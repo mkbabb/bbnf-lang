@@ -223,6 +223,26 @@ impl BbnfLanguageServer {
 }
 
 /// Semantic token legend shared between server and client.
+/// Check if a byte offset falls on an import directive's path string.
+/// If so, resolve the relative path against the current file's URI and return the target URI.
+fn resolve_import_at_offset(state: &DocumentState, uri: &Uri, offset: usize) -> Option<Uri> {
+    for imp in &state.info.imports {
+        // Check if cursor is within this import directive's span.
+        if offset < imp.span.0 || offset > imp.span.1 {
+            continue;
+        }
+
+        // Resolve the import path relative to the current file.
+        let file_path = uri.path().to_string();
+        let dir = std::path::Path::new(&file_path).parent()?;
+        let target = dir.join(&imp.path);
+        let canonical = target.canonicalize().ok().unwrap_or(target);
+        let target_uri: Uri = format!("file://{}", canonical.display()).parse().ok()?;
+        return Some(target_uri);
+    }
+    None
+}
+
 pub fn semantic_token_legend() -> SemanticTokensLegend {
     SemanticTokensLegend {
         token_types: vec![
@@ -366,8 +386,18 @@ impl LanguageServer for BbnfLanguageServer {
         if let Some(result) = features::goto_definition::goto_definition(state, &uri, pos) {
             return Ok(Some(result));
         }
-        // Cross-file: look up in global rules.
         let offset = crate::analysis::position_to_offset(&state.text, pos);
+
+        // Check if cursor is on an import path — jump to the imported file.
+        if let Some(target_uri) = resolve_import_at_offset(state, &uri, offset) {
+            let range = Range::new(Position::new(0, 0), Position::new(0, 0));
+            return Ok(Some(GotoDefinitionResponse::Scalar(Location {
+                uri: target_uri,
+                range,
+            })));
+        }
+
+        // Cross-file: look up in global rules.
         let symbol = crate::analysis::symbol_at_offset(&state.info, offset);
         if let Some(crate::analysis::SymbolAtOffset::RuleReference { name, .. }) = symbol {
             let global = self.global_rules.read().await;

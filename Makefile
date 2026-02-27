@@ -1,5 +1,5 @@
-.PHONY: all build build-lsp build-lsp-debug build-ext test test-rust test-ts \
-       install package publish bump-patch bump-minor bump-major release clean
+.PHONY: all build build-lsp build-lsp-debug build-ext dev test test-rust test-ts \
+       install package publish bump-patch bump-minor bump-major release clean clean-vsix watch
 
 # ─── Build ──────────────────────────────────────────────────────────────
 
@@ -21,6 +21,11 @@ build-lsp-debug:
 ## Build the VS Code extension bundle
 build-ext:
 	cd extension && npm run build
+
+## Quick dev build: debug LSP + extension (fast iteration)
+dev: build-lsp-debug build-ext
+	mkdir -p server
+	cp rust/target/debug/bbnf-lsp server/bbnf-lsp
 
 ## Build the TypeScript library
 build-ts:
@@ -104,6 +109,14 @@ release:
 # ─── Clean ──────────────────────────────────────────────────────────────
 
 clean:
-	rm -f bbnf-lang.vsix
+	rm -f *.vsix
 	rm -rf extension/dist
 	cd rust && cargo clean
+
+## Remove old .vsix files
+clean-vsix:
+	rm -f *.vsix
+
+## Continuous rebuild on save (requires cargo-watch: cargo install cargo-watch)
+watch:
+	cd rust && cargo watch -p bbnf-lsp -x build

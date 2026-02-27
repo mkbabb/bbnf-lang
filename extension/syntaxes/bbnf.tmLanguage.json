@@ -16,6 +16,9 @@
                     "include": "#lineComment"
                 },
                 {
+                    "include": "#importDirective"
+                },
+                {
                     "include": "#rule"
                 }
             ]
@@ -26,8 +29,33 @@
             "end": "\\*\\/"
         },
         "lineComment": {
-            "name": "comment.line.number",
+            "name": "comment.line.double-slash.bbnf",
             "match": "\\/\\/.*"
+        },
+
+        "importDirective": {
+            "name": "meta.import.bbnf",
+            "match": "(@import)\\s*(?:(\\{)\\s*([^}]*)(\\})\\s*(from)\\s*)?\\s*(\"[^\"]*\"|'[^']*')\\s*(;|\\.)?",
+            "captures": {
+                "1": { "name": "keyword.control.import.bbnf" },
+                "2": { "name": "punctuation.definition.block.bbnf" },
+                "3": {
+                    "patterns": [
+                        {
+                            "match": "[A-Za-z0-9_][A-Za-z0-9_-]*",
+                            "name": "entity.name.function.bbnf"
+                        },
+                        {
+                            "match": ",",
+                            "name": "punctuation.separator.comma.bbnf"
+                        }
+                    ]
+                },
+                "4": { "name": "punctuation.definition.block.bbnf" },
+                "5": { "name": "keyword.control.from.bbnf" },
+                "6": { "name": "string.quoted.double.bbnf" },
+                "7": { "name": "punctuation.terminator.bbnf" }
+            }
         },
 
         "terminator": {

@@ -24,8 +24,17 @@ function getServerPath(context: ExtensionContext): string {
         return envPath;
     }
 
-    // 3. Bundled binary next to extension.
+    // 3. Bundled binary inside extension.
     const ext = os.platform() === "win32" ? ".exe" : "";
+    const bundled = path.join(context.extensionPath, "server", `bbnf-lsp${ext}`);
+    try {
+        const fs = require("node:fs");
+        if (fs.existsSync(bundled)) {
+            return bundled;
+        }
+    } catch {}
+
+    // 4. Fallback: binary next to extension (dev layout).
     return path.join(context.extensionPath, "..", "server", `bbnf-lsp${ext}`);
 }
 

@@ -378,13 +378,26 @@ fn analyze_from_cache(
         .map(|(i, r)| (r.name.as_str(), i))
         .collect();
 
+    // Build set of names available via @import directives.
+    let imported_names: HashSet<&str> = import_infos
+        .iter()
+        .flat_map(|imp| {
+            imp.items
+                .as_ref()
+                .map(|items| items.iter().map(|s| s.as_str()).collect::<Vec<_>>())
+                .unwrap_or_default()
+        })
+        .collect();
+
     let mut referenced_names: std::collections::HashSet<&str> =
         std::collections::HashSet::new();
 
     for rule in &rules {
         for refinfo in &rule.references {
             referenced_names.insert(&refinfo.name);
-            if !defined.contains_key(refinfo.name.as_str()) {
+            if !defined.contains_key(refinfo.name.as_str())
+                && !imported_names.contains(refinfo.name.as_str())
+            {
                 diagnostics.push(Diagnostic {
                     range: line_index.span_to_range(refinfo.span.0, refinfo.span.1),
                     severity: Some(DiagnosticSeverity::WARNING),
@@ -487,6 +500,20 @@ pub fn analyze(text: &str, line_index: &LineIndex) -> DocumentInfo {
     analyze_from_cache(text, line_index, cached.as_ref(), &diag)
 }
 
+/// Format a byte as a display-friendly character for inlay hints.
+fn format_char(b: u8) -> String {
+    match b {
+        b'\t' => "\\t".into(),
+        b'\n' => "\\n".into(),
+        b'\r' => "\\r".into(),
+        b' ' => "SP".into(),
+        0x0b => "\\v".into(),
+        0x0c => "\\f".into(),
+        c if c.is_ascii_graphic() => format!("'{}'", c as char),
+        c => format!("0x{:02x}", c),
+    }
+}
+
 /// Format a CharSet as a human-readable string for inlay hints.
 fn format_charset(cs: &CharSet) -> String {
     if cs.is_empty() {
@@ -506,12 +533,12 @@ fn format_charset(cs: &CharSet) -> String {
             i += 1;
         }
         if end - start >= 2 {
-            parts.push(format!("'{}'..'{}'", start as char, end as char));
+            parts.push(format!("{}..{}", format_char(start), format_char(end)));
         } else if end > start {
-            parts.push(format!("'{}'", start as char));
-            parts.push(format!("'{}'", end as char));
+            parts.push(format_char(start));
+            parts.push(format_char(end));
         } else {
-            parts.push(format!("'{}'", start as char));
+            parts.push(format_char(start));
         }
         i += 1;
     }

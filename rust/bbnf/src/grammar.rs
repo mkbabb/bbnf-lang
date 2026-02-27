@@ -465,13 +465,21 @@ impl<'a> BBNFGrammar<'a> {
             })
     }
 
+    /// Skip any number of line/block comments (used between top-level items).
+    fn skip_comments() -> Parser<'a, ()> {
+        (Self::block_comment() | Self::line_comment())
+            .trim_whitespace()
+            .many(..)
+            .map(|_| ())
+    }
+
     /// Parse a grammar file: zero or more import directives followed by rules.
     /// Returns a `ParsedGrammar` with both imports and the AST.
     pub fn grammar_with_imports() -> Parser<'a, ParsedGrammar<'a>> {
-        let import = Self::import_directive().trim_whitespace();
+        let import = Self::skip_comments().next(Self::import_directive().trim_whitespace());
         let rule = Self::production_rule().trim_whitespace();
 
-        import.many(..).then(rule.many(..)).map(|(imports, rules)| {
+        Self::skip_comments().next(import.many(..).then(rule.many(..))).map(|(imports, rules)| {
             let ast: AST<'a> = rules
                 .into_iter()
                 .map(|expr| match expr {

@@ -639,7 +639,6 @@ fn test_inlay_hints() {
     eprintln!("Inlay hints response: {}", resp);
 
     // Should have FIRST sets for both rules.
-    assert!(resp.contains("FIRST"), "Expected FIRST set in inlay hints");
     // number's FIRST set should contain digits.
     assert!(
         resp.contains("'0'..'9'"),
@@ -692,7 +691,7 @@ fn test_inlay_hints_empty_range() {
     let (mut stdin, mut stdout, child) = start_server();
     initialize(&mut stdin, &mut stdout);
 
-    let grammar = "a = \"x\";\nb = \"y\";\nc = \"z\";";
+    let grammar = "a = \"x\" | \"y\";\nb = \"y\" | \"z\";\nc = \"z\" | \"w\";";
     let _diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
 
     // Request hints for only line 1 — should return just "b".
@@ -1017,16 +1016,18 @@ value = string | number | object | array | bool | null;"#;
     let resp = read_response(&mut stdout, 41);
     assert!(resp.contains("value"), "Hover should show value rule");
 
-    // Inlay hints — should have FIRST sets for all 8 rules.
+    // Inlay hints — trivial single-terminal rules are suppressed, but
+    // complex rules (alternations, references) should still have hints.
     send_lsp(
         &mut stdin,
         r#"{"jsonrpc":"2.0","id":42,"method":"textDocument/inlayHint","params":{"textDocument":{"uri":"file:///test.bbnf"},"range":{"start":{"line":0,"character":0},"end":{"line":7,"character":100}}}}"#,
     );
     let resp = read_response(&mut stdout, 42);
-    assert_eq!(
-        resp.matches("FIRST").count(),
-        8,
-        "Expected 8 FIRST set hints (one per rule), got: {}",
+    let hint_count = resp.matches("paddingLeft").count();
+    assert!(
+        hint_count >= 4,
+        "Expected at least 4 inlay hints for non-trivial rules, got {}: {}",
+        hint_count,
         resp
     );
 

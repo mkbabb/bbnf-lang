@@ -38,9 +38,9 @@ pub fn inlay_hints(state: &DocumentState, range: Range) -> Vec<InlayHint> {
             }
 
             let label = if nullable {
-                format!(" FIRST: {}  (nullable)", first_label)
+                format!(" {}  (nullable)", first_label)
             } else {
-                format!(" FIRST: {}", first_label)
+                format!(" {}", first_label)
             };
 
             hints.push(InlayHint {

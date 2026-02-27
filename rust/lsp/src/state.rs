@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use bbnf::grammar::{BBNFGrammar, Expression, Token, AST};
-use bbnf::analysis::{tarjan_scc, compute_first_sets, CharSet};
+use bbnf::analysis::{tarjan_scc, compute_first_sets, find_first_set_conflicts, find_aliases, CharSet};
 use bbnf::generate::{calculate_ast_deps, get_nonterminal_name};
 
 use self_cell::self_cell;
@@ -70,6 +70,8 @@ pub struct DocumentInfo {
     pub first_set_labels: HashMap<String, String>,
     /// Rules that can derive the empty string.
     pub nullable_rules: HashSet<String>,
+    /// Rules that participate in a cycle, with their cycle path.
+    pub cyclic_rule_paths: HashMap<String, String>,
     /// Import directives parsed from the document.
     pub imports: Vec<ImportInfo>,
 }
@@ -249,6 +251,7 @@ fn analyze_from_cache(
             semantic_tokens,
             first_set_labels: HashMap::new(),
             nullable_rules: HashSet::new(),
+            cyclic_rule_paths: HashMap::new(),
             imports: Vec::new(),
         };
     }
@@ -276,6 +279,7 @@ fn analyze_from_cache(
             semantic_tokens,
             first_set_labels: HashMap::new(),
             nullable_rules: HashSet::new(),
+            cyclic_rule_paths: HashMap::new(),
             imports: Vec::new(),
         };
     };
@@ -316,6 +320,7 @@ fn analyze_from_cache(
             semantic_tokens,
             first_set_labels: HashMap::new(),
             nullable_rules: HashSet::new(),
+            cyclic_rule_paths: HashMap::new(),
             imports: import_infos,
         };
     }
@@ -429,16 +434,49 @@ fn analyze_from_cache(
     let deps = calculate_ast_deps(&ast);
     let scc = tarjan_scc(&deps);
 
-    // Use SCC cyclic_rules directly — O(1) lookup instead of O(n*(V+E)) DFS.
-    for rule_expr in &scc.cyclic_rules {
-        if let Some(name) = get_nonterminal_name(rule_expr) {
-            if let Some(&idx) = rule_index.get(name) {
+    // Build cycle path strings and emit enhanced cycle diagnostics.
+    let mut cyclic_rule_paths = HashMap::new();
+    for scc_group in &scc.sccs {
+        // An SCC with >1 member means all members are cyclic.
+        // An SCC with 1 member is cyclic only if it self-references (checked via cyclic_rules).
+        let is_multi = scc_group.len() > 1;
+        let cyclic_members: Vec<&str> = scc_group
+            .iter()
+            .filter_map(|e| {
+                let name = get_nonterminal_name(e)?;
+                if is_multi || scc.cyclic_rules.contains(*e) {
+                    Some(name)
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        if cyclic_members.is_empty() {
+            continue;
+        }
+
+        for &member in &cyclic_members {
+            let path = if cyclic_members.len() == 1 {
+                // Self-recursive rule.
+                format!("{} \u{2192} {}", member, member)
+            } else {
+                // Multi-member SCC — reconstruct a representative cycle path.
+                build_cycle_path(member, &cyclic_members, &deps)
+            };
+
+            cyclic_rule_paths.insert(member.to_string(), path.clone());
+
+            if let Some(&idx) = rule_index.get(member) {
                 let rule = &rules[idx];
                 diagnostics.push(Diagnostic {
                     range: line_index.span_to_range(rule.name_span.0, rule.name_span.1),
                     severity: Some(DiagnosticSeverity::INFORMATION),
                     source: Some("bbnf".into()),
-                    message: format!("Rule `{}` participates in a cycle (left recursion)", name),
+                    message: format!(
+                        "Rule `{}` participates in a cycle: {}",
+                        member, path
+                    ),
                     ..Default::default()
                 });
             }
@@ -479,6 +517,83 @@ fn analyze_from_cache(
         }
     }
 
+    // FIRST set conflict detection for ambiguous alternations.
+    let conflicts = find_first_set_conflicts(&ast, &first_sets);
+    for (rule_name, rule_conflicts) in &conflicts {
+        if let Some(&idx) = rule_index.get(rule_name.as_str()) {
+            let rule = &rules[idx];
+            for conflict in rule_conflicts {
+                let overlap_str = format_charset(&conflict.overlap);
+                diagnostics.push(Diagnostic {
+                    range: line_index.span_to_range(rule.name_span.0, rule.name_span.1),
+                    severity: Some(DiagnosticSeverity::WARNING),
+                    source: Some("bbnf".into()),
+                    message: format!(
+                        "Alternation in `{}` has ambiguous FIRST sets: branches {} and {} both start with {}",
+                        rule_name,
+                        conflict.branch_a + 1,
+                        conflict.branch_b + 1,
+                        overlap_str
+                    ),
+                    ..Default::default()
+                });
+            }
+        }
+    }
+
+    // Alias detection: rules whose RHS is just a nonterminal reference.
+    let aliases = find_aliases(&ast, &scc.cyclic_rules);
+    for (alias_lhs, target) in &aliases {
+        if let (Some(alias_name), Some(target_name)) = (
+            get_nonterminal_name(alias_lhs),
+            get_nonterminal_name(target),
+        ) {
+            // Skip aliases of imported rules (intentional re-exports).
+            if imported_names.contains(alias_name) {
+                continue;
+            }
+            if let Some(&idx) = rule_index.get(alias_name) {
+                let rule = &rules[idx];
+                diagnostics.push(Diagnostic {
+                    range: line_index.span_to_range(rule.name_span.0, rule.name_span.1),
+                    severity: Some(DiagnosticSeverity::HINT),
+                    source: Some("bbnf".into()),
+                    message: format!(
+                        "Rule `{}` is an alias of `{}` — consider using `{}` directly",
+                        alias_name, target_name, target_name
+                    ),
+                    ..Default::default()
+                });
+            }
+        }
+    }
+
+    // Unreachable rule detection via BFS from root rules.
+    let reachable = compute_reachable_rules(&rules, &rule_index);
+    for rule in &rules {
+        // Skip the first rule (entry point) and already-unused rules.
+        if rule_index.get(rule.name.as_str()) == Some(&0) {
+            continue;
+        }
+        if !referenced_names.contains(rule.name.as_str()) {
+            // Already flagged as unused — no need to also flag as unreachable.
+            continue;
+        }
+        if !reachable.contains(rule.name.as_str()) {
+            diagnostics.push(Diagnostic {
+                range: line_index.span_to_range(rule.name_span.0, rule.name_span.1),
+                severity: Some(DiagnosticSeverity::HINT),
+                source: Some("bbnf".into()),
+                message: format!(
+                    "Rule `{}` is unreachable from the entry rule",
+                    rule.name
+                ),
+                tags: Some(vec![DiagnosticTag::UNNECESSARY]),
+                ..Default::default()
+            });
+        }
+    }
+
     // Sort semantic tokens by offset for encoding.
     semantic_tokens.sort_by_key(|t| t.span.0);
 
@@ -489,6 +604,7 @@ fn analyze_from_cache(
         semantic_tokens,
         first_set_labels,
         nullable_rules,
+        cyclic_rule_paths,
         imports: import_infos,
     }
 }
@@ -771,4 +887,85 @@ fn format_expression_short(expr: &Expression<'_>) -> String {
         }
         Expression::MappingFn(tok) => format!("=> {}", tok.value),
     }
+}
+
+/// Build a representative cycle path string for a rule within its SCC.
+///
+/// Walks the dependency graph from `start` following only edges within the SCC members,
+/// until it returns to `start`, producing a string like "expr → term → factor → expr".
+fn build_cycle_path(start: &str, scc_members: &[&str], deps: &HashMap<Expression<'_>, HashSet<Expression<'_>>>) -> String {
+    let member_set: HashSet<&str> = scc_members.iter().copied().collect();
+    let mut path = vec![start];
+    let mut visited = HashSet::new();
+    visited.insert(start);
+    let mut current = start;
+
+    loop {
+        // Find the dependency expression key for `current`.
+        let mut found_next = false;
+        for (key, dep_set) in deps {
+            if let Some(name) = get_nonterminal_name(key) {
+                if name == current {
+                    // Walk deps looking for a member of the SCC.
+                    for dep in dep_set {
+                        if let Some(dep_name) = get_nonterminal_name(dep) {
+                            if dep_name == start && path.len() > 1 {
+                                // Completed the cycle.
+                                path.push(start);
+                                return path.join(" \u{2192} ");
+                            }
+                            if member_set.contains(dep_name) && !visited.contains(dep_name) {
+                                visited.insert(dep_name);
+                                path.push(dep_name);
+                                current = dep_name;
+                                found_next = true;
+                                break;
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+        if !found_next {
+            // Couldn't extend the path — close the cycle back to start.
+            path.push(start);
+            return path.join(" \u{2192} ");
+        }
+    }
+}
+
+/// Compute the set of rule names reachable from root rules via BFS.
+///
+/// Root rules are: the first rule in the grammar, plus any rule referenced by an import.
+fn compute_reachable_rules(
+    rules: &[RuleInfo],
+    rule_index: &HashMap<String, usize>,
+) -> HashSet<String> {
+    let mut reachable = HashSet::new();
+
+    if rules.is_empty() {
+        return reachable;
+    }
+
+    // The first rule is the entry point / root.
+    let mut queue = std::collections::VecDeque::new();
+    queue.push_back(rules[0].name.clone());
+    reachable.insert(rules[0].name.clone());
+
+    // BFS from root rules.
+    while let Some(current) = queue.pop_front() {
+        // Find all rules referenced by `current`.
+        if let Some(&idx) = rule_index.get(&current) {
+            let rule = &rules[idx];
+            for refinfo in &rule.references {
+                if !reachable.contains(&refinfo.name) {
+                    reachable.insert(refinfo.name.clone());
+                    queue.push_back(refinfo.name.clone());
+                }
+            }
+        }
+    }
+
+    reachable
 }

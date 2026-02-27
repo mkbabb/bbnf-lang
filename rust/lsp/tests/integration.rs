@@ -628,6 +628,7 @@ fn test_inlay_hints() {
     let (mut stdin, mut stdout, child) = start_server();
     initialize(&mut stdin, &mut stdout);
 
+    // Pure-terminal rules (number) are suppressed; rules with refs (value) are shown.
     let grammar = "number = /[0-9]+/;\nvalue = number | \"hello\";";
     let _diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
 
@@ -638,24 +639,17 @@ fn test_inlay_hints() {
     let resp = read_response(&mut stdout, 30);
     eprintln!("Inlay hints response: {}", resp);
 
-    // Should have FIRST sets for both rules.
-    // number's FIRST set should contain digits.
-    assert!(
-        resp.contains("'0'..'9'"),
-        "Expected digit range in number FIRST set, got: {}",
-        resp
-    );
     // value's FIRST set should contain digits and 'h' (from "hello").
     assert!(
         resp.contains("'h'"),
         "Expected 'h' in value FIRST set, got: {}",
         resp
     );
-    // Should have two hint items (one per rule).
+    // Only value should have a hint (number is pure-terminal, suppressed).
     assert_eq!(
         resp.matches("paddingLeft").count(),
-        2,
-        "Expected 2 inlay hints, got: {}",
+        1,
+        "Expected 1 inlay hint (pure-terminal rules suppressed), got: {}",
         resp
     );
 
@@ -691,10 +685,11 @@ fn test_inlay_hints_empty_range() {
     let (mut stdin, mut stdout, child) = start_server();
     initialize(&mut stdin, &mut stdout);
 
-    let grammar = "a = \"x\" | \"y\";\nb = \"y\" | \"z\";\nc = \"z\" | \"w\";";
+    // Use rules with nonterminal refs so hints aren't suppressed.
+    let grammar = "x = \"x\";\na = x | \"y\";\nb = x | \"z\";\nc = x | \"w\";";
     let _diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
 
-    // Request hints for only line 1 — should return just "b".
+    // Request hints for only line 1 — should return just "a".
     send_lsp(
         &mut stdin,
         r#"{"jsonrpc":"2.0","id":30,"method":"textDocument/inlayHint","params":{"textDocument":{"uri":"file:///test.bbnf"},"range":{"start":{"line":1,"character":0},"end":{"line":1,"character":100}}}}"#,

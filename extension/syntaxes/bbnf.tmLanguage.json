@@ -80,6 +80,9 @@
                     "include": "#comment"
                 },
                 {
+                    "include": "#lineComment"
+                },
+                {
                     "include": "#expression"
                 }
             ]
@@ -89,6 +92,9 @@
             "patterns": [
                 {
                     "include": "#comment"
+                },
+                {
+                    "include": "#lineComment"
                 },
                 {
                     "include": "#operator"

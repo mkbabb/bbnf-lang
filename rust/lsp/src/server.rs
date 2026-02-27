@@ -223,14 +223,25 @@ impl BbnfLanguageServer {
 }
 
 /// Semantic token legend shared between server and client.
-/// Check if a byte offset falls on an import directive's path string.
-/// If so, resolve the relative path against the current file's URI and return the target URI.
-fn resolve_import_at_offset(state: &DocumentState, uri: &Uri, offset: usize) -> Option<Uri> {
+/// Check if a byte offset falls on an import directive.
+/// Returns (target_uri, path_string_byte_range) for constructing a LocationLink.
+fn resolve_import_at_offset(
+    state: &DocumentState,
+    uri: &Uri,
+    offset: usize,
+) -> Option<(Uri, (usize, usize))> {
     for imp in &state.info.imports {
         // Check if cursor is within this import directive's span.
         if offset < imp.span.0 || offset > imp.span.1 {
             continue;
         }
+
+        // Find the path string span within the directive text.
+        let directive_text = &state.text[imp.span.0..imp.span.1];
+        let path_in_text = format!("\"{}\"", imp.path);
+        let path_local_offset = directive_text.find(&path_in_text)?;
+        let path_start = imp.span.0 + path_local_offset;
+        let path_end = path_start + path_in_text.len();
 
         // Resolve the import path relative to the current file.
         let file_path = uri.path().to_string();
@@ -238,7 +249,7 @@ fn resolve_import_at_offset(state: &DocumentState, uri: &Uri, offset: usize) -> 
         let target = dir.join(&imp.path);
         let canonical = target.canonicalize().ok().unwrap_or(target);
         let target_uri: Uri = format!("file://{}", canonical.display()).parse().ok()?;
-        return Some(target_uri);
+        return Some((target_uri, (path_start, path_end)));
     }
     None
 }
@@ -388,13 +399,16 @@ impl LanguageServer for BbnfLanguageServer {
         }
         let offset = crate::analysis::position_to_offset(&state.text, pos);
 
-        // Check if cursor is on an import path — jump to the imported file.
-        if let Some(target_uri) = resolve_import_at_offset(state, &uri, offset) {
-            let range = Range::new(Position::new(0, 0), Position::new(0, 0));
-            return Ok(Some(GotoDefinitionResponse::Scalar(Location {
-                uri: target_uri,
-                range,
-            })));
+        // Check if cursor is on an import directive — jump to the imported file.
+        if let Some((target_uri, path_span)) = resolve_import_at_offset(state, &uri, offset) {
+            let origin_range = crate::analysis::span_to_range(&state.text, path_span.0, path_span.1);
+            let target_range = Range::new(Position::new(0, 0), Position::new(0, 0));
+            return Ok(Some(GotoDefinitionResponse::Link(vec![LocationLink {
+                origin_selection_range: Some(origin_range),
+                target_uri,
+                target_range,
+                target_selection_range: target_range,
+            }])));
         }
 
         // Cross-file: look up in global rules.

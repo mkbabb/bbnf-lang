@@ -24,16 +24,17 @@ pub fn inlay_hints(state: &DocumentState, range: Range) -> Vec<InlayHint> {
             let nullable = state.info.nullable_rules.contains(&rule.name);
             let ref_count = rule.references.len();
 
-            // Suppress trivial hints:
-            // 1. Pure terminal rule with a single FIRST char (e.g., `div = "/"`)
-            // 2. Single nonterminal alias (e.g., `colorPercentage = percentage`)
+            // Suppress trivial hints where FIRST is obvious from reading the rule:
+            // - Pure terminal rules (no nonterminal refs): FIRST is just the first
+            //   char of each literal/regex, which you can see directly
+            // - Single nonterminal alias with ≤1 FIRST element: just look at the ref
             if !nullable {
-                let first_count = first_label.matches('\'').count() / 2; // count quoted chars
-                if first_count <= 1 && ref_count == 0 {
-                    continue; // trivial terminal rule
+                if ref_count == 0 {
+                    continue; // pure terminal/regex rule — FIRST is obvious
                 }
+                let first_count = first_label.matches('\'').count() / 2;
                 if first_count <= 1 && ref_count == 1 {
-                    continue; // single alias, just look at the referenced rule
+                    continue; // single alias
                 }
             }
 

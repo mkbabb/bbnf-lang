@@ -381,6 +381,15 @@ impl CharSet {
         true
     }
 
+    /// Returns a new CharSet containing only characters present in both sets.
+    pub fn intersection(&self, other: &CharSet) -> CharSet {
+        let mut result = CharSet::new();
+        for i in 0..4 {
+            result.bits[i] = self.bits[i] & other.bits[i];
+        }
+        result
+    }
+
     /// Returns true if the set is empty.
     pub fn is_empty(&self) -> bool {
         self.bits.iter().all(|&w| w == 0)
@@ -660,6 +669,95 @@ fn compute_expr_first<'a>(
             false
         }
     }
+}
+
+// ---------------------------------------------------------------------------
+// 4b. Alternation FIRST set conflict detection
+// ---------------------------------------------------------------------------
+
+/// A FIRST set conflict between two branches of an alternation.
+#[derive(Debug, Clone)]
+pub struct FirstSetConflict {
+    /// 0-based index of the first conflicting branch.
+    pub branch_a: usize,
+    /// 0-based index of the second conflicting branch.
+    pub branch_b: usize,
+    /// The overlapping characters.
+    pub overlap: CharSet,
+}
+
+/// Find FIRST set conflicts in alternation rules.
+///
+/// For each rule whose RHS is an alternation, computes per-branch FIRST sets
+/// and checks for pairwise overlap. Returns a map from rule name to the list
+/// of conflicts found.
+pub fn find_first_set_conflicts<'a>(
+    ast: &'a AST<'a>,
+    first_sets: &FirstSets<'a>,
+) -> HashMap<String, Vec<FirstSetConflict>> {
+    let name_to_key: HashMap<&str, &'a Expression<'a>> = ast
+        .keys()
+        .filter_map(|lhs| match lhs {
+            Expression::Nonterminal(tok) => Some((tok.value.as_ref(), lhs)),
+            _ => None,
+        })
+        .collect();
+
+    let mut conflicts = HashMap::new();
+
+    for (lhs, rhs) in ast {
+        let name = match lhs {
+            Expression::Nonterminal(tok) => tok.value.to_string(),
+            _ => continue,
+        };
+
+        let inner = unwrap_rule(rhs);
+        let branches = match inner {
+            Expression::Alternation(tok) => &tok.value[..],
+            _ => continue,
+        };
+
+        if branches.len() < 2 {
+            continue;
+        }
+
+        // Compute per-branch FIRST sets.
+        let branch_firsts: Vec<CharSet> = branches
+            .iter()
+            .map(|branch| {
+                let mut cs = CharSet::new();
+                compute_expr_first(
+                    branch,
+                    &first_sets.first,
+                    &first_sets.nullable,
+                    &name_to_key,
+                    &mut cs,
+                );
+                cs
+            })
+            .collect();
+
+        // Check pairwise disjointness.
+        let mut rule_conflicts = Vec::new();
+        for i in 0..branch_firsts.len() {
+            for j in (i + 1)..branch_firsts.len() {
+                let overlap = branch_firsts[i].intersection(&branch_firsts[j]);
+                if !overlap.is_empty() {
+                    rule_conflicts.push(FirstSetConflict {
+                        branch_a: i,
+                        branch_b: j,
+                        overlap,
+                    });
+                }
+            }
+        }
+
+        if !rule_conflicts.is_empty() {
+            conflicts.insert(name, rule_conflicts);
+        }
+    }
+
+    conflicts
 }
 
 // ---------------------------------------------------------------------------

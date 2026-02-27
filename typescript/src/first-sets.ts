@@ -53,6 +53,43 @@ export class CharSet {
         );
     }
 
+    /**
+     * Returns a new CharSet containing only characters present in both sets.
+     */
+    intersection(other: CharSet): CharSet {
+        const result = new CharSet();
+        result.bits[0] = this.bits[0] & other.bits[0];
+        result.bits[1] = this.bits[1] & other.bits[1];
+        result.bits[2] = this.bits[2] & other.bits[2];
+        result.bits[3] = this.bits[3] & other.bits[3];
+        return result;
+    }
+
+    /**
+     * Number of characters in the set (popcount).
+     */
+    len(): number {
+        let count = 0;
+        for (let i = 0; i < 4; i++) {
+            let w = this.bits[i];
+            // Brian Kernighan's popcount
+            while (w) {
+                w &= w - 1;
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /**
+     * Iterate over all character codes present in the set.
+     */
+    *[Symbol.iterator](): Generator<number> {
+        for (let code = 0; code < 128; code++) {
+            if (this.has(code)) yield code;
+        }
+    }
+
     clone(): CharSet {
         const c = new CharSet();
         c.bits.set(this.bits);
@@ -533,6 +570,81 @@ function exprIsNullable(
         }
     }
     return false;
+}
+
+// --- FIRST set conflict detection ---
+
+/**
+ * A FIRST set conflict between two branches of an alternation.
+ */
+export interface FirstSetConflict {
+    /** 0-based index of the first conflicting branch. */
+    branchA: number;
+    /** 0-based index of the second conflicting branch. */
+    branchB: number;
+    /** The overlapping characters. */
+    overlap: CharSet;
+}
+
+/**
+ * Find FIRST set conflicts in alternation rules.
+ *
+ * For each rule whose expression is an alternation, computes per-branch FIRST
+ * sets and checks for pairwise overlap. Returns a map from rule name to the
+ * list of conflicts found.
+ */
+export function findFirstSetConflicts(
+    ast: AST,
+    firstNullable: FirstNullable,
+): Map<string, FirstSetConflict[]> {
+    const conflicts = new Map<string, FirstSetConflict[]>();
+
+    for (const [name, rule] of ast) {
+        const expr = rule.expression;
+        if (expr.type !== "alternation") continue;
+
+        const branches = expr.value as Expression[];
+        if (branches.length < 2) continue;
+
+        // Short-circuit: if rule-level FIRST set has ≤1 character, trivially no conflict.
+        const ruleFirst = firstNullable.firstSets.get(name);
+        if (ruleFirst && ruleFirst.len() <= 1) continue;
+
+        // Compute per-branch FIRST sets.
+        const branchFirsts = branches.map((branch) =>
+            exprFirstSet(branch, firstNullable.firstSets, firstNullable.nullable, ast),
+        );
+
+        // Running union optimization: check against union of prior branches.
+        const ruleConflicts: FirstSetConflict[] = [];
+        const runningUnion = new CharSet();
+
+        for (let i = 0; i < branchFirsts.length; i++) {
+            if (i > 0 && branchFirsts[i].isDisjoint(runningUnion)) {
+                // Disjoint with all prior branches — no conflicts possible.
+                runningUnion.union(branchFirsts[i]);
+                continue;
+            }
+
+            for (let j = 0; j < i; j++) {
+                const overlap = branchFirsts[i].intersection(branchFirsts[j]);
+                if (!overlap.isEmpty()) {
+                    ruleConflicts.push({
+                        branchA: j,
+                        branchB: i,
+                        overlap,
+                    });
+                }
+            }
+            runningUnion.union(branchFirsts[i]);
+        }
+
+        if (ruleConflicts.length > 0) {
+            conflicts.set(name, ruleConflicts);
+        }
+    }
+
+    return conflicts;
 }
 
 // --- Dispatch table ---

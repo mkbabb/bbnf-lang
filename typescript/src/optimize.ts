@@ -7,6 +7,7 @@ import type {
     Nonterminal,
     ProductionRule,
 } from "./types.js";
+import type { AnalysisCache } from "./analysis.js";
 
 export function topologicalSort(ast: AST) {
     const visited = new Set<string>();
@@ -354,8 +355,136 @@ export function removeDirectLeftRecursion(ast: AST) {
     }
 }
 
-export function removeAllLeftRecursion(ast: AST) {
+/**
+ * Eliminate indirect left recursion using Paull's algorithm.
+ *
+ * For rules ordered A_1, A_2, ..., A_n (topological order):
+ *   For each A_i, for each A_j where j < i:
+ *     If A_i starts with A_j, substitute A_j's alternatives inline.
+ *   After substitution, any remaining left recursion in A_i is direct.
+ *
+ * Only processes multi-member cyclic SCCs (where indirect recursion occurs).
+ */
+export function removeIndirectLeftRecursion(
+    ast: AST,
+    analysis: AnalysisCache,
+): AST {
+    // Find multi-member SCCs (indirect cycles).
+    const indirectCyclicSCCs = analysis.sccs.filter((scc) => scc.length > 1);
+
+    if (indirectCyclicSCCs.length === 0) return ast;
+
+    for (const scc of indirectCyclicSCCs) {
+        // Process rules in topological order within the SCC.
+        for (let i = 0; i < scc.length; i++) {
+            const nameI = scc[i];
+            const ruleI = ast.get(nameI);
+            if (!ruleI) continue;
+
+            // For each earlier rule in the SCC order.
+            for (let j = 0; j < i; j++) {
+                const nameJ = scc[j];
+                const ruleJ = ast.get(nameJ);
+                if (!ruleJ) continue;
+
+                // Substitute A_j's alternatives into A_i where A_i starts with A_j.
+                const substituted = substituteLeadingNonterminal(
+                    ruleI.expression,
+                    nameJ,
+                    ruleJ.expression,
+                );
+                if (substituted) {
+                    ruleI.expression = substituted;
+                }
+            }
+        }
+    }
+
+    return ast;
+}
+
+/**
+ * If `expr` begins with nonterminal `targetName`, substitute `targetExpr`
+ * in place of that leading reference. Returns the substituted expression,
+ * or null if no substitution was made.
+ */
+function substituteLeadingNonterminal(
+    expr: Expression,
+    targetName: string,
+    targetExpr: Expression,
+): Expression | null {
+    if (expr.type === "alternation") {
+        const branches = expr.value as Expression[];
+        let anyChanged = false;
+        const newBranches: Expression[] = [];
+
+        for (const branch of branches) {
+            const sub = substituteLeadingNonterminal(branch, targetName, targetExpr);
+            if (sub) {
+                // If target is an alternation, flatten its branches.
+                if (sub.type === "alternation") {
+                    newBranches.push(...(sub.value as Expression[]));
+                } else {
+                    newBranches.push(sub);
+                }
+                anyChanged = true;
+            } else {
+                newBranches.push(branch);
+            }
+        }
+
+        return anyChanged
+            ? ({ type: "alternation", value: newBranches } as Alteration)
+            : null;
+    }
+
+    if (expr.type === "concatenation") {
+        const elems = expr.value as Expression[];
+        if (elems.length === 0) return null;
+        const first = elems[0];
+
+        if (first.type === "nonterminal" && first.value === targetName) {
+            const rest = elems.slice(1);
+            // Substitute: replace leading nonterminal with target expression's alternatives.
+            if (targetExpr.type === "alternation") {
+                const targetAlts = targetExpr.value as Expression[];
+                const newBranches = targetAlts.map((alt) => ({
+                    type: "concatenation" as const,
+                    value: [alt, ...rest],
+                }));
+                return {
+                    type: "alternation",
+                    value: newBranches,
+                } as Alteration;
+            } else {
+                return {
+                    type: "concatenation",
+                    value: [targetExpr, ...rest],
+                } as Expression;
+            }
+        }
+        return null;
+    }
+
+    // Single nonterminal reference.
+    if (expr.type === "nonterminal" && expr.value === targetName) {
+        return targetExpr;
+    }
+
+    return null;
+}
+
+export function removeAllLeftRecursion(ast: AST, analysis?: AnalysisCache) {
     const newAST = topologicalSort(ast);
+
+    // If analysis is provided and has multi-member SCCs, apply indirect LR elimination first.
+    if (analysis) {
+        const hasIndirectCycles = analysis.sccs.some((scc) => scc.length > 1);
+        if (hasIndirectCycles) {
+            removeIndirectLeftRecursion(newAST, analysis);
+        }
+    }
+
     removeDirectLeftRecursion(newAST);
     return newAST;
 }

@@ -22,12 +22,24 @@ See [BBNF.md](./BBNF.md) for the full language specification.
 
 ### CSS Family
 
-A suite of grammars for CSS syntax, using `@import` to share common definitions:
+A suite of grammars for CSS syntax, using `@import` to share common definitions.
+See [PROGRESS.md](./PROGRESS.md) for revision notes and the dispatch-table design
+constraints that shape separator rules.
+
+```
+css-value-unit.bbnf  ← canonical base (numbers, units, dimensions)
+      ↑
+css-color.bbnf       ← imports css-value-unit (148 named colors, hex, rgb/hsl/hwb/lab/lch/oklab/oklch, color-mix)
+      ↑
+css-values.bbnf      ← imports css-value-unit + css-color (calc/min/max/clamp, var, env, url)
+css-keyframes.bbnf   ← imports css-value-unit (@keyframes, declarations, functions)
+css-selectors.bbnf   ← standalone (Level 4: :is/:where/:not/:has, An+B, namespaces)
+```
 
 | Grammar | Description |
 |---------|-------------|
-| [css-value-unit.bbnf](./css-value-unit.bbnf) | CSS numeric values and length units |
-| [css-values.bbnf](./css-values.bbnf) | CSS value types (lengths, percentages, etc.) |
-| [css-color.bbnf](./css-color.bbnf) | CSS color values (`rgb()`, `hsl()`, hex, named colors) |
-| [css-selectors.bbnf](./css-selectors.bbnf) | CSS selectors Level 3+ |
-| [css-keyframes.bbnf](./css-keyframes.bbnf) | CSS `@keyframes` animation syntax |
+| [css-value-unit.bbnf](./css-value-unit.bbnf) | CSS Values Level 4 — numeric primitives, all dimension types (length, angle, time, frequency, resolution, flex), viewport/container/font-relative units |
+| [css-color.bbnf](./css-color.bbnf) | CSS Color Level 4 — hex, named colors (full set), `rgb()`/`hsl()`/`hwb()`/`lab()`/`lch()`/`oklab()`/`oklch()`, `color()`, `color-mix()` |
+| [css-values.bbnf](./css-values.bbnf) | CSS Values Level 4 — composite value grammar with recursive `calc()`/`min()`/`max()`/`clamp()`, `var()`, `env()`, `url()` |
+| [css-selectors.bbnf](./css-selectors.bbnf) | CSS Selectors Level 4 — type/class/id/attribute selectors, `:is()`/`:where()`/`:not()`/`:has()`, An+B microsyntax, namespaces, relative selectors |
+| [css-keyframes.bbnf](./css-keyframes.bbnf) | CSS Animations Level 1 — `@keyframes` with import-based numeric/unit primitives |

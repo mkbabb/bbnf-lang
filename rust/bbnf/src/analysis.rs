@@ -442,6 +442,9 @@ pub struct FirstSets<'a> {
     pub first: HashMap<&'a Expression<'a>, CharSet>,
     /// The set of nonterminals that can derive the empty string.
     pub nullable: HashSet<&'a Expression<'a>>,
+    /// Pre-computed per-branch FIRST sets for alternation rules.
+    /// Key: rule LHS expression. Value: Vec of (branch_first_set, branch_is_nullable) per branch.
+    pub branch_firsts: HashMap<&'a Expression<'a>, Vec<(CharSet, bool)>>,
 }
 
 /// Compute FIRST sets and nullability for all nonterminals in the grammar.
@@ -499,14 +502,16 @@ pub fn compute_first_sets<'a>(
             }
         } else {
             // Cyclic SCC: fixed-point iteration only within this SCC.
+            // A3: Use per-expression memoization cache, cleared each pass.
             loop {
                 let mut changed = false;
+                let mut memo_cache: HashMap<*const Expression<'a>, (CharSet, bool)> = HashMap::new();
                 for &lhs in scc {
                     if let Some(&rhs) = expr_to_rhs.get(lhs) {
                         let rhs_expr = unwrap_rule(rhs);
                         let mut expr_first = CharSet::new();
-                        let expr_nullable = compute_expr_first(
-                            rhs_expr, &first, &nullable, &name_to_key, &mut expr_first,
+                        let expr_nullable = compute_expr_first_memoized(
+                            rhs_expr, &first, &nullable, &name_to_key, &mut expr_first, &mut memo_cache,
                         );
                         let entry = first.entry(lhs).or_insert_with(CharSet::new);
                         let old_bits = entry.bits;
@@ -531,7 +536,52 @@ pub fn compute_first_sets<'a>(
     // are not defined in this AST (external/built-in rules). These remain empty.
     let _ = deps;
 
-    FirstSets { first, nullable }
+    // A1: Pre-compute per-branch FIRST sets for alternation rules.
+    let mut branch_firsts: HashMap<&'a Expression<'a>, Vec<(CharSet, bool)>> = HashMap::new();
+    for (lhs, rhs) in ast.iter() {
+        let inner = unwrap_rule(rhs);
+        if let Expression::Alternation(tok) = inner {
+            let branches = &tok.value[..];
+            let per_branch: Vec<(CharSet, bool)> = branches
+                .iter()
+                .map(|branch| {
+                    let mut cs = CharSet::new();
+                    let is_nullable = compute_expr_first(
+                        branch, &first, &nullable, &name_to_key, &mut cs,
+                    );
+                    (cs, is_nullable)
+                })
+                .collect();
+            branch_firsts.insert(lhs, per_branch);
+        }
+    }
+
+    FirstSets { first, nullable, branch_firsts }
+}
+
+/// A3: Memoized wrapper around `compute_expr_first` for fixed-point iterations.
+///
+/// Caches results by expression pointer identity to avoid recomputing subexpressions
+/// within a single pass of the fixed-point loop. The cache should be cleared between
+/// passes since FIRST sets of nonterminals may have changed.
+fn compute_expr_first_memoized<'a>(
+    expr: &'a Expression<'a>,
+    first_sets: &HashMap<&'a Expression<'a>, CharSet>,
+    nullable_set: &HashSet<&'a Expression<'a>>,
+    name_to_key: &HashMap<&str, &'a Expression<'a>>,
+    out: &mut CharSet,
+    cache: &mut HashMap<*const Expression<'a>, (CharSet, bool)>,
+) -> bool {
+    let ptr = expr as *const Expression<'a>;
+    if let Some((cached_cs, cached_nullable)) = cache.get(&ptr) {
+        out.union(cached_cs);
+        return *cached_nullable;
+    }
+    let mut local_out = CharSet::new();
+    let is_nullable = compute_expr_first(expr, first_sets, nullable_set, name_to_key, &mut local_out);
+    out.union(&local_out);
+    cache.insert(ptr, (local_out, is_nullable));
+    is_nullable
 }
 
 /// Unwrap the `Expression::Rule(rhs, _)` wrapper to get the inner RHS expression.
@@ -688,9 +738,15 @@ pub struct FirstSetConflict {
 
 /// Find FIRST set conflicts in alternation rules.
 ///
-/// For each rule whose RHS is an alternation, computes per-branch FIRST sets
-/// and checks for pairwise overlap. Returns a map from rule name to the list
-/// of conflicts found.
+/// For each rule whose RHS is an alternation, uses pre-computed per-branch FIRST
+/// sets from `first_sets.branch_firsts` (A1) and checks for pairwise overlap.
+/// Returns a map from rule name to the list of conflicts found.
+///
+/// Optimizations:
+/// - A1: Uses cached `branch_firsts` instead of recomputing per-branch FIRST sets.
+/// - A1: Running union — skips pairwise checks for a branch if it is disjoint with
+///   the union of all prior branches.
+/// - A4: Short-circuits if the rule-level FIRST set has `len() <= 1`.
 pub fn find_first_set_conflicts<'a>(
     ast: &'a AST<'a>,
     first_sets: &FirstSets<'a>,
@@ -721,27 +777,56 @@ pub fn find_first_set_conflicts<'a>(
             continue;
         }
 
-        // Compute per-branch FIRST sets.
-        let branch_firsts: Vec<CharSet> = branches
-            .iter()
-            .map(|branch| {
-                let mut cs = CharSet::new();
-                compute_expr_first(
-                    branch,
-                    &first_sets.first,
-                    &first_sets.nullable,
-                    &name_to_key,
-                    &mut cs,
-                );
-                cs
-            })
-            .collect();
+        // A4: Short-circuit — if the rule-level FIRST set has <= 1 characters,
+        // there can be no meaningful conflict (trivially disjoint or single-char).
+        if let Some(rule_first) = first_sets.first.get(lhs) {
+            if rule_first.len() <= 1 {
+                continue;
+            }
+        }
 
-        // Check pairwise disjointness.
+        // A1: Use cached branch FIRST sets if available, otherwise compute.
+        let branch_firsts_vec: Vec<(CharSet, bool)>;
+        let branch_firsts: &[(CharSet, bool)] = if let Some(cached) = first_sets.branch_firsts.get(lhs) {
+            cached
+        } else {
+            // Fallback: compute per-branch FIRST sets.
+            branch_firsts_vec = branches
+                .iter()
+                .map(|branch| {
+                    let mut cs = CharSet::new();
+                    let is_nullable = compute_expr_first(
+                        branch,
+                        &first_sets.first,
+                        &first_sets.nullable,
+                        &name_to_key,
+                        &mut cs,
+                    );
+                    (cs, is_nullable)
+                })
+                .collect();
+            &branch_firsts_vec
+        };
+
+        // Check pairwise disjointness with running union optimization (A1).
         let mut rule_conflicts = Vec::new();
+        let mut union_so_far = CharSet::new();
+
         for i in 0..branch_firsts.len() {
+            let (ref branch_i_first, _) = branch_firsts[i];
+
+            if i > 0 {
+                // A1: Running union — if branch i is disjoint with the union of
+                // all prior branches, skip all pairwise checks for this branch.
+                if branch_i_first.is_disjoint(&union_so_far) {
+                    union_so_far.union(branch_i_first);
+                    continue;
+                }
+            }
+
             for j in (i + 1)..branch_firsts.len() {
-                let overlap = branch_firsts[i].intersection(&branch_firsts[j]);
+                let (ref branch_j_first, _) = branch_firsts[j];
+                let overlap = branch_i_first.intersection(branch_j_first);
                 if !overlap.is_empty() {
                     rule_conflicts.push(FirstSetConflict {
                         branch_a: i,
@@ -750,6 +835,8 @@ pub fn find_first_set_conflicts<'a>(
                     });
                 }
             }
+
+            union_so_far.union(branch_i_first);
         }
 
         if !rule_conflicts.is_empty() {
@@ -1647,6 +1734,7 @@ mod tests {
         let first_sets = FirstSets {
             first: HashMap::new(),
             nullable: HashSet::new(),
+            branch_firsts: HashMap::new(),
         };
 
         let alternatives: Vec<&Expression> = vec![&alt_a, &alt_x];
@@ -1667,6 +1755,7 @@ mod tests {
         let first_sets = FirstSets {
             first: HashMap::new(),
             nullable: HashSet::new(),
+            branch_firsts: HashMap::new(),
         };
 
         let alternatives: Vec<&Expression> = vec![&alt1, &alt2];

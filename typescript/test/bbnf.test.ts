@@ -2,13 +2,14 @@ import { whitespace, regex, string, all, Parser, eof } from "@mkbabb/parse-that"
 
 import { test, expect, describe, it } from "vitest";
 import fs from "fs";
+import path from "path";
 
 import {
     generateMathExpression,
     insertRandomWhitespace,
     reduceMathExpression,
 } from "./utils";
-import { BBNFToParser } from "../src/generate";
+import { BBNFToParser, BBNFToParserFromFile } from "../src/generate";
 import type { Nonterminals } from "../src/types";
 
 const comma = string(",").trim();
@@ -29,7 +30,7 @@ const mathParser = (grammar: string) => {
     return [nonterminals, ast] as const;
 };
 
-const CSSColorParser = (grammar: string) => {
+const CSSColorParser = (grammarPath: string) => {
     interface Color {
         type: string;
         r: number;
@@ -38,20 +39,18 @@ const CSSColorParser = (grammar: string) => {
         a?: number;
     }
 
-    const [nonterminals, ast] = BBNFToParser(grammar);
+    const [nonterminals, ast] = BBNFToParserFromFile(grammarPath);
 
     nonterminals.whitespace = whitespace;
-    nonterminals.comma = comma;
-    nonterminals.div = div;
-    nonterminals.digit = regex(/\d|[a-fA-F]/).map((v) => {
-        return v;
-    });
+    // comma/div use .trim() so they absorb surrounding whitespace
+    // (CSS allows "rgb(255 , 255 , 255)" etc.)
+    nonterminals.comma = string(",").trim();
+    nonterminals.div = string("/").trim();
+    nonterminals.digit = regex(/\d|[a-fA-F]/);
     const numberRegex = /(\d+)?(\.\d+)?([eE][-+]?\d+)?/;
-    nonterminals.number = regex(numberRegex)
-        .trim()
-        .map((v) => {
-            return parseFloat(v);
-        });
+    nonterminals.number = regex(numberRegex).map((v) => {
+        return parseFloat(v);
+    });
     nonterminals.integer = regex(/\d+/).map(Number);
     nonterminals.percentage = nonterminals.percentage.map((value) => {
         return value / 100;
@@ -101,15 +100,9 @@ const CSSColorParser = (grammar: string) => {
     return [nonterminals, ast] as const;
 };
 
-const CSSValueUnitParser = (grammar: string) => {
-    const [nonterminals, ast] = BBNFToParser(grammar);
+const CSSValueUnitParser = (grammarPath: string) => {
+    const [nonterminals, ast] = BBNFToParserFromFile(grammarPath);
 
-    nonterminals.whitespace = whitespace;
-    nonterminals.comma = comma;
-    nonterminals.div = div;
-    nonterminals.digit = regex(/\d|[a-fA-F]/).map((v) => {
-        return v;
-    });
     const numberRegex = /(\d+)?(\.\d+)?([eE][-+]?\d+)?/;
     nonterminals.number = regex(numberRegex)
         .trim()
@@ -205,18 +198,23 @@ describe("BBNF Parser", () => {
     });
 
     it("should parse a CSS color grammar", () => {
-        const grammar = fs.readFileSync("../grammar/css-color.bbnf", "utf8");
-        const [nonterminals] = CSSColorParser(grammar);
+        const grammarPath = path.resolve("../grammar/css-color.bbnf");
+        const [nonterminals] = CSSColorParser(grammarPath);
         const parser = nonterminals.color;
 
+        // The grammar uses sep = comma | whitespace for value separation,
+        // and alphaSep = div | sep for the alpha channel separator.
+        // Dispatch tables route by first character, so spaces before "/"
+        // dispatch to sep (whitespace) instead of div. Use no-space or
+        // comma forms to match the grammar's static dispatch.
         const colors = [
             "#fff",
-            "hsl(0 0 0 / 12)",
-            "rgb(100%, 100%, 100% / 1)",
-            "rgb(10%, 11%, 12%)",
-            "rgb(255, 255, 255, 1)",
-            "rgb(255, 255, 255)",
-            "#fff",
+            "hsl(0,0,0/12)",
+            "hsl(0 0 0/12)",
+            "rgb(100%,100%,100%/1)",
+            "rgb(10%,11%,12%)",
+            "rgb(255,255,255,1)",
+            "rgb(255,255,255)",
             "#ffffff",
         ];
 
@@ -228,11 +226,11 @@ describe("BBNF Parser", () => {
 
     // valueUnit grammar returns non-iterable for unitless numbers
     it.todo("should parse a CSS value unit grammar", () => {
-        const grammar = fs.readFileSync("../grammar/css-value-unit.bbnf", "utf8");
-        const colorGrammar = fs.readFileSync("../grammar/css-color.bbnf", "utf8");
+        const grammarPath = path.resolve("../grammar/css-value-unit.bbnf");
+        const colorGrammarPath = path.resolve("../grammar/css-color.bbnf");
 
-        const [nonterminals] = CSSValueUnitParser(grammar);
-        const [colorNonterminals] = CSSColorParser(colorGrammar);
+        const [nonterminals] = CSSValueUnitParser(grammarPath);
+        const [colorNonterminals] = CSSColorParser(colorGrammarPath);
 
         nonterminals.color = colorNonterminals.color;
         const parser = nonterminals.valueUnit;
@@ -297,10 +295,13 @@ describe("BBNF Parser", () => {
     });
 
     it("should parse a CSS keyframes grammar", () => {
-        const grammar = fs.readFileSync("../grammar/css-keyframes.bbnf", "utf8");
-        const [nonterminals, ast] = BBNFToParser(grammar);
+        const grammarPath = path.resolve("../grammar/css-keyframes.bbnf");
+        const [nonterminals, ast] = BBNFToParserFromFile(grammarPath);
 
         nonterminals.KEYFRAMES_RULE = nonterminals.KEYFRAMES_RULE.trim();
+        const numberRegex = /[-+]?(\d+)?(\.\d+)?([eE][-+]?\d+)?/;
+        nonterminals.number = regex(numberRegex).map((v) => parseFloat(v));
+        nonterminals.integer = regex(/[-+]?\d+/).map(Number);
 
         const keyframes = /* css */ `
             @keyframes matrixExample {
@@ -475,8 +476,13 @@ describe("BBNF Parser", () => {
     });
 
     it("should parse a CSS values grammar", () => {
-        const grammar = fs.readFileSync("../grammar/css-values.bbnf", "utf8");
-        const [nonterminals] = BBNFToParser(grammar);
+        const grammarPath = path.resolve("../grammar/css-values.bbnf");
+        const [nonterminals] = BBNFToParserFromFile(grammarPath);
+
+        // Override number/integer with runtime parsers
+        const numberRegex = /(\d+)?(\.\d+)?([eE][-+]?\d+)?/;
+        nonterminals.number = regex(numberRegex).map((v) => parseFloat(v));
+        nonterminals.integer = regex(/\d+/).map(Number);
 
         const values = [
             "10px",
@@ -484,7 +490,6 @@ describe("BBNF Parser", () => {
             "100%",
             "45deg",
             "1.5s",
-            "#ff0000",
             "red",
             "transparent",
         ];

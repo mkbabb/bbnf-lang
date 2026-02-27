@@ -58,7 +58,20 @@ rule = expression ;                             (* production rule *)
 ## CSS Grammar Dependency Chain
 
 ```
-css-value-unit.bbnf  (base: number, integer, units)
+css-value-unit.bbnf  ← canonical base (numbers, units, dimensions)
       ↑
-css-color.bbnf       (imports { number, integer })
+css-color.bbnf       ← glob imports css-value-unit
+      ↑
+css-values.bbnf      ← glob imports css-value-unit + css-color
+css-keyframes.bbnf   ← glob imports css-value-unit
+css-selectors.bbnf   ← standalone (no imports)
 ```
+
+**Important:** Use glob imports (not selective) for CSS grammars — selective
+imports don't bring transitive dependencies (e.g., `percentage` needs
+`percentageUnit`).
+
+**Dispatch table caveat:** `@import` directives must appear before any comments
+in a `.bbnf` file (TS parser limitation). Separator rules must have disjoint
+static FIRST sets for correct dispatch; runtime `.trim()` overrides that expand
+a branch's effective FIRST set will break dispatch routing.

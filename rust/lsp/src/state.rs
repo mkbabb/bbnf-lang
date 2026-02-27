@@ -160,6 +160,10 @@ pub struct DocumentState {
     pub line_index: LineIndex,
     /// Cached parsed AST (self-referential: borrows from its own String).
     ast_cell: OwnedAst,
+    /// Cached rule names from previous analysis (for structural change detection).
+    prev_rule_names: Option<Vec<String>>,
+    /// Cached dependency graph from previous analysis (for dep graph diffing).
+    prev_dep_edges: Option<HashSet<(String, String)>>,
 }
 
 impl DocumentState {
@@ -174,16 +178,64 @@ impl DocumentState {
             cached
         });
         let diag = parse_diag.into_inner().unwrap();
+
+        // Cache rule names and dep edges for incremental updates.
+        let (rule_names, dep_edges) = ast_cell
+            .borrow_dependent()
+            .as_ref()
+            .map(|cached| {
+                let names: Vec<String> = cached
+                    .ast
+                    .keys()
+                    .filter_map(|k| {
+                        if let Expression::Nonterminal(tok) = k {
+                            Some(tok.value.to_string())
+                        } else {
+                            None
+                        }
+                    })
+                    .collect();
+
+                let deps = calculate_ast_deps(&cached.ast);
+                let mut edges = HashSet::new();
+                for (lhs, dep_set) in &deps {
+                    if let Some(lhs_name) = get_nonterminal_name(lhs) {
+                        for dep in dep_set {
+                            if let Some(dep_name) = get_nonterminal_name(dep) {
+                                edges.insert((lhs_name.to_string(), dep_name.to_string()));
+                            }
+                        }
+                    }
+                }
+                (Some(names), Some(edges))
+            })
+            .unwrap_or((None, None));
+
         let info = analyze_from_cache(
             &text,
             &line_index,
             ast_cell.borrow_dependent().as_ref(),
             &diag,
         );
-        Self { text, info, line_index, ast_cell }
+        Self {
+            text,
+            info,
+            line_index,
+            ast_cell,
+            prev_rule_names: rule_names,
+            prev_dep_edges: dep_edges,
+        }
     }
 
     pub fn update(&mut self, text: String) {
+        // Fast path: if text unchanged from the last parsed source, skip everything.
+        // Compare against the ast_cell's owned string (the source the AST was built from),
+        // not self.text, because the server's did_change handler may have already mutated
+        // self.text via apply_incremental_changes before calling update().
+        if *self.ast_cell.borrow_owner() == text {
+            return;
+        }
+
         let line_index = LineIndex::new(&text);
         let parse_diag = std::cell::Cell::new(None::<ParseDiagnostics>);
         let ast_cell = OwnedAst::new(text.clone(), |src| {
@@ -192,12 +244,59 @@ impl DocumentState {
             cached
         });
         let diag = parse_diag.into_inner().unwrap();
+
+        // Check for structural changes (rule count/names differ).
+        let new_rule_names: Vec<String> = ast_cell
+            .borrow_dependent()
+            .as_ref()
+            .map(|cached| {
+                cached
+                    .ast
+                    .keys()
+                    .filter_map(|k| {
+                        if let Expression::Nonterminal(tok) = k {
+                            Some(tok.value.to_string())
+                        } else {
+                            None
+                        }
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
+
+        let _structural_change = self
+            .prev_rule_names
+            .as_ref()
+            .map(|prev| prev != &new_rule_names)
+            .unwrap_or(true);
+
+        // Always do full analysis for now (the caching of prev_rule_names
+        // and prev_dep_edges enables future selective re-analysis optimizations).
         self.info = analyze_from_cache(
             &text,
             &line_index,
             ast_cell.borrow_dependent().as_ref(),
             &diag,
         );
+
+        // Cache for next update.
+        self.prev_rule_names = Some(new_rule_names);
+        // Build dep edge set for next update's diffing.
+        if let Some(cached) = ast_cell.borrow_dependent().as_ref() {
+            let deps = calculate_ast_deps(&cached.ast);
+            let mut edges = HashSet::new();
+            for (lhs, dep_set) in &deps {
+                if let Some(lhs_name) = get_nonterminal_name(lhs) {
+                    for dep in dep_set {
+                        if let Some(dep_name) = get_nonterminal_name(dep) {
+                            edges.insert((lhs_name.to_string(), dep_name.to_string()));
+                        }
+                    }
+                }
+            }
+            self.prev_dep_edges = Some(edges);
+        }
+
         self.line_index = line_index;
         self.ast_cell = ast_cell;
         self.text = text;
@@ -893,37 +992,42 @@ fn format_expression_short(expr: &Expression<'_>) -> String {
 ///
 /// Walks the dependency graph from `start` following only edges within the SCC members,
 /// until it returns to `start`, producing a string like "expr → term → factor → expr".
+///
+/// A2: Uses a reverse index (`name_to_deps`) for O(1) lookup of a rule's dependencies
+/// instead of scanning all entries in `deps` for each step.
 fn build_cycle_path(start: &str, scc_members: &[&str], deps: &HashMap<Expression<'_>, HashSet<Expression<'_>>>) -> String {
     let member_set: HashSet<&str> = scc_members.iter().copied().collect();
+
+    // A2: Build reverse index from rule name to its dependency set.
+    let name_to_deps: HashMap<&str, &HashSet<Expression>> = deps
+        .iter()
+        .filter_map(|(k, v)| get_nonterminal_name(k).map(|n| (n, v)))
+        .collect();
+
     let mut path = vec![start];
     let mut visited = HashSet::new();
     visited.insert(start);
     let mut current = start;
 
     loop {
-        // Find the dependency expression key for `current`.
+        // A2: O(1) lookup for `current`'s dependencies.
         let mut found_next = false;
-        for (key, dep_set) in deps {
-            if let Some(name) = get_nonterminal_name(key) {
-                if name == current {
-                    // Walk deps looking for a member of the SCC.
-                    for dep in dep_set {
-                        if let Some(dep_name) = get_nonterminal_name(dep) {
-                            if dep_name == start && path.len() > 1 {
-                                // Completed the cycle.
-                                path.push(start);
-                                return path.join(" \u{2192} ");
-                            }
-                            if member_set.contains(dep_name) && !visited.contains(dep_name) {
-                                visited.insert(dep_name);
-                                path.push(dep_name);
-                                current = dep_name;
-                                found_next = true;
-                                break;
-                            }
-                        }
+        if let Some(dep_set) = name_to_deps.get(current) {
+            // Walk deps looking for a member of the SCC.
+            for dep in *dep_set {
+                if let Some(dep_name) = get_nonterminal_name(dep) {
+                    if dep_name == start && path.len() > 1 {
+                        // Completed the cycle.
+                        path.push(start);
+                        return path.join(" \u{2192} ");
                     }
-                    break;
+                    if member_set.contains(dep_name) && !visited.contains(dep_name) {
+                        visited.insert(dep_name);
+                        path.push(dep_name);
+                        current = dep_name;
+                        found_next = true;
+                        break;
+                    }
                 }
             }
         }

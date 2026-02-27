@@ -1,60 +1,62 @@
-// CSS Values and Units grammar
+@import "css-value-unit.bbnf" ;
+@import "css-color.bbnf" ;
 
-// Numbers
-integer = /[-+]?\d+/ ;
-number = /[-+]?(\d+)?(\.\d+)?([eE][-+]?\d+)?/ ;
+// CSS Values and Units Level 4 — composite value grammar.
+// Imports numeric primitives and color values from their canonical grammars.
 
-// Length units
-absoluteLengthUnit = "px" | "cm" | "mm" | "Q" | "in" | "pc" | "pt" ;
-relativeLengthUnit = "em" | "ex" | "ch" | "rem" | "lh" | "rlh"
-                   | "vw" | "vh" | "vmin" | "vmax"
-                   | "svw" | "svh" | "dvw" | "dvh"
-                   | "fr" ;
-lengthUnit = absoluteLengthUnit | relativeLengthUnit ;
-length = number, lengthUnit ;
+// --- Identifiers ---
 
-// Angle units
-angleUnit = "deg" | "rad" | "grad" | "turn" ;
-angle = number, angleUnit ;
+ident    = /[a-zA-Z_][\w-]*/ ;
+dashed   = /--[\w-]+/ ;
+string   = /"(?:[^"\\]|\\[\s\S])*"/ | /'(?:[^'\\]|\\[\s\S])*'/ ;
 
-// Time units
-timeUnit = "ms" | "s" ;
-time = number, timeUnit ;
+// --- Dimension (any dimensioned value) ---
 
-// Resolution units
-resolutionUnit = "dpi" | "dpcm" | "dppx" ;
-resolution = number, resolutionUnit ;
+dimension = length | angle | time | frequency | resolution | flex | percentage ;
 
-// Percentage
-percentage = number, "%" ;
+// --- calc() and math functions (CSS Values Level 4 §10) ---
+// Recursive: calc() can contain nested calc(), min(), max(), clamp().
 
-// Named colors (subset)
-namedColor = "transparent" | "currentcolor"
-           | "black" | "white" | "red" | "green" | "blue"
-           | "yellow" | "cyan" | "magenta" | "orange" | "purple"
-           | "pink" | "gray" | "grey" ;
+mathOperator = "+" | "-" | "*" | "/" ;
 
-// Hex color
-hexColor = /#[0-9a-fA-F]{3,8}/ ;
+mathValue = calcFunction
+          | minFunction
+          | maxFunction
+          | clampFunction
+          | dimension
+          | number
+          | "(" >> mathExpr << ")" ;
 
-// RGB / HSL function arguments
-colorArgs = number, ( /\s*[,\/]\s*/ | /\s+/ ), number, ( /\s*[,\/]\s*/ | /\s+/ ), number, ( ( /\s*[,\/]\s*/ | /\s+/ ), number )? ;
-rgbFunction = ( "rgb" | "rgba" ), "(", colorArgs, ")" ;
-hslFunction = ( "hsl" | "hsla" ), "(", colorArgs, ")" ;
+mathProduct = mathValue , ( ("*" | "/") >> mathValue ) * ;
+mathExpr    = mathProduct , ( ("+" | "-") >> mathProduct ) * ;
 
-// Color value
-color = rgbFunction | hslFunction | hexColor | namedColor ;
+calcFunction  = "calc(" >> mathExpr << ")" ;
+minFunction   = "min(" >> (mathExpr , ("," >> mathExpr) +) << ")" ;
+maxFunction   = "max(" >> (mathExpr , ("," >> mathExpr) +) << ")" ;
+clampFunction = "clamp(" >> mathExpr , "," >> mathExpr , "," >> mathExpr << ")" ;
 
-// calc() function
-calcExpr = /[^)]+/ ;
-calcFunction = "calc(", calcExpr, ")" ;
+// --- var() and env() functions ---
 
-// var() function
-varFallback = /[^)]+/ ;
-varFunction = "var(", /--[\w-]+/, ( ",", varFallback )?, ")" ;
+varFallback = value , ("," >> value) * ;
+varFunction = "var(" >> dashed , ("," >> varFallback) ? << ")" ;
+envFunction = "env(" >> ident , ("," >> varFallback) ? << ")" ;
 
-// Dimension (generic)
-dimension = length | angle | time | resolution | percentage ;
+// --- url() function ---
 
-// Generic value
-value = calcFunction | varFunction | color | dimension | number | /[\w-]+/ ;
+urlFunction = "url(" >> (string | /[^)"'\s]+/) << ")" ;
+
+// --- Generic value ---
+// Ordered for dispatch: longest-prefix / most-specific first.
+
+value = calcFunction
+      | minFunction
+      | maxFunction
+      | clampFunction
+      | varFunction
+      | envFunction
+      | urlFunction
+      | color
+      | dimension
+      | number
+      | string
+      | ident ;

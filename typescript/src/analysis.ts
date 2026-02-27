@@ -152,10 +152,123 @@ export interface AnalysisCache {
     cyclicRules: Set<string>;
     topoOrder: string[];
     refCounts: Map<string, number>;
+    /** Alias map: alias rule name → target rule name. */
+    aliases: Map<string, string>;
+    /** Rules that are pure alternations of nonterminals (transparent). */
+    transparentAlternations: Set<string>;
+    /** Rules whose transitive deps have no cycles or diamonds. */
+    acyclicRules: Set<string>;
+    /** Rules that are NOT acyclic (cyclic or diamond deps). */
+    nonAcyclicRules: Set<string>;
 }
 
 /**
- * Full grammar analysis: dep graphs, Tarjan's SCC, topological order, ref counts.
+ * Find rules whose expression is a bare nonterminal reference (possibly
+ * wrapped in group nodes). Returns a map from alias name → target name.
+ *
+ * Cyclic rules are excluded: if A = B and B = A, neither is an alias.
+ */
+export function findAliases(ast: AST, cyclicRules: Set<string>): Map<string, string> {
+    const aliases = new Map<string, string>();
+
+    for (const [name, rule] of ast) {
+        if (cyclicRules.has(name)) continue;
+
+        let expr: Expression = rule.expression;
+        // Unwrap groups
+        while (expr.type === "group") expr = expr.value as Expression;
+
+        if (expr.type === "nonterminal") {
+            const target = expr.value as string;
+            if (ast.has(target)) {
+                aliases.set(name, target);
+            }
+        }
+    }
+
+    return aliases;
+}
+
+/**
+ * Find rules that are pure alternations of nonterminals.
+ *
+ * A rule is "transparent" if:
+ *   - its body is an Alternation
+ *   - every branch is a Nonterminal
+ *   - the rule is cyclic (non-acyclic rules benefit from transparency in codegen)
+ */
+export function findTransparentAlternations(
+    ast: AST,
+    cyclicRules: Set<string>,
+): Set<string> {
+    const transparent = new Set<string>();
+
+    for (const [name, rule] of ast) {
+        // Only cyclic rules benefit from transparency.
+        if (!cyclicRules.has(name)) continue;
+
+        const expr = rule.expression;
+        if (expr.type !== "alternation") continue;
+
+        const branches = expr.value as Expression[];
+        if (branches.every((b) => b.type === "nonterminal")) {
+            transparent.add(name);
+        }
+    }
+
+    return transparent;
+}
+
+/**
+ * Classify rules as acyclic or non-acyclic based on their transitive
+ * dependency subgraph.
+ *
+ * A rule is "non-acyclic" if ANY of:
+ *   1. It is in a cyclic SCC
+ *   2. It transitively depends on a cyclic SCC
+ *   3. Its dependency subgraph has diamond (convergent) paths
+ *
+ * Replicates the Rust `calculate_acyclic_deps_scc` semantics.
+ */
+export function classifyAcyclicDeps(
+    depGraph: Map<string, Set<string>>,
+): { acyclic: Set<string>; nonAcyclic: Set<string> } {
+    const acyclic = new Set<string>();
+    const nonAcyclic = new Set<string>();
+
+    for (const name of depGraph.keys()) {
+        const visited = new Set<string>();
+        if (isAcyclicDfs(name, depGraph, visited)) {
+            acyclic.add(name);
+        } else {
+            nonAcyclic.add(name);
+        }
+    }
+
+    return { acyclic, nonAcyclic };
+}
+
+function isAcyclicDfs(
+    name: string,
+    depGraph: Map<string, Set<string>>,
+    visited: Set<string>,
+): boolean {
+    if (visited.has(name)) return false; // cycle or diamond
+    visited.add(name);
+
+    const deps = depGraph.get(name);
+    if (deps) {
+        for (const dep of deps) {
+            if (!depGraph.has(dep)) continue; // external ref
+            if (!isAcyclicDfs(dep, depGraph, visited)) return false;
+        }
+    }
+    return true;
+}
+
+/**
+ * Full grammar analysis: dep graphs, Tarjan's SCC, topological order, ref counts,
+ * aliases, transparent alternations, and acyclic dependency classification.
  */
 export function analyzeGrammar(ast: AST): AnalysisCache {
     const { depGraph, rdepGraph } = buildDepGraphs(ast);
@@ -171,6 +284,10 @@ export function analyzeGrammar(ast: AST): AnalysisCache {
     }
 
     const refCounts = computeRefCounts(ast);
+    const aliases = findAliases(ast, cyclicRules);
+    const transparentAlternations = findTransparentAlternations(ast, cyclicRules);
+    const { acyclic: acyclicRules, nonAcyclic: nonAcyclicRules } =
+        classifyAcyclicDeps(depGraph);
 
     return {
         depGraph,
@@ -180,5 +297,9 @@ export function analyzeGrammar(ast: AST): AnalysisCache {
         cyclicRules,
         topoOrder,
         refCounts,
+        aliases,
+        transparentAlternations,
+        acyclicRules,
+        nonAcyclicRules,
     };
 }

@@ -19,6 +19,7 @@ import { analyzeGrammar } from "./analysis.js";
 import type { AnalysisCache } from "./analysis.js";
 import { computeFirstSets, buildDispatchTable } from "./first-sets.js";
 import type { FirstNullable } from "./first-sets.js";
+import { loadModuleGraphSync, mergeModuleAST } from "./imports.js";
 
 function escapeRegex(s: string): string {
     return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -536,11 +537,63 @@ export function BBNFToParser(
 
     dedupGroups(ast);
 
-    const finalAst = optimizeGraph ? removeAllLeftRecursion(ast) : ast;
+    const analysis = analyzeGrammar(ast);
+    const finalAst = optimizeGraph ? removeAllLeftRecursion(ast, analysis) : ast;
 
-    // Analyze the grammar for optimal generation order + FIRST sets
-    const analysis = analyzeGrammar(finalAst);
-    const firstNullable = computeFirstSets(finalAst, analysis);
-    const nonterminals = ASTToParser(finalAst, analysis, firstNullable);
+    // Re-analyze if left recursion changed the AST
+    const finalAnalysis = finalAst !== ast ? analyzeGrammar(finalAst) : analysis;
+    const firstNullable = computeFirstSets(finalAst, finalAnalysis);
+    const nonterminals = ASTToParser(finalAst, finalAnalysis, firstNullable);
+    return [nonterminals, finalAst] as const;
+}
+
+/**
+ * Parse a BBNF grammar from a file path, resolving `@import` directives.
+ *
+ * This is the preferred entry point for grammars that use imports.
+ * It loads the full module graph, merges imported rules, then compiles
+ * to executable parsers.
+ *
+ * @param entryPath - Path to the main `.bbnf` file.
+ * @param readFileSync - Optional custom file reader (for testing/browser use).
+ * @param optimizeGraph - If true, apply left-recursion elimination.
+ * @returns [nonterminals, ast] — the compiled parser map and final AST.
+ */
+export function BBNFToParserFromFile(
+    entryPath: string,
+    readFileSync?: (path: string) => string,
+    optimizeGraph: boolean = false,
+) {
+    const registry = loadModuleGraphSync(entryPath, readFileSync);
+
+    if (registry.errors.length > 0) {
+        const errorMessages = registry.errors
+            .map((e) => {
+                switch (e.type) {
+                    case "FileNotFound":
+                        return `File not found: ${e.path} (imported from ${e.importedFrom})`;
+                    case "CircularImport":
+                        return `Circular import: ${e.path} (chain: ${e.chain.join(" → ")})`;
+                    case "MissingRule":
+                        return `Rule '${e.ruleName}' not found in ${e.path}`;
+                    case "NameConflict":
+                        return `Name conflict: '${e.ruleName}' from both ${e.sourceA} and ${e.sourceB}`;
+                    case "ParseError":
+                        return `Parse error in ${e.path}: ${e.message}`;
+                }
+            })
+            .join("\n");
+        throw new Error(`Import resolution errors:\n${errorMessages}`);
+    }
+
+    const ast = mergeModuleAST(registry, entryPath);
+    dedupGroups(ast);
+
+    const analysis = analyzeGrammar(ast);
+    const finalAst = optimizeGraph ? removeAllLeftRecursion(ast, analysis) : ast;
+
+    const finalAnalysis = finalAst !== ast ? analyzeGrammar(finalAst) : analysis;
+    const firstNullable = computeFirstSets(finalAst, finalAnalysis);
+    const nonterminals = ASTToParser(finalAst, finalAnalysis, firstNullable);
     return [nonterminals, finalAst] as const;
 }

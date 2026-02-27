@@ -1254,3 +1254,137 @@ value = a | b;"#;
 
     shutdown(&mut stdin, &mut stdout, child);
 }
+
+// ───── Enhanced diagnostics tests ─────────────────────────────────────────
+
+#[test]
+fn test_diagnostics_first_set_conflict() {
+    let (mut stdin, mut stdout, child) = start_server();
+    initialize(&mut stdin, &mut stdout);
+
+    // Two alternatives both start with a digit.
+    let grammar = "value = integer | decimal;\ninteger = /[0-9]+/;\ndecimal = /[0-9]+/, \".\", /[0-9]+/;";
+    let diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+    eprintln!("FIRST conflict diagnostics: {}", diag);
+    assert!(
+        diag.contains("ambiguous FIRST sets"),
+        "Expected FIRST set conflict diagnostic, got: {}",
+        diag
+    );
+
+    shutdown(&mut stdin, &mut stdout, child);
+}
+
+#[test]
+fn test_diagnostics_no_first_set_conflict() {
+    let (mut stdin, mut stdout, child) = start_server();
+    initialize(&mut stdin, &mut stdout);
+
+    // Two alternatives with disjoint FIRST sets.
+    let grammar = "value = number | string;\nnumber = /[0-9]+/;\nstring = /\"[^\"]*\"/;";
+    let diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+    eprintln!("No FIRST conflict diagnostics: {}", diag);
+    assert!(
+        !diag.contains("ambiguous FIRST sets"),
+        "Expected no FIRST set conflict, got: {}",
+        diag
+    );
+
+    shutdown(&mut stdin, &mut stdout, child);
+}
+
+#[test]
+fn test_diagnostics_cycle_path() {
+    let (mut stdin, mut stdout, child) = start_server();
+    initialize(&mut stdin, &mut stdout);
+
+    // Direct left recursion.
+    let grammar = "expr = expr, \"+\", term | term;\nterm = /[0-9]+/;";
+    let diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+    eprintln!("Cycle path diagnostics: {}", diag);
+    // Should contain the cycle path arrow notation (→ in UTF-8).
+    assert!(
+        diag.contains("\u{2192}"),
+        "Expected cycle path with arrow in diagnostic, got: {}",
+        diag
+    );
+    assert!(
+        diag.contains("participates in a cycle"),
+        "Expected cycle diagnostic, got: {}",
+        diag
+    );
+
+    shutdown(&mut stdin, &mut stdout, child);
+}
+
+#[test]
+fn test_diagnostics_alias_hint() {
+    let (mut stdin, mut stdout, child) = start_server();
+    initialize(&mut stdin, &mut stdout);
+
+    // Rule that is an alias of another.
+    let grammar = "value = number;\nnumber = /[0-9]+/;\nint = number;";
+    let diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+    eprintln!("Alias hint diagnostics: {}", diag);
+    assert!(
+        diag.contains("alias"),
+        "Expected alias hint diagnostic, got: {}",
+        diag
+    );
+    assert!(
+        diag.contains("int"),
+        "Expected alias name 'int' in diagnostic, got: {}",
+        diag
+    );
+
+    shutdown(&mut stdin, &mut stdout, child);
+}
+
+#[test]
+fn test_diagnostics_unreachable_rule() {
+    let (mut stdin, mut stdout, child) = start_server();
+    initialize(&mut stdin, &mut stdout);
+
+    // helperA and helperB reference each other but are unreachable from root.
+    let grammar = "value = number;\nnumber = /[0-9]+/;\nhelperA = helperB;\nhelperB = helperA;";
+    let diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+    eprintln!("Unreachable rule diagnostics: {}", diag);
+    assert!(
+        diag.contains("unreachable"),
+        "Expected unreachable rule diagnostic, got: {}",
+        diag
+    );
+
+    shutdown(&mut stdin, &mut stdout, child);
+}
+
+#[test]
+fn test_hover_enhanced_info() {
+    let (mut stdin, mut stdout, child) = start_server();
+    initialize(&mut stdin, &mut stdout);
+
+    let grammar = "number = /[0-9]+/;\nvalue = number;";
+    let _diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+
+    // Hover on "number" definition at line 0, char 2.
+    send_lsp(
+        &mut stdin,
+        r#"{"jsonrpc":"2.0","id":10,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///test.bbnf"},"position":{"line":0,"character":2}}}"#,
+    );
+    let resp = read_response(&mut stdout, 10);
+    eprintln!("Enhanced hover response: {}", resp);
+    // Should contain FIRST set info.
+    assert!(
+        resp.contains("FIRST"),
+        "Expected FIRST set in hover, got: {}",
+        resp
+    );
+    // Should contain nullable info.
+    assert!(
+        resp.contains("Nullable"),
+        "Expected nullable info in hover, got: {}",
+        resp
+    );
+
+    shutdown(&mut stdin, &mut stdout, child);
+}

@@ -7,24 +7,46 @@ Core BBNF library: grammar parsing, static analysis, and Rust code generation.
 ```
 bbnf/
 ├── Cargo.toml
-└── src/
-    ├── lib.rs          Re-exports all modules
-    ├── grammar.rs      BBNF parser → AST (523 lines)
-    ├── analysis.rs     SCC, FIRST sets, dispatch tables (1675 lines)
-    ├── generate.rs     Type inference + Rust parser codegen (1665 lines)
-    ├── optimize.rs     Direct left-recursion elimination (218 lines)
-    └── imports.rs      Module system: @import resolution (511 lines)
+├── src/
+│   ├── lib.rs            Re-exports all modules
+│   ├── types.rs          Expression, Token, AST, Comments, ImportDirective, ParsedGrammar
+│   ├── grammar.rs        BBNF parser combinators (BBNFGrammar)
+│   ├── analysis/
+│   │   ├── mod.rs        Re-exports
+│   │   ├── deps.rs       Dependencies type, calculate_ast_deps, traverse_ast
+│   │   ├── scc.rs        Tarjan SCC, topological sort, acyclic/non-acyclic classification
+│   │   ├── charset.rs    CharSet (128-bit ASCII bitset)
+│   │   ├── first_sets.rs FIRST set computation (fixed-point iteration)
+│   │   ├── regex_first.rs regex_first_chars + helpers
+│   │   ├── dispatch.rs   DispatchTable, FIRST set conflict detection
+│   │   └── metadata.rs   Ref counts, aliases, transparent alternations, span-eligibility
+│   ├── generate/
+│   │   ├── mod.rs        Re-exports + orchestrator
+│   │   ├── types.rs      ParserAttributes, GeneratedNonterminalParser, caches
+│   │   ├── type_inference.rs  Expression → syn::Type
+│   │   ├── patterns.rs   regex coalesce, sep_by, wrapped, any_span detection
+│   │   └── codegen.rs    Expression → TokenStream parser synthesis
+│   ├── optimize.rs       Direct left-recursion elimination
+│   └── imports.rs        Module system: @import resolution, DFS loader
+└── tests/
+    ├── common/mod.rs     Shared helpers: nt(), lit()
+    ├── analysis.rs       CharSet, regex_first, Tarjan SCC, ref counts, dispatch tables
+    ├── optimize.rs       Left-recursion elimination
+    └── imports.rs        Module graph loading (tempfile-based)
 ```
 
 ## Key Types
 
 - **`Expression<'a>`** — AST node enum (25+ variants): Literal, Regex, Nonterminal, Concatenation, Alternation, Skip, Next, Many, etc.
-- **`Token<'a, T>`** — Value + Span + optional comments.
+- **`Token<'a, T>`** — Value + Span + optional comments. `Token::inner()` returns `&T`.
 - **`AST<'a>`** — `IndexMap<Expression, Expression>`. Rule LHS → RHS, insertion-ordered.
 - **`ParsedGrammar<'a>`** — Imports + AST.
 - **`ImportDirective<'a>`** — Path, span, optional selective items.
 
 ## Modules
+
+### types.rs — AST Types
+All AST node types, `Token` struct (with `inner()` accessor), `Comment`, `Comments`, `PartialEq`/`Hash` impls. Separated from grammar.rs to break circular dependencies.
 
 ### grammar.rs — Parser
 Recursive descent via `parse_that` combinators. Operator precedence (low→high):
@@ -32,24 +54,22 @@ alternation `|`, concatenation `,`, skip/next `<<`/`>>`, minus `-`, quantifiers 
 
 Entry points: `BBNFGrammar::grammar()`, `BBNFGrammar::grammar_with_imports()`.
 
-### analysis.rs — Static Analysis
-1. **Tarjan SCC** — O(V+E) cycle detection. `SccResult` with reverse-topological ordering.
-2. **Topological sort** — Kahn's algorithm on SCC condensation DAG.
-3. **CharSet** — 128-bit ASCII bitset (`[u32; 4]`). O(1) insert/lookup/union/disjointness.
-4. **FIRST sets** — Fixed-point iteration. Acyclic rules: single pass. Cyclic SCCs: iterate until stable.
-5. **Dispatch tables** — `[i8; 128]` byte→branch mapping. Built only when all alternatives have disjoint, non-empty FIRST sets and are non-nullable.
-6. **Reference counts, aliases, transparent alternations, span-eligible rules** — codegen optimization metadata.
+### analysis/ — Static Analysis
+- **deps.rs**: Dependency graph construction (`calculate_ast_deps`), AST traversal (`traverse_ast`).
+- **scc.rs**: Tarjan SCC — O(V+E) cycle detection. `SccResult` with reverse-topological ordering. Kahn's algorithm on SCC condensation DAG.
+- **charset.rs**: 128-bit ASCII bitset (`[u32; 4]`). O(1) insert/lookup/union/disjointness.
+- **first_sets.rs**: Fixed-point iteration. Acyclic rules: single pass. Cyclic SCCs: iterate until stable.
+- **regex_first.rs**: Extract FIRST characters from regex patterns.
+- **dispatch.rs**: `[i8; 128]` byte→branch mapping. Built only when all alternatives have disjoint, non-empty FIRST sets and are non-nullable. FIRST set conflict detection.
+- **metadata.rs**: Reference counts, aliases, transparent alternations, span-eligible rules — codegen optimization metadata.
 
-### generate.rs — Code Generation
+### generate/ — Code Generation
 Emits `proc_macro2::TokenStream` for Rust parser methods.
 
-Key phases:
-- Type inference: Expression → `syn::Type` (Span, Option, Vec, tuple, Box<Enum>).
-- Parser synthesis: Expression → combinator calls (string, regex, then, one_of, lazy, etc.).
-- Dispatch table codegen: `match byte { ... }` for disjoint alternations.
-- Span coalescing: consecutive Span types merge into single Span.
-- JSON fast-paths: `sp_json_string_quoted()`, `sp_json_number()` for known regex patterns.
-- Regex coalescing: `literal >> many(regex) << literal` fused to single `sp_regex()`.
+- **types.rs**: `ParserAttributes`, `GeneratedNonterminalParser`, cache types, `DEFAULT_PARSERS`.
+- **type_inference.rs**: Expression → `syn::Type` (Span, Option, Vec, tuple, Box<Enum>).
+- **patterns.rs**: Pattern recognition — regex coalescing, sepBy detection, wrap detection, JSON fast-paths.
+- **codegen.rs**: Expression → combinator calls (string, regex, then, one_of, lazy, etc.). Dispatch table codegen. Span coalescing.
 
 Acyclic rules inline up to a depth limit. Non-acyclic rules wrapped in `lazy(|| ...)`.
 

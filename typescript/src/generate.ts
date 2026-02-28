@@ -12,85 +12,15 @@ import {
     createParserContext,
 } from "@mkbabb/parse-that";
 import type { ParserState } from "@mkbabb/parse-that";
-import type { Expression, Nonterminals, AST, ProductionRule, ParsedGrammar } from "./types.js";
-import { BBNFGrammar } from "./grammar.js";
+import type { Expression, Nonterminals, AST } from "./types.js";
 import { removeAllLeftRecursion } from "./optimize.js";
-import { analyzeGrammar } from "./analysis.js";
-import type { AnalysisCache } from "./analysis.js";
-import { computeFirstSets, buildDispatchTable } from "./first-sets.js";
-import type { FirstNullable } from "./first-sets.js";
+import { analyzeGrammar, computeFirstSets, buildDispatchTable, dedupGroups } from "./analysis/index.js";
+import type { AnalysisCache, FirstNullable } from "./analysis/index.js";
+import { BBNFToAST } from "./parse.js";
 import { loadModuleGraphSync, mergeModuleAST } from "./imports.js";
 
 function escapeRegex(s: string): string {
     return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-export function BBNFToAST(input: string) {
-    const parser = new BBNFGrammar().grammar().eof();
-    const parsed = parser.parse(input);
-
-    if (!parsed) {
-        return [parser] as const;
-    }
-
-    const ast = (parsed as ProductionRule[]).reduce(
-        (acc, productionRule) => {
-            return acc.set(productionRule.name.value, productionRule);
-        },
-        new Map<string, ProductionRule>(),
-    ) as AST;
-
-    return [parser, ast] as const;
-}
-
-/**
- * Parse a BBNF grammar that may contain `@import` directives.
- * Returns the parsed grammar with imports and rules separated.
- */
-export function BBNFToASTWithImports(input: string) {
-    const parser = new BBNFGrammar().grammarWithImports().eof();
-    const parsed = parser.parse(input);
-
-    if (!parsed) {
-        return [parser] as const;
-    }
-
-    const { imports, rules } = parsed as { imports: any[]; rules: ProductionRule[] };
-
-    const ast = rules.reduce(
-        (acc, productionRule) => {
-            return acc.set(productionRule.name.value, productionRule);
-        },
-        new Map<string, ProductionRule>(),
-    ) as AST;
-
-    return [parser, { imports, rules: ast } as ParsedGrammar] as const;
-}
-
-/**
- * Parse multiple BBNF source files and merge their rules into a single AST.
- *
- * `files` is a Map from filename/path to source text.
- * Rules from later files override earlier ones with the same name.
- * Import directives in each file are resolved against the provided files map.
- */
-export function BBNFToASTFromFiles(files: Map<string, string>): ParsedGrammar {
-    const allImports: ParsedGrammar["imports"] = [];
-    const mergedAST = new Map<string, ProductionRule>() as AST;
-
-    for (const [filename, source] of files) {
-        const result = BBNFToASTWithImports(source);
-        if (result.length < 2 || !result[1]) {
-            throw new Error(`Failed to parse grammar: ${filename}`);
-        }
-        const parsed = result[1];
-        allImports.push(...parsed.imports);
-        for (const [name, rule] of parsed.rules) {
-            mergedAST.set(name, rule);
-        }
-    }
-
-    return { imports: allImports, rules: mergedAST };
 }
 
 export function ASTToParser(
@@ -464,65 +394,6 @@ export function ASTToParser(
     }
 
     return nonterminals;
-}
-
-export function traverseAST(
-    ast: AST,
-    callback: (
-        node: Expression,
-        parentNode?: Expression,
-    ) => Expression | undefined,
-) {
-    const recurse = (node: Expression, parentNode?: Expression) => {
-        if (!node?.type) return;
-
-        node = callback(node, parentNode) ?? node;
-        parentNode = node;
-
-        if (node?.value instanceof Array) {
-            for (let i = node.value.length - 1; i >= 0; i--) {
-                recurse(node.value[i] as Expression, parentNode);
-            }
-        } else if (node?.value && typeof node.value === "object") {
-            recurse(node.value as Expression, parentNode);
-        }
-    };
-
-    for (const [, productionRule] of ast.entries()) {
-        recurse(productionRule.expression);
-    }
-}
-
-export function dedupGroups(ast: AST) {
-    traverseAST(ast, (node, parentNode) => {
-        const parentType = parentNode?.type;
-
-        if (
-            parentType === "group" &&
-            parentNode &&
-            (node.type === "group" || node.type === "nonterminal")
-        ) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (parentNode as any).value = node.value;
-            parentNode.range = node.range;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (parentNode as any).type = node.type;
-
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (parentNode as any).comment = {
-                left: [
-                    ...((parentNode as any).comment?.left ?? []),
-                    ...((node as any).comment?.left ?? []),
-                ],
-                right: [
-                    ...((parentNode as any).comment?.right ?? []),
-                    ...((node as any).comment?.right ?? []),
-                ],
-            };
-            return node.value as Expression;
-        }
-        return undefined;
-    });
 }
 
 export function BBNFToParser(

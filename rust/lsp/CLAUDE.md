@@ -9,8 +9,16 @@ lsp/
 ├── Cargo.toml
 ├── src/
 │   ├── main.rs                 Tokio entry point, stdio server
-│   ├── server.rs               LanguageServer impl, request routing, import graph
-│   ├── state.rs                Document parsing, analysis, caching (972 lines)
+│   ├── server/
+│   │   ├── mod.rs              BbnfLanguageServer struct, constructor, on_change
+│   │   ├── imports.rs          Import graph updates, diagnostic filtering, incremental edits
+│   │   └── protocol.rs         impl LanguageServer — all request/notification handlers
+│   ├── state/
+│   │   ├── mod.rs              DocumentState struct, new/update/ast methods
+│   │   ├── types.rs            RuleInfo, ReferenceInfo, SemanticTokenInfo, DocumentInfo, token_types
+│   │   ├── parsing.rs          OwnedAst (self_cell), CachedParseResult, parse_once
+│   │   ├── diagnostics.rs      analyze_from_cache — full diagnostic generation
+│   │   └── ast_utils.rs        collect_references, semantic tokens, format_expression, cycle paths
 │   ├── analysis.rs             LineIndex, symbol lookup utilities
 │   └── features/
 │       ├── mod.rs              Module declarations
@@ -28,8 +36,8 @@ lsp/
 │       ├── inlay_hints.rs      FIRST sets (non-trivial rules), nullable markers
 │       └── selection_range.rs  Expression-level expand/shrink selection
 └── tests/
-    ├── integration.rs          45+ JSON-RPC integration tests (1390 lines)
-    └── bench_lsp.rs            Performance benchmarks (404 lines)
+    ├── integration.rs          45+ JSON-RPC integration tests
+    └── bench_lsp.rs            Performance benchmarks
 ```
 
 ## Architecture

@@ -1,56 +1,14 @@
 import { describe, it, expect } from "vitest";
 
-import type { AST, Expression, ProductionRule } from "../src/types.js";
+import type { AST } from "../src/types.js";
 import {
     CharSet,
     regexFirstChars,
     computeFirstSets,
     buildDispatchTable,
-} from "../src/first-sets.js";
-import { analyzeGrammar } from "../src/analysis.js";
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function rule(name: string, expression: Expression): [string, ProductionRule] {
-    return [
-        name,
-        {
-            name: { type: "nonterminal", value: name },
-            expression,
-            comment: { above: [], below: [] },
-        } as ProductionRule,
-    ];
-}
-
-function nonterminal(value: string): Expression {
-    return { type: "nonterminal", value } as Expression;
-}
-
-function literal(value: string): Expression {
-    return { type: "literal", value } as Expression;
-}
-
-function alternation(branches: Expression[]): Expression {
-    return { type: "alternation", value: branches } as Expression;
-}
-
-function concatenation(elems: Expression[]): Expression {
-    return { type: "concatenation", value: elems } as Expression;
-}
-
-function regexExpr(pattern: RegExp): Expression {
-    return { type: "regex", value: pattern } as Expression;
-}
-
-function optional(expr: Expression): Expression {
-    return { type: "optional", value: expr } as Expression;
-}
-
-function epsilon(): Expression {
-    return { type: "epsilon" } as Expression;
-}
+    analyzeGrammar,
+} from "../src/analysis/index.js";
+import { rule, nonterminal, literal, alternation, concatenation, regexExpr, optional, epsilon } from "./helpers/ast-builders.js";
 
 // ---------------------------------------------------------------------------
 // regexFirstChars

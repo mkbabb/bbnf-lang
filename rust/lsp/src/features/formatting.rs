@@ -1,6 +1,6 @@
 use tower_lsp_server::ls_types::*;
 
-use bbnf::grammar::{Expression, Token, AST};
+use bbnf::types::{Expression, Token, AST};
 
 /// Extract the inner value from a TokenExpression.
 fn get_inner_expression<'a, T>(tok: &'a Token<'a, T>) -> &'a T {

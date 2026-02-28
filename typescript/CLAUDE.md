@@ -13,12 +13,22 @@ typescript/
 │   ├── index.ts        Public API re-exports
 │   ├── types.ts        Expression union type, AST, ProductionRule, ImportDirective
 │   ├── grammar.ts      BBNFGrammar class — BBNF parser via parse-that combinators
-│   ├── generate.ts     ASTToParser — compile AST to executable parsers
+│   ├── parse.ts        BBNFToAST, BBNFToASTWithImports, BBNFToASTFromFiles
+│   ├── generate.ts     ASTToParser, BBNFToParser — compile AST to executable parsers
 │   ├── imports.ts      Module graph loading, cycle-tolerant DFS, selective dep expansion
 │   ├── optimize.ts     Left-recursion elimination + prefix factoring
-│   ├── analysis.ts     Dependency graphs, Tarjan SCC, ref counts
-│   └── first-sets.ts   CharSet (128-bit), FIRST/nullable computation, dispatch tables
+│   └── analysis/
+│       ├── index.ts    Re-exports + analyzeGrammar facade
+│       ├── deps.ts     collectDependencies, buildDepGraphs, traverseAST, dedupGroups
+│       ├── scc.ts      SCCResult, tarjanSCC, classifyAcyclicDeps
+│       ├── charset.ts  CharSet (128-bit ASCII bitset)
+│       ├── first-sets.ts  FirstNullable, computeFirstSets
+│       ├── regex-first.ts regexFirstChars + helpers
+│       ├── dispatch.ts DispatchTable, buildDispatchTable, findFirstSetConflicts
+│       └── metadata.ts computeRefCounts, AnalysisCache, findAliases, findTransparentAlternations
 └── test/
+    ├── helpers/
+    │   └── ast-builders.ts  Shared: rule(), nonterminal(), literal(), alternation(), etc.
     ├── bbnf.test.ts       13 end-to-end grammar tests (JSON, CSS, BBNF self-parse, etc.)
     ├── imports.test.ts    13 import system tests (cyclic, transitive, selective, merge)
     ├── analysis.test.ts   16 analysis tests (SCC, ref counts, dep graphs, FIRST conflicts)
@@ -30,8 +40,8 @@ typescript/
 ## Key Exports
 
 - **`BBNFGrammar`** — Parser class. `grammar()`, `grammarWithImports()`.
-- **`BBNFToAST(text)`** — Parse BBNF text → AST.
-- **`BBNFToASTWithImports(text)`** — Parse with import directives.
+- **`BBNFToAST(text)`** — Parse BBNF text → AST. (from `parse.ts`)
+- **`BBNFToASTWithImports(text)`** — Parse with import directives. (from `parse.ts`)
 - **`ASTToParser(ast, analysis?, firstNullable?)`** — Compile AST → `Nonterminals` (rule name → Parser).
 - **`BBNFToParser(text)`** — End-to-end: text → executable parsers.
 - **`loadModuleGraphSync(path, reader?)`** — DFS-load a module and its transitive `@import` graph into a `ModuleRegistry`.

@@ -204,7 +204,7 @@ where
 
         // Phase B: Transparent rules return Box<Enum> directly.
         let is_transparent = grammar_attrs.transparent_rules
-            .map_or(false, |set| set.contains(name.as_ref()));
+            .is_some_and(|set| set.contains(name.as_ref()));
         let ty = if is_transparent {
             grammar_attrs.boxed_enum_type
         } else {
@@ -226,7 +226,7 @@ where
 
         // Phase D: Generate _sp() method for span-eligible rules.
         let is_span_eligible = grammar_attrs.span_eligible_rules
-            .map_or(false, |set| set.contains(name.as_ref()));
+            .is_some_and(|set| set.contains(name.as_ref()));
         if is_span_eligible {
             if let Some(sp_parser) = try_generate_span_parser(name, grammar_attrs) {
                 let sp_ident = format_ident!("{}_sp", name);

@@ -12,7 +12,7 @@ import * as path from "node:path";
 import * as fs from "node:fs";
 
 import type { ImportDirective, AST, ProductionRule, Expression } from "./types.js";
-import { BBNFToASTWithImports } from "./generate.js";
+import { BBNFToASTWithImports } from "./parse.js";
 
 // ---------------------------------------------------------------------------
 // Error types

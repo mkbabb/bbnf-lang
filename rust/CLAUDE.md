@@ -37,8 +37,8 @@ cargo clippy --all-targets -- -D warnings  # Lint (CI enforces this)
 .bbnf file
   → BBNFGrammar parser (bbnf/grammar.rs)
   → AST: IndexMap<Expression, Expression>
-  → Analysis: SCC, FIRST sets, dispatch tables (bbnf/analysis.rs)
-  → Codegen: Rust TokenStream via syn/quote (bbnf/generate.rs)
+  → Analysis: SCC, FIRST sets, dispatch tables (bbnf/analysis/)
+  → Codegen: Rust TokenStream via syn/quote (bbnf/generate/)
   → #[derive(Parser)] emits enum + parser methods (bbnf-derive/lib.rs)
 ```
 

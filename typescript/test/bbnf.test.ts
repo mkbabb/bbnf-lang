@@ -342,7 +342,7 @@ describe("BBNF Parser", () => {
         for (let i = 0; i < 10; i++) {
             grammar = parser.eof().parse(grammar).flat(Infinity).join("");
             expect(grammar).toBeTruthy();
-            fs.writeFileSync("../grammar/lang/bbnf.out", grammar, "utf8");
+            // Self-parse result is verified via expect(grammar).toBeTruthy() above.
         }
     });
 

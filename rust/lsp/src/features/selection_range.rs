@@ -1,6 +1,6 @@
 use tower_lsp_server::ls_types::*;
 
-use bbnf::grammar::{Expression, Token};
+use bbnf::types::{Expression, Token};
 
 use crate::analysis::{position_to_offset, span_to_range};
 use crate::state::DocumentState;
@@ -24,7 +24,7 @@ pub fn selection_ranges(state: &DocumentState, positions: Vec<Position>) -> Vec<
         .iter()
         .map(|&pos| {
             let offset = position_to_offset(&state.text, pos);
-            compute_selection_range(&state.text, &ast, offset)
+            compute_selection_range(&state.text, ast, offset)
                 .unwrap_or_else(|| trivial_range(pos))
         })
         .collect()
@@ -40,7 +40,7 @@ fn trivial_range(pos: Position) -> SelectionRange {
 /// Walk the AST to find all spans containing the offset, ordered innermost-first.
 fn compute_selection_range(
     text: &str,
-    ast: &bbnf::grammar::AST<'_>,
+    ast: &bbnf::types::AST<'_>,
     offset: usize,
 ) -> Option<SelectionRange> {
     // Find which rule contains this offset.

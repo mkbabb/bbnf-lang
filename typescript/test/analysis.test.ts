@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import type { AST, Expression, ProductionRule } from "../src/types.js";
+import type { AST } from "../src/types.js";
 import {
     findAliases,
     findTransparentAlternations,
@@ -9,43 +9,11 @@ import {
     buildDepGraphs,
     computeRefCounts,
     analyzeGrammar,
-} from "../src/analysis.js";
-import {
     CharSet,
     computeFirstSets,
     findFirstSetConflicts,
-} from "../src/first-sets.js";
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function rule(name: string, expression: Expression): [string, ProductionRule] {
-    return [
-        name,
-        {
-            name: { type: "nonterminal", value: name },
-            expression,
-            comment: { above: [], below: [] },
-        } as ProductionRule,
-    ];
-}
-
-function nonterminal(value: string): Expression {
-    return { type: "nonterminal", value } as Expression;
-}
-
-function literal(value: string): Expression {
-    return { type: "literal", value } as Expression;
-}
-
-function alternation(branches: Expression[]): Expression {
-    return { type: "alternation", value: branches } as Expression;
-}
-
-function regexExpr(pattern: RegExp): Expression {
-    return { type: "regex", value: pattern } as Expression;
-}
+} from "../src/analysis/index.js";
+import { rule, nonterminal, literal, alternation, regexExpr } from "./helpers/ast-builders.js";
 
 // ---------------------------------------------------------------------------
 // Analysis tests

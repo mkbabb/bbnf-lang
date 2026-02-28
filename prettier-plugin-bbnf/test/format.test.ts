@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { formatBBNF } from "../src/index.js";
 
-const grammarDir = path.resolve(__dirname, "../../grammar");
+const grammarDir = path.resolve(__dirname, "../../grammar/lang");
 
 describe("Prettier BBNF", () => {
     it("should format json.bbnf", async () => {

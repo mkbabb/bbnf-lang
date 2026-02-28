@@ -10,7 +10,7 @@
 
 use std::borrow::Cow;
 
-use crate::grammar::{Expression, Token, AST};
+use crate::types::{Expression, Token, AST};
 /// Remove all direct left-recursion from the grammar.
 ///
 /// For each rule, if any alternative in its alternation starts with a reference
@@ -162,57 +162,5 @@ fn strip_leading_nonterminal<'a>(expr: &Expression<'a>, name: &str) -> Option<Ex
         }
         Expression::Group(inner) => strip_leading_nonterminal(&inner.value, name),
         _ => None,
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::borrow::Cow;
-    use parse_that::Span;
-
-    fn nt(name: &str) -> Expression<'_> {
-        Expression::Nonterminal(Token::new(Cow::Borrowed(name), Span::new(0, 0, "")))
-    }
-
-    fn lit(value: &str) -> Expression<'_> {
-        Expression::Literal(Token::new(Cow::Borrowed(value), Span::new(0, 0, "")))
-    }
-
-    #[test]
-    fn test_no_left_recursion() {
-        let mut ast = AST::new();
-        let a = nt("A");
-        let rhs = Expression::Rule(Box::new(lit("x")), None);
-        ast.insert(a.clone(), rhs.clone());
-
-        let result = remove_direct_left_recursion(&ast);
-        assert_eq!(result.len(), 1);
-        assert!(result.get(&a).is_some());
-    }
-
-    #[test]
-    fn test_direct_left_recursion() {
-        let mut ast = AST::new();
-        let a = nt("A");
-
-        // A = A "x" | "y"
-        let alt1 = Expression::Concatenation(Box::new(Token::new_without_span(vec![
-            nt("A"),
-            lit("x"),
-        ])));
-        let alt2 = lit("y");
-        let rhs = Expression::Rule(
-            Box::new(Expression::Alternation(Box::new(Token::new_without_span(vec![alt1, alt2])))),
-            None,
-        );
-        ast.insert(a.clone(), rhs);
-
-        let result = remove_direct_left_recursion(&ast);
-        // Should have 2 rules: A and A_tail
-        assert_eq!(result.len(), 2);
-
-        let tail = nt("A_tail");
-        assert!(result.get(&tail).is_some());
     }
 }

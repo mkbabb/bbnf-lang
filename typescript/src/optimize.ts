@@ -7,7 +7,7 @@ import type {
     Nonterminal,
     ProductionRule,
 } from "./types.js";
-import type { AnalysisCache } from "./analysis.js";
+import type { AnalysisCache } from "./analysis/index.js";
 
 export function topologicalSort(ast: AST) {
     const visited = new Set<string>();

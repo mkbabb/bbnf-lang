@@ -194,7 +194,8 @@ fn test_diagnostics_unused_rule() {
     let (mut stdin, mut stdout, child) = start_server();
     initialize(&mut stdin, &mut stdout);
 
-    let grammar = "value = number;\nnumber = /[0-9]+/;\nunused = \"hello\";";
+    // Place the unused rule in the middle -- first and last rules are exempt.
+    let grammar = "value = number;\nunused = \"hello\";\nnumber = /[0-9]+/;";
     let diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
     eprintln!("Unused rule diagnostics: {}", diag);
     assert!(
@@ -1346,7 +1347,8 @@ fn test_diagnostics_unreachable_rule() {
     initialize(&mut stdin, &mut stdout);
 
     // helperA and helperB reference each other but are unreachable from root.
-    let grammar = "value = number;\nnumber = /[0-9]+/;\nhelperA = helperB;\nhelperB = helperA;";
+    // Place them in the middle -- first and last rules are exempt from unreachable.
+    let grammar = "value = number;\nhelperA = helperB;\nhelperB = helperA;\nnumber = /[0-9]+/;";
     let diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
     eprintln!("Unreachable rule diagnostics: {}", diag);
     assert!(

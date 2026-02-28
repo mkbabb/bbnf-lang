@@ -331,7 +331,7 @@ pub(crate) fn build_cycle_path(start: &str, scc_members: &[&str], deps: &HashMap
 
 /// Compute the set of rule names reachable from root rules via BFS.
 ///
-/// Root rules are: the first rule in the grammar, plus any rule referenced by an import.
+/// Root rules are: the first and last rules in the grammar, plus any rule referenced by an import.
 pub(crate) fn compute_reachable_rules(
     rules: &[RuleInfo],
     rule_index: &HashMap<String, usize>,
@@ -342,10 +342,15 @@ pub(crate) fn compute_reachable_rules(
         return reachable;
     }
 
-    // The first rule is the entry point / root.
+    // The first and last rules are both plausible entry points.
     let mut queue = std::collections::VecDeque::new();
     queue.push_back(rules[0].name.clone());
     reachable.insert(rules[0].name.clone());
+    let last = rules.len() - 1;
+    if last != 0 {
+        queue.push_back(rules[last].name.clone());
+        reachable.insert(rules[last].name.clone());
+    }
 
     // BFS from root rules.
     while let Some(current) = queue.pop_front() {

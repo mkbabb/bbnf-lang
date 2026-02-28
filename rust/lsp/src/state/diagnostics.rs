@@ -212,10 +212,12 @@ pub(crate) fn analyze_from_cache(
         }
     }
 
+    let last_rule_idx = rules.len().saturating_sub(1);
     for rule in &rules {
         if !referenced_names.contains(rule.name.as_str()) && rules.len() > 1 {
-            // Don't flag the first rule -- it's typically the entry point.
-            if rule_index.get(rule.name.as_str()) != Some(&0) {
+            let idx = rule_index.get(rule.name.as_str()).copied();
+            // Don't flag the first or last rule -- both are plausible entry points.
+            if idx != Some(0) && idx != Some(last_rule_idx) {
                 diagnostics.push(Diagnostic {
                     range: line_index.span_to_range(rule.name_span.0, rule.name_span.1),
                     severity: Some(DiagnosticSeverity::HINT),
@@ -369,8 +371,9 @@ pub(crate) fn analyze_from_cache(
     // Unreachable rule detection via BFS from root rules.
     let reachable = compute_reachable_rules(&rules, &rule_index);
     for rule in &rules {
-        // Skip the first rule (entry point) and already-unused rules.
-        if rule_index.get(rule.name.as_str()) == Some(&0) {
+        // Skip the first/last rule (entry points) and already-unused rules.
+        let idx = rule_index.get(rule.name.as_str()).copied();
+        if idx == Some(0) || idx == Some(last_rule_idx) {
             continue;
         }
         if !referenced_names.contains(rule.name.as_str()) {

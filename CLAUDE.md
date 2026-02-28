@@ -79,8 +79,9 @@ Requires `VSCE_PAT` secret in GitHub repo settings.
 - **Rust**: Nightly toolchain, edition 2024. Clippy with `-D warnings`.
 - **TypeScript**: ES2022 target, strict mode, ESM. Vite for bundling, vitest for tests.
 - **Extension**: esbuild, CommonJS output (Node.js), `vscode` external.
-- **Grammars**: `.bbnf` extension. `@import` for composition. `;` terminators.
+- **Grammars**: `.bbnf` extension. `@import` for composition. `@recover` for error recovery. `;` terminators.
 - **Local crate deps**: `parse_that` and `pprint` are local path dependencies.
 - **Lifetimes**: Borrowed `'a` throughout Rust AST; `Box::leak()` for import module graphs.
 - **Import system**: Cyclic imports handled via partial-init before recursion. Selective imports expand transitive local deps automatically. `@import` directives can appear at any position in a file.
+- **Recovery**: `@recover rule syncExpr ;` — per-rule annotation specifying a sync expression for multi-error parsing. Any valid BBNF expression (regex, alternation, concatenation, etc.) is valid as the sync. Emits `.recover(syncParser, null)` in TS codegen and a `Recovered` enum variant in Rust proc-macro codegen.
 - **Analysis pipeline**: Tarjan SCC → topological sort → FIRST sets (128-bit `CharSet`) → dispatch tables (constant-time alternation selection by leading character).

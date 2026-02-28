@@ -32,7 +32,7 @@ export function BBNFToASTWithImports(input: string) {
         return [parser] as const;
     }
 
-    const { imports, rules } = parsed as { imports: any[]; rules: ProductionRule[] };
+    const { imports, recovers, rules } = parsed as { imports: any[]; recovers: any[]; rules: ProductionRule[] };
 
     const ast = rules.reduce(
         (acc, productionRule) => {
@@ -41,7 +41,7 @@ export function BBNFToASTWithImports(input: string) {
         new Map<string, ProductionRule>(),
     ) as AST;
 
-    return [parser, { imports, rules: ast } as ParsedGrammar] as const;
+    return [parser, { imports, recovers: recovers ?? [], rules: ast } as ParsedGrammar] as const;
 }
 
 /**
@@ -53,6 +53,7 @@ export function BBNFToASTWithImports(input: string) {
  */
 export function BBNFToASTFromFiles(files: Map<string, string>): ParsedGrammar {
     const allImports: ParsedGrammar["imports"] = [];
+    const allRecovers: ParsedGrammar["recovers"] = [];
     const mergedAST = new Map<string, ProductionRule>() as AST;
 
     for (const [filename, source] of files) {
@@ -62,10 +63,11 @@ export function BBNFToASTFromFiles(files: Map<string, string>): ParsedGrammar {
         }
         const parsed = result[1];
         allImports.push(...parsed.imports);
+        allRecovers.push(...(parsed.recovers ?? []));
         for (const [name, rule] of parsed.rules) {
             mergedAST.set(name, rule);
         }
     }
 
-    return { imports: allImports, rules: mergedAST };
+    return { imports: allImports, recovers: allRecovers, rules: mergedAST };
 }

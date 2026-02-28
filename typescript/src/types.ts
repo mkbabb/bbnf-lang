@@ -82,7 +82,16 @@ export type ImportDirective = {
     range?: { start: number; end: number };
 };
 
+export type RecoverDirective = {
+    /** The name of the rule to wrap with recovery. */
+    ruleName: string;
+    /** The sync expression to use for error recovery. */
+    syncExpr: Expression;
+    range?: { start: number; end: number };
+};
+
 export type ParsedGrammar = {
     imports: ImportDirective[];
+    recovers: RecoverDirective[];
     rules: AST;
 };

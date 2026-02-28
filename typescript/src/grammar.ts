@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Parser, string, all, any, regex } from "@mkbabb/parse-that";
-import type { Expression, Literal, Epsilon, Nonterminal, Comment, Regex, Group, Optional, Many, Concatenation, Alteration, ProductionRule, ImportDirective, ParsedGrammar } from "./types.js";
+import type { Expression, Literal, Epsilon, Nonterminal, Comment, Regex, Group, Optional, Many, Concatenation, Alteration, ProductionRule, ImportDirective, RecoverDirective, ParsedGrammar } from "./types.js";
 
 const operatorToType: Record<string, string> = {
     "|": "alternation",
@@ -80,6 +80,7 @@ export class BBNFGrammar {
     private _productionRule?: Parser<any>;
     private _grammar?: Parser<any>;
     private _importDirective?: Parser<any>;
+    private _recoverDirective?: Parser<any>;
     private _grammarWithImports?: Parser<any>;
 
     constructor(options?: Partial<Options>) {
@@ -390,6 +391,22 @@ export class BBNFGrammar {
         }));
     }
 
+    recoverDirective(): Parser<any> {
+        return (this._recoverDirective ??= Parser.lazy(() => {
+            return mapStatePosition(
+                all(
+                    string("@recover").trim(),
+                    this.identifier().trim(),
+                    this.rhs().trim(),
+                    any(string(";"), string(".")).trim().opt(),
+                ).map(([, ruleName, syncExpr]: any) => ({
+                    ruleName,
+                    syncExpr,
+                } as RecoverDirective)),
+            );
+        }));
+    }
+
     grammarWithImports(): Parser<any> {
         return (this._grammarWithImports ??= Parser.lazy(() => {
             const commentTrim = this.lineComment().trim().many() as any;
@@ -408,22 +425,30 @@ export class BBNFGrammar {
                 .trim(commentTrim, false)
                 .map(([above, directive, below]: any) => directive);
 
+            const recoverDir = this.recoverDirective()
+                .trim(commentTrim, false)
+                .map(([above, directive, below]: any) => directive);
+
             const item = any(
                 importDir.map((d: ImportDirective) => ({ type: "import" as const, value: d })),
+                recoverDir.map((d: RecoverDirective) => ({ type: "recover" as const, value: d })),
                 rule.map((r: ProductionRule) => ({ type: "rule" as const, value: r })),
             );
 
             return item.many(1).trim().map((items: any[]) => {
                 const imports: ImportDirective[] = [];
+                const recovers: RecoverDirective[] = [];
                 const rules: ProductionRule[] = [];
                 for (const item of items) {
                     if (item.type === "import") {
                         imports.push(item.value);
+                    } else if (item.type === "recover") {
+                        recovers.push(item.value);
                     } else {
                         rules.push(item.value);
                     }
                 }
-                return { imports, rules } as { imports: ImportDirective[]; rules: ProductionRule[] };
+                return { imports, recovers, rules } as { imports: ImportDirective[]; recovers: RecoverDirective[]; rules: ProductionRule[] };
             });
         }));
     }

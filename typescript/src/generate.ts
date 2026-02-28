@@ -12,12 +12,12 @@ import {
     createParserContext,
 } from "@mkbabb/parse-that";
 import type { ParserState } from "@mkbabb/parse-that";
-import type { Expression, Nonterminals, AST } from "./types.js";
+import type { Expression, Nonterminals, AST, RecoverDirective } from "./types.js";
 import { removeAllLeftRecursion } from "./optimize.js";
 import { analyzeGrammar, computeFirstSets, buildDispatchTable, dedupGroups } from "./analysis/index.js";
 import type { AnalysisCache, FirstNullable } from "./analysis/index.js";
-import { BBNFToAST } from "./parse.js";
-import { loadModuleGraphSync, mergeModuleAST } from "./imports.js";
+import { BBNFToAST, BBNFToASTWithImports } from "./parse.js";
+import { loadModuleGraphSync, mergeModuleAST, mergeModuleRecovers } from "./imports.js";
 
 function escapeRegex(s: string): string {
     return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -27,6 +27,7 @@ export function ASTToParser(
     ast: AST,
     analysis?: AnalysisCache,
     firstNullable?: FirstNullable,
+    recovers?: RecoverDirective[],
 ) {
     // Compute analysis if not provided
     const cache = analysis ?? analyzeGrammar(ast);
@@ -393,6 +394,17 @@ export function ASTToParser(
         }
     }
 
+    // Apply @recover wrapping: wrap annotated rules with .recover(syncParser, null).
+    if (recovers && recovers.length > 0) {
+        for (const recover of recovers) {
+            const original = nonterminals[recover.ruleName];
+            if (original) {
+                const syncParser = generateParser(recover.ruleName + "$sync", recover.syncExpr, true);
+                nonterminals[recover.ruleName] = original.recover(syncParser, null);
+            }
+        }
+    }
+
     return nonterminals;
 }
 
@@ -400,10 +412,20 @@ export function BBNFToParser(
     input: string,
     optimizeGraph: boolean = false,
 ) {
-    const [, ast] = BBNFToAST(input);
+    // Try import-aware parsing first to pick up @recover directives
+    const importResult = BBNFToASTWithImports(input);
+    let ast: AST;
+    let recovers: RecoverDirective[] = [];
 
-    if (!ast) {
-        throw new Error("Failed to parse BBNF grammar");
+    if (importResult.length >= 2 && importResult[1]) {
+        ast = importResult[1].rules;
+        recovers = importResult[1].recovers ?? [];
+    } else {
+        const [, plainAst] = BBNFToAST(input);
+        if (!plainAst) {
+            throw new Error("Failed to parse BBNF grammar");
+        }
+        ast = plainAst;
     }
 
     dedupGroups(ast);
@@ -414,7 +436,7 @@ export function BBNFToParser(
     // Re-analyze if left recursion changed the AST
     const finalAnalysis = finalAst !== ast ? analyzeGrammar(finalAst) : analysis;
     const firstNullable = computeFirstSets(finalAst, finalAnalysis);
-    const nonterminals = ASTToParser(finalAst, finalAnalysis, firstNullable);
+    const nonterminals = ASTToParser(finalAst, finalAnalysis, firstNullable, recovers);
     return [nonterminals, finalAst] as const;
 }
 
@@ -458,6 +480,7 @@ export function BBNFToParserFromFile(
     }
 
     const ast = mergeModuleAST(registry, entryPath);
+    const recovers = mergeModuleRecovers(registry, entryPath);
     dedupGroups(ast);
 
     const analysis = analyzeGrammar(ast);
@@ -465,6 +488,6 @@ export function BBNFToParserFromFile(
 
     const finalAnalysis = finalAst !== ast ? analyzeGrammar(finalAst) : analysis;
     const firstNullable = computeFirstSets(finalAst, finalAnalysis);
-    const nonterminals = ASTToParser(finalAst, finalAnalysis, firstNullable);
+    const nonterminals = ASTToParser(finalAst, finalAnalysis, firstNullable, recovers);
     return [nonterminals, finalAst] as const;
 }

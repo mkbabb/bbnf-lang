@@ -133,9 +133,9 @@ describe("Module import graph", () => {
         );
     });
 
-    it("non-transitive scope — A cannot see C's rules through B", () => {
+    it("non-transitive scope — transitive deps included, unreferenced excluded", () => {
         const files = new Map<string, string>();
-        files.set("/test/c.bbnf", 'deep = /z/ ;');
+        files.set("/test/c.bbnf", 'deep = /z/ ; unrelated = /q/ ;');
         files.set("/test/b.bbnf", '@import "c.bbnf" ; mid = deep ;');
         files.set("/test/a.bbnf", '@import "b.bbnf" ; top = mid ;');
 
@@ -144,8 +144,10 @@ describe("Module import graph", () => {
         const namesA = importedRuleNames(registry, "/test/a.bbnf");
         // A can see B's local rule "mid".
         expect(namesA.has("mid")).toBe(true);
-        // A cannot see C's rule "deep" — imports are non-transitive.
-        expect(namesA.has("deep")).toBe(false);
+        // A can see "deep" — it's a transitive dependency of "mid".
+        expect(namesA.has("deep")).toBe(true);
+        // A cannot see C's "unrelated" — not referenced by any imported rule.
+        expect(namesA.has("unrelated")).toBe(false);
     });
 
     it("three-way circular import — all modules accessible", () => {

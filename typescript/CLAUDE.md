@@ -11,10 +11,10 @@ typescript/
 ├── vite.config.ts      Library build (ES + CJS), vite-plugin-dts
 ├── src/
 │   ├── index.ts        Public API re-exports
-│   ├── types.ts        Expression union type, AST, ProductionRule, ImportDirective
+│   ├── types.ts        Expression union type, AST, ProductionRule, ImportDirective, RecoverDirective
 │   ├── grammar.ts      BBNFGrammar class — BBNF parser via parse-that combinators
 │   ├── parse.ts        BBNFToAST, BBNFToASTWithImports, BBNFToASTFromFiles
-│   ├── generate.ts     ASTToParser, BBNFToParser — compile AST to executable parsers
+│   ├── generate.ts     ASTToParser, BBNFToParser — compile AST to executable parsers (applies @recover)
 │   ├── imports.ts      Module graph loading, cycle-tolerant DFS, selective dep expansion
 │   ├── optimize.ts     Left-recursion elimination + prefix factoring
 │   └── analysis/
@@ -29,11 +29,13 @@ typescript/
 └── test/
     ├── helpers/
     │   └── ast-builders.ts  Shared: rule(), nonterminal(), literal(), alternation(), etc.
-    ├── bbnf.test.ts       13 end-to-end grammar tests (JSON, CSS, BBNF self-parse, etc.)
-    ├── imports.test.ts    13 import system tests (cyclic, transitive, selective, merge)
-    ├── analysis.test.ts   16 analysis tests (SCC, ref counts, dep graphs, FIRST conflicts)
-    ├── optimize.test.ts   13 optimization tests (left-recursion, topological sort, prefix)
-    ├── first-sets.test.ts 17 FIRST set tests (regex dispatch, CharSet, dispatch tables)
+    ├── bbnf.test.ts           13 end-to-end grammar tests (JSON, CSS, BBNF self-parse, etc.)
+    ├── imports.test.ts        13 import system tests (cyclic, transitive, selective, merge)
+    ├── analysis.test.ts       16 analysis tests (SCC, ref counts, dep graphs, FIRST conflicts)
+    ├── optimize.test.ts       13 optimization tests (left-recursion, topological sort, prefix)
+    ├── first-sets.test.ts     17 FIRST set tests (regex dispatch, CharSet, dispatch tables)
+    ├── recover.test.ts        8 tests — @recover parsing, codegen (.recover() wrapping), error collection
+    └── css-stylesheet.test.ts 11 tests — css-stylesheet.bbnf with @recover + multi-error recovery
     └── utils.ts           Test helpers (math eval, random whitespace injection)
 ```
 

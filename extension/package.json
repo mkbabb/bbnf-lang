@@ -1,7 +1,7 @@
 {
     "name": "bbnf-language-support",
     "displayName": "BBNF Language",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "description": "Full language support for BBNF grammars — diagnostics, go-to-definition, references, rename, hover, completion, formatting, and more.",
     "icon": "icons/bbnf.png",
     "repository": {

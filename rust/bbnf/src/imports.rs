@@ -150,8 +150,9 @@ impl ModuleRegistry {
 /// Load a module graph starting from an entry file.
 ///
 /// Performs a DFS traversal of `@import` directives, parsing each file exactly
-/// once (canonical path dedup). Returns a `ModuleRegistry` with all modules and
-/// resolved imports. Errors are collected rather than failing on first error.
+/// once (canonical path dedup). Cyclic imports are allowed (Python-style
+/// partial-init: a module is registered before its imports are processed).
+/// Returns a `ModuleRegistry` with all modules and resolved imports.
 pub fn load_module_graph(entry: &Path) -> Result<ModuleRegistry, ImportError> {
     let entry = entry.canonicalize().map_err(|_| ImportError::FileNotFound {
         path: entry.to_path_buf(),
@@ -164,22 +165,18 @@ pub fn load_module_graph(entry: &Path) -> Result<ModuleRegistry, ImportError> {
         errors: Vec::new(),
     };
 
-    // DFS stack: (canonical_path, imported_from)
-    let mut stack: Vec<PathBuf> = Vec::new();
-    let mut on_stack: HashSet<PathBuf> = HashSet::new();
     let mut visited: HashSet<PathBuf> = HashSet::new();
 
     load_recursive(
         &entry,
         &PathBuf::from("<entry>"),
         &mut registry,
-        &mut stack,
-        &mut on_stack,
         &mut visited,
     );
 
-    // Phase 2: resolve imports (post-order from DFS guarantees deps are loaded first)
-    for path in visited.iter() {
+    // Phase 2: resolve imports for every visited module.
+    let paths: Vec<PathBuf> = visited.iter().cloned().collect();
+    for path in &paths {
         resolve_imports_for(path, &mut registry);
     }
 
@@ -190,21 +187,10 @@ fn load_recursive(
     path: &Path,
     imported_from: &Path,
     registry: &mut ModuleRegistry,
-    stack: &mut Vec<PathBuf>,
-    on_stack: &mut HashSet<PathBuf>,
     visited: &mut HashSet<PathBuf>,
 ) {
+    // Already parsed (or currently being parsed — cycle). Return harmlessly.
     if visited.contains(path) {
-        return;
-    }
-
-    // Cycle detection.
-    if on_stack.contains(path) {
-        let chain: Vec<PathBuf> = stack.clone();
-        registry.errors.push(ImportError::CircularImport {
-            path: path.to_path_buf(),
-            chain,
-        });
         return;
     }
 
@@ -248,22 +234,33 @@ fn load_recursive(
         }
     }).collect();
 
-    // Push onto stack for cycle detection.
-    stack.push(path.to_path_buf());
-    on_stack.insert(path.to_path_buf());
+    // Register BEFORE recursing (partial-init, like Python module loading).
+    // This allows cyclic imports to find the module already registered.
+    visited.insert(path.to_path_buf());
+    registry.modules.insert(path.to_path_buf(), ModuleData {
+        source,
+        grammar: parsed,
+        local_rule_names,
+    });
 
-    // Recursively load imports.
+    // Recursively load imports. Cycles find the file already in visited and return.
     let dir = path.parent().unwrap_or(Path::new("."));
-    for import in &parsed.imports {
-        let import_path = resolve_import_path(dir, &import.path);
+    // Collect import paths first to avoid borrow issues with registry.
+    let import_paths: Vec<PathBuf> = registry.modules.get(path)
+        .unwrap()
+        .grammar
+        .imports
+        .iter()
+        .map(|imp| resolve_import_path(dir, &imp.path))
+        .collect();
+
+    for import_path in import_paths {
         match import_path.canonicalize() {
             Ok(canonical) => {
                 load_recursive(
                     &canonical,
                     path,
                     registry,
-                    stack,
-                    on_stack,
                     visited,
                 );
             }
@@ -275,18 +272,6 @@ fn load_recursive(
             }
         }
     }
-
-    // Pop from stack.
-    stack.pop();
-    on_stack.remove(path);
-    visited.insert(path.to_path_buf());
-
-    // Store module data.
-    registry.modules.insert(path.to_path_buf(), ModuleData {
-        source,
-        grammar: parsed,
-        local_rule_names,
-    });
 }
 
 fn resolve_imports_for(path: &Path, registry: &mut ModuleRegistry) {
@@ -322,11 +307,12 @@ fn resolve_imports_for(path: &Path, registry: &mut ModuleRegistry) {
         };
 
         let rule_names: Vec<String> = if let Some(items) = items {
-            // Selective import: verify each named rule exists.
-            let mut names = Vec::new();
+            // Selective import: verify each named rule exists, then unfurl
+            // transitive local dependencies.
+            let mut verified = Vec::new();
             for name in &items {
                 if target.local_rule_names.contains(name) {
-                    names.push(name.clone());
+                    verified.push(name.clone());
                 } else {
                     registry.errors.push(ImportError::MissingRule {
                         rule_name: name.clone(),
@@ -335,7 +321,14 @@ fn resolve_imports_for(path: &Path, registry: &mut ModuleRegistry) {
                     });
                 }
             }
-            names
+            // Expand with transitive deps.
+            let mut expanded = HashSet::new();
+            for name in &verified {
+                for dep in transitive_local_deps(name, target) {
+                    expanded.insert(dep);
+                }
+            }
+            expanded.into_iter().collect()
         } else {
             // Glob import: all local rules.
             target.local_rule_names.clone()
@@ -362,6 +355,90 @@ fn resolve_imports_for(path: &Path, registry: &mut ModuleRegistry) {
     }
 
     registry.resolved_imports.insert(path.to_path_buf(), resolved);
+}
+
+/// Compute the transitive closure of local dependencies starting from `rule_name`
+/// within the given module. Returns a set of all rule names that `rule_name`
+/// transitively depends on (including itself).
+fn transitive_local_deps(rule_name: &str, module: &ModuleData) -> HashSet<String> {
+    let mut deps = HashSet::new();
+    let mut queue = vec![rule_name.to_string()];
+
+    while let Some(name) = queue.pop() {
+        if deps.contains(&name) {
+            continue;
+        }
+        deps.insert(name.clone());
+
+        // Find the rule in the module's grammar.
+        let rule_expr = module.grammar.rules.iter().find_map(|(lhs, rhs)| {
+            if let crate::grammar::Expression::Nonterminal(tok) = lhs {
+                if tok.value == name {
+                    return Some(rhs);
+                }
+            }
+            None
+        });
+
+        if let Some(expr) = rule_expr {
+            let refs = collect_nonterminal_refs(expr);
+            for r in refs {
+                if module.local_rule_names.contains(&r) && !deps.contains(&r) {
+                    queue.push(r);
+                }
+            }
+        }
+    }
+
+    deps
+}
+
+/// Collect all nonterminal references from an expression.
+fn collect_nonterminal_refs(expr: &crate::grammar::Expression) -> Vec<String> {
+    use crate::grammar::Expression;
+    let mut refs = Vec::new();
+    match expr {
+        Expression::Nonterminal(tok) => {
+            refs.push(tok.value.to_string());
+        }
+        Expression::Alternation(items) | Expression::Concatenation(items) => {
+            for item in &items.value {
+                refs.extend(collect_nonterminal_refs(item));
+            }
+        }
+        Expression::Group(inner)
+        | Expression::Optional(inner)
+        | Expression::OptionalWhitespace(inner)
+        | Expression::Many(inner)
+        | Expression::Many1(inner) => {
+            refs.extend(collect_nonterminal_refs(&inner.value));
+        }
+        Expression::Skip(a, b)
+        | Expression::Next(a, b)
+        | Expression::Minus(a, b) => {
+            refs.extend(collect_nonterminal_refs(&a.value));
+            refs.extend(collect_nonterminal_refs(&b.value));
+        }
+        Expression::ProductionRule(lhs, rhs) => {
+            refs.extend(collect_nonterminal_refs(lhs));
+            refs.extend(collect_nonterminal_refs(rhs));
+        }
+        Expression::MappedExpression((a, b)) => {
+            refs.extend(collect_nonterminal_refs(&a.value));
+            refs.extend(collect_nonterminal_refs(&b.value));
+        }
+        Expression::DebugExpression((inner, _)) => {
+            refs.extend(collect_nonterminal_refs(&inner.value));
+        }
+        Expression::Rule(lhs, rhs) => {
+            refs.extend(collect_nonterminal_refs(lhs));
+            if let Some(r) = rhs {
+                refs.extend(collect_nonterminal_refs(r));
+            }
+        }
+        _ => {} // Literal, Regex, Epsilon, MappingFn
+    }
+    refs
 }
 
 /// Resolve an import path relative to the importing file's directory.
@@ -447,7 +524,7 @@ entry = a | b;"#).unwrap();
     }
 
     #[test]
-    fn test_circular_import_detected() {
+    fn test_circular_import_allowed() {
         let dir = setup_test_dir();
         let a = dir.path().join("a.bbnf");
         let b = dir.path().join("b.bbnf");
@@ -458,8 +535,16 @@ a = /x/;"#).unwrap();
 b = /y/;"#).unwrap();
 
         let registry = load_module_graph(&a).unwrap();
-        let circular_errors: Vec<_> = registry.errors.iter().filter(|e| matches!(e, ImportError::CircularImport { .. })).collect();
-        assert!(!circular_errors.is_empty(), "Expected circular import error");
+        // Cyclic imports are now allowed (Python-style partial-init).
+        assert!(registry.errors.is_empty(), "Errors: {:?}", registry.errors);
+        // Both modules should be loaded.
+        let a_canon = a.canonicalize().unwrap();
+        let b_canon = b.canonicalize().unwrap();
+        assert!(registry.get_module(&a_canon).is_some(), "Module a should be loaded");
+        assert!(registry.get_module(&b_canon).is_some(), "Module b should be loaded");
+        // A can see B's rules.
+        let imported = registry.imported_rule_names(&a_canon);
+        assert!(imported.contains("b"), "A should see B's rule 'b'");
     }
 
     #[test]
@@ -507,5 +592,60 @@ a_rule = b_rule;"#).unwrap();
         // A imports B, B imports C. A should see b_rule but NOT c_rule.
         assert!(imported.contains("b_rule"), "Should import b_rule");
         assert!(!imported.contains("c_rule"), "Should NOT see c_rule (non-transitive)");
+    }
+
+    #[test]
+    fn test_three_way_cycle() {
+        let dir = setup_test_dir();
+        let a = dir.path().join("a.bbnf");
+        let b = dir.path().join("b.bbnf");
+        let c = dir.path().join("c.bbnf");
+
+        fs::write(&a, r#"@import "b.bbnf";
+a = /x/;"#).unwrap();
+        fs::write(&b, r#"@import "c.bbnf";
+b = /y/;"#).unwrap();
+        fs::write(&c, r#"@import "a.bbnf";
+c = /z/;"#).unwrap();
+
+        let registry = load_module_graph(&a).unwrap();
+        assert!(registry.errors.is_empty(), "Errors: {:?}", registry.errors);
+        assert!(registry.get_module(&a.canonicalize().unwrap()).is_some());
+        assert!(registry.get_module(&b.canonicalize().unwrap()).is_some());
+        assert!(registry.get_module(&c.canonicalize().unwrap()).is_some());
+    }
+
+    #[test]
+    fn test_self_import() {
+        let dir = setup_test_dir();
+        let a = dir.path().join("a.bbnf");
+        fs::write(&a, r#"@import "a.bbnf";
+a = /x/;"#).unwrap();
+
+        let registry = load_module_graph(&a).unwrap();
+        assert!(registry.errors.is_empty(), "Errors: {:?}", registry.errors);
+        assert!(registry.get_module(&a.canonicalize().unwrap()).is_some());
+    }
+
+    #[test]
+    fn test_selective_transitive_unfurling() {
+        let dir = setup_test_dir();
+        let base = dir.path().join("base.bbnf");
+        let main = dir.path().join("main.bbnf");
+
+        // percentage depends on number and percentageUnit
+        fs::write(&base, r#"number = /[0-9]+/;
+percentageUnit = "%";
+percentage = number, percentageUnit;"#).unwrap();
+        fs::write(&main, r#"@import { percentage } from "base.bbnf";
+value = percentage;"#).unwrap();
+
+        let registry = load_module_graph(&main).unwrap();
+        assert!(registry.errors.is_empty(), "Errors: {:?}", registry.errors);
+
+        let imported = registry.imported_rule_names(&main.canonicalize().unwrap());
+        assert!(imported.contains("percentage"), "Should import percentage");
+        assert!(imported.contains("number"), "Should unfurl transitive dep: number");
+        assert!(imported.contains("percentageUnit"), "Should unfurl transitive dep: percentageUnit");
     }
 }

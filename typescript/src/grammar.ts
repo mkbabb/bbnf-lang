@@ -392,8 +392,10 @@ export class BBNFGrammar {
 
     grammarWithImports(): Parser<any> {
         return (this._grammarWithImports ??= Parser.lazy(() => {
+            const commentTrim = this.lineComment().trim().many() as any;
+
             const rule = this.productionRule()
-                .trim(this.lineComment().trim().many() as any, false)
+                .trim(commentTrim, false)
                 .map(([above, rule, below]: any) => {
                     rule.comment = {
                         above,
@@ -402,8 +404,12 @@ export class BBNFGrammar {
                     return rule;
                 });
 
+            const importDir = this.importDirective()
+                .trim(commentTrim, false)
+                .map(([above, directive, below]: any) => directive);
+
             const item = any(
-                this.importDirective().map((d: ImportDirective) => ({ type: "import" as const, value: d })),
+                importDir.map((d: ImportDirective) => ({ type: "import" as const, value: d })),
                 rule.map((r: ProductionRule) => ({ type: "rule" as const, value: r })),
             );
 

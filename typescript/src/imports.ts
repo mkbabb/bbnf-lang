@@ -11,7 +11,7 @@
 import * as path from "node:path";
 import * as fs from "node:fs";
 
-import type { ImportDirective, AST, ProductionRule } from "./types.js";
+import type { ImportDirective, AST, ProductionRule, Expression } from "./types.js";
 import { BBNFToASTWithImports } from "./generate.js";
 
 // ---------------------------------------------------------------------------
@@ -173,11 +173,9 @@ export function loadModuleGraphSync(
         errors: [],
     };
 
-    const stack: string[] = [];
-    const onStack = new Set<string>();
     const visited = new Set<string>();
 
-    loadRecursiveSync(entry, "<entry>", registry, stack, onStack, visited, reader, useRealFs);
+    loadRecursiveSync(entry, "<entry>", registry, visited, reader, useRealFs);
 
     // Phase 2: resolve imports for every visited module.
     for (const filePath of visited) {
@@ -191,23 +189,12 @@ function loadRecursiveSync(
     filePath: string,
     importedFrom: string,
     registry: ModuleRegistry,
-    stack: string[],
-    onStack: Set<string>,
     visited: Set<string>,
     reader: (path: string) => string,
     useRealFs: boolean,
 ): void {
+    // Already parsed (or currently being parsed — cycle). Return harmlessly.
     if (visited.has(filePath)) {
-        return;
-    }
-
-    // Cycle detection.
-    if (onStack.has(filePath)) {
-        registry.errors.push({
-            type: "CircularImport",
-            path: filePath,
-            chain: [...stack],
-        });
         return;
     }
 
@@ -238,30 +225,71 @@ function loadRecursiveSync(
     const parsed = result[1];
     const localRuleNames = [...parsed.rules.keys()];
 
-    // Push onto DFS stack.
-    stack.push(filePath);
-    onStack.add(filePath);
-
-    // Recurse on imports.
-    const dir = path.dirname(filePath);
-    for (const imp of parsed.imports) {
-        const importPath = resolveImportPath(dir, imp.path);
-        const canonical = canonicalize(importPath, useRealFs);
-        loadRecursiveSync(canonical, filePath, registry, stack, onStack, visited, reader, useRealFs);
-    }
-
-    // Pop from DFS stack.
-    stack.pop();
-    onStack.delete(filePath);
+    // Register BEFORE recursing (partial-init, like Python module loading).
+    // This allows cyclic imports to find the module already registered.
     visited.add(filePath);
-
-    // Store module data.
     registry.modules.set(filePath, {
         source,
         imports: parsed.imports,
         rules: parsed.rules,
         localRuleNames,
     });
+
+    // Recurse on imports. Cycles find the file already in visited and return.
+    const dir = path.dirname(filePath);
+    for (const imp of parsed.imports) {
+        const importPath = resolveImportPath(dir, imp.path);
+        const canonical = canonicalize(importPath, useRealFs);
+        loadRecursiveSync(canonical, filePath, registry, visited, reader, useRealFs);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Dependency collection (local copy to avoid circular import with analysis.ts)
+// ---------------------------------------------------------------------------
+
+function collectDepsFromExpr(expr: Expression, deps: Set<string>): void {
+    if (!expr?.type) return;
+    if (expr.type === "nonterminal") {
+        deps.add(expr.value as string);
+        return;
+    }
+    if (expr.value instanceof Array) {
+        for (const child of expr.value) {
+            collectDepsFromExpr(child as Expression, deps);
+        }
+    } else if (
+        expr.value &&
+        typeof expr.value === "object" &&
+        "type" in (expr.value as object)
+    ) {
+        collectDepsFromExpr(expr.value as Expression, deps);
+    }
+}
+
+/**
+ * Compute the transitive closure of local dependencies starting from `ruleName`
+ * within the given module. Returns a set of all rule names that `ruleName`
+ * transitively depends on (including itself).
+ */
+function transitiveLocalDeps(ruleName: string, moduleData: ModuleData): Set<string> {
+    const deps = new Set<string>();
+    const queue = [ruleName];
+    while (queue.length > 0) {
+        const name = queue.pop()!;
+        if (deps.has(name)) continue;
+        deps.add(name);
+        const rule = moduleData.rules.get(name);
+        if (!rule) continue;
+        const refs = new Set<string>();
+        collectDepsFromExpr(rule.expression, refs);
+        for (const ref of refs) {
+            if (moduleData.localRuleNames.includes(ref) && !deps.has(ref)) {
+                queue.push(ref);
+            }
+        }
+    }
+    return deps;
 }
 
 // ---------------------------------------------------------------------------
@@ -307,11 +335,13 @@ export function resolveImportsFor(
         let ruleNames: string[];
 
         if (imp.items && imp.items.length > 0) {
-            // Selective import: verify each named rule exists.
-            ruleNames = [];
+            // Selective import: verify each named rule exists, then unfurl
+            // transitive local dependencies so callers don't have to
+            // manually import every sub-rule.
+            const verified: string[] = [];
             for (const name of imp.items) {
                 if (target.localRuleNames.includes(name)) {
-                    ruleNames.push(name);
+                    verified.push(name);
                 } else {
                     registry.errors.push({
                         type: "MissingRule",
@@ -321,6 +351,14 @@ export function resolveImportsFor(
                     });
                 }
             }
+            // Expand with transitive deps.
+            const expanded = new Set<string>();
+            for (const name of verified) {
+                for (const dep of transitiveLocalDeps(name, target)) {
+                    expanded.add(dep);
+                }
+            }
+            ruleNames = [...expanded];
         } else {
             // Glob import: all local rules.
             ruleNames = [...target.localRuleNames];
@@ -427,16 +465,12 @@ export async function loadModuleGraph(
         errors: [],
     };
 
-    const stack: string[] = [];
-    const onStack = new Set<string>();
     const visited = new Set<string>();
 
     await loadRecursiveAsync(
         entry,
         "<entry>",
         registry,
-        stack,
-        onStack,
         visited,
         reader,
         useRealFs,
@@ -454,23 +488,12 @@ async function loadRecursiveAsync(
     filePath: string,
     importedFrom: string,
     registry: ModuleRegistry,
-    stack: string[],
-    onStack: Set<string>,
     visited: Set<string>,
     reader: (path: string) => Promise<string>,
     useRealFs: boolean,
 ): Promise<void> {
+    // Already parsed (or currently being parsed — cycle). Return harmlessly.
     if (visited.has(filePath)) {
-        return;
-    }
-
-    // Cycle detection.
-    if (onStack.has(filePath)) {
-        registry.errors.push({
-            type: "CircularImport",
-            path: filePath,
-            chain: [...stack],
-        });
         return;
     }
 
@@ -501,11 +524,16 @@ async function loadRecursiveAsync(
     const parsed = result[1];
     const localRuleNames = [...parsed.rules.keys()];
 
-    // Push onto DFS stack.
-    stack.push(filePath);
-    onStack.add(filePath);
+    // Register BEFORE recursing (partial-init, like Python module loading).
+    visited.add(filePath);
+    registry.modules.set(filePath, {
+        source,
+        imports: parsed.imports,
+        rules: parsed.rules,
+        localRuleNames,
+    });
 
-    // Recurse on imports (sequential — DFS order matters for cycle detection).
+    // Recurse on imports. Cycles find the file already in visited and return.
     const dir = path.dirname(filePath);
     for (const imp of parsed.imports) {
         const importPath = resolveImportPath(dir, imp.path);
@@ -514,24 +542,9 @@ async function loadRecursiveAsync(
             canonical,
             filePath,
             registry,
-            stack,
-            onStack,
             visited,
             reader,
             useRealFs,
         );
     }
-
-    // Pop from DFS stack.
-    stack.pop();
-    onStack.delete(filePath);
-    visited.add(filePath);
-
-    // Store module data.
-    registry.modules.set(filePath, {
-        source,
-        imports: parsed.imports,
-        rules: parsed.rules,
-        localRuleNames,
-    });
 }

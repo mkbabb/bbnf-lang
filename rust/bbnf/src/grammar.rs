@@ -10,6 +10,12 @@ use pprint::{Doc, Pretty};
 
 use indexmap::IndexMap;
 
+/// Helper enum for interleaving imports and rules during parsing.
+enum Either<L, R> {
+    Left(L),
+    Right(R),
+}
+
 #[derive(Pretty, Debug, Clone, Eq, PartialEq)]
 pub enum Comment<'a> {
     Line(Cow<'a, str>),
@@ -473,14 +479,29 @@ impl<'a> BBNFGrammar<'a> {
             .map(|_| ())
     }
 
-    /// Parse a grammar file: zero or more import directives followed by rules.
+    /// Parse a grammar file: interleaved import directives and rules.
+    /// Imports may appear at any position (including after comments/rules).
     /// Returns a `ParsedGrammar` with both imports and the AST.
     pub fn grammar_with_imports() -> Parser<'a, ParsedGrammar<'a>> {
-        let import = Self::skip_comments().next(Self::import_directive().trim_whitespace());
-        let rule = Self::production_rule().trim_whitespace();
+        let import = Self::skip_comments()
+            .next(Self::import_directive().trim_whitespace())
+            .map(|imp| Either::Left(imp));
+        let rule = Self::skip_comments()
+            .next(Self::production_rule().trim_whitespace())
+            .map(|r| Either::Right(r));
 
-        Self::skip_comments().next(import.many(..).then(rule.many(..))).map(|(imports, rules)| {
-            let ast: AST<'a> = rules
+        let item = import | rule;
+
+        Self::skip_comments().next(item.many(..)).map(|items| {
+            let mut imports = Vec::new();
+            let mut rules_vec = Vec::new();
+            for item in items {
+                match item {
+                    Either::Left(imp) => imports.push(imp),
+                    Either::Right(r) => rules_vec.push(r),
+                }
+            }
+            let ast: AST<'a> = rules_vec
                 .into_iter()
                 .map(|expr| match expr {
                     Expression::ProductionRule(lhs, rhs) => (*lhs, *rhs),

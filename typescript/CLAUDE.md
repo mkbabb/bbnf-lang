@@ -14,12 +14,17 @@ typescript/
 │   ├── types.ts        Expression union type, AST, ProductionRule, ImportDirective
 │   ├── grammar.ts      BBNFGrammar class — BBNF parser via parse-that combinators
 │   ├── generate.ts     ASTToParser — compile AST to executable parsers
+│   ├── imports.ts      Module graph loading, cycle-tolerant DFS, selective dep expansion
 │   ├── optimize.ts     Left-recursion elimination + prefix factoring
 │   ├── analysis.ts     Dependency graphs, Tarjan SCC, ref counts
 │   └── first-sets.ts   CharSet (128-bit), FIRST/nullable computation, dispatch tables
 └── test/
-    ├── bbnf.test.ts    13 test cases (JSON, CSV, CSS, BBNF self-parse, etc.)
-    └── utils.ts        Test helpers (math eval, random whitespace injection)
+    ├── bbnf.test.ts       13 end-to-end grammar tests (JSON, CSS, BBNF self-parse, etc.)
+    ├── imports.test.ts    13 import system tests (cyclic, transitive, selective, merge)
+    ├── analysis.test.ts   16 analysis tests (SCC, ref counts, dep graphs, FIRST conflicts)
+    ├── optimize.test.ts   13 optimization tests (left-recursion, topological sort, prefix)
+    ├── first-sets.test.ts 17 FIRST set tests (regex dispatch, CharSet, dispatch tables)
+    └── utils.ts           Test helpers (math eval, random whitespace injection)
 ```
 
 ## Key Exports
@@ -29,7 +34,9 @@ typescript/
 - **`BBNFToASTWithImports(text)`** — Parse with import directives.
 - **`ASTToParser(ast, analysis?, firstNullable?)`** — Compile AST → `Nonterminals` (rule name → Parser).
 - **`BBNFToParser(text)`** — End-to-end: text → executable parsers.
-- **`analyzeGrammar(ast)`** — Full analysis: dep graphs, SCCs, topo order, ref counts.
+- **`loadModuleGraphSync(path, reader?)`** — DFS-load a module and its transitive `@import` graph into a `ModuleRegistry`.
+- **`mergeModuleAST(registry, path)`** — Merge a module's local + imported rules into a single AST.
+- **`analyzeGrammar(ast)`** — Dep graphs, Tarjan SCC, topo order, ref counts, alias detection, acyclicity classification.
 - **`computeFirstSets(ast, analysis)`** — FIRST sets + nullable flags.
 - **`removeAllLeftRecursion(ast)`** — Left-recursion elimination.
 - **`CharSet`** — 128-bit ASCII bitset.

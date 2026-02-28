@@ -82,4 +82,5 @@ Requires `VSCE_PAT` secret in GitHub repo settings.
 - **Grammars**: `.bbnf` extension. `@import` for composition. `;` terminators.
 - **Local crate deps**: `parse_that` and `pprint` are local path dependencies.
 - **Lifetimes**: Borrowed `'a` throughout Rust AST; `Box::leak()` for import module graphs.
-- **Analysis pipeline**: Tarjan SCC → topological sort → FIRST sets → dispatch tables.
+- **Import system**: Cyclic imports handled via partial-init before recursion. Selective imports expand transitive local deps automatically. `@import` directives can appear at any position in a file.
+- **Analysis pipeline**: Tarjan SCC → topological sort → FIRST sets (128-bit `CharSet`) → dispatch tables (constant-time alternation selection by leading character).

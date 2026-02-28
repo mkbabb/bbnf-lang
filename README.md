@@ -18,6 +18,8 @@ typescript/             TS library (@mkbabb/bbnf-lang)
 prettier-plugin-bbnf/   Prettier plugin for .bbnf files
 extension/              VS Code extension (LSP client)
 grammar/                Example grammars + language specification
+  css/                  CSS grammar family (value-unit, color, values, selectors, keyframes)
+  lang/                 Language/format grammars (JSON, CSV, math, regex, EBNF, etc.)
 server/                 Compiled LSP binary (copied by Makefile)
 ```
 
@@ -40,7 +42,7 @@ number = /\-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?/ ;
 (* EBNF operators: [] optional, {} repetition, () grouping *)
 array = "[", [ value, { ",", value } ], "]" ;
 
-(* Imports *)
+(* Imports—selective imports auto-unfurl transitive dependencies *)
 @import { number, integer } from "css-value-unit.bbnf" ;
 ```
 
@@ -100,8 +102,50 @@ BBNF supports `@import` directives for composing grammars:
 @import { number, integer } from "lib.bbnf" ; (* selective import *)
 ```
 
+Import directives may appear at any position in a file (before, between, or after rules).
+Selective imports automatically bring transitive dependencies—importing `percentage`
+also brings `number` and `percentageUnit` if `percentage` references them.
+Circular imports are handled via Python-style partial initialization (a module's rules
+are registered before recursing into its own imports).
+
 Cmd+Click on import paths opens the referenced file. Diagnostics are
 import-aware—imported rule names suppress "undefined rule" warnings.
+
+## Architecture
+
+### Analysis Pipeline
+
+Both the TypeScript runtime and the Rust LSP implement the same analysis pipeline
+over the parsed AST, run before code generation or diagnostics:
+
+1. **Dependency graph**—forward and reverse adjacency lists of nonterminal references.
+2. **Tarjan's SCC**—strongly connected components identify cyclic rule groups
+   (e.g., mutual recursion between `expr` and `term`).
+3. **Topological sort**—acyclic ordering for bottom-up processing; dependents before
+   dependencies for left-recursion elimination.
+4. **FIRST sets**—per-rule `CharSet` (128-bit ASCII bitset) of characters that can
+   begin a match, plus nullable flags. Computed iteratively to fixed point over cyclic
+   rules.
+5. **Dispatch tables**—when an alternation's branches have disjoint FIRST sets, the
+   codegen emits an O(1) character-dispatch lookup instead of ordered trial.
+
+### Codegen Optimizations
+
+`ASTToParser` (TS) and the `generate` module (Rust) apply these
+optimizations during code generation:
+
+- **Dispatch tables**: Disjoint FIRST sets on alternation branches produce O(1)
+  character dispatch via `dispatch()`.
+- **Regex coalescing**: Alternations of single-character literals collapse into a
+  single regex character class.
+- **Pattern detection**: `sepBy`, `wrap`, and all-literal alternation patterns are
+  recognized and compiled to specialized combinators.
+- **Lazy nonterminal refs**: All nonterminal references use `Parser.lazy()`, enabling
+  post-generation parser customization (e.g., mapping `number` to `parseFloat`).
+- **Alias chain resolution**: `A = B ;` rules are resolved transitively so references
+  to `A` use `B`'s parser directly.
+- **Left-recursion elimination**: Direct left recursion via tail-rule extraction
+  (Paull's algorithm); indirect left recursion via substitution on the topological order.
 
 ## Build & Test
 
@@ -212,6 +256,14 @@ Current test coverage (45 integration tests):
 - Incremental text sync (insert, delete, replace)
 - Cross-file: go-to-definition, references, completion via `@import`
 - Large grammar (8-rule JSON grammar, all features combined)
+
+TypeScript test coverage (72 tests across 5 suites):
+
+- **bbnf.test.ts** (13)—end-to-end grammar parsing: JSON, CSV, CSS color/selectors/values/keyframes/value-unit, math, regex, EBNF, BBNF self-parse, left-recursion
+- **imports.test.ts** (13)—module graph: glob/selective imports, cyclic (2-way, 3-way, self), diamond deps, transitive unfurling, non-transitive scope, merge precedence
+- **analysis.test.ts** (16)—Tarjan SCC, dep graphs, ref counts, aliases, transparent alternations, FIRST set conflicts, acyclic classification
+- **optimize.test.ts** (13)—topological sort, direct/indirect left-recursion elimination, common prefix detection
+- **first-sets.test.ts** (17)—`regexFirstChars` dispatch, `CharSet` operations, `computeFirstSets` convergence, `buildDispatchTable` routing
 
 ### Developing the Prettier Plugin
 

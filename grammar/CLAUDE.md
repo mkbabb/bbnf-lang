@@ -1,4 +1,4 @@
-# CLAUDE.md — grammar/
+# CLAUDE.md—grammar/
 
 Example grammars and language specification.
 
@@ -6,27 +6,29 @@ Example grammars and language specification.
 
 ```
 grammar/
-├── BBNF.md                 Full BBNF language specification
-├── about.md                Grammar index and descriptions
-├── bbnf.bbnf               Self-hosting BBNF grammar
-├── json.bbnf               JSON (RFC 8259)
-├── json-commented.bbnf     JSON with comments
-├── csv.bbnf                CSV (RFC 4180)
-├── math.bbnf               Arithmetic with precedence
-├── math-ambiguous.bbnf     Deliberately ambiguous arithmetic
-├── regex.bbnf              Regular expression syntax
-├── ebnf.bbnf               ISO 14977 EBNF
-├── emoji.bbnf              Emoji token toy language
-├── g4.bbnf                 English sentence structure
-├── css-value-unit.bbnf     CSS numeric values + units (base)
-├── css-values.bbnf         CSS value types
-├── css-color.bbnf          CSS color values (imports css-value-unit)
-├── css-selectors.bbnf      CSS selectors Level 3+
-├── css-keyframes.bbnf      CSS @keyframes syntax
+├── BBNF.md                     BBNF language specification
+├── about.md                    Grammar index and descriptions
+├── css/                        CSS grammar family
+│   ├── css-value-unit.bbnf     CSS numeric values + units (base)
+│   ├── css-color.bbnf          CSS color values (imports css-value-unit)
+│   ├── css-values.bbnf         CSS composite value types
+│   ├── css-selectors.bbnf      CSS selectors Level 4
+│   └── css-keyframes.bbnf      CSS @keyframes syntax
+├── lang/                       Language/format grammars
+│   ├── bbnf.bbnf               Self-hosting BBNF grammar
+│   ├── json.bbnf               JSON (RFC 8259)
+│   ├── json-commented.bbnf     JSON with comments
+│   ├── csv.bbnf                CSV (RFC 4180)
+│   ├── math.bbnf               Arithmetic with precedence
+│   ├── math-ambiguous.bbnf     Deliberately ambiguous arithmetic
+│   ├── regex.bbnf              Regular expression syntax
+│   ├── ebnf.bbnf               ISO 14977 EBNF
+│   ├── emoji.bbnf              Emoji token toy language
+│   └── g4.bbnf                 English sentence structure
 └── tests/
     └── json/
-        ├── valid.jsonl     Valid JSON test cases
-        └── invalid.jsonl   Invalid JSON test cases
+        ├── valid.jsonl         Valid JSON test cases
+        └── invalid.jsonl       Invalid JSON test cases
 ```
 
 ## BBNF Language Quick Reference
@@ -39,7 +41,7 @@ rule = expression ;                             (* production rule *)
 
 **Terminals**: `"string"`, `'string'`, `` `string` ``, `/regex/`, `epsilon` / `ε`
 
-**Operators** (lowest → highest precedence):
+**Operators** (lowest -> highest precedence):
 1. `|` alternation
 2. `,` concatenation (comma optional)
 3. `<<` skip, `>>` next, `-` minus
@@ -50,28 +52,25 @@ rule = expression ;                             (* production rule *)
 
 ## Import System
 
-- Non-transitive: must import explicitly at each level.
-- Circular imports: detected and rejected.
+- Cyclic imports: allowed (Python-style partial-init—module registered before recursing).
+- Selective imports: transitive local dependencies are automatically unfurled.
+- Non-transitive scope: A imports B, B imports C—A can't see C's rules.
 - Name conflicts: error if same rule imported from multiple sources.
 - Path resolution: relative to importing file, `.bbnf` auto-appended.
+- Imports may appear at any position (after comments, between rules, etc.).
 
 ## CSS Grammar Dependency Chain
 
 ```
-css-value-unit.bbnf  ← canonical base (numbers, units, dimensions)
-      ↑
-css-color.bbnf       ← glob imports css-value-unit
-      ↑
-css-values.bbnf      ← glob imports css-value-unit + css-color
-css-keyframes.bbnf   ← glob imports css-value-unit
-css-selectors.bbnf   ← standalone (no imports)
+css/css-value-unit.bbnf  <- canonical base (numbers, units, dimensions)
+      |
+css/css-color.bbnf       <- glob imports css-value-unit
+      |
+css/css-values.bbnf      <- glob imports css-value-unit + css-color
+css/css-keyframes.bbnf   <- glob imports css-value-unit
+css/css-selectors.bbnf   <- standalone (no imports)
 ```
 
-**Important:** Use glob imports (not selective) for CSS grammars — selective
-imports don't bring transitive dependencies (e.g., `percentage` needs
-`percentageUnit`).
-
-**Dispatch table caveat:** `@import` directives must appear before any comments
-in a `.bbnf` file (TS parser limitation). Separator rules must have disjoint
-static FIRST sets for correct dispatch; runtime `.trim()` overrides that expand
-a branch's effective FIRST set will break dispatch routing.
+**Dispatch table caveat:** Separator rules must have disjoint static FIRST sets
+for correct dispatch; runtime `.trim()` overrides that expand a branch's
+effective FIRST set will break dispatch routing.

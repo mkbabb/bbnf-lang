@@ -5,14 +5,14 @@ EBNF with operators for whitespace handling, value projection (skip/next), set
 difference, and mapping functions. BBNF grammars serve as the shared contract between
 the TypeScript and Rust implementations of `parse-that`.
 
-A BBNF file consists of optional **import directives** followed by one or more
-**production rules**, interleaved with comments. Each rule defines a named nonterminal
-in terms of an expression built from terminals, nonterminal references, and operators.
+A BBNF file consists of **import directives** and **production rules** in any order,
+interleaved with comments. Each rule defines a named nonterminal in terms of an
+expression built from terminals, nonterminal references, and operators.
 
 ## Import Directives
 
 Import directives allow a grammar to reference rules defined in other `.bbnf` files.
-They must appear at the top of the file, before any production rules.
+They may appear at any position in the file.
 
 ### Whole-file import
 
@@ -36,9 +36,13 @@ Imports only the named rules from the specified file:
   extension is given, `.bbnf` is appended.
 - **Non-transitive**: If A imports B and B imports C, A does **not** see C's rules.
   A must import C explicitly.
+- **Transitive dependency unfurling**: Selective imports include any rules the
+  named imports reference. `@import { percentage } from "base.bbnf"` also
+  brings `number` and `percentageUnit` if `percentage` depends on them.
 - **Local shadows imports**: A locally defined rule takes precedence over an imported
   rule of the same name (with a warning).
-- **Circular imports are errors**: Detected via DFS on-stack check.
+- **Circular imports are allowed**: A module's symbol table is registered before
+  its imports are resolved, so mutual import cycles don't deadlock or error.
 - **Name conflicts are errors**: Two imports defining the same rule name is an error.
 
 ## Production Rules

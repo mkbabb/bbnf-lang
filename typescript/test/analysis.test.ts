@@ -7,13 +7,14 @@ import {
     classifyAcyclicDeps,
     tarjanSCC,
     buildDepGraphs,
+    computeRefCounts,
+    analyzeGrammar,
 } from "../src/analysis.js";
 import {
     CharSet,
     computeFirstSets,
     findFirstSetConflicts,
 } from "../src/first-sets.js";
-import { analyzeGrammar } from "../src/analysis.js";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -224,5 +225,99 @@ describe("CharSet", () => {
 
         const codes = [...cs];
         expect(codes).toEqual([65, 90, 97]);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// Extended analysis tests
+// ---------------------------------------------------------------------------
+
+describe("tarjanSCC (extended)", () => {
+    it("detects 3+ member SCC", () => {
+        // a -> b -> c -> a (cycle of 3)
+        const depGraph = new Map<string, Set<string>>([
+            ["a", new Set(["b"])],
+            ["b", new Set(["c"])],
+            ["c", new Set(["a"])],
+        ]);
+        const { sccs, cyclicRules } = tarjanSCC(depGraph);
+
+        // All three should be in the same SCC
+        expect(cyclicRules.has("a")).toBe(true);
+        expect(cyclicRules.has("b")).toBe(true);
+        expect(cyclicRules.has("c")).toBe(true);
+
+        // Should be exactly one SCC containing all three
+        const largeScc = sccs.find((scc) => scc.length === 3);
+        expect(largeScc).toBeDefined();
+    });
+});
+
+describe("computeRefCounts", () => {
+    it("counts references accurately", () => {
+        // a = b | c ; b = c ; c = /x/
+        // c is referenced by both a and b (count 2), b by a (count 1)
+        const ast: AST = new Map([
+            rule("a", alternation([nonterminal("b"), nonterminal("c")])),
+            rule("b", nonterminal("c")),
+            rule("c", regexExpr(/x/)),
+        ]);
+        const counts = computeRefCounts(ast);
+
+        expect(counts.get("b")).toBe(1); // referenced by a
+        expect(counts.get("c")).toBe(2); // referenced by a and b
+        expect(counts.get("a")).toBe(0); // not referenced by anyone
+    });
+});
+
+describe("buildDepGraphs", () => {
+    it("builds correct forward and reverse graphs", () => {
+        const ast: AST = new Map([
+            rule("a", alternation([nonterminal("b"), nonterminal("c")])),
+            rule("b", nonterminal("c")),
+            rule("c", regexExpr(/x/)),
+        ]);
+        const { depGraph, rdepGraph } = buildDepGraphs(ast);
+
+        // Forward: a depends on b, c; b depends on c
+        expect(depGraph.get("a")!.has("b")).toBe(true);
+        expect(depGraph.get("a")!.has("c")).toBe(true);
+        expect(depGraph.get("b")!.has("c")).toBe(true);
+        expect(depGraph.get("c")!.size).toBe(0);
+
+        // Reverse: c is depended on by a, b; b is depended on by a
+        expect(rdepGraph.get("c")!.has("a")).toBe(true);
+        expect(rdepGraph.get("c")!.has("b")).toBe(true);
+        expect(rdepGraph.get("b")!.has("a")).toBe(true);
+        expect(rdepGraph.get("a")!.size).toBe(0);
+    });
+});
+
+describe("analyzeGrammar", () => {
+    it("returns complete analysis cache", () => {
+        const ast: AST = new Map([
+            rule("start", alternation([nonterminal("a"), nonterminal("b")])),
+            rule("a", regexExpr(/x/)),
+            rule("b", regexExpr(/y/)),
+        ]);
+        const analysis = analyzeGrammar(ast);
+
+        expect(analysis.depGraph).toBeDefined();
+        expect(analysis.rdepGraph).toBeDefined();
+        expect(analysis.sccs).toBeDefined();
+        expect(analysis.cyclicRules).toBeDefined();
+        expect(analysis.topoOrder).toBeDefined();
+        expect(analysis.refCounts).toBeDefined();
+        expect(analysis.aliases).toBeDefined();
+        expect(analysis.transparentAlternations).toBeDefined();
+        expect(analysis.acyclicRules).toBeDefined();
+        expect(analysis.nonAcyclicRules).toBeDefined();
+
+        // topoOrder should contain all rules
+        expect(analysis.topoOrder.length).toBe(3);
+        // All rules should be acyclic (no cycles)
+        expect(analysis.acyclicRules.has("start")).toBe(true);
+        expect(analysis.acyclicRules.has("a")).toBe(true);
+        expect(analysis.acyclicRules.has("b")).toBe(true);
     });
 });

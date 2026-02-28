@@ -76,7 +76,7 @@ describe("Module import graph", () => {
         expect(circularErrors).toEqual([]);
     });
 
-    it("circular import — CircularImport error", () => {
+    it("circular import — allowed (both modules accessible)", () => {
         const files = new Map<string, string>();
         files.set(
             "/test/a.bbnf",
@@ -89,10 +89,14 @@ describe("Module import graph", () => {
 
         const registry = loadModuleGraphSync("/test/a.bbnf", memoryReader(files));
 
-        const circularErrors = registry.errors.filter(
-            (e) => e.type === "CircularImport",
-        );
-        expect(circularErrors.length).toBeGreaterThan(0);
+        // Cyclic imports are now allowed (Python-style partial-init).
+        expect(registry.errors).toEqual([]);
+        // Both modules should be loaded.
+        expect(registry.modules.has("/test/a.bbnf")).toBe(true);
+        expect(registry.modules.has("/test/b.bbnf")).toBe(true);
+        // A can see B's rules.
+        const namesA = importedRuleNames(registry, "/test/a.bbnf");
+        expect(namesA.has("ruleB")).toBe(true);
     });
 
     it("missing file — FileNotFound error", () => {
@@ -142,6 +146,91 @@ describe("Module import graph", () => {
         expect(namesA.has("mid")).toBe(true);
         // A cannot see C's rule "deep" — imports are non-transitive.
         expect(namesA.has("deep")).toBe(false);
+    });
+
+    it("three-way circular import — all modules accessible", () => {
+        const files = new Map<string, string>();
+        files.set("/test/a.bbnf", '@import "b.bbnf" ; ruleA = /a/ ;');
+        files.set("/test/b.bbnf", '@import "c.bbnf" ; ruleB = /b/ ;');
+        files.set("/test/c.bbnf", '@import "a.bbnf" ; ruleC = /c/ ;');
+
+        const registry = loadModuleGraphSync("/test/a.bbnf", memoryReader(files));
+
+        expect(registry.errors).toEqual([]);
+        expect(registry.modules.has("/test/a.bbnf")).toBe(true);
+        expect(registry.modules.has("/test/b.bbnf")).toBe(true);
+        expect(registry.modules.has("/test/c.bbnf")).toBe(true);
+    });
+
+    it("self-import — no errors", () => {
+        const files = new Map<string, string>();
+        files.set("/test/self.bbnf", '@import "self.bbnf" ; ruleS = /s/ ;');
+
+        const registry = loadModuleGraphSync("/test/self.bbnf", memoryReader(files));
+
+        expect(registry.errors).toEqual([]);
+        expect(registry.modules.has("/test/self.bbnf")).toBe(true);
+    });
+
+    it("selective import with transitive unfurling", () => {
+        const files = new Map<string, string>();
+        // base has: number, percentageUnit, percentage (depends on number + percentageUnit)
+        files.set(
+            "/test/base.bbnf",
+            'number = /[0-9]+/ ; percentageUnit = "%" ; percentage = number , percentageUnit ;',
+        );
+        // main selectively imports only "percentage" — should auto-unfurl number + percentageUnit
+        files.set(
+            "/test/main.bbnf",
+            '@import { percentage } from "base.bbnf" ; value = percentage ;',
+        );
+
+        const registry = loadModuleGraphSync("/test/main.bbnf", memoryReader(files));
+
+        expect(registry.errors).toEqual([]);
+        const names = importedRuleNames(registry, "/test/main.bbnf");
+        expect(names.has("percentage")).toBe(true);
+        expect(names.has("number")).toBe(true);
+        expect(names.has("percentageUnit")).toBe(true);
+    });
+
+    it("deep chain unfurling — transitive deps through 3 levels", () => {
+        const files = new Map<string, string>();
+        files.set(
+            "/test/base.bbnf",
+            'digit = /[0-9]/ ; number = digit+ ; percentage = number , "%" ;',
+        );
+        files.set(
+            "/test/main.bbnf",
+            '@import { percentage } from "base.bbnf" ; value = percentage ;',
+        );
+
+        const registry = loadModuleGraphSync("/test/main.bbnf", memoryReader(files));
+
+        expect(registry.errors).toEqual([]);
+        const names = importedRuleNames(registry, "/test/main.bbnf");
+        expect(names.has("percentage")).toBe(true);
+        expect(names.has("number")).toBe(true);
+        expect(names.has("digit")).toBe(true);
+    });
+
+    it("import after rules — arbitrary position", () => {
+        const files = new Map<string, string>();
+        files.set("/test/base.bbnf", 'number = /[0-9]+/ ;');
+        files.set(
+            "/test/main.bbnf",
+            'ruleA = /a/ ; @import "base.bbnf" ; ruleB = number ;',
+        );
+
+        const registry = loadModuleGraphSync("/test/main.bbnf", memoryReader(files));
+
+        expect(registry.errors).toEqual([]);
+        const names = importedRuleNames(registry, "/test/main.bbnf");
+        expect(names.has("number")).toBe(true);
+        // Local rules should also be present
+        const mod = registry.modules.get("/test/main.bbnf")!;
+        expect(mod.localRuleNames).toContain("ruleA");
+        expect(mod.localRuleNames).toContain("ruleB");
     });
 
     it("mergeModuleAST — imported and local rules present, local takes precedence", () => {

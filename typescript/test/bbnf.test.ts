@@ -18,6 +18,12 @@ const div = string("/").trim();
 const mathParser = (grammar: string) => {
     const [nonterminals, ast] = BBNFToParser(grammar);
 
+    // The math grammar has no built-in whitespace handling, so trim all
+    // nonterminals to allow spaces around operators and operands.
+    for (const key of Object.keys(nonterminals)) {
+        nonterminals[key] = nonterminals[key].trim();
+    }
+
     nonterminals.expr = nonterminals.expr.map(reduceMathExpression);
     nonterminals.term = nonterminals.term.map(reduceMathExpression);
     const numberRegex = /(\d+)?(\.\d+)?([eE][-+]?\d+)?/;
@@ -184,9 +190,8 @@ export const JSONParser = (grammar: string) => {
 };
 
 describe("BBNF Parser", () => {
-    // BBNF math grammar fails on long expressions — parse returns undefined near end
-    it.todo("should parse a simple math grammar", () => {
-        const grammar = fs.readFileSync("../grammar/math.bbnf", "utf8");
+    it("should parse a simple math grammar", () => {
+        const grammar = fs.readFileSync("../grammar/lang/math.bbnf", "utf8");
         const [nonterminals] = mathParser(grammar);
         const parser = nonterminals.expr;
 
@@ -198,7 +203,7 @@ describe("BBNF Parser", () => {
     });
 
     it("should parse a CSS color grammar", () => {
-        const grammarPath = path.resolve("../grammar/css-color.bbnf");
+        const grammarPath = path.resolve("../grammar/css/css-color.bbnf");
         const [nonterminals] = CSSColorParser(grammarPath);
         const parser = nonterminals.color;
 
@@ -225,9 +230,9 @@ describe("BBNF Parser", () => {
     });
 
     // valueUnit grammar returns non-iterable for unitless numbers
-    it.todo("should parse a CSS value unit grammar", () => {
-        const grammarPath = path.resolve("../grammar/css-value-unit.bbnf");
-        const colorGrammarPath = path.resolve("../grammar/css-color.bbnf");
+    it("should parse a CSS value unit grammar", () => {
+        const grammarPath = path.resolve("../grammar/css/css-value-unit.bbnf");
+        const colorGrammarPath = path.resolve("../grammar/css/css-color.bbnf");
 
         const [nonterminals] = CSSValueUnitParser(grammarPath);
         const [colorNonterminals] = CSSColorParser(colorGrammarPath);
@@ -295,7 +300,7 @@ describe("BBNF Parser", () => {
     });
 
     it("should parse a CSS keyframes grammar", () => {
-        const grammarPath = path.resolve("../grammar/css-keyframes.bbnf");
+        const grammarPath = path.resolve("../grammar/css/css-keyframes.bbnf");
         const [nonterminals, ast] = BBNFToParserFromFile(grammarPath);
 
         nonterminals.KEYFRAMES_RULE = nonterminals.KEYFRAMES_RULE.trim();
@@ -329,7 +334,7 @@ describe("BBNF Parser", () => {
     });
 
     it("should parse an BBNF grammar", () => {
-        let grammar = fs.readFileSync("../grammar/bbnf.bbnf", "utf8");
+        let grammar = fs.readFileSync("../grammar/lang/bbnf.bbnf", "utf8");
 
         const [nonterminals, ast] = BBNFToParser(grammar);
         const parser = nonterminals.grammar;
@@ -337,7 +342,7 @@ describe("BBNF Parser", () => {
         for (let i = 0; i < 10; i++) {
             grammar = parser.eof().parse(grammar).flat(Infinity).join("");
             expect(grammar).toBeTruthy();
-            fs.writeFileSync("../grammar/bbnf.out", grammar, "utf8");
+            fs.writeFileSync("../grammar/lang/bbnf.out", grammar, "utf8");
         }
     });
 
@@ -365,7 +370,7 @@ describe("BBNF Parser", () => {
     });
 
     it("should parse JSON data", () => {
-        const grammar = fs.readFileSync("../grammar/json.bbnf", "utf8");
+        const grammar = fs.readFileSync("../grammar/lang/json.bbnf", "utf8");
 
         const parser = JSONParser(grammar);
 
@@ -376,7 +381,7 @@ describe("BBNF Parser", () => {
     });
 
     it("should parse regular expressions", () => {
-        const grammar = fs.readFileSync("../grammar/regex.bbnf", "utf8");
+        const grammar = fs.readFileSync("../grammar/lang/regex.bbnf", "utf8");
 
         const [nonterminals, ast] = BBNFToParser(grammar);
 
@@ -405,7 +410,7 @@ describe("BBNF Parser", () => {
     });
 
     it("should parse an ambiguous BBNF grammar", () => {
-        let grammar = fs.readFileSync("../grammar/g4.bbnf", "utf8");
+        let grammar = fs.readFileSync("../grammar/lang/g4.bbnf", "utf8");
 
         const [nonterminals, ast] = BBNFToParser(grammar, true);
 
@@ -433,7 +438,7 @@ describe("BBNF Parser", () => {
     });
 
     it("should parse an EBNF grammar", () => {
-        let grammar = fs.readFileSync("../grammar/ebnf.bbnf", "utf8");
+        let grammar = fs.readFileSync("../grammar/lang/ebnf.bbnf", "utf8");
 
         for (let i = 0; i < 10; i++) {
             const [nonterminals, ast] = BBNFToParser(grammar);
@@ -449,7 +454,7 @@ describe("BBNF Parser", () => {
     });
 
     it("should parse a CSS selectors grammar", () => {
-        const grammar = fs.readFileSync("../grammar/css-selectors.bbnf", "utf8");
+        const grammar = fs.readFileSync("../grammar/css/css-selectors.bbnf", "utf8");
         const [nonterminals] = BBNFToParser(grammar);
 
         const selectors = [
@@ -476,7 +481,7 @@ describe("BBNF Parser", () => {
     });
 
     it("should parse a CSS values grammar", () => {
-        const grammarPath = path.resolve("../grammar/css-values.bbnf");
+        const grammarPath = path.resolve("../grammar/css/css-values.bbnf");
         const [nonterminals] = BBNFToParserFromFile(grammarPath);
 
         // Override number/integer with runtime parsers
@@ -502,7 +507,7 @@ describe("BBNF Parser", () => {
     });
 
     it("should parse a CSV grammar", () => {
-        const grammar = fs.readFileSync("../grammar/csv.bbnf", "utf8");
+        const grammar = fs.readFileSync("../grammar/lang/csv.bbnf", "utf8");
         const [nonterminals] = BBNFToParser(grammar);
 
         const csvData = `name,age,city

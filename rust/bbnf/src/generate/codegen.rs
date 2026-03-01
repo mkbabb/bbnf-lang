@@ -523,22 +523,49 @@ pub fn calculate_alternation_expression<'a>(
         }
     }
 
+    // Inline flat alternation — emit a single closure with all branches.
+    // This creates one Box<dyn ParserFn> instead of N-1 .or() boxes.
+    if parsers.len() == 1 {
+        return parsers.into_iter().next().unwrap();
+    }
+    if parsers.len() <= 8 {
+        // Emit let bindings + inline match closure
+        let bindings: Vec<TokenStream> = parsers.iter().enumerate().map(|(i, p)| {
+            let ident = format_ident!("_alt_{}", i);
+            quote! { let #ident = #p; }
+        }).collect();
+        let arms: Vec<TokenStream> = (0..parsers.len()).map(|i| {
+            let ident = format_ident!("_alt_{}", i);
+            if i < parsers.len() - 1 {
+                quote! {
+                    if let Some(v) = #ident.call(state) { return Some(v); }
+                    state.furthest_offset = state.furthest_offset.max(state.offset);
+                    state.offset = cp;
+                }
+            } else {
+                // Last branch: no checkpoint restore needed
+                quote! { #ident.call(state) }
+            }
+        }).collect();
+        return quote! {
+            {
+                #(#bindings)*
+                ::parse_that::Parser::new(move |state: &mut ::parse_that::ParserState<'a>| {
+                    let cp = state.offset;
+                    #(#arms)*
+                })
+            }
+        };
+    }
+    // More than 8 branches: fall back to .or() chain
     let parser = parsers
         .into_iter()
-        .fold(None, |acc, parser| match acc {
+        .fold(None::<TokenStream>, |acc, parser| match acc {
             None => Some(parser),
-            Some(acc) => Some(quote! {
-                #acc | #parser
-            }),
+            Some(acc) => Some(quote! { #acc | #parser }),
         })
         .unwrap();
-    if inner_exprs.len() > 1 {
-        quote! {
-            (#parser)
-        }
-    } else {
-        parser
-    }
+    quote! { (#parser) }
 }
 
 pub fn calculate_parser_from_expression<'a>(

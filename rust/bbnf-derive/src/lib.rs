@@ -199,6 +199,9 @@ fn try_generate_span_parser<'a>(
                 Some(quote! { ::parse_that::sp_json_string_quoted() })
             } else if bbnf::generate::is_json_number_regex(value) {
                 Some(quote! { ::parse_that::sp_json_number() })
+            } else if let Some(excluded) = bbnf::generate::is_negated_char_class_regex(value) {
+                let excluded_bytes = proc_macro2::Literal::byte_string(excluded.as_bytes());
+                Some(quote! { ::parse_that::sp_take_until_any(#excluded_bytes) })
             } else {
                 let pattern = value.as_ref();
                 Some(quote! { ::parse_that::sp_regex(#pattern) })

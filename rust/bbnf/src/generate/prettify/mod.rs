@@ -172,7 +172,7 @@ pub fn generate_prettify(
 
                 to_doc_arms.push(quote! {
                     Self::#variant(#pat) => {
-                        ::pprint::Doc::Concat(vec![#(#doc_parts),*])
+                        ::pprint::concat(vec![#(#doc_parts),*])
                     }
                 });
 
@@ -388,8 +388,8 @@ fn generate_compound_doc(
         let combined = if parts.len() == 1 {
             parts[0].clone()
         } else {
-            // Interleave with spaces or softlines using Doc::Concat to avoid
-            // nested `+` operator chains that produce invalid TokenStreams for 4+ elements.
+            // Interleave with spaces or softlines using concat() to dispatch to
+            // DoubleDoc/TripleDoc for 2-3 elements, avoiding Vec heap allocation.
             let sep = if hints.contains(&"nobreak".to_string()) {
                 quote! { ::pprint::Doc::String(::std::borrow::Cow::Borrowed(" ")) }
             } else {
@@ -403,7 +403,7 @@ fn generate_compound_doc(
                 }
                 interleaved.push(part.clone());
             }
-            quote! { ::pprint::Doc::Concat(vec![#(#interleaved),*]) }
+            quote! { ::pprint::concat(vec![#(#interleaved),*]) }
         };
 
         let doc = apply_hints(combined, hints);

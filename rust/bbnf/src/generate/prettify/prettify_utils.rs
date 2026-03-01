@@ -189,7 +189,7 @@ pub fn doc_for_binding(binding: &syn::Ident, ty: &syn::Type) -> TokenStream {
             doc_for_binding(b, elem_ty)
         }).collect();
         quote! {
-            { let #pat = #binding; ::pprint::Doc::Concat(vec![#(#doc_parts),*]) }
+            { let #pat = #binding; ::pprint::concat(vec![#(#doc_parts),*]) }
         }
     } else {
         // Unknown type — emit Null.
@@ -282,7 +282,7 @@ pub fn generate_item_to_doc(vec_ty: &syn::Type) -> TokenStream {
             doc_for_binding(binding, elem_ty)
         }).collect();
         quote! {
-            { let #pat = item; ::pprint::Doc::Concat(vec![#(#doc_parts),*]) }
+            { let #pat = item; ::pprint::concat(vec![#(#doc_parts),*]) }
         }
     } else {
         // Simple element — call to_doc directly.

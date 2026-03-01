@@ -17,6 +17,38 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote, ToTokens};
 use syn::parse_quote;
 
+/// Unescape a BBNF literal string (e.g. `\n` → newline, `\t` → tab).
+/// BBNF literals store escape sequences as raw characters (backslash + letter)
+/// since they come from source text between quotes. We need to unescape them
+/// before embedding into Rust string literals via `quote!`.
+pub fn unescape_literal(s: &str) -> String {
+    let mut result = String::with_capacity(s.len());
+    let mut chars = s.chars();
+    while let Some(c) = chars.next() {
+        if c == '\\' {
+            match chars.next() {
+                Some('n') => result.push('\n'),
+                Some('t') => result.push('\t'),
+                Some('r') => result.push('\r'),
+                Some('\\') => result.push('\\'),
+                Some('\'') => result.push('\''),
+                Some('"') => result.push('"'),
+                Some('0') => result.push('\0'),
+                Some('f') => result.push('\x0C'),
+                Some('b') => result.push('\x08'),
+                Some(other) => {
+                    result.push('\\');
+                    result.push(other);
+                }
+                None => result.push('\\'),
+            }
+        } else {
+            result.push(c);
+        }
+    }
+    result
+}
+
 pub fn map_generated_parser<'a, 'b>(
     name: &str,
     expr: &Expression<'a>,
@@ -244,6 +276,62 @@ pub fn calculate_concatenation_expression<'a>(
     acc.unwrap()
 }
 
+/// Coerce alternation branch parsers to a uniform `Box<Enum>` output type.
+/// - Branches already producing `Box<Enum>`: left as-is.
+/// - Branches producing `Span`: wrapped with `.map(|x| Box::new(x))`.
+/// - Branches producing other types (tuples): wrapped with a sub-variant
+///   constructor: `.map(|x| Box::new(Enum::rule_N(x)))`.
+fn coerce_alternation_branches<'a>(
+    parsers: &[TokenStream],
+    branch_tys: &[syn::Type],
+    overall_is_boxed_enum: bool,
+    grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
+    _cache_bundle: &'a CacheBundle<'a, '_, '_>,
+) -> Vec<TokenStream> {
+    if !overall_is_boxed_enum {
+        return parsers.to_vec();
+    }
+
+    let boxed_enum_str = grammar_attrs.boxed_enum_type.to_token_stream().to_string();
+    let enum_ident = grammar_attrs.enum_ident;
+
+    // Collect ALL sub-variants from all rules into a flat lookup by type string.
+    // This handles the case where an alternation is encountered during deep inlining
+    // and current_rule_name doesn't match the original rule that defined the sub-variants.
+    let all_sub_variants: Vec<&(String, syn::Type)> = grammar_attrs
+        .sub_variants
+        .map(|sv| sv.values().flatten().collect())
+        .unwrap_or_default();
+
+    parsers
+        .iter()
+        .zip(branch_tys.iter())
+        .map(|(parser, branch_ty)| {
+            let ty_str = branch_ty.to_token_stream().to_string();
+
+            if ty_str == boxed_enum_str {
+                // Already Box<Enum> — no wrapping needed.
+                parser.clone()
+            } else if let Some((variant_name, _)) = all_sub_variants.iter().find(|(_, vty)| {
+                vty.to_token_stream().to_string() == ty_str
+            }) {
+                // Found a sub-variant with matching type — wrap with it.
+                // This must be checked BEFORE Span to handle heterogeneous alternations
+                // where Span branches need sub-variant wrappers (e.g. term_0).
+                let variant_ident = format_ident!("{}", variant_name);
+                quote! { #parser.map(|x| Box::new(#enum_ident::#variant_ident(x))) }
+            } else if type_is_span(branch_ty) {
+                // Span branch with no sub-variant — box it directly.
+                quote! { #parser.map(|x| Box::new(x)) }
+            } else {
+                // No matching sub-variant — leave as-is (this may cause a type error
+                // if the branch type doesn't match the alternation's overall type).
+                parser.clone()
+            }
+        })
+        .collect()
+}
+
 pub fn calculate_alternation_expression<'a>(
     inner_exprs: &'a [Expression<'a>],
     grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
@@ -290,20 +378,10 @@ pub fn calculate_alternation_expression<'a>(
                     == grammar_attrs.boxed_enum_type.to_token_stream().to_string();
 
             // Coerce each branch parser to the overall type if needed.
-            let coerced_parsers: Vec<TokenStream> = parsers
-                .iter()
-                .zip(branch_tys.iter())
-                .map(|(parser, branch_ty)| {
-                    if overall_is_boxed_enum && type_is_span(branch_ty) {
-                        // Span branch in a Box<Enum> alternation — wrap it.
-                        // The parser is already generated with proper type from
-                        // boxed2, so just box the result.
-                        quote! { #parser.map(|x| Box::new(x)) }
-                    } else {
-                        parser.clone()
-                    }
-                })
-                .collect();
+            let coerced_parsers: Vec<TokenStream> = coerce_alternation_branches(
+                &parsers, &branch_tys, overall_is_boxed_enum,
+                grammar_attrs, cache_bundle,
+            );
 
             // Phase C+D: Inline match dispatch with SpanParser fast-path.
             // For span-eligible branches, call Self::rule_sp() directly to avoid
@@ -425,8 +503,22 @@ pub fn calculate_alternation_expression<'a>(
             .collect();
         let all_span = tys.iter().all(type_is_span);
         if !all_span {
+            // Check if branches are heterogeneous (need coercion).
+            let all_same = tys.iter().all(|ty| {
+                ty.to_token_stream().to_string() == tys[0].to_token_stream().to_string()
+            });
+            if !all_same {
+                // Heterogeneous: coerce all branches to Box<Enum>.
+                let coerced = coerce_alternation_branches(
+                    &parsers, &tys, true,
+                    grammar_attrs, cache_bundle,
+                );
+                return quote! {
+                    ::parse_that::one_of(vec![#(#coerced),*])
+                };
+            }
             return quote! {
-                ::parse_that::parse::one_of(vec![#(#parsers),*])
+                ::parse_that::one_of(vec![#(#parsers),*])
             };
         }
     }
@@ -497,14 +589,18 @@ pub fn calculate_parser_from_expression<'a>(
         }
     }
     let parser = match expr {
-        Expression::Literal(Token { value, .. }) => get_and_parse_default_parser(
-            "LITERAL",
-            Some(quote! {
-                #value
-            }),
-            grammar_attrs,
-        )
-        .unwrap(),
+        Expression::Literal(Token { value, .. }) => {
+            let unescaped = unescape_literal(value);
+            let lit = proc_macro2::Literal::string(&unescaped);
+            get_and_parse_default_parser(
+                "LITERAL",
+                Some(quote! {
+                    #lit
+                }),
+                grammar_attrs,
+            )
+            .unwrap()
+        }
         Expression::Regex(Token { value, .. }) => {
             // Phase 2.1: Detect JSON string regex and emit sp_json_string() fast path.
             // The JSON grammar's string regex uses memchr2-based SIMD scanning which is
@@ -556,7 +652,7 @@ pub fn calculate_parser_from_expression<'a>(
             }
         }
         Expression::Epsilon(_) => quote! {
-            ::parse_that::parse::epsilon()
+            ::parse_that::epsilon()
         },
         Expression::MappedExpression((inner_expr, mapping_fn)) => {
             let inner_expr = inner_expr.inner();
@@ -774,7 +870,7 @@ pub fn calculate_parser_from_expression<'a>(
             );
 
             quote! {
-                #left_parser.not(#right_parser)
+                #left_parser.minus(#right_parser)
             }
         }
         Expression::Concatenation(inner_exprs) => {

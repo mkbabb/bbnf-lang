@@ -172,8 +172,8 @@ pub fn check_for_wrapped<'a>(
 ) -> Option<TokenStream> {
     match left_expr {
         Expression::Group(inner) => check_for_wrapped(
-            left_expr,
             &inner.as_ref().value,
+            right_expr,
             grammar_attrs,
             cache_bundle,
             max_depth,
@@ -249,16 +249,17 @@ pub fn check_for_any_span(exprs: &[Expression]) -> Option<TokenStream> {
         .iter()
         .all(|expr| matches!(expr, Expression::Literal(_)));
     if all_literals {
-        let literal_arr = exprs
+        let literal_arr: Vec<proc_macro2::Literal> = exprs
             .iter()
             .map(|expr| {
                 if let Expression::Literal(token) = expr {
-                    token.value.clone()
+                    let unescaped = super::codegen::unescape_literal(&token.value);
+                    proc_macro2::Literal::string(&unescaped)
                 } else {
                     panic!("Expected literal");
                 }
             })
-            .collect::<Vec<_>>();
+            .collect();
         Some(quote! {
             :: parse_that:: any_span(&[#(#literal_arr), *])
         })

@@ -12,30 +12,35 @@ mod types;
 mod type_inference;
 mod patterns;
 mod codegen;
+mod prettify;
 
 // Re-export everything publicly so downstream code sees the same API.
 pub use types::*;
 pub use type_inference::*;
 pub use patterns::*;
 pub use codegen::*;
+pub use prettify::*;
 
 use crate::analysis::get_nonterminal_name;
+use crate::types::Expression;
 
 use std::{
     cell::RefCell,
     collections::HashMap,
     rc::Rc,
 };
-use quote::quote;
+use quote::{format_ident, quote};
 
 pub fn calculate_nonterminal_generated_parsers<'a>(
     grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
     type_cache: &'a TypeCache<'a>,
+    _sub_variants: &'a SubVariantCache,
 ) -> GeneratedParserCache<'a> {
     let cache_bundle = CacheBundle {
         parser_cache: Rc::new(RefCell::new(GeneratedParserCache::new())),
         type_cache: Rc::new(RefCell::new(type_cache.clone())),
         inline_cache: Rc::new(RefCell::new(InlineCache::new())),
+        current_rule_name: RefCell::new(None),
     };
     let mut acyclic_deps_degree = calculate_acyclic_deps_degree(grammar_attrs.acyclic_deps);
     calculate_non_acyclic_deps_degree(grammar_attrs.deps, &mut acyclic_deps_degree);
@@ -116,6 +121,13 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
     formatted
         .iter()
         .filter(|(lhs, _)| grammar_attrs.acyclic_deps.contains_key(lhs))
+        // Skip inlining rules with sub-variants (heterogeneous alternations)
+        .filter(|(lhs, _)| {
+            let name = get_nonterminal_name(lhs).unwrap_or("");
+            !grammar_attrs
+                .sub_variants
+                .is_some_and(|sv| sv.contains_key(name))
+        })
         .for_each(|(lhs, rhs)| {
             cache_bundle.inline_cache.borrow_mut().insert(lhs, rhs);
         });
@@ -134,6 +146,14 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
                         .unwrap()
                         .iter()
                         .filter(|dep| grammar_attrs.acyclic_deps.contains_key(dep))
+                        // Skip inlining deps with sub-variants (heterogeneous alternations)
+                        // — their branches have diverse types that can't be uniformly mapped.
+                        .filter(|dep| {
+                            let dep_name = get_nonterminal_name(dep).unwrap_or("");
+                            !grammar_attrs
+                                .sub_variants
+                                .is_some_and(|sv| sv.contains_key(dep_name))
+                        })
                         .for_each(|dep| {
                             let rhs = boxed2.get(dep).unwrap_or(dep);
                             cache_bundle.inline_cache.borrow_mut().insert(dep, rhs);
@@ -147,6 +167,11 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
                 }
 
                 let max_depth = *acyclic_deps_degree.get(lhs).unwrap_or(&1);
+
+                // Set the current rule name for sub-variant lookup in alternation codegen.
+                if let Some(name) = get_nonterminal_name(lhs) {
+                    *cache_bundle.current_rule_name.borrow_mut() = Some(name.to_string());
+                }
 
                 let rhs = mapped.get(lhs).unwrap_or(rhs);
 
@@ -187,4 +212,56 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
     generated_parsers.extend(acyclic_generated_parsers);
 
     generated_parsers
+}
+
+/// Compile a simple BBNF expression (regex, literal, alternation, concatenation)
+/// into a standalone parser token stream. Used for `@recover` sync expressions
+/// which are always simple patterns, not referencing nonterminals.
+pub fn compile_sync_expression(expr: &Expression<'_>) -> proc_macro2::TokenStream {
+    use crate::types::Token;
+    match expr {
+        Expression::Regex(Token { value, .. }) => {
+            let pattern = value.as_ref();
+            quote! { ::parse_that::regex_span(#pattern) }
+        }
+        Expression::Literal(Token { value, .. }) => {
+            let unescaped = codegen::unescape_literal(value.as_ref());
+            let lit = proc_macro2::Literal::string(&unescaped);
+            quote! { ::parse_that::string_span(#lit) }
+        }
+        Expression::Alternation(token) => {
+            let branches: Vec<_> = token.value.iter().map(|e| compile_sync_expression(e)).collect();
+            quote! { ( #(#branches)|* ) }
+        }
+        Expression::Concatenation(token) => {
+            let parts: Vec<_> = token.value.iter().map(|e| compile_sync_expression(e)).collect();
+            if parts.len() == 1 {
+                parts.into_iter().next().unwrap()
+            } else {
+                let first = &parts[0];
+                let rest = &parts[1..];
+                quote! { #first #(.then_span(#rest))* }
+            }
+        }
+        Expression::Many(inner) => {
+            let p = compile_sync_expression(&inner.value);
+            quote! { #p.many_span(..) }
+        }
+        Expression::Many1(inner) => {
+            let p = compile_sync_expression(&inner.value);
+            quote! { #p.many_span(1..) }
+        }
+        Expression::Optional(inner) => {
+            let p = compile_sync_expression(&inner.value);
+            quote! { #p.opt_span() }
+        }
+        Expression::Group(inner) => compile_sync_expression(&inner.value),
+        Expression::Nonterminal(Token { value, .. }) => {
+            let ident = format_ident!("{}", value.as_ref());
+            quote! { Self::#ident() }
+        }
+        _ => {
+            panic!("Unsupported expression type in @recover sync expression: {:?}", expr);
+        }
+    }
 }

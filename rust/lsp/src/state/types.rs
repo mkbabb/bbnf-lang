@@ -44,6 +44,17 @@ pub struct ImportInfo {
     pub items: Option<Vec<String>>,
 }
 
+/// Owned representation of a @recover directive.
+#[derive(Debug, Clone)]
+pub struct RecoverInfo {
+    /// The name of the rule to wrap with recovery.
+    pub rule_name: String,
+    /// Byte offset range of the entire recover directive.
+    pub span: (usize, usize),
+    /// Byte offset range of the rule name within the directive.
+    pub rule_name_span: (usize, usize),
+}
+
 /// Pre-analyzed document state -- all data is owned (no lifetimes).
 #[derive(Debug, Clone)]
 pub struct DocumentInfo {
@@ -61,6 +72,8 @@ pub struct DocumentInfo {
     pub cyclic_rule_paths: HashMap<String, String>,
     /// Import directives parsed from the document.
     pub imports: Vec<ImportInfo>,
+    /// Recover directives parsed from the document.
+    pub recovers: Vec<RecoverInfo>,
 }
 
 /// Diagnostic info extracted from the parser state (owned, no lifetimes).

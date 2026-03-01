@@ -13,7 +13,8 @@ grammar/
 │   ├── css-color.bbnf          CSS color values (imports css-value-unit)
 │   ├── css-values.bbnf         CSS composite value types
 │   ├── css-selectors.bbnf      CSS selectors Level 4
-│   └── css-keyframes.bbnf      CSS @keyframes syntax
+│   ├── css-keyframes.bbnf      CSS @keyframes syntax
+│   └── css-stylesheet.bbnf     Full stylesheet (composes all CSS fragments, @recover annotations)
 ├── lang/                       Language/format grammars
 │   ├── bbnf.bbnf               Self-hosting BBNF grammar
 │   ├── json.bbnf               JSON (RFC 8259)
@@ -26,9 +27,11 @@ grammar/
 │   ├── emoji.bbnf              Emoji token toy language
 │   └── g4.bbnf                 English sentence structure
 └── tests/
-    └── json/
-        ├── valid.jsonl         Valid JSON test cases
-        └── invalid.jsonl       Invalid JSON test cases
+    ├── json/
+    │   ├── valid.jsonl         Valid JSON test cases
+    │   └── invalid.jsonl       Invalid JSON test cases
+    └── css/
+        └── complex-errors.css  CSS test vector with intentional parse errors (recovery)
 ```
 
 ## BBNF Language Quick Reference
@@ -37,6 +40,7 @@ grammar/
 rule = expression ;                             (* production rule *)
 @import "file.bbnf" ;                          (* glob import *)
 @import { a, b } from "file.bbnf" ;            (* selective import *)
+@recover rule syncExpr ;                        (* recovery directive (any BBNF expr as sync) *)
 ```
 
 **Terminals**: `"string"`, `'string'`, `` `string` ``, `/regex/`, `epsilon` / `ε`
@@ -69,6 +73,8 @@ css/css-color.bbnf       <- glob imports css-value-unit
 css/css-values.bbnf      <- glob imports css-value-unit + css-color
 css/css-keyframes.bbnf   <- glob imports css-value-unit
 css/css-selectors.bbnf   <- standalone (no imports)
+      |
+css/css-stylesheet.bbnf  <- glob imports all CSS fragments; adds @recover annotations
 ```
 
 **Dispatch table caveat:** Separator rules must have disjoint static FIRST sets

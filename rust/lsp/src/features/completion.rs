@@ -6,6 +6,8 @@ use crate::state::DocumentState;
 const BBNF_KEYWORDS: &[(&str, &str)] = &[
     ("epsilon", "Empty match (ε)"),
     ("ε", "Empty match"),
+    ("@import", "Import rules from another grammar"),
+    ("@recover", "Error recovery directive for a rule"),
 ];
 
 pub fn completion(state: &DocumentState) -> CompletionResponse {

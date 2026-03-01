@@ -90,8 +90,17 @@ export type RecoverDirective = {
     range?: { start: number; end: number };
 };
 
+export type PrettyDirective = {
+    /** The name of the rule to apply formatting hints to. */
+    ruleName: string;
+    /** Formatting hints (e.g. "group", "indent", "block", "blankline", "softbreak", "nobreak"). */
+    hints: string[];
+    range?: { start: number; end: number };
+};
+
 export type ParsedGrammar = {
     imports: ImportDirective[];
     recovers: RecoverDirective[];
+    pretties: PrettyDirective[];
     rules: AST;
 };

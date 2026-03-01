@@ -76,6 +76,40 @@ value = string | number | object | array | bool | null;"#;
     }
 
     #[test]
+    fn test_analyze_recover_directive() {
+        let grammar = r#"@recover stmt /[^;]*;/ ;
+
+stmt = /[a-z]+/ , "=" , /[a-z]+/ , ";" ;
+program = stmt * ;"#;
+        let line_index = LineIndex::new(grammar);
+        let info = analyze(grammar, &line_index);
+        eprintln!("Diagnostics: {:?}", info.diagnostics);
+        eprintln!("Recovers: {:?}", info.recovers);
+        assert_eq!(info.recovers.len(), 1, "Should have 1 @recover directive");
+        assert_eq!(info.recovers[0].rule_name, "stmt");
+        // Should have no "undefined rule" warnings for @recover target
+        let undefined_warnings: Vec<_> = info.diagnostics.iter()
+            .filter(|d| d.message.contains("undefined") || d.message.contains("Undefined"))
+            .collect();
+        assert!(undefined_warnings.is_empty(), "Should not warn about @recover target: {:?}", undefined_warnings);
+    }
+
+    #[test]
+    fn test_analyze_recover_undefined_target() {
+        let grammar = r#"@recover nonexistent /[^;]*;/ ;
+
+stmt = /[a-z]+/ , ";" ;"#;
+        let line_index = LineIndex::new(grammar);
+        let info = analyze(grammar, &line_index);
+        eprintln!("Diagnostics: {:?}", info.diagnostics);
+        // Should have a warning about undefined rule target
+        let recover_warnings: Vec<_> = info.diagnostics.iter()
+            .filter(|d| d.message.contains("@recover"))
+            .collect();
+        assert!(!recover_warnings.is_empty(), "Should warn about @recover targeting undefined rule");
+    }
+
+    #[test]
     fn test_analyze_simple_json_grammar() {
         // Simplified JSON grammar without problematic regex patterns
         let grammar = r#"null = "null";

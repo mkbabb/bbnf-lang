@@ -148,9 +148,25 @@ pub(crate) fn compute_expr_first<'a>(
     match expr {
         Expression::Literal(token) => {
             let s: &str = &token.value;
-            if let Some(first_byte) = s.bytes().next() {
-                if first_byte < 128 {
-                    out.add(first_byte);
+            // Unescape to get the actual first byte (e.g. `\"` → `"`, `\\` → `\`)
+            let first_byte = if s.starts_with('\\') {
+                match s.as_bytes().get(1) {
+                    Some(b'n') => Some(b'\n'),
+                    Some(b't') => Some(b'\t'),
+                    Some(b'r') => Some(b'\r'),
+                    Some(b'\\') => Some(b'\\'),
+                    Some(b'\'') => Some(b'\''),
+                    Some(b'"') => Some(b'"'),
+                    Some(b'0') => Some(b'\0'),
+                    Some(&other) => Some(other),
+                    None => Some(b'\\'),
+                }
+            } else {
+                s.bytes().next()
+            };
+            if let Some(b) = first_byte {
+                if b < 128 {
+                    out.add(b);
                 }
             }
             s.is_empty()

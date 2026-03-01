@@ -1,3 +1,4 @@
+@import "css-tokens.bbnf" ;
 @import "css-value-unit.bbnf" ;
 @import "css-color.bbnf" ;
 
@@ -15,9 +16,7 @@
 
 // --- Identifiers ---
 
-ident    = /[a-zA-Z_][\w-]*/ ;
 dashed   = /--[\w-]+/ ;
-string   = /"(?:[^"\\]|\\[\s\S])*"/ | /'(?:[^'\\]|\\[\s\S])*'/ ;
 
 // --- Dimension (any dimensioned value) ---
 

@@ -36,10 +36,11 @@ cargo clippy --all-targets -- -D warnings  # Lint (CI enforces this)
 ```
 .bbnf file
   → BBNFGrammar parser (bbnf/grammar.rs)
-  → AST: IndexMap<Expression, Expression>
+  → AST: IndexMap<Expression, Expression> + Vec<RecoverDirective>
   → Analysis: SCC, FIRST sets, dispatch tables (bbnf/analysis/)
   → Codegen: Rust TokenStream via syn/quote (bbnf/generate/)
   → #[derive(Parser)] emits enum + parser methods (bbnf-derive/lib.rs)
+       @recover directives emit Recovered<T> enum variant + .recover() wrapping
 ```
 
 The LSP reuses the parser and analysis from `bbnf/` but does its own
@@ -51,3 +52,8 @@ diagnostic generation and feature dispatch.
 - Borrowed lifetimes (`'a`) throughout AST types.
 - `Box::leak()` for import module graphs (arena-style ownership).
 - Fixed-point iteration for FIRST sets; Tarjan's algorithm for SCC.
+- `ParsedGrammar.recovers: Vec<RecoverDirective>` — stores `@recover` directives alongside the rule map.
+- `RecoverDirective { rule: &str, sync: Expression }` — sync expression is any parsed BBNF `Expression`.
+- `unescape_literal()` in codegen — converts raw BBNF escape sequences (`\n`, `\t`, etc.) to actual chars before `quote!` embedding. Applied in all three literal codegen paths (Expression::Literal, check_for_any_span, compile_sync_expression).
+- `Expression::Minus` emits `.minus()` (parse-that set-difference), not `.not()` (negative lookahead)
+- Sub-variant coercion — heterogeneous alternation branches generate anonymous enum variants (e.g., `factor_4`). Global type-matching lookup handles the two-pass codegen architecture.

@@ -189,12 +189,15 @@ pub fn calculate_expression_type<'a>(
 
 pub fn calculate_nonterminal_types<'a>(
     grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
-) -> TypeCache<'a> {
+) -> (TypeCache<'a>, SubVariantCache) {
     let cache_bundle = CacheBundle {
         parser_cache: std::rc::Rc::new(std::cell::RefCell::new(std::collections::HashMap::new())),
         type_cache: std::rc::Rc::new(std::cell::RefCell::new(std::collections::HashMap::new())),
         inline_cache: std::rc::Rc::new(std::cell::RefCell::new(std::collections::HashMap::new())),
+        current_rule_name: std::cell::RefCell::new(None),
     };
+    let mut sub_variants = SubVariantCache::new();
+
     grammar_attrs
         .ast
         .iter()
@@ -202,7 +205,7 @@ pub fn calculate_nonterminal_types<'a>(
         .for_each(|(lhs, rhs)| {
             cache_bundle.inline_cache.borrow_mut().insert(lhs, rhs);
         });
-    grammar_attrs
+    let type_cache: TypeCache = grammar_attrs
         .ast
         .iter()
         .map(|(lhs, rhs)| {
@@ -216,13 +219,83 @@ pub fn calculate_nonterminal_types<'a>(
                             .type_cache
                             .borrow_mut()
                             .insert(dep, grammar_attrs.boxed_enum_type.clone());
+                        cache_bundle.inline_cache.borrow_mut().remove(dep);
                     }
                 }
-                // Maybe this change needs to be rolled back via a cache after calculating the
-                // type.
             }
             let ty = calculate_expression_type(rhs, grammar_attrs, &cache_bundle);
+
+            // Detect heterogeneous alternations that produce Box<Enum>.
+            // For each branch with a non-Box<Enum> type, register a sub-variant.
+            if let Some(name) = crate::analysis::get_nonterminal_name(lhs) {
+                if !is_transparent_rule(name, grammar_attrs) {
+                    collect_sub_variants(name, rhs, grammar_attrs, &cache_bundle, &mut sub_variants);
+                }
+            }
+
             (lhs, ty)
         })
-        .collect()
+        .collect();
+    (type_cache, sub_variants)
+}
+
+/// If `rhs` is an alternation with heterogeneous branch types (i.e. the overall
+/// type is Box<Enum>), create sub-variant entries for branches that produce
+/// non-Box<Enum> types (e.g. tuples). This allows codegen to wrap those branches.
+fn collect_sub_variants<'a>(
+    rule_name: &str,
+    rhs: &'a Expression<'a>,
+    grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
+    cache_bundle: &'a CacheBundle<'a, '_, '_>,
+    sub_variants: &mut SubVariantCache,
+) {
+    // Unwrap Rule wrapper if present.
+    let inner = match rhs {
+        Expression::Rule(inner, _) => inner.as_ref(),
+        other => other,
+    };
+
+    let Expression::Alternation(inner_exprs) = inner else {
+        return;
+    };
+    let inner_exprs = inner_exprs.inner();
+    let tys: Vec<Type> = inner_exprs
+        .iter()
+        .map(|expr| calculate_expression_type(expr, grammar_attrs, cache_bundle))
+        .collect();
+
+    let boxed_enum_str = grammar_attrs.boxed_enum_type.to_token_stream().to_string();
+    let is_all_span = tys.iter().all(type_is_span);
+    let is_all_same = tys
+        .iter()
+        .all(|ty| ty.to_token_stream().to_string() == tys[0].to_token_stream().to_string());
+
+    // Only needed when the alternation is heterogeneous (overall type = Box<Enum>).
+    if is_all_span || is_all_same {
+        return;
+    }
+
+    let mut variants = Vec::new();
+    let mut seen_types: std::collections::HashMap<String, String> = std::collections::HashMap::new();
+
+    for (i, ty) in tys.iter().enumerate() {
+        let ty_str = ty.to_token_stream().to_string();
+        // Skip branches that already produce Box<Enum> — they need no wrapping.
+        if ty_str == boxed_enum_str {
+            continue;
+        }
+        // Reuse the same sub-variant name for branches with identical types.
+        let variant_name = if let Some(existing) = seen_types.get(&ty_str) {
+            existing.clone()
+        } else {
+            let name = format!("{}_{}", rule_name, i);
+            seen_types.insert(ty_str, name.clone());
+            name
+        };
+        variants.push((variant_name, ty.clone()));
+    }
+
+    if !variants.is_empty() {
+        sub_variants.insert(rule_name.to_string(), variants);
+    }
 }

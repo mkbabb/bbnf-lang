@@ -35,8 +35,8 @@ typescript/
     ├── optimize.test.ts       13 optimization tests (left-recursion, topological sort, prefix)
     ├── first-sets.test.ts     17 FIRST set tests (regex dispatch, CharSet, dispatch tables)
     ├── recover.test.ts        8 tests — @recover parsing, codegen (.recover() wrapping), error collection
-    └── css-stylesheet.test.ts 11 tests — css-stylesheet.bbnf with @recover + multi-error recovery
-    └── utils.ts           Test helpers (math eval, random whitespace injection)
+    ├── css-stylesheet.test.ts 11 tests — css-stylesheet.bbnf with @recover + multi-error recovery
+    └── utils.ts               Test helpers (math eval, random whitespace injection)
 ```
 
 ## Key Exports
@@ -44,7 +44,7 @@ typescript/
 - **`BBNFGrammar`** — Parser class. `grammar()`, `grammarWithImports()`.
 - **`BBNFToAST(text)`** — Parse BBNF text → AST. (from `parse.ts`)
 - **`BBNFToASTWithImports(text)`** — Parse with import directives. (from `parse.ts`)
-- **`ASTToParser(ast, analysis?, firstNullable?)`** — Compile AST → `Nonterminals` (rule name → Parser).
+- **`ASTToParser(ast, analysis?, firstNullable?)`** — Compile AST → `Nonterminals` (rule name → Parser). Applies `@recover` directives by wrapping target parsers with `.recover(syncParser, null)`.
 - **`BBNFToParser(text)`** — End-to-end: text → executable parsers.
 - **`loadModuleGraphSync(path, reader?)`** — DFS-load a module and its transitive `@import` graph into a `ModuleRegistry`.
 - **`mergeModuleAST(registry, path)`** — Merge a module's local + imported rules into a single AST.

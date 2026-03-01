@@ -7,10 +7,10 @@
 // and :has() takes a relativeSelectorList — both reference back to the
 // compoundSelector/complexSelector hierarchy. Parser.lazy() handles this.
 
+@import "css-tokens.bbnf" ;
+
 // --- Tokens ---
 
-ident  = /[a-zA-Z_][\w-]*/ ;
-string = /"[^"]*"/ | /'[^']*'/ ;
 hash   = /#[\w-]+/ ;
 
 // --- Namespace (CSS Namespaces) ---

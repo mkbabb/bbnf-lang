@@ -454,8 +454,8 @@ describe("BBNF Parser", () => {
     });
 
     it("should parse a CSS selectors grammar", () => {
-        const grammar = fs.readFileSync("../grammar/css/css-selectors.bbnf", "utf8");
-        const [nonterminals] = BBNFToParser(grammar);
+        const grammarPath = path.resolve("../grammar/css/css-selectors.bbnf");
+        const [nonterminals] = BBNFToParserFromFile(grammarPath);
 
         const selectors = [
             "div",

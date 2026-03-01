@@ -8,10 +8,12 @@ use parse_that::{
 
 use crate::types::*;
 
-/// Helper enum for interleaving imports and rules during parsing.
-enum Either<L, R> {
-    Left(L),
-    Right(R),
+/// Helper enum for interleaving imports, recovers, pretties, and rules during parsing.
+enum TopLevelItem<'a> {
+    Import(ImportDirective<'a>),
+    Recover(RecoverDirective<'a>),
+    Pretty(PrettyDirective<'a>),
+    Rule(Expression<'a>),
 }
 
 fn map_factor<'a>(
@@ -347,6 +349,44 @@ impl<'a> BBNFGrammar<'a> {
             })
     }
 
+    /// Parse an `@recover` directive:
+    /// `@recover ruleName syncExpr ;`
+    fn recover_directive() -> Parser<'a, RecoverDirective<'a>> {
+        string("@recover")
+            .trim_whitespace()
+            .next(
+                Self::identifier()
+                    .trim_whitespace()
+                    .then(Self::rhs().trim_whitespace()),
+            )
+            .skip(any_span(&[";", "."]).opt().trim_whitespace())
+            .map_with_state(|(name_span, sync_expr), prev_offset, state| {
+                RecoverDirective {
+                    rule_name: Cow::Borrowed(name_span.as_str()),
+                    sync_expr,
+                    span: Span::new(prev_offset, state.offset, state.src),
+                }
+            })
+    }
+
+    /// Parse a `@pretty` directive:
+    /// `@pretty ruleName hint1 hint2 ... ;`
+    fn pretty_directive() -> Parser<'a, PrettyDirective<'a>> {
+        string("@pretty")
+            .trim_whitespace()
+            .next(
+                Self::identifier()
+                    .trim_whitespace()
+                    .then(Self::identifier().trim_whitespace().many(1..)),
+            )
+            .skip(any_span(&[";", "."]).opt().trim_whitespace())
+            .map_with_state(|(name_span, hints), prev_offset, state| PrettyDirective {
+                rule_name: Cow::Borrowed(name_span.as_str()),
+                hints: hints.iter().map(|s| Cow::Borrowed(s.as_str())).collect(),
+                span: Span::new(prev_offset, state.offset, state.src),
+            })
+    }
+
     /// Skip any number of line/block comments (used between top-level items).
     fn skip_comments() -> Parser<'a, ()> {
         (Self::block_comment() | Self::line_comment())
@@ -355,26 +395,35 @@ impl<'a> BBNFGrammar<'a> {
             .map(|_| ())
     }
 
-    /// Parse a grammar file: interleaved import directives and rules.
-    /// Imports may appear at any position (including after comments/rules).
-    /// Returns a `ParsedGrammar` with both imports and the AST.
+    /// Parse a grammar file: interleaved import directives, recover directives, and rules.
+    /// Returns a `ParsedGrammar` with imports, recovers, and the AST.
     pub fn grammar_with_imports() -> Parser<'a, ParsedGrammar<'a>> {
         let import = Self::skip_comments()
             .next(Self::import_directive().trim_whitespace())
-            .map(Either::Left);
+            .map(TopLevelItem::Import);
+        let recover = Self::skip_comments()
+            .next(Self::recover_directive().trim_whitespace())
+            .map(TopLevelItem::Recover);
+        let pretty = Self::skip_comments()
+            .next(Self::pretty_directive().trim_whitespace())
+            .map(TopLevelItem::Pretty);
         let rule = Self::skip_comments()
             .next(Self::production_rule().trim_whitespace())
-            .map(Either::Right);
+            .map(TopLevelItem::Rule);
 
-        let item = import | rule;
+        let item = import | recover | pretty | rule;
 
         Self::skip_comments().next(item.many(..)).map(|items| {
             let mut imports = Vec::new();
+            let mut recovers = Vec::new();
+            let mut pretties = Vec::new();
             let mut rules_vec = Vec::new();
             for item in items {
                 match item {
-                    Either::Left(imp) => imports.push(imp),
-                    Either::Right(r) => rules_vec.push(r),
+                    TopLevelItem::Import(imp) => imports.push(imp),
+                    TopLevelItem::Recover(rec) => recovers.push(rec),
+                    TopLevelItem::Pretty(p) => pretties.push(p),
+                    TopLevelItem::Rule(r) => rules_vec.push(r),
                 }
             }
             let ast: AST<'a> = rules_vec
@@ -386,6 +435,8 @@ impl<'a> BBNFGrammar<'a> {
                 .collect();
             ParsedGrammar {
                 imports,
+                recovers,
+                pretties,
                 rules: ast,
             }
         })

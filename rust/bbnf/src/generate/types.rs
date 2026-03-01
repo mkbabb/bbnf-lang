@@ -19,6 +19,7 @@ pub struct ParserAttributes {
     pub debug: bool,
     pub use_string: bool,
     pub remove_left_recursion: bool,
+    pub prettify: bool,
 }
 
 pub struct GeneratedNonterminalParser {
@@ -62,6 +63,15 @@ pub struct GeneratedGrammarAttributes<'a> {
     /// Only these can be referenced as `Self::rule_sp().into_parser()` in codegen.
     pub sp_method_rules: Option<&'a HashSet<String>>,
 
+    /// `@recover` directives: maps rule name → sync expression.
+    pub recovers: Option<&'a HashMap<String, Expression<'a>>>,
+
+    /// `@pretty` directives: maps rule name → list of formatting hints.
+    pub pretties: Option<&'a HashMap<String, Vec<String>>>,
+
+    /// Sub-variants for heterogeneous alternation branches.
+    pub sub_variants: Option<&'a SubVariantCache>,
+
     pub ident: &'a syn::Ident,
     pub enum_ident: &'a syn::Ident,
 
@@ -77,12 +87,12 @@ pub static DEFAULT_PARSERS: std::sync::LazyLock<HashMap<&'static str, GeneratedN
         let name = "LITERAL";
         default_parsers.insert(
             name,
-            GeneratedNonterminalParser::new(name, "::parse_that::Span<'a>", "::parse_that::parse::string_span"),
+            GeneratedNonterminalParser::new(name, "::parse_that::Span<'a>", "::parse_that::string_span"),
         );
         let name = "REGEX";
         default_parsers.insert(
             name,
-            GeneratedNonterminalParser::new(name, "::parse_that::Span<'a>", "::parse_that::parse::regex_span"),
+            GeneratedNonterminalParser::new(name, "::parse_that::Span<'a>", "::parse_that::regex_span"),
         );
         let name = "NUMBER";
         default_parsers.insert(
@@ -107,6 +117,12 @@ pub static DEFAULT_PARSERS: std::sync::LazyLock<HashMap<&'static str, GeneratedN
 
 pub type TypeCache<'a> = HashMap<&'a Expression<'a>, Type>;
 
+/// Maps a rule name to its anonymous sub-variant types.
+/// When an alternation's branches have heterogeneous types (leading to Box<Enum>
+/// overall), each unique non-Box<Enum> branch gets a sub-variant like `rule_name_0(Ty)`.
+/// Indexed by (rule_name, branch_index) → (variant_name, branch_type).
+pub type SubVariantCache = HashMap<String, Vec<(String, Type)>>;
+
 pub type GeneratedParserCache<'a> = HashMap<&'a Expression<'a>, proc_macro2::TokenStream>;
 pub type InlineCache<'a, 'b> = HashMap<&'a Expression<'a>, &'b Expression<'a>>;
 
@@ -119,4 +135,7 @@ where
     pub parser_cache: Rc<RefCell<GeneratedParserCache<'c>>>,
     pub type_cache: Rc<RefCell<TypeCache<'c>>>,
     pub inline_cache: Rc<RefCell<InlineCache<'a, 'b>>>,
+    /// Tracks the current rule being generated (set by top-level codegen).
+    /// Used by alternation codegen to look up sub-variant info.
+    pub current_rule_name: RefCell<Option<String>>,
 }

@@ -11,7 +11,7 @@
 import * as path from "node:path";
 import * as fs from "node:fs";
 
-import type { ImportDirective, RecoverDirective, AST, ProductionRule, Expression } from "./types.js";
+import type { ImportDirective, RecoverDirective, PrettyDirective, AST, ProductionRule, Expression } from "./types.js";
 import { BBNFToASTWithImports } from "./parse.js";
 
 // ---------------------------------------------------------------------------
@@ -66,6 +66,8 @@ export interface ModuleData {
     imports: ImportDirective[];
     /** Recover directives found in this file. */
     recovers: RecoverDirective[];
+    /** Pretty directives found in this file. */
+    pretties: PrettyDirective[];
     /** The parsed AST (rule name → ProductionRule). */
     rules: AST;
     /** Names of rules defined locally in this file. */
@@ -238,6 +240,7 @@ function loadRecursiveSync(
         source,
         imports: parsed.imports,
         recovers: parsed.recovers ?? [],
+        pretties: parsed.pretties ?? [],
         rules: parsed.rules,
         localRuleNames,
     });
@@ -522,6 +525,50 @@ export function mergeModuleRecovers(
     return [...entryModule.recovers];
 }
 
+/**
+ * Collect all @pretty directives from the entry module and its transitive imports.
+ * Pretties from imported modules are also included (merged, entry overrides).
+ */
+export function mergeModulePretties(
+    registry: ModuleRegistry,
+    entryPath: string,
+): PrettyDirective[] {
+    const pretties: PrettyDirective[] = [];
+    const seen = new Set<string>();
+
+    // Collect from imports first.
+    const imports = registry.resolvedImports.get(entryPath);
+    if (imports) {
+        for (const imp of imports) {
+            const sourceModule = registry.modules.get(imp.source);
+            if (sourceModule) {
+                for (const p of sourceModule.pretties) {
+                    if (!seen.has(p.ruleName)) {
+                        seen.add(p.ruleName);
+                        pretties.push(p);
+                    }
+                }
+            }
+        }
+    }
+
+    // Entry module pretties override imports.
+    const entryModule = registry.modules.get(entryPath);
+    if (entryModule) {
+        for (const p of entryModule.pretties) {
+            if (seen.has(p.ruleName)) {
+                // Replace imported version with entry version.
+                const idx = pretties.findIndex(x => x.ruleName === p.ruleName);
+                if (idx >= 0) pretties[idx] = p;
+            } else {
+                pretties.push(p);
+            }
+        }
+    }
+
+    return pretties;
+}
+
 // ---------------------------------------------------------------------------
 // Asynchronous loader
 // ---------------------------------------------------------------------------
@@ -617,6 +664,7 @@ async function loadRecursiveAsync(
         source,
         imports: parsed.imports,
         recovers: parsed.recovers ?? [],
+        pretties: parsed.pretties ?? [],
         rules: parsed.rules,
         localRuleNames,
     });

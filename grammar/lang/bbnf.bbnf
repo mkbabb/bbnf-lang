@@ -20,13 +20,8 @@ term = "ε"
      | "{" , rhs ?w , "}" ;
 
 
-factor = big_comment ? , (
-      term ?w , "?w"
-    | term ?w , "?"
-    | term ?w , "*"
-    | term ?w , "+"
-    | term  
-) , big_comment ? ;
+modifier = "?w" | "?" | "*" | "+" ;
+factor = big_comment ? , term ?w , modifier ? , big_comment ? ;
 
 binary_operators = "<<" | ">>" | "-" ;
 
@@ -46,4 +41,13 @@ import_directive = "@import" ?w , (
     | import_path
 ) , ( ";" | "." ) ? ;
 
-grammar = ( comment ? , ( import_directive | rule ) ?w , comment ? ) * ;
+recover_directive = "@recover" ?w , identifier ?w , rhs ?w , ( ";" | "." ) ? ;
+
+pretty_hint = identifier ;
+pretty_directive = "@pretty" ?w , identifier ?w , (pretty_hint+) ?w , ( ";" | "." ) ? ;
+
+grammar = ( comment ? , ( import_directive | recover_directive | pretty_directive | rule ) ?w , comment ? ) * ;
+
+@pretty grammar block ;
+@pretty rule group ;
+@pretty alternation group ;

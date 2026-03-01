@@ -1,11 +1,12 @@
 extern crate proc_macro;
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 
 use bbnf::calculate_ast_deps;
 use bbnf::calculate_nonterminal_generated_parsers;
 use bbnf::calculate_nonterminal_types;
+use bbnf::generate_prettify;
 use bbnf::get_nonterminal_name;
 
 use bbnf::analysis::{
@@ -73,6 +74,9 @@ fn parse_parser_attrs(attrs: &[Attribute]) -> ParserAttributes {
                 Meta::Path(p) if p.is_ident("remove_left_recursion") => {
                     parser_attr.remove_left_recursion = true;
                 }
+                Meta::Path(p) if p.is_ident("prettify") => {
+                    parser_attr.prettify = true;
+                }
                 _ => {}
             }
         }
@@ -83,6 +87,7 @@ fn parse_parser_attrs(attrs: &[Attribute]) -> ParserAttributes {
 fn generate_enum(
     grammar_attrs: &GeneratedGrammarAttributes,
     nonterminal_types: &TypeCache,
+    sub_variants: &bbnf::SubVariantCache,
 ) -> proc_macro2::TokenStream {
     let enum_values = nonterminal_types.iter().filter_map(|(expr, ty)| {
         let Some(name) = get_nonterminal_name(expr) else {
@@ -98,12 +103,49 @@ fn generate_enum(
         Some(quote! { #name(#ty) })
     });
 
+    // Generate sub-variants for heterogeneous alternation branches.
+    let mut seen_sub_variant_names = std::collections::HashSet::new();
+    let sub_variant_values = sub_variants.values().flatten().filter_map(|(variant_name, ty)| {
+        // Deduplicate: multiple branches may share the same sub-variant name.
+        if !seen_sub_variant_names.insert(variant_name.clone()) {
+            return None;
+        }
+        let ident = format_ident!("{}", variant_name);
+        Some(quote! { #ident(#ty) })
+    });
+
     let enum_ident = &grammar_attrs.enum_ident;
 
-    quote! {
-        #[derive(::pprint::Pretty, Debug, Clone)]
-        pub enum #enum_ident<'a> {
-            #(#enum_values),*
+    // Add Recovered variant if any @recover directives exist.
+    let has_recovers = grammar_attrs.recovers
+        .is_some_and(|r| !r.is_empty());
+
+    let recovered_variant = if has_recovers {
+        quote! { , Recovered }
+    } else {
+        quote! {}
+    };
+
+    // Skip Pretty derive when sub-variants exist — the Pretty derive's From<Enum>
+    // for Doc impl can't handle tuple sub-variant types. Instead, generate_prettify
+    // produces to_doc() which handles all variants including sub-variants.
+    let has_sub_variants = !sub_variants.is_empty();
+    if has_sub_variants {
+        quote! {
+            #[derive(Debug, Clone)]
+            pub enum #enum_ident<'a> {
+                #(#enum_values),*,
+                #(#sub_variant_values),*
+                #recovered_variant
+            }
+        }
+    } else {
+        quote! {
+            #[derive(::pprint::Pretty, Debug, Clone)]
+            pub enum #enum_ident<'a> {
+                #(#enum_values),*
+                #recovered_variant
+            }
         }
     }
 }
@@ -212,11 +254,30 @@ where
         };
 
         // make the parser lazy if it's a non_acyclic dep:
-        let parser = if grammar_attrs.non_acyclic_deps.contains_key(expr) {
-            quote! { lazy(|| #parser) }
+        let mut parser = if grammar_attrs.non_acyclic_deps.contains_key(expr) {
+            quote! { ::parse_that::lazy(|| #parser) }
         } else {
             parser.clone()
         };
+
+        // Apply @recover wrapping if this rule has a recovery directive.
+        if let Some(recovers) = grammar_attrs.recovers {
+            if let Some(sync_expr) = recovers.get(name.as_ref()) {
+                let sync_parser = bbnf::compile_sync_expression(sync_expr);
+                let enum_ident = grammar_attrs.enum_ident;
+                parser = if is_transparent {
+                    // Transparent rules return Box<Enum> — sentinel needs Box wrapping.
+                    quote! {
+                        #parser.recover(#sync_parser.map(|_| ()), Box::new(#enum_ident::Recovered))
+                    }
+                } else {
+                    // Normal rules return Enum directly.
+                    quote! {
+                        #parser.recover(#sync_parser.map(|_| ()), #enum_ident::Recovered)
+                    }
+                };
+            }
+        }
 
         methods.push(quote! {
             pub fn #ident<'a>() -> Parser<'a, #ty> {
@@ -264,6 +325,9 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     // Try import-aware loading first: if the first file contains @import directives,
     // use load_module_graph() which handles DFS traversal, cycle detection, and
     // selective import resolution. Otherwise fall back to simple fold.
+    let mut recover_map: HashMap<String, Expression<'static>> = HashMap::new();
+    let mut pretty_map: HashMap<String, Vec<String>> = HashMap::new();
+
     let ast = if parser_container_attrs.paths.len() == 1 {
         let entry = &parser_container_attrs.paths[0];
         // Try parsing with import support to check for @import directives.
@@ -274,6 +338,18 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
         let (parsed, _) = parser.parse_return_state(source_static);
 
         if let Some(ref pg) = parsed {
+            // Extract @recover directives.
+            for rec in &pg.recovers {
+                recover_map.insert(rec.rule_name.to_string(), rec.sync_expr.clone());
+            }
+            // Extract @pretty directives.
+            for p in &pg.pretties {
+                pretty_map.insert(
+                    p.rule_name.to_string(),
+                    p.hints.iter().map(|h| h.to_string()).collect(),
+                );
+            }
+
             if !pg.imports.is_empty() {
                 // File has imports — use module graph loader.
                 let registry = load_module_graph(entry)
@@ -286,6 +362,16 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
                 let mut merged = IndexMap::new();
                 for path in registry.paths() {
                     if let Some(module) = registry.get_module(path) {
+                        // Also collect recovers from imported modules.
+                        for rec in &module.grammar.recovers {
+                            recover_map.entry(rec.rule_name.to_string())
+                                .or_insert_with(|| rec.sync_expr.clone());
+                        }
+                        // Also collect pretties from imported modules.
+                        for p in &module.grammar.pretties {
+                            pretty_map.entry(p.rule_name.to_string())
+                                .or_insert_with(|| p.hints.iter().map(|h| h.to_string()).collect());
+                        }
                         for (name, expr) in &module.grammar.rules {
                             merged.insert(name.clone(), expr.clone());
                         }
@@ -378,6 +464,9 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
                 transparent_rules: None,
                 span_eligible_rules: None,
                 sp_method_rules: None,
+                recovers: None,
+                pretties: None,
+                sub_variants: None,
                 ident,
                 enum_ident: &enum_ident,
                 enum_type: &enum_type,
@@ -389,6 +478,38 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
         .cloned()
         .collect();
 
+    let recovers_ref = if recover_map.is_empty() { None } else { Some(&recover_map) };
+    let pretties_ref = if pretty_map.is_empty() { None } else { Some(&pretty_map) };
+
+    // First pass: type inference (sub_variants not yet known).
+    let tmp_grammar_attrs = GeneratedGrammarAttributes {
+        ast: &ast,
+        deps: &deps,
+        acyclic_deps: &acyclic_deps,
+        non_acyclic_deps: &non_acyclic_deps,
+
+        first_sets: Some(&first_sets),
+        ref_counts: Some(&ref_counts),
+        aliases: Some(&aliases),
+        transparent_rules: Some(&transparent_rules),
+        span_eligible_rules: Some(&span_eligible_rules),
+        sp_method_rules: Some(&sp_method_rules),
+        recovers: recovers_ref,
+        pretties: pretties_ref,
+        sub_variants: None,
+
+        ident,
+        enum_ident: &enum_ident,
+
+        enum_type: &enum_type,
+        boxed_enum_type: &boxed_enum_type,
+
+        parser_container_attrs: &parser_container_attrs,
+    };
+
+    let (nonterminal_types, sub_variants) = calculate_nonterminal_types(&tmp_grammar_attrs);
+
+    // Rebuild grammar_attrs with sub_variants for codegen.
     let grammar_attrs = GeneratedGrammarAttributes {
         ast: &ast,
         deps: &deps,
@@ -401,6 +522,9 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
         transparent_rules: Some(&transparent_rules),
         span_eligible_rules: Some(&span_eligible_rules),
         sp_method_rules: Some(&sp_method_rules),
+        recovers: recovers_ref,
+        pretties: pretties_ref,
+        sub_variants: Some(&sub_variants),
 
         ident,
         enum_ident: &enum_ident,
@@ -411,17 +535,26 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
         parser_container_attrs: &parser_container_attrs,
     };
 
-    let nonterminal_types = calculate_nonterminal_types(&grammar_attrs);
-
     let grammar_arr = generate_grammar_arr(&grammar_attrs, &parser_container_attrs);
-    let grammar_enum = generate_enum(&grammar_attrs, &nonterminal_types);
+    let grammar_enum = generate_enum(&grammar_attrs, &nonterminal_types, &sub_variants);
 
     let generated_parsers =
-        calculate_nonterminal_generated_parsers(&grammar_attrs, &nonterminal_types);
+        calculate_nonterminal_generated_parsers(&grammar_attrs, &nonterminal_types, &sub_variants);
 
     let generated_parsers = format_generated_parsers(&generated_parsers, &grammar_attrs);
 
+    // Optionally generate prettify (to_doc + source_range) methods.
+    let prettify_impl = if parser_container_attrs.prettify {
+        generate_prettify(&grammar_attrs, &nonterminal_types)
+    } else {
+        quote! {}
+    };
+
     let expanded = quote! {
+        // Re-export parse_that items so generated code can reference traits
+        // (ParserSpan, ParserFlat) and functions (lazy, string_span, etc.).
+        use ::parse_that::*;
+
         #grammar_arr
 
         #grammar_enum
@@ -429,6 +562,8 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
          impl #impl_generics #ident #ty_generics #where_clause {
             #generated_parsers
         }
+
+        #prettify_impl
     };
 
     expanded.into()

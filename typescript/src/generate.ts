@@ -156,11 +156,18 @@ export function ASTToParser(
      * wrap() already inlines 2 function frames (index.ts), so this saves overhead.
      */
     function tryWrapDetect(name: string, expr: Expression): Parser<any> | null {
+        // Unwrap Group nodes before pattern matching (same as Rust check_for_wrapped).
+        if (expr.type === "group") {
+            return tryWrapDetect(name, expr.value as Expression);
+        }
         // Shape: skip(next(L, M), R) → M.wrap(L, R)
         if (expr.type === "skip") {
             const [left, right] = expr.value as [Expression, Expression];
-            if (left.type === "next") {
-                const [l, m] = left.value as [Expression, Expression];
+            // Unwrap Group on the left side too.
+            let unwrappedLeft = left;
+            while (unwrappedLeft.type === "group") unwrappedLeft = unwrappedLeft.value as Expression;
+            if (unwrappedLeft.type === "next") {
+                const [l, m] = unwrappedLeft.value as [Expression, Expression];
                 return generateParser(name, m).wrap(
                     generateParser(name, l),
                     generateParser(name, right),

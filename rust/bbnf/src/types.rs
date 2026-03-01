@@ -110,10 +110,34 @@ pub struct ImportDirective<'a> {
     pub items: Option<Vec<Cow<'a, str>>>,
 }
 
+/// An `@recover` directive that annotates a rule with error recovery.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RecoverDirective<'a> {
+    /// The name of the rule to wrap with recovery.
+    pub rule_name: Cow<'a, str>,
+    /// The sync expression to use for error recovery (typically a regex).
+    pub sync_expr: Expression<'a>,
+    /// The byte-offset span of the entire recover directive.
+    pub span: Span<'a>,
+}
+
+/// An `@pretty` directive that provides formatting hints for a rule.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PrettyDirective<'a> {
+    /// The name of the rule to apply formatting hints to.
+    pub rule_name: Cow<'a, str>,
+    /// Formatting hints (e.g. "group", "indent", "block", "blankline", "softbreak", "nobreak").
+    pub hints: Vec<Cow<'a, str>>,
+    /// The byte-offset span of the entire pretty directive.
+    pub span: Span<'a>,
+}
+
 /// The result of parsing a complete grammar file: imports + rules.
 #[derive(Debug, Clone)]
 pub struct ParsedGrammar<'a> {
     pub imports: Vec<ImportDirective<'a>>,
+    pub recovers: Vec<RecoverDirective<'a>>,
+    pub pretties: Vec<PrettyDirective<'a>>,
     pub rules: AST<'a>,
 }
 

@@ -137,5 +137,17 @@ pub fn symbol_at_offset<'a>(info: &'a DocumentInfo, offset: usize) -> Option<Sym
             }
         }
     }
+    // Check @recover directive rule names.
+    for rec in &info.recovers {
+        if offset >= rec.rule_name_span.0 && offset <= rec.rule_name_span.1 {
+            // Find the first rule to use as containing_rule placeholder.
+            if let Some(first_rule) = info.rules.first() {
+                return Some(SymbolAtOffset::RuleReference {
+                    name: rec.rule_name.clone(),
+                    containing_rule: first_rule,
+                });
+            }
+        }
+    }
     None
 }

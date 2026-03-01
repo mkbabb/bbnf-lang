@@ -10,8 +10,8 @@ letter = "A" | "B" | "C" | "D" | "E" | "F" | "G"
 digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
 
 symbol = "[" | "]" | "{" | "}" | "(" | ")" | "<" | ">"
-       | "'" | '"' | "=" | "|" | "." | "," | ";" | "-" 
-       | "+" | "*" | "?" | "\n" | "\t" | "\r" | "\f" 
+       | "'" | '"' | "=" | "|" | "." | "," | ";" | "-"
+       | "+" | "*" | "?" | "\n" | "\t" | "\r" | "\f"
        | "\b"| "\\" ;
 
 character = letter | digit | symbol | "_" | " " ;
@@ -45,3 +45,7 @@ lhs = identifier ;
 rule = lhs , S , "=" , S , rhs , S , terminator ;
 
 grammar = ( S , rule , S ) * ;
+
+@pretty grammar block ;
+@pretty rule group ;
+@pretty alternation group ;

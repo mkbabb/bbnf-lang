@@ -51,6 +51,7 @@ pub(crate) fn analyze_from_cache(
             nullable_rules: HashSet::new(),
             cyclic_rule_paths: HashMap::new(),
             imports: Vec::new(),
+            recovers: Vec::new(),
         };
     }
 
@@ -79,6 +80,7 @@ pub(crate) fn analyze_from_cache(
             nullable_rules: HashSet::new(),
             cyclic_rule_paths: HashMap::new(),
             imports: Vec::new(),
+            recovers: Vec::new(),
         };
     };
 
@@ -99,9 +101,10 @@ pub(crate) fn analyze_from_cache(
 
     let ast = &parsed.ast;
     let import_infos = parsed.imports.clone();
+    let recover_infos = parsed.recovers.clone();
 
     // Check for empty AST on non-empty input -- likely a parse failure not caught above.
-    if ast.is_empty() && !text.trim().is_empty() && import_infos.is_empty() {
+    if ast.is_empty() && !text.trim().is_empty() && import_infos.is_empty() && recover_infos.is_empty() {
         let furthest = parse_diag.furthest_offset.max(parse_diag.offset);
         let pos = line_index.offset_to_position(furthest.min(text.len()));
         diagnostics.push(Diagnostic {
@@ -120,6 +123,7 @@ pub(crate) fn analyze_from_cache(
             nullable_rules: HashSet::new(),
             cyclic_rule_paths: HashMap::new(),
             imports: import_infos,
+            recovers: recover_infos,
         };
     }
 
@@ -395,6 +399,41 @@ pub(crate) fn analyze_from_cache(
         }
     }
 
+    // @recover directive validation and semantic tokens.
+    for rec in &recover_infos {
+        // Semantic token: KEYWORD for "@recover".
+        // The "@recover" keyword is 8 bytes, starts at the directive span start.
+        semantic_tokens.push(SemanticTokenInfo {
+            span: (rec.span.0, rec.span.0 + 8), // "@recover" is 8 chars
+            token_type: token_types::KEYWORD,
+        });
+
+        // Semantic token: RULE_REFERENCE for the rule name.
+        semantic_tokens.push(SemanticTokenInfo {
+            span: rec.rule_name_span,
+            token_type: token_types::RULE_REFERENCE,
+        });
+
+        // Mark the rule name as referenced (for unused rule detection).
+        referenced_names.insert(&rec.rule_name);
+
+        // Validate: warn if the target rule doesn't exist.
+        if !defined.contains_key(rec.rule_name.as_str())
+            && !imported_names.contains(rec.rule_name.as_str())
+        {
+            diagnostics.push(Diagnostic {
+                range: line_index.span_to_range(rec.rule_name_span.0, rec.rule_name_span.1),
+                severity: Some(DiagnosticSeverity::WARNING),
+                source: Some("bbnf".into()),
+                message: format!(
+                    "`@recover` targets undefined rule: `{}`",
+                    rec.rule_name
+                ),
+                ..Default::default()
+            });
+        }
+    }
+
     // Sort semantic tokens by offset for encoding.
     semantic_tokens.sort_by_key(|t| t.span.0);
 
@@ -407,6 +446,7 @@ pub(crate) fn analyze_from_cache(
         nullable_rules,
         cyclic_rule_paths,
         imports: import_infos,
+        recovers: recover_infos,
     }
 }
 

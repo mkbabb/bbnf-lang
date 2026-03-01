@@ -18,7 +18,7 @@ typescript/             TS library (@mkbabb/bbnf-lang)
 prettier-plugin-bbnf/   Prettier plugin for .bbnf files
 extension/              VS Code extension (LSP client)
 grammar/                Example grammars + language specification
-  css/                  CSS grammar family (value-unit, color, values, selectors, keyframes)
+  css/                  CSS grammar family (value-unit, color, values, selectors, keyframes, stylesheet)
   lang/                 Language/format grammars (JSON, CSV, math, regex, EBNF, etc.)
 server/                 Compiled LSP binary (copied by Makefile)
 ```
@@ -44,6 +44,9 @@ array = "[", [ value, { ",", value } ], "]" ;
 
 (* Imports—selective imports auto-unfurl transitive dependencies *)
 @import { number, integer } from "css-value-unit.bbnf" ;
+
+(* Recovery—per-rule sync expression for multi-error parsing *)
+@recover declaration /[;}]/ ;
 ```
 
 ## VS Code Extension
@@ -92,6 +95,16 @@ The LSP produces the following diagnostics:
 - **Document formatting** — format the entire file
 - **Range formatting** — format a selection
 - **On-type formatting** — auto-format on `;`
+
+### Recovery
+
+`@recover rule syncExpr ;` annotates a rule with a synchronization expression used
+for multi-error parsing. When the rule fails, the parser advances past input until
+`syncExpr` matches, records a diagnostic, and continues. Any valid BBNF expression
+(regex, alternation, concatenation, etc.) is valid as the sync expression.
+
+The LSP provides semantic tokens, hover, completion, and diagnostics (undefined target
+rule) for `@recover` directives.
 
 ### Imports
 
@@ -242,28 +255,32 @@ responses—full end-to-end coverage without VS Code:
 cargo test -p bbnf-lsp --test integration -- --nocapture
 ```
 
-Current test coverage (45 integration tests):
+Current test coverage (47 integration tests):
 
 - Initialize & capability negotiation
 - Diagnostics: valid grammar, unused rules, undefined rules, parse errors, regex panics
 - Diagnostics: FIRST set conflicts, cycle paths, alias hints, unreachable rules
+- Diagnostics: `@recover` undefined target rule
 - Hover (basic + enhanced with FIRST/nullable info), go-to-definition, references, rename, completion
+- Completion: `@recover` keyword and target rule names
 - Document symbols, code lens, folding, code actions
 - Full document formatting, range formatting, on-type formatting
-- Semantic tokens
+- Semantic tokens (including `@recover` directive tokens)
 - Inlay hints (FIRST sets, nullability, range filtering)
 - Selection range (single & multiple positions)
 - Incremental text sync (insert, delete, replace)
 - Cross-file: go-to-definition, references, completion via `@import`
 - Large grammar (8-rule JSON grammar, all features combined)
 
-TypeScript test coverage (72 tests across 5 suites):
+TypeScript test coverage (91 tests across 7 suites):
 
 - **bbnf.test.ts** (13)—end-to-end grammar parsing: JSON, CSV, CSS color/selectors/values/keyframes/value-unit, math, regex, EBNF, BBNF self-parse, left-recursion
 - **imports.test.ts** (13)—module graph: glob/selective imports, cyclic (2-way, 3-way, self), diamond deps, transitive unfurling, non-transitive scope, merge precedence
 - **analysis.test.ts** (16)—Tarjan SCC, dep graphs, ref counts, aliases, transparent alternations, FIRST set conflicts, acyclic classification
 - **optimize.test.ts** (13)—topological sort, direct/indirect left-recursion elimination, common prefix detection
 - **first-sets.test.ts** (17)—`regexFirstChars` dispatch, `CharSet` operations, `computeFirstSets` convergence, `buildDispatchTable` routing
+- **recover.test.ts** (8)—`@recover` parsing, codegen `.recover()` wrapping, multi-error collection
+- **css-stylesheet.test.ts** (11)—`css-stylesheet.bbnf` with `@recover` annotations, complex-errors.css recovery
 
 ### Developing the Prettier Plugin
 

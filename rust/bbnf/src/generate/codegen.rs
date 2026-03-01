@@ -611,6 +611,11 @@ pub fn calculate_parser_from_expression<'a>(
             } else if is_json_number_regex(value) {
                 let parser = quote! { ::parse_that::sp_json_number() };
                 map_span_if_needed(parser, true, grammar_attrs)
+            } else if let Some(excluded) = is_negated_char_class_regex(value) {
+                // Negated character class `[^XYZ]+` → LUT byte scan (10-15x faster than regex NFA)
+                let excluded_bytes = proc_macro2::Literal::byte_string(excluded.as_bytes());
+                let parser = quote! { ::parse_that::take_until_any_span(#excluded_bytes) };
+                map_span_if_needed(parser, true, grammar_attrs)
             } else {
                 get_and_parse_default_parser(
                     "REGEX",

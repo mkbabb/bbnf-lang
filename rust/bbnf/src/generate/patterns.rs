@@ -244,6 +244,50 @@ pub fn is_json_number_regex(pattern: &str) -> bool {
         && pattern.contains("[eE]")
 }
 
+/// Detect a negated character class regex of the form `[^XYZ]+` and return the
+/// excluded bytes. These patterns scan until any excluded byte is found—perfectly
+/// suited for `take_until_any_span()` which uses a 256-byte LUT instead of NFA.
+///
+/// Matches patterns like `/[^;{}!,]+/`, `/[^{};]+/`, `/[^"\\]+/` etc.
+/// Returns `Some(excluded_bytes)` with the raw byte string content, or None.
+pub fn is_negated_char_class_regex(pattern: &str) -> Option<String> {
+    // Must be exactly `[^...]+` — no prefix, no suffix, no alternation
+    let inner = pattern.strip_prefix("[^")?.strip_suffix("]+")?;
+
+    // Validate: only ASCII printable characters and simple backslash escapes
+    let mut chars = inner.chars().peekable();
+    let mut excluded = String::new();
+    while let Some(c) = chars.next() {
+        if c == '\\' {
+            // Backslash escape — take next char literally
+            let esc = chars.next()?;
+            match esc {
+                '\\' | '/' | ']' | '[' | '^' | '-' | '.' | '*' | '+' | '?' | '(' | ')'
+                | '{' | '}' | '|' | 'n' | 'r' | 't' => {
+                    let actual = match esc {
+                        'n' => '\n',
+                        'r' => '\r',
+                        't' => '\t',
+                        other => other,
+                    };
+                    excluded.push(actual);
+                }
+                _ => return None, // Complex escape (e.g. \d, \w) — bail
+            }
+        } else if c.is_ascii() && c != '[' && c != ']' {
+            excluded.push(c);
+        } else {
+            return None; // Non-ASCII or nested bracket — bail
+        }
+    }
+
+    if excluded.is_empty() {
+        return None;
+    }
+
+    Some(excluded)
+}
+
 pub fn check_for_any_span(exprs: &[Expression]) -> Option<TokenStream> {
     let all_literals = exprs
         .iter()

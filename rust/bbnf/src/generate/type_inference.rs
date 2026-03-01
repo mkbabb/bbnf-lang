@@ -113,7 +113,14 @@ pub fn calculate_expression_type<'a>(
         Expression::Concatenation(inner_exprs) => {
             let inner_exprs = inner_exprs.inner();
             // Phase E: Override sp_method_rules nonterminals to Span in concatenation context.
-            let tys = inner_exprs
+            // This must agree with concatenation codegen (concatenation.rs) which substitutes
+            // Self::rule_sp().into_parser() for these elements.
+            //
+            // Guard: if ALL elements would become Span after override, DON'T apply the
+            // override — otherwise the concatenation collapses to a single Span type,
+            // which contaminates the TypeCache and causes Many/Optional handlers to
+            // incorrectly emit .many_span()/.opt_span() on non-Span parsers.
+            let overridden: Vec<Type> = inner_exprs
                 .iter()
                 .map(|expr| {
                     if concat_element_sp_name(expr, grammar_attrs).is_some() {
@@ -122,7 +129,16 @@ pub fn calculate_expression_type<'a>(
                         calculate_expression_type(expr, grammar_attrs, cache_bundle)
                     }
                 })
-                .collect::<Vec<_>>();
+                .collect();
+            let tys = if overridden.iter().all(type_is_span) {
+                // All Span → don't apply override, use true types to avoid collapse.
+                inner_exprs
+                    .iter()
+                    .map(|expr| calculate_expression_type(expr, grammar_attrs, cache_bundle))
+                    .collect::<Vec<_>>()
+            } else {
+                overridden
+            };
             let mut span_counter = 0;
             let mut non_span_counter = 0;
             let mut new_tys = Vec::new();

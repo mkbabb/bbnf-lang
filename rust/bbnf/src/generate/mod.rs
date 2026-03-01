@@ -12,6 +12,8 @@ mod types;
 mod type_inference;
 mod patterns;
 mod codegen;
+mod alternation;
+mod concatenation;
 mod prettify;
 
 // Re-export everything publicly so downstream code sees the same API.
@@ -19,6 +21,8 @@ pub use types::*;
 pub use type_inference::*;
 pub use patterns::*;
 pub use codegen::*;
+pub use alternation::*;
+pub use concatenation::*;
 pub use prettify::*;
 
 use crate::analysis::get_nonterminal_name;
@@ -198,6 +202,13 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
             acyclic_generated_parsers.remove(lhs);
             cache_bundle.parser_cache.borrow_mut().remove(lhs);
             cache_bundle.inline_cache.borrow_mut().insert(lhs, rhs);
+            // The boxed2 wrapper produces Box<Enum>, so update the type_cache to match.
+            // Without this, calculate_expression_type returns the PRE-wrapper body type,
+            // causing alternation coercion to apply incorrect sub-variant wrappers.
+            cache_bundle
+                .type_cache
+                .borrow_mut()
+                .insert(lhs, grammar_attrs.boxed_enum_type.clone());
         } else {
             let tmp = cache_bundle.parser_cache.borrow().get(lhs).map(|parser| {
                 quote! { #parser.map(Box::new) }

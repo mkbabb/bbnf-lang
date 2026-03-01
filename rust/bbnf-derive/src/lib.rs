@@ -1,5 +1,7 @@
 extern crate proc_macro;
 
+mod span_codegen;
+
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 
@@ -7,7 +9,6 @@ use bbnf::calculate_ast_deps;
 use bbnf::calculate_nonterminal_generated_parsers;
 use bbnf::calculate_nonterminal_types;
 use bbnf::generate_prettify;
-use bbnf::get_nonterminal_name;
 
 use bbnf::analysis::{
     tarjan_scc, topological_sort_scc, calculate_acyclic_deps_scc, calculate_non_acyclic_deps_scc,
@@ -17,10 +18,7 @@ use bbnf::analysis::{
 use bbnf::BBNFGrammar;
 use bbnf::Expression;
 use bbnf::GeneratedGrammarAttributes;
-use bbnf::GeneratedParserCache;
 use bbnf::ParserAttributes;
-use bbnf::Token;
-use bbnf::TypeCache;
 use bbnf::optimize::remove_direct_left_recursion;
 use bbnf::imports::load_module_graph;
 use indexmap::IndexMap;
@@ -35,6 +33,10 @@ use syn::{
 };
 
 use parse_that::utils::get_cargo_root_path;
+
+use span_codegen::{
+    generate_enum, generate_grammar_arr, try_generate_span_parser, format_generated_parsers,
+};
 
 fn parse_parser_attrs(attrs: &[Attribute]) -> ParserAttributes {
     let mut parser_attr = ParserAttributes::default();
@@ -82,231 +84,6 @@ fn parse_parser_attrs(attrs: &[Attribute]) -> ParserAttributes {
         }
     }
     parser_attr
-}
-
-fn generate_enum(
-    grammar_attrs: &GeneratedGrammarAttributes,
-    nonterminal_types: &TypeCache,
-    sub_variants: &bbnf::SubVariantCache,
-) -> proc_macro2::TokenStream {
-    let enum_values = nonterminal_types.iter().filter_map(|(expr, ty)| {
-        let Some(name) = get_nonterminal_name(expr) else {
-            panic!("Expected nonterminal");
-        };
-        // Phase B: Skip transparent alternation rules — they don't get their own variant.
-        if let Some(transparent) = grammar_attrs.transparent_rules {
-            if transparent.contains(name) {
-                return None;
-            }
-        }
-        let name = format_ident!("{}", name);
-        Some(quote! { #name(#ty) })
-    });
-
-    // Generate sub-variants for heterogeneous alternation branches.
-    let mut seen_sub_variant_names = std::collections::HashSet::new();
-    let sub_variant_values = sub_variants.values().flatten().filter_map(|(variant_name, ty)| {
-        // Deduplicate: multiple branches may share the same sub-variant name.
-        if !seen_sub_variant_names.insert(variant_name.clone()) {
-            return None;
-        }
-        let ident = format_ident!("{}", variant_name);
-        Some(quote! { #ident(#ty) })
-    });
-
-    let enum_ident = &grammar_attrs.enum_ident;
-
-    // Add Recovered variant if any @recover directives exist.
-    let has_recovers = grammar_attrs.recovers
-        .is_some_and(|r| !r.is_empty());
-
-    let recovered_variant = if has_recovers {
-        quote! { , Recovered }
-    } else {
-        quote! {}
-    };
-
-    // Skip Pretty derive when sub-variants exist — the Pretty derive's From<Enum>
-    // for Doc impl can't handle tuple sub-variant types. Instead, generate_prettify
-    // produces to_doc() which handles all variants including sub-variants.
-    let has_sub_variants = !sub_variants.is_empty();
-    if has_sub_variants {
-        quote! {
-            #[derive(Debug, Clone)]
-            pub enum #enum_ident<'a> {
-                #(#enum_values),*,
-                #(#sub_variant_values),*
-                #recovered_variant
-            }
-        }
-    } else {
-        quote! {
-            #[derive(::pprint::Pretty, Debug, Clone)]
-            pub enum #enum_ident<'a> {
-                #(#enum_values),*
-                #recovered_variant
-            }
-        }
-    }
-}
-
-fn generate_grammar_arr(
-    grammar_attrs: &GeneratedGrammarAttributes,
-    parser_container_attrs: &ParserAttributes,
-) -> proc_macro2::TokenStream {
-    let grammar_arr_name = format_ident!("GRAMMAR_{}", grammar_attrs.ident);
-
-    let len = parser_container_attrs.paths.len();
-    let include_strs = parser_container_attrs.paths.iter().map(|path| {
-        let path = path.to_str().unwrap();
-        quote! { include_str!(#path) }
-    });
-
-    quote! {
-        #[allow(non_upper_case_globals)]
-        pub const #grammar_arr_name: [&'static str; #len] = [
-            #(#include_strs),*
-        ];
-    }
-}
-
-/// Phase D: Try to generate a SpanParser expression for a span-eligible rule.
-/// Returns `Some(TokenStream)` if the rule's RHS maps to a known SpanParser pattern.
-fn try_generate_span_parser<'a>(
-    name: &str,
-    grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
-) -> Option<proc_macro2::TokenStream> {
-    let ast = grammar_attrs.ast;
-
-    // Find the rule's RHS in the AST.
-    let rhs = ast.iter().find_map(|(k, v)| {
-        if let Expression::Nonterminal(t) = k {
-            if t.value.as_ref() == name { Some(v) } else { None }
-        } else {
-            None
-        }
-    })?;
-
-    // Unwrap Rule wrapper if present.
-    let inner = match rhs {
-        Expression::Rule(inner, _) => inner.as_ref(),
-        other => other,
-    };
-
-    match inner {
-        Expression::Regex(Token { value, .. }) => {
-            if bbnf::generate::is_json_string_regex(value) {
-                Some(quote! { ::parse_that::sp_json_string_quoted() })
-            } else if bbnf::generate::is_json_number_regex(value) {
-                Some(quote! { ::parse_that::sp_json_number() })
-            } else if let Some(excluded) = bbnf::generate::is_negated_char_class_regex(value) {
-                let excluded_bytes = proc_macro2::Literal::byte_string(excluded.as_bytes());
-                Some(quote! { ::parse_that::sp_take_until_any(#excluded_bytes) })
-            } else {
-                let pattern = value.as_ref();
-                Some(quote! { ::parse_that::sp_regex(#pattern) })
-            }
-        }
-        Expression::Literal(Token { value, .. }) => {
-            let lit = value.as_ref();
-            Some(quote! { ::parse_that::sp_string(#lit) })
-        }
-        Expression::Alternation(token) => {
-            let branches = &token.value;
-            // All-literal alternation → sp_any
-            let all_lit = branches.iter().all(|b| matches!(b, Expression::Literal(_)));
-            if all_lit {
-                let lits: Vec<&str> = branches.iter().map(|b| {
-                    if let Expression::Literal(Token { value, .. }) = b {
-                        value.as_ref()
-                    } else {
-                        unreachable!()
-                    }
-                }).collect();
-                Some(quote! { ::parse_that::sp_any(&[#(#lits),*]) })
-            } else {
-                None
-            }
-        }
-        _ => None,
-    }
-}
-
-fn format_generated_parsers<'a, 'b>(
-    generated_parsers: &'a GeneratedParserCache<'a>,
-    grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
-) -> proc_macro2::TokenStream
-where
-    'a: 'b,
-{
-    let mut methods: Vec<proc_macro2::TokenStream> = Vec::new();
-
-    for (expr, parser) in generated_parsers.iter() {
-        let Expression::Nonterminal(Token { value: name, ..}) = expr else {
-            panic!("Expected nonterminal");
-        };
-        let ident = format_ident!("{}", name);
-
-        // Phase B: Transparent rules return Box<Enum> directly.
-        let is_transparent = grammar_attrs.transparent_rules
-            .is_some_and(|set| set.contains(name.as_ref()));
-        let ty = if is_transparent {
-            grammar_attrs.boxed_enum_type
-        } else {
-            grammar_attrs.enum_type
-        };
-
-        // make the parser lazy if it's a non_acyclic dep:
-        let mut parser = if grammar_attrs.non_acyclic_deps.contains_key(expr) {
-            quote! { ::parse_that::lazy(|| #parser) }
-        } else {
-            parser.clone()
-        };
-
-        // Apply @recover wrapping if this rule has a recovery directive.
-        if let Some(recovers) = grammar_attrs.recovers {
-            if let Some(sync_expr) = recovers.get(name.as_ref()) {
-                let sync_parser = bbnf::compile_sync_expression(sync_expr);
-                let enum_ident = grammar_attrs.enum_ident;
-                parser = if is_transparent {
-                    // Transparent rules return Box<Enum> — sentinel needs Box wrapping.
-                    quote! {
-                        #parser.recover(#sync_parser.map(|_| ()), Box::new(#enum_ident::Recovered))
-                    }
-                } else {
-                    // Normal rules return Enum directly.
-                    quote! {
-                        #parser.recover(#sync_parser.map(|_| ()), #enum_ident::Recovered)
-                    }
-                };
-            }
-        }
-
-        methods.push(quote! {
-            pub fn #ident<'a>() -> Parser<'a, #ty> {
-                #parser
-            }
-        });
-
-        // Phase D: Generate _sp() method for span-eligible rules.
-        let is_span_eligible = grammar_attrs.span_eligible_rules
-            .is_some_and(|set| set.contains(name.as_ref()));
-        if is_span_eligible {
-            if let Some(sp_parser) = try_generate_span_parser(name, grammar_attrs) {
-                let sp_ident = format_ident!("{}_sp", name);
-                methods.push(quote! {
-                    #[inline(always)]
-                    pub fn #sp_ident<'a>() -> ::parse_that::SpanParser<'a> {
-                        #sp_parser
-                    }
-                });
-            }
-        }
-    }
-
-    quote! {
-        #(#methods)*
-    }
 }
 
 #[proc_macro_derive(Parser, attributes(parser))]
@@ -449,37 +226,44 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     // Phase D: Span-eligible rule detection
     let span_eligible_rules = find_span_eligible_rules(&ast, &scc_result.cyclic_rules);
 
-    // Phase E: Compute which span-eligible rules actually get _sp() methods
-    // (only those whose RHS maps to a known SpanParser pattern).
-    let sp_method_rules: HashSet<String> = span_eligible_rules
-        .iter()
-        .filter(|name| {
-            // Temporarily build a minimal grammar_attrs just for the check.
-            // try_generate_span_parser only needs the AST.
-            let tmp_attrs = GeneratedGrammarAttributes {
-                ast: &ast,
-                deps: &deps,
-                acyclic_deps: &acyclic_deps,
-                non_acyclic_deps: &non_acyclic_deps,
-                first_sets: None,
-                ref_counts: None,
-                aliases: None,
-                transparent_rules: None,
-                span_eligible_rules: None,
-                sp_method_rules: None,
-                recovers: None,
-                pretties: None,
-                sub_variants: None,
-                ident,
-                enum_ident: &enum_ident,
-                enum_type: &enum_type,
-                boxed_enum_type: &boxed_enum_type,
-                parser_container_attrs: &parser_container_attrs,
-            };
-            try_generate_span_parser(name, &tmp_attrs).is_some()
-        })
-        .cloned()
-        .collect();
+    // Phase E: Iterative fixed-point to compute which span-eligible rules get _sp() methods.
+    // The recursive try_generate_span_parser needs sp_method_rules for nonterminal lookups,
+    // but sp_method_rules depends on try_generate_span_parser succeeding. We iterate until
+    // the set stabilizes (typically 2-3 iterations).
+    let mut sp_method_rules: HashSet<String> = HashSet::new();
+    loop {
+        let next: HashSet<String> = span_eligible_rules
+            .iter()
+            .filter(|name| {
+                let tmp_attrs = GeneratedGrammarAttributes {
+                    ast: &ast,
+                    deps: &deps,
+                    acyclic_deps: &acyclic_deps,
+                    non_acyclic_deps: &non_acyclic_deps,
+                    first_sets: None,
+                    ref_counts: None,
+                    aliases: None,
+                    transparent_rules: None,
+                    span_eligible_rules: Some(&span_eligible_rules),
+                    sp_method_rules: Some(&sp_method_rules),
+                    recovers: None,
+                    pretties: None,
+                    sub_variants: None,
+                    ident,
+                    enum_ident: &enum_ident,
+                    enum_type: &enum_type,
+                    boxed_enum_type: &boxed_enum_type,
+                    parser_container_attrs: &parser_container_attrs,
+                };
+                try_generate_span_parser(name, &tmp_attrs).is_some()
+            })
+            .cloned()
+            .collect();
+        if next == sp_method_rules {
+            break;
+        }
+        sp_method_rules = next;
+    }
 
     let recovers_ref = if recover_map.is_empty() { None } else { Some(&recover_map) };
     let pretties_ref = if pretty_map.is_empty() { None } else { Some(&pretty_map) };

@@ -1,6 +1,6 @@
 [package]
 name = "bbnf_derive"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 license = "MIT"
 description = "Derive macro for generating parsers from BBNF grammars"
@@ -11,9 +11,9 @@ path = "src/lib.rs"
 proc-macro = true
 
 [dependencies]
-bbnf = { version = "0.1.0", path = "../bbnf" }
-pprint = { version = "0.3.0", path = "/Users/mkbabb/Programming/pprint" }
-parse_that = { version = "0.1.0", path = "/Users/mkbabb/Programming/parse-that/rust/parse_that" }
+bbnf = { version = "0.1.1", path = "../bbnf" }
+pprint = { version = "0.3.1", path = "/Users/mkbabb/Programming/pprint" }
+parse_that = { version = "0.1.1", path = "/Users/mkbabb/Programming/parse-that/rust/parse_that" }
 
 syn = { version = "2", features = ["full"] }
 quote = "1"

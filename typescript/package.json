@@ -1,6 +1,6 @@
 {
     "name": "@mkbabb/bbnf-lang",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "BBNF grammar parser and code generator",
     "type": "module",
     "exports": {

@@ -74,13 +74,27 @@ make release        # Push tags → GitHub Actions builds 5 platforms → Market
 Platforms: linux-x64, linux-arm64, darwin-x64, darwin-arm64, win32-x64.
 Requires `VSCE_PAT` secret in GitHub repo settings.
 
+## Dependency Graph
+
+```
+Rust:                                 NPM:
+  pprint → parse_that → bbnf           @mkbabb/parse-that → @mkbabb/bbnf-lang
+                          ↓
+                      bbnf_derive
+                          ↓
+                       gorgeous
+```
+
+bbnf and bbnf_derive sit in the middle of the Rust crate graph.
+bbnf-lsp uses workspace-relative paths to bbnf; cross-repo deps are version-only.
+
 ## Conventions
 
 - **Rust**: Nightly toolchain, edition 2024. Clippy with `-D warnings`.
 - **TypeScript**: ES2022 target, strict mode, ESM. Vite for bundling, vitest for tests.
 - **Extension**: esbuild, CommonJS output (Node.js), `vscode` external.
 - **Grammars**: `.bbnf` extension. `@import` for composition. `@recover` for error recovery. `;` terminators.
-- **Local crate deps**: `parse_that` and `pprint` are local path dependencies.
+- **Crate deps**: `parse_that` and `pprint` from crates.io; local dev via `.cargo/config.toml` `[patch.crates-io]`.
 - **Lifetimes**: Borrowed `'a` throughout Rust AST; `Box::leak()` for import module graphs.
 - **Import system**: Cyclic imports handled via partial-init before recursion. Selective imports expand transitive local deps automatically. `@import` directives can appear at any position in a file.
 - **Recovery**: `@recover rule syncExpr ;` — per-rule annotation specifying a sync expression for multi-error parsing. Any valid BBNF expression (regex, alternation, concatenation, etc.) is valid as the sync. Emits `.recover(syncParser, null)` in TS codegen and a `Recovered` enum variant in Rust proc-macro codegen.

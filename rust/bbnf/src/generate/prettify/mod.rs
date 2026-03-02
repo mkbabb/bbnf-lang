@@ -17,7 +17,7 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 /// Recognised `@pretty` hint keywords.
-const VALID_HINTS: &[&str] = &["group", "block", "indent", "blankline", "softbreak", "nobreak"];
+const VALID_HINTS: &[&str] = &["group", "block", "indent", "blankline", "softbreak", "nobreak", "fast"];
 
 /// Generate `to_doc()` and `source_range()` impl blocks for the parser enum.
 ///
@@ -295,7 +295,7 @@ fn generate_vec_doc(
     // Default: softline-separated join of items.
     let sep = if hints.contains(&"blankline".to_string()) {
         quote! { ::pprint::Doc::Hardline + ::pprint::Doc::Hardline }
-    } else if hints.contains(&"block".to_string()) {
+    } else if hints.contains(&"block".to_string()) || hints.contains(&"fast".to_string()) {
         quote! { ::pprint::Doc::Hardline }
     } else if hints.contains(&"nobreak".to_string()) {
         quote! { ::pprint::Doc::String(::std::borrow::Cow::Borrowed(" ")) }
@@ -390,7 +390,9 @@ fn generate_compound_doc(
         } else {
             // Interleave with spaces or softlines using concat() to dispatch to
             // DoubleDoc/TripleDoc for 2-3 elements, avoiding Vec heap allocation.
-            let sep = if hints.contains(&"nobreak".to_string()) {
+            let sep = if hints.contains(&"fast".to_string()) {
+                quote! { ::pprint::Doc::Hardline }
+            } else if hints.contains(&"nobreak".to_string()) {
                 quote! { ::pprint::Doc::String(::std::borrow::Cow::Borrowed(" ")) }
             } else {
                 quote! { ::pprint::Doc::Softline }
@@ -484,6 +486,28 @@ fn generate_wrapped_doc(
     let is_vec = is_vec_type(ty);
 
     if is_vec {
+        let join_expr = if hints.contains(&"fast".to_string()) {
+            quote! {
+                ::pprint::Doc::Join(
+                    Box::new(
+                        ::pprint::Doc::String(::std::borrow::Cow::Borrowed(","))
+                            + ::pprint::Doc::String(::std::borrow::Cow::Borrowed(" "))
+                    ),
+                    items_docs,
+                )
+            }
+        } else {
+            quote! {
+                ::pprint::Doc::SmartJoin(
+                    Box::new(
+                        ::pprint::Doc::String(::std::borrow::Cow::Borrowed(","))
+                            + ::pprint::Doc::String(::std::borrow::Cow::Borrowed(" "))
+                    ),
+                    items_docs,
+                )
+            }
+        };
+
         let base = quote! {
             {
                 let items_docs: Vec<::pprint::Doc<'a>> = items.iter().map(|item| item.to_doc()).collect();
@@ -491,13 +515,7 @@ fn generate_wrapped_doc(
                     ::pprint::Doc::String(::std::borrow::Cow::Borrowed(concat!(#left, #right)))
                 } else {
                     ::pprint::Doc::String(::std::borrow::Cow::Borrowed(#left))
-                        + ::pprint::Doc::SmartJoin(
-                            Box::new(
-                                ::pprint::Doc::String(::std::borrow::Cow::Borrowed(","))
-                                    + ::pprint::Doc::String(::std::borrow::Cow::Borrowed(" "))
-                            ),
-                            items_docs,
-                        )
+                        + #join_expr
                         + ::pprint::Doc::String(::std::borrow::Cow::Borrowed(#right))
                 }
             }
@@ -564,7 +582,7 @@ fn apply_hints(doc: TokenStream, hints: &[String]) -> TokenStream {
         result = match hint.as_str() {
             "group" => quote! { ::pprint::Doc::Group(Box::new(#result)) },
             "indent" => quote! { ::pprint::Doc::Indent(Box::new(#result)) },
-            _ => result, // block, blankline, nobreak, softbreak are handled in join generation
+            _ => result, // block, blankline, nobreak, softbreak, fast are handled in join generation
         };
     }
     result

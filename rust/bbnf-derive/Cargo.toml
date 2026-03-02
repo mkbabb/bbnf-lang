@@ -11,7 +11,7 @@ path = "src/lib.rs"
 proc-macro = true
 
 [dependencies]
-bbnf = { path = "../bbnf" }
+bbnf = { version = "0.1.0", path = "../bbnf" }
 pprint = { version = "0.3.0", path = "/Users/mkbabb/Programming/pprint" }
 parse_that = { version = "0.1.0", path = "/Users/mkbabb/Programming/parse-that/rust/parse_that" }
 

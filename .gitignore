@@ -7,5 +7,6 @@ data/
 !.vscode/tasks.json
 *.vsix
 rust/target/
+*.out
 dist/
 extension/server/

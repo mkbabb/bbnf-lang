@@ -65,24 +65,6 @@ where
     Expression::MappedExpression((expr_token.into(), mapping_fn_token.into()))
 }
 
-pub fn box_generated_parser<'a, 'b>(
-    name: &str,
-    expr: &Expression<'a>,
-    enum_ident: &syn::Ident,
-) -> Expression<'b>
-where
-    'a: 'b,
-{
-    let ident = format_ident!("{}", name);
-    let expr_token = Token::new_without_span(expr.clone());
-    let mapping_fn = format!("|x| {enum_ident}::{ident}(Box::new(x)) ");
-    let mapping_fn_token = Token::new_without_span(Expression::MappingFn(Token::new_without_span(
-        mapping_fn.into(),
-    )));
-
-    Expression::MappedExpression((expr_token.into(), mapping_fn_token.into()))
-}
-
 pub fn box_generated_parser2<'a, 'b>(
     name: &str,
     expr: &Expression<'a>,

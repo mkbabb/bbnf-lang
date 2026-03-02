@@ -84,25 +84,6 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
         })
         .collect();
 
-    let _boxed: HashMap<_, _> = grammar_attrs
-        .ast
-        .iter()
-        .map(|(lhs, rhs)| {
-            let rhs = match get_nonterminal_name(lhs) {
-                Some(name) => {
-                    let formatted_expr = formatted.get(lhs).unwrap_or(rhs);
-                    if is_transparent_rule(name, grammar_attrs) {
-                        formatted_expr.clone()
-                    } else {
-                        box_generated_parser(name, formatted_expr, grammar_attrs.enum_ident)
-                    }
-                }
-                None => rhs.clone(),
-            };
-            (lhs.clone(), rhs)
-        })
-        .collect();
-
     let boxed2: HashMap<_, _> = grammar_attrs
         .ast
         .iter()

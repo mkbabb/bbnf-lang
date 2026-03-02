@@ -12,8 +12,8 @@ proc-macro = true
 
 [dependencies]
 bbnf = { version = "0.1.1", path = "../bbnf" }
-pprint = { version = "0.3.1", path = "/Users/mkbabb/Programming/pprint" }
-parse_that = { version = "0.1.1", path = "/Users/mkbabb/Programming/parse-that/rust/parse_that" }
+pprint = "0.3.1"
+parse_that = "0.1.1"
 
 syn = { version = "2", features = ["full"] }
 quote = "1"

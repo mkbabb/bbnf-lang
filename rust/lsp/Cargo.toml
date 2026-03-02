@@ -14,9 +14,9 @@ tower-lsp-server = "0.23"
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-parse_that = { version = "0.1.0", path = "/Users/mkbabb/Programming/parse-that/rust/parse_that" }
-bbnf = { path = "../bbnf" }
-pprint = { version = "0.3.0", path = "/Users/mkbabb/Programming/pprint" }
+parse_that = "0.1.1"
+bbnf = { version = "0.1.1", path = "../bbnf" }
+pprint = "0.3.1"
 indexmap = "2"
 self_cell = "1.2.2"
 

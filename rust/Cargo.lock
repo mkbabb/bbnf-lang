@@ -19,7 +19,7 @@ checksum = "7f202df86484c868dbad7eaa557ef785d5c66295e41b460ef922eca0723b842c"
 
 [[package]]
 name = "bbnf"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "indexmap",
  "parse_that",
@@ -48,7 +48,7 @@ dependencies = [
 
 [[package]]
 name = "bbnf_derive"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bbnf",
  "indexmap",
@@ -400,7 +400,7 @@ dependencies = [
 
 [[package]]
 name = "parse_that"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "aho-corasick",
  "fast-float2",
@@ -423,7 +423,7 @@ checksum = "3b3cff922bd51709b605d9ead9aa71031d81447142d828eb4a6eba76fe619f9b"
 
 [[package]]
 name = "pprint"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "dragonbox",
  "itoap",
@@ -433,7 +433,7 @@ dependencies = [
 
 [[package]]
 name = "pprint_derive"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "proc-macro2",
  "quote",

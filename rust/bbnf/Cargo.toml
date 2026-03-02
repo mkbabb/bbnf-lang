@@ -11,8 +11,8 @@ name = "bbnf"
 path = "src/lib.rs"
 
 [dependencies]
-pprint = { version = "0.3.1", path = "/Users/mkbabb/Programming/pprint" }
-parse_that = { version = "0.1.1", path = "/Users/mkbabb/Programming/parse-that/rust/parse_that" }
+pprint = "0.3.1"
+parse_that = "0.1.1"
 
 regex = { version = "1.11", features = ["perf"] }
 

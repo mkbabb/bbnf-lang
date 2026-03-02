@@ -209,8 +209,11 @@ fn load_recursive(
 
     // Parse using grammar_with_imports.
     // SAFETY: We leak the source string to get 'static lifetime for the AST.
-    // This is intentional — the ModuleRegistry owns all module data for the
-    // lifetime of the workspace. In production, use an arena allocator instead.
+    // This is acceptable because `load_module_graph()` is only called from:
+    //   1. The proc-macro derive path (`bbnf-derive`), where the process exits after compilation.
+    //   2. Integration tests, where the leaked memory is reclaimed at process exit.
+    // The LSP does NOT use this function — it uses `self_cell::self_cell!` in
+    // `lsp/src/state/parsing.rs` for safe self-referential ownership without leaking.
     let source_static: &'static str = Box::leak(source.clone().into_boxed_str());
     let parser = BBNFGrammar::grammar_with_imports();
     let (result, _parser_state) = parser.parse_return_state(source_static);

@@ -93,7 +93,7 @@ export type RecoverDirective = {
 export type PrettyDirective = {
     /** The name of the rule to apply formatting hints to. */
     ruleName: string;
-    /** Formatting hints (e.g. "group", "indent", "block", "blankline", "softbreak", "nobreak"). */
+    /** Formatting hints (e.g. "group", "indent", "block", "blankline", "nobreak", "fast"). */
     hints: string[];
     range?: { start: number; end: number };
 };

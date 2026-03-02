@@ -16,8 +16,10 @@ pub(crate) fn generate_enum(
     sub_variants: &bbnf::SubVariantCache,
 ) -> proc_macro2::TokenStream {
     let enum_values = nonterminal_types.iter().filter_map(|(expr, ty)| {
+        // Invariant: nonterminal_types keys are always Nonterminal expressions —
+        // they are populated by iterating AST LHS entries which are rule names.
         let Some(name) = get_nonterminal_name(expr) else {
-            panic!("Expected nonterminal");
+            panic!("Expected nonterminal in type cache key, got: {:?}", expr);
         };
         // Phase B: Skip transparent alternation rules — they don't get their own variant.
         if let Some(transparent) = grammar_attrs.transparent_rules {
@@ -84,6 +86,8 @@ pub(crate) fn generate_grammar_arr(
 
     let len = parser_container_attrs.paths.len();
     let include_strs = parser_container_attrs.paths.iter().map(|path| {
+        // Invariant: paths come from #[parser(path = "...")] attributes which are
+        // valid UTF-8 string literals, so to_str() always succeeds.
         let path = path.to_str().unwrap();
         quote! { include_str!(#path) }
     });
@@ -171,6 +175,7 @@ fn try_generate_span_expr<'a>(
                 return Some(quote! { ::parse_that::sp_epsilon() });
             }
             let mut iter = parts.iter();
+            // Invariant: the is_empty() check above ensures at least one element.
             let mut acc = try_generate_span_expr(iter.next().unwrap(), grammar_attrs)?;
             for part in iter {
                 let next = try_generate_span_expr(part, grammar_attrs)?;
@@ -190,7 +195,8 @@ fn try_generate_span_expr<'a>(
                         let unescaped = bbnf::generate::unescape_literal(value.as_ref());
                         proc_macro2::Literal::string(&unescaped)
                     } else {
-                        unreachable!()
+                        // Invariant: all_lit guard above ensures every branch is a Literal.
+                        unreachable!("all_lit guard ensures Expression::Literal")
                     }
                 }).collect();
                 Some(quote! { ::parse_that::sp_any(&[#(#lits),*]) })
@@ -270,8 +276,10 @@ where
     let mut methods: Vec<proc_macro2::TokenStream> = Vec::new();
 
     for (expr, parser) in generated_parsers.iter() {
+        // Invariant: generated_parsers keys are always Nonterminal expressions —
+        // they are populated from AST LHS entries which are rule names.
         let Expression::Nonterminal(Token { value: name, ..}) = expr else {
-            panic!("Expected nonterminal");
+            panic!("Expected nonterminal in generated parser key, got: {:?}", expr);
         };
         let ident = format_ident!("{}", name);
 

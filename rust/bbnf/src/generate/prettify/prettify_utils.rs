@@ -168,7 +168,7 @@ pub fn doc_for_binding(binding: &syn::Ident, ty: &syn::Type) -> TokenStream {
         quote! {
             {
                 let docs: Vec<::pprint::Doc<'a>> = #binding.iter().map(|item| #item_doc).collect();
-                ::pprint::Doc::Join(Box::new(::pprint::Doc::Softline), docs)
+                ::pprint::Doc::Join(Box::new((::pprint::Doc::Softline, docs)))
             }
         }
     } else if is_option_type(ty) {

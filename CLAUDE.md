@@ -87,4 +87,7 @@ Requires `VSCE_PAT` secret in GitHub repo settings.
 - **Analysis pipeline**: Tarjan SCC → topological sort → FIRST sets (128-bit `CharSet`) → dispatch tables (constant-time alternation selection by leading character).
 - **Recursive SpanParser codegen**: `try_generate_span_parser()` handles all expression types (concat, alt, many, skip/next, minus, nonterminal refs). Iterative fixed-point loop on `sp_method_rules` — start empty, try generating for all eligible rules, add successes, repeat until convergence (2–3 iterations). Literal unescape via `unescape_literal()` + `proc_macro2::Literal::string()`.
 - **File decomposition**: `codegen.rs` → `codegen.rs` + `alternation.rs` + `concatenation.rs`; `prettify.rs` → `prettify/mod.rs` + `prettify/prettify_utils.rs`; `lib.rs` → `lib.rs` + `span_codegen.rs`.
-- **Prettify codegen**: `@pretty` directives (`group`, `block`, `indent`, `blankline`, `softbreak`, `nobreak`, `fast`) control Doc emission. `generate_prettify()` produces `to_doc()` + `source_range()` impls. Sub-variant coercion for heterogeneous alternation branches.
+- **Prettify codegen**: `@pretty` directives (`group`, `block`, `indent`, `blankline`, `nobreak`, `fast`) control Doc emission. `generate_prettify()` produces `to_doc()` + `source_range()` impls. Sub-variant coercion for heterogeneous alternation branches.
+- **Type comparison**: `types_eq()` compares `syn::Type` structurally via per-token-tree comparison—no string serialization.
+- **Sub-variant validation**: `validate_sub_variant_uniqueness()` rejects cross-rule type collisions at compile time.
+- **JSON pattern detection**: Exact-match against canonical regex patterns (no substring heuristics). `is_json_string_regex()` / `is_json_number_regex()` use `const` pattern arrays.

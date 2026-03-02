@@ -12,7 +12,7 @@ use super::type_inference::*;
 use super::types::*;
 
 use proc_macro2::TokenStream;
-use quote::{format_ident, quote, ToTokens};
+use quote::{format_ident, quote};
 
 /// Coerce alternation branch parsers to a uniform `Box<Enum>` output type.
 /// - Branches already producing `Box<Enum>`: left as-is.
@@ -30,10 +30,9 @@ fn coerce_alternation_branches<'a>(
         return parsers.to_vec();
     }
 
-    let boxed_enum_str = grammar_attrs.boxed_enum_type.to_token_stream().to_string();
     let enum_ident = grammar_attrs.enum_ident;
 
-    // Collect ALL sub-variants from all rules into a flat lookup by type string.
+    // Collect ALL sub-variants from all rules into a flat lookup by type.
     // This handles the case where an alternation is encountered during deep inlining
     // and current_rule_name doesn't match the original rule that defined the sub-variants.
     let all_sub_variants: Vec<&(String, syn::Type)> = grammar_attrs
@@ -45,13 +44,11 @@ fn coerce_alternation_branches<'a>(
         .iter()
         .zip(branch_tys.iter())
         .map(|(parser, branch_ty)| {
-            let ty_str = branch_ty.to_token_stream().to_string();
-
-            if ty_str == boxed_enum_str {
+            if types_eq(branch_ty, grammar_attrs.boxed_enum_type) {
                 // Already Box<Enum> — no wrapping needed.
                 parser.clone()
             } else if let Some((variant_name, _)) = all_sub_variants.iter().find(|(_, vty)| {
-                vty.to_token_stream().to_string() == ty_str
+                types_eq(vty, branch_ty)
             }) {
                 // Found a sub-variant with matching type — wrap with it.
                 // This must be checked BEFORE Span to handle heterogeneous alternations
@@ -101,19 +98,15 @@ pub fn calculate_alternation_expression<'a>(
                 .collect();
             let overall_ty = {
                 let all_span = branch_tys.iter().all(type_is_span);
-                let all_same = branch_tys.iter().all(|ty| {
-                    ty.to_token_stream().to_string()
-                        == branch_tys[0].to_token_stream().to_string()
-                });
+                let all_same = branch_tys.iter().all(|ty| types_eq(ty, &branch_tys[0]));
                 if all_span || all_same {
                     branch_tys[0].clone()
                 } else {
                     grammar_attrs.boxed_enum_type.clone()
                 }
             };
-            let overall_is_boxed_enum = !type_is_span(&overall_ty)
-                && overall_ty.to_token_stream().to_string()
-                    == grammar_attrs.boxed_enum_type.to_token_stream().to_string();
+            let overall_is_boxed_enum =
+                !type_is_span(&overall_ty) && types_eq(&overall_ty, grammar_attrs.boxed_enum_type);
 
             // Coerce each branch parser to the overall type if needed.
             let coerced_parsers: Vec<TokenStream> = coerce_alternation_branches(
@@ -242,9 +235,7 @@ pub fn calculate_alternation_expression<'a>(
         let all_span = tys.iter().all(type_is_span);
         if !all_span {
             // Check if branches are heterogeneous (need coercion).
-            let all_same = tys.iter().all(|ty| {
-                ty.to_token_stream().to_string() == tys[0].to_token_stream().to_string()
-            });
+            let all_same = tys.iter().all(|ty| types_eq(ty, &tys[0]));
             if !all_same {
                 // Heterogeneous: coerce all branches to Box<Enum>.
                 let coerced = coerce_alternation_branches(
@@ -264,6 +255,7 @@ pub fn calculate_alternation_expression<'a>(
     // Inline flat alternation — emit a single closure with all branches.
     // This creates one Box<dyn ParserFn> instead of N-1 .or() boxes.
     if parsers.len() == 1 {
+        // Invariant: len == 1 guarantees next() succeeds.
         return parsers.into_iter().next().unwrap();
     }
     if parsers.len() <= 8 {
@@ -295,7 +287,9 @@ pub fn calculate_alternation_expression<'a>(
             }
         };
     }
-    // More than 8 branches: fall back to .or() chain
+    // More than 8 branches: fall back to .or() chain.
+    // Invariant: we only reach here when parsers.len() > 8, so fold always
+    // produces Some from the first iteration.
     let parser = parsers
         .into_iter()
         .fold(None::<TokenStream>, |acc, parser| match acc {

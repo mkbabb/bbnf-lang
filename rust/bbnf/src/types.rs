@@ -126,7 +126,7 @@ pub struct RecoverDirective<'a> {
 pub struct PrettyDirective<'a> {
     /// The name of the rule to apply formatting hints to.
     pub rule_name: Cow<'a, str>,
-    /// Formatting hints (e.g. "group", "indent", "block", "blankline", "softbreak", "nobreak").
+    /// Formatting hints (e.g. "group", "indent", "block", "blankline", "nobreak", "fast").
     pub hints: Vec<Cow<'a, str>>,
     /// The byte-offset span of the entire pretty directive.
     pub span: Span<'a>,

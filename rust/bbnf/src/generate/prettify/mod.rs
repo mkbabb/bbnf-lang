@@ -17,7 +17,7 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 /// Recognised `@pretty` hint keywords.
-const VALID_HINTS: &[&str] = &["group", "block", "indent", "blankline", "softbreak", "nobreak", "fast"];
+const VALID_HINTS: &[&str] = &["group", "block", "indent", "blankline", "nobreak", "fast"];
 
 /// Generate `to_doc()` and `source_range()` impl blocks for the parser enum.
 ///
@@ -80,12 +80,13 @@ pub fn generate_prettify(
             .cloned()
             .unwrap_or_default();
 
-        // Validate hints.
+        // Validate hints — unknown hints are user errors in the grammar file.
         for hint in &hints {
             if !VALID_HINTS.contains(&hint.as_str()) {
                 panic!(
-                    "@pretty directive for rule `{}` has unknown hint `{}`; valid: {:?}",
-                    name, hint, VALID_HINTS
+                    "@pretty directive for rule `{}` contains unknown hint `{}`. \
+                     Valid hints are: {}",
+                    name, hint, VALID_HINTS.join(", ")
                 );
             }
         }
@@ -313,7 +314,7 @@ fn generate_vec_doc(
             if docs.is_empty() {
                 ::pprint::Doc::Null
             } else {
-                ::pprint::Doc::Join(Box::new(#sep), docs)
+                ::pprint::Doc::Join(Box::new((#sep, docs)))
             }
         }
     };
@@ -489,21 +490,21 @@ fn generate_wrapped_doc(
         let join_expr = if hints.contains(&"fast".to_string()) {
             quote! {
                 ::pprint::Doc::Join(
-                    Box::new(
+                    Box::new((
                         ::pprint::Doc::String(::std::borrow::Cow::Borrowed(","))
-                            + ::pprint::Doc::String(::std::borrow::Cow::Borrowed(" "))
-                    ),
-                    items_docs,
+                            + ::pprint::Doc::String(::std::borrow::Cow::Borrowed(" ")),
+                        items_docs,
+                    ))
                 )
             }
         } else {
             quote! {
                 ::pprint::Doc::SmartJoin(
-                    Box::new(
+                    Box::new((
                         ::pprint::Doc::String(::std::borrow::Cow::Borrowed(","))
-                            + ::pprint::Doc::String(::std::borrow::Cow::Borrowed(" "))
-                    ),
-                    items_docs,
+                            + ::pprint::Doc::String(::std::borrow::Cow::Borrowed(" ")),
+                        items_docs,
+                    ))
                 )
             }
         };
@@ -582,7 +583,7 @@ fn apply_hints(doc: TokenStream, hints: &[String]) -> TokenStream {
         result = match hint.as_str() {
             "group" => quote! { ::pprint::Doc::Group(Box::new(#result)) },
             "indent" => quote! { ::pprint::Doc::Indent(Box::new(#result)) },
-            _ => result, // block, blankline, nobreak, softbreak, fast are handled in join generation
+            _ => result, // block, blankline, nobreak, fast are handled in join generation
         };
     }
     result

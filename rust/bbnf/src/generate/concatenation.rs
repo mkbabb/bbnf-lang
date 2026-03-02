@@ -162,5 +162,7 @@ pub fn calculate_concatenation_expression<'a>(
             }
         };
     }
+    // Invariant: concatenation expressions always have at least one element,
+    // so the fold above always produces Some.
     acc.unwrap()
 }

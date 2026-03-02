@@ -138,6 +138,8 @@ pub fn calculate_parser_from_expression<'a>(
         let Ok(ty) = syn:: parse_str::< syn:: Type >(ty) else {
             return None;
         };
+        // Invariant: DEFAULT_PARSERS contains only valid Rust expressions
+        // (e.g. "::parse_that::string_span") that always parse successfully.
         let parser = syn::parse_str::<syn::Expr>(parser)
             .unwrap()
             .to_token_stream();
@@ -169,6 +171,7 @@ pub fn calculate_parser_from_expression<'a>(
         Expression::Literal(Token { value, .. }) => {
             let unescaped = unescape_literal(value);
             let lit = proc_macro2::Literal::string(&unescaped);
+            // Invariant: "LITERAL" is a hardcoded key in DEFAULT_PARSERS and always exists.
             get_and_parse_default_parser(
                 "LITERAL",
                 Some(quote! {
@@ -194,6 +197,7 @@ pub fn calculate_parser_from_expression<'a>(
                 let parser = quote! { ::parse_that::take_until_any_span(#excluded_bytes) };
                 map_span_if_needed(parser, true, grammar_attrs)
             } else {
+                // Invariant: "REGEX" is a hardcoded key in DEFAULT_PARSERS and always exists.
                 get_and_parse_default_parser(
                     "REGEX",
                     Some(quote! {
@@ -249,9 +253,12 @@ pub fn calculate_parser_from_expression<'a>(
             );
 
             if let Expression::MappingFn(Token { value, .. }) = mapping_fn {
-                let Ok(mapping_fn) = syn:: parse_str::< syn:: ExprClosure >(value) else {
-                    panic!("Invalid mapper expression: {}", value);
-                };
+                let mapping_fn = syn::parse_str::<syn::ExprClosure>(value)
+                    .unwrap_or_else(|e| panic!(
+                        "Invalid mapping function in grammar expression: `{}`. \
+                         Must be a valid Rust closure (e.g. `|x| -> Type {{ ... }}`). \
+                         Parse error: {}", value, e
+                    ));
 
                 quote! {
                     #parser.map(#mapping_fn)
@@ -485,9 +492,12 @@ pub fn calculate_parser_from_expression<'a>(
             );
             if let Some(inner) = mapping_fn {
                 if let Expression::MappingFn(Token { value, .. }) = inner.as_ref() {
-                    let Ok(mapping_fn) = syn:: parse_str::< syn:: ExprClosure >(value) else {
-                        panic!("Invalid mapper expression: {}", value);
-                    };
+                    let mapping_fn = syn::parse_str::<syn::ExprClosure>(value)
+                        .unwrap_or_else(|e| panic!(
+                            "Invalid mapping function in grammar rule: `{}`. \
+                             Must be a valid Rust closure (e.g. `|x| -> Type {{ ... }}`). \
+                             Parse error: {}", value, e
+                        ));
 
                     quote! {
                         #parser.map(#mapping_fn)
@@ -499,7 +509,12 @@ pub fn calculate_parser_from_expression<'a>(
                 parser
             }
         }
-        _ => unimplemented!("Expression not implemented: {:?}", expr),
+        _ => panic!(
+            "Unsupported expression type in codegen: {:?}. \
+             This expression variant has no code generation handler. \
+             Check that your grammar only uses supported BBNF constructs.",
+            expr
+        ),
     };
     cache_bundle
         .parser_cache

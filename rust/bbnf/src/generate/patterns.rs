@@ -117,8 +117,9 @@ pub fn check_for_sep_by<'a>(
         Expression::Skip(left_expr, inner)
             if matches!(inner.as_ref(), Token { value: Expression::Optional(_), .. }) =>
         {
+            // Invariant: the match guard above already confirmed inner is Optional.
             let Token { value: Expression::Optional(right_expr), .. } = inner.as_ref() else {
-                unreachable!()
+                unreachable!("match guard confirmed Expression::Optional")
             };
             let left_expr = left_expr.inner();
             let mut right_expr = right_expr.inner();
@@ -220,28 +221,49 @@ pub fn check_for_wrapped<'a>(
     }
 }
 
+/// Known exact JSON string regex patterns that can be replaced with the
+/// `sp_json_string_quoted()` SIMD fast-path. Each entry is a canonical form
+/// found in real JSON grammars. We match exactly rather than using substring
+/// heuristics to avoid false positives on non-JSON patterns that happen to
+/// contain similar substrings.
+const JSON_STRING_REGEX_PATTERNS: &[&str] = &[
+    // Standard JSON string: "..."  with escape sequences
+    r#""(?:[^"\\]|\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4}))*""#,
+    // Variant with \uXXXX using [0-9A-Fa-f] (case-flexible hex)
+    r#""(?:[^"\\]|\\(?:["\\\/bfnrt]|u[0-9A-Fa-f]{4}))*""#,
+    // Variant without the \/ escape (some grammars omit forward-slash escape)
+    r#""(?:[^"\\]|\\(?:["\\bfnrt]|u[0-9a-fA-F]{4}))*""#,
+];
+
+/// Known exact JSON number regex patterns that can be replaced with the
+/// `sp_json_number()` monolithic byte-loop fast-path.
+const JSON_NUMBER_REGEX_PATTERNS: &[&str] = &[
+    // Standard JSON number with \d shorthand
+    r"-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?",
+    // Variant with explicit [0-9] instead of \d
+    r"-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?",
+];
+
 /// Detect the canonical JSON string regex pattern and return true if it matches.
 /// The JSON grammar uses `/"(?:[^"\\]|\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4}))*"/`
 /// which compiles to a general-purpose NFA via `sp_regex(...)`. The fast-path
 /// `sp_json_string()` uses `memchr2(b'"', b'\\')` SIMD scanning instead.
+///
+/// Uses exact pattern matching against known canonical forms rather than
+/// substring heuristics to avoid false positives.
 pub fn is_json_string_regex(pattern: &str) -> bool {
-    // Check for the distinctive substrings that identify the JSON string regex.
-    // We look for the character class `[^"\\]` (match non-quote, non-backslash)
-    // and the escape sequence group `\\(?:` which handles JSON escape sequences.
-    pattern.contains(r#"[^"\\]"#) && pattern.contains(r"\\(?:")
-        && pattern.starts_with('"') && pattern.ends_with('"')
+    JSON_STRING_REGEX_PATTERNS.contains(&pattern)
 }
 
 /// Detect the canonical JSON number regex and return true if it matches.
 /// The JSON grammar uses `/-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/` which
 /// compiles to a general-purpose NFA. The fast-path `sp_json_number()` uses a
 /// monolithic byte loop that is dramatically faster for number-heavy inputs.
+///
+/// Uses exact pattern matching against known canonical forms rather than
+/// substring heuristics to avoid false positives.
 pub fn is_json_number_regex(pattern: &str) -> bool {
-    // JSON number regex starts with optional minus, contains the integer part
-    // (0 or [1-9] followed by digits), and contains an exponent group [eE].
-    pattern.starts_with("-?")
-        && (pattern.contains("(0|[1-9]\\d*)") || pattern.contains("(0|[1-9][0-9]*)"))
-        && pattern.contains("[eE]")
+    JSON_NUMBER_REGEX_PATTERNS.contains(&pattern)
 }
 
 /// Detect a negated character class regex of the form `[^XYZ]+` and return the
@@ -300,7 +322,8 @@ pub fn check_for_any_span(exprs: &[Expression]) -> Option<TokenStream> {
                     let unescaped = super::codegen::unescape_literal(&token.value);
                     proc_macro2::Literal::string(&unescaped)
                 } else {
-                    panic!("Expected literal");
+                    // Invariant: all_literals guard above ensures every expr is a Literal.
+                    unreachable!("all_literals guard ensures Expression::Literal")
                 }
             })
             .collect();

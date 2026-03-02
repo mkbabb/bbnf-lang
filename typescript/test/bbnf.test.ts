@@ -517,4 +517,65 @@ describe("BBNF Parser", () => {
         const parsed = parser.parse(csvData);
         expect(parsed).toBeTruthy();
     });
+
+    it("should parse a BNF grammar", () => {
+        const grammar = fs.readFileSync("../grammar/lang/bnf.bbnf", "utf8");
+        const [nonterminals] = BBNFToParser(grammar);
+
+        const bnfInput = `<expr> ::= <term> | <expr> "+" <term>
+<term> ::= <factor> | <term> "*" <factor>
+<factor> ::= "(" <expr> ")" | <number>
+<number> ::= "0" | "1" | "2"`;
+
+        const parser = nonterminals.grammar;
+        const parsed = parser.parse(bnfInput);
+        expect(parsed).toBeTruthy();
+    });
+
+    it("should parse JSON with comments", () => {
+        const grammar = fs.readFileSync(
+            "../grammar/lang/json-commented.bbnf",
+            "utf8",
+        );
+        const [nonterminals] = BBNFToParser(grammar);
+
+        nonterminals.null = nonterminals.null.map(() => null);
+        nonterminals.bool = nonterminals.bool.map((v: string) => v === "true");
+        nonterminals.number = nonterminals.number.map(Number);
+        nonterminals.string = nonterminals.string.map((s: string) =>
+            s.indexOf("\\") === -1 ? s : JSON.parse(`"${s}"`),
+        );
+        nonterminals.object = nonterminals.object.map(
+            (pairs: [string, any][]) => Object.fromEntries(pairs),
+        );
+        nonterminals.value = nonterminals.value.trim();
+
+        const jsonInput = '{"hello": [1, true, null, "world"]}';
+        const parsed = nonterminals.value.parse(jsonInput);
+        expect(parsed).toEqual({ hello: [1, true, null, "world"] });
+    });
+
+    it("should compile an ambiguous math grammar", () => {
+        const grammar = fs.readFileSync(
+            "../grammar/lang/math-ambiguous.bbnf",
+            "utf8",
+        );
+        // The ambiguous grammar uses left recursion with optional operator,
+        // which causes infinite recursion in the TS runtime. Verify that the
+        // grammar at least compiles (parses the BBNF source) successfully.
+        const [nonterminals] = BBNFToParser(grammar, true);
+        expect(nonterminals.expression).toBeTruthy();
+        expect(nonterminals.number).toBeTruthy();
+    });
+
+    it("should reject an emoji grammar with unquoted terminals", () => {
+        const grammar = fs.readFileSync(
+            "../grammar/lang/emoji.bbnf",
+            "utf8",
+        );
+        // The emoji grammar uses unquoted emoji as terminals (e.g. 🍕 instead
+        // of "🍕"). The BBNF parser correctly rejects this since unquoted
+        // non-ASCII tokens aren't valid terminal syntax.
+        expect(() => BBNFToParser(grammar)).toThrow();
+    });
 });

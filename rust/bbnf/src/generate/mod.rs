@@ -125,6 +125,8 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
                 let is_acyclic = grammar_attrs.acyclic_deps.contains_key(lhs);
 
                 if !is_acyclic {
+                    // Invariant: every LHS in the AST has an entry in `deps` —
+                    // `calculate_ast_deps` ensures all rules are present.
                     grammar_attrs
                         .deps
                         .get(lhs)
@@ -228,6 +230,7 @@ pub fn compile_sync_expression(expr: &Expression<'_>) -> proc_macro2::TokenStrea
         Expression::Concatenation(token) => {
             let parts: Vec<_> = token.value.iter().map(|e| compile_sync_expression(e)).collect();
             if parts.len() == 1 {
+                // Invariant: len == 1 guarantees next() succeeds.
                 parts.into_iter().next().unwrap()
             } else {
                 let first = &parts[0];
@@ -253,7 +256,12 @@ pub fn compile_sync_expression(expr: &Expression<'_>) -> proc_macro2::TokenStrea
             quote! { Self::#ident() }
         }
         _ => {
-            panic!("Unsupported expression type in @recover sync expression: {:?}", expr);
+            panic!(
+                "Unsupported expression type in @recover sync expression: {:?}. \
+                 Sync expressions support: literals, regexes, alternation, concatenation, \
+                 many, many1, optional, groups, and nonterminal references.",
+                expr
+            );
         }
     }
 }

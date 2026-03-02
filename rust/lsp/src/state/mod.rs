@@ -9,10 +9,7 @@ pub use types::*;
 #[cfg(test)]
 pub use diagnostics::analyze;
 
-use std::collections::HashSet;
-
-use bbnf::analysis::{calculate_ast_deps, get_nonterminal_name};
-use bbnf::types::{Expression, AST};
+use bbnf::types::AST;
 
 use crate::analysis::LineIndex;
 
@@ -27,10 +24,6 @@ pub struct DocumentState {
     pub line_index: LineIndex,
     /// Cached parsed AST (self-referential: borrows from its own String).
     ast_cell: OwnedAst,
-    /// Cached rule names from previous analysis (for structural change detection).
-    prev_rule_names: Option<Vec<String>>,
-    /// Cached dependency graph from previous analysis (for dep graph diffing).
-    prev_dep_edges: Option<HashSet<(String, String)>>,
 }
 
 impl DocumentState {
@@ -46,38 +39,6 @@ impl DocumentState {
         });
         let diag = parse_diag.into_inner().unwrap();
 
-        // Cache rule names and dep edges for incremental updates.
-        let (rule_names, dep_edges) = ast_cell
-            .borrow_dependent()
-            .as_ref()
-            .map(|cached| {
-                let names: Vec<String> = cached
-                    .ast
-                    .keys()
-                    .filter_map(|k| {
-                        if let Expression::Nonterminal(tok) = k {
-                            Some(tok.value.to_string())
-                        } else {
-                            None
-                        }
-                    })
-                    .collect();
-
-                let deps = calculate_ast_deps(&cached.ast);
-                let mut edges = HashSet::new();
-                for (lhs, dep_set) in &deps {
-                    if let Some(lhs_name) = get_nonterminal_name(lhs) {
-                        for dep in dep_set {
-                            if let Some(dep_name) = get_nonterminal_name(dep) {
-                                edges.insert((lhs_name.to_string(), dep_name.to_string()));
-                            }
-                        }
-                    }
-                }
-                (Some(names), Some(edges))
-            })
-            .unwrap_or((None, None));
-
         let info = analyze_from_cache(
             &text,
             &line_index,
@@ -89,8 +50,6 @@ impl DocumentState {
             info,
             line_index,
             ast_cell,
-            prev_rule_names: rule_names,
-            prev_dep_edges: dep_edges,
         }
     }
 
@@ -112,57 +71,12 @@ impl DocumentState {
         });
         let diag = parse_diag.into_inner().unwrap();
 
-        // Check for structural changes (rule count/names differ).
-        let new_rule_names: Vec<String> = ast_cell
-            .borrow_dependent()
-            .as_ref()
-            .map(|cached| {
-                cached
-                    .ast
-                    .keys()
-                    .filter_map(|k| {
-                        if let Expression::Nonterminal(tok) = k {
-                            Some(tok.value.to_string())
-                        } else {
-                            None
-                        }
-                    })
-                    .collect()
-            })
-            .unwrap_or_default();
-
-        let _structural_change = self
-            .prev_rule_names
-            .as_ref()
-            .map(|prev| prev != &new_rule_names)
-            .unwrap_or(true);
-
-        // Always do full analysis for now (the caching of prev_rule_names
-        // and prev_dep_edges enables future selective re-analysis optimizations).
         self.info = analyze_from_cache(
             &text,
             &line_index,
             ast_cell.borrow_dependent().as_ref(),
             &diag,
         );
-
-        // Cache for next update.
-        self.prev_rule_names = Some(new_rule_names);
-        // Build dep edge set for next update's diffing.
-        if let Some(cached) = ast_cell.borrow_dependent().as_ref() {
-            let deps = calculate_ast_deps(&cached.ast);
-            let mut edges = HashSet::new();
-            for (lhs, dep_set) in &deps {
-                if let Some(lhs_name) = get_nonterminal_name(lhs) {
-                    for dep in dep_set {
-                        if let Some(dep_name) = get_nonterminal_name(dep) {
-                            edges.insert((lhs_name.to_string(), dep_name.to_string()));
-                        }
-                    }
-                }
-            }
-            self.prev_dep_edges = Some(edges);
-        }
 
         self.line_index = line_index;
         self.ast_cell = ast_cell;

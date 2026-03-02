@@ -47,7 +47,6 @@ pub struct GeneratedGrammarAttributes<'a> {
 
     pub first_sets: Option<&'a FirstSets<'a>>,
 
-    pub ref_counts: Option<&'a HashMap<&'a Expression<'a>, usize>>,
     pub aliases: Option<&'a HashMap<&'a Expression<'a>, &'a Expression<'a>>>,
 
     /// Rules whose enum variant is elided — their parser returns the inner

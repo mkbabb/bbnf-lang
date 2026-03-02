@@ -12,7 +12,7 @@ use bbnf::generate_prettify;
 
 use bbnf::analysis::{
     tarjan_scc, topological_sort_scc, calculate_acyclic_deps_scc, calculate_non_acyclic_deps_scc,
-    compute_first_sets, compute_ref_counts, find_aliases, find_transparent_alternations,
+    compute_first_sets, find_aliases, find_transparent_alternations,
     find_span_eligible_rules,
 };
 use bbnf::BBNFGrammar;
@@ -113,6 +113,8 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
         // Try parsing with import support to check for @import directives.
         let source = std::fs::read_to_string(entry)
             .unwrap_or_else(|_| panic!("Unable to read file: {}", entry.display()));
+        // SAFETY: Leak the source string to get 'static lifetime for the AST.
+        // Acceptable in a proc-macro context — the compiler process exits after expansion.
         let source_static: &'static str = Box::leak(source.clone().into_boxed_str());
         let parser = BBNFGrammar::grammar_with_imports();
         let (parsed, _) = parser.parse_return_state(source_static);
@@ -174,6 +176,7 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
             .map(|path| {
                 let s = std::fs::read_to_string(path)
                     .unwrap_or_else(|_| panic!("Unable to read file: {}", path.display()));
+                // SAFETY: Leak to get 'static lifetime — acceptable in proc-macro context.
                 &*Box::leak(s.into_boxed_str())
             })
             .collect();
@@ -216,8 +219,7 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     // Phase 1.2: Compute FIRST sets for dispatch table generation
     let first_sets = compute_first_sets(&ast, &deps, &scc_result);
 
-    // Phase 1.6: Reference counting and alias detection
-    let ref_counts = compute_ref_counts(&deps);
+    // Phase 1.6: Alias detection
     let aliases = find_aliases(&ast, &scc_result.cyclic_rules);
 
     // Phase B: Transparent alternation detection
@@ -241,7 +243,6 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
                     acyclic_deps: &acyclic_deps,
                     non_acyclic_deps: &non_acyclic_deps,
                     first_sets: None,
-                    ref_counts: None,
                     aliases: None,
                     transparent_rules: None,
                     span_eligible_rules: Some(&span_eligible_rules),
@@ -276,7 +277,6 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
         non_acyclic_deps: &non_acyclic_deps,
 
         first_sets: Some(&first_sets),
-        ref_counts: Some(&ref_counts),
         aliases: Some(&aliases),
         transparent_rules: Some(&transparent_rules),
         span_eligible_rules: Some(&span_eligible_rules),
@@ -304,7 +304,6 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
         non_acyclic_deps: &non_acyclic_deps,
 
         first_sets: Some(&first_sets),
-        ref_counts: Some(&ref_counts),
         aliases: Some(&aliases),
         transparent_rules: Some(&transparent_rules),
         span_eligible_rules: Some(&span_eligible_rules),

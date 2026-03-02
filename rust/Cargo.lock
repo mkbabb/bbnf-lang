@@ -19,7 +19,7 @@ checksum = "7f202df86484c868dbad7eaa557ef785d5c66295e41b460ef922eca0723b842c"
 
 [[package]]
 name = "bbnf"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "indexmap",
  "parse_that",
@@ -48,7 +48,7 @@ dependencies = [
 
 [[package]]
 name = "bbnf_derive"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "bbnf",
  "indexmap",

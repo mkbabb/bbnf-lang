@@ -41,6 +41,8 @@ rule = expression ;                             (* production rule *)
 @import "file.bbnf" ;                          (* glob import *)
 @import { a, b } from "file.bbnf" ;            (* selective import *)
 @recover rule syncExpr ;                        (* recovery directive (any BBNF expr as sync) *)
+@pretty rule hint1 hint2 ;                      (* prettify hints for codegen *)
+@pretty * auto ;                                (* grammar-wide heuristic mode: auto|minimal|off *)
 ```
 
 **Terminals**: `"string"`, `'string'`, `` `string` ``, `/regex/`, `epsilon` / `ε`

@@ -7,17 +7,20 @@
 mod prettify_utils;
 pub use prettify_utils::*;
 
+pub mod heuristics;
+pub mod hints;
+
 use crate::analysis::get_nonterminal_name;
 use crate::types::*;
 
 use super::type_inference::*;
 use super::types::*;
 
+use heuristics::{HeuristicContext, resolve_mode};
+use hints::is_valid_hint;
+
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
-
-/// Recognised `@pretty` hint keywords.
-const VALID_HINTS: &[&str] = &["group", "block", "indent", "blankline", "nobreak", "fast"];
 
 /// Generate `to_doc()` and `source_range()` impl blocks for the parser enum.
 ///
@@ -74,20 +77,42 @@ pub fn generate_prettify(
         };
 
         // Get @pretty hints for this rule (if any).
-        let hints: Vec<String> = grammar_attrs
+        let explicit_hints: Option<Vec<String>> = grammar_attrs
             .pretties
             .and_then(|p| p.get(name))
-            .cloned()
-            .unwrap_or_default();
+            .cloned();
+
+        let hints: Vec<String> = if let Some(ref h) = explicit_hints {
+            // "off" means disable heuristics — keep only "off" so it can
+            // affect separator selection (Null separator for compound/Vec).
+            if h.iter().any(|hint| hint == "off") {
+                vec!["off".to_string()]
+            } else {
+                h.clone()
+            }
+        } else {
+            // No explicit @pretty — try heuristic inference.
+            let mode = resolve_mode(grammar_attrs);
+            let ctx = HeuristicContext {
+                rule_name: name,
+                expr: inner,
+                ty,
+                grammar_attrs,
+            };
+            heuristics::infer_hints(&ctx, mode)
+        };
 
         // Validate hints — unknown hints are user errors in the grammar file.
-        for hint in &hints {
-            if !VALID_HINTS.contains(&hint.as_str()) {
-                panic!(
-                    "@pretty directive for rule `{}` contains unknown hint `{}`. \
-                     Valid hints are: {}",
-                    name, hint, VALID_HINTS.join(", ")
-                );
+        if let Some(ref h) = explicit_hints {
+            for hint in h {
+                if !is_valid_hint(hint) {
+                    let valid = hints::valid_hint_names();
+                    panic!(
+                        "@pretty directive for rule `{}` contains unknown hint `{}`. \
+                         Valid hints are: {}",
+                        name, hint, valid.join(", ")
+                    );
+                }
             }
         }
 
@@ -296,10 +321,19 @@ fn generate_vec_doc(
     // Default: softline-separated join of items.
     let sep = if hints.contains(&"blankline".to_string()) {
         quote! { ::pprint::Doc::Hardline + ::pprint::Doc::Hardline }
-    } else if hints.contains(&"block".to_string()) || hints.contains(&"fast".to_string()) {
+    } else if hints.contains(&"block".to_string())
+        || hints.contains(&"fast".to_string())
+        || hints.contains(&"hardbreak".to_string())
+    {
         quote! { ::pprint::Doc::Hardline }
-    } else if hints.contains(&"nobreak".to_string()) {
+    } else if hints.contains(&"nobreak".to_string())
+        || hints.contains(&"compact".to_string())
+    {
         quote! { ::pprint::Doc::String(::std::borrow::Cow::Borrowed(" ")) }
+    } else if hints.contains(&"softbreak".to_string()) {
+        quote! { ::pprint::Doc::Softline }
+    } else if hints.contains(&"off".to_string()) {
+        quote! { ::pprint::Doc::Null }
     } else {
         quote! { ::pprint::Doc::Softline }
     };
@@ -308,18 +342,53 @@ fn generate_vec_doc(
     // destructuring lambda that concatenates the element docs.
     let item_to_doc = generate_item_to_doc(ty);
 
-    let base = quote! {
-        {
-            let docs: Vec<::pprint::Doc<'a>> = items.iter().map(|item| #item_to_doc).collect();
-            if docs.is_empty() {
-                ::pprint::Doc::Null
-            } else {
-                ::pprint::Doc::Join(Box::new((#sep, docs)))
+    // When both a hard separator (block/blankline) AND indent are present,
+    // produce: Indent(Hardline + Join(sep, items)) + Hardline
+    // This ensures the first element starts on a new indented line, and there's
+    // a trailing newline at the parent indent for closing delimiters.
+    let has_indent = hints.contains(&"indent".to_string());
+    let has_hard_sep = hints.contains(&"block".to_string())
+        || hints.contains(&"blankline".to_string())
+        || hints.contains(&"hardbreak".to_string());
+
+    let base = if has_indent && has_hard_sep {
+        quote! {
+            {
+                let docs: Vec<::pprint::Doc<'a>> = items.iter().map(|item| #item_to_doc).collect();
+                if docs.is_empty() {
+                    ::pprint::Doc::Null
+                } else {
+                    ::pprint::Doc::Indent(Box::new(
+                        ::pprint::Doc::Hardline
+                            + ::pprint::Doc::Join(Box::new((#sep, docs)))
+                    ))
+                    + ::pprint::Doc::Hardline
+                }
+            }
+        }
+    } else {
+        quote! {
+            {
+                let docs: Vec<::pprint::Doc<'a>> = items.iter().map(|item| #item_to_doc).collect();
+                if docs.is_empty() {
+                    ::pprint::Doc::Null
+                } else {
+                    ::pprint::Doc::Join(Box::new((#sep, docs)))
+                }
             }
         }
     };
 
-    let doc = apply_outer_hints(base, hints);
+    // Filter out indent when already handled above to avoid double-wrapping.
+    let outer_hints: Vec<String> = if has_indent && has_hard_sep {
+        hints.iter()
+            .filter(|h| h.as_str() != "indent")
+            .cloned()
+            .collect()
+    } else {
+        hints.to_vec()
+    };
+    let doc = apply_outer_hints(base, &outer_hints);
     quote! {
         Self::#variant(items) => { #doc }
     }
@@ -391,12 +460,32 @@ fn generate_compound_doc(
         } else {
             // Interleave with spaces or softlines using concat() to dispatch to
             // DoubleDoc/TripleDoc for 2-3 elements, avoiding Vec heap allocation.
-            let sep = if hints.contains(&"fast".to_string()) {
+            let sep = if hints.contains(&"fast".to_string())
+                || hints.contains(&"hardbreak".to_string())
+                || hints.contains(&"block".to_string())
+            {
                 quote! { ::pprint::Doc::Hardline }
-            } else if hints.contains(&"nobreak".to_string()) {
+            } else if hints.contains(&"blankline".to_string()) {
+                quote! { ::pprint::Doc::Hardline + ::pprint::Doc::Hardline }
+            } else if hints.contains(&"nobreak".to_string())
+                || hints.contains(&"compact".to_string())
+            {
                 quote! { ::pprint::Doc::String(::std::borrow::Cow::Borrowed(" ")) }
-            } else {
+            } else if hints.contains(&"softbreak".to_string()) {
                 quote! { ::pprint::Doc::Softline }
+            } else if hints.contains(&"off".to_string()) {
+                // No separator — elements are directly concatenated.
+                // Use for rules with explicit whitespace Spans that handle their own spacing.
+                quote! { ::pprint::Doc::Null }
+            } else {
+                // Default: IfBreak — space when the enclosing Group fits inline,
+                // Hardline when it breaks.  Without an enclosing Group, renders as space.
+                quote! {
+                    ::pprint::Doc::IfBreak(
+                        Box::new(::pprint::Doc::Hardline),
+                        Box::new(::pprint::Doc::String(::std::borrow::Cow::Borrowed(" ")))
+                    )
+                }
             };
 
             let mut interleaved: Vec<proc_macro2::TokenStream> = Vec::new();
@@ -491,8 +580,7 @@ fn generate_wrapped_doc(
             quote! {
                 ::pprint::Doc::Join(
                     Box::new((
-                        ::pprint::Doc::String(::std::borrow::Cow::Borrowed(","))
-                            + ::pprint::Doc::String(::std::borrow::Cow::Borrowed(" ")),
+                        ::pprint::Doc::String(::std::borrow::Cow::Borrowed(", ")),
                         items_docs,
                     ))
                 )
@@ -501,8 +589,7 @@ fn generate_wrapped_doc(
             quote! {
                 ::pprint::Doc::SmartJoin(
                     Box::new((
-                        ::pprint::Doc::String(::std::borrow::Cow::Borrowed(","))
-                            + ::pprint::Doc::String(::std::borrow::Cow::Borrowed(" ")),
+                        ::pprint::Doc::String(::std::borrow::Cow::Borrowed(", ")),
                         items_docs,
                     ))
                 )
@@ -515,13 +602,28 @@ fn generate_wrapped_doc(
                 if items_docs.is_empty() {
                     ::pprint::Doc::String(::std::borrow::Cow::Borrowed(concat!(#left, #right)))
                 } else {
-                    ::pprint::Doc::String(::std::borrow::Cow::Borrowed(#left))
-                        + #join_expr
-                        + ::pprint::Doc::String(::std::borrow::Cow::Borrowed(#right))
+                    // IfBreak: Hardline when the Group breaks, nothing when it fits inline.
+                    let line_or_nothing = ::pprint::Doc::IfBreak(
+                        Box::new(::pprint::Doc::Hardline),
+                        Box::new(::pprint::Doc::Null),
+                    );
+                    ::pprint::Doc::Group(Box::new(
+                        ::pprint::Doc::String(::std::borrow::Cow::Borrowed(#left))
+                            + ::pprint::Doc::Indent(Box::new(
+                                line_or_nothing.clone() + #join_expr
+                            ))
+                            + line_or_nothing
+                            + ::pprint::Doc::String(::std::borrow::Cow::Borrowed(#right))
+                    ))
                 }
             }
         };
-        let doc = apply_outer_hints(base, hints);
+        // The base already contains a Group — filter it from outer hints to avoid double-wrapping.
+        let outer_hints: Vec<String> = hints.iter()
+            .filter(|h| h.as_str() != "group")
+            .cloned()
+            .collect();
+        let doc = apply_outer_hints(base, &outer_hints);
         quote! {
             Self::#variant(items) => { #doc }
         }
@@ -583,19 +685,21 @@ fn apply_hints(doc: TokenStream, hints: &[String]) -> TokenStream {
         result = match hint.as_str() {
             "group" => quote! { ::pprint::Doc::Group(Box::new(#result)) },
             "indent" => quote! { ::pprint::Doc::Indent(Box::new(#result)) },
-            _ => result, // block, blankline, nobreak, fast are handled in join generation
+            "dedent" => quote! { ::pprint::Doc::Dedent(Box::new(#result)) },
+            _ => result, // block, blankline, nobreak, fast, etc. handled in join generation
         };
     }
     result
 }
 
-/// Apply only outer structural hints (group, indent) without modifying join separators.
+/// Apply only outer structural hints (group, indent, dedent) without modifying join separators.
 fn apply_outer_hints(doc: TokenStream, hints: &[String]) -> TokenStream {
     let mut result = doc;
     for hint in hints {
         result = match hint.as_str() {
             "group" => quote! { ::pprint::Doc::Group(Box::new(#result)) },
             "indent" => quote! { ::pprint::Doc::Indent(Box::new(#result)) },
+            "dedent" => quote! { ::pprint::Doc::Dedent(Box::new(#result)) },
             _ => result,
         };
     }

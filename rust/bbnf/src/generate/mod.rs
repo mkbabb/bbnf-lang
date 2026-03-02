@@ -14,7 +14,7 @@ mod patterns;
 mod codegen;
 mod alternation;
 mod concatenation;
-mod prettify;
+pub mod prettify;
 
 // Re-export everything publicly so downstream code sees the same API.
 pub use types::*;

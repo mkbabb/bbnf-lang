@@ -25,7 +25,12 @@ bbnf/
 │   │   ├── types.rs      ParserAttributes, GeneratedNonterminalParser, caches
 │   │   ├── type_inference.rs  Expression → syn::Type
 │   │   ├── patterns.rs   regex coalesce, sep_by, wrapped, any_span detection
-│   │   └── codegen.rs    Expression → TokenStream parser synthesis
+│   │   ├── codegen.rs    Expression → TokenStream parser synthesis
+│   │   └── prettify/
+│   │       ├── mod.rs          @pretty codegen: to_doc() + source_range() emission
+│   │       ├── prettify_utils.rs  Type helpers, expression unwrapping
+│   │       ├── heuristics.rs   Auto-infer @pretty hints from rule shape
+│   │       └── hints.rs        HINT_DEFS — shared hint names + descriptions
 │   ├── optimize.rs       Direct left-recursion elimination
 │   └── imports.rs        Module system: @import resolution, DFS loader
 └── tests/
@@ -70,6 +75,7 @@ Emits `proc_macro2::TokenStream` for Rust parser methods.
 - **type_inference.rs**: Expression → `syn::Type` (Span, Option, Vec, tuple, Box<Enum>).
 - **patterns.rs**: Pattern recognition — regex coalescing, sepBy detection, wrap detection, JSON fast-paths.
 - **codegen.rs**: Expression → combinator calls (string, regex, then, one_of, lazy, etc.). Dispatch table codegen. Span coalescing.
+- **prettify/**: `@pretty` directive codegen. `mod.rs` emits `to_doc()` + `source_range()` impls. `heuristics.rs` auto-infers hints from rule shape (toplevel, brace-delimited, large compound). `hints.rs` is the single source of truth for hint names/descriptions (shared with LSP).
 
 Acyclic rules inline up to a depth limit. Non-acyclic rules wrapped in `lazy(|| ...)`.
 

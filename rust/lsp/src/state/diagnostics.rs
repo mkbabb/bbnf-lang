@@ -15,6 +15,7 @@ use super::ast_utils::{
     compute_reachable_rules, format_charset, format_expression_short, is_empty_rhs,
 };
 use super::parsing::CachedParseResult;
+use super::pretty;
 use super::types::{
     DocumentInfo, ParseDiagnostics, RuleInfo, SemanticTokenInfo, token_types,
 };
@@ -52,6 +53,7 @@ pub(crate) fn analyze_from_cache(
             cyclic_rule_paths: HashMap::new(),
             imports: Vec::new(),
             recovers: Vec::new(),
+            pretties: Vec::new(),
         };
     }
 
@@ -81,6 +83,7 @@ pub(crate) fn analyze_from_cache(
             cyclic_rule_paths: HashMap::new(),
             imports: Vec::new(),
             recovers: Vec::new(),
+            pretties: Vec::new(),
         };
     };
 
@@ -102,6 +105,7 @@ pub(crate) fn analyze_from_cache(
     let ast = &parsed.ast;
     let import_infos = parsed.imports.clone();
     let recover_infos = parsed.recovers.clone();
+    let pretty_infos = parsed.pretties.clone();
 
     // Check for empty AST on non-empty input -- likely a parse failure not caught above.
     if ast.is_empty() && !text.trim().is_empty() && import_infos.is_empty() && recover_infos.is_empty() {
@@ -124,6 +128,7 @@ pub(crate) fn analyze_from_cache(
             cyclic_rule_paths: HashMap::new(),
             imports: import_infos,
             recovers: recover_infos,
+            pretties: Vec::new(),
         };
     }
 
@@ -434,6 +439,23 @@ pub(crate) fn analyze_from_cache(
         }
     }
 
+    // @pretty directive validation and semantic tokens.
+    {
+        let (pretty_diags, pretty_tokens) = pretty::validate_pretties(
+            &pretty_infos,
+            &defined,
+            &imported_names,
+            line_index,
+        );
+        diagnostics.extend(pretty_diags);
+        semantic_tokens.extend(pretty_tokens);
+
+        // Mark pretty directive rule names as referenced (for unused rule detection).
+        for p in &pretty_infos {
+            referenced_names.insert(&p.rule_name);
+        }
+    }
+
     // Sort semantic tokens by offset for encoding.
     semantic_tokens.sort_by_key(|t| t.span.0);
 
@@ -447,6 +469,7 @@ pub(crate) fn analyze_from_cache(
         cyclic_rule_paths,
         imports: import_infos,
         recovers: recover_infos,
+        pretties: pretty_infos,
     }
 }
 

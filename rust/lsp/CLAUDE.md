@@ -18,15 +18,16 @@ lsp/
 │   │   ├── types.rs            RuleInfo, ReferenceInfo, SemanticTokenInfo, DocumentInfo, token_types
 │   │   ├── parsing.rs          OwnedAst (self_cell), CachedParseResult, parse_once
 │   │   ├── diagnostics.rs      analyze_from_cache — full diagnostic generation
+│   │   ├── pretty.rs           @pretty extraction, validation, semantic tokens
 │   │   └── ast_utils.rs        collect_references, semantic tokens, format_expression, cycle paths
 │   ├── analysis.rs             LineIndex, symbol lookup utilities
 │   └── features/
 │       ├── mod.rs              Module declarations
-│       ├── hover.rs            Rule definition + FIRST/nullable/cycle info
+│       ├── hover.rs            Rule definition + FIRST/nullable/cycle + @pretty hint info
 │       ├── goto_definition.rs  Local + cross-file + import path navigation
 │       ├── references.rs       Local + cross-file reference finding
 │       ├── rename.rs           Rule + reference rename (single document)
-│       ├── completion.rs       Rule names, keywords, imported rules
+│       ├── completion.rs       Rule names, keywords, imported rules, @pretty hints
 │       ├── document_symbols.rs Outline of all rules
 │       ├── code_lens.rs        Reference counts per rule
 │       ├── folding.rs          Multi-line rule folding

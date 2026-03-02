@@ -1,6 +1,7 @@
 mod ast_utils;
 mod diagnostics;
 mod parsing;
+pub(crate) mod pretty;
 pub mod types;
 
 pub use ast_utils::compute_expression_end_pub;

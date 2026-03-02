@@ -2,6 +2,8 @@ use std::collections::{HashMap, HashSet};
 
 use tower_lsp_server::ls_types::*;
 
+use super::pretty::PrettyInfo;
+
 /// Information about a single production rule.
 #[derive(Debug, Clone)]
 pub struct RuleInfo {
@@ -74,6 +76,8 @@ pub struct DocumentInfo {
     pub imports: Vec<ImportInfo>,
     /// Recover directives parsed from the document.
     pub recovers: Vec<RecoverInfo>,
+    /// Pretty directives parsed from the document.
+    pub pretties: Vec<PrettyInfo>,
 }
 
 /// Diagnostic info extracted from the parser state (owned, no lifetimes).

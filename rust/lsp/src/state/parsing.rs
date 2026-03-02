@@ -3,6 +3,7 @@ use bbnf::types::AST;
 
 use self_cell::self_cell;
 
+use super::pretty::{self, PrettyInfo};
 use super::types::{ImportInfo, RecoverInfo, ParseDiagnostics};
 
 // Self-referential struct: owns the source text and the parsed AST that borrows from it.
@@ -16,11 +17,12 @@ self_cell! {
 
 pub(crate) type CachedAst<'a> = Option<CachedParseResult<'a>>;
 
-/// Holds both the parsed grammar and import/recover directives (borrows from OwnedAst's owner).
+/// Holds both the parsed grammar and import/recover/pretty directives (borrows from OwnedAst's owner).
 pub(crate) struct CachedParseResult<'a> {
     pub(crate) ast: AST<'a>,
     pub(crate) imports: Vec<ImportInfo>,
     pub(crate) recovers: Vec<RecoverInfo>,
+    pub(crate) pretties: Vec<PrettyInfo>,
 }
 
 /// Parse the source text once, returning the cached AST data and diagnostic info.
@@ -60,10 +62,12 @@ pub(crate) fn parse_once(src: &str) -> (Option<CachedParseResult<'_>>, ParseDiag
                         (name_start, name_start + name_str.len())
                     },
                 }).collect();
+                let pretties = pretty::extract_pretties(&pg.pretties, src);
                 CachedParseResult {
                     ast: pg.rules,
                     imports,
                     recovers,
+                    pretties,
                 }
             });
             (cached, diag)

@@ -149,5 +149,16 @@ pub fn symbol_at_offset<'a>(info: &'a DocumentInfo, offset: usize) -> Option<Sym
             }
         }
     }
+    // Check @pretty directive rule names.
+    for pretty in &info.pretties {
+        if offset >= pretty.rule_name_span.0 && offset <= pretty.rule_name_span.1 {
+            if let Some(first_rule) = info.rules.first() {
+                return Some(SymbolAtOffset::RuleReference {
+                    name: pretty.rule_name.clone(),
+                    containing_rule: first_rule,
+                });
+            }
+        }
+    }
     None
 }

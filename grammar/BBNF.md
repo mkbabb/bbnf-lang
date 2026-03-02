@@ -45,6 +45,41 @@ Imports only the named rules from the specified file:
   its imports are resolved, so mutual import cycles don't deadlock or error.
 - **Name conflicts are errors**: Two imports defining the same rule name is an error.
 
+## Recovery Directives
+
+A `@recover` directive associates an error-recovery synchronisation expression with a
+production rule. When the parser fails inside the named rule, it skips ahead to the
+next match of the sync expression and resumes:
+
+```
+@recover rule syncExpr ;
+```
+
+The sync expression may be any valid BBNF expression (literal, regex, alternation, etc.).
+
+## Pretty Directives
+
+A `@pretty` directive attaches formatting hints to a production rule for the prettify
+code generator. Each hint keyword controls how the rule's `to_doc()` implementation
+emits `Doc` nodes:
+
+```
+@pretty rule hint1 hint2 ;
+```
+
+Recognised hints: `group`, `indent`, `dedent`, `block`, `blankline`, `nobreak`,
+`softbreak`, `hardbreak`, `compact`, `fast`, `off`.
+
+A grammar-wide meta-directive controls heuristic inference for un-annotated rules:
+
+```
+@pretty * auto ;     // auto (default), minimal, or off
+```
+
+When no `@pretty` directive is present and heuristics are enabled, the code generator
+auto-infers hints from rule shape (e.g. toplevel entry points, brace-delimited blocks,
+large compound types).
+
 ## Production Rules
 
 A production rule binds a name (the left-hand side) to an expression (the right-hand

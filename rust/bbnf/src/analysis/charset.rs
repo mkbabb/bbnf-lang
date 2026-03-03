@@ -62,6 +62,18 @@ impl CharSet {
         self.bits.iter().all(|&w| w == 0)
     }
 
+    /// Return the complement of this set within printable ASCII (0x20..0x7E).
+    /// Excludes control characters (0x00..0x1F) and DEL (0x7F).
+    pub fn complement_printable(&self) -> CharSet {
+        let mut result = CharSet::new();
+        for code in 0x20u8..0x7F {
+            if !self.has(code) {
+                result.add(code);
+            }
+        }
+        result
+    }
+
     pub fn iter(&self) -> CharSetIter<'_> {
         CharSetIter {
             set: self,

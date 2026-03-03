@@ -155,8 +155,9 @@ fn regex_parse_char_class(bytes: &[u8], pos: &mut usize) -> Option<CharSet> {
     *pos += 1; // consume '['
     let mut cs = CharSet::new();
 
-    if *pos < bytes.len() && bytes[*pos] == b'^' {
-        return None;
+    let negated = *pos < bytes.len() && bytes[*pos] == b'^';
+    if negated {
+        *pos += 1;
     }
 
     while *pos < bytes.len() && bytes[*pos] != b']' {
@@ -189,7 +190,11 @@ fn regex_parse_char_class(bytes: &[u8], pos: &mut usize) -> Option<CharSet> {
         *pos += 1;
     }
 
-    Some(cs)
+    if negated {
+        Some(cs.complement_printable())
+    } else {
+        Some(cs)
+    }
 }
 
 fn regex_escape_chars(ch: u8) -> Option<CharSet> {
@@ -199,7 +204,9 @@ fn regex_escape_chars(ch: u8) -> Option<CharSet> {
             cs.add_range(b'0', b'9');
         }
         b'D' => {
-            return None;
+            let mut digits = CharSet::new();
+            digits.add_range(b'0', b'9');
+            return Some(digits.complement_printable());
         }
         b'w' => {
             cs.add_range(b'a', b'z');
@@ -208,7 +215,12 @@ fn regex_escape_chars(ch: u8) -> Option<CharSet> {
             cs.add(b'_');
         }
         b'W' => {
-            return None;
+            let mut word = CharSet::new();
+            word.add_range(b'a', b'z');
+            word.add_range(b'A', b'Z');
+            word.add_range(b'0', b'9');
+            word.add(b'_');
+            return Some(word.complement_printable());
         }
         b's' => {
             cs.add(b' ');
@@ -218,7 +230,13 @@ fn regex_escape_chars(ch: u8) -> Option<CharSet> {
             cs.add(0x0C);
         }
         b'S' => {
-            return None;
+            let mut ws = CharSet::new();
+            ws.add(b' ');
+            ws.add(b'\t');
+            ws.add(b'\n');
+            ws.add(b'\r');
+            ws.add(0x0C);
+            return Some(ws.complement_printable());
         }
         b'b' | b'B' => {
             return Some(CharSet::new());

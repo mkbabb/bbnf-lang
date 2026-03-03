@@ -116,6 +116,11 @@ pub fn calculate_concatenation_expression<'a>(
     } else {
         inner_exprs.iter().map(|expr| calculate_expression_type(expr, grammar_attrs, cache_bundle)).collect()
     };
+    // @pretty tuple preservation: consume the flag so only the top-level
+    // Concatenation preserves Span element boundaries. Nested concatenations
+    // (inside Many1, Optional, etc.) won't see it.
+    let pretty_preserve = cache_bundle.pretty_preserve_next_concat.replace(false)
+        && tys.iter().all(type_is_span);
     let mut chains: Vec<(bool, Vec<TokenStream>)> = Vec::new();
     for (parser, ty) in inner_exprs
         .iter()
@@ -131,10 +136,12 @@ pub fn calculate_concatenation_expression<'a>(
         .zip(tys.iter())
     {
         let is_span = type_is_span(ty);
-        if let Some((last_is_span, last_chain)) = chains.last_mut() {
-            if is_span && *last_is_span {
-                last_chain.push(parser);
-                continue;
+        if !pretty_preserve {
+            if let Some((last_is_span, last_chain)) = chains.last_mut() {
+                if is_span && *last_is_span {
+                    last_chain.push(parser);
+                    continue;
+                }
             }
         }
         chains.push((is_span, vec![parser]));

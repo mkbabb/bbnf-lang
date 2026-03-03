@@ -45,6 +45,7 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
         type_cache: Rc::new(RefCell::new(type_cache.clone())),
         inline_cache: Rc::new(RefCell::new(InlineCache::new())),
         current_rule_name: RefCell::new(None),
+        pretty_preserve_next_concat: std::cell::Cell::new(false),
     };
     let mut acyclic_deps_degree = calculate_acyclic_deps_degree(grammar_attrs.acyclic_deps);
     calculate_non_acyclic_deps_degree(grammar_attrs.deps, &mut acyclic_deps_degree);
@@ -158,6 +159,12 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
                 // Set the current rule name for sub-variant lookup in alternation codegen.
                 if let Some(name) = get_nonterminal_name(lhs) {
                     *cache_bundle.current_rule_name.borrow_mut() = Some(name.to_string());
+                    // Set consumable flag for @pretty tuple preservation in concatenation codegen.
+                    let has_pretty = grammar_attrs
+                        .pretties
+                        .as_ref()
+                        .is_some_and(|p| p.contains_key(name));
+                    cache_bundle.pretty_preserve_next_concat.set(has_pretty);
                 }
 
                 let rhs = mapped.get(lhs).unwrap_or(rhs);

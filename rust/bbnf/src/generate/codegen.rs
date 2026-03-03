@@ -293,6 +293,9 @@ pub fn calculate_parser_from_expression<'a>(
         }
         Expression::Optional(inner_expr) => {
             let inner_expr = inner_expr.inner();
+            // Clear pretty-preserve flag: nested concatenations inside Optional
+            // should not be affected by the parent rule's @pretty directive.
+            cache_bundle.pretty_preserve_next_concat.set(false);
             let parser = calculate_parser_from_expression(
                 inner_expr,
                 grammar_attrs,
@@ -327,6 +330,9 @@ pub fn calculate_parser_from_expression<'a>(
         }
         Expression::Many(inner_expr) => {
             let inner_expr = inner_expr.inner();
+            // Clear pretty-preserve flag: nested concatenations inside Many
+            // should not be affected by the parent rule's @pretty directive.
+            cache_bundle.pretty_preserve_next_concat.set(false);
             if let Some(parser) =
                 check_for_sep_by(inner_expr, grammar_attrs, cache_bundle, max_depth, depth)
             {
@@ -352,6 +358,9 @@ pub fn calculate_parser_from_expression<'a>(
         }
         Expression::Many1(inner_expr) => {
             let inner_expr = inner_expr.inner();
+            // Clear pretty-preserve flag: nested concatenations inside Many1
+            // should not be affected by the parent rule's @pretty directive.
+            cache_bundle.pretty_preserve_next_concat.set(false);
             let parser = calculate_parser_from_expression(
                 inner_expr,
                 grammar_attrs,

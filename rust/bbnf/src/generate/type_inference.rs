@@ -84,7 +84,12 @@ pub fn calculate_expression_type<'a>(
         return ty.clone();
     }
     if let Some(cached_expr) = cache_bundle.inline_cache.borrow().get(expr) {
-        return calculate_expression_type(cached_expr, grammar_attrs, cache_bundle);
+        // Clear current_rule_name to prevent @pretty tuple preservation
+        // from cascading into inlined sub-rules.
+        let saved_rule = cache_bundle.current_rule_name.borrow_mut().take();
+        let ty = calculate_expression_type(cached_expr, grammar_attrs, cache_bundle);
+        *cache_bundle.current_rule_name.borrow_mut() = saved_rule;
+        return ty;
     }
     let ty = match expr {
         // Invariant: "LITERAL" and "REGEX" are hardcoded keys in DEFAULT_PARSERS
@@ -107,6 +112,9 @@ pub fn calculate_expression_type<'a>(
         }
         Expression::Optional(inner_expr) => {
             let inner_expr = inner_expr.inner();
+            // Clear pretty-preserve flag: nested concatenations inside Optional
+            // should not be affected by the parent rule's @pretty directive.
+            cache_bundle.pretty_preserve_next_concat.set(false);
             let inner_type = calculate_expression_type(inner_expr, grammar_attrs, cache_bundle);
             if type_is_span(&inner_type) {
                 return inner_type;
@@ -119,6 +127,9 @@ pub fn calculate_expression_type<'a>(
         }
         Expression::Many(inner_expr) | Expression::Many1(inner_expr) => {
             let inner_expr = inner_expr.inner();
+            // Clear pretty-preserve flag: nested concatenations inside Many/Many1
+            // should not be affected by the parent rule's @pretty directive.
+            cache_bundle.pretty_preserve_next_concat.set(false);
             let inner_type = calculate_expression_type(inner_expr, grammar_attrs, cache_bundle);
             if type_is_span(&inner_type) {
                 return inner_type;
@@ -127,16 +138,19 @@ pub fn calculate_expression_type<'a>(
         }
         Expression::Skip(left_expr, _) => {
             let left_expr = left_expr.inner();
+            cache_bundle.pretty_preserve_next_concat.set(false);
             let left_type = calculate_expression_type(left_expr, grammar_attrs, cache_bundle);
             return left_type;
         }
         Expression::Next(_, right_expr) => {
             let right_expr = right_expr.inner();
+            cache_bundle.pretty_preserve_next_concat.set(false);
             let right_type = calculate_expression_type(right_expr, grammar_attrs, cache_bundle);
             return right_type;
         }
         Expression::Minus(left_expr, _) => {
             let left_expr = left_expr.inner();
+            cache_bundle.pretty_preserve_next_concat.set(false);
             let left_type = calculate_expression_type(left_expr, grammar_attrs, cache_bundle);
             return left_type;
         }
@@ -169,23 +183,32 @@ pub fn calculate_expression_type<'a>(
             } else {
                 overridden
             };
-            let mut span_counter = 0;
-            let mut non_span_counter = 0;
-            let mut new_tys = Vec::new();
-            for ty in tys.iter() {
-                if type_is_span(ty) {
-                    span_counter += 1;
-                    non_span_counter = 0;
-                } else {
-                    span_counter = 0;
-                    non_span_counter += 1;
+            // @pretty tuple preservation: consume the flag so only the top-level
+            // Concatenation preserves all-Span tuples. Nested concatenations (inside
+            // Many1, Optional, etc.) won't see the flag — it's already consumed.
+            let pretty_preserve = cache_bundle.pretty_preserve_next_concat.replace(false);
+            let new_tys = if pretty_preserve && tys.iter().all(type_is_span) {
+                tys
+            } else {
+                let mut span_counter = 0;
+                let mut non_span_counter = 0;
+                let mut compressed = Vec::new();
+                for ty in tys.iter() {
+                    if type_is_span(ty) {
+                        span_counter += 1;
+                        non_span_counter = 0;
+                    } else {
+                        span_counter = 0;
+                        non_span_counter += 1;
+                    }
+                    if span_counter == 1 {
+                        compressed.push(parse_quote!(::parse_that::Span<'a>));
+                    } else if non_span_counter > 0 {
+                        compressed.push(ty.clone());
+                    }
                 }
-                if span_counter == 1 {
-                    new_tys.push(parse_quote!(::parse_that::Span<'a>));
-                } else if non_span_counter > 0 {
-                    new_tys.push(ty.clone());
-                }
-            }
+                compressed
+            };
             if new_tys.len() == 1 {
                 return new_tys[0].clone();
             }
@@ -250,6 +273,7 @@ pub fn calculate_nonterminal_types<'a>(
         type_cache: std::rc::Rc::new(std::cell::RefCell::new(std::collections::HashMap::new())),
         inline_cache: std::rc::Rc::new(std::cell::RefCell::new(std::collections::HashMap::new())),
         current_rule_name: std::cell::RefCell::new(None),
+        pretty_preserve_next_concat: std::cell::Cell::new(false),
     };
     let mut sub_variants = SubVariantCache::new();
 
@@ -278,7 +302,19 @@ pub fn calculate_nonterminal_types<'a>(
                     }
                 }
             }
+            // Set current_rule_name for alternation sub-variant lookup.
+            let rule_name = crate::analysis::get_nonterminal_name(lhs).map(|n| n.to_string());
+            *cache_bundle.current_rule_name.borrow_mut() = rule_name.clone();
+            // Set the consumable flag if this rule has @pretty directives.
+            // Only the first (top-level) Concatenation will consume it.
+            let has_pretty = rule_name
+                .as_ref()
+                .and_then(|name| grammar_attrs.pretties.as_ref()?.get(name.as_str()))
+                .is_some();
+            cache_bundle.pretty_preserve_next_concat.set(has_pretty);
             let ty = calculate_expression_type(rhs, grammar_attrs, &cache_bundle);
+            *cache_bundle.current_rule_name.borrow_mut() = None;
+            cache_bundle.pretty_preserve_next_concat.set(false);
 
             // Detect heterogeneous alternations that produce Box<Enum>.
             // For each branch with a non-Box<Enum> type, register a sub-variant.

@@ -71,11 +71,11 @@ Entry points: `BBNFGrammar::grammar()`, `BBNFGrammar::grammar_with_imports()`.
 ### generate/ — Code Generation
 Emits `proc_macro2::TokenStream` for Rust parser methods.
 
-- **types.rs**: `ParserAttributes`, `GeneratedNonterminalParser`, cache types, `DEFAULT_PARSERS`.
-- **type_inference.rs**: Expression → `syn::Type` (Span, Option, Vec, tuple, Box<Enum>).
+- **types.rs**: `ParserAttributes`, `GeneratedNonterminalParser`, cache types, `DEFAULT_PARSERS`. `CacheBundle` field: `pretty_preserve_next_concat: Cell<bool>` — consumable flag for @pretty tuple preservation.
+- **type_inference.rs**: Expression → `syn::Type` (Span, Option, Vec, tuple, Box<Enum>). `pretty_preserve_next_concat` consumable flag — prevents all-Span concatenation compression for @pretty rules. Only top-level concatenation consumes the flag; nested concatenations (inside Many/Many1/Optional) are unaffected.
 - **patterns.rs**: Pattern recognition — regex coalescing, sepBy detection, wrap detection, JSON fast-paths.
 - **codegen.rs**: Expression → combinator calls (string, regex, then, one_of, lazy, etc.). Dispatch table codegen. Span coalescing.
-- **prettify/**: `@pretty` directive codegen. `mod.rs` emits `to_doc()` + `source_range()` impls. `heuristics.rs` auto-infers hints from rule shape (toplevel, brace-delimited, large compound). `hints.rs` is the single source of truth for hint names/descriptions (shared with LSP).
+- **prettify/**: `@pretty` directive codegen. `mod.rs` emits `to_doc()` + `source_range()` impls. `source_range()` codegen uses single-pass min/max fold instead of Vec allocation. `heuristics.rs` auto-infers hints from rule shape (toplevel, brace-delimited, large compound). `hints.rs` is the single source of truth for hint names/descriptions (shared with LSP).
 
 Acyclic rules inline up to a depth limit. Non-acyclic rules wrapped in `lazy(|| ...)`.
 

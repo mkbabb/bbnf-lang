@@ -6,7 +6,7 @@ use crate::types::*;
 use crate::analysis::Dependencies;
 
 use std::{
-    cell::RefCell,
+    cell::{Cell, RefCell},
     collections::{HashMap, HashSet},
     rc::Rc,
 };
@@ -137,4 +137,9 @@ where
     /// Tracks the current rule being generated (set by top-level codegen).
     /// Used by alternation codegen to look up sub-variant info.
     pub current_rule_name: RefCell<Option<String>>,
+    /// Consumable flag: when true, the next Concatenation handler will preserve
+    /// all-Span tuples (skip consecutive-Span compression). The flag is consumed
+    /// (set to false) by the first Concatenation that reads it, preventing
+    /// nested concatenations (inside Many1, Optional, etc.) from being affected.
+    pub pretty_preserve_next_concat: Cell<bool>,
 }

@@ -31,6 +31,7 @@ pub enum HeuristicMode {
 
 impl HeuristicMode {
     /// Parse a mode string from a `@pretty * <mode>` directive.
+    #[allow(clippy::should_implement_trait)]
     pub fn from_str(s: &str) -> Option<Self> {
         match s {
             "off" => Some(Self::Off),

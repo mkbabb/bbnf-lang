@@ -202,17 +202,20 @@ pub fn range_for_binding(binding: &syn::Ident, ty: &syn::Type) -> TokenStream {
         quote! { Some((#binding.start, #binding.end)) }
     } else if is_vec_type(ty) {
         let item_range = generate_item_source_range(ty);
+        // Single-pass fold avoids collecting to a Vec.
         quote! {
             {
-                let ranges: Vec<_> = #binding.iter().filter_map(|i| #item_range).collect();
-                if ranges.is_empty() {
-                    None
-                } else {
-                    Some((
-                        ranges.iter().map(|r| r.0).min().unwrap(),
-                        ranges.iter().map(|r| r.1).max().unwrap(),
-                    ))
+                let mut _min_s = usize::MAX;
+                let mut _max_e = 0usize;
+                let mut _found = false;
+                for i in #binding.iter() {
+                    if let Some((s, e)) = #item_range {
+                        if s < _min_s { _min_s = s; }
+                        if e > _max_e { _max_e = e; }
+                        _found = true;
+                    }
                 }
+                if _found { Some((_min_s, _max_e)) } else { None }
             }
         }
     } else if is_option_type(ty) {
@@ -220,20 +223,31 @@ pub fn range_for_binding(binding: &syn::Ident, ty: &syn::Type) -> TokenStream {
     } else if is_box_enum_type(ty) {
         quote! { #binding.source_range() }
     } else if let syn::Type::Tuple(tuple_ty) = ty {
-        // Nested tuple — get range from each element.
+        // Nested tuple — single-pass min/max without Vec allocation.
         let n = tuple_ty.elems.len();
         let inner_bindings: Vec<_> = (0..n).map(|i| format_ident!("t{}", i)).collect();
         let pat = quote! { (#(#inner_bindings),*) };
         let range_parts: Vec<TokenStream> = tuple_ty.elems.iter().zip(inner_bindings.iter()).map(|(elem_ty, b)| {
             range_for_binding(b, elem_ty)
         }).collect();
+        // Generate a sequence of if-let checks that accumulate min/max.
+        let fold_stmts: Vec<TokenStream> = range_parts.iter().map(|rp| {
+            quote! {
+                if let Some((_s, _e)) = #rp {
+                    if _s < _min_s { _min_s = _s; }
+                    if _e > _max_e { _max_e = _e; }
+                    _found = true;
+                }
+            }
+        }).collect();
         quote! {
             {
                 let #pat = #binding;
-                let ranges: Vec<Option<(usize, usize)>> = vec![#(#range_parts),*];
-                let valid: Vec<_> = ranges.into_iter().flatten().collect();
-                if valid.is_empty() { None }
-                else { Some((valid.iter().map(|r| r.0).min().unwrap(), valid.iter().map(|r| r.1).max().unwrap())) }
+                let mut _min_s = usize::MAX;
+                let mut _max_e = 0usize;
+                let mut _found = false;
+                #(#fold_stmts)*
+                if _found { Some((_min_s, _max_e)) } else { None }
             }
         }
     } else {
@@ -323,9 +337,25 @@ pub fn generate_item_source_range(vec_ty: &syn::Type) -> TokenStream {
         let range_parts: Vec<TokenStream> = tuple_ty.elems.iter().zip(bindings.iter()).map(|(elem_ty, binding)| {
             range_for_binding(binding, elem_ty)
         }).collect();
+        // Single-pass min/max without Vec allocation.
+        let fold_stmts: Vec<TokenStream> = range_parts.iter().map(|rp| {
+            quote! {
+                if let Some((_s, _e)) = #rp {
+                    if _s < _min_s { _min_s = _s; }
+                    if _e > _max_e { _max_e = _e; }
+                    _found = true;
+                }
+            }
+        }).collect();
         quote! {
-            { let #pat = i; let rs: Vec<_> = [#(#range_parts),*].iter().filter_map(|r| *r).collect();
-              if rs.is_empty() { None } else { Some((rs.iter().map(|r| r.0).min().unwrap(), rs.iter().map(|r| r.1).max().unwrap())) } }
+            {
+                let #pat = i;
+                let mut _min_s = usize::MAX;
+                let mut _max_e = 0usize;
+                let mut _found = false;
+                #(#fold_stmts)*
+                if _found { Some((_min_s, _max_e)) } else { None }
+            }
         }
     } else {
         quote! { i.source_range() }

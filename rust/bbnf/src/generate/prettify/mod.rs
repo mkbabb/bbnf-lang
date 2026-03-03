@@ -156,17 +156,20 @@ pub fn generate_prettify(
             }
         } else if is_vec {
             let item_source_range = generate_item_source_range(ty);
+            // Single-pass fold avoids collecting to a Vec.
             quote! {
                 Self::#variant(items) => {
-                    let starts: Vec<_> = items.iter().filter_map(|i| #item_source_range).collect();
-                    if starts.is_empty() {
-                        None
-                    } else {
-                        Some((
-                            starts.iter().map(|r| r.0).min().unwrap(),
-                            starts.iter().map(|r| r.1).max().unwrap(),
-                        ))
+                    let mut _min_s = usize::MAX;
+                    let mut _max_e = 0usize;
+                    let mut _found = false;
+                    for i in items.iter() {
+                        if let Some((s, e)) = #item_source_range {
+                            if s < _min_s { _min_s = s; }
+                            if e > _max_e { _max_e = e; }
+                            _found = true;
+                        }
                     }
+                    if _found { Some((_min_s, _max_e)) } else { None }
                 }
             }
         } else {
@@ -207,17 +210,24 @@ pub fn generate_prettify(
                     range_for_binding(binding, elem_ty)
                 }).collect();
 
+                // Single-pass min/max without Vec allocation.
+                let fold_stmts: Vec<TokenStream> = range_parts.iter().map(|rp| {
+                    quote! {
+                        if let Some((_s, _e)) = #rp {
+                            if _s < _min_s { _min_s = _s; }
+                            if _e > _max_e { _max_e = _e; }
+                            _found = true;
+                        }
+                    }
+                }).collect();
+
                 source_range_arms.push(quote! {
                     Self::#variant(#pat) => {
-                        let ranges: Vec<_> = [#(#range_parts),*].iter().filter_map(|r| *r).collect();
-                        if ranges.is_empty() {
-                            None
-                        } else {
-                            Some((
-                                ranges.iter().map(|r| r.0).min().unwrap(),
-                                ranges.iter().map(|r| r.1).max().unwrap(),
-                            ))
-                        }
+                        let mut _min_s = usize::MAX;
+                        let mut _max_e = 0usize;
+                        let mut _found = false;
+                        #(#fold_stmts)*
+                        if _found { Some((_min_s, _max_e)) } else { None }
                     }
                 });
             } else if type_is_span(ty) {
@@ -539,18 +549,24 @@ fn generate_compound_range(variant: &syn::Ident, ty: &syn::Type) -> TokenStream 
             })
             .collect();
 
+        // Single-pass min/max without Vec allocation.
+        let fold_stmts: Vec<TokenStream> = range_exprs.iter().map(|rp| {
+            quote! {
+                if let Some((_s, _e)) = #rp {
+                    if _s < _min_s { _min_s = _s; }
+                    if _e > _max_e { _max_e = _e; }
+                    _found = true;
+                }
+            }
+        }).collect();
+
         return quote! {
             Self::#variant(#pattern) => {
-                let ranges: Vec<Option<(usize, usize)>> = vec![#(#range_exprs),*];
-                let valid: Vec<_> = ranges.into_iter().flatten().collect();
-                if valid.is_empty() {
-                    None
-                } else {
-                    Some((
-                        valid.iter().map(|r| r.0).min().unwrap(),
-                        valid.iter().map(|r| r.1).max().unwrap(),
-                    ))
-                }
+                let mut _min_s = usize::MAX;
+                let mut _max_e = 0usize;
+                let mut _found = false;
+                #(#fold_stmts)*
+                if _found { Some((_min_s, _max_e)) } else { None }
             }
         };
     }

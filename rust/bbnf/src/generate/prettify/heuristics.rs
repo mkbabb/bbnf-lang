@@ -95,12 +95,15 @@ pub fn infer_hints(ctx: &HeuristicContext, mode: HeuristicMode) -> Vec<String> {
 /// Looks for a special `@pretty * <mode>` entry (key `"*"`).
 /// Returns `Auto` when no `@pretty *` is present.
 pub fn resolve_mode(grammar_attrs: &GeneratedGrammarAttributes) -> HeuristicMode {
-    grammar_attrs
-        .pretties
-        .and_then(|p| p.get("*"))
-        .and_then(|hints| hints.first())
-        .and_then(|mode_str| HeuristicMode::from_str(mode_str))
-        .unwrap_or(HeuristicMode::Auto)
+    let Some(mode_hints) = grammar_attrs.pretties.and_then(|p| p.get("*")) else {
+        return HeuristicMode::Auto;
+    };
+    let mode_str = mode_hints.first().unwrap_or_else(|| {
+        panic!("@pretty * directive must include exactly one mode hint")
+    });
+    HeuristicMode::from_str(mode_str).unwrap_or_else(|| {
+        panic!("unknown @pretty heuristic mode `{}`", mode_str)
+    })
 }
 
 // ---------------------------------------------------------------------------

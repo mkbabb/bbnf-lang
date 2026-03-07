@@ -1,11 +1,11 @@
 use bbnf::generate::prettify::hints::hint_description;
 use tower_lsp_server::ls_types::*;
 
-use crate::analysis::{position_to_offset, span_to_range, symbol_at_offset, SymbolAtOffset};
+use crate::analysis::{symbol_at_offset, SymbolAtOffset};
 use crate::state::DocumentState;
 
 pub fn hover(state: &DocumentState, position: Position) -> Option<Hover> {
-    let offset = position_to_offset(&state.text, position);
+    let offset = state.line_index.position_to_offset(position);
 
     // Check @pretty directive hover first.
     if let Some(hover) = hover_pretty(state, offset) {
@@ -59,7 +59,7 @@ pub fn hover(state: &DocumentState, position: Position) -> Option<Hover> {
                     kind: MarkupKind::Markdown,
                     value: content,
                 }),
-                range: Some(span_to_range(&state.text, rule.name_span.0, rule.name_span.1)),
+                range: Some(state.line_index.span_to_range(rule.name_span.0, rule.name_span.1)),
             })
         }
         SymbolAtOffset::RuleReference { name, .. } => {
@@ -96,7 +96,7 @@ fn hover_pretty(state: &DocumentState, offset: usize) -> Option<Hover> {
             if let Some(&(start, end)) = pretty.hint_spans.get(i) {
                 if offset >= start && offset <= end {
                     let desc = hint_description(hint)
-                        .unwrap_or("Unknown hint");
+                        .unwrap_or_else(|| panic!("Unknown @pretty hint encountered in hover: `{}`", hint));
                     let content = format!(
                         "`@pretty` hint: **{}**\n\n{}",
                         hint, desc
@@ -106,7 +106,7 @@ fn hover_pretty(state: &DocumentState, offset: usize) -> Option<Hover> {
                             kind: MarkupKind::Markdown,
                             value: content,
                         }),
-                        range: Some(span_to_range(&state.text, start, end)),
+                        range: Some(state.line_index.span_to_range(start, end)),
                     });
                 }
             }
@@ -139,7 +139,7 @@ fn hover_pretty(state: &DocumentState, offset: usize) -> Option<Hover> {
                     kind: MarkupKind::Markdown,
                     value: content,
                 }),
-                range: Some(span_to_range(&state.text, rs, re)),
+                range: Some(state.line_index.span_to_range(rs, re)),
             });
         }
     }

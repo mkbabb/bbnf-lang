@@ -2,6 +2,7 @@ mod imports;
 mod protocol;
 
 use std::collections::{HashMap, HashSet};
+use std::path::{Component, Path, PathBuf};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
@@ -48,8 +49,7 @@ impl BbnfLanguageServer {
         if resolved.extension().is_none() {
             resolved.set_extension("bbnf");
         }
-        // Canonicalize if possible (file exists).
-        let resolved = resolved.canonicalize().unwrap_or(resolved);
+        let resolved = normalize_path(&resolved);
         Uri::from_file_path(&resolved)
     }
 
@@ -81,7 +81,10 @@ impl BbnfLanguageServer {
         // (their "undefined rule" warnings may be stale).
         let reverse_deps = {
             let importers = self.importers.read().await;
-            importers.get(&uri).cloned().unwrap_or_default()
+            match importers.get(&uri) {
+                Some(importer_set) => importer_set.clone(),
+                None => HashSet::new(),
+            }
         };
         for importer_uri in reverse_deps {
             let docs = self.documents.read().await;
@@ -114,4 +117,18 @@ pub fn semantic_token_legend() -> SemanticTokensLegend {
             SemanticTokenModifier::DEFINITION,
         ],
     }
+}
+
+pub(super) fn normalize_path(path: &Path) -> PathBuf {
+    let mut normalized = PathBuf::new();
+    for component in path.components() {
+        match component {
+            Component::CurDir => {}
+            Component::ParentDir => {
+                normalized.pop();
+            }
+            other => normalized.push(other.as_os_str()),
+        }
+    }
+    normalized
 }

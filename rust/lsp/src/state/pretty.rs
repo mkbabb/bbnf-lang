@@ -45,7 +45,12 @@ pub fn extract_pretties(
             let rule_name_offset = dir_src
                 .find(rule_name)
                 .map(|off| off + dir_start)
-                .unwrap_or(dir_start);
+                .unwrap_or_else(|| {
+                    panic!(
+                        "could not resolve @pretty rule-name span for `{}` within directive `{}`",
+                        rule_name, dir_src
+                    )
+                });
             let rule_name_span = (rule_name_offset, rule_name_offset + rule_name.len());
 
             // Find each hint span by searching after the rule name.
@@ -58,7 +63,12 @@ pub fn extract_pretties(
                     let offset = dir_src[search_start..]
                         .find(hint_str)
                         .map(|off| off + search_start + dir_start)
-                        .unwrap_or(dir_start);
+                        .unwrap_or_else(|| {
+                            panic!(
+                                "could not resolve @pretty hint span for `{}` within directive `{}`",
+                                hint_str, dir_src
+                            )
+                        });
                     search_start = offset - dir_start + hint_str.len();
                     (offset, offset + hint_str.len())
                 })
@@ -111,7 +121,12 @@ pub fn validate_pretties(
                         .hint_spans
                         .get(i)
                         .copied()
-                        .unwrap_or(pretty.span);
+                        .unwrap_or_else(|| {
+                            panic!(
+                                "missing @pretty mode hint span for `{}` at index {}",
+                                hint, i
+                            )
+                        });
                     diagnostics.push(Diagnostic {
                         range: line_index.span_to_range(span.0, span.1),
                         severity: Some(DiagnosticSeverity::WARNING),
@@ -159,7 +174,12 @@ pub fn validate_pretties(
                 .hint_spans
                 .get(i)
                 .copied()
-                .unwrap_or(pretty.span);
+                .unwrap_or_else(|| {
+                    panic!(
+                        "missing @pretty hint span for `{}` at index {}",
+                        hint, i
+                    )
+                });
 
             if !is_valid_hint(hint) {
                 let mut msg = format!("Unknown `@pretty` hint: `{}`", hint);

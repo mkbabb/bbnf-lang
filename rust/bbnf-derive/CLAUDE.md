@@ -54,6 +54,7 @@ Grammar file(s)
 - **Regex coalescing**: Fuse `lit >> many(regex) << lit` → single regex.
 - **Alias elimination**: `A = B` chains resolved to direct method calls.
 - **Inlining**: Acyclic rules inlined up to depth limit; non-acyclic use `lazy(|| ...)`.
+- **source_range codegen**: Single-pass min/max fold instead of Vec allocation.
 
 ## Dependencies
 

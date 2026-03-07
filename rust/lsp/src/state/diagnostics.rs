@@ -140,7 +140,12 @@ pub(crate) fn analyze_from_cache(
 
             // Compute full span (from LHS start to RHS end).
             let full_start = name_span.start;
-            let full_end = compute_expression_end(rhs).unwrap_or(name_span.end);
+            let full_end = compute_expression_end(rhs).unwrap_or_else(|| {
+                panic!(
+                    "analyze_from_cache could not compute expression end for rule `{}`",
+                    name
+                )
+            });
 
             // Collect nonterminal references in RHS.
             let mut references = Vec::new();
@@ -159,13 +164,18 @@ pub(crate) fn analyze_from_cache(
             let rhs_text = format_expression_short(rhs);
 
             // Check for duplicate rule.
-            if let Some(&_existing_idx) = rule_index.get(&name_str) {
+            if let Some(&existing_idx) = rule_index.get(&name_str) {
+                let previous = &rules[existing_idx];
                 diagnostics.push(Diagnostic {
                     range: line_index.span_to_range(name_byte_span.0, name_byte_span.1),
                     severity: Some(DiagnosticSeverity::ERROR),
                     source: Some("bbnf".into()),
-                    message: format!("Duplicate rule: `{}`", name_str),
-                    related_information: None, // TODO: populate with correct URI from caller
+                    message: format!(
+                        "Duplicate rule: `{}` (previous definition at bytes {}..{})",
+                        name_str,
+                        previous.name_span.0,
+                        previous.name_span.1
+                    ),
                     ..Default::default()
                 });
             }
@@ -193,12 +203,9 @@ pub(crate) fn analyze_from_cache(
     // Build set of names available via @import directives.
     let imported_names: HashSet<&str> = import_infos
         .iter()
-        .flat_map(|imp| {
-            imp.items
-                .as_ref()
-                .map(|items| items.iter().map(|s| s.as_str()).collect::<Vec<_>>())
-                .unwrap_or_default()
-        })
+        .filter_map(|imp| imp.items.as_ref())
+        .flatten()
+        .map(|s| s.as_str())
         .collect();
 
     let mut referenced_names: std::collections::HashSet<&str> =

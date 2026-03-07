@@ -103,6 +103,15 @@ pub struct ResolvedImport {
     pub rule_names: Vec<String>,
 }
 
+/// Recorded cycle encountered during module loading.
+#[derive(Debug, Clone)]
+pub struct ImportCycle {
+    /// The path that closes the cycle.
+    pub path: PathBuf,
+    /// The active load chain when the cycle was encountered.
+    pub chain: Vec<PathBuf>,
+}
+
 /// Registry of all loaded modules in an import graph.
 #[derive(Debug)]
 pub struct ModuleRegistry {
@@ -112,6 +121,8 @@ pub struct ModuleRegistry {
     resolved_imports: HashMap<PathBuf, Vec<ResolvedImport>>,
     /// All errors encountered during loading.
     pub errors: Vec<ImportError>,
+    /// Import cycles encountered during loading.
+    pub cycles: Vec<ImportCycle>,
 }
 
 impl ModuleRegistry {
@@ -164,15 +175,20 @@ pub fn load_module_graph(entry: &Path) -> Result<ModuleRegistry, ImportError> {
         modules: HashMap::new(),
         resolved_imports: HashMap::new(),
         errors: Vec::new(),
+        cycles: Vec::new(),
     };
 
     let mut visited: HashSet<PathBuf> = HashSet::new();
+    let mut loading: HashSet<PathBuf> = HashSet::new();
+    let mut active_chain: Vec<PathBuf> = Vec::new();
 
     load_recursive(
         &entry,
         &PathBuf::from("<entry>"),
         &mut registry,
         &mut visited,
+        &mut loading,
+        &mut active_chain,
     );
 
     // Phase 2: resolve imports for every visited module.
@@ -189,8 +205,21 @@ fn load_recursive(
     imported_from: &Path,
     registry: &mut ModuleRegistry,
     visited: &mut HashSet<PathBuf>,
+    loading: &mut HashSet<PathBuf>,
+    active_chain: &mut Vec<PathBuf>,
 ) {
-    // Already parsed (or currently being parsed — cycle). Return harmlessly.
+    if loading.contains(path) {
+        let start = active_chain.iter().position(|p| p.as_path() == path).unwrap_or(0);
+        let mut chain = active_chain[start..].to_vec();
+        chain.push(path.to_path_buf());
+        registry.cycles.push(ImportCycle {
+            path: path.to_path_buf(),
+            chain,
+        });
+        return;
+    }
+
+    // Already parsed and fully resolved.
     if visited.contains(path) {
         return;
     }
@@ -241,6 +270,8 @@ fn load_recursive(
     // Register BEFORE recursing (partial-init, like Python module loading).
     // This allows cyclic imports to find the module already registered.
     visited.insert(path.to_path_buf());
+    loading.insert(path.to_path_buf());
+    active_chain.push(path.to_path_buf());
     registry.modules.insert(path.to_path_buf(), ModuleData {
         source,
         grammar: parsed,
@@ -248,7 +279,12 @@ fn load_recursive(
     });
 
     // Recursively load imports. Cycles find the file already in visited and return.
-    let dir = path.parent().unwrap_or(Path::new("."));
+    let dir = path.parent().unwrap_or_else(|| {
+        panic!(
+            "module path `{}` has no parent directory for import resolution",
+            path.display()
+        )
+    });
     // Collect import paths first to avoid borrow issues with registry.
     let import_paths: Vec<PathBuf> = registry.modules.get(path)
         .unwrap()
@@ -266,6 +302,8 @@ fn load_recursive(
                     path,
                     registry,
                     visited,
+                    loading,
+                    active_chain,
                 );
             }
             Err(_) => {
@@ -276,6 +314,21 @@ fn load_recursive(
             }
         }
     }
+
+    let popped = active_chain.pop().unwrap_or_else(|| {
+        panic!("active import chain underflow while leaving `{}`", path.display())
+    });
+    assert_eq!(
+        popped.as_path(),
+        path,
+        "active import chain mismatch while leaving `{}`",
+        path.display()
+    );
+    assert!(
+        loading.remove(path),
+        "loading-set mismatch while leaving `{}`",
+        path.display()
+    );
 }
 
 fn resolve_imports_for(path: &Path, registry: &mut ModuleRegistry) {
@@ -284,7 +337,12 @@ fn resolve_imports_for(path: &Path, registry: &mut ModuleRegistry) {
         None => return,
     };
 
-    let dir = path.parent().unwrap_or(Path::new("."));
+    let dir = path.parent().unwrap_or_else(|| {
+        panic!(
+            "module path `{}` has no parent directory for import resolution",
+            path.display()
+        )
+    });
     let mut resolved: Vec<ResolvedImport> = Vec::new();
     // Track which names have been imported and from where (for conflict detection).
     let mut imported_names: HashMap<String, PathBuf> = HashMap::new();
@@ -302,12 +360,24 @@ fn resolve_imports_for(path: &Path, registry: &mut ModuleRegistry) {
     for (import_path, items) in imports {
         let canonical = match import_path.canonicalize() {
             Ok(c) => c,
-            Err(_) => continue, // Already reported as FileNotFound.
+            Err(_) => {
+                registry.errors.push(ImportError::FileNotFound {
+                    path: import_path.clone(),
+                    imported_from: path.to_path_buf(),
+                });
+                continue;
+            }
         };
 
         let target = match registry.modules.get(&canonical) {
             Some(m) => m,
-            None => continue, // Already reported.
+            None => {
+                registry.errors.push(ImportError::ParseError {
+                    path: canonical.clone(),
+                    message: "import graph invariant violation: canonical module missing from registry".to_string(),
+                });
+                continue;
+            }
         };
 
         let rule_names: Vec<String> = if let Some(items) = items {
@@ -454,4 +524,3 @@ fn resolve_import_path(dir: &Path, import_path: &str) -> PathBuf {
     }
     path
 }
-

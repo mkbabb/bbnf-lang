@@ -1,6 +1,5 @@
 use tower_lsp_server::ls_types::*;
 
-use crate::analysis::span_to_range;
 use crate::state::DocumentState;
 
 /// Produce inlay hints showing FIRST set and nullability info at rule definitions.
@@ -12,7 +11,7 @@ pub fn inlay_hints(state: &DocumentState, range: Range) -> Vec<InlayHint> {
     let mut hints = Vec::new();
 
     for rule in &state.info.rules {
-        let rule_range = span_to_range(&state.text, rule.name_span.0, rule.name_span.1);
+        let rule_range = state.line_index.span_to_range(rule.name_span.0, rule.name_span.1);
 
         // Only produce hints for rules within the requested range.
         if rule_range.start.line < range.start.line || rule_range.start.line > range.end.line {

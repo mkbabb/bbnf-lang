@@ -1,6 +1,5 @@
 use tower_lsp_server::ls_types::*;
 
-use crate::analysis::span_to_range;
 use crate::state::DocumentState;
 
 pub fn code_lens(state: &DocumentState) -> Vec<CodeLens> {
@@ -17,7 +16,7 @@ pub fn code_lens(state: &DocumentState) -> Vec<CodeLens> {
                 .filter(|r| r.name == rule.name)
                 .count();
 
-            let range = span_to_range(&state.text, rule.name_span.0, rule.name_span.1);
+            let range = state.line_index.span_to_range(rule.name_span.0, rule.name_span.1);
 
             CodeLens {
                 range,

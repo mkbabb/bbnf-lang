@@ -75,7 +75,11 @@ pub fn calculate_non_acyclic_deps_degree<'a, 'b>(
                 .iter()
                 .map(|dep| recurse(dep, non_acyclic_deps, acyclic_deps_degree))
                 .max()
-                .unwrap_or(0)
+                .unwrap_or_else(|| {
+                    panic!(
+                        "calculate_non_acyclic_deps_degree encountered empty dependency set"
+                    )
+                })
                 + 1;
             acyclic_deps_degree.insert(expr, max);
             max

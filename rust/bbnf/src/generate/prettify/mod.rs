@@ -514,11 +514,13 @@ fn generate_compound_doc(
         };
     }
 
-    // Fallback: just try to_doc() on the value.
-    let base = quote! { ::pprint::Doc::Null };
-    let doc = apply_hints(base, hints);
     quote! {
-        Self::#variant(_) => { #doc }
+        Self::#variant(_) => {
+            panic!(
+                "No @pretty doc-generation strategy registered for enum variant `{}`",
+                stringify!(#variant)
+            )
+        }
     }
 }
 
@@ -571,9 +573,13 @@ fn generate_compound_range(variant: &syn::Ident, ty: &syn::Type) -> TokenStream 
         };
     }
 
-    // Fallback.
     quote! {
-        Self::#variant(_) => None,
+        Self::#variant(_) => {
+            panic!(
+                "No @pretty source-range strategy registered for enum variant `{}`",
+                stringify!(#variant)
+            )
+        },
     }
 }
 
@@ -674,7 +680,12 @@ fn generate_key_value_doc(
     grammar_attrs: &GeneratedGrammarAttributes,
 ) -> TokenStream {
     // Resolve separator: if sep is a rule name, look up the literal it represents.
-    let sep_str = resolve_separator_literal(sep, grammar_attrs).unwrap_or_else(|| sep.to_string());
+    let sep_str = resolve_separator_literal(sep, grammar_attrs).unwrap_or_else(|| {
+        panic!(
+            "Unable to resolve key-value separator `{}` to a literal for @pretty codegen",
+            sep
+        )
+    });
     let sep_with_space = format!("{} ", sep_str.trim());
     let base = quote! {
         {
@@ -702,7 +713,8 @@ fn apply_hints(doc: TokenStream, hints: &[String]) -> TokenStream {
             "group" => quote! { ::pprint::Doc::Group(Box::new(#result)) },
             "indent" => quote! { ::pprint::Doc::Indent(Box::new(#result)) },
             "dedent" => quote! { ::pprint::Doc::Dedent(Box::new(#result)) },
-            _ => result, // block, blankline, nobreak, fast, etc. handled in join generation
+            "block" | "blankline" | "nobreak" | "softbreak" | "hardbreak" | "compact" | "fast" | "off" => result,
+            other => panic!("Unknown @pretty hint `{}` in apply_hints()", other),
         };
     }
     result
@@ -716,7 +728,8 @@ fn apply_outer_hints(doc: TokenStream, hints: &[String]) -> TokenStream {
             "group" => quote! { ::pprint::Doc::Group(Box::new(#result)) },
             "indent" => quote! { ::pprint::Doc::Indent(Box::new(#result)) },
             "dedent" => quote! { ::pprint::Doc::Dedent(Box::new(#result)) },
-            _ => result,
+            "block" | "blankline" | "nobreak" | "softbreak" | "hardbreak" | "compact" | "fast" | "off" => result,
+            other => panic!("Unknown @pretty hint `{}` in apply_outer_hints()", other),
         };
     }
     result

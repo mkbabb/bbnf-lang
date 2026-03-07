@@ -1,6 +1,5 @@
 use tower_lsp_server::ls_types::*;
 
-use crate::analysis::offset_to_position;
 use crate::state::DocumentState;
 
 pub fn folding_ranges(state: &DocumentState) -> Vec<FoldingRange> {
@@ -9,8 +8,8 @@ pub fn folding_ranges(state: &DocumentState) -> Vec<FoldingRange> {
         .rules
         .iter()
         .filter_map(|rule| {
-            let start = offset_to_position(&state.text, rule.full_span.0);
-            let end = offset_to_position(&state.text, rule.full_span.1);
+            let start = state.line_index.offset_to_position(rule.full_span.0);
+            let end = state.line_index.offset_to_position(rule.full_span.1);
 
             // Only fold if the rule spans multiple lines.
             if end.line > start.line {

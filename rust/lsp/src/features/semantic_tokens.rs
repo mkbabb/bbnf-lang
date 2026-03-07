@@ -1,6 +1,5 @@
 use tower_lsp_server::ls_types::*;
 
-use crate::analysis::offset_to_position;
 use crate::state::DocumentState;
 
 pub fn semantic_tokens_full(state: &DocumentState) -> SemanticTokensResult {
@@ -13,7 +12,7 @@ pub fn semantic_tokens_full(state: &DocumentState) -> SemanticTokensResult {
             continue;
         }
 
-        let pos = offset_to_position(&state.text, token.span.0);
+        let pos = state.line_index.offset_to_position(token.span.0);
         let length = (token.span.1 - token.span.0) as u32;
 
         let delta_line = pos.line - prev_line;

@@ -38,7 +38,13 @@ fn coerce_alternation_branches<'a>(
     let all_sub_variants: Vec<&(String, syn::Type)> = grammar_attrs
         .sub_variants
         .map(|sv| sv.values().flatten().collect())
-        .unwrap_or_default();
+        .unwrap_or_else(|| {
+            if overall_is_boxed_enum {
+                panic!("missing sub-variant metadata for boxed alternation coercion")
+            } else {
+                Vec::new()
+            }
+        });
 
     parsers
         .iter()
@@ -136,7 +142,14 @@ pub fn calculate_alternation_expression<'a>(
                                 if sp_rules.contains(nt_name.as_ref()) {
                                     if let Expression::MappingFn(Token { value: map_fn, .. }) = mapping {
                                         let sp_ident = format_ident!("{}_sp", nt_name.as_ref());
-                                        let map_closure: syn::ExprClosure = syn::parse_str(map_fn).ok()?;
+                                        let map_closure: syn::ExprClosure = syn::parse_str(map_fn)
+                                            .unwrap_or_else(|e| {
+                                                panic!(
+                                                    "invalid mapping closure for `{}` in alternation dispatch: {}",
+                                                    nt_name,
+                                                    e
+                                                )
+                                            });
                                         return Some((
                                             nt_name.as_ref().to_string(),
                                             quote! { Self::#sp_ident() },

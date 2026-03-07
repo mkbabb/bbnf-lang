@@ -56,9 +56,12 @@ pub(crate) fn parse_once(src: &str) -> (Option<CachedParseResult<'_>>, ParseDiag
                         // We'll refine in diagnostics where we have the source text.
                         let name_str = rec.rule_name.as_ref();
                         let dir_src = rec.span.as_str();
-                        let name_start = dir_src.find(name_str)
-                            .map(|off| rec.span.start + off)
-                            .unwrap_or(rec.span.start);
+                        let name_start = dir_src.find(name_str).map(|off| rec.span.start + off).unwrap_or_else(|| {
+                            panic!(
+                                "could not resolve @recover rule-name span for `{}` within directive `{}`",
+                                name_str, dir_src
+                            )
+                        });
                         (name_start, name_start + name_str.len())
                     },
                 }).collect();
@@ -78,7 +81,7 @@ pub(crate) fn parse_once(src: &str) -> (Option<CachedParseResult<'_>>, ParseDiag
             } else if let Some(s) = panic_info.downcast_ref::<&str>() {
                 s.to_string()
             } else {
-                "Internal parser error".to_string()
+                panic!("parser panicked with non-string payload")
             };
             let diag = ParseDiagnostics {
                 offset: 0,

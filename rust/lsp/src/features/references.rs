@@ -1,6 +1,6 @@
 use tower_lsp_server::ls_types::*;
 
-use crate::analysis::{position_to_offset, span_to_range, symbol_at_offset, SymbolAtOffset};
+use crate::analysis::{symbol_at_offset, SymbolAtOffset};
 use crate::state::DocumentState;
 
 pub fn references(
@@ -9,7 +9,7 @@ pub fn references(
     position: Position,
     include_declaration: bool,
 ) -> Option<Vec<Location>> {
-    let offset = position_to_offset(&state.text, position);
+    let offset = state.line_index.position_to_offset(position);
     let symbol = symbol_at_offset(&state.info, offset)?;
 
     let name = match &symbol {
@@ -25,7 +25,7 @@ pub fn references(
             let rule = &state.info.rules[idx];
             locations.push(Location {
                 uri: uri.clone(),
-                range: span_to_range(&state.text, rule.name_span.0, rule.name_span.1),
+                range: state.line_index.span_to_range(rule.name_span.0, rule.name_span.1),
             });
         }
     }
@@ -36,7 +36,7 @@ pub fn references(
             if refinfo.name == name {
                 locations.push(Location {
                     uri: uri.clone(),
-                    range: span_to_range(&state.text, refinfo.span.0, refinfo.span.1),
+                    range: state.line_index.span_to_range(refinfo.span.0, refinfo.span.1),
                 });
             }
         }

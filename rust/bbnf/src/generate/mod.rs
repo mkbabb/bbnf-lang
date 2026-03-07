@@ -70,7 +70,12 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
         .map(|(lhs, rhs)| {
             let rhs = match get_nonterminal_name(lhs) {
                 Some(name) => {
-                    let formatted_expr = formatted.get(lhs).unwrap_or(rhs);
+                    let formatted_expr = formatted.get(lhs).unwrap_or_else(|| {
+                        panic!(
+                            "missing formatted parser expression for rule `{}`",
+                            name
+                        )
+                    });
                     // Phase B: Transparent rules skip the enum variant wrapper.
                     // The alternation branches already produce the correct inner type.
                     if is_transparent_rule(name, grammar_attrs) {
@@ -91,7 +96,12 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
         .map(|(lhs, rhs)| {
             let rhs = match get_nonterminal_name(lhs) {
                 Some(name) => {
-                    let formatted_expr = formatted.get(lhs).unwrap_or(rhs);
+                    let formatted_expr = formatted.get(lhs).unwrap_or_else(|| {
+                        panic!(
+                            "missing formatted parser expression for rule `{}`",
+                            name
+                        )
+                    });
                     if is_transparent_rule(name, grammar_attrs) {
                         formatted_expr.clone()
                     } else {
@@ -109,7 +119,9 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
         .filter(|(lhs, _)| grammar_attrs.acyclic_deps.contains_key(lhs))
         // Skip inlining rules with sub-variants (heterogeneous alternations)
         .filter(|(lhs, _)| {
-            let name = get_nonterminal_name(lhs).unwrap_or("");
+            let name = get_nonterminal_name(lhs).unwrap_or_else(|| {
+                panic!("expected nonterminal key in acyclic dependency map")
+            });
             !grammar_attrs
                 .sub_variants
                 .is_some_and(|sv| sv.contains_key(name))
@@ -122,7 +134,7 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
         grammar_attrs
             .ast
             .iter()
-            .filter_map(|(lhs, rhs)| {
+            .filter_map(|(lhs, _rhs)| {
                 let is_acyclic = grammar_attrs.acyclic_deps.contains_key(lhs);
 
                 if !is_acyclic {
@@ -137,13 +149,17 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
                         // Skip inlining deps with sub-variants (heterogeneous alternations)
                         // — their branches have diverse types that can't be uniformly mapped.
                         .filter(|dep| {
-                            let dep_name = get_nonterminal_name(dep).unwrap_or("");
+                            let dep_name = get_nonterminal_name(dep).unwrap_or_else(|| {
+                                panic!("expected nonterminal dependency key while inlining")
+                            });
                             !grammar_attrs
                                 .sub_variants
                                 .is_some_and(|sv| sv.contains_key(dep_name))
                         })
                         .for_each(|dep| {
-                            let rhs = boxed2.get(dep).unwrap_or(dep);
+                            let rhs = boxed2.get(dep).unwrap_or_else(|| {
+                                panic!("missing boxed parser for inlined dependency")
+                            });
                             cache_bundle.inline_cache.borrow_mut().insert(dep, rhs);
                             cache_bundle
                                 .type_cache
@@ -154,7 +170,9 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
                     return None;
                 }
 
-                let max_depth = *acyclic_deps_degree.get(lhs).unwrap_or(&1);
+                let max_depth = *acyclic_deps_degree.get(lhs).unwrap_or_else(|| {
+                    panic!("missing acyclic dependency degree for parser rule")
+                });
 
                 // Set the current rule name for sub-variant lookup in alternation codegen.
                 if let Some(name) = get_nonterminal_name(lhs) {
@@ -167,7 +185,9 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
                     cache_bundle.pretty_preserve_next_concat.set(has_pretty);
                 }
 
-                let rhs = mapped.get(lhs).unwrap_or(rhs);
+                let rhs = mapped.get(lhs).unwrap_or_else(|| {
+                    panic!("missing mapped parser expression for rule")
+                });
 
                 let parser = calculate_parser_from_expression(
                     rhs,
@@ -183,11 +203,13 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
     let mut acyclic_generated_parsers: HashMap<_, _> = generate(false);
     *cache_bundle.parser_cache.borrow_mut() = acyclic_generated_parsers.clone();
 
-    grammar_attrs.ast.iter().for_each(|(lhs, rhs)| {
+    grammar_attrs.ast.iter().for_each(|(lhs, _rhs)| {
         let is_acyclic = grammar_attrs.acyclic_deps.contains_key(lhs);
 
         if !is_acyclic {
-            let rhs = boxed2.get(lhs).unwrap_or(rhs);
+            let rhs = boxed2.get(lhs).unwrap_or_else(|| {
+                panic!("missing boxed parser expression for non-acyclic rule")
+            });
 
             acyclic_generated_parsers.remove(lhs);
             cache_bundle.parser_cache.borrow_mut().remove(lhs);

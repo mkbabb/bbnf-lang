@@ -76,7 +76,12 @@ impl BbnfLanguageServer {
         let mut available_rules: HashSet<String> = HashSet::new();
 
         // For each imported URI, check the document's import info.
-        let doc_imports = docs.get(uri).map(|s| s.info.imports.clone()).unwrap_or_default();
+        let doc_imports = docs
+            .get(uri)
+            .unwrap_or_else(|| panic!("import graph contains `{:?}` without document state", uri))
+            .info
+            .imports
+            .clone();
         drop(docs);
 
         for import_info in &doc_imports {
@@ -120,10 +125,30 @@ impl BbnfLanguageServer {
 
     /// Apply incremental text edits to the stored document text.
     pub(crate) fn apply_incremental_changes(text: &mut String, changes: Vec<TextDocumentContentChangeEvent>) {
+        fn offset_for_position(text: &str, position: Position) -> usize {
+            let mut current_line: u32 = 0;
+            let mut current_col: u32 = 0;
+            for (i, byte) in text.bytes().enumerate() {
+                if current_line == position.line && current_col == position.character {
+                    return i;
+                }
+                if byte == b'\n' {
+                    if current_line == position.line {
+                        return i;
+                    }
+                    current_line += 1;
+                    current_col = 0;
+                } else {
+                    current_col += 1;
+                }
+            }
+            text.len()
+        }
+
         for change in changes {
             if let Some(range) = change.range {
-                let start = crate::analysis::position_to_offset(text, range.start);
-                let end = crate::analysis::position_to_offset(text, range.end);
+                let start = offset_for_position(text, range.start);
+                let end = offset_for_position(text, range.end);
                 text.replace_range(start..end, &change.text);
             } else {
                 // Full content replacement.
@@ -156,9 +181,13 @@ pub(crate) fn resolve_import_at_offset(
         // Resolve the import path relative to the current file.
         let file_path = uri.path().to_string();
         let dir = std::path::Path::new(&file_path).parent()?;
-        let target = dir.join(&imp.path);
-        let canonical = target.canonicalize().ok().unwrap_or(target);
-        let target_uri: Uri = format!("file://{}", canonical.display()).parse().ok()?;
+        let target = super::normalize_path(&dir.join(&imp.path));
+        let target_uri = Uri::from_file_path(&target).unwrap_or_else(|| {
+            panic!(
+                "failed to construct file URI for import target `{}`",
+                target.display()
+            )
+        });
         return Some((target_uri, (path_start, path_end)));
     }
     None

@@ -2,7 +2,6 @@ use tower_lsp_server::ls_types::*;
 
 use bbnf::types::{Expression, Token};
 
-use crate::analysis::{position_to_offset, span_to_range};
 use crate::state::DocumentState;
 
 /// Extract the inner value from a TokenExpression.
@@ -16,30 +15,27 @@ fn get_inner_expression<'a, T>(tok: &'a Token<'a, T>) -> &'a T {
 /// enabling "Expand/Shrink Selection" in the editor.
 pub fn selection_ranges(state: &DocumentState, positions: Vec<Position>) -> Vec<SelectionRange> {
     // Use the cached AST (no re-parsing needed).
-    let Some(ast) = state.ast() else {
-        return positions.iter().map(|p| trivial_range(*p)).collect();
-    };
+    let ast = state.ast().unwrap_or_else(|| panic!(
+        "selection_ranges requested for document with no parsed AST"
+    ));
 
     positions
         .iter()
         .map(|&pos| {
-            let offset = position_to_offset(&state.text, pos);
-            compute_selection_range(&state.text, ast, offset)
-                .unwrap_or_else(|| trivial_range(pos))
+            let offset = state.line_index.position_to_offset(pos);
+            compute_selection_range(&state.line_index, ast, offset).unwrap_or_else(|| {
+                panic!(
+                    "selection_ranges could not resolve a span chain for position {}:{}",
+                    pos.line, pos.character
+                )
+            })
         })
         .collect()
 }
 
-fn trivial_range(pos: Position) -> SelectionRange {
-    SelectionRange {
-        range: Range::new(pos, pos),
-        parent: None,
-    }
-}
-
 /// Walk the AST to find all spans containing the offset, ordered innermost-first.
 fn compute_selection_range(
-    text: &str,
+    line_index: &crate::analysis::LineIndex,
     ast: &bbnf::types::AST<'_>,
     offset: usize,
 ) -> Option<SelectionRange> {
@@ -47,7 +43,12 @@ fn compute_selection_range(
     for (lhs, rhs) in ast.iter() {
         if let Expression::Nonterminal(Token { span: name_span, .. }) = lhs {
             let rule_start = name_span.start;
-            let rule_end = crate::state::compute_expression_end_pub(rhs).unwrap_or(name_span.end);
+            let rule_end = crate::state::compute_expression_end_pub(rhs).unwrap_or_else(|| {
+                panic!(
+                    "compute_selection_range could not compute expression end for rule at {}",
+                    name_span.start
+                )
+            });
 
             if offset < rule_start || offset > rule_end {
                 continue;
@@ -67,7 +68,7 @@ fn compute_selection_range(
             // Build the chain from innermost to outermost.
             let mut result: Option<SelectionRange> = None;
             for (start, end) in spans.into_iter().rev() {
-                let range = span_to_range(text, start, end);
+                let range = line_index.span_to_range(start, end);
                 result = Some(SelectionRange {
                     range,
                     parent: result.map(Box::new),

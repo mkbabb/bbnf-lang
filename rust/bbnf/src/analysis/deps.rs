@@ -18,7 +18,7 @@ pub fn get_nonterminal_name<'a>(expr: &'a Expression<'a>) -> Option<&'a str> {
     }
 }
 
-pub fn traverse_ast<'a>(ast: &'a AST, visitor: Option<&mut Visitor<'a>>) {
+pub fn traverse_ast<'a>(ast: &'a AST, visitor: &mut Visitor<'a>) {
     fn visit<'a>(
         nonterminal: &'a Expression<'a>,
         expr: &'a Expression<'a>,
@@ -61,8 +61,6 @@ pub fn traverse_ast<'a>(ast: &'a AST, visitor: Option<&mut Visitor<'a>>) {
         }
     }
 
-    let mut visitor_default = |_, _| {};
-    let visitor = visitor.unwrap_or(&mut visitor_default);
     ast.into_iter()
         .for_each(|(lhs, rhs)| visit(lhs, rhs, visitor));
 }
@@ -79,6 +77,6 @@ pub fn calculate_ast_deps<'a>(ast: &'a AST<'a>) -> Dependencies<'a> {
             }
         }
     };
-    traverse_ast(ast, Some(&mut visitor));
+    traverse_ast(ast, &mut visitor);
     deps.take()
 }

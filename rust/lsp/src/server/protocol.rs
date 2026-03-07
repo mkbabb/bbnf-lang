@@ -1,6 +1,7 @@
 use tower_lsp_server::jsonrpc::Result;
 use tower_lsp_server::ls_types::*;
 use tower_lsp_server::LanguageServer;
+use std::path::Path;
 
 use crate::features;
 
@@ -84,19 +85,25 @@ impl LanguageServer for BbnfLanguageServer {
 
         // Apply incremental edits to the stored text, then re-analyze.
         let new_text;
+        let mut unknown_document = false;
         {
             let mut docs = self.documents.write().await;
             if let Some(state) = docs.get_mut(&uri) {
                 Self::apply_incremental_changes(&mut state.text, changes);
                 new_text = state.text.clone();
             } else {
-                // Document not tracked yet — take the last change as full text.
-                new_text = changes
-                    .into_iter()
-                    .next_back()
-                    .map(|c| c.text)
-                    .unwrap_or_default();
+                unknown_document = true;
+                new_text = String::new();
             }
+        }
+        if unknown_document {
+            self.client
+                .log_message(
+                    MessageType::ERROR,
+                    format!("Rejected didChange for unknown document `{:?}`", uri),
+                )
+                .await;
+            return;
         }
 
         self.on_change(uri, new_text).await;
@@ -133,11 +140,11 @@ impl LanguageServer for BbnfLanguageServer {
         if let Some(result) = features::goto_definition::goto_definition(state, &uri, pos) {
             return Ok(Some(result));
         }
-        let offset = crate::analysis::position_to_offset(&state.text, pos);
+        let offset = state.line_index.position_to_offset(pos);
 
         // Check if cursor is on an import directive — jump to the imported file.
         if let Some((target_uri, path_span)) = resolve_import_at_offset(state, &uri, offset) {
-            let origin_range = crate::analysis::span_to_range(&state.text, path_span.0, path_span.1);
+            let origin_range = state.line_index.span_to_range(path_span.0, path_span.1);
             let target_range = Range::new(Position::new(0, 0), Position::new(0, 0));
             return Ok(Some(GotoDefinitionResponse::Link(vec![LocationLink {
                 origin_selection_range: Some(origin_range),
@@ -156,9 +163,9 @@ impl LanguageServer for BbnfLanguageServer {
                     if entry.uri != uri {
                         if let Some(target_state) = docs.get(&entry.uri) {
                             if let Some(rule) = target_state.info.rules.get(entry.rule_index) {
-                                let range = crate::analysis::span_to_range(
-                                    &target_state.text, rule.name_span.0, rule.name_span.1,
-                                );
+                                let range = target_state
+                                    .line_index
+                                    .span_to_range(rule.name_span.0, rule.name_span.1);
                                 return Ok(Some(GotoDefinitionResponse::Scalar(Location {
                                     uri: entry.uri.clone(),
                                     range,
@@ -181,11 +188,13 @@ impl LanguageServer for BbnfLanguageServer {
             return Ok(None);
         };
         // Start with local references.
-        let mut locations = features::references::references(state, &uri, pos, include_decl)
-            .unwrap_or_default();
+        let mut locations = match features::references::references(state, &uri, pos, include_decl) {
+            Some(locs) => locs,
+            None => return Ok(None),
+        };
 
         // Determine the symbol name for cross-file search.
-        let offset = crate::analysis::position_to_offset(&state.text, pos);
+        let offset = state.line_index.position_to_offset(pos);
         let symbol = crate::analysis::symbol_at_offset(&state.info, offset);
         let name = match &symbol {
             Some(crate::analysis::SymbolAtOffset::RuleDefinition(rule)) => Some(rule.name.clone()),
@@ -204,9 +213,9 @@ impl LanguageServer for BbnfLanguageServer {
                         if refinfo.name == name {
                             locations.push(Location {
                                 uri: doc_uri.clone(),
-                                range: crate::analysis::span_to_range(
-                                    &doc_state.text, refinfo.span.0, refinfo.span.1,
-                                ),
+                                range: doc_state
+                                    .line_index
+                                    .span_to_range(refinfo.span.0, refinfo.span.1),
                             });
                         }
                     }
@@ -258,7 +267,10 @@ impl LanguageServer for BbnfLanguageServer {
         for import_info in &state.info.imports {
             if let Some(import_uri) = Self::resolve_import_uri(&uri, &import_info.path) {
                 if let Some(target_state) = docs.get(&import_uri) {
-                    let source_file = import_info.path.rsplit('/').next().unwrap_or(&import_info.path);
+                    let source_file = Path::new(&import_info.path)
+                        .file_name()
+                        .and_then(|n| n.to_str())
+                        .unwrap_or_else(|| panic!("invalid import path for completion label: `{}`", import_info.path));
                     if let Some(ref items) = import_info.items {
                         // Selective: only listed names.
                         for name in items {

@@ -2,7 +2,6 @@ use std::collections::HashMap;
 
 use tower_lsp_server::ls_types::*;
 
-use crate::analysis::span_to_range;
 use crate::state::DocumentState;
 
 pub fn code_actions(
@@ -50,7 +49,7 @@ pub fn code_actions(
                         changes.insert(
                             uri.clone(),
                             vec![TextEdit {
-                                range: span_to_range(&state.text, rule.full_span.0, delete_end),
+                                range: state.line_index.span_to_range(rule.full_span.0, delete_end),
                                 new_text: String::new(),
                             }],
                         );
@@ -84,7 +83,7 @@ pub fn code_actions(
                 if let Some(name) = name {
                     // Insert a new rule at the end of the document.
                     let insert_text = format!("\n{} = ;\n", name);
-                    let end_pos = offset_to_end_position(&state.text);
+                    let end_pos = state.line_index.offset_to_position(state.text.len());
 
                     let mut changes = HashMap::new();
                     changes.insert(
@@ -110,18 +109,4 @@ pub fn code_actions(
         }
 
     actions
-}
-
-fn offset_to_end_position(text: &str) -> Position {
-    let mut line: u32 = 0;
-    let mut col: u32 = 0;
-    for byte in text.bytes() {
-        if byte == b'\n' {
-            line += 1;
-            col = 0;
-        } else {
-            col += 1;
-        }
-    }
-    Position::new(line, col)
 }

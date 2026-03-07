@@ -11,6 +11,8 @@ use crate::state::{DocumentInfo, RuleInfo};
 pub struct LineIndex {
     /// Byte offset of the start of each line. `line_starts[0]` is always 0.
     line_starts: Vec<usize>,
+    /// Total text length in bytes.
+    text_len: usize,
 }
 
 impl LineIndex {
@@ -22,7 +24,10 @@ impl LineIndex {
                 line_starts.push(i + 1);
             }
         }
-        Self { line_starts }
+        Self {
+            line_starts,
+            text_len: text.len(),
+        }
     }
 
     /// Convert a byte offset to an LSP Position. O(log n) via binary search.
@@ -37,9 +42,22 @@ impl LineIndex {
     pub fn position_to_offset(&self, pos: Position) -> usize {
         let line = pos.line as usize;
         if line < self.line_starts.len() {
-            self.line_starts[line] + pos.character as usize
+            let line_start = self.line_starts[line];
+            let line_end = if line + 1 < self.line_starts.len() {
+                // Clamp to the '\n' byte for non-last lines.
+                self.line_starts[line + 1].saturating_sub(1)
+            } else {
+                // Last line can clamp to EOF.
+                self.text_len
+            };
+            let requested = line_start + pos.character as usize;
+            requested.min(line_end)
         } else {
-            *self.line_starts.last().unwrap_or(&0)
+            panic!(
+                "position_to_offset received out-of-range line {} (line_count={})",
+                line,
+                self.line_starts.len()
+            );
         }
     }
 
@@ -47,57 +65,6 @@ impl LineIndex {
     pub fn span_to_range(&self, start: usize, end: usize) -> Range {
         Range::new(self.offset_to_position(start), self.offset_to_position(end))
     }
-}
-
-// ---------------------------------------------------------------------------
-// Legacy free functions — delegate to linear scan for callers that don't
-// have a LineIndex (e.g., formatting which re-parses).
-// ---------------------------------------------------------------------------
-
-/// Convert a byte offset to an LSP Position (0-based line, 0-based character).
-pub fn offset_to_position(text: &str, offset: usize) -> Position {
-    let offset = offset.min(text.len());
-    let mut line: u32 = 0;
-    let mut col: u32 = 0;
-    for (i, byte) in text.bytes().enumerate() {
-        if i == offset {
-            break;
-        }
-        if byte == b'\n' {
-            line += 1;
-            col = 0;
-        } else {
-            col += 1;
-        }
-    }
-    Position::new(line, col)
-}
-
-/// Convert an LSP Position to a byte offset.
-pub fn position_to_offset(text: &str, position: Position) -> usize {
-    let mut current_line: u32 = 0;
-    let mut current_col: u32 = 0;
-    for (i, byte) in text.bytes().enumerate() {
-        if current_line == position.line && current_col == position.character {
-            return i;
-        }
-        if byte == b'\n' {
-            if current_line == position.line {
-                // Position is past end of line — clamp.
-                return i;
-            }
-            current_line += 1;
-            current_col = 0;
-        } else {
-            current_col += 1;
-        }
-    }
-    text.len()
-}
-
-/// Convert byte offset span to an LSP Range.
-pub fn span_to_range(text: &str, start: usize, end: usize) -> Range {
-    Range::new(offset_to_position(text, start), offset_to_position(text, end))
 }
 
 // ---------------------------------------------------------------------------
@@ -113,8 +80,8 @@ pub enum SymbolAtOffset<'a> {
     RuleReference {
         /// Name of the referenced nonterminal.
         name: String,
-        /// The rule that contains this reference.
-        containing_rule: &'a RuleInfo,
+        /// Byte span of this reference token.
+        span: (usize, usize),
     },
 }
 
@@ -132,7 +99,7 @@ pub fn symbol_at_offset<'a>(info: &'a DocumentInfo, offset: usize) -> Option<Sym
             if offset >= refinfo.span.0 && offset <= refinfo.span.1 {
                 return Some(SymbolAtOffset::RuleReference {
                     name: refinfo.name.clone(),
-                    containing_rule: rule,
+                    span: refinfo.span,
                 });
             }
         }
@@ -140,24 +107,19 @@ pub fn symbol_at_offset<'a>(info: &'a DocumentInfo, offset: usize) -> Option<Sym
     // Check @recover directive rule names.
     for rec in &info.recovers {
         if offset >= rec.rule_name_span.0 && offset <= rec.rule_name_span.1 {
-            // Find the first rule to use as containing_rule placeholder.
-            if let Some(first_rule) = info.rules.first() {
-                return Some(SymbolAtOffset::RuleReference {
-                    name: rec.rule_name.clone(),
-                    containing_rule: first_rule,
-                });
-            }
+            return Some(SymbolAtOffset::RuleReference {
+                name: rec.rule_name.clone(),
+                span: rec.rule_name_span,
+            });
         }
     }
     // Check @pretty directive rule names.
     for pretty in &info.pretties {
         if offset >= pretty.rule_name_span.0 && offset <= pretty.rule_name_span.1 {
-            if let Some(first_rule) = info.rules.first() {
-                return Some(SymbolAtOffset::RuleReference {
-                    name: pretty.rule_name.clone(),
-                    containing_rule: first_rule,
-                });
-            }
+            return Some(SymbolAtOffset::RuleReference {
+                name: pretty.rule_name.clone(),
+                span: pretty.rule_name_span,
+            });
         }
     }
     None

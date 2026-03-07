@@ -7,7 +7,6 @@ fn get_inner_expression<'a, T>(tok: &'a Token<'a, T>) -> &'a T {
     &tok.value
 }
 
-use crate::analysis::{position_to_offset, span_to_range};
 use crate::state::DocumentState;
 
 const MAX_WIDTH: usize = 66;
@@ -29,8 +28,8 @@ pub fn format_document(state: &DocumentState) -> Option<Vec<TextEdit>> {
 pub fn format_range(state: &DocumentState, range: Range) -> Option<Vec<TextEdit>> {
     let ast = state.ast()?;
 
-    let range_start = position_to_offset(&state.text, range.start);
-    let range_end = position_to_offset(&state.text, range.end);
+    let range_start = state.line_index.position_to_offset(range.start);
+    let range_end = state.line_index.position_to_offset(range.end);
 
     let mut edits = Vec::new();
 
@@ -38,10 +37,10 @@ pub fn format_range(state: &DocumentState, range: Range) -> Option<Vec<TextEdit>
         if let Expression::Nonterminal(Token { value: name, span: name_span, .. }) = lhs {
             let rule_start = name_span.start;
             let rule_end = crate::state::compute_expression_end_pub(rhs)
-                .unwrap_or(name_span.end);
+                .unwrap_or_else(|| panic!("format_range could not compute expression end for rule `{}`", name));
 
             // Skip rules that don't overlap the selection.
-            if rule_end < range_start || rule_start > range_end {
+            if rule_end <= range_start || rule_start >= range_end {
                 continue;
             }
 
@@ -53,7 +52,7 @@ pub fn format_range(state: &DocumentState, range: Range) -> Option<Vec<TextEdit>
             let extra = text_after_rule
                 .find(';')
                 .map(|i| i + 1)
-                .unwrap_or(0);
+                .unwrap_or_else(|| panic!("format_range expected `;` terminator for rule `{}`", name));
             let full_end = rule_end + extra;
 
             // Skip trailing whitespace/newlines after semicolon.
@@ -63,7 +62,7 @@ pub fn format_range(state: &DocumentState, range: Range) -> Option<Vec<TextEdit>
                 .count();
             let full_end = full_end + trailing;
 
-            let edit_range = span_to_range(&state.text, rule_start, full_end);
+            let edit_range = state.line_index.span_to_range(rule_start, full_end);
             edits.push(TextEdit {
                 range: edit_range,
                 new_text: formatted,
@@ -80,13 +79,13 @@ pub fn format_range(state: &DocumentState, range: Range) -> Option<Vec<TextEdit>
 
 /// Format the rule that was just completed (triggered by typing `;`).
 pub fn format_on_type(state: &DocumentState, position: Position) -> Option<Vec<TextEdit>> {
-    let offset = position_to_offset(&state.text, position);
+    let offset = state.line_index.position_to_offset(position);
 
     // Find which rule the cursor is in.
     for rule in &state.info.rules {
         if offset >= rule.full_span.0 && offset <= rule.full_span.1 + 2 {
             // Found the rule — format just this one by delegating to format_range.
-            let rule_range = span_to_range(&state.text, rule.full_span.0, rule.full_span.1);
+            let rule_range = state.line_index.span_to_range(rule.full_span.0, rule.full_span.1);
             return format_range(state, rule_range);
         }
     }

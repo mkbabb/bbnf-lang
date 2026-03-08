@@ -138,6 +138,12 @@ fn try_generate_span_expr<'a>(
                 Some(quote! { ::parse_that::sp_json_string_quoted() })
             } else if bbnf::generate::is_json_number_regex(value) {
                 Some(quote! { ::parse_that::sp_json_number() })
+            } else if bbnf::generate::is_css_ws_comment_regex(value) {
+                Some(quote! { ::parse_that::sp_css_ws_comment() })
+            } else if bbnf::generate::is_css_ident_regex(value) {
+                Some(quote! { ::parse_that::sp_css_ident() })
+            } else if bbnf::generate::is_css_string_regex(value) {
+                Some(quote! { ::parse_that::sp_css_string() })
             } else if let Some(excluded) = bbnf::generate::is_negated_char_class_regex(value) {
                 let excluded_bytes = proc_macro2::Literal::byte_string(excluded.as_bytes());
                 Some(quote! { ::parse_that::sp_take_until_any(#excluded_bytes) })

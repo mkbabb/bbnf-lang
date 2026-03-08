@@ -266,6 +266,42 @@ pub fn is_json_number_regex(pattern: &str) -> bool {
     JSON_NUMBER_REGEX_PATTERNS.contains(&pattern)
 }
 
+/// Known CSS whitespace+comment regex patterns that can be replaced with
+/// `sp_css_ws_comment()` — a monolithic byte scanner with memchr for `*/`.
+const CSS_WS_COMMENT_REGEX_PATTERNS: &[&str] = &[
+    r"(?s)(?:\s|/\*.*?\*/)*",
+    r"(?s)(?:\s|\/\*.*?\*\/)*",
+];
+
+/// Detect the canonical CSS whitespace+comment regex and return true if it matches.
+pub fn is_css_ws_comment_regex(pattern: &str) -> bool {
+    CSS_WS_COMMENT_REGEX_PATTERNS.contains(&pattern)
+}
+
+/// Known CSS identifier regex patterns that can be replaced with
+/// `sp_css_ident()` — a monolithic byte scanner.
+const CSS_IDENT_REGEX_PATTERNS: &[&str] = &[
+    r"[\-]?[a-zA-Z_][\w-]*|--[\w-]+",
+    r"-?[a-zA-Z_][\w-]*|--[\w-]+",
+    r"[a-zA-Z_][\w-]*|--[\w-]+|-[a-zA-Z][\w-]*",
+];
+
+/// Detect a CSS identifier regex and return true if it matches.
+pub fn is_css_ident_regex(pattern: &str) -> bool {
+    CSS_IDENT_REGEX_PATTERNS.contains(&pattern)
+}
+
+/// Known CSS string regex patterns that can be replaced with
+/// `sp_css_string()` — a monolithic scanner with memchr2.
+const CSS_STRING_REGEX_PATTERNS: &[&str] = &[
+    r#""(?:[^"\\]|\\[\s\S])*"|'(?:[^'\\]|\\[\s\S])*'"#,
+];
+
+/// Detect a CSS string regex and return true if it matches.
+pub fn is_css_string_regex(pattern: &str) -> bool {
+    CSS_STRING_REGEX_PATTERNS.contains(&pattern)
+}
+
 /// Detect a negated character class regex of the form `[^XYZ]+` and return the
 /// excluded bytes. These patterns scan until any excluded byte is found—perfectly
 /// suited for `take_until_any_span()` which uses a 256-byte LUT instead of NFA.

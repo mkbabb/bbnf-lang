@@ -177,12 +177,15 @@ pub fn calculate_nonterminal_generated_parsers<'a>(
                 // Set the current rule name for sub-variant lookup in alternation codegen.
                 if let Some(name) = get_nonterminal_name(lhs) {
                     *cache_bundle.current_rule_name.borrow_mut() = Some(name.to_string());
-                    // Set consumable flag for @pretty tuple preservation in concatenation codegen.
+                    // Set consumable flag for @pretty / @no_collapse tuple preservation in concatenation codegen.
                     let has_pretty = grammar_attrs
                         .pretties
                         .as_ref()
                         .is_some_and(|p| p.contains_key(name));
-                    cache_bundle.pretty_preserve_next_concat.set(has_pretty);
+                    let has_no_collapse = grammar_attrs
+                        .no_collapse_rules
+                        .is_some_and(|set| set.contains(name));
+                    cache_bundle.pretty_preserve_next_concat.set(has_pretty || has_no_collapse);
                 }
 
                 let rhs = mapped.get(lhs).unwrap_or_else(|| {

@@ -121,6 +121,19 @@ pub struct RecoverDirective<'a> {
     pub span: Span<'a>,
 }
 
+/// An `@no_collapse` directive that prevents span collapse for a rule.
+///
+/// When present, type inference preserves `Vec<Span>` for `Many`/`Many1`
+/// expressions and preserves tuple elements in concatenations instead of
+/// merging consecutive spans.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct NoCollapseDirective<'a> {
+    /// The name of the rule to prevent span collapse for.
+    pub rule_name: Cow<'a, str>,
+    /// The byte-offset span of the entire directive.
+    pub span: Span<'a>,
+}
+
 /// An `@pretty` directive that provides formatting hints for a rule.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PrettyDirective<'a> {
@@ -137,6 +150,7 @@ pub struct PrettyDirective<'a> {
 pub struct ParsedGrammar<'a> {
     pub imports: Vec<ImportDirective<'a>>,
     pub recovers: Vec<RecoverDirective<'a>>,
+    pub no_collapses: Vec<NoCollapseDirective<'a>>,
     pub pretties: Vec<PrettyDirective<'a>>,
     pub rules: AST<'a>,
 }

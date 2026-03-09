@@ -110,6 +110,7 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     // selective import resolution. Otherwise fall back to simple fold.
     let mut recover_map: HashMap<String, Expression<'static>> = HashMap::new();
     let mut pretty_map: HashMap<String, Vec<String>> = HashMap::new();
+    let mut no_collapse_set: HashSet<String> = HashSet::new();
 
     let ast = if parser_container_attrs.paths.len() == 1 {
         let entry = &parser_container_attrs.paths[0];
@@ -134,6 +135,10 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
                     p.hints.iter().map(|h| h.to_string()).collect(),
                 );
             }
+            // Extract @no_collapse directives.
+            for nc in &pg.no_collapses {
+                no_collapse_set.insert(nc.rule_name.to_string());
+            }
 
             if !pg.imports.is_empty() {
                 // File has imports — use module graph loader.
@@ -156,6 +161,10 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
                         for p in &module.grammar.pretties {
                             pretty_map.entry(p.rule_name.to_string())
                                 .or_insert_with(|| p.hints.iter().map(|h| h.to_string()).collect());
+                        }
+                        // Also collect no_collapses from imported modules.
+                        for nc in &module.grammar.no_collapses {
+                            no_collapse_set.insert(nc.rule_name.to_string());
                         }
                         for (name, expr) in &module.grammar.rules {
                             merged.insert(name.clone(), expr.clone());
@@ -251,6 +260,7 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
                     span_eligible_rules: Some(&span_eligible_rules),
                     sp_method_rules: Some(&sp_method_rules),
                     recovers: None,
+                    no_collapse_rules: None,
                     pretties: None,
                     sub_variants: None,
                     ident,
@@ -271,6 +281,7 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
 
     let recovers_ref = if recover_map.is_empty() { None } else { Some(&recover_map) };
     let pretties_ref = if pretty_map.is_empty() { None } else { Some(&pretty_map) };
+    let no_collapse_ref = if no_collapse_set.is_empty() { None } else { Some(&no_collapse_set) };
 
     // First pass: type inference (sub_variants not yet known).
     let tmp_grammar_attrs = GeneratedGrammarAttributes {
@@ -285,6 +296,7 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
         span_eligible_rules: Some(&span_eligible_rules),
         sp_method_rules: Some(&sp_method_rules),
         recovers: recovers_ref,
+        no_collapse_rules: no_collapse_ref,
         pretties: pretties_ref,
         sub_variants: None,
 
@@ -312,6 +324,7 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
         span_eligible_rules: Some(&span_eligible_rules),
         sp_method_rules: Some(&sp_method_rules),
         recovers: recovers_ref,
+        no_collapse_rules: no_collapse_ref,
         pretties: pretties_ref,
         sub_variants: Some(&sub_variants),
 

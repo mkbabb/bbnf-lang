@@ -46,6 +46,22 @@ pub fn is_transparent_rule(name: &str, grammar_attrs: &GeneratedGrammarAttribute
 /// Uses structural `syn::Ident` comparison on path segments — no string
 /// serialization involved. Matches both `parse_that::Span<'a>` and
 /// `::parse_that::Span<'a>`.
+/// Extract the inner type `T` from `Vec<T>`. Returns `None` if not a `Vec` type.
+pub fn extract_vec_inner_type(ty: &Type) -> Option<&Type> {
+    if let Type::Path(type_path) = ty {
+        let seg = type_path.path.segments.last()?;
+        if seg.ident != "Vec" {
+            return None;
+        }
+        if let syn::PathArguments::AngleBracketed(args) = &seg.arguments {
+            if let Some(syn::GenericArgument::Type(inner)) = args.args.first() {
+                return Some(inner);
+            }
+        }
+    }
+    None
+}
+
 pub fn type_is_span(ty: &Type) -> bool {
     if let Type::Path(type_path) = ty {
         let segments = &type_path.path.segments;
@@ -116,7 +132,18 @@ pub fn calculate_expression_type<'a>(
             // should not be affected by the parent rule's @pretty directive.
             cache_bundle.pretty_preserve_next_concat.set(false);
             let inner_type = calculate_expression_type(inner_expr, grammar_attrs, cache_bundle);
-            if type_is_span(&inner_type) {
+            // @no_collapse: if the current rule has @no_collapse, preserve Option<Span>
+            // instead of collapsing to Span.
+            let no_collapse = cache_bundle
+                .current_rule_name
+                .borrow()
+                .as_ref()
+                .is_some_and(|name| {
+                    grammar_attrs
+                        .no_collapse_rules
+                        .is_some_and(|set| set.contains(name))
+                });
+            if type_is_span(&inner_type) && !no_collapse {
                 return inner_type;
             }
             parse_quote!(Option < #inner_type >)
@@ -131,7 +158,19 @@ pub fn calculate_expression_type<'a>(
             // should not be affected by the parent rule's @pretty directive.
             cache_bundle.pretty_preserve_next_concat.set(false);
             let inner_type = calculate_expression_type(inner_expr, grammar_attrs, cache_bundle);
-            if type_is_span(&inner_type) {
+            // @no_collapse: if the current rule has @no_collapse, preserve Vec<Span>
+            // instead of collapsing to Span. This allows the prettifier to iterate
+            // individual items.
+            let no_collapse = cache_bundle
+                .current_rule_name
+                .borrow()
+                .as_ref()
+                .is_some_and(|name| {
+                    grammar_attrs
+                        .no_collapse_rules
+                        .is_some_and(|set| set.contains(name))
+                });
+            if type_is_span(&inner_type) && !no_collapse {
                 return inner_type;
             }
             parse_quote!(Vec < #inner_type >)
@@ -183,9 +222,10 @@ pub fn calculate_expression_type<'a>(
             } else {
                 overridden
             };
-            // @pretty tuple preservation: consume the flag so only the top-level
-            // Concatenation preserves all-Span tuples. Nested concatenations (inside
-            // Many1, Optional, etc.) won't see the flag — it's already consumed.
+            // @pretty / @no_collapse tuple preservation: consume the flag so only
+            // the top-level Concatenation preserves all-Span tuples. Nested
+            // concatenations (inside Many1, Optional, etc.) won't see the flag
+            // — it's already consumed.
             let pretty_preserve = cache_bundle.pretty_preserve_next_concat.replace(false);
             let new_tys = if pretty_preserve && tys.iter().all(type_is_span) {
                 tys
@@ -211,6 +251,22 @@ pub fn calculate_expression_type<'a>(
             };
             if new_tys.len() == 1 {
                 return new_tys[0].clone();
+            }
+            // Flatten (A, Vec<A>) → Vec<A> and (Vec<A>, A) → Vec<A>.
+            // This makes sep_by-like patterns (e.g. `item , (sep >> item) *`)
+            // produce a flat Vec instead of a tuple, enabling @pretty sep("...")
+            // to work naturally with generate_vec_doc.
+            if new_tys.len() == 2 {
+                if let Some(inner) = extract_vec_inner_type(&new_tys[1]) {
+                    if types_eq(&new_tys[0], inner) {
+                        return new_tys[1].clone();
+                    }
+                }
+                if let Some(inner) = extract_vec_inner_type(&new_tys[0]) {
+                    if types_eq(&new_tys[1], inner) {
+                        return new_tys[0].clone();
+                    }
+                }
             }
             parse_quote!((#(#new_tys), *))
         }
@@ -305,13 +361,20 @@ pub fn calculate_nonterminal_types<'a>(
             // Set current_rule_name for alternation sub-variant lookup.
             let rule_name = crate::analysis::get_nonterminal_name(lhs).map(|n| n.to_string());
             *cache_bundle.current_rule_name.borrow_mut() = rule_name.clone();
-            // Set the consumable flag if this rule has @pretty directives.
+            // Set the consumable flag if this rule has @pretty or @no_collapse directives.
             // Only the first (top-level) Concatenation will consume it.
             let has_pretty = rule_name
                 .as_ref()
                 .and_then(|name| grammar_attrs.pretties.as_ref()?.get(name.as_str()))
                 .is_some();
-            cache_bundle.pretty_preserve_next_concat.set(has_pretty);
+            let has_no_collapse = rule_name
+                .as_ref()
+                .is_some_and(|name| {
+                    grammar_attrs
+                        .no_collapse_rules
+                        .is_some_and(|set| set.contains(name.as_str()))
+                });
+            cache_bundle.pretty_preserve_next_concat.set(has_pretty || has_no_collapse);
             let ty = calculate_expression_type(rhs, grammar_attrs, &cache_bundle);
             *cache_bundle.current_rule_name.borrow_mut() = None;
             cache_bundle.pretty_preserve_next_concat.set(false);

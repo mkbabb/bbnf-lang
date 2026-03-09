@@ -287,6 +287,12 @@ pub fn generate_item_to_doc(vec_ty: &syn::Type) -> TokenStream {
         None
     };
 
+    if let Some(inner) = inner_ty {
+        if type_is_span(inner) {
+            // Span element — convert to Doc::String directly.
+            return quote! { ::pprint::Doc::String(::std::borrow::Cow::Borrowed(item.as_str())) };
+        }
+    }
     if let Some(syn::Type::Tuple(tuple_ty)) = inner_ty {
         // Tuple element — destructure and concat using doc_for_binding for each element.
         let n = tuple_ty.elems.len();
@@ -330,6 +336,12 @@ pub fn generate_item_source_range(vec_ty: &syn::Type) -> TokenStream {
         None
     };
 
+    if let Some(inner) = inner_ty {
+        if type_is_span(inner) {
+            // Span element — use start/end directly.
+            return quote! { Some((i.start, i.end)) };
+        }
+    }
     if let Some(syn::Type::Tuple(tuple_ty)) = inner_ty {
         let n = tuple_ty.elems.len();
         let bindings: Vec<syn::Ident> = (0..n).map(|j| format_ident!("f{}", j)).collect();

@@ -11,6 +11,8 @@ use super::patterns::concat_element_sp_name;
 use super::type_inference::*;
 use super::types::*;
 
+use syn::Type;
+
 use std::collections::HashMap;
 
 use proc_macro2::TokenStream;
@@ -120,9 +122,9 @@ pub fn calculate_concatenation_expression<'a>(
     } else {
         inner_exprs.iter().map(|expr| calculate_expression_type(expr, grammar_attrs, cache_bundle)).collect()
     };
-    // @pretty tuple preservation: consume the flag so only the top-level
-    // Concatenation preserves Span element boundaries. Nested concatenations
-    // (inside Many1, Optional, etc.) won't see it.
+    // @pretty / @no_collapse tuple preservation: consume the flag so only the
+    // top-level Concatenation preserves Span element boundaries. Nested
+    // concatenations (inside Many1, Optional, etc.) won't see it.
     let pretty_preserve = cache_bundle.pretty_preserve_next_concat.replace(false)
         && tys.iter().all(type_is_span);
     let mut chains: Vec<(bool, Vec<TokenStream>)> = Vec::new();
@@ -175,5 +177,58 @@ pub fn calculate_concatenation_expression<'a>(
     }
     // Invariant: concatenation expressions always have at least one element,
     // so the fold above always produces Some.
-    acc.unwrap()
+    let parser = acc.unwrap();
+
+    // Flatten (A, Vec<A>) → Vec<A> and (Vec<A>, A) → Vec<A>.
+    // Must match the same condition used by type inference.
+    // Compute the effective types after compression (same logic as type_inference).
+    let effective_tys: Vec<Type> = if pretty_preserve && tys.iter().all(type_is_span) {
+        tys.clone()
+    } else {
+        let mut span_counter = 0;
+        let mut non_span_counter = 0;
+        let mut compressed = Vec::new();
+        for ty in tys.iter() {
+            if type_is_span(ty) {
+                span_counter += 1;
+                non_span_counter = 0;
+            } else {
+                span_counter = 0;
+                non_span_counter += 1;
+            }
+            if span_counter == 1 {
+                compressed.push(parse_quote!(::parse_that::Span<'a>));
+            } else if non_span_counter > 0 {
+                compressed.push(ty.clone());
+            }
+        }
+        compressed
+    };
+    if effective_tys.len() == 2 {
+        // (A, Vec<A>) → prepend first element
+        if let Some(inner) = extract_vec_inner_type(&effective_tys[1]) {
+            if types_eq(&effective_tys[0], inner) {
+                return quote! {
+                    #parser.map(|(first, rest)| {
+                        let mut v = Vec::with_capacity(1 + rest.len());
+                        v.push(first);
+                        v.extend(rest);
+                        v
+                    })
+                };
+            }
+        }
+        // (Vec<A>, A) → append last element
+        if let Some(inner) = extract_vec_inner_type(&effective_tys[0]) {
+            if types_eq(&effective_tys[1], inner) {
+                return quote! {
+                    #parser.map(|(mut v, last)| {
+                        v.push(last);
+                        v
+                    })
+                };
+            }
+        }
+    }
+    parser
 }

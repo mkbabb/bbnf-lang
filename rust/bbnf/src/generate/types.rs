@@ -66,6 +66,10 @@ pub struct GeneratedGrammarAttributes<'a> {
     /// `@recover` directives: maps rule name → sync expression.
     pub recovers: Option<&'a HashMap<String, Expression<'a>>>,
 
+    /// `@no_collapse` directives: set of rule names that should preserve
+    /// `Vec<Span>` in `Many`/`Many1` and preserve tuple elements in concatenations.
+    pub no_collapse_rules: Option<&'a HashSet<String>>,
+
     /// `@pretty` directives: maps rule name → list of formatting hints.
     pub pretties: Option<&'a HashMap<String, Vec<String>>>,
 

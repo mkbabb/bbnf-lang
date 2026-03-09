@@ -392,7 +392,18 @@ pub fn calculate_parser_from_expression<'a>(
                 depth,
             );
             let ty = calculate_expression_type(inner_expr, grammar_attrs, cache_bundle);
-            if type_is_span(&ty) {
+            // @no_collapse: use .many() instead of .many_span() when the rule
+            // has @no_collapse, to preserve Vec<Span>.
+            let no_collapse = cache_bundle
+                .current_rule_name
+                .borrow()
+                .as_ref()
+                .is_some_and(|name| {
+                    grammar_attrs
+                        .no_collapse_rules
+                        .is_some_and(|set| set.contains(name))
+                });
+            if type_is_span(&ty) && !no_collapse {
                 return quote! {
                     #parser.many_span(..)
                 };
@@ -415,7 +426,18 @@ pub fn calculate_parser_from_expression<'a>(
                 depth,
             );
             let ty = calculate_expression_type(inner_expr, grammar_attrs, cache_bundle);
-            if type_is_span(&ty) {
+            // @no_collapse: use .many() instead of .many_span() when the rule
+            // has @no_collapse, to preserve Vec<Span>.
+            let no_collapse = cache_bundle
+                .current_rule_name
+                .borrow()
+                .as_ref()
+                .is_some_and(|name| {
+                    grammar_attrs
+                        .no_collapse_rules
+                        .is_some_and(|set| set.contains(name))
+                });
+            if type_is_span(&ty) && !no_collapse {
                 return quote! {
                     #parser.many_span(1..)
                 };

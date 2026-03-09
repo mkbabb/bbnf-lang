@@ -1,6 +1,6 @@
 {
     "name": "@mkbabb/bbnf-lang",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "description": "BBNF grammar parser and code generator",
     "type": "module",
     "exports": {
@@ -26,7 +26,7 @@
         "./dist"
     ],
     "dependencies": {
-        "@mkbabb/parse-that": "^0.6.0"
+        "@mkbabb/parse-that": "^0.7.0"
     },
     "devDependencies": {
         "@types/node": "^22.0.0",

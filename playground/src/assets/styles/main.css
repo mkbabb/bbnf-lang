@@ -1,0 +1,130 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+    --color-border: hsl(var(--border));
+    --color-input: hsl(var(--input));
+    --color-ring: hsl(var(--ring));
+    --color-background: hsl(var(--background));
+    --color-foreground: hsl(var(--foreground));
+    --color-primary: hsl(var(--primary));
+    --color-primary-foreground: hsl(var(--primary-foreground));
+    --color-secondary: hsl(var(--secondary));
+    --color-secondary-foreground: hsl(var(--secondary-foreground));
+    --color-destructive: hsl(var(--destructive));
+    --color-destructive-foreground: hsl(var(--destructive-foreground));
+    --color-muted: hsl(var(--muted));
+    --color-muted-foreground: hsl(var(--muted-foreground));
+    --color-accent: hsl(var(--accent));
+    --color-accent-foreground: hsl(var(--accent-foreground));
+    --color-popover: hsl(var(--popover));
+    --color-popover-foreground: hsl(var(--popover-foreground));
+    --color-card: hsl(var(--card));
+    --color-card-foreground: hsl(var(--card-foreground));
+    --color-shadow: hsl(var(--shadow));
+    --color-accent-red: hsl(var(--accent-red));
+    --color-accent-red-foreground: hsl(var(--accent-red-foreground));
+    --color-pastel-green: hsl(var(--pastel-green));
+    --color-pastel-blue: hsl(var(--pastel-blue));
+    --color-pastel-purple: hsl(var(--pastel-purple));
+    --color-pastel-amber: hsl(var(--pastel-amber));
+    --radius-xl: calc(var(--radius) + 4px);
+    --radius-lg: var(--radius);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-sm: calc(var(--radius) - 4px);
+    --font-serif: "Instrument Serif", serif;
+    --font-mono: "Fira Code", monospace;
+}
+
+@layer base {
+    :root {
+        color-scheme: light;
+        --background: 0 0% 100%;
+        --foreground: 222.2 84% 4.9%;
+        --muted: 210 40% 96.1%;
+        --muted-foreground: 215.4 16.3% 46.9%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 222.2 84% 4.9%;
+        --card: 0 0% 100%;
+        --card-foreground: 222.2 84% 4.9%;
+        --border: 214.3 31.8% 91.4%;
+        --input: 214.3 31.8% 91.4%;
+        --primary: 222.2 47.4% 11.2%;
+        --primary-foreground: 210 40% 98%;
+        --secondary: 210 40% 96.1%;
+        --secondary-foreground: 222.2 47.4% 11.2%;
+        --accent: 210 40% 96.1%;
+        --accent-foreground: 222.2 47.4% 11.2%;
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 210 40% 98%;
+        --ring: 222.2 84% 4.9%;
+        --radius: 0.5rem;
+        --shadow: 0, 0%, 65%;
+        --accent-red: 0 72% 63%;
+        --accent-red-foreground: 0 0% 100%;
+        --pastel-green: 152 50% 42%;
+        --pastel-blue: 215 55% 50%;
+        --pastel-purple: 270 45% 55%;
+        --pastel-amber: 30 70% 50%;
+    }
+
+    .dark {
+        color-scheme: dark;
+        --background: 222.2 84% 4.9%;
+        --foreground: 210 40% 98%;
+        --muted: 217.2 32.6% 17.5%;
+        --muted-foreground: 215 20.2% 65.1%;
+        --popover: 222.2 84% 4.9%;
+        --popover-foreground: 210 40% 98%;
+        --card: 222.2 84% 4.9%;
+        --card-foreground: 210 40% 98%;
+        --border: 217.2 32.6% 17.5%;
+        --input: 217.2 32.6% 17.5%;
+        --primary: 210 40% 98%;
+        --primary-foreground: 222.2 47.4% 11.2%;
+        --secondary: 217.2 32.6% 17.5%;
+        --secondary-foreground: 210 40% 98%;
+        --accent: 217.2 32.6% 17.5%;
+        --accent-foreground: 210 40% 98%;
+        --destructive: 0 62.8% 30.6%;
+        --destructive-foreground: 210 40% 98%;
+        --ring: 212.7 26.8% 83.9%;
+        --shadow: 0, 0%, 45%;
+        --accent-red: 5 55% 50%;
+        --accent-red-foreground: 0 0% 95%;
+        --pastel-green: 152 45% 55%;
+        --pastel-blue: 215 50% 62%;
+        --pastel-purple: 270 40% 68%;
+        --pastel-amber: 35 65% 62%;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+    html, body {
+        @apply bg-background text-foreground;
+        overflow: hidden;
+        overscroll-behavior: none;
+        min-height: 100dvh;
+        width: 100vw;
+        margin: 0;
+        padding: 0;
+        font-family: var(--font-mono);
+    }
+}
+
+.instrument-serif {
+    font-family: var(--font-serif);
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-hidden {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}

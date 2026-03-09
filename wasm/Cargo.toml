@@ -1,0 +1,24 @@
+[package]
+name = "bbnf-wasm"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "WASM bindings for BBNF analysis + gorgeous formatting"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+bbnf-analysis = { version = "0.1.0", path = "../rust/bbnf-analysis" }
+gorgeous = "0.1"
+ls-types = "0.0.6"
+wasm-bindgen = "0.2"
+serde = { version = "1", features = ["derive"] }
+serde-wasm-bindgen = "0.6"
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
+[profile.release]
+opt-level = "s"
+lto = true

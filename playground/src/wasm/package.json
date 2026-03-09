@@ -1,0 +1,13 @@
+{
+  "name": "bbnf-wasm",
+  "description": "WASM bindings for BBNF analysis + gorgeous formatting",
+  "version": "0.1.0",
+  "files": [
+    "bbnf_wasm_bg.wasm",
+    "bbnf_wasm.js",
+    "bbnf_wasm.d.ts"
+  ],
+  "module": "bbnf_wasm.js",
+  "types": "bbnf_wasm.d.ts",
+  "sideEffects": false
+}

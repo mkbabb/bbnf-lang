@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "strict": true,
+        "verbatimModuleSyntax": true,
+        "jsx": "preserve",
+        "jsxImportSource": "vue",
+        "skipLibCheck": true,
+        "paths": {
+            "@/*": ["./src/*"]
+        }
+    },
+    "include": ["src/**/*.ts", "src/**/*.vue"],
+    "references": [{ "path": "./tsconfig.node.json" }]
+}

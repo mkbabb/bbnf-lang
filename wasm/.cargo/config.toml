@@ -1,0 +1,8 @@
+# Local development overrides
+[patch.crates-io]
+gorgeous = { path = "../../gorgeous" }
+pprint = { path = "../../pprint/rust" }
+pprint_derive = { path = "../../pprint/rust/derive" }
+parse_that = { path = "../../parse-that/rust/parse_that" }
+bbnf = { path = "../rust/bbnf" }
+bbnf_derive = { path = "../rust/bbnf-derive" }

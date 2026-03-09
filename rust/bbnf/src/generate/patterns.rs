@@ -163,6 +163,69 @@ pub fn check_for_sep_by<'a>(
     }
 }
 
+/// Like `check_for_sep_by` but emits `sep_by_ws` / `sep_by_ws_span` which
+/// fuse whitespace trimming into the sep_by loop, avoiding redundant
+/// double-trims between elements.
+pub fn check_for_sep_by_ws<'a>(
+    expr: &'a Expression<'a>,
+    grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
+    cache_bundle: &'a CacheBundle<'a, '_, '_>,
+    max_depth: usize,
+    depth: usize,
+) -> Option<TokenStream> {
+    match expr {
+        Expression::Group(inner) => {
+            let Token { value, .. } = inner.as_ref();
+            check_for_sep_by_ws(value, grammar_attrs, cache_bundle, max_depth, depth)
+        }
+        Expression::Skip(left_expr, inner)
+            if matches!(inner.as_ref(), Token { value: Expression::Optional(_), .. }) =>
+        {
+            let Token { value: Expression::Optional(right_expr), .. } = inner.as_ref() else {
+                unreachable!("match guard confirmed Expression::Optional")
+            };
+            let left_expr = left_expr.inner();
+            let mut right_expr = right_expr.inner();
+
+            let left_parser = calculate_parser_from_expression(
+                left_expr,
+                grammar_attrs,
+                cache_bundle,
+                max_depth,
+                depth,
+            );
+
+            if let Some(Expression::MappedExpression((t_right_expr, _))) =
+                cache_bundle.inline_cache.borrow().get(right_expr)
+            {
+                right_expr = t_right_expr.inner();
+            }
+
+            let right_parser = calculate_parser_from_expression(
+                right_expr,
+                grammar_attrs,
+                cache_bundle,
+                max_depth,
+                depth,
+            );
+
+            let left_type = calculate_expression_type(left_expr, grammar_attrs, cache_bundle);
+            let right_type = calculate_expression_type(right_expr, grammar_attrs, cache_bundle);
+
+            if type_is_span(&left_type) && type_is_span(&right_type) {
+                Some(quote! {
+                    #left_parser.sep_by_ws_span(#right_parser, ..)
+                })
+            } else {
+                Some(quote! {
+                    #left_parser.sep_by_ws(#right_parser, ..)
+                })
+            }
+        }
+        _ => None,
+    }
+}
+
 pub fn check_for_wrapped<'a>(
     left_expr: &'a Expression<'a>,
     right_expr: &'a Expression<'a>,

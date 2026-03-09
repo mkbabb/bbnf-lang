@@ -420,6 +420,7 @@ dependencies = [
  "memchr",
  "pprint",
  "regex",
+ "smallvec",
 ]
 
 [[package]]

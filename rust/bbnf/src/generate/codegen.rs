@@ -316,6 +316,31 @@ pub fn calculate_parser_from_expression<'a>(
         }
         Expression::OptionalWhitespace(inner_expr) => {
             let inner_expr = inner_expr.inner();
+
+            // Optimization: fuse trim_whitespace into sep_by → sep_by_ws.
+            // When OptionalWhitespace wraps Many(sep_by_pattern), emit
+            // sep_by_ws directly instead of sep_by().trim_whitespace().
+            // Unwrap transparent Group wrappers to find the Many.
+            {
+                let mut unwrapped = inner_expr;
+                while let Expression::Group(inner) = unwrapped {
+                    unwrapped = inner.inner();
+                }
+                if let Expression::Many(many_inner) = unwrapped {
+                    let many_inner_expr = many_inner.inner();
+                    cache_bundle.pretty_preserve_next_concat.set(false);
+                    if let Some(parser) = check_for_sep_by_ws(
+                        many_inner_expr,
+                        grammar_attrs,
+                        cache_bundle,
+                        max_depth,
+                        depth,
+                    ) {
+                        return parser;
+                    }
+                }
+            }
+
             let parser = calculate_parser_from_expression(
                 inner_expr,
                 grammar_attrs,

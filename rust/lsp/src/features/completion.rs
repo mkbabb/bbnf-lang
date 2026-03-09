@@ -9,6 +9,7 @@ const BBNF_KEYWORDS: &[(&str, &str)] = &[
     ("ε", "Empty match"),
     ("@import", "Import rules from another grammar"),
     ("@recover", "Error recovery directive for a rule"),
+    ("@no_collapse", "Prevent span collapse for a rule (preserve Vec<Span>)"),
     ("@pretty", "Formatting hints for pretty-printer output"),
 ];
 
@@ -44,6 +45,29 @@ pub fn completion(state: &DocumentState) -> CompletionResponse {
             ..Default::default()
         });
     }
+
+    // sep("...") hint with snippet.
+    items.push(CompletionItem {
+        label: "sep(\"...\")".to_string(),
+        kind: Some(CompletionItemKind::ENUM_MEMBER),
+        detail: Some("Custom separator string for Vec/tuple items".to_string()),
+        insert_text: Some("sep(\"$1\")".to_string()),
+        insert_text_format: Some(InsertTextFormat::SNIPPET),
+        ..Default::default()
+    });
+
+    // split("...") hint with snippet.
+    items.push(CompletionItem {
+        label: "split(\"...\")".to_string(),
+        kind: Some(CompletionItemKind::ENUM_MEMBER),
+        detail: Some(
+            "Split Span text on delimiter at format time (depth-aware, respects ()[] and quotes)"
+                .to_string(),
+        ),
+        insert_text: Some("split(\"$1\")".to_string()),
+        insert_text_format: Some(InsertTextFormat::SNIPPET),
+        ..Default::default()
+    });
 
     CompletionResponse::Array(items)
 }

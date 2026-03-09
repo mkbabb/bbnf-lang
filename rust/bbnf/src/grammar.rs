@@ -8,10 +8,11 @@ use parse_that::{
 
 use crate::types::*;
 
-/// Helper enum for interleaving imports, recovers, pretties, and rules during parsing.
+/// Helper enum for interleaving imports, recovers, no_collapses, pretties, and rules during parsing.
 enum TopLevelItem<'a> {
     Import(ImportDirective<'a>),
     Recover(RecoverDirective<'a>),
+    NoCollapse(NoCollapseDirective<'a>),
     Pretty(PrettyDirective<'a>),
     Rule(Expression<'a>),
 }
@@ -369,15 +370,57 @@ impl<'a> BBNFGrammar<'a> {
             })
     }
 
+    /// Parse an `@no_collapse` directive:
+    /// `@no_collapse ruleName ;`
+    fn no_collapse_directive() -> Parser<'a, NoCollapseDirective<'a>> {
+        string("@no_collapse")
+            .trim_whitespace()
+            .next(Self::identifier().trim_whitespace())
+            .skip(any_span(&[";", "."]).opt().trim_whitespace())
+            .map_with_state(|name_span, prev_offset, state| NoCollapseDirective {
+                rule_name: Cow::Borrowed(name_span.as_str()),
+                span: Span::new(prev_offset, state.offset, state.src),
+            })
+    }
+
+    /// Parse a `sep("...")` hint: `sep("literal string")`.
+    fn sep_hint() -> Parser<'a, Span<'a>> {
+        let not_quote = take_while_span(|c| c != '"' && c != '\\');
+        let escaped = string_span(r"\").then_span(next_span(1));
+        let quoted_content = (not_quote | escaped)
+            .many_span(..)
+            .wrap_span(string_span("\""), string_span("\""));
+        // Match `sep(` ... `)` and return the whole span including sep("...").
+        string_span("sep(")
+            .then_span(quoted_content)
+            .then_span(string_span(")"))
+    }
+
+    /// Parse a `split("...")` hint: `split("delimiter string")`.
+    fn split_hint() -> Parser<'a, Span<'a>> {
+        let not_quote = take_while_span(|c| c != '"' && c != '\\');
+        let escaped = string_span(r"\").then_span(next_span(1));
+        let quoted_content = (not_quote | escaped)
+            .many_span(..)
+            .wrap_span(string_span("\""), string_span("\""));
+        // Match `split(` ... `)` and return the whole span including split("...").
+        string_span("split(")
+            .then_span(quoted_content)
+            .then_span(string_span(")"))
+    }
+
     /// Parse a `@pretty` directive:
     /// `@pretty ruleName hint1 hint2 ... ;`
+    /// Hints can be identifiers (e.g. `group`), `sep("...")`, or `split("...")` expressions.
     fn pretty_directive() -> Parser<'a, PrettyDirective<'a>> {
+        let hint = Self::sep_hint() | Self::split_hint() | Self::identifier();
+
         string("@pretty")
             .trim_whitespace()
             .next(
                 Self::identifier()
                     .trim_whitespace()
-                    .then(Self::identifier().trim_whitespace().many(1..)),
+                    .then(hint.trim_whitespace().many(1..)),
             )
             .skip(any_span(&[";", "."]).opt().trim_whitespace())
             .map_with_state(|(name_span, hints), prev_offset, state| PrettyDirective {
@@ -404,6 +447,9 @@ impl<'a> BBNFGrammar<'a> {
         let recover = Self::skip_comments()
             .next(Self::recover_directive().trim_whitespace())
             .map(TopLevelItem::Recover);
+        let no_collapse = Self::skip_comments()
+            .next(Self::no_collapse_directive().trim_whitespace())
+            .map(TopLevelItem::NoCollapse);
         let pretty = Self::skip_comments()
             .next(Self::pretty_directive().trim_whitespace())
             .map(TopLevelItem::Pretty);
@@ -411,17 +457,19 @@ impl<'a> BBNFGrammar<'a> {
             .next(Self::production_rule().trim_whitespace())
             .map(TopLevelItem::Rule);
 
-        let item = import | recover | pretty | rule;
+        let item = import | recover | no_collapse | pretty | rule;
 
         Self::skip_comments().next(item.many(..)).map(|items| {
             let mut imports = Vec::new();
             let mut recovers = Vec::new();
+            let mut no_collapses = Vec::new();
             let mut pretties = Vec::new();
             let mut rules_vec = Vec::new();
             for item in items {
                 match item {
                     TopLevelItem::Import(imp) => imports.push(imp),
                     TopLevelItem::Recover(rec) => recovers.push(rec),
+                    TopLevelItem::NoCollapse(nc) => no_collapses.push(nc),
                     TopLevelItem::Pretty(p) => pretties.push(p),
                     TopLevelItem::Rule(r) => rules_vec.push(r),
                 }
@@ -436,6 +484,7 @@ impl<'a> BBNFGrammar<'a> {
             ParsedGrammar {
                 imports,
                 recovers,
+                no_collapses,
                 pretties,
                 rules: ast,
             }

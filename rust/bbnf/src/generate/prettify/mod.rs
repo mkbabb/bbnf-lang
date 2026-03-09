@@ -17,7 +17,7 @@ use super::type_inference::*;
 use super::types::*;
 
 use heuristics::{HeuristicContext, resolve_mode};
-use hints::is_valid_hint;
+use hints::{extract_sep_string, extract_split_delim, is_valid_hint};
 
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
@@ -291,10 +291,86 @@ pub fn generate_prettify(
 // ---------------------------------------------------------------------------
 
 fn generate_span_doc(variant: &syn::Ident, hints: &[String]) -> TokenStream {
-    let base = quote! { ::pprint::Doc::String(::std::borrow::Cow::Borrowed(s.as_str())) };
-    let doc = apply_hints(base, hints);
-    quote! {
-        Self::#variant(s) => { #doc }
+    // Check for split("...") hint — split the span text at format time.
+    let split_delim = hints.iter().find_map(|h| extract_split_delim(h));
+
+    if let Some(delim_str) = split_delim {
+        // The delimiter must be a single ASCII byte.
+        let delim_byte = delim_str.as_bytes()[0];
+        let delim_lit = proc_macro2::Literal::u8_suffixed(delim_byte);
+
+        // Determine the separator Doc from a co-occurring sep("...") hint.
+        let custom_sep = hints.iter().find_map(|h| extract_sep_string(h));
+        let has_group = hints.contains(&"group".to_string());
+
+        let sep_doc = if let Some(sep_str) = custom_sep {
+            if has_group {
+                let sep_lit = proc_macro2::Literal::string(sep_str);
+                let break_sep = sep_str.trim_end();
+                let break_lit = proc_macro2::Literal::string(break_sep);
+                quote! {
+                    ::pprint::Doc::IfBreak(
+                        Box::new(
+                            ::pprint::Doc::String(::std::borrow::Cow::Borrowed(#break_lit))
+                            + ::pprint::Doc::Hardline
+                        ),
+                        Box::new(
+                            ::pprint::Doc::String(::std::borrow::Cow::Borrowed(#sep_lit))
+                        ),
+                    )
+                }
+            } else {
+                let sep_lit = proc_macro2::Literal::string(sep_str);
+                quote! { ::pprint::Doc::String(::std::borrow::Cow::Borrowed(#sep_lit)) }
+            }
+        } else {
+            // Default separator: IfBreak(Hardline, Space)
+            quote! {
+                ::pprint::Doc::IfBreak(
+                    Box::new(::pprint::Doc::Hardline),
+                    Box::new(::pprint::Doc::String(::std::borrow::Cow::Borrowed(" ")))
+                )
+            }
+        };
+
+        let base = quote! {
+            {
+                let text = s.as_str();
+                // Fast path: skip split_balanced + Vec alloc when delimiter is absent.
+                if ::parse_that::contains_delimiter(text, #delim_lit) {
+                    let parts = ::parse_that::split_balanced(text, #delim_lit);
+                    if parts.len() > 1 {
+                        let sep = #sep_doc;
+                        let docs: Vec<::pprint::Doc<'a>> = parts.iter()
+                            .map(|s| ::pprint::Doc::String(::std::borrow::Cow::Borrowed(s.trim())))
+                            .collect();
+                        ::pprint::Doc::Join(Box::new((sep, docs)))
+                    } else {
+                        ::pprint::Doc::String(::std::borrow::Cow::Borrowed(text))
+                    }
+                } else {
+                    ::pprint::Doc::String(::std::borrow::Cow::Borrowed(text))
+                }
+            }
+        };
+
+        // Apply remaining hints (group, indent, etc.), filtering out split/sep
+        // which are already consumed above.
+        let filtered_hints: Vec<String> = hints
+            .iter()
+            .filter(|h| !hints::is_split_hint(h) && !hints::is_sep_hint(h))
+            .cloned()
+            .collect();
+        let doc = apply_hints(base, &filtered_hints);
+        quote! {
+            Self::#variant(s) => { #doc }
+        }
+    } else {
+        let base = quote! { ::pprint::Doc::String(::std::borrow::Cow::Borrowed(s.as_str())) };
+        let doc = apply_hints(base, hints);
+        quote! {
+            Self::#variant(s) => { #doc }
+        }
     }
 }
 
@@ -329,8 +405,34 @@ fn generate_vec_doc(
     ty: &syn::Type,
     hints: &[String],
 ) -> TokenStream {
+    // Check for sep("...") hint.
+    let custom_sep = hints.iter().find_map(|h| extract_sep_string(h));
+
     // Default: softline-separated join of items.
-    let sep = if hints.contains(&"blankline".to_string()) {
+    let sep = if let Some(sep_str) = custom_sep {
+        let has_group = hints.contains(&"group".to_string());
+        if has_group {
+            // With group: IfBreak — when the Group breaks, emit the separator
+            // (trimmed of trailing spaces) + hardline; when inline, emit as-is.
+            let sep_lit = proc_macro2::Literal::string(sep_str);
+            let break_sep = sep_str.trim_end();
+            let break_lit = proc_macro2::Literal::string(break_sep);
+            quote! {
+                ::pprint::Doc::IfBreak(
+                    Box::new(
+                        ::pprint::Doc::String(::std::borrow::Cow::Borrowed(#break_lit))
+                        + ::pprint::Doc::Hardline
+                    ),
+                    Box::new(
+                        ::pprint::Doc::String(::std::borrow::Cow::Borrowed(#sep_lit))
+                    ),
+                )
+            }
+        } else {
+            let sep_lit = proc_macro2::Literal::string(sep_str);
+            quote! { ::pprint::Doc::String(::std::borrow::Cow::Borrowed(#sep_lit)) }
+        }
+    } else if hints.contains(&"blankline".to_string()) {
         quote! { ::pprint::Doc::Hardline + ::pprint::Doc::Hardline }
     } else if hints.contains(&"block".to_string())
         || hints.contains(&"fast".to_string())
@@ -469,9 +571,33 @@ fn generate_compound_doc(
         let combined = if parts.len() == 1 {
             parts[0].clone()
         } else {
+            // Check for sep("...") hint.
+            let custom_sep = hints.iter().find_map(|h| extract_sep_string(h));
+
             // Interleave with spaces or softlines using concat() to dispatch to
             // DoubleDoc/TripleDoc for 2-3 elements, avoiding Vec heap allocation.
-            let sep = if hints.contains(&"fast".to_string())
+            let sep = if let Some(sep_str) = custom_sep {
+                let has_group = hints.contains(&"group".to_string());
+                if has_group {
+                    let sep_lit = proc_macro2::Literal::string(sep_str);
+                    let break_sep = sep_str.trim_end();
+                    let break_lit = proc_macro2::Literal::string(break_sep);
+                    quote! {
+                        ::pprint::Doc::IfBreak(
+                            Box::new(
+                                ::pprint::Doc::String(::std::borrow::Cow::Borrowed(#break_lit))
+                                + ::pprint::Doc::Hardline
+                            ),
+                            Box::new(
+                                ::pprint::Doc::String(::std::borrow::Cow::Borrowed(#sep_lit))
+                            ),
+                        )
+                    }
+                } else {
+                    let sep_lit = proc_macro2::Literal::string(sep_str);
+                    quote! { ::pprint::Doc::String(::std::borrow::Cow::Borrowed(#sep_lit)) }
+                }
+            } else if hints.contains(&"fast".to_string())
                 || hints.contains(&"hardbreak".to_string())
                 || hints.contains(&"block".to_string())
             {
@@ -706,6 +832,9 @@ fn generate_key_value_doc(
 fn apply_hints(doc: TokenStream, hints: &[String]) -> TokenStream {
     let mut result = doc;
     for hint in hints {
+        if hints::is_sep_hint(hint) || hints::is_split_hint(hint) {
+            continue; // sep/split are handled at separator selection, not as wrappers.
+        }
         result = match hint.as_str() {
             "group" => quote! { ::pprint::Doc::Group(Box::new(#result)) },
             "indent" => quote! { ::pprint::Doc::Indent(Box::new(#result)) },
@@ -721,6 +850,9 @@ fn apply_hints(doc: TokenStream, hints: &[String]) -> TokenStream {
 fn apply_outer_hints(doc: TokenStream, hints: &[String]) -> TokenStream {
     let mut result = doc;
     for hint in hints {
+        if hints::is_sep_hint(hint) || hints::is_split_hint(hint) {
+            continue; // sep/split are handled at separator selection, not as wrappers.
+        }
         result = match hint.as_str() {
             "group" => quote! { ::pprint::Doc::Group(Box::new(#result)) },
             "indent" => quote! { ::pprint::Doc::Indent(Box::new(#result)) },

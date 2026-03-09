@@ -12,7 +12,7 @@ path = "src/lib.rs"
 
 [dependencies]
 pprint = "0.3"
-parse_that = "0.2"
+parse_that = "0.3"
 
 regex = { version = "1.11", features = ["perf"] }
 

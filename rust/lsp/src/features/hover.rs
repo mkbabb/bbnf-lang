@@ -1,4 +1,4 @@
-use bbnf::generate::prettify::hints::hint_description;
+use bbnf::generate::prettify::hints::{hint_description, is_sep_hint, is_split_hint};
 use tower_lsp_server::ls_types::*;
 
 use crate::analysis::{symbol_at_offset, SymbolAtOffset};
@@ -95,8 +95,14 @@ fn hover_pretty(state: &DocumentState, offset: usize) -> Option<Hover> {
         for (i, hint) in pretty.hints.iter().enumerate() {
             if let Some(&(start, end)) = pretty.hint_spans.get(i) {
                 if offset >= start && offset <= end {
-                    let desc = hint_description(hint)
-                        .unwrap_or_else(|| panic!("Unknown @pretty hint encountered in hover: `{}`", hint));
+                    let desc = if is_sep_hint(hint) {
+                        "Custom separator string for Vec/tuple items"
+                    } else if is_split_hint(hint) {
+                        "Split Span text on delimiter at format time (depth-aware, respects ()[] and quotes)"
+                    } else {
+                        hint_description(hint)
+                            .unwrap_or_else(|| panic!("Unknown @pretty hint encountered in hover: `{}`", hint))
+                    };
                     let content = format!(
                         "`@pretty` hint: **{}**\n\n{}",
                         hint, desc

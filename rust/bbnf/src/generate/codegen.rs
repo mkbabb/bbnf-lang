@@ -186,16 +186,37 @@ pub fn calculate_parser_from_expression<'a>(
             // The JSON grammar's string regex uses memchr2-based SIMD scanning which is
             // dramatically faster than the general-purpose NFA for string-heavy workloads.
             if is_json_string_regex(value) {
-                let parser = quote! { ::parse_that::sp_json_string_quoted() };
+                let parser = quote! { ::parse_that::sp_json_string_quoted().into_parser() };
                 map_span_if_needed(parser, true, grammar_attrs)
             } else if is_json_number_regex(value) {
-                let parser = quote! { ::parse_that::sp_json_number() };
+                let parser = quote! { ::parse_that::sp_json_number().into_parser() };
                 map_span_if_needed(parser, true, grammar_attrs)
-            } else if let Some(excluded) = is_negated_char_class_regex(value) {
-                // Negated character class `[^XYZ]+` → LUT byte scan (10-15x faster than regex NFA)
-                let excluded_bytes = proc_macro2::Literal::byte_string(excluded.as_bytes());
-                let parser = quote! { ::parse_that::take_until_any_span(#excluded_bytes) };
+            } else if is_css_ws_comment_regex(value) {
+                let parser = quote! { ::parse_that::sp_css_ws_comment().into_parser() };
                 map_span_if_needed(parser, true, grammar_attrs)
+            } else if is_css_ident_regex(value) {
+                let parser = quote! { ::parse_that::sp_css_ident().into_parser() };
+                map_span_if_needed(parser, true, grammar_attrs)
+            } else if is_css_string_regex(value) {
+                let parser = quote! { ::parse_that::sp_css_string().into_parser() };
+                map_span_if_needed(parser, true, grammar_attrs)
+            } else if let Some((excluded, quantifier)) = is_negated_char_class_regex(value) {
+                if quantifier == NegCharClassQuantifier::Plus {
+                    // `[^XYZ]+` → LUT byte scan (10-15x faster than regex NFA)
+                    let excluded_bytes = proc_macro2::Literal::byte_string(excluded.as_bytes());
+                    let parser = quote! { ::parse_that::take_until_any_span(#excluded_bytes) };
+                    map_span_if_needed(parser, true, grammar_attrs)
+                } else {
+                    // `[^XYZ]*` (zero-or-more) — fall through to regex since
+                    // take_until_any_span requires 1+ match. These patterns are
+                    // typically in low-frequency rules (e.g. genericAtRule body).
+                    get_and_parse_default_parser(
+                        "REGEX",
+                        Some(quote! { #value }),
+                        grammar_attrs,
+                    )
+                    .unwrap()
+                }
             } else {
                 // Invariant: "REGEX" is a hardcoded key in DEFAULT_PARSERS and always exists.
                 get_and_parse_default_parser(

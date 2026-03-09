@@ -38,7 +38,8 @@ pub fn generate_prettify(
     let enum_ident = grammar_attrs.enum_ident;
     let has_recovers = grammar_attrs
         .recovers
-        .is_some_and(|r| !r.is_empty());
+        .is_some_and(|r| !r.is_empty())
+        && !grammar_attrs.parser_container_attrs.skip_recover;
 
     let mut to_doc_arms = Vec::new();
     let mut source_range_arms = Vec::new();
@@ -598,33 +599,29 @@ fn generate_wrapped_doc(
     let is_vec = is_vec_type(ty);
 
     if is_vec {
-        let join_expr = if hints.contains(&"fast".to_string()) {
-            quote! {
-                ::pprint::Doc::Join(
-                    Box::new((
-                        ::pprint::Doc::String(::std::borrow::Cow::Borrowed(", ")),
-                        items_docs,
-                    ))
-                )
-            }
-        } else {
-            quote! {
-                ::pprint::Doc::SmartJoin(
-                    Box::new((
-                        ::pprint::Doc::String(::std::borrow::Cow::Borrowed(", ")),
-                        items_docs,
-                    ))
-                )
-            }
-        };
-
         let base = quote! {
             {
                 let items_docs: Vec<::pprint::Doc<'a>> = items.iter().map(|item| item.to_doc()).collect();
                 if items_docs.is_empty() {
                     ::pprint::Doc::String(::std::borrow::Cow::Borrowed(concat!(#left, #right)))
                 } else {
-                    // IfBreak: Hardline when the Group breaks, nothing when it fits inline.
+                    // IfBreak separator: when Group breaks → ",\n" (one item per line),
+                    // when it fits → ", " (inline).
+                    let break_sep = ::pprint::Doc::IfBreak(
+                        Box::new(
+                            ::pprint::Doc::Char(b',')
+                            + ::pprint::Doc::Hardline
+                        ),
+                        Box::new(
+                            ::pprint::Doc::String(::std::borrow::Cow::Borrowed(", "))
+                        ),
+                    );
+                    // Build concat of items with IfBreak separators so break_mode
+                    // propagates from the enclosing Group to each separator.
+                    let mut body = items_docs[0].clone();
+                    for item in &items_docs[1..] {
+                        body = body + break_sep.clone() + item.clone();
+                    }
                     let line_or_nothing = ::pprint::Doc::IfBreak(
                         Box::new(::pprint::Doc::Hardline),
                         Box::new(::pprint::Doc::Null),
@@ -632,7 +629,7 @@ fn generate_wrapped_doc(
                     ::pprint::Doc::Group(Box::new(
                         ::pprint::Doc::String(::std::borrow::Cow::Borrowed(#left))
                             + ::pprint::Doc::Indent(Box::new(
-                                line_or_nothing.clone() + #join_expr
+                                line_or_nothing.clone() + body
                             ))
                             + line_or_nothing
                             + ::pprint::Doc::String(::std::borrow::Cow::Borrowed(#right))

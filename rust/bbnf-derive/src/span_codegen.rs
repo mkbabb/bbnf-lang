@@ -44,9 +44,10 @@ pub(crate) fn generate_enum(
 
     let enum_ident = &grammar_attrs.enum_ident;
 
-    // Add Recovered variant if any @recover directives exist.
+    // Add Recovered variant if any @recover directives exist (and skip_recover is not set).
     let has_recovers = grammar_attrs.recovers
-        .is_some_and(|r| !r.is_empty());
+        .is_some_and(|r| !r.is_empty())
+        && !grammar_attrs.parser_container_attrs.skip_recover;
 
     let recovered_variant = if has_recovers {
         quote! { , Recovered }
@@ -144,9 +145,14 @@ fn try_generate_span_expr<'a>(
                 Some(quote! { ::parse_that::sp_css_ident() })
             } else if bbnf::generate::is_css_string_regex(value) {
                 Some(quote! { ::parse_that::sp_css_string() })
-            } else if let Some(excluded) = bbnf::generate::is_negated_char_class_regex(value) {
+            } else if let Some((excluded, quantifier)) = bbnf::generate::is_negated_char_class_regex(value) {
                 let excluded_bytes = proc_macro2::Literal::byte_string(excluded.as_bytes());
-                Some(quote! { ::parse_that::sp_take_until_any(#excluded_bytes) })
+                if quantifier == bbnf::generate::NegCharClassQuantifier::Plus {
+                    Some(quote! { ::parse_that::sp_take_until_any(#excluded_bytes) })
+                } else {
+                    // `[^...]*` — SpanParser's opt_span handles zero-match
+                    Some(quote! { ::parse_that::sp_take_until_any(#excluded_bytes).opt_span() })
+                }
             } else {
                 let pattern = value.as_ref();
                 Some(quote! { ::parse_that::sp_regex(#pattern) })
@@ -306,6 +312,8 @@ where
         };
 
         // Apply @recover wrapping if this rule has a recovery directive.
+        // Skip when `skip_recover` is set (e.g. formatting well-formed input).
+        if !grammar_attrs.parser_container_attrs.skip_recover {
         if let Some(recovers) = grammar_attrs.recovers {
             if let Some(sync_expr) = recovers.get(name.as_ref()) {
                 let sync_parser = bbnf::compile_sync_expression(sync_expr);
@@ -322,6 +330,7 @@ where
                     }
                 };
             }
+        }
         }
 
         methods.push(quote! {

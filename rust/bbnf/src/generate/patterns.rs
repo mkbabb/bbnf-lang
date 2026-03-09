@@ -365,15 +365,35 @@ pub fn is_css_string_regex(pattern: &str) -> bool {
     CSS_STRING_REGEX_PATTERNS.contains(&pattern)
 }
 
-/// Detect a negated character class regex of the form `[^XYZ]+` and return the
-/// excluded bytes. These patterns scan until any excluded byte is found—perfectly
-/// suited for `take_until_any_span()` which uses a 256-byte LUT instead of NFA.
+/// Whether a negated character class uses `+` (one-or-more) or `*` (zero-or-more).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NegCharClassQuantifier {
+    Plus,
+    Star,
+}
+
+/// Detect a negated character class regex of the form `[^XYZ]+` or `[^XYZ]*`
+/// and return the excluded bytes and quantifier. These patterns scan until any
+/// excluded byte is found—perfectly suited for `take_until_any_span()` which
+/// uses a 256-byte LUT instead of NFA.
 ///
-/// Matches patterns like `/[^;{}!,]+/`, `/[^{};]+/`, `/[^"\\]+/` etc.
-/// Returns `Some(excluded_bytes)` with the raw byte string content, or None.
-pub fn is_negated_char_class_regex(pattern: &str) -> Option<String> {
-    // Must be exactly `[^...]+` — no prefix, no suffix, no alternation
-    let inner = pattern.strip_prefix("[^")?.strip_suffix("]+")?;
+/// Matches patterns like `/[^;{}!,]+/`, `/[^{};]+/`, `/[^"\\]+/`, `/[^;{}]*/`.
+/// Returns `Some((excluded_bytes, quantifier))` or None.
+pub fn is_negated_char_class_regex(pattern: &str) -> Option<(String, NegCharClassQuantifier)> {
+    // Strip the `[^` prefix
+    let rest = pattern.strip_prefix("[^")?;
+
+    // Find the closing `]+` or `]*` — no prefix, no suffix, no alternation.
+    // Compound suffixes like `[^{};]+[^\s{};]` are NOT handled because the
+    // trailing assertion changes semantics (e.g. trimming trailing whitespace)
+    // that a simple LUT scan can't replicate.
+    let (inner, quantifier) = if let Some(inner) = rest.strip_suffix("]+") {
+        (inner, NegCharClassQuantifier::Plus)
+    } else if let Some(inner) = rest.strip_suffix("]*") {
+        (inner, NegCharClassQuantifier::Star)
+    } else {
+        return None;
+    };
 
     // Validate: only ASCII printable characters and simple backslash escapes
     let mut chars = inner.chars().peekable();
@@ -406,7 +426,7 @@ pub fn is_negated_char_class_regex(pattern: &str) -> Option<String> {
         return None;
     }
 
-    Some(excluded)
+    Some((excluded, quantifier))
 }
 
 pub fn check_for_any_span(exprs: &[Expression]) -> Option<TokenStream> {

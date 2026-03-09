@@ -79,6 +79,9 @@ fn parse_parser_attrs(attrs: &[Attribute]) -> ParserAttributes {
                 Meta::Path(p) if p.is_ident("prettify") => {
                     parser_attr.prettify = true;
                 }
+                Meta::Path(p) if p.is_ident("skip_recover") => {
+                    parser_attr.skip_recover = true;
+                }
                 _ => {}
             }
         }

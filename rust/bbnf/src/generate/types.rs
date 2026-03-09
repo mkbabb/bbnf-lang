@@ -20,6 +20,7 @@ pub struct ParserAttributes {
     pub use_string: bool,
     pub remove_left_recursion: bool,
     pub prettify: bool,
+    pub skip_recover: bool,
 }
 
 pub struct GeneratedNonterminalParser {

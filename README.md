@@ -14,8 +14,10 @@ rust/                   Rust workspace
   bbnf/                 BBNF grammar framework (lib)
   bbnf-derive/          Proc-macro derive for BBNF
   lsp/                  Language Server Protocol server
+wasm/                   bbnf-wasm crate (wasm-pack → playground)
 typescript/             TS library (@mkbabb/bbnf-lang)
 prettier-plugin-bbnf/   Prettier plugin for .bbnf files
+playground/             Vue 3 + Monaco playground (uses bbnf-wasm)
 extension/              VS Code extension (LSP client)
 grammar/                Example grammars + language specification
   css/                  CSS grammar family (value-unit, color, values, selectors, keyframes, stylesheet)
@@ -189,6 +191,9 @@ npm ci && cd typescript && npm run build && cd ../prettier-plugin-bbnf && npm te
 
 # Extension
 cd extension && npm ci && npm run build
+
+# WASM (builds into playground/src/wasm/)
+cd wasm && wasm-pack build --target web --out-dir ../playground/src/wasm
 ```
 
 ## Development

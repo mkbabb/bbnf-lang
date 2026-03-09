@@ -12,8 +12,11 @@ bbnf-lang/
 │   ├── bbnf/                   Core grammar parser, analysis, codegen (lib)
 │   ├── bbnf-derive/            Proc-macro: #[derive(Parser)] from .bbnf files
 │   └── lsp/                    Language server (bbnf-lsp binary)
+├── wasm/                       bbnf-wasm crate (wasm-pack → playground)
 ├── typescript/                 @mkbabb/bbnf-lang — runtime parser + codegen
 ├── prettier-plugin-bbnf/       Prettier plugin for .bbnf formatting
+├── playground/                 Vue 3 + Monaco playground (uses bbnf-wasm)
+│   └── src/composables/wasm/   WASM bridge: types.ts, loader.ts, index.ts
 ├── extension/                  VS Code extension (LSP client)
 ├── grammar/                    Example grammars + language specification
 ├── server/                     Compiled LSP binary (copied by Makefile)
@@ -50,6 +53,9 @@ npm ci && cd typescript && npm run build && cd ../prettier-plugin-bbnf && npm te
 
 # Extension
 cd extension && npm ci && npm run build
+
+# WASM (builds into playground/src/wasm/)
+cd wasm && wasm-pack build --target web --out-dir ../playground/src/wasm
 ```
 
 ## Development
@@ -83,6 +89,8 @@ Rust:                                 NPM:
                       bbnf_derive
                           ↓
                        gorgeous
+                          ↓
+                      bbnf_wasm (wasm-pack → playground)
 ```
 
 bbnf and bbnf_derive sit in the middle of the Rust crate graph.
@@ -107,3 +115,26 @@ bbnf-lsp uses workspace-relative paths to bbnf; cross-repo deps are version-only
 - **Type comparison**: `types_eq()` compares `syn::Type` structurally via per-token-tree comparison—no string serialization.
 - **Sub-variant validation**: `validate_sub_variant_uniqueness()` rejects cross-rule type collisions at compile time.
 - **JSON pattern detection**: Exact-match against canonical regex patterns (no substring heuristics). `is_json_string_regex()` / `is_json_number_regex()` use `const` pattern arrays.
+- **WASM**: `wasm/` crate (`bbnf-wasm`) — 13 exports total: 5 formatters (json/css/bnf/ebnf/bbnf) + `analyze_grammar` + `hover_at_offset` + `completions` + 8 LSP features. `gorgeous-wasm` repo deleted (redundant — `bbnf-wasm` already exports the same formatters).
+- **Playground composables**: `composables/wasm/{types,loader,index}.ts` replaces monolithic `useWasm.ts`. `useLanguageProvider.ts` registers 10 Monaco providers: hover, completion, semantic tokens, inlay hints, definition, document symbols, folding, selection ranges, code actions, code lens.
+
+## Roadmap
+
+### Landing Page
+- Replace bare playground with proper landing page at `/`
+- Hero section: BBNF branding, tagline, CTA linking to playground
+- Expand `HeaderRibbon` into full nav bar with route links
+- Routes: `/` = landing, `/playground` = current playground, `/docs` = documentation
+
+### Documentation Page
+- Dynamic docs rendered from markdown at `/docs/:slug`
+- File-system or frontmatter-based routing (`docs/*.md` → slug)
+- Sidebar nav auto-generated from markdown headings/structure
+- Code blocks with syntax highlighting (reuse Monaco)
+- API reference: grammar syntax, directives (`@pretty`, `@recover`, `@no_collapse`, `@import`, `skip_recover`), hint vocabulary
+
+### Playground Walk-Through Demos
+- Guided interactive tutorials that load grammar + input pairs
+- Step-by-step progression with tooltip/overlay annotations per feature
+- Progress tracking through demo steps
+- Starter demos: "Build a JSON parser", "Add error recovery", "Format with `@pretty`"

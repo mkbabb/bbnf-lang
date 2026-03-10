@@ -74,7 +74,8 @@ const sourceLabels: Record<string, string> = {
 </script>
 
 <template>
-    <div class="flex items-center justify-between px-2 sm:px-4 pb-2 pt-1 gap-2">
+    <div class="flex justify-center px-2 sm:px-4 pb-2 pt-1">
+      <div class="flex items-center justify-between gap-3 w-full md:w-fit md:min-w-[20rem] px-3 py-1.5 rounded-full border border-border/30 bg-card/60 backdrop-blur-sm shadow-lg">
         <!-- Left: Example selector -->
         <Select
             :model-value="currentExample.name"
@@ -189,6 +190,7 @@ const sourceLabels: Record<string, string> = {
                 </div>
             </DialogContent>
         </Dialog>
+      </div>
     </div>
 </template>
 

@@ -4,15 +4,17 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Slider } from "@/components/ui/slider";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
-import {
-    HoverCardRoot,
-    HoverCardTrigger,
-    HoverCardPortal,
-    HoverCardContent,
-} from "reka-ui";
 import { AlertCircle, Loader2, Settings2 } from "lucide-vue-next";
 import type { PipelineError } from "@/composables/usePipeline";
 import type { Example } from "@/composables/useExamples";
+
+const exampleIcons: Record<string, string> = {
+    JSON: "/icons/json.svg",
+    CSS: "/icons/css.svg",
+    BBNF: "/icons/bbnf.svg",
+    Math: "/icons/js.svg",
+    Hello: "/icons/text.svg",
+};
 
 const props = defineProps<{
     examples: Example[];
@@ -81,35 +83,24 @@ const sourceLabels: Record<string, string> = {
             :model-value="currentExample.name"
             @update:model-value="(v: string) => emit('selectExample', v)"
         >
-            <SelectTrigger class="w-auto h-8 md:h-10 border-none bg-transparent shadow-none px-2 gap-1.5 instrument-serif text-sm md:text-lg text-foreground rounded-lg">
-                <SelectValue placeholder="Example" />
+            <SelectTrigger class="w-auto h-8 md:h-10 border-none bg-transparent shadow-none px-1 gap-1.5 instrument-serif text-sm md:text-lg text-foreground rounded-lg [&>span]:flex [&>span]:items-center [&>span]:gap-1.5">
+                <SelectValue>
+                    <img :src="exampleIcons[currentExample.name] ?? '/icons/text.svg'" alt="" class="h-4 w-4 md:h-5 md:w-5 shrink-0" />
+                    <span :class="shimmerClass(currentExample.name)">{{ currentExample.name }}</span>
+                </SelectValue>
             </SelectTrigger>
-            <SelectContent align="start" :side-offset="8">
-                <SelectItem v-for="ex in examples" :key="ex.name" :value="ex.name">
-                    <HoverCardRoot :open-delay="400">
-                        <HoverCardTrigger as-child>
-                            <span :class="shimmerClass(ex.name)">{{ ex.name }}</span>
-                        </HoverCardTrigger>
-                        <HoverCardPortal>
-                            <HoverCardContent
-                                side="right"
-                                :side-offset="12"
-                                class="w-64 rounded-xl border border-border/40 bg-card/90 backdrop-blur-xl p-3 shadow-lg z-[100]"
-                            >
-                                <p class="instrument-serif text-base mb-1">{{ ex.name }}</p>
-                                <p class="text-xs text-muted-foreground mb-2">{{ ex.description }}</p>
-                                <div v-if="ex.tags?.length" class="flex flex-wrap gap-1">
-                                    <span
-                                        v-for="tag in ex.tags"
-                                        :key="tag"
-                                        class="rounded-full bg-muted/40 px-2 py-0.5 text-[10px] text-muted-foreground"
-                                    >
-                                        {{ tag }}
-                                    </span>
-                                </div>
-                            </HoverCardContent>
-                        </HoverCardPortal>
-                    </HoverCardRoot>
+            <SelectContent align="start" :side-offset="8" class="min-w-[16rem]">
+                <SelectItem
+                    v-for="ex in examples"
+                    :key="ex.name"
+                    :value="ex.name"
+                    class="instrument-serif rounded-md py-2 pl-9 pr-3 cursor-pointer transition-colors hover:bg-accent/60"
+                >
+                    <span class="flex items-center gap-2">
+                        <img :src="exampleIcons[ex.name] ?? '/icons/text.svg'" alt="" class="h-4 w-4 shrink-0" />
+                        <span class="text-sm" :class="shimmerClass(ex.name)">{{ ex.name }}</span>
+                        <span class="text-[11px] text-muted-foreground truncate ml-1">{{ ex.description }}</span>
+                    </span>
                 </SelectItem>
             </SelectContent>
         </Select>

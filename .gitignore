@@ -19,5 +19,7 @@ extension/server/
 # Playwright MCP
 .playwright-mcp/
 
+scripts/
+
 # Screenshot artifacts (root only, not assets/)
 /*.png

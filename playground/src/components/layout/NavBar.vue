@@ -33,7 +33,7 @@ const navLinksStyle = computed(() => {
     const tx = (1 - p) * -100;
     return {
         transform: `translateX(${tx}px)`,
-        transition: 'transform 0.1s ease-out',
+        transition: 'transform 0.15s ease-out',
     };
 });
 
@@ -49,7 +49,7 @@ function isActive(to: string) {
 
 <template>
     <nav
-        class="fixed top-0 left-0 right-0 z-40 h-14 flex items-center px-3 sm:px-5 transition-colors duration-300 border-b"
+        class="fixed top-0 left-0 right-0 z-50 h-14 flex items-center px-3 sm:px-5 transition-colors duration-300 border-b"
         :class="navOpaque
             ? 'backdrop-blur-xl bg-background/95 border-border/30 shadow-sm'
             : 'bg-transparent border-transparent'"
@@ -99,13 +99,18 @@ function isActive(to: string) {
     </nav>
 
     <!-- Top-right ribbon with dark mode toggle -->
-    <HeaderRibbon position="right">
+    <HeaderRibbon position="right" ref="ribbonRef">
         <template #items>
             <DarkModeToggle class="h-6 w-6" />
         </template>
-        <template #anchor>
-            <div class="flex items-center cursor-pointer px-2 py-1">
-                <span class="instrument-serif text-lg text-muted-foreground hover:text-foreground transition-colors">@mbabb</span>
+        <template #anchor="{ toggled }">
+            <div class="flex items-center cursor-pointer px-2 py-1 group">
+                <span
+                    class="instrument-serif text-lg text-muted-foreground transition-all duration-200 group-hover:text-foreground"
+                    :class="toggled
+                        ? 'text-foreground underline underline-offset-4 decoration-1 decoration-foreground/40'
+                        : 'group-hover:underline group-hover:underline-offset-4 group-hover:decoration-1 group-hover:decoration-muted-foreground/40'"
+                >@mbabb</span>
             </div>
         </template>
     </HeaderRibbon>

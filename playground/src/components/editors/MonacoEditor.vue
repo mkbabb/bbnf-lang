@@ -110,6 +110,18 @@ watch(
     },
 );
 
+// Language sync — update model language when prop changes
+watch(
+    () => props.language,
+    (lang) => {
+        if (!editor.value) return;
+        const model = editor.value.getModel();
+        if (model) {
+            monaco.editor.setModelLanguage(model, lang);
+        }
+    },
+);
+
 // Theme sync — isDark drives Monaco global theme
 watch(isDark, (dark) => {
     monaco.editor.setTheme(dark ? "dark-theme" : "light-theme");

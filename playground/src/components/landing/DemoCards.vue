@@ -6,7 +6,19 @@ const demos = [
         id: "json-parser",
         icon: BookOpen,
         title: "Build a JSON parser",
-        description: "Start from scratch: define value, string, number, array, and object rules step by step.",
+        parts: [
+            { text: "Start from scratch: define " },
+            { text: "value", code: true },
+            { text: ", " },
+            { text: "string", code: true },
+            { text: ", " },
+            { text: "number", code: true },
+            { text: ", " },
+            { text: "array", code: true },
+            { text: ", and " },
+            { text: "object", code: true },
+            { text: " rules step by step." },
+        ],
         iconClass: "text-pastel-green",
         borderClass: "border-pastel-green/40",
         shimmerClass: "shimmer-green",
@@ -15,7 +27,9 @@ const demos = [
         id: "bbnf-grammar",
         icon: FileCode,
         title: "Write BBNF in BBNF",
-        description: "Explore the self-hosting grammar — BBNF defined in its own notation.",
+        parts: [
+            { text: "Explore the self-hosting grammar — BBNF defined in its own notation." },
+        ],
         iconClass: "text-pastel-amber",
         borderClass: "border-pastel-amber/40",
         shimmerClass: "shimmer-amber",
@@ -24,7 +38,11 @@ const demos = [
         id: "error-recovery",
         icon: ShieldAlert,
         title: "Add error recovery",
-        description: "Use @recover directives to parse past errors and collect multiple diagnostics.",
+        parts: [
+            { text: "Use " },
+            { text: "@recover", code: true, codeClass: "text-pastel-blue bg-pastel-blue/12 border-pastel-blue/25" },
+            { text: " directives to parse past errors and collect multiple diagnostics." },
+        ],
         iconClass: "text-pastel-blue",
         borderClass: "border-pastel-blue/40",
         shimmerClass: "shimmer-blue",
@@ -33,7 +51,17 @@ const demos = [
         id: "pretty-printing",
         icon: Palette,
         title: "Format with @pretty",
-        description: "Annotate rules with group, indent, and sep to build a grammar-driven formatter.",
+        parts: [
+            { text: "Annotate rules with " },
+            { text: "@pretty", code: true, codeClass: "text-pastel-pink bg-pastel-pink/12 border-pastel-pink/25" },
+            { text: " directives to build a grammar-driven formatter. " },
+            { text: "group", code: true },
+            { text: ", " },
+            { text: "indent", code: true },
+            { text: ", and " },
+            { text: "sep", code: true },
+            { text: " — all declarative." },
+        ],
         iconClass: "text-pastel-pink",
         borderClass: "border-pastel-pink/40",
         shimmerClass: "shimmer-pink",
@@ -62,7 +90,16 @@ const demos = [
                 >
                     <component :is="demo.icon" class="h-5 w-5 sm:h-6 sm:w-6 mb-2 sm:mb-3" :class="demo.iconClass" />
                     <h3 class="instrument-serif text-base sm:text-lg mb-1 sm:mb-2">{{ demo.title }}</h3>
-                    <p class="text-[11px] sm:text-xs text-muted-foreground leading-relaxed mb-3">{{ demo.description }}</p>
+                    <p class="text-[11px] sm:text-xs text-muted-foreground leading-relaxed mb-3">
+                        <template v-for="(part, i) in demo.parts" :key="i">
+                            <code
+                                v-if="part.code"
+                                class="font-mono text-[11px] rounded border px-1.5 py-0.5"
+                                :class="part.codeClass ?? 'bg-muted/50 border-border/30'"
+                            >{{ part.text }}</code>
+                            <template v-else>{{ part.text }}</template>
+                        </template>
+                    </p>
                     <span class="flex items-center gap-1 text-[11px] sm:text-xs font-mono text-muted-foreground/60 group-hover:text-foreground/80 transition-colors">
                         Start
                         <ArrowRight class="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
@@ -86,22 +123,22 @@ const demos = [
 .shimmer-green::before {
     background: linear-gradient(105deg, transparent 35%, hsl(152 50% 42% / 0.04) 43%, hsl(152 50% 42% / 0.08) 50%, hsl(152 50% 42% / 0.04) 57%, transparent 65%);
     background-size: 300% 100%;
-    animation: sweep 12s ease-in-out infinite;
+    animation: sweep 20s ease-in-out infinite;
 }
 .shimmer-amber::before {
     background: linear-gradient(105deg, transparent 35%, hsl(30 70% 50% / 0.04) 43%, hsl(30 70% 50% / 0.08) 50%, hsl(30 70% 50% / 0.04) 57%, transparent 65%);
     background-size: 300% 100%;
-    animation: sweep 12s 3s ease-in-out infinite;
+    animation: sweep 20s 5s ease-in-out infinite;
 }
 .shimmer-blue::before {
     background: linear-gradient(105deg, transparent 35%, hsl(215 55% 50% / 0.04) 43%, hsl(215 55% 50% / 0.08) 50%, hsl(215 55% 50% / 0.04) 57%, transparent 65%);
     background-size: 300% 100%;
-    animation: sweep 12s 6s ease-in-out infinite;
+    animation: sweep 20s 10s ease-in-out infinite;
 }
 .shimmer-pink::before {
     background: linear-gradient(105deg, transparent 35%, hsl(330 65% 55% / 0.04) 43%, hsl(330 65% 55% / 0.08) 50%, hsl(330 65% 55% / 0.04) 57%, transparent 65%);
     background-size: 300% 100%;
-    animation: sweep 12s 9s ease-in-out infinite;
+    animation: sweep 20s 15s ease-in-out infinite;
 }
 
 @keyframes sweep {

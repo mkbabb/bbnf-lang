@@ -126,6 +126,50 @@ are registered before recursing into its own imports).
 Cmd+Click on import paths opens the referenced file. Diagnostics are
 import-aware—imported rule names suppress "undefined rule" warnings.
 
+## Playground
+
+Live at **[grammar.babb.dev](https://grammar.babb.dev)**.
+
+A Vue 3 + Monaco editor for writing, parsing, and formatting BBNF grammars
+entirely in the browser—no server, no install.
+
+### Editor
+
+Monaco with full BBNF language support via WASM: hover, completion, go-to-definition,
+semantic tokens, inlay hints (FIRST sets + nullable), code lens, code actions,
+document symbols, folding, and selection ranges. Diagnostics update on every keystroke.
+
+### Panels
+
+Four panes, two visible at a time:
+
+| Pane | What it shows |
+|------|---------------|
+| **Grammar** | BBNF grammar editor with live diagnostics |
+| **Input** | Source text parsed against the grammar |
+| **Parsed AST** | JSON AST produced by the parser |
+| **Formatted** | Pretty-printed output via `@pretty` directives |
+
+Formatting uses [gorgeous](https://github.com/mkbabb/bbnf-lang) (WASM) for
+built-in languages (JSON, CSS, BBNF) and falls back to a TS interpreter for
+custom grammars. A telemetry badge shows parse/format timings.
+
+### Walkthroughs
+
+Four guided demos, launchable from the landing page or via `?demo=<id>`:
+
+- **JSON parser** — build a complete JSON grammar from scratch
+- **BBNF in BBNF** — the self-describing grammar
+- **Error recovery** — `@recover` directives and multi-error diagnostics
+- **Pretty-printing** — `@pretty` directives driving gorgeous output
+
+Each walkthrough steps through grammar/input mutations with annotated overlays.
+
+### Docs
+
+Built-in documentation covering parse-that, BBNF, pprint, and gorgeous—rendered
+from Markdown with section-themed navigation and code blocks.
+
 ## Architecture
 
 ### Analysis Pipeline

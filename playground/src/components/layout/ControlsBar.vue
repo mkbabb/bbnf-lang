@@ -75,13 +75,13 @@ const sourceLabels: Record<string, string> = {
 
 <template>
     <div class="flex justify-center px-2 sm:px-4 pb-2 pt-1">
-      <div class="flex items-center justify-between gap-3 w-full md:w-fit md:min-w-[20rem] px-3 py-1.5 rounded-full border border-border/30 bg-card/60 backdrop-blur-sm shadow-lg">
+      <div class="flex items-center justify-between gap-3 md:gap-5 w-full md:w-fit md:min-w-[20rem] px-3 md:px-5 py-1.5 md:py-2 rounded-full border border-border/30 bg-card/60 backdrop-blur-sm shadow-lg">
         <!-- Left: Example selector -->
         <Select
             :model-value="currentExample.name"
             @update:model-value="(v: string) => emit('selectExample', v)"
         >
-            <SelectTrigger class="w-auto h-8 border border-border/30 bg-card/60 backdrop-blur-sm shadow-none px-2 gap-1.5 instrument-serif text-sm text-foreground rounded-lg">
+            <SelectTrigger class="w-auto h-8 md:h-10 border-none bg-transparent shadow-none px-2 gap-1.5 instrument-serif text-sm md:text-lg text-foreground rounded-lg">
                 <SelectValue placeholder="Example" />
             </SelectTrigger>
             <SelectContent align="start" :side-offset="8">
@@ -116,15 +116,15 @@ const sourceLabels: Record<string, string> = {
 
         <!-- Center: Status -->
         <div class="flex items-center justify-center">
-            <Loader2 v-if="isProcessing" class="h-4 w-4 animate-spin text-muted-foreground" />
+            <Loader2 v-if="isProcessing" class="h-4 w-4 md:h-5 md:w-5 animate-spin text-muted-foreground" />
 
             <template v-else-if="errors.length > 0">
                 <Dialog v-model:open="errorDialogOpen">
                     <Tooltip>
                         <TooltipTrigger as-child>
                             <DialogTrigger as-child>
-                                <button class="flex items-center gap-1 text-xs text-destructive hover:text-destructive/80 transition-colors cursor-pointer">
-                                    <AlertCircle class="h-3.5 w-3.5 shrink-0" />
+                                <button class="flex items-center gap-1 text-xs md:text-base text-destructive hover:text-destructive/80 transition-colors cursor-pointer">
+                                    <AlertCircle class="h-3.5 w-3.5 md:h-5 md:w-5 shrink-0" />
                                     <span>{{ errors.length }}</span>
                                 </button>
                             </DialogTrigger>
@@ -149,15 +149,15 @@ const sourceLabels: Record<string, string> = {
                 </Dialog>
             </template>
 
-            <span v-else class="instrument-serif text-sm text-pastel-green">OK</span>
+            <span v-else class="instrument-serif text-sm md:text-lg text-pastel-green">OK</span>
         </div>
 
         <!-- Right: Settings button -->
         <Dialog v-model:open="settingsOpen">
             <DialogTrigger as-child>
-                <button class="flex items-center gap-1.5 h-8 px-2 rounded-lg border border-border/30 bg-card/60 backdrop-blur-sm text-muted-foreground hover:text-foreground transition-colors">
-                    <Settings2 class="h-3.5 w-3.5" />
-                    <span class="text-xs font-mono hidden sm:inline">{{ printerConfig.maxWidth }}w · {{ indentLabel }}</span>
+                <button class="flex items-center gap-1.5 h-8 md:h-10 px-2 rounded-lg border-none bg-transparent text-muted-foreground hover:text-foreground transition-colors">
+                    <Settings2 class="h-3.5 w-3.5 md:h-5 md:w-5" />
+                    <span class="text-xs md:text-base font-mono hidden sm:inline">{{ printerConfig.maxWidth }}w · {{ indentLabel }}</span>
                 </button>
             </DialogTrigger>
             <DialogContent class="max-w-sm">

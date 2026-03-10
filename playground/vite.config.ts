@@ -9,7 +9,7 @@ export default defineConfig({
         alias: {
             "@": fileURLToPath(new URL("./src", import.meta.url)),
             "@mkbabb/keyframes.js": fileURLToPath(
-                new URL("../../keyframes.js/dist/keyframes.js", import.meta.url),
+                new URL("../node_modules/@mkbabb/keyframes.js/dist/keyframes.js", import.meta.url),
             ),
             "monaco-themes/themes": fileURLToPath(
                 new URL("../node_modules/monaco-themes/themes", import.meta.url),

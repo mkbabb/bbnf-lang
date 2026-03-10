@@ -282,7 +282,7 @@ export function ASTToParser(
                 return generateParser(
                     name,
                     (expr.value as [Expression, Expression])[0],
-                ).not(
+                ).minus(
                     generateParser(
                         name,
                         (expr.value as [Expression, Expression])[1],

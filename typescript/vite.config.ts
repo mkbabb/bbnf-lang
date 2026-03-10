@@ -13,6 +13,9 @@ export default defineConfig({
             },
             formats: ["es", "cjs"],
         },
+        rollupOptions: {
+            external: ["@mkbabb/parse-that", "@mkbabb/pprint"],
+        },
     },
 
     plugins: [dts()],

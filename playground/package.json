@@ -9,8 +9,9 @@
     },
     "dependencies": {
         "@mkbabb/bbnf-lang": "*",
-        "@mkbabb/parse-that": "file:../../../parse-that/typescript",
-        "@mkbabb/pprint": "file:../../../pprint/typescript",
+        "@mkbabb/keyframes.js": "^1.2.0",
+        "@mkbabb/parse-that": "^0.8.0",
+        "@mkbabb/pprint": "^0.3.4",
         "@vueuse/core": "^13.0.0",
         "class-variance-authority": "^0.7.0",
         "clsx": "^2.1.0",

@@ -30,6 +30,7 @@
     --color-pastel-blue: hsl(var(--pastel-blue));
     --color-pastel-purple: hsl(var(--pastel-purple));
     --color-pastel-amber: hsl(var(--pastel-amber));
+    --color-pastel-pink: hsl(var(--pastel-pink));
     --radius-xl: calc(var(--radius) + 4px);
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
@@ -68,6 +69,7 @@
         --pastel-blue: 215 55% 50%;
         --pastel-purple: 270 45% 55%;
         --pastel-amber: 30 70% 50%;
+        --pastel-pink: 330 65% 55%;
     }
 
     .dark {
@@ -96,6 +98,7 @@
         --accent-red-foreground: 0 0% 95%;
         --pastel-green: 152 45% 55%;
         --pastel-blue: 215 50% 62%;
+        --pastel-pink: 330 55% 68%;
         --pastel-purple: 270 40% 68%;
         --pastel-amber: 35 65% 62%;
     }
@@ -107,7 +110,6 @@
     }
     html, body {
         @apply bg-background text-foreground;
-        overflow: hidden;
         overscroll-behavior: none;
         min-height: 100dvh;
         width: 100vw;
@@ -128,3 +130,170 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
 }
+
+/* Page transitions */
+.page-fade-enter-active { transition: opacity 0.2s ease-out; }
+.page-fade-leave-active { transition: opacity 0.15s ease-in; }
+.page-fade-enter-from, .page-fade-leave-to { opacity: 0; }
+
+/* ------------------------------------------------------------------ */
+/* Prose styles for docs                                              */
+/* ------------------------------------------------------------------ */
+
+/* Headings */
+.prose h1 {
+    font-family: var(--font-serif);
+    font-size: 2.25rem;
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+    color: hsl(var(--foreground));
+}
+.prose h2 {
+    font-family: var(--font-serif);
+    font-size: 1.5rem;
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+    border-bottom: 1px solid hsl(var(--border) / 0.3);
+    padding-bottom: 0.5rem;
+    color: hsl(var(--foreground));
+}
+.prose h3 {
+    font-family: var(--font-serif);
+    font-size: 1.25rem;
+    margin-top: 1.75rem;
+    margin-bottom: 0.5rem;
+    color: hsl(var(--foreground) / 0.95);
+}
+
+/* Body text */
+.prose p {
+    font-size: 0.875rem;
+    line-height: 1.75;
+    color: hsl(var(--foreground) / 0.85);
+    margin-bottom: 1rem;
+}
+
+/* Inline code */
+.prose code:not(pre code) {
+    background: hsl(var(--muted) / 0.5);
+    border: 1px solid hsl(var(--border) / 0.3);
+    border-radius: 0.25rem;
+    padding: 0.1rem 0.4rem;
+    font-size: 0.8em;
+    color: hsl(var(--pastel-green));
+}
+
+/* Code blocks (inside .code-card) */
+.prose pre {
+    border-radius: 0.75rem;
+    background: hsl(var(--card) / 0.6);
+    backdrop-filter: blur(8px);
+    padding: 1rem;
+    overflow-x: auto;
+    margin-bottom: 0;
+    font-size: 0.8rem;
+    line-height: 1.7;
+    border: none;
+}
+
+/* Code card container — card-styled with box shadow */
+.prose .code-card {
+    position: relative;
+    border-radius: 0.75rem;
+    border: 1px solid hsl(var(--border) / 0.4);
+    background: hsl(var(--card) / 0.6);
+    backdrop-filter: blur(8px);
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+    box-shadow: 3px 3px 0px 0px rgba(0, 0, 0, 0.08);
+}
+.dark .prose .code-card {
+    box-shadow: 3px 3px 0px 0px rgba(200, 200, 255, 0.06);
+}
+.prose .code-card pre {
+    background: transparent;
+    backdrop-filter: none;
+}
+
+/* Language label in code cards */
+.prose .code-lang-label {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.75rem;
+    font-size: 0.625rem;
+    font-family: var(--font-mono);
+    color: hsl(var(--muted-foreground) / 0.4);
+    user-select: none;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+/* Links */
+.prose a { color: hsl(var(--pastel-blue)); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.prose a:hover { color: hsl(var(--pastel-blue) / 0.8); text-decoration-thickness: 2px; }
+
+/* Blockquotes */
+.prose blockquote {
+    border-left: 2px solid hsl(var(--pastel-purple) / 0.5);
+    padding-left: 1rem;
+    font-style: italic;
+    color: hsl(var(--muted-foreground));
+    margin: 1rem 0;
+}
+
+/* Tables — card-styled */
+.prose table {
+    width: 100%;
+    font-size: 0.8rem;
+    border-collapse: collapse;
+    margin-bottom: 1.25rem;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    border: 1px solid hsl(var(--border) / 0.3);
+    box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 0.05);
+}
+.dark .prose table {
+    box-shadow: 2px 2px 0px 0px rgba(200, 200, 255, 0.04);
+}
+.prose th, .prose td {
+    border: 1px solid hsl(var(--border) / 0.3);
+    padding: 0.5rem 0.75rem;
+}
+.prose th {
+    background: hsl(var(--muted) / 0.3);
+    font-weight: 500;
+    text-align: left;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: hsl(var(--muted-foreground));
+}
+
+/* Lists */
+.prose ul { list-style: disc; padding-left: 1.5rem; margin-bottom: 1rem; font-size: 0.875rem; line-height: 1.75; }
+.prose ol { list-style: decimal; padding-left: 1.5rem; margin-bottom: 1rem; font-size: 0.875rem; line-height: 1.75; }
+.prose li { margin-bottom: 0.35rem; color: hsl(var(--foreground) / 0.85); }
+
+/* Strong/em */
+.prose strong { color: hsl(var(--foreground)); font-weight: 600; }
+.prose em { color: hsl(var(--muted-foreground)); }
+
+/* Horizontal rules */
+.prose hr {
+    border: none;
+    border-top: 1px solid hsl(var(--border) / 0.2);
+    margin: 2rem 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Syntax highlighting — token colors                                 */
+/* ------------------------------------------------------------------ */
+.hl-keyword  { color: hsl(var(--pastel-purple)); }
+.hl-builtin  { color: hsl(var(--pastel-amber)); }
+.hl-string   { color: hsl(var(--pastel-green)); }
+.hl-number   { color: hsl(var(--pastel-blue)); }
+.hl-comment  { color: hsl(var(--muted-foreground) / 0.5); font-style: italic; }
+.hl-type     { color: hsl(var(--pastel-amber) / 0.85); }
+.hl-decorator { color: hsl(var(--pastel-purple) / 0.85); }
+.hl-regex    { color: hsl(var(--pastel-blue) / 0.9); }
+.hl-operator { color: hsl(var(--muted-foreground) / 0.7); }

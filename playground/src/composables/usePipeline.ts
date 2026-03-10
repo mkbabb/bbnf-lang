@@ -11,6 +11,13 @@ export interface PipelineError {
     column?: number;
 }
 
+export interface Telemetry {
+    parseMs: number;
+    formatMs: number;
+    totalMs: number;
+    inputBytes: number;
+}
+
 export interface PipelineResult {
     grammarText: Ref<string>;
     inputText: Ref<string>;
@@ -25,6 +32,8 @@ export interface PipelineResult {
     formattedLanguage: Ref<string>;
     /** Indicates which formatter produced the output. */
     formattedBy: Ref<"interpreter" | "gorgeous" | "">;
+    /** Timing telemetry for the last pipeline run. */
+    telemetry: Telemetry;
 }
 
 /**
@@ -82,6 +91,7 @@ export function usePipeline(): PipelineResult {
     const isProcessing = ref(false);
     const formattedLanguage = ref("plaintext");
     const formattedBy = ref<"interpreter" | "gorgeous" | "">("");
+    const telemetry = reactive<Telemetry>({ parseMs: 0, formatMs: 0, totalMs: 0, inputBytes: 0 });
 
     const wasm = useWasm();
 
@@ -192,7 +202,9 @@ export function usePipeline(): PipelineResult {
             }
 
             try {
+                const t0 = performance.now();
                 const result = entryParser.parse(inputText.value);
+                const t1 = performance.now();
                 if (result === undefined || result === null) {
                     errors.value.push({ message: "Input does not match grammar", source: "parse" });
                     astJson.value = "";
@@ -247,6 +259,12 @@ export function usePipeline(): PipelineResult {
                         formattedBy.value = "";
                     }
                 }
+                // Record telemetry
+                const t2 = performance.now();
+                telemetry.parseMs = +(t1 - t0).toFixed(1);
+                telemetry.formatMs = +(t2 - t1).toFixed(1);
+                telemetry.totalMs = +(t2 - t0).toFixed(1);
+                telemetry.inputBytes = new TextEncoder().encode(inputText.value).byteLength;
             } catch (e: any) {
                 const msg = e.message ?? String(e);
                 const pos = extractPosition(msg, inputText.value);
@@ -277,7 +295,7 @@ export function usePipeline(): PipelineResult {
         },
     );
 
-    return { grammarText, inputText, entryRuleOverride, printerConfig, astJson, formatted, errors, isProcessing, formattedLanguage, formattedBy };
+    return { grammarText, inputText, entryRuleOverride, printerConfig, astJson, formatted, errors, isProcessing, formattedLanguage, formattedBy, telemetry };
 }
 
 /**
@@ -311,5 +329,8 @@ function detectLanguage(entryRule: string, ast: Map<string, any>): string {
     }
     if (lower === "stylesheet" || lower === "rule" || lower.includes("css")) return "css";
     if (lower === "program" || lower === "statement") return "javascript";
+    if (lower === "grammar" || lower === "rule_def" || lower.includes("bbnf")) {
+        if (ast.has("identifier") && (ast.has("expression") || ast.has("alternation"))) return "bbnf";
+    }
     return "plaintext";
 }

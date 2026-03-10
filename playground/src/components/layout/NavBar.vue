@@ -1,0 +1,131 @@
+<script setup lang="ts">
+import { ref, computed, onMounted, onBeforeUnmount } from "vue";
+import { useRoute } from "vue-router";
+import { HeaderRibbon } from "@/components/custom/header-ribbon";
+import { DarkModeToggle } from "@/components/custom/dark-mode-toggle";
+import { BbnfLogo } from "@/components/custom/bbnf-logo";
+import { navIcons } from "@/composables/useSectionTheme";
+import { useHeroState } from "@/composables/useHeroState";
+
+const route = useRoute();
+const scrollY = ref(0);
+
+function onScroll() {
+    scrollY.value = window.scrollY;
+}
+
+onMounted(() => {
+    window.addEventListener("scroll", onScroll, { passive: true });
+});
+onBeforeUnmount(() => {
+    window.removeEventListener("scroll", onScroll);
+});
+
+const isLanding = computed(() => route.path === "/");
+const navOpaque = computed(() => !isLanding.value || scrollY.value > 40);
+
+const { morphProgress } = useHeroState();
+const hideNavLogo = computed(() => isLanding.value && morphProgress.value < 1);
+
+const navLinksStyle = computed(() => {
+    if (!isLanding.value) return {};
+    const p = morphProgress.value;
+    const tx = (1 - p) * -100;
+    return {
+        transform: `translateX(${tx}px)`,
+        transition: 'transform 0.1s ease-out',
+    };
+});
+
+const navLinks = [
+    { to: "/playground", label: "Playground", icon: navIcons.playground },
+    { to: "/docs", label: "Docs", icon: navIcons.docs },
+];
+
+function isActive(to: string) {
+    return route.path.startsWith(to);
+}
+</script>
+
+<template>
+    <nav
+        class="fixed top-0 left-0 right-0 z-40 h-14 flex items-center px-3 sm:px-5 transition-colors duration-300 border-b"
+        :class="navOpaque
+            ? 'backdrop-blur-xl bg-background/95 border-border/30 shadow-sm'
+            : 'bg-transparent border-transparent'"
+    >
+        <!-- Left: Logo + nav links — always visible, no hamburger -->
+        <div class="flex items-center gap-0">
+            <router-link
+                to="/"
+                class="shrink-0 transition-opacity duration-300"
+                :class="hideNavLogo ? 'opacity-0' : 'opacity-100'"
+            >
+                <span data-navbar-logo class="inline-block">
+                    <BbnfLogo size="md" />
+                </span>
+            </router-link>
+
+            <!-- Vertical separator — hidden on landing until logo arrives -->
+            <div
+                class="h-6 w-px bg-border/40 mx-2 sm:mx-4 transition-opacity duration-300"
+                :class="hideNavLogo ? 'opacity-0' : 'opacity-100'"
+            />
+
+            <!-- Nav links — horizontally scrollable with edge fade -->
+            <div class="nav-links-mask overflow-x-auto scrollbar-hidden" :style="navLinksStyle">
+                <div class="flex items-center gap-0.5 sm:gap-1 whitespace-nowrap">
+                    <router-link
+                        v-for="link in navLinks"
+                        :key="link.to"
+                        :to="link.to"
+                        class="flex items-center gap-1 sm:gap-1.5 instrument-serif text-sm sm:text-base px-2 sm:px-3 py-1.5 rounded-md transition-colors shrink-0"
+                        :class="isActive(link.to)
+                            ? 'text-foreground'
+                            : 'text-muted-foreground hover:text-foreground'"
+                    >
+                        <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path :d="link.icon.iconPath" />
+                            <path v-if="link.icon.iconPath2" :d="link.icon.iconPath2" />
+                        </svg>
+                        {{ link.label }}
+                    </router-link>
+                </div>
+            </div>
+        </div>
+
+        <!-- Spacer -->
+        <div class="flex-1" />
+    </nav>
+
+    <!-- Top-right ribbon with dark mode toggle -->
+    <HeaderRibbon position="right">
+        <template #items>
+            <DarkModeToggle class="h-6 w-6" />
+        </template>
+        <template #anchor>
+            <div class="flex items-center cursor-pointer px-2 py-1">
+                <span class="instrument-serif text-lg text-muted-foreground hover:text-foreground transition-colors">@mbabb</span>
+            </div>
+        </template>
+    </HeaderRibbon>
+</template>
+
+<style scoped>
+.nav-links-mask {
+    mask-image: linear-gradient(
+        to right,
+        transparent 0%,
+        black 8px,
+        black calc(100% - 8px),
+        transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+        to right,
+        transparent 0%,
+        black 8px,
+        black calc(100% - 8px),
+        transparent 100%
+    );
+}
+</style>

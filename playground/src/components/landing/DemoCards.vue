@@ -7,28 +7,32 @@ const demos = [
         icon: BookOpen,
         title: "Build a JSON parser",
         description: "Start from scratch: define value, string, number, array, and object rules step by step.",
-        color: "pastel-green",
+        iconClass: "text-pastel-green",
+        borderClass: "border-pastel-green/40",
     },
     {
         id: "bbnf-grammar",
         icon: FileCode,
         title: "Write BBNF in BBNF",
         description: "Explore the self-hosting grammar — BBNF defined in its own notation.",
-        color: "pastel-amber",
+        iconClass: "text-pastel-amber",
+        borderClass: "border-pastel-amber/40",
     },
     {
         id: "error-recovery",
         icon: ShieldAlert,
         title: "Add error recovery",
         description: "Use @recover directives to parse past errors and collect multiple diagnostics.",
-        color: "pastel-blue",
+        iconClass: "text-pastel-blue",
+        borderClass: "border-pastel-blue/40",
     },
     {
         id: "pretty-printing",
         icon: Palette,
         title: "Format with @pretty",
         description: "Annotate rules with group, indent, and sep to build a grammar-driven formatter.",
-        color: "pastel-purple",
+        iconClass: "text-pastel-pink",
+        borderClass: "border-pastel-pink/40",
     },
 ];
 </script>
@@ -45,13 +49,13 @@ const demos = [
                 class="block"
             >
                 <div
-                    class="rounded-xl bg-card/80 backdrop-blur-sm p-3 sm:p-5 h-full transition-all duration-300
+                    class="rounded-xl border bg-card/80 backdrop-blur-sm p-3 sm:p-5 h-full transition-all duration-300
                            hover:-translate-y-0.5
                            shadow-[3px_3px_0px_0px_rgba(0,0,0,0.08)] dark:shadow-[3px_3px_0px_0px_rgba(200,200,255,0.06)]
                            hover:shadow-[5px_7px_0_rgba(0,0,0,0.12)] dark:hover:shadow-[5px_7px_0_rgba(200,200,255,0.08)]"
-                    :style="{ border: `1px solid color-mix(in srgb, var(--color-${demo.color}) 40%, transparent)` }"
+                    :class="demo.borderClass"
                 >
-                    <component :is="demo.icon" class="h-5 w-5 sm:h-6 sm:w-6 mb-2 sm:mb-3" :style="{ color: `var(--color-${demo.color})` }" />
+                    <component :is="demo.icon" class="h-5 w-5 sm:h-6 sm:w-6 mb-2 sm:mb-3" :class="demo.iconClass" />
                     <h3 class="instrument-serif text-base sm:text-lg mb-1 sm:mb-2">{{ demo.title }}</h3>
                     <p class="text-[11px] sm:text-xs text-muted-foreground leading-relaxed">{{ demo.description }}</p>
                 </div>

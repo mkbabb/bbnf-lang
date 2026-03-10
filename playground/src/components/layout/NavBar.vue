@@ -27,15 +27,15 @@ const navOpaque = computed(() => !isLanding.value || scrollY.value > 40);
 const { morphProgress } = useHeroState();
 const hideNavLogo = computed(() => isLanding.value && morphProgress.value < 1);
 
-const navLinksStyle = computed(() => {
-    if (!isLanding.value) return {};
-    const p = morphProgress.value;
-    const tx = (1 - p) * -100;
-    return {
-        transform: `translateX(${tx}px)`,
-        transition: 'transform 0.15s ease-out',
-    };
-});
+/**
+ * When the logo is hidden (landing, pre-scroll), pull it out of flow
+ * so the nav links sit flush at the navbar's left padding — matching
+ * the @mbabb right-side inset.  The logo element stays positioned for
+ * scroll-morph measurement via `absolute`.
+ */
+const logoHiddenClass = computed(() =>
+    hideNavLogo.value ? 'absolute opacity-0 pointer-events-none' : 'relative opacity-100',
+);
 
 const navLinks = [
     { to: "/playground", label: "Playground", icon: navIcons.playground },
@@ -49,31 +49,34 @@ function isActive(to: string) {
 
 <template>
     <nav
-        class="fixed top-0 left-0 right-0 z-50 h-14 flex items-center px-3 sm:px-5 transition-colors duration-300 border-b"
-        :class="navOpaque
-            ? 'backdrop-blur-xl bg-background/95 border-border/30 shadow-sm'
-            : 'bg-transparent border-transparent'"
+        class="fixed top-0 left-0 right-0 z-50 h-14 flex items-center transition-[padding,background-color,border-color] duration-300 border-b"
+        :class="[
+            navOpaque
+                ? 'backdrop-blur-xl bg-background/95 border-border/30 shadow-sm'
+                : 'bg-transparent border-transparent',
+            hideNavLogo ? 'px-4 sm:px-3' : 'px-3 sm:px-5',
+        ]"
     >
         <!-- Left: Logo + nav links — always visible, no hamburger -->
-        <div class="flex items-center gap-0">
+        <div class="relative flex items-center gap-0">
             <router-link
                 to="/"
                 class="shrink-0 transition-opacity duration-300"
-                :class="hideNavLogo ? 'opacity-0' : 'opacity-100'"
+                :class="logoHiddenClass"
             >
                 <span data-navbar-logo class="inline-block">
                     <BbnfLogo size="md" />
                 </span>
             </router-link>
 
-            <!-- Vertical separator — hidden on landing until logo arrives -->
+            <!-- Vertical separator — hidden when logo is out of flow -->
             <div
+                v-if="!hideNavLogo"
                 class="h-6 w-px bg-border/40 mx-2 sm:mx-4 transition-opacity duration-300"
-                :class="hideNavLogo ? 'opacity-0' : 'opacity-100'"
             />
 
             <!-- Nav links — horizontally scrollable with edge fade -->
-            <div class="nav-links-mask overflow-x-auto scrollbar-hidden" :style="navLinksStyle">
+            <div class="nav-links-mask overflow-x-auto scrollbar-hidden">
                 <div class="flex items-center gap-0.5 sm:gap-1 whitespace-nowrap">
                     <router-link
                         v-for="link in navLinks"

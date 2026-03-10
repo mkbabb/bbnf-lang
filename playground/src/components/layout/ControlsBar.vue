@@ -11,7 +11,7 @@ import type { Example } from "@/composables/useExamples";
 const exampleIcons: Record<string, string> = {
     JSON: "/icons/json.svg",
     CSS: "/icons/css.svg",
-    BBNF: "/icons/bbnf.svg",
+    BBNF: "/icons/bbnf.png",
     Math: "/icons/math.svg",
     Hello: "/icons/text.svg",
 };
@@ -94,12 +94,12 @@ const sourceLabels: Record<string, string> = {
                     v-for="ex in examples"
                     :key="ex.name"
                     :value="ex.name"
-                    class="instrument-serif rounded-md py-2 pl-9 pr-3 cursor-pointer transition-colors hover:bg-accent/60"
+                    class="instrument-serif rounded-md py-2.5 pl-9 pr-3 cursor-pointer transition-colors hover:bg-accent/60"
                 >
                     <span class="flex items-center gap-2">
-                        <img :src="exampleIcons[ex.name] ?? '/icons/text.svg'" alt="" class="h-4 w-4 shrink-0" />
-                        <span class="text-sm" :class="shimmerClass(ex.name)">{{ ex.name }}</span>
-                        <span class="text-[11px] text-muted-foreground truncate ml-1">{{ ex.description }}</span>
+                        <img :src="exampleIcons[ex.name] ?? '/icons/text.svg'" alt="" class="h-5 w-5 shrink-0" />
+                        <span class="text-base" :class="shimmerClass(ex.name)">{{ ex.name }}</span>
+                        <span class="text-sm text-muted-foreground truncate ml-1">{{ ex.description }}</span>
                     </span>
                 </SelectItem>
             </SelectContent>

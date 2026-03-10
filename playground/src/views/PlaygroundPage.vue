@@ -73,7 +73,7 @@ const langIcons: Record<string, string> = {
     typescript: "/icons/typescript.svg",
     html: "/icons/html.svg",
     markdown: "/icons/markdown.svg",
-    bbnf: "/icons/bbnf.svg",
+    bbnf: "/icons/bbnf.png",
     plaintext: "/icons/text.svg",
 };
 

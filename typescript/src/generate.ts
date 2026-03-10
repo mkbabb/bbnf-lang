@@ -28,6 +28,7 @@ export function ASTToParser(
     analysis?: AnalysisCache,
     firstNullable?: FirstNullable,
     recovers?: RecoverDirective[],
+    tagAlternations = false,
 ) {
     // Compute analysis if not provided
     const cache = analysis ?? analyzeGrammar(ast);
@@ -336,7 +337,11 @@ export function ASTToParser(
                 const litDispatch = tryAllLiteralsAlternation(name, alts);
                 if (litDispatch) return litDispatch;
 
-                const parsers = alts.map((x) => generateParser(name, x));
+                let parsers = alts.map((x) => generateParser(name, x));
+
+                if (tagAlternations) {
+                    parsers = parsers.map((p, i) => p.map((v: any) => ({ _branch: i, value: v })));
+                }
 
                 // Try to build a dispatch table for O(1) alternation.
                 // Only use dispatch when all alternatives are non-nullable
@@ -418,6 +423,7 @@ export function ASTToParser(
 export function BBNFToParser(
     input: string,
     optimizeGraph: boolean = false,
+    tagAlternations: boolean = false,
 ) {
     // Try import-aware parsing first to pick up @recover directives
     const importResult = BBNFToASTWithImports(input);
@@ -443,7 +449,7 @@ export function BBNFToParser(
     // Re-analyze if left recursion changed the AST
     const finalAnalysis = finalAst !== ast ? analyzeGrammar(finalAst) : analysis;
     const firstNullable = computeFirstSets(finalAst, finalAnalysis);
-    const nonterminals = ASTToParser(finalAst, finalAnalysis, firstNullable, recovers);
+    const nonterminals = ASTToParser(finalAst, finalAnalysis, firstNullable, recovers, tagAlternations);
     return [nonterminals, finalAst] as const;
 }
 
@@ -463,6 +469,7 @@ export function BBNFToParserFromFile(
     entryPath: string,
     readFileSync?: (path: string) => string,
     optimizeGraph: boolean = false,
+    tagAlternations: boolean = false,
 ) {
     const registry = loadModuleGraphSync(entryPath, readFileSync);
 
@@ -495,6 +502,6 @@ export function BBNFToParserFromFile(
 
     const finalAnalysis = finalAst !== ast ? analyzeGrammar(finalAst) : analysis;
     const firstNullable = computeFirstSets(finalAst, finalAnalysis);
-    const nonterminals = ASTToParser(finalAst, finalAnalysis, firstNullable, recovers);
+    const nonterminals = ASTToParser(finalAst, finalAnalysis, firstNullable, recovers, tagAlternations);
     return [nonterminals, finalAst] as const;
 }

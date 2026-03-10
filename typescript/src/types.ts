@@ -90,17 +90,26 @@ export type RecoverDirective = {
     range?: { start: number; end: number };
 };
 
+export type PrettyHint = { name: string; arg?: string };
+
 export type PrettyDirective = {
     /** The name of the rule to apply formatting hints to. */
     ruleName: string;
-    /** Formatting hints (e.g. "group", "indent", "block", "blankline", "nobreak", "fast"). */
-    hints: string[];
+    /** Formatting hints (e.g. "group", "indent", "block", "sep(\", \")", "split(\",\")"). */
+    hints: PrettyHint[];
+    range?: { start: number; end: number };
+};
+
+export type NoCollapseDirective = {
+    /** The name of the rule to suppress Vec→Span collapse for. */
+    ruleName: string;
     range?: { start: number; end: number };
 };
 
 export type ParsedGrammar = {
     imports: ImportDirective[];
     recovers: RecoverDirective[];
+    no_collapses: NoCollapseDirective[];
     pretties: PrettyDirective[];
     rules: AST;
 };

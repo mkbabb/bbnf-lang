@@ -11,7 +11,7 @@
 import * as path from "node:path";
 import * as fs from "node:fs";
 
-import type { ImportDirective, RecoverDirective, PrettyDirective, AST, ProductionRule, Expression } from "./types.js";
+import type { ImportDirective, RecoverDirective, NoCollapseDirective, PrettyDirective, AST, ProductionRule, Expression } from "./types.js";
 import { BBNFToASTWithImports } from "./parse.js";
 
 // ---------------------------------------------------------------------------
@@ -66,6 +66,8 @@ export interface ModuleData {
     imports: ImportDirective[];
     /** Recover directives found in this file. */
     recovers: RecoverDirective[];
+    /** No-collapse directives found in this file. */
+    no_collapses: NoCollapseDirective[];
     /** Pretty directives found in this file. */
     pretties: PrettyDirective[];
     /** The parsed AST (rule name → ProductionRule). */
@@ -240,6 +242,7 @@ function loadRecursiveSync(
         source,
         imports: parsed.imports,
         recovers: parsed.recovers ?? [],
+        no_collapses: parsed.no_collapses ?? [],
         pretties: parsed.pretties ?? [],
         rules: parsed.rules,
         localRuleNames,
@@ -664,6 +667,7 @@ async function loadRecursiveAsync(
         source,
         imports: parsed.imports,
         recovers: parsed.recovers ?? [],
+        no_collapses: parsed.no_collapses ?? [],
         pretties: parsed.pretties ?? [],
         rules: parsed.rules,
         localRuleNames,

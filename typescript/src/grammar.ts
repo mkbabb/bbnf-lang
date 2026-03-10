@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Parser, string, all, any, regex } from "@mkbabb/parse-that";
-import type { Expression, Literal, Epsilon, Nonterminal, Comment, Regex, Group, Optional, Many, Concatenation, Alteration, ProductionRule, ImportDirective, RecoverDirective, PrettyDirective, ParsedGrammar } from "./types.js";
+import type { Expression, Literal, Epsilon, Nonterminal, Comment, Regex, Group, Optional, Many, Concatenation, Alteration, ProductionRule, ImportDirective, RecoverDirective, PrettyDirective, PrettyHint, NoCollapseDirective, ParsedGrammar } from "./types.js";
 
 const operatorToType: Record<string, string> = {
     "|": "alternation",
@@ -82,6 +82,7 @@ export class BBNFGrammar {
     private _importDirective?: Parser<any>;
     private _recoverDirective?: Parser<any>;
     private _prettyDirective?: Parser<any>;
+    private _noCollapseDirective?: Parser<any>;
     private _grammarWithImports?: Parser<any>;
 
     constructor(options?: Partial<Options>) {
@@ -410,16 +411,45 @@ export class BBNFGrammar {
 
     prettyDirective(): Parser<any> {
         return (this._prettyDirective ??= Parser.lazy(() => {
+            // A hint is either `identifier("string")` or a bare `identifier`.
+            const quotedArg = regex(/(\\.|[^"\\])*/)
+                .wrap(string('"'), string('"'));
+
+            const hintWithArg = all(
+                this.identifier(),
+                quotedArg.wrap(string("("), string(")")),
+            ).map(([name, arg]: any) => ({ name, arg } as PrettyHint));
+
+            const bareHint = this.identifier().map(
+                (name: any) => ({ name } as PrettyHint),
+            );
+
+            const hint = any(hintWithArg, bareHint);
+
             return mapStatePosition(
                 all(
                     string("@pretty").trim(),
                     this.identifier().trim(),
-                    this.identifier().trim().many(1),
+                    hint.trim().many(1),
                     any(string(";"), string(".")).trim().opt(),
                 ).map(([, ruleName, hints]: any) => ({
                     ruleName,
                     hints,
                 } as PrettyDirective)),
+            );
+        }));
+    }
+
+    noCollapseDirective(): Parser<any> {
+        return (this._noCollapseDirective ??= Parser.lazy(() => {
+            return mapStatePosition(
+                all(
+                    string("@no_collapse").trim(),
+                    this.identifier().trim(),
+                    any(string(";"), string(".")).trim().opt(),
+                ).map(([, ruleName]: any) => ({
+                    ruleName,
+                } as NoCollapseDirective)),
             );
         }));
     }
@@ -450,9 +480,14 @@ export class BBNFGrammar {
                 .trim(commentTrim, false)
                 .map(([above, directive, below]: any) => directive);
 
+            const noCollapseDir = this.noCollapseDirective()
+                .trim(commentTrim, false)
+                .map(([above, directive, below]: any) => directive);
+
             const item = any(
                 importDir.map((d: ImportDirective) => ({ type: "import" as const, value: d })),
                 recoverDir.map((d: RecoverDirective) => ({ type: "recover" as const, value: d })),
+                noCollapseDir.map((d: NoCollapseDirective) => ({ type: "no_collapse" as const, value: d })),
                 prettyDir.map((d: PrettyDirective) => ({ type: "pretty" as const, value: d })),
                 rule.map((r: ProductionRule) => ({ type: "rule" as const, value: r })),
             );
@@ -460,6 +495,7 @@ export class BBNFGrammar {
             return item.many(1).trim().map((items: any[]) => {
                 const imports: ImportDirective[] = [];
                 const recovers: RecoverDirective[] = [];
+                const no_collapses: NoCollapseDirective[] = [];
                 const pretties: PrettyDirective[] = [];
                 const rules: ProductionRule[] = [];
                 for (const item of items) {
@@ -467,13 +503,15 @@ export class BBNFGrammar {
                         imports.push(item.value);
                     } else if (item.type === "recover") {
                         recovers.push(item.value);
+                    } else if (item.type === "no_collapse") {
+                        no_collapses.push(item.value);
                     } else if (item.type === "pretty") {
                         pretties.push(item.value);
                     } else {
                         rules.push(item.value);
                     }
                 }
-                return { imports, recovers, pretties, rules } as { imports: ImportDirective[]; recovers: RecoverDirective[]; pretties: PrettyDirective[]; rules: ProductionRule[] };
+                return { imports, recovers, no_collapses, pretties, rules } as ParsedGrammar;
             });
         }));
     }

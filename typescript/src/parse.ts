@@ -32,7 +32,7 @@ export function BBNFToASTWithImports(input: string) {
         return [parser] as const;
     }
 
-    const { imports, recovers, pretties, rules } = parsed as { imports: any[]; recovers: any[]; pretties: any[]; rules: ProductionRule[] };
+    const { imports, recovers, no_collapses, pretties, rules } = parsed as { imports: any[]; recovers: any[]; no_collapses: any[]; pretties: any[]; rules: ProductionRule[] };
 
     const ast = rules.reduce(
         (acc, productionRule) => {
@@ -41,7 +41,7 @@ export function BBNFToASTWithImports(input: string) {
         new Map<string, ProductionRule>(),
     ) as AST;
 
-    return [parser, { imports, recovers: recovers ?? [], pretties: pretties ?? [], rules: ast } as ParsedGrammar] as const;
+    return [parser, { imports, recovers: recovers ?? [], no_collapses: no_collapses ?? [], pretties: pretties ?? [], rules: ast } as ParsedGrammar] as const;
 }
 
 /**
@@ -54,6 +54,7 @@ export function BBNFToASTWithImports(input: string) {
 export function BBNFToASTFromFiles(files: Map<string, string>): ParsedGrammar {
     const allImports: ParsedGrammar["imports"] = [];
     const allRecovers: ParsedGrammar["recovers"] = [];
+    const allNoCollapses: ParsedGrammar["no_collapses"] = [];
     const allPretties: ParsedGrammar["pretties"] = [];
     const mergedAST = new Map<string, ProductionRule>() as AST;
 
@@ -65,11 +66,12 @@ export function BBNFToASTFromFiles(files: Map<string, string>): ParsedGrammar {
         const parsed = result[1];
         allImports.push(...parsed.imports);
         allRecovers.push(...(parsed.recovers ?? []));
+        allNoCollapses.push(...(parsed.no_collapses ?? []));
         allPretties.push(...(parsed.pretties ?? []));
         for (const [name, rule] of parsed.rules) {
             mergedAST.set(name, rule);
         }
     }
 
-    return { imports: allImports, recovers: allRecovers, pretties: allPretties, rules: mergedAST };
+    return { imports: allImports, recovers: allRecovers, no_collapses: allNoCollapses, pretties: allPretties, rules: mergedAST };
 }

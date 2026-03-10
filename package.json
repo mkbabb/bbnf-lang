@@ -2,6 +2,7 @@
     "private": true,
     "workspaces": [
         "typescript",
-        "prettier-plugin-bbnf"
+        "prettier-plugin-bbnf",
+        "playground"
     ]
 }

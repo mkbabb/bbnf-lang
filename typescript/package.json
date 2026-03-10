@@ -26,7 +26,8 @@
         "./dist"
     ],
     "dependencies": {
-        "@mkbabb/parse-that": "^0.7.0"
+        "@mkbabb/parse-that": "file:../../parse-that/typescript",
+        "@mkbabb/pprint": "file:../../pprint/typescript"
     },
     "devDependencies": {
         "@types/node": "^22.0.0",

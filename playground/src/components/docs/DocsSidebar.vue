@@ -36,7 +36,7 @@ const filteredSections = computed(() => {
 </script>
 
 <template>
-    <aside class="w-64 shrink-0 border-r border-border/30 bg-card/40 backdrop-blur-xl sticky top-14 h-[calc(100dvh-3.5rem)] overflow-y-auto flex flex-col scrollbar-hidden">
+    <aside class="flex h-full w-64 shrink-0 flex-col overflow-y-auto border-r border-border/30 bg-card/40 backdrop-blur-xl scrollbar-hidden">
         <!-- Search bar -->
         <div class="p-3 border-b border-border/20">
             <div class="relative">

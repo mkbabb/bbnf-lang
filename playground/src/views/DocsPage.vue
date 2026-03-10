@@ -39,10 +39,10 @@ const sectionTheme = computed(() => currentDoc.value ? getSectionTheme(currentDo
 </script>
 
 <template>
-    <div class="flex h-[calc(100dvh-3.5rem)] pt-14 overflow-hidden">
+    <div class="mt-14 flex min-h-[calc(100dvh-3.5rem)]">
         <!-- Desktop sidebar — collapsible -->
         <div
-            class="hidden md:block shrink-0 overflow-hidden transition-[width] duration-200"
+            class="sticky top-14 hidden h-[calc(100dvh-3.5rem)] shrink-0 self-start overflow-hidden transition-[width] duration-200 md:block"
             :style="{ width: sidebarOpen ? '16rem' : '0' }"
         >
             <DocsSidebar :current-slug="slug" />
@@ -73,8 +73,8 @@ const sectionTheme = computed(() => currentDoc.value ? getSectionTheme(currentDo
         </Transition>
 
         <!-- Main content -->
-        <main class="flex-1 flex flex-col overflow-y-auto px-4 sm:px-8 py-4 sm:py-6 min-w-0">
-            <div v-if="currentDoc" class="max-w-4xl mx-auto w-full flex-1 flex flex-col">
+        <main class="flex-1 flex min-h-[calc(100dvh-3.5rem)] flex-col px-4 py-4 sm:px-8 sm:py-6 min-w-0">
+            <div v-if="currentDoc" class="mx-auto flex w-full max-w-4xl flex-1 flex-col">
                 <!-- Card-styled article container -->
                 <div
                     class="rounded-xl border bg-card/80 backdrop-blur-sm p-5 sm:p-8 md:p-10 flex-1 relative"

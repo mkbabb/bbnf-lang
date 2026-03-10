@@ -1,14 +1,12 @@
-mod ast_utils;
-mod diagnostics;
-mod parsing;
-pub(crate) mod pretty;
+pub mod ast_utils;
+pub mod diagnostics;
+pub mod parsing;
+pub mod pretty;
 pub mod types;
 
 pub use ast_utils::compute_expression_end_pub;
-pub use types::*;
-
-#[cfg(test)]
 pub use diagnostics::analyze;
+pub use types::*;
 
 use bbnf::types::AST;
 

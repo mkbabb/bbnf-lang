@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use tower_lsp_server::ls_types::*;
+use ls_types::*;
 
 use super::pretty::PrettyInfo;
 
@@ -57,6 +57,17 @@ pub struct RecoverInfo {
     pub rule_name_span: (usize, usize),
 }
 
+/// Owned representation of a @no_collapse directive.
+#[derive(Debug, Clone)]
+pub struct NoCollapseInfo {
+    /// The name of the rule to prevent span collapse for.
+    pub rule_name: String,
+    /// Byte offset range of the entire directive.
+    pub span: (usize, usize),
+    /// Byte offset range of the rule name within the directive.
+    pub rule_name_span: (usize, usize),
+}
+
 /// Pre-analyzed document state -- all data is owned (no lifetimes).
 #[derive(Debug, Clone)]
 pub struct DocumentInfo {
@@ -76,6 +87,8 @@ pub struct DocumentInfo {
     pub imports: Vec<ImportInfo>,
     /// Recover directives parsed from the document.
     pub recovers: Vec<RecoverInfo>,
+    /// No-collapse directives parsed from the document.
+    pub no_collapses: Vec<NoCollapseInfo>,
     /// Pretty directives parsed from the document.
     pub pretties: Vec<PrettyInfo>,
 }

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use tower_lsp_server::ls_types::*;
+use ls_types::*;
 
 use crate::state::DocumentState;
 

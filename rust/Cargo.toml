@@ -1,3 +1,3 @@
 [workspace]
-members = ["bbnf", "bbnf-derive", "lsp"]
+members = ["bbnf", "bbnf-derive", "bbnf-analysis", "lsp"]
 resolver = "2"

@@ -1,4 +1,4 @@
-use tower_lsp_server::ls_types::*;
+use ls_types::*;
 
 use crate::analysis::{symbol_at_offset, SymbolAtOffset};
 use crate::state::DocumentState;

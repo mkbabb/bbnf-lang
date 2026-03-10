@@ -1,5 +1,5 @@
 use bbnf::generate::prettify::hints::HINT_DEFS;
-use tower_lsp_server::ls_types::*;
+use ls_types::*;
 
 use crate::state::DocumentState;
 

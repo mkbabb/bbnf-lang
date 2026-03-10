@@ -6,7 +6,7 @@ use bbnf::analysis::{
 };
 use bbnf::types::{Expression, Token};
 
-use tower_lsp_server::ls_types::*;
+use ls_types::*;
 
 use crate::analysis::LineIndex;
 
@@ -22,7 +22,7 @@ use super::types::{
 
 /// Analyze a BBNF document using pre-parsed AST and diagnostics from `parse_once()`.
 /// This avoids double-parsing: the OwnedAst parses once, and we reuse its results here.
-pub(crate) fn analyze_from_cache(
+pub fn analyze_from_cache(
     text: &str,
     line_index: &LineIndex,
     cached: Option<&CachedParseResult<'_>>,
@@ -53,6 +53,7 @@ pub(crate) fn analyze_from_cache(
             cyclic_rule_paths: HashMap::new(),
             imports: Vec::new(),
             recovers: Vec::new(),
+            no_collapses: Vec::new(),
             pretties: Vec::new(),
         };
     }
@@ -83,6 +84,7 @@ pub(crate) fn analyze_from_cache(
             cyclic_rule_paths: HashMap::new(),
             imports: Vec::new(),
             recovers: Vec::new(),
+            no_collapses: Vec::new(),
             pretties: Vec::new(),
         };
     };
@@ -105,6 +107,7 @@ pub(crate) fn analyze_from_cache(
     let ast = &parsed.ast;
     let import_infos = parsed.imports.clone();
     let recover_infos = parsed.recovers.clone();
+    let no_collapse_infos = parsed.no_collapses.clone();
     let pretty_infos = parsed.pretties.clone();
 
     // Check for empty AST on non-empty input -- likely a parse failure not caught above.
@@ -128,6 +131,7 @@ pub(crate) fn analyze_from_cache(
             cyclic_rule_paths: HashMap::new(),
             imports: import_infos,
             recovers: recover_infos,
+            no_collapses: no_collapse_infos,
             pretties: Vec::new(),
         };
     }
@@ -226,6 +230,17 @@ pub(crate) fn analyze_from_cache(
                 });
             }
         }
+    }
+
+    // Add directive-referenced rule names before the unused rule check.
+    for rec in &recover_infos {
+        referenced_names.insert(&rec.rule_name);
+    }
+    for nc in &no_collapse_infos {
+        referenced_names.insert(&nc.rule_name);
+    }
+    for p in &pretty_infos {
+        referenced_names.insert(&p.rule_name);
     }
 
     let last_rule_idx = rules.len().saturating_sub(1);
@@ -446,6 +461,41 @@ pub(crate) fn analyze_from_cache(
         }
     }
 
+    // @no_collapse directive validation and semantic tokens.
+    for nc in &no_collapse_infos {
+        // Semantic token: KEYWORD for "@no_collapse".
+        // The "@no_collapse" keyword is 13 bytes, starts at the directive span start.
+        semantic_tokens.push(SemanticTokenInfo {
+            span: (nc.span.0, nc.span.0 + 13), // "@no_collapse" is 13 chars
+            token_type: token_types::KEYWORD,
+        });
+
+        // Semantic token: RULE_REFERENCE for the rule name.
+        semantic_tokens.push(SemanticTokenInfo {
+            span: nc.rule_name_span,
+            token_type: token_types::RULE_REFERENCE,
+        });
+
+        // Mark the rule name as referenced (for unused rule detection).
+        referenced_names.insert(&nc.rule_name);
+
+        // Validate: warn if the target rule doesn't exist.
+        if !defined.contains_key(nc.rule_name.as_str())
+            && !imported_names.contains(nc.rule_name.as_str())
+        {
+            diagnostics.push(Diagnostic {
+                range: line_index.span_to_range(nc.rule_name_span.0, nc.rule_name_span.1),
+                severity: Some(DiagnosticSeverity::WARNING),
+                source: Some("bbnf".into()),
+                message: format!(
+                    "`@no_collapse` targets undefined rule: `{}`",
+                    nc.rule_name
+                ),
+                ..Default::default()
+            });
+        }
+    }
+
     // @pretty directive validation and semantic tokens.
     {
         let (pretty_diags, pretty_tokens) = pretty::validate_pretties(
@@ -476,13 +526,13 @@ pub(crate) fn analyze_from_cache(
         cyclic_rule_paths,
         imports: import_infos,
         recovers: recover_infos,
+        no_collapses: no_collapse_infos,
         pretties: pretty_infos,
     }
 }
 
 /// Public convenience wrapper: parses the text and analyzes in one step.
-/// Used by tests and any code that doesn't need the cached AST.
-#[cfg(test)]
+/// Used by tests, WASM, and any code that doesn't need the cached AST.
 pub fn analyze(text: &str, line_index: &LineIndex) -> DocumentInfo {
     let (cached, diag) = super::parsing::parse_once(text);
     analyze_from_cache(text, line_index, cached.as_ref(), &diag)

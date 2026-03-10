@@ -6,7 +6,7 @@ use bbnf::types::Expression;
 use super::types::{ReferenceInfo, RuleInfo, SemanticTokenInfo, token_types};
 
 /// Format a byte as a display-friendly character for inlay hints.
-pub(crate) fn format_char(b: u8) -> String {
+pub fn format_char(b: u8) -> String {
     match b {
         b'\t' => "\\t".into(),
         b'\n' => "\\n".into(),
@@ -20,7 +20,7 @@ pub(crate) fn format_char(b: u8) -> String {
 }
 
 /// Format a CharSet as a human-readable string for inlay hints.
-pub(crate) fn format_charset(cs: &CharSet) -> String {
+pub fn format_charset(cs: &CharSet) -> String {
     if cs.is_empty() {
         return "{}".into();
     }
@@ -58,7 +58,7 @@ pub(crate) fn format_charset(cs: &CharSet) -> String {
 }
 
 /// Check if a rule RHS is effectively empty (epsilon only).
-pub(crate) fn is_empty_rhs(expr: &Expression<'_>) -> bool {
+pub fn is_empty_rhs(expr: &Expression<'_>) -> bool {
     match expr {
         Expression::Epsilon(_) => true,
         Expression::Rule(rhs, _) => is_empty_rhs(rhs),
@@ -72,7 +72,7 @@ pub fn compute_expression_end_pub(expr: &Expression<'_>) -> Option<usize> {
 }
 
 /// Recursively collect nonterminal references from an expression.
-pub(crate) fn collect_references(expr: &Expression<'_>, refs: &mut Vec<ReferenceInfo>) {
+pub fn collect_references(expr: &Expression<'_>, refs: &mut Vec<ReferenceInfo>) {
     match expr {
         Expression::Nonterminal(tok) => {
             refs.push(ReferenceInfo {
@@ -110,7 +110,7 @@ pub(crate) fn collect_references(expr: &Expression<'_>, refs: &mut Vec<Reference
 }
 
 /// Collect semantic tokens from an expression tree.
-pub(crate) fn collect_semantic_tokens(expr: &Expression<'_>, tokens: &mut Vec<SemanticTokenInfo>) {
+pub fn collect_semantic_tokens(expr: &Expression<'_>, tokens: &mut Vec<SemanticTokenInfo>) {
     match expr {
         Expression::Nonterminal(tok) => {
             tokens.push(SemanticTokenInfo {
@@ -166,7 +166,7 @@ pub(crate) fn collect_semantic_tokens(expr: &Expression<'_>, tokens: &mut Vec<Se
 }
 
 /// Compute the end byte offset of an expression.
-pub(crate) fn compute_expression_end(expr: &Expression<'_>) -> Option<usize> {
+pub fn compute_expression_end(expr: &Expression<'_>) -> Option<usize> {
     match expr {
         Expression::Literal(tok)
         | Expression::Nonterminal(tok)
@@ -208,7 +208,7 @@ pub(crate) fn compute_expression_end(expr: &Expression<'_>) -> Option<usize> {
 }
 
 /// Quick one-line formatting of an expression for hover text.
-pub(crate) fn format_expression_short(expr: &Expression<'_>) -> String {
+pub fn format_expression_short(expr: &Expression<'_>) -> String {
     match expr {
         Expression::Literal(tok) => format!("\"{}\"", tok.value),
         Expression::Nonterminal(tok) => tok.value.to_string(),
@@ -285,7 +285,7 @@ pub(crate) fn format_expression_short(expr: &Expression<'_>) -> String {
 ///
 /// A2: Uses a reverse index (`name_to_deps`) for O(1) lookup of a rule's dependencies
 /// instead of scanning all entries in `deps` for each step.
-pub(crate) fn build_cycle_path(start: &str, scc_members: &[&str], deps: &HashMap<Expression<'_>, HashSet<Expression<'_>>>) -> String {
+pub fn build_cycle_path(start: &str, scc_members: &[&str], deps: &HashMap<Expression<'_>, HashSet<Expression<'_>>>) -> String {
     let member_set: HashSet<&str> = scc_members.iter().copied().collect();
 
     // A2: Build reverse index from rule name to its dependency set.
@@ -332,7 +332,7 @@ pub(crate) fn build_cycle_path(start: &str, scc_members: &[&str], deps: &HashMap
 /// Compute the set of rule names reachable from root rules via BFS.
 ///
 /// Root rules are: the first and last rules in the grammar, plus any rule referenced by an import.
-pub(crate) fn compute_reachable_rules(
+pub fn compute_reachable_rules(
     rules: &[RuleInfo],
     rule_index: &HashMap<String, usize>,
 ) -> HashSet<String> {

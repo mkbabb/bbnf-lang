@@ -1,4 +1,4 @@
-use tower_lsp_server::ls_types::*;
+use ls_types::*;
 
 use crate::state::{DocumentInfo, RuleInfo};
 
@@ -110,6 +110,15 @@ pub fn symbol_at_offset<'a>(info: &'a DocumentInfo, offset: usize) -> Option<Sym
             return Some(SymbolAtOffset::RuleReference {
                 name: rec.rule_name.clone(),
                 span: rec.rule_name_span,
+            });
+        }
+    }
+    // Check @no_collapse directive rule names.
+    for nc in &info.no_collapses {
+        if offset >= nc.rule_name_span.0 && offset <= nc.rule_name_span.1 {
+            return Some(SymbolAtOffset::RuleReference {
+                name: nc.rule_name.clone(),
+                span: nc.rule_name_span,
             });
         }
     }

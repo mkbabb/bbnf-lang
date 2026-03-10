@@ -5,7 +5,7 @@
 use std::collections::{HashMap, HashSet};
 
 use bbnf::generate::prettify::hints::{self, closest_hint, is_valid_hint};
-use tower_lsp_server::ls_types::*;
+use ls_types::*;
 
 use crate::analysis::LineIndex;
 

@@ -1,5 +1,5 @@
 use bbnf::generate::prettify::hints::{hint_description, is_sep_hint, is_split_hint};
-use tower_lsp_server::ls_types::*;
+use ls_types::*;
 
 use crate::analysis::{symbol_at_offset, SymbolAtOffset};
 use crate::state::DocumentState;
@@ -7,7 +7,13 @@ use crate::state::DocumentState;
 pub fn hover(state: &DocumentState, position: Position) -> Option<Hover> {
     let offset = state.line_index.position_to_offset(position);
 
-    // Check @pretty directive hover first.
+    // Check directive keyword hovers first.
+    if let Some(hover) = hover_no_collapse(state, offset) {
+        return Some(hover);
+    }
+    if let Some(hover) = hover_recover(state, offset) {
+        return Some(hover);
+    }
     if let Some(hover) = hover_pretty(state, offset) {
         return Some(hover);
     }
@@ -86,6 +92,60 @@ pub fn hover(state: &DocumentState, position: Position) -> Option<Hover> {
             })
         }
     }
+}
+
+/// Check if the cursor is over the @no_collapse keyword or its rule name.
+fn hover_no_collapse(state: &DocumentState, offset: usize) -> Option<Hover> {
+    for nc in &state.info.no_collapses {
+        // Check keyword span: "@no_collapse" is 13 chars.
+        let kw_end = nc.span.0 + 13;
+        if offset >= nc.span.0 && offset <= kw_end {
+            let content = format!(
+                "`@no_collapse` directive\n\n\
+                 Prevents span collapse for rule `{}`. Preserves `Vec<Span>` for `*`/`+` \
+                 repetitions and `Option<Span>` for `?` optionals, instead of merging \
+                 consecutive spans into a single `Span`.",
+                nc.rule_name
+            );
+            return Some(Hover {
+                contents: HoverContents::Markup(MarkupContent {
+                    kind: MarkupKind::Markdown,
+                    value: content,
+                }),
+                range: Some(state.line_index.span_to_range(nc.span.0, kw_end)),
+            });
+        }
+
+        // Rule name hover is handled by symbol_at_offset → RuleReference.
+    }
+    None
+}
+
+/// Check if the cursor is over the @recover keyword.
+fn hover_recover(state: &DocumentState, offset: usize) -> Option<Hover> {
+    for rec in &state.info.recovers {
+        // Check keyword span: "@recover" is 8 chars.
+        let kw_end = rec.span.0 + 8;
+        if offset >= rec.span.0 && offset <= kw_end {
+            let content = format!(
+                "`@recover` directive\n\n\
+                 Error recovery for rule `{}`. When parsing fails, the parser skips forward \
+                 to a synchronization point and continues, collecting the error into \
+                 diagnostics instead of aborting.",
+                rec.rule_name
+            );
+            return Some(Hover {
+                contents: HoverContents::Markup(MarkupContent {
+                    kind: MarkupKind::Markdown,
+                    value: content,
+                }),
+                range: Some(state.line_index.span_to_range(rec.span.0, kw_end)),
+            });
+        }
+
+        // Rule name hover is handled by symbol_at_offset → RuleReference.
+    }
+    None
 }
 
 /// Check if the cursor is over a @pretty hint keyword or rule name.

@@ -32,14 +32,24 @@ dependencies = [
 ]
 
 [[package]]
-name = "bbnf-lsp"
+name = "bbnf-analysis"
 version = "0.1.0"
 dependencies = [
  "bbnf",
  "indexmap",
- "parse_that 0.1.1",
+ "ls-types",
  "pprint",
  "self_cell",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "bbnf-lsp"
+version = "0.1.0"
+dependencies = [
+ "bbnf",
+ "bbnf-analysis",
  "serde",
  "serde_json",
  "tokio",
@@ -396,19 +406,6 @@ dependencies = [
  "redox_syscall",
  "smallvec",
  "windows-link",
-]
-
-[[package]]
-name = "parse_that"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1abe912b36a0715d9170d57ebd44895ea9ebfb14141620a3d19a1cb63a91857e"
-dependencies = [
- "aho-corasick",
- "fast-float2",
- "memchr",
- "pprint",
- "regex",
 ]
 
 [[package]]

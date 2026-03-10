@@ -1390,3 +1390,147 @@ fn test_hover_enhanced_info() {
 
     shutdown(&mut stdin, &mut stdout, child);
 }
+
+#[test]
+fn test_hover_no_collapse_keyword() {
+    let (mut stdin, mut stdout, child) = start_server();
+    initialize(&mut stdin, &mut stdout);
+
+    let grammar = "@no_collapse items ;\nitems = /[a-z]+/ * ;\nprogram = items ;";
+    let _diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+
+    // Hover on "@no_collapse" keyword at line 0, char 5
+    send_lsp(
+        &mut stdin,
+        r#"{"jsonrpc":"2.0","id":10,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///test.bbnf"},"position":{"line":0,"character":5}}}"#,
+    );
+    let resp = read_response(&mut stdout, 10);
+    eprintln!("@no_collapse keyword hover: {}", resp);
+    assert!(
+        resp.contains("@no_collapse"),
+        "Expected @no_collapse in hover, got: {}",
+        resp
+    );
+    assert!(
+        resp.contains("directive"),
+        "Expected directive description in hover, got: {}",
+        resp
+    );
+
+    shutdown(&mut stdin, &mut stdout, child);
+}
+
+#[test]
+fn test_hover_no_collapse_rule_name() {
+    let (mut stdin, mut stdout, child) = start_server();
+    initialize(&mut stdin, &mut stdout);
+
+    let grammar = "@no_collapse items ;\nitems = /[a-z]+/ * ;\nprogram = items ;";
+    let _diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+
+    // Hover on "items" rule name in @no_collapse at line 0, char 15
+    send_lsp(
+        &mut stdin,
+        r#"{"jsonrpc":"2.0","id":11,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///test.bbnf"},"position":{"line":0,"character":15}}}"#,
+    );
+    let resp = read_response(&mut stdout, 11);
+    eprintln!("@no_collapse rule name hover: {}", resp);
+    assert!(
+        resp.contains("items"),
+        "Expected items in hover, got: {}",
+        resp
+    );
+
+    shutdown(&mut stdin, &mut stdout, child);
+}
+
+#[test]
+fn test_hover_recover_keyword() {
+    let (mut stdin, mut stdout, child) = start_server();
+    initialize(&mut stdin, &mut stdout);
+
+    let grammar = "@recover stmt /[^;]*;/ ;\nstmt = /[a-z]+/ , \"=\" , /[a-z]+/ , \";\" ;\nprogram = stmt * ;";
+    let _diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+
+    // Hover on "@recover" keyword at line 0, char 3
+    send_lsp(
+        &mut stdin,
+        r#"{"jsonrpc":"2.0","id":10,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///test.bbnf"},"position":{"line":0,"character":3}}}"#,
+    );
+    let resp = read_response(&mut stdout, 10);
+    eprintln!("@recover keyword hover: {}", resp);
+    assert!(
+        resp.contains("@recover"),
+        "Expected @recover in hover, got: {}",
+        resp
+    );
+    assert!(
+        resp.contains("directive"),
+        "Expected directive description in hover, got: {}",
+        resp
+    );
+
+    shutdown(&mut stdin, &mut stdout, child);
+}
+
+#[test]
+fn test_diagnostics_no_collapse_undefined_target() {
+    let (mut stdin, mut stdout, child) = start_server();
+    initialize(&mut stdin, &mut stdout);
+
+    let grammar = "@no_collapse nonexistent ;\nstmt = /[a-z]+/ ;";
+    let diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+    eprintln!("Diagnostics: {}", diag);
+    assert!(
+        diag.contains("@no_collapse"),
+        "Expected @no_collapse warning in diagnostics, got: {}",
+        diag
+    );
+
+    shutdown(&mut stdin, &mut stdout, child);
+}
+
+#[test]
+fn test_goto_definition_from_no_collapse() {
+    let (mut stdin, mut stdout, child) = start_server();
+    initialize(&mut stdin, &mut stdout);
+
+    // items is defined on line 1
+    let grammar = "@no_collapse items ;\nitems = /[a-z]+/ * ;\nprogram = items ;";
+    let _diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+
+    // Go to definition of "items" in @no_collapse at line 0, char 15
+    send_lsp(
+        &mut stdin,
+        r#"{"jsonrpc":"2.0","id":11,"method":"textDocument/definition","params":{"textDocument":{"uri":"file:///test.bbnf"},"position":{"line":0,"character":15}}}"#,
+    );
+    let resp = read_response(&mut stdout, 11);
+    eprintln!("Definition from @no_collapse: {}", resp);
+    // Should point to line 1 (where items is defined)
+    assert!(
+        resp.contains("\"line\":1"),
+        "Expected definition at line 1, got: {}",
+        resp
+    );
+
+    shutdown(&mut stdin, &mut stdout, child);
+}
+
+#[test]
+fn test_no_collapse_rule_not_unused() {
+    let (mut stdin, mut stdout, child) = start_server();
+    initialize(&mut stdin, &mut stdout);
+
+    // "middle" is only referenced by @no_collapse — should not be flagged as unused.
+    let grammar = "entry = /[a-z]+/ ;\n@no_collapse middle ;\nmiddle = /[0-9]+/ ;\nlast = entry ;";
+    let diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+    eprintln!("Diagnostics: {}", diag);
+    // Should NOT have "Unused rule: `middle`"
+    assert!(
+        !diag.contains("Unused rule"),
+        "middle should not be flagged as unused: {}",
+        diag
+    );
+
+    shutdown(&mut stdin, &mut stdout, child);
+}

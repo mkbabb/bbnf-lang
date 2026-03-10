@@ -1,0 +1,15 @@
+[package]
+name = "bbnf-analysis"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "Pure analysis logic for BBNF grammars (shared by LSP + WASM)"
+
+[dependencies]
+ls-types = "0.0.6"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+bbnf = { version = "0.2.0", path = "../bbnf" }
+pprint = "0.3.1"
+indexmap = "2"
+self_cell = "1.2.2"

@@ -7,8 +7,17 @@ data/
 !.vscode/tasks.json
 *.vsix
 rust/target/
+wasm/target/
+wasm/.cargo/
 *.out
 dist/
 extension/server/
 
 .cargo/
+.claude/
+
+# Playwright MCP
+.playwright-mcp/
+
+# Screenshot artifacts (root only, not assets/)
+/*.png

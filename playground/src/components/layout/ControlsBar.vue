@@ -12,7 +12,7 @@ const exampleIcons: Record<string, string> = {
     JSON: "/icons/json.svg",
     CSS: "/icons/css.svg",
     BBNF: "/icons/bbnf.svg",
-    Math: "/icons/js.svg",
+    Math: "/icons/math.svg",
     Hello: "/icons/text.svg",
 };
 

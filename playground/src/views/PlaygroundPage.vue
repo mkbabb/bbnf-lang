@@ -70,6 +70,9 @@ const langIcons: Record<string, string> = {
     json: "/icons/json.svg",
     css: "/icons/css.svg",
     javascript: "/icons/js.svg",
+    typescript: "/icons/typescript.svg",
+    html: "/icons/html.svg",
+    markdown: "/icons/markdown.svg",
     bbnf: "/icons/bbnf.svg",
     plaintext: "/icons/text.svg",
 };

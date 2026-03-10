@@ -49,22 +49,24 @@ pub fn parse_once(src: &str) -> (Option<CachedParseResult<'_>>, ParseDiagnostics
                         items.iter().map(|i| i.to_string()).collect()
                     }),
                 }).collect();
-                let recovers = pg.recovers.iter().map(|rec| RecoverInfo {
-                    rule_name: rec.rule_name.to_string(),
-                    span: (rec.span.start, rec.span.end),
-                    rule_name_span: {
-                        // The rule name starts after "@recover " — approximate from directive span.
-                        // We'll refine in diagnostics where we have the source text.
-                        let name_str = rec.rule_name.as_ref();
-                        let dir_src = rec.span.as_str();
-                        let name_start = dir_src.find(name_str).map(|off| rec.span.start + off).unwrap_or_else(|| {
-                            panic!(
-                                "could not resolve @recover rule-name span for `{}` within directive `{}`",
-                                name_str, dir_src
-                            )
-                        });
-                        (name_start, name_start + name_str.len())
-                    },
+                let recovers = pg.recovers.iter().map(|rec| {
+                    let name_str = rec.rule_name.as_ref();
+                    let dir_src = rec.span.as_str();
+                    let name_start = dir_src.find(name_str).map(|off| rec.span.start + off).unwrap_or_else(|| {
+                        panic!(
+                            "could not resolve @recover rule-name span for `{}` within directive `{}`",
+                            name_str, dir_src
+                        )
+                    });
+                    // Extract sync expression text: everything between end of rule name and end of directive (minus trailing `;`).
+                    let after_name = &dir_src[name_start - rec.span.start + name_str.len()..];
+                    let sync_text = after_name.trim().trim_end_matches(';').trim().to_string();
+                    RecoverInfo {
+                        rule_name: name_str.to_string(),
+                        span: (rec.span.start, rec.span.end),
+                        rule_name_span: (name_start, name_start + name_str.len()),
+                        sync_expr_text: sync_text,
+                    }
                 }).collect();
                 let no_collapses = pg.no_collapses.iter().map(|nc| {
                     let name_str = nc.rule_name.as_ref();

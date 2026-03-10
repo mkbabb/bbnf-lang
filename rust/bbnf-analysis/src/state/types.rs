@@ -55,6 +55,8 @@ pub struct RecoverInfo {
     pub span: (usize, usize),
     /// Byte offset range of the rule name within the directive.
     pub rule_name_span: (usize, usize),
+    /// The sync expression source text (e.g. `";" | "}"` or `/[;\n]/`).
+    pub sync_expr_text: String,
 }
 
 /// Owned representation of a @no_collapse directive.

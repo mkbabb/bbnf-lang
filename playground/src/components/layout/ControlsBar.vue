@@ -9,11 +9,11 @@ import type { PipelineError } from "@/composables/usePipeline";
 import type { Example } from "@/composables/useExamples";
 
 const exampleIcons: Record<string, string> = {
-    JSON: "/icons/json.svg",
-    CSS: "/icons/css.svg",
-    BBNF: "/icons/bbnf.png",
-    Math: "/icons/math.svg",
-    Hello: "/icons/text.svg",
+    JSON: "/img/json.svg",
+    CSS: "/img/css.svg",
+    BBNF: "/img/bbnf.png",
+    Math: "/img/math.svg",
+    Hello: "/img/text.svg",
 };
 
 const props = defineProps<{
@@ -85,7 +85,7 @@ const sourceLabels: Record<string, string> = {
         >
             <SelectTrigger class="w-auto h-8 md:h-10 border-none bg-transparent shadow-none px-1 gap-1.5 instrument-serif text-sm md:text-lg text-foreground rounded-lg [&>span]:flex [&>span]:items-center [&>span]:gap-1.5">
                 <SelectValue>
-                    <img :src="exampleIcons[currentExample.name] ?? '/icons/text.svg'" alt="" class="h-4 w-4 md:h-5 md:w-5 shrink-0" />
+                    <img :src="exampleIcons[currentExample.name] ?? '/img/text.svg'" alt="" class="h-4 w-4 md:h-5 md:w-5 shrink-0" />
                     <span :class="shimmerClass(currentExample.name)">{{ currentExample.name }}</span>
                 </SelectValue>
             </SelectTrigger>
@@ -97,7 +97,7 @@ const sourceLabels: Record<string, string> = {
                     class="instrument-serif rounded-md py-2.5 pl-9 pr-3 cursor-pointer transition-colors hover:bg-accent/60"
                 >
                     <span class="flex items-center gap-2">
-                        <img :src="exampleIcons[ex.name] ?? '/icons/text.svg'" alt="" class="h-5 w-5 shrink-0" />
+                        <img :src="exampleIcons[ex.name] ?? '/img/text.svg'" alt="" class="h-5 w-5 shrink-0" />
                         <span class="text-base" :class="shimmerClass(ex.name)">{{ ex.name }}</span>
                         <span class="text-sm text-muted-foreground truncate ml-1">{{ ex.description }}</span>
                     </span>

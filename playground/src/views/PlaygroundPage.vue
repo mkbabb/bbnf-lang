@@ -67,14 +67,14 @@ function toggleRightTab() {
 
 // Language badge config
 const langIcons: Record<string, string> = {
-    json: "/icons/json.svg",
-    css: "/icons/css.svg",
-    javascript: "/icons/js.svg",
-    typescript: "/icons/typescript.svg",
-    html: "/icons/html.svg",
-    markdown: "/icons/markdown.svg",
-    bbnf: "/icons/bbnf.png",
-    plaintext: "/icons/text.svg",
+    json: "/img/json.svg",
+    css: "/img/css.svg",
+    javascript: "/img/js.svg",
+    typescript: "/img/typescript.svg",
+    html: "/img/html.svg",
+    markdown: "/img/markdown.svg",
+    bbnf: "/img/bbnf.png",
+    plaintext: "/img/text.svg",
 };
 
 const panelConfig = {

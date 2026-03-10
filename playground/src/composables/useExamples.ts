@@ -14,9 +14,9 @@ export interface Example {
 }
 
 const examples: Example[] = [
-    { ...jsonExample, description: "RFC 8259 JSON — object, array, string, number, boolean, null", tags: ["@pretty", "recursive"] },
-    { ...cssExample, description: "CSS L1.75 — selectors, declarations, @media, @supports, error recovery", tags: ["error recovery", "@pretty", "nesting"] },
-    { ...bbnfExample, description: "BBNF parsing itself — self-hosting grammar with @pretty directives", tags: ["self-hosting", "@pretty", "meta"] },
+    { ...jsonExample, description: "RFC 8259 `JSON` — object, array, string, number, boolean, null", tags: ["@pretty", "recursive"] },
+    { ...cssExample, description: "`CSS L1.75` — selectors, declarations, `@media`, `@supports`, `error recovery`", tags: ["error recovery", "@pretty", "nesting"] },
+    { ...bbnfExample, description: "`BBNF` parsing itself — self-hosting grammar with `@pretty` directives", tags: ["self-hosting", "@pretty", "meta"] },
     { ...mathExample, description: "Operator-precedence math — left-recursive via memoization", tags: ["precedence", "recursive"] },
     { ...helloExample, description: "Minimal grammar — single string literal", tags: ["beginner"] },
 ];

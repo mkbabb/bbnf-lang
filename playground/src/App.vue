@@ -4,6 +4,7 @@ import { useRoute } from "vue-router";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NavBar from "@/components/layout/NavBar.vue";
 import FooterSection from "@/components/landing/FooterSection.vue";
+import { Toaster } from "vue-sonner";
 
 const route = useRoute();
 const showFooter = computed(() => route.path !== "/playground" && !route.path.startsWith("/docs"));
@@ -26,6 +27,14 @@ const showFooter = computed(() => route.path !== "/playground" && !route.path.st
                 </transition>
             </router-view>
             <FooterSection v-if="showFooter" />
+            <Toaster
+                position="top-right"
+                rich-colors
+                close-button
+                :toast-options="{
+                    class: 'border border-border/40 bg-card/92 backdrop-blur-xl',
+                }"
+            />
         </div>
     </TooltipProvider>
 </template>

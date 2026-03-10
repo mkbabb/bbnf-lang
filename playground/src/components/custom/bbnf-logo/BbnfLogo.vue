@@ -1,13 +1,16 @@
 <script setup lang="ts">
 withDefaults(defineProps<{
-    size?: "sm" | "md" | "lg" | "xl" | "2xl";
+    size?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
+    brand?: boolean;
     shimmer?: boolean;
 }>(), {
     size: "md",
+    brand: false,
     shimmer: false,
 });
 
 const sizeClasses = {
+    xs: { icon: "h-4 w-4", text: "text-lg" },
     sm: { icon: "h-5 w-5", text: "text-xl" },
     md: { icon: "h-7 w-7", text: "text-3xl" },
     lg: { icon: "h-10 w-10", text: "text-5xl" },
@@ -23,7 +26,7 @@ const sizeClasses = {
             :class="[
                 'instrument-serif tracking-tight',
                 sizeClasses[size].text,
-                shimmer ? 'bbnf-shimmer' : 'text-foreground',
+                shimmer ? 'bbnf-shimmer' : brand ? 'text-pastel-green' : 'text-foreground',
             ]"
         >BNF</span>
     </span>

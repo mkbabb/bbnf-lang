@@ -23,6 +23,8 @@ export interface PipelineResult {
     inputText: Ref<string>;
     /** Optional entry rule override (e.g. "stylesheet" for CSS). */
     entryRuleOverride: Ref<string>;
+    /** Entry rules discovered from the last successful grammar compile. */
+    availableEntryRules: Ref<string[]>;
     printerConfig: { maxWidth: number; indent: number; useTabs: boolean };
     astJson: Ref<string>;
     formatted: Ref<string>;
@@ -83,6 +85,7 @@ export function usePipeline(): PipelineResult {
     const grammarText = ref("");
     const inputText = ref("");
     const entryRuleOverride = ref("");
+    const availableEntryRules = ref<string[]>([]);
     const printerConfig = reactive({ maxWidth: 80, indent: 2, useTabs: false });
 
     const astJson = ref("");
@@ -122,6 +125,7 @@ export function usePipeline(): PipelineResult {
                 cachedEntryRule = "";
 
                 if (!grammarText.value.trim()) {
+                    availableEntryRules.value = [];
                     astJson.value = "";
                     formatted.value = "";
                     return;
@@ -140,6 +144,7 @@ export function usePipeline(): PipelineResult {
                     const parsed = result[1];
                     const ast = parsed.rules;
                     cachedPretties = parsed.pretties ?? [];
+                    availableEntryRules.value = Array.from(ast.keys());
 
                     dedupGroups(ast);
                     const analysis = analyzeGrammar(ast);
@@ -175,6 +180,7 @@ export function usePipeline(): PipelineResult {
                 } catch (e: any) {
                     const msg = e.message ?? String(e);
                     const pos = extractPosition(msg, grammarText.value);
+                    availableEntryRules.value = [];
                     errors.value.push({ message: msg, source: "grammar", ...pos });
                     astJson.value = "";
                     formatted.value = "";
@@ -295,7 +301,20 @@ export function usePipeline(): PipelineResult {
         },
     );
 
-    return { grammarText, inputText, entryRuleOverride, printerConfig, astJson, formatted, errors, isProcessing, formattedLanguage, formattedBy, telemetry };
+    return {
+        grammarText,
+        inputText,
+        entryRuleOverride,
+        availableEntryRules,
+        printerConfig,
+        astJson,
+        formatted,
+        errors,
+        isProcessing,
+        formattedLanguage,
+        formattedBy,
+        telemetry,
+    };
 }
 
 /**

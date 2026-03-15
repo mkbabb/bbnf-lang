@@ -1,23 +1,16 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import InlineRichText from "@/components/ui/InlineRichText.vue";
-import { AlertCircle, Copy, GitBranch, Link2, Loader2, RotateCcw, Settings2 } from "lucide-vue-next";
+import ErrorDialog from "@/components/layout/ErrorDialog.vue";
+import FormatterSettings from "@/components/layout/FormatterSettings.vue";
+import { Copy, GitBranch, Link2, Loader2, RotateCcw } from "lucide-vue-next";
+import { exampleIcons, exampleToneClass, shimmerClass, tagToneStyle } from "@/lib/toneMaps";
 import type { PipelineError } from "@/composables/usePipeline";
 import type { Example } from "@/composables/useExamples";
 
 const AUTO_ENTRY_VALUE = "__auto__";
-
-const exampleIcons: Record<string, string> = {
-    JSON: "/img/json.svg",
-    CSS: "/img/css.svg",
-    BBNF: "/img/bbnf.png",
-    Math: "/img/math.svg",
-    Hello: "/img/text.svg",
-};
 
 const props = defineProps<{
     examples: Example[];
@@ -40,32 +33,7 @@ const emit = defineEmits<{
     jumpToError: [error: PipelineError];
 }>();
 
-const errorDialogOpen = ref(false);
-const settingsOpen = ref(false);
 const descriptionScrollDistances = ref<Record<string, number>>({});
-
-const widthModel = computed({
-    get: () => [props.printerConfig.maxWidth],
-    set: (val: number[]) => { props.printerConfig.maxWidth = val[0]; },
-});
-
-const indentLabel = computed(() => {
-    if (props.printerConfig.useTabs) return "Tab";
-    return String(props.printerConfig.indent);
-});
-
-const indentModel = computed({
-    get: () => props.printerConfig.useTabs ? "tab" : String(props.printerConfig.indent),
-    set: (val: string) => {
-        if (val === "tab") {
-            props.printerConfig.useTabs = true;
-            props.printerConfig.indent = 1;
-        } else {
-            props.printerConfig.useTabs = false;
-            props.printerConfig.indent = parseInt(val, 10);
-        }
-    },
-});
 
 const entryRuleModel = computed({
     get: () => props.entryRule || AUTO_ENTRY_VALUE,
@@ -78,7 +46,7 @@ const copyLabel = computed(() => props.activeResultLabel === "Parsed AST" ? "Cop
 const firstEntryRule = computed(() => props.availableEntryRules[0] ?? "");
 const entryRuleOptions = computed(() => {
     const autoDetail = firstEntryRule.value
-        ? `Uses “${firstEntryRule.value}” as the compiled default.`
+        ? `Uses "${firstEntryRule.value}" as the compiled default.`
         : "Uses the first compiled rule in the grammar.";
 
     return [
@@ -106,63 +74,12 @@ const selectedEntryRuleOption = computed(() => {
 const entryRuleTooltip = computed(() => {
     if (selectedEntryRuleOption.value?.value === AUTO_ENTRY_VALUE) {
         return firstEntryRule.value
-            ? `\`Auto\` starts from “${firstEntryRule.value}”. Pick another rule here to change the parser entry.`
+            ? `\`Auto\` starts from "${firstEntryRule.value}". Pick another rule here to change the parser entry.`
             : "`Auto` starts from the first compiled rule. Pick another rule here to change the parser entry.";
     }
 
-    return `Parsing currently starts from “${selectedEntryRuleOption.value?.label}”. Switch this to change the parser entry.`;
+    return `Parsing currently starts from "${selectedEntryRuleOption.value?.label}". Switch this to change the parser entry.`;
 });
-
-/** Per-language shimmer color map. */
-const shimmerMap: Record<string, "gold" | "blue"> = {
-    BBNF: "gold",
-    CSS: "blue",
-};
-
-function shimmerClass(name: string): string {
-    const color = shimmerMap[name];
-    if (color === "gold") return "gold-shimmer";
-    if (color === "blue") return "blue-shimmer";
-    return "";
-}
-
-const exampleToneMap: Record<string, string> = {
-    JSON: "border-pastel-green/25 hover:border-pastel-green/45 hover:bg-pastel-green/5",
-    CSS: "border-pastel-blue/25 hover:border-pastel-blue/45 hover:bg-pastel-blue/5",
-    BBNF: "border-pastel-amber/25 hover:border-pastel-amber/45 hover:bg-pastel-amber/5",
-    Math: "border-pastel-purple/25 hover:border-pastel-purple/45 hover:bg-pastel-purple/5",
-    Hello: "border-pastel-green/25 hover:border-pastel-green/45 hover:bg-pastel-green/5",
-};
-
-const tagToneMap: Record<string, string> = {
-    "@pretty": "pastel-pink",
-    "@recover": "pastel-blue",
-    "error recovery": "pastel-blue",
-    recursive: "pastel-green",
-    nesting: "pastel-purple",
-    precedence: "pastel-amber",
-    "self-hosting": "pastel-amber",
-    meta: "pastel-purple",
-    beginner: "pastel-green",
-};
-
-function exampleToneClass(name: string): string {
-    return exampleToneMap[name] ?? "border-border/35 hover:border-border/60 hover:bg-accent/40";
-}
-
-function tagToneColor(tag: string): string {
-    return tagToneMap[tag.toLowerCase()] ?? "muted-foreground";
-}
-
-function tagToneStyle(tag: string) {
-    const color = tagToneColor(tag);
-    return {
-        color: `var(--color-${color})`,
-        background: `color-mix(in srgb, var(--color-${color}) 12%, transparent)`,
-        border: `1px solid color-mix(in srgb, var(--color-${color}) 24%, transparent)`,
-        boxShadow: `inset 0 1px 0 color-mix(in srgb, var(--color-${color}) 10%, transparent)`,
-    };
-}
 
 function measureDescriptionScroll(name: string, event: Event) {
     const item = event.currentTarget as HTMLElement | null;
@@ -177,25 +94,11 @@ function measureDescriptionScroll(name: string, event: Event) {
 
 function descriptionScrollStyle(name: string) {
     const distance = descriptionScrollDistances.value[name] ?? 0;
-    return {
-        "--description-scroll-distance": `${distance}px`,
-    };
+    return { "--description-scroll-distance": `${distance}px` };
 }
 
 function hasDescriptionOverflow(name: string) {
     return (descriptionScrollDistances.value[name] ?? 0) > 8;
-}
-
-const sourceLabels: Record<string, string> = {
-    grammar: "Grammar",
-    parse: "Parse",
-    format: "Format",
-    import: "Import",
-};
-
-function onJumpToError(error: PipelineError) {
-    errorDialogOpen.value = false;
-    emit("jumpToError", error);
 }
 </script>
 
@@ -248,7 +151,7 @@ function onJumpToError(error: PipelineError) {
                                                 <span
                                                     v-for="tag in ex.tags"
                                                     :key="tag"
-                                                    class="inline-flex items-center rounded-full px-2 py-0.5 font-mono text-[10px] tracking-[0.04em] backdrop-blur-sm"
+                                                    class="inline-flex items-center rounded-full px-2 py-0.5 font-mono text-[length:var(--font-size-label)] tracking-[0.04em] backdrop-blur-sm"
                                                     :style="tagToneStyle(tag)"
                                                 >
                                                     {{ tag }}
@@ -288,7 +191,7 @@ function onJumpToError(error: PipelineError) {
                                     <div class="min-w-0">
                                         <div class="flex items-center gap-2">
                                             <span
-                                                class="rounded border px-1.5 py-0.5 font-mono text-[11px]"
+                                                class="rounded border px-1.5 py-0.5 font-mono text-xs"
                                                 :class="option.toneClass"
                                             >
                                                 {{ option.label === "Auto" ? "default" : "entry" }}
@@ -314,42 +217,11 @@ function onJumpToError(error: PipelineError) {
             <div class="flex items-center justify-center">
                 <Loader2 v-if="isProcessing" class="h-4 w-4 animate-spin text-muted-foreground sm:h-5 sm:w-5" />
 
-                <template v-else-if="errors.length > 0">
-                    <Dialog v-model:open="errorDialogOpen">
-                        <Tooltip>
-                            <TooltipTrigger as-child>
-                                <DialogTrigger as-child>
-                                    <button class="flex items-center gap-1 rounded-xl px-2 py-1 text-xs text-destructive transition-colors hover:bg-destructive/8 hover:text-destructive/80 sm:text-sm">
-                                        <AlertCircle class="h-3.5 w-3.5 shrink-0 sm:h-4.5 sm:w-4.5" />
-                                        <span class="font-mono">{{ errors.length }}</span>
-                                    </button>
-                                </DialogTrigger>
-                            </TooltipTrigger>
-                            <TooltipContent side="top" :side-offset="8">
-                                <p class="text-xs">Inspect errors and jump to the failing editor span.</p>
-                            </TooltipContent>
-                        </Tooltip>
-                        <DialogContent class="max-w-lg">
-                            <DialogTitle class="instrument-serif text-xl text-destructive">Errors</DialogTitle>
-                            <DialogDescription class="sr-only">Pipeline errors</DialogDescription>
-                            <div class="mt-4 space-y-3 max-h-96 overflow-y-auto">
-                                <button
-                                    v-for="(err, i) in errors"
-                                    :key="i"
-                                    type="button"
-                                    class="w-full rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-left transition-colors hover:bg-destructive/10"
-                                    @click="onJumpToError(err)"
-                                >
-                                    <div class="mb-1 flex items-center gap-2">
-                                        <span class="text-xs font-medium uppercase tracking-wider text-destructive/70">{{ sourceLabels[err.source] ?? err.source }}</span>
-                                        <span v-if="err.line" class="font-mono text-xs text-muted-foreground">line {{ err.line }}<template v-if="err.column">:{{ err.column }}</template></span>
-                                    </div>
-                                    <p class="text-sm font-mono text-foreground/90 break-words">{{ err.message }}</p>
-                                </button>
-                            </div>
-                        </DialogContent>
-                    </Dialog>
-                </template>
+                <ErrorDialog
+                    v-else-if="errors.length > 0"
+                    :errors="errors"
+                    @jump-to-error="(err) => emit('jumpToError', err)"
+                />
 
                 <Tooltip v-else>
                     <TooltipTrigger as-child>
@@ -415,48 +287,7 @@ function onJumpToError(error: PipelineError) {
                     </TooltipContent>
                 </Tooltip>
 
-                <Dialog v-model:open="settingsOpen">
-                    <Tooltip>
-                        <TooltipTrigger as-child>
-                            <DialogTrigger as-child>
-                                <button class="flex h-9 items-center gap-1.5 rounded-xl border border-border/35 bg-background/30 px-2.5 text-muted-foreground transition-all hover:border-border/55 hover:bg-background/45 hover:text-foreground sm:h-10">
-                                    <Settings2 class="h-4 w-4 shrink-0" />
-                                    <span class="hidden font-mono text-xs sm:inline">{{ printerConfig.maxWidth }}w · {{ indentLabel }}</span>
-                                </button>
-                            </DialogTrigger>
-                        </TooltipTrigger>
-                        <TooltipContent side="top" :side-offset="8" class="max-w-xs border-border/40 bg-card/90 backdrop-blur-xl">
-                            <p class="text-xs sm:text-sm">Tune print width and indentation for the formatter output.</p>
-                        </TooltipContent>
-                    </Tooltip>
-                    <DialogContent class="max-w-sm">
-                        <DialogTitle class="instrument-serif text-xl">Formatter Settings</DialogTitle>
-                        <DialogDescription class="sr-only">Configure formatter width and indentation</DialogDescription>
-                        <div class="mt-4 space-y-5">
-                            <div class="space-y-2">
-                                <div class="flex items-center justify-between">
-                                    <label class="instrument-serif text-base text-muted-foreground">Print Width</label>
-                                    <span class="tabular-nums text-sm text-foreground font-mono">{{ printerConfig.maxWidth }}</span>
-                                </div>
-                                <Slider v-model="widthModel" :min="40" :max="120" :step="1" />
-                            </div>
-
-                            <div class="space-y-2">
-                                <label class="instrument-serif text-base text-muted-foreground">Indentation</label>
-                                <Select v-model="indentModel">
-                                    <SelectTrigger class="h-9 w-full">
-                                        <span class="tabular-nums">{{ indentLabel === "Tab" ? "Tab" : `${indentLabel} spaces` }}</span>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="2">2 spaces</SelectItem>
-                                        <SelectItem value="4">4 spaces</SelectItem>
-                                        <SelectItem value="tab">Tab</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                    </DialogContent>
-                </Dialog>
+                <FormatterSettings :printer-config="printerConfig" />
             </div>
         </div>
     </div>
@@ -471,7 +302,7 @@ function onJumpToError(error: PipelineError) {
 
 .group\/example:hover .example-description-track[data-overflow="true"],
 .group\/example:focus-within .example-description-track[data-overflow="true"] {
-    animation: description-marquee 5.5s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+    animation: description-marquee 5.5s var(--ease-smooth) infinite alternate;
 }
 
 @keyframes description-marquee {

@@ -12,6 +12,10 @@ import type {
     WasmSelectionRange,
     WasmCodeAction,
     WasmCodeLens,
+    WasmLocation,
+    WasmPrepareRename,
+    WasmTextEdit,
+    WasmParseResult,
 } from "./types";
 
 export type {
@@ -31,6 +35,10 @@ export type {
     WasmTextEdit,
     WasmCodeAction,
     WasmCodeLens,
+    WasmLocation,
+    WasmPrepareRename,
+    WasmParseResult,
+    WasmParseDiagnostic,
 } from "./types";
 
 export { toMonacoRange } from "./types";
@@ -47,10 +55,10 @@ export function detectBuiltinLanguage(entryRule: string): string | null {
     const lower = entryRule.toLowerCase();
     if (lower === "value" || lower === "json") return "json";
     if (lower === "stylesheet" || lower === "css") return "css";
-    if (lower === "grammar") {
-        // Could be BNF, EBNF, or BBNF — we can't distinguish without more context
-        return null;
-    }
+    if (lower === "bnf_grammar") return "bnf";
+    if (lower === "ebnf_grammar") return "ebnf";
+    if (lower === "bbnf_grammar") return "bbnf";
+    // "grammar" could be BNF, EBNF, or BBNF — let VM handle ambiguous grammars.
     return null;
 }
 
@@ -176,6 +184,71 @@ export function useWasm() {
         return getWasmModule().code_lens(text) as WasmCodeLens[];
     }
 
+    async function findReferences(text: string, offset: number): Promise<WasmLocation[]> {
+        await ensureLoaded();
+        const result = getWasmModule().find_references(text, offset);
+        return result ? (result as WasmLocation[]) : [];
+    }
+
+    async function prepareRename(text: string, offset: number): Promise<WasmPrepareRename | null> {
+        await ensureLoaded();
+        return getWasmModule().prepare_rename(text, offset) as WasmPrepareRename | null;
+    }
+
+    async function renameSymbol(text: string, offset: number, newName: string): Promise<WasmTextEdit[]> {
+        await ensureLoaded();
+        const result = getWasmModule().rename_symbol(text, offset, newName);
+        return result ? (result as WasmTextEdit[]) : [];
+    }
+
+    async function formatDocument(text: string): Promise<WasmTextEdit[]> {
+        await ensureLoaded();
+        const result = getWasmModule().format_document(text);
+        return result ? (result as WasmTextEdit[]) : [];
+    }
+
+    async function formatRange(text: string, startOffset: number, endOffset: number): Promise<WasmTextEdit[]> {
+        await ensureLoaded();
+        const result = getWasmModule().format_range(text, startOffset, endOffset);
+        return result ? (result as WasmTextEdit[]) : [];
+    }
+
+    async function onTypeFormat(text: string, offset: number): Promise<WasmTextEdit[]> {
+        await ensureLoaded();
+        const result = getWasmModule().on_type_format(text, offset);
+        return result ? (result as WasmTextEdit[]) : [];
+    }
+
+    // -----------------------------------------------------------------------
+    // Bytecode VM: compile, parse, format, free
+    // -----------------------------------------------------------------------
+
+    async function compileGrammar(grammar: string, entryRule?: string): Promise<number> {
+        await ensureLoaded();
+        return getWasmModule().compile_grammar(grammar, entryRule ?? undefined);
+    }
+
+    async function parseWithGrammar(handle: number, input: string): Promise<WasmParseResult> {
+        await ensureLoaded();
+        return getWasmModule().parse_with_grammar(handle, input) as WasmParseResult;
+    }
+
+    async function formatWithGrammar(
+        handle: number,
+        input: string,
+        maxWidth: number,
+        indent: number,
+        useTabs: boolean,
+    ): Promise<string | null> {
+        await ensureLoaded();
+        return getWasmModule().format_with_grammar(handle, input, maxWidth, indent, useTabs) ?? null;
+    }
+
+    function freeGrammar(handle: number): void {
+        if (!isLoaded.value) return;
+        getWasmModule().free_grammar(handle);
+    }
+
     return {
         isLoaded,
         isLoading,
@@ -192,5 +265,15 @@ export function useWasm() {
         getSelectionRanges,
         getCodeActions,
         getCodeLens,
+        findReferences,
+        prepareRename,
+        renameSymbol,
+        formatDocument,
+        formatRange,
+        onTypeFormat,
+        compileGrammar,
+        parseWithGrammar,
+        formatWithGrammar,
+        freeGrammar,
     };
 }

@@ -1,6 +1,13 @@
 import * as monaco from "monaco-editor";
 import { useWasm, ensureWasmLoaded, toMonacoRange } from "./wasm";
-import type { WasmDiagnostic, WasmAnalysisResult, WasmSelectionRange } from "./wasm";
+import type {
+    WasmDiagnostic,
+    WasmAnalysisResult,
+    WasmSelectionRange,
+    WasmLocation,
+    WasmPrepareRename,
+    WasmTextEdit,
+} from "./wasm";
 
 const SEVERITY_MAP: Record<number, monaco.MarkerSeverity> = {
     1: monaco.MarkerSeverity.Error,
@@ -284,6 +291,126 @@ function registerCodeLensProvider(
     });
 }
 
+function registerReferenceProvider(
+    wasm: ReturnType<typeof useWasm>,
+): monaco.IDisposable {
+    return monaco.languages.registerReferenceProvider("bbnf", {
+        async provideReferences(model, position) {
+            const text = model.getValue();
+            const offset = model.getOffsetAt(position);
+            const locations = await wasm.findReferences(text, offset);
+
+            return locations.map((loc: WasmLocation) => ({
+                uri: model.uri,
+                range: toMonacoRange(loc.range),
+            }));
+        },
+    });
+}
+
+function registerRenameProvider(
+    wasm: ReturnType<typeof useWasm>,
+): monaco.IDisposable {
+    return monaco.languages.registerRenameProvider("bbnf", {
+        async provideRenameEdits(model, position, newName) {
+            const text = model.getValue();
+            const offset = model.getOffsetAt(position);
+            const edits = await wasm.renameSymbol(text, offset, newName);
+
+            return {
+                edits: edits.map((edit: WasmTextEdit) => ({
+                    resource: model.uri,
+                    textEdit: {
+                        range: toMonacoRange(edit.range),
+                        text: edit.new_text,
+                    },
+                    versionId: model.getVersionId(),
+                })),
+            };
+        },
+        async resolveRenameLocation(model, position) {
+            const text = model.getValue();
+            const offset = model.getOffsetAt(position);
+            const result = await wasm.prepareRename(text, offset);
+            if (!result) {
+                return {
+                    range: new monaco.Range(
+                        position.lineNumber,
+                        position.column,
+                        position.lineNumber,
+                        position.column,
+                    ),
+                    text: "",
+                    rejectReason: "Cannot rename this element",
+                };
+            }
+
+            return {
+                range: toMonacoRange(result.range),
+                text: result.placeholder,
+            };
+        },
+    });
+}
+
+function registerDocumentFormattingEditProvider(
+    wasm: ReturnType<typeof useWasm>,
+): monaco.IDisposable {
+    return monaco.languages.registerDocumentFormattingEditProvider("bbnf", {
+        async provideDocumentFormattingEdits(model) {
+            const text = model.getValue();
+            const edits = await wasm.formatDocument(text);
+
+            return edits.map((edit: WasmTextEdit) => ({
+                range: toMonacoRange(edit.range),
+                text: edit.new_text,
+            }));
+        },
+    });
+}
+
+function registerDocumentRangeFormattingEditProvider(
+    wasm: ReturnType<typeof useWasm>,
+): monaco.IDisposable {
+    return monaco.languages.registerDocumentRangeFormattingEditProvider("bbnf", {
+        async provideDocumentRangeFormattingEdits(model, range) {
+            const text = model.getValue();
+            const startOffset = model.getOffsetAt({
+                lineNumber: range.startLineNumber,
+                column: range.startColumn,
+            });
+            const endOffset = model.getOffsetAt({
+                lineNumber: range.endLineNumber,
+                column: range.endColumn,
+            });
+            const edits = await wasm.formatRange(text, startOffset, endOffset);
+
+            return edits.map((edit: WasmTextEdit) => ({
+                range: toMonacoRange(edit.range),
+                text: edit.new_text,
+            }));
+        },
+    });
+}
+
+function registerOnTypeFormattingEditProvider(
+    wasm: ReturnType<typeof useWasm>,
+): monaco.IDisposable {
+    return monaco.languages.registerOnTypeFormattingEditProvider("bbnf", {
+        autoFormatTriggerCharacters: [";"],
+        async provideOnTypeFormattingEdits(model, position) {
+            const text = model.getValue();
+            const offset = model.getOffsetAt(position);
+            const edits = await wasm.onTypeFormat(text, offset);
+
+            return edits.map((edit: WasmTextEdit) => ({
+                range: toMonacoRange(edit.range),
+                text: edit.new_text,
+            }));
+        },
+    });
+}
+
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
@@ -307,6 +434,11 @@ export async function registerBBNFLanguageProvider() {
         registerSelectionRangeProvider(wasm),
         registerCodeActionProvider(wasm),
         registerCodeLensProvider(wasm),
+        registerReferenceProvider(wasm),
+        registerRenameProvider(wasm),
+        registerDocumentFormattingEditProvider(wasm),
+        registerDocumentRangeFormattingEditProvider(wasm),
+        registerOnTypeFormattingEditProvider(wasm),
     ];
 
     return {

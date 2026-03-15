@@ -1,5 +1,5 @@
 import { ref } from "vue";
-import { jsonExample, cssExample, mathExample, helloExample, bbnfExample } from "./examples";
+import { jsonExample, cssExample, mathExample, helloExample, bbnfExample, googleSheetsExample } from "./examples";
 
 export interface Example {
     name: string;
@@ -19,6 +19,7 @@ const examples: Example[] = [
     { ...bbnfExample, description: "`BBNF` parsing itself — self-hosting grammar with `@pretty` directives", tags: ["self-hosting", "@pretty", "meta"] },
     { ...mathExample, description: "Operator-precedence math — left-recursive via memoization", tags: ["precedence", "recursive"] },
     { ...helloExample, description: "Minimal grammar — single string literal", tags: ["beginner"] },
+    { ...googleSheetsExample },
 ];
 
 export function useExamples() {

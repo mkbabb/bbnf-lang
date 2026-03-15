@@ -125,3 +125,30 @@ export interface WasmCodeLens {
     range: WasmRange;
     title: string;
 }
+
+export interface WasmLocation {
+    range: WasmRange;
+}
+
+export interface WasmPrepareRename {
+    range: WasmRange;
+    placeholder: string;
+}
+
+// ---------------------------------------------------------------------------
+// Parse result diagnostics (from bytecode interpreter FOLLOW sets)
+// ---------------------------------------------------------------------------
+
+export interface WasmParseDiagnostic {
+    rule_name: string | null;
+    offset: number;
+    /** Pre-formatted message, e.g. "expected one of: 'a', 'b', '\\n'". */
+    expected: string;
+}
+
+export interface WasmParseResult {
+    success: boolean;
+    offset: number;
+    value: unknown;
+    diagnostics: WasmParseDiagnostic[];
+}

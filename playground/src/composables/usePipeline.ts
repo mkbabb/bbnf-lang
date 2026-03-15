@@ -1,4 +1,4 @@
-import { ref, reactive, watch, computed, type Ref } from "vue";
+import { ref, reactive, watch, onBeforeUnmount, type Ref } from "vue";
 import { useDebounceFn } from "@vueuse/core";
 import { useWasm, detectBuiltinLanguage } from "./wasm";
 
@@ -33,7 +33,7 @@ export interface PipelineResult {
     /** Language hint for the formatted output editor. */
     formattedLanguage: Ref<string>;
     /** Indicates which formatter produced the output. */
-    formattedBy: Ref<"interpreter" | "gorgeous" | "">;
+    formattedBy: Ref<"gorgeous" | "">;
     /** Timing telemetry for the last pipeline run. */
     telemetry: Telemetry;
 }
@@ -61,24 +61,11 @@ function extractPosition(msg: string, source: string): { line?: number; column?:
 }
 
 /**
- * Recursively unwrap `{ _branch: N, value: V }` wrappers from tagged alternations
- * so the AST JSON view shows clean values to the user.
+ * Convert a byte offset into 1-based line/column using the source text.
  */
-function stripBranchTags(val: unknown): unknown {
-    if (val === null || val === undefined) return val;
-    if (Array.isArray(val)) return val.map(stripBranchTags);
-    if (typeof val === "object") {
-        const obj = val as Record<string, unknown>;
-        if ("_branch" in obj && "value" in obj && Object.keys(obj).length === 2) {
-            return stripBranchTags(obj.value);
-        }
-        const out: Record<string, unknown> = {};
-        for (const [k, v] of Object.entries(obj)) {
-            out[k] = stripBranchTags(v);
-        }
-        return out;
-    }
-    return val;
+function offsetToLineCol(source: string, offset: number): { line: number; column: number } {
+    const lines = source.slice(0, offset).split("\n");
+    return { line: lines.length, column: (lines[lines.length - 1]?.length ?? 0) + 1 };
 }
 
 export function usePipeline(): PipelineResult {
@@ -93,17 +80,14 @@ export function usePipeline(): PipelineResult {
     const errors = ref<PipelineError[]>([]);
     const isProcessing = ref(false);
     const formattedLanguage = ref("plaintext");
-    const formattedBy = ref<"interpreter" | "gorgeous" | "">("");
+    const formattedBy = ref<"gorgeous" | "">("");
     const telemetry = reactive<Telemetry>({ parseMs: 0, formatMs: 0, totalMs: 0, inputBytes: 0 });
 
     const wasm = useWasm();
 
-    // Cache compiled grammar to avoid recompilation on input-only changes
+    // Cache compiled grammar handle to avoid recompilation on input-only changes.
     let cachedGrammarText = "";
-    let cachedEntryOverride = "";
-    let cachedNonterminals: Record<string, any> | null = null;
-    let cachedAST: Map<string, any> | null = null;
-    let cachedPretties: any[] = [];
+    let cachedGrammarHandle: number | null = null;
     let cachedEntryRule = "";
 
     async function runPipeline() {
@@ -111,72 +95,48 @@ export function usePipeline(): PipelineResult {
         errors.value = [];
 
         try {
-            const { BBNFToASTWithImports, ASTToParser, analyzeGrammar, computeFirstSets, dedupGroups } =
-                await import("@mkbabb/bbnf-lang");
-            const { prettify } = await import("@mkbabb/bbnf-lang");
-
-            // Step 1: Compile grammar (only if grammar text or entry rule changed)
-            if (grammarText.value !== cachedGrammarText || entryRuleOverride.value !== cachedEntryOverride) {
+            // Step 1: Compile grammar (only if grammar text changed)
+            if (grammarText.value !== cachedGrammarText) {
+                // Free previous handle
+                if (cachedGrammarHandle != null) {
+                    wasm.freeGrammar(cachedGrammarHandle);
+                    cachedGrammarHandle = null;
+                }
                 cachedGrammarText = grammarText.value;
-                cachedEntryOverride = entryRuleOverride.value;
-                cachedNonterminals = null;
-                cachedAST = null;
-                cachedPretties = [];
                 cachedEntryRule = "";
 
                 if (!grammarText.value.trim()) {
                     availableEntryRules.value = [];
                     astJson.value = "";
                     formatted.value = "";
+                    formattedBy.value = "";
                     return;
                 }
 
                 try {
-                    const result = BBNFToASTWithImports(grammarText.value);
+                    // Analyze grammar first to discover entry rules
+                    const analysis = await wasm.analyzeGrammar(grammarText.value);
+                    if (analysis && analysis.rules.length > 0) {
+                        const ruleNames = analysis.rules.map((r) => r.name);
+                        availableEntryRules.value = ruleNames;
 
-                    if (result.length < 2 || !result[1]) {
-                        errors.value.push({ message: "Failed to parse grammar", source: "grammar" });
-                        astJson.value = "";
-                        formatted.value = "";
-                        return;
+                        // Use explicit override if set, otherwise default to last rule
+                        // (BBNF convention: last rule in source order is the entry point)
+                        const lastRule = ruleNames[ruleNames.length - 1] ?? "";
+                        cachedEntryRule =
+                            entryRuleOverride.value && ruleNames.includes(entryRuleOverride.value)
+                                ? entryRuleOverride.value
+                                : lastRule;
+
+                        // Heuristic: detect output language for syntax highlighting
+                        formattedLanguage.value = detectLanguage(cachedEntryRule, ruleNames);
+                    } else {
+                        availableEntryRules.value = [];
+                        cachedEntryRule = "";
                     }
 
-                    const parsed = result[1];
-                    const ast = parsed.rules;
-                    cachedPretties = parsed.pretties ?? [];
-                    availableEntryRules.value = Array.from(ast.keys());
-
-                    dedupGroups(ast);
-                    const analysis = analyzeGrammar(ast);
-                    const firstNullable = computeFirstSets(ast, analysis);
-                    const nonterminals = ASTToParser(
-                        ast,
-                        analysis,
-                        firstNullable,
-                        parsed.recovers ?? [],
-                        true, // tagAlternations for prettify
-                    );
-
-                    // Only auto-trim if the grammar doesn't handle whitespace itself.
-                    // Grammars using ?w (optionalWhitespace) have explicit whitespace
-                    // handling — global trim would double-skip and break parsing.
-                    if (!hasExplicitWhitespace(ast)) {
-                        for (const key of Object.keys(nonterminals)) {
-                            nonterminals[key] = nonterminals[key].trim();
-                        }
-                    }
-
-                    cachedNonterminals = nonterminals;
-                    cachedAST = ast;
-
-                    // Use explicit override if set, otherwise default to first rule
-                    const firstKey = ast.keys().next().value;
-                    cachedEntryRule = (entryRuleOverride.value && ast.has(entryRuleOverride.value))
-                        ? entryRuleOverride.value
-                        : (firstKey ?? "");
-
-                    // Heuristic: detect output language for syntax highlighting
-                    formattedLanguage.value = detectLanguage(cachedEntryRule, ast);
+                    // Compile grammar via WASM bytecode VM, passing the resolved entry rule
+                    cachedGrammarHandle = await wasm.compileGrammar(grammarText.value, cachedEntryRule || undefined);
                 } catch (e: any) {
                     const msg = e.message ?? String(e);
                     const pos = extractPosition(msg, grammarText.value);
@@ -184,87 +144,97 @@ export function usePipeline(): PipelineResult {
                     errors.value.push({ message: msg, source: "grammar", ...pos });
                     astJson.value = "";
                     formatted.value = "";
+                    formattedBy.value = "";
                     return;
+                }
+            } else if (entryRuleOverride.value) {
+                // Grammar unchanged but entry rule override changed — update cachedEntryRule
+                if (availableEntryRules.value.includes(entryRuleOverride.value)) {
+                    cachedEntryRule = entryRuleOverride.value;
                 }
             }
 
-            if (!cachedNonterminals || !cachedEntryRule || !cachedAST) {
+            if (cachedGrammarHandle == null || !cachedEntryRule) {
                 astJson.value = "";
                 formatted.value = "";
+                formattedBy.value = "";
                 return;
             }
 
             if (!inputText.value.trim()) {
                 astJson.value = "";
                 formatted.value = "";
+                formattedBy.value = "";
                 return;
             }
 
-            // Step 2: Parse input text with the compiled grammar
-            const entryParser = cachedNonterminals[cachedEntryRule];
-            if (!entryParser) {
-                errors.value.push({ message: `No parser for entry rule: "${cachedEntryRule}"`, source: "parse" });
-                return;
-            }
-
+            // Step 2: Parse input text with the compiled grammar via WASM
             try {
                 const t0 = performance.now();
-                const result = entryParser.parse(inputText.value);
+                const result = await wasm.parseWithGrammar(cachedGrammarHandle, inputText.value);
                 const t1 = performance.now();
-                if (result === undefined || result === null) {
-                    errors.value.push({ message: "Input does not match grammar", source: "parse" });
+
+                if (!result.success) {
+                    // Build error message from diagnostics
+                    const diagMessages = result.diagnostics
+                        .map((d) => {
+                            const prefix = d.rule_name ? `[${d.rule_name}] ` : "";
+                            return `${prefix}${d.expected}`;
+                        })
+                        .join("\n");
+
+                    const msg = diagMessages || "Input does not match grammar";
+                    // Use the furthest offset for error position
+                    const pos = offsetToLineCol(inputText.value, result.offset);
+                    errors.value.push({ message: msg, source: "parse", ...pos });
                     astJson.value = "";
                     formatted.value = "";
+                    formattedBy.value = "";
                     return;
                 }
 
-                astJson.value = JSON.stringify(stripBranchTags(result), null, 2);
+                astJson.value = JSON.stringify(result.value, null, 2);
 
-                // Step 3: Format output
-                // Try WASM gorgeous first for built-in languages (perfect output).
-                const builtinLang = detectBuiltinLanguage(cachedEntryRule);
-                let wasmFormatted = false;
+                // Step 3: Format output via WASM
+                // Route: AOT gorgeous formatter for built-in languages, VM for custom grammars.
+                try {
+                    let fmtResult: string | null = null;
 
-                if (builtinLang) {
-                    try {
-                        const wasmOutput = await wasm.formatWithGorgeous(
+                    const builtinLang = detectBuiltinLanguage(cachedEntryRule);
+                    if (builtinLang) {
+                        fmtResult = await wasm.formatWithGorgeous(
                             builtinLang,
                             inputText.value,
                             printerConfig.maxWidth,
                             printerConfig.indent,
                             printerConfig.useTabs,
                         );
-                        if (wasmOutput != null) {
-                            formatted.value = wasmOutput;
-                            formattedBy.value = "gorgeous";
-                            wasmFormatted = true;
-                        }
-                    } catch {
-                        // WASM failed — fall through to TS interpreter
                     }
-                }
 
-                // Fall back to TS prettify interpreter for custom grammars or WASM failures.
-                if (!wasmFormatted) {
-                    if (cachedPretties.length > 0) {
-                        try {
-                            const output = prettify(result, cachedEntryRule, cachedAST, cachedPretties, {
-                                maxWidth: printerConfig.maxWidth,
-                                indent: printerConfig.indent,
-                                useTabs: printerConfig.useTabs,
-                            });
-                            formatted.value = output;
-                            formattedBy.value = "interpreter";
-                        } catch (e: any) {
-                            const msg = e.message ?? String(e);
-                            errors.value.push({ message: msg, source: "format" });
-                            formatted.value = "";
-                        }
+                    if (fmtResult == null && cachedGrammarHandle != null) {
+                        fmtResult = await wasm.formatWithGrammar(
+                            cachedGrammarHandle,
+                            inputText.value,
+                            printerConfig.maxWidth,
+                            printerConfig.indent,
+                            printerConfig.useTabs,
+                        );
+                    }
+
+                    if (fmtResult != null) {
+                        formatted.value = fmtResult;
+                        formattedBy.value = "gorgeous";
                     } else {
                         formatted.value = "(no @pretty directives in grammar)";
                         formattedBy.value = "";
                     }
+                } catch (e: any) {
+                    const msg = e.message ?? String(e);
+                    errors.value.push({ message: msg, source: "format" });
+                    formatted.value = "";
+                    formattedBy.value = "";
                 }
+
                 // Record telemetry
                 const t2 = performance.now();
                 telemetry.parseMs = +(t1 - t0).toFixed(1);
@@ -277,6 +247,7 @@ export function usePipeline(): PipelineResult {
                 errors.value.push({ message: msg, source: "parse", ...pos });
                 astJson.value = "";
                 formatted.value = "";
+                formattedBy.value = "";
             }
         } catch (e: any) {
             errors.value.push({ message: e.message ?? String(e), source: "import" });
@@ -284,6 +255,14 @@ export function usePipeline(): PipelineResult {
             isProcessing.value = false;
         }
     }
+
+    // Free cached grammar handle on unmount to prevent leaks
+    onBeforeUnmount(() => {
+        if (cachedGrammarHandle != null) {
+            wasm.freeGrammar(cachedGrammarHandle);
+            cachedGrammarHandle = null;
+        }
+    });
 
     const debouncedRun = useDebounceFn(runPipeline, 300);
 
@@ -317,39 +296,20 @@ export function usePipeline(): PipelineResult {
     };
 }
 
-/**
- * Check if any expression in the grammar AST uses the `?w` (optionalWhitespace)
- * operator, indicating the grammar handles whitespace explicitly.
- */
-function hasExplicitWhitespace(ast: Map<string, any>): boolean {
-    function walk(expr: any): boolean {
-        if (!expr?.type) return false;
-        if (expr.type === "optionalWhitespace") return true;
-        if (Array.isArray(expr.value)) {
-            return expr.value.some(walk);
-        }
-        if (expr.value && typeof expr.value === "object" && "type" in expr.value) {
-            return walk(expr.value);
-        }
-        return false;
-    }
-    for (const rule of ast.values()) {
-        if (walk(rule.expression)) return true;
-    }
-    return false;
-}
-
 /** Heuristic: detect the output language for syntax highlighting. */
-function detectLanguage(entryRule: string, ast: Map<string, any>): string {
+function detectLanguage(entryRule: string, ruleNames: string[]): string {
     const lower = entryRule.toLowerCase();
     if (lower === "value" || lower === "json" || lower === "object") {
-        // Check if grammar has JSON-like rules
-        if (ast.has("object") && ast.has("array") && ast.has("string")) return "json";
+        if (ruleNames.some((r) => r === "object") && ruleNames.some((r) => r === "array") && ruleNames.some((r) => r === "string")) {
+            return "json";
+        }
     }
     if (lower === "stylesheet" || lower === "rule" || lower.includes("css")) return "css";
     if (lower === "program" || lower === "statement") return "javascript";
     if (lower === "grammar" || lower === "rule_def" || lower.includes("bbnf")) {
-        if (ast.has("identifier") && (ast.has("expression") || ast.has("alternation"))) return "bbnf";
+        if (ruleNames.some((r) => r === "identifier") && (ruleNames.some((r) => r === "expression") || ruleNames.some((r) => r === "alternation"))) {
+            return "bbnf";
+        }
     }
     return "plaintext";
 }

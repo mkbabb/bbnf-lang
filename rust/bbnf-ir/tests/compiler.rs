@@ -1,0 +1,239 @@
+use std::collections::HashMap;
+
+use bbnf_ir::bytecode::Op;
+use bbnf_ir::compiler::compile;
+use bbnf_ir::{AltBranch, GrammarIR, IrNode, IrRule, MemoStrategy, RuleMeta};
+
+fn make_simple_ir(body: IrNode) -> GrammarIR {
+    GrammarIR {
+        rules: vec![IrRule {
+            id: 0,
+            name: 0,
+            body,
+            meta: RuleMeta::default(),
+        }],
+        entry: 0,
+        strings: vec!["rule".into(), "hello".into(), "world".into()],
+        fns: vec![],
+        types: vec![],
+        follow_sets: HashMap::new(),
+    }
+}
+
+#[test]
+fn compile_literal() {
+    let ir = make_simple_ir(IrNode::Literal(1));
+    let program = compile(&ir);
+
+    assert_eq!(program.entries[0], 0);
+    assert!(matches!(program.code[0], Op::MatchString(1)));
+    // MakeTagged wraps the result with the rule name before Return.
+    assert!(matches!(program.code[1], Op::MakeTagged(0)));
+    assert!(matches!(program.code[2], Op::Return));
+}
+
+#[test]
+fn compile_seq() {
+    let ir = make_simple_ir(IrNode::Seq(vec![IrNode::Literal(1), IrNode::Literal(2)]));
+    let program = compile(&ir);
+
+    assert!(program.code.iter().any(|op| matches!(op, Op::SaveState)));
+    assert!(program
+        .code
+        .iter()
+        .any(|op| matches!(op, Op::MatchString(1))));
+    assert!(program
+        .code
+        .iter()
+        .any(|op| matches!(op, Op::MatchString(2))));
+}
+
+#[test]
+fn compile_seq_nested_no_cross_patch() {
+    // Nested Seq should NOT cross-patch JumpIfFail targets.
+    // inner = Seq(["hello", "world"]), outer = Seq([inner, Literal("!")])
+    let ir = make_simple_ir(IrNode::Seq(vec![
+        IrNode::Seq(vec![IrNode::Literal(1), IrNode::Literal(2)]),
+        IrNode::Literal(1), // reuse "hello"
+    ]));
+    let program = compile(&ir);
+
+    // All JumpIfFail targets should be nonzero (properly patched).
+    for op in &program.code {
+        if let Op::JumpIfFail(target) = op {
+            assert_ne!(*target, 0, "Found unpatched JumpIfFail(0)");
+        }
+    }
+}
+
+#[test]
+fn compile_alt() {
+    let ir = make_simple_ir(IrNode::Alt(
+        vec![
+            AltBranch {
+                node: IrNode::Literal(1),
+                first_set: None,
+            },
+            AltBranch {
+                node: IrNode::Literal(2),
+                first_set: None,
+            },
+        ],
+        None,
+    ));
+    let program = compile(&ir);
+
+    assert!(program.code.iter().any(|op| matches!(op, Op::SaveState)));
+    assert!(program
+        .code
+        .iter()
+        .any(|op| matches!(op, Op::RestoreState)));
+}
+
+#[test]
+fn compile_repeat() {
+    let ir = make_simple_ir(IrNode::Repeat {
+        inner: Box::new(IrNode::Literal(1)),
+        lo: 0,
+        hi: u32::MAX,
+    });
+    let program = compile(&ir);
+
+    assert!(program
+        .code
+        .iter()
+        .any(|op| matches!(op, Op::RepeatBegin { .. })));
+    assert!(program.code.iter().any(|op| matches!(op, Op::RepeatEnd)));
+}
+
+#[test]
+fn compile_memo_rule() {
+    let ir = GrammarIR {
+        rules: vec![IrRule {
+            id: 0,
+            name: 0,
+            body: IrNode::Literal(1),
+            meta: RuleMeta {
+                memo: MemoStrategy::Full,
+                ..Default::default()
+            },
+        }],
+        entry: 0,
+        strings: vec!["rule".into(), "x".into()],
+        fns: vec![],
+        types: vec![],
+        follow_sets: HashMap::new(),
+    };
+    let program = compile(&ir);
+
+    assert!(program
+        .code
+        .iter()
+        .any(|op| matches!(op, Op::MemoCheck { .. })));
+    assert!(program
+        .code
+        .iter()
+        .any(|op| matches!(op, Op::MemoStore(_))));
+}
+
+#[test]
+fn compile_alt_dispatch() {
+    use bbnf_ir::AltDispatch;
+    use bbnf_ir::CharSet128;
+
+    // Two branches with pre-computed dispatch table -> should emit Dispatch.
+    let mut fs_a = CharSet128::new();
+    fs_a.add(b'a');
+    let mut fs_b = CharSet128::new();
+    fs_b.add(b'b');
+
+    // Build dispatch table matching what the dispatch pass would produce.
+    let mut table = vec![255u8; 128];
+    table[b'a' as usize] = 0;
+    table[b'b' as usize] = 1;
+
+    let ir = make_simple_ir(IrNode::Alt(
+        vec![
+            AltBranch {
+                node: IrNode::Literal(1),
+                first_set: Some(fs_a),
+            },
+            AltBranch {
+                node: IrNode::Literal(2),
+                first_set: Some(fs_b),
+            },
+        ],
+        Some(AltDispatch { table }),
+    ));
+    let program = compile(&ir);
+
+    // Should use Dispatch instead of SaveState/RestoreState.
+    assert!(
+        program
+            .code
+            .iter()
+            .any(|op| matches!(op, Op::Dispatch(..))),
+        "Expected Dispatch for pre-computed dispatch table"
+    );
+    assert!(
+        !program.code.iter().any(|op| matches!(op, Op::SaveState)),
+        "Dispatch should not need SaveState"
+    );
+}
+
+#[test]
+fn compile_alt_no_dispatch_uses_backtracking() {
+    // No dispatch table -> should fall back to backtracking.
+    let ir = make_simple_ir(IrNode::Alt(
+        vec![
+            AltBranch {
+                node: IrNode::Literal(1),
+                first_set: None,
+            },
+            AltBranch {
+                node: IrNode::Literal(2),
+                first_set: None,
+            },
+        ],
+        None,
+    ));
+    let program = compile(&ir);
+
+    // No dispatch, uses SaveState.
+    assert!(
+        !program
+            .code
+            .iter()
+            .any(|op| matches!(op, Op::Dispatch(..))),
+        "No dispatch table should not use Dispatch"
+    );
+    assert!(program.code.iter().any(|op| matches!(op, Op::SaveState)));
+}
+
+#[test]
+fn compile_call() {
+    let ir = GrammarIR {
+        rules: vec![
+            IrRule {
+                id: 0,
+                name: 0,
+                body: IrNode::Ref(1),
+                meta: RuleMeta::default(),
+            },
+            IrRule {
+                id: 1,
+                name: 1,
+                body: IrNode::Literal(2),
+                meta: RuleMeta::default(),
+            },
+        ],
+        entry: 0,
+        strings: vec!["start".into(), "item".into(), "x".into()],
+        fns: vec![],
+        types: vec![],
+        follow_sets: HashMap::new(),
+    };
+    let program = compile(&ir);
+
+    assert!(program.code.iter().any(|op| matches!(op, Op::Call(1))));
+}

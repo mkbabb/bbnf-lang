@@ -1,0 +1,170 @@
+//! Bytecode opcodes for the grammar VM interpreter.
+//!
+//! Designed for a tight interpreter loop with excellent branch prediction.
+//! Bytecode is compact (avg ~3 bytes/instruction) and fast to emit from IR.
+
+use std::collections::HashMap;
+use std::sync::Arc;
+
+use serde::{Deserialize, Serialize};
+
+use crate::{CharSet128, RuleId, StringId};
+
+/// Dispatch table data shared via Arc to avoid cloning heap allocations.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct DispatchData {
+    /// 128-entry table: `table[byte]` = branch index, or 255 for no match.
+    pub table: Vec<u8>,
+    /// Bytecode offsets for each branch.
+    pub offsets: Vec<u32>,
+    /// Bytecode offset for the fallback (no match) path.
+    pub fallback: u32,
+}
+
+/// A single bytecode instruction.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub enum Op {
+    // ── Leaves ──────────────────────────────────────────────────────────
+
+    /// Match a literal string. Fails if the input at current offset doesn't match.
+    MatchString(StringId),
+
+    /// Match a regex. Fails if the regex doesn't match at current offset.
+    MatchRegex(StringId),
+
+    /// Always succeeds, consumes nothing.
+    Epsilon,
+
+    // ── Control Flow ────────────────────────────────────────────────────
+
+    /// Jump to an absolute bytecode offset.
+    Jump(u32),
+
+    /// Jump to an absolute bytecode offset if the last operation failed.
+    JumpIfFail(u32),
+
+    /// Jump to an absolute bytecode offset if the last operation succeeded.
+    JumpIfOk(u32),
+
+    /// Call a rule: push a call frame, jump to the rule's entry point.
+    Call(RuleId),
+
+    /// Return from the current rule.
+    Return,
+
+    // ── State Management ────────────────────────────────────────────────
+
+    /// Push current offset + error state onto the checkpoint stack.
+    SaveState,
+
+    /// Pop checkpoint and restore offset + error state (backtrack).
+    RestoreState,
+
+    /// Pop checkpoint without restoring (commit).
+    DropState,
+
+    /// Trim optional whitespace at current offset.
+    TrimWs,
+
+    // ── Combinators ─────────────────────────────────────────────────────
+
+    /// Set-difference: execute next two instructions, fail if both succeed.
+    /// Layout: Minus → [lhs instruction(s)] → [rhs instruction(s)]
+    /// Uses SaveState/RestoreState internally in the interpreter.
+    Minus,
+
+    /// Zero-width negative assertion: fail if next instruction succeeds.
+    Negate,
+
+    // ── Dispatch ────────────────────────────────────────────────────────
+
+    /// O(1) byte dispatch table: maps first byte → branch offset.
+    /// Wrapped in `Arc` to avoid cloning heap data in the interpreter loop.
+    Dispatch(Arc<DispatchData>),
+
+    // ── Repetition ──────────────────────────────────────────────────────
+
+    /// Begin a repeat loop. Pushes repeat state (count = 0).
+    /// `body_end` is the bytecode offset of the instruction after the body.
+    RepeatBegin {
+        lo: u32,
+        hi: u32,
+        body_end: u32,
+    },
+
+    /// End of repeat body. Increments count, checks bounds, loops or exits.
+    RepeatEnd,
+
+    // ── Value Construction ──────────────────────────────────────────────
+
+    /// Push a span (start_offset, end_offset) for the just-matched input.
+    CaptureSpan,
+
+    /// Save the current value stack depth for later truncation (used by Skip/Next).
+    SaveValueDepth,
+
+    /// For Skip (`<<`): discard all values pushed since `SaveValueDepth`, keeping left's values.
+    DiscardRight,
+
+    /// For Next (`>>`): keep only values pushed since `SaveValueDepth`, discarding left's values.
+    DiscardLeft,
+
+    /// Collect the top `count` values from the value stack into an array.
+    MakeArray(u32),
+
+    /// Tag the top value with a rule name (for AST construction).
+    MakeTagged(StringId),
+
+    // ── Memoization ─────────────────────────────────────────────────────
+
+    /// Check memo table for this rule at current offset.
+    /// If cached: restore state from cache, jump to `hit_offset`.
+    /// If not cached: continue to next instruction.
+    MemoCheck {
+        rule_id: RuleId,
+        hit_offset: u32,
+    },
+
+    /// Store current result in memo table for this rule.
+    MemoStore(RuleId),
+
+    // ── Debug ───────────────────────────────────────────────────────────
+
+    /// No-op. Used for padding/alignment.
+    Nop,
+
+    /// Halt execution (success or failure based on current state).
+    Halt,
+}
+
+/// A compiled bytecode program for a grammar.
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct BytecodeProgram {
+    /// The bytecode instructions.
+    pub code: Vec<Op>,
+
+    /// Entry points for each rule: `entry[rule_id] = bytecode_offset`.
+    pub entries: Vec<u32>,
+
+    /// Interned string table (shared with GrammarIR).
+    pub strings: Vec<String>,
+
+    /// Entry rule ID.
+    pub entry: RuleId,
+
+    /// FOLLOW sets per rule, for error recovery and expected-token reporting.
+    /// Populated from `GrammarIR::follow_sets` during compilation.
+    #[serde(default)]
+    pub follow_sets: HashMap<RuleId, CharSet128>,
+
+    /// Rule names indexed by RuleId (for error messages).
+    #[serde(default)]
+    pub rule_names: Vec<StringId>,
+}
+
+impl BytecodeProgram {
+    /// Get the entry point for a rule.
+    pub fn rule_entry(&self, rule_id: RuleId) -> u32 {
+        self.entries[rule_id as usize]
+    }
+}

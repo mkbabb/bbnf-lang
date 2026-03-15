@@ -1,0 +1,26 @@
+//! IR transformation passes.
+//!
+//! Each pass is an independent function `GrammarIR → GrammarIR` (or `&mut GrammarIR`).
+//! Passes can be composed in any order (though some orderings are more efficient).
+
+pub mod alias;
+pub mod dispatch;
+pub mod follow;
+pub mod inline;
+pub mod memo;
+pub mod optimize;
+pub mod prefix;
+pub mod prune;
+pub mod span;
+pub mod types;
+
+pub use alias::canonicalize_aliases;
+pub use dispatch::generate_dispatch_tables;
+pub use follow::compute_follow_sets;
+pub use inline::inline_acyclic;
+pub use memo::refine_memo_strategies;
+pub use optimize::{eliminate_epsilon, merge_literals};
+pub use prefix::factor_common_prefixes;
+pub use prune::prune_unreachable;
+pub use span::{refine_span_eligibility, compute_sp_method_rules};
+pub use types::infer_types;

@@ -572,25 +572,28 @@ value = string | number | object | array | bool | null;"#;
 }
 
 #[test]
-fn test_regex_panic_handled() {
+fn test_regex_charclass_slash_parses() {
     let (mut stdin, mut stdout, child) = start_server();
     initialize(&mut stdin, &mut stdout);
 
-    // This regex pattern causes a panic in the parser — LSP should catch it gracefully.
+    // Regex with `/` inside character classes — previously caused a panic because
+    // the parser treated `/` as the closing delimiter. The character-class-aware
+    // scanner now handles this correctly.
     let grammar = r#"char = /[^"\\]/ | /\\["\\/bfnrt]/ | /\\u[0-9a-fA-F]{4}/;
 value = char;"#;
 
     let diag =
         open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
-    eprintln!("Regex panic diagnostics: {}", diag);
-    // Should get a diagnostic about parse error, not a crash
+    eprintln!("Regex charclass diagnostics: {}", diag);
+    // Grammar is valid — should get diagnostics notification with no errors
     assert!(
         diag.contains("publishDiagnostics"),
-        "Should get diagnostics notification even on regex panic"
+        "Should get diagnostics notification"
     );
+    // No error-level diagnostics expected (only hints like alias suggestions)
     assert!(
-        diag.contains("error") || diag.contains("Parse") || diag.contains("regex"),
-        "Should report the regex error, got: {}",
+        !diag.contains("\"severity\":1"),
+        "Should not contain error-level diagnostics, got: {}",
         diag
     );
 

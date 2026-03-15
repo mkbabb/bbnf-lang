@@ -170,29 +170,6 @@ fn generate_nested_grammar(n: usize) -> String {
 // Benchmark helpers
 // ---------------------------------------------------------------------------
 
-struct BenchResult {
-    name: String,
-    grammar_size: usize,
-    rule_count: usize,
-    bytes: usize,
-    durations: Vec<Duration>,
-}
-
-impl BenchResult {
-    fn avg_ms(&self) -> f64 {
-        let total: Duration = self.durations.iter().sum();
-        total.as_secs_f64() * 1000.0 / self.durations.len() as f64
-    }
-
-    fn min_ms(&self) -> f64 {
-        self.durations.iter().min().unwrap().as_secs_f64() * 1000.0
-    }
-
-    fn max_ms(&self) -> f64 {
-        self.durations.iter().max().unwrap().as_secs_f64() * 1000.0
-    }
-}
-
 fn timed<F: FnOnce() -> R, R>(f: F) -> (R, Duration) {
     let start = Instant::now();
     let r = f();

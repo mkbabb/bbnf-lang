@@ -107,13 +107,10 @@ pub struct ParseDiagnostics {
 }
 
 /// Semantic token type indices matching our legend.
-#[allow(dead_code)]
 pub mod token_types {
     pub const RULE_DEFINITION: u32 = 0;
     pub const RULE_REFERENCE: u32 = 1;
     pub const STRING: u32 = 2;
     pub const REGEXP: u32 = 3;
-    pub const OPERATOR: u32 = 4;
     pub const KEYWORD: u32 = 5;
-    pub const COMMENT: u32 = 6;
 }

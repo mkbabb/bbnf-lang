@@ -38,7 +38,6 @@ impl LineIndex {
     }
 
     /// Convert an LSP Position to a byte offset. O(1).
-    #[allow(dead_code)]
     pub fn position_to_offset(&self, pos: Position) -> usize {
         let line = pos.line as usize;
         if line < self.line_starts.len() {

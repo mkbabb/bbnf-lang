@@ -27,6 +27,8 @@ const emit = defineEmits<{
     "update:modelValue": [value: string];
 }>();
 
+const EDITOR_FONT_SIZE = 14;
+
 const { isDark } = useGlobalDark();
 const containerRef = ref<HTMLElement | null>(null);
 const editor = shallowRef<monaco.editor.IStandaloneCodeEditor>();
@@ -58,7 +60,7 @@ function initEditor() {
         theme: isDark.value ? "dark-theme" : "light-theme",
         readOnly: props.readonly,
         fontFamily: "Fira Code, monospace",
-        fontSize: 14,
+        fontSize: EDITOR_FONT_SIZE,
         fontLigatures: true,
         minimap: { enabled: false },
         wordWrap: "on",
@@ -74,7 +76,11 @@ function initEditor() {
             horizontal: "auto",
             verticalScrollbarSize: 8,
             horizontalScrollbarSize: 8,
+            useShadows: false,
         },
+        smoothScrolling: false,
+        fastScrollSensitivity: 7,
+        mouseWheelScrollSensitivity: 2,
     });
 
     ed.onDidChangeModelContent(() => {
@@ -194,7 +200,7 @@ watch(isDark, (dark) => {
     layout();
 });
 
-// Inline diagnostic markers — deep watch since computed array contents change
+// Inline diagnostic markers — parent creates new array refs, shallow watch suffices
 watch(
     () => props.markers,
     (markers) => {
@@ -207,7 +213,6 @@ watch(
         if (!model) return;
         monaco.editor.setModelMarkers(model, "pipeline", markers ?? []);
     },
-    { deep: true },
 );
 
 onBeforeUnmount(() => {
@@ -220,5 +225,5 @@ defineExpose({ editor, layout, focus, focusPosition });
 </script>
 
 <template>
-    <div ref="containerRef" class="h-full w-full min-h-0 min-w-0" />
+    <div ref="containerRef" class="h-full w-full min-h-0 min-w-0" style="contain: strict" />
 </template>

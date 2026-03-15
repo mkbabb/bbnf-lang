@@ -180,7 +180,7 @@ function cardTransform(i: number): string {
                     class="group relative px-6 py-3 rounded-xl bg-pastel-green/10 border border-pastel-green/30 backdrop-blur-sm
                            instrument-serif text-lg text-foreground transition-all duration-300
                            hover:scale-[1.02] hover:-translate-y-0.5
-                           shadow-[3px_3px_0_rgba(0,0,0,0.08)] hover:shadow-[5px_7px_0_rgba(0,0,0,0.12)]"
+                           shadow-card hover:shadow-[5px_7px_0_rgba(0,0,0,0.12)]"
                 >
                     <span class="relative z-10">Try the Playground</span>
                     <div class="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-pastel-green/10 to-transparent
@@ -191,7 +191,7 @@ function cardTransform(i: number): string {
                     class="group relative px-6 py-3 rounded-xl bg-pastel-blue/10 border border-pastel-blue/30 backdrop-blur-sm
                            instrument-serif text-lg text-foreground transition-all duration-300
                            hover:scale-[1.02] hover:-translate-y-0.5
-                           shadow-[3px_3px_0_rgba(0,0,0,0.08)] hover:shadow-[5px_7px_0_rgba(0,0,0,0.12)]"
+                           shadow-card hover:shadow-[5px_7px_0_rgba(0,0,0,0.12)]"
                 >
                     <span class="relative z-10">Read the Docs</span>
                     <div class="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-pastel-blue/10 to-transparent
@@ -220,7 +220,7 @@ function cardTransform(i: number): string {
                     <div class="h-1.5 w-1.5 rounded-full" :style="{ background: `var(--color-${card.color})` }" />
                     <span class="instrument-serif text-xs" :style="{ color: `var(--color-${card.color})` }">{{ card.title }}</span>
                 </div>
-                <pre class="text-[10px] leading-relaxed text-foreground/80 overflow-hidden"><code><template v-for="(line, j) in card.lines" :key="j"><template v-for="(span, k) in line.spans" :key="k"><span v-if="span.cls" :class="span.cls">{{ span.text }}</span><template v-else>{{ span.text }}</template></template>
+                <pre class="text-[length:var(--font-size-label)] leading-relaxed text-foreground/80 overflow-hidden"><code><template v-for="(line, j) in card.lines" :key="j"><template v-for="(span, k) in line.spans" :key="k"><span v-if="span.cls" :class="span.cls">{{ span.text }}</span><template v-else>{{ span.text }}</template></template>
 </template></code></pre>
             </div>
         </div>
@@ -268,7 +268,7 @@ function cardTransform(i: number): string {
 
 <style scoped>
 .card-fan {
-    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: transform 0.6s var(--ease-spring);
 }
 
 @keyframes float {

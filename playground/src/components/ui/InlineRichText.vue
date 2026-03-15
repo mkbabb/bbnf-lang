@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { BbnfLogo } from "@/components/custom/bbnf-logo";
+import { tokenToneMap } from "@/lib/toneMaps";
 
 type RichTextPart = {
     code: boolean;
@@ -10,20 +11,6 @@ type RichTextPart = {
 const props = defineProps<{
     text: string;
 }>();
-
-const tokenToneMap: Record<string, string> = {
-    "@pretty": "pastel-pink",
-    "@recover": "pastel-blue",
-    "@media": "pastel-blue",
-    "@supports": "pastel-blue",
-    "error recovery": "pastel-blue",
-    "JSON": "pastel-green",
-    "CSS L1.75": "pastel-blue",
-    "Auto": "pastel-blue",
-    "gorgeous": "pastel-amber",
-    "WASM": "pastel-amber",
-    "TS interpreter": "pastel-purple",
-};
 
 const parts = computed<RichTextPart[]>(() => {
     const output: RichTextPart[] = [];
@@ -108,7 +95,7 @@ function bbnfBadgeStyle() {
             </span>
             <code
                 v-else-if="part.code"
-                class="mx-[0.05rem] inline-flex items-center rounded-full px-1.5 py-0.5 align-[0.05em] font-mono text-[0.82em] leading-none backdrop-blur-sm"
+                class="mx-[0.05rem] inline-flex items-center rounded-full px-1.5 py-0.5 align-[0.05em] font-mono text-xs leading-none backdrop-blur-sm"
                 :style="chipStyle(part.text)"
             >
                 {{ part.text }}

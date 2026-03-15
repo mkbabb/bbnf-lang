@@ -37,6 +37,21 @@
     --radius-sm: calc(var(--radius) - 4px);
     --font-serif: "Instrument Serif", serif;
     --font-mono: "Fira Code", monospace;
+
+    /* Navbar height — used in calc() across PlaygroundPage, DocsPage */
+    --spacing-navbar: 3.5rem;
+
+    /* Card shadow — repeated across components */
+    --shadow-card: 3px 3px 0px 0px;
+
+    /* Animation timing tokens */
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    --duration-fast: 150ms;
+    --duration-normal: 300ms;
+
+    /* Label font size — intentionally smaller than text-xs for badges/tags */
+    --font-size-label: 0.625rem;
 }
 
 @layer base {
@@ -121,8 +136,23 @@
     }
 }
 
+/* Z-index scale: 0=base, 10=tabs, 20=badges, 30=dropdowns, 40=sticky, 50=overlays/modals, 60=hero-morph */
+
 .instrument-serif {
     font-family: var(--font-serif);
+}
+
+.shadow-card {
+    box-shadow: var(--shadow-card) hsl(var(--shadow) / 0.08);
+}
+.dark .shadow-card {
+    box-shadow: var(--shadow-card) hsl(var(--shadow) / 0.06);
+}
+
+.text-gradient {
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
 }
 
 .scrollbar-hidden::-webkit-scrollbar {
@@ -207,10 +237,10 @@
     backdrop-filter: blur(8px);
     margin-bottom: 1.25rem;
     overflow: hidden;
-    box-shadow: 3px 3px 0px 0px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow-card) hsl(var(--shadow) / 0.08);
 }
 .dark .prose .code-card {
-    box-shadow: 3px 3px 0px 0px rgba(200, 200, 255, 0.06);
+    box-shadow: var(--shadow-card) hsl(var(--shadow) / 0.06);
 }
 .prose .code-card pre {
     background: transparent;

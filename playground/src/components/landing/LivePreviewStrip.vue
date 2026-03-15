@@ -188,8 +188,7 @@ const astHighlighted = computed(() => astOutput.value ? highlightJson(astOutput.
         <h2 class="instrument-serif text-3xl text-center mb-2">See it in action</h2>
         <p class="text-sm text-muted-foreground text-center mb-8">Edit the grammar or input below — parsing runs live.</p>
 
-        <div class="rounded-xl border border-border/40 bg-card/80 backdrop-blur-sm overflow-hidden
-                    shadow-[3px_3px_0px_0px_rgba(0,0,0,0.08)] dark:shadow-[3px_3px_0px_0px_rgba(200,200,255,0.06)]">
+        <div class="rounded-xl border border-border/40 bg-card/80 backdrop-blur-sm overflow-hidden shadow-card">
             <div class="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-border/30 md:h-[12rem] md:h-[18rem]">
                 <!-- Grammar -->
                 <div class="p-4 flex flex-col h-[12rem] md:h-[18rem]">
@@ -257,7 +256,7 @@ const astHighlighted = computed(() => astOutput.value ? highlightJson(astOutput.
                     <button
                         v-for="(preset, i) in presets"
                         :key="i"
-                        class="px-2.5 py-0.5 rounded-full text-[11px] font-mono transition-all duration-300"
+                        class="px-2.5 py-0.5 rounded-full text-xs font-mono transition-all duration-300"
                         :class="i === activeIndex
                             ? 'bg-pastel-green/20 text-pastel-green'
                             : 'text-muted-foreground/50 hover:text-muted-foreground'"

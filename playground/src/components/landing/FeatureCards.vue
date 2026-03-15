@@ -58,18 +58,17 @@ const features = [
                 v-for="feature in features"
                 :key="feature.title"
                 class="rounded-xl border bg-card/80 backdrop-blur-sm p-3 sm:p-5 transition-all duration-300
-                       hover:-translate-y-0.5 cursor-default
-                       shadow-[3px_3px_0px_0px_rgba(0,0,0,0.08)] dark:shadow-[3px_3px_0px_0px_rgba(200,200,255,0.06)]
+                       hover:-translate-y-0.5 cursor-default shadow-card
                        hover:shadow-[5px_7px_0_rgba(0,0,0,0.12)] dark:hover:shadow-[5px_7px_0_rgba(200,200,255,0.08)]"
                 :class="feature.borderClass"
             >
                 <component :is="feature.icon" class="h-5 w-5 sm:h-6 sm:w-6 mb-2 sm:mb-3" :class="feature.iconClass" />
                 <h3 class="instrument-serif text-base sm:text-lg mb-1 sm:mb-2">{{ feature.title }}</h3>
-                <p class="text-[11px] sm:text-xs text-muted-foreground leading-relaxed">
+                <p class="text-xs text-muted-foreground leading-relaxed">
                     <template v-for="(part, i) in feature.parts" :key="i">
                         <code
                             v-if="part.code"
-                            class="font-mono text-[11px] rounded border px-1.5 py-0.5"
+                            class="font-mono text-xs rounded border px-1.5 py-0.5"
                             :class="part.codeClass ?? 'bg-muted/50 border-border/30'"
                         >{{ part.text }}</code>
                         <template v-else>{{ part.text }}</template>

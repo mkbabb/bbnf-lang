@@ -121,18 +121,19 @@ function isActive(to: string) {
 
 <style scoped>
 .nav-links-mask {
+    --edge-fade: 0.5rem;
     mask-image: linear-gradient(
         to right,
         transparent 0%,
-        black 8px,
-        black calc(100% - 8px),
+        black var(--edge-fade),
+        black calc(100% - var(--edge-fade)),
         transparent 100%
     );
     -webkit-mask-image: linear-gradient(
         to right,
         transparent 0%,
-        black 8px,
-        black calc(100% - 8px),
+        black var(--edge-fade),
+        black calc(100% - var(--edge-fade)),
         transparent 100%
     );
 }

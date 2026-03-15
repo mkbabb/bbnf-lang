@@ -3,23 +3,25 @@ import type { Example } from "../useExamples";
 export const jsonExample: Example = {
     name: "JSON",
     grammar: `// JSON Grammar
-value = object | array | string | number | "true" | "false" | "null";
+null = "null" ;
+bool = "true" | "false" ;
+number = /-?(0|[1-9]\\d*)(\\.\\d+)?([eE][+-]?\\d+)?/ ;
 
-@pretty value group;
+comma = "," ?w ;
+colon = ":" ?w ;
 
-object = "{" , members? , "}";
-@pretty object group indent sep(", ");
+string = /"(?:[^"\\\\]|\\\\(?:["\\\\\\/bfnrt]|u[0-9a-fA-F]{4}))*"/ ;
 
-members = member , ("," , member)*;
-member = string , ":" , value;
-@pretty member sep(": ");
-
-array = "[" , elements? , "]";
+array = "[" >> (( value << comma ? ) *)?w << "]" ;
 @pretty array group indent sep(", ");
 
-elements = value , ("," , value)*;
+pair = string, colon >> value ;
+@pretty pair sep(": ");
 
-string = /"[^"]*"/;
-number = /-?\\d+(\\.\\d+)?([eE][+-]?\\d+)?/;`,
+object = "{" >> (( pair << comma ? ) *)?w << "}" ;
+@pretty object group indent sep(", ");
+
+value = object | array | string | number | bool | null ;
+@pretty value group;`,
     input: `{"name": "BBNF", "version": 1, "items": [1, 2, 3], "nested": {"a": true, "b": null}}`,
 };

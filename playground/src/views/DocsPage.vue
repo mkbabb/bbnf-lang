@@ -39,10 +39,10 @@ const sectionTheme = computed(() => currentDoc.value ? getSectionTheme(currentDo
 </script>
 
 <template>
-    <div class="mt-14 flex min-h-[calc(100dvh-3.5rem)]">
+    <div class="mt-14 flex min-h-[calc(100dvh-var(--spacing-navbar))]">
         <!-- Desktop sidebar — collapsible -->
         <div
-            class="sticky top-14 hidden h-[calc(100dvh-3.5rem)] shrink-0 self-start overflow-hidden transition-[width] duration-200 md:block"
+            class="sticky top-14 hidden h-[calc(100dvh-var(--spacing-navbar))] shrink-0 self-start overflow-hidden transition-[width] duration-200 md:block"
             :style="{ width: sidebarOpen ? '16rem' : '0' }"
         >
             <DocsSidebar :current-slug="slug" />
@@ -55,7 +55,7 @@ const sectionTheme = computed(() => currentDoc.value ? getSectionTheme(currentDo
                 class="fixed inset-0 z-50 md:hidden bg-black/20"
                 @click.self="mobileDrawer = false"
             >
-                <div class="absolute top-14 left-0 w-72 h-[calc(100dvh-3.5rem)] bg-card/95 backdrop-blur-xl border-r border-border/30 shadow-lg flex flex-col">
+                <div class="absolute top-14 left-0 w-72 h-[calc(100dvh-var(--spacing-navbar))] bg-card/95 backdrop-blur-xl border-r border-border/30 shadow-lg flex flex-col">
                     <div class="flex items-center justify-between px-4 py-2 border-b border-border/20 shrink-0">
                         <span class="instrument-serif text-sm text-muted-foreground">Navigation</span>
                         <button
@@ -73,16 +73,15 @@ const sectionTheme = computed(() => currentDoc.value ? getSectionTheme(currentDo
         </Transition>
 
         <!-- Main content -->
-        <main class="flex-1 flex min-h-[calc(100dvh-3.5rem)] flex-col px-4 py-4 sm:px-8 sm:py-6 min-w-0">
+        <main class="flex-1 flex min-h-[calc(100dvh-var(--spacing-navbar))] flex-col px-4 py-4 sm:px-8 sm:py-6 min-w-0">
             <div v-if="currentDoc" class="mx-auto flex w-full max-w-4xl flex-1 flex-col">
                 <!-- Card-styled article container -->
                 <div
-                    class="rounded-xl border bg-card/80 backdrop-blur-sm p-5 sm:p-8 md:p-10 flex-1 relative"
+                    class="rounded-xl border bg-card/80 backdrop-blur-sm p-5 sm:p-8 md:p-10 flex-1 relative shadow-card"
                     :style="{
                         borderColor: sectionTheme
                             ? `color-mix(in srgb, var(--color-${sectionTheme.color}) 25%, hsl(var(--border) / 0.4))`
                             : undefined,
-                        boxShadow: '3px 3px 0px 0px rgba(0,0,0,0.08)',
                     }"
                 >
                     <!-- Sidebar toggle — top-right of card, sticky -->
@@ -106,7 +105,7 @@ const sectionTheme = computed(() => currentDoc.value ? getSectionTheme(currentDo
                     <!-- Section badge -->
                     <div
                         v-if="sectionTheme"
-                        class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-mono uppercase tracking-wider mb-4"
+                        class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[length:var(--font-size-label)] font-mono uppercase tracking-wider mb-4"
                         :style="{
                             color: `var(--color-${sectionTheme.color})`,
                             background: `color-mix(in srgb, var(--color-${sectionTheme.color}) 10%, transparent)`,
@@ -136,10 +135,6 @@ const sectionTheme = computed(() => currentDoc.value ? getSectionTheme(currentDo
 </template>
 
 <style scoped>
-.dark div[style*="boxShadow"] {
-    box-shadow: 3px 3px 0px 0px rgba(200, 200, 255, 0.06) !important;
-}
-
 .mobile-drawer-enter-active,
 .mobile-drawer-leave-active {
     transition: opacity 0.2s ease;

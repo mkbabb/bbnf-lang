@@ -1,299 +1,140 @@
 //! Rust parser code generation from BBNF grammars.
 //!
 //! This module translates a parsed and analysed BBNF grammar into
-//! `proc_macro2::TokenStream` parser combinator code. The pipeline:
-//!
-//! 1. **Type inference** — map each expression to a `syn::Type`.
-//! 2. **Pattern detection** — recognize sep-by, wrapped, regex coalescing, etc.
-//! 3. **Codegen** — emit parser combinators, dispatch tables, and enum wrappers.
-//! 4. **Orchestration** — `calculate_nonterminal_generated_parsers` ties it all together.
+//! `proc_macro2::TokenStream` parser combinator code via the IR pipeline.
 
 mod types;
-mod type_inference;
-mod patterns;
-mod codegen;
-mod alternation;
-mod concatenation;
 pub mod prettify;
 
-// Re-export everything publicly so downstream code sees the same API.
+// ── IR-based codegen modules ────────────────────────────────────────────────
+pub mod fast_paths;
+pub mod ir_types;
+pub mod ir_enums;
+pub mod ir_codegen;
+pub mod ir_span;
+pub mod ir_pretty;
+
 pub use types::*;
-pub use type_inference::*;
-pub use patterns::*;
-pub use codegen::*;
-pub use alternation::*;
-pub use concatenation::*;
-pub use prettify::*;
 
-use crate::analysis::get_nonterminal_name;
-use crate::types::Expression;
-
-use std::{
-    cell::RefCell,
-    collections::HashMap,
-    rc::Rc,
-};
 use quote::{format_ident, quote};
 
-pub fn calculate_nonterminal_generated_parsers<'a>(
-    grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
-    type_cache: &'a TypeCache<'a>,
-    _sub_variants: &'a SubVariantCache,
-) -> GeneratedParserCache<'a> {
-    let cache_bundle = CacheBundle {
-        parser_cache: Rc::new(RefCell::new(GeneratedParserCache::new())),
-        type_cache: Rc::new(RefCell::new(type_cache.clone())),
-        inline_cache: Rc::new(RefCell::new(InlineCache::new())),
-        current_rule_name: RefCell::new(None),
-        pretty_preserve_next_concat: std::cell::Cell::new(false),
-    };
-    let mut acyclic_deps_degree = calculate_acyclic_deps_degree(grammar_attrs.acyclic_deps);
-    calculate_non_acyclic_deps_degree(grammar_attrs.deps, &mut acyclic_deps_degree);
+// ── IR-based generate_all entry point ───────────────────────────────────────
 
-    let formatted = grammar_attrs
-        .ast
-        .iter()
-        .map(|(lhs, rhs)| {
-            let rhs = match get_nonterminal_name(lhs) {
-                Some(name) => {
-                    format_parser(name, rhs, grammar_attrs.parser_container_attrs)
-                }
-                None => rhs.clone(),
-            };
-            (lhs.clone(), rhs)
-        })
-        .collect::<HashMap<_, _>>();
+/// Generate all parser code from IR: enum, parser methods, and optionally prettify.
+///
+/// This is the IR-based replacement for the legacy AST pipeline.
+pub fn generate_all(
+    ir: &mut bbnf_ir::GrammarIR,
+    parser_attrs: &ParserAttributes,
+    ident: &syn::Ident,
+) -> proc_macro2::TokenStream {
+    // Compute sp_method_rules via iterative fixed-point BEFORE type inference,
+    // so that infer_types uses the correct has_sp_method flags for B.1 override.
+    bbnf_ir::passes::compute_sp_method_rules(ir);
+    // Run type inference with correct sp_method info.
+    bbnf_ir::passes::infer_types(ir);
 
-    let mapped: HashMap<_, _> = grammar_attrs
-        .ast
-        .iter()
-        .map(|(lhs, rhs)| {
-            let rhs = match get_nonterminal_name(lhs) {
-                Some(name) => {
-                    let formatted_expr = formatted.get(lhs).unwrap_or_else(|| {
-                        panic!(
-                            "missing formatted parser expression for rule `{}`",
-                            name
-                        )
-                    });
-                    // Phase B: Transparent rules skip the enum variant wrapper.
-                    // The alternation branches already produce the correct inner type.
-                    if is_transparent_rule(name, grammar_attrs) {
-                        formatted_expr.clone()
-                    } else {
-                        map_generated_parser(name, formatted_expr, grammar_attrs.enum_ident)
-                    }
-                }
-                None => rhs.clone(),
-            };
-            (lhs.clone(), rhs)
-        })
+    let mut ctx = ir_types::IrCodegenCtx::new(ir, ident, parser_attrs);
+
+    // Copy has_sp_method from IR metadata to ctx.sp_method_rules for codegen.
+    ctx.sp_method_rules = ir.rules.iter()
+        .filter(|r| r.meta.has_sp_method)
+        .map(|r| ir.get_string(r.name).to_string())
         .collect();
 
-    let boxed2: HashMap<_, _> = grammar_attrs
-        .ast
-        .iter()
-        .map(|(lhs, rhs)| {
-            let rhs = match get_nonterminal_name(lhs) {
-                Some(name) => {
-                    let formatted_expr = formatted.get(lhs).unwrap_or_else(|| {
-                        panic!(
-                            "missing formatted parser expression for rule `{}`",
-                            name
-                        )
-                    });
-                    if is_transparent_rule(name, grammar_attrs) {
-                        formatted_expr.clone()
-                    } else {
-                        box_generated_parser2(name, formatted_expr, grammar_attrs.enum_ident)
-                    }
-                }
-                None => rhs.clone(),
-            };
-            (lhs.clone(), rhs)
-        })
-        .collect();
+    let grammar_arr = ir_enums::generate_grammar_arr(parser_attrs, ident);
+    let grammar_enum = ir_enums::generate_enum(&ctx);
+    let parser_methods = generate_ir_parser_methods(ir, &ctx);
 
-    formatted
-        .iter()
-        .filter(|(lhs, _)| grammar_attrs.acyclic_deps.contains_key(lhs))
-        // Skip inlining rules with sub-variants (heterogeneous alternations)
-        .filter(|(lhs, _)| {
-            let name = get_nonterminal_name(lhs).unwrap_or_else(|| {
-                panic!("expected nonterminal key in acyclic dependency map")
-            });
-            !grammar_attrs
-                .sub_variants
-                .is_some_and(|sv| sv.contains_key(name))
-        })
-        .for_each(|(lhs, rhs)| {
-            cache_bundle.inline_cache.borrow_mut().insert(lhs, rhs);
-        });
-
-    let generate = |recursive_inline: bool| {
-        grammar_attrs
-            .ast
-            .iter()
-            .filter_map(|(lhs, _rhs)| {
-                let is_acyclic = grammar_attrs.acyclic_deps.contains_key(lhs);
-
-                if !is_acyclic {
-                    // Invariant: every LHS in the AST has an entry in `deps` —
-                    // `calculate_ast_deps` ensures all rules are present.
-                    grammar_attrs
-                        .deps
-                        .get(lhs)
-                        .unwrap()
-                        .iter()
-                        .filter(|dep| grammar_attrs.acyclic_deps.contains_key(dep))
-                        // Skip inlining deps with sub-variants (heterogeneous alternations)
-                        // — their branches have diverse types that can't be uniformly mapped.
-                        .filter(|dep| {
-                            let dep_name = get_nonterminal_name(dep).unwrap_or_else(|| {
-                                panic!("expected nonterminal dependency key while inlining")
-                            });
-                            !grammar_attrs
-                                .sub_variants
-                                .is_some_and(|sv| sv.contains_key(dep_name))
-                        })
-                        .for_each(|dep| {
-                            let rhs = boxed2.get(dep).unwrap_or_else(|| {
-                                panic!("missing boxed parser for inlined dependency")
-                            });
-                            cache_bundle.inline_cache.borrow_mut().insert(dep, rhs);
-                            cache_bundle
-                                .type_cache
-                                .borrow_mut()
-                                .insert(dep, grammar_attrs.boxed_enum_type.clone());
-                        });
-                } else if recursive_inline {
-                    return None;
-                }
-
-                let max_depth = *acyclic_deps_degree.get(lhs).unwrap_or_else(|| {
-                    panic!("missing acyclic dependency degree for parser rule")
-                });
-
-                // Set the current rule name for sub-variant lookup in alternation codegen.
-                if let Some(name) = get_nonterminal_name(lhs) {
-                    *cache_bundle.current_rule_name.borrow_mut() = Some(name.to_string());
-                    // Set consumable flag for @pretty / @no_collapse tuple preservation in concatenation codegen.
-                    let has_pretty = grammar_attrs
-                        .pretties
-                        .as_ref()
-                        .is_some_and(|p| p.contains_key(name));
-                    let has_no_collapse = grammar_attrs
-                        .no_collapse_rules
-                        .is_some_and(|set| set.contains(name));
-                    cache_bundle.pretty_preserve_next_concat.set(has_pretty || has_no_collapse);
-                }
-
-                let rhs = mapped.get(lhs).unwrap_or_else(|| {
-                    panic!("missing mapped parser expression for rule")
-                });
-
-                let parser = calculate_parser_from_expression(
-                    rhs,
-                    grammar_attrs,
-                    &cache_bundle,
-                    max_depth,
-                    0,
-                );
-                Some((lhs, parser))
-            })
-            .collect()
+    // Generate prettify (to_doc + source_range) if enabled.
+    let prettify_impl = if parser_attrs.prettify {
+        ir_pretty::generate_prettify_ir(&ctx)
+    } else {
+        quote! {}
     };
-    let mut acyclic_generated_parsers: HashMap<_, _> = generate(false);
-    *cache_bundle.parser_cache.borrow_mut() = acyclic_generated_parsers.clone();
 
-    grammar_attrs.ast.iter().for_each(|(lhs, _rhs)| {
-        let is_acyclic = grammar_attrs.acyclic_deps.contains_key(lhs);
+    quote! {
+        use ::parse_that::*;
 
-        if !is_acyclic {
-            let rhs = boxed2.get(lhs).unwrap_or_else(|| {
-                panic!("missing boxed parser expression for non-acyclic rule")
-            });
+        #grammar_arr
 
-            acyclic_generated_parsers.remove(lhs);
-            cache_bundle.parser_cache.borrow_mut().remove(lhs);
-            cache_bundle.inline_cache.borrow_mut().insert(lhs, rhs);
-            // The boxed2 wrapper produces Box<Enum>, so update the type_cache to match.
-            // Without this, calculate_expression_type returns the PRE-wrapper body type,
-            // causing alternation coercion to apply incorrect sub-variant wrappers.
-            cache_bundle
-                .type_cache
-                .borrow_mut()
-                .insert(lhs, grammar_attrs.boxed_enum_type.clone());
-        } else {
-            let tmp = cache_bundle.parser_cache.borrow().get(lhs).map(|parser| {
-                quote! { #parser.map(Box::new) }
-            });
-            if let Some(parser) = tmp {
-                cache_bundle.parser_cache.borrow_mut().insert(lhs, parser);
-            }
+        #grammar_enum
+
+        impl #ident {
+            #parser_methods
         }
-    });
 
-    let mut generated_parsers = generate(true);
-    generated_parsers.extend(acyclic_generated_parsers);
-
-    generated_parsers
+        #prettify_impl
+    }
 }
 
-/// Compile a simple BBNF expression (regex, literal, alternation, concatenation)
-/// into a standalone parser token stream. Used for `@recover` sync expressions
-/// which are always simple patterns, not referencing nonterminals.
-pub fn compile_sync_expression(expr: &Expression<'_>) -> proc_macro2::TokenStream {
-    use crate::types::Token;
-    match expr {
-        Expression::Regex(Token { value, .. }) => {
-            let pattern = value.as_ref();
-            quote! { ::parse_that::regex_span(#pattern) }
+/// Generate parser methods (+ _sp methods) for all rules from IR.
+fn generate_ir_parser_methods(
+    ir: &bbnf_ir::GrammarIR,
+    ctx: &ir_types::IrCodegenCtx<'_>,
+) -> proc_macro2::TokenStream {
+    let mut methods: Vec<proc_macro2::TokenStream> = Vec::new();
+
+    for rule in &ir.rules {
+        let name = ir.get_string(rule.name);
+        let ident = format_ident!("{}", name);
+
+        // Determine return type.
+        let ty = ctx.rule_return_type(rule.id);
+
+        // Generate the parser body.
+        let mut parser = ir_codegen::ir_node_to_tokens(&rule.body, ctx);
+
+        // Enum wrapping: non-transparent rules must map to enum variant.
+        // Transparent rules already produce Box<Enum> via emit_ref.
+        if !rule.meta.is_transparent {
+            let variant_ident = format_ident!("{}", name);
+            let enum_ident = &ctx.enum_ident;
+            parser = quote! { #parser.map(|x| #enum_ident::#variant_ident(x)) };
         }
-        Expression::Literal(Token { value, .. }) => {
-            let unescaped = codegen::unescape_literal(value.as_ref());
-            let lit = proc_macro2::Literal::string(&unescaped);
-            quote! { ::parse_that::string_span(#lit) }
+
+        // Cyclic → lazy().
+        if rule.meta.is_cyclic {
+            parser = quote! { ::parse_that::lazy(|| #parser) };
         }
-        Expression::Alternation(token) => {
-            let branches: Vec<_> = token.value.iter().map(|e| compile_sync_expression(e)).collect();
-            quote! { ( #(#branches)|* ) }
+
+        // Memoization → .memoize().
+        if matches!(
+            rule.meta.memo,
+            bbnf_ir::MemoStrategy::Full | bbnf_ir::MemoStrategy::Selective
+        ) {
+            parser = quote! { #parser.memoize() };
         }
-        Expression::Concatenation(token) => {
-            let parts: Vec<_> = token.value.iter().map(|e| compile_sync_expression(e)).collect();
-            if parts.len() == 1 {
-                // Invariant: len == 1 guarantees next() succeeds.
-                parts.into_iter().next().unwrap()
-            } else {
-                let first = &parts[0];
-                let rest = &parts[1..];
-                quote! { #first #(.then_span(#rest))* }
+
+        // Recovery → .recover().
+        if let Some(ref sync) = rule.meta.recover {
+            if !ctx.parser_attrs.skip_recover {
+                let sync_ts = ir_codegen::ir_node_to_tokens(sync, ctx);
+                let sentinel = ctx.recover_sentinel(rule.id);
+                parser =
+                    quote! { #parser.recover(#sync_ts.map(|_| ()), #sentinel) };
             }
         }
-        Expression::Many(inner) => {
-            let p = compile_sync_expression(&inner.value);
-            quote! { #p.many_span(..) }
-        }
-        Expression::Many1(inner) => {
-            let p = compile_sync_expression(&inner.value);
-            quote! { #p.many_span(1..) }
-        }
-        Expression::Optional(inner) => {
-            let p = compile_sync_expression(&inner.value);
-            quote! { #p.opt_span() }
-        }
-        Expression::Group(inner) => compile_sync_expression(&inner.value),
-        Expression::Nonterminal(Token { value, .. }) => {
-            let ident = format_ident!("{}", value.as_ref());
-            quote! { Self::#ident() }
-        }
-        _ => {
-            panic!(
-                "Unsupported expression type in @recover sync expression: {:?}. \
-                 Sync expressions support: literals, regexes, alternation, concatenation, \
-                 many, many1, optional, groups, and nonterminal references.",
-                expr
-            );
+
+        methods.push(quote! {
+            pub fn #ident<'a>() -> Parser<'a, #ty> {
+                #parser
+            }
+        });
+
+        // SpanParser _sp() method.
+        if rule.meta.span_eligible {
+            if let Some(sp) = ir_span::try_ir_span_parser(rule.id, ctx) {
+                let sp_ident = format_ident!("{}_sp", name);
+                methods.push(quote! {
+                    #[inline(always)]
+                    pub fn #sp_ident<'a>() -> ::parse_that::SpanParser<'a> {
+                        #sp
+                    }
+                });
+            }
         }
     }
+
+    quote! { #(#methods)* }
 }

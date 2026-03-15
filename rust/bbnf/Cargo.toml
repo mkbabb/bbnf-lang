@@ -13,6 +13,7 @@ path = "src/lib.rs"
 [dependencies]
 pprint = "0.3"
 parse_that = "0.3"
+bbnf-ir = { path = "../bbnf-ir" }
 
 regex = { version = "1.11", features = ["perf"] }
 
@@ -23,3 +24,9 @@ indexmap = "2"
 
 [dev-dependencies]
 tempfile = "3"
+gorgeous = { version = "0.1", features = ["vm"] }
+bencher = "0.1"
+
+[[bench]]
+name = "google_sheets"
+harness = false

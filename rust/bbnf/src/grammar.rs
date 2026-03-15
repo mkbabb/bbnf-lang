@@ -128,14 +128,55 @@ impl<'a> BBNFGrammar<'a> {
         })
     }
 
+    /// Scan a regex body between `/` delimiters, aware of character classes (`[...]`)
+    /// where `/` is literal and not a closing delimiter.
+    fn regex_body() -> Parser<'a, Span<'a>> {
+        let body = move |state: &mut ParserState<'a>| {
+            let start = state.offset;
+            let bytes = state.src_bytes;
+            let end = state.end;
+            let mut i = start;
+            let mut bracket_depth: u32 = 0;
+
+            while i < end {
+                match bytes[i] {
+                    b'\\' => {
+                        // Escape sequence: consume backslash + next char.
+                        i += 1;
+                        if i < end {
+                            i += 1;
+                        }
+                    }
+                    b'[' if bracket_depth == 0 => {
+                        bracket_depth += 1;
+                        i += 1;
+                    }
+                    b']' if bracket_depth > 0 => {
+                        bracket_depth -= 1;
+                        i += 1;
+                    }
+                    b'/' if bracket_depth == 0 => {
+                        // Closing delimiter — stop before it.
+                        break;
+                    }
+                    _ => {
+                        i += 1;
+                    }
+                }
+            }
+
+            if i == start {
+                // Empty body is valid (e.g. `//`), produce an empty span.
+                return Some(Span::new(start, start, state.src));
+            }
+            state.offset = i;
+            Some(Span::new(start, i, state.src))
+        };
+        Parser::new(body)
+    }
+
     fn regex() -> Parser<'a, Expression<'a>> {
-        let not_slash_or_backslash = take_while_span(|c| c != '/' && c != '\\');
-
-        // Handle any escape sequence (\/, \\, \., \[, etc.)
-        let escaped_span = string_span(r"\").then_span(next_span(1));
-
-        let string = (escaped_span | not_slash_or_backslash)
-            .many_span(..)
+        let string = Self::regex_body()
             .wrap_span(string_span("/"), string_span("/"));
 
         string.map(|s| {

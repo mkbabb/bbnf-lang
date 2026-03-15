@@ -1,12 +1,10 @@
 //! Utility functions for prettify code generation.
 //!
-//! Contains type predicates, pattern detection, binding doc/range helpers,
-//! and item-level doc/range generation extracted from the main prettify module.
+//! Contains type predicates, binding doc/range helpers,
+//! and item-level doc/range generation used by both
+//! the IR-based prettify generator and the prettify submodules.
 
-use crate::types::*;
-
-use super::super::type_inference::*;
-use super::super::types::*;
+use super::super::ir_types::type_is_span;
 
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
@@ -49,114 +47,6 @@ pub fn is_box_enum_type(ty: &syn::Type) -> bool {
 }
 
 // ---------------------------------------------------------------------------
-// Pattern detection
-// ---------------------------------------------------------------------------
-
-/// Detect `"L" >> middle << "R"` (wrapped repetition).
-///
-/// In the BBNF AST this parses as: `Skip(Next(Literal(L), middle), Literal(R))`
-/// where middle may be wrapped in OptionalWhitespace/Group/etc.
-pub fn detect_wrapped_pattern(expr: &Expression) -> Option<(String, String)> {
-    // Primary shape: Skip(Next(Literal(L), ...), Literal(R))
-    if let Expression::Skip(left_token, right_token) = expr {
-        let left = unwrap_transparent(&left_token.value);
-        let right_delim = unwrap_transparent(&right_token.value);
-
-        if let Expression::Next(next_left, _) = left {
-            let next_left_inner = unwrap_transparent(&next_left.value);
-            if let Expression::Literal(Token { value: l, .. }) = next_left_inner {
-                if let Expression::Literal(Token { value: r, .. }) = right_delim {
-                    return Some((l.to_string(), r.to_string()));
-                }
-            }
-        }
-    }
-    None
-}
-
-/// Resolve a nonterminal reference and detect wrapped pattern in the referenced rule.
-/// E.g. `lhs = nonterminal` where `nonterminal = "<" >> identifier << ">"`.
-pub fn resolve_and_detect_wrapped<'a>(
-    expr: &'a Expression<'a>,
-    grammar_attrs: &'a GeneratedGrammarAttributes<'a>,
-) -> Option<(String, String)> {
-    if let Expression::Nonterminal(Token { value: ref_name, .. }) = expr {
-        // Look up the referenced rule's RHS.
-        let rhs = grammar_attrs.ast.iter().find_map(|(k, v)| {
-            if let Expression::Nonterminal(t) = k {
-                if t.value.as_ref() == ref_name.as_ref() { Some(v) } else { None }
-            } else {
-                None
-            }
-        })?;
-        let inner = match rhs {
-            Expression::Rule(inner, _) => inner.as_ref(),
-            other => other,
-        };
-        detect_wrapped_pattern(inner)
-    } else {
-        None
-    }
-}
-
-/// Detect `key, sep >> value` (key-value pair) pattern.
-///
-/// In the BBNF AST: `Concatenation([Nonterminal(key), Next(sep, value)])`
-/// where sep can be a Nonterminal (like `colon`) or a Literal.
-pub fn detect_key_value_pattern(expr: &Expression) -> Option<(String, String)> {
-    if let Expression::Concatenation(token) = expr {
-        let elems = &token.value;
-        if elems.len() == 2 {
-            // Second element should be Next(sep, value)
-            if let Expression::Next(sep, _) = &elems[1] {
-                let sep_inner = unwrap_transparent(&sep.value);
-                // sep can be a Literal (e.g., ":")
-                if let Expression::Literal(Token { value: sep_val, .. }) = sep_inner {
-                    return Some(("key".to_string(), sep_val.to_string()));
-                }
-                // sep can be a Nonterminal (e.g., colon = ":" ?w)
-                // In that case, look up what the nonterminal represents.
-                if let Expression::Nonterminal(Token { value: sep_name, .. }) = sep_inner {
-                    // Emit the separator name; the actual separator string
-                    // will be inferred from the nonterminal's definition.
-                    return Some(("key".to_string(), sep_name.to_string()));
-                }
-            }
-        }
-    }
-    None
-}
-
-/// If `name` is a nonterminal rule name whose body is a simple literal (possibly
-/// wrapped in OptionalWhitespace), return that literal string. Otherwise None.
-pub fn resolve_separator_literal(name: &str, grammar_attrs: &GeneratedGrammarAttributes) -> Option<String> {
-    for (k, v) in grammar_attrs.ast.iter() {
-        if let Expression::Nonterminal(t) = k {
-            if t.value.as_ref() == name {
-                let inner = match v {
-                    Expression::Rule(inner, _) => inner.as_ref(),
-                    other => other,
-                };
-                let unwrapped = unwrap_transparent(inner);
-                if let Expression::Literal(Token { value: lit, .. }) = unwrapped {
-                    return Some(lit.to_string());
-                }
-            }
-        }
-    }
-    None
-}
-
-/// Unwrap transparent expression wrappers (OptionalWhitespace, Group).
-pub fn unwrap_transparent<'a>(expr: &'a Expression<'a>) -> &'a Expression<'a> {
-    match expr {
-        Expression::OptionalWhitespace(inner) => unwrap_transparent(&inner.value),
-        Expression::Group(inner) => unwrap_transparent(&inner.value),
-        other => other,
-    }
-}
-
-// ---------------------------------------------------------------------------
 // Binding doc/range helpers for tuple elements
 // ---------------------------------------------------------------------------
 
@@ -181,15 +71,25 @@ pub fn doc_for_binding(binding: &syn::Ident, ty: &syn::Type) -> TokenStream {
     } else if is_box_enum_type(ty) {
         quote! { #binding.to_doc() }
     } else if let syn::Type::Tuple(tuple_ty) = ty {
-        // Nested tuple — destructure and concat.
+        // Nested tuple — destructure and chain with `+` (no Null interleaving).
+        // Chains into a single Concat(Vec) with one heap allocation.
         let n = tuple_ty.elems.len();
         let inner_bindings: Vec<_> = (0..n).map(|i| format_ident!("t{}", i)).collect();
         let pat = quote! { (#(#inner_bindings),*) };
         let doc_parts: Vec<TokenStream> = tuple_ty.elems.iter().zip(inner_bindings.iter()).map(|(elem_ty, b)| {
             doc_for_binding(b, elem_ty)
         }).collect();
+        let combined = if doc_parts.len() == 1 {
+            doc_parts[0].clone()
+        } else {
+            let mut acc = doc_parts[0].clone();
+            for part in &doc_parts[1..] {
+                acc = quote! { (#acc) + (#part) };
+            }
+            acc
+        };
         quote! {
-            { let #pat = #binding; ::pprint::concat(vec![#(#doc_parts),*]) }
+            { let #pat = #binding; #combined }
         }
     } else {
         // Unknown type — emit Null.
@@ -294,15 +194,24 @@ pub fn generate_item_to_doc(vec_ty: &syn::Type) -> TokenStream {
         }
     }
     if let Some(syn::Type::Tuple(tuple_ty)) = inner_ty {
-        // Tuple element — destructure and concat using doc_for_binding for each element.
+        // Tuple element — destructure and chain with `+` (no Null interleaving).
         let n = tuple_ty.elems.len();
         let bindings: Vec<syn::Ident> = (0..n).map(|i| format_ident!("f{}", i)).collect();
         let pat = quote! { (#(#bindings),*) };
         let doc_parts: Vec<TokenStream> = tuple_ty.elems.iter().zip(bindings.iter()).map(|(elem_ty, binding)| {
             doc_for_binding(binding, elem_ty)
         }).collect();
+        let combined = if doc_parts.len() == 1 {
+            doc_parts[0].clone()
+        } else {
+            let mut acc = doc_parts[0].clone();
+            for part in &doc_parts[1..] {
+                acc = quote! { (#acc) + (#part) };
+            }
+            acc
+        };
         quote! {
-            { let #pat = item; ::pprint::concat(vec![#(#doc_parts),*]) }
+            { let #pat = item; #combined }
         }
     } else {
         // Simple element — call to_doc directly.

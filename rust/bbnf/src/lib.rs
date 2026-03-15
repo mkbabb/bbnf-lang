@@ -15,3 +15,6 @@ pub mod optimize;
 pub use optimize::*;
 
 pub mod imports;
+
+pub mod lower;
+pub mod pipeline;

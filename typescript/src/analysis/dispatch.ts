@@ -126,3 +126,119 @@ export function buildDispatchTable(
 
     return { table, isPerfect: true };
 }
+
+// --- Partial dispatch ---
+
+/**
+ * Partial dispatch result: groups of alternatives that share first-byte overlap,
+ * plus a fallback group for nullable/empty-FIRST alternatives.
+ */
+export interface PartialDispatchTable {
+    /** charCode → group index, -1 = no dispatchable match (try fallback). */
+    table: Int8Array;
+    /** Group index → alternative indices. Single-element = direct dispatch. */
+    groups: number[][];
+    /** Alternative indices not dispatchable (nullable or empty FIRST set). */
+    fallbackIndices: number[];
+}
+
+/**
+ * Build a partial dispatch table for alternations where perfect dispatch fails.
+ *
+ * Uses union-find to merge alternatives that share any first-byte overlap into
+ * groups. Each group gets a dispatch slot — single-element groups dispatch O(1),
+ * multi-element groups fall back to sequential trial within the group.
+ *
+ * Returns null when partial dispatch doesn't improve over sequential trial
+ * (fewer than 2 dispatchable groups, or all alternatives collide).
+ */
+export function buildPartialDispatchTable(
+    alternatives: Expression[],
+    firstSets: Map<string, CharSet>,
+    nullable: Map<string, boolean>,
+): PartialDispatchTable | null {
+    const n = alternatives.length;
+    if (n < 3) return null; // Need at least 3 alternatives for partial to beat any()
+
+    const altFirstSets: (CharSet | null)[] = [];
+    const fallbackIndices: number[] = [];
+    const dispatchableIndices: number[] = [];
+
+    // Separate nullable/empty-FIRST alternatives from dispatchable ones.
+    for (let i = 0; i < n; i++) {
+        if (exprIsNullable(alternatives[i], nullable, new Map())) {
+            altFirstSets.push(null);
+            fallbackIndices.push(i);
+        } else {
+            const cs = exprFirstSet(alternatives[i], firstSets, nullable, new Map());
+            if (cs.isEmpty()) {
+                altFirstSets.push(null);
+                fallbackIndices.push(i);
+            } else {
+                altFirstSets.push(cs);
+                dispatchableIndices.push(i);
+            }
+        }
+    }
+
+    if (dispatchableIndices.length < 2) return null;
+
+    // Union-find: merge alternatives that share any character.
+    const parent = new Int32Array(n);
+    for (let i = 0; i < n; i++) parent[i] = i;
+
+    function find(x: number): number {
+        while (parent[x] !== x) {
+            parent[x] = parent[parent[x]];
+            x = parent[x];
+        }
+        return x;
+    }
+    function merge(a: number, b: number) {
+        parent[find(a)] = find(b);
+    }
+
+    for (let ch = 0; ch < 128; ch++) {
+        let first = -1;
+        for (const i of dispatchableIndices) {
+            if (altFirstSets[i]!.has(ch)) {
+                if (first >= 0) merge(first, i);
+                else first = i;
+            }
+        }
+    }
+
+    // Collect groups from union-find components.
+    const groupMap = new Map<number, number[]>();
+    for (const i of dispatchableIndices) {
+        const root = find(i);
+        if (!groupMap.has(root)) groupMap.set(root, []);
+        groupMap.get(root)!.push(i);
+    }
+
+    const groups = [...groupMap.values()];
+
+    // Partial dispatch only helps when there are at least 2 distinct groups.
+    if (groups.length <= 1) return null;
+
+    // Build alt-to-group lookup.
+    const altToGroup = new Int8Array(n).fill(-1);
+    for (let g = 0; g < groups.length; g++) {
+        for (const i of groups[g]) {
+            altToGroup[i] = g;
+        }
+    }
+
+    // Build table: charCode → group index.
+    const table = new Int8Array(128).fill(-1);
+    for (let ch = 0; ch < 128; ch++) {
+        for (const i of dispatchableIndices) {
+            if (altFirstSets[i]!.has(ch)) {
+                table[ch] = altToGroup[i];
+                break; // All alternatives sharing this char are in the same group.
+            }
+        }
+    }
+
+    return { table, groups, fallbackIndices };
+}

@@ -14,7 +14,7 @@ import {
 import type { ParserState } from "@mkbabb/parse-that";
 import type { Expression, Nonterminals, AST, RecoverDirective } from "./types.js";
 import { removeAllLeftRecursion } from "./optimize.js";
-import { analyzeGrammar, computeFirstSets, buildDispatchTable, dedupGroups } from "./analysis/index.js";
+import { analyzeGrammar, computeFirstSets, buildDispatchTable, buildPartialDispatchTable, dedupGroups } from "./analysis/index.js";
 import type { AnalysisCache, FirstNullable } from "./analysis/index.js";
 import { BBNFToAST, BBNFToASTWithImports } from "./parse.js";
 import { loadModuleGraphSync, mergeModuleAST, mergeModuleRecovers } from "./imports.js";
@@ -23,12 +23,53 @@ function escapeRegex(s: string): string {
     return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+/**
+ * Find SCC entry points: cyclic rules referenced from outside their SCC.
+ * Only these rules need full memoization — other cyclic rules in the same
+ * SCC are reached through the entry point which already caches.
+ */
+function findSccEntryPoints(cache: AnalysisCache): Set<string> {
+    const { depGraph, sccIndex, cyclicRules, sccs } = cache;
+    const entryPoints = new Set<string>();
+
+    // A cyclic rule is an entry point if any rule outside its SCC references it.
+    for (const [src, deps] of depGraph) {
+        const srcScc = sccIndex.get(src);
+        for (const dep of deps) {
+            if (!cyclicRules.has(dep)) continue;
+            const depScc = sccIndex.get(dep);
+            if (srcScc !== depScc) {
+                entryPoints.add(dep);
+            }
+        }
+    }
+
+    // Ensure every cyclic SCC has at least one entry point.
+    for (const scc of sccs) {
+        if (scc.length <= 1) {
+            // Single-member SCC: if cyclic (self-referencing), it's its own entry point.
+            const name = scc[0];
+            if (cyclicRules.has(name) && !entryPoints.has(name)) {
+                entryPoints.add(name);
+            }
+            continue;
+        }
+        const hasEntry = scc.some((name) => entryPoints.has(name));
+        if (!hasEntry) {
+            entryPoints.add(scc[0]);
+        }
+    }
+
+    return entryPoints;
+}
+
 export function ASTToParser(
     ast: AST,
     analysis?: AnalysisCache,
     firstNullable?: FirstNullable,
     recovers?: RecoverDirective[],
     tagAlternations = false,
+    enableMemoization = false,
 ) {
     // Compute analysis if not provided
     const cache = analysis ?? analyzeGrammar(ast);
@@ -344,22 +385,67 @@ export function ASTToParser(
                 }
 
                 // Try to build a dispatch table for O(1) alternation.
-                // Only use dispatch when all alternatives are non-nullable
-                // (epsilon/optional alternatives can't be dispatched on first char).
                 if (parsers.length >= 2) {
-                    const dispatch = buildDispatchTable(
+                    // Perfect dispatch: all branches have disjoint FIRST sets.
+                    const perfectDispatch = buildDispatchTable(
                         alts,
                         fnData.firstSets,
                         fnData.nullable,
                     );
 
-                    if (dispatch?.isPerfect) {
-                        const tbl = dispatch.table;
+                    if (perfectDispatch?.isPerfect) {
+                        const tbl = perfectDispatch.table;
                         const dispatchParser = (state: ParserState<any>) => {
                             const ch = state.src.charCodeAt(state.offset);
                             const idx = ch < 128 ? tbl[ch] : -1;
                             if (idx >= 0) {
                                 return parsers[idx].parser(state);
+                            }
+                            mergeErrorState(state as ParserState<unknown>);
+                            return state.err(undefined);
+                        };
+                        return new Parser(
+                            dispatchParser,
+                            createParserContext("dispatch", undefined, ...parsers),
+                        );
+                    }
+
+                    // Partial dispatch: group colliding alternatives, dispatch to groups.
+                    const partial = buildPartialDispatchTable(
+                        alts,
+                        fnData.firstSets,
+                        fnData.nullable,
+                    );
+
+                    if (partial) {
+                        const tbl = partial.table;
+                        // Build group parsers: single → direct, multi → any().
+                        const groupParsers = partial.groups.map((indices) =>
+                            indices.length === 1
+                                ? parsers[indices[0]]
+                                : any(...indices.map((i) => parsers[i])),
+                        );
+                        const fallbackParser =
+                            partial.fallbackIndices.length > 0
+                                ? any(...partial.fallbackIndices.map((i) => parsers[i]))
+                                : null;
+
+                        const dispatchParser = (state: ParserState<any>) => {
+                            const ch = state.src.charCodeAt(state.offset);
+                            const groupIdx = ch < 128 ? tbl[ch] : -1;
+                            if (groupIdx >= 0) {
+                                const result = groupParsers[groupIdx].parser(state);
+                                if (!state.isError) return result;
+                                // Group failed — try nullable fallback.
+                                if (fallbackParser) {
+                                    state.isError = false;
+                                    return fallbackParser.parser(state);
+                                }
+                                return result;
+                            }
+                            // No dispatch match — try nullable fallback.
+                            if (fallbackParser) {
+                                return fallbackParser.parser(state);
                             }
                             mergeErrorState(state as ParserState<unknown>);
                             return state.err(undefined);
@@ -376,11 +462,31 @@ export function ASTToParser(
         }
     }
 
+    // Compute SCC entry points and reference counts for memoization strategy.
+    const sccEntryPoints = enableMemoization ? findSccEntryPoints(cache) : new Set<string>();
+    const { refCounts } = cache;
+    const SELECTIVE_THRESHOLD = 3;
+
     // Build rules in topological order (leaves first, from Tarjan's SCC).
     for (const name of topoOrder) {
         const rule = ast.get(name);
         if (!rule) continue;
-        nonterminals[name] = generateParser(name, rule.expression);
+        let parser = generateParser(name, rule.expression);
+
+        // SCC-selective memoization (opt-in): entry points get full memo,
+        // high-ref acyclic rules get lightweight mergeMemos.
+        if (enableMemoization) {
+            if (sccEntryPoints.has(name)) {
+                parser = parser.memoize();
+            } else if (
+                !cyclicRules.has(name) &&
+                (refCounts.get(name) ?? 0) > SELECTIVE_THRESHOLD
+            ) {
+                parser = parser.mergeMemos();
+            }
+        }
+
+        nonterminals[name] = parser;
     }
 
     // Build any rules not in topoOrder
@@ -449,7 +555,7 @@ export function BBNFToParser(
     // Re-analyze if left recursion changed the AST
     const finalAnalysis = finalAst !== ast ? analyzeGrammar(finalAst) : analysis;
     const firstNullable = computeFirstSets(finalAst, finalAnalysis);
-    const nonterminals = ASTToParser(finalAst, finalAnalysis, firstNullable, recovers, tagAlternations);
+    const nonterminals = ASTToParser(finalAst, finalAnalysis, firstNullable, recovers, tagAlternations, optimizeGraph);
     return [nonterminals, finalAst] as const;
 }
 
@@ -502,6 +608,6 @@ export function BBNFToParserFromFile(
 
     const finalAnalysis = finalAst !== ast ? analyzeGrammar(finalAst) : analysis;
     const firstNullable = computeFirstSets(finalAst, finalAnalysis);
-    const nonterminals = ASTToParser(finalAst, finalAnalysis, firstNullable, recovers, tagAlternations);
+    const nonterminals = ASTToParser(finalAst, finalAnalysis, firstNullable, recovers, tagAlternations, optimizeGraph);
     return [nonterminals, finalAst] as const;
 }

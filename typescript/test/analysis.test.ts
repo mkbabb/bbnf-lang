@@ -12,8 +12,10 @@ import {
     CharSet,
     computeFirstSets,
     findFirstSetConflicts,
+    buildDispatchTable,
+    buildPartialDispatchTable,
 } from "../src/analysis/index.js";
-import { rule, nonterminal, literal, alternation, regexExpr } from "./helpers/ast-builders.js";
+import { rule, nonterminal, literal, alternation, regexExpr, optional } from "./helpers/ast-builders.js";
 
 // ---------------------------------------------------------------------------
 // Analysis tests
@@ -258,6 +260,107 @@ describe("buildDepGraphs", () => {
         expect(rdepGraph.get("c")!.has("b")).toBe(true);
         expect(rdepGraph.get("b")!.has("a")).toBe(true);
         expect(rdepGraph.get("a")!.size).toBe(0);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// Dispatch table tests
+// ---------------------------------------------------------------------------
+
+describe("buildDispatchTable", () => {
+    it("builds perfect table for disjoint literals", () => {
+        // r = "a" | "b" | "c"
+        const ast: AST = new Map([
+            rule("r", alternation([literal("a"), literal("b"), literal("c")])),
+        ]);
+        const analysis = analyzeGrammar(ast);
+        const fn = computeFirstSets(ast, analysis);
+        const alts = [literal("a"), literal("b"), literal("c")];
+
+        const dt = buildDispatchTable(alts, fn.firstSets, fn.nullable);
+        expect(dt).not.toBeNull();
+        expect(dt!.isPerfect).toBe(true);
+        expect(dt!.table[97]).toBe(0); // 'a' → 0
+        expect(dt!.table[98]).toBe(1); // 'b' → 1
+        expect(dt!.table[99]).toBe(2); // 'c' → 2
+        expect(dt!.table[100]).toBe(-1); // 'd' → -1
+    });
+
+    it("returns null for overlapping FIRST sets", () => {
+        // r = "ab" | "ac" — both start with 'a'
+        const ast: AST = new Map([
+            rule("r", alternation([literal("ab"), literal("ac")])),
+        ]);
+        const analysis = analyzeGrammar(ast);
+        const fn = computeFirstSets(ast, analysis);
+
+        const dt = buildDispatchTable([literal("ab"), literal("ac")], fn.firstSets, fn.nullable);
+        expect(dt).toBeNull();
+    });
+});
+
+describe("buildPartialDispatchTable", () => {
+    it("groups colliding alternatives, dispatches disjoint ones", () => {
+        // r = "ab" | "ac" | "{" | "["
+        // 'a' collides between "ab" and "ac" → same group
+        // '{' and '[' are each disjoint → own groups
+        const alts = [literal("ab"), literal("ac"), literal("{"), literal("[")];
+        const ast: AST = new Map([rule("r", alternation(alts))]);
+        const analysis = analyzeGrammar(ast);
+        const fn = computeFirstSets(ast, analysis);
+
+        const pt = buildPartialDispatchTable(alts, fn.firstSets, fn.nullable);
+        expect(pt).not.toBeNull();
+        expect(pt!.groups.length).toBeGreaterThanOrEqual(3);
+        expect(pt!.fallbackIndices).toEqual([]);
+
+        // '{' and '[' should be in their own single-element groups.
+        const braceGroup = pt!.groups.find((g) => g.includes(2));
+        const bracketGroup = pt!.groups.find((g) => g.includes(3));
+        expect(braceGroup!.length).toBe(1);
+        expect(bracketGroup!.length).toBe(1);
+
+        // "ab" and "ac" should be in the same group.
+        const aGroup = pt!.groups.find((g) => g.includes(0));
+        expect(aGroup).toContain(1);
+
+        // Table should dispatch correctly.
+        expect(pt!.table[123]).toBeGreaterThanOrEqual(0); // '{'
+        expect(pt!.table[91]).toBeGreaterThanOrEqual(0);  // '['
+        expect(pt!.table[97]).toBeGreaterThanOrEqual(0);  // 'a'
+    });
+
+    it("returns null when all alternatives collide", () => {
+        // r = "abc" | "axy" | "azz" — all start with 'a', one group
+        const alts = [literal("abc"), literal("axy"), literal("azz")];
+        const ast: AST = new Map([rule("r", alternation(alts))]);
+        const analysis = analyzeGrammar(ast);
+        const fn = computeFirstSets(ast, analysis);
+
+        const pt = buildPartialDispatchTable(alts, fn.firstSets, fn.nullable);
+        expect(pt).toBeNull(); // One group ≤ 1 → not helpful
+    });
+
+    it("returns null for fewer than 3 alternatives", () => {
+        const alts = [literal("a"), literal("b")];
+        const ast: AST = new Map([rule("r", alternation(alts))]);
+        const analysis = analyzeGrammar(ast);
+        const fn = computeFirstSets(ast, analysis);
+
+        const pt = buildPartialDispatchTable(alts, fn.firstSets, fn.nullable);
+        expect(pt).toBeNull();
+    });
+
+    it("separates nullable alternatives into fallback", () => {
+        // r = "a" | "b" | c? — optional c is nullable → fallback
+        const alts = [literal("a"), literal("b"), optional(literal("c")), literal("{")];
+        const ast: AST = new Map([rule("r", alternation(alts))]);
+        const analysis = analyzeGrammar(ast);
+        const fn = computeFirstSets(ast, analysis);
+
+        const pt = buildPartialDispatchTable(alts, fn.firstSets, fn.nullable);
+        expect(pt).not.toBeNull();
+        expect(pt!.fallbackIndices).toContain(2); // optional is nullable
     });
 });
 

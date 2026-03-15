@@ -1,42 +1,32 @@
 extern crate proc_macro;
 
-mod span_codegen;
-
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 
 use bbnf::calculate_ast_deps;
-use bbnf::calculate_nonterminal_generated_parsers;
-use bbnf::calculate_nonterminal_types;
-use bbnf::generate_prettify;
 
 use bbnf::analysis::{
-    tarjan_scc, topological_sort_scc, calculate_acyclic_deps_scc, calculate_non_acyclic_deps_scc,
+    tarjan_scc, topological_sort_scc,
     compute_first_sets, find_aliases, find_transparent_alternations,
     find_span_eligible_rules,
 };
 use bbnf::BBNFGrammar;
 use bbnf::Expression;
-use bbnf::GeneratedGrammarAttributes;
 use bbnf::ParserAttributes;
 use bbnf::optimize::remove_direct_left_recursion;
 use bbnf::imports::load_module_graph;
+use bbnf::lower::lower_to_ir;
 use indexmap::IndexMap;
 
 use proc_macro::TokenStream;
 
-use quote::{format_ident, quote};
 use syn::{
-    parse_macro_input, parse_quote,
+    parse_macro_input,
     punctuated::Punctuated,
-    Attribute, DeriveInput, Expr, ExprLit, Lit, Meta, Type,
+    Attribute, DeriveInput, Expr, ExprLit, Lit, Meta,
 };
 
 use parse_that::utils::get_cargo_root_path;
-
-use span_codegen::{
-    generate_enum, generate_grammar_arr, try_generate_span_parser, format_generated_parsers,
-};
 
 fn parse_parser_attrs(attrs: &[Attribute]) -> ParserAttributes {
     let mut parser_attr = ParserAttributes::default();
@@ -96,12 +86,7 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     let ident = &input.ident;
     let generics = &input.generics;
 
-    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
-
-    let enum_ident = format_ident!("{}Enum", ident);
-
-    let enum_type: Type = parse_quote!(#enum_ident<'a>);
-    let boxed_enum_type: Type = parse_quote!(Box<#enum_ident<'a>> );
+    let (_impl_generics, _ty_generics, _where_clause) = generics.split_for_impl();
 
     let parser_container_attrs = parse_parser_attrs(&input.attrs);
 
@@ -223,11 +208,6 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     let scc_result = tarjan_scc(&deps);
     let ast = topological_sort_scc(&ast, &scc_result, &deps);
 
-    // O(V+E) acyclic/non-acyclic classification.
-    // Nodes with cycles OR diamond dependencies are classified as non-acyclic.
-    let acyclic_deps = calculate_acyclic_deps_scc(&deps, &scc_result);
-    let non_acyclic_deps = calculate_non_acyclic_deps_scc(&deps, &acyclic_deps);
-
     // Phase 1.2: Compute FIRST sets for dispatch table generation
     let first_sets = compute_first_sets(&ast, &deps, &scc_result);
 
@@ -240,133 +220,46 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     // Phase D: Span-eligible rule detection
     let span_eligible_rules = find_span_eligible_rules(&ast, &scc_result.cyclic_rules);
 
-    // Phase E: Iterative fixed-point to compute which span-eligible rules get _sp() methods.
-    // The recursive try_generate_span_parser needs sp_method_rules for nonterminal lookups,
-    // but sp_method_rules depends on try_generate_span_parser succeeding. We iterate until
-    // the set stabilizes (typically 2-3 iterations).
-    let mut sp_method_rules: HashSet<String> = HashSet::new();
-    loop {
-        let next: HashSet<String> = span_eligible_rules
-            .iter()
-            .filter(|name| {
-                let tmp_attrs = GeneratedGrammarAttributes {
-                    ast: &ast,
-                    deps: &deps,
-                    acyclic_deps: &acyclic_deps,
-                    non_acyclic_deps: &non_acyclic_deps,
-                    first_sets: None,
-                    aliases: None,
-                    transparent_rules: None,
-                    span_eligible_rules: Some(&span_eligible_rules),
-                    sp_method_rules: Some(&sp_method_rules),
-                    recovers: None,
-                    no_collapse_rules: None,
-                    pretties: None,
-                    sub_variants: None,
-                    ident,
-                    enum_ident: &enum_ident,
-                    enum_type: &enum_type,
-                    boxed_enum_type: &boxed_enum_type,
-                    parser_container_attrs: &parser_container_attrs,
-                };
-                try_generate_span_parser(name, &tmp_attrs).is_some()
-            })
-            .cloned()
-            .collect();
-        if next == sp_method_rules {
-            break;
-        }
-        sp_method_rules = next;
-    }
-
     let recovers_ref = if recover_map.is_empty() { None } else { Some(&recover_map) };
     let pretties_ref = if pretty_map.is_empty() { None } else { Some(&pretty_map) };
     let no_collapse_ref = if no_collapse_set.is_empty() { None } else { Some(&no_collapse_set) };
 
-    // First pass: type inference (sub_variants not yet known).
-    let tmp_grammar_attrs = GeneratedGrammarAttributes {
-        ast: &ast,
-        deps: &deps,
-        acyclic_deps: &acyclic_deps,
-        non_acyclic_deps: &non_acyclic_deps,
+    // ── IR Lowering ──────────────────────────────────────────────────────────
+    // Lower the parsed + analysed grammar to the canonical GrammarIR.
+    let dispatch_tables_for_ir = std::collections::HashMap::new();
+    let mut grammar_ir = lower_to_ir(
+        &ast,
+        &first_sets,
+        &scc_result,
+        &aliases,
+        &transparent_rules,
+        &span_eligible_rules,
+        recovers_ref,
+        pretties_ref,
+        no_collapse_ref,
+        &dispatch_tables_for_ir,
+    );
 
-        first_sets: Some(&first_sets),
-        aliases: Some(&aliases),
-        transparent_rules: Some(&transparent_rules),
-        span_eligible_rules: Some(&span_eligible_rules),
-        sp_method_rules: Some(&sp_method_rules),
-        recovers: recovers_ref,
-        no_collapse_rules: no_collapse_ref,
-        pretties: pretties_ref,
-        sub_variants: None,
+    // Run all IR optimization passes.
+    bbnf_ir::passes::canonicalize_aliases(&mut grammar_ir);
+    bbnf_ir::passes::prune_unreachable(&mut grammar_ir);
+    bbnf_ir::passes::inline_acyclic(&mut grammar_ir);
+    bbnf_ir::passes::eliminate_epsilon(&mut grammar_ir);
+    bbnf_ir::passes::merge_literals(&mut grammar_ir);
+    bbnf_ir::passes::factor_common_prefixes(&mut grammar_ir);
+    bbnf_ir::passes::refine_span_eligibility(&mut grammar_ir);
+    grammar_ir.follow_sets = bbnf_ir::passes::compute_follow_sets(&grammar_ir);
+    bbnf_ir::passes::generate_dispatch_tables(&mut grammar_ir);
+    bbnf_ir::passes::refine_memo_strategies(&mut grammar_ir);
+    // NOTE: infer_types is called inside generate_all() AFTER sp_method_rules
+    // computation, so that type inference uses the correct has_sp_method flags.
 
+    // ── IR-based codegen (active) ──────────────────────────────────────
+    let output = bbnf::generate::generate_all(
+        &mut grammar_ir,
+        &parser_container_attrs,
         ident,
-        enum_ident: &enum_ident,
+    );
 
-        enum_type: &enum_type,
-        boxed_enum_type: &boxed_enum_type,
-
-        parser_container_attrs: &parser_container_attrs,
-    };
-
-    let (nonterminal_types, sub_variants) = calculate_nonterminal_types(&tmp_grammar_attrs);
-
-    // Rebuild grammar_attrs with sub_variants for codegen.
-    let grammar_attrs = GeneratedGrammarAttributes {
-        ast: &ast,
-        deps: &deps,
-        acyclic_deps: &acyclic_deps,
-        non_acyclic_deps: &non_acyclic_deps,
-
-        first_sets: Some(&first_sets),
-        aliases: Some(&aliases),
-        transparent_rules: Some(&transparent_rules),
-        span_eligible_rules: Some(&span_eligible_rules),
-        sp_method_rules: Some(&sp_method_rules),
-        recovers: recovers_ref,
-        no_collapse_rules: no_collapse_ref,
-        pretties: pretties_ref,
-        sub_variants: Some(&sub_variants),
-
-        ident,
-        enum_ident: &enum_ident,
-
-        enum_type: &enum_type,
-        boxed_enum_type: &boxed_enum_type,
-
-        parser_container_attrs: &parser_container_attrs,
-    };
-
-    let grammar_arr = generate_grammar_arr(&grammar_attrs, &parser_container_attrs);
-    let grammar_enum = generate_enum(&grammar_attrs, &nonterminal_types, &sub_variants);
-
-    let generated_parsers =
-        calculate_nonterminal_generated_parsers(&grammar_attrs, &nonterminal_types, &sub_variants);
-
-    let generated_parsers = format_generated_parsers(&generated_parsers, &grammar_attrs);
-
-    // Optionally generate prettify (to_doc + source_range) methods.
-    let prettify_impl = if parser_container_attrs.prettify {
-        generate_prettify(&grammar_attrs, &nonterminal_types)
-    } else {
-        quote! {}
-    };
-
-    let expanded = quote! {
-        // Re-export parse_that items so generated code can reference traits
-        // (ParserSpan, ParserFlat) and functions (lazy, string_span, etc.).
-        use ::parse_that::*;
-
-        #grammar_arr
-
-        #grammar_enum
-
-         impl #impl_generics #ident #ty_generics #where_clause {
-            #generated_parsers
-        }
-
-        #prettify_impl
-    };
-
-    expanded.into()
+    output.into()
 }

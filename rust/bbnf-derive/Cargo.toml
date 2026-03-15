@@ -12,6 +12,7 @@ proc-macro = true
 
 [dependencies]
 bbnf = { version = "0.2.4", path = "../bbnf" }
+bbnf-ir = { path = "../bbnf-ir" }
 pprint = "0.3"
 parse_that = "0.3"
 

@@ -36,6 +36,28 @@ export function code_lens(text) {
 }
 
 /**
+ * Compile a BBNF grammar string into a bytecode program.
+ * Returns a numeric handle for use with `parse_with_grammar` and `free_grammar`.
+ *
+ * If `entry_rule` is provided and non-empty, it overrides the default entry rule
+ * (which is the last rule in source order).
+ * @param {string} grammar
+ * @param {string | null} [entry_rule]
+ * @returns {number}
+ */
+export function compile_grammar(grammar, entry_rule) {
+    const ptr0 = passStringToWasm0(grammar, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    var ptr1 = isLikeNone(entry_rule) ? 0 : passStringToWasm0(entry_rule, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    var len1 = WASM_VECTOR_LEN;
+    const ret = wasm.compile_grammar(ptr0, len0, ptr1, len1);
+    if (ret[2]) {
+        throw takeFromExternrefTable0(ret[1]);
+    }
+    return ret[0] >>> 0;
+}
+
+/**
  * @param {string} text
  * @returns {any}
  */
@@ -54,6 +76,18 @@ export function document_symbols(text) {
     const ptr0 = passStringToWasm0(text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
     const ret = wasm.document_symbols(ptr0, len0);
+    return ret;
+}
+
+/**
+ * @param {string} text
+ * @param {number} offset
+ * @returns {any}
+ */
+export function find_references(text, offset) {
+    const ptr0 = passStringToWasm0(text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.find_references(ptr0, len0, offset);
     return ret;
 }
 
@@ -126,6 +160,17 @@ export function format_css(input, max_width, indent, use_tabs) {
 }
 
 /**
+ * @param {string} text
+ * @returns {any}
+ */
+export function format_document(text) {
+    const ptr0 = passStringToWasm0(text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.format_document(ptr0, len0);
+    return ret;
+}
+
+/**
  * @param {string} input
  * @param {number} max_width
  * @param {number} indent
@@ -165,6 +210,60 @@ export function format_json(input, max_width, indent, use_tabs) {
 
 /**
  * @param {string} text
+ * @param {number} start_offset
+ * @param {number} end_offset
+ * @returns {any}
+ */
+export function format_range(text, start_offset, end_offset) {
+    const ptr0 = passStringToWasm0(text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.format_range(ptr0, len0, start_offset, end_offset);
+    return ret;
+}
+
+/**
+ * Format input using a previously compiled grammar's @pretty hints.
+ * Returns the formatted string, or null if parsing fails or no pretty hints are defined.
+ * @param {number} handle
+ * @param {string} input
+ * @param {number} max_width
+ * @param {number} indent
+ * @param {boolean} use_tabs
+ * @returns {string | undefined}
+ */
+export function format_with_grammar(handle, input, max_width, indent, use_tabs) {
+    const ptr0 = passStringToWasm0(input, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.format_with_grammar(handle, ptr0, len0, max_width, indent, use_tabs);
+    let v2;
+    if (ret[0] !== 0) {
+        v2 = getStringFromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+    }
+    return v2;
+}
+
+/**
+ * Free a compiled grammar, releasing its memory.
+ * @param {number} handle
+ */
+export function free_grammar(handle) {
+    wasm.free_grammar(handle);
+}
+
+/**
+ * @param {string} text
+ * @returns {any}
+ */
+export function full_sync(text) {
+    const ptr0 = passStringToWasm0(text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.full_sync(ptr0, len0);
+    return ret;
+}
+
+/**
+ * @param {string} text
  * @param {number} offset
  * @returns {any}
  */
@@ -188,6 +287,13 @@ export function hover_at_offset(text, offset) {
 }
 
 /**
+ * Initialize panic hook for better error messages in WASM.
+ */
+export function init_panic_hook() {
+    wasm.init_panic_hook();
+}
+
+/**
  * @param {string} text
  * @param {number} start_line
  * @param {number} end_line
@@ -197,6 +303,79 @@ export function inlay_hints(text, start_line, end_line) {
     const ptr0 = passStringToWasm0(text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
     const ret = wasm.inlay_hints(ptr0, len0, start_line, end_line);
+    return ret;
+}
+
+/**
+ * @param {string} text
+ * @param {number} offset
+ * @returns {any}
+ */
+export function on_type_format(text, offset) {
+    const ptr0 = passStringToWasm0(text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.on_type_format(ptr0, len0, offset);
+    return ret;
+}
+
+/**
+ * Parse input, returning only success and offset — no tree serialization.
+ * Use this when you only need to validate or measure raw parse throughput.
+ * @param {number} handle
+ * @param {string} input
+ * @returns {any}
+ */
+export function parse_check(handle, input) {
+    const ptr0 = passStringToWasm0(input, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.parse_check(handle, ptr0, len0);
+    if (ret[2]) {
+        throw takeFromExternrefTable0(ret[1]);
+    }
+    return takeFromExternrefTable0(ret[0]);
+}
+
+/**
+ * Parse input using a previously compiled grammar.
+ * Returns a JSON-serializable parse result.
+ * @param {number} handle
+ * @param {string} input
+ * @returns {any}
+ */
+export function parse_with_grammar(handle, input) {
+    const ptr0 = passStringToWasm0(input, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.parse_with_grammar(handle, ptr0, len0);
+    if (ret[2]) {
+        throw takeFromExternrefTable0(ret[1]);
+    }
+    return takeFromExternrefTable0(ret[0]);
+}
+
+/**
+ * @param {string} text
+ * @param {number} offset
+ * @returns {any}
+ */
+export function prepare_rename(text, offset) {
+    const ptr0 = passStringToWasm0(text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.prepare_rename(ptr0, len0, offset);
+    return ret;
+}
+
+/**
+ * @param {string} text
+ * @param {number} offset
+ * @param {string} new_name
+ * @returns {any}
+ */
+export function rename_symbol(text, offset, new_name) {
+    const ptr0 = passStringToWasm0(text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passStringToWasm0(new_name, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ret = wasm.rename_symbol(ptr0, len0, offset, ptr1, len1);
     return ret;
 }
 
@@ -228,8 +407,8 @@ export function semantic_tokens_full(text) {
 function __wbg_get_imports() {
     const import0 = {
         __proto__: null,
-        __wbg___wbindgen_debug_string_5398f5bb970e0daa: function(arg0, arg1) {
-            const ret = debugString(arg1);
+        __wbg_String_8564e559799eccda: function(arg0, arg1) {
+            const ret = String(arg1);
             const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
             const len1 = WASM_VECTOR_LEN;
             getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
@@ -237,6 +416,21 @@ function __wbg_get_imports() {
         },
         __wbg___wbindgen_throw_6ddd609b62940d55: function(arg0, arg1) {
             throw new Error(getStringFromWasm0(arg0, arg1));
+        },
+        __wbg_error_a6fa202b58aa1cd3: function(arg0, arg1) {
+            let deferred0_0;
+            let deferred0_1;
+            try {
+                deferred0_0 = arg0;
+                deferred0_1 = arg1;
+                console.error(getStringFromWasm0(arg0, arg1));
+            } finally {
+                wasm.__wbindgen_free(deferred0_0, deferred0_1, 1);
+            }
+        },
+        __wbg_new_227d7c05414eb861: function() {
+            const ret = new Error();
+            return ret;
         },
         __wbg_new_a70fbab9066b301f: function() {
             const ret = new Array();
@@ -251,6 +445,17 @@ function __wbg_get_imports() {
         },
         __wbg_set_6be42768c690e380: function(arg0, arg1, arg2) {
             arg0[arg1] = arg2;
+        },
+        __wbg_set_7eaa4f96924fd6b3: function() { return handleError(function (arg0, arg1, arg2) {
+            const ret = Reflect.set(arg0, arg1, arg2);
+            return ret;
+        }, arguments); },
+        __wbg_stack_3b0d974bbf31e44f: function(arg0, arg1) {
+            const ret = arg1.stack;
+            const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            const len1 = WASM_VECTOR_LEN;
+            getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
+            getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
         },
         __wbindgen_cast_0000000000000001: function(arg0) {
             // Cast intrinsic for `F64 -> Externref`.
@@ -278,69 +483,10 @@ function __wbg_get_imports() {
     };
 }
 
-function debugString(val) {
-    // primitive types
-    const type = typeof val;
-    if (type == 'number' || type == 'boolean' || val == null) {
-        return  `${val}`;
-    }
-    if (type == 'string') {
-        return `"${val}"`;
-    }
-    if (type == 'symbol') {
-        const description = val.description;
-        if (description == null) {
-            return 'Symbol';
-        } else {
-            return `Symbol(${description})`;
-        }
-    }
-    if (type == 'function') {
-        const name = val.name;
-        if (typeof name == 'string' && name.length > 0) {
-            return `Function(${name})`;
-        } else {
-            return 'Function';
-        }
-    }
-    // objects
-    if (Array.isArray(val)) {
-        const length = val.length;
-        let debug = '[';
-        if (length > 0) {
-            debug += debugString(val[0]);
-        }
-        for(let i = 1; i < length; i++) {
-            debug += ', ' + debugString(val[i]);
-        }
-        debug += ']';
-        return debug;
-    }
-    // Test for built-in
-    const builtInMatches = /\[object ([^\]]+)\]/.exec(toString.call(val));
-    let className;
-    if (builtInMatches && builtInMatches.length > 1) {
-        className = builtInMatches[1];
-    } else {
-        // Failed to match the standard '[object ClassName]'
-        return toString.call(val);
-    }
-    if (className == 'Object') {
-        // we're a user defined class or Object
-        // JSON.stringify avoids problems with cycles, and is generally much
-        // easier than looping through ownProperties of `val`.
-        try {
-            return 'Object(' + JSON.stringify(val) + ')';
-        } catch (_) {
-            return 'Object';
-        }
-    }
-    // errors
-    if (val instanceof Error) {
-        return `${val.name}: ${val.message}\n${val.stack}`;
-    }
-    // TODO we could test for more things here, like `Set`s and `Map`s.
-    return className;
+function addToExternrefTable0(obj) {
+    const idx = wasm.__externref_table_alloc();
+    wasm.__wbindgen_externrefs.set(idx, obj);
+    return idx;
 }
 
 let cachedDataViewMemory0 = null;
@@ -370,6 +516,19 @@ function getUint8ArrayMemory0() {
         cachedUint8ArrayMemory0 = new Uint8Array(wasm.memory.buffer);
     }
     return cachedUint8ArrayMemory0;
+}
+
+function handleError(f, args) {
+    try {
+        return f.apply(this, args);
+    } catch (e) {
+        const idx = addToExternrefTable0(e);
+        wasm.__wbindgen_exn_store(idx);
+    }
+}
+
+function isLikeNone(x) {
+    return x === undefined || x === null;
 }
 
 function passArray32ToWasm0(arg, malloc) {
@@ -414,6 +573,12 @@ function passStringToWasm0(arg, malloc, realloc) {
 
     WASM_VECTOR_LEN = offset;
     return ptr;
+}
+
+function takeFromExternrefTable0(idx) {
+    const value = wasm.__wbindgen_externrefs.get(idx);
+    wasm.__externref_table_dealloc(idx);
+    return value;
 }
 
 let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });

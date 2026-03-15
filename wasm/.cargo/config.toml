@@ -1,8 +1,15 @@
+# WASM default stack is 1MB — the BBNF grammar parser uses recursive descent
+# which overflows on complex regex patterns + gorgeous formatting pipelines.
+# 8MB provides sufficient headroom for deeply nested inputs.
+[target.wasm32-unknown-unknown]
+rustflags = ["-C", "link-arg=-zstack-size=8388608"]
+
 # Local development overrides
 [patch.crates-io]
 gorgeous = { path = "../../gorgeous" }
 pprint = { path = "../../pprint/rust" }
 pprint_derive = { path = "../../pprint/rust/derive" }
 parse_that = { path = "../../parse-that/rust/parse_that" }
+bbnf-ir = { path = "../rust/bbnf-ir" }
 bbnf = { path = "../rust/bbnf" }
 bbnf_derive = { path = "../rust/bbnf-derive" }

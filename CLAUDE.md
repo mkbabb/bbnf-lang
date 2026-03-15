@@ -9,16 +9,22 @@ BBNF extends EBNF for defining context-free grammars, used by the
 ```
 bbnf-lang/
 ├── rust/                       Rust workspace (Cargo)
-│   ├── bbnf/                   Core grammar parser, analysis, codegen (lib)
+│   ├── bbnf/                   Core grammar parser, IR lowering, codegen (lib)
+│   ├── bbnf-ir/                Canonical grammar IR, bytecode compiler, interpreter
 │   ├── bbnf-derive/            Proc-macro: #[derive(Parser)] from .bbnf files
+│   ├── bbnf-analysis/          Shared analysis types (CharSet, dispatch tables)
 │   └── lsp/                    Language server (bbnf-lsp binary)
 ├── wasm/                       bbnf-wasm crate (wasm-pack → playground)
+│   └── src/                    lib.rs + analysis.rs, gorgeous.rs, lsp.rs, vm.rs
 ├── typescript/                 @mkbabb/bbnf-lang — runtime parser + codegen
 ├── prettier-plugin-bbnf/       Prettier plugin for .bbnf formatting
 ├── playground/                 Vue 3 + Monaco playground (uses bbnf-wasm)
-│   └── src/composables/wasm/   WASM bridge: types.ts, loader.ts, index.ts
+│   └── src/composables/        wasm/, usePlaygroundQuery, useSplitPane, usePipeline, useLanguageProvider, useExamples
 ├── extension/                  VS Code extension (LSP client)
 ├── grammar/                    Example grammars + language specification
+│   └── lang/                   Language grammars (json, css, bnf, ebnf, bbnf, google-sheets)
+├── data/                       Benchmark datasets
+├── scripts/                    Build automation scripts
 ├── server/                     Compiled LSP binary (copied by Makefile)
 ├── .github/workflows/          CI (ci.yml) + release pipeline (release.yml)
 ├── .vscode/                    Launch configs, tasks, settings
@@ -108,23 +114,21 @@ bbnf-lsp uses workspace-relative paths to bbnf; cross-repo deps are version-only
 - **Recovery**: `@recover rule syncExpr ;` — per-rule annotation specifying a sync expression for multi-error parsing. Any valid BBNF expression (regex, alternation, concatenation, etc.) is valid as the sync. Emits `.recover(syncParser, null)` in TS codegen and a `Recovered` enum variant in Rust proc-macro codegen.
 - **Analysis pipeline**: Tarjan SCC → topological sort → FIRST sets (128-bit `CharSet`) → dispatch tables (constant-time alternation selection by leading character).
 - **Recursive SpanParser codegen**: `try_generate_span_parser()` handles all expression types (concat, alt, many, skip/next, minus, nonterminal refs). Iterative fixed-point loop on `sp_method_rules` — start empty, try generating for all eligible rules, add successes, repeat until convergence (2–3 iterations). Literal unescape via `unescape_literal()` + `proc_macro2::Literal::string()`.
-- **File decomposition**: `codegen.rs` → `codegen.rs` + `alternation.rs` + `concatenation.rs`; `prettify.rs` → `prettify/mod.rs` + `prettify/prettify_utils.rs`; `lib.rs` → `lib.rs` + `span_codegen.rs`.
+- **IR-based codegen**: Grammar → `lower.rs` → bbnf-ir `Module` → `ir_codegen.rs`/`ir_enums.rs`/`ir_types.rs`/`ir_span.rs`/`ir_pretty.rs`. Old direct-AST codegen (`codegen.rs`, `alternation.rs`, `concatenation.rs`, `patterns.rs`, `type_inference.rs`) removed. `pipeline.rs` orchestrates the full lowering + codegen sequence.
 - **Prettify codegen**: `@pretty` directives control Doc emission. Hint vocabulary: `group`, `indent`, `dedent`, `block`, `blankline`, `nobreak`, `softbreak`, `hardbreak`, `compact`, `fast`, `off`. `generate_prettify()` produces `to_doc()` + `source_range()` impls. Sub-variant coercion for heterogeneous alternation branches. Heuristic inference (`heuristics.rs`) auto-applies hints for un-annotated rules (toplevel, brace-delimited, large compound). Shared hint definitions in `hints.rs` — single source of truth for codegen + LSP.
 - **Wrapped vec formatting**: Delimiter-wrapped repetitions (e.g. `"{" >> items << "}"`) emit IfBreak concat — one item per line when Group breaks, comma-separated inline when it fits.
 - **`skip_recover`**: Parser attribute that suppresses `@recover` codegen and the `Recovered` enum variant. Used by formatting-only parsers that assume well-formed input.
 - **Type comparison**: `types_eq()` compares `syn::Type` structurally via per-token-tree comparison—no string serialization.
 - **Sub-variant validation**: `validate_sub_variant_uniqueness()` rejects cross-rule type collisions at compile time.
 - **JSON pattern detection**: Exact-match against canonical regex patterns (no substring heuristics). `is_json_string_regex()` / `is_json_number_regex()` use `const` pattern arrays.
-- **WASM**: `wasm/` crate (`bbnf-wasm`) — 13 exports total: 5 formatters (json/css/bnf/ebnf/bbnf) + `analyze_grammar` + `hover_at_offset` + `completions` + 8 LSP features. `gorgeous-wasm` repo deleted (redundant — `bbnf-wasm` already exports the same formatters).
-- **Playground composables**: `composables/wasm/{types,loader,index}.ts` replaces monolithic `useWasm.ts`. `useLanguageProvider.ts` registers 10 Monaco providers: hover, completion, semantic tokens, inlay hints, definition, document symbols, folding, selection ranges, code actions, code lens.
+- **WASM**: `wasm/` crate (`bbnf-wasm`) — 28 exports total: 6 formatters (json/css/bnf/ebnf/bbnf/google-sheets) + `analyze_grammar` + `hover_at_offset` + `completions` + LSP features + VM interpreter. `gorgeous-wasm` repo deleted (redundant). Decomposed into `analysis.rs`, `gorgeous.rs`, `lsp.rs`, `vm.rs`.
+- **Playground composables**: `composables/wasm/{types,index}.ts` + `usePlaygroundQuery.ts`, `useSplitPane.ts`, `usePipeline.ts`, `useLanguageProvider.ts`, `useExamples.ts`. 10 Monaco providers: hover, completion, semantic tokens, inlay hints, definition, document symbols, folding, selection ranges, code actions, code lens.
 
 ## Roadmap
 
-### Landing Page
-- Replace bare playground with proper landing page at `/`
-- Hero section: BBNF branding, tagline, CTA linking to playground
-- Expand `HeaderRibbon` into full nav bar with route links
-- Routes: `/` = landing, `/playground` = current playground, `/docs` = documentation
+### Landing Page — COMPLETE
+Landing page at `/` with HeroSection, DemoCards, FeatureCards, LivePreviewStrip, NavBar.
+Routes: `/` = landing, `/playground` = playground, `/docs` = docs.
 
 ### Documentation Page
 - Dynamic docs rendered from markdown at `/docs/:slug`

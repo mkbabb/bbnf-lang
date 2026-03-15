@@ -11,17 +11,19 @@ BBNF extends EBNF for defining context-free grammars, used by the
 
 ```
 rust/                   Rust workspace
-  bbnf/                 BBNF grammar framework (lib)
+  bbnf/                 BBNF grammar framework, IR lowering, codegen (lib)
+  bbnf-ir/              Canonical grammar IR, bytecode compiler, interpreter
   bbnf-derive/          Proc-macro derive for BBNF
+  bbnf-analysis/        Shared analysis types (CharSet, dispatch tables)
   lsp/                  Language Server Protocol server
-wasm/                   bbnf-wasm crate (wasm-pack → playground)
+wasm/                   bbnf-wasm crate (wasm-pack → playground, bytecode VM)
 typescript/             TS library (@mkbabb/bbnf-lang)
 prettier-plugin-bbnf/   Prettier plugin for .bbnf files
 playground/             Vue 3 + Monaco playground (uses bbnf-wasm)
 extension/              VS Code extension (LSP client)
 grammar/                Example grammars + language specification
   css/                  CSS grammar family (value-unit, color, values, selectors, keyframes, stylesheet)
-  lang/                 Language/format grammars (JSON, CSV, math, regex, EBNF, etc.)
+  lang/                 Language/format grammars (JSON, CSV, math, regex, EBNF, Google Sheets, etc.)
 server/                 Compiled LSP binary (copied by Makefile)
 ```
 
@@ -150,9 +152,9 @@ Four panes, two visible at a time:
 | **Parsed AST** | JSON AST produced by the parser |
 | **Formatted** | Pretty-printed output via `@pretty` directives |
 
-Formatting uses [gorgeous](https://github.com/mkbabb/bbnf-lang) (WASM) for
-built-in languages (JSON, CSS, BBNF) and falls back to a TS interpreter for
-custom grammars. A telemetry badge shows parse/format timings.
+Formatting uses [gorgeous](https://github.com/mkbabb/gorgeous) (WASM) for
+built-in languages (JSON, CSS, BBNF, Google Sheets) and falls back to a
+bytecode VM interpreter for custom grammars. A telemetry badge shows parse/format timings.
 
 ### Walkthroughs
 

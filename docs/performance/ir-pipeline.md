@@ -40,7 +40,7 @@ The pass pipeline typically converges in 2–3 iterations of the fixed-point loo
 
 Resolves transitive alias chains (`A = B`, `B = C`) to their terminal non-alias target, then rewrites all `Ref(alias_id)` nodes throughout the IR to point directly at the canonical rule.
 
-Fires whenever the lowering step marks a rule with `is_alias`---typically single-production rules whose body is a bare nonterminal reference. Eliminates indirect call overhead in both the interpreter and AOT codegen by removing one level of indirection per alias hop, and exposes the true call target to downstream passes like `inline_acyclic` and `generate_dispatch_tables`.
+Fires whenever the lowering step marks a rule with `is_alias`—typically single-production rules whose body is a bare nonterminal reference. Eliminates indirect call overhead in both the interpreter and AOT codegen by removing one level of indirection per alias hop, and exposes the true call target to downstream passes like `inline_acyclic` and `generate_dispatch_tables`.
 
 ## `prune_unreachable`
 
@@ -84,19 +84,19 @@ Fires on patterns like `"if" ident | "if" "(" expr ")"`, keyword tables, or any 
 
 ## `refine_span_eligibility`
 
-Iterates to a fixed point over all non-cyclic rules, marking each as span-eligible if its entire body---leaves, combinators, and all transitively referenced rules---can produce a `Span<'a>` without semantic transformations (`Map`, boxing, enum wrapping). Cyclic rules are excluded because SpanParser has no recursive variant.
+Iterates to a fixed point over all non-cyclic rules, marking each as span-eligible if its entire body—leaves, combinators, and all transitively referenced rules—can produce a `Span<'a>` without semantic transformations (`Map`, boxing, enum wrapping). Cyclic rules are excluded because SpanParser has no recursive variant.
 
 Enables `_sp()` method generation in AOT codegen (zero-copy, vtable-free parsing) and allows `infer_types` to assign `Span` instead of `BoxedEnum` for references to span-eligible rules inside concatenations.
 
 ## `compute_follow_sets`
 
-Computes `FOLLOW(A)`---the set of ASCII characters that can appear immediately after rule A in any sentential form---using the standard textbook algorithm with fixed-point iteration for cyclic grammars. Propagates through `Seq` (FIRST of suffix), `Alt` (union), `Repeat` (self-loop), `Skip`/`Next`/`Minus` (binary), and handles nullable suffixes by adding `FOLLOW(container)`.
+Computes `FOLLOW(A)`—the set of ASCII characters that can appear immediately after rule A in any sentential form—using the standard textbook algorithm with fixed-point iteration for cyclic grammars. Propagates through `Seq` (FIRST of suffix), `Alt` (union), `Repeat` (self-loop), `Skip`/`Next`/`Minus` (binary), and handles nullable suffixes by adding `FOLLOW(container)`.
 
 Consumed by two downstream passes: `generate_dispatch_tables` uses FOLLOW sets to assign nullable alternation branches to dispatch entries, and `refine_memo_strategies` uses FOLLOW set cardinality as a signal for memoization benefit.
 
 ## `generate_dispatch_tables`
 
-Walks the entire IR tree and annotates each `Alt` node whose branches have pairwise disjoint FIRST sets with an `AltDispatch`---a 128-byte lookup table mapping each ASCII byte to a branch index (or 255 for no match). When FOLLOW sets are available, a single nullable branch can participate in dispatch by using `FOLLOW(containing_rule)` as its effective dispatch set, provided it is disjoint from all other branches' FIRST sets.
+Walks the entire IR tree and annotates each `Alt` node whose branches have pairwise disjoint FIRST sets with an `AltDispatch`—a 128-byte lookup table mapping each ASCII byte to a branch index (or 255 for no match). When FOLLOW sets are available, a single nullable branch can participate in dispatch by using `FOLLOW(containing_rule)` as its effective dispatch set, provided it is disjoint from all other branches' FIRST sets.
 
 Converts O(n) linear branch trial in the interpreter to O(1) table lookup, which is the single largest performance improvement for grammars with many-branch alternations (e.g., JSON `value` with 6+ branches).
 
@@ -137,4 +137,4 @@ Bytecode programs are serialized via MessagePack for crossing the WASM boundary.
 
 ## IR vs Direct AST
 
-The previous codegen architecture walked the AST directly. The IR-based architecture adds a lowering step but enables cross-rule optimizations that weren't possible before---`inline_acyclic` and `factor_common_prefixes` can't operate on a raw AST because they need whole-grammar visibility.
+The previous codegen architecture walked the AST directly. The IR-based architecture adds a lowering step but enables cross-rule optimizations that weren't possible before—`inline_acyclic` and `factor_common_prefixes` can't operate on a raw AST because they need whole-grammar visibility.

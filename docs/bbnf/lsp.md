@@ -38,7 +38,7 @@ definition, document symbols, folding, selection ranges, code actions, code lens
 
 ## Diagnostics
 
-The language server produces diagnostics at five severity levels. Undefined-rule warnings are import-aware---imported rule names suppress the warning.
+The language server produces diagnostics at five severity levels. Undefined-rule warnings are import-aware—imported rule names suppress the warning.
 
 | Severity | Diagnostic | Description |
 |----------|------------|-------------|
@@ -50,11 +50,11 @@ The language server produces diagnostics at five severity levels. Undefined-rule
 | INFO | Left recursion | Cycle path reported (e.g., `expr -> term -> factor -> expr`) |
 | HINT | Unused rules | Zero references, not the entry rule |
 | HINT | Unreachable rules | Not reachable from the entry rule via any path |
-| HINT | Alias rules | `A = B ;`---suggests using `B` directly |
+| HINT | Alias rules | `A = B ;`—suggests using `B` directly |
 
 ## Navigation
 
-**Go-to-definition** jumps to a rule's definition site. Works across files---Cmd+Click on a rule imported via `@import` navigates to its definition in the source file. Cmd+Click on an import path opens the referenced file.
+**Go-to-definition** jumps to a rule's definition site. Works across files—Cmd+Click on a rule imported via `@import` navigates to its definition in the source file. Cmd+Click on an import path opens the referenced file.
 
 **Find references** locates all references to a rule within the current document and across imported files.
 
@@ -100,7 +100,7 @@ The language server produces diagnostics at five severity levels. Undefined-rule
 @recover declaration /[;}]/ ;
 ```
 
-The sync expression can be any valid BBNF expression---regex, alternation, concatenation, or any other form.
+The sync expression can be any valid BBNF expression—regex, alternation, concatenation, or any other form.
 
 ### Cross-file imports
 
@@ -111,7 +111,7 @@ BBNF grammars compose via `@import` directives. Import directives may appear at 
 @import { number, integer } from "lib.bbnf" ; (* selective import *)
 ```
 
-Selective imports automatically bring transitive dependencies---importing `percentage` also brings `number` and `percentageUnit` if `percentage` references them. Circular imports are handled via partial initialization: a module's rules are registered before recursing into its own imports.
+Selective imports automatically bring transitive dependencies—importing `percentage` also brings `number` and `percentageUnit` if `percentage` references them. Circular imports are handled via partial initialization: a module's rules are registered before recursing into its own imports.
 
 The server maintains forward and reverse import graphs, updated on every file change. Cross-file features affected:
 
@@ -122,7 +122,7 @@ The server maintains forward and reverse import graphs, updated on every file ch
 
 ## Analysis Pipeline
 
-On every `textDocument/didChange` notification, the server runs a full re-parse and re-analysis. No incremental parsing---grammar files are small enough that full re-analysis is acceptable.
+On every `textDocument/didChange` notification, the server runs a full re-parse and re-analysis. No incremental parsing—grammar files are small enough that full re-analysis is acceptable.
 
 ```flow-chart
 { "title": "Per-Change Analysis Pipeline",

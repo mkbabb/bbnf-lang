@@ -8,7 +8,9 @@ Cargo workspace containing the core BBNF compiler and language server.
 rust/
 ├── Cargo.toml          Workspace manifest (resolver = "2")
 ├── bbnf/               Core library: grammar parsing, analysis, Rust codegen
+├── bbnf-ir/            Canonical grammar IR, passes, bytecode compiler, interpreter
 ├── bbnf-derive/        Proc-macro crate: #[derive(Parser)]
+├── bbnf-analysis/      Shared analysis (DocumentState, LSP providers)
 └── lsp/                Language server binary (bbnf-lsp)
 ```
 
@@ -25,6 +27,7 @@ cargo clippy --all-targets -- -D warnings  # Lint (CI enforces this)
 
 - **parse_that**: Local path dep — parser combinator library
 - **pprint**: Local path dep — pretty printing (derives `Pretty`)
+- **bbnf-ir**: Workspace path dep — canonical grammar IR, passes, bytecode VM
 - **indexmap**: Insertion-order HashMap (AST rule ordering)
 - **syn/quote/proc-macro2**: Rust code generation
 - **tower-lsp-server**: LSP protocol (lsp crate only)

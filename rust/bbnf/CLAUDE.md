@@ -23,9 +23,14 @@ bbnf/
 │   ├── generate/
 │   │   ├── mod.rs        Re-exports + orchestrator
 │   │   ├── types.rs      ParserAttributes, GeneratedNonterminalParser, caches
-│   │   ├── type_inference.rs  Expression → syn::Type
-│   │   ├── patterns.rs   regex coalesce, sep_by, wrapped, any_span detection
-│   │   ├── codegen.rs    Expression → TokenStream parser synthesis
+│   │   ├── ir_codegen/   IR-based Rust codegen (split from monolithic ir_codegen.rs)
+│   │   │   ├── mod.rs    Entry point, generate_all(), expression dispatch
+│   │   │   ├── alt.rs    Alternation codegen (dispatch tables, sub-variants)
+│   │   │   ├── seq.rs    Concatenation/sequence codegen
+│   │   │   ├── repeat.rs Repetition codegen (many, sep_by, optional)
+│   │   │   ├── wrap.rs   Skip/Next/Minus/Negate codegen
+│   │   │   └── infer.rs  IrNode → syn::Type inference
+│   │   ├── ir_span.rs    SpanParser dual-method codegen
 │   │   └── prettify/
 │   │       ├── mod.rs          @pretty codegen: to_doc() + source_range() emission
 │   │       ├── prettify_utils.rs  Type helpers, expression unwrapping
@@ -69,12 +74,11 @@ Entry points: `BBNFGrammar::grammar()`, `BBNFGrammar::grammar_with_imports()`.
 - **metadata.rs**: Reference counts, aliases, transparent alternations, span-eligible rules — codegen optimization metadata.
 
 ### generate/ — Code Generation
-Emits `proc_macro2::TokenStream` for Rust parser methods.
+Emits `proc_macro2::TokenStream` for Rust parser methods. Two codegen paths:
 
-- **types.rs**: `ParserAttributes`, `GeneratedNonterminalParser`, cache types, `DEFAULT_PARSERS`. `CacheBundle` field: `pretty_preserve_next_concat: Cell<bool>` — consumable flag for @pretty tuple preservation.
-- **type_inference.rs**: Expression → `syn::Type` (Span, Option, Vec, tuple, Box<Enum>). `pretty_preserve_next_concat` consumable flag — prevents all-Span concatenation compression for @pretty rules. Only top-level concatenation consumes the flag; nested concatenations (inside Many/Many1/Optional) are unaffected.
-- **patterns.rs**: Pattern recognition — regex coalescing, sepBy detection, wrap detection, JSON fast-paths.
-- **codegen.rs**: Expression → combinator calls (string, regex, then, one_of, lazy, etc.). Dispatch table codegen. Span coalescing.
+- **ir_codegen/**: IR-based Rust codegen. Takes a `GrammarIR` and produces `TokenStream`. Split into sub-modules: `alt.rs` (alternation + dispatch tables), `seq.rs` (concatenation), `repeat.rs` (repetition + sep_by), `wrap.rs` (skip/next/minus/negate), `infer.rs` (IrNode → syn::Type).
+- **ir_span.rs**: SpanParser dual-method codegen—generates `rule_sp()` alongside `rule()` for span-eligible rules.
+- **types.rs**: `ParserAttributes`, `GeneratedNonterminalParser`, cache types, `DEFAULT_PARSERS`.
 - **prettify/**: `@pretty` directive codegen. `mod.rs` emits `to_doc()` + `source_range()` impls. `source_range()` codegen uses single-pass min/max fold instead of Vec allocation. `heuristics.rs` auto-infers hints from rule shape (toplevel, brace-delimited, large compound). `hints.rs` is the single source of truth for hint names/descriptions (shared with LSP).
 
 Acyclic rules inline up to a depth limit. Non-acyclic rules wrapped in `lazy(|| ...)`.

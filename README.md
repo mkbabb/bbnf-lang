@@ -14,7 +14,7 @@ rust/                   Rust workspace
   bbnf/                 BBNF grammar framework, IR lowering, codegen (lib)
   bbnf-ir/              Canonical grammar IR, bytecode compiler, interpreter
   bbnf-derive/          Proc-macro derive for BBNF
-  bbnf-analysis/        Shared analysis types (CharSet, dispatch tables)
+  bbnf-analysis/        Shared analysis (DocumentState, LSP providers)
   lsp/                  Language Server Protocol server
 wasm/                   bbnf-wasm crate (wasm-pack → playground, bytecode VM)
 typescript/             TS library (@mkbabb/bbnf-lang)
@@ -306,7 +306,7 @@ responses—full end-to-end coverage without VS Code:
 cargo test -p bbnf-lsp --test integration -- --nocapture
 ```
 
-Current test coverage (47 integration tests):
+Current test coverage (~51 integration tests):
 
 - Initialize & capability negotiation
 - Diagnostics: valid grammar, unused rules, undefined rules, parse errors, regex panics
@@ -323,15 +323,16 @@ Current test coverage (47 integration tests):
 - Cross-file: go-to-definition, references, completion via `@import`
 - Large grammar (8-rule JSON grammar, all features combined)
 
-TypeScript test coverage (91 tests across 7 suites):
+TypeScript test coverage (117 tests across 8 suites):
 
-- **bbnf.test.ts** (13)—end-to-end grammar parsing: JSON, CSV, CSS color/selectors/values/keyframes/value-unit, math, regex, EBNF, BBNF self-parse, left-recursion
+- **bbnf.test.ts** (17)—end-to-end grammar parsing: JSON, CSV, CSS color/selectors/values/keyframes/value-unit, math, regex, EBNF, BBNF self-parse, left-recursion, Google Sheets
 - **imports.test.ts** (13)—module graph: glob/selective imports, cyclic (2-way, 3-way, self), diamond deps, transitive unfurling, non-transitive scope, merge precedence
-- **analysis.test.ts** (16)—Tarjan SCC, dep graphs, ref counts, aliases, transparent alternations, FIRST set conflicts, acyclic classification
+- **analysis.test.ts** (22)—Tarjan SCC, dep graphs, ref counts, aliases, transparent alternations, FIRST set conflicts, acyclic classification
 - **optimize.test.ts** (13)—topological sort, direct/indirect left-recursion elimination, common prefix detection
 - **first-sets.test.ts** (17)—`regexFirstChars` dispatch, `CharSet` operations, `computeFirstSets` convergence, `buildDispatchTable` routing
 - **recover.test.ts** (8)—`@recover` parsing, codegen `.recover()` wrapping, multi-error collection
 - **css-stylesheet.test.ts** (11)—`css-stylesheet.bbnf` with `@recover` annotations, complex-errors.css recovery
+- **google-sheets.test.ts** (16)—Google Sheets formula grammar parsing and formatting
 
 ### Developing the Prettier Plugin
 

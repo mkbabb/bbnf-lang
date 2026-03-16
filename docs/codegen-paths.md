@@ -152,7 +152,7 @@ rust/
       analysis/         FIRST/FOLLOW, SCC, span eligibility
       lower.rs          AST → GrammarIR
       generate/
-        ir_codegen.rs   IR → Rust TokenStream (parser methods)
+        ir_codegen/     IR → Rust TokenStream (mod, alt, seq, repeat, wrap, infer)
         ir_span.rs      IR → SpanParser methods
         ir_pretty.rs    IR → to_doc() methods
         prettify/       Doc generation helpers
@@ -164,9 +164,10 @@ rust/
   bbnf-ir/              Canonical IR — shared by AOT and VM
     src/
       lib.rs            GrammarIR, IrNode, IrRule, RuleMeta, TypeDesc types
-      passes/           11 optimization passes (used by both AOT and VM)
+      passes/           12 optimization passes (used by both AOT and VM)
         canonicalize_aliases, prune_unreachable, inline_acyclic,
-        eliminate_epsilon, merge_literals, factor_common_prefixes,
+        eliminate_epsilon, merge_literals, merge_regex_alts,
+        factor_common_prefixes,
         refine_span_eligibility, compute_follow_sets,
         generate_dispatch_tables, refine_memo_strategies, infer_types,
         compute_sp_method_rules

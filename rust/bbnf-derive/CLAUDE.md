@@ -36,14 +36,19 @@ pub struct MyParser;
 
 ```
 Grammar file(s)
-  → Phase 0: Parse + import resolution (BBNFGrammar, ModuleRegistry)
-  → Phase 1: Tarjan SCC + topological sort + acyclic classification
-  → Phase 2: Left-recursion removal (opt-in), FIRST sets
-  → Phase 3: Ref counts, aliases, transparent alternations, span-eligibility
-  → Phase 4: Type calculation (Expression → syn::Type)
-  → Phase 5: Enum generation (one variant per nonterminal)
-  → Phase 6: Parser generation (dispatch tables, JSON fast-paths, inlining)
-  → Phase 7: Grammar array embedding (include_str!)
+  → Parse + import resolution (BBNFGrammar, ModuleRegistry)
+  → Analysis: Tarjan SCC, topological sort, FIRST sets, aliases, span-eligibility
+  → Optional left-recursion elimination (Paull's + direct)
+  → Lower to IR (lower_to_ir → GrammarIR)
+  → IR passes (12 passes, must mirror pipeline.rs ordering):
+      1. canonicalize_aliases     7. factor_common_prefixes
+      2. prune_unreachable        8. refine_span_eligibility
+      3. inline_acyclic           9. compute_follow_sets
+      4. eliminate_epsilon       10. generate_dispatch_tables
+      5. merge_literals          11. refine_memo_strategies
+      6. merge_regex_alts        12. infer_types
+  → Rust codegen: ir_codegen/ → TokenStream (enum + parser methods)
+  → Grammar array embedding (include_str!)
 ```
 
 ## Key Optimizations

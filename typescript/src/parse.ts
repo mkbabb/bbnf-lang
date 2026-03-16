@@ -32,16 +32,9 @@ export function BBNFToASTWithImports(input: string) {
         return [parser] as const;
     }
 
-    const { imports, recovers, no_collapses, pretties, rules } = parsed as { imports: any[]; recovers: any[]; no_collapses: any[]; pretties: any[]; rules: ProductionRule[] };
+    const grammar = parsed as ParsedGrammar;
 
-    const ast = rules.reduce(
-        (acc, productionRule) => {
-            return acc.set(productionRule.name.value, productionRule);
-        },
-        new Map<string, ProductionRule>(),
-    ) as AST;
-
-    return [parser, { imports, recovers: recovers ?? [], no_collapses: no_collapses ?? [], pretties: pretties ?? [], rules: ast } as ParsedGrammar] as const;
+    return [parser, { imports: grammar.imports, recovers: grammar.recovers ?? [], no_collapses: grammar.no_collapses ?? [], pretties: grammar.pretties ?? [], rules: grammar.rules } as ParsedGrammar] as const;
 }
 
 /**

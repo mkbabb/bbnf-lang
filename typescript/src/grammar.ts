@@ -511,7 +511,10 @@ export class BBNFGrammar {
                         rules.push(item.value);
                     }
                 }
-                return { imports, recovers, no_collapses, pretties, rules } as ParsedGrammar;
+                const rulesMap: Map<string, ProductionRule> = new Map(
+                    rules.map((r) => [r.name.value, r]),
+                );
+                return { imports, recovers, no_collapses, pretties, rules: rulesMap } as ParsedGrammar;
             });
         }));
     }

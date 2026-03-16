@@ -26,8 +26,7 @@
         "./dist"
     ],
     "dependencies": {
-        "@mkbabb/parse-that": "^0.8.0",
-        "@mkbabb/pprint": "^0.3.4"
+        "@mkbabb/parse-that": "^0.8.0"
     },
     "devDependencies": {
         "@types/node": "^22.0.0",

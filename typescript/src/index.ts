@@ -6,5 +6,3 @@ export * from "./optimize.js";
 export * from "./analysis/index.js";
 export * from "./imports.js";
 export * from "./imports-loader.js";
-export * from "./prettify/index.js";
-export * from "./wasm.js";

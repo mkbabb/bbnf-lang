@@ -111,7 +111,7 @@ describe("CSS Stylesheet BBNF Grammar", () => {
             // Print diagnostics for visual inspection
             if (diagnostics.length > 0) {
                 for (const d of diagnostics) {
-                    console.error(`  [line ${d.line}:${d.column}] ${d.message ?? "recovery"}`);
+                    console.error(`  [line ${d.line}:${d.column}] ${d.found ?? "recovery"}`);
                 }
             }
 

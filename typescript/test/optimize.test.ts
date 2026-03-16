@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import type { AST, Alteration, Concatenation, Nonterminal, Epsilon } from "../src/types.js";
+import type { AST, Alteration, Concatenation, Nonterminal, Epsilon, Expression } from "../src/types.js";
 import {
     topologicalSort,
     removeDirectLeftRecursion,

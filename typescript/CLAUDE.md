@@ -56,7 +56,7 @@ typescript/
 
 ## Dependency
 
-- **`@mkbabb/parse-that`** (^0.6.0) — Parser combinator library. Provides `Parser<T>`, `string()`, `regex()`, `all()`, `any()`, `dispatch()`, `.trim()`, `.opt()`, `.many()`, `.sepBy()`, `.wrap()`, `.skip()`, `.next()`, etc.
+- **`@mkbabb/parse-that`** (^0.8.0) — Parser combinator library. Provides `Parser<T>`, `string()`, `regex()`, `all()`, `any()`, `dispatch()`, `.trim()`, `.opt()`, `.many()`, `.sepBy()`, `.wrap()`, `.skip()`, `.next()`, etc.
 
 ## Codegen Optimizations
 

@@ -402,13 +402,15 @@ fn generate_vec_doc_ir(
         || hints.contains(&"hardbreak".to_string())
     {
         quote! { ::pprint::Doc::Hardline }
-    } else if hints.contains(&"nobreak".to_string())
-        || hints.contains(&"compact".to_string())
-    {
+    } else if hints.contains(&"nobreak".to_string()) {
         quote! { ::pprint::Doc::String(::std::borrow::Cow::Borrowed(" ")) }
+    } else if hints.contains(&"compact".to_string()) {
+        // No separator — matches VM's Doc::Concat behavior for compact.
+        quote! { ::pprint::Doc::Null }
     } else if hints.contains(&"softbreak".to_string()) {
         quote! { ::pprint::Doc::Softline }
     } else if hints.contains(&"off".to_string()) {
+        // No separator — matches VM/tuple path behavior for off.
         quote! { ::pprint::Doc::Null }
     } else {
         quote! { ::pprint::Doc::Softline }
@@ -419,7 +421,8 @@ fn generate_vec_doc_ir(
     let has_indent = hints.contains(&"indent".to_string());
     let has_hard_sep = hints.contains(&"block".to_string())
         || hints.contains(&"blankline".to_string())
-        || hints.contains(&"hardbreak".to_string());
+        || hints.contains(&"hardbreak".to_string())
+        || hints.contains(&"fast".to_string());
 
     let base = if has_indent && has_hard_sep {
         quote! {
@@ -564,10 +567,11 @@ fn generate_compound_doc_ir(
                 Some(quote! { ::pprint::Doc::Hardline })
             } else if hints.contains(&"blankline".to_string()) {
                 Some(quote! { ::pprint::Doc::Hardline + ::pprint::Doc::Hardline })
-            } else if hints.contains(&"nobreak".to_string())
-                || hints.contains(&"compact".to_string())
-            {
+            } else if hints.contains(&"nobreak".to_string()) {
                 Some(quote! { ::pprint::Doc::String(::std::borrow::Cow::Borrowed(" ")) })
+            } else if hints.contains(&"compact".to_string()) {
+                // No separator — matches VM's Doc::Concat behavior for compact.
+                None
             } else if hints.contains(&"softbreak".to_string()) {
                 Some(quote! { ::pprint::Doc::Softline })
             } else if hints.contains(&"off".to_string()) {

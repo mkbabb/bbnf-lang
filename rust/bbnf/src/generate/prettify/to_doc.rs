@@ -206,37 +206,70 @@ pub(crate) fn generate_wrapped_doc(
 // ---------------------------------------------------------------------------
 
 /// Apply hints as wrappers around a Doc expression.
+///
+/// Applies indent/dedent first, then group, producing `Group(Indent(x))`.
+/// This matches the VM's `apply_hints` ordering in gorgeous.
 pub(crate) fn apply_hints(doc: TokenStream, hints: &[String]) -> TokenStream {
     let mut result = doc;
+
+    // First pass: indent/dedent (inner wrappers).
     for hint in hints {
         if super::hints::is_sep_hint(hint) || super::hints::is_split_hint(hint) {
-            continue; // sep/split are handled at separator selection, not as wrappers.
+            continue;
+        }
+        result = match hint.as_str() {
+            "indent" => quote! { ::pprint::Doc::Indent(Box::new(#result)) },
+            "dedent" => quote! { ::pprint::Doc::Dedent(Box::new(#result)) },
+            _ => result,
+        };
+    }
+
+    // Second pass: group (outer wrapper) — produces Group(Indent(x)), matching VM.
+    for hint in hints {
+        if super::hints::is_sep_hint(hint) || super::hints::is_split_hint(hint) {
+            continue;
         }
         result = match hint.as_str() {
             "group" => quote! { ::pprint::Doc::Group(Box::new(#result)) },
-            "indent" => quote! { ::pprint::Doc::Indent(Box::new(#result)) },
-            "dedent" => quote! { ::pprint::Doc::Dedent(Box::new(#result)) },
+            "indent" | "dedent" => result, // already applied
             "block" | "blankline" | "nobreak" | "softbreak" | "hardbreak" | "compact" | "fast" | "off" => result,
             other => panic!("Unknown @pretty hint `{}` in apply_hints()", other),
         };
     }
+
     result
 }
 
 /// Apply only outer structural hints (group, indent, dedent) without modifying join separators.
+///
+/// Same ordering as `apply_hints`: indent/dedent first, then group.
 pub(crate) fn apply_outer_hints(doc: TokenStream, hints: &[String]) -> TokenStream {
     let mut result = doc;
+
+    // First pass: indent/dedent.
     for hint in hints {
         if super::hints::is_sep_hint(hint) || super::hints::is_split_hint(hint) {
-            continue; // sep/split are handled at separator selection, not as wrappers.
+            continue;
+        }
+        result = match hint.as_str() {
+            "indent" => quote! { ::pprint::Doc::Indent(Box::new(#result)) },
+            "dedent" => quote! { ::pprint::Doc::Dedent(Box::new(#result)) },
+            _ => result,
+        };
+    }
+
+    // Second pass: group.
+    for hint in hints {
+        if super::hints::is_sep_hint(hint) || super::hints::is_split_hint(hint) {
+            continue;
         }
         result = match hint.as_str() {
             "group" => quote! { ::pprint::Doc::Group(Box::new(#result)) },
-            "indent" => quote! { ::pprint::Doc::Indent(Box::new(#result)) },
-            "dedent" => quote! { ::pprint::Doc::Dedent(Box::new(#result)) },
+            "indent" | "dedent" => result,
             "block" | "blankline" | "nobreak" | "softbreak" | "hardbreak" | "compact" | "fast" | "off" => result,
             other => panic!("Unknown @pretty hint `{}` in apply_outer_hints()", other),
         };
     }
+
     result
 }

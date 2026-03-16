@@ -54,7 +54,7 @@ onMounted(() => {
             <TypewriterText />
 
             <p class="text-lg text-muted-foreground max-w-xl mx-auto mb-10">
-                Define a grammar in BBNF. Get a parser, error recovery, and a pretty-printer — all from a single source of truth.
+                Define a grammar in BBNF. Get a parser, error recovery, and a pretty-printer—all in one.
             </p>
 
             <!-- CTA pair -->

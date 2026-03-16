@@ -275,8 +275,8 @@ watch([leftTab, rightTab], () => {
 </script>
 
 <template>
-    <div class="relative mt-14 grid h-[calc(100dvh-var(--spacing-navbar))] max-h-[calc(100dvh-var(--spacing-navbar))] w-full grid-rows-[1fr_auto] overflow-hidden">
-        <div class="min-h-0 min-w-0 overflow-hidden p-1 pb-1 sm:p-4 sm:pb-2">
+    <div class="relative mt-14 h-[calc(100dvh-var(--spacing-navbar))] max-h-[calc(100dvh-var(--spacing-navbar))] w-full overflow-hidden">
+        <div class="absolute inset-0 overflow-hidden p-1 pb-12 sm:p-4 sm:pb-14">
             <div
                 ref="splitContainerRef"
                 class="flex h-full min-h-0 min-w-0 overflow-hidden"

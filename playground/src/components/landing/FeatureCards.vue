@@ -8,7 +8,7 @@ const features = [
         iconClass: "text-pastel-green",
         borderClass: "border-pastel-green/40",
         parts: [
-            { text: "Compose parsers from simple building blocks. String literals, regex, alternation, repetition — all in a clean grammar syntax." },
+            { text: "Compose parsers from simple building blocks. String literals, regex, alternation, repetition" },
         ],
     },
     {

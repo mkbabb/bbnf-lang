@@ -9,6 +9,16 @@ import { useHeroState } from "@/composables/useHeroState";
 
 const route = useRoute();
 const scrollY = ref(0);
+const hoverCardOpen = ref(false);
+let hoverTimer: ReturnType<typeof setTimeout> | null = null;
+
+function onHoverEnter() {
+    if (hoverTimer) { clearTimeout(hoverTimer); hoverTimer = null; }
+    hoverCardOpen.value = true;
+}
+function onHoverLeave() {
+    hoverTimer = setTimeout(() => { hoverCardOpen.value = false; }, 200);
+}
 
 function onScroll() {
     scrollY.value = window.scrollY;
@@ -107,19 +117,91 @@ function isActive(to: string) {
             <DarkModeToggle class="h-6 w-6" />
         </template>
         <template #anchor="{ toggled }">
-            <div class="flex items-center cursor-pointer px-2 py-1 group">
+            <div
+                class="relative flex items-center cursor-pointer px-2 py-1 group"
+                @mouseenter="onHoverEnter"
+                @mouseleave="onHoverLeave"
+            >
                 <span
                     class="instrument-serif text-lg text-muted-foreground transition-all duration-200 group-hover:text-foreground"
                     :class="toggled
                         ? 'text-foreground underline underline-offset-4 decoration-1 decoration-foreground/40'
                         : 'group-hover:underline group-hover:underline-offset-4 group-hover:decoration-1 group-hover:decoration-muted-foreground/40'"
                 >@mbabb</span>
+
+                <!-- Attribution hover card -->
+                <div
+                    class="attribution-card"
+                    :class="{ 'is-open': hoverCardOpen }"
+                    @mouseenter="onHoverEnter"
+                    @mouseleave="onHoverLeave"
+                >
+                    <div class="flex items-center gap-3">
+                        <img
+                            src="https://avatars.githubusercontent.com/u/2848617?v=4"
+                            alt="mkbabb"
+                            class="h-10 w-10 rounded-full"
+                        />
+                        <div class="flex-1">
+                            <a
+                                href="https://github.com/mkbabb"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="font-mono text-sm font-semibold text-foreground hover:underline"
+                            >@mbabb</a>
+                            <p class="mt-0.5 text-xs italic text-muted-foreground">Grammar-driven parsers &amp; formatters</p>
+                        </div>
+                    </div>
+                    <hr class="my-2 border-border/50" />
+                    <a
+                        href="https://github.com/mkbabb/bbnf-lang"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="block text-sm text-foreground hover:underline"
+                    >View the project on GitHub 🎉</a>
+                </div>
             </div>
         </template>
     </HeaderRibbon>
 </template>
 
 <style scoped>
+.attribution-card {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 0.25rem;
+    padding: 1rem;
+    background: color-mix(in srgb, hsl(var(--popover)) 80%, transparent);
+    border: 1px solid hsl(var(--border) / 0.3);
+    border-radius: 0.75rem;
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.92) translateY(6px);
+    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 50;
+    min-width: 16rem;
+    white-space: normal;
+}
+
+.attribution-card::before {
+    content: '';
+    position: absolute;
+    top: -0.5rem;
+    left: 0;
+    right: 0;
+    height: 0.5rem;
+}
+
+.attribution-card.is-open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: scale(1) translateY(0);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 8px 32px hsl(var(--foreground) / 0.1);
+}
+
 .nav-links-mask {
     --edge-fade: 0.5rem;
     mask-image: linear-gradient(

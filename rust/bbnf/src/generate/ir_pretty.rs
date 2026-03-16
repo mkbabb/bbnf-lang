@@ -366,7 +366,17 @@ fn generate_vec_doc_ir(
 
     let sep = if let Some(sep_str) = custom_sep {
         let has_group = hints.contains(&"group".to_string());
-        if has_group {
+        let has_hardbreak = hints.contains(&"hardbreak".to_string())
+            || hints.contains(&"block".to_string());
+        if has_hardbreak {
+            // Non-filling: trimmed separator + hardline (one item per line).
+            let break_sep = sep_str.trim_end();
+            let break_lit = proc_macro2::Literal::string(break_sep);
+            quote! {
+                ::pprint::Doc::String(::std::borrow::Cow::Borrowed(#break_lit))
+                + ::pprint::Doc::Hardline
+            }
+        } else if has_group {
             let sep_lit = proc_macro2::Literal::string(sep_str);
             let break_sep = sep_str.trim_end();
             let break_lit = proc_macro2::Literal::string(break_sep);
@@ -518,7 +528,17 @@ fn generate_compound_doc_ir(
 
             let sep: Option<TokenStream> = if let Some(sep_str) = custom_sep {
                 let has_group = hints.contains(&"group".to_string());
-                if has_group {
+                let has_hardbreak = hints.contains(&"hardbreak".to_string())
+                    || hints.contains(&"block".to_string());
+                if has_hardbreak {
+                    // Non-filling: trimmed separator + hardline (one item per line).
+                    let break_sep = sep_str.trim_end();
+                    let break_lit = proc_macro2::Literal::string(break_sep);
+                    Some(quote! {
+                        ::pprint::Doc::String(::std::borrow::Cow::Borrowed(#break_lit))
+                        + ::pprint::Doc::Hardline
+                    })
+                } else if has_group {
                     let sep_lit = proc_macro2::Literal::string(sep_str);
                     let break_sep = sep_str.trim_end();
                     let break_lit = proc_macro2::Literal::string(break_sep);

@@ -104,7 +104,7 @@ formula = /=?/ , expression ;
 
 @pretty let_call group indent ;
 @pretty let_binding group indent sep(", ") ;
-@pretty let_args group sep(", ") ;
+@pretty let_args hardbreak sep(", ") ;
 
 @pretty lambda_call group indent ;
 @pretty lambda_params group indent sep(", ") ;

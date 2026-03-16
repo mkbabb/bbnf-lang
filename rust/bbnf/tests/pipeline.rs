@@ -538,6 +538,15 @@ fn pipeline_google_sheets_multiline_let() {
     assert!(result.success, "multiline LET failed at offset={}", result.offset);
     assert_eq!(result.offset as usize, input.len(), "should consume all input");
 
+    // Format via VM
+    let value = result.value.as_ref().unwrap();
+    let formatted = gorgeous::vm::format_value(&ir, value, input, pprint::Printer::new(80, 2, false));
+    let formatted = formatted.unwrap();
+    eprintln!("VM formatted:\n{}", formatted);
+
+    // Each let_binding (name, value) should stay on one line when it fits
+    assert!(formatted.contains("scale, DURATION"), "name-value pair should stay on one line");
+
     // Same formula without leading =
     let no_eq = &input[1..];
     let mut interp = Interpreter::new(&program, no_eq);

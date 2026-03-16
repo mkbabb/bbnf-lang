@@ -1,5 +1,6 @@
-.PHONY: all build build-lsp build-lsp-debug build-ext dev test test-rust test-ts \
-       install package publish bump-patch bump-minor bump-major release clean clean-vsix watch
+.PHONY: all build build-lsp build-lsp-debug build-ext build-wasm dev test test-rust test-ts \
+       install package publish bump-patch bump-minor bump-major release clean clean-vsix watch \
+       deploy
 
 # ─── Build ──────────────────────────────────────────────────────────────
 
@@ -26,6 +27,10 @@ build-ext:
 dev: build-lsp-debug build-ext
 	mkdir -p server
 	cp rust/target/debug/bbnf-lsp server/bbnf-lsp
+
+## Build the WASM module (bbnf-wasm → playground/src/wasm/)
+build-wasm:
+	cd wasm && wasm-pack build --target web --out-dir ../playground/src/wasm
 
 ## Build the TypeScript library
 build-ts:
@@ -116,6 +121,10 @@ clean:
 ## Remove old .vsix files
 clean-vsix:
 	rm -f *.vsix
+
+## Deploy playground (rebuild WASM + Vite build + rsync)
+deploy: build-wasm
+	./scripts/deploy.sh
 
 ## Continuous rebuild on save (requires cargo-watch: cargo install cargo-watch)
 watch:

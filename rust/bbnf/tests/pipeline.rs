@@ -442,3 +442,107 @@ fn pipeline_google_sheets_formula() {
     eprintln!("Without space formatted:\n{}", formatted);
     assert_eq!(formatted_space, formatted, "trailing space should not change formatting");
 }
+
+#[test]
+fn pipeline_google_sheets_multiline_let() {
+    let grammar = std::fs::read_to_string("../../grammar/lang/google-sheets.bbnf")
+        .expect("failed to read google-sheets.bbnf");
+    let ir = compile_grammar(&grammar, &PipelineOptions::default()).unwrap();
+    let program = compile_bytecode(&ir);
+
+    let test_rule = |name: &str, input: &str| -> (bool, u32) {
+        let rule = ir.find_rule(name).unwrap_or_else(|| panic!("{} not found", name));
+        let mut test_ir = ir.clone();
+        test_ir.entry = rule.id;
+        let prog = compile_bytecode(&test_ir);
+        let mut interp = Interpreter::new(&prog, input);
+        let result = interp.run();
+        eprintln!("  {} '{}': success={} offset={}/{}", name,
+            &input[..input.len().min(60)], result.success, result.offset, input.len());
+        (result.success, result.offset)
+    };
+
+    // Sub-expression diagnostics
+    let subs: &[(&str, &str)] = &[
+        ("cell_or_range", "B3:B"),
+        ("cell_or_range", "Sheet1!C2:C"),
+        ("cell_or_range", "Sheet1!AD2:AD"),
+        ("cell_or_range", "H2:O2"),
+        ("cell_or_range", "H3:O"),
+        ("cell_or_range", "A:A"),
+        ("expression", r#"B3:B <> """#),
+        ("func_call", r#"FILTER(B3:B, B3:B <> "")"#),
+        ("lambda_call", "LAMBDA(x, LOWER(TRIM(TO_TEXT(x))))"),
+        ("expression", "(sheet1Psus = psu) * (sheet1Providers = provider)"),
+        ("func_call", "MATCH(1, (sheet1Psus = psu) * (sheet1Providers = provider), 0)"),
+        ("func_call", "N(INDEX(recurring, r, c))"),
+        ("func_call", "IFERROR(INDEX(oneTimeCosts, MATCH(1, (sheet1Psus = psu) * (sheet1Providers = provider), 0)), 0)"),
+        ("expression", "monthlyValue * scale + N(oneTimeCost)"),
+        ("func_call", "IF(monthlyValue > 0, monthlyValue * scale + N(oneTimeCost), 0)"),
+        ("func_call", "VSTACK(providers, values)"),
+    ];
+    for (rule_name, sub) in subs {
+        let (ok, off) = test_rule(rule_name, sub);
+        assert!(ok && off as usize == sub.len(),
+            "{} should fully parse '{}' (offset={}/{})", rule_name, sub, off, sub.len());
+    }
+
+    // Full multiline formula
+    let input = r#"=LET(
+  scale, DURATION,
+
+  psus, FILTER(B3:B, B3:B <> ""),
+  providers, H2:O2,
+  recurring, FILTER(H3:O, B3:B <> ""),
+
+  normalize, LAMBDA(x, LOWER(TRIM(TO_TEXT(x)))),
+
+  sheet1Psus, ARRAYFORMULA(Sheet1!C2:C),
+  sheet1Providers, ARRAYFORMULA(Sheet1!B2:B),
+  oneTimeCosts, Sheet1!AD2:AD,
+
+  values,
+    MAKEARRAY(
+      ROWS(psus),
+      COLUMNS(providers),
+      LAMBDA(r, c,
+        LET(
+          psu, INDEX(psus, r),
+          provider, INDEX(providers, c),
+          monthlyValue, N(INDEX(recurring, r, c)),
+          oneTimeCost,
+            IFERROR(
+              INDEX(
+                oneTimeCosts,
+                MATCH(
+                  1,
+                  (sheet1Psus = psu) * (sheet1Providers = provider),
+                  0
+                )
+              ),
+              0
+            ),
+          IF(monthlyValue > 0, monthlyValue * scale + N(oneTimeCost), 0)
+        )
+      )
+    ),
+
+  VSTACK(providers, values)
+)"#;
+
+    let mut interp = Interpreter::new(&program, input);
+    let result = interp.run();
+    eprintln!("multiline LET: success={} offset={} len={} remaining='{}'",
+        result.success, result.offset, input.len(),
+        &input[result.offset as usize..]);
+    assert!(result.success, "multiline LET failed at offset={}", result.offset);
+    assert_eq!(result.offset as usize, input.len(), "should consume all input");
+
+    // Same formula without leading =
+    let no_eq = &input[1..];
+    let mut interp = Interpreter::new(&program, no_eq);
+    let result = interp.run();
+    eprintln!("no-eq LET: success={} offset={} len={}", result.success, result.offset, no_eq.len());
+    assert!(result.success, "formula without = failed at offset={}", result.offset);
+    assert_eq!(result.offset as usize, no_eq.len(), "should consume all input without =");
+}

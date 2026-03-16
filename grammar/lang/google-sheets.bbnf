@@ -12,14 +12,17 @@ error_literal = "#N/A" | "#VALUE!" | "#REF!" | "#DIV/0!"
 // Sheet prefix: Sheet1! or 'Sheet Name'!
 sheet_prefix = /'(?:[^']|'')*'!/ | /[A-Za-z_]\w*!/ ;
 
-// Cell reference: requires column letters + row digits (A1, $B$2)
+// Cell reference: column letters + row digits (A1, $B$2)
 cell_ref = /\$?[A-Za-z]{1,3}\$?\d+/ ;
+
+// Range endpoint: cell ref, column-only ($B, AD), or row-only ($3)
+range_end = cell_ref | /\$?[A-Za-z]{1,3}/ | /\$?\d+/ ;
 
 // Cell with optional sheet prefix
 cell = sheet_prefix ? , cell_ref ;
 
-// Range: A1:B2, Sheet1!A1:B2
-range_ref = cell , ":" , cell ;
+// Range: A1:B2, B3:B, A:A, 1:5, Sheet1!C2:C
+range_ref = sheet_prefix ? , range_end , ":" , range_end ;
 
 // Reference: range first (greedy), then single cell
 cell_or_range = range_ref | cell ;

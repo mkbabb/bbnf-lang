@@ -40,7 +40,7 @@ export const languageIcons: Record<string, LanguageIcon> = {
     },
     bbnf: {
         label: "BBNF",
-        svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 8 8 12 3 16"/><polyline points="21 8 16 12 21 16"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg>`,
+        svg: `<img src="/img/bbnf.png" alt="BBNF" style="width:100%;height:100%;object-fit:contain" />`,
         color: "#4ade80",
     },
     json: {

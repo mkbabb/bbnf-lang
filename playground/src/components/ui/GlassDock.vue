@@ -141,9 +141,9 @@ onUnmounted(clearTimer);
     white-space: nowrap;
     transition:
         width 0.35s var(--ease-smooth),
-        padding 0.4s var(--ease-spring),
+        padding 0.35s var(--ease-smooth),
         box-shadow var(--duration-normal) var(--ease-standard),
-        transform 0.4s var(--ease-spring),
+        transform 0.3s var(--ease-smooth),
         background var(--duration-normal) var(--ease-standard),
         border-color var(--duration-normal) var(--ease-standard);
 }

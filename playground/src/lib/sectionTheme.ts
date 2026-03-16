@@ -23,7 +23,7 @@ export const sectionThemes: Record<string, SectionTheme> = {
         // Quill pen — writing/grammar (fallback)
         iconPath: "M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z",
         iconPath2: "M16 8L2 22 M17.5 15H9",
-        iconSrc: "/img/bbnf.svg",
+        iconSrc: "/img/bbnf.png",
     },
     "parse-that": {
         color: "pastel-blue",

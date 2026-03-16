@@ -61,12 +61,12 @@ function hasDescriptionOverflow(name: string) {
                             <span :class="shimmerClass(currentExample.name)">{{ currentExample.name }}</span>
                         </SelectValue>
                     </SelectTrigger>
-                    <SelectContent align="start" :side-offset="10" class="min-w-[18rem] max-w-[23rem]">
+                    <SelectContent align="start" :side-offset="10" class="min-w-[18rem] max-w-[23rem] overflow-hidden">
                         <SelectItem
                             v-for="ex in examples"
                             :key="ex.name"
                             :value="ex.name"
-                            class="group/example rounded-xl border bg-card/35 py-2 pl-3 pr-3 transition-all duration-200 hover:-translate-y-0.5"
+                            class="group/example overflow-hidden rounded-xl border bg-card/35 py-2 pl-3 pr-3 transition-all duration-200 hover:-translate-y-0.5 data-[state=checked]:-translate-y-0.5 data-[state=checked]:bg-card/60 data-[state=checked]:shadow-md data-[state=checked]:border-accent/40"
                             :class="exampleToneClass(ex.name)"
                             @pointerenter="measureDescriptionScroll(ex.name, $event)"
                             @focusin="measureDescriptionScroll(ex.name, $event)"

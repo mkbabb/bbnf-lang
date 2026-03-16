@@ -19,7 +19,7 @@ checksum = "c08606f8c3cbf4ce6ec8e28fb0014a2c086708fe954eaa885384a6165172e7e8"
 
 [[package]]
 name = "bbnf"
-version = "0.2.6"
+version = "0.2.7"
 dependencies = [
  "bbnf-ir",
  "indexmap",
@@ -46,7 +46,7 @@ dependencies = [
 
 [[package]]
 name = "bbnf-ir"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "regex",
  "rmp-serde",
@@ -74,7 +74,7 @@ dependencies = [
 
 [[package]]
 name = "bbnf_derive"
-version = "0.2.6"
+version = "0.2.7"
 dependencies = [
  "bbnf",
  "bbnf-ir",
@@ -176,7 +176,7 @@ dependencies = [
 
 [[package]]
 name = "gorgeous"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "bbnf",
  "bbnf-ir",
@@ -304,7 +304,7 @@ checksum = "9b4f627cb1b25917193a259e49bdad08f671f8d9708acfd5fe0a8c1455d87220"
 
 [[package]]
 name = "pprint"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "dragonbox",
  "itoap",

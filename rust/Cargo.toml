@@ -1,3 +1,12 @@
 [workspace]
 members = ["bbnf", "bbnf-derive", "bbnf-analysis", "bbnf-ir", "lsp"]
 resolver = "2"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+
+[profile.bench]
+inherits = "release"
+lto = "fat"
+codegen-units = 1

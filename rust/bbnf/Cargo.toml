@@ -30,3 +30,11 @@ bencher = "0.1"
 [[bench]]
 name = "google_sheets"
 harness = false
+
+[[bench]]
+name = "json_parse"
+harness = false
+
+[[bench]]
+name = "css_parse"
+harness = false

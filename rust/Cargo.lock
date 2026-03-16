@@ -25,7 +25,7 @@ checksum = "c08606f8c3cbf4ce6ec8e28fb0014a2c086708fe954eaa885384a6165172e7e8"
 
 [[package]]
 name = "bbnf"
-version = "0.2.5"
+version = "0.2.6"
 dependencies = [
  "bbnf-ir",
  "bencher",
@@ -55,7 +55,7 @@ dependencies = [
 
 [[package]]
 name = "bbnf-ir"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "regex",
  "rmp-serde",
@@ -77,7 +77,7 @@ dependencies = [
 
 [[package]]
 name = "bbnf_derive"
-version = "0.2.5"
+version = "0.2.6"
 dependencies = [
  "bbnf",
  "bbnf-ir",
@@ -306,7 +306,7 @@ dependencies = [
 
 [[package]]
 name = "gorgeous"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "bbnf",
  "bbnf-ir",
@@ -501,7 +501,7 @@ dependencies = [
 
 [[package]]
 name = "parse_that"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "aho-corasick",
  "colored",
@@ -526,7 +526,7 @@ checksum = "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd"
 
 [[package]]
 name = "pprint"
-version = "0.3.4"
+version = "0.3.5"
 dependencies = [
  "dragonbox",
  "itoap",

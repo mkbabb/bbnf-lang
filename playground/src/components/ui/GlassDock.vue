@@ -140,7 +140,7 @@ onUnmounted(clearTimer);
     overflow: visible;
     white-space: nowrap;
     transition:
-        width 0.4s var(--ease-spring),
+        width 0.35s var(--ease-smooth),
         padding 0.4s var(--ease-spring),
         box-shadow var(--duration-normal) var(--ease-standard),
         transform 0.4s var(--ease-spring),

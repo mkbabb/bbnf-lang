@@ -66,7 +66,7 @@ function hasDescriptionOverflow(name: string) {
                             v-for="ex in examples"
                             :key="ex.name"
                             :value="ex.name"
-                            class="group/example rounded-xl border bg-card/35 py-3 pl-9 pr-3 transition-all duration-200 hover:-translate-y-0.5"
+                            class="group/example rounded-xl border bg-card/35 py-2 pl-3 pr-3 transition-all duration-200 hover:-translate-y-0.5"
                             :class="exampleToneClass(ex.name)"
                             @pointerenter="measureDescriptionScroll(ex.name, $event)"
                             @focusin="measureDescriptionScroll(ex.name, $event)"

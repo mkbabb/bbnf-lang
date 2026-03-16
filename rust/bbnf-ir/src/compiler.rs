@@ -237,7 +237,14 @@ impl Compiler {
     }
 
     /// Emit a Dispatch instruction using a pre-computed table from the dispatch pass.
+    ///
+    /// Wraps the entire dispatch in SaveState/RestoreState so that when a
+    /// dispatch-selected branch partially matches then fails, the offset is
+    /// correctly restored (mirroring the linear Alt pattern).
     fn compile_dispatch(&mut self, branches: &[AltBranch], table: &[u8], ir: &GrammarIR) {
+        // Save state before dispatch so we can restore on branch failure.
+        self.emit(Op::SaveState);
+
         // Emit a placeholder Dispatch, then compile each branch body.
         let dispatch_idx = self.emit(Op::Dispatch(Arc::new(DispatchData {
             table: table.to_vec(),
@@ -246,17 +253,31 @@ impl Compiler {
         })));
 
         let mut branch_offsets = Vec::with_capacity(branches.len());
-        let mut jump_to_end: Vec<usize> = Vec::new();
+        let mut fail_jumps: Vec<usize> = Vec::new();
+        let mut success_jumps: Vec<usize> = Vec::new();
 
-        for (i, branch) in branches.iter().enumerate() {
+        for branch in branches.iter() {
             branch_offsets.push(self.current_offset());
             self.compile_node(&branch.node, ir);
-            if i < branches.len() - 1 {
-                jump_to_end.push(self.emit(Op::Jump(0)));
-            }
+            // Check if branch failed → jump to restore.
+            fail_jumps.push(self.emit(Op::JumpIfFail(0)));
+            // Branch succeeded → jump to drop state.
+            success_jumps.push(self.emit(Op::Jump(0)));
         }
 
+        // Fallback: dispatch couldn't find a matching branch (is_error already set by exec_dispatch).
         let fallback = self.current_offset();
+        let fallback_jump = self.emit(Op::Jump(0));
+
+        // Success path: drop the checkpoint.
+        let drop_offset = self.current_offset();
+        self.emit(Op::DropState);
+        let end_jump = self.emit(Op::Jump(0));
+
+        // Failure path: restore the checkpoint.
+        let restore_offset = self.current_offset();
+        self.emit(Op::RestoreState);
+        let after = self.current_offset();
 
         // Patch the Dispatch instruction with computed offsets.
         self.code[dispatch_idx] = Op::Dispatch(Arc::new(DispatchData {
@@ -265,10 +286,18 @@ impl Compiler {
             fallback,
         }));
 
-        // Patch jump-to-end for non-last branches.
-        for idx in jump_to_end {
-            self.patch(idx, Op::Jump(fallback));
+        // Patch fail jumps → RestoreState.
+        for idx in fail_jumps {
+            self.patch(idx, Op::JumpIfFail(restore_offset));
         }
+        // Patch success jumps → DropState.
+        for idx in success_jumps {
+            self.patch(idx, Op::Jump(drop_offset));
+        }
+        // Patch fallback → RestoreState.
+        self.patch(fallback_jump, Op::Jump(restore_offset));
+        // Patch end → after RestoreState.
+        self.patch(end_jump, Op::Jump(after));
     }
 
     /// Compile repetition: RepeatBegin → body → RepeatEnd.

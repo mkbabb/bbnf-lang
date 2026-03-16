@@ -167,7 +167,7 @@ fn compile_alt_dispatch() {
     ));
     let program = compile(&ir);
 
-    // Should use Dispatch instead of SaveState/RestoreState.
+    // Should use Dispatch wrapped in SaveState/RestoreState for offset recovery.
     assert!(
         program
             .code
@@ -176,8 +176,12 @@ fn compile_alt_dispatch() {
         "Expected Dispatch for pre-computed dispatch table"
     );
     assert!(
-        !program.code.iter().any(|op| matches!(op, Op::SaveState)),
-        "Dispatch should not need SaveState"
+        program.code.iter().any(|op| matches!(op, Op::SaveState)),
+        "Dispatch should use SaveState for offset restoration on branch failure"
+    );
+    assert!(
+        program.code.iter().any(|op| matches!(op, Op::RestoreState)),
+        "Dispatch should use RestoreState for offset restoration on branch failure"
     );
 }
 

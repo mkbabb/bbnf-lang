@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onBeforeUnmount, nextTick } from "vue";
+import { ref, computed, watch, onBeforeUnmount, nextTick, type Ref } from "vue";
 import { useRoute } from "vue-router";
 import * as monaco from "monaco-editor";
 import { useDebounceFn } from "@vueuse/core";
@@ -114,6 +114,8 @@ const {
     scheduleEditorRelayout,
 } = useSplitPane(relayoutAllEditors);
 
+const currentExampleName = computed(() => currentExample.value.name);
+
 // Query string hydration
 const { buildShareUrl } = usePlaygroundQuery({
     grammarText,
@@ -121,7 +123,22 @@ const { buildShareUrl } = usePlaygroundQuery({
     entryRuleOverride,
     printerConfig,
     walkthrough,
-    onHydrated: () => scheduleEditorRelayout(),
+    leftTab: leftTab as Ref<string>,
+    rightTab: rightTab as Ref<string>,
+    exampleName: currentExampleName,
+    onHydrated: () => {
+        // If localStorage had an exampleName, restore it
+        const saved = localStorage.getItem("bbnf-playground-state");
+        if (saved) {
+            try {
+                const state = JSON.parse(saved);
+                if (state.exampleName && state.exampleName !== currentExample.value.name) {
+                    selectExample(state.exampleName);
+                }
+            } catch {}
+        }
+        scheduleEditorRelayout();
+    },
 });
 
 applyCurrentExample();
@@ -275,8 +292,13 @@ watch([leftTab, rightTab], () => {
 </script>
 
 <template>
-    <div class="relative mt-14 h-[calc(100dvh-var(--spacing-navbar))] max-h-[calc(100dvh-var(--spacing-navbar))] w-full overflow-hidden">
-        <div class="absolute inset-0 overflow-hidden p-1 pb-12 sm:p-4 sm:pb-14">
+    <div
+        class="relative mt-14 w-full overflow-hidden"
+        :class="isDesktop
+            ? 'h-[calc(100dvh-var(--spacing-navbar))] max-h-[calc(100dvh-var(--spacing-navbar))]'
+            : 'h-[calc(200dvh-var(--spacing-navbar))]'"
+    >
+        <div class="absolute inset-0 overflow-hidden p-1 pb-8 sm:p-4 sm:pb-12">
             <div
                 ref="splitContainerRef"
                 class="flex h-full min-h-0 min-w-0 overflow-hidden"
@@ -316,10 +338,11 @@ watch([leftTab, rightTab], () => {
                     <TooltipTrigger as-child>
                         <button
                             type="button"
-                            class="group relative shrink-0 rounded-full border border-border/35 bg-card/35 text-muted-foreground transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                            style="touch-action: none"
+                            class="group relative shrink-0 rounded-full border border-border/50 bg-card/35 text-muted-foreground transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
                             :class="isDesktop
-                                ? 'mx-1 my-10 w-3 cursor-col-resize'
-                                : 'mx-10 my-1 h-3 cursor-row-resize'"
+                                ? 'mx-1 my-6 w-3 cursor-col-resize'
+                                : 'mx-6 my-1 h-5 cursor-row-resize'"
                             :aria-label="isDesktop ? 'Resize playground panes horizontally' : 'Resize playground panes vertically'"
                             @pointerdown="onDividerPointerDown"
                             @keydown="onDividerKeyDown"

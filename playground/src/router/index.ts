@@ -40,6 +40,7 @@ const titles: Record<string, string> = {
 
 router.beforeEach((to) => {
     document.title = titles[to.name as string] ?? "BBNF";
+    window.scrollTo(0, 0);
 });
 
 export default router;

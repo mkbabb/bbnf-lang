@@ -121,6 +121,28 @@ defineExpose({ isPinned, isExpanded, isVisible, isToggled });
     overflow: visible;
 }
 
+/* Staggered entrance for child items */
+.header-items-wrapper > :deep(*) {
+    transition: opacity 0.25s ease-out, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.header-collapsed-left > :deep(*),
+.header-collapsed-right > :deep(*) {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.9);
+}
+
+/* Stagger children */
+.header-items-wrapper > :deep(:nth-child(1)) { transition-delay: 0.05s; }
+.header-items-wrapper > :deep(:nth-child(2)) { transition-delay: 0.1s; }
+.header-items-wrapper > :deep(:nth-child(3)) { transition-delay: 0.15s; }
+.header-collapsed-left > :deep(*),
+.header-collapsed-right > :deep(*) {
+    transition-delay: 0s;
+}
+
 /* Left-aligned: items expand to the right of anchor */
 .header-items-left {
     margin-left: 0.75rem;

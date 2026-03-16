@@ -56,11 +56,11 @@ useMarkdownComponents(articleRef, rendered);
         <!-- Desktop expand button — shown when sidebar is collapsed -->
         <button
             v-if="!sidebarOpen"
-            class="sticky top-16 hidden md:flex items-center justify-center shrink-0 ml-1 p-1.5 rounded-md hover:bg-muted/50 transition-colors text-muted-foreground h-fit z-20"
+            class="sticky top-16 hidden md:flex items-center justify-center shrink-0 ml-1 p-2 rounded-lg border border-border/30 hover:bg-muted/50 transition-colors text-muted-foreground h-fit z-20"
             title="Expand sidebar"
             @click="sidebarOpen = true"
         >
-            <PanelLeftOpen class="h-4 w-4" />
+            <PanelLeftOpen class="h-5 w-5" />
         </button>
 
         <!-- Mobile drawer overlay -->

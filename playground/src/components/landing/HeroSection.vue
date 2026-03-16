@@ -21,8 +21,12 @@ watch(morphProgressLocal, (p) => { morphProgress.value = p; }, { immediate: true
 onBeforeUnmount(() => { morphProgress.value = 1; });
 
 const visible = ref(false);
+/** True once the entrance transition is done — clears the translate so no
+ *  ancestor `transform` exists to break `position: fixed` for the morph. */
+const entranceDone = ref(false);
 onMounted(() => {
     requestAnimationFrame(() => { visible.value = true; });
+    setTimeout(() => { entranceDone.value = true; }, 750);
 });
 </script>
 
@@ -30,18 +34,22 @@ onMounted(() => {
     <section class="min-h-[calc(100dvh-3.5rem)] flex flex-col items-center justify-center px-4 sm:px-6 py-12 sm:py-20 gap-8 sm:gap-12">
         <!-- Text content -->
         <div
-            class="text-center max-w-3xl transition-all duration-700 relative z-50"
-            :class="visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'"
+            class="text-center max-w-3xl relative z-50"
+            :class="[
+                entranceDone ? 'transition-opacity' : 'transition-all duration-700',
+                visible ? 'opacity-100' : 'opacity-0',
+                !visible ? 'translate-y-6' : '',
+                visible && !entranceDone ? 'translate-y-0' : '',
+            ]"
         >
             <!-- BBNF Logo — above heading, morphs into navbar on scroll -->
             <div class="relative mb-6 inline-block">
                 <!-- Invisible marker at logo's natural position (no morph transform) -->
                 <span ref="heroLogoMarker" class="absolute inset-0 pointer-events-none" aria-hidden="true" />
-                <!-- Logo with morph transform — hidden once morph completes (navbar logo takes over) -->
+                <!-- Logo with morph transform — stays visible at final position -->
                 <span
                     ref="heroLogoElement"
-                    class="inline-block relative z-[60] transition-opacity duration-150"
-                    :class="morphProgressLocal >= 1 ? 'opacity-0 pointer-events-none' : 'opacity-100'"
+                    class="inline-block relative z-[60]"
                 >
                     <BbnfLogo size="xl" shimmer />
                 </span>
@@ -84,7 +92,7 @@ onMounted(() => {
             </div>
         </div>
 
-        <hr class="border-border/60 border-t-2 w-full max-w-5xl" />
+        <div class="tapered-rule w-full max-w-5xl" />
 
         <!-- Code cards: vertical stack on mobile, 3D fan on md+ -->
         <CodeCardGrid :cards="codeCards" :visible="visible" />

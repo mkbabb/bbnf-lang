@@ -30,7 +30,7 @@ const emit = defineEmits<{
 
 <template>
     <Card class="relative flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
-        <div class="flex items-center justify-between px-3 py-1 backdrop-blur-md bg-card/40 border-b border-border/30">
+        <div class="flex items-center justify-between px-3 py-1 backdrop-blur-md bg-card/40 border-b border-border/50">
             <Tooltip>
                 <TooltipTrigger as-child>
                     <span

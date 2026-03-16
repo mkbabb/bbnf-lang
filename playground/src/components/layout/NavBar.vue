@@ -1,16 +1,23 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from "vue";
-import { useRoute } from "vue-router";
+import { ref, computed, onMounted, onBeforeUnmount, useTemplateRef } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { onClickOutside } from "@vueuse/core";
 import { HeaderRibbon } from "@/components/custom/header-ribbon";
 import { DarkModeToggle } from "@/components/custom/dark-mode-toggle";
 import { BbnfLogo } from "@/components/custom/bbnf-logo";
+import { ChevronDown, Home } from "lucide-vue-next";
 import { navIcons } from "@/lib/sectionTheme";
 import { useHeroState } from "@/composables/useHeroState";
 
 const route = useRoute();
+const router = useRouter();
 const scrollY = ref(0);
 const hoverCardOpen = ref(false);
+const navDropdownOpen = ref(false);
+const dropdownRef = useTemplateRef<HTMLElement>("dropdownRef");
 let hoverTimer: ReturnType<typeof setTimeout> | null = null;
+
+onClickOutside(dropdownRef, () => { navDropdownOpen.value = false; });
 
 function onHoverEnter() {
     if (hoverTimer) { clearTimeout(hoverTimer); hoverTimer = null; }
@@ -35,25 +42,46 @@ const isLanding = computed(() => route.path === "/");
 const navOpaque = computed(() => !isLanding.value || scrollY.value > 40);
 
 const { morphProgress } = useHeroState();
-const hideNavLogo = computed(() => isLanding.value && morphProgress.value < 1);
+/** True when the logo is not visually present in the navbar. */
+const hideNavLogo = computed(() => isLanding.value && morphProgress.value < 0.5);
 
 /**
- * When the logo is hidden (landing, pre-scroll), pull it out of flow
- * so the nav links sit flush at the navbar's left padding — matching
- * the @mbabb right-side inset.  The logo element stays positioned for
- * scroll-morph measurement via `absolute`.
+ * Inline style for the logo+separator wrapper.
+ * On landing: width is driven by morphProgress (clip-reveals the slot as scroll
+ * progresses), pushing the dropdown right. The logo INSIDE stays invisible —
+ * it's only a morph measurement target. The hero logo IS the visual element
+ * that flies in. Once progress hits 1, the hero fades out and the navbar logo
+ * fades in via navLogoOpacity.
+ * On other pages: no constraint (natural width), logo fully visible.
  */
-const logoHiddenClass = computed(() =>
-    hideNavLogo.value ? 'absolute opacity-0 pointer-events-none' : 'relative opacity-100',
-);
+const NAV_LOGO_SLOT_REM = 5.75;
+const logoSlotStyle = computed(() => {
+    if (!isLanding.value) return {};
+    return { width: `${morphProgress.value * NAV_LOGO_SLOT_REM}rem` };
+});
 
-const navLinks = [
+/** Navbar logo opacity — invisible on landing (hero logo covers it), visible elsewhere. */
+const navLogoOpacity = computed(() => {
+    return isLanding.value ? 0 : 1;
+});
+
+const allNavLinks = [
+    { to: "/", label: "Home", isHome: true },
     { to: "/playground", label: "Playground", icon: navIcons.playground },
     { to: "/docs", label: "Docs", icon: navIcons.docs },
 ];
 
-function isActive(to: string) {
-    return route.path.startsWith(to);
+const activeNavLink = computed(() => {
+    if (route.path === "/") return allNavLinks[0]!;
+    for (const link of allNavLinks) {
+        if (link.to !== "/" && route.path.startsWith(link.to)) return link;
+    }
+    return allNavLinks[0]!;
+});
+
+function isActiveLink(link: typeof allNavLinks[0]) {
+    if (link.to === "/") return route.path === "/";
+    return route.path.startsWith(link.to);
 }
 </script>
 
@@ -62,48 +90,81 @@ function isActive(to: string) {
         class="fixed top-0 left-0 right-0 z-50 h-14 flex items-center transition-[padding,background-color,border-color] duration-300 border-b"
         :class="[
             navOpaque
-                ? 'backdrop-blur-xl bg-background/95 border-border/30 shadow-sm'
+                ? 'backdrop-blur-xl bg-background/95 border-border/50 shadow-sm'
                 : 'bg-transparent border-transparent',
             hideNavLogo ? 'px-4 sm:px-3' : 'px-3 sm:px-5',
         ]"
     >
-        <!-- Left: Logo + nav links — always visible, no hamburger -->
+        <!-- Left: Logo + nav dropdown -->
         <div class="relative flex items-center gap-0">
-            <router-link
-                to="/"
-                class="shrink-0 transition-opacity duration-300"
-                :class="logoHiddenClass"
-            >
-                <span data-navbar-logo class="inline-block">
-                    <BbnfLogo size="md" />
-                </span>
-            </router-link>
-
-            <!-- Vertical separator — hidden when logo is out of flow -->
+            <!--
+              Single logo+separator wrapper — always the same DOM.
+              On landing: width driven by morphProgress (clip-reveals as scroll progresses).
+              On other pages: unconstrained, takes natural width.
+            -->
             <div
-                v-if="!hideNavLogo"
-                class="h-6 w-px bg-border/40 mx-2 sm:mx-4 transition-opacity duration-300"
-            />
+                class="shrink-0 flex items-center overflow-hidden"
+                :style="logoSlotStyle"
+            >
+                <router-link
+                    to="/"
+                    class="shrink-0 transition-opacity duration-150"
+                    :style="{ opacity: navLogoOpacity }"
+                >
+                    <span data-navbar-logo class="inline-block">
+                        <BbnfLogo size="md" />
+                    </span>
+                </router-link>
+                <div class="h-6 w-px bg-border mx-2 sm:mx-4 shrink-0" />
+            </div>
 
-            <!-- Nav links — horizontally scrollable with edge fade -->
-            <div class="nav-links-mask overflow-x-auto scrollbar-hidden">
-                <div class="flex items-center gap-0.5 sm:gap-1 whitespace-nowrap">
-                    <router-link
-                        v-for="link in navLinks"
-                        :key="link.to"
-                        :to="link.to"
-                        class="flex items-center gap-1 sm:gap-1.5 instrument-serif text-sm sm:text-base px-2 sm:px-3 py-1.5 rounded-md transition-colors shrink-0"
-                        :class="isActive(link.to)
-                            ? 'text-foreground'
-                            : 'text-muted-foreground hover:text-foreground'"
-                    >
+            <!-- Nav dropdown -->
+            <div ref="dropdownRef" class="relative">
+                <button
+                    class="flex items-center gap-1 sm:gap-1.5 instrument-serif text-sm sm:text-base px-2 sm:px-3 py-1.5 rounded-md transition-colors"
+                    :class="navDropdownOpen
+                        ? 'text-foreground bg-muted/30'
+                        : 'text-muted-foreground hover:text-foreground'"
+                    @click="navDropdownOpen = !navDropdownOpen"
+                >
+                    <template v-if="activeNavLink?.isHome">
+                        <Home class="h-4 w-4 shrink-0" />
+                        Home
+                    </template>
+                    <template v-else-if="activeNavLink?.icon">
                         <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path :d="link.icon.iconPath" />
-                            <path v-if="link.icon.iconPath2" :d="link.icon.iconPath2" />
+                            <path :d="activeNavLink.icon.iconPath" />
+                            <path v-if="activeNavLink.icon.iconPath2" :d="activeNavLink.icon.iconPath2" />
                         </svg>
-                        {{ link.label }}
-                    </router-link>
-                </div>
+                        {{ activeNavLink.label }}
+                    </template>
+                    <ChevronDown class="h-3.5 w-3.5 transition-transform duration-200" :class="navDropdownOpen ? 'rotate-180' : ''" />
+                </button>
+
+                <Transition name="nav-dropdown">
+                    <div
+                        v-if="navDropdownOpen"
+                        class="absolute top-full left-0 mt-1.5 min-w-[11rem] rounded-lg border border-border/60 bg-card/95 backdrop-blur-xl shadow-lg p-1 z-50"
+                    >
+                        <router-link
+                            v-for="link in allNavLinks"
+                            :key="link.to"
+                            :to="link.to"
+                            class="flex items-center gap-2 px-3 py-2 rounded-md transition-colors instrument-serif text-sm"
+                            :class="isActiveLink(link)
+                                ? 'text-pastel-amber font-medium bg-pastel-amber/8'
+                                : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'"
+                            @click="navDropdownOpen = false"
+                        >
+                            <Home v-if="link.isHome" class="h-4 w-4 shrink-0" />
+                            <svg v-else-if="link.icon" class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path :d="link.icon.iconPath" />
+                                <path v-if="link.icon.iconPath2" :d="link.icon.iconPath2" />
+                            </svg>
+                            {{ link.label }}
+                        </router-link>
+                    </div>
+                </Transition>
             </div>
         </div>
 
@@ -202,21 +263,13 @@ function isActive(to: string) {
     box-shadow: 0 8px 32px hsl(var(--foreground) / 0.1);
 }
 
-.nav-links-mask {
-    --edge-fade: 0.5rem;
-    mask-image: linear-gradient(
-        to right,
-        transparent 0%,
-        black var(--edge-fade),
-        black calc(100% - var(--edge-fade)),
-        transparent 100%
-    );
-    -webkit-mask-image: linear-gradient(
-        to right,
-        transparent 0%,
-        black var(--edge-fade),
-        black calc(100% - var(--edge-fade)),
-        transparent 100%
-    );
+.nav-dropdown-enter-active,
+.nav-dropdown-leave-active {
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.nav-dropdown-enter-from,
+.nav-dropdown-leave-to {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.95);
 }
 </style>

@@ -109,7 +109,9 @@ export function useSplitPane(onRelayout: () => void): SplitPaneReturn {
         dividerDragStart = { x: event.clientX, y: event.clientY };
         dividerDidDrag = false;
         document.body.style.userSelect = "none";
-        (event.currentTarget as HTMLElement | null)?.focus();
+        const el = event.currentTarget as HTMLElement | null;
+        el?.focus();
+        el?.setPointerCapture(event.pointerId);
         window.addEventListener("pointermove", onWindowPointerMove);
         window.addEventListener("pointerup", onWindowPointerUp);
     }

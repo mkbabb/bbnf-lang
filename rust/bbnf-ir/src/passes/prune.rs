@@ -14,6 +14,14 @@ pub fn prune_unreachable(ir: &mut GrammarIR) {
     }
 
     // Phase 1: Collect reachable rule IDs via DFS.
+    // Build O(1) lookup from RuleId → index.
+    let id_to_idx: HashMap<crate::RuleId, usize> = ir
+        .rules
+        .iter()
+        .enumerate()
+        .map(|(i, r)| (r.id, i))
+        .collect();
+
     let mut reachable = HashSet::new();
     let mut stack = vec![ir.entry];
 
@@ -21,7 +29,8 @@ pub fn prune_unreachable(ir: &mut GrammarIR) {
         if !reachable.insert(rule_id) {
             continue;
         }
-        if let Some(rule) = ir.rules.iter().find(|r| r.id == rule_id) {
+        if let Some(&idx) = id_to_idx.get(&rule_id) {
+            let rule = &ir.rules[idx];
             collect_refs(&rule.body, &mut stack);
             // Also follow recovery expressions.
             if let Some(ref recover) = rule.meta.recover {

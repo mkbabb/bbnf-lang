@@ -244,6 +244,8 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     bbnf_ir::passes::canonicalize_aliases(&mut grammar_ir);
     bbnf_ir::passes::prune_unreachable(&mut grammar_ir);
     bbnf_ir::passes::inline_acyclic(&mut grammar_ir);
+    // Second prune: inlined rules may now be unreachable.
+    bbnf_ir::passes::prune_unreachable(&mut grammar_ir);
     bbnf_ir::passes::eliminate_epsilon(&mut grammar_ir);
     bbnf_ir::passes::merge_literals(&mut grammar_ir);
     bbnf_ir::passes::merge_regex_alts(&mut grammar_ir);

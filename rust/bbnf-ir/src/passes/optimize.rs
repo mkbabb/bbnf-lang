@@ -3,6 +3,8 @@
 //! These are lightweight tree-rewrite passes that reduce node count and match operations.
 //! Run early in the pipeline (before dispatch table generation).
 
+use std::collections::HashMap;
+
 use crate::{GrammarIR, IrNode};
 
 // ── Epsilon Elimination ─────────────────────────────────────────────────────
@@ -47,26 +49,48 @@ fn elim_epsilon(node: IrNode) -> IrNode {
                 IrNode::Alt(cleaned, dispatch)
             }
         }
-        IrNode::Repeat { inner, lo, hi } => IrNode::Repeat {
-            inner: Box::new(elim_epsilon(*inner)),
-            lo,
-            hi,
-        },
-        IrNode::Skip(a, b) => IrNode::Skip(
-            Box::new(elim_epsilon(*a)),
-            Box::new(elim_epsilon(*b)),
-        ),
-        IrNode::Next(a, b) => IrNode::Next(
-            Box::new(elim_epsilon(*a)),
-            Box::new(elim_epsilon(*b)),
-        ),
+        IrNode::Repeat { inner, lo, hi } => {
+            let inner = elim_epsilon(*inner);
+            // Repeat(Epsilon, 0, _) → Epsilon (optional nothing = nothing)
+            if matches!(&inner, IrNode::Epsilon) && lo == 0 {
+                return IrNode::Epsilon;
+            }
+            IrNode::Repeat {
+                inner: Box::new(inner),
+                lo,
+                hi,
+            }
+        }
+        IrNode::Skip(a, b) => {
+            let a = elim_epsilon(*a);
+            let b = elim_epsilon(*b);
+            // Skip(Epsilon, x) → x
+            if matches!(&a, IrNode::Epsilon) {
+                return b;
+            }
+            IrNode::Skip(Box::new(a), Box::new(b))
+        }
+        IrNode::Next(a, b) => {
+            let a = elim_epsilon(*a);
+            let b = elim_epsilon(*b);
+            // Next(x, Epsilon) → x
+            if matches!(&b, IrNode::Epsilon) {
+                return a;
+            }
+            IrNode::Next(Box::new(a), Box::new(b))
+        }
         IrNode::Minus(a, b) => IrNode::Minus(
             Box::new(elim_epsilon(*a)),
             Box::new(elim_epsilon(*b)),
         ),
         IrNode::Negate(inner) => IrNode::Negate(Box::new(elim_epsilon(*inner))),
         IrNode::OptionalWhitespace(inner) => {
-            IrNode::OptionalWhitespace(Box::new(elim_epsilon(*inner)))
+            let inner = elim_epsilon(*inner);
+            // OptionalWhitespace(OptionalWhitespace(x)) → OptionalWhitespace(x)
+            if matches!(&inner, IrNode::OptionalWhitespace(_)) {
+                return inner;
+            }
+            IrNode::OptionalWhitespace(Box::new(inner))
         }
         IrNode::Map { inner, fn_id } => IrNode::Map {
             inner: Box::new(elim_epsilon(*inner)),
@@ -84,19 +108,42 @@ fn elim_epsilon(node: IrNode) -> IrNode {
 /// Rewrites `Seq([Lit("a"), Lit("b"), ...])` → `Seq([Lit("ab"), ...])`.
 /// Reduces the number of match operations in the interpreter.
 pub fn merge_literals(ir: &mut GrammarIR) {
+    // Build dedup index for the existing string table.
+    let mut string_dedup: HashMap<String, u32> = ir
+        .strings
+        .iter()
+        .enumerate()
+        .map(|(i, s)| (s.clone(), i as u32))
+        .collect();
+
     for rule in &mut ir.rules {
-        rule.body = merge_lits(std::mem::replace(&mut rule.body, IrNode::Epsilon), &mut ir.strings);
+        rule.body = merge_lits(
+            std::mem::replace(&mut rule.body, IrNode::Epsilon),
+            &mut ir.strings,
+            &mut string_dedup,
+        );
     }
 }
 
-fn merge_lits(node: IrNode, strings: &mut Vec<String>) -> IrNode {
+/// Intern a string, reusing an existing entry if present.
+fn intern_string(s: String, strings: &mut Vec<String>, dedup: &mut HashMap<String, u32>) -> u32 {
+    if let Some(&existing) = dedup.get(&s) {
+        return existing;
+    }
+    let sid = strings.len() as u32;
+    dedup.insert(s.clone(), sid);
+    strings.push(s);
+    sid
+}
+
+fn merge_lits(node: IrNode, strings: &mut Vec<String>, dedup: &mut HashMap<String, u32>) -> IrNode {
     match node {
         IrNode::Seq(children) => {
             let mut merged: Vec<IrNode> = Vec::with_capacity(children.len());
             let mut pending_lit: Option<String> = None;
 
             for child in children {
-                let child = merge_lits(child, strings);
+                let child = merge_lits(child, strings, dedup);
                 if let IrNode::Literal(sid) = &child {
                     let s = strings[*sid as usize].clone();
                     if let Some(ref mut acc) = pending_lit {
@@ -109,16 +156,14 @@ fn merge_lits(node: IrNode, strings: &mut Vec<String>) -> IrNode {
                 }
                 // Flush pending literal.
                 if let Some(acc) = pending_lit.take() {
-                    let sid = strings.len() as u32;
-                    strings.push(acc);
+                    let sid = intern_string(acc, strings, dedup);
                     merged.push(IrNode::Literal(sid));
                 }
                 merged.push(child);
             }
             // Flush trailing pending.
             if let Some(acc) = pending_lit.take() {
-                let sid = strings.len() as u32;
-                strings.push(acc);
+                let sid = intern_string(acc, strings, dedup);
                 merged.push(IrNode::Literal(sid));
             }
 
@@ -132,35 +177,35 @@ fn merge_lits(node: IrNode, strings: &mut Vec<String>) -> IrNode {
             let cleaned: Vec<_> = branches
                 .into_iter()
                 .map(|mut b| {
-                    b.node = merge_lits(b.node, strings);
+                    b.node = merge_lits(b.node, strings, dedup);
                     b
                 })
                 .collect();
             IrNode::Alt(cleaned, dispatch)
         }
         IrNode::Repeat { inner, lo, hi } => IrNode::Repeat {
-            inner: Box::new(merge_lits(*inner, strings)),
+            inner: Box::new(merge_lits(*inner, strings, dedup)),
             lo,
             hi,
         },
         IrNode::Skip(a, b) => IrNode::Skip(
-            Box::new(merge_lits(*a, strings)),
-            Box::new(merge_lits(*b, strings)),
+            Box::new(merge_lits(*a, strings, dedup)),
+            Box::new(merge_lits(*b, strings, dedup)),
         ),
         IrNode::Next(a, b) => IrNode::Next(
-            Box::new(merge_lits(*a, strings)),
-            Box::new(merge_lits(*b, strings)),
+            Box::new(merge_lits(*a, strings, dedup)),
+            Box::new(merge_lits(*b, strings, dedup)),
         ),
         IrNode::Minus(a, b) => IrNode::Minus(
-            Box::new(merge_lits(*a, strings)),
-            Box::new(merge_lits(*b, strings)),
+            Box::new(merge_lits(*a, strings, dedup)),
+            Box::new(merge_lits(*b, strings, dedup)),
         ),
-        IrNode::Negate(inner) => IrNode::Negate(Box::new(merge_lits(*inner, strings))),
+        IrNode::Negate(inner) => IrNode::Negate(Box::new(merge_lits(*inner, strings, dedup))),
         IrNode::OptionalWhitespace(inner) => {
-            IrNode::OptionalWhitespace(Box::new(merge_lits(*inner, strings)))
+            IrNode::OptionalWhitespace(Box::new(merge_lits(*inner, strings, dedup)))
         }
         IrNode::Map { inner, fn_id } => IrNode::Map {
-            inner: Box::new(merge_lits(*inner, strings)),
+            inner: Box::new(merge_lits(*inner, strings, dedup)),
             fn_id,
         },
         other => other,

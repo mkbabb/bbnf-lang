@@ -174,6 +174,8 @@ pub fn compile_ast<'a>(
     bbnf_ir::passes::canonicalize_aliases(&mut ir);
     bbnf_ir::passes::prune_unreachable(&mut ir);
     bbnf_ir::passes::inline_acyclic(&mut ir);
+    // Second prune: inlined rules may now be unreachable.
+    bbnf_ir::passes::prune_unreachable(&mut ir);
     bbnf_ir::passes::eliminate_epsilon(&mut ir);
     bbnf_ir::passes::merge_literals(&mut ir);
     bbnf_ir::passes::merge_regex_alts(&mut ir);

@@ -7,7 +7,9 @@
 use crate::{GrammarIR, IrNode, RuleId};
 
 /// Maximum node count for a rule to be considered inlinable.
-const INLINE_THRESHOLD: usize = 3;
+/// Increased from 3 to 4 to enable more inlining opportunities,
+/// exposing further literal merging and dispatch optimizations.
+const INLINE_THRESHOLD: usize = 4;
 
 /// Inline small acyclic rules at their call sites.
 ///

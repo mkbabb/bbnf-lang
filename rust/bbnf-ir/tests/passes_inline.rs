@@ -89,7 +89,7 @@ fn entry_point_not_inlined() {
 
 #[test]
 fn large_rule_not_inlined() {
-    // Rule 1 has 4 nodes (Seq + 3 Literals) -- over threshold.
+    // Rule 1 has 5 nodes (Seq + 4 Literals) -- over threshold.
     let mut ir = make_ir(
         vec![
             IrRule {
@@ -105,6 +105,7 @@ fn large_rule_not_inlined() {
                     IrNode::Literal(2),
                     IrNode::Literal(3),
                     IrNode::Literal(2),
+                    IrNode::Literal(3),
                 ]),
                 meta: RuleMeta::default(),
             },

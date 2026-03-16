@@ -19,25 +19,31 @@ pub fn merge_regex_alts(ir: &mut GrammarIR) {
 fn merge_regex_in_node(node: IrNode, strings: &mut Vec<String>) -> IrNode {
     match node {
         IrNode::Alt(branches, dispatch) => {
-            // Check if ALL branches are bare Regex nodes (no Map wrappers, no dispatch).
+            // Check if ALL branches are bare Regex or Literal nodes that can be fused.
             // Only merge when there's no dispatch table (dispatch handles perf already).
-            let all_regex = dispatch.is_none()
+            let all_regex_or_lit = dispatch.is_none()
                 && branches.len() >= 2
-                && branches.iter().all(|b| matches!(&b.node, IrNode::Regex(_)));
+                && branches.iter().all(|b| matches!(&b.node, IrNode::Regex(_) | IrNode::Literal(_)))
+                && branches.iter().any(|b| matches!(&b.node, IrNode::Regex(_)));
 
-            if all_regex {
+            if all_regex_or_lit {
                 // Fuse all regex patterns with `|` into a single combined pattern.
                 let combined: String = branches
                     .iter()
-                    .map(|b| {
-                        let IrNode::Regex(sid) = &b.node else {
-                            unreachable!()
-                        };
-                        // Wrap ALL patterns in non-capturing groups unconditionally
-                        // to prevent capture group renumbering and ensure semantic
-                        // equivalence regardless of internal structure.
-                        let pattern = &strings[*sid as usize];
-                        format!("(?:{})", pattern)
+                    .map(|b| match &b.node {
+                        IrNode::Regex(sid) => {
+                            let pattern = &strings[*sid as usize];
+                            if pattern_has_top_level_pipe(pattern) {
+                                format!("(?:{})", pattern)
+                            } else {
+                                pattern.clone()
+                            }
+                        }
+                        IrNode::Literal(sid) => {
+                            // Escape the literal string for use in a regex pattern.
+                            regex_escape_literal(&strings[*sid as usize])
+                        }
+                        _ => unreachable!(),
                     })
                     .collect::<Vec<_>>()
                     .join("|");
@@ -90,6 +96,18 @@ fn merge_regex_in_node(node: IrNode, strings: &mut Vec<String>) -> IrNode {
         // Leaves — no recursion needed.
         node @ (IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon | IrNode::Ref(_)) => node,
     }
+}
+
+/// Escape a literal string for safe inclusion in a regex pattern.
+fn regex_escape_literal(s: &str) -> String {
+    let mut out = String::with_capacity(s.len() + 4);
+    for ch in s.chars() {
+        if "\\^$.|?*+()[]{}".contains(ch) {
+            out.push('\\');
+        }
+        out.push(ch);
+    }
+    out
 }
 
 /// Check if a regex pattern contains a top-level `|` (pipe) character.

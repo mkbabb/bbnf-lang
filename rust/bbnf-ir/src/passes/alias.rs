@@ -9,12 +9,19 @@ use crate::{GrammarIR, IrNode, RuleId};
 
 /// Resolve alias chains and rewrite Ref nodes to point to canonical targets.
 pub fn canonicalize_aliases(ir: &mut GrammarIR) {
+    // Build O(1) lookup from RuleId → alias target.
+    let alias_targets: HashMap<RuleId, Option<RuleId>> = ir
+        .rules
+        .iter()
+        .map(|r| (r.id, r.meta.is_alias))
+        .collect();
+
     // Phase 1: Build alias chain resolution map.
     let mut canonical: HashMap<RuleId, RuleId> = HashMap::new();
 
     for rule in &ir.rules {
         if rule.meta.is_alias.is_some() {
-            canonical.insert(rule.id, resolve_chain(rule.id, ir));
+            canonical.insert(rule.id, resolve_chain(rule.id, &alias_targets));
         }
     }
 
@@ -38,7 +45,10 @@ pub fn canonicalize_aliases(ir: &mut GrammarIR) {
 }
 
 /// Follow the alias chain from `start` to find the terminal (non-alias) target.
-fn resolve_chain(start: RuleId, ir: &GrammarIR) -> RuleId {
+fn resolve_chain(
+    start: RuleId,
+    alias_targets: &std::collections::HashMap<RuleId, Option<RuleId>>,
+) -> RuleId {
     let mut current = start;
     let mut visited = std::collections::HashSet::new();
 
@@ -47,14 +57,11 @@ fn resolve_chain(start: RuleId, ir: &GrammarIR) -> RuleId {
             // Cycle detected — return current to break the loop.
             return current;
         }
-        match ir.rules.iter().find(|r| r.id == current) {
-            Some(rule) => match rule.meta.is_alias {
-                Some(target) if target != current => {
-                    current = target;
-                }
-                _ => return current,
-            },
-            None => return current,
+        match alias_targets.get(&current) {
+            Some(Some(target)) if *target != current => {
+                current = *target;
+            }
+            _ => return current,
         }
     }
 }

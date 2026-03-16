@@ -93,6 +93,17 @@ impl CharSet128 {
         }
     }
 
+    /// Return the complement restricted to printable ASCII (32..127).
+    pub fn complement_printable(&self) -> CharSet128 {
+        let mut cs = CharSet128::new();
+        for code in 32u8..127 {
+            if !self.has(code) {
+                cs.add(code);
+            }
+        }
+        cs
+    }
+
     /// Convert to the existing `[u32; 4]` CharSet representation.
     pub fn to_u32x4(&self) -> [u32; 4] {
         [

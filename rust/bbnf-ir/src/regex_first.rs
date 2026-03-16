@@ -1,0 +1,335 @@
+//! Conservative first-character extraction from regex patterns.
+//!
+//! Ported from `bbnf/src/analysis/regex_first.rs` to use `CharSet128`.
+
+use crate::CharSet128;
+
+/// Conservatively extract the set of possible first characters from a regex pattern.
+///
+/// Returns `Some(charset)` for patterns whose first characters can be determined,
+/// `None` for patterns containing unsupported constructs (e.g., `.` wildcard).
+pub fn regex_first_chars(pattern: &str) -> Option<CharSet128> {
+    let bytes = pattern.as_bytes();
+    if bytes.is_empty() {
+        return Some(CharSet128::new());
+    }
+
+    let mut pos = 0;
+
+    // Skip leading anchor.
+    if pos < bytes.len() && bytes[pos] == b'^' {
+        pos += 1;
+    }
+
+    regex_first_chars_at(bytes, &mut pos)
+}
+
+fn regex_first_chars_at(bytes: &[u8], pos: &mut usize) -> Option<CharSet128> {
+    let mut result = CharSet128::new();
+
+    loop {
+        let alt = regex_first_chars_single(bytes, pos)?;
+        result.union(&alt);
+
+        // Skip to end of this alternation branch.
+        let mut depth = 0u32;
+        while *pos < bytes.len() {
+            match bytes[*pos] {
+                b'(' => {
+                    depth += 1;
+                    *pos += 1;
+                }
+                b')' if depth > 0 => {
+                    depth -= 1;
+                    *pos += 1;
+                }
+                b')' => break,
+                b'|' if depth == 0 => break,
+                b'\\' => {
+                    *pos += 2.min(bytes.len() - *pos);
+                }
+                b'[' => {
+                    *pos += 1;
+                    while *pos < bytes.len() && bytes[*pos] != b']' {
+                        if bytes[*pos] == b'\\' {
+                            *pos += 1;
+                        }
+                        *pos += 1;
+                    }
+                    if *pos < bytes.len() {
+                        *pos += 1;
+                    }
+                }
+                _ => {
+                    *pos += 1;
+                }
+            }
+        }
+
+        if *pos < bytes.len() && bytes[*pos] == b'|' {
+            *pos += 1;
+        } else {
+            break;
+        }
+    }
+
+    Some(result)
+}
+
+fn is_nullable_quantifier(bytes: &[u8], pos: usize) -> bool {
+    if pos >= bytes.len() {
+        return false;
+    }
+    matches!(bytes[pos], b'?' | b'*')
+}
+
+fn regex_first_chars_single(bytes: &[u8], pos: &mut usize) -> Option<CharSet128> {
+    if *pos >= bytes.len() {
+        return Some(CharSet128::new());
+    }
+
+    match bytes[*pos] {
+        b'[' => {
+            let cs = regex_parse_char_class(bytes, pos)?;
+            let nullable = is_nullable_quantifier(bytes, *pos);
+            skip_quantifier(bytes, pos);
+            if nullable {
+                let mut combined = cs;
+                let next = regex_first_chars_single(bytes, pos)?;
+                combined.union(&next);
+                Some(combined)
+            } else {
+                Some(cs)
+            }
+        }
+
+        b'\\' => {
+            *pos += 1;
+            if *pos >= bytes.len() {
+                return None;
+            }
+            let cs = regex_escape_chars(bytes[*pos])?;
+            *pos += 1;
+            let nullable = is_nullable_quantifier(bytes, *pos);
+            skip_quantifier(bytes, pos);
+            if nullable {
+                let mut combined = cs;
+                let next = regex_first_chars_single(bytes, pos)?;
+                combined.union(&next);
+                Some(combined)
+            } else {
+                Some(cs)
+            }
+        }
+
+        b'(' => {
+            *pos += 1;
+            if *pos < bytes.len() && bytes[*pos] == b'?' {
+                if *pos + 1 < bytes.len() && bytes[*pos + 1] == b':' {
+                    *pos += 2;
+                } else {
+                    return None;
+                }
+            }
+            let inner = regex_first_chars_at(bytes, pos)?;
+            if *pos < bytes.len() && bytes[*pos] == b')' {
+                *pos += 1;
+            }
+            let nullable = is_nullable_quantifier(bytes, *pos);
+            skip_quantifier(bytes, pos);
+            if nullable {
+                let mut combined = inner;
+                let next = regex_first_chars_single(bytes, pos)?;
+                combined.union(&next);
+                Some(combined)
+            } else {
+                Some(inner)
+            }
+        }
+
+        b'.' => None,
+
+        b'|' | b')' => Some(CharSet128::new()),
+
+        ch => {
+            let mut cs = CharSet128::new();
+            cs.add(ch);
+            *pos += 1;
+            let nullable = is_nullable_quantifier(bytes, *pos);
+            skip_quantifier(bytes, pos);
+            if nullable {
+                let next = regex_first_chars_single(bytes, pos)?;
+                cs.union(&next);
+            }
+            Some(cs)
+        }
+    }
+}
+
+fn regex_parse_char_class(bytes: &[u8], pos: &mut usize) -> Option<CharSet128> {
+    *pos += 1; // consume '['
+    let mut cs = CharSet128::new();
+
+    let negated = *pos < bytes.len() && bytes[*pos] == b'^';
+    if negated {
+        *pos += 1;
+    }
+
+    while *pos < bytes.len() && bytes[*pos] != b']' {
+        if bytes[*pos] == b'\\' {
+            *pos += 1;
+            if *pos >= bytes.len() {
+                return None;
+            }
+            let esc = regex_escape_chars(bytes[*pos])?;
+            cs.union(&esc);
+            *pos += 1;
+        } else if *pos + 2 < bytes.len() && bytes[*pos + 1] == b'-' && bytes[*pos + 2] != b']' {
+            let from = bytes[*pos];
+            let to = bytes[*pos + 2];
+            if from > to {
+                return None;
+            }
+            cs.add_range(from, to);
+            *pos += 3;
+        } else {
+            cs.add(bytes[*pos]);
+            *pos += 1;
+        }
+    }
+
+    if *pos < bytes.len() && bytes[*pos] == b']' {
+        *pos += 1;
+    }
+
+    if negated {
+        Some(cs.complement_printable())
+    } else {
+        Some(cs)
+    }
+}
+
+fn regex_escape_chars(ch: u8) -> Option<CharSet128> {
+    let mut cs = CharSet128::new();
+    match ch {
+        b'd' => {
+            cs.add_range(b'0', b'9');
+        }
+        b'D' => {
+            let mut digits = CharSet128::new();
+            digits.add_range(b'0', b'9');
+            return Some(digits.complement_printable());
+        }
+        b'w' => {
+            cs.add_range(b'a', b'z');
+            cs.add_range(b'A', b'Z');
+            cs.add_range(b'0', b'9');
+            cs.add(b'_');
+        }
+        b'W' => {
+            let mut word = CharSet128::new();
+            word.add_range(b'a', b'z');
+            word.add_range(b'A', b'Z');
+            word.add_range(b'0', b'9');
+            word.add(b'_');
+            return Some(word.complement_printable());
+        }
+        b's' => {
+            cs.add(b' ');
+            cs.add(b'\t');
+            cs.add(b'\n');
+            cs.add(b'\r');
+            cs.add(0x0C);
+        }
+        b'S' => {
+            let mut ws = CharSet128::new();
+            ws.add(b' ');
+            ws.add(b'\t');
+            ws.add(b'\n');
+            ws.add(b'\r');
+            ws.add(0x0C);
+            return Some(ws.complement_printable());
+        }
+        b'b' | b'B' => {
+            return Some(CharSet128::new());
+        }
+        _ => {
+            cs.add(ch);
+        }
+    }
+    Some(cs)
+}
+
+fn skip_quantifier(bytes: &[u8], pos: &mut usize) {
+    if *pos >= bytes.len() {
+        return;
+    }
+    match bytes[*pos] {
+        b'*' | b'+' | b'?' => {
+            *pos += 1;
+            if *pos < bytes.len() && bytes[*pos] == b'?' {
+                *pos += 1;
+            }
+        }
+        b'{' => {
+            while *pos < bytes.len() && bytes[*pos] != b'}' {
+                *pos += 1;
+            }
+            if *pos < bytes.len() {
+                *pos += 1;
+            }
+            if *pos < bytes.len() && bytes[*pos] == b'?' {
+                *pos += 1;
+            }
+        }
+        _ => {}
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn simple_literal() {
+        let cs = regex_first_chars("abc").unwrap();
+        assert!(cs.has(b'a'));
+        assert!(!cs.has(b'b'));
+    }
+
+    #[test]
+    fn char_class() {
+        let cs = regex_first_chars("[a-zA-Z_]").unwrap();
+        assert!(cs.has(b'a'));
+        assert!(cs.has(b'Z'));
+        assert!(cs.has(b'_'));
+        assert!(!cs.has(b'0'));
+    }
+
+    #[test]
+    fn alternation() {
+        let cs = regex_first_chars("abc|[0-9]").unwrap();
+        assert!(cs.has(b'a'));
+        assert!(cs.has(b'5'));
+    }
+
+    #[test]
+    fn optional_prefix() {
+        let cs = regex_first_chars("-?[0-9]").unwrap();
+        assert!(cs.has(b'-'));
+        assert!(cs.has(b'0'));
+    }
+
+    #[test]
+    fn dot_returns_none() {
+        assert!(regex_first_chars(".*").is_none());
+    }
+
+    #[test]
+    fn escape_sequences() {
+        let cs = regex_first_chars(r"\d+").unwrap();
+        assert!(cs.has(b'0'));
+        assert!(cs.has(b'9'));
+        assert!(!cs.has(b'a'));
+    }
+}

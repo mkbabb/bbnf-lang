@@ -7,7 +7,7 @@
 
 use std::collections::HashMap;
 
-use crate::{CharSet128, GrammarIR, IrNode, RuleId};
+use crate::{CharSet128, GrammarIR, IrNode, RuleId, regex_first};
 
 /// FOLLOW sets for all rules in the grammar.
 pub type FollowSets = HashMap<RuleId, CharSet128>;
@@ -140,14 +140,35 @@ fn propagate_follow(
 
             // For Ref(B) inside a repeat, FIRST(inner) is also in FOLLOW(B)
             // because the repeat can loop.
-            if let IrNode::Ref(ref_id) = inner.as_ref() {
-                let inner_first = compute_node_first(inner, first_of, ir);
-                let entry = follow.entry(*ref_id).or_default();
-                let old = entry.bits;
-                entry.union(&inner_first);
-                if entry.bits != old {
-                    *changed = true;
+            let inner_first = compute_node_first(inner, first_of, ir);
+            match inner.as_ref() {
+                IrNode::Ref(ref_id) => {
+                    let entry = follow.entry(*ref_id).or_default();
+                    let old = entry.bits;
+                    entry.union(&inner_first);
+                    if entry.bits != old {
+                        *changed = true;
+                    }
                 }
+                // For Repeat { inner: Seq([..., Ref(B)]) }, the last Ref in the
+                // sequence also has FIRST(inner) in its FOLLOW (the repeat loops back).
+                IrNode::Seq(children) => {
+                    // Propagate FIRST(inner) into the FOLLOW of the last Ref in the sequence.
+                    for child in children.iter().rev() {
+                        if let IrNode::Ref(ref_id) = child {
+                            let entry = follow.entry(*ref_id).or_default();
+                            let old = entry.bits;
+                            entry.union(&inner_first);
+                            if entry.bits != old {
+                                *changed = true;
+                            }
+                        }
+                        if !is_node_nullable(child, nullable, ir) {
+                            break;
+                        }
+                    }
+                }
+                _ => {}
             }
         }
 
@@ -196,9 +217,9 @@ fn compute_node_first(
             }
             cs
         }
-        IrNode::Regex(_) => {
-            // Conservative: we don't parse regex here. Use the rule's FIRST set if available.
-            CharSet128::new()
+        IrNode::Regex(sid) => {
+            let pattern = ir.get_string(*sid);
+            regex_first::regex_first_chars(pattern).unwrap_or_default()
         }
         IrNode::Epsilon => CharSet128::new(),
         IrNode::Ref(id) => first_of.get(id).map(|cs| (*cs).clone()).unwrap_or_default(),

@@ -9,7 +9,7 @@
 //! branches' FIRST sets, the nullable branch gets O(1) dispatch instead of
 //! falling through as a linear fallback.
 
-use crate::{AltBranch, AltDispatch, CharSet128, GrammarIR, IrNode};
+use crate::{AltBranch, AltDispatch, CharSet128, GrammarIR, IrNode, regex_first};
 
 /// Generate dispatch tables for all eligible Alt nodes in the IR.
 ///
@@ -54,9 +54,10 @@ fn node_first_set(node: &IrNode, rule_metas: &[(CharSet128, bool)], strings: &[S
                 None // empty literal = nullable
             }
         }
-        IrNode::Regex(_) => {
-            // Regex FIRST sets are complex to compute here; conservatively return None.
-            None
+        IrNode::Regex(sid) => {
+            let pattern = &strings[*sid as usize];
+            regex_first::regex_first_chars(pattern)
+                .filter(|cs| !cs.is_empty())
         }
         IrNode::Ref(rule_id) => {
             let (ref first_set, nullable) = rule_metas[*rule_id as usize];

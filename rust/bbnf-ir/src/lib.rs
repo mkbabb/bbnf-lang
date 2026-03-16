@@ -13,6 +13,7 @@ pub mod passes;
 pub mod bytecode;
 pub mod compiler;
 pub mod interpreter;
+pub mod regex_first;
 
 use std::collections::HashMap;
 

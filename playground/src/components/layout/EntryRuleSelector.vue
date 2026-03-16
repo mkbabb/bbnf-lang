@@ -79,7 +79,7 @@ const entryRuleTooltip = computed(() => {
                     <SelectTrigger class="h-9 min-w-36 max-w-full border-border/35 bg-background/35 px-2.5 shadow-none rounded-xl sm:h-10 sm:min-w-44">
                         <div class="flex items-center gap-2 overflow-hidden">
                             <GitBranch class="h-4 w-4 shrink-0 text-pastel-blue" />
-                            <span class="truncate font-mono text-xs sm:text-sm">
+                            <span class="truncate font-mono text-sm sm:text-base">
                                 {{ selectedEntryRuleOption?.label === "Auto" ? "Auto (first rule)" : selectedEntryRuleOption?.label }}
                             </span>
                         </div>
@@ -101,7 +101,7 @@ const entryRuleTooltip = computed(() => {
                                     </span>
                                     <span class="font-mono text-sm text-foreground">{{ option.label === "Auto" ? "Auto (first rule)" : option.label }}</span>
                                 </div>
-                                <p v-if="option.detail" class="mt-1 text-xs text-muted-foreground">{{ option.detail }}</p>
+                                <p v-if="option.detail" class="mt-1 text-sm text-muted-foreground">{{ option.detail }}</p>
                             </div>
                         </SelectItem>
                     </SelectContent>
@@ -109,7 +109,7 @@ const entryRuleTooltip = computed(() => {
             </div>
         </TooltipTrigger>
         <TooltipContent side="top" :side-offset="8" class="max-w-xs border-border/40 bg-card/90 backdrop-blur-xl">
-            <p class="text-xs sm:text-sm">
+            <p class="text-sm sm:text-base">
                 <InlineRichText :text="entryRuleTooltip" />
             </p>
         </TooltipContent>

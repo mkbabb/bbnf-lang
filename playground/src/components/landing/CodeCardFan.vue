@@ -56,7 +56,7 @@ function cardTransform(i: number): string {
                     <div class="h-2 w-2 rounded-full" :style="{ background: `var(--color-${card.color})` }" />
                     <span class="instrument-serif text-sm" :style="{ color: `var(--color-${card.color})` }">{{ card.title }}</span>
                 </div>
-                <pre class="text-xs leading-relaxed text-foreground/80 overflow-hidden"><code><template v-for="(line, j) in card.lines" :key="j"><template v-for="(span, k) in line.spans" :key="k"><span v-if="span.cls" :class="span.cls">{{ span.text }}</span><template v-else>{{ span.text }}</template></template>
+                <pre class="text-sm leading-relaxed text-foreground/80 overflow-hidden"><code><template v-for="(line, j) in card.lines" :key="j"><template v-for="(span, k) in line.spans" :key="k"><span v-if="span.cls" :class="span.cls">{{ span.text }}</span><template v-else>{{ span.text }}</template></template>
 </template></code></pre>
             </div>
         </div>

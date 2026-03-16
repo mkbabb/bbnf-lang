@@ -134,7 +134,7 @@ useMarkdownComponents(articleRef, rendered);
 /* Float the section badge so it sits inline with the h1 text */
 .section-badge {
     float: right;
-    margin-top: 0.25rem;
+    margin-top: 0.5rem;
     margin-left: 1rem;
 }
 

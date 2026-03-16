@@ -108,7 +108,7 @@ function hasDescriptionOverflow(name: string) {
             </div>
         </TooltipTrigger>
         <TooltipContent side="top" :side-offset="8" class="max-w-xs border-border/40 bg-card/90 backdrop-blur-xl">
-            <p class="text-xs sm:text-sm">Swap between showcase grammars.</p>
+            <p class="text-sm sm:text-base">Swap between showcase grammars.</p>
         </TooltipContent>
     </Tooltip>
 </template>

@@ -191,7 +191,7 @@ const astHighlighted = computed(() => astOutput.value ? highlightJson(astOutput.
 <template>
     <section class="max-w-5xl mx-auto px-4 sm:px-8 py-10 sm:py-16">
         <h2 class="instrument-serif text-3xl text-center mb-2">See it in action</h2>
-        <p class="text-sm text-muted-foreground text-center mb-8">Edit the grammar or input below — parsing runs live.</p>
+        <p class="text-base text-muted-foreground text-center mb-8">Edit the grammar or input below — parsing runs live.</p>
 
         <div class="rounded-xl border border-border/40 bg-card/80 backdrop-blur-sm overflow-hidden shadow-card">
             <div class="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-border/30 md:h-72">
@@ -203,14 +203,14 @@ const astHighlighted = computed(() => astOutput.value ? highlightJson(astOutput.
                     </div>
                     <div class="relative flex-1 overflow-y-auto overflow-x-hidden">
                         <pre
-                            class="absolute inset-0 overflow-y-auto text-xs leading-relaxed font-mono whitespace-pre-wrap break-words pointer-events-none scrollbar-hidden p-0 m-0"
+                            class="absolute inset-0 overflow-y-auto text-sm leading-relaxed font-mono whitespace-pre-wrap break-words pointer-events-none scrollbar-hidden p-0 m-0"
                             aria-hidden="true"
                             v-html="grammarHighlighted + '\n'"
                         />
                         <textarea
                             v-model="grammarText"
                             spellcheck="false"
-                            class="absolute inset-0 w-full h-full bg-transparent text-xs leading-relaxed font-mono resize-none outline-none scrollbar-hidden text-transparent caret-foreground p-0 m-0"
+                            class="absolute inset-0 w-full h-full bg-transparent text-sm leading-relaxed font-mono resize-none outline-none scrollbar-hidden text-transparent caret-foreground p-0 m-0"
                             @input="onUserEdit"
                         />
                     </div>
@@ -224,14 +224,14 @@ const astHighlighted = computed(() => astOutput.value ? highlightJson(astOutput.
                     </div>
                     <div class="relative flex-1 overflow-y-auto overflow-x-hidden">
                         <pre
-                            class="absolute inset-0 overflow-y-auto text-xs leading-relaxed font-mono whitespace-pre-wrap break-words pointer-events-none scrollbar-hidden p-0 m-0"
+                            class="absolute inset-0 overflow-y-auto text-sm leading-relaxed font-mono whitespace-pre-wrap break-words pointer-events-none scrollbar-hidden p-0 m-0"
                             aria-hidden="true"
                             v-html="inputHighlighted + '\n'"
                         />
                         <textarea
                             v-model="inputText"
                             spellcheck="false"
-                            class="absolute inset-0 w-full h-full bg-transparent text-xs leading-relaxed font-mono resize-none outline-none scrollbar-hidden text-transparent caret-foreground p-0 m-0"
+                            class="absolute inset-0 w-full h-full bg-transparent text-sm leading-relaxed font-mono resize-none outline-none scrollbar-hidden text-transparent caret-foreground p-0 m-0"
                             @input="onUserEdit"
                         />
                     </div>
@@ -246,11 +246,11 @@ const astHighlighted = computed(() => astOutput.value ? highlightJson(astOutput.
                     <div class="flex-1 overflow-y-auto scrollbar-hidden">
                         <pre
                             v-if="astOutput"
-                            class="text-xs leading-relaxed font-mono whitespace-pre-wrap break-words"
+                            class="text-sm leading-relaxed font-mono whitespace-pre-wrap break-words"
                             v-html="astHighlighted"
                         />
-                        <p v-else-if="parseError" class="text-xs text-destructive mt-1">{{ parseError }}</p>
-                        <p v-else class="text-xs text-muted-foreground/50 mt-1 italic">Waiting...</p>
+                        <p v-else-if="parseError" class="text-sm text-destructive mt-1">{{ parseError }}</p>
+                        <p v-else class="text-sm text-muted-foreground/50 mt-1 italic">Waiting...</p>
                     </div>
                 </div>
             </div>

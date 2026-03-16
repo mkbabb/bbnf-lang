@@ -64,7 +64,7 @@ const features = [
             >
                 <component :is="feature.icon" class="h-5 w-5 sm:h-6 sm:w-6 mb-2 sm:mb-3" :class="feature.iconClass" />
                 <h3 class="instrument-serif text-base sm:text-lg mb-1 sm:mb-2">{{ feature.title }}</h3>
-                <p class="text-xs text-muted-foreground leading-relaxed">
+                <p class="text-sm text-muted-foreground leading-relaxed">
                     <template v-for="(part, i) in feature.parts" :key="i">
                         <code
                             v-if="part.code"

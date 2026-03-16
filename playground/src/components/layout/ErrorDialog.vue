@@ -41,14 +41,14 @@ function onJumpToError(error: PipelineError) {
         <Tooltip>
             <TooltipTrigger as-child>
                 <DialogTrigger as-child>
-                    <button class="flex items-center gap-1 rounded-xl px-2 py-1 text-xs text-destructive transition-colors hover:bg-destructive/8 hover:text-destructive/80 sm:text-sm">
+                    <button class="flex items-center gap-1 rounded-xl px-2 py-1 text-sm text-destructive transition-colors hover:bg-destructive/8 hover:text-destructive/80 sm:text-base">
                         <AlertCircle class="h-3.5 w-3.5 shrink-0 sm:h-4.5 sm:w-4.5" />
                         <span class="font-mono">{{ errors.length }}</span>
                     </button>
                 </DialogTrigger>
             </TooltipTrigger>
             <TooltipContent side="top" :side-offset="8">
-                <p class="text-xs">Inspect errors and jump to the failing editor span.</p>
+                <p class="text-sm">Inspect errors and jump to the failing editor span.</p>
             </TooltipContent>
         </Tooltip>
         <DialogContent class="max-w-lg">

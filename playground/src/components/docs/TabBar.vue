@@ -20,7 +20,7 @@ defineEmits<{
         <button
             v-for="tab in tabs"
             :key="tab.key"
-            class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono transition-colors relative"
+            class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-mono transition-colors relative"
             :class="tab.key === modelValue
                 ? 'text-foreground'
                 : 'text-muted-foreground/60 hover:text-muted-foreground'"

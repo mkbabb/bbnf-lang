@@ -93,7 +93,7 @@ function onNodeClick(node: FlowNode) {
                     />
                     <div class="pl-2 flex-1 flex items-center justify-between gap-2">
                         <span class="text-sm font-mono font-medium text-foreground">{{ node.label }}</span>
-                        <span v-if="node.detail" class="text-[10px] font-mono text-muted-foreground truncate max-w-[180px]">
+                        <span v-if="node.detail" class="text-xs font-mono text-muted-foreground truncate max-w-[180px]">
                             {{ node.detail }}
                         </span>
                     </div>

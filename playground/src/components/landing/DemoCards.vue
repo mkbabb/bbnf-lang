@@ -72,7 +72,7 @@ const demos = [
 <template>
     <section class="max-w-5xl mx-auto px-4 sm:px-8 py-10 sm:py-16">
         <h2 class="instrument-serif text-2xl sm:text-3xl text-center mb-2 sm:mb-3">Guided walkthroughs</h2>
-        <p class="text-sm text-muted-foreground text-center mb-6 sm:mb-8">Step-by-step demos in the playground — click to begin.</p>
+        <p class="text-base text-muted-foreground text-center mb-6 sm:mb-8">Step-by-step demos in the playground — click to begin.</p>
 
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             <router-link
@@ -89,7 +89,7 @@ const demos = [
                 >
                     <component :is="demo.icon" class="h-5 w-5 sm:h-6 sm:w-6 mb-2 sm:mb-3" :class="demo.iconClass" />
                     <h3 class="instrument-serif text-base sm:text-lg mb-1 sm:mb-2">{{ demo.title }}</h3>
-                    <p class="text-xs text-muted-foreground leading-relaxed mb-3">
+                    <p class="text-sm text-muted-foreground leading-relaxed mb-3">
                         <template v-for="(part, i) in demo.parts" :key="i">
                             <code
                                 v-if="part.code"

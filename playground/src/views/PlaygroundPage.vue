@@ -333,7 +333,7 @@ watch([leftTab, rightTab], () => {
                         </button>
                     </TooltipTrigger>
                     <TooltipContent side="top" :side-offset="8" class="max-w-xs border-border/40 bg-card/90 backdrop-blur-xl">
-                        <p class="text-xs sm:text-sm">
+                        <p class="text-sm sm:text-base">
                             Drag to resize the panes. Use arrow keys for fine adjustments and double-click to reset.
                         </p>
                     </TooltipContent>

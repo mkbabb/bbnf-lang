@@ -63,7 +63,7 @@ async function run() {
         <!-- Grammar -->
         <div class="border-b border-border/20">
             <div class="flex items-center justify-between px-3 py-1.5 bg-muted/10">
-                <span class="text-[10px] font-mono font-semibold text-muted-foreground uppercase tracking-wider">Grammar</span>
+                <span class="text-xs font-mono font-semibold text-muted-foreground uppercase tracking-wider">Grammar</span>
             </div>
             <pre class="px-4 py-3 text-sm font-mono overflow-x-auto !mt-0"><code v-if="data.highlighted" v-html="data.highlighted" /><code v-else>{{ data.grammar }}</code></pre>
         </div>
@@ -71,7 +71,7 @@ async function run() {
         <!-- Input -->
         <div class="border-b border-border/20">
             <div class="flex items-center justify-between px-3 py-1.5 bg-muted/10">
-                <span class="text-[10px] font-mono font-semibold text-muted-foreground uppercase tracking-wider">Input</span>
+                <span class="text-xs font-mono font-semibold text-muted-foreground uppercase tracking-wider">Input</span>
             </div>
             <pre class="px-4 py-3 text-sm font-mono overflow-x-auto !mt-0"><code>{{ data.input }}</code></pre>
         </div>
@@ -81,7 +81,7 @@ async function run() {
             <button
                 @click="run"
                 :disabled="running"
-                class="self-start flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-mono font-medium transition-colors"
+                class="self-start flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-mono font-medium transition-colors"
                 :class="running
                     ? 'bg-muted/20 text-muted-foreground cursor-wait'
                     : 'bg-foreground/10 text-foreground hover:bg-foreground/20 cursor-pointer'"

@@ -33,7 +33,7 @@ const copyLabel = computed(() => props.activeResultLabel === "Parsed AST" ? "Cop
                 </button>
             </TooltipTrigger>
             <TooltipContent side="top" :side-offset="8" class="max-w-xs border-border/40 bg-card/90 backdrop-blur-xl">
-                <p class="text-xs sm:text-sm">{{ copyLabel }}</p>
+                <p class="text-sm sm:text-base">{{ copyLabel }}</p>
             </TooltipContent>
         </Tooltip>
 
@@ -48,7 +48,7 @@ const copyLabel = computed(() => props.activeResultLabel === "Parsed AST" ? "Cop
                 </button>
             </TooltipTrigger>
             <TooltipContent side="top" :side-offset="8" class="max-w-xs border-border/40 bg-card/90 backdrop-blur-xl">
-                <p class="text-xs sm:text-sm">Share Link</p>
+                <p class="text-sm sm:text-base">Share Link</p>
             </TooltipContent>
         </Tooltip>
 
@@ -63,7 +63,7 @@ const copyLabel = computed(() => props.activeResultLabel === "Parsed AST" ? "Cop
                 </button>
             </TooltipTrigger>
             <TooltipContent side="top" :side-offset="8" class="max-w-xs border-border/40 bg-card/90 backdrop-blur-xl">
-                <p class="text-xs sm:text-sm">Reset playground</p>
+                <p class="text-sm sm:text-base">Reset playground</p>
             </TooltipContent>
         </Tooltip>
 

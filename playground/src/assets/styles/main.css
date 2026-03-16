@@ -204,8 +204,8 @@
 /* Headings */
 .prose h1 {
     font-family: var(--font-serif);
-    font-size: 2.25rem;
-    margin-top: 0;
+    @apply text-4xl;
+    margin-top: 0.5rem;
     margin-bottom: 1rem;
     color: hsl(var(--foreground));
     border-bottom: 2px solid hsl(var(--border) / 0.4);
@@ -213,7 +213,7 @@
 }
 .prose h2 {
     font-family: var(--font-serif);
-    font-size: 1.5rem;
+    @apply text-2xl;
     margin-top: 2.5rem;
     margin-bottom: 0.75rem;
     border-bottom: 1px solid hsl(var(--border) / 0.3);
@@ -222,7 +222,7 @@
 }
 .prose h3 {
     font-family: var(--font-serif);
-    font-size: 1.25rem;
+    @apply text-xl;
     margin-top: 1.75rem;
     margin-bottom: 0.5rem;
     color: hsl(var(--foreground) / 0.95);
@@ -232,8 +232,7 @@
 
 /* Body text */
 .prose p {
-    font-size: 0.875rem;
-    line-height: 1.75;
+    @apply text-base leading-relaxed;
     color: hsl(var(--foreground) / 0.85);
     margin-bottom: 1rem;
 }
@@ -258,8 +257,7 @@
     overflow-x: auto;
     margin-bottom: 0;
     font-family: var(--font-mono);
-    font-size: 0.8rem;
-    line-height: 1.7;
+    @apply text-sm leading-relaxed;
     border: none;
 }
 
@@ -324,7 +322,7 @@
 /* Tables — card-styled */
 .prose table {
     width: 100%;
-    font-size: 0.8rem;
+    @apply text-sm;
     border-collapse: collapse;
     margin-bottom: 1.25rem;
     border-radius: 0.5rem;
@@ -344,7 +342,7 @@
     font-family: var(--font-mono);
     font-weight: 500;
     text-align: left;
-    font-size: 0.75rem;
+    @apply text-xs;
     text-transform: uppercase;
     letter-spacing: 0.03em;
     color: hsl(var(--muted-foreground));
@@ -354,8 +352,8 @@
 }
 
 /* Lists */
-.prose ul { list-style: disc; padding-left: 1.5rem; margin-bottom: 1rem; font-size: 0.875rem; line-height: 1.75; }
-.prose ol { list-style: decimal; padding-left: 1.5rem; margin-bottom: 1rem; font-size: 0.875rem; line-height: 1.75; }
+.prose ul { list-style: disc; padding-left: 1.5rem; margin-bottom: 1rem; @apply text-base leading-relaxed; }
+.prose ol { list-style: decimal; padding-left: 1.5rem; margin-bottom: 1rem; @apply text-base leading-relaxed; }
 .prose li { margin-bottom: 0.35rem; color: hsl(var(--foreground) / 0.85); }
 
 /* Strong/em */

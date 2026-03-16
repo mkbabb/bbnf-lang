@@ -51,12 +51,12 @@ const indentModel = computed({
                 <DialogTrigger as-child>
                     <button class="flex h-9 items-center gap-1.5 rounded-xl border border-border/35 bg-background/30 px-2.5 text-muted-foreground transition-all hover:border-border/55 hover:bg-background/45 hover:text-foreground sm:h-10">
                         <Settings2 class="h-4 w-4 shrink-0" />
-                        <span class="hidden font-mono text-xs sm:inline">{{ printerConfig.maxWidth }}w · {{ indentLabel }}</span>
+                        <span class="hidden font-mono text-sm sm:inline">{{ printerConfig.maxWidth }}w · {{ indentLabel }}</span>
                     </button>
                 </DialogTrigger>
             </TooltipTrigger>
             <TooltipContent side="top" :side-offset="8" class="max-w-xs border-border/40 bg-card/90 backdrop-blur-xl">
-                <p class="text-xs sm:text-sm">Tune print width and indentation for the formatter output.</p>
+                <p class="text-sm sm:text-base">Tune print width and indentation for the formatter output.</p>
             </TooltipContent>
         </Tooltip>
         <DialogContent class="max-w-sm">

@@ -5,7 +5,7 @@
 
 use std::collections::HashSet;
 
-use bbnf_ir::{GrammarIR, IrNode, RuleId};
+use bbnf_ir::{FnDescriptor, GrammarIR, IrNode, RuleId};
 
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
@@ -35,8 +35,33 @@ fn unwrap_map(node: &IrNode) -> &IrNode {
     }
 }
 
+/// Strip `Map` wrappers (EnumWrap, BoxWrap) from a node whose result will be discarded.
+fn strip_discarded_maps_span<'a>(node: &'a IrNode, ctx: &IrCodegenCtx<'_>) -> &'a IrNode {
+    match node {
+        IrNode::Map { inner, fn_id } => {
+            let fd = &ctx.ir.fns[*fn_id as usize];
+            match fd {
+                FnDescriptor::EnumWrap { .. } | FnDescriptor::BoxWrap => {
+                    strip_discarded_maps_span(inner, ctx)
+                }
+                _ => node,
+            }
+        }
+        _ => node,
+    }
+}
+
+/// Strip `OptionalWhitespace` from separator in sep_by_ws_span context.
+fn strip_separator_ow_span(node: &IrNode) -> &IrNode {
+    match node {
+        IrNode::OptionalWhitespace(inner) => inner.as_ref(),
+        _ => node,
+    }
+}
+
 /// Recursively generate a SpanParser expression for an IrNode.
-fn try_ir_span_expr(node: &IrNode, ctx: &IrCodegenCtx<'_>) -> Option<TokenStream> {
+/// `pub(super)` so `ir_codegen` can call it for inlined dispatch branches.
+pub(super) fn try_ir_span_expr(node: &IrNode, ctx: &IrCodegenCtx<'_>) -> Option<TokenStream> {
     match node {
         IrNode::Literal(sid) => {
             let raw = ctx.ir.get_string(*sid);
@@ -111,6 +136,27 @@ fn try_ir_span_expr(node: &IrNode, ctx: &IrCodegenCtx<'_>) -> Option<TokenStream
         }
 
         IrNode::Repeat { inner, lo, hi } => {
+            // sep_by_span detection: Repeat { inner: Skip(elem, Repeat { sep, 0, 1 }) }
+            if !(*lo == 0 && *hi == 1) {
+                if let IrNode::Skip(element, opt_sep) = inner.as_ref() {
+                    if let IrNode::Repeat {
+                        inner: separator,
+                        lo: 0,
+                        hi: 1,
+                    } = opt_sep.as_ref()
+                    {
+                        // Fix 5: strip discarded Map wrappers from separator.
+                        let separator = strip_discarded_maps_span(separator, ctx);
+                        let elem_ts = try_ir_span_expr(element, ctx)?;
+                        let sep_ts = try_ir_span_expr(separator, ctx)?;
+                        let lo_usize = *lo as usize;
+                        return Some(
+                            quote! { #elem_ts.sep_by_span(#sep_ts, #lo_usize..) },
+                        );
+                    }
+                }
+            }
+
             let inner_ts = try_ir_span_expr(inner, ctx)?;
             if *lo == 0 && *hi == 1 {
                 Some(quote! { #inner_ts.opt_span() })
@@ -125,12 +171,26 @@ fn try_ir_span_expr(node: &IrNode, ctx: &IrCodegenCtx<'_>) -> Option<TokenStream
         }
 
         IrNode::Skip(left, right) => {
+            // wrap_span detection: Skip(Next(open, middle), close)
+            if let IrNode::Next(open, middle) = left.as_ref() {
+                let o = try_ir_span_expr(open, ctx)?;
+                let m = try_ir_span_expr(middle, ctx)?;
+                let c = try_ir_span_expr(right, ctx)?;
+                return Some(quote! { #m.wrap_span(#o, #c) });
+            }
             let l = try_ir_span_expr(left, ctx)?;
             let r = try_ir_span_expr(right, ctx)?;
             Some(quote! { #l.skip_span(#r) })
         }
 
         IrNode::Next(left, right) => {
+            // wrap_span detection: Next(open, Skip(middle, close))
+            if let IrNode::Skip(middle, close) = right.as_ref() {
+                let o = try_ir_span_expr(left, ctx)?;
+                let m = try_ir_span_expr(middle, ctx)?;
+                let c = try_ir_span_expr(close, ctx)?;
+                return Some(quote! { #m.wrap_span(#o, #c) });
+            }
             let l = try_ir_span_expr(left, ctx)?;
             let r = try_ir_span_expr(right, ctx)?;
             Some(quote! { #l.next_after(#r) })
@@ -148,6 +208,35 @@ fn try_ir_span_expr(node: &IrNode, ctx: &IrCodegenCtx<'_>) -> Option<TokenStream
         }
 
         IrNode::OptionalWhitespace(inner) => {
+            // sep_by_ws_span detection: OptionalWhitespace(Repeat { Skip(elem, Repeat { sep, 0, 1 }) })
+            if let IrNode::Repeat {
+                inner: rep_inner,
+                lo,
+                hi,
+            } = inner.as_ref()
+            {
+                if !(*lo == 0 && *hi == 1) {
+                    if let IrNode::Skip(element, opt_sep) = rep_inner.as_ref() {
+                        if let IrNode::Repeat {
+                            inner: separator,
+                            lo: 0,
+                            hi: 1,
+                        } = opt_sep.as_ref()
+                        {
+                            // Fix 5+6: strip discarded Map wrappers and redundant OW.
+                            let separator = strip_discarded_maps_span(separator, ctx);
+                            let separator = strip_separator_ow_span(separator);
+                            let elem_ts = try_ir_span_expr(element, ctx)?;
+                            let sep_ts = try_ir_span_expr(separator, ctx)?;
+                            let lo_usize = *lo as usize;
+                            return Some(
+                                quote! { #elem_ts.sep_by_ws_span(#sep_ts, #lo_usize..) },
+                            );
+                        }
+                    }
+                }
+            }
+
             let inner_ts = try_ir_span_expr(inner, ctx)?;
             Some(quote! { #inner_ts.trim_whitespace() })
         }

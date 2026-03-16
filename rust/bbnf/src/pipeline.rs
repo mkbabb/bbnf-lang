@@ -176,6 +176,7 @@ pub fn compile_ast<'a>(
     bbnf_ir::passes::inline_acyclic(&mut ir);
     bbnf_ir::passes::eliminate_epsilon(&mut ir);
     bbnf_ir::passes::merge_literals(&mut ir);
+    bbnf_ir::passes::merge_regex_alts(&mut ir);
     bbnf_ir::passes::factor_common_prefixes(&mut ir);
     bbnf_ir::passes::refine_span_eligibility(&mut ir);
 
@@ -437,23 +438,26 @@ number = /-?\d+/ ;
         bbnf_ir::passes::merge_literals(&mut ir);
         assert!(test_parse(&ir, "5-merge_literals"), "merge_literals broke it");
 
+        bbnf_ir::passes::merge_regex_alts(&mut ir);
+        assert!(test_parse(&ir, "6-merge_regex_alts"), "merge_regex_alts broke it");
+
         bbnf_ir::passes::factor_common_prefixes(&mut ir);
-        assert!(test_parse(&ir, "6-factor_common_prefixes"), "factor_common_prefixes broke it");
+        assert!(test_parse(&ir, "7-factor_common_prefixes"), "factor_common_prefixes broke it");
 
         bbnf_ir::passes::refine_span_eligibility(&mut ir);
-        assert!(test_parse(&ir, "7-refine_span_eligibility"), "refine_span_eligibility broke it");
+        assert!(test_parse(&ir, "8-refine_span_eligibility"), "refine_span_eligibility broke it");
 
         ir.follow_sets = bbnf_ir::passes::compute_follow_sets(&ir);
-        assert!(test_parse(&ir, "8-compute_follow_sets"), "compute_follow_sets broke it");
+        assert!(test_parse(&ir, "9-compute_follow_sets"), "compute_follow_sets broke it");
 
         bbnf_ir::passes::generate_dispatch_tables(&mut ir);
-        assert!(test_parse(&ir, "9-generate_dispatch_tables"), "generate_dispatch_tables broke it");
+        assert!(test_parse(&ir, "10-generate_dispatch_tables"), "generate_dispatch_tables broke it");
 
         bbnf_ir::passes::refine_memo_strategies(&mut ir);
-        assert!(test_parse(&ir, "10-refine_memo_strategies"), "refine_memo_strategies broke it");
+        assert!(test_parse(&ir, "11-refine_memo_strategies"), "refine_memo_strategies broke it");
 
         bbnf_ir::passes::infer_types(&mut ir);
-        assert!(test_parse(&ir, "11-infer_types"), "infer_types broke it");
+        assert!(test_parse(&ir, "12-infer_types"), "infer_types broke it");
     }
 
     #[test]

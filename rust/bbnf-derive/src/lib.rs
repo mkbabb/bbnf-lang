@@ -246,6 +246,7 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     bbnf_ir::passes::inline_acyclic(&mut grammar_ir);
     bbnf_ir::passes::eliminate_epsilon(&mut grammar_ir);
     bbnf_ir::passes::merge_literals(&mut grammar_ir);
+    bbnf_ir::passes::merge_regex_alts(&mut grammar_ir);
     bbnf_ir::passes::factor_common_prefixes(&mut grammar_ir);
     bbnf_ir::passes::refine_span_eligibility(&mut grammar_ir);
     grammar_ir.follow_sets = bbnf_ir::passes::compute_follow_sets(&grammar_ir);

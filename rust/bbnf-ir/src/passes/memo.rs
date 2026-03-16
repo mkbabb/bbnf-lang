@@ -44,7 +44,15 @@ pub fn refine_memo_strategies(ir: &mut GrammarIR) {
             // Only memoize SCC entry points — other cyclic rules are reached
             // through the entry point which already has the cache.
             if scc_entries.contains(&rule.id) {
-                MemoStrategy::Full
+                // Fix 7: If the rule body has a total dispatch table (all branches
+                // have disjoint FIRST sets), skip memoization. The dispatch table
+                // provides O(1) branch selection, preventing redundant parsing at
+                // the same offset — making memoization redundant overhead.
+                if body_has_total_dispatch(&rule.body) {
+                    MemoStrategy::None
+                } else {
+                    MemoStrategy::Full
+                }
             } else {
                 MemoStrategy::None
             }
@@ -78,6 +86,31 @@ pub fn refine_memo_strategies(ir: &mut GrammarIR) {
                 MemoStrategy::None
             }
         };
+    }
+}
+
+/// Check if a rule body has a total dispatch table (all Alt branches covered).
+/// Looks through Map wrappers to find the underlying Alt node.
+/// A "total" dispatch means: every branch index appears in the dispatch table,
+/// so the dispatch provides O(1) branch selection without ambiguity — making
+/// memoization for cycle termination unnecessary when the grammar's FIRST sets
+/// are fully disjoint.
+fn body_has_total_dispatch(node: &IrNode) -> bool {
+    match node {
+        IrNode::Alt(branches, Some(dispatch)) => {
+            // Verify dispatch covers all branches: every branch index 0..n
+            // must appear at least once in the table.
+            let n = branches.len();
+            let mut covered = vec![false; n];
+            for &entry in &dispatch.table {
+                if (entry as usize) < n {
+                    covered[entry as usize] = true;
+                }
+            }
+            covered.iter().all(|&c| c)
+        }
+        IrNode::Map { inner, .. } => body_has_total_dispatch(inner),
+        _ => false,
     }
 }
 

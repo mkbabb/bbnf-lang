@@ -20,9 +20,12 @@ bbnf/
 │   │   ├── regex_first.rs regex_first_chars + helpers
 │   │   ├── dispatch.rs   DispatchTable, FIRST set conflict detection
 │   │   └── metadata.rs   Ref counts, aliases, transparent alternations, span-eligibility
+│   ├── lower.rs         AST-to-IR lowering (Grammar → GrammarIR)
+│   ├── pipeline.rs      Full lowering + codegen orchestrator (12-pass sequence)
 │   ├── generate/
 │   │   ├── mod.rs        Re-exports + orchestrator
 │   │   ├── types.rs      ParserAttributes, GeneratedNonterminalParser, caches
+│   │   ├── fast_paths.rs JSON pattern detection, SIMD-accelerated parser fast paths
 │   │   ├── ir_codegen/   IR-based Rust codegen (split from monolithic ir_codegen.rs)
 │   │   │   ├── mod.rs    Entry point, generate_all(), expression dispatch
 │   │   │   ├── alt.rs    Alternation codegen (dispatch tables, sub-variants)
@@ -30,9 +33,14 @@ bbnf/
 │   │   │   ├── repeat.rs Repetition codegen (many, sep_by, optional)
 │   │   │   ├── wrap.rs   Skip/Next/Minus/Negate codegen
 │   │   │   └── infer.rs  IrNode → syn::Type inference
+│   │   ├── ir_enums.rs   Enum type generation from IR alternations
+│   │   ├── ir_types.rs   IR-level type inference and mapping
+│   │   ├── ir_pretty.rs  IR pretty-printing for debug output
 │   │   ├── ir_span.rs    SpanParser dual-method codegen
 │   │   └── prettify/
-│   │       ├── mod.rs          @pretty codegen: to_doc() + source_range() emission
+│   │       ├── mod.rs          @pretty codegen orchestrator
+│   │       ├── to_doc.rs       to_doc() impl emission
+│   │       ├── source_range.rs source_range() impl emission (single-pass min/max fold)
 │   │       ├── prettify_utils.rs  Type helpers, expression unwrapping
 │   │       ├── heuristics.rs   Auto-infer @pretty hints from rule shape
 │   │       └── hints.rs        HINT_DEFS — shared hint names + descriptions
@@ -42,7 +50,11 @@ bbnf/
     ├── common/mod.rs     Shared helpers: nt(), lit()
     ├── analysis.rs       CharSet, regex_first, Tarjan SCC, ref counts, dispatch tables
     ├── optimize.rs       Left-recursion elimination
-    └── imports.rs        Module graph loading (tempfile-based)
+    ├── imports.rs        Module graph loading (tempfile-based)
+    ├── lower.rs          AST-to-IR lowering tests
+    ├── pipeline.rs       Full pipeline integration tests
+    ├── recover.rs        @recover directive parsing and codegen
+    └── regex_charclass.rs  Regex character class extraction tests
 ```
 
 ## Key Types
@@ -79,7 +91,7 @@ Emits `proc_macro2::TokenStream` for Rust parser methods. Two codegen paths:
 - **ir_codegen/**: IR-based Rust codegen. Takes a `GrammarIR` and produces `TokenStream`. Split into sub-modules: `alt.rs` (alternation + dispatch tables), `seq.rs` (concatenation), `repeat.rs` (repetition + sep_by), `wrap.rs` (skip/next/minus/negate), `infer.rs` (IrNode → syn::Type).
 - **ir_span.rs**: SpanParser dual-method codegen—generates `rule_sp()` alongside `rule()` for span-eligible rules.
 - **types.rs**: `ParserAttributes`, `GeneratedNonterminalParser`, cache types, `DEFAULT_PARSERS`.
-- **prettify/**: `@pretty` directive codegen. `mod.rs` emits `to_doc()` + `source_range()` impls. `source_range()` codegen uses single-pass min/max fold instead of Vec allocation. `heuristics.rs` auto-infers hints from rule shape (toplevel, brace-delimited, large compound). `hints.rs` is the single source of truth for hint names/descriptions (shared with LSP).
+- **prettify/**: `@pretty` directive codegen. `to_doc.rs` emits `to_doc()` impls, `source_range.rs` emits `source_range()` impls (single-pass min/max fold instead of Vec allocation). `heuristics.rs` auto-infers hints from rule shape (toplevel, brace-delimited, large compound). `hints.rs` is the single source of truth for hint names/descriptions (shared with LSP).
 
 Acyclic rules inline up to a depth limit. Non-acyclic rules wrapped in `lazy(|| ...)`.
 

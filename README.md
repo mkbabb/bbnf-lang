@@ -14,7 +14,7 @@ rust/                   Rust workspace
   bbnf/                 BBNF grammar framework, IR lowering, codegen (lib)
   bbnf-ir/              Canonical grammar IR, bytecode compiler, interpreter
   bbnf-derive/          Proc-macro derive for BBNF
-  bbnf-analysis/        Shared analysis (DocumentState, LSP providers)
+  bbnf-analysis/        LSP analysis engine (DocumentState, feature providers)
   lsp/                  Language Server Protocol server
 wasm/                   bbnf-wasm crate (wasm-pack → playground, bytecode VM)
 typescript/             TS library (@mkbabb/bbnf-lang)
@@ -22,9 +22,14 @@ prettier-plugin-bbnf/   Prettier plugin for .bbnf files
 playground/             Vue 3 + Monaco playground (uses bbnf-wasm)
 extension/              VS Code extension (LSP client)
 grammar/                Example grammars + language specification
-  css/                  CSS grammar family (value-unit, color, values, selectors, keyframes, stylesheet)
+  css/                  CSS grammar family (value-unit, color, values, selectors, keyframes, stylesheet, css-tokens, css-stylesheet-pretty)
   lang/                 Language/format grammars (JSON, CSV, math, regex, EBNF, Google Sheets, etc.)
+docs/                   Documentation (markdown, rendered by playground)
+scripts/                Build automation scripts
+data/                   Benchmark datasets
 server/                 Compiled LSP binary (copied by Makefile)
+.github/workflows/      CI + release pipeline
+.vscode/                Launch configs, tasks, settings
 ```
 
 ## Language
@@ -153,7 +158,7 @@ Four panes, two visible at a time:
 | **Formatted** | Pretty-printed output via `@pretty` directives |
 
 Formatting uses [gorgeous](https://github.com/mkbabb/gorgeous) (WASM) for
-built-in languages (JSON, CSS, BBNF, Google Sheets) and falls back to a
+built-in languages (JSON, CSS, BNF, EBNF, BBNF) and falls back to a
 bytecode VM interpreter for custom grammars. A telemetry badge shows parse/format timings.
 
 ### Walkthroughs
@@ -169,8 +174,8 @@ Each walkthrough steps through grammar/input mutations with annotated overlays.
 
 ### Docs
 
-Built-in documentation covering parse-that, BBNF, pprint, and gorgeous—rendered
-from Markdown with section-themed navigation and code blocks.
+Built-in documentation covering parse-that, BBNF, pprint, gorgeous, and
+performance—rendered from Markdown with section-themed navigation and code blocks.
 
 ## Architecture
 
@@ -190,23 +195,49 @@ over the parsed AST, run before code generation or diagnostics:
 5. **Dispatch tables**—when an alternation's branches have disjoint FIRST sets, the
    codegen emits an O(1) character-dispatch lookup instead of ordered trial.
 
+### IR Pipeline
+
+Grammar → `lower.rs` → `GrammarIR` → 12-pass optimization → bytecode VM or Rust codegen.
+
+The 12 passes (in order):
+
+1. `canonicalize_aliases` — resolve `A = B` chains
+2. `prune_unreachable` — remove rules unreachable from entry
+3. `inline_acyclic` — inline non-recursive rules up to depth limit
+4. `eliminate_epsilon` — remove empty alternatives
+5. `merge_literals` — coalesce adjacent string literals
+6. `merge_regex_alts` — fuse `Alt([Regex, ...])` into a single pattern
+7. `factor_common_prefixes` — left-factor shared prefixes in alternations
+8. `refine_span_eligibility` — mark rules eligible for SpanParser dual methods
+9. `compute_follow_sets` — FOLLOW sets for context-sensitive decisions
+10. `generate_dispatch_tables` — O(1) byte-dispatch for disjoint FIRST sets
+11. `refine_memo_strategies` — decide memoization per rule
+12. `infer_types` — IrNode → `syn::Type` for Rust codegen
+
+Two backends consume the optimized IR: a bytecode VM (WASM playground) and Rust
+`TokenStream` emission (proc-macro). `pipeline.rs` orchestrates the sequence;
+`bbnf-derive` mirrors the same 12-pass order.
+
 ### Codegen Optimizations
 
-`ASTToParser` (TS) and the `generate` module (Rust) apply these
-optimizations during code generation:
+The IR pipeline and the `generate` module (Rust) apply these optimizations:
 
 - **Dispatch tables**: Disjoint FIRST sets on alternation branches produce O(1)
-  character dispatch via `dispatch()`.
-- **Regex coalescing**: Alternations of single-character literals collapse into a
-  single regex character class.
+  character dispatch.
+- **Regex coalescing**: Alternations of literals and adjacent regex patterns collapse
+  into single character classes.
 - **Pattern detection**: `sepBy`, `wrap`, and all-literal alternation patterns are
   recognized and compiled to specialized combinators.
-- **Lazy nonterminal refs**: All nonterminal references use `Parser.lazy()`, enabling
-  post-generation parser customization (e.g., mapping `number` to `parseFloat`).
-- **Alias chain resolution**: `A = B ;` rules are resolved transitively so references
-  to `A` use `B`'s parser directly.
+- **Lazy nonterminal refs**: Non-acyclic rules use `lazy(|| ...)`, enabling
+  post-generation parser customization.
+- **Alias chain resolution**: `A = B` chains resolved transitively so references
+  use the terminal parser directly.
 - **Left-recursion elimination**: Direct left recursion via tail-rule extraction
-  (Paull's algorithm); indirect left recursion via substitution on the topological order.
+  (Paull's algorithm); indirect via substitution on topological order.
+- **SpanParser dual methods**: Span-eligible rules generate both `rule()` and
+  `rule_sp()` for zero-copy parsing.
+- **JSON fast-paths**: Pattern-detect canonical string/number regexes →
+  SIMD-accelerated parsers.
 
 ## Build & Test
 
@@ -323,16 +354,16 @@ Current test coverage (~51 integration tests):
 - Cross-file: go-to-definition, references, completion via `@import`
 - Large grammar (8-rule JSON grammar, all features combined)
 
-TypeScript test coverage (117 tests across 8 suites):
+TypeScript test suites:
 
-- **bbnf.test.ts** (17)—end-to-end grammar parsing: JSON, CSV, CSS color/selectors/values/keyframes/value-unit, math, regex, EBNF, BBNF self-parse, left-recursion, Google Sheets
-- **imports.test.ts** (13)—module graph: glob/selective imports, cyclic (2-way, 3-way, self), diamond deps, transitive unfurling, non-transitive scope, merge precedence
-- **analysis.test.ts** (22)—Tarjan SCC, dep graphs, ref counts, aliases, transparent alternations, FIRST set conflicts, acyclic classification
-- **optimize.test.ts** (13)—topological sort, direct/indirect left-recursion elimination, common prefix detection
-- **first-sets.test.ts** (17)—`regexFirstChars` dispatch, `CharSet` operations, `computeFirstSets` convergence, `buildDispatchTable` routing
-- **recover.test.ts** (8)—`@recover` parsing, codegen `.recover()` wrapping, multi-error collection
-- **css-stylesheet.test.ts** (11)—`css-stylesheet.bbnf` with `@recover` annotations, complex-errors.css recovery
-- **google-sheets.test.ts** (16)—Google Sheets formula grammar parsing and formatting
+- **bbnf.test.ts** — end-to-end grammar parsing: JSON, CSV, CSS, math, regex, EBNF, BBNF self-parse, left-recursion, Google Sheets
+- **imports.test.ts** — module graph: glob/selective imports, cyclic (2-way, 3-way, self), diamond deps, transitive unfurling, merge precedence
+- **analysis.test.ts** — Tarjan SCC, dep graphs, ref counts, aliases, transparent alternations, FIRST set conflicts, dispatch tables, acyclic classification
+- **optimize.test.ts** — topological sort, direct/indirect left-recursion elimination, common prefix detection
+- **first-sets.test.ts** — `regexFirstChars` dispatch, `CharSet` operations, `computeFirstSets` convergence, `buildDispatchTable` routing
+- **recover.test.ts** — `@recover` parsing, codegen `.recover()` wrapping, multi-error collection
+- **css-stylesheet.test.ts** — `css-stylesheet.bbnf` with `@recover` annotations, multi-error recovery
+- **google-sheets.test.ts** — Google Sheets formula grammar parsing and formatting
 
 ### Developing the Prettier Plugin
 
@@ -379,7 +410,7 @@ https://dev.azure.com with the "Marketplace (Manage)" scope.
 ## Sources, acknowledgements, &c.
 
 - [Extended Backus-Naur form](https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form) — ISO 14977. BBNF's ancestor.
-- Wheeler, D. A. [Don't Use ISO 14977 EBNF](https://dwheeler.com/essays/dont-use-iso-14977-bbnf.html). — Motivation for BBNF's syntactic deviations.
+- Wheeler, D. A. [Don't Use ISO 14977 EBNF](https://dwheeler.com/essays/dont-use-iso-14977-ebnf.html). — Motivation for BBNF's syntactic deviations.
 - Aho, A. V., Lam, M. S., Sethi, R., & Ullman, J. D. (2006). *Compilers: Principles, Techniques, and Tools* (2nd ed.). Addison-Wesley. — Left recursion, left factoring, FIRST/FOLLOW sets.
 - Tarjan, R. E. (1972). Depth-first search and linear graph algorithms. *SIAM Journal on Computing*. — SCC detection used for cycle analysis, FIRST-set propagation, and build ordering.
 - [Language Server Protocol](https://microsoft.github.io/language-server-protocol/). Microsoft. — The protocol implemented by `bbnf-lsp`.

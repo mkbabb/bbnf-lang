@@ -10,7 +10,7 @@ rust/
 ├── bbnf/               Core library: grammar parsing, analysis, Rust codegen
 ├── bbnf-ir/            Canonical grammar IR, passes, bytecode compiler, interpreter
 ├── bbnf-derive/        Proc-macro crate: #[derive(Parser)]
-├── bbnf-analysis/      Shared analysis (DocumentState, LSP providers)
+├── bbnf-analysis/      LSP analysis engine (DocumentState, 14 feature providers)
 └── lsp/                Language server binary (bbnf-lsp)
 ```
 
@@ -32,7 +32,9 @@ cargo clippy --all-targets -- -D warnings  # Lint (CI enforces this)
 - **syn/quote/proc-macro2**: Rust code generation
 - **tower-lsp-server**: LSP protocol (lsp crate only)
 - **tokio**: Async runtime (lsp crate only)
-- **self_cell**: Self-referential structs for AST caching (lsp crate only)
+- **self_cell**: Self-referential structs for AST caching (bbnf-analysis crate)
+- **ls-types**: LSP type definitions (bbnf-analysis crate)
+- **bbnf-analysis**: Workspace path dep — LSP analysis engine, feature providers
 
 ## Architecture
 

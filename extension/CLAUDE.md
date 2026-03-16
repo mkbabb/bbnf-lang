@@ -6,7 +6,7 @@ VS Code extension: LSP client for `.bbnf` files. Thin wrapper around `bbnf-lsp`.
 
 ```
 extension/
-├── package.json                    Extension manifest (v1.0.3, publisher: mkbabb)
+├── package.json                    Extension manifest (publisher: mkbabb)
 ├── esbuild.mjs                     Build config (CJS bundle, vscode external)
 ├── tsconfig.json                   ES2022, strict, bundler resolution
 ├── language-configuration.json     Comments (// and /* */), brackets, auto-close

@@ -6,7 +6,7 @@ Prettier plugin for formatting `.bbnf` grammar files.
 
 ```
 prettier-plugin-bbnf/
-├── package.json        v0.1.0, ESM, peer: prettier ^3.0.0
+├── package.json        v0.1.1, ESM, peer: prettier ^3.0.0
 ├── tsconfig.json       ES2022, strict
 ├── vite.config.ts      Library build (ES only), externals: prettier, @mkbabb/bbnf-lang
 ├── src/
@@ -19,7 +19,7 @@ prettier-plugin-bbnf/
 
 ## Formatting Rules
 
-- **Print width**: 66 (hardcoded).
+- **Print width**: 66 (default).
 - **Tab width**: 4 spaces.
 - **Literals**: Double-quoted (single-quoted if value contains `"`).
 - **Epsilon**: `ε` (Unicode).
@@ -42,7 +42,9 @@ prettier-plugin-bbnf/
 
 ```bash
 # Must build @mkbabb/bbnf-lang first (npm workspace dependency)
+npm ci
 cd ../typescript && npm run build
+cd ../prettier-plugin-bbnf
 npm test        # vitest
 npm run build   # vite → dist/prettier-plugin-bbnf.js
 ```

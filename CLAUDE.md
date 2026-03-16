@@ -12,14 +12,14 @@ bbnf-lang/
 │   ├── bbnf/                   Core grammar parser, IR lowering, codegen (lib)
 │   ├── bbnf-ir/                Canonical grammar IR, bytecode compiler, interpreter
 │   ├── bbnf-derive/            Proc-macro: #[derive(Parser)] from .bbnf files
-│   ├── bbnf-analysis/          Shared analysis types (DocumentState, LSP providers)
+│   ├── bbnf-analysis/          LSP analysis engine (DocumentState, 14 feature providers, state management)
 │   └── lsp/                    Language server (bbnf-lsp binary)
 ├── wasm/                       bbnf-wasm crate (wasm-pack → playground)
 │   └── src/                    lib.rs + analysis.rs, gorgeous.rs, lsp.rs, vm.rs
 ├── typescript/                 @mkbabb/bbnf-lang — runtime parser + codegen
 ├── prettier-plugin-bbnf/       Prettier plugin for .bbnf formatting
 ├── playground/                 Vue 3 + Monaco playground (uses bbnf-wasm)
-│   └── src/composables/        wasm/, usePlaygroundQuery, useSplitPane, usePipeline, useLanguageProvider, useExamples
+│   └── src/composables/        wasm/, usePlaygroundQuery, useSplitPane, usePipeline, useExamples, useWalkthrough, useDocs, useHeroState, useTypewriter, useMouseParallax, useScrollTimeline, useScrollMorph, useMarkdownComponents, useChartData
 ├── extension/                  VS Code extension (LSP client)
 ├── docs/                       Documentation (markdown, rendered by playground)
 ├── grammar/                    Example grammars + language specification
@@ -124,13 +124,13 @@ bbnf-lsp uses workspace-relative paths to bbnf; cross-repo deps are version-only
 - **Type comparison**: `types_eq()` compares `syn::Type` structurally via per-token-tree comparison—no string serialization.
 - **Sub-variant validation**: `validate_sub_variant_uniqueness()` rejects cross-rule type collisions at compile time.
 - **JSON pattern detection**: Exact-match against canonical regex patterns (no substring heuristics). `is_json_string_regex()` / `is_json_number_regex()` use `const` pattern arrays.
-- **WASM**: `wasm/` crate (`bbnf-wasm`) — 28 exports total: 6 formatters (json/css/bnf/ebnf/bbnf/google-sheets) + `analyze_grammar` + `hover_at_offset` + `completions` + LSP features + VM interpreter. `gorgeous-wasm` repo deleted (redundant). Decomposed into `analysis.rs`, `gorgeous.rs`, `lsp.rs`, `vm.rs`.
-- **Playground composables**: `composables/wasm/{types,index}.ts` + `usePlaygroundQuery.ts`, `useSplitPane.ts`, `usePipeline.ts`, `useLanguageProvider.ts`, `useExamples.ts`. 10 Monaco providers: hover, completion, semantic tokens, inlay hints, definition, document symbols, folding, selection ranges, code actions, code lens.
+- **WASM**: `wasm/` crate (`bbnf-wasm`) — 29 exports total: 5 formatters (json/css/bnf/ebnf/bbnf) + `analyze_grammar` + 17 LSP features + 5 VM functions (compile, parse, parse_check, format, free) + `init_panic_hook`. Decomposed into `analysis.rs`, `gorgeous.rs`, `lsp.rs`, `vm.rs`.
+- **Playground composables**: `composables/wasm/{types,index,loader}.ts` + `usePlaygroundQuery.ts`, `useSplitPane.ts`, `usePipeline.ts`, `useExamples.ts`, `useWalkthrough.ts`, `useDocs.ts`, `useHeroState.ts`, `useTypewriter.ts`, `useMouseParallax.ts`, `useScrollTimeline.ts`, `useScrollMorph.ts`, `useMarkdownComponents.ts`, `useChartData.ts`. 15 Monaco providers: hover, completion, semantic tokens, inlay hints, definition, document symbols, folding, selection ranges, code actions, code lens, references, rename, document formatting, range formatting, on-type formatting.
 
 ## Roadmap
 
 ### Landing Page — COMPLETE
-Landing page at `/` with HeroSection, DemoCards, FeatureCards, LivePreviewStrip, NavBar.
+Landing page at `/` with HeroSection, DemoCards, FeatureCards, LivePreviewStrip, CodeCardFan, CodeCardGrid, FooterSection, TypewriterText. NavBar in `layout/`.
 Routes: `/` = landing, `/playground` = playground, `/docs` = docs.
 
 ### Documentation Page

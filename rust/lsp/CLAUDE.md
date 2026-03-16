@@ -2,6 +2,10 @@
 
 BBNF language server. Binary: `bbnf-lsp`. Communicates over stdio (JSON-RPC).
 
+Thin wrapper around `bbnf-analysis`—the LSP crate handles protocol transport,
+import graph management, and diagnostic re-publication. All analysis logic,
+feature providers, and state management live in `bbnf-analysis`.
+
 ## Structure
 
 ```
@@ -9,33 +13,10 @@ lsp/
 ├── Cargo.toml
 ├── src/
 │   ├── main.rs                 Tokio entry point, stdio server
-│   ├── server/
-│   │   ├── mod.rs              BbnfLanguageServer struct, constructor, on_change
-│   │   ├── imports.rs          Import graph updates, diagnostic filtering, incremental edits
-│   │   └── protocol.rs         impl LanguageServer — all request/notification handlers
-│   ├── state/
-│   │   ├── mod.rs              DocumentState struct, new/update/ast methods
-│   │   ├── types.rs            RuleInfo, ReferenceInfo, SemanticTokenInfo, DocumentInfo, token_types
-│   │   ├── parsing.rs          OwnedAst (self_cell), CachedParseResult, parse_once
-│   │   ├── diagnostics.rs      analyze_from_cache — full diagnostic generation
-│   │   ├── pretty.rs           @pretty extraction, validation, semantic tokens
-│   │   └── ast_utils.rs        collect_references, semantic tokens, format_expression, cycle paths
-│   ├── analysis.rs             LineIndex, symbol lookup utilities
-│   └── features/
-│       ├── mod.rs              Module declarations
-│       ├── hover.rs            Rule definition + FIRST/nullable/cycle + @pretty hint info
-│       ├── goto_definition.rs  Local + cross-file + import path navigation
-│       ├── references.rs       Local + cross-file reference finding
-│       ├── rename.rs           Rule + reference rename (single document)
-│       ├── completion.rs       Rule names, keywords, imported rules, @pretty hints
-│       ├── document_symbols.rs Outline of all rules
-│       ├── code_lens.rs        Reference counts per rule
-│       ├── folding.rs          Multi-line rule folding
-│       ├── code_actions.rs     Remove unused / define undefined rules
-│       ├── formatting.rs       Document, range, on-type (trigger: `;`)
-│       ├── semantic_tokens.rs  ruleDefinition, ruleReference, string, regexp, keyword
-│       ├── inlay_hints.rs      FIRST sets (non-trivial rules), nullable markers
-│       └── selection_range.rs  Expression-level expand/shrink selection
+│   └── server/
+│       ├── mod.rs              BbnfLanguageServer struct, constructor, on_change
+│       ├── imports.rs          Import graph updates, diagnostic filtering, incremental edits
+│       └── protocol.rs         impl LanguageServer — all request/notification handlers
 └── tests/
     ├── integration.rs          45+ JSON-RPC integration tests
     └── bench_lsp.rs            Performance benchmarks
@@ -53,7 +34,7 @@ stdio → tower-lsp-server → BbnfLanguageServer
 
 ### State Management
 
-- **DocumentState**: Owns text + `OwnedAst` (self-referential via `self_cell`).
+- **DocumentState**: Defined in `bbnf-analysis`. Owns text + `OwnedAst` (self-referential via `self_cell`).
 - **DocumentInfo**: Rules, diagnostics, semantic tokens, FIRST labels, nullable set, cycle paths, imports.
 - **LineIndex**: Pre-computed line starts for O(log n) offset↔position conversion.
 - On every `didChange`: full re-parse + re-analysis (no incremental). Acceptable for grammar file sizes.

@@ -15,7 +15,7 @@ export function parse(text: string, parsers: object, options: object) {
 
     if (parser.state.isError) {
         // @ts-ignore
-        throw new Error(`Error parsing EBNF: ${parser.state}`, {
+        throw new Error(`Error parsing BBNF: ${parser.state}`, {
             cause: parser,
         });
     }

@@ -16,6 +16,7 @@ typescript/
 │   ├── parse.ts        BBNFToAST, BBNFToASTWithImports, BBNFToASTFromFiles
 │   ├── generate.ts     ASTToParser, BBNFToParser — compile AST to executable parsers (applies @recover)
 │   ├── imports.ts      Module graph loading, cycle-tolerant DFS, selective dep expansion
+│   ├── imports-loader.ts  File-system module loader for BBNFToASTFromFiles
 │   ├── optimize.ts     Left-recursion elimination + prefix factoring
 │   └── analysis/
 │       ├── index.ts    Re-exports + analyzeGrammar facade
@@ -29,13 +30,14 @@ typescript/
 └── test/
     ├── helpers/
     │   └── ast-builders.ts  Shared: rule(), nonterminal(), literal(), alternation(), etc.
-    ├── bbnf.test.ts           13 end-to-end grammar tests (JSON, CSS, BBNF self-parse, etc.)
+    ├── bbnf.test.ts           17 end-to-end grammar tests (JSON, CSS, BBNF self-parse, etc.)
     ├── imports.test.ts        13 import system tests (cyclic, transitive, selective, merge)
-    ├── analysis.test.ts       16 analysis tests (SCC, ref counts, dep graphs, FIRST conflicts)
+    ├── analysis.test.ts       22 analysis tests (SCC, ref counts, dep graphs, FIRST conflicts, dispatch tables)
     ├── optimize.test.ts       13 optimization tests (left-recursion, topological sort, prefix)
     ├── first-sets.test.ts     17 FIRST set tests (regex dispatch, CharSet, dispatch tables)
     ├── recover.test.ts        8 tests — @recover parsing, codegen (.recover() wrapping), error collection
     ├── css-stylesheet.test.ts 11 tests — css-stylesheet.bbnf with @recover + multi-error recovery
+    ├── google-sheets.test.ts  16 tests — Google Sheets formula grammar parsing and formatting
     └── utils.ts               Test helpers (math eval, random whitespace injection)
 ```
 
@@ -52,11 +54,17 @@ typescript/
 - **`computeFirstSets(ast, analysis)`** — FIRST sets + nullable flags.
 - **`removeAllLeftRecursion(ast)`** — Left-recursion elimination.
 - **`CharSet`** — 128-bit ASCII bitset.
+- **`BBNFToASTFromFiles(paths)`** — Parse grammar file(s) with file-system import resolution. (from `parse.ts`)
+- **`loadModuleGraph(path, reader?)`** — Async DFS-load a module and its transitive `@import` graph.
+- **`topologicalSort(ast)`** — Topologically sort AST rules.
 - **`buildDispatchTable(alts, firstSets, nullable)`** — O(1) dispatch for alternations.
+- **`PrettyDirective`** — `@pretty` directive type.
+- **`NoCollapseDirective`** — `@no_collapse` directive type.
+- **`ParsedGrammar`** — Imports + AST container type.
 
 ## Dependency
 
-- **`@mkbabb/parse-that`** (^0.8.0) — Parser combinator library. Provides `Parser<T>`, `string()`, `regex()`, `all()`, `any()`, `dispatch()`, `.trim()`, `.opt()`, `.many()`, `.sepBy()`, `.wrap()`, `.skip()`, `.next()`, etc.
+- **`@mkbabb/parse-that`** (^0.8.2) — Parser combinator library. Provides `Parser<T>`, `string()`, `regex()`, `all()`, `any()`, `dispatch()`, `.trim()`, `.opt()`, `.many()`, `.sepBy()`, `.wrap()`, `.skip()`, `.next()`, etc.
 
 ## Codegen Optimizations
 

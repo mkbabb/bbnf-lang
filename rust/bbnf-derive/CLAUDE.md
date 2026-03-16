@@ -8,7 +8,7 @@ Proc-macro crate. Generates parser code from `.bbnf` grammar files at compile ti
 bbnf-derive/
 ├── Cargo.toml      proc-macro = true
 └── src/
-    └── lib.rs      Derive macro entry point (436 lines)
+    └── lib.rs      Derive macro entry point (~267 lines)
 ```
 
 ## Interface

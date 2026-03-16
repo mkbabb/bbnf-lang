@@ -34,7 +34,7 @@ fn merges_two_regex_alts() {
     merge_regex_alts(&mut ir);
     match &ir.rules[0].body {
         IrNode::Regex(sid) => {
-            assert_eq!(ir.get_string(*sid), "[a-z]+|[0-9]+");
+            assert_eq!(ir.get_string(*sid), "(?:[a-z]+)|(?:[0-9]+)");
         }
         other => panic!("Expected Regex, got {:?}", other),
     }
@@ -63,7 +63,7 @@ fn merges_three_css_property_regex() {
         IrNode::Regex(sid) => {
             assert_eq!(
                 ir.get_string(*sid),
-                r"[a-zA-Z_][\w-]*|--[\w-]+|-[a-zA-Z][\w-]*"
+                r"(?:[a-zA-Z_][\w-]*)|(?:--[\w-]+)|(?:-[a-zA-Z][\w-]*)"
             );
         }
         other => panic!("Expected Regex, got {:?}", other),
@@ -102,7 +102,7 @@ fn wraps_pipe_containing_patterns() {
     merge_regex_alts(&mut ir);
     match &ir.rules[0].body {
         IrNode::Regex(sid) => {
-            assert_eq!(ir.get_string(*sid), "(?:a|b)|c");
+            assert_eq!(ir.get_string(*sid), "(?:a|b)|(?:c)");
         }
         other => panic!("Expected Regex, got {:?}", other),
     }

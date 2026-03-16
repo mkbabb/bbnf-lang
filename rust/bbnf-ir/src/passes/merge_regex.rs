@@ -33,14 +33,11 @@ fn merge_regex_in_node(node: IrNode, strings: &mut Vec<String>) -> IrNode {
                         let IrNode::Regex(sid) = &b.node else {
                             unreachable!()
                         };
-                        // Wrap each alternative in a non-capturing group if it
-                        // contains an unescaped `|` at the top level.
+                        // Wrap ALL patterns in non-capturing groups unconditionally
+                        // to prevent capture group renumbering and ensure semantic
+                        // equivalence regardless of internal structure.
                         let pattern = &strings[*sid as usize];
-                        if pattern_has_top_level_pipe(pattern) {
-                            format!("(?:{})", pattern)
-                        } else {
-                            pattern.clone()
-                        }
+                        format!("(?:{})", pattern)
                     })
                     .collect::<Vec<_>>()
                     .join("|");

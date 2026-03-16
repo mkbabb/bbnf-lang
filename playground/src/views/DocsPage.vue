@@ -6,7 +6,7 @@ import { useDocs } from "@/composables/useDocs";
 import { useMarkdown } from "@/lib/markdown";
 import { useMarkdownComponents } from "@/composables/useMarkdownComponents";
 import { getSectionTheme } from "@/lib/sectionTheme";
-import { PanelLeftClose, PanelLeftOpen, Menu, X } from "lucide-vue-next";
+import { PanelLeftOpen, Menu } from "lucide-vue-next";
 
 const props = defineProps<{
     slug?: string;
@@ -50,8 +50,18 @@ useMarkdownComponents(articleRef, rendered);
             class="sticky top-14 hidden h-[calc(100dvh-var(--spacing-navbar))] shrink-0 self-start overflow-hidden transition-[width] duration-200 md:block"
             :style="{ width: sidebarOpen ? '16rem' : '0' }"
         >
-            <DocsSidebar :current-slug="slug" />
+            <DocsSidebar :current-slug="slug" show-collapse @collapse="sidebarOpen = false" />
         </div>
+
+        <!-- Desktop expand button — shown when sidebar is collapsed -->
+        <button
+            v-if="!sidebarOpen"
+            class="sticky top-16 hidden md:flex items-center justify-center shrink-0 ml-1 p-1.5 rounded-md hover:bg-muted/50 transition-colors text-muted-foreground h-fit z-20"
+            title="Expand sidebar"
+            @click="sidebarOpen = true"
+        >
+            <PanelLeftOpen class="h-4 w-4" />
+        </button>
 
         <!-- Mobile drawer overlay -->
         <Transition name="mobile-drawer">
@@ -70,6 +80,14 @@ useMarkdownComponents(articleRef, rendered);
 
         <!-- Main content -->
         <main class="flex-1 flex min-h-[calc(100dvh-var(--spacing-navbar))] flex-col px-4 py-2 sm:px-8 sm:py-3 min-w-0">
+            <!-- Mobile menu button -->
+            <button
+                class="md:hidden self-start mb-2 p-1.5 rounded-md hover:bg-muted/50 transition-colors text-muted-foreground"
+                @click="mobileDrawer = !mobileDrawer"
+            >
+                <Menu class="h-4 w-4" />
+            </button>
+
             <div v-if="currentDoc" class="mx-auto flex w-full max-w-4xl flex-1 flex-col">
                 <!-- Card-styled article container -->
                 <div
@@ -80,28 +98,10 @@ useMarkdownComponents(articleRef, rendered);
                             : undefined,
                     }"
                 >
-                    <!-- Sidebar toggle — top-right of card, sticky -->
-                    <div class="float-right sticky top-4 z-20 ml-3 mb-2">
-                        <!-- Mobile: menu button -->
-                        <button
-                            class="md:hidden p-1.5 rounded-md hover:bg-muted/50 transition-colors text-muted-foreground"
-                            @click="mobileDrawer = !mobileDrawer"
-                        >
-                            <Menu class="h-4 w-4" />
-                        </button>
-                        <!-- Desktop: collapse/expand -->
-                        <button
-                            class="hidden md:flex items-center gap-1.5 p-1.5 rounded-md hover:bg-muted/50 transition-colors text-muted-foreground"
-                            @click="sidebarOpen = !sidebarOpen"
-                        >
-                            <component :is="sidebarOpen ? PanelLeftClose : PanelLeftOpen" class="h-4 w-4" />
-                        </button>
-                    </div>
-
-                    <!-- Section badge -->
+                    <!-- Section badge — top-right -->
                     <div
                         v-if="sectionTheme"
-                        class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[length:var(--font-size-label)] font-mono uppercase tracking-wider mb-2"
+                        class="absolute top-4 right-4 z-10 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[length:var(--font-size-label)] font-mono uppercase tracking-wider"
                         :style="{
                             color: `var(--color-${sectionTheme.color})`,
                             background: `color-mix(in srgb, var(--color-${sectionTheme.color}) 10%, transparent)`,

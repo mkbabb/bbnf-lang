@@ -12,16 +12,35 @@ The BBNF language server (`bbnf-lsp`) provides 17 features across two transports
 
 Measured on grammars of varying size (cold DocumentState, single operation):
 
-| Operation | 5-rule | 20-rule | 50-rule | 100-rule |
-|-----------|--------|---------|---------|----------|
-| **Diagnostics** | <1 ms | ~2 ms | ~5 ms | ~12 ms |
-| **Hover** | <1 ms | <1 ms | ~1 ms | ~2 ms |
-| **Completion** | <1 ms | <1 ms | ~2 ms | ~4 ms |
-| **Go-to-def** | <1 ms | <1 ms | <1 ms | ~1 ms |
-| **References** | <1 ms | <1 ms | ~2 ms | ~3 ms |
-| **Semantic tokens** | <1 ms | ~1 ms | ~3 ms | ~8 ms |
-| **Formatting** | ~1 ms | ~2 ms | ~5 ms | ~15 ms |
-| **Inlay hints** | <1 ms | ~1 ms | ~3 ms | ~7 ms |
+```bench-chart
+{ "title": "LSP Operation Latency", "unit": "ms", "lowerIsBetter": true,
+  "datasets": [
+    { "name": "Diagnostics",
+      "labels": ["5-rule", "20-rule", "50-rule", "100-rule"],
+      "series": [{"label": "Latency", "values": [0.5, 2, 5, 12]}] },
+    { "name": "Hover",
+      "labels": ["5-rule", "20-rule", "50-rule", "100-rule"],
+      "series": [{"label": "Latency", "values": [0.5, 0.5, 1, 2]}] },
+    { "name": "Completion",
+      "labels": ["5-rule", "20-rule", "50-rule", "100-rule"],
+      "series": [{"label": "Latency", "values": [0.5, 0.5, 2, 4]}] },
+    { "name": "Go-to-def",
+      "labels": ["5-rule", "20-rule", "50-rule", "100-rule"],
+      "series": [{"label": "Latency", "values": [0.5, 0.5, 0.5, 1]}] },
+    { "name": "References",
+      "labels": ["5-rule", "20-rule", "50-rule", "100-rule"],
+      "series": [{"label": "Latency", "values": [0.5, 0.5, 2, 3]}] },
+    { "name": "Semantic tokens",
+      "labels": ["5-rule", "20-rule", "50-rule", "100-rule"],
+      "series": [{"label": "Latency", "values": [0.5, 1, 3, 8]}] },
+    { "name": "Formatting",
+      "labels": ["5-rule", "20-rule", "50-rule", "100-rule"],
+      "series": [{"label": "Latency", "values": [1, 2, 5, 15]}] },
+    { "name": "Inlay hints",
+      "labels": ["5-rule", "20-rule", "50-rule", "100-rule"],
+      "series": [{"label": "Latency", "values": [0.5, 1, 3, 7]}] }
+  ] }
+```
 
 All operations stay under 20 ms on 100-rule grammars, well under the 100 ms responsiveness threshold.
 

@@ -34,13 +34,7 @@ number = /-?\d+(\.\d+)?([eE][+-]?\d+)?/ ;
 
 ## Try It
 
-Run this grammar directly in the browser — click **Run** to parse the input with the WASM VM:
-
-```runnable-code
-{ "grammar": "value = object | array | string | number | \"true\" | \"false\" | \"null\" ;\n\nobject = \"{\" , members? , \"}\" ;\nmembers = member , (\",\" , member)* ;\nmember = string , \":\" , value ;\n\narray = \"[\" , elements? , \"]\" ;\nelements = value , (\",\" , value)* ;\n\nstring = /\"[^\"]*\"/ ;\nnumber = /-?\\d+(\\.\\d+)?([eE][+-]?\\d+)?/ ;", "input": "{\"name\": \"BBNF\", \"version\": 1, \"features\": [\"parsing\", \"formatting\"]}", "language": "bbnf" }
-```
-
-Or head to the [Playground](/playground) to write and test grammars interactively with full editor support.
+Head to the [Playground](/playground) to write and test grammars interactively with full editor support.
 
 ## Installation
 

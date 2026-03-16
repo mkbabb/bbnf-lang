@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import { ref, computed, nextTick } from "vue";
-import { Search, X } from "lucide-vue-next";
+import { Search, X, PanelLeftClose } from "lucide-vue-next";
 import { useDocs } from "@/composables/useDocs";
 import { getSectionTheme } from "@/lib/sectionTheme";
 
 defineProps<{
     currentSlug?: string;
     showClose?: boolean;
+    showCollapse?: boolean;
 }>();
 
 const emit = defineEmits<{
     close: [];
+    collapse: [];
 }>();
 
 // JS-based height transition hooks
@@ -76,25 +78,35 @@ const filteredSections = computed(() => {
 
 <template>
     <aside class="flex h-full w-64 shrink-0 flex-col overflow-y-auto border-r border-border/30 bg-card/40 backdrop-blur-xl scrollbar-hidden">
-        <!-- Search bar -->
+        <!-- Search bar + collapse toggle -->
         <div class="p-3 border-b border-border/20">
-            <div class="relative">
-                <Search class="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/50" />
-                <input
-                    v-model="searchQuery"
-                    type="text"
-                    placeholder="Search docs..."
-                    :class="[
-                        'w-full pl-8 py-1.5 rounded-md bg-muted/20 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-pastel-green/50 transition-colors',
-                        showClose ? 'pr-8' : 'pr-3'
-                    ]"
-                />
+            <div class="flex items-center gap-1.5">
+                <div class="relative flex-1">
+                    <Search class="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/50" />
+                    <input
+                        v-model="searchQuery"
+                        type="text"
+                        placeholder="Search docs..."
+                        :class="[
+                            'w-full pl-8 py-1.5 rounded-md bg-muted/20 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-pastel-green/50 transition-colors',
+                            showClose ? 'pr-8' : 'pr-3'
+                        ]"
+                    />
+                    <button
+                        v-if="showClose"
+                        class="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-md hover:bg-muted/50 transition-colors text-muted-foreground"
+                        @click="emit('close')"
+                    >
+                        <X class="h-3.5 w-3.5" />
+                    </button>
+                </div>
                 <button
-                    v-if="showClose"
-                    class="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-md hover:bg-muted/50 transition-colors text-muted-foreground"
-                    @click="emit('close')"
+                    v-if="showCollapse"
+                    class="shrink-0 p-1.5 rounded-md hover:bg-muted/50 transition-colors text-muted-foreground"
+                    title="Collapse sidebar"
+                    @click="emit('collapse')"
                 >
-                    <X class="h-3.5 w-3.5" />
+                    <PanelLeftClose class="h-4 w-4" />
                 </button>
             </div>
         </div>

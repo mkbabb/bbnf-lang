@@ -84,7 +84,7 @@ const demos = [
                 <div
                     class="demo-card relative overflow-hidden rounded-xl border bg-card/80 backdrop-blur-sm p-3 sm:p-5 h-full transition-all duration-300
                            hover:-translate-y-1 cursor-pointer shadow-card
-                           hover:shadow-[5px_7px_0_rgba(0,0,0,0.12)] dark:hover:shadow-[5px_7px_0_rgba(200,200,255,0.08)]"
+                           hover:shadow-card-hover"
                     :class="[demo.borderClass, demo.shimmerClass]"
                 >
                     <component :is="demo.icon" class="h-5 w-5 sm:h-6 sm:w-6 mb-2 sm:mb-3" :class="demo.iconClass" />

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, watch, inject } from "vue";
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { AlertCircle } from "lucide-vue-next";
@@ -14,6 +14,14 @@ const emit = defineEmits<{
 }>();
 
 const errorDialogOpen = ref(false);
+
+const dockKeepOpen = inject<(() => void) | null>("dockKeepOpen", null);
+const dockRelease = inject<(() => void) | null>("dockRelease", null);
+
+watch(errorDialogOpen, (open) => {
+    if (open) dockKeepOpen?.();
+    else dockRelease?.();
+});
 
 const sourceLabels: Record<string, string> = {
     grammar: "Grammar",
@@ -49,7 +57,7 @@ function onJumpToError(error: PipelineError) {
             <div class="mt-4 space-y-3 max-h-96 overflow-y-auto">
                 <button
                     v-for="(err, i) in errors"
-                    :key="i"
+                    :key="err.message + (err.line ?? i)"
                     type="button"
                     class="w-full rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-left transition-colors hover:bg-destructive/10"
                     @click="onJumpToError(err)"

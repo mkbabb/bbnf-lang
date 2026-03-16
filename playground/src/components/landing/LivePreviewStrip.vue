@@ -1,20 +1,22 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
 import { useRouter } from "vue-router";
+import { useWasm } from "../../composables/wasm";
 
 const router = useRouter();
+const wasm = useWasm();
 
 const presets = [
     {
         name: "JSON",
-        grammar: `value = object | array | string | number | "true" | "false" | "null" ;
-object = "{" , members? , "}" ;
-members = member , ("," , member)* ;
-member = string , ":" , value ;
-array = "[" , elements? , "]" ;
-elements = value , ("," , value)* ;
-string = /"[^"]*"/ ;
-number = /-?\\d+(\\.\\d+)?/ ;`,
+        grammar: `string = /"[^"]*"/ ;
+number = /-?\\d+(\\.\\d+)?/ ;
+object = "{" ?w , members? , "}" ?w ;
+members = member , ("," ?w , member)* ;
+member = string ?w , ":" ?w , value ;
+array = "[" ?w , elements? , "]" ?w ;
+elements = value , ("," ?w , value)* ;
+value = object | array | string | number | "true" | "false" | "null" ;`,
         input: `{"name": "BBNF", "version": 1, "items": [1, 2, 3]}`,
     },
     {
@@ -22,18 +24,18 @@ number = /-?\\d+(\\.\\d+)?/ ;`,
         grammar: `selectorSpan = /[^{};]+[^\\s{};]/ ;
 propertyName = /[a-zA-Z_][\\w-]*/ ;
 valueSpan = /[^;{}!,]+/ ;
-declaration = propertyName , ":" , valueSpan , ";" ;
-ruleBlock = "{" , declaration* , "}" ;
-qualifiedRule = selectorSpan , ruleBlock ;
-stylesheet = qualifiedRule* ;`,
+declaration = propertyName ?w , ":" ?w , valueSpan , ";" ?w ;
+ruleBlock = "{" ?w , declaration* , "}" ?w ;
+qualifiedRule = selectorSpan ?w , ruleBlock ;
+stylesheet = qualifiedRule+ ;`,
         input: `.card { background: #fff; border-radius: 8px; }`,
     },
     {
         name: "Math",
-        grammar: `expr = term , (("+" | "-") , term)* ;
-term = factor , (("*" | "/") , factor)* ;
-factor = number | "(" , expr , ")" ;
-number = /\\d+(\\.\\d+)?/ ;`,
+        grammar: `number = /\\d+(\\.\\d+)?/ ;
+factor = number | "(" ?w , expr , ")" ?w ;
+term = factor , (("*" | "/") ?w , factor)* ;
+expr = term , (("+" | "-") ?w , term)* ;`,
         input: `2 + 3 * (4 - 1)`,
     },
 ];
@@ -48,6 +50,10 @@ const parseError = ref("");
 const userEngaged = ref(false);
 let timer: ReturnType<typeof setInterval> | undefined;
 
+// Cached grammar handle — freed on grammar change or unmount.
+let cachedGrammarText = "";
+let cachedHandle: number | null = null;
+
 function startTimer() {
     clearInterval(timer);
     if (userEngaged.value) return;
@@ -61,7 +67,13 @@ onMounted(() => {
     runMiniParse();
     startTimer();
 });
-onBeforeUnmount(() => { clearInterval(timer); });
+onBeforeUnmount(() => {
+    clearInterval(timer);
+    if (cachedHandle != null) {
+        wasm.freeGrammar(cachedHandle);
+        cachedHandle = null;
+    }
+});
 
 function selectPreset(i: number) {
     activeIndex.value = i;
@@ -79,36 +91,29 @@ function onUserEdit() {
 
 async function runMiniParse() {
     try {
-        const { BBNFToASTWithImports, ASTToParser, analyzeGrammar, computeFirstSets, dedupGroups } =
-            await import("@mkbabb/bbnf-lang");
-
-        const result = BBNFToASTWithImports(grammarText.value);
-        if (!result[1]) { parseError.value = "Grammar error"; astOutput.value = ""; return; }
-
-        const ast = result[1].rules;
-        dedupGroups(ast);
-        const analysis = analyzeGrammar(ast);
-        const firstNullable = computeFirstSets(ast, analysis);
-        const nonterminals = ASTToParser(ast, analysis, firstNullable, [], false);
-
-        for (const key of Object.keys(nonterminals)) {
-            nonterminals[key] = nonterminals[key].trim();
+        // Recompile grammar only when text changes.
+        if (grammarText.value !== cachedGrammarText) {
+            if (cachedHandle != null) {
+                wasm.freeGrammar(cachedHandle);
+                cachedHandle = null;
+            }
+            cachedGrammarText = grammarText.value;
+            cachedHandle = await wasm.compileGrammar(grammarText.value);
         }
 
-        const firstKey = ast.keys().next().value;
-        if (!firstKey || !nonterminals[firstKey]) {
-            parseError.value = "No entry rule";
+        if (cachedHandle == null) {
+            parseError.value = "Grammar error";
             astOutput.value = "";
             return;
         }
 
-        const parsed = nonterminals[firstKey].parse(inputText.value);
-        if (parsed == null) {
+        const result = await wasm.parseWithGrammar(cachedHandle, inputText.value);
+        if (!result.success) {
             parseError.value = "Parse failed";
             astOutput.value = "";
         } else {
             parseError.value = "";
-            astOutput.value = JSON.stringify(parsed, null, 2);
+            astOutput.value = JSON.stringify(result.value, null, 2);
         }
     } catch (e: any) {
         parseError.value = e.message?.slice(0, 60) ?? "Error";
@@ -189,9 +194,9 @@ const astHighlighted = computed(() => astOutput.value ? highlightJson(astOutput.
         <p class="text-sm text-muted-foreground text-center mb-8">Edit the grammar or input below — parsing runs live.</p>
 
         <div class="rounded-xl border border-border/40 bg-card/80 backdrop-blur-sm overflow-hidden shadow-card">
-            <div class="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-border/30 md:h-[12rem] md:h-[18rem]">
+            <div class="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-border/30 md:h-72">
                 <!-- Grammar -->
-                <div class="p-4 flex flex-col h-[12rem] md:h-[18rem]">
+                <div class="p-4 flex flex-col h-48 md:h-72">
                     <div class="flex items-center gap-2 mb-2 shrink-0">
                         <div class="h-2 w-2 rounded-full bg-pastel-green" />
                         <span class="instrument-serif text-sm text-pastel-green">Grammar</span>
@@ -212,7 +217,7 @@ const astHighlighted = computed(() => astOutput.value ? highlightJson(astOutput.
                 </div>
 
                 <!-- Input -->
-                <div class="p-4 flex flex-col h-[12rem] md:h-[18rem]">
+                <div class="p-4 flex flex-col h-48 md:h-72">
                     <div class="flex items-center gap-2 mb-2 shrink-0">
                         <div class="h-2 w-2 rounded-full bg-pastel-blue" />
                         <span class="instrument-serif text-sm text-pastel-blue">Input</span>
@@ -233,7 +238,7 @@ const astHighlighted = computed(() => astOutput.value ? highlightJson(astOutput.
                 </div>
 
                 <!-- AST Output -->
-                <div class="p-4 flex flex-col h-[12rem] md:h-[18rem]">
+                <div class="p-4 flex flex-col h-48 md:h-72">
                     <div class="flex items-center gap-2 mb-2 shrink-0">
                         <div class="h-2 w-2 rounded-full bg-pastel-purple" />
                         <span class="instrument-serif text-sm text-pastel-purple">Parsed AST</span>

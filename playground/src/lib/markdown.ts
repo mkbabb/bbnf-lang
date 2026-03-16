@@ -1,4 +1,5 @@
 import MarkdownIt from "markdown-it";
+import { getLanguageIcon } from "./languageIcons";
 
 const md = new MarkdownIt({
     html: true,
@@ -150,20 +151,103 @@ function escapeHtml(s: string): string {
     return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
+/** Escape for use inside single-quoted HTML attributes — also escapes single quotes. */
+function escapeAttr(s: string): string {
+    return escapeHtml(s).replace(/'/g, "&#39;");
+}
+
+// Helper: parse code-tabs fence content into per-language blocks
+function parseCodeTabs(content: string): { lang: string; code: string }[] {
+    const blocks: { lang: string; code: string }[] = [];
+    const parts = content.split(/^---(\w+)---$/m);
+    // parts: ["", "rust", "\ncode...\n", "typescript", "\ncode...\n", ...]
+    for (let i = 1; i < parts.length; i += 2) {
+        const lang = parts[i]!.trim();
+        const code = (parts[i + 1] ?? "").trim();
+        if (lang && code) blocks.push({ lang, code });
+    }
+    return blocks;
+}
+
 // Custom fence renderer: card-styled container + language label + syntax highlighting
+// Intercepts special fence types (code-tabs, bench-chart, live-bench) before default handling.
 md.renderer.rules.fence = (tokens, idx) => {
     const token = tokens[idx]!;
     const lang = token.info.trim();
+
+    // Custom fence: code tabs (Rust/TS toggle)
+    if (lang === "code-tabs") {
+        const blocks = parseCodeTabs(token.content);
+        const labelMap: Record<string, string> = {
+            rust: "Rust", ts: "TypeScript", typescript: "TypeScript",
+            js: "JavaScript", javascript: "JavaScript",
+            bash: "Bash", toml: "TOML", json: "JSON", css: "CSS",
+            bbnf: "BBNF", wasm: "WASM",
+        };
+        const data = JSON.stringify(blocks.map(b => ({
+            lang: b.lang,
+            label: labelMap[b.lang] ?? b.lang.charAt(0).toUpperCase() + b.lang.slice(1),
+            code: b.code,
+            highlighted: highlightCode(b.code, b.lang),
+        })));
+        return `<div class="code-tabs-block" data-tabs='${escapeAttr(data)}'></div>`;
+    }
+
+    // Custom fence: benchmark chart
+    if (lang === "bench-chart") {
+        return `<div class="bench-chart-block" data-chart='${escapeAttr(token.content.trim())}'></div>`;
+    }
+
+    // Custom fence: live benchmark
+    if (lang === "live-bench") {
+        return `<div class="live-bench-block" data-bench='${escapeAttr(token.content.trim())}'></div>`;
+    }
+
+    // Custom fence: flow chart
+    if (lang === "flow-chart") {
+        return `<div class="flow-chart-block" data-flow='${escapeAttr(token.content.trim())}'></div>`;
+    }
+
+    // Custom fence: runnable code example
+    if (lang === "runnable-code") {
+        try {
+            const parsed = JSON.parse(token.content.trim());
+            const data = {
+                grammar: parsed.grammar ?? "",
+                input: parsed.input ?? "",
+                language: parsed.language ?? "bbnf",
+                highlighted: parsed.grammar ? highlightCode(parsed.grammar, parsed.language ?? "bbnf") : "",
+            };
+            return `<div class="runnable-code-block" data-runnable='${escapeAttr(JSON.stringify(data))}'></div>`;
+        } catch {
+            return `<div class="code-card"><pre><code>${escapeHtml(token.content)}</code></pre></div>`;
+        }
+    }
+
+    // Default fence rendering
     const highlighted = highlightCode(token.content, lang);
+    const icon = getLanguageIcon(lang);
+    const iconHtml = icon ? `<span class="code-lang-icon" style="color:${icon.color}">${icon.svg}</span>` : "";
     const langLabel = lang
-        ? `<span class="code-lang-label">${escapeHtml(lang)}</span>`
+        ? `<span class="code-lang-label">${iconHtml}${escapeHtml(icon?.label ?? lang)}</span>`
         : "";
     return `<div class="code-card">${langLabel}<pre class="!mt-0"><code class="language-${lang}">${highlighted}</code></pre></div>`;
 };
 
 export function useMarkdown() {
     function renderMarkdown(source: string): string {
-        return md.render(source);
+        let html = md.render(source);
+        // Post-process: colorize performance numbers (e.g. "1,234.5 MB/s", "42 ms")
+        // Use alternation to skip HTML tags — first branch captures tags verbatim,
+        // second branch captures perf patterns only in text content.
+        html = html.replace(
+            /(<[^>]*>)|(\d[\d,]*(?:\.\d+)?)\s*(MB\/s|GB\/s|ops\/s|ms|µs|KB|MB|GB|x\b)/g,
+            (_match, tag, num, unit) => {
+                if (tag) return tag;
+                return `<span class="perf-number">${num}</span>\u00a0<span class="perf-unit">${unit}</span>`;
+            }
+        );
+        return html;
     }
     return { renderMarkdown };
 }

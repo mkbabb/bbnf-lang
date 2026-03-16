@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch, inject } from "vue";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
@@ -11,6 +11,14 @@ const props = defineProps<{
 }>();
 
 const settingsOpen = ref(false);
+
+const dockKeepOpen = inject<(() => void) | null>("dockKeepOpen", null);
+const dockRelease = inject<(() => void) | null>("dockRelease", null);
+
+watch(settingsOpen, (open) => {
+    if (open) dockKeepOpen?.();
+    else dockRelease?.();
+});
 
 const widthModel = computed({
     get: () => [props.printerConfig.maxWidth],

@@ -38,7 +38,7 @@ const { toggleDark } = useGlobalDark();
 
     transition: opacity 0.2s ease, background 0.2s ease;
 
-    z-index: 999;
+    z-index: 50;
 
     svg {
         fill: hsl(var(--foreground));

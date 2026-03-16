@@ -14,6 +14,7 @@ export default defineConfig({
             "monaco-themes/themes": fileURLToPath(
                 new URL("../node_modules/monaco-themes/themes", import.meta.url),
             ),
+            "@docs": fileURLToPath(new URL("../docs", import.meta.url)),
         },
     },
     server: {

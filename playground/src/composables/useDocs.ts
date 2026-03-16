@@ -13,7 +13,7 @@ interface DocSection {
     docs: DocMeta[];
 }
 
-const modules = import.meta.glob("@/docs/**/*.md", { query: "?raw", import: "default", eager: true }) as Record<string, string>;
+const modules = import.meta.glob("@docs/**/*.md", { query: "?raw", import: "default", eager: true }) as Record<string, string>;
 
 function parseFrontmatter(raw: string): { meta: Record<string, string>; content: string } {
     const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
@@ -41,13 +41,21 @@ const allDocs: DocMeta[] = Object.entries(modules).map(([path, raw]) => {
     };
 }).sort((a, b) => a.order - b.order);
 
+const sectionOrder = ["Performance", "BBNF", "parse-that", "pprint", "gorgeous"];
+
 const sections = computed<DocSection[]>(() => {
     const map = new Map<string, DocMeta[]>();
     for (const doc of allDocs) {
         if (!map.has(doc.section)) map.set(doc.section, []);
         map.get(doc.section)!.push(doc);
     }
-    return Array.from(map.entries()).map(([name, docs]) => ({ name, docs }));
+    return Array.from(map.entries())
+        .map(([name, docs]) => ({ name, docs }))
+        .sort((a, b) => {
+            const ai = sectionOrder.indexOf(a.name);
+            const bi = sectionOrder.indexOf(b.name);
+            return (ai === -1 ? sectionOrder.length : ai) - (bi === -1 ? sectionOrder.length : bi);
+        });
 });
 
 const allSlugs = allDocs.map((d) => d.slug);

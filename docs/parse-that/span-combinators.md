@@ -6,7 +6,7 @@ section: parse-that
 
 # Span Combinators
 
-Span combinators are zero-copy alternatives to the standard combinators. Instead of extracting substrings, they return `Span` objects -- pairs of `{start, end}` offsets into the source string. This avoids substring allocation entirely during parsing; you materialize text only when needed.
+Span combinators are zero-copy alternatives to the standard combinators. Instead of extracting substrings, they return `Span` objects—pairs of `{start, end}` offsets into the source string. This avoids substring allocation entirely during parsing; you materialize text only when needed.
 
 ```ts
 import {
@@ -145,8 +145,8 @@ const value = nextSpan(stringSpan("="), regexSpan(/\w+/));
 
 Span combinators are ideal when:
 
-- **You are scanning** -- tokenizers and lexers that identify regions without needing the text content
-- **You are formatting** -- pretty-printers that rearrange source regions without interpreting them
-- **Performance matters** -- avoiding thousands of `substring()` calls in tight loops
+- **You are scanning**—tokenizers and lexers that identify regions without needing the text content
+- **You are formatting**—pretty-printers that rearrange source regions without interpreting them
+- **Performance matters**—avoiding thousands of `substring()` calls in tight loops
 
 For parsers that need to inspect or transform the matched text (like converting `"42"` to the number `42`), use the standard `string()`, `regex()`, and `.map()` combinators instead. You can freely mix span and non-span parsers in the same grammar.

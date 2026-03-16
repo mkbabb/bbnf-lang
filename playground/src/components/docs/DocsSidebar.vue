@@ -1,12 +1,51 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
-import { Search } from "lucide-vue-next";
+import { ref, computed, nextTick } from "vue";
+import { Search, X } from "lucide-vue-next";
 import { useDocs } from "@/composables/useDocs";
-import { getSectionTheme } from "@/composables/useSectionTheme";
+import { getSectionTheme } from "@/lib/sectionTheme";
 
 defineProps<{
     currentSlug?: string;
+    showClose?: boolean;
 }>();
+
+const emit = defineEmits<{
+    close: [];
+}>();
+
+// JS-based height transition hooks
+function onBeforeEnter(el: Element) {
+    const htmlEl = el as HTMLElement;
+    htmlEl.style.maxHeight = "0";
+    htmlEl.style.overflow = "hidden";
+}
+function onEnter(el: Element) {
+    const htmlEl = el as HTMLElement;
+    nextTick(() => {
+        htmlEl.style.maxHeight = htmlEl.scrollHeight + "px";
+    });
+}
+function onAfterEnter(el: Element) {
+    const htmlEl = el as HTMLElement;
+    htmlEl.style.maxHeight = "none";
+    htmlEl.style.overflow = "";
+}
+function onBeforeLeave(el: Element) {
+    const htmlEl = el as HTMLElement;
+    htmlEl.style.maxHeight = htmlEl.scrollHeight + "px";
+    htmlEl.style.overflow = "hidden";
+}
+function onLeave(el: Element) {
+    const htmlEl = el as HTMLElement;
+    requestAnimationFrame(() => {
+        htmlEl.style.maxHeight = "0";
+    });
+}
+function onAfterLeave(el: Element) {
+    const htmlEl = el as HTMLElement;
+    htmlEl.style.maxHeight = "none";
+    htmlEl.style.overflow = "";
+}
 
 const { sections } = useDocs();
 const searchQuery = ref("");
@@ -45,8 +84,18 @@ const filteredSections = computed(() => {
                     v-model="searchQuery"
                     type="text"
                     placeholder="Search docs..."
-                    class="w-full pl-8 pr-3 py-1.5 rounded-md bg-muted/20 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-pastel-green/50 transition-colors"
+                    :class="[
+                        'w-full pl-8 py-1.5 rounded-md bg-muted/20 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-pastel-green/50 transition-colors',
+                        showClose ? 'pr-8' : 'pr-3'
+                    ]"
                 />
+                <button
+                    v-if="showClose"
+                    class="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-md hover:bg-muted/50 transition-colors text-muted-foreground"
+                    @click="emit('close')"
+                >
+                    <X class="h-3.5 w-3.5" />
+                </button>
             </div>
         </div>
 
@@ -87,8 +136,15 @@ const filteredSections = computed(() => {
                         <path d="M4 2l4 4-4 4" />
                     </svg>
                 </button>
-                <Transition name="section-expand">
-                    <ul v-show="expandedSections.has(section.name)" class="space-y-0.5 mt-1">
+                <Transition
+                    @before-enter="onBeforeEnter"
+                    @enter="onEnter"
+                    @after-enter="onAfterEnter"
+                    @before-leave="onBeforeLeave"
+                    @leave="onLeave"
+                    @after-leave="onAfterLeave"
+                >
+                    <ul v-show="expandedSections.has(section.name)" class="space-y-0.5 mt-1 section-expand-list">
                         <li v-for="doc in section.docs" :key="doc.slug">
                             <router-link
                                 :to="`/docs/${doc.slug}`"
@@ -114,14 +170,7 @@ const filteredSections = computed(() => {
 </template>
 
 <style scoped>
-.section-expand-enter-active,
-.section-expand-leave-active {
-    transition: all 0.2s ease;
-    overflow: hidden;
-}
-.section-expand-enter-from,
-.section-expand-leave-to {
-    opacity: 0;
-    max-height: 0;
+.section-expand-list {
+    transition: max-height 0.2s ease;
 }
 </style>

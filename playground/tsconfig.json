@@ -9,7 +9,8 @@
         "jsxImportSource": "vue",
         "skipLibCheck": true,
         "paths": {
-            "@/*": ["./src/*"]
+            "@/*": ["./src/*"],
+            "@docs/*": ["../docs/*"]
         }
     },
     "include": ["src/**/*.ts", "src/**/*.vue"],

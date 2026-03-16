@@ -10,33 +10,22 @@ gorgeous is a grammar-derived code formatter built in Rust. Instead of hand-writ
 
 ## Built-in Formatters
 
-gorgeous includes five pre-built formatters, each generated from a BBNF grammar:
+gorgeous includes six pre-built formatters, each generated from a BBNF grammar:
 
 | Language | Entry point | Notes |
 |----------|------------|-------|
 | **JSON** | `prettify_json()` | Full JSON spec with surrogate pair validation |
-| **CSS** | `prettify_css()` | L1.75 — at-rules, media queries, selectors, declarations |
+| **CSS** | `prettify_css()` | L1.75—at-rules, media queries, selectors, declarations |
 | **BNF** | `prettify_bnf()` | Standard Backus-Naur Form |
 | **EBNF** | `prettify_ebnf()` | Extended BNF (ISO 14977) |
 | **BBNF** | `prettify_bbnf()` | BBNF grammar files themselves |
+| **Google Sheets** | `prettify_google_sheets()` | Google Sheets formula language |
 
-Every formatter is purely grammar-driven with zero manual overrides. The `@pretty` directives in the grammar control all layout decisions: `group`, `indent`, `sep("...")`, `split("...")`.
+All formatters are generated from BBNF grammars. The `@pretty` directives in the grammar control all layout decisions: `group`, `indent`, `sep("...")`, `split("...")`.
 
 ## Performance
 
-gorgeous is fast. The combination of parse_that's high-throughput parser combinators and pprint's stack-based renderer produces output at hundreds of megabytes per second.
-
-**CSS formatting (gorgeous vs Biome):**
-
-| File | Size | gorgeous | Biome | Speedup |
-|------|------|----------|-------|---------|
-| app.css | 6 KB | 50 MB/s | 11 MB/s | 4.5x |
-| bootstrap.css | 281 KB | 342 MB/s | 17 MB/s | **20x** |
-| tailwind.css | 3.8 MB | 36 MB/s | 8 MB/s | 4.5x |
-
-**JSON formatting:** 115 MB/s (cached), competitive with serde-based formatters.
-
-**Internal pipeline throughput** on bootstrap.css: `to_doc` at 1,450 MB/s, `render` at 1,428 MB/s.
+See [Formatting Performance](/docs/performance/formatting) for full benchmark data. gorgeous achieves 205 MB/s end-to-end on bootstrap.css (13x faster than Biome), with cached parse results reaching 409 MB/s.
 
 ## WASM API
 
@@ -52,6 +41,7 @@ function format_css(input: string, max_width: number, indent: number, use_tabs: 
 function format_bnf(input: string, max_width: number, indent: number, use_tabs: boolean): string | undefined;
 function format_ebnf(input: string, max_width: number, indent: number, use_tabs: boolean): string | undefined;
 function format_bbnf(input: string, max_width: number, indent: number, use_tabs: boolean): string | undefined;
+function format_google_sheets(input: string, max_width: number, indent: number, use_tabs: boolean): string | undefined;
 ```
 
 Functions return `undefined` if parsing fails (e.g., malformed input).
@@ -109,4 +99,4 @@ The gorgeous pipeline for each language:
 2. **to_doc** — BBNF-derived codegen transforms each AST node into a pprint `Doc` tree, applying `@pretty` directives (`group`, `indent`, `sep`, `split`)
 3. **Render** — pprint's `pprint()` function traverses the `Doc` tree and produces the formatted string, breaking lines when Groups exceed `max_width`
 
-The `@pretty split(",")` directive deserves special mention: it enables grammar-driven format-time splitting of opaque spans (like CSS selector lists) using `split_balanced()` from parse_that, which respects parenthesis/bracket nesting and string quoting. This eliminated the last manual formatting override in the CSS formatter.
+The `@pretty split(",")` directive enables grammar-driven format-time splitting of opaque spans (like CSS selector lists) using `split_balanced()` from parse_that, which respects parenthesis/bracket nesting and string quoting. This eliminated the last manual formatting override in the CSS formatter.

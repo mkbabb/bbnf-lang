@@ -31,12 +31,14 @@
     --color-pastel-purple: hsl(var(--pastel-purple));
     --color-pastel-amber: hsl(var(--pastel-amber));
     --color-pastel-pink: hsl(var(--pastel-pink));
+    --color-pastel-cyan: hsl(var(--pastel-cyan));
     --radius-xl: calc(var(--radius) + 4px);
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
     --radius-sm: calc(var(--radius) - 4px);
+    --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
     --font-serif: "Instrument Serif", serif;
-    --font-mono: "Fira Code", monospace;
+    --font-mono: "Fira Code", "Fira Mono", monospace;
 
     /* Navbar height — used in calc() across PlaygroundPage, DocsPage */
     --spacing-navbar: 3.5rem;
@@ -47,11 +49,37 @@
     /* Animation timing tokens */
     --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
     --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
     --duration-fast: 150ms;
     --duration-normal: 300ms;
 
+    /* Glassmorphism tokens */
+    --glass-bg: hsl(var(--card) / 0.82);
+    --glass-bg-heavy: hsl(var(--card) / 0.95);
+    --glass-border: hsl(var(--border) / 0.5);
+    --glass-blur: blur(12px);
+    --glass-blur-heavy: blur(16px) saturate(1.3);
+    --glass-shadow: 0 4px 16px hsl(var(--foreground) / 0.08);
+    --glass-shadow-elevated: 0 4px 20px hsl(var(--foreground) / 0.12),
+        0 0 0 0.5px hsl(var(--foreground) / 0.05);
+
+    /* Pill radius */
+    --radius-pill: 9999px;
+
     /* Label font size — intentionally smaller than text-xs for badges/tags */
     --font-size-label: 0.625rem;
+
+    /* Hover shadow — used on cards, CTA buttons */
+    --shadow-hover: 5px 7px 0px 0px;
+
+    /* Small text sizes for charts/badges not covered by Tailwind scale */
+    --font-size-micro: 0.5625rem;   /* 9px — BenchChart labels */
+    --font-size-mini: 0.625rem;     /* 10px — LiveBench, badge labels */
+    --font-size-caption: 0.6875rem; /* 11px — BenchChart axis */
+
+    /* Long animation durations */
+    --duration-slow: 500ms;
+    --duration-hero: 700ms;
 }
 
 @layer base {
@@ -85,6 +113,7 @@
         --pastel-purple: 270 45% 55%;
         --pastel-amber: 30 70% 50%;
         --pastel-pink: 330 65% 55%;
+        --pastel-cyan: 185 55% 42%;
     }
 
     .dark {
@@ -116,6 +145,7 @@
         --pastel-pink: 330 55% 68%;
         --pastel-purple: 270 40% 68%;
         --pastel-amber: 35 65% 62%;
+        --pastel-cyan: 185 50% 58%;
     }
 }
 
@@ -127,10 +157,10 @@
         @apply bg-background text-foreground;
         overscroll-behavior: none;
         min-height: 100dvh;
-        width: 100vw;
+        width: 100%;
         margin: 0;
         padding: 0;
-        font-family: var(--font-mono);
+        font-family: var(--font-sans);
         -webkit-text-size-adjust: 100%;
         touch-action: manipulation;
     }
@@ -159,7 +189,6 @@
     display: none;
 }
 .scrollbar-hidden {
-    -ms-overflow-style: none;
     scrollbar-width: none;
 }
 
@@ -179,6 +208,8 @@
     margin-top: 2.5rem;
     margin-bottom: 1rem;
     color: hsl(var(--foreground));
+    border-bottom: 2px solid hsl(var(--border) / 0.4);
+    padding-bottom: 0.75rem;
 }
 .prose h2 {
     font-family: var(--font-serif);
@@ -195,6 +226,8 @@
     margin-top: 1.75rem;
     margin-bottom: 0.5rem;
     color: hsl(var(--foreground) / 0.95);
+    border-bottom: 1px solid hsl(var(--border) / 0.15);
+    padding-bottom: 0.35rem;
 }
 
 /* Body text */
@@ -211,6 +244,7 @@
     border: 1px solid hsl(var(--border) / 0.3);
     border-radius: 0.25rem;
     padding: 0.1rem 0.4rem;
+    font-family: var(--font-mono);
     font-size: 0.8em;
     color: hsl(var(--pastel-green));
 }
@@ -223,6 +257,7 @@
     padding: 1rem;
     overflow-x: auto;
     margin-bottom: 0;
+    font-family: var(--font-mono);
     font-size: 0.8rem;
     line-height: 1.7;
     border: none;
@@ -258,6 +293,19 @@
     user-select: none;
     letter-spacing: 0.05em;
     text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+}
+.code-lang-icon {
+    display: inline-flex;
+    width: 14px;
+    height: 14px;
+    vertical-align: -2px;
+    margin-right: 4px;
+}
+.code-lang-icon svg {
+    width: 100%;
+    height: 100%;
 }
 
 /* Links */
@@ -282,10 +330,10 @@
     border-radius: 0.5rem;
     overflow: hidden;
     border: 1px solid hsl(var(--border) / 0.3);
-    box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 0.05);
+    box-shadow: 2px 2px 0px 0px hsl(var(--shadow) / 0.05);
 }
 .dark .prose table {
-    box-shadow: 2px 2px 0px 0px rgba(200, 200, 255, 0.04);
+    box-shadow: 2px 2px 0px 0px hsl(var(--shadow) / 0.04);
 }
 .prose th, .prose td {
     border: 1px solid hsl(var(--border) / 0.3);
@@ -293,12 +341,16 @@
 }
 .prose th {
     background: hsl(var(--muted) / 0.3);
+    font-family: var(--font-mono);
     font-weight: 500;
     text-align: left;
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.03em;
     color: hsl(var(--muted-foreground));
+}
+.prose td {
+    font-variant-numeric: tabular-nums;
 }
 
 /* Lists */
@@ -329,3 +381,114 @@
 .hl-decorator { color: hsl(var(--pastel-purple) / 0.85); }
 .hl-regex    { color: hsl(var(--pastel-blue) / 0.9); }
 .hl-operator { color: hsl(var(--muted-foreground) / 0.7); }
+
+/* Performance number colorization (docs prose) */
+.perf-number { color: hsl(var(--pastel-cyan)); font-variant-numeric: tabular-nums; font-weight: 600; }
+.perf-unit { color: hsl(var(--muted-foreground) / 0.7); font-size: 0.85em; }
+
+/* ------------------------------------------------------------------ */
+/* Dock & glass component utilities                                    */
+/* ------------------------------------------------------------------ */
+
+@layer components {
+    .glass {
+        background: var(--glass-bg);
+        backdrop-filter: var(--glass-blur);
+        -webkit-backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--glass-shadow);
+    }
+
+    .glass-elevated {
+        background: var(--glass-bg-heavy);
+        backdrop-filter: var(--glass-blur-heavy);
+        -webkit-backdrop-filter: var(--glass-blur-heavy);
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--glass-shadow-elevated);
+    }
+
+    .dock-icon-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: var(--radius-pill);
+        border: none;
+        background: transparent;
+        color: hsl(var(--foreground) / 0.7);
+        cursor: pointer;
+        transition: all var(--duration-fast) var(--ease-smooth);
+        flex-shrink: 0;
+        padding: 0;
+    }
+    .dock-icon-btn:hover:not(:disabled) {
+        background: hsl(var(--foreground) / 0.08);
+        color: hsl(var(--foreground));
+        transform: scale(1.1);
+    }
+    .dock-icon-btn:active:not(:disabled) {
+        transform: scale(0.92);
+    }
+    .dock-icon-btn:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+    }
+    .dock-icon-btn.is-active {
+        background: hsl(var(--foreground) / 0.08);
+        color: hsl(var(--foreground));
+    }
+
+    .dock-separator {
+        width: 1px;
+        height: 1.25rem;
+        margin: 0 0.125rem;
+        background: hsl(var(--foreground) / 0.15);
+        flex-shrink: 0;
+    }
+
+    .dock-spacer {
+        flex: 1;
+    }
+
+    .shadow-card-hover {
+        box-shadow: var(--shadow-hover) hsl(var(--shadow) / 0.12);
+    }
+    :is(.dark) .shadow-card-hover {
+        box-shadow: var(--shadow-hover) hsl(var(--shadow) / 0.08);
+    }
+
+    .dock-badge {
+        color: hsl(var(--foreground) / 0.5);
+        font-variant-numeric: tabular-nums;
+        padding: 0 0.375rem;
+        white-space: nowrap;
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* Shimmer text effects (shared across components)                     */
+/* ------------------------------------------------------------------ */
+
+.gold-shimmer {
+    background: linear-gradient(90deg, #b8860b, #ffd700, #daa520, #ffd700, #b8860b);
+    background-size: 200% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    animation: shimmer 3s linear infinite;
+}
+
+.blue-shimmer {
+    background: linear-gradient(90deg, #1e40af, #60a5fa, #3b82f6, #60a5fa, #1e40af);
+    background-size: 200% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    animation: shimmer 3s linear infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}

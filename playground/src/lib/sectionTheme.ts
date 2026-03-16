@@ -43,6 +43,11 @@ export const sectionThemes: Record<string, SectionTheme> = {
         iconPath: "M6 3h12l4 6-10 13L2 9z",
         iconPath2: "M2 9h20M12 22L6 9l6-6 6 6z",
     },
+    Performance: {
+        color: "pastel-cyan",
+        // Lightning bolt — speed/performance
+        iconPath: "M13 2L3 14h9l-1 8 10-12h-9l1-8z",
+    },
 };
 
 /** Nav link icons for Playground and Docs. */

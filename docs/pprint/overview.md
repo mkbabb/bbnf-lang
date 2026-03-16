@@ -97,14 +97,18 @@ use pprint::PRINTER; // max_width: 80, indent: 4, use_tabs: false
 
 pprint is optimized for throughput in formatter pipelines:
 
-- **Stack-based rendering** — no recursion, no stack overflow on deep trees
-- **Literal fast-path** — `Char`, `DoubleChar`, `SmallBytes` variants avoid heap allocation for short strings
-- **Cached text length** — `FxHashMap` (pre-allocated, 256 capacity) avoids redundant width calculations
-- **`LinearJoin`** — inline break decisions with zero pre-pass overhead
-- **`SmartJoin`** — text-justification algorithm for optimal line filling
-- **`unsafe` UTF-8 skip** — release builds use `String::from_utf8_unchecked` (all inputs validated at construction)
+```bench-chart
+{ "title": "pprint Render vs Pipeline", "unit": "MB/s",
+  "datasets": [
+    { "name": "bootstrap.css (281 KB)", "icon": "rust",
+      "labels": ["pprint render", "to_doc", "end-to-end"],
+      "series": [{"label": "Throughput", "values": [1115, 1026, 205]}] }
+  ] }
+```
 
-In the gorgeous formatter pipeline, pprint renders at over 1,400 MB/s on a 281KB CSS file.
+Key optimizations: stack-based rendering (no recursion), inline `SmallBytes` variants for strings ≤24 bytes, `FxHashMap` width cache, and `LinearJoin` for zero-pre-pass break decisions.
+
+See [pprint Performance](/docs/performance/pprint) for detailed benchmarks and inline text variant analysis.
 
 ## Integration with gorgeous
 

@@ -20,7 +20,7 @@ import { usePipeline, type PipelineError } from "@/composables/usePipeline";
 import { useSplitPane } from "@/composables/useSplitPane";
 import { usePlaygroundQuery } from "@/composables/usePlaygroundQuery";
 import { registerBBNFLanguage } from "@/components/editors/bbnfMonarch";
-import { registerBBNFLanguageProvider, updateGrammarDiagnostics } from "@/composables/useLanguageProvider";
+import { registerBBNFLanguageProvider, updateGrammarDiagnostics } from "@/lib/languageProvider";
 import { useWalkthrough } from "@/composables/useWalkthrough";
 import { BbnfLogo } from "@/components/custom/bbnf-logo";
 import { ExternalLink, GripHorizontal, GripVertical } from "lucide-vue-next";

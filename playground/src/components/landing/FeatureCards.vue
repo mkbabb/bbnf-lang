@@ -59,7 +59,7 @@ const features = [
                 :key="feature.title"
                 class="rounded-xl border bg-card/80 backdrop-blur-sm p-3 sm:p-5 transition-all duration-300
                        hover:-translate-y-0.5 cursor-default shadow-card
-                       hover:shadow-[5px_7px_0_rgba(0,0,0,0.12)] dark:hover:shadow-[5px_7px_0_rgba(200,200,255,0.08)]"
+                       hover:shadow-card-hover"
                 :class="feature.borderClass"
             >
                 <component :is="feature.icon" class="h-5 w-5 sm:h-6 sm:w-6 mb-2 sm:mb-3" :class="feature.iconClass" />

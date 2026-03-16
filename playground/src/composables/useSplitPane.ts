@@ -29,7 +29,6 @@ export function useSplitPane(onRelayout: () => void): SplitPaneReturn {
     const splitContainerRef = ref<HTMLElement | null>(null);
     const splitAxisSize = ref(0);
     const isDraggingDivider = ref(false);
-
     let splitResizeObserver: ResizeObserver | null = null;
     let dividerDragStart: { x: number; y: number } | null = null;
     let dividerDidDrag = false;

@@ -77,5 +77,6 @@ Import rules from other `.bbnf` files:
 ```
 
 - Paths are relative to the importing file
-- Non-transitive: A importing B importing C does not give A access to C
+- **Glob imports** are non-transitive—A importing all of B doesn't expose B's own imports to A
+- **Selective imports** auto-unfurl transitive dependencies—`@import { x } from "B.bbnf"` pulls in any local rules that `x` depends on
 - Local rules shadow imports

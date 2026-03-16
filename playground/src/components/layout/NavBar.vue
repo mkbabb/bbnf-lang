@@ -4,7 +4,7 @@ import { useRoute } from "vue-router";
 import { HeaderRibbon } from "@/components/custom/header-ribbon";
 import { DarkModeToggle } from "@/components/custom/dark-mode-toggle";
 import { BbnfLogo } from "@/components/custom/bbnf-logo";
-import { navIcons } from "@/composables/useSectionTheme";
+import { navIcons } from "@/lib/sectionTheme";
 import { useHeroState } from "@/composables/useHeroState";
 
 const route = useRoute();

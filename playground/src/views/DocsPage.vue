@@ -3,8 +3,9 @@ import { ref, computed, watch } from "vue";
 import { useRouter } from "vue-router";
 import DocsSidebar from "@/components/docs/DocsSidebar.vue";
 import { useDocs } from "@/composables/useDocs";
-import { useMarkdown } from "@/composables/useMarkdown";
-import { getSectionTheme } from "@/composables/useSectionTheme";
+import { useMarkdown } from "@/lib/markdown";
+import { useMarkdownComponents } from "@/composables/useMarkdownComponents";
+import { getSectionTheme } from "@/lib/sectionTheme";
 import { PanelLeftClose, PanelLeftOpen, Menu, X } from "lucide-vue-next";
 
 const props = defineProps<{
@@ -36,6 +37,10 @@ watch(() => props.slug, () => { mobileDrawer.value = false; });
 const currentDoc = computed(() => props.slug ? getDoc(props.slug) : undefined);
 const rendered = computed(() => currentDoc.value ? renderMarkdown(currentDoc.value.content) : "");
 const sectionTheme = computed(() => currentDoc.value ? getSectionTheme(currentDoc.value.section) : null);
+
+// Hydrate interactive components (code-tabs, bench-chart, live-bench) into rendered markdown
+const articleRef = ref<HTMLElement | null>(null);
+useMarkdownComponents(articleRef, rendered);
 </script>
 
 <template>
@@ -56,28 +61,19 @@ const sectionTheme = computed(() => currentDoc.value ? getSectionTheme(currentDo
                 @click.self="mobileDrawer = false"
             >
                 <div class="absolute top-14 left-0 w-72 h-[calc(100dvh-var(--spacing-navbar))] bg-card/95 backdrop-blur-xl border-r border-border/30 shadow-lg flex flex-col">
-                    <div class="flex items-center justify-between px-4 py-2 border-b border-border/20 shrink-0">
-                        <span class="instrument-serif text-sm text-muted-foreground">Navigation</span>
-                        <button
-                            class="p-1.5 rounded-md hover:bg-muted/50 transition-colors text-muted-foreground"
-                            @click="mobileDrawer = false"
-                        >
-                            <X class="h-5 w-5 transition-transform duration-200" />
-                        </button>
-                    </div>
                     <div class="flex-1 overflow-y-auto">
-                        <DocsSidebar :current-slug="slug" />
+                        <DocsSidebar :current-slug="slug" show-close @close="mobileDrawer = false" />
                     </div>
                 </div>
             </div>
         </Transition>
 
         <!-- Main content -->
-        <main class="flex-1 flex min-h-[calc(100dvh-var(--spacing-navbar))] flex-col px-4 py-4 sm:px-8 sm:py-6 min-w-0">
+        <main class="flex-1 flex min-h-[calc(100dvh-var(--spacing-navbar))] flex-col px-4 py-2 sm:px-8 sm:py-3 min-w-0">
             <div v-if="currentDoc" class="mx-auto flex w-full max-w-4xl flex-1 flex-col">
                 <!-- Card-styled article container -->
                 <div
-                    class="rounded-xl border bg-card/80 backdrop-blur-sm p-5 sm:p-8 md:p-10 flex-1 relative shadow-card"
+                    class="rounded-xl border bg-card/80 backdrop-blur-sm p-5 sm:p-6 md:p-8 flex-1 relative shadow-card"
                     :style="{
                         borderColor: sectionTheme
                             ? `color-mix(in srgb, var(--color-${sectionTheme.color}) 25%, hsl(var(--border) / 0.4))`
@@ -105,7 +101,7 @@ const sectionTheme = computed(() => currentDoc.value ? getSectionTheme(currentDo
                     <!-- Section badge -->
                     <div
                         v-if="sectionTheme"
-                        class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[length:var(--font-size-label)] font-mono uppercase tracking-wider mb-4"
+                        class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[length:var(--font-size-label)] font-mono uppercase tracking-wider mb-2"
                         :style="{
                             color: `var(--color-${sectionTheme.color})`,
                             background: `color-mix(in srgb, var(--color-${sectionTheme.color}) 10%, transparent)`,
@@ -124,7 +120,7 @@ const sectionTheme = computed(() => currentDoc.value ? getSectionTheme(currentDo
                         </svg>
                         {{ currentDoc.section }}
                     </div>
-                    <article class="prose max-w-none" v-html="rendered" />
+                    <article ref="articleRef" class="prose max-w-none" v-html="rendered" />
                 </div>
             </div>
             <div v-else class="text-center text-muted-foreground pt-20">

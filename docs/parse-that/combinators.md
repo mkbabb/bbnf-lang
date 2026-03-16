@@ -14,10 +14,15 @@ All combinators are methods on `Parser<T>`. Each returns a new parser without mu
 
 Sequence two parsers. `.then()` keeps both values as a tuple, `.skip()` keeps only the left value, `.next()` keeps only the right value.
 
-```ts
+```code-tabs
+---typescript---
 string("a").then(string("b")).parse("ab");  // ["a", "b"]
 regex(/\w+/).skip(string(";")).parse("hi;"); // "hi"
 string("x=").next(regex(/\d+/)).parse("x=42"); // "42"
+---rust---
+string("a").then(string("b")).parse("ab");  // ("a", "b")
+regex(r"\w+").skip(string(";")).parse("hi;"); // "hi"
+string("x=").next(regex(r"\d+")).parse("x=42"); // "42"
 ```
 
 ## Alternation
@@ -26,8 +31,11 @@ string("x=").next(regex(/\d+/)).parse("x=42"); // "42"
 
 Try `this` first. If it fails, try `other`. Returns `Parser<T | S>`.
 
-```ts
+```code-tabs
+---typescript---
 string("true").or(regex(/\d+/)).parse("42"); // "42"
+---rust---
+string("true").or(regex(r"\d+")).parse("42"); // "42"
 ```
 
 ## Transformation
@@ -36,11 +44,18 @@ string("true").or(regex(/\d+/)).parse("42"); // "42"
 
 `.map()` transforms a successful result. `.chain()` uses the result to select the next parser dynamically.
 
-```ts
+```code-tabs
+---typescript---
 const num = regex(/\d+/).map(Number);       // Parser<number>
 const tagged = regex(/\w+/).chain(tag =>
-    tag === "num" ? regex(/\d+/).map(Number) : regex(/.+/)
+    tag === "num" ? regex(/\d+/) : regex(/.+/)
 );
+---rust---
+let num = regex(r"\d+").map(|s: &str| s.parse::<i64>().unwrap());
+let tagged = regex(r"\w+").chain(|tag: &str| match tag {
+    "num" => regex(r"\d+"),
+    _ => regex(r".+"),
+});
 ```
 
 ## Repetition
@@ -54,7 +69,9 @@ const digits = regex(/\d/).many(1);
 digits.parse("123"); // ["1", "2", "3"]
 ```
 
-**Signature:** `many(min?: number, max?: number): Parser<T[]>`
+**TypeScript signature:** `many(min?: number, max?: number): Parser<T[]>`
+
+**Rust signature:** `many(range: impl RangeBounds<usize>): Parser<Vec<T>>` — e.g. `many(..)`, `many(1..)`
 
 ### `.sepBy(sep, min?, max?)`
 
@@ -65,13 +82,15 @@ const csv = regex(/\w+/).sepBy(string(","));
 csv.parse("a,b,c"); // ["a", "b", "c"]
 ```
 
-**Signature:** `sepBy<S>(sep: Parser<S>, min?: number, max?: number): Parser<T[]>`
+**TypeScript signature:** `sepBy<S>(sep: Parser<S>, min?: number, max?: number): Parser<T[]>`
+
+**Rust signature:** `sep_by<S>(sep: Parser<S>, range: impl RangeBounds<usize>): Parser<Vec<T>>`
 
 ## Optionality
 
 ### `.opt()`
 
-Try `this`. On failure, succeed with `undefined` instead.
+Try `this`. On failure, succeed with `undefined` (TypeScript) or `None` (Rust) instead.
 
 ```ts
 const maybeSign = string("-").opt();
@@ -79,7 +98,9 @@ maybeSign.parse("-");  // "-"
 maybeSign.parse("3");  // undefined
 ```
 
-**Signature:** `opt(): Parser<T | undefined>`
+**TypeScript signature:** `opt(): Parser<T | undefined>`
+
+**Rust signature:** `opt(): Parser<Option<T>>`
 
 ## Wrapping and Trimming
 
@@ -112,7 +133,7 @@ const ident = regex(/\w+/).not(string("class"));
 
 ### `.peek()` / `.lookAhead(lookahead)`
 
-`.peek()` is a zero-width positive assertion -- succeeds with `this`'s value without consuming input. `.lookAhead()` parses `this`, then asserts `lookahead` matches at the resulting position (zero-width). Returns `this`'s value.
+`.peek()` is a zero-width positive assertion — succeeds with `this`'s value without consuming input. `.lookAhead()` (Rust: `.look_ahead()`) parses `this`, then asserts `lookahead` matches at the resulting position (zero-width). Returns `this`'s value.
 
 ### `.minus(excluded)`
 
@@ -148,17 +169,24 @@ Enable packrat memoization with left-recursion support. Caches results by parser
 
 ## Recursion
 
-### `Parser.lazy(fn)`
+### `Parser.lazy(fn)` / `lazy(fn)`
 
-Static method for defining recursive parsers. The factory function `fn` is called lazily on first use and cached.
+Static method (TypeScript) or free function (Rust) for defining recursive parsers. The factory function `fn` is called lazily on first use and cached.
 
-```ts
+```code-tabs
+---typescript---
 const expr: Parser<number> = Parser.lazy(() =>
     num.or(expr.wrap(string("("), string(")")))
 );
+---rust---
+let expr = lazy(|| {
+    num.or(expr.wrap(string("("), string(")")))
+});
 ```
 
-**Signature:** `static lazy<T>(fn: () => Parser<T>): Parser<T>`
+**TypeScript signature:** `static lazy<T>(fn: () => Parser<T>): Parser<T>`
+
+**Rust signature:** `lazy<T>(fn: impl Fn() -> Parser<T>): Parser<T>`
 
 ## End of Input
 

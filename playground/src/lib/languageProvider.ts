@@ -1,5 +1,5 @@
 import * as monaco from "monaco-editor";
-import { useWasm, ensureWasmLoaded, toMonacoRange } from "./wasm";
+import { useWasm, ensureWasmLoaded, toMonacoRange } from "@/composables/wasm";
 import type {
     WasmDiagnostic,
     WasmAnalysisResult,
@@ -7,7 +7,7 @@ import type {
     WasmLocation,
     WasmPrepareRename,
     WasmTextEdit,
-} from "./wasm";
+} from "@/composables/wasm";
 
 const SEVERITY_MAP: Record<number, monaco.MarkerSeverity> = {
     1: monaco.MarkerSeverity.Error,

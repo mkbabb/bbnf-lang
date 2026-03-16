@@ -112,11 +112,11 @@ import { whitespace } from "@mkbabb/parse-that";
 const token = string("hello").skip(whitespace);
 ```
 
-Note: for hot paths, the library uses an optimized `trimStateWhitespace` function that operates with a `charCodeAt` loop instead of regex, and is invoked automatically when you use `.trim()` with the default whitespace parser.
+When `.trim()` is called without a custom parser, an optimized `charCodeAt` loop is used instead of regex.
 
 ## Domain Parsers
 
-The library also ships higher-level parsers built from these primitives:
+Higher-level parsers built from these primitives:
 
 ```ts
 import { jsonParser, csvParser } from "@mkbabb/parse-that";

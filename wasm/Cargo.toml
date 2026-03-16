@@ -9,9 +9,9 @@ description = "WASM bindings for BBNF analysis + gorgeous formatting"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-bbnf-analysis = { version = "0.1.0", path = "../rust/bbnf-analysis" }
-bbnf = { version = "0.2.0", path = "../rust/bbnf" }
-bbnf-ir = { version = "0.1.0", path = "../rust/bbnf-ir" }
+bbnf-analysis = { version = "0.1", path = "../rust/bbnf-analysis" }
+bbnf = { version = "0.2", path = "../rust/bbnf" }
+bbnf-ir = { version = "0.1", path = "../rust/bbnf-ir" }
 gorgeous = { version = "0.1", features = ["vm"] }
 pprint = "0.3"
 parse_that = "0.3"

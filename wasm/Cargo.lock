@@ -19,7 +19,7 @@ checksum = "c08606f8c3cbf4ce6ec8e28fb0014a2c086708fe954eaa885384a6165172e7e8"
 
 [[package]]
 name = "bbnf"
-version = "0.2.4"
+version = "0.2.5"
 dependencies = [
  "bbnf-ir",
  "indexmap",
@@ -33,7 +33,7 @@ dependencies = [
 
 [[package]]
 name = "bbnf-analysis"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bbnf",
  "indexmap",
@@ -46,7 +46,7 @@ dependencies = [
 
 [[package]]
 name = "bbnf-ir"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "regex",
  "rmp-serde",
@@ -74,7 +74,7 @@ dependencies = [
 
 [[package]]
 name = "bbnf_derive"
-version = "0.2.3"
+version = "0.2.5"
 dependencies = [
  "bbnf",
  "bbnf-ir",

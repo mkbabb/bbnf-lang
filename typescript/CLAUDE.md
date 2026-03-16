@@ -6,7 +6,7 @@
 
 ```
 typescript/
-├── package.json        @mkbabb/bbnf-lang v0.1.3, ESM
+├── package.json        @mkbabb/bbnf-lang v0.1.4, ESM
 ├── tsconfig.json       ES2022, strict
 ├── vite.config.ts      Library build (ES + CJS), vite-plugin-dts
 ├── src/

@@ -1,6 +1,6 @@
 {
     "name": "prettier-plugin-bbnf",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "Prettier plugin for BBNF grammar files",
     "type": "module",
     "exports": {
@@ -16,7 +16,7 @@
         "prettier": "^3.0.0"
     },
     "dependencies": {
-        "@mkbabb/bbnf-lang": "^0.1.0"
+        "@mkbabb/bbnf-lang": "^0.1.4"
     },
     "devDependencies": {
         "prettier": "^3.0.0",

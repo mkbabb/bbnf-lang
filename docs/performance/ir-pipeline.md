@@ -6,7 +6,7 @@ section: BBNF
 
 # IR Pipeline
 
-Both AOT and VM paths share the same IR (`bbnf-ir`'s `GrammarIR`), with eleven optimization passes transforming it before codegen or bytecode compilation.
+Both AOT and VM paths share the same IR (`bbnf-ir`'s `GrammarIR`), with twelve optimization passes transforming it before codegen or bytecode compilation.
 
 ## Optimization Passes
 
@@ -17,9 +17,10 @@ Applied in order, each pass is idempotent:
   "nodes": [
     {"label": "canonicalize_aliases", "detail": "Resolve A = B chains transitively", "color": "green", "href": "#canonicalize_aliases"},
     {"label": "prune_unreachable", "detail": "Remove rules unreachable from entry", "color": "green", "href": "#prune_unreachable"},
-    {"label": "eliminate_epsilon", "detail": "Remove redundant ε productions", "color": "green", "href": "#eliminate_epsilon"},
     {"label": "inline_acyclic", "detail": "Inline non-recursive rules at call sites", "color": "blue", "href": "#inline_acyclic"},
+    {"label": "eliminate_epsilon", "detail": "Remove redundant ε productions", "color": "green", "href": "#eliminate_epsilon"},
     {"label": "merge_literals", "detail": "Coalesce adjacent string literals", "color": "blue", "href": "#merge_literals"},
+    {"label": "merge_regex_alts", "detail": "Fuse regex-only alternation branches", "color": "blue", "href": "#merge_regex_alts"},
     {"label": "factor_common_prefixes", "detail": "Factor shared prefixes", "color": "blue", "href": "#factor_common_prefixes"},
     {"label": "refine_span_eligibility", "detail": "Mark rules for zero-copy span parsing", "color": "purple", "href": "#refine_span_eligibility"},
     {"label": "compute_follow_sets", "detail": "Compute FOLLOW sets for conflict detection", "color": "purple", "href": "#compute_follow_sets"},
@@ -57,6 +58,10 @@ Replaces `Ref(id)` nodes with the referenced rule's body when the target is non-
 
 Scans `Seq` nodes for runs of adjacent `Literal` children and coalesces them into a single `Literal` with the concatenated string (e.g., `Seq([Lit("a"), Lit("b")])` becomes `Lit("ab")`). Fires after `inline_acyclic`, which frequently places formerly-separate literals next to each other. Reduces the number of `MatchString` opcodes in bytecode, turning N sequential string matches into one, and shrinks the IR tree for faster traversal by later passes.
 
+## merge_regex_alts
+
+Scans `Alt` nodes for branches that are all `Regex` leaves and fuses them into a single `Regex` with a combined pattern (e.g., `Alt([Regex("a+"), Regex("b+")])` becomes `Regex("(?:a+)|(?:b+)")`). Fires after `merge_literals` and `inline_acyclic`, which can surface regex-only alternations that weren't visible at the AST level. Reduces alternation trial overhead in both the interpreter and AOT codegen by replacing N regex matches with one, and can enable `generate_dispatch_tables` on the containing alternation by collapsing branches.
+
 ## factor_common_prefixes
 
 Groups consecutive alternation branches that share the same leading IR node and rewrites them as `Seq(prefix, Alt(remainders))`. Uses sequential grouping (not arbitrary reordering) to preserve alternation priority semantics. Fires on patterns like `"if" ident | "if" "(" expr ")"`, keyword tables, or any grammar where branches share a literal or nonterminal prefix. Eliminates redundant backtracking by parsing the shared prefix once, and can enable `generate_dispatch_tables` on the resulting inner alternation by making its branches' FIRST sets disjoint.
@@ -85,7 +90,7 @@ Walks each rule body in topological order and assigns a `TypeDesc` (`Span`, `Vec
 
 ## AOT vs VM Compile Time
 
-The paths diverge after pass 11:
+The paths diverge after pass 12:
 
 ```bench-chart
 { "title": "AOT vs VM Compile Time (8-rule JSON)", "unit": "ms",

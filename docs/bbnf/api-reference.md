@@ -19,14 +19,13 @@ const firstNullable = computeFirstSets(parsed.rules, analysis);
 const parsers = ASTToParser(parsed.rules, analysis, firstNullable, parsed.recovers);
 const result = parsers.value.parse("hello");
 ---rust---
-use bbnf::BBNF;
+use bbnf_derive::Parser;
 
-#[derive(BBNF)]
-#[grammar = "path/to/grammar.bbnf"]
-#[entry = "value"]
+#[derive(Parser)]
+#[parser(path = "path/to/grammar.bbnf")]
 struct MyParser;
 
-let result = MyParser.parse("hello");
+let result = MyParser::value().parse("hello");
 ```
 
 ## TypeScript API
@@ -94,15 +93,14 @@ Parser class with `grammar()` and `grammarWithImports()` methods for programmati
 ### Derive Macro
 
 ```rust
-use bbnf::BBNF;
+use bbnf_derive::Parser;
 
-#[derive(BBNF)]
-#[grammar = "path/to/grammar.bbnf"]
-#[entry = "value"]
+#[derive(Parser)]
+#[parser(path = "path/to/grammar.bbnf")]
 struct MyParser;
 ```
 
-Generates a `parse()` method returning the parsed AST. Available attributes:
+Generates an enum and per-rule parser methods. Available attributes:
 
 | Attribute | Effect |
 |-----------|--------|
@@ -141,7 +139,7 @@ See the [pprint docs](/docs/pprint/overview) for the full Doc API.
 
 ## WASM
 
-gorgeous compiles to WebAssembly via the `bbnf-wasm` crate. Six AOT formatters are available:
+The `bbnf-wasm` crate provides WebAssembly formatters via gorgeous. Six AOT formatters are available:
 
 ```typescript
 import init, { format_json, format_css, format_bbnf, format_bnf, format_ebnf, format_google_sheets } from "bbnf-wasm";

@@ -23,7 +23,7 @@ Three independent pipelines transform `.bbnf` grammars into executable parsers a
                GrammarIR        │      ASTToParser() runtime
               (bbnf-ir)         │       combinator gen
                     │            │             │
-          ┌─── 11 IR passes ────┤             ▼
+          ┌─── 12 IR passes ────┤             ▼
           │   (bbnf-ir::passes) │        Parser<T> tree
           │                     │        (parse-that TS)
           ▼                     │             │
@@ -42,7 +42,7 @@ Three independent pipelines transform `.bbnf` grammars into executable parsers a
 ```
 
 `bbnf-ir` is the shared core — it defines the canonical IR (`GrammarIR`, `IrNode`,
-`IrRule`, `RuleMeta`, `TypeDesc`) and all 11 optimization passes. Both AOT and VM
+`IrRule`, `RuleMeta`, `TypeDesc`) and all 12 optimization passes. Both AOT and VM
 consume the same optimized IR; they only diverge at the final step: Rust codegen
 vs. bytecode compilation.
 
@@ -58,13 +58,13 @@ Compile-time code generation. Reads `.bbnf`, emits Rust `TokenStream`.
 3. Extract `@recover`, `@pretty`, `@no_collapse` directives
 4. Analysis — SCC detection, FIRST sets, alias detection, span eligibility
 5. Lower AST → `GrammarIR` (`bbnf::lower`) — IR types from `bbnf-ir`
-6. Apply 11 IR optimization passes (`bbnf-ir::passes`) — **same passes as VM**
+6. Apply 12 IR optimization passes (`bbnf-ir::passes`) — **same passes as VM**
 7. **(AOT only)** Codegen → Rust `TokenStream` (`bbnf::generate`)
 
 **IR Passes** (in order):
 `canonicalize_aliases` → `prune_unreachable` → `inline_acyclic` →
-`eliminate_epsilon` → `merge_literals` → `factor_common_prefixes` →
-`refine_span_eligibility` → `compute_follow_sets` →
+`eliminate_epsilon` → `merge_literals` → `merge_regex_alts` →
+`factor_common_prefixes` → `refine_span_eligibility` → `compute_follow_sets` →
 `generate_dispatch_tables` → `refine_memo_strategies` → `infer_types`
 
 **Generated code per struct:**
@@ -99,7 +99,7 @@ Rust `TokenStream`.
 2. Resolve imports, extract directives
 3. Analysis — SCC, FIRST sets, span eligibility
 4. Lower AST → `GrammarIR` (`bbnf::lower`)
-5. Apply 11 IR optimization passes (`bbnf-ir::passes`) — **same passes as AOT**
+5. Apply 12 IR optimization passes (`bbnf-ir::passes`) — **same passes as AOT**
 6. **(VM only)** Compile IR → `BytecodeProgram` (`bbnf-ir::compiler`)
 7. Serialize via MessagePack (for WASM boundary crossing)
 8. Interpret bytecode against input (`bbnf-ir::interpreter`)
@@ -169,8 +169,7 @@ rust/
         eliminate_epsilon, merge_literals, merge_regex_alts,
         factor_common_prefixes,
         refine_span_eligibility, compute_follow_sets,
-        generate_dispatch_tables, refine_memo_strategies, infer_types,
-        compute_sp_method_rules
+        generate_dispatch_tables, refine_memo_strategies, infer_types
       compiler.rs       IR → BytecodeProgram (VM path only)
       interpreter.rs    BytecodeProgram → ParseResult (VM path only)
       bytecode.rs       Op enum, BytecodeProgram struct (VM path only)

@@ -14,7 +14,7 @@ valueSpan    = /[^;{}!,]+/ ;
 propertyName = /[a-zA-Z_][\w-]*/ | /--[\w-]+/ | /-[a-zA-Z][\w-]*/ ;
 important    = "!" ?w , "important" ;
 optSemicolon = ";" ? ;
-declaration  = propertyName ?w , ":" ?w , valueSpan , ("," ?w , valueSpan) * ,
+declaration  = propertyName ?w , ":" ?w , (valueSpan , ("," ?w , valueSpan) *) ? ,
                important ? , optSemicolon ?w ;
 
 @recover declaration /[^;{}]+;/ ;
@@ -22,7 +22,7 @@ declaration  = propertyName ?w , ":" ?w , valueSpan , ("," ?w , valueSpan) * ,
 // Block contents: declarations and nested rules (CSS Nesting Level 1)
 // This creates the structural cycle: blockContent → ruleItem → ... → ruleBlock → blockContent
 blockContent = (ws , (declaration | ruleItem) ?w) * ;
-ruleBlock    = "{" ?w , blockContent ?w , "}" ;
+ruleBlock    = "{" ?w , blockContent , ws , "}" ;
 
 // Qualified rules
 qualifiedRule = selectorSpan ?w , ruleBlock ;

@@ -33,8 +33,8 @@ const emit = defineEmits<{
 </script>
 
 <template>
-    <div class="relative px-2 sm:px-4 pb-2 pt-1 h-12">
-        <GlassDock class="absolute left-1/2 bottom-1 -translate-x-1/2" :collapse-delay="2000" :start-collapsed="true" :fit-content="true">
+    <div class="flex justify-center px-2 sm:px-4 pb-2 pt-1">
+        <GlassDock :collapse-delay="2000" :start-collapsed="true" :fit-content="true">
             <!-- Expanded state -->
             <div class="flex items-center gap-1.5">
                 <ExampleSelector

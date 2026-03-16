@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, nextTick, onMounted, onUnmounted, useTemplateRef, provide } from "vue";
+import { ref, onMounted, onUnmounted, useTemplateRef, provide } from "vue";
 
 const props = withDefaults(
     defineProps<{
@@ -15,6 +15,7 @@ const props = withDefaults(
 );
 
 const expanded = ref(!props.startCollapsed);
+const mounted = ref(false);
 let collapseTimer: ReturnType<typeof setTimeout> | null = null;
 let ignoreEvents = true;
 
@@ -34,6 +35,10 @@ provide("dockRelease", () => {
 });
 
 onMounted(() => {
+    // Suppress transitions on initial render
+    requestAnimationFrame(() => {
+        mounted.value = true;
+    });
     setTimeout(() => {
         ignoreEvents = false;
     }, 600);
@@ -76,30 +81,6 @@ function onClickSummary() {
     scheduleCollapse();
 }
 
-// Animate width between states by measuring natural sizes
-watch(expanded, () => {
-    const el = dockEl.value;
-    if (!el) return;
-
-    const from = el.getBoundingClientRect().width;
-
-    nextTick(() => {
-        el.style.width = "";
-        const to = el.getBoundingClientRect().width;
-
-        el.style.width = `${from}px`;
-        requestAnimationFrame(() => {
-            el.style.width = `${to}px`;
-        });
-    });
-});
-
-function onTransitionEnd(e: TransitionEvent) {
-    if (e.propertyName === "width" && e.target === dockEl.value) {
-        dockEl.value!.style.width = "";
-    }
-}
-
 defineExpose({ expanded, expand: onEnter, collapse: () => { expanded.value = false; } });
 onUnmounted(clearTimer);
 </script>
@@ -108,12 +89,11 @@ onUnmounted(clearTimer);
     <div
         ref="dockEl"
         class="glass-dock"
-        :class="{ expanded, collapsed: !expanded, 'fit-content': fitContent }"
+        :class="{ expanded, collapsed: !expanded, 'fit-content': fitContent, 'no-transition': !mounted }"
         @mouseenter="onEnter"
         @mouseleave="onLeave"
         @focusin="onEnter"
         @focusout="onFocusOut"
-        @transitionend="onTransitionEnd"
     >
         <div class="dock-layers">
             <div :class="['dock-layer dock-layer--full', { 'layer-active': expanded }]">
@@ -137,20 +117,30 @@ onUnmounted(clearTimer);
     -webkit-backdrop-filter: var(--glass-blur);
     border: 1px solid var(--glass-border);
     box-shadow: var(--glass-shadow);
-    overflow: visible;
+    overflow: hidden;
     white-space: nowrap;
     transition:
-        width 0.35s var(--ease-smooth),
+        max-width 0.4s var(--ease-smooth),
         padding 0.35s var(--ease-smooth),
         box-shadow var(--duration-normal) var(--ease-standard),
-        transform 0.3s var(--ease-smooth),
         background var(--duration-normal) var(--ease-standard),
         border-color var(--duration-normal) var(--ease-standard);
+}
+
+/* Suppress transitions on initial render */
+.glass-dock.no-transition {
+    transition: none !important;
+}
+
+/* Expanded: allow full intrinsic width */
+.glass-dock.expanded {
+    max-width: 100vw;
 }
 
 /* ── Collapsed: compact pill ── */
 .glass-dock.collapsed {
     cursor: pointer;
+    max-width: 14rem;
     padding: 0.375rem 0.75rem;
     background: hsl(var(--card) / 0.92);
     border-color: hsl(var(--border) / 0.7);
@@ -165,7 +155,6 @@ onUnmounted(clearTimer);
     box-shadow:
         0 4px 20px hsl(var(--foreground) / 0.18),
         0 0 0 1px hsl(var(--foreground) / 0.1);
-    transform: scale(1.03);
 }
 
 /* ── Layer stacking via grid ── */

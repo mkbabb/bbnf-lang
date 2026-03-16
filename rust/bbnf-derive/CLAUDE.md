@@ -40,13 +40,14 @@ Grammar file(s)
   → Analysis: Tarjan SCC, topological sort, FIRST sets, aliases, span-eligibility
   → Optional left-recursion elimination (Paull's + direct)
   → Lower to IR (lower_to_ir → GrammarIR)
-  → IR passes (12 passes, must mirror pipeline.rs ordering):
-      1. canonicalize_aliases     7. factor_common_prefixes
-      2. prune_unreachable        8. refine_span_eligibility
-      3. inline_acyclic           9. compute_follow_sets
-      4. eliminate_epsilon       10. generate_dispatch_tables
-      5. merge_literals          11. refine_memo_strategies
-      6. merge_regex_alts        12. infer_types
+  → IR passes (13 passes, must mirror pipeline.rs ordering):
+      1. canonicalize_aliases      8. factor_common_prefixes
+      2. prune_unreachable         9. refine_span_eligibility
+      3. inline_acyclic           10. compute_follow_sets
+      4. prune_unreachable (2nd)  11. generate_dispatch_tables
+      5. eliminate_epsilon        12. refine_memo_strategies
+      6. merge_literals           13. infer_types
+      7. merge_regex_alts
   → Rust codegen: ir_codegen/ → TokenStream (enum + parser methods)
   → Grammar array embedding (include_str!)
 ```

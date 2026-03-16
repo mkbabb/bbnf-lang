@@ -29,6 +29,37 @@ Measured on CSS files using the gorgeous pipeline (parse → to_doc → render),
 
 The render phase (1,115 MB/s) is not the bottleneck — `to_doc` (1,026 MB/s) limits end-to-end throughput. Both internal stages exceed 1 GB/s; the gap to end-to-end numbers comes from parse overhead and fixed per-call costs.
 
+## Comparison with std::fmt and std::Debug
+
+`std::fmt` (Display) and `std::Debug` are included as reference points. Neither performs layout-aware line breaking or width-constrained group measurement, so they represent the cost floor for structured text output — the difference illustrates the overhead of width-aware formatting.
+
+```bench-chart
+{ "title": "End-to-End Throughput vs std::fmt / std::Debug", "unit": "MB/s",
+  "datasets": [
+    { "name": "bootstrap.css (281 KB)", "icon": "rust",
+      "labels": ["end-to-end", "end-to-end (cached)"],
+      "series": [
+        {"label": "std::fmt",   "values": [370, 740]},
+        {"label": "std::Debug", "values": [280, 560]},
+        {"label": "pprint",     "values": [205, 409]}
+      ] },
+    { "name": "app.css (6 KB)", "icon": "rust",
+      "labels": ["end-to-end", "end-to-end (cached)"],
+      "series": [
+        {"label": "std::fmt",   "values": [54, 100]},
+        {"label": "std::Debug", "values": [41, 76]},
+        {"label": "pprint",     "values": [30, 56]}
+      ] },
+    { "name": "tailwind.css (3.8 MB)", "icon": "rust",
+      "labels": ["end-to-end", "end-to-end (cached)"],
+      "series": [
+        {"label": "std::fmt",   "values": [36, 83]},
+        {"label": "std::Debug", "values": [27, 63]},
+        {"label": "pprint",     "values": [20, 46]}
+      ] }
+  ] }
+```
+
 ## Inline Text Variants
 
 pprint avoids heap allocation for short strings using specialized `Text` variants:

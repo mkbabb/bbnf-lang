@@ -14,7 +14,7 @@ md.renderer.rules.heading_open = (tokens, idx, options, env, self) => {
     const token = tokens[idx]!;
     const nextToken = tokens[idx + 1];
     if (nextToken?.type === "inline" && nextToken.content) {
-        const slug = nextToken.content.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+        const slug = nextToken.content.toLowerCase().replace(/[^a-z0-9_]+/g, "-").replace(/(^-|-$)/g, "");
         token.attrSet("id", slug);
     }
     return defaultHeadingOpen(tokens, idx, options, env, self);

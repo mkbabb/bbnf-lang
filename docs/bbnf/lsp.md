@@ -6,54 +6,39 @@ section: BBNF
 
 # Language Server
 
-The BBNF language server (`bbnf-lsp`) provides IDE support for `.bbnf` grammar files. It is written in Rust, communicates over stdio using JSON-RPC, and implements 17 LSP features. The same analysis pipeline powers the WASM playground via direct function calls (no JSON-RPC overhead).
+The BBNF language server (`bbnf-lsp`) provides IDE support for `.bbnf` grammar files. It implements 17 LSP features, written in Rust on `tower-lsp-server` with a Tokio async runtime. The same analysis pipeline powers the WASM playground via direct function calls.
 
-## Features
+## Two Transports
 
-### Navigation
+The language server runs in two environments with different transport mechanisms.
 
-**Go-to-definition** jumps to a rule's definition site. Works across files---Cmd+Click on a rule imported via `@import` navigates to its definition in the source file. Cmd+Click on an import path opens the referenced file.
+```code-tabs
+---vscode---
+# VS Code — stdio transport
 
-**Find references** locates all references to a rule within the current document and across imported files.
+VS Code extension spawns `bbnf-lsp` as a subprocess.
+Communication uses JSON-RPC over stdin/stdout.
 
-**Document symbols** provides an outline of all rules in the file, accessible via Cmd+Shift+O.
+    VS Code ←→ stdio (JSON-RPC) ←→ bbnf-lsp process
 
-### Editing
+Full LSP protocol: initialize, capabilities, notifications, requests.
+Cross-file features use the filesystem for import resolution.
+---wasm---
+# Playground — direct WASM calls
 
-**Rename** (F2) renames a rule and all its references within a single document.
+The playground loads `bbnf-wasm` and calls analysis functions directly.
+No JSON-RPC overhead — function calls return results immediately.
 
-**Completion** suggests rule names, keywords, and imported rule names as you type. Inside `@recover` directives, it suggests the `@recover` keyword and target rule names.
+    Monaco Editor → bbnf-wasm → { analyze, hover, completions, ... }
 
-**Code actions** offer two quick fixes:
-
-- Remove unused rules (rules with zero references that are not the entry rule)
-- Define undefined rules (stub out a rule body for an undefined reference)
-
-### Display
-
-**Hover** shows the rule's definition expression, FIRST set, nullable status, cycle information (with the full cycle path), and reference count.
-
-**Inlay hints** display FIRST sets for non-trivial rules and nullable markers inline in the editor.
-
-**Code lens** shows reference counts above each rule definition.
-
-**Semantic tokens** provides syntax highlighting for rule definitions, rule references, string literals, regex patterns, and keywords (including `@recover` and `@import` directives).
-
-**Folding** collapses multi-line rules.
-
-**Selection range** expands and shrinks selection at the expression level (Cmd+Shift+Arrow).
-
-### Formatting
-
-**Document formatting** formats the entire file.
-
-**Range formatting** formats a selected region.
-
-**On-type formatting** auto-formats when typing `;`, keeping rules consistently formatted as you write.
+Same analysis pipeline as the native LSP, compiled to WebAssembly.
+10 Monaco providers: hover, completion, semantic tokens, inlay hints,
+definition, document symbols, folding, selection ranges, code actions, code lens.
+```
 
 ## Diagnostics
 
-The language server produces diagnostics at five severity levels:
+The language server produces diagnostics at five severity levels. Undefined-rule warnings are import-aware---imported rule names suppress the warning.
 
 | Severity | Diagnostic | Description |
 |----------|------------|-------------|
@@ -65,95 +50,95 @@ The language server produces diagnostics at five severity levels:
 | INFO | Left recursion | Cycle path reported (e.g., `expr -> term -> factor -> expr`) |
 | HINT | Unused rules | Zero references, not the entry rule |
 | HINT | Unreachable rules | Not reachable from the entry rule via any path |
-| HINT | Alias rules | `A = B ;` suggests using `B` directly |
+| HINT | Alias rules | `A = B ;`---suggests using `B` directly |
 
-Undefined-rule warnings are import-aware: if a rule name is provided by an `@import`, the warning is suppressed.
+## Navigation
 
-## Recovery Support
+**Go-to-definition** jumps to a rule's definition site. Works across files---Cmd+Click on a rule imported via `@import` navigates to its definition in the source file. Cmd+Click on an import path opens the referenced file.
 
-`@recover` directives integrate with the language server. The LSP provides:
+**Find references** locates all references to a rule within the current document and across imported files.
 
-- Semantic tokens for `@recover` directive syntax
-- Hover information on `@recover` target rules
-- Completion of the `@recover` keyword and target rule names
-- ERROR diagnostic when the `@recover` target rule is undefined
+**Document symbols** provides an outline of all rules in the file, accessible via Cmd+Shift+O.
+
+## Editing
+
+**Rename** (F2) renames a rule and all its references within a single document.
+
+**Completion** suggests rule names, keywords, and imported rule names as you type. Inside `@recover` directives, it suggests the `@recover` keyword and target rule names. Inside `@pretty` directives, it suggests hint vocabulary.
+
+**Code actions** offer two quick fixes: remove unused rules (rules with zero references that are not the entry rule) and define undefined rules (stub out a rule body for an undefined reference).
+
+## Display
+
+**Hover** shows the rule's definition expression, FIRST set, nullable status, cycle information (with the full cycle path), and reference count.
+
+**Inlay hints** display FIRST sets for non-trivial rules and nullable markers inline in the editor.
+
+**Code lens** shows reference counts above each rule definition.
+
+**Semantic tokens** provides syntax highlighting for rule definitions, rule references, string literals, regex patterns, and keywords (including `@recover`, `@import`, and `@pretty` directives).
+
+**Folding** collapses multi-line rules.
+
+**Selection range** expands and shrinks selection at the expression level (Cmd+Shift+Arrow).
+
+## Formatting
+
+**Document formatting** formats the entire `.bbnf` file.
+
+**Range formatting** formats a selected region.
+
+**On-type formatting** auto-formats when typing `;`, keeping rules consistently formatted as you write.
+
+## Recovery & Imports
+
+### `@recover` integration
+
+`@recover` directives are fully supported by the language server. The LSP provides semantic tokens for directive syntax, hover information on target rules, completion of the `@recover` keyword and target rule names, and an ERROR diagnostic when the target rule is undefined.
 
 ```bbnf
 @recover declaration /[;}]/ ;
 ```
 
-The sync expression (here `/[;}]/`) can be any valid BBNF expression---regex, alternation, concatenation, or any other form.
+The sync expression can be any valid BBNF expression---regex, alternation, concatenation, or any other form.
 
-## Import System
+### Cross-file imports
 
-BBNF grammars compose via `@import` directives:
+BBNF grammars compose via `@import` directives. Import directives may appear at any position in a file.
 
 ```bbnf
 @import "other.bbnf" ;                        (* import all rules *)
 @import { number, integer } from "lib.bbnf" ; (* selective import *)
 ```
 
-Import directives may appear at any position in a file. Selective imports automatically bring transitive dependencies---importing `percentage` also brings `number` and `percentageUnit` if `percentage` references them.
+Selective imports automatically bring transitive dependencies---importing `percentage` also brings `number` and `percentageUnit` if `percentage` references them. Circular imports are handled via partial initialization: a module's rules are registered before recursing into its own imports.
 
-The language server maintains forward and reverse import graphs, updated on every file change. Cross-file features affected:
+The server maintains forward and reverse import graphs, updated on every file change. Cross-file features affected:
 
 - **Go-to-definition** resolves to the source file for imported rules
 - **Find references** includes references across importing files
 - **Completion** includes rule names from imported files
 - **Diagnostics** suppress "undefined rule" warnings for imported names and re-publish diagnostics to reverse-dependency files when an imported file changes
 
-Circular imports are handled via partial initialization: a module's rules are registered before recursing into its own imports.
+## Analysis Pipeline
 
-## Architecture
+On every `textDocument/didChange` notification, the server runs a full re-parse and re-analysis. No incremental parsing---grammar files are small enough that full re-analysis is acceptable.
 
-The server is built on `tower-lsp-server` with a Tokio async runtime.
-
-### State
-
-```
-BbnfLanguageServer
-  ├── documents:    HashMap<Uri, DocumentState>
-  ├── import_graph: HashMap<Uri, Vec<Uri>>         (forward)
-  ├── importers:    HashMap<Uri, HashSet<Uri>>      (reverse)
-  └── global_rules: HashMap<String, Vec<GlobalRule>>
-```
-
-`DocumentState` owns the source text and an `OwnedAst` (self-referential via `self_cell`). A `LineIndex` precomputes line starts for O(log n) offset-to-position conversion.
-
-### Analysis Pipeline
-
-On every `textDocument/didChange` notification, the server runs a full re-parse and re-analysis (no incremental parsing---acceptable for grammar file sizes):
-
-1. Parse via `BBNFGrammar::grammar_with_imports()` (panic-caught)
-2. Extract rules, references, semantic tokens
-3. Detect duplicates, undefined references, unused rules
-4. Tarjan SCC for cycle detection and cycle path strings
-5. FIRST set computation and ambiguous alternation detection
-6. Alias detection, reachability (BFS from entry)
-7. Filter diagnostics against the import graph (suppress imported-but-undefined)
-8. Re-publish diagnostics to reverse-dependency files
-
-### File Layout
-
-```
-lsp/src/
-├── main.rs              Tokio entry point, stdio server
-├── server/
-│   ├── mod.rs           BbnfLanguageServer struct, on_change
-│   ├── imports.rs       Import graph updates, diagnostic filtering
-│   └── protocol.rs      LanguageServer trait implementation
-├── state/
-│   ├── mod.rs           DocumentState struct
-│   ├── types.rs         RuleInfo, ReferenceInfo, SemanticTokenInfo
-│   ├── parsing.rs       OwnedAst, CachedParseResult, parse_once
-│   ├── diagnostics.rs   Full diagnostic generation
-│   ├── pretty.rs        @pretty extraction and validation
-│   └── ast_utils.rs     Reference collection, semantic tokens
-├── analysis.rs          LineIndex, symbol lookup
-└── features/            One module per LSP feature (17 total)
+```flow-chart
+{ "title": "Per-Change Analysis Pipeline",
+  "nodes": [
+    {"label": "Parse", "detail": "BBNFGrammar::grammar_with_imports() (panic-caught)", "color": "cyan"},
+    {"label": "Extract", "detail": "Rules, references, semantic tokens", "color": "blue"},
+    {"label": "Detect duplicates", "detail": "Undefined refs, unused rules", "color": "blue"},
+    {"label": "Tarjan SCC", "detail": "Cycle detection + cycle path strings", "color": "green"},
+    {"label": "FIRST sets", "detail": "Ambiguous alternation detection", "color": "green"},
+    {"label": "Alias + reachability", "detail": "BFS from entry rule", "color": "purple"},
+    {"label": "Filter diagnostics", "detail": "Suppress imported-but-undefined", "color": "amber"},
+    {"label": "Re-publish", "detail": "Diagnostics to reverse-dependency files", "color": "amber"}
+  ] }
 ```
 
-## Binary Path Resolution
+## Binary Resolution
 
 The VS Code extension locates the `bbnf-lsp` binary in this priority order:
 

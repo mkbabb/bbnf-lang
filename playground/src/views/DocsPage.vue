@@ -112,7 +112,7 @@ useMarkdownComponents(articleRef, rendered);
                             v-if="sectionTheme.iconSrc"
                             :src="sectionTheme.iconSrc"
                             alt=""
-                            class="h-3 w-3"
+                            class="h-3.5 w-3.5"
                         />
                         <svg v-else class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path :d="sectionTheme.iconPath" />

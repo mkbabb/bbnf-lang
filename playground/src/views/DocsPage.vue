@@ -98,10 +98,10 @@ useMarkdownComponents(articleRef, rendered);
                             : undefined,
                     }"
                 >
-                    <!-- Section badge — top-right -->
+                    <!-- Section badge — top-right, matched to card padding so it aligns with h1 -->
                     <div
                         v-if="sectionTheme"
-                        class="absolute top-4 right-4 z-10 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[length:var(--font-size-label)] font-mono uppercase tracking-wider"
+                        class="section-badge z-10 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[length:var(--font-size-label)] font-mono uppercase tracking-wider"
                         :style="{
                             color: `var(--color-${sectionTheme.color})`,
                             background: `color-mix(in srgb, var(--color-${sectionTheme.color}) 10%, transparent)`,
@@ -131,6 +131,13 @@ useMarkdownComponents(articleRef, rendered);
 </template>
 
 <style scoped>
+/* Float the section badge so it sits inline with the h1 text */
+.section-badge {
+    float: right;
+    margin-top: 0.5rem; /* matches .prose h1 margin-top */
+    margin-left: 1rem;
+}
+
 .mobile-drawer-enter-active,
 .mobile-drawer-leave-active {
     transition: opacity 0.2s ease;

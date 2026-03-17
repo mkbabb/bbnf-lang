@@ -82,8 +82,8 @@ const demos = [
                 class="group block"
             >
                 <div
-                    class="demo-card relative overflow-hidden rounded-xl border bg-card/80 backdrop-blur-sm p-3 sm:p-5 h-full transition-all duration-300
-                           hover:-translate-y-1 cursor-pointer shadow-card
+                    class="demo-card relative overflow-hidden card-base p-3 sm:p-5 h-full transition-all duration-300
+                           hover:-translate-y-1 cursor-pointer
                            hover:shadow-card-hover"
                     :class="[demo.borderClass, demo.shimmerClass]"
                 >
@@ -93,7 +93,7 @@ const demos = [
                         <template v-for="(part, i) in demo.parts" :key="i">
                             <code
                                 v-if="part.code"
-                                class="font-mono text-xs rounded border px-1.5 py-0.5"
+                                class="code-badge"
                                 :class="part.codeClass ?? 'bg-muted/50 border-border/30'"
                             >{{ part.text }}</code>
                             <template v-else>{{ part.text }}</template>

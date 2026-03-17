@@ -66,16 +66,8 @@
     /* Pill radius */
     --radius-pill: 9999px;
 
-    /* Label font size — intentionally smaller than text-xs for badges/tags */
-    --font-size-label: 0.625rem;
-
     /* Hover shadow — used on cards, CTA buttons */
     --shadow-hover: 5px 7px 0px 0px;
-
-    /* Small text sizes for charts/badges not covered by Tailwind scale */
-    --font-size-micro: 0.5625rem;   /* 9px — BenchChart labels */
-    --font-size-mini: 0.625rem;     /* 10px — LiveBench, badge labels */
-    --font-size-caption: 0.6875rem; /* 11px — BenchChart axis */
 
     /* Long animation durations */
     --duration-slow: 500ms;
@@ -161,35 +153,104 @@
         margin: 0;
         padding: 0;
         font-family: var(--font-sans);
-        -webkit-text-size-adjust: 100%;
         touch-action: manipulation;
     }
 }
 
 /* Z-index scale: 0=base, 10=tabs, 20=badges, 30=dropdowns, 40=sticky, 50=overlays/modals, 60=hero-morph */
 
-.instrument-serif {
+/* ------------------------------------------------------------------ */
+/* Tailwind @utility registrations                                     */
+/* ------------------------------------------------------------------ */
+
+@utility instrument-serif {
     font-family: var(--font-serif);
 }
 
-.shadow-card {
+@utility shadow-card {
     box-shadow: var(--shadow-card) hsl(var(--shadow) / 0.08);
-}
-.dark .shadow-card {
-    box-shadow: var(--shadow-card) hsl(var(--shadow) / 0.06);
+    @variant dark {
+        box-shadow: var(--shadow-card) hsl(var(--shadow) / 0.06);
+    }
 }
 
-.text-gradient {
+@utility shadow-card-hover {
+    box-shadow: var(--shadow-hover) hsl(var(--shadow) / 0.12);
+    @variant dark {
+        box-shadow: var(--shadow-hover) hsl(var(--shadow) / 0.08);
+    }
+}
+
+@utility text-gradient {
     background-clip: text;
     -webkit-background-clip: text;
     color: transparent;
 }
 
-.scrollbar-hidden::-webkit-scrollbar {
-    display: none;
-}
-.scrollbar-hidden {
+@utility scrollbar-hidden {
     scrollbar-width: none;
+    &::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+@utility tapered-rule {
+    height: 2px;
+    background: linear-gradient(to right, transparent, hsl(var(--border)) 15%, hsl(var(--border)) 85%, transparent);
+}
+
+@utility gold-shimmer {
+    background: linear-gradient(90deg, #b8860b, #ffd700, #daa520, #ffd700, #b8860b);
+    background-size: 200% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    animation: shimmer 3s linear infinite;
+}
+
+@utility blue-shimmer {
+    background: linear-gradient(90deg, #1e40af, #60a5fa, #3b82f6, #60a5fa, #1e40af);
+    background-size: 200% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    animation: shimmer 3s linear infinite;
+}
+
+@utility code-badge {
+    @apply font-mono text-xs rounded border px-1.5 py-0.5;
+}
+
+@utility card-base {
+    @apply rounded-xl border border-border/50 bg-card/80 backdrop-blur-sm shadow-card;
+}
+
+@utility card-subtle {
+    @apply rounded-xl border border-border/30 bg-card/60 backdrop-blur-sm;
+}
+
+@utility card-elevated {
+    @apply rounded-xl border border-border/60 bg-card/95 backdrop-blur-xl shadow-lg;
+}
+
+/* ------------------------------------------------------------------ */
+/* Shared button utilities                                             */
+/* ------------------------------------------------------------------ */
+
+@utility btn-ghost {
+    @apply inline-flex items-center justify-center rounded-md px-2 py-1.5 text-sm transition-colors;
+    @apply text-muted-foreground hover:text-foreground hover:bg-muted/50;
+    @apply active:scale-[0.97] active:opacity-80;
+    @apply disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none;
+}
+
+@utility btn-cta {
+    @apply relative px-6 py-3 rounded-xl backdrop-blur-sm instrument-serif text-lg text-foreground;
+    @apply transition-all duration-300;
+    @apply hover:scale-[1.02] hover:-translate-y-0.5;
+    @apply shadow-card hover:shadow-card-hover;
+    @apply active:scale-[0.98] active:translate-y-0;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none;
 }
 
 /* Page transitions */
@@ -198,18 +259,29 @@
 .page-fade-enter-from, .page-fade-leave-to { opacity: 0; }
 
 /* ------------------------------------------------------------------ */
+/* Shared Vue transitions                                              */
+/* ------------------------------------------------------------------ */
+
+.hover-card-enter-active,
+.hover-card-leave-active {
+    transition: opacity var(--duration-fast) var(--ease-smooth), transform var(--duration-fast) var(--ease-smooth);
+}
+.hover-card-enter-from,
+.hover-card-leave-to {
+    opacity: 0;
+    transform: scale(0.92) translateY(6px);
+}
+
+/* ------------------------------------------------------------------ */
 /* Prose styles for docs                                              */
 /* ------------------------------------------------------------------ */
 
 /* Headings */
 .prose h1 {
     font-family: var(--font-serif);
-    @apply text-4xl;
-    margin-top: 0.5rem;
-    margin-bottom: 1rem;
-    color: hsl(var(--foreground));
+    @apply text-4xl mt-2 mb-4 text-foreground;
     border-bottom: none;
-    padding-bottom: 0.75rem;
+    @apply pb-3;
     background-image: linear-gradient(to right, hsl(var(--border)), hsl(var(--border)) 85%, transparent);
     background-size: 100% 2px;
     background-position: bottom left;
@@ -217,12 +289,9 @@
 }
 .prose h2 {
     font-family: var(--font-serif);
-    @apply text-2xl;
-    margin-top: 2.5rem;
-    margin-bottom: 0.75rem;
+    @apply text-2xl mt-10 mb-3 text-foreground;
     border-bottom: none;
-    padding-bottom: 0.5rem;
-    color: hsl(var(--foreground));
+    @apply pb-2;
     background-image: linear-gradient(to right, hsl(var(--border)), hsl(var(--border)) 70%, transparent);
     background-size: 100% 1px;
     background-position: bottom left;
@@ -230,9 +299,7 @@
 }
 .prose h3 {
     font-family: var(--font-serif);
-    @apply text-xl;
-    margin-top: 1.75rem;
-    margin-bottom: 0.5rem;
+    @apply text-xl mt-7 mb-2;
     color: hsl(var(--foreground) / 0.95);
     border-bottom: none;
     padding-bottom: 0.35rem;
@@ -244,44 +311,33 @@
 
 /* Body text */
 .prose p {
-    @apply text-base leading-relaxed;
+    @apply text-base leading-relaxed mb-4;
     color: hsl(var(--foreground) / 0.85);
-    margin-bottom: 1rem;
 }
 
 /* Inline code */
 .prose code:not(pre code) {
+    @apply rounded px-1.5 py-0.5 font-mono text-[0.8em];
     background: hsl(var(--muted) / 0.5);
     border: 1px solid hsl(var(--border) / 0.3);
-    border-radius: 0.25rem;
-    padding: 0.1rem 0.4rem;
-    font-family: var(--font-mono);
-    font-size: 0.8em;
     color: hsl(var(--pastel-green));
 }
 
 /* Code blocks (inside .code-card) */
 .prose pre {
-    border-radius: 0.75rem;
+    @apply rounded-xl text-sm leading-relaxed font-mono p-4 mt-0 mb-0;
     background: hsl(var(--card) / 0.6);
     backdrop-filter: blur(8px);
-    padding: 1rem;
     overflow-x: auto;
-    margin-bottom: 0;
-    font-family: var(--font-mono);
-    @apply text-sm leading-relaxed;
     border: none;
 }
 
 /* Code card container — card-styled with box shadow */
 .prose .code-card {
-    position: relative;
-    border-radius: 0.75rem;
+    @apply relative rounded-xl overflow-hidden mb-5;
     border: 1px solid hsl(var(--border) / 0.4);
     background: hsl(var(--card) / 0.6);
     backdrop-filter: blur(8px);
-    margin-bottom: 1.25rem;
-    overflow: hidden;
     box-shadow: var(--shadow-card) hsl(var(--shadow) / 0.08);
 }
 .dark .prose .code-card {
@@ -291,54 +347,47 @@
     background: transparent;
     backdrop-filter: none;
 }
+/* Pre inside .code-tabs — remove top border-radius */
+.prose .code-tabs pre {
+    @apply mt-0 rounded-t-none;
+}
 
 /* Language label in code cards */
 .prose .code-lang-label {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.75rem;
-    font-size: 0.625rem;
-    font-family: var(--font-mono);
+    @apply absolute top-2 right-3 text-[0.625rem] font-mono select-none uppercase tracking-wider inline-flex items-center;
     color: hsl(var(--muted-foreground) / 0.4);
-    user-select: none;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    display: inline-flex;
-    align-items: center;
 }
 .code-lang-icon {
-    display: inline-flex;
-    width: 14px;
-    height: 14px;
+    @apply inline-flex w-3.5 h-3.5 mr-1;
     vertical-align: -2px;
-    margin-right: 4px;
 }
 .code-lang-icon svg {
-    width: 100%;
-    height: 100%;
+    @apply w-full h-full;
 }
 
 /* Links */
-.prose a { color: hsl(var(--pastel-blue)); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
-.prose a:hover { color: hsl(var(--pastel-blue) / 0.8); text-decoration-thickness: 2px; }
+.prose a {
+    @apply underline;
+    color: hsl(var(--pastel-blue));
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+}
+.prose a:hover {
+    color: hsl(var(--pastel-blue) / 0.8);
+    text-decoration-thickness: 2px;
+}
 
 /* Blockquotes */
 .prose blockquote {
+    @apply pl-4 italic my-4;
     border-left: 2px solid hsl(var(--pastel-purple) / 0.5);
-    padding-left: 1rem;
-    font-style: italic;
     color: hsl(var(--muted-foreground));
-    margin: 1rem 0;
 }
 
 /* Tables — card-styled */
 .prose table {
-    width: 100%;
-    @apply text-sm;
+    @apply w-full text-sm mb-5 rounded-lg overflow-hidden;
     border-collapse: collapse;
-    margin-bottom: 1.25rem;
-    border-radius: 0.5rem;
-    overflow: hidden;
     border: 1px solid hsl(var(--border) / 0.3);
     box-shadow: 2px 2px 0px 0px hsl(var(--shadow) / 0.05);
 }
@@ -346,43 +395,30 @@
     box-shadow: 2px 2px 0px 0px hsl(var(--shadow) / 0.04);
 }
 .prose th, .prose td {
+    @apply px-3 py-2;
     border: 1px solid hsl(var(--border) / 0.3);
-    padding: 0.5rem 0.75rem;
 }
 .prose th {
+    @apply text-xs font-mono font-medium text-left uppercase tracking-wider text-muted-foreground;
     background: hsl(var(--muted) / 0.3);
-    font-family: var(--font-mono);
-    font-weight: 500;
-    text-align: left;
-    @apply text-xs;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    color: hsl(var(--muted-foreground));
 }
 .prose td {
     font-variant-numeric: tabular-nums;
 }
 
 /* Lists */
-.prose ul { list-style: disc; padding-left: 1.5rem; margin-bottom: 1rem; @apply text-base leading-relaxed; }
-.prose ol { list-style: decimal; padding-left: 1.5rem; margin-bottom: 1rem; @apply text-base leading-relaxed; }
-.prose li { margin-bottom: 0.35rem; color: hsl(var(--foreground) / 0.85); }
+.prose ul { @apply list-disc pl-6 mb-4 text-base leading-relaxed; }
+.prose ol { @apply list-decimal pl-6 mb-4 text-base leading-relaxed; }
+.prose li { @apply mb-1.5; color: hsl(var(--foreground) / 0.85); }
 
 /* Strong/em */
-.prose strong { color: hsl(var(--foreground)); font-weight: 600; }
-.prose em { color: hsl(var(--muted-foreground)); }
+.prose strong { @apply font-semibold text-foreground; }
+.prose em { @apply text-muted-foreground; }
 
 /* Horizontal rules */
 .prose hr {
-    border: none;
+    @apply border-none my-8;
     height: 1px;
-    background: linear-gradient(to right, transparent, hsl(var(--border)) 15%, hsl(var(--border)) 85%, transparent);
-    margin: 2rem 0;
-}
-
-/* Tapered divider — gradient fades at both edges */
-.tapered-rule {
-    height: 2px;
     background: linear-gradient(to right, transparent, hsl(var(--border)) 15%, hsl(var(--border)) 85%, transparent);
 }
 
@@ -411,45 +447,34 @@
     .glass {
         background: var(--glass-bg);
         backdrop-filter: var(--glass-blur);
-        -webkit-backdrop-filter: var(--glass-blur);
-        border: 1px solid var(--glass-border);
+        @apply border border-solid;
+        border-color: var(--glass-border);
         box-shadow: var(--glass-shadow);
     }
 
     .glass-elevated {
         background: var(--glass-bg-heavy);
         backdrop-filter: var(--glass-blur-heavy);
-        -webkit-backdrop-filter: var(--glass-blur-heavy);
-        border: 1px solid var(--glass-border);
+        @apply border border-solid;
+        border-color: var(--glass-border);
         box-shadow: var(--glass-shadow-elevated);
     }
 
     .dock-icon-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 2.5rem;
-        height: 2.5rem;
-        border-radius: var(--radius-pill);
-        border: none;
-        background: transparent;
+        @apply inline-flex items-center justify-center w-10 h-10 rounded-full border-none bg-transparent cursor-pointer shrink-0 p-0;
         color: hsl(var(--foreground) / 0.7);
-        cursor: pointer;
         transition: all var(--duration-fast) var(--ease-smooth);
-        flex-shrink: 0;
-        padding: 0;
     }
     .dock-icon-btn:hover:not(:disabled) {
+        @apply scale-110;
         background: hsl(var(--foreground) / 0.08);
         color: hsl(var(--foreground));
-        transform: scale(1.1);
     }
     .dock-icon-btn:active:not(:disabled) {
-        transform: scale(0.92);
+        @apply scale-[0.92];
     }
     .dock-icon-btn:disabled {
-        opacity: 0.35;
-        cursor: not-allowed;
+        @apply opacity-35 cursor-not-allowed;
     }
     .dock-icon-btn.is-active {
         background: hsl(var(--foreground) / 0.08);
@@ -457,52 +482,18 @@
     }
 
     .dock-separator {
-        width: 1px;
-        height: 1.25rem;
-        margin: 0 0.125rem;
+        @apply w-px h-5 mx-0.5 shrink-0;
         background: hsl(var(--foreground) / 0.3);
-        flex-shrink: 0;
     }
 
     .dock-spacer {
-        flex: 1;
-    }
-
-    .shadow-card-hover {
-        box-shadow: var(--shadow-hover) hsl(var(--shadow) / 0.12);
-    }
-    :is(.dark) .shadow-card-hover {
-        box-shadow: var(--shadow-hover) hsl(var(--shadow) / 0.08);
+        @apply flex-1;
     }
 
     .dock-badge {
+        @apply px-1.5 whitespace-nowrap tabular-nums;
         color: hsl(var(--foreground) / 0.5);
-        font-variant-numeric: tabular-nums;
-        padding: 0 0.375rem;
-        white-space: nowrap;
     }
-}
-
-/* ------------------------------------------------------------------ */
-/* Shimmer text effects (shared across components)                     */
-/* ------------------------------------------------------------------ */
-
-.gold-shimmer {
-    background: linear-gradient(90deg, #b8860b, #ffd700, #daa520, #ffd700, #b8860b);
-    background-size: 200% 100%;
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
-    animation: shimmer 3s linear infinite;
-}
-
-.blue-shimmer {
-    background: linear-gradient(90deg, #1e40af, #60a5fa, #3b82f6, #60a5fa, #1e40af);
-    background-size: 200% 100%;
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
-    animation: shimmer 3s linear infinite;
 }
 
 @keyframes shimmer {

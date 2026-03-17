@@ -24,7 +24,7 @@ defineProps<{
                 <div class="h-1.5 w-1.5 rounded-full" :style="{ background: `var(--color-${card.color})` }" />
                 <span class="instrument-serif text-xs" :style="{ color: `var(--color-${card.color})` }">{{ card.title }}</span>
             </div>
-            <pre class="text-[length:var(--font-size-label)] leading-relaxed text-foreground/80 overflow-hidden"><code><template v-for="(line, j) in card.lines" :key="j"><template v-for="(span, k) in line.spans" :key="k"><span v-if="span.cls" :class="span.cls">{{ span.text }}</span><template v-else>{{ span.text }}</template></template>
+            <pre class="text-[0.625rem] leading-relaxed text-foreground/80 overflow-hidden"><code><template v-for="(line, j) in card.lines" :key="j"><template v-for="(span, k) in line.spans" :key="k"><span v-if="span.cls" :class="span.cls">{{ span.text }}</span><template v-else>{{ span.text }}</template></template>
 </template></code></pre>
         </div>
     </div>

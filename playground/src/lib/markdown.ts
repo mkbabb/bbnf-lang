@@ -231,7 +231,7 @@ md.renderer.rules.fence = (tokens, idx) => {
     const langLabel = lang
         ? `<span class="code-lang-label">${iconHtml}${escapeHtml(icon?.label ?? lang)}</span>`
         : "";
-    return `<div class="code-card">${langLabel}<pre class="!mt-0"><code class="language-${lang}">${highlighted}</code></pre></div>`;
+    return `<div class="code-card">${langLabel}<pre><code class="language-${lang}">${highlighted}</code></pre></div>`;
 };
 
 export function useMarkdown() {

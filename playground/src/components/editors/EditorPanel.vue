@@ -40,7 +40,7 @@ const emit = defineEmits<{
                         {{ tabs.find(t => t.key === activeTab)?.label }}
                     </span>
                 </TooltipTrigger>
-                <TooltipContent side="bottom" :side-offset="8" class="max-w-xs border-border/40 bg-card/90 backdrop-blur-xl">
+                <TooltipContent side="bottom" :side-offset="8" class="max-w-xs">
                     <p class="instrument-serif text-base leading-relaxed">
                         <InlineRichText :text="tabs.find(t => t.key === activeTab)?.description ?? ''" />
                     </p>
@@ -98,14 +98,3 @@ const emit = defineEmits<{
     </Card>
 </template>
 
-<style scoped>
-.hover-card-enter-active,
-.hover-card-leave-active {
-    transition: opacity var(--duration-fast) var(--ease-smooth), transform var(--duration-fast) var(--ease-smooth);
-}
-.hover-card-enter-from,
-.hover-card-leave-to {
-    opacity: 0;
-    transform: scale(0.92) translateY(6px);
-}
-</style>

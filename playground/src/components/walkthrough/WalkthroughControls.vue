@@ -16,7 +16,7 @@ const demoTitle = computed(() => props.walkthrough.currentDemo.value?.title ?? "
                 Step {{ walkthrough.currentStepIndex.value + 1 }} of {{ walkthrough.totalSteps.value }}
             </span>
             <button
-                class="text-xs text-muted-foreground hover:text-foreground transition-colors ml-2"
+                class="text-xs text-muted-foreground hover:text-foreground transition-all active:scale-95 ml-2"
                 @click="walkthrough.exitDemo()"
             >
                 Exit

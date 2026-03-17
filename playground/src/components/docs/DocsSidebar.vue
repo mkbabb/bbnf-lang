@@ -94,7 +94,7 @@ const filteredSections = computed(() => {
                     />
                     <button
                         v-if="showClose"
-                        class="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-md hover:bg-muted/50 transition-colors text-muted-foreground"
+                        class="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-md hover:bg-muted/50 active:scale-90 transition-[colors,transform] text-muted-foreground"
                         @click="emit('close')"
                     >
                         <X class="h-3.5 w-3.5" />
@@ -102,7 +102,7 @@ const filteredSections = computed(() => {
                 </div>
                 <button
                     v-if="showCollapse"
-                    class="shrink-0 p-1.5 rounded-md hover:bg-muted/50 transition-colors text-muted-foreground"
+                    class="shrink-0 p-1.5 rounded-md hover:bg-muted/50 active:scale-90 transition-[colors,transform] text-muted-foreground"
                     title="Collapse sidebar"
                     @click="emit('collapse')"
                 >
@@ -115,7 +115,7 @@ const filteredSections = computed(() => {
         <nav class="flex-1 overflow-y-auto p-3 scrollbar-hidden">
             <div v-for="section in filteredSections" :key="section.name" class="mb-5">
                 <button
-                    class="flex items-center gap-2 w-full px-2 py-1.5 group"
+                    class="flex items-center gap-2 w-full px-2 py-1.5 group active:scale-[0.98] transition-transform"
                     @click="toggleSection(section.name)"
                 >
                     <!-- Section icon -->

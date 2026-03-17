@@ -193,7 +193,7 @@ const astHighlighted = computed(() => astOutput.value ? highlightJson(astOutput.
         <h2 class="instrument-serif text-3xl text-center mb-2">See it in action</h2>
         <p class="text-base text-muted-foreground text-center mb-8">Edit the grammar or input below — parsing runs live.</p>
 
-        <div class="rounded-xl border border-border/40 bg-card/80 backdrop-blur-sm overflow-hidden shadow-card">
+        <div class="card-base overflow-hidden">
             <div class="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-border/30 md:h-72">
                 <!-- Grammar -->
                 <div class="p-4 flex flex-col h-48 md:h-72">
@@ -261,7 +261,7 @@ const astHighlighted = computed(() => astOutput.value ? highlightJson(astOutput.
                     <button
                         v-for="(preset, i) in presets"
                         :key="i"
-                        class="px-2.5 py-0.5 rounded-full text-xs font-mono transition-all duration-300"
+                        class="px-2.5 py-0.5 rounded-full text-xs font-mono transition-all duration-300 active:scale-95"
                         :class="i === activeIndex
                             ? 'bg-pastel-green/20 text-pastel-green'
                             : 'text-muted-foreground/50 hover:text-muted-foreground'"
@@ -271,7 +271,7 @@ const astHighlighted = computed(() => astOutput.value ? highlightJson(astOutput.
                     </button>
                 </div>
                 <button
-                    class="text-xs text-muted-foreground hover:text-foreground transition-colors instrument-serif"
+                    class="text-xs text-muted-foreground hover:text-foreground transition-colors instrument-serif active:scale-95 active:opacity-80"
                     @click="openInPlayground"
                 >
                     Open in Playground →

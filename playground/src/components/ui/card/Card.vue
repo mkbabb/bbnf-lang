@@ -11,7 +11,7 @@ const props = defineProps<{
     <div
         :class="
             cn(
-                'scrollbar-hidden rounded-xl border border-border/60 bg-card/80 text-card-foreground backdrop-blur-sm shadow-card',
+                'scrollbar-hidden card-base text-card-foreground',
                 props.class,
             )
         "

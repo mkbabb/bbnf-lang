@@ -37,7 +37,6 @@ const activeIndex = computed(() => {
             v-for="(tab, i) in props.tabs"
             v-show="i === activeIndex"
             :key="tab.lang"
-            class="!mt-0 !rounded-t-none"
         ><code :class="`language-${tab.lang}`" v-html="tab.highlighted" /></pre>
     </div>
 </template>

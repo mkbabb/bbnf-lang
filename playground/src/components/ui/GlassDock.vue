@@ -114,7 +114,6 @@ onUnmounted(clearTimer);
     border-radius: var(--radius-pill);
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
     border: 1px solid var(--glass-border);
     box-shadow: var(--glass-shadow);
     overflow: hidden;

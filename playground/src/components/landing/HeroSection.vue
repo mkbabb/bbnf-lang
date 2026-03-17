@@ -69,10 +69,7 @@ onMounted(() => {
             <div class="flex flex-wrap justify-center gap-4">
                 <router-link
                     to="/playground"
-                    class="group relative px-6 py-3 rounded-xl bg-pastel-green/10 border border-pastel-green/30 backdrop-blur-sm
-                           instrument-serif text-lg text-foreground transition-all duration-300
-                           hover:scale-[1.02] hover:-translate-y-0.5
-                           shadow-card hover:shadow-card-hover"
+                    class="group btn-cta bg-pastel-green/10 border border-pastel-green/30"
                 >
                     <span class="relative z-10">Try the Playground</span>
                     <div class="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-pastel-green/10 to-transparent
@@ -80,10 +77,7 @@ onMounted(() => {
                 </router-link>
                 <router-link
                     to="/docs"
-                    class="group relative px-6 py-3 rounded-xl bg-pastel-blue/10 border border-pastel-blue/30 backdrop-blur-sm
-                           instrument-serif text-lg text-foreground transition-all duration-300
-                           hover:scale-[1.02] hover:-translate-y-0.5
-                           shadow-card hover:shadow-card-hover"
+                    class="group btn-cta bg-pastel-blue/10 border border-pastel-blue/30"
                 >
                     <span class="relative z-10">Read the Docs</span>
                     <div class="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-pastel-blue/10 to-transparent

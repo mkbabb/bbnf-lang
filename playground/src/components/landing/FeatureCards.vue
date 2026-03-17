@@ -57,8 +57,8 @@ const features = [
             <div
                 v-for="feature in features"
                 :key="feature.title"
-                class="rounded-xl border bg-card/80 backdrop-blur-sm p-3 sm:p-5 transition-all duration-300
-                       hover:-translate-y-0.5 cursor-default shadow-card
+                class="card-base p-3 sm:p-5 transition-all duration-300
+                       hover:-translate-y-0.5 cursor-default
                        hover:shadow-card-hover"
                 :class="feature.borderClass"
             >
@@ -68,7 +68,7 @@ const features = [
                     <template v-for="(part, i) in feature.parts" :key="i">
                         <code
                             v-if="part.code"
-                            class="font-mono text-xs rounded border px-1.5 py-0.5"
+                            class="code-badge"
                             :class="part.codeClass ?? 'bg-muted/50 border-border/30'"
                         >{{ part.text }}</code>
                         <template v-else>{{ part.text }}</template>

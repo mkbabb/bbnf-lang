@@ -112,12 +112,11 @@ function hoveredIsOurs(): boolean {
                         <!-- Label -->
                         <span
                             v-if="activeLabels?.[vi]"
-                            class="flex items-center justify-end gap-1.5 text-xs font-mono shrink-0 text-right whitespace-nowrap overflow-hidden text-ellipsis"
+                            class="flex items-center justify-end gap-1.5 text-xs font-mono shrink-0 text-right whitespace-nowrap overflow-hidden text-ellipsis w-[9.5rem]"
                             :class="[
                                 isOurs(activeLabels[vi]!) ? 'font-bold' : '',
                                 isWinner(si, vi) ? 'text-foreground font-bold' : isOurs(activeLabels[vi]!) ? 'text-foreground' : 'text-muted-foreground',
                             ]"
-                            style="width: 150px"
                         >
                             <span
                                 v-if="isSingleSeries"
@@ -145,7 +144,7 @@ function hoveredIsOurs(): boolean {
                                 :class="isWinner(si, vi) || isOurs(activeLabels?.[vi] ?? '') ? 'text-foreground font-semibold' : 'text-foreground/70'"
                             >
                                 {{ formatValue(val) }}
-                                <span class="text-muted-foreground text-[length:var(--font-size-caption)] ml-0.5">{{ data.unit }}</span>
+                                <span class="text-muted-foreground text-[0.6875rem] ml-0.5">{{ data.unit }}</span>
                             </span>
                         </div>
                     </div>
@@ -162,13 +161,13 @@ function hoveredIsOurs(): boolean {
                 <span class="text-foreground font-semibold">{{ hoveredLabel() }}</span>
                 <span
                     v-if="hoveredIsOurs()"
-                    class="text-[length:var(--font-size-micro)] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full"
+                    class="text-[0.5625rem] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full"
                     style="background: hsl(45 90% 55% / 0.2); color: hsl(45 90% 55%)"
                 >BBNF</span>
             </div>
             <div class="text-muted-foreground">{{ formatValue(hoveredValue()) }} {{ data.unit }}</div>
             <div class="text-muted-foreground/70">{{ hoveredPercent() }}% of max</div>
-            <div v-if="hoveredDescription()" class="text-muted-foreground/60 text-[length:var(--font-size-caption)] mt-0.5 max-w-[220px]">{{ hoveredDescription() }}</div>
+            <div v-if="hoveredDescription()" class="text-muted-foreground/60 text-[0.6875rem] mt-0.5 max-w-[220px]">{{ hoveredDescription() }}</div>
         </FloatingTooltip>
     </DocCard>
 </template>

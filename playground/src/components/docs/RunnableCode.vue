@@ -65,7 +65,7 @@ async function run() {
             <div class="flex items-center justify-between px-3 py-1.5 bg-muted/10">
                 <span class="text-xs font-mono font-semibold text-muted-foreground uppercase tracking-wider">Grammar</span>
             </div>
-            <pre class="px-4 py-3 text-sm font-mono overflow-x-auto !mt-0"><code v-if="data.highlighted" v-html="data.highlighted" /><code v-else>{{ data.grammar }}</code></pre>
+            <pre class="px-4 py-3 text-sm font-mono overflow-x-auto"><code v-if="data.highlighted" v-html="data.highlighted" /><code v-else>{{ data.grammar }}</code></pre>
         </div>
 
         <!-- Input -->
@@ -73,7 +73,7 @@ async function run() {
             <div class="flex items-center justify-between px-3 py-1.5 bg-muted/10">
                 <span class="text-xs font-mono font-semibold text-muted-foreground uppercase tracking-wider">Input</span>
             </div>
-            <pre class="px-4 py-3 text-sm font-mono overflow-x-auto !mt-0"><code>{{ data.input }}</code></pre>
+            <pre class="px-4 py-3 text-sm font-mono overflow-x-auto"><code>{{ data.input }}</code></pre>
         </div>
 
         <!-- Run button + Output -->
@@ -81,7 +81,7 @@ async function run() {
             <button
                 @click="run"
                 :disabled="running"
-                class="self-start flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-mono font-medium transition-colors"
+                class="self-start flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-mono font-medium transition-all active:scale-95"
                 :class="running
                     ? 'bg-muted/20 text-muted-foreground cursor-wait'
                     : 'bg-foreground/10 text-foreground hover:bg-foreground/20 cursor-pointer'"
@@ -97,7 +97,7 @@ async function run() {
 
             <div v-if="hasRun && !running" class="rounded-md border border-border/20 bg-muted/10 px-3 py-2">
                 <div v-if="error" class="text-xs font-mono text-red-400 whitespace-pre-wrap">{{ error }}</div>
-                <pre v-else class="text-xs font-mono text-foreground/80 whitespace-pre-wrap overflow-x-auto !mt-0"><code>{{ output }}</code></pre>
+                <pre v-else class="text-xs font-mono text-foreground/80 whitespace-pre-wrap overflow-x-auto"><code>{{ output }}</code></pre>
             </div>
         </div>
     </div>

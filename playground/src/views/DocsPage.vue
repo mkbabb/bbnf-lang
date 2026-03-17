@@ -56,7 +56,7 @@ useMarkdownComponents(articleRef, rendered);
         <!-- Desktop expand button — shown when sidebar is collapsed -->
         <button
             v-if="!sidebarOpen"
-            class="sticky top-16 hidden md:flex items-center justify-center shrink-0 ml-1 p-2 rounded-lg border border-border/30 hover:bg-muted/50 transition-colors text-muted-foreground h-fit z-20"
+            class="sticky top-16 hidden md:flex items-center justify-center shrink-0 ml-1 p-2 rounded-lg border border-border/30 hover:bg-muted/50 active:scale-95 transition-colors text-muted-foreground h-fit z-20"
             title="Expand sidebar"
             @click="sidebarOpen = true"
         >
@@ -82,7 +82,7 @@ useMarkdownComponents(articleRef, rendered);
         <main class="flex-1 flex min-h-[calc(100dvh-var(--spacing-navbar))] flex-col px-4 py-2 sm:px-8 sm:py-3 min-w-0">
             <!-- Mobile menu button -->
             <button
-                class="md:hidden self-start mb-2 p-1.5 rounded-md hover:bg-muted/50 transition-colors text-muted-foreground"
+                class="md:hidden self-start mb-2 p-1.5 rounded-md hover:bg-muted/50 active:scale-95 transition-colors text-muted-foreground"
                 @click="mobileDrawer = !mobileDrawer"
             >
                 <Menu class="h-4 w-4" />
@@ -91,7 +91,7 @@ useMarkdownComponents(articleRef, rendered);
             <div v-if="currentDoc" class="mx-auto flex w-full max-w-4xl flex-1 flex-col">
                 <!-- Card-styled article container -->
                 <div
-                    class="rounded-xl border bg-card/80 backdrop-blur-sm p-5 sm:p-6 md:p-8 flex-1 relative shadow-card"
+                    class="card-base p-5 sm:p-6 md:p-8 flex-1 relative"
                     :style="{
                         borderColor: sectionTheme
                             ? `color-mix(in srgb, var(--color-${sectionTheme.color}) 25%, hsl(var(--border) / 0.4))`
@@ -101,7 +101,7 @@ useMarkdownComponents(articleRef, rendered);
                     <!-- Section badge — top-right, matched to card padding so it aligns with h1 -->
                     <div
                         v-if="sectionTheme"
-                        class="section-badge z-10 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[length:var(--font-size-label)] font-mono uppercase tracking-wider"
+                        class="section-badge z-10 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[0.625rem] font-mono uppercase tracking-wider"
                         :style="{
                             color: `var(--color-${sectionTheme.color})`,
                             background: `color-mix(in srgb, var(--color-${sectionTheme.color}) 10%, transparent)`,

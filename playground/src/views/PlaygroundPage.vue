@@ -355,7 +355,7 @@ watch([leftTab, rightTab], () => {
                             </span>
                         </button>
                     </TooltipTrigger>
-                    <TooltipContent side="top" :side-offset="8" class="max-w-xs border-border/40 bg-card/90 backdrop-blur-xl">
+                    <TooltipContent side="top" :side-offset="8" class="max-w-xs">
                         <p class="text-sm sm:text-base">
                             Drag to resize the panes. Use arrow keys for fine adjustments and double-click to reset.
                         </p>
@@ -407,7 +407,7 @@ watch([leftTab, rightTab], () => {
                                     >
                                         <div class="mb-2 flex items-center gap-2">
                                             <span class="instrument-serif text-base">gorgeous</span>
-                                            <span class="rounded-full bg-muted/40 px-2 py-0.5 text-[length:var(--font-size-label)] text-muted-foreground">WASM</span>
+                                            <span class="rounded-full bg-muted/40 px-2 py-0.5 text-[0.625rem] text-muted-foreground">WASM</span>
                                         </div>
                                         <div class="mb-3 grid grid-cols-2 gap-y-1 text-xs text-muted-foreground font-mono">
                                             <span>Parse</span>  <span class="text-right">{{ telemetry.parseMs }}ms</span>
@@ -460,14 +460,3 @@ import WalkthroughOverlay from "@/components/walkthrough/WalkthroughOverlay.vue"
 import WalkthroughControls from "@/components/walkthrough/WalkthroughControls.vue";
 </script>
 
-<style scoped>
-.hover-card-enter-active,
-.hover-card-leave-active {
-    transition: opacity var(--duration-fast) var(--ease-smooth), transform var(--duration-fast) var(--ease-smooth);
-}
-.hover-card-enter-from,
-.hover-card-leave-to {
-    opacity: 0;
-    transform: scale(0.92) translateY(6px);
-}
-</style>

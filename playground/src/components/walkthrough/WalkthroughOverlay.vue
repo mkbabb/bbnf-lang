@@ -41,7 +41,7 @@ const isLast = computed(() => props.walkthrough.currentStepIndex.value === total
 
                 <!-- Close button -->
                 <button
-                    class="shrink-0 p-1 rounded-md hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
+                    class="shrink-0 p-1 rounded-md hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-all active:scale-90"
                     @click="walkthrough.exitDemo()"
                 >
                     <X class="h-4 w-4" />
@@ -51,7 +51,7 @@ const isLast = computed(() => props.walkthrough.currentStepIndex.value === total
             <!-- Navigation -->
             <div class="flex items-center justify-between mt-4 pt-3 border-t border-border/30">
                 <button
-                    class="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    class="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed disabled:pointer-events-none"
                     :disabled="isFirst"
                     @click="walkthrough.prevStep()"
                 >
@@ -69,14 +69,14 @@ const isLast = computed(() => props.walkthrough.currentStepIndex.value === total
 
                 <button
                     v-if="!isLast"
-                    class="flex items-center gap-1 text-xs text-foreground font-medium hover:text-pastel-green transition-colors"
+                    class="flex items-center gap-1 text-xs text-foreground font-medium hover:text-pastel-green transition-all active:scale-95"
                     @click="walkthrough.nextStep()"
                 >
                     Next <ChevronRight class="h-3.5 w-3.5" />
                 </button>
                 <button
                     v-else
-                    class="flex items-center gap-1 text-xs text-pastel-green font-medium hover:text-pastel-green/80 transition-colors"
+                    class="flex items-center gap-1 text-xs text-pastel-green font-medium hover:text-pastel-green/80 transition-all active:scale-95"
                     @click="walkthrough.exitDemo()"
                 >
                     Finish

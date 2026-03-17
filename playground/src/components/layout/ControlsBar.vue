@@ -66,7 +66,7 @@ const emit = defineEmits<{
                                 OK
                             </span>
                         </TooltipTrigger>
-                        <TooltipContent side="top" :side-offset="8" class="border-border/40 bg-card/90 backdrop-blur-xl">
+                        <TooltipContent side="top" :side-offset="8">
                             <p class="text-sm sm:text-base">No grammar, parse, or format errors.</p>
                         </TooltipContent>
                     </Tooltip>

@@ -108,7 +108,7 @@ const entryRuleTooltip = computed(() => {
                 </Select>
             </div>
         </TooltipTrigger>
-        <TooltipContent side="top" :side-offset="8" class="max-w-xs border-border/40 bg-card/90 backdrop-blur-xl">
+        <TooltipContent side="top" :side-offset="8" class="max-w-xs">
             <p class="text-sm sm:text-base">
                 <InlineRichText :text="entryRuleTooltip" />
             </p>

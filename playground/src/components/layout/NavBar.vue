@@ -121,7 +121,7 @@ function isActiveLink(link: typeof allNavLinks[0]) {
             <!-- Nav dropdown -->
             <div ref="dropdownRef" class="relative">
                 <button
-                    class="flex items-center gap-1 sm:gap-1.5 instrument-serif text-sm sm:text-base px-2 sm:px-3 py-1.5 rounded-md transition-colors"
+                    class="flex items-center gap-1 sm:gap-1.5 instrument-serif text-sm sm:text-base px-2 sm:px-3 py-1.5 rounded-md transition-colors active:scale-[0.97]"
                     :class="navDropdownOpen
                         ? 'text-foreground bg-muted/30'
                         : 'text-muted-foreground hover:text-foreground'"
@@ -259,7 +259,6 @@ function isActiveLink(link: typeof allNavLinks[0]) {
     pointer-events: auto;
     transform: scale(1) translateY(0);
     backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
     box-shadow: 0 8px 32px hsl(var(--foreground) / 0.1);
 }
 

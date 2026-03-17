@@ -94,7 +94,7 @@ function hasDescriptionOverflow(name: string) {
                                         <span
                                             v-for="tag in ex.tags"
                                             :key="tag"
-                                            class="inline-flex items-center rounded-full px-2 py-0.5 font-mono text-[length:var(--font-size-label)] tracking-[0.04em] backdrop-blur-sm"
+                                            class="inline-flex items-center rounded-full px-2 py-0.5 font-mono text-[0.625rem] tracking-[0.04em] backdrop-blur-sm"
                                             :style="tagToneStyle(tag)"
                                         >
                                             {{ tag }}
@@ -107,7 +107,7 @@ function hasDescriptionOverflow(name: string) {
                 </Select>
             </div>
         </TooltipTrigger>
-        <TooltipContent side="top" :side-offset="8" class="max-w-xs border-border/40 bg-card/90 backdrop-blur-xl">
+        <TooltipContent side="top" :side-offset="8" class="max-w-xs">
             <p class="text-sm sm:text-base">Swap between showcase grammars.</p>
         </TooltipContent>
     </Tooltip>

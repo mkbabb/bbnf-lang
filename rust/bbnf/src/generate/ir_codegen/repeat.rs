@@ -10,24 +10,27 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use super::super::ir_types::IrCodegenCtx;
-use super::infer::infer_node_type;
-use super::ir_node_to_tokens;
+use super::infer::{infer_node_type, infer_node_type_in_vec};
+use super::{ir_node_to_tokens, ir_node_to_tokens_vec};
 
 /// Emit a Repeat expression.
-pub fn emit_repeat(inner: &IrNode, lo: u32, hi: u32, ctx: &IrCodegenCtx<'_>) -> TokenStream {
+///
+/// `in_vec` indicates the Repeat's result will be stored in a Vec (from a parent
+/// context). For Optional, this means the Option inner can also skip boxing.
+/// For Many/Many1, `in_vec=true` is always set regardless of the parameter
+/// since Vec provides heap indirection.
+pub fn emit_repeat(inner: &IrNode, lo: u32, hi: u32, ctx: &IrCodegenCtx<'_>, in_vec: bool) -> TokenStream {
     // sep_by detection: Repeat { inner: Skip(element, Repeat { separator, 0, 1 }) }
     // Only for non-optional repeats (not lo=0, hi=1 which is just Optional).
     if !(lo == 0 && hi == 1) {
         if let Some((element, separator)) = try_sep_by(inner) {
-            // Fix 5: emit separator without discarded overhead.
-            // sep_by discards separator value → skip enum/box wrapping.
-            // Don't strip OW here (only in sep_by_ws context).
-            let elem_ts = ir_node_to_tokens(element, ctx);
             let sep_ts = emit_discarded_separator(separator, false, ctx);
-
-            let elem_ty = infer_node_type(element, ctx);
+            let elem_ty = infer_node_type_in_vec(element, ctx);
             let sep_is_span = separator_is_span(separator, ctx);
             let both_span = elem_ty == TypeDesc::Span && sep_is_span;
+
+            // Vec-producing: pass in_vec=true for element emission.
+            let elem_ts = ir_node_to_tokens_vec(element, ctx, true);
 
             let lo_usize = lo as usize;
             return if both_span {
@@ -38,34 +41,37 @@ pub fn emit_repeat(inner: &IrNode, lo: u32, hi: u32, ctx: &IrCodegenCtx<'_>) -> 
         }
     }
 
-    let inner_ts = ir_node_to_tokens(inner, ctx);
-    let inner_ty = infer_node_type(inner, ctx);
-    let is_span = inner_ty == TypeDesc::Span;
-
     if lo == 0 && hi == 1 {
-        // Optional.
+        // Optional: NOT a Vec context — use standard (boxed) emission.
+        let inner_ty = infer_node_type(inner, ctx);
+        let is_span = inner_ty == TypeDesc::Span;
+        let inner_ts = ir_node_to_tokens(inner, ctx);
         if is_span {
             quote! { #inner_ts.opt_span() }
         } else {
             quote! { #inner_ts.opt() }
         }
-    } else if lo == 0 {
-        // Many (zero or more).
-        if is_span {
-            quote! { #inner_ts.many_span(..) }
-        } else {
-            quote! { #inner_ts.many(..) }
-        }
-    } else if lo == 1 {
-        // Many1 (one or more).
-        if is_span {
-            quote! { #inner_ts.many_span(1..) }
-        } else {
-            quote! { #inner_ts.many(1..) }
-        }
     } else {
-        let lo = lo as usize;
-        quote! { #inner_ts.many(#lo..) }
+        // Vec-producing: pass in_vec=true to skip Box wrapping.
+        let inner_ty = infer_node_type_in_vec(inner, ctx);
+        let is_span = inner_ty == TypeDesc::Span;
+        let inner_ts = ir_node_to_tokens_vec(inner, ctx, true);
+        if lo == 0 {
+            if is_span {
+                quote! { #inner_ts.many_span(..) }
+            } else {
+                quote! { #inner_ts.many(..) }
+            }
+        } else if lo == 1 {
+            if is_span {
+                quote! { #inner_ts.many_span(1..) }
+            } else {
+                quote! { #inner_ts.many(1..) }
+            }
+        } else {
+            let lo = lo as usize;
+            quote! { #inner_ts.many(#lo..) }
+        }
     }
 }
 
@@ -81,12 +87,13 @@ pub fn emit_sep_by_ws(
     // Fix 5+6: emit separator without discarded overhead.
     // sep_by discards separator value → skip enum/box wrapping.
     // sep_by_ws handles whitespace → skip OW trimming.
-    let elem_ts = ir_node_to_tokens(element, ctx);
+    // Vec-producing: pass in_vec=true for element emission.
+    let elem_ts = ir_node_to_tokens_vec(element, ctx, true);
     let sep_ts = emit_discarded_separator(separator, true, ctx);
 
     // After stripping, check if separator is effectively Span
     // (e.g. a Ref with _sp method) for sep_by_ws_span upgrade.
-    let elem_ty = infer_node_type(element, ctx);
+    let elem_ty = infer_node_type_in_vec(element, ctx);
     let sep_is_span = separator_is_span(separator, ctx);
     let both_span = elem_ty == TypeDesc::Span && sep_is_span;
 

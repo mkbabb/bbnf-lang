@@ -9,7 +9,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 
 use super::super::ir_types::IrCodegenCtx;
-use super::ir_node_to_tokens;
+use super::{ir_node_to_tokens, ir_node_to_tokens_vec};
 
 /// Emit a `wrap` / `wrap_span` expression for the pattern `open >> middle << close`.
 ///
@@ -20,6 +20,7 @@ pub fn emit_wrap(
     middle: &IrNode,
     close: &IrNode,
     ctx: &IrCodegenCtx<'_>,
+    in_vec: bool,
 ) -> TokenStream {
     // Fix 4: Regex coalescing — Literal(open) >> Regex(pattern)* << Literal(close)
     // Fuse into a single regex: sp_regex("open_lit" + pattern + "close_lit").
@@ -35,7 +36,7 @@ pub fn emit_wrap(
     }
 
     let open_ts = ir_node_to_tokens(open, ctx);
-    let middle_ts = ir_node_to_tokens(middle, ctx);
+    let middle_ts = ir_node_to_tokens_vec(middle, ctx, in_vec);
     let close_ts = ir_node_to_tokens(close, ctx);
 
     // Always use `.wrap()` in the Parser context — `.wrap_span()` converts to

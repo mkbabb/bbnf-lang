@@ -8,9 +8,9 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use super::super::ir_types::{type_is_span, IrCodegenCtx};
-use super::infer::infer_node_type;
+use super::infer::{infer_node_type, infer_node_type_in_vec};
 use super::unescape_literal;
-use super::ir_node_to_tokens;
+use super::{ir_node_to_tokens, ir_node_to_tokens_vec};
 
 /// Emit an Alt (alternation) expression.
 ///
@@ -20,12 +20,14 @@ pub fn emit_alt(
     branches: &[AltBranch],
     dispatch: Option<&bbnf_ir::AltDispatch>,
     ctx: &IrCodegenCtx<'_>,
+    in_vec: bool,
 ) -> TokenStream {
     if branches.is_empty() {
         return quote! { ::parse_that::epsilon().map(|_| unreachable!()) };
     }
     if branches.len() == 1 {
-        return ir_node_to_tokens(&branches[0].node, ctx);
+        // Single branch: can propagate in_vec since no coercion needed.
+        return ir_node_to_tokens_vec(&branches[0].node, ctx, in_vec);
     }
 
     // Check for all-literal → any_span fast path.
@@ -47,18 +49,31 @@ pub fn emit_alt(
         return quote! { ::parse_that::any_span(&[#(#lits),*]) };
     }
 
-    // Compute branch types and determine if coercion is needed.
-    let branch_tys: Vec<TypeDesc> = branches
+    // Compute branch types with in_vec context to check homogeneity.
+    let branch_tys_vec: Vec<TypeDesc> = branches
         .iter()
-        .map(|b| infer_node_type(&b.node, ctx))
+        .map(|b| infer_node_type_in_vec(&b.node, ctx))
         .collect();
+    let all_same_vec = branch_tys_vec.windows(2).all(|w| w[0] == w[1]);
+
+    // Only propagate in_vec if branches are homogeneous WITH in_vec.
+    // Heterogeneous alts need coercion to BoxedEnum, which defeats in_vec.
+    let effective_in_vec = in_vec && all_same_vec;
+
+    let branch_tys: Vec<TypeDesc> = if effective_in_vec {
+        branch_tys_vec
+    } else {
+        branches
+            .iter()
+            .map(|b| infer_node_type(&b.node, ctx))
+            .collect()
+    };
     let all_same = branch_tys.windows(2).all(|w| w[0] == w[1]);
     let overall_is_boxed_enum = !all_same;
 
-    // Generate branch parsers.
     let parsers: Vec<TokenStream> = branches
         .iter()
-        .map(|b| ir_node_to_tokens(&b.node, ctx))
+        .map(|b| ir_node_to_tokens_vec(&b.node, ctx, effective_in_vec))
         .collect();
 
     // Coerce branches if heterogeneous.
@@ -247,10 +262,42 @@ fn try_sp_dispatch_branch(
             }
             None
         }
-        // Bare inlined nodes without Map wrapper: fall through to normal parser path.
-        // The Map wrapper (with enum variant info) is preserved by inline_acyclic,
-        // so bare nodes here would lack the variant mapping needed for coercion.
-        _ => None,
+        // Case 4: Bare inlined nodes without Map wrapper.
+        // After inline_acyclic, if the branch node doesn't have a Map wrapper but
+        // can be expressed as a SpanParser, emit it directly. The coercion wrapper
+        // (Box::new / enum variant) is already handled by `coerce_branches` in the
+        // caller, so we only need an identity map here. This applies when the
+        // alternation context uses sub-variant coercion for this branch.
+        other => {
+            let sp_expr = super::super::ir_span::try_ir_span_expr(other, ctx)?;
+            // Check if there's a matching sub-variant for the inferred type.
+            let node_ty = infer_node_type(other, ctx);
+            let all_sub_variants: Vec<(&str, &TypeDesc)> = ctx
+                .ir
+                .rules
+                .iter()
+                .flat_map(|r| {
+                    r.meta.sub_variants.iter().map(|sv| {
+                        let name = ctx.ir.get_string(sv.variant_name);
+                        (name, &sv.ty)
+                    })
+                })
+                .collect();
+
+            if let Some((variant_name, _)) = all_sub_variants
+                .iter()
+                .find(|(_, vty)| **vty == node_ty)
+            {
+                let variant_ident = format_ident!("{}", variant_name);
+                let enum_ident = &ctx.enum_ident;
+                Some((sp_expr, quote! { |x| #enum_ident::#variant_ident(x) }))
+            } else if node_ty == TypeDesc::Span {
+                // Homogeneous Span output — identity map (Box wrapping done by caller).
+                Some((sp_expr, quote! { |x| x }))
+            } else {
+                None
+            }
+        }
     }
 }
 
@@ -279,8 +326,8 @@ fn coerce_branches(
         .iter()
         .zip(branch_tys.iter())
         .map(|(parser, branch_ty)| {
-            if *branch_ty == TypeDesc::BoxedEnum {
-                // Already Box<Enum>.
+            if *branch_ty == TypeDesc::BoxedEnum || *branch_ty == TypeDesc::Enum {
+                // Already (Box<)Enum(>) — no sub-variant coercion needed.
                 parser.clone()
             } else if let Some((variant_name, _)) = all_sub_variants
                 .iter()

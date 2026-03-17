@@ -590,7 +590,7 @@ fn generate_compound_doc_ir(
                     }
                     interleaved.push(part.clone());
                 }
-                quote! { ::pprint::concat(vec![#(#interleaved),*]) }
+                quote! { ::pprint::Doc::Concat(vec![#(#interleaved),*]) }
             } else {
                 // No separator — direct `+` chaining (no Null interleaving).
                 // Chains into a single Concat(Vec) with one heap allocation,
@@ -682,7 +682,7 @@ fn generate_sub_variant_arms(
 
                 to_doc_arms.push(quote! {
                     Self::#variant(#pat) => {
-                        ::pprint::concat(vec![#(#doc_parts),*])
+                        ::pprint::Doc::Concat(vec![#(#doc_parts),*])
                     }
                 });
 

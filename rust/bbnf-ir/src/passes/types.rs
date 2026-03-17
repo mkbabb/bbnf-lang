@@ -154,8 +154,11 @@ pub fn infer_types(ir: &mut GrammarIR) {
 
     ir.types = cache.into_iter().collect();
     ir.types.sort_by_key(|(id, _)| *id);
+
 }
 
+/// Post-inference pass: convert `Vec<BoxedEnum>` → `Vec<Enum>` in inferred types.
+///
 /// Context for type inference — avoids threading many parameters.
 struct InferCtx<'a> {
     ir: &'a GrammarIR,
@@ -192,11 +195,10 @@ fn infer_node(node: &IrNode, ctx: &InferCtx<'_>) -> TypeDesc {
         IrNode::Epsilon => TypeDesc::Tuple(vec![]),
 
         IrNode::Ref(_id) => {
-            // Always BoxedEnum: emit_ref wraps all nonterminal calls with
-            // `.map(|x| Box::new(x))`, producing `Box<Enum>` at runtime.
-            // This matches the codegen's `infer_node_type` and the AST's
-            // `type_inference.rs:122` which returns `boxed_enum_type` for all
-            // nonterminal references.
+            // BoxedEnum: emit_ref wraps non-transparent calls with Box::new.
+            // Transparent refs also return Box<Enum>.
+            // The insert_recursion_boxing post-pass converts Vec<BoxedEnum>
+            // → Vec<Enum> where Vec provides sufficient heap indirection.
             TypeDesc::BoxedEnum
         }
 
@@ -224,17 +226,19 @@ fn infer_node(node: &IrNode, ctx: &InferCtx<'_>) -> TypeDesc {
         IrNode::Repeat { inner, lo, hi } => {
             // Nested: consume pretty_preserve.
             let consumed = ctx.consumed();
-            let inner_ty = infer_node(inner, &consumed);
 
             if *lo == 0 && *hi == 1 {
                 // Optional.
+                let inner_ty = infer_node(inner, &consumed);
                 if inner_ty == TypeDesc::Span && !ctx.no_collapse {
                     TypeDesc::Span
                 } else {
                     TypeDesc::Option(Box::new(inner_ty))
                 }
             } else {
-                // Many / Many1.
+                // Many / Many1: use in_vec inference for inner elements.
+                // Vec provides heap indirection, so Box is unnecessary.
+                let inner_ty = infer_node_in_vec(inner, &consumed);
                 if inner_ty == TypeDesc::Span && !ctx.no_collapse {
                     TypeDesc::Span
                 } else {
@@ -275,6 +279,74 @@ fn infer_node(node: &IrNode, ctx: &InferCtx<'_>) -> TypeDesc {
                 }
             }
         }
+    }
+}
+
+/// Infer the output type of a single IR node in a Vec context.
+///
+/// Identical to `infer_node` except `Ref` returns `Enum` for non-transparent rules
+/// (since Vec provides heap indirection, Box is unnecessary). Transparent rules
+/// still return `BoxedEnum` since they box internally.
+///
+/// The `in_vec` context propagates through Skip (left), Next (right), Minus (left),
+/// Map, and OptionalWhitespace — the same nodes that propagate `in_vec` in codegen.
+/// It does NOT propagate into Seq children (multi-element Seq produces a tuple),
+/// Alt branches (they produce compound types), or Repeat (which starts its own context).
+fn infer_node_in_vec(node: &IrNode, ctx: &InferCtx<'_>) -> TypeDesc {
+    match node {
+        // In Vec context, ALL refs return Enum (no boxing needed).
+        // Non-transparent: codegen emits Self::rule() without Box.
+        // Transparent: codegen emits Self::rule_unboxed() which returns Enum directly.
+        IrNode::Ref(_) => TypeDesc::Enum,
+        IrNode::Skip(left, _) => {
+            let consumed = ctx.consumed();
+            infer_node_in_vec(left, &consumed)
+        }
+        IrNode::Next(_, right) => {
+            let consumed = ctx.consumed();
+            infer_node_in_vec(right, &consumed)
+        }
+        IrNode::Minus(left, _) => {
+            let consumed = ctx.consumed();
+            infer_node_in_vec(left, &consumed)
+        }
+        IrNode::OptionalWhitespace(inner) => infer_node_in_vec(inner, ctx),
+        IrNode::Map { inner: _, fn_id } => {
+            // Map determines its own type from FnDescriptor, not from inner.
+            let fd = &ctx.ir.fns[*fn_id as usize];
+            match fd {
+                FnDescriptor::EnumWrap { .. } => TypeDesc::Enum,
+                FnDescriptor::BoxWrap => TypeDesc::BoxedEnum,
+                FnDescriptor::Custom { return_type, source } => {
+                    if let Some(rt) = return_type {
+                        rt.clone()
+                    } else {
+                        TypeDesc::Named(*source)
+                    }
+                }
+            }
+        }
+        // Alt: try in_vec inference. Only apply if branches are homogeneous
+        // with in_vec (otherwise coercion produces BoxedEnum, defeating in_vec).
+        IrNode::Alt(branches, _) => {
+            if branches.is_empty() {
+                return TypeDesc::Tuple(vec![]);
+            }
+            let consumed = ctx.consumed();
+            let first = infer_node_in_vec(&branches[0].node, &consumed);
+            let all_same = branches[1..]
+                .iter()
+                .all(|b| infer_node_in_vec(&b.node, &consumed) == first);
+            if all_same {
+                first
+            } else {
+                // Heterogeneous even with in_vec — fall back to standard inference.
+                infer_node(node, ctx)
+            }
+        }
+        // For all other nodes (Seq, Repeat, Literal, Regex, Epsilon, Negate),
+        // delegate to infer_node.
+        _ => infer_node(node, ctx),
     }
 }
 
@@ -372,10 +444,18 @@ fn try_flatten_pair(a: &TypeDesc, b: &TypeDesc) -> Option<TypeDesc> {
         if **inner == *a {
             return Some(b.clone());
         }
+        // (BoxedEnum, Vec<Enum>) → Vec<Enum>: unbox the first element to match.
+        if **inner == TypeDesc::Enum && *a == TypeDesc::BoxedEnum {
+            return Some(b.clone());
+        }
     }
     // (Vec<T>, T) → Vec<T>
     if let TypeDesc::Vec(inner) = a {
         if **inner == *b {
+            return Some(a.clone());
+        }
+        // (Vec<Enum>, BoxedEnum) → Vec<Enum>: unbox the last element to match.
+        if **inner == TypeDesc::Enum && *b == TypeDesc::BoxedEnum {
             return Some(a.clone());
         }
     }
@@ -429,10 +509,10 @@ fn collect_sub_variants_walk(
 
             if is_heterogeneous {
                 // Collect sub-variants for branches that need coercion.
-                // Skip BoxedEnum (already Box<Enum>).
+                // Skip BoxedEnum and Enum (already the unified enum type).
                 let mut seen_types: Vec<(TypeDesc, String)> = Vec::new();
                 for (i, ty) in tys.iter().enumerate() {
-                    if *ty == TypeDesc::BoxedEnum {
+                    if *ty == TypeDesc::BoxedEnum || *ty == TypeDesc::Enum {
                         continue;
                     }
                     let variant_name = if let Some((_, existing)) =

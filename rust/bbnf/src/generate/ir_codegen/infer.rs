@@ -104,6 +104,15 @@ pub fn infer_node_type(node: &IrNode, ctx: &IrCodegenCtx<'_>) -> TypeDesc {
                 if inner_ty == TypeDesc::Span {
                     TypeDesc::Span
                 } else {
+                    // Phase 1a: transparent refs get unboxed in Optional context.
+                    // Codegen emits _unboxed().opt() → Option<Enum> instead of
+                    // rule().opt() → Option<Box<Enum>>.
+                    if let IrNode::Ref(rule_id) = inner.as_ref() {
+                        let rule = &ctx.ir.rules[*rule_id as usize];
+                        if rule.meta.is_transparent {
+                            return TypeDesc::Option(Box::new(TypeDesc::Enum));
+                        }
+                    }
                     TypeDesc::Option(Box::new(inner_ty))
                 }
             } else {

@@ -10,7 +10,7 @@
 //! where the combinator approach is already efficient (dispatch Alt, Repeat)
 //! or too complex to inline (Minus, Negate).
 
-use bbnf_ir::{FnDescriptor, IrNode, RuleId};
+use bbnf_ir::{FnDescriptor, IrNode, RuleId, TypeDesc};
 
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
@@ -66,7 +66,9 @@ fn benefits_from_inline(node: &IrNode) -> bool {
         IrNode::OptionalWhitespace(inner) => benefits_from_inline(inner),
         // Ref: inlining saves the .map(Box::new) Box allocation.
         IrNode::Ref(_) => true,
-        // Alt, Repeat, Minus, Negate: already efficient or complex — no benefit.
+        // Optional (Repeat 0..1): inline when inner benefits, avoiding .opt() combinator wrapper.
+        IrNode::Repeat { inner, lo, hi } if *lo == 0 && *hi == 1 => benefits_from_inline(inner),
+        // Alt, Repeat (non-optional), Minus, Negate: already efficient or complex — no benefit.
         _ => false,
     }
 }
@@ -165,8 +167,54 @@ pub(crate) fn ir_node_to_inline_vec(
             emit_inline_fallback(node, ctx, ictx, in_vec)
         }
 
+        IrNode::Repeat { inner, lo, hi } if *lo == 0 && *hi == 1 => {
+            // Phase 2b: inline Optional when inner benefits from inlining.
+            let inner_ty = super::infer::infer_node_type(inner, ctx);
+            if inner_ty != TypeDesc::Span {
+                // Phase 1a: transparent ref → _unboxed() inline optional.
+                if let IrNode::Ref(rule_id) = inner.as_ref() {
+                    let rule = &ctx.ir.rules[*rule_id as usize];
+                    if rule.meta.is_transparent {
+                        let resolved_name = ctx.resolve_rule_name(*rule_id);
+                        let unboxed_ident = format_ident!("{}_unboxed", resolved_name);
+                        let name = ictx.hoist(quote! { Self::#unboxed_ident() });
+                        let cp_var = ictx.fresh_ident("cp");
+                        return quote! {
+                            {
+                                let #cp_var = state.offset;
+                                if let Some(__opt_v) = #name.call(state) {
+                                    Some(Some(__opt_v))
+                                } else {
+                                    state.offset = #cp_var;
+                                    Some(None)
+                                }
+                            }
+                        };
+                    }
+                }
+
+                if benefits_from_inline(inner) {
+                    let inner_expr = ir_node_to_inline_vec(inner, ctx, ictx, in_vec);
+                    let cp_var = ictx.fresh_ident("cp");
+                    return quote! {
+                        {
+                            let #cp_var = state.offset;
+                            if let Some(__opt_v) = { #inner_expr } {
+                                Some(Some(__opt_v))
+                            } else {
+                                state.offset = #cp_var;
+                                Some(None)
+                            }
+                        }
+                    };
+                }
+            }
+            // Span case or non-beneficial inner: fall back to combinator.
+            emit_inline_fallback(node, ctx, ictx, false)
+        }
+
         IrNode::Repeat { .. } => {
-            // Repeat needs combinator loop infrastructure — fall back.
+            // Non-optional Repeat needs combinator loop infrastructure — fall back.
             emit_inline_fallback(node, ctx, ictx, false)
         }
 

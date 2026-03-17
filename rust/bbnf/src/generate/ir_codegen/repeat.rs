@@ -45,6 +45,18 @@ pub fn emit_repeat(inner: &IrNode, lo: u32, hi: u32, ctx: &IrCodegenCtx<'_>, in_
         // Optional: NOT a Vec context — use standard (boxed) emission.
         let inner_ty = infer_node_type(inner, ctx);
         let is_span = inner_ty == TypeDesc::Span;
+
+        // Phase 1a: transparent refs use _unboxed() to skip Box allocation.
+        // Option<Enum> instead of Option<Box<Enum>>.
+        if let IrNode::Ref(rule_id) = inner {
+            let rule = &ctx.ir.rules[*rule_id as usize];
+            if rule.meta.is_transparent {
+                let resolved_name = ctx.resolve_rule_name(*rule_id);
+                let unboxed_ident = format_ident!("{}_unboxed", resolved_name);
+                return quote! { Self::#unboxed_ident().opt() };
+            }
+        }
+
         let inner_ts = ir_node_to_tokens(inner, ctx);
         if is_span {
             quote! { #inner_ts.opt_span() }
@@ -162,6 +174,12 @@ fn emit_discarded_separator(
                 // Use SpanParser path — cheapest, no enum/box overhead.
                 let sp_ident = format_ident!("{}_sp", name);
                 quote! { Self::#sp_ident().into_parser() }
+            } else if rule.meta.is_transparent {
+                // Phase 1b: transparent refs use _unboxed() — value is discarded
+                // anyway, so skip the internal boxing that transparent rules do.
+                let resolved_name = ctx.resolve_rule_name(*rule_id);
+                let unboxed_ident = format_ident!("{}_unboxed", resolved_name);
+                quote! { Self::#unboxed_ident() }
             } else {
                 // Emit Self::rule() WITHOUT the .map(|x| Box::new(x)) boxing
                 // that emit_ref normally adds. The value is discarded anyway.

@@ -130,10 +130,10 @@ fn many_non_span_is_vec() {
             },
         ),
     ]);
-    // Rule 1: Alt(Span, Span) -> Span. But Ref(1) always returns BoxedEnum
-    // (matching emit_ref's Box::new wrapping), so many(BoxedEnum) -> Vec(BoxedEnum).
+    // Rule 1: Alt(Span, Span) -> Span. Ref(1) in Vec context returns Enum
+    // (Vec provides heap indirection, so Box is unnecessary), so many(Enum) -> Vec(Enum).
     infer_types(&mut ir);
-    assert_eq!(*get_type(&ir, 0), TypeDesc::Vec(Box::new(TypeDesc::BoxedEnum)));
+    assert_eq!(*get_type(&ir, 0), TypeDesc::Vec(Box::new(TypeDesc::Enum)));
 }
 
 #[test]

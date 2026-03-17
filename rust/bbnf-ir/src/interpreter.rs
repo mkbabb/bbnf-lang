@@ -5,6 +5,7 @@
 //! checkpoints, and values.
 
 use std::collections::HashMap;
+use std::rc::Rc;
 
 use crate::bytecode::{BytecodeProgram, Op};
 use crate::RuleId;
@@ -99,11 +100,11 @@ pub struct Interpreter<'a> {
     offset: u32,
     is_error: bool,
 
-    values: Vec<Value>,
+    values: Vec<Rc<Value>>,
     call_stack: Vec<CallFrame>,
     checkpoints: Vec<Checkpoint>,
     repeats: Vec<RepeatState>,
-    memo: HashMap<(RuleId, u32), (u32, Value, bool)>,
+    memo: HashMap<(RuleId, u32), (u32, Rc<Value>, bool)>,
     regex_cache: HashMap<u32, regex::Regex>,
 
     /// Stack of (rule_id, start_offset) pushed by MemoCheck on cache miss,
@@ -243,7 +244,12 @@ impl<'a> Interpreter<'a> {
             }
         }
 
-        let value = self.values.pop();
+        // Clear memo to release shared references before unwrapping.
+        self.memo.clear();
+
+        let value = self.values.pop().map(|rc| {
+            Rc::try_unwrap(rc).unwrap_or_else(|rc| (*rc).clone())
+        });
         let success = !self.is_error && value.is_some();
 
         // On failure, generate a diagnostic from FOLLOW sets at the furthest offset.
@@ -299,7 +305,7 @@ impl<'a> Interpreter<'a> {
         let end = start + s.len();
 
         if end <= self.input.len() && &self.input_bytes[start..end] == s.as_bytes() {
-            self.values.push(Value::Span(self.offset, end as u32));
+            self.values.push(Rc::new(Value::Span(self.offset, end as u32)));
             self.offset = end as u32;
             self.is_error = false;
             self.track_furthest();
@@ -323,7 +329,7 @@ impl<'a> Interpreter<'a> {
 
         if let Some(m) = re.find(remaining) {
             let end = start + m.end();
-            self.values.push(Value::Span(self.offset, end as u32));
+            self.values.push(Rc::new(Value::Span(self.offset, end as u32)));
             self.offset = end as u32;
             self.is_error = false;
             self.track_furthest();
@@ -335,7 +341,7 @@ impl<'a> Interpreter<'a> {
     }
 
     fn exec_epsilon(&mut self) {
-        self.values.push(Value::Nil);
+        self.values.push(Rc::new(Value::Nil));
         self.is_error = false;
         self.pc += 1;
     }
@@ -453,8 +459,10 @@ impl<'a> Interpreter<'a> {
         let depth = repeat.value_depth.min(self.values.len());
 
         if repeat.count >= repeat.lo {
-            let collected: Vec<Value> = self.values.drain(depth..).collect();
-            self.values.push(Value::Array(collected));
+            let collected: Vec<Value> = self.values.drain(depth..)
+                .map(|rc| Rc::try_unwrap(rc).unwrap_or_else(|rc| (*rc).clone()))
+                .collect();
+            self.values.push(Rc::new(Value::Array(collected)));
             self.is_error = false;
         } else {
             self.values.truncate(depth);
@@ -470,8 +478,10 @@ impl<'a> Interpreter<'a> {
     fn exec_make_array(&mut self, count: u32) {
         let n = count as usize;
         let start = self.values.len().saturating_sub(n);
-        let collected: Vec<Value> = self.values.drain(start..).collect();
-        self.values.push(Value::Array(collected));
+        let collected: Vec<Value> = self.values.drain(start..)
+            .map(|rc| Rc::try_unwrap(rc).unwrap_or_else(|rc| (*rc).clone()))
+            .collect();
+        self.values.push(Rc::new(Value::Array(collected)));
         self.pc += 1;
     }
 
@@ -482,13 +492,15 @@ impl<'a> Interpreter<'a> {
             .map(|f| (f.start_offset, f.value_depth))
             .unwrap_or((0, 0));
         let depth = depth.min(self.values.len());
-        let children: Vec<Value> = self.values.drain(depth..).collect();
+        let children: Vec<Value> = self.values.drain(depth..)
+            .map(|rc| Rc::try_unwrap(rc).unwrap_or_else(|rc| (*rc).clone()))
+            .collect();
         if !children.is_empty() {
-            self.values.push(Value::Tagged {
+            self.values.push(Rc::new(Value::Tagged {
                 tag,
                 span: (start, self.offset),
                 children,
-            });
+            }));
         }
         self.pc += 1;
     }
@@ -502,7 +514,7 @@ impl<'a> Interpreter<'a> {
         let key = (rule_id, start_offset);
         if let Some((result_offset, value, was_error)) = self.memo.get(&key) {
             self.offset = *result_offset;
-            self.values.push(value.clone());
+            self.values.push(Rc::clone(value)); // O(1) instead of deep clone
             self.is_error = *was_error;
             self.pc = hit_offset;
         } else {
@@ -513,7 +525,9 @@ impl<'a> Interpreter<'a> {
     }
 
     fn exec_memo_store(&mut self, _rule_id: u32) {
-        let value = self.values.last().cloned().unwrap_or(Value::Nil);
+        let value = self.values.last()
+            .map(Rc::clone)
+            .unwrap_or_else(|| Rc::new(Value::Nil));
         // Pop the start offset saved by MemoCheck.
         let (rule_id, start_offset) = self.memo_starts.pop()
             .expect("MemoStore without matching MemoCheck");
@@ -553,4 +567,3 @@ pub fn parse_with_ir(ir: &crate::GrammarIR, input: &str) -> ParseResult {
     let mut interp = Interpreter::new(&program, input);
     interp.run()
 }
-

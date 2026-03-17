@@ -105,18 +105,57 @@ fn three_branches_two_shared() {
 }
 
 #[test]
-fn single_node_branches_factored() {
-    // Alt([Lit(1), Lit(1)]) -> Lit(1) (identical branches collapse)
+fn depth_two_prefix_factored() {
+    // Alt([Seq(A, B, C), Seq(A, B, D)]) should factor to Seq(A, B, Alt([C, D]))
+    // via multi-round fixed-point: pass 1 factors A, pass 2 factors B.
+    let mut ir = make_ir(alt(vec![
+        IrNode::Seq(vec![IrNode::Literal(1), IrNode::Literal(2), IrNode::Literal(3)]),
+        IrNode::Seq(vec![IrNode::Literal(1), IrNode::Literal(2), IrNode::Regex(3)]),
+    ]));
+
+    factor_common_prefixes(&mut ir);
+
+    // Result: Seq(Lit(1), Seq(Lit(2), Alt([Lit(3), Regex(3)])))
+    // Pass 1 factors out Lit(1), leaving Alt([Seq(Lit(2),Lit(3)), Seq(Lit(2),Regex(3))])
+    // Re-factor recurses and factors out Lit(2), producing Seq(Lit(2), Alt([Lit(3), Regex(3)]))
+    match &ir.rules[0].body {
+        IrNode::Seq(outer) => {
+            assert_eq!(outer.len(), 2, "expected Seq(A, Seq(B, Alt(...))), got {:?}", outer);
+            assert_eq!(outer[0], IrNode::Literal(1));
+            match &outer[1] {
+                IrNode::Seq(inner) => {
+                    assert_eq!(inner.len(), 2);
+                    assert_eq!(inner[0], IrNode::Literal(2));
+                    match &inner[1] {
+                        IrNode::Alt(branches, _) => {
+                            assert_eq!(branches.len(), 2);
+                            assert_eq!(branches[0].node, IrNode::Literal(3));
+                            assert_eq!(branches[1].node, IrNode::Regex(3));
+                        }
+                        other => panic!("expected inner Alt, got {:?}", other),
+                    }
+                }
+                other => panic!("expected inner Seq, got {:?}", other),
+            }
+        }
+        other => panic!("expected outer Seq after depth-2 factoring, got {:?}", other),
+    }
+}
+
+#[test]
+fn single_node_branches_unchanged() {
+    // Alt([Lit(1), Lit(1)]) — identical single-node branches are NOT factored
+    // because all remainders would be Epsilon (non-productive factoring).
     let mut ir = make_ir(alt(vec![IrNode::Literal(1), IrNode::Literal(1)]));
 
     factor_common_prefixes(&mut ir);
 
-    // After factoring: Seq(Lit(1), Alt([Epsilon, Epsilon]))
-    // This is correct -- the branches were identical single-node entries.
     match &ir.rules[0].body {
-        IrNode::Seq(children) => {
-            assert_eq!(children[0], IrNode::Literal(1));
+        IrNode::Alt(branches, _) => {
+            assert_eq!(branches.len(), 2);
+            assert_eq!(branches[0].node, IrNode::Literal(1));
+            assert_eq!(branches[1].node, IrNode::Literal(1));
         }
-        other => panic!("expected Seq after factoring identical branches, got {:?}", other),
+        other => panic!("expected unchanged Alt, got {:?}", other),
     }
 }

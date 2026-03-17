@@ -3,6 +3,8 @@
 //! Rewrites `Alt([Seq(A, B), Seq(A, C)])` → `Seq(A, Alt([B, C]))` when branches
 //! share a common prefix. Reduces backtracking by hoisting shared work.
 
+use rayon::prelude::*;
+
 use crate::{AltBranch, GrammarIR, IrNode};
 
 /// Factor common prefixes out of alternation branches.
@@ -11,8 +13,14 @@ use crate::{AltBranch, GrammarIR, IrNode};
 /// share a common leading node. The factored prefix becomes a `Seq`
 /// wrapping the remaining alternation.
 pub fn factor_common_prefixes(ir: &mut GrammarIR) {
-    for rule in &mut ir.rules {
-        rule.body = factor(std::mem::replace(&mut rule.body, IrNode::Epsilon));
+    if ir.rules.len() >= 16 {
+        ir.rules.par_iter_mut().for_each(|rule| {
+            rule.body = factor(std::mem::replace(&mut rule.body, IrNode::Epsilon));
+        });
+    } else {
+        for rule in &mut ir.rules {
+            rule.body = factor(std::mem::replace(&mut rule.body, IrNode::Epsilon));
+        }
     }
 }
 
@@ -28,8 +36,20 @@ fn factor(node: IrNode) -> IrNode {
                 })
                 .collect();
 
-            // Group branches by their leading node.
+            // Group branches by their leading node, then re-factor remainder
+            // alternations to catch depth-2+ prefixes. E.g.:
+            //   Alt([Seq(A,B,C), Seq(A,B,D)]) → Seq(A, Alt([Seq(B,C), Seq(B,D)]))
+            // First pass factors out A, second pass (via recursive factor call on
+            // the remainder) factors out B.
             let factored = factor_branches(branches);
+            // Re-factor each produced branch to catch nested prefixes.
+            let factored: Vec<AltBranch> = factored
+                .into_iter()
+                .map(|mut b| {
+                    b.node = factor(b.node);
+                    b
+                })
+                .collect();
 
             if factored.len() == 1 {
                 factored.into_iter().next().unwrap().node
@@ -123,6 +143,20 @@ fn factor_branches(branches: Vec<AltBranch>) -> Vec<AltBranch> {
                     first_set: None,
                 })
                 .collect();
+
+            // If all remainders are Epsilon, the branches were identical single
+            // nodes — factoring just wraps in Seq(leader, Alt([Eps,...])) which
+            // is non-productive. Keep the original branches as-is.
+            if remainder_branches
+                .iter()
+                .all(|b| b.node == IrNode::Epsilon)
+            {
+                for b in &branches[i..j] {
+                    result.push(b.clone());
+                }
+                i = j;
+                continue;
+            }
 
             let remainder_alt = if remainder_branches.len() == 1 {
                 remainder_branches.into_iter().next().unwrap().node

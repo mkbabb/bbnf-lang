@@ -9,6 +9,8 @@
 //! branches' FIRST sets, the nullable branch gets O(1) dispatch instead of
 //! falling through as a linear fallback.
 
+use rayon::prelude::*;
+
 use crate::{AltBranch, AltDispatch, CharSet128, GrammarIR, IrNode, regex_first};
 
 /// Generate dispatch tables for all eligible Alt nodes in the IR.
@@ -29,11 +31,21 @@ pub fn generate_dispatch_tables(ir: &mut GrammarIR) {
         .map(|r| (r.meta.first_set.clone(), r.meta.nullable))
         .collect();
 
-    for rule in &mut ir.rules {
-        let follow = follow_sets.get(&rule.id);
-        annotate_node(&mut rule.body, follow, &rule_metas, &strings);
-        if let Some(ref mut recover) = rule.meta.recover {
-            annotate_node(recover, follow, &rule_metas, &strings);
+    if ir.rules.len() >= 16 {
+        ir.rules.par_iter_mut().for_each(|rule| {
+            let follow = follow_sets.get(&rule.id);
+            annotate_node(&mut rule.body, follow, &rule_metas, &strings);
+            if let Some(ref mut recover) = rule.meta.recover {
+                annotate_node(recover, follow, &rule_metas, &strings);
+            }
+        });
+    } else {
+        for rule in &mut ir.rules {
+            let follow = follow_sets.get(&rule.id);
+            annotate_node(&mut rule.body, follow, &rule_metas, &strings);
+            if let Some(ref mut recover) = rule.meta.recover {
+                annotate_node(recover, follow, &rule_metas, &strings);
+            }
         }
     }
 }

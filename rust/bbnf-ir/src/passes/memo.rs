@@ -12,6 +12,8 @@
 
 use std::collections::{HashMap, HashSet};
 
+use rayon::prelude::*;
+
 use crate::{GrammarIR, IrNode, MemoStrategy, RuleId};
 
 /// Default reference-count threshold for selective memoization.
@@ -39,15 +41,9 @@ pub fn refine_memo_strategies(ir: &mut GrammarIR) {
     // Clone follow_sets to avoid borrow conflict.
     let follow_sets = ir.follow_sets.clone();
 
-    for rule in &mut ir.rules {
+    let assign_memo = |rule: &mut crate::IrRule| {
         rule.meta.memo = if rule.meta.is_cyclic {
-            // Only memoize SCC entry points — other cyclic rules are reached
-            // through the entry point which already has the cache.
             if scc_entries.contains(&rule.id) {
-                // Fix 7: If the rule body has a total dispatch table (all branches
-                // have disjoint FIRST sets), skip memoization. The dispatch table
-                // provides O(1) branch selection, preventing redundant parsing at
-                // the same offset — making memoization redundant overhead.
                 if body_has_total_dispatch(&rule.body) {
                     MemoStrategy::None
                 } else {
@@ -59,8 +55,6 @@ pub fn refine_memo_strategies(ir: &mut GrammarIR) {
         } else {
             let refs = ref_counts.get(&rule.id).copied().unwrap_or(0);
 
-            // Adjust threshold based on FOLLOW set cardinality when available.
-            // If FOLLOW sets have not been computed (empty map), use the default.
             let threshold = if follow_sets.is_empty() {
                 SELECTIVE_THRESHOLD
             } else {
@@ -70,10 +64,8 @@ pub fn refine_memo_strategies(ir: &mut GrammarIR) {
                     .unwrap_or(0);
 
                 if follow_card >= FOLLOW_BOOST_THRESHOLD {
-                    // Large FOLLOW → many calling contexts → memoize sooner.
                     SELECTIVE_THRESHOLD.saturating_sub(1)
                 } else if follow_card < 4 {
-                    // Small FOLLOW → few contexts → re-parsing is cheap.
                     SELECTIVE_THRESHOLD + 1
                 } else {
                     SELECTIVE_THRESHOLD
@@ -86,6 +78,14 @@ pub fn refine_memo_strategies(ir: &mut GrammarIR) {
                 MemoStrategy::None
             }
         };
+    };
+
+    if ir.rules.len() >= 16 {
+        ir.rules.par_iter_mut().for_each(assign_memo);
+    } else {
+        for rule in &mut ir.rules {
+            assign_memo(rule);
+        }
     }
 }
 

@@ -5,6 +5,8 @@
 
 use std::collections::HashMap;
 
+use rayon::prelude::*;
+
 use crate::{GrammarIR, IrNode};
 
 // ── Epsilon Elimination ─────────────────────────────────────────────────────
@@ -16,8 +18,14 @@ use crate::{GrammarIR, IrNode};
 /// - `Seq([single])` → `single` (unwrap singleton sequences)
 /// - `Alt([single], _)` → `single.node` (unwrap singleton alternations)
 pub fn eliminate_epsilon(ir: &mut GrammarIR) {
-    for rule in &mut ir.rules {
-        rule.body = elim_epsilon(std::mem::replace(&mut rule.body, IrNode::Epsilon));
+    if ir.rules.len() >= 16 {
+        ir.rules.par_iter_mut().for_each(|rule| {
+            rule.body = elim_epsilon(std::mem::replace(&mut rule.body, IrNode::Epsilon));
+        });
+    } else {
+        for rule in &mut ir.rules {
+            rule.body = elim_epsilon(std::mem::replace(&mut rule.body, IrNode::Epsilon));
+        }
     }
 }
 

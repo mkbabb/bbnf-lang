@@ -32,7 +32,8 @@ bbnf/
 │   │   │   ├── seq.rs    Concatenation/sequence codegen
 │   │   │   ├── repeat.rs Repetition codegen (many, sep_by, optional)
 │   │   │   ├── wrap.rs   Skip/Next/Minus/Negate codegen
-│   │   │   └── infer.rs  IrNode → syn::Type inference
+│   │   │   ├── infer.rs  IrNode → syn::Type inference
+│   │   │   └── inline.rs Flat match-arm dispatch codegen (InlineCtx, emit_rule_body_inline)
 │   │   ├── ir_enums.rs   Enum type generation from IR alternations
 │   │   ├── ir_types.rs   IR-level type inference and mapping
 │   │   ├── ir_pretty.rs  IR pretty-printing for debug output
@@ -88,7 +89,7 @@ Entry points: `BBNFGrammar::grammar()`, `BBNFGrammar::grammar_with_imports()`.
 ### generate/ — Code Generation
 Emits `proc_macro2::TokenStream` for Rust parser methods. Two codegen paths:
 
-- **ir_codegen/**: IR-based Rust codegen. Takes a `GrammarIR` and produces `TokenStream`. Split into sub-modules: `alt.rs` (alternation + dispatch tables), `seq.rs` (concatenation), `repeat.rs` (repetition + sep_by), `wrap.rs` (skip/next/minus/negate), `infer.rs` (IrNode → syn::Type).
+- **ir_codegen/**: IR-based Rust codegen. Takes a `GrammarIR` and produces `TokenStream`. Split into sub-modules: `alt.rs` (alternation + dispatch tables), `seq.rs` (concatenation), `repeat.rs` (repetition + sep_by), `wrap.rs` (skip/next/minus/negate), `infer.rs` (IrNode → syn::Type), `inline.rs` (flat match-arm dispatch via `InlineCtx`/`emit_rule_body_inline`). Two codegen modes: combinator-based (default, builds parser combinator chains) and inline (emits flat match-arm dispatch). The `in_vec` parameter is threaded through codegen to emit `Vec<Enum>` instead of `Vec<Box<Enum>>` where safe.
 - **ir_span.rs**: SpanParser dual-method codegen—generates `rule_sp()` alongside `rule()` for span-eligible rules.
 - **types.rs**: `ParserAttributes`, `GeneratedNonterminalParser`, cache types, `DEFAULT_PARSERS`.
 - **prettify/**: `@pretty` directive codegen. `to_doc.rs` emits `to_doc()` impls, `source_range.rs` emits `source_range()` impls (single-pass min/max fold instead of Vec allocation). `heuristics.rs` auto-infers hints from rule shape (toplevel, brace-delimited, large compound). `hints.rs` is the single source of truth for hint names/descriptions (shared with LSP).

@@ -58,7 +58,7 @@ AOT and VM both support formula formatting. Phase-split benchmarks on 1 KB formu
   "datasets": [
     { "name": "Parse", "icon": "rust",
       "labels": ["AOT", "VM"],
-      "series": [{"label": "Time", "values": [25504, 665921]}] },
+      "series": [{"label": "Time", "values": [19620, 665921]}] },
     { "name": "Full format", "icon": "rust",
       "labels": ["AOT", "VM"],
       "series": [{"label": "Time", "values": [1305446, 15459312]}] },

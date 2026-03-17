@@ -135,6 +135,25 @@ The VM compiles each IR rule into a sequence of opcodes:
 
 Bytecode programs are serialized via MessagePack for crossing the WASM boundary. A typical JSON grammar compiles to ~2 KB of bytecode.
 
+## Codegen Optimizations
+
+### Phase 1: Inline direct-dispatch codegen
+
+`ir_codegen/inline.rs` generates flat match-arm dispatch instead of combinator chains. `InlineCtx` manages scope, and `emit_rule_body_inline` handles Seq/Alt/Repeat/Ref nodes. Measured 0% gain on JSON (grammar too flat), but provides the architectural foundation for deeper inlining in subsequent phases.
+
+### Phase 2a: Vec unboxing
+
+The `in_vec` context parameter is threaded through codegen to emit `Vec<Enum>` instead of `Vec<Box<Enum>>`. `infer_node_in_vec` is a sub-pass in types.rs that determines when unboxing is safe. Transparent rules generate an `_unboxed()` method for zero-cost enum extraction. Results on JSON benchmarks:
+
+| Dataset | Before (MB/s) | After (MB/s) | Gain |
+|---------|---------------|--------------|------|
+| data.json | 792 | 1,543 | +95% |
+| apache | 825 | 1,638 | +99% |
+| citm_catalog | 693 | 1,520 | +119% |
+| canada | 297 | 1,260 | +324% |
+| twitter | 851 | 1,599 | +88% |
+| data_xl | 604 | 1,052 | +74% |
+
 ## IR vs Direct AST
 
 The previous codegen architecture walked the AST directly. The IR-based architecture adds a lowering step but enables cross-rule optimizations that weren't possible before—`inline_acyclic` and `factor_common_prefixes` can't operate on a raw AST because they need whole-grammar visibility.

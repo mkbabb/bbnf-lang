@@ -17,22 +17,22 @@ Benchmarked across six JSON datasets with ten parsers using the `bencher` crate.
   "datasets": [
     { "name": "data.json (35 KB)", "icon": "rust",
       "labels": ["sonic-rs", "simd-json", "jiter", "serde_json_borrow", "BBNF AOT", "parse-that", "nom", "winnow", "serde_json", "pest"],
-      "series": [{"label": "Throughput", "values": [2277, 1443, 1254, 1183, 792, 663, 566, 519, 508, 244]}] },
+      "series": [{"label": "Throughput", "values": [2277, 1543, 1443, 1254, 1183, 663, 566, 519, 508, 244]}] },
     { "name": "apache (127 KB)", "icon": "rust",
-      "labels": ["sonic-rs", "simd-json", "jiter", "serde_json_borrow", "BBNF AOT", "parse-that", "nom", "winnow", "serde_json", "pest"],
-      "series": [{"label": "Throughput", "values": [1853, 1413, 1120, 1118, 825, 735, 689, 613, 501, 270]}] },
+      "labels": ["sonic-rs", "BBNF AOT", "simd-json", "jiter", "serde_json_borrow", "parse-that", "nom", "winnow", "serde_json", "pest"],
+      "series": [{"label": "Throughput", "values": [1853, 1638, 1413, 1120, 1118, 735, 689, 613, 501, 270]}] },
     { "name": "citm_catalog (1.7 MB)", "icon": "rust",
-      "labels": ["sonic-rs", "serde_json_borrow", "simd-json", "jiter", "parse-that", "serde_json", "BBNF AOT", "nom", "winnow", "pest"],
-      "series": [{"label": "Throughput", "values": [2958, 1281, 1235, 1004, 837, 746, 693, 611, 571, 244]}] },
+      "labels": ["sonic-rs", "BBNF AOT", "serde_json_borrow", "simd-json", "jiter", "parse-that", "serde_json", "nom", "winnow", "pest"],
+      "series": [{"label": "Throughput", "values": [2958, 1520, 1281, 1235, 1004, 837, 746, 611, 571, 244]}] },
     { "name": "canada (2.2 MB)", "icon": "rust",
-      "labels": ["sonic-rs", "serde_json_borrow", "serde_json", "jiter", "winnow", "nom", "parse-that", "BBNF AOT", "simd-json", "pest"],
-      "series": [{"label": "Throughput", "values": [1494, 614, 569, 562, 385, 377, 376, 297, 477, 153]}] },
+      "labels": ["sonic-rs", "BBNF AOT", "serde_json_borrow", "serde_json", "jiter", "simd-json", "winnow", "nom", "parse-that", "pest"],
+      "series": [{"label": "Throughput", "values": [1494, 1260, 614, 569, 562, 477, 385, 377, 376, 153]}] },
     { "name": "twitter (631 KB)", "icon": "rust",
-      "labels": ["sonic-rs", "simd-json", "serde_json_borrow", "jiter", "BBNF AOT", "parse-that", "serde_json", "winnow", "nom", "pest"],
-      "series": [{"label": "Throughput", "values": [2416, 1468, 1304, 1017, 851, 786, 535, 509, 488, 229]}] },
+      "labels": ["sonic-rs", "BBNF AOT", "simd-json", "serde_json_borrow", "jiter", "parse-that", "serde_json", "winnow", "nom", "pest"],
+      "series": [{"label": "Throughput", "values": [2416, 1599, 1468, 1304, 1017, 786, 535, 509, 488, 229]}] },
     { "name": "data_xl (39 MB)", "icon": "rust",
-      "labels": ["sonic-rs", "simd-json", "jiter", "serde_json_borrow", "parse-that", "BBNF AOT", "nom", "winnow", "serde_json", "pest"],
-      "series": [{"label": "Throughput", "values": [2680, 1519, 1351, 1223, 946, 604, 596, 563, 549, 247]}] }
+      "labels": ["sonic-rs", "simd-json", "jiter", "serde_json_borrow", "BBNF AOT", "parse-that", "nom", "winnow", "serde_json", "pest"],
+      "series": [{"label": "Throughput", "values": [2680, 1519, 1351, 1223, 1052, 946, 596, 563, 549, 247]}] }
   ] }
 ```
 
@@ -46,33 +46,33 @@ BBNF AOT and parse-that produce a typed AST; lightningcss and cssparser are Mozi
 { "title": "Rust CSS Parsing", "unit": "MB/s",
   "datasets": [
     { "name": "bootstrap (281 KB)", "icon": "rust",
-      "labels": ["cssparser", "BBNF AOT", "parse-that", "lightningcss"],
-      "series": [{"label": "Throughput", "values": [414, 338, 249, 100]}] },
+      "labels": ["BBNF AOT", "cssparser", "parse-that", "lightningcss"],
+      "series": [{"label": "Throughput", "values": [661, 414, 249, 100]}] },
     { "name": "normalize (6 KB)", "icon": "rust",
       "labels": ["cssparser", "BBNF AOT", "parse-that", "lightningcss"],
-      "series": [{"label": "Throughput", "values": [651, 611, 493, 220]}] },
+      "series": [{"label": "Throughput", "values": [651, 488, 493, 220]}] },
     { "name": "tailwind (3.8 MB)", "icon": "rust",
-      "labels": ["cssparser", "parse-that", "BBNF AOT"],
-      "series": [{"label": "Throughput", "values": [257, 224, 215]}] }
+      "labels": ["BBNF AOT", "cssparser", "parse-that"],
+      "series": [{"label": "Throughput", "values": [382, 257, 224]}] }
   ] }
 ```
 
 ## Rust: Google Sheets
 
-AOT vs VM on formula parsing. The VM interprets bytecode; AOT generates native Rust. The VM gap narrows on larger inputs as bytecode dispatch overhead amortizes. AOT is 53x faster on pathological inputs, 26x on 1 KB, 6.3x on 10 KB.
+AOT vs VM on formula parsing. The VM interprets bytecode; AOT generates native Rust. The VM gap narrows on larger inputs as bytecode dispatch overhead amortizes. AOT is 78x faster on pathological inputs, 34x on 1 KB, 17x on 10 KB.
 
 ```bench-chart
 { "title": "Google Sheets Parsing — AOT vs VM", "unit": "ns", "lowerIsBetter": true,
   "datasets": [
     { "name": "pathological (270 B)", "icon": "rust",
       "labels": ["AOT", "VM"],
-      "series": [{"label": "Latency", "values": [8103, 434494]}] },
+      "series": [{"label": "Latency", "values": [5562, 434494]}] },
     { "name": "1 KB formulas", "icon": "rust",
       "labels": ["AOT", "VM"],
-      "series": [{"label": "Latency", "values": [25504, 665921]}] },
+      "series": [{"label": "Latency", "values": [19620, 665921]}] },
     { "name": "10 KB formulas", "icon": "rust",
       "labels": ["AOT", "VM"],
-      "series": [{"label": "Latency", "values": [651059, 4074964]}] }
+      "series": [{"label": "Latency", "values": [242117, 4074964]}] }
   ] }
 ```
 

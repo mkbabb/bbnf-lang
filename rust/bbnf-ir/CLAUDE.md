@@ -28,7 +28,7 @@ bbnf-ir/
 │       ├── follow.rs      compute_follow_sets — FOLLOW set fixed-point iteration
 │       ├── dispatch.rs    generate_dispatch_tables — O(1) byte-dispatch for disjoint alts
 │       ├── memo.rs        refine_memo_strategies — selective memoization heuristics
-│       └── types.rs       infer_types — IrNode → TypeDesc inference
+│       └── types.rs       infer_types — IrNode → TypeDesc inference (includes infer_node_in_vec sub-pass for Vec context)
 ```
 
 ## Key Types
@@ -58,7 +58,7 @@ and `bbnf-derive/src/lib.rs`):
 10. `compute_follow_sets` — FOLLOW set fixed-point iteration (with Repeat inner Seq propagation, regex FIRST sets)
 11. `generate_dispatch_tables` — build O(1) byte-dispatch for disjoint alternations (regex FIRST sets via `regex_first` module)
 12. `refine_memo_strategies` — assign memoization strategies (None/Full/Selective)
-13. `infer_types` — populate `GrammarIR::types` with `TypeDesc` for each rule
+13. `infer_types` — populate `GrammarIR::types` with `TypeDesc` for each rule; `infer_node_in_vec` sub-pass handles Vec context inference
 
 ## Serialization
 

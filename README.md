@@ -212,7 +212,7 @@ The 12 passes (in order):
 9. `compute_follow_sets` — FOLLOW sets for context-sensitive decisions
 10. `generate_dispatch_tables` — O(1) byte-dispatch for disjoint FIRST sets
 11. `refine_memo_strategies` — decide memoization per rule
-12. `infer_types` — IrNode → `syn::Type` for Rust codegen
+12. `infer_types` — IrNode → `syn::Type` for Rust codegen; `infer_node_in_vec` sub-pass for Vec context
 
 Two backends consume the optimized IR: a bytecode VM (WASM playground) and Rust
 `TokenStream` emission (proc-macro). `pipeline.rs` orchestrates the sequence;

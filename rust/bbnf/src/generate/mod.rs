@@ -82,16 +82,23 @@ fn generate_ir_parser_methods(
         // Determine return type.
         let ty = ctx.rule_return_type(rule.id);
 
-        // Generate the parser body.
-        let mut parser = ir_codegen::ir_node_to_tokens(&rule.body, ctx);
-
-        // Enum wrapping: non-transparent rules must map to enum variant.
-        // Transparent rules already produce Box<Enum> via emit_ref.
-        if !rule.meta.is_transparent {
+        // Generate the parser body using inline direct-dispatch codegen.
+        // The enum variant wrapping is absorbed into the inline closure,
+        // eliminating an outer `.map()` Box allocation.
+        let enum_wrap = if !rule.meta.is_transparent {
             let variant_ident = format_ident!("{}", name);
-            let enum_ident = &ctx.enum_ident;
-            parser = quote! { #parser.map(|x| #enum_ident::#variant_ident(x)) };
-        }
+            Some(variant_ident)
+        } else {
+            None
+        };
+
+        let mut parser = ir_codegen::emit_rule_body_inline(
+            &rule.body,
+            ctx,
+            enum_wrap
+                .as_ref()
+                .map(|v| (&ctx.enum_ident as &syn::Ident, v as &syn::Ident)),
+        );
 
         // Cyclic → lazy().
         if rule.meta.is_cyclic {
@@ -121,6 +128,36 @@ fn generate_ir_parser_methods(
                 #parser
             }
         });
+
+        // Unboxed variant for transparent rules — used in Vec contexts where
+        // Box indirection is unnecessary (Vec provides heap indirection).
+        // Returns Enum directly instead of Box<Enum>.
+        if rule.meta.is_transparent {
+            let unboxed_ident = format_ident!("{}_unboxed", name);
+            let unboxed_ty = ctx.enum_type.clone();
+
+            // Generate the body with in_vec=true so inner refs skip boxing.
+            let mut unboxed_parser =
+                ir_codegen::ir_node_to_tokens_vec(&rule.body, ctx, true);
+
+            if rule.meta.is_cyclic {
+                unboxed_parser = quote! { ::parse_that::lazy(|| #unboxed_parser) };
+            }
+
+            if matches!(
+                rule.meta.memo,
+                bbnf_ir::MemoStrategy::Full | bbnf_ir::MemoStrategy::Selective
+            ) {
+                unboxed_parser = quote! { #unboxed_parser.memoize() };
+            }
+
+            methods.push(quote! {
+                #[inline(always)]
+                pub fn #unboxed_ident<'a>() -> Parser<'a, #unboxed_ty> {
+                    #unboxed_parser
+                }
+            });
+        }
 
         // SpanParser _sp() method.
         if rule.meta.span_eligible {

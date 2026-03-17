@@ -246,6 +246,10 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     bbnf_ir::passes::inline_acyclic(&mut grammar_ir);
     // Second prune: inlined rules may now be unreachable.
     bbnf_ir::passes::prune_unreachable(&mut grammar_ir);
+    // Fuse single-use rules into their call sites for better dispatch coverage.
+    bbnf_ir::passes::fuse_single_use(&mut grammar_ir);
+    // Third prune: fused rules may now be unreachable.
+    bbnf_ir::passes::prune_unreachable(&mut grammar_ir);
     bbnf_ir::passes::eliminate_epsilon(&mut grammar_ir);
     bbnf_ir::passes::merge_literals(&mut grammar_ir);
     bbnf_ir::passes::merge_regex_alts(&mut grammar_ir);

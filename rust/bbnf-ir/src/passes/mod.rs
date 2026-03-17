@@ -6,6 +6,7 @@
 pub mod alias;
 pub mod dispatch;
 pub mod follow;
+pub mod fuse;
 pub mod inline;
 pub mod memo;
 pub mod merge_regex;
@@ -18,6 +19,7 @@ pub mod types;
 pub use alias::canonicalize_aliases;
 pub use dispatch::generate_dispatch_tables;
 pub use follow::compute_follow_sets;
+pub use fuse::fuse_single_use;
 pub use inline::inline_acyclic;
 pub use memo::refine_memo_strategies;
 pub use merge_regex::merge_regex_alts;

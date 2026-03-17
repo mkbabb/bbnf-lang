@@ -20,7 +20,12 @@ bbnf/
 │   │   ├── regex_first.rs regex_first_chars + helpers
 │   │   ├── dispatch.rs   DispatchTable, FIRST set conflict detection
 │   │   └── metadata.rs   Ref counts, aliases, transparent alternations, span-eligibility
-│   ├── lower.rs         AST-to-IR lowering (Grammar → GrammarIR)
+│   ├── lower/           AST-to-IR lowering (Grammar → GrammarIR)
+│   │   ├── mod.rs        Entry point (lower_to_ir), LowerCtx, orchestration
+│   │   ├── string_interner.rs  StringInterner — dedup string literals
+│   │   ├── fn_table.rs   FnTable — host function descriptors
+│   │   ├── expression.rs Recursive expression/node lowering
+│   │   └── metadata.rs   Rule metadata lowering (recover, pretty, no_collapse)
 │   ├── pipeline.rs      Full lowering + codegen orchestrator (12-pass sequence)
 │   ├── generate/
 │   │   ├── mod.rs        Re-exports + orchestrator
@@ -36,7 +41,12 @@ bbnf/
 │   │   │   └── inline.rs Flat match-arm dispatch codegen (InlineCtx, emit_rule_body_inline)
 │   │   ├── ir_enums.rs   Enum type generation from IR alternations
 │   │   ├── ir_types.rs   IR-level type inference and mapping
-│   │   ├── ir_pretty.rs  IR pretty-printing for debug output
+│   │   ├── ir_pretty/    IR-based @pretty codegen
+│   │   │   ├── mod.rs    Entry point (generate_prettify_ir), main loop
+│   │   │   ├── patterns.rs  IR pattern detection (wrapped reps, key-value)
+│   │   │   ├── heuristics.rs  Heuristic hint inference, mode resolution
+│   │   │   ├── codegen.rs  Doc generation wrappers, sub-variant arms
+│   │   │   └── utils.rs   Hint conversion, IR unwrapping helpers
 │   │   ├── ir_span.rs    SpanParser dual-method codegen
 │   │   └── prettify/
 │   │       ├── mod.rs          @pretty codegen orchestrator
@@ -92,7 +102,8 @@ Emits `proc_macro2::TokenStream` for Rust parser methods. Two codegen paths:
 - **ir_codegen/**: IR-based Rust codegen. Takes a `GrammarIR` and produces `TokenStream`. Split into sub-modules: `alt.rs` (alternation + dispatch tables), `seq.rs` (concatenation), `repeat.rs` (repetition + sep_by), `wrap.rs` (skip/next/minus/negate), `infer.rs` (IrNode → syn::Type), `inline.rs` (flat match-arm dispatch via `InlineCtx`/`emit_rule_body_inline`). Two codegen modes: combinator-based (default, builds parser combinator chains) and inline (emits flat match-arm dispatch). The `in_vec` parameter is threaded through codegen to emit `Vec<Enum>` instead of `Vec<Box<Enum>>` where safe.
 - **ir_span.rs**: SpanParser dual-method codegen—generates `rule_sp()` alongside `rule()` for span-eligible rules.
 - **types.rs**: `ParserAttributes`, `GeneratedNonterminalParser`, cache types, `DEFAULT_PARSERS`.
-- **prettify/**: `@pretty` directive codegen. `to_doc.rs` emits `to_doc()` impls, `source_range.rs` emits `source_range()` impls (single-pass min/max fold instead of Vec allocation). `heuristics.rs` auto-infers hints from rule shape (toplevel, brace-delimited, large compound). `hints.rs` is the single source of truth for hint names/descriptions (shared with LSP).
+- **ir_pretty/**: IR-based `@pretty` codegen. `patterns.rs` detects wrapped repetitions and key-value structures. `heuristics.rs` infers hints from rule shape (toplevel, brace-delimited, large compound). `codegen.rs` generates doc wrappers and sub-variant match arms. `utils.rs` handles hint conversion and IR node unwrapping.
+- **prettify/**: AST-based `@pretty` directive codegen. `to_doc.rs` emits `to_doc()` impls, `source_range.rs` emits `source_range()` impls (single-pass min/max fold instead of Vec allocation). `heuristics.rs` auto-infers hints from rule shape. `hints.rs` is the single source of truth for hint names/descriptions (shared with LSP).
 
 Acyclic rules inline up to a depth limit. Non-acyclic rules wrapped in `lazy(|| ...)`.
 

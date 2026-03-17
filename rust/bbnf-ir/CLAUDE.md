@@ -28,7 +28,11 @@ bbnf-ir/
 │       ├── follow.rs      compute_follow_sets — FOLLOW set fixed-point iteration
 │       ├── dispatch.rs    generate_dispatch_tables — O(1) byte-dispatch for disjoint alts
 │       ├── memo.rs        refine_memo_strategies — selective memoization heuristics
-│       └── types.rs       infer_types — IrNode → TypeDesc inference (includes infer_node_in_vec sub-pass for Vec context)
+│       └── types/         infer_types — IrNode → TypeDesc inference
+│           ├── mod.rs     Entry point (infer_types), orchestration
+│           ├── infer.rs   Core recursive inference (infer_node, infer_node_in_vec, infer_seq)
+│           ├── subvariants.rs  Sub-variant collection, walking, uniqueness validation
+│           └── utils.rs   InferCtx struct, try_flatten_pair helper
 ```
 
 ## Key Types

@@ -197,7 +197,7 @@ over the parsed AST, run before code generation or diagnostics:
 
 ### IR Pipeline
 
-Grammar → `lower.rs` → `GrammarIR` → 12-pass optimization → bytecode VM or Rust codegen.
+Grammar → `lower/` → `GrammarIR` → 12-pass optimization → bytecode VM or Rust codegen.
 
 The 12 passes (in order):
 

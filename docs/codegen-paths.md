@@ -150,11 +150,11 @@ rust/
     src/
       grammar.rs        Parse BBNF → AST
       analysis/         FIRST/FOLLOW, SCC, span eligibility
-      lower.rs          AST → GrammarIR
+      lower/            AST → GrammarIR (mod, string_interner, fn_table, expression, metadata)
       generate/
-        ir_codegen/     IR → Rust TokenStream (mod, alt, seq, repeat, wrap, infer)
+        ir_codegen/     IR → Rust TokenStream (mod, alt, seq, repeat, wrap, infer, inline)
         ir_span.rs      IR → SpanParser methods
-        ir_pretty.rs    IR → to_doc() methods
+        ir_pretty/      IR → to_doc() methods (mod, patterns, heuristics, codegen, utils)
         prettify/       Doc generation helpers
         fast_paths.rs   Dispatch + memoization codegen
       optimize/         Left-recursion elimination (Paull)

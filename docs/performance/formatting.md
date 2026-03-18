@@ -49,6 +49,8 @@ gorgeous vs Biome on real-world CSS files:
 
 "Cached" means the parse result is reused across formatting calls. The 13x speedup on bootstrap occurs because fixed overhead is amortized at this file size while the working set fits in cache.
 
+For parse-only throughput comparisons against cssparser and lightningcss, see the [parsing benchmarks](./parsing#rust-css--tier-1-structural-scan).
+
 ## Google Sheets Formatting
 
 AOT and VM both support formula formatting. Phase-split benchmarks on 1 KB formula inputs:

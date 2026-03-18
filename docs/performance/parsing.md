@@ -87,26 +87,47 @@ Full escape decoding via `Cow<'a, str>`—borrows when clean, allocates when esc
 
 All Rust benchmarks use mimalloc as the global allocator for consistent results. The BBNF parsers are generated from a `.bbnf` grammar via `#[derive(Parser)]`—zero hand-written Rust.
 
-## Rust: `CSS`
+## Rust: `CSS` — Tier 1: Structural Scan
 
-Two grammar tiers: **fast** (css-fast.bbnf) returns opaque spans for maximum throughput; **pretty** (css-stylesheet-pretty.bbnf) builds a structural AST for formatting.
-
-cssparser and lightningcss operate at different abstraction levels (tokenizer-only and full semantic parse, respectively) and aren't directly comparable to BBNF's grammar-derived parser. See the [formatting benchmarks](./formatting) for gorgeous end-to-end comparisons against Biome.
+**BBNF fast** (css-fast.bbnf) returns opaque spans—selectors and values are captured as raw byte slices without interpretation. **cssparser** (Mozilla's tokenizer) uses a visitor pattern that counts rules and declarations without building an AST. Both do minimal work—fair head-to-head.
 
 ```bench-chart
-{ "title": "CSS Parsing", "unit": "MB/s",
+{ "title": "CSS Structural Scan", "unit": "MB/s",
   "datasets": [
+    { "name": "normalize (1.8 KB)", "icon": "rust",
+      "labels": ["BBNF fast", "cssparser"],
+      "series": [{"label": "Throughput", "values": [956, 326]}] },
     { "name": "bootstrap (281 KB)", "icon": "rust",
-      "labels": ["BBNF fast", "BBNF pretty"],
-      "series": [{"label": "Throughput", "values": [1106, 729]}] },
-    { "name": "normalize (6 KB)", "icon": "rust",
-      "labels": ["BBNF fast", "BBNF pretty"],
-      "series": [{"label": "Throughput", "values": [2279, 1897]}] },
+      "labels": ["BBNF fast", "cssparser"],
+      "series": [{"label": "Throughput", "values": [1174, 435]}] },
     { "name": "tailwind (3.8 MB)", "icon": "rust",
-      "labels": ["BBNF fast", "BBNF pretty"],
-      "series": [{"label": "Throughput", "values": [271, 89]}] }
+      "labels": ["BBNF fast", "cssparser"],
+      "series": [{"label": "Throughput", "values": [194, 360]}] }
   ] }
 ```
+
+BBNF fast is 2.7x faster than cssparser on bootstrap. On tailwind (3.8 MB), cssparser's tokenizer pulls ahead—the BBNF regex engine's per-match overhead amortizes less favorably on tailwind's repetitive utility classes.
+
+## Rust: `CSS` — Tier 2: Structural AST
+
+**BBNF pretty** (css-stylesheet-pretty.bbnf) builds a typed enum tree with rule/block/declaration structure, using opaque regex spans for selectors and values (L1.5). **lightningcss** (Parcel) performs a full L2 semantic parse—typed CSS properties, vendor prefix analysis, CSS Nesting validation. lightningcss does *more* work, so the comparison quantifies how much overhead semantic analysis adds.
+
+```bench-chart
+{ "title": "CSS Structural AST", "unit": "MB/s",
+  "datasets": [
+    { "name": "normalize (1.8 KB)", "icon": "rust",
+      "labels": ["BBNF pretty", "lightningcss"],
+      "series": [{"label": "Throughput", "values": [792, 91]}] },
+    { "name": "bootstrap (281 KB)", "icon": "rust",
+      "labels": ["BBNF pretty", "lightningcss"],
+      "series": [{"label": "Throughput", "values": [854, 113]}] },
+    { "name": "tailwind (3.8 MB)", "icon": "rust",
+      "labels": ["BBNF pretty"],
+      "series": [{"label": "Throughput", "values": [164]}] }
+  ] }
+```
+
+BBNF pretty is 7.5x faster than lightningcss on bootstrap. lightningcss errors on synthetic tailwind output and is omitted. See the [formatting benchmarks](./formatting) for gorgeous vs Biome end-to-end comparisons.
 
 ## Rust: `Google Sheets`
 

@@ -120,7 +120,11 @@ bbnf-lsp uses workspace-relative paths to bbnf; cross-repo deps are version-only
 - **Vec unboxing**: `in_vec` parameter threading through codegen, `ir_node_to_tokens_vec`, `infer_node_type_in_vec`. Transparent rule `_unboxed()` generation for zero-cost enum extraction.
 - **`try_flatten_pair`**: Extension for `(BoxedEnum, Vec<Enum>)` patterns — flattens pair into unboxed Vec.
 - **`merge_regex_alts` pass**: Fuses `Alt([Regex, Regex, ...])` into a single combined regex pattern. Runs after `merge_literals` and before `factor_common_prefixes` in the IR pipeline.
-- **Pipeline synchronization**: The IR pass ordering in `pipeline.rs` and `bbnf-derive/src/lib.rs` must be kept in sync—both run the same 12-pass sequence.
+- **Pipeline synchronization**: The IR pass ordering in `pipeline.rs` and `bbnf-derive/src/lib.rs` must be kept in sync—both run the same 15-operation sequence (13 unique passes).
+- **`fuse_single_use` pass**: Inlines single-use rules at their call site regardless of body size, guarded by SCC membership. Runs after `inline_acyclic` + prune, before `eliminate_epsilon`.
+- **`no_collapse` gating**: Rules annotated with `@no_collapse` are excluded from inlining and fusing passes to preserve their identity in the generated AST.
+- **`emit_discarded` for Skip/Next**: Skip and Next codegen emits the discarded side for its side effects (e.g., whitespace consumption) even though the value is unused.
+- **mimalloc in bench files**: Benchmark binaries use `#[global_allocator] static GLOBAL: mimalloc::MiMalloc` for consistent, high-performance allocation during benchmarking.
 - **Prettify codegen**: `@pretty` directives control Doc emission. Hint vocabulary: `group`, `indent`, `dedent`, `block`, `blankline`, `nobreak`, `softbreak`, `hardbreak`, `compact`, `fast`, `off`. `generate_prettify()` produces `to_doc()` + `source_range()` impls. Sub-variant coercion for heterogeneous alternation branches. Heuristic inference (`heuristics.rs`) auto-applies hints for un-annotated rules (toplevel, brace-delimited, large compound). Shared hint definitions in `hints.rs` — single source of truth for codegen + LSP.
 - **Wrapped vec formatting**: Delimiter-wrapped repetitions (e.g. `"{" >> items << "}"`) emit IfBreak concat — one item per line when Group breaks, comma-separated inline when it fits.
 - **`skip_recover`**: Parser attribute that suppresses `@recover` codegen and the `Recovered` enum variant. Used by formatting-only parsers that assume well-formed input.

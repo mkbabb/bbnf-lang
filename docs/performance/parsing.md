@@ -8,71 +8,118 @@ section: Performance
 
 parse_that (Rust) and parse-that (TypeScript) are the parsing backbone. Both use dispatch tables, FIRST-set routing, and memoization tuned for their respective runtimes.
 
-## Rust: JSON
+## Rust: JSON — Span Parsing (Zero-Copy Validation)
 
-Benchmarked across six JSON datasets with ten parsers using the `bencher` crate. All runs validate output. SIMD parsers (sonic-rs, simd-json) use vectorized string scanning and are not combinator-based. Each dataset is sorted by throughput descending.
+Span parsing returns borrowed byte slices without decoding strings or parsing numbers. No tree is built. This measures raw grammar traversal speed—structural validation only.
 
 ```bench-chart
-{ "title": "Rust JSON Parsing", "unit": "MB/s",
+{ "title": "JSON Span Parsing", "unit": "MB/s",
   "datasets": [
     { "name": "data.json (35 KB)", "icon": "rust",
-      "labels": ["sonic-rs", "simd-json", "jiter", "serde_json_borrow", "BBNF AOT", "parse-that", "nom", "winnow", "serde_json", "pest"],
-      "series": [{"label": "Throughput", "values": [2277, 1543, 1443, 1254, 1183, 663, 566, 519, 508, 244]}] },
+      "labels": ["BBNF span"],
+      "series": [{"label": "Throughput", "values": [3402]}] },
     { "name": "apache (127 KB)", "icon": "rust",
-      "labels": ["sonic-rs", "BBNF AOT", "simd-json", "jiter", "serde_json_borrow", "parse-that", "nom", "winnow", "serde_json", "pest"],
-      "series": [{"label": "Throughput", "values": [1853, 1638, 1413, 1120, 1118, 735, 689, 613, 501, 270]}] },
-    { "name": "citm_catalog (1.7 MB)", "icon": "rust",
-      "labels": ["sonic-rs", "BBNF AOT", "serde_json_borrow", "simd-json", "jiter", "parse-that", "serde_json", "nom", "winnow", "pest"],
-      "series": [{"label": "Throughput", "values": [2958, 1520, 1281, 1235, 1004, 837, 746, 611, 571, 244]}] },
-    { "name": "canada (2.2 MB)", "icon": "rust",
-      "labels": ["sonic-rs", "BBNF AOT", "serde_json_borrow", "serde_json", "jiter", "simd-json", "winnow", "nom", "parse-that", "pest"],
-      "series": [{"label": "Throughput", "values": [1494, 1260, 614, 569, 562, 477, 385, 377, 376, 153]}] },
+      "labels": ["BBNF span"],
+      "series": [{"label": "Throughput", "values": [4237]}] },
     { "name": "twitter (631 KB)", "icon": "rust",
-      "labels": ["sonic-rs", "BBNF AOT", "simd-json", "serde_json_borrow", "jiter", "parse-that", "serde_json", "winnow", "nom", "pest"],
-      "series": [{"label": "Throughput", "values": [2416, 1599, 1468, 1304, 1017, 786, 535, 509, 488, 229]}] },
-    { "name": "data_xl (39 MB)", "icon": "rust",
-      "labels": ["sonic-rs", "simd-json", "jiter", "serde_json_borrow", "BBNF AOT", "parse-that", "nom", "winnow", "serde_json", "pest"],
-      "series": [{"label": "Throughput", "values": [2680, 1519, 1351, 1223, 1052, 946, 596, 563, 549, 247]}] }
+      "labels": ["BBNF span"],
+      "series": [{"label": "Throughput", "values": [4080]}] },
+    { "name": "citm_catalog (1.7 MB)", "icon": "rust",
+      "labels": ["BBNF span"],
+      "series": [{"label": "Throughput", "values": [3916]}] },
+    { "name": "canada (2.2 MB)", "icon": "rust",
+      "labels": ["BBNF span"],
+      "series": [{"label": "Throughput", "values": [2175]}] }
   ] }
 ```
 
-The BBNF-generated parser outperforms the hand-rolled version on string-heavy inputs because the codegen emits `memchr2`-accelerated string scanning.
+## Rust: JSON — Borrowed Parsing (f64 + Borrowed Strings)
+
+Borrowed parsing decodes numbers to f64 and borrows strings from the input buffer (no escape handling). Builds a Vec/Object tree. Comparable to sonic-rs, simd-json, and serde_json_borrow, which also borrow unescaped strings from input.
+
+```bench-chart
+{ "title": "JSON Borrowed Parsing", "unit": "MB/s",
+  "datasets": [
+    { "name": "data.json (35 KB)", "icon": "rust",
+      "labels": ["sonic-rs", "BBNF borrow", "simd-json", "jiter", "serde_json_borrow"],
+      "series": [{"label": "Throughput", "values": [2323, 2077, 1922, 1465, 1421]}] },
+    { "name": "apache (127 KB)", "icon": "rust",
+      "labels": ["BBNF borrow", "sonic-rs", "simd-json", "serde_json_borrow", "jiter"],
+      "series": [{"label": "Throughput", "values": [2524, 1949, 1889, 1316, 1286]}] },
+    { "name": "twitter (631 KB)", "icon": "rust",
+      "labels": ["sonic-rs", "BBNF borrow", "simd-json", "serde_json_borrow", "jiter"],
+      "series": [{"label": "Throughput", "values": [2515, 2325, 1749, 1585, 1178]}] },
+    { "name": "citm_catalog (1.7 MB)", "icon": "rust",
+      "labels": ["sonic-rs", "BBNF borrow", "simd-json", "serde_json_borrow", "jiter"],
+      "series": [{"label": "Throughput", "values": [3037, 2129, 1878, 1539, 1274]}] },
+    { "name": "canada (2.2 MB)", "icon": "rust",
+      "labels": ["sonic-rs", "BBNF borrow", "simd-json", "serde_json_borrow", "jiter"],
+      "series": [{"label": "Throughput", "values": [1521, 776, 754, 713, 643]}] }
+  ] }
+```
+
+## Rust: JSON — Owned Parsing (f64 + Decoded Strings)
+
+Owned parsing decodes numbers to f64 and handles string escapes via Cow—borrows when clean, allocates when escaped. Full deserialization with Vec/Object tree construction.
+
+```bench-chart
+{ "title": "JSON Owned Parsing", "unit": "MB/s",
+  "datasets": [
+    { "name": "data.json (35 KB)", "icon": "rust",
+      "labels": ["BBNF owned", "serde_json"],
+      "series": [{"label": "Throughput", "values": [1583, 875]}] },
+    { "name": "apache (127 KB)", "icon": "rust",
+      "labels": ["BBNF owned", "serde_json"],
+      "series": [{"label": "Throughput", "values": [1619, 851]}] },
+    { "name": "twitter (631 KB)", "icon": "rust",
+      "labels": ["BBNF owned", "serde_json"],
+      "series": [{"label": "Throughput", "values": [1545, 794]}] },
+    { "name": "citm_catalog (1.7 MB)", "icon": "rust",
+      "labels": ["BBNF owned", "serde_json"],
+      "series": [{"label": "Throughput", "values": [1630, 1241]}] },
+    { "name": "canada (2.2 MB)", "icon": "rust",
+      "labels": ["BBNF owned", "serde_json"],
+      "series": [{"label": "Throughput", "values": [783, 642]}] }
+  ] }
+```
+
+All Rust benchmarks use mimalloc as the global allocator for consistent results. The BBNF parsers are generated from a `.bbnf` grammar via `#[derive(Parser)]`—zero hand-written Rust.
 
 ## Rust: CSS
 
-BBNF AOT and parse-that produce a typed AST; lightningcss and cssparser are Mozilla-derived. lightningcss does not have a tailwind benchmark in the suite.
+Two grammar tiers: **fast** (css-fast.bbnf) returns opaque spans for maximum throughput; **pretty** (css-stylesheet-pretty.bbnf) builds a structural AST for formatting.
 
 ```bench-chart
 { "title": "Rust CSS Parsing", "unit": "MB/s",
   "datasets": [
     { "name": "bootstrap (281 KB)", "icon": "rust",
-      "labels": ["BBNF AOT", "cssparser", "parse-that", "lightningcss"],
-      "series": [{"label": "Throughput", "values": [661, 414, 249, 100]}] },
+      "labels": ["BBNF fast", "BBNF pretty"],
+      "series": [{"label": "Throughput", "values": [1106, 729]}] },
     { "name": "normalize (6 KB)", "icon": "rust",
-      "labels": ["cssparser", "BBNF AOT", "parse-that", "lightningcss"],
-      "series": [{"label": "Throughput", "values": [651, 488, 493, 220]}] },
+      "labels": ["BBNF fast", "BBNF pretty"],
+      "series": [{"label": "Throughput", "values": [2279, 1897]}] },
     { "name": "tailwind (3.8 MB)", "icon": "rust",
-      "labels": ["BBNF AOT", "cssparser", "parse-that"],
-      "series": [{"label": "Throughput", "values": [382, 257, 224]}] }
+      "labels": ["BBNF fast", "BBNF pretty"],
+      "series": [{"label": "Throughput", "values": [271, 89]}] }
   ] }
 ```
 
 ## Rust: Google Sheets
 
-AOT vs VM on formula parsing. The VM interprets bytecode; AOT generates native Rust. The VM gap narrows on larger inputs as bytecode dispatch overhead amortizes. AOT is 78x faster on pathological inputs, 34x on 1 KB, 17x on 10 KB.
+AOT vs VM on formula parsing. The VM interprets bytecode; AOT generates native Rust. The VM gap narrows on larger inputs as bytecode dispatch overhead amortizes. AOT is 81x faster on pathological inputs, 34x on 1 KB, 16x on 10 KB.
 
 ```bench-chart
 { "title": "Google Sheets Parsing — AOT vs VM", "unit": "ns", "lowerIsBetter": true,
   "datasets": [
     { "name": "pathological (270 B)", "icon": "rust",
       "labels": ["AOT", "VM"],
-      "series": [{"label": "Latency", "values": [5562, 434494]}] },
+      "series": [{"label": "Latency", "values": [5349, 434494]}] },
     { "name": "1 KB formulas", "icon": "rust",
       "labels": ["AOT", "VM"],
-      "series": [{"label": "Latency", "values": [19620, 665921]}] },
+      "series": [{"label": "Latency", "values": [19735, 665921]}] },
     { "name": "10 KB formulas", "icon": "rust",
       "labels": ["AOT", "VM"],
-      "series": [{"label": "Latency", "values": [242117, 4074964]}] }
+      "series": [{"label": "Latency", "values": [247747, 4074964]}] }
   ] }
 ```
 

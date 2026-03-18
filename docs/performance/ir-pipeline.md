@@ -6,7 +6,7 @@ section: BBNF
 
 # IR Pipeline
 
-Both AOT and VM paths share the same IR (`bbnf-ir`'s `GrammarIR`), with twelve optimization passes transforming it before codegen or bytecode compilation.
+Both AOT and VM paths share the same IR (`bbnf-ir`'s `GrammarIR`), with fifteen optimization passes (thirteen unique) transforming it before codegen or bytecode compilation.
 
 ## Optimization Passes
 
@@ -18,6 +18,9 @@ Applied in order, each pass is idempotent:
     {"label": "canonicalize_aliases", "detail": "Resolves transitive alias chains and rewrites all Ref nodes to point at the canonical rule, eliminating indirection.", "color": "green", "href": "#canonicalize_aliases"},
     {"label": "prune_unreachable", "detail": "DFS from the entry rule to collect reachable IDs, then removes unreachable rules and compacts the RuleId space.", "color": "green", "href": "#prune_unreachable"},
     {"label": "inline_acyclic", "detail": "Replaces Ref nodes with the referenced rule's body when the target is non-cyclic and small (at most 3 IR nodes).", "color": "blue", "href": "#inline_acyclic"},
+    {"label": "prune_unreachable", "detail": "Removes rules made dead by inlining.", "color": "green", "href": "#prune_unreachable"},
+    {"label": "fuse_single_use", "detail": "Inlines rules referenced exactly once regardless of body size, guarded by SCC membership.", "color": "blue", "href": "#fuse_single_use"},
+    {"label": "prune_unreachable", "detail": "Removes rules made dead by fusing.", "color": "green", "href": "#prune_unreachable"},
     {"label": "eliminate_epsilon", "detail": "Strips Epsilon nodes from Seq children, unwraps singleton wrappers, and collapses all-epsilon sequences.", "color": "green", "href": "#eliminate_epsilon"},
     {"label": "merge_literals", "detail": "Coalesces runs of adjacent Literal children in Seq nodes into a single concatenated Literal.", "color": "blue", "href": "#merge_literals"},
     {"label": "merge_regex_alts", "detail": "Fuses Alt branches that are all Regex leaves into one combined Regex pattern.", "color": "blue", "href": "#merge_regex_alts"},
@@ -61,6 +64,14 @@ Fires after `inline_acyclic` (which can introduce epsilon remnants) and after le
 Replaces `Ref(id)` nodes with the referenced rule's body when the target is non-cyclic (no SCC membership), is not the entry point, and has at most 3 IR nodes. Fires on small leaf-like rules such as `comma = "," ?w` or `colon = ":" ?w` that appear frequently as helpers.
 
 Eliminates `Call`/`Return` overhead in the interpreter, and by splicing the body inline, exposes adjacent literals to `merge_literals` and shared prefixes to `factor_common_prefixes`.
+
+## `fuse_single_use`
+
+Inlines rules referenced exactly once at their call site, regardless of body size. Unlike `inline_acyclic` (which is size-gated at 3 nodes), this pass targets rules that appear in only one location—since there's no fan-out, inlining always reduces total work.
+
+Guarded by SCC membership: rules in strongly connected components are skipped to avoid infinite expansion. Runs after `inline_acyclic` + prune to pick up remaining single-use rules that were too large for the size threshold.
+
+Exposes additional optimization opportunities for `merge_literals`, `factor_common_prefixes`, and `generate_dispatch_tables` by eliminating call boundaries that previously hid adjacent patterns.
 
 ## `merge_literals`
 
@@ -114,7 +125,7 @@ Populates `GrammarIR::types` and `RuleMeta::sub_variants`, which are consumed by
 
 ## AOT vs VM Compile Time
 
-The paths diverge after pass 12:
+The paths diverge after pass 14:
 
 ```bench-chart
 { "title": "AOT vs VM Compile Time (8-rule JSON)", "unit": "ms",

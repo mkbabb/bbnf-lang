@@ -26,7 +26,7 @@ bbnf/
 │   │   ├── fn_table.rs   FnTable — host function descriptors
 │   │   ├── expression.rs Recursive expression/node lowering
 │   │   └── metadata.rs   Rule metadata lowering (recover, pretty, no_collapse)
-│   ├── pipeline.rs      Full lowering + codegen orchestrator (12-pass sequence)
+│   ├── pipeline.rs      Full lowering + codegen orchestrator (15-operation pass sequence)
 │   ├── generate/
 │   │   ├── mod.rs        Re-exports + orchestrator
 │   │   ├── types.rs      ParserAttributes, GeneratedNonterminalParser, caches

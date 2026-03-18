@@ -21,6 +21,7 @@ bbnf-ir/
 │       ├── alias.rs       canonicalize_aliases — resolve A = B chains
 │       ├── prune.rs       prune_unreachable — remove rules unreachable from entry
 │       ├── inline.rs      inline_acyclic — inline small acyclic rule bodies
+│       ├── fuse.rs        fuse_single_use — inline single-use rules regardless of size
 │       ├── optimize.rs    eliminate_epsilon, merge_literals
 │       ├── merge_regex.rs merge_regex_alts — fuse Alt([Regex, ...]) into single pattern
 │       ├── prefix.rs      factor_common_prefixes — left-factor shared prefixes
@@ -47,22 +48,24 @@ bbnf-ir/
 
 ## IR Pass Pipeline
 
-Passes run in this exact order (must stay in sync with `bbnf/src/pipeline.rs`
-and `bbnf-derive/src/lib.rs`):
+15 operations (13 unique passes) run in this exact order (must stay in sync
+with `bbnf/src/pipeline.rs` and `bbnf-derive/src/lib.rs`):
 
 1. `canonicalize_aliases` — resolve alias chains to direct references (O(1) lookup)
 2. `prune_unreachable` — remove rules not reachable from entry (O(1) rule lookup)
 3. `inline_acyclic` — inline small acyclic rule bodies at call sites (threshold: 4 nodes)
 4. `prune_unreachable` *(second pass)* — remove rules made dead by inlining
-5. `eliminate_epsilon` — simplify epsilon-containing sequences/alternations; extended to handle `Repeat(Epsilon,0,..)→Epsilon`, `Skip(Epsilon,x)→x`, `Next(x,Epsilon)→x`, nested `OptionalWhitespace` fusion
-6. `merge_literals` — fuse adjacent literals in sequences (with string deduplication)
-7. `merge_regex_alts` — combine regex/literal alternation branches into one pattern (mixed literal+regex fusion)
-8. `factor_common_prefixes` — left-factor shared prefixes in alternations
-9. `refine_span_eligibility` — propagate span eligibility through rule graph
-10. `compute_follow_sets` — FOLLOW set fixed-point iteration (with Repeat inner Seq propagation, regex FIRST sets)
-11. `generate_dispatch_tables` — build O(1) byte-dispatch for disjoint alternations (regex FIRST sets via `regex_first` module)
-12. `refine_memo_strategies` — assign memoization strategies (None/Full/Selective)
-13. `infer_types` — populate `GrammarIR::types` with `TypeDesc` for each rule; `infer_node_in_vec` sub-pass handles Vec context inference
+5. `fuse_single_use` — inlines rules referenced exactly once regardless of body size, guarded by SCC membership
+6. `prune_unreachable` *(third pass)* — remove rules made dead by fusing
+7. `eliminate_epsilon` — simplify epsilon-containing sequences/alternations; extended to handle `Repeat(Epsilon,0,..)→Epsilon`, `Skip(Epsilon,x)→x`, `Next(x,Epsilon)→x`, nested `OptionalWhitespace` fusion
+8. `merge_literals` — fuse adjacent literals in sequences (with string deduplication)
+9. `merge_regex_alts` — combine regex/literal alternation branches into one pattern (mixed literal+regex fusion)
+10. `factor_common_prefixes` — left-factor shared prefixes in alternations
+11. `refine_span_eligibility` — propagate span eligibility through rule graph
+12. `compute_follow_sets` — FOLLOW set fixed-point iteration (with Repeat inner Seq propagation, regex FIRST sets)
+13. `generate_dispatch_tables` — build O(1) byte-dispatch for disjoint alternations (regex FIRST sets via `regex_first` module)
+14. `refine_memo_strategies` — assign memoization strategies (None/Full/Selective)
+15. `infer_types` — populate `GrammarIR::types` with `TypeDesc` for each rule; `infer_node_in_vec` sub-pass handles Vec context inference
 
 ## Serialization
 

@@ -116,7 +116,8 @@ pub fn ir_node_to_tokens_vec(node: &IrNode, ctx: &IrCodegenCtx<'_>, in_vec: bool
                 return wrap::emit_wrap(open, middle, right, ctx, in_vec);
             }
             let left_ts = ir_node_to_tokens_vec(left, ctx, in_vec);
-            let right_ts = ir_node_to_tokens_vec(right, ctx, false);
+            // Right side is discarded by .skip() — strip Map/Box overhead.
+            let right_ts = repeat::emit_discarded(right, false, ctx);
             quote! { #left_ts.skip(#right_ts) }
         }
 
@@ -125,7 +126,8 @@ pub fn ir_node_to_tokens_vec(node: &IrNode, ctx: &IrCodegenCtx<'_>, in_vec: bool
             if let IrNode::Skip(middle, close) = right.as_ref() {
                 return wrap::emit_wrap(left, middle, close, ctx, in_vec);
             }
-            let left_ts = ir_node_to_tokens_vec(left, ctx, false);
+            // Left side is discarded by .next() — strip Map/Box overhead.
+            let left_ts = repeat::emit_discarded(left, false, ctx);
             let right_ts = ir_node_to_tokens_vec(right, ctx, in_vec);
             quote! { #left_ts.next(#right_ts) }
         }
@@ -142,6 +144,16 @@ pub fn ir_node_to_tokens_vec(node: &IrNode, ctx: &IrCodegenCtx<'_>, in_vec: bool
         }
 
         IrNode::Map { inner, fn_id } => {
+            // Map fusion: detect Map { inner: Map { .. }, .. } and fuse into single .map().
+            if let IrNode::Map {
+                inner: inner2,
+                fn_id: fn_id2,
+            } = inner.as_ref()
+            {
+                if let Some(fused) = try_fuse_maps(inner2, *fn_id2, *fn_id, ctx, in_vec) {
+                    return fused;
+                }
+            }
             let inner_ts = ir_node_to_tokens_vec(inner, ctx, in_vec);
             emit_map(inner_ts, *fn_id, ctx)
         }
@@ -195,6 +207,42 @@ fn emit_ref(rule_id: RuleId, ctx: &IrCodegenCtx<'_>, in_vec: bool) -> TokenStrea
     }
 }
 
+
+/// Try to fuse two nested Map operations into a single `.map()` call.
+///
+/// Patterns:
+/// - `EnumWrap` + `BoxWrap` → `.map(|x| Box::new(Enum::Variant(x)))`
+/// - `BoxWrap` + `EnumWrap` → `.map(|x| Enum::Variant(Box::new(x)))`
+fn try_fuse_maps(
+    inner: &IrNode,
+    inner_fn_id: u32,
+    outer_fn_id: u32,
+    ctx: &IrCodegenCtx<'_>,
+    in_vec: bool,
+) -> Option<TokenStream> {
+    let inner_fd = &ctx.ir.fns[inner_fn_id as usize];
+    let outer_fd = &ctx.ir.fns[outer_fn_id as usize];
+
+    let inner_ts = ir_node_to_tokens_vec(inner, ctx, in_vec);
+
+    match (inner_fd, outer_fd) {
+        // EnumWrap then BoxWrap → .map(|x| Box::new(Enum::Variant(x)))
+        (FnDescriptor::EnumWrap { variant }, FnDescriptor::BoxWrap) => {
+            let vname = ctx.ir.get_string(*variant);
+            let vident = format_ident!("{}", vname);
+            let enum_ident = &ctx.enum_ident;
+            Some(quote! { #inner_ts.map(|x| Box::new(#enum_ident::#vident(x))) })
+        }
+        // BoxWrap then EnumWrap → .map(|x| Enum::Variant(Box::new(x)))
+        (FnDescriptor::BoxWrap, FnDescriptor::EnumWrap { variant }) => {
+            let vname = ctx.ir.get_string(*variant);
+            let vident = format_ident!("{}", vname);
+            let enum_ident = &ctx.enum_ident;
+            Some(quote! { #inner_ts.map(|x| #enum_ident::#vident(Box::new(x))) })
+        }
+        _ => None,
+    }
+}
 
 /// Emit a Map expression (combinator mode).
 fn emit_map(inner_ts: TokenStream, fn_id: u32, ctx: &IrCodegenCtx<'_>) -> TokenStream {

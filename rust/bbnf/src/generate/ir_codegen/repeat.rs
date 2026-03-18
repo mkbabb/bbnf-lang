@@ -24,7 +24,7 @@ pub fn emit_repeat(inner: &IrNode, lo: u32, hi: u32, ctx: &IrCodegenCtx<'_>, in_
     // Only for non-optional repeats (not lo=0, hi=1 which is just Optional).
     if !(lo == 0 && hi == 1) {
         if let Some((element, separator)) = try_sep_by(inner) {
-            let sep_ts = emit_discarded_separator(separator, false, ctx);
+            let sep_ts = emit_discarded(separator, false, ctx);
             let elem_ty = infer_node_type_in_vec(element, ctx);
             let sep_is_span = separator_is_span(separator, ctx);
             let both_span = elem_ty == TypeDesc::Span && sep_is_span;
@@ -44,7 +44,6 @@ pub fn emit_repeat(inner: &IrNode, lo: u32, hi: u32, ctx: &IrCodegenCtx<'_>, in_
     if lo == 0 && hi == 1 {
         // Optional: NOT a Vec context — use standard (boxed) emission.
         let inner_ty = infer_node_type(inner, ctx);
-        let is_span = inner_ty == TypeDesc::Span;
 
         // Phase 1a: transparent refs use _unboxed() to skip Box allocation.
         // Option<Enum> instead of Option<Box<Enum>>.
@@ -58,7 +57,15 @@ pub fn emit_repeat(inner: &IrNode, lo: u32, hi: u32, ctx: &IrCodegenCtx<'_>, in_
         }
 
         let inner_ts = ir_node_to_tokens(inner, ctx);
-        if is_span {
+        // Use opt_span for nodes guaranteed to produce a single Span.
+        // Leaf nodes (Literal, Regex, Ref) always produce Span when typed as such.
+        // Sequences also produce Span when no_collapse is false (normal span
+        // compression is active). When no_collapse is true (@pretty/@no_collapse),
+        // emit_seq preserves tuples, so opt_span would be a type mismatch.
+        let is_safe_span = inner_ty == TypeDesc::Span
+            && (matches!(inner, IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Ref(_))
+                || (matches!(inner, IrNode::Seq(_)) && !ctx.no_collapse.get()));
+        if is_safe_span {
             quote! { #inner_ts.opt_span() }
         } else {
             quote! { #inner_ts.opt() }
@@ -101,7 +108,7 @@ pub fn emit_sep_by_ws(
     // sep_by_ws handles whitespace → skip OW trimming.
     // Vec-producing: pass in_vec=true for element emission.
     let elem_ts = ir_node_to_tokens_vec(element, ctx, true);
-    let sep_ts = emit_discarded_separator(separator, true, ctx);
+    let sep_ts = emit_discarded(separator, true, ctx);
 
     // After stripping, check if separator is effectively Span
     // (e.g. a Ref with _sp method) for sep_by_ws_span upgrade.
@@ -137,16 +144,19 @@ pub fn try_sep_by(inner: &IrNode) -> Option<(&IrNode, &IrNode)> {
     None
 }
 
-/// Emit a parser expression for a separator whose value will be discarded by sep_by.
+/// Emit a parser expression for a node whose value will be discarded.
 ///
-/// Since sep_by throws away the separator result (Output2), we can skip:
+/// Since the result is thrown away, we can skip:
 /// - Enum wrapping (EnumWrap maps)
 /// - Boxing (BoxWrap maps, emit_ref boxing)
-/// - Whitespace trimming redundant with sep_by_ws context
+/// - Whitespace trimming redundant with sep_by_ws context (when `strip_ow` is true)
 ///
 /// For Ref nodes, uses `_sp().into_parser()` when available (cheapest path),
 /// otherwise emits `Self::rule()` without the usual `.map(|x| Box::new(x))` boxing.
-fn emit_discarded_separator(
+///
+/// Used by sep_by/sep_by_ws for discarded separators, and by Skip/Next for
+/// discarded positions (right side of Skip, left side of Next).
+pub(crate) fn emit_discarded(
     node: &IrNode,
     strip_ow: bool,
     ctx: &IrCodegenCtx<'_>,
@@ -157,14 +167,14 @@ fn emit_discarded_separator(
             let fd = &ctx.ir.fns[*fn_id as usize];
             match fd {
                 FnDescriptor::EnumWrap { .. } | FnDescriptor::BoxWrap => {
-                    emit_discarded_separator(inner, strip_ow, ctx)
+                    emit_discarded(inner, strip_ow, ctx)
                 }
                 _ => ir_node_to_tokens(node, ctx), // Custom maps may have side effects.
             }
         }
         // Strip OptionalWhitespace in sep_by_ws context (sep_by_ws handles WS).
         IrNode::OptionalWhitespace(inner) if strip_ow => {
-            emit_discarded_separator(inner, strip_ow, ctx)
+            emit_discarded(inner, strip_ow, ctx)
         }
         // For Ref nodes, skip boxing and prefer _sp path.
         IrNode::Ref(rule_id) => {
@@ -190,6 +200,31 @@ fn emit_discarded_separator(
         }
         // Everything else: fall through to normal emission.
         _ => ir_node_to_tokens(node, ctx),
+    }
+}
+
+/// Like `emit_sep_by_ws` but also emits a terminator byte array for speculative
+/// loop termination. Used inside wrap patterns where the close delimiter is known.
+pub fn emit_sep_by_ws_until(
+    element: &IrNode,
+    separator: &IrNode,
+    lo: u32,
+    close_bytes: &[u8],
+    ctx: &IrCodegenCtx<'_>,
+) -> TokenStream {
+    let elem_ts = ir_node_to_tokens_vec(element, ctx, true);
+    let sep_ts = emit_discarded(separator, true, ctx);
+
+    let elem_ty = infer_node_type_in_vec(element, ctx);
+    let sep_is_span = separator_is_span(separator, ctx);
+    let both_span = elem_ty == TypeDesc::Span && sep_is_span;
+
+    let lo_usize = lo as usize;
+    if both_span {
+        quote! { #elem_ts.sep_by_ws_span(#sep_ts, #lo_usize..) }
+    } else {
+        let term_bytes = close_bytes;
+        quote! { #elem_ts.sep_by_ws_until(#sep_ts, #lo_usize.., &[#(#term_bytes),*]) }
     }
 }
 

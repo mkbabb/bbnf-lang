@@ -290,12 +290,8 @@ fn generate_key_value_doc_ir(
     hints: &[String],
     ir: &GrammarIR,
 ) -> TokenStream {
-    let sep_str = resolve_separator_literal_ir(sep, ir).unwrap_or_else(|| {
-        panic!(
-            "Unable to resolve key-value separator `{}` to a literal for @pretty codegen",
-            sep
-        )
-    });
+    let sep_str = resolve_separator_literal_ir(sep, ir)
+        .unwrap_or_else(|| sep.to_string());
     let sep_with_space = format!("{} ", sep_str.trim());
     let base = quote! {
         {

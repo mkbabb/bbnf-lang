@@ -35,6 +35,21 @@ pub fn is_option_type(ty: &syn::Type) -> bool {
     }
 }
 
+/// Extract the inner type `T` from `Option<T>`.
+pub fn extract_option_inner(ty: &syn::Type) -> Option<&syn::Type> {
+    if let syn::Type::Path(path) = ty {
+        let seg = path.path.segments.last()?;
+        if seg.ident == "Option" {
+            if let syn::PathArguments::AngleBracketed(args) = &seg.arguments {
+                if let Some(syn::GenericArgument::Type(inner)) = args.args.first() {
+                    return Some(inner);
+                }
+            }
+        }
+    }
+    None
+}
+
 pub fn is_box_enum_type(ty: &syn::Type) -> bool {
     if let syn::Type::Path(path) = ty {
         path.path
@@ -62,9 +77,17 @@ pub fn doc_for_binding(binding: &syn::Ident, ty: &syn::Type) -> TokenStream {
             }
         }
     } else if is_option_type(ty) {
+        // Extract Option<T> inner type and recursively generate doc for it.
+        let inner_ty = extract_option_inner(ty);
+        let inner_ident = format_ident!("inner");
+        let inner_doc = if let Some(inner_t) = inner_ty {
+            doc_for_binding(&inner_ident, inner_t)
+        } else {
+            quote! { inner.to_doc() }
+        };
         quote! {
             match #binding {
-                Some(inner) => inner.to_doc(),
+                Some(#inner_ident) => { #inner_doc },
                 None => ::pprint::Doc::Null,
             }
         }
@@ -119,7 +142,14 @@ pub fn range_for_binding(binding: &syn::Ident, ty: &syn::Type) -> TokenStream {
             }
         }
     } else if is_option_type(ty) {
-        quote! { #binding.as_ref().and_then(|v| v.source_range()) }
+        let inner_ty = extract_option_inner(ty);
+        let inner_ident = format_ident!("v");
+        let inner_range = if let Some(inner_t) = inner_ty {
+            range_for_binding(&inner_ident, inner_t)
+        } else {
+            quote! { v.source_range() }
+        };
+        quote! { #binding.as_ref().and_then(|#inner_ident| #inner_range) }
     } else if is_box_enum_type(ty) {
         quote! { #binding.source_range() }
     } else if let syn::Type::Tuple(tuple_ty) = ty {
@@ -214,7 +244,7 @@ pub fn generate_item_to_doc(vec_ty: &syn::Type) -> TokenStream {
             { let #pat = item; #combined }
         }
     } else {
-        // Simple element — call to_doc directly.
+        // Box<Enum> or other type — call to_doc directly.
         quote! { item.to_doc() }
     }
 }

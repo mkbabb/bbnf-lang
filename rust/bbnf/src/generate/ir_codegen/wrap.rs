@@ -9,6 +9,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 
 use super::super::ir_types::IrCodegenCtx;
+use super::repeat;
 use super::{ir_node_to_tokens, ir_node_to_tokens_vec};
 
 /// Emit a `wrap` / `wrap_span` expression for the pattern `open >> middle << close`.
@@ -32,6 +33,32 @@ pub fn emit_wrap(
             ctx,
         ) {
             return fused;
+        }
+    }
+
+    // Step 5: FOLLOW-set speculative termination.
+    // When middle is OW(Repeat(sep_by)) and close is a Literal, emit
+    // sep_by_ws_small_until with the close delimiter's bytes as terminator.
+    if let IrNode::Literal(close_sid) = close {
+        if let IrNode::OptionalWhitespace(ow_inner) = middle {
+            if let IrNode::Repeat {
+                inner: rep_inner,
+                lo,
+                hi,
+            } = ow_inner.as_ref()
+            {
+                if !(*lo == 0 && *hi == 1) {
+                    if let Some((element, separator)) = repeat::try_sep_by(rep_inner) {
+                        let close_lit = ctx.ir.get_string(*close_sid);
+                        let close_bytes: Vec<u8> = close_lit.bytes().collect();
+                        let open_ts = ir_node_to_tokens(open, ctx);
+                        let close_ts = ir_node_to_tokens(close, ctx);
+                        let sep_ts =
+                            repeat::emit_sep_by_ws_until(element, separator, *lo, &close_bytes, ctx);
+                        return quote! { #sep_ts.wrap(#open_ts, #close_ts) };
+                    }
+                }
+            }
         }
     }
 

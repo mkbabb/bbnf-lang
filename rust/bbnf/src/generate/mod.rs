@@ -28,6 +28,15 @@ pub fn generate_all(
     parser_attrs: &ParserAttributes,
     ident: &syn::Ident,
 ) -> proc_macro2::TokenStream {
+    // When prettify is not enabled, clear @pretty metadata so that
+    // no_collapse is not applied for @pretty rules — this allows span
+    // compression in Seq codegen, which is critical for throughput.
+    if !parser_attrs.prettify {
+        for rule in &mut ir.rules {
+            rule.meta.pretty = None;
+        }
+    }
+
     // Compute sp_method_rules via iterative fixed-point BEFORE type inference,
     // so that infer_types uses the correct has_sp_method flags for B.1 override.
     bbnf_ir::passes::compute_sp_method_rules(ir);
@@ -91,6 +100,10 @@ fn generate_ir_parser_methods(
         } else {
             None
         };
+
+        // Set no_collapse for rules with @pretty or @no_collapse — prevents
+        // Span compression in Seq so the codegen type matches the IR type.
+        ctx.no_collapse.set(rule.meta.no_collapse || rule.meta.pretty.is_some());
 
         let mut parser = ir_codegen::emit_rule_body_inline(
             &rule.body,

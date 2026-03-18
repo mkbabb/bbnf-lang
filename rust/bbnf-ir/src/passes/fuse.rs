@@ -23,7 +23,7 @@ use crate::{GrammarIR, IrNode, RuleId};
 /// Fuse single-use rules into their sole call site.
 ///
 /// A rule is fusable when:
-/// 1. It is not cyclic (no SCC membership)
+/// 1. It is not cyclic
 /// 2. It is not the grammar entry point
 /// 3. It is referenced exactly once across all rule bodies
 ///
@@ -120,7 +120,12 @@ fn inline_single_use(node: IrNode, bodies: &[Option<IrNode>]) -> IrNode {
             let branches = branches
                 .into_iter()
                 .map(|mut b| {
-                    b.node = inline_single_use(b.node, bodies);
+                    // Don't inline bare Refs in Alt branches — codegen needs rule
+                    // identity for proper enum variant wrapping. Refs inside Map
+                    // wrappers or deeper sub-expressions are fine to inline.
+                    if !matches!(&b.node, IrNode::Ref(_)) {
+                        b.node = inline_single_use(b.node, bodies);
+                    }
                     b
                 })
                 .collect();

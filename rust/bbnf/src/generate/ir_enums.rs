@@ -16,7 +16,13 @@ pub fn generate_enum(ctx: &IrCodegenCtx<'_>) -> TokenStream {
     let enum_ident = &ctx.enum_ident;
 
     // Rule variants: one per non-transparent rule.
-    let enum_values = ctx.ir.rules.iter().filter_map(|rule| {
+    let debug_info: Vec<String> = ctx.ir.rules.iter()
+        .map(|r| format!("{}: trans={}", ctx.ir.get_string(r.name), r.meta.is_transparent))
+        .collect();
+    if ctx.ir.rules.iter().all(|r| r.meta.is_transparent) && !ctx.ir.rules.is_empty() {
+        panic!("All {} rules are transparent: {}", ctx.ir.rules.len(), debug_info.join(", "));
+    }
+    let enum_values: Vec<_> = ctx.ir.rules.iter().filter_map(|rule| {
         if rule.meta.is_transparent {
             return None;
         }
@@ -28,7 +34,9 @@ pub fn generate_enum(ctx: &IrCodegenCtx<'_>) -> TokenStream {
             .map(|t| t.clone())
             .unwrap_or_else(|| ctx.boxed_enum_type.clone());
         Some(quote! { #ident(#ty) })
-    });
+    }).collect();
+
+    let enum_values = enum_values.into_iter();
 
     // Sub-variants from heterogeneous alternations.
     let mut seen_sub_variant_names = HashSet::new();

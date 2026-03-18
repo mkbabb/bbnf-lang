@@ -83,7 +83,7 @@ impl<'a> BBNFGrammar<'a> {
     }
 
     fn line_comment() -> Parser<'a, Comment<'a>> {
-        let not_newline = take_while_span(|c| c != '\n');
+        let not_newline = take_while_span(|c| c != '\n').opt_span();
         let end = string_span("\r").opt_span().then_span(string_span("\n"));
 
         not_newline

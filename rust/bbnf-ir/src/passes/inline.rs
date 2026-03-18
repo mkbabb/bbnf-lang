@@ -14,7 +14,7 @@ const INLINE_THRESHOLD: usize = 4;
 /// Inline small acyclic rules at their call sites.
 ///
 /// A rule is inlinable when:
-/// 1. It is not cyclic (no SCC membership)
+/// 1. It is not cyclic
 /// 2. It is not the grammar entry point
 /// 3. Its body has at most `INLINE_THRESHOLD` nodes
 ///
@@ -89,7 +89,12 @@ fn inline_refs(node: IrNode, bodies: &[Option<IrNode>]) -> IrNode {
             let branches = branches
                 .into_iter()
                 .map(|mut b| {
-                    b.node = inline_refs(b.node, bodies);
+                    // Don't inline bare Refs in Alt branches — codegen needs rule
+                    // identity for proper enum variant wrapping. Refs inside Map
+                    // wrappers or deeper sub-expressions are fine to inline.
+                    if !matches!(&b.node, IrNode::Ref(_)) {
+                        b.node = inline_refs(b.node, bodies);
+                    }
                     b
                 })
                 .collect();

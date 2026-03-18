@@ -77,9 +77,16 @@ pub fn emit_seq(children: &[IrNode], ctx: &IrCodegenCtx<'_>, in_vec: bool) -> To
     };
 
     // Build chains: group consecutive Span children for then_span().
+    // When no_collapse is set and all types are Span, don't group — preserve the tuple.
+    // Consume after first use (only top-level Seq of the rule preserves tuples).
+    let no_collapse = ctx.no_collapse.get() && types.iter().all(|t| *t == TypeDesc::Span);
+    // When no_collapse, clear it for nested emit_seq calls (only top-level preserves).
+    if no_collapse {
+        ctx.no_collapse.set(false);
+    }
     let mut chains: Vec<(bool, Vec<TokenStream>)> = Vec::new();
     for (parser, ty) in parsers.iter().zip(types.iter()) {
-        let is_span = *ty == TypeDesc::Span;
+        let is_span = *ty == TypeDesc::Span && !no_collapse;
         if let Some((last_is_span, last_chain)) = chains.last_mut() {
             if is_span && *last_is_span {
                 last_chain.push(parser.clone());
@@ -226,11 +233,32 @@ pub(super) fn emit_seq_inline(
 
     // If still all-Span, fall back to combinator path (SpanParser chains are
     // already allocation-free — no benefit from inlining).
+    // Exception: when no_collapse is set (@pretty/@no_collapse), keep the tuple.
     let still_all_span = child_types.iter().all(|t| *t == TypeDesc::Span);
     if still_all_span {
-        let parser = emit_seq(children, ctx, false);
-        let name = ictx.hoist(parser);
-        return quote! { #name.call(state) };
+        if ctx.no_collapse.get() {
+            // @pretty/@no_collapse: emit each child as Span, produce a tuple.
+            // Clear no_collapse for nested Seqs (only top-level preserves tuples).
+            ctx.no_collapse.set(false);
+            let mut stmts: Vec<TokenStream> = Vec::new();
+            let mut vars: Vec<TokenStream> = Vec::new();
+            for child in children {
+                let child_expr = ir_node_to_inline(child, ctx, ictx);
+                let var = ictx.fresh_ident("sp");
+                stmts.push(quote! { let #var = #child_expr?; });
+                vars.push(quote! { #var });
+            }
+            return quote! {
+                {
+                    #(#stmts)*
+                    Some((#(#vars),*))
+                }
+            };
+        } else {
+            let parser = emit_seq(children, ctx, false);
+            let name = ictx.hoist(parser);
+            return quote! { #name.call(state) };
+        }
     }
 
     // ── Step 2: Group consecutive Span children (span compression) ───────

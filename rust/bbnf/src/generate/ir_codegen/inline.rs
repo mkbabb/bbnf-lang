@@ -73,6 +73,25 @@ fn benefits_from_inline(node: &IrNode) -> bool {
     }
 }
 
+/// Check if a node would generate `?` operators when inlined.
+/// These nodes are unsafe to inline inside an optional's `if let Some(...) = { ... }`
+/// because the `?` would return from the outer parser closure instead of just
+/// the optional scope.
+fn inner_generates_try(node: &IrNode) -> bool {
+    match node {
+        // Sequences generate `__h.call(state)?` for each step.
+        IrNode::Seq(children) => children.len() > 1,
+        // Skip/Next generate `?` for sub-expressions.
+        IrNode::Skip(_, _) | IrNode::Next(_, _) => true,
+        // Map/OW: delegate to inner.
+        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
+            inner_generates_try(inner)
+        }
+        // Leaves and refs: no `?` generated.
+        _ => false,
+    }
+}
+
 /// Emit a rule body as inline direct-dispatch code.
 ///
 /// If `enum_wrap` is `Some((enum_ident, variant_ident))`, the result is wrapped
@@ -196,10 +215,19 @@ pub(crate) fn ir_node_to_inline_vec(
                 if benefits_from_inline(inner) {
                     let inner_expr = ir_node_to_inline_vec(inner, ctx, ictx, in_vec);
                     let cp_var = ictx.fresh_ident("cp");
+                    // When inner generates `?` operators (sequences, skip/next),
+                    // wrap in an immediately-invoked closure so `?` returns from
+                    // the closure (producing None → optional miss) rather than
+                    // propagating out of the outer parser closure.
+                    let try_expr = if inner_generates_try(inner) {
+                        quote! { (|| { #inner_expr })() }
+                    } else {
+                        quote! { { #inner_expr } }
+                    };
                     return quote! {
                         {
                             let #cp_var = state.offset;
-                            if let Some(__opt_v) = { #inner_expr } {
+                            if let Some(__opt_v) = #try_expr {
                                 Some(Some(__opt_v))
                             } else {
                                 state.offset = #cp_var;
@@ -224,12 +252,15 @@ pub(crate) fn ir_node_to_inline_vec(
                 return emit_inline_fallback(node, ctx, ictx, in_vec);
             }
             let left_expr = ir_node_to_inline_vec(left, ctx, ictx, in_vec);
-            let right_expr = ir_node_to_inline_vec(right, ctx, ictx, false);
+            // Right side is discarded — use emit_discarded to strip Map/Box overhead,
+            // then hoist and call inline.
+            let right_parser = repeat::emit_discarded(right, false, ctx);
+            let right_name = ictx.hoist(right_parser);
             let left_var = ictx.fresh_ident("skip");
             quote! {
                 {
                     let #left_var = #left_expr?;
-                    #right_expr?;
+                    #right_name.call(state)?;
                     Some(#left_var)
                 }
             }
@@ -240,11 +271,14 @@ pub(crate) fn ir_node_to_inline_vec(
             if let IrNode::Skip(_, _) = right.as_ref() {
                 return emit_inline_fallback(node, ctx, ictx, in_vec);
             }
-            let left_expr = ir_node_to_inline_vec(left, ctx, ictx, false);
+            // Left side is discarded — use emit_discarded to strip Map/Box overhead,
+            // then hoist and call inline.
+            let left_parser = repeat::emit_discarded(left, false, ctx);
+            let left_name = ictx.hoist(left_parser);
             let right_expr = ir_node_to_inline_vec(right, ctx, ictx, in_vec);
             quote! {
                 {
-                    #left_expr?;
+                    #left_name.call(state)?;
                     #right_expr
                 }
             }
@@ -256,6 +290,35 @@ pub(crate) fn ir_node_to_inline_vec(
         }
 
         IrNode::Map { inner, fn_id } => {
+            // Map fusion: detect Map { inner: Map { .. }, .. } and fuse.
+            if let IrNode::Map {
+                inner: inner2,
+                fn_id: fn_id2,
+            } = inner.as_ref()
+            {
+                let inner_fd = &ctx.ir.fns[*fn_id2 as usize];
+                let outer_fd = &ctx.ir.fns[*fn_id as usize];
+                match (inner_fd, outer_fd) {
+                    // EnumWrap then BoxWrap → fused .map(|x| Box::new(Enum::Variant(x)))
+                    (FnDescriptor::EnumWrap { variant }, FnDescriptor::BoxWrap) => {
+                        let inner_expr = ir_node_to_inline_vec(inner2, ctx, ictx, in_vec);
+                        let vname = ctx.ir.get_string(*variant);
+                        let vident = format_ident!("{}", vname);
+                        let enum_ident = &ctx.enum_ident;
+                        return quote! { #inner_expr.map(|__x| Box::new(#enum_ident::#vident(__x))) };
+                    }
+                    // BoxWrap then EnumWrap → fused .map(|x| Enum::Variant(Box::new(x)))
+                    (FnDescriptor::BoxWrap, FnDescriptor::EnumWrap { variant }) => {
+                        let inner_expr = ir_node_to_inline_vec(inner2, ctx, ictx, in_vec);
+                        let vname = ctx.ir.get_string(*variant);
+                        let vident = format_ident!("{}", vname);
+                        let enum_ident = &ctx.enum_ident;
+                        return quote! { #inner_expr.map(|__x| #enum_ident::#vident(Box::new(__x))) };
+                    }
+                    _ => {}
+                }
+            }
+
             let inner_expr = ir_node_to_inline_vec(inner, ctx, ictx, in_vec);
             let fd = &ctx.ir.fns[*fn_id as usize];
             match fd {

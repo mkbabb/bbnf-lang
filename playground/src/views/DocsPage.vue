@@ -70,7 +70,7 @@ useMarkdownComponents(articleRef, rendered);
                 class="fixed inset-0 z-50 md:hidden bg-black/20"
                 @click.self="mobileDrawer = false"
             >
-                <div class="absolute top-14 left-0 w-72 h-[calc(100dvh-var(--spacing-navbar))] bg-card/95 backdrop-blur-xl border-r border-border/30 shadow-lg flex flex-col">
+                <div class="absolute top-14 left-0 w-72 h-[calc(100dvh-var(--spacing-navbar))] bg-card/95 backdrop-blur-xl border-r border-border/30 shadow-lg flex flex-col rounded-tr-xl rounded-br-xl overflow-hidden">
                     <div class="flex-1 overflow-y-auto">
                         <DocsSidebar :current-slug="slug" show-close @close="mobileDrawer = false" />
                     </div>
@@ -80,14 +80,6 @@ useMarkdownComponents(articleRef, rendered);
 
         <!-- Main content -->
         <main class="flex-1 flex min-h-[calc(100dvh-var(--spacing-navbar))] flex-col px-4 py-2 sm:px-8 sm:py-3 min-w-0">
-            <!-- Mobile menu button -->
-            <button
-                class="md:hidden self-start mb-2 p-1.5 rounded-md hover:bg-muted/50 active:scale-95 transition-colors text-muted-foreground"
-                @click="mobileDrawer = !mobileDrawer"
-            >
-                <Menu class="h-4 w-4" />
-            </button>
-
             <div v-if="currentDoc" class="mx-auto flex w-full max-w-4xl flex-1 flex-col">
                 <!-- Card-styled article container -->
                 <div
@@ -120,6 +112,13 @@ useMarkdownComponents(articleRef, rendered);
                         </svg>
                         {{ currentDoc.section }}
                     </div>
+                    <!-- Mobile menu button — below badge, sticky on scroll -->
+                    <button
+                        class="mobile-menu-btn md:hidden"
+                        @click="mobileDrawer = !mobileDrawer"
+                    >
+                        <Menu class="h-4 w-4" />
+                    </button>
                     <article ref="articleRef" class="prose max-w-none" v-html="rendered" />
                 </div>
             </div>
@@ -136,6 +135,34 @@ useMarkdownComponents(articleRef, rendered);
     float: right;
     margin-top: 0.5rem;
     margin-left: 1rem;
+}
+
+/* Mobile menu button — below badge, sticky on scroll.
+   float:right + clear:right places it below the badge.
+   position:sticky keeps it visible while scrolling. */
+.mobile-menu-btn {
+    position: sticky;
+    top: calc(var(--spacing-navbar) + 0.5rem);
+    float: right;
+    clear: right;
+    z-index: 20;
+    margin: 0.25rem -0.25rem 0 0.75rem;
+    padding: 0.375rem;
+    border-radius: 0.5rem;
+    background: hsl(var(--card) / 0.85);
+    backdrop-filter: blur(8px);
+    border: 1px solid hsl(var(--border) / 0.3);
+    color: hsl(var(--muted-foreground));
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    line-height: 0;
+}
+.mobile-menu-btn:hover {
+    background: hsl(var(--muted) / 0.5);
+    color: hsl(var(--foreground));
+}
+.mobile-menu-btn:active {
+    transform: scale(0.95);
 }
 
 .mobile-drawer-enter-active,

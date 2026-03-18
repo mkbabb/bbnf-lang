@@ -16,11 +16,11 @@ defineEmits<{
 </script>
 
 <template>
-    <div class="flex items-center gap-0 border-b border-border/20">
+    <div class="flex items-center gap-0 border-b border-border/20 overflow-x-auto scrollbar-hidden">
         <button
             v-for="tab in tabs"
             :key="tab.key"
-            class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-mono transition-colors relative"
+            class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-mono transition-colors relative whitespace-nowrap shrink-0"
             :class="tab.key === modelValue
                 ? 'text-foreground'
                 : 'text-muted-foreground/60 hover:text-muted-foreground'"

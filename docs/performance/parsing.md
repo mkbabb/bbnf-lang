@@ -8,9 +8,9 @@ section: Performance
 
 parse_that (Rust) and parse-that (TypeScript) are the parsing backbone. Both use dispatch tables, FIRST-set routing, and memoization tuned for their respective runtimes.
 
-## Rust: JSON — Span Parsing (Zero-Copy Validation)
+## Rust: `JSON` — Span
 
-Span parsing returns borrowed byte slices without decoding strings or parsing numbers. No tree is built. This measures raw grammar traversal speed—structural validation only.
+Span parsing returns borrowed byte slices without decoding strings or parsing numbers. No tree is built—structural validation only.
 
 ```bench-chart
 { "title": "JSON Span Parsing", "unit": "MB/s",
@@ -33,37 +33,39 @@ Span parsing returns borrowed byte slices without decoding strings or parsing nu
   ] }
 ```
 
-## Rust: JSON — Borrowed Parsing (f64 + Borrowed Strings)
+## Rust: `JSON` — Borrowed
 
-Borrowed parsing decodes numbers to f64 and borrows strings from the input buffer (no escape handling). Builds a Vec/Object tree. Comparable to sonic-rs, simd-json, and serde_json_borrow, which also borrow unescaped strings from input.
+Numbers parsed to f64, strings borrowed from input (no escape decoding). Builds a Vec/Object tree. All parsers in this tier borrow unescaped strings directly from the input buffer.
 
 ```bench-chart
-{ "title": "JSON Borrowed Parsing", "unit": "MB/s",
+{ "title": "JSON Borrowed", "unit": "MB/s",
   "datasets": [
     { "name": "data.json (35 KB)", "icon": "rust",
-      "labels": ["sonic-rs", "BBNF borrow", "simd-json", "jiter", "serde_json_borrow"],
-      "series": [{"label": "Throughput", "values": [2323, 2077, 1922, 1465, 1421]}] },
+      "labels": ["sonic-rs", "BBNF borrow", "simd-json", "jiter", "serde_json_borrow", "nom", "winnow", "pest"],
+      "series": [{"label": "Throughput", "values": [2323, 2077, 1922, 1465, 1421, 576, 524, 255]}] },
     { "name": "apache (127 KB)", "icon": "rust",
-      "labels": ["BBNF borrow", "sonic-rs", "simd-json", "serde_json_borrow", "jiter"],
-      "series": [{"label": "Throughput", "values": [2524, 1949, 1889, 1316, 1286]}] },
+      "labels": ["BBNF borrow", "sonic-rs", "simd-json", "serde_json_borrow", "jiter", "nom", "winnow", "pest"],
+      "series": [{"label": "Throughput", "values": [2524, 1949, 1889, 1316, 1286, 690, 645, 272]}] },
     { "name": "twitter (631 KB)", "icon": "rust",
-      "labels": ["sonic-rs", "BBNF borrow", "simd-json", "serde_json_borrow", "jiter"],
-      "series": [{"label": "Throughput", "values": [2515, 2325, 1749, 1585, 1178]}] },
+      "labels": ["sonic-rs", "BBNF borrow", "simd-json", "serde_json_borrow", "jiter", "nom", "winnow", "pest"],
+      "series": [{"label": "Throughput", "values": [2515, 2325, 1749, 1585, 1178, 496, 525, 222]}] },
     { "name": "citm_catalog (1.7 MB)", "icon": "rust",
-      "labels": ["sonic-rs", "BBNF borrow", "simd-json", "serde_json_borrow", "jiter"],
-      "series": [{"label": "Throughput", "values": [3037, 2129, 1878, 1539, 1274]}] },
+      "labels": ["sonic-rs", "BBNF borrow", "simd-json", "serde_json_borrow", "jiter", "nom", "winnow", "pest"],
+      "series": [{"label": "Throughput", "values": [3037, 2129, 1878, 1539, 1274, 607, 581, 250]}] },
     { "name": "canada (2.2 MB)", "icon": "rust",
-      "labels": ["sonic-rs", "BBNF borrow", "simd-json", "serde_json_borrow", "jiter"],
-      "series": [{"label": "Throughput", "values": [1521, 776, 754, 713, 643]}] }
+      "labels": ["sonic-rs", "BBNF borrow", "simd-json", "serde_json_borrow", "jiter", "nom", "winnow", "pest"],
+      "series": [{"label": "Throughput", "values": [1521, 776, 754, 713, 643, 391, 390, 154]}] }
   ] }
 ```
 
-## Rust: JSON — Owned Parsing (f64 + Decoded Strings)
+nom, winnow, and pest all produce borrowed output (`&'a str` strings, no escape decoding). sonic-rs and simd-json use SIMD-accelerated string scanning. The nom/winnow/pest numbers are pre-mimalloc and will be updated in a future run.
 
-Owned parsing decodes numbers to f64 and handles string escapes via Cow—borrows when clean, allocates when escaped. Full deserialization with Vec/Object tree construction.
+## Rust: `JSON` — Owned
+
+Full escape decoding via `Cow<'a, str>`—borrows when clean, allocates when escaped. Numbers parsed to f64. Full deserialization with Vec/Object tree.
 
 ```bench-chart
-{ "title": "JSON Owned Parsing", "unit": "MB/s",
+{ "title": "JSON Owned", "unit": "MB/s",
   "datasets": [
     { "name": "data.json (35 KB)", "icon": "rust",
       "labels": ["BBNF owned", "serde_json"],
@@ -85,12 +87,14 @@ Owned parsing decodes numbers to f64 and handles string escapes via Cow—borrow
 
 All Rust benchmarks use mimalloc as the global allocator for consistent results. The BBNF parsers are generated from a `.bbnf` grammar via `#[derive(Parser)]`—zero hand-written Rust.
 
-## Rust: CSS
+## Rust: `CSS`
 
 Two grammar tiers: **fast** (css-fast.bbnf) returns opaque spans for maximum throughput; **pretty** (css-stylesheet-pretty.bbnf) builds a structural AST for formatting.
 
+cssparser and lightningcss operate at different abstraction levels (tokenizer-only and full semantic parse, respectively) and aren't directly comparable to BBNF's grammar-derived parser. See the [formatting benchmarks](./formatting) for gorgeous end-to-end comparisons against Biome.
+
 ```bench-chart
-{ "title": "Rust CSS Parsing", "unit": "MB/s",
+{ "title": "CSS Parsing", "unit": "MB/s",
   "datasets": [
     { "name": "bootstrap (281 KB)", "icon": "rust",
       "labels": ["BBNF fast", "BBNF pretty"],
@@ -104,12 +108,12 @@ Two grammar tiers: **fast** (css-fast.bbnf) returns opaque spans for maximum thr
   ] }
 ```
 
-## Rust: Google Sheets
+## Rust: `Google Sheets`
 
 AOT vs VM on formula parsing. The VM interprets bytecode; AOT generates native Rust. The VM gap narrows on larger inputs as bytecode dispatch overhead amortizes. AOT is 81x faster on pathological inputs, 34x on 1 KB, 16x on 10 KB.
 
 ```bench-chart
-{ "title": "Google Sheets Parsing — AOT vs VM", "unit": "ns", "lowerIsBetter": true,
+{ "title": "Google Sheets — AOT vs VM", "unit": "ns", "lowerIsBetter": true,
   "datasets": [
     { "name": "pathological (270 B)", "icon": "rust",
       "labels": ["AOT", "VM"],
@@ -123,12 +127,12 @@ AOT vs VM on formula parsing. The VM interprets bytecode; AOT generates native R
   ] }
 ```
 
-## TypeScript: JSON
+## TypeScript: `JSON`
 
 Benchmarked with vitest across five datasets. parse-that consistently outperforms Chevrotain, with the gap widening on larger inputs.
 
 ```bench-chart
-{ "title": "TypeScript JSON Parsing", "unit": "ops/s",
+{ "title": "TypeScript JSON", "unit": "ops/s",
   "datasets": [
     { "name": "data.json (35 KB)", "icon": "ts",
       "labels": ["JSON.parse", "parse-that", "Chevrotain", "Peggy", "Parsimmon", "Nearley+moo"],
@@ -153,72 +157,3 @@ parse-that's TS performance comes from three optimization phases:
 1. **Mutable ParserState**—single reused object, zero-alloc save/restore
 2. **BBNF graph optimizations**—Tarjan SCC, FIRST-set dispatch, regex coalescing
 3. **V8-specific tuning**—`RegExp.test()` + `substring()` instead of `exec()` allocation
-
-## Dispatch Tables
-
-When alternation branches have disjoint FIRST sets, the codegen emits an O(1) character-dispatch lookup:
-
-```code-tabs
----rust---
-// Generated by #[derive(Parser)]
-fn value(&self, state: &mut ParserState<'a>) -> Parser<'a, Value<'a>> {
-    dispatch! {
-        b'"' => self.string(state),
-        b'0'..=b'9' | b'-' => self.number(state),
-        b'{' => self.object(state),
-        b'[' => self.array(state),
-        b't' => self.parse_true(state),
-        b'f' => self.parse_false(state),
-        b'n' => self.parse_null(state),
-    }
-}
----typescript---
-// Generated by ASTToParser()
-const value = dispatch({
-    '"': jsonString,
-    "0-9": jsonNumber,
-    "-": jsonNumber,
-    "{": jsonObject,
-    "[": jsonArray,
-    "t": string("true").map(() => true),
-    "f": string("false").map(() => false),
-    "n": string("null").map(() => null),
-});
-```
-
-The leading byte selects the parser in constant time, eliminating sequential trial across branches.
-
-## FIRST Sets
-
-Every rule's FIRST set is a 128-bit `CharSet` covering ASCII, computed iteratively to fixed point over cyclic rules:
-
-```code-tabs
----rust---
-use bbnf::analysis::CharSet;
-
-// FIRST set computation — iterates to fixed point
-let first_sets = grammar.compute_first_sets();
-// first_sets["value"] = CharSet { '"', '0'..='9', '-', '{', '[', 't', 'f', 'n' }
-
-// Use in dispatch table generation
-let table = grammar.generate_dispatch_table(&first_sets);
----typescript---
-import { computeFirstSets } from "@mkbabb/bbnf-lang";
-
-// FIRST set computation — iterates to fixed point
-const firstSets = computeFirstSets(grammar);
-// firstSets.get("value") = Set { '"', '0'-'9', '-', '{', '[', 't', 'f', 'n' }
-
-// Use in dispatch table generation
-const table = generateDispatchTable(firstSets);
-```
-
-```
-value: {", 0-9, -, {, [, t, f, n}
-object: {{}
-array: {[}
-string: {"}
-number: {0-9, -}
-```
-
-When FIRST sets overlap between alternation branches, the codegen falls back to sequential `any()` and the LSP emits an ambiguity warning.

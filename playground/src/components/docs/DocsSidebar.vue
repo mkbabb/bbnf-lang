@@ -77,7 +77,7 @@ const filteredSections = computed(() => {
 </script>
 
 <template>
-    <aside class="flex h-full w-64 shrink-0 flex-col overflow-y-auto border-r border-border/30 bg-card/40 backdrop-blur-xl scrollbar-hidden">
+    <aside class="flex h-full w-64 shrink-0 flex-col overflow-y-auto border-r border-border/30 bg-card/40 backdrop-blur-xl scrollbar-hidden rounded-tr-xl rounded-br-xl">
         <!-- Search bar + collapse toggle -->
         <div class="p-3 border-b border-border/20">
             <div class="flex items-center gap-1.5">
@@ -112,8 +112,8 @@ const filteredSections = computed(() => {
         </div>
 
         <!-- Navigation -->
-        <nav class="flex-1 overflow-y-auto p-3 scrollbar-hidden">
-            <div v-for="section in filteredSections" :key="section.name" class="mb-5">
+        <nav class="flex-1 overflow-y-auto px-2 py-3 scrollbar-hidden">
+            <div v-for="section in filteredSections" :key="section.name" class="mb-4">
                 <button
                     class="flex items-center gap-2 w-full px-2 py-1.5 group active:scale-[0.98] transition-transform"
                     @click="toggleSection(section.name)"

@@ -48,6 +48,9 @@ const colors = [
 const OUR_NAMES = new Set([
     "bbnf aot", "bbnf-generated", "parse-that", "parse_that",
     "gorgeous", "gorgeous (cached)", "aot",
+    "bbnf span", "bbnf borrow", "bbnf owned",
+    "bbnf fast", "bbnf pretty",
+    "bbnf aot (borrow)",
 ]);
 
 export function useChartData(data: ChartData, mounted: Ref<boolean>) {

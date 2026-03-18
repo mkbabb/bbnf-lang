@@ -97,11 +97,11 @@ function hoveredIsOurs(): boolean {
                 </div>
 
                 <!-- Bars: full-width vertical stack -->
-                <div class="flex flex-col gap-1.5">
+                <div class="flex flex-col gap-1.5 sm:gap-1.5">
                     <div
                         v-for="(val, vi) in series.values"
                         :key="vi"
-                        class="group flex items-center gap-3 transition-opacity duration-300"
+                        class="bench-bar group transition-opacity duration-300"
                         :style="{
                             opacity: mounted ? 1 : 0,
                             transitionDelay: barDelay(si, vi),
@@ -112,7 +112,7 @@ function hoveredIsOurs(): boolean {
                         <!-- Label -->
                         <span
                             v-if="activeLabels?.[vi]"
-                            class="flex items-center justify-end gap-1.5 text-xs font-mono shrink-0 text-right whitespace-nowrap overflow-hidden text-ellipsis w-[9.5rem]"
+                            class="bench-bar-label flex items-center gap-1.5 text-xs font-mono shrink-0 whitespace-nowrap overflow-hidden text-ellipsis"
                             :class="[
                                 isOurs(activeLabels[vi]!) ? 'font-bold' : '',
                                 isWinner(si, vi) ? 'text-foreground font-bold' : isOurs(activeLabels[vi]!) ? 'text-foreground' : 'text-muted-foreground',
@@ -124,10 +124,15 @@ function hoveredIsOurs(): boolean {
                                 :style="{ background: getBarColor(si, vi, series.color) }"
                             />
                             {{ activeLabels[vi] }}
+                            <!-- Mobile-only inline value -->
+                            <span class="sm:hidden text-muted-foreground font-normal ml-auto tabular-nums">
+                                {{ formatValue(val) }}
+                                <span class="text-[0.6875rem]">{{ data.unit }}</span>
+                            </span>
                         </span>
 
                         <!-- Bar track -->
-                        <div class="flex-1 h-7 bg-muted/15 rounded-md overflow-hidden relative">
+                        <div class="bench-bar-track h-6 sm:h-7 bg-muted/15 rounded-md overflow-hidden relative min-w-0">
                             <!-- Bar fill -->
                             <div
                                 class="h-full rounded-md transition-all duration-700 ease-out"
@@ -138,9 +143,9 @@ function hoveredIsOurs(): boolean {
                                     transitionDelay: barDelay(si, vi),
                                 }"
                             />
-                            <!-- Value label -->
+                            <!-- Value label — hidden on mobile (shown inline with label instead) -->
                             <span
-                                class="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-mono tabular-nums"
+                                class="bar-value absolute right-2 top-1/2 -translate-y-1/2 text-xs font-mono tabular-nums hidden sm:inline"
                                 :class="isWinner(si, vi) || isOurs(activeLabels?.[vi] ?? '') ? 'text-foreground font-semibold' : 'text-foreground/70'"
                             >
                                 {{ formatValue(val) }}
@@ -171,3 +176,48 @@ function hoveredIsOurs(): boolean {
         </FloatingTooltip>
     </DocCard>
 </template>
+
+<style scoped>
+/* Mobile: label above bar, full-width stack */
+.bench-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+}
+.bench-bar-label {
+    justify-content: flex-start;
+    text-align: left;
+}
+
+/* Value text over bars — text shadow for legibility against bar fill */
+.bar-value {
+    text-shadow:
+        0 0 4px hsl(var(--card)),
+        0 0 8px hsl(var(--card)),
+        0 1px 2px hsl(var(--card) / 0.8);
+}
+
+/* Mobile: bar track is full-width block, not flex child */
+.bench-bar-track {
+    width: 100%;
+    flex: none;
+}
+
+/* Desktop (sm+): label beside bar, fixed width */
+@media (min-width: 640px) {
+    .bench-bar {
+        flex-direction: row;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    .bench-bar-label {
+        width: 9.5rem;
+        justify-content: flex-end;
+        text-align: right;
+    }
+    .bench-bar-track {
+        flex: 1 1 0%;
+        width: auto;
+    }
+}
+</style>

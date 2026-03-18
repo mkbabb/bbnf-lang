@@ -1,6 +1,6 @@
 [package]
 name = "bbnf"
-version = "0.2.9"
+version = "0.2.11"
 edition = "2024"
 license = "MIT"
 description = "BBNF grammar parser and code generator built on parse_that"
@@ -24,8 +24,17 @@ indexmap = "2"
 
 [dev-dependencies]
 tempfile = "3"
-gorgeous = { version = "0.1", features = ["vm"] }
+bbnf_derive = { version = "0.2", path = "../bbnf-derive" }
+pprint = "0.3"
 bencher = "0.1"
+mimalloc = "0.1"
+
+# JSON competitor parsers
+serde_json = "1"
+serde = { version = "1", features = ["derive"] }
+sonic-rs = "0.3"
+simd-json = "0.14"
+jiter = "0.8"
 
 [[bench]]
 name = "google_sheets"
@@ -37,4 +46,8 @@ harness = false
 
 [[bench]]
 name = "css_parse"
+harness = false
+
+[[bench]]
+name = "json_competitors"
 harness = false

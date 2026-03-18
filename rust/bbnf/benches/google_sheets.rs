@@ -1,22 +1,25 @@
 #![feature(cold_path)]
 
+//! Google Sheets formula benchmarks — AOT and VM.
+
+// #[global_allocator]
+// static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 use bencher::{benchmark_group, benchmark_main, black_box, Bencher};
 
 use bbnf::pipeline::{compile_grammar, PipelineOptions};
+use bbnf_derive::Parser;
 use bbnf_ir::compiler::compile as compile_bytecode;
 use bbnf_ir::interpreter::Interpreter;
-use gorgeous::google_sheets::{prettify_formula, GoogleSheetsParser};
-use gorgeous::PrinterConfig;
-use pprint::{pprint as render, pprint_ref};
 
-// ── Formulas ────────────────────────────────────────────────────────────────
+#[derive(Parser)]
+#[parser(path = "benches/grammars/google-sheets.bbnf", prettify)]
+struct GoogleSheetsParser;
 
 const PATHOLOGICAL: &str = r#"=LET(raw, A2:E1000, filtered, FILTER(raw, (INDEX(raw,,3)>100)*(INDEX(raw,,5)="Active")), sorted, SORT(filtered, 3, FALSE), IF(ROWS(sorted)>0, MAP(SEQUENCE(MIN(10, ROWS(sorted))), LAMBDA(i, INDEX(sorted, i, 1)&" - "&TEXT(INDEX(sorted, i, 3), "$#,##0"))), "No results"))"#;
 
-// ── Helpers ─────────────────────────────────────────────────────────────────
-
 fn compiled() -> (bbnf_ir::GrammarIR, bbnf_ir::bytecode::BytecodeProgram) {
-    let grammar = std::fs::read_to_string("../../grammar/lang/google-sheets.bbnf")
+    let grammar = std::fs::read_to_string("benches/grammars/google-sheets.bbnf")
         .expect("failed to read google-sheets.bbnf");
     let ir = compile_grammar(&grammar, &PipelineOptions::default()).unwrap();
     let program = compile_bytecode(&ir);
@@ -38,10 +41,10 @@ fn generate_large_formula(n_bindings: usize) -> String {
     format!("=LET({})", parts.join(", "))
 }
 
-// ── VM Benchmarks ──────────────────────────────────────────────────────────
+// ── VM ──────────────────────────────────────────────────────────────────────
 
 fn vm_compile(b: &mut Bencher) {
-    let grammar = std::fs::read_to_string("../../grammar/lang/google-sheets.bbnf")
+    let grammar = std::fs::read_to_string("benches/grammars/google-sheets.bbnf")
         .expect("failed to read google-sheets.bbnf");
     b.bytes = grammar.len() as u64;
     b.iter(|| {
@@ -82,44 +85,7 @@ fn vm_parse_10kb(b: &mut Bencher) {
     });
 }
 
-fn vm_format_pathological(b: &mut Bencher) {
-    let (ir, program) = compiled();
-    let printer = pprint::Printer::new(80, 2, false);
-    b.bytes = PATHOLOGICAL.len() as u64;
-    b.iter(|| {
-        let mut interp = Interpreter::new(&program, black_box(PATHOLOGICAL));
-        let r = interp.run();
-        assert!(r.success);
-        let formatted = gorgeous::vm::format_value(
-            &ir,
-            r.value.as_ref().unwrap(),
-            PATHOLOGICAL,
-            printer,
-        );
-        assert!(formatted.is_some());
-    });
-}
-
-fn vm_format_1kb(b: &mut Bencher) {
-    let (ir, program) = compiled();
-    let printer = pprint::Printer::new(80, 2, false);
-    let input = generate_large_formula(10);
-    b.bytes = input.len() as u64;
-    b.iter(|| {
-        let mut interp = Interpreter::new(&program, black_box(&input));
-        let r = interp.run();
-        assert!(r.success);
-        let formatted = gorgeous::vm::format_value(
-            &ir,
-            r.value.as_ref().unwrap(),
-            &input,
-            printer,
-        );
-        assert!(formatted.is_some());
-    });
-}
-
-// ── AOT Benchmarks ─────────────────────────────────────────────────────────
+// ── AOT ─────────────────────────────────────────────────────────────────────
 
 fn aot_parse_pathological(b: &mut Bencher) {
     let parser = GoogleSheetsParser::formula();
@@ -142,80 +108,35 @@ fn aot_parse_10kb(b: &mut Bencher) {
 }
 
 fn aot_format_pathological(b: &mut Bencher) {
-    let config = PrinterConfig::new(80, 2);
-    b.bytes = PATHOLOGICAL.len() as u64;
-    b.iter(|| prettify_formula(black_box(PATHOLOGICAL), &config).unwrap());
-}
-
-fn aot_format_pathological_cached(b: &mut Bencher) {
-    let config = PrinterConfig::new(80, 2);
     let parser = GoogleSheetsParser::formula();
+    let config = pprint::Printer::new(80, 2, false);
     b.bytes = PATHOLOGICAL.len() as u64;
     b.iter(|| {
         let ast = parser.parse(black_box(PATHOLOGICAL)).unwrap();
-        render(ast.to_doc(), config.to_printer())
+        pprint::pprint(ast.to_doc(), config)
     });
 }
 
 fn aot_format_1kb(b: &mut Bencher) {
     let input = generate_large_formula(10);
-    let config = PrinterConfig::new(80, 2);
-    b.bytes = input.len() as u64;
-    b.iter(|| prettify_formula(black_box(&input), &config).unwrap());
-}
-
-fn aot_format_1kb_cached(b: &mut Bencher) {
-    let input = generate_large_formula(10);
-    let config = PrinterConfig::new(80, 2);
     let parser = GoogleSheetsParser::formula();
+    let config = pprint::Printer::new(80, 2, false);
     b.bytes = input.len() as u64;
     b.iter(|| {
         let ast = parser.parse(black_box(&input)).unwrap();
-        render(ast.to_doc(), config.to_printer())
+        pprint::pprint(ast.to_doc(), config)
     });
 }
 
 fn aot_format_10kb(b: &mut Bencher) {
     let input = generate_large_formula(100);
-    let config = PrinterConfig::new(80, 2);
+    let parser = GoogleSheetsParser::formula();
+    let config = pprint::Printer::new(80, 2, false);
     b.bytes = input.len() as u64;
-    b.iter(|| prettify_formula(black_box(&input), &config).unwrap());
-}
-
-// ── AOT phase-split benchmarks ─────────────────────────────────────────────
-
-fn aot_pathological_to_doc_only(b: &mut Bencher) {
-    let parser = GoogleSheetsParser::formula();
-    let ast = parser.parse(PATHOLOGICAL).unwrap();
-    b.bytes = PATHOLOGICAL.len() as u64;
-    b.iter(|| ast.to_doc());
-}
-
-fn aot_pathological_render_only(b: &mut Bencher) {
-    let config = PrinterConfig::new(80, 2);
-    let parser = GoogleSheetsParser::formula();
-    let ast = parser.parse(PATHOLOGICAL).unwrap();
-    let doc = ast.to_doc();
-    b.bytes = PATHOLOGICAL.len() as u64;
-    b.iter(|| pprint_ref(&doc, config.to_printer()));
-}
-
-fn aot_1kb_to_doc_only(b: &mut Bencher) {
-    let input = generate_large_formula(10);
-    let parser = GoogleSheetsParser::formula();
-    let ast = parser.parse(&input).unwrap();
-    b.bytes = input.len() as u64;
-    b.iter(|| ast.to_doc());
-}
-
-fn aot_1kb_render_only(b: &mut Bencher) {
-    let input = generate_large_formula(10);
-    let config = PrinterConfig::new(80, 2);
-    let parser = GoogleSheetsParser::formula();
-    let ast = parser.parse(&input).unwrap();
-    let doc = ast.to_doc();
-    b.bytes = input.len() as u64;
-    b.iter(|| pprint_ref(&doc, config.to_printer()));
+    b.iter(|| {
+        let ast = parser.parse(black_box(&input)).unwrap();
+        pprint::pprint(ast.to_doc(), config)
+    });
 }
 
 // ── Groups ──────────────────────────────────────────────────────────────────
@@ -226,8 +147,6 @@ benchmark_group!(
     vm_parse_pathological,
     vm_parse_1kb,
     vm_parse_10kb,
-    vm_format_pathological,
-    vm_format_1kb,
 );
 
 benchmark_group!(
@@ -236,18 +155,8 @@ benchmark_group!(
     aot_parse_1kb,
     aot_parse_10kb,
     aot_format_pathological,
-    aot_format_pathological_cached,
     aot_format_1kb,
-    aot_format_1kb_cached,
     aot_format_10kb,
 );
 
-benchmark_group!(
-    aot_phase_benches,
-    aot_pathological_to_doc_only,
-    aot_pathological_render_only,
-    aot_1kb_to_doc_only,
-    aot_1kb_render_only,
-);
-
-benchmark_main!(vm_benches, aot_benches, aot_phase_benches);
+benchmark_main!(vm_benches, aot_benches);

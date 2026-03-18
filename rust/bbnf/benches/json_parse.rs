@@ -1,11 +1,20 @@
 #![feature(cold_path)]
 
+//! JSON parsing benchmarks using the canonical json.bbnf grammar.
+
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 use bencher::{benchmark_group, benchmark_main, black_box, Bencher};
 
 use bbnf::pipeline::{compile_grammar, PipelineOptions};
+use bbnf_derive::Parser;
 use bbnf_ir::compiler::compile as compile_bytecode;
 use bbnf_ir::interpreter::Interpreter;
-use gorgeous::json::JsonParser;
+
+#[derive(Parser)]
+#[parser(path = "benches/grammars/json.bbnf")]
+struct BbnfJsonParser;
 
 fn load_json(name: &str) -> String {
     let path = format!("../../data/json/{}", name);
@@ -24,28 +33,28 @@ fn compiled_json_vm() -> (bbnf_ir::GrammarIR, bbnf_ir::bytecode::BytecodeProgram
 
 fn aot_data(b: &mut Bencher) {
     let input = load_json("data.json");
-    let parser = JsonParser::value();
+    let parser = BbnfJsonParser::value();
     b.bytes = input.len() as u64;
     b.iter(|| parser.parse(black_box(&input)).unwrap());
 }
 
 fn aot_twitter(b: &mut Bencher) {
     let input = load_json("twitter.json");
-    let parser = JsonParser::value();
+    let parser = BbnfJsonParser::value();
     b.bytes = input.len() as u64;
     b.iter(|| parser.parse(black_box(&input)).unwrap());
 }
 
 fn aot_citm_catalog(b: &mut Bencher) {
     let input = load_json("citm_catalog.json");
-    let parser = JsonParser::value();
+    let parser = BbnfJsonParser::value();
     b.bytes = input.len() as u64;
     b.iter(|| parser.parse(black_box(&input)).unwrap());
 }
 
 fn aot_canada(b: &mut Bencher) {
     let input = load_json("canada.json");
-    let parser = JsonParser::value();
+    let parser = BbnfJsonParser::value();
     b.bytes = input.len() as u64;
     b.iter(|| parser.parse(black_box(&input)).unwrap());
 }

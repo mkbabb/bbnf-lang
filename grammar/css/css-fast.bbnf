@@ -1,0 +1,38 @@
+// CSS Fast Grammar — streamlined for throughput.
+// Opaque spans (no typed values/selectors).
+// Handles comments, empty values, real-world CSS.
+//
+// Uses explicit `ws` (comment-aware whitespace) instead of `?w` (which only
+// trims \s) so inline comments like `/* 1 */` are consumed correctly.
+
+ws = /(?s)(?:\s|\/\*.*?\*\/)*/ ;
+
+selectorSpan = /[^{};]+/ ;
+valueSpan    = /[^;{}!]*/ ;
+
+propertyName = /[a-zA-Z_][\w-]*/ | /--[\w-]+/ | /-[a-zA-Z][\w-]*/ ;
+important    = "!" , ws , "important" ;
+optSemicolon = ";" ? ;
+declaration  = propertyName , ws , ":" , ws , valueSpan , important ? , optSemicolon , ws ;
+
+blockContent = (ws , (declaration | ruleItem)) * ;
+ruleBlock    = "{" , ws , blockContent , ws , "}" ;
+
+qualifiedRule = selectorSpan , ws , ruleBlock ;
+
+atRuleBody     = ruleBlock | ";" ;
+genericAtRule  = /@[a-zA-Z][\w-]*/ , /[^;{}]*/ , atRuleBody ;
+
+atRule = genericAtRule ;
+
+ruleItem = qualifiedRule | atRule ;
+ruleList = (ws , ruleItem) * ;
+stylesheet = ws , ruleList , ws ;
+
+@pretty stylesheet block ;
+@pretty ruleList blankline ;
+@pretty blockContent block indent ;
+@pretty ruleBlock off ;
+@pretty qualifiedRule group nobreak ;
+@pretty declaration group ;
+@pretty atRule group nobreak ;

@@ -6,9 +6,8 @@
 @import "css-values.bbnf" ;
 @import { KEYFRAMES_RULE } from "css-keyframes.bbnf" ;
 
-// Comments + whitespace
-cssComment = /\/\*[^*]*\*+([^\/*][^*]*\*+)*\// ;
-ws         = (/\s+/ | cssComment) * ;
+// Comments + whitespace — single regex hits sp_css_ws_comment() SIMD fast path
+ws = /(?s)(?:\s|\/\*.*?\*\/)*/ ;
 
 // Shared tokens (locally defined to shadow imports from sub-grammars)
 ident  = /[a-zA-Z_][\w-]*/ ;

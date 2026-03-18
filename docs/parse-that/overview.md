@@ -118,12 +118,12 @@ parse-that drives the parsing stage for all BBNF-generated parsers. Throughput o
 { "title": "JSON Parsing Throughput (Rust)", "unit": "MB/s",
   "datasets": [
     { "name": "data.json (35 KB)", "icon": "rust",
-      "labels": ["BBNF AOT", "parse-that", "nom", "serde_json"],
-      "series": [{"label": "Throughput", "values": [792, 663, 566, 508]}] }
+      "labels": ["BBNF borrow", "serde_json", "nom", "winnow", "pest"],
+      "series": [{"label": "Throughput", "values": [3430, 959, 673, 603, 232]}] }
   ] }
 ```
 
-BBNF AOT generates parse-that combinators with dispatch tables and span parsing, reaching 792 MB/s — 1.2x faster than hand-written parse-that and 1.6x faster than serde_json.
+BBNF AOT generates parse-that combinators with dispatch tables and span parsing, reaching 3,430 MB/s on data.json — 3.6x faster than serde_json and 5.1x faster than nom.
 
 See [Parsing Performance](/docs/performance/parsing) for full benchmarks across file sizes and languages.
 

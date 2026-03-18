@@ -2,8 +2,8 @@
 
 //! Google Sheets formula benchmarks — AOT and VM.
 
-// #[global_allocator]
-// static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 use bencher::{benchmark_group, benchmark_main, black_box, Bencher};
 
@@ -90,6 +90,7 @@ fn vm_parse_10kb(b: &mut Bencher) {
 fn aot_parse_pathological(b: &mut Bencher) {
     let parser = GoogleSheetsParser::formula();
     b.bytes = PATHOLOGICAL.len() as u64;
+    assert!(parser.parse(PATHOLOGICAL).is_some(), "pathological: AOT parse failed");
     b.iter(|| parser.parse(black_box(PATHOLOGICAL)).unwrap());
 }
 

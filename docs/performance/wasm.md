@@ -6,16 +6,16 @@ section: Performance
 
 # WASM Performance
 
-The `bbnf-wasm` crate compiles the entire toolchain to WebAssembly—6 AOT formatters, a bytecode VM, and 17 LSP features. This page covers module characteristics and browser performance.
+The `bbnf-wasm` crate compiles the entire toolchain to WebAssembly—5 AOT formatters, a bytecode VM, and 18 LSP features. This page covers module characteristics and browser performance.
 
 ## Module Size
 
 | Component | Size (gzipped) |
 |-----------|---------------|
-| bbnf_wasm.wasm | ~1.2 MB (~400 KB gzipped) |
+| bbnf_wasm.wasm | ~4.7 MB (~1.1 MB gzipped) |
 | bbnf_wasm.js | ~15 KB |
 
-The WASM module is loaded lazily on first use. The playground shows a loading indicator during initialization.
+Built with `opt-level = 3`. The WASM module is loaded lazily on first use. The playground shows a loading indicator during initialization.
 
 ## Initialization Time
 
@@ -25,11 +25,11 @@ The WASM module is loaded lazily on first use. The playground shows a loading in
   "series": [{"label": "Init time", "values": [80, 90, 120]}] }
 ```
 
-Initialization includes WASM compilation + memory allocation. Subsequent calls are synchronous with no overhead.
+Initialization includes WASM compilation + memory allocation. Subsequent calls are synchronous with no initialization overhead.
 
 ## Formatter Throughput (Browser)
 
-All 6 formatters are available in the browser. Throughput on representative inputs:
+All 5 formatters are available in the browser. Throughput on representative inputs:
 
 ```bench-chart
 { "title": "WASM Formatter Throughput (Browser)", "unit": "ops/s",
@@ -43,7 +43,7 @@ All 6 formatters are available in the browser. Throughput on representative inpu
   ] }
 ```
 
-WASM VM (full tree) is 30–75x slower than native `JSON.parse`; check-only mode is 3–4x faster than full-tree mode. The BBNF TS combinator parser is only 2–5x slower than native.
+WASM VM (full tree) is 30–75x slower than native `JSON.parse`; check-only mode is 3–4x faster than full-tree mode. The BBNF TS combinator parser is 2–5x slower than native.
 
 ### WASM vs Native Parse Throughput
 
@@ -69,10 +69,10 @@ Custom grammars use the bytecode VM instead of AOT formatters:
 ```bench-chart
 { "title": "VM Interpreter Timing (Google Sheets WASM)", "unit": "ms",
   "labels": ["Compile grammar", "Parse (simple)", "Parse (pathological)", "Format (simple)", "Format (pathological)"],
-  "series": [{"label": "Median", "values": [5.4, 0.9, 1.3, 0.9, 56.6]}] }
+  "series": [{"label": "Median", "values": [3.1, 0.49, 0.75, 0.51, 40.2]}] }
 ```
 
-The compile step runs once per grammar edit. Parse and format run on every input change.
+The compile step runs once per grammar edit. Parse and format run on every input change. LSP features use a thread-local `DocumentState` cache keyed on text hash — one parse per unique text instead of 3–5 per keystroke.
 
 ## Live Benchmarks
 

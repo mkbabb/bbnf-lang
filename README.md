@@ -58,53 +58,6 @@ array = "[", [ value, { ",", value } ], "]" ;
 @recover declaration /[;}]/ ;
 ```
 
-## VS Code Extension
-
-Full `.bbnf` language support via an LSP server written in Rust.
-
-### Diagnostics
-
-The LSP produces the following diagnostics:
-
-| Severity | Diagnostic |
-|----------|-----------|
-| ERROR | Parse errors (syntax issues, incomplete input) |
-| ERROR | Duplicate rule definitions |
-| WARNING | Undefined rule references (import-aware) |
-| WARNING | Empty rule body (`rule = ;`) |
-| WARNING | Ambiguous alternations (overlapping FIRST sets between branches) |
-| INFO | Left recursion with cycle path (e.g., `expr → term → factor → expr`) |
-| HINT | Unused rules (zero references, not the entry rule) |
-| HINT | Unreachable rules (referenced but not reachable from entry) |
-| HINT | Alias rules (`A = B` — suggests using `B` directly) |
-
-### Navigation
-
-- **Go-to-definition** — jump to a rule's definition (Cmd+Click), including import paths
-- **Find references** — all references to a rule across the document
-- **Document symbols** — outline of all rules (Cmd+Shift+O)
-
-### Editing
-
-- **Rename** — rename a rule and all its references (F2)
-- **Completion** — rule names and keywords
-- **Code actions** — remove unused rules, define undefined rules
-
-### Display
-
-- **Hover** — rule definition, FIRST set, nullable, cycle info, reference count
-- **Inlay hints** — FIRST sets for non-trivial rules, nullable markers
-- **Code lens** — reference counts above each rule
-- **Semantic tokens** — rule definitions, references, strings, regex, keywords
-- **Folding** — collapse multi-line rules
-- **Selection range** — expand/shrink selection (Cmd+Shift+Arrow)
-
-### Formatting
-
-- **Document formatting** — format the entire file
-- **Range formatting** — format a selection
-- **On-type formatting** — auto-format on `;`
-
 ### Recovery
 
 `@recover rule syncExpr ;` annotates a rule with a synchronization expression used
@@ -133,12 +86,13 @@ are registered before recursing into its own imports).
 Cmd+Click on import paths opens the referenced file. Diagnostics are
 import-aware—imported rule names suppress "undefined rule" warnings.
 
+### Formatting
+
+BBNF's `@pretty` directives drive pretty-printing in the playground and Prettier plugin.
+
 ## Playground
 
 Live at **[grammar.babb.dev](https://grammar.babb.dev)**.
-
-A Vue 3 + Monaco editor for writing, parsing, and formatting BBNF grammars
-entirely in the browser—no server, no install.
 
 ### Editor
 
@@ -146,9 +100,7 @@ Monaco with full BBNF language support via WASM: hover, completion, go-to-defini
 semantic tokens, inlay hints (FIRST sets + nullable), code lens, code actions,
 document symbols, folding, and selection ranges. Diagnostics update on every keystroke.
 
-### Panels
-
-Four panes, two visible at a time:
+Four panes show different views of the grammar and input:
 
 | Pane | What it shows |
 |------|---------------|
@@ -157,255 +109,12 @@ Four panes, two visible at a time:
 | **Parsed AST** | JSON AST produced by the parser |
 | **Formatted** | Pretty-printed output via `@pretty` directives |
 
-Formatting uses [gorgeous](https://github.com/mkbabb/gorgeous) (WASM) for
-built-in languages (JSON, CSS, BNF, EBNF, BBNF) and falls back to a
-bytecode VM interpreter for custom grammars. A telemetry badge shows parse/format timings.
-
-### Walkthroughs
-
-Four guided demos, launchable from the landing page or via `?demo=<id>`:
-
-- **JSON parser** — build a complete JSON grammar from scratch
-- **BBNF in BBNF** — the self-describing grammar
-- **Error recovery** — `@recover` directives and multi-error diagnostics
-- **Pretty-printing** — `@pretty` directives driving gorgeous output
-
-Each walkthrough steps through grammar/input mutations with annotated overlays.
+Formatting uses [gorgeous](https://github.com/mkbabb/gorgeous) (WASM)—AOT-generated formatters for built-in languages, a bytecode VM for custom grammars.
 
 ### Docs
 
-Built-in documentation covering parse-that, BBNF, pprint, gorgeous, and
-performance—rendered from Markdown with section-themed navigation and code blocks.
-
-## Architecture
-
-### Analysis Pipeline
-
-Both the TypeScript runtime and the Rust LSP implement the same analysis pipeline
-over the parsed AST, run before code generation or diagnostics:
-
-1. **Dependency graph**—forward and reverse adjacency lists of nonterminal references.
-2. **Tarjan's SCC**—strongly connected components identify cyclic rule groups
-   (e.g., mutual recursion between `expr` and `term`).
-3. **Topological sort**—acyclic ordering for bottom-up processing; dependents before
-   dependencies for left-recursion elimination.
-4. **FIRST sets**—per-rule `CharSet` (128-bit ASCII bitset) of characters that can
-   begin a match, plus nullable flags. Computed iteratively to fixed point over cyclic
-   rules.
-5. **Dispatch tables**—when an alternation's branches have disjoint FIRST sets, the
-   codegen emits an O(1) character-dispatch lookup instead of ordered trial.
-
-### IR Pipeline
-
-Grammar → `lower/` → `GrammarIR` → 12-pass optimization → bytecode VM or Rust codegen.
-
-The 12 passes (in order):
-
-1. `canonicalize_aliases` — resolve `A = B` chains
-2. `prune_unreachable` — remove rules unreachable from entry
-3. `inline_acyclic` — inline non-recursive rules up to depth limit
-4. `eliminate_epsilon` — remove empty alternatives
-5. `merge_literals` — coalesce adjacent string literals
-6. `merge_regex_alts` — fuse `Alt([Regex, ...])` into a single pattern
-7. `factor_common_prefixes` — left-factor shared prefixes in alternations
-8. `refine_span_eligibility` — mark rules eligible for SpanParser dual methods
-9. `compute_follow_sets` — FOLLOW sets for context-sensitive decisions
-10. `generate_dispatch_tables` — O(1) byte-dispatch for disjoint FIRST sets
-11. `refine_memo_strategies` — decide memoization per rule
-12. `infer_types` — IrNode → `syn::Type` for Rust codegen; `infer_node_in_vec` sub-pass for Vec context
-
-Two backends consume the optimized IR: a bytecode VM (WASM playground) and Rust
-`TokenStream` emission (proc-macro). `pipeline.rs` orchestrates the sequence;
-`bbnf-derive` mirrors the same 12-pass order.
-
-### Codegen Optimizations
-
-The IR pipeline and the `generate` module (Rust) apply these optimizations:
-
-- **Dispatch tables**: Disjoint FIRST sets on alternation branches produce O(1)
-  character dispatch.
-- **Regex coalescing**: Alternations of literals and adjacent regex patterns collapse
-  into single character classes.
-- **Pattern detection**: `sepBy`, `wrap`, and all-literal alternation patterns are
-  recognized and compiled to specialized combinators.
-- **Lazy nonterminal refs**: Non-acyclic rules use `lazy(|| ...)`, enabling
-  post-generation parser customization.
-- **Alias chain resolution**: `A = B` chains resolved transitively so references
-  use the terminal parser directly.
-- **Left-recursion elimination**: Direct left recursion via tail-rule extraction
-  (Paull's algorithm); indirect via substitution on topological order.
-- **SpanParser dual methods**: Span-eligible rules generate both `rule()` and
-  `rule_sp()` for zero-copy parsing.
-- **JSON fast-paths**: Pattern-detect canonical string/number regexes →
-  SIMD-accelerated parsers.
-
-## Build & Test
-
-A `Makefile` automates the most common workflows:
-
-```bash
-make build          # Build release LSP binary + extension
-make dev            # Quick debug build + extension (fast iteration)
-make test           # Run all Rust and TypeScript tests
-make bench          # Run LSP performance benchmarks
-make install        # Build, package .vsix, and install into VS Code
-make package        # Build and create bbnf-lang.vsix (no install)
-make watch          # Continuous rebuild on save (cargo watch)
-make clean-vsix     # Remove old .vsix files
-```
-
-### Manual builds
-
-```bash
-# Rust (requires nightly)
-cd rust && cargo test --workspace && cargo build --release -p bbnf-lsp
-
-# TypeScript library
-cd typescript && npm ci && npm test
-
-# Prettier plugin (must build TS library first)
-npm ci && cd typescript && npm run build && cd ../prettier-plugin-bbnf && npm test
-
-# Extension
-cd extension && npm ci && npm run build
-
-# WASM (builds into playground/src/wasm/)
-cd wasm && wasm-pack build --target web --out-dir ../playground/src/wasm
-```
-
-## Development
-
-### Quick start
-
-```bash
-make build-lsp-debug   # Fast debug build of the LSP binary
-make build-ext         # Bundle the extension
-```
-
-Then open this repo in VS Code and press **F5** to launch the Extension Development
-Host with the BBNF extension loaded.
-
-### Testing locally (without F5)
-
-To install the extension into your regular VS Code instance:
-
-```bash
-make install    # Builds everything, packages a .vsix, installs it
-```
-
-Reload VS Code after installation. The extension will use the LSP binary
-bundled in `server/bbnf-lsp`.
-
-### VS Code launch configurations
-
-Two configs are provided in `.vscode/launch.json`:
-
-| Config | What it does |
-|--------|-------------|
-| **Launch Extension** | Builds the extension, uses the release binary in `server/` |
-| **Launch Extension (Debug LSP)** | Builds both LSP (debug) and extension, uses `rust/target/debug/bbnf-lsp` |
-
-The extension reads the server path from (in priority order):
-
-1. VS Code setting `BBNF.server.path`
-2. Environment variable `BBNF_SERVER_PATH` (set by launch configs)
-3. Bundled binary at `<extensionPath>/server/bbnf-lsp`
-4. Dev fallback at `<extensionPath>/../server/bbnf-lsp`
-
-### Developing the LSP
-
-The Rust LSP server at `rust/lsp/` communicates over stdin/stdout using the
-[LSP protocol](https://microsoft.github.io/language-server-protocol/). The
-development loop:
-
-```bash
-# Edit rust/lsp/src/**/*.rs
-
-# Run unit + integration tests (no VS Code needed)
-cd rust && cargo test --workspace
-
-# Rebuild and test in VS Code
-cargo build -p bbnf-lsp
-# Then F5 in VS Code to relaunch the extension host
-```
-
-**Integration tests** (`rust/lsp/tests/integration.rs`) spawn the compiled
-`bbnf-lsp` binary as a subprocess, send raw JSON-RPC messages, and assert on
-responses—full end-to-end coverage without VS Code:
-
-```bash
-cargo test -p bbnf-lsp --test integration -- --nocapture
-```
-
-Current test coverage (~51 integration tests):
-
-- Initialize & capability negotiation
-- Diagnostics: valid grammar, unused rules, undefined rules, parse errors, regex panics
-- Diagnostics: FIRST set conflicts, cycle paths, alias hints, unreachable rules
-- Diagnostics: `@recover` undefined target rule
-- Hover (basic + enhanced with FIRST/nullable info), go-to-definition, references, rename, completion
-- Completion: `@recover` keyword and target rule names
-- Document symbols, code lens, folding, code actions
-- Full document formatting, range formatting, on-type formatting
-- Semantic tokens (including `@recover` directive tokens)
-- Inlay hints (FIRST sets, nullability, range filtering)
-- Selection range (single & multiple positions)
-- Incremental text sync (insert, delete, replace)
-- Cross-file: go-to-definition, references, completion via `@import`
-- Large grammar (8-rule JSON grammar, all features combined)
-
-TypeScript test suites:
-
-- **bbnf.test.ts** — end-to-end grammar parsing: JSON, CSV, CSS, math, regex, EBNF, BBNF self-parse, left-recursion, Google Sheets
-- **imports.test.ts** — module graph: glob/selective imports, cyclic (2-way, 3-way, self), diamond deps, transitive unfurling, merge precedence
-- **analysis.test.ts** — Tarjan SCC, dep graphs, ref counts, aliases, transparent alternations, FIRST set conflicts, dispatch tables, acyclic classification
-- **optimize.test.ts** — topological sort, direct/indirect left-recursion elimination, common prefix detection
-- **first-sets.test.ts** — `regexFirstChars` dispatch, `CharSet` operations, `computeFirstSets` convergence, `buildDispatchTable` routing
-- **recover.test.ts** — `@recover` parsing, codegen `.recover()` wrapping, multi-error collection
-- **css-stylesheet.test.ts** — `css-stylesheet.bbnf` with `@recover` annotations, multi-error recovery
-- **google-sheets.test.ts** — Google Sheets formula grammar parsing and formatting
-
-### Developing the Prettier Plugin
-
-```bash
-# From repo root (npm workspaces resolve @mkbabb/bbnf-lang locally)
-npm ci
-cd typescript && npm run build   # must build bbnf-lang first
-cd ../prettier-plugin-bbnf && npm test
-```
-
-### VS Code tasks
-
-Available via **Terminal > Run Task**:
-
-| Task | Description |
-|------|-------------|
-| Build Extension | `npm run build` in extension/ |
-| Build LSP (Release) | `cargo build --release -p bbnf-lsp` |
-| Build LSP (Debug) | `cargo build -p bbnf-lsp` |
-| Build All (Debug) | LSP + extension sequentially |
-| Test LSP | `cargo test --workspace` |
-| Test All | Runs Test LSP (expandable) |
-
-## Publishing
-
-Releases are automated via GitHub Actions. The pipeline builds platform-specific
-LSP binaries (linux-x64, linux-arm64, darwin-x64, darwin-arm64, win32-x64),
-packages platform-specific `.vsix` files, and publishes to the VS Code Marketplace.
-
-```bash
-# 1. Bump the version (choose one)
-make bump-patch     # 1.0.0 → 1.0.1
-make bump-minor     # 1.0.0 → 1.1.0
-make bump-major     # 1.0.0 → 2.0.0
-
-# 2. Push the tag to trigger the release pipeline
-make release        # git push --follow-tags
-```
-
-**Prerequisites:** The `VSCE_PAT` secret must be configured in the GitHub repo
-settings (Settings > Secrets > Actions). Generate a Personal Access Token at
-https://dev.azure.com with the "Marketplace (Manage)" scope.
+Built-in documentation covering [`parse-that`](https://github.com/mkbabb/parse-that), BBNF, [`pprint`](https://github.com/mkbabb/pprint), [`gorgeous`](https://github.com/mkbabb/gorgeous), and
+performance—rendered from Markdown with a sidebar nav grouped by section and syntax-highlighted code blocks.
 
 ## Sources, acknowledgements, &c.
 
@@ -415,7 +124,3 @@ https://dev.azure.com with the "Marketplace (Manage)" scope.
 - Tarjan, R. E. (1972). Depth-first search and linear graph algorithms. *SIAM Journal on Computing*. — SCC detection used for cycle analysis, FIRST-set propagation, and build ordering.
 - [Language Server Protocol](https://microsoft.github.io/language-server-protocol/). Microsoft. — The protocol implemented by `bbnf-lsp`.
 - [`parse-that`](https://github.com/mkbabb/parse-that) — The parser combinator library that consumes BBNF grammars.
-
-## License
-
-MIT

@@ -307,6 +307,21 @@ export function inlay_hints(text, start_line, end_line) {
 }
 
 /**
+ * Run hover + completions + semantic tokens + inlay hints + diagnostics in one call.
+ * @param {string} text
+ * @param {number} offset
+ * @param {number} start_line
+ * @param {number} end_line
+ * @returns {any}
+ */
+export function lsp_batch(text, offset, start_line, end_line) {
+    const ptr0 = passStringToWasm0(text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.lsp_batch(ptr0, len0, offset, start_line, end_line);
+    return ret;
+}
+
+/**
  * @param {string} text
  * @param {number} offset
  * @returns {any}

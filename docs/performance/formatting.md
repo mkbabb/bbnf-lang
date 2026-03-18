@@ -20,7 +20,7 @@ gorgeous generates formatters from `@pretty` directives in BBNF grammars. Layout
   ] }
 ```
 
-The parse phase uses an L0 tokenization pass—it needs a flat token stream for formatting, not a typed AST. The `to_doc` phase (1,026 MB/s) is the throughput-limiting stage; `render` runs at 1,115 MB/s.
+The parse phase is the throughput-limiting stage—end-to-end is bounded by parse speed. The `to_doc` phase runs at 1,026 MB/s and `render` at 1,115 MB/s, both well above the end-to-end rate.
 
 ## End-to-End: CSS
 
@@ -47,7 +47,7 @@ gorgeous vs Biome on real-world CSS files:
 | bootstrap.css | 281 KB | 205 MB/s | 409 MB/s | 16 MB/s | 13x |
 | tailwind.css | 3.8 MB | 20 MB/s | 46 MB/s | 14 MB/s | 1.4x |
 
-"Cached" means the parse result is reused across formatting calls. The 13x speedup on bootstrap occurs because fixed overhead is amortized at this file size while the working set fits in cache.
+"Cached" means the parse result is reused across formatting calls. The 13x speedup on bootstrap likely reflects fixed overhead amortizing at this file size while the working set fits in cache.
 
 For parse-only throughput comparisons against cssparser and lightningcss, see the [parsing benchmarks](./parsing#rust-css--tier-1-structural-scan).
 
@@ -58,19 +58,16 @@ AOT and VM both support formula formatting. Phase-split benchmarks on 1 KB formu
 ```bench-chart
 { "title": "Google Sheets Formatting — 1 KB", "unit": "ns",
   "datasets": [
-    { "name": "Parse", "icon": "rust",
+    { "name": "Parse only", "icon": "rust",
       "labels": ["AOT", "VM"],
-      "series": [{"label": "Time", "values": [19620, 665921]}] },
-    { "name": "Full format", "icon": "rust",
-      "labels": ["AOT", "VM"],
-      "series": [{"label": "Time", "values": [1305446, 15459312]}] },
-    { "name": "Full (cached)", "icon": "rust",
+      "series": [{"label": "Time", "values": [31996, 953486]}] },
+    { "name": "Full format (parse + to_doc + render)", "icon": "rust",
       "labels": ["AOT"],
-      "series": [{"label": "Time", "values": [100173]}] }
+      "series": [{"label": "Time", "values": [110555]}] }
   ] }
 ```
 
-The VM does not expose phase-split timing. Full format includes parse + to_doc + render.
+Full format includes parse + to_doc + render.
 
 ## Formatter Invocation
 
@@ -111,7 +108,7 @@ pprint uses a Wadler-Lindig algorithm with several throughput optimizations:
 - **LinearJoin**—forward-scan break decisions with no pre-pass
 - **SmartJoin**—text-justification via greedy bin-packing, O(n) uniform
 
-pprint renders at 1,115 MB/s on CSS. The `to_doc` phase (1,026 MB/s) is the throughput-limiting stage.
+pprint renders at 1,115 MB/s on CSS. Parse is the throughput-limiting stage in the end-to-end pipeline.
 
 ## `@pretty` Directive Overhead
 

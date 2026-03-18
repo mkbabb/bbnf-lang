@@ -58,4 +58,4 @@ Each error includes position information derived from the input offset where the
 - Use regex sync expressions that match common statement/block terminators
 - For statement-level recovery, sync on `;` or `}`
 - For block-level recovery, sync on `}`
-- Recovery is greedy — it will skip as little input as possible to find the sync match
+- Recovery is non-greedy — it skips as little input as possible to find the nearest sync match

@@ -152,3 +152,24 @@ export interface WasmParseResult {
     value: unknown;
     diagnostics: WasmParseDiagnostic[];
 }
+
+/** Lightweight parse result — no tree, just success + offset. */
+export interface WasmParseCheckResult {
+    success: boolean;
+    offset: number;
+}
+
+/** Batch LSP result — multiple features in one WASM call. */
+export interface WasmLspBatch {
+    hover: WasmHoverResult | null;
+    completions: WasmCompletionItem[];
+    semantic_tokens: WasmSemanticTokenDelta[];
+    inlay_hints: WasmInlayHint[];
+    diagnostics: WasmBatchDiagnostic[];
+}
+
+export interface WasmBatchDiagnostic {
+    range: WasmRange;
+    severity: number;
+    message: string;
+}

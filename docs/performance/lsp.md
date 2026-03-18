@@ -6,7 +6,7 @@ section: Performance
 
 # LSP Performance
 
-The BBNF language server (`bbnf-lsp`) provides 17 features across two transports—stdio for VS Code, direct function calls for the WASM playground. Both use `bbnf-analysis::DocumentState` for incremental analysis.
+The BBNF language server (`bbnf-lsp`) provides 17 features across two transports—stdio for VS Code, direct function calls for the WASM playground. Both use `bbnf-analysis::DocumentState` for analysis.
 
 ## Operation Latency
 
@@ -44,15 +44,9 @@ Measured on grammars of varying size (cold DocumentState, single operation):
 
 All operations stay under 20 ms on 100-rule grammars, well under the 100 ms responsiveness threshold.
 
-## Incremental Editing
+## Per-Change Analysis
 
-After the initial analysis, incremental edits (insert, delete, replace) trigger partial re-analysis:
-
-- **Single-rule edit** — only the modified rule and its dependents are re-analyzed
-- **New rule** — added to the dependency graph; dependents recomputed
-- **Deleted rule** — removed from graph; references flagged as undefined
-
-The LSP maintains a `DocumentState` that caches SCC decomposition, FIRST sets, and dispatch tables. Incremental edits invalidate only the affected subgraph.
+On every change, the server runs a full re-parse and re-analysis. Grammar files are small enough that full re-analysis stays well under the 100 ms responsiveness threshold (see latency chart above). The `DocumentState` caches SCC decomposition, FIRST sets, and dispatch tables between changes.
 
 ## WASM vs Native
 

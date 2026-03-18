@@ -36,6 +36,11 @@ export interface PipelineResult {
     formattedBy: Ref<"gorgeous" | "">;
     /** Timing telemetry for the last pipeline run. */
     telemetry: Telemetry;
+    /**
+     * Set to true when the AST tab is visible. When false, the pipeline uses
+     * `parse_check` (no tree serialization) for ~3-4x faster validation.
+     */
+    needsFullTree: Ref<boolean>;
 }
 
 /**
@@ -82,6 +87,7 @@ export function usePipeline(): PipelineResult {
     const formattedLanguage = ref("plaintext");
     const formattedBy = ref<"gorgeous" | "">("");
     const telemetry = reactive<Telemetry>({ parseMs: 0, formatMs: 0, totalMs: 0, inputBytes: 0 });
+    const needsFullTree = ref(false);
 
     const wasm = useWasm();
 
@@ -169,78 +175,142 @@ export function usePipeline(): PipelineResult {
             }
 
             // Step 2: Parse input text with the compiled grammar via WASM
+            //
+            // Fast path: when the AST tab is not visible, use parse_check (no tree
+            // serialization, ~3-4x faster). Full parse only when AST tab is active.
             try {
                 const t0 = performance.now();
-                const result = await wasm.parseWithGrammar(cachedGrammarHandle, inputText.value);
-                const t1 = performance.now();
 
-                if (!result.success) {
-                    // Build error message from diagnostics
-                    const diagMessages = result.diagnostics
-                        .map((d) => {
-                            const prefix = d.rule_name ? `[${d.rule_name}] ` : "";
-                            return `${prefix}${d.expected}`;
-                        })
-                        .join("\n");
+                if (!needsFullTree.value) {
+                    // Fast path: validate only, skip tree serialization
+                    const checkResult = await wasm.parseCheck(cachedGrammarHandle, inputText.value);
+                    const t1 = performance.now();
 
-                    const msg = diagMessages || "Input does not match grammar";
-                    // Use the furthest offset for error position
-                    const pos = offsetToLineCol(inputText.value, result.offset);
-                    errors.value.push({ message: msg, source: "parse", ...pos });
+                    if (!checkResult.success) {
+                        const pos = offsetToLineCol(inputText.value, checkResult.offset);
+                        errors.value.push({ message: "Input does not match grammar", source: "parse", ...pos });
+                        astJson.value = "";
+                        formatted.value = "";
+                        formattedBy.value = "";
+                        return;
+                    }
+
+                    // No AST to show in fast path
                     astJson.value = "";
-                    formatted.value = "";
-                    formattedBy.value = "";
-                    return;
-                }
 
-                astJson.value = JSON.stringify(result.value, null, 2);
+                    // Still format output
+                    try {
+                        let fmtResult: string | null = null;
 
-                // Step 3: Format output via WASM
-                // Route: AOT gorgeous formatter for built-in languages, VM for custom grammars.
-                try {
-                    let fmtResult: string | null = null;
+                        const builtinLang = detectBuiltinLanguage(cachedEntryRule);
+                        if (builtinLang) {
+                            fmtResult = await wasm.formatWithGorgeous(
+                                builtinLang,
+                                inputText.value,
+                                printerConfig.maxWidth,
+                                printerConfig.indent,
+                                printerConfig.useTabs,
+                            );
+                        }
 
-                    const builtinLang = detectBuiltinLanguage(cachedEntryRule);
-                    if (builtinLang) {
-                        fmtResult = await wasm.formatWithGorgeous(
-                            builtinLang,
-                            inputText.value,
-                            printerConfig.maxWidth,
-                            printerConfig.indent,
-                            printerConfig.useTabs,
-                        );
-                    }
+                        if (fmtResult == null && cachedGrammarHandle != null) {
+                            fmtResult = await wasm.formatWithGrammar(
+                                cachedGrammarHandle,
+                                inputText.value,
+                                printerConfig.maxWidth,
+                                printerConfig.indent,
+                                printerConfig.useTabs,
+                            );
+                        }
 
-                    if (fmtResult == null && cachedGrammarHandle != null) {
-                        fmtResult = await wasm.formatWithGrammar(
-                            cachedGrammarHandle,
-                            inputText.value,
-                            printerConfig.maxWidth,
-                            printerConfig.indent,
-                            printerConfig.useTabs,
-                        );
-                    }
-
-                    if (fmtResult != null) {
-                        formatted.value = fmtResult;
-                        formattedBy.value = "gorgeous";
-                    } else {
-                        formatted.value = "(no @pretty directives in grammar)";
+                        if (fmtResult != null) {
+                            formatted.value = fmtResult;
+                            formattedBy.value = "gorgeous";
+                        } else {
+                            formatted.value = "(no @pretty directives in grammar)";
+                            formattedBy.value = "";
+                        }
+                    } catch (e: any) {
+                        const msg = e.message ?? String(e);
+                        errors.value.push({ message: msg, source: "format" });
+                        formatted.value = "";
                         formattedBy.value = "";
                     }
-                } catch (e: any) {
-                    const msg = e.message ?? String(e);
-                    errors.value.push({ message: msg, source: "format" });
-                    formatted.value = "";
-                    formattedBy.value = "";
-                }
 
-                // Record telemetry
-                const t2 = performance.now();
-                telemetry.parseMs = +(t1 - t0).toFixed(1);
-                telemetry.formatMs = +(t2 - t1).toFixed(1);
-                telemetry.totalMs = +(t2 - t0).toFixed(1);
-                telemetry.inputBytes = new TextEncoder().encode(inputText.value).byteLength;
+                    const t2 = performance.now();
+                    telemetry.parseMs = +(t1 - t0).toFixed(1);
+                    telemetry.formatMs = +(t2 - t1).toFixed(1);
+                    telemetry.totalMs = +(t2 - t0).toFixed(1);
+                    telemetry.inputBytes = new TextEncoder().encode(inputText.value).byteLength;
+                } else {
+                    // Full path: parse with tree serialization for AST tab
+                    const result = await wasm.parseWithGrammar(cachedGrammarHandle, inputText.value);
+                    const t1 = performance.now();
+
+                    if (!result.success) {
+                        const diagMessages = result.diagnostics
+                            .map((d) => {
+                                const prefix = d.rule_name ? `[${d.rule_name}] ` : "";
+                                return `${prefix}${d.expected}`;
+                            })
+                            .join("\n");
+
+                        const msg = diagMessages || "Input does not match grammar";
+                        const pos = offsetToLineCol(inputText.value, result.offset);
+                        errors.value.push({ message: msg, source: "parse", ...pos });
+                        astJson.value = "";
+                        formatted.value = "";
+                        formattedBy.value = "";
+                        return;
+                    }
+
+                    astJson.value = JSON.stringify(result.value, null, 2);
+
+                    // Step 3: Format output via WASM
+                    try {
+                        let fmtResult: string | null = null;
+
+                        const builtinLang = detectBuiltinLanguage(cachedEntryRule);
+                        if (builtinLang) {
+                            fmtResult = await wasm.formatWithGorgeous(
+                                builtinLang,
+                                inputText.value,
+                                printerConfig.maxWidth,
+                                printerConfig.indent,
+                                printerConfig.useTabs,
+                            );
+                        }
+
+                        if (fmtResult == null && cachedGrammarHandle != null) {
+                            fmtResult = await wasm.formatWithGrammar(
+                                cachedGrammarHandle,
+                                inputText.value,
+                                printerConfig.maxWidth,
+                                printerConfig.indent,
+                                printerConfig.useTabs,
+                            );
+                        }
+
+                        if (fmtResult != null) {
+                            formatted.value = fmtResult;
+                            formattedBy.value = "gorgeous";
+                        } else {
+                            formatted.value = "(no @pretty directives in grammar)";
+                            formattedBy.value = "";
+                        }
+                    } catch (e: any) {
+                        const msg = e.message ?? String(e);
+                        errors.value.push({ message: msg, source: "format" });
+                        formatted.value = "";
+                        formattedBy.value = "";
+                    }
+
+                    const t2 = performance.now();
+                    telemetry.parseMs = +(t1 - t0).toFixed(1);
+                    telemetry.formatMs = +(t2 - t1).toFixed(1);
+                    telemetry.totalMs = +(t2 - t0).toFixed(1);
+                    telemetry.inputBytes = new TextEncoder().encode(inputText.value).byteLength;
+                }
             } catch (e: any) {
                 const msg = e.message ?? String(e);
                 const pos = extractPosition(msg, inputText.value);
@@ -271,6 +341,7 @@ export function usePipeline(): PipelineResult {
             grammarText,
             inputText,
             entryRuleOverride,
+            needsFullTree,
             () => printerConfig.maxWidth,
             () => printerConfig.indent,
             () => printerConfig.useTabs,
@@ -293,6 +364,7 @@ export function usePipeline(): PipelineResult {
         formattedLanguage,
         formattedBy,
         telemetry,
+        needsFullTree,
     };
 }
 

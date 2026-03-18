@@ -26,6 +26,7 @@ indexmap = "2"
 tempfile = "3"
 bbnf_derive = { version = "0.2", path = "../bbnf-derive" }
 pprint = "0.3"
+parse_that = "0.3"
 bencher = "0.1"
 mimalloc = "0.1"
 
@@ -35,19 +36,35 @@ serde = { version = "1", features = ["derive"] }
 sonic-rs = "0.3"
 simd-json = "0.14"
 jiter = "0.8"
+serde_json_borrow = "0.9"
+nom = "7"
+winnow = "0.7"
+pest = "2.5"
+pest_grammars = "2.5"
+
+# CSS competitor parsers
+cssparser = "0.34"
+lightningcss = "1.0.0-alpha.70"
+
+# Number parsing for borrow/owned tiers
+fast-float2 = "0.2"
 
 [[bench]]
 name = "google_sheets"
 harness = false
 
 [[bench]]
-name = "json_parse"
-harness = false
-
-[[bench]]
-name = "css_parse"
+name = "json_bbnf"
 harness = false
 
 [[bench]]
 name = "json_competitors"
+harness = false
+
+[[bench]]
+name = "css_bbnf"
+harness = false
+
+[[bench]]
+name = "css_competitors"
 harness = false

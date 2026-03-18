@@ -62,6 +62,11 @@ export function init_panic_hook(): void;
 
 export function inlay_hints(text: string, start_line: number, end_line: number): any;
 
+/**
+ * Run hover + completions + semantic tokens + inlay hints + diagnostics in one call.
+ */
+export function lsp_batch(text: string, offset: number, start_line: number, end_line: number): any;
+
 export function on_type_format(text: string, offset: number): any;
 
 /**
@@ -105,18 +110,19 @@ export interface InitOutput {
     readonly format_range: (a: number, b: number, c: number, d: number) => any;
     readonly on_type_format: (a: number, b: number, c: number) => any;
     readonly full_sync: (a: number, b: number) => any;
-    readonly init_panic_hook: () => void;
+    readonly lsp_batch: (a: number, b: number, c: number, d: number, e: number) => any;
     readonly format_json: (a: number, b: number, c: number, d: number, e: number) => [number, number];
     readonly format_css: (a: number, b: number, c: number, d: number, e: number) => [number, number];
     readonly format_bnf: (a: number, b: number, c: number, d: number, e: number) => [number, number];
     readonly format_ebnf: (a: number, b: number, c: number, d: number, e: number) => [number, number];
     readonly format_bbnf: (a: number, b: number, c: number, d: number, e: number) => [number, number];
+    readonly init_panic_hook: () => void;
+    readonly analyze_grammar: (a: number, b: number) => any;
     readonly compile_grammar: (a: number, b: number, c: number, d: number) => [number, number, number];
     readonly parse_with_grammar: (a: number, b: number, c: number) => [number, number, number];
     readonly parse_check: (a: number, b: number, c: number) => [number, number, number];
     readonly format_with_grammar: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
     readonly free_grammar: (a: number) => void;
-    readonly analyze_grammar: (a: number, b: number) => any;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
     readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
     readonly __wbindgen_free: (a: number, b: number, c: number) => void;

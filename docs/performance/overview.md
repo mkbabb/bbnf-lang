@@ -14,7 +14,7 @@ Each pipeline stage is benchmarked independently.
 { "title": "Formatting Pipeline",
   "nodes": [
     {"label": "Source text", "color": "cyan"},
-    {"label": "parse_that / parse-that", "detail": "271–4,237 MB/s (Rust) · 4,252–22,959 ops/s (TS)", "color": "blue"},
+    {"label": "parse_that / parse-that", "detail": "783–4,087 MB/s (Rust) · 4,252–22,959 ops/s (TS)", "color": "blue"},
     {"label": "to_doc()", "detail": "1,026 MB/s (CSS bootstrap)", "color": "green"},
     {"label": "pprint::render", "detail": "1,115 MB/s (CSS bootstrap)", "color": "purple"},
     {"label": "Formatted output", "detail": "20–409 MB/s end-to-end", "color": "amber"}
@@ -35,14 +35,14 @@ Three codegen paths feed this pipeline:
 { "title": "Aggregate Throughput", "unit": "MB/s",
   "datasets": [
     { "name": "Parsing (Rust)", "icon": "rust",
-      "labels": ["BBNF span", "BBNF borrow", "BBNF owned", "sonic-rs"],
-      "series": [{"label": "data.json 35 KB", "values": [3402, 2077, 1583, 2323]}] },
+      "labels": ["BBNF borrow", "sonic-rs", "simd-json", "jiter", "serde_json_borrow", "serde_json", "nom", "winnow", "pest"],
+      "series": [{"label": "data.json 35 KB", "values": [3430, 2279, 1374, 1505, 1165, 959, 673, 603, 232]}] },
     { "name": "Formatting (Rust)", "icon": "rust",
       "labels": ["gorgeous E2E", "gorgeous (cached)", "Biome"],
       "series": [{"label": "bootstrap.css 281 KB", "values": [205, 409, 16]}] },
     { "name": "Google Sheets", "icon": "rust",
-      "labels": ["AOT parse", "AOT format (cached)", "VM parse"],
-      "series": [{"label": "1 KB formulas", "values": [52, 10, 2]}] }
+      "labels": ["AOT parse", "AOT format", "VM parse"],
+      "series": [{"label": "1 KB formulas", "values": [31, 9, 1]}] }
   ] }
 ```
 
@@ -51,5 +51,5 @@ Three codegen paths feed this pipeline:
 - [Parsing Performance](./parsing)—parse_that throughput, dispatch tables, FIRST sets
 - [Formatting Performance](./formatting)—gorgeous end-to-end, to_doc + render phases
 - [pprint Performance](./pprint)—render throughput, inline text variants
-- [LSP Performance](./lsp)—latency by operation, incremental editing
+- [LSP Performance](./lsp)—latency by operation, analysis pipeline
 - [WASM Performance](./wasm)—module size, init time, live browser benchmarks

@@ -70,6 +70,7 @@ export function ASTToParser(
     recovers?: RecoverDirective[],
     tagAlternations = false,
     enableMemoization = false,
+    skipRecover = false,
 ) {
     // Compute analysis if not provided
     const cache = analysis ?? analyzeGrammar(ast);
@@ -217,6 +218,53 @@ export function ASTToParser(
             }
         }
         return null;
+    }
+
+    /**
+     * Fuse regex/literal alternation branches into a single regexSpan() call.
+     * When all branches resolve to Regex or Literal (with at least one Regex),
+     * combine into `regexSpan(/a|b|c/)` — same optimization as Rust's `merge_regex_alts`.
+     */
+    function tryRegexAlternationFusion(alts: Expression[], discarded: boolean): Parser<any> | null {
+        if (alts.length < 2) return null;
+
+        let hasRegex = false;
+        const parts: string[] = [];
+
+        for (const alt of alts) {
+            const resolved = resolveToTerminal(alt);
+            if (!resolved) return null;
+
+            if (resolved.type === "regex") {
+                hasRegex = true;
+                const re = resolved.value as RegExp;
+                // Wrap in non-capturing group if the source contains unescaped |
+                const src = re.source;
+                if (src.includes("|")) {
+                    parts.push(`(?:${src})`);
+                } else {
+                    parts.push(src);
+                }
+            } else if (resolved.type === "literal") {
+                const lit = resolved.value as string;
+                if (lit.length === 0) return null;
+                parts.push(escapeRegex(lit));
+            } else {
+                return null;
+            }
+        }
+
+        // Only fuse if at least one branch is a regex (all-literal has its own path)
+        if (!hasRegex) return null;
+
+        try {
+            const combined = new RegExp(parts.join("|"));
+            // Use regex() (not regexSpan) so the matched text is returned as a string
+            // value — alternation results are often mapped/consumed by user code.
+            return discarded ? regexSpan(combined) : regex(combined);
+        } catch {
+            return null;
+        }
     }
 
     /**
@@ -374,6 +422,10 @@ export function ASTToParser(
             case "alternation": {
                 const alts = expr.value as Expression[];
 
+                // Regex/literal fusion: merge into single regex()/regexSpan()
+                const regexFusion = tryRegexAlternationFusion(alts, discarded);
+                if (regexFusion) return regexFusion;
+
                 // Phase 3.2: all-literals → dispatch table
                 const litDispatch = tryAllLiteralsAlternation(name, alts);
                 if (litDispatch) return litDispatch;
@@ -513,7 +565,8 @@ export function ASTToParser(
     }
 
     // Apply @recover wrapping: wrap annotated rules with .recover(syncParser, null).
-    if (recovers && recovers.length > 0) {
+    // Suppressed when skipRecover is true (formatting-only parsers that assume well-formed input).
+    if (recovers && recovers.length > 0 && !skipRecover) {
         for (const recover of recovers) {
             const original = nonterminals[recover.ruleName];
             if (original) {

@@ -10,16 +10,15 @@ gorgeous is a grammar-derived code formatter built in Rust. Instead of hand-writ
 
 ## Built-in Formatters
 
-gorgeous includes six pre-built formatters, each generated from a BBNF grammar:
+gorgeous includes five pre-built formatters, each generated from a BBNF grammar:
 
 | Language | Entry point | Notes |
 |----------|------------|-------|
 | **JSON** | `prettify_json()` | Full JSON spec with surrogate pair validation |
-| **CSS** | `prettify_css()` | L1.75—at-rules, media queries, selectors, declarations |
+| **CSS** | `prettify_css()` | L1.5—at-rules, media queries, selectors, declarations |
 | **BNF** | `prettify_bnf()` | Standard Backus-Naur Form |
 | **EBNF** | `prettify_ebnf()` | Extended BNF (ISO 14977) |
 | **BBNF** | `prettify_bbnf()` | BBNF grammar files themselves |
-| **Google Sheets** | `prettify_google_sheets()` | Google Sheets formula language |
 
 All formatters are generated from BBNF grammars. The `@pretty` directives in the grammar control all layout decisions: `group`, `indent`, `sep("...")`, `split("...")`.
 
@@ -41,7 +40,6 @@ function format_css(input: string, max_width: number, indent: number, use_tabs: 
 function format_bnf(input: string, max_width: number, indent: number, use_tabs: boolean): string | undefined;
 function format_ebnf(input: string, max_width: number, indent: number, use_tabs: boolean): string | undefined;
 function format_bbnf(input: string, max_width: number, indent: number, use_tabs: boolean): string | undefined;
-function format_google_sheets(input: string, max_width: number, indent: number, use_tabs: boolean): string | undefined;
 ```
 
 Functions return `undefined` if parsing fails (e.g., malformed input).
@@ -99,4 +97,4 @@ The gorgeous pipeline for each language:
 2. **to_doc** — BBNF-derived codegen transforms each AST node into a pprint `Doc` tree, applying `@pretty` directives (`group`, `indent`, `sep`, `split`)
 3. **Render** — pprint's `pprint()` function traverses the `Doc` tree and produces the formatted string, breaking lines when Groups exceed `max_width`
 
-The `@pretty split(",")` directive enables grammar-driven format-time splitting of opaque spans (like CSS selector lists) using `split_balanced()` from parse_that, which respects parenthesis/bracket nesting and string quoting. This eliminated the last manual formatting override in the CSS formatter.
+The `@pretty split(",")` directive enables grammar-driven format-time splitting of opaque spans (like CSS selector lists) using `split_balanced()` from parse_that, which respects parenthesis/bracket nesting and string quoting.

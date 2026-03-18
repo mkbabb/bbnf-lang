@@ -16,6 +16,8 @@ import type {
     WasmPrepareRename,
     WasmTextEdit,
     WasmParseResult,
+    WasmParseCheckResult,
+    WasmLspBatch,
 } from "./types";
 
 export type {
@@ -39,6 +41,9 @@ export type {
     WasmPrepareRename,
     WasmParseResult,
     WasmParseDiagnostic,
+    WasmParseCheckResult,
+    WasmLspBatch,
+    WasmBatchDiagnostic,
 } from "./types";
 
 export { toMonacoRange } from "./types";
@@ -233,6 +238,21 @@ export function useWasm() {
         return getWasmModule().parse_with_grammar(handle, input) as WasmParseResult;
     }
 
+    async function parseCheck(handle: number, input: string): Promise<WasmParseCheckResult> {
+        await ensureLoaded();
+        return getWasmModule().parse_check(handle, input) as WasmParseCheckResult;
+    }
+
+    async function lspBatch(
+        text: string,
+        offset: number,
+        startLine: number,
+        endLine: number,
+    ): Promise<WasmLspBatch> {
+        await ensureLoaded();
+        return getWasmModule().lsp_batch(text, offset, startLine, endLine) as WasmLspBatch;
+    }
+
     async function formatWithGrammar(
         handle: number,
         input: string,
@@ -273,7 +293,9 @@ export function useWasm() {
         onTypeFormat,
         compileGrammar,
         parseWithGrammar,
+        parseCheck,
         formatWithGrammar,
         freeGrammar,
+        lspBatch,
     };
 }

@@ -85,7 +85,7 @@ Compile-time code generation. Reads `.bbnf`, emits Rust `TokenStream`.
 | `ignore_whitespace` | Auto-trim |
 | `debug` | Debug output during compilation |
 
-**Consumers:** gorgeous (6 built-in formatters), WASM AOT wrappers
+**Consumers:** gorgeous (5 built-in formatters), WASM AOT wrappers
 
 ## 2. Rust VM — Bytecode Compiler + Interpreter
 
@@ -190,7 +190,7 @@ wasm/                   WASM bindings (wasm-bindgen)
     lib.rs              init, memory management
     vm.rs               compile_grammar, parse_with_grammar, format_with_grammar
     gorgeous.rs         format_json, format_css, format_bnf, format_ebnf, format_bbnf
-    lsp.rs              17 LSP feature exports
+    lsp.rs              18 LSP feature exports
     analysis.rs         Grammar analysis exports
 ```
 

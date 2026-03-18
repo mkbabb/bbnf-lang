@@ -53,10 +53,14 @@ const {
     formattedLanguage,
     formattedBy,
     telemetry,
+    needsFullTree,
 } = usePipeline();
 
 const leftTab = ref<LeftTab>("grammar");
 const rightTab = ref<RightTab>("format");
+
+// Drive parse_check fast path: only serialize the full AST when the tab is visible.
+watch(rightTab, (tab) => { needsFullTree.value = tab === "ast"; }, { immediate: true });
 
 const grammarEditorRef = ref<InstanceType<typeof MonacoEditor> | null>(null);
 const inputEditorRef = ref<InstanceType<typeof MonacoEditor> | null>(null);

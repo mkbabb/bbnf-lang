@@ -32,8 +32,9 @@ No JSON-RPC overhead — function calls return results immediately.
     Monaco Editor → bbnf-wasm → { analyze, hover, completions, ... }
 
 Same analysis pipeline as the native LSP, compiled to WebAssembly.
-10 Monaco providers: hover, completion, semantic tokens, inlay hints,
-definition, document symbols, folding, selection ranges, code actions, code lens.
+15 Monaco providers: hover, completion, semantic tokens, inlay hints,
+definition, document symbols, folding, selection ranges, code actions, code lens,
+references, rename, document formatting, range formatting, on-type formatting.
 ```
 
 ## Diagnostics

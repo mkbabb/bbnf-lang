@@ -37,12 +37,12 @@ Four tiers of BBNF JSON parsing on the same datasets, all using `BumpArena` (col
 
 | Tier | What | Work Level |
 |------|------|------------|
-| **span_arena** | Arena-allocated opaque AST spans | Structural validation |
-| **borrow_arena** | Borrowed `JsonValue` — numbers parsed, strings stripped | Zero-copy, no escape decode |
-| **owned_arena** | Owned `JsonValue` — full escape decode, `Cow<str>` | Full deserialization |
+| **span** | Opaque AST spans | Structural validation |
+| **borrow** | Borrowed `JsonValue` — numbers parsed, strings stripped | Zero-copy, no escape decode |
+| **copy** | Owned `JsonValue` — full escape decode, `Cow<str>` | Full deserialization |
 | **vm** | Bytecode interpreter | Runtime interpretation |
 
-Groups: `span_arena`, `borrow_arena`, `owned_arena`, `vm` — 4 groups × 5 datasets = 20 bench fns
+Groups: `span`, `borrow`, `copy`, `vm` — 4 groups × 5 datasets = 20 bench fns
 
 ### JSON — Competitors (`json_competitors.rs`)
 
@@ -67,10 +67,10 @@ Two tiers of BBNF CSS parsing on 3 datasets:
 
 | Tier | Grammar | What |
 |------|---------|------|
-| **fast_arena** | `css-fast.bbnf` | Opaque spans, `@ws` SIMD whitespace, `@inline` helpers (L0) |
-| **pretty_arena** | `css-stylesheet-pretty.bbnf` | Structural AST with `@pretty` directives (L1.5) |
+| **span** | `css-fast.bbnf` | Opaque spans, `@ws` SIMD whitespace, `@inline` helpers (L0) |
+| **span_pretty** | `css-stylesheet-pretty.bbnf` | Structural AST with `@pretty` directives (L1.5) |
 
-Groups: `fast_arena`, `pretty_arena` — 2 groups × 3 datasets = 6 bench fns. Cold per-parse with `BumpArena`.
+Groups: `span`, `span_pretty` — 2 groups × 3 datasets = 6 bench fns. Cold per-parse with `BumpArena`.
 
 ### CSS — Competitors (`css_competitors.rs`)
 
@@ -143,10 +143,9 @@ Charts group parsers by the actual work performed, not just by whether they retu
 
 | Tier | String Work | Tree Structure | Parsers |
 |------|------------|----------------|---------|
-| **Arena Span** | None (opaque spans) | BumpArena-allocated AST | BBNF arena |
-| **Borrow — No Decode** | Strip quotes, no escape decode | Vec or HashMap tree | BBNF borrow, nom, winnow, pest |
-| **Borrow — With Decode** | Full or selective escape decode, zero-copy output | Borrowed `Value` / `Cow` | serde_json_borrow, jiter, simd-json |
-| **Owned — Full Decode** | Full escape decode + owned allocation | Owned `Value` / `Cow` | BBNF owned, sonic-rs, serde_json |
+| **Span** | None (opaque byte ranges) | Structural validation | BBNF span, tree-sitter |
+| **Borrow** | Strip quotes, no escape decode | Zero-copy tree | BBNF borrow, nom, winnow, pest |
+| **Copy** | Full or selective escape decode, owned/Cow allocation | Deserialized tree | BBNF copy, sonic-rs, serde_json_borrow, simd-json, jiter, serde_json |
 
 Comparing across tiers is misleading—a no-decode parser skipping escape handling will always outperform a full-decode parser on the same input. Within each tier, the work performed is comparable and differences reflect genuine parser/codegen efficiency.
 

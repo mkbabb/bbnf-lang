@@ -1,16 +1,13 @@
 #![feature(cold_path)]
 
-//! BBNF JSON parsing benchmarks — cold per-parse, four tiers.
+//! BBNF JSON parsing benchmarks — cold per-parse, three tiers + VM.
 //!
-//! All benches construct a fresh BumpArena + Parser per iteration (cold).
-//! No warm-cache benchmarks: reusing a pre-constructed parser measures
-//! combinator cache throughput, not parse throughput.
+//! Fresh BumpArena + Parser per iteration. No warm-cache benchmarks.
 //!
-//! Tiers:
-//! - **span_arena**: Raw BBNF parse (opaque AST spans, arena-allocated)
-//! - **borrow_arena**: Borrowed JsonValue (numbers parsed, strings stripped)
-//! - **owned_arena**: Owned JsonValue (full escape decode, Cow strings)
-//! - **vm**: Bytecode interpreter (fresh interpreter per iteration)
+//! - **span**: opaque AST spans, structural validation only
+//! - **borrow**: borrowed JsonValue, numbers parsed, strings stripped, no escape decode
+//! - **copy**: owned JsonValue, full escape decode, Cow strings
+//! - **vm**: bytecode interpreter
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -184,9 +181,9 @@ fn decode_string<'a>(s: Span<'a>) -> Cow<'a, str> {
     Cow::Owned(out)
 }
 
-// ── Span tier (arena, cold per-parse) ──────────────────────────────────────
+// ── Span tier (cold per-parse) ──────────────────────────────────────
 
-macro_rules! bench_span_arena {
+macro_rules! bench_span {
     ($name:ident, $file:expr) => {
         fn $name(b: &mut Bencher) {
             let input = load_json($file);
@@ -211,15 +208,15 @@ macro_rules! bench_span_arena {
     };
 }
 
-bench_span_arena!(span_arena_data, "data.json");
-bench_span_arena!(span_arena_twitter, "twitter.json");
-bench_span_arena!(span_arena_citm, "citm_catalog.json");
-bench_span_arena!(span_arena_canada, "canada.json");
-bench_span_arena!(span_arena_data_xl, "data_xl.json");
+bench_span!(span_data, "data.json");
+bench_span!(span_twitter, "twitter.json");
+bench_span!(span_citm, "citm_catalog.json");
+bench_span!(span_canada, "canada.json");
+bench_span!(span_data_xl, "data_xl.json");
 
-// ── Borrow tier (arena, cold per-parse) ────────────────────────────────────
+// ── Borrow tier (cold per-parse) ────────────────────────────────────
 
-macro_rules! bench_borrow_arena {
+macro_rules! bench_borrow {
     ($name:ident, $file:expr) => {
         fn $name(b: &mut Bencher) {
             let input = load_json($file);
@@ -244,15 +241,15 @@ macro_rules! bench_borrow_arena {
     };
 }
 
-bench_borrow_arena!(borrow_arena_data, "data.json");
-bench_borrow_arena!(borrow_arena_twitter, "twitter.json");
-bench_borrow_arena!(borrow_arena_citm, "citm_catalog.json");
-bench_borrow_arena!(borrow_arena_canada, "canada.json");
-bench_borrow_arena!(borrow_arena_data_xl, "data_xl.json");
+bench_borrow!(borrow_data, "data.json");
+bench_borrow!(borrow_twitter, "twitter.json");
+bench_borrow!(borrow_citm, "citm_catalog.json");
+bench_borrow!(borrow_canada, "canada.json");
+bench_borrow!(borrow_data_xl, "data_xl.json");
 
-// ── Owned tier (arena, cold per-parse) ─────────────────────────────────────
+// ── Copy tier (cold per-parse) ─────────────────────────────────────
 
-macro_rules! bench_owned_arena {
+macro_rules! bench_copy {
     ($name:ident, $file:expr) => {
         fn $name(b: &mut Bencher) {
             let input = load_json($file);
@@ -277,11 +274,11 @@ macro_rules! bench_owned_arena {
     };
 }
 
-bench_owned_arena!(owned_arena_data, "data.json");
-bench_owned_arena!(owned_arena_twitter, "twitter.json");
-bench_owned_arena!(owned_arena_citm, "citm_catalog.json");
-bench_owned_arena!(owned_arena_canada, "canada.json");
-bench_owned_arena!(owned_arena_data_xl, "data_xl.json");
+bench_copy!(copy_data, "data.json");
+bench_copy!(copy_twitter, "twitter.json");
+bench_copy!(copy_citm, "citm_catalog.json");
+bench_copy!(copy_canada, "canada.json");
+bench_copy!(copy_data_xl, "data_xl.json");
 
 // ── VM tier (bytecode interpreter) ──────────────────────────────────────────
 
@@ -314,28 +311,29 @@ bench_vm!(vm_data_xl, "data_xl.json");
 // ── Groups ──────────────────────────────────────────────────────────────────
 
 benchmark_group!(
-    span_arena,
-    span_arena_data,
-    span_arena_twitter,
-    span_arena_citm,
-    span_arena_canada,
-    span_arena_data_xl
+    span,
+    span_data,
+    span_twitter,
+    span_citm,
+    span_canada,
+    span_data_xl
 );
 benchmark_group!(
-    borrow_arena,
-    borrow_arena_data,
-    borrow_arena_twitter,
-    borrow_arena_citm,
-    borrow_arena_canada,
-    borrow_arena_data_xl
+    borrow,
+    borrow_data,
+    borrow_twitter,
+    borrow_citm,
+    borrow_canada,
+    borrow_data_xl
 );
 benchmark_group!(
-    owned_arena,
-    owned_arena_data,
-    owned_arena_twitter,
-    owned_arena_citm,
-    owned_arena_canada,
-    owned_arena_data_xl
+    copy,
+    copy_data,
+    copy_twitter,
+    copy_citm,
+    copy_canada,
+    copy_data_xl
 );
 benchmark_group!(vm, vm_data, vm_twitter, vm_citm, vm_canada, vm_data_xl);
-benchmark_main!(span_arena, borrow_arena, owned_arena, vm);
+benchmark_main!(span, borrow, copy, vm);
+

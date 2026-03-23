@@ -4,8 +4,8 @@
 //!
 //! All benches construct a fresh BumpArena + Parser per iteration.
 //!
-//! - **fast_arena**: css-fast.bbnf — opaque spans, @ws SIMD whitespace
-//! - **pretty_arena**: css-stylesheet-pretty.bbnf — structural AST with @pretty directives
+//! - **span**: css-fast.bbnf — opaque spans, @ws SIMD whitespace
+//! - **span_pretty**: css-stylesheet-pretty.bbnf — structural AST with @pretty directives
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -33,9 +33,9 @@ fn load_css(name: &str) -> String {
     std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("Failed to read {}: {}", path, e))
 }
 
-// ── L0 fast (arena, cold per-parse) ─────────────────────────────────────────
+// ── Span (cold per-parse) ─────────────────────────────────────────
 
-macro_rules! bench_fast_arena {
+macro_rules! bench_span {
     ($name:ident, $file:expr) => {
         fn $name(b: &mut Bencher) {
             let input = load_css($file);
@@ -63,15 +63,15 @@ macro_rules! bench_fast_arena {
     };
 }
 
-bench_fast_arena!(fast_arena_normalize, "normalize.css");
-bench_fast_arena!(fast_arena_bootstrap, "bootstrap.css");
-bench_fast_arena!(fast_arena_tailwind, "tailwind.css");
+bench_span!(span_normalize, "normalize.css");
+bench_span!(span_bootstrap, "bootstrap.css");
+bench_span!(span_tailwind, "tailwind.css");
 
 // ── L1.75 pretty ────────────────────────────────────────────────────────────
 
-// ── L1.75 pretty (arena, cold per-parse) ────────────────────────────────────
+// ── Span Pretty (cold per-parse) ────────────────────────────────────
 
-macro_rules! bench_pretty_arena {
+macro_rules! bench_span_pretty {
     ($name:ident, $file:expr) => {
         fn $name(b: &mut Bencher) {
             let input = load_css($file);
@@ -99,22 +99,22 @@ macro_rules! bench_pretty_arena {
     };
 }
 
-bench_pretty_arena!(pretty_arena_normalize, "normalize.css");
-bench_pretty_arena!(pretty_arena_bootstrap, "bootstrap.css");
-bench_pretty_arena!(pretty_arena_tailwind, "tailwind.css");
+bench_span_pretty!(span_pretty_normalize, "normalize.css");
+bench_span_pretty!(span_pretty_bootstrap, "bootstrap.css");
+bench_span_pretty!(span_pretty_tailwind, "tailwind.css");
 
 // ── Groups ──────────────────────────────────────────────────────────────────
 
 benchmark_group!(
-    fast_arena,
-    fast_arena_normalize,
-    fast_arena_bootstrap,
-    fast_arena_tailwind
+    span,
+    span_normalize,
+    span_bootstrap,
+    span_tailwind
 );
 benchmark_group!(
-    pretty_arena,
-    pretty_arena_normalize,
-    pretty_arena_bootstrap,
-    pretty_arena_tailwind
+    span_pretty,
+    span_pretty_normalize,
+    span_pretty_bootstrap,
+    span_pretty_tailwind
 );
-benchmark_main!(fast_arena, pretty_arena);
+benchmark_main!(span, span_pretty);

@@ -42,7 +42,7 @@ Four tiers of BBNF JSON parsing on the same 4 datasets:
 | **owned** | Owned `JsonValue` — full escape decode, `Cow<str>` | Full deserialization |
 | **vm** | Bytecode interpreter | Runtime interpretation |
 
-Groups: `span`, `borrow`, `owned`, `vm` — 4 groups × 4 datasets = 16 bench fns
+Groups: `span`, `borrow`, `owned`, `vm` — 4 groups × 6 datasets = 24 bench fns (VM skips data_supermaxx)
 
 ### JSON — Competitors (`json_competitors.rs`)
 
@@ -59,7 +59,7 @@ Groups: `span`, `borrow`, `owned`, `vm` — 4 groups × 4 datasets = 16 bench fn
 | winnow | Combinator | nom successor, `dispatch!` macro |
 | pest | PEG | Grammar-generated parser |
 
-Groups: `bench_serde`, `bench_serde_borrow`, `bench_sonic`, `bench_simd`, `bench_jiter`, `bench_nom`, `bench_winnow`, `bench_pest` — 8 groups × 4 datasets = 32 bench fns
+Groups: `bench_serde`, `bench_serde_borrow`, `bench_sonic`, `bench_simd`, `bench_jiter`, `bench_nom`, `bench_winnow`, `bench_pest` — 8 groups × 6 datasets = 48 bench fns
 
 ### CSS — BBNF (`css_bbnf.rs`)
 
@@ -103,7 +103,7 @@ cargo test -p bbnf-lsp --test bench_lsp -- --nocapture
 
 ## Datasets
 
-### JSON (4 files)
+### JSON (6 files)
 
 | Dataset | Size | Description |
 |---------|------|-------------|
@@ -111,6 +111,8 @@ cargo test -p bbnf-lsp --test bench_lsp -- --nocapture
 | `twitter.json` | 617 KB | Twitter API response (strings, nested objects) |
 | `citm_catalog.json` | 1.6 MB | Event catalog (arrays, numbers) |
 | `canada.json` | 2.1 MB | GeoJSON coordinates (number-heavy) |
+| `data_xl.json` | 20 MB | 18K synthetic records (mixed types, 7 levels deep) |
+| `data_supermaxx.json` | 1.0 GB | 350K synthetic records (escape-heavy strings, deep nesting, large arrays) |
 
 ### CSS (3 files)
 
@@ -134,6 +136,19 @@ Every bench fn validates parse success ONCE before the hot loop. The bench binar
 - simd-json requires `.to_vec()` per iteration — inherent library cost
 - Benchmark data files are in `data/json/` and `data/css/`
 - Bench profile uses `lto = "fat"` and `codegen-units = 1` for maximum optimization
+
+### Work-Equivalence Tiers (JSON)
+
+Charts group parsers by the actual work performed, not just by whether they return borrowed references:
+
+| Tier | String Work | Tree Structure | Parsers |
+|------|------------|----------------|---------|
+| **Span** | None (opaque spans) | AST spans only | BBNF span |
+| **Borrow — No Decode** | Strip quotes, no escape decode | Vec or HashMap tree | BBNF borrow, nom, winnow, pest |
+| **Borrow — With Decode** | Full or selective escape decode, zero-copy output | Borrowed `Value` / `Cow` | serde_json_borrow, jiter, simd-json |
+| **Owned — Full Decode** | Full escape decode + owned allocation | Owned `Value` / `Cow` | BBNF owned, sonic-rs, serde_json |
+
+Comparing across tiers is misleading—a no-decode parser skipping escape handling will always outperform a full-decode parser on the same input. Within each tier, the work performed is comparable and differences reflect genuine parser/codegen efficiency.
 
 ## Cross-Repo Layout
 

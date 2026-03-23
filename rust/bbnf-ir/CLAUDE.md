@@ -75,4 +75,4 @@ JSON (`to_json`/`from_json`) for debugging.
 ## Dependencies
 
 - **serde** + **rmp-serde** — serialization
-- **regex** — used by `merge_regex_alts` pass for pattern validation
+- **regex** — used by `merge_regex_alts` pass for pattern validation 

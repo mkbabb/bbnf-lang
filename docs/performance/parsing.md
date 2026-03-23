@@ -17,68 +17,102 @@ Span parsing returns borrowed byte slices without decoding strings or parsing nu
   "datasets": [
     { "name": "data.json (35 KB)", "icon": "rust",
       "labels": ["BBNF span"],
-      "series": [{"label": "Throughput", "values": [3441]}] },
+      "series": [{"label": "Throughput", "values": [3376]}] },
     { "name": "twitter (631 KB)", "icon": "rust",
       "labels": ["BBNF span"],
-      "series": [{"label": "Throughput", "values": [1123]}] },
+      "series": [{"label": "Throughput", "values": [4298]}] },
     { "name": "citm_catalog (1.7 MB)", "icon": "rust",
       "labels": ["BBNF span"],
-      "series": [{"label": "Throughput", "values": [3933]}] },
+      "series": [{"label": "Throughput", "values": [4639]}] },
     { "name": "canada (2.2 MB)", "icon": "rust",
       "labels": ["BBNF span"],
-      "series": [{"label": "Throughput", "values": [2197]}] }
+      "series": [{"label": "Throughput", "values": [2832]}] },
+    { "name": "data_xl (20 MB)", "icon": "rust",
+      "labels": ["BBNF span"],
+      "series": [{"label": "Throughput", "values": [1071]}] }
   ] }
 ```
 
-## Rust: `JSON` — Borrowed
+## Rust: `JSON` — Borrow (No Decode)
 
-Numbers parsed to f64, strings borrowed from input (no escape decoding). Builds a Vec/Object tree. All parsers in this tier borrow unescaped strings directly from the input buffer.
-
-All 12 JSON parsers (BBNF 4 tiers + 8 competitors) are benchmarked in bbnf-lang across 4 datasets. See `json_bbnf.rs` and `json_competitors.rs`.
+Numbers parsed to f64, strings borrowed from input without escape decoding. Builds a tree from raw slices. All parsers in this tier do comparable work—the difference is tree structure: BBNF uses `Vec<(K,V)>` for objects while nom, winnow, and pest use `HashMap<&str,V>`. The Vec-vs-HashMap gap is a real codegen win, not a measurement artifact.
 
 ```bench-chart
-{ "title": "JSON Borrowed", "unit": "MB/s",
+{ "title": "JSON Borrow — No Decode", "unit": "MB/s",
   "datasets": [
     { "name": "data.json (35 KB)", "icon": "rust",
-      "labels": ["BBNF borrow", "sonic-rs", "simd-json", "jiter", "serde_json_borrow", "serde_json", "nom", "winnow", "pest"],
-      "series": [{"label": "Throughput", "values": [3430, 2279, 1374, 1505, 1165, 959, 673, 603, 232]}] },
+      "labels": ["BBNF borrow", "nom", "winnow", "pest"],
+      "series": [{"label": "Throughput", "values": [2099, 657, 609, 229]}] },
     { "name": "twitter (631 KB)", "icon": "rust",
-      "labels": ["BBNF borrow", "sonic-rs", "simd-json", "jiter", "serde_json_borrow", "serde_json", "nom", "winnow", "pest"],
-      "series": [{"label": "Throughput", "values": [4087, 2541, 1354, 1215, 1292, 895, 496, 525, 222]}] },
+      "labels": ["BBNF borrow", "nom", "winnow", "pest"],
+      "series": [{"label": "Throughput", "values": [2535, 540, 586, 224]}] },
     { "name": "citm_catalog (1.7 MB)", "icon": "rust",
-      "labels": ["BBNF borrow", "sonic-rs", "simd-json", "jiter", "serde_json_borrow", "serde_json", "nom", "winnow", "pest"],
-      "series": [{"label": "Throughput", "values": [4019, 3024, 1661, 1305, 1268, 1235, 607, 581, 250]}] },
+      "labels": ["BBNF borrow", "nom", "winnow", "pest"],
+      "series": [{"label": "Throughput", "values": [2481, 703, 679, 186]}] },
     { "name": "canada (2.2 MB)", "icon": "rust",
-      "labels": ["BBNF borrow", "sonic-rs", "simd-json", "jiter", "serde_json_borrow", "serde_json", "nom", "winnow", "pest"],
-      "series": [{"label": "Throughput", "values": [2195, 1488, 742, 667, 617, 655, 391, 390, 154]}] }
+      "labels": ["BBNF borrow", "nom", "winnow", "pest"],
+      "series": [{"label": "Throughput", "values": [895, 447, 440, 106]}] },
+    { "name": "data_xl (20 MB)", "icon": "rust",
+      "labels": ["BBNF borrow", "nom", "winnow", "pest"],
+      "series": [{"label": "Throughput", "values": [628, 491, 441, 154]}] }
   ] }
 ```
 
-sonic-rs and simd-json use SIMD-accelerated string scanning. nom, winnow, and pest are combinator/PEG parsers with borrowed strings (comparable work to BBNF borrow). All benchmarks use mimalloc as the global allocator.
+nom, winnow, and pest are combinator/PEG parsers with borrowed strings—comparable work to BBNF borrow. All benchmarks use mimalloc as the global allocator.
 
-## Rust: `JSON` — Owned
+## Rust: `JSON` — Borrow (With Decode)
 
-Full escape decoding via `Cow<'a, str>`—borrows when clean, allocates when escaped. Numbers parsed to f64. Full deserialization with Vec/Object tree.
+Zero-copy output with escape decoding during parse. These parsers borrow from the input when possible but decode escape sequences, doing significantly more work than the no-decode tier.
 
 ```bench-chart
-{ "title": "JSON Owned", "unit": "MB/s",
+{ "title": "JSON Borrow — With Decode", "unit": "MB/s",
   "datasets": [
     { "name": "data.json (35 KB)", "icon": "rust",
-      "labels": ["BBNF owned", "serde_json"],
-      "series": [{"label": "Throughput", "values": [1583, 875]}] },
+      "labels": ["jiter", "serde_json_borrow", "simd-json"],
+      "series": [{"label": "Throughput", "values": [1475, 1515, 1364]}] },
     { "name": "twitter (631 KB)", "icon": "rust",
-      "labels": ["BBNF owned", "serde_json"],
-      "series": [{"label": "Throughput", "values": [1545, 794]}] },
+      "labels": ["jiter", "serde_json_borrow", "simd-json"],
+      "series": [{"label": "Throughput", "values": [1222, 1652, 1375]}] },
     { "name": "citm_catalog (1.7 MB)", "icon": "rust",
-      "labels": ["BBNF owned", "serde_json"],
-      "series": [{"label": "Throughput", "values": [1630, 1241]}] },
+      "labels": ["jiter", "serde_json_borrow", "simd-json"],
+      "series": [{"label": "Throughput", "values": [1295, 1416, 1696]}] },
     { "name": "canada (2.2 MB)", "icon": "rust",
-      "labels": ["BBNF owned", "serde_json"],
-      "series": [{"label": "Throughput", "values": [783, 642]}] }
+      "labels": ["jiter", "serde_json_borrow", "simd-json"],
+      "series": [{"label": "Throughput", "values": [607, 660, 733]}] },
+    { "name": "data_xl (20 MB)", "icon": "rust",
+      "labels": ["jiter", "serde_json_borrow", "simd-json"],
+      "series": [{"label": "Throughput", "values": [798, 890, 982]}] }
   ] }
 ```
 
-All Rust benchmarks use mimalloc as the global allocator for consistent results. The BBNF parsers are generated from a `.bbnf` grammar via `#[derive(Parser)]`—zero hand-written Rust.
+serde_json_borrow returns a zero-copy borrowed `Value` with full escape decoding. jiter (Pydantic's parser) uses `Cow` for selective decode. simd-json uses SIMD-accelerated scanning but pays a `.to_vec()` copy cost per iteration.
+
+## Rust: `JSON` — Owned (Full Decode)
+
+Full escape decoding with owned string allocation. BBNF owned uses `Cow<'a, str>`—borrows when clean, allocates only for escaped strings. serde_json always allocates owned `String`s. sonic-rs uses SIMD + arena allocation.
+
+```bench-chart
+{ "title": "JSON Owned — Full Decode", "unit": "MB/s",
+  "datasets": [
+    { "name": "data.json (35 KB)", "icon": "rust",
+      "labels": ["BBNF owned", "sonic-rs", "serde_json"],
+      "series": [{"label": "Throughput", "values": [1563, 2293, 930]}] },
+    { "name": "twitter (631 KB)", "icon": "rust",
+      "labels": ["BBNF owned", "sonic-rs", "serde_json"],
+      "series": [{"label": "Throughput", "values": [1584, 2522, 867]}] },
+    { "name": "citm_catalog (1.7 MB)", "icon": "rust",
+      "labels": ["BBNF owned", "sonic-rs", "serde_json"],
+      "series": [{"label": "Throughput", "values": [2003, 3031, 1132]}] },
+    { "name": "canada (2.2 MB)", "icon": "rust",
+      "labels": ["BBNF owned", "sonic-rs", "serde_json"],
+      "series": [{"label": "Throughput", "values": [904, 1499, 607]}] },
+    { "name": "data_xl (20 MB)", "icon": "rust",
+      "labels": ["BBNF owned", "sonic-rs", "serde_json"],
+      "series": [{"label": "Throughput", "values": [641, 1445, 647]}] }
+  ] }
+```
+
+sonic-rs uses SIMD-accelerated string scanning and arena allocation—it does full owned decoding but with hardware acceleration. All Rust benchmarks use mimalloc as the global allocator. The BBNF parsers are generated from a `.bbnf` grammar via `#[derive(Parser)]`—zero hand-written Rust.
 
 ## Rust: `CSS` — Tier 1: Structural Scan
 
@@ -89,17 +123,17 @@ All Rust benchmarks use mimalloc as the global allocator for consistent results.
   "datasets": [
     { "name": "normalize (6 KB)", "icon": "rust",
       "labels": ["BBNF fast", "cssparser"],
-      "series": [{"label": "Throughput", "values": [956, 326]}] },
+      "series": [{"label": "Throughput", "values": [2280, 655]}] },
     { "name": "bootstrap (281 KB)", "icon": "rust",
       "labels": ["BBNF fast", "cssparser"],
-      "series": [{"label": "Throughput", "values": [1174, 435]}] },
+      "series": [{"label": "Throughput", "values": [1407, 424]}] },
     { "name": "tailwind (3.8 MB)", "icon": "rust",
       "labels": ["BBNF fast", "cssparser"],
-      "series": [{"label": "Throughput", "values": [194, 360]}] }
+      "series": [{"label": "Throughput", "values": [695, 402]}] }
   ] }
 ```
 
-BBNF fast is 2.7x faster than cssparser on bootstrap. On tailwind (3.8 MB), cssparser's tokenizer pulls ahead—likely because the BBNF regex engine's per-match overhead amortizes less favorably on tailwind's repetitive utility classes.
+BBNF fast is 3.3x faster than cssparser on bootstrap, 1.7x on tailwind. The gap narrows on tailwind's repetitive utility classes where the regex engine's per-match overhead amortizes less favorably.
 
 ## Rust: `CSS` — Tier 2: Structural AST
 
@@ -110,34 +144,34 @@ BBNF fast is 2.7x faster than cssparser on bootstrap. On tailwind (3.8 MB), cssp
   "datasets": [
     { "name": "normalize (6 KB)", "icon": "rust",
       "labels": ["BBNF pretty", "lightningcss"],
-      "series": [{"label": "Throughput", "values": [792, 91]}] },
+      "series": [{"label": "Throughput", "values": [1969, 257]}] },
     { "name": "bootstrap (281 KB)", "icon": "rust",
       "labels": ["BBNF pretty", "lightningcss"],
-      "series": [{"label": "Throughput", "values": [854, 113]}] },
+      "series": [{"label": "Throughput", "values": [1000, 117]}] },
     { "name": "tailwind (3.8 MB)", "icon": "rust",
-      "labels": ["BBNF pretty"],
-      "series": [{"label": "Throughput", "values": [164]}] }
+      "labels": ["BBNF pretty", "lightningcss"],
+      "series": [{"label": "Throughput", "values": [968, 94]}] }
   ] }
 ```
 
-BBNF pretty is 7.5x faster than lightningcss on bootstrap. lightningcss errors on synthetic tailwind output and is omitted. See the [formatting benchmarks](./formatting) for gorgeous vs Biome end-to-end comparisons.
+BBNF pretty is 8.5x faster than lightningcss on bootstrap and 10.3x faster on tailwind. See the [formatting benchmarks](./formatting) for gorgeous vs Biome end-to-end comparisons.
 
 ## Rust: `Google Sheets`
 
-AOT vs VM on formula parsing. The VM interprets bytecode; AOT generates native Rust. The VM gap narrows on larger inputs as bytecode dispatch overhead amortizes. AOT is 50x faster on pathological inputs, 30x on 1 KB, 18x on 10 KB.
+AOT vs VM on formula parsing. The VM interprets bytecode; AOT generates native Rust. The VM gap narrows on larger inputs as bytecode dispatch overhead amortizes. AOT is 93x faster on pathological inputs, 33x on 1 KB, 16x on 10 KB.
 
 ```bench-chart
 { "title": "Google Sheets — AOT vs VM", "unit": "ns", "lowerIsBetter": true,
   "datasets": [
     { "name": "pathological (270 B)", "icon": "rust",
       "labels": ["AOT", "VM"],
-      "series": [{"label": "Latency", "values": [12103, 600594]}] },
+      "series": [{"label": "Latency", "values": [4582, 427128]}] },
     { "name": "1 KB formulas", "icon": "rust",
       "labels": ["AOT", "VM"],
-      "series": [{"label": "Latency", "values": [31996, 953486]}] },
+      "series": [{"label": "Latency", "values": [19194, 638100]}] },
     { "name": "10 KB formulas", "icon": "rust",
       "labels": ["AOT", "VM"],
-      "series": [{"label": "Latency", "values": [348248, 6266218]}] }
+      "series": [{"label": "Latency", "values": [235881, 3771929]}] }
   ] }
 ```
 

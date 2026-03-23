@@ -17,14 +17,14 @@ propertyName = /[a-zA-Z_][\w-]*/ | /--[\w-]+/ | /-[a-zA-Z][\w-]*/ ;
 important    = "!" , ws , "important" ;
 optSemicolon = ";" ? ;
 declaration  = propertyName , ws , ":" , ws , (valueSpan , ("," , ws , valueSpan) *) ? ,
-               important ? , optSemicolon , ws ;
+               important ? , optSemicolon << ws ;
 
 @recover declaration /[^;{}]+;/ ;
 
 // Block contents: declarations and nested rules (CSS Nesting Level 1)
 // This creates the structural cycle: blockContent → ruleItem → ... → ruleBlock → blockContent
-blockContent = (ws , (declaration | ruleItem)) * ;
-ruleBlock    = "{" , ws , blockContent , ws , "}" ;
+blockContent = (ws >> (declaration | ruleItem)) * ;
+ruleBlock    = "{" , ws >> blockContent << ws , "}" ;
 
 // Qualified rules
 qualifiedRule = selectorSpan , ws , ruleBlock ;
@@ -47,10 +47,10 @@ atRule = mediaRule | supportsRule | fontFaceRule | importRule | genericAtRule ;
 ruleItem = qualifiedRule | atRule ;
 
 // Rule list (top-level)
-ruleList   = (ws , ruleItem) * ;
+ruleList   = (ws >> ruleItem) * ;
 
 // Entry point
-stylesheet = ws , ruleList , ws ;
+stylesheet = ws >> ruleList << ws ;
 
 @pretty stylesheet block ;
 @pretty ruleList block ;

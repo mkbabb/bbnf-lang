@@ -33,32 +33,32 @@ Arena parsing returns opaque spans allocated via `BumpArena`. Each iteration con
   ] }
 ```
 
-## Rust: `JSON` — Borrow (No Decode)
+## Rust: `JSON` — Arena Borrow (No Decode)
 
-Numbers parsed to f64, strings borrowed from input without escape decoding. Builds a tree from raw slices. All parsers in this tier do comparable work—the difference is tree structure: BBNF uses `Vec<(K,V)>` for objects while nom, winnow, and pest use `HashMap<&str,V>`. The Vec-vs-HashMap gap is a real codegen win, not a measurement artifact.
+Numbers parsed to f64, strings borrowed from input without escape decoding. Cold per-parse with `BumpArena`. BBNF uses `Vec<(K,V)>` for objects; nom, winnow, and pest use `HashMap<&str,V>`.
 
 ```bench-chart
-{ "title": "JSON Borrow — No Decode", "unit": "MB/s",
+{ "title": "JSON Arena Borrow — No Decode", "unit": "MB/s",
   "datasets": [
     { "name": "data.json (35 KB)", "icon": "rust",
-      "labels": ["BBNF borrow", "nom", "winnow", "pest"],
-      "series": [{"label": "Throughput", "values": [2099, 657, 609, 229]}] },
+      "labels": ["BBNF arena borrow", "nom", "winnow", "pest"],
+      "series": [{"label": "Throughput", "values": [1019, 657, 609, 229]}] },
     { "name": "twitter (631 KB)", "icon": "rust",
-      "labels": ["BBNF borrow", "nom", "winnow", "pest"],
-      "series": [{"label": "Throughput", "values": [2535, 540, 586, 224]}] },
+      "labels": ["BBNF arena borrow", "nom", "winnow", "pest"],
+      "series": [{"label": "Throughput", "values": [1156, 540, 586, 224]}] },
     { "name": "citm_catalog (1.7 MB)", "icon": "rust",
-      "labels": ["BBNF borrow", "nom", "winnow", "pest"],
-      "series": [{"label": "Throughput", "values": [2481, 703, 679, 186]}] },
+      "labels": ["BBNF arena borrow", "nom", "winnow", "pest"],
+      "series": [{"label": "Throughput", "values": [1257, 703, 679, 186]}] },
     { "name": "canada (2.2 MB)", "icon": "rust",
-      "labels": ["BBNF borrow", "nom", "winnow", "pest"],
-      "series": [{"label": "Throughput", "values": [895, 447, 440, 106]}] },
+      "labels": ["BBNF arena borrow", "nom", "winnow", "pest"],
+      "series": [{"label": "Throughput", "values": [598, 447, 440, 106]}] },
     { "name": "data_xl (20 MB)", "icon": "rust",
-      "labels": ["BBNF borrow", "nom", "winnow", "pest"],
-      "series": [{"label": "Throughput", "values": [628, 491, 441, 154]}] }
+      "labels": ["BBNF arena borrow", "nom", "winnow", "pest"],
+      "series": [{"label": "Throughput", "values": [632, 491, 441, 154]}] }
   ] }
 ```
 
-nom, winnow, and pest are combinator/PEG parsers with borrowed strings—comparable work to BBNF borrow. All benchmarks use mimalloc as the global allocator.
+All benchmarks use mimalloc. nom, winnow, and pest construct per-iteration (cold).
 
 ## Rust: `JSON` — Borrow (With Decode)
 
@@ -87,32 +87,32 @@ Zero-copy output with escape decoding during parse. These parsers borrow from th
 
 serde_json_borrow returns a zero-copy borrowed `Value` with full escape decoding. jiter (Pydantic's parser) uses `Cow` for selective decode. simd-json uses SIMD-accelerated scanning but pays a `.to_vec()` copy cost per iteration.
 
-## Rust: `JSON` — Owned (Full Decode)
+## Rust: `JSON` — Arena Owned (Full Decode)
 
-Full escape decoding with owned string allocation. BBNF owned uses `Cow<'a, str>`—borrows when clean, allocates only for escaped strings. serde_json always allocates owned `String`s. sonic-rs uses SIMD + arena allocation.
+Full escape decoding with `Cow<'a, str>` strings (borrows when clean, allocates for escapes). Cold per-parse with `BumpArena`. sonic-rs uses SIMD + its own arena allocation.
 
 ```bench-chart
-{ "title": "JSON Owned — Full Decode", "unit": "MB/s",
+{ "title": "JSON Arena Owned — Full Decode", "unit": "MB/s",
   "datasets": [
     { "name": "data.json (35 KB)", "icon": "rust",
-      "labels": ["BBNF owned", "sonic-rs", "serde_json"],
-      "series": [{"label": "Throughput", "values": [1563, 2293, 930]}] },
+      "labels": ["BBNF arena owned", "sonic-rs", "serde_json"],
+      "series": [{"label": "Throughput", "values": [887, 2293, 930]}] },
     { "name": "twitter (631 KB)", "icon": "rust",
-      "labels": ["BBNF owned", "sonic-rs", "serde_json"],
-      "series": [{"label": "Throughput", "values": [1584, 2522, 867]}] },
+      "labels": ["BBNF arena owned", "sonic-rs", "serde_json"],
+      "series": [{"label": "Throughput", "values": [900, 2522, 867]}] },
     { "name": "citm_catalog (1.7 MB)", "icon": "rust",
-      "labels": ["BBNF owned", "sonic-rs", "serde_json"],
-      "series": [{"label": "Throughput", "values": [2003, 3031, 1132]}] },
+      "labels": ["BBNF arena owned", "sonic-rs", "serde_json"],
+      "series": [{"label": "Throughput", "values": [1173, 3031, 1132]}] },
     { "name": "canada (2.2 MB)", "icon": "rust",
-      "labels": ["BBNF owned", "sonic-rs", "serde_json"],
-      "series": [{"label": "Throughput", "values": [904, 1499, 607]}] },
+      "labels": ["BBNF arena owned", "sonic-rs", "serde_json"],
+      "series": [{"label": "Throughput", "values": [595, 1499, 607]}] },
     { "name": "data_xl (20 MB)", "icon": "rust",
-      "labels": ["BBNF owned", "sonic-rs", "serde_json"],
-      "series": [{"label": "Throughput", "values": [641, 1445, 647]}] }
+      "labels": ["BBNF arena owned", "sonic-rs", "serde_json"],
+      "series": [{"label": "Throughput", "values": [567, 1445, 647]}] }
   ] }
 ```
 
-sonic-rs uses SIMD-accelerated string scanning and arena allocation—it does full owned decoding but with hardware acceleration. All Rust benchmarks use mimalloc as the global allocator. The BBNF parsers are generated from a `.bbnf` grammar via `#[derive(Parser)]`—zero hand-written Rust.
+All Rust benchmarks use mimalloc. BBNF parsers are generated from a `.bbnf` grammar via `#[derive(Parser)]` with zero hand-written Rust.
 
 ## Rust: `CSS` — Arena Structural Scan
 

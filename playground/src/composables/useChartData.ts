@@ -142,9 +142,21 @@ export function useChartData(data: ChartData, mounted: Ref<boolean>) {
         return winnerIndices.value[si] === vi;
     }
 
-    function formatValue(val: number): string {
-        if (val >= 1000) return val.toLocaleString();
-        return String(val);
+    function formatValue(val: number): { value: string; unit: string } {
+        const baseUnit = data.unit;
+        // Auto-scale throughput units
+        if (baseUnit === "MB/s" && val >= 1000) {
+            return { value: (val / 1000).toFixed(2), unit: "GB/s" };
+        }
+        if (baseUnit === "ns" && val >= 1_000_000) {
+            return { value: (val / 1_000_000).toFixed(2), unit: "ms" };
+        }
+        if (baseUnit === "ns" && val >= 1000) {
+            return { value: (val / 1000).toFixed(1), unit: "µs" };
+        }
+        // Default: thousands separator
+        const formatted = val >= 1000 ? val.toLocaleString() : String(val);
+        return { value: formatted, unit: baseUnit };
     }
 
     // Track which non-highlighted color index we're at per render

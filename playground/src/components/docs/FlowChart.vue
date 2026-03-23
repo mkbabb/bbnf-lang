@@ -73,7 +73,7 @@ function onNodeClick(node: FlowNode) {
 
                 <!-- Node pill -->
                 <div
-                    class="flow-node relative flex items-center gap-3 rounded-lg border border-border/30 bg-muted/10 backdrop-blur-sm px-4 py-2.5 w-full max-w-xl transition-all duration-200"
+                    class="flow-node relative flex items-center gap-3 rounded-lg border border-border/30 bg-muted/10 backdrop-blur-sm px-3 py-2 sm:px-4 sm:py-2.5 w-full transition-all duration-200"
                     :class="[
                         node.href ? 'flow-node--clickable cursor-pointer' : 'cursor-default',
                         node.detail ? 'flow-node--has-detail' : '',
@@ -91,9 +91,9 @@ function onNodeClick(node: FlowNode) {
                         class="absolute left-0 top-2 bottom-2 w-1 rounded-full"
                         :style="{ background: getNodeColor(node, i) }"
                     />
-                    <div class="pl-2 flex-1 flex items-center justify-between gap-2">
-                        <span class="text-sm font-mono font-medium text-foreground">{{ node.label }}</span>
-                        <span v-if="node.detail" class="text-xs font-mono text-muted-foreground truncate max-w-[180px]">
+                    <div class="pl-2 flex-1 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5 sm:gap-2">
+                        <span class="text-xs sm:text-sm font-mono font-medium text-foreground">{{ node.label }}</span>
+                        <span v-if="node.detail" class="text-xs font-mono text-muted-foreground truncate max-w-[100px] sm:max-w-[180px] md:max-w-[260px]">
                             {{ node.detail }}
                         </span>
                     </div>
@@ -101,7 +101,7 @@ function onNodeClick(node: FlowNode) {
                     <!-- Tooltip -->
                     <div
                         v-if="node.detail"
-                        class="flow-tooltip pointer-events-none absolute left-1/2 bottom-full mb-2 -translate-x-1/2 z-50 rounded-md border border-border/40 bg-popover/95 backdrop-blur-md shadow-lg px-3 py-2 text-xs font-mono text-popover-foreground max-w-[300px] w-max opacity-0 transition-opacity duration-150"
+                        class="flow-tooltip pointer-events-none absolute left-1/2 bottom-full mb-2 -translate-x-1/2 z-50 rounded-md border border-border/40 bg-popover/95 backdrop-blur-md shadow-lg px-3 py-2 text-xs font-mono text-popover-foreground max-w-[240px] sm:max-w-[300px] w-max opacity-0 transition-opacity duration-150"
                     >
                         <div class="font-medium text-foreground mb-0.5">{{ node.label }}</div>
                         <div class="text-muted-foreground leading-relaxed">{{ node.detail }}</div>

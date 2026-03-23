@@ -126,8 +126,8 @@ function hoveredIsOurs(): boolean {
                             {{ activeLabels[vi] }}
                             <!-- Mobile-only inline value -->
                             <span class="sm:hidden text-muted-foreground font-normal ml-auto tabular-nums">
-                                {{ formatValue(val) }}
-                                <span class="text-[0.6875rem]">{{ data.unit }}</span>
+                                {{ formatValue(val).value }}
+                                <span class="text-[0.6875rem]">{{ formatValue(val).unit }}</span>
                             </span>
                         </span>
 
@@ -148,8 +148,8 @@ function hoveredIsOurs(): boolean {
                                 class="bar-value absolute right-2 top-1/2 -translate-y-1/2 text-xs font-mono tabular-nums hidden sm:inline"
                                 :class="isWinner(si, vi) || isOurs(activeLabels?.[vi] ?? '') ? 'text-foreground font-semibold' : 'text-foreground/70'"
                             >
-                                {{ formatValue(val) }}
-                                <span class="text-muted-foreground text-[0.6875rem] ml-0.5">{{ data.unit }}</span>
+                                {{ formatValue(val).value }}
+                                <span class="text-muted-foreground text-[0.6875rem] ml-0.5">{{ formatValue(val).unit }}</span>
                             </span>
                         </div>
                     </div>
@@ -170,7 +170,7 @@ function hoveredIsOurs(): boolean {
                     style="background: hsl(45 90% 55% / 0.2); color: hsl(45 90% 55%)"
                 >BBNF</span>
             </div>
-            <div class="text-muted-foreground">{{ formatValue(hoveredValue()) }} {{ data.unit }}</div>
+            <div class="text-muted-foreground">{{ formatValue(hoveredValue()).value }} {{ formatValue(hoveredValue()).unit }}</div>
             <div class="text-muted-foreground/70">{{ hoveredPercent() }}% of max</div>
             <div v-if="hoveredDescription()" class="text-muted-foreground/60 text-[0.6875rem] mt-0.5 max-w-[220px]">{{ hoveredDescription() }}</div>
         </FloatingTooltip>

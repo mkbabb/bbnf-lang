@@ -39,33 +39,34 @@ bbnf-ir/
 ## Key Types
 
 - **`IrNode`** — Expression tree node (Literal, Regex, Epsilon, Seq, Alt, Repeat, Ref, Skip, Next, Minus, Negate, Map, OptionalWhitespace).
-- **`GrammarIR`** — Top-level container: rules, entry point, string interning table, host function table, types, FOLLOW sets.
+- **`GrammarIR`** — Top-level container: rules, entry point, string interning table, host function table, types, FOLLOW sets, `ws_pattern`, `b1_span_collapse`.
 - **`IrRule`** — Rule id + name + body (`IrNode`) + metadata (`RuleMeta`).
-- **`RuleMeta`** — FIRST set, nullable, SCC info, memo strategy, dispatch hint, span eligibility, pretty hints, recover sync, sub-variants.
+- **`RuleMeta`** — FIRST set, nullable, SCC info, memo strategy, dispatch hint, span eligibility, pretty hints, recover sync, sub-variants, `force_inline`.
 - **`AltDispatch`** — 128-entry byte→branch dispatch table for alternations with disjoint FIRST sets.
 - **`FnDescriptor`** — Host function descriptor (EnumWrap, BoxWrap, Custom closure).
 - **`TypeDesc`** — Serialized type info (Span, Option, Vec, Tuple, BoxedEnum, Enum, Named).
 
 ## IR Pass Pipeline
 
-15 operations (13 unique passes) run in this exact order (must stay in sync
+16 operations (14 unique passes) run in this exact order (must stay in sync
 with `bbnf/src/pipeline.rs` and `bbnf-derive/src/lib.rs`):
 
 1. `canonicalize_aliases` — resolve alias chains to direct references (O(1) lookup)
 2. `prune_unreachable` — remove rules not reachable from entry (O(1) rule lookup)
 3. `inline_acyclic` — inline small acyclic rule bodies at call sites (threshold: 4 nodes)
-4. `prune_unreachable` *(second pass)* — remove rules made dead by inlining
-5. `fuse_single_use` — inlines rules referenced exactly once regardless of body size, guarded by SCC membership
-6. `prune_unreachable` *(third pass)* — remove rules made dead by fusing
-7. `eliminate_epsilon` — simplify epsilon-containing sequences/alternations; extended to handle `Repeat(Epsilon,0,..)→Epsilon`, `Skip(Epsilon,x)→x`, `Next(x,Epsilon)→x`, nested `OptionalWhitespace` fusion
-8. `merge_literals` — fuse adjacent literals in sequences (with string deduplication)
-9. `merge_regex_alts` — combine regex/literal alternation branches into one pattern (mixed literal+regex fusion)
-10. `factor_common_prefixes` — left-factor shared prefixes in alternations
-11. `refine_span_eligibility` — propagate span eligibility through rule graph
-12. `compute_follow_sets` — FOLLOW set fixed-point iteration (with Repeat inner Seq propagation, regex FIRST sets)
-13. `generate_dispatch_tables` — build O(1) byte-dispatch for disjoint alternations (regex FIRST sets via `regex_first` module)
-14. `refine_memo_strategies` — assign memoization strategies (None/Full/Selective)
-15. `infer_types` — populate `GrammarIR::types` with `TypeDesc` for each rule; `infer_node_in_vec` sub-pass handles Vec context inference
+4. `force_inline` — inline `@inline`-annotated rules at all call sites regardless of size/ref count
+5. `prune_unreachable` *(second pass)* — remove rules made dead by inlining
+6. `fuse_single_use` — inlines rules referenced exactly once regardless of body size, guarded by SCC membership
+7. `prune_unreachable` *(third pass)* — remove rules made dead by fusing
+8. `eliminate_epsilon` — simplify epsilon-containing sequences/alternations; extended to handle `Repeat(Epsilon,0,..)→Epsilon`, `Skip(Epsilon,x)→x`, `Next(x,Epsilon)→x`, nested `OptionalWhitespace` fusion
+9. `merge_literals` — fuse adjacent literals in sequences (with string deduplication)
+10. `merge_regex_alts` — combine regex/literal alternation branches into one pattern (mixed literal+regex fusion)
+11. `factor_common_prefixes` — left-factor shared prefixes in alternations
+12. `refine_span_eligibility` — propagate span eligibility through rule graph
+13. `compute_follow_sets` — FOLLOW set fixed-point iteration (with Repeat inner Seq propagation, regex FIRST sets)
+14. `generate_dispatch_tables` — build O(1) byte-dispatch for disjoint alternations (regex FIRST sets via `regex_first` module)
+15. `refine_memo_strategies` — assign memoization strategies (None/Full/Selective)
+16. `infer_types` — populate `GrammarIR::types` with `TypeDesc` for each rule; `infer_node_in_vec` sub-pass handles Vec context inference
 
 ## Serialization
 

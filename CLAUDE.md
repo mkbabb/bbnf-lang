@@ -120,7 +120,7 @@ bbnf-lsp uses workspace-relative paths to bbnf; cross-repo deps are version-only
 - **Vec unboxing**: `in_vec` parameter threading through codegen, `ir_node_to_tokens_vec`, `infer_node_type_in_vec`. Transparent rule `_unboxed()` generation for zero-cost enum extraction.
 - **`try_flatten_pair`**: Extension for `(BoxedEnum, Vec<Enum>)` patterns — flattens pair into unboxed Vec.
 - **`merge_regex_alts` pass**: Fuses `Alt([Regex, Regex, ...])` into a single combined regex pattern. Runs after `merge_literals` and before `factor_common_prefixes` in the IR pipeline.
-- **Pipeline synchronization**: The IR pass ordering in `pipeline.rs` and `bbnf-derive/src/lib.rs` must be kept in sync—both run the same 15-operation sequence (13 unique passes).
+- **Pipeline synchronization**: The IR pass ordering in `pipeline.rs` and `bbnf-derive/src/lib.rs` must be kept in sync—both run the same 16-operation sequence (14 unique passes).
 - **`fuse_single_use` pass**: Inlines single-use rules at their call site regardless of body size, guarded by SCC membership. Runs after `inline_acyclic` + prune, before `eliminate_epsilon`.
 - **`no_collapse` gating**: Rules annotated with `@no_collapse` are excluded from inlining and fusing passes to preserve their identity in the generated AST.
 - **`emit_discarded` for Skip/Next**: Skip and Next codegen emits the discarded side for its side effects (e.g., whitespace consumption) even though the value is unused.
@@ -130,6 +130,12 @@ bbnf-lsp uses workspace-relative paths to bbnf; cross-repo deps are version-only
 - **`skip_recover`**: Parser attribute that suppresses `@recover` codegen and the `Recovered` enum variant. Used by formatting-only parsers that assume well-formed input.
 - **Type comparison**: `types_eq()` compares `syn::Type` structurally via per-token-tree comparison—no string serialization.
 - **Sub-variant validation**: `validate_sub_variant_uniqueness()` rejects cross-rule type collisions at compile time.
+- **Monolithic arena codegen**: `ir_codegen/monolithic/` (5 sub-modules: `mod.rs`, `alt.rs`, `seq.rs`, `repeat.rs`, `expr.rs`). Triggered by `#[parser(arena)]`. Generates direct recursive `fn __rule_arena(state) -> Option<ArenaEnum>` functions—zero combinator overhead. `MonoCtx` tracks fusion eligibility, single-site inline eligibility, dispatch-guaranteed-byte, and hoisted leaf-parser bindings. Unified `SepByConfig` + `emit_mono_sep_by_core` handles all three sep_by variants (bare, ws-aware, delimited-with-terminator).
+- **BumpArena**: `parse_that::BumpArena<T>`—UnsafeCell-based bump allocator replacing `typed_arena::Arena`. Zero RefCell borrow tracking per alloc. Used via `parse_with_context(&input, &arena)`.
+- **`@ws` directive**: `@ws /regex/ ;` overrides what `?w` compiles to. Stored as `GrammarIR::ws_pattern: Option<StringId>`. Codegen uses `emit_ws_trim()` which checks `ir.ws_pattern` and emits `fast_paths::emit_regex_direct_call` for known SIMD fast paths (e.g., CSS comment-aware whitespace → `css_ws_comment_fast`).
+- **`@inline` directive**: `@inline ruleName ;` force-inlines a rule at all call sites via `force_inline` IR pass. Stored as `RuleMeta::force_inline: bool`. Rule body substituted at every `Ref`, no enum variant generated. Guarded against direct self-recursion. Runs after `inline_acyclic`, before `fuse_single_use`.
+- **`b1_span_collapse`**: `GrammarIR::b1_span_collapse: bool`. When true (prettify disabled), the B.1 all-Span guard in Seq codegen keeps overrides for simple children, collapsing the Seq to a single Span. Eliminates arena allocation for declaration-like rules. Gated to prevent type cascading in prettify grammars.
+- **Cold benchmarks only**: All bench macros construct fresh BumpArena + Parser per iteration. Warm/cached benchmarks (reusing a pre-constructed Parser) removed—they measure combinator cache throughput, not parse throughput.
 - **JSON pattern detection**: Exact-match against canonical regex patterns (no substring heuristics). `is_json_string_regex()` / `is_json_number_regex()` use `const` pattern arrays.
 - **WASM**: `wasm/` crate (`bbnf-wasm`) — 29 exports total: 5 formatters (json/css/bnf/ebnf/bbnf) + `analyze_grammar` + 17 LSP features + 5 VM functions (compile, parse, parse_check, format, free) + `init_panic_hook`. Decomposed into `analysis.rs`, `gorgeous.rs`, `lsp.rs`, `vm.rs`.
 - **Playground composables**: `composables/wasm/{types,index,loader}.ts` + `usePlaygroundQuery.ts`, `useSplitPane.ts`, `usePipeline.ts`, `useExamples.ts`, `useWalkthrough.ts`, `useDocs.ts`, `useHeroState.ts`, `useTypewriter.ts`, `useMouseParallax.ts`, `useScrollTimeline.ts`, `useScrollMorph.ts`, `useMarkdownComponents.ts`, `useChartData.ts`. 15 Monaco providers: hover, completion, semantic tokens, inlay hints, definition, document symbols, folding, selection ranges, code actions, code lens, references, rename, document formatting, range formatting, on-type formatting.
@@ -145,7 +151,7 @@ Routes: `/` = landing, `/playground` = playground, `/docs` = docs.
 - File-system or frontmatter-based routing (`docs/*.md` → slug)
 - Sidebar nav auto-generated from markdown headings/structure
 - Code blocks with syntax highlighting (reuse Monaco)
-- API reference: grammar syntax, directives (`@pretty`, `@recover`, `@no_collapse`, `@import`, `skip_recover`), hint vocabulary
+- API reference: grammar syntax, directives (`@pretty`, `@recover`, `@no_collapse`, `@import`, `@ws`, `@inline`, `skip_recover`), hint vocabulary
 
 ### Playground Walk-Through Demos
 - Guided interactive tutorials that load grammar + input pairs

@@ -33,16 +33,16 @@ cargo test -p bbnf-lsp --test bench_lsp -- --nocapture
 
 ### JSON — BBNF (`json_bbnf.rs`)
 
-Four tiers of BBNF JSON parsing on the same 4 datasets:
+Four tiers of BBNF JSON parsing on the same datasets, all using `BumpArena` (cold per-parse: fresh arena + parser per iteration):
 
 | Tier | What | Work Level |
 |------|------|------------|
-| **span** | Raw BBNF parse — opaque AST spans | Structural validation only |
-| **borrow** | Borrowed `JsonValue` — numbers parsed, strings stripped | Zero-copy, no escape decode |
-| **owned** | Owned `JsonValue` — full escape decode, `Cow<str>` | Full deserialization |
+| **span_arena** | Arena-allocated opaque AST spans | Structural validation |
+| **borrow_arena** | Borrowed `JsonValue` — numbers parsed, strings stripped | Zero-copy, no escape decode |
+| **owned_arena** | Owned `JsonValue` — full escape decode, `Cow<str>` | Full deserialization |
 | **vm** | Bytecode interpreter | Runtime interpretation |
 
-Groups: `span`, `borrow`, `owned`, `vm` — 4 groups × 6 datasets = 24 bench fns (VM skips data_supermaxx)
+Groups: `span_arena`, `borrow_arena`, `owned_arena`, `vm` — 4 groups × 5 datasets = 20 bench fns
 
 ### JSON — Competitors (`json_competitors.rs`)
 
@@ -67,10 +67,10 @@ Two tiers of BBNF CSS parsing on 3 datasets:
 
 | Tier | Grammar | What |
 |------|---------|------|
-| **fast** | `css-fast.bbnf` | Opaque spans, maximum throughput (L0) |
-| **pretty** | `css-stylesheet-pretty.bbnf` | Structural AST with `@pretty` directives (L1.5) |
+| **fast_arena** | `css-fast.bbnf` | Opaque spans, `@ws` SIMD whitespace, `@inline` helpers (L0) |
+| **pretty_arena** | `css-stylesheet-pretty.bbnf` | Structural AST with `@pretty` directives (L1.5) |
 
-Groups: `fast`, `pretty` — 2 groups × 3 datasets = 6 bench fns
+Groups: `fast_arena`, `pretty_arena` — 2 groups × 3 datasets = 6 bench fns. Cold per-parse with `BumpArena`.
 
 ### CSS — Competitors (`css_competitors.rs`)
 
@@ -132,7 +132,7 @@ Every bench fn validates parse success ONCE before the hot loop. The bench binar
 - All benchmarks use mimalloc as the global allocator
 - Input data is loaded once before benchmarking (not included in timing)
 - VM benchmarks create a new `Interpreter` per iteration (includes allocation)
-- AOT benchmarks reuse the parser across iterations (parser construction is free)
+- Arena benchmarks create a fresh `BumpArena` + `Parser` per iteration (cold per-parse)
 - simd-json requires `.to_vec()` per iteration — inherent library cost
 - Benchmark data files are in `data/json/` and `data/css/`
 - Bench profile uses `lto = "fat"` and `codegen-units = 1` for maximum optimization
@@ -143,7 +143,7 @@ Charts group parsers by the actual work performed, not just by whether they retu
 
 | Tier | String Work | Tree Structure | Parsers |
 |------|------------|----------------|---------|
-| **Span** | None (opaque spans) | AST spans only | BBNF span |
+| **Arena Span** | None (opaque spans) | BumpArena-allocated AST | BBNF arena |
 | **Borrow — No Decode** | Strip quotes, no escape decode | Vec or HashMap tree | BBNF borrow, nom, winnow, pest |
 | **Borrow — With Decode** | Full or selective escape decode, zero-copy output | Borrowed `Value` / `Cow` | serde_json_borrow, jiter, simd-json |
 | **Owned — Full Decode** | Full escape decode + owned allocation | Owned `Value` / `Cow` | BBNF owned, sonic-rs, serde_json |

@@ -56,6 +56,13 @@ array = "[", [ value, { ",", value } ], "]" ;
 
 (* Recovery—per-rule sync expression for multi-error parsing *)
 @recover declaration /[;}]/ ;
+
+(* Custom whitespace—overrides ?w to use comment-aware scanning *)
+@ws /(?s)(?:\s|\/\*.*?\*\/)*/ ;
+declaration = propertyName ?w ":" ?w valueSpan ;
+
+(* Force-inline—splice rule body at every call site, no enum variant *)
+@inline optSemicolon ;
 ```
 
 ### Recovery
@@ -86,9 +93,32 @@ are registered before recursing into its own imports).
 Cmd+Click on import paths opens the referenced file. Diagnostics are
 import-aware—imported rule names suppress "undefined rule" warnings.
 
+### Whitespace
+
+`@ws /regex/ ;` overrides the `?w` (optional whitespace) operator grammar-wide. By default, `?w` trims ASCII whitespace (`\s`). With `@ws`, it compiles to the given regex instead, enabling comment-aware whitespace without allocating a named rule's enum variant at each call site. CSS grammars use this to route `?w` through a SIMD-accelerated comment scanner.
+
+### Inlining
+
+`@inline ruleName ;` force-inlines a rule at every call site during IR compilation. The rule's body is substituted directly—no enum variant generated, no function emitted. Useful for small helper rules (optional semicolons, opaque spans) where the abstraction aids readability but the codegen overhead doesn't.
+
 ### Formatting
 
 BBNF's `@pretty` directives drive pretty-printing in the playground and Prettier plugin.
+
+### Arena Parsing
+
+`#[parser(arena)]` on the derive macro generates a second set of parser methods that use `BumpArena<T>` for allocation instead of `Box<T>`. The arena path emits monolithic recursive functions—direct `match` dispatch on the first byte, inlined rule bodies, zero combinator construction overhead. Fresh arena and parser per parse; bulk deallocation on drop.
+
+```rust
+#[derive(Parser)]
+#[parser(path = "json.bbnf", arena)]
+struct JsonParser;
+
+let arena = BumpArena::<JsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
+let ast = JsonParser::value_arena()
+    .parse_with_context(&input, &arena)
+    .unwrap();
+```
 
 ## Playground
 

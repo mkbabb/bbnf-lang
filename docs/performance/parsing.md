@@ -8,28 +8,28 @@ section: Performance
 
 parse_that (Rust) and parse-that (TypeScript) are the parsing backbone. Both use dispatch tables, FIRST-set routing, and memoization tuned for their respective runtimes.
 
-## Rust: `JSON` — Span
+## Rust: `JSON` — Arena Span
 
-Span parsing returns borrowed byte slices without decoding strings or parsing numbers. No tree is built—structural validation only.
+Arena parsing returns opaque spans allocated via `BumpArena`. Each iteration constructs a fresh arena and parser—cold per-parse throughput.
 
 ```bench-chart
-{ "title": "JSON Span Parsing", "unit": "MB/s",
+{ "title": "JSON Arena Span", "unit": "MB/s",
   "datasets": [
     { "name": "data.json (35 KB)", "icon": "rust",
-      "labels": ["BBNF span"],
-      "series": [{"label": "Throughput", "values": [3376]}] },
+      "labels": ["BBNF arena"],
+      "series": [{"label": "Throughput", "values": [1261]}] },
     { "name": "twitter (631 KB)", "icon": "rust",
-      "labels": ["BBNF span"],
-      "series": [{"label": "Throughput", "values": [4298]}] },
+      "labels": ["BBNF arena"],
+      "series": [{"label": "Throughput", "values": [1347]}] },
     { "name": "citm_catalog (1.7 MB)", "icon": "rust",
-      "labels": ["BBNF span"],
-      "series": [{"label": "Throughput", "values": [4639]}] },
+      "labels": ["BBNF arena"],
+      "series": [{"label": "Throughput", "values": [1597]}] },
     { "name": "canada (2.2 MB)", "icon": "rust",
-      "labels": ["BBNF span"],
-      "series": [{"label": "Throughput", "values": [2832]}] },
+      "labels": ["BBNF arena"],
+      "series": [{"label": "Throughput", "values": [1115]}] },
     { "name": "data_xl (20 MB)", "icon": "rust",
-      "labels": ["BBNF span"],
-      "series": [{"label": "Throughput", "values": [1071]}] }
+      "labels": ["BBNF arena"],
+      "series": [{"label": "Throughput", "values": [815]}] }
   ] }
 ```
 
@@ -114,30 +114,30 @@ Full escape decoding with owned string allocation. BBNF owned uses `Cow<'a, str>
 
 sonic-rs uses SIMD-accelerated string scanning and arena allocation—it does full owned decoding but with hardware acceleration. All Rust benchmarks use mimalloc as the global allocator. The BBNF parsers are generated from a `.bbnf` grammar via `#[derive(Parser)]`—zero hand-written Rust.
 
-## Rust: `CSS` — Tier 1: Structural Scan
+## Rust: `CSS` — Arena Structural Scan
 
-**BBNF fast** (css-fast.bbnf) returns opaque spans—selectors and values are captured as raw byte slices without interpretation. **cssparser** (Mozilla's tokenizer) uses a visitor pattern that counts rules and declarations without building an AST. Both do minimal work—fair head-to-head.
+**BBNF fast** (css-fast.bbnf) uses `@ws` for SIMD comment-aware whitespace and `@inline` for trivial helper rules. Cold per-parse with `BumpArena`. **cssparser** (Mozilla's tokenizer) uses a visitor pattern that counts rules and declarations without building an AST.
 
 ```bench-chart
-{ "title": "CSS Structural Scan", "unit": "MB/s",
+{ "title": "CSS Arena Structural Scan", "unit": "MB/s",
   "datasets": [
     { "name": "normalize (6 KB)", "icon": "rust",
-      "labels": ["BBNF fast", "cssparser"],
-      "series": [{"label": "Throughput", "values": [2280, 655]}] },
+      "labels": ["BBNF fast arena", "cssparser"],
+      "series": [{"label": "Throughput", "values": [760, 655]}] },
     { "name": "bootstrap (281 KB)", "icon": "rust",
-      "labels": ["BBNF fast", "cssparser"],
-      "series": [{"label": "Throughput", "values": [1407, 424]}] },
+      "labels": ["BBNF fast arena", "cssparser"],
+      "series": [{"label": "Throughput", "values": [331, 424]}] },
     { "name": "tailwind (3.8 MB)", "icon": "rust",
-      "labels": ["BBNF fast", "cssparser"],
-      "series": [{"label": "Throughput", "values": [695, 402]}] }
+      "labels": ["BBNF fast arena", "cssparser"],
+      "series": [{"label": "Throughput", "values": [28, 402]}] }
   ] }
 ```
 
-BBNF fast is 3.3x faster than cssparser on bootstrap, 1.7x on tailwind. The gap narrows on tailwind's repetitive utility classes where the regex engine's per-match overhead amortizes less favorably.
+On normalize (6 KB), BBNF arena is 1.2x cssparser. On bootstrap and tailwind the per-rule overhead of recursive descent grammar parsing (alternation dispatch, whitespace scanning, arena allocation per rule) exceeds cssparser's flat tokenizer loop. Tailwind's ~65K tiny utility classes (~40 bytes each) hit this hardest—fixed per-rule costs don't amortize on small rules.
 
-## Rust: `CSS` — Tier 2: Structural AST
+## Rust: `CSS` — Structural AST
 
-**BBNF pretty** (css-stylesheet-pretty.bbnf) builds a typed enum tree with rule/block/declaration structure, using opaque regex spans for selectors and values (L1.5). **lightningcss** (Parcel) performs a full L2 semantic parse—typed CSS properties, vendor prefix analysis, CSS Nesting validation. lightningcss does *more* work, so the comparison quantifies how much overhead semantic analysis adds.
+**BBNF pretty** (css-stylesheet-pretty.bbnf) builds a typed enum tree with rule/block/declaration structure, using opaque regex spans for selectors and values (L1.5). **lightningcss** (Parcel) performs a full L2 semantic parse—typed CSS properties, vendor prefix analysis, CSS Nesting validation.
 
 ```bench-chart
 { "title": "CSS Structural AST", "unit": "MB/s",
@@ -154,7 +154,7 @@ BBNF fast is 3.3x faster than cssparser on bootstrap, 1.7x on tailwind. The gap 
   ] }
 ```
 
-BBNF pretty is 8.5x faster than lightningcss on bootstrap and 10.3x faster on tailwind. See the [formatting benchmarks](./formatting) for gorgeous vs Biome end-to-end comparisons.
+See the [formatting benchmarks](./formatting) for gorgeous vs Biome end-to-end comparisons.
 
 ## Rust: `Google Sheets`
 

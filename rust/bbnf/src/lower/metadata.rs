@@ -84,6 +84,11 @@ pub(crate) fn build_rule_meta<'a>(
         .no_collapse_rules
         .is_some_and(|set| set.contains(name));
 
+    // Force-inline.
+    let force_inline = ctx
+        .inline_rules
+        .is_some_and(|set| set.contains(name));
+
     RuleMeta {
         first_set,
         nullable,
@@ -97,6 +102,7 @@ pub(crate) fn build_rule_meta<'a>(
         pretty,
         recover,
         no_collapse,
+        force_inline,
         has_sp_method: false, // Computed by compute_sp_method_rules pass.
         sub_variants: Vec::new(),
     }

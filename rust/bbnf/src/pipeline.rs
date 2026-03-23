@@ -57,6 +57,12 @@ pub fn compile_grammar(source: &str, options: &PipelineOptions) -> Result<Gramma
         no_collapse_set.insert(nc.rule_name.to_string());
     }
 
+    let ws_pat = parsed.ws_pattern;
+    let mut inline_set: HashSet<String> = HashSet::new();
+    for name in &parsed.inline_rules {
+        inline_set.insert(name.to_string());
+    }
+    let inline_ref = if inline_set.is_empty() { None } else { Some(&inline_set) };
     let ast = parsed.rules;
     compile_ast(
         ast,
@@ -64,6 +70,8 @@ pub fn compile_grammar(source: &str, options: &PipelineOptions) -> Result<Gramma
         &pretty_map,
         &no_collapse_set,
         options,
+        ws_pat.as_deref(),
+        inline_ref,
     )
 }
 
@@ -76,6 +84,8 @@ pub fn compile_ast<'a>(
     pretty_map: &HashMap<String, Vec<String>>,
     no_collapse_set: &HashSet<String>,
     options: &PipelineOptions,
+    ws_pattern: Option<&str>,
+    inline_rules: Option<&HashSet<String>>,
 ) -> Result<GrammarIR, String> {
     // Determine the entry rule name: use override if provided, otherwise last rule in source order.
     let entry_rule_name: Option<String> = options.entry_rule.clone().or_else(|| {
@@ -161,6 +171,8 @@ pub fn compile_ast<'a>(
         pretties_ref,
         no_collapse_ref,
         &dispatch_tables,
+        ws_pattern,
+        inline_rules,
     );
 
     // Set the correct entry rule (last rule in original source order).
@@ -174,6 +186,8 @@ pub fn compile_ast<'a>(
     bbnf_ir::passes::canonicalize_aliases(&mut ir);
     bbnf_ir::passes::prune_unreachable(&mut ir);
     bbnf_ir::passes::inline_acyclic(&mut ir);
+    // Force-inline @inline rules at all call sites.
+    bbnf_ir::passes::force_inline(&mut ir);
     // Second prune: inlined rules may now be unreachable.
     bbnf_ir::passes::prune_unreachable(&mut ir);
     // Fuse single-use rules into their call sites for better dispatch coverage.

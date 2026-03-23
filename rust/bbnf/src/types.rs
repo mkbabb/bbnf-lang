@@ -153,6 +153,11 @@ pub struct ParsedGrammar<'a> {
     pub no_collapses: Vec<NoCollapseDirective<'a>>,
     pub pretties: Vec<PrettyDirective<'a>>,
     pub rules: AST<'a>,
+    /// Custom whitespace pattern from `@ws /regex/ ;` directive.
+    /// When set, `?w` compiles to this regex instead of the default `\s*` trim.
+    pub ws_pattern: Option<Cow<'a, str>>,
+    /// Rules to force-inline from `@inline ruleName ;` directives.
+    pub inline_rules: Vec<Cow<'a, str>>,
 }
 
 pub fn set_expression_comments<'a>(expr: &mut Expression<'a>, comments: Comments<'a>) {

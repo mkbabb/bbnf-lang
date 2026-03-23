@@ -14,6 +14,10 @@ enum TopLevelItem<'a> {
     Recover(RecoverDirective<'a>),
     NoCollapse(NoCollapseDirective<'a>),
     Pretty(PrettyDirective<'a>),
+    /// `@ws /regex/ ;` — custom whitespace pattern for `?w`.
+    WsPattern(Cow<'a, str>),
+    /// `@inline ruleName ;` — force-inline a rule at all call sites.
+    Inline(Cow<'a, str>),
     Rule(Expression<'a>),
 }
 
@@ -424,6 +428,30 @@ impl<'a> BBNFGrammar<'a> {
             })
     }
 
+    /// Parse an `@inline ruleName ;` directive — force-inline a rule at all call sites.
+    fn inline_directive() -> Parser<'a, Cow<'a, str>> {
+        string("@inline")
+            .trim_whitespace()
+            .next(Self::identifier().trim_whitespace())
+            .skip(any_span(&[";", "."]).opt().trim_whitespace())
+            .map(|name_span| Cow::Borrowed(name_span.as_str()))
+    }
+
+    /// Parse an `@ws /regex/ ;` directive — custom whitespace pattern for `?w`.
+    fn ws_directive() -> Parser<'a, Cow<'a, str>> {
+        string("@ws")
+            .trim_whitespace()
+            .next(Self::regex().trim_whitespace())
+            .skip(any_span(&[";", "."]).opt().trim_whitespace())
+            .map(|regex_expr| {
+                // Extract the regex pattern string from Expression::Regex.
+                match regex_expr {
+                    Expression::Regex(token) => token.value,
+                    _ => unreachable!(),
+                }
+            })
+    }
+
     /// Parse a `sep("...")` hint: `sep("literal string")`.
     fn sep_hint() -> Parser<'a, Span<'a>> {
         let not_quote = take_while_span(|c| c != '"' && c != '\\');
@@ -494,17 +522,25 @@ impl<'a> BBNFGrammar<'a> {
         let pretty = Self::skip_comments()
             .next(Self::pretty_directive().trim_whitespace())
             .map(TopLevelItem::Pretty);
+        let ws_pat = Self::skip_comments()
+            .next(Self::ws_directive().trim_whitespace())
+            .map(TopLevelItem::WsPattern);
+        let inline_dir = Self::skip_comments()
+            .next(Self::inline_directive().trim_whitespace())
+            .map(TopLevelItem::Inline);
         let rule = Self::skip_comments()
             .next(Self::production_rule().trim_whitespace())
             .map(TopLevelItem::Rule);
 
-        let item = import | recover | no_collapse | pretty | rule;
+        let item = import | recover | no_collapse | pretty | ws_pat | inline_dir | rule;
 
         Self::skip_comments().next(item.many(..)).map(|items| {
             let mut imports = Vec::new();
             let mut recovers = Vec::new();
             let mut no_collapses = Vec::new();
             let mut pretties = Vec::new();
+            let mut ws_pattern = None;
+            let mut inline_rules = Vec::new();
             let mut rules_vec = Vec::new();
             for item in items {
                 match item {
@@ -512,6 +548,8 @@ impl<'a> BBNFGrammar<'a> {
                     TopLevelItem::Recover(rec) => recovers.push(rec),
                     TopLevelItem::NoCollapse(nc) => no_collapses.push(nc),
                     TopLevelItem::Pretty(p) => pretties.push(p),
+                    TopLevelItem::WsPattern(pat) => ws_pattern = Some(pat),
+                    TopLevelItem::Inline(name) => inline_rules.push(name),
                     TopLevelItem::Rule(r) => rules_vec.push(r),
                 }
             }
@@ -528,6 +566,8 @@ impl<'a> BBNFGrammar<'a> {
                 no_collapses,
                 pretties,
                 rules: ast,
+                ws_pattern,
+                inline_rules,
             }
         })
     }

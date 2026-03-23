@@ -6,24 +6,21 @@ use std::path::PathBuf;
 use bbnf::calculate_ast_deps;
 
 use bbnf::analysis::{
+    compute_first_sets, find_aliases, find_span_eligible_rules, find_transparent_alternations,
     tarjan_scc, topological_sort_scc,
-    compute_first_sets, find_aliases, find_transparent_alternations,
-    find_span_eligible_rules,
 };
+use bbnf::imports::load_module_graph;
+use bbnf::lower::lower_to_ir;
+use bbnf::optimize::remove_direct_left_recursion;
 use bbnf::BBNFGrammar;
 use bbnf::Expression;
 use bbnf::ParserAttributes;
-use bbnf::optimize::remove_direct_left_recursion;
-use bbnf::imports::load_module_graph;
-use bbnf::lower::lower_to_ir;
 use indexmap::IndexMap;
 
 use proc_macro::TokenStream;
 
 use syn::{
-    parse_macro_input,
-    punctuated::Punctuated,
-    Attribute, DeriveInput, Expr, ExprLit, Lit, Meta,
+    parse_macro_input, punctuated::Punctuated, Attribute, DeriveInput, Expr, ExprLit, Lit, Meta,
 };
 
 use parse_that::utils::get_cargo_root_path;
@@ -44,7 +41,10 @@ fn parse_parser_attrs(attrs: &[Attribute]) -> ParserAttributes {
         for meta in nested {
             match &meta {
                 Meta::NameValue(nv) if nv.path.is_ident("path") => {
-                    if let Expr::Lit(ExprLit { lit: Lit::Str(s), .. }) = &nv.value {
+                    if let Expr::Lit(ExprLit {
+                        lit: Lit::Str(s), ..
+                    }) = &nv.value
+                    {
                         let path = PathBuf::from(s.value());
                         let path = if path.is_relative() {
                             root_path.join(path)
@@ -72,6 +72,9 @@ fn parse_parser_attrs(attrs: &[Attribute]) -> ParserAttributes {
                 Meta::Path(p) if p.is_ident("skip_recover") => {
                     parser_attr.skip_recover = true;
                 }
+                Meta::Path(p) if p.is_ident("arena") => {
+                    parser_attr.arena = true;
+                }
                 _ => {}
             }
         }
@@ -96,6 +99,8 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     let mut recover_map: HashMap<String, Expression<'static>> = HashMap::new();
     let mut pretty_map: HashMap<String, Vec<String>> = HashMap::new();
     let mut no_collapse_set: HashSet<String> = HashSet::new();
+    let mut inline_set: HashSet<String> = HashSet::new();
+    let mut ws_pattern: Option<String> = None;
 
     let ast = if parser_container_attrs.paths.len() == 1 {
         let entry = &parser_container_attrs.paths[0];
@@ -124,6 +129,14 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
             for nc in &pg.no_collapses {
                 no_collapse_set.insert(nc.rule_name.to_string());
             }
+            // Extract @ws directive.
+            if let Some(ref pat) = pg.ws_pattern {
+                ws_pattern = Some(pat.to_string());
+            }
+            // Extract @inline directives.
+            for name in &pg.inline_rules {
+                inline_set.insert(name.to_string());
+            }
 
             if !pg.imports.is_empty() {
                 // File has imports — use module graph loader.
@@ -139,12 +152,14 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
                     if let Some(module) = registry.get_module(path) {
                         // Also collect recovers from imported modules.
                         for rec in &module.grammar.recovers {
-                            recover_map.entry(rec.rule_name.to_string())
+                            recover_map
+                                .entry(rec.rule_name.to_string())
                                 .or_insert_with(|| rec.sync_expr.clone());
                         }
                         // Also collect pretties from imported modules.
                         for p in &module.grammar.pretties {
-                            pretty_map.entry(p.rule_name.to_string())
+                            pretty_map
+                                .entry(p.rule_name.to_string())
                                 .or_insert_with(|| p.hints.iter().map(|h| h.to_string()).collect());
                         }
                         // Also collect no_collapses from imported modules.
@@ -220,9 +235,26 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     // Phase D: Span-eligible rule detection
     let span_eligible_rules = find_span_eligible_rules(&ast, &scc_result.cyclic_rules);
 
-    let recovers_ref = if recover_map.is_empty() { None } else { Some(&recover_map) };
-    let pretties_ref = if pretty_map.is_empty() { None } else { Some(&pretty_map) };
-    let no_collapse_ref = if no_collapse_set.is_empty() { None } else { Some(&no_collapse_set) };
+    let recovers_ref = if recover_map.is_empty() {
+        None
+    } else {
+        Some(&recover_map)
+    };
+    let pretties_ref = if pretty_map.is_empty() {
+        None
+    } else {
+        Some(&pretty_map)
+    };
+    let no_collapse_ref = if no_collapse_set.is_empty() {
+        None
+    } else {
+        Some(&no_collapse_set)
+    };
+    let inline_ref = if inline_set.is_empty() {
+        None
+    } else {
+        Some(&inline_set)
+    };
 
     // ── IR Lowering ──────────────────────────────────────────────────────────
     // Lower the parsed + analysed grammar to the canonical GrammarIR.
@@ -238,12 +270,15 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
         pretties_ref,
         no_collapse_ref,
         &dispatch_tables_for_ir,
+        ws_pattern.as_deref(),
+        inline_ref,
     );
 
     // Run all IR optimization passes.
     bbnf_ir::passes::canonicalize_aliases(&mut grammar_ir);
     bbnf_ir::passes::prune_unreachable(&mut grammar_ir);
     bbnf_ir::passes::inline_acyclic(&mut grammar_ir);
+    bbnf_ir::passes::force_inline(&mut grammar_ir);
     bbnf_ir::passes::prune_unreachable(&mut grammar_ir);
     bbnf_ir::passes::fuse_single_use(&mut grammar_ir);
     bbnf_ir::passes::prune_unreachable(&mut grammar_ir);
@@ -259,11 +294,7 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     // computation, so that type inference uses the correct has_sp_method flags.
 
     // ── IR-based codegen (active) ──────────────────────────────────────
-    let output = bbnf::generate::generate_all(
-        &mut grammar_ir,
-        &parser_container_attrs,
-        ident,
-    );
+    let output = bbnf::generate::generate_all(&mut grammar_ir, &parser_container_attrs, ident);
 
     output.into()
 }

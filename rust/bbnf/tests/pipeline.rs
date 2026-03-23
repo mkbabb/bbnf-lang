@@ -208,6 +208,8 @@ number = /-?\d+/ ;
         &span_eligible,
         None, None, None,
         &HashMap::new(),
+        None,
+        None,
     );
 
     if let Some(ref name) = entry_rule_name {

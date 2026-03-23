@@ -33,24 +33,17 @@ impl InferCtx<'_> {
 }
 
 /// Try to flatten a 2-element tuple where one is `T` and the other is `Vec<T>`.
+/// Only flattens same-type pairs (A, Vec<A>) or (Vec<A>, A).
 pub(super) fn try_flatten_pair(a: &TypeDesc, b: &TypeDesc) -> Option<TypeDesc> {
     // (T, Vec<T>) → Vec<T>
     if let TypeDesc::Vec(inner) = b {
         if **inner == *a {
             return Some(b.clone());
         }
-        // (BoxedEnum, Vec<Enum>) → Vec<Enum>: unbox the first element to match.
-        if **inner == TypeDesc::Enum && *a == TypeDesc::BoxedEnum {
-            return Some(b.clone());
-        }
     }
     // (Vec<T>, T) → Vec<T>
     if let TypeDesc::Vec(inner) = a {
         if **inner == *b {
-            return Some(a.clone());
-        }
-        // (Vec<Enum>, BoxedEnum) → Vec<Enum>: unbox the last element to match.
-        if **inner == TypeDesc::Enum && *b == TypeDesc::BoxedEnum {
             return Some(a.clone());
         }
     }

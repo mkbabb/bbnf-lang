@@ -282,6 +282,11 @@ pub struct RuleMeta {
     /// Whether `@no_collapse` is set for this rule.
     pub no_collapse: bool,
 
+    /// Whether `@inline` is set for this rule. Force-inlined rules have their
+    /// body substituted at every call site — no enum variant, no function.
+    #[serde(default)]
+    pub force_inline: bool,
+
     // ── Sub-variants ────────────────────────────────────────────────────
 
     /// Sub-variants for heterogeneous alternation branches.
@@ -339,6 +344,18 @@ pub struct GrammarIR {
     /// Populated by the `compute_follow_sets` pass; empty until that pass runs.
     #[serde(default)]
     pub follow_sets: HashMap<RuleId, CharSet128>,
+
+    /// Custom whitespace pattern from `@ws /regex/ ;` directive.
+    /// When set, `?w` (OptionalWhitespace) compiles to this regex instead of the
+    /// default ASCII `\s*` trim. The StringId indexes `self.strings`.
+    #[serde(default)]
+    pub ws_pattern: Option<StringId>,
+
+    /// When true, the B.1 all-Span guard keeps overrides for simple Seqs,
+    /// collapsing them to Span and eliminating arena allocation.
+    /// Set to true when prettify is disabled (no @pretty formatting constraints).
+    #[serde(default)]
+    pub b1_span_collapse: bool,
 }
 
 impl GrammarIR {

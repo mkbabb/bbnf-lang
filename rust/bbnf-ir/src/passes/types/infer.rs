@@ -209,10 +209,37 @@ fn infer_seq(children: &[IrNode], ctx: &InferCtx<'_>) -> TypeDesc {
         })
         .collect();
 
-    // B.1 guard: if ALL elements would become Span after override, don't apply.
-    // Re-infer without the override to get true types.
+    // B.1 guard: when all children are Span after B.1 override, decide whether
+    // to keep the override (collapsing the whole Seq to Span) or undo it.
+    //
+    // Keep B.1 when: every child is EITHER a naturally-Span leaf (Literal/Regex/
+    // Epsilon/inlined) OR a B.1-overridden Ref, AND !pretty_preserve.
+    // This limits the optimization to simple Seqs like `(propertyName, ":", value)`
+    // where compression to Span is unambiguous.
+    //
+    // Undo B.1 when: any child is Span through inference of a complex expression
+    // (Repeat, Skip, etc.) — these have different compression behavior between
+    // IR and codegen, causing type mismatches.
     let all_span = child_types.iter().all(|t| *t == TypeDesc::Span);
-    let effective_types = if all_span {
+    // Check if every child is Span through simple, unambiguous means:
+    // either naturally Span (leaf), B.1-overridden Ref, or infers to Span
+    // through the same logic the codegen will use.
+    let all_simple_span = all_span
+        && ctx.ir.b1_span_collapse
+        && !ctx.pretty_preserve
+        && children.iter().zip(child_types.iter()).all(|(c, ty)| {
+            // B.1-overridden Ref — codegen will call _sp().
+            if let IrNode::Ref(id) = c {
+                let rule = &ctx.ir.rules[*id as usize];
+                if rule.meta.has_sp_method && !rule.meta.is_transparent {
+                    return true;
+                }
+            }
+            // Naturally Span — leaf or collapsed expression.
+            // Only safe when the child ALWAYS infers to Span regardless of context.
+            *ty == TypeDesc::Span
+        });
+    let effective_types = if all_span && !all_simple_span {
         children
             .iter()
             .map(|c| {

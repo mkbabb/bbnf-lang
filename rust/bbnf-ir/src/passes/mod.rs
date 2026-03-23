@@ -6,6 +6,7 @@
 pub mod alias;
 pub mod dispatch;
 pub mod follow;
+pub mod force_inline;
 pub mod fuse;
 pub mod inline;
 pub mod memo;
@@ -19,6 +20,7 @@ pub mod types;
 pub use alias::canonicalize_aliases;
 pub use dispatch::generate_dispatch_tables;
 pub use follow::compute_follow_sets;
+pub use force_inline::force_inline;
 pub use fuse::fuse_single_use;
 pub use inline::inline_acyclic;
 pub use memo::refine_memo_strategies;

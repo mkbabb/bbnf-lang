@@ -42,6 +42,7 @@ pub(crate) struct LowerCtx<'a> {
     pub(crate) recovers: Option<&'a HashMap<String, Expression<'a>>>,
     pub(crate) pretties: Option<&'a HashMap<String, Vec<String>>>,
     pub(crate) no_collapse_rules: Option<&'a HashSet<String>>,
+    pub(crate) inline_rules: Option<&'a HashSet<String>>,
 
     /// The current LHS expression being lowered (for branch_firsts lookup).
     pub(crate) current_lhs: Option<&'a Expression<'a>>,
@@ -77,6 +78,8 @@ pub fn lower_to_ir<'a>(
     pretties: Option<&'a HashMap<String, Vec<String>>>,
     no_collapse_rules: Option<&'a HashSet<String>>,
     dispatch_tables: &'a HashMap<String, DispatchTable>,
+    ws_pattern: Option<&str>,
+    inline_rules: Option<&'a HashSet<String>>,
 ) -> GrammarIR {
     let mut ctx = LowerCtx {
         strings: StringInterner::new(),
@@ -91,6 +94,7 @@ pub fn lower_to_ir<'a>(
         recovers,
         pretties,
         no_collapse_rules,
+        inline_rules,
         current_lhs: None,
         recovery_mode: false,
     };
@@ -147,6 +151,8 @@ pub fn lower_to_ir<'a>(
     // original source order (e.g., the last rule in the grammar file).
     let entry = rules.last().map(|r| r.id).unwrap_or(0);
 
+    let ws_pattern_id = ws_pattern.map(|pat| ctx.strings.intern(pat));
+
     GrammarIR {
         rules,
         entry,
@@ -154,5 +160,7 @@ pub fn lower_to_ir<'a>(
         fns: ctx.fns.fns,
         types: Vec::new(), // Type info populated by a later pass or backend.
         follow_sets: HashMap::new(), // Populated by compute_follow_sets pass.
+        ws_pattern: ws_pattern_id,
+        b1_span_collapse: false, // Set by generate_all based on prettify flag.
     }
 }

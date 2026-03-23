@@ -17,7 +17,7 @@ use quote::{format_ident, quote};
 
 use super::super::fast_paths;
 use super::super::ir_types::IrCodegenCtx;
-use super::{ir_node_to_tokens, ir_node_to_tokens_vec, repeat, seq, unescape_literal};
+use super::{ir_node_to_tokens, ir_node_to_tokens_elide, repeat, seq, unescape_literal};
 
 /// Context for inline code generation — tracks hoisted parser bindings and
 /// generates unique variable names within a rule body.
@@ -84,9 +84,7 @@ fn inner_generates_try(node: &IrNode) -> bool {
         // Skip/Next generate `?` for sub-expressions.
         IrNode::Skip(_, _) | IrNode::Next(_, _) => true,
         // Map/OW: delegate to inner.
-        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
-            inner_generates_try(inner)
-        }
+        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => inner_generates_try(inner),
         // Leaves and refs: no `?` generated.
         _ => false,
     }
@@ -140,8 +138,8 @@ pub fn emit_rule_body_inline(
 /// binding from the enclosing closure. Complex sub-expressions (Alt, Repeat) fall
 /// back to the combinator path, hoisting the constructed parser and calling it inline.
 ///
-/// The `in_vec` parameter indicates the result will be stored in a Vec, so Box
-/// indirection on Ref calls is unnecessary.
+/// The `elide_box` parameter indicates the parent provides heap indirection,
+/// so Box wrapping on Ref calls is unnecessary.
 pub(crate) fn ir_node_to_inline(
     node: &IrNode,
     ctx: &IrCodegenCtx<'_>,
@@ -150,12 +148,12 @@ pub(crate) fn ir_node_to_inline(
     ir_node_to_inline_vec(node, ctx, ictx, false)
 }
 
-/// Emit inline code for an IrNode with Vec context control.
+/// Emit inline code for an IrNode with Box elision control.
 pub(crate) fn ir_node_to_inline_vec(
     node: &IrNode,
     ctx: &IrCodegenCtx<'_>,
     ictx: &mut InlineCtx,
-    in_vec: bool,
+    elide_box: bool,
 ) -> TokenStream {
     match node {
         IrNode::Literal(sid) => {
@@ -177,26 +175,29 @@ pub(crate) fn ir_node_to_inline_vec(
             quote! { Some(::parse_that::Span::new(state.offset, state.offset, state.src)) }
         }
 
-        IrNode::Ref(rule_id) => emit_ref_inline(*rule_id, ctx, ictx, in_vec),
+        IrNode::Ref(rule_id) => emit_ref_inline(*rule_id, ctx, ictx, elide_box),
 
-        IrNode::Seq(children) => seq::emit_seq_inline(children, ctx, ictx, in_vec),
+        IrNode::Seq(children) => seq::emit_seq_inline(children, ctx, ictx, elide_box),
 
         IrNode::Alt(..) => {
             // Alt (especially dispatch) is already efficient — fall back to combinator.
-            emit_inline_fallback(node, ctx, ictx, in_vec)
+            emit_inline_fallback(node, ctx, ictx, elide_box)
         }
 
         IrNode::Repeat { inner, lo, hi } if *lo == 0 && *hi == 1 => {
-            // Phase 2b: inline Optional when inner benefits from inlining.
+            // Inline Optional when inner benefits from inlining.
             let inner_ty = super::infer::infer_node_type(inner, ctx);
             if inner_ty != TypeDesc::Span {
-                // Phase 1a: transparent ref → _unboxed() inline optional.
+                // ALL Ref nodes skip Box in Optional context.
+                // Transparent: _unboxed(). Non-transparent: normal method (already Enum).
                 if let IrNode::Ref(rule_id) = inner.as_ref() {
                     let rule = &ctx.ir.rules[*rule_id as usize];
                     if rule.meta.is_transparent {
-                        let resolved_name = ctx.resolve_rule_name(*rule_id);
-                        let unboxed_ident = format_ident!("{}_unboxed", resolved_name);
-                        let name = ictx.hoist(quote! { Self::#unboxed_ident() });
+                        // Transparent: _unboxed() → Option<Enum>
+                        let unboxed_ident =
+                            ctx.unboxed_method_ident_for_name(ctx.resolve_rule_name(*rule_id));
+                        let parser_expr = quote! { Self::#unboxed_ident() };
+                        let name = ictx.hoist(parser_expr);
                         let cp_var = ictx.fresh_ident("cp");
                         return quote! {
                             {
@@ -209,11 +210,32 @@ pub(crate) fn ir_node_to_inline_vec(
                                 }
                             }
                         };
+                    } else {
+                        // Non-transparent: Box wrap → Option<Box<Enum>>
+                        let ident = ctx.rule_method_ident(*rule_id);
+                        let parser_expr = quote! { Self::#ident() };
+                        let name = ictx.hoist(parser_expr);
+                        let cp_var = ictx.fresh_ident("cp");
+                        let wrapped = ctx.wrap_recur_expr_with_state(
+                            quote! { __opt_v },
+                            &format_ident!("state"),
+                        );
+                        return quote! {
+                            {
+                                let #cp_var = state.offset;
+                                if let Some(__opt_v) = #name.call(state) {
+                                    Some(Some(#wrapped))
+                                } else {
+                                    state.offset = #cp_var;
+                                    Some(None)
+                                }
+                            }
+                        };
                     }
                 }
 
                 if benefits_from_inline(inner) {
-                    let inner_expr = ir_node_to_inline_vec(inner, ctx, ictx, in_vec);
+                    let inner_expr = ir_node_to_inline_vec(inner, ctx, ictx, elide_box);
                     let cp_var = ictx.fresh_ident("cp");
                     // When inner generates `?` operators (sequences, skip/next),
                     // wrap in an immediately-invoked closure so `?` returns from
@@ -249,9 +271,9 @@ pub(crate) fn ir_node_to_inline_vec(
         IrNode::Skip(left, right) => {
             // Wrap detection: Skip(Next(open, middle), close) → wrap combinator.
             if let IrNode::Next(_, _) = left.as_ref() {
-                return emit_inline_fallback(node, ctx, ictx, in_vec);
+                return emit_inline_fallback(node, ctx, ictx, elide_box);
             }
-            let left_expr = ir_node_to_inline_vec(left, ctx, ictx, in_vec);
+            let left_expr = ir_node_to_inline_vec(left, ctx, ictx, elide_box);
             // Right side is discarded — use emit_discarded to strip Map/Box overhead,
             // then hoist and call inline.
             let right_parser = repeat::emit_discarded(right, false, ctx);
@@ -269,13 +291,13 @@ pub(crate) fn ir_node_to_inline_vec(
         IrNode::Next(left, right) => {
             // Wrap detection: Next(open, Skip(middle, close)) → wrap combinator.
             if let IrNode::Skip(_, _) = right.as_ref() {
-                return emit_inline_fallback(node, ctx, ictx, in_vec);
+                return emit_inline_fallback(node, ctx, ictx, elide_box);
             }
             // Left side is discarded — use emit_discarded to strip Map/Box overhead,
             // then hoist and call inline.
             let left_parser = repeat::emit_discarded(left, false, ctx);
             let left_name = ictx.hoist(left_parser);
-            let right_expr = ir_node_to_inline_vec(right, ctx, ictx, in_vec);
+            let right_expr = ir_node_to_inline_vec(right, ctx, ictx, elide_box);
             quote! {
                 {
                     #left_name.call(state)?;
@@ -286,7 +308,7 @@ pub(crate) fn ir_node_to_inline_vec(
 
         IrNode::Minus(_, _) | IrNode::Negate(_) => {
             // Rare — fall back to combinator.
-            emit_inline_fallback(node, ctx, ictx, in_vec)
+            emit_inline_fallback(node, ctx, ictx, elide_box)
         }
 
         IrNode::Map { inner, fn_id } => {
@@ -299,27 +321,33 @@ pub(crate) fn ir_node_to_inline_vec(
                 let inner_fd = &ctx.ir.fns[*fn_id2 as usize];
                 let outer_fd = &ctx.ir.fns[*fn_id as usize];
                 match (inner_fd, outer_fd) {
-                    // EnumWrap then BoxWrap → fused .map(|x| Box::new(Enum::Variant(x)))
+                    // EnumWrap then BoxWrap → skip BoxWrap in elide_box context.
                     (FnDescriptor::EnumWrap { variant }, FnDescriptor::BoxWrap) => {
-                        let inner_expr = ir_node_to_inline_vec(inner2, ctx, ictx, in_vec);
+                        let inner_expr = ir_node_to_inline_vec(inner2, ctx, ictx, elide_box);
                         let vname = ctx.ir.get_string(*variant);
                         let vident = format_ident!("{}", vname);
                         let enum_ident = &ctx.enum_ident;
-                        return quote! { #inner_expr.map(|__x| Box::new(#enum_ident::#vident(__x))) };
+                        if elide_box {
+                            return quote! { #inner_expr.map(|__x| #enum_ident::#vident(__x)) };
+                        } else {
+                            let wrapped = ctx.wrap_recur_expr(quote! { #enum_ident::#vident(__x) });
+                            return quote! { #inner_expr.map(|__x| #wrapped) };
+                        }
                     }
-                    // BoxWrap then EnumWrap → fused .map(|x| Enum::Variant(Box::new(x)))
+                    // BoxWrap then EnumWrap → .map(|x| Enum::Variant(Box::new(x)))
                     (FnDescriptor::BoxWrap, FnDescriptor::EnumWrap { variant }) => {
-                        let inner_expr = ir_node_to_inline_vec(inner2, ctx, ictx, in_vec);
+                        let inner_expr = ir_node_to_inline_vec(inner2, ctx, ictx, elide_box);
                         let vname = ctx.ir.get_string(*variant);
                         let vident = format_ident!("{}", vname);
                         let enum_ident = &ctx.enum_ident;
-                        return quote! { #inner_expr.map(|__x| #enum_ident::#vident(Box::new(__x))) };
+                        let wrapped = ctx.wrap_recur_expr(quote! { __x });
+                        return quote! { #inner_expr.map(|__x| #enum_ident::#vident(#wrapped)) };
                     }
                     _ => {}
                 }
             }
 
-            let inner_expr = ir_node_to_inline_vec(inner, ctx, ictx, in_vec);
+            let inner_expr = ir_node_to_inline_vec(inner, ctx, ictx, elide_box);
             let fd = &ctx.ir.fns[*fn_id as usize];
             match fd {
                 FnDescriptor::EnumWrap { variant } => {
@@ -329,7 +357,13 @@ pub(crate) fn ir_node_to_inline_vec(
                     quote! { #inner_expr.map(|__x| #enum_ident::#vident(__x)) }
                 }
                 FnDescriptor::BoxWrap => {
-                    quote! { #inner_expr.map(Box::new) }
+                    if elide_box {
+                        // Parent provides indirection — skip Box wrapping.
+                        inner_expr
+                    } else {
+                        let wrapped = ctx.wrap_recur_expr(quote! { __x });
+                        quote! { #inner_expr.map(|__x| #wrapped) }
+                    }
                 }
                 FnDescriptor::Custom { source, .. } => {
                     let closure_src = ctx.ir.get_string(*source);
@@ -363,7 +397,7 @@ pub(crate) fn ir_node_to_inline_vec(
             }
 
             // Inline whitespace trimming: trim before, call inner, trim after on success.
-            let inner_expr = ir_node_to_inline_vec(inner, ctx, ictx, in_vec);
+            let inner_expr = ir_node_to_inline_vec(inner, ctx, ictx, elide_box);
             let result_var = ictx.fresh_ident("ow");
             quote! {
                 {
@@ -381,45 +415,50 @@ pub(crate) fn ir_node_to_inline_vec(
 
 /// Emit a nonterminal reference as inline code.
 ///
-/// When `in_vec` is true and the rule is non-transparent, skip Box wrapping
-/// since Vec provides heap indirection.
-fn emit_ref_inline(rule_id: RuleId, ctx: &IrCodegenCtx<'_>, ictx: &mut InlineCtx, in_vec: bool) -> TokenStream {
+/// When `elide_box` is true, skip Box wrapping. Transparent rules use
+/// `_unboxed()`, non-transparent rules use the normal method directly.
+fn emit_ref_inline(
+    rule_id: RuleId,
+    ctx: &IrCodegenCtx<'_>,
+    ictx: &mut InlineCtx,
+    elide_box: bool,
+) -> TokenStream {
     let rule = &ctx.ir.rules[rule_id as usize];
-    let resolved_name = ctx.resolve_rule_name(rule_id);
-    let ident = format_ident!("{}", resolved_name);
+    let ident = ctx.rule_method_ident(rule_id);
 
-    if in_vec {
+    if elide_box {
         if rule.meta.is_transparent {
-            // Vec context + transparent: call _unboxed() which returns Enum directly.
-            let unboxed_ident = format_ident!("{}_unboxed", resolved_name);
+            // Transparent + elide: call _unboxed() which returns Enum directly.
+            let unboxed_ident = ctx.unboxed_method_ident_for_name(ctx.resolve_rule_name(rule_id));
             let name = ictx.hoist(quote! { Self::#unboxed_ident() });
             quote! { #name.call(state) }
         } else {
-            // Vec context + non-transparent: skip Box.
+            // Non-transparent + elide: normal method returns Enum; skip Box.
             let name = ictx.hoist(quote! { Self::#ident() });
             quote! { #name.call(state) }
         }
     } else if rule.meta.is_transparent {
-        // Non-Vec + transparent: returns Box<Enum> directly.
+        // Non-elide + transparent: returns Box<Enum> directly.
         let name = ictx.hoist(quote! { Self::#ident() });
         quote! { #name.call(state) }
     } else {
-        // Non-Vec + non-transparent: call and box the result inline.
+        // Non-elide + non-transparent: call and Box the result inline.
         let name = ictx.hoist(quote! { Self::#ident() });
-        quote! { #name.call(state).map(|__x| Box::new(__x)) }
+        let wrapped = ctx.wrap_recur_expr(quote! { __x });
+        quote! { #name.call(state).map(|__x| #wrapped) }
     }
 }
 
-/// Fallback: build a combinator expression via `ir_node_to_tokens_vec`, hoist it,
+/// Fallback: build a combinator expression via `ir_node_to_tokens_elide`, hoist it,
 /// and call it inline. Used for complex nodes (Alt, Repeat, Wrap) where the
 /// combinator approach is already efficient or too complex to inline.
 pub(super) fn emit_inline_fallback(
     node: &IrNode,
     ctx: &IrCodegenCtx<'_>,
     ictx: &mut InlineCtx,
-    in_vec: bool,
+    elide_box: bool,
 ) -> TokenStream {
-    let parser = ir_node_to_tokens_vec(node, ctx, in_vec);
+    let parser = ir_node_to_tokens_elide(node, ctx, elide_box);
     let name = ictx.hoist(parser);
     quote! { #name.call(state) }
 }

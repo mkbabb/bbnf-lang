@@ -61,10 +61,7 @@ pub(crate) fn detect_key_value_pattern_ir(
             if let IrNode::Next(sep, _) = &children[1] {
                 let sep_inner = unwrap_ir_whitespace(sep);
                 if let IrNode::Literal(sep_sid) = sep_inner {
-                    return Some((
-                        "key".to_string(),
-                        ir.get_string(*sep_sid).to_string(),
-                    ));
+                    return Some(("key".to_string(), ir.get_string(*sep_sid).to_string()));
                 }
                 // sep can be a Ref to a rule that is a literal.
                 if let IrNode::Ref(sep_rule_id) = sep_inner {
@@ -107,9 +104,9 @@ pub(crate) fn contains_structured_ref_ir(node: &IrNode, ctx: &IrCodegenCtx<'_>) 
             }
         }
         IrNode::Seq(children) => children.iter().any(|c| contains_structured_ref_ir(c, ctx)),
-        IrNode::Alt(branches, _) => {
-            branches.iter().any(|b| contains_structured_ref_ir(&b.node, ctx))
-        }
+        IrNode::Alt(branches, _) => branches
+            .iter()
+            .any(|b| contains_structured_ref_ir(&b.node, ctx)),
         IrNode::Repeat { inner, .. } => contains_structured_ref_ir(inner, ctx),
         IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
             contains_structured_ref_ir(a, ctx) || contains_structured_ref_ir(b, ctx)

@@ -170,12 +170,18 @@ pub fn extract_split_delim(name: &str) -> Option<&str> {
 
 /// Look up the short description for a hint keyword.
 pub fn hint_description(name: &str) -> Option<&'static str> {
-    HINT_DEFS.iter().find(|d| d.name == name).map(|d| d.description)
+    HINT_DEFS
+        .iter()
+        .find(|d| d.name == name)
+        .map(|d| d.description)
 }
 
 /// Look up the rich documentation for a hint keyword.
 pub fn hint_documentation(name: &str) -> Option<&'static str> {
-    HINT_DEFS.iter().find(|d| d.name == name).map(|d| d.documentation)
+    HINT_DEFS
+        .iter()
+        .find(|d| d.name == name)
+        .map(|d| d.documentation)
 }
 
 /// Find the closest hint name to `name` (for "did you mean?" suggestions).
@@ -202,10 +208,12 @@ fn edit_distance(a: &str, b: &str) -> usize {
     for i in 1..=m {
         curr[0] = i;
         for j in 1..=n {
-            let cost = if a_bytes[i - 1] == b_bytes[j - 1] { 0 } else { 1 };
-            curr[j] = (prev[j] + 1)
-                .min(curr[j - 1] + 1)
-                .min(prev[j - 1] + cost);
+            let cost = if a_bytes[i - 1] == b_bytes[j - 1] {
+                0
+            } else {
+                1
+            };
+            curr[j] = (prev[j] + 1).min(curr[j - 1] + 1).min(prev[j - 1] + cost);
         }
         std::mem::swap(&mut prev, &mut curr);
     }

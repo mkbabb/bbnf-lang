@@ -174,7 +174,8 @@ pub(crate) fn generate_wrapped_doc(
             }
         };
         // The base already contains a Group — filter it from outer hints to avoid double-wrapping.
-        let outer_hints: Vec<String> = hints.iter()
+        let outer_hints: Vec<String> = hints
+            .iter()
             .filter(|h| h.as_str() != "group")
             .cloned()
             .collect();
@@ -232,7 +233,8 @@ pub(crate) fn apply_hints(doc: TokenStream, hints: &[String]) -> TokenStream {
         result = match hint.as_str() {
             "group" => quote! { ::pprint::Doc::Group(Box::new(#result)) },
             "indent" | "dedent" => result, // already applied
-            "block" | "blankline" | "nobreak" | "softbreak" | "hardbreak" | "compact" | "fast" | "off" => result,
+            "block" | "blankline" | "nobreak" | "softbreak" | "hardbreak" | "compact" | "fast"
+            | "off" => result,
             other => panic!("Unknown @pretty hint `{}` in apply_hints()", other),
         };
     }
@@ -266,7 +268,8 @@ pub(crate) fn apply_outer_hints(doc: TokenStream, hints: &[String]) -> TokenStre
         result = match hint.as_str() {
             "group" => quote! { ::pprint::Doc::Group(Box::new(#result)) },
             "indent" | "dedent" => result,
-            "block" | "blankline" | "nobreak" | "softbreak" | "hardbreak" | "compact" | "fast" | "off" => result,
+            "block" | "blankline" | "nobreak" | "softbreak" | "hardbreak" | "compact" | "fast"
+            | "off" => result,
             other => panic!("Unknown @pretty hint `{}` in apply_outer_hints()", other),
         };
     }

@@ -17,10 +17,7 @@ use super::ir_types::IrCodegenCtx;
 /// Try to generate a SpanParser expression for a rule's body.
 /// Returns `None` if the body contains constructs that can't be expressed as SpanParser
 /// (recursion, Map nodes with custom functions, etc.).
-pub fn try_ir_span_parser(
-    rule_id: RuleId,
-    ctx: &IrCodegenCtx<'_>,
-) -> Option<TokenStream> {
+pub fn try_ir_span_parser(rule_id: RuleId, ctx: &IrCodegenCtx<'_>) -> Option<TokenStream> {
     let rule = &ctx.ir.rules[rule_id as usize];
     // Unwrap Map wrapper — SpanParser doesn't do enum wrapping.
     let body = unwrap_map(&rule.body);
@@ -150,9 +147,7 @@ pub(super) fn try_ir_span_expr(node: &IrNode, ctx: &IrCodegenCtx<'_>) -> Option<
                         let elem_ts = try_ir_span_expr(element, ctx)?;
                         let sep_ts = try_ir_span_expr(separator, ctx)?;
                         let lo_usize = *lo as usize;
-                        return Some(
-                            quote! { #elem_ts.sep_by_span(#sep_ts, #lo_usize..) },
-                        );
+                        return Some(quote! { #elem_ts.sep_by_span(#sep_ts, #lo_usize..) });
                     }
                 }
             }
@@ -229,9 +224,7 @@ pub(super) fn try_ir_span_expr(node: &IrNode, ctx: &IrCodegenCtx<'_>) -> Option<
                             let elem_ts = try_ir_span_expr(element, ctx)?;
                             let sep_ts = try_ir_span_expr(separator, ctx)?;
                             let lo_usize = *lo as usize;
-                            return Some(
-                                quote! { #elem_ts.sep_by_ws_span(#sep_ts, #lo_usize..) },
-                            );
+                            return Some(quote! { #elem_ts.sep_by_ws_span(#sep_ts, #lo_usize..) });
                         }
                     }
                 }

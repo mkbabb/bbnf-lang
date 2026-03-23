@@ -65,6 +65,31 @@ pub fn emit_regex_span(pattern: &str) -> TokenStream {
     quote! { ::parse_that::sp_regex(#pattern) }
 }
 
+/// Emit a direct scanner function call for known regex patterns, bypassing
+/// the SpanParser dispatch stack. Returns `None` for unrecognized patterns.
+///
+/// Used by monolithic codegen to call `json_string_fast_quoted(state)` etc.
+/// directly instead of going through `SpanParser::call → SpanKind match →
+/// SpanScanner match → actual_scan_fn`.
+pub fn emit_regex_direct_call(pattern: &str) -> Option<TokenStream> {
+    if is_json_string_regex(pattern) {
+        return Some(quote! { ::parse_that::json_string_fast_quoted(state) });
+    }
+    if is_json_number_regex(pattern) {
+        return Some(quote! { ::parse_that::number_span_fast(state) });
+    }
+    if is_css_ws_comment_regex(pattern) {
+        return Some(quote! { ::parse_that::css_ws_comment_fast(state) });
+    }
+    if is_css_ident_regex(pattern) {
+        return Some(quote! { ::parse_that::css_ident_fast(state) });
+    }
+    if is_css_string_regex(pattern) {
+        return Some(quote! { ::parse_that::css_string_fast(state) });
+    }
+    None
+}
+
 // ---------------------------------------------------------------------------
 // Regex pattern detection
 // ---------------------------------------------------------------------------
@@ -95,10 +120,8 @@ fn is_json_number_regex(pattern: &str) -> bool {
 }
 
 /// Known CSS whitespace+comment regex patterns.
-const CSS_WS_COMMENT_REGEX_PATTERNS: &[&str] = &[
-    r"(?s)(?:\s|/\*.*?\*/)*",
-    r"(?s)(?:\s|\/\*.*?\*\/)*",
-];
+const CSS_WS_COMMENT_REGEX_PATTERNS: &[&str] =
+    &[r"(?s)(?:\s|/\*.*?\*/)*", r"(?s)(?:\s|\/\*.*?\*\/)*"];
 
 /// Detect the canonical CSS whitespace+comment regex.
 fn is_css_ws_comment_regex(pattern: &str) -> bool {
@@ -118,9 +141,7 @@ fn is_css_ident_regex(pattern: &str) -> bool {
 }
 
 /// Known CSS string regex patterns.
-const CSS_STRING_REGEX_PATTERNS: &[&str] = &[
-    r#""(?:[^"\\]|\\[\s\S])*"|'(?:[^'\\]|\\[\s\S])*'"#,
-];
+const CSS_STRING_REGEX_PATTERNS: &[&str] = &[r#""(?:[^"\\]|\\[\s\S])*"|'(?:[^'\\]|\\[\s\S])*'"#];
 
 /// Detect a CSS string regex.
 fn is_css_string_regex(pattern: &str) -> bool {
@@ -155,8 +176,8 @@ fn is_negated_char_class_regex(pattern: &str) -> Option<(String, NegCharClassQua
         if c == '\\' {
             let esc = chars.next()?;
             match esc {
-                '\\' | '/' | ']' | '[' | '^' | '-' | '.' | '*' | '+' | '?' | '(' | ')'
-                | '{' | '}' | '|' | 'n' | 'r' | 't' => {
+                '\\' | '/' | ']' | '[' | '^' | '-' | '.' | '*' | '+' | '?' | '(' | ')' | '{'
+                | '}' | '|' | 'n' | 'r' | 't' => {
                     let actual = match esc {
                         'n' => '\n',
                         'r' => '\r',

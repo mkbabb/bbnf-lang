@@ -14,15 +14,16 @@ use quote::{format_ident, quote};
 /// Handles Box<Enum> (delegate), Option (delegate via and_then), and tuples
 /// (single-pass min/max fold over element ranges).
 pub(crate) fn generate_compound_range(variant: &syn::Ident, ty: &syn::Type) -> TokenStream {
-    if is_box_enum_type(ty) {
+    if is_recursive_enum_type(ty) {
         return quote! {
             Self::#variant(val) => val.source_range(),
         };
     }
 
     if is_option_type(ty) {
+        let range_expr = quote! { val.as_ref().and_then(|v| v.source_range()) };
         return quote! {
-            Self::#variant(val) => val.as_ref().and_then(|v| v.source_range()),
+            Self::#variant(val) => #range_expr,
         };
     }
 
@@ -41,15 +42,18 @@ pub(crate) fn generate_compound_range(variant: &syn::Ident, ty: &syn::Type) -> T
             .collect();
 
         // Single-pass min/max without Vec allocation.
-        let fold_stmts: Vec<TokenStream> = range_exprs.iter().map(|rp| {
-            quote! {
-                if let Some((_s, _e)) = #rp {
-                    if _s < _min_s { _min_s = _s; }
-                    if _e > _max_e { _max_e = _e; }
-                    _found = true;
+        let fold_stmts: Vec<TokenStream> = range_exprs
+            .iter()
+            .map(|rp| {
+                quote! {
+                    if let Some((_s, _e)) = #rp {
+                        if _s < _min_s { _min_s = _s; }
+                        if _e > _max_e { _max_e = _e; }
+                        _found = true;
+                    }
                 }
-            }
-        }).collect();
+            })
+            .collect();
 
         return quote! {
             Self::#variant(#pattern) => {

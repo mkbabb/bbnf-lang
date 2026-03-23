@@ -1,11 +1,16 @@
 #![feature(cold_path)]
 
-//! BBNF JSON parsing benchmarks — four tiers.
+//! BBNF JSON parsing benchmarks — cold per-parse, four tiers.
 //!
-//! - **span**: Raw BBNF parse (opaque AST spans)
-//! - **borrow**: Borrowed JsonValue (numbers parsed, strings stripped — no escape decode)
-//! - **owned**: Owned JsonValue (full escape decode, Cow strings)
-//! - **vm**: Bytecode interpreter
+//! All benches construct a fresh BumpArena + Parser per iteration (cold).
+//! No warm-cache benchmarks: reusing a pre-constructed parser measures
+//! combinator cache throughput, not parse throughput.
+//!
+//! Tiers:
+//! - **span_arena**: Raw BBNF parse (opaque AST spans, arena-allocated)
+//! - **borrow_arena**: Borrowed JsonValue (numbers parsed, strings stripped)
+//! - **owned_arena**: Owned JsonValue (full escape decode, Cow strings)
+//! - **vm**: Bytecode interpreter (fresh interpreter per iteration)
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -18,11 +23,15 @@ use bbnf::pipeline::{compile_grammar, PipelineOptions};
 use bbnf_derive::Parser;
 use bbnf_ir::compiler::compile as compile_bytecode;
 use bbnf_ir::interpreter::Interpreter;
-use parse_that::Span;
+use parse_that::{BumpArena, Span};
 
 #[derive(Parser)]
-#[parser(path = "benches/grammars/json.bbnf")]
+#[parser(path = "benches/grammars/json.bbnf", arena)]
 struct BbnfJsonParser;
+
+// Compile-time enum size audit: ensure the generated enum stays compact.
+// Smaller enums → faster Vec operations (memcpy, reallocation).
+const _: () = assert!(std::mem::size_of::<BbnfJsonParserEnum>() <= 48);
 
 fn load_json(name: &str) -> String {
     let path = format!("../../data/json/{}", name);
@@ -52,29 +61,29 @@ enum BorrowedJsonValue<'a> {
     Object(Vec<(&'a str, BorrowedJsonValue<'a>)>),
 }
 
-fn to_borrowed<'a>(node: BbnfJsonParserEnum<'a>) -> BorrowedJsonValue<'a> {
+fn to_borrowed_arena<'a>(node: &'a BbnfJsonParserArenaEnum<'a>) -> BorrowedJsonValue<'a> {
     match node {
-        BbnfJsonParserEnum::null(_) => BorrowedJsonValue::Null,
-        BbnfJsonParserEnum::r#bool(s) => BorrowedJsonValue::Bool(s.as_str() == "true"),
-        BbnfJsonParserEnum::number(s) => {
+        BbnfJsonParserArenaEnum::null(_) => BorrowedJsonValue::Null,
+        BbnfJsonParserArenaEnum::r#bool(s) => BorrowedJsonValue::Bool(s.as_str() == "true"),
+        BbnfJsonParserArenaEnum::number(s) => {
             BorrowedJsonValue::Number(fast_float2::parse(s.as_str()).unwrap())
         }
-        BbnfJsonParserEnum::string(s) => {
+        BbnfJsonParserArenaEnum::string(s) => {
             let raw = s.as_str();
             BorrowedJsonValue::String(&raw[1..raw.len() - 1])
         }
-        BbnfJsonParserEnum::array(items) => {
-            BorrowedJsonValue::Array(items.into_iter().map(to_borrowed).collect())
+        BbnfJsonParserArenaEnum::array(items) => {
+            BorrowedJsonValue::Array(items.iter().map(to_borrowed_arena).collect())
         }
-        BbnfJsonParserEnum::object(pairs) => BorrowedJsonValue::Object(
+        BbnfJsonParserArenaEnum::object(pairs) => BorrowedJsonValue::Object(
             pairs
-                .into_iter()
+                .iter()
                 .map(|p| {
-                    let BbnfJsonParserEnum::pair((key_span, val_box)) = p else {
+                    let BbnfJsonParserArenaEnum::pair((key_span, val_ref)) = p else {
                         unreachable!()
                     };
                     let raw = key_span.as_str();
-                    (&raw[1..raw.len() - 1], to_borrowed(*val_box))
+                    (&raw[1..raw.len() - 1], to_borrowed_arena(val_ref))
                 })
                 .collect(),
         ),
@@ -97,25 +106,25 @@ enum OwnedJsonValue<'a> {
     Object(Vec<(Cow<'a, str>, OwnedJsonValue<'a>)>),
 }
 
-fn to_owned_value<'a>(node: BbnfJsonParserEnum<'a>) -> OwnedJsonValue<'a> {
+fn to_owned_value_arena<'a>(node: &'a BbnfJsonParserArenaEnum<'a>) -> OwnedJsonValue<'a> {
     match node {
-        BbnfJsonParserEnum::null(_) => OwnedJsonValue::Null,
-        BbnfJsonParserEnum::r#bool(s) => OwnedJsonValue::Bool(s.as_str() == "true"),
-        BbnfJsonParserEnum::number(s) => {
+        BbnfJsonParserArenaEnum::null(_) => OwnedJsonValue::Null,
+        BbnfJsonParserArenaEnum::r#bool(s) => OwnedJsonValue::Bool(s.as_str() == "true"),
+        BbnfJsonParserArenaEnum::number(s) => {
             OwnedJsonValue::Number(fast_float2::parse(s.as_str()).unwrap())
         }
-        BbnfJsonParserEnum::string(s) => OwnedJsonValue::String(decode_string(s)),
-        BbnfJsonParserEnum::array(items) => {
-            OwnedJsonValue::Array(items.into_iter().map(to_owned_value).collect())
+        BbnfJsonParserArenaEnum::string(s) => OwnedJsonValue::String(decode_string(*s)),
+        BbnfJsonParserArenaEnum::array(items) => {
+            OwnedJsonValue::Array(items.iter().map(to_owned_value_arena).collect())
         }
-        BbnfJsonParserEnum::object(pairs) => OwnedJsonValue::Object(
+        BbnfJsonParserArenaEnum::object(pairs) => OwnedJsonValue::Object(
             pairs
-                .into_iter()
+                .iter()
                 .map(|p| {
-                    let BbnfJsonParserEnum::pair((key_span, val_box)) = p else {
+                    let BbnfJsonParserArenaEnum::pair((key_span, val_ref)) = p else {
                         unreachable!()
                     };
-                    (decode_string(key_span), to_owned_value(*val_box))
+                    (decode_string(*key_span), to_owned_value_arena(val_ref))
                 })
                 .collect(),
         ),
@@ -155,8 +164,7 @@ fn decode_string<'a>(s: Span<'a>) -> Cow<'a, str> {
                         let hex2 = &inner[i..i + 4];
                         let lo = u16::from_str_radix(hex2, 16).unwrap();
                         i += 4;
-                        let full =
-                            0x10000 + ((cp as u32 - 0xD800) << 10) + (lo as u32 - 0xDC00);
+                        let full = 0x10000 + ((cp as u32 - 0xD800) << 10) + (lo as u32 - 0xDC00);
                         out.push(char::from_u32(full).unwrap());
                         i += 1;
                         continue;
@@ -176,68 +184,104 @@ fn decode_string<'a>(s: Span<'a>) -> Cow<'a, str> {
     Cow::Owned(out)
 }
 
-// ── Span tier (raw BBNF parse) ─────────────────────────────────────────────
+// ── Span tier (arena, cold per-parse) ──────────────────────────────────────
 
-macro_rules! bench_span {
+macro_rules! bench_span_arena {
     ($name:ident, $file:expr) => {
         fn $name(b: &mut Bencher) {
             let input = load_json($file);
-            let parser = BbnfJsonParser::value();
             b.bytes = input.len() as u64;
-            assert!(parser.parse(&input).is_some(), concat!($file, ": parse failed"));
-            b.iter(|| parser.parse(black_box(&input)).unwrap());
-        }
-    };
-}
-
-bench_span!(span_data, "data.json");
-bench_span!(span_twitter, "twitter.json");
-bench_span!(span_citm, "citm_catalog.json");
-bench_span!(span_canada, "canada.json");
-
-// ── Borrow tier (borrowed JsonValue) ────────────────────────────────────────
-
-macro_rules! bench_borrow {
-    ($name:ident, $file:expr) => {
-        fn $name(b: &mut Bencher) {
-            let input = load_json($file);
-            let parser = BbnfJsonParser::value();
-            b.bytes = input.len() as u64;
-            assert!(parser.parse(&input).is_some(), concat!($file, ": parse failed"));
+            {
+                let arena = BumpArena::<BbnfJsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = BbnfJsonParser::value_arena();
+                assert!(
+                    parser.parse_with_context(&input, &arena).is_some(),
+                    concat!($file, ": arena parse failed")
+                );
+            }
             b.iter(|| {
-                let ast = parser.parse(black_box(&input)).unwrap();
-                to_borrowed(*ast)
+                let arena = BumpArena::<BbnfJsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = BbnfJsonParser::value_arena();
+                let ast = parser
+                    .parse_with_context(black_box(&input), &arena)
+                    .unwrap();
+                black_box(ast as *const _);
             });
         }
     };
 }
 
-bench_borrow!(borrow_data, "data.json");
-bench_borrow!(borrow_twitter, "twitter.json");
-bench_borrow!(borrow_citm, "citm_catalog.json");
-bench_borrow!(borrow_canada, "canada.json");
+bench_span_arena!(span_arena_data, "data.json");
+bench_span_arena!(span_arena_twitter, "twitter.json");
+bench_span_arena!(span_arena_citm, "citm_catalog.json");
+bench_span_arena!(span_arena_canada, "canada.json");
+bench_span_arena!(span_arena_data_xl, "data_xl.json");
 
-// ── Owned tier (full escape decode) ─────────────────────────────────────────
+// ── Borrow tier (arena, cold per-parse) ────────────────────────────────────
 
-macro_rules! bench_owned {
+macro_rules! bench_borrow_arena {
     ($name:ident, $file:expr) => {
         fn $name(b: &mut Bencher) {
             let input = load_json($file);
-            let parser = BbnfJsonParser::value();
             b.bytes = input.len() as u64;
-            assert!(parser.parse(&input).is_some(), concat!($file, ": parse failed"));
+            {
+                let arena = BumpArena::<BbnfJsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = BbnfJsonParser::value_arena();
+                assert!(
+                    parser.parse_with_context(&input, &arena).is_some(),
+                    concat!($file, ": arena parse failed")
+                );
+            }
             b.iter(|| {
-                let ast = parser.parse(black_box(&input)).unwrap();
-                to_owned_value(*ast)
+                let arena = BumpArena::<BbnfJsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = BbnfJsonParser::value_arena();
+                let ast = parser
+                    .parse_with_context(black_box(&input), &arena)
+                    .unwrap();
+                black_box(to_borrowed_arena(ast));
             });
         }
     };
 }
 
-bench_owned!(owned_data, "data.json");
-bench_owned!(owned_twitter, "twitter.json");
-bench_owned!(owned_citm, "citm_catalog.json");
-bench_owned!(owned_canada, "canada.json");
+bench_borrow_arena!(borrow_arena_data, "data.json");
+bench_borrow_arena!(borrow_arena_twitter, "twitter.json");
+bench_borrow_arena!(borrow_arena_citm, "citm_catalog.json");
+bench_borrow_arena!(borrow_arena_canada, "canada.json");
+bench_borrow_arena!(borrow_arena_data_xl, "data_xl.json");
+
+// ── Owned tier (arena, cold per-parse) ─────────────────────────────────────
+
+macro_rules! bench_owned_arena {
+    ($name:ident, $file:expr) => {
+        fn $name(b: &mut Bencher) {
+            let input = load_json($file);
+            b.bytes = input.len() as u64;
+            {
+                let arena = BumpArena::<BbnfJsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = BbnfJsonParser::value_arena();
+                assert!(
+                    parser.parse_with_context(&input, &arena).is_some(),
+                    concat!($file, ": arena parse failed")
+                );
+            }
+            b.iter(|| {
+                let arena = BumpArena::<BbnfJsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = BbnfJsonParser::value_arena();
+                let ast = parser
+                    .parse_with_context(black_box(&input), &arena)
+                    .unwrap();
+                black_box(to_owned_value_arena(ast));
+            });
+        }
+    };
+}
+
+bench_owned_arena!(owned_arena_data, "data.json");
+bench_owned_arena!(owned_arena_twitter, "twitter.json");
+bench_owned_arena!(owned_arena_citm, "citm_catalog.json");
+bench_owned_arena!(owned_arena_canada, "canada.json");
+bench_owned_arena!(owned_arena_data_xl, "data_xl.json");
 
 // ── VM tier (bytecode interpreter) ──────────────────────────────────────────
 
@@ -265,11 +309,33 @@ bench_vm!(vm_data, "data.json");
 bench_vm!(vm_twitter, "twitter.json");
 bench_vm!(vm_citm, "citm_catalog.json");
 bench_vm!(vm_canada, "canada.json");
+bench_vm!(vm_data_xl, "data_xl.json");
 
 // ── Groups ──────────────────────────────────────────────────────────────────
 
-benchmark_group!(span, span_data, span_twitter, span_citm, span_canada);
-benchmark_group!(borrow, borrow_data, borrow_twitter, borrow_citm, borrow_canada);
-benchmark_group!(owned, owned_data, owned_twitter, owned_citm, owned_canada);
-benchmark_group!(vm, vm_data, vm_twitter, vm_citm, vm_canada);
-benchmark_main!(span, borrow, owned, vm);
+benchmark_group!(
+    span_arena,
+    span_arena_data,
+    span_arena_twitter,
+    span_arena_citm,
+    span_arena_canada,
+    span_arena_data_xl
+);
+benchmark_group!(
+    borrow_arena,
+    borrow_arena_data,
+    borrow_arena_twitter,
+    borrow_arena_citm,
+    borrow_arena_canada,
+    borrow_arena_data_xl
+);
+benchmark_group!(
+    owned_arena,
+    owned_arena_data,
+    owned_arena_twitter,
+    owned_arena_citm,
+    owned_arena_canada,
+    owned_arena_data_xl
+);
+benchmark_group!(vm, vm_data, vm_twitter, vm_citm, vm_canada, vm_data_xl);
+benchmark_main!(span_arena, borrow_arena, owned_arena, vm);

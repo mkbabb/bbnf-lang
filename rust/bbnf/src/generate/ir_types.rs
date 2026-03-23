@@ -8,24 +8,30 @@ use std::collections::{HashMap, HashSet};
 
 use bbnf_ir::{GrammarIR, RuleId, TypeDesc};
 
+use proc_macro2::TokenStream;
+use quote::format_ident;
 use syn::{parse_quote, Type};
 
 use super::types::ParserAttributes;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum StorageMode {
+    Owned,
+    Arena,
+}
+
 /// Central context for IR-based code generation.
-///
-/// Holds all data needed by `ir_codegen`, `ir_span`, `ir_enums`, and `ir_pretty`
-/// to emit TokenStream output. Replaces `GeneratedGrammarAttributes` + `CacheBundle`.
 pub struct IrCodegenCtx<'a> {
     pub ir: &'a GrammarIR,
     /// Parser struct name (e.g., `Json`).
     pub ident: &'a syn::Ident,
-    /// Enum name (e.g., `JsonEnum`).
+    /// Enum name (e.g., `JsonEnum` / `JsonArenaEnum`).
     pub enum_ident: syn::Ident,
-    /// `JsonEnum<'a>`.
+    /// `JsonEnum<'a>` / `JsonArenaEnum<'a>`.
     pub enum_type: Type,
-    /// `Box<JsonEnum<'a>>`.
+    /// `Box<JsonEnum<'a>>` / `&'a JsonArenaEnum<'a>`.
     pub boxed_enum_type: Type,
+    pub storage_mode: StorageMode,
     /// Parser container attributes.
     pub parser_attrs: &'a ParserAttributes,
     /// Span-eligible rules that successfully produce `_sp()` methods.
@@ -37,18 +43,22 @@ pub struct IrCodegenCtx<'a> {
 }
 
 impl<'a> IrCodegenCtx<'a> {
-    /// Build context from GrammarIR + parser attributes.
-    /// Type map is populated from `ir.types`.
     pub fn new(
         ir: &'a GrammarIR,
         ident: &'a syn::Ident,
         parser_attrs: &'a ParserAttributes,
+        storage_mode: StorageMode,
     ) -> Self {
-        let enum_ident = quote::format_ident!("{}Enum", ident);
+        let enum_ident = match storage_mode {
+            StorageMode::Owned => quote::format_ident!("{}Enum", ident),
+            StorageMode::Arena => quote::format_ident!("{}ArenaEnum", ident),
+        };
         let enum_type: Type = parse_quote!(#enum_ident<'a>);
-        let boxed_enum_type: Type = parse_quote!(Box<#enum_ident<'a>>);
+        let boxed_enum_type: Type = match storage_mode {
+            StorageMode::Owned => parse_quote!(Box<#enum_ident<'a>>),
+            StorageMode::Arena => parse_quote!(&'a #enum_ident<'a>),
+        };
 
-        // Build type map from IR types, using a temporary ctx for conversion.
         let mut rule_types = HashMap::new();
         for (rule_id, type_desc) in &ir.types {
             let ty = type_desc_to_syn_raw(type_desc, &enum_type, &boxed_enum_type, ir);
@@ -61,6 +71,7 @@ impl<'a> IrCodegenCtx<'a> {
             enum_ident,
             enum_type,
             boxed_enum_type,
+            storage_mode,
             parser_attrs,
             sp_method_rules: HashSet::new(),
             rule_types,
@@ -68,7 +79,11 @@ impl<'a> IrCodegenCtx<'a> {
         }
     }
 
-    /// Get the syn::Type for a rule's output.
+    #[inline]
+    pub fn uses_arena(&self) -> bool {
+        self.storage_mode == StorageMode::Arena
+    }
+
     pub fn rule_return_type(&self, rule_id: RuleId) -> Type {
         let rule = &self.ir.rules[rule_id as usize];
         if rule.meta.is_transparent {
@@ -78,7 +93,6 @@ impl<'a> IrCodegenCtx<'a> {
         }
     }
 
-    /// Get the inferred type for a rule (pre-codegen wrapping).
     pub fn rule_body_type(&self, rule_id: RuleId) -> Type {
         self.rule_types
             .get(&rule_id)
@@ -86,23 +100,26 @@ impl<'a> IrCodegenCtx<'a> {
             .unwrap_or_else(|| self.boxed_enum_type.clone())
     }
 
-    /// Get the recover sentinel expression for a rule.
-    pub fn recover_sentinel(&self, rule_id: RuleId) -> proc_macro2::TokenStream {
+    pub fn recover_sentinel(&self, rule_id: RuleId) -> TokenStream {
         let rule = &self.ir.rules[rule_id as usize];
         let enum_ident = &self.enum_ident;
         if rule.meta.is_transparent {
-            quote::quote! { Box::new(#enum_ident::Recovered) }
+            match self.storage_mode {
+                StorageMode::Owned => quote::quote! { Box::new(#enum_ident::Recovered) },
+                StorageMode::Arena => {
+                    let recovered_ident = self.recovered_static_ident();
+                    quote::quote! { &#recovered_ident }
+                }
+            }
         } else {
             quote::quote! { #enum_ident::Recovered }
         }
     }
 
-    /// Check if a rule name is in the sp_method_rules set.
     pub fn has_sp_method(&self, name: &str) -> bool {
         self.sp_method_rules.contains(name)
     }
 
-    /// Resolve a rule name, following aliases.
     pub fn resolve_rule_name(&self, rule_id: RuleId) -> &str {
         let rule = &self.ir.rules[rule_id as usize];
         if let Some(alias_id) = rule.meta.is_alias {
@@ -111,14 +128,74 @@ impl<'a> IrCodegenCtx<'a> {
             self.ir.get_string(rule.name)
         }
     }
+
+    pub fn rule_method_ident(&self, rule_id: RuleId) -> syn::Ident {
+        self.method_ident_for_name(self.resolve_rule_name(rule_id))
+    }
+
+    pub fn method_ident_for_name(&self, name: &str) -> syn::Ident {
+        match self.storage_mode {
+            StorageMode::Owned => format_ident!("{}", name),
+            StorageMode::Arena => format_ident!("{}_arena", name),
+        }
+    }
+
+    pub fn unboxed_method_ident_for_name(&self, name: &str) -> syn::Ident {
+        match self.storage_mode {
+            StorageMode::Owned => format_ident!("{}_unboxed", name),
+            StorageMode::Arena => format_ident!("{}_arena_unboxed", name),
+        }
+    }
+
+    pub fn wrap_recur_expr_with_state(
+        &self,
+        expr: TokenStream,
+        state_ident: &syn::Ident,
+    ) -> TokenStream {
+        match self.storage_mode {
+            StorageMode::Owned => quote::quote! { Box::new(#expr) },
+            StorageMode::Arena => {
+                let helper_ident = self.arena_helper_ident();
+                quote::quote! {{
+                    let __arena_alloc = #helper_ident(#state_ident).alloc(#expr);
+                    &*__arena_alloc
+                }}
+            }
+        }
+    }
+
+    pub fn wrap_recur_expr(&self, expr: TokenStream) -> TokenStream {
+        let state_ident = format_ident!("state");
+        self.wrap_recur_expr_with_state(expr, &state_ident)
+    }
+
+    pub fn wrap_recur_map_with_state(
+        &self,
+        parser: TokenStream,
+        body: TokenStream,
+        state_ident: &syn::Ident,
+    ) -> TokenStream {
+        match self.storage_mode {
+            StorageMode::Owned => quote::quote! { #parser.map(|x| #body) },
+            StorageMode::Arena => quote::quote! {
+                #parser.map_with_ctx(|x, #state_ident| #body)
+            },
+        }
+    }
+
+    pub fn recovered_static_ident(&self) -> syn::Ident {
+        format_ident!("__{}_RECOVERED", self.enum_ident)
+    }
+
+    pub fn arena_helper_ident(&self) -> syn::Ident {
+        format_ident!("__{}_arena", self.enum_ident)
+    }
 }
 
-/// Convert an IR `TypeDesc` to a `syn::Type`.
 pub fn type_desc_to_syn(desc: &TypeDesc, ctx: &IrCodegenCtx<'_>) -> Type {
     type_desc_to_syn_raw(desc, &ctx.enum_type, &ctx.boxed_enum_type, ctx.ir)
 }
 
-/// Convert TypeDesc → syn::Type without requiring full IrCodegenCtx (for bootstrapping).
 fn type_desc_to_syn_raw(
     desc: &TypeDesc,
     enum_type: &Type,
@@ -156,16 +233,10 @@ fn type_desc_to_syn_raw(
     }
 }
 
-/// Check whether a TypeDesc is Span.
 pub fn type_desc_is_span(desc: &TypeDesc) -> bool {
     matches!(desc, TypeDesc::Span)
 }
 
-/// Check whether a `syn::Type` is `parse_that::Span` (with or without leading `::`).
-///
-/// Uses structural `syn::Ident` comparison on path segments — no string
-/// serialization involved. Matches both `parse_that::Span<'a>` and
-/// `::parse_that::Span<'a>`.
 pub fn type_is_span(ty: &syn::Type) -> bool {
     if let syn::Type::Path(type_path) = ty {
         let segments = &type_path.path.segments;

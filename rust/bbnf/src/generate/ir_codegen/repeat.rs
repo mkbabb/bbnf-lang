@@ -10,8 +10,8 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use super::super::ir_types::IrCodegenCtx;
-use super::infer::{infer_node_type, infer_node_type_in_vec};
-use super::{ir_node_to_tokens, ir_node_to_tokens_vec};
+use super::infer::{infer_node_type, infer_node_type_elide_box};
+use super::{ir_node_to_tokens, ir_node_to_tokens_elide};
 
 /// Emit a Repeat expression.
 ///
@@ -19,18 +19,24 @@ use super::{ir_node_to_tokens, ir_node_to_tokens_vec};
 /// context). For Optional, this means the Option inner can also skip boxing.
 /// For Many/Many1, `in_vec=true` is always set regardless of the parameter
 /// since Vec provides heap indirection.
-pub fn emit_repeat(inner: &IrNode, lo: u32, hi: u32, ctx: &IrCodegenCtx<'_>, in_vec: bool) -> TokenStream {
+pub fn emit_repeat(
+    inner: &IrNode,
+    lo: u32,
+    hi: u32,
+    ctx: &IrCodegenCtx<'_>,
+    _elide_box: bool,
+) -> TokenStream {
     // sep_by detection: Repeat { inner: Skip(element, Repeat { separator, 0, 1 }) }
     // Only for non-optional repeats (not lo=0, hi=1 which is just Optional).
     if !(lo == 0 && hi == 1) {
         if let Some((element, separator)) = try_sep_by(inner) {
             let sep_ts = emit_discarded(separator, false, ctx);
-            let elem_ty = infer_node_type_in_vec(element, ctx);
+            let elem_ty = infer_node_type_elide_box(element, ctx);
             let sep_is_span = separator_is_span(separator, ctx);
             let both_span = elem_ty == TypeDesc::Span && sep_is_span;
 
-            // Vec-producing: pass in_vec=true for element emission.
-            let elem_ts = ir_node_to_tokens_vec(element, ctx, true);
+            // Vec-producing: pass elide_box=true for element emission.
+            let elem_ts = ir_node_to_tokens_elide(element, ctx, true);
 
             let lo_usize = lo as usize;
             return if both_span {
@@ -42,39 +48,41 @@ pub fn emit_repeat(inner: &IrNode, lo: u32, hi: u32, ctx: &IrCodegenCtx<'_>, in_
     }
 
     if lo == 0 && hi == 1 {
-        // Optional: NOT a Vec context — use standard (boxed) emission.
+        // Optional: skip Box for ALL Ref nodes.
+        // Transparent: _unboxed(). Non-transparent: normal method (already Enum).
         let inner_ty = infer_node_type(inner, ctx);
 
-        // Phase 1a: transparent refs use _unboxed() to skip Box allocation.
-        // Option<Enum> instead of Option<Box<Enum>>.
         if let IrNode::Ref(rule_id) = inner {
             let rule = &ctx.ir.rules[*rule_id as usize];
             if rule.meta.is_transparent {
-                let resolved_name = ctx.resolve_rule_name(*rule_id);
-                let unboxed_ident = format_ident!("{}_unboxed", resolved_name);
+                // Transparent: _unboxed().opt() → Option<Enum>
+                let unboxed_ident =
+                    ctx.unboxed_method_ident_for_name(ctx.resolve_rule_name(*rule_id));
                 return quote! { Self::#unboxed_ident().opt() };
+            } else {
+                // Non-transparent: full ref with arena alloc → Option<&'a Enum>
+                let ref_ts = super::emit_ref(*rule_id, ctx, false);
+                return quote! { #ref_ts.opt() };
             }
         }
 
         let inner_ts = ir_node_to_tokens(inner, ctx);
         // Use opt_span for nodes guaranteed to produce a single Span.
-        // Leaf nodes (Literal, Regex, Ref) always produce Span when typed as such.
-        // Sequences also produce Span when no_collapse is false (normal span
-        // compression is active). When no_collapse is true (@pretty/@no_collapse),
-        // emit_seq preserves tuples, so opt_span would be a type mismatch.
         let is_safe_span = inner_ty == TypeDesc::Span
-            && (matches!(inner, IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Ref(_))
-                || (matches!(inner, IrNode::Seq(_)) && !ctx.no_collapse.get()));
+            && (matches!(
+                inner,
+                IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Ref(_)
+            ) || (matches!(inner, IrNode::Seq(_)) && !ctx.no_collapse.get()));
         if is_safe_span {
             quote! { #inner_ts.opt_span() }
         } else {
             quote! { #inner_ts.opt() }
         }
     } else {
-        // Vec-producing: pass in_vec=true to skip Box wrapping.
-        let inner_ty = infer_node_type_in_vec(inner, ctx);
+        // Vec-producing: pass elide_box=true to skip Box wrapping.
+        let inner_ty = infer_node_type_elide_box(inner, ctx);
         let is_span = inner_ty == TypeDesc::Span;
-        let inner_ts = ir_node_to_tokens_vec(inner, ctx, true);
+        let inner_ts = ir_node_to_tokens_elide(inner, ctx, true);
         if lo == 0 {
             if is_span {
                 quote! { #inner_ts.many_span(..) }
@@ -107,12 +115,12 @@ pub fn emit_sep_by_ws(
     // sep_by discards separator value → skip enum/box wrapping.
     // sep_by_ws handles whitespace → skip OW trimming.
     // Vec-producing: pass in_vec=true for element emission.
-    let elem_ts = ir_node_to_tokens_vec(element, ctx, true);
+    let elem_ts = ir_node_to_tokens_elide(element, ctx, true);
     let sep_ts = emit_discarded(separator, true, ctx);
 
     // After stripping, check if separator is effectively Span
     // (e.g. a Ref with _sp method) for sep_by_ws_span upgrade.
-    let elem_ty = infer_node_type_in_vec(element, ctx);
+    let elem_ty = infer_node_type_elide_box(element, ctx);
     let sep_is_span = separator_is_span(separator, ctx);
     let both_span = elem_ty == TypeDesc::Span && sep_is_span;
 
@@ -156,11 +164,7 @@ pub fn try_sep_by(inner: &IrNode) -> Option<(&IrNode, &IrNode)> {
 ///
 /// Used by sep_by/sep_by_ws for discarded separators, and by Skip/Next for
 /// discarded positions (right side of Skip, left side of Next).
-pub(crate) fn emit_discarded(
-    node: &IrNode,
-    strip_ow: bool,
-    ctx: &IrCodegenCtx<'_>,
-) -> TokenStream {
+pub(crate) fn emit_discarded(node: &IrNode, strip_ow: bool, ctx: &IrCodegenCtx<'_>) -> TokenStream {
     match node {
         // Strip Map wrappers (EnumWrap, BoxWrap) — their output is discarded.
         IrNode::Map { inner, fn_id } => {
@@ -173,28 +177,23 @@ pub(crate) fn emit_discarded(
             }
         }
         // Strip OptionalWhitespace in sep_by_ws context (sep_by_ws handles WS).
-        IrNode::OptionalWhitespace(inner) if strip_ow => {
-            emit_discarded(inner, strip_ow, ctx)
-        }
-        // For Ref nodes, skip boxing and prefer _sp path.
+        IrNode::OptionalWhitespace(inner) if strip_ow => emit_discarded(inner, strip_ow, ctx),
+        // For Ref nodes, skip arena alloc and prefer _sp path.
         IrNode::Ref(rule_id) => {
             let rule = &ctx.ir.rules[*rule_id as usize];
             let name = ctx.ir.get_string(rule.name);
             if ctx.has_sp_method(name) {
-                // Use SpanParser path — cheapest, no enum/box overhead.
+                // Use SpanParser path — cheapest, no enum/arena overhead.
                 let sp_ident = format_ident!("{}_sp", name);
                 quote! { Self::#sp_ident().into_parser() }
             } else if rule.meta.is_transparent {
-                // Phase 1b: transparent refs use _unboxed() — value is discarded
-                // anyway, so skip the internal boxing that transparent rules do.
-                let resolved_name = ctx.resolve_rule_name(*rule_id);
-                let unboxed_ident = format_ident!("{}_unboxed", resolved_name);
+                // Transparent: _unboxed() to skip internal arena alloc.
+                let unboxed_ident =
+                    ctx.unboxed_method_ident_for_name(ctx.resolve_rule_name(*rule_id));
                 quote! { Self::#unboxed_ident() }
             } else {
-                // Emit Self::rule() WITHOUT the .map(|x| Box::new(x)) boxing
-                // that emit_ref normally adds. The value is discarded anyway.
-                let resolved_name = ctx.resolve_rule_name(*rule_id);
-                let ident = format_ident!("{}", resolved_name);
+                // Non-transparent: normal method returns Enum; skip arena alloc.
+                let ident = ctx.rule_method_ident(*rule_id);
                 quote! { Self::#ident() }
             }
         }
@@ -212,10 +211,10 @@ pub fn emit_sep_by_ws_until(
     close_bytes: &[u8],
     ctx: &IrCodegenCtx<'_>,
 ) -> TokenStream {
-    let elem_ts = ir_node_to_tokens_vec(element, ctx, true);
+    let elem_ts = ir_node_to_tokens_elide(element, ctx, true);
     let sep_ts = emit_discarded(separator, true, ctx);
 
-    let elem_ty = infer_node_type_in_vec(element, ctx);
+    let elem_ty = infer_node_type_elide_box(element, ctx);
     let sep_is_span = separator_is_span(separator, ctx);
     let both_span = elem_ty == TypeDesc::Span && sep_is_span;
 

@@ -14,6 +14,7 @@
 //!   nom              — combinator, borrowed strings
 //!   winnow           — combinator (nom successor), dispatch! macro
 //!   pest             — PEG grammar-generated parser
+//!   tree-sitter      — incremental, error-recovering parser generator (C-based)
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -42,6 +43,8 @@ bench_serde!(serde_data, "data.json");
 bench_serde!(serde_twitter, "twitter.json");
 bench_serde!(serde_citm, "citm_catalog.json");
 bench_serde!(serde_canada, "canada.json");
+bench_serde!(serde_data_xl, "data_xl.json");
+bench_serde!(serde_data_supermaxx, "data_supermaxx.json");
 
 // ── serde_json_borrow (zero-copy borrowed Value) ────────────────────────────
 
@@ -63,6 +66,8 @@ bench_serde_borrow!(serde_borrow_data, "data.json");
 bench_serde_borrow!(serde_borrow_twitter, "twitter.json");
 bench_serde_borrow!(serde_borrow_citm, "citm_catalog.json");
 bench_serde_borrow!(serde_borrow_canada, "canada.json");
+bench_serde_borrow!(serde_borrow_data_xl, "data_xl.json");
+bench_serde_borrow!(serde_borrow_data_supermaxx, "data_supermaxx.json");
 
 // ── sonic-rs (SIMD, arena-allocated) ────────────────────────────────────────
 
@@ -81,6 +86,8 @@ bench_sonic!(sonic_data, "data.json");
 bench_sonic!(sonic_twitter, "twitter.json");
 bench_sonic!(sonic_citm, "citm_catalog.json");
 bench_sonic!(sonic_canada, "canada.json");
+bench_sonic!(sonic_data_xl, "data_xl.json");
+bench_sonic!(sonic_data_supermaxx, "data_supermaxx.json");
 
 // ── simd-json (SIMD, requires mutable input — .to_vec() per iteration) ─────
 
@@ -105,6 +112,8 @@ bench_simd!(simd_data, "data.json");
 bench_simd!(simd_twitter, "twitter.json");
 bench_simd!(simd_citm, "citm_catalog.json");
 bench_simd!(simd_canada, "canada.json");
+bench_simd!(simd_data_xl, "data_xl.json");
+bench_simd!(simd_data_supermaxx, "data_supermaxx.json");
 
 // ── jiter (Pydantic's iterable parser, Cow<str> selective decode) ───────────
 
@@ -124,6 +133,8 @@ bench_jiter!(jiter_data, "data.json");
 bench_jiter!(jiter_twitter, "twitter.json");
 bench_jiter!(jiter_citm, "citm_catalog.json");
 bench_jiter!(jiter_canada, "canada.json");
+bench_jiter!(jiter_data_xl, "data_xl.json");
+bench_jiter!(jiter_data_supermaxx, "data_supermaxx.json");
 
 // ── nom (combinator, borrowed strings) ──────────────────────────────────────
 
@@ -253,6 +264,8 @@ bench_nom!(nom_data, "data.json");
 bench_nom!(nom_twitter, "twitter.json");
 bench_nom!(nom_citm, "citm_catalog.json");
 bench_nom!(nom_canada, "canada.json");
+bench_nom!(nom_data_xl, "data_xl.json");
+bench_nom!(nom_data_supermaxx, "data_supermaxx.json");
 
 // ── winnow (combinator, dispatch! macro, borrowed strings) ──────────────────
 
@@ -368,6 +381,8 @@ bench_winnow!(winnow_data, "data.json");
 bench_winnow!(winnow_twitter, "twitter.json");
 bench_winnow!(winnow_citm, "citm_catalog.json");
 bench_winnow!(winnow_canada, "canada.json");
+bench_winnow!(winnow_data_xl, "data_xl.json");
+bench_winnow!(winnow_data_supermaxx, "data_supermaxx.json");
 
 // ── pest (PEG grammar-generated parser) ─────────────────────────────────────
 
@@ -445,17 +460,44 @@ bench_pest!(pest_data, "data.json");
 bench_pest!(pest_twitter, "twitter.json");
 bench_pest!(pest_citm, "citm_catalog.json");
 bench_pest!(pest_canada, "canada.json");
+bench_pest!(pest_data_xl, "data_xl.json");
+bench_pest!(pest_data_supermaxx, "data_supermaxx.json");
+
+// ── tree-sitter (incremental, error-recovering, C-based) ─────────────────────
+
+macro_rules! bench_tree_sitter {
+    ($name:ident, $file:expr) => {
+        fn $name(b: &mut Bencher) {
+            let input = load_json($file);
+            b.bytes = input.len() as u64;
+            let mut parser = tree_sitter::Parser::new();
+            parser.set_language(&tree_sitter_json::LANGUAGE.into()).unwrap();
+            assert!(parser.parse(&input, None).is_some(), concat!($file, ": tree-sitter parse failed"));
+            b.iter(|| {
+                parser.parse(black_box(&input), None).unwrap()
+            });
+        }
+    };
+}
+
+bench_tree_sitter!(tree_sitter_data, "data.json");
+bench_tree_sitter!(tree_sitter_twitter, "twitter.json");
+bench_tree_sitter!(tree_sitter_citm, "citm_catalog.json");
+bench_tree_sitter!(tree_sitter_canada, "canada.json");
+bench_tree_sitter!(tree_sitter_data_xl, "data_xl.json");
+bench_tree_sitter!(tree_sitter_data_supermaxx, "data_supermaxx.json");
 
 // ── Groups ──────────────────────────────────────────────────────────────────
 
-benchmark_group!(bench_serde, serde_data, serde_twitter, serde_citm, serde_canada);
-benchmark_group!(bench_serde_borrow, serde_borrow_data, serde_borrow_twitter, serde_borrow_citm, serde_borrow_canada);
-benchmark_group!(bench_sonic, sonic_data, sonic_twitter, sonic_citm, sonic_canada);
-benchmark_group!(bench_simd, simd_data, simd_twitter, simd_citm, simd_canada);
-benchmark_group!(bench_jiter, jiter_data, jiter_twitter, jiter_citm, jiter_canada);
-benchmark_group!(bench_nom, nom_data, nom_twitter, nom_citm, nom_canada);
-benchmark_group!(bench_winnow, winnow_data, winnow_twitter, winnow_citm, winnow_canada);
-benchmark_group!(bench_pest, pest_data, pest_twitter, pest_citm, pest_canada);
+benchmark_group!(bench_serde, serde_data, serde_twitter, serde_citm, serde_canada, serde_data_xl, serde_data_supermaxx);
+benchmark_group!(bench_serde_borrow, serde_borrow_data, serde_borrow_twitter, serde_borrow_citm, serde_borrow_canada, serde_borrow_data_xl, serde_borrow_data_supermaxx);
+benchmark_group!(bench_sonic, sonic_data, sonic_twitter, sonic_citm, sonic_canada, sonic_data_xl, sonic_data_supermaxx);
+benchmark_group!(bench_simd, simd_data, simd_twitter, simd_citm, simd_canada, simd_data_xl, simd_data_supermaxx);
+benchmark_group!(bench_jiter, jiter_data, jiter_twitter, jiter_citm, jiter_canada, jiter_data_xl, jiter_data_supermaxx);
+benchmark_group!(bench_nom, nom_data, nom_twitter, nom_citm, nom_canada, nom_data_xl, nom_data_supermaxx);
+benchmark_group!(bench_winnow, winnow_data, winnow_twitter, winnow_citm, winnow_canada, winnow_data_xl, winnow_data_supermaxx);
+benchmark_group!(bench_pest, pest_data, pest_twitter, pest_citm, pest_canada, pest_data_xl, pest_data_supermaxx);
+benchmark_group!(bench_tree_sitter, tree_sitter_data, tree_sitter_twitter, tree_sitter_citm, tree_sitter_canada, tree_sitter_data_xl, tree_sitter_data_supermaxx);
 
 benchmark_main!(
     bench_serde,
@@ -465,5 +507,6 @@ benchmark_main!(
     bench_jiter,
     bench_nom,
     bench_winnow,
-    bench_pest
+    bench_pest,
+    bench_tree_sitter
 );

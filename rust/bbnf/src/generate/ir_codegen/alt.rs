@@ -8,9 +8,9 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use super::super::ir_types::{type_is_span, IrCodegenCtx};
-use super::infer::{infer_node_type, infer_node_type_in_vec};
+use super::infer::{infer_node_type, infer_node_type_elide_box};
+use super::ir_node_to_tokens_elide;
 use super::unescape_literal;
-use super::{ir_node_to_tokens, ir_node_to_tokens_vec};
 
 /// Emit an Alt (alternation) expression.
 ///
@@ -20,14 +20,14 @@ pub fn emit_alt(
     branches: &[AltBranch],
     dispatch: Option<&bbnf_ir::AltDispatch>,
     ctx: &IrCodegenCtx<'_>,
-    in_vec: bool,
+    elide_box: bool,
 ) -> TokenStream {
     if branches.is_empty() {
         return quote! { ::parse_that::epsilon().map(|_| unreachable!()) };
     }
     if branches.len() == 1 {
-        // Single branch: can propagate in_vec since no coercion needed.
-        return ir_node_to_tokens_vec(&branches[0].node, ctx, in_vec);
+        // Single branch: can propagate elide_box since no coercion needed.
+        return ir_node_to_tokens_elide(&branches[0].node, ctx, elide_box);
     }
 
     // Check for all-literal → any_span fast path.
@@ -49,19 +49,19 @@ pub fn emit_alt(
         return quote! { ::parse_that::any_span(&[#(#lits),*]) };
     }
 
-    // Compute branch types with in_vec context to check homogeneity.
-    let branch_tys_vec: Vec<TypeDesc> = branches
+    // Compute branch types with elide_box context to check homogeneity.
+    let branch_tys_elide: Vec<TypeDesc> = branches
         .iter()
-        .map(|b| infer_node_type_in_vec(&b.node, ctx))
+        .map(|b| infer_node_type_elide_box(&b.node, ctx))
         .collect();
-    let all_same_vec = branch_tys_vec.windows(2).all(|w| w[0] == w[1]);
+    let all_same_elide = branch_tys_elide.windows(2).all(|w| w[0] == w[1]);
 
-    // Only propagate in_vec if branches are homogeneous WITH in_vec.
-    // Heterogeneous alts need coercion to BoxedEnum, which defeats in_vec.
-    let effective_in_vec = in_vec && all_same_vec;
+    // Only propagate elide_box if branches are homogeneous WITH elide_box.
+    // Heterogeneous alts need coercion to BoxedEnum, which defeats elide_box.
+    let effective_elide_box = elide_box && all_same_elide;
 
-    let branch_tys: Vec<TypeDesc> = if effective_in_vec {
-        branch_tys_vec
+    let branch_tys: Vec<TypeDesc> = if effective_elide_box {
+        branch_tys_elide
     } else {
         branches
             .iter()
@@ -73,7 +73,7 @@ pub fn emit_alt(
 
     let parsers: Vec<TokenStream> = branches
         .iter()
-        .map(|b| ir_node_to_tokens_vec(&b.node, ctx, effective_in_vec))
+        .map(|b| ir_node_to_tokens_elide(&b.node, ctx, effective_elide_box))
         .collect();
 
     // Coerce branches if heterogeneous.
@@ -165,7 +165,8 @@ fn emit_dispatch(
                 let (sp_constructor, map_fn) = sp_info;
                 let sp_binding = format_ident!("_sp_{}", idx);
                 branch_bindings.push(quote! { let #sp_binding = #sp_constructor; });
-                let call = quote! { #sp_binding.call(state).map(#map_fn).map(Box::new) };
+                let wrapped = ctx.wrap_recur_expr(quote! { x });
+                let call = quote! { #sp_binding.call(state).map(#map_fn).map(|x| #wrapped) };
                 match_arms.push(quote! { #(#byte_patterns)|* => { #call }, });
                 continue;
             }
@@ -249,7 +250,7 @@ fn try_sp_dispatch_branch(
             let name = ctx.ir.get_string(rule.name);
             if ctx.has_sp_method(name) && !rule.meta.is_transparent {
                 let body_ty = ctx.rule_types.get(&rule.id);
-                let is_span_body = body_ty.is_some_and(|ty| type_is_span(ty));
+                let is_span_body = body_ty.is_some_and(type_is_span);
                 if is_span_body {
                     let sp_ident = format_ident!("{}_sp", name);
                     let enum_ident = &ctx.enum_ident;
@@ -284,9 +285,8 @@ fn try_sp_dispatch_branch(
                 })
                 .collect();
 
-            if let Some((variant_name, _)) = all_sub_variants
-                .iter()
-                .find(|(_, vty)| **vty == node_ty)
+            if let Some((variant_name, _)) =
+                all_sub_variants.iter().find(|(_, vty)| **vty == node_ty)
             {
                 let variant_ident = format_ident!("{}", variant_name);
                 let enum_ident = &ctx.enum_ident;
@@ -327,18 +327,24 @@ fn coerce_branches(
         .zip(branch_tys.iter())
         .map(|(parser, branch_ty)| {
             if *branch_ty == TypeDesc::BoxedEnum || *branch_ty == TypeDesc::Enum {
-                // Already (Box<)Enum(>) — no sub-variant coercion needed.
+                // Already (Box<>)Enum — no sub-variant coercion needed.
                 parser.clone()
-            } else if let Some((variant_name, _)) = all_sub_variants
-                .iter()
-                .find(|(_, vty)| *vty == branch_ty)
+            } else if let Some((variant_name, _)) =
+                all_sub_variants.iter().find(|(_, vty)| *vty == branch_ty)
             {
-                // Found matching sub-variant.
+                // Found matching sub-variant — wrap in Box-allocated enum.
                 let variant_ident = format_ident!("{}", variant_name);
-                quote! { #parser.map(|x| Box::new(#enum_ident::#variant_ident(x))) }
+                let state_ident = format_ident!("state");
+                let wrapped = ctx.wrap_recur_expr_with_state(
+                    quote! { #enum_ident::#variant_ident(x) },
+                    &state_ident,
+                );
+                ctx.wrap_recur_map_with_state(parser.clone(), wrapped, &state_ident)
             } else if *branch_ty == TypeDesc::Span {
-                // Span branch without sub-variant.
-                quote! { #parser.map(|x| Box::new(x)) }
+                // Span branch without sub-variant — Box alloc.
+                let state_ident = format_ident!("state");
+                let wrapped = ctx.wrap_recur_expr_with_state(quote! { x }, &state_ident);
+                ctx.wrap_recur_map_with_state(parser.clone(), wrapped, &state_ident)
             } else {
                 parser.clone()
             }

@@ -2,32 +2,26 @@
 // Opaque spans (no typed values/selectors).
 // Handles comments, empty values, real-world CSS.
 //
-// Uses explicit `ws` (comment-aware whitespace) instead of `?w` (which only
-// trims \s) so inline comments like `/* 1 */` are consumed correctly.
+// @ws overrides `?w` to use comment-aware whitespace (SIMD fast path).
+// @inline eliminates enum variants for trivial helper rules.
 
-ws = /(?s)(?:\s|\/\*.*?\*\/)*/ ;
-
-selectorSpan = /[^{};]+/ ;
-valueSpan    = /[^;{}!]*/ ;
+@ws /(?s)(?:\s|\/\*.*?\*\/)*/ ;
 
 propertyName = /[a-zA-Z_][\w-]*/ | /--[\w-]+/ | /-[a-zA-Z][\w-]*/ ;
-important    = "!" , ws , "important" ;
-optSemicolon = ";" ? ;
-declaration  = propertyName , ws , ":" , ws , valueSpan , important ? , optSemicolon , ws ;
+declaration  = (propertyName , ":" , /[^;{}]*/ , ";" ?) ?w ;
 
-blockContent = (ws , (declaration | ruleItem)) * ;
-ruleBlock    = "{" , ws , blockContent , ws , "}" ;
+blockContent = ((declaration | ruleItem) ?w) * ;
+ruleBlock    = "{" >> blockContent ?w << "}" ;
 
-qualifiedRule = selectorSpan , ws , ruleBlock ;
+qualifiedRule = /[^{};]+/ , ruleBlock ?w ;
 
 atRuleBody     = ruleBlock | ";" ;
 genericAtRule  = /@[a-zA-Z][\w-]*/ , /[^;{}]*/ , atRuleBody ;
-
 atRule = genericAtRule ;
 
 ruleItem = qualifiedRule | atRule ;
-ruleList = (ws , ruleItem) * ;
-stylesheet = ws , ruleList , ws ;
+ruleList = (ruleItem ?w) * ;
+stylesheet = ruleList ?w ;
 
 @pretty stylesheet block ;
 @pretty ruleList blankline ;

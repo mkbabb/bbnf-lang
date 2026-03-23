@@ -42,6 +42,10 @@ winnow = "0.7"
 pest = "2.5"
 pest_grammars = "2.5"
 
+# Tree-sitter
+tree-sitter = "0.25"
+tree-sitter-json = "0.24"
+
 # CSS competitor parsers
 cssparser = "0.34"
 lightningcss = "1.0.0-alpha.70"

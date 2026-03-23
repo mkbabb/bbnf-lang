@@ -31,8 +31,8 @@ pub(crate) fn generate_vec_doc_ir(
 
     let sep = if let Some(sep_str) = custom_sep {
         let has_group = hints.contains(&"group".to_string());
-        let has_hardbreak = hints.contains(&"hardbreak".to_string())
-            || hints.contains(&"block".to_string());
+        let has_hardbreak =
+            hints.contains(&"hardbreak".to_string()) || hints.contains(&"block".to_string());
         if has_hardbreak {
             // Non-filling: trimmed separator + hardline (one item per line).
             let break_sep = sep_str.trim_end();
@@ -152,7 +152,7 @@ pub(crate) fn generate_compound_doc_ir(
         return generate_key_value_doc_ir(variant, &sep_lit, hints, ctx.ir);
     }
 
-    // Box<Enum> -- recurse.
+    // Box<Enum> -- deref and recurse.
     if is_box_enum_type(ty) {
         let doc = quote! { val.to_doc() };
         let doc = apply_hints(doc, hints);
@@ -163,9 +163,10 @@ pub(crate) fn generate_compound_doc_ir(
 
     // Option -- unwrap.
     if is_option_type(ty) {
+        let inner_doc = quote! { inner.to_doc() };
         let base = quote! {
             match val {
-                Some(inner) => inner.to_doc(),
+                Some(inner) => #inner_doc,
                 None => ::pprint::Doc::Null,
             }
         };
@@ -290,8 +291,7 @@ fn generate_key_value_doc_ir(
     hints: &[String],
     ir: &GrammarIR,
 ) -> TokenStream {
-    let sep_str = resolve_separator_literal_ir(sep, ir)
-        .unwrap_or_else(|| sep.to_string());
+    let sep_str = resolve_separator_literal_ir(sep, ir).unwrap_or_else(|| sep.to_string());
     let sep_with_space = format!("{} ", sep_str.trim());
     let base = quote! {
         {

@@ -20,6 +20,7 @@
 mod alt;
 pub mod infer;
 mod inline;
+pub mod monolithic;
 mod repeat;
 mod seq;
 mod wrap;
@@ -74,17 +75,21 @@ pub fn unescape_literal(s: &str) -> String {
 /// Used internally by the inline emitter as a fallback for complex nodes, and by
 /// other codegen modules (ir_span, ir_pretty) that don't need inline optimization.
 ///
-/// The `in_vec` parameter indicates the result will be stored in a Vec, so Box
-/// indirection on Ref calls is unnecessary (Vec provides heap indirection).
+/// The `elide_box` parameter indicates the parent provides heap indirection
+/// (Vec, Option, or discarded context), so Box wrapping on Ref calls is unnecessary.
 pub fn ir_node_to_tokens(node: &IrNode, ctx: &IrCodegenCtx<'_>) -> TokenStream {
-    ir_node_to_tokens_vec(node, ctx, false)
+    ir_node_to_tokens_elide(node, ctx, false)
 }
 
-/// Generate a parser TokenStream from an IrNode with Vec context control.
+/// Generate a parser TokenStream from an IrNode with Box elision control.
 ///
-/// When `in_vec` is true, non-transparent Ref calls skip `.map(Box::new)` since
-/// the Vec already provides heap indirection.
-pub fn ir_node_to_tokens_vec(node: &IrNode, ctx: &IrCodegenCtx<'_>, in_vec: bool) -> TokenStream {
+/// When `elide_box` is true, Ref calls use `_unboxed()` variants that return
+/// `Enum` directly instead of `Box<Enum>`, since the parent provides heap indirection.
+pub fn ir_node_to_tokens_elide(
+    node: &IrNode,
+    ctx: &IrCodegenCtx<'_>,
+    elide_box: bool,
+) -> TokenStream {
     match node {
         IrNode::Literal(sid) => {
             let raw = ctx.ir.get_string(*sid);
@@ -100,22 +105,22 @@ pub fn ir_node_to_tokens_vec(node: &IrNode, ctx: &IrCodegenCtx<'_>, in_vec: bool
 
         IrNode::Epsilon => quote! { ::parse_that::epsilon() },
 
-        IrNode::Ref(rule_id) => emit_ref(*rule_id, ctx, in_vec),
+        IrNode::Ref(rule_id) => emit_ref(*rule_id, ctx, elide_box),
 
-        IrNode::Seq(children) => seq::emit_seq(children, ctx, in_vec),
+        IrNode::Seq(children) => seq::emit_seq(children, ctx, elide_box),
 
         IrNode::Alt(branches, dispatch) => {
-            alt::emit_alt(branches, dispatch.as_ref(), ctx, in_vec)
+            alt::emit_alt(branches, dispatch.as_ref(), ctx, elide_box)
         }
 
-        IrNode::Repeat { inner, lo, hi } => repeat::emit_repeat(inner, *lo, *hi, ctx, in_vec),
+        IrNode::Repeat { inner, lo, hi } => repeat::emit_repeat(inner, *lo, *hi, ctx, elide_box),
 
         IrNode::Skip(left, right) => {
             // wrap detection: Skip(Next(open, middle), close) → middle.wrap(open, close)
             if let IrNode::Next(open, middle) = left.as_ref() {
-                return wrap::emit_wrap(open, middle, right, ctx, in_vec);
+                return wrap::emit_wrap(open, middle, right, ctx, elide_box);
             }
-            let left_ts = ir_node_to_tokens_vec(left, ctx, in_vec);
+            let left_ts = ir_node_to_tokens_elide(left, ctx, elide_box);
             // Right side is discarded by .skip() — strip Map/Box overhead.
             let right_ts = repeat::emit_discarded(right, false, ctx);
             quote! { #left_ts.skip(#right_ts) }
@@ -124,22 +129,22 @@ pub fn ir_node_to_tokens_vec(node: &IrNode, ctx: &IrCodegenCtx<'_>, in_vec: bool
         IrNode::Next(left, right) => {
             // wrap detection: Next(open, Skip(middle, close)) → middle.wrap(open, close)
             if let IrNode::Skip(middle, close) = right.as_ref() {
-                return wrap::emit_wrap(left, middle, close, ctx, in_vec);
+                return wrap::emit_wrap(left, middle, close, ctx, elide_box);
             }
             // Left side is discarded by .next() — strip Map/Box overhead.
             let left_ts = repeat::emit_discarded(left, false, ctx);
-            let right_ts = ir_node_to_tokens_vec(right, ctx, in_vec);
+            let right_ts = ir_node_to_tokens_elide(right, ctx, elide_box);
             quote! { #left_ts.next(#right_ts) }
         }
 
         IrNode::Minus(left, right) => {
-            let left_ts = ir_node_to_tokens_vec(left, ctx, in_vec);
-            let right_ts = ir_node_to_tokens_vec(right, ctx, false);
+            let left_ts = ir_node_to_tokens_elide(left, ctx, elide_box);
+            let right_ts = ir_node_to_tokens_elide(right, ctx, false);
             quote! { #left_ts.minus(#right_ts) }
         }
 
         IrNode::Negate(inner) => {
-            let inner_ts = ir_node_to_tokens_vec(inner, ctx, false);
+            let inner_ts = ir_node_to_tokens_elide(inner, ctx, false);
             quote! { #inner_ts.negate() }
         }
 
@@ -150,12 +155,12 @@ pub fn ir_node_to_tokens_vec(node: &IrNode, ctx: &IrCodegenCtx<'_>, in_vec: bool
                 fn_id: fn_id2,
             } = inner.as_ref()
             {
-                if let Some(fused) = try_fuse_maps(inner2, *fn_id2, *fn_id, ctx, in_vec) {
+                if let Some(fused) = try_fuse_maps(inner2, *fn_id2, *fn_id, ctx, elide_box) {
                     return fused;
                 }
             }
-            let inner_ts = ir_node_to_tokens_vec(inner, ctx, in_vec);
-            emit_map(inner_ts, *fn_id, ctx)
+            let inner_ts = ir_node_to_tokens_elide(inner, ctx, elide_box);
+            emit_map(inner_ts, *fn_id, ctx, elide_box)
         }
 
         IrNode::OptionalWhitespace(inner) => {
@@ -173,7 +178,7 @@ pub fn ir_node_to_tokens_vec(node: &IrNode, ctx: &IrCodegenCtx<'_>, in_vec: bool
                 }
             }
 
-            let inner_ts = ir_node_to_tokens_vec(inner, ctx, in_vec);
+            let inner_ts = ir_node_to_tokens_elide(inner, ctx, elide_box);
             quote! { #inner_ts.trim_whitespace() }
         }
     }
@@ -181,32 +186,28 @@ pub fn ir_node_to_tokens_vec(node: &IrNode, ctx: &IrCodegenCtx<'_>, in_vec: bool
 
 /// Emit a nonterminal reference (combinator mode).
 ///
-/// When `in_vec` is true and the rule is non-transparent, skip the `.map(Box::new)`
-/// wrapping since Vec provides heap indirection. Transparent rules always return
-/// `Box<Enum>` regardless of `in_vec` (they box internally).
-fn emit_ref(rule_id: RuleId, ctx: &IrCodegenCtx<'_>, in_vec: bool) -> TokenStream {
+/// When `elide_box` is true, skip Box wrapping. For transparent rules, call
+/// `_unboxed()` which returns Enum directly. For non-transparent rules, call
+/// the normal method (which already returns Enum — Box wrapping is a call-site concern).
+fn emit_ref(rule_id: RuleId, ctx: &IrCodegenCtx<'_>, elide_box: bool) -> TokenStream {
     let rule = &ctx.ir.rules[rule_id as usize];
-    let resolved_name = ctx.resolve_rule_name(rule_id);
-    let ident = format_ident!("{}", resolved_name);
+    let ident = ctx.rule_method_ident(rule_id);
 
-    if in_vec {
+    if elide_box {
         if rule.meta.is_transparent {
-            // Vec context + transparent: call _unboxed() which returns Enum directly.
-            let unboxed_ident = format_ident!("{}_unboxed", resolved_name);
+            let unboxed_ident = ctx.unboxed_method_ident_for_name(ctx.resolve_rule_name(rule_id));
             quote! { Self::#unboxed_ident() }
         } else {
-            // Vec context + non-transparent: skip Box — Vec provides heap indirection.
             quote! { Self::#ident() }
         }
     } else if rule.meta.is_transparent {
-        // Non-Vec + transparent: returns Box<Enum> directly — no extra boxing.
         quote! { Self::#ident() }
     } else {
-        // Non-Vec + non-transparent: wrap result in Box for recursive types.
-        quote! { Self::#ident().map(|x| Box::new(x)) }
+        let state_ident = format_ident!("state");
+        let body = ctx.wrap_recur_expr_with_state(quote! { x }, &state_ident);
+        ctx.wrap_recur_map_with_state(quote! { Self::#ident() }, body, &state_ident)
     }
 }
-
 
 /// Try to fuse two nested Map operations into a single `.map()` call.
 ///
@@ -218,34 +219,50 @@ fn try_fuse_maps(
     inner_fn_id: u32,
     outer_fn_id: u32,
     ctx: &IrCodegenCtx<'_>,
-    in_vec: bool,
+    elide_box: bool,
 ) -> Option<TokenStream> {
     let inner_fd = &ctx.ir.fns[inner_fn_id as usize];
     let outer_fd = &ctx.ir.fns[outer_fn_id as usize];
 
-    let inner_ts = ir_node_to_tokens_vec(inner, ctx, in_vec);
+    let inner_ts = ir_node_to_tokens_elide(inner, ctx, elide_box);
 
     match (inner_fd, outer_fd) {
-        // EnumWrap then BoxWrap → .map(|x| Box::new(Enum::Variant(x)))
         (FnDescriptor::EnumWrap { variant }, FnDescriptor::BoxWrap) => {
             let vname = ctx.ir.get_string(*variant);
             let vident = format_ident!("{}", vname);
             let enum_ident = &ctx.enum_ident;
-            Some(quote! { #inner_ts.map(|x| Box::new(#enum_ident::#vident(x))) })
+            if elide_box {
+                Some(quote! { #inner_ts.map(|x| #enum_ident::#vident(x)) })
+            } else {
+                let state_ident = format_ident!("state");
+                let wrapped = ctx
+                    .wrap_recur_expr_with_state(quote! { #enum_ident::#vident(x) }, &state_ident);
+                Some(ctx.wrap_recur_map_with_state(inner_ts.clone(), wrapped, &state_ident))
+            }
         }
-        // BoxWrap then EnumWrap → .map(|x| Enum::Variant(Box::new(x)))
         (FnDescriptor::BoxWrap, FnDescriptor::EnumWrap { variant }) => {
             let vname = ctx.ir.get_string(*variant);
             let vident = format_ident!("{}", vname);
             let enum_ident = &ctx.enum_ident;
-            Some(quote! { #inner_ts.map(|x| #enum_ident::#vident(Box::new(x))) })
+            let state_ident = format_ident!("state");
+            let wrapped = ctx.wrap_recur_expr_with_state(quote! { x }, &state_ident);
+            Some(quote! {
+                #inner_ts.map_with_ctx(|x, #state_ident| #enum_ident::#vident(#wrapped))
+            })
         }
         _ => None,
     }
 }
 
 /// Emit a Map expression (combinator mode).
-fn emit_map(inner_ts: TokenStream, fn_id: u32, ctx: &IrCodegenCtx<'_>) -> TokenStream {
+///
+/// When `elide_box` is true, `BoxWrap` is a no-op (the parent provides indirection).
+fn emit_map(
+    inner_ts: TokenStream,
+    fn_id: u32,
+    ctx: &IrCodegenCtx<'_>,
+    elide_box: bool,
+) -> TokenStream {
     let fd = &ctx.ir.fns[fn_id as usize];
     match fd {
         FnDescriptor::EnumWrap { variant } => {
@@ -255,7 +272,13 @@ fn emit_map(inner_ts: TokenStream, fn_id: u32, ctx: &IrCodegenCtx<'_>) -> TokenS
             quote! { #inner_ts.map(|x| #enum_ident::#vident(x)) }
         }
         FnDescriptor::BoxWrap => {
-            quote! { #inner_ts.map(Box::new) }
+            if elide_box {
+                inner_ts
+            } else {
+                let state_ident = format_ident!("state");
+                let wrapped = ctx.wrap_recur_expr_with_state(quote! { x }, &state_ident);
+                ctx.wrap_recur_map_with_state(inner_ts, wrapped, &state_ident)
+            }
         }
         FnDescriptor::Custom { source, .. } => {
             let closure_src = ctx.ir.get_string(*source);

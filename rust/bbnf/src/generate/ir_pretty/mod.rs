@@ -34,8 +34,8 @@ use super::prettify::to_doc::*;
 /// Generate `to_doc()` and `source_range()` impl blocks from IR.
 pub fn generate_prettify_ir(ctx: &IrCodegenCtx<'_>) -> TokenStream {
     let enum_ident = &ctx.enum_ident;
-    let has_recovers = ctx.ir.rules.iter().any(|r| r.meta.recover.is_some())
-        && !ctx.parser_attrs.skip_recover;
+    let has_recovers =
+        ctx.ir.rules.iter().any(|r| r.meta.recover.is_some()) && !ctx.parser_attrs.skip_recover;
 
     let mut to_doc_arms = Vec::new();
     let mut source_range_arms = Vec::new();

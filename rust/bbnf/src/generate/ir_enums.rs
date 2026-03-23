@@ -16,25 +16,43 @@ pub fn generate_enum(ctx: &IrCodegenCtx<'_>) -> TokenStream {
     let enum_ident = &ctx.enum_ident;
 
     // Rule variants: one per non-transparent rule.
-    let debug_info: Vec<String> = ctx.ir.rules.iter()
-        .map(|r| format!("{}: trans={}", ctx.ir.get_string(r.name), r.meta.is_transparent))
+    let debug_info: Vec<String> = ctx
+        .ir
+        .rules
+        .iter()
+        .map(|r| {
+            format!(
+                "{}: trans={}",
+                ctx.ir.get_string(r.name),
+                r.meta.is_transparent
+            )
+        })
         .collect();
     if ctx.ir.rules.iter().all(|r| r.meta.is_transparent) && !ctx.ir.rules.is_empty() {
-        panic!("All {} rules are transparent: {}", ctx.ir.rules.len(), debug_info.join(", "));
+        panic!(
+            "All {} rules are transparent: {}",
+            ctx.ir.rules.len(),
+            debug_info.join(", ")
+        );
     }
-    let enum_values: Vec<_> = ctx.ir.rules.iter().filter_map(|rule| {
-        if rule.meta.is_transparent {
-            return None;
-        }
-        let name = ctx.ir.get_string(rule.name);
-        let ident = format_ident!("{}", name);
-        let ty = ctx
-            .rule_types
-            .get(&rule.id)
-            .map(|t| t.clone())
-            .unwrap_or_else(|| ctx.boxed_enum_type.clone());
-        Some(quote! { #ident(#ty) })
-    }).collect();
+    let enum_values: Vec<_> = ctx
+        .ir
+        .rules
+        .iter()
+        .filter_map(|rule| {
+            if rule.meta.is_transparent {
+                return None;
+            }
+            let name = ctx.ir.get_string(rule.name);
+            let ident = format_ident!("{}", name);
+            let ty = ctx
+                .rule_types
+                .get(&rule.id)
+                .map(|t| t.clone())
+                .unwrap_or_else(|| ctx.boxed_enum_type.clone());
+            Some(quote! { #ident(#ty) })
+        })
+        .collect();
 
     let enum_values = enum_values.into_iter();
 
@@ -54,8 +72,8 @@ pub fn generate_enum(ctx: &IrCodegenCtx<'_>) -> TokenStream {
     }
 
     // Recovered variant if any @recover directives exist.
-    let has_recovers = ctx.ir.rules.iter().any(|r| r.meta.recover.is_some())
-        && !ctx.parser_attrs.skip_recover;
+    let has_recovers =
+        ctx.ir.rules.iter().any(|r| r.meta.recover.is_some()) && !ctx.parser_attrs.skip_recover;
     let recovered_variant = if has_recovers {
         quote! { , Recovered }
     } else {
@@ -84,10 +102,7 @@ pub fn generate_enum(ctx: &IrCodegenCtx<'_>) -> TokenStream {
 }
 
 /// Generate the `GRAMMAR_X` const array with `include_str!()` for each path.
-pub fn generate_grammar_arr(
-    parser_attrs: &ParserAttributes,
-    ident: &syn::Ident,
-) -> TokenStream {
+pub fn generate_grammar_arr(parser_attrs: &ParserAttributes, ident: &syn::Ident) -> TokenStream {
     let grammar_arr_name = format_ident!("GRAMMAR_{}", ident);
     let len = parser_attrs.paths.len();
     let include_strs = parser_attrs.paths.iter().map(|path| {

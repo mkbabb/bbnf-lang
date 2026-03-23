@@ -29,7 +29,13 @@ pub(crate) fn infer_hints_ir(
 
             // 1. Top-level detection by name.
             const TOPLEVEL_NAMES: &[&str] = &[
-                "grammar", "program", "stylesheet", "module", "document", "file", "root",
+                "grammar",
+                "program",
+                "stylesheet",
+                "module",
+                "document",
+                "file",
+                "root",
             ];
             if TOPLEVEL_NAMES.contains(&name) {
                 return vec!["block".to_string()];
@@ -135,8 +141,7 @@ fn contains_brace_wrapped_ir(node: &IrNode, ir: &GrammarIR) -> bool {
                 let next_left_inner = unwrap_ir_whitespace(next_left);
                 if let IrNode::Literal(l_sid) = next_left_inner {
                     if let IrNode::Literal(r_sid) = right_node {
-                        return ir.get_string(*l_sid) == "{"
-                            && ir.get_string(*r_sid) == "}";
+                        return ir.get_string(*l_sid) == "{" && ir.get_string(*r_sid) == "}";
                     }
                 }
             }

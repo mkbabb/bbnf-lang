@@ -61,6 +61,23 @@ pub fn is_box_enum_type(ty: &syn::Type) -> bool {
     }
 }
 
+pub fn is_ref_enum_type(ty: &syn::Type) -> bool {
+    if let syn::Type::Reference(reference) = ty {
+        if let syn::Type::Path(path) = reference.elem.as_ref() {
+            return path
+                .path
+                .segments
+                .last()
+                .is_some_and(|seg| seg.ident.to_string().ends_with("Enum"));
+        }
+    }
+    false
+}
+
+pub fn is_recursive_enum_type(ty: &syn::Type) -> bool {
+    is_box_enum_type(ty) || is_ref_enum_type(ty)
+}
+
 // ---------------------------------------------------------------------------
 // Binding doc/range helpers for tuple elements
 // ---------------------------------------------------------------------------
@@ -91,7 +108,7 @@ pub fn doc_for_binding(binding: &syn::Ident, ty: &syn::Type) -> TokenStream {
                 None => ::pprint::Doc::Null,
             }
         }
-    } else if is_box_enum_type(ty) {
+    } else if is_recursive_enum_type(ty) {
         quote! { #binding.to_doc() }
     } else if let syn::Type::Tuple(tuple_ty) = ty {
         // Nested tuple — destructure and chain with `+` (no Null interleaving).
@@ -99,9 +116,12 @@ pub fn doc_for_binding(binding: &syn::Ident, ty: &syn::Type) -> TokenStream {
         let n = tuple_ty.elems.len();
         let inner_bindings: Vec<_> = (0..n).map(|i| format_ident!("t{}", i)).collect();
         let pat = quote! { (#(#inner_bindings),*) };
-        let doc_parts: Vec<TokenStream> = tuple_ty.elems.iter().zip(inner_bindings.iter()).map(|(elem_ty, b)| {
-            doc_for_binding(b, elem_ty)
-        }).collect();
+        let doc_parts: Vec<TokenStream> = tuple_ty
+            .elems
+            .iter()
+            .zip(inner_bindings.iter())
+            .map(|(elem_ty, b)| doc_for_binding(b, elem_ty))
+            .collect();
         let combined = if doc_parts.len() == 1 {
             doc_parts[0].clone()
         } else {
@@ -150,26 +170,32 @@ pub fn range_for_binding(binding: &syn::Ident, ty: &syn::Type) -> TokenStream {
             quote! { v.source_range() }
         };
         quote! { #binding.as_ref().and_then(|#inner_ident| #inner_range) }
-    } else if is_box_enum_type(ty) {
+    } else if is_recursive_enum_type(ty) {
         quote! { #binding.source_range() }
     } else if let syn::Type::Tuple(tuple_ty) = ty {
         // Nested tuple — single-pass min/max without Vec allocation.
         let n = tuple_ty.elems.len();
         let inner_bindings: Vec<_> = (0..n).map(|i| format_ident!("t{}", i)).collect();
         let pat = quote! { (#(#inner_bindings),*) };
-        let range_parts: Vec<TokenStream> = tuple_ty.elems.iter().zip(inner_bindings.iter()).map(|(elem_ty, b)| {
-            range_for_binding(b, elem_ty)
-        }).collect();
+        let range_parts: Vec<TokenStream> = tuple_ty
+            .elems
+            .iter()
+            .zip(inner_bindings.iter())
+            .map(|(elem_ty, b)| range_for_binding(b, elem_ty))
+            .collect();
         // Generate a sequence of if-let checks that accumulate min/max.
-        let fold_stmts: Vec<TokenStream> = range_parts.iter().map(|rp| {
-            quote! {
-                if let Some((_s, _e)) = #rp {
-                    if _s < _min_s { _min_s = _s; }
-                    if _e > _max_e { _max_e = _e; }
-                    _found = true;
+        let fold_stmts: Vec<TokenStream> = range_parts
+            .iter()
+            .map(|rp| {
+                quote! {
+                    if let Some((_s, _e)) = #rp {
+                        if _s < _min_s { _min_s = _s; }
+                        if _e > _max_e { _max_e = _e; }
+                        _found = true;
+                    }
                 }
-            }
-        }).collect();
+            })
+            .collect();
         quote! {
             {
                 let #pat = #binding;
@@ -228,9 +254,12 @@ pub fn generate_item_to_doc(vec_ty: &syn::Type) -> TokenStream {
         let n = tuple_ty.elems.len();
         let bindings: Vec<syn::Ident> = (0..n).map(|i| format_ident!("f{}", i)).collect();
         let pat = quote! { (#(#bindings),*) };
-        let doc_parts: Vec<TokenStream> = tuple_ty.elems.iter().zip(bindings.iter()).map(|(elem_ty, binding)| {
-            doc_for_binding(binding, elem_ty)
-        }).collect();
+        let doc_parts: Vec<TokenStream> = tuple_ty
+            .elems
+            .iter()
+            .zip(bindings.iter())
+            .map(|(elem_ty, binding)| doc_for_binding(binding, elem_ty))
+            .collect();
         let combined = if doc_parts.len() == 1 {
             doc_parts[0].clone()
         } else {
@@ -244,7 +273,7 @@ pub fn generate_item_to_doc(vec_ty: &syn::Type) -> TokenStream {
             { let #pat = item; #combined }
         }
     } else {
-        // Box<Enum> or other type — call to_doc directly.
+        // Enum or other type — call to_doc.
         quote! { item.to_doc() }
     }
 }
@@ -285,19 +314,25 @@ pub fn generate_item_source_range(vec_ty: &syn::Type) -> TokenStream {
         let n = tuple_ty.elems.len();
         let bindings: Vec<syn::Ident> = (0..n).map(|j| format_ident!("f{}", j)).collect();
         let pat = quote! { (#(#bindings),*) };
-        let range_parts: Vec<TokenStream> = tuple_ty.elems.iter().zip(bindings.iter()).map(|(elem_ty, binding)| {
-            range_for_binding(binding, elem_ty)
-        }).collect();
+        let range_parts: Vec<TokenStream> = tuple_ty
+            .elems
+            .iter()
+            .zip(bindings.iter())
+            .map(|(elem_ty, binding)| range_for_binding(binding, elem_ty))
+            .collect();
         // Single-pass min/max without Vec allocation.
-        let fold_stmts: Vec<TokenStream> = range_parts.iter().map(|rp| {
-            quote! {
-                if let Some((_s, _e)) = #rp {
-                    if _s < _min_s { _min_s = _s; }
-                    if _e > _max_e { _max_e = _e; }
-                    _found = true;
+        let fold_stmts: Vec<TokenStream> = range_parts
+            .iter()
+            .map(|rp| {
+                quote! {
+                    if let Some((_s, _e)) = #rp {
+                        if _s < _min_s { _min_s = _s; }
+                        if _e > _max_e { _max_e = _e; }
+                        _found = true;
+                    }
                 }
-            }
-        }).collect();
+            })
+            .collect();
         quote! {
             {
                 let #pat = i;

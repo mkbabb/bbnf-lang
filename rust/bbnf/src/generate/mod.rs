@@ -3,20 +3,22 @@
 //! This module translates a parsed and analysed BBNF grammar into
 //! `proc_macro2::TokenStream` parser combinator code via the IR pipeline.
 
-mod types;
 pub mod prettify;
+mod types;
 
 // ── IR-based codegen modules ────────────────────────────────────────────────
 pub mod fast_paths;
-pub mod ir_types;
-pub mod ir_enums;
 pub mod ir_codegen;
-pub mod ir_span;
+pub mod ir_enums;
 pub mod ir_pretty;
+pub mod ir_span;
+pub mod ir_types;
 
 pub use types::*;
 
 use quote::{format_ident, quote};
+
+use self::ir_types::StorageMode;
 
 // ── IR-based generate_all entry point ───────────────────────────────────────
 
@@ -37,16 +39,22 @@ pub fn generate_all(
         }
     }
 
+    // Enable B.1 span collapse when prettify is disabled — allows Seqs of
+    // simple Span children to collapse to a single Span, eliminating arena allocs.
+    ir.b1_span_collapse = !parser_attrs.prettify;
+
     // Compute sp_method_rules via iterative fixed-point BEFORE type inference,
     // so that infer_types uses the correct has_sp_method flags for B.1 override.
     bbnf_ir::passes::compute_sp_method_rules(ir);
     // Run type inference with correct sp_method info.
     bbnf_ir::passes::infer_types(ir);
 
-    let mut ctx = ir_types::IrCodegenCtx::new(ir, ident, parser_attrs);
+    let mut ctx = ir_types::IrCodegenCtx::new(ir, ident, parser_attrs, StorageMode::Owned);
 
     // Copy has_sp_method from IR metadata to ctx.sp_method_rules for codegen.
-    ctx.sp_method_rules = ir.rules.iter()
+    ctx.sp_method_rules = ir
+        .rules
+        .iter()
         .filter(|r| r.meta.has_sp_method)
         .map(|r| ir.get_string(r.name).to_string())
         .collect();
@@ -62,18 +70,67 @@ pub fn generate_all(
         quote! {}
     };
 
+    let (arena_enum, arena_helper, arena_methods, arena_prettify, arena_recovered) = if parser_attrs
+        .arena
+    {
+        let mut arena_ctx =
+            ir_types::IrCodegenCtx::new(ir, ident, parser_attrs, StorageMode::Arena);
+        arena_ctx.sp_method_rules = ctx.sp_method_rules.clone();
+        let has_recovers = arena_ctx.ir.rules.iter().any(|r| r.meta.recover.is_some())
+            && !arena_ctx.parser_attrs.skip_recover;
+        let arena_helper_ident = arena_ctx.arena_helper_ident();
+        let arena_enum_ident = &arena_ctx.enum_ident;
+        let recovered_static = if has_recovers {
+            let recovered_ident = arena_ctx.recovered_static_ident();
+            quote! {
+                static #recovered_ident: #arena_enum_ident<'static> = #arena_enum_ident::Recovered;
+            }
+        } else {
+            quote! {}
+        };
+        (
+            ir_enums::generate_enum(&arena_ctx),
+            quote! {
+                #[allow(non_snake_case)]
+                #[inline(always)]
+                fn #arena_helper_ident<'a>(
+                    state: &::parse_that::ParserState<'a>,
+                ) -> &'a ::parse_that::BumpArena<#arena_enum_ident<'a>> {
+                    debug_assert!(!state.context_ptr.is_null(), "arena parser requires parse_with_context()");
+                    unsafe {
+                        &*(state.context_ptr as *const ::parse_that::BumpArena<#arena_enum_ident<'a>>)
+                    }
+                }
+            },
+            ir_codegen::monolithic::generate_monolithic_arena(ir, &arena_ctx),
+            if parser_attrs.prettify {
+                ir_pretty::generate_prettify_ir(&arena_ctx)
+            } else {
+                quote! {}
+            },
+            recovered_static,
+        )
+    } else {
+        (quote! {}, quote! {}, quote! {}, quote! {}, quote! {})
+    };
+
     quote! {
         use ::parse_that::*;
 
         #grammar_arr
 
         #grammar_enum
+        #arena_enum
+        #arena_helper
+        #arena_recovered
 
         impl #ident {
             #parser_methods
+            #arena_methods
         }
 
         #prettify_impl
+        #arena_prettify
     }
 }
 
@@ -86,7 +143,7 @@ fn generate_ir_parser_methods(
 
     for rule in &ir.rules {
         let name = ir.get_string(rule.name);
-        let ident = format_ident!("{}", name);
+        let ident = ctx.method_ident_for_name(name);
 
         // Determine return type.
         let ty = ctx.rule_return_type(rule.id);
@@ -103,7 +160,8 @@ fn generate_ir_parser_methods(
 
         // Set no_collapse for rules with @pretty or @no_collapse — prevents
         // Span compression in Seq so the codegen type matches the IR type.
-        ctx.no_collapse.set(rule.meta.no_collapse || rule.meta.pretty.is_some());
+        ctx.no_collapse
+            .set(rule.meta.no_collapse || rule.meta.pretty.is_some());
 
         let mut parser = ir_codegen::emit_rule_body_inline(
             &rule.body,
@@ -131,8 +189,7 @@ fn generate_ir_parser_methods(
             if !ctx.parser_attrs.skip_recover {
                 let sync_ts = ir_codegen::ir_node_to_tokens(sync, ctx);
                 let sentinel = ctx.recover_sentinel(rule.id);
-                parser =
-                    quote! { #parser.recover(#sync_ts.map(|_| ()), #sentinel) };
+                parser = quote! { #parser.recover(#sync_ts.map(|_| ()), #sentinel) };
             }
         }
 
@@ -142,16 +199,16 @@ fn generate_ir_parser_methods(
             }
         });
 
-        // Unboxed variant for transparent rules — used in Vec contexts where
-        // Box indirection is unnecessary (Vec provides heap indirection).
-        // Returns Enum directly instead of Box<Enum>.
+        // Unboxed variant for transparent rules — used in Vec, Optional, and
+        // discarded contexts where Box indirection is unnecessary.
+        // Non-transparent rules don't need _unboxed() — their normal method
+        // already returns Enum; boxing happens at the call site.
         if rule.meta.is_transparent {
-            let unboxed_ident = format_ident!("{}_unboxed", name);
+            let unboxed_ident = ctx.unboxed_method_ident_for_name(name);
             let unboxed_ty = ctx.enum_type.clone();
 
-            // Generate the body with in_vec=true so inner refs skip boxing.
-            let mut unboxed_parser =
-                ir_codegen::ir_node_to_tokens_vec(&rule.body, ctx, true);
+            // Generate the body with elide_box=true so inner refs skip arena alloc.
+            let mut unboxed_parser = ir_codegen::ir_node_to_tokens_elide(&rule.body, ctx, true);
 
             if rule.meta.is_cyclic {
                 unboxed_parser = quote! { ::parse_that::lazy(|| #unboxed_parser) };
@@ -173,7 +230,7 @@ fn generate_ir_parser_methods(
         }
 
         // SpanParser _sp() method.
-        if rule.meta.span_eligible {
+        if rule.meta.span_eligible && !ctx.uses_arena() {
             if let Some(sp) = ir_span::try_ir_span_parser(rule.id, ctx) {
                 let sp_ident = format_ident!("{}_sp", name);
                 methods.push(quote! {

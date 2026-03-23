@@ -56,23 +56,15 @@ pub fn infer_node_type(node: &IrNode, ctx: &IrCodegenCtx<'_>) -> TypeDesc {
                 }
             }
 
-            // (T, Vec<T>) flattening — matches emit_seq.
+            // (T, Vec<T>) flattening — matches emit_seq (same-type only).
             if compressed.len() == 2 {
                 if let TypeDesc::Vec(inner) = &compressed[1] {
                     if **inner == compressed[0] {
                         return compressed[1].clone();
                     }
-                    // (BoxedEnum, Vec<Enum>) → Vec<Enum>
-                    if **inner == TypeDesc::Enum && compressed[0] == TypeDesc::BoxedEnum {
-                        return compressed[1].clone();
-                    }
                 }
                 if let TypeDesc::Vec(inner) = &compressed[0] {
                     if **inner == compressed[1] {
-                        return compressed[0].clone();
-                    }
-                    // (Vec<Enum>, BoxedEnum) → Vec<Enum>
-                    if **inner == TypeDesc::Enum && compressed[1] == TypeDesc::BoxedEnum {
                         return compressed[0].clone();
                     }
                 }
@@ -104,20 +96,21 @@ pub fn infer_node_type(node: &IrNode, ctx: &IrCodegenCtx<'_>) -> TypeDesc {
                 if inner_ty == TypeDesc::Span {
                     TypeDesc::Span
                 } else {
-                    // Phase 1a: transparent refs get unboxed in Optional context.
-                    // Codegen emits _unboxed().opt() → Option<Enum> instead of
-                    // rule().opt() → Option<Box<Enum>>.
+                    // Transparent Ref nodes get unboxed in Optional context.
+                    // Codegen emits _unboxed().opt() → Option<Enum>.
+                    // Non-transparent Refs keep arena ref: rule().opt() → Option<&'a Enum>.
                     if let IrNode::Ref(rule_id) = inner.as_ref() {
                         let rule = &ctx.ir.rules[*rule_id as usize];
                         if rule.meta.is_transparent {
                             return TypeDesc::Option(Box::new(TypeDesc::Enum));
                         }
+                        // Non-transparent falls through to default: Option<BoxedEnum>
                     }
                     TypeDesc::Option(Box::new(inner_ty))
                 }
             } else {
-                // Vec-producing: use in_vec inference (Ref → Enum, not BoxedEnum).
-                let inner_ty = infer_node_type_in_vec(inner, ctx);
+                // Vec-producing: use elide_box inference (Ref → Enum, not BoxedEnum).
+                let inner_ty = infer_node_type_elide_box(inner, ctx);
                 if inner_ty == TypeDesc::Span {
                     TypeDesc::Span
                 } else {
@@ -141,48 +134,49 @@ pub fn infer_node_type(node: &IrNode, ctx: &IrCodegenCtx<'_>) -> TypeDesc {
     }
 }
 
-/// Quick type inference for a single IrNode in a Vec context.
+/// Quick type inference for a single IrNode in an elide_box context.
 ///
-/// Identical to `infer_node_type` except `Ref` returns `Enum` for non-transparent
-/// rules (since Vec provides heap indirection, Box is unnecessary). Transparent
-/// rules still return `BoxedEnum` since they box internally.
+/// Identical to `infer_node_type` except `Ref` returns `Enum` for ALL rules
+/// (since the parent provides heap indirection, Box is unnecessary), and
+/// `BoxWrap` returns `Enum` instead of `BoxedEnum`.
 ///
 /// Propagates through Skip (left), Next (right), Minus (left), Map, OW — matching
-/// the codegen `in_vec` propagation.
-pub fn infer_node_type_in_vec(node: &IrNode, ctx: &IrCodegenCtx<'_>) -> TypeDesc {
+/// the codegen `elide_box` propagation.
+pub fn infer_node_type_elide_box(node: &IrNode, ctx: &IrCodegenCtx<'_>) -> TypeDesc {
     match node {
-        // In Vec context, ALL refs return Enum (no boxing needed).
-        // Non-transparent: codegen emits Self::rule() without Box.
-        // Transparent: codegen emits Self::rule_unboxed() which returns Enum directly.
+        // In elide_box context, ALL refs return Enum (no boxing needed).
+        // Codegen emits Self::rule_unboxed() which returns Enum directly.
         IrNode::Ref(_) => TypeDesc::Enum,
-        IrNode::Skip(left, _) => infer_node_type_in_vec(left, ctx),
-        IrNode::Next(_, right) => infer_node_type_in_vec(right, ctx),
-        IrNode::Minus(left, _) => infer_node_type_in_vec(left, ctx),
-        IrNode::OptionalWhitespace(inner) => infer_node_type_in_vec(inner, ctx),
+        IrNode::Skip(left, _) => infer_node_type_elide_box(left, ctx),
+        IrNode::Next(_, right) => infer_node_type_elide_box(right, ctx),
+        IrNode::Minus(left, _) => infer_node_type_elide_box(left, ctx),
+        IrNode::OptionalWhitespace(inner) => infer_node_type_elide_box(inner, ctx),
         IrNode::Map { fn_id, .. } => {
             // Map determines its own type from FnDescriptor.
             match &ctx.ir.fns[*fn_id as usize] {
                 FnDescriptor::EnumWrap { .. } => TypeDesc::Enum,
-                FnDescriptor::BoxWrap => TypeDesc::BoxedEnum,
-                FnDescriptor::Custom { return_type, source } => {
-                    return_type.clone().unwrap_or(TypeDesc::Named(*source))
-                }
+                // BoxWrap is elided in elide_box context — returns Enum, not BoxedEnum.
+                FnDescriptor::BoxWrap => TypeDesc::Enum,
+                FnDescriptor::Custom {
+                    return_type,
+                    source,
+                } => return_type.clone().unwrap_or(TypeDesc::Named(*source)),
             }
         }
-        // Alt: try in_vec inference. Only apply if branches are homogeneous
-        // with in_vec (otherwise coercion produces BoxedEnum, defeating in_vec).
+        // Alt: try elide_box inference. Only apply if branches are homogeneous
+        // with elide_box (otherwise coercion produces BoxedEnum, defeating elide_box).
         IrNode::Alt(branches, _) => {
             if branches.is_empty() {
                 return TypeDesc::Tuple(vec![]);
             }
-            let first = infer_node_type_in_vec(&branches[0].node, ctx);
+            let first = infer_node_type_elide_box(&branches[0].node, ctx);
             let all_same = branches[1..]
                 .iter()
-                .all(|b| infer_node_type_in_vec(&b.node, ctx) == first);
+                .all(|b| infer_node_type_elide_box(&b.node, ctx) == first);
             if all_same {
                 first
             } else {
-                // Heterogeneous even with in_vec — fall back to standard inference.
+                // Heterogeneous even with elide_box — fall back to standard inference.
                 infer_node_type(node, ctx)
             }
         }

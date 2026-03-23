@@ -10,8 +10,8 @@ use quote::{format_ident, quote};
 
 use super::super::ir_types::IrCodegenCtx;
 use super::infer::infer_node_type;
-use super::{ir_node_to_tokens, ir_node_to_tokens_vec};
 use super::inline::{ir_node_to_inline, ir_node_to_inline_vec, InlineCtx};
+use super::{ir_node_to_tokens, ir_node_to_tokens_elide};
 
 /// Emit a Seq (concatenation) expression.
 ///
@@ -19,16 +19,16 @@ use super::inline::{ir_node_to_inline, ir_node_to_inline_vec, InlineCtx};
 /// - Span compression (consecutive Span children → `.then_span()`)
 /// - sp_method_rules override (Ref to span-eligible → `Self::rule_sp().into_parser()`)
 /// - `(T, Vec<T>)` → `Vec<T>` flattening
-pub fn emit_seq(children: &[IrNode], ctx: &IrCodegenCtx<'_>, in_vec: bool) -> TokenStream {
+pub fn emit_seq(children: &[IrNode], ctx: &IrCodegenCtx<'_>, elide_box: bool) -> TokenStream {
     if children.is_empty() {
         return quote! { ::parse_that::epsilon() };
     }
     if children.len() == 1 {
-        return ir_node_to_tokens_vec(&children[0], ctx, in_vec);
+        return ir_node_to_tokens_elide(&children[0], ctx, elide_box);
     }
 
     // Multi-element seq produces a tuple, not a Vec element directly.
-    // Reset in_vec for individual children.
+    // Reset elide_box for individual children.
 
     // Compute per-child types and determine sp_method_rules overrides.
     let child_info: Vec<(TokenStream, bool)> = children
@@ -61,9 +61,22 @@ pub fn emit_seq(children: &[IrNode], ctx: &IrCodegenCtx<'_>, in_vec: bool) -> To
         })
         .collect();
 
-    // All-Span guard: if all children would be Span after override, don't use override.
+    // All-Span guard: keep B.1 only when every child is a simple Span leaf
+    // or a B.1-overridden Ref, and !no_collapse.
     let all_span = child_types.iter().all(|t| *t == TypeDesc::Span);
-    let (parsers, types): (Vec<TokenStream>, Vec<TypeDesc>) = if all_span {
+    let all_simple_span = all_span
+        && ctx.ir.b1_span_collapse
+        && !ctx.no_collapse.get()
+        && children.iter().zip(child_types.iter()).all(|(c, ty)| {
+            if let IrNode::Ref(id) = c {
+                let rule = &ctx.ir.rules[*id as usize];
+                if rule.meta.has_sp_method && !rule.meta.is_transparent {
+                    return true;
+                }
+            }
+            *ty == TypeDesc::Span
+        });
+    let (parsers, types): (Vec<TokenStream>, Vec<TypeDesc>) = if all_span && !all_simple_span {
         children
             .iter()
             .map(|c| (ir_node_to_tokens(c, ctx), infer_node_type(c, ctx)))
@@ -99,10 +112,12 @@ pub fn emit_seq(children: &[IrNode], ctx: &IrCodegenCtx<'_>, in_vec: bool) -> To
     // Fold chains into a single expression.
     let mut acc: Option<TokenStream> = None;
     for (n, (_, chain)) in chains.iter().enumerate() {
-        let chain_acc = chain.iter().fold(None::<TokenStream>, |acc, parser| match acc {
-            None => Some(parser.clone()),
-            Some(acc) => Some(quote! { #acc.then_span(#parser) }),
-        });
+        let chain_acc = chain
+            .iter()
+            .fold(None::<TokenStream>, |acc, parser| match acc {
+                None => Some(parser.clone()),
+                Some(acc) => Some(quote! { #acc.then_span(#parser) }),
+            });
         acc = match acc {
             None => chain_acc,
             Some(prev) => {
@@ -136,7 +151,7 @@ pub fn emit_seq(children: &[IrNode], ctx: &IrCodegenCtx<'_>, in_vec: bool) -> To
     };
 
     if effective_types.len() == 2 {
-        // (A, Vec<A>) → prepend first element
+        // (A, Vec<A>) → prepend first element (same-type only)
         if let TypeDesc::Vec(inner) = &effective_types[1] {
             if **inner == effective_types[0] {
                 return quote! {
@@ -148,33 +163,13 @@ pub fn emit_seq(children: &[IrNode], ctx: &IrCodegenCtx<'_>, in_vec: bool) -> To
                     })
                 };
             }
-            // (BoxedEnum, Vec<Enum>) → Vec<Enum>: unbox first element
-            if **inner == TypeDesc::Enum && effective_types[0] == TypeDesc::BoxedEnum {
-                return quote! {
-                    #parser.map(|(first, rest)| {
-                        let mut v = Vec::with_capacity(1 + rest.len());
-                        v.push(*first);
-                        v.extend(rest);
-                        v
-                    })
-                };
-            }
         }
-        // (Vec<A>, A) → append last element
+        // (Vec<A>, A) → append last element (same-type only)
         if let TypeDesc::Vec(inner) = &effective_types[0] {
             if **inner == effective_types[1] {
                 return quote! {
                     #parser.map(|(mut v, last)| {
                         v.push(last);
-                        v
-                    })
-                };
-            }
-            // (Vec<Enum>, BoxedEnum) → Vec<Enum>: unbox last element
-            if **inner == TypeDesc::Enum && effective_types[1] == TypeDesc::BoxedEnum {
-                return quote! {
-                    #parser.map(|(mut v, last)| {
-                        v.push(*last);
                         v
                     })
                 };
@@ -195,15 +190,15 @@ pub(super) fn emit_seq_inline(
     children: &[IrNode],
     ctx: &IrCodegenCtx<'_>,
     ictx: &mut InlineCtx,
-    in_vec: bool,
+    elide_box: bool,
 ) -> TokenStream {
     if children.is_empty() {
         return quote! { Some(::parse_that::Span::new(state.offset, state.offset, state.src)) };
     }
     if children.len() == 1 {
-        return ir_node_to_inline_vec(&children[0], ctx, ictx, in_vec);
+        return ir_node_to_inline_vec(&children[0], ctx, ictx, elide_box);
     }
-    // Multi-element seq produces a tuple — reset in_vec for children.
+    // Multi-element seq produces a tuple — reset elide_box for children.
 
     // ── Step 1: Determine per-child types and sp_method overrides ────────
 
@@ -224,15 +219,27 @@ pub(super) fn emit_seq_inline(
         sp_override.push(false);
     }
 
-    // All-Span guard: if all children would be Span after override, don't apply.
+    // All-Span guard: keep B.1 only when every child is a simple Span leaf
+    // or a B.1-overridden Ref, and !no_collapse.
     let all_span = child_types.iter().all(|t| *t == TypeDesc::Span);
-    if all_span {
+    let all_simple_span = all_span
+        && ctx.ir.b1_span_collapse
+        && !ctx.no_collapse.get()
+        && children.iter().zip(child_types.iter()).all(|(c, ty)| {
+            if let IrNode::Ref(id) = c {
+                let rule = &ctx.ir.rules[*id as usize];
+                if rule.meta.has_sp_method && !rule.meta.is_transparent {
+                    return true;
+                }
+            }
+            *ty == TypeDesc::Span
+        });
+    if all_span && !all_simple_span {
         child_types = children.iter().map(|c| infer_node_type(c, ctx)).collect();
         sp_override = vec![false; children.len()];
     }
 
-    // If still all-Span, fall back to combinator path (SpanParser chains are
-    // already allocation-free — no benefit from inlining).
+    // If still all-Span, emit combined Span.
     // Exception: when no_collapse is set (@pretty/@no_collapse), keep the tuple.
     let still_all_span = child_types.iter().all(|t| *t == TypeDesc::Span);
     if still_all_span {
@@ -255,6 +262,7 @@ pub(super) fn emit_seq_inline(
                 }
             };
         } else {
+            // All-Span: emit combined SpanParser chain via combinator path.
             let parser = emit_seq(children, ctx, false);
             let name = ictx.hoist(parser);
             return quote! { #name.call(state) };
@@ -336,7 +344,7 @@ pub(super) fn emit_seq_inline(
     // ── Step 4: (T, Vec<T>) / (Vec<T>, T) flattening ────────────────────
 
     if effective_types.len() == 2 {
-        // (A, Vec<A>) → Vec<A>: prepend first element.
+        // (A, Vec<A>) → Vec<A>: prepend first element (same-type only).
         if let TypeDesc::Vec(inner) = &effective_types[1] {
             if **inner == effective_types[0] {
                 let first = &result_vars[0];
@@ -351,22 +359,8 @@ pub(super) fn emit_seq_inline(
                     }
                 };
             }
-            // (BoxedEnum, Vec<Enum>) → Vec<Enum>: unbox first element.
-            if **inner == TypeDesc::Enum && effective_types[0] == TypeDesc::BoxedEnum {
-                let first = &result_vars[0];
-                let rest = &result_vars[1];
-                return quote! {
-                    {
-                        #(#stmts)*
-                        let mut __v = Vec::with_capacity(1 + #rest.len());
-                        __v.push(*#first);
-                        __v.extend(#rest);
-                        Some(__v)
-                    }
-                };
-            }
         }
-        // (Vec<A>, A) → Vec<A>: append last element.
+        // (Vec<A>, A) → Vec<A>: append last element (same-type only).
         if let TypeDesc::Vec(inner) = &effective_types[0] {
             if **inner == effective_types[1] {
                 let vec_var = &result_vars[0];
@@ -376,19 +370,6 @@ pub(super) fn emit_seq_inline(
                         #(#stmts)*
                         let mut __v = #vec_var;
                         __v.push(#last);
-                        Some(__v)
-                    }
-                };
-            }
-            // (Vec<Enum>, BoxedEnum) → Vec<Enum>: unbox last element.
-            if **inner == TypeDesc::Enum && effective_types[1] == TypeDesc::BoxedEnum {
-                let vec_var = &result_vars[0];
-                let last = &result_vars[1];
-                return quote! {
-                    {
-                        #(#stmts)*
-                        let mut __v = #vec_var;
-                        __v.push(*#last);
                         Some(__v)
                     }
                 };

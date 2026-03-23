@@ -10,7 +10,7 @@ use quote::quote;
 
 use super::super::ir_types::IrCodegenCtx;
 use super::repeat;
-use super::{ir_node_to_tokens, ir_node_to_tokens_vec};
+use super::{ir_node_to_tokens, ir_node_to_tokens_elide};
 
 /// Emit a `wrap` / `wrap_span` expression for the pattern `open >> middle << close`.
 ///
@@ -21,7 +21,7 @@ pub fn emit_wrap(
     middle: &IrNode,
     close: &IrNode,
     ctx: &IrCodegenCtx<'_>,
-    in_vec: bool,
+    elide_box: bool,
 ) -> TokenStream {
     // Fix 4: Regex coalescing — Literal(open) >> Regex(pattern)* << Literal(close)
     // Fuse into a single regex: sp_regex("open_lit" + pattern + "close_lit").
@@ -53,8 +53,13 @@ pub fn emit_wrap(
                         let close_bytes: Vec<u8> = close_lit.bytes().collect();
                         let open_ts = ir_node_to_tokens(open, ctx);
                         let close_ts = ir_node_to_tokens(close, ctx);
-                        let sep_ts =
-                            repeat::emit_sep_by_ws_until(element, separator, *lo, &close_bytes, ctx);
+                        let sep_ts = repeat::emit_sep_by_ws_until(
+                            element,
+                            separator,
+                            *lo,
+                            &close_bytes,
+                            ctx,
+                        );
                         return quote! { #sep_ts.wrap(#open_ts, #close_ts) };
                     }
                 }
@@ -63,7 +68,7 @@ pub fn emit_wrap(
     }
 
     let open_ts = ir_node_to_tokens(open, ctx);
-    let middle_ts = ir_node_to_tokens_vec(middle, ctx, in_vec);
+    let middle_ts = ir_node_to_tokens_elide(middle, ctx, elide_box);
     let close_ts = ir_node_to_tokens(close, ctx);
 
     // Always use `.wrap()` in the Parser context — `.wrap_span()` converts to

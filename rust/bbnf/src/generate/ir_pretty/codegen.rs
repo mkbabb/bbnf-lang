@@ -152,8 +152,8 @@ pub(crate) fn generate_compound_doc_ir(
         return generate_key_value_doc_ir(variant, &sep_lit, hints, ctx.ir);
     }
 
-    // Box<Enum> -- deref and recurse.
-    if is_box_enum_type(ty) {
+    // Box<Enum> or &'a ArenaEnum -- deref and recurse.
+    if is_recursive_enum_type(ty) {
         let doc = quote! { val.to_doc() };
         let doc = apply_hints(doc, hints);
         return quote! {
@@ -378,7 +378,7 @@ pub(crate) fn generate_sub_variant_arms(
                 source_range_arms.push(quote! {
                     Self::#variant(s) => Some((s.start, s.end)),
                 });
-            } else if is_box_enum_type(&ty) {
+            } else if is_recursive_enum_type(&ty) {
                 to_doc_arms.push(quote! {
                     Self::#variant(val) => val.to_doc(),
                 });

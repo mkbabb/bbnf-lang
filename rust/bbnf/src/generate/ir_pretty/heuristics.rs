@@ -60,7 +60,7 @@ pub(crate) fn infer_hints_ir(
                     return vec!["group".to_string()];
                 }
             }
-            if is_box_enum_type(ty) && !type_is_span(ty) {
+            if is_recursive_enum_type(ty) && !type_is_span(ty) {
                 if let IrNode::Alt(branches, _) = inner {
                     if branches.len() > 2 {
                         return vec!["group".to_string()];

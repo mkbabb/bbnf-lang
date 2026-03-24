@@ -1,5 +1,6 @@
 import MarkdownIt from "markdown-it";
 import { getLanguageIcon } from "./languageIcons";
+import { lookupTerm, lookupFileUrl } from "./termRegistry";
 
 const md = new MarkdownIt({
     html: true,
@@ -151,6 +152,10 @@ function escapeHtml(s: string): string {
     return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
+function unescapeHtmlEntities(s: string): string {
+    return s.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+}
+
 /** Escape for use inside single-quoted HTML attributes — also escapes single quotes. */
 function escapeAttr(s: string): string {
     return escapeHtml(s).replace(/'/g, "&#39;");
@@ -247,6 +252,47 @@ export function useMarkdown() {
                 return `<span class="perf-number">${num}</span>\u00a0<span class="perf-unit">${unit}</span>`;
             }
         );
+
+        // Post-process: linkify bare .bbnf file references in prose text.
+        // Skip content inside <code>, <pre>, <a>, and HTML tags.
+        html = html.replace(
+            /(<code[^>]*>[\s\S]*?<\/code>|<pre[\s\S]*?<\/pre>|<a[\s\S]*?<\/a>|<[^>]*>)|([\w][\w.-]*\.bbnf)\b/g,
+            (match, skip, filename) => {
+                if (skip) return skip;
+                const url = lookupFileUrl(filename);
+                if (!url) return match;
+                return `<a href="${url}" class="file-link" target="_blank" rel="noopener">${escapeHtml(filename)}</a>`;
+            }
+        );
+
+        // Post-process: annotate inline <code> elements with tooltip data + file links.
+        // Skip everything inside <pre> blocks (code fences).
+        html = html.replace(
+            /(<pre[\s\S]*?<\/pre>)|(<code>)([\s\S]*?)(<\/code>)/g,
+            (match, preBlock, openTag, content, closeTag) => {
+                if (preBlock) return preBlock;
+                const raw = unescapeHtmlEntities(content);
+                const term = lookupTerm(raw);
+                const fileUrl = lookupFileUrl(raw);
+
+                let newOpen = openTag as string;
+                let wrap: [string, string] | null = null;
+
+                if (term) {
+                    newOpen = `<code class="has-tooltip" data-term-key="${escapeAttr(term.key)}" data-term-cat="${term.category}">`;
+                }
+                if (fileUrl) {
+                    wrap = [
+                        `<a href="${fileUrl}" class="file-link" target="_blank" rel="noopener">`,
+                        `</a>`,
+                    ];
+                }
+
+                const inner = `${newOpen}${content}${closeTag}`;
+                return wrap ? `${wrap[0]}${inner}${wrap[1]}` : inner;
+            }
+        );
+
         return html;
     }
     return { renderMarkdown };

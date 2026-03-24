@@ -23,7 +23,7 @@ import { registerBBNFLanguage } from "@/components/editors/bbnfMonarch";
 import { registerBBNFLanguageProvider, updateGrammarDiagnostics } from "@/lib/languageProvider";
 import { useWalkthrough } from "@/composables/useWalkthrough";
 import { BbnfLogo } from "@/components/custom/bbnf-logo";
-import { ExternalLink, GripHorizontal, GripVertical } from "lucide-vue-next";
+import { ExternalLink, GripVertical } from "lucide-vue-next";
 import "@/lib/monacoWorkers";
 
 type LeftTab = "grammar" | "input";
@@ -58,9 +58,7 @@ const {
 
 const leftTab = ref<LeftTab>("grammar");
 const rightTab = ref<RightTab>("format");
-
-// Drive parse_check fast path: only serialize the full AST when the tab is visible.
-watch(rightTab, (tab) => { needsFullTree.value = tab === "ast"; }, { immediate: true });
+const mobilePaneIndex = ref<0 | 1>(0);
 
 const grammarEditorRef = ref<InstanceType<typeof MonacoEditor> | null>(null);
 const inputEditorRef = ref<InstanceType<typeof MonacoEditor> | null>(null);
@@ -117,6 +115,14 @@ const {
     resetSplitForCurrentMode,
     scheduleEditorRelayout,
 } = useSplitPane(relayoutAllEditors);
+
+// Drive parse_check fast path: only serialize the full AST when the tab is visible.
+watch([rightTab, mobilePaneIndex], () => {
+    needsFullTree.value = rightTab.value === "ast" && (isDesktop.value || mobilePaneIndex.value === 1);
+}, { immediate: true });
+
+// Relayout editors when mobile pane switches
+watch(mobilePaneIndex, () => { scheduleEditorRelayout(); });
 
 const currentExampleName = computed(() => currentExample.value.name);
 
@@ -215,18 +221,21 @@ function onResetPlayground() {
 function onJumpToError(error: PipelineError) {
     if (error.source === "grammar") {
         leftTab.value = "grammar";
+        if (!isDesktop.value) mobilePaneIndex.value = 0;
         focusEditorAfterSwitch(grammarEditorRef, error.line ?? 1, error.column ?? 1);
         return;
     }
 
     if (error.source === "parse") {
         leftTab.value = "input";
+        if (!isDesktop.value) mobilePaneIndex.value = 0;
         focusEditorAfterSwitch(inputEditorRef, error.line ?? 1, error.column ?? 1);
         return;
     }
 
     if (error.source === "format") {
         rightTab.value = "format";
+        if (!isDesktop.value) mobilePaneIndex.value = 1;
         requestAnimationFrame(() => {
             formattedEditorRef.value?.layout();
             formattedEditorRef.value?.focus();
@@ -297,16 +306,30 @@ watch([leftTab, rightTab], () => {
 
 <template>
     <div
-        class="relative mt-14 w-full overflow-hidden"
-        :class="isDesktop
-            ? 'h-[calc(100dvh-var(--spacing-navbar))] max-h-[calc(100dvh-var(--spacing-navbar))]'
-            : 'h-[calc(200dvh-var(--spacing-navbar))]'"
+        class="relative mt-14 w-full overflow-hidden h-[calc(100dvh-var(--spacing-navbar))] max-h-[calc(100dvh-var(--spacing-navbar))]"
     >
-        <div class="absolute inset-0 overflow-hidden p-1 pb-8 sm:p-4 sm:pb-12">
+        <div class="absolute inset-0 overflow-hidden p-1 pb-5 sm:p-4 sm:pb-12 flex flex-col">
+            <!-- Mobile pane toggle — visible only below 768px -->
+            <div v-if="!isDesktop" class="mobile-pane-tabs">
+                <button
+                    :class="['mobile-pane-tab', mobilePaneIndex === 0 && 'active']"
+                    @click="mobilePaneIndex = 0"
+                >
+                    Editor
+                </button>
+                <button
+                    :class="['mobile-pane-tab', mobilePaneIndex === 1 && 'active']"
+                    @click="mobilePaneIndex = 1"
+                >
+                    Output
+                </button>
+            </div>
+
+            <!-- Desktop: split pane with divider -->
             <div
+                v-if="isDesktop"
                 ref="splitContainerRef"
-                class="flex h-full min-h-0 min-w-0 overflow-hidden"
-                :class="isDesktop ? 'flex-row items-stretch' : 'flex-col items-stretch'"
+                class="flex h-full min-h-0 min-w-0 overflow-hidden flex-row items-stretch"
             >
                 <!-- Left pane: Grammar / Input -->
                 <div class="min-h-0 min-w-0" :style="primaryPaneStyle">
@@ -343,19 +366,15 @@ watch([leftTab, rightTab], () => {
                         <button
                             type="button"
                             style="touch-action: none"
-                            class="group relative shrink-0 rounded-full border border-border/50 bg-card/35 text-muted-foreground transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-                            :class="isDesktop
-                                ? 'mx-1 my-6 w-3 cursor-col-resize'
-                                : 'mx-6 my-1 h-5 cursor-row-resize'"
-                            :aria-label="isDesktop ? 'Resize playground panes horizontally' : 'Resize playground panes vertically'"
+                            class="group relative shrink-0 rounded-full border border-border/50 bg-card/35 text-muted-foreground transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 mx-1 my-6 w-3 cursor-col-resize"
+                            aria-label="Resize playground panes horizontally"
                             @pointerdown="onDividerPointerDown"
                             @keydown="onDividerKeyDown"
                             @dblclick="resetSplitForCurrentMode"
                         >
                             <span class="absolute inset-[1px] rounded-full bg-card/70 backdrop-blur-xl" />
                             <span class="relative flex h-full w-full items-center justify-center">
-                                <GripVertical v-if="isDesktop" class="h-3.5 w-3.5" />
-                                <GripHorizontal v-else class="h-3.5 w-3.5" />
+                                <GripVertical class="h-3.5 w-3.5" />
                             </span>
                         </button>
                     </TooltipTrigger>
@@ -434,6 +453,105 @@ watch([leftTab, rightTab], () => {
                     </EditorPanel>
                 </div>
             </div>
+
+            <!-- Mobile: single pane, toggled by mobilePaneIndex -->
+            <template v-else>
+                <Transition name="mobile-pane" mode="out-in">
+                    <div v-if="mobilePaneIndex === 0" key="left" class="flex-1 min-h-0 min-w-0">
+                        <EditorPanel
+                            :active-tab="leftTab"
+                            :tabs="leftTabs"
+                            :lang-icons="langIcons"
+                            :badge-language="leftTab === 'input' ? formattedLanguage : undefined"
+                            :show-bbnf-badge="leftTab === 'grammar'"
+                            @toggle-tab="toggleLeftTab"
+                        >
+                            <template #grammar>
+                                <MonacoEditor
+                                    ref="grammarEditorRef"
+                                    v-model="grammarText"
+                                    language="bbnf"
+                                    :markers="grammarMarkers"
+                                />
+                            </template>
+                            <template #input>
+                                <MonacoEditor
+                                    ref="inputEditorRef"
+                                    v-model="inputText"
+                                    :language="formattedLanguage"
+                                    :markers="inputMarkers"
+                                />
+                            </template>
+                        </EditorPanel>
+                    </div>
+                    <div v-else key="right" class="flex-1 min-h-0 min-w-0">
+                        <EditorPanel
+                            :active-tab="rightTab"
+                            :tabs="rightTabs"
+                            :lang-icons="langIcons"
+                            :badge-language="rightTab === 'format' ? formattedLanguage : undefined"
+                            @toggle-tab="toggleRightTab"
+                        >
+                            <template #ast>
+                                <MonacoEditor
+                                    ref="astEditorRef"
+                                    :model-value="astJson"
+                                    language="json"
+                                    :readonly="true"
+                                />
+                            </template>
+                            <template #format>
+                                <MonacoEditor
+                                    ref="formattedEditorRef"
+                                    :model-value="formatted"
+                                    :language="formattedLanguage"
+                                    :readonly="true"
+                                />
+                            </template>
+                            <template #overlay>
+                                <HoverCardRoot :open-delay="300">
+                                    <HoverCardTrigger as-child>
+                                        <Transition name="hover-card">
+                                            <span
+                                                v-if="rightTab === 'format' && formattedBy"
+                                                class="absolute top-2 right-4 z-20 cursor-default rounded-md border px-2 py-0.5 text-xs font-mono backdrop-blur-sm bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400"
+                                            >
+                                                gorgeous (WASM)
+                                            </span>
+                                        </Transition>
+                                    </HoverCardTrigger>
+                                    <HoverCardPortal>
+                                        <HoverCardContent
+                                            side="bottom"
+                                            :side-offset="8"
+                                            class="z-50 w-72 rounded-xl border border-border/40 bg-card/90 p-4 shadow-lg backdrop-blur-xl"
+                                        >
+                                            <div class="mb-2 flex items-center gap-2">
+                                                <span class="instrument-serif text-base">gorgeous</span>
+                                                <span class="rounded-full bg-muted/40 px-2 py-0.5 text-[0.625rem] text-muted-foreground">WASM</span>
+                                            </div>
+                                            <div class="mb-3 grid grid-cols-2 gap-y-1 text-xs text-muted-foreground font-mono">
+                                                <span>Parse</span>  <span class="text-right">{{ telemetry.parseMs }}ms</span>
+                                                <span>Format</span> <span class="text-right">{{ telemetry.formatMs }}ms</span>
+                                                <span>Total</span>  <span class="text-right">{{ telemetry.totalMs }}ms</span>
+                                                <span>Input</span>  <span class="text-right">{{ telemetry.inputBytes }} B</span>
+                                            </div>
+                                            <a
+                                                href="https://github.com/mkbabb/bbnf-lang"
+                                                target="_blank"
+                                                rel="noopener"
+                                                class="flex items-center gap-1 text-xs text-pastel-blue hover:underline"
+                                            >
+                                                <ExternalLink class="h-3 w-3" /> github.com/mkbabb/bbnf-lang
+                                            </a>
+                                        </HoverCardContent>
+                                    </HoverCardPortal>
+                                </HoverCardRoot>
+                            </template>
+                        </EditorPanel>
+                    </div>
+                </Transition>
+            </template>
         </div>
 
         <ControlsBar

@@ -110,7 +110,7 @@ onUnmounted(clearTimer);
 .glass-dock {
     display: inline-flex;
     align-items: center;
-    padding: 0.375rem 0.75rem;
+    padding: 0.25rem 0.5rem;
     border-radius: var(--radius-pill);
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
@@ -124,6 +124,12 @@ onUnmounted(clearTimer);
         box-shadow var(--duration-normal) var(--ease-standard),
         background var(--duration-normal) var(--ease-standard),
         border-color var(--duration-normal) var(--ease-standard);
+}
+
+@media (min-width: 640px) {
+    .glass-dock {
+        padding: 0.375rem 0.75rem;
+    }
 }
 
 /* Suppress transitions on initial render */
@@ -140,12 +146,18 @@ onUnmounted(clearTimer);
 .glass-dock.collapsed {
     cursor: pointer;
     max-width: 14rem;
-    padding: 0.375rem 0.75rem;
+    padding: 0.25rem 0.5rem;
     background: hsl(var(--card) / 0.92);
     border-color: hsl(var(--border) / 0.7);
     box-shadow:
         0 2px 8px hsl(var(--foreground) / 0.06),
         0 0 0 1px hsl(var(--foreground) / 0.06);
+}
+
+@media (min-width: 640px) {
+    .glass-dock.collapsed {
+        padding: 0.375rem 0.75rem;
+    }
 }
 
 .glass-dock.collapsed:hover {
@@ -165,10 +177,17 @@ onUnmounted(clearTimer);
     grid-area: 1 / 1;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    min-height: 2rem;
+    gap: 0.375rem;
+    min-height: 1.5rem;
     white-space: nowrap;
     transition: opacity var(--duration-normal) var(--ease-standard);
+}
+
+@media (min-width: 640px) {
+    .dock-layer {
+        gap: 0.5rem;
+        min-height: 2rem;
+    }
 }
 
 .dock-layer.layer-active {

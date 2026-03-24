@@ -440,6 +440,136 @@
 .perf-unit { color: hsl(var(--muted-foreground) / 0.7); font-size: 0.85em; }
 
 /* ------------------------------------------------------------------ */
+/* Doc enrichment — file links & term tooltips                         */
+/* ------------------------------------------------------------------ */
+
+/* File links in prose */
+.prose .file-link { text-decoration-style: dotted; }
+.prose .file-link code {
+    color: hsl(var(--pastel-blue));
+    border-color: hsl(var(--pastel-blue) / 0.3);
+    background: hsl(var(--pastel-blue) / 0.08);
+}
+.prose .file-link:hover code {
+    background: hsl(var(--pastel-blue) / 0.15);
+    border-color: hsl(var(--pastel-blue) / 0.5);
+}
+
+/* Annotated inline code (terms with tooltips) */
+.prose code.has-tooltip {
+    cursor: help;
+    text-decoration: underline;
+    text-decoration-style: dashed;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+    text-decoration-color: hsl(var(--muted-foreground) / 0.3);
+}
+.prose code.has-tooltip:hover {
+    text-decoration-color: hsl(var(--muted-foreground) / 0.6);
+    background: hsl(var(--muted) / 0.7);
+}
+/* Category accent colors */
+.prose code.has-tooltip[data-term-cat="directive"] { color: hsl(var(--pastel-purple)); }
+.prose code.has-tooltip[data-term-cat="operator"]  { color: hsl(var(--pastel-amber)); }
+.prose code.has-tooltip[data-term-cat="concept"]   { color: hsl(var(--pastel-cyan)); }
+.prose code.has-tooltip[data-term-cat="type"]       { color: hsl(var(--pastel-green)); }
+
+/* Floating term tooltip */
+.term-tooltip {
+    position: fixed;
+    z-index: 50;
+    max-width: 320px;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    border: 1px solid hsl(var(--border) / 0.4);
+    background: hsl(var(--popover) / 0.95);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 4px 16px hsl(var(--foreground) / 0.08);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: hsl(var(--popover-foreground));
+    pointer-events: auto;
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+    transition: opacity 150ms ease, transform 150ms ease;
+    visibility: hidden;
+}
+.term-tooltip.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    visibility: visible;
+}
+.term-tooltip-badge {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.125rem 0.375rem;
+    border-radius: 9999px;
+    margin-bottom: 0.25rem;
+}
+.term-tooltip-desc {
+    color: hsl(var(--foreground) / 0.85);
+}
+.term-tooltip-link {
+    display: inline-block;
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    color: hsl(var(--pastel-blue));
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+.term-tooltip-link:hover {
+    color: hsl(var(--pastel-blue) / 0.8);
+}
+
+/* ------------------------------------------------------------------ */
+/* Mobile pane segmented control (playground)                          */
+/* ------------------------------------------------------------------ */
+.mobile-pane-tabs {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px;
+    margin: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    background: hsl(var(--foreground) / 0.05);
+    flex-shrink: 0;
+}
+.mobile-pane-tab {
+    flex: 1;
+    padding: 0.25rem 0.75rem;
+    border: none;
+    border-radius: 9999px;
+    font-family: "Instrument Serif", serif;
+    font-size: 0.8125rem;
+    color: hsl(var(--muted-foreground));
+    background: transparent;
+    transition: all 150ms ease;
+    cursor: pointer;
+    text-align: center;
+}
+.mobile-pane-tab.active {
+    background: hsl(var(--foreground));
+    color: hsl(var(--background));
+}
+
+/* Mobile pane transition */
+.mobile-pane-enter-active,
+.mobile-pane-leave-active {
+    transition: opacity 200ms ease, transform 200ms ease;
+}
+.mobile-pane-enter-from {
+    opacity: 0;
+    transform: translateX(8px);
+}
+.mobile-pane-leave-to {
+    opacity: 0;
+    transform: translateX(-8px);
+}
+
+/* ------------------------------------------------------------------ */
 /* Dock & glass component utilities                                    */
 /* ------------------------------------------------------------------ */
 
@@ -461,7 +591,7 @@
     }
 
     .dock-icon-btn {
-        @apply inline-flex items-center justify-center w-10 h-10 rounded-full border-none bg-transparent cursor-pointer shrink-0 p-0;
+        @apply inline-flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full border-none bg-transparent cursor-pointer shrink-0 p-0;
         color: hsl(var(--foreground) / 0.7);
         transition: all var(--duration-fast) var(--ease-smooth);
     }

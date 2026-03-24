@@ -114,6 +114,14 @@ pub fn generate_all(
         (quote! {}, quote! {}, quote! {}, quote! {}, quote! {})
     };
 
+    // Span-only monolithic mode: emit fn __rule_span(state) -> Option<Span>.
+    // Zero allocations. Requires no custom Map functions in grammar.
+    let span_methods = if parser_attrs.span {
+        ir_codegen::monolithic::span::generate_monolithic_span(ir, &ctx)
+    } else {
+        quote! {}
+    };
+
     quote! {
         use ::parse_that::*;
 
@@ -127,6 +135,7 @@ pub fn generate_all(
         impl #ident {
             #parser_methods
             #arena_methods
+            #span_methods
         }
 
         #prettify_impl

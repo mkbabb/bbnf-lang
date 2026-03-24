@@ -20,9 +20,11 @@
 //! - `expr`: Leaf, Ref, Skip/Next, Wrap, Map, OptionalWhitespace
 
 mod alt;
+mod delim_scan;
 mod expr;
 mod repeat;
 mod seq;
+pub mod span;
 
 use bbnf_ir::{FnDescriptor, GrammarIR, IrNode};
 
@@ -106,6 +108,9 @@ pub(super) struct MonoCtx {
     /// check that matches can skip the bounds check — just advance offset.
     /// Consumed (set to None) after use.
     pub dispatch_guaranteed_byte: Option<u8>,
+    /// Name of the rule currently being generated. Used by delim_scan for
+    /// self-recursion (nested blocks call the enclosing wrap function).
+    pub current_rule_name: Option<String>,
 }
 
 impl MonoCtx {
@@ -116,6 +121,7 @@ impl MonoCtx {
             fusion_eligible,
             single_site_inline,
             dispatch_guaranteed_byte: None,
+            current_rule_name: None,
         }
     }
 
@@ -465,7 +471,7 @@ pub(super) fn emit_mono_discarded(
 ///
 /// Single-byte literals (`:`, `,`, `{`, etc.) compile to a single byte comparison.
 /// Multi-byte literals compile to a slice comparison.
-fn emit_literal_inline(unescaped: &str, need_span: bool) -> TokenStream {
+pub(super) fn emit_literal_inline(unescaped: &str, need_span: bool) -> TokenStream {
     let bytes = unescaped.as_bytes();
     if bytes.is_empty() {
         if need_span {
@@ -567,7 +573,7 @@ pub(super) fn emit_mono_fallback(
 /// 1. Rule body does NOT contain `Ref(self)` (no direct self-recursion)
 /// 2. Rule has exactly 1 call site (reference count across all rule bodies == 1)
 /// 3. Rule is NOT the grammar entry point (rule id != 0)
-fn compute_single_site_inline(ir: &GrammarIR) -> Vec<bool> {
+pub(super) fn compute_single_site_inline(ir: &GrammarIR) -> Vec<bool> {
     let n = ir.rules.len();
     let mut ref_counts = vec![0u32; n];
     for rule in &ir.rules {

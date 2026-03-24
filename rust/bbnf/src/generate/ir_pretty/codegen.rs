@@ -296,7 +296,7 @@ fn generate_key_value_doc_ir(
     let base = quote! {
         {
             let (key, val) = inner;
-            ::pprint::Doc::String(::std::borrow::Cow::Borrowed(key.as_str()))
+            ::pprint::Doc::Text(key.as_str(), (key.end - key.start) as u32)
                 + ::pprint::Doc::String(::std::borrow::Cow::Borrowed(#sep_with_space))
                 + val.to_doc()
         }
@@ -373,7 +373,7 @@ pub(crate) fn generate_sub_variant_arms(
                 });
             } else if type_is_span(&ty) {
                 to_doc_arms.push(quote! {
-                    Self::#variant(s) => ::pprint::Doc::String(::std::borrow::Cow::Borrowed(s.as_str())),
+                    Self::#variant(s) => ::pprint::Doc::Text(s.as_str(), (s.end - s.start) as u32),
                 });
                 source_range_arms.push(quote! {
                     Self::#variant(s) => Some((s.start, s.end)),

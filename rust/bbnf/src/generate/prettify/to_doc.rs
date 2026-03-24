@@ -91,7 +91,7 @@ pub(crate) fn generate_span_doc(variant: &syn::Ident, hints: &[String]) -> Token
             Self::#variant(s) => { #doc }
         }
     } else {
-        let base = quote! { ::pprint::Doc::String(::std::borrow::Cow::Borrowed(s.as_str())) };
+        let base = quote! { ::pprint::Doc::Text(s.as_str(), (s.end - s.start) as u32) };
         let doc = apply_hints(base, hints);
         quote! {
             Self::#variant(s) => { #doc }

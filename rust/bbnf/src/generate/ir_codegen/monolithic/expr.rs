@@ -197,6 +197,11 @@ pub(super) fn emit_mono_wrap(
         }
     }
 
+    // Delimiter-scan optimization for arena path.
+    if let Some(ts) = super::delim_scan::try_emit_arena_wrap(open, middle, close, ctx.ir, ctx, mctx) {
+        return ts;
+    }
+
     // General wrap: open >> middle << close.
     let open_expr = emit_mono_discarded(open, false, ctx, mctx);
     let middle_expr = emit_mono_expr(middle, ctx, mctx, elide_box);

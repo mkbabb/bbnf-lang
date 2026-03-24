@@ -87,6 +87,114 @@ pub fn emit_regex_direct_call(pattern: &str) -> Option<TokenStream> {
     if is_css_string_regex(pattern) {
         return Some(quote! { ::parse_that::css_string_fast(state) });
     }
+
+    // Negated character class → direct memchr call, bypassing SpanParser dispatch.
+    if let Some((excluded, quantifier)) = is_negated_char_class_regex(pattern) {
+        let bytes = excluded.as_bytes();
+        let result = match (bytes.len(), quantifier) {
+            (1, NegCharClassQuantifier::Plus) => {
+                let b0 = proc_macro2::Literal::byte_character(bytes[0]);
+                Some(quote! {
+                    {
+                        let __start = state.offset;
+                        if __start >= state.src_bytes.len() { None } else {
+                            let __scan = ::parse_that::memchr::memchr(#b0, &state.src_bytes[__start..])
+                                .unwrap_or(state.src_bytes.len() - __start);
+                            if __scan == 0 { None } else {
+                                state.offset = __start + __scan;
+                                Some(::parse_that::Span::new(__start, state.offset, state.src))
+                            }
+                        }
+                    }
+                })
+            }
+            (2, NegCharClassQuantifier::Plus) => {
+                let b0 = proc_macro2::Literal::byte_character(bytes[0]);
+                let b1 = proc_macro2::Literal::byte_character(bytes[1]);
+                Some(quote! {
+                    {
+                        let __start = state.offset;
+                        if __start >= state.src_bytes.len() { None } else {
+                            let __scan = ::parse_that::memchr::memchr2(#b0, #b1, &state.src_bytes[__start..])
+                                .unwrap_or(state.src_bytes.len() - __start);
+                            if __scan == 0 { None } else {
+                                state.offset = __start + __scan;
+                                Some(::parse_that::Span::new(__start, state.offset, state.src))
+                            }
+                        }
+                    }
+                })
+            }
+            (3, NegCharClassQuantifier::Plus) => {
+                let b0 = proc_macro2::Literal::byte_character(bytes[0]);
+                let b1 = proc_macro2::Literal::byte_character(bytes[1]);
+                let b2 = proc_macro2::Literal::byte_character(bytes[2]);
+                Some(quote! {
+                    {
+                        let __start = state.offset;
+                        if __start >= state.src_bytes.len() { None } else {
+                            let __scan = ::parse_that::memchr::memchr3(#b0, #b1, #b2, &state.src_bytes[__start..])
+                                .unwrap_or(state.src_bytes.len() - __start);
+                            if __scan == 0 { None } else {
+                                state.offset = __start + __scan;
+                                Some(::parse_that::Span::new(__start, state.offset, state.src))
+                            }
+                        }
+                    }
+                })
+            }
+            (1, NegCharClassQuantifier::Star) => {
+                let b0 = proc_macro2::Literal::byte_character(bytes[0]);
+                Some(quote! {
+                    {
+                        let __start = state.offset;
+                        let __scan = if __start >= state.src_bytes.len() { 0 } else {
+                            ::parse_that::memchr::memchr(#b0, &state.src_bytes[__start..])
+                                .unwrap_or(state.src_bytes.len() - __start)
+                        };
+                        state.offset = __start + __scan;
+                        Some(::parse_that::Span::new(__start, state.offset, state.src))
+                    }
+                })
+            }
+            (2, NegCharClassQuantifier::Star) => {
+                let b0 = proc_macro2::Literal::byte_character(bytes[0]);
+                let b1 = proc_macro2::Literal::byte_character(bytes[1]);
+                Some(quote! {
+                    {
+                        let __start = state.offset;
+                        let __scan = if __start >= state.src_bytes.len() { 0 } else {
+                            ::parse_that::memchr::memchr2(#b0, #b1, &state.src_bytes[__start..])
+                                .unwrap_or(state.src_bytes.len() - __start)
+                        };
+                        state.offset = __start + __scan;
+                        Some(::parse_that::Span::new(__start, state.offset, state.src))
+                    }
+                })
+            }
+            (3, NegCharClassQuantifier::Star) => {
+                let b0 = proc_macro2::Literal::byte_character(bytes[0]);
+                let b1 = proc_macro2::Literal::byte_character(bytes[1]);
+                let b2 = proc_macro2::Literal::byte_character(bytes[2]);
+                Some(quote! {
+                    {
+                        let __start = state.offset;
+                        let __scan = if __start >= state.src_bytes.len() { 0 } else {
+                            ::parse_that::memchr::memchr3(#b0, #b1, #b2, &state.src_bytes[__start..])
+                                .unwrap_or(state.src_bytes.len() - __start)
+                        };
+                        state.offset = __start + __scan;
+                        Some(::parse_that::Span::new(__start, state.offset, state.src))
+                    }
+                })
+            }
+            _ => None,
+        };
+        if result.is_some() {
+            return result;
+        }
+    }
+
     None
 }
 

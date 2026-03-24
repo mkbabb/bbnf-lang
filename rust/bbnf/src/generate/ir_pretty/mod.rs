@@ -151,6 +151,24 @@ pub fn generate_prettify_ir(ctx: &IrCodegenCtx<'_>) -> TokenStream {
                 }
             }
 
+            /// Width-aware Doc construction. Nodes whose source extent fits
+            /// within `max_width` have their outer Group wrapper stripped,
+            /// avoiding the render-time width measurement.
+            pub fn to_doc_with_width(&self, __max_width: usize) -> ::pprint::Doc<'a> {
+                let doc = self.to_doc();
+                // If this node's flat source extent fits on one line,
+                // strip the outer Group to avoid render-time measurement.
+                if let Some((s, e)) = self.source_range() {
+                    let flat_len = e.saturating_sub(s);
+                    if flat_len > 0 && flat_len <= __max_width {
+                        if let ::pprint::Doc::Group(inner) = doc {
+                            return *inner;
+                        }
+                    }
+                }
+                doc
+            }
+
             pub fn source_range(&self) -> Option<(usize, usize)> {
                 match self {
                     #(#source_range_arms)*

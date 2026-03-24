@@ -20,6 +20,10 @@ use bbnf_derive::Parser;
 struct CssFastParser;
 
 #[derive(Parser)]
+#[parser(path = "benches/grammars/css-fast.bbnf", span)]
+struct CssFastSpanParser;
+
+#[derive(Parser)]
 #[parser(
     path = "../../grammar/css/css-stylesheet-pretty.bbnf",
     prettify,
@@ -103,6 +107,36 @@ bench_span_pretty!(span_pretty_normalize, "normalize.css");
 bench_span_pretty!(span_pretty_bootstrap, "bootstrap.css");
 bench_span_pretty!(span_pretty_tailwind, "tailwind.css");
 
+// ── Span-only (cold per-parse, zero allocations) ─────────────────────────────
+
+macro_rules! bench_span_only {
+    ($name:ident, $file:expr) => {
+        fn $name(b: &mut Bencher) {
+            let input = load_css($file);
+            let (bytes, consumed_pct) = {
+                let parser = CssFastSpanParser::stylesheet_span();
+                let (_result, state) = parser.parse_return_state(&input);
+                (state.offset as u64, state.offset * 100 / input.len().max(1))
+            };
+            assert!(
+                consumed_pct >= 95,
+                concat!($file, ": span-only parser only consumed {}%"),
+                consumed_pct
+            );
+            b.bytes = bytes;
+            b.iter(|| {
+                let parser = CssFastSpanParser::stylesheet_span();
+                let result = parser.parse(black_box(&input)).unwrap();
+                black_box(&result as *const _);
+            });
+        }
+    };
+}
+
+bench_span_only!(span_only_normalize, "normalize.css");
+bench_span_only!(span_only_bootstrap, "bootstrap.css");
+bench_span_only!(span_only_tailwind, "tailwind.css");
+
 // ── Groups ──────────────────────────────────────────────────────────────────
 
 benchmark_group!(
@@ -117,4 +151,10 @@ benchmark_group!(
     span_pretty_bootstrap,
     span_pretty_tailwind
 );
-benchmark_main!(span, span_pretty);
+benchmark_group!(
+    span_only,
+    span_only_normalize,
+    span_only_bootstrap,
+    span_only_tailwind
+);
+benchmark_main!(span, span_pretty, span_only);

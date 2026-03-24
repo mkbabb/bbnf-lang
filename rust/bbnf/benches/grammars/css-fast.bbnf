@@ -3,7 +3,6 @@
 // Handles comments, empty values, real-world CSS.
 //
 // @ws overrides `?w` to use comment-aware whitespace (SIMD fast path).
-// @inline eliminates enum variants for trivial helper rules.
 
 @ws /(?s)(?:\s|\/\*.*?\*\/)*/ ;
 

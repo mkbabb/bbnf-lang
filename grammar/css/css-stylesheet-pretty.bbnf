@@ -6,6 +6,8 @@
 // trims \s) so inline comments like `/* 1 */` are consumed correctly.
 
 // Comments + whitespace — single regex hits sp_css_ws_comment() SIMD fast path
+// @ws overrides ?w for the delimiter-scan optimizer (same pattern as the explicit ws rule)
+@ws /(?s)(?:\s|\/\*.*?\*\/)*/ ;
 ws = /(?s)(?:\s|\/\*.*?\*\/)*/ ;
 
 // Opaque tokens
@@ -24,7 +26,7 @@ declaration  = propertyName , ws , ":" , ws , (valueSpan , ("," , ws , valueSpan
 // Block contents: declarations and nested rules (CSS Nesting Level 1)
 // This creates the structural cycle: blockContent → ruleItem → ... → ruleBlock → blockContent
 blockContent = (ws >> (declaration | ruleItem)) * ;
-ruleBlock    = "{" , ws >> blockContent << ws , "}" ;
+ruleBlock    = "{" >> (ws >> blockContent << ws) << "}" ;
 
 // Qualified rules
 qualifiedRule = selectorSpan , ws , ruleBlock ;

@@ -67,13 +67,25 @@ All numbers are cold: fresh `BumpArena` + `Parser` constructed per iteration.
 
 ## CSS Results (cold per-parse, mimalloc)
 
-| Dataset | Size | Fast Arena MB/s |
-|---------|------|----------------|
-| normalize.css | 6 KB | 708 |
-| bootstrap.css | 281 KB | 313 |
-| tailwind.css | 3.8 MB | 28 |
+| Dataset | Size | Pretty Arena | Parse-only | cssparser |
+|---------|------|-------------|-----------|-----------|
+| normalize.css | 6 KB | 659 | 639 | 323 |
+| bootstrap.css | 281 KB | 276 | 939 | 437 |
+| tailwind.css | 3.8 MB | 284 | 469 | 360 |
 
-Tailwind's 28 MB/s is per-rule overhead on ~65K tiny utility classes (~40 bytes each). The grammar requires alternation dispatch, whitespace scanning, and arena allocation per rule—fixed costs that don't amortize on small rules.
+The pretty arena tier produces the full typed AST that gorgeous uses for formatting. Parse-only is the isolated parse phase (no `to_doc` or render). Prior to the delimiter-scan optimization, tailwind parsed at 28 MB/s—the structural overhead of recursive descent on ~38K tiny utility rules was the bottleneck.
+
+### Delimiter-driven flat scanning
+
+For `Wrap(Repeat(Alt))` patterns where the Alt's FIRST sets overlap (no dispatch table), the monolithic emitter detects distinguishing "pivot" bytes inside each branch and compiles a forward `memchr` scanner that selects the branch before entering recursive descent. All bytes are extracted from the grammar's own Literal nodes—the optimization is grammar-agnostic.
+
+Detection criteria:
+- Open and close are single-byte Literals
+- The Repeat inner is an Alt without a dispatch table
+- At least one branch contains a single-byte Literal at position > 0 (the pivot)
+- Pivot, open, close bytes are pairwise distinct
+
+In the span path, the scanner replaces the descent entirely (all Span output). In the arena path, the scanner determines which branch to call, then invokes that branch's existing recursive descent function—preserving full typed output for formatting. A pseudo-class guard handles ambiguous pivots: if the scanned value terminates at the open byte, the pivot was part of a compound token (e.g., `selector:pseudo{...}`), and the scanner falls back to the block branch.
 
 ## Vec Capacity
 

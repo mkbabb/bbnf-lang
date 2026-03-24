@@ -14,10 +14,10 @@ Each pipeline stage is benchmarked independently.
 { "title": "Formatting Pipeline",
   "nodes": [
     {"label": "Source text", "color": "cyan"},
-    {"label": "parse_that / parse-that", "detail": "815–1,597 MB/s (Rust arena, cold) · 4,252–22,959 ops/s (TS)", "color": "blue"},
-    {"label": "to_doc()", "detail": "1,026 MB/s (CSS bootstrap)", "color": "green"},
-    {"label": "pprint::render", "detail": "1,115 MB/s (CSS bootstrap)", "color": "purple"},
-    {"label": "Formatted output", "detail": "20–409 MB/s end-to-end", "color": "amber"}
+    {"label": "parse_that / parse-that", "detail": "284–1,597 MB/s (Rust arena, cold) · 4,252–22,959 ops/s (TS)", "color": "blue"},
+    {"label": "to_doc()", "detail": "158–356 MB/s (CSS)", "color": "green"},
+    {"label": "pprint::render", "detail": "179–254 MB/s (CSS)", "color": "purple"},
+    {"label": "Formatted output", "detail": "22–115 MB/s end-to-end", "color": "amber"}
   ] }
 ```
 

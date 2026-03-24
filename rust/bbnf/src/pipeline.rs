@@ -203,6 +203,10 @@ pub fn compile_ast<'a>(
     // Compute FOLLOW sets before dispatch and memo passes that consume them.
     ir.follow_sets = bbnf_ir::passes::compute_follow_sets(&ir);
 
+    // Factor regex prefixes with lookahead dispatch — restructures Alts where
+    // branches share a leading regex but have disjoint continuation FIRST sets.
+    bbnf_ir::passes::factor_regex_with_lookahead(&mut ir);
+
     // Dispatch tables use FOLLOW sets for nullable branch optimization.
     bbnf_ir::passes::generate_dispatch_tables(&mut ir);
 

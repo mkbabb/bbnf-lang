@@ -5,6 +5,7 @@
 
 pub mod alias;
 pub mod dispatch;
+pub mod factor_lookahead;
 pub mod follow;
 pub mod force_inline;
 pub mod fuse;
@@ -19,6 +20,7 @@ pub mod types;
 
 pub use alias::canonicalize_aliases;
 pub use dispatch::generate_dispatch_tables;
+pub use factor_lookahead::factor_regex_with_lookahead;
 pub use follow::compute_follow_sets;
 pub use force_inline::force_inline;
 pub use fuse::fuse_single_use;

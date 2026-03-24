@@ -75,6 +75,9 @@ fn parse_parser_attrs(attrs: &[Attribute]) -> ParserAttributes {
                 Meta::Path(p) if p.is_ident("arena") => {
                     parser_attr.arena = true;
                 }
+                Meta::Path(p) if p.is_ident("span") => {
+                    parser_attr.span = true;
+                }
                 _ => {}
             }
         }
@@ -288,6 +291,7 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     bbnf_ir::passes::factor_common_prefixes(&mut grammar_ir);
     bbnf_ir::passes::refine_span_eligibility(&mut grammar_ir);
     grammar_ir.follow_sets = bbnf_ir::passes::compute_follow_sets(&grammar_ir);
+    bbnf_ir::passes::factor_regex_with_lookahead(&mut grammar_ir);
     bbnf_ir::passes::generate_dispatch_tables(&mut grammar_ir);
     bbnf_ir::passes::refine_memo_strategies(&mut grammar_ir);
     // NOTE: infer_types is called inside generate_all() AFTER sp_method_rules

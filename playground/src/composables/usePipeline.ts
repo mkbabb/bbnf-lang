@@ -187,8 +187,17 @@ export function usePipeline(): PipelineResult {
                     const t1 = performance.now();
 
                     if (!checkResult.success) {
-                        const pos = offsetToLineCol(inputText.value, checkResult.offset);
-                        errors.value.push({ message: "Input does not match grammar", source: "parse", ...pos });
+                        // Fall back to full parse for rich diagnostics (FOLLOW sets, rule context).
+                        const fullResult = await wasm.parseWithGrammar(cachedGrammarHandle, inputText.value);
+                        const diagMessages = fullResult.diagnostics
+                            .map((d) => {
+                                const prefix = d.rule_name ? `in \`${d.rule_name}\`: ` : "";
+                                return `${prefix}${d.expected}`;
+                            })
+                            .join("\n");
+                        const msg = diagMessages || "Input does not match grammar";
+                        const pos = offsetToLineCol(inputText.value, fullResult.offset);
+                        errors.value.push({ message: msg, source: "parse", ...pos });
                         astJson.value = "";
                         formatted.value = "";
                         formattedBy.value = "";
@@ -250,7 +259,7 @@ export function usePipeline(): PipelineResult {
                     if (!result.success) {
                         const diagMessages = result.diagnostics
                             .map((d) => {
-                                const prefix = d.rule_name ? `[${d.rule_name}] ` : "";
+                                const prefix = d.rule_name ? `in \`${d.rule_name}\`: ` : "";
                                 return `${prefix}${d.expected}`;
                             })
                             .join("\n");

@@ -50,7 +50,7 @@ function onJumpToError(error: PipelineError) {
                 <p class="text-sm">Inspect errors and jump to the failing editor span.</p>
             </TooltipContent>
         </Tooltip>
-        <DialogContent class="max-w-lg rounded-xl">
+        <DialogContent class="max-w-lg rounded-xl bg-card/95 backdrop-blur-xl border-border/40">
             <DialogTitle class="instrument-serif text-xl text-destructive">Errors</DialogTitle>
             <DialogDescription class="sr-only">Pipeline errors</DialogDescription>
             <div class="mt-4 space-y-3 max-h-96 overflow-y-auto">

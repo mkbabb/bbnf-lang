@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from "vue";
 import { PanelLeftClose, ChevronRight } from "lucide-vue-next";
-import { FuzzySearch, useFuzzySearch } from "@mkbabb/glass-ui";
-import type { SearchableItem } from "@mkbabb/glass-ui";
+import { FuzzySearch, useFuzzySearch, useScrollTracker, buildTreeIndex } from "@mkbabb/glass-ui";
+import type { SearchableItem, SidebarSection } from "@mkbabb/glass-ui";
 import { useDocs } from "@/composables/useDocs";
 import { getSectionTheme } from "@/lib/sectionTheme";
 import { useRouter } from "vue-router";
@@ -122,6 +122,38 @@ const searchState = useFuzzySearch({
         router.push(`/docs/${result.item.id}`);
     },
 });
+
+// ── Scroll-based active heading tracking ─────────────────────────────────────
+
+// Build a flat SidebarSection[] from the current doc's headings for the scroll tracker.
+// These IDs match the rendered heading elements' id attributes in the markdown.
+const currentDoc = computed(() => {
+    if (!props.currentSlug) return null;
+    for (const s of sections.value) {
+        const doc = s.docs.find((d) => d.slug === props.currentSlug);
+        if (doc) return doc;
+    }
+    return null;
+});
+
+const headingSections = computed<SidebarSection[]>(() => {
+    const doc = currentDoc.value;
+    if (!doc || doc.headings.length === 0) return [];
+    // Build a tree: ## headings are roots, ### are children of the preceding ##
+    const roots: SidebarSection[] = [];
+    for (const h of doc.headings) {
+        if (h.level === 2) {
+            roots.push({ id: h.id, title: h.text, children: [] });
+        } else if (h.level === 3 && roots.length > 0) {
+            roots[roots.length - 1]!.children!.push({ id: h.id, title: h.text });
+        }
+    }
+    return roots;
+});
+
+const headingIndex = computed(() => buildTreeIndex(headingSections.value));
+
+const { activeId: activeHeadingId } = useScrollTracker(headingSections, headingIndex);
 
 const filteredSections = computed(() => {
     const q = searchState.query.value.toLowerCase().trim();
@@ -248,9 +280,16 @@ const filteredSections = computed(() => {
                                         <li v-for="h in doc.headings" :key="h.id">
                                             <a
                                                 :href="`#${h.id}`"
-                                                class="block py-0.5 text-xs text-muted-foreground/60 hover:text-foreground transition-colors truncate"
-                                                :class="h.level === 3 ? 'pl-8' : 'pl-5'"
-                                                :style="`border-left: 2px solid color-mix(in srgb, var(--color-${getSectionTheme(section.name).color}) 20%, transparent)`"
+                                                class="block py-0.5 text-xs transition-colors truncate"
+                                                :class="[
+                                                    h.level === 3 ? 'pl-8' : 'pl-5',
+                                                    activeHeadingId === h.id
+                                                        ? 'text-foreground font-medium'
+                                                        : 'text-muted-foreground/60 hover:text-foreground',
+                                                ]"
+                                                :style="activeHeadingId === h.id
+                                                    ? `border-left: 2px solid var(--color-${getSectionTheme(section.name).color})`
+                                                    : `border-left: 2px solid color-mix(in srgb, var(--color-${getSectionTheme(section.name).color}) 20%, transparent)`"
                                             >
                                                 {{ h.text }}
                                             </a>

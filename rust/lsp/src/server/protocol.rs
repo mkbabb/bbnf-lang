@@ -273,8 +273,8 @@ impl LanguageServer for BbnfLanguageServer {
                         .unwrap_or_else(|| panic!("invalid import path for completion label: `{}`", import_info.path));
                     if let Some(ref items) = import_info.items {
                         // Selective: only listed names.
-                        for name in items {
-                            if let Some(&idx) = target_state.info.rule_index.get(name.as_str()) {
+                        for item in items {
+                            if let Some(&idx) = target_state.info.rule_index.get(item.name.as_str()) {
                                 let rule = &target_state.info.rules[idx];
                                 if let CompletionResponse::Array(ref mut arr) = response {
                                     arr.push(CompletionItem {

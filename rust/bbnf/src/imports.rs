@@ -352,7 +352,7 @@ fn resolve_imports_for(path: &Path, registry: &mut ModuleRegistry) {
         (
             resolve_import_path(dir, &imp.path),
             imp.items.as_ref().map(|items| {
-                items.iter().map(|i| i.to_string()).collect::<Vec<String>>()
+                items.iter().map(|i| i.name.to_string()).collect::<Vec<String>>()
             }),
         )
     }).collect();

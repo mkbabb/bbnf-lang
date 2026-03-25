@@ -90,9 +90,9 @@ impl BbnfLanguageServer {
                 if let Some(target_state) = docs.get(&import_uri) {
                     if let Some(ref items) = import_info.items {
                         // Selective import.
-                        for name in items {
-                            if target_state.info.rule_index.contains_key(name.as_str()) {
-                                available_rules.insert(name.clone());
+                        for item in items {
+                            if target_state.info.rule_index.contains_key(item.name.as_str()) {
+                                available_rules.insert(item.name.clone());
                             }
                         }
                     } else {

@@ -1,6 +1,6 @@
 import { ref, type Ref } from "vue";
-import { useWasm } from "./wasm";
-import type { WasmDebugSnapshot } from "./wasm/types";
+import { useWasm } from "@/composables/wasm";
+import type { WasmDebugSnapshot } from "@/composables/wasm/types";
 
 export type { WasmDebugSnapshot as DebugSnapshot };
 

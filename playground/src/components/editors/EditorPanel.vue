@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@mkbabb/glass-ui";
 import InlineRichText from "@/components/ui/InlineRichText.vue";
 import { BbnfLogo } from "@/components/custom/bbnf-logo";
 import { Redo2, ArrowRightLeft } from "lucide-vue-next";
-import { Card } from "@/components/ui/card";
+import { Card } from "@mkbabb/glass-ui";
 
 export interface PanelTab {
     key: string;

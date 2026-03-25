@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useRoute } from "vue-router";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { TooltipProvider } from "@mkbabb/glass-ui";
 import NavBar from "@/components/layout/NavBar.vue";
 import FooterSection from "@/components/landing/FooterSection.vue";
 import { Toaster } from "vue-sonner";

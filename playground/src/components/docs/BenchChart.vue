@@ -4,7 +4,7 @@ import DocCard from "./DocCard.vue";
 import TabBar from "./TabBar.vue";
 import FloatingTooltip from "./FloatingTooltip.vue";
 import { PARSER_DESCRIPTIONS } from "@/lib/parserDescriptions";
-import { useChartData, type ChartData } from "@/composables/useChartData";
+import { useChartData, type ChartData } from "@/components/docs/useChartData";
 
 const props = defineProps<{
     data: ChartData;

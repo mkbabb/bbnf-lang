@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@mkbabb/glass-ui";
 import { Play, StepForward, ArrowDownToLine, Square } from "lucide-vue-next";
-import type { UseDebugSessionReturn } from "@/composables/useDebugSession";
+import type { UseDebugSessionReturn } from "@/components/debug/useDebugSession";
 
 defineProps<{
     session: UseDebugSessionReturn;

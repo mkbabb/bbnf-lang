@@ -4,7 +4,7 @@ import { useRouter } from "vue-router";
 import DocsSidebar from "@/components/docs/DocsSidebar.vue";
 import { useDocs } from "@/composables/useDocs";
 import { useMarkdown } from "@/lib/markdown";
-import { useMarkdownComponents } from "@/composables/useMarkdownComponents";
+import { useMarkdownComponents } from "@/components/docs/useMarkdownComponents";
 import { getSectionTheme } from "@/lib/sectionTheme";
 import { PanelLeftOpen, Menu } from "lucide-vue-next";
 

@@ -1,0 +1,55 @@
+/*
+ * preset-bbnf.css — BBNF playground design overrides
+ * Fonts + accent palette only. All other tokens from glass-ui defaults.
+ */
+
+@theme {
+    --font-display: "Instrument Serif", serif;
+    --font-serif: "Instrument Serif", serif;
+    --font-mono: "Fira Code", "Fira Mono", monospace;
+
+    /* BBNF accent palette */
+    --color-accent-red: hsl(var(--accent-red));
+    --color-accent-red-foreground: hsl(var(--accent-red-foreground));
+    --color-pastel-green: hsl(var(--pastel-green));
+    --color-pastel-blue: hsl(var(--pastel-blue));
+    --color-pastel-purple: hsl(var(--pastel-purple));
+    --color-pastel-amber: hsl(var(--pastel-amber));
+    --color-pastel-pink: hsl(var(--pastel-pink));
+    --color-pastel-cyan: hsl(var(--pastel-cyan));
+}
+
+:root {
+    /* BBNF pastel palette — light mode */
+    --accent-red: 0 72% 63%;
+    --accent-red-foreground: 0 0% 100%;
+    --pastel-green: 148 65% 38%;
+    --pastel-blue: 210 70% 48%;
+    --pastel-purple: 270 45% 55%;
+    --pastel-amber: 30 70% 50%;
+    --pastel-pink: 330 65% 55%;
+    --pastel-cyan: 185 55% 42%;
+
+    /* Navbar height — used in calc() across PlaygroundPage, DocsPage */
+    --spacing-navbar: 3.5rem;
+
+    /* Card shadow — BBNF uses lighter cartoon offset */
+    --shadow-card: 3px 3px 0px 0px;
+    --shadow-hover: 5px 7px 0px 0px;
+
+    /* Animation extras */
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    --duration-hero: 700ms;
+}
+
+.dark {
+    /* BBNF pastel palette — dark mode */
+    --accent-red: 5 55% 50%;
+    --accent-red-foreground: 0 0% 95%;
+    --pastel-green: 148 55% 52%;
+    --pastel-blue: 210 60% 60%;
+    --pastel-pink: 330 55% 68%;
+    --pastel-purple: 270 40% 68%;
+    --pastel-amber: 35 65% 62%;
+    --pastel-cyan: 185 50% 58%;
+}

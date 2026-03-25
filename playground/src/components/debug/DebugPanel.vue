@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { ArrowRight, ChevronRight, CircleDot, Bug } from "lucide-vue-next";
-import type { UseDebugSessionReturn } from "@/composables/useDebugSession";
+import type { UseDebugSessionReturn } from "@/components/debug/useDebugSession";
 import DebugToolbar from "./DebugToolbar.vue";
 
 const props = defineProps<{

@@ -1,145 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-
-@custom-variant dark (&:where(.dark, .dark *));
-
-@theme {
-    --color-border: hsl(var(--border));
-    --color-input: hsl(var(--input));
-    --color-ring: hsl(var(--ring));
-    --color-background: hsl(var(--background));
-    --color-foreground: hsl(var(--foreground));
-    --color-primary: hsl(var(--primary));
-    --color-primary-foreground: hsl(var(--primary-foreground));
-    --color-secondary: hsl(var(--secondary));
-    --color-secondary-foreground: hsl(var(--secondary-foreground));
-    --color-destructive: hsl(var(--destructive));
-    --color-destructive-foreground: hsl(var(--destructive-foreground));
-    --color-muted: hsl(var(--muted));
-    --color-muted-foreground: hsl(var(--muted-foreground));
-    --color-accent: hsl(var(--accent));
-    --color-accent-foreground: hsl(var(--accent-foreground));
-    --color-popover: hsl(var(--popover));
-    --color-popover-foreground: hsl(var(--popover-foreground));
-    --color-card: hsl(var(--card));
-    --color-card-foreground: hsl(var(--card-foreground));
-    --color-shadow: hsl(var(--shadow));
-    --color-accent-red: hsl(var(--accent-red));
-    --color-accent-red-foreground: hsl(var(--accent-red-foreground));
-    --color-pastel-green: hsl(var(--pastel-green));
-    --color-pastel-blue: hsl(var(--pastel-blue));
-    --color-pastel-purple: hsl(var(--pastel-purple));
-    --color-pastel-amber: hsl(var(--pastel-amber));
-    --color-pastel-pink: hsl(var(--pastel-pink));
-    --color-pastel-cyan: hsl(var(--pastel-cyan));
-    --radius-xl: calc(var(--radius) + 4px);
-    --radius-lg: var(--radius);
-    --radius-md: calc(var(--radius) - 2px);
-    --radius-sm: calc(var(--radius) - 4px);
-    --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    --font-serif: "Instrument Serif", serif;
-    --font-mono: "Fira Code", "Fira Mono", monospace;
-
-    /* Navbar height — used in calc() across PlaygroundPage, DocsPage */
-    --spacing-navbar: 3.5rem;
-
-    /* Card shadow — repeated across components */
-    --shadow-card: 3px 3px 0px 0px;
-
-    /* Animation timing tokens */
-    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
-    --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
-    --duration-fast: 150ms;
-    --duration-normal: 300ms;
-
-    /* Glassmorphism tokens */
-    --glass-bg: hsl(var(--card) / 0.82);
-    --glass-bg-heavy: hsl(var(--card) / 0.95);
-    --glass-border: hsl(var(--border) / 0.85);
-    --glass-blur: blur(12px);
-    --glass-blur-heavy: blur(16px) saturate(1.3);
-    --glass-shadow: 0 4px 16px hsl(var(--foreground) / 0.08);
-    --glass-shadow-elevated: 0 4px 20px hsl(var(--foreground) / 0.12),
-        0 0 0 0.5px hsl(var(--foreground) / 0.05);
-
-    /* Pill radius */
-    --radius-pill: 9999px;
-
-    /* Hover shadow — used on cards, CTA buttons */
-    --shadow-hover: 5px 7px 0px 0px;
-
-    /* Long animation durations */
-    --duration-slow: 500ms;
-    --duration-hero: 700ms;
-}
-
-@layer base {
-    :root {
-        color-scheme: light;
-        --background: 0 0% 100%;
-        --foreground: 222.2 84% 4.9%;
-        --muted: 210 40% 96.1%;
-        --muted-foreground: 215.4 16.3% 46.9%;
-        --popover: 0 0% 100%;
-        --popover-foreground: 222.2 84% 4.9%;
-        --card: 0 0% 100%;
-        --card-foreground: 222.2 84% 4.9%;
-        --border: 214.3 31.8% 84%;
-        --input: 214.3 31.8% 84%;
-        --primary: 222.2 47.4% 11.2%;
-        --primary-foreground: 210 40% 98%;
-        --secondary: 210 40% 96.1%;
-        --secondary-foreground: 222.2 47.4% 11.2%;
-        --accent: 210 40% 96.1%;
-        --accent-foreground: 222.2 47.4% 11.2%;
-        --destructive: 0 84.2% 60.2%;
-        --destructive-foreground: 210 40% 98%;
-        --ring: 222.2 84% 4.9%;
-        --radius: 0.5rem;
-        --shadow: 0, 0%, 65%;
-        --accent-red: 0 72% 63%;
-        --accent-red-foreground: 0 0% 100%;
-        --pastel-green: 148 65% 38%;
-        --pastel-blue: 210 70% 48%;
-        --pastel-purple: 270 45% 55%;
-        --pastel-amber: 30 70% 50%;
-        --pastel-pink: 330 65% 55%;
-        --pastel-cyan: 185 55% 42%;
-    }
-
-    .dark {
-        color-scheme: dark;
-        --background: 222.2 84% 4.9%;
-        --foreground: 210 40% 98%;
-        --muted: 217.2 32.6% 17.5%;
-        --muted-foreground: 215 20.2% 65.1%;
-        --popover: 222.2 84% 4.9%;
-        --popover-foreground: 210 40% 98%;
-        --card: 222.2 84% 4.9%;
-        --card-foreground: 210 40% 98%;
-        --border: 217.2 32.6% 24%;
-        --input: 217.2 32.6% 24%;
-        --primary: 210 40% 98%;
-        --primary-foreground: 222.2 47.4% 11.2%;
-        --secondary: 217.2 32.6% 17.5%;
-        --secondary-foreground: 210 40% 98%;
-        --accent: 217.2 32.6% 17.5%;
-        --accent-foreground: 210 40% 98%;
-        --destructive: 0 62.8% 30.6%;
-        --destructive-foreground: 210 40% 98%;
-        --ring: 212.7 26.8% 83.9%;
-        --shadow: 0, 0%, 45%;
-        --accent-red: 5 55% 50%;
-        --accent-red-foreground: 0 0% 95%;
-        --pastel-green: 148 55% 52%;
-        --pastel-blue: 210 60% 60%;
-        --pastel-pink: 330 55% 68%;
-        --pastel-purple: 270 40% 68%;
-        --pastel-amber: 35 65% 62%;
-        --pastel-cyan: 185 50% 58%;
-    }
-}
+@import "@mkbabb/glass-ui/styles";
+@import "./preset-bbnf.css";
+@variant dark (&:where(.dark, .dark *));
 
 @layer base {
     * {
@@ -156,8 +19,6 @@
         touch-action: manipulation;
     }
 }
-
-/* Z-index scale: 0=base, 10=tabs, 20=badges, 30=dropdowns, 40=sticky, 50=overlays/modals, 60=hero-morph */
 
 /* ------------------------------------------------------------------ */
 /* Tailwind @utility registrations                                     */
@@ -178,19 +39,6 @@
     box-shadow: var(--shadow-hover) hsl(var(--shadow) / 0.12);
     @variant dark {
         box-shadow: var(--shadow-hover) hsl(var(--shadow) / 0.08);
-    }
-}
-
-@utility text-gradient {
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
-}
-
-@utility scrollbar-hidden {
-    scrollbar-width: none;
-    &::-webkit-scrollbar {
-        display: none;
     }
 }
 
@@ -259,7 +107,7 @@
 .page-fade-enter-from, .page-fade-leave-to { opacity: 0; }
 
 /* ------------------------------------------------------------------ */
-/* Shared Vue transitions                                              */
+/* BBNF-specific Vue transitions                                       */
 /* ------------------------------------------------------------------ */
 
 .hover-card-enter-active,
@@ -570,56 +418,10 @@
 }
 
 /* ------------------------------------------------------------------ */
-/* Dock & glass component utilities                                    */
+/* BBNF-specific component utilities                                   */
 /* ------------------------------------------------------------------ */
 
 @layer components {
-    .glass {
-        background: var(--glass-bg);
-        backdrop-filter: var(--glass-blur);
-        @apply border border-solid;
-        border-color: var(--glass-border);
-        box-shadow: var(--glass-shadow);
-    }
-
-    .glass-elevated {
-        background: var(--glass-bg-heavy);
-        backdrop-filter: var(--glass-blur-heavy);
-        @apply border border-solid;
-        border-color: var(--glass-border);
-        box-shadow: var(--glass-shadow-elevated);
-    }
-
-    .dock-icon-btn {
-        @apply inline-flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full border-none bg-transparent cursor-pointer shrink-0 p-0;
-        color: hsl(var(--foreground) / 0.7);
-        transition: all var(--duration-fast) var(--ease-smooth);
-    }
-    .dock-icon-btn:hover:not(:disabled) {
-        @apply scale-110;
-        background: hsl(var(--foreground) / 0.08);
-        color: hsl(var(--foreground));
-    }
-    .dock-icon-btn:active:not(:disabled) {
-        @apply scale-[0.92];
-    }
-    .dock-icon-btn:disabled {
-        @apply opacity-35 cursor-not-allowed;
-    }
-    .dock-icon-btn.is-active {
-        background: hsl(var(--foreground) / 0.08);
-        color: hsl(var(--foreground));
-    }
-
-    .dock-separator {
-        @apply w-px h-5 mx-0.5 shrink-0 hidden sm:block;
-        background: hsl(var(--foreground) / 0.3);
-    }
-
-    .dock-spacer {
-        @apply flex-1;
-    }
-
     .dock-badge {
         @apply px-1.5 whitespace-nowrap tabular-nums;
         color: hsl(var(--foreground) / 0.5);
@@ -630,4 +432,3 @@
     0% { background-position: 250% 0; }
     100% { background-position: -250% 0; }
 }
-

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, inject } from "vue";
-import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogTrigger, Tooltip, TooltipTrigger, TooltipContent } from "@mkbabb/glass-ui";
 import { AlertCircle } from "lucide-vue-next";
 import type { PipelineError } from "@/composables/usePipeline";
 

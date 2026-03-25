@@ -4,7 +4,7 @@ import * as monaco from "monaco-editor";
 import "./monaco-debug.css";
 import DarkTheme from "monaco-themes/themes/Dracula.json";
 import LightTheme from "monaco-themes/themes/GitHub.json";
-import { useGlobalDark } from "@/components/custom/dark-mode-toggle";
+import { useGlobalDark } from "@mkbabb/glass-ui";
 
 // Register themes once
 monaco.editor.defineTheme("dark-theme", DarkTheme as any);

@@ -10,12 +10,10 @@ import { useRouter } from "vue-router";
 const props = defineProps<{
     currentSlug?: string;
     showClose?: boolean;
-    showCollapse?: boolean;
 }>();
 
 const emit = defineEmits<{
     close: [];
-    collapse: [];
 }>();
 
 const router = useRouter();
@@ -120,26 +118,24 @@ const filteredSections = computed(() => {
 
 <template>
     <aside class="flex h-full w-64 shrink-0 flex-col overflow-y-auto border-r border-border/30 bg-card/40 backdrop-blur-xl scrollbar-hidden">
-        <!-- Search bar + collapse toggle -->
-        <div class="px-2 py-1.5 border-b border-border/20">
-            <div class="flex items-center gap-1.5">
-                <div class="flex-1 min-w-0">
-                    <FuzzySearch
-                        :state="searchState"
-                        variant="sidebar"
-                        placeholder="Search docs..."
-                        :type-label="(item: SearchableItem) => item.type ?? ''"
-                    />
-                </div>
-                <button
-                    v-if="showCollapse"
-                    class="shrink-0 p-1.5 rounded-md hover:bg-muted/50 active:scale-90 transition-[colors,transform] text-muted-foreground"
-                    title="Collapse sidebar"
-                    @click="emit('collapse')"
-                >
-                    <PanelLeftClose class="h-4 w-4" />
-                </button>
+        <!-- Search -->
+        <div class="px-2 py-1.5 border-b border-border/20 flex items-center gap-1.5">
+            <div class="flex-1 min-w-0">
+                <FuzzySearch
+                    :state="searchState"
+                    variant="sidebar"
+                    placeholder="Search docs..."
+                    :type-label="(item: SearchableItem) => item.type ?? ''"
+                />
             </div>
+            <button
+                v-if="showClose"
+                class="shrink-0 p-1.5 rounded-md hover:bg-muted/50 active:scale-90 transition-[colors,transform] text-muted-foreground"
+                title="Close sidebar"
+                @click="emit('close')"
+            >
+                <PanelLeftClose class="h-4 w-4" />
+            </button>
         </div>
 
         <!-- Navigation -->
@@ -191,9 +187,9 @@ const filteredSections = computed(() => {
                         <li v-for="doc in section.docs" :key="doc.slug">
                             <router-link
                                 :to="`/docs/${doc.slug}`"
-                                class="block px-3 py-1.5 text-sm transition-all"
+                                class="block px-3 py-1 text-sm transition-all"
                                 :class="currentSlug === doc.slug
-                                    ? 'sidebar-active text-foreground'
+                                    ? 'sidebar-active text-foreground font-medium'
                                     : 'text-muted-foreground hover:text-foreground hover:pl-4'"
                                 :style="currentSlug === doc.slug
                                     ? `border-left: 2px solid var(--color-${getSectionTheme(section.name).color})`
@@ -201,6 +197,19 @@ const filteredSections = computed(() => {
                             >
                                 {{ doc.title }}
                             </router-link>
+                            <!-- Subsection headings (shown when this doc is active) -->
+                            <ul v-if="currentSlug === doc.slug && doc.headings.length > 0" class="space-y-0">
+                                <li v-for="h in doc.headings" :key="h.id">
+                                    <a
+                                        :href="`#${h.id}`"
+                                        class="block py-0.5 text-xs text-muted-foreground/70 hover:text-foreground transition-colors truncate"
+                                        :class="h.level === 3 ? 'pl-7' : 'pl-5'"
+                                        :style="`border-left: 2px solid color-mix(in srgb, var(--color-${getSectionTheme(section.name).color}) 30%, transparent)`"
+                                    >
+                                        {{ h.text }}
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
                     </ul>
                 </Transition>

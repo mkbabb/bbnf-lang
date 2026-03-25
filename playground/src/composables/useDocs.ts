@@ -1,11 +1,18 @@
 import { computed } from "vue";
 
+export interface DocHeading {
+    id: string;
+    text: string;
+    level: number;
+}
+
 interface DocMeta {
     title: string;
     order: number;
     section: string;
     slug: string;
     content: string;
+    headings: DocHeading[];
 }
 
 interface DocSection {
@@ -28,6 +35,24 @@ function parseFrontmatter(raw: string): { meta: Record<string, string>; content:
     return { meta, content: match[2]! };
 }
 
+/** Extract ## and ### headings from markdown content. */
+function extractHeadings(content: string): DocHeading[] {
+    const headings: DocHeading[] = [];
+    for (const line of content.split("\n")) {
+        const match = line.match(/^(#{2,3})\s+(.+)$/);
+        if (match) {
+            const text = match[2]!.trim();
+            // Generate a slug-friendly id from the heading text
+            const id = text
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, "-")
+                .replace(/^-|-$/g, "");
+            headings.push({ id, text, level: match[1]!.length });
+        }
+    }
+    return headings;
+}
+
 const allDocs: DocMeta[] = Object.entries(modules).map(([path, raw]) => {
     // Support nested dirs: /docs/bbnf/foo.md → "bbnf/foo"
     const slug = path.split("/docs/")[1]!.replace(/\.md$/, "");
@@ -38,6 +63,7 @@ const allDocs: DocMeta[] = Object.entries(modules).map(([path, raw]) => {
         section: meta.section ?? "General",
         slug,
         content,
+        headings: extractHeadings(content),
     };
 }).sort((a, b) => a.order - b.order);
 

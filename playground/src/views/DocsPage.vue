@@ -59,18 +59,8 @@ useMarkdownComponents(articleRef, rendered);
             class="sticky top-14 hidden h-[calc(100dvh-var(--spacing-navbar))] shrink-0 self-start overflow-hidden transition-[width] duration-200 md:block"
             :style="{ width: sidebarOpen ? '16rem' : '0' }"
         >
-            <DocsSidebar :current-slug="slug" show-collapse @collapse="sidebarOpen = false" />
+            <DocsSidebar :current-slug="slug" />
         </div>
-
-        <!-- Desktop expand button — shown when sidebar is collapsed -->
-        <button
-            v-if="!sidebarOpen"
-            class="sticky top-16 hidden md:flex items-center justify-center shrink-0 ml-1 p-2 rounded-lg border border-border/30 hover:bg-muted/50 active:scale-95 transition-colors text-muted-foreground h-fit z-[var(--z-controls)]"
-            title="Expand sidebar"
-            @click="sidebarOpen = true"
-        >
-            <PanelLeftOpen class="h-4 w-4" />
-        </button>
 
         <!-- Mobile drawer overlay -->
         <Transition name="mobile-drawer">
@@ -148,14 +138,15 @@ useMarkdownComponents(articleRef, rendered);
 }
 
 /* Sidebar toggle — float right below badge, sticky on scroll.
-   Works as drawer toggle on mobile and collapse/expand on desktop. */
+   Works as drawer toggle on mobile and collapse/expand on desktop.
+   Aligned flush with the section badge's right edge (same float context). */
 .sidebar-toggle-btn {
     position: sticky;
     top: calc(var(--spacing-navbar) + 0.5rem);
     float: right;
     clear: right;
     z-index: var(--z-controls);
-    margin: 0.25rem -0.25rem 0 0.75rem;
+    margin: 0.25rem 0 0 0.75rem;
     padding: 0.375rem;
     border-radius: 0.5rem;
     background: hsl(var(--card) / 0.85);

@@ -4,11 +4,72 @@
 //! The interpreter uses a tight loop with explicit stacks for call frames,
 //! checkpoints, and values.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
 use crate::bytecode::{BytecodeProgram, Op};
 use crate::RuleId;
+
+// ── Debug types ─────────────────────────────────────────────────────────────
+
+/// Step mode for interactive debugging.
+#[derive(Clone, Debug, PartialEq)]
+pub enum StepMode {
+    /// Run until a breakpoint is hit.
+    Continue,
+    /// Stop at the next rule entry/exit.
+    StepRule,
+    /// Stop at the next `DebugBreak` opcode.
+    StepNode,
+    /// Stop at every opcode.
+    StepInstruction,
+}
+
+/// Action returned by the debug callback to control execution.
+#[derive(Clone, Debug, PartialEq)]
+pub enum DebugAction {
+    Continue,
+    StepRule,
+    StepNode,
+    StepInstruction,
+    Stop,
+}
+
+/// Snapshot of interpreter state at a debug break.
+#[derive(Clone, Debug)]
+pub struct DebugSnapshot {
+    pub pc: u32,
+    pub offset: u32,
+    pub rule_stack: Vec<RuleId>,
+    pub rule_id: RuleId,
+    pub is_entry: bool,
+    pub is_error: bool,
+    pub values_depth: usize,
+}
+
+/// A recorded trace entry for deterministic replay.
+#[derive(Clone, Debug)]
+pub struct TraceEntry {
+    pub pc: u32,
+    pub offset: u32,
+    pub rule_id: RuleId,
+    pub is_entry: bool,
+}
+
+/// Interactive debug state attached to the interpreter.
+///
+/// When `None`, `DebugBreak` opcodes are a single branch (`self.pc += 1`) —
+/// negligible overhead. When `Some`, enables breakpoints, stepping, and replay.
+pub struct DebugState {
+    /// Rules with active breakpoints.
+    pub breakpoints: HashSet<RuleId>,
+    /// Current step mode.
+    pub step_mode: StepMode,
+    /// Trace log for deterministic replay (`stepBack`).
+    pub trace: Vec<TraceEntry>,
+    /// Callback invoked when the interpreter hits a debug point.
+    pub on_break: Box<dyn FnMut(&DebugSnapshot) -> DebugAction>,
+}
 
 // ── Value types ─────────────────────────────────────────────────────────────
 
@@ -128,6 +189,9 @@ pub struct Interpreter<'a> {
 
     /// Enable step-by-step trace output to stderr (for debugging).
     pub trace: bool,
+
+    /// Interactive debug state. When `None`, `DebugBreak` is a no-op.
+    pub debug_state: Option<DebugState>,
 }
 
 impl<'a> Interpreter<'a> {
@@ -152,7 +216,13 @@ impl<'a> Interpreter<'a> {
             furthest_offset: 0,
             furthest_rule: None,
             trace: false,
+            debug_state: None,
         }
+    }
+
+    /// Snapshot of the current rule stack (for debug adapters).
+    pub fn rule_stack_snapshot(&self) -> &[RuleId] {
+        &self.rule_stack
     }
 
     /// Execute the program and return the parse result.
@@ -237,6 +307,43 @@ impl<'a> Interpreter<'a> {
                 } => self.exec_memo_check(rule_id, hit_offset),
                 Op::MemoStore(rule_id) => self.exec_memo_store(rule_id),
                 Op::Dispatch(ref data) => self.exec_dispatch(&data.table, &data.offsets, data.fallback),
+                Op::DebugBreak { rule_id, is_entry } => {
+                    if let Some(ref mut dbg) = self.debug_state {
+                        dbg.trace.push(TraceEntry {
+                            pc: self.pc,
+                            offset: self.offset,
+                            rule_id,
+                            is_entry,
+                        });
+                        let should_break = match dbg.step_mode {
+                            StepMode::Continue => dbg.breakpoints.contains(&rule_id),
+                            StepMode::StepRule | StepMode::StepNode => true,
+                            StepMode::StepInstruction => true,
+                        };
+                        if should_break {
+                            let snapshot = DebugSnapshot {
+                                pc: self.pc,
+                                offset: self.offset,
+                                rule_stack: self.rule_stack.clone(),
+                                rule_id,
+                                is_entry,
+                                is_error: self.is_error,
+                                values_depth: self.values.len(),
+                            };
+                            let action = (dbg.on_break)(&snapshot);
+                            match action {
+                                DebugAction::Continue => dbg.step_mode = StepMode::Continue,
+                                DebugAction::StepRule => dbg.step_mode = StepMode::StepRule,
+                                DebugAction::StepNode => dbg.step_mode = StepMode::StepNode,
+                                DebugAction::StepInstruction => {
+                                    dbg.step_mode = StepMode::StepInstruction;
+                                }
+                                DebugAction::Stop => break,
+                            }
+                        }
+                    }
+                    self.pc += 1;
+                }
                 Op::Minus | Op::Negate | Op::Nop => {
                     self.pc += 1;
                 }

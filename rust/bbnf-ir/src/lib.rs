@@ -32,6 +32,18 @@ pub type StringId = u32;
 /// Index into `GrammarIR::fns` host function table.
 pub type FnId = u32;
 
+// ─── Source Mapping ──────────────────────────────────────────────────────────
+
+/// Byte range in the original grammar source file.
+///
+/// Used for DWARF-like source mapping from IR/bytecode back to grammar source.
+/// Owned (no lifetime) so it survives serialization across WASM boundary.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Default)]
+pub struct GrammarSpan {
+    pub start: u32,
+    pub end: u32,
+}
+
 // ─── IR Nodes ────────────────────────────────────────────────────────────────
 
 /// A single node in the grammar IR tree.
@@ -162,6 +174,11 @@ pub struct IrRule {
 
     /// Metadata from analysis passes.
     pub meta: RuleMeta,
+
+    /// Source span of the rule definition in the grammar file (byte offsets).
+    /// Populated during lowering; survives all IR passes unchanged.
+    #[serde(default)]
+    pub source_span: Option<GrammarSpan>,
 }
 
 /// Memoization strategy for a rule.
@@ -287,6 +304,11 @@ pub struct RuleMeta {
     #[serde(default)]
     pub force_inline: bool,
 
+    /// Whether `@debug` is set for this rule. Instrumented rules emit
+    /// trace output (compiled paths) or `DebugBreak` opcodes (VM path).
+    #[serde(default)]
+    pub debug: bool,
+
     // ── Sub-variants ────────────────────────────────────────────────────
 
     /// Sub-variants for heterogeneous alternation branches.
@@ -356,6 +378,16 @@ pub struct GrammarIR {
     /// Set to true when prettify is disabled (no @pretty formatting constraints).
     #[serde(default)]
     pub b1_span_collapse: bool,
+
+    /// When true, all rules are instrumented for debugging.
+    /// Set by `@debug * ;` directive or `#[parser(debug)]` attribute.
+    #[serde(default)]
+    pub debug_all: bool,
+
+    /// Debug labels from `DebugExpression` AST nodes.
+    /// Preserved through lowering for display in debug adapters.
+    #[serde(default)]
+    pub debug_labels: Vec<(RuleId, StringId)>,
 }
 
 impl GrammarIR {

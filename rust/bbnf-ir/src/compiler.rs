@@ -4,14 +4,26 @@
 
 use std::sync::Arc;
 
-use crate::bytecode::{BytecodeProgram, DispatchData, Op};
+use crate::bytecode::{BytecodeProgram, DispatchData, Op, SourceMapEntry};
 use crate::{AltBranch, GrammarIR, IrNode, MemoStrategy};
 
 /// Compile a GrammarIR to bytecode.
 pub fn compile(ir: &GrammarIR) -> BytecodeProgram {
+    compile_with_debug(ir, false)
+}
+
+/// Compile a GrammarIR to bytecode, optionally generating debug info.
+///
+/// When `debug` is true:
+/// - Source map entries are emitted for each rule
+/// - `DebugBreak` opcodes are emitted for `@debug`-annotated rules
+pub fn compile_with_debug(ir: &GrammarIR, debug: bool) -> BytecodeProgram {
     let mut compiler = Compiler {
         code: Vec::new(),
         entries: vec![0; ir.rules.len()],
+        source_map: Vec::new(),
+        debug,
+        debug_all: ir.debug_all,
     };
 
     for rule in &ir.rules {
@@ -30,12 +42,19 @@ pub fn compile(ir: &GrammarIR) -> BytecodeProgram {
         entry: ir.entry,
         follow_sets: ir.follow_sets.clone(),
         rule_names,
+        source_map: compiler.source_map,
     }
 }
 
 struct Compiler {
     code: Vec<Op>,
     entries: Vec<u32>,
+    /// Source map entries (only populated when `debug` is true).
+    source_map: Vec<SourceMapEntry>,
+    /// Whether to generate debug info.
+    debug: bool,
+    /// Whether all rules are instrumented (`@debug *`).
+    debug_all: bool,
 }
 
 // ── Core emit/patch helpers ─────────────────────────────────────────────────
@@ -71,6 +90,26 @@ impl Compiler {
         let entry = self.code.len() as u32;
         self.entries[rule.id as usize] = entry;
 
+        // Emit source map entry when debug info is requested.
+        if self.debug {
+            if let Some(ref span) = rule.source_span {
+                self.source_map.push(SourceMapEntry {
+                    pc: entry,
+                    rule_id: rule.id,
+                    span: span.clone(),
+                });
+            }
+        }
+
+        // Emit debug breakpoint at rule entry for @debug-annotated rules.
+        let rule_debug = self.debug_all || rule.meta.debug;
+        if rule_debug {
+            self.emit(Op::DebugBreak {
+                rule_id: rule.id,
+                is_entry: true,
+            });
+        }
+
         // Emit memo check for memoized rules.
         let memo_check_idx = if rule.meta.memo != MemoStrategy::None {
             Some(self.emit(Op::MemoCheck {
@@ -92,6 +131,14 @@ impl Compiler {
 
         if rule.meta.memo != MemoStrategy::None {
             self.emit(Op::MemoStore(rule.id));
+        }
+
+        // Emit debug breakpoint at rule exit.
+        if rule_debug {
+            self.emit(Op::DebugBreak {
+                rule_id: rule.id,
+                is_entry: false,
+            });
         }
 
         let return_idx = self.emit(Op::Return);

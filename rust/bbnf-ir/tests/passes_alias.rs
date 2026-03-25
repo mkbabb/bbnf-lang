@@ -12,6 +12,7 @@ fn make_rule(id: RuleId, name_id: u32, body: IrNode, alias: Option<RuleId>) -> I
             is_alias: alias,
             ..Default::default()
         },
+        source_span: None,
     }
 }
 
@@ -28,6 +29,10 @@ fn resolve_direct_alias() {
         fns: vec![],
         types: vec![],
         follow_sets: HashMap::new(),
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
     };
 
     canonicalize_aliases(&mut ir);
@@ -55,6 +60,10 @@ fn resolve_chain_alias() {
         fns: vec![],
         types: vec![],
         follow_sets: HashMap::new(),
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
     };
 
     canonicalize_aliases(&mut ir);

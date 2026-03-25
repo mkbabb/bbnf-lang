@@ -9,6 +9,7 @@ fn make_rule(id: RuleId, body: IrNode) -> IrRule {
         name: id,
         body,
         meta: RuleMeta::default(),
+        source_span: None,
     }
 }
 
@@ -21,6 +22,10 @@ fn literal_is_span_eligible() {
         fns: vec![],
         types: vec![],
         follow_sets: HashMap::new(),
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
     };
 
     refine_span_eligibility(&mut ir);
@@ -42,6 +47,10 @@ fn map_not_span_eligible() {
         fns: vec![FnDescriptor::BoxWrap],
         types: vec![],
         follow_sets: HashMap::new(),
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
     };
 
     refine_span_eligibility(&mut ir);
@@ -62,6 +71,10 @@ fn transitive_span_eligibility() {
         fns: vec![],
         types: vec![],
         follow_sets: HashMap::new(),
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
     };
 
     refine_span_eligibility(&mut ir);
@@ -80,12 +93,17 @@ fn cyclic_not_span_eligible() {
                 is_cyclic: true,
                 ..Default::default()
             },
+            source_span: None,
         }],
         entry: 0,
         strings: vec!["expr".into()],
         fns: vec![],
         types: vec![],
         follow_sets: HashMap::new(),
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
     };
 
     refine_span_eligibility(&mut ir);
@@ -104,6 +122,10 @@ fn seq_of_literals_span_eligible() {
         fns: vec![],
         types: vec![],
         follow_sets: HashMap::new(),
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
     };
 
     refine_span_eligibility(&mut ir);

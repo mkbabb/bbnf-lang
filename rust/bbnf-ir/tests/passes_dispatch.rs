@@ -31,12 +31,17 @@ fn dispatch_for_disjoint_branches() {
                 },
             ], None),
             meta: RuleMeta::default(),
+            source_span: None,
         }],
         entry: 0,
         strings: vec!["value".into(), "true".into(), "false".into(), "null".into()],
         fns: vec![],
         types: vec![],
         follow_sets: HashMap::new(),
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
     };
 
     generate_dispatch_tables(&mut ir);
@@ -74,12 +79,17 @@ fn no_dispatch_for_overlapping_branches() {
                 },
             ], None),
             meta: RuleMeta::default(),
+            source_span: None,
         }],
         entry: 0,
         strings: vec!["rule".into(), "a".into(), "b".into()],
         fns: vec![],
         types: vec![],
         follow_sets: HashMap::new(),
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
     };
 
     generate_dispatch_tables(&mut ir);
@@ -109,12 +119,17 @@ fn dispatch_for_nested_alt() {
                 IrNode::Literal(3),
             ]),
             meta: RuleMeta::default(),
+            source_span: None,
         }],
         entry: 0,
         strings: vec!["rule".into(), "a".into(), "b".into(), "end".into()],
         fns: vec![],
         types: vec![],
         follow_sets: HashMap::new(),
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
     };
 
     generate_dispatch_tables(&mut ir);
@@ -158,12 +173,17 @@ fn dispatch_with_nullable_branch_via_follow() {
                 },
             ], None),
             meta: RuleMeta::default(),
+            source_span: None,
         }],
         entry: 0,
         strings: vec!["rule".into(), "x".into()],
         fns: vec![],
         types: vec![],
         follow_sets,
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
     };
 
     generate_dispatch_tables(&mut ir);
@@ -209,12 +229,17 @@ fn no_dispatch_when_nullable_overlaps_follow() {
                 },
             ], None),
             meta: RuleMeta::default(),
+            source_span: None,
         }],
         entry: 0,
         strings: vec!["rule".into(), "x".into()],
         fns: vec![],
         types: vec![],
         follow_sets,
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
     };
 
     generate_dispatch_tables(&mut ir);

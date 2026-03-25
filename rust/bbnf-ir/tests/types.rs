@@ -11,6 +11,10 @@ fn make_ir(rules: Vec<IrRule>) -> GrammarIR {
         fns: vec![],
         types: vec![],
         follow_sets: HashMap::new(),
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
     }
 }
 
@@ -20,6 +24,7 @@ fn rule(id: RuleId, body: IrNode) -> IrRule {
         name: id,
         body,
         meta: RuleMeta::default(),
+        source_span: None,
     }
 }
 
@@ -32,6 +37,7 @@ fn rule_no_collapse(id: RuleId, body: IrNode) -> IrRule {
             no_collapse: true,
             ..Default::default()
         },
+        source_span: None,
     }
 }
 
@@ -271,6 +277,10 @@ fn map_enum_wrap() {
         fns: vec![FnDescriptor::EnumWrap { variant: 0 }],
         types: vec![],
         follow_sets: HashMap::new(),
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
     };
     infer_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::Enum);
@@ -291,6 +301,10 @@ fn map_box_wrap() {
         fns: vec![FnDescriptor::BoxWrap],
         types: vec![],
         follow_sets: HashMap::new(),
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
     };
     infer_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::BoxedEnum);

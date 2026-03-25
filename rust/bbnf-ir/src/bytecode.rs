@@ -8,7 +8,7 @@ use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 
-use crate::{CharSet128, RuleId, StringId};
+use crate::{CharSet128, GrammarSpan, RuleId, StringId};
 
 /// Dispatch table data shared via Arc to avoid cloning heap allocations.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -130,6 +130,13 @@ pub enum Op {
 
     // ── Debug ───────────────────────────────────────────────────────────
 
+    /// Debug breakpoint. No-op when interpreter has no debug state.
+    /// Emitted at rule entry/exit for `@debug`-annotated rules.
+    DebugBreak {
+        rule_id: RuleId,
+        is_entry: bool,
+    },
+
     /// No-op. Used for padding/alignment.
     Nop,
 
@@ -160,6 +167,22 @@ pub struct BytecodeProgram {
     /// Rule names indexed by RuleId (for error messages).
     #[serde(default)]
     pub rule_names: Vec<StringId>,
+
+    /// Source map: bytecode PC → grammar source span.
+    /// Only populated when compiled with debug info.
+    #[serde(default)]
+    pub source_map: Vec<SourceMapEntry>,
+}
+
+/// Maps a bytecode program counter to a grammar source location.
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct SourceMapEntry {
+    /// Bytecode offset (program counter).
+    pub pc: u32,
+    /// Rule that this PC belongs to.
+    pub rule_id: RuleId,
+    /// Byte range in the original grammar source.
+    pub span: GrammarSpan,
 }
 
 impl BytecodeProgram {

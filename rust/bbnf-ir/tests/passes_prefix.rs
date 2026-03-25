@@ -11,11 +11,16 @@ fn make_ir(body: IrNode) -> GrammarIR {
             name: 0,
             body,
             meta: RuleMeta::default(),
+            source_span: None,
         }],
         strings: vec!["start".into(), "a".into(), "b".into(), "c".into()],
         fns: vec![],
         types: vec![],
         follow_sets: HashMap::new(),
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
     }
 }
 

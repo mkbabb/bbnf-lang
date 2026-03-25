@@ -24,6 +24,7 @@ fn follow_set_basic_seq() {
                     },
                     ..Default::default()
                 },
+                source_span: None,
             },
             IrRule {
                 id: 1,
@@ -33,6 +34,7 @@ fn follow_set_basic_seq() {
                     first_set: first_a,
                     ..Default::default()
                 },
+                source_span: None,
             },
         ],
         entry: 0,
@@ -40,6 +42,10 @@ fn follow_set_basic_seq() {
         fns: vec![],
         types: vec![],
         follow_sets: HashMap::new(),
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
     };
 
     let follow = compute_follow_sets(&ir);
@@ -65,6 +71,7 @@ fn follow_set_propagates_through_nullable() {
                     IrNode::Literal(3),
                 ]),
                 meta: RuleMeta::default(),
+                source_span: None,
             },
             IrRule {
                 id: 1,
@@ -78,6 +85,7 @@ fn follow_set_propagates_through_nullable() {
                     },
                     ..Default::default()
                 },
+                source_span: None,
             },
             IrRule {
                 id: 2,
@@ -91,6 +99,7 @@ fn follow_set_propagates_through_nullable() {
                     },
                     ..Default::default()
                 },
+                source_span: None,
             },
         ],
         entry: 0,
@@ -101,6 +110,10 @@ fn follow_set_propagates_through_nullable() {
         fns: vec![],
         types: vec![],
         follow_sets: HashMap::new(),
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
     };
 
     let follow = compute_follow_sets(&ir);

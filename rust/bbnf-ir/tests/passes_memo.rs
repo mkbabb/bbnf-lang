@@ -28,12 +28,17 @@ fn cyclic_entry_point_gets_full_memo() {
                 scc_id: Some(0),
                 ..Default::default()
             },
+            source_span: None,
         }],
         entry: 0,
         strings: vec!["expr".into(), "term".into(), "+".into(), "x".into()],
         fns: vec![],
         types: vec![],
         follow_sets: HashMap::new(),
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
     };
 
     refine_memo_strategies(&mut ir);
@@ -55,6 +60,7 @@ fn scc_non_entry_gets_none() {
                     scc_id: Some(0),
                     ..Default::default()
                 },
+                source_span: None,
             },
             IrRule {
                 id: 1,
@@ -77,6 +83,7 @@ fn scc_non_entry_gets_none() {
                     scc_id: Some(0),
                     ..Default::default()
                 },
+                source_span: None,
             },
             // External rule that references rule 0.
             IrRule {
@@ -84,6 +91,7 @@ fn scc_non_entry_gets_none() {
                 name: 2,
                 body: IrNode::Ref(0),
                 meta: RuleMeta::default(),
+                source_span: None,
             },
         ],
         entry: 2,
@@ -91,6 +99,10 @@ fn scc_non_entry_gets_none() {
         fns: vec![],
         types: vec![],
         follow_sets: HashMap::new(),
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
     };
 
     refine_memo_strategies(&mut ir);
@@ -114,12 +126,14 @@ fn highly_referenced_gets_selective() {
                     IrNode::Ref(1),
                 ]),
                 meta: RuleMeta::default(),
+                source_span: None,
             },
             IrRule {
                 id: 1,
                 name: 1,
                 body: IrNode::Literal(2),
                 meta: RuleMeta::default(),
+                source_span: None,
             },
         ],
         entry: 0,
@@ -127,6 +141,10 @@ fn highly_referenced_gets_selective() {
         fns: vec![],
         types: vec![],
         follow_sets: HashMap::new(),
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
     };
 
     refine_memo_strategies(&mut ir);
@@ -142,12 +160,14 @@ fn low_ref_count_gets_none() {
                 name: 0,
                 body: IrNode::Ref(1),
                 meta: RuleMeta::default(),
+                source_span: None,
             },
             IrRule {
                 id: 1,
                 name: 1,
                 body: IrNode::Literal(2),
                 meta: RuleMeta::default(),
+                source_span: None,
             },
         ],
         entry: 0,
@@ -155,6 +175,10 @@ fn low_ref_count_gets_none() {
         fns: vec![],
         types: vec![],
         follow_sets: HashMap::new(),
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
     };
 
     refine_memo_strategies(&mut ir);
@@ -185,12 +209,14 @@ fn large_follow_set_lowers_memo_threshold() {
                     IrNode::Ref(1),
                 ]),
                 meta: RuleMeta::default(),
+                source_span: None,
             },
             IrRule {
                 id: 1,
                 name: 1,
                 body: IrNode::Literal(2),
                 meta: RuleMeta::default(),
+                source_span: None,
             },
         ],
         entry: 0,
@@ -198,6 +224,10 @@ fn large_follow_set_lowers_memo_threshold() {
         fns: vec![],
         types: vec![],
         follow_sets,
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
     };
 
     refine_memo_strategies(&mut ir);
@@ -227,12 +257,14 @@ fn small_follow_set_raises_memo_threshold() {
                     IrNode::Ref(1),
                 ]),
                 meta: RuleMeta::default(),
+                source_span: None,
             },
             IrRule {
                 id: 1,
                 name: 1,
                 body: IrNode::Literal(2),
                 meta: RuleMeta::default(),
+                source_span: None,
             },
         ],
         entry: 0,
@@ -240,6 +272,10 @@ fn small_follow_set_raises_memo_threshold() {
         fns: vec![],
         types: vec![],
         follow_sets,
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
     };
 
     refine_memo_strategies(&mut ir);

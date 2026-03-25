@@ -11,6 +11,10 @@ fn make_ir(rules: Vec<IrRule>, entry: RuleId) -> GrammarIR {
         fns: vec![],
         types: vec![],
         follow_sets: HashMap::new(),
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
     }
 }
 
@@ -25,12 +29,14 @@ fn small_acyclic_inlined() {
                 name: 0,
                 body: IrNode::Ref(1),
                 meta: RuleMeta::default(),
+                source_span: None,
             },
             IrRule {
                 id: 1,
                 name: 1,
                 body: IrNode::Literal(2),
                 meta: RuleMeta::default(),
+                source_span: None,
             },
         ],
         0,
@@ -50,6 +56,7 @@ fn cyclic_not_inlined() {
                 name: 0,
                 body: IrNode::Ref(1),
                 meta: RuleMeta::default(),
+                source_span: None,
             },
             IrRule {
                 id: 1,
@@ -60,6 +67,7 @@ fn cyclic_not_inlined() {
                     scc_id: Some(0),
                     ..Default::default()
                 },
+                source_span: None,
             },
         ],
         0,
@@ -79,6 +87,7 @@ fn entry_point_not_inlined() {
             name: 0,
             body: IrNode::Literal(2),
             meta: RuleMeta::default(),
+            source_span: None,
         }],
         0,
     );
@@ -97,6 +106,7 @@ fn large_rule_not_inlined() {
                 name: 0,
                 body: IrNode::Ref(1),
                 meta: RuleMeta::default(),
+                source_span: None,
             },
             IrRule {
                 id: 1,
@@ -108,6 +118,7 @@ fn large_rule_not_inlined() {
                     IrNode::Literal(3),
                 ]),
                 meta: RuleMeta::default(),
+                source_span: None,
             },
         ],
         0,

@@ -11,12 +11,17 @@ fn make_simple_ir(body: IrNode) -> GrammarIR {
             name: 0,
             body,
             meta: RuleMeta::default(),
+            source_span: None,
         }],
         entry: 0,
         strings: vec!["rule".into(), "hello".into(), "world".into()],
         fns: vec![],
         types: vec![],
         follow_sets: HashMap::new(),
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
     }
 }
 
@@ -117,12 +122,17 @@ fn compile_memo_rule() {
                 memo: MemoStrategy::Full,
                 ..Default::default()
             },
+            source_span: None,
         }],
         entry: 0,
         strings: vec!["rule".into(), "x".into()],
         fns: vec![],
         types: vec![],
         follow_sets: HashMap::new(),
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
     };
     let program = compile(&ir);
 
@@ -223,12 +233,14 @@ fn compile_call() {
                 name: 0,
                 body: IrNode::Ref(1),
                 meta: RuleMeta::default(),
+                source_span: None,
             },
             IrRule {
                 id: 1,
                 name: 1,
                 body: IrNode::Literal(2),
                 meta: RuleMeta::default(),
+                source_span: None,
             },
         ],
         entry: 0,
@@ -236,6 +248,10 @@ fn compile_call() {
         fns: vec![],
         types: vec![],
         follow_sets: HashMap::new(),
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
     };
     let program = compile(&ir);
 

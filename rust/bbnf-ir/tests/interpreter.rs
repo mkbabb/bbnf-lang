@@ -17,7 +17,11 @@ fn make_ir(rules: Vec<IrRule>, strings: Vec<String>) -> GrammarIR {
         strings,
         fns: vec![],
         types: vec![],
-            follow_sets: HashMap::new(),
+        follow_sets: HashMap::new(),
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
     }
 }
 
@@ -27,6 +31,7 @@ fn rule(id: u32, name: u32, body: IrNode) -> IrRule {
         name,
         body,
         meta: RuleMeta::default(),
+        source_span: None,
     }
 }
 

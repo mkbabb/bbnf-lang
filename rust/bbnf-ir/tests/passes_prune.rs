@@ -9,6 +9,7 @@ fn make_rule(id: RuleId, name_id: u32, body: IrNode) -> IrRule {
         name: name_id,
         body,
         meta: RuleMeta::default(),
+        source_span: None,
     }
 }
 
@@ -31,6 +32,10 @@ fn prune_removes_unreachable() {
         fns: vec![],
         types: vec![],
         follow_sets: HashMap::new(),
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
     };
 
     prune_unreachable(&mut ir);
@@ -55,6 +60,10 @@ fn prune_keeps_all_when_all_reachable() {
         fns: vec![],
         types: vec![],
         follow_sets: HashMap::new(),
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
     };
 
     prune_unreachable(&mut ir);
@@ -85,6 +94,10 @@ fn prune_follows_alt_branches() {
         fns: vec![],
         types: vec![],
         follow_sets: HashMap::new(),
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
     };
 
     prune_unreachable(&mut ir);

@@ -210,6 +210,8 @@ number = /-?\d+/ ;
         &HashMap::new(),
         None,
         None,
+        None,
+        false,
     );
 
     if let Some(ref name) = entry_rule_name {

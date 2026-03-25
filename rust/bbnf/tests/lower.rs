@@ -36,6 +36,8 @@ fn lower_grammar(source: &str) -> GrammarIR {
         &dispatch_tables,
         None,
         None,
+        None,
+        false,
     )
 }
 
@@ -272,6 +274,8 @@ fn lower_with_pretty_hints() {
             &dispatch_tables,
             None,
             None,
+            None,
+            false,
         )
     };
 

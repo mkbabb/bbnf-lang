@@ -63,6 +63,18 @@ pub fn compile_grammar(source: &str, options: &PipelineOptions) -> Result<Gramma
         inline_set.insert(name.to_string());
     }
     let inline_ref = if inline_set.is_empty() { None } else { Some(&inline_set) };
+
+    let mut debug_set: HashSet<String> = HashSet::new();
+    let mut debug_all = false;
+    for name in &parsed.debug_rules {
+        if name.as_ref() == "*" {
+            debug_all = true;
+        } else {
+            debug_set.insert(name.to_string());
+        }
+    }
+    let debug_ref = if debug_set.is_empty() { None } else { Some(&debug_set) };
+
     let ast = parsed.rules;
     compile_ast(
         ast,
@@ -72,6 +84,8 @@ pub fn compile_grammar(source: &str, options: &PipelineOptions) -> Result<Gramma
         options,
         ws_pat.as_deref(),
         inline_ref,
+        debug_ref,
+        debug_all,
     )
 }
 
@@ -86,6 +100,8 @@ pub fn compile_ast<'a>(
     options: &PipelineOptions,
     ws_pattern: Option<&str>,
     inline_rules: Option<&HashSet<String>>,
+    debug_rules: Option<&HashSet<String>>,
+    debug_all: bool,
 ) -> Result<GrammarIR, String> {
     // Determine the entry rule name: use override if provided, otherwise last rule in source order.
     let entry_rule_name: Option<String> = options.entry_rule.clone().or_else(|| {
@@ -173,6 +189,8 @@ pub fn compile_ast<'a>(
         &dispatch_tables,
         ws_pattern,
         inline_rules,
+        debug_rules,
+        debug_all,
     );
 
     // Set the correct entry rule (last rule in original source order).

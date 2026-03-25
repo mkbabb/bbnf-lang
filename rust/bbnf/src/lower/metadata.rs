@@ -103,6 +103,7 @@ pub(crate) fn build_rule_meta<'a>(
         recover,
         no_collapse,
         force_inline,
+        debug: false, // Set by caller from @debug directives.
         has_sp_method: false, // Computed by compute_sp_method_rules pass.
         sub_variants: Vec::new(),
     }

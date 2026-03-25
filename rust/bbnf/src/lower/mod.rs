@@ -43,6 +43,8 @@ pub(crate) struct LowerCtx<'a> {
     pub(crate) pretties: Option<&'a HashMap<String, Vec<String>>>,
     pub(crate) no_collapse_rules: Option<&'a HashSet<String>>,
     pub(crate) inline_rules: Option<&'a HashSet<String>>,
+    pub(crate) debug_rules: Option<&'a HashSet<String>>,
+    pub(crate) debug_all: bool,
 
     /// The current LHS expression being lowered (for branch_firsts lookup).
     pub(crate) current_lhs: Option<&'a Expression<'a>>,
@@ -80,6 +82,8 @@ pub fn lower_to_ir<'a>(
     dispatch_tables: &'a HashMap<String, DispatchTable>,
     ws_pattern: Option<&str>,
     inline_rules: Option<&'a HashSet<String>>,
+    debug_rules: Option<&'a HashSet<String>>,
+    debug_all: bool,
 ) -> GrammarIR {
     let mut ctx = LowerCtx {
         strings: StringInterner::new(),
@@ -95,6 +99,8 @@ pub fn lower_to_ir<'a>(
         pretties,
         no_collapse_rules,
         inline_rules,
+        debug_rules,
+        debug_all,
         current_lhs: None,
         recovery_mode: false,
     };
@@ -110,12 +116,24 @@ pub fn lower_to_ir<'a>(
     }
 
     // Phase 2: Lower rule bodies (interns all body strings).
-    let mut rule_bodies: Vec<(RuleId, bbnf_ir::StringId, bbnf_ir::IrNode, &str, &Expression)> =
-        Vec::with_capacity(rule_names.len());
+    let mut rule_bodies: Vec<(
+        RuleId,
+        bbnf_ir::StringId,
+        bbnf_ir::IrNode,
+        &str,
+        &Expression,
+        Option<bbnf_ir::GrammarSpan>,
+    )> = Vec::with_capacity(rule_names.len());
 
     for (lhs, rhs) in ast.iter() {
-        let name = match lhs {
-            Expression::Nonterminal(Token { value, .. }) => value.as_ref(),
+        let (name, source_span) = match lhs {
+            Expression::Nonterminal(Token { value, span, .. }) => {
+                let gs = bbnf_ir::GrammarSpan {
+                    start: span.start as u32,
+                    end: span.end as u32,
+                };
+                (value.as_ref(), Some(gs))
+            }
             _ => continue,
         };
 
@@ -131,18 +149,26 @@ pub fn lower_to_ir<'a>(
         // Lower the body expression.
         let body = lower_expression(body_expr, &mut ctx);
 
-        rule_bodies.push((rule_id, name_id, body, name, lhs));
+        rule_bodies.push((rule_id, name_id, body, name, lhs, source_span));
     }
 
     // Phase 3: Build metadata (recovery expressions can now intern strings too).
     let mut rules = Vec::with_capacity(rule_bodies.len());
-    for (rule_id, name_id, body, name, lhs) in rule_bodies {
-        let meta = build_rule_meta(lhs, name, &mut ctx, dispatch_tables);
+    for (rule_id, name_id, body, name, lhs, source_span) in rule_bodies {
+        let mut meta = build_rule_meta(lhs, name, &mut ctx, dispatch_tables);
+
+        // Set debug flag from @debug directive.
+        meta.debug = ctx.debug_all
+            || ctx
+                .debug_rules
+                .map_or(false, |set| set.contains(name));
+
         rules.push(IrRule {
             id: rule_id,
             name: name_id,
             body,
             meta,
+            source_span,
         });
     }
 
@@ -162,5 +188,7 @@ pub fn lower_to_ir<'a>(
         follow_sets: HashMap::new(), // Populated by compute_follow_sets pass.
         ws_pattern: ws_pattern_id,
         b1_span_collapse: false, // Set by generate_all based on prettify flag.
+        debug_all: ctx.debug_all,
+        debug_labels: Vec::new(),
     }
 }

@@ -98,6 +98,13 @@ impl<'a, T: std::hash::Hash> std::hash::Hash for Token<'a, T> {
 
 pub type AST<'a> = IndexMap<Expression<'a>, Expression<'a>>;
 
+/// A single imported name in a selective `@import { a, b } from "path"` directive.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ImportedName<'a> {
+    pub name: Cow<'a, str>,
+    pub span: Span<'a>,
+}
+
 /// An `@import` directive at the top of a grammar file.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ImportDirective<'a> {
@@ -107,7 +114,7 @@ pub struct ImportDirective<'a> {
     pub span: Span<'a>,
     /// If `Some`, selective import: only these rule names are imported.
     /// If `None`, glob import: all rules are imported.
-    pub items: Option<Vec<Cow<'a, str>>>,
+    pub items: Option<Vec<ImportedName<'a>>>,
 }
 
 /// An `@recover` directive that annotates a rule with error recovery.
@@ -158,6 +165,9 @@ pub struct ParsedGrammar<'a> {
     pub ws_pattern: Option<Cow<'a, str>>,
     /// Rules to force-inline from `@inline ruleName ;` directives.
     pub inline_rules: Vec<Cow<'a, str>>,
+    /// Rules to instrument for debugging from `@debug ruleName ;` directives.
+    /// `"*"` means all rules.
+    pub debug_rules: Vec<Cow<'a, str>>,
 }
 
 pub fn set_expression_comments<'a>(expr: &mut Expression<'a>, comments: Comments<'a>) {

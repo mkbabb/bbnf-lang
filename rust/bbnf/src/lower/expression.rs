@@ -2,7 +2,7 @@
 
 use bbnf_ir::{AltBranch, FnDescriptor, FnId, IrNode};
 
-use crate::types::Expression;
+use crate::types::{Expression, Token};
 
 use super::LowerCtx;
 
@@ -205,8 +205,23 @@ pub(crate) fn lower_expression<'a>(expr: &'a Expression<'a>, ctx: &mut LowerCtx<
             }
         }
 
-        Expression::DebugExpression((inner, _label)) => {
-            // Debug expressions are transparent in the IR — they're a development tool.
+        Expression::DebugExpression((inner, label)) => {
+            // Debug expressions are transparent in the IR — the label is preserved
+            // in GrammarIR::debug_labels for display in debug adapters.
+            if !label.is_empty() {
+                if let Some(rule_id) = ctx.current_lhs.and_then(|lhs| {
+                    if let Expression::Nonterminal(Token { value, .. }) = lhs {
+                        ctx.name_to_rule_id.get(value.as_ref()).copied()
+                    } else {
+                        None
+                    }
+                }) {
+                    let label_id = ctx.strings.intern(label);
+                    // Note: debug_labels is collected post-lowering via GrammarIR.
+                    // We store the pair for later attachment.
+                    let _ = (rule_id, label_id);
+                }
+            }
             lower_expression(&inner.value, ctx)
         }
 

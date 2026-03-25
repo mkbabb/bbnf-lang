@@ -103,6 +103,8 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     let mut pretty_map: HashMap<String, Vec<String>> = HashMap::new();
     let mut no_collapse_set: HashSet<String> = HashSet::new();
     let mut inline_set: HashSet<String> = HashSet::new();
+    let mut debug_set: HashSet<String> = HashSet::new();
+    let mut debug_all = parser_container_attrs.debug;
     let mut ws_pattern: Option<String> = None;
 
     let ast = if parser_container_attrs.paths.len() == 1 {
@@ -139,6 +141,14 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
             // Extract @inline directives.
             for name in &pg.inline_rules {
                 inline_set.insert(name.to_string());
+            }
+            // Extract @debug directives.
+            for name in &pg.debug_rules {
+                if name.as_ref() == "*" {
+                    debug_all = true;
+                } else {
+                    debug_set.insert(name.to_string());
+                }
             }
 
             if !pg.imports.is_empty() {
@@ -258,6 +268,11 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     } else {
         Some(&inline_set)
     };
+    let debug_ref = if debug_set.is_empty() {
+        None
+    } else {
+        Some(&debug_set)
+    };
 
     // ── IR Lowering ──────────────────────────────────────────────────────────
     // Lower the parsed + analysed grammar to the canonical GrammarIR.
@@ -275,6 +290,8 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
         &dispatch_tables_for_ir,
         ws_pattern.as_deref(),
         inline_ref,
+        debug_ref,
+        debug_all,
     );
 
     // Run all IR optimization passes.

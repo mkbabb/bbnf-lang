@@ -18,6 +18,8 @@ enum TopLevelItem<'a> {
     WsPattern(Cow<'a, str>),
     /// `@inline ruleName ;` — force-inline a rule at all call sites.
     Inline(Cow<'a, str>),
+    /// `@debug ruleName ;` or `@debug * ;` — instrument a rule for debugging.
+    Debug(Cow<'a, str>),
     Rule(Expression<'a>),
 }
 
@@ -360,8 +362,11 @@ impl<'a> BBNFGrammar<'a> {
     }
 
     /// Parse a list of identifiers in `{ a, b, c }` form.
-    fn import_items() -> Parser<'a, Vec<Cow<'a, str>>> {
-        let ident = Self::identifier().map(|s: Span<'a>| Cow::Borrowed(s.as_str()));
+    fn import_items() -> Parser<'a, Vec<ImportedName<'a>>> {
+        let ident = Self::identifier().map(|s: Span<'a>| ImportedName {
+            name: Cow::Borrowed(s.as_str()),
+            span: s,
+        });
 
         string("{")
             .trim_whitespace()
@@ -435,6 +440,18 @@ impl<'a> BBNFGrammar<'a> {
             .next(Self::identifier().trim_whitespace())
             .skip(any_span(&[";", "."]).opt().trim_whitespace())
             .map(|name_span| Cow::Borrowed(name_span.as_str()))
+    }
+
+    /// Parse a `@debug ruleName ;` or `@debug * ;` directive — instrument rules for debugging.
+    fn debug_directive() -> Parser<'a, Cow<'a, str>> {
+        string("@debug")
+            .trim_whitespace()
+            .next(
+                (string_span("*") | Self::identifier())
+                    .trim_whitespace()
+                    .map(|span| Cow::Borrowed(span.as_str())),
+            )
+            .skip(any_span(&[";", "."]).opt().trim_whitespace())
     }
 
     /// Parse an `@ws /regex/ ;` directive — custom whitespace pattern for `?w`.
@@ -528,11 +545,14 @@ impl<'a> BBNFGrammar<'a> {
         let inline_dir = Self::skip_comments()
             .next(Self::inline_directive().trim_whitespace())
             .map(TopLevelItem::Inline);
+        let debug_dir = Self::skip_comments()
+            .next(Self::debug_directive().trim_whitespace())
+            .map(TopLevelItem::Debug);
         let rule = Self::skip_comments()
             .next(Self::production_rule().trim_whitespace())
             .map(TopLevelItem::Rule);
 
-        let item = import | recover | no_collapse | pretty | ws_pat | inline_dir | rule;
+        let item = import | recover | no_collapse | pretty | ws_pat | inline_dir | debug_dir | rule;
 
         Self::skip_comments().next(item.many(..)).map(|items| {
             let mut imports = Vec::new();
@@ -541,6 +561,7 @@ impl<'a> BBNFGrammar<'a> {
             let mut pretties = Vec::new();
             let mut ws_pattern = None;
             let mut inline_rules = Vec::new();
+            let mut debug_rules = Vec::new();
             let mut rules_vec = Vec::new();
             for item in items {
                 match item {
@@ -550,6 +571,7 @@ impl<'a> BBNFGrammar<'a> {
                     TopLevelItem::Pretty(p) => pretties.push(p),
                     TopLevelItem::WsPattern(pat) => ws_pattern = Some(pat),
                     TopLevelItem::Inline(name) => inline_rules.push(name),
+                    TopLevelItem::Debug(name) => debug_rules.push(name),
                     TopLevelItem::Rule(r) => rules_vec.push(r),
                 }
             }
@@ -568,6 +590,7 @@ impl<'a> BBNFGrammar<'a> {
                 rules: ast,
                 ws_pattern,
                 inline_rules,
+                debug_rules,
             }
         })
     }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import type { TypewriterWord } from "@/composables/useTypewriter";
+import type { TypewriterWord } from "@/components/landing/useTypewriter";
 
 withDefaults(defineProps<{
     displayText: string;
@@ -18,17 +18,17 @@ defineExpose({ wordRef });
 
 <template>
     <div class="flex items-baseline justify-center mb-6 typewriter-row">
-        <span class="instrument-serif text-5xl sm:text-6xl md:text-7xl lg:text-8xl text-muted-foreground whitespace-nowrap">to parse:&nbsp;</span>
+        <span class="text-title sm:text-display-1 text-muted-foreground whitespace-nowrap">to parse:&nbsp;</span>
         <span
             ref="wordRef"
             :class="[
-                currentWord.isCode ? 'font-mono code-word' : 'instrument-serif',
+                currentWord.isCode ? 'font-mono code-word' : '',
                 currentWord.className,
             ]"
-            class="inline-block min-w-[3ch] text-5xl sm:text-6xl md:text-7xl lg:text-8xl leading-none overflow-visible"
+            class="inline-block min-w-[3ch] text-title sm:text-display-1 leading-none overflow-visible"
             :style="{ opacity: wordOpacity }"
         >{{ displayText }}</span><span
-            class="tw-cursor text-5xl sm:text-6xl md:text-7xl lg:text-8xl"
+            class="tw-cursor text-title sm:text-display-1"
             :style="{ opacity: cursorOpacity }"
         >|</span>
     </div>

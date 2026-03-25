@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import { useTypewriter, type TypewriterWord } from "@/composables/useTypewriter";
-import { useHeroSequence } from "@/composables/useHeroSequence";
+import { useTypewriter, type TypewriterWord } from "@/components/landing/useTypewriter";
+import { useHeroSequence } from "@/components/landing/useHeroSequence";
 import { BbnfLogo } from "@/components/custom/bbnf-logo";
 import TypewriterText from "./TypewriterText.vue";
 import CodeCardFan from "./CodeCardFan.vue";
@@ -56,7 +56,7 @@ const { morphElementOpacity, typewriterOpacity, cursorOpacity } = useHeroSequenc
                 visible && !entranceDone ? 'translate-y-0' : '',
             ]"
         >
-            <h1 class="instrument-serif text-4xl sm:text-5xl md:text-7xl lg:text-8xl tracking-tight text-foreground mb-4">
+            <h1 class="text-display-2 sm:text-display-3 text-foreground mb-4">
                 Grammar-driven<br />parser &amp; formatter
             </h1>
 

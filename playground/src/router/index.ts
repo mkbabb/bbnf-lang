@@ -11,7 +11,7 @@ const router = createRouter({
         {
             path: "/playground",
             name: "playground",
-            component: () => import("@/views/PlaygroundPage.vue"),
+            component: () => import("@/views/playground/PlaygroundPage.vue"),
         },
         {
             path: "/docs/:slug(.*)?",

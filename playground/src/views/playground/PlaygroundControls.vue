@@ -1,0 +1,46 @@
+<script setup lang="ts">
+import ControlsBar from "@/components/layout/ControlsBar.vue";
+import type { PipelineError } from "@/composables/usePipeline";
+import type { Example } from "@/composables/useExamples";
+
+defineProps<{
+    examples: Example[];
+    currentExample: Example;
+    printerConfig: { maxWidth: number; indent: number; useTabs: boolean };
+    errors: PipelineError[];
+    isProcessing: boolean;
+    entryRule: string;
+    availableEntryRules: string[];
+    activeResultLabel: string;
+    canCopyResult: boolean;
+}>();
+
+const emit = defineEmits<{
+    "select-example": [name: string];
+    "select-entry-rule": [value: string];
+    "copy-result": [];
+    "share-link": [];
+    "reset-playground": [];
+    "jump-to-error": [error: PipelineError];
+}>();
+</script>
+
+<template>
+    <ControlsBar
+        :examples="examples"
+        :current-example="currentExample"
+        :printer-config="printerConfig"
+        :errors="errors"
+        :is-processing="isProcessing"
+        :entry-rule="entryRule"
+        :available-entry-rules="availableEntryRules"
+        :active-result-label="activeResultLabel"
+        :can-copy-result="canCopyResult"
+        @select-example="emit('select-example', $event)"
+        @select-entry-rule="emit('select-entry-rule', $event)"
+        @copy-result="emit('copy-result')"
+        @share-link="emit('share-link')"
+        @reset-playground="emit('reset-playground')"
+        @jump-to-error="emit('jump-to-error', $event)"
+    />
+</template>

@@ -38,15 +38,6 @@ const currentDoc = computed(() => props.slug ? getDoc(props.slug) : undefined);
 const rendered = computed(() => currentDoc.value ? renderMarkdown(currentDoc.value.content) : "");
 const sectionTheme = computed(() => currentDoc.value ? getSectionTheme(currentDoc.value.section) : null);
 
-// Sidebar toggle — mobile: drawer, desktop: collapse/expand
-function onToggleSidebar() {
-    if (window.matchMedia("(min-width: 768px)").matches) {
-        sidebarOpen.value = !sidebarOpen.value;
-    } else {
-        mobileDrawer.value = !mobileDrawer.value;
-    }
-}
-
 // Hydrate interactive components (code-tabs, bench-chart, live-bench) into rendered markdown
 const articleRef = ref<HTMLElement | null>(null);
 useMarkdownComponents(articleRef, rendered);
@@ -54,13 +45,23 @@ useMarkdownComponents(articleRef, rendered);
 
 <template>
     <div class="mt-14 flex min-h-[calc(100dvh-var(--spacing-navbar))]">
-        <!-- Desktop sidebar — collapsible -->
+        <!-- Desktop sidebar — collapsible, with its own collapse button -->
         <div
             class="sticky top-14 hidden h-[calc(100dvh-var(--spacing-navbar))] shrink-0 self-start overflow-hidden transition-[width] duration-200 md:block"
             :style="{ width: sidebarOpen ? '16rem' : '0' }"
         >
-            <DocsSidebar :current-slug="slug" />
+            <DocsSidebar :current-slug="slug" show-collapse @collapse="sidebarOpen = false" />
         </div>
+
+        <!-- Desktop expand button — shown when sidebar is collapsed -->
+        <button
+            v-if="!sidebarOpen"
+            class="sticky top-16 hidden md:flex items-center justify-center shrink-0 ml-1 p-2 rounded-lg border border-border/30 hover:bg-muted/50 active:scale-95 transition-colors text-muted-foreground h-fit z-[var(--z-controls)]"
+            title="Expand sidebar"
+            @click="sidebarOpen = true"
+        >
+            <PanelLeftOpen class="h-4 w-4" />
+        </button>
 
         <!-- Mobile drawer overlay -->
         <Transition name="mobile-drawer">
@@ -69,7 +70,7 @@ useMarkdownComponents(articleRef, rendered);
                 class="fixed inset-0 z-[var(--z-overlay)] md:hidden bg-black/20"
                 @click.self="mobileDrawer = false"
             >
-                <div class="absolute top-14 left-0 w-72 h-[calc(100dvh-var(--spacing-navbar))] bg-card/95 backdrop-blur-xl border-r border-border/30 shadow-lg flex flex-col rounded-tr-xl rounded-br-xl overflow-hidden">
+                <div class="absolute top-14 left-0 w-72 h-[calc(100dvh-var(--spacing-navbar))] bg-card/95 backdrop-blur-xl border-r border-border/30 shadow-lg flex flex-col overflow-hidden">
                     <div class="flex-1 overflow-y-auto">
                         <DocsSidebar :current-slug="slug" show-close @close="mobileDrawer = false" />
                     </div>
@@ -111,12 +112,12 @@ useMarkdownComponents(articleRef, rendered);
                         </svg>
                         {{ currentDoc.section }}
                     </div>
-                    <!-- Sidebar toggle — sticky on scroll, works as drawer toggle on mobile and collapse/expand on desktop -->
+                    <!-- Mobile sidebar toggle — opens drawer, hidden on desktop -->
                     <button
-                        class="sidebar-toggle-btn"
-                        @click="onToggleSidebar"
+                        class="sidebar-toggle-btn md:hidden"
+                        @click="mobileDrawer = !mobileDrawer"
                     >
-                        <PanelLeftOpen v-if="!sidebarOpen && !mobileDrawer" class="h-4 w-4" />
+                        <PanelLeftOpen v-if="!mobileDrawer" class="h-4 w-4" />
                         <PanelLeftClose v-else class="h-4 w-4" />
                     </button>
                     <article ref="articleRef" class="prose max-w-none" v-html="rendered" />

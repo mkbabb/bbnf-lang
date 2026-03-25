@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from "vue";
-import { PanelLeftClose } from "lucide-vue-next";
+import { PanelLeftClose, ChevronRight } from "lucide-vue-next";
 import { FuzzySearch, useFuzzySearch } from "@mkbabb/glass-ui";
 import type { SearchableItem } from "@mkbabb/glass-ui";
 import { useDocs } from "@/composables/useDocs";
@@ -10,49 +10,46 @@ import { useRouter } from "vue-router";
 const props = defineProps<{
     currentSlug?: string;
     showClose?: boolean;
+    showCollapse?: boolean;
 }>();
 
 const emit = defineEmits<{
     close: [];
+    collapse: [];
 }>();
 
 const router = useRouter();
+const navRef = ref<HTMLElement | null>(null);
 
-// JS-based height transition hooks
+// ── Height transition hooks ──────────────────────────────────────────────────
+
 function onBeforeEnter(el: Element) {
-    const htmlEl = el as HTMLElement;
-    htmlEl.style.maxHeight = "0";
-    htmlEl.style.overflow = "hidden";
+    (el as HTMLElement).style.maxHeight = "0";
+    (el as HTMLElement).style.overflow = "hidden";
 }
 function onEnter(el: Element) {
-    const htmlEl = el as HTMLElement;
-    nextTick(() => {
-        htmlEl.style.maxHeight = htmlEl.scrollHeight + "px";
-    });
+    nextTick(() => { (el as HTMLElement).style.maxHeight = el.scrollHeight + "px"; });
 }
 function onAfterEnter(el: Element) {
-    const htmlEl = el as HTMLElement;
-    htmlEl.style.maxHeight = "none";
-    htmlEl.style.overflow = "";
+    (el as HTMLElement).style.maxHeight = "none";
+    (el as HTMLElement).style.overflow = "";
 }
 function onBeforeLeave(el: Element) {
-    const htmlEl = el as HTMLElement;
-    htmlEl.style.maxHeight = htmlEl.scrollHeight + "px";
-    htmlEl.style.overflow = "hidden";
+    (el as HTMLElement).style.maxHeight = el.scrollHeight + "px";
+    (el as HTMLElement).style.overflow = "hidden";
 }
 function onLeave(el: Element) {
-    const htmlEl = el as HTMLElement;
-    requestAnimationFrame(() => {
-        htmlEl.style.maxHeight = "0";
-    });
+    requestAnimationFrame(() => { (el as HTMLElement).style.maxHeight = "0"; });
 }
 function onAfterLeave(el: Element) {
-    const htmlEl = el as HTMLElement;
-    htmlEl.style.maxHeight = "none";
-    htmlEl.style.overflow = "";
+    (el as HTMLElement).style.maxHeight = "none";
+    (el as HTMLElement).style.overflow = "";
 }
 
+// ── Section state ────────────────────────────────────────────────────────────
+
 const { sections } = useDocs();
+
 // Expand only the section containing the current page (BBNF by default)
 const expandedSections = ref<Set<string>>(new Set((() => {
     if (props.currentSlug) {
@@ -62,6 +59,23 @@ const expandedSections = ref<Set<string>>(new Set((() => {
     return ["BBNF"];
 })()));
 
+// Track whether subsections are collapsed per doc (default: expanded for active)
+const collapsedSubsections = ref<Set<string>>(new Set());
+
+function toggleSubsections(slug: string) {
+    if (collapsedSubsections.value.has(slug)) {
+        collapsedSubsections.value.delete(slug);
+    } else {
+        collapsedSubsections.value.add(slug);
+    }
+}
+
+// Which section contains the current page?
+const currentSectionName = computed(() => {
+    if (!props.currentSlug) return null;
+    return sections.value.find((s) => s.docs.some((d) => d.slug === props.currentSlug))?.name ?? null;
+});
+
 // Auto-expand section when navigating to a new page
 watch(() => props.currentSlug, (slug) => {
     if (!slug) return;
@@ -69,17 +83,26 @@ watch(() => props.currentSlug, (slug) => {
     if (match && !expandedSections.value.has(match.name)) {
         expandedSections.value.add(match.name);
     }
+    // Reset subsection collapse for the new doc
+    collapsedSubsections.value.delete(slug);
 });
 
 function toggleSection(name: string) {
-    if (expandedSections.value.has(name)) {
+    const wasExpanded = expandedSections.value.has(name);
+    if (wasExpanded) {
         expandedSections.value.delete(name);
     } else {
         expandedSections.value.add(name);
+        // Auto-scroll the section header into view after expanding
+        nextTick(() => {
+            const el = navRef.value?.querySelector(`[data-section="${name}"]`);
+            el?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        });
     }
 }
 
-// Fuzzy search over all docs
+// ── Search ───────────────────────────────────────────────────────────────────
+
 const searchItems = computed<SearchableItem[]>(() =>
     sections.value.flatMap((s) =>
         s.docs.map((d) => ({
@@ -100,7 +123,6 @@ const searchState = useFuzzySearch({
     },
 });
 
-// Filter sections based on active search query
 const filteredSections = computed(() => {
     const q = searchState.query.value.toLowerCase().trim();
     if (!q) return sections.value;
@@ -117,8 +139,8 @@ const filteredSections = computed(() => {
 </script>
 
 <template>
-    <aside class="flex h-full w-64 shrink-0 flex-col overflow-y-auto border-r border-border/30 bg-card/40 backdrop-blur-xl scrollbar-hidden">
-        <!-- Search -->
+    <aside class="flex h-full w-64 shrink-0 flex-col overflow-hidden border-r border-border/30 bg-card/40 backdrop-blur-xl rounded-r-xl">
+        <!-- Search + controls -->
         <div class="px-2 py-1.5 border-b border-border/20 flex items-center gap-1.5">
             <div class="flex-1 min-w-0">
                 <FuzzySearch
@@ -128,6 +150,14 @@ const filteredSections = computed(() => {
                     :type-label="(item: SearchableItem) => item.type ?? ''"
                 />
             </div>
+            <button
+                v-if="showCollapse"
+                class="shrink-0 p-1.5 rounded-md hover:bg-muted/50 active:scale-90 transition-[colors,transform] text-muted-foreground"
+                title="Collapse sidebar"
+                @click="emit('collapse')"
+            >
+                <PanelLeftClose class="h-4 w-4" />
+            </button>
             <button
                 v-if="showClose"
                 class="shrink-0 p-1.5 rounded-md hover:bg-muted/50 active:scale-90 transition-[colors,transform] text-muted-foreground"
@@ -139,13 +169,16 @@ const filteredSections = computed(() => {
         </div>
 
         <!-- Navigation -->
-        <nav class="flex-1 overflow-y-auto px-0 py-1 scrollbar-hidden">
-            <div v-for="section in filteredSections" :key="section.name" class="mb-4">
+        <nav ref="navRef" class="flex-1 overflow-y-auto px-0 py-1 scrollbar-hidden">
+            <div v-for="section in filteredSections" :key="section.name" class="mb-2" :data-section="section.name">
+                <!-- Section header -->
                 <button
-                    class="flex items-center gap-2 w-full px-2 py-1.5 group active:scale-[0.98] transition-transform"
+                    class="flex items-center gap-2 w-full px-2 py-1.5 rounded-md transition-all active:scale-[0.98]"
+                    :class="currentSectionName === section.name
+                        ? 'bg-muted/40'
+                        : 'hover:bg-muted/20'"
                     @click="toggleSection(section.name)"
                 >
-                    <!-- Section icon -->
                     <img
                         v-if="getSectionTheme(section.name).iconSrc"
                         :src="getSectionTheme(section.name).iconSrc"
@@ -167,29 +200,25 @@ const filteredSections = computed(() => {
                     >
                         {{ section.name }}
                     </h3>
-                    <svg
+                    <ChevronRight
                         class="h-3 w-3 text-muted-foreground/40 transition-transform duration-200"
                         :class="expandedSections.has(section.name) ? 'rotate-90' : ''"
-                        viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"
-                    >
-                        <path d="M4 2l4 4-4 4" />
-                    </svg>
+                    />
                 </button>
+
+                <!-- Doc list -->
                 <Transition
-                    @before-enter="onBeforeEnter"
-                    @enter="onEnter"
-                    @after-enter="onAfterEnter"
-                    @before-leave="onBeforeLeave"
-                    @leave="onLeave"
-                    @after-leave="onAfterLeave"
+                    @before-enter="onBeforeEnter" @enter="onEnter" @after-enter="onAfterEnter"
+                    @before-leave="onBeforeLeave" @leave="onLeave" @after-leave="onAfterLeave"
                 >
-                    <ul v-show="expandedSections.has(section.name)" class="space-y-0.5 mt-1 section-expand-list">
+                    <ul v-show="expandedSections.has(section.name)" class="mt-0.5 section-expand-list">
                         <li v-for="doc in section.docs" :key="doc.slug">
+                            <!-- Doc title -->
                             <router-link
                                 :to="`/docs/${doc.slug}`"
                                 class="block px-3 py-1 text-sm transition-all"
                                 :class="currentSlug === doc.slug
-                                    ? 'sidebar-active text-foreground font-medium'
+                                    ? 'text-foreground font-medium'
                                     : 'text-muted-foreground hover:text-foreground hover:pl-4'"
                                 :style="currentSlug === doc.slug
                                     ? `border-left: 2px solid var(--color-${getSectionTheme(section.name).color})`
@@ -197,19 +226,38 @@ const filteredSections = computed(() => {
                             >
                                 {{ doc.title }}
                             </router-link>
-                            <!-- Subsection headings (shown when this doc is active) -->
-                            <ul v-if="currentSlug === doc.slug && doc.headings.length > 0" class="space-y-0">
-                                <li v-for="h in doc.headings" :key="h.id">
-                                    <a
-                                        :href="`#${h.id}`"
-                                        class="block py-0.5 text-xs text-muted-foreground/70 hover:text-foreground transition-colors truncate"
-                                        :class="h.level === 3 ? 'pl-7' : 'pl-5'"
-                                        :style="`border-left: 2px solid color-mix(in srgb, var(--color-${getSectionTheme(section.name).color}) 30%, transparent)`"
-                                    >
-                                        {{ h.text }}
-                                    </a>
-                                </li>
-                            </ul>
+
+                            <!-- Subsection headings (collapsible, shown when doc is active) -->
+                            <div v-if="currentSlug === doc.slug && doc.headings.length > 0">
+                                <button
+                                    class="flex items-center gap-1 px-3 py-0.5 text-[0.625rem] text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                                    :style="`border-left: 2px solid color-mix(in srgb, var(--color-${getSectionTheme(section.name).color}) 20%, transparent)`"
+                                    @click="toggleSubsections(doc.slug)"
+                                >
+                                    <ChevronRight
+                                        class="h-2.5 w-2.5 transition-transform duration-150"
+                                        :class="!collapsedSubsections.has(doc.slug) ? 'rotate-90' : ''"
+                                    />
+                                    <span>{{ doc.headings.length }} sections</span>
+                                </button>
+                                <Transition
+                                    @before-enter="onBeforeEnter" @enter="onEnter" @after-enter="onAfterEnter"
+                                    @before-leave="onBeforeLeave" @leave="onLeave" @after-leave="onAfterLeave"
+                                >
+                                    <ul v-show="!collapsedSubsections.has(doc.slug)" class="section-expand-list">
+                                        <li v-for="h in doc.headings" :key="h.id">
+                                            <a
+                                                :href="`#${h.id}`"
+                                                class="block py-0.5 text-xs text-muted-foreground/60 hover:text-foreground transition-colors truncate"
+                                                :class="h.level === 3 ? 'pl-8' : 'pl-5'"
+                                                :style="`border-left: 2px solid color-mix(in srgb, var(--color-${getSectionTheme(section.name).color}) 20%, transparent)`"
+                                            >
+                                                {{ h.text }}
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </Transition>
+                            </div>
                         </li>
                     </ul>
                 </Transition>

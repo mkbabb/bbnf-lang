@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, nextTick } from "vue";
+import { ref, computed, watch, nextTick } from "vue";
 import { PanelLeftClose } from "lucide-vue-next";
 import { FuzzySearch, useFuzzySearch } from "@mkbabb/glass-ui";
 import type { SearchableItem } from "@mkbabb/glass-ui";
@@ -55,7 +55,23 @@ function onAfterLeave(el: Element) {
 }
 
 const { sections } = useDocs();
-const expandedSections = ref<Set<string>>(new Set(sections.value.map((s) => s.name)));
+// Expand only the section containing the current page (BBNF by default)
+const expandedSections = ref<Set<string>>(new Set((() => {
+    if (props.currentSlug) {
+        const match = sections.value.find((s) => s.docs.some((d) => d.slug === props.currentSlug));
+        if (match) return [match.name];
+    }
+    return ["BBNF"];
+})()));
+
+// Auto-expand section when navigating to a new page
+watch(() => props.currentSlug, (slug) => {
+    if (!slug) return;
+    const match = sections.value.find((s) => s.docs.some((d) => d.slug === slug));
+    if (match && !expandedSections.value.has(match.name)) {
+        expandedSections.value.add(match.name);
+    }
+});
 
 function toggleSection(name: string) {
     if (expandedSections.value.has(name)) {
@@ -103,9 +119,9 @@ const filteredSections = computed(() => {
 </script>
 
 <template>
-    <aside class="flex h-full w-64 shrink-0 flex-col overflow-y-auto border-r border-border/30 bg-card/40 backdrop-blur-xl scrollbar-hidden rounded-tr-xl rounded-br-xl">
+    <aside class="flex h-full w-64 shrink-0 flex-col overflow-y-auto border-r border-border/30 bg-card/40 backdrop-blur-xl scrollbar-hidden">
         <!-- Search bar + collapse toggle -->
-        <div class="p-2 border-b border-border/20">
+        <div class="px-2 py-1.5 border-b border-border/20">
             <div class="flex items-center gap-1.5">
                 <div class="flex-1 min-w-0">
                     <FuzzySearch
@@ -127,7 +143,7 @@ const filteredSections = computed(() => {
         </div>
 
         <!-- Navigation -->
-        <nav class="flex-1 overflow-y-auto px-1.5 py-2 scrollbar-hidden">
+        <nav class="flex-1 overflow-y-auto px-0 py-1 scrollbar-hidden">
             <div v-for="section in filteredSections" :key="section.name" class="mb-4">
                 <button
                     class="flex items-center gap-2 w-full px-2 py-1.5 group active:scale-[0.98] transition-transform"

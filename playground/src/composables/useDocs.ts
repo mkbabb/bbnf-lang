@@ -41,11 +41,13 @@ const allDocs: DocMeta[] = Object.entries(modules).map(([path, raw]) => {
     };
 }).sort((a, b) => a.order - b.order);
 
-const sectionOrder = ["Performance", "BBNF", "parse-that", "pprint", "gorgeous"];
+// BBNF first, Performance last. "General" excluded.
+const sectionOrder = ["BBNF", "parse-that", "pprint", "gorgeous", "Performance"];
 
 const sections = computed<DocSection[]>(() => {
     const map = new Map<string, DocMeta[]>();
     for (const doc of allDocs) {
+        if (doc.section === "General") continue; // Exclude "General" section
         if (!map.has(doc.section)) map.set(doc.section, []);
         map.get(doc.section)!.push(doc);
     }

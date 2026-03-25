@@ -1,28 +1,36 @@
 <script setup lang="ts">
-import { useTypewriter, type TypewriterWord } from "@/composables/useTypewriter";
+import { ref } from "vue";
+import type { TypewriterWord } from "@/composables/useTypewriter";
 
-const words: TypewriterWord[] = [
-    { text: "that",     className: "tw-rainbow", isCode: false },
-    { text: "BBNF",     className: "tw-golden",  isCode: false },
-    { text: "JSON",     className: "tw-green",   isCode: true },
-    { text: "CSS",      className: "tw-blue",    isCode: true },
-    { text: "HTML",     className: "tw-purple",  isCode: true },
-    { text: "TOML",     className: "tw-amber",   isCode: true },
-];
+withDefaults(defineProps<{
+    displayText: string;
+    currentWord: TypewriterWord;
+    wordOpacity?: number;
+    cursorOpacity?: number;
+}>(), {
+    wordOpacity: 1,
+    cursorOpacity: 1,
+});
 
-const { displayText, currentWord } = useTypewriter(words);
+const wordRef = ref<HTMLElement | null>(null);
+defineExpose({ wordRef });
 </script>
 
 <template>
     <div class="flex items-baseline justify-center mb-6 typewriter-row">
         <span class="instrument-serif text-5xl sm:text-6xl md:text-7xl lg:text-8xl text-muted-foreground whitespace-nowrap">to parse:&nbsp;</span>
         <span
+            ref="wordRef"
             :class="[
                 currentWord.isCode ? 'font-mono code-word' : 'instrument-serif',
                 currentWord.className,
             ]"
             class="inline-block min-w-[3ch] text-5xl sm:text-6xl md:text-7xl lg:text-8xl leading-none overflow-visible"
-        >{{ displayText }}</span><span class="tw-cursor text-5xl sm:text-6xl md:text-7xl lg:text-8xl">|</span>
+            :style="{ opacity: wordOpacity }"
+        >{{ displayText }}</span><span
+            class="tw-cursor text-5xl sm:text-6xl md:text-7xl lg:text-8xl"
+            :style="{ opacity: cursorOpacity }"
+        >|</span>
     </div>
 </template>
 
@@ -51,17 +59,17 @@ const { displayText, currentWord } = useTypewriter(words);
 }
 
 .tw-golden {
-    background: linear-gradient(90deg, #b8860b, #ffd700, #daa520, #ffd700, #b8860b);
-    background-size: 200% 100%;
+    background: linear-gradient(90deg, #c49a2e, #e8c84a, #d4a832, #e8c84a, #c49a2e);
+    background-size: 250% 100%;
     background-clip: text;
     -webkit-background-clip: text;
     color: transparent;
-    animation: shimmer 3s linear infinite;
+    animation: shimmer 5s linear infinite;
     padding-bottom: 0.15em;
 }
 @keyframes shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
+    0% { background-position: 250% 0; }
+    100% { background-position: -250% 0; }
 }
 
 .tw-green { color: var(--color-pastel-green); }
@@ -69,8 +77,7 @@ const { displayText, currentWord } = useTypewriter(words);
 .tw-purple { color: var(--color-pastel-purple); }
 .tw-amber { color: var(--color-pastel-amber); }
 
-/* Fixed height prevents reflow when switching between serif and code words.
-   Height matches the tallest variant (code-word with border/padding at lg:text-8xl). */
+/* Fixed height prevents reflow when switching between serif and code words. */
 .typewriter-row {
     height: clamp(3.5rem, 9vw, 7.5rem);
 }

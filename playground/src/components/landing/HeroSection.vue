@@ -1,24 +1,28 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, onBeforeUnmount } from "vue";
-import { useScrollMorph } from "@/composables/useScrollMorph";
-import { useHeroState } from "@/composables/useHeroState";
+import { ref, onMounted } from "vue";
+import { useTypewriter, type TypewriterWord } from "@/composables/useTypewriter";
+import { useHeroSequence } from "@/composables/useHeroSequence";
 import { BbnfLogo } from "@/components/custom/bbnf-logo";
 import TypewriterText from "./TypewriterText.vue";
 import CodeCardFan from "./CodeCardFan.vue";
 import CodeCardGrid from "./CodeCardGrid.vue";
 import { codeCards, expandConfigs } from "@/lib/heroCards";
 
-// Scroll-morph: hero logo animates toward the navbar logo.
-// Uses a separate marker element (untransformed) for accurate position measurement.
-// elementRef is written to directly in rAF — no Vue reactivity lag.
-const heroLogoMarker = ref<HTMLElement | null>(null);
-const heroLogoElement = ref<HTMLElement | null>(null);
-const { progress: morphProgressLocal } = useScrollMorph(heroLogoMarker, heroLogoElement, "[data-navbar-logo]", { scrollThreshold: 0.35 });
+const words: TypewriterWord[] = [
+    { text: "that",     className: "tw-rainbow", isCode: false },
+    { text: "BBNF",     className: "tw-golden",  isCode: false },
+    { text: "JSON",     className: "tw-green",   isCode: true },
+    { text: "CSS",      className: "tw-blue",    isCode: true },
+    { text: "HTML",     className: "tw-purple",  isCode: true },
+    { text: "TOML",     className: "tw-amber",   isCode: true },
+];
 
-// Share morph progress with NavBar
-const { morphProgress } = useHeroState();
-watch(morphProgressLocal, (p) => { morphProgress.value = p; }, { immediate: true });
-onBeforeUnmount(() => { morphProgress.value = 1; });
+// Typewriter with external control
+const typewriter = useTypewriter(words);
+
+// Morph marker + element refs
+const morphMarker = ref<HTMLElement | null>(null);
+const morphElement = ref<HTMLElement | null>(null);
 
 const visible = ref(false);
 /** True once the entrance transition is done — clears the translate so no
@@ -28,6 +32,16 @@ onMounted(() => {
     requestAnimationFrame(() => { visible.value = true; });
     setTimeout(() => { entranceDone.value = true; }, 750);
 });
+
+// Hero sequence: scroll-driven typewriter → morph orchestration
+const { morphElementOpacity, typewriterOpacity, cursorOpacity } = useHeroSequence(
+    typewriter,
+    words,
+    morphMarker,
+    morphElement,
+    "[data-navbar-logo]",
+    { scrollThreshold: 0.35, entranceDone },
+);
 </script>
 
 <template>
@@ -42,24 +56,46 @@ onMounted(() => {
                 visible && !entranceDone ? 'translate-y-0' : '',
             ]"
         >
-            <!-- BBNF Logo — above heading, morphs into navbar on scroll -->
-            <div class="relative mb-6 inline-block">
-                <!-- Invisible marker at logo's natural position (no morph transform) -->
-                <span ref="heroLogoMarker" class="absolute inset-0 pointer-events-none" aria-hidden="true" />
-                <!-- Logo with morph transform — stays visible at final position -->
-                <span
-                    ref="heroLogoElement"
-                    class="inline-block relative z-[60]"
-                >
-                    <BbnfLogo size="xl" shimmer />
-                </span>
-            </div>
-
             <h1 class="instrument-serif text-4xl sm:text-5xl md:text-7xl lg:text-8xl tracking-tight text-foreground mb-4">
                 Grammar-driven<br />parser &amp; formatter
             </h1>
 
-            <TypewriterText />
+            <!-- Typewriter -->
+            <TypewriterText
+                :display-text="typewriter.displayText.value"
+                :current-word="typewriter.currentWord.value"
+                :word-opacity="typewriterOpacity"
+                :cursor-opacity="cursorOpacity"
+            />
+
+            <!--
+                Morph origin block: always rendered for measurement.
+                The inner container sizes itself to BbnfLogo (via the invisible sizer).
+                Marker (absolute inset-0) measures that exact rect.
+                Morph element overlays the same space, controlled by morphElementOpacity.
+                No ancestor transforms — safe for position:fixed.
+
+                The absolute overlay on the typewriter row ensures the morph starts
+                from the typewriter's vertical position without affecting layout.
+            -->
+            <div class="absolute left-0 right-0 flex items-center justify-center pointer-events-none">
+                <div class="relative inline-block">
+                    <!-- Invisible sizer: establishes container dimensions = BbnfLogo natural size -->
+                    <span class="inline-block invisible" aria-hidden="true">
+                        <BbnfLogo size="xl" />
+                    </span>
+                    <!-- Marker: measures this correct BbnfLogo-sized rect -->
+                    <span ref="morphMarker" class="absolute inset-0 pointer-events-none" aria-hidden="true" />
+                    <!-- Morph element: fades in during Phase C, goes position:fixed for flight -->
+                    <span
+                        ref="morphElement"
+                        class="inline-block absolute inset-0 z-[60]"
+                        :style="{ opacity: morphElementOpacity }"
+                    >
+                        <BbnfLogo size="xl" shimmer />
+                    </span>
+                </div>
+            </div>
 
             <p class="text-lg text-muted-foreground max-w-xl mx-auto mb-10">
                 Define a grammar in BBNF. Get a parser, error recovery, and a pretty-printer—all in one.

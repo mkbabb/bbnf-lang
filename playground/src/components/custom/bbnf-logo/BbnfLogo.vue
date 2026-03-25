@@ -34,15 +34,15 @@ const sizeClasses = {
 
 <style scoped>
 .bbnf-shimmer {
-    background: linear-gradient(90deg, #b8860b, #ffd700, #daa520, #ffd700, #b8860b);
-    background-size: 200% 100%;
+    background: linear-gradient(90deg, #c49a2e, #e8c84a, #d4a832, #e8c84a, #c49a2e);
+    background-size: 250% 100%;
     background-clip: text;
     -webkit-background-clip: text;
     color: transparent;
-    animation: shimmer 3s linear infinite;
+    animation: shimmer 5s linear infinite;
 }
 @keyframes shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
+    0% { background-position: 250% 0; }
+    100% { background-position: -250% 0; }
 }
 </style>

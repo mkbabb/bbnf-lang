@@ -49,7 +49,7 @@ const emit = defineEmits<{
                     @select-entry-rule="(value) => emit('selectEntryRule', value)"
                 />
 
-                <div class="dock-separator hidden sm:block" />
+                <div class="dock-separator" />
 
                 <div class="flex items-center justify-center">
                     <Loader2 v-if="isProcessing" class="h-4 w-4 animate-spin text-muted-foreground sm:h-5 sm:w-5" />

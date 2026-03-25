@@ -100,6 +100,7 @@ name = "bbnf-analysis"
 version = "0.1.1"
 dependencies = [
  "bbnf",
+ "bbnf-ir",
  "indexmap",
  "ls-types",
  "pprint",
@@ -125,8 +126,10 @@ version = "0.1.0"
 dependencies = [
  "bbnf",
  "bbnf-analysis",
+ "bbnf-ir",
  "serde",
  "serde_json",
+ "tempfile",
  "tokio",
  "tower-lsp-server",
 ]

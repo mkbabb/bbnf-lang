@@ -16,6 +16,12 @@ use tower_lsp_server::{LspService, Server};
 
 #[tokio::main]
 async fn main() {
+    // --dap flag: run as a Debug Adapter Protocol server instead of LSP.
+    if std::env::args().any(|a| a == "--dap") {
+        bbnf_lsp::dap::serve_dap();
+        return;
+    }
+
     let stdin = tokio::io::stdin();
     let stdout = tokio::io::stdout();
 

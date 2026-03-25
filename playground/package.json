@@ -4,7 +4,7 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "build": "vite build",
+        "build": "vite build && cp dist/index.html dist/404.html",
         "preview": "vite preview",
         "test:e2e": "playwright test",
         "test:e2e:ui": "playwright test --ui"

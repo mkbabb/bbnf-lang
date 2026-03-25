@@ -58,6 +58,25 @@ export function compile_grammar(grammar, entry_rule) {
 }
 
 /**
+ * Compile a grammar with debug instrumentation (source map + DebugBreak opcodes).
+ * Returns a handle usable with `debug_step` and `debug_get_state`.
+ * @param {string} grammar
+ * @param {string | null} [entry_rule]
+ * @returns {number}
+ */
+export function compile_grammar_debug(grammar, entry_rule) {
+    const ptr0 = passStringToWasm0(grammar, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    var ptr1 = isLikeNone(entry_rule) ? 0 : passStringToWasm0(entry_rule, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    var len1 = WASM_VECTOR_LEN;
+    const ret = wasm.compile_grammar_debug(ptr0, len0, ptr1, len1);
+    if (ret[2]) {
+        throw takeFromExternrefTable0(ret[1]);
+    }
+    return ret[0] >>> 0;
+}
+
+/**
  * @param {string} text
  * @returns {any}
  */
@@ -66,6 +85,33 @@ export function completions(text) {
     const len0 = WASM_VECTOR_LEN;
     const ret = wasm.completions(ptr0, len0);
     return ret;
+}
+
+/**
+ * Debug-step: run the interpreter with the given step mode until it stops.
+ *
+ * `mode` is one of: `"continue"`, `"stepRule"`, `"stepNode"`, `"stepInstruction"`.
+ * `breakpoint_rules` is a JSON array of rule names to break on.
+ *
+ * Returns a JSON object with the debug snapshot or completion status.
+ * @param {number} handle
+ * @param {string} input
+ * @param {string} mode
+ * @param {string} breakpoint_rules
+ * @returns {any}
+ */
+export function debug_step(handle, input, mode, breakpoint_rules) {
+    const ptr0 = passStringToWasm0(input, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passStringToWasm0(mode, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ptr2 = passStringToWasm0(breakpoint_rules, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len2 = WASM_VECTOR_LEN;
+    const ret = wasm.debug_step(handle, ptr0, len0, ptr1, len1, ptr2, len2);
+    if (ret[2]) {
+        throw takeFromExternrefTable0(ret[1]);
+    }
+    return takeFromExternrefTable0(ret[0]);
 }
 
 /**

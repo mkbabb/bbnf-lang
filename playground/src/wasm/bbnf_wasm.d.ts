@@ -16,7 +16,23 @@ export function code_lens(text: string): any;
  */
 export function compile_grammar(grammar: string, entry_rule?: string | null): number;
 
+/**
+ * Compile a grammar with debug instrumentation (source map + DebugBreak opcodes).
+ * Returns a handle usable with `debug_step` and `debug_get_state`.
+ */
+export function compile_grammar_debug(grammar: string, entry_rule?: string | null): number;
+
 export function completions(text: string): any;
+
+/**
+ * Debug-step: run the interpreter with the given step mode until it stops.
+ *
+ * `mode` is one of: `"continue"`, `"stepRule"`, `"stepNode"`, `"stepInstruction"`.
+ * `breakpoint_rules` is a JSON array of rule names to break on.
+ *
+ * Returns a JSON object with the debug snapshot or completion status.
+ */
+export function debug_step(handle: number, input: string, mode: string, breakpoint_rules: string): any;
 
 export function document_symbols(text: string): any;
 
@@ -111,18 +127,20 @@ export interface InitOutput {
     readonly on_type_format: (a: number, b: number, c: number) => any;
     readonly full_sync: (a: number, b: number) => any;
     readonly lsp_batch: (a: number, b: number, c: number, d: number, e: number) => any;
-    readonly format_json: (a: number, b: number, c: number, d: number, e: number) => [number, number];
-    readonly format_css: (a: number, b: number, c: number, d: number, e: number) => [number, number];
-    readonly format_bnf: (a: number, b: number, c: number, d: number, e: number) => [number, number];
-    readonly format_ebnf: (a: number, b: number, c: number, d: number, e: number) => [number, number];
-    readonly format_bbnf: (a: number, b: number, c: number, d: number, e: number) => [number, number];
-    readonly init_panic_hook: () => void;
-    readonly analyze_grammar: (a: number, b: number) => any;
     readonly compile_grammar: (a: number, b: number, c: number, d: number) => [number, number, number];
     readonly parse_with_grammar: (a: number, b: number, c: number) => [number, number, number];
     readonly parse_check: (a: number, b: number, c: number) => [number, number, number];
     readonly format_with_grammar: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
     readonly free_grammar: (a: number) => void;
+    readonly compile_grammar_debug: (a: number, b: number, c: number, d: number) => [number, number, number];
+    readonly debug_step: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => [number, number, number];
+    readonly init_panic_hook: () => void;
+    readonly analyze_grammar: (a: number, b: number) => any;
+    readonly format_json: (a: number, b: number, c: number, d: number, e: number) => [number, number];
+    readonly format_css: (a: number, b: number, c: number, d: number, e: number) => [number, number];
+    readonly format_bnf: (a: number, b: number, c: number, d: number, e: number) => [number, number];
+    readonly format_ebnf: (a: number, b: number, c: number, d: number, e: number) => [number, number];
+    readonly format_bbnf: (a: number, b: number, c: number, d: number, e: number) => [number, number];
     readonly __wbindgen_malloc: (a: number, b: number) => number;
     readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
     readonly __wbindgen_free: (a: number, b: number, c: number) => void;

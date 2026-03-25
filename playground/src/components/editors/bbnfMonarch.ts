@@ -11,6 +11,9 @@ export function registerBBNFLanguage() {
             "@recover",
             "@pretty",
             "@no_collapse",
+            "@inline",
+            "@debug",
+            "@ws",
         ],
 
         operators: ["|", ",", "<<", ">>", "*", "+", "?", "?w", "-", "=", ";", "."],
@@ -22,7 +25,7 @@ export function registerBBNFLanguage() {
                 // Block comments
                 [/\/\*/, "comment", "@comment"],
                 // Directives
-                [/@(import|recover|pretty|no_collapse)\b/, "keyword"],
+                [/@(import|recover|pretty|no_collapse|inline|debug|ws)\b/, "keyword"],
                 // Strings
                 [/"([^"\\]|\\.)*"/, "string"],
                 [/'([^'\\]|\\.)*'/, "string"],

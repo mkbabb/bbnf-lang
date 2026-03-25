@@ -10,8 +10,8 @@ use std::sync::atomic::{AtomicU32, Ordering};
 use bbnf::pipeline::{PipelineOptions, compile_grammar as compile_grammar_impl};
 use bbnf_ir::GrammarIR;
 use bbnf_ir::bytecode::BytecodeProgram;
-use bbnf_ir::compiler::compile as compile_bytecode;
-use bbnf_ir::interpreter::{Interpreter, Value};
+use bbnf_ir::compiler::{compile as compile_bytecode, compile_with_debug};
+use bbnf_ir::interpreter::{DebugAction, DebugState, Interpreter, StepMode, Value};
 use serde::Serialize;
 use wasm_bindgen::prelude::*;
 
@@ -219,4 +219,195 @@ pub fn free_grammar(handle: u32) {
     with_store(|store| {
         store.remove(&handle);
     });
+}
+
+// ── Debug ────────────────────────────────────────────────────────────────────
+
+/// Compile a grammar with debug instrumentation (source map + DebugBreak opcodes).
+/// Returns a handle usable with `debug_step` and `debug_get_state`.
+#[wasm_bindgen]
+pub fn compile_grammar_debug(grammar: &str, entry_rule: Option<String>) -> Result<u32, JsValue> {
+    let options = PipelineOptions {
+        entry_rule: entry_rule.filter(|s| !s.is_empty()),
+        ..PipelineOptions::default()
+    };
+    let mut ir = compile_grammar_impl(grammar, &options)
+        .map_err(|e| JsValue::from_str(&e))?;
+
+    // Force all rules to be debug-instrumented for the playground debugger,
+    // regardless of @debug directives in the grammar source.
+    ir.debug_all = true;
+    for rule in &mut ir.rules {
+        rule.meta.debug = true;
+    }
+
+    let program = compile_with_debug(&ir, true);
+    let handle = NEXT_HANDLE.fetch_add(1, Ordering::Relaxed);
+
+    with_store(|store| {
+        store.insert(handle, CompiledGrammar { ir, program });
+    });
+
+    Ok(handle)
+}
+
+/// Debug-step: run the interpreter with the given step mode until it stops.
+///
+/// `mode` is one of: `"continue"`, `"stepRule"`, `"stepNode"`, `"stepInstruction"`.
+/// `breakpoint_rules` is a JSON array of rule names to break on.
+///
+/// Returns a JSON object with the debug snapshot or completion status.
+#[wasm_bindgen]
+pub fn debug_step(
+    handle: u32,
+    input: &str,
+    mode: &str,
+    breakpoint_rules: &str,
+) -> Result<JsValue, JsValue> {
+    use std::collections::HashSet;
+
+    // The step index tracks how many debug breaks to skip before stopping.
+    // Each call to debug_step increments it, so the interpreter replays to the
+    // correct position (deterministic re-execution model).
+    thread_local! {
+        static STEP_INDEX: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    }
+
+    // "continue" from completed → reset to beginning.
+    // Passing mode "reset" also resets.
+    if mode == "reset" {
+        STEP_INDEX.with(|c| c.set(0));
+        return serde_wasm_bindgen::to_value(&WasmDebugSnapshot {
+            stopped: false,
+            rule_name: String::new(),
+            rule_stack: Vec::new(),
+            offset: 0,
+            is_entry: false,
+            is_error: false,
+            completed: false,
+        }).map_err(|e| JsValue::from_str(&e.to_string()));
+    }
+
+    let current_step = STEP_INDEX.with(|c| c.get());
+
+    with_store(|store| {
+        let grammar = store
+            .get(&handle)
+            .ok_or_else(|| JsValue::from_str("Invalid grammar handle"))?;
+
+        let step_mode = match mode {
+            "stepRule" => StepMode::StepRule,
+            "stepNode" => StepMode::StepNode,
+            "stepInstruction" => StepMode::StepInstruction,
+            _ => StepMode::Continue,
+        };
+
+        // Parse breakpoint rule names → RuleIds.
+        let bp_names: Vec<String> = serde_json::from_str(breakpoint_rules).unwrap_or_default();
+        let mut breakpoints: HashSet<u32> = HashSet::new();
+        for name in &bp_names {
+            if let Some(rule) = grammar.ir.find_rule(name) {
+                breakpoints.insert(rule.id);
+            }
+        }
+
+        // Re-execute from scratch, skipping `current_step` breaks before stopping.
+        let mut breaks_hit = 0usize;
+        let target_break = current_step + 1; // Stop at the NEXT break after current position.
+
+        let mut interp = Interpreter::new(&grammar.program, input);
+        interp.debug_state = Some(DebugState {
+            breakpoints: breakpoints.clone(),
+            step_mode: step_mode.clone(),
+            trace: Vec::new(),
+            on_break: Box::new(move |_snap| {
+                breaks_hit += 1;
+                if breaks_hit >= target_break {
+                    DebugAction::Stop
+                } else {
+                    // Skip this break — continue with the same step mode.
+                    match step_mode {
+                        StepMode::StepRule => DebugAction::StepRule,
+                        StepMode::StepNode => DebugAction::StepNode,
+                        StepMode::StepInstruction => DebugAction::StepInstruction,
+                        StepMode::Continue => DebugAction::Continue,
+                    }
+                }
+            }),
+        });
+
+        let result = interp.run();
+
+        // Extract snapshot from the trace.
+        let mut snapshot_data: Option<WasmDebugSnapshot> = None;
+        if let Some(ref dbg) = interp.debug_state {
+            if let Some(last) = dbg.trace.last() {
+                let rule_name = grammar
+                    .program
+                    .rule_names
+                    .get(last.rule_id as usize)
+                    .and_then(|&sid| grammar.program.strings.get(sid as usize))
+                    .cloned()
+                    .unwrap_or_default();
+
+                let rule_stack: Vec<String> = interp
+                    .rule_stack_snapshot()
+                    .iter()
+                    .filter_map(|&rid| {
+                        grammar
+                            .program
+                            .rule_names
+                            .get(rid as usize)
+                            .and_then(|&sid| grammar.program.strings.get(sid as usize))
+                            .cloned()
+                    })
+                    .collect();
+
+                // Did we actually stop, or did we exhaust all breaks?
+                let trace_len = dbg.trace.len();
+                let actually_stopped = trace_len >= target_break;
+
+                if actually_stopped {
+                    STEP_INDEX.with(|c| c.set(current_step + 1));
+                    snapshot_data = Some(WasmDebugSnapshot {
+                        stopped: true,
+                        rule_name,
+                        rule_stack,
+                        offset: last.offset,
+                        is_entry: last.is_entry,
+                        is_error: false,
+                        completed: false,
+                    });
+                }
+            }
+        }
+
+        let snapshot = snapshot_data.unwrap_or_else(|| {
+            // Parse completed without hitting the target break.
+            STEP_INDEX.with(|c| c.set(0)); // Reset for next session.
+            WasmDebugSnapshot {
+                stopped: false,
+                rule_name: String::new(),
+                rule_stack: Vec::new(),
+                offset: result.offset,
+                is_entry: false,
+                is_error: !result.success,
+                completed: true,
+            }
+        });
+
+        serde_wasm_bindgen::to_value(&snapshot).map_err(|e| JsValue::from_str(&e.to_string()))
+    })
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct WasmDebugSnapshot {
+    stopped: bool,
+    rule_name: String,
+    rule_stack: Vec<String>,
+    offset: u32,
+    is_entry: bool,
+    is_error: bool,
+    completed: bool,
 }

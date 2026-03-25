@@ -2,7 +2,7 @@
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import InlineRichText from "@/components/ui/InlineRichText.vue";
 import { BbnfLogo } from "@/components/custom/bbnf-logo";
-import { Redo2 } from "lucide-vue-next";
+import { Redo2, ArrowRightLeft } from "lucide-vue-next";
 import { Card } from "@/components/ui/card";
 
 export interface PanelTab {
@@ -12,19 +12,25 @@ export interface PanelTab {
     description: string;
 }
 
-defineProps<{
+const props = defineProps<{
     activeTab: string;
-    tabs: [PanelTab, PanelTab];
+    tabs: PanelTab[];
     /** Language icon map for badge overlays. */
     langIcons?: Record<string, string>;
     /** Current language for badge display (e.g. "json", "bbnf"). */
     badgeLanguage?: string;
     /** Whether to show the BBNF logo badge instead of a language icon. */
     showBbnfBadge?: boolean;
+    /** Label for the mobile pane-switch button (e.g. "Output", "Editor"). Hidden on desktop. */
+    mobilePaneLabel?: string;
+    /** Color token for the mobile pane-switch button. */
+    mobilePaneColor?: string;
 }>();
 
 const emit = defineEmits<{
-    toggleTab: [];
+    selectTab: [key: string];
+    /** Switch the mobile pane (editor ↔ output). */
+    switchPane: [];
 }>();
 </script>
 
@@ -46,30 +52,41 @@ const emit = defineEmits<{
                     </p>
                 </TooltipContent>
             </Tooltip>
-            <button
-                type="button"
-                class="flex items-center gap-1.5 rounded-md px-2 py-0.5 instrument-serif text-sm transition-colors hover:bg-muted/50"
-                :style="{ color: `var(--color-${tabs.find(t => t.key !== activeTab)?.color})` }"
-                @click="emit('toggleTab')"
-            >
-                <Redo2 class="h-4.5 w-4.5" />
-                <span>{{ tabs.find(t => t.key !== activeTab)?.label }}</span>
-            </button>
+            <div class="flex items-center gap-1">
+                <!-- Mobile pane switcher (Editor ↔ Output) — hidden on desktop -->
+                <button
+                    v-if="mobilePaneLabel"
+                    type="button"
+                    class="flex items-center gap-1 rounded-md px-2 py-0.5 instrument-serif text-sm transition-colors hover:bg-muted/50 md:hidden"
+                    :style="mobilePaneColor ? { color: `var(--color-${mobilePaneColor})` } : {}"
+                    @click="emit('switchPane')"
+                >
+                    <ArrowRightLeft class="h-3.5 w-3.5" />
+                    <span>{{ mobilePaneLabel }}</span>
+                </button>
+                <!-- Tab switchers within this pane -->
+                <button
+                    v-for="tab in tabs.filter(t => t.key !== activeTab)"
+                    :key="tab.key"
+                    type="button"
+                    class="flex items-center gap-1 rounded-md px-2 py-0.5 instrument-serif text-sm transition-colors hover:bg-muted/50"
+                    :style="{ color: `var(--color-${tab.color})` }"
+                    @click="emit('selectTab', tab.key)"
+                >
+                    <Redo2 class="h-4 w-4" />
+                    <span>{{ tab.label }}</span>
+                </button>
+            </div>
         </div>
         <div class="relative flex-1 min-h-0 min-w-0">
-            <!-- Tab content slots: first tab -->
+            <!-- Tab content slots (dynamic) -->
             <div
+                v-for="tab in tabs"
+                :key="tab.key"
                 class="absolute inset-0 min-h-0 min-w-0 transition-opacity duration-fast"
-                :class="activeTab === tabs[0].key ? 'z-10 opacity-100' : 'pointer-events-none z-0 opacity-0'"
+                :class="activeTab === tab.key ? 'z-10 opacity-100' : 'pointer-events-none z-0 opacity-0'"
             >
-                <slot :name="tabs[0].key" />
-            </div>
-            <!-- Tab content slots: second tab -->
-            <div
-                class="absolute inset-0 min-h-0 min-w-0 transition-opacity duration-fast"
-                :class="activeTab === tabs[1].key ? 'z-10 opacity-100' : 'pointer-events-none z-0 opacity-0'"
-            >
-                <slot :name="tabs[1].key" />
+                <slot :name="tab.key" />
             </div>
 
             <!-- Language badge overlay -->

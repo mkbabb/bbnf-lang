@@ -22,12 +22,14 @@ import { usePlaygroundQuery } from "@/composables/usePlaygroundQuery";
 import { registerBBNFLanguage } from "@/components/editors/bbnfMonarch";
 import { registerBBNFLanguageProvider, updateGrammarDiagnostics } from "@/lib/languageProvider";
 import { useWalkthrough } from "@/composables/useWalkthrough";
+import { useDebugSession } from "@/composables/useDebugSession";
+import DebugPanel from "@/components/debug/DebugPanel.vue";
 import { BbnfLogo } from "@/components/custom/bbnf-logo";
 import { ExternalLink, GripVertical } from "lucide-vue-next";
 import "@/lib/monacoWorkers";
 
 type LeftTab = "grammar" | "input";
-type RightTab = "ast" | "format";
+type RightTab = "ast" | "format" | "debug";
 
 registerBBNFLanguage();
 
@@ -56,6 +58,51 @@ const {
     needsFullTree,
 } = usePipeline();
 
+const debugSession = useDebugSession({
+    grammarText,
+    inputText,
+    entryRuleOverride,
+});
+
+// Single-pass rule definition map: line (1-based) ↔ rule name.
+// Computed once from grammar text; all breakpoint logic derives from this.
+const ruleLineMap = computed(() => {
+    const lineToName = new Map<number, string>();
+    const nameToLine = new Map<string, number>();
+    const lineArr = grammarText.value.split("\n");
+    for (let i = 0; i < lineArr.length; i++) {
+        const m = lineArr[i]!.match(/^\s*([a-zA-Z_][\w-]*)\s*=/);
+        if (m) {
+            const line = i + 1;
+            lineToName.set(line, m[1]!);
+            nameToLine.set(m[1]!, line);
+        }
+    }
+    return { lineToName, nameToLine };
+});
+
+const ruleDefinitionLines = computed(() => new Set(ruleLineMap.value.lineToName.keys()));
+
+const breakpointLines = computed(() => {
+    const lines = new Set<number>();
+    for (const name of debugSession.breakpoints.value) {
+        const line = ruleLineMap.value.nameToLine.get(name);
+        if (line) lines.add(line);
+    }
+    return lines;
+});
+
+function onToggleBreakpointLine(line: number) {
+    const name = ruleLineMap.value.lineToName.get(line);
+    if (name) debugSession.toggleBreakpoint(name);
+}
+
+// Consumed offset for the input editor decoration.
+const debugConsumedOffset = computed(() => {
+    if (!debugSession.active.value || !debugSession.snapshot.value) return 0;
+    return debugSession.snapshot.value.offset;
+});
+
 const leftTab = ref<LeftTab>("grammar");
 const rightTab = ref<RightTab>("format");
 const mobilePaneIndex = ref<0 | 1>(0);
@@ -76,14 +123,15 @@ const langIcons: Record<string, string> = {
     plaintext: "/img/text.svg",
 };
 
-const leftTabs: [PanelTab, PanelTab] = [
+const leftTabs: PanelTab[] = [
     { key: "grammar", label: "Grammar", color: "pastel-green", description: "`BBNF` grammar definition — rules, directives, and `@pretty` hints" },
     { key: "input", label: "Input", color: "pastel-blue", description: "Source text to parse using the grammar above" },
 ];
 
-const rightTabs: [PanelTab, PanelTab] = [
+const rightTabs: PanelTab[] = [
     { key: "ast", label: "Parsed AST", color: "pastel-purple", description: "Abstract syntax tree produced by the parser (`JSON`)" },
     { key: "format", label: "Formatted", color: "pastel-amber", description: "Pretty-printed output driven by `@pretty` directives, powered by `gorgeous` (`WASM`)" },
+    { key: "debug", label: "Debug", color: "pastel-pink", description: "Step through parse execution — set breakpoints, inspect call stack and parse state" },
 ];
 
 const activeEntryRule = computed(() => {
@@ -172,12 +220,8 @@ function onSelectEntryRule(value: string) {
     scheduleEditorRelayout();
 }
 
-function toggleLeftTab() {
-    leftTab.value = leftTab.value === "grammar" ? "input" : "grammar";
-}
-
-function toggleRightTab() {
-    rightTab.value = rightTab.value === "ast" ? "format" : "ast";
+function selectRightTab(key: string) {
+    rightTab.value = key as RightTab;
 }
 
 function focusEditorAfterSwitch(editorRef: typeof grammarEditorRef, line = 1, column = 1) {
@@ -308,23 +352,7 @@ watch([leftTab, rightTab], () => {
     <div
         class="relative mt-14 w-full overflow-hidden h-[calc(100dvh-var(--spacing-navbar))] max-h-[calc(100dvh-var(--spacing-navbar))]"
     >
-        <div class="absolute inset-0 overflow-hidden p-1 pb-5 sm:p-4 sm:pb-12 flex flex-col">
-            <!-- Mobile pane toggle — visible only below 768px -->
-            <div v-if="!isDesktop" class="mobile-pane-tabs">
-                <button
-                    :class="['mobile-pane-tab', mobilePaneIndex === 0 && 'active']"
-                    @click="mobilePaneIndex = 0"
-                >
-                    Editor
-                </button>
-                <button
-                    :class="['mobile-pane-tab', mobilePaneIndex === 1 && 'active']"
-                    @click="mobilePaneIndex = 1"
-                >
-                    Output
-                </button>
-            </div>
-
+        <div class="absolute inset-0 overflow-hidden p-1 pb-12 sm:p-4 sm:pb-12 flex flex-col">
             <!-- Desktop: split pane with divider -->
             <div
                 v-if="isDesktop"
@@ -339,7 +367,7 @@ watch([leftTab, rightTab], () => {
                         :lang-icons="langIcons"
                         :badge-language="leftTab === 'input' ? formattedLanguage : undefined"
                         :show-bbnf-badge="leftTab === 'grammar'"
-                        @toggle-tab="toggleLeftTab"
+                        @select-tab="(key: string) => { leftTab = key as LeftTab; }"
                     >
                         <template #grammar>
                             <MonacoEditor
@@ -347,6 +375,9 @@ watch([leftTab, rightTab], () => {
                                 v-model="grammarText"
                                 language="bbnf"
                                 :markers="grammarMarkers"
+                                :breakpoint-lines="breakpointLines"
+                                :rule-definition-lines="ruleDefinitionLines"
+                                @toggle-breakpoint-line="onToggleBreakpointLine"
                             />
                         </template>
                         <template #input>
@@ -355,6 +386,7 @@ watch([leftTab, rightTab], () => {
                                 v-model="inputText"
                                 :language="formattedLanguage"
                                 :markers="inputMarkers"
+                                :consumed-offset="debugConsumedOffset"
                             />
                         </template>
                     </EditorPanel>
@@ -392,7 +424,7 @@ watch([leftTab, rightTab], () => {
                         :tabs="rightTabs"
                         :lang-icons="langIcons"
                         :badge-language="rightTab === 'format' ? formattedLanguage : undefined"
-                        @toggle-tab="toggleRightTab"
+                        @select-tab="selectRightTab"
                     >
                         <template #ast>
                             <MonacoEditor
@@ -408,6 +440,16 @@ watch([leftTab, rightTab], () => {
                                 :model-value="formatted"
                                 :language="formattedLanguage"
                                 :readonly="true"
+                            />
+                        </template>
+                        <template #debug>
+                            <DebugPanel
+                                :session="debugSession"
+                                :input-text="inputText"
+                                @jump-to-rule="(name) => {
+                                    leftTab = 'grammar';
+                                    // Future: jump to rule definition line
+                                }"
                             />
                         </template>
                         <template #overlay>
@@ -457,14 +499,17 @@ watch([leftTab, rightTab], () => {
             <!-- Mobile: single pane, toggled by mobilePaneIndex -->
             <template v-else>
                 <Transition name="mobile-pane" mode="out-in">
-                    <div v-if="mobilePaneIndex === 0" key="left" class="flex-1 min-h-0 min-w-0">
+                    <div v-if="mobilePaneIndex === 0" key="left" class="flex-1 min-h-0 min-w-0 overflow-hidden">
                         <EditorPanel
                             :active-tab="leftTab"
                             :tabs="leftTabs"
                             :lang-icons="langIcons"
                             :badge-language="leftTab === 'input' ? formattedLanguage : undefined"
                             :show-bbnf-badge="leftTab === 'grammar'"
-                            @toggle-tab="toggleLeftTab"
+                            mobile-pane-label="Output"
+                            mobile-pane-color="pastel-amber"
+                            @select-tab="(key: string) => { leftTab = key as LeftTab; }"
+                            @switch-pane="mobilePaneIndex = 1"
                         >
                             <template #grammar>
                                 <MonacoEditor
@@ -484,13 +529,16 @@ watch([leftTab, rightTab], () => {
                             </template>
                         </EditorPanel>
                     </div>
-                    <div v-else key="right" class="flex-1 min-h-0 min-w-0">
+                    <div v-else key="right" class="flex-1 min-h-0 min-w-0 overflow-hidden">
                         <EditorPanel
                             :active-tab="rightTab"
                             :tabs="rightTabs"
                             :lang-icons="langIcons"
                             :badge-language="rightTab === 'format' ? formattedLanguage : undefined"
-                            @toggle-tab="toggleRightTab"
+                            mobile-pane-label="Editor"
+                            mobile-pane-color="pastel-green"
+                            @select-tab="selectRightTab"
+                            @switch-pane="mobilePaneIndex = 0"
                         >
                             <template #ast>
                                 <MonacoEditor
@@ -506,6 +554,16 @@ watch([leftTab, rightTab], () => {
                                     :model-value="formatted"
                                     :language="formattedLanguage"
                                     :readonly="true"
+                                />
+                            </template>
+                            <template #debug>
+                                <DebugPanel
+                                    :session="debugSession"
+                                    :input-text="inputText"
+                                    @jump-to-rule="(name) => {
+                                        leftTab = 'grammar';
+                                        if (!isDesktop) mobilePaneIndex = 0;
+                                    }"
                                 />
                             </template>
                             <template #overlay>

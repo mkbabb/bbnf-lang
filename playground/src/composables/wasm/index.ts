@@ -18,6 +18,7 @@ import type {
     WasmParseResult,
     WasmParseCheckResult,
     WasmLspBatch,
+    WasmDebugSnapshot,
 } from "./types";
 
 export type {
@@ -44,6 +45,7 @@ export type {
     WasmParseCheckResult,
     WasmLspBatch,
     WasmBatchDiagnostic,
+    WasmDebugSnapshot,
 } from "./types";
 
 export { toMonacoRange } from "./types";
@@ -269,6 +271,25 @@ export function useWasm() {
         getWasmModule().free_grammar(handle);
     }
 
+    // -----------------------------------------------------------------------
+    // Debug: compile with instrumentation, step through execution
+    // -----------------------------------------------------------------------
+
+    async function compileGrammarDebug(grammar: string, entryRule?: string): Promise<number> {
+        await ensureLoaded();
+        return getWasmModule().compile_grammar_debug(grammar, entryRule ?? undefined);
+    }
+
+    async function debugStep(
+        handle: number,
+        input: string,
+        mode: string,
+        breakpointRulesJson: string,
+    ): Promise<WasmDebugSnapshot> {
+        await ensureLoaded();
+        return getWasmModule().debug_step(handle, input, mode, breakpointRulesJson) as WasmDebugSnapshot;
+    }
+
     return {
         isLoaded,
         isLoading,
@@ -297,5 +318,7 @@ export function useWasm() {
         formatWithGrammar,
         freeGrammar,
         lspBatch,
+        compileGrammarDebug,
+        debugStep,
     };
 }

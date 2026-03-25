@@ -159,6 +159,20 @@ export interface WasmParseCheckResult {
     offset: number;
 }
 
+// ---------------------------------------------------------------------------
+// Debug types (bytecode VM stepping)
+// ---------------------------------------------------------------------------
+
+export interface WasmDebugSnapshot {
+    stopped: boolean;
+    ruleName: string;
+    ruleStack: string[];
+    offset: number;
+    isEntry: boolean;
+    isError: boolean;
+    completed: boolean;
+}
+
 /** Batch LSP result — multiple features in one WASM call. */
 export interface WasmLspBatch {
     hover: WasmHoverResult | null;

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount, shallowRef } from "vue";
 import * as monaco from "monaco-editor";
+import "./monaco-debug.css";
 import DarkTheme from "monaco-themes/themes/Dracula.json";
 import LightTheme from "monaco-themes/themes/GitHub.json";
 import { useGlobalDark } from "@/components/custom/dark-mode-toggle";
@@ -15,16 +16,25 @@ const props = withDefaults(
         language?: string;
         readonly?: boolean;
         markers?: monaco.editor.IMarkerData[];
+        /** Set of 1-based line numbers where breakpoints are shown. */
+        breakpointLines?: Set<number>;
+        /** Set of 1-based line numbers that are valid breakpoint targets (rule definitions). */
+        ruleDefinitionLines?: Set<number>;
+        /** Byte offset up to which input is "consumed" (green highlight). 0 = no highlight. */
+        consumedOffset?: number;
     }>(),
     {
         modelValue: "",
         language: "plaintext",
         readonly: false,
+        consumedOffset: 0,
     },
 );
 
 const emit = defineEmits<{
     "update:modelValue": [value: string];
+    /** Fired when user clicks a glyph margin to toggle a breakpoint. */
+    "toggle-breakpoint-line": [line: number];
 }>();
 
 const EDITOR_FONT_SIZE = 14;
@@ -67,6 +77,7 @@ function initEditor() {
         padding: { top: 12, bottom: 12 },
         automaticLayout: false,
         scrollBeyondLastLine: false,
+        fixedOverflowWidgets: true,
         lineNumbers: props.readonly ? "off" : "on",
         renderLineHighlight: "none",
         overviewRulerLanes: 0,
@@ -88,6 +99,49 @@ function initEditor() {
         const value = ed.getValue();
         if (value !== props.modelValue) {
             emit("update:modelValue", value);
+        }
+    });
+
+    // ── Breakpoint dots: ghost on hover, confirm on click ───────────────
+    // Uses marginClassName on line-number elements — no extra glyph margin column.
+    let ghostDecoIds: string[] = [];
+
+    ed.onMouseMove((e) => {
+        if (
+            props.breakpointLines !== undefined &&
+            e.target.type === monaco.editor.MouseTargetType.GUTTER_LINE_NUMBERS &&
+            e.target.position
+        ) {
+            const line = e.target.position.lineNumber;
+            const isValidTarget = props.ruleDefinitionLines?.has(line) ?? false;
+            if (!isValidTarget || props.breakpointLines?.has(line)) {
+                ghostDecoIds = ed.deltaDecorations(ghostDecoIds, []);
+                return;
+            }
+            ghostDecoIds = ed.deltaDecorations(ghostDecoIds, [{
+                range: new monaco.Range(line, 1, line, 1),
+                options: {
+                    isWholeLine: true,
+                    marginClassName: "debug-breakpoint-ghost",
+                    stickiness: monaco.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+                },
+            }]);
+        } else {
+            ghostDecoIds = ed.deltaDecorations(ghostDecoIds, []);
+        }
+    });
+
+    ed.onMouseDown((e) => {
+        if (
+            props.breakpointLines !== undefined &&
+            e.target.type === monaco.editor.MouseTargetType.GUTTER_LINE_NUMBERS &&
+            e.target.position
+        ) {
+            const line = e.target.position.lineNumber;
+            const isValidTarget = props.ruleDefinitionLines?.has(line) ?? false;
+            if (!isValidTarget) return;
+            emit("toggle-breakpoint-line", line);
+            ghostDecoIds = ed.deltaDecorations(ghostDecoIds, []);
         }
     });
 
@@ -212,6 +266,59 @@ watch(
         const model = editor.value.getModel();
         if (!model) return;
         monaco.editor.setModelMarkers(model, "pipeline", markers ?? []);
+    },
+);
+
+// ── Breakpoint decorations (marginClassName on line numbers) ─────────────────
+
+let breakpointDecorationIds: string[] = [];
+
+watch(
+    () => props.breakpointLines,
+    (lines) => {
+        const ed = editor.value;
+        if (!ed) return;
+        const decorations: monaco.editor.IModelDeltaDecoration[] = lines
+            ? [...lines].map((line) => ({
+                  range: new monaco.Range(line, 1, line, 1),
+                  options: {
+                      isWholeLine: true,
+                      marginClassName: "debug-breakpoint-active",
+                      stickiness: monaco.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+                  },
+              }))
+            : [];
+        breakpointDecorationIds = ed.deltaDecorations(breakpointDecorationIds, decorations);
+    },
+    { deep: true },
+);
+
+// ── Consumed-offset highlight (green background up to cursor) ────────────────
+
+let consumedDecorationIds: string[] = [];
+
+watch(
+    () => props.consumedOffset,
+    (offset) => {
+        const ed = editor.value;
+        if (!ed || !offset) {
+            if (ed) consumedDecorationIds = ed.deltaDecorations(consumedDecorationIds, []);
+            return;
+        }
+        const model = ed.getModel();
+        if (!model) return;
+        const startPos = model.getPositionAt(0);
+        const endPos = model.getPositionAt(offset);
+        const decorations: monaco.editor.IModelDeltaDecoration[] = [
+            {
+                range: monaco.Range.fromPositions(startPos, endPos),
+                options: {
+                    className: "debug-consumed-highlight",
+                    isWholeLine: false,
+                },
+            },
+        ];
+        consumedDecorationIds = ed.deltaDecorations(consumedDecorationIds, decorations);
     },
 );
 

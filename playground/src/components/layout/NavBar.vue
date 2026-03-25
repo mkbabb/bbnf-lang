@@ -87,7 +87,7 @@ function isActiveLink(link: typeof allNavLinks[0]) {
 
 <template>
     <nav
-        class="fixed top-0 left-0 right-0 z-50 h-14 flex items-center transition-[padding,background-color,border-color] duration-300 border-b"
+        class="fixed top-0 left-0 right-0 z-[var(--z-bar)] h-14 flex items-center transition-[padding,background-color,border-color] duration-300 border-b"
         :class="[
             navOpaque
                 ? 'backdrop-blur-xl bg-background/95 border-border/50 shadow-sm'
@@ -144,7 +144,7 @@ function isActiveLink(link: typeof allNavLinks[0]) {
                 <Transition name="nav-dropdown">
                     <div
                         v-if="navDropdownOpen"
-                        class="absolute top-full left-0 mt-1.5 min-w-[11rem] rounded-lg border border-border/60 bg-card/95 backdrop-blur-xl shadow-lg p-1 z-50"
+                        class="absolute top-full left-0 mt-1.5 min-w-[11rem] rounded-lg border border-border/60 bg-card/95 backdrop-blur-xl shadow-lg p-1 z-[var(--z-popover)]"
                     >
                         <router-link
                             v-for="link in allNavLinks"

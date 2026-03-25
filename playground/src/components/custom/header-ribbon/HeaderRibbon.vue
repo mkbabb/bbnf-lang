@@ -1,7 +1,7 @@
 <template>
     <div
         :class="[
-            'fixed z-50 pointer-events-none w-fit flex items-center px-4 pt-4 pb-2',
+            'fixed z-[var(--z-overlay)] pointer-events-none w-fit flex items-center px-4 pt-4 pb-2',
             position === 'left' ? 'top-0 left-0' : 'top-0 right-0',
         ]"
         @mouseleave="onGroupMouseLeave"

@@ -32,7 +32,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-    <div class="absolute bottom-0 left-0 right-0 z-10 flex items-end justify-center px-1 sm:px-4 h-12 pb-1.5 sm:pb-2">
+    <div class="absolute bottom-0 left-0 right-0 z-[var(--z-dock)] flex items-end justify-center px-1 sm:px-4 h-12 pb-1.5 sm:pb-2">
         <GlassDock :collapse-delay="2000" :start-collapsed="true" :fit-content="true">
             <!-- Expanded state -->
             <div class="flex flex-wrap items-center justify-center gap-1 sm:gap-1.5 sm:flex-nowrap">

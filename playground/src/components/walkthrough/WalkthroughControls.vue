@@ -9,7 +9,7 @@ const demoTitle = computed(() => props.walkthrough.currentDemo.value?.title ?? "
 </script>
 
 <template>
-    <div class="absolute top-2 left-1/2 -translate-x-1/2 z-50">
+    <div class="absolute top-2 left-1/2 -translate-x-1/2 z-[var(--z-overlay)]">
         <div class="flex items-center gap-3 rounded-xl border border-border/40 bg-card/80 backdrop-blur-xl px-4 py-2 shadow-md">
             <span class="instrument-serif text-sm text-pastel-green">{{ demoTitle }}</span>
             <span class="text-xs text-muted-foreground">

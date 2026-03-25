@@ -48,7 +48,7 @@ const { morphElementOpacity, typewriterOpacity, cursorOpacity } = useHeroSequenc
     <section class="min-h-[calc(100dvh-3.5rem)] flex flex-col items-center justify-center px-4 sm:px-6 py-12 sm:py-20 gap-8 sm:gap-12">
         <!-- Text content -->
         <div
-            class="text-center max-w-3xl relative z-50"
+            class="text-center max-w-3xl relative z-[var(--z-content)]"
             :class="[
                 entranceDone ? 'transition-opacity' : 'transition-all duration-700',
                 visible ? 'opacity-100' : 'opacity-0',
@@ -89,7 +89,7 @@ const { morphElementOpacity, typewriterOpacity, cursorOpacity } = useHeroSequenc
                     <!-- Morph element: fades in during Phase C, goes position:fixed for flight -->
                     <span
                         ref="morphElement"
-                        class="inline-block absolute inset-0 z-[60]"
+                        class="inline-block absolute inset-0 z-[var(--z-controls)]"
                         :style="{ opacity: morphElementOpacity }"
                     >
                         <BbnfLogo size="xl" shimmer />

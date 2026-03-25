@@ -101,7 +101,7 @@ function onNodeClick(node: FlowNode) {
                     <!-- Tooltip -->
                     <div
                         v-if="node.detail"
-                        class="flow-tooltip pointer-events-none absolute left-1/2 bottom-full mb-2 -translate-x-1/2 z-50 rounded-md border border-border/40 bg-popover/95 backdrop-blur-md shadow-lg px-3 py-2 text-xs font-mono text-popover-foreground max-w-[240px] sm:max-w-[300px] w-max opacity-0 transition-opacity duration-150"
+                        class="flow-tooltip pointer-events-none absolute left-1/2 bottom-full mb-2 -translate-x-1/2 z-[var(--z-hovercard)] rounded-md border border-border/40 bg-popover/95 backdrop-blur-md shadow-lg px-3 py-2 text-xs font-mono text-popover-foreground max-w-[240px] sm:max-w-[300px] w-max opacity-0 transition-opacity duration-150"
                     >
                         <div class="font-medium text-foreground mb-0.5">{{ node.label }}</div>
                         <div class="text-muted-foreground leading-relaxed">{{ node.detail }}</div>

@@ -15,7 +15,7 @@ const isLast = computed(() => props.walkthrough.currentStepIndex.value === total
 
 <template>
     <!-- Progress bar -->
-    <div class="absolute top-0 left-0 right-0 z-50 h-0.5 bg-muted/30">
+    <div class="absolute top-0 left-0 right-0 z-[var(--z-overlay)] h-0.5 bg-muted/30">
         <div
             class="h-full bg-pastel-green transition-all duration-500 ease-out"
             :style="{ width: `${walkthrough.progress.value * 100}%` }"
@@ -25,7 +25,7 @@ const isLast = computed(() => props.walkthrough.currentStepIndex.value === total
     <!-- Annotation card -->
     <div
         v-if="step"
-        class="absolute bottom-20 left-1/2 -translate-x-1/2 z-50 w-[32rem] max-w-[calc(100vw-2rem)]"
+        class="absolute bottom-20 left-1/2 -translate-x-1/2 z-[var(--z-overlay)] w-[32rem] max-w-[calc(100vw-2rem)]"
     >
         <div class="rounded-xl border border-border/50 bg-card/90 backdrop-blur-xl shadow-lg p-5">
             <div class="flex items-start gap-3">

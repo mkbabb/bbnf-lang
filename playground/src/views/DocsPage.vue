@@ -56,7 +56,7 @@ useMarkdownComponents(articleRef, rendered);
         <!-- Desktop expand button — shown when sidebar is collapsed -->
         <button
             v-if="!sidebarOpen"
-            class="sticky top-16 hidden md:flex items-center justify-center shrink-0 ml-1 p-2 rounded-lg border border-border/30 hover:bg-muted/50 active:scale-95 transition-colors text-muted-foreground h-fit z-20"
+            class="sticky top-16 hidden md:flex items-center justify-center shrink-0 ml-1 p-2 rounded-lg border border-border/30 hover:bg-muted/50 active:scale-95 transition-colors text-muted-foreground h-fit z-[var(--z-controls)]"
             title="Expand sidebar"
             @click="sidebarOpen = true"
         >
@@ -67,7 +67,7 @@ useMarkdownComponents(articleRef, rendered);
         <Transition name="mobile-drawer">
             <div
                 v-if="mobileDrawer"
-                class="fixed inset-0 z-50 md:hidden bg-black/20"
+                class="fixed inset-0 z-[var(--z-overlay)] md:hidden bg-black/20"
                 @click.self="mobileDrawer = false"
             >
                 <div class="absolute top-14 left-0 w-72 h-[calc(100dvh-var(--spacing-navbar))] bg-card/95 backdrop-blur-xl border-r border-border/30 shadow-lg flex flex-col rounded-tr-xl rounded-br-xl overflow-hidden">

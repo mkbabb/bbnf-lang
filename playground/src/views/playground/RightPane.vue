@@ -85,7 +85,7 @@ const formattedEditorRef = defineModel<InstanceType<typeof MonacoEditor> | null>
                     <Transition name="hover-card">
                         <span
                             v-if="rightTab === 'format' && formattedBy"
-                            class="absolute top-2 right-4 z-20 cursor-default rounded-md border px-2 py-0.5 text-xs font-mono backdrop-blur-sm bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400"
+                            class="absolute top-2 right-4 z-[var(--z-controls)] cursor-default rounded-md border px-2 py-0.5 text-xs font-mono backdrop-blur-sm bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400"
                         >
                             gorgeous (WASM)
                         </span>
@@ -95,7 +95,7 @@ const formattedEditorRef = defineModel<InstanceType<typeof MonacoEditor> | null>
                     <HoverCardContent
                         side="bottom"
                         :side-offset="8"
-                        class="z-50 w-72 rounded-xl border border-border/40 bg-card/90 p-4 shadow-lg backdrop-blur-xl"
+                        class="z-[var(--z-hovercard)] w-72 rounded-xl border border-border/40 bg-card/90 p-4 shadow-lg backdrop-blur-xl"
                     >
                         <div class="mb-2 flex items-center gap-2">
                             <span class="instrument-serif text-base">gorgeous</span>

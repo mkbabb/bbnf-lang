@@ -84,7 +84,7 @@ const emit = defineEmits<{
                 v-for="tab in tabs"
                 :key="tab.key"
                 class="absolute inset-0 min-h-0 min-w-0 transition-opacity duration-fast"
-                :class="activeTab === tab.key ? 'z-10 opacity-100' : 'pointer-events-none z-0 opacity-0'"
+                :class="activeTab === tab.key ? 'z-[var(--z-content)] opacity-100' : 'pointer-events-none z-0 opacity-0'"
             >
                 <slot :name="tab.key" />
             </div>
@@ -93,13 +93,13 @@ const emit = defineEmits<{
             <Transition name="hover-card">
                 <div
                     v-if="showBbnfBadge"
-                    class="absolute bottom-2 right-3 z-20 flex items-center gap-1.5 rounded-md border border-border/30 bg-card/60 px-2 py-0.5 text-xs text-muted-foreground backdrop-blur-sm font-mono"
+                    class="absolute bottom-2 right-3 z-[var(--z-controls)] flex items-center gap-1.5 rounded-md border border-border/30 bg-card/60 px-2 py-0.5 text-xs text-muted-foreground backdrop-blur-sm font-mono"
                 >
                     <BbnfLogo size="sm" shimmer />
                 </div>
                 <div
                     v-else-if="badgeLanguage && badgeLanguage !== 'plaintext' && langIcons"
-                    class="absolute bottom-2 right-3 z-20 flex items-center gap-1.5 rounded-md border border-border/30 bg-card/60 px-2 py-0.5 text-xs text-muted-foreground backdrop-blur-sm font-mono"
+                    class="absolute bottom-2 right-3 z-[var(--z-controls)] flex items-center gap-1.5 rounded-md border border-border/30 bg-card/60 px-2 py-0.5 text-xs text-muted-foreground backdrop-blur-sm font-mono"
                 >
                     <BbnfLogo v-if="badgeLanguage === 'bbnf'" size="sm" shimmer />
                     <template v-else>

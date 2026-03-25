@@ -18,17 +18,17 @@ defineExpose({ wordRef });
 
 <template>
     <div class="flex items-baseline justify-center mb-6 typewriter-row">
-        <span class="text-title sm:text-display-1 text-muted-foreground whitespace-nowrap">to parse:&nbsp;</span>
+        <span class="text-display-2 sm:text-display-3 text-muted-foreground whitespace-nowrap">to parse:&nbsp;</span>
         <span
             ref="wordRef"
             :class="[
                 currentWord.isCode ? 'font-mono code-word' : '',
                 currentWord.className,
             ]"
-            class="inline-block min-w-[3ch] text-title sm:text-display-1 leading-none overflow-visible"
+            class="inline-block min-w-[3ch] text-display-2 sm:text-display-3 leading-none overflow-visible"
             :style="{ opacity: wordOpacity }"
         >{{ displayText }}</span><span
-            class="tw-cursor text-title sm:text-display-1"
+            class="tw-cursor text-display-2 sm:text-display-3"
             :style="{ opacity: cursorOpacity }"
         >|</span>
     </div>

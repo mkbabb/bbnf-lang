@@ -37,10 +37,23 @@ pub fn inlay_hints(state: &DocumentState, range: Range) -> Vec<InlayHint> {
                 }
             }
 
-            let label = if nullable {
-                format!(" {}  (nullable)", first_label)
+            // Truncate long FIRST set labels to keep inlay hints readable.
+            const MAX_HINT_LEN: usize = 32;
+            let truncated = if first_label.len() > MAX_HINT_LEN {
+                let mut s = first_label[..MAX_HINT_LEN].to_string();
+                // Don't cut in the middle of a char representation — find last comma.
+                if let Some(comma) = s.rfind(',') {
+                    s.truncate(comma);
+                }
+                format!("{}…}}", s.trim_end_matches(|c: char| c == ' ' || c == ','))
             } else {
-                format!(" {}", first_label)
+                first_label.clone()
+            };
+
+            let label = if nullable {
+                format!(" {}  ε", truncated)
+            } else {
+                format!(" {}", truncated)
             };
 
             hints.push(InlayHint {

@@ -10,7 +10,8 @@
         "skipLibCheck": true,
         "paths": {
             "@/*": ["./src/*"],
-            "@docs/*": ["../docs/*"]
+            "@docs/*": ["../docs/*"],
+            "@grammars/*": ["../grammar/*"]
         }
     },
     "include": ["src/**/*.ts", "src/**/*.vue"],

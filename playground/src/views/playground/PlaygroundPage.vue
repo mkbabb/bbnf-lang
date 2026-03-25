@@ -59,7 +59,6 @@ watch([rightTab, mobilePaneIndex], () => {
 watch(mobilePaneIndex, () => { scheduleEditorRelayout(); });
 
 const currentExampleName = computed(() => currentExample.value.name);
-const activeEntryRule = computed(() => entryRuleOverride.value && availableEntryRules.value.includes(entryRuleOverride.value) ? entryRuleOverride.value : "");
 const activeResultText = computed(() => rightTab.value === "ast" ? astJson.value : formatted.value);
 const activeResultLabel = computed(() => rightTab.value === "ast" ? "Parsed AST" : "Formatted");
 const canCopyResult = computed(() => activeResultText.value.length > 0);
@@ -90,7 +89,6 @@ function applyCurrentExample() {
 }
 
 function onSelectExample(name: string) { selectExample(name); applyCurrentExample(); leftTab.value = "grammar"; rightTab.value = "format"; scheduleEditorRelayout(); }
-function onSelectEntryRule(value: string) { entryRuleOverride.value = value; scheduleEditorRelayout(); }
 
 async function copyToClipboard(text: string, msg: string) { try { await navigator.clipboard.writeText(text); toast.success(msg); } catch { toast.error("Clipboard access failed"); } }
 async function onCopyResult() { if (canCopyResult.value) await copyToClipboard(activeResultText.value, `${activeResultLabel.value} copied`); }
@@ -182,9 +180,9 @@ watch([leftTab, rightTab], () => { scheduleEditorRelayout(); });
 
         <PlaygroundControls
             :examples="examples" :current-example="currentExample" :printer-config="printerConfig"
-            :errors="errors" :is-processing="isProcessing" :entry-rule="activeEntryRule"
-            :available-entry-rules="availableEntryRules" :active-result-label="activeResultLabel" :can-copy-result="canCopyResult"
-            @select-example="onSelectExample" @select-entry-rule="onSelectEntryRule"
+            :errors="errors" :is-processing="isProcessing"
+            :active-result-label="activeResultLabel" :can-copy-result="canCopyResult"
+            @select-example="onSelectExample"
             @copy-result="onCopyResult" @share-link="onShareLink"
             @reset-playground="onResetPlayground" @jump-to-error="onJumpToError"
         />

@@ -15,6 +15,7 @@ export default defineConfig({
                 new URL("../node_modules/monaco-themes/themes", import.meta.url),
             ),
             "@docs": fileURLToPath(new URL("../docs", import.meta.url)),
+            "@grammars": fileURLToPath(new URL("../grammar", import.meta.url)),
         },
     },
     server: {

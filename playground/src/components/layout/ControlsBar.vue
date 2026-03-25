@@ -2,7 +2,6 @@
 import { Tooltip, TooltipTrigger, TooltipContent, GlassDock } from "@mkbabb/glass-ui";
 import ErrorDialog from "@/components/layout/ErrorDialog.vue";
 import ExampleSelector from "@/components/layout/ExampleSelector.vue";
-import EntryRuleSelector from "@/components/layout/EntryRuleSelector.vue";
 import ActionButtons from "@/components/layout/ActionButtons.vue";
 import { Loader2, AlertCircle, Ellipsis } from "lucide-vue-next";
 import { exampleIcons, shimmerClass } from "@/lib/toneMaps";
@@ -15,15 +14,12 @@ const props = defineProps<{
     printerConfig: { maxWidth: number; indent: number; useTabs: boolean };
     errors: PipelineError[];
     isProcessing: boolean;
-    entryRule: string;
-    availableEntryRules: string[];
     activeResultLabel: string;
     canCopyResult: boolean;
 }>();
 
 const emit = defineEmits<{
     selectExample: [name: string];
-    selectEntryRule: [value: string];
     copyResult: [];
     shareLink: [];
     resetPlayground: [];
@@ -40,13 +36,6 @@ const emit = defineEmits<{
                     :examples="examples"
                     :current-example="currentExample"
                     @select-example="(name) => emit('selectExample', name)"
-                />
-
-                <EntryRuleSelector
-                    class="hidden sm:flex"
-                    :entry-rule="entryRule"
-                    :available-entry-rules="availableEntryRules"
-                    @select-entry-rule="(value) => emit('selectEntryRule', value)"
                 />
 
                 <div class="dock-separator" />

@@ -676,8 +676,8 @@ fn test_inlay_hints_nullable() {
     let resp = read_response(&mut stdout, 30);
     eprintln!("Nullable inlay hints: {}", resp);
     assert!(
-        resp.contains("nullable"),
-        "Expected nullable indicator for optional rule, got: {}",
+        resp.contains("nullable") || resp.contains("ε"),
+        "Expected nullable indicator (ε) for optional rule, got: {}",
         resp
     );
 

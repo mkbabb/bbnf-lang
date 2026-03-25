@@ -9,15 +9,12 @@ defineProps<{
     printerConfig: { maxWidth: number; indent: number; useTabs: boolean };
     errors: PipelineError[];
     isProcessing: boolean;
-    entryRule: string;
-    availableEntryRules: string[];
     activeResultLabel: string;
     canCopyResult: boolean;
 }>();
 
 const emit = defineEmits<{
     "select-example": [name: string];
-    "select-entry-rule": [value: string];
     "copy-result": [];
     "share-link": [];
     "reset-playground": [];
@@ -32,12 +29,9 @@ const emit = defineEmits<{
         :printer-config="printerConfig"
         :errors="errors"
         :is-processing="isProcessing"
-        :entry-rule="entryRule"
-        :available-entry-rules="availableEntryRules"
         :active-result-label="activeResultLabel"
         :can-copy-result="canCopyResult"
         @select-example="emit('select-example', $event)"
-        @select-entry-rule="emit('select-entry-rule', $event)"
         @copy-result="emit('copy-result')"
         @share-link="emit('share-link')"
         @reset-playground="emit('reset-playground')"

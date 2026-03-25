@@ -4,7 +4,10 @@ use bbnf::analysis::{
     calculate_ast_deps, compute_first_sets, find_aliases, find_first_set_conflicts,
     get_nonterminal_name, tarjan_scc,
 };
+use bbnf::pipeline::{compile_ast, PipelineOptions};
 use bbnf::types::{Expression, Token};
+
+use super::types::IrRuleMeta;
 
 use ls_types::*;
 
@@ -55,6 +58,10 @@ pub fn analyze_from_cache(
             recovers: Vec::new(),
             no_collapses: Vec::new(),
             pretties: Vec::new(),
+            inlines: Vec::new(),
+            debugs: Vec::new(),
+            ws_pattern: None,
+            ir_meta: HashMap::new(),
         };
     }
 
@@ -86,6 +93,10 @@ pub fn analyze_from_cache(
             recovers: Vec::new(),
             no_collapses: Vec::new(),
             pretties: Vec::new(),
+            inlines: Vec::new(),
+            debugs: Vec::new(),
+            ws_pattern: None,
+            ir_meta: HashMap::new(),
         };
     };
 
@@ -109,6 +120,9 @@ pub fn analyze_from_cache(
     let recover_infos = parsed.recovers.clone();
     let no_collapse_infos = parsed.no_collapses.clone();
     let pretty_infos = parsed.pretties.clone();
+    let inline_infos = parsed.inlines.clone();
+    let debug_infos = parsed.debugs.clone();
+    let ws_pattern_info = parsed.ws_pattern.clone();
 
     // Check for empty AST on non-empty input -- likely a parse failure not caught above.
     if ast.is_empty() && !text.trim().is_empty() && import_infos.is_empty() && recover_infos.is_empty() {
@@ -133,6 +147,10 @@ pub fn analyze_from_cache(
             recovers: recover_infos,
             no_collapses: no_collapse_infos,
             pretties: Vec::new(),
+            inlines: Vec::new(),
+            debugs: Vec::new(),
+            ws_pattern: None,
+            ir_meta: HashMap::new(),
         };
     }
 
@@ -209,7 +227,7 @@ pub fn analyze_from_cache(
         .iter()
         .filter_map(|imp| imp.items.as_ref())
         .flatten()
-        .map(|s| s.as_str())
+        .map(|item| item.name.as_str())
         .collect();
 
     let mut referenced_names: std::collections::HashSet<&str> =
@@ -241,6 +259,14 @@ pub fn analyze_from_cache(
     }
     for p in &pretty_infos {
         referenced_names.insert(&p.rule_name);
+    }
+    for inl in &inline_infos {
+        referenced_names.insert(&inl.rule_name);
+    }
+    for dbg in &debug_infos {
+        if dbg.rule_name != "*" {
+            referenced_names.insert(&dbg.rule_name);
+        }
     }
 
     let last_rule_idx = rules.len().saturating_sub(1);
@@ -426,6 +452,24 @@ pub fn analyze_from_cache(
         }
     }
 
+    // @import directive semantic tokens.
+    for imp in &import_infos {
+        // "@import" keyword (7 chars).
+        semantic_tokens.push(SemanticTokenInfo {
+            span: (imp.span.0, imp.span.0 + 7),
+            token_type: token_types::KEYWORD,
+        });
+        // Selectively imported names as RULE_REFERENCE.
+        if let Some(ref items) = imp.items {
+            for item in items {
+                semantic_tokens.push(SemanticTokenInfo {
+                    span: item.span,
+                    token_type: token_types::RULE_REFERENCE,
+                });
+            }
+        }
+    }
+
     // @recover directive validation and semantic tokens.
     for rec in &recover_infos {
         // Semantic token: KEYWORD for "@recover".
@@ -513,8 +557,95 @@ pub fn analyze_from_cache(
         }
     }
 
+    // @inline directive validation and semantic tokens.
+    for inl in &inline_infos {
+        // Semantic token: KEYWORD for "@inline" (7 chars).
+        semantic_tokens.push(SemanticTokenInfo {
+            span: (inl.span.0, inl.span.0 + 7),
+            token_type: token_types::KEYWORD,
+        });
+
+        // Semantic token: RULE_REFERENCE for the rule name.
+        semantic_tokens.push(SemanticTokenInfo {
+            span: inl.rule_name_span,
+            token_type: token_types::RULE_REFERENCE,
+        });
+
+        // Mark the rule name as referenced (for unused rule detection).
+        referenced_names.insert(&inl.rule_name);
+
+        // Validate: warn if the target rule doesn't exist.
+        if !defined.contains_key(inl.rule_name.as_str())
+            && !imported_names.contains(inl.rule_name.as_str())
+        {
+            diagnostics.push(Diagnostic {
+                range: line_index.span_to_range(inl.rule_name_span.0, inl.rule_name_span.1),
+                severity: Some(DiagnosticSeverity::WARNING),
+                source: Some("bbnf".into()),
+                message: format!(
+                    "`@inline` targets undefined rule: `{}`",
+                    inl.rule_name
+                ),
+                ..Default::default()
+            });
+        }
+    }
+
+    // @debug directive validation and semantic tokens.
+    for dbg in &debug_infos {
+        // Semantic token: KEYWORD for "@debug" (6 chars).
+        semantic_tokens.push(SemanticTokenInfo {
+            span: (dbg.span.0, dbg.span.0 + 6),
+            token_type: token_types::KEYWORD,
+        });
+
+        // Semantic token: RULE_REFERENCE for the rule name (unless "*").
+        if dbg.rule_name != "*" {
+            semantic_tokens.push(SemanticTokenInfo {
+                span: dbg.rule_name_span,
+                token_type: token_types::RULE_REFERENCE,
+            });
+
+            // Mark the rule name as referenced (for unused rule detection).
+            referenced_names.insert(&dbg.rule_name);
+
+            // Validate: warn if the target rule doesn't exist.
+            if !defined.contains_key(dbg.rule_name.as_str())
+                && !imported_names.contains(dbg.rule_name.as_str())
+            {
+                diagnostics.push(Diagnostic {
+                    range: line_index.span_to_range(dbg.rule_name_span.0, dbg.rule_name_span.1),
+                    severity: Some(DiagnosticSeverity::WARNING),
+                    source: Some("bbnf".into()),
+                    message: format!(
+                        "`@debug` targets undefined rule: `{}`",
+                        dbg.rule_name
+                    ),
+                    ..Default::default()
+                });
+            }
+        }
+    }
+
+    // @ws directive semantic tokens.
+    if let Some(ws) = &ws_pattern_info {
+        // Semantic token: KEYWORD for "@ws" (3 chars).
+        semantic_tokens.push(SemanticTokenInfo {
+            span: (ws.span.0, ws.span.0 + 3),
+            token_type: token_types::KEYWORD,
+        });
+    }
+
     // Sort semantic tokens by offset for encoding.
     semantic_tokens.sort_by_key(|t| t.span.0);
+
+    // IR pipeline: extract rich metadata (FOLLOW sets, dispatch, memo, types).
+    let ir_meta = cached
+        .map(|c| {
+            std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| try_compile_ir(c)))
+                .unwrap_or_default()
+        })
+        .unwrap_or_default();
 
     DocumentInfo {
         rules,
@@ -528,6 +659,10 @@ pub fn analyze_from_cache(
         recovers: recover_infos,
         no_collapses: no_collapse_infos,
         pretties: pretty_infos,
+        inlines: inline_infos,
+        debugs: debug_infos,
+        ws_pattern: ws_pattern_info,
+        ir_meta,
     }
 }
 
@@ -536,4 +671,134 @@ pub fn analyze_from_cache(
 pub fn analyze(text: &str, line_index: &LineIndex) -> DocumentInfo {
     let (cached, diag) = super::parsing::parse_once(text);
     analyze_from_cache(text, line_index, cached.as_ref(), &diag)
+}
+
+// ─── IR Pipeline Integration ─────────────────────────────────────────────────
+
+/// Run the IR pipeline on a cached parse result and extract per-rule metadata.
+///
+/// On failure (e.g., the grammar is incomplete or uses features not yet supported
+/// by the IR lowering), returns an empty map — callers degrade gracefully.
+fn try_compile_ir(
+    cached: &CachedParseResult<'_>,
+) -> HashMap<String, IrRuleMeta> {
+    let ast = cached.ast.clone();
+
+    // Reconstruct directive maps from the analysis-layer types.
+    let recover_map: HashMap<String, Expression<'_>> = HashMap::new();
+
+    let pretty_map: HashMap<String, Vec<String>> = cached
+        .pretties
+        .iter()
+        .map(|p| (p.rule_name.clone(), p.hints.clone()))
+        .collect();
+
+    let no_collapse_set: HashSet<String> = cached
+        .no_collapses
+        .iter()
+        .map(|nc| nc.rule_name.clone())
+        .collect();
+
+    let inline_set: HashSet<String> = cached
+        .inlines
+        .iter()
+        .map(|inl| inl.rule_name.clone())
+        .collect();
+    let inline_ref = if inline_set.is_empty() { None } else { Some(&inline_set) };
+
+    let mut debug_set: HashSet<String> = HashSet::new();
+    let mut debug_all = false;
+    for dbg in &cached.debugs {
+        if dbg.rule_name == "*" {
+            debug_all = true;
+        } else {
+            debug_set.insert(dbg.rule_name.clone());
+        }
+    }
+    let debug_ref = if debug_set.is_empty() { None } else { Some(&debug_set) };
+
+    let ws_pattern = cached.ws_pattern.as_ref().map(|ws| ws.pattern.as_str());
+
+    let options = PipelineOptions::default();
+
+    let ir = match compile_ast(
+        ast,
+        &recover_map,
+        &pretty_map,
+        &no_collapse_set,
+        &options,
+        ws_pattern,
+        inline_ref,
+        debug_ref,
+        debug_all,
+    ) {
+        Ok(ir) => ir,
+        Err(_) => return HashMap::new(),
+    };
+
+    // Build a lookup from RuleId → TypeDesc.
+    let type_map: HashMap<u32, &bbnf_ir::TypeDesc> = ir
+        .types
+        .iter()
+        .map(|(id, td)| (*id, td))
+        .collect();
+
+    let mut result = HashMap::new();
+    for rule in &ir.rules {
+        let name = ir.get_string(rule.name).to_string();
+
+        let follow_set_label = ir.follow_sets.get(&rule.id).map(|cs| {
+            format_charset_iter(cs.iter())
+        });
+
+        let inferred_type = type_map.get(&rule.id).map(|td| format_type_desc(td, &ir));
+
+        result.insert(name, IrRuleMeta {
+            follow_set_label,
+            has_dispatch: rule.meta.dispatch.is_some(),
+            memo_strategy: format!("{:?}", rule.meta.memo),
+            span_eligible: rule.meta.span_eligible,
+            has_sp_method: rule.meta.has_sp_method,
+            inferred_type,
+            force_inline: rule.meta.force_inline,
+            is_transparent: rule.meta.is_transparent,
+        });
+    }
+
+    result
+}
+
+/// Format a set of byte values for display (e.g., `{'a', 'b', 0x0a}`).
+fn format_charset_iter(iter: impl IntoIterator<Item = u8>) -> String {
+    let chars: Vec<u8> = iter.into_iter().collect();
+    if chars.is_empty() {
+        return "\u{2205}".into(); // ∅
+    }
+    let formatted: Vec<String> = chars
+        .iter()
+        .map(|&b| {
+            if b.is_ascii_graphic() {
+                format!("'{}'", b as char)
+            } else {
+                format!("0x{:02x}", b)
+            }
+        })
+        .collect();
+    format!("{{{}}}", formatted.join(", "))
+}
+
+/// Format a `TypeDesc` as a human-readable string.
+fn format_type_desc(td: &bbnf_ir::TypeDesc, ir: &bbnf_ir::GrammarIR) -> String {
+    match td {
+        bbnf_ir::TypeDesc::Span => "Span".into(),
+        bbnf_ir::TypeDesc::Option(inner) => format!("Option<{}>", format_type_desc(inner, ir)),
+        bbnf_ir::TypeDesc::Vec(inner) => format!("Vec<{}>", format_type_desc(inner, ir)),
+        bbnf_ir::TypeDesc::Tuple(items) => {
+            let parts: Vec<_> = items.iter().map(|t| format_type_desc(t, ir)).collect();
+            format!("({})", parts.join(", "))
+        }
+        bbnf_ir::TypeDesc::BoxedEnum => "Box<Enum>".into(),
+        bbnf_ir::TypeDesc::Enum => "Enum".into(),
+        bbnf_ir::TypeDesc::Named(id) => ir.get_string(*id).to_string(),
+    }
 }

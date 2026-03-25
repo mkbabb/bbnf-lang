@@ -11,6 +11,9 @@ const BBNF_KEYWORDS: &[(&str, &str)] = &[
     ("@recover", "Error recovery directive for a rule"),
     ("@no_collapse", "Prevent span collapse for a rule (preserve Vec<Span>)"),
     ("@pretty", "Formatting hints for pretty-printer output"),
+    ("@ws", "Custom whitespace pattern for ?w operator"),
+    ("@inline", "Force-inline a rule at all call sites"),
+    ("@debug", "Instrument a rule for debug tracing"),
 ];
 
 pub fn completion(state: &DocumentState) -> CompletionResponse {

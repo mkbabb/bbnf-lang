@@ -35,6 +35,13 @@ pub struct SemanticTokenInfo {
     pub token_type: u32,
 }
 
+/// A single imported name with its byte span.
+#[derive(Debug, Clone)]
+pub struct ImportedItem {
+    pub name: String,
+    pub span: (usize, usize),
+}
+
 /// Owned representation of an import directive.
 #[derive(Debug, Clone)]
 pub struct ImportInfo {
@@ -43,7 +50,7 @@ pub struct ImportInfo {
     /// Byte offset range of the entire import directive.
     pub span: (usize, usize),
     /// If `Some`, selective import; if `None`, glob import.
-    pub items: Option<Vec<String>>,
+    pub items: Option<Vec<ImportedItem>>,
 }
 
 /// Owned representation of a @recover directive.
@@ -70,6 +77,51 @@ pub struct NoCollapseInfo {
     pub rule_name_span: (usize, usize),
 }
 
+/// Owned representation of an `@inline` directive.
+#[derive(Debug, Clone)]
+pub struct InlineInfo {
+    pub rule_name: String,
+    pub span: (usize, usize),
+    pub rule_name_span: (usize, usize),
+}
+
+/// Owned representation of a `@debug` directive.
+#[derive(Debug, Clone)]
+pub struct DebugInfo {
+    /// Rule name, or `"*"` for all rules.
+    pub rule_name: String,
+    pub span: (usize, usize),
+    pub rule_name_span: (usize, usize),
+}
+
+/// Owned representation of a `@ws` directive.
+#[derive(Debug, Clone)]
+pub struct WsPatternInfo {
+    pub pattern: String,
+    pub span: (usize, usize),
+}
+
+/// IR-derived metadata for a single rule (optional enrichment from the full pipeline).
+#[derive(Debug, Clone, Default)]
+pub struct IrRuleMeta {
+    /// FOLLOW set characters (formatted for display).
+    pub follow_set_label: Option<String>,
+    /// Whether a dispatch table exists for this rule's top-level alternation.
+    pub has_dispatch: bool,
+    /// Memoization strategy name.
+    pub memo_strategy: String,
+    /// Whether this rule is span-eligible.
+    pub span_eligible: bool,
+    /// Whether this rule gets an `_sp()` SpanParser method.
+    pub has_sp_method: bool,
+    /// Inferred output type (formatted for display).
+    pub inferred_type: Option<String>,
+    /// Whether this rule was force-inlined.
+    pub force_inline: bool,
+    /// Whether this rule is a transparent alternation.
+    pub is_transparent: bool,
+}
+
 /// Pre-analyzed document state -- all data is owned (no lifetimes).
 #[derive(Debug, Clone)]
 pub struct DocumentInfo {
@@ -93,6 +145,14 @@ pub struct DocumentInfo {
     pub no_collapses: Vec<NoCollapseInfo>,
     /// Pretty directives parsed from the document.
     pub pretties: Vec<PrettyInfo>,
+    /// Inline directives parsed from the document.
+    pub inlines: Vec<InlineInfo>,
+    /// Debug directives parsed from the document.
+    pub debugs: Vec<DebugInfo>,
+    /// Custom whitespace pattern from `@ws` directive.
+    pub ws_pattern: Option<WsPatternInfo>,
+    /// IR-derived metadata per rule name (empty if IR pipeline failed or was skipped).
+    pub ir_meta: HashMap<String, IrRuleMeta>,
 }
 
 /// Diagnostic info extracted from the parser state (owned, no lifetimes).

@@ -9,6 +9,11 @@ use crate::state::DocumentState;
 pub fn hover(state: &DocumentState, position: Position) -> Option<Hover> {
     let offset = state.line_index.position_to_offset(position);
 
+    // Check import hovers first.
+    if let Some(hover) = hover_import(state, offset) {
+        return Some(hover);
+    }
+
     // Check directive keyword hovers first.
     if let Some(hover) = hover_no_collapse(state, offset) {
         return Some(hover);
@@ -17,6 +22,15 @@ pub fn hover(state: &DocumentState, position: Position) -> Option<Hover> {
         return Some(hover);
     }
     if let Some(hover) = hover_pretty(state, offset) {
+        return Some(hover);
+    }
+    if let Some(hover) = hover_inline(state, offset) {
+        return Some(hover);
+    }
+    if let Some(hover) = hover_debug(state, offset) {
+        return Some(hover);
+    }
+    if let Some(hover) = hover_ws(state, offset) {
         return Some(hover);
     }
 
@@ -40,24 +54,59 @@ pub fn hover(state: &DocumentState, position: Position) -> Option<Hover> {
                 if ref_count == 1 { "" } else { "s" }
             );
 
-            // Add analysis info block.
+            // Compact analysis summary line.
             content.push_str("\n\n---\n");
-            if let Some(first_label) = state.info.first_set_labels.get(&rule.name) {
-                content.push_str(&format!("FIRST: {}\n\n", first_label));
-            }
-            let nullable = state.info.nullable_rules.contains(&rule.name);
-            content.push_str(&format!(
-                "Nullable: {}\n\n",
-                if nullable { "yes" } else { "no" }
-            ));
-            if let Some(cycle_path) = state.info.cyclic_rule_paths.get(&rule.name) {
-                content.push_str(&format!("Cyclic: yes ({})\n", cycle_path));
+            {
+                let mut parts: Vec<String> = Vec::new();
+
+                if let Some(first_label) = state.info.first_set_labels.get(&rule.name) {
+                    if first_label != "∅" && !first_label.is_empty() {
+                        parts.push(format!("FIRST {}", first_label));
+                    }
+                }
+                if let Some(ir_meta) = state.info.ir_meta.get(&rule.name) {
+                    if let Some(ref follow) = ir_meta.follow_set_label {
+                        if follow != "∅" && !follow.is_empty() {
+                            parts.push(format!("FOLLOW {}", follow));
+                        }
+                    }
+                }
+                if state.info.nullable_rules.contains(&rule.name) {
+                    parts.push("nullable".into());
+                }
+                if let Some(cycle_path) = state.info.cyclic_rule_paths.get(&rule.name) {
+                    parts.push(format!("cyclic ({})", cycle_path));
+                }
+                if !parts.is_empty() {
+                    content.push_str(&parts.join(" · "));
+                    content.push('\n');
+                }
             }
 
-            // Show @pretty hints if any.
+            // IR-derived metadata — compact line.
+            if let Some(ir_meta) = state.info.ir_meta.get(&rule.name) {
+                let mut tags: Vec<&str> = Vec::new();
+                if ir_meta.has_dispatch { tags.push("dispatch"); }
+                if ir_meta.span_eligible { tags.push("span"); }
+                if ir_meta.memo_strategy != "None" { tags.push("memo"); }
+
+                let mut line = String::new();
+                if !tags.is_empty() {
+                    line.push_str(&tags.join(" · "));
+                }
+                if let Some(ref ty) = ir_meta.inferred_type {
+                    if !line.is_empty() { line.push_str(" · "); }
+                    line.push_str(&format!("`{}`", ty));
+                }
+                if !line.is_empty() {
+                    content.push_str(&format!("\n{}\n", line));
+                }
+            }
+
+            // @pretty hints.
             for p in &state.info.pretties {
                 if p.rule_name == rule.name {
-                    content.push_str(&format!("\n@pretty: `{}`\n", p.hints.join(" ")));
+                    content.push_str(&format!("\n@pretty `{}`\n", p.hints.join(" ")));
                     break;
                 }
             }
@@ -84,10 +133,41 @@ pub fn hover(state: &DocumentState, position: Position) -> Option<Hover> {
 
             let content = if let Some(def) = def {
                 let mut s = format!("```bbnf\n{} = {}\n```", def.name, def.rhs_text);
-                // Add FIRST set for references too.
+
+                // Compact summary — same format as RuleDefinition.
+                let mut parts: Vec<String> = Vec::new();
                 if let Some(first_label) = state.info.first_set_labels.get(&def.name) {
-                    s.push_str(&format!("\n\n---\nFIRST: {}", first_label));
+                    if first_label != "∅" && !first_label.is_empty() {
+                        parts.push(format!("FIRST {}", first_label));
+                    }
                 }
+                if let Some(ir_meta) = state.info.ir_meta.get(&def.name) {
+                    if let Some(ref follow) = ir_meta.follow_set_label {
+                        if follow != "∅" && !follow.is_empty() {
+                            parts.push(format!("FOLLOW {}", follow));
+                        }
+                    }
+                }
+                if state.info.nullable_rules.contains(&def.name) {
+                    parts.push("nullable".into());
+                }
+                if !parts.is_empty() {
+                    s.push_str(&format!("\n\n---\n{}", parts.join(" · ")));
+                }
+                if let Some(ir_meta) = state.info.ir_meta.get(&def.name) {
+                    let mut tags: Vec<&str> = Vec::new();
+                    if ir_meta.has_dispatch { tags.push("dispatch"); }
+                    if ir_meta.span_eligible { tags.push("span"); }
+                    if let Some(ref ty) = ir_meta.inferred_type {
+                        let mut line = tags.join(" · ");
+                        if !line.is_empty() { line.push_str(" · "); }
+                        line.push_str(&format!("`{}`", ty));
+                        s.push_str(&format!("\n\n{}", line));
+                    } else if !tags.is_empty() {
+                        s.push_str(&format!("\n\n{}", tags.join(" · ")));
+                    }
+                }
+
                 s
             } else {
                 format!("`{}` — undefined rule", name)
@@ -102,6 +182,55 @@ pub fn hover(state: &DocumentState, position: Position) -> Option<Hover> {
             })
         }
     }
+}
+
+/// Check if the cursor is over an @import directive or a selectively imported name.
+fn hover_import(state: &DocumentState, offset: usize) -> Option<Hover> {
+    for imp in &state.info.imports {
+        if offset < imp.span.0 || offset > imp.span.1 {
+            continue;
+        }
+
+        // Check "@import" keyword (7 chars).
+        let kw_end = imp.span.0 + 7;
+        if offset >= imp.span.0 && offset < kw_end {
+            let content = format!(
+                "### `@import` — Module Import\n\n\
+                 Imports rules from `\"{}\"`.\n\n\
+                 - **Glob**: `@import \"path\" ;` imports all rules.\n\
+                 - **Selective**: `@import {{ a, b }} from \"path\" ;` imports only named rules \
+                 (transitive local deps are expanded automatically).\n",
+                imp.path
+            );
+            return Some(Hover {
+                contents: HoverContents::Markup(MarkupContent {
+                    kind: MarkupKind::Markdown,
+                    value: content,
+                }),
+                range: Some(state.line_index.span_to_range(imp.span.0, kw_end)),
+            });
+        }
+
+        // Check selectively imported names.
+        if let Some(ref items) = imp.items {
+            for item in items {
+                if offset >= item.span.0 && offset <= item.span.1 {
+                    let content = format!(
+                        "Imported rule `{}` from `\"{}\"`",
+                        item.name, imp.path
+                    );
+                    return Some(Hover {
+                        contents: HoverContents::Markup(MarkupContent {
+                            kind: MarkupKind::Markdown,
+                            value: content,
+                        }),
+                        range: Some(state.line_index.span_to_range(item.span.0, item.span.1)),
+                    });
+                }
+            }
+        }
+    }
+    None
 }
 
 /// Check if the cursor is over the @no_collapse keyword or its rule name.
@@ -258,6 +387,130 @@ fn hover_pretty(state: &DocumentState, offset: usize) -> Option<Hover> {
             });
         }
     }
+    None
+}
+
+/// Check if the cursor is over the @inline keyword or its rule name.
+fn hover_inline(state: &DocumentState, offset: usize) -> Option<Hover> {
+    for inl in &state.info.inlines {
+        // Check keyword span: "@inline" is 7 chars.
+        let kw_end = inl.span.0 + 7;
+        if offset >= inl.span.0 && offset <= kw_end {
+            let rule_def = state
+                .info
+                .rule_index
+                .get(&inl.rule_name)
+                .map(|&i| &state.info.rules[i]);
+
+            let mut content = format!(
+                "### `@inline` — Force Inline\n\n\
+                 Force-inlines `{}` at every call site. No enum variant or function generated.\n\n\
+                 The rule body is substituted directly at each `Ref` to this rule, \
+                 eliminating combinator overhead and the intermediate type.\n",
+                inl.rule_name
+            );
+
+            if let Some(def) = rule_def {
+                content.push_str(&format!(
+                    "\n---\n```bbnf\n{} = {}\n```",
+                    def.name, def.rhs_text
+                ));
+            }
+
+            return Some(Hover {
+                contents: HoverContents::Markup(MarkupContent {
+                    kind: MarkupKind::Markdown,
+                    value: content,
+                }),
+                range: Some(state.line_index.span_to_range(inl.span.0, kw_end)),
+            });
+        }
+
+        // Check rule name span.
+        if offset >= inl.rule_name_span.0 && offset <= inl.rule_name_span.1 {
+            // Delegate to symbol_at_offset for the rule definition hover.
+            continue;
+        }
+    }
+    None
+}
+
+/// Check if the cursor is over the @debug keyword or its rule name.
+fn hover_debug(state: &DocumentState, offset: usize) -> Option<Hover> {
+    for dbg in &state.info.debugs {
+        // Check keyword span: "@debug" is 6 chars.
+        let kw_end = dbg.span.0 + 6;
+        if offset >= dbg.span.0 && offset <= kw_end {
+            let content = if dbg.rule_name == "*" {
+                "### `@debug *` — Debug All Rules\n\n\
+                 Instruments **all** rules for debug tracing.\n\n\
+                 Emits trace output in compiled paths, `DebugBreak` opcodes in bytecode VM."
+                    .to_string()
+            } else {
+                let rule_def = state
+                    .info
+                    .rule_index
+                    .get(&dbg.rule_name)
+                    .map(|&i| &state.info.rules[i]);
+
+                let mut s = format!(
+                    "### `@debug` — Debug Tracing\n\n\
+                     Instruments `{}` for debug tracing. \
+                     Emits trace output in compiled paths, `DebugBreak` opcodes in bytecode VM.\n",
+                    dbg.rule_name
+                );
+
+                if let Some(def) = rule_def {
+                    s.push_str(&format!(
+                        "\n---\n```bbnf\n{} = {}\n```",
+                        def.name, def.rhs_text
+                    ));
+                }
+                s
+            };
+
+            return Some(Hover {
+                contents: HoverContents::Markup(MarkupContent {
+                    kind: MarkupKind::Markdown,
+                    value: content,
+                }),
+                range: Some(state.line_index.span_to_range(dbg.span.0, kw_end)),
+            });
+        }
+
+        // Check rule name span — delegate to symbol_at_offset.
+        if dbg.rule_name != "*" && offset >= dbg.rule_name_span.0 && offset <= dbg.rule_name_span.1
+        {
+            continue;
+        }
+    }
+    None
+}
+
+/// Check if the cursor is over the @ws directive.
+fn hover_ws(state: &DocumentState, offset: usize) -> Option<Hover> {
+    let ws = state.info.ws_pattern.as_ref()?;
+
+    // Check keyword span: "@ws" is 3 chars.
+    let kw_end = ws.span.0 + 3;
+    if offset >= ws.span.0 && offset <= ws.span.1 {
+        let content = format!(
+            "### `@ws` — Custom Whitespace Pattern\n\n\
+             Overrides `?w` (optional whitespace) to use pattern: `/{}/`.\n\n\
+             Enables comment-aware whitespace scanning. When set, every `?w` \
+             operator compiles to this regex instead of the default `\\s*`.\n",
+            ws.pattern
+        );
+
+        return Some(Hover {
+            contents: HoverContents::Markup(MarkupContent {
+                kind: MarkupKind::Markdown,
+                value: content,
+            }),
+            range: Some(state.line_index.span_to_range(ws.span.0, kw_end)),
+        });
+    }
+
     None
 }
 

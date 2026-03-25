@@ -96,6 +96,64 @@
                 "superType": "variable",
                 "description": "Nonterminal reference in RHS"
             }
+        ],
+        "breakpoints": [
+            {
+                "language": "bbnf"
+            }
+        ],
+        "debuggers": [
+            {
+                "type": "bbnf",
+                "label": "BBNF Grammar Debugger",
+                "languages": [
+                    "bbnf"
+                ],
+                "configurationAttributes": {
+                    "launch": {
+                        "required": [
+                            "grammar"
+                        ],
+                        "properties": {
+                            "grammar": {
+                                "type": "string",
+                                "description": "Path to the .bbnf grammar file to debug."
+                            },
+                            "input": {
+                                "type": "string",
+                                "description": "Path to the input file to parse."
+                            },
+                            "inputText": {
+                                "type": "string",
+                                "description": "Inline input text to parse (alternative to input file)."
+                            },
+                            "entryRule": {
+                                "type": "string",
+                                "description": "Override the entry rule name (default: last rule in grammar)."
+                            },
+                            "stopOnEntry": {
+                                "type": "boolean",
+                                "default": true,
+                                "description": "Pause on the entry rule before parsing begins."
+                            }
+                        }
+                    }
+                },
+                "configurationSnippets": [
+                    {
+                        "label": "BBNF: Debug Grammar",
+                        "description": "Debug a BBNF grammar by stepping through parse execution.",
+                        "body": {
+                            "type": "bbnf",
+                            "request": "launch",
+                            "name": "Debug Grammar",
+                            "grammar": "${file}",
+                            "input": "${workspaceFolder}/test-input.txt",
+                            "stopOnEntry": true
+                        }
+                    }
+                ]
+            }
         ]
     },
     "scripts": {

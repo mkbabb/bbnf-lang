@@ -10,6 +10,23 @@ import {
 
 let client: LanguageClient | undefined;
 
+// ── Debug Adapter ────────────────────────────────────────────────────────────
+
+class BbnfDebugAdapterFactory
+    implements vscode.DebugAdapterDescriptorFactory
+{
+    constructor(private context: ExtensionContext) {}
+
+    createDebugAdapterDescriptor(
+        _session: vscode.DebugSession,
+    ): vscode.ProviderResult<vscode.DebugAdapterDescriptor> {
+        const serverPath = getServerPath(this.context);
+        return new vscode.DebugAdapterExecutable(serverPath, ["--dap"]);
+    }
+}
+
+// ── Server Path Resolution ───────────────────────────────────────────────────
+
 function getServerPath(context: ExtensionContext): string {
     // 1. VS Code setting.
     const config = vscode.workspace.getConfiguration("BBNF");
@@ -70,6 +87,14 @@ export async function activate(context: ExtensionContext) {
                 );
             }
         }),
+    );
+
+    // Register debug adapter — reuses the same bbnf-lsp binary with --dap flag.
+    context.subscriptions.push(
+        vscode.debug.registerDebugAdapterDescriptorFactory(
+            "bbnf",
+            new BbnfDebugAdapterFactory(context),
+        ),
     );
 
     await client.start();

@@ -2,10 +2,9 @@ import type { Example } from "../useExamples";
 
 export const mathExample: Example = {
     name: "Math",
-    grammar: `// Math Expression Grammar — operator precedence via recursive descent
-expr = term , (("+" | "-") ?w , term) * ;
-term = factor , (("*" | "/") ?w , factor) * ;
+    grammar: `number = /\\d+(\\.\\d+)?/ ?w ;
 factor = number | "(" >> expr << ")" ?w ;
-number = /\\d+(\\.\\d+)?/ ?w ;`,
+term = factor , (("*" | "/") ?w , factor) * ;
+expr = term , (("+" | "-") ?w , term) * ;`,
     input: `2 + 3 * (4 - 1)`,
 };

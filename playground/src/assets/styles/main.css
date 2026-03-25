@@ -48,15 +48,15 @@
 }
 
 @utility card-base {
-    @apply rounded-xl border border-border/50 bg-card/80 backdrop-blur-sm shadow-card;
+    @apply rounded-xl border border-white/10 bg-card/50 backdrop-blur-xl;
 }
 
 @utility card-subtle {
-    @apply rounded-xl border border-border/30 bg-card/60 backdrop-blur-sm;
+    @apply rounded-xl border border-white/5 bg-card/35 backdrop-blur-lg;
 }
 
 @utility card-elevated {
-    @apply rounded-xl border border-border/60 bg-card/95 backdrop-blur-xl shadow-lg;
+    @apply rounded-xl border border-white/15 bg-card/65 backdrop-blur-xl shadow-lg;
 }
 
 /* ------------------------------------------------------------------ */

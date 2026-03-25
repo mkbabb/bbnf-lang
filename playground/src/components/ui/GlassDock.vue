@@ -111,16 +111,17 @@ onUnmounted(clearTimer);
     display: inline-flex;
     align-items: center;
     padding: 0.25rem 0.5rem;
-    border-radius: var(--radius-pill);
+    border-radius: 1rem;
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
     border: 1px solid var(--glass-border);
     box-shadow: var(--glass-shadow);
     overflow: hidden;
-    white-space: nowrap;
+    max-width: calc(100vw - 1rem);
+    transform-origin: center bottom;
     transition:
-        max-width 0.4s var(--ease-smooth),
-        padding 0.35s var(--ease-smooth),
+        transform 0.25s var(--ease-smooth),
+        opacity 0.2s var(--ease-smooth),
         box-shadow var(--duration-normal) var(--ease-standard),
         background var(--duration-normal) var(--ease-standard),
         border-color var(--duration-normal) var(--ease-standard);
@@ -129,6 +130,9 @@ onUnmounted(clearTimer);
 @media (min-width: 640px) {
     .glass-dock {
         padding: 0.375rem 0.75rem;
+        border-radius: var(--radius-pill);
+        max-width: 100vw;
+        white-space: nowrap;
     }
 }
 
@@ -137,15 +141,10 @@ onUnmounted(clearTimer);
     transition: none !important;
 }
 
-/* Expanded: allow full intrinsic width */
-.glass-dock.expanded {
-    max-width: 100vw;
-}
-
 /* ── Collapsed: compact pill ── */
 .glass-dock.collapsed {
     cursor: pointer;
-    max-width: 14rem;
+    border-radius: var(--radius-pill);
     padding: 0.25rem 0.5rem;
     background: hsl(var(--card) / 0.92);
     border-color: hsl(var(--border) / 0.7);
@@ -179,14 +178,14 @@ onUnmounted(clearTimer);
     align-items: center;
     gap: 0.375rem;
     min-height: 1.5rem;
-    white-space: nowrap;
-    transition: opacity var(--duration-normal) var(--ease-standard);
+    transition: opacity 0.2s var(--ease-standard);
 }
 
 @media (min-width: 640px) {
     .dock-layer {
         gap: 0.5rem;
         min-height: 2rem;
+        white-space: nowrap;
     }
 }
 

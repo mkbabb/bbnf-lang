@@ -1,10 +1,23 @@
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import vue from "@vitejs/plugin-vue";
 import tailwindcss from "@tailwindcss/vite";
 import { fileURLToPath } from "url";
+import { copyFileSync } from "fs";
+import { resolve } from "path";
+
+/** Copy index.html → 404.html after build for SPA fallback routing. */
+function spaFallback(): Plugin {
+    return {
+        name: "spa-fallback",
+        closeBundle() {
+            const dist = resolve(__dirname, "dist");
+            copyFileSync(resolve(dist, "index.html"), resolve(dist, "404.html"));
+        },
+    };
+}
 
 export default defineConfig({
-    plugins: [vue(), tailwindcss()],
+    plugins: [vue(), tailwindcss(), spaFallback()],
     resolve: {
         alias: {
             "@": fileURLToPath(new URL("./src", import.meta.url)),

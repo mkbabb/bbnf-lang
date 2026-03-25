@@ -61,7 +61,7 @@ const indentModel = computed({
                 <p class="text-sm sm:text-base">Tune print width and indentation for the formatter output.</p>
             </TooltipContent>
         </Tooltip>
-        <DialogContent variant="glass" class="max-w-sm">
+        <DialogContent class="max-w-sm">
             <DialogTitle class="instrument-serif text-xl">Formatter Settings</DialogTitle>
             <DialogDescription class="sr-only">Configure formatter width and indentation</DialogDescription>
             <div class="mt-4 space-y-5">

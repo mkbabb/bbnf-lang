@@ -109,6 +109,9 @@ Generates an enum and per-rule parser methods. Available attributes:
 | `skip_recover` | Omit `@recover` codegen |
 | `remove_left_recursion` | Apply Paull transform |
 | `ignore_whitespace` | Auto-trim whitespace |
+| `debug` | Instrument all rules for trace output |
+| `arena` | Monolithic arena codegen with BumpArena |
+| `span` | Span-only monolithic codegen (zero allocation) |
 
 ### Parser Combinators
 
@@ -160,3 +163,10 @@ Each formatter takes `(input: string, max_width: number, indent: number, use_tab
 | `format_google_sheets` | Google Sheets formulas |
 
 Beyond formatters, the WASM module exports grammar analysis (`analyze_grammar`), hover (`hover_at_offset`), completions, semantic tokens, and a full VM interpreter for custom grammars.
+
+### Debug Exports
+
+| Export | Description |
+|--------|-------------|
+| `compile_grammar_debug(grammar, entry_rule?)` | Compile with `DebugBreak` instrumentation |
+| `debug_step(handle, input, mode, breakpoint_rules_json)` | Step through parse execution |

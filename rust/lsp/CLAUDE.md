@@ -12,11 +12,17 @@ feature providers, and state management live in `bbnf-analysis`.
 lsp/
 ├── Cargo.toml
 ├── src/
-│   ├── main.rs                 Tokio entry point, stdio server
-│   └── server/
-│       ├── mod.rs              BbnfLanguageServer struct, constructor, on_change
-│       ├── imports.rs          Import graph updates, diagnostic filtering, incremental edits
-│       └── protocol.rs         impl LanguageServer — all request/notification handlers
+│   ├── main.rs                 Tokio entry point, stdio server, --dap flag
+│   ├── lib.rs                  Re-exports for tests
+│   ├── server/
+│   │   ├── mod.rs              BbnfLanguageServer struct, constructor, on_change
+│   │   ├── imports.rs          Import graph updates, diagnostic filtering, incremental edits
+│   │   └── protocol.rs         impl LanguageServer — all request/notification handlers
+│   └── dap/
+│       ├── mod.rs              serve_dap(), Content-Length transport, command dispatch
+│       ├── adapter.rs          DapAdapter: compile grammar, run interpreter, build frames/variables
+│       ├── protocol.rs         DAP message serde types (no library dependency)
+│       └── mapping.rs          LineIndex, resolve_breakpoint(), rule_at_offset()
 └── tests/
     ├── integration.rs          45+ JSON-RPC integration tests
     └── bench_lsp.rs            Performance benchmarks

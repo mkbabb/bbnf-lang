@@ -23,7 +23,7 @@ Three independent pipelines transform `.bbnf` grammars into executable parsers a
                GrammarIR        │      ASTToParser() runtime
               (bbnf-ir)         │       combinator gen
                     │            │             │
-          ┌─── 15 IR passes ────┤             ▼
+          ┌─── 17 IR passes ────┤             ▼
           │   (bbnf-ir::passes) │        Parser<T> tree
           │                     │        (parse-that TS)
           ▼                     │             │
@@ -42,7 +42,7 @@ Three independent pipelines transform `.bbnf` grammars into executable parsers a
 ```
 
 `bbnf-ir` is the shared core — it defines the canonical IR (`GrammarIR`, `IrNode`,
-`IrRule`, `RuleMeta`, `TypeDesc`) and all 15 IR operations (13 unique passes). Both AOT and VM
+`IrRule`, `RuleMeta`, `TypeDesc`) and all 17 IR operations (15 unique passes). Both AOT and VM
 consume the same optimized IR; they only diverge at the final step: Rust codegen
 vs. bytecode compilation.
 
@@ -55,18 +55,18 @@ Compile-time code generation. Reads `.bbnf`, emits Rust `TokenStream`.
 **Phases (shared with VM through step 6):**
 1. Parse grammar → AST (`bbnf::grammar`)
 2. Resolve `@import` directives → module graph DFS
-3. Extract `@recover`, `@pretty`, `@no_collapse` directives
+3. Extract `@recover`, `@pretty`, `@no_collapse`, `@debug` directives
 4. Analysis — SCC detection, FIRST sets, alias detection, span eligibility
 5. Lower AST → `GrammarIR` (`bbnf::lower`) — IR types from `bbnf-ir`
-6. Apply 15 IR optimization passes (`bbnf-ir::passes`) — **same passes as VM**
+6. Apply 17 IR optimization passes (`bbnf-ir::passes`) — **same passes as VM**
 7. **(AOT only)** Codegen → Rust `TokenStream` (`bbnf::generate`)
 
-**IR Passes** (in order):
+**IR Passes** (17 operations, 15 unique passes, in order):
 `canonicalize_aliases` → `prune_unreachable` → `inline_acyclic` →
-`prune_unreachable` → `fuse_single_use` → `prune_unreachable` →
+`force_inline` → `prune_unreachable` → `fuse_single_use` → `prune_unreachable` →
 `eliminate_epsilon` → `merge_literals` → `merge_regex_alts` →
 `factor_common_prefixes` → `refine_span_eligibility` → `compute_follow_sets` →
-`generate_dispatch_tables` → `refine_memo_strategies` → `infer_types`
+`factor_regex_with_lookahead` → `generate_dispatch_tables` → `refine_memo_strategies` → `infer_types`
 
 **Generated code per struct:**
 - `ParserFn` trait impl — one method per rule, returns `Parser<'a, Enum<'a>>`
@@ -83,7 +83,9 @@ Compile-time code generation. Reads `.bbnf`, emits Rust `TokenStream`.
 | `skip_recover` | Omit `@recover` codegen (well-formed input only) |
 | `remove_left_recursion` | Paull transform before codegen |
 | `ignore_whitespace` | Auto-trim |
-| `debug` | Debug output during compilation |
+| `debug` | Instrument all rules for trace output |
+| `arena` | Monolithic arena codegen with BumpArena |
+| `span` | Span-only monolithic codegen (zero allocation) |
 
 **Consumers:** gorgeous (5 built-in formatters), WASM AOT wrappers
 
@@ -100,7 +102,7 @@ Rust `TokenStream`.
 2. Resolve imports, extract directives
 3. Analysis — SCC, FIRST sets, span eligibility
 4. Lower AST → `GrammarIR` (`bbnf::lower`)
-5. Apply 15 IR optimization passes (`bbnf-ir::passes`) — **same passes as AOT**
+5. Apply 17 IR optimization passes (`bbnf-ir::passes`) — **same passes as AOT**
 6. **(VM only)** Compile IR → `BytecodeProgram` (`bbnf-ir::compiler`)
 7. Serialize via MessagePack (for WASM boundary crossing)
 8. Interpret bytecode against input (`bbnf-ir::interpreter`)
@@ -113,6 +115,14 @@ Rust `TokenStream`.
 - `Value` variants: `Nil`, `Span(start, end)`, `Tagged { tag, span, children }`, `Array`
 
 **Consumers:** WASM `compile_grammar()` + `parse_with_grammar()`, gorgeous `vm` feature
+
+### Debug Codegen
+
+`@debug` directives and the `#[parser(debug)]` attribute enable parse tracing across all three paths:
+
+- **Compiled (AOT)**: `ir_codegen/trace.rs` emits `#[cfg(feature = "parser-trace")]` instrumentation around monolithic rule functions. Zero overhead when the feature flag is off.
+- **Bytecode (VM)**: The compiler emits `Op::DebugBreak` opcodes at rule entry/exit. The interpreter supports stepping (into, over, out) and breakpoint filtering via `DebugState`.
+- **DAP bridge**: `bbnf-lsp --dap` speaks Debug Adapter Protocol over stdin/stdout, bridging the VM interpreter to VS Code's debug UI—breakpoints on rules, call stack inspection, parse state variables.
 
 ## 3. TypeScript Interpreter — Runtime Combinator Generation
 
@@ -153,7 +163,7 @@ rust/
       analysis/         FIRST/FOLLOW, SCC, span eligibility
       lower/            AST → GrammarIR (mod, string_interner, fn_table, expression, metadata)
       generate/
-        ir_codegen/     IR → Rust TokenStream (mod, alt, seq, repeat, wrap, infer, inline)
+        ir_codegen/     IR → Rust TokenStream (mod, alt, seq, repeat, wrap, infer, inline, trace)
         ir_span.rs      IR → SpanParser methods
         ir_pretty/      IR → to_doc() methods (mod, patterns, heuristics, codegen, utils)
         prettify/       Doc generation helpers
@@ -165,12 +175,13 @@ rust/
   bbnf-ir/              Canonical IR — shared by AOT and VM
     src/
       lib.rs            GrammarIR, IrNode, IrRule, RuleMeta, TypeDesc types
-      passes/           15 IR operations, 13 unique passes (used by both AOT and VM)
+      passes/           17 IR operations, 15 unique passes (used by both AOT and VM)
         canonicalize_aliases, prune_unreachable, inline_acyclic,
-        fuse.rs       fuse_single_use — inline single-use rules
+        force_inline, fuse.rs (fuse_single_use),
         eliminate_epsilon, merge_literals, merge_regex_alts,
         factor_common_prefixes,
         refine_span_eligibility, compute_follow_sets,
+        factor_lookahead.rs (factor_regex_with_lookahead),
         generate_dispatch_tables, refine_memo_strategies, infer_types
       compiler.rs       IR → BytecodeProgram (VM path only)
       interpreter.rs    BytecodeProgram → ParseResult (VM path only)

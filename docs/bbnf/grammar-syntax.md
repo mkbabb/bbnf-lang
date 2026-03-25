@@ -80,3 +80,17 @@ Import rules from other `.bbnf` files:
 - **Glob imports** are non-transitive—A importing all of B doesn't expose B's own imports to A
 - **Selective imports** auto-unfurl transitive dependencies—`@import { x } from "B.bbnf"` pulls in any local rules that `x` depends on
 - Local rules shadow imports
+
+## Directives Summary
+
+BBNF defines seven directives, all prefixed with `@` and terminated by `;`:
+
+| Directive | Syntax | Purpose |
+|-----------|--------|---------|
+| `@import` | `@import "path" ;` / `@import { names } from "path" ;` | Compose grammars from other files |
+| `@recover` | `@recover ruleName syncExpr ;` | Per-rule error recovery with sync expression |
+| `@pretty` | `@pretty ruleName hints ;` | Control pretty-printing Doc emission |
+| `@no_collapse` | `@no_collapse ruleName ;` | Preserve rule identity in AST (prevent Span compression) |
+| `@ws` | `@ws /regex/ ;` | Override `?w` whitespace operator grammar-wide |
+| `@inline` | `@inline ruleName ;` | Force-inline rule body at every call site |
+| `@debug` | `@debug ruleName ;` / `@debug * ;` | Instrument rules for debug tracing across compiled and VM paths |

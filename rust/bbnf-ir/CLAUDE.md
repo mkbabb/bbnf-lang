@@ -13,9 +13,9 @@ bbnf-ir/
 │   ├── lib.rs            GrammarIR, IrNode, IrRule, RuleMeta, TypeDesc, FnDescriptor
 │   ├── charset.rs        CharSet128 — 128-bit ASCII bitset (portable, no SIMD)
 │   ├── regex_first.rs    Conservative FIRST char extraction from regex patterns
-│   ├── compiler.rs       GrammarIR → bytecode Program
-│   ├── interpreter.rs    Bytecode VM interpreter (ParseResult, captures)
-│   ├── bytecode.rs       Opcode enum, Program struct
+│   ├── compiler.rs       GrammarIR → bytecode Program; compile_with_debug() for DebugBreak instrumentation
+│   ├── interpreter.rs    Bytecode VM interpreter (ParseResult, captures); rule_stack_snapshot() for debug frames
+│   ├── bytecode.rs       Opcode enum (incl. DebugBreak), Program struct, DebugState, StepMode, DebugAction, DebugSnapshot, TraceEntry
 │   └── passes/
 │       ├── mod.rs         Re-exports all passes
 │       ├── alias.rs       canonicalize_aliases — resolve A = B chains
@@ -27,6 +27,7 @@ bbnf-ir/
 │       ├── prefix.rs      factor_common_prefixes — left-factor shared prefixes
 │       ├── span.rs        refine_span_eligibility, compute_sp_method_rules
 │       ├── follow.rs      compute_follow_sets — FOLLOW set fixed-point iteration
+│       ├── factor_lookahead.rs  factor_regex_with_lookahead — lookahead-based regex factoring
 │       ├── dispatch.rs    generate_dispatch_tables — O(1) byte-dispatch for disjoint alts
 │       ├── memo.rs        refine_memo_strategies — selective memoization heuristics
 │       └── types/         infer_types — IrNode → TypeDesc inference
@@ -39,16 +40,20 @@ bbnf-ir/
 ## Key Types
 
 - **`IrNode`** — Expression tree node (Literal, Regex, Epsilon, Seq, Alt, Repeat, Ref, Skip, Next, Minus, Negate, Map, OptionalWhitespace).
-- **`GrammarIR`** — Top-level container: rules, entry point, string interning table, host function table, types, FOLLOW sets, `ws_pattern`, `b1_span_collapse`.
+- **`GrammarIR`** — Top-level container: rules, entry point, string interning table, host function table, types, FOLLOW sets, `ws_pattern`, `b1_span_collapse`, `debug_all`, `debug_labels`.
+- **`GrammarSpan`** / **`SourceMapEntry`** — Source location tracking for debug and error reporting.
 - **`IrRule`** — Rule id + name + body (`IrNode`) + metadata (`RuleMeta`).
-- **`RuleMeta`** — FIRST set, nullable, SCC info, memo strategy, dispatch hint, span eligibility, pretty hints, recover sync, sub-variants, `force_inline`.
+- **`RuleMeta`** — FIRST set, nullable, SCC info, memo strategy, dispatch hint, span eligibility, pretty hints, recover sync, sub-variants, `force_inline`, `debug`.
+- **`Op::DebugBreak`** — Bytecode opcode for debug instrumentation (rule entry/exit).
+- **`DebugState`** / **`StepMode`** / **`DebugAction`** — VM debug stepping control (into, over, out, continue, breakpoint filtering).
+- **`DebugSnapshot`** / **`TraceEntry`** — Captured parse state at a debug break: rule stack, offset, input slice.
 - **`AltDispatch`** — 128-entry byte→branch dispatch table for alternations with disjoint FIRST sets.
 - **`FnDescriptor`** — Host function descriptor (EnumWrap, BoxWrap, Custom closure).
 - **`TypeDesc`** — Serialized type info (Span, Option, Vec, Tuple, BoxedEnum, Enum, Named).
 
 ## IR Pass Pipeline
 
-16 operations (14 unique passes) run in this exact order (must stay in sync
+17 operations (15 unique passes) run in this exact order (must stay in sync
 with `bbnf/src/pipeline.rs` and `bbnf-derive/src/lib.rs`):
 
 1. `canonicalize_aliases` — resolve alias chains to direct references (O(1) lookup)
@@ -64,9 +69,10 @@ with `bbnf/src/pipeline.rs` and `bbnf-derive/src/lib.rs`):
 11. `factor_common_prefixes` — left-factor shared prefixes in alternations
 12. `refine_span_eligibility` — propagate span eligibility through rule graph
 13. `compute_follow_sets` — FOLLOW set fixed-point iteration (with Repeat inner Seq propagation, regex FIRST sets)
-14. `generate_dispatch_tables` — build O(1) byte-dispatch for disjoint alternations (regex FIRST sets via `regex_first` module)
-15. `refine_memo_strategies` — assign memoization strategies (None/Full/Selective)
-16. `infer_types` — populate `GrammarIR::types` with `TypeDesc` for each rule; `infer_node_in_vec` sub-pass handles Vec context inference
+14. `factor_regex_with_lookahead` — factor Alt branches with overlapping regex FIRST sets but disjoint continuation FIRST sets
+15. `generate_dispatch_tables` — build O(1) byte-dispatch for disjoint alternations (regex FIRST sets via `regex_first` module)
+16. `refine_memo_strategies` — assign memoization strategies (None/Full/Selective)
+17. `infer_types` — populate `GrammarIR::types` with `TypeDesc` for each rule; `infer_node_in_vec` sub-pass handles Vec context inference
 
 ## Serialization
 

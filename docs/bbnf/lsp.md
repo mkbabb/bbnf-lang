@@ -139,6 +139,25 @@ On every `textDocument/didChange` notification, the server runs a full re-parse 
   ] }
 ```
 
+## Directive Support
+
+All BBNF directives receive first-class LSP treatment—semantic tokens, hover, completion, and validation.
+
+- **`@inline`**: Semantic tokens for the keyword and target rule reference. Hover explains force-inlining behavior ("Splices rule body at every call site—no enum variant generated"). Completion suggests eligible rule names. Undefined target produces an ERROR diagnostic.
+- **`@debug`**: Same token + hover + completion pattern. Hover explains tracing behavior across compiled and VM paths. The `*` wildcard is recognized and highlighted as a keyword.
+- **`@ws`**: KEYWORD semantic token. Hover displays the overriding regex pattern.
+- **`@import`**: KEYWORD token for `@import` and `from`; RULE_REFERENCE tokens for each selectively imported name. Hover on imported names shows the source file path.
+
+## IR-Backed Enrichment
+
+When a grammar parses successfully, the analysis pipeline runs `try_compile_ir()`—the full IR lowering and pass sequence—and extracts per-rule metadata (`IrRuleMeta`) for hover enrichment. Hovering a rule now shows:
+
+- **FOLLOW set** — characters that can legally follow the rule
+- **Dispatch table** — whether the rule's alternation has an O(1) byte-dispatch table
+- **Memo strategy** — None, Full, or Selective memoization
+- **Span eligibility** — whether the rule qualifies for zero-copy `_sp()` method generation
+- **Inferred output type** — the `TypeDesc` the codegen would produce (Span, Vec, Option, Enum, etc.)
+
 ## Binary Resolution
 
 The VS Code extension locates the `bbnf-lsp` binary in this priority order:

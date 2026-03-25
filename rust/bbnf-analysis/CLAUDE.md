@@ -40,6 +40,9 @@ bbnf-analysis/
 - **OwnedAst** — `self_cell` wrapper: owns the leaked `&'static str` text and borrows it into the parsed AST.
 - **DocumentInfo** — rules, diagnostics, semantic tokens, FIRST labels, nullable set, cycle paths, imports. Computed on every text change.
 - **LineIndex** — pre-computed line starts for O(log n) offset↔position conversion.
+- **IrRuleMeta** — per-rule metadata from `try_compile_ir()`: FOLLOW sets, dispatch table presence, memo strategy, span eligibility, inferred type.
+- **ImportedItem** — imported rule with source path, used for hover enrichment on `@import` names.
+- **InlineInfo** / **DebugInfo** / **WsPatternInfo** — directive-specific metadata for hover and semantic tokens.
 
 ## Dependencies
 
@@ -53,3 +56,7 @@ bbnf-analysis/
 ## Feature Provider Pattern
 
 Each file in `features/` exports a function that takes `&DocumentState` (plus position/range parameters) and returns an LSP response type. The LSP server (`lsp/src/server/protocol.rs`) and the WASM crate (`wasm/src/lsp.rs`) both call these functions directly—no protocol-level dispatch in the analysis crate itself.
+
+## IR Pipeline Integration
+
+When a grammar parses successfully, `diagnostics.rs` runs `try_compile_ir()`—the full IR lowering and pass sequence from `bbnf::pipeline`—and caches per-rule `IrRuleMeta` on `DocumentInfo`. This enriches hover with FOLLOW sets, dispatch table presence, memo strategy, span eligibility, and inferred output type. The IR compilation is best-effort; analysis degrades gracefully if lowering fails.

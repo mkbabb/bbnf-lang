@@ -73,7 +73,7 @@ All numbers are cold: fresh `BumpArena` + `Parser` constructed per iteration.
 | bootstrap.css | 281 KB | 276 | 939 | 437 |
 | tailwind.css | 3.8 MB | 284 | 469 | 360 |
 
-The pretty arena tier produces the full typed AST that gorgeous uses for formatting. Parse-only is the isolated parse phase (no `to_doc` or render). Prior to the delimiter-scan optimization, tailwind parsed at 28 MB/s—the structural overhead of recursive descent on ~38K tiny utility rules was the bottleneck.
+The pretty arena tier produces the full typed AST that gorgeous uses for formatting. Parse-only is the isolated parse phase (no `to_doc` or render). Prior to the delimiter-scan optimization, tailwind parsed at 28 MB/s—the structural overhead of recursive descent on ~38K tiny utility rules was the bottleneck. With delimiter scanning and span-only codegen, tailwind went from 28 MB/s to 2196 MB/s (arena) and 3585 MB/s (span-only).
 
 ### Delimiter-driven flat scanning
 
@@ -86,6 +86,14 @@ Detection criteria:
 - Pivot, open, close bytes are pairwise distinct
 
 In the span path, the scanner replaces the descent entirely (all Span output). In the arena path, the scanner determines which branch to call, then invokes that branch's existing recursive descent function—preserving full typed output for formatting. A pseudo-class guard handles ambiguous pivots: if the scanned value terminates at the open byte, the pivot was part of a compound token (e.g., `selector:pseudo{...}`), and the scanner falls back to the block branch.
+
+## Span-Only Parsing
+
+`#[parser(span)]` generates a third codegen tier—`fn __rule_span(state) -> Option<Span<'a>>` functions that return byte-range spans with zero allocation. No enum variants, no arena, no Vec. Every rule collapses to a start/end offset pair.
+
+This tier is useful for validation-only parsing (syntax checking, linting) and for inner loops where the typed AST isn't needed. Direct `memchr` emission for negated character classes (`[^XYZ]+`, `[^XYZ]*`) bypasses the SpanParser enum dispatch entirely, calling `memchr::memchr1/2/3` inline.
+
+The span path also serves as the fast lane for delimiter-driven flat scanning—the `memchr` scanner replaces recursive descent wholesale when the grammar matches the `Wrap(Repeat(Alt))` pattern.
 
 ## Vec Capacity
 

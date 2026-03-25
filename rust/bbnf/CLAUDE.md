@@ -38,7 +38,8 @@ bbnf/
 │   │   │   ├── repeat.rs Repetition codegen (many, sep_by, optional)
 │   │   │   ├── wrap.rs   Skip/Next/Minus/Negate codegen
 │   │   │   ├── infer.rs  IrNode → syn::Type inference
-│   │   │   └── inline.rs Flat match-arm dispatch codegen (InlineCtx, emit_rule_body_inline)
+│   │   │   ├── inline.rs Flat match-arm dispatch codegen (InlineCtx, emit_rule_body_inline)
+│   │   │   └── trace.rs  Debug trace codegen (#[cfg(feature = "parser-trace")] instrumentation)
 │   │   ├── ir_enums.rs   Enum type generation from IR alternations
 │   │   ├── ir_types.rs   IR-level type inference and mapping
 │   │   ├── ir_pretty/    IR-based @pretty codegen
@@ -112,3 +113,7 @@ Standard algorithm: `A = Aα | β` → `A = βA'`, `A' = αA' | ε`. Direct only
 
 ### imports.rs — Module System
 `ModuleRegistry` loads transitive imports via DFS. Cycle detection, selective import verification, name conflict detection. Non-transitive: A imports B, B imports C → A doesn't see C.
+
+## Conventions
+
+- **`@debug` directive**: `@debug ruleName ;` / `@debug * ;` instruments rules for trace output. `ir_codegen/trace.rs` emits `#[cfg(feature = "parser-trace")]` instrumentation for monolithic paths; the combinator path wraps with `.debug("name")`. `RuleMeta::debug` and `GrammarIR::debug_all` carry the directive through lowering.

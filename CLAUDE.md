@@ -10,16 +10,19 @@ BBNF extends EBNF for defining context-free grammars, used by the
 bbnf-lang/
 ├── rust/                       Rust workspace (Cargo)
 │   ├── bbnf/                   Core grammar parser, IR lowering, codegen (lib)
+│   │   └── generate/ir_codegen/trace.rs  Debug trace codegen (#[cfg(feature = "parser-trace")])
 │   ├── bbnf-ir/                Canonical grammar IR, bytecode compiler, interpreter
 │   ├── bbnf-derive/            Proc-macro: #[derive(Parser)] from .bbnf files
 │   ├── bbnf-analysis/          LSP analysis engine (DocumentState, 14 feature providers, state management)
 │   └── lsp/                    Language server (bbnf-lsp binary)
+│       └── src/dap/            DAP server (mod, adapter, protocol, mapping)
 ├── wasm/                       bbnf-wasm crate (wasm-pack → playground)
 │   └── src/                    lib.rs + analysis.rs, gorgeous.rs, lsp.rs, vm.rs
 ├── typescript/                 @mkbabb/bbnf-lang — runtime parser + codegen
 ├── prettier-plugin-bbnf/       Prettier plugin for .bbnf formatting
 ├── playground/                 Vue 3 + Monaco playground (uses bbnf-wasm)
-│   └── src/composables/        wasm/, usePlaygroundQuery, useSplitPane, usePipeline, useExamples, useWalkthrough, useDocs, useHeroState, useTypewriter, useMouseParallax, useScrollTimeline, useScrollMorph, useMarkdownComponents, useChartData
+│   ├── src/components/debug/   Debug pane components (breakpoints, call stack, parse state)
+│   └── src/composables/        wasm/, usePlaygroundQuery, useSplitPane, usePipeline, useExamples, useWalkthrough, useDocs, useHeroState, useTypewriter, useMouseParallax, useScrollTimeline, useScrollMorph, useMarkdownComponents, useChartData, useDebugSession
 ├── extension/                  VS Code extension (LSP client)
 ├── docs/                       Documentation (markdown, rendered by playground)
 ├── grammar/                    Example grammars + language specification
@@ -138,11 +141,15 @@ bbnf-lsp uses workspace-relative paths to bbnf; cross-repo deps are version-only
 - **BumpArena**: `parse_that::BumpArena<T>`—UnsafeCell-based bump allocator replacing `typed_arena::Arena`. Zero RefCell borrow tracking per alloc. Used via `parse_with_context(&input, &arena)`.
 - **`@ws` directive**: `@ws /regex/ ;` overrides what `?w` compiles to. Stored as `GrammarIR::ws_pattern: Option<StringId>`. Codegen uses `emit_ws_trim()` which checks `ir.ws_pattern` and emits `fast_paths::emit_regex_direct_call` for known SIMD fast paths (e.g., CSS comment-aware whitespace → `css_ws_comment_fast`).
 - **`@inline` directive**: `@inline ruleName ;` force-inlines a rule at all call sites via `force_inline` IR pass. Stored as `RuleMeta::force_inline: bool`. Rule body substituted at every `Ref`, no enum variant generated. Guarded against direct self-recursion. Runs after `inline_acyclic`, before `fuse_single_use`.
+- **`@debug` directive**: `@debug ruleName ;` / `@debug * ;` instruments rules for trace output. Stored as `RuleMeta::debug: bool` and `GrammarIR::debug_all: bool`. Trace codegen: `ir_codegen/trace.rs` emits `#[cfg(feature = "parser-trace")]` calls for monolithic paths; combinator path wraps with `.debug("name")`.
+- **DAP server**: `lsp/src/dap/` (4 sub-modules: `mod.rs`, `adapter.rs`, `protocol.rs`, `mapping.rs`). `bbnf-lsp --dap` speaks Debug Adapter Protocol over stdin/stdout.
+- **Import item spans**: `ImportedName<'a>` preserves byte spans for selective imports. `ImportedItem` in analysis layer.
+- **IR-backed LSP analysis**: `try_compile_ir()` in `diagnostics.rs` runs the full IR pipeline per document change, extracts `IrRuleMeta` (FOLLOW sets, dispatch, memo, span eligibility, inferred type) for hover enrichment.
 - **`b1_span_collapse`**: `GrammarIR::b1_span_collapse: bool`. When true (prettify disabled), the B.1 all-Span guard in Seq codegen keeps overrides for simple children, collapsing the Seq to a single Span. Eliminates arena allocation for declaration-like rules. Gated to prevent type cascading in prettify grammars.
 - **Cold benchmarks only**: All bench macros construct fresh BumpArena + Parser per iteration. Warm/cached benchmarks (reusing a pre-constructed Parser) removed—they measure combinator cache throughput, not parse throughput.
 - **JSON pattern detection**: Exact-match against canonical regex patterns (no substring heuristics). `is_json_string_regex()` / `is_json_number_regex()` use `const` pattern arrays.
-- **WASM**: `wasm/` crate (`bbnf-wasm`) — 29 exports total: 5 formatters (json/css/bnf/ebnf/bbnf) + `analyze_grammar` + 17 LSP features + 5 VM functions (compile, parse, parse_check, format, free) + `init_panic_hook`. Decomposed into `analysis.rs`, `gorgeous.rs`, `lsp.rs`, `vm.rs`.
-- **Playground composables**: `composables/wasm/{types,index,loader}.ts` + `usePlaygroundQuery.ts`, `useSplitPane.ts`, `usePipeline.ts`, `useExamples.ts`, `useWalkthrough.ts`, `useDocs.ts`, `useHeroState.ts`, `useTypewriter.ts`, `useMouseParallax.ts`, `useScrollTimeline.ts`, `useScrollMorph.ts`, `useMarkdownComponents.ts`, `useChartData.ts`. 15 Monaco providers: hover, completion, semantic tokens, inlay hints, definition, document symbols, folding, selection ranges, code actions, code lens, references, rename, document formatting, range formatting, on-type formatting.
+- **WASM**: `wasm/` crate (`bbnf-wasm`) — 31 exports total: 5 formatters (json/css/bnf/ebnf/bbnf) + `analyze_grammar` + 17 LSP features + 7 VM functions (compile, compile_grammar_debug, parse, parse_check, format, debug_step, free) + `init_panic_hook`. Decomposed into `analysis.rs`, `gorgeous.rs`, `lsp.rs`, `vm.rs`.
+- **Playground composables**: `composables/wasm/{types,index,loader}.ts` + `usePlaygroundQuery.ts`, `useSplitPane.ts`, `usePipeline.ts`, `useExamples.ts`, `useWalkthrough.ts`, `useDocs.ts`, `useHeroState.ts`, `useTypewriter.ts`, `useMouseParallax.ts`, `useScrollTimeline.ts`, `useScrollMorph.ts`, `useMarkdownComponents.ts`, `useChartData.ts`, `useDebugSession.ts`. 15 Monaco providers: hover, completion, semantic tokens, inlay hints, definition, document symbols, folding, selection ranges, code actions, code lens, references, rename, document formatting, range formatting, on-type formatting.
 
 ## Roadmap
 

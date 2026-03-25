@@ -101,6 +101,14 @@ import-aware—imported rule names suppress "undefined rule" warnings.
 
 `@inline ruleName ;` force-inlines a rule at every call site during IR compilation. The rule's body is substituted directly—no enum variant generated, no function emitted. Useful for small helper rules (optional semicolons, opaque spans) where the abstraction aids readability but the codegen overhead doesn't.
 
+### Debugging
+
+`@debug ruleName ;` instruments a rule for trace output across all codegen paths. `@debug * ;` instruments every rule. Compiled paths gate behind `#[cfg(feature = "parser-trace")]`; the bytecode VM uses `Op::DebugBreak` opcodes with stepping and breakpoint support. The VS Code extension supports grammar-level debugging via DAP (`bbnf-lsp --dap`)—breakpoints on rules, step through parse execution, inspect call stack and parse state.
+
+### No-Collapse
+
+`@no_collapse ruleName ;` preserves a rule's structural identity in the generated AST, preventing Span compression from collapsing it.
+
 ### Formatting
 
 BBNF's `@pretty` directives drive pretty-printing in the playground and Prettier plugin.
@@ -120,6 +128,10 @@ let ast = JsonParser::value_arena()
     .unwrap();
 ```
 
+### Span-Only Parsing
+
+`#[parser(span)]` generates zero-allocation `__rule_span` functions returning `Option<Span<'a>>`. No enum variants, no arena, no Vec. Validation-only parsing at maximum throughput.
+
 ## Playground
 
 Live at **[grammar.babb.dev](https://grammar.babb.dev)**.
@@ -138,6 +150,7 @@ Four panes show different views of the grammar and input:
 | **Input** | Source text parsed against the grammar |
 | **Parsed AST** | JSON AST produced by the parser |
 | **Formatted** | Pretty-printed output via `@pretty` directives |
+| **Debug** | Step through parse execution—breakpoints, call stack, parse state |
 
 Formatting uses [gorgeous](https://github.com/mkbabb/gorgeous) (WASM)—AOT-generated formatters for built-in languages, a bytecode VM for custom grammars.
 

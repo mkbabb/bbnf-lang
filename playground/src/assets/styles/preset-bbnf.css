@@ -37,6 +37,14 @@
     --shadow-card: 3px 3px 0px 0px;
     --shadow-hover: 5px 7px 0px 0px;
 
+    /* Medium glass intensity */
+    --glass-opacity-light: 0.52;
+    --glass-opacity-medium: 0.62;
+    --glass-bg: hsl(var(--card) / 0.52);
+    --glass-bg-medium: hsl(var(--card) / 0.62);
+    --glass-blur: blur(12px);
+    --glass-blur-heavy: blur(20px) saturate(1.2);
+
     /* Animation extras */
     --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
     --duration-hero: 700ms;

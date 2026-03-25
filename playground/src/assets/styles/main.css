@@ -47,28 +47,6 @@
     background: linear-gradient(to right, transparent, hsl(var(--border)) 15%, hsl(var(--border)) 85%, transparent);
 }
 
-@utility gold-shimmer {
-    background: linear-gradient(90deg, #c49a2e, #e8c84a, #d4a832, #e8c84a, #c49a2e);
-    background-size: 250% 100%;
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
-    animation: shimmer 5s linear infinite;
-}
-
-@utility blue-shimmer {
-    background: linear-gradient(90deg, #1e40af, #60a5fa, #3b82f6, #60a5fa, #1e40af);
-    background-size: 200% 100%;
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
-    animation: shimmer 3s linear infinite;
-}
-
-@utility code-badge {
-    @apply font-mono text-xs rounded border px-1.5 py-0.5;
-}
-
 @utility card-base {
     @apply rounded-xl border border-border/50 bg-card/80 backdrop-blur-sm shadow-card;
 }
@@ -325,7 +303,7 @@
 /* Floating term tooltip */
 .term-tooltip {
     position: fixed;
-    z-index: 50;
+    z-index: var(--z-overlay);
     max-width: 320px;
     padding: 0.5rem 0.75rem;
     border-radius: 0.5rem;
@@ -426,9 +404,4 @@
         @apply px-1.5 whitespace-nowrap tabular-nums;
         color: hsl(var(--foreground) / 0.5);
     }
-}
-
-@keyframes shimmer {
-    0% { background-position: 250% 0; }
-    100% { background-position: -250% 0; }
 }

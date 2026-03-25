@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { ref, computed, nextTick } from "vue";
-import { Search, X, PanelLeftClose } from "lucide-vue-next";
+import { PanelLeftClose } from "lucide-vue-next";
+import { FuzzySearch, useFuzzySearch } from "@mkbabb/glass-ui";
+import type { SearchableItem } from "@mkbabb/glass-ui";
 import { useDocs } from "@/composables/useDocs";
 import { getSectionTheme } from "@/lib/sectionTheme";
+import { useRouter } from "vue-router";
 
-defineProps<{
+const props = defineProps<{
     currentSlug?: string;
     showClose?: boolean;
     showCollapse?: boolean;
@@ -14,6 +17,8 @@ const emit = defineEmits<{
     close: [];
     collapse: [];
 }>();
+
+const router = useRouter();
 
 // JS-based height transition hooks
 function onBeforeEnter(el: Element) {
@@ -50,7 +55,6 @@ function onAfterLeave(el: Element) {
 }
 
 const { sections } = useDocs();
-const searchQuery = ref("");
 const expandedSections = ref<Set<string>>(new Set(sections.value.map((s) => s.name)));
 
 function toggleSection(name: string) {
@@ -61,8 +65,30 @@ function toggleSection(name: string) {
     }
 }
 
+// Fuzzy search over all docs
+const searchItems = computed<SearchableItem[]>(() =>
+    sections.value.flatMap((s) =>
+        s.docs.map((d) => ({
+            id: d.slug,
+            label: d.title,
+            text: d.content,
+            type: s.name,
+        }))
+    )
+);
+
+const searchState = useFuzzySearch({
+    items: () => searchItems.value,
+    debounceMs: 150,
+    maxResults: 20,
+    onSelect: (result) => {
+        router.push(`/docs/${result.item.id}`);
+    },
+});
+
+// Filter sections based on active search query
 const filteredSections = computed(() => {
-    const q = searchQuery.value.toLowerCase().trim();
+    const q = searchState.query.value.toLowerCase().trim();
     if (!q) return sections.value;
     return sections.value
         .map((section) => ({
@@ -79,26 +105,15 @@ const filteredSections = computed(() => {
 <template>
     <aside class="flex h-full w-64 shrink-0 flex-col overflow-y-auto border-r border-border/30 bg-card/40 backdrop-blur-xl scrollbar-hidden rounded-tr-xl rounded-br-xl">
         <!-- Search bar + collapse toggle -->
-        <div class="p-3 border-b border-border/20">
+        <div class="p-2 border-b border-border/20">
             <div class="flex items-center gap-1.5">
-                <div class="relative flex-1">
-                    <Search class="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/50" />
-                    <input
-                        v-model="searchQuery"
-                        type="text"
+                <div class="flex-1 min-w-0">
+                    <FuzzySearch
+                        :state="searchState"
+                        variant="sidebar"
                         placeholder="Search docs..."
-                        :class="[
-                            'w-full pl-8 py-1.5 rounded-md bg-muted/20 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-pastel-green/50 transition-colors',
-                            showClose ? 'pr-8' : 'pr-3'
-                        ]"
+                        :type-label="(item: SearchableItem) => item.type ?? ''"
                     />
-                    <button
-                        v-if="showClose"
-                        class="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-md hover:bg-muted/50 active:scale-90 transition-[colors,transform] text-muted-foreground"
-                        @click="emit('close')"
-                    >
-                        <X class="h-3.5 w-3.5" />
-                    </button>
                 </div>
                 <button
                     v-if="showCollapse"
@@ -112,7 +127,7 @@ const filteredSections = computed(() => {
         </div>
 
         <!-- Navigation -->
-        <nav class="flex-1 overflow-y-auto px-2 py-3 scrollbar-hidden">
+        <nav class="flex-1 overflow-y-auto px-1.5 py-2 scrollbar-hidden">
             <div v-for="section in filteredSections" :key="section.name" class="mb-4">
                 <button
                     class="flex items-center gap-2 w-full px-2 py-1.5 group active:scale-[0.98] transition-transform"

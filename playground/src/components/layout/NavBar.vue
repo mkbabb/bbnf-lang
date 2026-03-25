@@ -240,7 +240,7 @@ function isActiveLink(link: typeof allNavLinks[0]) {
     pointer-events: none;
     transform: scale(0.92) translateY(6px);
     transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 50;
+    z-index: var(--z-dock);
     min-width: 16rem;
     white-space: normal;
 }

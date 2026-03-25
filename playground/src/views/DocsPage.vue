@@ -6,7 +6,7 @@ import { useDocs } from "@/composables/useDocs";
 import { useMarkdown } from "@/lib/markdown";
 import { useMarkdownComponents } from "@/components/docs/useMarkdownComponents";
 import { getSectionTheme } from "@/lib/sectionTheme";
-import { PanelLeftOpen, Menu } from "lucide-vue-next";
+import { PanelLeftOpen, PanelLeftClose } from "lucide-vue-next";
 
 const props = defineProps<{
     slug?: string;
@@ -38,6 +38,15 @@ const currentDoc = computed(() => props.slug ? getDoc(props.slug) : undefined);
 const rendered = computed(() => currentDoc.value ? renderMarkdown(currentDoc.value.content) : "");
 const sectionTheme = computed(() => currentDoc.value ? getSectionTheme(currentDoc.value.section) : null);
 
+// Sidebar toggle — mobile: drawer, desktop: collapse/expand
+function onToggleSidebar() {
+    if (window.matchMedia("(min-width: 768px)").matches) {
+        sidebarOpen.value = !sidebarOpen.value;
+    } else {
+        mobileDrawer.value = !mobileDrawer.value;
+    }
+}
+
 // Hydrate interactive components (code-tabs, bench-chart, live-bench) into rendered markdown
 const articleRef = ref<HTMLElement | null>(null);
 useMarkdownComponents(articleRef, rendered);
@@ -60,7 +69,7 @@ useMarkdownComponents(articleRef, rendered);
             title="Expand sidebar"
             @click="sidebarOpen = true"
         >
-            <PanelLeftOpen class="h-5 w-5" />
+            <PanelLeftOpen class="h-4 w-4" />
         </button>
 
         <!-- Mobile drawer overlay -->
@@ -112,12 +121,13 @@ useMarkdownComponents(articleRef, rendered);
                         </svg>
                         {{ currentDoc.section }}
                     </div>
-                    <!-- Mobile menu button — below badge, sticky on scroll -->
+                    <!-- Sidebar toggle — sticky on scroll, works as drawer toggle on mobile and collapse/expand on desktop -->
                     <button
-                        class="mobile-menu-btn md:hidden"
-                        @click="mobileDrawer = !mobileDrawer"
+                        class="sidebar-toggle-btn"
+                        @click="onToggleSidebar"
                     >
-                        <Menu class="h-4 w-4" />
+                        <PanelLeftOpen v-if="!sidebarOpen && !mobileDrawer" class="h-4 w-4" />
+                        <PanelLeftClose v-else class="h-4 w-4" />
                     </button>
                     <article ref="articleRef" class="prose max-w-none" v-html="rendered" />
                 </div>
@@ -137,15 +147,14 @@ useMarkdownComponents(articleRef, rendered);
     margin-left: 1rem;
 }
 
-/* Mobile menu button — below badge, sticky on scroll.
-   float:right + clear:right places it below the badge.
-   position:sticky keeps it visible while scrolling. */
-.mobile-menu-btn {
+/* Sidebar toggle — float right below badge, sticky on scroll.
+   Works as drawer toggle on mobile and collapse/expand on desktop. */
+.sidebar-toggle-btn {
     position: sticky;
     top: calc(var(--spacing-navbar) + 0.5rem);
     float: right;
     clear: right;
-    z-index: 20;
+    z-index: var(--z-controls);
     margin: 0.25rem -0.25rem 0 0.75rem;
     padding: 0.375rem;
     border-radius: 0.5rem;
@@ -157,11 +166,11 @@ useMarkdownComponents(articleRef, rendered);
     transition: background 0.15s, color 0.15s;
     line-height: 0;
 }
-.mobile-menu-btn:hover {
+.sidebar-toggle-btn:hover {
     background: hsl(var(--muted) / 0.5);
     color: hsl(var(--foreground));
 }
-.mobile-menu-btn:active {
+.sidebar-toggle-btn:active {
     transform: scale(0.95);
 }
 

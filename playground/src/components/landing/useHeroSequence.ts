@@ -123,7 +123,7 @@ export function useHeroSequence(
         element.style.top = "0px";
         element.style.width = `${m.width}px`;
         element.style.height = `${m.height}px`;
-        element.style.zIndex = "60";
+        element.style.zIndex = "var(--z-overlay)";
         element.style.transform = `translate(${x}px,${y}px) scale(${sx},${sy})`;
         element.style.transformOrigin = "top left";
         element.style.willChange = p >= 1 ? "auto" : "transform";

@@ -202,6 +202,11 @@ fn generate_ir_parser_methods(
             }
         }
 
+        // Debug → .debug("name") (parse_that combinator, feature-gated).
+        if rule.meta.debug || ctx.parser_attrs.debug {
+            parser = ir_codegen::trace::emit_combinator_debug(parser, name);
+        }
+
         methods.push(quote! {
             pub fn #ident<'a>() -> Parser<'a, #ty> {
                 #parser

@@ -62,13 +62,30 @@ pub fn generate_monolithic_span(
         let body_expr = emit_span_expr(&rule.body, ir, ctx, &mut mctx);
         let hoisted = &mctx.hoisted;
 
+        let fn_body = quote! { #(#hoisted)* #body_expr };
+
+        let rule_debug = ir.debug_all || rule.meta.debug;
+        let instrumented_body = if rule_debug {
+            let trace_entry = super::super::trace::emit_trace_entry(name);
+            let result_ident =
+                syn::Ident::new("__trace_result", proc_macro2::Span::call_site());
+            let trace_exit = super::super::trace::emit_trace_exit(name, &result_ident);
+            quote! {
+                #trace_entry
+                let #result_ident = (|| -> Option<::parse_that::Span<'a>> { #fn_body })();
+                #trace_exit
+                #result_ident
+            }
+        } else {
+            fn_body
+        };
+
         methods.push(quote! {
             #[allow(non_snake_case)]
             fn #fn_ident<'a>(
                 state: &mut ::parse_that::ParserState<'a>,
             ) -> Option<::parse_that::Span<'a>> {
-                #(#hoisted)*
-                #body_expr
+                #instrumented_body
             }
         });
 
@@ -79,7 +96,18 @@ pub fn generate_monolithic_span(
         });
     }
 
-    quote! { #(#methods)* }
+    // Emit thread-local depth counter if any rule is debug-instrumented.
+    let has_debug = ir.debug_all || ir.rules.iter().any(|r| r.meta.debug);
+    let depth_counter = if has_debug {
+        super::super::trace::emit_depth_counter()
+    } else {
+        quote! {}
+    };
+
+    quote! {
+        #depth_counter
+        #(#methods)*
+    }
 }
 
 /// Emit span-only code for an IrNode. Returns `Option<Span<'a>>`.

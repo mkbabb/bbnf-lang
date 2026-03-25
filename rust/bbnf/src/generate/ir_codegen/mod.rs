@@ -23,6 +23,7 @@ mod inline;
 pub mod monolithic;
 mod repeat;
 mod seq;
+pub mod trace;
 mod wrap;
 
 use bbnf_ir::{FnDescriptor, IrNode, RuleId};

@@ -15,7 +15,7 @@
 use bbnf_ir::{GrammarIR, IrNode, RuleId};
 
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{format_ident, quote};
 
 use super::super::super::ir_types::IrCodegenCtx;
 use super::super::unescape_literal;
@@ -468,15 +468,19 @@ pub(super) fn emit_arena(
         quote! { state.offset += 1; }
     };
 
-    // Pivot branch: rewind to item start, call the pivot rule's arena function.
-    // The scanner determined this is a pivot-led item (e.g., pivot-led item);
-    // the function handles all typed construction via normal recursive descent.
+    // Pivot branch: the scanner found the pivot byte and scanned the value.
+    // `state.offset` is at the end of the value (past optional trail).
+    // `__item` is the start of the item.
+    //
+    // For Span-typed pivot rules (e.g., `declaration = ... ?w` returning Span),
+    // we can construct the result directly from scanner offsets, eliminating
+    // the rewind + re-parse that the speculative dispatch normally does.
     let on_pivot = if let Some(pivot_rule_id) = config.pivot_fn {
-        let pivot_name = ctx.ir.get_string(ctx.ir.rules[pivot_rule_id as usize].name);
+        let pivot_rule = &ctx.ir.rules[pivot_rule_id as usize];
+        let pivot_name = ctx.ir.get_string(pivot_rule.name);
         let pivot_fn = mono_fn_ident(pivot_name);
 
-        // Fallback: if the pivot function fails (rare — e.g., scanner misidentified
-        // the pivot), try the block branch instead.
+        // Fallback: if the pivot function fails, try the block branch.
         let fallback = if let Some(block_rule_id) = config.block_fn {
             let block_name = ctx.ir.get_string(ctx.ir.rules[block_rule_id as usize].name);
             let block_fn = mono_fn_ident(block_name);
@@ -492,17 +496,35 @@ pub(super) fn emit_arena(
             quote! { break; }
         };
 
-        quote! {
-            state.offset = __item;
-            if let Some(__v) = Self::#pivot_fn(state) {
-                __vals.push(__v);
-            } else {
-                #fallback
+        // Check if the pivot rule returns Span — if so, construct directly
+        // from scanner offsets (no rewind, no re-parse).
+        let pivot_type = ctx.ir.types.iter().find(|(id, _)| *id == pivot_rule_id);
+        let is_span_result = pivot_rule.meta.is_token
+            || pivot_type.is_some_and(|(_, td)| *td == bbnf_ir::TypeDesc::Span);
+
+        if is_span_result {
+            // Direct construction: the scanner already scanned the entire item.
+            // Build Span from __item to state.offset (post-trail-consume).
+            let variant_ident = format_ident!("{}", pivot_name);
+            let enum_ident = &ctx.enum_ident;
+            quote! {
+                // Scanner already consumed the item — construct Span directly.
+                __vals.push(#enum_ident::#variant_ident(
+                    ::parse_that::Span::new(__item, state.offset, state.src)
+                ));
+            }
+        } else {
+            // Non-Span result: rewind and re-parse with the pivot function.
+            quote! {
+                state.offset = __item;
+                if let Some(__v) = Self::#pivot_fn(state) {
+                    __vals.push(__v);
+                } else {
+                    #fallback
+                }
             }
         }
     } else {
-        // No pivot rule (inlined branch) — fall through to standard codegen.
-        // This shouldn't happen in practice (the detection requires a Ref branch).
         quote! { break; }
     };
 

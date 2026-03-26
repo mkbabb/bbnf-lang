@@ -88,6 +88,11 @@ pub fn emit_regex_direct_call(pattern: &str) -> Option<TokenStream> {
         return Some(quote! { ::parse_that::css_string_fast(state) });
     }
 
+    // Generalized regex patterns (char ranges, small char sets).
+    if let Some(ts) = emit_generalized_regex_direct(pattern) {
+        return Some(ts);
+    }
+
     // Negated character class → direct memchr call, bypassing SpanParser dispatch.
     if let Some((excluded, quantifier)) = is_negated_char_class_regex(pattern) {
         let bytes = excluded.as_bytes();
@@ -261,6 +266,160 @@ fn is_css_string_regex(pattern: &str) -> bool {
 pub enum NegCharClassQuantifier {
     Plus,
     Star,
+}
+
+// ---------------------------------------------------------------------------
+// Generalized regex strength reduction
+// ---------------------------------------------------------------------------
+
+/// Whether a pattern is a simple character range like `[a-z]` or `[0-9]`.
+/// Returns `(lo, hi)` byte range if detected.
+fn is_single_char_range_regex(pattern: &str) -> Option<(u8, u8)> {
+    let inner = pattern.strip_prefix('[')?.strip_suffix(']')?;
+    // Must be exactly "X-Y" where X and Y are single ASCII characters.
+    if inner.len() == 3 && inner.as_bytes()[1] == b'-' {
+        let lo = inner.as_bytes()[0];
+        let hi = inner.as_bytes()[2];
+        if lo.is_ascii() && hi.is_ascii() && lo < hi {
+            return Some((lo, hi));
+        }
+    }
+    None
+}
+
+/// Whether a pattern is a simple character set like `[abc]` (no ranges, no escapes).
+/// Returns the set of bytes if detected (max 8 bytes for practical emission).
+fn is_small_char_set_regex(pattern: &str) -> Option<Vec<u8>> {
+    let inner = pattern.strip_prefix('[')?.strip_suffix(']')?;
+    // Must not contain ranges, escapes, or negation.
+    if inner.starts_with('^') || inner.contains('-') || inner.contains('\\') {
+        return None;
+    }
+    let bytes: Vec<u8> = inner.bytes().collect();
+    if bytes.len() >= 2 && bytes.len() <= 8 && bytes.iter().all(|b| b.is_ascii()) {
+        Some(bytes)
+    } else {
+        None
+    }
+}
+
+/// Whether a pattern is a single-char range with `+` quantifier like `[a-z]+`.
+/// Returns `(lo, hi)` byte range.
+fn is_char_range_plus_regex(pattern: &str) -> Option<(u8, u8)> {
+    let inner = pattern.strip_suffix('+')?;
+    is_single_char_range_regex(inner)
+}
+
+/// Whether a pattern is a single-char range with `*` quantifier like `[a-z]*`.
+/// Returns `(lo, hi)` byte range.
+fn is_char_range_star_regex(pattern: &str) -> Option<(u8, u8)> {
+    let inner = pattern.strip_suffix('*')?;
+    is_single_char_range_regex(inner)
+}
+
+/// Emit a direct call for generalized regex patterns beyond JSON/CSS.
+///
+/// Covers:
+/// - `[a-z]` → single byte range check
+/// - `[abc]` → small character set match (2-8 chars)
+/// - `[a-z]+` → byte range scan loop
+/// - `[a-z]*` → byte range scan loop (zero-or-more)
+pub fn emit_generalized_regex_direct(pattern: &str) -> Option<TokenStream> {
+    // Single character range: [a-z]
+    if let Some((lo, hi)) = is_single_char_range_regex(pattern) {
+        let lo_lit = proc_macro2::Literal::byte_character(lo);
+        let hi_lit = proc_macro2::Literal::byte_character(hi);
+        return Some(quote! {
+            {
+                let __start = state.offset;
+                if let Some(&__b) = state.src_bytes.get(__start) {
+                    if __b >= #lo_lit && __b <= #hi_lit {
+                        state.offset = __start + 1;
+                        Some(::parse_that::Span::new(__start, __start + 1, state.src))
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            }
+        });
+    }
+
+    // Small character set: [abc]
+    if let Some(bytes) = is_small_char_set_regex(pattern) {
+        let byte_lits: Vec<_> = bytes
+            .iter()
+            .map(|b| proc_macro2::Literal::byte_character(*b))
+            .collect();
+        return Some(quote! {
+            {
+                let __start = state.offset;
+                if let Some(&__b) = state.src_bytes.get(__start) {
+                    if matches!(__b, #(#byte_lits)|*) {
+                        state.offset = __start + 1;
+                        Some(::parse_that::Span::new(__start, __start + 1, state.src))
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            }
+        });
+    }
+
+    // Character range with + quantifier: [a-z]+
+    if let Some((lo, hi)) = is_char_range_plus_regex(pattern) {
+        let lo_lit = proc_macro2::Literal::byte_character(lo);
+        let hi_lit = proc_macro2::Literal::byte_character(hi);
+        return Some(quote! {
+            {
+                let __start = state.offset;
+                let __end = state.src_bytes.len();
+                let mut __pos = __start;
+                while __pos < __end {
+                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                    if __b >= #lo_lit && __b <= #hi_lit {
+                        __pos += 1;
+                    } else {
+                        break;
+                    }
+                }
+                if __pos > __start {
+                    state.offset = __pos;
+                    Some(::parse_that::Span::new(__start, __pos, state.src))
+                } else {
+                    None
+                }
+            }
+        });
+    }
+
+    // Character range with * quantifier: [a-z]*
+    if let Some((lo, hi)) = is_char_range_star_regex(pattern) {
+        let lo_lit = proc_macro2::Literal::byte_character(lo);
+        let hi_lit = proc_macro2::Literal::byte_character(hi);
+        return Some(quote! {
+            {
+                let __start = state.offset;
+                let __end = state.src_bytes.len();
+                let mut __pos = __start;
+                while __pos < __end {
+                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                    if __b >= #lo_lit && __b <= #hi_lit {
+                        __pos += 1;
+                    } else {
+                        break;
+                    }
+                }
+                state.offset = __pos;
+                Some(::parse_that::Span::new(__start, __pos, state.src))
+            }
+        });
+    }
+
+    None
 }
 
 /// Detect a negated character class regex of the form `[^XYZ]+` or `[^XYZ]*`

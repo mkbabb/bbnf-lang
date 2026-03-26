@@ -5,6 +5,7 @@ use bbnf_ir::{IrNode, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::quote;
 
+use super::super::super::fast_paths;
 use super::super::super::ir_types::IrCodegenCtx;
 use super::super::infer::infer_node_type;
 use super::super::repeat as combinator_repeat;
@@ -276,8 +277,56 @@ fn emit_mono_optional(
         }
     }
 
-    // Span case: use combinator opt/opt_span.
+    // Span case: emit inline for Literal/Regex, fall back to combinator otherwise.
     if inner_ty == TypeDesc::Span {
+        // Optional single-byte literal: inline byte check, no SpanParser construction.
+        if let IrNode::Literal(sid) = inner {
+            let raw = ctx.ir.get_string(*sid);
+            let unescaped = unescape_literal(raw);
+            let bytes = unescaped.as_bytes();
+            if bytes.len() == 1 {
+                let byte_lit = proc_macro2::Literal::byte_character(bytes[0]);
+                return quote! {
+                    {
+                        let __start = state.offset;
+                        if state.src_bytes.get(state.offset).copied() == Some(#byte_lit) {
+                            state.offset += 1;
+                        }
+                        Some(::parse_that::Span::new(__start, state.offset, state.src))
+                    }
+                };
+            }
+            // Multi-byte optional literal: inline slice check.
+            let len = bytes.len();
+            let byte_lits: Vec<proc_macro2::Literal> =
+                bytes.iter().map(|b| proc_macro2::Literal::byte_character(*b)).collect();
+            return quote! {
+                {
+                    let __start = state.offset;
+                    let __end = state.offset + #len;
+                    if state.src_bytes.get(state.offset..__end) == Some(&[#(#byte_lits),*]) {
+                        state.offset = __end;
+                    }
+                    Some(::parse_that::Span::new(__start, state.offset, state.src))
+                }
+            };
+        }
+
+        // Optional regex: emit inline via direct call if available.
+        if let IrNode::Regex(sid) = inner {
+            let pattern = ctx.ir.get_string(*sid);
+            if let Some(direct) = fast_paths::emit_regex_direct_call(pattern) {
+                return quote! {
+                    {
+                        let __start = state.offset;
+                        let _ = #direct;
+                        Some(::parse_that::Span::new(__start, state.offset, state.src))
+                    }
+                };
+            }
+        }
+
+        // General Span optional: fall back to hoisted combinator.
         return emit_mono_fallback(
             &IrNode::Repeat {
                 inner: Box::new(inner.clone()),
@@ -332,6 +381,19 @@ fn emit_mono_many(
         quote! { (|| #elem_expr)() }
     };
 
+    // When lo == 0, the length check is always true — elide it.
+    let check = if lo == 0 {
+        quote! { Some(#vals_var) }
+    } else {
+        quote! {
+            if #vals_var.len() >= #lo_usize {
+                Some(#vals_var)
+            } else {
+                None
+            }
+        }
+    };
+
     quote! {
         {
             let mut #vals_var = Vec::new();
@@ -349,11 +411,7 @@ fn emit_mono_many(
                     }
                 }
             }
-            if #vals_var.len() >= #lo_usize {
-                Some(#vals_var)
-            } else {
-                None
-            }
+            #check
         }
     }
 }

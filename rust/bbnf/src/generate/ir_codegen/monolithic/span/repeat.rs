@@ -122,8 +122,43 @@ pub(super) fn emit_span_optional(
     ctx: &IrCodegenCtx<'_>,
     mctx: &mut MonoCtx,
 ) -> TokenStream {
-    let inner_expr = emit_span_expr(inner, ir, ctx, mctx);
     let start_var = mctx.fresh("opt_start");
+
+    // Inline optional single-byte literal: direct byte check, no IIFE.
+    if let IrNode::Literal(sid) = inner {
+        let raw = ir.get_string(*sid);
+        let unescaped = super::super::unescape_literal(raw);
+        let bytes = unescaped.as_bytes();
+        if bytes.len() == 1 {
+            let byte_lit = proc_macro2::Literal::byte_character(bytes[0]);
+            return quote! {
+                {
+                    let #start_var = state.offset;
+                    if state.src_bytes.get(state.offset).copied() == Some(#byte_lit) {
+                        state.offset += 1;
+                    }
+                    Some(::parse_that::Span::new(#start_var, state.offset, state.src))
+                }
+            };
+        }
+    }
+
+    // Inline optional regex with direct fast-path call.
+    if let IrNode::Regex(sid) = inner {
+        let pattern = ir.get_string(*sid);
+        if let Some(direct) = super::super::super::fast_paths::emit_regex_direct_call(pattern) {
+            return quote! {
+                {
+                    let #start_var = state.offset;
+                    let _ = #direct;
+                    Some(::parse_that::Span::new(#start_var, state.offset, state.src))
+                }
+            };
+        }
+    }
+
+    // General case: IIFE wrapper.
+    let inner_expr = emit_span_expr(inner, ir, ctx, mctx);
     quote! {
         {
             let #start_var = state.offset;

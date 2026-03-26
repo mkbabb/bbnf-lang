@@ -64,6 +64,12 @@ pub fn compile_grammar(source: &str, options: &PipelineOptions) -> Result<Gramma
     }
     let inline_ref = if inline_set.is_empty() { None } else { Some(&inline_set) };
 
+    let mut token_set: HashSet<String> = HashSet::new();
+    for name in &parsed.token_rules {
+        token_set.insert(name.to_string());
+    }
+    let token_ref = if token_set.is_empty() { None } else { Some(&token_set) };
+
     let mut debug_set: HashSet<String> = HashSet::new();
     let mut debug_all = false;
     for name in &parsed.debug_rules {
@@ -84,6 +90,7 @@ pub fn compile_grammar(source: &str, options: &PipelineOptions) -> Result<Gramma
         options,
         ws_pat.as_deref(),
         inline_ref,
+        token_ref,
         debug_ref,
         debug_all,
     )
@@ -100,6 +107,7 @@ pub fn compile_ast<'a>(
     options: &PipelineOptions,
     ws_pattern: Option<&str>,
     inline_rules: Option<&HashSet<String>>,
+    token_rules: Option<&HashSet<String>>,
     debug_rules: Option<&HashSet<String>>,
     debug_all: bool,
 ) -> Result<GrammarIR, String> {
@@ -189,6 +197,7 @@ pub fn compile_ast<'a>(
         &dispatch_tables,
         ws_pattern,
         inline_rules,
+        token_rules,
         debug_rules,
         debug_all,
     );

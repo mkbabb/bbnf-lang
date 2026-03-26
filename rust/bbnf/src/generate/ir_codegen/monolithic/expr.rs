@@ -1,6 +1,6 @@
 //! Monolithic expression helpers: Ref, Skip/Next, Wrap, Map, OptionalWhitespace.
 
-use bbnf_ir::{FnDescriptor, IrNode};
+use bbnf_ir::{FnDescriptor, GrammarIR, IrNode};
 
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
@@ -10,6 +10,50 @@ use super::super::repeat as combinator_repeat;
 use super::super::unescape_literal;
 use super::repeat::{emit_mono_sep_by_ws, emit_mono_sep_by_core, try_unchecked_sep, SepByConfig};
 use super::{emit_mono_discarded, emit_mono_expr, mono_fn_ident, MonoCtx};
+
+/// Detect a wrap pattern `open >> middle << close` where `open` is a single-byte Literal.
+/// Returns `(open_byte, middle_node, close_node)` if the pattern matches.
+/// Unwraps through Map/OW wrappers on the body to find the structural wrap.
+fn detect_guaranteed_wrap<'a>(
+    body: &'a IrNode,
+    ir: &GrammarIR,
+) -> Option<(u8, &'a IrNode, &'a IrNode)> {
+    // Unwrap Map wrappers (enum variant wrapping around the structural pattern).
+    let inner = match body {
+        IrNode::Map { inner, .. } => inner.as_ref(),
+        other => other,
+    };
+
+    // Detect Skip(Next(open, middle), close) — the canonical wrap pattern.
+    if let IrNode::Skip(left, close) = inner {
+        if let IrNode::Next(open, middle) = left.as_ref() {
+            if let IrNode::Literal(sid) = open.as_ref() {
+                let raw = ir.get_string(*sid);
+                let unescaped = unescape_literal(raw);
+                let bytes = unescaped.as_bytes();
+                if bytes.len() == 1 {
+                    return Some((bytes[0], middle.as_ref(), close.as_ref()));
+                }
+            }
+        }
+    }
+
+    // Detect Next(open, Skip(middle, close)) — alternate wrap order.
+    if let IrNode::Next(open, right) = inner {
+        if let IrNode::Skip(middle, close) = right.as_ref() {
+            if let IrNode::Literal(sid) = open.as_ref() {
+                let raw = ir.get_string(*sid);
+                let unescaped = unescape_literal(raw);
+                let bytes = unescaped.as_bytes();
+                if bytes.len() == 1 {
+                    return Some((bytes[0], middle.as_ref(), close.as_ref()));
+                }
+            }
+        }
+    }
+
+    None
+}
 
 // ── Ref ──────────────────────────────────────────────────────────────────────
 

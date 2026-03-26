@@ -103,6 +103,7 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     let mut pretty_map: HashMap<String, Vec<String>> = HashMap::new();
     let mut no_collapse_set: HashSet<String> = HashSet::new();
     let mut inline_set: HashSet<String> = HashSet::new();
+    let mut token_set: HashSet<String> = HashSet::new();
     let mut debug_set: HashSet<String> = HashSet::new();
     let mut debug_all = parser_container_attrs.debug;
     let mut ws_pattern: Option<String> = None;
@@ -141,6 +142,10 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
             // Extract @inline directives.
             for name in &pg.inline_rules {
                 inline_set.insert(name.to_string());
+            }
+            // Extract @token directives.
+            for name in &pg.token_rules {
+                token_set.insert(name.to_string());
             }
             // Extract @debug directives.
             for name in &pg.debug_rules {
@@ -268,6 +273,11 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     } else {
         Some(&inline_set)
     };
+    let token_ref = if token_set.is_empty() {
+        None
+    } else {
+        Some(&token_set)
+    };
     let debug_ref = if debug_set.is_empty() {
         None
     } else {
@@ -290,6 +300,7 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
         &dispatch_tables_for_ir,
         ws_pattern.as_deref(),
         inline_ref,
+        token_ref,
         debug_ref,
         debug_all,
     );

@@ -161,14 +161,19 @@ pub fn generate_monolithic_arena(
     let enum_type = &ctx.enum_type;
 
     // Pre-compute fusion eligibility: non-cyclic, no @recover, no @pretty, no @no_collapse.
+    // @token rules are always fusion-eligible — body inlined at call sites, but the enum
+    // variant is preserved (unlike force_inline which eliminates the variant entirely).
+    // This allows @token to coexist with @pretty: the parsing body is flat inline code,
+    // but to_doc() match arms can still reference the variant by name.
     let fusion_eligible: Vec<bool> = ir
         .rules
         .iter()
         .map(|rule| {
-            !rule.meta.is_cyclic
-                && rule.meta.recover.is_none()
-                && rule.meta.pretty.is_none()
-                && !rule.meta.no_collapse
+            rule.meta.is_token
+                || (!rule.meta.is_cyclic
+                    && rule.meta.recover.is_none()
+                    && rule.meta.pretty.is_none()
+                    && !rule.meta.no_collapse)
         })
         .collect();
 

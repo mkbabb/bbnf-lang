@@ -94,6 +94,14 @@ pub struct DebugInfo {
     pub rule_name_span: (usize, usize),
 }
 
+/// Owned representation of a `@token` directive.
+#[derive(Debug, Clone)]
+pub struct TokenInfo {
+    pub rule_name: String,
+    pub span: (usize, usize),
+    pub rule_name_span: (usize, usize),
+}
+
 /// Owned representation of a `@ws` directive.
 #[derive(Debug, Clone)]
 pub struct WsPatternInfo {
@@ -149,6 +157,8 @@ pub struct DocumentInfo {
     pub inlines: Vec<InlineInfo>,
     /// Debug directives parsed from the document.
     pub debugs: Vec<DebugInfo>,
+    /// Token directives parsed from the document.
+    pub tokens: Vec<TokenInfo>,
     /// Custom whitespace pattern from `@ws` directive.
     pub ws_pattern: Option<WsPatternInfo>,
     /// IR-derived metadata per rule name (empty if IR pipeline failed or was skipped).

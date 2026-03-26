@@ -309,6 +309,12 @@ pub struct RuleMeta {
     #[serde(default)]
     pub debug: bool,
 
+    /// Whether `@token` is set for this rule. Token rules return Span at leaf
+    /// level even in arena codegen, are unconditionally inlined, and must not
+    /// contain nonterminal references.
+    #[serde(default)]
+    pub is_token: bool,
+
     // ── Sub-variants ────────────────────────────────────────────────────
 
     /// Sub-variants for heterogeneous alternation branches.
@@ -388,6 +394,7 @@ pub struct GrammarIR {
     /// Preserved through lowering for display in debug adapters.
     #[serde(default)]
     pub debug_labels: Vec<(RuleId, StringId)>,
+
 }
 
 impl GrammarIR {

@@ -60,6 +60,7 @@ pub fn analyze_from_cache(
             pretties: Vec::new(),
             inlines: Vec::new(),
             debugs: Vec::new(),
+            tokens: Vec::new(),
             ws_pattern: None,
             ir_meta: HashMap::new(),
         };
@@ -95,6 +96,7 @@ pub fn analyze_from_cache(
             pretties: Vec::new(),
             inlines: Vec::new(),
             debugs: Vec::new(),
+            tokens: Vec::new(),
             ws_pattern: None,
             ir_meta: HashMap::new(),
         };
@@ -122,6 +124,7 @@ pub fn analyze_from_cache(
     let pretty_infos = parsed.pretties.clone();
     let inline_infos = parsed.inlines.clone();
     let debug_infos = parsed.debugs.clone();
+    let token_infos = parsed.tokens.clone();
     let ws_pattern_info = parsed.ws_pattern.clone();
 
     // Check for empty AST on non-empty input -- likely a parse failure not caught above.
@@ -149,6 +152,7 @@ pub fn analyze_from_cache(
             pretties: Vec::new(),
             inlines: Vec::new(),
             debugs: Vec::new(),
+            tokens: Vec::new(),
             ws_pattern: None,
             ir_meta: HashMap::new(),
         };
@@ -262,6 +266,9 @@ pub fn analyze_from_cache(
     }
     for inl in &inline_infos {
         referenced_names.insert(&inl.rule_name);
+    }
+    for tok in &token_infos {
+        referenced_names.insert(&tok.rule_name);
     }
     for dbg in &debug_infos {
         if dbg.rule_name != "*" {
@@ -627,6 +634,40 @@ pub fn analyze_from_cache(
         }
     }
 
+    // @token directive validation and semantic tokens.
+    for tok in &token_infos {
+        // Semantic token: KEYWORD for "@token" (6 chars).
+        semantic_tokens.push(SemanticTokenInfo {
+            span: (tok.span.0, tok.span.0 + 6),
+            token_type: token_types::KEYWORD,
+        });
+
+        // Semantic token: RULE_REFERENCE for the rule name.
+        semantic_tokens.push(SemanticTokenInfo {
+            span: tok.rule_name_span,
+            token_type: token_types::RULE_REFERENCE,
+        });
+
+        // Mark the rule name as referenced (for unused rule detection).
+        referenced_names.insert(&tok.rule_name);
+
+        // Validate: warn if the target rule doesn't exist.
+        if !defined.contains_key(tok.rule_name.as_str())
+            && !imported_names.contains(tok.rule_name.as_str())
+        {
+            diagnostics.push(Diagnostic {
+                range: line_index.span_to_range(tok.rule_name_span.0, tok.rule_name_span.1),
+                severity: Some(DiagnosticSeverity::WARNING),
+                source: Some("bbnf".into()),
+                message: format!(
+                    "`@token` targets undefined rule: `{}`",
+                    tok.rule_name
+                ),
+                ..Default::default()
+            });
+        }
+    }
+
     // @ws directive semantic tokens.
     if let Some(ws) = &ws_pattern_info {
         // Semantic token: KEYWORD for "@ws" (3 chars).
@@ -661,6 +702,7 @@ pub fn analyze_from_cache(
         pretties: pretty_infos,
         inlines: inline_infos,
         debugs: debug_infos,
+        tokens: token_infos,
         ws_pattern: ws_pattern_info,
         ir_meta,
     }
@@ -706,6 +748,13 @@ fn try_compile_ir(
         .collect();
     let inline_ref = if inline_set.is_empty() { None } else { Some(&inline_set) };
 
+    let token_set: HashSet<String> = cached
+        .tokens
+        .iter()
+        .map(|tok| tok.rule_name.clone())
+        .collect();
+    let token_ref = if token_set.is_empty() { None } else { Some(&token_set) };
+
     let mut debug_set: HashSet<String> = HashSet::new();
     let mut debug_all = false;
     for dbg in &cached.debugs {
@@ -729,6 +778,7 @@ fn try_compile_ir(
         &options,
         ws_pattern,
         inline_ref,
+        token_ref,
         debug_ref,
         debug_all,
     ) {

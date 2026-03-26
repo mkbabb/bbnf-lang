@@ -10,7 +10,11 @@
 @ws /(?s)(?:\s|\/\*.*?\*\/)*/ ;
 ws = /(?s)(?:\s|\/\*.*?\*\/)*/ ;
 
-// Opaque tokens
+// Opaque tokens — @token forces fusion-style inlining + span eligibility.
+// Variant preserved (unlike @inline), so @pretty can still reference them.
+@token selectorSpan ;
+@token valueSpan ;
+@token propertyName ;
 selectorSpan = /[^{};]+[^\s{};]/ | /[^{};]/ ;
 valueSpan    = /[^;{}!,]+/ ;
 

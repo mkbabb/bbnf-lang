@@ -211,6 +211,7 @@ number = /-?\d+/ ;
         None,
         None,
         None,
+        None,
         false,
     );
 

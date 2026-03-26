@@ -5,7 +5,7 @@ use self_cell::self_cell;
 
 use super::pretty::{self, PrettyInfo};
 use super::types::{
-    DebugInfo, ImportInfo, ImportedItem, InlineInfo, NoCollapseInfo, ParseDiagnostics, RecoverInfo, WsPatternInfo,
+    DebugInfo, ImportInfo, ImportedItem, InlineInfo, NoCollapseInfo, ParseDiagnostics, RecoverInfo, TokenInfo, WsPatternInfo,
 };
 
 // Self-referential struct: owns the source text and the parsed AST that borrows from it.
@@ -28,6 +28,7 @@ pub struct CachedParseResult<'a> {
     pub pretties: Vec<PrettyInfo>,
     pub inlines: Vec<InlineInfo>,
     pub debugs: Vec<DebugInfo>,
+    pub tokens: Vec<TokenInfo>,
     pub ws_pattern: Option<WsPatternInfo>,
 }
 
@@ -124,6 +125,21 @@ pub fn parse_once(src: &str) -> (Option<CachedParseResult<'_>>, ParseDiagnostics
                     })
                 }).collect();
 
+                // Extract @token directives — find byte spans by searching source text.
+                let tokens = pg.token_rules.iter().filter_map(|name| {
+                    let name_str = name.as_ref();
+                    let needle = format!("@token {}", name_str);
+                    let dir_start = src.find(&needle)?;
+                    let kw_end = dir_start + needle.len();
+                    let dir_end = src[kw_end..].find(';').map(|off| kw_end + off + 1).unwrap_or(kw_end);
+                    let name_start = dir_start + "@token ".len();
+                    Some(TokenInfo {
+                        rule_name: name_str.to_string(),
+                        span: (dir_start, dir_end),
+                        rule_name_span: (name_start, name_start + name_str.len()),
+                    })
+                }).collect();
+
                 // Extract @ws directive — find byte span by searching source text.
                 let ws_pattern = pg.ws_pattern.as_ref().and_then(|pat| {
                     let dir_start = src.find("@ws")?;
@@ -143,6 +159,7 @@ pub fn parse_once(src: &str) -> (Option<CachedParseResult<'_>>, ParseDiagnostics
                     pretties,
                     inlines,
                     debugs,
+                    tokens,
                     ws_pattern,
                 }
             });

@@ -168,6 +168,8 @@ pub struct ParsedGrammar<'a> {
     /// Rules to instrument for debugging from `@debug ruleName ;` directives.
     /// `"*"` means all rules.
     pub debug_rules: Vec<Cow<'a, str>>,
+    /// Rules marked as lexical tokens from `@token ruleName ;` directives.
+    pub token_rules: Vec<Cow<'a, str>>,
 }
 
 pub fn set_expression_comments<'a>(expr: &mut Expression<'a>, comments: Comments<'a>) {

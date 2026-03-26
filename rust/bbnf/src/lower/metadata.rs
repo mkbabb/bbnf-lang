@@ -89,6 +89,14 @@ pub(crate) fn build_rule_meta<'a>(
         .inline_rules
         .is_some_and(|set| set.contains(name));
 
+    // Token rule: implies span_eligible (returns Span even in arena context).
+    // Does NOT imply force_inline — that would eliminate the enum variant,
+    // which breaks @pretty directives that reference the rule by name.
+    let is_token = ctx
+        .token_rules
+        .is_some_and(|set| set.contains(name));
+    let span_eligible = span_eligible || is_token;
+
     RuleMeta {
         first_set,
         nullable,
@@ -103,6 +111,7 @@ pub(crate) fn build_rule_meta<'a>(
         recover,
         no_collapse,
         force_inline,
+        is_token,
         debug: false, // Set by caller from @debug directives.
         has_sp_method: false, // Computed by compute_sp_method_rules pass.
         sub_variants: Vec::new(),

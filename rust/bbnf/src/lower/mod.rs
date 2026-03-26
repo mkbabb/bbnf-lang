@@ -43,6 +43,7 @@ pub(crate) struct LowerCtx<'a> {
     pub(crate) pretties: Option<&'a HashMap<String, Vec<String>>>,
     pub(crate) no_collapse_rules: Option<&'a HashSet<String>>,
     pub(crate) inline_rules: Option<&'a HashSet<String>>,
+    pub(crate) token_rules: Option<&'a HashSet<String>>,
     pub(crate) debug_rules: Option<&'a HashSet<String>>,
     pub(crate) debug_all: bool,
 
@@ -82,6 +83,7 @@ pub fn lower_to_ir<'a>(
     dispatch_tables: &'a HashMap<String, DispatchTable>,
     ws_pattern: Option<&str>,
     inline_rules: Option<&'a HashSet<String>>,
+    token_rules: Option<&'a HashSet<String>>,
     debug_rules: Option<&'a HashSet<String>>,
     debug_all: bool,
 ) -> GrammarIR {
@@ -99,6 +101,7 @@ pub fn lower_to_ir<'a>(
         pretties,
         no_collapse_rules,
         inline_rules,
+        token_rules,
         debug_rules,
         debug_all,
         current_lhs: None,

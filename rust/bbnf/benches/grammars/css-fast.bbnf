@@ -5,6 +5,7 @@
 // @ws overrides `?w` to use comment-aware whitespace (SIMD fast path).
 
 @ws /(?s)(?:\s|\/\*.*?\*\/)*/ ;
+@token propertyName ;
 
 propertyName = /[a-zA-Z_][\w-]*/ | /--[\w-]+/ | /-[a-zA-Z][\w-]*/ ;
 declaration  = (propertyName , ":" , /[^;{}]*/ , ";" ?) ?w ;

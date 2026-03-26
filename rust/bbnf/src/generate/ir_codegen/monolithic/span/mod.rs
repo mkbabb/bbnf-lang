@@ -42,10 +42,11 @@ pub fn generate_monolithic_span(
         .rules
         .iter()
         .map(|rule| {
-            !rule.meta.is_cyclic
-                && rule.meta.recover.is_none()
-                && rule.meta.pretty.is_none()
-                && !rule.meta.no_collapse
+            rule.meta.is_token
+                || (!rule.meta.is_cyclic
+                    && rule.meta.recover.is_none()
+                    && rule.meta.pretty.is_none()
+                    && !rule.meta.no_collapse)
         })
         .collect();
 

@@ -89,24 +89,24 @@ All Rust benchmarks use mimalloc. BBNF parsers are generated from a [`.bbnf` gra
 
 ## Rust: `CSS` — Span
 
-BBNF uses [`@ws`](../../grammar/BBNF.md) for SIMD comment-aware whitespace and `@inline` for trivial helper rules. Cold per-parse with `BumpArena`. cssparser (Mozilla's tokenizer) uses a visitor pattern that counts rules and declarations without building an AST.
+BBNF uses [`@ws`](../../grammar/BBNF.md) for SIMD comment-aware whitespace, `@inline` for trivial helper rules, and `@token` for lexical tokens with fusion-style inlining. Cold per-parse with `BumpArena`. cssparser (Mozilla's tokenizer) uses a visitor pattern that counts rules and declarations without building an AST.
 
 ```bench-chart
-{ "title": "CSS Arena Structural Scan", "unit": "MB/s",
+{ "title": "CSS Arena + Span", "unit": "MB/s",
   "datasets": [
     { "name": "normalize (6 KB)", "icon": "rust",
-      "labels": ["BBNF fast arena", "cssparser"],
-      "series": [{"label": "Throughput", "values": [760, 655]}] },
+      "labels": ["BBNF arena", "BBNF span", "cssparser"],
+      "series": [{"label": "Throughput", "values": [2182, 2472, 655]}] },
     { "name": "bootstrap (281 KB)", "icon": "rust",
-      "labels": ["BBNF fast arena", "cssparser"],
-      "series": [{"label": "Throughput", "values": [331, 424]}] },
+      "labels": ["BBNF arena", "BBNF span", "cssparser"],
+      "series": [{"label": "Throughput", "values": [1270, 1885, 424]}] },
     { "name": "tailwind (3.8 MB)", "icon": "rust",
-      "labels": ["BBNF fast arena", "cssparser"],
-      "series": [{"label": "Throughput", "values": [28, 402]}] }
+      "labels": ["BBNF arena", "BBNF span", "cssparser"],
+      "series": [{"label": "Throughput", "values": [1202, 1856, 402]}] }
   ] }
 ```
 
-On normalize (6 KB), BBNF span is 1.2x cssparser. On bootstrap and tailwind the per-rule overhead of recursive descent grammar parsing (alternation dispatch, whitespace scanning, arena allocation per rule) exceeds cssparser's flat tokenizer loop. Tailwind's ~65K tiny utility classes (~40 bytes each) hit this hardest—fixed per-rule costs don't amortize on small rules.
+BBNF arena is 3x cssparser across all three datasets; BBNF span widens the gap further with zero-allocation parsing. Inline optional Span codegen, direct Span construction in delim_scan, `@token` fusion, and generalized regex strength reduction eliminated the per-rule overhead that previously made recursive descent slower than cssparser's flat tokenizer loop on utility-heavy stylesheets.
 
 ## Rust: `CSS` — Structural AST
 
@@ -117,13 +117,13 @@ BBNF pretty builds a typed enum tree with rule/block/declaration structure, usin
   "datasets": [
     { "name": "normalize (6 KB)", "icon": "rust",
       "labels": ["BBNF pretty", "lightningcss"],
-      "series": [{"label": "Throughput", "values": [1969, 257]}] },
+      "series": [{"label": "Throughput", "values": [711, 257]}] },
     { "name": "bootstrap (281 KB)", "icon": "rust",
       "labels": ["BBNF pretty", "lightningcss"],
-      "series": [{"label": "Throughput", "values": [1000, 117]}] },
+      "series": [{"label": "Throughput", "values": [299, 117]}] },
     { "name": "tailwind (3.8 MB)", "icon": "rust",
       "labels": ["BBNF pretty", "lightningcss"],
-      "series": [{"label": "Throughput", "values": [968, 94]}] }
+      "series": [{"label": "Throughput", "values": [296, 94]}] }
   ] }
 ```
 

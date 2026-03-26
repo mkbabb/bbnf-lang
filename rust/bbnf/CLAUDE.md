@@ -25,7 +25,7 @@ bbnf/
 │   │   ├── string_interner.rs  StringInterner — dedup string literals
 │   │   ├── fn_table.rs   FnTable — host function descriptors
 │   │   ├── expression.rs Recursive expression/node lowering
-│   │   └── metadata.rs   Rule metadata lowering (recover, pretty, no_collapse)
+│   │   └── metadata.rs   Rule metadata lowering (recover, pretty, no_collapse, token)
 │   ├── pipeline.rs      Full lowering + codegen orchestrator (15-operation pass sequence)
 │   ├── generate/
 │   │   ├── mod.rs        Re-exports + orchestrator
@@ -116,4 +116,5 @@ Standard algorithm: `A = Aα | β` → `A = βA'`, `A' = αA' | ε`. Direct only
 
 ## Conventions
 
+- **`@token` directive**: `@token ruleName ;` marks a rule as a lexical token. `RuleMeta::is_token` carries the flag through lowering. Implies span eligibility. Uses fusion-style inlining (body inlined at call sites, enum variant preserved for `@pretty` compatibility).
 - **`@debug` directive**: `@debug ruleName ;` / `@debug * ;` instruments rules for trace output. `ir_codegen/trace.rs` emits `#[cfg(feature = "parser-trace")]` instrumentation for monolithic paths; the combinator path wraps with `.debug("name")`. `RuleMeta::debug` and `GrammarIR::debug_all` carry the directive through lowering.

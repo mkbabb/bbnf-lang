@@ -14,6 +14,7 @@ const BBNF_KEYWORDS: &[(&str, &str)] = &[
     ("@ws", "Custom whitespace pattern for ?w operator"),
     ("@inline", "Force-inline a rule at all call sites"),
     ("@debug", "Instrument a rule for debug tracing"),
+    ("@token", "Mark a rule as a lexical token (span eligible + fusion inline)"),
 ];
 
 pub fn completion(state: &DocumentState) -> CompletionResponse {

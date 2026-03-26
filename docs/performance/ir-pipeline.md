@@ -71,6 +71,8 @@ Inlines rules referenced exactly once at their call site, regardless of body siz
 
 Guarded by SCC membership: rules in strongly connected components are skipped to avoid infinite expansion. Runs after `inline_acyclic` + prune to pick up remaining single-use rules that were too large for the size threshold.
 
+Rules marked with `@token` are also fused at this stage: the body is inlined at every call site (fusion-style), but the rule's enum variant is preserved so `@pretty` consumers can dispatch on it. `@token` implies span-eligible, so these rules participate in span-only codegen without additional annotation.
+
 Exposes additional optimization opportunities for `merge_literals`, `factor_common_prefixes`, and `generate_dispatch_tables` by eliminating call boundaries that previously hid adjacent patterns.
 
 ## `merge_literals`

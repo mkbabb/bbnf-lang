@@ -63,6 +63,9 @@ declaration = propertyName ?w ":" ?w valueSpan ;
 
 (* Force-inline—splice rule body at every call site, no enum variant *)
 @inline optSemicolon ;
+
+(* Lexical token—fusion-inlined + span eligible, enum variant preserved *)
+@token selectorSpan ;
 ```
 
 ### Recovery
@@ -104,6 +107,10 @@ import-aware—imported rule names suppress "undefined rule" warnings.
 ### Debugging
 
 `@debug ruleName ;` instruments a rule for trace output across all codegen paths. `@debug * ;` instruments every rule. Compiled paths gate behind `#[cfg(feature = "parser-trace")]`; the bytecode VM uses `Op::DebugBreak` opcodes with stepping and breakpoint support. The VS Code extension supports grammar-level debugging via DAP (`bbnf-lsp --dap`)—breakpoints on rules, step through parse execution, inspect call stack and parse state.
+
+### Token
+
+`@token ruleName ;` marks a rule as a lexical token. Token rules are forced span-eligible and use fusion-style inlining (body inlined at call sites, but the enum variant is preserved). Unlike `@inline`, which eliminates the variant entirely, `@token` is compatible with `@pretty` directives that need to reference the variant for formatting.
 
 ### No-Collapse
 

@@ -67,7 +67,7 @@ Two tiers of BBNF CSS parsing on 3 datasets:
 
 | Tier | Grammar | What |
 |------|---------|------|
-| **span** | `css-fast.bbnf` | Opaque spans, `@ws` SIMD whitespace, `@inline` helpers (L0) |
+| **span** | `css-fast.bbnf` | Opaque spans, `@ws` SIMD whitespace, `@inline` helpers, `@token` lexical fusion (L0) |
 | **span_pretty** | `css-stylesheet-pretty.bbnf` | Structural AST with `@pretty` directives (L1.5) |
 
 Groups: `span`, `span_pretty` — 2 groups × 3 datasets = 6 bench fns. Cold per-parse with `BumpArena`.
@@ -136,6 +136,7 @@ Every bench fn validates parse success ONCE before the hot loop. The bench binar
 - simd-json requires `.to_vec()` per iteration — inherent library cost
 - Benchmark data files are in `data/json/` and `data/css/`
 - Bench profile uses `lto = "fat"` and `codegen-units = 1` for maximum optimization
+- Codegen-level optimizations (inline optional Span, generalized regex strength reduction, direct Span construction in delim_scan, `@token` fusion) are applied automatically by the IR pipeline—no hand-written Rust in any BBNF benchmark
 
 ### Work-Equivalence Tiers (JSON)
 

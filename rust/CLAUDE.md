@@ -46,6 +46,7 @@ cargo clippy --all-targets -- -D warnings  # Lint (CI enforces this)
   → Codegen: Rust TokenStream via syn/quote (bbnf/generate/)
   → #[derive(Parser)] emits enum + parser methods (bbnf-derive/lib.rs)
        @recover directives emit Recovered<T> enum variant + .recover() wrapping
+       @token directives mark rules as lexical tokens (fusion-inlined, span-eligible, variant preserved)
 ```
 
 The LSP reuses the parser and analysis from `bbnf/` but does its own

@@ -46,12 +46,17 @@ Each public `rule_arena()` method wraps a single function pointer in `Parser::ne
 | — | Type-aware Alt elision—heterogeneous Alts in Vec context coerce by value, not arena ref |
 | — | B.1 Span collapse—Seqs of simple Span children + has_sp_method Refs collapse to single Span |
 | — | `Vec::new()` default—no pre-allocation heuristics; Rust's growth handles nested and flat containers |
+| — | Inline optional Span—optional single-byte literals emit a direct byte check instead of SpanParser construction per call |
+| — | Direct Span in delim_scan—when the pivot rule returns Span, construct directly from scanner offsets instead of rewinding + re-parsing |
+| — | Generalized regex strength reduction—`[a-z]`, `[abc]`, `[a-z]+`, `[a-z]*` emit direct inline code bypassing the regex engine |
 
 ### Grammar directives
 
 `@ws /regex/ ;` overrides what `?w` compiles to. CSS grammars use `@ws /(?s)(?:\s|\/\*.*?\*\/)*/ ;` to get SIMD `css_ws_comment_fast` instead of allocating a `ws` enum variant per call.
 
 `@inline ruleName ;` force-inlines a rule at all call sites via a dedicated IR pass. The rule body is substituted at every `Ref`—no enum variant, no function. Guarded against direct self-recursion.
+
+`@token ruleName ;` marks a rule as a lexical token. The body is inlined at call sites (fusion-style), but the rule's enum variant is preserved for `@pretty` consumers. Implies span-eligible. Useful for rules like `ident` or `number` that appear in many branches—call-site overhead disappears while the typed variant remains available for formatting dispatch.
 
 ## JSON Results (cold per-parse, mimalloc)
 
@@ -67,13 +72,13 @@ All numbers are cold: fresh `BumpArena` + `Parser` constructed per iteration.
 
 ## CSS Results (cold per-parse, mimalloc)
 
-| Dataset | Size | Pretty Arena | Parse-only | cssparser |
-|---------|------|-------------|-----------|-----------|
-| normalize.css | 6 KB | 659 | 639 | 323 |
-| bootstrap.css | 281 KB | 276 | 939 | 437 |
-| tailwind.css | 3.8 MB | 284 | 469 | 360 |
+| Dataset | Size | Pretty Arena | Arena | Span-only | cssparser |
+|---------|------|-------------|-------|-----------|-----------|
+| normalize.css | 6 KB | 711 | 2,182 | 2,472 | 323 |
+| bootstrap.css | 281 KB | 299 | 1,270 | 1,885 | 437 |
+| tailwind.css | 3.8 MB | 296 | 1,202 | 1,856 | 360 |
 
-The pretty arena tier produces the full typed AST that gorgeous uses for formatting. Parse-only is the isolated parse phase (no `to_doc` or render). Prior to the delimiter-scan optimization, tailwind parsed at 28 MB/s—the structural overhead of recursive descent on ~38K tiny utility rules was the bottleneck. With delimiter scanning and span-only codegen, tailwind went from 28 MB/s to 2196 MB/s (arena) and 3585 MB/s (span-only).
+The pretty arena tier produces the full typed AST that gorgeous uses for formatting. Arena is the parse-only phase (no `to_doc` or render); span-only returns byte-range spans with zero allocation. Prior to the delimiter-scan optimization, tailwind parsed at 28 MB/s—the structural overhead of recursive descent on ~38K tiny utility rules was the bottleneck. Successive rounds of optimization—delimiter scanning, inline optional Span codegen, direct Span construction in delim_scan, and generalized regex strength reduction—brought tailwind from 28 MB/s to 1,202 MB/s (arena) and 1,856 MB/s (span-only).
 
 ### Delimiter-driven flat scanning
 
@@ -85,13 +90,13 @@ Detection criteria:
 - At least one branch contains a single-byte Literal at position > 0 (the pivot)
 - Pivot, open, close bytes are pairwise distinct
 
-In the span path, the scanner replaces the descent entirely (all Span output). In the arena path, the scanner determines which branch to call, then invokes that branch's existing recursive descent function—preserving full typed output for formatting. A pseudo-class guard handles ambiguous pivots: if the scanned value terminates at the open byte, the pivot was part of a compound token (e.g., `selector:pseudo{...}`), and the scanner falls back to the block branch.
+In the span path, the scanner replaces the descent entirely (all Span output). In the arena path, when the pivot rule returns Span, the scanner constructs the Span directly from its scan offsets instead of rewinding and re-parsing—eliminating the redundant descent that was previously required to produce a typed value. For non-Span branches, the scanner determines which branch to call, then invokes that branch's existing recursive descent function—preserving full typed output for formatting. A pseudo-class guard handles ambiguous pivots: if the scanned value terminates at the open byte, the pivot was part of a compound token (e.g., `selector:pseudo{...}`), and the scanner falls back to the block branch.
 
 ## Span-Only Parsing
 
 `#[parser(span)]` generates a third codegen tier—`fn __rule_span(state) -> Option<Span<'a>>` functions that return byte-range spans with zero allocation. No enum variants, no arena, no Vec. Every rule collapses to a start/end offset pair.
 
-This tier is useful for validation-only parsing (syntax checking, linting) and for inner loops where the typed AST isn't needed. Direct `memchr` emission for negated character classes (`[^XYZ]+`, `[^XYZ]*`) bypasses the SpanParser enum dispatch entirely, calling `memchr::memchr1/2/3` inline.
+This tier is useful for validation-only parsing (syntax checking, linting) and for inner loops where the typed AST isn't needed. Direct `memchr` emission for negated character classes (`[^XYZ]+`, `[^XYZ]*`) bypasses the SpanParser enum dispatch entirely, calling `memchr::memchr1/2/3` inline. Generalized regex strength reduction extends this further: simple character classes (`[a-z]`, `[abc]`), their quantified forms (`[a-z]+`, `[a-z]*`), and optional single-byte literals all emit direct inline byte checks or loops, bypassing the regex engine wholesale.
 
 The span path also serves as the fast lane for delimiter-driven flat scanning—the `memchr` scanner replaces recursive descent wholesale when the grammar matches the `Wrap(Repeat(Alt))` pattern.
 

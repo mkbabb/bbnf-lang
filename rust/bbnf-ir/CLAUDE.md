@@ -43,7 +43,7 @@ bbnf-ir/
 - **`GrammarIR`** — Top-level container: rules, entry point, string interning table, host function table, types, FOLLOW sets, `ws_pattern`, `b1_span_collapse`, `debug_all`, `debug_labels`.
 - **`GrammarSpan`** / **`SourceMapEntry`** — Source location tracking for debug and error reporting.
 - **`IrRule`** — Rule id + name + body (`IrNode`) + metadata (`RuleMeta`).
-- **`RuleMeta`** — FIRST set, nullable, SCC info, memo strategy, dispatch hint, span eligibility, pretty hints, recover sync, sub-variants, `force_inline`, `debug`.
+- **`RuleMeta`** — FIRST set, nullable, SCC info, memo strategy, dispatch hint, span eligibility, pretty hints, recover sync, sub-variants, `force_inline`, `is_token`, `debug`.
 - **`Op::DebugBreak`** — Bytecode opcode for debug instrumentation (rule entry/exit).
 - **`DebugState`** / **`StepMode`** / **`DebugAction`** — VM debug stepping control (into, over, out, continue, breakpoint filtering).
 - **`DebugSnapshot`** / **`TraceEntry`** — Captured parse state at a debug break: rule stack, offset, input slice.

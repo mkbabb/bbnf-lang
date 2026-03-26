@@ -80,6 +80,19 @@ When no `@pretty` directive is present and heuristics are enabled, the code gene
 auto-infers hints from rule shape (e.g. toplevel entry points, brace-delimited blocks,
 large compound types).
 
+## Token Directives
+
+A `@token` directive marks a production rule as a lexical token:
+
+```
+@token ruleName ;
+```
+
+Token rules are forced span-eligible and use fusion-style inlining—the rule body is
+inlined at every call site, but the enum variant is preserved. This differs from
+`@inline`, which eliminates the variant entirely. `@token` is compatible with `@pretty`
+directives that need to reference the variant for formatting.
+
 ## Production Rules
 
 A production rule binds a name (the left-hand side) to an expression (the right-hand

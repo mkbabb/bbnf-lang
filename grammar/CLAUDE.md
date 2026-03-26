@@ -43,6 +43,7 @@ rule = expression ;                             (* production rule *)
 @recover rule syncExpr ;                        (* recovery directive (any BBNF expr as sync) *)
 @pretty rule hint1 hint2 ;                      (* prettify hints for codegen *)
 @pretty * auto ;                                (* grammar-wide heuristic mode: auto|minimal|off *)
+@token ruleName ;                               (* mark rule as lexical token: span eligible + fusion inline *)
 ```
 
 **Terminals**: `"string"`, `'string'`, `` `string` ``, `/regex/`, `epsilon` / `ε`

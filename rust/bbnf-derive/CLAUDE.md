@@ -8,7 +8,7 @@ Proc-macro crate. Generates parser code from `.bbnf` grammar files at compile ti
 bbnf-derive/
 ├── Cargo.toml      proc-macro = true
 └── src/
-    └── lib.rs      Derive macro entry point (~267 lines)
+    └── lib.rs      Derive macro entry point (~513 lines)
 ```
 
 ## Interface
@@ -55,6 +55,7 @@ Grammar file(s)
 
 ## Key Optimizations
 
+- **Content-based codegen cache**: Disk cache in `target/.bbnf-cache/` keyed by hash of all grammar file contents (including transitive `@import` deps), parser attributes, struct ident, and crate version. Skips the entire pipeline on cache hit. Cache files are `{hash}.rs` containing serialized TokenStream. Uses atomic write (tmp + rename). Falls through to full generation on any cache error.
 - **Dispatch tables**: O(1) byte-match for alternations with disjoint FIRST sets.
 - **SpanParser dual methods**: `rule()` + `rule_sp()` for span-eligible rules.
 - **JSON fast-paths**: Pattern-detect string/number regexes → SIMD-accelerated parsers.

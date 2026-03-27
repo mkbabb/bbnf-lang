@@ -1,7 +1,8 @@
 extern crate proc_macro;
 
 use std::collections::{HashMap, HashSet};
-use std::path::PathBuf;
+use std::hash::{Hash, Hasher};
+use std::path::{Path, PathBuf};
 
 use bbnf::calculate_ast_deps;
 
@@ -24,6 +25,165 @@ use syn::{
 };
 
 use parse_that::utils::get_cargo_root_path;
+
+// ── Content-based codegen cache ──────────────────────────────────────────────
+//
+// The full pipeline (parse → lower → 17 IR passes → codegen) is expensive.
+// We cache the generated TokenStream on disk, keyed by a hash of:
+//   - All grammar file contents (entry + transitive imports)
+//   - Parser attributes (arena, span, prettify, skip_recover, etc.)
+//   - The struct ident name (determines generated type names)
+//   - The bbnf crate version (invalidates on compiler changes)
+
+/// Version tag baked into the cache key to invalidate on compiler changes.
+const CACHE_VERSION: &str = env!("CARGO_PKG_VERSION");
+
+/// Recursively collect all grammar file contents for hashing.
+///
+/// Scans for `@import "path" ;` directives via simple string matching to avoid
+/// running the full parser. This is conservative: any line containing `@import`
+/// followed by a quoted path will be followed. False positives (e.g., inside
+/// comments) are harmless — they just add extra files to the hash, which is
+/// correct (more inputs → more cache invalidation, never less).
+fn collect_grammar_contents(
+    path: &Path,
+    visited: &mut HashSet<PathBuf>,
+    contents: &mut Vec<(PathBuf, String)>,
+) {
+    let canonical = match path.canonicalize() {
+        Ok(p) => p,
+        Err(_) => return,
+    };
+    if !visited.insert(canonical.clone()) {
+        return;
+    }
+    let source = match std::fs::read_to_string(&canonical) {
+        Ok(s) => s,
+        Err(_) => return,
+    };
+
+    // Scan for @import directives to find transitive dependencies.
+    let parent = canonical.parent().unwrap_or(Path::new("."));
+    for line in source.lines() {
+        let trimmed = line.trim();
+        if let Some(rest) = trimmed.strip_prefix("@import") {
+            // Extract the quoted path: @import "path" ; or @import "path" { ... } ;
+            let rest = rest.trim();
+            if let Some(start) = rest.find('"') {
+                if let Some(end) = rest[start + 1..].find('"') {
+                    let import_path_str = &rest[start + 1..start + 1 + end];
+                    let import_path = parent.join(import_path_str);
+                    collect_grammar_contents(&import_path, visited, contents);
+                }
+            }
+        }
+    }
+
+    contents.push((canonical, source));
+}
+
+/// Compute a deterministic hash of grammar contents + attributes + ident.
+fn compute_cache_key(
+    paths: &[PathBuf],
+    attrs: &ParserAttributes,
+    ident_name: &str,
+) -> Option<u64> {
+    let mut all_contents = Vec::new();
+    let mut visited = HashSet::new();
+
+    for path in paths {
+        collect_grammar_contents(path, &mut visited, &mut all_contents);
+    }
+
+    if all_contents.is_empty() {
+        return None;
+    }
+
+    // Sort by path for deterministic ordering.
+    all_contents.sort_by(|a, b| a.0.cmp(&b.0));
+
+    let mut hasher = std::hash::DefaultHasher::new();
+
+    // Hash version tag.
+    CACHE_VERSION.hash(&mut hasher);
+
+    // Hash all grammar file contents.
+    for (path, content) in &all_contents {
+        path.hash(&mut hasher);
+        content.hash(&mut hasher);
+    }
+
+    // Hash all parser attributes that affect codegen output.
+    ident_name.hash(&mut hasher);
+    attrs.ignore_whitespace.hash(&mut hasher);
+    attrs.debug.hash(&mut hasher);
+    attrs.use_string.hash(&mut hasher);
+    attrs.remove_left_recursion.hash(&mut hasher);
+    attrs.prettify.hash(&mut hasher);
+    attrs.skip_recover.hash(&mut hasher);
+    attrs.arena.hash(&mut hasher);
+    attrs.span.hash(&mut hasher);
+    for p in &attrs.paths {
+        // Hash canonical paths so that the same file via different relative
+        // paths produces the same key.
+        if let Ok(c) = p.canonicalize() {
+            c.hash(&mut hasher);
+        } else {
+            p.hash(&mut hasher);
+        }
+    }
+
+    Some(hasher.finish())
+}
+
+/// Resolve the cache directory: `<target_dir>/.bbnf-cache/`.
+fn cache_dir() -> Option<PathBuf> {
+    // In proc-macro context, OUT_DIR is not set. CARGO_TARGET_DIR may be set
+    // explicitly. Fall back to walking up from CARGO_MANIFEST_DIR to find
+    // `target/`.
+    if let Ok(target) = std::env::var("CARGO_TARGET_DIR") {
+        let dir = PathBuf::from(target).join(".bbnf-cache");
+        return Some(dir);
+    }
+
+    // Walk up from CARGO_MANIFEST_DIR looking for a `target/` directory.
+    if let Ok(manifest) = std::env::var("CARGO_MANIFEST_DIR") {
+        let mut dir = PathBuf::from(manifest);
+        loop {
+            let candidate = dir.join("target");
+            if candidate.is_dir() {
+                return Some(candidate.join(".bbnf-cache"));
+            }
+            if !dir.pop() {
+                break;
+            }
+        }
+    }
+
+    None
+}
+
+/// Try to read a cached TokenStream for the given cache key.
+fn read_cache(key: u64) -> Option<proc_macro2::TokenStream> {
+    let dir = cache_dir()?;
+    let path = dir.join(format!("{:016x}.rs", key));
+    let cached = std::fs::read_to_string(&path).ok()?;
+    cached.parse::<proc_macro2::TokenStream>().ok()
+}
+
+/// Write a generated TokenStream to the cache.
+fn write_cache(key: u64, tokens: &proc_macro2::TokenStream) {
+    let Some(dir) = cache_dir() else { return };
+    if std::fs::create_dir_all(&dir).is_err() {
+        return;
+    }
+    let path = dir.join(format!("{:016x}.rs", key));
+    // Write to a temp file then rename for atomicity.
+    let tmp = dir.join(format!("{:016x}.rs.tmp", key));
+    if std::fs::write(&tmp, tokens.to_string()).is_ok() {
+        let _ = std::fs::rename(&tmp, &path);
+    }
+}
 
 fn parse_parser_attrs(attrs: &[Attribute]) -> ParserAttributes {
     let mut parser_attr = ParserAttributes::default();
@@ -96,6 +256,21 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
 
     let parser_container_attrs = parse_parser_attrs(&input.attrs);
 
+    // ── Cache check ──────────────────────────────────────────────────────────
+    // Compute a content-based hash of all grammar files + attributes. If the
+    // cache has a valid entry, skip the entire pipeline.
+    let cache_key = compute_cache_key(
+        &parser_container_attrs.paths,
+        &parser_container_attrs,
+        &ident.to_string(),
+    );
+
+    if let Some(key) = cache_key {
+        if let Some(cached) = read_cache(key) {
+            return cached.into();
+        }
+    }
+
     // Try import-aware loading first: if the first file contains @import directives,
     // use load_module_graph() which handles DFS traversal, cycle detection, and
     // selective import resolution. Otherwise fall back to simple fold.
@@ -164,29 +339,53 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
                     let msgs: Vec<String> = registry.errors.iter().map(|e| e.to_string()).collect();
                     panic!("Import errors:\n{}", msgs.join("\n"));
                 }
-                // Merge all modules in topological order (deps before dependents).
+                // Merge all modules: imported modules first, entry module last.
+                // The entry module's local rules override imported ones (e.g.,
+                // css-stylesheet.bbnf can override calcFunction from css-func-body.bbnf).
+                let entry_canonical = entry.canonicalize()
+                    .unwrap_or_else(|_| entry.to_path_buf());
                 let mut merged = IndexMap::new();
+                // First pass: all non-entry modules.
                 for path in registry.paths() {
+                    if *path == entry_canonical {
+                        continue; // Process entry last.
+                    }
                     if let Some(module) = registry.get_module(path) {
-                        // Also collect recovers from imported modules.
                         for rec in &module.grammar.recovers {
                             recover_map
                                 .entry(rec.rule_name.to_string())
                                 .or_insert_with(|| rec.sync_expr.clone());
                         }
-                        // Also collect pretties from imported modules.
                         for p in &module.grammar.pretties {
                             pretty_map
                                 .entry(p.rule_name.to_string())
                                 .or_insert_with(|| p.hints.iter().map(|h| h.to_string()).collect());
                         }
-                        // Also collect no_collapses from imported modules.
                         for nc in &module.grammar.no_collapses {
                             no_collapse_set.insert(nc.rule_name.to_string());
                         }
                         for (name, expr) in &module.grammar.rules {
                             merged.insert(name.clone(), expr.clone());
                         }
+                    }
+                }
+                // Second pass: entry module (its rules override imports).
+                if let Some(module) = registry.get_module(&entry_canonical) {
+                    for rec in &module.grammar.recovers {
+                        recover_map
+                            .entry(rec.rule_name.to_string())
+                            .or_insert_with(|| rec.sync_expr.clone());
+                    }
+                    for p in &module.grammar.pretties {
+                        pretty_map
+                            .entry(p.rule_name.to_string())
+                            .or_insert_with(|| p.hints.iter().map(|h| h.to_string()).collect());
+                    }
+                    for nc in &module.grammar.no_collapses {
+                        no_collapse_set.insert(nc.rule_name.to_string());
+                    }
+                    for (name, expr) in &module.grammar.rules {
+                        merged.insert(name.clone(), expr.clone());
                     }
                 }
                 merged
@@ -320,6 +519,7 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     bbnf_ir::passes::refine_span_eligibility(&mut grammar_ir);
     grammar_ir.follow_sets = bbnf_ir::passes::compute_follow_sets(&grammar_ir);
     bbnf_ir::passes::factor_regex_with_lookahead(&mut grammar_ir);
+    bbnf_ir::passes::fuse_token_dispatch(&mut grammar_ir);
     bbnf_ir::passes::generate_dispatch_tables(&mut grammar_ir);
     bbnf_ir::passes::refine_memo_strategies(&mut grammar_ir);
     // NOTE: infer_types is called inside generate_all() AFTER sp_method_rules
@@ -327,6 +527,11 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
 
     // ── IR-based codegen (active) ──────────────────────────────────────
     let output = bbnf::generate::generate_all(&mut grammar_ir, &parser_container_attrs, ident);
+
+    // ── Cache write ──────────────────────────────────────────────────────────
+    if let Some(key) = cache_key {
+        write_cache(key, &output);
+    }
 
     output.into()
 }

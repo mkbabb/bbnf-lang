@@ -45,11 +45,15 @@ pub fn generate_enum(ctx: &IrCodegenCtx<'_>) -> TokenStream {
             }
             let name = ctx.ir.get_string(rule.name);
             let ident = format_ident!("{}", name);
-            let ty = ctx
-                .rule_types
-                .get(&rule.id)
-                .map(|t| t.clone())
-                .unwrap_or_else(|| ctx.boxed_enum_type.clone());
+            let ty = if ctx.fused_number_rules.contains(&rule.id) {
+                // Fused number: variant stores (Span<'a>, f64) instead of Span.
+                syn::parse_quote!((::parse_that::Span<'a>, f64))
+            } else {
+                ctx.rule_types
+                    .get(&rule.id)
+                    .map(|t| t.clone())
+                    .unwrap_or_else(|| ctx.boxed_enum_type.clone())
+            };
             Some(quote! { #ident(#ty) })
         })
         .collect();
@@ -74,28 +78,32 @@ pub fn generate_enum(ctx: &IrCodegenCtx<'_>) -> TokenStream {
     // Recovered variant if any @recover directives exist.
     let has_recovers =
         ctx.ir.rules.iter().any(|r| r.meta.recover.is_some()) && !ctx.parser_attrs.skip_recover;
-    let recovered_variant = if has_recovers {
-        quote! { , Recovered }
-    } else {
-        quote! {}
-    };
-
     let has_sub_variants = !sub_variant_values.is_empty();
+    // Collect all variants into a single Vec for clean comma handling.
+    let mut all_variants: Vec<TokenStream> = enum_values.collect();
+    all_variants.extend(sub_variant_values.iter().cloned());
+    if has_recovers {
+        all_variants.push(quote! { Recovered });
+    }
+    // PhantomData ensures 'a is used even when all variants map to non-lifetime types.
+    all_variants.push(quote! { #[doc(hidden)] __Phantom(::core::marker::PhantomData<&'a ()>) });
+
+    // Skip Pretty derive when PhantomData is present (Pretty can't handle it).
+    // The Pretty impl is generated manually for sub-variant enums anyway.
     if has_sub_variants {
         quote! {
             #[derive(Debug, Clone)]
             pub enum #enum_ident<'a> {
-                #(#enum_values),*,
-                #(#sub_variant_values),*
-                #recovered_variant
+                #(#all_variants),*
             }
         }
     } else {
+        // Generate manual From<Enum> for Doc instead of deriving Pretty,
+        // to handle the __Phantom variant.
         quote! {
-            #[derive(::pprint::Pretty, Debug, Clone)]
+            #[derive(Debug, Clone)]
             pub enum #enum_ident<'a> {
-                #(#enum_values),*
-                #recovered_variant
+                #(#all_variants),*
             }
         }
     }

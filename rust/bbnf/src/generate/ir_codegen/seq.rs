@@ -34,11 +34,11 @@ pub fn emit_seq(children: &[IrNode], ctx: &IrCodegenCtx<'_>, elide_box: bool) ->
     let child_info: Vec<(TokenStream, bool)> = children
         .iter()
         .map(|c| {
-            // Check for sp_method_rules override.
+            // Check for sp_method override using IR flag (matches unified inference).
             if let IrNode::Ref(id) = c {
                 let rule = &ctx.ir.rules[*id as usize];
                 let name = ctx.ir.get_string(rule.name);
-                if ctx.has_sp_method(name) && !rule.meta.is_transparent {
+                if rule.meta.has_sp_method && !rule.meta.is_transparent {
                     let sp_ident = format_ident!("{}_sp", name);
                     return (quote! { Self::#sp_ident().into_parser() }, true);
                 }
@@ -208,8 +208,9 @@ pub(super) fn emit_seq_inline(
     for child in children {
         if let IrNode::Ref(id) = child {
             let rule = &ctx.ir.rules[*id as usize];
-            let name = ctx.ir.get_string(rule.name);
-            if ctx.has_sp_method(name) && !rule.meta.is_transparent {
+            // Use rule.meta.has_sp_method (the IR flag) to match the unified inference.
+            // ctx.has_sp_method(name) uses a HashSet that may diverge for imported rules.
+            if rule.meta.has_sp_method && !rule.meta.is_transparent {
                 child_types.push(TypeDesc::Span);
                 sp_override.push(true);
                 continue;

@@ -1,6 +1,6 @@
 //! Monolithic Alt emission: dispatch-table match and flat checkpoint chain.
 
-use bbnf_ir::{AltBranch, IrNode, TypeDesc};
+use bbnf_ir::{AltBranch, FnDescriptor, IrNode, TypeDesc};
 
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
@@ -9,6 +9,46 @@ use super::super::super::ir_types::{self, IrCodegenCtx};
 use super::super::infer::{infer_node_type, infer_node_type_elide_box};
 use super::super::unescape_literal;
 use super::{emit_mono_expr, MonoCtx};
+
+/// Result of extracting a literal through a Map wrapper.
+/// `lit_sid` is the StringId of the literal; `constant_value` is `Some(StringId)`
+/// when the node is `Map(Literal, Constant { value, .. })`.
+#[derive(Clone, Copy)]
+struct LitThroughMap {
+    lit_sid: bbnf_ir::StringId,
+    constant_value: Option<bbnf_ir::StringId>,
+}
+
+/// Extract a literal StringId from a node, looking through Map(_, Constant)
+/// wrappers. Returns the literal's StringId and the constant value StringId
+/// (if wrapped), allowing the caller to emit the constant value directly
+/// instead of constructing a Span.
+fn extract_literal_through_map(
+    node: &IrNode,
+    ctx: &IrCodegenCtx<'_>,
+) -> Option<LitThroughMap> {
+    match node {
+        IrNode::Literal(sid) => Some(LitThroughMap {
+            lit_sid: *sid,
+            constant_value: None,
+        }),
+        IrNode::Map { inner, fn_id } => {
+            let fd = &ctx.ir.fns[*fn_id as usize];
+            match fd {
+                FnDescriptor::Constant { value, .. } => {
+                    // Recurse through nested Maps, but attach the outermost constant value.
+                    let inner_info = extract_literal_through_map(inner, ctx)?;
+                    Some(LitThroughMap {
+                        lit_sid: inner_info.lit_sid,
+                        constant_value: Some(*value),
+                    })
+                }
+                _ => None,
+            }
+        }
+        _ => None,
+    }
+}
 
 /// Emit a monolithic Alt.
 pub(super) fn emit_mono_alt(
@@ -25,28 +65,113 @@ pub(super) fn emit_mono_alt(
         return emit_mono_expr(&branches[0].node, ctx, mctx, elide_box);
     }
 
-    // Check for all-literal → direct byte matching (small sets) or any_span (large sets).
-    let all_literal = branches
+    // Check for all-literal (or all Map(Literal, Constant)) → direct byte matching.
+    // Extract (literal_string, optional_constant_value_sid) for each branch.
+    let lit_infos: Vec<Option<LitThroughMap>> = branches
         .iter()
-        .all(|b| matches!(&b.node, IrNode::Literal(_)));
-    if all_literal {
-        let lit_strings: Vec<String> = branches
-            .iter()
-            .map(|b| {
-                let IrNode::Literal(sid) = &b.node else {
-                    unreachable!()
-                };
-                let raw = ctx.ir.get_string(*sid);
-                unescape_literal(raw)
-            })
-            .collect();
+        .map(|b| extract_literal_through_map(&b.node, ctx))
+        .collect();
 
-        // For small sets (≤8 literals), emit a checkpoint + sequential byte comparison
-        // chain instead of building an Aho-Corasick automaton at runtime.
-        if lit_strings.len() <= 8 {
+    let all_literal_like = lit_infos.iter().all(|x| x.is_some());
+    if all_literal_like {
+        let entries: Vec<LitThroughMap> = lit_infos.into_iter().map(|x| x.unwrap()).collect();
+
+        let any_mapped = entries.iter().any(|e| e.constant_value.is_some());
+        let all_bare = !any_mapped;
+
+        // All-bare-literal path: Span return (any_span for large sets, sequential for small).
+        // All-mapped-literal path: constant return values via sequential byte comparison.
+        // Mixed (some bare, some mapped) also uses sequential when ≤ threshold.
+
+        // Sequential byte comparison threshold: for bare literals use 8 (above that,
+        // any_span with Aho-Corasick is faster). For mapped literals, sequential is the
+        // only option since each branch has a unique return value.
+        let use_sequential = if any_mapped {
+            true // No any_span alternative for mapped branches.
+        } else {
+            entries.len() <= 8
+        };
+
+        if use_sequential {
             let cp_var = mctx.fresh("lit_cp");
             let mut arms: Vec<TokenStream> = Vec::new();
-            for (i, s) in lit_strings.iter().enumerate() {
+            for (i, info) in entries.iter().enumerate() {
+                let raw = ctx.ir.get_string(info.lit_sid);
+                let s = unescape_literal(raw);
+                let bytes = s.as_bytes();
+                let len = bytes.len();
+                let byte_lits: Vec<proc_macro2::Literal> =
+                    bytes.iter().map(|b| proc_macro2::Literal::byte_character(*b)).collect();
+
+                // The return expression: Span for bare literals, constant value for mapped.
+                let ret_expr = if let Some(const_sid) = info.constant_value {
+                    let val_src = ctx.ir.get_string(const_sid);
+                    let val_expr: syn::Expr = syn::parse_str(val_src).unwrap();
+                    quote! { #val_expr }
+                } else {
+                    // Bare literal — return Span.
+                    if len == 1 {
+                        quote! { ::parse_that::Span::new(#cp_var, #cp_var + 1, state.src) }
+                    } else {
+                        quote! { ::parse_that::Span::new(#cp_var, __end, state.src) }
+                    }
+                };
+
+                let check = if len == 1 {
+                    quote! {
+                        if state.src_bytes.get(state.offset).copied() == Some(#(#byte_lits)*) {
+                            state.offset += 1;
+                            return Some(#ret_expr);
+                        }
+                    }
+                } else {
+                    quote! {
+                        {
+                            let __end = state.offset + #len;
+                            if state.src_bytes.get(state.offset..__end) == Some(&[#(#byte_lits),*] as &[u8]) {
+                                state.offset = __end;
+                                return Some(#ret_expr);
+                            }
+                        }
+                    }
+                };
+
+                if i < entries.len() - 1 {
+                    arms.push(check);
+                } else {
+                    arms.push(quote! {
+                        #check
+                        None
+                    });
+                }
+            }
+
+            // Return type: Span for all-bare, the constant type for all-mapped,
+            // or `_` for mixed (compiler infers).
+            let return_type = if all_bare {
+                quote! { ::parse_that::Span<'a> }
+            } else {
+                quote! { _ }
+            };
+
+            return quote! {
+                (|| -> Option<#return_type> {
+                    let #cp_var = state.offset;
+                    #(#arms)*
+                })()
+            };
+        }
+
+        // Large all-bare sets: inline sequential byte matching (no combinator).
+        // Even for large sets (>8), sequential inline byte comparison avoids
+        // SpanParser/any_span combinator overhead in the monolithic path.
+        debug_assert!(all_bare, "mapped literals should always use sequential path");
+        {
+            let cp_var = mctx.fresh("lit_cp");
+            let mut arms: Vec<TokenStream> = Vec::new();
+            for (i, info) in entries.iter().enumerate() {
+                let raw = ctx.ir.get_string(info.lit_sid);
+                let s = unescape_literal(raw);
                 let bytes = s.as_bytes();
                 let len = bytes.len();
                 let byte_lits: Vec<proc_macro2::Literal> =
@@ -56,14 +181,14 @@ pub(super) fn emit_mono_alt(
                     quote! {
                         if state.src_bytes.get(state.offset).copied() == Some(#(#byte_lits)*) {
                             state.offset += 1;
-                            return Some(::parse_that::Span::new(#cp_var, state.offset, state.src));
+                            return Some(::parse_that::Span::new(#cp_var, #cp_var + 1, state.src));
                         }
                     }
                 } else {
                     quote! {
                         {
                             let __end = state.offset + #len;
-                            if state.src_bytes.get(state.offset..__end) == Some(&[#(#byte_lits),*]) {
+                            if state.src_bytes.get(state.offset..__end) == Some(&[#(#byte_lits),*] as &[u8]) {
                                 state.offset = __end;
                                 return Some(::parse_that::Span::new(#cp_var, __end, state.src));
                             }
@@ -71,10 +196,9 @@ pub(super) fn emit_mono_alt(
                     }
                 };
 
-                if i < lit_strings.len() - 1 {
+                if i < entries.len() - 1 {
                     arms.push(check);
                 } else {
-                    // Last arm: no need for early return, just return None on failure.
                     arms.push(quote! {
                         #check
                         None
@@ -89,21 +213,21 @@ pub(super) fn emit_mono_alt(
                 })()
             };
         }
-
-        // Large sets: fall back to any_span (Aho-Corasick).
-        let lits: Vec<proc_macro2::Literal> = lit_strings
-            .iter()
-            .map(|s| proc_macro2::Literal::string(s))
-            .collect();
-        let name = mctx.hoist(quote! { ::parse_that::any_span(&[#(#lits),*]) });
-        return quote! { #name.call(state) };
     }
 
     // Check branch homogeneity for elide_box propagation.
-    // When elide_box=true (from Vec/Repeat parent), propagate it even for
-    // heterogeneous branches — coerce to Enum (by value) instead of BoxedEnum
-    // (arena ref). This eliminates arena allocations in Vec contexts.
-    let effective_elide_box = elide_box;
+    // Only propagate elide_box when branches are homogeneous in the elide_box
+    // context. Heterogeneous branches require sub-variant coercion to BoxedEnum
+    // (arena ref), which must match the enum variant type from `infer_types`.
+    let effective_elide_box = if elide_box {
+        let elide_tys: Vec<TypeDesc> = branches
+            .iter()
+            .map(|b| infer_node_type_elide_box(&b.node, ctx))
+            .collect();
+        elide_tys.windows(2).all(|w| w[0] == w[1])
+    } else {
+        false
+    };
 
     let branch_tys: Vec<TypeDesc> = if effective_elide_box {
         branches
@@ -119,12 +243,48 @@ pub(super) fn emit_mono_alt(
     let all_same = branch_tys.windows(2).all(|w| w[0] == w[1]);
     let needs_coercion = !all_same;
 
+    // Build a local sub-variant map for THIS specific Alt's branches.
+    // This avoids the global lookup ambiguity when two rules produce
+    // structurally identical sub-variant types.
+    let local_sub_variants: Vec<Option<String>> = if needs_coercion {
+        branch_tys
+            .iter()
+            .map(|ty| {
+                if *ty == TypeDesc::BoxedEnum || *ty == TypeDesc::Enum {
+                    return None;
+                }
+                // Search the current rule first (handles non-fused bodies).
+                if let Some(ref name) = mctx.current_rule_name {
+                    if let Some(rule) = ctx.ir.find_rule(name) {
+                        for sv in &rule.meta.sub_variants {
+                            if sv.ty == *ty {
+                                return Some(ctx.ir.get_string(sv.variant_name).to_string());
+                            }
+                        }
+                    }
+                }
+                // Fallback: search all rules (handles fused/inlined bodies).
+                for r in &ctx.ir.rules {
+                    for sv in &r.meta.sub_variants {
+                        if sv.ty == *ty {
+                            return Some(ctx.ir.get_string(sv.variant_name).to_string());
+                        }
+                    }
+                }
+                None
+            })
+            .collect()
+    } else {
+        Vec::new()
+    };
+
     if let Some(disp) = dispatch {
         emit_mono_dispatch(
             branches,
             disp,
             &branch_tys,
             needs_coercion,
+            &local_sub_variants,
             ctx,
             mctx,
             effective_elide_box,
@@ -134,6 +294,7 @@ pub(super) fn emit_mono_alt(
             branches,
             &branch_tys,
             needs_coercion,
+            &local_sub_variants,
             ctx,
             mctx,
             effective_elide_box,
@@ -147,6 +308,7 @@ fn emit_mono_dispatch(
     disp: &bbnf_ir::AltDispatch,
     branch_tys: &[TypeDesc],
     needs_coercion: bool,
+    local_sub_variants: &[Option<String>],
     ctx: &IrCodegenCtx<'_>,
     mctx: &mut MonoCtx,
     elide_box: bool,
@@ -189,10 +351,11 @@ fn emit_mono_dispatch(
 
         // Apply coercion if branches are heterogeneous.
         let coerced = if needs_coercion {
+            let sv_name = local_sub_variants.get(idx).and_then(|s| s.as_deref());
             if elide_box {
-                coerce_mono_branch_by_value(branch_expr, &branch_tys[idx], ctx)
+                coerce_mono_branch_by_value(branch_expr, &branch_tys[idx], sv_name, ctx)
             } else {
-                coerce_mono_branch(branch_expr, &branch_tys[idx], ctx)
+                coerce_mono_branch(branch_expr, &branch_tys[idx], sv_name, ctx)
             }
         } else {
             branch_expr
@@ -218,6 +381,7 @@ fn emit_mono_flat_alt(
     branches: &[AltBranch],
     branch_tys: &[TypeDesc],
     needs_coercion: bool,
+    local_sub_variants: &[Option<String>],
     ctx: &IrCodegenCtx<'_>,
     mctx: &mut MonoCtx,
     elide_box: bool,
@@ -244,10 +408,11 @@ fn emit_mono_flat_alt(
     for (i, branch) in branches.iter().enumerate() {
         let branch_expr = emit_mono_expr(&branch.node, ctx, mctx, elide_box);
         let coerced = if needs_coercion {
+            let sv_name = local_sub_variants.get(i).and_then(|s| s.as_deref());
             if elide_box {
-                coerce_mono_branch_by_value(branch_expr, &branch_tys[i], ctx)
+                coerce_mono_branch_by_value(branch_expr, &branch_tys[i], sv_name, ctx)
             } else {
-                coerce_mono_branch(branch_expr, &branch_tys[i], ctx)
+                coerce_mono_branch(branch_expr, &branch_tys[i], sv_name, ctx)
             }
         } else {
             branch_expr
@@ -277,9 +442,20 @@ fn emit_mono_flat_alt(
 /// Coerce a branch expression to Enum (`ArenaEnum`) by value for heterogeneous Alt
 /// in elide_box context. No arena allocation — Span branches get wrapped in a
 /// sub-variant enum constructor, Enum branches pass through.
+/// Public wrapper for token_dispatch module.
+pub(super) fn coerce_mono_branch_by_value_pub(
+    expr: TokenStream,
+    branch_ty: &TypeDesc,
+    variant_name: Option<&str>,
+    ctx: &IrCodegenCtx<'_>,
+) -> TokenStream {
+    coerce_mono_branch_by_value(expr, branch_ty, variant_name, ctx)
+}
+
 fn coerce_mono_branch_by_value(
     expr: TokenStream,
     branch_ty: &TypeDesc,
+    variant_name: Option<&str>,
     ctx: &IrCodegenCtx<'_>,
 ) -> TokenStream {
     if *branch_ty == TypeDesc::Enum {
@@ -288,37 +464,32 @@ fn coerce_mono_branch_by_value(
 
     let enum_ident = &ctx.enum_ident;
 
-    let all_sub_variants: Vec<(&str, &TypeDesc)> = ctx
-        .ir
-        .rules
-        .iter()
-        .flat_map(|r| {
-            r.meta.sub_variants.iter().map(|sv| {
-                let name = ctx.ir.get_string(sv.variant_name);
-                (name, &sv.ty)
-            })
-        })
-        .collect();
-
-    if let Some((variant_name, _)) = all_sub_variants
-        .iter()
-        .find(|(_, vty)| **vty == *branch_ty)
-    {
-        let variant_ident = format_ident!("{}", variant_name);
+    if let Some(name) = variant_name {
+        let variant_ident = format_ident!("{}", name);
         quote! { #expr.map(|__x| #enum_ident::#variant_ident(__x)) }
     } else {
-        // No sub-variant match — wrap directly (shouldn't happen in practice).
         expr
     }
 }
 
 /// Coerce a branch expression to BoxedEnum (`&'a ArenaEnum`) for heterogeneous Alt.
 ///
+/// Public wrapper for token_dispatch module.
+pub(super) fn coerce_mono_branch_pub(
+    expr: TokenStream,
+    branch_ty: &TypeDesc,
+    variant_name: Option<&str>,
+    ctx: &IrCodegenCtx<'_>,
+) -> TokenStream {
+    coerce_mono_branch(expr, branch_ty, variant_name, ctx)
+}
+
 /// All branches must produce the same type. BoxedEnum branches pass through.
 /// Enum branches get arena.alloc'd. Sub-variant branches get wrapped + alloc'd.
 fn coerce_mono_branch(
     expr: TokenStream,
     branch_ty: &TypeDesc,
+    variant_name: Option<&str>,
     ctx: &IrCodegenCtx<'_>,
 ) -> TokenStream {
     // Already BoxedEnum (&ArenaEnum) — no coercion needed.
@@ -329,24 +500,7 @@ fn coerce_mono_branch(
     let enum_ident = &ctx.enum_ident;
     let helper = ctx.arena_helper_ident();
 
-    // Look for a matching sub-variant (Span/other non-Enum types from
-    // heterogeneous branches get wrapped in a sub-variant + arena.alloc).
-    let all_sub_variants: Vec<(&str, &TypeDesc)> = ctx
-        .ir
-        .rules
-        .iter()
-        .flat_map(|r| {
-            r.meta.sub_variants.iter().map(|sv| {
-                let name = ctx.ir.get_string(sv.variant_name);
-                (name, &sv.ty)
-            })
-        })
-        .collect();
-
-    if let Some((variant_name, _)) = all_sub_variants
-        .iter()
-        .find(|(_, vty)| **vty == *branch_ty)
-    {
+    if let Some(variant_name) = variant_name {
         let variant_ident = format_ident!("{}", variant_name);
         quote! {
             #expr.map(|__x| {

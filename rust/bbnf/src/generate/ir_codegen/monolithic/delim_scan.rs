@@ -300,13 +300,9 @@ fn emit_scan_loop(
         quote! { ::parse_that::memchr::memchr2(#open_lit, #close_lit, __rem) }
     };
 
-    // Value scan (find trail/open/close after the pivot).
-    let value_scan = if let Some(tb) = config.trail_byte {
-        let trail_lit = proc_macro2::Literal::byte_character(tb);
-        quote! { ::parse_that::memchr::memchr3(#trail_lit, #open_lit, #close_lit, __vrem) }
-    } else {
-        quote! { ::parse_that::memchr::memchr2(#open_lit, #close_lit, __vrem) }
-    };
+    // Value scan: balanced-aware scanner that skips quoted strings and nested parens.
+    // Returns usize (offset to first depth-0 `;`, `{`, or `}`), NOT Option.
+    let value_scan = quote! { ::parse_that::css_scan_value_end(__vrem) };
 
     // Trail consume (advance past ';' if present after value).
     let trail_consume = if let Some(tb) = config.trail_byte {
@@ -328,6 +324,16 @@ fn emit_scan_loop(
         quote! {}
     };
 
+    // Unified structural scan: find the first of ALL structural bytes in one
+    // SIMD pass instead of 2 sequential memchr calls. Uses find_first_of_3/4
+    // which scans 16 bytes per iteration with all target comparisons fused.
+    let unified_scan = if let Some(tb) = config.trail_byte {
+        let trail_lit = proc_macro2::Literal::byte_character(tb);
+        quote! { ::parse_that::find_first_of_4(__rem, #open_lit, #close_lit, #pivot_lit, #trail_lit) }
+    } else {
+        quote! { ::parse_that::find_first_of_3(__rem, #open_lit, #close_lit, #pivot_lit) }
+    };
+
     let loop_body = quote! {
         loop {
             #ws_trim
@@ -337,45 +343,36 @@ fn emit_scan_loop(
             let __item = state.offset;
             let __rem = &state.src_bytes[state.offset..];
 
-            // Phase 1: find next block-structural delimiter.
-            let __bd = #block_scan;
-            let __scan_end = __bd.unwrap_or(__rem.len());
+            // Unified scan: find first structural byte (open/close/pivot/trail)
+            // in a single SIMD pass.
+            let __first = #unified_scan;
 
-            // Phase 2: check for pivot byte within that range.
-            let __piv = ::parse_that::memchr::memchr(#pivot_lit, &__rem[..__scan_end]);
+            if let Some((__fp, __fb)) = __first {
+                if __fb == #pivot_lit {
+                    // Pivot found first — tentatively a pivot branch.
+                    // Scan the value to find where it ends.
+                    let __val_start = __item + __fp + 1;
+                    state.offset = __val_start;
+                    let __vrem = &state.src_bytes[state.offset..];
+                    let __val_end_rel = #value_scan;
+                    state.offset += __val_end_rel;
 
-            if let Some(__pp) = __piv {
-                // Tentatively a pivot branch (e.g., pivot-led item).
-                // Scan the value to find where it ends.
-                let __val_start = __item + __pp + 1;
-                state.offset = __val_start;
-                let __vrem = &state.src_bytes[state.offset..];
-                let __vend = #value_scan;
-                let __val_end_rel = __vend.unwrap_or(__vrem.len());
-                state.offset += __val_end_rel;
-
-                // Pseudo-class guard: if the value terminated at open_byte,
-                // the pivot was part of a selector (e.g., selector:pseudo{...}), not
-                // a pivot-bearing selector, not a delimiter. Reinterpret as block branch.
-                if state.src_bytes.get(state.offset).copied() == Some(#open_lit) {
-                    // The content from __item through the current offset is a selector.
-                    // Self-recurse to handle the nested { ... } block.
-                    #on_block
-                } else {
-                    // Genuine pivot branch.
-                    #trail_consume
-                    #on_pivot
-                }
-            } else if let Some(__bp) = __bd {
-                // Block/fallback branch — no pivot found before the delimiter.
-                match __rem[__bp] {
-                    #open_lit => {
-                        state.offset = __item + __bp;
+                    // Pseudo-class guard: if the value terminated at open_byte,
+                    // the pivot was part of a selector (e.g., selector:pseudo{...}).
+                    if state.src_bytes.get(state.offset).copied() == Some(#open_lit) {
                         #on_block
+                    } else {
+                        #trail_consume
+                        #on_pivot
                     }
-                    #close_lit => break,
-                    #trail_branch
-                    _ => unreachable!(),
+                } else if __fb == #open_lit {
+                    state.offset = __item + __fp;
+                    #on_block
+                } else if __fb == #close_lit {
+                    break;
+                } else {
+                    // Trail byte — skip past it.
+                    state.offset = __item + __fp + 1;
                 }
             } else {
                 state.offset = state.src_bytes.len();
@@ -552,7 +549,7 @@ pub(super) fn emit_arena(
             if state.src_bytes.get(state.offset).copied() != Some(#open_lit) { return None; }
             state.offset += 1;
 
-            let mut __vals = Vec::new();
+            let mut __vals = Vec::with_capacity(4);
 
             #loop_body
 
@@ -623,5 +620,7 @@ pub(super) fn try_emit_arena_wrap(
     mctx: &mut MonoCtx,
 ) -> Option<TokenStream> {
     let config = try_detect(open, middle, close, ir)?;
+    // Arena path requires content_rule for Vec variant construction.
+    config.content_rule?;
     Some(emit_arena(&config, ctx, mctx))
 }

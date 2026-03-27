@@ -25,6 +25,7 @@ mod expr;
 mod repeat;
 mod seq;
 pub mod span;
+mod token_dispatch;
 
 use bbnf_ir::{FnDescriptor, GrammarIR, IrNode};
 
@@ -50,10 +51,13 @@ pub(super) fn emit_ws_trim(ctx: &IrCodegenCtx<'_>, mctx: &mut MonoCtx) -> TokenS
             // Direct scanner returns Option<Span>; we just need the side effect (advance offset).
             return quote! { #direct; };
         }
-        // General case: hoist a SpanParser for the custom regex.
-        let sp = fast_paths::emit_regex_span(pattern);
-        let name = mctx.hoist(sp);
-        quote! { #name.call(state); }
+        // Try HIR-based inline compilation.
+        if let Some(inline) = super::super::regex_emit::try_emit_regex_inline(pattern) {
+            return quote! { #inline; };
+        }
+        // Fall back to LazyLock<Regex> — NEVER sp_regex.
+        let lazy = super::super::regex_emit::emit_regex_lazy_static(pattern);
+        quote! { #lazy; }
     } else {
         quote! { ::parse_that::trim_leading_whitespace_mut(state); }
     }
@@ -93,6 +97,8 @@ pub(super) fn is_simple_expr(node: &IrNode, mctx: &MonoCtx) -> bool {
 /// generates unique variable names, and tracks fusion-eligible rules.
 pub(super) struct MonoCtx {
     pub hoisted: Vec<TokenStream>,
+    /// Deduplication map: expression string → hoisted binding name.
+    hoist_dedup: std::collections::HashMap<String, syn::Ident>,
     counter: usize,
     /// Per-rule flag: true if the rule's body can be inlined at call sites.
     /// Indexed by RuleId. Computed once in `generate_monolithic_arena`.
@@ -117,6 +123,7 @@ impl MonoCtx {
     pub fn new(fusion_eligible: Vec<bool>, single_site_inline: Vec<bool>) -> Self {
         Self {
             hoisted: Vec::new(),
+            hoist_dedup: std::collections::HashMap::new(),
             counter: 0,
             fusion_eligible,
             single_site_inline,
@@ -132,8 +139,16 @@ impl MonoCtx {
     }
 
     pub fn hoist(&mut self, expr: TokenStream) -> syn::Ident {
+        // Deduplicate: if an identical expression was already hoisted, reuse it.
+        let expr_str = expr.to_string();
+        if let Some(existing) = self.hoist_dedup.get(&expr_str) {
+            return existing.clone();
+        }
         let name = self.fresh("h");
+
         self.hoisted.push(quote! { let #name = #expr; });
+
+        self.hoist_dedup.insert(expr_str, name.clone());
         name
     }
 }
@@ -165,15 +180,42 @@ pub fn generate_monolithic_arena(
     // variant is preserved (unlike force_inline which eliminates the variant entirely).
     // This allows @token to coexist with @pretty: the parsing body is flat inline code,
     // but to_doc() match arms can still reference the variant by name.
+    //
+    // Code bloat guard: `estimate_expansion_cost(body) * ref_count <= 4096`.
+    // A rule's fused body is copied at every call site, so total expansion is
+    // proportional to cost × sites. `value` (cost ~150, 20 sites → 3000) passes
+    // the per-rule cost check but exceeds the total budget, preventing 33K-line
+    // functions. `declaration` (cost ~280, 1–2 sites → ≤560) stays fused.
+    let mut ref_counts = vec![0u32; ir.rules.len()];
+    for rule in &ir.rules {
+        count_refs_vec(&rule.body, &mut ref_counts);
+    }
+
     let fusion_eligible: Vec<bool> = ir
         .rules
         .iter()
-        .map(|rule| {
-            rule.meta.is_token
-                || (!rule.meta.is_cyclic
-                    && rule.meta.recover.is_none()
-                    && rule.meta.pretty.is_none()
-                    && !rule.meta.no_collapse)
+        .enumerate()
+        .map(|(i, rule)| {
+            // @token rules always inline (small by definition).
+            if rule.meta.is_token {
+                return true;
+            }
+            // Don't inline cyclic, recoverable, pretty, or no_collapse rules.
+            if rule.meta.is_cyclic
+                || rule.meta.recover.is_some()
+                || rule.meta.pretty.is_some()
+                || rule.meta.no_collapse
+            {
+                return false;
+            }
+            // Inline rules with moderate expansion cost.
+            // The estimate weights Ref nodes at 8 (IIFE + checkpoint + call + restore),
+            // Alt branches at 5 each, Repeats at 10. This prevents:
+            // - value (14 Ref branches, cost ~182): NOT inlined
+            // - namedColor (147 literal branches): NOT inlined (max_alt_branches > 48)
+            // - But allows dimension (4 Ref branches, cost ~52): inlined
+            // - And small rules like ident/string: inlined
+            max_alt_branches(&rule.body) <= 32 && estimate_expansion_cost(&rule.body) <= 80
         })
         .collect();
 
@@ -205,10 +247,28 @@ pub fn generate_monolithic_arena(
 
         let mut mctx = MonoCtx::new(fusion_eligible.clone(), single_site_inline.clone());
 
+        // Fused number scan+convert: if the rule body is a JSON number regex,
+        // emit number_scan_convert which returns (Span, f64) in one pass.
+        // The enum variant stores (Span<'a>, f64) instead of plain Span.
+        // Fused number: bare JSON number regex → (Span, f64) enum variant.
+        // NumberConvert (from -> f64 map) is handled separately by emit_mono_map —
+        // it produces f64 directly, NOT (Span, f64).
+        let is_fused_number = match &rule.body {
+            IrNode::Regex(sid) => fast_paths::is_fused_number_regex(ir.get_string(*sid)),
+            _ => false,
+        };
+
         // All internal fns return Option<ArenaEnum<'a>>.
         // Transparent rules: body emitted with elide_box=true (returns ArenaEnum directly).
         // Non-transparent rules: body emitted with elide_box=false, wrapped in enum variant.
-        let body_expr = if rule.meta.is_transparent {
+        let body_expr = if is_fused_number && !rule.meta.is_transparent {
+            let variant_ident = format_ident!("{}", name);
+            let enum_ident = &ctx.enum_ident;
+            quote! {
+                ::parse_that::number_scan_convert(state)
+                    .map(|__x| #enum_ident::#variant_ident(__x))
+            }
+        } else if rule.meta.is_transparent {
             emit_mono_expr(&rule.body, ctx, &mut mctx, true)
         } else {
             let variant_ident = format_ident!("{}", name);
@@ -366,12 +426,19 @@ pub(super) fn emit_mono_expr(
         IrNode::Regex(sid) => {
             let pattern = ctx.ir.get_string(*sid);
             // Phase 2: try direct scanner call (bypasses SpanParser dispatch stack).
-            if let Some(direct) = fast_paths::emit_regex_direct_call(pattern) {
+            // Arena context: fuse number conversion (returns (Span, f64) for JSON numbers).
+            let fuse = ctx.storage_mode == StorageMode::Arena;
+            // 1. Try known fast paths (css_ident_fast, number_scan_f64, etc.)
+            if let Some(direct) = fast_paths::emit_regex_direct_call_with_fuse(pattern, fuse) {
                 direct
-            } else {
-                let sp = fast_paths::emit_regex_span(pattern);
-                let name = mctx.hoist(sp);
-                quote! { #name.call(state) }
+            }
+            // 2. Try HIR-based inline compilation
+            else if let Some(inline) = super::super::regex_emit::try_emit_regex_inline(pattern) {
+                inline
+            }
+            // 3. Fall back to LazyLock<Regex> — NEVER sp_regex
+            else {
+                super::super::regex_emit::emit_regex_lazy_static(pattern)
             }
         }
 
@@ -402,6 +469,10 @@ pub(super) fn emit_mono_expr(
         IrNode::Map { inner, fn_id } => expr::emit_mono_map(inner, *fn_id, ctx, mctx, elide_box),
 
         IrNode::OptionalWhitespace(inner) => expr::emit_mono_ow(inner, ctx, mctx, elide_box),
+
+        IrNode::TokenDispatch { token, arms, fallback } => {
+            token_dispatch::emit_token_dispatch(token, arms, fallback, ctx, mctx, elide_box)
+        }
     }
 }
 
@@ -419,7 +490,9 @@ pub(super) fn emit_mono_discarded(
         IrNode::Map { inner, fn_id } => {
             let fd = &ctx.ir.fns[*fn_id as usize];
             match fd {
-                FnDescriptor::EnumWrap { .. } | FnDescriptor::BoxWrap => {
+                FnDescriptor::EnumWrap { .. }
+                | FnDescriptor::BoxWrap
+                | FnDescriptor::Constant { .. } => {
                     emit_mono_discarded(inner, strip_ow, ctx, mctx)
                 }
                 _ => emit_mono_expr(node, ctx, mctx, false),
@@ -435,16 +508,28 @@ pub(super) fn emit_mono_discarded(
         IrNode::OptionalWhitespace(inner) => {
             let ws_trim = emit_ws_trim(ctx, mctx);
             let inner_discarded = emit_mono_discarded(inner, false, ctx, mctx);
-            let result_var = mctx.fresh("owd");
-            let ws2 = ws_trim.clone();
-            quote! {
-                {
-                    #ws_trim
-                    let #result_var = #inner_discarded;
-                    if #result_var.is_some() {
-                        #ws2
+
+            // Loop invariant hoisting: skip redundant trailing trim when
+            // inner already ends with OW.
+            if expr::ends_with_ow(inner) {
+                quote! {
+                    {
+                        #ws_trim
+                        #inner_discarded
                     }
-                    #result_var
+                }
+            } else {
+                let result_var = mctx.fresh("owd");
+                let ws2 = ws_trim.clone();
+                quote! {
+                    {
+                        #ws_trim
+                        let #result_var = #inner_discarded;
+                        if #result_var.is_some() {
+                            #ws2
+                        }
+                        #result_var
+                    }
                 }
             }
         }
@@ -478,17 +563,10 @@ pub(super) fn emit_mono_discarded(
                 ctx.no_collapse.set(saved_no_collapse);
                 return result;
             }
-            let rule = &ctx.ir.rules[*rule_id as usize];
-            let name = ctx.ir.get_string(rule.name);
-            if ctx.has_sp_method(name) {
-                let sp_ident = format_ident!("{}_sp", name);
-                let hname = mctx.hoist(quote! { Self::#sp_ident().into_parser() });
-                quote! { #hname.call(state) }
-            } else {
-                // Call monolithic fn (result discarded).
-                let fn_ident = mono_fn_ident(ctx.resolve_rule_name(*rule_id));
-                quote! { Self::#fn_ident(state) }
-            }
+            // Always use monolithic fn call — never construct SpanParser combinators.
+            // The monolithic function does the same parsing work without combinator overhead.
+            let fn_ident = mono_fn_ident(ctx.resolve_rule_name(*rule_id));
+            quote! { Self::#fn_ident(state) }
         }
         // Regex/other — emit via standard path.
         _ => emit_mono_expr(node, ctx, mctx, false),
@@ -626,6 +704,73 @@ pub(super) fn compute_single_site_inline(ir: &GrammarIR) -> Vec<bool> {
         .collect()
 }
 
+/// Maximum Alt branch count in a tree (for fusion eligibility gating).
+/// Returns the largest number of branches in any Alt node.
+fn max_alt_branches(node: &IrNode) -> usize {
+    match node {
+        IrNode::Alt(branches, _) => {
+            let inner_max = branches
+                .iter()
+                .map(|b| max_alt_branches(&b.node))
+                .max()
+                .unwrap_or(0);
+            branches.len().max(inner_max)
+        }
+        IrNode::Seq(children) => children.iter().map(max_alt_branches).max().unwrap_or(0),
+        IrNode::Repeat { inner, .. }
+        | IrNode::Negate(inner)
+        | IrNode::OptionalWhitespace(inner)
+        | IrNode::Map { inner, .. } => max_alt_branches(inner),
+        IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
+            max_alt_branches(a).max(max_alt_branches(b))
+        }
+        _ => 0,
+    }
+}
+
+/// Estimate the code expansion cost of inlining a rule body.
+/// Weights nodes by their codegen output size, not just node count.
+/// A Ref generates ~8 lines (IIFE + checkpoint + call + restore).
+/// An Alt branch generates ~5 lines of scaffolding per alternative.
+fn estimate_expansion_cost(node: &IrNode) -> usize {
+    match node {
+        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => 2,
+        IrNode::Ref(_) => 8, // IIFE closure + checkpoint save + fn call + restore
+        IrNode::Seq(children) => {
+            1 + children.iter().map(estimate_expansion_cost).sum::<usize>()
+        }
+        IrNode::Alt(branches, _) => {
+            // Each branch: checkpoint save (1) + IIFE (2) + body + checkpoint restore (1) + error check (1)
+            branches
+                .iter()
+                .map(|b| 5 + estimate_expansion_cost(&b.node))
+                .sum::<usize>()
+        }
+        IrNode::Repeat { inner, .. } => {
+            // Loop setup (Vec::new, loop {}, break check, push)
+            10 + estimate_expansion_cost(inner)
+        }
+        IrNode::Map { inner, .. } => 2 + estimate_expansion_cost(inner),
+        IrNode::OptionalWhitespace(inner) => 2 + estimate_expansion_cost(inner),
+        IrNode::Negate(inner) => 3 + estimate_expansion_cost(inner),
+        IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
+            estimate_expansion_cost(a) + estimate_expansion_cost(b)
+        }
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => {
+            estimate_expansion_cost(token)
+                + arms
+                    .iter()
+                    .map(|a| 3 + estimate_expansion_cost(&a.continuation))
+                    .sum::<usize>()
+                + estimate_expansion_cost(fallback)
+        }
+    }
+}
+
 /// Count references to each rule in an IrNode tree.
 fn count_refs_vec(node: &IrNode, counts: &mut [u32]) {
     match node {
@@ -652,6 +797,13 @@ fn count_refs_vec(node: &IrNode, counts: &mut [u32]) {
             count_refs_vec(a, counts);
             count_refs_vec(b, counts);
         }
+        IrNode::TokenDispatch { token, arms, fallback } => {
+            count_refs_vec(token, counts);
+            for arm in arms {
+                count_refs_vec(&arm.continuation, counts);
+            }
+            count_refs_vec(fallback, counts);
+        }
         IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => {}
     }
 }
@@ -671,6 +823,12 @@ fn body_has_self_ref(node: &IrNode, rule_id: bbnf_ir::RuleId) -> bool {
         IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
             body_has_self_ref(a, rule_id) || body_has_self_ref(b, rule_id)
         }
+        IrNode::TokenDispatch { token, arms, fallback } => {
+            body_has_self_ref(token, rule_id)
+                || arms.iter().any(|a| body_has_self_ref(&a.continuation, rule_id))
+                || body_has_self_ref(fallback, rule_id)
+        }
         IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => false,
     }
 }
+

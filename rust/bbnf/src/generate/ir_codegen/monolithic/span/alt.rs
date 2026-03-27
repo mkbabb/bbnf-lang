@@ -55,7 +55,7 @@ pub(super) fn emit_span_alt(
                     quote! {
                         {
                             let __end = state.offset + #len;
-                            if state.src_bytes.get(state.offset..__end) == Some(&[#(#byte_lits),*]) {
+                            if state.src_bytes.get(state.offset..__end) == Some(&[#(#byte_lits),*] as &[u8]) {
                                 state.offset = __end;
                                 return Some(::parse_that::Span::new(#cp_var, __end, state.src));
                             }
@@ -76,9 +76,46 @@ pub(super) fn emit_span_alt(
             };
         }
 
-        let lits: Vec<proc_macro2::Literal> = lit_strings.iter().map(|s| proc_macro2::Literal::string(s)).collect();
-        let name = mctx.hoist(quote! { ::parse_that::any_span(&[#(#lits),*]) });
-        return quote! { #name.call(state) };
+        // Large all-literal sets: inline sequential byte matching (no combinator).
+        {
+            let cp_var2 = mctx.fresh("lit_cp");
+            let mut arms2: Vec<TokenStream> = Vec::new();
+            for (i, s) in lit_strings.iter().enumerate() {
+                let bytes = s.as_bytes();
+                let len = bytes.len();
+                let byte_lits: Vec<proc_macro2::Literal> =
+                    bytes.iter().map(|b| proc_macro2::Literal::byte_character(*b)).collect();
+                let check = if len == 1 {
+                    quote! {
+                        if state.src_bytes.get(state.offset).copied() == Some(#(#byte_lits)*) {
+                            state.offset += 1;
+                            return Some(::parse_that::Span::new(#cp_var2, state.offset, state.src));
+                        }
+                    }
+                } else {
+                    quote! {
+                        {
+                            let __end = state.offset + #len;
+                            if state.src_bytes.get(state.offset..__end) == Some(&[#(#byte_lits),*] as &[u8]) {
+                                state.offset = __end;
+                                return Some(::parse_that::Span::new(#cp_var2, __end, state.src));
+                            }
+                        }
+                    }
+                };
+                if i < lit_strings.len() - 1 {
+                    arms2.push(check);
+                } else {
+                    arms2.push(quote! { #check None });
+                }
+            }
+            return quote! {
+                (|| -> Option<::parse_that::Span<'a>> {
+                    let #cp_var2 = state.offset;
+                    #(#arms2)*
+                })()
+            };
+        }
     }
 
     if let Some(disp) = dispatch {

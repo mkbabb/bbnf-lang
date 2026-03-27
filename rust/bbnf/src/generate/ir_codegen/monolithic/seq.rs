@@ -250,21 +250,18 @@ fn emit_span_child(
 ) -> TokenStream {
     if is_sp_override {
         if let IrNode::Ref(id) = child {
-            // Fusion: inline the rule body for direct Span result.
-            if mctx.fusion_eligible.get(*id as usize).copied() == Some(true) {
-                let rule = &ctx.ir.rules[*id as usize];
-                let saved_no_collapse = ctx.no_collapse.get();
-                ctx.no_collapse.set(false);
-                let result = emit_mono_expr(&rule.body, ctx, mctx, false);
-                ctx.no_collapse.set(saved_no_collapse);
-                return result;
-            }
-            // Standard: use SpanParser _sp() path.
-            let rule = &ctx.ir.rules[*id as usize];
-            let name = ctx.ir.get_string(rule.name);
-            let sp_ident = format_ident!("{}_sp", name);
-            let hname = mctx.hoist(quote! { Self::#sp_ident() });
-            return quote! { #hname.call(state) };
+            // B.1 span override: must produce Span, not ArenaEnum.
+            // Use direct monolithic call + offset-delta Span construction.
+            // Avoids SpanParser combinator overhead entirely.
+            let fn_ident = super::mono_fn_ident(ctx.resolve_rule_name(*id));
+            return quote! {
+                {
+                    let __sp_b1 = state.offset;
+                    Self::#fn_ident(state).map(|_| {
+                        ::parse_that::Span::new(__sp_b1, state.offset, state.src)
+                    })
+                }
+            };
         }
     }
     emit_mono_expr(child, ctx, mctx, false)

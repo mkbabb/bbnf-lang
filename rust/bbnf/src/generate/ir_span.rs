@@ -38,7 +38,9 @@ fn strip_discarded_maps_span<'a>(node: &'a IrNode, ctx: &IrCodegenCtx<'_>) -> &'
         IrNode::Map { inner, fn_id } => {
             let fd = &ctx.ir.fns[*fn_id as usize];
             match fd {
-                FnDescriptor::EnumWrap { .. } | FnDescriptor::BoxWrap => {
+                FnDescriptor::EnumWrap { .. }
+                | FnDescriptor::BoxWrap
+                | FnDescriptor::Constant { .. } => {
                     strip_discarded_maps_span(inner, ctx)
                 }
                 _ => node,
@@ -236,6 +238,9 @@ pub(super) fn try_ir_span_expr(node: &IrNode, ctx: &IrCodegenCtx<'_>) -> Option<
 
         // Map nodes can't be represented as SpanParser (they change output types).
         IrNode::Map { .. } => None,
+
+        // TokenDispatch can't be represented as SpanParser (complex dispatch logic).
+        IrNode::TokenDispatch { .. } => None,
     }
 }
 

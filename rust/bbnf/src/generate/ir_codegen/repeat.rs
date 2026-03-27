@@ -170,7 +170,9 @@ pub(crate) fn emit_discarded(node: &IrNode, strip_ow: bool, ctx: &IrCodegenCtx<'
         IrNode::Map { inner, fn_id } => {
             let fd = &ctx.ir.fns[*fn_id as usize];
             match fd {
-                FnDescriptor::EnumWrap { .. } | FnDescriptor::BoxWrap => {
+                FnDescriptor::EnumWrap { .. }
+                | FnDescriptor::BoxWrap
+                | FnDescriptor::Constant { .. } => {
                     emit_discarded(inner, strip_ow, ctx)
                 }
                 _ => ir_node_to_tokens(node, ctx), // Custom maps may have side effects.
@@ -234,7 +236,9 @@ fn separator_is_span(node: &IrNode, ctx: &IrCodegenCtx<'_>) -> bool {
         IrNode::Map { inner, fn_id } => {
             let fd = &ctx.ir.fns[*fn_id as usize];
             match fd {
-                FnDescriptor::EnumWrap { .. } | FnDescriptor::BoxWrap => {
+                FnDescriptor::EnumWrap { .. }
+                | FnDescriptor::BoxWrap
+                | FnDescriptor::Constant { .. } => {
                     separator_is_span(inner, ctx)
                 }
                 _ => infer_node_type(node, ctx) == TypeDesc::Span,

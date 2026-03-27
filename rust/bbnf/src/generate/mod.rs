@@ -8,6 +8,8 @@ mod types;
 
 // ── IR-based codegen modules ────────────────────────────────────────────────
 pub mod fast_paths;
+pub mod regex_classify;
+pub mod regex_emit;
 pub mod ir_codegen;
 pub mod ir_enums;
 pub mod ir_pretty;
@@ -73,43 +75,55 @@ pub fn generate_all(
     let (arena_enum, arena_helper, arena_methods, arena_prettify, arena_recovered) = if parser_attrs
         .arena
     {
-        let mut arena_ctx =
-            ir_types::IrCodegenCtx::new(ir, ident, parser_attrs, StorageMode::Arena);
-        arena_ctx.sp_method_rules = ctx.sp_method_rules.clone();
-        let has_recovers = arena_ctx.ir.rules.iter().any(|r| r.meta.recover.is_some())
-            && !arena_ctx.parser_attrs.skip_recover;
-        let arena_helper_ident = arena_ctx.arena_helper_ident();
-        let arena_enum_ident = &arena_ctx.enum_ident;
-        let recovered_static = if has_recovers {
-            let recovered_ident = arena_ctx.recovered_static_ident();
-            quote! {
-                static #recovered_ident: #arena_enum_ident<'static> = #arena_enum_ident::Recovered;
-            }
-        } else {
-            quote! {}
-        };
-        (
-            ir_enums::generate_enum(&arena_ctx),
-            quote! {
-                #[allow(non_snake_case)]
-                #[inline(always)]
-                fn #arena_helper_ident<'a>(
-                    state: &::parse_that::ParserState<'a>,
-                ) -> &'a ::parse_that::BumpArena<#arena_enum_ident<'a>> {
-                    debug_assert!(!state.context_ptr.is_null(), "arena parser requires parse_with_context()");
-                    unsafe {
-                        &*(state.context_ptr as *const ::parse_that::BumpArena<#arena_enum_ident<'a>>)
+        let result = {
+            let mut arena_ctx =
+                ir_types::IrCodegenCtx::new(ir, ident, parser_attrs, StorageMode::Arena);
+            arena_ctx.sp_method_rules = ctx.sp_method_rules.clone();
+
+            // Detect fused number rules for arena-specific enum variant override.
+            for rule in &ir.rules {
+                if let bbnf_ir::IrNode::Regex(sid) = &rule.body {
+                    if fast_paths::is_fused_number_regex(ir.get_string(*sid)) {
+                        arena_ctx.fused_number_rules.insert(rule.id);
                     }
                 }
-            },
-            ir_codegen::monolithic::generate_monolithic_arena(ir, &arena_ctx),
-            if parser_attrs.prettify {
-                ir_pretty::generate_prettify_ir(&arena_ctx)
+            }
+            let has_recovers = arena_ctx.ir.rules.iter().any(|r| r.meta.recover.is_some())
+                && !arena_ctx.parser_attrs.skip_recover;
+            let arena_helper_ident = arena_ctx.arena_helper_ident();
+            let arena_enum_ident = &arena_ctx.enum_ident;
+            let recovered_static = if has_recovers {
+                let recovered_ident = arena_ctx.recovered_static_ident();
+                quote! {
+                    static #recovered_ident: #arena_enum_ident<'static> = #arena_enum_ident::Recovered;
+                }
             } else {
                 quote! {}
-            },
-            recovered_static,
-        )
+            };
+            (
+                ir_enums::generate_enum(&arena_ctx),
+                quote! {
+                    #[allow(non_snake_case)]
+                    #[inline(always)]
+                    fn #arena_helper_ident<'a>(
+                        state: &::parse_that::ParserState<'a>,
+                    ) -> &'a ::parse_that::BumpArena<#arena_enum_ident<'a>> {
+                        debug_assert!(!state.context_ptr.is_null(), "arena parser requires parse_with_context()");
+                        unsafe {
+                            &*(state.context_ptr as *const ::parse_that::BumpArena<#arena_enum_ident<'a>>)
+                        }
+                    }
+                },
+                ir_codegen::monolithic::generate_monolithic_arena(ir, &arena_ctx),
+                if parser_attrs.prettify {
+                    ir_pretty::generate_prettify_ir(&arena_ctx)
+                } else {
+                    quote! {}
+                },
+                recovered_static,
+            )
+        };
+        result
     } else {
         (quote! {}, quote! {}, quote! {}, quote! {}, quote! {})
     };
@@ -221,8 +235,17 @@ fn generate_ir_parser_methods(
             let unboxed_ident = ctx.unboxed_method_ident_for_name(name);
             let unboxed_ty = ctx.enum_type.clone();
 
-            // Generate the body with elide_box=true so inner refs skip arena alloc.
-            let mut unboxed_parser = ir_codegen::ir_node_to_tokens_elide(&rule.body, ctx, true);
+            // Check if elide_box codegen is safe for this rule's body.
+            // Heterogeneous Alts produce BoxedEnum even with elide_box=true,
+            // so we fall back to unboxing the normal method's result.
+            let body_ty = ir_codegen::infer::infer_node_type_elide_box(&rule.body, &ctx);
+            let mut unboxed_parser = if body_ty == bbnf_ir::TypeDesc::BoxedEnum {
+                // Heterogeneous Alt: elide_box won't work. Delegate to the
+                // normal (boxed) method and dereference the Box.
+                quote! { Self::#ident().map(|x| *x) }
+            } else {
+                ir_codegen::ir_node_to_tokens_elide(&rule.body, ctx, true)
+            };
 
             if rule.meta.is_cyclic {
                 unboxed_parser = quote! { ::parse_that::lazy(|| #unboxed_parser) };

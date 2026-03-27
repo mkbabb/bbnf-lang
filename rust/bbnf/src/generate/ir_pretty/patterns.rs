@@ -114,6 +114,11 @@ pub(crate) fn contains_structured_ref_ir(node: &IrNode, ctx: &IrCodegenCtx<'_>) 
         IrNode::OptionalWhitespace(inner) | IrNode::Negate(inner) | IrNode::Map { inner, .. } => {
             contains_structured_ref_ir(inner, ctx)
         }
+        IrNode::TokenDispatch { token, arms, fallback } => {
+            contains_structured_ref_ir(token, ctx)
+                || arms.iter().any(|a| contains_structured_ref_ir(&a.continuation, ctx))
+                || contains_structured_ref_ir(fallback, ctx)
+        }
         IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => false,
     }
 }

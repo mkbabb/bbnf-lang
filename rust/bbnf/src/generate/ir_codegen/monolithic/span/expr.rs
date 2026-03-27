@@ -278,19 +278,36 @@ pub(super) fn emit_span_ow(
 
     let ws_trim = emit_ws_trim(ctx, mctx);
     let inner_expr = emit_span_expr(inner, ir, ctx, mctx);
-    let ws2 = ws_trim.clone();
     let start_var = mctx.fresh("ow_start");
 
-    quote! {
-        {
-            let #start_var = state.offset;
-            #ws_trim
-            let __r = #inner_expr;
-            if __r.is_some() { #ws2 }
-            if __r.is_some() {
-                Some(::parse_that::Span::new(#start_var, state.offset, state.src))
-            } else {
-                __r
+    // Loop invariant hoisting: if the inner expression already ends with a
+    // whitespace trim, skip the redundant trailing trim.
+    if super::super::expr::ends_with_ow(inner) {
+        quote! {
+            {
+                let #start_var = state.offset;
+                #ws_trim
+                let __r = #inner_expr;
+                if __r.is_some() {
+                    Some(::parse_that::Span::new(#start_var, state.offset, state.src))
+                } else {
+                    __r
+                }
+            }
+        }
+    } else {
+        let ws2 = ws_trim.clone();
+        quote! {
+            {
+                let #start_var = state.offset;
+                #ws_trim
+                let __r = #inner_expr;
+                if __r.is_some() { #ws2 }
+                if __r.is_some() {
+                    Some(::parse_that::Span::new(#start_var, state.offset, state.src))
+                } else {
+                    __r
+                }
             }
         }
     }

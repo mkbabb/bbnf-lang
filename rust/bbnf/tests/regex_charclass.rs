@@ -92,3 +92,29 @@ fn regex_charclass_with_backslash_and_slash() {
     let body = extract_regex(r#"rule = /[\\\/]/ ;"#);
     assert_eq!(body, r"[\\\/]");
 }
+
+#[test]
+fn regex_close_paren_in_charclass_inside_group() {
+    // Regression: /[^)]+/ inside a BBNF group (...) must NOT consume ) as the
+    // group closer. The ) is inside a regex character class [^)].
+    let source = r#"
+a = "x" ;
+b = ("," , /[^)]+/) ;
+c = "y" ;
+"#;
+    let source_static: &'static str = Box::leak(source.to_string().into_boxed_str());
+    let parser = BBNFGrammar::grammar();
+    let ast = parser.parse(source_static).expect("grammar parse failed");
+    let rule_names: Vec<&str> = ast
+        .keys()
+        .filter_map(|e| match e {
+            Expression::Nonterminal(tok) => Some(tok.value.as_ref()),
+            _ => None,
+        })
+        .collect();
+    assert!(
+        rule_names.contains(&"c"),
+        "rule 'c' not found — parser stopped at regex with ) in char class. Found: {:?}",
+        rule_names,
+    );
+}

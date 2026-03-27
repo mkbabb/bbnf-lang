@@ -40,6 +40,9 @@ pub struct IrCodegenCtx<'a> {
     pub rule_types: HashMap<RuleId, Type>,
     /// When true, Span compression in Seq is suppressed (for `@pretty`/`@no_collapse` rules).
     pub no_collapse: Cell<bool>,
+    /// Rule IDs with fused number scan+convert. These rules produce `(Span, f64)`
+    /// instead of `Span` in the arena enum. Only set for arena codegen context.
+    pub fused_number_rules: HashSet<RuleId>,
 }
 
 impl<'a> IrCodegenCtx<'a> {
@@ -76,6 +79,7 @@ impl<'a> IrCodegenCtx<'a> {
             sp_method_rules: HashSet::new(),
             rule_types,
             no_collapse: Cell::new(false),
+            fused_number_rules: HashSet::new(),
         }
     }
 
@@ -204,6 +208,8 @@ fn type_desc_to_syn_raw(
 ) -> Type {
     match desc {
         TypeDesc::Span => parse_quote!(::parse_that::Span<'a>),
+        TypeDesc::F64 => parse_quote!(f64),
+        TypeDesc::U32 => parse_quote!(u32),
         TypeDesc::Option(inner) => {
             let inner = type_desc_to_syn_raw(inner, enum_type, boxed_enum_type, ir);
             parse_quote!(Option<#inner>)

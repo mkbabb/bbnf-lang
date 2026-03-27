@@ -143,6 +143,14 @@ pub fn generate_prettify_ir(ctx: &IrCodegenCtx<'_>) -> TokenStream {
         });
     }
 
+    // PhantomData variant — always present, never produces output.
+    to_doc_arms.push(quote! {
+        Self::__Phantom(_) => ::pprint::Doc::Null,
+    });
+    source_range_arms.push(quote! {
+        Self::__Phantom(_) => None,
+    });
+
     quote! {
         impl<'a> #enum_ident<'a> {
             pub fn to_doc(&self) -> ::pprint::Doc<'a> {

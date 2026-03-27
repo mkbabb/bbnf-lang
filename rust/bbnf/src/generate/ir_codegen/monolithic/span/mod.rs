@@ -138,12 +138,19 @@ pub(super) fn emit_span_expr(
 
         IrNode::Regex(sid) => {
             let pattern = ir.get_string(*sid);
+            // Span-only: no fused number conversion (emit_regex_direct_call
+            // without fuse returns number_span_fast for JSON numbers).
+            // 1. Try known fast paths (css_ident_fast, number_span_fast, etc.)
             if let Some(direct) = fast_paths::emit_regex_direct_call(pattern) {
                 direct
-            } else {
-                let sp = fast_paths::emit_regex_span(pattern);
-                let name = mctx.hoist(sp);
-                quote! { #name.call(state) }
+            }
+            // 2. Try HIR-based inline compilation
+            else if let Some(inline) = super::super::super::regex_emit::try_emit_regex_inline(pattern) {
+                inline
+            }
+            // 3. Fall back to LazyLock<Regex> — NEVER sp_regex
+            else {
+                super::super::super::regex_emit::emit_regex_lazy_static(pattern)
             }
         }
 
@@ -172,6 +179,9 @@ pub(super) fn emit_span_expr(
         IrNode::Negate(inner) => expr::emit_span_negate(inner, ir, ctx, mctx),
         IrNode::Map { inner, .. } => emit_span_expr(inner, ir, ctx, mctx),
         IrNode::OptionalWhitespace(inner) => expr::emit_span_ow(inner, ir, ctx, mctx),
+        IrNode::TokenDispatch { .. } => {
+            todo!("TokenDispatch span codegen not yet implemented")
+        }
     }
 }
 
@@ -188,14 +198,26 @@ pub(super) fn emit_span_discarded(
         IrNode::OptionalWhitespace(inner) => {
             let ws_trim = emit_ws_trim(ctx, mctx);
             let inner_d = emit_span_discarded(inner, ir, ctx, mctx);
-            let ws2 = ws_trim.clone();
-            let var = mctx.fresh("owd");
-            quote! {
-                {
-                    #ws_trim
-                    let #var = #inner_d;
-                    if #var.is_some() { #ws2 }
-                    #var
+
+            // Loop invariant hoisting: skip redundant trailing trim when
+            // inner already ends with OW.
+            if super::expr::ends_with_ow(inner) {
+                quote! {
+                    {
+                        #ws_trim
+                        #inner_d
+                    }
+                }
+            } else {
+                let ws2 = ws_trim.clone();
+                let var = mctx.fresh("owd");
+                quote! {
+                    {
+                        #ws_trim
+                        let #var = #inner_d;
+                        if #var.is_some() { #ws2 }
+                        #var
+                    }
                 }
             }
         }

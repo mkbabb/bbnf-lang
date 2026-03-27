@@ -231,6 +231,15 @@ fn try_sp_dispatch_branch(
             // Case 3: Map { inner: <inlined node> } — after inline_acyclic, the
             // inner Ref was replaced with the rule body (Regex, Literal, Alt, etc.).
             // Try generating a SpanParser expression for the inlined body.
+            //
+            // Guard: only use SpanParser fast-path when the inner node's inferred
+            // type IS Span. If it's a tuple (e.g., Seq with Optional child that
+            // doesn't collapse), the SpanParser would flatten the tuple to a single
+            // Span, mismatching the sub-variant's expected type.
+            let inner_ty = infer_node_type(inner, ctx);
+            if inner_ty != TypeDesc::Span {
+                return None;
+            }
             let sp_expr = super::super::ir_span::try_ir_span_expr(inner, ctx)?;
             let fd = &ctx.ir.fns[*fn_id as usize];
             let map_fn = match fd {
@@ -270,9 +279,14 @@ fn try_sp_dispatch_branch(
         // caller, so we only need an identity map here. This applies when the
         // alternation context uses sub-variant coercion for this branch.
         other => {
-            let sp_expr = super::super::ir_span::try_ir_span_expr(other, ctx)?;
-            // Check if there's a matching sub-variant for the inferred type.
+            // Guard: only use SpanParser fast-path when the node's inferred type
+            // IS Span. If it's a tuple or other complex type, the SpanParser would
+            // collapse it to Span, mismatching the sub-variant's expected type.
             let node_ty = infer_node_type(other, ctx);
+            if node_ty != TypeDesc::Span {
+                return None;
+            }
+            let sp_expr = super::super::ir_span::try_ir_span_expr(other, ctx)?;
             let all_sub_variants: Vec<(&str, &TypeDesc)> = ctx
                 .ir
                 .rules

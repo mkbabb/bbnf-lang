@@ -143,9 +143,10 @@ pub(super) fn emit_span_optional(
         }
     }
 
-    // Inline optional regex with direct fast-path call.
+    // Inline optional regex with direct fast-path call or regex_emit.
     if let IrNode::Regex(sid) = inner {
         let pattern = ir.get_string(*sid);
+        // 1. Try known fast paths.
         if let Some(direct) = super::super::super::fast_paths::emit_regex_direct_call(pattern) {
             return quote! {
                 {
@@ -155,6 +156,25 @@ pub(super) fn emit_span_optional(
                 }
             };
         }
+        // 2. Try HIR-based inline compilation.
+        if let Some(inline) = super::super::super::super::regex_emit::try_emit_regex_inline(pattern) {
+            return quote! {
+                {
+                    let #start_var = state.offset;
+                    let _ = #inline;
+                    Some(::parse_that::Span::new(#start_var, state.offset, state.src))
+                }
+            };
+        }
+        // 3. Fall back to LazyLock<Regex>.
+        let lazy = super::super::super::super::regex_emit::emit_regex_lazy_static(pattern);
+        return quote! {
+            {
+                let #start_var = state.offset;
+                let _ = #lazy;
+                Some(::parse_that::Span::new(#start_var, state.offset, state.src))
+            }
+        };
     }
 
     // General case: IIFE wrapper.

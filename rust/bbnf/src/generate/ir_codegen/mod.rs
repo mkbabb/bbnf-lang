@@ -182,6 +182,13 @@ pub fn ir_node_to_tokens_elide(
             let inner_ts = ir_node_to_tokens_elide(inner, ctx, elide_box);
             quote! { #inner_ts.trim_whitespace() }
         }
+
+        IrNode::TokenDispatch { fallback, .. } => {
+            // Combinator path: fall back to the unfused expression.
+            // TokenDispatch is an arena-path optimization; the combinator path
+            // uses the fallback (which contains all original branches).
+            ir_node_to_tokens_elide(fallback, ctx, elide_box)
+        }
     }
 }
 
@@ -290,6 +297,26 @@ fn emit_map(
                 )
             });
             quote! { #inner_ts.map(#closure) }
+        }
+        FnDescriptor::NumberConvert => {
+            quote! { css_number_scan_f64(state) }
+        }
+        FnDescriptor::HexConvert { fn_path } => {
+            let fn_path_str = ctx.ir.get_string(*fn_path);
+            let fn_path_tokens: syn::Path = syn::parse_str(fn_path_str).unwrap_or_else(|e| {
+                panic!(
+                    "Invalid HexConvert fn_path `{}`: {}",
+                    fn_path_str, e
+                )
+            });
+            quote! { #inner_ts.map(|__s| #fn_path_tokens(__s.as_str())) }
+        }
+        FnDescriptor::Constant { value, .. } => {
+            let val_src = ctx.ir.get_string(*value);
+            let val_expr: syn::Expr = syn::parse_str(val_src).unwrap_or_else(|e| {
+                panic!("Invalid constant expression `{}` in IR codegen: {}", val_src, e)
+            });
+            quote! { #inner_ts.map(|_| #val_expr) }
         }
     }
 }

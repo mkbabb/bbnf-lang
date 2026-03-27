@@ -376,6 +376,31 @@ pub(crate) fn ir_node_to_inline_vec(
                         });
                     quote! { #inner_expr.map(#closure) }
                 }
+                FnDescriptor::NumberConvert => {
+                    quote! { css_number_scan_f64(state) }
+                }
+                FnDescriptor::HexConvert { fn_path } => {
+                    let fn_path_str = ctx.ir.get_string(*fn_path);
+                    let fn_path_tokens: syn::Path =
+                        syn::parse_str(fn_path_str).unwrap_or_else(|e| {
+                            panic!(
+                                "Invalid HexConvert fn_path `{}`: {}",
+                                fn_path_str, e
+                            )
+                        });
+                    quote! { #inner_expr.map(|__s| #fn_path_tokens(__s.as_str())) }
+                }
+                FnDescriptor::Constant { value, .. } => {
+                    let val_src = ctx.ir.get_string(*value);
+                    let val_expr: syn::Expr =
+                        syn::parse_str(val_src).unwrap_or_else(|e| {
+                            panic!(
+                                "Invalid constant expression `{}` in inline codegen: {}",
+                                val_src, e
+                            )
+                        });
+                    quote! { #inner_expr.map(|_| #val_expr) }
+                }
             }
         }
 
@@ -409,6 +434,11 @@ pub(crate) fn ir_node_to_inline_vec(
                     #result_var
                 }
             }
+        }
+
+        IrNode::TokenDispatch { fallback, .. } => {
+            // Inline combinator: fall back to unfused expression.
+            ir_node_to_inline_vec(fallback, ctx, ictx, elide_box)
         }
     }
 }

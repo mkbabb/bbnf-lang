@@ -310,46 +310,144 @@ pub(super) fn emit_mono_map(
                     })
                 };
             }
+            (FnDescriptor::NumberConvert, FnDescriptor::EnumWrap { variant }) => {
+                let vname = ctx.ir.get_string(*variant);
+                let vident = format_ident!("{}", vname);
+                let enum_ident = &ctx.enum_ident;
+                if elide_box {
+                    return quote! {
+                        ::parse_that::css_number_scan_f64(state).map(|__x| #enum_ident::#vident(__x))
+                    };
+                } else {
+                    let helper = ctx.arena_helper_ident();
+                    return quote! {
+                        ::parse_that::css_number_scan_f64(state).map(|__x| {
+                            let __alloc = #helper(state).alloc(#enum_ident::#vident(__x));
+                            &*__alloc
+                        })
+                    };
+                }
+            }
+            (FnDescriptor::NumberConvert, FnDescriptor::BoxWrap) => {
+                if elide_box {
+                    return quote! { ::parse_that::css_number_scan_f64(state) };
+                } else {
+                    let helper = ctx.arena_helper_ident();
+                    return quote! {
+                        ::parse_that::css_number_scan_f64(state).map(|__x| {
+                            let __alloc = #helper(state).alloc(__x);
+                            &*__alloc
+                        })
+                    };
+                }
+            }
+            (FnDescriptor::Constant { value, .. }, FnDescriptor::EnumWrap { variant }) => {
+                let val_src = ctx.ir.get_string(*value);
+                let val_expr: syn::Expr = syn::parse_str(val_src).unwrap();
+                let vident = format_ident!("{}", ctx.ir.get_string(*variant));
+                let enum_ident = &ctx.enum_ident;
+                let inner_expr = emit_mono_expr(inner2.as_ref(), ctx, mctx, elide_box);
+                if elide_box {
+                    return quote! { #inner_expr.map(|_| #enum_ident::#vident(#val_expr)) };
+                } else {
+                    let helper = ctx.arena_helper_ident();
+                    return quote! {
+                        #inner_expr.map(|_| {
+                            let __alloc = #helper(state).alloc(#enum_ident::#vident(#val_expr));
+                            &*__alloc
+                        })
+                    };
+                }
+            }
             _ => {}
         }
     }
 
-    let inner_expr = emit_mono_expr(inner, ctx, mctx, elide_box);
     let fd = &ctx.ir.fns[fn_id as usize];
     match fd {
-        FnDescriptor::EnumWrap { variant } => {
-            let vname = ctx.ir.get_string(*variant);
-            let vident = format_ident!("{}", vname);
-            let enum_ident = &ctx.enum_ident;
-            quote! { #inner_expr.map(|__x| #enum_ident::#vident(__x)) }
+        FnDescriptor::NumberConvert => {
+            // Strength reduction: direct fused CSS number scanner → f64
+            // No regex, no Span, no closure overhead
+            quote! { ::parse_that::css_number_scan_f64(state) }
         }
-        FnDescriptor::BoxWrap => {
-            if elide_box {
-                inner_expr
-            } else {
-                let helper = ctx.arena_helper_ident();
-                quote! {
-                    #inner_expr.map(|__x| {
-                        let __alloc = #helper(state).alloc(__x);
-                        &*__alloc
-                    })
-                }
-            }
-        }
-        FnDescriptor::Custom { source, .. } => {
-            let closure_src = ctx.ir.get_string(*source);
-            let closure: syn::ExprClosure = syn::parse_str(closure_src).unwrap_or_else(|e| {
-                panic!(
-                    "Invalid mapping closure `{}` in monolithic codegen: {}",
-                    closure_src, e
-                )
+        FnDescriptor::HexConvert { fn_path } => {
+            let inner_expr = emit_mono_expr(inner, ctx, mctx, elide_box);
+            let fn_src = ctx.ir.get_string(*fn_path);
+            let fn_expr: syn::Expr = syn::parse_str(fn_src).unwrap_or_else(|e| {
+                panic!("Invalid HexConvert function `{}`: {}", fn_src, e)
             });
-            quote! { #inner_expr.map(#closure) }
+            // Inner produces Span; the user function expects &str.
+            quote! { #inner_expr.map(|__s| #fn_expr(__s.as_str())) }
+        }
+        _ => {
+            let inner_expr = emit_mono_expr(inner, ctx, mctx, elide_box);
+            match fd {
+                FnDescriptor::EnumWrap { variant } => {
+                    let vname = ctx.ir.get_string(*variant);
+                    let vident = format_ident!("{}", vname);
+                    let enum_ident = &ctx.enum_ident;
+                    quote! { #inner_expr.map(|__x| #enum_ident::#vident(__x)) }
+                }
+                FnDescriptor::BoxWrap => {
+                    if elide_box {
+                        inner_expr
+                    } else {
+                        let helper = ctx.arena_helper_ident();
+                        quote! {
+                            #inner_expr.map(|__x| {
+                                let __alloc = #helper(state).alloc(__x);
+                                &*__alloc
+                            })
+                        }
+                    }
+                }
+                FnDescriptor::Custom { source, .. } => {
+                    let closure_src = ctx.ir.get_string(*source);
+                    let closure: syn::ExprClosure =
+                        syn::parse_str(closure_src).unwrap_or_else(|e| {
+                            panic!(
+                                "Invalid mapping closure `{}` in monolithic codegen: {}",
+                                closure_src, e
+                            )
+                        });
+                    quote! { #inner_expr.map(#closure) }
+                }
+                FnDescriptor::Constant { value, .. } => {
+                    let val_src = ctx.ir.get_string(*value);
+                    let val_expr: syn::Expr = syn::parse_str(val_src).unwrap_or_else(|e| {
+                        panic!(
+                            "Invalid constant expression `{}` in monolithic codegen: {}",
+                            val_src, e
+                        )
+                    });
+                    quote! { #inner_expr.map(|_| #val_expr) }
+                }
+                // Already handled above
+                FnDescriptor::NumberConvert | FnDescriptor::HexConvert { .. } => unreachable!(),
+            }
         }
     }
 }
 
 // ── OptionalWhitespace ───────────────────────────────────────────────────────
+
+/// Check whether an IrNode structurally ends with OptionalWhitespace.
+///
+/// When `OW(inner)` wraps an expression whose last action is already a whitespace
+/// trim, the post-trim in `emit_mono_ow` is redundant — the inner expression already
+/// consumed trailing whitespace. This avoids 1-2 extra `css_ws_comment_fast` (or
+/// `trim_leading_whitespace_mut`) calls per iteration in hot loops like
+/// `blockContent = ((declaration | ruleItem) ?w) *`.
+pub(super) fn ends_with_ow(node: &IrNode) -> bool {
+    match node {
+        IrNode::OptionalWhitespace(_) => true,
+        IrNode::Map { inner, .. } => ends_with_ow(inner),
+        IrNode::Alt(branches, _) => branches.iter().all(|b| ends_with_ow(&b.node)),
+        IrNode::Seq(children) => children.last().is_some_and(|c| ends_with_ow(c)),
+        IrNode::Skip(left, _) => ends_with_ow(left), // Skip keeps left, which might end with OW
+        _ => false,
+    }
+}
 
 /// Emit monolithic OptionalWhitespace.
 pub(super) fn emit_mono_ow(
@@ -375,16 +473,29 @@ pub(super) fn emit_mono_ow(
     // Inline whitespace trimming (uses custom @ws pattern if configured).
     let ws_trim = super::emit_ws_trim(ctx, mctx);
     let inner_expr = emit_mono_expr(inner, ctx, mctx, elide_box);
-    let result_var = mctx.fresh("ow");
-    let ws2 = ws_trim.clone();
-    quote! {
-        {
-            #ws_trim
-            let #result_var = #inner_expr;
-            if #result_var.is_some() {
-                #ws2
+
+    // Loop invariant hoisting: if the inner expression already ends with a
+    // whitespace trim (e.g., inner is itself OW-wrapped, or an Alt where every
+    // branch ends with OW), skip the redundant trailing trim.
+    if ends_with_ow(inner) {
+        quote! {
+            {
+                #ws_trim
+                #inner_expr
             }
-            #result_var
+        }
+    } else {
+        let result_var = mctx.fresh("ow");
+        let ws2 = ws_trim.clone();
+        quote! {
+            {
+                #ws_trim
+                let #result_var = #inner_expr;
+                if #result_var.is_some() {
+                    #ws2
+                }
+                #result_var
+            }
         }
     }
 }

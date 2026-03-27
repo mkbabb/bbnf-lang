@@ -107,17 +107,39 @@ The left-hand side is an **identifier**: one or more characters matching
 
 The first rule in a grammar is treated as the start symbol by convention.
 
-### Mapping Functions (Rust only)
+### Per-Expression Mapping `->` (Rust only)
 
-In the Rust implementation, a production rule may include an inline mapping function
-between the expression and the terminator. The mapping function is a Rust closure
-introduced by `=>`:
+The `->` operator maps the result of any factor expression through a Rust function,
+closure, or constant. It is a postfix operator at the same precedence level as `?w`:
 
 ```
+number = /[0-9]+/ -> |s: Span| -> f64 { s.as_str().parse().unwrap() } ;
+```
+
+Three forms are supported:
+
+| Form | Syntax | Example |
+|------|--------|---------|
+| Closure | `-> \|params\| -> RetType { body }` | `-> \|s: Span\| -> f64 { s.as_str().parse().unwrap() }` |
+| Function path | `-> path::to::func` | `-> crate::parse_color` |
+| Constant | `-> value` | `-> 0u8` |
+
+Because `->` attaches to individual factors, different alternation branches can map
+to different values or types:
+
+```
+lengthUnit = "px" -> 0u8 | "em" -> 1u8 | "rem" -> 2u8 | "vw" -> 3u8 ;
+```
+
+The `=>` operator is a legacy alias that applies a mapping to the entire rule
+right-hand side (equivalent to wrapping the RHS in parentheses and applying `->`):
+
+```
+// These are equivalent:
 number = /[0-9]+/ => |s: &str| -> i64 { s.parse().unwrap() } ;
+number = ( /[0-9]+/ ) -> |s: &str| -> i64 { s.parse().unwrap() } ;
 ```
 
-The closure is parsed as a `syn::ExprClosure` and must include an explicit return type.
 This feature is not available in the TypeScript implementation.
 
 ## Terminal Expressions
@@ -264,10 +286,10 @@ items  = item * ;
 sign   = ("+" | "-") ? ;
 ```
 
-### 6. Optional Whitespace `?w` (postfix, high precedence)
+### 6. Optional Whitespace `?w` and Mapping `->` (postfix, high precedence)
 
-A special postfix operator that wraps the preceding term so that optional whitespace
-is consumed (and discarded) **before and after** it:
+The `?w` operator wraps the preceding term so that optional whitespace is consumed
+(and discarded) **before and after** it:
 
 ```
 comma = "," ?w ;
@@ -278,7 +300,9 @@ rule  = lhs , "=" ?w , rhs ;
 distinct from `?` (which means "zero or one") -- the trailing `w` makes it a
 whitespace-trimming operator.
 
-The `?w` operator has the same precedence as the other postfix quantifiers.
+The `->` operator maps the preceding factor through a Rust closure, function path,
+or constant value (see [Per-Expression Mapping](#per-expression-mapping---rust-only)).
+It has the same precedence as `?w`.
 
 ### 7. Grouping Constructs (highest precedence)
 
@@ -309,7 +333,7 @@ From lowest to highest:
 | 1 | `\|` | left | Alternation (ordered choice) |
 | 2 | `,` | left | Concatenation (sequence) |
 | 3 | `<<` `>>` `-` | left | Skip, next, minus |
-| 4 | `*` `+` `?` `?w` | postfix | Quantifiers, optional whitespace |
+| 4 | `*` `+` `?` `?w` `->` | postfix | Quantifiers, whitespace, mapping |
 | 5 | `(` `)` `[` `]` `{` `}` | -- | Grouping constructs |
 
 ## Comments
@@ -362,13 +386,15 @@ term = "ε"
      | "[" , rhs ?w , "]"
      | "{" , rhs ?w , "}" ;
 
+mapper = "|" , /[^;]*/ | /[^\s|,;]+/ ;
+
 factor = big_comment ? , (
       term ?w , "?w"
     | term ?w , "?"
     | term ?w , "*"
     | term ?w , "+"
     | term
-) , big_comment ? ;
+) , ( "->" ?w , mapper ) ? , big_comment ? ;
 
 binary_operators = "<<" | ">>" | "-" ;
 

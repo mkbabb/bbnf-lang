@@ -83,7 +83,7 @@ Import rules from other `.bbnf` files:
 
 ## Directives Summary
 
-BBNF defines seven directives, all prefixed with `@` and terminated by `;`:
+BBNF defines eight directives, all prefixed with `@` and terminated by `;`:
 
 | Directive | Syntax | Purpose |
 |-----------|--------|---------|
@@ -93,4 +93,34 @@ BBNF defines seven directives, all prefixed with `@` and terminated by `;`:
 | `@no_collapse` | `@no_collapse ruleName ;` | Preserve rule identity in AST (prevent Span compression) |
 | `@ws` | `@ws /regex/ ;` | Override `?w` whitespace operator grammar-wide |
 | `@inline` | `@inline ruleName ;` | Force-inline rule body at every call site |
+| `@token` | `@token ruleName ;` | Mark rule as lexical token (span-eligible, fusion-inlined, variant preserved) |
 | `@debug` | `@debug ruleName ;` / `@debug * ;` | Instrument rules for debug tracing across compiled and VM paths |
+
+## Operators
+
+Operators from lowest to highest precedence:
+
+| Level | Operator(s) | Description |
+|-------|-------------|-------------|
+| 1 | `\|` | Alternation (ordered choice) |
+| 2 | `,` | Concatenation (comma optional) |
+| 3 | `<<` `>>` `-` | Skip, next, minus |
+| 4 | `*` `+` `?` `?w` `->` | Quantifiers, whitespace trim, mapping |
+| 5 | `()` `[]` `{}` | Grouping, optional group, repetition group |
+
+### Per-Expression Mapping `->` (Rust only)
+
+The `->` operator maps a factor's parse result through a Rust function. Three shorthand forms:
+
+```bbnf
+// Closure — inline conversion
+number = /[0-9]+/ -> |s: Span| -> f64 { s.as_str().parse().unwrap() } ;
+
+// Function path — delegate to a named function
+color = /[0-9a-fA-F]{6}/ -> crate::parse_hex_color ;
+
+// Constant — discard the matched text, emit a fixed value
+lengthUnit = "px" -> 0u8 | "em" -> 1u8 | "rem" -> 2u8 ;
+```
+
+The legacy `=>` operator applies a mapping to the entire rule RHS. `->` is preferred because it attaches to individual factors, enabling per-branch mapping in alternations.

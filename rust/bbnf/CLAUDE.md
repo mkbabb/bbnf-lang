@@ -30,7 +30,8 @@ bbnf/
 │   ├── generate/
 │   │   ├── mod.rs        Re-exports + orchestrator
 │   │   ├── types.rs      ParserAttributes, GeneratedNonterminalParser, caches
-│   │   ├── fast_paths.rs JSON pattern detection, SIMD-accelerated parser fast paths
+│   │   ├── fast_paths.rs Pattern detection, inline byte scanners, SIMD-accelerated fast paths
+│   │   ├── regex_classify.rs Structural regex classification (Numeric, HexDigits, Identifier, QuotedString)
 │   │   ├── ir_codegen/   IR-based Rust codegen (split from monolithic ir_codegen.rs)
 │   │   │   ├── mod.rs    Entry point, generate_all(), expression dispatch
 │   │   │   ├── alt.rs    Alternation codegen (dispatch tables, sub-variants)
@@ -102,6 +103,7 @@ Emits `proc_macro2::TokenStream` for Rust parser methods. Two codegen paths:
 
 - **ir_codegen/**: IR-based Rust codegen. Takes a `GrammarIR` and produces `TokenStream`. Split into sub-modules: `alt.rs` (alternation + dispatch tables), `seq.rs` (concatenation), `repeat.rs` (repetition + sep_by), `wrap.rs` (skip/next/minus/negate), `infer.rs` (IrNode → syn::Type), `inline.rs` (flat match-arm dispatch via `InlineCtx`/`emit_rule_body_inline`). Two codegen modes: combinator-based (default, builds parser combinator chains) and inline (emits flat match-arm dispatch). The `in_vec` parameter is threaded through codegen to emit `Vec<Enum>` instead of `Vec<Box<Enum>>` where safe.
 - **ir_span.rs**: SpanParser dual-method codegen—generates `rule_sp()` alongside `rule()` for span-eligible rules.
+- **regex_classify.rs**: Structural regex classification (`RegexClass` enum). `classify_regex()` decomposes patterns into Numeric/HexDigits/Identifier/QuotedString without exact string lists. Used by `fast_paths.rs` for inline scanner selection and by `lower/expression.rs` for `FnDescriptor` specialization.
 - **types.rs**: `ParserAttributes`, `GeneratedNonterminalParser`, cache types, `DEFAULT_PARSERS`.
 - **ir_pretty/**: IR-based `@pretty` codegen. `patterns.rs` detects wrapped repetitions and key-value structures. `heuristics.rs` infers hints from rule shape (toplevel, brace-delimited, large compound). `codegen.rs` generates doc wrappers and sub-variant match arms. `utils.rs` handles hint conversion and IR node unwrapping.
 - **prettify/**: AST-based `@pretty` directive codegen. `to_doc.rs` emits `to_doc()` impls, `source_range.rs` emits `source_range()` impls (single-pass min/max fold instead of Vec allocation). `heuristics.rs` auto-infers hints from rule shape. `hints.rs` is the single source of truth for hint names/descriptions (shared with LSP).
@@ -118,3 +120,6 @@ Standard algorithm: `A = Aα | β` → `A = βA'`, `A' = αA' | ε`. Direct only
 
 - **`@token` directive**: `@token ruleName ;` marks a rule as a lexical token. `RuleMeta::is_token` carries the flag through lowering. Implies span eligibility. Uses fusion-style inlining (body inlined at call sites, enum variant preserved for `@pretty` compatibility).
 - **`@debug` directive**: `@debug ruleName ;` / `@debug * ;` instruments rules for trace output. `ir_codegen/trace.rs` emits `#[cfg(feature = "parser-trace")]` instrumentation for monolithic paths; the combinator path wraps with `.debug("name")`. `RuleMeta::debug` and `GrammarIR::debug_all` carry the directive through lowering.
+- **`regex_classify.rs`**: Structural regex classification for during-parse value conversion. `classify_regex()` analyzes pattern components to detect `Numeric` (sign, fraction, exponent structure), `HexDigits`, `Identifier`, and `QuotedString` classes without exact string matching. Drives `FnDescriptor` specialization in `lower/expression.rs` and inline scanner selection in `fast_paths.rs`.
+- **`fast_paths.rs` CSS extensions**: Beyond JSON, emits inline scanners for CSS patterns: `css_ident_fast` (identifiers), `css_string_fast` (quoted strings), `css_ws_comment_fast` (comment-aware whitespace), comma-or-whitespace `,|\s+`, and generalized char-class/negated-class loops via `emit_generalized_regex_direct`. The structural classifier feeds unsigned-numeric and identifier patterns into these fast paths automatically.
+- **`->` lowering in `lower/expression.rs`**: `try_specialize_map_fn` detects `Regex(numeric) -> f64` and `Regex(hex) -> user_fn` patterns using `regex_classify`, upgrading generic `FnDescriptor::Custom` to `NumberConvert`, `HexConvert`, or `Constant`. Constant detection recognizes literal expressions, numeric suffixed values, and boolean keywords.

@@ -63,14 +63,18 @@ Groups: `bench_serde`, `bench_serde_borrow`, `bench_sonic`, `bench_simd`, `bench
 
 ### CSS — BBNF (`css_bbnf.rs`)
 
-Two tiers of BBNF CSS parsing on 3 datasets:
+Five tiers of BBNF CSS parsing on 3 datasets:
 
 | Tier | Grammar | What |
 |------|---------|------|
 | **span** | `css-fast.bbnf` | Opaque spans, `@ws` SIMD whitespace, `@inline` helpers, `@token` lexical fusion (L0) |
+| **arena** | `css-fast.bbnf` | Typed enum tree with opaque values (L0.5) |
 | **span_pretty** | `css-stylesheet-pretty.bbnf` | Structural AST with `@pretty` directives (L1.5) |
+| **semantic** | `css-typed.bbnf` | f64 numbers, u32 hex colors, u8 length/angle/time unit discriminants (L2) |
+| **typed** | `css-typed.bbnf` | Full CSS L4 property types (L3) |
+| **import** | `css-stylesheet.bbnf` | Full L2 via `@import` composition — property-aware dispatch (21 groups), typed CSS Selectors Level 4 (31 rules), balanced-paren function bodies, 147 named colors, typed numbers (f64), typed hex colors (u32) |
 
-Groups: `span`, `span_pretty` — 2 groups × 3 datasets = 6 bench fns. Cold per-parse with `BumpArena`.
+Groups: `span`, `arena`, `span_pretty`, `semantic`, `typed`, `import` — 6 groups × 3 datasets = 18 bench fns. Cold per-parse with `BumpArena`.
 
 ### CSS — Competitors (`css_competitors.rs`)
 

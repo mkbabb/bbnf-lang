@@ -52,7 +52,7 @@ rule = expression ;                             (* production rule *)
 1. `|` alternation
 2. `,` concatenation (comma optional)
 3. `<<` skip, `>>` next, `-` minus
-4. `*` many, `+` many1, `?` optional, `?w` optional whitespace
+4. `*` many, `+` many1, `?` optional, `?w` optional whitespace, `->` mapping (Rust only)
 5. `()` group, `[]` optional group, `{}` repetition group
 
 **Comments**: `// line`, `/* block */`

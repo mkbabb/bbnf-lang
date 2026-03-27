@@ -100,6 +100,30 @@ This tier is useful for validation-only parsing (syntax checking, linting) and f
 
 The span path also serves as the fast lane for delimiter-driven flat scanning—the `memchr` scanner replaces recursive descent wholesale when the grammar matches the `Wrap(Repeat(Alt))` pattern.
 
+## Literal Prefix Factoring
+
+The `factor_common_prefixes` IR pass performs trie-style byte splitting on literal alternations. Given `Alt([Literal("rem"), Literal("rlh")])`, it factors the common prefix to produce `Seq(Literal("r"), Alt(Literal("em"), Literal("lh")))`. The outer `Seq` consumes the shared prefix once, and the inner `Alt` dispatches on the first diverging byte—enabling the dispatch table that a flat alternation of overlapping literals would preclude.
+
+This pass runs after `merge_regex_alts` and before `refine_span_eligibility` in the 17-operation IR pipeline. It operates recursively: nested Alts with shared prefixes are factored at each level. The result is a trie encoded as nested Seq/Alt nodes, where each dispatch point branches on a single byte.
+
+## Map-Transparent Literal Detection
+
+When the monolithic Alt emitter in `monolithic/alt.rs` encounters `Map(Literal, Constant)` branches, it recognizes these as literal matches that return constant values. The codegen uses the same sequential byte-comparison fast path as bare `Literal` branches—no Span construction, no regex dispatch. The `Constant` value is returned directly on match. This keeps the alternation's hot path tight: a chain of byte comparisons followed by an immediate enum variant return, with the map elided entirely.
+
+## Inline Scanners
+
+`fast_paths.rs` emits direct byte-scanning code for patterns that would otherwise go through the `sp_regex` SpanParser dispatch. Each pattern is recognized by `emit_regex_direct_call` and compiled to inline byte loops:
+
+| Pattern | Emitted Code | Use Case |
+|---------|-------------|----------|
+| `--[\w-]+` | Byte loop: consume `--`, then `[a-zA-Z0-9_-]+` | CSS custom properties |
+| `@[a-zA-Z][\w-]*` | Byte loop: consume `@`, then alpha, then `[\w-]*` | CSS at-keywords |
+| `,` or `\s+` | `memchr` for `,`, otherwise whitespace scan | Color function separators |
+| `[^XYZ]+` / `[^XYZ]*` | `memchr::memchr1/2/3` for terminator | Negated character classes |
+| `[a-z]+` / `[abc]*` | Inline byte-range or set check loop | Positive character classes |
+
+The key insight is that these patterns appear in hot inner loops—CSS value parsing, selector scanning—where the per-call cost of constructing a `SpanParser::Regex` and dispatching through the enum is measurable. The inline scanners eliminate that overhead entirely: no regex compilation, no enum dispatch, no function pointer indirection.
+
 ## Vec Capacity
 
 All monolithic Vecs use `Vec::new()`. Prior heuristics (`Vec::with_capacity(remaining/64)`) caused pathological over-allocation for deeply nested containers (canada.json: 2-element `[lon, lat]` arrays allocated 16K capacity each). Rust's default growth strategy (0→4→8→16→...) handles both nested containers (1-2 elements, 1 allocation) and flat lists (amortized O(1) growth) without special-casing.

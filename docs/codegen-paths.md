@@ -124,6 +124,26 @@ Rust `TokenStream`.
 - **Bytecode (VM)**: The compiler emits `Op::DebugBreak` opcodes at rule entry/exit. The interpreter supports stepping (into, over, out) and breakpoint filtering via `DebugState`.
 - **DAP bridge**: `bbnf-lsp --dap` speaks Debug Adapter Protocol over stdin/stdout, bridging the VM interpreter to VS Code's debug UI—breakpoints on rules, call stack inspection, parse state variables.
 
+### FnDescriptor Specialization — the `->` Pipeline
+
+Grammar rules that use the `->` operator (value conversion) lower to `Map(inner, FnDescriptor)` nodes in the IR. The `try_specialize_map_fn` pipeline in `lower/expression.rs` detects specific patterns via `regex_classify` and emits specialized `FnDescriptor` variants instead of generic function calls:
+
+| FnDescriptor | Lowered From | Emitted Code | Return Type |
+|-------------|-------------|-------------|-------------|
+| `NumberConvert` | `number -> /regex/ ;` where regex matches a numeric pattern | `::parse_that::css_number_scan_f64(state)` | `Option<f64>` |
+| `HexConvert { fn_path }` | `hex -> /[0-9a-fA-F]+/ ;` with conversion function | Inline char-class byte loop + `fn_path(span.as_str())` | `Option<u32>` |
+| `Constant { value }` | Literal match with fixed return value | Span construction elided, returns `value` directly | constant type |
+
+`NumberConvert` is the highest-impact specialization. The default codegen for `number -> /[-+]?\d+(\.\d+)?([eE][-+]?\d+)?/ ;` would construct a `SpanParser::Regex`, dispatch through the enum, capture a `Span`, convert to `&str`, and call `str::parse::<f64>()`. The specialized path replaces the entire chain with a single `css_number_scan_f64` call—a hand-written byte scanner with fused Eisel-Lemire conversion that returns `Option<f64>` directly. Zero regex, zero string allocation, zero intermediate Span.
+
+**Map fusion** further optimizes the common case where a specialized `FnDescriptor` feeds into an enum wrapper. The pairs `(NumberConvert, EnumWrap)` and `(Constant, EnumWrap)` are detected and fused to a single `.map()` closure, eliminating an intermediate allocation and function call boundary. The IR sees:
+
+```
+Map(Map(Regex, NumberConvert), EnumWrap)  →  Map(NumberScan, FusedNumberEnumWrap)
+```
+
+The result is one function call that scans bytes, converts to f64, and wraps in the target enum variant—three logical operations collapsed to one code path.
+
 ## 3. TypeScript Interpreter — Runtime Combinator Generation
 
 Dynamic parser construction. Builds `parse-that` combinator tree at runtime.
@@ -168,6 +188,8 @@ rust/
         ir_pretty/      IR → to_doc() methods (mod, patterns, heuristics, codegen, utils)
         prettify/       Doc generation helpers
         fast_paths.rs   Dispatch + memoization codegen
+        regex_emit/     HIR-based inline regex compilation (mod, hir_walk, fallback)
+        regex_classify.rs  Structural regex classification (Numeric, HexDigits, Identifier, QuotedString)
       optimize/         Left-recursion elimination (Paull)
       imports.rs        @import resolution
       pipeline.rs       Orchestrate parse → analyze → lower → pass → codegen

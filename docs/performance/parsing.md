@@ -129,6 +129,97 @@ BBNF pretty builds a typed enum tree with rule/block/declaration structure, usin
 
 See the [formatting benchmarks](./formatting) for gorgeous vs Biome end-to-end comparisons.
 
+## Rust: `CSS` — Semantic
+
+BBNF semantic produces typed values during the parse itself—f64 numbers via fused Eisel-Lemire conversion, u32 hex colors, u8 discriminants for length/angle/time units—not as a post-hoc AST walk. lightningcss performs equivalent semantic work: typed CSS properties, vendor prefix resolution, CSS Nesting validation.
+
+```bench-chart
+{ "title": "CSS Semantic — vs lightningcss", "unit": "MB/s",
+  "datasets": [
+    { "name": "normalize (6 KB)", "icon": "rust",
+      "labels": ["BBNF semantic", "lightningcss"],
+      "series": [{"label": "Throughput", "values": [601, 256]}] },
+    { "name": "bootstrap (281 KB)", "icon": "rust",
+      "labels": ["BBNF semantic", "lightningcss"],
+      "series": [{"label": "Throughput", "values": [258, 114]}] },
+    { "name": "tailwind (3.8 MB)", "icon": "rust",
+      "labels": ["BBNF semantic", "lightningcss"],
+      "series": [{"label": "Throughput", "values": [310, 88]}] }
+  ] }
+```
+
+| Parser | normalize | bootstrap | tailwind |
+|--------|-----------|-----------|----------|
+| BBNF semantic | 601 MB/s | 258 MB/s | 310 MB/s |
+| lightningcss | 256 MB/s | 114 MB/s | 88 MB/s |
+| Ratio | 2.35x | 2.26x | 3.52x |
+
+The gap widens on tailwind (3.52x) where BBNF's dispatch tables and inline byte scanners amortize better across ~38K utility rules than lightningcss's hand-written recursive descent. Bootstrap went from 21 MB/s to 258 MB/s over the optimization sequence—a 12.3x improvement driven by compiler techniques applied to the parser codegen (see below).
+
+## Rust: `CSS` — Import Grammar (L2)
+
+The import grammar does comparable work to lightningcss — property-aware dispatch (21 groups), typed CSS Selectors Level 4 (31 rules), balanced-paren function bodies, 147 named colors, typed numbers (f64), typed hex colors (u32). Built entirely via `@import` composition from modular grammar files, no monolithic grammar needed.
+
+```bench-chart
+{ "title": "CSS Import (L2) — vs lightningcss", "unit": "MB/s",
+  "datasets": [
+    { "name": "normalize (6 KB)", "icon": "rust",
+      "labels": ["BBNF import", "lightningcss"],
+      "series": [{"label": "Throughput", "values": [237, 260]}] },
+    { "name": "bootstrap (281 KB)", "icon": "rust",
+      "labels": ["BBNF import", "lightningcss"],
+      "series": [{"label": "Throughput", "values": [125, 116]}] },
+    { "name": "tailwind (3.8 MB)", "icon": "rust",
+      "labels": ["BBNF import", "lightningcss"],
+      "series": [{"label": "Throughput", "values": [123, 87]}] }
+  ] }
+```
+
+| Parser | normalize | bootstrap | tailwind |
+|--------|-----------|-----------|----------|
+| BBNF import (L2) | 237 MB/s | 125 MB/s | 123 MB/s |
+| lightningcss | 260 MB/s | 116 MB/s | 87 MB/s |
+
+On normalize (6 KB), lightningcss's hand-written parser has a slight edge. On bootstrap and tailwind, BBNF's dispatch tables and inline byte scanners pull ahead — 1.08x on bootstrap, 1.41x on tailwind. The import grammar demonstrates that modular `@import` composition incurs no performance penalty compared to monolithic grammars.
+
+### CSS Tier Summary
+
+| Tier | normalize | bootstrap | tailwind | Work |
+|------|-----------|-----------|----------|------|
+| span | 2,472 | 1,885 | 1,856 | Byte-range validation |
+| arena | 2,182 | 1,270 | 1,202 | Typed enum tree (opaque values) |
+| structural/pretty | 711 | 299 | 296 | Formatted AST with `@pretty` |
+| semantic | 601 | 258 | 310 | f64/u32/u8 typed values |
+| import (L2) | 237 | 125 | 123 | Full L2 via `@import` composition |
+| typed | 213 | 102 | 102 | Full CSS L4 property types |
+
+### Compiler Optimization Techniques
+
+The 12.3x improvement on bootstrap came from applying classical compiler optimizations to parser codegen—the same techniques compilers use on scalar code, applied at the IR level to parser construction:
+
+| Technique | Application | Impact |
+|-----------|-------------|--------|
+| Strength Reduction | `NumberConvert` emits `css_number_scan_f64`: regex replaced by byte scanner | 7.3x |
+| LICM | Inline byte scanners for `--[\w-]+`, comma-or-ws patterns, etc. eliminate per-call regex construction | +54% |
+| CSE | `hoist_dedup` HashMap prevents intra-function duplicate scanner construction | +39% |
+| Map Fusion (SSA) | `(NumberConvert, EnumWrap)`, `(Constant, EnumWrap)` fused to single `.map()` | +15% |
+| Induction Variable | `FnDescriptor` specialization: NumberConvert, HexConvert, Constant recognized at IR level | enables all above |
+| Trie Prefix Factoring | `factor_literal_prefixes`: byte-level literal splitting enables dispatch tables | +2-5% |
+
+These are not hand-applied optimizations—the IR pipeline detects the patterns and emits specialized code automatically. The grammar author writes `number -> /regex/ ;` and the codegen emits a fused byte scanner with Eisel-Lemire f64 conversion.
+
+### `regex_emit` — HIR-Based Inline Regex Compilation
+
+The `regex_emit` module (`generate/regex_emit/`) compiles regex patterns to inline byte operations at proc-macro expansion time, eliminating all runtime regex overhead in the monolithic codegen path. The architecture has three tiers, tried in order:
+
+1. **`fast_paths::emit_regex_direct_call`** — pattern-matched fast paths for known high-value patterns (CSS identifiers, quoted strings, comment-aware whitespace, negated character classes). Emits calls to hand-tuned byte scanners in `parse_that` (e.g., `css_ident_fast`, `css_ws_comment_fast`, `memchr`-based `[^XYZ]+`).
+
+2. **`regex_emit::try_emit_regex_inline`** (`hir_walk.rs`) — parses the regex via `regex-syntax` into HIR (High-level Intermediate Representation), then walks the HIR tree to emit inline Rust byte operations. Handles concatenation, alternation, character classes (positive and negated), repetition (greedy `*`/`+`/`?`/`{n,m}`), and anchored/unanchored variants. Each HIR node maps to a small code fragment: `Class` becomes byte-range checks, `Repetition` becomes a `loop` with break conditions, `Concat` sequences the fragments. No `Regex` object is ever constructed at runtime.
+
+3. **`regex_emit::emit_regex_lazy_static`** (`fallback.rs`) — fallback for patterns too complex for inline compilation. Emits a `LazyLock<Regex>` that compiles the regex once on first use. In practice, this path is never reached for CSS or JSON grammars — all patterns are handled by tiers 1 or 2.
+
+The result: zero `SpanParser::Regex` enum dispatch, zero `Regex::find()` calls, zero runtime compilation in the monolithic codegen path. Every regex in the grammar becomes straight-line byte comparisons and loops, subject to the same LLVM optimizations as hand-written scanner code.
+
 ## Rust: `Google Sheets`
 
 AOT vs VM on formula parsing. The VM interprets bytecode; AOT generates native Rust. The VM gap narrows on larger inputs as bytecode dispatch overhead amortizes. AOT is 93x faster on pathological inputs, 33x on 1 KB, 16x on 10 KB.

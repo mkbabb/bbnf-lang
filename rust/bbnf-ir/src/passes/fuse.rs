@@ -98,6 +98,13 @@ fn count_refs(node: &IrNode, counts: &mut [u32]) {
             count_refs(a, counts);
             count_refs(b, counts);
         }
+        IrNode::TokenDispatch { token, arms, fallback } => {
+            count_refs(token, counts);
+            for a in arms {
+                count_refs(&a.continuation, counts);
+            }
+            count_refs(fallback, counts);
+        }
         IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => {}
     }
 }
@@ -155,6 +162,14 @@ fn inline_single_use(node: IrNode, bodies: &[Option<IrNode>]) -> IrNode {
         IrNode::Map { inner, fn_id } => IrNode::Map {
             inner: Box::new(inline_single_use(*inner, bodies)),
             fn_id,
+        },
+        IrNode::TokenDispatch { token, arms, fallback } => IrNode::TokenDispatch {
+            token: Box::new(inline_single_use(*token, bodies)),
+            arms: arms.into_iter().map(|mut a| {
+                a.continuation = inline_single_use(a.continuation, bodies);
+                a
+            }).collect(),
+            fallback: Box::new(inline_single_use(*fallback, bodies)),
         },
         other => other,
     }

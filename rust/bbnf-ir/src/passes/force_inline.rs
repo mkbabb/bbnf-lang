@@ -58,6 +58,11 @@ fn body_has_self_ref(node: &IrNode, rule_id: u32) -> bool {
         IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
             body_has_self_ref(a, rule_id) || body_has_self_ref(b, rule_id)
         }
+        IrNode::TokenDispatch { token, arms, fallback } => {
+            body_has_self_ref(token, rule_id)
+                || arms.iter().any(|a| body_has_self_ref(&a.continuation, rule_id))
+                || body_has_self_ref(fallback, rule_id)
+        }
         IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => false,
     }
 }
@@ -107,6 +112,14 @@ fn do_inline(node: IrNode, bodies: &[Option<IrNode>]) -> IrNode {
         IrNode::Map { inner, fn_id } => IrNode::Map {
             inner: Box::new(do_inline(*inner, bodies)),
             fn_id,
+        },
+        IrNode::TokenDispatch { token, arms, fallback } => IrNode::TokenDispatch {
+            token: Box::new(do_inline(*token, bodies)),
+            arms: arms.into_iter().map(|mut a| {
+                a.continuation = do_inline(a.continuation, bodies);
+                a
+            }).collect(),
+            fallback: Box::new(do_inline(*fallback, bodies)),
         },
         other => other,
     }

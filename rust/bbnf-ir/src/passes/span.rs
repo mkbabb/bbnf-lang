@@ -79,6 +79,8 @@ fn node_is_span_eligible(node: &IrNode, eligible_rules: &HashSet<RuleId>) -> boo
         IrNode::OptionalWhitespace(inner) => node_is_span_eligible(inner, eligible_rules),
 
         IrNode::Map { .. } => false, // Transforms output type.
+
+        IrNode::TokenDispatch { .. } => false, // Complex dispatch node.
     }
 }
 
@@ -143,5 +145,6 @@ fn can_be_span_parser(node: &IrNode, sp_set: &HashSet<RuleId>) -> bool {
         IrNode::Negate(inner) => can_be_span_parser(inner, sp_set),
         IrNode::OptionalWhitespace(inner) => can_be_span_parser(inner, sp_set),
         IrNode::Map { .. } => false, // Custom maps can't be span parsers.
+        IrNode::TokenDispatch { .. } => false, // Complex dispatch node.
     }
 }

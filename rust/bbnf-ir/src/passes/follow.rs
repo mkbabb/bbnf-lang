@@ -196,6 +196,14 @@ fn propagate_follow(
             propagate_follow(inner, container_rule, first_of, nullable, ir, follow, changed);
         }
 
+        IrNode::TokenDispatch { token, arms, fallback } => {
+            propagate_follow(token, container_rule, first_of, nullable, ir, follow, changed);
+            for arm in arms {
+                propagate_follow(&arm.continuation, container_rule, first_of, nullable, ir, follow, changed);
+            }
+            propagate_follow(fallback, container_rule, first_of, nullable, ir, follow, changed);
+        }
+
         IrNode::Ref(_) | IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => {}
     }
 }
@@ -253,6 +261,7 @@ fn compute_node_first(
         IrNode::OptionalWhitespace(inner) | IrNode::Map { inner, .. } => {
             compute_node_first(inner, first_of, ir)
         }
+        IrNode::TokenDispatch { token, .. } => compute_node_first(token, first_of, ir),
     }
 }
 

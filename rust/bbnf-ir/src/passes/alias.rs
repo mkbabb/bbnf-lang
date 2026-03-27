@@ -96,6 +96,13 @@ fn rewrite_refs(node: &mut IrNode, aliases: &HashMap<RuleId, RuleId>) {
         IrNode::Map { inner, .. } => {
             rewrite_refs(inner, aliases);
         }
+        IrNode::TokenDispatch { token, arms, fallback } => {
+            rewrite_refs(token, aliases);
+            for arm in arms {
+                rewrite_refs(&mut arm.continuation, aliases);
+            }
+            rewrite_refs(fallback, aliases);
+        }
         IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => {}
     }
 }

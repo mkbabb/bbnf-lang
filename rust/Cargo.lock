@@ -83,6 +83,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "regex",
+ "regex-syntax",
  "serde",
  "serde_json",
  "serde_json_borrow",
@@ -115,6 +116,7 @@ version = "0.1.6"
 dependencies = [
  "rayon",
  "regex",
+ "regex-syntax",
  "rmp-serde",
  "serde",
  "serde_json",

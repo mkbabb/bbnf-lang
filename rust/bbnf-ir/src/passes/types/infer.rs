@@ -5,7 +5,7 @@ use crate::{FnDescriptor, IrNode, TypeDesc};
 use super::utils::{try_flatten_pair, InferCtx};
 
 /// Infer the output type of a single IR node.
-pub(super) fn infer_node(node: &IrNode, ctx: &InferCtx<'_>) -> TypeDesc {
+pub fn infer_node(node: &IrNode, ctx: &InferCtx<'_>) -> TypeDesc {
     match node {
         IrNode::Literal(_) | IrNode::Regex(_) => TypeDesc::Span,
 
@@ -102,8 +102,20 @@ pub(super) fn infer_node(node: &IrNode, ctx: &InferCtx<'_>) -> TypeDesc {
                         TypeDesc::Named(*source)
                     }
                 }
+                FnDescriptor::NumberConvert => TypeDesc::F64,
+                FnDescriptor::HexConvert { .. } => TypeDesc::U32,
+                FnDescriptor::Constant { return_type, value } => {
+                    if let Some(rt) = return_type {
+                        rt.clone()
+                    } else {
+                        TypeDesc::Named(*value)
+                    }
+                }
             }
         }
+
+        // TokenDispatch is a heterogeneous alternation dispatched by token value.
+        IrNode::TokenDispatch { .. } => TypeDesc::BoxedEnum,
     }
 }
 
@@ -117,7 +129,7 @@ pub(super) fn infer_node(node: &IrNode, ctx: &InferCtx<'_>) -> TypeDesc {
 /// Map, and OptionalWhitespace — the same nodes that propagate `in_vec` in codegen.
 /// It does NOT propagate into Seq children (multi-element Seq produces a tuple),
 /// Alt branches (they produce compound types), or Repeat (which starts its own context).
-pub(super) fn infer_node_in_vec(node: &IrNode, ctx: &InferCtx<'_>) -> TypeDesc {
+pub fn infer_node_in_vec(node: &IrNode, ctx: &InferCtx<'_>) -> TypeDesc {
     match node {
         // In Vec context, ALL refs return Enum (no boxing needed).
         // Non-transparent: codegen emits Self::rule() without Box.
@@ -147,6 +159,15 @@ pub(super) fn infer_node_in_vec(node: &IrNode, ctx: &InferCtx<'_>) -> TypeDesc {
                         rt.clone()
                     } else {
                         TypeDesc::Named(*source)
+                    }
+                }
+                FnDescriptor::NumberConvert => TypeDesc::F64,
+                FnDescriptor::HexConvert { .. } => TypeDesc::U32,
+                FnDescriptor::Constant { return_type, value } => {
+                    if let Some(rt) = return_type {
+                        rt.clone()
+                    } else {
+                        TypeDesc::Named(*value)
                     }
                 }
             }

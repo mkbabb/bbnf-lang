@@ -197,6 +197,13 @@ fn collect_cross_scc_refs(
         IrNode::Map { inner, .. } => {
             collect_cross_scc_refs(inner, src_scc, rule_scc, entries);
         }
+        IrNode::TokenDispatch { token, arms, fallback } => {
+            collect_cross_scc_refs(token, src_scc, rule_scc, entries);
+            for arm in arms {
+                collect_cross_scc_refs(&arm.continuation, src_scc, rule_scc, entries);
+            }
+            collect_cross_scc_refs(fallback, src_scc, rule_scc, entries);
+        }
         IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => {}
     }
 }
@@ -241,6 +248,13 @@ fn count_refs(node: &IrNode, counts: &mut HashMap<RuleId, u32>) {
         }
         IrNode::Map { inner, .. } => {
             count_refs(inner, counts);
+        }
+        IrNode::TokenDispatch { token, arms, fallback } => {
+            count_refs(token, counts);
+            for arm in arms {
+                count_refs(&arm.continuation, counts);
+            }
+            count_refs(fallback, counts);
         }
         IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => {}
     }

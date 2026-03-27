@@ -112,6 +112,7 @@ fn node_first_set(node: &IrNode, rule_metas: &[(CharSet128, bool)], strings: &[S
         IrNode::Skip(a, _) | IrNode::Next(a, _) => node_first_set(a, rule_metas, strings),
         IrNode::Minus(a, _) => node_first_set(a, rule_metas, strings),
         IrNode::Negate(_) => None, // zero-width, nullable
+        IrNode::TokenDispatch { token, .. } => node_first_set(token, rule_metas, strings),
     }
 }
 
@@ -180,7 +181,15 @@ fn annotate_node(
                 return;
             }
 
-            // Try to build a dispatch table (with nullable branch support).
+            // Recompute FIRST sets for branches that lack them (after inlining/fusing,
+            // newly created AltBranch nodes may have first_set=None).
+            for branch in branches.iter_mut() {
+                if branch.first_set.is_none() {
+                    branch.first_set = node_first_set(&branch.node, rule_metas, strings);
+                }
+            }
+
+            // Try to build a full dispatch table (all branches disjoint).
             if let Some(table) = try_build_dispatch(branches, containing_follow) {
                 *dispatch = Some(table);
             }
@@ -206,6 +215,13 @@ fn annotate_node(
         IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
             annotate_node(a, containing_follow, rule_metas, strings);
             annotate_node(b, containing_follow, rule_metas, strings);
+        }
+        IrNode::TokenDispatch { token, arms, fallback } => {
+            annotate_node(token, containing_follow, rule_metas, strings);
+            for arm in arms {
+                annotate_node(&mut arm.continuation, containing_follow, rule_metas, strings);
+            }
+            annotate_node(fallback, containing_follow, rule_metas, strings);
         }
         IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon | IrNode::Ref(_) => {}
     }

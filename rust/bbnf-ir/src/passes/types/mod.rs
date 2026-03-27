@@ -15,9 +15,11 @@ use std::collections::HashMap;
 
 use crate::{GrammarIR, IrNode, RuleId, SubVariant, TypeDesc};
 
-use infer::infer_node;
 use subvariants::{collect_sub_variants_raw, validate_sub_variant_uniqueness_raw};
-use utils::InferCtx;
+
+// Re-export for codegen to use the SAME inference functions (no divergence).
+pub use infer::{infer_node, infer_node_in_vec};
+pub use utils::{InferCtx, try_flatten_pair};
 
 /// Infer types for all rules and populate `ir.types`.
 ///
@@ -133,6 +135,15 @@ pub fn infer_types(ir: &mut GrammarIR) {
 
     // Validate cross-rule sub-variant uniqueness (using raw names).
     validate_sub_variant_uniqueness_raw(&raw_sub_variants, &rule_names);
+
+    // Clear all existing sub-variants before writing new ones.
+    // This is critical when infer_types runs multiple times (e.g., pipeline call
+    // with b1_span_collapse=false, then generate_all with b1_span_collapse=true).
+    // Without clearing, stale sub-variants from the first run persist and cause
+    // type mismatches in codegen.
+    for rule in &mut ir.rules {
+        rule.meta.sub_variants.clear();
+    }
 
     // Intern sub-variant names and write to rules.
     for rule in &mut ir.rules {

@@ -189,7 +189,6 @@ fn try_factor_alt(
     rule_metas: &[(CharSet128, bool)],
 ) -> Option<IrNode> {
     if branches.len() != 2 {
-        // For now, handle only 2-branch case.
         return None;
     }
 

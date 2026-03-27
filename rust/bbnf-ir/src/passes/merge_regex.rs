@@ -93,6 +93,14 @@ fn merge_regex_in_node(node: IrNode, strings: &mut Vec<String>) -> IrNode {
             inner: Box::new(merge_regex_in_node(*inner, strings)),
             fn_id,
         },
+        IrNode::TokenDispatch { token, arms, fallback } => IrNode::TokenDispatch {
+            token: Box::new(merge_regex_in_node(*token, strings)),
+            arms: arms.into_iter().map(|mut a| {
+                a.continuation = merge_regex_in_node(a.continuation, strings);
+                a
+            }).collect(),
+            fallback: Box::new(merge_regex_in_node(*fallback, strings)),
+        },
         // Leaves — no recursion needed.
         node @ (IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon | IrNode::Ref(_)) => node,
     }

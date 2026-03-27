@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use crate::{GrammarIR, RuleId, TypeDesc};
 
 /// Context for type inference — avoids threading many parameters.
-pub(super) struct InferCtx<'a> {
+pub struct InferCtx<'a> {
     pub ir: &'a GrammarIR,
     pub cache: &'a HashMap<RuleId, TypeDesc>,
     pub acyclic_rules: &'a std::collections::HashSet<RuleId>,
@@ -34,7 +34,7 @@ impl InferCtx<'_> {
 
 /// Try to flatten a 2-element tuple where one is `T` and the other is `Vec<T>`.
 /// Only flattens same-type pairs (A, Vec<A>) or (Vec<A>, A).
-pub(super) fn try_flatten_pair(a: &TypeDesc, b: &TypeDesc) -> Option<TypeDesc> {
+pub fn try_flatten_pair(a: &TypeDesc, b: &TypeDesc) -> Option<TypeDesc> {
     // (T, Vec<T>) → Vec<T>
     if let TypeDesc::Vec(inner) = b {
         if **inner == *a {

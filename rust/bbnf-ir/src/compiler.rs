@@ -183,6 +183,9 @@ impl Compiler {
                 self.compile_node(inner, ir);
                 self.emit(Op::TrimWs);
             }
+            IrNode::TokenDispatch { .. } => {
+                todo!("TokenDispatch bytecode compilation not yet implemented")
+            }
         }
     }
 }

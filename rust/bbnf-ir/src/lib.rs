@@ -115,6 +115,35 @@ pub enum IrNode {
     /// Marks the inner expression as having optional surrounding whitespace.
     /// This is a flag-level concept: backends translate it to `trim_whitespace(inner)`.
     OptionalWhitespace(Box<IrNode>),
+
+    // ── Lexer-Parser Fusion ──────────────────────────────────────────
+
+    /// Parse a token once, then dispatch on its string value.
+    /// Eliminates sequential checkpoint/restore for alternations where multiple
+    /// branches start with the same token class (e.g., identifier-led CSS values).
+    TokenDispatch {
+        /// The token expression to parse (e.g., Regex for identifier class).
+        token: Box<IrNode>,
+        /// Dispatch arms: each maps string patterns to a continuation body.
+        arms: Vec<TokenDispatchArm>,
+        /// Fallback arm: tried when no pattern matches (e.g., bare ident).
+        fallback: Box<IrNode>,
+    },
+}
+
+/// A single arm of a `TokenDispatch` node.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct TokenDispatchArm {
+    /// String values that trigger this arm (e.g., ["var"], ["calc", "min"]).
+    /// Each `StringId` indexes `GrammarIR::strings`.
+    pub patterns: Vec<StringId>,
+    /// Optional guard: a single-byte literal that must follow the token
+    /// (e.g., `(` for function calls). `None` means no guard.
+    pub guard_byte: Option<u8>,
+    /// Continuation body after the token (+ guard) is consumed.
+    pub continuation: IrNode,
+    /// The original branch's Map wrapping (enum variant).
+    pub map_fn: Option<FnId>,
 }
 
 /// A single branch of an `Alt` node, with optional pre-computed FIRST set.
@@ -154,6 +183,22 @@ pub enum FnDescriptor {
     /// The optional `return_type` is parsed from the closure's `-> ReturnType` annotation.
     Custom {
         source: StringId,
+        return_type: Option<TypeDesc>,
+    },
+
+    /// Fused numeric regex scan + f64 conversion (CSS-compatible).
+    /// Codegen emits `css_number_scan_f64(state)` → `Option<f64>`.
+    NumberConvert,
+
+    /// Fused hex regex scan + user conversion function.
+    /// Codegen emits inline char-class loop + conversion call.
+    HexConvert { fn_path: StringId },
+
+    /// Map to a constant Rust expression (literal, path, etc.).
+    /// Codegen emits the expression directly, discarding the parse result.
+    /// E.g., `"px" -> 0u8` lowers to `Constant { value: "0u8", return_type: Some(Named("u8")) }`.
+    Constant {
+        value: StringId,
         return_type: Option<TypeDesc>,
     },
 }
@@ -333,6 +378,10 @@ pub struct RuleMeta {
 pub enum TypeDesc {
     /// A borrowed string span: `Span<'a>` in Rust, `string` in TS.
     Span,
+    /// A 64-bit float (produced by fused number scan+convert).
+    F64,
+    /// An unsigned 32-bit integer (produced by fused hex scan+convert).
+    U32,
     /// An optional value.
     Option(Box<TypeDesc>),
     /// A vector of values.

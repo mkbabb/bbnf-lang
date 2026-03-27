@@ -62,8 +62,9 @@ fn to_borrowed_arena<'a>(node: &'a BbnfJsonParserArenaEnum<'a>) -> BorrowedJsonV
     match node {
         BbnfJsonParserArenaEnum::null(_) => BorrowedJsonValue::Null,
         BbnfJsonParserArenaEnum::r#bool(s) => BorrowedJsonValue::Bool(s.as_str() == "true"),
-        BbnfJsonParserArenaEnum::number(s) => {
-            BorrowedJsonValue::Number(fast_float2::parse(s.as_str()).unwrap())
+        BbnfJsonParserArenaEnum::number((_, f)) => {
+            // f64 already computed during parse via fused number_scan_convert.
+            BorrowedJsonValue::Number(*f)
         }
         BbnfJsonParserArenaEnum::string(s) => {
             let raw = s.as_str();
@@ -107,8 +108,8 @@ fn to_owned_value_arena<'a>(node: &'a BbnfJsonParserArenaEnum<'a>) -> OwnedJsonV
     match node {
         BbnfJsonParserArenaEnum::null(_) => OwnedJsonValue::Null,
         BbnfJsonParserArenaEnum::r#bool(s) => OwnedJsonValue::Bool(s.as_str() == "true"),
-        BbnfJsonParserArenaEnum::number(s) => {
-            OwnedJsonValue::Number(fast_float2::parse(s.as_str()).unwrap())
+        BbnfJsonParserArenaEnum::number((_, f)) => {
+            OwnedJsonValue::Number(*f)
         }
         BbnfJsonParserArenaEnum::string(s) => OwnedJsonValue::String(decode_string(*s)),
         BbnfJsonParserArenaEnum::array(items) => {
@@ -308,6 +309,38 @@ bench_vm!(vm_citm, "citm_catalog.json");
 bench_vm!(vm_canada, "canada.json");
 bench_vm!(vm_data_xl, "data_xl.json");
 
+// ── Convert tier (fused scan+convert, parse-that built-in json_value) ────────
+// Uses parse_that::json_value() which fuses number scanning with mantissa
+// accumulation — numbers converted to f64 during parsing, no re-read.
+// This is the fair comparison against sonic-rs (which also fuses).
+
+macro_rules! bench_convert {
+    ($name:ident, $file:expr) => {
+        fn $name(b: &mut Bencher) {
+            let input = load_json($file);
+            b.bytes = input.len() as u64;
+            {
+                let parser = parse_that::parsers::json::json_parser();
+                assert!(
+                    parser.parse(&input).is_some(),
+                    concat!($file, ": json_value parse failed")
+                );
+            }
+            b.iter(|| {
+                let parser = parse_that::parsers::json::json_parser();
+                let ast = parser.parse(black_box(&input)).unwrap();
+                black_box(&ast as *const _);
+            });
+        }
+    };
+}
+
+bench_convert!(convert_data, "data.json");
+bench_convert!(convert_twitter, "twitter.json");
+bench_convert!(convert_citm, "citm_catalog.json");
+bench_convert!(convert_canada, "canada.json");
+bench_convert!(convert_data_xl, "data_xl.json");
+
 // ── Groups ──────────────────────────────────────────────────────────────────
 
 benchmark_group!(
@@ -334,6 +367,14 @@ benchmark_group!(
     copy_canada,
     copy_data_xl
 );
+benchmark_group!(
+    convert,
+    convert_data,
+    convert_twitter,
+    convert_citm,
+    convert_canada,
+    convert_data_xl
+);
 benchmark_group!(vm, vm_data, vm_twitter, vm_citm, vm_canada, vm_data_xl);
-benchmark_main!(span, borrow, copy, vm);
+benchmark_main!(span, borrow, copy, convert, vm);
 

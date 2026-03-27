@@ -1,0 +1,18 @@
+@import "css-value-unit.bbnf" ;
+
+// CSS Filter Effects Level 1 — filter functions.
+// Spec: https://drafts.fxtf.org/filter-effects-1/
+
+blur       = "blur" , "(" ?w , (length ?) ?w , ")" ;
+brightness = "brightness" , "(" ?w , ((number | percentage) ?) ?w , ")" ;
+contrast   = "contrast" , "(" ?w , ((number | percentage) ?) ?w , ")" ;
+dropShadow = "drop-shadow" , "(" ?w , length , length , length ? , /[^)]*/ ?w , ")" ;
+grayscale  = "grayscale" , "(" ?w , ((number | percentage) ?) ?w , ")" ;
+hueRotate  = "hue-rotate" , "(" ?w , (angle ?) ?w , ")" ;
+invert     = "invert" , "(" ?w , ((number | percentage) ?) ?w , ")" ;
+filterOpacity = "opacity" , "(" ?w , ((number | percentage) ?) ?w , ")" ;
+saturate   = "saturate" , "(" ?w , ((number | percentage) ?) ?w , ")" ;
+sepia      = "sepia" , "(" ?w , ((number | percentage) ?) ?w , ")" ;
+
+filterFunction = blur | brightness | contrast | dropShadow
+               | grayscale | hueRotate | invert | filterOpacity | saturate | sepia ;

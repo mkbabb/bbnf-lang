@@ -1,0 +1,34 @@
+@import "css-color.bbnf" ;
+@import "css-value-unit.bbnf" ;
+
+// CSS Images Level 4 — gradient functions.
+// Spec: https://drafts.csswg.org/css-images-4/
+
+// Color stop: color with optional position(s)
+colorStopPosition = percentage | length ;
+colorStop = color , colorStopPosition ? , colorStopPosition ? ;
+colorStopList = colorStop , ("," ?w , colorStop) * ;
+
+// Linear gradient
+linearSide = "top" | "bottom" | "left" | "right" ;
+linearDirection = ("to" , linearSide , linearSide ?) | angle ;
+linearGradient = "linear-gradient" , "(" ?w , (linearDirection , "," ?w) ? , colorStopList ?w , ")" ;
+repeatingLinearGradient = "repeating-linear-gradient" , "(" ?w , (linearDirection , "," ?w) ? , colorStopList ?w , ")" ;
+
+// Radial gradient
+radialShape = "circle" | "ellipse" ;
+radialExtent = "closest-side" | "closest-corner" | "farthest-side" | "farthest-corner" ;
+radialSize = (length , length ?) | radialExtent ;
+radialPosition = "at" , /[^,)]+/ ;
+radialConfig = (radialShape ? , radialSize ?) , radialPosition ? ;
+radialGradient = "radial-gradient" , "(" ?w , (radialConfig , "," ?w) ? , colorStopList ?w , ")" ;
+repeatingRadialGradient = "repeating-radial-gradient" , "(" ?w , (radialConfig , "," ?w) ? , colorStopList ?w , ")" ;
+
+// Conic gradient
+conicConfig = ("from" , angle) ? , ("at" , /[^,)]+/) ? ;
+conicGradient = "conic-gradient" , "(" ?w , (conicConfig , "," ?w) ? , colorStopList ?w , ")" ;
+repeatingConicGradient = "repeating-conic-gradient" , "(" ?w , (conicConfig , "," ?w) ? , colorStopList ?w , ")" ;
+
+gradient = linearGradient | repeatingLinearGradient
+         | radialGradient | repeatingRadialGradient
+         | conicGradient | repeatingConicGradient ;

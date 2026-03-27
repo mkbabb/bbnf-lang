@@ -1,0 +1,34 @@
+@import "css-value-unit.bbnf" ;
+
+// CSS Transforms Level 2 — transform functions.
+// Spec: https://drafts.csswg.org/css-transforms-2/
+
+transformValue = length | percentage | angle | number ;
+transformArgs = transformValue , ("," ?w , transformValue) * ;
+
+translate   = "translate" , "(" ?w , transformArgs ?w , ")" ;
+translateX  = "translateX" , "(" ?w , transformValue ?w , ")" ;
+translateY  = "translateY" , "(" ?w , transformValue ?w , ")" ;
+translate3d = "translate3d" , "(" ?w , transformArgs ?w , ")" ;
+rotate      = "rotate" , "(" ?w , angle ?w , ")" ;
+rotateX     = "rotateX" , "(" ?w , angle ?w , ")" ;
+rotateY     = "rotateY" , "(" ?w , angle ?w , ")" ;
+rotateZ     = "rotateZ" , "(" ?w , angle ?w , ")" ;
+rotate3d    = "rotate3d" , "(" ?w , transformArgs ?w , ")" ;
+scale       = "scale" , "(" ?w , transformArgs ?w , ")" ;
+scaleX      = "scaleX" , "(" ?w , number ?w , ")" ;
+scaleY      = "scaleY" , "(" ?w , number ?w , ")" ;
+scale3d     = "scale3d" , "(" ?w , transformArgs ?w , ")" ;
+skew        = "skew" , "(" ?w , transformArgs ?w , ")" ;
+skewX       = "skewX" , "(" ?w , angle ?w , ")" ;
+skewY       = "skewY" , "(" ?w , angle ?w , ")" ;
+matrix      = "matrix" , "(" ?w , transformArgs ?w , ")" ;
+matrix3d    = "matrix3d" , "(" ?w , transformArgs ?w , ")" ;
+perspectiveFn = "perspective" , "(" ?w , length ?w , ")" ;
+
+transformFunction = translate | translateX | translateY | translate3d
+                  | rotate | rotateX | rotateY | rotateZ | rotate3d
+                  | scale | scaleX | scaleY | scale3d
+                  | skew | skewX | skewY
+                  | matrix | matrix3d
+                  | perspectiveFn ;

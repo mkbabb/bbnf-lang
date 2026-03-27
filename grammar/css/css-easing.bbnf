@@ -1,0 +1,15 @@
+@import "css-value-unit.bbnf" ;
+
+// CSS Easing Functions Level 2.
+// Spec: https://drafts.csswg.org/css-easing-2/
+
+cubicBezier   = "cubic-bezier" , "(" ?w , number , "," ?w , number , "," ?w , number , "," ?w , number ?w , ")" ;
+stepsKeyword  = "jump-start" | "jump-end" | "jump-none" | "jump-both" | "start" | "end" ;
+steps         = "steps" , "(" ?w , integer ?w , ("," ?w , stepsKeyword) ? , ")" ;
+linearEasing  = "linear" , "(" ?w , (number , percentage ?) , ("," ?w , number , percentage ?) * , ")" ;
+
+// Keyword forms — ordered longest-first for PEG
+easingKeyword = "ease-in-out" | "ease-in" | "ease-out" | "ease"
+              | "step-start" | "step-end" | "linear" ;
+
+easingFunction = cubicBezier | steps | linearEasing | easingKeyword ;

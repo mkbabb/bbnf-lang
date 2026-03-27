@@ -1,0 +1,119 @@
+// CSS Keyword Enumerations
+// Typed keyword values for property-specific declaration dispatch.
+// Each keyword maps to a u8 discriminant via -> constant shorthand.
+
+// --- Display ---
+displayKeyword = "inline-block" -> 2u8
+               | "inline-flex" -> 6u8
+               | "inline-grid" -> 7u8
+               | "inline" -> 1u8
+               | "block" -> 0u8
+               | "flex" -> 3u8
+               | "grid" -> 4u8
+               | "none" -> 5u8
+               | "contents" -> 8u8
+               | "table" -> 9u8
+               | "table-row" -> 10u8
+               | "table-cell" -> 11u8
+               | "list-item" -> 12u8
+               | "flow-root" -> 13u8 ;
+
+// --- Position ---
+positionKeyword = "static" -> 0u8
+                | "relative" -> 1u8
+                | "absolute" -> 2u8
+                | "fixed" -> 3u8
+                | "sticky" -> 4u8 ;
+
+// --- Overflow ---
+overflowKeyword = "visible" -> 0u8
+                | "hidden" -> 1u8
+                | "scroll" -> 2u8
+                | "auto" -> 3u8
+                | "clip" -> 4u8 ;
+
+// --- Visibility ---
+visibilityKeyword = "visible" -> 0u8
+                  | "hidden" -> 1u8
+                  | "collapse" -> 2u8 ;
+
+// --- Flex direction ---
+flexDirKeyword = "row-reverse" -> 1u8
+               | "row" -> 0u8
+               | "column-reverse" -> 3u8
+               | "column" -> 2u8 ;
+
+// --- Flex wrap ---
+flexWrapKeyword = "nowrap" -> 0u8
+                | "wrap-reverse" -> 2u8
+                | "wrap" -> 1u8 ;
+
+// --- Alignment (justify-content, align-items, etc.) ---
+alignKeyword = "flex-start" -> 0u8
+             | "flex-end" -> 1u8
+             | "center" -> 2u8
+             | "stretch" -> 3u8
+             | "baseline" -> 4u8
+             | "space-between" -> 5u8
+             | "space-around" -> 6u8
+             | "space-evenly" -> 7u8
+             | "start" -> 8u8
+             | "end" -> 9u8 ;
+
+// --- Border style ---
+borderStyleKeyword = "none" -> 0u8
+                   | "solid" -> 1u8
+                   | "dashed" -> 2u8
+                   | "dotted" -> 3u8
+                   | "double" -> 4u8
+                   | "groove" -> 5u8
+                   | "ridge" -> 6u8
+                   | "inset" -> 7u8
+                   | "outset" -> 8u8
+                   | "hidden" -> 9u8 ;
+
+// --- Border width keywords ---
+borderWidthKeyword = "thin" -> 0u8
+                   | "medium" -> 1u8
+                   | "thick" -> 2u8 ;
+
+// --- Font weight keywords ---
+// Longer prefixes before shorter: "bolder" before "bold", "lighter" before "light".
+fontWeightKeyword = "bolder" -> 2u8
+                  | "lighter" -> 3u8
+                  | "normal" -> 0u8
+                  | "bold" -> 1u8 ;
+
+// --- Text align ---
+textAlignKeyword = "left" -> 0u8
+                 | "right" -> 1u8
+                 | "center" -> 2u8
+                 | "justify" -> 3u8
+                 | "start" -> 4u8
+                 | "end" -> 5u8 ;
+
+// --- Box sizing ---
+boxSizingKeyword = "content-box" -> 0u8
+                 | "border-box" -> 1u8 ;
+
+// --- Cursor (common) ---
+// "grabbing" before "grab" to avoid prefix match.
+cursorKeyword = "auto" -> 0u8
+              | "default" -> 1u8
+              | "pointer" -> 2u8
+              | "text" -> 3u8
+              | "move" -> 4u8
+              | "not-allowed" -> 5u8
+              | "crosshair" -> 6u8
+              | "grabbing" -> 8u8
+              | "grab" -> 7u8
+              | "wait" -> 9u8
+              | "help" -> 10u8
+              | "none" -> 11u8 ;
+
+// --- Global CSS keywords ---
+globalKeyword = "revert-layer" -> 0u8
+              | "inherit" -> 1u8
+              | "initial" -> 2u8
+              | "unset" -> 3u8
+              | "revert" -> 4u8 ;

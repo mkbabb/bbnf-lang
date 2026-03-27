@@ -1,0 +1,74 @@
+// CSS Typed Grammar — typed property values for fair lightningcss comparison.
+// Self-contained (no imports) to avoid import-path codegen issues.
+// Covers the top 8 value types (~90% of real CSS declarations).
+//
+// @ws overrides `?w` to use comment-aware whitespace (SIMD fast path).
+
+@ws /(?s)(?:\s|\/\*.*?\*\/)*/ ;
+@token propertyName ;
+@no_collapse stylesheet ;
+
+// --- Numeric primitives ---
+number     = /[-+]?(\d+)?(\.\d+)?([eE][-+]?\d+)?/ ;
+integer    = /[-+]?\d+/ ;
+percentage = number , "%" ;
+
+// --- Length units ---
+lengthUnit = "rem" | "em" | "px" | "vh" | "vw" | "vmin" | "vmax" | "ch" | "ex"
+           | "cm" | "mm" | "in" | "pt" | "pc" | "lh" | "rlh"
+           | "svw" | "svh" | "dvw" | "dvh" | "lvw" | "lvh"
+           | "cqw" | "cqh" | "cqi" | "cqb" ;
+length     = number , lengthUnit ;
+
+// --- Angle / time ---
+angle = number , ("deg" | "rad" | "grad" | "turn") ;
+time  = number , ("ms" | "s") ;
+
+// --- Dimension (any unit) ---
+dimension = length | angle | time | percentage ;
+
+// --- Colors ---
+hexColor   = "#" , /[0-9a-fA-F]{3,8}/ ;
+namedColor = "transparent" | "currentcolor" | "inherit" | "initial" | "unset" ;
+
+// Color function arguments: space- or comma-separated values
+colorArgs  = (number | percentage) , (("," | /\s+/) ?w , (number | percentage)) * ,
+             ("/" ?w , (number | percentage)) ? ;
+colorFn    = ("rgb" | "rgba" | "hsl" | "hsla" | "hwb" | "oklch" | "oklab") ,
+             "(" ?w , colorArgs ?w , ")" ;
+
+color = colorFn | hexColor | namedColor ;
+
+// --- Functions ---
+// Keywords split from delimiters for readability + enables prefix factoring.
+varFunction  = "var" , "(" ?w , /--[\w-]+/ ?w , ("," ?w , /[^)]+/) ? , ")" ;
+calcFunction = ("calc" | "min" | "max" | "clamp") , "(" , /[^)]+/ , ")" ;
+urlFunction  = "url" , "(" ?w , /[^)]+/ ?w , ")" ;
+genericFunction = /[a-zA-Z][\w-]*/ , "(" , /[^)]*/ , ")" ;
+
+// --- Identifiers and strings ---
+ident     = /[a-zA-Z_][\w-]*/ ;
+cssString = /"(?:[^"\\]|\\[\s\S])*"/ | /'(?:[^'\\]|\\[\s\S])*'/ ;
+
+// --- Value (ordered for PEG: most specific first) ---
+value = varFunction | calcFunction | urlFunction | colorFn
+      | genericFunction | hexColor
+      | dimension | number | cssString | namedColor | ident ;
+
+// --- Declarations ---
+propertyName = /[a-zA-Z_][\w-]*/ | /--[\w-]+/ | /-[a-zA-Z][\w-]*/ ;
+declaration  = (propertyName , ":" , (value ?w) + , ("!" ?w , "important") ? , ";" ?) ?w ;
+
+// --- Structure (same as css-fast) ---
+blockContent = ((declaration | ruleItem) ?w) * ;
+ruleBlock    = "{" >> blockContent ?w << "}" ;
+
+qualifiedRule = /[^{};]+/ , ruleBlock ?w ;
+
+atRuleBody     = ruleBlock | ";" ;
+genericAtRule  = /@[a-zA-Z][\w-]*/ , /[^;{}]*/ , atRuleBody ;
+atRule = genericAtRule ;
+
+ruleItem = qualifiedRule | atRule ;
+ruleList = (ruleItem ?w) * ;
+stylesheet = ruleList ?w ;

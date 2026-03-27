@@ -1,17 +1,75 @@
-@import "css-value-unit.bbnf" ;
+// CSS Import-Flat Grammar — manually inlined version of css-stylesheet.bbnf
+// with all @import directives resolved. Validates that performance differences
+// come from grammar complexity (more rules), not the import mechanism itself.
 
-// CSS Color Level 4 — color values.
-// Spec: https://drafts.csswg.org/css-color-4/
-// Imports numeric primitives from the canonical base grammar.
-//
-// Design note: separator rules are designed for unambiguous dispatch-table
-// routing. The static FIRST set of each alternation branch must be disjoint
-// so the generated parser can route in O(1) by first character. In particular:
-//   sep      = comma | whitespace
-//   alphaSep = div | sep
-// If a runtime override adds .trim() to div, the parser can match " / " but
-// the dispatch table still sees ' ' to sep. To avoid this mismatch, either
-// (a) override alphaSep instead of div, or (b) avoid whitespace around "/".
+// Comment-aware whitespace — hits sp_css_ws_comment() SIMD fast path
+@ws /(?s)(?:\s|\/\*.*?\*\/)*/ ;
+
+// ============================================================================
+// From css-value-unit.bbnf — numeric primitives and dimension types
+// ============================================================================
+
+// --- Numeric primitives (§3.1) ---
+
+number = /[-+]?(\d+)?(\.\d+)?([eE][-+]?\d+)?/
+    -> |s: ::parse_that::Span| -> f64 { ::fast_float2::parse::<f64, _>(s.as_str()).unwrap_or(0.0) } ;
+integer = /[-+]?\d+/
+    -> |s: ::parse_that::Span| -> f64 { ::fast_float2::parse::<f64, _>(s.as_str()).unwrap_or(0.0) } ;
+
+// --- Length units (§6) ---
+
+// §6.2 — Absolute lengths
+absoluteLengthUnit = "cm" | "mm" | "Q" | "in" | "pc" | "pt" | "px" ;
+
+// §6.3 — Viewport-percentage lengths (added in L4: vi/vb, s/l/d prefixed)
+viewportLengthUnit = "vw" | "vh" | "vmin" | "vmax" | "vb" | "vi"
+                   | "svw" | "svh" | "svmin" | "svmax" | "svb" | "svi"
+                   | "lvw" | "lvh" | "lvmin" | "lvmax" | "lvb" | "lvi"
+                   | "dvw" | "dvh" | "dvmin" | "dvmax" | "dvb" | "dvi" ;
+
+// Container query units (CSS Containment Level 3)
+containerLengthUnit = "cqw" | "cqh" | "cqi" | "cqb" | "cqmin" | "cqmax" ;
+
+// §6.1 — Font-relative lengths
+fontLengthUnit = "em" | "ex" | "ch" | "rem" | "lh" | "rlh" | "cap" | "ic" | "rcap" | "rex" | "rch" | "ric" | "rlh" ;
+
+relativeLengthUnit = fontLengthUnit | viewportLengthUnit | containerLengthUnit ;
+lengthUnit = absoluteLengthUnit | relativeLengthUnit ;
+
+// --- Other dimension units ---
+
+// §6.4 — Angle units
+angleUnit = "deg" | "rad" | "grad" | "turn" ;
+// §6.5 — Duration units
+timeUnit  = "ms" | "s" ;
+// §6.6 — Frequency units
+frequencyUnit = "Hz" | "kHz" ;
+// §6.7 — Resolution units
+resolutionUnit = "dpi" | "dpcm" | "dppx" | "x" ;
+// CSS Grid Layout Level 1 — Flexible lengths
+flexUnit = "fr" ;
+
+// §5.1.1 — Percentage
+percentageUnit = "%" ;
+
+// --- Dimension types ---
+// Each produces a [number, unit] tuple for runtime mapping.
+
+length     = number , lengthUnit ;
+angle      = number , angleUnit ;
+time       = number , timeUnit ;
+frequency  = number , frequencyUnit ;
+resolution = number , resolutionUnit ;
+flex       = number , flexUnit ;
+percentage = number , percentageUnit ;
+
+unitless = number ;
+
+valueUnit = length | angle | time | frequency | resolution | flex | percentage | unitless ;
+
+// ============================================================================
+// From css-color.bbnf — color values
+// ============================================================================
 
 // --- Tokens ---
 
@@ -112,3 +170,38 @@ colorMix = "color-mix" , "(" >>
 // --- Top-level color ---
 
 color = colorMix | colorFn | hex | colorFunction | namedColor ;
+
+// ============================================================================
+// From css-stylesheet.bbnf — local rules
+// ============================================================================
+
+// --- Local value rules (override imported, use opaque function bodies) ---
+varFunction     = "var" , "(" ?w , /--[\w-]+/ ?w , ("," ?w , /[^)]+/) ? , ")" ;
+calcFunction    = ("calc" | "min" | "max" | "clamp") , "(" , /[^)]+/ , ")" ;
+urlFunction     = "url" , "(" ?w , /[^)]+/ ?w , ")" ;
+genericFunction = /[a-zA-Z][\w-]*/ , "(" , /[^)]*/ , ")" ;
+
+ident     = /[a-zA-Z_][\w-]*/ ;
+cssString = /"(?:[^"\\]|\\[\s\S])*"/ | /'(?:[^'\\]|\\[\s\S])*'/ ;
+
+value = varFunction | calcFunction | urlFunction | colorFn
+      | genericFunction | hexColor
+      | dimension | number | cssString | namedColor | ident ;
+
+// --- Declarations ---
+propertyName = /[a-zA-Z_][\w-]*/ | /--[\w-]+/ | /-[a-zA-Z][\w-]*/ ;
+declaration  = (propertyName , ":" , (value ?w) * , ("!" ?w , "important") ? , ";" ?) ?w ;
+
+// --- Structure (matches semantic grammar pattern for delim_scan) ---
+blockContent = ((declaration | ruleItem) ?w) * ;
+ruleBlock    = "{" >> blockContent ?w << "}" ;
+
+qualifiedRule = /[^{};]+/ , ruleBlock ?w ;
+
+atRuleBody     = ruleBlock | ";" ;
+genericAtRule  = /@[a-zA-Z][\w-]*/ , /[^;{}]*/ , atRuleBody ;
+atRule = genericAtRule ;
+
+ruleItem = qualifiedRule | atRule ;
+ruleList = (ruleItem ?w) * ;
+stylesheet = ruleList ?w ;

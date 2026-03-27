@@ -1,47 +1,45 @@
-// CSS Stylesheet Grammar
-// Composes existing CSS grammar fragments with @recover annotations
-// for multi-error parsing of malformed stylesheets.
+// CSS Stylesheet Grammar — CSS Level 4
+// Full typed parsing with property-aware dispatch, balanced-paren functions,
+// and imported value/color/selector modules.
 
 @import "css-selectors.bbnf" ;
-@import "css-values.bbnf" ;
-@import { KEYFRAMES_RULE } from "css-keyframes.bbnf" ;
+@import "css-properties.bbnf" ;
 
-// Comments + whitespace — single regex hits sp_css_ws_comment() SIMD fast path
-ws = /(?s)(?:\s|\/\*.*?\*\/)*/ ;
+// Comment-aware whitespace — hits sp_css_ws_comment() SIMD fast path
+@ws /(?s)(?:\s|\/\*.*?\*\/)*/ ;
 
-// Shared tokens (locally defined to shadow imports from sub-grammars)
-ident  = /[a-zA-Z_][\w-]*/ ;
-string = /"(?:[^"\\]|\\[\s\S])*"/ | /'(?:[^'\\]|\\[\s\S])*'/ ;
-IDENT  = ident ;
-STRING = string ;
+// Override imported ident: supports CSS escape sequences (\: \. \/ for Tailwind)
+// and leading hyphen (-moz-*, -webkit-* vendor prefixes in pseudo-elements).
+// Shadows both css-selectors and css-properties definitions.
+ident = /(?:-?[a-zA-Z_]|\\[^\n])(?:[\w-]|\\[^\n])*/ ;
 
-// Declarations
-propertyName    = IDENT | /--[\w-]+/ ;
-declaration     = propertyName ?w << ":" ?w , value , ("," >> value) * ,
-                  ("!" ?w , "important") ? << ";" ?w ;
-declarationList = (declaration ?w) * ;
+// --- Override imported function rules with opaque balanced-paren versions ---
+// The recursive math expression grammar from css-func-body.bbnf doesn't handle
+// whitespace around + - operators. These overrides use funcBody from
+// css-func-body.bbnf for balanced-paren scanning (handles nested calls like
+// calc(var(--x) * 0.5)). genericFunction also uses funcBody.
+calcFunction    = ("calc" | "min" | "max" | "clamp") , "(" , funcBody , ")" ;
+varFunction     = "var" , "(" , funcBody , ")" ;
+urlFunction     = "url" , "(" , funcBody , ")" ;
 
-@recover declaration /[^;{}]+;/ ;
+// --- Structure (delim_scan pattern: Wrap(Repeat(Alt))) ---
+blockContent = ((declaration | ruleItem) ?w) * ;
+ruleBlock    = "{" >> blockContent ?w << "}" ;
 
-// Qualified rules
-qualifiedRule = selectorList ?w , "{" ?w >> declarationList ?w << "}" ;
+qualifiedRule = /[^{};]+/ , ruleBlock ?w ;
 
-@recover qualifiedRule /[^}]+}/ ;
+// --- @keyframes — uses percentage/from/to selectors, not CSS selectors ---
+keyframeSelector  = "from" | "to" | /\d+%/ ;
+keyframeSelectors = keyframeSelector , (/\s*,\s*/ >> keyframeSelector) * ;
+keyframeBlock     = "{" >> (declaration ?w) * ?w << "}" ;
+keyframeRule      = keyframeSelectors ?w , keyframeBlock ?w ;
+keyframeBody      = "{" >> (keyframeRule ?w) * ?w << "}" ;
+keyframesAtRule   = "@keyframes" , /[^;{}]*/ , keyframeBody ;
 
-// At-rules (minimal viable set)
-mediaRule     = "@media" >> /[^{]+/ , "{" ?w >> ruleList ?w << "}" ;
-supportsRule  = "@supports" >> /[^{]+/ , "{" ?w >> ruleList ?w << "}" ;
-fontFaceRule  = "@font-face" ?w , "{" ?w >> declarationList ?w << "}" ;
-importRule    = "@import" >> (value , ("," >> value) *) << ";" ;
-genericAtRule = /@[a-zA-Z][\w-]*/ , /[^;{}]*/ , ("{" ?w >> ruleList ?w << "}" | ";") ;
+atRuleBody     = ruleBlock | ";" ;
+genericAtRule  = /@[a-zA-Z][\w-]*/ , /[^;{}]*/ , atRuleBody ;
+atRule = keyframesAtRule | genericAtRule ;
 
-atRule = mediaRule | supportsRule | fontFaceRule | importRule
-       | KEYFRAMES_RULE | genericAtRule ;
-
-@recover atRule /[^;{}]+[;]|[^}]+}/ ;
-
-// Rule list (recursive for nesting)
-ruleList   = (ws >> (atRule | qualifiedRule) ?w) * ;
-
-// Entry point
-stylesheet = ws >> ruleList ?w ;
+ruleItem = qualifiedRule | atRule ;
+ruleList = (ruleItem ?w) * ;
+stylesheet = ruleList ?w ;

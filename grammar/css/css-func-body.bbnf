@@ -1,0 +1,44 @@
+// CSS Function Body & Math Expressions
+// Provides balanced-paren function body scanning and typed calc/min/max/clamp.
+// Spec: CSS Values and Units Level 4 §10
+
+@import "css-value-unit.bbnf" ;
+
+// --- Balanced function body ---
+// Handles nested (), "", '' — used for generic function args and var() fallback.
+// Cyclic: funcBody references itself for nested parens.
+string = /"(?:[^"\\]|\\[\s\S])*"/ | /'(?:[^'\\]|\\[\s\S])*'/ ;
+funcBody = (/[^()"']+/ | "(" , funcBody , ")" | string) * ;
+
+// --- Math expressions (calc/min/max/clamp) ---
+// Recursive with correct precedence: * / before + -
+
+mathValue = calcFunction
+          | minFunction
+          | maxFunction
+          | clampFunction
+          | varFunction
+          | envFunction
+          | dimension
+          | number
+          | "(" >> mathExpr << ")" ;
+
+mathProduct = mathValue , (("*" | "/") >> mathValue) * ;
+mathExpr    = mathProduct , (("+" | "-") >> mathProduct) * ;
+
+calcFunction  = "calc" , "(" >> mathExpr << ")" ;
+minFunction   = "min" , "(" >> (mathExpr , ("," >> mathExpr) +) << ")" ;
+maxFunction   = "max" , "(" >> (mathExpr , ("," >> mathExpr) +) << ")" ;
+clampFunction = "clamp" , "(" >> mathExpr , "," >> mathExpr , "," >> mathExpr << ")" ;
+
+// --- var() and env() ---
+dashed = /--[\w-]+/ ;
+varFallback = funcBody ;
+varFunction = "var" , "(" >> dashed , ("," >> varFallback) ? << ")" ;
+envFunction = "env" , "(" >> /[a-zA-Z_][\w-]*/ , ("," >> varFallback) ? << ")" ;
+
+// --- url() ---
+urlFunction = "url" , "(" >> (string | /[^)"'\s]+/) << ")" ;
+
+// --- Generic function (balanced body) ---
+genericFunction = /[a-zA-Z][\w-]*/ , "(" , funcBody , ")" ;

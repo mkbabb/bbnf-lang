@@ -1,6 +1,12 @@
 @import "css-tokens.bbnf" ;
 @import "css-value-unit.bbnf" ;
 @import "css-color.bbnf" ;
+@import "css-gradients.bbnf" ;
+@import "css-transforms.bbnf" ;
+@import "css-filters.bbnf" ;
+@import "css-easing.bbnf" ;
+
+// @token ident ; -- disabled: causes factoring issues with nullable number regex
 
 // CSS Values and Units Level 4 — composite value grammar.
 // Spec: https://drafts.csswg.org/css-values-4/
@@ -33,6 +39,8 @@ mathValue = calcFunction
           | minFunction
           | maxFunction
           | clampFunction
+          | varFunction
+          | envFunction
           | dimension
           | number
           | "(" >> mathExpr << ")" ;
@@ -40,25 +48,30 @@ mathValue = calcFunction
 mathProduct = mathValue , ( ("*" | "/") >> mathValue ) * ;
 mathExpr    = mathProduct , ( ("+" | "-") >> mathProduct ) * ;
 
-calcFunction  = "calc(" >> mathExpr << ")" ;
-minFunction   = "min(" >> (mathExpr , ("," >> mathExpr) +) << ")" ;
-maxFunction   = "max(" >> (mathExpr , ("," >> mathExpr) +) << ")" ;
-clampFunction = "clamp(" >> mathExpr , "," >> mathExpr , "," >> mathExpr << ")" ;
+calcFunction  = "calc" , "(" >> mathExpr << ")" ;
+minFunction   = "min" , "(" >> (mathExpr , ("," >> mathExpr) +) << ")" ;
+maxFunction   = "max" , "(" >> (mathExpr , ("," >> mathExpr) +) << ")" ;
+clampFunction = "clamp" , "(" >> mathExpr , "," >> mathExpr , "," >> mathExpr << ")" ;
 
 // --- var() and env() functions ---
 // CSS Custom Properties Level 1 — var() with optional fallback
 // CSS Environment Variables Level 1 — env() for safe-area-inset-* etc.
 
 varFallback = value , ("," >> value) * ;
-varFunction = "var(" >> dashed , ("," >> varFallback) ? << ")" ;
-envFunction = "env(" >> ident , ("," >> varFallback) ? << ")" ;
+varFunction = "var" , "(" >> dashed , ("," >> varFallback) ? << ")" ;
+envFunction = "env" , "(" >> ident , ("," >> varFallback) ? << ")" ;
 
 // --- url() function ---
 
-urlFunction = "url(" >> (string | /[^)"'\s]+/) << ")" ;
+urlFunction = "url" , "(" >> (string | /[^)"'\s]+/) << ")" ;
+
+// --- Global keywords (CSS Cascading and Inheritance Level 5) ---
+
+globalKeyword = "revert-layer" | "inherit" | "initial" | "unset" | "revert" ;
 
 // --- Generic value ---
 // Ordered for dispatch: longest-prefix / most-specific first.
+// Functions with distinct leading characters enable O(1) dispatch-table routing.
 
 value = calcFunction
       | minFunction
@@ -67,8 +80,13 @@ value = calcFunction
       | varFunction
       | envFunction
       | urlFunction
+      | gradient
+      | transformFunction
+      | filterFunction
+      | easingFunction
       | color
       | dimension
       | number
       | string
+      | globalKeyword
       | ident ;

@@ -27,4 +27,9 @@ impl StringInterner {
         self.map.insert(s.to_string(), id);
         id
     }
+
+    /// Resolve a `StringId` back to its string.
+    pub(crate) fn resolve(&self, id: StringId) -> &str {
+        &self.strings[id as usize]
+    }
 }

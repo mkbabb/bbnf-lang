@@ -26,27 +26,26 @@ enum TopLevelItem<'a> {
 }
 
 fn map_factor<'a>(
-    factor: (Expression<'a>, Option<Span<'a>>),
+    factor: (Expression<'a>, Vec<Span<'a>>),
     prev_offset: usize,
     state: &mut ParserState<'a>,
 ) -> Expression<'a> {
-    match factor {
-        (expr, Some(op)) => {
-            let token = Token::new(expr, Span::new(prev_offset, state.offset, state.src));
-            match op.as_str() {
-                "*" => Expression::Many(Box::new(token)),
-                "+" => Expression::Many1(Box::new(token)),
-                "?w" => Expression::OptionalWhitespace(Box::new(token)),
-                "?" => Expression::Optional(Box::new(token)),
-                _ => unreachable!(
-                    "unhandled factor: {:?}, {:?}",
-                    op.as_str(),
-                    token.span.as_str()
-                ),
-            }
-        }
-        (expr, _) => expr,
+    let (mut expr, modifiers) = factor;
+    for op in modifiers {
+        let token = Token::new(expr, Span::new(prev_offset, state.offset, state.src));
+        expr = match op.as_str() {
+            "*" => Expression::Many(Box::new(token)),
+            "+" => Expression::Many1(Box::new(token)),
+            "?w" => Expression::OptionalWhitespace(Box::new(token)),
+            "?" => Expression::Optional(Box::new(token)),
+            _ => unreachable!(
+                "unhandled factor: {:?}, {:?}",
+                op.as_str(),
+                token.span.as_str()
+            ),
+        };
     }
+    expr
 }
 
 fn reduce_binary_expression<'a>(
@@ -259,14 +258,115 @@ impl<'a> BBNFGrammar<'a> {
     fn factor() -> Parser<'a, Expression<'a>> {
         Self::trim_comment(
             Self::term()
-                .then(any_span(&["?w", "*", "+", "?"]).trim_whitespace().opt())
+                .then(any_span(&["?w", "*", "+", "?"]).trim_whitespace().many(..))
                 .map_with_state(map_factor),
             Self::block_comment().opt(),
         )
     }
 
-    fn binary_factor() -> Parser<'a, Expression<'a>> {
+    /// Parse `factor -> mapper_expr` — per-expression map.
+    /// The mapper text is consumed greedily until the next delimiter.
+    fn mapped_factor() -> Parser<'a, Expression<'a>> {
         Self::factor()
+            .then(Self::map_arrow().opt())
+            .map_with_state(|pair: (Expression<'a>, Option<Span<'a>>), prev_offset, state| {
+                let (expr, mapper_opt) = pair;
+                if let Some(mapper_span) = mapper_opt {
+                    let mapper_str = mapper_span.as_str().trim();
+                    let mapper_token = Token::new(
+                        Cow::Borrowed(mapper_str),
+                        mapper_span,
+                    );
+                    let expr_token = Token::new(
+                        expr,
+                        Span::new(prev_offset, state.offset, state.src),
+                    );
+                    let fn_token = Token::new(
+                        Expression::MappingFn(mapper_token),
+                        Span::new(prev_offset, state.offset, state.src),
+                    );
+                    Expression::MappedExpression((Box::new(expr_token), Box::new(fn_token)))
+                } else {
+                    expr
+                }
+            })
+    }
+
+    /// Parse the `->` operator and its argument text.
+    /// Handles three mapper forms:
+    /// 1. Rust closure: `|params| -> RetType { body }` or `|params| expr`
+    /// 2. Function path: `crate::module::func`
+    /// 3. Literal value: `0u8`, `true`
+    ///
+    /// Balanced `{}`/`()`/`[]` are tracked. Closure `|...|` params are recognized
+    /// when the mapper starts with `|`.
+    fn map_arrow() -> Parser<'a, Span<'a>> {
+        string_span("->")
+            .trim_whitespace()
+            .next(Parser::new(|state: &mut ParserState<'a>| {
+                let src = &state.src[state.offset..];
+                let start = state.offset;
+                let bytes = src.as_bytes();
+                let len = bytes.len();
+                let mut i = 0;
+
+                // If the mapper starts with `|`, it's a Rust closure.
+                // Consume the parameter list `|...|` first, then the body.
+                if i < len && bytes[i] == b'|' {
+                    // Skip opening `|` and find the matching closing `|`.
+                    i += 1;
+                    while i < len && bytes[i] != b'|' {
+                        i += 1;
+                    }
+                    if i < len {
+                        i += 1; // skip closing `|`
+                    }
+                    // Now consume the closure body with balanced delimiters.
+                    // Stop at depth-0 `,`, `|`, `;` (BBNF delimiters).
+                    let mut depth: usize = 0;
+                    while i < len {
+                        match bytes[i] {
+                            b'{' | b'(' | b'[' => depth += 1,
+                            b'}' | b')' | b']' => {
+                                if depth == 0 {
+                                    break;
+                                }
+                                depth -= 1;
+                            }
+                            b',' | b'|' | b';' if depth == 0 => break,
+                            _ => {}
+                        }
+                        i += 1;
+                    }
+                } else {
+                    // Non-closure mapper: consume until depth-0 delimiter.
+                    let mut depth: usize = 0;
+                    while i < len {
+                        match bytes[i] {
+                            b'{' | b'(' | b'[' => depth += 1,
+                            b'}' | b')' | b']' => {
+                                if depth == 0 {
+                                    break;
+                                }
+                                depth -= 1;
+                            }
+                            b',' | b'|' | b';' if depth == 0 => break,
+                            _ => {}
+                        }
+                        i += 1;
+                    }
+                }
+
+                if i == 0 {
+                    return None;
+                }
+                state.offset += i;
+                Some(Span::new(start, state.offset, state.src))
+            }))
+    }
+
+    fn binary_factor() -> Parser<'a, Expression<'a>> {
+        Self::mapped_factor()
             .then(
                 any_span(&["<<", ">>", "-"])
                     .trim_whitespace()
@@ -323,9 +423,12 @@ impl<'a> BBNFGrammar<'a> {
             .next(not_lhs.many_span(..).then_span(next_span(1)))
             .map(|s| {
                 let token = Token::new(s.as_str().into(), s);
-                match syn::parse_str::<syn::ExprClosure>(s.as_str()) {
-                    Ok(_) => {}
-                    Err(e) => panic!("invalid mapper expression: {:?}, {:?}", s.as_str(), e),
+                let trimmed = s.as_str().trim();
+                // Accept closures, constant literals, or path expressions.
+                if syn::parse_str::<syn::ExprClosure>(trimmed).is_err()
+                    && syn::parse_str::<syn::Expr>(trimmed).is_err()
+                {
+                    panic!("invalid mapper expression: {:?}", trimmed);
                 }
 
                 Box::new(Expression::MappingFn(token))

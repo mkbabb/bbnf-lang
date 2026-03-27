@@ -234,6 +234,11 @@ pub fn compile_ast<'a>(
     // branches share a leading regex but have disjoint continuation FIRST sets.
     bbnf_ir::passes::factor_regex_with_lookahead(&mut ir);
 
+    // @token-guided prefix factoring: factor overlapping-FIRST Alts through Refs,
+    // creating synthetic continuation rules and shared token prefixes.
+    // Must run BEFORE dispatch tables so the restructured Alts get dispatch.
+    bbnf_ir::passes::fuse_token_dispatch(&mut ir);
+
     // Dispatch tables use FOLLOW sets for nullable branch optimization.
     bbnf_ir::passes::generate_dispatch_tables(&mut ir);
 

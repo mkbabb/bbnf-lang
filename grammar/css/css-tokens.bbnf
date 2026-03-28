@@ -1,5 +1,9 @@
 // CSS shared tokens — imported by all CSS sub-grammars.
 // Avoids name conflicts when multiple CSS grammars are composed.
+// selectorIdent handles:
+//   - vendor prefixes (leading `-` for -moz-, -webkit-)
+//   - CSS escape sequences (\: \. etc.) for Tailwind-style class names
 
 ident  = /[a-zA-Z_][\w-]*/ ;
+selectorIdent = /(?:-?[a-zA-Z_]|\\[^\n])(?:[\w-]|\\[^\n])*/ ;
 string = /"(?:[^"\\]|\\[\s\S])*"/ | /'(?:[^'\\]|\\[\s\S])*'/ ;

@@ -1,9 +1,8 @@
 // CSS Selectors Level 4 grammar.
 // Spec: https://drafts.csswg.org/selectors-4/
 //
-// Works with @ws directive — descendant combinator is implicit
-// (absence of explicit > + ~ between compounds).
-// The ":" prefix is factored to enable dispatch tables.
+// Uses selectorIdent for escape-aware identifier matching
+// (handles Tailwind \: escapes and vendor -moz- prefixes).
 
 @import "css-tokens.bbnf" ;
 
@@ -11,18 +10,18 @@
 hash = /#(?:[\w-]|\\[^\n])+/ ;
 
 // --- Namespace (CSS Namespaces) ---
-nsPrefix = (ident | "*") , "|" ;
-wqName   = nsPrefix ? , ident ;
+nsPrefix = (selectorIdent | "*") , "|" ;
+wqName   = nsPrefix ? , selectorIdent ;
 
 // --- Simple selectors ---
 typeSelector  = wqName | nsPrefix ? , "*" ;
-classSelector = "." , ident ;
+classSelector = "." , selectorIdent ;
 idSelector    = hash ;
 
 // --- Attribute selectors ---
 attrMatcher  = "~=" | "|=" | "^=" | "$=" | "*=" | "=" ;
 attrModifier = /[iIsS]/ ;
-attrSelector = "[" ?w , wqName ?w , (attrMatcher ?w , (string | ident) ?w , attrModifier ?) ? , "]" ;
+attrSelector = "[" ?w , wqName ?w , (attrMatcher ?w , (string | selectorIdent) ?w , attrModifier ?) ? , "]" ;
 
 // --- An+B microsyntax ---
 anPlusB = "odd" | "even" | /[-+]?\d*n\s*[+-]\s*\d+/ | /[-+]?\d*n/ | /[-+]?\d+/ ;
@@ -34,37 +33,32 @@ notPseudo   = ":not" , "(" >> selectorList << ")" ;
 hasPseudo   = ":has" , "(" >> relativeSelectorList << ")" ;
 nthPseudo   = ":" , ("nth-last-of-type" | "nth-last-child" | "nth-of-type" | "nth-child")
               , "(" , anPlusB , ("of" >> selectorList) ? , ")" ;
-langPseudo  = ":lang" , "(" >> (ident , ("," >> ident) *) << ")" ;
+langPseudo  = ":lang" , "(" >> (selectorIdent , ("," >> selectorIdent) *) << ")" ;
 dirPseudo   = ":dir" , "(" >> ("ltr" | "rtl") << ")" ;
-simplePseudoClass = ":" , ident ;
+simplePseudoClass = ":" , selectorIdent ;
 
 pseudoClass = isPseudo | wherePseudo | notPseudo | hasPseudo
             | nthPseudo | langPseudo | dirPseudo
             | simplePseudoClass ;
 
 // --- Pseudo-elements (all start with ::) ---
-partPseudo      = "::part" , "(" >> (ident , (" " >> ident) *) << ")" ;
+partPseudo      = "::part" , "(" >> (selectorIdent , (" " >> selectorIdent) *) << ")" ;
 slottedPseudo   = "::slotted" , "(" >> compoundSelector << ")" ;
-highlightPseudo = "::highlight" , "(" >> ident << ")" ;
-simplePseudoElement = "::" , ident ;
+highlightPseudo = "::highlight" , "(" >> selectorIdent << ")" ;
+simplePseudoElement = "::" , selectorIdent ;
 
 pseudoElement = partPseudo | slottedPseudo | highlightPseudo | simplePseudoElement ;
 
 // --- Colon-prefixed selector (factored for dispatch: :: before :) ---
-// pseudoElement starts with "::" and pseudoClass starts with ":"
-// Ordering ensures "::" is tried first (PEG: longest prefix first).
 colonSelector = pseudoElement | pseudoClass ;
 
 // --- Simple selector (dispatch-friendly: disjoint first bytes) ---
-// "." → class, "#" → id, "[" → attr, ":" → colon, ident/* → type
 simpleSelector = classSelector | idSelector | attrSelector
                | colonSelector | typeSelector ;
 
 compoundSelector = simpleSelector + ;
 
 // --- Combinators ---
-// Explicit whitespace handling (NOT relying on @ws) because CSS descendant
-// combinator IS whitespace. The /\s+/ branch must be LAST (PEG: longer first).
 combinator = /\s*>\s*/ | /\s*\+\s*/ | /\s*~\s*/ | /\s+/ ;
 
 // --- Complex selector ---

@@ -1,45 +1,28 @@
-// CSS Stylesheet Grammar — CSS Level 4
-// Full typed parsing with property-aware dispatch, balanced-paren functions,
-// and imported value/color/selector modules.
-
-@import "css-selectors.bbnf" ;
 @import "css-properties.bbnf" ;
+@import "css-selectors.bbnf" ;
 
-// Comment-aware whitespace — hits sp_css_ws_comment() SIMD fast path
 @ws /(?s)(?:\s|\/\*.*?\*\/)*/ ;
 
-// Override imported ident: supports CSS escape sequences (\: \. \/ for Tailwind)
-// and leading hyphen (-moz-*, -webkit-* vendor prefixes in pseudo-elements).
-// Shadows both css-selectors and css-properties definitions.
-ident = /(?:-?[a-zA-Z_]|\\[^\n])(?:[\w-]|\\[^\n])*/ ;
-
-// --- Override imported function rules with opaque balanced-paren versions ---
-// The recursive math expression grammar from css-func-body.bbnf doesn't handle
-// whitespace around + - operators. These overrides use funcBody from
-// css-func-body.bbnf for balanced-paren scanning (handles nested calls like
-// calc(var(--x) * 0.5)). genericFunction also uses funcBody.
-calcFunction    = ("calc" | "min" | "max" | "clamp") , "(" , funcBody , ")" ;
-varFunction     = "var" , "(" , funcBody , ")" ;
-urlFunction     = "url" , "(" , funcBody , ")" ;
-
-// --- Structure (delim_scan pattern: Wrap(Repeat(Alt))) ---
 blockContent = ((declaration | ruleItem) ?w) * ;
 ruleBlock    = "{" >> blockContent ?w << "}" ;
 
-qualifiedRule = /[^{};]+/ , ruleBlock ?w ;
+// Typed selectors — full CSS Selectors L4 AST (parity with lightningcss)
+qualifiedRule = selectorList ?w , ruleBlock ?w ;
 
-// --- @keyframes — uses percentage/from/to selectors, not CSS selectors ---
-keyframeSelector  = "from" | "to" | /\d+%/ ;
-keyframeSelectors = keyframeSelector , (/\s*,\s*/ >> keyframeSelector) * ;
-keyframeBlock     = "{" >> (declaration ?w) * ?w << "}" ;
-keyframeRule      = keyframeSelectors ?w , keyframeBlock ?w ;
-keyframeBody      = "{" >> (keyframeRule ?w) * ?w << "}" ;
-keyframesAtRule   = "@keyframes" , /[^;{}]*/ , keyframeBody ;
+// Typed @-rules
+mediaQuery    = /[^{;]+/ ;
+mediaRule     = "@media" ?w , mediaQuery ?w , ruleBlock ;
 
-atRuleBody     = ruleBlock | ";" ;
-genericAtRule  = /@[a-zA-Z][\w-]*/ , /[^;{}]*/ , atRuleBody ;
-atRule = keyframesAtRule | genericAtRule ;
+keyframeStop  = /\d+%/ | "from" | "to" ;
+keyframeSel   = keyframeStop , (/\s*,\s*/ >> keyframeStop) * ;
+keyframeBlock = (keyframeSel ?w , "{" >> ((declaration ?w) *) ?w << "}") ?w ;
+keyframesRule = "@keyframes" ?w , ident ?w , "{" >> (keyframeBlock *) ?w << "}" ;
 
+// Generic @-rule fallback
+atRuleBody    = ruleBlock | ";" ;
+genericAtRule = /@[a-zA-Z][\w-]*/ , /[^;{}]*/ , atRuleBody ;
+
+atRule   = mediaRule | keyframesRule | genericAtRule ;
 ruleItem = qualifiedRule | atRule ;
 ruleList = (ruleItem ?w) * ;
 stylesheet = ruleList ?w ;

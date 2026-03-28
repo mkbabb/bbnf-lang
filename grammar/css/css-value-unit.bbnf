@@ -3,52 +3,56 @@
 // This is the canonical base grammar; other CSS grammars import from here.
 //
 // Usage: @import "css-value-unit.bbnf" ;
-// All dimension types (length, angle, time, etc.) produce [number, unit] tuples.
-// Override `number` and `integer` at runtime for proper numeric parsing.
+// Unit literals map to u8 discriminants (matching lightningcss LengthValue layout).
 
 // --- Numeric primitives (§3.1) ---
 
-number = /[-+]?(\d+)?(\.\d+)?([eE][-+]?\d+)?/ ;
+number = /[-+]?(\d+(\.\d+)?|\.\d+)([eE][-+]?\d+)?/ ;
 integer = /[-+]?\d+/ ;
 
-// --- Length units (§6) ---
+// --- Length units (§6) → u8 discriminant ---
 
-// §6.2 — Absolute lengths
-absoluteLengthUnit = "cm" | "mm" | "Q" | "in" | "pc" | "pt" | "px" ;
+absoluteLengthUnit = "px" -> 0u8 | "cm" -> 9u8 | "mm" -> 10u8 | "Q" -> 26u8
+                   | "in" -> 11u8 | "pc" -> 13u8 | "pt" -> 12u8 ;
 
-// §6.3 — Viewport-percentage lengths (added in L4: vi/vb, s/l/d prefixed)
-viewportLengthUnit = "vw" | "vh" | "vmin" | "vmax" | "vb" | "vi"
-                   | "svw" | "svh" | "svmin" | "svmax" | "svb" | "svi"
-                   | "lvw" | "lvh" | "lvmin" | "lvmax" | "lvb" | "lvi"
-                   | "dvw" | "dvh" | "dvmin" | "dvmax" | "dvb" | "dvi" ;
+viewportLengthUnit = "vmin" -> 5u8 | "vmax" -> 6u8 | "vh" -> 3u8 | "vw" -> 4u8
+                   | "vb" -> 27u8 | "vi" -> 28u8
+                   | "svmin" -> 29u8 | "svmax" -> 30u8 | "svw" -> 16u8 | "svh" -> 17u8
+                   | "svb" -> 31u8 | "svi" -> 32u8
+                   | "lvmin" -> 33u8 | "lvmax" -> 34u8 | "lvw" -> 20u8 | "lvh" -> 21u8
+                   | "lvb" -> 35u8 | "lvi" -> 36u8
+                   | "dvmin" -> 37u8 | "dvmax" -> 38u8 | "dvw" -> 18u8 | "dvh" -> 19u8
+                   | "dvb" -> 39u8 | "dvi" -> 40u8 ;
 
-// Container query units (CSS Containment Level 3)
-containerLengthUnit = "cqw" | "cqh" | "cqi" | "cqb" | "cqmin" | "cqmax" ;
+containerLengthUnit = "cqmin" -> 41u8 | "cqmax" -> 42u8
+                    | "cqw" -> 22u8 | "cqh" -> 23u8 | "cqi" -> 24u8 | "cqb" -> 25u8 ;
 
-// §6.1 — Font-relative lengths
-fontLengthUnit = "em" | "ex" | "ch" | "rem" | "lh" | "rlh" | "cap" | "ic" | "rcap" | "rex" | "rch" | "ric" | "rlh" ;
+fontLengthUnit = "rem" -> 2u8 | "em" -> 1u8 | "ex" -> 8u8 | "ch" -> 7u8
+               | "lh" -> 14u8 | "rlh" -> 15u8 | "cap" -> 43u8 | "ic" -> 44u8
+               | "rcap" -> 45u8 | "rex" -> 46u8 | "rch" -> 47u8 | "ric" -> 48u8 ;
 
 relativeLengthUnit = fontLengthUnit | viewportLengthUnit | containerLengthUnit ;
 lengthUnit = absoluteLengthUnit | relativeLengthUnit ;
 
-// --- Other dimension units ---
+// --- Angle units (§6.4) → u8 discriminant ---
+angleUnit = "deg" -> 0u8 | "grad" -> 2u8 | "rad" -> 1u8 | "turn" -> 3u8 ;
 
-// §6.4 — Angle units
-angleUnit = "deg" | "rad" | "grad" | "turn" ;
-// §6.5 — Duration units
-timeUnit  = "ms" | "s" ;
-// §6.6 — Frequency units
-frequencyUnit = "Hz" | "kHz" ;
-// §6.7 — Resolution units
-resolutionUnit = "dpi" | "dpcm" | "dppx" | "x" ;
-// CSS Grid Layout Level 1 — Flexible lengths
-flexUnit = "fr" ;
+// --- Time units (§6.5) → u8 discriminant ---
+timeUnit = "ms" -> 0u8 | "s" -> 1u8 ;
 
-// §5.1.1 — Percentage
+// --- Frequency units (§6.6) → u8 discriminant ---
+frequencyUnit = "kHz" -> 1u8 | "Hz" -> 0u8 ;
+
+// --- Resolution units (§6.7) → u8 discriminant ---
+resolutionUnit = "dpcm" -> 1u8 | "dppx" -> 2u8 | "dpi" -> 0u8 | "x" -> 3u8 ;
+
+// --- Flex units (Grid L1) → u8 discriminant ---
+flexUnit = "fr" -> 0u8 ;
+
+// --- Percentage (§5.1.1) ---
 percentageUnit = "%" ;
 
 // --- Dimension types ---
-// Each produces a [number, unit] tuple for runtime mapping.
 
 length     = number , lengthUnit ;
 angle      = number , angleUnit ;

@@ -6,6 +6,9 @@
 // permissive.  Every typed declaration shares the same value list so
 // multi-value shorthands, comma-separated lists, calc()/var() nesting,
 // and slash-separated values all parse correctly.
+//
+// Per-declaration keyword wiring: each typed declaration has its specific
+// keyword set as first-priority in the value Alt (displayKeyword | value).
 
 @import "css-value-unit.bbnf" ;
 @import "css-color.bbnf" ;
@@ -15,12 +18,16 @@
 // --- Shared value patterns ---
 ident = /[a-zA-Z_][\w-]*/ ;
 propertyName = /[a-zA-Z_][\w-]*/ | /--[\w-]+/ | /-[a-zA-Z][\w-]*/ ;
-dimension = length | angle | time | frequency | resolution | flex | percentage ;
+
+// --- !important ---
 importantSuffix = ("!" ?w , "important") ? ;
 
+// --- Dimension: factor common `number` prefix, dispatch on unit ---
+anyUnit = lengthUnit | angleUnit | timeUnit | frequencyUnit
+        | resolutionUnit | flexUnit | percentageUnit ;
+dimension = number , anyUnit ;
+
 // --- Generic value token — matches any single CSS value token ---
-// Property-specific declarations use (value ?w) * for their value lists.
-// The property name dispatch gives us the type; values are parsed generously.
 cssString = /"(?:[^"\\]|\\[\s\S])*"/ | /'(?:[^'\\]|\\[\s\S])*'/ ;
 value = varFunction | calcFunction | urlFunction | colorFn
       | genericFunction | hex
@@ -43,48 +50,75 @@ spacingProps = "margin-top" | "margin-right" | "margin-bottom" | "margin-left" |
              | "top" | "right" | "bottom" | "left" | "inset"
              | "gap" | "row-gap" | "column-gap" ;
 
-// --- Typed declarations — all use the same permissive value list ---
+fontProps = "font-family" | "font-style" | "font-variant" | "font"
+          | "text-transform" | "text-decoration" | "text-decoration-line"
+          | "text-decoration-style" | "text-decoration-thickness"
+          | "letter-spacing" | "word-spacing" | "white-space" | "text-indent"
+          | "text-overflow" | "word-break" | "overflow-wrap" | "hyphens" ;
+
+bgProps = "background" | "background-image" | "background-position" | "background-size"
+        | "background-repeat" | "background-attachment" | "background-clip" | "background-origin"
+        | "background-blend-mode" ;
+
+transformProps = "transform" | "transform-origin" | "transform-style" | "perspective"
+               | "perspective-origin" | "backface-visibility" ;
+
+transitionProps = "transition" | "transition-property" | "transition-duration"
+                | "transition-timing-function" | "transition-delay"
+                | "animation" | "animation-name" | "animation-duration"
+                | "animation-timing-function" | "animation-delay" | "animation-iteration-count"
+                | "animation-direction" | "animation-fill-mode" | "animation-play-state" ;
+
+listTableProps = "list-style" | "list-style-type" | "list-style-position" | "list-style-image"
+               | "table-layout" | "border-collapse" | "border-spacing" | "caption-side"
+               | "empty-cells" | "vertical-align" ;
+
+// --- Typed declarations with per-declaration keyword wiring ---
 
 colorDecl      = colorProps   , ":" , (value ?w) * , importantSuffix , ";" ? ;
 sizeDecl       = sizeProps    , ":" , (value ?w) * , importantSuffix , ";" ? ;
 spacingDecl    = spacingProps , ":" , (value ?w) * , importantSuffix , ";" ? ;
+fontDecl       = fontProps    , ":" , ((fontWeightKeyword | value) ?w) * , importantSuffix , ";" ? ;
+bgDecl         = bgProps      , ":" , (value ?w) * , importantSuffix , ";" ? ;
+transformDecl  = transformProps , ":" , (value ?w) * , importantSuffix , ";" ? ;
+transitionDecl = transitionProps , ":" , (value ?w) * , importantSuffix , ";" ? ;
+listTableDecl  = listTableProps , ":" , (value ?w) * , importantSuffix , ";" ? ;
 
-displayDecl    = "display"    , ":" , (value ?w) * , importantSuffix , ";" ? ;
-positionDecl   = "position"   , ":" , (value ?w) * , importantSuffix , ";" ? ;
-overflowDecl   = ("overflow-x" | "overflow-y" | "overflow") , ":" , (value ?w) * , importantSuffix , ";" ? ;
-visibilityDecl = "visibility" , ":" , (value ?w) * , importantSuffix , ";" ? ;
+displayDecl    = "display"    , ":" , ((displayKeyword | value) ?w) * , importantSuffix , ";" ? ;
+positionDecl   = "position"   , ":" , ((positionKeyword | value) ?w) * , importantSuffix , ";" ? ;
+overflowDecl   = ("overflow-x" | "overflow-y" | "overflow") , ":" , ((overflowKeyword | value) ?w) * , importantSuffix , ";" ? ;
+visibilityDecl = "visibility" , ":" , ((visibilityKeyword | value) ?w) * , importantSuffix , ";" ? ;
 
-flexDirDecl    = "flex-direction" , ":" , (value ?w) * , importantSuffix , ";" ? ;
-flexWrapDecl   = "flex-wrap"     , ":" , (value ?w) * , importantSuffix , ";" ? ;
+flexDirDecl    = "flex-direction" , ":" , ((flexDirKeyword | value) ?w) * , importantSuffix , ";" ? ;
+flexWrapDecl   = "flex-wrap"     , ":" , ((flexWrapKeyword | value) ?w) * , importantSuffix , ";" ? ;
 alignDecl      = ("justify-content" | "align-items" | "align-content" | "align-self" | "justify-items" | "justify-self")
-                 , ":" , (value ?w) * , importantSuffix , ";" ? ;
+                 , ":" , ((alignKeyword | value) ?w) * , importantSuffix , ";" ? ;
 flexNumDecl    = ("flex-grow" | "flex-shrink" | "order" | "z-index")
                  , ":" , (value ?w) * , importantSuffix , ";" ? ;
 
 fontSizeDecl   = "font-size"   , ":" , (value ?w) * , importantSuffix , ";" ? ;
-fontWeightDecl = "font-weight" , ":" , (value ?w) * , importantSuffix , ";" ? ;
+fontWeightDecl = "font-weight" , ":" , ((fontWeightKeyword | value) ?w) * , importantSuffix , ";" ? ;
 lineHeightDecl = "line-height" , ":" , (value ?w) * , importantSuffix , ";" ? ;
 
 borderWidthDecl  = ("border-top-width" | "border-right-width" | "border-bottom-width" | "border-left-width" | "border-width")
-                   , ":" , (value ?w) * , importantSuffix , ";" ? ;
+                   , ":" , ((borderWidthKeyword | value) ?w) * , importantSuffix , ";" ? ;
 borderStyleDecl  = ("border-top-style" | "border-right-style" | "border-bottom-style" | "border-left-style" | "border-style")
-                   , ":" , (value ?w) * , importantSuffix , ";" ? ;
+                   , ":" , ((borderStyleKeyword | value) ?w) * , importantSuffix , ";" ? ;
 borderRadiusDecl = ("border-top-left-radius" | "border-top-right-radius"
                    | "border-bottom-left-radius" | "border-bottom-right-radius" | "border-radius")
                    , ":" , (value ?w) * , importantSuffix , ";" ? ;
 
 opacityDecl    = "opacity"    , ":" , (value ?w) * , importantSuffix , ";" ? ;
-textAlignDecl  = "text-align" , ":" , (value ?w) * , importantSuffix , ";" ? ;
-boxSizingDecl  = "box-sizing" , ":" , (value ?w) * , importantSuffix , ";" ? ;
-cursorDecl     = "cursor"     , ":" , (value ?w) * , importantSuffix , ";" ? ;
+textAlignDecl  = "text-align" , ":" , ((textAlignKeyword | value) ?w) * , importantSuffix , ";" ? ;
+boxSizingDecl  = "box-sizing" , ":" , ((boxSizingKeyword | value) ?w) * , importantSuffix , ";" ? ;
+cursorDecl     = "cursor"     , ":" , ((cursorKeyword | value) ?w) * , importantSuffix , ";" ? ;
 
 // --- Generic fallback declaration (catches ALL unlisted properties) ---
 genericDecl = (propertyName , ":" , (value ?w) * , importantSuffix , ";" ?) ?w ;
 
 // --- Master declaration dispatch ---
-// Property-specific rules first, generic fallback last.
-// Longer property names must come before shorter prefixes.
 declaration = colorDecl | sizeDecl | spacingDecl
+            | fontDecl | bgDecl | transformDecl | transitionDecl | listTableDecl
             | displayDecl | positionDecl | overflowDecl | visibilityDecl
             | flexDirDecl | flexWrapDecl | alignDecl | flexNumDecl
             | fontSizeDecl | fontWeightDecl | lineHeightDecl

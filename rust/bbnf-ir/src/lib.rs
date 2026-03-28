@@ -162,6 +162,10 @@ pub struct AltBranch {
 pub struct AltDispatch {
     /// 128-entry table: `table[byte]` = branch index, or 255 for no match.
     pub table: Vec<u8>,
+    /// When set, this branch is a catch-all fallback tried when a dispatched
+    /// branch fails, or when no dispatch entry matches.  Enables dispatch
+    /// tables even when the last Alt branch has a superset FIRST set.
+    pub fallback_idx: Option<u8>,
 }
 
 // ─── Host Function Descriptors ───────────────────────────────────────────────

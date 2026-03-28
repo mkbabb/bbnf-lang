@@ -240,10 +240,13 @@ impl Compiler {
             return;
         }
 
-        // Use pre-computed dispatch table if available.
+        // Use pre-computed dispatch table if available (strict dispatch only;
+        // fallback-aware dispatch is only used by the monolithic codegen path).
         if let Some(alt_dispatch) = dispatch {
-            self.compile_dispatch(branches, &alt_dispatch.table, ir);
-            return;
+            if alt_dispatch.fallback_idx.is_none() {
+                self.compile_dispatch(branches, &alt_dispatch.table, ir);
+                return;
+            }
         }
 
         // Fallback: linear backtracking.

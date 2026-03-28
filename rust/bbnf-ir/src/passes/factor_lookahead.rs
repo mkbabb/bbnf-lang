@@ -266,7 +266,7 @@ fn try_factor_alt(
                 first_set: Some(cont_b),
             },
         ],
-        Some(AltDispatch { table }),
+        Some(AltDispatch { table, fallback_idx: None }),
     );
 
     Some(IrNode::Seq(vec![IrNode::Regex(common_regex_sid), inner_alt]))

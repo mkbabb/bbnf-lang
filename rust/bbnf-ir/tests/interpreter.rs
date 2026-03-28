@@ -407,7 +407,7 @@ fn parse_dispatch_multi_branch() {
                 AltBranch { node: IrNode::Literal(2), first_set: Some(fs_f) },  // "false"
                 AltBranch { node: IrNode::Literal(3), first_set: Some(fs_n) },  // "null"
                 AltBranch { node: IrNode::Regex(4),   first_set: Some(fs_d) },  // /[0-9]+/
-            ], Some(AltDispatch { table })),
+            ], Some(AltDispatch { table, fallback_idx: None })),
         )],
         vec!["start".into(), "true".into(), "false".into(), "null".into(), "[0-9]+".into()],
     );

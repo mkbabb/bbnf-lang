@@ -249,3 +249,140 @@ fn no_dispatch_when_nullable_overlaps_follow() {
         other => panic!("expected Alt, got {:?}", other),
     }
 }
+
+// ── Fallback dispatch tests ─────────────────────────────────────────────────
+
+#[test]
+fn fallback_dispatch_typed_plus_catchall() {
+    // 3 typed branches (disjoint) + 1 catch-all (superset).
+    let mut first_a = CharSet128::new();
+    first_a.add(b'a');
+    let mut first_b = CharSet128::new();
+    first_b.add(b'b');
+    let mut first_c = CharSet128::new();
+    first_c.add(b'c');
+    let mut first_all = CharSet128::new();
+    for b in b'a'..=b'z' {
+        first_all.add(b);
+    }
+
+    let mut ir = GrammarIR {
+        rules: vec![IrRule {
+            id: 0,
+            name: 0,
+            body: IrNode::Alt(vec![
+                AltBranch { node: IrNode::Literal(1), first_set: Some(first_a) },
+                AltBranch { node: IrNode::Literal(2), first_set: Some(first_b) },
+                AltBranch { node: IrNode::Literal(3), first_set: Some(first_c) },
+                AltBranch { node: IrNode::Regex(4), first_set: Some(first_all) },
+            ], None),
+            meta: RuleMeta::default(),
+            source_span: None,
+        }],
+        entry: 0,
+        strings: vec!["rule".into(), "aa".into(), "bb".into(), "cc".into(), "[a-z]+".into()],
+        fns: vec![],
+        types: vec![],
+        follow_sets: HashMap::new(),
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
+    };
+
+    generate_dispatch_tables(&mut ir);
+
+    match &ir.rules[0].body {
+        IrNode::Alt(_, Some(dispatch)) => {
+            assert_eq!(dispatch.fallback_idx, Some(3));
+            assert_eq!(dispatch.table[b'a' as usize], 0);
+            assert_eq!(dispatch.table[b'b' as usize], 1);
+            assert_eq!(dispatch.table[b'c' as usize], 2);
+            assert_eq!(dispatch.table[b'd' as usize], 255);
+        }
+        other => panic!("expected Alt with fallback dispatch, got {:?}", other),
+    }
+}
+
+#[test]
+fn fallback_dispatch_not_superset() {
+    // Typed branches overlap with catch-all (strict dispatch fails),
+    // but catch-all FIRST {a, x} is NOT a superset of typed union {a, b} → no fallback.
+    let mut first_a = CharSet128::new();
+    first_a.add(b'a');
+    let mut first_b = CharSet128::new();
+    first_b.add(b'b');
+    let mut first_partial = CharSet128::new();
+    first_partial.add(b'a'); // Overlaps with branch 0 → strict dispatch fails
+    first_partial.add(b'x'); // But doesn't cover 'b' → not a superset
+
+    let mut ir = GrammarIR {
+        rules: vec![IrRule {
+            id: 0,
+            name: 0,
+            body: IrNode::Alt(vec![
+                AltBranch { node: IrNode::Literal(1), first_set: Some(first_a) },
+                AltBranch { node: IrNode::Literal(2), first_set: Some(first_b) },
+                AltBranch { node: IrNode::Regex(3), first_set: Some(first_partial) },
+            ], None),
+            meta: RuleMeta::default(),
+            source_span: None,
+        }],
+        entry: 0,
+        strings: vec!["rule".into(), "aa".into(), "bb".into(), "[xy]+".into()],
+        fns: vec![],
+        types: vec![],
+        follow_sets: HashMap::new(),
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
+    };
+
+    generate_dispatch_tables(&mut ir);
+
+    match &ir.rules[0].body {
+        IrNode::Alt(_, disp) => assert!(disp.is_none()),
+        other => panic!("expected Alt without dispatch, got {:?}", other),
+    }
+}
+
+#[test]
+fn fallback_dispatch_too_few_branches() {
+    // Only 2 branches — fallback dispatch requires ≥3.
+    let mut first_a = CharSet128::new();
+    first_a.add(b'a');
+    let mut first_all = CharSet128::new();
+    for b in b'a'..=b'z' {
+        first_all.add(b);
+    }
+
+    let mut ir = GrammarIR {
+        rules: vec![IrRule {
+            id: 0,
+            name: 0,
+            body: IrNode::Alt(vec![
+                AltBranch { node: IrNode::Literal(1), first_set: Some(first_a) },
+                AltBranch { node: IrNode::Regex(2), first_set: Some(first_all) },
+            ], None),
+            meta: RuleMeta::default(),
+            source_span: None,
+        }],
+        entry: 0,
+        strings: vec!["rule".into(), "aa".into(), "[a-z]+".into()],
+        fns: vec![],
+        types: vec![],
+        follow_sets: HashMap::new(),
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
+    };
+
+    generate_dispatch_tables(&mut ir);
+
+    match &ir.rules[0].body {
+        IrNode::Alt(_, disp) => assert!(disp.is_none()),
+        other => panic!("expected Alt without dispatch, got {:?}", other),
+    }
+}

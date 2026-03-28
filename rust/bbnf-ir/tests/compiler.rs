@@ -173,7 +173,7 @@ fn compile_alt_dispatch() {
                 first_set: Some(fs_b),
             },
         ],
-        Some(AltDispatch { table }),
+        Some(AltDispatch { table, fallback_idx: None }),
     ));
     let program = compile(&ir);
 

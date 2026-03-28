@@ -1,379 +1,11 @@
-//! Shared regex/scanner pattern detection for IR codegen.
-//!
-//! Detects well-known regex patterns (JSON string/number, CSS ident/ws/string,
-//! negated character classes) and emits optimized parser/span constructors.
-//! Used by both `ir_codegen.rs` (Parser output) and `ir_span.rs` (SpanParser output).
+//! Generalized regex direct emission — strength-reduces regex patterns into
+//! inline byte-scanning loops (char ranges, char sets, shorthand classes,
+//! literal-prefix + class tail, whitespace-padded literals).
 
 use proc_macro2::TokenStream;
 use quote::quote;
 
-// ---------------------------------------------------------------------------
-// Regex fast-path emission
-// ---------------------------------------------------------------------------
-
-/// Emit a Parser<Span> expression for a regex pattern, using fast-paths where available.
-pub fn emit_regex_parser(pattern: &str) -> TokenStream {
-    if is_json_string_regex(pattern) {
-        return quote! { ::parse_that::sp_json_string_quoted().into_parser() };
-    }
-    if is_json_number_regex(pattern) {
-        return quote! { ::parse_that::sp_json_number().into_parser() };
-    }
-    if is_css_ws_comment_regex(pattern) {
-        return quote! { ::parse_that::sp_css_ws_comment().into_parser() };
-    }
-    if is_css_ident_regex(pattern) {
-        return quote! { ::parse_that::sp_css_ident().into_parser() };
-    }
-    if is_css_string_regex(pattern) {
-        return quote! { ::parse_that::sp_css_string().into_parser() };
-    }
-    // Try direct scanner (same strength reduction as monolithic path).
-    // Wraps the raw state-manipulation code in a Parser closure.
-    if let Some(direct) = emit_regex_direct_call(pattern) {
-        return quote! {
-            ::parse_that::Parser::new(|state: &mut ::parse_that::ParserState<'a>| #direct)
-        };
-    }
-    if let Some((excluded, quantifier)) = is_negated_char_class_regex(pattern) {
-        if quantifier == NegCharClassQuantifier::Plus {
-            let excluded_bytes = proc_macro2::Literal::byte_string(excluded.as_bytes());
-            return quote! { ::parse_that::take_until_any_span(#excluded_bytes) };
-        }
-    }
-    quote! { ::parse_that::regex_span(#pattern) }
-}
-
-/// Emit a SpanParser expression for a regex pattern, using fast-paths where available.
-pub fn emit_regex_span(pattern: &str) -> TokenStream {
-    if is_json_string_regex(pattern) {
-        return quote! { ::parse_that::sp_json_string_quoted() };
-    }
-    if is_json_number_regex(pattern) {
-        return quote! { ::parse_that::sp_json_number() };
-    }
-    if is_css_ws_comment_regex(pattern) {
-        return quote! { ::parse_that::sp_css_ws_comment() };
-    }
-    if is_css_ident_regex(pattern) {
-        return quote! { ::parse_that::sp_css_ident() };
-    }
-    if is_css_string_regex(pattern) {
-        return quote! { ::parse_that::sp_css_string() };
-    }
-    if let Some((excluded, quantifier)) = is_negated_char_class_regex(pattern) {
-        let excluded_bytes = proc_macro2::Literal::byte_string(excluded.as_bytes());
-        if quantifier == NegCharClassQuantifier::Plus {
-            return quote! { ::parse_that::sp_take_until_any(#excluded_bytes) };
-        } else {
-            return quote! { ::parse_that::sp_take_until_any(#excluded_bytes).opt_span() };
-        }
-    }
-    quote! { ::parse_that::sp_regex(#pattern) }
-}
-
-/// Emit a direct scanner function call for known regex patterns, bypassing
-/// the SpanParser dispatch stack. Returns `None` for unrecognized patterns.
-///
-/// Used by monolithic codegen to call `json_string_fast_quoted(state)` etc.
-/// directly instead of going through `SpanParser::call → SpanKind match →
-/// SpanScanner match → actual_scan_fn`.
-/// Emit a direct scanner call, without fused number conversion.
-/// Used by span-only codegen where f64 conversion is not needed.
-pub fn emit_regex_direct_call(pattern: &str) -> Option<TokenStream> {
-    emit_regex_direct_call_with_fuse(pattern, false)
-}
-
-/// Emit a direct scanner call with optional fused number conversion.
-/// When `fuse_numbers` is true, JSON number regex returns `(Span, f64)`.
-/// When false, returns `Span` only.
-pub fn emit_regex_direct_call_with_fuse(pattern: &str, fuse_numbers: bool) -> Option<TokenStream> {
-    if is_json_string_regex(pattern) {
-        return Some(quote! { ::parse_that::json_string_fast_quoted(state) });
-    }
-    if is_json_number_regex(pattern) {
-        if fuse_numbers {
-            return Some(quote! { ::parse_that::number_scan_convert(state) });
-        } else {
-            return Some(quote! { ::parse_that::number_span_fast(state) });
-        }
-    }
-    if is_css_ws_comment_regex(pattern) {
-        return Some(quote! { ::parse_that::css_ws_comment_fast(state) });
-    }
-    if is_css_ident_regex(pattern) {
-        return Some(quote! { ::parse_that::css_ident_fast(state) });
-    }
-    if is_css_string_regex(pattern) {
-        return Some(quote! { ::parse_that::css_string_fast(state) });
-    }
-
-    // Comma-or-whitespace separator: ,|\s+
-    if pattern == r",|\s+" || pattern == r"\s+|," {
-        return Some(quote! {
-            {
-                let __start = state.offset;
-                if __start < state.src_bytes.len() {
-                    if unsafe { *state.src_bytes.get_unchecked(__start) } == b',' {
-                        state.offset = __start + 1;
-                        Some(::parse_that::Span::new(__start, __start + 1, state.src))
-                    } else {
-                        let mut __pos = __start;
-                        while __pos < state.src_bytes.len()
-                            && unsafe { *state.src_bytes.get_unchecked(__pos) }.is_ascii_whitespace()
-                        {
-                            __pos += 1;
-                        }
-                        if __pos > __start {
-                            state.offset = __pos;
-                            Some(::parse_that::Span::new(__start, __pos, state.src))
-                        } else {
-                            None
-                        }
-                    }
-                } else {
-                    None
-                }
-            }
-        });
-    }
-
-    // Structural classification: detect numeric/string/hex/identifier patterns
-    // without requiring exact string matches against pattern lists.
-    use super::regex_classify::{classify_regex, RegexClass};
-    match classify_regex(pattern) {
-        RegexClass::Numeric { allows_sign, .. } => {
-            // Only use the number fast path for patterns WITHOUT sign
-            // (unsigned integers). CSS number patterns with [-+]? have
-            // edge cases with exponent-like suffixes (e.g., 0.375em where
-            // 'e' is part of the unit 'em', not an exponent indicator).
-            if !allows_sign {
-                return Some(quote! { ::parse_that::number_span_fast(state) });
-            }
-        }
-        RegexClass::Identifier => {
-            return Some(quote! { ::parse_that::css_ident_fast(state) });
-        }
-        // QuotedString and HexDigits: handled by existing negated-class / char-class paths below.
-        _ => {}
-    }
-
-    // Generalized regex patterns (char ranges, small char sets).
-    if let Some(ts) = emit_generalized_regex_direct(pattern) {
-        return Some(ts);
-    }
-
-    // Negated character class → direct memchr call, bypassing SpanParser dispatch.
-    if let Some((excluded, quantifier)) = is_negated_char_class_regex(pattern) {
-        let bytes = excluded.as_bytes();
-        let result = match (bytes.len(), quantifier) {
-            (1, NegCharClassQuantifier::Plus) => {
-                let b0 = proc_macro2::Literal::byte_character(bytes[0]);
-                Some(quote! {
-                    {
-                        let __start = state.offset;
-                        if __start >= state.src_bytes.len() { None } else {
-                            let __scan = ::parse_that::memchr::memchr(#b0, &state.src_bytes[__start..])
-                                .unwrap_or(state.src_bytes.len() - __start);
-                            if __scan == 0 { None } else {
-                                state.offset = __start + __scan;
-                                Some(::parse_that::Span::new(__start, state.offset, state.src))
-                            }
-                        }
-                    }
-                })
-            }
-            (2, NegCharClassQuantifier::Plus) => {
-                let b0 = proc_macro2::Literal::byte_character(bytes[0]);
-                let b1 = proc_macro2::Literal::byte_character(bytes[1]);
-                Some(quote! {
-                    {
-                        let __start = state.offset;
-                        if __start >= state.src_bytes.len() { None } else {
-                            let __scan = ::parse_that::memchr::memchr2(#b0, #b1, &state.src_bytes[__start..])
-                                .unwrap_or(state.src_bytes.len() - __start);
-                            if __scan == 0 { None } else {
-                                state.offset = __start + __scan;
-                                Some(::parse_that::Span::new(__start, state.offset, state.src))
-                            }
-                        }
-                    }
-                })
-            }
-            (3, NegCharClassQuantifier::Plus) => {
-                let b0 = proc_macro2::Literal::byte_character(bytes[0]);
-                let b1 = proc_macro2::Literal::byte_character(bytes[1]);
-                let b2 = proc_macro2::Literal::byte_character(bytes[2]);
-                Some(quote! {
-                    {
-                        let __start = state.offset;
-                        if __start >= state.src_bytes.len() { None } else {
-                            let __scan = ::parse_that::memchr::memchr3(#b0, #b1, #b2, &state.src_bytes[__start..])
-                                .unwrap_or(state.src_bytes.len() - __start);
-                            if __scan == 0 { None } else {
-                                state.offset = __start + __scan;
-                                Some(::parse_that::Span::new(__start, state.offset, state.src))
-                            }
-                        }
-                    }
-                })
-            }
-            (1, NegCharClassQuantifier::Star) => {
-                let b0 = proc_macro2::Literal::byte_character(bytes[0]);
-                Some(quote! {
-                    {
-                        let __start = state.offset;
-                        let __scan = if __start >= state.src_bytes.len() { 0 } else {
-                            ::parse_that::memchr::memchr(#b0, &state.src_bytes[__start..])
-                                .unwrap_or(state.src_bytes.len() - __start)
-                        };
-                        state.offset = __start + __scan;
-                        Some(::parse_that::Span::new(__start, state.offset, state.src))
-                    }
-                })
-            }
-            (2, NegCharClassQuantifier::Star) => {
-                let b0 = proc_macro2::Literal::byte_character(bytes[0]);
-                let b1 = proc_macro2::Literal::byte_character(bytes[1]);
-                Some(quote! {
-                    {
-                        let __start = state.offset;
-                        let __scan = if __start >= state.src_bytes.len() { 0 } else {
-                            ::parse_that::memchr::memchr2(#b0, #b1, &state.src_bytes[__start..])
-                                .unwrap_or(state.src_bytes.len() - __start)
-                        };
-                        state.offset = __start + __scan;
-                        Some(::parse_that::Span::new(__start, state.offset, state.src))
-                    }
-                })
-            }
-            (3, NegCharClassQuantifier::Star) => {
-                let b0 = proc_macro2::Literal::byte_character(bytes[0]);
-                let b1 = proc_macro2::Literal::byte_character(bytes[1]);
-                let b2 = proc_macro2::Literal::byte_character(bytes[2]);
-                Some(quote! {
-                    {
-                        let __start = state.offset;
-                        let __scan = if __start >= state.src_bytes.len() { 0 } else {
-                            ::parse_that::memchr::memchr3(#b0, #b1, #b2, &state.src_bytes[__start..])
-                                .unwrap_or(state.src_bytes.len() - __start)
-                        };
-                        state.offset = __start + __scan;
-                        Some(::parse_that::Span::new(__start, state.offset, state.src))
-                    }
-                })
-            }
-            _ => None,
-        };
-        if result.is_some() {
-            return result;
-        }
-    }
-
-    None
-}
-
-/// Check if a regex pattern returns a fused `(Span, f64)` instead of plain `Span`.
-/// Used by type inference to determine the correct enum variant type.
-pub fn is_fused_number_regex(pattern: &str) -> bool {
-    is_json_number_regex(pattern)
-}
-
-// ---------------------------------------------------------------------------
-// Regex pattern detection
-// ---------------------------------------------------------------------------
-
-/// Known exact JSON string regex patterns that can be replaced with the
-/// `sp_json_string_quoted()` SIMD fast-path.
-const JSON_STRING_REGEX_PATTERNS: &[&str] = &[
-    r#""(?:[^"\\]|\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4}))*""#,
-    r#""(?:[^"\\]|\\(?:["\\\/bfnrt]|u[0-9A-Fa-f]{4}))*""#,
-    r#""(?:[^"\\]|\\(?:["\\bfnrt]|u[0-9a-fA-F]{4}))*""#,
-];
-
-/// Known exact JSON number regex patterns that can be replaced with the
-/// `sp_json_number()` monolithic byte-loop fast-path.
-const JSON_NUMBER_REGEX_PATTERNS: &[&str] = &[
-    r"-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?",
-    r"-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?",
-];
-
-/// Detect the canonical JSON string regex pattern.
-fn is_json_string_regex(pattern: &str) -> bool {
-    JSON_STRING_REGEX_PATTERNS.contains(&pattern)
-}
-
-/// Detect the canonical JSON number regex.
-fn is_json_number_regex(pattern: &str) -> bool {
-    JSON_NUMBER_REGEX_PATTERNS.contains(&pattern)
-}
-
-/// Known CSS whitespace+comment regex patterns.
-const CSS_WS_COMMENT_REGEX_PATTERNS: &[&str] =
-    &[r"(?s)(?:\s|/\*.*?\*/)*", r"(?s)(?:\s|\/\*.*?\*\/)*"];
-
-/// Detect the canonical CSS whitespace+comment regex.
-fn is_css_ws_comment_regex(pattern: &str) -> bool {
-    CSS_WS_COMMENT_REGEX_PATTERNS.contains(&pattern)
-}
-
-/// Known CSS identifier regex patterns.
-const CSS_IDENT_REGEX_PATTERNS: &[&str] = &[
-    r"[\-]?[a-zA-Z_][\w-]*|--[\w-]+",
-    r"-?[a-zA-Z_][\w-]*|--[\w-]+",
-    r"[a-zA-Z_][\w-]*|--[\w-]+|-[a-zA-Z][\w-]*",
-    r"[a-zA-Z_][\w-]*",
-    r"[a-zA-Z][\w-]*",
-];
-
-/// Detect a CSS identifier regex.
-fn is_css_ident_regex(pattern: &str) -> bool {
-    CSS_IDENT_REGEX_PATTERNS.contains(&pattern)
-}
-
-/// Known CSS string regex patterns.
-const CSS_STRING_REGEX_PATTERNS: &[&str] = &[r#""(?:[^"\\]|\\[\s\S])*"|'(?:[^'\\]|\\[\s\S])*'"#];
-
-/// Detect a CSS string regex.
-fn is_css_string_regex(pattern: &str) -> bool {
-    CSS_STRING_REGEX_PATTERNS.contains(&pattern)
-}
-
-/// Whether a negated character class uses `+` (one-or-more) or `*` (zero-or-more).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum NegCharClassQuantifier {
-    Plus,
-    Star,
-}
-
-// ---------------------------------------------------------------------------
-// Generalized regex strength reduction
-// ---------------------------------------------------------------------------
-
-/// Detect `\s*LITERAL\s*` patterns — a fixed literal with optional whitespace padding.
-/// Returns the inner literal string if detected. Handles single-char and multi-char literals.
-/// Examples: `\s*,\s*` → Some(","), `\s*>\s*` → Some(">"), `\s*::\s*` → Some("::")
-fn try_strip_ws_padded_literal(pattern: &str) -> Option<String> {
-    let rest = pattern.strip_prefix(r"\s*")?;
-    let (literal_end, _) = rest
-        .char_indices()
-        .find(|(_, c)| *c == '\\' || *c == '[' || *c == '(' || *c == '|')?;
-    if literal_end == 0 {
-        return None;
-    }
-    let literal = &rest[..literal_end];
-    let after = &rest[literal_end..];
-    if after == r"\s*" {
-        // Verify the literal contains only plain ASCII (no regex metacharacters)
-        if literal.chars().all(|c| !r"\.+*?^${}[]|()/".contains(c) || c == '.' || c == '/' ) {
-            // Only accept if the literal has no regex metacharacters
-            if literal.chars().all(|c| matches!(c, ',' | '>' | '+' | '~' | ':' | ';' | '(' | ')' | '{' | '}' | '!' | '=' | '#' | '.' | '/' | '-' | '_' | 'a'..='z' | 'A'..='Z' | '0'..='9')) {
-                return Some(literal.to_string());
-            }
-        }
-    }
-    None
-}
+use super::negated_class::try_strip_ws_padded_literal;
 
 /// Whether a pattern is a simple character range like `[a-z]` or `[0-9]`.
 /// Returns `(lo, hi)` byte range if detected.
@@ -583,7 +215,7 @@ pub fn emit_generalized_regex_direct(pattern: &str) -> Option<TokenStream> {
 
 /// Try to emit a byte-predicate loop for `[charclass]+` or `[charclass]*` patterns.
 /// Handles multi-range classes like `[0-9a-fA-F]` and shorthand `\w`.
-fn emit_char_class_loop(pattern: &str) -> Option<TokenStream> {
+pub(crate) fn emit_char_class_loop(pattern: &str) -> Option<TokenStream> {
     // Strip quantifier: +, *, or {n,m}.
     let (class_str, min_count, max_count) = if let Some(s) = pattern.strip_suffix('+') {
         (s, 1usize, usize::MAX)
@@ -681,7 +313,7 @@ fn emit_char_class_loop(pattern: &str) -> Option<TokenStream> {
 ///
 /// These are bare escape sequences (not wrapped in `[...]`) followed by `+` or `*`.
 /// Compiles to a tight byte-predicate loop with no regex engine overhead.
-fn emit_shorthand_class_loop(pattern: &str) -> Option<TokenStream> {
+pub(crate) fn emit_shorthand_class_loop(pattern: &str) -> Option<TokenStream> {
     let (shorthand, is_plus) = if let Some(s) = pattern.strip_suffix('+') {
         (s, true)
     } else if let Some(s) = pattern.strip_suffix('*') {
@@ -743,7 +375,7 @@ fn emit_shorthand_class_loop(pattern: &str) -> Option<TokenStream> {
 /// each with their own quantifier. The overall match requires the prefix plus at least
 /// whatever the quantifiers mandate (e.g., `+` requires at least one char class byte
 /// after the prefix).
-fn emit_literal_prefix_class(pattern: &str) -> Option<TokenStream> {
+pub(crate) fn emit_literal_prefix_class(pattern: &str) -> Option<TokenStream> {
     // Find where the first `[` starts — everything before it is the literal prefix.
     let bracket_pos = pattern.find('[')?;
     if bracket_pos == 0 {
@@ -777,7 +409,7 @@ fn emit_literal_prefix_class(pattern: &str) -> Option<TokenStream> {
 }
 
 /// A parsed char class segment: predicate expression + quantifier.
-struct ClassSegment {
+pub(crate) struct ClassSegment {
     predicate: TokenStream,
     min: usize,
     max: usize, // usize::MAX = unbounded
@@ -785,7 +417,7 @@ struct ClassSegment {
 
 /// Parse a sequence of `[class]quantifier?` segments from a pattern suffix.
 /// Returns None if the pattern contains anything unparseable.
-fn parse_class_segments(mut s: &str) -> Option<Vec<ClassSegment>> {
+pub(crate) fn parse_class_segments(mut s: &str) -> Option<Vec<ClassSegment>> {
     let mut segments = Vec::new();
 
     while !s.is_empty() {
@@ -845,7 +477,7 @@ fn parse_class_segments(mut s: &str) -> Option<Vec<ClassSegment>> {
 
 /// Unescape a regex literal prefix (before the first `[`).
 /// Returns the raw bytes, or None if the prefix contains regex metacharacters.
-fn unescape_regex_prefix(prefix: &str) -> Option<Vec<u8>> {
+pub(crate) fn unescape_regex_prefix(prefix: &str) -> Option<Vec<u8>> {
     let mut bytes = Vec::new();
     let mut chars = prefix.chars();
     while let Some(c) = chars.next() {
@@ -877,7 +509,7 @@ fn unescape_regex_prefix(prefix: &str) -> Option<Vec<u8>> {
 ///
 /// Uses a closure IIFE to scope early returns — the emitted code evaluates to
 /// `Option<Span>` without leaking `return` into the caller's function.
-fn emit_prefix_segments(
+pub(crate) fn emit_prefix_segments(
     prefix_lit: &proc_macro2::Literal,
     prefix_len: usize,
     segments: &[ClassSegment],
@@ -1001,7 +633,7 @@ fn emit_prefix_segments(
 
 /// Convert a regex character class body (without [ ]) to a Rust byte predicate.
 /// Returns a TokenStream expression that checks if `__b: u8` matches.
-fn char_class_to_predicate(class: &str) -> Option<TokenStream> {
+pub(crate) fn char_class_to_predicate(class: &str) -> Option<TokenStream> {
     let mut conditions: Vec<TokenStream> = Vec::new();
     let mut chars = class.chars().peekable();
 
@@ -1054,51 +686,4 @@ fn char_class_to_predicate(class: &str) -> Option<TokenStream> {
     } else {
         Some(quote! { #(#conditions)||* })
     }
-}
-
-/// Detect a negated character class regex of the form `[^XYZ]+` or `[^XYZ]*`
-/// and return the excluded bytes and quantifier. These patterns scan until any
-/// excluded byte is found — suited for `take_until_any_span()` (256-byte LUT).
-fn is_negated_char_class_regex(pattern: &str) -> Option<(String, NegCharClassQuantifier)> {
-    let rest = pattern.strip_prefix("[^")?;
-
-    let (inner, quantifier) = if let Some(inner) = rest.strip_suffix("]+") {
-        (inner, NegCharClassQuantifier::Plus)
-    } else if let Some(inner) = rest.strip_suffix("]*") {
-        (inner, NegCharClassQuantifier::Star)
-    } else {
-        return None;
-    };
-
-    // Validate: only ASCII printable characters and simple backslash escapes.
-    let mut chars = inner.chars().peekable();
-    let mut excluded = String::new();
-    while let Some(c) = chars.next() {
-        if c == '\\' {
-            let esc = chars.next()?;
-            match esc {
-                '\\' | '/' | ']' | '[' | '^' | '-' | '.' | '*' | '+' | '?' | '(' | ')' | '{'
-                | '}' | '|' | 'n' | 'r' | 't' => {
-                    let actual = match esc {
-                        'n' => '\n',
-                        'r' => '\r',
-                        't' => '\t',
-                        other => other,
-                    };
-                    excluded.push(actual);
-                }
-                _ => return None,
-            }
-        } else if c.is_ascii() && c != '[' && c != ']' {
-            excluded.push(c);
-        } else {
-            return None;
-        }
-    }
-
-    if excluded.is_empty() {
-        return None;
-    }
-
-    Some((excluded, quantifier))
 }

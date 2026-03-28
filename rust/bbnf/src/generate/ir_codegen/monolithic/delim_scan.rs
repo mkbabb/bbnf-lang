@@ -195,19 +195,45 @@ fn unwrap_map_ow(node: &IrNode) -> &IrNode {
     }
 }
 
-/// Find a pivot byte in a Seq branch: the first single-byte Literal at position > 0.
+/// Find a pivot byte in a branch: the first single-byte Literal at position > 0
+/// in a Seq, or the common pivot across all branches of an Alt.
 /// Also detects a trailing optional Literal (e.g., `";" ?`).
-/// Follows Ref nodes to find the Seq inside referenced rules.
+/// Follows Ref nodes to find the Seq/Alt inside referenced rules.
 fn find_pivot_in_seq(node: &IrNode, ir: &GrammarIR) -> Option<(u8, Option<u8>)> {
-    let children = match node {
-        IrNode::Seq(children) => children,
+    match node {
+        IrNode::Seq(children) => find_pivot_in_children(children, ir),
         IrNode::Ref(rule_id) => {
-            // Follow Ref to the rule's body and try again.
             let rule = &ir.rules[*rule_id as usize];
-            return find_pivot_in_seq(unwrap_map_ow(&rule.body), ir);
+            find_pivot_in_seq(unwrap_map_ow(&rule.body), ir)
         }
-        _ => return None,
-    };
+        IrNode::Alt(branches, _) => {
+            // All branches must share the same pivot byte.
+            let mut common_pivot: Option<u8> = None;
+            let mut common_trail: Option<u8> = None;
+            for branch in branches {
+                let (piv, trail) = find_pivot_in_seq(unwrap_map_ow(&branch.node), ir)?;
+                if let Some(cp) = common_pivot {
+                    if cp != piv {
+                        return None; // Different pivots — can't use delim_scan.
+                    }
+                } else {
+                    common_pivot = Some(piv);
+                }
+                if trail.is_some() {
+                    common_trail = trail;
+                }
+            }
+            common_pivot.map(|p| (p, common_trail))
+        }
+        IrNode::OptionalWhitespace(inner) | IrNode::Map { inner, .. } => {
+            find_pivot_in_seq(inner, ir)
+        }
+        _ => None,
+    }
+}
+
+/// Find a pivot byte within a Seq's children.
+fn find_pivot_in_children(children: &[IrNode], ir: &GrammarIR) -> Option<(u8, Option<u8>)> {
     if children.len() < 2 {
         return None;
     }
@@ -302,7 +328,7 @@ fn emit_scan_loop(
 
     // Value scan: balanced-aware scanner that skips quoted strings and nested parens.
     // Returns usize (offset to first depth-0 `;`, `{`, or `}`), NOT Option.
-    let value_scan = quote! { ::parse_that::css_scan_value_end(__vrem) };
+    let value_scan = quote! { ::parse_that::scan_balanced_end(__vrem) };
 
     // Trail consume (advance past ';' if present after value).
     let trail_consume = if let Some(tb) = config.trail_byte {

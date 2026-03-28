@@ -299,7 +299,7 @@ fn emit_map(
             quote! { #inner_ts.map(#closure) }
         }
         FnDescriptor::NumberConvert => {
-            quote! { css_number_scan_f64(state) }
+            quote! { scan_number_f64(state) }
         }
         FnDescriptor::HexConvert { fn_path } => {
             let fn_path_str = ctx.ir.get_string(*fn_path);

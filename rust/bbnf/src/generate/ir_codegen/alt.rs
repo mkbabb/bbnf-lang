@@ -83,9 +83,11 @@ pub fn emit_alt(
         parsers.clone()
     };
 
-    // Dispatch table (O(1) byte dispatch).
+    // Dispatch table (O(1) byte dispatch — strict only, no fallback in combinator path).
     if let Some(disp) = dispatch {
-        return emit_dispatch(&coerced, disp, overall_is_boxed_enum, branches, ctx);
+        if disp.fallback_idx.is_none() {
+            return emit_dispatch(&coerced, disp, overall_is_boxed_enum, branches, ctx);
+        }
     }
 
     // Flat alternation: for ≤8 branches, emit inline closure.

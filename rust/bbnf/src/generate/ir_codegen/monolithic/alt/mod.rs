@@ -1,5 +1,8 @@
 //! Monolithic Alt emission: dispatch-table match and flat checkpoint chain.
 
+mod ident_dispatch;
+mod literal;
+
 use bbnf_ir::{AltBranch, FnDescriptor, IrNode, TypeDesc};
 
 use proc_macro2::TokenStream;
@@ -7,23 +10,24 @@ use quote::{format_ident, quote};
 
 use super::super::super::ir_types::{self, IrCodegenCtx};
 use super::super::infer::{infer_node_type, infer_node_type_elide_box};
-use super::super::unescape_literal;
 use super::{emit_mono_expr, MonoCtx};
+
+use ident_dispatch::try_emit_ident_dispatch;
 
 /// Result of extracting a literal through a Map wrapper.
 /// `lit_sid` is the StringId of the literal; `constant_value` is `Some(StringId)`
 /// when the node is `Map(Literal, Constant { value, .. })`.
 #[derive(Clone, Copy)]
-struct LitThroughMap {
-    lit_sid: bbnf_ir::StringId,
-    constant_value: Option<bbnf_ir::StringId>,
+pub(self) struct LitThroughMap {
+    pub(self) lit_sid: bbnf_ir::StringId,
+    pub(self) constant_value: Option<bbnf_ir::StringId>,
 }
 
 /// Extract a literal StringId from a node, looking through Map(_, Constant)
 /// wrappers. Returns the literal's StringId and the constant value StringId
 /// (if wrapped), allowing the caller to emit the constant value directly
 /// instead of constructing a Span.
-fn extract_literal_through_map(
+pub(self) fn extract_literal_through_map(
     node: &IrNode,
     ctx: &IrCodegenCtx<'_>,
 ) -> Option<LitThroughMap> {
@@ -65,154 +69,9 @@ pub(super) fn emit_mono_alt(
         return emit_mono_expr(&branches[0].node, ctx, mctx, elide_box);
     }
 
-    // Check for all-literal (or all Map(Literal, Constant)) → direct byte matching.
-    // Extract (literal_string, optional_constant_value_sid) for each branch.
-    let lit_infos: Vec<Option<LitThroughMap>> = branches
-        .iter()
-        .map(|b| extract_literal_through_map(&b.node, ctx))
-        .collect();
-
-    let all_literal_like = lit_infos.iter().all(|x| x.is_some());
-    if all_literal_like {
-        let entries: Vec<LitThroughMap> = lit_infos.into_iter().map(|x| x.unwrap()).collect();
-
-        let any_mapped = entries.iter().any(|e| e.constant_value.is_some());
-        let all_bare = !any_mapped;
-
-        // All-bare-literal path: Span return (any_span for large sets, sequential for small).
-        // All-mapped-literal path: constant return values via sequential byte comparison.
-        // Mixed (some bare, some mapped) also uses sequential when ≤ threshold.
-
-        // Sequential byte comparison threshold: for bare literals use 8 (above that,
-        // any_span with Aho-Corasick is faster). For mapped literals, sequential is the
-        // only option since each branch has a unique return value.
-        let use_sequential = if any_mapped {
-            true // No any_span alternative for mapped branches.
-        } else {
-            entries.len() <= 8
-        };
-
-        if use_sequential {
-            let cp_var = mctx.fresh("lit_cp");
-            let mut arms: Vec<TokenStream> = Vec::new();
-            for (i, info) in entries.iter().enumerate() {
-                let raw = ctx.ir.get_string(info.lit_sid);
-                let s = unescape_literal(raw);
-                let bytes = s.as_bytes();
-                let len = bytes.len();
-                let byte_lits: Vec<proc_macro2::Literal> =
-                    bytes.iter().map(|b| proc_macro2::Literal::byte_character(*b)).collect();
-
-                // The return expression: Span for bare literals, constant value for mapped.
-                let ret_expr = if let Some(const_sid) = info.constant_value {
-                    let val_src = ctx.ir.get_string(const_sid);
-                    let val_expr: syn::Expr = syn::parse_str(val_src).unwrap();
-                    quote! { #val_expr }
-                } else {
-                    // Bare literal — return Span.
-                    if len == 1 {
-                        quote! { ::parse_that::Span::new(#cp_var, #cp_var + 1, state.src) }
-                    } else {
-                        quote! { ::parse_that::Span::new(#cp_var, __end, state.src) }
-                    }
-                };
-
-                let check = if len == 1 {
-                    quote! {
-                        if state.src_bytes.get(state.offset).copied() == Some(#(#byte_lits)*) {
-                            state.offset += 1;
-                            return Some(#ret_expr);
-                        }
-                    }
-                } else {
-                    quote! {
-                        {
-                            let __end = state.offset + #len;
-                            if state.src_bytes.get(state.offset..__end) == Some(&[#(#byte_lits),*] as &[u8]) {
-                                state.offset = __end;
-                                return Some(#ret_expr);
-                            }
-                        }
-                    }
-                };
-
-                if i < entries.len() - 1 {
-                    arms.push(check);
-                } else {
-                    arms.push(quote! {
-                        #check
-                        None
-                    });
-                }
-            }
-
-            // Return type: Span for all-bare, the constant type for all-mapped,
-            // or `_` for mixed (compiler infers).
-            let return_type = if all_bare {
-                quote! { ::parse_that::Span<'a> }
-            } else {
-                quote! { _ }
-            };
-
-            return quote! {
-                (|| -> Option<#return_type> {
-                    let #cp_var = state.offset;
-                    #(#arms)*
-                })()
-            };
-        }
-
-        // Large all-bare sets: inline sequential byte matching (no combinator).
-        // Even for large sets (>8), sequential inline byte comparison avoids
-        // SpanParser/any_span combinator overhead in the monolithic path.
-        debug_assert!(all_bare, "mapped literals should always use sequential path");
-        {
-            let cp_var = mctx.fresh("lit_cp");
-            let mut arms: Vec<TokenStream> = Vec::new();
-            for (i, info) in entries.iter().enumerate() {
-                let raw = ctx.ir.get_string(info.lit_sid);
-                let s = unescape_literal(raw);
-                let bytes = s.as_bytes();
-                let len = bytes.len();
-                let byte_lits: Vec<proc_macro2::Literal> =
-                    bytes.iter().map(|b| proc_macro2::Literal::byte_character(*b)).collect();
-
-                let check = if len == 1 {
-                    quote! {
-                        if state.src_bytes.get(state.offset).copied() == Some(#(#byte_lits)*) {
-                            state.offset += 1;
-                            return Some(::parse_that::Span::new(#cp_var, #cp_var + 1, state.src));
-                        }
-                    }
-                } else {
-                    quote! {
-                        {
-                            let __end = state.offset + #len;
-                            if state.src_bytes.get(state.offset..__end) == Some(&[#(#byte_lits),*] as &[u8]) {
-                                state.offset = __end;
-                                return Some(::parse_that::Span::new(#cp_var, __end, state.src));
-                            }
-                        }
-                    }
-                };
-
-                if i < entries.len() - 1 {
-                    arms.push(check);
-                } else {
-                    arms.push(quote! {
-                        #check
-                        None
-                    });
-                }
-            }
-
-            return quote! {
-                (|| -> Option<::parse_that::Span<'a>> {
-                    let #cp_var = state.offset;
-                    #(#arms)*
-                })()
-            };
-        }
+    // Check for all-literal (or all Map(Literal, Constant)) -> direct byte matching.
+    if let Some(ts) = literal::try_emit_all_literal_alt(branches, ctx, mctx) {
+        return ts;
     }
 
     // Check branch homogeneity for elide_box propagation.
@@ -289,6 +148,16 @@ pub(super) fn emit_mono_alt(
             mctx,
             effective_elide_box,
         )
+    } else if let Some(ts) = try_emit_ident_dispatch(
+        branches,
+        &branch_tys,
+        needs_coercion,
+        &local_sub_variants,
+        ctx,
+        mctx,
+        effective_elide_box,
+    ) {
+        ts
     } else {
         emit_mono_flat_alt(
             branches,
@@ -302,7 +171,7 @@ pub(super) fn emit_mono_alt(
     }
 }
 
-/// Emit a monolithic dispatch-table Alt — direct `match` on first byte.
+/// Emit a monolithic dispatch-table Alt -- direct `match` on first byte.
 fn emit_mono_dispatch(
     branches: &[AltBranch],
     disp: &bbnf_ir::AltDispatch,
@@ -313,8 +182,29 @@ fn emit_mono_dispatch(
     mctx: &mut MonoCtx,
     elide_box: bool,
 ) -> TokenStream {
+    // Generate the fallback expression once if this dispatch has a fallback branch.
+    let fallback_expr = disp.fallback_idx.map(|fb_idx| {
+        let fb = &branches[fb_idx as usize];
+        let fb_expr = emit_mono_expr(&fb.node, ctx, mctx, elide_box);
+        if needs_coercion {
+            let sv_name = local_sub_variants.get(fb_idx as usize).and_then(|s| s.as_deref());
+            if elide_box {
+                coerce_mono_branch_by_value(fb_expr, &branch_tys[fb_idx as usize], sv_name, ctx)
+            } else {
+                coerce_mono_branch(fb_expr, &branch_tys[fb_idx as usize], sv_name, ctx)
+            }
+        } else {
+            fb_expr
+        }
+    });
+
     let mut match_arms: Vec<TokenStream> = Vec::new();
     let mut used = vec![false; branches.len()];
+
+    // Mark fallback branch as used so it's not emitted as a normal arm.
+    if let Some(fb_idx) = disp.fallback_idx {
+        used[fb_idx as usize] = true;
+    }
 
     for (idx, branch) in branches.iter().enumerate() {
         if used[idx] {
@@ -339,7 +229,7 @@ fn emit_mono_dispatch(
         // Dispatch guaranteed byte: when the arm matches exactly one byte,
         // the next single-byte literal check for that byte can skip bounds checking.
         // This eliminates the redundant open-delimiter check in wrap patterns
-        // (e.g., dispatch matches `{` → object body re-checks `{`).
+        // (e.g., dispatch matches `{` -> object body re-checks `{`).
         mctx.dispatch_guaranteed_byte = if bytes.len() == 1 {
             Some(bytes[0])
         } else {
@@ -361,10 +251,30 @@ fn emit_mono_dispatch(
             branch_expr
         };
 
-        match_arms.push(quote! { #(#byte_patterns)|* => { #coerced }, });
+        // If there's a fallback, wrap dispatched branches so failures fall through.
+        if let Some(ref fb) = fallback_expr {
+            match_arms.push(quote! {
+                #(#byte_patterns)|* => {
+                    let __fb_cp = state.offset;
+                    if let Some(__v) = (|| { #coerced })() {
+                        Some(__v)
+                    } else {
+                        state.offset = __fb_cp;
+                        #fb
+                    }
+                },
+            });
+        } else {
+            match_arms.push(quote! { #(#byte_patterns)|* => { #coerced }, });
+        }
     }
 
-    match_arms.push(quote! { _ => None, });
+    // Default arm: fallback branch or None.
+    if let Some(ref fb) = fallback_expr {
+        match_arms.push(quote! { _ => { #fb }, });
+    } else {
+        match_arms.push(quote! { _ => None, });
+    }
 
     quote! {
         {
@@ -376,7 +286,7 @@ fn emit_mono_dispatch(
     }
 }
 
-/// Emit a monolithic flat Alt — checkpoint/restore chain.
+/// Emit a monolithic flat Alt -- checkpoint/restore chain.
 fn emit_mono_flat_alt(
     branches: &[AltBranch],
     branch_tys: &[TypeDesc],
@@ -388,10 +298,10 @@ fn emit_mono_flat_alt(
 ) -> TokenStream {
     let cp_var = mctx.fresh("alt_cp");
     // Return type must match what branches actually produce.
-    // - Homogeneous BoxedEnum → &'a ArenaEnum (boxed_enum_type)
-    // - Homogeneous Enum → ArenaEnum (enum_type)
-    // - Heterogeneous + elide_box → ArenaEnum (enum_type, by value)
-    // - Heterogeneous + !elide_box → &'a ArenaEnum (boxed_enum_type, arena ref)
+    // - Homogeneous BoxedEnum -> &'a ArenaEnum (boxed_enum_type)
+    // - Homogeneous Enum -> ArenaEnum (enum_type)
+    // - Heterogeneous + elide_box -> ArenaEnum (enum_type, by value)
+    // - Heterogeneous + !elide_box -> &'a ArenaEnum (boxed_enum_type, arena ref)
     let return_type = if needs_coercion {
         if elide_box {
             ctx.enum_type.clone()
@@ -440,7 +350,7 @@ fn emit_mono_flat_alt(
 }
 
 /// Coerce a branch expression to Enum (`ArenaEnum`) by value for heterogeneous Alt
-/// in elide_box context. No arena allocation — Span branches get wrapped in a
+/// in elide_box context. No arena allocation -- Span branches get wrapped in a
 /// sub-variant enum constructor, Enum branches pass through.
 /// Public wrapper for token_dispatch module.
 pub(super) fn coerce_mono_branch_by_value_pub(
@@ -492,7 +402,7 @@ fn coerce_mono_branch(
     variant_name: Option<&str>,
     ctx: &IrCodegenCtx<'_>,
 ) -> TokenStream {
-    // Already BoxedEnum (&ArenaEnum) — no coercion needed.
+    // Already BoxedEnum (&ArenaEnum) -- no coercion needed.
     if *branch_ty == TypeDesc::BoxedEnum {
         return expr;
     }
@@ -509,7 +419,7 @@ fn coerce_mono_branch(
             })
         }
     } else if *branch_ty == TypeDesc::Enum {
-        // Enum (ArenaEnum) → arena.alloc → &ArenaEnum (BoxedEnum).
+        // Enum (ArenaEnum) -> arena.alloc -> &ArenaEnum (BoxedEnum).
         quote! {
             #expr.map(|__x| {
                 let __alloc = #helper(state).alloc(__x);
@@ -517,7 +427,7 @@ fn coerce_mono_branch(
             })
         }
     } else if *branch_ty == TypeDesc::Span {
-        // Span without sub-variant — arena.alloc directly.
+        // Span without sub-variant -- arena.alloc directly.
         // (Shouldn't happen in practice; IR always generates sub-variants
         // for heterogeneous Alt branches.)
         quote! {

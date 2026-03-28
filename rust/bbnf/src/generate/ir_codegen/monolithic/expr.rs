@@ -316,12 +316,12 @@ pub(super) fn emit_mono_map(
                 let enum_ident = &ctx.enum_ident;
                 if elide_box {
                     return quote! {
-                        ::parse_that::css_number_scan_f64(state).map(|__x| #enum_ident::#vident(__x))
+                        ::parse_that::scan_number_f64(state).map(|__x| #enum_ident::#vident(__x))
                     };
                 } else {
                     let helper = ctx.arena_helper_ident();
                     return quote! {
-                        ::parse_that::css_number_scan_f64(state).map(|__x| {
+                        ::parse_that::scan_number_f64(state).map(|__x| {
                             let __alloc = #helper(state).alloc(#enum_ident::#vident(__x));
                             &*__alloc
                         })
@@ -330,11 +330,11 @@ pub(super) fn emit_mono_map(
             }
             (FnDescriptor::NumberConvert, FnDescriptor::BoxWrap) => {
                 if elide_box {
-                    return quote! { ::parse_that::css_number_scan_f64(state) };
+                    return quote! { ::parse_that::scan_number_f64(state) };
                 } else {
                     let helper = ctx.arena_helper_ident();
                     return quote! {
-                        ::parse_that::css_number_scan_f64(state).map(|__x| {
+                        ::parse_that::scan_number_f64(state).map(|__x| {
                             let __alloc = #helper(state).alloc(__x);
                             &*__alloc
                         })
@@ -368,7 +368,7 @@ pub(super) fn emit_mono_map(
         FnDescriptor::NumberConvert => {
             // Strength reduction: direct fused CSS number scanner → f64
             // No regex, no Span, no closure overhead
-            quote! { ::parse_that::css_number_scan_f64(state) }
+            quote! { ::parse_that::scan_number_f64(state) }
         }
         FnDescriptor::HexConvert { fn_path } => {
             let inner_expr = emit_mono_expr(inner, ctx, mctx, elide_box);
@@ -435,7 +435,7 @@ pub(super) fn emit_mono_map(
 ///
 /// When `OW(inner)` wraps an expression whose last action is already a whitespace
 /// trim, the post-trim in `emit_mono_ow` is redundant — the inner expression already
-/// consumed trailing whitespace. This avoids 1-2 extra `css_ws_comment_fast` (or
+/// consumed trailing whitespace. This avoids 1-2 extra `scan_ws_block_comments` (or
 /// `trim_leading_whitespace_mut`) calls per iteration in hot loops like
 /// `blockContent = ((declaration | ruleItem) ?w) *`.
 pub(super) fn ends_with_ow(node: &IrNode) -> bool {

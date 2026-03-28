@@ -133,8 +133,17 @@ fn emit_span_dispatch(
     ctx: &IrCodegenCtx<'_>,
     mctx: &mut MonoCtx,
 ) -> TokenStream {
+    // Generate fallback expression if present.
+    let fallback_expr = disp.fallback_idx.map(|fb_idx| {
+        emit_span_expr(&branches[fb_idx as usize].node, ir, ctx, mctx)
+    });
+
     let mut match_arms: Vec<TokenStream> = Vec::new();
     let mut used = vec![false; branches.len()];
+
+    if let Some(fb_idx) = disp.fallback_idx {
+        used[fb_idx as usize] = true;
+    }
 
     for (idx, branch) in branches.iter().enumerate() {
         if used[idx] { continue; }
@@ -156,10 +165,28 @@ fn emit_span_dispatch(
         let branch_expr = emit_span_expr(&branch.node, ir, ctx, mctx);
         mctx.dispatch_guaranteed_byte = None;
 
-        match_arms.push(quote! { #(#byte_patterns)|* => { #branch_expr }, });
+        if let Some(ref fb) = fallback_expr {
+            match_arms.push(quote! {
+                #(#byte_patterns)|* => {
+                    let __fb_cp = state.offset;
+                    if let Some(__v) = (|| { #branch_expr })() {
+                        Some(__v)
+                    } else {
+                        state.offset = __fb_cp;
+                        #fb
+                    }
+                },
+            });
+        } else {
+            match_arms.push(quote! { #(#byte_patterns)|* => { #branch_expr }, });
+        }
     }
 
-    match_arms.push(quote! { _ => None, });
+    if let Some(ref fb) = fallback_expr {
+        match_arms.push(quote! { _ => { #fb }, });
+    } else {
+        match_arms.push(quote! { _ => None, });
+    }
 
     quote! {
         {

@@ -40,7 +40,7 @@ pub fn try_emit_regex_inline(pattern: &str) -> Option<TokenStream> {
                 #body
                 Some(())
             })();
-            if __result.is_some() {
+            if __result.is_some() && state.offset > __start {
                 Some(::parse_that::Span::new(__start, state.offset, state.src))
             } else {
                 state.offset = __start;

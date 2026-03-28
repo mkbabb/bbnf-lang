@@ -428,7 +428,7 @@ pub(super) fn emit_mono_expr(
             // Phase 2: try direct scanner call (bypasses SpanParser dispatch stack).
             // Arena context: fuse number conversion (returns (Span, f64) for JSON numbers).
             let fuse = ctx.storage_mode == StorageMode::Arena;
-            // 1. Try known fast paths (css_ident_fast, number_scan_f64, etc.)
+            // 1. Try known fast paths (scan_ident, scan_number_f64, etc.)
             if let Some(direct) = fast_paths::emit_regex_direct_call_with_fuse(pattern, fuse) {
                 direct
             }

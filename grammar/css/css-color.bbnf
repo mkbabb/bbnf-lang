@@ -33,40 +33,156 @@ colorValue      = colorPercentage | number ;
 
 // --- Named colors (CSS Color Level 4 §6.1, complete set) ---
 
-namedColor = "aliceblue" | "antiquewhite" | "aqua" | "aquamarine" | "azure"
-           | "beige" | "bisque" | "black" | "blanchedalmond" | "blue"
-           | "blueviolet" | "brown" | "burlywood" | "cadetblue" | "chartreuse"
-           | "chocolate" | "coral" | "cornflowerblue" | "cornsilk" | "crimson"
-           | "cyan" | "darkblue" | "darkcyan" | "darkgoldenrod" | "darkgray"
-           | "darkgreen" | "darkgrey" | "darkkhaki" | "darkmagenta"
-           | "darkolivegreen" | "darkorange" | "darkorchid" | "darkred"
-           | "darksalmon" | "darkseagreen" | "darkslateblue" | "darkslategray"
-           | "darkslategrey" | "darkturquoise" | "darkviolet" | "deeppink"
-           | "deepskyblue" | "dimgray" | "dimgrey" | "dodgerblue" | "firebrick"
-           | "floralwhite" | "forestgreen" | "fuchsia" | "gainsboro"
-           | "ghostwhite" | "gold" | "goldenrod" | "gray" | "green"
-           | "greenyellow" | "grey" | "honeydew" | "hotpink" | "indianred"
-           | "indigo" | "ivory" | "khaki" | "lavender" | "lavenderblush"
-           | "lawngreen" | "lemonchiffon" | "lightblue" | "lightcoral"
-           | "lightcyan" | "lightgoldenrodyellow" | "lightgray" | "lightgreen"
-           | "lightgrey" | "lightpink" | "lightsalmon" | "lightseagreen"
-           | "lightskyblue" | "lightslategray" | "lightslategrey"
-           | "lightsteelblue" | "lightyellow" | "lime" | "limegreen" | "linen"
-           | "magenta" | "maroon" | "mediumaquamarine" | "mediumblue"
-           | "mediumorchid" | "mediumpurple" | "mediumseagreen"
-           | "mediumslateblue" | "mediumspringgreen" | "mediumturquoise"
-           | "mediumvioletred" | "midnightblue" | "mintcream" | "mistyrose"
-           | "moccasin" | "navajowhite" | "navy" | "oldlace" | "olive"
-           | "olivedrab" | "orange" | "orangered" | "orchid" | "palegoldenrod"
-           | "palegreen" | "paleturquoise" | "palevioletred" | "papayawhip"
-           | "peachpuff" | "peru" | "pink" | "plum" | "powderblue" | "purple"
-           | "rebeccapurple" | "red" | "rosybrown" | "royalblue" | "saddlebrown"
-           | "salmon" | "sandybrown" | "seagreen" | "seashell" | "sienna"
-           | "silver" | "skyblue" | "slateblue" | "slategray" | "slategrey"
-           | "snow" | "springgreen" | "steelblue" | "tan" | "teal" | "thistle"
-           | "tomato" | "turquoise" | "violet" | "wheat" | "white" | "whitesmoke"
-           | "yellow" | "yellowgreen"
-           | "transparent" | "currentcolor" ;
+namedColor = "aliceblue" -> 0xF0F8FFFFu32
+           | "antiquewhite" -> 0xFAEBD7FFu32
+           | "aquamarine" -> 0x7FFFD4FFu32
+           | "aqua" -> 0x00FFFFFFu32
+           | "azure" -> 0xF0FFFFFFu32
+           | "beige" -> 0xF5F5DCFFu32
+           | "bisque" -> 0xFFE4C4FFu32
+           | "black" -> 0x000000FFu32
+           | "blanchedalmond" -> 0xFFEBCDFFu32
+           | "blueviolet" -> 0x8A2BE2FFu32
+           | "blue" -> 0x0000FFFFu32
+           | "brown" -> 0xA52A2AFFu32
+           | "burlywood" -> 0xDEB887FFu32
+           | "cadetblue" -> 0x5F9EA0FFu32
+           | "chartreuse" -> 0x7FFF00FFu32
+           | "chocolate" -> 0xD2691EFFu32
+           | "coral" -> 0xFF7F50FFu32
+           | "cornflowerblue" -> 0x6495EDFFu32
+           | "cornsilk" -> 0xFFF8DCFFu32
+           | "crimson" -> 0xDC143CFFu32
+           | "currentcolor" -> 0x000000FFu32
+           | "cyan" -> 0x00FFFFFFu32
+           | "darkblue" -> 0x00008BFFu32
+           | "darkcyan" -> 0x008B8BFFu32
+           | "darkgoldenrod" -> 0xB8860BFFu32
+           | "darkgray" -> 0xA9A9A9FFu32
+           | "darkgreen" -> 0x006400FFu32
+           | "darkgrey" -> 0xA9A9A9FFu32
+           | "darkkhaki" -> 0xBDB76BFFu32
+           | "darkmagenta" -> 0x8B008BFFu32
+           | "darkolivegreen" -> 0x556B2FFFu32
+           | "darkorange" -> 0xFF8C00FFu32
+           | "darkorchid" -> 0x9932CCFFu32
+           | "darkred" -> 0x8B0000FFu32
+           | "darksalmon" -> 0xE9967AFFu32
+           | "darkseagreen" -> 0x8FBC8FFFu32
+           | "darkslateblue" -> 0x483D8BFFu32
+           | "darkslategray" -> 0x2F4F4FFFu32
+           | "darkslategrey" -> 0x2F4F4FFFu32
+           | "darkturquoise" -> 0x00CED1FFu32
+           | "darkviolet" -> 0x9400D3FFu32
+           | "deeppink" -> 0xFF1493FFu32
+           | "deepskyblue" -> 0x00BFFFFFu32
+           | "dimgray" -> 0x696969FFu32
+           | "dimgrey" -> 0x696969FFu32
+           | "dodgerblue" -> 0x1E90FFFFu32
+           | "firebrick" -> 0xB22222FFu32
+           | "floralwhite" -> 0xFFFAF0FFu32
+           | "forestgreen" -> 0x228B22FFu32
+           | "fuchsia" -> 0xFF00FFFFu32
+           | "gainsboro" -> 0xDCDCDCFFu32
+           | "ghostwhite" -> 0xF8F8FFFFu32
+           | "goldenrod" -> 0xDAA520FFu32
+           | "gold" -> 0xFFD700FFu32
+           | "gray" -> 0x808080FFu32
+           | "greenyellow" -> 0xADFF2FFFu32
+           | "green" -> 0x008000FFu32
+           | "grey" -> 0x808080FFu32
+           | "honeydew" -> 0xF0FFF0FFu32
+           | "hotpink" -> 0xFF69B4FFu32
+           | "indianred" -> 0xCD5C5CFFu32
+           | "indigo" -> 0x4B0082FFu32
+           | "ivory" -> 0xFFFFF0FFu32
+           | "khaki" -> 0xF0E68CFFu32
+           | "lavenderblush" -> 0xFFF0F5FFu32
+           | "lavender" -> 0xE6E6FAFFu32
+           | "lawngreen" -> 0x7CFC00FFu32
+           | "lemonchiffon" -> 0xFFFACDFFu32
+           | "lightblue" -> 0xADD8E6FFu32
+           | "lightcoral" -> 0xF08080FFu32
+           | "lightcyan" -> 0xE0FFFFFFu32
+           | "lightgoldenrodyellow" -> 0xFAFAD2FFu32
+           | "lightgray" -> 0xD3D3D3FFu32
+           | "lightgreen" -> 0x90EE90FFu32
+           | "lightgrey" -> 0xD3D3D3FFu32
+           | "lightpink" -> 0xFFB6C1FFu32
+           | "lightsalmon" -> 0xFFA07AFFu32
+           | "lightseagreen" -> 0x20B2AAFFu32
+           | "lightskyblue" -> 0x87CEFAFFu32
+           | "lightslategray" -> 0x778899FFu32
+           | "lightslategrey" -> 0x778899FFu32
+           | "lightsteelblue" -> 0xB0C4DEFFu32
+           | "lightyellow" -> 0xFFFFE0FFu32
+           | "limegreen" -> 0x32CD32FFu32
+           | "lime" -> 0x00FF00FFu32
+           | "linen" -> 0xFAF0E6FFu32
+           | "magenta" -> 0xFF00FFFFu32
+           | "maroon" -> 0x800000FFu32
+           | "mediumaquamarine" -> 0x66CDAAFFu32
+           | "mediumblue" -> 0x0000CDFFu32
+           | "mediumorchid" -> 0xBA55D3FFu32
+           | "mediumpurple" -> 0x9370DBFFu32
+           | "mediumseagreen" -> 0x3CB371FFu32
+           | "mediumslateblue" -> 0x7B68EEFFu32
+           | "mediumspringgreen" -> 0x00FA9AFFu32
+           | "mediumturquoise" -> 0x48D1CCFFu32
+           | "mediumvioletred" -> 0xC71585FFu32
+           | "midnightblue" -> 0x191970FFu32
+           | "mintcream" -> 0xF5FFFAFFu32
+           | "mistyrose" -> 0xFFE4E1FFu32
+           | "moccasin" -> 0xFFE4B5FFu32
+           | "navajowhite" -> 0xFFDEADFFu32
+           | "navy" -> 0x000080FFu32
+           | "oldlace" -> 0xFDF5E6FFu32
+           | "olivedrab" -> 0x6B8E23FFu32
+           | "olive" -> 0x808000FFu32
+           | "orangered" -> 0xFF4500FFu32
+           | "orange" -> 0xFFA500FFu32
+           | "orchid" -> 0xDA70D6FFu32
+           | "palegoldenrod" -> 0xEEE8AAFFu32
+           | "palegreen" -> 0x98FB98FFu32
+           | "paleturquoise" -> 0xAFEEEEFFu32
+           | "palevioletred" -> 0xDB7093FFu32
+           | "papayawhip" -> 0xFFEFD5FFu32
+           | "peachpuff" -> 0xFFDAB9FFu32
+           | "peru" -> 0xCD853FFFu32
+           | "pink" -> 0xFFC0CBFFu32
+           | "plum" -> 0xDDA0DDFFu32
+           | "powderblue" -> 0xB0E0E6FFu32
+           | "purple" -> 0x800080FFu32
+           | "rebeccapurple" -> 0x663399FFu32
+           | "red" -> 0xFF0000FFu32
+           | "rosybrown" -> 0xBC8F8FFFu32
+           | "royalblue" -> 0x4169E1FFu32
+           | "saddlebrown" -> 0x8B4513FFu32
+           | "salmon" -> 0xFA8072FFu32
+           | "sandybrown" -> 0xF4A460FFu32
+           | "seagreen" -> 0x2E8B57FFu32
+           | "seashell" -> 0xFFF5EEFFu32
+           | "sienna" -> 0xA0522DFFu32
+           | "silver" -> 0xC0C0C0FFu32
+           | "skyblue" -> 0x87CEEBFFu32
+           | "slateblue" -> 0x6A5ACDFFu32
+           | "slategray" -> 0x708090FFu32
+           | "slategrey" -> 0x708090FFu32
+           | "snow" -> 0xFFFAFAFFu32
+           | "springgreen" -> 0x00FF7FFFu32
+           | "steelblue" -> 0x4682B4FFu32
+           | "tan" -> 0xD2B48CFFu32
+           | "teal" -> 0x008080FFu32
+           | "thistle" -> 0xD8BFD8FFu32
+           | "tomato" -> 0xFF6347FFu32
+           | "transparent" -> 0x00000000u32
+           | "turquoise" -> 0x40E0D0FFu32
+           | "violet" -> 0xEE82EEFFu32
+           | "wheat" -> 0xF5DEB3FFu32
+           | "whitesmoke" -> 0xF5F5F5FFu32
+           | "white" -> 0xFFFFFFFFu32
+           | "yellowgreen" -> 0x9ACD32FFu32
+           | "yellow" -> 0xFFFF00FFu32 ;
 
 // --- Hex colors (#RGB, #RRGGBB, #RGBA, #RRGGBBAA) ---
 

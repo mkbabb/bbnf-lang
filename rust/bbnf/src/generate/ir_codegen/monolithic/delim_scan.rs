@@ -142,6 +142,25 @@ fn single_byte_literal(node: &IrNode, ir: &GrammarIR) -> Option<u8> {
     None
 }
 
+/// Detect a trailing delimiter byte in a multi-char Literal.
+/// Handles the case where `merge_literals` fused a property name with `:`,
+/// e.g. `"display:"` → trailing byte is `:`.
+/// Only returns known delimiter bytes (`:`, `;`) to avoid false positives.
+fn trailing_delimiter_byte(node: &IrNode, ir: &GrammarIR) -> Option<u8> {
+    if let IrNode::Literal(sid) = node {
+        let raw = ir.get_string(*sid);
+        let unescaped = unescape_literal(raw);
+        let bytes = unescaped.as_bytes();
+        if bytes.len() >= 2 {
+            let last = *bytes.last()?;
+            if last == b':' || last == b';' {
+                return Some(last);
+            }
+        }
+    }
+    None
+}
+
 /// Unwrap through OW/Map/Ref/Next/Skip layers to find a Repeat node.
 /// Returns (Repeat inner node, Option<RuleId of the Ref that was followed>).
 fn unwrap_to_repeat_with_rule<'a>(node: &'a IrNode, ir: &'a GrammarIR) -> Option<(&'a IrNode, Option<RuleId>)> {
@@ -240,6 +259,12 @@ fn find_pivot_in_children(children: &[IrNode], ir: &GrammarIR) -> Option<(u8, Op
 
     let mut pivot: Option<u8> = None;
     let mut trail: Option<u8> = None;
+
+    // Check if the first child is a literal ending with a delimiter byte
+    // (from merge_literals fusing e.g. "display" + ":" → "display:").
+    if let Some(byte) = trailing_delimiter_byte(&children[0], ir) {
+        pivot = Some(byte);
+    }
 
     for (i, child) in children.iter().enumerate() {
         if i == 0 {

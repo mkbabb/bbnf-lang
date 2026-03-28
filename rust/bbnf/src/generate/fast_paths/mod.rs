@@ -23,19 +23,19 @@ use quote::quote;
 
 /// Emit a Parser<Span> expression for a regex pattern, using fast-paths where available.
 pub fn emit_regex_parser(pattern: &str) -> TokenStream {
-    if is_json_string_regex(pattern) {
+    if is_json_string_pattern(pattern) {
         return quote! { ::parse_that::sp_json_string_quoted().into_parser() };
     }
-    if is_json_number_regex(pattern) {
+    if is_json_number_pattern(pattern) {
         return quote! { ::parse_that::sp_json_number().into_parser() };
     }
-    if is_css_ws_comment_regex(pattern) {
+    if is_ws_block_comment_pattern(pattern) {
         return quote! { ::parse_that::sp_css_ws_comment().into_parser() };
     }
-    if is_css_ident_regex(pattern) {
+    if is_ident_pattern(pattern) {
         return quote! { ::parse_that::sp_css_ident().into_parser() };
     }
-    if is_css_string_regex(pattern) {
+    if is_quoted_string_pattern(pattern) {
         return quote! { ::parse_that::sp_css_string().into_parser() };
     }
     // Try direct scanner (same strength reduction as monolithic path).
@@ -56,19 +56,19 @@ pub fn emit_regex_parser(pattern: &str) -> TokenStream {
 
 /// Emit a SpanParser expression for a regex pattern, using fast-paths where available.
 pub fn emit_regex_span(pattern: &str) -> TokenStream {
-    if is_json_string_regex(pattern) {
+    if is_json_string_pattern(pattern) {
         return quote! { ::parse_that::sp_json_string_quoted() };
     }
-    if is_json_number_regex(pattern) {
+    if is_json_number_pattern(pattern) {
         return quote! { ::parse_that::sp_json_number() };
     }
-    if is_css_ws_comment_regex(pattern) {
+    if is_ws_block_comment_pattern(pattern) {
         return quote! { ::parse_that::sp_css_ws_comment() };
     }
-    if is_css_ident_regex(pattern) {
+    if is_ident_pattern(pattern) {
         return quote! { ::parse_that::sp_css_ident() };
     }
-    if is_css_string_regex(pattern) {
+    if is_quoted_string_pattern(pattern) {
         return quote! { ::parse_that::sp_css_string() };
     }
     if let Some((excluded, quantifier)) = is_negated_char_class_regex(pattern) {
@@ -98,23 +98,23 @@ pub fn emit_regex_direct_call(pattern: &str) -> Option<TokenStream> {
 /// When `fuse_numbers` is true, JSON number regex returns `(Span, f64)`.
 /// When false, returns `Span` only.
 pub fn emit_regex_direct_call_with_fuse(pattern: &str, fuse_numbers: bool) -> Option<TokenStream> {
-    if is_json_string_regex(pattern) {
+    if is_json_string_pattern(pattern) {
         return Some(quote! { ::parse_that::scan_json_string(state) });
     }
-    if is_json_number_regex(pattern) {
+    if is_json_number_pattern(pattern) {
         if fuse_numbers {
             return Some(quote! { ::parse_that::scan_number_convert_json(state) });
         } else {
             return Some(quote! { ::parse_that::scan_number_span_json(state) });
         }
     }
-    if is_css_ws_comment_regex(pattern) {
+    if is_ws_block_comment_pattern(pattern) {
         return Some(quote! { ::parse_that::scan_ws_block_comments(state) });
     }
-    if is_css_ident_regex(pattern) {
+    if is_ident_pattern(pattern) {
         return Some(quote! { ::parse_that::scan_ident(state) });
     }
-    if is_css_string_regex(pattern) {
+    if is_quoted_string_pattern(pattern) {
         return Some(quote! { ::parse_that::scan_string_quoted(state) });
     }
 
@@ -286,5 +286,5 @@ pub fn emit_regex_direct_call_with_fuse(pattern: &str, fuse_numbers: bool) -> Op
 /// Check if a regex pattern returns a fused `(Span, f64)` instead of plain `Span`.
 /// Used by type inference to determine the correct enum variant type.
 pub fn is_fused_number_regex(pattern: &str) -> bool {
-    is_json_number_regex(pattern)
+    is_json_number_pattern(pattern)
 }

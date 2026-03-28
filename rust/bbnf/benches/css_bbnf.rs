@@ -1,11 +1,12 @@
 #![feature(cold_path)]
 
-//! CSS parsing benchmarks — cold per-parse, three BBNF tiers.
+//! CSS parsing benchmarks — cold per-parse, four BBNF tiers.
 //!
 //! All benches construct a fresh BumpArena + Parser per iteration.
 //!
 //! - **arena**: css-fast.bbnf — L0 typed enum tree, opaque spans for values/selectors
-//! - **structural**: css-stylesheet-pretty.bbnf — L1.5 structural AST with @pretty directives
+//! - **semantic**: css-semantic.bbnf — L1 typed values (numbers → f64 during parsing)
+//! - **import**: css-stylesheet.bbnf — L2 property dispatch + typed selectors via imports
 //! - **span**: css-fast.bbnf — L0 zero-alloc byte ranges, validation only
 
 #[global_allocator]
@@ -69,7 +70,6 @@ mod css_types {
     }
 
     /// CSS length unit discriminant (matches lightningcss LengthValue variants).
-    /// Used by `lengthUnit -> N` per-branch mapping.
     #[repr(u8)]
     #[derive(Debug, Clone, Copy)]
     pub enum LengthUnit {
@@ -129,7 +129,6 @@ mod css_types {
     }
 
     /// Parse CSS rgb/rgba function arguments to CssColor.
-    /// Input is the FULL span including function name: "rgb(255, 0, 128)"
     pub fn parse_rgb_color(s: &str) -> CssColor {
         let inner = s.find('(').map(|i| &s[i + 1..]).unwrap_or(s);
         let inner = inner.trim_end_matches(')').trim();
@@ -162,21 +161,12 @@ struct CssFastParser;
 struct CssFastSpanParser;
 
 #[derive(Parser)]
-#[parser(
-    path = "../../grammar/css/css-stylesheet-pretty.bbnf",
-    prettify,
-    skip_recover,
-    arena
-)]
-struct CssPrettyParser;
-
-#[derive(Parser)]
-#[parser(path = "benches/grammars/css-typed.bbnf", arena)]
-struct CssTypedParser;
-
-#[derive(Parser)]
 #[parser(path = "benches/grammars/css-semantic.bbnf", arena)]
 struct CssSemanticParser;
+
+#[derive(Parser)]
+#[parser(path = "../../grammar/css/css-stylesheet.bbnf", skip_recover, arena)]
+struct CssImportParser;
 
 fn load_css(name: &str) -> String {
     let path = format!("../../data/css/{}", name);
@@ -217,40 +207,6 @@ bench_arena!(arena_normalize, "normalize.css");
 bench_arena!(arena_bootstrap, "bootstrap.css");
 bench_arena!(arena_tailwind, "tailwind.css");
 
-// ── Structural (cold per-parse) ──────────────────────────────────────
-
-macro_rules! bench_structural {
-    ($name:ident, $file:expr) => {
-        fn $name(b: &mut Bencher) {
-            let input = load_css($file);
-            let (bytes, consumed_pct) = {
-                let arena = BumpArena::<CssPrettyParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = CssPrettyParser::stylesheet_arena();
-                let (_result, state) = parser.parse_return_state_with_context(&input, &arena);
-                (state.offset as u64, state.offset * 100 / input.len().max(1))
-            };
-            assert!(
-                consumed_pct >= 95,
-                concat!($file, ": pretty arena parser only consumed {}%"),
-                consumed_pct
-            );
-            b.bytes = bytes;
-            b.iter(|| {
-                let arena = BumpArena::<CssPrettyParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = CssPrettyParser::stylesheet_arena();
-                let ast = parser
-                    .parse_with_context(black_box(&input), &arena)
-                    .unwrap();
-                black_box(&ast as *const _);
-            });
-        }
-    };
-}
-
-bench_structural!(structural_normalize, "normalize.css");
-bench_structural!(structural_bootstrap, "bootstrap.css");
-bench_structural!(structural_tailwind, "tailwind.css");
-
 // ── Span (cold per-parse, zero allocations) ──────────────────────────
 
 macro_rules! bench_span {
@@ -280,40 +236,6 @@ macro_rules! bench_span {
 bench_span!(span_normalize, "normalize.css");
 bench_span!(span_bootstrap, "bootstrap.css");
 bench_span!(span_tailwind, "tailwind.css");
-
-// ── Typed (cold per-parse, full CSS Level 4 typed values + selectors) ───────
-
-macro_rules! bench_typed {
-    ($name:ident, $file:expr) => {
-        fn $name(b: &mut Bencher) {
-            let input = load_css($file);
-            let (bytes, consumed_pct) = {
-                let arena = BumpArena::<CssTypedParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = CssTypedParser::stylesheet_arena();
-                let (_result, state) = parser.parse_return_state_with_context(&input, &arena);
-                (state.offset as u64, state.offset * 100 / input.len().max(1))
-            };
-            assert!(
-                consumed_pct >= 95,
-                concat!($file, ": typed arena parser only consumed {}%"),
-                consumed_pct
-            );
-            b.bytes = bytes;
-            b.iter(|| {
-                let arena = BumpArena::<CssTypedParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = CssTypedParser::stylesheet_arena();
-                let ast = parser
-                    .parse_with_context(black_box(&input), &arena)
-                    .unwrap();
-                black_box(&ast as *const _);
-            });
-        }
-    };
-}
-
-bench_typed!(typed_normalize, "normalize.css");
-bench_typed!(typed_bootstrap, "bootstrap.css");
-bench_typed!(typed_tailwind, "tailwind.css");
 
 // ── Semantic (cold per-parse, numbers → f64 during parsing) ──────────────
 
@@ -349,42 +271,7 @@ bench_semantic!(semantic_normalize, "normalize.css");
 bench_semantic!(semantic_bootstrap, "bootstrap.css");
 bench_semantic!(semantic_tailwind, "tailwind.css");
 
-// ── Groups ──────────────────────────────────────────────────────────────────
-
-benchmark_group!(
-    arena,
-    arena_normalize,
-    arena_bootstrap,
-    arena_tailwind
-);
-benchmark_group!(
-    structural,
-    structural_normalize,
-    structural_bootstrap,
-    structural_tailwind
-);
-benchmark_group!(
-    span,
-    span_normalize,
-    span_bootstrap,
-    span_tailwind
-);
-benchmark_group!(
-    typed,
-    typed_normalize,
-    typed_bootstrap,
-    typed_tailwind
-);
-benchmark_group!(
-    semantic,
-    semantic_normalize,
-    semantic_bootstrap,
-    semantic_tailwind
-);
-// Import-based full CSS L4 grammar (typed values + selectors via imports)
-#[derive(Parser)]
-#[parser(path = "../../grammar/css/css-stylesheet.bbnf", skip_recover, arena)]
-struct CssImportParser;
+// ── Import (cold per-parse, property dispatch + typed selectors) ─────
 
 macro_rules! bench_import {
     ($name:ident, $file:expr) => {
@@ -395,10 +282,14 @@ macro_rules! bench_import {
                 let parser = CssImportParser::stylesheet_arena();
                 let (_result, state) = parser.parse_return_state_with_context(&input, &arena);
                 let pct = state.offset * 100 / input.len().max(1);
-                assert!(
-                    pct >= 95,
-                    "{}: import parser consumed {}%", $file, pct
-                );
+                if pct < 95 {
+                    let f = state.furthest_offset;
+                    let around = &input[f.saturating_sub(10)..(f+30).min(input.len())];
+                    panic!(
+                        "{}: import consumed {}% (offset {}, furthest {} = '{}')",
+                        $file, pct, state.offset, f, around
+                    );
+                }
                 (state.offset as u64, pct)
             };
             b.bytes = bytes;
@@ -417,14 +308,12 @@ macro_rules! bench_import {
 bench_import!(import_normalize, "normalize.css");
 bench_import!(import_bootstrap, "bootstrap.css");
 bench_import!(import_tailwind, "tailwind.css");
-bench_import!(import_minimal, "test_minimal.css");
 
-benchmark_group!(
-    import,
-    import_normalize,
-    import_bootstrap,
-    import_tailwind,
-    import_minimal
-);
+// ── Groups ──────────────────────────────────────────────────────────────────
 
-benchmark_main!(arena, structural, span, typed, semantic, import);
+benchmark_group!(arena, arena_normalize, arena_bootstrap, arena_tailwind);
+benchmark_group!(span, span_normalize, span_bootstrap, span_tailwind);
+benchmark_group!(semantic, semantic_normalize, semantic_bootstrap, semantic_tailwind);
+benchmark_group!(import, import_normalize, import_bootstrap, import_tailwind);
+
+benchmark_main!(arena, span, semantic, import);

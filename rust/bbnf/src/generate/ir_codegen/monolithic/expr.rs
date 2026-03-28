@@ -422,6 +422,20 @@ pub(super) fn emit_mono_map(
                     });
                     quote! { #inner_expr.map(|_| #val_expr) }
                 }
+                FnDescriptor::SpanCapture => {
+                    // @{expr}: parse inner for validation, discard result, return Span.
+                    quote! {
+                        {
+                            let __start = state.offset;
+                            let __result: Option<()> = (|| { let _ = #inner_expr; Some(()) })();
+                            if __result.is_some() {
+                                Some(::parse_that::Span::new(__start, state.offset, state.src))
+                            } else {
+                                None
+                            }
+                        }
+                    }
+                }
                 // Already handled above
                 FnDescriptor::NumberConvert | FnDescriptor::HexConvert { .. } => unreachable!(),
             }

@@ -232,8 +232,22 @@ impl<'a> BBNFGrammar<'a> {
         })
     }
 
+    fn span_capture() -> Parser<'a, Expression<'a>> {
+        lazy(|| {
+            string_span("@{")
+                .trim_whitespace()
+                .next(Self::rhs().trim_whitespace())
+                .skip(string_span("}"))
+                .map_with_state(|expr, prev_offset, state| {
+                    let token = Token::new(expr, Span::new(prev_offset, state.offset, state.src));
+                    Expression::SpanCapture(Box::new(token))
+                })
+        })
+    }
+
     fn term() -> Parser<'a, Expression<'a>> {
         Self::epsilon()
+            | Self::span_capture()
             | Self::group()
             | Self::optional_group()
             | Self::many_group()

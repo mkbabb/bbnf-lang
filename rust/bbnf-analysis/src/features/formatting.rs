@@ -161,6 +161,10 @@ fn format_expression(expr: &Expression<'_>, indent_level: usize) -> String {
             let inner_str = format_expression(get_inner_expression(inner), indent_level);
             format!("{}?w", inner_str)
         }
+        Expression::SpanCapture(inner) => {
+            let inner_str = format_expression(get_inner_expression(inner), indent_level);
+            format!("@{{{}}}", inner_str)
+        }
         Expression::Skip(l, r) => {
             format!(
                 "{} << {}",

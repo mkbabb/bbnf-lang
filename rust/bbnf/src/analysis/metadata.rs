@@ -109,7 +109,8 @@ fn expr_is_span_eligible<'a>(
         | Expression::Optional(inner)
         | Expression::OptionalWhitespace(inner)
         | Expression::Many(inner)
-        | Expression::Many1(inner) => {
+        | Expression::Many1(inner)
+        | Expression::SpanCapture(inner) => {
             expr_is_span_eligible(&inner.value, cyclic_rules, ast)
         }
         Expression::Skip(left, right) | Expression::Next(left, right) => {

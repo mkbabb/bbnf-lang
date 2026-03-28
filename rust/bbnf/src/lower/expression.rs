@@ -253,6 +253,16 @@ pub(crate) fn lower_expression<'a>(expr: &'a Expression<'a>, ctx: &mut LowerCtx<
             lower_expression(&inner.value, ctx)
         }
 
+        Expression::SpanCapture(inner) => {
+            // @{expr}: parse inner for validation, return Span of consumed input.
+            let inner_node = lower_expression(&inner.value, ctx);
+            let fn_id = ctx.fns.push(bbnf_ir::FnDescriptor::SpanCapture);
+            IrNode::Map {
+                inner: Box::new(inner_node),
+                fn_id,
+            }
+        }
+
         Expression::Optional(inner) => {
             let inner_node = lower_expression(&inner.value, ctx);
             IrNode::Repeat {

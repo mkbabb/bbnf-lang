@@ -93,7 +93,8 @@ pub fn collect_references(expr: &Expression<'_>, refs: &mut Vec<ReferenceInfo>) 
         | Expression::Optional(inner)
         | Expression::Many(inner)
         | Expression::Many1(inner)
-        | Expression::OptionalWhitespace(inner) => {
+        | Expression::OptionalWhitespace(inner)
+        | Expression::SpanCapture(inner) => {
             collect_references(inner.inner(), refs);
         }
         Expression::Rule(rhs, _) => {
@@ -149,7 +150,8 @@ pub fn collect_semantic_tokens(expr: &Expression<'_>, tokens: &mut Vec<SemanticT
         | Expression::Optional(inner)
         | Expression::Many(inner)
         | Expression::Many1(inner)
-        | Expression::OptionalWhitespace(inner) => {
+        | Expression::OptionalWhitespace(inner)
+        | Expression::SpanCapture(inner) => {
             collect_semantic_tokens(inner.inner(), tokens);
         }
         Expression::Rule(rhs, _) => {
@@ -187,7 +189,8 @@ pub fn compute_expression_end(expr: &Expression<'_>) -> Option<usize> {
         | Expression::Optional(inner)
         | Expression::Many(inner)
         | Expression::Many1(inner)
-        | Expression::OptionalWhitespace(inner) => {
+        | Expression::OptionalWhitespace(inner)
+        | Expression::SpanCapture(inner) => {
             Some(inner.span.end)
         }
         Expression::Rule(rhs, mapping) => {
@@ -222,6 +225,9 @@ pub fn format_expression_short(expr: &Expression<'_>) -> String {
         }
         Expression::OptionalWhitespace(inner) => {
             format!("{}?w", format_expression_short(inner.inner()))
+        }
+        Expression::SpanCapture(inner) => {
+            format!("@{{{}}}", format_expression_short(inner.inner()))
         }
         Expression::Many(inner) => {
             format!("{{{}}}",  format_expression_short(inner.inner()))

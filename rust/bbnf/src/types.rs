@@ -35,6 +35,8 @@ pub enum Expression<'a> {
     Group(TokenExpression<'a>),
     Optional(TokenExpression<'a>),
     OptionalWhitespace(TokenExpression<'a>),
+    /// Span capture: `@{expr}` — parse inner expression, discard result, return Span.
+    SpanCapture(TokenExpression<'a>),
 
     Many(TokenExpression<'a>),
     Many1(TokenExpression<'a>),
@@ -186,6 +188,7 @@ pub fn set_expression_comments<'a>(expr: &mut Expression<'a>, comments: Comments
         | Expression::Optional(token)
         | Expression::Many(token)
         | Expression::Many1(token)
+        | Expression::SpanCapture(token)
         | Expression::Skip(token, _)
         | Expression::Next(token, _)
         | Expression::Minus(token, _) => token.comments = Some(comments),

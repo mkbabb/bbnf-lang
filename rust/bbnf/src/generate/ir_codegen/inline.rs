@@ -401,6 +401,20 @@ pub(crate) fn ir_node_to_inline_vec(
                         });
                     quote! { #inner_expr.map(|_| #val_expr) }
                 }
+                FnDescriptor::SpanCapture => {
+                    // @{expr}: parse inner for validation, discard result, return Span.
+                    quote! {
+                        {
+                            let __start = state.offset;
+                            let __result = #inner_expr;
+                            if __result.is_some() {
+                                Some(::parse_that::Span::new(__start, state.offset, state.src))
+                            } else {
+                                None
+                            }
+                        }
+                    }
+                }
             }
         }
 

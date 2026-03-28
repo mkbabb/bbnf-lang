@@ -318,5 +318,19 @@ fn emit_map(
             });
             quote! { #inner_ts.map(|_| #val_expr) }
         }
+        FnDescriptor::SpanCapture => {
+            // @{expr}: parse inner for validation, return Span of consumed input.
+            quote! {
+                {
+                    let __start = state.offset;
+                    let __result = #inner_ts;
+                    if __result.is_some() {
+                        Some(::parse_that::Span::new(__start, state.offset, state.src))
+                    } else {
+                        None
+                    }
+                }
+            }
+        }
     }
 }

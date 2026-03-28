@@ -50,7 +50,8 @@ pub fn traverse_ast<'a>(ast: &'a AST, visitor: &mut Visitor<'a>) {
             | Expression::Optional(inner_expr)
             | Expression::Many(inner_expr)
             | Expression::Many1(inner_expr)
-            | Expression::OptionalWhitespace(inner_expr) => {
+            | Expression::OptionalWhitespace(inner_expr)
+            | Expression::SpanCapture(inner_expr) => {
                 let inner_expr = inner_expr.inner();
                 visit(nonterminal, inner_expr, visitor);
             }

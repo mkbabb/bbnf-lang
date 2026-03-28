@@ -205,6 +205,10 @@ pub enum FnDescriptor {
         value: StringId,
         return_type: Option<TypeDesc>,
     },
+
+    /// Span capture: parse inner expression for validation, discard result, return Span.
+    /// Used by `@{expr}` syntax to capture raw text while validating structure.
+    SpanCapture,
 }
 
 // ─── Rule-Level Metadata ─────────────────────────────────────────────────────

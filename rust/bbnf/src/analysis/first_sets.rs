@@ -255,6 +255,10 @@ pub(crate) fn compute_expr_first<'a>(
             compute_expr_first(&inner.value, first_sets, nullable_set, name_to_key, out)
         }
 
+        Expression::SpanCapture(inner) => {
+            compute_expr_first(&inner.value, first_sets, nullable_set, name_to_key, out)
+        }
+
         Expression::MappingFn(_) | Expression::ProductionRule(_, _) => {
             false
         }

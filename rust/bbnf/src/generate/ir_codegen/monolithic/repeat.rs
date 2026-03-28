@@ -35,6 +35,21 @@ pub(super) struct SepByConfig {
     pub unchecked_sep: Option<TokenStream>,
 }
 
+/// Check if a separator is a single-byte comma (possibly wrapped in OW).
+fn is_comma_separator(separator: &IrNode, ctx: &IrCodegenCtx<'_>) -> bool {
+    let check = |sid: bbnf_ir::StringId| -> bool {
+        let raw = ctx.ir.get_string(sid);
+        unescape_literal(raw) == ","
+    };
+    match separator {
+        IrNode::Literal(sid) => check(*sid),
+        IrNode::OptionalWhitespace(inner) => {
+            matches!(inner.as_ref(), IrNode::Literal(sid) if check(*sid))
+        }
+        _ => false,
+    }
+}
+
 /// Try to extract an unchecked single-byte separator expression.
 ///
 /// Returns `Some(TokenStream)` if the separator is a single-byte literal
@@ -89,11 +104,31 @@ pub(super) fn emit_mono_sep_by_core(
     let sep_expr = super::emit_mono_discarded(separator, config.ws, ctx, mctx);
     let loop_sep = config.unchecked_sep.as_ref().unwrap_or(&sep_expr);
 
-    // No pre-allocation: Rust's Vec grows 0→4→8→16→... which handles both
-    // small containers (1-5 elements, 1 alloc) and large ones (amortized O(1)).
-    // Pre-allocating caused pathological over-allocation for nested containers
-    // (canada.json: 2-element arrays allocated 16K capacity each).
-    let capacity_code = quote! { let mut #vals_var = Vec::new(); };
+    // Pre-allocation strategy: for comma-separated lists in delimited contexts,
+    // use SIMD-accelerated memchr to count commas up to the first terminator byte.
+    // This gives an upper-bound capacity that avoids Vec reallocation.
+    // For non-delimited or non-comma contexts, use Vec::new() (Rust's default
+    // growth 0→4→8→16... handles both small and large containers).
+    let capacity_code = if is_comma_separator(separator, ctx) {
+        if let Some(ref term_bytes) = config.terminator_bytes {
+            // Delimited comma list: count commas up to first terminator.
+            let term_lit = proc_macro2::Literal::byte_character(term_bytes[0]);
+            quote! {
+                let mut #vals_var = {
+                    let __rem = &state.src_bytes[state.offset..];
+                    let __cap = match memchr::memchr(#term_lit, __rem) {
+                        Some(__end) => memchr::memchr_iter(b',', &__rem[..__end]).count() + 1,
+                        None => 0,
+                    };
+                    Vec::with_capacity(__cap)
+                };
+            }
+        } else {
+            quote! { let mut #vals_var = Vec::new(); }
+        }
+    } else {
+        quote! { let mut #vals_var = Vec::new(); }
+    };
 
     // ── Whitespace fragments (use custom @ws pattern if configured) ──
     let ws_trim = super::emit_ws_trim(ctx, mctx);

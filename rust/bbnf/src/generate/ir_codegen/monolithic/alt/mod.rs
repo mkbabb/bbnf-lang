@@ -1,6 +1,6 @@
 //! Monolithic Alt emission: dispatch-table match and flat checkpoint chain.
 
-mod ident_dispatch;
+mod key_dispatch;
 mod literal;
 
 use bbnf_ir::{AltBranch, FnDescriptor, IrNode, TypeDesc};
@@ -12,7 +12,7 @@ use super::super::super::ir_types::{self, IrCodegenCtx};
 use super::super::infer::{infer_node_type, infer_node_type_elide_box};
 use super::{emit_mono_expr, MonoCtx};
 
-use ident_dispatch::try_emit_ident_dispatch;
+use key_dispatch::try_emit_key_dispatch;
 
 /// Result of extracting a literal through a Map wrapper.
 /// `lit_sid` is the StringId of the literal; `constant_value` is `Some(StringId)`
@@ -148,7 +148,7 @@ pub(super) fn emit_mono_alt(
             mctx,
             effective_elide_box,
         )
-    } else if let Some(ts) = try_emit_ident_dispatch(
+    } else if let Some(ts) = try_emit_key_dispatch(
         branches,
         &branch_tys,
         needs_coercion,

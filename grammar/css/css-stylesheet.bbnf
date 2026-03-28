@@ -3,6 +3,7 @@
 @import "css-media.bbnf" ;
 
 @ws /(?s)(?:\s|\/\*.*?\*\/)*/ ;
+@token ident ;
 
 blockContent = ((declaration | ruleItem) ?w) * ;
 ruleBlock    = "{" >> blockContent ?w << "}" ;

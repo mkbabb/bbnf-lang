@@ -48,11 +48,14 @@ pub fn fuse_token_dispatch(ir: &mut GrammarIR) {
         .iter()
         .map(|r| (r.id, r.body.clone()))
         .collect();
-    let rule_first_sets: Vec<CharSet128> = ir
-        .rules
-        .iter()
-        .map(|r| r.meta.first_set.clone())
-        .collect();
+    // Build ID-indexed FIRST set map (rule IDs may be sparse after pruning).
+    let max_rule_id = ir.rules.iter().map(|r| r.id).max().unwrap_or(0) as usize;
+    let mut rule_first_sets: Vec<CharSet128> = vec![CharSet128::new(); max_rule_id + 1];
+    for r in &ir.rules {
+        if (r.id as usize) < rule_first_sets.len() {
+            rule_first_sets[r.id as usize] = r.meta.first_set.clone();
+        }
+    }
 
     // Collect synthetic continuation rules to add.
     let mut new_rules: Vec<IrRule> = Vec::new();
@@ -277,23 +280,51 @@ fn factor_with_token(
     // Build continuations for each overlapping branch.
     // Branches with keyword-only bodies (Epsilon continuation) get moved back
     // to non_overlap (they need the pre-scanned token as their result).
-    let mut continuation_branches: Vec<AltBranch> = Vec::new();
-    let mut actual_overlap: Vec<usize> = Vec::new();
+    //
+    // Also collect key patterns per branch for TokenDispatch generation.
+    struct ContinuationInfo {
+        branch_idx: usize,
+        cont_ref: IrNode,
+        cont_first: Option<CharSet128>,
+        /// Literal key patterns extracted from the stripped keyword (None for regex catch-all).
+        key_patterns: Option<Vec<StringId>>,
+    }
+
+    let mut continuations: Vec<ContinuationInfo> = Vec::new();
 
     for &i in &overlap_indices {
         let branch = &branches[i];
 
-        // Get the rule body (follow Ref).
+        // Get the rule body: follow Ref, or use inline body directly.
         let (ref_rule_id, body) = match &branch.node {
             IrNode::Ref(id) => {
                 let b = rule_bodies.iter().find(|(rid, _)| *rid == *id)?.1.clone();
-                (*id, b)
+                (Some(*id), b)
             }
-            _ => continue, // Can't factor non-Ref branches (bare expressions).
+            // Handle inline Seq/OW branches (e.g., after fuse_single_use inlines declarations).
+            IrNode::Seq(_) | IrNode::OptionalWhitespace(_) => {
+                (None, branch.node.clone())
+            }
+            _ => continue,
         };
 
-        // Strip the leading keyword from the body.
-        let continuation_body = strip_leading_keyword(&body, strings);
+        // Extract key patterns from the leading keyword BEFORE stripping.
+        let key_patterns = match &body {
+            IrNode::Seq(children) if !children.is_empty() => {
+                extract_keyword_patterns(&children[0], strings, rule_bodies)
+            }
+            IrNode::OptionalWhitespace(inner) => match inner.as_ref() {
+                IrNode::Seq(children) if !children.is_empty() => {
+                    extract_keyword_patterns(&children[0], strings, rule_bodies)
+                }
+                _ => None,
+            },
+            _ => None,
+        };
+
+        // Strip the leading keyword from the body (follows Refs to detect
+        // property group rules like colorProps = "color" | "background-color" | ...).
+        let continuation_body = strip_leading_keyword(&body, strings, rule_bodies);
 
         // Skip keyword-only branches (continuation is Epsilon) — they need
         // the pre-scanned token as their result, which the Seq can't provide.
@@ -303,19 +334,25 @@ fn factor_with_token(
             continue;
         }
 
+        // Skip branches where strip_leading_keyword couldn't strip anything —
+        // the continuation still expects the leading token (e.g., Ref to a property
+        // group rule that isn't a simple keyword). Including these would cause the
+        // fused Seq to double-consume the prefix.
+        if continuation_body == body {
+            non_overlap_indices.push(i);
+            continue;
+        }
+
         let cont_first = leading_first_set(&continuation_body, rule_first_sets, strings);
 
-        // Create a synthetic continuation rule instead of inlining the body.
-        // This ensures the continuation always infers to BoxedEnum, avoiding
-        // tuple-type coercion failures for complex Seq bodies from imports.
+        // Create a synthetic continuation rule.
         let cont_rule_id = *next_id;
         *next_id += 1;
 
-        let orig_name = rule_names
-            .iter()
-            .find(|(id, _)| *id == ref_rule_id)
+        let orig_name = ref_rule_id
+            .and_then(|rid| rule_names.iter().find(|(id, _)| *id == rid))
             .map(|(_, n)| n.as_str())
-            .unwrap_or("unknown");
+            .unwrap_or("branch");
         let cont_name = format!("__{}_cont_{}", orig_name, cont_rule_id);
         let cont_name_sid = strings.len() as u32;
         strings.push(cont_name);
@@ -331,28 +368,47 @@ fn factor_with_token(
             source_span: None,
         });
 
-        // Use Ref to the synthetic rule in the Alt, not the inline body.
-        continuation_branches.push(AltBranch {
-            node: IrNode::Ref(cont_rule_id),
-            first_set: cont_first,
+        continuations.push(ContinuationInfo {
+            branch_idx: i,
+            cont_ref: IrNode::Ref(cont_rule_id),
+            cont_first,
+            key_patterns,
         });
-        actual_overlap.push(i);
     }
+
+    let actual_overlap: Vec<usize> = continuations.iter().map(|c| c.branch_idx).collect();
 
     // Need at least 3 actual continuation branches.
     if actual_overlap.len() < 3 {
         return None;
     }
 
-    // Build the fused group: Seq(token_regex, Alt(continuations))
-    let fused = IrNode::Seq(vec![
-        IrNode::Regex(token_regex_sid),
-        IrNode::Alt(continuation_branches, None),
-    ]);
+    // Always produce Seq+Alt. The dispatch table pass handles disjoint FIRST
+    // sets. For shared FIRST sets (key-value patterns like CSS declarations),
+    // the codegen-level ident_dispatch is more efficient than IR-level
+    // TokenDispatch (avoids function call overhead from synthetic continuation rules).
+    let fused = {
+        let continuation_branches: Vec<AltBranch> = continuations
+            .iter()
+            .map(|c| AltBranch {
+                node: c.cont_ref.clone(),
+                first_set: c.cont_first.clone(),
+            })
+            .collect();
+        IrNode::Seq(vec![
+            IrNode::Regex(token_regex_sid),
+            IrNode::Alt(continuation_branches, None),
+        ])
+    };
 
     let fused_first = crate::regex_first::regex_first_chars(&strings[token_regex_sid as usize]);
 
-    // Rebuild the outer Alt: non-overlapping branches + fused group.
+    // For TokenDispatch, the fallback already handles non-matching keys.
+    // The outer Alt only needs: non-overlap branches that weren't folded into
+    // the fallback (e.g., branches with non-ident FIRST sets like hex, number)
+    // plus the TokenDispatch node itself.
+    //
+    // For Seq+Alt, same as before: non-overlap branches + fused group.
     let last_overlap_pos = *actual_overlap.last().unwrap();
 
     let mut new_branches: Vec<AltBranch> = Vec::new();
@@ -405,8 +461,132 @@ fn new_branches_with_rest(
     new_branches
 }
 
-/// Strip the leading keyword (Literal or Alt-of-Literals) from a rule body.
-fn strip_leading_keyword(body: &IrNode, strings: &[String]) -> IrNode {
+/// Extract literal string patterns from a keyword node (following Refs).
+/// Returns None if the node contains non-literal patterns (regex, etc.).
+/// Collect all concrete string values that a keyword pattern can match.
+/// For prefix-factored nodes like `Seq(Literal("b"), Alt(Literal("order"), Literal("ack")))`,
+/// reconstructs the full strings: ["border", "back"].
+fn collect_keyword_strings(
+    node: &IrNode,
+    strings: &[String],
+    rule_bodies: &[(u32, IrNode)],
+    prefix: &str,
+) -> Option<Vec<String>> {
+    match node {
+        IrNode::Literal(sid) => {
+            let s = &strings[*sid as usize];
+            Some(vec![format!("{}{}", prefix, s)])
+        }
+        IrNode::Alt(alts, _) => {
+            let mut result = Vec::new();
+            for b in alts {
+                result.extend(collect_keyword_strings(&b.node, strings, rule_bodies, prefix)?);
+            }
+            Some(result)
+        }
+        IrNode::Seq(children) => {
+            // Thread prefix through Seq: each child appends to the prefix.
+            let mut current_prefix = prefix.to_string();
+            for (i, child) in children.iter().enumerate() {
+                if i == children.len() - 1 {
+                    // Last child: collect full strings.
+                    return collect_keyword_strings(child, strings, rule_bodies, &current_prefix);
+                }
+                // Intermediate child must be a single Literal.
+                match child {
+                    IrNode::Literal(sid) => {
+                        current_prefix.push_str(&strings[*sid as usize]);
+                    }
+                    _ => return None,
+                }
+            }
+            Some(vec![current_prefix])
+        }
+        IrNode::Ref(id) => {
+            if let Some((_, ref_body)) = rule_bodies.iter().find(|(rid, _)| *rid == *id) {
+                collect_keyword_strings(ref_body, strings, rule_bodies, prefix)
+            } else {
+                None
+            }
+        }
+        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
+            collect_keyword_strings(inner, strings, rule_bodies, prefix)
+        }
+        IrNode::Epsilon => {
+            if prefix.is_empty() { None } else { Some(vec![prefix.to_string()]) }
+        }
+        _ => None,
+    }
+}
+
+/// Extract literal string patterns from a keyword node (following Refs).
+/// Returns None if the node contains non-literal patterns (regex, etc.).
+fn extract_keyword_patterns(
+    node: &IrNode,
+    strings: &mut Vec<String>,
+    rule_bodies: &[(u32, IrNode)],
+) -> Option<Vec<StringId>> {
+    let keyword_strings = collect_keyword_strings(node, strings, rule_bodies, "")?;
+    if keyword_strings.is_empty() {
+        return None;
+    }
+    // Intern each keyword string and return StringIds.
+    let mut sids = Vec::new();
+    for s in keyword_strings {
+        if !s.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_') {
+            return None;
+        }
+        // Find existing or add new string.
+        let sid = if let Some(pos) = strings.iter().position(|existing| existing == &s) {
+            pos as StringId
+        } else {
+            let sid = strings.len() as StringId;
+            strings.push(s);
+            sid
+        };
+        sids.push(sid);
+    }
+    Some(sids)
+}
+
+/// Check whether an IR node is a keyword pattern (ident-like literals, regex,
+/// or a Ref to a rule whose body is a keyword pattern).
+fn is_keyword_node(node: &IrNode, strings: &[String], rule_bodies: &[(u32, IrNode)]) -> bool {
+    match node {
+        IrNode::Literal(sid) => {
+            let s = &strings[*sid as usize];
+            s.bytes()
+                .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
+        }
+        IrNode::Alt(alts, _) => alts.iter().all(|b| is_keyword_node(&b.node, strings, rule_bodies)),
+        // Seq of keywords is a keyword (e.g., after prefix factoring:
+        // Seq(Literal("b"), Alt(Literal("order-color"), ...)) → "border-color").
+        IrNode::Seq(children) => children.iter().all(|c| is_keyword_node(c, strings, rule_bodies)),
+        IrNode::Regex(_) => true,
+        IrNode::Epsilon => true,
+        // Follow Refs: check if the referenced rule body is a keyword pattern.
+        IrNode::Ref(id) => {
+            if let Some((_, ref_body)) = rule_bodies.iter().find(|(rid, _)| *rid == *id) {
+                is_keyword_node(ref_body, strings, rule_bodies)
+            } else {
+                false
+            }
+        }
+        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
+            is_keyword_node(inner, strings, rule_bodies)
+        }
+        _ => false,
+    }
+}
+
+/// Strip the leading keyword (Literal, Alt-of-Literals, Regex, or Ref to keyword
+/// rule) from a rule body. Follows Refs to detect keyword patterns in property
+/// group rules like `colorProps = "color" | "background-color" | ...`.
+fn strip_leading_keyword(
+    body: &IrNode,
+    strings: &[String],
+    rule_bodies: &[(u32, IrNode)],
+) -> IrNode {
     // Unwrap OW.
     let inner = match body {
         IrNode::OptionalWhitespace(i) => i.as_ref(),
@@ -415,23 +595,7 @@ fn strip_leading_keyword(body: &IrNode, strings: &[String]) -> IrNode {
 
     match inner {
         IrNode::Seq(children) if children.len() >= 2 => {
-            let first = &children[0];
-            let is_keyword = match first {
-                IrNode::Literal(sid) => {
-                    let s = &strings[*sid as usize];
-                    s.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
-                }
-                IrNode::Alt(alts, _) => alts.iter().all(|b| {
-                    matches!(&b.node, IrNode::Literal(sid) if {
-                        let s = &strings[*sid as usize];
-                        s.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
-                    })
-                }),
-                IrNode::Regex(_) => true, // Regex prefix (genericFunction)
-                _ => false,
-            };
-
-            if is_keyword {
+            if is_keyword_node(&children[0], strings, rule_bodies) {
                 if children.len() == 2 {
                     children[1].clone()
                 } else {

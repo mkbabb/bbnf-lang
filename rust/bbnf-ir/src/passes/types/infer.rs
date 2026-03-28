@@ -111,6 +111,7 @@ pub fn infer_node(node: &IrNode, ctx: &InferCtx<'_>) -> TypeDesc {
                         TypeDesc::Named(*value)
                     }
                 }
+                FnDescriptor::SpanCapture => TypeDesc::Span,
             }
         }
 
@@ -170,6 +171,7 @@ pub fn infer_node_in_vec(node: &IrNode, ctx: &InferCtx<'_>) -> TypeDesc {
                         TypeDesc::Named(*value)
                     }
                 }
+                FnDescriptor::SpanCapture => TypeDesc::Span,
             }
         }
         // Alt: try in_vec inference. Only apply if branches are homogeneous

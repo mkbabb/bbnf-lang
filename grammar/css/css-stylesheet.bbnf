@@ -1,5 +1,6 @@
 @import "css-properties.bbnf" ;
 @import "css-selectors.bbnf" ;
+@import "css-media.bbnf" ;
 
 @ws /(?s)(?:\s|\/\*.*?\*\/)*/ ;
 
@@ -10,8 +11,7 @@ ruleBlock    = "{" >> blockContent ?w << "}" ;
 qualifiedRule = selectorList ?w , ruleBlock ?w ;
 
 // Typed @-rules
-mediaQuery    = /[^{;]+/ ;
-mediaRule     = "@media" ?w , mediaQuery ?w , ruleBlock ;
+mediaRule     = "@media" ?w , mediaQueryList ?w , ruleBlock ;
 
 keyframeStop  = /\d+%/ | "from" | "to" ;
 keyframeSel   = keyframeStop , (/\s*,\s*/ >> keyframeStop) * ;

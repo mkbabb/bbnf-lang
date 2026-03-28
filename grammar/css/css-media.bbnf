@@ -1,0 +1,27 @@
+// CSS Media Queries Level 5 — structured media condition grammar.
+// Spec: https://drafts.csswg.org/mediaqueries-5/
+//
+// Covers the real-world subset: media types, feature expressions with
+// min/max prefixes, and boolean combinators (and, or, not).
+
+@import "css-tokens.bbnf" ;
+
+// --- Media types ---
+mediaType = "all" | "print" | "screen" | "speech" ;
+
+// --- Media feature: (name: value) or (name) ---
+mediaFeatureName = ident ;
+mediaFeatureValue = /[^)]+/ ;
+mediaFeature = "(" ?w , mediaFeatureName ?w , (":" ?w , mediaFeatureValue ?w) ? , ")" ;
+
+// --- Media condition combinators ---
+mediaNot       = "not" ?w , mediaInParens ;
+mediaAnd       = mediaInParens , ("and" ?w >> mediaInParens) + ;
+mediaOr        = mediaInParens , ("or" ?w >> mediaInParens) + ;
+mediaInParens  = mediaFeature | "(" ?w >> mediaCondition << ?w ")" ;
+mediaCondition = mediaNot | mediaAnd | mediaOr | mediaInParens ;
+
+// --- Full media query ---
+// "print", "screen and (min-width: 768px)", "not print", "(prefers-color-scheme: dark)"
+mediaQuery     = ("not" | "only") ? , mediaType ? , ("and" ?w >> mediaInParens) * ;
+mediaQueryList = mediaQuery , ("," ?w >> mediaQuery) * ;

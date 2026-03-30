@@ -37,7 +37,7 @@ pub fn audit_regex_pattern(pattern: &str) -> RegexTier {
     }
 
     // Tier 3: DFA.
-    if let Some(dfa) = parse_that::regex::Dfa::compile(pattern) {
+    if let Some(dfa) = parse_that::regex_engine::Dfa::compile(pattern) {
         return RegexTier::DfaCompiled {
             states: dfa.state_count(),
             classes: dfa.class_count(),

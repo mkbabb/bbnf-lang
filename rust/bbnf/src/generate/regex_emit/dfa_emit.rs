@@ -1,6 +1,6 @@
 //! DFA → inline TokenStream code emission.
 //!
-//! Converts a compiled `parse_that::regex::Dfa` into inline Rust code
+//! Converts a compiled `parse_that::regex_engine::Dfa` into inline Rust code
 //! that performs anchored regex matching via direct byte operations.
 //!
 //! Three emission tiers based on DFA size:
@@ -13,9 +13,9 @@
 //! All tiers emit code that evaluates to `Option<Span<'a>>`, reading from
 //! `state.src_bytes` and advancing `state.offset`.
 
-use parse_that::regex::accel::{AccelStrategy, detect_accel};
-use parse_that::regex::dfa::Dfa;
-use parse_that::regex::nfa::DEAD;
+use parse_that::regex_engine::accel::{AccelStrategy, detect_accel};
+use parse_that::regex_engine::dfa::Dfa;
+use parse_that::regex_engine::nfa::DEAD;
 use proc_macro2::TokenStream;
 use quote::quote;
 
@@ -113,7 +113,7 @@ fn emit_tier_a(dfa: &Dfa) -> TokenStream {
 /// non-start state that self-loops and is accepting.
 fn try_emit_simple_loop(
     dfa: &Dfa,
-    accels: &[parse_that::regex::accel::StateAccel],
+    accels: &[parse_that::regex_engine::accel::StateAccel],
     _state_transitions: &[Vec<(TokenStream, u32)>],
 ) -> Option<TokenStream> {
     let state0 = &dfa.states[0];
@@ -205,7 +205,7 @@ fn try_emit_simple_loop(
 /// Emit a general state machine loop for small DFAs.
 fn emit_general_state_machine(
     dfa: &Dfa,
-    _accels: &[parse_that::regex::accel::StateAccel],
+    _accels: &[parse_that::regex_engine::accel::StateAccel],
     state_transitions: &[Vec<(TokenStream, u32)>],
 ) -> TokenStream {
     let num_states = dfa.state_count();
@@ -530,7 +530,7 @@ fn bytes_to_ranges(bytes: &[u8]) -> Vec<(u8, u8)> {
 
 /// Try to emit SIMD-accelerated scanning code for a self-loop state.
 fn try_emit_accel_scan(
-    accel: &parse_that::regex::accel::StateAccel,
+    accel: &parse_that::regex_engine::accel::StateAccel,
 ) -> Option<TokenStream> {
     match &accel.strategy {
         AccelStrategy::Memchr1(b) => {

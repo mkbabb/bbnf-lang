@@ -14,7 +14,7 @@ proc-macro = true
 bbnf = { version = "0.2.5", path = "../bbnf" }
 bbnf-ir = { version = "0.1", path = "../bbnf-ir" }
 pprint = "0.3"
-parse_that = "0.3"
+parse_that = "0.4"
 
 syn = { version = "2", features = ["full"] }
 quote = "1"

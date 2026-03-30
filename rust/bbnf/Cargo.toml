@@ -12,7 +12,7 @@ path = "src/lib.rs"
 
 [dependencies]
 pprint = "0.3"
-parse_that = "0.3"
+parse_that = "0.4"
 bbnf-ir = { version = "0.1", path = "../bbnf-ir" }
 
 syn = { version = "2", features = ["full"] }
@@ -29,7 +29,7 @@ dhat-heap = ["dep:dhat"]
 tempfile = "3"
 bbnf_derive = { version = "0.2", path = "../bbnf-derive" }
 pprint = "0.3"
-parse_that = "0.3"
+parse_that = "0.4"
 bencher = "0.1"
 mimalloc = "0.1"
 

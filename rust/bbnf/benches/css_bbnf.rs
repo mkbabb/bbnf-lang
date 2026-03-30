@@ -5,10 +5,15 @@
 //! All benches construct a fresh BumpArena + Parser per iteration.
 //!
 //! - **arena**: css-fast.bbnf — L0 typed enum tree, opaque spans for values/selectors
-//! - **semantic**: css-semantic.bbnf — L1 typed values (numbers → f64 during parsing)
-//! - **import**: css-stylesheet.bbnf — L2 property dispatch + typed selectors via imports
 //! - **span**: css-fast.bbnf — L0 zero-alloc byte ranges, validation only
+//! - **semantic**: css-semantic.bbnf — L1 typed values (numbers → f64 via -> mapping)
+//! - **l4**: css-stylesheet.bbnf — full CSS L4 spec via @import composition
 
+#[cfg(feature = "dhat-heap")]
+#[global_allocator]
+static ALLOC: dhat::Alloc = dhat::Alloc;
+
+#[cfg(not(feature = "dhat-heap"))]
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
@@ -271,9 +276,9 @@ bench_semantic!(semantic_normalize, "normalize.css");
 bench_semantic!(semantic_bootstrap, "bootstrap.css");
 bench_semantic!(semantic_tailwind, "tailwind.css");
 
-// ── Import (cold per-parse, property dispatch + typed selectors) ─────
+// ── L4 (cold per-parse, full CSS L4 spec via @import composition) ──
 
-macro_rules! bench_import {
+macro_rules! bench_l4 {
     ($name:ident, $file:expr) => {
         fn $name(b: &mut Bencher) {
             let input = load_css($file);
@@ -286,7 +291,7 @@ macro_rules! bench_import {
                     let f = state.furthest_offset;
                     let around = &input[f.saturating_sub(10)..(f+30).min(input.len())];
                     panic!(
-                        "{}: import consumed {}% (offset {}, furthest {} = '{}')",
+                        "{}: l4 consumed {}% (offset {}, furthest {} = '{}')",
                         $file, pct, state.offset, f, around
                     );
                 }
@@ -305,15 +310,59 @@ macro_rules! bench_import {
     };
 }
 
-bench_import!(import_normalize, "normalize.css");
-bench_import!(import_bootstrap, "bootstrap.css");
-bench_import!(import_tailwind, "tailwind.css");
+bench_l4!(l4_normalize, "normalize.css");
+bench_l4!(l4_bootstrap, "bootstrap.css");
+bench_l4!(l4_tailwind, "tailwind.css");
+
+// ── VM tier (bytecode interpreter) ─────────────────────────────────────────
+
+use bbnf::pipeline::{compile_grammar, PipelineOptions};
+use bbnf_ir::compiler::compile as compile_bytecode;
+use bbnf_ir::interpreter::Interpreter;
+
+fn compiled_css_vm() -> (bbnf_ir::GrammarIR, bbnf_ir::bytecode::BytecodeProgram) {
+    let grammar = std::fs::read_to_string("benches/grammars/css-fast.bbnf")
+        .expect("failed to read css-fast.bbnf");
+    let ir = compile_grammar(&grammar, &PipelineOptions::default()).unwrap();
+    let program = compile_bytecode(&ir);
+    (ir, program)
+}
+
+macro_rules! bench_vm {
+    ($name:ident, $file:expr) => {
+        fn $name(b: &mut Bencher) {
+            let input = load_css($file);
+            let (_ir, program) = compiled_css_vm();
+            {
+                let mut interp = Interpreter::new(&program, &input);
+                let r = interp.run();
+                let consumed_pct = r.offset as usize * 100 / input.len().max(1);
+                assert!(
+                    r.success && consumed_pct >= 95,
+                    concat!($file, ": VM consumed only {}% (offset {})"),
+                    consumed_pct, r.offset
+                );
+            }
+            b.bytes = input.len() as u64;
+            b.iter(|| {
+                let mut interp = Interpreter::new(&program, black_box(&input));
+                let r = interp.run();
+                black_box(r.offset);
+            });
+        }
+    };
+}
+
+bench_vm!(vm_normalize, "normalize.css");
+bench_vm!(vm_bootstrap, "bootstrap.css");
+bench_vm!(vm_tailwind, "tailwind.css");
 
 // ── Groups ──────────────────────────────────────────────────────────────────
 
 benchmark_group!(arena, arena_normalize, arena_bootstrap, arena_tailwind);
 benchmark_group!(span, span_normalize, span_bootstrap, span_tailwind);
 benchmark_group!(semantic, semantic_normalize, semantic_bootstrap, semantic_tailwind);
-benchmark_group!(import, import_normalize, import_bootstrap, import_tailwind);
+benchmark_group!(l4, l4_normalize, l4_bootstrap, l4_tailwind);
+benchmark_group!(vm, vm_normalize, vm_bootstrap, vm_tailwind);
 
-benchmark_main!(arena, span, semantic, import);
+benchmark_main!(arena, span, semantic, l4, vm);

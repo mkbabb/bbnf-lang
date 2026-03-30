@@ -1,14 +1,20 @@
 #![feature(cold_path)]
 
-//! BBNF JSON parsing benchmarks — cold per-parse, three tiers + VM.
+//! BBNF JSON parsing benchmarks — cold per-parse, five tiers.
 //!
 //! Fresh BumpArena + Parser per iteration. No warm-cache benchmarks.
 //!
-//! - **span**: opaque AST spans, structural validation only
-//! - **borrow**: borrowed JsonValue, numbers parsed, strings stripped, no escape decode
-//! - **copy**: owned JsonValue, full escape decode, Cow strings
+//! - **arena**: arena codegen, raw enum output (structural validation)
+//! - **borrow**: arena codegen, borrowed JsonValue (null/bool fused via ->, strings stripped)
+//! - **copy**: arena codegen, owned JsonValue (full escape decode, Cow strings)
+//! - **native**: parse_that built-in json_parser (fused number conversion, not BBNF)
 //! - **vm**: bytecode interpreter
 
+#[cfg(feature = "dhat-heap")]
+#[global_allocator]
+static ALLOC: dhat::Alloc = dhat::Alloc;
+
+#[cfg(not(feature = "dhat-heap"))]
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
@@ -61,9 +67,9 @@ enum BorrowedJsonValue<'a> {
 fn to_borrowed_arena<'a>(node: &'a BbnfJsonParserArenaEnum<'a>) -> BorrowedJsonValue<'a> {
     match node {
         BbnfJsonParserArenaEnum::null(_) => BorrowedJsonValue::Null,
-        BbnfJsonParserArenaEnum::r#bool(s) => BorrowedJsonValue::Bool(s.as_str() == "true"),
-        BbnfJsonParserArenaEnum::number((_, f)) => {
-            // f64 already computed during parse via fused number_scan_convert.
+        BbnfJsonParserArenaEnum::r#bool(b) => BorrowedJsonValue::Bool(*b),
+        BbnfJsonParserArenaEnum::number(f) => {
+            // f64 fused during parse via NumberConvert (Eisel-Lemire).
             BorrowedJsonValue::Number(*f)
         }
         BbnfJsonParserArenaEnum::string(s) => {
@@ -107,8 +113,8 @@ enum OwnedJsonValue<'a> {
 fn to_owned_value_arena<'a>(node: &'a BbnfJsonParserArenaEnum<'a>) -> OwnedJsonValue<'a> {
     match node {
         BbnfJsonParserArenaEnum::null(_) => OwnedJsonValue::Null,
-        BbnfJsonParserArenaEnum::r#bool(s) => OwnedJsonValue::Bool(s.as_str() == "true"),
-        BbnfJsonParserArenaEnum::number((_, f)) => {
+        BbnfJsonParserArenaEnum::r#bool(b) => OwnedJsonValue::Bool(*b),
+        BbnfJsonParserArenaEnum::number(f) => {
             OwnedJsonValue::Number(*f)
         }
         BbnfJsonParserArenaEnum::string(s) => OwnedJsonValue::String(decode_string(*s)),
@@ -182,9 +188,9 @@ fn decode_string<'a>(s: Span<'a>) -> Cow<'a, str> {
     Cow::Owned(out)
 }
 
-// ── Span tier (cold per-parse) ──────────────────────────────────────
+// ── Arena tier (cold per-parse) ─────────────────────────────────────
 
-macro_rules! bench_span {
+macro_rules! bench_arena {
     ($name:ident, $file:expr) => {
         fn $name(b: &mut Bencher) {
             let input = load_json($file);
@@ -209,11 +215,11 @@ macro_rules! bench_span {
     };
 }
 
-bench_span!(span_data, "data.json");
-bench_span!(span_twitter, "twitter.json");
-bench_span!(span_citm, "citm_catalog.json");
-bench_span!(span_canada, "canada.json");
-bench_span!(span_data_xl, "data_xl.json");
+bench_arena!(arena_data, "data.json");
+bench_arena!(arena_twitter, "twitter.json");
+bench_arena!(arena_citm, "citm_catalog.json");
+bench_arena!(arena_canada, "canada.json");
+bench_arena!(arena_data_xl, "data_xl.json");
 
 // ── Borrow tier (cold per-parse) ────────────────────────────────────
 
@@ -309,12 +315,12 @@ bench_vm!(vm_citm, "citm_catalog.json");
 bench_vm!(vm_canada, "canada.json");
 bench_vm!(vm_data_xl, "data_xl.json");
 
-// ── Convert tier (fused scan+convert, parse-that built-in json_value) ────────
+// ── Native tier (parse_that built-in json_parser, not BBNF) ─────────
 // Uses parse_that::json_value() which fuses number scanning with mantissa
 // accumulation — numbers converted to f64 during parsing, no re-read.
 // This is the fair comparison against sonic-rs (which also fuses).
 
-macro_rules! bench_convert {
+macro_rules! bench_native {
     ($name:ident, $file:expr) => {
         fn $name(b: &mut Bencher) {
             let input = load_json($file);
@@ -335,21 +341,21 @@ macro_rules! bench_convert {
     };
 }
 
-bench_convert!(convert_data, "data.json");
-bench_convert!(convert_twitter, "twitter.json");
-bench_convert!(convert_citm, "citm_catalog.json");
-bench_convert!(convert_canada, "canada.json");
-bench_convert!(convert_data_xl, "data_xl.json");
+bench_native!(native_data, "data.json");
+bench_native!(native_twitter, "twitter.json");
+bench_native!(native_citm, "citm_catalog.json");
+bench_native!(native_canada, "canada.json");
+bench_native!(native_data_xl, "data_xl.json");
 
 // ── Groups ──────────────────────────────────────────────────────────────────
 
 benchmark_group!(
-    span,
-    span_data,
-    span_twitter,
-    span_citm,
-    span_canada,
-    span_data_xl
+    arena,
+    arena_data,
+    arena_twitter,
+    arena_citm,
+    arena_canada,
+    arena_data_xl
 );
 benchmark_group!(
     borrow,
@@ -368,13 +374,13 @@ benchmark_group!(
     copy_data_xl
 );
 benchmark_group!(
-    convert,
-    convert_data,
-    convert_twitter,
-    convert_citm,
-    convert_canada,
-    convert_data_xl
+    native,
+    native_data,
+    native_twitter,
+    native_citm,
+    native_canada,
+    native_data_xl
 );
 benchmark_group!(vm, vm_data, vm_twitter, vm_citm, vm_canada, vm_data_xl);
-benchmark_main!(span, borrow, copy, convert, vm);
+benchmark_main!(arena, borrow, copy, native, vm);
 

@@ -15,13 +15,15 @@ pprint = "0.3"
 parse_that = "0.3"
 bbnf-ir = { version = "0.1", path = "../bbnf-ir" }
 
-regex = { version = "1.11", features = ["perf"] }
-
 syn = { version = "2", features = ["full"] }
 quote = "1"
 proc-macro2 = "1"
 indexmap = "2"
 regex-syntax = "0.8.10"
+dhat = { version = "0.3", optional = true }
+
+[features]
+dhat-heap = ["dep:dhat"]
 
 [dev-dependencies]
 tempfile = "3"
@@ -54,6 +56,9 @@ lightningcss = "1.0.0-alpha.70"
 # Number parsing for borrow/owned tiers
 fast-float2 = "0.2"
 
+# Formatting engine (VM-based pretty-printing)
+gorgeous = { version = "0.1", features = ["vm"] }
+
 [[bench]]
 name = "google_sheets"
 harness = false
@@ -72,4 +77,12 @@ harness = false
 
 [[bench]]
 name = "css_competitors"
+harness = false
+
+[[bench]]
+name = "css_stress"
+harness = false
+
+[[bench]]
+name = "stress"
 harness = false

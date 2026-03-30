@@ -63,7 +63,9 @@ envFunction = "env" , "(" >> ident , ("," >> varFallback) ? << ")" ;
 
 // --- url() function ---
 
-urlFunction = "url" , "(" >> (string | /[^)"'\s]+/) << ")" ;
+// @{...} span capture: preserves raw URL text for source maps and
+// cache-aware handling.
+urlFunction = @{ "url" , "(" >> (string | /[^)"'\s]+/) << ")" } ;
 
 // --- Global keywords (CSS Cascading and Inheritance Level 5) ---
 

@@ -560,3 +560,38 @@ fn pipeline_google_sheets_multiline_let() {
     assert!(result.success, "formula without = failed at offset={}", result.offset);
     assert_eq!(result.offset as usize, no_eq.len(), "should consume all input without =");
 }
+
+#[test]
+fn pipeline_span_capture_type_inference() {
+    // @{expr} should always infer TypeDesc::Span, regardless of inner expression type.
+    let grammar = r#"
+        number = /[0-9]+/ ;
+        comma  = "," ;
+        pair   = number , comma , number ;
+        captured = @{ pair } ;
+        value  = captured | number ;
+    "#;
+
+    let ir = compile_grammar(grammar, &PipelineOptions::default()).unwrap();
+
+    // Find the "captured" rule and verify its type is Span.
+    let captured_rule = ir.find_rule("captured").expect("rule 'captured' should exist");
+    let captured_id = captured_rule.id;
+    let captured_type = ir
+        .types
+        .iter()
+        .find(|(id, _)| *id == captured_id)
+        .map(|(_, td)| td);
+    assert_eq!(
+        captured_type,
+        Some(&bbnf_ir::TypeDesc::Span),
+        "span capture @{{...}} should infer TypeDesc::Span"
+    );
+
+    // Verify it parses correctly via the interpreter.
+    let program = bbnf_ir::compiler::compile(&ir);
+    let mut interp = Interpreter::new(&program, "123,456");
+    let result = interp.run();
+    assert!(result.success, "span capture should parse '123,456'");
+    assert_eq!(result.offset as usize, 7);
+}

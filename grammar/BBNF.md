@@ -313,6 +313,7 @@ Parentheses and brackets override precedence and introduce special semantics:
 | `( expr )` | Group | Parenthesized sub-expression (no semantic change) |
 | `[ expr ]` | Optional group | Equivalent to `( expr ) ?` |
 | `{ expr }` | Repetition group | Equivalent to `( expr ) *` |
+| `@{ expr }` | Span capture | Parse `expr` for validation, return raw `Span` |
 
 ```
 // These two are equivalent:
@@ -324,6 +325,28 @@ list_a = item , { "," , item } ;
 list_b = item , ( "," , item ) * ;
 ```
 
+### Span Capture `@{ expr }` (Rust only)
+
+The `@{...}` operator parses `expr` for structural validation but discards the
+typed result and returns a raw `Span` covering the matched input. This is useful
+when the grammar must validate syntax (e.g., balanced parentheses, correct
+argument structure) but the caller wants to defer semantic processing:
+
+```
+// Validate color function syntax, return raw span for deferred conversion
+colorFunction = @{ colorType , "(" >> args << ")" } ;
+
+// Preserve raw URL text for source maps
+urlFunction = @{ "url" , "(" >> content << ")" } ;
+```
+
+Type inference always produces `TypeDesc::Span` for `@{...}` expressions.
+The inner expression is parsed normally — errors, recovery, and whitespace
+handling all apply — but the generated code constructs a `Span` from the
+start and end offsets instead of the typed result.
+
+This feature is not available in the TypeScript implementation.
+
 ## Precedence Summary
 
 From lowest to highest:
@@ -334,7 +357,7 @@ From lowest to highest:
 | 2 | `,` | left | Concatenation (sequence) |
 | 3 | `<<` `>>` `-` | left | Skip, next, minus |
 | 4 | `*` `+` `?` `?w` `->` | postfix | Quantifiers, whitespace, mapping |
-| 5 | `(` `)` `[` `]` `{` `}` | -- | Grouping constructs |
+| 5 | `(` `)` `[` `]` `{` `}` `@{` `}` | -- | Grouping constructs |
 
 ## Comments
 

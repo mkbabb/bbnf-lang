@@ -195,14 +195,17 @@ hex = "#" , /[0-9a-fA-F]{3,8}/
 colorType = "oklch" | "oklab" | "rgba" | "rgb" | "hsla" | "hsl" | "hwb" | "lab" | "lch" ;
 
 // Standard color function: type(c1 sep c2 sep c3 [alphaSep alpha])
-colorFunction =
+// @{...} span capture: validates argument structure, returns raw Span
+// for deferred color-space conversion.
+colorFunction = @{
     (colorType)
     , "(" >>
         colorValue << sep,
         colorValue << sep,
         colorValue,
         (alphaSep >> colorValue)?
-    << ")" ;
+    << ")"
+} ;
 
 // --- color() function (CSS Color Level 4 §10) ---
 

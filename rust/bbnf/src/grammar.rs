@@ -187,9 +187,8 @@ impl<'a> BBNFGrammar<'a> {
             .wrap_span(string_span("/"), string_span("/"));
 
         string.map(|s| {
-            match regex::Regex::new(s.as_str()) {
-                Ok(_) => {}
-                Err(e) => panic!("invalid regex: {:?}, {:?}", s.as_str(), e),
+            if let Err(e) = regex_syntax::Parser::new().parse(s.as_str()) {
+                panic!("invalid regex: {:?}, {:?}", s.as_str(), e);
             }
             let token = Token::new(s.as_str().into(), s);
             Expression::Regex(token)

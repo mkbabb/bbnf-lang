@@ -1,29 +1,30 @@
-//! Fallback regex emission via `LazyLock<Regex>`.
+//! Fallback regex emission via `LazyLock<Dfa>`.
 //!
-//! Used when `try_emit_regex_inline` returns `None` — the pattern has features
-//! that cannot be compiled to inline byte operations (e.g., Unicode properties,
-//! backreferences, complex lookahead).
+//! Used when `try_emit_regex_inline` and `try_emit_dfa_inline` both return
+//! `None` — the pattern has features that cannot be compiled to inline byte
+//! operations or a static DFA table. Compiles the DFA at runtime instead.
 
 use proc_macro2::TokenStream;
 use quote::quote;
 
-/// Emit a `LazyLock<Regex>` that matches the pattern at the current offset.
+/// Emit a `LazyLock`-cached DFA that matches the pattern at the current offset.
 ///
 /// Returns `Option<Span>` — advances `state.offset` on match, returns `None`
-/// on mismatch. The regex is compiled once and reused across calls.
+/// on mismatch. The DFA is compiled once and reused across calls.
 pub fn emit_regex_lazy_static(pattern: &str) -> TokenStream {
     let pattern_lit = proc_macro2::Literal::string(pattern);
     quote! {
         {
-            static __RE: ::std::sync::LazyLock<::regex::Regex> =
-                ::std::sync::LazyLock::new(|| ::regex::Regex::new(#pattern_lit).unwrap());
             let __start = state.offset;
-            __RE.find_at(state.src, __start)
-                .filter(|m| m.start() == __start)
-                .map(|m| {
-                    state.offset = m.end();
-                    ::parse_that::Span::new(__start, m.end(), state.src)
-                })
+            let __dfa = ::parse_that::cached_dfa(#pattern_lit);
+            let __bytes = &state.src_bytes[__start..];
+            match __dfa.find_at(__bytes, 0) {
+                Some(__end) if __end > 0 => {
+                    state.offset = __start + __end;
+                    Some(::parse_that::Span::new(__start, state.offset, state.src))
+                }
+                _ => None,
+            }
         }
     }
 }

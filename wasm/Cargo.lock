@@ -321,18 +321,17 @@ checksum = "42f5e15c9953c5e4ccceeb2e7382a716482c34515315f7b03532b8b4e8393d2d"
 
 [[package]]
 name = "parse_that"
-version = "0.3.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "11ec17ca1cca684e70085a3f5fd4aa95af4d9942791ebdead7dee4372e810ccd"
+version = "0.4.0"
 dependencies = [
  "aho-corasick",
  "colored",
  "fast-float2",
  "memchr",
  "pprint",
- "regex",
+ "regex-syntax",
  "smallbox",
  "smallvec",
+ "typed-arena",
 ]
 
 [[package]]
@@ -569,6 +568,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "typed-arena"
+version = "2.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6af6ae20167a9ece4bcb41af5b80f8a1f1df981f6391189ce00fd257af04126a"
+
+[[package]]
 name = "unicode-ident"
 version = "1.0.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -639,7 +644,3 @@ name = "zmij"
 version = "1.0.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b8848ee67ecc8aedbaf3e4122217aff892639231befc6a1b58d29fff4c2cabaa"
-
-[[patch.unused]]
-name = "parse_that"
-version = "0.4.0"

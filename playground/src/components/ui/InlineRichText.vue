@@ -56,9 +56,9 @@ function chipStyle(token: string) {
     if (!tone) {
         return {
             color: "var(--color-foreground)",
-            background: "hsl(var(--muted) / 0.55)",
-            border: "1px solid hsl(var(--border) / 0.45)",
-            boxShadow: "inset 0 1px 0 hsl(var(--background) / 0.2)",
+            background: "color-mix(in srgb, var(--muted) 55%, transparent)",
+            border: "1px solid color-mix(in srgb, var(--border) 45%, transparent)",
+            boxShadow: "inset 0 1px 0 color-mix(in srgb, var(--background) 20%, transparent)",
         };
     }
 
@@ -76,7 +76,7 @@ function isBbnfToken(token: string) {
 
 function bbnfBadgeStyle() {
     return {
-        background: "linear-gradient(180deg, color-mix(in srgb, var(--color-pastel-blue) 10%, hsl(var(--card)) 90%), color-mix(in srgb, var(--color-pastel-green) 10%, hsl(var(--card)) 90%))",
+        background: "linear-gradient(180deg, color-mix(in srgb, var(--color-pastel-blue) 10%, var(--card) 90%), color-mix(in srgb, var(--color-pastel-green) 10%, var(--card) 90%))",
         border: "1px solid color-mix(in srgb, var(--color-pastel-green) 28%, transparent)",
         boxShadow: "inset 0 1px 0 color-mix(in srgb, var(--color-pastel-blue) 18%, transparent), 0 0 0 1px color-mix(in srgb, var(--color-pastel-blue) 8%, transparent)",
     };

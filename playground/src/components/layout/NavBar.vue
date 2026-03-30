@@ -233,8 +233,8 @@ function isActiveLink(link: typeof allNavLinks[0]) {
     right: 0;
     margin-top: 0.25rem;
     padding: 1rem;
-    background: color-mix(in srgb, hsl(var(--popover)) 80%, transparent);
-    border: 1px solid hsl(var(--border) / 0.3);
+    background: color-mix(in srgb, var(--popover) 80%, transparent);
+    border: 1px solid color-mix(in srgb, var(--border) 30%, transparent);
     border-radius: 0.75rem;
     opacity: 0;
     pointer-events: none;
@@ -259,7 +259,7 @@ function isActiveLink(link: typeof allNavLinks[0]) {
     pointer-events: auto;
     transform: scale(1) translateY(0);
     backdrop-filter: blur(12px);
-    box-shadow: 0 8px 32px hsl(var(--foreground) / 0.1);
+    box-shadow: 0 8px 32px color-mix(in srgb, var(--foreground) 10%, transparent);
 }
 
 .nav-dropdown-enter-active,

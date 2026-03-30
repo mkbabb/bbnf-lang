@@ -192,9 +192,9 @@ function hoveredIsOurs(): boolean {
 /* Value text over bars — text shadow for legibility against bar fill */
 .bar-value {
     text-shadow:
-        0 0 4px hsl(var(--card)),
-        0 0 8px hsl(var(--card)),
-        0 1px 2px hsl(var(--card) / 0.8);
+        0 0 4px var(--card),
+        0 0 8px var(--card),
+        0 1px 2px color-mix(in srgb, var(--card) 80%, transparent);
 }
 
 /* Mobile: bar track is full-width block, not flex child */

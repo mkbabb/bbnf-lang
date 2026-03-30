@@ -9,26 +9,26 @@
     --font-mono: "Fira Code", "Fira Mono", monospace;
 
     /* BBNF accent palette */
-    --color-accent-red: hsl(var(--accent-red));
-    --color-accent-red-foreground: hsl(var(--accent-red-foreground));
-    --color-pastel-green: hsl(var(--pastel-green));
-    --color-pastel-blue: hsl(var(--pastel-blue));
-    --color-pastel-purple: hsl(var(--pastel-purple));
-    --color-pastel-amber: hsl(var(--pastel-amber));
-    --color-pastel-pink: hsl(var(--pastel-pink));
-    --color-pastel-cyan: hsl(var(--pastel-cyan));
+    --color-accent-red: var(--accent-red);
+    --color-accent-red-foreground: var(--accent-red-foreground);
+    --color-pastel-green: var(--pastel-green);
+    --color-pastel-blue: var(--pastel-blue);
+    --color-pastel-purple: var(--pastel-purple);
+    --color-pastel-amber: var(--pastel-amber);
+    --color-pastel-pink: var(--pastel-pink);
+    --color-pastel-cyan: var(--pastel-cyan);
 }
 
 :root {
     /* BBNF pastel palette — light mode */
-    --accent-red: 0 72% 63%;
-    --accent-red-foreground: 0 0% 100%;
-    --pastel-green: 148 65% 38%;
-    --pastel-blue: 210 70% 48%;
-    --pastel-purple: 270 45% 55%;
-    --pastel-amber: 30 70% 50%;
-    --pastel-pink: 330 65% 55%;
-    --pastel-cyan: 185 55% 42%;
+    --accent-red: hsl(0 72% 63%);
+    --accent-red-foreground: hsl(0 0% 100%);
+    --pastel-green: hsl(148 65% 38%);
+    --pastel-blue: hsl(210 70% 48%);
+    --pastel-purple: hsl(270 45% 55%);
+    --pastel-amber: hsl(30 70% 50%);
+    --pastel-pink: hsl(330 65% 55%);
+    --pastel-cyan: hsl(185 55% 42%);
 
     /* Navbar height — used in calc() across PlaygroundPage, DocsPage */
     --spacing-navbar: 3.5rem;
@@ -40,8 +40,8 @@
     /* Medium glass intensity */
     --glass-opacity-light: 0.52;
     --glass-opacity-medium: 0.62;
-    --glass-bg: hsl(var(--card) / 0.52);
-    --glass-bg-medium: hsl(var(--card) / 0.62);
+    --glass-bg: color-mix(in srgb, var(--card) 52%, transparent);
+    --glass-bg-medium: color-mix(in srgb, var(--card) 62%, transparent);
     --glass-blur: blur(12px);
     --glass-blur-heavy: blur(20px) saturate(1.2);
 
@@ -52,12 +52,12 @@
 
 .dark {
     /* BBNF pastel palette — dark mode */
-    --accent-red: 5 55% 50%;
-    --accent-red-foreground: 0 0% 95%;
-    --pastel-green: 148 55% 52%;
-    --pastel-blue: 210 60% 60%;
-    --pastel-pink: 330 55% 68%;
-    --pastel-purple: 270 40% 68%;
-    --pastel-amber: 35 65% 62%;
-    --pastel-cyan: 185 50% 58%;
+    --accent-red: hsl(5 55% 50%);
+    --accent-red-foreground: hsl(0 0% 95%);
+    --pastel-green: hsl(148 55% 52%);
+    --pastel-blue: hsl(210 60% 60%);
+    --pastel-pink: hsl(330 55% 68%);
+    --pastel-purple: hsl(270 40% 68%);
+    --pastel-amber: hsl(35 65% 62%);
+    --pastel-cyan: hsl(185 50% 58%);
 }

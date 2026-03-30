@@ -29,22 +29,22 @@
 }
 
 @utility shadow-card {
-    box-shadow: var(--shadow-card) hsl(var(--shadow) / 0.08);
+    box-shadow: var(--shadow-card) color-mix(in srgb, var(--shadow) 8%, transparent);
     @variant dark {
-        box-shadow: var(--shadow-card) hsl(var(--shadow) / 0.06);
+        box-shadow: var(--shadow-card) color-mix(in srgb, var(--shadow) 6%, transparent);
     }
 }
 
 @utility shadow-card-hover {
-    box-shadow: var(--shadow-hover) hsl(var(--shadow) / 0.12);
+    box-shadow: var(--shadow-hover) color-mix(in srgb, var(--shadow) 12%, transparent);
     @variant dark {
-        box-shadow: var(--shadow-hover) hsl(var(--shadow) / 0.08);
+        box-shadow: var(--shadow-hover) color-mix(in srgb, var(--shadow) 8%, transparent);
     }
 }
 
 @utility tapered-rule {
     height: 2px;
-    background: linear-gradient(to right, transparent, hsl(var(--border)) 15%, hsl(var(--border)) 85%, transparent);
+    background: linear-gradient(to right, transparent, var(--border) 15%, var(--border) 85%, transparent);
 }
 
 @utility card-base {
@@ -108,7 +108,7 @@
     @apply text-4xl mt-2 mb-4 text-foreground;
     border-bottom: none;
     @apply pb-3;
-    background-image: linear-gradient(to right, hsl(var(--border)), hsl(var(--border)) 85%, transparent);
+    background-image: linear-gradient(to right, var(--border), var(--border) 85%, transparent);
     background-size: 100% 2px;
     background-position: bottom left;
     background-repeat: no-repeat;
@@ -118,7 +118,7 @@
     @apply text-2xl mt-10 mb-3 text-foreground;
     border-bottom: none;
     @apply pb-2;
-    background-image: linear-gradient(to right, hsl(var(--border)), hsl(var(--border)) 70%, transparent);
+    background-image: linear-gradient(to right, var(--border), var(--border) 70%, transparent);
     background-size: 100% 1px;
     background-position: bottom left;
     background-repeat: no-repeat;
@@ -126,10 +126,10 @@
 .prose h3 {
     font-family: var(--font-serif);
     @apply text-xl mt-7 mb-2;
-    color: hsl(var(--foreground) / 0.95);
+    color: color-mix(in srgb, var(--foreground) 95%, transparent);
     border-bottom: none;
     padding-bottom: 0.35rem;
-    background-image: linear-gradient(to right, hsl(var(--border) / 0.7), hsl(var(--border) / 0.7) 50%, transparent);
+    background-image: linear-gradient(to right, color-mix(in srgb, var(--border) 70%, transparent), color-mix(in srgb, var(--border) 70%, transparent) 50%, transparent);
     background-size: 100% 1px;
     background-position: bottom left;
     background-repeat: no-repeat;
@@ -138,21 +138,21 @@
 /* Body text */
 .prose p {
     @apply text-base leading-relaxed mb-4;
-    color: hsl(var(--foreground) / 0.85);
+    color: color-mix(in srgb, var(--foreground) 85%, transparent);
 }
 
 /* Inline code */
 .prose code:not(pre code) {
     @apply rounded px-1.5 py-0.5 font-mono text-[0.8em];
-    background: hsl(var(--muted) / 0.5);
-    border: 1px solid hsl(var(--border) / 0.3);
-    color: hsl(var(--pastel-green));
+    background: color-mix(in srgb, var(--muted) 50%, transparent);
+    border: 1px solid color-mix(in srgb, var(--border) 30%, transparent);
+    color: var(--pastel-green);
 }
 
 /* Code blocks (inside .code-card) */
 .prose pre {
     @apply rounded-xl text-sm leading-relaxed font-mono p-4 mt-0 mb-0;
-    background: hsl(var(--card) / 0.6);
+    background: color-mix(in srgb, var(--card) 60%, transparent);
     backdrop-filter: blur(8px);
     overflow-x: auto;
     border: none;
@@ -161,13 +161,13 @@
 /* Code card container — card-styled with box shadow */
 .prose .code-card {
     @apply relative rounded-xl overflow-hidden mb-5;
-    border: 1px solid hsl(var(--border) / 0.4);
-    background: hsl(var(--card) / 0.6);
+    border: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+    background: color-mix(in srgb, var(--card) 60%, transparent);
     backdrop-filter: blur(8px);
-    box-shadow: var(--shadow-card) hsl(var(--shadow) / 0.08);
+    box-shadow: var(--shadow-card) color-mix(in srgb, var(--shadow) 8%, transparent);
 }
 .dark .prose .code-card {
-    box-shadow: var(--shadow-card) hsl(var(--shadow) / 0.06);
+    box-shadow: var(--shadow-card) color-mix(in srgb, var(--shadow) 6%, transparent);
 }
 .prose .code-card pre {
     background: transparent;
@@ -181,7 +181,7 @@
 /* Language label in code cards */
 .prose .code-lang-label {
     @apply absolute top-2 right-3 text-[0.625rem] font-mono select-none uppercase tracking-wider inline-flex items-center;
-    color: hsl(var(--muted-foreground) / 0.4);
+    color: color-mix(in srgb, var(--muted-foreground) 40%, transparent);
 }
 .code-lang-icon {
     @apply inline-flex w-3.5 h-3.5 mr-1;
@@ -194,39 +194,39 @@
 /* Links */
 .prose a {
     @apply underline;
-    color: hsl(var(--pastel-blue));
+    color: var(--pastel-blue);
     text-underline-offset: 3px;
     text-decoration-thickness: 1px;
 }
 .prose a:hover {
-    color: hsl(var(--pastel-blue) / 0.8);
+    color: color-mix(in srgb, var(--pastel-blue) 80%, transparent);
     text-decoration-thickness: 2px;
 }
 
 /* Blockquotes */
 .prose blockquote {
     @apply pl-4 italic my-4;
-    border-left: 2px solid hsl(var(--pastel-purple) / 0.5);
-    color: hsl(var(--muted-foreground));
+    border-left: 2px solid color-mix(in srgb, var(--pastel-purple) 50%, transparent);
+    color: var(--muted-foreground);
 }
 
 /* Tables — card-styled */
 .prose table {
     @apply w-full text-sm mb-5 rounded-lg overflow-hidden;
     border-collapse: collapse;
-    border: 1px solid hsl(var(--border) / 0.3);
-    box-shadow: 2px 2px 0px 0px hsl(var(--shadow) / 0.05);
+    border: 1px solid color-mix(in srgb, var(--border) 30%, transparent);
+    box-shadow: 2px 2px 0px 0px color-mix(in srgb, var(--shadow) 5%, transparent);
 }
 .dark .prose table {
-    box-shadow: 2px 2px 0px 0px hsl(var(--shadow) / 0.04);
+    box-shadow: 2px 2px 0px 0px color-mix(in srgb, var(--shadow) 4%, transparent);
 }
 .prose th, .prose td {
     @apply px-3 py-2;
-    border: 1px solid hsl(var(--border) / 0.3);
+    border: 1px solid color-mix(in srgb, var(--border) 30%, transparent);
 }
 .prose th {
     @apply text-xs font-mono font-medium text-left uppercase tracking-wider text-muted-foreground;
-    background: hsl(var(--muted) / 0.3);
+    background: color-mix(in srgb, var(--muted) 30%, transparent);
 }
 .prose td {
     font-variant-numeric: tabular-nums;
@@ -235,7 +235,7 @@
 /* Lists */
 .prose ul { @apply list-disc pl-6 mb-4 text-base leading-relaxed; }
 .prose ol { @apply list-decimal pl-6 mb-4 text-base leading-relaxed; }
-.prose li { @apply mb-1.5; color: hsl(var(--foreground) / 0.85); }
+.prose li { @apply mb-1.5; color: color-mix(in srgb, var(--foreground) 85%, transparent); }
 
 /* Strong/em */
 .prose strong { @apply font-semibold text-foreground; }
@@ -245,25 +245,25 @@
 .prose hr {
     @apply border-none my-8;
     height: 1px;
-    background: linear-gradient(to right, transparent, hsl(var(--border)) 15%, hsl(var(--border)) 85%, transparent);
+    background: linear-gradient(to right, transparent, var(--border) 15%, var(--border) 85%, transparent);
 }
 
 /* ------------------------------------------------------------------ */
 /* Syntax highlighting — token colors                                 */
 /* ------------------------------------------------------------------ */
-.hl-keyword  { color: hsl(var(--pastel-purple)); }
-.hl-builtin  { color: hsl(var(--pastel-amber)); }
-.hl-string   { color: hsl(var(--pastel-green)); }
-.hl-number   { color: hsl(var(--pastel-blue)); }
-.hl-comment  { color: hsl(var(--muted-foreground) / 0.5); font-style: italic; }
-.hl-type     { color: hsl(var(--pastel-amber) / 0.85); }
-.hl-decorator { color: hsl(var(--pastel-purple) / 0.85); }
-.hl-regex    { color: hsl(var(--pastel-blue) / 0.9); }
-.hl-operator { color: hsl(var(--muted-foreground) / 0.7); }
+.hl-keyword  { color: var(--pastel-purple); }
+.hl-builtin  { color: var(--pastel-amber); }
+.hl-string   { color: var(--pastel-green); }
+.hl-number   { color: var(--pastel-blue); }
+.hl-comment  { color: color-mix(in srgb, var(--muted-foreground) 50%, transparent); font-style: italic; }
+.hl-type     { color: color-mix(in srgb, var(--pastel-amber) 85%, transparent); }
+.hl-decorator { color: color-mix(in srgb, var(--pastel-purple) 85%, transparent); }
+.hl-regex    { color: color-mix(in srgb, var(--pastel-blue) 90%, transparent); }
+.hl-operator { color: color-mix(in srgb, var(--muted-foreground) 70%, transparent); }
 
 /* Performance number colorization (docs prose) */
-.perf-number { color: hsl(var(--pastel-cyan)); font-variant-numeric: tabular-nums; font-weight: 600; }
-.perf-unit { color: hsl(var(--muted-foreground) / 0.7); font-size: 0.85em; }
+.perf-number { color: var(--pastel-cyan); font-variant-numeric: tabular-nums; font-weight: 600; }
+.perf-unit { color: color-mix(in srgb, var(--muted-foreground) 70%, transparent); font-size: 0.85em; }
 
 /* ------------------------------------------------------------------ */
 /* Doc enrichment — file links & term tooltips                         */
@@ -272,13 +272,13 @@
 /* File links in prose */
 .prose .file-link { text-decoration-style: dotted; }
 .prose .file-link code {
-    color: hsl(var(--pastel-blue));
-    border-color: hsl(var(--pastel-blue) / 0.3);
-    background: hsl(var(--pastel-blue) / 0.08);
+    color: var(--pastel-blue);
+    border-color: color-mix(in srgb, var(--pastel-blue) 30%, transparent);
+    background: color-mix(in srgb, var(--pastel-blue) 8%, transparent);
 }
 .prose .file-link:hover code {
-    background: hsl(var(--pastel-blue) / 0.15);
-    border-color: hsl(var(--pastel-blue) / 0.5);
+    background: color-mix(in srgb, var(--pastel-blue) 15%, transparent);
+    border-color: color-mix(in srgb, var(--pastel-blue) 50%, transparent);
 }
 
 /* Annotated inline code (terms with tooltips) */
@@ -288,17 +288,17 @@
     text-decoration-style: dashed;
     text-underline-offset: 3px;
     text-decoration-thickness: 1px;
-    text-decoration-color: hsl(var(--muted-foreground) / 0.3);
+    text-decoration-color: color-mix(in srgb, var(--muted-foreground) 30%, transparent);
 }
 .prose code.has-tooltip:hover {
-    text-decoration-color: hsl(var(--muted-foreground) / 0.6);
-    background: hsl(var(--muted) / 0.7);
+    text-decoration-color: color-mix(in srgb, var(--muted-foreground) 60%, transparent);
+    background: color-mix(in srgb, var(--muted) 70%, transparent);
 }
 /* Category accent colors */
-.prose code.has-tooltip[data-term-cat="directive"] { color: hsl(var(--pastel-purple)); }
-.prose code.has-tooltip[data-term-cat="operator"]  { color: hsl(var(--pastel-amber)); }
-.prose code.has-tooltip[data-term-cat="concept"]   { color: hsl(var(--pastel-cyan)); }
-.prose code.has-tooltip[data-term-cat="type"]       { color: hsl(var(--pastel-green)); }
+.prose code.has-tooltip[data-term-cat="directive"] { color: var(--pastel-purple); }
+.prose code.has-tooltip[data-term-cat="operator"]  { color: var(--pastel-amber); }
+.prose code.has-tooltip[data-term-cat="concept"]   { color: var(--pastel-cyan); }
+.prose code.has-tooltip[data-term-cat="type"]       { color: var(--pastel-green); }
 
 /* Floating term tooltip */
 .term-tooltip {
@@ -307,13 +307,13 @@
     max-width: 320px;
     padding: 0.5rem 0.75rem;
     border-radius: 0.5rem;
-    border: 1px solid hsl(var(--border) / 0.4);
-    background: hsl(var(--popover) / 0.95);
+    border: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+    background: color-mix(in srgb, var(--popover) 95%, transparent);
     backdrop-filter: blur(12px);
-    box-shadow: 0 4px 16px hsl(var(--foreground) / 0.08);
+    box-shadow: 0 4px 16px color-mix(in srgb, var(--foreground) 8%, transparent);
     font-size: 0.8125rem;
     line-height: 1.5;
-    color: hsl(var(--popover-foreground));
+    color: var(--popover-foreground);
     pointer-events: auto;
     opacity: 0;
     transform: translateY(4px) scale(0.98);
@@ -336,18 +336,18 @@
     margin-bottom: 0.25rem;
 }
 .term-tooltip-desc {
-    color: hsl(var(--foreground) / 0.85);
+    color: color-mix(in srgb, var(--foreground) 85%, transparent);
 }
 .term-tooltip-link {
     display: inline-block;
     margin-top: 0.25rem;
     font-size: 0.75rem;
-    color: hsl(var(--pastel-blue));
+    color: var(--pastel-blue);
     text-decoration: underline;
     text-underline-offset: 2px;
 }
 .term-tooltip-link:hover {
-    color: hsl(var(--pastel-blue) / 0.8);
+    color: color-mix(in srgb, var(--pastel-blue) 80%, transparent);
 }
 
 /* ------------------------------------------------------------------ */
@@ -360,7 +360,7 @@
     padding: 2px;
     margin: 0.25rem 0.5rem;
     border-radius: 9999px;
-    background: hsl(var(--foreground) / 0.05);
+    background: color-mix(in srgb, var(--foreground) 5%, transparent);
     flex-shrink: 0;
 }
 .mobile-pane-tab {
@@ -370,15 +370,15 @@
     border-radius: 9999px;
     font-family: "Instrument Serif", serif;
     font-size: 0.8125rem;
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     background: transparent;
     transition: all 150ms ease;
     cursor: pointer;
     text-align: center;
 }
 .mobile-pane-tab.active {
-    background: hsl(var(--foreground));
-    color: hsl(var(--background));
+    background: var(--foreground);
+    color: var(--background);
 }
 
 /* Mobile pane transition */
@@ -402,6 +402,6 @@
 @layer components {
     .dock-badge {
         @apply px-1.5 whitespace-nowrap tabular-nums;
-        color: hsl(var(--foreground) / 0.5);
+        color: color-mix(in srgb, var(--foreground) 50%, transparent);
     }
 }

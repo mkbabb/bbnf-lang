@@ -83,8 +83,8 @@ defineExpose({ wordRef });
 }
 
 .code-word {
-    background: hsl(var(--muted) / 0.4);
-    border: 1px solid hsl(var(--border) / 0.5);
+    background: color-mix(in srgb, var(--muted) 40%, transparent);
+    border: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
     border-radius: 0.25em;
     padding: 0 0.15em;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);

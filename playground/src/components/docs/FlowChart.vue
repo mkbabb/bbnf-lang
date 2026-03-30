@@ -117,8 +117,8 @@ function onNodeClick(node: FlowNode) {
 .flow-node--clickable:hover {
     filter: brightness(1.1);
     transform: scale(1.01) translateY(0) !important;
-    border-color: hsl(var(--border) / 0.5);
-    box-shadow: 0 0 0 1px hsl(var(--foreground) / 0.08);
+    border-color: color-mix(in srgb, var(--border) 50%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--foreground) 8%, transparent);
 }
 
 .flow-node--clickable:active {

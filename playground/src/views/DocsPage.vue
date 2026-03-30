@@ -86,7 +86,7 @@ useMarkdownComponents(articleRef, rendered);
                     class="card-base p-5 sm:p-6 md:p-8 flex-1 relative"
                     :style="{
                         borderColor: sectionTheme
-                            ? `color-mix(in srgb, var(--color-${sectionTheme.color}) 25%, hsl(var(--border) / 0.4))`
+                            ? `color-mix(in srgb, var(--color-${sectionTheme.color}) 25%, color-mix(in srgb, var(--border) 40%, transparent))`
                             : undefined,
                     }"
                 >
@@ -150,17 +150,17 @@ useMarkdownComponents(articleRef, rendered);
     margin: 0.25rem 0 0 0.75rem;
     padding: 0.375rem;
     border-radius: 0.5rem;
-    background: hsl(var(--card) / 0.85);
+    background: color-mix(in srgb, var(--card) 85%, transparent);
     backdrop-filter: blur(8px);
-    border: 1px solid hsl(var(--border) / 0.3);
-    color: hsl(var(--muted-foreground));
+    border: 1px solid color-mix(in srgb, var(--border) 30%, transparent);
+    color: var(--muted-foreground);
     cursor: pointer;
     transition: background 0.15s, color 0.15s;
     line-height: 0;
 }
 .sidebar-toggle-btn:hover {
-    background: hsl(var(--muted) / 0.5);
-    color: hsl(var(--foreground));
+    background: color-mix(in srgb, var(--muted) 50%, transparent);
+    color: var(--foreground);
 }
 .sidebar-toggle-btn:active {
     transform: scale(0.95);

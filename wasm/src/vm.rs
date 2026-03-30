@@ -74,36 +74,45 @@ struct WasmParseDiagnostic {
     expected: String,
 }
 
-#[derive(Serialize)]
-struct WasmParseResult {
-    success: bool,
-    offset: u32,
-    value: Option<WasmValue>,
-    diagnostics: Vec<WasmParseDiagnostic>,
-}
-
-#[derive(Serialize)]
-#[serde(tag = "type")]
-enum WasmValue {
-    Span { start: u32, end: u32 },
-    Tagged { tag: String, start: u32, end: u32, children: Vec<WasmValue> },
-    Array { items: Vec<WasmValue> },
-    Nil,
-}
-
-fn value_to_wasm(value: &Value, strings: &[String]) -> WasmValue {
+/// Convert a parse tree Value directly to JsValue, skipping intermediate allocations.
+fn value_to_js(value: &Value, strings: &[String]) -> JsValue {
     match value {
-        Value::Span(s, e) => WasmValue::Span { start: *s, end: *e },
-        Value::Tagged { tag, span, children } => WasmValue::Tagged {
-            tag: strings.get(*tag as usize).cloned().unwrap_or_default(),
-            start: span.0,
-            end: span.1,
-            children: children.iter().map(|c| value_to_wasm(c, strings)).collect(),
-        },
-        Value::Array(items) => WasmValue::Array {
-            items: items.iter().map(|v| value_to_wasm(v, strings)).collect(),
-        },
-        Value::Nil => WasmValue::Nil,
+        Value::Span(s, e) => {
+            let obj = js_sys::Object::new();
+            let _ = js_sys::Reflect::set(&obj, &"type".into(), &"Span".into());
+            let _ = js_sys::Reflect::set(&obj, &"start".into(), &(*s).into());
+            let _ = js_sys::Reflect::set(&obj, &"end".into(), &(*e).into());
+            obj.into()
+        }
+        Value::Tagged { tag, span, children } => {
+            let obj = js_sys::Object::new();
+            let _ = js_sys::Reflect::set(&obj, &"type".into(), &"Tagged".into());
+            let tag_name = strings.get(*tag as usize).map(|s| s.as_str()).unwrap_or("");
+            let _ = js_sys::Reflect::set(&obj, &"tag".into(), &tag_name.into());
+            let _ = js_sys::Reflect::set(&obj, &"start".into(), &span.0.into());
+            let _ = js_sys::Reflect::set(&obj, &"end".into(), &span.1.into());
+            let arr = js_sys::Array::new_with_length(children.len() as u32);
+            for (i, child) in children.iter().enumerate() {
+                arr.set(i as u32, value_to_js(child, strings));
+            }
+            let _ = js_sys::Reflect::set(&obj, &"children".into(), &arr);
+            obj.into()
+        }
+        Value::Array(items) => {
+            let obj = js_sys::Object::new();
+            let _ = js_sys::Reflect::set(&obj, &"type".into(), &"Array".into());
+            let arr = js_sys::Array::new_with_length(items.len() as u32);
+            for (i, item) in items.iter().enumerate() {
+                arr.set(i as u32, value_to_js(item, strings));
+            }
+            let _ = js_sys::Reflect::set(&obj, &"items".into(), &arr);
+            obj.into()
+        }
+        Value::Nil => {
+            let obj = js_sys::Object::new();
+            let _ = js_sys::Reflect::set(&obj, &"type".into(), &"Nil".into());
+            obj.into()
+        }
     }
 }
 
@@ -153,14 +162,30 @@ pub fn parse_with_grammar(handle: u32, input: &str) -> Result<JsValue, JsValue> 
             })
             .collect();
 
-        let wasm_result = WasmParseResult {
-            success: result.success,
-            offset: result.offset,
-            value: result.value.as_ref().map(|v| value_to_wasm(v, &grammar.program.strings)),
-            diagnostics,
-        };
+        // Build JsValue directly — no intermediate WasmValue allocation.
+        let obj = js_sys::Object::new();
+        js_sys::Reflect::set(&obj, &"success".into(), &result.success.into())?;
+        js_sys::Reflect::set(&obj, &"offset".into(), &result.offset.into())?;
 
-        serde_wasm_bindgen::to_value(&wasm_result).map_err(|e| JsValue::from_str(&e.to_string()))
+        if let Some(ref value) = result.value {
+            js_sys::Reflect::set(&obj, &"value".into(), &value_to_js(value, &grammar.program.strings))?;
+        } else {
+            js_sys::Reflect::set(&obj, &"value".into(), &JsValue::NULL)?;
+        }
+
+        let diag_arr = js_sys::Array::new_with_length(diagnostics.len() as u32);
+        for (i, d) in diagnostics.iter().enumerate() {
+            let dobj = js_sys::Object::new();
+            if let Some(ref name) = d.rule_name {
+                js_sys::Reflect::set(&dobj, &"rule_name".into(), &name.into())?;
+            }
+            js_sys::Reflect::set(&dobj, &"offset".into(), &d.offset.into())?;
+            js_sys::Reflect::set(&dobj, &"expected".into(), &d.expected.clone().into())?;
+            diag_arr.set(i as u32, dobj.into());
+        }
+        js_sys::Reflect::set(&obj, &"diagnostics".into(), &diag_arr)?;
+
+        Ok(obj.into())
     })
 }
 

@@ -501,6 +501,10 @@ function __wbg_get_imports() {
             const ret = new Object();
             return ret;
         },
+        __wbg_new_with_length_3259a525196bd8cc: function(arg0) {
+            const ret = new Array(arg0 >>> 0);
+            return ret;
+        },
         __wbg_set_282384002438957f: function(arg0, arg1, arg2) {
             arg0[arg1 >>> 0] = arg2;
         },

@@ -24,9 +24,8 @@ serde-wasm-bindgen = "0.6"
 console_error_panic_hook = "0.1"
 
 [package.metadata.wasm-pack.profile.release]
-# wasm-opt disabled: bundled version doesn't support WASM features used by nightly.
-# Install binaryen >= 119 and set wasm-opt = ["-O3"] to re-enable.
-wasm-opt = false
+# Requires binaryen >= 119 installed (brew install binaryen).
+wasm-opt = ["-O3", "--enable-simd"]
 
 [profile.release]
 opt-level = 3

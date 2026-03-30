@@ -135,12 +135,12 @@ export interface InitOutput {
     readonly compile_grammar_debug: (a: number, b: number, c: number, d: number) => [number, number, number];
     readonly debug_step: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => [number, number, number];
     readonly init_panic_hook: () => void;
-    readonly analyze_grammar: (a: number, b: number) => any;
     readonly format_json: (a: number, b: number, c: number, d: number, e: number) => [number, number];
     readonly format_css: (a: number, b: number, c: number, d: number, e: number) => [number, number];
     readonly format_bnf: (a: number, b: number, c: number, d: number, e: number) => [number, number];
     readonly format_ebnf: (a: number, b: number, c: number, d: number, e: number) => [number, number];
     readonly format_bbnf: (a: number, b: number, c: number, d: number, e: number) => [number, number];
+    readonly analyze_grammar: (a: number, b: number) => any;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
     readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
     readonly __wbindgen_free: (a: number, b: number, c: number) => void;

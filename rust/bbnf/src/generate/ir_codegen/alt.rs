@@ -179,13 +179,49 @@ fn emit_dispatch(
         match_arms.push(quote! { #(#byte_patterns)|* => #branch_ident.call(state), });
     }
 
-    match_arms.push(quote! { _ => None, });
+    // Find the nullable/epsilon branch index.  Nullable branches are mapped
+    // to FOLLOW bytes in the dispatch table, but the FOLLOW set may not cover
+    // all bytes that can follow in context (e.g., `;` terminator after a long
+    // rule chain).  The nullable branch must also serve as:
+    //   1. The catch-all (`_`) arm for bytes not in the table
+    //   2. The EOF handler (no byte to dispatch on)
+    let nullable_idx = disp.fallback_idx.or_else(|| {
+        branches.iter().position(|b| {
+            matches!(b.node, bbnf_ir::IrNode::Epsilon)
+                || matches!(b.node, bbnf_ir::IrNode::Repeat { lo: 0, .. })
+                || b.first_set.is_none() // nullable FIRST set
+        }).map(|i| i as u8)
+    });
+
+    // Default arm: nullable branch if present, fallback if set, else None.
+    let default_call = if let Some(nul_idx) = nullable_idx {
+        let nul_ident = format_ident!("_branch_{}", nul_idx);
+        quote! { #nul_ident.call(state) }
+    } else if let Some(fb_idx) = disp.fallback_idx {
+        let fb_ident = format_ident!("_branch_{}", fb_idx);
+        quote! { #fb_ident.call(state) }
+    } else {
+        quote! { None }
+    };
+    match_arms.push(quote! { _ => #default_call, });
+
+    // EOF handler: when at end-of-input, invoke the nullable/fallback branch
+    // instead of returning None via `?` on the byte lookup.
+    let eof_handler = if nullable_idx.is_some() || disp.fallback_idx.is_some() {
+        quote! {
+            let Some(&byte) = state.src_bytes.get(state.offset) else {
+                return #default_call;
+            };
+        }
+    } else {
+        quote! { let byte = *state.src_bytes.get(state.offset)?; }
+    };
 
     quote! {
         {
             #(#branch_bindings)*
             ::parse_that::Parser::new(move |state: &mut ::parse_that::ParserState<'a>| {
-                let byte = *state.src_bytes.get(state.offset)?;
+                #eof_handler
                 match byte {
                     #(#match_arms)*
                 }

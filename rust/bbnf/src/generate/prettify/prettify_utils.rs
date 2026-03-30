@@ -84,7 +84,19 @@ pub fn is_recursive_enum_type(ty: &syn::Type) -> bool {
 
 pub fn doc_for_binding(binding: &syn::Ident, ty: &syn::Type) -> TokenStream {
     if type_is_span(ty) {
-        quote! { ::pprint::Doc::String(::std::borrow::Cow::Borrowed(#binding.as_str())) }
+        // Whitespace-only Spans are structural placeholders (e.g., from `ws` rules).
+        // The formatter's separator directives (@pretty block/group) handle spacing;
+        // re-emitting parsed whitespace breaks idempotency.
+        quote! {
+            {
+                let __s = #binding.as_str();
+                if __s.bytes().all(|b| matches!(b, b' ' | b'\t' | b'\n' | b'\r')) {
+                    ::pprint::Doc::Null
+                } else {
+                    ::pprint::Doc::String(::std::borrow::Cow::Borrowed(__s))
+                }
+            }
+        }
     } else if is_vec_type(ty) {
         let item_doc = generate_item_to_doc(ty);
         quote! {

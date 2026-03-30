@@ -85,9 +85,10 @@ pub fn generate_monolithic_arena(
         let pub_ident = ctx.method_ident_for_name(name);
         let return_type = ctx.rule_return_type(rule.id);
 
-        // Set no_collapse for @pretty / @no_collapse rules.
-        ctx.no_collapse
-            .set(rule.meta.no_collapse || rule.meta.pretty.is_some());
+        // Set no_collapse for @no_collapse rules only.  @pretty uses
+        // pretty_preserve in infer_types; consecutive-Span compression
+        // must still match to avoid tuple shape divergence.
+        ctx.no_collapse.set(rule.meta.no_collapse);
 
         // State-based memo is disabled for monolithic arena fns.
         // Rationale: monolithic fns have zero lazy/combinator construction overhead,
@@ -108,9 +109,14 @@ pub fn generate_monolithic_arena(
         // Fused number: bare JSON number regex → (Span, f64) enum variant.
         // NumberConvert (from -> f64 map) is handled separately by emit_mono_map —
         // it produces f64 directly, NOT (Span, f64).
-        let is_fused_number = match &rule.body {
-            IrNode::Regex(sid) => fast_paths::is_fused_number_regex(ir.get_string(*sid)),
-            _ => false,
+        // Skip when prettify is enabled — formatters only need Spans.
+        let is_fused_number = if ctx.parser_attrs.prettify {
+            false
+        } else {
+            match &rule.body {
+                IrNode::Regex(sid) => fast_paths::is_fused_number_regex(ir.get_string(*sid)),
+                _ => false,
+            }
         };
 
         // All internal fns return Option<ArenaEnum<'a>>.

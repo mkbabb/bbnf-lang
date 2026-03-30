@@ -131,6 +131,21 @@ fn lower_mapping_fn<'a>(expr: &Expression<'a>, ctx: &mut LowerCtx<'a>) -> FnId {
             let mapper_str = token.value.as_ref().trim();
             let string_id = ctx.strings.intern(mapper_str);
 
+            // Type-shorthand: bare type name like `f64` or `u32`.
+            // Lowers as a Custom with the named return type so that
+            // `try_specialize_map_fn` can detect `Regex(numeric) -> f64`
+            // and emit `NumberConvert` / `HexConvert`.
+            if syn::parse_str::<syn::Type>(mapper_str).is_ok()
+                && syn::parse_str::<syn::ExprLit>(mapper_str).is_err()
+                && matches!(mapper_str, "f64" | "f32" | "u32" | "u64" | "i32" | "i64" | "usize")
+            {
+                let type_sid = ctx.strings.intern(mapper_str);
+                return ctx.fns.push(FnDescriptor::Custom {
+                    source: string_id,
+                    return_type: Some(bbnf_ir::TypeDesc::Named(type_sid)),
+                });
+            }
+
             // Try as closure first (existing path).
             if syn::parse_str::<syn::ExprClosure>(mapper_str).is_ok() {
                 let return_type = parse_closure_return_type(mapper_str, ctx);

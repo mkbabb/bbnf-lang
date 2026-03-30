@@ -81,10 +81,14 @@ pub fn generate_all(
             arena_ctx.sp_method_rules = ctx.sp_method_rules.clone();
 
             // Detect fused number rules for arena-specific enum variant override.
-            for rule in &ir.rules {
-                if let bbnf_ir::IrNode::Regex(sid) = &rule.body {
-                    if fast_paths::is_fused_number_regex(ir.get_string(*sid)) {
-                        arena_ctx.fused_number_rules.insert(rule.id);
+            // Skip when prettify is enabled — formatters only need Spans, and
+            // the fused (Span, f64) type breaks prettify's source_range codegen.
+            if !parser_attrs.prettify {
+                for rule in &ir.rules {
+                    if let bbnf_ir::IrNode::Regex(sid) = &rule.body {
+                        if fast_paths::is_fused_number_regex(ir.get_string(*sid)) {
+                            arena_ctx.fused_number_rules.insert(rule.id);
+                        }
                     }
                 }
             }
@@ -181,10 +185,10 @@ fn generate_ir_parser_methods(
             None
         };
 
-        // Set no_collapse for rules with @pretty or @no_collapse — prevents
-        // Span compression in Seq so the codegen type matches the IR type.
-        ctx.no_collapse
-            .set(rule.meta.no_collapse || rule.meta.pretty.is_some());
+        // Set no_collapse for @no_collapse rules only.  @pretty rules use
+        // pretty_preserve in infer_types for all-Span tuple preservation;
+        // consecutive-Span compression must still happen to match infer_types.
+        ctx.no_collapse.set(rule.meta.no_collapse);
 
         let mut parser = ir_codegen::emit_rule_body_inline(
             &rule.body,

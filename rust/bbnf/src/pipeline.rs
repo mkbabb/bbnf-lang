@@ -225,6 +225,7 @@ pub fn compile_ast<'a>(
     bbnf_ir::passes::merge_literals(&mut ir);
     bbnf_ir::passes::merge_regex_alts(&mut ir);
     bbnf_ir::passes::factor_common_prefixes(&mut ir);
+    bbnf_ir::passes::sort_alt_branches(&mut ir);
     bbnf_ir::passes::refine_span_eligibility(&mut ir);
 
     // Compute FOLLOW sets before dispatch and memo passes that consume them.

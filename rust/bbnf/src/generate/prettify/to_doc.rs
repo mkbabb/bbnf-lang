@@ -152,16 +152,13 @@ pub(crate) fn generate_wrapped_doc(
                             ::pprint::Doc::String(::std::borrow::Cow::Borrowed(", "))
                         ),
                     );
-                    // Build concat of items with IfBreak separators so break_mode
-                    // propagates from the enclosing Group to each separator.
-                    let mut body = items_docs[0].clone();
-                    for item in &items_docs[1..] {
-                        body = body + break_sep.clone() + item.clone();
-                    }
                     let line_or_nothing = ::pprint::Doc::IfBreak(
                         Box::new(::pprint::Doc::Hardline),
                         Box::new(::pprint::Doc::Null),
                     );
+                    // Join stores the separator once and the items as a Vec —
+                    // O(1) per item, no cloning.
+                    let body = ::pprint::Doc::Join(Box::new((break_sep, items_docs)));
                     ::pprint::Doc::Group(Box::new(
                         ::pprint::Doc::String(::std::borrow::Cow::Borrowed(#left))
                             + ::pprint::Doc::Indent(Box::new(

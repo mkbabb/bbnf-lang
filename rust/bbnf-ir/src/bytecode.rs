@@ -4,13 +4,12 @@
 //! Bytecode is compact (avg ~3 bytes/instruction) and fast to emit from IR.
 
 use std::collections::HashMap;
-use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 
 use crate::{CharSet128, GrammarSpan, RuleId, StringId};
 
-/// Dispatch table data shared via Arc to avoid cloning heap allocations.
+/// Dispatch table data stored in a side table, referenced by index.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct DispatchData {
     /// 128-entry table: `table[byte]` = branch index, or 255 for no match.
@@ -63,8 +62,12 @@ pub enum Op {
     /// Pop checkpoint without restoring (commit).
     DropState,
 
-    /// Trim optional whitespace at current offset.
+    /// Trim optional whitespace at current offset (basic ASCII whitespace).
     TrimWs,
+
+    /// Trim optional whitespace using a custom `@ws` regex pattern.
+    /// Advances offset without pushing a value (like TrimWs).
+    TrimWsPattern(StringId),
 
     // ── Combinators ─────────────────────────────────────────────────────
 
@@ -78,9 +81,8 @@ pub enum Op {
 
     // ── Dispatch ────────────────────────────────────────────────────────
 
-    /// O(1) byte dispatch table: maps first byte → branch offset.
-    /// Wrapped in `Arc` to avoid cloning heap data in the interpreter loop.
-    Dispatch(Arc<DispatchData>),
+    /// O(1) byte dispatch table: index into `BytecodeProgram::dispatch_tables`.
+    Dispatch(u16),
 
     // ── Repetition ──────────────────────────────────────────────────────
 
@@ -159,6 +161,15 @@ pub struct BytecodeProgram {
     /// Entry rule ID.
     pub entry: RuleId,
 
+    /// Dispatch tables referenced by `Op::Dispatch(idx)`.
+    #[serde(default)]
+    pub dispatch_tables: Vec<DispatchData>,
+
+    /// Pre-compiled regex patterns, indexed by StringId.
+    /// `None` for string IDs that are not regex patterns.
+    #[serde(skip)]
+    pub compiled_regexes: Vec<Option<regex::Regex>>,
+
     /// FOLLOW sets per rule, for error recovery and expected-token reporting.
     /// Populated from `GrammarIR::follow_sets` during compilation.
     #[serde(default)]
@@ -189,5 +200,32 @@ impl BytecodeProgram {
     /// Get the entry point for a rule.
     pub fn rule_entry(&self, rule_id: RuleId) -> u32 {
         self.entries[rule_id as usize]
+    }
+
+    /// Pre-compile all regex patterns referenced by `MatchRegex` opcodes.
+    /// Called automatically by `compile()`, and should be called after deserialization.
+    pub fn prepare_regexes(&mut self) {
+        // Collect all StringIds used by regex-matching opcodes.
+        let mut regex_sids = std::collections::HashSet::new();
+        for op in &self.code {
+            match op {
+                Op::MatchRegex(sid) | Op::TrimWsPattern(sid) => {
+                    regex_sids.insert(*sid);
+                }
+                _ => {}
+            }
+        }
+
+        // Build the compiled_regexes vec, sized to cover all referenced SIDs.
+        let max_sid = regex_sids.iter().copied().max().unwrap_or(0) as usize;
+        self.compiled_regexes = vec![None; max_sid + 1];
+
+        for sid in regex_sids {
+            let pattern = &self.strings[sid as usize];
+            let anchored = format!("^(?:{})", pattern);
+            let re = regex::Regex::new(&anchored)
+                .unwrap_or_else(|e| panic!("Invalid regex in grammar: {}: {}", pattern, e));
+            self.compiled_regexes[sid as usize] = Some(re);
+        }
     }
 }

@@ -16,6 +16,7 @@ pub mod merge_regex;
 pub mod optimize;
 pub mod prefix;
 pub mod prune;
+pub mod sort;
 pub mod span;
 pub mod types;
 
@@ -32,6 +33,7 @@ pub use merge_regex::merge_regex_alts;
 pub use optimize::{eliminate_epsilon, merge_literals};
 pub use prefix::factor_common_prefixes;
 pub use prune::prune_unreachable;
+pub use sort::sort_alt_branches;
 pub use span::{refine_span_eligibility, compute_sp_method_rules};
 pub use types::infer_types;
 pub use types::{infer_node, infer_node_in_vec, InferCtx};

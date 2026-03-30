@@ -4,8 +4,9 @@
 //! The interpreter uses a tight loop with explicit stacks for call frames,
 //! checkpoints, and values.
 
-use std::collections::{HashMap, HashSet};
-use std::rc::Rc;
+use std::collections::HashSet;
+
+use rustc_hash::FxHashMap;
 
 use crate::bytecode::{BytecodeProgram, Op};
 use crate::RuleId;
@@ -161,12 +162,11 @@ pub struct Interpreter<'a> {
     offset: u32,
     is_error: bool,
 
-    values: Vec<Rc<Value>>,
+    values: Vec<Value>,
     call_stack: Vec<CallFrame>,
     checkpoints: Vec<Checkpoint>,
     repeats: Vec<RepeatState>,
-    memo: HashMap<(RuleId, u32), (u32, Rc<Value>, bool)>,
-    regex_cache: HashMap<u32, regex::Regex>,
+    memo: FxHashMap<(RuleId, u32), (u32, Value, bool)>,
 
     /// Stack of (rule_id, start_offset) pushed by MemoCheck on cache miss,
     /// popped by MemoStore to key the cache entry at the correct pre-parse offset.
@@ -207,8 +207,7 @@ impl<'a> Interpreter<'a> {
             call_stack: Vec::with_capacity(32),
             checkpoints: Vec::with_capacity(32),
             repeats: Vec::with_capacity(16),
-            memo: HashMap::new(),
-            regex_cache: HashMap::new(),
+            memo: FxHashMap::default(),
             memo_starts: Vec::with_capacity(8),
             value_depth_stack: Vec::with_capacity(8),
             rule_stack: Vec::with_capacity(16),
@@ -230,21 +229,23 @@ impl<'a> Interpreter<'a> {
         self.pc = self.program.rule_entry(self.program.entry);
 
         loop {
-            if self.pc as usize >= self.program.code.len() {
+            let pc = self.pc as usize;
+            if pc >= self.program.code.len() {
                 break;
             }
 
-            // Clone the op to avoid borrow conflict with &mut self dispatch.
-            let op = self.program.code[self.pc as usize].clone();
             if self.trace {
                 eprintln!(
                     "  pc={:3} off={:3} err={} vs={} cs={} cp={} | {:?}",
                     self.pc, self.offset, self.is_error as u8,
                     self.values.len(), self.call_stack.len(), self.checkpoints.len(),
-                    op
+                    self.program.code[pc]
                 );
             }
-            match op {
+
+            // Borrow the op by reference — extract small payloads by copy.
+            // This avoids cloning Arc/Vec for Dispatch ops.
+            match self.program.code[pc] {
                 Op::MatchString(sid) => self.exec_match_string(sid),
                 Op::MatchRegex(sid) => self.exec_match_regex(sid),
                 Op::Epsilon => self.exec_epsilon(),
@@ -267,6 +268,7 @@ impl<'a> Interpreter<'a> {
                 Op::RestoreState => self.exec_restore_state(),
                 Op::DropState => self.exec_drop_state(),
                 Op::TrimWs => self.exec_trim_ws(),
+                Op::TrimWsPattern(sid) => self.exec_trim_ws_pattern(sid),
                 Op::RepeatBegin { lo, hi, body_end } => {
                     self.exec_repeat_begin(lo, hi, body_end);
                 }
@@ -279,21 +281,15 @@ impl<'a> Interpreter<'a> {
                     self.pc += 1;
                 }
                 Op::DiscardRight => {
-                    // Pop the left/right boundary depth. Truncate to it (drops right's values).
                     if let Some(left_right_boundary) = self.value_depth_stack.pop() {
                         self.values.truncate(left_right_boundary);
                     }
-                    // Also pop the context/left boundary (not used for Skip).
                     self.value_depth_stack.pop();
                     self.pc += 1;
                 }
                 Op::DiscardLeft => {
-                    // Pop the left/right boundary and context/left boundary.
-                    // Stack: [context...] [left...] [right...]
-                    //         ^context_depth  ^left_right_boundary
                     let left_right_boundary = self.value_depth_stack.pop().unwrap_or(0);
                     let context_depth = self.value_depth_stack.pop().unwrap_or(0);
-                    // Drain left's values (between context_depth and left_right_boundary).
                     if left_right_boundary > context_depth && left_right_boundary <= self.values.len() {
                         self.values.drain(context_depth..left_right_boundary);
                     }
@@ -306,7 +302,23 @@ impl<'a> Interpreter<'a> {
                     hit_offset,
                 } => self.exec_memo_check(rule_id, hit_offset),
                 Op::MemoStore(rule_id) => self.exec_memo_store(rule_id),
-                Op::Dispatch(ref data) => self.exec_dispatch(&data.table, &data.offsets, data.fallback),
+                Op::Dispatch(table_idx) => {
+                    let data = &self.program.dispatch_tables[table_idx as usize];
+                    // Copy the small values we need before the mutable dispatch call.
+                    let fallback = data.fallback;
+                    let byte = if (self.offset as usize) < self.input_bytes.len() {
+                        self.input_bytes[self.offset as usize]
+                    } else {
+                        255
+                    };
+                    let branch_idx = if byte < 128 { data.table[byte as usize] } else { 255 };
+                    if (branch_idx as usize) < data.offsets.len() {
+                        self.pc = data.offsets[branch_idx as usize];
+                    } else {
+                        self.is_error = true;
+                        self.pc = fallback;
+                    }
+                }
                 Op::DebugBreak { rule_id, is_entry } => {
                     if let Some(ref mut dbg) = self.debug_state {
                         dbg.trace.push(TraceEntry {
@@ -351,12 +363,7 @@ impl<'a> Interpreter<'a> {
             }
         }
 
-        // Clear memo to release shared references before unwrapping.
-        self.memo.clear();
-
-        let value = self.values.pop().map(|rc| {
-            Rc::try_unwrap(rc).unwrap_or_else(|rc| (*rc).clone())
-        });
+        let value = self.values.pop();
         let success = !self.is_error && value.is_some();
 
         // On failure, generate a diagnostic from FOLLOW sets at the furthest offset.
@@ -412,7 +419,7 @@ impl<'a> Interpreter<'a> {
         let end = start + s.len();
 
         if end <= self.input.len() && &self.input_bytes[start..end] == s.as_bytes() {
-            self.values.push(Rc::new(Value::Span(self.offset, end as u32)));
+            self.values.push(Value::Span(self.offset, end as u32));
             self.offset = end as u32;
             self.is_error = false;
             self.track_furthest();
@@ -424,19 +431,16 @@ impl<'a> Interpreter<'a> {
     }
 
     fn exec_match_regex(&mut self, sid: u32) {
-        let pattern = &self.program.strings[sid as usize];
         let start = self.offset as usize;
         let remaining = &self.input[start..];
 
-        let re = self.regex_cache.entry(sid).or_insert_with(|| {
-            let anchored = format!("^(?:{})", pattern);
-            regex::Regex::new(&anchored)
-                .unwrap_or_else(|e| panic!("Invalid regex in grammar: {}: {}", pattern, e))
-        });
+        // Use pre-compiled regex from the program (zero per-parse compilation).
+        let re = self.program.compiled_regexes[sid as usize].as_ref()
+            .expect("MatchRegex references non-regex StringId");
 
         if let Some(m) = re.find(remaining) {
             let end = start + m.end();
-            self.values.push(Rc::new(Value::Span(self.offset, end as u32)));
+            self.values.push(Value::Span(self.offset, end as u32));
             self.offset = end as u32;
             self.is_error = false;
             self.track_furthest();
@@ -448,7 +452,7 @@ impl<'a> Interpreter<'a> {
     }
 
     fn exec_epsilon(&mut self) {
-        self.values.push(Rc::new(Value::Nil));
+        self.values.push(Value::Nil);
         self.is_error = false;
         self.pc += 1;
     }
@@ -515,6 +519,20 @@ impl<'a> Interpreter<'a> {
         self.offset = pos as u32;
         self.pc += 1;
     }
+
+    /// Trim whitespace using a custom `@ws` regex pattern.
+    /// Advances offset without pushing a value (like TrimWs). Always succeeds.
+    fn exec_trim_ws_pattern(&mut self, sid: u32) {
+        let start = self.offset as usize;
+        let remaining = &self.input[start..];
+        let re = self.program.compiled_regexes[sid as usize].as_ref()
+            .expect("TrimWsPattern references non-regex StringId");
+        if let Some(m) = re.find(remaining) {
+            self.offset = (start + m.end()) as u32;
+        }
+        // Always succeed — whitespace is optional.
+        self.pc += 1;
+    }
 }
 
 // ── Repetition ──────────────────────────────────────────────────────────────
@@ -566,10 +584,8 @@ impl<'a> Interpreter<'a> {
         let depth = repeat.value_depth.min(self.values.len());
 
         if repeat.count >= repeat.lo {
-            let collected: Vec<Value> = self.values.drain(depth..)
-                .map(|rc| Rc::try_unwrap(rc).unwrap_or_else(|rc| (*rc).clone()))
-                .collect();
-            self.values.push(Rc::new(Value::Array(collected)));
+            let collected: Vec<Value> = self.values.drain(depth..).collect();
+            self.values.push(Value::Array(collected));
             self.is_error = false;
         } else {
             self.values.truncate(depth);
@@ -585,10 +601,8 @@ impl<'a> Interpreter<'a> {
     fn exec_make_array(&mut self, count: u32) {
         let n = count as usize;
         let start = self.values.len().saturating_sub(n);
-        let collected: Vec<Value> = self.values.drain(start..)
-            .map(|rc| Rc::try_unwrap(rc).unwrap_or_else(|rc| (*rc).clone()))
-            .collect();
-        self.values.push(Rc::new(Value::Array(collected)));
+        let collected: Vec<Value> = self.values.drain(start..).collect();
+        self.values.push(Value::Array(collected));
         self.pc += 1;
     }
 
@@ -599,15 +613,13 @@ impl<'a> Interpreter<'a> {
             .map(|f| (f.start_offset, f.value_depth))
             .unwrap_or((0, 0));
         let depth = depth.min(self.values.len());
-        let children: Vec<Value> = self.values.drain(depth..)
-            .map(|rc| Rc::try_unwrap(rc).unwrap_or_else(|rc| (*rc).clone()))
-            .collect();
+        let children: Vec<Value> = self.values.drain(depth..).collect();
         if !children.is_empty() {
-            self.values.push(Rc::new(Value::Tagged {
+            self.values.push(Value::Tagged {
                 tag,
                 span: (start, self.offset),
                 children,
-            }));
+            });
         }
         self.pc += 1;
     }
@@ -621,7 +633,7 @@ impl<'a> Interpreter<'a> {
         let key = (rule_id, start_offset);
         if let Some((result_offset, value, was_error)) = self.memo.get(&key) {
             self.offset = *result_offset;
-            self.values.push(Rc::clone(value)); // O(1) instead of deep clone
+            self.values.push(value.clone()); // Deep clone on cache hit (rare)
             self.is_error = *was_error;
             self.pc = hit_offset;
         } else {
@@ -633,8 +645,8 @@ impl<'a> Interpreter<'a> {
 
     fn exec_memo_store(&mut self, _rule_id: u32) {
         let value = self.values.last()
-            .map(Rc::clone)
-            .unwrap_or_else(|| Rc::new(Value::Nil));
+            .cloned()
+            .unwrap_or(Value::Nil);
         // Pop the start offset saved by MemoCheck.
         let (rule_id, start_offset) = self.memo_starts.pop()
             .expect("MemoStore without matching MemoCheck");
@@ -644,27 +656,7 @@ impl<'a> Interpreter<'a> {
     }
 }
 
-// ── Dispatch ────────────────────────────────────────────────────────────────
-
-impl<'a> Interpreter<'a> {
-    fn exec_dispatch(&mut self, table: &[u8], offsets: &[u32], fallback: u32) {
-        let byte = if (self.offset as usize) < self.input_bytes.len() {
-            self.input_bytes[self.offset as usize]
-        } else {
-            255
-        };
-
-        let branch_idx = if byte < 128 { table[byte as usize] } else { 255 };
-
-        if branch_idx < offsets.len() as u8 {
-            self.pc = offsets[branch_idx as usize];
-        } else {
-            // No matching byte — dispatch fails.
-            self.is_error = true;
-            self.pc = fallback;
-        }
-    }
-}
+// (Dispatch is inlined into the main loop for zero-copy borrow from program.dispatch_tables)
 
 // ── Public API ──────────────────────────────────────────────────────────────
 

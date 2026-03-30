@@ -2,8 +2,6 @@
 //!
 //! Compiles a `GrammarIR` into a `BytecodeProgram` for the VM interpreter.
 
-use std::sync::Arc;
-
 use crate::bytecode::{BytecodeProgram, DispatchData, Op, SourceMapEntry};
 use crate::{AltBranch, GrammarIR, IrNode, MemoStrategy};
 
@@ -21,6 +19,7 @@ pub fn compile_with_debug(ir: &GrammarIR, debug: bool) -> BytecodeProgram {
     let mut compiler = Compiler {
         code: Vec::new(),
         entries: vec![0; ir.rules.len()],
+        dispatch_tables: Vec::new(),
         source_map: Vec::new(),
         debug,
         debug_all: ir.debug_all,
@@ -35,20 +34,29 @@ pub fn compile_with_debug(ir: &GrammarIR, debug: bool) -> BytecodeProgram {
     // Collect rule name StringIds for error messages.
     let rule_names: Vec<u32> = ir.rules.iter().map(|r| r.name).collect();
 
-    BytecodeProgram {
+    let mut program = BytecodeProgram {
         code: compiler.code,
         entries: compiler.entries,
         strings: ir.strings.clone(),
         entry: ir.entry,
+        dispatch_tables: compiler.dispatch_tables,
+        compiled_regexes: Vec::new(),
         follow_sets: ir.follow_sets.clone(),
         rule_names,
         source_map: compiler.source_map,
-    }
+    };
+
+    // Pre-compile all regex patterns referenced by MatchRegex opcodes.
+    program.prepare_regexes();
+
+    program
 }
 
 struct Compiler {
     code: Vec<Op>,
     entries: Vec<u32>,
+    /// Dispatch tables stored by index (referenced via `Op::Dispatch(idx)`).
+    dispatch_tables: Vec<DispatchData>,
     /// Source map entries (only populated when `debug` is true).
     source_map: Vec<SourceMapEntry>,
     /// Whether to generate debug info.
@@ -179,9 +187,18 @@ impl Compiler {
             IrNode::Negate(inner) => self.compile_negate(inner, ir),
             IrNode::Map { inner, .. } => self.compile_node(inner, ir),
             IrNode::OptionalWhitespace(inner) => {
-                self.emit(Op::TrimWs);
+                // Use custom @ws pattern if available; otherwise basic ASCII whitespace.
+                if let Some(ws_sid) = ir.ws_pattern {
+                    self.emit(Op::TrimWsPattern(ws_sid));
+                } else {
+                    self.emit(Op::TrimWs);
+                }
                 self.compile_node(inner, ir);
-                self.emit(Op::TrimWs);
+                if let Some(ws_sid) = ir.ws_pattern {
+                    self.emit(Op::TrimWsPattern(ws_sid));
+                } else {
+                    self.emit(Op::TrimWs);
+                }
             }
             IrNode::TokenDispatch { .. } => {
                 todo!("TokenDispatch bytecode compilation not yet implemented")
@@ -298,12 +315,14 @@ impl Compiler {
         // Save state before dispatch so we can restore on branch failure.
         self.emit(Op::SaveState);
 
-        // Emit a placeholder Dispatch, then compile each branch body.
-        let dispatch_idx = self.emit(Op::Dispatch(Arc::new(DispatchData {
+        // Reserve a dispatch table index and emit a placeholder Dispatch op.
+        let table_idx = self.dispatch_tables.len() as u16;
+        self.dispatch_tables.push(DispatchData {
             table: table.to_vec(),
             offsets: vec![0; branches.len()],
             fallback: 0,
-        })));
+        });
+        let dispatch_idx = self.emit(Op::Dispatch(table_idx));
 
         let mut branch_offsets = Vec::with_capacity(branches.len());
         let mut fail_jumps: Vec<usize> = Vec::new();
@@ -332,12 +351,12 @@ impl Compiler {
         self.emit(Op::RestoreState);
         let after = self.current_offset();
 
-        // Patch the Dispatch instruction with computed offsets.
-        self.code[dispatch_idx] = Op::Dispatch(Arc::new(DispatchData {
+        // Patch the dispatch table with computed offsets.
+        self.dispatch_tables[table_idx as usize] = DispatchData {
             table: table.to_vec(),
             offsets: branch_offsets,
             fallback,
-        }));
+        };
 
         // Patch fail jumps → RestoreState.
         for idx in fail_jumps {

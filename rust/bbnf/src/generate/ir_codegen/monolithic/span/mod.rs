@@ -148,7 +148,11 @@ pub(super) fn emit_span_expr(
             else if let Some(inline) = super::super::super::regex_emit::try_emit_regex_inline(pattern) {
                 inline
             }
-            // 3. Fall back to LazyLock<Regex> — NEVER sp_regex
+            // 3. Try DFA-based inline compilation
+            else if let Some(dfa_code) = super::super::super::regex_emit::try_emit_dfa_inline(pattern) {
+                dfa_code
+            }
+            // 4. Fall back to LazyLock<Regex> — NEVER sp_regex
             else {
                 super::super::super::regex_emit::emit_regex_lazy_static(pattern)
             }

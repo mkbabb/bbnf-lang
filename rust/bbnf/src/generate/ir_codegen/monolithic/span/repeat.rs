@@ -166,7 +166,17 @@ pub(super) fn emit_span_optional(
                 }
             };
         }
-        // 3. Fall back to LazyLock<Regex>.
+        // 3. Try DFA-based inline compilation.
+        if let Some(dfa_code) = super::super::super::super::regex_emit::try_emit_dfa_inline(pattern) {
+            return quote! {
+                {
+                    let #start_var = state.offset;
+                    let _ = #dfa_code;
+                    Some(::parse_that::Span::new(#start_var, state.offset, state.src))
+                }
+            };
+        }
+        // 4. Fall back to LazyLock<Regex>.
         let lazy = super::super::super::super::regex_emit::emit_regex_lazy_static(pattern);
         return quote! {
             {

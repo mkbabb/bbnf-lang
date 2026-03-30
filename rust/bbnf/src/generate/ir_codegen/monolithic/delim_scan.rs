@@ -376,13 +376,31 @@ fn emit_scan_loop(
     };
 
     // Unified structural scan: find the first of ALL structural bytes in one
-    // SIMD pass instead of 2 sequential memchr calls. Uses find_first_of_3/4
-    // which scans 16 bytes per iteration with all target comparisons fused.
-    let unified_scan = if let Some(tb) = config.trail_byte {
-        let trail_lit = proc_macro2::Literal::byte_character(tb);
-        quote! { ::parse_that::find_first_of_4(__rem, #open_lit, #close_lit, #pivot_lit, #trail_lit) }
-    } else {
-        quote! { ::parse_that::find_first_of_3(__rem, #open_lit, #close_lit, #pivot_lit) }
+    // SIMD pass instead of 2 sequential memchr calls.
+    //
+    // Dispatches to the optimal function based on target count:
+    // - 3 targets: find_first_of_3 (simd_eq × 3)
+    // - 4 targets: find_first_of_4 (simd_eq × 4)
+    // - 5+ targets: find_first_of (nibble LUT + swizzle_dyn)
+    let unified_scan = {
+        let mut structural_lits = vec![open_lit.clone(), close_lit.clone(), pivot_lit.clone()];
+        if let Some(tb) = config.trail_byte {
+            structural_lits.push(proc_macro2::Literal::byte_character(tb));
+        }
+        match structural_lits.len() {
+            3 => {
+                let (a, b, c) = (&structural_lits[0], &structural_lits[1], &structural_lits[2]);
+                quote! { ::parse_that::find_first_of_3(__rem, #a, #b, #c) }
+            }
+            4 => {
+                let (a, b, c, d) = (&structural_lits[0], &structural_lits[1], &structural_lits[2], &structural_lits[3]);
+                quote! { ::parse_that::find_first_of_4(__rem, #a, #b, #c, #d) }
+            }
+            _ => {
+                // 5+ targets: general find_first_of with nibble LUT dispatch
+                quote! { ::parse_that::find_first_of(__rem, &[#(#structural_lits),*]) }
+            }
+        }
     };
 
     let loop_body = quote! {

@@ -44,7 +44,7 @@ pub use generate::generate_monolithic_arena;
 // Re-export items used by sub-modules via `super::`.
 pub(super) use generate::compute_single_site_inline;
 pub(super) use helpers::{
-    emit_literal_inline, emit_literal_inline_unchecked, emit_mono_discarded, emit_mono_fallback,
+    emit_literal_inline, emit_literal_inline_unchecked, emit_mono_discarded,
     mono_fn_ident,
 };
 
@@ -66,6 +66,10 @@ pub(super) fn emit_ws_trim(ctx: &IrCodegenCtx<'_>, mctx: &mut MonoCtx) -> TokenS
         // Try HIR-based inline compilation.
         if let Some(inline) = super::super::regex_emit::try_emit_regex_inline(pattern) {
             return quote! { #inline; };
+        }
+        // Try DFA-based inline compilation.
+        if let Some(dfa_code) = super::super::regex_emit::try_emit_dfa_inline(pattern) {
+            return quote! { #dfa_code; };
         }
         // Fall back to LazyLock<Regex> — NEVER sp_regex.
         let lazy = super::super::regex_emit::emit_regex_lazy_static(pattern);
@@ -200,7 +204,8 @@ pub(super) fn emit_mono_expr(
             let pattern = ctx.ir.get_string(*sid);
             // Phase 2: try direct scanner call (bypasses SpanParser dispatch stack).
             // Arena context: fuse number conversion (returns (Span, f64) for JSON numbers).
-            let fuse = ctx.storage_mode == StorageMode::Arena;
+            // Skip fusing when prettify is enabled — formatters only need Spans.
+            let fuse = ctx.storage_mode == StorageMode::Arena && !ctx.parser_attrs.prettify;
             // 1. Try known fast paths (scan_ident, scan_number_f64, etc.)
             if let Some(direct) = fast_paths::emit_regex_direct_call_with_fuse(pattern, fuse) {
                 direct
@@ -209,7 +214,11 @@ pub(super) fn emit_mono_expr(
             else if let Some(inline) = super::super::regex_emit::try_emit_regex_inline(pattern) {
                 inline
             }
-            // 3. Fall back to LazyLock<Regex> — NEVER sp_regex
+            // 3. Try DFA-based inline compilation
+            else if let Some(dfa_code) = super::super::regex_emit::try_emit_dfa_inline(pattern) {
+                dfa_code
+            }
+            // 4. Fall back to LazyLock<Regex> — NEVER sp_regex
             else {
                 super::super::regex_emit::emit_regex_lazy_static(pattern)
             }
@@ -234,9 +243,41 @@ pub(super) fn emit_mono_expr(
         IrNode::Skip(left, right) => expr::emit_mono_skip(left, right, ctx, mctx, elide_box),
         IrNode::Next(left, right) => expr::emit_mono_next(left, right, ctx, mctx, elide_box),
 
-        IrNode::Minus(..) | IrNode::Negate(..) => {
-            // Rare — fall back to combinator (hoisted and called inline).
-            emit_mono_fallback(node, ctx, mctx, elide_box)
+        IrNode::Minus(left, right) => {
+            // Checkpoint/restore pattern: try right (excluded), if it matches
+            // at this position, reject. Otherwise try left.
+            let right_expr = emit_mono_expr(right, ctx, mctx, false);
+            let left_expr = emit_mono_expr(left, ctx, mctx, elide_box);
+            quote! {
+                {
+                    let __save_minus = state.offset;
+                    let __excluded = #right_expr;
+                    state.offset = __save_minus;
+                    if __excluded.is_some() {
+                        None
+                    } else {
+                        #left_expr
+                    }
+                }
+            }
+        }
+
+        IrNode::Negate(inner) => {
+            // Zero-width assertion: succeeds (returning unit) iff inner fails.
+            // Never advances state.offset.
+            let inner_expr = emit_mono_expr(inner, ctx, mctx, false);
+            quote! {
+                {
+                    let __save_neg = state.offset;
+                    let __inner = #inner_expr;
+                    state.offset = __save_neg;
+                    if __inner.is_some() {
+                        None
+                    } else {
+                        Some(())
+                    }
+                }
+            }
         }
 
         IrNode::Map { inner, fn_id } => expr::emit_mono_map(inner, *fn_id, ctx, mctx, elide_box),

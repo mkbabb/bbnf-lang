@@ -11,7 +11,7 @@ use super::super::infer::infer_node_type;
 use super::super::repeat as combinator_repeat;
 use super::super::unescape_literal;
 use super::{
-    emit_literal_inline_unchecked, emit_mono_expr, emit_mono_fallback, is_simple_expr,
+    emit_literal_inline_unchecked, emit_mono_expr, is_simple_expr,
     mono_fn_ident, MonoCtx,
 };
 
@@ -35,18 +35,25 @@ pub(super) struct SepByConfig {
     pub unchecked_sep: Option<TokenStream>,
 }
 
-/// Check if a separator is a single-byte comma (possibly wrapped in OW).
-fn is_comma_separator(separator: &IrNode, ctx: &IrCodegenCtx<'_>) -> bool {
-    let check = |sid: bbnf_ir::StringId| -> bool {
+/// Extract the single separator byte from a separator node (possibly wrapped in OW).
+/// Returns `None` if the separator is multi-byte or not a literal.
+fn single_byte_separator(separator: &IrNode, ctx: &IrCodegenCtx<'_>) -> Option<u8> {
+    let check = |sid: bbnf_ir::StringId| -> Option<u8> {
         let raw = ctx.ir.get_string(sid);
-        unescape_literal(raw) == ","
+        let unesc = unescape_literal(raw);
+        let bytes = unesc.as_bytes();
+        if bytes.len() == 1 { Some(bytes[0]) } else { None }
     };
     match separator {
         IrNode::Literal(sid) => check(*sid),
         IrNode::OptionalWhitespace(inner) => {
-            matches!(inner.as_ref(), IrNode::Literal(sid) if check(*sid))
+            if let IrNode::Literal(sid) = inner.as_ref() {
+                check(*sid)
+            } else {
+                None
+            }
         }
-        _ => false,
+        _ => None,
     }
 }
 
@@ -104,30 +111,40 @@ pub(super) fn emit_mono_sep_by_core(
     let sep_expr = super::emit_mono_discarded(separator, config.ws, ctx, mctx);
     let loop_sep = config.unchecked_sep.as_ref().unwrap_or(&sep_expr);
 
-    // Pre-allocation strategy: for comma-separated lists in delimited contexts,
-    // use SIMD-accelerated memchr to count commas up to the first terminator byte.
-    // This gives an upper-bound capacity that avoids Vec reallocation.
-    // For non-delimited or non-comma contexts, use Vec::new() (Rust's default
-    // growth 0→4→8→16... handles both small and large containers).
-    let capacity_code = if is_comma_separator(separator, ctx) {
+    // Pre-allocation strategy: for any single-byte separator, use SIMD-accelerated
+    // memchr to count separator occurrences. In delimited contexts, count up to the
+    // first terminator byte for an exact capacity. In non-delimited contexts, count
+    // in the entire remaining input for an upper-bound estimate.
+    let lo_cap = lo.max(1) as usize;
+    let capacity_code = if let Some(sep_byte) = single_byte_separator(separator, ctx) {
+        let sep_lit = proc_macro2::Literal::byte_character(sep_byte);
         if let Some(ref term_bytes) = config.terminator_bytes {
-            // Delimited comma list: count commas up to first terminator.
+            // Delimited: count separator bytes up to first terminator → exact capacity.
             let term_lit = proc_macro2::Literal::byte_character(term_bytes[0]);
             quote! {
                 let mut #vals_var = {
                     let __rem = &state.src_bytes[state.offset..];
                     let __cap = match memchr::memchr(#term_lit, __rem) {
-                        Some(__end) => memchr::memchr_iter(b',', &__rem[..__end]).count() + 1,
-                        None => 0,
+                        Some(__end) => memchr::memchr_iter(#sep_lit, &__rem[..__end]).count() + 1,
+                        None => #lo_cap,
                     };
                     Vec::with_capacity(__cap)
                 };
             }
         } else {
-            quote! { let mut #vals_var = Vec::new(); }
+            // Non-delimited: count separator bytes in remaining input → upper bound.
+            // Cap at 64 to avoid over-allocating on large inputs with many separators.
+            quote! {
+                let mut #vals_var = {
+                    let __rem = &state.src_bytes[state.offset..];
+                    let __cap = (memchr::memchr_iter(#sep_lit, __rem).count() + 1).min(64);
+                    Vec::with_capacity(__cap)
+                };
+            }
         }
     } else {
-        quote! { let mut #vals_var = Vec::new(); }
+        // No single-byte separator detected — use lo bound as hint.
+        quote! { let mut #vals_var = Vec::with_capacity(#lo_cap); }
     };
 
     // ── Whitespace fragments (use custom @ws pattern if configured) ──
@@ -361,17 +378,25 @@ fn emit_mono_optional(
             }
         }
 
-        // General Span optional: fall back to hoisted combinator.
-        return emit_mono_fallback(
-            &IrNode::Repeat {
-                inner: Box::new(inner.clone()),
-                lo: 0,
-                hi: 1,
-            },
-            ctx,
-            mctx,
-            elide_box,
-        );
+        // General Span optional: inline checkpoint/restore.
+        let inner_expr = emit_mono_expr(inner, ctx, mctx, elide_box);
+        let cp_var = mctx.fresh("opt_cp");
+        let inner_call = if is_simple_expr(inner, mctx) {
+            quote! { #inner_expr }
+        } else {
+            quote! { (|| #inner_expr)() }
+        };
+        return quote! {
+            {
+                let #cp_var = state.offset;
+                if let Some(__v) = #inner_call {
+                    Some(Some(__v))
+                } else {
+                    state.offset = #cp_var;
+                    Some(None)
+                }
+            }
+        };
     }
 
     // General case: wrap in IIFE to scope `?` unless the expr is simple.
@@ -429,9 +454,12 @@ fn emit_mono_many(
         }
     };
 
+    // Use lo bound as capacity hint: lo=0 → 4 (small default), lo>=1 → lo.
+    let init_cap = if lo == 0 { 4usize } else { lo as usize };
+
     quote! {
         {
-            let mut #vals_var = Vec::new();
+            let mut #vals_var = Vec::with_capacity(#init_cap);
             loop {
                 let #prev_var = state.offset;
                 let __elem = #elem_call;

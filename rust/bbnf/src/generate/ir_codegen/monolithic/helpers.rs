@@ -203,15 +203,3 @@ pub(crate) fn emit_literal_inline_unchecked(byte: u8) -> TokenStream {
         }
     }
 }
-
-/// Fallback: build a combinator expression, hoist it, and call inline.
-pub(crate) fn emit_mono_fallback(
-    node: &IrNode,
-    ctx: &IrCodegenCtx<'_>,
-    mctx: &mut MonoCtx,
-    elide_box: bool,
-) -> TokenStream {
-    let parser = super::super::ir_node_to_tokens_elide(node, ctx, elide_box);
-    let name = mctx.hoist(parser);
-    quote! { #name.call(state) }
-}

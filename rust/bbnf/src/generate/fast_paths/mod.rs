@@ -4,8 +4,9 @@
 //! negated character classes) and emits optimized parser/span constructors.
 //! Used by both `ir_codegen.rs` (Parser output) and `ir_span.rs` (SpanParser output).
 
-mod detect;
+pub(crate) mod detect;
 mod generalized;
+mod inline_scanners;
 mod negated_class;
 
 pub use negated_class::{NegCharClassQuantifier, is_negated_char_class_regex};
@@ -109,13 +110,13 @@ pub fn emit_regex_direct_call_with_fuse(pattern: &str, fuse_numbers: bool) -> Op
         }
     }
     if is_ws_block_comment_pattern(pattern) {
-        return Some(quote! { ::parse_that::scan_ws_block_comments(state) });
+        return Some(inline_scanners::emit_inline_ws_comment_scanner());
     }
     if is_ident_pattern(pattern) {
-        return Some(quote! { ::parse_that::scan_ident(state) });
+        return Some(inline_scanners::emit_inline_ident_scanner());
     }
     if is_quoted_string_pattern(pattern) {
-        return Some(quote! { ::parse_that::scan_string_quoted(state) });
+        return Some(inline_scanners::emit_inline_string_scanner());
     }
 
     // Comma-or-whitespace separator: ,|\s+
@@ -162,7 +163,7 @@ pub fn emit_regex_direct_call_with_fuse(pattern: &str, fuse_numbers: bool) -> Op
             }
         }
         RegexClass::Identifier => {
-            return Some(quote! { ::parse_that::scan_ident(state) });
+            return Some(inline_scanners::emit_inline_ident_scanner());
         }
         // QuotedString and HexDigits: handled by existing negated-class / char-class paths below.
         _ => {}

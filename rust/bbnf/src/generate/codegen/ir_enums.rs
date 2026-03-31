@@ -50,7 +50,7 @@ pub fn generate_enum(ctx: &IrCodegenCtx<'_>) -> TokenStream {
             } else {
                 ctx.rule_types
                     .get(&rule.id)
-                    .map(|t| t.clone())
+                    .cloned()
                     .unwrap_or_else(|| ctx.boxed_enum_type.clone())
             };
             Some(quote! { #ident(#ty) })

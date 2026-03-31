@@ -122,14 +122,15 @@ pub fn lower_to_ir<'a>(
     }
 
     // Phase 2: Lower rule bodies (interns all body strings).
-    let mut rule_bodies: Vec<(
+    type RuleBody<'b> = (
         RuleId,
         bbnf_ir::StringId,
         bbnf_ir::IrNode,
-        &str,
-        &Expression,
+        &'b str,
+        &'b Expression<'b>,
         Option<bbnf_ir::GrammarSpan>,
-    )> = Vec::with_capacity(rule_names.len());
+    );
+    let mut rule_bodies: Vec<RuleBody<'_>> = Vec::with_capacity(rule_names.len());
 
     for (lhs, rhs) in ast.iter() {
         let (name, source_span) = match lhs {
@@ -167,7 +168,7 @@ pub fn lower_to_ir<'a>(
         meta.debug = ctx.debug_all
             || ctx
                 .debug_rules
-                .map_or(false, |set| set.contains(name));
+                .is_some_and(|set| set.contains(name));
 
         rules.push(IrRule {
             id: rule_id,

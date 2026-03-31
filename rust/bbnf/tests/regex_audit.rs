@@ -23,7 +23,7 @@ fn extract_regex_patterns(source: &str) -> Vec<String> {
 
         // Line comments: //
         if c == '/' && chars.peek() == Some(&'/') {
-            while let Some(c2) = chars.next() {
+            for c2 in chars.by_ref() {
                 if c2 == '\n' {
                     break;
                 }
@@ -143,7 +143,7 @@ fn scan_grammar_dir(dir: &Path) -> Vec<(String, String)> {
 fn audit_all_grammar_regex_patterns() {
     let grammar_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../grammar");
 
-    let mut all_patterns = scan_grammar_dir(&grammar_dir);
+    let all_patterns = scan_grammar_dir(&grammar_dir);
 
     if all_patterns.is_empty() {
         eprintln!("WARNING: No regex patterns found in grammar files");

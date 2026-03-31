@@ -14,6 +14,17 @@
 
 use crate::{AltBranch, CharSet128, GrammarIR, IrNode, IrRule, RuleMeta, StringId};
 
+/// Shared mutable context threaded through the recursive factoring pass.
+struct FactorCtx<'a> {
+    token_rules: &'a [(u32, CharSet128, StringId)],
+    rule_bodies: &'a [(u32, IrNode)],
+    strings: &'a mut Vec<String>,
+    rule_first_sets: &'a [CharSet128],
+    new_rules: &'a mut Vec<IrRule>,
+    next_id: &'a mut u32,
+    rule_names: &'a [(u32, String)],
+}
+
 /// Factor overlapping-FIRST Alts using @token hints.
 pub fn fuse_token_dispatch(ir: &mut GrammarIR) {
     // Find @token rules suitable for prefix factoring.
@@ -33,7 +44,7 @@ pub fn fuse_token_dispatch(ir: &mut GrammarIR) {
             // with moderate FIRST set.
             let is_scannable = matches!(&r.body, IrNode::Regex(_))
                 || matches!(&r.body, IrNode::Alt(branches, _) if branches.iter().all(|b| matches!(&b.node, IrNode::Literal(_))));
-            is_scannable && fs_len >= 2 && fs_len <= 80
+            is_scannable && (2..=80).contains(&fs_len)
         })
         .map(|r| (r.id, r.meta.first_set.clone(), r.name))
         .collect();
@@ -71,16 +82,19 @@ pub fn fuse_token_dispatch(ir: &mut GrammarIR) {
     // Process each rule body. Take rules out temporarily to split the borrow
     // on `ir` (we need `&mut ir.strings` alongside `&mut rules`).
     let mut rules = std::mem::take(&mut ir.rules);
+    let mut ctx = FactorCtx {
+        token_rules: &token_rules,
+        rule_bodies: &rule_bodies,
+        strings: &mut ir.strings,
+        rule_first_sets: &rule_first_sets,
+        new_rules: &mut new_rules,
+        next_id: &mut next_id,
+        rule_names: &rule_names,
+    };
     for rule in &mut rules {
         let new_body = try_factor_alt(
             std::mem::replace(&mut rule.body, IrNode::Epsilon),
-            &token_rules,
-            &rule_bodies,
-            &mut ir.strings,
-            &rule_first_sets,
-            &mut new_rules,
-            &mut next_id,
-            &rule_names,
+            &mut ctx,
         );
         rule.body = new_body;
     }
@@ -92,49 +106,26 @@ pub fn fuse_token_dispatch(ir: &mut GrammarIR) {
     }
 }
 
-fn try_factor_alt(
-    node: IrNode,
-    token_rules: &[(u32, CharSet128, StringId)],
-    rule_bodies: &[(u32, IrNode)],
-    strings: &mut Vec<String>,
-    rule_first_sets: &[CharSet128],
-    new_rules: &mut Vec<IrRule>,
-    next_id: &mut u32,
-    rule_names: &[(u32, String)],
-) -> IrNode {
+fn try_factor_alt(node: IrNode, ctx: &mut FactorCtx<'_>) -> IrNode {
     match node {
         IrNode::Alt(branches, dispatch) if dispatch.is_none() && branches.len() >= 4 => {
             // Recurse into branch bodies first.
             let branches: Vec<AltBranch> = branches
                 .into_iter()
                 .map(|mut b| {
-                    b.node = try_factor_alt(
-                        b.node,
-                        token_rules,
-                        rule_bodies,
-                        strings,
-                        rule_first_sets,
-                        new_rules,
-                        next_id,
-                        rule_names,
-                    );
+                    b.node = try_factor_alt(b.node, ctx);
                     b
                 })
                 .collect();
 
             // Try to factor using each @token rule.
-            for (token_rule_id, token_first, token_name_sid) in token_rules {
+            for (token_rule_id, token_first, token_name_sid) in ctx.token_rules {
                 if let Some(factored) = factor_with_token(
                     &branches,
                     *token_rule_id,
                     token_first,
                     *token_name_sid,
-                    rule_bodies,
-                    strings,
-                    rule_first_sets,
-                    new_rules,
-                    next_id,
-                    rule_names,
+                    ctx,
                 ) {
                     return factored;
                 }
@@ -146,66 +137,28 @@ fn try_factor_alt(
         IrNode::Seq(children) => IrNode::Seq(
             children
                 .into_iter()
-                .map(|c| {
-                    try_factor_alt(
-                        c,
-                        token_rules,
-                        rule_bodies,
-                        strings,
-                        rule_first_sets,
-                        new_rules,
-                        next_id,
-                        rule_names,
-                    )
-                })
+                .map(|c| try_factor_alt(c, ctx))
                 .collect(),
         ),
         IrNode::Repeat { inner, lo, hi } => IrNode::Repeat {
-            inner: Box::new(try_factor_alt(
-                *inner,
-                token_rules,
-                rule_bodies,
-                strings,
-                rule_first_sets,
-                new_rules,
-                next_id,
-                rule_names,
-            )),
+            inner: Box::new(try_factor_alt(*inner, ctx)),
             lo,
             hi,
         },
         IrNode::Map { inner, fn_id } => IrNode::Map {
-            inner: Box::new(try_factor_alt(
-                *inner,
-                token_rules,
-                rule_bodies,
-                strings,
-                rule_first_sets,
-                new_rules,
-                next_id,
-                rule_names,
-            )),
+            inner: Box::new(try_factor_alt(*inner, ctx)),
             fn_id,
         },
-        IrNode::OptionalWhitespace(inner) => IrNode::OptionalWhitespace(Box::new(
-            try_factor_alt(
-                *inner,
-                token_rules,
-                rule_bodies,
-                strings,
-                rule_first_sets,
-                new_rules,
-                next_id,
-                rule_names,
-            ),
-        )),
+        IrNode::OptionalWhitespace(inner) => {
+            IrNode::OptionalWhitespace(Box::new(try_factor_alt(*inner, ctx)))
+        }
         IrNode::Skip(a, b) => IrNode::Skip(
-            Box::new(try_factor_alt(*a, token_rules, rule_bodies, strings, rule_first_sets, new_rules, next_id, rule_names)),
-            Box::new(try_factor_alt(*b, token_rules, rule_bodies, strings, rule_first_sets, new_rules, next_id, rule_names)),
+            Box::new(try_factor_alt(*a, ctx)),
+            Box::new(try_factor_alt(*b, ctx)),
         ),
         IrNode::Next(a, b) => IrNode::Next(
-            Box::new(try_factor_alt(*a, token_rules, rule_bodies, strings, rule_first_sets, new_rules, next_id, rule_names)),
-            Box::new(try_factor_alt(*b, token_rules, rule_bodies, strings, rule_first_sets, new_rules, next_id, rule_names)),
+            Box::new(try_factor_alt(*a, ctx)),
+            Box::new(try_factor_alt(*b, ctx)),
         ),
         other => other,
     }
@@ -217,12 +170,7 @@ fn factor_with_token(
     token_rule_id: u32,
     token_first: &CharSet128,
     _token_name_sid: StringId,
-    rule_bodies: &[(u32, IrNode)],
-    strings: &mut Vec<String>,
-    rule_first_sets: &[CharSet128],
-    new_rules: &mut Vec<IrRule>,
-    next_id: &mut u32,
-    rule_names: &[(u32, String)],
+    ctx: &mut FactorCtx<'_>,
 ) -> Option<IrNode> {
     // Find branches whose FIRST set overlaps with the token's FIRST set.
     let mut overlap_indices: Vec<usize> = Vec::new();
@@ -235,7 +183,7 @@ fn factor_with_token(
             .or_else(|| {
                 // Compute from Ref if missing.
                 if let IrNode::Ref(id) = &branch.node {
-                    rule_first_sets.get(*id as usize)
+                    ctx.rule_first_sets.get(*id as usize)
                 } else {
                     None
                 }
@@ -267,7 +215,7 @@ fn factor_with_token(
     }
 
     // Find the token rule's regex (the shared prefix scanner).
-    let token_body = rule_bodies
+    let token_body = ctx.rule_bodies
         .iter()
         .find(|(id, _)| *id == token_rule_id)?
         .1
@@ -294,7 +242,7 @@ fn factor_with_token(
         // Get the rule body: follow Ref, or use inline body directly.
         let (ref_rule_id, body) = match &branch.node {
             IrNode::Ref(id) => {
-                let b = rule_bodies.iter().find(|(rid, _)| *rid == *id)?.1.clone();
+                let b = ctx.rule_bodies.iter().find(|(rid, _)| *rid == *id)?.1.clone();
                 (Some(*id), b)
             }
             // Handle inline Seq/OW branches (e.g., after fuse_single_use inlines declarations).
@@ -306,7 +254,7 @@ fn factor_with_token(
 
         // Strip the leading keyword from the body (follows Refs to detect
         // property group rules like colorProps = "color" | "background-color" | ...).
-        let continuation_body = strip_leading_keyword(&body, strings, rule_bodies);
+        let continuation_body = strip_leading_keyword(&body, ctx.strings, ctx.rule_bodies);
 
         // Skip keyword-only branches (continuation is Epsilon) — they need
         // the pre-scanned token as their result, which the Seq can't provide.
@@ -325,24 +273,26 @@ fn factor_with_token(
             continue;
         }
 
-        let cont_first = leading_first_set(&continuation_body, rule_first_sets, strings);
+        let cont_first = leading_first_set(&continuation_body, ctx.rule_first_sets, ctx.strings);
 
         // Create a synthetic continuation rule.
-        let cont_rule_id = *next_id;
-        *next_id += 1;
+        let cont_rule_id = *ctx.next_id;
+        *ctx.next_id += 1;
 
         let orig_name = ref_rule_id
-            .and_then(|rid| rule_names.iter().find(|(id, _)| *id == rid))
+            .and_then(|rid| ctx.rule_names.iter().find(|(id, _)| *id == rid))
             .map(|(_, n)| n.as_str())
             .unwrap_or("branch");
         let cont_name = format!("__{}_cont_{}", orig_name, cont_rule_id);
-        let cont_name_sid = strings.len() as u32;
-        strings.push(cont_name);
+        let cont_name_sid = ctx.strings.len() as u32;
+        ctx.strings.push(cont_name);
 
-        let mut cont_meta = RuleMeta::default();
-        cont_meta.first_set = cont_first.clone().unwrap_or_default();
+        let cont_meta = RuleMeta {
+            first_set: cont_first.clone().unwrap_or_default(),
+            ..Default::default()
+        };
 
-        new_rules.push(IrRule {
+        ctx.new_rules.push(IrRule {
             id: cont_rule_id,
             name: cont_name_sid,
             body: continuation_body,
@@ -382,7 +332,7 @@ fn factor_with_token(
         ])
     };
 
-    let fused_first = crate::regex_first::regex_first_chars(&strings[token_regex_sid as usize]);
+    let fused_first = crate::regex_first::regex_first_chars(&ctx.strings[token_regex_sid as usize]);
 
     // For TokenDispatch, the fallback already handles non-matching keys.
     // The outer Alt only needs: non-overlap branches that weren't folded into
@@ -394,36 +344,32 @@ fn factor_with_token(
         .expect("overlap set must not be empty when building fused token");
 
     let mut new_branches: Vec<AltBranch> = Vec::new();
-    let mut fused_inserted = false;
 
-    for i in 0..branches.len() {
+    for (i, branch) in branches.iter().enumerate() {
         if actual_overlap.contains(&i) {
-            if !fused_inserted && i == last_overlap_pos {
+            if i == last_overlap_pos {
                 new_branches.push(AltBranch {
                     node: fused,
                     first_set: fused_first.clone(),
                 });
-                fused_inserted = true;
                 return Some(IrNode::Alt(new_branches_with_rest(
                     new_branches,
                     branches,
                     &actual_overlap,
                     i + 1,
-                    fused_inserted,
                 ), None));
             }
             // Skip individual overlapping branches.
         } else {
-            new_branches.push(branches[i].clone());
+            new_branches.push(branch.clone());
         }
     }
 
-    if !fused_inserted {
-        new_branches.push(AltBranch {
-            node: fused,
-            first_set: fused_first,
-        });
-    }
+    // Fallback: fused node not yet inserted (last_overlap_pos was not reached).
+    new_branches.push(AltBranch {
+        node: fused,
+        first_set: fused_first,
+    });
 
     Some(IrNode::Alt(new_branches, None))
 }
@@ -433,11 +379,10 @@ fn new_branches_with_rest(
     branches: &[AltBranch],
     overlap_indices: &[usize],
     from: usize,
-    _fused_inserted: bool,
 ) -> Vec<AltBranch> {
-    for i in from..branches.len() {
+    for (i, branch) in branches.iter().enumerate().skip(from) {
         if !overlap_indices.contains(&i) {
-            new_branches.push(branches[i].clone());
+            new_branches.push(branch.clone());
         }
     }
     new_branches

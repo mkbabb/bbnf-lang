@@ -2,7 +2,7 @@
 //!
 //! Bridges DAP line numbers (1-based) to grammar byte offsets and `RuleId`s.
 
-use bbnf_ir::{GrammarIR, GrammarSpan, RuleId};
+use bbnf_ir::{GrammarIR, RuleId};
 
 /// Pre-computed line start offsets for a source text.
 pub struct LineIndex {
@@ -84,7 +84,7 @@ pub fn resolve_breakpoint(
 }
 
 /// Get the rule name for a `RuleId`.
-pub fn rule_name<'a>(ir: &'a GrammarIR, rule_id: RuleId) -> &'a str {
+pub fn rule_name(ir: &GrammarIR, rule_id: RuleId) -> &str {
     let rule = &ir.rules[rule_id as usize];
     ir.get_string(rule.name)
 }

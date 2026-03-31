@@ -196,6 +196,7 @@ pub(super) fn emit_span_wrap(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn emit_span_sep_by_ws_until(
     element: &IrNode,
     separator: &IrNode,

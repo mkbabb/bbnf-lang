@@ -6,9 +6,7 @@ use bbnf::analysis::{
     compute_ref_counts, regex_first_chars, tarjan_scc, CharSet,
     Dependencies,
 };
-use bbnf::types::Expression;
-
-use common::{lit, nt};
+use common::nt;
 
 // -- CharSet tests --
 

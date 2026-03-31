@@ -8,7 +8,7 @@ use std::sync::Arc;
 use bbnf_ir::bytecode::Op;
 use bbnf_ir::compiler::{compile, compile_with_debug};
 use bbnf_ir::interpreter::{DebugAction, DebugState, Interpreter, StepMode};
-use bbnf_ir::{AltBranch, CharSet128, GrammarIR, GrammarSpan, IrNode, IrRule, RuleMeta};
+use bbnf_ir::{GrammarIR, GrammarSpan, IrNode, IrRule, RuleMeta};
 
 fn make_debug_ir() -> GrammarIR {
     // Grammar: entry = value ; value = "x" ;

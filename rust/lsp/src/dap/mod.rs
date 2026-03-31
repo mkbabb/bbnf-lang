@@ -33,12 +33,7 @@ pub fn serve_dap() {
     let mut grammar_path = String::new();
     let mut last_snapshot: Option<bbnf_ir::interpreter::DebugSnapshot> = None;
 
-    loop {
-        let msg = match read_message(&mut reader) {
-            Ok(msg) => msg,
-            Err(_) => break,
-        };
-
+    while let Ok(msg) = read_message(&mut reader) {
         let request: DapRequest = match serde_json::from_str(&msg) {
             Ok(r) => r,
             Err(e) => {
@@ -302,7 +297,7 @@ pub fn serve_dap() {
                 break;
             }
 
-            other => {
+            _other => {
                 // Unknown command — respond with success (DAP spec: adapters should
                 // not fail on unknown requests).
                 send_response(&mut writer, &mut seq_counter, &request, true, None);
@@ -316,11 +311,11 @@ fn run_and_report(
     writer: &mut impl Write,
     seq: &mut i64,
     adapter: &DapAdapter,
-    grammar_path: &str,
+    _grammar_path: &str,
     step_mode: StepMode,
     last_snapshot: &mut Option<bbnf_ir::interpreter::DebugSnapshot>,
 ) {
-    let (result, snapshots) = adapter.run(step_mode);
+    let (_result, snapshots) = adapter.run(step_mode);
 
     if let Some(snap) = snapshots.into_iter().next() {
         // Stopped at a breakpoint/step.

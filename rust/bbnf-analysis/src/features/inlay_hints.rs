@@ -45,7 +45,7 @@ pub fn inlay_hints(state: &DocumentState, range: Range) -> Vec<InlayHint> {
                 if let Some(comma) = s.rfind(',') {
                     s.truncate(comma);
                 }
-                format!("{}…}}", s.trim_end_matches(|c: char| c == ' ' || c == ','))
+                format!("{}…}}", s.trim_end_matches([' ', ',']))
             } else {
                 first_label.clone()
             };

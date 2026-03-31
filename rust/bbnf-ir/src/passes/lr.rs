@@ -166,8 +166,7 @@ pub fn eliminate_indirect_lr(ir: &mut GrammarIR) {
             };
 
             // For each earlier rule A_j in the SCC.
-            for j in 0..i {
-                let id_j = scc_ids[j];
+            for id_j in scc_ids.iter().take(i).copied() {
                 let idx_j = match id_to_idx.get(&id_j) {
                     Some(&idx) => idx,
                     None => continue,

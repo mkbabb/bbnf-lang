@@ -172,6 +172,7 @@ pub(super) fn emit_mono_alt(
 }
 
 /// Emit a monolithic dispatch-table Alt -- direct `match` on first byte.
+#[allow(clippy::too_many_arguments)]
 fn emit_mono_dispatch(
     branches: &[AltBranch],
     disp: &bbnf_ir::AltDispatch,

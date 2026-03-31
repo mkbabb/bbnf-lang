@@ -131,7 +131,7 @@ fn shutdown(
 /// Generate a grammar with N rules. Each rule references the previous one.
 fn generate_chain_grammar(n: usize) -> String {
     let mut lines = Vec::with_capacity(n);
-    lines.push(format!("rule_0 = \"token_0\";"));
+    lines.push("rule_0 = \"token_0\";".to_string());
     for i in 1..n {
         lines.push(format!("rule_{} = rule_{} | \"token_{}\";", i, i - 1, i));
     }
@@ -183,10 +183,11 @@ fn timed<F: FnOnce() -> R, R>(f: F) -> (R, Duration) {
 #[test]
 fn bench_lsp_actions() {
     let sizes = [10, 50, 100, 500, 1000];
-    let generators: Vec<(&str, Box<dyn Fn(usize) -> String>)> = vec![
-        ("chain", Box::new(|n| generate_chain_grammar(n))),
-        ("wide", Box::new(|n| generate_wide_grammar(n))),
-        ("nested", Box::new(|n| generate_nested_grammar(n))),
+    type Generator = (&'static str, Box<dyn Fn(usize) -> String>);
+    let generators: Vec<Generator> = vec![
+        ("chain", Box::new(generate_chain_grammar)),
+        ("wide", Box::new(generate_wide_grammar)),
+        ("nested", Box::new(generate_nested_grammar)),
     ];
 
     println!("\n{}", "=".repeat(100));
@@ -237,9 +238,7 @@ fn bench_lsp_actions() {
             });
 
             // 4. Find references (first rule).
-            let refs_msg = format!(
-                r#"{{"jsonrpc":"2.0","id":12,"method":"textDocument/references","params":{{"textDocument":{{"uri":"file:///bench.bbnf"}},"position":{{"line":0,"character":3}},"context":{{"includeDeclaration":true}}}}}}"#,
-            );
+            let refs_msg = r#"{"jsonrpc":"2.0","id":12,"method":"textDocument/references","params":{"textDocument":{"uri":"file:///bench.bbnf"},"position":{"line":0,"character":3},"context":{"includeDeclaration":true}}}"#.to_string();
             let (_, refs_dur) = timed(|| {
                 send_lsp(&mut stdin, &refs_msg);
                 read_response(&mut stdout, 12)

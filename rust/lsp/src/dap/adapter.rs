@@ -146,7 +146,7 @@ impl DapAdapter {
             breakpoints,
             step_mode,
             trace: Vec::new(),
-            on_break: Box::new(|snapshot| {
+            on_break: Box::new(|_snapshot| {
                 // In the synchronous model, we just record the first stop
                 // and halt. The DAP server will re-run from the trace for
                 // subsequent steps.

@@ -399,7 +399,7 @@ pub(super) fn ends_with_ow(node: &IrNode) -> bool {
         IrNode::OptionalWhitespace(_) => true,
         IrNode::Map { inner, .. } => ends_with_ow(inner),
         IrNode::Alt(branches, _) => branches.iter().all(|b| ends_with_ow(&b.node)),
-        IrNode::Seq(children) => children.last().is_some_and(|c| ends_with_ow(c)),
+        IrNode::Seq(children) => children.last().is_some_and(ends_with_ow),
         IrNode::Skip(left, _) => ends_with_ow(left), // Skip keeps left, which might end with OW
         _ => false,
     }

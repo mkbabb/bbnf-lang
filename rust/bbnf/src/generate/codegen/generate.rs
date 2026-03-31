@@ -53,8 +53,7 @@ pub fn generate_monolithic(
     let fusion_eligible: Vec<bool> = ir
         .rules
         .iter()
-        .enumerate()
-        .map(|(_i, rule)| {
+        .map(|rule| {
             // @token rules always inline (small by definition).
             if rule.meta.is_token {
                 return true;

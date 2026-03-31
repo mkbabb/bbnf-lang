@@ -137,7 +137,7 @@ pub(super) fn validate_sub_variant_uniqueness_raw(
             if sv.ty == TypeDesc::Span {
                 continue;
             }
-            if seen_in_rule.iter().any(|seen| *seen == &sv.ty) {
+            if seen_in_rule.contains(&&sv.ty) {
                 continue;
             }
             seen_in_rule.push(&sv.ty);

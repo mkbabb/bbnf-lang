@@ -9,6 +9,7 @@ pub fn nt(name: &str) -> Expression<'_> {
 }
 
 /// Helper: create a Literal expression.
+#[allow(dead_code)]
 pub fn lit(value: &str) -> Expression<'_> {
     Expression::Literal(Token::new(Cow::Borrowed(value), Span::new(0, 0, "")))
 }

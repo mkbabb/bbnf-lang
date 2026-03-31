@@ -1,7 +1,5 @@
 //! Tests for the DAP module: protocol serialization, mapping, and adapter.
 
-use std::io::Cursor;
-
 // ── Protocol serialization ───────────────────────────────────────────────────
 
 mod protocol {

@@ -3,11 +3,10 @@ mod common;
 use std::collections::{HashMap, HashSet};
 
 use bbnf::analysis::{
-    build_dispatch_table, compute_ref_counts, regex_first_chars, tarjan_scc, CharSet,
-    Dependencies, FirstSets,
+    compute_ref_counts, regex_first_chars, tarjan_scc, CharSet,
+    Dependencies,
 };
-use bbnf::types::{Expression, AST};
-use indexmap::IndexMap;
+use bbnf::types::Expression;
 
 use common::{lit, nt};
 
@@ -258,42 +257,3 @@ fn ref_counts_basic() {
     assert_eq!(*c_count, 2);
 }
 
-// -- Dispatch table tests --
-
-#[test]
-fn dispatch_table_basic() {
-    // Simulate two literal alternatives: "abc" and "xyz".
-    let alt_a = lit("abc");
-    let alt_x = lit("xyz");
-
-    let ast: AST = IndexMap::new();
-    let first_sets = FirstSets {
-        first: HashMap::new(),
-        nullable: HashSet::new(),
-        branch_firsts: HashMap::new(),
-    };
-
-    let alternatives: Vec<&Expression> = vec![&alt_a, &alt_x];
-    let table = build_dispatch_table(&alternatives, &first_sets, &ast).unwrap();
-
-    assert_eq!(table.lookup(b'a'), Some(0));
-    assert_eq!(table.lookup(b'x'), Some(1));
-    assert_eq!(table.lookup(b'z'), None);
-}
-
-#[test]
-fn dispatch_table_overlapping_returns_none() {
-    // Two literals that start with the same character.
-    let alt1 = lit("abc");
-    let alt2 = lit("axyz");
-
-    let ast: AST = IndexMap::new();
-    let first_sets = FirstSets {
-        first: HashMap::new(),
-        nullable: HashSet::new(),
-        branch_firsts: HashMap::new(),
-    };
-
-    let alternatives: Vec<&Expression> = vec![&alt1, &alt2];
-    assert!(build_dispatch_table(&alternatives, &first_sets, &ast).is_none());
-}

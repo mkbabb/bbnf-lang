@@ -9,7 +9,10 @@ pub fn infer_node(node: &IrNode, ctx: &InferCtx<'_>) -> TypeDesc {
     match node {
         IrNode::Literal(_) | IrNode::Regex(_) => TypeDesc::Span,
 
-        IrNode::Epsilon => TypeDesc::Tuple(vec![]),
+        // Epsilon produces an empty Span in monolithic codegen:
+        // `Span::new(state.offset, state.offset, state.src)`.
+        // Must match codegen output so sub-variant enum types are correct.
+        IrNode::Epsilon => TypeDesc::Span,
 
         IrNode::Ref(_id) => {
             // BoxedEnum: emit_ref wraps non-transparent calls with Box::new.

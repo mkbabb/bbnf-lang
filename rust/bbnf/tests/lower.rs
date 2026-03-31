@@ -4,7 +4,7 @@ use bbnf::analysis::{
     calculate_ast_deps, compute_first_sets, find_aliases, find_span_eligible_rules,
     find_transparent_alternations, tarjan_scc,
 };
-use bbnf::lower::lower_to_ir;
+use bbnf::lower::{DirectiveSet, lower_to_ir};
 use bbnf::BBNFGrammar;
 
 use bbnf_ir::{GrammarIR, IrNode, MemoStrategy};
@@ -22,6 +22,8 @@ fn lower_grammar(source: &str) -> GrammarIR {
     let transparent_rules = find_transparent_alternations(&ast, &scc_result.cyclic_rules);
     let span_eligible_rules = find_span_eligible_rules(&ast, &scc_result.cyclic_rules);
 
+    let directives = DirectiveSet::empty();
+
     lower_to_ir(
         &ast,
         &first_sets,
@@ -29,12 +31,7 @@ fn lower_grammar(source: &str) -> GrammarIR {
         &aliases,
         &transparent_rules,
         &span_eligible_rules,
-        None,
-        None,
-        None,
-        None,
-        None,
-        false,
+        &directives,
     )
 }
 
@@ -257,6 +254,15 @@ fn lower_with_pretty_hints() {
             ],
         );
 
+        let directives = DirectiveSet {
+            recovers: None,
+            pretties: Some(&pretties),
+            ws_pattern: None,
+            token_rules: None,
+            debug_rules: None,
+            debug_all: false,
+        };
+
         lower_to_ir(
             &ast,
             &first_sets,
@@ -264,12 +270,7 @@ fn lower_with_pretty_hints() {
             &aliases,
             &transparent_rules,
             &span_eligible_rules,
-            None,
-            Some(&pretties),
-            None,
-            None,
-            None,
-            false,
+            &directives,
         )
     };
 

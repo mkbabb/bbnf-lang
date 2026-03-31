@@ -20,6 +20,33 @@ use fn_table::FnTable;
 use metadata::build_rule_meta;
 use string_interner::StringInterner;
 
+/// All directive data extracted from a parsed grammar.
+///
+/// Encapsulates the 6 directive parameters that were previously passed individually
+/// to `lower_to_ir` and `compile_ast`.
+pub struct DirectiveSet<'a> {
+    pub recovers: Option<&'a HashMap<String, Expression<'a>>>,
+    pub pretties: Option<&'a HashMap<String, Vec<String>>>,
+    pub ws_pattern: Option<&'a str>,
+    pub token_rules: Option<&'a HashSet<String>>,
+    pub debug_rules: Option<&'a HashSet<String>>,
+    pub debug_all: bool,
+}
+
+impl<'a> DirectiveSet<'a> {
+    /// Create a `DirectiveSet` with all directives empty/disabled.
+    pub fn empty() -> Self {
+        Self {
+            recovers: None,
+            pretties: None,
+            ws_pattern: None,
+            token_rules: None,
+            debug_rules: None,
+            debug_all: false,
+        }
+    }
+}
+
 /// Context for the lowering pass.
 pub(crate) struct LowerCtx<'a> {
     pub(crate) strings: StringInterner,
@@ -63,9 +90,7 @@ pub(crate) struct LowerCtx<'a> {
 /// * `aliases` -- Alias detection results.
 /// * `transparent_rules` -- Transparent alternation rule names.
 /// * `span_eligible_rules` -- Span-eligible rule names.
-/// * `recovers` -- `@recover` directive map (rule_name -> sync expression).
-/// * `pretties` -- `@pretty` directive map (rule_name -> hint strings).
-#[allow(clippy::too_many_arguments)]
+/// * `directives` -- All directive data from the parsed grammar.
 pub fn lower_to_ir<'a>(
     ast: &'a AST<'a>,
     first_sets: &'a FirstSets<'a>,
@@ -73,12 +98,7 @@ pub fn lower_to_ir<'a>(
     aliases: &'a HashMap<&'a Expression<'a>, &'a Expression<'a>>,
     transparent_rules: &'a HashSet<String>,
     span_eligible_rules: &'a HashSet<String>,
-    recovers: Option<&'a HashMap<String, Expression<'a>>>,
-    pretties: Option<&'a HashMap<String, Vec<String>>>,
-    ws_pattern: Option<&str>,
-    token_rules: Option<&'a HashSet<String>>,
-    debug_rules: Option<&'a HashSet<String>>,
-    debug_all: bool,
+    directives: &'a DirectiveSet<'a>,
 ) -> GrammarIR {
     let mut ctx = LowerCtx {
         strings: StringInterner::new(),
@@ -90,11 +110,11 @@ pub fn lower_to_ir<'a>(
         transparent_rules,
         span_eligible_rules,
         cyclic_rules: &scc_result.cyclic_rules,
-        recovers,
-        pretties,
-        token_rules,
-        debug_rules,
-        debug_all,
+        recovers: directives.recovers,
+        pretties: directives.pretties,
+        token_rules: directives.token_rules,
+        debug_rules: directives.debug_rules,
+        debug_all: directives.debug_all,
         current_lhs: None,
         recovery_mode: false,
     };
@@ -171,7 +191,7 @@ pub fn lower_to_ir<'a>(
     // original source order (e.g., the last rule in the grammar file).
     let entry = rules.last().map(|r| r.id).unwrap_or(0);
 
-    let ws_pattern_id = ws_pattern.map(|pat| ctx.strings.intern(pat));
+    let ws_pattern_id = directives.ws_pattern.map(|pat| ctx.strings.intern(pat));
 
     GrammarIR {
         rules,

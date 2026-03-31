@@ -11,7 +11,7 @@ use bbnf::analysis::{
     tarjan_scc, topological_sort_scc,
 };
 use bbnf::imports::load_module_graph;
-use bbnf::lower::lower_to_ir;
+use bbnf::lower::{DirectiveSet, lower_to_ir};
 use bbnf::optimize::remove_direct_left_recursion;
 use bbnf::BBNFGrammar;
 use bbnf::Expression;
@@ -36,6 +36,8 @@ use parse_that::utils::get_cargo_root_path;
 //   - The bbnf crate version (invalidates on compiler changes)
 
 /// Version tag baked into the cache key to invalidate on compiler changes.
+/// Includes a build timestamp so that recompiling bbnf-derive (triggered by
+/// any change to bbnf or bbnf-ir source) invalidates all cached codegen.
 const CACHE_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// Recursively collect all grammar file contents for hashing.
@@ -436,25 +438,18 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     // Phase D: Span-eligible rule detection
     let span_eligible_rules = find_span_eligible_rules(&ast, &scc_result.cyclic_rules);
 
-    let recovers_ref = if recover_map.is_empty() {
-        None
-    } else {
-        Some(&recover_map)
-    };
-    let pretties_ref = if pretty_map.is_empty() {
-        None
-    } else {
-        Some(&pretty_map)
-    };
-    let token_ref = if token_set.is_empty() {
-        None
-    } else {
-        Some(&token_set)
-    };
-    let debug_ref = if debug_set.is_empty() {
-        None
-    } else {
-        Some(&debug_set)
+    let recovers_ref = if recover_map.is_empty() { None } else { Some(&recover_map) };
+    let pretties_ref = if pretty_map.is_empty() { None } else { Some(&pretty_map) };
+    let token_ref = if token_set.is_empty() { None } else { Some(&token_set) };
+    let debug_ref = if debug_set.is_empty() { None } else { Some(&debug_set) };
+
+    let directives = DirectiveSet {
+        recovers: recovers_ref,
+        pretties: pretties_ref,
+        ws_pattern: ws_pattern.as_deref(),
+        token_rules: token_ref,
+        debug_rules: debug_ref,
+        debug_all,
     };
 
     // ── IR Lowering ──────────────────────────────────────────────────────────
@@ -466,12 +461,7 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
         &aliases,
         &transparent_rules,
         &span_eligible_rules,
-        recovers_ref,
-        pretties_ref,
-        ws_pattern.as_deref(),
-        token_ref,
-        debug_ref,
-        debug_all,
+        &directives,
     );
 
     // Run all IR optimization passes.

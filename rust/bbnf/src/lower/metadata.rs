@@ -117,10 +117,10 @@ fn lower_pretty_hints(hint_strs: &[String]) -> PrettyHints {
             "off" => ph.off = true,
             _ => {
                 // Check for parameterized hints.
-                if h.starts_with("sep(\"") && h.ends_with("\")") {
-                    ph.sep = Some(h[5..h.len() - 2].to_string());
-                } else if h.starts_with("split(\"") && h.ends_with("\")") {
-                    ph.split = Some(h[7..h.len() - 2].to_string());
+                if let Some(sep) = bbnf_ir::parse_sep_hint(h) {
+                    ph.sep = Some(sep.to_string());
+                } else if let Some(split) = bbnf_ir::parse_split_hint(h) {
+                    ph.split = Some(split.to_string());
                 }
                 // Unknown hints are silently ignored (validation happens earlier).
             }

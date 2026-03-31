@@ -5,7 +5,8 @@
 
 use super::hir;
 use super::fast_paths;
-use super::fast_paths::detect;
+
+use super::classify::{classify_regex, RegexClass};
 
 /// Which emission tier handles a regex pattern.
 #[derive(Debug, Clone)]
@@ -50,20 +51,14 @@ pub fn audit_regex_pattern(pattern: &str) -> RegexTier {
 
 /// Classify which fast-path scanner handles a pattern (for diagnostic display).
 fn classify_fast_path(pattern: &str) -> &'static str {
-    if detect::is_json_number_pattern(pattern) {
-        return "json_number";
+    match classify_regex(pattern) {
+        RegexClass::JsonNumber => "json_number",
+        RegexClass::JsonString => "json_string",
+        RegexClass::WsBlockComment => "ws_block_comment",
+        RegexClass::CssIdent => "ident",
+        RegexClass::CssQuotedString => "quoted_string",
+        RegexClass::Identifier => "ident",
+        RegexClass::Numeric { .. } => "numeric",
+        _ => "other",
     }
-    if detect::is_json_string_pattern(pattern) {
-        return "json_string";
-    }
-    if detect::is_ws_block_comment_pattern(pattern) {
-        return "ws_block_comment";
-    }
-    if detect::is_ident_pattern(pattern) {
-        return "ident";
-    }
-    if detect::is_quoted_string_pattern(pattern) {
-        return "quoted_string";
-    }
-    "other"
 }

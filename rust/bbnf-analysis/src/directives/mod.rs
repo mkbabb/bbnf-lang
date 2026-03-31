@@ -1,5 +1,12 @@
-//! Directive definitions and metadata.
+//! Directive definitions, extraction, validation, and metadata.
 //!
-//! `hints` — `@pretty` hint keyword definitions, validation, documentation.
+//! Each directive type has its own module containing its info struct,
+//! extraction logic (from parsed grammar), and validation + semantic token generation.
 
 pub mod hints;
+pub mod debug;
+pub mod import;
+pub mod pretty;
+pub mod recover;
+pub mod token;
+pub mod ws;

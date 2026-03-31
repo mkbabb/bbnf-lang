@@ -291,6 +291,18 @@ pub struct PrettyHints {
     pub split: Option<String>,
 }
 
+// ─── Hint Parsing Helpers ──────────────────────────────────────────────────
+
+/// Parse a `sep("...")` hint string, returning the separator content.
+pub fn parse_sep_hint(h: &str) -> Option<&str> {
+    h.strip_prefix("sep(\"")?.strip_suffix("\")")
+}
+
+/// Parse a `split("...")` hint string, returning the delimiter content.
+pub fn parse_split_hint(h: &str) -> Option<&str> {
+    h.strip_prefix("split(\"")?.strip_suffix("\")")
+}
+
 /// A sub-variant for a heterogeneous alternation branch.
 ///
 /// When an `Alt` node produces `BoxedEnum` overall, branches that produce

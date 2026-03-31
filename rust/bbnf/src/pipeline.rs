@@ -12,7 +12,7 @@ use crate::analysis::{
     tarjan_scc, topological_sort_scc,
 };
 use crate::grammar::BBNFGrammar;
-use crate::lower::lower_to_ir;
+use crate::lower::{DirectiveSet, lower_to_ir};
 use crate::optimize::{remove_direct_left_recursion, remove_indirect_left_recursion};
 use crate::types::{AST, Expression};
 
@@ -71,16 +71,20 @@ pub fn compile_grammar(source: &str, options: &PipelineOptions) -> Result<Gramma
     let debug_ref = if debug_set.is_empty() { None } else { Some(&debug_set) };
 
     let ast = parsed.rules;
-    compile_ast(
-        ast,
-        &recover_map,
-        &pretty_map,
-        options,
-        ws_pat.as_deref(),
-        token_ref,
-        debug_ref,
+
+    let recovers_ref = if recover_map.is_empty() { None } else { Some(&recover_map) };
+    let pretties_ref = if pretty_map.is_empty() { None } else { Some(&pretty_map) };
+
+    let directives = DirectiveSet {
+        recovers: recovers_ref,
+        pretties: pretties_ref,
+        ws_pattern: ws_pat.as_deref(),
+        token_rules: token_ref,
+        debug_rules: debug_ref,
         debug_all,
-    )
+    };
+
+    compile_ast(ast, &directives, options)
 }
 
 /// Compile an already-parsed AST to `GrammarIR`.
@@ -88,13 +92,8 @@ pub fn compile_grammar(source: &str, options: &PipelineOptions) -> Result<Gramma
 /// Useful when the AST is already available (e.g., from `DocumentState`).
 pub fn compile_ast<'a>(
     ast: AST<'a>,
-    recover_map: &HashMap<String, Expression<'a>>,
-    pretty_map: &HashMap<String, Vec<String>>,
+    directives: &'a DirectiveSet<'a>,
     options: &PipelineOptions,
-    ws_pattern: Option<&str>,
-    token_rules: Option<&HashSet<String>>,
-    debug_rules: Option<&HashSet<String>>,
-    debug_all: bool,
 ) -> Result<GrammarIR, String> {
     // Determine the entry rule name: use override if provided, otherwise last rule in source order.
     let entry_rule_name: Option<String> = options.entry_rule.clone().or_else(|| {
@@ -148,17 +147,6 @@ pub fn compile_ast<'a>(
     let transparent_rules = find_transparent_alternations(&ast, &scc_result.cyclic_rules);
     let span_eligible_rules = find_span_eligible_rules(&ast, &scc_result.cyclic_rules);
 
-    // Directive refs.
-    let recovers_ref = if recover_map.is_empty() {
-        None
-    } else {
-        Some(recover_map)
-    };
-    let pretties_ref = if pretty_map.is_empty() {
-        None
-    } else {
-        Some(pretty_map)
-    };
     // Lower to IR.
     let mut ir = lower_to_ir(
         &ast,
@@ -167,12 +155,7 @@ pub fn compile_ast<'a>(
         &aliases,
         &transparent_rules,
         &span_eligible_rules,
-        recovers_ref,
-        pretties_ref,
-        ws_pattern,
-        token_rules,
-        debug_rules,
-        debug_all,
+        directives,
     );
 
     // Set the correct entry rule (last rule in original source order).

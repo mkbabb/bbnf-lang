@@ -4,6 +4,7 @@ use bbnf::analysis::{
     calculate_ast_deps, compute_first_sets, find_aliases, find_first_set_conflicts,
     get_nonterminal_name, tarjan_scc,
 };
+use bbnf::lower::DirectiveSet;
 use bbnf::pipeline::{compile_ast, PipelineOptions};
 use bbnf::types::{Expression, Token};
 
@@ -447,56 +448,27 @@ pub fn analyze_from_cache(
         }
     }
 
+    // ── Directive validation and semantic tokens ─────────────────────────────
+
     // @import directive semantic tokens.
-    for imp in &import_infos {
-        // "@import" keyword (7 chars).
-        semantic_tokens.push(SemanticTokenInfo {
-            span: (imp.span.0, imp.span.0 + 7),
-            token_type: token_types::KEYWORD,
-        });
-        // Selectively imported names as RULE_REFERENCE.
-        if let Some(ref items) = imp.items {
-            for item in items {
-                semantic_tokens.push(SemanticTokenInfo {
-                    span: item.span,
-                    token_type: token_types::RULE_REFERENCE,
-                });
-            }
-        }
-    }
+    semantic_tokens.extend(
+        crate::directives::import::import_semantic_tokens(&import_infos),
+    );
 
     // @recover directive validation and semantic tokens.
-    for rec in &recover_infos {
-        // Semantic token: KEYWORD for "@recover".
-        // The "@recover" keyword is 8 bytes, starts at the directive span start.
-        semantic_tokens.push(SemanticTokenInfo {
-            span: (rec.span.0, rec.span.0 + 8), // "@recover" is 8 chars
-            token_type: token_types::KEYWORD,
-        });
+    {
+        let (rec_diags, rec_tokens) = crate::directives::recover::validate_recovers(
+            &recover_infos,
+            &defined,
+            &imported_names,
+            line_index,
+        );
+        diagnostics.extend(rec_diags);
+        semantic_tokens.extend(rec_tokens);
 
-        // Semantic token: RULE_REFERENCE for the rule name.
-        semantic_tokens.push(SemanticTokenInfo {
-            span: rec.rule_name_span,
-            token_type: token_types::RULE_REFERENCE,
-        });
-
-        // Mark the rule name as referenced (for unused rule detection).
-        referenced_names.insert(&rec.rule_name);
-
-        // Validate: warn if the target rule doesn't exist.
-        if !defined.contains_key(rec.rule_name.as_str())
-            && !imported_names.contains(rec.rule_name.as_str())
-        {
-            diagnostics.push(Diagnostic {
-                range: line_index.span_to_range(rec.rule_name_span.0, rec.rule_name_span.1),
-                severity: Some(DiagnosticSeverity::WARNING),
-                source: Some("bbnf".into()),
-                message: format!(
-                    "`@recover` targets undefined rule: `{}`",
-                    rec.rule_name
-                ),
-                ..Default::default()
-            });
+        // Mark recover directive rule names as referenced (for unused rule detection).
+        for rec in &recover_infos {
+            referenced_names.insert(&rec.rule_name);
         }
     }
 
@@ -518,83 +490,45 @@ pub fn analyze_from_cache(
     }
 
     // @debug directive validation and semantic tokens.
-    for dbg in &debug_infos {
-        // Semantic token: KEYWORD for "@debug" (6 chars).
-        semantic_tokens.push(SemanticTokenInfo {
-            span: (dbg.span.0, dbg.span.0 + 6),
-            token_type: token_types::KEYWORD,
-        });
+    {
+        let (dbg_diags, dbg_tokens) = crate::directives::debug::validate_debugs(
+            &debug_infos,
+            &defined,
+            &imported_names,
+            line_index,
+        );
+        diagnostics.extend(dbg_diags);
+        semantic_tokens.extend(dbg_tokens);
 
-        // Semantic token: RULE_REFERENCE for the rule name (unless "*").
-        if dbg.rule_name != "*" {
-            semantic_tokens.push(SemanticTokenInfo {
-                span: dbg.rule_name_span,
-                token_type: token_types::RULE_REFERENCE,
-            });
-
-            // Mark the rule name as referenced (for unused rule detection).
-            referenced_names.insert(&dbg.rule_name);
-
-            // Validate: warn if the target rule doesn't exist.
-            if !defined.contains_key(dbg.rule_name.as_str())
-                && !imported_names.contains(dbg.rule_name.as_str())
-            {
-                diagnostics.push(Diagnostic {
-                    range: line_index.span_to_range(dbg.rule_name_span.0, dbg.rule_name_span.1),
-                    severity: Some(DiagnosticSeverity::WARNING),
-                    source: Some("bbnf".into()),
-                    message: format!(
-                        "`@debug` targets undefined rule: `{}`",
-                        dbg.rule_name
-                    ),
-                    ..Default::default()
-                });
+        // Mark debug directive rule names as referenced (for unused rule detection).
+        for dbg in &debug_infos {
+            if dbg.rule_name != "*" {
+                referenced_names.insert(&dbg.rule_name);
             }
         }
     }
 
     // @token directive validation and semantic tokens.
-    for tok in &token_infos {
-        // Semantic token: KEYWORD for "@token" (6 chars).
-        semantic_tokens.push(SemanticTokenInfo {
-            span: (tok.span.0, tok.span.0 + 6),
-            token_type: token_types::KEYWORD,
-        });
+    {
+        let (tok_diags, tok_tokens) = crate::directives::token::validate_tokens(
+            &token_infos,
+            &defined,
+            &imported_names,
+            line_index,
+        );
+        diagnostics.extend(tok_diags);
+        semantic_tokens.extend(tok_tokens);
 
-        // Semantic token: RULE_REFERENCE for the rule name.
-        semantic_tokens.push(SemanticTokenInfo {
-            span: tok.rule_name_span,
-            token_type: token_types::RULE_REFERENCE,
-        });
-
-        // Mark the rule name as referenced (for unused rule detection).
-        referenced_names.insert(&tok.rule_name);
-
-        // Validate: warn if the target rule doesn't exist.
-        if !defined.contains_key(tok.rule_name.as_str())
-            && !imported_names.contains(tok.rule_name.as_str())
-        {
-            diagnostics.push(Diagnostic {
-                range: line_index.span_to_range(tok.rule_name_span.0, tok.rule_name_span.1),
-                severity: Some(DiagnosticSeverity::WARNING),
-                source: Some("bbnf".into()),
-                message: format!(
-                    "`@token` targets undefined rule: `{}`",
-                    tok.rule_name
-                ),
-                ..Default::default()
-            });
+        // Mark token directive rule names as referenced (for unused rule detection).
+        for tok in &token_infos {
+            referenced_names.insert(&tok.rule_name);
         }
     }
 
     // @ws directive semantic tokens.
-    if let Some(ws) = &ws_pattern_info {
-        // Semantic token: KEYWORD for "@ws" (3 chars).
-        semantic_tokens.push(SemanticTokenInfo {
-            span: (ws.span.0, ws.span.0 + 3),
-            token_type: token_types::KEYWORD,
-        });
-    }
+    semantic_tokens.extend(
+        crate::directives::ws::ws_semantic_tokens(ws_pattern_info.as_ref()),
+    );
 
     // Sort semantic tokens by offset for encoding.
     semantic_tokens.sort_by_key(|t| t.span.0);
@@ -672,17 +606,24 @@ fn try_compile_ir(
 
     let ws_pattern = cached.ws_pattern.as_ref().map(|ws| ws.pattern.as_str());
 
+    let recovers_ref = if recover_map.is_empty() { None } else { Some(&recover_map) };
+    let pretties_ref = if pretty_map.is_empty() { None } else { Some(&pretty_map) };
+
+    let directives = DirectiveSet {
+        recovers: recovers_ref,
+        pretties: pretties_ref,
+        ws_pattern,
+        token_rules: token_ref,
+        debug_rules: debug_ref,
+        debug_all,
+    };
+
     let options = PipelineOptions::default();
 
     let ir = match compile_ast(
         ast,
-        &recover_map,
-        &pretty_map,
+        &directives,
         &options,
-        ws_pattern,
-        token_ref,
-        debug_ref,
-        debug_all,
     ) {
         Ok(ir) => ir,
         Err(_) => return HashMap::new(),

@@ -138,34 +138,24 @@ pub fn is_valid_hint(name: &str) -> bool {
 
 /// Check whether `name` is a `sep("...")` hint.
 pub fn is_sep_hint(name: &str) -> bool {
-    name.starts_with("sep(\"") && name.ends_with("\")")
+    bbnf_ir::parse_sep_hint(name).is_some()
 }
 
 /// Extract the separator string from a `sep("...")` hint.
 /// Returns `None` if `name` is not a valid `sep(...)` hint.
 pub fn extract_sep_string(name: &str) -> Option<&str> {
-    if is_sep_hint(name) {
-        // Strip `sep("` prefix and `")` suffix.
-        Some(&name[5..name.len() - 2])
-    } else {
-        None
-    }
+    bbnf_ir::parse_sep_hint(name)
 }
 
 /// Check whether `name` is a `split("...")` hint.
 pub fn is_split_hint(name: &str) -> bool {
-    name.starts_with("split(\"") && name.ends_with("\")")
+    bbnf_ir::parse_split_hint(name).is_some()
 }
 
 /// Extract the delimiter string from a `split("...")` hint.
 /// Returns `None` if `name` is not a valid `split(...)` hint.
 pub fn extract_split_delim(name: &str) -> Option<&str> {
-    if is_split_hint(name) {
-        // Strip `split("` prefix and `")` suffix.
-        Some(&name[7..name.len() - 2])
-    } else {
-        None
-    }
+    bbnf_ir::parse_split_hint(name)
 }
 
 /// Look up the short description for a hint keyword.

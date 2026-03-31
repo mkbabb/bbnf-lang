@@ -4,7 +4,6 @@
 //! negated character classes) and emits optimized parser/span constructors.
 //! Used by the codegen module for both arena and span output paths.
 
-pub mod detect;
 mod generalized;
 mod inline_scanners;
 mod negated_class;
@@ -13,7 +12,7 @@ pub use negated_class::{NegCharClassQuantifier, is_negated_char_class_regex};
 
 use generalized::emit_generalized_regex_direct;
 
-use detect::*;
+use crate::generate::regex_ir::classify::{classify_regex, RegexClass};
 
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -38,24 +37,40 @@ pub fn emit_regex_direct_call(pattern: &str) -> Option<TokenStream> {
 /// When `fuse_numbers` is true, JSON number regex returns `(Span, f64)`.
 /// When false, returns `Span` only.
 pub fn emit_regex_direct_call_with_fuse(pattern: &str, fuse_numbers: bool) -> Option<TokenStream> {
-    if is_json_string_pattern(pattern) {
-        return Some(quote! { ::parse_that::scan_json_string(state) });
-    }
-    if is_json_number_pattern(pattern) {
-        if fuse_numbers {
-            return Some(quote! { ::parse_that::scan_number_convert_json(state) });
-        } else {
-            return Some(quote! { ::parse_that::scan_number_span_json(state) });
+    match classify_regex(pattern) {
+        RegexClass::JsonString => {
+            return Some(quote! { ::parse_that::scan_json_string(state) });
         }
-    }
-    if is_ws_block_comment_pattern(pattern) {
-        return Some(inline_scanners::emit_inline_ws_comment_scanner());
-    }
-    if is_ident_pattern(pattern) {
-        return Some(inline_scanners::emit_inline_ident_scanner());
-    }
-    if is_quoted_string_pattern(pattern) {
-        return Some(inline_scanners::emit_inline_string_scanner());
+        RegexClass::JsonNumber => {
+            if fuse_numbers {
+                return Some(quote! { ::parse_that::scan_number_convert_json(state) });
+            } else {
+                return Some(quote! { ::parse_that::scan_number_span_json(state) });
+            }
+        }
+        RegexClass::WsBlockComment => {
+            return Some(inline_scanners::emit_inline_ws_comment_scanner());
+        }
+        RegexClass::CssIdent => {
+            return Some(inline_scanners::emit_inline_ident_scanner());
+        }
+        RegexClass::CssQuotedString => {
+            return Some(inline_scanners::emit_inline_string_scanner());
+        }
+        RegexClass::Numeric { allows_sign, .. } => {
+            // Only use the number fast path for patterns WITHOUT sign
+            // (unsigned integers). CSS number patterns with [-+]? have
+            // edge cases with exponent-like suffixes (e.g., 0.375em where
+            // 'e' is part of the unit 'em', not an exponent indicator).
+            if !allows_sign {
+                return Some(quote! { ::parse_that::scan_number_span_json(state) });
+            }
+        }
+        RegexClass::Identifier => {
+            return Some(inline_scanners::emit_inline_ident_scanner());
+        }
+        // QuotedString and HexDigits: handled by existing negated-class / char-class paths below.
+        _ => {}
     }
 
     // Comma-or-whitespace separator: ,|\s+
@@ -86,26 +101,6 @@ pub fn emit_regex_direct_call_with_fuse(pattern: &str, fuse_numbers: bool) -> Op
                 }
             }
         });
-    }
-
-    // Structural classification: detect numeric/string/hex/identifier patterns
-    // without requiring exact string matches against pattern lists.
-    use crate::generate::regex_ir::classify::{classify_regex, RegexClass};
-    match classify_regex(pattern) {
-        RegexClass::Numeric { allows_sign, .. } => {
-            // Only use the number fast path for patterns WITHOUT sign
-            // (unsigned integers). CSS number patterns with [-+]? have
-            // edge cases with exponent-like suffixes (e.g., 0.375em where
-            // 'e' is part of the unit 'em', not an exponent indicator).
-            if !allows_sign {
-                return Some(quote! { ::parse_that::scan_number_span_json(state) });
-            }
-        }
-        RegexClass::Identifier => {
-            return Some(inline_scanners::emit_inline_ident_scanner());
-        }
-        // QuotedString and HexDigits: handled by existing negated-class / char-class paths below.
-        _ => {}
     }
 
     // Generalized regex patterns (char ranges, small char sets).
@@ -226,5 +221,5 @@ pub fn emit_regex_direct_call_with_fuse(pattern: &str, fuse_numbers: bool) -> Op
 /// Check if a regex pattern returns a fused `(Span, f64)` instead of plain `Span`.
 /// Used by type inference to determine the correct enum variant type.
 pub fn is_fused_number_regex(pattern: &str) -> bool {
-    is_json_number_pattern(pattern)
+    matches!(classify_regex(pattern), RegexClass::JsonNumber)
 }

@@ -6,7 +6,7 @@ use bbnf::analysis::{
     tarjan_scc, topological_sort_scc,
 };
 use bbnf::grammar::BBNFGrammar;
-use bbnf::lower::lower_to_ir;
+use bbnf::lower::{DirectiveSet, lower_to_ir};
 use bbnf_ir::compiler::compile as compile_bytecode;
 use bbnf_ir::interpreter::Interpreter;
 use bbnf_ir::GrammarIR;
@@ -198,6 +198,8 @@ number = /-?\d+/ ;
         }
     });
 
+    let directives = DirectiveSet::empty();
+
     let mut ir = lower_to_ir(
         &ast,
         &first_sets,
@@ -205,11 +207,7 @@ number = /-?\d+/ ;
         &aliases,
         &transparent,
         &span_eligible,
-        None, None,
-        None,
-        None,
-        None,
-        false,
+        &directives,
     );
 
     if let Some(ref name) = entry_rule_name {

@@ -15,8 +15,8 @@ use bbnf_ir::{AltBranch, IrNode, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use crate::generate::ir_types::{self, IrCodegenCtx};
-use crate::generate::regex_classify::{classify_regex, RegexClass};
+use super::super::ir_types::{self, IrCodegenCtx};
+use crate::generate::regex_ir::classify::{classify_regex, RegexClass};
 use crate::generate::codegen::unescape_literal;
 use crate::generate::codegen::{emit_mono_expr, MonoCtx};
 use super::{coerce_mono_branch, coerce_mono_branch_by_value};

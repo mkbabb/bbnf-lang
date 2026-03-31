@@ -1,6 +1,6 @@
 //! Tests for structural regex classification.
 
-use bbnf::generate::regex_classify::{classify_regex, RegexClass};
+use bbnf::generate::regex_ir::classify::{classify_regex, RegexClass};
 
 #[test]
 fn json_number() {

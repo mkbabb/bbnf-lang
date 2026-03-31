@@ -10,7 +10,7 @@ use std::collections::{HashMap, HashSet};
 use bbnf_ir::{IrNode, RuleId, TypeDesc};
 use bbnf_ir::passes::{InferCtx, infer_node, infer_node_in_vec};
 
-use super::super::ir_types::IrCodegenCtx;
+use super::ir_types::IrCodegenCtx;
 
 /// Shared state for codegen type inference — cached to avoid recomputation.
 ///

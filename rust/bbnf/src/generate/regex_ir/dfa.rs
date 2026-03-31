@@ -33,7 +33,7 @@ pub fn try_emit_dfa_inline(pattern: &str) -> Option<TokenStream> {
         .build()
         .parse(pattern)
         .ok()?;
-    if super::hir_walk::contains_lazy_quantifier(&hir) {
+    if super::hir::contains_lazy_quantifier(&hir) {
         return None;
     }
 

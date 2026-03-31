@@ -18,7 +18,7 @@ use bbnf_ir::{GrammarIR, IrNode};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::super::ir_types::IrCodegenCtx;
+use super::ir_types::IrCodegenCtx;
 use super::MonoCtx;
 
 /// Function name for a prettify rule: `__rule_prettify`.
@@ -231,26 +231,26 @@ pub(super) fn emit_prettify_expr(
                 }
             };
 
-            if let Some(direct) = crate::generate::fast_paths::emit_regex_direct_call(pattern) {
+            if let Some(direct) = crate::generate::regex_ir::fast_paths::emit_regex_direct_call(pattern) {
                 quote! { {
                     let __start = state.offset;
                     if #direct.is_none() { return false; }
                     #emit_text
                 } }
-            } else if let Some(inline) = crate::generate::regex_emit::try_emit_regex_inline(pattern) {
+            } else if let Some(inline) = crate::generate::regex_ir::try_emit_regex_inline(pattern) {
                 quote! { {
                     let __start = state.offset;
                     if #inline.is_none() { return false; }
                     #emit_text
                 } }
-            } else if let Some(dfa_code) = crate::generate::regex_emit::try_emit_dfa_inline(pattern) {
+            } else if let Some(dfa_code) = crate::generate::regex_ir::try_emit_dfa_inline(pattern) {
                 quote! { {
                     let __start = state.offset;
                     if #dfa_code.is_none() { return false; }
                     #emit_text
                 } }
             } else {
-                let err = crate::generate::regex_emit::emit_regex_unsupported(pattern);
+                let err = crate::generate::regex_ir::emit_regex_unsupported(pattern);
                 quote! { {
                     let __start = state.offset;
                     if #err.is_none() { return false; }

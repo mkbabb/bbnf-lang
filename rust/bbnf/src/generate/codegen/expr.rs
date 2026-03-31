@@ -5,7 +5,7 @@ use bbnf_ir::{FnDescriptor, IrNode};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::super::ir_types::IrCodegenCtx;
+use super::ir_types::IrCodegenCtx;
 use super::unescape_literal;
 use super::helpers::try_sep_by;
 use super::repeat::{emit_mono_sep_by_ws, emit_mono_sep_by_core, try_unchecked_sep, SepByConfig};

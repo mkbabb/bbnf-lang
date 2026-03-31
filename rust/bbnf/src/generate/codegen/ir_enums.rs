@@ -8,8 +8,7 @@ use std::collections::HashSet;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::ir_types::{type_desc_to_syn, IrCodegenCtx};
-use super::types::ParserAttributes;
+use super::ir_types::{type_desc_to_syn, IrCodegenCtx, ParserAttributes};
 
 /// Generate the parser enum from IR rule types + sub-variants.
 pub fn generate_enum(ctx: &IrCodegenCtx<'_>) -> TokenStream {

@@ -2,7 +2,7 @@
 
 use bbnf_ir::{AltBranch, FnDescriptor, FnId, IrNode, TypeDesc};
 
-use crate::generate::regex_classify::{classify_regex, RegexClass};
+use crate::generate::regex_ir::classify::{classify_regex, RegexClass};
 use crate::types::{Expression, Token};
 
 use super::LowerCtx;

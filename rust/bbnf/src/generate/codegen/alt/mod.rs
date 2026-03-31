@@ -8,7 +8,7 @@ use bbnf_ir::{AltBranch, FnDescriptor, IrNode, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::super::ir_types::{self, IrCodegenCtx};
+use super::ir_types::{self, IrCodegenCtx};
 use super::infer::{infer_node_type, infer_node_type_elide_box};
 use super::{emit_mono_expr, MonoCtx};
 

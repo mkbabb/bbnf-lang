@@ -3,21 +3,17 @@
 //! All codegen goes through the monolithic path. Arena and Owned modes differ
 //! only in allocation strategy (arena.alloc vs Box::new).
 
-mod types;
-
 // ── Codegen modules ────────────────────────────────────────────────────────
-pub mod fast_paths;
-pub mod hir_classify;
-pub mod regex_emit;
+pub mod regex_ir;
 
 // Backward-compat alias — all call sites use `regex_classify::RegexClass` and `classify_regex()`.
-pub use hir_classify as regex_classify;
-pub mod codegen;
-pub mod ir_enums;
-// ir_span removed — span codegen handled by monolithic/span/
-pub mod ir_types;
+pub use regex_ir::classify as regex_classify;
 
-pub use types::*;
+pub mod codegen;
+
+pub use codegen::ir_enums;
+pub use codegen::ir_types;
+pub use codegen::ir_types::ParserAttributes;
 
 use quote::quote;
 
@@ -80,7 +76,7 @@ pub fn generate_all(
         if !parser_attrs.prettify {
             for rule in &ir.rules {
                 if let bbnf_ir::IrNode::Regex(sid) = &rule.body {
-                    if fast_paths::is_fused_number_regex(ir.get_string(*sid)) {
+                    if regex_ir::fast_paths::is_fused_number_regex(ir.get_string(*sid)) {
                         arena_ctx.fused_number_rules.insert(rule.id);
                     }
                 }

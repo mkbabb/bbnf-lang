@@ -4,7 +4,7 @@
 //! negated character classes) and emits optimized parser/span constructors.
 //! Used by the codegen module for both arena and span output paths.
 
-pub(crate) mod detect;
+pub mod detect;
 mod generalized;
 mod inline_scanners;
 mod negated_class;
@@ -21,67 +21,6 @@ use quote::quote;
 // ---------------------------------------------------------------------------
 // Regex fast-path emission
 // ---------------------------------------------------------------------------
-
-/// Emit a Parser<Span> expression for a regex pattern, using fast-paths where available.
-pub fn emit_regex_parser(pattern: &str) -> TokenStream {
-    if is_json_string_pattern(pattern) {
-        return quote! { ::parse_that::sp_json_string_quoted().into_parser() };
-    }
-    if is_json_number_pattern(pattern) {
-        return quote! { ::parse_that::sp_json_number().into_parser() };
-    }
-    if is_ws_block_comment_pattern(pattern) {
-        return quote! { ::parse_that::sp_css_ws_comment().into_parser() };
-    }
-    if is_ident_pattern(pattern) {
-        return quote! { ::parse_that::sp_css_ident().into_parser() };
-    }
-    if is_quoted_string_pattern(pattern) {
-        return quote! { ::parse_that::sp_css_string().into_parser() };
-    }
-    // Try direct scanner (same strength reduction as monolithic path).
-    // Wraps the raw state-manipulation code in a Parser closure.
-    if let Some(direct) = emit_regex_direct_call(pattern) {
-        return quote! {
-            ::parse_that::Parser::new(|state: &mut ::parse_that::ParserState<'a>| #direct)
-        };
-    }
-    if let Some((excluded, quantifier)) = is_negated_char_class_regex(pattern) {
-        if quantifier == NegCharClassQuantifier::Plus {
-            let excluded_bytes = proc_macro2::Literal::byte_string(excluded.as_bytes());
-            return quote! { ::parse_that::take_until_any_span(#excluded_bytes) };
-        }
-    }
-    quote! { ::parse_that::regex_span(#pattern) }
-}
-
-/// Emit a SpanParser expression for a regex pattern, using fast-paths where available.
-pub fn emit_regex_span(pattern: &str) -> TokenStream {
-    if is_json_string_pattern(pattern) {
-        return quote! { ::parse_that::sp_json_string_quoted() };
-    }
-    if is_json_number_pattern(pattern) {
-        return quote! { ::parse_that::sp_json_number() };
-    }
-    if is_ws_block_comment_pattern(pattern) {
-        return quote! { ::parse_that::sp_css_ws_comment() };
-    }
-    if is_ident_pattern(pattern) {
-        return quote! { ::parse_that::sp_css_ident() };
-    }
-    if is_quoted_string_pattern(pattern) {
-        return quote! { ::parse_that::sp_css_string() };
-    }
-    if let Some((excluded, quantifier)) = is_negated_char_class_regex(pattern) {
-        let excluded_bytes = proc_macro2::Literal::byte_string(excluded.as_bytes());
-        if quantifier == NegCharClassQuantifier::Plus {
-            return quote! { ::parse_that::sp_take_until_any(#excluded_bytes) };
-        } else {
-            return quote! { ::parse_that::sp_take_until_any(#excluded_bytes).opt_span() };
-        }
-    }
-    quote! { ::parse_that::sp_regex(#pattern) }
-}
 
 /// Emit a direct scanner function call for known regex patterns, bypassing
 /// the SpanParser dispatch stack. Returns `None` for unrecognized patterns.
@@ -151,7 +90,7 @@ pub fn emit_regex_direct_call_with_fuse(pattern: &str, fuse_numbers: bool) -> Op
 
     // Structural classification: detect numeric/string/hex/identifier patterns
     // without requiring exact string matches against pattern lists.
-    use super::regex_classify::{classify_regex, RegexClass};
+    use crate::generate::regex_ir::classify::{classify_regex, RegexClass};
     match classify_regex(pattern) {
         RegexClass::Numeric { allows_sign, .. } => {
             // Only use the number fast path for patterns WITHOUT sign

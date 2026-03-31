@@ -21,8 +21,8 @@ use bbnf_ir::{IrNode, GrammarIR};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::super::ir_types::IrCodegenCtx;
-use super::super::fast_paths;
+use super::ir_types::IrCodegenCtx;
+use super::super::regex_ir::fast_paths;
 use super::unescape_literal;
 use super::{emit_ws_trim, MonoCtx};
 
@@ -145,16 +145,16 @@ pub(super) fn emit_span_expr(
                 direct
             }
             // 2. Try HIR-based inline compilation
-            else if let Some(inline) = super::super::regex_emit::try_emit_regex_inline(pattern) {
+            else if let Some(inline) = super::super::regex_ir::try_emit_regex_inline(pattern) {
                 inline
             }
             // 3. Try DFA-based inline compilation
-            else if let Some(dfa_code) = super::super::regex_emit::try_emit_dfa_inline(pattern) {
+            else if let Some(dfa_code) = super::super::regex_ir::try_emit_dfa_inline(pattern) {
                 dfa_code
             }
             // 4. Unsupported pattern — compile-time error
             else {
-                super::super::regex_emit::emit_regex_unsupported(pattern)
+                super::super::regex_ir::emit_regex_unsupported(pattern)
             }
         }
 

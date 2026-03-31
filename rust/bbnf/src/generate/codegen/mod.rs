@@ -25,6 +25,8 @@ mod expr;
 mod generate;
 mod helpers;
 pub mod infer;
+pub mod ir_enums;
+pub mod ir_types;
 mod repeat;
 mod seq;
 pub mod span;
@@ -37,8 +39,8 @@ use bbnf_ir::IrNode;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::fast_paths;
-use super::ir_types::{IrCodegenCtx, StorageMode};
+use super::regex_ir::fast_paths;
+use ir_types::{IrCodegenCtx, StorageMode};
 
 /// Unescape a BBNF literal string (e.g. `\n` → newline, `\t` → tab).
 /// BBNF literals store escape sequences as raw characters (backslash + letter)
@@ -98,15 +100,15 @@ pub(super) fn emit_ws_trim(ctx: &IrCodegenCtx<'_>, _mctx: &mut MonoCtx) -> Token
             return quote! { #direct; };
         }
         // Try HIR-based inline compilation.
-        if let Some(inline) = super::regex_emit::try_emit_regex_inline(pattern) {
+        if let Some(inline) = super::regex_ir::try_emit_regex_inline(pattern) {
             return quote! { #inline; };
         }
         // Try DFA-based inline compilation.
-        if let Some(dfa_code) = super::regex_emit::try_emit_dfa_inline(pattern) {
+        if let Some(dfa_code) = super::regex_ir::try_emit_dfa_inline(pattern) {
             return quote! { #dfa_code; };
         }
         // Unsupported pattern — compile-time error.
-        let err = super::regex_emit::emit_regex_unsupported(pattern);
+        let err = super::regex_ir::emit_regex_unsupported(pattern);
         quote! { #err; }
     } else {
         quote! { ::parse_that::trim_leading_whitespace_mut(state); }
@@ -234,16 +236,16 @@ pub(super) fn emit_mono_expr(
                 direct
             }
             // 2. Try HIR-based inline compilation
-            else if let Some(inline) = super::regex_emit::try_emit_regex_inline(pattern) {
+            else if let Some(inline) = super::regex_ir::try_emit_regex_inline(pattern) {
                 inline
             }
             // 3. Try DFA-based inline compilation
-            else if let Some(dfa_code) = super::regex_emit::try_emit_dfa_inline(pattern) {
+            else if let Some(dfa_code) = super::regex_ir::try_emit_dfa_inline(pattern) {
                 dfa_code
             }
             // 4. Unsupported pattern — compile-time error
             else {
-                super::regex_emit::emit_regex_unsupported(pattern)
+                super::regex_ir::emit_regex_unsupported(pattern)
             }
         }
 

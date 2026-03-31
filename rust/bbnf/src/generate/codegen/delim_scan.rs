@@ -17,7 +17,7 @@ use bbnf_ir::{GrammarIR, IrNode, RuleId};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::super::ir_types::IrCodegenCtx;
+use super::ir_types::IrCodegenCtx;
 use super::unescape_literal;
 use super::{emit_ws_trim, mono_fn_ident, MonoCtx};
 

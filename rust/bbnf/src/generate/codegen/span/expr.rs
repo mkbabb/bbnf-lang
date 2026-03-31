@@ -5,7 +5,7 @@ use bbnf_ir::{IrNode, GrammarIR};
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use super::super::super::ir_types::IrCodegenCtx;
+use super::super::ir_types::IrCodegenCtx;
 use super::super::MonoCtx;
 use super::{span_fn_ident, emit_span_expr, emit_span_discarded, emit_ws_trim};
 

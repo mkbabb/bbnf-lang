@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 
 use bbnf::pipeline::{compile_grammar, PipelineOptions};
 use bbnf::{calculate_ast_deps, Expression};
@@ -207,7 +206,6 @@ number = /-?\d+/ ;
         &transparent,
         &span_eligible,
         None, None,
-        &HashMap::new(),
         None,
         None,
         None,
@@ -405,7 +403,7 @@ fn pipeline_google_sheets_formula() {
 
     // Formatting via gorgeous VM
     let value = result.value.as_ref().unwrap();
-    let printer = pprint::Printer::new(80, 2, false);
+    let printer = &gorgeous::PrinterConfig { max_width: 80, indent: 2, use_tabs: false };
     let formatted = gorgeous::vm::format_value(&ir, value, input, printer);
     assert!(formatted.is_some(), "formatting should produce output");
     let formatted = formatted.unwrap();
@@ -420,7 +418,7 @@ fn pipeline_google_sheets_formula() {
     assert!(result.success, "pathological formula failed at offset={}", result.offset);
     assert_eq!(result.offset as usize, pathological.len(), "should consume all input");
     let value = result.value.as_ref().unwrap();
-    let formatted = gorgeous::vm::format_value(&ir, value, pathological, pprint::Printer::new(80, 2, false));
+    let formatted = gorgeous::vm::format_value(&ir, value, pathological, &gorgeous::PrinterConfig { max_width: 80, indent: 2, use_tabs: false });
     let formatted = formatted.unwrap();
     eprintln!("Pathological:\n{}", formatted);
     assert!(formatted.contains('\n'), "pathological should have line breaks");
@@ -436,7 +434,7 @@ fn pipeline_google_sheets_formula() {
     assert!(result.success, "with_space formula failed at offset={}", result.offset);
     assert_eq!(result.offset as usize, with_space.len(), "should consume all input");
     let value = result.value.as_ref().unwrap();
-    let formatted_space = gorgeous::vm::format_value(&ir, value, with_space, pprint::Printer::new(80, 2, false));
+    let formatted_space = gorgeous::vm::format_value(&ir, value, with_space, &gorgeous::PrinterConfig { max_width: 80, indent: 2, use_tabs: false });
     let formatted_space = formatted_space.unwrap();
     eprintln!("With space formatted:\n{}", formatted_space);
     // Both should produce identical formatted output (whitespace is insignificant)
@@ -541,7 +539,7 @@ fn pipeline_google_sheets_multiline_let() {
 
     // Format via VM
     let value = result.value.as_ref().unwrap();
-    let formatted = gorgeous::vm::format_value(&ir, value, input, pprint::Printer::new(80, 2, false));
+    let formatted = gorgeous::vm::format_value(&ir, value, input, &gorgeous::PrinterConfig { max_width: 80, indent: 2, use_tabs: false });
     let formatted = formatted.unwrap();
     eprintln!("VM formatted:\n{}", formatted);
 

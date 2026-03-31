@@ -154,22 +154,22 @@ fn audit_all_grammar_regex_patterns() {
     let mut fallbacks: Vec<(String, String)> = Vec::new();
 
     for (file, pattern) in &all_patterns {
-        let tier = bbnf::generate::regex_emit::audit::audit_regex_pattern(pattern);
+        let tier = bbnf::generate::regex_ir::audit::audit_regex_pattern(pattern);
         tier_counts[4] += 1;
 
         match &tier {
-            bbnf::generate::regex_emit::audit::RegexTier::FastPath(_)
-            | bbnf::generate::regex_emit::audit::RegexTier::FastPathFused(_) => {
+            bbnf::generate::regex_ir::audit::RegexTier::FastPath(_)
+            | bbnf::generate::regex_ir::audit::RegexTier::FastPathFused(_) => {
                 tier_counts[0] += 1;
             }
-            bbnf::generate::regex_emit::audit::RegexTier::HirInline => {
+            bbnf::generate::regex_ir::audit::RegexTier::HirInline => {
                 tier_counts[1] += 1;
             }
-            bbnf::generate::regex_emit::audit::RegexTier::DfaCompiled { states, classes } => {
+            bbnf::generate::regex_ir::audit::RegexTier::DfaCompiled { states, classes } => {
                 tier_counts[2] += 1;
                 eprintln!("  DFA: /{pattern}/ ({states} states, {classes} classes) [{file}]");
             }
-            bbnf::generate::regex_emit::audit::RegexTier::LazyLockFallback => {
+            bbnf::generate::regex_ir::audit::RegexTier::Unsupported => {
                 tier_counts[3] += 1;
                 fallbacks.push((file.clone(), pattern.clone()));
             }
@@ -181,7 +181,7 @@ fn audit_all_grammar_regex_patterns() {
     eprintln!("  Tier 1 (fast paths): {}", tier_counts[0]);
     eprintln!("  Tier 2 (HIR inline): {}", tier_counts[1]);
     eprintln!("  Tier 3 (DFA compiled): {}", tier_counts[2]);
-    eprintln!("  Tier 4 (LazyLock fallback): {}", tier_counts[3]);
+    eprintln!("  Tier 4 (Unsupported): {}", tier_counts[3]);
 
     if !fallbacks.is_empty() {
         eprintln!("\n  LazyLock fallbacks:");

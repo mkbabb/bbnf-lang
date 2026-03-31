@@ -9,8 +9,8 @@ use bbnf_ir::{GrammarIR, IrNode, RuleId};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::super::fast_paths;
-use super::super::ir_types::IrCodegenCtx;
+use super::super::regex_ir::fast_paths;
+use super::ir_types::IrCodegenCtx;
 use super::helpers::mono_fn_ident;
 use super::{emit_mono_expr, MonoCtx};
 

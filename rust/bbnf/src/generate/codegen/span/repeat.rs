@@ -6,7 +6,7 @@ use bbnf_ir::{IrNode, GrammarIR};
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use super::super::super::ir_types::IrCodegenCtx;
+use super::super::ir_types::IrCodegenCtx;
 use super::super::MonoCtx;
 use super::{emit_span_expr, emit_span_discarded};
 
@@ -147,7 +147,7 @@ pub(super) fn emit_span_optional(
     if let IrNode::Regex(sid) = inner {
         let pattern = ir.get_string(*sid);
         // 1. Try known fast paths.
-        if let Some(direct) = super::super::super::fast_paths::emit_regex_direct_call(pattern) {
+        if let Some(direct) = super::super::super::regex_ir::fast_paths::emit_regex_direct_call(pattern) {
             return quote! {
                 {
                     let #start_var = state.offset;
@@ -157,7 +157,7 @@ pub(super) fn emit_span_optional(
             };
         }
         // 2. Try HIR-based inline compilation.
-        if let Some(inline) = super::super::super::regex_emit::try_emit_regex_inline(pattern) {
+        if let Some(inline) = super::super::super::regex_ir::try_emit_regex_inline(pattern) {
             return quote! {
                 {
                     let #start_var = state.offset;
@@ -167,7 +167,7 @@ pub(super) fn emit_span_optional(
             };
         }
         // 3. Try DFA-based inline compilation.
-        if let Some(dfa_code) = super::super::super::regex_emit::try_emit_dfa_inline(pattern) {
+        if let Some(dfa_code) = super::super::super::regex_ir::try_emit_dfa_inline(pattern) {
             return quote! {
                 {
                     let #start_var = state.offset;
@@ -177,7 +177,7 @@ pub(super) fn emit_span_optional(
             };
         }
         // 4. Unsupported pattern — compile-time error.
-        let err = super::super::super::regex_emit::emit_regex_unsupported(pattern);
+        let err = super::super::super::regex_ir::emit_regex_unsupported(pattern);
         return quote! {
             {
                 let #start_var = state.offset;

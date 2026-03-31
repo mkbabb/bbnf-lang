@@ -3,9 +3,9 @@
 //! Used for coverage tracking: every regex pattern in a grammar should
 //! resolve to a tier without falling back to LazyLock.
 
-use super::hir_walk;
-use crate::generate::fast_paths;
-use crate::generate::fast_paths::detect;
+use super::hir;
+use super::fast_paths;
+use super::fast_paths::detect;
 
 /// Which emission tier handles a regex pattern.
 #[derive(Debug, Clone)]
@@ -32,7 +32,7 @@ pub fn audit_regex_pattern(pattern: &str) -> RegexTier {
     }
 
     // Tier 2: HIR-based inline.
-    if hir_walk::try_emit_regex_inline(pattern).is_some() {
+    if hir::try_emit_regex_inline(pattern).is_some() {
         return RegexTier::HirInline;
     }
 

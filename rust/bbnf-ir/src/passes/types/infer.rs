@@ -251,6 +251,11 @@ fn infer_seq(children: &[IrNode], ctx: &InferCtx<'_>) -> TypeDesc {
         && ctx.ir.b1_span_collapse
         && !ctx.pretty_preserve
         && children.iter().zip(child_types.iter()).all(|(c, ty)| {
+            // Optional(Span) produces Option<Span> at runtime, not Span —
+            // exclude from B.1 collapse to match codegen behavior in seq.rs.
+            if let IrNode::Repeat { lo: 0, hi: 1, .. } = c {
+                return false;
+            }
             // B.1-overridden Ref — codegen will call _sp().
             if let IrNode::Ref(id) = c {
                 let rule = &ctx.ir.rules[*id as usize];

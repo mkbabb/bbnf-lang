@@ -1,0 +1,92 @@
+#![feature(cold_path)]
+
+//! Google Sheets formula AOT benchmark — monolithic codegen.
+
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
+use bencher::{benchmark_group, benchmark_main, black_box, Bencher};
+use bbnf_derive::Parser;
+
+#[derive(Parser)]
+#[parser(path = "../../grammar/google-sheets/google-sheets.bbnf", prettify)]
+struct GoogleSheetsParser;
+
+const PATHOLOGICAL: &str = r#"=LET(raw, A2:E1000, filtered, FILTER(raw, (INDEX(raw,,3)>100)*(INDEX(raw,,5)="Active")), sorted, SORT(filtered, 3, FALSE), IF(ROWS(sorted)>0, MAP(SEQUENCE(MIN(10, ROWS(sorted))), LAMBDA(i, INDEX(sorted, i, 1)&" - "&TEXT(INDEX(sorted, i, 3), "$#,##0"))), "No results"))"#;
+
+fn generate_large_formula(n_bindings: usize) -> String {
+    let mut parts = Vec::with_capacity(n_bindings * 2 + 1);
+    for i in 0..n_bindings {
+        parts.push(format!("v{}", i));
+        parts.push(format!(
+            "IF(v{}>0, FILTER(A1:Z100, INDEX(A1:Z100,,{})>0), SUM(A1:A{}))",
+            i, i + 1, i + 10
+        ));
+    }
+    parts.push(format!("v{}", n_bindings - 1));
+    format!("=LET({})", parts.join(", "))
+}
+
+fn parse_pathological(b: &mut Bencher) {
+    let parser = GoogleSheetsParser::formula();
+    b.bytes = PATHOLOGICAL.len() as u64;
+    assert!(parser.parse(PATHOLOGICAL).is_some(), "pathological: parse failed");
+    b.iter(|| parser.parse(black_box(PATHOLOGICAL)).unwrap());
+}
+
+fn parse_1kb(b: &mut Bencher) {
+    let input = generate_large_formula(10);
+    let parser = GoogleSheetsParser::formula();
+    b.bytes = input.len() as u64;
+    b.iter(|| parser.parse(black_box(&input)).unwrap());
+}
+
+fn parse_10kb(b: &mut Bencher) {
+    let input = generate_large_formula(100);
+    let parser = GoogleSheetsParser::formula();
+    b.bytes = input.len() as u64;
+    b.iter(|| parser.parse(black_box(&input)).unwrap());
+}
+
+fn format_pathological(b: &mut Bencher) {
+    let parser = GoogleSheetsParser::formula();
+    let config = pprint::Printer::new(80, 2, false);
+    b.bytes = PATHOLOGICAL.len() as u64;
+    b.iter(|| {
+        let ast = parser.parse(black_box(PATHOLOGICAL)).unwrap();
+        pprint::pprint(ast.to_doc(), config)
+    });
+}
+
+fn format_1kb(b: &mut Bencher) {
+    let input = generate_large_formula(10);
+    let parser = GoogleSheetsParser::formula();
+    let config = pprint::Printer::new(80, 2, false);
+    b.bytes = input.len() as u64;
+    b.iter(|| {
+        let ast = parser.parse(black_box(&input)).unwrap();
+        pprint::pprint(ast.to_doc(), config)
+    });
+}
+
+fn format_10kb(b: &mut Bencher) {
+    let input = generate_large_formula(100);
+    let parser = GoogleSheetsParser::formula();
+    let config = pprint::Printer::new(80, 2, false);
+    b.bytes = input.len() as u64;
+    b.iter(|| {
+        let ast = parser.parse(black_box(&input)).unwrap();
+        pprint::pprint(ast.to_doc(), config)
+    });
+}
+
+benchmark_group!(
+    benches,
+    parse_pathological,
+    parse_1kb,
+    parse_10kb,
+    format_pathological,
+    format_1kb,
+    format_10kb,
+);
+benchmark_main!(benches);

@@ -15,6 +15,7 @@ static ALLOC: dhat::Alloc = dhat::Alloc;
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
+#[path = "../generators/mod.rs"]
 mod generators;
 
 use bencher::{benchmark_group, benchmark_main, black_box, Bencher};

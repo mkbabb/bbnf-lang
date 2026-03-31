@@ -60,29 +60,61 @@ fast-float2 = "0.2"
 gorgeous = { version = "0.1", features = ["vm"] }
 
 [[bench]]
-name = "google_sheets"
+name = "json_monolithic"
+path = "benches/json/monolithic.rs"
 harness = false
 
 [[bench]]
-name = "json_bbnf"
+name = "json_parse_that"
+path = "benches/json/parse_that.rs"
+harness = false
+
+[[bench]]
+name = "json_vm"
+path = "benches/json/vm.rs"
 harness = false
 
 [[bench]]
 name = "json_competitors"
+path = "benches/json/competitors.rs"
 harness = false
 
 [[bench]]
-name = "css_bbnf"
+name = "json_stress"
+path = "benches/json/stress.rs"
+harness = false
+
+[[bench]]
+name = "css_monolithic"
+path = "benches/css/monolithic.rs"
+harness = false
+
+[[bench]]
+name = "css_l4"
+path = "benches/css/l4.rs"
+harness = false
+
+[[bench]]
+name = "css_vm"
+path = "benches/css/vm.rs"
 harness = false
 
 [[bench]]
 name = "css_competitors"
+path = "benches/css/competitors.rs"
 harness = false
 
 [[bench]]
 name = "css_stress"
+path = "benches/css/stress.rs"
 harness = false
 
 [[bench]]
-name = "stress"
+name = "google_sheets_monolithic"
+path = "benches/google_sheets/monolithic.rs"
+harness = false
+
+[[bench]]
+name = "google_sheets_vm"
+path = "benches/google_sheets/vm.rs"
 harness = false

@@ -12,7 +12,6 @@ use crate::analysis::{
 };
 use crate::grammar::BBNFGrammar;
 use crate::lower::{DirectiveSet, lower_to_ir};
-use crate::optimize::{remove_direct_left_recursion, remove_indirect_left_recursion};
 use crate::types::{AST, Expression};
 
 /// Options for the compilation pipeline.
@@ -105,33 +104,7 @@ pub fn compile_ast<'a>(
         })
     });
 
-    // Optional: remove left-recursion (indirect first via Paull's, then direct).
-    let ast = if options.remove_left_recursion {
-        // Extract multi-member SCC names (owned) so deps/scc_result can be dropped.
-        let indirect_sccs = {
-            let deps = crate::calculate_ast_deps(&ast);
-            let scc_result = tarjan_scc(&deps);
-            scc_result
-                .sccs
-                .iter()
-                .filter(|scc| scc.len() > 1)
-                .map(|scc| {
-                    scc.iter()
-                        .filter_map(|expr| match expr {
-                            Expression::Nonterminal(tok) => Some(tok.value.to_string()),
-                            _ => None,
-                        })
-                        .collect::<Vec<_>>()
-                })
-                .collect::<Vec<_>>()
-        };
-        let ast = remove_indirect_left_recursion(&ast, &indirect_sccs);
-        remove_direct_left_recursion(&ast)
-    } else {
-        ast
-    };
-
-    // Dependency analysis (recomputed after potential LR transformation).
+    // Dependency analysis.
     let deps = crate::calculate_ast_deps(&ast);
 
     // SCC detection + topological ordering.
@@ -154,6 +127,12 @@ pub fn compile_ast<'a>(
         if let Some(rule) = ir.find_rule(name) {
             ir.entry = rule.id;
         }
+    }
+
+    // Optional: eliminate left-recursion at IR level (indirect via Paull's, then direct).
+    if options.remove_left_recursion {
+        bbnf_ir::passes::eliminate_indirect_lr(&mut ir);
+        bbnf_ir::passes::eliminate_direct_lr(&mut ir);
     }
 
     // Run IR metadata passes (alias + transparent detection from IR structure).

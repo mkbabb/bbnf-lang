@@ -11,7 +11,6 @@ use bbnf::analysis::{
 };
 use bbnf::imports::load_module_graph;
 use bbnf::lower::{DirectiveSet, lower_to_ir};
-use bbnf::optimize::remove_direct_left_recursion;
 use bbnf::BBNFGrammar;
 use bbnf::Expression;
 use bbnf::ParserAttributes;
@@ -417,15 +416,6 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
             })
     };
 
-    // Phase 2.2: Optionally remove direct left-recursion before analysis.
-    let ast = if parser_container_attrs.remove_left_recursion {
-        let transformed = remove_direct_left_recursion(&ast);
-        // Convert back to IndexMap preserving insertion order
-        transformed.into_iter().collect::<IndexMap<_, _>>()
-    } else {
-        ast
-    };
-
     let deps = calculate_ast_deps(&ast);
 
     // Phase 1.1: Tarjan SCC — O(V+E) cycle detection + topological ordering
@@ -457,6 +447,12 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
         &scc_result,
         &directives,
     );
+
+    // Optional: eliminate left-recursion at IR level (indirect via Paull's, then direct).
+    if parser_container_attrs.remove_left_recursion {
+        bbnf_ir::passes::eliminate_indirect_lr(&mut grammar_ir);
+        bbnf_ir::passes::eliminate_direct_lr(&mut grammar_ir);
+    }
 
     // Run IR metadata passes (alias + transparent detection from IR structure).
     bbnf_ir::passes::compute_aliases(&mut grammar_ir);

@@ -11,9 +11,6 @@ pub use generate::*;
 pub mod analysis;
 pub use analysis::*;
 
-pub mod optimize;
-pub use optimize::*;
-
 pub mod imports;
 
 pub mod lower;

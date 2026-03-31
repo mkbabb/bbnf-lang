@@ -1,45 +1,149 @@
-mod common;
+//! Integration tests for left-recursion elimination (IR-level passes).
+//!
+//! These tests exercise the LR elimination through the full pipeline by
+//! constructing a GrammarIR and running the passes directly.
 
-use bbnf::optimize::remove_direct_left_recursion;
-use bbnf::types::{Expression, Token, AST};
+use std::collections::HashMap;
 
-use common::{lit, nt};
+use bbnf_ir::{
+    AltBranch, GrammarIR, IrNode, IrRule, RuleId, RuleMeta,
+};
+use bbnf_ir::passes::{eliminate_direct_lr, eliminate_indirect_lr};
+
+/// Build a minimal GrammarIR for testing.
+fn make_ir(rules: Vec<(&str, IrNode, Option<u32>, bool)>) -> GrammarIR {
+    let mut strings = Vec::new();
+    let mut string_dedup: HashMap<String, u32> = HashMap::new();
+    let mut ir_rules = Vec::new();
+
+    for (i, (name, body, scc_id, is_cyclic)) in rules.into_iter().enumerate() {
+        let name_id = intern(name, &mut strings, &mut string_dedup);
+        ir_rules.push(IrRule {
+            id: i as RuleId,
+            name: name_id,
+            body,
+            meta: RuleMeta {
+                scc_id,
+                is_cyclic,
+                ..Default::default()
+            },
+            source_span: None,
+        });
+    }
+
+    let entry = ir_rules.last().map(|r| r.id).unwrap_or(0);
+
+    GrammarIR {
+        rules: ir_rules,
+        entry,
+        strings,
+        fns: Vec::new(),
+        types: Vec::new(),
+        follow_sets: HashMap::new(),
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
+    }
+}
+
+fn intern(s: &str, strings: &mut Vec<String>, dedup: &mut HashMap<String, u32>) -> u32 {
+    if let Some(&existing) = dedup.get(s) {
+        return existing;
+    }
+    let sid = strings.len() as u32;
+    dedup.insert(s.to_string(), sid);
+    strings.push(s.to_string());
+    sid
+}
+
+fn lit(s: &str, ir: &mut GrammarIR) -> IrNode {
+    let sid = ir.strings.len() as u32;
+    ir.strings.push(s.to_string());
+    IrNode::Literal(sid)
+}
+
+fn alt(branches: Vec<IrNode>) -> IrNode {
+    IrNode::Alt(
+        branches
+            .into_iter()
+            .map(|node| AltBranch {
+                node,
+                first_set: None,
+            })
+            .collect(),
+        None,
+    )
+}
+
+fn seq(children: Vec<IrNode>) -> IrNode {
+    IrNode::Seq(children)
+}
 
 #[test]
 fn test_no_left_recursion() {
-    let mut ast = AST::new();
-    let a = nt("A");
-    let rhs = Expression::Rule(Box::new(lit("x")), None);
-    ast.insert(a.clone(), rhs.clone());
+    let mut ir = make_ir(vec![
+        ("A", IrNode::Epsilon, None, false),
+    ]);
+    let x = lit("x", &mut ir);
+    ir.rules[0].body = x;
 
-    let result = remove_direct_left_recursion(&ast);
-    assert_eq!(result.len(), 1);
-    assert!(result.get(&a).is_some());
+    eliminate_direct_lr(&mut ir);
+    assert_eq!(ir.rules.len(), 1, "No tail rule should be created");
 }
 
 #[test]
 fn test_direct_left_recursion() {
-    let mut ast = AST::new();
-    let a = nt("A");
-
     // A = A "x" | "y"
-    let alt1 = Expression::Concatenation(Box::new(Token::new_without_span(vec![
-        nt("A"),
-        lit("x"),
-    ])));
-    let alt2 = lit("y");
-    let rhs = Expression::Rule(
-        Box::new(Expression::Alternation(Box::new(
-            Token::new_without_span(vec![alt1, alt2]),
-        ))),
-        None,
+    let mut ir = make_ir(vec![
+        ("A", IrNode::Epsilon, None, false),
+    ]);
+    let x = lit("x", &mut ir);
+    let y = lit("y", &mut ir);
+
+    ir.rules[0].body = alt(vec![
+        seq(vec![IrNode::Ref(0), x]),
+        y,
+    ]);
+
+    eliminate_direct_lr(&mut ir);
+
+    // Should have 2 rules: A and A_tail.
+    assert_eq!(ir.rules.len(), 2);
+    assert_eq!(
+        ir.strings[ir.rules[1].name as usize],
+        "A_tail",
+        "Second rule should be A_tail"
     );
-    ast.insert(a.clone(), rhs);
+}
 
-    let result = remove_direct_left_recursion(&ast);
-    // Should have 2 rules: A and A_tail
-    assert_eq!(result.len(), 2);
+#[test]
+fn test_indirect_then_direct() {
+    // A = B "x"          (id=0, scc=0)
+    // B = A "y" | "z"    (id=1, scc=0)
+    let mut ir = make_ir(vec![
+        ("A", IrNode::Epsilon, Some(0), true),
+        ("B", IrNode::Epsilon, Some(0), true),
+    ]);
 
-    let tail = nt("A_tail");
-    assert!(result.get(&tail).is_some());
+    let x = lit("x", &mut ir);
+    let y = lit("y", &mut ir);
+    let z = lit("z", &mut ir);
+
+    ir.rules[0].body = seq(vec![IrNode::Ref(1), x]);
+    ir.rules[1].body = alt(vec![
+        seq(vec![IrNode::Ref(0), y]),
+        z,
+    ]);
+
+    // Run indirect first (Paull's), then direct.
+    eliminate_indirect_lr(&mut ir);
+    eliminate_direct_lr(&mut ir);
+
+    // B should now be directly left-recursive (B starts with B after substitution),
+    // and direct LR elimination should have created a B_tail rule.
+    let has_tail = ir.rules.iter().any(|r| {
+        ir.strings[r.name as usize] == "B_tail"
+    });
+    assert!(has_tail, "Expected B_tail rule after indirect + direct LR elimination");
 }

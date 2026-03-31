@@ -2,7 +2,7 @@
 // Provides balanced-paren function body scanning and typed calc/min/max/clamp.
 // Spec: CSS Values and Units Level 4 §10
 
-@import "css-value-unit.bbnf" ;
+@import "value-unit.bbnf" ;
 
 // --- Balanced function body ---
 // Handles nested (), "", '' — used for generic function args and var() fallback.

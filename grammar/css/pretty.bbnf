@@ -15,7 +15,7 @@ ws = /(?s)(?:\s|\/\*.*?\*\/)*/ ;
 @token selectorSpan ;
 @token valueSpan ;
 @token propertyName ;
-selectorSpan = /[^{};]+[^\s{};]/ | /[^{};]/ ;
+selectorSpan = /[^{};]+/ ;
 valueSpan    = /[^;{}!,]+/ ;
 
 // Declarations

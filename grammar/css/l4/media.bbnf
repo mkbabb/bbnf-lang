@@ -4,7 +4,7 @@
 // Covers the real-world subset: media types, feature expressions with
 // min/max prefixes, and boolean combinators (and, or, not).
 
-@import "css-tokens.bbnf" ;
+@import "tokens.bbnf" ;
 
 // --- Media types ---
 mediaType = "all" | "print" | "screen" | "speech" ;

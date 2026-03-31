@@ -2,7 +2,7 @@
 // Spec: https://drafts.csswg.org/css-values-4/
 // This is the canonical base grammar; other CSS grammars import from here.
 //
-// Usage: @import "css-value-unit.bbnf" ;
+// Usage: @import "value-unit.bbnf" ;
 // Unit literals map to u8 discriminants (matching lightningcss LengthValue layout).
 
 // --- Numeric primitives (§3.1) ---

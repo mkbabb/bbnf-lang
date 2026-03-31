@@ -1,5 +1,5 @@
-@import "css-color.bbnf" ;
-@import "css-value-unit.bbnf" ;
+@import "color.bbnf" ;
+@import "value-unit.bbnf" ;
 
 // CSS Images Level 4 — gradient functions.
 // Spec: https://drafts.csswg.org/css-images-4/

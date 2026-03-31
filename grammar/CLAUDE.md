@@ -8,22 +8,40 @@ Example grammars and language specification.
 grammar/
 ├── BBNF.md                     BBNF language specification
 ├── about.md                    Grammar index and descriptions
-├── css/                        CSS grammar family
-│   ├── css-value-unit.bbnf     CSS numeric values + units (base)
-│   ├── css-color.bbnf          CSS color values (imports css-value-unit)
-│   ├── css-values.bbnf         CSS composite value types
-│   ├── css-selectors.bbnf      CSS selectors Level 4
-│   ├── css-keyframes.bbnf      CSS @keyframes syntax
-│   └── css-stylesheet.bbnf     Full stylesheet (composes all CSS fragments, @recover annotations)
-├── lang/                       Language/format grammars
-│   ├── bbnf.bbnf               Self-hosting BBNF grammar
-│   ├── json.bbnf               JSON (RFC 8259)
-│   ├── json-commented.bbnf     JSON with comments
+├── css/
+│   ├── pretty.bbnf             Formatting grammar with @pretty hints (opaque spans)
+│   └── l4/                     Full CSS L4 spec via @import composition
+│       ├── stylesheet.bbnf     Entry point (composes properties, selectors, media)
+│       ├── value-unit.bbnf     Numeric values + units (canonical base)
+│       ├── color.bbnf          Color values (imports value-unit)
+│       ├── values.bbnf         Composite value types (imports all value grammars)
+│       ├── selectors.bbnf      CSS Selectors Level 4
+│       ├── keyframes.bbnf      @keyframes syntax
+│       ├── media.bbnf          Media Queries Level 5
+│       ├── properties.bbnf     Property-aware declaration dispatch
+│       ├── easing.bbnf         Easing functions
+│       ├── filters.bbnf        Filter functions
+│       ├── gradients.bbnf      Gradient functions
+│       ├── transforms.bbnf     Transform functions
+│       ├── tokens.bbnf         Shared tokens (ident, string)
+│       ├── keywords.bbnf       Keyword enumerations
+│       └── func-body.bbnf      Function body & math expressions
+├── json/
+│   └── json.bbnf               JSON (RFC 8259) with -> mappings and @pretty hints
+├── ebnf/
+│   └── ebnf.bbnf               ISO 14977 EBNF
+├── bnf/
+│   └── bnf.bbnf                Backus-Naur Form
+├── bbnf/
+│   └── bbnf.bbnf               Self-hosting BBNF grammar
+├── google-sheets/
+│   └── google-sheets.bbnf      Google Sheets formula parser
+├── misc/                       Miscellaneous/toy grammars
 │   ├── csv.bbnf                CSV (RFC 4180)
 │   ├── math.bbnf               Arithmetic with precedence
 │   ├── math-ambiguous.bbnf     Deliberately ambiguous arithmetic
 │   ├── regex.bbnf              Regular expression syntax
-│   ├── ebnf.bbnf               ISO 14977 EBNF
+│   ├── json-commented.bbnf     JSON with comments
 │   ├── emoji.bbnf              Emoji token toy language
 │   └── g4.bbnf                 English sentence structure
 └── tests/
@@ -69,15 +87,15 @@ rule = expression ;                             (* production rule *)
 ## CSS Grammar Dependency Chain
 
 ```
-css/css-value-unit.bbnf  <- canonical base (numbers, units, dimensions)
+css/l4/value-unit.bbnf   <- canonical base (numbers, units, dimensions)
       |
-css/css-color.bbnf       <- glob imports css-value-unit
+css/l4/color.bbnf        <- imports value-unit
       |
-css/css-values.bbnf      <- glob imports css-value-unit + css-color
-css/css-keyframes.bbnf   <- glob imports css-value-unit
-css/css-selectors.bbnf   <- standalone (no imports)
+css/l4/values.bbnf       <- imports value-unit + color + gradients + transforms + filters + easing
+css/l4/keyframes.bbnf    <- imports value-unit
+css/l4/selectors.bbnf    <- imports tokens
       |
-css/css-stylesheet.bbnf  <- glob imports all CSS fragments; adds @recover annotations
+css/l4/stylesheet.bbnf   <- imports properties, selectors, media
 ```
 
 **Dispatch table caveat:** Separator rules must have disjoint static FIRST sets

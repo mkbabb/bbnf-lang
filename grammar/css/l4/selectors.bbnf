@@ -4,7 +4,7 @@
 // Uses selectorIdent for escape-aware identifier matching
 // (handles Tailwind \: escapes and vendor -moz- prefixes).
 
-@import "css-tokens.bbnf" ;
+@import "tokens.bbnf" ;
 
 // --- Tokens ---
 hash = /#(?:[\w-]|\\[^\n])+/ ;

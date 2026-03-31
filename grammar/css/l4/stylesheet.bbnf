@@ -1,6 +1,6 @@
-@import "css-properties.bbnf" ;
-@import "css-selectors.bbnf" ;
-@import "css-media.bbnf" ;
+@import "properties.bbnf" ;
+@import "selectors.bbnf" ;
+@import "media.bbnf" ;
 
 @ws /(?s)(?:\s|\/\*.*?\*\/)*/ ;
 @token ident ;

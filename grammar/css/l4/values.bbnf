@@ -1,10 +1,10 @@
-@import "css-tokens.bbnf" ;
-@import "css-value-unit.bbnf" ;
-@import "css-color.bbnf" ;
-@import "css-gradients.bbnf" ;
-@import "css-transforms.bbnf" ;
-@import "css-filters.bbnf" ;
-@import "css-easing.bbnf" ;
+@import "tokens.bbnf" ;
+@import "value-unit.bbnf" ;
+@import "color.bbnf" ;
+@import "gradients.bbnf" ;
+@import "transforms.bbnf" ;
+@import "filters.bbnf" ;
+@import "easing.bbnf" ;
 
 // @token ident ; -- disabled: causes factoring issues with nullable number regex
 

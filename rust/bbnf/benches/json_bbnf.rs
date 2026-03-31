@@ -1,13 +1,11 @@
 #![feature(cold_path)]
 
-//! BBNF JSON parsing benchmarks — cold per-parse, five tiers.
+//! BBNF JSON parsing benchmarks — cold per-parse, three tiers.
 //!
 //! Fresh BumpArena + Parser per iteration. No warm-cache benchmarks.
 //!
-//! - **arena**: arena codegen, raw enum output (structural validation)
-//! - **borrow**: arena codegen, borrowed JsonValue (null/bool fused via ->, strings stripped)
-//! - **copy**: arena codegen, owned JsonValue (full escape decode, Cow strings)
-//! - **native**: parse_that built-in json_parser (fused number conversion, not BBNF)
+//! - **monolithic**: arena codegen, raw enum output (structural validation)
+//! - **combinator**: parse_that built-in json_parser (fused number conversion, not BBNF)
 //! - **vm**: bytecode interpreter
 
 #[cfg(feature = "dhat-heap")]
@@ -18,23 +16,21 @@ static ALLOC: dhat::Alloc = dhat::Alloc;
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-use std::borrow::Cow;
-
 use bencher::{benchmark_group, benchmark_main, black_box, Bencher};
 
 use bbnf::pipeline::{compile_grammar, PipelineOptions};
 use bbnf_derive::Parser;
 use bbnf_ir::compiler::compile as compile_bytecode;
 use bbnf_ir::interpreter::Interpreter;
-use parse_that::{BumpArena, Span};
+use parse_that::BumpArena;
 
 #[derive(Parser)]
-#[parser(path = "benches/grammars/json.bbnf", arena)]
-struct BbnfJsonParser;
+#[parser(path = "../../grammar/json/json.bbnf", arena)]
+struct JsonParser;
 
 // Compile-time enum size audit: ensure the generated enum stays compact.
 // Smaller enums → faster Vec operations (memcpy, reallocation).
-const _: () = assert!(std::mem::size_of::<BbnfJsonParserEnum>() <= 48);
+const _: () = assert!(std::mem::size_of::<JsonParserEnum>() <= 48);
 
 fn load_json(name: &str) -> String {
     let path = format!("../../data/json/{}", name);
@@ -43,169 +39,30 @@ fn load_json(name: &str) -> String {
 
 fn compiled_json_vm() -> (bbnf_ir::GrammarIR, bbnf_ir::bytecode::BytecodeProgram) {
     let grammar =
-        std::fs::read_to_string("../../grammar/lang/json.bbnf").expect("failed to read json.bbnf");
+        std::fs::read_to_string("../../grammar/json/json.bbnf").expect("failed to read json.bbnf");
     let ir = compile_grammar(&grammar, &PipelineOptions::default()).unwrap();
     let program = compile_bytecode(&ir);
     (ir, program)
 }
 
-// ── Borrowed JSON value type ────────────────────────────────────────────────
-// Numbers parsed to f64. Strings borrowed as &str (quotes stripped, no escape
-// decode). Comparable to serde_json_borrow on inputs without escape sequences.
+// ── Monolithic tier (cold per-parse) ────────────────────────────────
 
-#[derive(Debug)]
-#[allow(dead_code)]
-enum BorrowedJsonValue<'a> {
-    Null,
-    Bool(bool),
-    Number(f64),
-    String(&'a str),
-    Array(Vec<BorrowedJsonValue<'a>>),
-    Object(Vec<(&'a str, BorrowedJsonValue<'a>)>),
-}
-
-fn to_borrowed_arena<'a>(node: &'a BbnfJsonParserArenaEnum<'a>) -> BorrowedJsonValue<'a> {
-    match node {
-        BbnfJsonParserArenaEnum::null(_) => BorrowedJsonValue::Null,
-        BbnfJsonParserArenaEnum::r#bool(b) => BorrowedJsonValue::Bool(*b),
-        BbnfJsonParserArenaEnum::number(f) => {
-            // f64 fused during parse via NumberConvert (Eisel-Lemire).
-            BorrowedJsonValue::Number(*f)
-        }
-        BbnfJsonParserArenaEnum::string(s) => {
-            let raw = s.as_str();
-            BorrowedJsonValue::String(&raw[1..raw.len() - 1])
-        }
-        BbnfJsonParserArenaEnum::array(items) => {
-            BorrowedJsonValue::Array(items.iter().map(to_borrowed_arena).collect())
-        }
-        BbnfJsonParserArenaEnum::object(pairs) => BorrowedJsonValue::Object(
-            pairs
-                .iter()
-                .map(|p| {
-                    let BbnfJsonParserArenaEnum::pair((key_span, val_ref)) = p else {
-                        unreachable!()
-                    };
-                    let raw = key_span.as_str();
-                    (&raw[1..raw.len() - 1], to_borrowed_arena(val_ref))
-                })
-                .collect(),
-        ),
-        _ => unreachable!(),
-    }
-}
-
-// ── Owned JSON value type ───────────────────────────────────────────────────
-// Full escape decode including Unicode surrogates. Cow<str> borrows when no
-// escapes present, allocates only on the slow path.
-
-#[derive(Debug)]
-#[allow(dead_code)]
-enum OwnedJsonValue<'a> {
-    Null,
-    Bool(bool),
-    Number(f64),
-    String(Cow<'a, str>),
-    Array(Vec<OwnedJsonValue<'a>>),
-    Object(Vec<(Cow<'a, str>, OwnedJsonValue<'a>)>),
-}
-
-fn to_owned_value_arena<'a>(node: &'a BbnfJsonParserArenaEnum<'a>) -> OwnedJsonValue<'a> {
-    match node {
-        BbnfJsonParserArenaEnum::null(_) => OwnedJsonValue::Null,
-        BbnfJsonParserArenaEnum::r#bool(b) => OwnedJsonValue::Bool(*b),
-        BbnfJsonParserArenaEnum::number(f) => {
-            OwnedJsonValue::Number(*f)
-        }
-        BbnfJsonParserArenaEnum::string(s) => OwnedJsonValue::String(decode_string(*s)),
-        BbnfJsonParserArenaEnum::array(items) => {
-            OwnedJsonValue::Array(items.iter().map(to_owned_value_arena).collect())
-        }
-        BbnfJsonParserArenaEnum::object(pairs) => OwnedJsonValue::Object(
-            pairs
-                .iter()
-                .map(|p| {
-                    let BbnfJsonParserArenaEnum::pair((key_span, val_ref)) = p else {
-                        unreachable!()
-                    };
-                    (decode_string(*key_span), to_owned_value_arena(val_ref))
-                })
-                .collect(),
-        ),
-        _ => unreachable!(),
-    }
-}
-
-#[inline]
-fn decode_string<'a>(s: Span<'a>) -> Cow<'a, str> {
-    let raw = s.as_str();
-    let inner = &raw[1..raw.len() - 1];
-    if !inner.contains('\\') {
-        return Cow::Borrowed(inner);
-    }
-    let mut out = String::with_capacity(inner.len());
-    let bytes = inner.as_bytes();
-    let mut i = 0;
-    while i < bytes.len() {
-        if bytes[i] == b'\\' {
-            i += 1;
-            match bytes[i] {
-                b'"' => out.push('"'),
-                b'\\' => out.push('\\'),
-                b'/' => out.push('/'),
-                b'b' => out.push('\u{08}'),
-                b'f' => out.push('\u{0C}'),
-                b'n' => out.push('\n'),
-                b'r' => out.push('\r'),
-                b't' => out.push('\t'),
-                b'u' => {
-                    let hex = &inner[i + 1..i + 5];
-                    let cp = u16::from_str_radix(hex, 16).unwrap();
-                    i += 4;
-                    if (0xD800..=0xDBFF).contains(&cp) {
-                        i += 1; // skip backslash
-                        i += 1; // skip 'u'
-                        let hex2 = &inner[i..i + 4];
-                        let lo = u16::from_str_radix(hex2, 16).unwrap();
-                        i += 4;
-                        let full = 0x10000 + ((cp as u32 - 0xD800) << 10) + (lo as u32 - 0xDC00);
-                        out.push(char::from_u32(full).unwrap());
-                        i += 1;
-                        continue;
-                    }
-                    out.push(char::from_u32(cp as u32).unwrap());
-                }
-                _ => {
-                    out.push('\\');
-                    out.push(bytes[i] as char);
-                }
-            }
-        } else {
-            out.push(bytes[i] as char);
-        }
-        i += 1;
-    }
-    Cow::Owned(out)
-}
-
-// ── Arena tier (cold per-parse) ─────────────────────────────────────
-
-macro_rules! bench_arena {
+macro_rules! bench_monolithic {
     ($name:ident, $file:expr) => {
         fn $name(b: &mut Bencher) {
             let input = load_json($file);
             b.bytes = input.len() as u64;
             {
-                let arena = BumpArena::<BbnfJsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = BbnfJsonParser::value_arena();
+                let arena = BumpArena::<JsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = JsonParser::value_arena();
                 assert!(
                     parser.parse_with_context(&input, &arena).is_some(),
-                    concat!($file, ": arena parse failed")
+                    concat!($file, ": monolithic parse failed")
                 );
             }
             b.iter(|| {
-                let arena = BumpArena::<BbnfJsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = BbnfJsonParser::value_arena();
+                let arena = BumpArena::<JsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = JsonParser::value_arena();
                 let ast = parser
                     .parse_with_context(black_box(&input), &arena)
                     .unwrap();
@@ -215,77 +72,11 @@ macro_rules! bench_arena {
     };
 }
 
-bench_arena!(arena_data, "data.json");
-bench_arena!(arena_twitter, "twitter.json");
-bench_arena!(arena_citm, "citm_catalog.json");
-bench_arena!(arena_canada, "canada.json");
-bench_arena!(arena_data_xl, "data_xl.json");
-
-// ── Borrow tier (cold per-parse) ────────────────────────────────────
-
-macro_rules! bench_borrow {
-    ($name:ident, $file:expr) => {
-        fn $name(b: &mut Bencher) {
-            let input = load_json($file);
-            b.bytes = input.len() as u64;
-            {
-                let arena = BumpArena::<BbnfJsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = BbnfJsonParser::value_arena();
-                assert!(
-                    parser.parse_with_context(&input, &arena).is_some(),
-                    concat!($file, ": arena parse failed")
-                );
-            }
-            b.iter(|| {
-                let arena = BumpArena::<BbnfJsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = BbnfJsonParser::value_arena();
-                let ast = parser
-                    .parse_with_context(black_box(&input), &arena)
-                    .unwrap();
-                black_box(to_borrowed_arena(ast));
-            });
-        }
-    };
-}
-
-bench_borrow!(borrow_data, "data.json");
-bench_borrow!(borrow_twitter, "twitter.json");
-bench_borrow!(borrow_citm, "citm_catalog.json");
-bench_borrow!(borrow_canada, "canada.json");
-bench_borrow!(borrow_data_xl, "data_xl.json");
-
-// ── Copy tier (cold per-parse) ─────────────────────────────────────
-
-macro_rules! bench_copy {
-    ($name:ident, $file:expr) => {
-        fn $name(b: &mut Bencher) {
-            let input = load_json($file);
-            b.bytes = input.len() as u64;
-            {
-                let arena = BumpArena::<BbnfJsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = BbnfJsonParser::value_arena();
-                assert!(
-                    parser.parse_with_context(&input, &arena).is_some(),
-                    concat!($file, ": arena parse failed")
-                );
-            }
-            b.iter(|| {
-                let arena = BumpArena::<BbnfJsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = BbnfJsonParser::value_arena();
-                let ast = parser
-                    .parse_with_context(black_box(&input), &arena)
-                    .unwrap();
-                black_box(to_owned_value_arena(ast));
-            });
-        }
-    };
-}
-
-bench_copy!(copy_data, "data.json");
-bench_copy!(copy_twitter, "twitter.json");
-bench_copy!(copy_citm, "citm_catalog.json");
-bench_copy!(copy_canada, "canada.json");
-bench_copy!(copy_data_xl, "data_xl.json");
+bench_monolithic!(monolithic_data, "data.json");
+bench_monolithic!(monolithic_twitter, "twitter.json");
+bench_monolithic!(monolithic_citm, "citm_catalog.json");
+bench_monolithic!(monolithic_canada, "canada.json");
+bench_monolithic!(monolithic_data_xl, "data_xl.json");
 
 // ── VM tier (bytecode interpreter) ──────────────────────────────────────────
 
@@ -315,12 +106,12 @@ bench_vm!(vm_citm, "citm_catalog.json");
 bench_vm!(vm_canada, "canada.json");
 bench_vm!(vm_data_xl, "data_xl.json");
 
-// ── Native tier (parse_that built-in json_parser, not BBNF) ─────────
+// ── Combinator tier (parse_that built-in json_parser, not BBNF) ────
 // Uses parse_that::json_value() which fuses number scanning with mantissa
 // accumulation — numbers converted to f64 during parsing, no re-read.
 // This is the fair comparison against sonic-rs (which also fuses).
 
-macro_rules! bench_native {
+macro_rules! bench_combinator {
     ($name:ident, $file:expr) => {
         fn $name(b: &mut Bencher) {
             let input = load_json($file);
@@ -341,46 +132,29 @@ macro_rules! bench_native {
     };
 }
 
-bench_native!(native_data, "data.json");
-bench_native!(native_twitter, "twitter.json");
-bench_native!(native_citm, "citm_catalog.json");
-bench_native!(native_canada, "canada.json");
-bench_native!(native_data_xl, "data_xl.json");
+bench_combinator!(combinator_data, "data.json");
+bench_combinator!(combinator_twitter, "twitter.json");
+bench_combinator!(combinator_citm, "citm_catalog.json");
+bench_combinator!(combinator_canada, "canada.json");
+bench_combinator!(combinator_data_xl, "data_xl.json");
 
 // ── Groups ──────────────────────────────────────────────────────────────────
 
 benchmark_group!(
-    arena,
-    arena_data,
-    arena_twitter,
-    arena_citm,
-    arena_canada,
-    arena_data_xl
+    monolithic,
+    monolithic_data,
+    monolithic_twitter,
+    monolithic_citm,
+    monolithic_canada,
+    monolithic_data_xl
 );
 benchmark_group!(
-    borrow,
-    borrow_data,
-    borrow_twitter,
-    borrow_citm,
-    borrow_canada,
-    borrow_data_xl
-);
-benchmark_group!(
-    copy,
-    copy_data,
-    copy_twitter,
-    copy_citm,
-    copy_canada,
-    copy_data_xl
-);
-benchmark_group!(
-    native,
-    native_data,
-    native_twitter,
-    native_citm,
-    native_canada,
-    native_data_xl
+    combinator,
+    combinator_data,
+    combinator_twitter,
+    combinator_citm,
+    combinator_canada,
+    combinator_data_xl
 );
 benchmark_group!(vm, vm_data, vm_twitter, vm_citm, vm_canada, vm_data_xl);
-benchmark_main!(arena, borrow, copy, native, vm);
-
+benchmark_main!(monolithic, combinator, vm);

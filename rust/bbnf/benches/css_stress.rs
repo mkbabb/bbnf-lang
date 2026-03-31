@@ -23,7 +23,7 @@ use bbnf_derive::Parser;
 use parse_that::BumpArena;
 
 #[derive(Parser)]
-#[parser(path = "benches/grammars/css-fast.bbnf", arena)]
+#[parser(path = "../../grammar/css/pretty.bbnf", skip_recover, arena)]
 struct CssFastParser;
 
 // ── CSS rules: many separate rules ─────────────────────────────────────

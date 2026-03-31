@@ -18,8 +18,8 @@ use bbnf_derive::Parser;
 use parse_that::BumpArena;
 
 #[derive(Parser)]
-#[parser(path = "benches/grammars/json.bbnf", arena)]
-struct BbnfJsonParser;
+#[parser(path = "../../grammar/json/json.bbnf", arena)]
+struct JsonParser;
 
 // ── JSON depth: deeply nested objects ───────────────────────────────────
 
@@ -30,8 +30,8 @@ macro_rules! bench_depth_obj {
             b.bytes = input.len() as u64;
             {
                 let arena =
-                    BumpArena::<BbnfJsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = BbnfJsonParser::value_arena();
+                    BumpArena::<JsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = JsonParser::value_arena();
                 assert!(
                     parser.parse_with_context(&input, &arena).is_some(),
                     "depth_obj_{}: parse failed",
@@ -40,8 +40,8 @@ macro_rules! bench_depth_obj {
             }
             b.iter(|| {
                 let arena =
-                    BumpArena::<BbnfJsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = BbnfJsonParser::value_arena();
+                    BumpArena::<JsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = JsonParser::value_arena();
                 let ast = parser
                     .parse_with_context(black_box(&input), &arena)
                     .unwrap();
@@ -64,8 +64,8 @@ macro_rules! bench_depth_arr {
             b.bytes = input.len() as u64;
             {
                 let arena =
-                    BumpArena::<BbnfJsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = BbnfJsonParser::value_arena();
+                    BumpArena::<JsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = JsonParser::value_arena();
                 assert!(
                     parser.parse_with_context(&input, &arena).is_some(),
                     "depth_arr_{}: parse failed",
@@ -74,8 +74,8 @@ macro_rules! bench_depth_arr {
             }
             b.iter(|| {
                 let arena =
-                    BumpArena::<BbnfJsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = BbnfJsonParser::value_arena();
+                    BumpArena::<JsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = JsonParser::value_arena();
                 let ast = parser
                     .parse_with_context(black_box(&input), &arena)
                     .unwrap();
@@ -98,8 +98,8 @@ macro_rules! bench_wide_arr {
             b.bytes = input.len() as u64;
             {
                 let arena =
-                    BumpArena::<BbnfJsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = BbnfJsonParser::value_arena();
+                    BumpArena::<JsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = JsonParser::value_arena();
                 assert!(
                     parser.parse_with_context(&input, &arena).is_some(),
                     "wide_arr_{}: parse failed",
@@ -108,8 +108,8 @@ macro_rules! bench_wide_arr {
             }
             b.iter(|| {
                 let arena =
-                    BumpArena::<BbnfJsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = BbnfJsonParser::value_arena();
+                    BumpArena::<JsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = JsonParser::value_arena();
                 let ast = parser
                     .parse_with_context(black_box(&input), &arena)
                     .unwrap();
@@ -132,8 +132,8 @@ macro_rules! bench_wide_obj {
             b.bytes = input.len() as u64;
             {
                 let arena =
-                    BumpArena::<BbnfJsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = BbnfJsonParser::value_arena();
+                    BumpArena::<JsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = JsonParser::value_arena();
                 assert!(
                     parser.parse_with_context(&input, &arena).is_some(),
                     "wide_obj_{}: parse failed",
@@ -142,8 +142,8 @@ macro_rules! bench_wide_obj {
             }
             b.iter(|| {
                 let arena =
-                    BumpArena::<BbnfJsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = BbnfJsonParser::value_arena();
+                    BumpArena::<JsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = JsonParser::value_arena();
                 let ast = parser
                     .parse_with_context(black_box(&input), &arena)
                     .unwrap();
@@ -166,8 +166,8 @@ macro_rules! bench_strings {
             b.bytes = input.len() as u64;
             {
                 let arena =
-                    BumpArena::<BbnfJsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = BbnfJsonParser::value_arena();
+                    BumpArena::<JsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = JsonParser::value_arena();
                 assert!(
                     parser.parse_with_context(&input, &arena).is_some(),
                     "strings_{}x{}: parse failed",
@@ -177,8 +177,8 @@ macro_rules! bench_strings {
             }
             b.iter(|| {
                 let arena =
-                    BumpArena::<BbnfJsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = BbnfJsonParser::value_arena();
+                    BumpArena::<JsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = JsonParser::value_arena();
                 let ast = parser
                     .parse_with_context(black_box(&input), &arena)
                     .unwrap();
@@ -201,8 +201,8 @@ macro_rules! bench_escapes {
             b.bytes = input.len() as u64;
             {
                 let arena =
-                    BumpArena::<BbnfJsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = BbnfJsonParser::value_arena();
+                    BumpArena::<JsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = JsonParser::value_arena();
                 assert!(
                     parser.parse_with_context(&input, &arena).is_some(),
                     "escapes_{}: parse failed",
@@ -211,8 +211,8 @@ macro_rules! bench_escapes {
             }
             b.iter(|| {
                 let arena =
-                    BumpArena::<BbnfJsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = BbnfJsonParser::value_arena();
+                    BumpArena::<JsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = JsonParser::value_arena();
                 let ast = parser
                     .parse_with_context(black_box(&input), &arena)
                     .unwrap();
@@ -234,8 +234,8 @@ macro_rules! bench_mixed {
             b.bytes = input.len() as u64;
             {
                 let arena =
-                    BumpArena::<BbnfJsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = BbnfJsonParser::value_arena();
+                    BumpArena::<JsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = JsonParser::value_arena();
                 assert!(
                     parser.parse_with_context(&input, &arena).is_some(),
                     "mixed_{}: parse failed",
@@ -244,8 +244,8 @@ macro_rules! bench_mixed {
             }
             b.iter(|| {
                 let arena =
-                    BumpArena::<BbnfJsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = BbnfJsonParser::value_arena();
+                    BumpArena::<JsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = JsonParser::value_arena();
                 let ast = parser
                     .parse_with_context(black_box(&input), &arena)
                     .unwrap();

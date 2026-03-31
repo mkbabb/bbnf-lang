@@ -13,13 +13,13 @@ use bbnf_ir::compiler::compile as compile_bytecode;
 use bbnf_ir::interpreter::Interpreter;
 
 #[derive(Parser)]
-#[parser(path = "benches/grammars/google-sheets.bbnf", prettify)]
+#[parser(path = "../../grammar/google-sheets/google-sheets.bbnf", prettify)]
 struct GoogleSheetsParser;
 
 const PATHOLOGICAL: &str = r#"=LET(raw, A2:E1000, filtered, FILTER(raw, (INDEX(raw,,3)>100)*(INDEX(raw,,5)="Active")), sorted, SORT(filtered, 3, FALSE), IF(ROWS(sorted)>0, MAP(SEQUENCE(MIN(10, ROWS(sorted))), LAMBDA(i, INDEX(sorted, i, 1)&" - "&TEXT(INDEX(sorted, i, 3), "$#,##0"))), "No results"))"#;
 
 fn compiled() -> (bbnf_ir::GrammarIR, bbnf_ir::bytecode::BytecodeProgram) {
-    let grammar = std::fs::read_to_string("benches/grammars/google-sheets.bbnf")
+    let grammar = std::fs::read_to_string("../../grammar/google-sheets/google-sheets.bbnf")
         .expect("failed to read google-sheets.bbnf");
     let ir = compile_grammar(&grammar, &PipelineOptions::default()).unwrap();
     let program = compile_bytecode(&ir);
@@ -44,7 +44,7 @@ fn generate_large_formula(n_bindings: usize) -> String {
 // ── VM ──────────────────────────────────────────────────────────────────────
 
 fn vm_compile(b: &mut Bencher) {
-    let grammar = std::fs::read_to_string("benches/grammars/google-sheets.bbnf")
+    let grammar = std::fs::read_to_string("../../grammar/google-sheets/google-sheets.bbnf")
         .expect("failed to read google-sheets.bbnf");
     b.bytes = grammar.len() as u64;
     b.iter(|| {

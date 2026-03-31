@@ -66,7 +66,7 @@ Compile-time code generation. Reads `.bbnf`, emits Rust `TokenStream`.
 `force_inline` → `prune_unreachable` → `fuse_single_use` → `prune_unreachable` →
 `eliminate_epsilon` → `merge_literals` → `merge_regex_alts` →
 `factor_common_prefixes` → `refine_span_eligibility` → `compute_follow_sets` →
-`factor_regex_with_lookahead` → `generate_dispatch_tables` → `refine_memo_strategies` → `infer_types`
+`factor_regex_with_lookahead` → `generate_dispatch_tables` → `infer_types`
 
 **Generated code per struct:**
 - `ParserFn` trait impl — one method per rule, returns `Parser<'a, Enum<'a>>`
@@ -197,14 +197,14 @@ rust/
   bbnf-ir/              Canonical IR — shared by AOT and VM
     src/
       lib.rs            GrammarIR, IrNode, IrRule, RuleMeta, TypeDesc types
-      passes/           17 IR operations, 15 unique passes (used by both AOT and VM)
+      passes/           16 IR operations, 14 unique passes (used by both AOT and VM)
         canonicalize_aliases, prune_unreachable, inline_acyclic,
         force_inline, fuse.rs (fuse_single_use),
         eliminate_epsilon, merge_literals, merge_regex_alts,
         factor_common_prefixes,
         refine_span_eligibility, compute_follow_sets,
         factor_lookahead.rs (factor_regex_with_lookahead),
-        generate_dispatch_tables, refine_memo_strategies, infer_types
+        generate_dispatch_tables, infer_types
       compiler.rs       IR → BytecodeProgram (VM path only)
       interpreter.rs    BytecodeProgram → ParseResult (VM path only)
       bytecode.rs       Op enum, BytecodeProgram struct (VM path only)

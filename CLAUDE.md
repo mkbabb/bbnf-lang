@@ -123,7 +123,7 @@ bbnf-lsp uses workspace-relative paths to bbnf; cross-repo deps are version-only
 - **Vec unboxing**: `in_vec` parameter threading through codegen, `ir_node_to_tokens_vec`, `infer_node_type_in_vec`. Transparent rule `_unboxed()` generation for zero-cost enum extraction.
 - **`try_flatten_pair`**: Extension for `(BoxedEnum, Vec<Enum>)` patterns — flattens pair into unboxed Vec.
 - **`merge_regex_alts` pass**: Fuses `Alt([Regex, Regex, ...])` into a single combined regex pattern. Runs after `merge_literals` and before `factor_common_prefixes` in the IR pipeline.
-- **Pipeline synchronization**: The IR pass ordering in `pipeline.rs` and `bbnf-derive/src/lib.rs` must be kept in sync—both run the same 17-operation sequence (15 unique passes, including `factor_regex_with_lookahead` after `compute_follow_sets`).
+- **Pipeline synchronization**: The IR pass ordering in `pipeline.rs` and `bbnf-derive/src/lib.rs` must be kept in sync—both run the same 16-operation sequence (14 unique passes, including `factor_regex_with_lookahead` after `compute_follow_sets`).
 - **`fuse_single_use` pass**: Inlines single-use rules at their call site regardless of body size, guarded by SCC membership. Runs after `inline_acyclic` + prune, before `eliminate_epsilon`.
 - **`no_collapse` gating**: Rules annotated with `@no_collapse` are excluded from inlining and fusing passes to preserve their identity in the generated AST.
 - **`emit_discarded` for Skip/Next**: Skip and Next codegen emits the discarded side for its side effects (e.g., whitespace consumption) even though the value is unused.

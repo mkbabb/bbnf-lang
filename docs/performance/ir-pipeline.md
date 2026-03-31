@@ -28,7 +28,6 @@ Applied in order, each pass is idempotent:
     {"label": "refine_span_eligibility", "detail": "Fixed-point iteration marking non-cyclic rules as span-eligible when their entire body can produce a Span without semantic transforms.", "color": "purple", "href": "#refine_span_eligibility"},
     {"label": "compute_follow_sets", "detail": "Computes FOLLOW(A) for every rule using fixed-point iteration, propagating through Seq, Alt, Repeat, and binary operators.", "color": "purple", "href": "#compute_follow_sets"},
     {"label": "generate_dispatch_tables", "detail": "Annotates Alt nodes with disjoint FIRST sets with a 128-byte O(1) lookup table mapping each ASCII byte to a branch index.", "color": "purple", "href": "#generate_dispatch_tables"},
-    {"label": "refine_memo_strategies", "detail": "Assigns Full, None, or Selective memoization per rule based on SCC membership, reference count, and FOLLOW set cardinality.", "color": "purple", "href": "#refine_memo_strategies"},
     {"label": "infer_types", "detail": "Walks rule bodies in topological order assigning TypeDesc values consumed by all codegen backends for typed parser emission.", "color": "purple", "href": "#infer_types"}
   ] }
 ```
@@ -105,19 +104,13 @@ Enables `_sp()` method generation in AOT codegen (zero-copy, vtable-free parsing
 
 Computes `FOLLOW(A)`—the set of ASCII characters that can appear immediately after rule A in any sentential form—using the standard textbook algorithm with fixed-point iteration for cyclic grammars. Propagates through `Seq` (FIRST of suffix), `Alt` (union), `Repeat` (self-loop), `Skip`/`Next`/`Minus` (binary), and handles nullable suffixes by adding `FOLLOW(container)`.
 
-Consumed by two downstream passes: `generate_dispatch_tables` uses FOLLOW sets to assign nullable alternation branches to dispatch entries, and `refine_memo_strategies` uses FOLLOW set cardinality as a signal for memoization benefit.
+Consumed by `generate_dispatch_tables`, which uses FOLLOW sets to assign nullable alternation branches to dispatch entries.
 
 ## `generate_dispatch_tables`
 
 Walks the entire IR tree and annotates each `Alt` node whose branches have pairwise disjoint FIRST sets with an `AltDispatch`—a 128-byte lookup table mapping each ASCII byte to a branch index (or 255 for no match). When FOLLOW sets are available, a single nullable branch can participate in dispatch by using `FOLLOW(containing_rule)` as its effective dispatch set, provided it is disjoint from all other branches' FIRST sets.
 
 Converts O(n) linear branch trial in the interpreter to O(1) table lookup, which is the single largest performance improvement for grammars with many-branch alternations (e.g., JSON `value` with 6+ branches).
-
-## `refine_memo_strategies`
-
-Assigns one of three memoization strategies per rule: `Full` for SCC entry points (required for termination of cyclic parsing), `None` for non-entry cyclic rules (subsumed by the entry point's cache), and `Selective` for non-cyclic rules whose cross-rule reference count exceeds a threshold.
-
-The threshold is modulated by FOLLOW set cardinality: rules with large FOLLOW sets (>= 8 characters, indicating many calling contexts) have the threshold lowered by 1, while rules with small FOLLOW sets (< 4 characters) have it raised by 1. Avoids unconditional memoization overhead on rarely-referenced rules while ensuring hot rules and recursive entry points cache their results.
 
 ## `infer_types`
 

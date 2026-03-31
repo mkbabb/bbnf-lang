@@ -7,7 +7,7 @@ use crate::types::{Expression, AST};
 use super::charset::CharSet;
 use super::deps::Dependencies;
 use super::scc::SccResult;
-use super::regex_first::regex_first_chars;
+use super::regex_first_chars;
 
 /// The result of FIRST set analysis.
 #[derive(Debug)]

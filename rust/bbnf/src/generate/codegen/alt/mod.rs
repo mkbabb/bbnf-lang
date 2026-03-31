@@ -8,8 +8,8 @@ use bbnf_ir::{AltBranch, FnDescriptor, IrNode, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::super::super::ir_types::{self, IrCodegenCtx};
-use super::super::infer::{infer_node_type, infer_node_type_elide_box};
+use super::super::ir_types::{self, IrCodegenCtx};
+use super::infer::{infer_node_type, infer_node_type_elide_box};
 use super::{emit_mono_expr, MonoCtx};
 
 use key_dispatch::try_emit_key_dispatch;
@@ -18,16 +18,16 @@ use key_dispatch::try_emit_key_dispatch;
 /// `lit_sid` is the StringId of the literal; `constant_value` is `Some(StringId)`
 /// when the node is `Map(Literal, Constant { value, .. })`.
 #[derive(Clone, Copy)]
-pub(self) struct LitThroughMap {
-    pub(self) lit_sid: bbnf_ir::StringId,
-    pub(self) constant_value: Option<bbnf_ir::StringId>,
+struct LitThroughMap {
+    lit_sid: bbnf_ir::StringId,
+    constant_value: Option<bbnf_ir::StringId>,
 }
 
 /// Extract a literal StringId from a node, looking through Map(_, Constant)
 /// wrappers. Returns the literal's StringId and the constant value StringId
 /// (if wrapped), allowing the caller to emit the constant value directly
 /// instead of constructing a Span.
-pub(self) fn extract_literal_through_map(
+fn extract_literal_through_map(
     node: &IrNode,
     ctx: &IrCodegenCtx<'_>,
 ) -> Option<LitThroughMap> {
@@ -349,19 +349,6 @@ fn emit_mono_flat_alt(
     }
 }
 
-/// Coerce a branch expression to Enum (`ArenaEnum`) by value for heterogeneous Alt
-/// in elide_box context. No arena allocation -- Span branches get wrapped in a
-/// sub-variant enum constructor, Enum branches pass through.
-/// Public wrapper for token_dispatch module.
-pub(super) fn coerce_mono_branch_by_value_pub(
-    expr: TokenStream,
-    branch_ty: &TypeDesc,
-    variant_name: Option<&str>,
-    ctx: &IrCodegenCtx<'_>,
-) -> TokenStream {
-    coerce_mono_branch_by_value(expr, branch_ty, variant_name, ctx)
-}
-
 fn coerce_mono_branch_by_value(
     expr: TokenStream,
     branch_ty: &TypeDesc,
@@ -382,58 +369,48 @@ fn coerce_mono_branch_by_value(
     }
 }
 
-/// Coerce a branch expression to BoxedEnum (`&'a ArenaEnum`) for heterogeneous Alt.
-///
-/// Public wrapper for token_dispatch module.
-pub(super) fn coerce_mono_branch_pub(
-    expr: TokenStream,
-    branch_ty: &TypeDesc,
-    variant_name: Option<&str>,
-    ctx: &IrCodegenCtx<'_>,
-) -> TokenStream {
-    coerce_mono_branch(expr, branch_ty, variant_name, ctx)
-}
-
 /// All branches must produce the same type. BoxedEnum branches pass through.
-/// Enum branches get arena.alloc'd. Sub-variant branches get wrapped + alloc'd.
+/// Enum branches get boxed/alloc'd. Sub-variant branches get wrapped + boxed/alloc'd.
 fn coerce_mono_branch(
     expr: TokenStream,
     branch_ty: &TypeDesc,
     variant_name: Option<&str>,
     ctx: &IrCodegenCtx<'_>,
 ) -> TokenStream {
-    // Already BoxedEnum (&ArenaEnum) -- no coercion needed.
+    // Already BoxedEnum (&ArenaEnum / Box<Enum>) -- no coercion needed.
     if *branch_ty == TypeDesc::BoxedEnum {
         return expr;
     }
 
     let enum_ident = &ctx.enum_ident;
-    let helper = ctx.arena_helper_ident();
 
     if let Some(variant_name) = variant_name {
         let variant_ident = format_ident!("{}", variant_name);
+        let alloc_expr = quote! { #enum_ident::#variant_ident(__x) };
+        let alloc_code = ctx.emit_box_alloc_let(&alloc_expr);
         quote! {
             #expr.map(|__x| {
-                let __alloc = #helper(state).alloc(#enum_ident::#variant_ident(__x));
-                &*__alloc
+                #alloc_code
             })
         }
     } else if *branch_ty == TypeDesc::Enum {
-        // Enum (ArenaEnum) -> arena.alloc -> &ArenaEnum (BoxedEnum).
+        // Enum (ArenaEnum) -> boxed/alloc'd -> BoxedEnum.
+        let inner = quote! { __x };
+        let alloc_code = ctx.emit_box_alloc_let(&inner);
         quote! {
             #expr.map(|__x| {
-                let __alloc = #helper(state).alloc(__x);
-                &*__alloc
+                #alloc_code
             })
         }
     } else if *branch_ty == TypeDesc::Span {
-        // Span without sub-variant -- arena.alloc directly.
+        // Span without sub-variant -- boxed/alloc'd directly.
         // (Shouldn't happen in practice; IR always generates sub-variants
         // for heterogeneous Alt branches.)
+        let inner = quote! { __x };
+        let alloc_code = ctx.emit_box_alloc_let(&inner);
         quote! {
             #expr.map(|__x| {
-                let __alloc = #helper(state).alloc(__x);
-                &*__alloc
+                #alloc_code
             })
         }
     } else {

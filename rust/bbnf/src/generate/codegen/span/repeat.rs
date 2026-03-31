@@ -6,9 +6,9 @@ use bbnf_ir::{IrNode, GrammarIR};
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use super::super::super::super::ir_types::IrCodegenCtx;
+use super::super::super::ir_types::IrCodegenCtx;
 use super::super::MonoCtx;
-use super::{emit_span_expr, emit_span_discarded, emit_ws_trim};
+use super::{emit_span_expr, emit_span_discarded};
 
 /// Emit a span-only Repeat (many).
 pub(super) fn emit_span_repeat(
@@ -18,7 +18,7 @@ pub(super) fn emit_span_repeat(
     ctx: &IrCodegenCtx<'_>,
     mctx: &mut MonoCtx,
 ) -> TokenStream {
-    if let Some((element, separator)) = super::super::super::repeat::try_sep_by(inner) {
+    if let Some((element, separator)) = super::super::helpers::try_sep_by(inner) {
         return emit_span_sep_by(element, separator, lo, ir, ctx, mctx);
     }
 
@@ -157,7 +157,7 @@ pub(super) fn emit_span_optional(
             };
         }
         // 2. Try HIR-based inline compilation.
-        if let Some(inline) = super::super::super::super::regex_emit::try_emit_regex_inline(pattern) {
+        if let Some(inline) = super::super::super::regex_emit::try_emit_regex_inline(pattern) {
             return quote! {
                 {
                     let #start_var = state.offset;
@@ -167,7 +167,7 @@ pub(super) fn emit_span_optional(
             };
         }
         // 3. Try DFA-based inline compilation.
-        if let Some(dfa_code) = super::super::super::super::regex_emit::try_emit_dfa_inline(pattern) {
+        if let Some(dfa_code) = super::super::super::regex_emit::try_emit_dfa_inline(pattern) {
             return quote! {
                 {
                     let #start_var = state.offset;
@@ -177,7 +177,7 @@ pub(super) fn emit_span_optional(
             };
         }
         // 4. Unsupported pattern — compile-time error.
-        let err = super::super::super::super::regex_emit::emit_regex_unsupported(pattern);
+        let err = super::super::super::regex_emit::emit_regex_unsupported(pattern);
         return quote! {
             {
                 let #start_var = state.offset;

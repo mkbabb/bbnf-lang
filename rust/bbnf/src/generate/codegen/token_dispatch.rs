@@ -9,8 +9,8 @@ use bbnf_ir::{IrNode, TokenDispatchArm};
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use super::super::super::ir_types::IrCodegenCtx;
-use super::super::unescape_literal;
+use super::super::ir_types::IrCodegenCtx;
+use super::unescape_literal;
 use super::{emit_mono_expr, MonoCtx};
 
 /// Emit monolithic code for a TokenDispatch node.

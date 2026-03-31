@@ -1,59 +1,15 @@
 //! Monolithic expression helpers: Ref, Skip/Next, Wrap, Map, OptionalWhitespace.
 
-use bbnf_ir::{FnDescriptor, GrammarIR, IrNode};
+use bbnf_ir::{FnDescriptor, IrNode};
 
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::super::super::ir_types::IrCodegenCtx;
-use super::super::repeat as combinator_repeat;
-use super::super::unescape_literal;
+use super::super::ir_types::IrCodegenCtx;
+use super::unescape_literal;
+use super::helpers::try_sep_by;
 use super::repeat::{emit_mono_sep_by_ws, emit_mono_sep_by_core, try_unchecked_sep, SepByConfig};
 use super::{emit_mono_discarded, emit_mono_expr, mono_fn_ident, MonoCtx};
-
-/// Detect a wrap pattern `open >> middle << close` where `open` is a single-byte Literal.
-/// Returns `(open_byte, middle_node, close_node)` if the pattern matches.
-/// Unwraps through Map/OW wrappers on the body to find the structural wrap.
-fn detect_guaranteed_wrap<'a>(
-    body: &'a IrNode,
-    ir: &GrammarIR,
-) -> Option<(u8, &'a IrNode, &'a IrNode)> {
-    // Unwrap Map wrappers (enum variant wrapping around the structural pattern).
-    let inner = match body {
-        IrNode::Map { inner, .. } => inner.as_ref(),
-        other => other,
-    };
-
-    // Detect Skip(Next(open, middle), close) — the canonical wrap pattern.
-    if let IrNode::Skip(left, close) = inner {
-        if let IrNode::Next(open, middle) = left.as_ref() {
-            if let IrNode::Literal(sid) = open.as_ref() {
-                let raw = ir.get_string(*sid);
-                let unescaped = unescape_literal(raw);
-                let bytes = unescaped.as_bytes();
-                if bytes.len() == 1 {
-                    return Some((bytes[0], middle.as_ref(), close.as_ref()));
-                }
-            }
-        }
-    }
-
-    // Detect Next(open, Skip(middle, close)) — alternate wrap order.
-    if let IrNode::Next(open, right) = inner {
-        if let IrNode::Skip(middle, close) = right.as_ref() {
-            if let IrNode::Literal(sid) = open.as_ref() {
-                let raw = ir.get_string(*sid);
-                let unescaped = unescape_literal(raw);
-                let bytes = unescaped.as_bytes();
-                if bytes.len() == 1 {
-                    return Some((bytes[0], middle.as_ref(), close.as_ref()));
-                }
-            }
-        }
-    }
-
-    None
-}
 
 // ── Ref ──────────────────────────────────────────────────────────────────────
 
@@ -89,11 +45,10 @@ pub(super) fn emit_mono_ref(
             if elide_box {
                 body
             } else {
-                let helper = ctx.arena_helper_ident();
+                let alloc_code = ctx.emit_box_alloc_let(&quote! { __v });
                 quote! {
                     #body.map(|__v| {
-                        let __alloc = #helper(state).alloc(__v);
-                        &*__alloc
+                        #alloc_code
                     })
                 }
             }
@@ -106,11 +61,10 @@ pub(super) fn emit_mono_ref(
             if elide_box {
                 quote! { #inner.map(|__x| #enum_ident::#variant_ident(__x)) }
             } else {
-                let helper = ctx.arena_helper_ident();
+                let alloc_code = ctx.emit_box_alloc_let(&quote! { #enum_ident::#variant_ident(__x) });
                 quote! {
                     #inner.map(|__x| {
-                        let __alloc = #helper(state).alloc(#enum_ident::#variant_ident(__x));
-                        &*__alloc
+                        #alloc_code
                     })
                 }
             }
@@ -126,12 +80,11 @@ pub(super) fn emit_mono_ref(
         // Direct call → ArenaEnum<'a>
         quote! { Self::#fn_ident(state) }
     } else {
-        // Call + arena.alloc → Option<&'a ArenaEnum<'a>>
-        let helper = ctx.arena_helper_ident();
+        // Call + alloc → Option<&'a ArenaEnum<'a>> / Option<Box<Enum>>
+        let alloc_code = ctx.emit_box_alloc_let(&quote! { __v });
         quote! {
             Self::#fn_ident(state).map(|__v| {
-                let __alloc = #helper(state).alloc(__v);
-                &*__alloc
+                #alloc_code
             })
         }
     }
@@ -206,7 +159,7 @@ pub(super) fn emit_mono_wrap(
             } = ow_inner.as_ref()
             {
                 if !(*lo == 0 && *hi == 1) {
-                    if let Some((element, separator)) = combinator_repeat::try_sep_by(rep_inner) {
+                    if let Some((element, separator)) = try_sep_by(rep_inner) {
                         let close_lit = ctx.ir.get_string(*close_sid);
                         let close_unescaped = unescape_literal(close_lit);
                         let close_bytes: Vec<u8> = close_unescaped.bytes().collect();
@@ -283,11 +236,10 @@ pub(super) fn emit_mono_map(
                 if elide_box {
                     return quote! { #inner_expr.map(|__x| #enum_ident::#vident(__x)) };
                 } else {
-                    let helper = ctx.arena_helper_ident();
+                    let alloc_code = ctx.emit_box_alloc_let(&quote! { #enum_ident::#vident(__x) });
                     return quote! {
                         #inner_expr.map(|__x| {
-                            let __alloc = #helper(state).alloc(#enum_ident::#vident(__x));
-                            &*__alloc
+                            #alloc_code
                         })
                     };
                 }
@@ -297,10 +249,10 @@ pub(super) fn emit_mono_map(
                 let vname = ctx.ir.get_string(*variant);
                 let vident = format_ident!("{}", vname);
                 let enum_ident = &ctx.enum_ident;
-                let helper = ctx.arena_helper_ident();
+                let alloc_code = ctx.emit_box_alloc(&quote! { __x });
                 return quote! {
                     #inner_expr.map(|__x| {
-                        #enum_ident::#vident(&*#helper(state).alloc(__x))
+                        #enum_ident::#vident(#alloc_code)
                     })
                 };
             }
@@ -313,11 +265,10 @@ pub(super) fn emit_mono_map(
                         ::parse_that::scan_number_f64(state).map(|__x| #enum_ident::#vident(__x))
                     };
                 } else {
-                    let helper = ctx.arena_helper_ident();
+                    let alloc_code = ctx.emit_box_alloc_let(&quote! { #enum_ident::#vident(__x) });
                     return quote! {
                         ::parse_that::scan_number_f64(state).map(|__x| {
-                            let __alloc = #helper(state).alloc(#enum_ident::#vident(__x));
-                            &*__alloc
+                            #alloc_code
                         })
                     };
                 }
@@ -326,11 +277,10 @@ pub(super) fn emit_mono_map(
                 if elide_box {
                     return quote! { ::parse_that::scan_number_f64(state) };
                 } else {
-                    let helper = ctx.arena_helper_ident();
+                    let alloc_code = ctx.emit_box_alloc_let(&quote! { __x });
                     return quote! {
                         ::parse_that::scan_number_f64(state).map(|__x| {
-                            let __alloc = #helper(state).alloc(__x);
-                            &*__alloc
+                            #alloc_code
                         })
                     };
                 }
@@ -344,11 +294,10 @@ pub(super) fn emit_mono_map(
                 if elide_box {
                     return quote! { #inner_expr.map(|_| #enum_ident::#vident(#val_expr)) };
                 } else {
-                    let helper = ctx.arena_helper_ident();
+                    let alloc_code = ctx.emit_box_alloc_let(&quote! { #enum_ident::#vident(#val_expr) });
                     return quote! {
                         #inner_expr.map(|_| {
-                            let __alloc = #helper(state).alloc(#enum_ident::#vident(#val_expr));
-                            &*__alloc
+                            #alloc_code
                         })
                     };
                 }
@@ -386,11 +335,10 @@ pub(super) fn emit_mono_map(
                     if elide_box {
                         inner_expr
                     } else {
-                        let helper = ctx.arena_helper_ident();
+                        let alloc_code = ctx.emit_box_alloc_let(&quote! { __x });
                         quote! {
                             #inner_expr.map(|__x| {
-                                let __alloc = #helper(state).alloc(__x);
-                                &*__alloc
+                                #alloc_code
                             })
                         }
                     }
@@ -472,7 +420,7 @@ pub(super) fn emit_mono_ow(
     } = inner
     {
         if !(*lo == 0 && *hi == 1) {
-            if let Some((element, separator)) = combinator_repeat::try_sep_by(rep_inner) {
+            if let Some((element, separator)) = try_sep_by(rep_inner) {
                 return emit_mono_sep_by_ws(element, separator, *lo, ctx, mctx);
             }
         }

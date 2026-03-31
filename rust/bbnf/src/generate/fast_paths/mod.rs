@@ -2,7 +2,7 @@
 //!
 //! Detects well-known regex patterns (JSON string/number, CSS ident/ws/string,
 //! negated character classes) and emits optimized parser/span constructors.
-//! Used by both `ir_codegen.rs` (Parser output) and `ir_span.rs` (SpanParser output).
+//! Used by the codegen module for both arena and span output paths.
 
 pub(crate) mod detect;
 mod generalized;

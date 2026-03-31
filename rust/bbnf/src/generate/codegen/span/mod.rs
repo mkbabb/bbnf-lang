@@ -21,9 +21,9 @@ use bbnf_ir::{IrNode, GrammarIR};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::super::super::ir_types::IrCodegenCtx;
+use super::super::ir_types::IrCodegenCtx;
 use super::super::fast_paths;
-use super::super::unescape_literal;
+use super::unescape_literal;
 use super::{emit_ws_trim, MonoCtx};
 
 /// Function name for a span-only rule: `__rule_span`.
@@ -67,10 +67,10 @@ pub fn generate_monolithic_span(
 
         let rule_debug = ir.debug_all || rule.meta.debug;
         let instrumented_body = if rule_debug {
-            let trace_entry = super::super::trace::emit_trace_entry(name);
+            let trace_entry = super::trace::emit_trace_entry(name);
             let result_ident =
                 syn::Ident::new("__trace_result", proc_macro2::Span::call_site());
-            let trace_exit = super::super::trace::emit_trace_exit(name, &result_ident);
+            let trace_exit = super::trace::emit_trace_exit(name, &result_ident);
             quote! {
                 #trace_entry
                 let #result_ident = (|| -> Option<::parse_that::Span<'a>> { #fn_body })();
@@ -100,7 +100,7 @@ pub fn generate_monolithic_span(
     // Emit thread-local depth counter if any rule is debug-instrumented.
     let has_debug = ir.debug_all || ir.rules.iter().any(|r| r.meta.debug);
     let depth_counter = if has_debug {
-        super::super::trace::emit_depth_counter()
+        super::trace::emit_depth_counter()
     } else {
         quote! {}
     };
@@ -145,16 +145,16 @@ pub(super) fn emit_span_expr(
                 direct
             }
             // 2. Try HIR-based inline compilation
-            else if let Some(inline) = super::super::super::regex_emit::try_emit_regex_inline(pattern) {
+            else if let Some(inline) = super::super::regex_emit::try_emit_regex_inline(pattern) {
                 inline
             }
             // 3. Try DFA-based inline compilation
-            else if let Some(dfa_code) = super::super::super::regex_emit::try_emit_dfa_inline(pattern) {
+            else if let Some(dfa_code) = super::super::regex_emit::try_emit_dfa_inline(pattern) {
                 dfa_code
             }
             // 4. Unsupported pattern — compile-time error
             else {
-                super::super::super::regex_emit::emit_regex_unsupported(pattern)
+                super::super::regex_emit::emit_regex_unsupported(pattern)
             }
         }
 

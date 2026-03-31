@@ -1,6 +1,6 @@
 //! Monolithic Seq emission: sequential let bindings with span compression.
 //!
-//! Mirrors the combinator inline seq (`ir_codegen/seq.rs:emit_seq_inline`)
+//! Mirrors the inline seq pattern from codegen
 //! but emits direct function calls for Refs instead of hoisted Parser objects.
 
 use bbnf_ir::{IrNode, TypeDesc};
@@ -8,8 +8,8 @@ use bbnf_ir::{IrNode, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use super::super::super::ir_types::IrCodegenCtx;
-use super::super::infer::infer_node_type;
+use super::super::ir_types::IrCodegenCtx;
+use super::infer::infer_node_type;
 use super::{emit_mono_expr, MonoCtx};
 
 /// Emit a monolithic Seq — sequential let bindings with span compression.

@@ -3,9 +3,9 @@
 use bbnf_ir::{AltBranch, AltDispatch, GrammarIR, IrNode};
 
 use proc_macro2::TokenStream;
-use quote::{format_ident, quote};
+use quote::quote;
 
-use super::super::super::super::ir_types::IrCodegenCtx;
+use super::super::super::ir_types::IrCodegenCtx;
 use super::super::MonoCtx;
 use super::emit_prettify_expr;
 

@@ -18,7 +18,7 @@ use bbnf_ir::{GrammarIR, IrNode};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::super::super::ir_types::IrCodegenCtx;
+use super::super::ir_types::IrCodegenCtx;
 use super::MonoCtx;
 
 /// Function name for a prettify rule: `__rule_prettify`.
@@ -188,7 +188,7 @@ pub(super) fn emit_prettify_expr(
     match node {
         IrNode::Literal(sid) => {
             let raw = ir.get_string(*sid);
-            let unescaped = super::super::unescape_literal(raw);
+            let unescaped = super::unescape_literal(raw);
             let bytes = unescaped.as_bytes();
             if bytes.len() == 1 {
                 let b = bytes[0];

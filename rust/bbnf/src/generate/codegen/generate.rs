@@ -1,31 +1,35 @@
-//! Monolithic arena entry-point generation.
+//! Monolithic entry-point generation.
 //!
-//! Contains `generate_monolithic_arena` and its supporting helper functions
-//! for fusion eligibility, single-site inline detection, and expansion cost estimation.
+//! Contains `generate_monolithic` (handles both Arena and Owned storage modes)
+//! and supporting helper functions for fusion eligibility, single-site inline
+//! detection, and expansion cost estimation.
 
 use bbnf_ir::{GrammarIR, IrNode, RuleId};
 
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::super::super::fast_paths;
-use super::super::super::ir_types::{IrCodegenCtx, StorageMode};
+use super::super::fast_paths;
+use super::super::ir_types::IrCodegenCtx;
 use super::helpers::mono_fn_ident;
 use super::{emit_mono_expr, MonoCtx};
 
 // ── Entry Point ──────────────────────────────────────────────────────────────
 
-/// Generate all monolithic arena methods for all rules.
+/// Generate all monolithic methods for all rules.
+///
+/// Supports both Arena and Owned storage modes:
+/// - Arena: `fn __rule_arena<'a>(state) -> Option<ArenaEnum<'a>>` with arena.alloc
+/// - Owned: `fn __rule<'a>(state) -> Option<Enum<'a>>` with Box::new
 ///
 /// For each rule, emits:
-/// 1. A private associated fn `fn __rule_arena<'a>(state) -> Option<ArenaEnum<'a>>`
-/// 2. A public method `pub fn rule_arena<'a>() -> Parser<'a, ReturnType>`
-/// 3. For transparent rules: `pub fn rule_arena_unboxed<'a>() -> Parser<'a, ArenaEnum<'a>>`
-pub fn generate_monolithic_arena(
+/// 1. A private associated fn (internal dispatch)
+/// 2. A public method returning `Parser<'a, ReturnType>`
+/// 3. For transparent rules: an unboxed variant
+pub fn generate_monolithic(
     ir: &GrammarIR,
     ctx: &IrCodegenCtx<'_>,
 ) -> TokenStream {
-    assert!(ctx.storage_mode == StorageMode::Arena);
 
     let mut methods: Vec<TokenStream> = Vec::new();
     let enum_type = &ctx.enum_type;
@@ -50,7 +54,7 @@ pub fn generate_monolithic_arena(
         .rules
         .iter()
         .enumerate()
-        .map(|(i, rule)| {
+        .map(|(_i, rule)| {
             // @token rules always inline (small by definition).
             if rule.meta.is_token {
                 return true;
@@ -178,9 +182,9 @@ pub fn generate_monolithic_arena(
 
         let rule_debug = ir.debug_all || rule.meta.debug;
         let instrumented_body = if rule_debug {
-            let trace_entry = super::super::trace::emit_trace_entry(name);
+            let trace_entry = super::trace::emit_trace_entry(name);
             let result_ident = syn::Ident::new("__trace_result", proc_macro2::Span::call_site());
-            let trace_exit = super::super::trace::emit_trace_exit(name, &result_ident);
+            let trace_exit = super::trace::emit_trace_exit(name, &result_ident);
             quote! {
                 #trace_entry
                 let #result_ident = (|| -> Option<#enum_type> { #fn_body })();
@@ -203,14 +207,13 @@ pub fn generate_monolithic_arena(
         // ── Emit public method(s) ────────────────────────────────────────
 
         if rule.meta.is_transparent {
-            // Transparent: public method wraps result in arena.alloc.
-            let helper_ident = ctx.arena_helper_ident();
+            // Transparent: public method wraps result in Box (Owned) or arena.alloc (Arena).
+            let alloc_code = ctx.emit_box_alloc(&quote! { __v });
             methods.push(quote! {
                 pub fn #pub_ident<'a>() -> Parser<'a, #return_type> {
                     Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                         let __v = Self::#fn_ident(state)?;
-                        let __arena = #helper_ident(state);
-                        Some(&*__arena.alloc(__v))
+                        Some(#alloc_code)
                     })
                 }
             });
@@ -236,7 +239,7 @@ pub fn generate_monolithic_arena(
     // Emit the thread-local depth counter if any rule is debug-instrumented.
     let has_debug = ir.debug_all || ir.rules.iter().any(|r| r.meta.debug);
     let depth_counter = if has_debug {
-        super::super::trace::emit_depth_counter()
+        super::trace::emit_depth_counter()
     } else {
         quote! {}
     };

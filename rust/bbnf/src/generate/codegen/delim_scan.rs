@@ -17,8 +17,8 @@ use bbnf_ir::{GrammarIR, IrNode, RuleId};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::super::super::ir_types::IrCodegenCtx;
-use super::super::unescape_literal;
+use super::super::ir_types::IrCodegenCtx;
+use super::unescape_literal;
 use super::{emit_ws_trim, mono_fn_ident, MonoCtx};
 
 // ── Configuration ────────────────────────────────────────────────────────────
@@ -181,11 +181,6 @@ fn unwrap_to_repeat_with_rule<'a>(node: &'a IrNode, ir: &'a GrammarIR) -> Option
     }
 }
 
-/// Convenience: unwrap to Repeat, discarding the rule ID.
-fn unwrap_to_repeat<'a>(node: &'a IrNode, ir: &'a GrammarIR) -> Option<&'a IrNode> {
-    unwrap_to_repeat_with_rule(node, ir).map(|(n, _)| n)
-}
-
 /// Unwrap through OW/Map/Ref/Next/Skip layers to find an Alt node.
 /// Returns branches only if no dispatch table.
 fn unwrap_to_alt<'a>(node: &'a IrNode, ir: &'a GrammarIR) -> Option<&'a [bbnf_ir::AltBranch]> {
@@ -344,7 +339,7 @@ fn emit_scan_loop(
     let ws_post = ws_trim.clone();
 
     // Block-delimiter scan (find open/close/trail in forward direction).
-    let block_scan = if let Some(tb) = config.trail_byte {
+    let _block_scan = if let Some(tb) = config.trail_byte {
         let trail_lit = proc_macro2::Literal::byte_character(tb);
         quote! { ::parse_that::memchr::memchr3(#open_lit, #close_lit, #trail_lit, __rem) }
     } else {
@@ -368,7 +363,7 @@ fn emit_scan_loop(
     };
 
     // Trail match arm in the block-delimiter dispatch.
-    let trail_branch = if let Some(tb) = config.trail_byte {
+    let _trail_branch = if let Some(tb) = config.trail_byte {
         let trail_lit = proc_macro2::Literal::byte_character(tb);
         quote! { #trail_lit => { state.offset = __item + __bp + 1; } }
     } else {
@@ -594,7 +589,7 @@ pub(super) fn emit_arena(
         quote! { break; }
     };
 
-    let ws_trim = emit_ws_trim(ctx, mctx);
+    let _ws_trim = emit_ws_trim(ctx, mctx);
     let (loop_body, ws_post) = emit_scan_loop(config, ctx, mctx, &on_pivot, &on_block);
 
     let helper = ctx.arena_helper_ident();
@@ -628,36 +623,6 @@ pub(super) fn emit_arena(
             Some(&*#helper(state).alloc(#wrap_variant(__vals)))
         }
     }
-}
-
-/// Find the enum variant for the content rule that contains the Repeat(Alt).
-/// Searches all rules for one whose body matches the detected pattern.
-fn find_wrap_content_variant(
-    config: &DelimScanConfig,
-    ctx: &IrCodegenCtx<'_>,
-) -> TokenStream {
-    let enum_ident = &ctx.enum_ident;
-
-    // Search all rules for one whose body (after unwrapping) is a Repeat
-    // with an Alt containing our pivot byte.
-    for rule in &ctx.ir.rules {
-        if let Some(repeat_inner) = unwrap_to_repeat(&rule.body, ctx.ir) {
-            if let Some(branches) = unwrap_to_alt(repeat_inner, ctx.ir) {
-                for branch in branches {
-                    let inner = unwrap_map_ow(&branch.node);
-                    if find_pivot_in_seq(inner, ctx.ir).map(|(p, _)| p) == Some(config.pivot_byte) {
-                        let name = ctx.ir.get_string(rule.name);
-                        let variant = quote::format_ident!("{}", name);
-                        return quote! { #enum_ident::#variant };
-                    }
-                }
-            }
-        }
-    }
-
-    // Fallback: shouldn't reach if detection was correct.
-    let variant = quote::format_ident!("__delim_scan_content_rule_not_found");
-    quote! { #enum_ident::#variant }
 }
 
 // ── Combined detect + emit (convenience) ─────────────────────────────────────

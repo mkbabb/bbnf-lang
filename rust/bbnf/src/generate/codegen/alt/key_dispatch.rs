@@ -17,8 +17,8 @@ use quote::quote;
 
 use crate::generate::ir_types::{self, IrCodegenCtx};
 use crate::generate::regex_classify::{classify_regex, RegexClass};
-use crate::generate::ir_codegen::unescape_literal;
-use crate::generate::ir_codegen::monolithic::{emit_mono_expr, MonoCtx};
+use crate::generate::codegen::unescape_literal;
+use crate::generate::codegen::{emit_mono_expr, MonoCtx};
 use super::{coerce_mono_branch, coerce_mono_branch_by_value};
 
 // ── Helpers ────────────────────────────────────────────────────
@@ -102,7 +102,7 @@ enum KeyClass {
     /// CSS/general identifiers: `[a-zA-Z_][\w-]*`
     Identifier,
     /// Quoted strings: `"..."` or `'...'`
-    QuotedString { quote_char: u8 },
+    QuotedString { _quote_char: u8 },
 }
 
 /// Derive the key class from the fallback branch's leading regex pattern.
@@ -113,7 +113,7 @@ fn classify_fallback_key(fallback: &IrNode, ctx: &IrCodegenCtx<'_>) -> Option<Ke
         RegexClass::QuotedString {
             quote_char,
             allows_escapes: _,
-        } => Some(KeyClass::QuotedString { quote_char }),
+        } => Some(KeyClass::QuotedString { _quote_char: quote_char }),
         // Numeric and unknown patterns: don't dispatch (not enough structure).
         _ => None,
     }

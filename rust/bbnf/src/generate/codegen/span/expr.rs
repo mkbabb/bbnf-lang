@@ -5,7 +5,7 @@ use bbnf_ir::{IrNode, GrammarIR};
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use super::super::super::super::ir_types::IrCodegenCtx;
+use super::super::super::ir_types::IrCodegenCtx;
 use super::super::MonoCtx;
 use super::{span_fn_ident, emit_span_expr, emit_span_discarded, emit_ws_trim};
 
@@ -157,7 +157,7 @@ pub(super) fn emit_span_wrap(
         if let IrNode::OptionalWhitespace(ow_inner) = middle {
             if let IrNode::Repeat { inner: rep_inner, lo, hi } = ow_inner.as_ref() {
                 if !(*lo == 0 && *hi == 1) {
-                    if let Some((element, separator)) = super::super::super::repeat::try_sep_by(rep_inner) {
+                    if let Some((element, separator)) = super::super::helpers::try_sep_by(rep_inner) {
                         let open_expr = emit_span_discarded(open, ir, ctx, mctx);
                         let close_expr = emit_span_discarded(close, ir, ctx, mctx);
                         return emit_span_sep_by_ws_until(
@@ -270,7 +270,7 @@ pub(super) fn emit_span_ow(
     // sep_by_ws detection.
     if let IrNode::Repeat { inner: rep_inner, lo, hi } = inner {
         if !(*lo == 0 && *hi == 1) {
-            if let Some((element, separator)) = super::super::super::repeat::try_sep_by(rep_inner) {
+            if let Some((element, separator)) = super::super::helpers::try_sep_by(rep_inner) {
                 return emit_span_sep_by_ws(element, separator, *lo, ir, ctx, mctx);
             }
         }

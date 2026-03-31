@@ -9,8 +9,8 @@ use bbnf_ir::{FnDescriptor, IrNode};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::super::super::ir_types::IrCodegenCtx;
-use super::super::unescape_literal;
+use super::super::ir_types::IrCodegenCtx;
+use super::unescape_literal;
 use super::{emit_mono_expr, emit_ws_trim, MonoCtx};
 
 /// Internal function name for a rule: `__rule_arena`.
@@ -199,4 +199,21 @@ pub(crate) fn emit_literal_inline_unchecked(byte: u8) -> TokenStream {
             None
         }
     }
+}
+
+/// Detect a sep_by pattern: `Skip(element, Optional(separator))`.
+///
+/// Returns `(element, separator)` if the pattern matches.
+pub fn try_sep_by(inner: &IrNode) -> Option<(&IrNode, &IrNode)> {
+    if let IrNode::Skip(element, opt_sep) = inner {
+        if let IrNode::Repeat {
+            inner: separator,
+            lo: 0,
+            hi: 1,
+        } = opt_sep.as_ref()
+        {
+            return Some((element.as_ref(), separator.as_ref()));
+        }
+    }
+    None
 }

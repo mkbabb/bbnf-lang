@@ -190,6 +190,43 @@ impl<'a> IrCodegenCtx<'a> {
     pub fn arena_helper_ident(&self) -> syn::Ident {
         format_ident!("__{}_arena", self.enum_ident)
     }
+
+    /// Emit code that boxes/allocs a value expression into the `boxed_enum_type`.
+    ///
+    /// - Arena mode: `&*helper(state).alloc(expr)`
+    /// - Owned mode: `Box::new(expr)`
+    pub fn emit_box_alloc(&self, value_expr: &TokenStream) -> TokenStream {
+        match self.storage_mode {
+            StorageMode::Arena => {
+                let helper = self.arena_helper_ident();
+                quote::quote! { &*#helper(state).alloc(#value_expr) }
+            }
+            StorageMode::Owned => {
+                quote::quote! { Box::new(#value_expr) }
+            }
+        }
+    }
+
+    /// Emit code that boxes/allocs a value via a let binding + alloc.
+    ///
+    /// - Arena mode: `let __alloc = helper(state).alloc(expr); &*__alloc`
+    /// - Owned mode: `Box::new(expr)`
+    ///
+    /// The let-binding form is needed in Arena mode to extend the borrow lifetime.
+    pub fn emit_box_alloc_let(&self, value_expr: &TokenStream) -> TokenStream {
+        match self.storage_mode {
+            StorageMode::Arena => {
+                let helper = self.arena_helper_ident();
+                quote::quote! {
+                    let __alloc = #helper(state).alloc(#value_expr);
+                    &*__alloc
+                }
+            }
+            StorageMode::Owned => {
+                quote::quote! { Box::new(#value_expr) }
+            }
+        }
+    }
 }
 
 pub fn type_desc_to_syn(desc: &TypeDesc, ctx: &IrCodegenCtx<'_>) -> Type {

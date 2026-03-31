@@ -10,8 +10,8 @@ use bbnf_ir::AltBranch;
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use super::super::super::super::ir_types::IrCodegenCtx;
-use super::super::super::unescape_literal;
+use super::super::super::ir_types::IrCodegenCtx;
+use super::super::unescape_literal;
 use super::super::MonoCtx;
 use super::{extract_literal_through_map, LitThroughMap};
 

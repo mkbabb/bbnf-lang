@@ -237,7 +237,7 @@ pub(crate) fn emit_char_class_loop(pattern: &str) -> Option<TokenStream> {
         return None;
     };
 
-    let is_plus = min_count >= 1 && max_count == usize::MAX;
+    let _is_plus = min_count >= 1 && max_count == usize::MAX;
 
     // Must be a single char class [...]
     let inner = class_str.strip_prefix('[')?.strip_suffix(']')?;

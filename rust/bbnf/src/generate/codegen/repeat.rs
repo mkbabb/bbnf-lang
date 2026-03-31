@@ -5,11 +5,11 @@ use bbnf_ir::{IrNode, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use super::super::super::fast_paths;
-use super::super::super::ir_types::IrCodegenCtx;
-use super::super::infer::infer_node_type;
-use super::super::repeat as combinator_repeat;
-use super::super::unescape_literal;
+use super::super::fast_paths;
+use super::super::ir_types::IrCodegenCtx;
+use super::infer::infer_node_type;
+use super::unescape_literal;
+use super::helpers::try_sep_by;
 use super::{
     emit_literal_inline_unchecked, emit_mono_expr, is_simple_expr,
     mono_fn_ident, MonoCtx,
@@ -274,7 +274,7 @@ pub(super) fn emit_mono_repeat(
 ) -> TokenStream {
     // sep_by detection.
     if !(lo == 0 && hi == 1) {
-        if let Some((element, separator)) = combinator_repeat::try_sep_by(inner) {
+        if let Some((element, separator)) = try_sep_by(inner) {
             return emit_mono_sep_by(element, separator, lo, ctx, mctx);
         }
     }
@@ -314,12 +314,13 @@ fn emit_mono_optional(
                 }
             };
         } else {
-            let helper = ctx.arena_helper_ident();
+            let val_expr = quote! { __v };
+            let alloc_expr = ctx.emit_box_alloc(&val_expr);
             return quote! {
                 {
                     let #cp_var = state.offset;
                     if let Some(__v) = Self::#fn_ident(state) {
-                        Some(Some(&*#helper(state).alloc(__v)))
+                        Some(Some(#alloc_expr))
                     } else {
                         state.offset = #cp_var;
                         Some(None)

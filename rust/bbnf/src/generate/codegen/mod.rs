@@ -24,23 +24,56 @@ mod delim_scan;
 mod expr;
 mod generate;
 mod helpers;
+pub mod infer;
 mod repeat;
 mod seq;
 pub mod span;
 pub mod prettify;
 mod token_dispatch;
+pub mod trace;
 
 use bbnf_ir::IrNode;
 
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::super::fast_paths;
-use super::super::ir_types::{IrCodegenCtx, StorageMode};
-use super::unescape_literal;
+use super::fast_paths;
+use super::ir_types::{IrCodegenCtx, StorageMode};
 
-// Re-export the entry point at the original visibility.
-pub use generate::generate_monolithic_arena;
+/// Unescape a BBNF literal string (e.g. `\n` → newline, `\t` → tab).
+/// BBNF literals store escape sequences as raw characters (backslash + letter)
+/// since they come from source text between quotes. We need to unescape them
+/// before embedding into Rust string literals via `quote!`.
+pub fn unescape_literal(s: &str) -> String {
+    let mut result = String::with_capacity(s.len());
+    let mut chars = s.chars();
+    while let Some(c) = chars.next() {
+        if c == '\\' {
+            match chars.next() {
+                Some('n') => result.push('\n'),
+                Some('t') => result.push('\t'),
+                Some('r') => result.push('\r'),
+                Some('\\') => result.push('\\'),
+                Some('\'') => result.push('\''),
+                Some('"') => result.push('"'),
+                Some('0') => result.push('\0'),
+                Some('f') => result.push('\x0C'),
+                Some('b') => result.push('\x08'),
+                Some(other) => {
+                    result.push('\\');
+                    result.push(other);
+                }
+                None => result.push('\\'),
+            }
+        } else {
+            result.push(c);
+        }
+    }
+    result
+}
+
+// Re-export the entry point.
+pub use generate::generate_monolithic;
 
 // Re-export items used by sub-modules via `super::`.
 pub(super) use generate::compute_single_site_inline;
@@ -56,7 +89,7 @@ pub(super) use helpers::{
 ///
 /// The emitted code is a statement (not an expression) — it advances `state.offset`
 /// past whitespace and returns nothing.
-pub(super) fn emit_ws_trim(ctx: &IrCodegenCtx<'_>, mctx: &mut MonoCtx) -> TokenStream {
+pub(super) fn emit_ws_trim(ctx: &IrCodegenCtx<'_>, _mctx: &mut MonoCtx) -> TokenStream {
     if let Some(ws_sid) = ctx.ir.ws_pattern {
         let pattern = ctx.ir.get_string(ws_sid);
         // Try direct scanner call (SIMD fast path for known patterns).
@@ -65,15 +98,15 @@ pub(super) fn emit_ws_trim(ctx: &IrCodegenCtx<'_>, mctx: &mut MonoCtx) -> TokenS
             return quote! { #direct; };
         }
         // Try HIR-based inline compilation.
-        if let Some(inline) = super::super::regex_emit::try_emit_regex_inline(pattern) {
+        if let Some(inline) = super::regex_emit::try_emit_regex_inline(pattern) {
             return quote! { #inline; };
         }
         // Try DFA-based inline compilation.
-        if let Some(dfa_code) = super::super::regex_emit::try_emit_dfa_inline(pattern) {
+        if let Some(dfa_code) = super::regex_emit::try_emit_dfa_inline(pattern) {
             return quote! { #dfa_code; };
         }
         // Unsupported pattern — compile-time error.
-        let err = super::super::regex_emit::emit_regex_unsupported(pattern);
+        let err = super::regex_emit::emit_regex_unsupported(pattern);
         quote! { #err; }
     } else {
         quote! { ::parse_that::trim_leading_whitespace_mut(state); }
@@ -114,8 +147,6 @@ pub(super) fn is_simple_expr(node: &IrNode, mctx: &MonoCtx) -> bool {
 /// generates unique variable names, and tracks fusion-eligible rules.
 pub(super) struct MonoCtx {
     pub hoisted: Vec<TokenStream>,
-    /// Deduplication map: expression string → hoisted binding name.
-    hoist_dedup: std::collections::HashMap<String, syn::Ident>,
     counter: usize,
     /// Per-rule flag: true if the rule's body can be inlined at call sites.
     /// Indexed by RuleId. Computed once in `generate_monolithic_arena`.
@@ -144,7 +175,6 @@ impl MonoCtx {
     pub fn new(fusion_eligible: Vec<bool>, single_site_inline: Vec<bool>) -> Self {
         Self {
             hoisted: Vec::new(),
-            hoist_dedup: std::collections::HashMap::new(),
             counter: 0,
             fusion_eligible,
             single_site_inline,
@@ -160,19 +190,6 @@ impl MonoCtx {
         format_ident!("__{}{}", prefix, id)
     }
 
-    pub fn hoist(&mut self, expr: TokenStream) -> syn::Ident {
-        // Deduplicate: if an identical expression was already hoisted, reuse it.
-        let expr_str = expr.to_string();
-        if let Some(existing) = self.hoist_dedup.get(&expr_str) {
-            return existing.clone();
-        }
-        let name = self.fresh("h");
-
-        self.hoisted.push(quote! { let #name = #expr; });
-
-        self.hoist_dedup.insert(expr_str, name.clone());
-        name
-    }
 }
 
 // ── Expression Dispatch ──────────────────────────────────────────────────────
@@ -217,16 +234,16 @@ pub(super) fn emit_mono_expr(
                 direct
             }
             // 2. Try HIR-based inline compilation
-            else if let Some(inline) = super::super::regex_emit::try_emit_regex_inline(pattern) {
+            else if let Some(inline) = super::regex_emit::try_emit_regex_inline(pattern) {
                 inline
             }
             // 3. Try DFA-based inline compilation
-            else if let Some(dfa_code) = super::super::regex_emit::try_emit_dfa_inline(pattern) {
+            else if let Some(dfa_code) = super::regex_emit::try_emit_dfa_inline(pattern) {
                 dfa_code
             }
             // 4. Unsupported pattern — compile-time error
             else {
-                super::super::regex_emit::emit_regex_unsupported(pattern)
+                super::regex_emit::emit_regex_unsupported(pattern)
             }
         }
 

@@ -75,7 +75,7 @@ fn emit_tier_a(dfa: &Dfa) -> TokenStream {
     // For each state, build a list of (byte_predicate, target_state) transitions.
     let mut state_transitions: Vec<Vec<(TokenStream, u32)>> = Vec::new();
 
-    for (sid, state) in dfa.states.iter().enumerate() {
+    for state in dfa.states.iter() {
         let mut transitions: Vec<(TokenStream, u32)> = Vec::new();
 
         // Group classes by target state to merge predicates.
@@ -208,7 +208,7 @@ fn emit_general_state_machine(
     _accels: &[parse_that::regex_engine::accel::StateAccel],
     state_transitions: &[Vec<(TokenStream, u32)>],
 ) -> TokenStream {
-    let num_states = dfa.state_count();
+    let _num_states = dfa.state_count();
 
     // Build match arms for each state.
     let mut arms: Vec<TokenStream> = Vec::new();
@@ -460,7 +460,7 @@ fn detect_shorthand(bytes: &[u8]) -> Option<TokenStream> {
     // \d = [0-9]
     if set.len() == 10
         && (b'0'..=b'9').all(|b| set.contains(&b))
-        && set.iter().all(|b| (b'0'..=b'9').contains(b))
+        && set.iter().all(|b| b.is_ascii_digit())
     {
         return Some(quote! { __b.is_ascii_digit() });
     }

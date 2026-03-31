@@ -49,7 +49,10 @@ fn try_specialize_map_fn(inner: &IrNode, fn_id: FnId, ctx: &mut LowerCtx<'_>) ->
 
     match type_name.as_str() {
         "f64" => {
-            if matches!(classify_regex(&pattern), RegexClass::Numeric { .. }) {
+            if matches!(
+                classify_regex(&pattern),
+                RegexClass::Numeric { .. } | RegexClass::JsonNumber
+            ) {
                 ctx.fns.push(FnDescriptor::NumberConvert)
             } else {
                 fn_id

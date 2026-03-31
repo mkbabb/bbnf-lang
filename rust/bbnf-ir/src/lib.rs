@@ -10,10 +10,14 @@
 
 pub mod charset;
 pub mod passes;
-pub mod bytecode;
-pub mod compiler;
-pub mod interpreter;
+pub mod vm;
 pub mod regex_first;
+
+// Backward-compat re-exports: downstream crates can still use
+// `bbnf_ir::bytecode`, `bbnf_ir::compiler`, `bbnf_ir::interpreter`.
+pub use vm::bytecode;
+pub use vm::compiler;
+pub use vm::interpreter;
 
 use std::collections::HashMap;
 

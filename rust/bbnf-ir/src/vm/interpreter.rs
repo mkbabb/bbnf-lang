@@ -8,7 +8,7 @@ use std::collections::HashSet;
 
 use rustc_hash::FxHashMap;
 
-use crate::bytecode::{BytecodeProgram, Op};
+use super::bytecode::{BytecodeProgram, Op};
 use crate::RuleId;
 
 // ── Debug types ─────────────────────────────────────────────────────────────
@@ -91,15 +91,6 @@ pub enum Value {
     Nil,
 }
 
-/// Extract the start offset from a Value (for span computation in MakeTagged).
-fn value_start(val: &Value) -> u32 {
-    match val {
-        Value::Span(s, _) => *s,
-        Value::Tagged { span, .. } => span.0,
-        Value::Array(items) => items.first().map(value_start).unwrap_or(0),
-        Value::Nil => 0,
-    }
-}
 
 // ── Internal stack frames ───────────────────────────────────────────────────
 
@@ -558,7 +549,8 @@ impl<'a> Interpreter<'a> {
     }
 
     fn exec_repeat_end(&mut self) {
-        let repeat = self.repeats.last_mut().unwrap();
+        let repeat = self.repeats.last_mut()
+            .expect("repeat stack should not be empty at RepeatEnd");
 
         if self.is_error || repeat.iter_start_offset == self.offset {
             // Body failed or zero-length match — finalize.
@@ -586,7 +578,8 @@ impl<'a> Interpreter<'a> {
     /// repeat body can legitimately truncate the values stack below the level
     /// recorded at `RepeatBegin`.
     fn finalize_repeat(&mut self) {
-        let repeat = self.repeats.pop().unwrap();
+        let repeat = self.repeats.pop()
+            .expect("repeat stack should not be empty during finalize");
         let depth = repeat.value_depth.min(self.values.len());
 
         if repeat.count >= repeat.lo {
@@ -668,7 +661,7 @@ impl<'a> Interpreter<'a> {
 
 /// Convenience function: compile IR and parse input.
 pub fn parse_with_ir(ir: &crate::GrammarIR, input: &str) -> ParseResult {
-    let program = crate::compiler::compile(ir);
+    let program = super::compiler::compile(ir);
     let mut interp = Interpreter::new(&program, input);
     interp.run()
 }

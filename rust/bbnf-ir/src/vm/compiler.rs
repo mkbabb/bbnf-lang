@@ -2,7 +2,7 @@
 //!
 //! Compiles a `GrammarIR` into a `BytecodeProgram` for the VM interpreter.
 
-use crate::bytecode::{BytecodeProgram, DispatchData, Op, SourceMapEntry};
+use super::bytecode::{BytecodeProgram, DispatchData, Op, SourceMapEntry};
 use crate::{AltBranch, GrammarIR, IrNode, MemoStrategy};
 
 /// Compile a GrammarIR to bytecode.
@@ -322,7 +322,7 @@ impl Compiler {
             offsets: vec![0; branches.len()],
             fallback: 0,
         });
-        let dispatch_idx = self.emit(Op::Dispatch(table_idx));
+        let _dispatch_idx = self.emit(Op::Dispatch(table_idx));
 
         let mut branch_offsets = Vec::with_capacity(branches.len());
         let mut fail_jumps: Vec<usize> = Vec::new();

@@ -299,7 +299,8 @@ fn infer_seq(children: &[IrNode], ctx: &InferCtx<'_>) -> TypeDesc {
 
     // Single-element unwrap.
     if compressed.len() == 1 {
-        return compressed.into_iter().next().unwrap();
+        return compressed.into_iter().next()
+            .expect("compressed Seq verified to have exactly one element");
     }
 
     // (T, Vec<T>) → Vec<T> flattening.

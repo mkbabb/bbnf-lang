@@ -314,7 +314,7 @@ fn first_set_width(
         }
         IrNode::Alt(branches, _) => {
             // Union of all branch widths.
-            let mut combined = CharSet128::new();
+            let combined = CharSet128::new();
             for b in branches {
                 let w = first_set_width(unwrap_transparent(&b.node), rule_metas, strings);
                 if w >= 128 {

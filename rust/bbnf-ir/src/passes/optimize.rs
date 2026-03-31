@@ -39,7 +39,8 @@ fn elim_epsilon(node: IrNode) -> IrNode {
                 .collect();
             match cleaned.len() {
                 0 => IrNode::Epsilon,
-                1 => cleaned.into_iter().next().unwrap(),
+                1 => cleaned.into_iter().next()
+                    .expect("cleaned Seq verified to have exactly one element"),
                 _ => IrNode::Seq(cleaned),
             }
         }
@@ -52,7 +53,8 @@ fn elim_epsilon(node: IrNode) -> IrNode {
                 })
                 .collect();
             if cleaned.len() == 1 && dispatch.is_none() {
-                cleaned.into_iter().next().unwrap().node
+                cleaned.into_iter().next()
+                    .expect("cleaned Alt verified to have exactly one branch").node
             } else {
                 IrNode::Alt(cleaned, dispatch)
             }
@@ -177,7 +179,8 @@ fn merge_lits(node: IrNode, strings: &mut Vec<String>, dedup: &mut HashMap<Strin
 
             match merged.len() {
                 0 => IrNode::Epsilon,
-                1 => merged.into_iter().next().unwrap(),
+                1 => merged.into_iter().next()
+                    .expect("merged Seq verified to have exactly one element"),
                 _ => IrNode::Seq(merged),
             }
         }

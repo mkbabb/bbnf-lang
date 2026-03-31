@@ -62,7 +62,8 @@ fn factor(node: IrNode, strings: &mut Vec<String>) -> IrNode {
                 .collect();
 
             if factored.len() == 1 {
-                factored.into_iter().next().unwrap().node
+                factored.into_iter().next()
+                    .expect("factored branch set verified non-empty").node
             } else {
                 IrNode::Alt(factored, dispatch)
             }
@@ -125,7 +126,8 @@ fn strip_leading(node: IrNode) -> IrNode {
         IrNode::Seq(mut children) if children.len() > 1 => {
             children.remove(0);
             if children.len() == 1 {
-                children.into_iter().next().unwrap()
+                children.into_iter().next()
+                    .expect("Seq child list verified non-empty")
             } else {
                 IrNode::Seq(children)
             }
@@ -184,7 +186,8 @@ fn factor_branches(branches: Vec<AltBranch>) -> Vec<AltBranch> {
             }
 
             let remainder_alt = if remainder_branches.len() == 1 {
-                remainder_branches.into_iter().next().unwrap().node
+                remainder_branches.into_iter().next()
+                    .expect("remainder branch set verified non-empty").node
             } else {
                 IrNode::Alt(remainder_branches, None)
             };
@@ -306,7 +309,8 @@ fn factor_literal_prefixes(
                 // Collect remainders (clone strings to avoid borrow conflict).
                 let remainders: Vec<(String, Option<FnId>)> = (i..j)
                     .map(|k| {
-                        let li = literal_infos[k].as_ref().unwrap();
+                        let li = literal_infos[k].as_ref()
+                            .expect("literal info must exist for branch in literal group");
                         let full_str = strings[li.literal_sid as usize].clone();
                         (full_str[1..].to_owned(), li.map_fn)
                     })
@@ -338,7 +342,8 @@ fn factor_literal_prefixes(
                 }
 
                 let continuation = if continuation_branches.len() == 1 {
-                    continuation_branches.into_iter().next().unwrap().node
+                    continuation_branches.into_iter().next()
+                        .expect("continuation branch set verified non-empty").node
                 } else {
                     IrNode::Alt(continuation_branches, None)
                 };

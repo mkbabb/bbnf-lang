@@ -286,7 +286,8 @@ fn strip_leading_seq(node: &IrNode) -> Option<IrNode> {
         IrNode::Seq(children) if children.len() > 1 => {
             let rest: Vec<IrNode> = children[1..].to_vec();
             if rest.len() == 1 {
-                Some(rest.into_iter().next().unwrap())
+                Some(rest.into_iter().next()
+                    .expect("stripped Seq remainder verified non-empty"))
             } else {
                 Some(IrNode::Seq(rest))
             }

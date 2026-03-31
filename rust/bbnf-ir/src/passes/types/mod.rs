@@ -122,7 +122,8 @@ pub fn infer_types(ir: &mut GrammarIR) {
             cyclic_context: is_cyclic,
             pretty_preserve: false,
         };
-        let rule_name = rule_names.get(id).unwrap();
+        let rule_name = rule_names.get(id)
+            .expect("rule ID must exist in rule_names map");
         let svs = collect_sub_variants_raw(rule_name, body, &ctx);
         if !svs.is_empty() {
             raw_sub_variants.insert(*id, svs);

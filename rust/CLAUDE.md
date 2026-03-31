@@ -43,7 +43,7 @@ cargo clippy --all-targets -- -D warnings  # Lint (CI enforces this)
   → BBNFGrammar parser (bbnf/grammar.rs)
   → AST: IndexMap<Expression, Expression> + Vec<RecoverDirective>
   → Analysis: SCC, FIRST sets, dispatch tables (bbnf/analysis/)
-  → Codegen: Rust TokenStream via syn/quote (bbnf/generate/)
+  → Codegen: monolithic Rust codegen via syn/quote (bbnf/generate/codegen/)
   → #[derive(Parser)] emits enum + parser methods (bbnf-derive/lib.rs)
        @recover directives emit Recovered<T> enum variant + .recover() wrapping
        @token directives mark rules as lexical tokens (fusion-inlined, span-eligible, variant preserved)

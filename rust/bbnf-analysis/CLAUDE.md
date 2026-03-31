@@ -10,6 +10,9 @@ bbnf-analysis/
 ├── src/
 │   ├── lib.rs          Re-exports all modules
 │   ├── analysis.rs     LineIndex, symbol lookup utilities
+│   ├── directives/
+│   │   ├── mod.rs      Re-exports
+│   │   └── hints.rs    HINT_DEFS — shared hint names + descriptions (moved from bbnf/generate/prettify/)
 │   ├── state/
 │   │   ├── mod.rs              DocumentState struct, new/update/ast methods
 │   │   ├── types.rs            RuleInfo, ReferenceInfo, SemanticTokenInfo, DocumentInfo, token_types

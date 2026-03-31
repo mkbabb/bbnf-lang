@@ -10,12 +10,14 @@ serializable via MessagePack for WASM boundary transfer.
 bbnf-ir/
 ├── Cargo.toml
 ├── src/
-│   ├── lib.rs            GrammarIR, IrNode, IrRule, RuleMeta, TypeDesc, FnDescriptor
+│   ├── lib.rs            GrammarIR, IrNode, IrRule, RuleMeta, TypeDesc, FnDescriptor (re-exports vm/)
 │   ├── charset.rs        CharSet128 — 128-bit ASCII bitset (portable, no SIMD)
 │   ├── regex_first.rs    Conservative FIRST char extraction from regex patterns
-│   ├── compiler.rs       GrammarIR → bytecode Program; compile_with_debug() for DebugBreak instrumentation
-│   ├── interpreter.rs    Bytecode VM interpreter (ParseResult, captures); rule_stack_snapshot() for debug frames
-│   ├── bytecode.rs       Opcode enum (incl. DebugBreak), Program struct, DebugState, StepMode, DebugAction, DebugSnapshot, TraceEntry
+│   ├── vm/
+│   │   ├── mod.rs        Re-exports bytecode, compiler, interpreter
+│   │   ├── bytecode.rs   Opcode enum (incl. DebugBreak), Program struct, DebugState, StepMode, DebugAction, DebugSnapshot, TraceEntry
+│   │   ├── compiler.rs   GrammarIR → bytecode Program; compile_with_debug() for DebugBreak instrumentation
+│   │   └── interpreter.rs  Bytecode VM interpreter (ParseResult, captures); rule_stack_snapshot() for debug frames
 │   └── passes/
 │       ├── mod.rs         Re-exports all passes
 │       ├── alias.rs       canonicalize_aliases — resolve A = B chains
@@ -29,6 +31,8 @@ bbnf-ir/
 │       ├── follow.rs      compute_follow_sets — FOLLOW set fixed-point iteration
 │       ├── factor_lookahead.rs  factor_regex_with_lookahead — lookahead-based regex factoring
 │       ├── dispatch.rs    generate_dispatch_tables — O(1) byte-dispatch for disjoint alts
+│       ├── fuse_token.rs  fuse_token_dispatch — inline @token bodies at dispatch call sites
+│       ├── sort.rs        sort_alt_branches — deterministic branch ordering
 │       └── types/         infer_types — IrNode → TypeDesc inference
 │           ├── mod.rs     Entry point (infer_types), orchestration
 │           ├── infer.rs   Core recursive inference (infer_node, infer_node_in_vec, infer_seq)
@@ -42,7 +46,7 @@ bbnf-ir/
 - **`GrammarIR`** — Top-level container: rules, entry point, string interning table, host function table, types, FOLLOW sets, `ws_pattern`, `b1_span_collapse`, `debug_all`, `debug_labels`.
 - **`GrammarSpan`** / **`SourceMapEntry`** — Source location tracking for debug and error reporting.
 - **`IrRule`** — Rule id + name + body (`IrNode`) + metadata (`RuleMeta`).
-- **`RuleMeta`** — FIRST set, nullable, SCC info, memo strategy, dispatch hint, span eligibility, pretty hints, recover sync, sub-variants, `force_inline`, `is_token`, `debug`.
+- **`RuleMeta`** — FIRST set, nullable, SCC info, memo strategy, dispatch hint, span eligibility, pretty hints, recover sync, sub-variants, `is_token`, `debug`.
 - **`Op::DebugBreak`** — Bytecode opcode for debug instrumentation (rule entry/exit).
 - **`DebugState`** / **`StepMode`** / **`DebugAction`** — VM debug stepping control (into, over, out, continue, breakpoint filtering).
 - **`DebugSnapshot`** / **`TraceEntry`** — Captured parse state at a debug break: rule stack, offset, input slice.
@@ -52,7 +56,7 @@ bbnf-ir/
 
 ## IR Pass Pipeline
 
-15 operations (13 unique passes) run in this exact order (must stay in sync
+18 operations (16 unique passes) run in this exact order (must stay in sync
 with `bbnf/src/pipeline.rs` and `bbnf-derive/src/lib.rs`):
 
 1. `canonicalize_aliases` — resolve alias chains to direct references (O(1) lookup)
@@ -65,11 +69,13 @@ with `bbnf/src/pipeline.rs` and `bbnf-derive/src/lib.rs`):
 8. `merge_literals` — fuse adjacent literals in sequences (with string deduplication)
 9. `merge_regex_alts` — combine regex/literal alternation branches into one pattern (mixed literal+regex fusion)
 10. `factor_common_prefixes` — left-factor shared prefixes in alternations
-11. `refine_span_eligibility` — propagate span eligibility through rule graph
-12. `compute_follow_sets` — FOLLOW set fixed-point iteration (with Repeat inner Seq propagation, regex FIRST sets)
-13. `factor_regex_with_lookahead` — factor Alt branches with overlapping regex FIRST sets but disjoint continuation FIRST sets
-14. `generate_dispatch_tables` — build O(1) byte-dispatch for disjoint alternations (regex FIRST sets via `regex_first` module)
-15. `infer_types` — populate `GrammarIR::types` with `TypeDesc` for each rule; `infer_node_in_vec` sub-pass handles Vec context inference
+11. `sort_alt_branches` — sort alternation branches for deterministic codegen
+12. `refine_span_eligibility` — propagate span eligibility through rule graph
+13. `compute_follow_sets` — FOLLOW set fixed-point iteration (with Repeat inner Seq propagation, regex FIRST sets)
+14. `factor_regex_with_lookahead` — factor Alt branches with overlapping regex FIRST sets but disjoint continuation FIRST sets
+15. `fuse_token_dispatch` — fuse `@token`-marked rules at dispatch call sites (inline body, preserve variant)
+16. `generate_dispatch_tables` — build O(1) byte-dispatch for disjoint alternations (regex FIRST sets via `regex_first` module)
+17. `infer_types` — populate `GrammarIR::types` with `TypeDesc` for each rule; `infer_node_in_vec` sub-pass handles Vec context inference
 
 ## Serialization
 

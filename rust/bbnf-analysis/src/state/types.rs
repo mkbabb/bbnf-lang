@@ -66,14 +66,6 @@ pub struct RecoverInfo {
     pub sync_expr_text: String,
 }
 
-/// Owned representation of an `@inline` directive.
-#[derive(Debug, Clone)]
-pub struct InlineInfo {
-    pub rule_name: String,
-    pub span: (usize, usize),
-    pub rule_name_span: (usize, usize),
-}
-
 /// Owned representation of a `@debug` directive.
 #[derive(Debug, Clone)]
 pub struct DebugInfo {
@@ -113,8 +105,6 @@ pub struct IrRuleMeta {
     pub has_sp_method: bool,
     /// Inferred output type (formatted for display).
     pub inferred_type: Option<String>,
-    /// Whether this rule was force-inlined.
-    pub force_inline: bool,
     /// Whether this rule is a transparent alternation.
     pub is_transparent: bool,
 }
@@ -140,8 +130,6 @@ pub struct DocumentInfo {
     pub recovers: Vec<RecoverInfo>,
     /// Pretty directives parsed from the document.
     pub pretties: Vec<PrettyInfo>,
-    /// Inline directives parsed from the document.
-    pub inlines: Vec<InlineInfo>,
     /// Debug directives parsed from the document.
     pub debugs: Vec<DebugInfo>,
     /// Token directives parsed from the document.

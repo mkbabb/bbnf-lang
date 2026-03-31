@@ -349,11 +349,6 @@ pub struct RuleMeta {
     /// Error recovery sync expression.
     pub recover: Option<IrNode>,
 
-    /// Whether `@inline` is set for this rule. Force-inlined rules have their
-    /// body substituted at every call site — no enum variant, no function.
-    #[serde(default)]
-    pub force_inline: bool,
-
     /// Whether `@debug` is set for this rule. Instrumented rules emit
     /// trace output (compiled paths) or `DebugBreak` opcodes (VM path).
     #[serde(default)]

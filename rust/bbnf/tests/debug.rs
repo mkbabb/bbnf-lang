@@ -35,11 +35,10 @@ fn parse_debug_multiple_rules() {
 
 #[test]
 fn parse_debug_with_other_directives() {
-    let source = "@debug value ;\n@inline helper ;\nhelper = \"x\" ;\nvalue = helper ;";
+    let source = "@debug value ;\nhelper = \"x\" ;\nvalue = helper ;";
     let parser = BBNFGrammar::grammar_with_imports();
     let result = parser.parse(source).unwrap();
     assert_eq!(result.debug_rules.len(), 1);
-    assert_eq!(result.inline_rules.len(), 1);
 }
 
 // ── Pipeline: @debug → RuleMeta.debug ────────────────────────────────────────

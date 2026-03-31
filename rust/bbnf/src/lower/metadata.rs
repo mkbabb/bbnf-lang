@@ -1,10 +1,7 @@
 //! Metadata lowering: recover directives, pretty hints.
 
-use std::collections::HashMap;
+use bbnf_ir::{CharSet128, MemoStrategy, PrettyHints, RuleMeta};
 
-use bbnf_ir::{CharSet128, DispatchHint, MemoStrategy, PrettyHints, RuleMeta};
-
-use crate::analysis::DispatchTable;
 use crate::generate::prettify::hints;
 use crate::types::{Expression, Token};
 
@@ -21,7 +18,6 @@ pub(crate) fn build_rule_meta<'a>(
     lhs: &'a Expression<'a>,
     name: &str,
     ctx: &mut LowerCtx<'a>,
-    dispatch_tables: &HashMap<String, DispatchTable>,
 ) -> RuleMeta {
     // FIRST set.
     let first_set = ctx
@@ -45,10 +41,8 @@ pub(crate) fn build_rule_meta<'a>(
         MemoStrategy::None
     };
 
-    // Dispatch hint.
-    let dispatch = dispatch_tables.get(name).map(|dt| DispatchHint::ByteTable {
-        table: dt.table.to_vec(),
-    });
+    // Dispatch hint — populated later by the IR `generate_dispatch_tables` pass.
+    let dispatch = None;
 
     // Span eligibility.
     let span_eligible = ctx.span_eligible_rules.contains(name);
@@ -79,14 +73,7 @@ pub(crate) fn build_rule_meta<'a>(
         node
     });
 
-    // Force-inline.
-    let force_inline = ctx
-        .inline_rules
-        .is_some_and(|set| set.contains(name));
-
     // Token rule: implies span_eligible (returns Span even in arena context).
-    // Does NOT imply force_inline — that would eliminate the enum variant,
-    // which breaks @pretty directives that reference the rule by name.
     let is_token = ctx
         .token_rules
         .is_some_and(|set| set.contains(name));
@@ -104,7 +91,6 @@ pub(crate) fn build_rule_meta<'a>(
         is_transparent,
         pretty,
         recover,
-        force_inline,
         is_token,
         debug: false, // Set by caller from @debug directives.
         has_sp_method: false, // Computed by compute_sp_method_rules pass.

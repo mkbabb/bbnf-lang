@@ -42,7 +42,7 @@ bbnf-analysis/
 - **LineIndex** — pre-computed line starts for O(log n) offset↔position conversion.
 - **IrRuleMeta** — per-rule metadata from `try_compile_ir()`: FOLLOW sets, dispatch table presence, memo strategy, span eligibility, inferred type.
 - **ImportedItem** — imported rule with source path, used for hover enrichment on `@import` names.
-- **InlineInfo** / **DebugInfo** / **WsPatternInfo** — directive-specific metadata for hover and semantic tokens.
+- **DebugInfo** / **WsPatternInfo** — directive-specific metadata for hover and semantic tokens.
 
 ## Dependencies
 

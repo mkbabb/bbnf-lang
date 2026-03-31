@@ -15,8 +15,6 @@ enum TopLevelItem<'a> {
     Pretty(PrettyDirective<'a>),
     /// `@ws /regex/ ;` — custom whitespace pattern for `?w`.
     WsPattern(Cow<'a, str>),
-    /// `@inline ruleName ;` — force-inline a rule at all call sites.
-    Inline(Cow<'a, str>),
     /// `@debug ruleName ;` or `@debug * ;` — instrument a rule for debugging.
     Debug(Cow<'a, str>),
     /// `@token ruleName ;` — mark a rule as a lexical token.
@@ -537,15 +535,6 @@ impl<'a> BBNFGrammar<'a> {
             })
     }
 
-    /// Parse an `@inline ruleName ;` directive — force-inline a rule at all call sites.
-    fn inline_directive() -> Parser<'a, Cow<'a, str>> {
-        string("@inline")
-            .trim_whitespace()
-            .next(Self::identifier().trim_whitespace())
-            .skip(any_span(&[";", "."]).opt().trim_whitespace())
-            .map(|name_span| Cow::Borrowed(name_span.as_str()))
-    }
-
     /// Parse a `@debug ruleName ;` or `@debug * ;` directive — instrument rules for debugging.
     fn debug_directive() -> Parser<'a, Cow<'a, str>> {
         string("@debug")
@@ -652,9 +641,6 @@ impl<'a> BBNFGrammar<'a> {
         let ws_pat = Self::skip_comments()
             .next(Self::ws_directive().trim_whitespace())
             .map(TopLevelItem::WsPattern);
-        let inline_dir = Self::skip_comments()
-            .next(Self::inline_directive().trim_whitespace())
-            .map(TopLevelItem::Inline);
         let debug_dir = Self::skip_comments()
             .next(Self::debug_directive().trim_whitespace())
             .map(TopLevelItem::Debug);
@@ -665,14 +651,13 @@ impl<'a> BBNFGrammar<'a> {
             .next(Self::production_rule().trim_whitespace())
             .map(TopLevelItem::Rule);
 
-        let item = import | recover | pretty | ws_pat | inline_dir | debug_dir | token_dir | rule;
+        let item = import | recover | pretty | ws_pat | debug_dir | token_dir | rule;
 
         Self::skip_comments().next(item.many(..)).map(|items| {
             let mut imports = Vec::new();
             let mut recovers = Vec::new();
             let mut pretties = Vec::new();
             let mut ws_pattern = None;
-            let mut inline_rules = Vec::new();
             let mut debug_rules = Vec::new();
             let mut token_rules = Vec::new();
             let mut rules_vec = Vec::new();
@@ -682,7 +667,6 @@ impl<'a> BBNFGrammar<'a> {
                     TopLevelItem::Recover(rec) => recovers.push(rec),
                     TopLevelItem::Pretty(p) => pretties.push(p),
                     TopLevelItem::WsPattern(pat) => ws_pattern = Some(pat),
-                    TopLevelItem::Inline(name) => inline_rules.push(name),
                     TopLevelItem::Debug(name) => debug_rules.push(name),
                     TopLevelItem::Token(name) => token_rules.push(name),
                     TopLevelItem::Rule(r) => rules_vec.push(r),
@@ -701,7 +685,6 @@ impl<'a> BBNFGrammar<'a> {
                 pretties,
                 rules: ast,
                 ws_pattern,
-                inline_rules,
                 debug_rules,
                 token_rules,
             }

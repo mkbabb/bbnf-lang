@@ -211,7 +211,6 @@ number = /-?\d+/ ;
         None,
         None,
         None,
-        None,
         false,
     );
 
@@ -267,11 +266,8 @@ number = /-?\d+/ ;
     bbnf_ir::passes::generate_dispatch_tables(&mut ir);
     assert!(test_parse(&ir, "10-generate_dispatch_tables"), "generate_dispatch_tables broke it");
 
-    bbnf_ir::passes::refine_memo_strategies(&mut ir);
-    assert!(test_parse(&ir, "11-refine_memo_strategies"), "refine_memo_strategies broke it");
-
     bbnf_ir::passes::infer_types(&mut ir);
-    assert!(test_parse(&ir, "12-infer_types"), "infer_types broke it");
+    assert!(test_parse(&ir, "11-infer_types"), "infer_types broke it");
 }
 
 #[test]

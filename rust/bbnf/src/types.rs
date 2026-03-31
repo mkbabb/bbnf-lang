@@ -151,8 +151,6 @@ pub struct ParsedGrammar<'a> {
     /// Custom whitespace pattern from `@ws /regex/ ;` directive.
     /// When set, `?w` compiles to this regex instead of the default `\s*` trim.
     pub ws_pattern: Option<Cow<'a, str>>,
-    /// Rules to force-inline from `@inline ruleName ;` directives.
-    pub inline_rules: Vec<Cow<'a, str>>,
     /// Rules to instrument for debugging from `@debug ruleName ;` directives.
     /// `"*"` means all rules.
     pub debug_rules: Vec<Cow<'a, str>>,

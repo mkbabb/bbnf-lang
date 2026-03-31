@@ -58,7 +58,6 @@ pub fn analyze_from_cache(
             recovers: Vec::new(),
 
             pretties: Vec::new(),
-            inlines: Vec::new(),
             debugs: Vec::new(),
             tokens: Vec::new(),
             ws_pattern: None,
@@ -94,7 +93,6 @@ pub fn analyze_from_cache(
             recovers: Vec::new(),
 
             pretties: Vec::new(),
-            inlines: Vec::new(),
             debugs: Vec::new(),
             tokens: Vec::new(),
             ws_pattern: None,
@@ -121,7 +119,6 @@ pub fn analyze_from_cache(
     let import_infos = parsed.imports.clone();
     let recover_infos = parsed.recovers.clone();
     let pretty_infos = parsed.pretties.clone();
-    let inline_infos = parsed.inlines.clone();
     let debug_infos = parsed.debugs.clone();
     let token_infos = parsed.tokens.clone();
     let ws_pattern_info = parsed.ws_pattern.clone();
@@ -148,7 +145,6 @@ pub fn analyze_from_cache(
             imports: import_infos,
             recovers: recover_infos,
             pretties: Vec::new(),
-            inlines: Vec::new(),
             debugs: Vec::new(),
             tokens: Vec::new(),
             ws_pattern: None,
@@ -258,9 +254,6 @@ pub fn analyze_from_cache(
     }
     for p in &pretty_infos {
         referenced_names.insert(&p.rule_name);
-    }
-    for inl in &inline_infos {
-        referenced_names.insert(&inl.rule_name);
     }
     for tok in &token_infos {
         referenced_names.insert(&tok.rule_name);
@@ -524,40 +517,6 @@ pub fn analyze_from_cache(
         }
     }
 
-    // @inline directive validation and semantic tokens.
-    for inl in &inline_infos {
-        // Semantic token: KEYWORD for "@inline" (7 chars).
-        semantic_tokens.push(SemanticTokenInfo {
-            span: (inl.span.0, inl.span.0 + 7),
-            token_type: token_types::KEYWORD,
-        });
-
-        // Semantic token: RULE_REFERENCE for the rule name.
-        semantic_tokens.push(SemanticTokenInfo {
-            span: inl.rule_name_span,
-            token_type: token_types::RULE_REFERENCE,
-        });
-
-        // Mark the rule name as referenced (for unused rule detection).
-        referenced_names.insert(&inl.rule_name);
-
-        // Validate: warn if the target rule doesn't exist.
-        if !defined.contains_key(inl.rule_name.as_str())
-            && !imported_names.contains(inl.rule_name.as_str())
-        {
-            diagnostics.push(Diagnostic {
-                range: line_index.span_to_range(inl.rule_name_span.0, inl.rule_name_span.1),
-                severity: Some(DiagnosticSeverity::WARNING),
-                source: Some("bbnf".into()),
-                message: format!(
-                    "`@inline` targets undefined rule: `{}`",
-                    inl.rule_name
-                ),
-                ..Default::default()
-            });
-        }
-    }
-
     // @debug directive validation and semantic tokens.
     for dbg in &debug_infos {
         // Semantic token: KEYWORD for "@debug" (6 chars).
@@ -659,7 +618,6 @@ pub fn analyze_from_cache(
         imports: import_infos,
         recovers: recover_infos,
         pretties: pretty_infos,
-        inlines: inline_infos,
         debugs: debug_infos,
         tokens: token_infos,
         ws_pattern: ws_pattern_info,
@@ -694,13 +652,6 @@ fn try_compile_ir(
         .map(|p| (p.rule_name.clone(), p.hints.clone()))
         .collect();
 
-    let inline_set: HashSet<String> = cached
-        .inlines
-        .iter()
-        .map(|inl| inl.rule_name.clone())
-        .collect();
-    let inline_ref = if inline_set.is_empty() { None } else { Some(&inline_set) };
-
     let token_set: HashSet<String> = cached
         .tokens
         .iter()
@@ -729,7 +680,6 @@ fn try_compile_ir(
         &pretty_map,
         &options,
         ws_pattern,
-        inline_ref,
         token_ref,
         debug_ref,
         debug_all,
@@ -762,7 +712,6 @@ fn try_compile_ir(
             span_eligible: rule.meta.span_eligible,
             has_sp_method: rule.meta.has_sp_method,
             inferred_type,
-            force_inline: rule.meta.force_inline,
             is_transparent: rule.meta.is_transparent,
         });
     }

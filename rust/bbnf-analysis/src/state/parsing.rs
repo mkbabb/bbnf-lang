@@ -5,7 +5,7 @@ use self_cell::self_cell;
 
 use super::pretty::{self, PrettyInfo};
 use super::types::{
-    DebugInfo, ImportInfo, ImportedItem, InlineInfo, ParseDiagnostics, RecoverInfo, TokenInfo, WsPatternInfo,
+    DebugInfo, ImportInfo, ImportedItem, ParseDiagnostics, RecoverInfo, TokenInfo, WsPatternInfo,
 };
 
 // Self-referential struct: owns the source text and the parsed AST that borrows from it.
@@ -25,7 +25,6 @@ pub struct CachedParseResult<'a> {
     pub imports: Vec<ImportInfo>,
     pub recovers: Vec<RecoverInfo>,
     pub pretties: Vec<PrettyInfo>,
-    pub inlines: Vec<InlineInfo>,
     pub debugs: Vec<DebugInfo>,
     pub tokens: Vec<TokenInfo>,
     pub ws_pattern: Option<WsPatternInfo>,
@@ -78,22 +77,6 @@ pub fn parse_once(src: &str) -> (Option<CachedParseResult<'_>>, ParseDiagnostics
                 }).collect();
                 let pretties = pretty::extract_pretties(&pg.pretties, src);
 
-                // Extract @inline directives — find byte spans by searching source text.
-                let inlines = pg.inline_rules.iter().filter_map(|name| {
-                    let name_str = name.as_ref();
-                    let needle = format!("@inline {}", name_str);
-                    let dir_start = src.find(&needle)?;
-                    let kw_end = dir_start + needle.len();
-                    // Directive span: from "@inline" to the next ";".
-                    let dir_end = src[kw_end..].find(';').map(|off| kw_end + off + 1).unwrap_or(kw_end);
-                    let name_start = dir_start + "@inline ".len();
-                    Some(InlineInfo {
-                        rule_name: name_str.to_string(),
-                        span: (dir_start, dir_end),
-                        rule_name_span: (name_start, name_start + name_str.len()),
-                    })
-                }).collect();
-
                 // Extract @debug directives — find byte spans by searching source text.
                 let debugs = pg.debug_rules.iter().filter_map(|name| {
                     let name_str = name.as_ref();
@@ -140,7 +123,6 @@ pub fn parse_once(src: &str) -> (Option<CachedParseResult<'_>>, ParseDiagnostics
                     imports,
                     recovers,
                     pretties,
-                    inlines,
                     debugs,
                     tokens,
                     ws_pattern,

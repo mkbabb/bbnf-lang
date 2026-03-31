@@ -21,7 +21,6 @@ fn lower_grammar(source: &str) -> GrammarIR {
     let aliases = find_aliases(&ast, &scc_result.cyclic_rules);
     let transparent_rules = find_transparent_alternations(&ast, &scc_result.cyclic_rules);
     let span_eligible_rules = find_span_eligible_rules(&ast, &scc_result.cyclic_rules);
-    let dispatch_tables = HashMap::new();
 
     lower_to_ir(
         &ast,
@@ -31,8 +30,6 @@ fn lower_grammar(source: &str) -> GrammarIR {
         &transparent_rules,
         &span_eligible_rules,
         None,
-        None,
-        &dispatch_tables,
         None,
         None,
         None,
@@ -249,7 +246,6 @@ fn lower_with_pretty_hints() {
         let aliases = find_aliases(&ast, &scc_result.cyclic_rules);
         let transparent_rules = find_transparent_alternations(&ast, &scc_result.cyclic_rules);
         let span_eligible_rules = find_span_eligible_rules(&ast, &scc_result.cyclic_rules);
-        let dispatch_tables = HashMap::new();
 
         let mut pretties = HashMap::new();
         pretties.insert(
@@ -270,8 +266,6 @@ fn lower_with_pretty_hints() {
             &span_eligible_rules,
             None,
             Some(&pretties),
-            &dispatch_tables,
-            None,
             None,
             None,
             None,

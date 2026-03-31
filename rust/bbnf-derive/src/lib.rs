@@ -276,7 +276,6 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     // selective import resolution. Otherwise fall back to simple fold.
     let mut recover_map: HashMap<String, Expression<'static>> = HashMap::new();
     let mut pretty_map: HashMap<String, Vec<String>> = HashMap::new();
-    let mut inline_set: HashSet<String> = HashSet::new();
     let mut token_set: HashSet<String> = HashSet::new();
     let mut debug_set: HashSet<String> = HashSet::new();
     let mut debug_all = parser_container_attrs.debug;
@@ -308,10 +307,6 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
             // Extract @ws directive.
             if let Some(ref pat) = pg.ws_pattern {
                 ws_pattern = Some(pat.to_string());
-            }
-            // Extract @inline directives.
-            for name in &pg.inline_rules {
-                inline_set.insert(name.to_string());
             }
             // Extract @token directives.
             for name in &pg.token_rules {
@@ -451,11 +446,6 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     } else {
         Some(&pretty_map)
     };
-    let inline_ref = if inline_set.is_empty() {
-        None
-    } else {
-        Some(&inline_set)
-    };
     let token_ref = if token_set.is_empty() {
         None
     } else {
@@ -469,7 +459,6 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
 
     // ── IR Lowering ──────────────────────────────────────────────────────────
     // Lower the parsed + analysed grammar to the canonical GrammarIR.
-    let dispatch_tables_for_ir = std::collections::HashMap::new();
     let mut grammar_ir = lower_to_ir(
         &ast,
         &first_sets,
@@ -479,9 +468,7 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
         &span_eligible_rules,
         recovers_ref,
         pretties_ref,
-        &dispatch_tables_for_ir,
         ws_pattern.as_deref(),
-        inline_ref,
         token_ref,
         debug_ref,
         debug_all,
@@ -491,7 +478,6 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     bbnf_ir::passes::canonicalize_aliases(&mut grammar_ir);
     bbnf_ir::passes::prune_unreachable(&mut grammar_ir);
     bbnf_ir::passes::inline_acyclic(&mut grammar_ir);
-    bbnf_ir::passes::force_inline(&mut grammar_ir);
     bbnf_ir::passes::prune_unreachable(&mut grammar_ir);
     bbnf_ir::passes::fuse_single_use(&mut grammar_ir);
     bbnf_ir::passes::prune_unreachable(&mut grammar_ir);
@@ -505,7 +491,6 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     bbnf_ir::passes::factor_regex_with_lookahead(&mut grammar_ir);
     bbnf_ir::passes::fuse_token_dispatch(&mut grammar_ir);
     bbnf_ir::passes::generate_dispatch_tables(&mut grammar_ir);
-    bbnf_ir::passes::refine_memo_strategies(&mut grammar_ir);
     // NOTE: infer_types is called inside generate_all() AFTER sp_method_rules
     // computation, so that type inference uses the correct has_sp_method flags.
 

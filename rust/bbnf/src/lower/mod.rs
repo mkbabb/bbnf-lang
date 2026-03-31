@@ -12,7 +12,7 @@ use std::collections::{HashMap, HashSet};
 
 use bbnf_ir::{GrammarIR, IrRule, RuleId};
 
-use crate::analysis::{DispatchTable, FirstSets, SccResult};
+use crate::analysis::{FirstSets, SccResult};
 use crate::types::{Expression, Token, AST};
 
 use expression::{lower_expression, unwrap_rule};
@@ -41,7 +41,6 @@ pub(crate) struct LowerCtx<'a> {
     /// Directives.
     pub(crate) recovers: Option<&'a HashMap<String, Expression<'a>>>,
     pub(crate) pretties: Option<&'a HashMap<String, Vec<String>>>,
-    pub(crate) inline_rules: Option<&'a HashSet<String>>,
     pub(crate) token_rules: Option<&'a HashSet<String>>,
     pub(crate) debug_rules: Option<&'a HashSet<String>>,
     pub(crate) debug_all: bool,
@@ -66,7 +65,6 @@ pub(crate) struct LowerCtx<'a> {
 /// * `span_eligible_rules` -- Span-eligible rule names.
 /// * `recovers` -- `@recover` directive map (rule_name -> sync expression).
 /// * `pretties` -- `@pretty` directive map (rule_name -> hint strings).
-/// * `dispatch_tables` -- Pre-built dispatch tables for alternation rules.
 #[allow(clippy::too_many_arguments)]
 pub fn lower_to_ir<'a>(
     ast: &'a AST<'a>,
@@ -77,9 +75,7 @@ pub fn lower_to_ir<'a>(
     span_eligible_rules: &'a HashSet<String>,
     recovers: Option<&'a HashMap<String, Expression<'a>>>,
     pretties: Option<&'a HashMap<String, Vec<String>>>,
-    dispatch_tables: &'a HashMap<String, DispatchTable>,
     ws_pattern: Option<&str>,
-    inline_rules: Option<&'a HashSet<String>>,
     token_rules: Option<&'a HashSet<String>>,
     debug_rules: Option<&'a HashSet<String>>,
     debug_all: bool,
@@ -96,7 +92,6 @@ pub fn lower_to_ir<'a>(
         cyclic_rules: &scc_result.cyclic_rules,
         recovers,
         pretties,
-        inline_rules,
         token_rules,
         debug_rules,
         debug_all,
@@ -154,7 +149,7 @@ pub fn lower_to_ir<'a>(
     // Phase 3: Build metadata (recovery expressions can now intern strings too).
     let mut rules = Vec::with_capacity(rule_bodies.len());
     for (rule_id, name_id, body, name, lhs, source_span) in rule_bodies {
-        let mut meta = build_rule_meta(lhs, name, &mut ctx, dispatch_tables);
+        let mut meta = build_rule_meta(lhs, name, &mut ctx);
 
         // Set debug flag from @debug directive.
         meta.debug = ctx.debug_all

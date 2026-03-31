@@ -53,12 +53,6 @@ pub fn compile_grammar(source: &str, options: &PipelineOptions) -> Result<Gramma
     }
 
     let ws_pat = parsed.ws_pattern;
-    let mut inline_set: HashSet<String> = HashSet::new();
-    for name in &parsed.inline_rules {
-        inline_set.insert(name.to_string());
-    }
-    let inline_ref = if inline_set.is_empty() { None } else { Some(&inline_set) };
-
     let mut token_set: HashSet<String> = HashSet::new();
     for name in &parsed.token_rules {
         token_set.insert(name.to_string());
@@ -83,7 +77,6 @@ pub fn compile_grammar(source: &str, options: &PipelineOptions) -> Result<Gramma
         &pretty_map,
         options,
         ws_pat.as_deref(),
-        inline_ref,
         token_ref,
         debug_ref,
         debug_all,
@@ -99,7 +92,6 @@ pub fn compile_ast<'a>(
     pretty_map: &HashMap<String, Vec<String>>,
     options: &PipelineOptions,
     ws_pattern: Option<&str>,
-    inline_rules: Option<&HashSet<String>>,
     token_rules: Option<&HashSet<String>>,
     debug_rules: Option<&HashSet<String>>,
     debug_all: bool,
@@ -167,9 +159,6 @@ pub fn compile_ast<'a>(
     } else {
         Some(pretty_map)
     };
-    // Dispatch tables (empty for now — IR passes generate these).
-    let dispatch_tables = HashMap::new();
-
     // Lower to IR.
     let mut ir = lower_to_ir(
         &ast,
@@ -180,9 +169,7 @@ pub fn compile_ast<'a>(
         &span_eligible_rules,
         recovers_ref,
         pretties_ref,
-        &dispatch_tables,
         ws_pattern,
-        inline_rules,
         token_rules,
         debug_rules,
         debug_all,
@@ -199,8 +186,6 @@ pub fn compile_ast<'a>(
     bbnf_ir::passes::canonicalize_aliases(&mut ir);
     bbnf_ir::passes::prune_unreachable(&mut ir);
     bbnf_ir::passes::inline_acyclic(&mut ir);
-    // Force-inline @inline rules at all call sites.
-    bbnf_ir::passes::force_inline(&mut ir);
     // Second prune: inlined rules may now be unreachable.
     bbnf_ir::passes::prune_unreachable(&mut ir);
     // Fuse single-use rules into their call sites for better dispatch coverage.
@@ -228,9 +213,6 @@ pub fn compile_ast<'a>(
 
     // Dispatch tables use FOLLOW sets for nullable branch optimization.
     bbnf_ir::passes::generate_dispatch_tables(&mut ir);
-
-    // Memo strategies use FOLLOW set cardinality as a signal.
-    bbnf_ir::passes::refine_memo_strategies(&mut ir);
 
     // Type inference (populates GrammarIR::types for codegen backends).
     bbnf_ir::passes::infer_types(&mut ir);

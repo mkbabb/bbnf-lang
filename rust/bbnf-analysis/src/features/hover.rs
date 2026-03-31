@@ -21,9 +21,6 @@ pub fn hover(state: &DocumentState, position: Position) -> Option<Hover> {
     if let Some(hover) = hover_pretty(state, offset) {
         return Some(hover);
     }
-    if let Some(hover) = hover_inline(state, offset) {
-        return Some(hover);
-    }
     if let Some(hover) = hover_debug(state, offset) {
         return Some(hover);
     }
@@ -333,51 +330,6 @@ fn hover_pretty(state: &DocumentState, offset: usize) -> Option<Hover> {
                 }),
                 range: Some(state.line_index.span_to_range(rs, re)),
             });
-        }
-    }
-    None
-}
-
-/// Check if the cursor is over the @inline keyword or its rule name.
-fn hover_inline(state: &DocumentState, offset: usize) -> Option<Hover> {
-    for inl in &state.info.inlines {
-        // Check keyword span: "@inline" is 7 chars.
-        let kw_end = inl.span.0 + 7;
-        if offset >= inl.span.0 && offset <= kw_end {
-            let rule_def = state
-                .info
-                .rule_index
-                .get(&inl.rule_name)
-                .map(|&i| &state.info.rules[i]);
-
-            let mut content = format!(
-                "### `@inline` — Force Inline\n\n\
-                 Force-inlines `{}` at every call site. No enum variant or function generated.\n\n\
-                 The rule body is substituted directly at each `Ref` to this rule, \
-                 eliminating combinator overhead and the intermediate type.\n",
-                inl.rule_name
-            );
-
-            if let Some(def) = rule_def {
-                content.push_str(&format!(
-                    "\n---\n```bbnf\n{} = {}\n```",
-                    def.name, def.rhs_text
-                ));
-            }
-
-            return Some(Hover {
-                contents: HoverContents::Markup(MarkupContent {
-                    kind: MarkupKind::Markdown,
-                    value: content,
-                }),
-                range: Some(state.line_index.span_to_range(inl.span.0, kw_end)),
-            });
-        }
-
-        // Check rule name span.
-        if offset >= inl.rule_name_span.0 && offset <= inl.rule_name_span.1 {
-            // Delegate to symbol_at_offset for the rule definition hover.
-            continue;
         }
     }
     None

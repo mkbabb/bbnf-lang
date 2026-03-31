@@ -32,7 +32,7 @@ pub fn generate_monolithic_arena(
 
     // Pre-compute fusion eligibility: non-cyclic, no @recover, no @pretty.
     // @token rules are always fusion-eligible — body inlined at call sites, but the enum
-    // variant is preserved (unlike force_inline which eliminates the variant entirely).
+    // variant is preserved.
     // This allows @token to coexist with @pretty: the parsing body is flat inline code,
     // but to_doc() match arms can still reference the variant by name.
     //

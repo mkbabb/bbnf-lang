@@ -1,12 +1,7 @@
-//! Prettify code generation utilities.
+//! Prettify shared utilities.
 //!
-//! Provides shared helpers (`hints`, `heuristics`, `prettify_utils`, `source_range`,
-//! `to_doc`) consumed by the IR-based prettify generator (`ir_pretty.rs`).
-
-pub(crate) mod prettify_utils;
-pub use prettify_utils::*;
+//! `hints` — shared hint definitions (used by codegen + LSP).
+//! `heuristics` — auto-infer @pretty hints from rule shape.
 
 pub mod heuristics;
 pub mod hints;
-pub(crate) mod source_range;
-pub(crate) mod to_doc;

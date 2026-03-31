@@ -12,7 +12,6 @@ pub mod regex_classify;
 pub mod regex_emit;
 pub mod ir_codegen;
 pub mod ir_enums;
-pub mod ir_pretty;
 pub mod ir_span;
 pub mod ir_types;
 
@@ -33,8 +32,8 @@ pub fn generate_all(
     ident: &syn::Ident,
 ) -> proc_macro2::TokenStream {
     // When prettify is not enabled, clear @pretty metadata so that
-    // no_collapse is not applied for @pretty rules — this allows span
-    // compression in Seq codegen, which is critical for throughput.
+    // pretty_preserve is not applied — this allows span compression
+    // in Seq codegen, which is critical for throughput.
     if !parser_attrs.prettify {
         for rule in &mut ir.rules {
             rule.meta.pretty = None;
@@ -65,12 +64,7 @@ pub fn generate_all(
     let grammar_enum = ir_enums::generate_enum(&ctx);
     let parser_methods = generate_ir_parser_methods(ir, &ctx);
 
-    // Generate prettify (to_doc + source_range) if enabled.
-    let prettify_impl = if parser_attrs.prettify {
-        ir_pretty::generate_prettify_ir(&ctx)
-    } else {
-        quote! {}
-    };
+    let prettify_impl = quote! {};
 
     let (arena_enum, arena_helper, arena_methods, arena_prettify, arena_recovered) = if parser_attrs
         .arena
@@ -119,11 +113,7 @@ pub fn generate_all(
                     }
                 },
                 ir_codegen::monolithic::generate_monolithic_arena(ir, &arena_ctx),
-                if parser_attrs.prettify {
-                    ir_pretty::generate_prettify_ir(&arena_ctx)
-                } else {
-                    quote! {}
-                },
+                quote! {},
                 recovered_static,
             )
         };
@@ -136,6 +126,14 @@ pub fn generate_all(
     // Zero allocations. Requires no custom Map functions in grammar.
     let span_methods = if parser_attrs.span {
         ir_codegen::monolithic::span::generate_monolithic_span(ir, &ctx)
+    } else {
+        quote! {}
+    };
+
+    // Fused parse+format: emit fn __rule_prettify(state, builder) -> bool.
+    // Constructs FmtOp instructions during parsing — no intermediate AST.
+    let prettify_methods = if parser_attrs.prettify {
+        ir_codegen::monolithic::prettify::generate_monolithic_prettify(ir, &ctx)
     } else {
         quote! {}
     };
@@ -154,6 +152,7 @@ pub fn generate_all(
             #parser_methods
             #arena_methods
             #span_methods
+            #prettify_methods
         }
 
         #prettify_impl
@@ -184,11 +183,6 @@ fn generate_ir_parser_methods(
         } else {
             None
         };
-
-        // Set no_collapse for @no_collapse rules only.  @pretty rules use
-        // pretty_preserve in infer_types for all-Span tuple preservation;
-        // consecutive-Span compression must still happen to match infer_types.
-        ctx.no_collapse.set(rule.meta.no_collapse);
 
         let mut parser = ir_codegen::emit_rule_body_inline(
             &rule.body,

@@ -2,8 +2,7 @@
 use bbnf::pipeline::{compile_grammar, PipelineOptions};
 use bbnf::{calculate_ast_deps, Expression};
 use bbnf::analysis::{
-    compute_first_sets, find_aliases, find_span_eligible_rules, find_transparent_alternations,
-    tarjan_scc, topological_sort_scc,
+    compute_first_sets, tarjan_scc, topological_sort_scc,
 };
 use bbnf::grammar::BBNFGrammar;
 use bbnf::lower::{DirectiveSet, lower_to_ir};
@@ -186,9 +185,6 @@ number = /-?\d+/ ;
     let scc_result = tarjan_scc(&deps);
     let ast = topological_sort_scc(&ast, &scc_result, &deps);
     let first_sets = compute_first_sets(&ast, &deps, &scc_result);
-    let aliases = find_aliases(&ast, &scc_result.cyclic_rules);
-    let transparent = find_transparent_alternations(&ast, &scc_result.cyclic_rules);
-    let span_eligible = find_span_eligible_rules(&ast, &scc_result.cyclic_rules);
 
     let entry_rule_name: Option<String> = ast.keys().last().and_then(|lhs| {
         if let Expression::Nonterminal(tok) = lhs {
@@ -204,11 +200,12 @@ number = /-?\d+/ ;
         &ast,
         &first_sets,
         &scc_result,
-        &aliases,
-        &transparent,
-        &span_eligible,
         &directives,
     );
+
+    // Run IR metadata passes first (alias + transparent detection).
+    bbnf_ir::passes::compute_aliases(&mut ir);
+    bbnf_ir::passes::compute_transparent(&mut ir);
 
     if let Some(ref name) = entry_rule_name {
         if let Some(rule) = ir.find_rule(name) {

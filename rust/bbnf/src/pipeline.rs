@@ -8,8 +8,7 @@ use std::collections::{HashMap, HashSet};
 use bbnf_ir::GrammarIR;
 
 use crate::analysis::{
-    compute_first_sets, find_aliases, find_span_eligible_rules, find_transparent_alternations,
-    tarjan_scc, topological_sort_scc,
+    compute_first_sets, tarjan_scc, topological_sort_scc,
 };
 use crate::grammar::BBNFGrammar;
 use crate::lower::{DirectiveSet, lower_to_ir};
@@ -142,19 +141,11 @@ pub fn compile_ast<'a>(
     // FIRST set computation.
     let first_sets = compute_first_sets(&ast, &deps, &scc_result);
 
-    // Alias, transparent, and span-eligible detection.
-    let aliases = find_aliases(&ast, &scc_result.cyclic_rules);
-    let transparent_rules = find_transparent_alternations(&ast, &scc_result.cyclic_rules);
-    let span_eligible_rules = find_span_eligible_rules(&ast, &scc_result.cyclic_rules);
-
     // Lower to IR.
     let mut ir = lower_to_ir(
         &ast,
         &first_sets,
         &scc_result,
-        &aliases,
-        &transparent_rules,
-        &span_eligible_rules,
         directives,
     );
 
@@ -164,6 +155,10 @@ pub fn compile_ast<'a>(
             ir.entry = rule.id;
         }
     }
+
+    // Run IR metadata passes (alias + transparent detection from IR structure).
+    bbnf_ir::passes::compute_aliases(&mut ir);
+    bbnf_ir::passes::compute_transparent(&mut ir);
 
     // Run IR optimization passes.
     bbnf_ir::passes::canonicalize_aliases(&mut ir);

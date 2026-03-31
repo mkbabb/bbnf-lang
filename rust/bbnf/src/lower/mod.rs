@@ -58,11 +58,6 @@ pub(crate) struct LowerCtx<'a> {
     /// Analysis results.
     pub(crate) first_sets: &'a FirstSets<'a>,
     pub(crate) scc_result: &'a SccResult<'a>,
-
-    /// Metadata maps.
-    pub(crate) aliases: &'a HashMap<&'a Expression<'a>, &'a Expression<'a>>,
-    pub(crate) transparent_rules: &'a HashSet<String>,
-    pub(crate) span_eligible_rules: &'a HashSet<String>,
     pub(crate) cyclic_rules: &'a HashSet<Expression<'a>>,
 
     /// Directives.
@@ -82,22 +77,22 @@ pub(crate) struct LowerCtx<'a> {
 
 /// Lower a full BBNF grammar (AST + analysis results) to the canonical `GrammarIR`.
 ///
+/// Alias detection, transparent alternation detection, and span eligibility are
+/// computed by IR passes (`compute_aliases`, `compute_transparent`,
+/// `refine_span_eligibility`) that run post-lowering. This function only needs
+/// FIRST sets and SCC results (which are required during expression lowering for
+/// per-branch FIRST sets and cycle/memo metadata).
+///
 /// # Arguments
 ///
 /// * `ast` -- Topologically sorted AST.
 /// * `first_sets` -- Pre-computed FIRST sets.
 /// * `scc_result` -- SCC analysis results.
-/// * `aliases` -- Alias detection results.
-/// * `transparent_rules` -- Transparent alternation rule names.
-/// * `span_eligible_rules` -- Span-eligible rule names.
 /// * `directives` -- All directive data from the parsed grammar.
 pub fn lower_to_ir<'a>(
     ast: &'a AST<'a>,
     first_sets: &'a FirstSets<'a>,
     scc_result: &'a SccResult<'a>,
-    aliases: &'a HashMap<&'a Expression<'a>, &'a Expression<'a>>,
-    transparent_rules: &'a HashSet<String>,
-    span_eligible_rules: &'a HashSet<String>,
     directives: &'a DirectiveSet<'a>,
 ) -> GrammarIR {
     let mut ctx = LowerCtx {
@@ -106,9 +101,6 @@ pub fn lower_to_ir<'a>(
         name_to_rule_id: HashMap::new(),
         first_sets,
         scc_result,
-        aliases,
-        transparent_rules,
-        span_eligible_rules,
         cyclic_rules: &scc_result.cyclic_rules,
         recovers: directives.recovers,
         pretties: directives.pretties,

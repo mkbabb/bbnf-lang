@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 
 use bbnf::analysis::{
-    calculate_ast_deps, compute_first_sets, find_aliases, find_span_eligible_rules,
-    find_transparent_alternations, tarjan_scc,
+    calculate_ast_deps, compute_first_sets, tarjan_scc,
 };
 use bbnf::lower::{DirectiveSet, lower_to_ir};
 use bbnf::BBNFGrammar;
@@ -18,21 +17,22 @@ fn lower_grammar(source: &str) -> GrammarIR {
     let deps = calculate_ast_deps(&ast);
     let scc_result = tarjan_scc(&deps);
     let first_sets = compute_first_sets(&ast, &deps, &scc_result);
-    let aliases = find_aliases(&ast, &scc_result.cyclic_rules);
-    let transparent_rules = find_transparent_alternations(&ast, &scc_result.cyclic_rules);
-    let span_eligible_rules = find_span_eligible_rules(&ast, &scc_result.cyclic_rules);
 
     let directives = DirectiveSet::empty();
 
-    lower_to_ir(
+    let mut ir = lower_to_ir(
         &ast,
         &first_sets,
         &scc_result,
-        &aliases,
-        &transparent_rules,
-        &span_eligible_rules,
         &directives,
-    )
+    );
+
+    // Run metadata IR passes (alias + transparent + span eligibility detection).
+    bbnf_ir::passes::compute_aliases(&mut ir);
+    bbnf_ir::passes::compute_transparent(&mut ir);
+    bbnf_ir::passes::refine_span_eligibility(&mut ir);
+
+    ir
 }
 
 #[test]
@@ -240,9 +240,6 @@ fn lower_with_pretty_hints() {
         let deps = calculate_ast_deps(&ast);
         let scc_result = tarjan_scc(&deps);
         let first_sets = compute_first_sets(&ast, &deps, &scc_result);
-        let aliases = find_aliases(&ast, &scc_result.cyclic_rules);
-        let transparent_rules = find_transparent_alternations(&ast, &scc_result.cyclic_rules);
-        let span_eligible_rules = find_span_eligible_rules(&ast, &scc_result.cyclic_rules);
 
         let mut pretties = HashMap::new();
         pretties.insert(
@@ -267,9 +264,6 @@ fn lower_with_pretty_hints() {
             &ast,
             &first_sets,
             &scc_result,
-            &aliases,
-            &transparent_rules,
-            &span_eligible_rules,
             &directives,
         )
     };

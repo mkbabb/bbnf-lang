@@ -7,8 +7,7 @@ use std::path::{Path, PathBuf};
 use bbnf::calculate_ast_deps;
 
 use bbnf::analysis::{
-    compute_first_sets, find_aliases, find_span_eligible_rules, find_transparent_alternations,
-    tarjan_scc, topological_sort_scc,
+    compute_first_sets, tarjan_scc, topological_sort_scc,
 };
 use bbnf::imports::load_module_graph;
 use bbnf::lower::{DirectiveSet, lower_to_ir};
@@ -436,15 +435,6 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     // Phase 1.2: Compute FIRST sets for dispatch table generation
     let first_sets = compute_first_sets(&ast, &deps, &scc_result);
 
-    // Phase 1.6: Alias detection
-    let aliases = find_aliases(&ast, &scc_result.cyclic_rules);
-
-    // Phase B: Transparent alternation detection
-    let transparent_rules = find_transparent_alternations(&ast, &scc_result.cyclic_rules);
-
-    // Phase D: Span-eligible rule detection
-    let span_eligible_rules = find_span_eligible_rules(&ast, &scc_result.cyclic_rules);
-
     let recovers_ref = if recover_map.is_empty() { None } else { Some(&recover_map) };
     let pretties_ref = if pretty_map.is_empty() { None } else { Some(&pretty_map) };
     let token_ref = if token_set.is_empty() { None } else { Some(&token_set) };
@@ -465,11 +455,12 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
         &ast,
         &first_sets,
         &scc_result,
-        &aliases,
-        &transparent_rules,
-        &span_eligible_rules,
         &directives,
     );
+
+    // Run IR metadata passes (alias + transparent detection from IR structure).
+    bbnf_ir::passes::compute_aliases(&mut grammar_ir);
+    bbnf_ir::passes::compute_transparent(&mut grammar_ir);
 
     // Run all IR optimization passes.
     bbnf_ir::passes::canonicalize_aliases(&mut grammar_ir);

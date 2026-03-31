@@ -1,8 +1,12 @@
 //! Metadata lowering: recover directives, pretty hints.
+//!
+//! Alias detection, transparent alternation detection, and span eligibility are
+//! NOT computed here -- they are handled by IR passes (`compute_aliases`,
+//! `compute_transparent`, `refine_span_eligibility`) that run post-lowering.
 
 use bbnf_ir::{CharSet128, MemoStrategy, PrettyHints, RuleMeta};
 
-use crate::types::{Expression, Token};
+use crate::types::Expression;
 
 use super::LowerCtx;
 use super::expression::lower_expression;
@@ -13,6 +17,11 @@ fn charset_to_128(cs: &crate::analysis::CharSet) -> CharSet128 {
 }
 
 /// Build rule metadata from analysis results.
+///
+/// Sets FIRST set, nullability, SCC info, memo strategy, pretty hints, recovery
+/// expression, and token flag. Alias detection (`is_alias`), transparent
+/// alternation (`is_transparent`), and span eligibility (`span_eligible`) are
+/// left at their defaults -- they are computed by IR passes post-lowering.
 pub(crate) fn build_rule_meta<'a>(
     lhs: &'a Expression<'a>,
     name: &str,
@@ -40,24 +49,6 @@ pub(crate) fn build_rule_meta<'a>(
         MemoStrategy::None
     };
 
-    // Dispatch hint — populated later by the IR `generate_dispatch_tables` pass.
-    let dispatch = None;
-
-    // Span eligibility.
-    let span_eligible = ctx.span_eligible_rules.contains(name);
-
-    // Alias detection.
-    let is_alias = ctx.aliases.get(lhs).and_then(|target| {
-        if let Expression::Nonterminal(Token { value, .. }) = target {
-            ctx.name_to_rule_id.get(value.as_ref()).copied()
-        } else {
-            None
-        }
-    });
-
-    // Transparent alternation.
-    let is_transparent = ctx.transparent_rules.contains(name);
-
     // Pretty hints.
     let pretty = ctx
         .pretties
@@ -72,11 +63,11 @@ pub(crate) fn build_rule_meta<'a>(
         node
     });
 
-    // Token rule: implies span_eligible (returns Span even in arena context).
+    // Token rule flag (span eligibility is refined by IR pass, but is_token
+    // is a directive that we record here).
     let is_token = ctx
         .token_rules
         .is_some_and(|set| set.contains(name));
-    let span_eligible = span_eligible || is_token;
 
     RuleMeta {
         first_set,
@@ -84,10 +75,10 @@ pub(crate) fn build_rule_meta<'a>(
         scc_id,
         is_cyclic,
         memo,
-        dispatch,
-        span_eligible,
-        is_alias,
-        is_transparent,
+        dispatch: None,       // Populated by generate_dispatch_tables IR pass.
+        span_eligible: false,  // Populated by refine_span_eligibility IR pass.
+        is_alias: None,        // Populated by compute_aliases IR pass.
+        is_transparent: false, // Populated by compute_transparent IR pass.
         pretty,
         recover,
         is_token,

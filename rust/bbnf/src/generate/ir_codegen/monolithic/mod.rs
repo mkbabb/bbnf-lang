@@ -72,9 +72,9 @@ pub(super) fn emit_ws_trim(ctx: &IrCodegenCtx<'_>, mctx: &mut MonoCtx) -> TokenS
         if let Some(dfa_code) = super::super::regex_emit::try_emit_dfa_inline(pattern) {
             return quote! { #dfa_code; };
         }
-        // Fall back to LazyLock<Regex> — NEVER sp_regex.
-        let lazy = super::super::regex_emit::emit_regex_lazy_static(pattern);
-        quote! { #lazy; }
+        // Unsupported pattern — compile-time error.
+        let err = super::super::regex_emit::emit_regex_unsupported(pattern);
+        quote! { #err; }
     } else {
         quote! { ::parse_that::trim_leading_whitespace_mut(state); }
     }
@@ -224,9 +224,9 @@ pub(super) fn emit_mono_expr(
             else if let Some(dfa_code) = super::super::regex_emit::try_emit_dfa_inline(pattern) {
                 dfa_code
             }
-            // 4. Fall back to LazyLock<Regex> — NEVER sp_regex
+            // 4. Unsupported pattern — compile-time error
             else {
-                super::super::regex_emit::emit_regex_lazy_static(pattern)
+                super::super::regex_emit::emit_regex_unsupported(pattern)
             }
         }
 

@@ -7,7 +7,7 @@
 //! Returns `None` for patterns with features that cannot be inlined
 //! (lookahead/lookbehind, Unicode properties beyond ASCII, backreferences,
 //! lazy quantifiers outside of `.*?literal` sequences).
-//! The caller falls back to `emit_regex_lazy_static` in that case.
+//! The caller falls back to `emit_regex_unsupported` (compile-time error) in that case.
 
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -171,7 +171,7 @@ fn emit_bytes_class_predicate(cb: &ClassBytes) -> Option<TokenStream> {
 /// Emit a predicate for a Unicode character class.
 ///
 /// We only handle classes that are entirely within ASCII (0..=127).
-/// Anything with non-ASCII codepoints bails out — caller uses fallback.
+/// Anything with non-ASCII codepoints bails out — caller uses DFA tier.
 fn emit_unicode_class_predicate(cu: &ClassUnicode) -> Option<TokenStream> {
     let ranges = cu.ranges();
     // Ensure all ranges are ASCII.
@@ -313,7 +313,7 @@ fn emit_look(look: Look) -> Option<TokenStream> {
                 return None;
             }
         }),
-        // Word boundaries and other complex assertions: bail to fallback.
+        // Word boundaries and other complex assertions: bail to DFA tier.
         _ => None,
     }
 }
@@ -327,7 +327,7 @@ fn emit_repetition(rep: &Repetition) -> Option<TokenStream> {
 
     // Lazy quantifiers (`*?`, `+?`, `{n,m}?`) cannot be handled correctly
     // by the HIR walker — greedy loops would over-consume. Bail to the
-    // DFA emitter or LazyLock fallback which handle lazy semantics properly.
+    // DFA emitter which handles lazy semantics properly.
     // Exception: lazy patterns fused with a following literal in emit_concat
     // use memmem-based scan (handled there, not here).
     if !rep.greedy {
@@ -878,12 +878,12 @@ mod tests {
         );
     }
 
-    /// Helper: check that a pattern produces None (i.e., needs fallback).
+    /// Helper: check that a pattern produces None (i.e., needs DFA tier).
     fn assert_not_inlinable(pattern: &str) {
         let result = try_emit_regex_inline(pattern);
         assert!(
             result.is_none(),
-            "Expected pattern to need fallback: {pattern}"
+            "Expected pattern to need DFA tier: {pattern}"
         );
     }
 

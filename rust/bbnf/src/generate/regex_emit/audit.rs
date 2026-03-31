@@ -18,8 +18,8 @@ pub enum RegexTier {
     HirInline,
     /// Tier 3: DFA-compiled inline state machine or table.
     DfaCompiled { states: usize, classes: usize },
-    /// Tier 4: LazyLock<Regex> fallback (should never happen for supported patterns).
-    LazyLockFallback,
+    /// Tier 4: Unsupported — no tier can compile this pattern (compile-time error).
+    Unsupported,
 }
 
 /// Audit a regex pattern to determine which emission tier handles it.
@@ -44,8 +44,8 @@ pub fn audit_regex_pattern(pattern: &str) -> RegexTier {
         };
     }
 
-    // Tier 4: fallback.
-    RegexTier::LazyLockFallback
+    // Tier 4: unsupported.
+    RegexTier::Unsupported
 }
 
 /// Classify which fast-path scanner handles a pattern (for diagnostic display).

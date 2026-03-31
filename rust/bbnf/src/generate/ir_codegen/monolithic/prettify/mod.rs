@@ -250,10 +250,10 @@ pub(super) fn emit_prettify_expr(
                     #emit_text
                 } }
             } else {
-                let lazy = crate::generate::regex_emit::emit_regex_lazy_static(pattern);
+                let err = crate::generate::regex_emit::emit_regex_unsupported(pattern);
                 quote! { {
                     let __start = state.offset;
-                    if #lazy.is_none() { return false; }
+                    if #err.is_none() { return false; }
                     #emit_text
                 } }
             }

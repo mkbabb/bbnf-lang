@@ -176,12 +176,12 @@ pub(super) fn emit_span_optional(
                 }
             };
         }
-        // 4. Fall back to LazyLock<Regex>.
-        let lazy = super::super::super::super::regex_emit::emit_regex_lazy_static(pattern);
+        // 4. Unsupported pattern — compile-time error.
+        let err = super::super::super::super::regex_emit::emit_regex_unsupported(pattern);
         return quote! {
             {
                 let #start_var = state.offset;
-                let _ = #lazy;
+                let _ = #err;
                 Some(::parse_that::Span::new(#start_var, state.offset, state.src))
             }
         };

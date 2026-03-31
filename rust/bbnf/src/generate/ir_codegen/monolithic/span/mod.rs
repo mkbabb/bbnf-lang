@@ -152,9 +152,9 @@ pub(super) fn emit_span_expr(
             else if let Some(dfa_code) = super::super::super::regex_emit::try_emit_dfa_inline(pattern) {
                 dfa_code
             }
-            // 4. Fall back to LazyLock<Regex> — NEVER sp_regex
+            // 4. Unsupported pattern — compile-time error
             else {
-                super::super::super::regex_emit::emit_regex_lazy_static(pattern)
+                super::super::super::regex_emit::emit_regex_unsupported(pattern)
             }
         }
 

@@ -26,7 +26,7 @@ use quote::quote;
 pub fn try_emit_dfa_inline(pattern: &str) -> Option<TokenStream> {
     // DFA-based matching always produces longest-match semantics.
     // Patterns with lazy quantifiers need shortest-match, which requires
-    // NFA simulation. Bail to the LazyLock fallback for these.
+    // NFA simulation. Bail — the pattern is unsupported.
     let hir = regex_syntax::ParserBuilder::new()
         .utf8(false)
         .unicode(false)

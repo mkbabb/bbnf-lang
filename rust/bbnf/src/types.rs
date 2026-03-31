@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use parse_that::Span;
 
-use pprint::{Doc, Pretty};
+use pprint::Pretty;
 
 use indexmap::IndexMap;
 
@@ -52,7 +52,7 @@ pub enum Expression<'a> {
 
     ProductionRule(Box<Expression<'a>>, Box<Expression<'a>>),
 
-    Epsilon(Token<'a, ()>),
+    Epsilon(#[pprint(skip)] Token<'a, ()>),
 }
 
 #[derive(Pretty, Debug, Clone, Eq)]

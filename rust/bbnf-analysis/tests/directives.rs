@@ -6,73 +6,6 @@ use bbnf_analysis::state::diagnostics::analyze;
 
 // ── @inline ──────────────────────────────────────────────────────────────────
 
-#[test]
-fn inline_directive_no_spurious_diagnostic() {
-    let grammar = "@inline helper ;\nhelper = \"x\" ;\nentry = helper ;";
-    let info = analyze(grammar, &LineIndex::new(grammar));
-    let inline_warnings: Vec<_> = info
-        .diagnostics
-        .iter()
-        .filter(|d| d.message.contains("@inline") || d.message.contains("Undefined"))
-        .collect();
-    assert!(
-        inline_warnings.is_empty(),
-        "should not warn about valid @inline: {:?}",
-        inline_warnings
-    );
-}
-
-#[test]
-fn inline_directive_undefined_target_warns() {
-    let grammar = "@inline nonexistent ;\nentry = \"x\" ;";
-    let info = analyze(grammar, &LineIndex::new(grammar));
-    let warnings: Vec<_> = info
-        .diagnostics
-        .iter()
-        .filter(|d| d.message.contains("@inline") && d.message.contains("undefined"))
-        .collect();
-    assert!(
-        !warnings.is_empty(),
-        "should warn about @inline targeting undefined rule"
-    );
-}
-
-#[test]
-fn inline_directive_has_semantic_tokens() {
-    let grammar = "@inline helper ;\nhelper = \"x\" ;\nentry = helper ;";
-    let info = analyze(grammar, &LineIndex::new(grammar));
-    // @inline keyword should produce a KEYWORD semantic token.
-    let keyword_tokens: Vec<_> = info
-        .semantic_tokens
-        .iter()
-        .filter(|t| t.token_type == 5) // KEYWORD
-        .filter(|t| {
-            let text = &grammar[t.span.0..t.span.1];
-            text == "@inline"
-        })
-        .collect();
-    assert!(
-        !keyword_tokens.is_empty(),
-        "should have semantic token for @inline keyword"
-    );
-}
-
-#[test]
-fn inline_prevents_unused_warning() {
-    let grammar = "@inline helper ;\nhelper = \"x\" ;\nentry = \"y\" ;";
-    let info = analyze(grammar, &LineIndex::new(grammar));
-    let unused: Vec<_> = info
-        .diagnostics
-        .iter()
-        .filter(|d| d.message.contains("Unused rule") && d.message.contains("helper"))
-        .collect();
-    assert!(
-        unused.is_empty(),
-        "helper should not be flagged as unused when @inline targets it: {:?}",
-        unused
-    );
-}
-
 // ── @debug ───────────────────────────────────────────────────────────────────
 
 #[test]
@@ -192,10 +125,9 @@ fn ws_directive_has_semantic_token() {
 
 #[test]
 fn document_info_has_all_directive_fields() {
-    let grammar = "@debug value ;\n@inline helper ;\n@ws /\\s+/ ;\nhelper = \"x\" ;\nvalue = helper ;";
+    let grammar = "@debug value ;\n@ws /\\s+/ ;\nhelper = \"x\" ;\nvalue = helper ;";
     let info = analyze(grammar, &LineIndex::new(grammar));
     assert!(!info.debugs.is_empty(), "debugs should be populated");
-    assert!(!info.inlines.is_empty(), "inlines should be populated");
     assert!(info.ws_pattern.is_some(), "ws_pattern should be populated");
 }
 

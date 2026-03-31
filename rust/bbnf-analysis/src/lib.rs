@@ -1,4 +1,5 @@
 pub mod analysis;
+pub mod directives;
 pub mod features;
 pub mod state;
 

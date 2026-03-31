@@ -4,7 +4,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use bbnf::generate::prettify::hints::{self, closest_hint, is_valid_hint};
+use crate::directives::hints::{self, closest_hint, is_valid_hint};
 use ls_types::*;
 
 use crate::analysis::LineIndex;

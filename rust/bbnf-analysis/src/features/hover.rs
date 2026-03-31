@@ -1,6 +1,4 @@
-use bbnf::generate::prettify::hints::{
-    extract_sep_string, extract_split_delim, hint_documentation,
-};
+use crate::directives::hints::{extract_sep_string, extract_split_delim, hint_documentation};
 use ls_types::*;
 
 use crate::analysis::{symbol_at_offset, SymbolAtOffset};
@@ -498,7 +496,7 @@ fn build_pretty_directive_hover(
                     "- `split(\"{}\")` — splits Span text on `\"{}\"` (depth-aware)\n",
                     delim, delim
                 ));
-            } else if let Some(desc) = bbnf::generate::prettify::hints::hint_description(hint) {
+            } else if let Some(desc) = crate::directives::hints::hint_description(hint) {
                 content.push_str(&format!("- `{}` — {}\n", hint, lowercase_first(desc)));
             }
         }

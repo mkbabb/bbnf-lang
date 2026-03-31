@@ -1,4 +1,4 @@
-use bbnf::generate::prettify::hints::HINT_DEFS;
+use crate::directives::hints::HINT_DEFS;
 use ls_types::*;
 
 use crate::state::DocumentState;

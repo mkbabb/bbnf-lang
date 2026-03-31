@@ -2,7 +2,6 @@
 
 use bbnf_ir::{CharSet128, MemoStrategy, PrettyHints, RuleMeta};
 
-use crate::generate::prettify::hints;
 use crate::types::{Expression, Token};
 
 use super::LowerCtx;
@@ -118,10 +117,10 @@ fn lower_pretty_hints(hint_strs: &[String]) -> PrettyHints {
             "off" => ph.off = true,
             _ => {
                 // Check for parameterized hints.
-                if let Some(sep_str) = hints::extract_sep_string(h) {
-                    ph.sep = Some(sep_str.to_string());
-                } else if let Some(split_delim) = hints::extract_split_delim(h) {
-                    ph.split = Some(split_delim.to_string());
+                if h.starts_with("sep(\"") && h.ends_with("\")") {
+                    ph.sep = Some(h[5..h.len() - 2].to_string());
+                } else if h.starts_with("split(\"") && h.ends_with("\")") {
+                    ph.split = Some(h[7..h.len() - 2].to_string());
                 }
                 // Unknown hints are silently ignored (validation happens earlier).
             }

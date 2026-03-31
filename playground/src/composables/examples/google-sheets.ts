@@ -1,5 +1,5 @@
 import type { Example } from "../useExamples";
-import grammar from "@grammars/lang/google-sheets.bbnf?raw";
+import grammar from "@grammars/google-sheets/google-sheets.bbnf?raw";
 
 export const googleSheetsExample: Example = {
     name: "Google Sheets",

@@ -15,7 +15,9 @@ A parser combinator library with isomorphic TypeScript and Rust implementations.
 - **Error recovery**—`recover()` combinator collects multiple diagnostics in a single pass
 - **Memoization**—built-in packrat memoization with left-recursion support
 - **O(1) dispatch**—first-character lookup tables for fast alternation
-- **Zero runtime deps**—the TypeScript package has no dependencies
+- **Bespoke regex engine**—NFA→DFA compilation with Hopcroft minimization, no `regex` crate at runtime (Rust)
+- **BumpArena\<T\>**—UnsafeCell-based bump allocator for zero-overhead arena parsing (Rust)
+- **Zero runtime deps**—the TypeScript package has no dependencies; Rust has no `regex` crate dependency
 
 ## Installation
 
@@ -26,7 +28,7 @@ npm install @mkbabb/parse-that
 ---toml---
 # Rust / Cargo
 [dependencies]
-parse_that = "0.3"
+parse_that = "0.4"
 ```
 
 ## Quick Example

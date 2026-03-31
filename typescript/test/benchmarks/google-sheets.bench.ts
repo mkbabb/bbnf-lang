@@ -7,7 +7,7 @@ import { BBNFToParser } from "../../src/generate";
 // ---------------------------------------------------------------------------
 // Grammar compilation (one-time)
 // ---------------------------------------------------------------------------
-const grammarPath = path.resolve(__dirname, "../../../grammar/lang/google-sheets.bbnf");
+const grammarPath = path.resolve(__dirname, "../../../grammar/google-sheets/google-sheets.bbnf");
 const grammarSrc = fs.readFileSync(grammarPath, "utf8");
 const [nonterminals] = BBNFToParser(grammarSrc);
 const parser = nonterminals.formula;

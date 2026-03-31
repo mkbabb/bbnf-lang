@@ -15,9 +15,6 @@ pub fn hover(state: &DocumentState, position: Position) -> Option<Hover> {
     }
 
     // Check directive keyword hovers first.
-    if let Some(hover) = hover_no_collapse(state, offset) {
-        return Some(hover);
-    }
     if let Some(hover) = hover_recover(state, offset) {
         return Some(hover);
     }
@@ -228,55 +225,6 @@ fn hover_import(state: &DocumentState, offset: usize) -> Option<Hover> {
                     });
                 }
             }
-        }
-    }
-    None
-}
-
-/// Check if the cursor is over the @no_collapse keyword or its rule name.
-fn hover_no_collapse(state: &DocumentState, offset: usize) -> Option<Hover> {
-    for nc in &state.info.no_collapses {
-        // Check keyword span: "@no_collapse" is 13 chars.
-        let kw_end = nc.span.0 + 13;
-        if offset >= nc.span.0 && offset <= kw_end {
-            // Look up rule definition for context.
-            let rule_def = state
-                .info
-                .rule_index
-                .get(&nc.rule_name)
-                .map(|&i| &state.info.rules[i]);
-
-            let mut content = String::from(
-                "### `@no_collapse` — Span Preservation\n\n\
-                 Prevents the parser from merging consecutive spans into a single `Span` \
-                 for rule `",
-            );
-            content.push_str(&nc.rule_name);
-            content.push_str("`.\n\n");
-
-            content.push_str(
-                "**Without** `@no_collapse`: repetitions (`*`, `+`) produce a single merged `Span`, \
-                 and optionals (`?`) produce `Span` instead of `Option<Span>`.\n\n\
-                 **With** `@no_collapse`: repetitions produce `Vec<Span>` and optionals produce \
-                 `Option<Span>` — preserving individual element boundaries for formatting.\n\n",
-            );
-
-            content.push_str(
-                "Use when `@pretty` directives need to format each repeated element independently \
-                 (e.g. with `sep(\"...\")` or `split(\"...\")`).\n",
-            );
-
-            if let Some(def) = rule_def {
-                content.push_str(&format!("\n---\n```bbnf\n{} = {}\n```", def.name, def.rhs_text));
-            }
-
-            return Some(Hover {
-                contents: HoverContents::Markup(MarkupContent {
-                    kind: MarkupKind::Markdown,
-                    value: content,
-                }),
-                range: Some(state.line_index.span_to_range(nc.span.0, kw_end)),
-            });
         }
     }
     None

@@ -56,7 +56,7 @@ pub fn analyze_from_cache(
             cyclic_rule_paths: HashMap::new(),
             imports: Vec::new(),
             recovers: Vec::new(),
-            no_collapses: Vec::new(),
+
             pretties: Vec::new(),
             inlines: Vec::new(),
             debugs: Vec::new(),
@@ -92,7 +92,7 @@ pub fn analyze_from_cache(
             cyclic_rule_paths: HashMap::new(),
             imports: Vec::new(),
             recovers: Vec::new(),
-            no_collapses: Vec::new(),
+
             pretties: Vec::new(),
             inlines: Vec::new(),
             debugs: Vec::new(),
@@ -120,7 +120,6 @@ pub fn analyze_from_cache(
     let ast = &parsed.ast;
     let import_infos = parsed.imports.clone();
     let recover_infos = parsed.recovers.clone();
-    let no_collapse_infos = parsed.no_collapses.clone();
     let pretty_infos = parsed.pretties.clone();
     let inline_infos = parsed.inlines.clone();
     let debug_infos = parsed.debugs.clone();
@@ -148,7 +147,6 @@ pub fn analyze_from_cache(
             cyclic_rule_paths: HashMap::new(),
             imports: import_infos,
             recovers: recover_infos,
-            no_collapses: no_collapse_infos,
             pretties: Vec::new(),
             inlines: Vec::new(),
             debugs: Vec::new(),
@@ -257,9 +255,6 @@ pub fn analyze_from_cache(
     // Add directive-referenced rule names before the unused rule check.
     for rec in &recover_infos {
         referenced_names.insert(&rec.rule_name);
-    }
-    for nc in &no_collapse_infos {
-        referenced_names.insert(&nc.rule_name);
     }
     for p in &pretty_infos {
         referenced_names.insert(&p.rule_name);
@@ -512,41 +507,6 @@ pub fn analyze_from_cache(
         }
     }
 
-    // @no_collapse directive validation and semantic tokens.
-    for nc in &no_collapse_infos {
-        // Semantic token: KEYWORD for "@no_collapse".
-        // The "@no_collapse" keyword is 13 bytes, starts at the directive span start.
-        semantic_tokens.push(SemanticTokenInfo {
-            span: (nc.span.0, nc.span.0 + 13), // "@no_collapse" is 13 chars
-            token_type: token_types::KEYWORD,
-        });
-
-        // Semantic token: RULE_REFERENCE for the rule name.
-        semantic_tokens.push(SemanticTokenInfo {
-            span: nc.rule_name_span,
-            token_type: token_types::RULE_REFERENCE,
-        });
-
-        // Mark the rule name as referenced (for unused rule detection).
-        referenced_names.insert(&nc.rule_name);
-
-        // Validate: warn if the target rule doesn't exist.
-        if !defined.contains_key(nc.rule_name.as_str())
-            && !imported_names.contains(nc.rule_name.as_str())
-        {
-            diagnostics.push(Diagnostic {
-                range: line_index.span_to_range(nc.rule_name_span.0, nc.rule_name_span.1),
-                severity: Some(DiagnosticSeverity::WARNING),
-                source: Some("bbnf".into()),
-                message: format!(
-                    "`@no_collapse` targets undefined rule: `{}`",
-                    nc.rule_name
-                ),
-                ..Default::default()
-            });
-        }
-    }
-
     // @pretty directive validation and semantic tokens.
     {
         let (pretty_diags, pretty_tokens) = pretty::validate_pretties(
@@ -698,7 +658,6 @@ pub fn analyze_from_cache(
         cyclic_rule_paths,
         imports: import_infos,
         recovers: recover_infos,
-        no_collapses: no_collapse_infos,
         pretties: pretty_infos,
         inlines: inline_infos,
         debugs: debug_infos,
@@ -735,12 +694,6 @@ fn try_compile_ir(
         .map(|p| (p.rule_name.clone(), p.hints.clone()))
         .collect();
 
-    let no_collapse_set: HashSet<String> = cached
-        .no_collapses
-        .iter()
-        .map(|nc| nc.rule_name.clone())
-        .collect();
-
     let inline_set: HashSet<String> = cached
         .inlines
         .iter()
@@ -774,7 +727,6 @@ fn try_compile_ir(
         ast,
         &recover_map,
         &pretty_map,
-        &no_collapse_set,
         &options,
         ws_pattern,
         inline_ref,

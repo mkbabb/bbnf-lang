@@ -1,5 +1,5 @@
 import type { Example } from "../useExamples";
-import grammar from "@grammars/lang/bbnf.bbnf?raw";
+import grammar from "@grammars/bbnf/bbnf.bbnf?raw";
 
 export const bbnfExample: Example = {
     name: "BBNF",

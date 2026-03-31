@@ -4,7 +4,7 @@ import path from "path";
 
 import { BBNFToParser } from "../src/generate";
 
-const grammarPath = path.resolve(__dirname, "../../grammar/lang/google-sheets.bbnf");
+const grammarPath = path.resolve(__dirname, "../../grammar/google-sheets/google-sheets.bbnf");
 const grammarSrc = fs.readFileSync(grammarPath, "utf8");
 
 function sheetsParser() {

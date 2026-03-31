@@ -66,17 +66,6 @@ pub struct RecoverInfo {
     pub sync_expr_text: String,
 }
 
-/// Owned representation of a @no_collapse directive.
-#[derive(Debug, Clone)]
-pub struct NoCollapseInfo {
-    /// The name of the rule to prevent span collapse for.
-    pub rule_name: String,
-    /// Byte offset range of the entire directive.
-    pub span: (usize, usize),
-    /// Byte offset range of the rule name within the directive.
-    pub rule_name_span: (usize, usize),
-}
-
 /// Owned representation of an `@inline` directive.
 #[derive(Debug, Clone)]
 pub struct InlineInfo {
@@ -149,8 +138,6 @@ pub struct DocumentInfo {
     pub imports: Vec<ImportInfo>,
     /// Recover directives parsed from the document.
     pub recovers: Vec<RecoverInfo>,
-    /// No-collapse directives parsed from the document.
-    pub no_collapses: Vec<NoCollapseInfo>,
     /// Pretty directives parsed from the document.
     pub pretties: Vec<PrettyInfo>,
     /// Inline directives parsed from the document.

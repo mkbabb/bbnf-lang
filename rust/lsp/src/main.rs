@@ -130,41 +130,4 @@ value = string | number | bool | null;"#;
         assert_eq!(info.rules.len(), 5, "Should have 5 rules");
     }
 
-    #[test]
-    fn test_analyze_no_collapse_directive() {
-        let grammar = "@no_collapse items ;\n\nitems = /[a-z]+/ * ;\nprogram = items ;";
-        let line_index = LineIndex::new(grammar);
-        let info = analyze(grammar, &line_index);
-        eprintln!("Diagnostics: {:?}", info.diagnostics);
-        eprintln!("No collapses: {:?}", info.no_collapses);
-        assert_eq!(info.no_collapses.len(), 1, "Should have 1 @no_collapse directive");
-        assert_eq!(info.no_collapses[0].rule_name, "items");
-        let undefined_warnings: Vec<_> = info.diagnostics.iter()
-            .filter(|d| d.message.contains("undefined") || d.message.contains("Undefined"))
-            .collect();
-        assert!(undefined_warnings.is_empty(), "Should not warn about @no_collapse target: {:?}", undefined_warnings);
-    }
-
-    #[test]
-    fn test_analyze_no_collapse_undefined_target() {
-        let grammar = "@no_collapse nonexistent ;\n\nstmt = /[a-z]+/ ;";
-        let line_index = LineIndex::new(grammar);
-        let info = analyze(grammar, &line_index);
-        eprintln!("Diagnostics: {:?}", info.diagnostics);
-        let nc_warnings: Vec<_> = info.diagnostics.iter()
-            .filter(|d| d.message.contains("@no_collapse"))
-            .collect();
-        assert!(!nc_warnings.is_empty(), "Should warn about @no_collapse targeting undefined rule");
-    }
-
-    #[test]
-    fn test_no_collapse_prevents_unused_warning() {
-        let grammar = "entry = items ;\n@no_collapse items ;\nitems = /[a-z]+/ * ;";
-        let line_index = LineIndex::new(grammar);
-        let info = analyze(grammar, &line_index);
-        let unused: Vec<_> = info.diagnostics.iter()
-            .filter(|d| d.message.contains("Unused rule") && d.message.contains("items"))
-            .collect();
-        assert!(unused.is_empty(), "items should not be flagged as unused: {:?}", unused);
-    }
 }

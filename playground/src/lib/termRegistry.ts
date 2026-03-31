@@ -221,29 +221,43 @@ export const TERM_REGISTRY: Record<string, TermEntry> = {
 const GITHUB_BASE = "https://github.com/mkbabb/bbnf-lang/blob/master";
 
 const FILE_PATH_MAP: Record<string, string> = {
-    // grammar/lang/
-    "json.bbnf": "grammar/lang/json.bbnf",
-    "json-commented.bbnf": "grammar/lang/json-commented.bbnf",
-    "bbnf.bbnf": "grammar/lang/bbnf.bbnf",
-    "bnf.bbnf": "grammar/lang/bnf.bbnf",
-    "ebnf.bbnf": "grammar/lang/ebnf.bbnf",
-    "csv.bbnf": "grammar/lang/csv.bbnf",
-    "emoji.bbnf": "grammar/lang/emoji.bbnf",
-    "g4.bbnf": "grammar/lang/g4.bbnf",
-    "math.bbnf": "grammar/lang/math.bbnf",
-    "math-ambiguous.bbnf": "grammar/lang/math-ambiguous.bbnf",
-    "regex.bbnf": "grammar/lang/regex.bbnf",
-    "google-sheets.bbnf": "grammar/lang/google-sheets.bbnf",
+    // grammar/json/
+    "json.bbnf": "grammar/json/json.bbnf",
+    "json-pretty.bbnf": "grammar/json/json.bbnf",
+    // grammar/bbnf/
+    "bbnf.bbnf": "grammar/bbnf/bbnf.bbnf",
+    // grammar/bnf/
+    "bnf.bbnf": "grammar/bnf/bnf.bbnf",
+    // grammar/ebnf/
+    "ebnf.bbnf": "grammar/ebnf/ebnf.bbnf",
+    // grammar/google-sheets/
+    "google-sheets.bbnf": "grammar/google-sheets/google-sheets.bbnf",
+    // grammar/misc/
+    "json-commented.bbnf": "grammar/misc/json-commented.bbnf",
+    "csv.bbnf": "grammar/misc/csv.bbnf",
+    "emoji.bbnf": "grammar/misc/emoji.bbnf",
+    "g4.bbnf": "grammar/misc/g4.bbnf",
+    "math.bbnf": "grammar/misc/math.bbnf",
+    "math-ambiguous.bbnf": "grammar/misc/math-ambiguous.bbnf",
+    "regex.bbnf": "grammar/misc/regex.bbnf",
     // grammar/css/
-    "css-value-unit.bbnf": "grammar/css/css-value-unit.bbnf",
-    "css-color.bbnf": "grammar/css/css-color.bbnf",
-    "css-values.bbnf": "grammar/css/css-values.bbnf",
-    "css-selectors.bbnf": "grammar/css/css-selectors.bbnf",
-    "css-keyframes.bbnf": "grammar/css/css-keyframes.bbnf",
-    "css-stylesheet.bbnf": "grammar/css/css-stylesheet.bbnf",
-    "css-fast.bbnf": "grammar/css/css-fast.bbnf",
-    "css-stylesheet-pretty.bbnf": "grammar/css/css-stylesheet-pretty.bbnf",
-    "css-tokens.bbnf": "grammar/css/css-tokens.bbnf",
+    "css-pretty.bbnf": "grammar/css/pretty.bbnf",
+    // grammar/css/l4/
+    "value-unit.bbnf": "grammar/css/l4/value-unit.bbnf",
+    "color.bbnf": "grammar/css/l4/color.bbnf",
+    "values.bbnf": "grammar/css/l4/values.bbnf",
+    "selectors.bbnf": "grammar/css/l4/selectors.bbnf",
+    "keyframes.bbnf": "grammar/css/l4/keyframes.bbnf",
+    "stylesheet.bbnf": "grammar/css/l4/stylesheet.bbnf",
+    "tokens.bbnf": "grammar/css/l4/tokens.bbnf",
+    "media.bbnf": "grammar/css/l4/media.bbnf",
+    "properties.bbnf": "grammar/css/l4/properties.bbnf",
+    "easing.bbnf": "grammar/css/l4/easing.bbnf",
+    "filters.bbnf": "grammar/css/l4/filters.bbnf",
+    "gradients.bbnf": "grammar/css/l4/gradients.bbnf",
+    "transforms.bbnf": "grammar/css/l4/transforms.bbnf",
+    "keywords.bbnf": "grammar/css/l4/keywords.bbnf",
+    "func-body.bbnf": "grammar/css/l4/func-body.bbnf",
 };
 
 // ── Lookup helpers ──────────────────────────────────────────────

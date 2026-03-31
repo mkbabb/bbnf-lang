@@ -191,7 +191,7 @@ export const JSONParser = (grammar: string) => {
 
 describe("BBNF Parser", () => {
     it("should parse a simple math grammar", () => {
-        const grammar = fs.readFileSync("../grammar/lang/math.bbnf", "utf8");
+        const grammar = fs.readFileSync("../grammar/misc/math.bbnf", "utf8");
         const [nonterminals] = mathParser(grammar);
         const parser = nonterminals.expr;
 
@@ -203,7 +203,7 @@ describe("BBNF Parser", () => {
     });
 
     it("should parse a CSS color grammar", () => {
-        const grammarPath = path.resolve("../grammar/css/css-color.bbnf");
+        const grammarPath = path.resolve("../grammar/css/l4/color.bbnf");
         const [nonterminals] = CSSColorParser(grammarPath);
         const parser = nonterminals.color;
 
@@ -231,8 +231,8 @@ describe("BBNF Parser", () => {
 
     // valueUnit grammar returns non-iterable for unitless numbers
     it("should parse a CSS value unit grammar", () => {
-        const grammarPath = path.resolve("../grammar/css/css-value-unit.bbnf");
-        const colorGrammarPath = path.resolve("../grammar/css/css-color.bbnf");
+        const grammarPath = path.resolve("../grammar/css/l4/value-unit.bbnf");
+        const colorGrammarPath = path.resolve("../grammar/css/l4/color.bbnf");
 
         const [nonterminals] = CSSValueUnitParser(grammarPath);
         const [colorNonterminals] = CSSColorParser(colorGrammarPath);
@@ -300,7 +300,7 @@ describe("BBNF Parser", () => {
     });
 
     it("should parse a CSS keyframes grammar", () => {
-        const grammarPath = path.resolve("../grammar/css/css-keyframes.bbnf");
+        const grammarPath = path.resolve("../grammar/css/l4/keyframes.bbnf");
         const [nonterminals, ast] = BBNFToParserFromFile(grammarPath);
 
         nonterminals.KEYFRAMES_RULE = nonterminals.KEYFRAMES_RULE.trim();
@@ -334,7 +334,7 @@ describe("BBNF Parser", () => {
     });
 
     it("should parse an BBNF grammar", () => {
-        let grammar = fs.readFileSync("../grammar/lang/bbnf.bbnf", "utf8");
+        let grammar = fs.readFileSync("../grammar/bbnf/bbnf.bbnf", "utf8");
 
         const [nonterminals, ast] = BBNFToParser(grammar);
         const parser = nonterminals.grammar;
@@ -370,7 +370,7 @@ describe("BBNF Parser", () => {
     });
 
     it("should parse JSON data", () => {
-        const grammar = fs.readFileSync("../grammar/lang/json.bbnf", "utf8");
+        const grammar = fs.readFileSync("../grammar/json/json.bbnf", "utf8");
 
         const parser = JSONParser(grammar);
 
@@ -381,7 +381,7 @@ describe("BBNF Parser", () => {
     });
 
     it("should parse regular expressions", () => {
-        const grammar = fs.readFileSync("../grammar/lang/regex.bbnf", "utf8");
+        const grammar = fs.readFileSync("../grammar/misc/regex.bbnf", "utf8");
 
         const [nonterminals, ast] = BBNFToParser(grammar);
 
@@ -410,7 +410,7 @@ describe("BBNF Parser", () => {
     });
 
     it("should parse an ambiguous BBNF grammar", () => {
-        let grammar = fs.readFileSync("../grammar/lang/g4.bbnf", "utf8");
+        let grammar = fs.readFileSync("../grammar/misc/g4.bbnf", "utf8");
 
         const [nonterminals, ast] = BBNFToParser(grammar, true);
 
@@ -438,7 +438,7 @@ describe("BBNF Parser", () => {
     });
 
     it("should parse an EBNF grammar", () => {
-        let grammar = fs.readFileSync("../grammar/lang/ebnf.bbnf", "utf8");
+        let grammar = fs.readFileSync("../grammar/ebnf/ebnf.bbnf", "utf8");
 
         for (let i = 0; i < 10; i++) {
             const [nonterminals, ast] = BBNFToParser(grammar);
@@ -454,7 +454,7 @@ describe("BBNF Parser", () => {
     });
 
     it("should parse a CSS selectors grammar", () => {
-        const grammarPath = path.resolve("../grammar/css/css-selectors.bbnf");
+        const grammarPath = path.resolve("../grammar/css/l4/selectors.bbnf");
         const [nonterminals] = BBNFToParserFromFile(grammarPath);
 
         const selectors = [
@@ -481,7 +481,7 @@ describe("BBNF Parser", () => {
     });
 
     it("should parse a CSS values grammar", () => {
-        const grammarPath = path.resolve("../grammar/css/css-values.bbnf");
+        const grammarPath = path.resolve("../grammar/css/l4/values.bbnf");
         const [nonterminals] = BBNFToParserFromFile(grammarPath);
 
         // Override number/integer with runtime parsers
@@ -507,7 +507,7 @@ describe("BBNF Parser", () => {
     });
 
     it("should parse a CSV grammar", () => {
-        const grammar = fs.readFileSync("../grammar/lang/csv.bbnf", "utf8");
+        const grammar = fs.readFileSync("../grammar/misc/csv.bbnf", "utf8");
         const [nonterminals] = BBNFToParser(grammar);
 
         const csvData = `name,age,city
@@ -519,7 +519,7 @@ describe("BBNF Parser", () => {
     });
 
     it("should parse a BNF grammar", () => {
-        const grammar = fs.readFileSync("../grammar/lang/bnf.bbnf", "utf8");
+        const grammar = fs.readFileSync("../grammar/bnf/bnf.bbnf", "utf8");
         const [nonterminals] = BBNFToParser(grammar);
 
         const bnfInput = `<expr> ::= <term> | <expr> "+" <term>
@@ -534,7 +534,7 @@ describe("BBNF Parser", () => {
 
     it("should parse JSON with comments", () => {
         const grammar = fs.readFileSync(
-            "../grammar/lang/json-commented.bbnf",
+            "../grammar/misc/json-commented.bbnf",
             "utf8",
         );
         const [nonterminals] = BBNFToParser(grammar);
@@ -557,7 +557,7 @@ describe("BBNF Parser", () => {
 
     it("should compile an ambiguous math grammar", () => {
         const grammar = fs.readFileSync(
-            "../grammar/lang/math-ambiguous.bbnf",
+            "../grammar/misc/math-ambiguous.bbnf",
             "utf8",
         );
         // The ambiguous grammar uses left recursion with optional operator,
@@ -570,7 +570,7 @@ describe("BBNF Parser", () => {
 
     it("should reject an emoji grammar with unquoted terminals", () => {
         const grammar = fs.readFileSync(
-            "../grammar/lang/emoji.bbnf",
+            "../grammar/misc/emoji.bbnf",
             "utf8",
         );
         // The emoji grammar uses unquoted emoji as terminals (e.g. 🍕 instead

@@ -24,7 +24,7 @@ import {
 init_panic_hook();
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const grammarPath = resolve(__dirname, "../../grammar/lang/google-sheets.bbnf");
+const grammarPath = resolve(__dirname, "../../grammar/google-sheets/google-sheets.bbnf");
 const grammar = readFileSync(grammarPath, "utf-8");
 
 let passed = 0;

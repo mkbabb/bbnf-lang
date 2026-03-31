@@ -112,15 +112,6 @@ pub fn symbol_at_offset<'a>(info: &'a DocumentInfo, offset: usize) -> Option<Sym
             });
         }
     }
-    // Check @no_collapse directive rule names.
-    for nc in &info.no_collapses {
-        if offset >= nc.rule_name_span.0 && offset <= nc.rule_name_span.1 {
-            return Some(SymbolAtOffset::RuleReference {
-                name: nc.rule_name.clone(),
-                span: nc.rule_name_span,
-            });
-        }
-    }
     // Check @pretty directive rule names.
     for pretty in &info.pretties {
         if offset >= pretty.rule_name_span.0 && offset <= pretty.rule_name_span.1 {

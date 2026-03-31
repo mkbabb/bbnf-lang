@@ -11,7 +11,7 @@ import {
 } from "@mkbabb/parse-that";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const grammarDir = resolve(__dirname, "../../grammar/css");
+const grammarDir = resolve(__dirname, "../../grammar/css/l4");
 const testDir = resolve(__dirname, "../../grammar/tests/css");
 
 describe("CSS Stylesheet BBNF Grammar", () => {
@@ -20,7 +20,7 @@ describe("CSS Stylesheet BBNF Grammar", () => {
     beforeEach(() => {
         // Compile the css-stylesheet.bbnf grammar with @recover directives
         if (!nonterminals) {
-            const entryPath = resolve(grammarDir, "css-stylesheet.bbnf");
+            const entryPath = resolve(grammarDir, "stylesheet.bbnf");
             [nonterminals] = BBNFToParserFromFile(entryPath);
         }
         enableDiagnostics();

@@ -5,7 +5,7 @@ use self_cell::self_cell;
 
 use super::pretty::{self, PrettyInfo};
 use super::types::{
-    DebugInfo, ImportInfo, ImportedItem, InlineInfo, NoCollapseInfo, ParseDiagnostics, RecoverInfo, TokenInfo, WsPatternInfo,
+    DebugInfo, ImportInfo, ImportedItem, InlineInfo, ParseDiagnostics, RecoverInfo, TokenInfo, WsPatternInfo,
 };
 
 // Self-referential struct: owns the source text and the parsed AST that borrows from it.
@@ -24,7 +24,6 @@ pub struct CachedParseResult<'a> {
     pub ast: AST<'a>,
     pub imports: Vec<ImportInfo>,
     pub recovers: Vec<RecoverInfo>,
-    pub no_collapses: Vec<NoCollapseInfo>,
     pub pretties: Vec<PrettyInfo>,
     pub inlines: Vec<InlineInfo>,
     pub debugs: Vec<DebugInfo>,
@@ -75,21 +74,6 @@ pub fn parse_once(src: &str) -> (Option<CachedParseResult<'_>>, ParseDiagnostics
                         span: (rec.span.start, rec.span.end),
                         rule_name_span: (name_start, name_start + name_str.len()),
                         sync_expr_text: sync_text,
-                    }
-                }).collect();
-                let no_collapses = pg.no_collapses.iter().map(|nc| {
-                    let name_str = nc.rule_name.as_ref();
-                    let dir_src = nc.span.as_str();
-                    let name_start = dir_src.find(name_str).map(|off| nc.span.start + off).unwrap_or_else(|| {
-                        panic!(
-                            "could not resolve @no_collapse rule-name span for `{}` within directive `{}`",
-                            name_str, dir_src
-                        )
-                    });
-                    NoCollapseInfo {
-                        rule_name: name_str.to_string(),
-                        span: (nc.span.start, nc.span.end),
-                        rule_name_span: (name_start, name_start + name_str.len()),
                     }
                 }).collect();
                 let pretties = pretty::extract_pretties(&pg.pretties, src);
@@ -155,7 +139,6 @@ pub fn parse_once(src: &str) -> (Option<CachedParseResult<'_>>, ParseDiagnostics
                     ast: pg.rules,
                     imports,
                     recovers,
-                    no_collapses,
                     pretties,
                     inlines,
                     debugs,

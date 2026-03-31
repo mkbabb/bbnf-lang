@@ -8,28 +8,28 @@ section: Performance
 
 parse_that (Rust) and parse-that (TypeScript) are the parsing backbone. Both use dispatch tables, FIRST-set routing, and memoization tuned for their respective runtimes.
 
-## Rust: `JSON` — Span
+## Rust: `JSON` — Arena
 
-Arena parsing returns opaque spans allocated via `BumpArena`. Each iteration constructs a fresh arena and parser—cold per-parse throughput.
+Arena parsing returns typed enum trees allocated via `BumpArena`. Each iteration constructs a fresh arena and parser—cold per-parse throughput.
 
 ```bench-chart
-{ "title": "JSON Arena Span", "unit": "MB/s",
+{ "title": "JSON Arena", "unit": "MB/s",
   "datasets": [
     { "name": "data.json (35 KB)", "icon": "rust",
-      "labels": ["BBNF span"],
-      "series": [{"label": "Throughput", "values": [1261]}] },
+      "labels": ["BBNF arena"],
+      "series": [{"label": "Throughput", "values": [1197]}] },
     { "name": "twitter (631 KB)", "icon": "rust",
-      "labels": ["BBNF span"],
-      "series": [{"label": "Throughput", "values": [1347]}] },
+      "labels": ["BBNF arena"],
+      "series": [{"label": "Throughput", "values": [1340]}] },
     { "name": "citm_catalog (1.7 MB)", "icon": "rust",
-      "labels": ["BBNF span"],
-      "series": [{"label": "Throughput", "values": [1597]}] },
-    { "name": "canada (2.2 MB)", "icon": "rust",
-      "labels": ["BBNF span"],
-      "series": [{"label": "Throughput", "values": [1115]}] },
+      "labels": ["BBNF arena"],
+      "series": [{"label": "Throughput", "values": [1610]}] },
+    { "name": "canada (2.3 MB)", "icon": "rust",
+      "labels": ["BBNF arena"],
+      "series": [{"label": "Throughput", "values": [964]}] },
     { "name": "data_xl (20 MB)", "icon": "rust",
-      "labels": ["BBNF span"],
-      "series": [{"label": "Throughput", "values": [815]}] }
+      "labels": ["BBNF arena"],
+      "series": [{"label": "Throughput", "values": [810]}] }
   ] }
 ```
 
@@ -38,23 +38,23 @@ Arena parsing returns opaque spans allocated via `BumpArena`. Each iteration con
 Numbers parsed to f64, strings borrowed from input without escape decoding. Cold per-parse with `BumpArena`. BBNF uses `Vec<(K,V)>` for objects; nom, winnow, and pest use `HashMap<&str,V>`.
 
 ```bench-chart
-{ "title": "JSON Arena Borrow — No Decode", "unit": "MB/s",
+{ "title": "JSON Borrow — No Decode", "unit": "MB/s",
   "datasets": [
     { "name": "data.json (35 KB)", "icon": "rust",
       "labels": ["BBNF borrow", "nom", "winnow", "pest"],
-      "series": [{"label": "Throughput", "values": [1019, 657, 609, 229]}] },
+      "series": [{"label": "Throughput", "values": [1029, 417, 416, 112]}] },
     { "name": "twitter (631 KB)", "icon": "rust",
       "labels": ["BBNF borrow", "nom", "winnow", "pest"],
-      "series": [{"label": "Throughput", "values": [1156, 540, 586, 224]}] },
+      "series": [{"label": "Throughput", "values": [1165, 417, 416, 112]}] },
     { "name": "citm_catalog (1.7 MB)", "icon": "rust",
       "labels": ["BBNF borrow", "nom", "winnow", "pest"],
-      "series": [{"label": "Throughput", "values": [1257, 703, 679, 186]}] },
-    { "name": "canada (2.2 MB)", "icon": "rust",
+      "series": [{"label": "Throughput", "values": [1319, 417, 416, 112]}] },
+    { "name": "canada (2.3 MB)", "icon": "rust",
       "labels": ["BBNF borrow", "nom", "winnow", "pest"],
-      "series": [{"label": "Throughput", "values": [598, 447, 440, 106]}] },
+      "series": [{"label": "Throughput", "values": [731, 417, 416, 112]}] },
     { "name": "data_xl (20 MB)", "icon": "rust",
       "labels": ["BBNF borrow", "nom", "winnow", "pest"],
-      "series": [{"label": "Throughput", "values": [632, 491, 441, 154]}] }
+      "series": [{"label": "Throughput", "values": [666, 417, 416, 112]}] }
   ] }
 ```
 
@@ -69,25 +69,25 @@ Full escape decoding with owned or `Cow` string allocation. Cold per-parse with 
   "datasets": [
     { "name": "data.json (35 KB)", "icon": "rust",
       "labels": ["BBNF copy", "sonic-rs", "serde_json_borrow", "simd-json", "jiter", "serde_json"],
-      "series": [{"label": "Throughput", "values": [887, 2293, 1515, 1364, 1475, 930]}] },
+      "series": [{"label": "Throughput", "values": [877, 2293, 1515, 1364, 1475, 930]}] },
     { "name": "twitter (631 KB)", "icon": "rust",
       "labels": ["BBNF copy", "sonic-rs", "serde_json_borrow", "simd-json", "jiter", "serde_json"],
-      "series": [{"label": "Throughput", "values": [900, 2522, 1652, 1375, 1222, 867]}] },
+      "series": [{"label": "Throughput", "values": [916, 2522, 1652, 1375, 1222, 867]}] },
     { "name": "citm_catalog (1.7 MB)", "icon": "rust",
       "labels": ["BBNF copy", "sonic-rs", "serde_json_borrow", "simd-json", "jiter", "serde_json"],
-      "series": [{"label": "Throughput", "values": [1173, 3031, 1416, 1696, 1295, 1132]}] },
-    { "name": "canada (2.2 MB)", "icon": "rust",
+      "series": [{"label": "Throughput", "values": [1221, 3031, 1416, 1696, 1295, 1132]}] },
+    { "name": "canada (2.3 MB)", "icon": "rust",
       "labels": ["BBNF copy", "sonic-rs", "serde_json_borrow", "simd-json", "jiter", "serde_json"],
-      "series": [{"label": "Throughput", "values": [595, 1499, 660, 733, 607, 607]}] },
+      "series": [{"label": "Throughput", "values": [724, 1499, 660, 733, 607, 607]}] },
     { "name": "data_xl (20 MB)", "icon": "rust",
       "labels": ["BBNF copy", "sonic-rs", "serde_json_borrow", "simd-json", "jiter", "serde_json"],
-      "series": [{"label": "Throughput", "values": [567, 1445, 890, 982, 798, 647]}] }
+      "series": [{"label": "Throughput", "values": [591, 1445, 890, 982, 798, 647]}] }
   ] }
 ```
 
-All Rust benchmarks use mimalloc. BBNF parsers are generated from a [`.bbnf` grammar](../../grammar/lang/json.bbnf) via `#[derive(Parser)]` with zero hand-written Rust.
+All Rust benchmarks use mimalloc. BBNF parsers are generated from a [`.bbnf` grammar](../../grammar/json/json.bbnf) via `#[derive(Parser)]` with zero hand-written Rust.
 
-## Rust: `CSS` — Span
+## Rust: `CSS` — Arena + Span
 
 BBNF uses [`@ws`](../../grammar/BBNF.md) for SIMD comment-aware whitespace, `@inline` for trivial helper rules, and `@token` for lexical tokens with fusion-style inlining. Cold per-parse with `BumpArena`. cssparser (Mozilla's tokenizer) uses a visitor pattern that counts rules and declarations without building an AST.
 
@@ -96,13 +96,13 @@ BBNF uses [`@ws`](../../grammar/BBNF.md) for SIMD comment-aware whitespace, `@in
   "datasets": [
     { "name": "normalize (6 KB)", "icon": "rust",
       "labels": ["BBNF arena", "BBNF span", "cssparser"],
-      "series": [{"label": "Throughput", "values": [2182, 2472, 655]}] },
+      "series": [{"label": "Throughput", "values": [2378, 2571, 655]}] },
     { "name": "bootstrap (281 KB)", "icon": "rust",
       "labels": ["BBNF arena", "BBNF span", "cssparser"],
-      "series": [{"label": "Throughput", "values": [1270, 1885, 424]}] },
-    { "name": "tailwind (3.8 MB)", "icon": "rust",
+      "series": [{"label": "Throughput", "values": [1421, 1639, 424]}] },
+    { "name": "tailwind (3.6 MB)", "icon": "rust",
       "labels": ["BBNF arena", "BBNF span", "cssparser"],
-      "series": [{"label": "Throughput", "values": [1202, 1856, 402]}] }
+      "series": [{"label": "Throughput", "values": [1370, 1425, 402]}] }
   ] }
 ```
 
@@ -121,7 +121,7 @@ BBNF pretty builds a typed enum tree with rule/block/declaration structure, usin
     { "name": "bootstrap (281 KB)", "icon": "rust",
       "labels": ["BBNF pretty", "lightningcss"],
       "series": [{"label": "Throughput", "values": [299, 117]}] },
-    { "name": "tailwind (3.8 MB)", "icon": "rust",
+    { "name": "tailwind (3.6 MB)", "icon": "rust",
       "labels": ["BBNF pretty", "lightningcss"],
       "series": [{"label": "Throughput", "values": [296, 94]}] }
   ] }
@@ -129,73 +129,65 @@ BBNF pretty builds a typed enum tree with rule/block/declaration structure, usin
 
 See the [formatting benchmarks](./formatting) for gorgeous vs Biome end-to-end comparisons.
 
-## Rust: `CSS` — Semantic
+## Rust: `CSS` — Semantic (L4)
 
 BBNF semantic produces typed values during the parse itself—f64 numbers via fused Eisel-Lemire conversion, u32 hex colors, u8 discriminants for length/angle/time units—not as a post-hoc AST walk. lightningcss performs equivalent semantic work: typed CSS properties, vendor prefix resolution, CSS Nesting validation.
 
 ```bench-chart
-{ "title": "CSS Semantic — vs lightningcss", "unit": "MB/s",
+{ "title": "CSS Semantic (L4) — vs lightningcss", "unit": "MB/s",
   "datasets": [
     { "name": "normalize (6 KB)", "icon": "rust",
       "labels": ["BBNF semantic", "lightningcss"],
-      "series": [{"label": "Throughput", "values": [601, 256]}] },
+      "series": [{"label": "Throughput", "values": [289, 256]}] },
     { "name": "bootstrap (281 KB)", "icon": "rust",
       "labels": ["BBNF semantic", "lightningcss"],
-      "series": [{"label": "Throughput", "values": [258, 114]}] },
-    { "name": "tailwind (3.8 MB)", "icon": "rust",
+      "series": [{"label": "Throughput", "values": [135, 114]}] },
+    { "name": "tailwind (3.6 MB)", "icon": "rust",
       "labels": ["BBNF semantic", "lightningcss"],
-      "series": [{"label": "Throughput", "values": [310, 88]}] }
+      "series": [{"label": "Throughput", "values": [121, 88]}] }
   ] }
 ```
 
 | Parser | normalize | bootstrap | tailwind |
 |--------|-----------|-----------|----------|
-| BBNF semantic | 601 MB/s | 258 MB/s | 310 MB/s |
+| BBNF semantic | 289 MB/s | 135 MB/s | 121 MB/s |
 | lightningcss | 256 MB/s | 114 MB/s | 88 MB/s |
-| Ratio | 2.35x | 2.26x | 3.52x |
+| Ratio | 1.13x | 1.18x | 1.38x |
 
-The gap widens on tailwind (3.52x) where BBNF's dispatch tables and inline byte scanners amortize better across ~38K utility rules than lightningcss's hand-written recursive descent. Bootstrap went from 21 MB/s to 258 MB/s over the optimization sequence—a 12.3x improvement driven by compiler techniques applied to the parser codegen (see below).
+The gap widens on tailwind (1.38x) where BBNF's dispatch tables and inline byte scanners amortize better across ~38K utility rules than lightningcss's hand-written recursive descent.
 
-## Rust: `CSS` — Import Grammar (L2)
+## Rust: `CSS` — VM
 
-The import grammar does comparable work to lightningcss — property-aware dispatch (21 groups), typed CSS Selectors Level 4 (31 rules), balanced-paren function bodies, 147 named colors, typed numbers (f64), typed hex colors (u32). Built entirely via `@import` composition from modular grammar files, no monolithic grammar needed.
+The VM tier interprets bytecode compiled from `.bbnf` grammars at runtime. It doesn't benefit from AOT codegen or LLVM optimization, but provides a zero-compile-time path for dynamic grammar loading (e.g., the WASM playground).
 
 ```bench-chart
-{ "title": "CSS Import (L2) — vs lightningcss", "unit": "MB/s",
+{ "title": "CSS VM", "unit": "MB/s",
   "datasets": [
     { "name": "normalize (6 KB)", "icon": "rust",
-      "labels": ["BBNF import", "lightningcss"],
-      "series": [{"label": "Throughput", "values": [237, 260]}] },
+      "labels": ["BBNF VM"],
+      "series": [{"label": "Throughput", "values": [143]}] },
     { "name": "bootstrap (281 KB)", "icon": "rust",
-      "labels": ["BBNF import", "lightningcss"],
-      "series": [{"label": "Throughput", "values": [125, 116]}] },
-    { "name": "tailwind (3.8 MB)", "icon": "rust",
-      "labels": ["BBNF import", "lightningcss"],
-      "series": [{"label": "Throughput", "values": [123, 87]}] }
+      "labels": ["BBNF VM"],
+      "series": [{"label": "Throughput", "values": [75]}] },
+    { "name": "tailwind (3.6 MB)", "icon": "rust",
+      "labels": ["BBNF VM"],
+      "series": [{"label": "Throughput", "values": [55]}] }
   ] }
 ```
-
-| Parser | normalize | bootstrap | tailwind |
-|--------|-----------|-----------|----------|
-| BBNF import (L2) | 237 MB/s | 125 MB/s | 123 MB/s |
-| lightningcss | 260 MB/s | 116 MB/s | 87 MB/s |
-
-On normalize (6 KB), lightningcss's hand-written parser has a slight edge. On bootstrap and tailwind, BBNF's dispatch tables and inline byte scanners pull ahead — 1.08x on bootstrap, 1.41x on tailwind. The import grammar demonstrates that modular `@import` composition incurs no performance penalty compared to monolithic grammars.
 
 ### CSS Tier Summary
 
 | Tier | normalize | bootstrap | tailwind | Work |
 |------|-----------|-----------|----------|------|
-| span | 2,472 | 1,885 | 1,856 | Byte-range validation |
-| arena | 2,182 | 1,270 | 1,202 | Typed enum tree (opaque values) |
+| span | 2,571 | 1,639 | 1,425 | Byte-range validation |
+| arena | 2,378 | 1,421 | 1,370 | Typed enum tree (opaque values) |
 | structural/pretty | 711 | 299 | 296 | Formatted AST with `@pretty` |
-| semantic | 601 | 258 | 310 | f64/u32/u8 typed values |
-| import (L2) | 237 | 125 | 123 | Full L2 via `@import` composition |
-| typed | 213 | 102 | 102 | Full CSS L4 property types |
+| semantic (L4) | 289 | 135 | 121 | Full CSS L4 property types |
+| VM | 143 | 75 | 55 | Bytecode interpreter |
 
 ### Compiler Optimization Techniques
 
-The 12.3x improvement on bootstrap came from applying classical compiler optimizations to parser codegen—the same techniques compilers use on scalar code, applied at the IR level to parser construction:
+The performance gains came from applying classical compiler optimizations to parser codegen—the same techniques compilers use on scalar code, applied at the IR level to parser construction:
 
 | Technique | Application | Impact |
 |-----------|-------------|--------|
@@ -206,7 +198,7 @@ The 12.3x improvement on bootstrap came from applying classical compiler optimiz
 | Induction Variable | `FnDescriptor` specialization: NumberConvert, HexConvert, Constant recognized at IR level | enables all above |
 | Trie Prefix Factoring | `factor_literal_prefixes`: byte-level literal splitting enables dispatch tables | +2-5% |
 
-These are not hand-applied optimizations—the IR pipeline detects the patterns and emits specialized code automatically. The grammar author writes `number -> /regex/ ;` and the codegen emits a fused byte scanner with Eisel-Lemire f64 conversion.
+These aren't hand-applied optimizations—the IR pipeline detects the patterns and emits specialized code automatically. The grammar author writes `number -> /regex/ ;` and the codegen emits a fused byte scanner with Eisel-Lemire f64 conversion.
 
 ### `regex_emit` — HIR-Based Inline Regex Compilation
 

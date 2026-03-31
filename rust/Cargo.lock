@@ -145,8 +145,8 @@ dependencies = [
 name = "bbnf-ir"
 version = "0.1.6"
 dependencies = [
+ "parse_that",
  "rayon",
- "regex",
  "regex-syntax",
  "rmp-serde",
  "rustc-hash 2.1.2",
@@ -1325,8 +1325,6 @@ dependencies = [
  "dragonbox",
  "itoap",
  "pprint_derive",
- "regex",
- "rustc-hash 2.1.2",
 ]
 
 [[package]]

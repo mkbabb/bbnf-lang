@@ -432,18 +432,23 @@ impl<'a> Interpreter<'a> {
 
     fn exec_match_regex(&mut self, sid: u32) {
         let start = self.offset as usize;
-        let remaining = &self.input[start..];
+        let bytes = self.input.as_bytes();
 
-        // Use pre-compiled regex from the program (zero per-parse compilation).
-        let re = self.program.compiled_regexes[sid as usize].as_ref()
+        // Use pre-compiled DFA from the program (zero per-parse compilation).
+        // find_at returns the absolute end position in bytes (not a length).
+        let dfa = self.program.compiled_regexes[sid as usize].as_ref()
             .expect("MatchRegex references non-regex StringId");
 
-        if let Some(m) = re.find(remaining) {
-            let end = start + m.end();
-            self.values.push(Value::Span(self.offset, end as u32));
-            self.offset = end as u32;
-            self.is_error = false;
-            self.track_furthest();
+        if let Some(end) = dfa.find_at(bytes, start) {
+            if end > start {
+                self.values.push(Value::Span(self.offset, end as u32));
+                self.offset = end as u32;
+                self.is_error = false;
+                self.track_furthest();
+            } else {
+                self.is_error = true;
+                self.track_furthest();
+            }
         } else {
             self.is_error = true;
             self.track_furthest();
@@ -520,15 +525,16 @@ impl<'a> Interpreter<'a> {
         self.pc += 1;
     }
 
-    /// Trim whitespace using a custom `@ws` regex pattern.
+    /// Trim whitespace using a custom `@ws` DFA pattern.
     /// Advances offset without pushing a value (like TrimWs). Always succeeds.
     fn exec_trim_ws_pattern(&mut self, sid: u32) {
         let start = self.offset as usize;
-        let remaining = &self.input[start..];
-        let re = self.program.compiled_regexes[sid as usize].as_ref()
+        let bytes = self.input.as_bytes();
+        let dfa = self.program.compiled_regexes[sid as usize].as_ref()
             .expect("TrimWsPattern references non-regex StringId");
-        if let Some(m) = re.find(remaining) {
-            self.offset = (start + m.end()) as u32;
+        // find_at returns the absolute end position in bytes.
+        if let Some(end) = dfa.find_at(bytes, start) {
+            self.offset = end as u32;
         }
         // Always succeed — whitespace is optional.
         self.pc += 1;

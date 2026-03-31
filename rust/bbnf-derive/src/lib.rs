@@ -36,9 +36,16 @@ use parse_that::utils::get_cargo_root_path;
 //   - The bbnf crate version (invalidates on compiler changes)
 
 /// Version tag baked into the cache key to invalidate on compiler changes.
-/// Includes a build timestamp so that recompiling bbnf-derive (triggered by
-/// any change to bbnf or bbnf-ir source) invalidates all cached codegen.
-const CACHE_VERSION: &str = env!("CARGO_PKG_VERSION");
+///
+/// Combines the crate version with a build-time ID emitted by `build.rs`.
+/// Since Cargo recompiles bbnf-derive whenever any transitive dependency
+/// (bbnf, bbnf-ir, parse_that) changes, the build ID changes on every
+/// recompilation — invalidating stale caches even without a version bump.
+const CACHE_VERSION: &str = concat!(
+    env!("CARGO_PKG_VERSION"),
+    "-",
+    env!("BBNF_DERIVE_BUILD_ID"),
+);
 
 /// Recursively collect all grammar file contents for hashing.
 ///

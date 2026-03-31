@@ -378,7 +378,8 @@ fn emit_mono_optional(
             }
         }
 
-        // General Span optional: inline checkpoint/restore.
+        // General Span optional: try to match, emit zero-width Span on failure.
+        // Optional(Span) collapses to Span in the type system.
         let inner_expr = emit_mono_expr(inner, ctx, mctx, elide_box);
         let cp_var = mctx.fresh("opt_cp");
         let inner_call = if is_simple_expr(inner, mctx) {
@@ -389,12 +390,10 @@ fn emit_mono_optional(
         return quote! {
             {
                 let #cp_var = state.offset;
-                if let Some(__v) = #inner_call {
-                    Some(Some(__v))
-                } else {
+                if #inner_call.is_none() {
                     state.offset = #cp_var;
-                    Some(None)
                 }
+                Some(::parse_that::Span::new(#cp_var, state.offset, state.src))
             }
         };
     }
@@ -428,6 +427,48 @@ fn emit_mono_many(
     ctx: &IrCodegenCtx<'_>,
     mctx: &mut MonoCtx,
 ) -> TokenStream {
+    // Repeat(Span) collapses to Span: loop consuming, produce combined Span.
+    let inner_ty = infer_node_type(inner, ctx);
+    if inner_ty == TypeDesc::Span {
+        let elem_expr = emit_mono_expr(inner, ctx, mctx, false);
+        let start_var = mctx.fresh("sp_start");
+        let prev_var = mctx.fresh("prev");
+        let count_var = mctx.fresh("cnt");
+        let elem_call = if is_simple_expr(inner, mctx) {
+            quote! { #elem_expr }
+        } else {
+            quote! { (|| #elem_expr)() }
+        };
+        let lo_usize = lo as usize;
+        let check = if lo == 0 {
+            quote! { Some(::parse_that::Span::new(#start_var, state.offset, state.src)) }
+        } else {
+            quote! {
+                if #count_var >= #lo_usize {
+                    Some(::parse_that::Span::new(#start_var, state.offset, state.src))
+                } else {
+                    None
+                }
+            }
+        };
+        return quote! {
+            {
+                let #start_var = state.offset;
+                let mut #count_var = 0usize;
+                loop {
+                    let #prev_var = state.offset;
+                    if #elem_call.is_none() {
+                        state.offset = #prev_var;
+                        break;
+                    }
+                    #count_var += 1;
+                    if state.offset == #prev_var { break; }
+                }
+                #check
+            }
+        };
+    }
+
     let elem_expr = emit_mono_expr(inner, ctx, mctx, true);
     let lo_usize = lo as usize;
 

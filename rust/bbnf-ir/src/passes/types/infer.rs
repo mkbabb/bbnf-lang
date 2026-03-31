@@ -47,7 +47,7 @@ pub fn infer_node(node: &IrNode, ctx: &InferCtx<'_>) -> TypeDesc {
             if *lo == 0 && *hi == 1 {
                 // Optional.
                 let inner_ty = infer_node(inner, &consumed);
-                if inner_ty == TypeDesc::Span && !ctx.no_collapse {
+                if inner_ty == TypeDesc::Span {
                     TypeDesc::Span
                 } else {
                     // Phase 1a: transparent refs get unboxed in Optional context.
@@ -64,7 +64,7 @@ pub fn infer_node(node: &IrNode, ctx: &InferCtx<'_>) -> TypeDesc {
                 // Many / Many1: use in_vec inference for inner elements.
                 // Vec provides heap indirection, so Box is unnecessary.
                 let inner_ty = infer_node_in_vec(inner, &consumed);
-                if inner_ty == TypeDesc::Span && !ctx.no_collapse {
+                if inner_ty == TypeDesc::Span {
                     TypeDesc::Span
                 } else {
                     TypeDesc::Vec(Box::new(inner_ty))
@@ -202,7 +202,7 @@ pub fn infer_node_in_vec(node: &IrNode, ctx: &InferCtx<'_>) -> TypeDesc {
 ///
 /// Applies:
 /// - B.1: sp_method_rules Span override (with all-Span guard)
-/// - B.2: @pretty/@no_collapse tuple preservation (consume flag)
+/// - B.2: @pretty tuple preservation (consume flag)
 /// - Consecutive-Span compression
 /// - `(T, Vec<T>)` flattening
 fn infer_seq(children: &[IrNode], ctx: &InferCtx<'_>) -> TypeDesc {

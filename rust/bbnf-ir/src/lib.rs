@@ -349,9 +349,6 @@ pub struct RuleMeta {
     /// Error recovery sync expression.
     pub recover: Option<IrNode>,
 
-    /// Whether `@no_collapse` is set for this rule.
-    pub no_collapse: bool,
-
     /// Whether `@inline` is set for this rule. Force-inlined rules have their
     /// body substituted at every call site — no enum variant, no function.
     #[serde(default)]
@@ -441,6 +438,7 @@ pub struct GrammarIR {
     /// Set to true when prettify is disabled (no @pretty formatting constraints).
     #[serde(default)]
     pub b1_span_collapse: bool,
+
 
     /// When true, all rules are instrumented for debugging.
     /// Set by `@debug * ;` directive or `#[parser(debug)]` attribute.

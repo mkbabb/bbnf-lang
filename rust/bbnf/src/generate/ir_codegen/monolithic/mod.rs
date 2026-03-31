@@ -27,6 +27,7 @@ mod helpers;
 mod repeat;
 mod seq;
 pub mod span;
+pub mod prettify;
 mod token_dispatch;
 
 use bbnf_ir::IrNode;
@@ -133,6 +134,10 @@ pub(super) struct MonoCtx {
     /// Name of the rule currently being generated. Used by delim_scan for
     /// self-recursion (nested blocks call the enclosing wrap function).
     pub current_rule_name: Option<String>,
+    /// @pretty hints for the current rule. Used by the prettify repeat codegen
+    /// to determine the separator between items (softline, hardline, blankline,
+    /// sep("str"), etc.).
+    pub current_pretty_hints: Option<bbnf_ir::PrettyHints>,
 }
 
 impl MonoCtx {
@@ -145,6 +150,7 @@ impl MonoCtx {
             single_site_inline,
             dispatch_guaranteed_byte: None,
             current_rule_name: None,
+            current_pretty_hints: None,
         }
     }
 

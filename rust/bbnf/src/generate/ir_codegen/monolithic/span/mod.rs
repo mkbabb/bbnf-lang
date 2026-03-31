@@ -46,7 +46,7 @@ pub fn generate_monolithic_span(
                 || (!rule.meta.is_cyclic
                     && rule.meta.recover.is_none()
                     && rule.meta.pretty.is_none()
-                    && !rule.meta.no_collapse)
+                    )
         })
         .collect();
 

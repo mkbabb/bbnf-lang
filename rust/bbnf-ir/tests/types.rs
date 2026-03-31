@@ -28,19 +28,6 @@ fn rule(id: RuleId, body: IrNode) -> IrRule {
     }
 }
 
-fn rule_no_collapse(id: RuleId, body: IrNode) -> IrRule {
-    IrRule {
-        id,
-        name: id,
-        body,
-        meta: RuleMeta {
-            no_collapse: true,
-            ..Default::default()
-        },
-        source_span: None,
-    }
-}
-
 fn alt(nodes: Vec<IrNode>) -> IrNode {
     IrNode::Alt(
         nodes
@@ -89,23 +76,6 @@ fn optional_span_collapses() {
     )]);
     infer_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::Span);
-}
-
-#[test]
-fn optional_span_no_collapse() {
-    let mut ir = make_ir(vec![rule_no_collapse(
-        0,
-        IrNode::Repeat {
-            inner: Box::new(IrNode::Literal(3)),
-            lo: 0,
-            hi: 1,
-        },
-    )]);
-    infer_types(&mut ir);
-    assert_eq!(
-        *get_type(&ir, 0),
-        TypeDesc::Option(Box::new(TypeDesc::Span))
-    );
 }
 
 #[test]
@@ -189,9 +159,9 @@ fn seq_mixed_tuple() {
 
 #[test]
 fn pair_flattening() {
-    // Seq(Ref(1), Repeat(Ref(1))) where Ref(1) = Span -> Span (collapsed)
-    // But with no_collapse, Seq(Span, Vec<Span>) -> Vec<Span>
-    let mut ir = make_ir(vec![rule_no_collapse(
+    // Seq(Literal, Repeat(Literal)) where Repeat(Span) -> Span (collapsed)
+    // So Seq(Span, Span) -> Span (all-Span seq compression)
+    let mut ir = make_ir(vec![rule(
         0,
         IrNode::Seq(vec![
             IrNode::Literal(2),
@@ -203,8 +173,8 @@ fn pair_flattening() {
         ]),
     )]);
     infer_types(&mut ir);
-    // no_collapse: Repeat(Span) -> Vec<Span>, Seq(Span, Vec<Span>) -> Vec<Span> (flattened)
-    assert_eq!(*get_type(&ir, 0), TypeDesc::Vec(Box::new(TypeDesc::Span)));
+    // Repeat(Span) -> Span, Seq(Span, Span) -> Span
+    assert_eq!(*get_type(&ir, 0), TypeDesc::Span);
 }
 
 #[test]
@@ -234,9 +204,10 @@ fn next_keeps_right() {
 }
 
 #[test]
-fn alt_heterogeneous_is_boxed_enum() {
-    // Alt(Span, Tuple(Span, Span)) -> BoxedEnum
-    let mut ir = make_ir(vec![rule_no_collapse(
+fn alt_homogeneous_span() {
+    // Alt(Literal, Optional(Literal)) where Optional(Span) -> Span
+    // Alt(Span, Span) -> Span (homogeneous)
+    let mut ir = make_ir(vec![rule(
         0,
         alt(vec![
             IrNode::Literal(2),
@@ -248,9 +219,8 @@ fn alt_heterogeneous_is_boxed_enum() {
         ]),
     )]);
     infer_types(&mut ir);
-    // no_collapse: Literal -> Span, Optional(Literal) -> Option<Span>
-    // Alt(Span, Option<Span>) -> BoxedEnum (heterogeneous)
-    assert_eq!(*get_type(&ir, 0), TypeDesc::BoxedEnum);
+    // Literal -> Span, Optional(Span) -> Span, Alt(Span, Span) -> Span
+    assert_eq!(*get_type(&ir, 0), TypeDesc::Span);
 }
 
 #[test]

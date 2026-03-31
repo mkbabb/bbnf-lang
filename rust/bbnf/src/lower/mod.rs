@@ -41,7 +41,6 @@ pub(crate) struct LowerCtx<'a> {
     /// Directives.
     pub(crate) recovers: Option<&'a HashMap<String, Expression<'a>>>,
     pub(crate) pretties: Option<&'a HashMap<String, Vec<String>>>,
-    pub(crate) no_collapse_rules: Option<&'a HashSet<String>>,
     pub(crate) inline_rules: Option<&'a HashSet<String>>,
     pub(crate) token_rules: Option<&'a HashSet<String>>,
     pub(crate) debug_rules: Option<&'a HashSet<String>>,
@@ -67,7 +66,6 @@ pub(crate) struct LowerCtx<'a> {
 /// * `span_eligible_rules` -- Span-eligible rule names.
 /// * `recovers` -- `@recover` directive map (rule_name -> sync expression).
 /// * `pretties` -- `@pretty` directive map (rule_name -> hint strings).
-/// * `no_collapse_rules` -- `@no_collapse` rule name set.
 /// * `dispatch_tables` -- Pre-built dispatch tables for alternation rules.
 #[allow(clippy::too_many_arguments)]
 pub fn lower_to_ir<'a>(
@@ -79,7 +77,6 @@ pub fn lower_to_ir<'a>(
     span_eligible_rules: &'a HashSet<String>,
     recovers: Option<&'a HashMap<String, Expression<'a>>>,
     pretties: Option<&'a HashMap<String, Vec<String>>>,
-    no_collapse_rules: Option<&'a HashSet<String>>,
     dispatch_tables: &'a HashMap<String, DispatchTable>,
     ws_pattern: Option<&str>,
     inline_rules: Option<&'a HashSet<String>>,
@@ -99,7 +96,6 @@ pub fn lower_to_ir<'a>(
         cyclic_rules: &scc_result.cyclic_rules,
         recovers,
         pretties,
-        no_collapse_rules,
         inline_rules,
         token_rules,
         debug_rules,

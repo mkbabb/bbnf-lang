@@ -3,7 +3,6 @@
 //! Provides the context object and type conversion utilities consumed by
 //! all IR codegen modules.
 
-use std::cell::Cell;
 use std::collections::{HashMap, HashSet};
 
 use bbnf_ir::{GrammarIR, RuleId, TypeDesc};
@@ -38,8 +37,6 @@ pub struct IrCodegenCtx<'a> {
     pub sp_method_rules: HashSet<String>,
     /// Pre-computed syn::Type per rule (from IR TypeDesc).
     pub rule_types: HashMap<RuleId, Type>,
-    /// When true, Span compression in Seq is suppressed (for `@pretty`/`@no_collapse` rules).
-    pub no_collapse: Cell<bool>,
     /// Rule IDs with fused number scan+convert. These rules produce `(Span, f64)`
     /// instead of `Span` in the arena enum. Only set for arena codegen context.
     pub fused_number_rules: HashSet<RuleId>,
@@ -78,7 +75,6 @@ impl<'a> IrCodegenCtx<'a> {
             parser_attrs,
             sp_method_rules: HashSet::new(),
             rule_types,
-            no_collapse: Cell::new(false),
             fused_number_rules: HashSet::new(),
         }
     }

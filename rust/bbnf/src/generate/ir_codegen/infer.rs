@@ -45,7 +45,7 @@ impl CodegenInfer {
             cache: &self.cache,
             acyclic_rules: &self.acyclic_rules,
             cyclic_context,
-            no_collapse: ctx.no_collapse.get(),
+
             pretty_preserve: false,
         }
     }

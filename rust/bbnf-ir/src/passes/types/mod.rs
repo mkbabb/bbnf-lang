@@ -29,7 +29,7 @@ pub use utils::{InferCtx, try_flatten_pair};
 ///
 /// Implements 5 fixes over the baseline:
 /// - B.1: sp_method_rules Span override in Seq (all-Span guard)
-/// - B.2: @pretty/@no_collapse consumable flag for tuple preservation
+/// - B.2: @pretty consumable flag for tuple preservation
 /// - B.3: Custom mapping return type from closure annotation
 /// - B.4: Cyclic→acyclic type override (BoxedEnum for non-inlined acyclic refs in cyclic context)
 /// - B.5: Sub-variant collection for heterogeneous alternations
@@ -37,14 +37,13 @@ pub fn infer_types(ir: &mut GrammarIR) {
     let mut cache: HashMap<RuleId, TypeDesc> = HashMap::new();
 
     // Collect metadata before inference (avoids borrow issues).
-    let rule_meta: HashMap<RuleId, (bool, bool, bool)> = ir
+    let rule_meta: HashMap<RuleId, (bool, bool)> = ir
         .rules
         .iter()
         .map(|r| {
             (
                 r.id,
                 (
-                    r.meta.no_collapse,
                     r.meta.is_cyclic,
                     r.meta.span_eligible,
                 ),
@@ -52,14 +51,13 @@ pub fn infer_types(ir: &mut GrammarIR) {
         })
         .collect();
 
-    // Collect which rules have @pretty or @no_collapse (for B.2).
+    // Collect which rules have @pretty (for B.2).
     let pretty_preserve_rules: HashMap<RuleId, bool> = ir
         .rules
         .iter()
         .map(|r| {
             let has_pretty = r.meta.pretty.is_some();
-            let has_no_collapse = r.meta.no_collapse;
-            (r.id, has_pretty || has_no_collapse)
+            (r.id, has_pretty)
         })
         .collect();
 
@@ -79,7 +77,7 @@ pub fn infer_types(ir: &mut GrammarIR) {
         .collect();
 
     for (id, body, _is_transparent) in &rules_snapshot {
-        let (no_collapse, is_cyclic, _span_eligible) =
+        let (is_cyclic, _span_eligible) =
             rule_meta.get(id).copied().unwrap_or_default();
 
         // B.4: For cyclic rules, override acyclic Ref types to BoxedEnum.
@@ -95,7 +93,6 @@ pub fn infer_types(ir: &mut GrammarIR) {
             cache: &cache,
             acyclic_rules: &acyclic_rules,
             cyclic_context,
-            no_collapse,
             pretty_preserve,
         };
 
@@ -117,13 +114,12 @@ pub fn infer_types(ir: &mut GrammarIR) {
         if *is_transparent {
             continue;
         }
-        let (no_collapse, is_cyclic, _) = rule_meta.get(id).copied().unwrap_or_default();
+        let (is_cyclic, _) = rule_meta.get(id).copied().unwrap_or_default();
         let ctx = InferCtx {
             ir,
             cache: &cache,
             acyclic_rules: &acyclic_rules,
             cyclic_context: is_cyclic,
-            no_collapse,
             pretty_preserve: false,
         };
         let rule_name = rule_names.get(id).unwrap();

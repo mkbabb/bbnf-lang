@@ -6,7 +6,7 @@
 use bbnf_ir::{IrNode, TypeDesc};
 
 use proc_macro2::TokenStream;
-use quote::{format_ident, quote};
+use quote::quote;
 
 use super::super::super::ir_types::IrCodegenCtx;
 use super::super::infer::infer_node_type;
@@ -16,7 +16,7 @@ use super::{emit_mono_expr, MonoCtx};
 ///
 /// Follows the same 4-step process as the combinator `emit_seq_inline`:
 /// 1. Classify children with B.1 sp_method override
-/// 2. All-Span guard + still-all-Span / no_collapse handling
+/// 2. All-Span guard + still-all-Span handling
 /// 3. Group consecutive Span children for compression
 /// 4. (T, Vec<T>) flattening
 pub(super) fn emit_mono_seq(
@@ -51,12 +51,11 @@ pub(super) fn emit_mono_seq(
     }
 
     // All-Span guard: keep B.1 only when every child is a simple Span leaf
-    // or a B.1-overridden Ref, and !no_collapse. Complex children (Repeat,
-    // Skip, etc.) that infer to Span through collapse may compress differently.
+    // or a B.1-overridden Ref. Complex children (Repeat, Skip, etc.) that
+    // infer to Span through collapse may compress differently.
     let all_span = child_types.iter().all(|t| *t == TypeDesc::Span);
     let all_simple_span = all_span
         && ctx.ir.b1_span_collapse
-        && !ctx.no_collapse.get()
         && children.iter().zip(child_types.iter()).all(|(c, ty)| {
             if let IrNode::Ref(id) = c {
                 let rule = &ctx.ir.rules[*id as usize];
@@ -71,49 +70,34 @@ pub(super) fn emit_mono_seq(
         sp_override = vec![false; children.len()];
     }
 
-    // ── Step 2: Still-all-Span + no_collapse handling ────────────────────
+    // ── Step 2: Still-all-Span handling ───────────────────────────────────
 
     let still_all_span = child_types.iter().all(|t| *t == TypeDesc::Span);
     if still_all_span {
-        if ctx.no_collapse.get() {
-            // @pretty/@no_collapse: emit each child individually as Span tuple.
-            // Consume the flag for nested Seqs (only top-level preserves tuples).
-            ctx.no_collapse.set(false);
-            let mut stmts: Vec<TokenStream> = Vec::new();
-            let mut vars: Vec<syn::Ident> = Vec::new();
-            for child in children {
-                let expr = emit_mono_expr(child, ctx, mctx, false);
-                let var = mctx.fresh("sp");
-                stmts.push(quote! { let #var = #expr?; });
-                vars.push(var);
-            }
-            return quote! {
-                {
-                    #(#stmts)*
-                    Some((#(#vars),*))
-                }
-            };
-        } else {
-            // All-Span without no_collapse: monolithic span compression.
-            // B.1-overridden Refs use _sp() (no enum wrapping, no arena alloc).
-            let start_var = mctx.fresh("sp_start");
-            let mut stmts: Vec<TokenStream> = Vec::new();
-            stmts.push(quote! { let #start_var = state.offset; });
-            for (idx, child) in children.iter().enumerate() {
-                let expr = emit_span_child(child, sp_override[idx], ctx, mctx);
-                stmts.push(quote! { #expr?; });
-            }
-            return quote! {
-                {
-                    #(#stmts)*
-                    Some(::parse_that::Span::new(#start_var, state.offset, state.src))
-                }
-            };
+        // All-Span: monolithic span compression.
+        // B.1-overridden Refs use _sp() (no enum wrapping, no arena alloc).
+        let start_var = mctx.fresh("sp_start");
+        let mut stmts: Vec<TokenStream> = Vec::new();
+        stmts.push(quote! { let #start_var = state.offset; });
+        for (idx, child) in children.iter().enumerate() {
+            let expr = emit_span_child(child, sp_override[idx], ctx, mctx);
+            stmts.push(quote! { #expr?; });
         }
+        return quote! {
+            {
+                #(#stmts)*
+                Some(::parse_that::Span::new(#start_var, state.offset, state.src))
+            }
+        };
     }
 
     // ── Step 3: Group consecutive Span children for compression ──────────
-    // (no_collapse does NOT affect this — only still-all-Span is gated above)
+    //
+    // For prettify grammars, skip grouping: each Span child keeps its own
+    // identity so whitespace-only Spans (ws rules) can be individually
+    // nullified by the Doc generator.  Merging them with adjacent non-ws
+    // Spans (e.g., ";") produces mixed-content Spans that bypass the
+    // whitespace check and break idempotency.
 
     struct Group {
         is_span: bool,
@@ -121,12 +105,16 @@ pub(super) fn emit_mono_seq(
     }
     let mut groups: Vec<Group> = Vec::new();
 
+    let skip_span_grouping = false;
+
     for (i, ty) in child_types.iter().enumerate() {
         let is_span = *ty == TypeDesc::Span;
-        if let Some(last) = groups.last_mut() {
-            if is_span && last.is_span {
-                last.indices.push(i);
-                continue;
+        if !skip_span_grouping {
+            if let Some(last) = groups.last_mut() {
+                if is_span && last.is_span {
+                    last.indices.push(i);
+                    continue;
+                }
             }
         }
         groups.push(Group {

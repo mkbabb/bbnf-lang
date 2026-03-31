@@ -30,7 +30,7 @@ pub fn generate_monolithic_arena(
     let mut methods: Vec<TokenStream> = Vec::new();
     let enum_type = &ctx.enum_type;
 
-    // Pre-compute fusion eligibility: non-cyclic, no @recover, no @pretty, no @no_collapse.
+    // Pre-compute fusion eligibility: non-cyclic, no @recover, no @pretty.
     // @token rules are always fusion-eligible — body inlined at call sites, but the enum
     // variant is preserved (unlike force_inline which eliminates the variant entirely).
     // This allows @token to coexist with @pretty: the parsing body is flat inline code,
@@ -55,11 +55,10 @@ pub fn generate_monolithic_arena(
             if rule.meta.is_token {
                 return true;
             }
-            // Don't inline cyclic, recoverable, pretty, or no_collapse rules.
+            // Don't inline cyclic, recoverable, or pretty rules.
             if rule.meta.is_cyclic
                 || rule.meta.recover.is_some()
                 || rule.meta.pretty.is_some()
-                || rule.meta.no_collapse
             {
                 return false;
             }
@@ -84,11 +83,6 @@ pub fn generate_monolithic_arena(
         let fn_ident = mono_fn_ident(name);
         let pub_ident = ctx.method_ident_for_name(name);
         let return_type = ctx.rule_return_type(rule.id);
-
-        // Set no_collapse for @no_collapse rules only.  @pretty uses
-        // pretty_preserve in infer_types; consecutive-Span compression
-        // must still match to avoid tuple shape divergence.
-        ctx.no_collapse.set(rule.meta.no_collapse);
 
         // State-based memo is disabled for monolithic arena fns.
         // Rationale: monolithic fns have zero lazy/combinator construction overhead,
@@ -278,7 +272,6 @@ pub(crate) fn compute_single_site_inline(ir: &GrammarIR) -> Vec<bool> {
                 && !body_has_self_ref(&rule.body, rule.id)
                 && rule.meta.recover.is_none()
                 && rule.meta.pretty.is_none()
-                && !rule.meta.no_collapse
         })
         .collect()
 }

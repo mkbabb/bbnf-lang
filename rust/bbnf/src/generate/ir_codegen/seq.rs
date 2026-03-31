@@ -62,11 +62,10 @@ pub fn emit_seq(children: &[IrNode], ctx: &IrCodegenCtx<'_>, elide_box: bool) ->
         .collect();
 
     // All-Span guard: keep B.1 only when every child is a simple Span leaf
-    // or a B.1-overridden Ref, and !no_collapse.
+    // or a B.1-overridden Ref.
     let all_span = child_types.iter().all(|t| *t == TypeDesc::Span);
     let all_simple_span = all_span
         && ctx.ir.b1_span_collapse
-        && !ctx.no_collapse.get()
         && children.iter().zip(child_types.iter()).all(|(c, ty)| {
             if let IrNode::Ref(id) = c {
                 let rule = &ctx.ir.rules[*id as usize];
@@ -90,20 +89,17 @@ pub fn emit_seq(children: &[IrNode], ctx: &IrCodegenCtx<'_>, elide_box: bool) ->
     };
 
     // Build chains: group consecutive Span children for then_span().
-    // When no_collapse is set and all types are Span, don't group — preserve the tuple.
-    // Consume after first use (only top-level Seq of the rule preserves tuples).
-    let no_collapse = ctx.no_collapse.get() && types.iter().all(|t| *t == TypeDesc::Span);
-    // When no_collapse, clear it for nested emit_seq calls (only top-level preserves).
-    if no_collapse {
-        ctx.no_collapse.set(false);
-    }
+    // Skip grouping for arena+prettify (prettify_span_preserve) to match type inference.
+    let skip_span_grouping = false;
     let mut chains: Vec<(bool, Vec<TokenStream>)> = Vec::new();
     for (parser, ty) in parsers.iter().zip(types.iter()) {
-        let is_span = *ty == TypeDesc::Span && !no_collapse;
-        if let Some((last_is_span, last_chain)) = chains.last_mut() {
-            if is_span && *last_is_span {
-                last_chain.push(parser.clone());
-                continue;
+        let is_span = *ty == TypeDesc::Span;
+        if !skip_span_grouping {
+            if let Some((last_is_span, last_chain)) = chains.last_mut() {
+                if is_span && *last_is_span {
+                    last_chain.push(parser.clone());
+                    continue;
+                }
             }
         }
         chains.push((is_span, vec![parser.clone()]));
@@ -221,11 +217,10 @@ pub(super) fn emit_seq_inline(
     }
 
     // All-Span guard: keep B.1 only when every child is a simple Span leaf
-    // or a B.1-overridden Ref, and !no_collapse.
+    // or a B.1-overridden Ref.
     let all_span = child_types.iter().all(|t| *t == TypeDesc::Span);
     let all_simple_span = all_span
         && ctx.ir.b1_span_collapse
-        && !ctx.no_collapse.get()
         && children.iter().zip(child_types.iter()).all(|(c, ty)| {
             if let IrNode::Ref(id) = c {
                 let rule = &ctx.ir.rules[*id as usize];
@@ -241,48 +236,33 @@ pub(super) fn emit_seq_inline(
     }
 
     // If still all-Span, emit combined Span.
-    // Exception: when no_collapse is set (@pretty/@no_collapse), keep the tuple.
     let still_all_span = child_types.iter().all(|t| *t == TypeDesc::Span);
     if still_all_span {
-        if ctx.no_collapse.get() {
-            // @pretty/@no_collapse: emit each child as Span, produce a tuple.
-            // Clear no_collapse for nested Seqs (only top-level preserves tuples).
-            ctx.no_collapse.set(false);
-            let mut stmts: Vec<TokenStream> = Vec::new();
-            let mut vars: Vec<TokenStream> = Vec::new();
-            for child in children {
-                let child_expr = ir_node_to_inline(child, ctx, ictx);
-                let var = ictx.fresh_ident("sp");
-                stmts.push(quote! { let #var = #child_expr?; });
-                vars.push(quote! { #var });
-            }
-            return quote! {
-                {
-                    #(#stmts)*
-                    Some((#(#vars),*))
-                }
-            };
-        } else {
-            // All-Span: emit combined SpanParser chain via combinator path.
-            let parser = emit_seq(children, ctx, false);
-            let name = ictx.hoist(parser);
-            return quote! { #name.call(state) };
-        }
+        // All-Span: emit combined SpanParser chain via combinator path.
+        let parser = emit_seq(children, ctx, false);
+        let name = ictx.hoist(parser);
+        return quote! { #name.call(state) };
     }
 
     // ── Step 2: Group consecutive Span children (span compression) ───────
+    //
+    // For arena+prettify (prettify_span_preserve), skip grouping so each Span
+    // keeps its own identity for whitespace nullification in the Doc generator.
 
     struct Group {
         is_span: bool,
         indices: Vec<usize>,
     }
     let mut groups: Vec<Group> = Vec::new();
+    let skip_span_grouping = false;
     for (i, ty) in child_types.iter().enumerate() {
         let is_span = *ty == TypeDesc::Span;
-        if let Some(last) = groups.last_mut() {
-            if is_span && last.is_span {
-                last.indices.push(i);
-                continue;
+        if !skip_span_grouping {
+            if let Some(last) = groups.last_mut() {
+                if is_span && last.is_span {
+                    last.indices.push(i);
+                    continue;
+                }
             }
         }
         groups.push(Group {

@@ -1,4 +1,4 @@
-//! Metadata lowering: recover directives, pretty hints, no_collapse.
+//! Metadata lowering: recover directives, pretty hints.
 
 use std::collections::HashMap;
 
@@ -79,11 +79,6 @@ pub(crate) fn build_rule_meta<'a>(
         node
     });
 
-    // No-collapse.
-    let no_collapse = ctx
-        .no_collapse_rules
-        .is_some_and(|set| set.contains(name));
-
     // Force-inline.
     let force_inline = ctx
         .inline_rules
@@ -109,7 +104,6 @@ pub(crate) fn build_rule_meta<'a>(
         is_transparent,
         pretty,
         recover,
-        no_collapse,
         force_inline,
         is_token,
         debug: false, // Set by caller from @debug directives.

@@ -99,10 +99,7 @@ pub(crate) fn emit_mono_discarded(
                     == Some(true);
             if can_inline {
                 let rule = &ctx.ir.rules[*rule_id as usize];
-                let saved_no_collapse = ctx.no_collapse.get();
-                ctx.no_collapse.set(false);
                 let result = emit_mono_discarded(&rule.body, strip_ow, ctx, mctx);
-                ctx.no_collapse.set(saved_no_collapse);
                 return result;
             }
             // Always use monolithic fn call — never construct SpanParser combinators.

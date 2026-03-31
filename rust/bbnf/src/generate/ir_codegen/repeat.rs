@@ -72,7 +72,7 @@ pub fn emit_repeat(
             && (matches!(
                 inner,
                 IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Ref(_)
-            ) || (matches!(inner, IrNode::Seq(_)) && !ctx.no_collapse.get()));
+            ) || matches!(inner, IrNode::Seq(_)));
         if is_safe_span {
             quote! { #inner_ts.opt_span() }
         } else {

@@ -276,7 +276,6 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     // selective import resolution. Otherwise fall back to simple fold.
     let mut recover_map: HashMap<String, Expression<'static>> = HashMap::new();
     let mut pretty_map: HashMap<String, Vec<String>> = HashMap::new();
-    let mut no_collapse_set: HashSet<String> = HashSet::new();
     let mut inline_set: HashSet<String> = HashSet::new();
     let mut token_set: HashSet<String> = HashSet::new();
     let mut debug_set: HashSet<String> = HashSet::new();
@@ -305,10 +304,6 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
                     p.rule_name.to_string(),
                     p.hints.iter().map(|h| h.to_string()).collect(),
                 );
-            }
-            // Extract @no_collapse directives.
-            for nc in &pg.no_collapses {
-                no_collapse_set.insert(nc.rule_name.to_string());
             }
             // Extract @ws directive.
             if let Some(ref pat) = pg.ws_pattern {
@@ -361,9 +356,6 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
                                 .entry(p.rule_name.to_string())
                                 .or_insert_with(|| p.hints.iter().map(|h| h.to_string()).collect());
                         }
-                        for nc in &module.grammar.no_collapses {
-                            no_collapse_set.insert(nc.rule_name.to_string());
-                        }
                         for (name, expr) in &module.grammar.rules {
                             merged.insert(name.clone(), expr.clone());
                         }
@@ -380,9 +372,6 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
                         pretty_map
                             .entry(p.rule_name.to_string())
                             .or_insert_with(|| p.hints.iter().map(|h| h.to_string()).collect());
-                    }
-                    for nc in &module.grammar.no_collapses {
-                        no_collapse_set.insert(nc.rule_name.to_string());
                     }
                     for (name, expr) in &module.grammar.rules {
                         merged.insert(name.clone(), expr.clone());
@@ -462,11 +451,6 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     } else {
         Some(&pretty_map)
     };
-    let no_collapse_ref = if no_collapse_set.is_empty() {
-        None
-    } else {
-        Some(&no_collapse_set)
-    };
     let inline_ref = if inline_set.is_empty() {
         None
     } else {
@@ -495,7 +479,6 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
         &span_eligible_rules,
         recovers_ref,
         pretties_ref,
-        no_collapse_ref,
         &dispatch_tables_for_ir,
         ws_pattern.as_deref(),
         inline_ref,

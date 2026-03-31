@@ -11,9 +11,7 @@ pub struct InferCtx<'a> {
     pub acyclic_rules: &'a std::collections::HashSet<RuleId>,
     /// Whether the current rule being inferred is cyclic (for B.4).
     pub cyclic_context: bool,
-    /// Whether @no_collapse is set for the current rule.
-    pub no_collapse: bool,
-    /// Consumable flag for @pretty/@no_collapse tuple preservation (B.2).
+    /// Consumable flag for @pretty tuple preservation (B.2).
     /// Only applies to the first (top-level) Seq encountered.
     pub pretty_preserve: bool,
 }
@@ -26,7 +24,6 @@ impl InferCtx<'_> {
             cache: self.cache,
             acyclic_rules: self.acyclic_rules,
             cyclic_context: self.cyclic_context,
-            no_collapse: self.no_collapse,
             pretty_preserve: false,
         }
     }

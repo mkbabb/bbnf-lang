@@ -63,7 +63,7 @@ fn detect_guaranteed_wrap<'a>(
 /// - `elide_box = true`:  return ArenaEnum directly
 /// - `elide_box = false`: arena.alloc → `&'a ArenaEnum<'a>`
 ///
-/// **Fusion**: When the target rule is fusion-eligible (non-cyclic, no @recover/@pretty/@no_collapse),
+/// **Fusion**: When the target rule is fusion-eligible (non-cyclic, no @recover/@pretty),
 /// its body is inlined at the call site. This lets LLVM see through the code and hoists
 /// the inlined body's leaf parsers into the caller's scope (created once, reused per iteration).
 pub(super) fn emit_mono_ref(
@@ -82,11 +82,6 @@ pub(super) fn emit_mono_ref(
             == Some(true);
     if can_inline {
         let rule = &ctx.ir.rules[rule_id as usize];
-
-        // Save/restore no_collapse: fusion-eligible rules always have no_collapse=false,
-        // but the caller might have it set (e.g., @pretty rule calling a leaf rule).
-        let saved_no_collapse = ctx.no_collapse.get();
-        ctx.no_collapse.set(false);
 
         let result = if rule.meta.is_transparent {
             // Transparent: body emitted with elide_box=true, returns inner type.
@@ -121,7 +116,6 @@ pub(super) fn emit_mono_ref(
             }
         };
 
-        ctx.no_collapse.set(saved_no_collapse);
         return result;
     }
 

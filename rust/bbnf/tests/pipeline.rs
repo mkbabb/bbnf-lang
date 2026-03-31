@@ -206,7 +206,7 @@ number = /-?\d+/ ;
         &aliases,
         &transparent,
         &span_eligible,
-        None, None, None,
+        None, None,
         &HashMap::new(),
         None,
         None,
@@ -326,7 +326,7 @@ fn pipeline_type_inference_json() {
 
 #[test]
 fn pipeline_google_sheets_formula() {
-    let grammar = std::fs::read_to_string("../../grammar/lang/google-sheets.bbnf")
+    let grammar = std::fs::read_to_string("../../grammar/google-sheets/google-sheets.bbnf")
         .expect("failed to read google-sheets.bbnf");
     let ir = compile_grammar(&grammar, &PipelineOptions::default()).unwrap();
     let program = compile_bytecode(&ir);
@@ -450,7 +450,7 @@ fn pipeline_google_sheets_formula() {
 
 #[test]
 fn pipeline_google_sheets_multiline_let() {
-    let grammar = std::fs::read_to_string("../../grammar/lang/google-sheets.bbnf")
+    let grammar = std::fs::read_to_string("../../grammar/google-sheets/google-sheets.bbnf")
         .expect("failed to read google-sheets.bbnf");
     let ir = compile_grammar(&grammar, &PipelineOptions::default()).unwrap();
     let program = compile_bytecode(&ir);

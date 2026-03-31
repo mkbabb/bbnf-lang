@@ -3,7 +3,7 @@ use bbnf_derive::Parser;
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 #[derive(Parser)]
-#[parser(path = "benches/grammars/json.bbnf", arena)]
+#[parser(path = "../../grammar/json/json.bbnf", arena)]
 struct P;
 fn main() {
     for name in ["data.json", "twitter.json", "citm_catalog.json", "canada.json", "data_xl.json"] {

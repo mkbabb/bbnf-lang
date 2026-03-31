@@ -8,11 +8,10 @@ use parse_that::{
 
 use crate::types::*;
 
-/// Helper enum for interleaving imports, recovers, no_collapses, pretties, and rules during parsing.
+/// Helper enum for interleaving imports, recovers, pretties, and rules during parsing.
 enum TopLevelItem<'a> {
     Import(ImportDirective<'a>),
     Recover(RecoverDirective<'a>),
-    NoCollapse(NoCollapseDirective<'a>),
     Pretty(PrettyDirective<'a>),
     /// `@ws /regex/ ;` — custom whitespace pattern for `?w`.
     WsPattern(Cow<'a, str>),
@@ -538,19 +537,6 @@ impl<'a> BBNFGrammar<'a> {
             })
     }
 
-    /// Parse an `@no_collapse` directive:
-    /// `@no_collapse ruleName ;`
-    fn no_collapse_directive() -> Parser<'a, NoCollapseDirective<'a>> {
-        string("@no_collapse")
-            .trim_whitespace()
-            .next(Self::identifier().trim_whitespace())
-            .skip(any_span(&[";", "."]).opt().trim_whitespace())
-            .map_with_state(|name_span, prev_offset, state| NoCollapseDirective {
-                rule_name: Cow::Borrowed(name_span.as_str()),
-                span: Span::new(prev_offset, state.offset, state.src),
-            })
-    }
-
     /// Parse an `@inline ruleName ;` directive — force-inline a rule at all call sites.
     fn inline_directive() -> Parser<'a, Cow<'a, str>> {
         string("@inline")
@@ -660,9 +646,6 @@ impl<'a> BBNFGrammar<'a> {
         let recover = Self::skip_comments()
             .next(Self::recover_directive().trim_whitespace())
             .map(TopLevelItem::Recover);
-        let no_collapse = Self::skip_comments()
-            .next(Self::no_collapse_directive().trim_whitespace())
-            .map(TopLevelItem::NoCollapse);
         let pretty = Self::skip_comments()
             .next(Self::pretty_directive().trim_whitespace())
             .map(TopLevelItem::Pretty);
@@ -682,12 +665,11 @@ impl<'a> BBNFGrammar<'a> {
             .next(Self::production_rule().trim_whitespace())
             .map(TopLevelItem::Rule);
 
-        let item = import | recover | no_collapse | pretty | ws_pat | inline_dir | debug_dir | token_dir | rule;
+        let item = import | recover | pretty | ws_pat | inline_dir | debug_dir | token_dir | rule;
 
         Self::skip_comments().next(item.many(..)).map(|items| {
             let mut imports = Vec::new();
             let mut recovers = Vec::new();
-            let mut no_collapses = Vec::new();
             let mut pretties = Vec::new();
             let mut ws_pattern = None;
             let mut inline_rules = Vec::new();
@@ -698,7 +680,6 @@ impl<'a> BBNFGrammar<'a> {
                 match item {
                     TopLevelItem::Import(imp) => imports.push(imp),
                     TopLevelItem::Recover(rec) => recovers.push(rec),
-                    TopLevelItem::NoCollapse(nc) => no_collapses.push(nc),
                     TopLevelItem::Pretty(p) => pretties.push(p),
                     TopLevelItem::WsPattern(pat) => ws_pattern = Some(pat),
                     TopLevelItem::Inline(name) => inline_rules.push(name),
@@ -717,7 +698,6 @@ impl<'a> BBNFGrammar<'a> {
             ParsedGrammar {
                 imports,
                 recovers,
-                no_collapses,
                 pretties,
                 rules: ast,
                 ws_pattern,

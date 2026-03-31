@@ -25,7 +25,7 @@ bbnf/
 │   │   ├── string_interner.rs  StringInterner — dedup string literals
 │   │   ├── fn_table.rs   FnTable — host function descriptors
 │   │   ├── expression.rs Recursive expression/node lowering
-│   │   └── metadata.rs   Rule metadata lowering (recover, pretty, no_collapse, token)
+│   │   └── metadata.rs   Rule metadata lowering (recover, pretty, token)
 │   ├── pipeline.rs      Full lowering + codegen orchestrator (15-operation pass sequence)
 │   ├── generate/
 │   │   ├── mod.rs        Re-exports + orchestrator

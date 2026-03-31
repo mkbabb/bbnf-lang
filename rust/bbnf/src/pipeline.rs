@@ -42,8 +42,6 @@ pub fn compile_grammar(source: &str, options: &PipelineOptions) -> Result<Gramma
     // Extract directives.
     let mut recover_map: HashMap<String, Expression<'static>> = HashMap::new();
     let mut pretty_map: HashMap<String, Vec<String>> = HashMap::new();
-    let mut no_collapse_set: HashSet<String> = HashSet::new();
-
     for rec in &parsed.recovers {
         recover_map.insert(rec.rule_name.to_string(), rec.sync_expr.clone());
     }
@@ -52,9 +50,6 @@ pub fn compile_grammar(source: &str, options: &PipelineOptions) -> Result<Gramma
             p.rule_name.to_string(),
             p.hints.iter().map(|h| h.to_string()).collect(),
         );
-    }
-    for nc in &parsed.no_collapses {
-        no_collapse_set.insert(nc.rule_name.to_string());
     }
 
     let ws_pat = parsed.ws_pattern;
@@ -86,7 +81,6 @@ pub fn compile_grammar(source: &str, options: &PipelineOptions) -> Result<Gramma
         ast,
         &recover_map,
         &pretty_map,
-        &no_collapse_set,
         options,
         ws_pat.as_deref(),
         inline_ref,
@@ -103,7 +97,6 @@ pub fn compile_ast<'a>(
     ast: AST<'a>,
     recover_map: &HashMap<String, Expression<'a>>,
     pretty_map: &HashMap<String, Vec<String>>,
-    no_collapse_set: &HashSet<String>,
     options: &PipelineOptions,
     ws_pattern: Option<&str>,
     inline_rules: Option<&HashSet<String>>,
@@ -174,12 +167,6 @@ pub fn compile_ast<'a>(
     } else {
         Some(pretty_map)
     };
-    let no_collapse_ref = if no_collapse_set.is_empty() {
-        None
-    } else {
-        Some(no_collapse_set)
-    };
-
     // Dispatch tables (empty for now — IR passes generate these).
     let dispatch_tables = HashMap::new();
 
@@ -193,7 +180,6 @@ pub fn compile_ast<'a>(
         &span_eligible_rules,
         recovers_ref,
         pretties_ref,
-        no_collapse_ref,
         &dispatch_tables,
         ws_pattern,
         inline_rules,

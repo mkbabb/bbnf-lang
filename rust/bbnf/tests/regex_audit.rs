@@ -142,10 +142,8 @@ fn scan_grammar_dir(dir: &Path) -> Vec<(String, String)> {
 #[test]
 fn audit_all_grammar_regex_patterns() {
     let grammar_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../grammar");
-    let bench_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("benches/grammars");
 
     let mut all_patterns = scan_grammar_dir(&grammar_dir);
-    all_patterns.extend(scan_grammar_dir(&bench_dir));
 
     if all_patterns.is_empty() {
         eprintln!("WARNING: No regex patterns found in grammar files");

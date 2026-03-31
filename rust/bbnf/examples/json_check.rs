@@ -5,8 +5,8 @@ use bbnf_derive::Parser;
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 #[derive(Parser)]
-#[parser(path = "benches/grammars/json.bbnf", arena)]
-struct BbnfJsonParser;
+#[parser(path = "../../grammar/json/json.bbnf", arena)]
+struct JsonParser;
 
 fn bench_file(name: &str) {
     let candidates = [
@@ -32,7 +32,7 @@ fn bench_file(name: &str) {
 
     // Cold span — single parse, fresh parser construction
     let start = std::time::Instant::now();
-    let span_p = BbnfJsonParser::value();
+    let span_p = JsonParser::value();
     let _ = std::hint::black_box(span_p.parse(std::hint::black_box(&input)));
     let span_cold = start.elapsed();
 
@@ -41,8 +41,8 @@ fn bench_file(name: &str) {
     let start = std::time::Instant::now();
     for _ in 0..n {
         let arena =
-            parse_that::BumpArena::<BbnfJsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-        let arena_parser = BbnfJsonParser::value_arena();
+            parse_that::BumpArena::<JsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
+        let arena_parser = JsonParser::value_arena();
         let ast = arena_parser
             .parse_with_context(std::hint::black_box(&input), &arena)
             .unwrap();

@@ -516,7 +516,7 @@ pub(super) fn emit_arena(
     // Block branch: rewind to item start, call the block rule's arena function.
     let on_block = if let Some(block_rule_id) = config.block_fn {
         let name = ctx.ir.get_string(ctx.ir.rules[block_rule_id as usize].name);
-        let fn_ident = mono_fn_ident(name);
+        let fn_ident = mono_fn_ident(name, ctx.uses_arena());
         quote! {
             state.offset = __item;
             if let Some(__v) = Self::#fn_ident(state) {
@@ -539,12 +539,12 @@ pub(super) fn emit_arena(
     let on_pivot = if let Some(pivot_rule_id) = config.pivot_fn {
         let pivot_rule = &ctx.ir.rules[pivot_rule_id as usize];
         let pivot_name = ctx.ir.get_string(pivot_rule.name);
-        let pivot_fn = mono_fn_ident(pivot_name);
+        let pivot_fn = mono_fn_ident(pivot_name, ctx.uses_arena());
 
         // Fallback: if the pivot function fails, try the block branch.
         let fallback = if let Some(block_rule_id) = config.block_fn {
             let block_name = ctx.ir.get_string(ctx.ir.rules[block_rule_id as usize].name);
-            let block_fn = mono_fn_ident(block_name);
+            let block_fn = mono_fn_ident(block_name, ctx.uses_arena());
             quote! {
                 state.offset = __item;
                 if let Some(__v) = Self::#block_fn(state) {

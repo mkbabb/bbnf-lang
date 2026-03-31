@@ -74,7 +74,7 @@ pub(super) fn emit_mono_ref(
     }
 
     // Standard path: emit function call.
-    let fn_ident = mono_fn_ident(ctx.resolve_rule_name(rule_id));
+    let fn_ident = mono_fn_ident(ctx.resolve_rule_name(rule_id), ctx.uses_arena());
 
     if elide_box {
         // Direct call → ArenaEnum<'a>

@@ -53,10 +53,16 @@ pub(super) fn emit_mono_seq(
     // All-Span guard: keep B.1 only when every child is a simple Span leaf
     // or a B.1-overridden Ref. Complex children (Repeat, Skip, etc.) that
     // infer to Span through collapse may compress differently.
+    // Optional children (Repeat { lo: 0, hi: 1 }) produce Option<Span>,
+    // not Span, so they must exclude from B.1 collapse.
     let all_span = child_types.iter().all(|t| *t == TypeDesc::Span);
     let all_simple_span = all_span
         && ctx.ir.b1_span_collapse
         && children.iter().zip(child_types.iter()).all(|(c, ty)| {
+            // Optional(Span) produces Option<Span>, not Span — exclude.
+            if let IrNode::Repeat { lo: 0, hi: 1, .. } = c {
+                return false;
+            }
             if let IrNode::Ref(id) = c {
                 let rule = &ctx.ir.rules[*id as usize];
                 if rule.meta.has_sp_method && !rule.meta.is_transparent {
@@ -241,7 +247,7 @@ fn emit_span_child(
             // B.1 span override: must produce Span, not ArenaEnum.
             // Use direct monolithic call + offset-delta Span construction.
             // Avoids SpanParser combinator overhead entirely.
-            let fn_ident = super::mono_fn_ident(ctx.resolve_rule_name(*id));
+            let fn_ident = super::mono_fn_ident(ctx.resolve_rule_name(*id), ctx.uses_arena());
             return quote! {
                 {
                     let __sp_b1 = state.offset;

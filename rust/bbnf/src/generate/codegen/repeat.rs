@@ -298,7 +298,7 @@ fn emit_mono_optional(
     // Ref nodes: skip Box in Optional context.
     if let IrNode::Ref(rule_id) = inner {
         let rule = &ctx.ir.rules[*rule_id as usize];
-        let fn_ident = mono_fn_ident(ctx.resolve_rule_name(*rule_id));
+        let fn_ident = mono_fn_ident(ctx.resolve_rule_name(*rule_id), ctx.uses_arena());
         let cp_var = mctx.fresh("opt_cp");
 
         if rule.meta.is_transparent || elide_box {

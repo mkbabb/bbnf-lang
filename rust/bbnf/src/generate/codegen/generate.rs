@@ -84,7 +84,7 @@ pub fn generate_monolithic(
 
     for rule in &ir.rules {
         let name = ir.get_string(rule.name);
-        let fn_ident = mono_fn_ident(name);
+        let fn_ident = mono_fn_ident(name, ctx.uses_arena());
         let pub_ident = ctx.method_ident_for_name(name);
         let return_type = ctx.rule_return_type(rule.id);
 
@@ -204,21 +204,58 @@ pub fn generate_monolithic(
             }
         });
 
+        // ── Emit sync function + recovery wrapping ─────────────────────
+
+        let has_recover = rule.meta.recover.is_some() && !ctx.parser_attrs.skip_recover;
+
+        if let Some(ref sync_node) = rule.meta.recover {
+            if !ctx.parser_attrs.skip_recover {
+                let sync_ident = format_ident!("__sync_{}", name);
+                let mut sync_mctx =
+                    MonoCtx::new(fusion_eligible.clone(), single_site_inline.clone());
+                let sync_body = emit_mono_expr(sync_node, ctx, &mut sync_mctx, false);
+                let sync_hoisted = &sync_mctx.hoisted;
+                methods.push(quote! {
+                    #[allow(non_snake_case)]
+                    fn #sync_ident<'a>(
+                        state: &mut ::parse_that::ParserState<'a>,
+                    ) -> Option<()> {
+                        #(#sync_hoisted)*
+                        (#sync_body).map(|_| ())
+                    }
+                });
+            }
+        }
+
         // ── Emit public method(s) ────────────────────────────────────────
 
         if rule.meta.is_transparent {
             // Transparent: public method wraps result in Box (Owned) or arena.alloc (Arena).
             let alloc_code = ctx.emit_box_alloc(&quote! { __v });
+
+            let mut pub_parser = quote! {
+                Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                    let __v = Self::#fn_ident(state)?;
+                    Some(#alloc_code)
+                })
+            };
+
+            if has_recover {
+                let sync_ident = format_ident!("__sync_{}", name);
+                let sentinel = ctx.recover_sentinel(rule.id);
+                pub_parser = quote! {
+                    #pub_parser.recover(Parser::new(Self::#sync_ident), #sentinel)
+                };
+            }
+
             methods.push(quote! {
                 pub fn #pub_ident<'a>() -> Parser<'a, #return_type> {
-                    Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                        let __v = Self::#fn_ident(state)?;
-                        Some(#alloc_code)
-                    })
+                    #pub_parser
                 }
             });
 
-            // Unboxed variant: direct delegation.
+            // Unboxed variant: direct delegation (no recovery wrapping — unboxed
+            // is used internally, recovery is on the public boxed method).
             let unboxed_ident = ctx.unboxed_method_ident_for_name(name);
             methods.push(quote! {
                 #[inline(always)]
@@ -228,9 +265,19 @@ pub fn generate_monolithic(
             });
         } else {
             // Non-transparent: direct delegation (fn already returns ArenaEnum).
+            let mut pub_parser = quote! { Parser::new(Self::#fn_ident) };
+
+            if has_recover {
+                let sync_ident = format_ident!("__sync_{}", name);
+                let sentinel = ctx.recover_sentinel(rule.id);
+                pub_parser = quote! {
+                    #pub_parser.recover(Parser::new(Self::#sync_ident), #sentinel)
+                };
+            }
+
             methods.push(quote! {
                 pub fn #pub_ident<'a>() -> Parser<'a, #return_type> {
-                    Parser::new(Self::#fn_ident)
+                    #pub_parser
                 }
             });
         }

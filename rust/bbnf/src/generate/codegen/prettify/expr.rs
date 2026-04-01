@@ -54,7 +54,7 @@ pub(super) fn emit_prettify_ref(
         // Save parent hints, switch to the inlined rule's hints so nested
         // Repeats use the correct separator (not the parent's @pretty hint).
         let saved_hints = mctx.current_pretty_hints.take();
-        mctx.current_pretty_hints = rule.meta.pretty.clone();
+        mctx.current_pretty_hints = rule.meta.directives.pretty.clone();
         let result = emit_prettify_expr(&rule.body, ir, ctx, mctx);
         mctx.current_pretty_hints = saved_hints;
         return result;

@@ -33,7 +33,7 @@ pub fn prune_unreachable(ir: &mut GrammarIR) {
             let rule = &ir.rules[idx];
             collect_refs(&rule.body, &mut stack);
             // Also follow recovery expressions.
-            if let Some(ref recover) = rule.meta.recover {
+            if let Some(ref recover) = rule.meta.directives.recover {
                 collect_refs(recover, &mut stack);
             }
         }
@@ -54,7 +54,7 @@ pub fn prune_unreachable(ir: &mut GrammarIR) {
     for rule in &mut ir.rules {
         rule.id = old_to_new[&rule.id];
         remap_refs(&mut rule.body, &old_to_new);
-        if let Some(ref mut recover) = rule.meta.recover {
+        if let Some(ref mut recover) = rule.meta.directives.recover {
             remap_refs(recover, &old_to_new);
         }
         if let Some(ref mut alias_id) = rule.meta.is_alias {

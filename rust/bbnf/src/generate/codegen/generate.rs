@@ -49,11 +49,11 @@ pub fn generate_monolithic(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStrea
         .iter()
         .map(|rule| {
             // @token rules always inline (small by definition).
-            if rule.meta.is_token {
+            if rule.meta.directives.token {
                 return true;
             }
             // Don't inline cyclic, recoverable, or pretty rules.
-            if rule.meta.is_cyclic || rule.meta.recover.is_some() || rule.meta.pretty.is_some() {
+            if rule.meta.is_cyclic || rule.meta.directives.recover.is_some() || rule.meta.directives.pretty.is_some() {
                 return false;
             }
             // Inline rules with moderate expansion cost.
@@ -171,7 +171,7 @@ pub fn generate_monolithic(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStrea
 
         // ── Emit internal function ───────────────────────────────────────
 
-        let rule_debug = ir.debug_all || rule.meta.debug;
+        let rule_debug = ir.debug_all || rule.meta.directives.debug;
         let instrumented_body = if rule_debug {
             let trace_entry = super::trace::emit_trace_entry(name);
             let result_ident = syn::Ident::new("__trace_result", proc_macro2::Span::call_site());
@@ -197,9 +197,9 @@ pub fn generate_monolithic(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStrea
 
         // ── Emit sync function + recovery wrapping ─────────────────────
 
-        let has_recover = rule.meta.recover.is_some() && !ctx.parser_attrs.skip_recover;
+        let has_recover = rule.meta.directives.recover.is_some() && !ctx.parser_attrs.skip_recover;
 
-        if let Some(ref sync_node) = rule.meta.recover {
+        if let Some(ref sync_node) = rule.meta.directives.recover {
             if !ctx.parser_attrs.skip_recover {
                 let sync_ident = format_ident!("__sync_{}", name);
                 let mut sync_mctx =
@@ -275,7 +275,7 @@ pub fn generate_monolithic(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStrea
     }
 
     // Emit the thread-local depth counter if any rule is debug-instrumented.
-    let has_debug = ir.debug_all || ir.rules.iter().any(|r| r.meta.debug);
+    let has_debug = ir.debug_all || ir.rules.iter().any(|r| r.meta.directives.debug);
     let depth_counter = if has_debug {
         super::trace::emit_depth_counter()
     } else {
@@ -311,8 +311,8 @@ pub(crate) fn compute_single_site_inline(ir: &GrammarIR) -> Vec<bool> {
                 && rule.id != 0
                 && ref_counts[i] == 1
                 && !body_has_self_ref(&rule.body, rule.id)
-                && rule.meta.recover.is_none()
-                && rule.meta.pretty.is_none()
+                && rule.meta.directives.recover.is_none()
+                && rule.meta.directives.pretty.is_none()
         })
         .collect()
 }

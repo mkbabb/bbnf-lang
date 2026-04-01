@@ -8,7 +8,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use bbnf_ir::bytecode::Op;
 use bbnf_ir::compiler::{compile, compile_with_debug};
 use bbnf_ir::interpreter::{DebugAction, DebugState, Interpreter, StepMode};
-use bbnf_ir::{GrammarIR, GrammarSpan, IrNode, IrRule, RuleMeta};
+use bbnf_ir::{GrammarIR, GrammarSpan, IrNode, IrRule, RuleDirectives, RuleMeta};
 
 fn make_debug_ir() -> GrammarIR {
     // Grammar: entry = value ; value = "x" ;
@@ -19,7 +19,7 @@ fn make_debug_ir() -> GrammarIR {
                 name: 0,
                 body: IrNode::Ref(1),
                 meta: RuleMeta {
-                    debug: true,
+                    directives: RuleDirectives { debug: true, ..Default::default() },
                     ..Default::default()
                 },
                 source_span: Some(GrammarSpan { start: 0, end: 10 }),
@@ -29,7 +29,7 @@ fn make_debug_ir() -> GrammarIR {
                 name: 1,
                 body: IrNode::Literal(2),
                 meta: RuleMeta {
-                    debug: true,
+                    directives: RuleDirectives { debug: true, ..Default::default() },
                     ..Default::default()
                 },
                 source_span: Some(GrammarSpan { start: 12, end: 25 }),
@@ -109,7 +109,7 @@ fn compiler_debug_all_instruments_all_rules() {
     let mut ir = make_debug_ir();
     ir.debug_all = true;
     for rule in &mut ir.rules {
-        rule.meta.debug = false; // Clear per-rule, rely on debug_all.
+        rule.meta.directives.debug = false; // Clear per-rule, rely on debug_all.
     }
     let program = compile_with_debug(&ir, true);
 

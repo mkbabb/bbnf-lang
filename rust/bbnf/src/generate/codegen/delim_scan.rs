@@ -583,7 +583,7 @@ pub(super) fn emit_arena(
         // Check if the pivot rule returns Span — if so, construct directly
         // from scanner offsets (no rewind, no re-parse).
         let pivot_type = ctx.ir.types.iter().find(|(id, _)| *id == pivot_rule_id);
-        let is_span_result = pivot_rule.meta.is_token
+        let is_span_result = pivot_rule.meta.directives.token
             || pivot_type.is_some_and(|(_, td)| *td == bbnf_ir::TypeDesc::Span);
 
         if is_span_result {

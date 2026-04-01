@@ -255,7 +255,7 @@ fn lower_with_pretty_hints() {
     };
 
     let rule = &ir.rules[0];
-    let hints = rule.meta.pretty.as_ref().unwrap();
+    let hints = rule.meta.directives.pretty.as_ref().unwrap();
     assert!(hints.group);
     assert!(hints.indent);
     assert_eq!(hints.sep.as_deref(), Some(", "));

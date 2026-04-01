@@ -4,7 +4,7 @@
 //! NOT computed here -- they are handled by IR passes (`compute_aliases`,
 //! `compute_transparent`, `refine_span_eligibility`) that run post-lowering.
 
-use bbnf_ir::{CharSet128, MemoStrategy, PrettyHints, RuleMeta};
+use bbnf_ir::{CharSet128, MemoStrategy, PrettyHints, RuleDirectives, RuleMeta};
 
 use crate::types::Expression;
 
@@ -77,10 +77,12 @@ pub(crate) fn build_rule_meta<'a>(
         span_eligible: false,  // Populated by refine_span_eligibility IR pass.
         is_alias: None,        // Populated by compute_aliases IR pass.
         is_transparent: false, // Populated by compute_transparent IR pass.
-        pretty,
-        recover,
-        is_token,
-        debug: false,         // Set by caller from @debug directives.
+        directives: RuleDirectives {
+            pretty,
+            recover,
+            token: is_token,
+            debug: false,     // Set by caller from @debug directives.
+        },
         has_sp_method: false, // Computed by compute_sp_method_rules pass.
         sub_variants: Vec::new(),
     }

@@ -39,10 +39,10 @@ pub fn generate_monolithic_span(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> Token
         .rules
         .iter()
         .map(|rule| {
-            rule.meta.is_token
+            rule.meta.directives.token
                 || (!rule.meta.is_cyclic
-                    && rule.meta.recover.is_none()
-                    && rule.meta.pretty.is_none())
+                    && rule.meta.directives.recover.is_none()
+                    && rule.meta.directives.pretty.is_none())
         })
         .collect();
 
@@ -61,7 +61,7 @@ pub fn generate_monolithic_span(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> Token
 
         let fn_body = quote! { #(#hoisted)* #body_expr };
 
-        let rule_debug = ir.debug_all || rule.meta.debug;
+        let rule_debug = ir.debug_all || rule.meta.directives.debug;
         let instrumented_body = if rule_debug {
             let trace_entry = super::trace::emit_trace_entry(name);
             let result_ident = syn::Ident::new("__trace_result", proc_macro2::Span::call_site());
@@ -93,7 +93,7 @@ pub fn generate_monolithic_span(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> Token
     }
 
     // Emit thread-local depth counter if any rule is debug-instrumented.
-    let has_debug = ir.debug_all || ir.rules.iter().any(|r| r.meta.debug);
+    let has_debug = ir.debug_all || ir.rules.iter().any(|r| r.meta.directives.debug);
     let depth_counter = if has_debug {
         super::trace::emit_depth_counter()
     } else {

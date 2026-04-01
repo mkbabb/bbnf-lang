@@ -36,7 +36,7 @@ pub fn fuse_token_dispatch(ir: &mut GrammarIR) {
         .rules
         .iter()
         .filter(|r| {
-            if !r.meta.is_token {
+            if !r.meta.directives.token {
                 return false;
             }
             let fs_len = r.meta.first_set.len();

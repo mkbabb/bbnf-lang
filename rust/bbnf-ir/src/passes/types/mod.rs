@@ -48,7 +48,7 @@ pub fn infer_types(ir: &mut GrammarIR) {
         .rules
         .iter()
         .map(|r| {
-            let has_pretty = r.meta.pretty.is_some();
+            let has_pretty = r.meta.directives.pretty.is_some();
             (r.id, has_pretty)
         })
         .collect();

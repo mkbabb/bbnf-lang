@@ -33,7 +33,7 @@ pub fn generate_monolithic_prettify(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> T
     let fusion_eligible: Vec<bool> = ir
         .rules
         .iter()
-        .map(|rule| rule.meta.is_token || (!rule.meta.is_cyclic && rule.meta.recover.is_none()))
+        .map(|rule| rule.meta.directives.token || (!rule.meta.is_cyclic && rule.meta.directives.recover.is_none()))
         .collect();
 
     let single_site_inline = super::compute_single_site_inline(ir);
@@ -45,10 +45,10 @@ pub fn generate_monolithic_prettify(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> T
 
         let mut mctx = MonoCtx::new(fusion_eligible.clone(), single_site_inline.clone());
         mctx.current_rule_name = Some(name.to_string());
-        mctx.current_pretty_hints = rule.meta.pretty.clone();
+        mctx.current_pretty_hints = rule.meta.directives.pretty.clone();
 
         // Determine @pretty hints for this rule.
-        let ph = rule.meta.pretty.as_ref();
+        let ph = rule.meta.directives.pretty.as_ref();
         let has_group = ph.is_some_and(|p| p.group);
         let has_block = ph.is_some_and(|p| p.block);
         let has_indent = ph.is_some_and(|p| p.indent);

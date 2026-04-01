@@ -34,7 +34,7 @@ pub fn fuse_single_use(ir: &mut GrammarIR) {
     for rule in &ir.rules {
         count_refs(&rule.body, &mut ref_counts);
         // Also count refs in recover expressions.
-        if let Some(ref recover) = rule.meta.recover {
+        if let Some(ref recover) = rule.meta.directives.recover {
             count_refs(recover, &mut ref_counts);
         }
     }

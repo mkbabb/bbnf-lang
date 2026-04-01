@@ -35,7 +35,7 @@ pub fn canonicalize_aliases(ir: &mut GrammarIR) {
     // Only rewrite refs that point to aliases — don't collapse all refs.
     for rule in &mut ir.rules {
         rewrite_refs(&mut rule.body, &canonical);
-        if let Some(ref mut recover) = rule.meta.recover {
+        if let Some(ref mut recover) = rule.meta.directives.recover {
             rewrite_refs(recover, &canonical);
         }
     }

@@ -308,6 +308,22 @@ pub struct SubVariant {
     pub branch_index: u32,
 }
 
+/// Per-rule directives from `@` decorators in the grammar.
+/// Extensible: new decorators add fields here.
+#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
+pub struct RuleDirectives {
+    /// Pretty-printing hints from `@pretty` directive.
+    pub pretty: Option<PrettyHints>,
+    /// Error recovery sync expression from `@recover` directive.
+    pub recover: Option<IrNode>,
+    /// Whether `@token` is set (lexical token, fusion-inlined).
+    #[serde(default)]
+    pub token: bool,
+    /// Whether `@debug` is set (trace instrumentation).
+    #[serde(default)]
+    pub debug: bool,
+}
+
 /// Analysis metadata for a single rule.
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct RuleMeta {
@@ -345,23 +361,10 @@ pub struct RuleMeta {
     /// Whether this rule is a transparent alternation of nonterminals.
     pub is_transparent: bool,
 
-    // ── Pretty ──────────────────────────────────────────────────────────
-    /// Pretty-printing hints from `@pretty` directives.
-    pub pretty: Option<PrettyHints>,
-
-    /// Error recovery sync expression.
-    pub recover: Option<IrNode>,
-
-    /// Whether `@debug` is set for this rule. Instrumented rules emit
-    /// trace output (compiled paths) or `DebugBreak` opcodes (VM path).
+    // ── Directives ──────────────────────────────────────────────────────
+    /// Per-rule `@` directives (pretty, recover, token, debug).
     #[serde(default)]
-    pub debug: bool,
-
-    /// Whether `@token` is set for this rule. Token rules return Span at leaf
-    /// level even in arena codegen, are unconditionally inlined, and must not
-    /// contain nonterminal references.
-    #[serde(default)]
-    pub is_token: bool,
+    pub directives: RuleDirectives,
 
     // ── Sub-variants ────────────────────────────────────────────────────
     /// Sub-variants for heterogeneous alternation branches.

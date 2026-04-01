@@ -263,7 +263,7 @@ pub fn compile_grammar_debug(grammar: &str, entry_rule: Option<String>) -> Resul
     // regardless of @debug directives in the grammar source.
     ir.debug_all = true;
     for rule in &mut ir.rules {
-        rule.meta.debug = true;
+        rule.meta.directives.debug = true;
     }
 
     let program = compile_with_debug(&ir, true);

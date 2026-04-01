@@ -134,7 +134,7 @@ impl Compiler {
         }
 
         // Emit debug breakpoint at rule entry for @debug-annotated rules.
-        let rule_debug = self.debug_all || rule.meta.debug;
+        let rule_debug = self.debug_all || rule.meta.directives.debug;
         if rule_debug {
             self.emit(Op::DebugBreak {
                 rule_id: rule.id,

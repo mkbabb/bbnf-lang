@@ -51,7 +51,7 @@ pub fn refine_span_eligibility(ir: &mut GrammarIR) {
 
     // Update the rules. @token rules are unconditionally span-eligible.
     for rule in &mut ir.rules {
-        rule.meta.span_eligible = eligible.contains(&rule.id) || rule.meta.is_token;
+        rule.meta.span_eligible = eligible.contains(&rule.id) || rule.meta.directives.token;
     }
 }
 

@@ -76,7 +76,7 @@ pub fn generate_enum(ctx: &IrCodegenCtx<'_>) -> TokenStream {
 
     // Recovered variant if any @recover directives exist.
     let has_recovers =
-        ctx.ir.rules.iter().any(|r| r.meta.recover.is_some()) && !ctx.parser_attrs.skip_recover;
+        ctx.ir.rules.iter().any(|r| r.meta.directives.recover.is_some()) && !ctx.parser_attrs.skip_recover;
     let has_sub_variants = !sub_variant_values.is_empty();
     // Collect all variants into a single Vec for clean comma handling.
     let mut all_variants: Vec<TokenStream> = enum_values.collect();

@@ -51,7 +51,7 @@ fn pipeline_debug_single_rule_meta() {
     assert!(value_rule.is_some(), "value rule should exist");
     // After inlining/pruning, the rule may be optimized away. Check if it survives.
     if let Some(rule) = value_rule {
-        assert!(rule.meta.debug, "value should have debug=true");
+        assert!(rule.meta.directives.debug, "value should have debug=true");
     }
 }
 
@@ -70,7 +70,7 @@ fn pipeline_no_debug_default() {
     assert!(!ir.debug_all);
     for rule in &ir.rules {
         assert!(
-            !rule.meta.debug,
+            !rule.meta.directives.debug,
             "no rules should have debug without @debug"
         );
     }

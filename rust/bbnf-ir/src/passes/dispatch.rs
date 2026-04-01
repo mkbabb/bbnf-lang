@@ -37,7 +37,7 @@ pub fn generate_dispatch_tables(ir: &mut GrammarIR) {
         ir.rules.par_iter_mut().for_each(|rule| {
             let follow = follow_sets.get(&rule.id);
             annotate_node(&mut rule.body, follow, &rule_metas, &strings);
-            if let Some(ref mut recover) = rule.meta.recover {
+            if let Some(ref mut recover) = rule.meta.directives.recover {
                 annotate_node(recover, follow, &rule_metas, &strings);
             }
         });
@@ -45,7 +45,7 @@ pub fn generate_dispatch_tables(ir: &mut GrammarIR) {
         for rule in &mut ir.rules {
             let follow = follow_sets.get(&rule.id);
             annotate_node(&mut rule.body, follow, &rule_metas, &strings);
-            if let Some(ref mut recover) = rule.meta.recover {
+            if let Some(ref mut recover) = rule.meta.directives.recover {
                 annotate_node(recover, follow, &rule_metas, &strings);
             }
         }

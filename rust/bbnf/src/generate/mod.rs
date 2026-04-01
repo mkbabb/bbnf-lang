@@ -32,7 +32,7 @@ pub fn generate_all(
     // in Seq codegen, which is critical for throughput.
     if !parser_attrs.prettify {
         for rule in &mut ir.rules {
-            rule.meta.pretty = None;
+            rule.meta.directives.pretty = None;
         }
     }
 
@@ -79,7 +79,7 @@ pub fn generate_all(
         let grammar_enum = ir_enums::generate_enum(&ctx);
         let parser_methods = codegen::generate_monolithic(ir, &ctx);
 
-        let has_recovers = ctx.ir.rules.iter().any(|r| r.meta.recover.is_some())
+        let has_recovers = ctx.ir.rules.iter().any(|r| r.meta.directives.recover.is_some())
             && !ctx.parser_attrs.skip_recover;
         let enum_ident = &ctx.enum_ident;
         let recovered_static = if has_recovers {

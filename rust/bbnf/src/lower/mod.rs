@@ -165,7 +165,7 @@ pub fn lower_to_ir<'a>(
         let mut meta = build_rule_meta(lhs, name, &mut ctx);
 
         // Set debug flag from @debug directive.
-        meta.debug = ctx.debug_all || ctx.debug_rules.is_some_and(|set| set.contains(name));
+        meta.directives.debug = ctx.debug_all || ctx.debug_rules.is_some_and(|set| set.contains(name));
 
         rules.push(IrRule {
             id: rule_id,

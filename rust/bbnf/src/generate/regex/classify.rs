@@ -501,6 +501,12 @@ fn try_classify_identifier(hir: &Hir) -> bool {
 
 fn is_letter_class(hir: &Hir) -> bool {
     if let HirKind::Class(Class::Bytes(bc)) = hir.kind() {
+        // Guard: reject materialized negated classes. regex-syntax 0.8 normalizes
+        // [^{};] into positive ranges spanning most of ASCII (250+ bytes).
+        // Legitimate letter classes cover at most ~60 bytes (a-zA-Z0-9_-).
+        if is_negated_class_materialization(bc) {
+            return false;
+        }
         let ranges = bc.ranges();
         let has_lower = ranges.iter().any(|r| r.start() <= b'a' && r.end() >= b'z');
         let has_upper = ranges.iter().any(|r| r.start() <= b'A' && r.end() >= b'Z');
@@ -518,8 +524,10 @@ fn is_word_continuation(hir: &Hir) -> bool {
 
 fn is_word_class(hir: &Hir) -> bool {
     if let HirKind::Class(Class::Bytes(bc)) = hir.kind() {
+        if is_negated_class_materialization(bc) {
+            return false;
+        }
         let ranges = bc.ranges();
-        // Word class contains at least alphanumeric ranges.
         let has_lower = ranges.iter().any(|r| r.start() <= b'a' && r.end() >= b'z');
         let has_digit = ranges
             .iter()
@@ -527,6 +535,20 @@ fn is_word_class(hir: &Hir) -> bool {
         return has_lower && has_digit;
     }
     false
+}
+
+/// Detect regex-syntax 0.8's materialized negated classes.
+///
+/// When regex-syntax parses `[^XYZ]`, it has no `.negated()` flag — the complement
+/// is materialized as positive ranges. Legitimate letter/word classes cover at most
+/// ~62 bytes (`[a-zA-Z0-9]`). Negated classes cover 250+.
+fn is_negated_class_materialization(bc: &regex_syntax::hir::ClassBytes) -> bool {
+    let total_bytes: usize = bc
+        .ranges()
+        .iter()
+        .map(|r| (r.end() - r.start()) as usize + 1)
+        .sum();
+    total_bytes > 100
 }
 
 // ── Utility ────────────────────────────────────────────────────────────────

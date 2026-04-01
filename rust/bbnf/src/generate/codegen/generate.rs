@@ -9,7 +9,7 @@ use bbnf_ir::{GrammarIR, IrNode, RuleId};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::super::regex_ir::fast_paths;
+use super::super::regex;
 use super::helpers::mono_fn_ident;
 use super::ir_types::IrCodegenCtx;
 use super::{MonoCtx, emit_mono_expr};
@@ -103,7 +103,7 @@ pub fn generate_monolithic(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStrea
             false
         } else {
             match &rule.body {
-                IrNode::Regex(sid) => fast_paths::is_fused_number_regex(ir.get_string(*sid)),
+                IrNode::Regex(sid) => regex::is_fused_number_regex(ir.get_string(*sid)),
                 _ => false,
             }
         };

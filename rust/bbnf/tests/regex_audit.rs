@@ -154,22 +154,22 @@ fn audit_all_grammar_regex_patterns() {
     let mut fallbacks: Vec<(String, String)> = Vec::new();
 
     for (file, pattern) in &all_patterns {
-        let tier = bbnf::generate::regex_ir::audit::audit_regex_pattern(pattern);
+        let tier = bbnf::generate::regex::audit_regex_pattern(pattern);
         tier_counts[4] += 1;
 
         match &tier {
-            bbnf::generate::regex_ir::audit::RegexTier::FastPath(_)
-            | bbnf::generate::regex_ir::audit::RegexTier::FastPathFused(_) => {
+            bbnf::generate::regex::RegexTier::FastPath(_)
+            | bbnf::generate::regex::RegexTier::FastPathFused(_) => {
                 tier_counts[0] += 1;
             }
-            bbnf::generate::regex_ir::audit::RegexTier::HirInline => {
+            bbnf::generate::regex::RegexTier::HirInline => {
                 tier_counts[1] += 1;
             }
-            bbnf::generate::regex_ir::audit::RegexTier::DfaCompiled { states, classes } => {
+            bbnf::generate::regex::RegexTier::DfaCompiled { states, classes } => {
                 tier_counts[2] += 1;
                 eprintln!("  DFA: /{pattern}/ ({states} states, {classes} classes) [{file}]");
             }
-            bbnf::generate::regex_ir::audit::RegexTier::Unsupported => {
+            bbnf::generate::regex::RegexTier::Unsupported => {
                 tier_counts[3] += 1;
                 fallbacks.push((file.clone(), pattern.clone()));
             }

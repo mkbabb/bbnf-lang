@@ -5,7 +5,7 @@ use bbnf_ir::{FnDescriptor, IrNode};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::super::regex_ir::fast_paths;
+use super::super::regex;
 use super::helpers::try_sep_by;
 use super::ir_types::IrCodegenCtx;
 use super::repeat::{SepByConfig, emit_mono_sep_by_core, emit_mono_sep_by_ws, try_unchecked_sep};
@@ -17,7 +17,7 @@ use super::{MonoCtx, emit_mono_discarded, emit_mono_expr, mono_fn_ident};
 #[inline(always)]
 fn is_json_number_inner(inner: &IrNode, ctx: &IrCodegenCtx<'_>) -> bool {
     match inner {
-        IrNode::Regex(sid) => fast_paths::is_fused_number_regex(ctx.ir.get_string(*sid)),
+        IrNode::Regex(sid) => regex::is_fused_number_regex(ctx.ir.get_string(*sid)),
         IrNode::OptionalWhitespace(next) | IrNode::Map { inner: next, .. } => {
             is_json_number_inner(next, ctx)
         }

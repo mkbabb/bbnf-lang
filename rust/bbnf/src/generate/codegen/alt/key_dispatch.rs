@@ -19,7 +19,7 @@ use super::super::ir_types::{self, IrCodegenCtx};
 use super::{coerce_mono_branch, coerce_mono_branch_by_value};
 use crate::generate::codegen::unescape_literal;
 use crate::generate::codegen::{MonoCtx, emit_mono_expr};
-use crate::generate::regex_ir::classify::{RegexClass, classify_regex};
+use crate::generate::regex::classify::{RegexClass, classify_regex};
 
 // ── Helpers ────────────────────────────────────────────────────
 

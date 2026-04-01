@@ -222,31 +222,12 @@ pub(super) fn emit_prettify_expr(
                 }
             };
 
-            if let Some(direct) =
-                crate::generate::regex_ir::fast_paths::emit_regex_direct_call(pattern)
             {
+                let opts = crate::generate::regex::EmitOpts::new(&crate::generate::regex::CostModel::DEFAULT);
+                let code = crate::generate::regex::emit_regex(pattern, &opts);
                 quote! { {
                     let __start = state.offset;
-                    if #direct.is_none() { return false; }
-                    #emit_text
-                } }
-            } else if let Some(inline) = crate::generate::regex_ir::try_emit_regex_inline(pattern) {
-                quote! { {
-                    let __start = state.offset;
-                    if #inline.is_none() { return false; }
-                    #emit_text
-                } }
-            } else if let Some(dfa_code) = crate::generate::regex_ir::try_emit_dfa_inline(pattern) {
-                quote! { {
-                    let __start = state.offset;
-                    if #dfa_code.is_none() { return false; }
-                    #emit_text
-                } }
-            } else {
-                let err = crate::generate::regex_ir::emit_regex_unsupported(pattern);
-                quote! { {
-                    let __start = state.offset;
-                    if #err.is_none() { return false; }
+                    if #code.is_none() { return false; }
                     #emit_text
                 } }
             }

@@ -3,10 +3,10 @@
 //! All codegen goes through the monolithic arena path.
 
 // ── Codegen modules ────────────────────────────────────────────────────────
-pub mod regex_ir;
+pub mod regex;
 
-// Backward-compat alias — all call sites use `regex_classify::RegexClass` and `classify_regex()`.
-pub use regex_ir::classify as regex_classify;
+// Backward-compat alias — existing callers that reference regex_classify.
+pub use regex::classify as regex_classify;
 
 pub mod codegen;
 
@@ -62,7 +62,7 @@ pub fn generate_all(
     if !parser_attrs.prettify {
         for rule in &ir.rules {
             if let bbnf_ir::IrNode::Regex(sid) = &rule.body {
-                if regex_ir::fast_paths::is_fused_number_regex(ir.get_string(*sid)) {
+                if regex::is_fused_number_regex(ir.get_string(*sid)) {
                     ctx.fused_number_rules.insert(rule.id);
                 }
             }

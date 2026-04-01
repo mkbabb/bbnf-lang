@@ -37,7 +37,6 @@ use bbnf_ir::IrNode;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::regex_ir::fast_paths;
 use ir_types::IrCodegenCtx;
 
 /// Unescape a BBNF literal string (e.g. `\n` → newline, `\t` → tab).
@@ -91,22 +90,10 @@ pub(super) use helpers::{
 pub(super) fn emit_ws_trim(ctx: &IrCodegenCtx<'_>, _mctx: &mut MonoCtx) -> TokenStream {
     if let Some(ws_sid) = ctx.ir.ws_pattern {
         let pattern = ctx.ir.get_string(ws_sid);
-        // Try direct scanner call (SIMD fast path for known patterns).
-        if let Some(direct) = fast_paths::emit_regex_direct_call(pattern) {
-            // Direct scanner returns Option<Span>; we just need the side effect (advance offset).
-            return quote! { #direct; };
-        }
-        // Try HIR-based inline compilation.
-        if let Some(inline) = super::regex_ir::try_emit_regex_inline(pattern) {
-            return quote! { #inline; };
-        }
-        // Try DFA-based inline compilation.
-        if let Some(dfa_code) = super::regex_ir::try_emit_dfa_inline(pattern) {
-            return quote! { #dfa_code; };
-        }
-        // Unsupported pattern — compile-time error.
-        let err = super::regex_ir::emit_regex_unsupported(pattern);
-        quote! { #err; }
+        let opts = super::regex::EmitOpts::new(&super::regex::CostModel::DEFAULT);
+        let code = super::regex::emit_regex(pattern, &opts);
+        // Emit as statement — we just need the side effect (advance offset).
+        quote! { #code; }
     } else {
         quote! { ::parse_that::trim_leading_whitespace_mut(state); }
     }
@@ -222,26 +209,12 @@ pub(super) fn emit_mono_expr(
 
         IrNode::Regex(sid) => {
             let pattern = ctx.ir.get_string(*sid);
-            // Phase 2: try direct scanner call (bypasses SpanParser dispatch stack).
             // Arena context: fuse number conversion (returns (Span, f64) for JSON numbers).
             // Skip fusing when prettify is enabled — formatters only need Spans.
             let fuse = !ctx.parser_attrs.prettify;
-            // 1. Try known fast paths (scan_ident, scan_number_f64, etc.)
-            if let Some(direct) = fast_paths::emit_regex_direct_call_with_fuse(pattern, fuse) {
-                direct
-            }
-            // 2. Try HIR-based inline compilation
-            else if let Some(inline) = super::regex_ir::try_emit_regex_inline(pattern) {
-                inline
-            }
-            // 3. Try DFA-based inline compilation
-            else if let Some(dfa_code) = super::regex_ir::try_emit_dfa_inline(pattern) {
-                dfa_code
-            }
-            // 4. Unsupported pattern — compile-time error
-            else {
-                super::regex_ir::emit_regex_unsupported(pattern)
-            }
+            let opts = super::regex::EmitOpts::new(&super::regex::CostModel::DEFAULT)
+                .with_fuse(fuse);
+            super::regex::emit_regex(pattern, &opts)
         }
 
         IrNode::Epsilon => {

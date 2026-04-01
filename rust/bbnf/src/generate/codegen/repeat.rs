@@ -5,7 +5,7 @@ use bbnf_ir::{IrNode, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use super::super::regex_ir::fast_paths;
+use super::super::regex;
 use super::helpers::try_sep_by;
 use super::ir_types::IrCodegenCtx;
 use super::unescape_literal;
@@ -417,7 +417,7 @@ fn emit_mono_optional(
         // Optional regex: emit inline via direct call if available.
         if let IrNode::Regex(sid) = inner {
             let pattern = ctx.ir.get_string(*sid);
-            if let Some(direct) = fast_paths::emit_regex_direct_call(pattern) {
+            if let Some(direct) = regex::emit_regex_direct_call(pattern) {
                 return quote! {
                     {
                         let __start = state.offset;

@@ -1,10 +1,8 @@
 use std::collections::HashMap;
 
-use bbnf::analysis::{
-    calculate_ast_deps, compute_first_sets, tarjan_scc,
-};
-use bbnf::lower::{DirectiveSet, lower_to_ir};
 use bbnf::BBNFGrammar;
+use bbnf::analysis::{calculate_ast_deps, compute_first_sets, tarjan_scc};
+use bbnf::lower::{DirectiveSet, lower_to_ir};
 
 use bbnf_ir::{GrammarIR, IrNode, MemoStrategy};
 
@@ -20,12 +18,7 @@ fn lower_grammar(source: &str) -> GrammarIR {
 
     let directives = DirectiveSet::empty();
 
-    let mut ir = lower_to_ir(
-        &ast,
-        &first_sets,
-        &scc_result,
-        &directives,
-    );
+    let mut ir = lower_to_ir(&ast, &first_sets, &scc_result, &directives);
 
     // Run metadata IR passes (alias + transparent + span eligibility detection).
     bbnf_ir::passes::compute_aliases(&mut ir);
@@ -105,9 +98,7 @@ fn lower_optional() {
     let ir = lower_grammar(r#"a = "x" ? ;"#);
     assert_eq!(ir.rules.len(), 1);
     match &ir.rules[0].body {
-        IrNode::Repeat {
-            lo: 0, hi: 1, ..
-        } => {}
+        IrNode::Repeat { lo: 0, hi: 1, .. } => {}
         other => panic!("expected Repeat(0, 1), got {:?}", other),
     }
 }
@@ -260,12 +251,7 @@ fn lower_with_pretty_hints() {
             debug_all: false,
         };
 
-        lower_to_ir(
-            &ast,
-            &first_sets,
-            &scc_result,
-            &directives,
-        )
+        lower_to_ir(&ast, &first_sets, &scc_result, &directives)
     };
 
     let rule = &ir.rules[0];

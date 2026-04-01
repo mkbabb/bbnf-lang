@@ -1,6 +1,6 @@
 //! Tests for structural regex classification.
 
-use bbnf::generate::regex_ir::classify::{classify_regex, RegexClass};
+use bbnf::generate::regex_ir::classify::{RegexClass, classify_regex};
 
 #[test]
 fn json_number_known() {
@@ -14,7 +14,11 @@ fn json_number_known() {
 fn css_number_required_digits() {
     assert!(matches!(
         classify_regex(r"[-+]?\d+(\.\d+)?([eE][-+]?\d+)?"),
-        RegexClass::Numeric { allows_sign: true, allows_fraction: true, allows_exponent: true }
+        RegexClass::Numeric {
+            allows_sign: true,
+            allows_fraction: true,
+            allows_exponent: true
+        }
     ));
 }
 
@@ -22,7 +26,11 @@ fn css_number_required_digits() {
 fn css_number_non_nullable() {
     assert!(matches!(
         classify_regex(r"[-+]?(\d+(\.\d+)?|\.\d+)([eE][-+]?\d+)?"),
-        RegexClass::Numeric { allows_sign: true, allows_fraction: true, allows_exponent: true }
+        RegexClass::Numeric {
+            allows_sign: true,
+            allows_fraction: true,
+            allows_exponent: true
+        }
     ));
 }
 
@@ -30,7 +38,11 @@ fn css_number_non_nullable() {
 fn simple_integer() {
     assert!(matches!(
         classify_regex(r"[-+]?\d+"),
-        RegexClass::Numeric { allows_sign: true, allows_fraction: false, allows_exponent: false }
+        RegexClass::Numeric {
+            allows_sign: true,
+            allows_fraction: false,
+            allows_exponent: false
+        }
     ));
 }
 
@@ -38,7 +50,11 @@ fn simple_integer() {
 fn unsigned_integer() {
     assert!(matches!(
         classify_regex(r"\d+"),
-        RegexClass::Numeric { allows_sign: false, allows_fraction: false, allows_exponent: false }
+        RegexClass::Numeric {
+            allows_sign: false,
+            allows_fraction: false,
+            allows_exponent: false
+        }
     ));
 }
 
@@ -46,7 +62,11 @@ fn unsigned_integer() {
 fn simple_decimal() {
     assert!(matches!(
         classify_regex(r"[0-9]+(\.[0-9]+)?"),
-        RegexClass::Numeric { allows_sign: false, allows_fraction: true, allows_exponent: false }
+        RegexClass::Numeric {
+            allows_sign: false,
+            allows_fraction: true,
+            allows_exponent: false
+        }
     ));
 }
 
@@ -64,14 +84,20 @@ fn identifier_known() {
 
 #[test]
 fn identifier_structural() {
-    assert_eq!(classify_regex(r"[a-zA-Z_][a-zA-Z0-9]*"), RegexClass::Identifier);
+    assert_eq!(
+        classify_regex(r"[a-zA-Z_][a-zA-Z0-9]*"),
+        RegexClass::Identifier
+    );
 }
 
 #[test]
 fn quoted_string() {
     assert!(matches!(
         classify_regex(r#""(?:[^"\\]|\\[\s\S])*""#),
-        RegexClass::QuotedString { quote_char: b'"', .. }
+        RegexClass::QuotedString {
+            quote_char: b'"',
+            ..
+        }
     ));
 }
 

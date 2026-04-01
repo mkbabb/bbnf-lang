@@ -13,7 +13,7 @@ use std::collections::{HashMap, HashSet};
 use bbnf_ir::{GrammarIR, IrRule, RuleId};
 
 use crate::analysis::{FirstSets, SccResult};
-use crate::types::{Expression, Token, AST};
+use crate::types::{AST, Expression, Token};
 
 use expression::{lower_expression, unwrap_rule};
 use fn_table::FnTable;
@@ -165,10 +165,7 @@ pub fn lower_to_ir<'a>(
         let mut meta = build_rule_meta(lhs, name, &mut ctx);
 
         // Set debug flag from @debug directive.
-        meta.debug = ctx.debug_all
-            || ctx
-                .debug_rules
-                .is_some_and(|set| set.contains(name));
+        meta.debug = ctx.debug_all || ctx.debug_rules.is_some_and(|set| set.contains(name));
 
         rules.push(IrRule {
             id: rule_id,

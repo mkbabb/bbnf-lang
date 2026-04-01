@@ -32,7 +32,10 @@ impl LineIndex {
 
     /// Convert a byte offset to an LSP Position. O(log n) via binary search.
     pub fn offset_to_position(&self, offset: usize) -> Position {
-        let line = self.line_starts.partition_point(|&s| s <= offset).saturating_sub(1);
+        let line = self
+            .line_starts
+            .partition_point(|&s| s <= offset)
+            .saturating_sub(1);
         let col = offset.saturating_sub(self.line_starts[line]);
         Position::new(line as u32, col as u32)
     }

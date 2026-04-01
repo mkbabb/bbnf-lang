@@ -2,8 +2,8 @@
 //! and interpreter debug hooks.
 
 use std::collections::{HashMap, HashSet};
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use bbnf_ir::bytecode::Op;
 use bbnf_ir::compiler::{compile, compile_with_debug};
@@ -95,7 +95,11 @@ fn compiler_no_debug_break_without_flag() {
         .iter()
         .filter(|op| matches!(op, Op::DebugBreak { .. }))
         .collect();
-    assert_eq!(debug_breaks.len(), 0, "should have no DebugBreak without debug flag");
+    assert_eq!(
+        debug_breaks.len(),
+        0,
+        "should have no DebugBreak without debug flag"
+    );
 }
 
 #[test]
@@ -112,7 +116,11 @@ fn compiler_debug_all_instruments_all_rules() {
         .iter()
         .filter(|op| matches!(op, Op::DebugBreak { .. }))
         .collect();
-    assert_eq!(debug_breaks.len(), 4, "debug_all should instrument all rules");
+    assert_eq!(
+        debug_breaks.len(),
+        4,
+        "debug_all should instrument all rules"
+    );
 }
 
 // ── Source map ───────────────────────────────────────────────────────────────
@@ -257,7 +265,10 @@ fn interpreter_no_debug_state_no_overhead() {
     // No debug_state — DebugBreak is a no-op (just pc += 1).
     let mut interp = Interpreter::new(&program, "x");
     let result = interp.run();
-    assert!(result.success, "should parse successfully with no debug state");
+    assert!(
+        result.success,
+        "should parse successfully with no debug state"
+    );
 }
 
 #[test]
@@ -290,5 +301,9 @@ fn interpreter_debug_snapshot_has_rule_stack() {
     // When rule 1 is entered via Call, it's pushed onto rule_stack.
     // Rule 0 (entry) is entered directly (no Call), so only rule 1 is on the stack.
     let stack_len = captured_stack_len.load(Ordering::Relaxed);
-    assert!(stack_len >= 1, "rule_stack should have >=1 entries at inner rule entry, got {}", stack_len);
+    assert!(
+        stack_len >= 1,
+        "rule_stack should have >=1 entries at inner rule entry, got {}",
+        stack_len
+    );
 }

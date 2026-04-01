@@ -5,8 +5,8 @@
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-use bencher::{benchmark_group, benchmark_main, black_box, Bencher};
 use bbnf_derive::Parser;
+use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
 use parse_that::BumpArena;
 
 #[derive(Parser)]
@@ -23,17 +23,25 @@ macro_rules! bench {
         fn $name(b: &mut Bencher) {
             let input = load($file);
             let (bytes, consumed_pct) = {
-                let arena = BumpArena::<CssPrettyParserArenaEnum<'_>>::with_capacity(input.len() / 32);
+                let arena =
+                    BumpArena::<CssPrettyParserArenaEnum<'_>>::with_capacity(input.len() / 32);
                 let parser = CssPrettyParser::stylesheet_arena();
                 let (_result, state) = parser.parse_return_state_with_context(&input, &arena);
                 (state.offset as u64, state.offset * 100 / input.len().max(1))
             };
-            assert!(consumed_pct >= 95, concat!($file, ": only consumed {}%"), consumed_pct);
+            assert!(
+                consumed_pct >= 95,
+                concat!($file, ": only consumed {}%"),
+                consumed_pct
+            );
             b.bytes = bytes;
             b.iter(|| {
-                let arena = BumpArena::<CssPrettyParserArenaEnum<'_>>::with_capacity(input.len() / 32);
+                let arena =
+                    BumpArena::<CssPrettyParserArenaEnum<'_>>::with_capacity(input.len() / 32);
                 let parser = CssPrettyParser::stylesheet_arena();
-                let ast = parser.parse_with_context(black_box(&input), &arena).unwrap();
+                let ast = parser
+                    .parse_with_context(black_box(&input), &arena)
+                    .unwrap();
                 black_box(&ast as *const _);
             });
         }

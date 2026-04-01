@@ -12,7 +12,7 @@ pub use negated_class::{NegCharClassQuantifier, is_negated_char_class_regex};
 
 use generalized::emit_generalized_regex_direct;
 
-use crate::generate::regex_ir::classify::{classify_regex, RegexClass};
+use crate::generate::regex_ir::classify::{RegexClass, classify_regex};
 
 use proc_macro2::TokenStream;
 use quote::quote;

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use bbnf_ir::{AltBranch, FnDescriptor, GrammarIR, IrNode, IrRule, RuleMeta};
 use bbnf_ir::passes::factor_common_prefixes;
+use bbnf_ir::{AltBranch, FnDescriptor, GrammarIR, IrNode, IrRule, RuleMeta};
 
 fn make_ir(body: IrNode) -> GrammarIR {
     GrammarIR {
@@ -135,8 +135,16 @@ fn depth_two_prefix_factored() {
     // Alt([Seq(A, B, C), Seq(A, B, D)]) should factor to Seq(A, B, Alt([C, D]))
     // via multi-round fixed-point: pass 1 factors A, pass 2 factors B.
     let mut ir = make_ir(alt(vec![
-        IrNode::Seq(vec![IrNode::Literal(1), IrNode::Literal(2), IrNode::Literal(3)]),
-        IrNode::Seq(vec![IrNode::Literal(1), IrNode::Literal(2), IrNode::Regex(3)]),
+        IrNode::Seq(vec![
+            IrNode::Literal(1),
+            IrNode::Literal(2),
+            IrNode::Literal(3),
+        ]),
+        IrNode::Seq(vec![
+            IrNode::Literal(1),
+            IrNode::Literal(2),
+            IrNode::Regex(3),
+        ]),
     ]));
 
     factor_common_prefixes(&mut ir);
@@ -146,7 +154,12 @@ fn depth_two_prefix_factored() {
     // Re-factor recurses and factors out Lit(2), producing Seq(Lit(2), Alt([Lit(3), Regex(3)]))
     match &ir.rules[0].body {
         IrNode::Seq(outer) => {
-            assert_eq!(outer.len(), 2, "expected Seq(A, Seq(B, Alt(...))), got {:?}", outer);
+            assert_eq!(
+                outer.len(),
+                2,
+                "expected Seq(A, Seq(B, Alt(...))), got {:?}",
+                outer
+            );
             assert_eq!(outer[0], IrNode::Literal(1));
             match &outer[1] {
                 IrNode::Seq(inner) => {
@@ -164,7 +177,10 @@ fn depth_two_prefix_factored() {
                 other => panic!("expected inner Seq, got {:?}", other),
             }
         }
-        other => panic!("expected outer Seq after depth-2 factoring, got {:?}", other),
+        other => panic!(
+            "expected outer Seq after depth-2 factoring, got {:?}",
+            other
+        ),
     }
 }
 
@@ -372,7 +388,11 @@ fn literal_byte_split_single_byte_not_split() {
 
     match &ir.rules[0].body {
         IrNode::Alt(branches, _) => {
-            assert_eq!(branches.len(), 2, "single-byte literals should not be split");
+            assert_eq!(
+                branches.len(),
+                2,
+                "single-byte literals should not be split"
+            );
         }
         other => panic!("expected unchanged Alt, got {:?}", other),
     }
@@ -389,12 +409,7 @@ fn literal_byte_split_mixed_with_non_literal() {
             IrNode::Regex(3),
             IrNode::Literal(2),
         ]),
-        vec![
-            "start".into(),
-            "rem".into(),
-            "rlh".into(),
-            "x+".into(),
-        ],
+        vec!["start".into(), "rem".into(), "rlh".into(), "x+".into()],
     );
 
     factor_common_prefixes(&mut ir);
@@ -402,7 +417,11 @@ fn literal_byte_split_mixed_with_non_literal() {
     match &ir.rules[0].body {
         IrNode::Alt(branches, _) => {
             // All 3 branches should remain (no consecutive same-first-byte literals).
-            assert_eq!(branches.len(), 3, "non-literal barrier should prevent grouping");
+            assert_eq!(
+                branches.len(),
+                3,
+                "non-literal barrier should prevent grouping"
+            );
         }
         other => panic!("expected Alt with 3 branches, got {:?}", other),
     }
@@ -421,8 +440,15 @@ fn literal_byte_split_idempotent() {
     let strings_after_first = ir.strings.clone();
 
     factor_common_prefixes(&mut ir);
-    assert_eq!(ir.rules[0].body, body_after_first, "pass should be idempotent");
-    assert_eq!(ir.strings.len(), strings_after_first.len(), "no new strings on second pass");
+    assert_eq!(
+        ir.rules[0].body, body_after_first,
+        "pass should be idempotent"
+    );
+    assert_eq!(
+        ir.strings.len(),
+        strings_after_first.len(),
+        "no new strings on second pass"
+    );
 }
 
 #[test]
@@ -433,13 +459,12 @@ fn literal_byte_split_recursive_trie() {
     //   Alt([Literal("bc"), Literal("bd"), Literal("ef")])
     //   → Alt([Seq(Literal("b"), Alt([Literal("c"), Literal("d")])), Literal("ef")])
     let mut ir = make_ir_with_strings(
-        alt(vec![IrNode::Literal(1), IrNode::Literal(2), IrNode::Literal(3)]),
-        vec![
-            "start".into(),
-            "abc".into(),
-            "abd".into(),
-            "aef".into(),
-        ],
+        alt(vec![
+            IrNode::Literal(1),
+            IrNode::Literal(2),
+            IrNode::Literal(3),
+        ]),
+        vec!["start".into(), "abc".into(), "abd".into(), "aef".into()],
     );
 
     factor_common_prefixes(&mut ir);

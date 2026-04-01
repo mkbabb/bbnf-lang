@@ -6,8 +6,8 @@ use std::path::{Component, Path, PathBuf};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-use tower_lsp_server::ls_types::*;
 use tower_lsp_server::Client;
+use tower_lsp_server::ls_types::*;
 
 use crate::state::DocumentState;
 
@@ -71,7 +71,9 @@ impl BbnfLanguageServer {
         self.update_import_graph(&uri).await;
 
         // Suppress "Undefined rule" diagnostics for imported rules.
-        let filtered_diagnostics = self.filter_diagnostics_with_imports(&uri, diagnostics).await;
+        let filtered_diagnostics = self
+            .filter_diagnostics_with_imports(&uri, diagnostics)
+            .await;
 
         self.client
             .publish_diagnostics(uri.clone(), filtered_diagnostics, None)
@@ -91,7 +93,9 @@ impl BbnfLanguageServer {
             if let Some(state) = docs.get(&importer_uri) {
                 let diags = state.info.diagnostics.clone();
                 drop(docs);
-                let filtered = self.filter_diagnostics_with_imports(&importer_uri, diags).await;
+                let filtered = self
+                    .filter_diagnostics_with_imports(&importer_uri, diags)
+                    .await;
                 self.client
                     .publish_diagnostics(importer_uri, filtered, None)
                     .await;
@@ -104,13 +108,13 @@ impl BbnfLanguageServer {
 pub fn semantic_token_legend() -> SemanticTokensLegend {
     SemanticTokensLegend {
         token_types: vec![
-            SemanticTokenType::new("ruleDefinition"),  // 0
-            SemanticTokenType::new("ruleReference"),    // 1
-            SemanticTokenType::STRING,                  // 2
-            SemanticTokenType::REGEXP,                  // 3
-            SemanticTokenType::OPERATOR,                // 4
-            SemanticTokenType::KEYWORD,                 // 5
-            SemanticTokenType::COMMENT,                 // 6
+            SemanticTokenType::new("ruleDefinition"), // 0
+            SemanticTokenType::new("ruleReference"),  // 1
+            SemanticTokenType::STRING,                // 2
+            SemanticTokenType::REGEXP,                // 3
+            SemanticTokenType::OPERATOR,              // 4
+            SemanticTokenType::KEYWORD,               // 5
+            SemanticTokenType::COMMENT,               // 6
         ],
         token_modifiers: vec![
             SemanticTokenModifier::DECLARATION,

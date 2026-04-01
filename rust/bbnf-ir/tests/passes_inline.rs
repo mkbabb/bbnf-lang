@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use bbnf_ir::{GrammarIR, IrNode, IrRule, RuleId, RuleMeta};
 use bbnf_ir::passes::inline_acyclic;
+use bbnf_ir::{GrammarIR, IrNode, IrRule, RuleId, RuleMeta};
 
 fn make_ir(rules: Vec<IrRule>, entry: RuleId) -> GrammarIR {
     GrammarIR {

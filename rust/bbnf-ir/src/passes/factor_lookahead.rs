@@ -32,11 +32,7 @@ pub fn factor_regex_with_lookahead(ir: &mut GrammarIR) {
     }
 }
 
-fn factor_node(
-    node: IrNode,
-    strings: &[String],
-    rule_metas: &[(CharSet128, bool)],
-) -> IrNode {
+fn factor_node(node: IrNode, strings: &[String], rule_metas: &[(CharSet128, bool)]) -> IrNode {
     match node {
         IrNode::Alt(branches, dispatch) => {
             // Recurse first.
@@ -60,9 +56,12 @@ fn factor_node(
 
             IrNode::Alt(branches, dispatch)
         }
-        IrNode::Seq(children) => {
-            IrNode::Seq(children.into_iter().map(|c| factor_node(c, strings, rule_metas)).collect())
-        }
+        IrNode::Seq(children) => IrNode::Seq(
+            children
+                .into_iter()
+                .map(|c| factor_node(c, strings, rule_metas))
+                .collect(),
+        ),
         IrNode::Repeat { inner, lo, hi } => IrNode::Repeat {
             inner: Box::new(factor_node(*inner, strings, rule_metas)),
             lo,
@@ -266,10 +265,16 @@ fn try_factor_alt(
                 first_set: Some(cont_b),
             },
         ],
-        Some(AltDispatch { table, fallback_idx: None }),
+        Some(AltDispatch {
+            table,
+            fallback_idx: None,
+        }),
     );
 
-    Some(IrNode::Seq(vec![IrNode::Regex(common_regex_sid), inner_alt]))
+    Some(IrNode::Seq(vec![
+        IrNode::Regex(common_regex_sid),
+        inner_alt,
+    ]))
 }
 
 /// Check if charset A is a subset of charset B.
@@ -286,8 +291,11 @@ fn strip_leading_seq(node: &IrNode) -> Option<IrNode> {
         IrNode::Seq(children) if children.len() > 1 => {
             let rest: Vec<IrNode> = children[1..].to_vec();
             if rest.len() == 1 {
-                Some(rest.into_iter().next()
-                    .expect("stripped Seq remainder verified non-empty"))
+                Some(
+                    rest.into_iter()
+                        .next()
+                        .expect("stripped Seq remainder verified non-empty"),
+                )
             } else {
                 Some(IrNode::Seq(rest))
             }

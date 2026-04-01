@@ -18,7 +18,7 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 #[path = "../generators/mod.rs"]
 mod generators;
 
-use bencher::{benchmark_group, benchmark_main, black_box, Bencher};
+use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
 
 use bbnf_derive::Parser;
 use parse_that::BumpArena;
@@ -38,15 +38,9 @@ macro_rules! bench_rules {
                 let arena =
                     BumpArena::<CssFastParserArenaEnum<'_>>::with_capacity(input.len() / 32);
                 let parser = CssFastParser::stylesheet_arena();
-                let (_result, state) =
-                    parser.parse_return_state_with_context(&input, &arena);
+                let (_result, state) = parser.parse_return_state_with_context(&input, &arena);
                 let pct = state.offset * 100 / input.len().max(1);
-                assert!(
-                    pct >= 95,
-                    "many_rules_{}: only consumed {}%",
-                    $count,
-                    pct,
-                );
+                assert!(pct >= 95, "many_rules_{}: only consumed {}%", $count, pct,);
             }
             b.iter(|| {
                 let arena =
@@ -76,8 +70,7 @@ macro_rules! bench_decls {
                 let arena =
                     BumpArena::<CssFastParserArenaEnum<'_>>::with_capacity(input.len() / 32);
                 let parser = CssFastParser::stylesheet_arena();
-                let (_result, state) =
-                    parser.parse_return_state_with_context(&input, &arena);
+                let (_result, state) = parser.parse_return_state_with_context(&input, &arena);
                 let pct = state.offset * 100 / input.len().max(1);
                 assert!(
                     pct >= 95,
@@ -113,8 +106,7 @@ macro_rules! bench_selectors {
                 let arena =
                     BumpArena::<CssFastParserArenaEnum<'_>>::with_capacity(input.len() / 32);
                 let parser = CssFastParser::stylesheet_arena();
-                let (_result, state) =
-                    parser.parse_return_state_with_context(&input, &arena);
+                let (_result, state) = parser.parse_return_state_with_context(&input, &arena);
                 let pct = state.offset * 100 / input.len().max(1);
                 assert!(
                     pct >= 95,
@@ -150,8 +142,7 @@ macro_rules! bench_nesting {
                 let arena =
                     BumpArena::<CssFastParserArenaEnum<'_>>::with_capacity(input.len() / 32);
                 let parser = CssFastParser::stylesheet_arena();
-                let (_result, state) =
-                    parser.parse_return_state_with_context(&input, &arena);
+                let (_result, state) = parser.parse_return_state_with_context(&input, &arena);
                 let pct = state.offset * 100 / input.len().max(1);
                 assert!(
                     pct >= 95,

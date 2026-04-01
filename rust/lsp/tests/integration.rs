@@ -55,10 +55,7 @@ fn read_until(
 }
 
 /// Read LSP messages until we find one containing the given text.
-fn read_until_contains(
-    stdout: &mut BufReader<impl Read>,
-    needle: &str,
-) -> String {
+fn read_until_contains(stdout: &mut BufReader<impl Read>, needle: &str) -> String {
     read_until(stdout, |msg| msg.contains(needle), Duration::from_secs(10))
         .unwrap_or_else(|| panic!("Timed out waiting for message containing '{}'", needle))
 }
@@ -130,10 +127,7 @@ fn shutdown(
         r#"{"jsonrpc":"2.0","id":999,"method":"shutdown","params":null}"#,
     );
     let _ = read_response(stdout, 999);
-    send_lsp(
-        stdin,
-        r#"{"jsonrpc":"2.0","method":"exit","params":null}"#,
-    );
+    send_lsp(stdin, r#"{"jsonrpc":"2.0","method":"exit","params":null}"#);
     let status = child.wait().unwrap();
     assert!(status.success(), "LSP process exited with: {:?}", status);
 }
@@ -242,9 +236,12 @@ fn test_diagnostics_parse_error() {
     let diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
     eprintln!("Parse error diagnostics: {}", diag);
     assert!(
-        diag.contains("severity\":1") || diag.contains("severity\":2")
-            || diag.contains("Parse") || diag.contains("parse")
-            || diag.contains("Incomplete") || diag.contains("incomplete"),
+        diag.contains("severity\":1")
+            || diag.contains("severity\":2")
+            || diag.contains("Parse")
+            || diag.contains("parse")
+            || diag.contains("Incomplete")
+            || diag.contains("incomplete"),
         "Expected parse error diagnostic, got: {}",
         diag
     );
@@ -258,7 +255,8 @@ fn test_hover_on_definition() {
     initialize(&mut stdin, &mut stdout);
 
     let grammar = "number = /[0-9]+/;\nvalue = number;";
-    let _diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+    let _diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
 
     // Hover on "number" at line 0, char 2
     send_lsp(
@@ -282,7 +280,8 @@ fn test_goto_definition() {
     initialize(&mut stdin, &mut stdout);
 
     let grammar = "number = /[0-9]+/;\nvalue = number;";
-    let _diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+    let _diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
 
     // Go to definition of "number" reference at line 1, char 10
     send_lsp(
@@ -307,7 +306,8 @@ fn test_completion() {
     initialize(&mut stdin, &mut stdout);
 
     let grammar = "number = /[0-9]+/;\nstring = /\"[^\"]*\"/;\nvalue = ;";
-    let _diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+    let _diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
 
     send_lsp(
         &mut stdin,
@@ -335,7 +335,8 @@ fn test_document_symbols() {
     initialize(&mut stdin, &mut stdout);
 
     let grammar = "alpha = \"a\";\nbeta = \"b\";\ngamma = alpha | beta;";
-    let _diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+    let _diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
 
     send_lsp(
         &mut stdin,
@@ -364,7 +365,8 @@ fn test_references() {
     initialize(&mut stdin, &mut stdout);
 
     let grammar = "number = /[0-9]+/;\nvalue = number;\nlist = number | value;";
-    let _diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+    let _diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
 
     // Find references to "number" (defined on line 0, referenced on lines 1 and 2)
     send_lsp(
@@ -390,7 +392,8 @@ fn test_formatting() {
 
     // Grammar with irregular spacing
     let grammar = "number = /[0-9]+/ ;\nvalue = number | \"hello\" ;";
-    let _diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+    let _diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
 
     send_lsp(
         &mut stdin,
@@ -414,7 +417,8 @@ fn test_rename() {
     initialize(&mut stdin, &mut stdout);
 
     let grammar = "number = /[0-9]+/;\nvalue = number;";
-    let _diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+    let _diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
 
     // Prepare rename on "number" definition
     send_lsp(
@@ -451,7 +455,8 @@ fn test_semantic_tokens() {
     initialize(&mut stdin, &mut stdout);
 
     let grammar = "number = /[0-9]+/;\nvalue = number | \"hello\";";
-    let _diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+    let _diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
 
     send_lsp(
         &mut stdin,
@@ -474,7 +479,8 @@ fn test_code_lens() {
     initialize(&mut stdin, &mut stdout);
 
     let grammar = "number = /[0-9]+/;\nvalue = number;\nlist = number | value;";
-    let _diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+    let _diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
 
     send_lsp(
         &mut stdin,
@@ -497,8 +503,10 @@ fn test_folding_ranges() {
     initialize(&mut stdin, &mut stdout);
 
     // Multi-line rule should produce folding range
-    let grammar = "value =\n  number\n  | string\n  | \"null\";\nnumber = /[0-9]+/;\nstring = /\"[^\"]*\"/;";
-    let _diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+    let grammar =
+        "value =\n  number\n  | string\n  | \"null\";\nnumber = /[0-9]+/;\nstring = /\"[^\"]*\"/;";
+    let _diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
 
     send_lsp(
         &mut stdin,
@@ -522,7 +530,8 @@ fn test_code_actions() {
 
     // Grammar with an unused rule
     let grammar = "value = number;\nnumber = /[0-9]+/;\nunused = \"hello\";";
-    let _diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+    let _diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
 
     // Request code actions for the "unused" rule on line 2
     send_lsp(
@@ -558,8 +567,7 @@ pair = string , ":" , value;
 object = "{" , [ pair , { "," , pair } ] , "}";
 value = string | number | object | array | bool | null;"#;
 
-    let diag =
-        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///json.bbnf", grammar);
+    let diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///json.bbnf", grammar);
     eprintln!("JSON grammar diagnostics: {}", diag);
     // Should parse — no errors (only hints about unused rules allowed)
     assert!(
@@ -582,8 +590,7 @@ fn test_regex_charclass_slash_parses() {
     let grammar = r#"char = /[^"\\]/ | /\\["\\/bfnrt]/ | /\\u[0-9a-fA-F]{4}/;
 value = char;"#;
 
-    let diag =
-        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+    let diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
     eprintln!("Regex charclass diagnostics: {}", diag);
     // Grammar is valid — should get diagnostics notification with no errors
     assert!(
@@ -607,7 +614,8 @@ fn test_did_change() {
 
     // Start with valid grammar
     let grammar = "number = /[0-9]+/;";
-    let _diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+    let _diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
 
     // Change to grammar with undefined reference
     let changed = r#"{"jsonrpc":"2.0","method":"textDocument/didChange","params":{"textDocument":{"uri":"file:///test.bbnf","version":2},"contentChanges":[{"text":"value = missing;"}]}}"#;
@@ -634,7 +642,8 @@ fn test_inlay_hints() {
 
     // Pure-terminal rules (number) are suppressed; rules with refs (value) are shown.
     let grammar = "number = /[0-9]+/;\nvalue = number | \"hello\";";
-    let _diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+    let _diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
 
     send_lsp(
         &mut stdin,
@@ -667,7 +676,8 @@ fn test_inlay_hints_nullable() {
 
     // Optional makes value nullable.
     let grammar = "value = [\"hello\"];";
-    let _diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+    let _diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
 
     send_lsp(
         &mut stdin,
@@ -691,7 +701,8 @@ fn test_inlay_hints_empty_range() {
 
     // Use rules with nonterminal refs so hints aren't suppressed.
     let grammar = "x = \"x\";\na = x | \"y\";\nb = x | \"z\";\nc = x | \"w\";";
-    let _diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+    let _diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
 
     // Request hints for only line 1 — should return just "a".
     send_lsp(
@@ -716,9 +727,18 @@ fn test_initialize_new_capabilities() {
     let resp = initialize(&mut stdin, &mut stdout);
 
     assert!(resp.contains("inlayHintProvider"), "missing inlay hints");
-    assert!(resp.contains("selectionRangeProvider"), "missing selection range");
-    assert!(resp.contains("documentRangeFormattingProvider"), "missing range formatting");
-    assert!(resp.contains("documentOnTypeFormattingProvider"), "missing on-type formatting");
+    assert!(
+        resp.contains("selectionRangeProvider"),
+        "missing selection range"
+    );
+    assert!(
+        resp.contains("documentRangeFormattingProvider"),
+        "missing range formatting"
+    );
+    assert!(
+        resp.contains("documentOnTypeFormattingProvider"),
+        "missing on-type formatting"
+    );
     // Check incremental sync.
     assert!(
         resp.contains("textDocumentSync") && resp.contains("2"),
@@ -735,7 +755,8 @@ fn test_selection_range() {
     initialize(&mut stdin, &mut stdout);
 
     let grammar = "value = number | \"hello\";\nnumber = /[0-9]+/;";
-    let _diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+    let _diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
 
     // Request selection range at the "number" reference position (line 0, char 10).
     send_lsp(
@@ -769,7 +790,8 @@ fn test_selection_range_multiple_positions() {
     initialize(&mut stdin, &mut stdout);
 
     let grammar = "a = \"x\";\nb = \"y\";";
-    let _diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+    let _diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
 
     // Request selection ranges for two positions.
     send_lsp(
@@ -781,7 +803,12 @@ fn test_selection_range_multiple_positions() {
     // Should return array of 2 results.
     let result: serde_json::Value = serde_json::from_str(&resp).unwrap();
     let arr = result["result"].as_array().expect("result should be array");
-    assert_eq!(arr.len(), 2, "Expected 2 selection ranges, got {}", arr.len());
+    assert_eq!(
+        arr.len(),
+        2,
+        "Expected 2 selection ranges, got {}",
+        arr.len()
+    );
 
     shutdown(&mut stdin, &mut stdout, child);
 }
@@ -792,7 +819,8 @@ fn test_range_formatting() {
     initialize(&mut stdin, &mut stdout);
 
     let grammar = "number = /[0-9]+/ ;\nvalue = number | \"hello\" ;";
-    let _diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+    let _diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
 
     // Format only the first line.
     send_lsp(
@@ -823,7 +851,8 @@ fn test_range_formatting_no_overlap() {
     initialize(&mut stdin, &mut stdout);
 
     let grammar = "a = \"x\";\nb = \"y\";\nc = \"z\";";
-    let _diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+    let _diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
 
     // Format a range covering only the middle rule (line 1).
     send_lsp(
@@ -845,7 +874,8 @@ fn test_on_type_formatting() {
     initialize(&mut stdin, &mut stdout);
 
     let grammar = "number = /[0-9]+/ ;";
-    let _diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+    let _diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
 
     // Trigger on-type formatting after typing ';'.
     send_lsp(
@@ -870,7 +900,8 @@ fn test_incremental_change() {
 
     // Start with valid grammar.
     let grammar = "number = /[0-9]+/;";
-    let _diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+    let _diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
 
     // Send an incremental change: insert "value = number;\n" at the beginning.
     let change = r#"{"jsonrpc":"2.0","method":"textDocument/didChange","params":{"textDocument":{"uri":"file:///test.bbnf","version":2},"contentChanges":[{"range":{"start":{"line":0,"character":0},"end":{"line":0,"character":0}},"text":"value = number;\n"}]}}"#;
@@ -901,7 +932,8 @@ fn test_incremental_change_delete() {
 
     // Start with two rules: value references number.
     let grammar = "value = number;\nnumber = /[0-9]+/;";
-    let _diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+    let _diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
 
     // Delete the second line (number rule) via incremental change.
     let change = r#"{"jsonrpc":"2.0","method":"textDocument/didChange","params":{"textDocument":{"uri":"file:///test.bbnf","version":2},"contentChanges":[{"range":{"start":{"line":0,"character":15},"end":{"line":1,"character":18}},"text":""}]}}"#;
@@ -925,7 +957,8 @@ fn test_incremental_change_replace() {
     initialize(&mut stdin, &mut stdout);
 
     let grammar = "value = \"hello\";";
-    let _diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+    let _diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
 
     // Replace "hello" with "world" via incremental change.
     let change = r#"{"jsonrpc":"2.0","method":"textDocument/didChange","params":{"textDocument":{"uri":"file:///test.bbnf","version":2},"contentChanges":[{"range":{"start":{"line":0,"character":9},"end":{"line":0,"character":14}},"text":"world"}]}}"#;
@@ -963,7 +996,8 @@ fn test_formatting_produces_valid_output() {
 
     // Grammar with irregular whitespace.
     let grammar = "a =    \"x\" ;\nb  =  \"y\"  |  \"z\" ;";
-    let _diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+    let _diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
 
     send_lsp(
         &mut stdin,
@@ -977,7 +1011,10 @@ fn test_formatting_produces_valid_output() {
     eprintln!("Formatted text:\n{}", new_text);
 
     // Formatted output should have consistent spacing.
-    assert!(new_text.contains("a = \"x\";"), "Expected normalized rule a");
+    assert!(
+        new_text.contains("a = \"x\";"),
+        "Expected normalized rule a"
+    );
     assert!(
         new_text.contains("b = \"y\" | \"z\";"),
         "Expected normalized alternation, got: {}",
@@ -1003,7 +1040,10 @@ object = "{" , [ pair , { "," , pair } ] , "}";
 value = string | number | object | array | bool | null;"#;
 
     let diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
-    assert!(!diag.contains("\"severity\":1"), "No errors in valid grammar");
+    assert!(
+        !diag.contains("\"severity\":1"),
+        "No errors in valid grammar"
+    );
 
     // Test all features work together on this grammar.
 
@@ -1054,16 +1094,14 @@ fn test_import_suppresses_undefined_rule() {
 
     // Open the "base" document first.
     let base_grammar = "number = /[0-9]+/;\nstring = /[a-zA-Z]+/;";
-    let _diag = open_doc_and_wait_diagnostics(
-        &mut stdin, &mut stdout, "file:///base.bbnf", base_grammar,
-    );
+    let _diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///base.bbnf", base_grammar);
 
     // Open the "main" document that imports base.
     let main_grammar = r#"@import "base.bbnf";
 value = number | string;"#;
-    let diag = open_doc_and_wait_diagnostics(
-        &mut stdin, &mut stdout, "file:///main.bbnf", main_grammar,
-    );
+    let diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///main.bbnf", main_grammar);
     eprintln!("Import diagnostics: {}", diag);
 
     // The "Undefined rule" diagnostics for `number` and `string` should be suppressed
@@ -1084,16 +1122,14 @@ fn test_import_selective_suppresses_only_named_rules() {
 
     // Open the "base" document with three rules.
     let base_grammar = "number = /[0-9]+/;\nstring = /[a-zA-Z]+/;\nbool = \"true\" | \"false\";";
-    let _diag = open_doc_and_wait_diagnostics(
-        &mut stdin, &mut stdout, "file:///base.bbnf", base_grammar,
-    );
+    let _diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///base.bbnf", base_grammar);
 
     // Main imports only `number` selectively, but references `string` too.
     let main_grammar = r#"@import { number } from "base.bbnf";
 value = number | string;"#;
-    let diag = open_doc_and_wait_diagnostics(
-        &mut stdin, &mut stdout, "file:///main.bbnf", main_grammar,
-    );
+    let diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///main.bbnf", main_grammar);
     eprintln!("Selective import diagnostics: {}", diag);
 
     // `number` should be suppressed, but `string` should still be undefined.
@@ -1118,16 +1154,14 @@ fn test_cross_file_goto_definition() {
 
     // Open the base document.
     let base_grammar = "number = /[0-9]+/;";
-    let _diag = open_doc_and_wait_diagnostics(
-        &mut stdin, &mut stdout, "file:///base.bbnf", base_grammar,
-    );
+    let _diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///base.bbnf", base_grammar);
 
     // Open main that imports base and references `number`.
     let main_grammar = r#"@import "base.bbnf";
 value = number;"#;
-    let _diag = open_doc_and_wait_diagnostics(
-        &mut stdin, &mut stdout, "file:///main.bbnf", main_grammar,
-    );
+    let _diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///main.bbnf", main_grammar);
 
     // Go to definition of "number" at line 1, char 10.
     send_lsp(
@@ -1154,16 +1188,14 @@ fn test_cross_file_references() {
 
     // Open base document with `number` rule.
     let base_grammar = "number = /[0-9]+/;";
-    let _diag = open_doc_and_wait_diagnostics(
-        &mut stdin, &mut stdout, "file:///base.bbnf", base_grammar,
-    );
+    let _diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///base.bbnf", base_grammar);
 
     // Open main that references `number`.
     let main_grammar = r#"@import "base.bbnf";
 value = number;"#;
-    let _diag = open_doc_and_wait_diagnostics(
-        &mut stdin, &mut stdout, "file:///main.bbnf", main_grammar,
-    );
+    let _diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///main.bbnf", main_grammar);
 
     // Find references to `number` from its definition in base.bbnf (line 0, char 2).
     send_lsp(
@@ -1195,16 +1227,14 @@ fn test_cross_file_completion_includes_imported_rules() {
 
     // Open base document with rules.
     let base_grammar = "number = /[0-9]+/;\nstring = /[a-zA-Z]+/;";
-    let _diag = open_doc_and_wait_diagnostics(
-        &mut stdin, &mut stdout, "file:///base.bbnf", base_grammar,
-    );
+    let _diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///base.bbnf", base_grammar);
 
     // Open main that imports base and has a partially-written rule.
     let main_grammar = r#"@import "base.bbnf";
 value = ;"#;
-    let _diag = open_doc_and_wait_diagnostics(
-        &mut stdin, &mut stdout, "file:///main.bbnf", main_grammar,
-    );
+    let _diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///main.bbnf", main_grammar);
 
     // Request completion at the cursor position in `value = |`.
     send_lsp(
@@ -1244,9 +1274,7 @@ fn test_import_parser_valid_syntax() {
     let grammar = r#"@import "other.bbnf";
 @import { a, b } from "lib.bbnf";
 value = a | b;"#;
-    let diag = open_doc_and_wait_diagnostics(
-        &mut stdin, &mut stdout, "file:///test.bbnf", grammar,
-    );
+    let diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
     eprintln!("Import syntax diagnostics: {}", diag);
 
     // Should not have parse errors.
@@ -1267,7 +1295,8 @@ fn test_diagnostics_first_set_conflict() {
     initialize(&mut stdin, &mut stdout);
 
     // Two alternatives both start with a digit.
-    let grammar = "value = integer | decimal;\ninteger = /[0-9]+/;\ndecimal = /[0-9]+/, \".\", /[0-9]+/;";
+    let grammar =
+        "value = integer | decimal;\ninteger = /[0-9]+/;\ndecimal = /[0-9]+/, \".\", /[0-9]+/;";
     let diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
     eprintln!("FIRST conflict diagnostics: {}", diag);
     assert!(
@@ -1369,7 +1398,8 @@ fn test_hover_enhanced_info() {
     initialize(&mut stdin, &mut stdout);
 
     let grammar = "number = /[0-9]+/;\nvalue = number;";
-    let _diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+    let _diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
 
     // Hover on "number" definition at line 0, char 2.
     send_lsp(
@@ -1400,7 +1430,8 @@ fn test_hover_recover_keyword() {
     initialize(&mut stdin, &mut stdout);
 
     let grammar = "@recover stmt /[^;]*;/ ;\nstmt = /[a-z]+/ , \"=\" , /[a-z]+/ , \";\" ;\nprogram = stmt * ;";
-    let _diag = open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
+    let _diag =
+        open_doc_and_wait_diagnostics(&mut stdin, &mut stdout, "file:///test.bbnf", grammar);
 
     // Hover on "@recover" keyword at line 0, char 3
     send_lsp(
@@ -1422,4 +1453,3 @@ fn test_hover_recover_keyword() {
 
     shutdown(&mut stdin, &mut stdout, child);
 }
-

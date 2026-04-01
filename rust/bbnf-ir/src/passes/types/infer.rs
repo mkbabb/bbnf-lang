@@ -2,7 +2,7 @@
 
 use crate::{FnDescriptor, IrNode, TypeDesc};
 
-use super::utils::{try_flatten_pair, InferCtx};
+use super::utils::{InferCtx, try_flatten_pair};
 
 /// Infer the output type of a single IR node.
 pub fn infer_node(node: &IrNode, ctx: &InferCtx<'_>) -> TypeDesc {
@@ -36,11 +36,7 @@ pub fn infer_node(node: &IrNode, ctx: &InferCtx<'_>) -> TypeDesc {
             let all_same = branches[1..]
                 .iter()
                 .all(|b| infer_node(&b.node, &consumed) == first);
-            if all_same {
-                first
-            } else {
-                TypeDesc::BoxedEnum
-            }
+            if all_same { first } else { TypeDesc::BoxedEnum }
         }
 
         IrNode::Repeat { inner, lo, hi } => {
@@ -98,7 +94,10 @@ pub fn infer_node(node: &IrNode, ctx: &InferCtx<'_>) -> TypeDesc {
                 FnDescriptor::EnumWrap { .. } => TypeDesc::Enum,
                 FnDescriptor::BoxWrap => TypeDesc::BoxedEnum,
                 // B.3: Use parsed return type if available.
-                FnDescriptor::Custom { return_type, source } => {
+                FnDescriptor::Custom {
+                    return_type,
+                    source,
+                } => {
                     if let Some(rt) = return_type {
                         rt.clone()
                     } else {
@@ -158,7 +157,10 @@ pub fn infer_node_in_vec(node: &IrNode, ctx: &InferCtx<'_>) -> TypeDesc {
             match fd {
                 FnDescriptor::EnumWrap { .. } => TypeDesc::Enum,
                 FnDescriptor::BoxWrap => TypeDesc::BoxedEnum,
-                FnDescriptor::Custom { return_type, source } => {
+                FnDescriptor::Custom {
+                    return_type,
+                    source,
+                } => {
                     if let Some(rt) = return_type {
                         rt.clone()
                     } else {
@@ -283,7 +285,8 @@ fn infer_seq(children: &[IrNode], ctx: &InferCtx<'_>) -> TypeDesc {
     };
 
     // B.2: Consume pretty_preserve flag. Only the top-level Seq preserves all-Span tuples.
-    let pretty_preserve = ctx.pretty_preserve && effective_types.iter().all(|t| *t == TypeDesc::Span);
+    let pretty_preserve =
+        ctx.pretty_preserve && effective_types.iter().all(|t| *t == TypeDesc::Span);
 
     // Consecutive Span compression (skip if pretty_preserve).
     let compressed = if pretty_preserve {
@@ -307,7 +310,9 @@ fn infer_seq(children: &[IrNode], ctx: &InferCtx<'_>) -> TypeDesc {
 
     // Single-element unwrap.
     if compressed.len() == 1 {
-        return compressed.into_iter().next()
+        return compressed
+            .into_iter()
+            .next()
             .expect("compressed Seq verified to have exactly one element");
     }
 

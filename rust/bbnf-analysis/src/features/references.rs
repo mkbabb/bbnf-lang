@@ -1,6 +1,6 @@
 use ls_types::*;
 
-use crate::analysis::{symbol_at_offset, SymbolAtOffset};
+use crate::analysis::{SymbolAtOffset, symbol_at_offset};
 use crate::state::DocumentState;
 
 pub fn references(
@@ -25,7 +25,9 @@ pub fn references(
             let rule = &state.info.rules[idx];
             locations.push(Location {
                 uri: uri.clone(),
-                range: state.line_index.span_to_range(rule.name_span.0, rule.name_span.1),
+                range: state
+                    .line_index
+                    .span_to_range(rule.name_span.0, rule.name_span.1),
             });
         }
     }
@@ -36,7 +38,9 @@ pub fn references(
             if refinfo.name == name {
                 locations.push(Location {
                     uri: uri.clone(),
-                    range: state.line_index.span_to_range(refinfo.span.0, refinfo.span.1),
+                    range: state
+                        .line_index
+                        .span_to_range(refinfo.span.0, refinfo.span.1),
                 });
             }
         }

@@ -47,10 +47,7 @@ pub fn inline_acyclic(ir: &mut GrammarIR) {
 
     // Rewrite all rule bodies.
     for rule in &mut ir.rules {
-        rule.body = inline_refs(
-            std::mem::replace(&mut rule.body, IrNode::Epsilon),
-            &bodies,
-        );
+        rule.body = inline_refs(std::mem::replace(&mut rule.body, IrNode::Epsilon), &bodies);
     }
 }
 
@@ -59,9 +56,7 @@ fn node_count(node: &IrNode) -> usize {
     match node {
         IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon | IrNode::Ref(_) => 1,
         IrNode::Seq(children) => 1 + children.iter().map(node_count).sum::<usize>(),
-        IrNode::Alt(branches, _) => {
-            1 + branches.iter().map(|b| node_count(&b.node)).sum::<usize>()
-        }
+        IrNode::Alt(branches, _) => 1 + branches.iter().map(|b| node_count(&b.node)).sum::<usize>(),
         IrNode::Repeat { inner, .. }
         | IrNode::Negate(inner)
         | IrNode::OptionalWhitespace(inner)
@@ -69,9 +64,16 @@ fn node_count(node: &IrNode) -> usize {
         IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
             1 + node_count(a) + node_count(b)
         }
-        IrNode::TokenDispatch { token, arms, fallback } => {
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => {
             1 + node_count(token)
-                + arms.iter().map(|a| node_count(&a.continuation)).sum::<usize>()
+                + arms
+                    .iter()
+                    .map(|a| node_count(&a.continuation))
+                    .sum::<usize>()
                 + node_count(fallback)
         }
     }
@@ -87,9 +89,12 @@ fn inline_refs(node: IrNode, bodies: &[Option<IrNode>]) -> IrNode {
                 IrNode::Ref(id)
             }
         }
-        IrNode::Seq(children) => {
-            IrNode::Seq(children.into_iter().map(|c| inline_refs(c, bodies)).collect())
-        }
+        IrNode::Seq(children) => IrNode::Seq(
+            children
+                .into_iter()
+                .map(|c| inline_refs(c, bodies))
+                .collect(),
+        ),
         IrNode::Alt(branches, dispatch) => {
             let branches = branches
                 .into_iter()
@@ -130,12 +135,19 @@ fn inline_refs(node: IrNode, bodies: &[Option<IrNode>]) -> IrNode {
             inner: Box::new(inline_refs(*inner, bodies)),
             fn_id,
         },
-        IrNode::TokenDispatch { token, arms, fallback } => IrNode::TokenDispatch {
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => IrNode::TokenDispatch {
             token: Box::new(inline_refs(*token, bodies)),
-            arms: arms.into_iter().map(|mut a| {
-                a.continuation = inline_refs(a.continuation, bodies);
-                a
-            }).collect(),
+            arms: arms
+                .into_iter()
+                .map(|mut a| {
+                    a.continuation = inline_refs(a.continuation, bodies);
+                    a
+                })
+                .collect(),
             fallback: Box::new(inline_refs(*fallback, bodies)),
         },
         other => other,

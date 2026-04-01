@@ -5,10 +5,8 @@
 
 use std::collections::HashMap;
 
-use bbnf_ir::{
-    AltBranch, GrammarIR, IrNode, IrRule, RuleId, RuleMeta,
-};
 use bbnf_ir::passes::{eliminate_direct_lr, eliminate_indirect_lr};
+use bbnf_ir::{AltBranch, GrammarIR, IrNode, IrRule, RuleId, RuleMeta};
 
 /// Build a minimal GrammarIR for testing.
 fn make_ir(rules: Vec<(&str, IrNode, Option<u32>, bool)>) -> GrammarIR {
@@ -82,9 +80,7 @@ fn seq(children: Vec<IrNode>) -> IrNode {
 
 #[test]
 fn test_no_left_recursion() {
-    let mut ir = make_ir(vec![
-        ("A", IrNode::Epsilon, None, false),
-    ]);
+    let mut ir = make_ir(vec![("A", IrNode::Epsilon, None, false)]);
     let x = lit("x", &mut ir);
     ir.rules[0].body = x;
 
@@ -95,24 +91,18 @@ fn test_no_left_recursion() {
 #[test]
 fn test_direct_left_recursion() {
     // A = A "x" | "y"
-    let mut ir = make_ir(vec![
-        ("A", IrNode::Epsilon, None, false),
-    ]);
+    let mut ir = make_ir(vec![("A", IrNode::Epsilon, None, false)]);
     let x = lit("x", &mut ir);
     let y = lit("y", &mut ir);
 
-    ir.rules[0].body = alt(vec![
-        seq(vec![IrNode::Ref(0), x]),
-        y,
-    ]);
+    ir.rules[0].body = alt(vec![seq(vec![IrNode::Ref(0), x]), y]);
 
     eliminate_direct_lr(&mut ir);
 
     // Should have 2 rules: A and A_tail.
     assert_eq!(ir.rules.len(), 2);
     assert_eq!(
-        ir.strings[ir.rules[1].name as usize],
-        "A_tail",
+        ir.strings[ir.rules[1].name as usize], "A_tail",
         "Second rule should be A_tail"
     );
 }
@@ -131,10 +121,7 @@ fn test_indirect_then_direct() {
     let z = lit("z", &mut ir);
 
     ir.rules[0].body = seq(vec![IrNode::Ref(1), x]);
-    ir.rules[1].body = alt(vec![
-        seq(vec![IrNode::Ref(0), y]),
-        z,
-    ]);
+    ir.rules[1].body = alt(vec![seq(vec![IrNode::Ref(0), y]), z]);
 
     // Run indirect first (Paull's), then direct.
     eliminate_indirect_lr(&mut ir);
@@ -142,8 +129,12 @@ fn test_indirect_then_direct() {
 
     // B should now be directly left-recursive (B starts with B after substitution),
     // and direct LR elimination should have created a B_tail rule.
-    let has_tail = ir.rules.iter().any(|r| {
-        ir.strings[r.name as usize] == "B_tail"
-    });
-    assert!(has_tail, "Expected B_tail rule after indirect + direct LR elimination");
+    let has_tail = ir
+        .rules
+        .iter()
+        .any(|r| ir.strings[r.name as usize] == "B_tail");
+    assert!(
+        has_tail,
+        "Expected B_tail rule after indirect + direct LR elimination"
+    );
 }

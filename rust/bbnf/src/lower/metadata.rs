@@ -65,9 +65,7 @@ pub(crate) fn build_rule_meta<'a>(
 
     // Token rule flag (span eligibility is refined by IR pass, but is_token
     // is a directive that we record here).
-    let is_token = ctx
-        .token_rules
-        .is_some_and(|set| set.contains(name));
+    let is_token = ctx.token_rules.is_some_and(|set| set.contains(name));
 
     RuleMeta {
         first_set,
@@ -75,14 +73,14 @@ pub(crate) fn build_rule_meta<'a>(
         scc_id,
         is_cyclic,
         memo,
-        dispatch: None,       // Populated by generate_dispatch_tables IR pass.
+        dispatch: None,        // Populated by generate_dispatch_tables IR pass.
         span_eligible: false,  // Populated by refine_span_eligibility IR pass.
         is_alias: None,        // Populated by compute_aliases IR pass.
         is_transparent: false, // Populated by compute_transparent IR pass.
         pretty,
         recover,
         is_token,
-        debug: false, // Set by caller from @debug directives.
+        debug: false,         // Set by caller from @debug directives.
         has_sp_method: false, // Computed by compute_sp_method_rules pass.
         sub_variants: Vec::new(),
     }

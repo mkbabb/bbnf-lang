@@ -2,7 +2,7 @@
 
 use bbnf_ir::{AltBranch, FnDescriptor, FnId, IrNode, TypeDesc};
 
-use crate::generate::regex_ir::classify::{classify_regex, RegexClass};
+use crate::generate::regex_ir::classify::{RegexClass, classify_regex};
 use crate::types::{Expression, Token};
 
 use super::LowerCtx;
@@ -110,8 +110,7 @@ fn extract_closure_fn_path(source: &str) -> Option<String> {
         // The function position should be a path expression.
         if let syn::Expr::Path(path_expr) = call.func.as_ref() {
             // Convert the path back to a string, normalizing `::` spacing.
-            let path_str =
-                quote::ToTokens::to_token_stream(&path_expr.path).to_string();
+            let path_str = quote::ToTokens::to_token_stream(&path_expr.path).to_string();
             return Some(path_str.replace(" :: ", "::"));
         }
     }
@@ -140,7 +139,10 @@ fn lower_mapping_fn<'a>(expr: &Expression<'a>, ctx: &mut LowerCtx<'a>) -> FnId {
             // and emit `NumberConvert` / `HexConvert`.
             if syn::parse_str::<syn::Type>(mapper_str).is_ok()
                 && syn::parse_str::<syn::ExprLit>(mapper_str).is_err()
-                && matches!(mapper_str, "f64" | "f32" | "u32" | "u64" | "i32" | "i64" | "usize")
+                && matches!(
+                    mapper_str,
+                    "f64" | "f32" | "u32" | "u64" | "i32" | "i64" | "usize"
+                )
             {
                 let type_sid = ctx.strings.intern(mapper_str);
                 return ctx.fns.push(FnDescriptor::Custom {
@@ -369,10 +371,7 @@ pub(crate) fn lower_expression<'a>(expr: &'a Expression<'a>, ctx: &mut LowerCtx<
                             }
                         });
 
-                    AltBranch {
-                        node,
-                        first_set,
-                    }
+                    AltBranch { node, first_set }
                 })
                 .collect();
 

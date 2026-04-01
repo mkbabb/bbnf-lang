@@ -47,8 +47,7 @@ fn collect_sub_variants_walk(
                 .map(|b| infer_node(&b.node, &consumed))
                 .collect();
 
-            let is_heterogeneous = tys.len() >= 2
-                && !tys.windows(2).all(|w| w[0] == w[1]);
+            let is_heterogeneous = tys.len() >= 2 && !tys.windows(2).all(|w| w[0] == w[1]);
 
             if is_heterogeneous {
                 // Collect sub-variants for branches that need coercion.
@@ -94,9 +93,7 @@ fn collect_sub_variants_walk(
         IrNode::Map { inner, .. } => {
             collect_sub_variants_walk(rule_name, inner, ctx, variants, counter);
         }
-        IrNode::Skip(left, right)
-        | IrNode::Next(left, right)
-        | IrNode::Minus(left, right) => {
+        IrNode::Skip(left, right) | IrNode::Next(left, right) | IrNode::Minus(left, right) => {
             collect_sub_variants_walk(rule_name, left, ctx, variants, counter);
             collect_sub_variants_walk(rule_name, right, ctx, variants, counter);
         }
@@ -104,7 +101,11 @@ fn collect_sub_variants_walk(
             collect_sub_variants_walk(rule_name, inner, ctx, variants, counter);
         }
 
-        IrNode::TokenDispatch { token, arms, fallback } => {
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => {
             collect_sub_variants_walk(rule_name, token, ctx, variants, counter);
             for arm in arms {
                 collect_sub_variants_walk(rule_name, &arm.continuation, ctx, variants, counter);

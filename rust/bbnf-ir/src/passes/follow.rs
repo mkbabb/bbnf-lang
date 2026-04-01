@@ -29,16 +29,10 @@ pub fn compute_follow_sets(ir: &GrammarIR) -> FollowSets {
     }
 
     // Build FIRST set + nullable lookup per rule.
-    let first_of: HashMap<RuleId, &CharSet128> = ir
-        .rules
-        .iter()
-        .map(|r| (r.id, &r.meta.first_set))
-        .collect();
-    let nullable: HashMap<RuleId, bool> = ir
-        .rules
-        .iter()
-        .map(|r| (r.id, r.meta.nullable))
-        .collect();
+    let first_of: HashMap<RuleId, &CharSet128> =
+        ir.rules.iter().map(|r| (r.id, &r.meta.first_set)).collect();
+    let nullable: HashMap<RuleId, bool> =
+        ir.rules.iter().map(|r| (r.id, r.meta.nullable)).collect();
 
     // Fixed-point iteration.
     loop {
@@ -79,7 +73,15 @@ fn propagate_follow(
         IrNode::Seq(children) => {
             for (i, child) in children.iter().enumerate() {
                 // Recurse into child.
-                propagate_follow(child, container_rule, first_of, nullable, ir, follow, changed);
+                propagate_follow(
+                    child,
+                    container_rule,
+                    first_of,
+                    nullable,
+                    ir,
+                    follow,
+                    changed,
+                );
 
                 // If child is Ref(B), compute what follows it.
                 if let IrNode::Ref(ref_id) = child {
@@ -106,10 +108,8 @@ fn propagate_follow(
 
                     // If suffix is nullable, add FOLLOW(container) to FOLLOW(B).
                     if suffix_nullable {
-                        let container_follow = follow
-                            .get(&container_rule)
-                            .cloned()
-                            .unwrap_or_default();
+                        let container_follow =
+                            follow.get(&container_rule).cloned().unwrap_or_default();
                         let entry = follow.entry(*ref_id).or_default();
                         let old = entry.bits;
                         entry.union(&container_follow);
@@ -136,7 +136,15 @@ fn propagate_follow(
         }
 
         IrNode::Repeat { inner, .. } => {
-            propagate_follow(inner, container_rule, first_of, nullable, ir, follow, changed);
+            propagate_follow(
+                inner,
+                container_rule,
+                first_of,
+                nullable,
+                ir,
+                follow,
+                changed,
+            );
 
             // For Ref(B) inside a repeat, FIRST(inner) is also in FOLLOW(B)
             // because the repeat can loop.
@@ -189,19 +197,63 @@ fn propagate_follow(
         }
 
         IrNode::Negate(inner) | IrNode::OptionalWhitespace(inner) => {
-            propagate_follow(inner, container_rule, first_of, nullable, ir, follow, changed);
+            propagate_follow(
+                inner,
+                container_rule,
+                first_of,
+                nullable,
+                ir,
+                follow,
+                changed,
+            );
         }
 
         IrNode::Map { inner, .. } => {
-            propagate_follow(inner, container_rule, first_of, nullable, ir, follow, changed);
+            propagate_follow(
+                inner,
+                container_rule,
+                first_of,
+                nullable,
+                ir,
+                follow,
+                changed,
+            );
         }
 
-        IrNode::TokenDispatch { token, arms, fallback } => {
-            propagate_follow(token, container_rule, first_of, nullable, ir, follow, changed);
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => {
+            propagate_follow(
+                token,
+                container_rule,
+                first_of,
+                nullable,
+                ir,
+                follow,
+                changed,
+            );
             for arm in arms {
-                propagate_follow(&arm.continuation, container_rule, first_of, nullable, ir, follow, changed);
+                propagate_follow(
+                    &arm.continuation,
+                    container_rule,
+                    first_of,
+                    nullable,
+                    ir,
+                    follow,
+                    changed,
+                );
             }
-            propagate_follow(fallback, container_rule, first_of, nullable, ir, follow, changed);
+            propagate_follow(
+                fallback,
+                container_rule,
+                first_of,
+                nullable,
+                ir,
+                follow,
+                changed,
+            );
         }
 
         IrNode::Ref(_) | IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => {}
@@ -266,11 +318,7 @@ fn compute_node_first(
 }
 
 /// Check if a node is nullable (simplified — doesn't do full analysis).
-fn is_node_nullable(
-    node: &IrNode,
-    nullable: &HashMap<RuleId, bool>,
-    _ir: &GrammarIR,
-) -> bool {
+fn is_node_nullable(node: &IrNode, nullable: &HashMap<RuleId, bool>, _ir: &GrammarIR) -> bool {
     match node {
         IrNode::Epsilon => true,
         IrNode::Repeat { lo: 0, .. } => true,

@@ -15,9 +15,9 @@ fn get_inner_expression<'a, T>(tok: &'a Token<'a, T>) -> &'a T {
 /// enabling "Expand/Shrink Selection" in the editor.
 pub fn selection_ranges(state: &DocumentState, positions: Vec<Position>) -> Vec<SelectionRange> {
     // Use the cached AST (no re-parsing needed).
-    let ast = state.ast().unwrap_or_else(|| panic!(
-        "selection_ranges requested for document with no parsed AST"
-    ));
+    let ast = state
+        .ast()
+        .unwrap_or_else(|| panic!("selection_ranges requested for document with no parsed AST"));
 
     positions
         .iter()
@@ -41,7 +41,10 @@ fn compute_selection_range(
 ) -> Option<SelectionRange> {
     // Find which rule contains this offset.
     for (lhs, rhs) in ast.iter() {
-        if let Expression::Nonterminal(Token { span: name_span, .. }) = lhs {
+        if let Expression::Nonterminal(Token {
+            span: name_span, ..
+        }) = lhs
+        {
             let rule_start = name_span.start;
             let rule_end = crate::state::compute_expression_end_pub(rhs).unwrap_or_else(|| {
                 panic!(

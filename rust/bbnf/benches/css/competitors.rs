@@ -9,7 +9,7 @@
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-use bencher::{benchmark_group, benchmark_main, black_box, Bencher};
+use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
 
 fn load_css(name: &str) -> String {
     let path = format!("../../data/css/{}", name);

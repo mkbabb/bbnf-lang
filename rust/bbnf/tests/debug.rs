@@ -1,7 +1,7 @@
 //! Tests for @debug directive parsing, pipeline threading, and compiled trace codegen.
 
 use bbnf::grammar::BBNFGrammar;
-use bbnf::pipeline::{compile_grammar, PipelineOptions};
+use bbnf::pipeline::{PipelineOptions, compile_grammar};
 
 // ── @debug directive parsing ─────────────────────────────────────────────────
 
@@ -57,7 +57,8 @@ fn pipeline_debug_single_rule_meta() {
 
 #[test]
 fn pipeline_debug_wildcard_sets_all() {
-    let source = "@debug * ;\nnull = \"null\" ;\nbool = \"true\" | \"false\" ;\nvalue = null | bool ;";
+    let source =
+        "@debug * ;\nnull = \"null\" ;\nbool = \"true\" | \"false\" ;\nvalue = null | bool ;";
     let ir = compile_grammar(source, &PipelineOptions::default()).unwrap();
     assert!(ir.debug_all, "debug_all should be true");
 }
@@ -68,7 +69,10 @@ fn pipeline_no_debug_default() {
     let ir = compile_grammar(source, &PipelineOptions::default()).unwrap();
     assert!(!ir.debug_all);
     for rule in &ir.rules {
-        assert!(!rule.meta.debug, "no rules should have debug without @debug");
+        assert!(
+            !rule.meta.debug,
+            "no rules should have debug without @debug"
+        );
     }
 }
 

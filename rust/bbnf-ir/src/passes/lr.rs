@@ -80,7 +80,9 @@ pub fn eliminate_direct_lr(ir: &mut GrammarIR) {
             .collect();
 
         let new_body = if new_betas.len() == 1 {
-            new_betas.into_iter().next()
+            new_betas
+                .into_iter()
+                .next()
                 .expect("new_betas verified to have exactly one element")
                 .node
         } else {
@@ -212,7 +214,9 @@ fn strip_leading_ref(node: &IrNode, rule_id: RuleId) -> Option<IrNode> {
             let rest: Vec<IrNode> = children[1..].to_vec();
             Some(match rest.len() {
                 0 => IrNode::Epsilon,
-                1 => rest.into_iter().next()
+                1 => rest
+                    .into_iter()
+                    .next()
                     .expect("rest verified to have exactly one element"),
                 _ => IrNode::Seq(rest),
             })
@@ -395,25 +399,25 @@ mod tests {
         let x1 = lit("x", &mut ir);
         let x2 = lit("x", &mut ir);
 
-        ir.rules[0].body = alt(vec![
-            seq(vec![ref_node(0), plus, x1]),
-            x2,
-        ]);
+        ir.rules[0].body = alt(vec![seq(vec![ref_node(0), plus, x1]), x2]);
 
         eliminate_direct_lr(&mut ir);
 
         // Should produce A and A_tail rules.
         assert_eq!(ir.rules.len(), 2, "Expected 2 rules (A + A_tail)");
         assert_eq!(
-            ir.strings[ir.rules[1].name as usize],
-            "A_tail",
+            ir.strings[ir.rules[1].name as usize], "A_tail",
             "Second rule should be A_tail"
         );
 
         // A_tail should reference itself recursively and have an epsilon branch.
         let tail_body = &ir.rules[1].body;
         if let IrNode::Alt(branches, _) = tail_body {
-            assert_eq!(branches.len(), 2, "A_tail should have 2 branches (alpha + epsilon)");
+            assert_eq!(
+                branches.len(),
+                2,
+                "A_tail should have 2 branches (alpha + epsilon)"
+            );
             // Last branch should be Epsilon.
             assert!(
                 matches!(&branches.last().unwrap().node, IrNode::Epsilon),
@@ -426,9 +430,7 @@ mod tests {
 
     #[test]
     fn no_lr_unchanged() {
-        let mut ir = make_ir(vec![
-            ("A", IrNode::Epsilon, None, false),
-        ]);
+        let mut ir = make_ir(vec![("A", IrNode::Epsilon, None, false)]);
 
         let x = lit("x", &mut ir);
         let y = lit("y", &mut ir);
@@ -442,9 +444,7 @@ mod tests {
 
     #[test]
     fn non_alt_body_unchanged() {
-        let mut ir = make_ir(vec![
-            ("A", IrNode::Epsilon, None, false),
-        ]);
+        let mut ir = make_ir(vec![("A", IrNode::Epsilon, None, false)]);
 
         let x = lit("x", &mut ir);
         ir.rules[0].body = x;
@@ -469,10 +469,10 @@ mod tests {
         let y1 = lit("y", &mut ir);
         let z1 = lit("z", &mut ir);
 
-        ir.rules[0].body = seq(vec![ref_node(1), x1]);  // A = B "x"
+        ir.rules[0].body = seq(vec![ref_node(1), x1]); // A = B "x"
         ir.rules[1].body = alt(vec![
-            seq(vec![ref_node(0), y1]),  // A "y"
-            z1,                          // "z"
+            seq(vec![ref_node(0), y1]), // A "y"
+            z1,                         // "z"
         ]);
 
         eliminate_indirect_lr(&mut ir);
@@ -488,10 +488,16 @@ mod tests {
                 // The substitution of A = (B "x") into (A "y") gives Seq([B, "x", "y"])
                 // or Seq([Seq([B, "x"]), "y"]).
                 // Our implementation creates Seq([Seq([B, "x"]), "y"]).
-                assert!(elems.len() >= 2, "Expected at least 2 elements in substituted seq");
+                assert!(
+                    elems.len() >= 2,
+                    "Expected at least 2 elements in substituted seq"
+                );
                 // The first element should contain a reference to B (rule 1).
                 let has_b_ref = contains_ref(&elems[0], 1);
-                assert!(has_b_ref, "Expected substituted branch to reference B (rule 1)");
+                assert!(
+                    has_b_ref,
+                    "Expected substituted branch to reference B (rule 1)"
+                );
             } else {
                 panic!("Expected Seq after substitution, got {:?}", first);
             }
@@ -503,18 +509,17 @@ mod tests {
     #[test]
     fn indirect_lr_no_multi_sccs_is_noop() {
         // Single-member SCCs should not trigger indirect LR elimination.
-        let mut ir = make_ir(vec![
-            ("A", IrNode::Epsilon, Some(0), true),
-        ]);
+        let mut ir = make_ir(vec![("A", IrNode::Epsilon, Some(0), true)]);
 
         let x = lit("x", &mut ir);
-        ir.rules[0].body = alt(vec![
-            seq(vec![ref_node(0), x]),
-        ]);
+        ir.rules[0].body = alt(vec![seq(vec![ref_node(0), x])]);
 
         let body_before = ir.rules[0].body.clone();
         eliminate_indirect_lr(&mut ir);
-        assert_eq!(ir.rules[0].body, body_before, "Single-member SCC should be unchanged");
+        assert_eq!(
+            ir.rules[0].body, body_before,
+            "Single-member SCC should be unchanged"
+        );
     }
 
     /// Check if an IrNode tree contains a Ref to the given rule id.
@@ -540,8 +545,14 @@ mod tests {
     fn starts_with_ref_checks() {
         assert!(starts_with_ref(&IrNode::Ref(0), 0));
         assert!(!starts_with_ref(&IrNode::Ref(1), 0));
-        assert!(starts_with_ref(&IrNode::Seq(vec![IrNode::Ref(0), IrNode::Epsilon]), 0));
-        assert!(!starts_with_ref(&IrNode::Seq(vec![IrNode::Epsilon, IrNode::Ref(0)]), 0));
+        assert!(starts_with_ref(
+            &IrNode::Seq(vec![IrNode::Ref(0), IrNode::Epsilon]),
+            0
+        ));
+        assert!(!starts_with_ref(
+            &IrNode::Seq(vec![IrNode::Epsilon, IrNode::Ref(0)]),
+            0
+        ));
     }
 
     #[test]
@@ -593,8 +604,14 @@ mod tests {
         let node = IrNode::Seq(vec![IrNode::Ref(0), IrNode::Literal(1)]);
         let replacement = IrNode::Alt(
             vec![
-                AltBranch { node: IrNode::Literal(2), first_set: None },
-                AltBranch { node: IrNode::Literal(3), first_set: None },
+                AltBranch {
+                    node: IrNode::Literal(2),
+                    first_set: None,
+                },
+                AltBranch {
+                    node: IrNode::Literal(3),
+                    first_set: None,
+                },
             ],
             None,
         );

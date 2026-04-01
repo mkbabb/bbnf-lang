@@ -68,8 +68,10 @@ pub fn emit_generalized_regex_direct(pattern: &str) -> Option<TokenStream> {
     if let Some(inner) = try_strip_ws_padded_literal(pattern) {
         let inner_bytes = inner.as_bytes();
         let inner_len = inner_bytes.len();
-        let byte_lits: Vec<proc_macro2::Literal> =
-            inner_bytes.iter().map(|b| proc_macro2::Literal::byte_character(*b)).collect();
+        let byte_lits: Vec<proc_macro2::Literal> = inner_bytes
+            .iter()
+            .map(|b| proc_macro2::Literal::byte_character(*b))
+            .collect();
         let check = if inner_len == 1 {
             quote! {
                 __pos < state.src_bytes.len()
@@ -224,7 +226,9 @@ pub(crate) fn emit_char_class_loop(pattern: &str) -> Option<TokenStream> {
     } else if let Some(brace_start) = pattern.rfind('{') {
         let class_str = &pattern[..brace_start];
         let quant = &pattern[brace_start + 1..pattern.len() - 1]; // strip { }
-        if !pattern.ends_with('}') { return None; }
+        if !pattern.ends_with('}') {
+            return None;
+        }
         if let Some(comma) = quant.find(',') {
             let min: usize = quant[..comma].parse().ok()?;
             let max: usize = quant[comma + 1..].parse().ok()?;

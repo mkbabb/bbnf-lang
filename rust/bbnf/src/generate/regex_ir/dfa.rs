@@ -224,8 +224,7 @@ fn emit_general_state_machine(
         // Self-loop detection: if this state loops to itself on most inputs,
         // emit a while loop instead of a match arm.
         let self_loop_count = transitions.iter().filter(|(_, t)| *t == sid as u32).count();
-        let is_self_loop_dominant = self_loop_count > 0
-            && transitions.len() - self_loop_count <= 2;
+        let is_self_loop_dominant = self_loop_count > 0 && transitions.len() - self_loop_count <= 2;
 
         if is_self_loop_dominant && dfa.states[sid].is_accept {
             // Self-looping accepting state: emit tight loop.
@@ -476,15 +475,16 @@ fn detect_shorthand(bytes: &[u8]) -> Option<TokenStream> {
     }
 
     // [a-zA-Z]
-    let alpha: std::collections::HashSet<u8> =
-        (b'A'..=b'Z').chain(b'a'..=b'z').collect();
+    let alpha: std::collections::HashSet<u8> = (b'A'..=b'Z').chain(b'a'..=b'z').collect();
     if set == alpha {
         return Some(quote! { __b.is_ascii_alphabetic() });
     }
 
     // \s = ASCII whitespace
-    let ws: std::collections::HashSet<u8> =
-        [b' ', b'\t', b'\n', b'\r', 0x0B, 0x0C].iter().copied().collect();
+    let ws: std::collections::HashSet<u8> = [b' ', b'\t', b'\n', b'\r', 0x0B, 0x0C]
+        .iter()
+        .copied()
+        .collect();
     if set == ws {
         return Some(quote! { __b.is_ascii_whitespace() });
     }
@@ -529,9 +529,7 @@ fn bytes_to_ranges(bytes: &[u8]) -> Vec<(u8, u8)> {
 }
 
 /// Try to emit SIMD-accelerated scanning code for a self-loop state.
-fn try_emit_accel_scan(
-    accel: &parse_that::regex_engine::accel::StateAccel,
-) -> Option<TokenStream> {
+fn try_emit_accel_scan(accel: &parse_that::regex_engine::accel::StateAccel) -> Option<TokenStream> {
     match &accel.strategy {
         AccelStrategy::Memchr1(b) => {
             let b_lit = proc_macro2::Literal::byte_character(*b);

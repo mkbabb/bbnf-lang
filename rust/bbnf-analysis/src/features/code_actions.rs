@@ -4,20 +4,14 @@ use ls_types::*;
 
 use crate::state::DocumentState;
 
-pub fn code_actions(
-    state: &DocumentState,
-    uri: &Uri,
-    range: Range,
-) -> CodeActionResponse {
+pub fn code_actions(state: &DocumentState, uri: &Uri, range: Range) -> CodeActionResponse {
     let mut actions = Vec::new();
 
     // "Remove unused rule" for rules at cursor with UNNECESSARY tag.
     for diag in &state.info.diagnostics {
         if diag.message.starts_with("Unused rule:") {
             // Check if the diagnostic is in our range.
-            if diag.range.start.line >= range.start.line
-                && diag.range.end.line <= range.end.line
-            {
+            if diag.range.start.line >= range.start.line && diag.range.end.line <= range.end.line {
                 // Find the rule.
                 let name = diag
                     .message
@@ -76,37 +70,37 @@ pub fn code_actions(
             && diag.range.start.line >= range.start.line
             && diag.range.end.line <= range.end.line
         {
-                let name = diag
-                    .message
-                    .strip_prefix("Undefined rule: `")
-                    .and_then(|s| s.strip_suffix('`'));
-                if let Some(name) = name {
-                    // Insert a new rule at the end of the document.
-                    let insert_text = format!("\n{} = ;\n", name);
-                    let end_pos = state.line_index.offset_to_position(state.text.len());
+            let name = diag
+                .message
+                .strip_prefix("Undefined rule: `")
+                .and_then(|s| s.strip_suffix('`'));
+            if let Some(name) = name {
+                // Insert a new rule at the end of the document.
+                let insert_text = format!("\n{} = ;\n", name);
+                let end_pos = state.line_index.offset_to_position(state.text.len());
 
-                    let mut changes = HashMap::new();
-                    changes.insert(
-                        uri.clone(),
-                        vec![TextEdit {
-                            range: Range::new(end_pos, end_pos),
-                            new_text: insert_text,
-                        }],
-                    );
+                let mut changes = HashMap::new();
+                changes.insert(
+                    uri.clone(),
+                    vec![TextEdit {
+                        range: Range::new(end_pos, end_pos),
+                        new_text: insert_text,
+                    }],
+                );
 
-                    actions.push(CodeActionOrCommand::CodeAction(CodeAction {
-                        title: format!("Define rule `{}`", name),
-                        kind: Some(CodeActionKind::QUICKFIX),
-                        diagnostics: Some(vec![diag.clone()]),
-                        edit: Some(WorkspaceEdit {
-                            changes: Some(changes),
-                            ..Default::default()
-                        }),
+                actions.push(CodeActionOrCommand::CodeAction(CodeAction {
+                    title: format!("Define rule `{}`", name),
+                    kind: Some(CodeActionKind::QUICKFIX),
+                    diagnostics: Some(vec![diag.clone()]),
+                    edit: Some(WorkspaceEdit {
+                        changes: Some(changes),
                         ..Default::default()
-                    }));
-                }
+                    }),
+                    ..Default::default()
+                }));
             }
         }
+    }
 
     actions
 }

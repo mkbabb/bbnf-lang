@@ -3,11 +3,11 @@
 use std::collections::HashMap;
 use std::collections::HashSet;
 
-use crate::types::{Expression, AST};
 use super::charset::CharSet;
 use super::deps::Dependencies;
-use super::scc::SccResult;
 use super::regex_first_chars;
+use super::scc::SccResult;
+use crate::types::{AST, Expression};
 
 /// The result of FIRST set analysis.
 #[derive(Debug)]
@@ -34,9 +34,7 @@ pub fn compute_first_sets<'a>(
         })
         .collect();
 
-    let expr_to_rhs: HashMap<&'a Expression<'a>, &'a Expression<'a>> = ast
-        .iter()
-        .collect();
+    let expr_to_rhs: HashMap<&'a Expression<'a>, &'a Expression<'a>> = ast.iter().collect();
 
     for (lhs, _) in ast {
         first.entry(lhs).or_default();
@@ -48,9 +46,8 @@ pub fn compute_first_sets<'a>(
             if let Some(&rhs) = expr_to_rhs.get(lhs) {
                 let rhs_expr = unwrap_rule(rhs);
                 let mut expr_first = CharSet::new();
-                let expr_nullable = compute_expr_first(
-                    rhs_expr, &first, &nullable, &name_to_key, &mut expr_first,
-                );
+                let expr_nullable =
+                    compute_expr_first(rhs_expr, &first, &nullable, &name_to_key, &mut expr_first);
                 let entry = first.entry(lhs).or_default();
                 entry.union(&expr_first);
                 if expr_nullable {
@@ -60,13 +57,19 @@ pub fn compute_first_sets<'a>(
         } else {
             loop {
                 let mut changed = false;
-                let mut memo_cache: HashMap<*const Expression<'a>, (CharSet, bool)> = HashMap::new();
+                let mut memo_cache: HashMap<*const Expression<'a>, (CharSet, bool)> =
+                    HashMap::new();
                 for &lhs in scc {
                     if let Some(&rhs) = expr_to_rhs.get(lhs) {
                         let rhs_expr = unwrap_rule(rhs);
                         let mut expr_first = CharSet::new();
                         let expr_nullable = compute_expr_first_memoized(
-                            rhs_expr, &first, &nullable, &name_to_key, &mut expr_first, &mut memo_cache,
+                            rhs_expr,
+                            &first,
+                            &nullable,
+                            &name_to_key,
+                            &mut expr_first,
+                            &mut memo_cache,
                         );
                         let entry = first.entry(lhs).or_default();
                         let old_bits = entry.bits;
@@ -98,9 +101,8 @@ pub fn compute_first_sets<'a>(
                 .iter()
                 .map(|branch| {
                     let mut cs = CharSet::new();
-                    let is_nullable = compute_expr_first(
-                        branch, &first, &nullable, &name_to_key, &mut cs,
-                    );
+                    let is_nullable =
+                        compute_expr_first(branch, &first, &nullable, &name_to_key, &mut cs);
                     (cs, is_nullable)
                 })
                 .collect();
@@ -108,7 +110,11 @@ pub fn compute_first_sets<'a>(
         }
     }
 
-    FirstSets { first, nullable, branch_firsts }
+    FirstSets {
+        first,
+        nullable,
+        branch_firsts,
+    }
 }
 
 fn compute_expr_first_memoized<'a>(
@@ -125,7 +131,8 @@ fn compute_expr_first_memoized<'a>(
         return *cached_nullable;
     }
     let mut local_out = CharSet::new();
-    let is_nullable = compute_expr_first(expr, first_sets, nullable_set, name_to_key, &mut local_out);
+    let is_nullable =
+        compute_expr_first(expr, first_sets, nullable_set, name_to_key, &mut local_out);
     out.union(&local_out);
     cache.insert(ptr, (local_out, is_nullable));
     is_nullable
@@ -194,7 +201,8 @@ pub(crate) fn compute_expr_first<'a>(
         Expression::Concatenation(token) => {
             let exprs = &token.value;
             for child in exprs {
-                let child_nullable = compute_expr_first(child, first_sets, nullable_set, name_to_key, out);
+                let child_nullable =
+                    compute_expr_first(child, first_sets, nullable_set, name_to_key, out);
                 if !child_nullable {
                     return false;
                 }
@@ -206,7 +214,8 @@ pub(crate) fn compute_expr_first<'a>(
             let exprs = &token.value;
             let mut any_nullable = false;
             for child in exprs {
-                let child_nullable = compute_expr_first(child, first_sets, nullable_set, name_to_key, out);
+                let child_nullable =
+                    compute_expr_first(child, first_sets, nullable_set, name_to_key, out);
                 if child_nullable {
                     any_nullable = true;
                 }
@@ -214,7 +223,9 @@ pub(crate) fn compute_expr_first<'a>(
             any_nullable
         }
 
-        Expression::Optional(inner) | Expression::Many(inner) | Expression::OptionalWhitespace(inner) => {
+        Expression::Optional(inner)
+        | Expression::Many(inner)
+        | Expression::OptionalWhitespace(inner) => {
             compute_expr_first(&inner.value, first_sets, nullable_set, name_to_key, out);
             true
         }
@@ -227,9 +238,7 @@ pub(crate) fn compute_expr_first<'a>(
             compute_expr_first(&inner.value, first_sets, nullable_set, name_to_key, out)
         }
 
-        Expression::Epsilon(_) => {
-            true
-        }
+        Expression::Epsilon(_) => true,
 
         Expression::Rule(inner, _) => {
             compute_expr_first(inner, first_sets, nullable_set, name_to_key, out)
@@ -240,7 +249,8 @@ pub(crate) fn compute_expr_first<'a>(
         }
 
         Expression::Next(_left, right) => {
-            let left_nullable = compute_expr_first(&_left.value, first_sets, nullable_set, name_to_key, out);
+            let left_nullable =
+                compute_expr_first(&_left.value, first_sets, nullable_set, name_to_key, out);
             if left_nullable {
                 compute_expr_first(&right.value, first_sets, nullable_set, name_to_key, out);
             }
@@ -259,8 +269,6 @@ pub(crate) fn compute_expr_first<'a>(
             compute_expr_first(&inner.value, first_sets, nullable_set, name_to_key, out)
         }
 
-        Expression::MappingFn(_) | Expression::ProductionRule(_, _) => {
-            false
-        }
+        Expression::MappingFn(_) | Expression::ProductionRule(_, _) => false,
     }
 }

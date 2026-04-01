@@ -3,15 +3,15 @@ use bbnf::types::AST;
 
 use self_cell::self_cell;
 
+use super::pretty::{self, PrettyInfo};
+use super::types::{
+    DebugInfo, ImportInfo, ParseDiagnostics, RecoverInfo, TokenInfo, WsPatternInfo,
+};
 use crate::directives::debug;
 use crate::directives::import;
 use crate::directives::recover;
 use crate::directives::token;
 use crate::directives::ws;
-use super::pretty::{self, PrettyInfo};
-use super::types::{
-    DebugInfo, ImportInfo, ParseDiagnostics, RecoverInfo, TokenInfo, WsPatternInfo,
-};
 
 // Self-referential struct: owns the source text and the parsed AST that borrows from it.
 self_cell! {

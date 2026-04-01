@@ -16,6 +16,7 @@ pub fn compile(ir: &GrammarIR) -> BytecodeProgram {
 /// - Source map entries are emitted for each rule
 /// - `DebugBreak` opcodes are emitted for `@debug`-annotated rules
 pub fn compile_with_debug(ir: &GrammarIR, debug: bool) -> BytecodeProgram {
+    let memo_enabled = grammar_needs_memo(ir);
     let mut compiler = Compiler {
         code: Vec::new(),
         entries: vec![0; ir.rules.len()],
@@ -23,6 +24,7 @@ pub fn compile_with_debug(ir: &GrammarIR, debug: bool) -> BytecodeProgram {
         source_map: Vec::new(),
         debug,
         debug_all: ir.debug_all,
+        memo_enabled,
     };
 
     for rule in &ir.rules {
@@ -39,6 +41,7 @@ pub fn compile_with_debug(ir: &GrammarIR, debug: bool) -> BytecodeProgram {
         entries: compiler.entries,
         strings: ir.strings.clone(),
         entry: ir.entry,
+        memo_enabled,
         dispatch_tables: compiler.dispatch_tables,
         compiled_regexes: Vec::new(),
         follow_sets: ir.follow_sets.clone(),
@@ -63,6 +66,27 @@ struct Compiler {
     debug: bool,
     /// Whether all rules are instrumented (`@debug *`).
     debug_all: bool,
+    /// Whether the program should emit VM memo ops at all.
+    memo_enabled: bool,
+}
+
+fn grammar_needs_memo(ir: &GrammarIR) -> bool {
+    ir.rules.iter().any(|rule| {
+        rule.meta.memo != MemoStrategy::None && node_has_direct_left_recursion(&rule.body, rule.id)
+    })
+}
+
+fn node_has_direct_left_recursion(node: &IrNode, rule_id: u32) -> bool {
+    match node {
+        IrNode::Ref(id) => *id == rule_id,
+        IrNode::Seq(children) => children
+            .first()
+            .is_some_and(|first| node_has_direct_left_recursion(first, rule_id)),
+        IrNode::Alt(branches, _) => branches
+            .iter()
+            .any(|branch| node_has_direct_left_recursion(&branch.node, rule_id)),
+        _ => false,
+    }
 }
 
 // ── Core emit/patch helpers ─────────────────────────────────────────────────
@@ -119,7 +143,7 @@ impl Compiler {
         }
 
         // Emit memo check for memoized rules.
-        let memo_check_idx = if rule.meta.memo != MemoStrategy::None {
+        let memo_check_idx = if self.memo_enabled && rule.meta.memo != MemoStrategy::None {
             Some(self.emit(Op::MemoCheck {
                 rule_id: rule.id,
                 hit_offset: 0,
@@ -137,7 +161,7 @@ impl Compiler {
             self.emit(Op::MakeTagged(rule.name));
         }
 
-        if rule.meta.memo != MemoStrategy::None {
+        if self.memo_enabled && rule.meta.memo != MemoStrategy::None {
             self.emit(Op::MemoStore(rule.id));
         }
 
@@ -248,7 +272,12 @@ impl Compiler {
     ///
     /// If the dispatch pass has pre-computed a dispatch table (`AltDispatch`),
     /// emits an O(1) `Dispatch` instruction. Otherwise falls back to linear backtracking.
-    fn compile_alt(&mut self, branches: &[AltBranch], dispatch: Option<&crate::AltDispatch>, ir: &GrammarIR) {
+    fn compile_alt(
+        &mut self,
+        branches: &[AltBranch],
+        dispatch: Option<&crate::AltDispatch>,
+        ir: &GrammarIR,
+    ) {
         if branches.is_empty() {
             return;
         }

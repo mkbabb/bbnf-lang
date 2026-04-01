@@ -85,7 +85,14 @@ pub fn escape_heavy(count: usize) -> String {
 /// Alternating types: [null,true,42,"str",[],{},...] repeated
 pub fn mixed_types(count: usize) -> String {
     let types = [
-        "null", "true", "false", "42", "3.14", "\"hello\"", "[]", "{}",
+        "null",
+        "true",
+        "false",
+        "42",
+        "3.14",
+        "\"hello\"",
+        "[]",
+        "{}",
     ];
     let mut s = String::from("[");
     for i in 0..count {

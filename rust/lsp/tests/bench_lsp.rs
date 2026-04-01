@@ -117,10 +117,7 @@ fn shutdown(
         r#"{"jsonrpc":"2.0","id":999,"method":"shutdown","params":null}"#,
     );
     let _ = read_response(stdout, 999);
-    send_lsp(
-        stdin,
-        r#"{"jsonrpc":"2.0","method":"exit","params":null}"#,
-    );
+    send_lsp(stdin, r#"{"jsonrpc":"2.0","method":"exit","params":null}"#);
     let _ = child.wait();
 }
 
@@ -198,7 +195,16 @@ fn bench_lsp_actions() {
         println!("\n--- Grammar type: {} ---", gen_name);
         println!(
             "{:<8} {:>8} {:>10} {:>10} {:>10} {:>10} {:>10} {:>10} {:>10} {:>10}",
-            "Rules", "Bytes", "Open+Diag", "Hover", "Goto Def", "Refs", "Complete", "Format", "Inlay", "SelRange"
+            "Rules",
+            "Bytes",
+            "Open+Diag",
+            "Hover",
+            "Goto Def",
+            "Refs",
+            "Complete",
+            "Format",
+            "Inlay",
+            "SelRange"
         );
 
         for &n in &sizes {

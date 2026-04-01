@@ -44,31 +44,61 @@ pub enum ImportError {
         imported_from: PathBuf,
     },
     /// Parse error in a dependent file.
-    ParseError {
-        path: PathBuf,
-        message: String,
-    },
+    ParseError { path: PathBuf, message: String },
 }
 
 impl fmt::Display for ImportError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ImportError::FileNotFound { path, imported_from } => {
-                write!(f, "File not found: `{}` (imported from `{}`)",
-                    path.display(), imported_from.display())
+            ImportError::FileNotFound {
+                path,
+                imported_from,
+            } => {
+                write!(
+                    f,
+                    "File not found: `{}` (imported from `{}`)",
+                    path.display(),
+                    imported_from.display()
+                )
             }
             ImportError::CircularImport { path, chain } => {
-                let chain_str: Vec<String> = chain.iter().map(|p| p.display().to_string()).collect();
-                write!(f, "Circular import: `{}` (chain: {} → {})",
-                    path.display(), chain_str.join(" → "), path.display())
+                let chain_str: Vec<String> =
+                    chain.iter().map(|p| p.display().to_string()).collect();
+                write!(
+                    f,
+                    "Circular import: `{}` (chain: {} → {})",
+                    path.display(),
+                    chain_str.join(" → "),
+                    path.display()
+                )
             }
-            ImportError::MissingRule { rule_name, path, imported_from } => {
-                write!(f, "Rule `{}` not found in `{}` (imported from `{}`)",
-                    rule_name, path.display(), imported_from.display())
+            ImportError::MissingRule {
+                rule_name,
+                path,
+                imported_from,
+            } => {
+                write!(
+                    f,
+                    "Rule `{}` not found in `{}` (imported from `{}`)",
+                    rule_name,
+                    path.display(),
+                    imported_from.display()
+                )
             }
-            ImportError::NameConflict { rule_name, source_a, source_b, imported_from } => {
-                write!(f, "Name conflict: rule `{}` is imported from both `{}` and `{}` in `{}`",
-                    rule_name, source_a.display(), source_b.display(), imported_from.display())
+            ImportError::NameConflict {
+                rule_name,
+                source_a,
+                source_b,
+                imported_from,
+            } => {
+                write!(
+                    f,
+                    "Name conflict: rule `{}` is imported from both `{}` and `{}` in `{}`",
+                    rule_name,
+                    source_a.display(),
+                    source_b.display(),
+                    imported_from.display()
+                )
             }
             ImportError::ParseError { path, message } => {
                 write!(f, "Parse error in `{}`: {}", path.display(), message)
@@ -166,10 +196,12 @@ impl ModuleRegistry {
 /// partial-init: a module is registered before its imports are processed).
 /// Returns a `ModuleRegistry` with all modules and resolved imports.
 pub fn load_module_graph(entry: &Path) -> Result<ModuleRegistry, ImportError> {
-    let entry = entry.canonicalize().map_err(|_| ImportError::FileNotFound {
-        path: entry.to_path_buf(),
-        imported_from: PathBuf::from("<entry>"),
-    })?;
+    let entry = entry
+        .canonicalize()
+        .map_err(|_| ImportError::FileNotFound {
+            path: entry.to_path_buf(),
+            imported_from: PathBuf::from("<entry>"),
+        })?;
 
     let mut registry = ModuleRegistry {
         modules: HashMap::new(),
@@ -209,7 +241,10 @@ fn load_recursive(
     active_chain: &mut Vec<PathBuf>,
 ) {
     if loading.contains(path) {
-        let start = active_chain.iter().position(|p| p.as_path() == path).unwrap_or(0);
+        let start = active_chain
+            .iter()
+            .position(|p| p.as_path() == path)
+            .unwrap_or(0);
         let mut chain = active_chain[start..].to_vec();
         chain.push(path.to_path_buf());
         registry.cycles.push(ImportCycle {
@@ -259,24 +294,31 @@ fn load_recursive(
     };
 
     // Extract local rule names.
-    let local_rule_names: Vec<String> = parsed.rules.keys().filter_map(|expr| {
-        if let crate::types::Expression::Nonterminal(tok) = expr {
-            Some(tok.value.to_string())
-        } else {
-            None
-        }
-    }).collect();
+    let local_rule_names: Vec<String> = parsed
+        .rules
+        .keys()
+        .filter_map(|expr| {
+            if let crate::types::Expression::Nonterminal(tok) = expr {
+                Some(tok.value.to_string())
+            } else {
+                None
+            }
+        })
+        .collect();
 
     // Register BEFORE recursing (partial-init, like Python module loading).
     // This allows cyclic imports to find the module already registered.
     visited.insert(path.to_path_buf());
     loading.insert(path.to_path_buf());
     active_chain.push(path.to_path_buf());
-    registry.modules.insert(path.to_path_buf(), ModuleData {
-        source,
-        grammar: parsed,
-        local_rule_names,
-    });
+    registry.modules.insert(
+        path.to_path_buf(),
+        ModuleData {
+            source,
+            grammar: parsed,
+            local_rule_names,
+        },
+    );
 
     // Recursively load imports. Cycles find the file already in visited and return.
     let dir = path.parent().unwrap_or_else(|| {
@@ -286,7 +328,9 @@ fn load_recursive(
         )
     });
     // Collect import paths first to avoid borrow issues with registry.
-    let import_paths: Vec<PathBuf> = registry.modules.get(path)
+    let import_paths: Vec<PathBuf> = registry
+        .modules
+        .get(path)
         .unwrap()
         .grammar
         .imports
@@ -297,14 +341,7 @@ fn load_recursive(
     for import_path in import_paths {
         match import_path.canonicalize() {
             Ok(canonical) => {
-                load_recursive(
-                    &canonical,
-                    path,
-                    registry,
-                    visited,
-                    loading,
-                    active_chain,
-                );
+                load_recursive(&canonical, path, registry, visited, loading, active_chain);
             }
             Err(_) => {
                 registry.errors.push(ImportError::FileNotFound {
@@ -316,7 +353,10 @@ fn load_recursive(
     }
 
     let popped = active_chain.pop().unwrap_or_else(|| {
-        panic!("active import chain underflow while leaving `{}`", path.display())
+        panic!(
+            "active import chain underflow while leaving `{}`",
+            path.display()
+        )
     });
     assert_eq!(
         popped.as_path(),
@@ -348,14 +388,22 @@ fn resolve_imports_for(path: &Path, registry: &mut ModuleRegistry) {
     let mut imported_names: HashMap<String, PathBuf> = HashMap::new();
 
     // Clone the imports to avoid borrow issues.
-    let imports: Vec<_> = module.grammar.imports.iter().map(|imp| {
-        (
-            resolve_import_path(dir, &imp.path),
-            imp.items.as_ref().map(|items| {
-                items.iter().map(|i| i.name.to_string()).collect::<Vec<String>>()
-            }),
-        )
-    }).collect();
+    let imports: Vec<_> = module
+        .grammar
+        .imports
+        .iter()
+        .map(|imp| {
+            (
+                resolve_import_path(dir, &imp.path),
+                imp.items.as_ref().map(|items| {
+                    items
+                        .iter()
+                        .map(|i| i.name.to_string())
+                        .collect::<Vec<String>>()
+                }),
+            )
+        })
+        .collect();
 
     for (import_path, items) in imports {
         let canonical = match import_path.canonicalize() {
@@ -374,7 +422,9 @@ fn resolve_imports_for(path: &Path, registry: &mut ModuleRegistry) {
             None => {
                 registry.errors.push(ImportError::ParseError {
                     path: canonical.clone(),
-                    message: "import graph invariant violation: canonical module missing from registry".to_string(),
+                    message:
+                        "import graph invariant violation: canonical module missing from registry"
+                            .to_string(),
                 });
                 continue;
             }
@@ -428,7 +478,9 @@ fn resolve_imports_for(path: &Path, registry: &mut ModuleRegistry) {
         });
     }
 
-    registry.resolved_imports.insert(path.to_path_buf(), resolved);
+    registry
+        .resolved_imports
+        .insert(path.to_path_buf(), resolved);
 }
 
 /// Compute the transitive closure of local dependencies starting from `rule_name`
@@ -487,9 +539,7 @@ fn collect_nonterminal_refs(expr: &crate::types::Expression) -> Vec<String> {
         | Expression::Many1(inner) => {
             refs.extend(collect_nonterminal_refs(&inner.value));
         }
-        Expression::Skip(a, b)
-        | Expression::Next(a, b)
-        | Expression::Minus(a, b) => {
+        Expression::Skip(a, b) | Expression::Next(a, b) | Expression::Minus(a, b) => {
             refs.extend(collect_nonterminal_refs(&a.value));
             refs.extend(collect_nonterminal_refs(&b.value));
         }

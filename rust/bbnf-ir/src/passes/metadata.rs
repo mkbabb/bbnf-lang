@@ -61,9 +61,7 @@ pub fn compute_transparent(ir: &mut GrammarIR) {
 /// Check if an IR node body is a pure alternation of Ref nodes.
 fn is_transparent_body(node: &IrNode) -> bool {
     match node {
-        IrNode::Alt(branches, _) => {
-            branches.iter().all(|b| matches!(&b.node, IrNode::Ref(_)))
-        }
+        IrNode::Alt(branches, _) => branches.iter().all(|b| matches!(&b.node, IrNode::Ref(_))),
         // A Map wrapper around an Alt can occur from enum wrapping, but the
         // transparency detection should look through it if the Alt is all-Ref.
         // However, to keep the semantics identical to the AST-level pass, we

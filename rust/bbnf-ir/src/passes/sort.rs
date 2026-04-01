@@ -28,20 +28,12 @@ pub fn sort_alt_branches(ir: &mut GrammarIR) {
         .collect();
 
     for rule in &mut ir.rules {
-        sort_node(
-            &mut rule.body,
-            &rule_metas,
-            &strings,
-        );
+        sort_node(&mut rule.body, &rule_metas, &strings);
     }
 }
 
 /// Recursively sort Alt nodes throughout the IR tree.
-fn sort_node(
-    node: &mut IrNode,
-    rule_metas: &[(CharSet128, bool)],
-    strings: &[String],
-) {
+fn sort_node(node: &mut IrNode, rule_metas: &[(CharSet128, bool)], strings: &[String]) {
     match node {
         IrNode::Alt(branches, dispatch) => {
             // Recurse into children first.
@@ -195,16 +187,19 @@ fn branch_first_set(
         }
         IrNode::Regex(sid) => {
             let pattern = &strings[*sid as usize];
-            crate::regex_first::regex_first_chars(pattern)
-                .filter(|cs| !cs.is_empty())
+            crate::regex_first::regex_first_chars(pattern).filter(|cs| !cs.is_empty())
         }
         IrNode::Ref(rule_id) => {
             let (ref first_set, nullable) = rule_metas[*rule_id as usize];
-            if nullable { None } else { Some(first_set.clone()) }
+            if nullable {
+                None
+            } else {
+                Some(first_set.clone())
+            }
         }
-        IrNode::Seq(children) => {
-            children.first().and_then(|c| branch_first_set(c, rule_metas, strings))
-        }
+        IrNode::Seq(children) => children
+            .first()
+            .and_then(|c| branch_first_set(c, rule_metas, strings)),
         IrNode::Skip(a, _) | IrNode::Next(a, _) => branch_first_set(a, rule_metas, strings),
         IrNode::Repeat { lo: 0, .. } | IrNode::Epsilon | IrNode::Negate(_) => None,
         IrNode::Repeat { inner, .. } => branch_first_set(inner, rule_metas, strings),
@@ -234,9 +229,7 @@ fn branch_specificity(
 /// Unwrap transparent wrappers (Map, OW) to reach the structural node.
 fn unwrap_transparent(node: &IrNode) -> &IrNode {
     match node {
-        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
-            unwrap_transparent(inner)
-        }
+        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => unwrap_transparent(inner),
         other => other,
     }
 }
@@ -246,11 +239,7 @@ fn unwrap_transparent(node: &IrNode) -> &IrNode {
 /// For `Seq([Literal("calc"), Literal("("), ...])` → 5.
 /// For `Ref(rule_id)` → follows the reference to measure the rule body.
 /// For `Regex(_)` → 0 (no constant prefix).
-fn literal_prefix_len(
-    node: &IrNode,
-    rule_metas: &[(CharSet128, bool)],
-    strings: &[String],
-) -> u32 {
+fn literal_prefix_len(node: &IrNode, rule_metas: &[(CharSet128, bool)], strings: &[String]) -> u32 {
     match node {
         IrNode::Literal(sid) => strings[*sid as usize].len() as u32,
         IrNode::Seq(children) => {
@@ -284,11 +273,7 @@ fn literal_prefix_len(
 }
 
 /// Compute the FIRST set width (number of distinct leading bytes).
-fn first_set_width(
-    node: &IrNode,
-    rule_metas: &[(CharSet128, bool)],
-    strings: &[String],
-) -> u32 {
+fn first_set_width(node: &IrNode, rule_metas: &[(CharSet128, bool)], strings: &[String]) -> u32 {
     match node {
         IrNode::Literal(sid) => {
             let s = &strings[*sid as usize];
@@ -303,7 +288,11 @@ fn first_set_width(
         }
         IrNode::Ref(rule_id) => {
             let (ref first_set, nullable) = rule_metas[*rule_id as usize];
-            if nullable { 128 } else { first_set.len() as u32 }
+            if nullable {
+                128
+            } else {
+                first_set.len() as u32
+            }
         }
         IrNode::Seq(children) => {
             if let Some(first) = children.first() {
@@ -332,20 +321,14 @@ fn first_set_width(
         }
         IrNode::Repeat { lo: 0, .. } | IrNode::Epsilon | IrNode::Negate(_) => 128,
         IrNode::Repeat { inner, .. } => first_set_width(inner, rule_metas, strings),
-        IrNode::TokenDispatch { token, .. } => {
-            first_set_width(token, rule_metas, strings)
-        }
+        IrNode::TokenDispatch { token, .. } => first_set_width(token, rule_metas, strings),
     }
 }
 
 /// Detect "catchall" branches — regex-only patterns with wide FIRST sets
 /// that match most input (identifiers, generic patterns).  These should
 /// always sort last.
-fn is_catchall(
-    node: &IrNode,
-    rule_metas: &[(CharSet128, bool)],
-    strings: &[String],
-) -> bool {
+fn is_catchall(node: &IrNode, rule_metas: &[(CharSet128, bool)], strings: &[String]) -> bool {
     match node {
         IrNode::Regex(sid) => {
             let pattern = &strings[*sid as usize];

@@ -16,11 +16,7 @@ pub fn deep_recursion_grammar(depth: usize) -> String {
     let mut s = String::new();
     for i in 0..depth {
         if i < depth - 1 {
-            s.push_str(&format!(
-                "rule{} = \"(\" , rule{} , \")\" ;\n",
-                i,
-                i + 1
-            ));
+            s.push_str(&format!("rule{} = \"(\" , rule{} , \")\" ;\n", i, i + 1));
         } else {
             s.push_str(&format!("rule{} = \"x\" ;\n", i));
         }

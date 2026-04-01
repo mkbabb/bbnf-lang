@@ -48,7 +48,10 @@ mod tests {
         let line_index = LineIndex::new(text);
         let info = analyze(text, &line_index);
         eprintln!("Diagnostics: {:?}", info.diagnostics);
-        eprintln!("Rules: {:?}", info.rules.iter().map(|r| &r.name).collect::<Vec<_>>());
+        eprintln!(
+            "Rules: {:?}",
+            info.rules.iter().map(|r| &r.name).collect::<Vec<_>>()
+        );
         // Should produce a diagnostic
         assert!(
             !info.diagnostics.is_empty(),
@@ -62,8 +65,14 @@ mod tests {
         let line_index = LineIndex::new(text);
         let info = analyze(text, &line_index);
         eprintln!("Diagnostics: {:?}", info.diagnostics);
-        eprintln!("Rules: {:?}", info.rules.iter().map(|r| &r.name).collect::<Vec<_>>());
-        assert!(info.diagnostics.is_empty(), "Expected no diagnostics for valid grammar");
+        eprintln!(
+            "Rules: {:?}",
+            info.rules.iter().map(|r| &r.name).collect::<Vec<_>>()
+        );
+        assert!(
+            info.diagnostics.is_empty(),
+            "Expected no diagnostics for valid grammar"
+        );
         assert_eq!(info.rules.len(), 1);
     }
 
@@ -81,7 +90,10 @@ value = string | number | object | array | bool | null;"#;
         let line_index = LineIndex::new(grammar);
         let info = analyze(grammar, &line_index);
         eprintln!("Diagnostics: {:?}", info.diagnostics);
-        eprintln!("Rules: {:?}", info.rules.iter().map(|r| &r.name).collect::<Vec<_>>());
+        eprintln!(
+            "Rules: {:?}",
+            info.rules.iter().map(|r| &r.name).collect::<Vec<_>>()
+        );
     }
 
     #[test]
@@ -96,10 +108,16 @@ program = stmt * ;"#;
         eprintln!("Recovers: {:?}", info.recovers);
         assert_eq!(info.recovers.len(), 1, "Should have 1 @recover directive");
         assert_eq!(info.recovers[0].rule_name, "stmt");
-        let undefined_warnings: Vec<_> = info.diagnostics.iter()
+        let undefined_warnings: Vec<_> = info
+            .diagnostics
+            .iter()
             .filter(|d| d.message.contains("undefined") || d.message.contains("Undefined"))
             .collect();
-        assert!(undefined_warnings.is_empty(), "Should not warn about @recover target: {:?}", undefined_warnings);
+        assert!(
+            undefined_warnings.is_empty(),
+            "Should not warn about @recover target: {:?}",
+            undefined_warnings
+        );
     }
 
     #[test]
@@ -110,10 +128,15 @@ stmt = /[a-z]+/ , ";" ;"#;
         let line_index = LineIndex::new(grammar);
         let info = analyze(grammar, &line_index);
         eprintln!("Diagnostics: {:?}", info.diagnostics);
-        let recover_warnings: Vec<_> = info.diagnostics.iter()
+        let recover_warnings: Vec<_> = info
+            .diagnostics
+            .iter()
             .filter(|d| d.message.contains("@recover"))
             .collect();
-        assert!(!recover_warnings.is_empty(), "Should warn about @recover targeting undefined rule");
+        assert!(
+            !recover_warnings.is_empty(),
+            "Should warn about @recover targeting undefined rule"
+        );
     }
 
     #[test]
@@ -126,8 +149,10 @@ value = string | number | bool | null;"#;
         let line_index = LineIndex::new(grammar);
         let info = analyze(grammar, &line_index);
         eprintln!("Diagnostics: {:?}", info.diagnostics);
-        eprintln!("Rules: {:?}", info.rules.iter().map(|r| &r.name).collect::<Vec<_>>());
+        eprintln!(
+            "Rules: {:?}",
+            info.rules.iter().map(|r| &r.name).collect::<Vec<_>>()
+        );
         assert_eq!(info.rules.len(), 5, "Should have 5 rules");
     }
-
 }

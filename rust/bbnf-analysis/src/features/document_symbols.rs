@@ -11,17 +11,19 @@ pub fn document_symbols(state: &DocumentState) -> DocumentSymbolResponse {
         .info
         .rules
         .iter()
-        .map(|rule| {
-            DocumentSymbol {
-                name: rule.name.clone(),
-                detail: Some(rule.rhs_text.clone()),
-                kind: SymbolKind::FUNCTION,
-                tags: None,
-                deprecated: None,
-                range: state.line_index.span_to_range(rule.full_span.0, rule.full_span.1),
-                selection_range: state.line_index.span_to_range(rule.name_span.0, rule.name_span.1),
-                children: None,
-            }
+        .map(|rule| DocumentSymbol {
+            name: rule.name.clone(),
+            detail: Some(rule.rhs_text.clone()),
+            kind: SymbolKind::FUNCTION,
+            tags: None,
+            deprecated: None,
+            range: state
+                .line_index
+                .span_to_range(rule.full_span.0, rule.full_span.1),
+            selection_range: state
+                .line_index
+                .span_to_range(rule.name_span.0, rule.name_span.1),
+            children: None,
         })
         .collect();
 

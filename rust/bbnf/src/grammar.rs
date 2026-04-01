@@ -2,8 +2,8 @@ use std::borrow::Cow;
 
 use parse_that::parsers::utils::escaped_span;
 use parse_that::{
-    any_span, lazy, next_span, string, string_span, take_while_span, Parser, ParserFlat,
-    ParserSpan, ParserState, Span,
+    Parser, ParserFlat, ParserSpan, ParserState, Span, any_span, lazy, next_span, string,
+    string_span, take_while_span,
 };
 
 use crate::types::*;
@@ -180,8 +180,7 @@ impl<'a> BBNFGrammar<'a> {
     }
 
     fn regex() -> Parser<'a, Expression<'a>> {
-        let string = Self::regex_body()
-            .wrap_span(string_span("/"), string_span("/"));
+        let string = Self::regex_body().wrap_span(string_span("/"), string_span("/"));
 
         string.map(|s| {
             if let Err(e) = regex_syntax::Parser::new().parse(s.as_str()) {
@@ -277,20 +276,14 @@ impl<'a> BBNFGrammar<'a> {
     /// Parse `factor -> mapper_expr` — per-expression map.
     /// The mapper text is consumed greedily until the next delimiter.
     fn mapped_factor() -> Parser<'a, Expression<'a>> {
-        Self::factor()
-            .then(Self::map_arrow().opt())
-            .map_with_state(|pair: (Expression<'a>, Option<Span<'a>>), prev_offset, state| {
+        Self::factor().then(Self::map_arrow().opt()).map_with_state(
+            |pair: (Expression<'a>, Option<Span<'a>>), prev_offset, state| {
                 let (expr, mapper_opt) = pair;
                 if let Some(mapper_span) = mapper_opt {
                     let mapper_str = mapper_span.as_str().trim();
-                    let mapper_token = Token::new(
-                        Cow::Borrowed(mapper_str),
-                        mapper_span,
-                    );
-                    let expr_token = Token::new(
-                        expr,
-                        Span::new(prev_offset, state.offset, state.src),
-                    );
+                    let mapper_token = Token::new(Cow::Borrowed(mapper_str), mapper_span);
+                    let expr_token =
+                        Token::new(expr, Span::new(prev_offset, state.offset, state.src));
                     let fn_token = Token::new(
                         Expression::MappingFn(mapper_token),
                         Span::new(prev_offset, state.offset, state.src),
@@ -299,7 +292,8 @@ impl<'a> BBNFGrammar<'a> {
                 } else {
                     expr
                 }
-            })
+            },
+        )
     }
 
     /// Parse the `->` operator and its argument text.
@@ -526,13 +520,13 @@ impl<'a> BBNFGrammar<'a> {
                     .then(Self::rhs().trim_whitespace()),
             )
             .skip(any_span(&[";", "."]).opt().trim_whitespace())
-            .map_with_state(|(name_span, sync_expr), prev_offset, state| {
-                RecoverDirective {
+            .map_with_state(
+                |(name_span, sync_expr), prev_offset, state| RecoverDirective {
                     rule_name: Cow::Borrowed(name_span.as_str()),
                     sync_expr,
                     span: Span::new(prev_offset, state.offset, state.src),
-                }
-            })
+                },
+            )
     }
 
     /// Parse a `@debug ruleName ;` or `@debug * ;` directive — instrument rules for debugging.

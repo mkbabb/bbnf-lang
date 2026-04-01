@@ -43,14 +43,18 @@ fn compile_seq() {
     let program = compile(&ir);
 
     assert!(program.code.iter().any(|op| matches!(op, Op::SaveState)));
-    assert!(program
-        .code
-        .iter()
-        .any(|op| matches!(op, Op::MatchString(1))));
-    assert!(program
-        .code
-        .iter()
-        .any(|op| matches!(op, Op::MatchString(2))));
+    assert!(
+        program
+            .code
+            .iter()
+            .any(|op| matches!(op, Op::MatchString(1)))
+    );
+    assert!(
+        program
+            .code
+            .iter()
+            .any(|op| matches!(op, Op::MatchString(2)))
+    );
 }
 
 #[test]
@@ -89,10 +93,7 @@ fn compile_alt() {
     let program = compile(&ir);
 
     assert!(program.code.iter().any(|op| matches!(op, Op::SaveState)));
-    assert!(program
-        .code
-        .iter()
-        .any(|op| matches!(op, Op::RestoreState)));
+    assert!(program.code.iter().any(|op| matches!(op, Op::RestoreState)));
 }
 
 #[test]
@@ -104,10 +105,12 @@ fn compile_repeat() {
     });
     let program = compile(&ir);
 
-    assert!(program
-        .code
-        .iter()
-        .any(|op| matches!(op, Op::RepeatBegin { .. })));
+    assert!(
+        program
+            .code
+            .iter()
+            .any(|op| matches!(op, Op::RepeatBegin { .. }))
+    );
     assert!(program.code.iter().any(|op| matches!(op, Op::RepeatEnd)));
 }
 
@@ -136,14 +139,61 @@ fn compile_memo_rule() {
     };
     let program = compile(&ir);
 
-    assert!(program
-        .code
-        .iter()
-        .any(|op| matches!(op, Op::MemoCheck { .. })));
-    assert!(program
-        .code
-        .iter()
-        .any(|op| matches!(op, Op::MemoStore(_))));
+    assert!(!program.memo_enabled);
+    assert!(
+        !program
+            .code
+            .iter()
+            .any(|op| matches!(op, Op::MemoCheck { .. }))
+    );
+    assert!(!program.code.iter().any(|op| matches!(op, Op::MemoStore(_))));
+}
+
+#[test]
+fn compile_direct_left_recursive_rule_keeps_memo() {
+    let ir = GrammarIR {
+        rules: vec![IrRule {
+            id: 0,
+            name: 0,
+            body: IrNode::Alt(
+                vec![
+                    AltBranch {
+                        node: IrNode::Seq(vec![IrNode::Ref(0), IrNode::Literal(1)]),
+                        first_set: None,
+                    },
+                    AltBranch {
+                        node: IrNode::Literal(1),
+                        first_set: None,
+                    },
+                ],
+                None,
+            ),
+            meta: RuleMeta {
+                memo: MemoStrategy::Full,
+                ..Default::default()
+            },
+            source_span: None,
+        }],
+        entry: 0,
+        strings: vec!["rule".into(), "x".into()],
+        fns: vec![],
+        types: vec![],
+        follow_sets: HashMap::new(),
+        ws_pattern: None,
+        b1_span_collapse: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
+    };
+    let program = compile(&ir);
+
+    assert!(program.memo_enabled);
+    assert!(
+        program
+            .code
+            .iter()
+            .any(|op| matches!(op, Op::MemoCheck { .. }))
+    );
+    assert!(program.code.iter().any(|op| matches!(op, Op::MemoStore(_))));
 }
 
 #[test]
@@ -173,16 +223,16 @@ fn compile_alt_dispatch() {
                 first_set: Some(fs_b),
             },
         ],
-        Some(AltDispatch { table, fallback_idx: None }),
+        Some(AltDispatch {
+            table,
+            fallback_idx: None,
+        }),
     ));
     let program = compile(&ir);
 
     // Should use Dispatch wrapped in SaveState/RestoreState for offset recovery.
     assert!(
-        program
-            .code
-            .iter()
-            .any(|op| matches!(op, Op::Dispatch(..))),
+        program.code.iter().any(|op| matches!(op, Op::Dispatch(..))),
         "Expected Dispatch for pre-computed dispatch table"
     );
     assert!(
@@ -215,10 +265,7 @@ fn compile_alt_no_dispatch_uses_backtracking() {
 
     // No dispatch, uses SaveState.
     assert!(
-        !program
-            .code
-            .iter()
-            .any(|op| matches!(op, Op::Dispatch(..))),
+        !program.code.iter().any(|op| matches!(op, Op::Dispatch(..))),
         "No dispatch table should not use Dispatch"
     );
     assert!(program.code.iter().any(|op| matches!(op, Op::SaveState)));

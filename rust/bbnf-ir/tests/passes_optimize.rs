@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use bbnf_ir::{AltBranch, GrammarIR, IrNode, IrRule, RuleMeta};
 use bbnf_ir::passes::{eliminate_epsilon, merge_literals};
+use bbnf_ir::{AltBranch, GrammarIR, IrNode, IrRule, RuleMeta};
 
 fn make_ir(body: IrNode, strings: Vec<String>) -> GrammarIR {
     GrammarIR {

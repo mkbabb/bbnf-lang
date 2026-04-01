@@ -2,9 +2,9 @@
 
 use std::collections::HashMap;
 
-use crate::types::{Expression, AST};
 use super::charset::CharSet;
 use super::first_sets::{FirstSets, compute_expr_first, unwrap_rule};
+use crate::types::{AST, Expression};
 
 // NOTE: DispatchTable and build_dispatch_table were removed — AST-level dispatch
 // is dead code. The IR pass `generate_dispatch_tables` handles dispatch.
@@ -55,25 +55,26 @@ pub fn find_first_set_conflicts<'a>(
         }
 
         let branch_firsts_vec: Vec<(CharSet, bool)>;
-        let branch_firsts: &[(CharSet, bool)] = if let Some(cached) = first_sets.branch_firsts.get(lhs) {
-            cached
-        } else {
-            branch_firsts_vec = branches
-                .iter()
-                .map(|branch| {
-                    let mut cs = CharSet::new();
-                    let is_nullable = compute_expr_first(
-                        branch,
-                        &first_sets.first,
-                        &first_sets.nullable,
-                        &name_to_key,
-                        &mut cs,
-                    );
-                    (cs, is_nullable)
-                })
-                .collect();
-            &branch_firsts_vec
-        };
+        let branch_firsts: &[(CharSet, bool)] =
+            if let Some(cached) = first_sets.branch_firsts.get(lhs) {
+                cached
+            } else {
+                branch_firsts_vec = branches
+                    .iter()
+                    .map(|branch| {
+                        let mut cs = CharSet::new();
+                        let is_nullable = compute_expr_first(
+                            branch,
+                            &first_sets.first,
+                            &first_sets.nullable,
+                            &name_to_key,
+                            &mut cs,
+                        );
+                        (cs, is_nullable)
+                    })
+                    .collect();
+                &branch_firsts_vec
+            };
 
         let mut rule_conflicts = Vec::new();
         let mut union_so_far = CharSet::new();
@@ -107,4 +108,3 @@ pub fn find_first_set_conflicts<'a>(
 
     conflicts
 }
-

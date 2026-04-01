@@ -6,20 +6,18 @@ use std::path::{Path, PathBuf};
 
 use bbnf::calculate_ast_deps;
 
-use bbnf::analysis::{
-    compute_first_sets, tarjan_scc, topological_sort_scc,
-};
-use bbnf::imports::load_module_graph;
-use bbnf::lower::{DirectiveSet, lower_to_ir};
 use bbnf::BBNFGrammar;
 use bbnf::Expression;
 use bbnf::ParserAttributes;
+use bbnf::analysis::{compute_first_sets, tarjan_scc, topological_sort_scc};
+use bbnf::imports::load_module_graph;
+use bbnf::lower::{DirectiveSet, lower_to_ir};
 use indexmap::IndexMap;
 
 use proc_macro::TokenStream;
 
 use syn::{
-    parse_macro_input, punctuated::Punctuated, Attribute, DeriveInput, Expr, ExprLit, Lit, Meta,
+    Attribute, DeriveInput, Expr, ExprLit, Lit, Meta, parse_macro_input, punctuated::Punctuated,
 };
 
 use parse_that::utils::get_cargo_root_path;
@@ -39,11 +37,7 @@ use parse_that::utils::get_cargo_root_path;
 /// Since Cargo recompiles bbnf-derive whenever any transitive dependency
 /// (bbnf, bbnf-ir, parse_that) changes, the build ID changes on every
 /// recompilation — invalidating stale caches even without a version bump.
-const CACHE_VERSION: &str = concat!(
-    env!("CARGO_PKG_VERSION"),
-    "-",
-    env!("BBNF_DERIVE_BUILD_ID"),
-);
+const CACHE_VERSION: &str = concat!(env!("CARGO_PKG_VERSION"), "-", env!("BBNF_DERIVE_BUILD_ID"),);
 
 /// Recursively collect all grammar file contents for hashing.
 ///
@@ -90,11 +84,7 @@ fn collect_grammar_contents(
 }
 
 /// Compute a deterministic hash of grammar contents + attributes + ident.
-fn compute_cache_key(
-    paths: &[PathBuf],
-    attrs: &ParserAttributes,
-    ident_name: &str,
-) -> Option<u64> {
+fn compute_cache_key(paths: &[PathBuf], attrs: &ParserAttributes, ident_name: &str) -> Option<u64> {
     let mut all_contents = Vec::new();
     let mut visited = HashSet::new();
 
@@ -339,8 +329,7 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
                 // Merge all modules: imported modules first, entry module last.
                 // The entry module's local rules override imported ones (e.g.,
                 // css-stylesheet.bbnf can override calcFunction from css-func-body.bbnf).
-                let entry_canonical = entry.canonicalize()
-                    .unwrap_or_else(|_| entry.to_path_buf());
+                let entry_canonical = entry.canonicalize().unwrap_or_else(|_| entry.to_path_buf());
                 let mut merged = IndexMap::new();
                 // First pass: all non-entry modules.
                 for path in registry.paths() {
@@ -425,10 +414,26 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     // Phase 1.2: Compute FIRST sets for dispatch table generation
     let first_sets = compute_first_sets(&ast, &deps, &scc_result);
 
-    let recovers_ref = if recover_map.is_empty() { None } else { Some(&recover_map) };
-    let pretties_ref = if pretty_map.is_empty() { None } else { Some(&pretty_map) };
-    let token_ref = if token_set.is_empty() { None } else { Some(&token_set) };
-    let debug_ref = if debug_set.is_empty() { None } else { Some(&debug_set) };
+    let recovers_ref = if recover_map.is_empty() {
+        None
+    } else {
+        Some(&recover_map)
+    };
+    let pretties_ref = if pretty_map.is_empty() {
+        None
+    } else {
+        Some(&pretty_map)
+    };
+    let token_ref = if token_set.is_empty() {
+        None
+    } else {
+        Some(&token_set)
+    };
+    let debug_ref = if debug_set.is_empty() {
+        None
+    } else {
+        Some(&debug_set)
+    };
 
     let directives = DirectiveSet {
         recovers: recovers_ref,
@@ -441,12 +446,7 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
 
     // ── IR Lowering ──────────────────────────────────────────────────────────
     // Lower the parsed + analysed grammar to the canonical GrammarIR.
-    let mut grammar_ir = lower_to_ir(
-        &ast,
-        &first_sets,
-        &scc_result,
-        &directives,
-    );
+    let mut grammar_ir = lower_to_ir(&ast, &first_sets, &scc_result, &directives);
 
     // Optional: eliminate left-recursion at IR level (indirect via Paull's, then direct).
     if parser_container_attrs.remove_left_recursion {

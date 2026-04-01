@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use bbnf_ir::{AltBranch, GrammarIR, IrNode, IrRule, RuleId, RuleMeta};
 use bbnf_ir::passes::prune_unreachable;
+use bbnf_ir::{AltBranch, GrammarIR, IrNode, IrRule, RuleId, RuleMeta};
 
 fn make_rule(id: RuleId, name_id: u32, body: IrNode) -> IrRule {
     IrRule {
@@ -17,9 +17,9 @@ fn make_rule(id: RuleId, name_id: u32, body: IrNode) -> IrRule {
 fn prune_removes_unreachable() {
     let mut ir = GrammarIR {
         rules: vec![
-            make_rule(0, 0, IrNode::Ref(1)),       // start -> a
-            make_rule(1, 1, IrNode::Literal(2)),    // a -> "x"
-            make_rule(2, 3, IrNode::Literal(4)),    // dead -> "y"
+            make_rule(0, 0, IrNode::Ref(1)),     // start -> a
+            make_rule(1, 1, IrNode::Literal(2)), // a -> "x"
+            make_rule(2, 3, IrNode::Literal(4)), // dead -> "y"
         ],
         entry: 0,
         strings: vec![
@@ -77,10 +77,19 @@ fn prune_follows_alt_branches() {
             make_rule(
                 0,
                 0,
-                IrNode::Alt(vec![
-                    AltBranch { node: IrNode::Ref(1), first_set: None },
-                    AltBranch { node: IrNode::Ref(2), first_set: None },
-                ], None),
+                IrNode::Alt(
+                    vec![
+                        AltBranch {
+                            node: IrNode::Ref(1),
+                            first_set: None,
+                        },
+                        AltBranch {
+                            node: IrNode::Ref(2),
+                            first_set: None,
+                        },
+                    ],
+                    None,
+                ),
             ),
             make_rule(1, 1, IrNode::Literal(3)),
             make_rule(2, 2, IrNode::Literal(4)),
@@ -88,8 +97,13 @@ fn prune_follows_alt_branches() {
         ],
         entry: 0,
         strings: vec![
-            "start".into(), "a".into(), "b".into(),
-            "x".into(), "y".into(), "dead".into(), "z".into(),
+            "start".into(),
+            "a".into(),
+            "b".into(),
+            "x".into(),
+            "y".into(),
+            "dead".into(),
+            "z".into(),
         ],
         fns: vec![],
         types: vec![],

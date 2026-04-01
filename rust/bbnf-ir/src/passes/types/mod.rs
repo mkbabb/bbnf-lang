@@ -40,15 +40,7 @@ pub fn infer_types(ir: &mut GrammarIR) {
     let rule_meta: HashMap<RuleId, (bool, bool)> = ir
         .rules
         .iter()
-        .map(|r| {
-            (
-                r.id,
-                (
-                    r.meta.is_cyclic,
-                    r.meta.span_eligible,
-                ),
-            )
-        })
+        .map(|r| (r.id, (r.meta.is_cyclic, r.meta.span_eligible)))
         .collect();
 
     // Collect which rules have @pretty (for B.2).
@@ -77,8 +69,7 @@ pub fn infer_types(ir: &mut GrammarIR) {
         .collect();
 
     for (id, body, _is_transparent) in &rules_snapshot {
-        let (is_cyclic, _span_eligible) =
-            rule_meta.get(id).copied().unwrap_or_default();
+        let (is_cyclic, _span_eligible) = rule_meta.get(id).copied().unwrap_or_default();
 
         // B.4: For cyclic rules, override acyclic Ref types to BoxedEnum.
         // This matches AST codegen's behavior where acyclic deps in cyclic context
@@ -122,7 +113,8 @@ pub fn infer_types(ir: &mut GrammarIR) {
             cyclic_context: is_cyclic,
             pretty_preserve: false,
         };
-        let rule_name = rule_names.get(id)
+        let rule_name = rule_names
+            .get(id)
             .expect("rule ID must exist in rule_names map");
         let svs = collect_sub_variants_raw(rule_name, body, &ctx);
         if !svs.is_empty() {
@@ -149,15 +141,14 @@ pub fn infer_types(ir: &mut GrammarIR) {
                 .into_iter()
                 .map(|rsv| {
                     // Intern the variant name into the string table.
-                    let name_id = if let Some(pos) =
-                        ir.strings.iter().position(|s| s == &rsv.variant_name)
-                    {
-                        pos as u32
-                    } else {
-                        let id = ir.strings.len() as u32;
-                        ir.strings.push(rsv.variant_name);
-                        id
-                    };
+                    let name_id =
+                        if let Some(pos) = ir.strings.iter().position(|s| s == &rsv.variant_name) {
+                            pos as u32
+                        } else {
+                            let id = ir.strings.len() as u32;
+                            ir.strings.push(rsv.variant_name);
+                            id
+                        };
                     SubVariant {
                         variant_name: name_id,
                         ty: rsv.ty,

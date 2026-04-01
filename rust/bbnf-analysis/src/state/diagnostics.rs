@@ -5,7 +5,7 @@ use bbnf::analysis::{
     get_nonterminal_name, tarjan_scc,
 };
 use bbnf::lower::DirectiveSet;
-use bbnf::pipeline::{compile_ast, PipelineOptions};
+use bbnf::pipeline::{PipelineOptions, compile_ast};
 use bbnf::types::{Expression, Token};
 
 use super::types::IrRuleMeta;
@@ -20,9 +20,7 @@ use super::ast_utils::{
 };
 use super::parsing::CachedParseResult;
 use super::pretty;
-use super::types::{
-    DocumentInfo, ParseDiagnostics, RuleInfo, SemanticTokenInfo, token_types,
-};
+use super::types::{DocumentInfo, ParseDiagnostics, RuleInfo, SemanticTokenInfo, token_types};
 
 /// Analyze a BBNF document using pre-parsed AST and diagnostics from `parse_once()`.
 /// This avoids double-parsing: the OwnedAst parses once, and we reuse its results here.
@@ -125,14 +123,20 @@ pub fn analyze_from_cache(
     let ws_pattern_info = parsed.ws_pattern.clone();
 
     // Check for empty AST on non-empty input -- likely a parse failure not caught above.
-    if ast.is_empty() && !text.trim().is_empty() && import_infos.is_empty() && recover_infos.is_empty() {
+    if ast.is_empty()
+        && !text.trim().is_empty()
+        && import_infos.is_empty()
+        && recover_infos.is_empty()
+    {
         let furthest = parse_diag.furthest_offset.max(parse_diag.offset);
         let pos = line_index.offset_to_position(furthest.min(text.len()));
         diagnostics.push(Diagnostic {
             range: Range::new(Position::new(0, 0), pos),
             severity: Some(DiagnosticSeverity::ERROR),
             source: Some("bbnf".into()),
-            message: "Failed to parse any rules. Check syntax (each rule needs: name = expression ;)".into(),
+            message:
+                "Failed to parse any rules. Check syntax (each rule needs: name = expression ;)"
+                    .into(),
             ..Default::default()
         });
         return DocumentInfo {
@@ -155,7 +159,12 @@ pub fn analyze_from_cache(
 
     // Extract rule info from AST.
     for (lhs, rhs) in ast.iter() {
-        if let Expression::Nonterminal(Token { value: name, span: name_span, .. }) = lhs {
+        if let Expression::Nonterminal(Token {
+            value: name,
+            span: name_span,
+            ..
+        }) = lhs
+        {
             let name_str = name.to_string();
             let name_byte_span = (name_span.start, name_span.end);
 
@@ -193,9 +202,7 @@ pub fn analyze_from_cache(
                     source: Some("bbnf".into()),
                     message: format!(
                         "Duplicate rule: `{}` (previous definition at bytes {}..{})",
-                        name_str,
-                        previous.name_span.0,
-                        previous.name_span.1
+                        name_str, previous.name_span.0, previous.name_span.1
                     ),
                     ..Default::default()
                 });
@@ -229,8 +236,7 @@ pub fn analyze_from_cache(
         .map(|item| item.name.as_str())
         .collect();
 
-    let mut referenced_names: std::collections::HashSet<&str> =
-        std::collections::HashSet::new();
+    let mut referenced_names: std::collections::HashSet<&str> = std::collections::HashSet::new();
 
     for rule in &rules {
         for refinfo in &rule.references {
@@ -326,10 +332,7 @@ pub fn analyze_from_cache(
                     range: line_index.span_to_range(rule.name_span.0, rule.name_span.1),
                     severity: Some(DiagnosticSeverity::INFORMATION),
                     source: Some("bbnf".into()),
-                    message: format!(
-                        "Rule `{}` participates in a cycle: {}",
-                        member, path
-                    ),
+                    message: format!("Rule `{}` participates in a cycle: {}", member, path),
                     ..Default::default()
                 });
             }
@@ -438,10 +441,7 @@ pub fn analyze_from_cache(
                 range: line_index.span_to_range(rule.name_span.0, rule.name_span.1),
                 severity: Some(DiagnosticSeverity::HINT),
                 source: Some("bbnf".into()),
-                message: format!(
-                    "Rule `{}` is unreachable from the entry rule",
-                    rule.name
-                ),
+                message: format!("Rule `{}` is unreachable from the entry rule", rule.name),
                 tags: Some(vec![DiagnosticTag::UNNECESSARY]),
                 ..Default::default()
             });
@@ -451,9 +451,9 @@ pub fn analyze_from_cache(
     // ── Directive validation and semantic tokens ─────────────────────────────
 
     // @import directive semantic tokens.
-    semantic_tokens.extend(
-        crate::directives::import::import_semantic_tokens(&import_infos),
-    );
+    semantic_tokens.extend(crate::directives::import::import_semantic_tokens(
+        &import_infos,
+    ));
 
     // @recover directive validation and semantic tokens.
     {
@@ -474,12 +474,8 @@ pub fn analyze_from_cache(
 
     // @pretty directive validation and semantic tokens.
     {
-        let (pretty_diags, pretty_tokens) = pretty::validate_pretties(
-            &pretty_infos,
-            &defined,
-            &imported_names,
-            line_index,
-        );
+        let (pretty_diags, pretty_tokens) =
+            pretty::validate_pretties(&pretty_infos, &defined, &imported_names, line_index);
         diagnostics.extend(pretty_diags);
         semantic_tokens.extend(pretty_tokens);
 
@@ -526,9 +522,9 @@ pub fn analyze_from_cache(
     }
 
     // @ws directive semantic tokens.
-    semantic_tokens.extend(
-        crate::directives::ws::ws_semantic_tokens(ws_pattern_info.as_ref()),
-    );
+    semantic_tokens.extend(crate::directives::ws::ws_semantic_tokens(
+        ws_pattern_info.as_ref(),
+    ));
 
     // Sort semantic tokens by offset for encoding.
     semantic_tokens.sort_by_key(|t| t.span.0);
@@ -572,9 +568,7 @@ pub fn analyze(text: &str, line_index: &LineIndex) -> DocumentInfo {
 ///
 /// On failure (e.g., the grammar is incomplete or uses features not yet supported
 /// by the IR lowering), returns an empty map — callers degrade gracefully.
-fn try_compile_ir(
-    cached: &CachedParseResult<'_>,
-) -> HashMap<String, IrRuleMeta> {
+fn try_compile_ir(cached: &CachedParseResult<'_>) -> HashMap<String, IrRuleMeta> {
     let ast = cached.ast.clone();
 
     // Reconstruct directive maps from the analysis-layer types.
@@ -591,7 +585,11 @@ fn try_compile_ir(
         .iter()
         .map(|tok| tok.rule_name.clone())
         .collect();
-    let token_ref = if token_set.is_empty() { None } else { Some(&token_set) };
+    let token_ref = if token_set.is_empty() {
+        None
+    } else {
+        Some(&token_set)
+    };
 
     let mut debug_set: HashSet<String> = HashSet::new();
     let mut debug_all = false;
@@ -602,12 +600,24 @@ fn try_compile_ir(
             debug_set.insert(dbg.rule_name.clone());
         }
     }
-    let debug_ref = if debug_set.is_empty() { None } else { Some(&debug_set) };
+    let debug_ref = if debug_set.is_empty() {
+        None
+    } else {
+        Some(&debug_set)
+    };
 
     let ws_pattern = cached.ws_pattern.as_ref().map(|ws| ws.pattern.as_str());
 
-    let recovers_ref = if recover_map.is_empty() { None } else { Some(&recover_map) };
-    let pretties_ref = if pretty_map.is_empty() { None } else { Some(&pretty_map) };
+    let recovers_ref = if recover_map.is_empty() {
+        None
+    } else {
+        Some(&recover_map)
+    };
+    let pretties_ref = if pretty_map.is_empty() {
+        None
+    } else {
+        Some(&pretty_map)
+    };
 
     let directives = DirectiveSet {
         recovers: recovers_ref,
@@ -620,41 +630,38 @@ fn try_compile_ir(
 
     let options = PipelineOptions::default();
 
-    let ir = match compile_ast(
-        ast,
-        &directives,
-        &options,
-    ) {
+    let ir = match compile_ast(ast, &directives, &options) {
         Ok(ir) => ir,
         Err(_) => return HashMap::new(),
     };
 
     // Build a lookup from RuleId → TypeDesc.
-    let type_map: HashMap<u32, &bbnf_ir::TypeDesc> = ir
-        .types
-        .iter()
-        .map(|(id, td)| (*id, td))
-        .collect();
+    let type_map: HashMap<u32, &bbnf_ir::TypeDesc> =
+        ir.types.iter().map(|(id, td)| (*id, td)).collect();
 
     let mut result = HashMap::new();
     for rule in &ir.rules {
         let name = ir.get_string(rule.name).to_string();
 
-        let follow_set_label = ir.follow_sets.get(&rule.id).map(|cs| {
-            format_charset_iter(cs.iter())
-        });
+        let follow_set_label = ir
+            .follow_sets
+            .get(&rule.id)
+            .map(|cs| format_charset_iter(cs.iter()));
 
         let inferred_type = type_map.get(&rule.id).map(|td| format_type_desc(td, &ir));
 
-        result.insert(name, IrRuleMeta {
-            follow_set_label,
-            has_dispatch: rule.meta.dispatch.is_some(),
-            memo_strategy: format!("{:?}", rule.meta.memo),
-            span_eligible: rule.meta.span_eligible,
-            has_sp_method: rule.meta.has_sp_method,
-            inferred_type,
-            is_transparent: rule.meta.is_transparent,
-        });
+        result.insert(
+            name,
+            IrRuleMeta {
+                follow_set_label,
+                has_dispatch: rule.meta.dispatch.is_some(),
+                memo_strategy: format!("{:?}", rule.meta.memo),
+                span_eligible: rule.meta.span_eligible,
+                has_sp_method: rule.meta.has_sp_method,
+                inferred_type,
+                is_transparent: rule.meta.is_transparent,
+            },
+        );
     }
 
     result

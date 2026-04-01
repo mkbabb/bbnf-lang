@@ -1,14 +1,12 @@
-
-use bbnf::pipeline::{compile_grammar, PipelineOptions};
-use bbnf::{calculate_ast_deps, Expression};
-use bbnf::analysis::{
-    compute_first_sets, tarjan_scc, topological_sort_scc,
-};
+use bbnf::analysis::{compute_first_sets, tarjan_scc, topological_sort_scc};
 use bbnf::grammar::BBNFGrammar;
 use bbnf::lower::{DirectiveSet, lower_to_ir};
-use bbnf_ir::compiler::compile as compile_bytecode;
-use bbnf_ir::interpreter::Interpreter;
+use bbnf::pipeline::{PipelineOptions, compile_grammar};
+use bbnf::{Expression, calculate_ast_deps};
 use bbnf_ir::GrammarIR;
+use bbnf_ir::bytecode::BytecodeProgram;
+use bbnf_ir::compiler::compile as compile_bytecode;
+use bbnf_ir::interpreter::{Interpreter, ParseResult};
 
 const JSON_GRAMMAR: &str = r#"
 null = "null" ;
@@ -23,11 +21,15 @@ object = "{" >> (( pair << comma ? ) *)?w << "}" ;
 value = object | array | string | number | bool | null ;
     "#;
 
-fn parse_json(input: &str) -> bbnf_ir::interpreter::ParseResult {
+fn run_program(program: &BytecodeProgram, input: &str) -> ParseResult {
+    let mut interp = Interpreter::new(program, input);
+    interp.run()
+}
+
+fn parse_json(input: &str) -> ParseResult {
     let ir = compile_grammar(JSON_GRAMMAR, &PipelineOptions::default()).unwrap();
     let program = compile_bytecode(&ir);
-    let mut interp = Interpreter::new(&program, input);
-    interp.run()
+    run_program(&program, input)
 }
 
 #[test]
@@ -86,12 +88,20 @@ fn pipeline_parse_array() {
 fn pipeline_parse_object() {
     // Test simple object without spaces
     let result = parse_json(r#"{"a":"b"}"#);
-    assert!(result.success, "failed to parse simple object: {:?}", result);
+    assert!(
+        result.success,
+        "failed to parse simple object: {:?}",
+        result
+    );
     assert_eq!(result.offset, 9);
 
     // Test object with space after colon
     let result = parse_json(r#"{"key": "value"}"#);
-    assert!(result.success, "failed to parse object with space: {:?}", result);
+    assert!(
+        result.success,
+        "failed to parse object with space: {:?}",
+        result
+    );
     assert_eq!(result.offset, 16);
 }
 
@@ -121,8 +131,7 @@ expr = expr, "+" >> term | term ;
 
     // Should compile without panic.
     let program = compile_bytecode(&ir);
-    let mut interp = Interpreter::new(&program, "1+2+3");
-    let result = interp.run();
+    let result = run_program(&program, "1+2+3");
     assert!(result.success, "failed to parse '1+2+3': {:?}", result);
     assert_eq!(result.offset, 5);
 }
@@ -154,13 +163,11 @@ number = /-?\d+/ ;
 
     // At this point all 11 passes ran. Test first.
     let program = compile_bytecode(&ir);
-    let mut interp = Interpreter::new(&program, r#""hello""#);
-    let result = interp.run();
+    let result = run_program(&program, r#""hello""#);
     assert!(result.success, "failed to parse string: {:?}", result);
     assert_eq!(result.offset, 7);
 
-    let mut interp = Interpreter::new(&program, "42");
-    let result = interp.run();
+    let result = run_program(&program, "42");
     assert!(result.success, "failed to parse number: {:?}", result);
     assert_eq!(result.offset, 2);
 }
@@ -196,12 +203,7 @@ number = /-?\d+/ ;
 
     let directives = DirectiveSet::empty();
 
-    let mut ir = lower_to_ir(
-        &ast,
-        &first_sets,
-        &scc_result,
-        &directives,
-    );
+    let mut ir = lower_to_ir(&ast, &first_sets, &scc_result, &directives);
 
     // Run IR metadata passes first (alias + transparent detection).
     bbnf_ir::passes::compute_aliases(&mut ir);
@@ -215,49 +217,74 @@ number = /-?\d+/ ;
 
     fn test_parse(ir: &GrammarIR, label: &str) -> bool {
         let program = compile_bytecode(ir);
-        let mut interp = Interpreter::new(&program, r#""hello""#);
-        let result = interp.run();
-        eprintln!("{}: string={} num={}", label,
-            result.success,
-            {
-                let mut i2 = Interpreter::new(&program, "42");
-                i2.run().success
-            }
-        );
+        let result = run_program(&program, r#""hello""#);
+        eprintln!("{}: string={} num={}", label, result.success, {
+            run_program(&program, "42").success
+        });
         result.success
     }
 
     assert!(test_parse(&ir, "0-base"), "base IR fails");
 
     bbnf_ir::passes::canonicalize_aliases(&mut ir);
-    assert!(test_parse(&ir, "1-canonicalize_aliases"), "canonicalize_aliases broke it");
+    assert!(
+        test_parse(&ir, "1-canonicalize_aliases"),
+        "canonicalize_aliases broke it"
+    );
 
     bbnf_ir::passes::prune_unreachable(&mut ir);
-    assert!(test_parse(&ir, "2-prune_unreachable"), "prune_unreachable broke it");
+    assert!(
+        test_parse(&ir, "2-prune_unreachable"),
+        "prune_unreachable broke it"
+    );
 
     bbnf_ir::passes::inline_acyclic(&mut ir);
-    assert!(test_parse(&ir, "3-inline_acyclic"), "inline_acyclic broke it");
+    assert!(
+        test_parse(&ir, "3-inline_acyclic"),
+        "inline_acyclic broke it"
+    );
 
     bbnf_ir::passes::eliminate_epsilon(&mut ir);
-    assert!(test_parse(&ir, "4-eliminate_epsilon"), "eliminate_epsilon broke it");
+    assert!(
+        test_parse(&ir, "4-eliminate_epsilon"),
+        "eliminate_epsilon broke it"
+    );
 
     bbnf_ir::passes::merge_literals(&mut ir);
-    assert!(test_parse(&ir, "5-merge_literals"), "merge_literals broke it");
+    assert!(
+        test_parse(&ir, "5-merge_literals"),
+        "merge_literals broke it"
+    );
 
     bbnf_ir::passes::merge_regex_alts(&mut ir);
-    assert!(test_parse(&ir, "6-merge_regex_alts"), "merge_regex_alts broke it");
+    assert!(
+        test_parse(&ir, "6-merge_regex_alts"),
+        "merge_regex_alts broke it"
+    );
 
     bbnf_ir::passes::factor_common_prefixes(&mut ir);
-    assert!(test_parse(&ir, "7-factor_common_prefixes"), "factor_common_prefixes broke it");
+    assert!(
+        test_parse(&ir, "7-factor_common_prefixes"),
+        "factor_common_prefixes broke it"
+    );
 
     bbnf_ir::passes::refine_span_eligibility(&mut ir);
-    assert!(test_parse(&ir, "8-refine_span_eligibility"), "refine_span_eligibility broke it");
+    assert!(
+        test_parse(&ir, "8-refine_span_eligibility"),
+        "refine_span_eligibility broke it"
+    );
 
     ir.follow_sets = bbnf_ir::passes::compute_follow_sets(&ir);
-    assert!(test_parse(&ir, "9-compute_follow_sets"), "compute_follow_sets broke it");
+    assert!(
+        test_parse(&ir, "9-compute_follow_sets"),
+        "compute_follow_sets broke it"
+    );
 
     bbnf_ir::passes::generate_dispatch_tables(&mut ir);
-    assert!(test_parse(&ir, "10-generate_dispatch_tables"), "generate_dispatch_tables broke it");
+    assert!(
+        test_parse(&ir, "10-generate_dispatch_tables"),
+        "generate_dispatch_tables broke it"
+    );
 
     bbnf_ir::passes::infer_types(&mut ir);
     assert!(test_parse(&ir, "11-infer_types"), "infer_types broke it");
@@ -273,14 +300,12 @@ fn pipeline_next_operator() {
     let program = compile_bytecode(&ir);
 
     // Input "x:y" — ":" >> "y" keeps "y".
-    let mut interp = Interpreter::new(&program, "x:y");
-    let r = interp.run();
+    let r = run_program(&program, "x:y");
     assert!(r.success, "failed to parse 'x:y': {:?}", r);
     assert_eq!(r.offset, 3);
 
     // Input "x: y" — whitespace trimmed by ?w on "y".
-    let mut interp = Interpreter::new(&program, "x: y");
-    let r = interp.run();
+    let r = run_program(&program, "x: y");
     assert!(r.success, "failed to parse 'x: y': {:?}", r);
     assert_eq!(r.offset, 4);
 }
@@ -321,17 +346,27 @@ fn pipeline_google_sheets_formula() {
     let program = compile_bytecode(&ir);
 
     // Test individual rules directly to isolate issues
-    let test_rule = |ir: &bbnf_ir::GrammarIR, name: &str, input: &str, trace: bool| -> (bool, u32) {
-        let rule = ir.find_rule(name).unwrap_or_else(|| panic!("{} not found", name));
-        let mut test_ir = ir.clone();
-        test_ir.entry = rule.id;
-        let prog = compile_bytecode(&test_ir);
-        let mut interp = Interpreter::new(&prog, input);
-        interp.trace = trace;
-        let result = interp.run();
-        eprintln!("{} '{}': success={} offset={}", name, input, result.success, result.offset);
-        (result.success, result.offset)
-    };
+    let test_rule =
+        |ir: &bbnf_ir::GrammarIR, name: &str, input: &str, trace: bool| -> (bool, u32) {
+            let rule = ir
+                .find_rule(name)
+                .unwrap_or_else(|| panic!("{} not found", name));
+            let mut test_ir = ir.clone();
+            test_ir.entry = rule.id;
+            let prog = compile_bytecode(&test_ir);
+            let result = if trace {
+                let mut interp = Interpreter::new(&prog, input);
+                interp.trace = true;
+                interp.run()
+            } else {
+                run_program(&prog, input)
+            };
+            eprintln!(
+                "{} '{}': success={} offset={}",
+                name, input, result.success, result.offset
+            );
+            (result.success, result.offset)
+        };
 
     test_rule(&ir, "identifier", "SUM", false);
     test_rule(&ir, "number", "42", false);
@@ -340,33 +375,55 @@ fn pipeline_google_sheets_formula() {
     assert_eq!(off, 6, "func_call should consume all of 'SUM(1)'");
 
     // Full formula parse
-    let mut interp = Interpreter::new(&program, "=SUM(1)");
-    let result = interp.run();
-    eprintln!("formula '=SUM(1)': success={} offset={}", result.success, result.offset);
-    assert_eq!(result.offset as usize, "=SUM(1)".len(), "should consume all input");
+    let result = run_program(&program, "=SUM(1)");
+    eprintln!(
+        "formula '=SUM(1)': success={} offset={}",
+        result.success, result.offset
+    );
+    assert_eq!(
+        result.offset as usize,
+        "=SUM(1)".len(),
+        "should consume all input"
+    );
 
     // Test IF (3 args = 1 pair + 1 solo)
-    let mut interp = Interpreter::new(&program, "=IF(1,2,3)");
-    let result = interp.run();
-    eprintln!("formula '=IF(1,2,3)': success={} offset={}", result.success, result.offset);
+    let result = run_program(&program, "=IF(1,2,3)");
+    eprintln!(
+        "formula '=IF(1,2,3)': success={} offset={}",
+        result.success, result.offset
+    );
     assert!(result.success, "IF(1,2,3) failed");
 
     // Test LET (pairs)
-    let mut interp = Interpreter::new(&program, "=LET(x,1,y,2,x)");
-    let result = interp.run();
-    eprintln!("formula '=LET(x,1,y,2,x)': success={} offset={}", result.success, result.offset);
-    assert!(result.success, "LET(x,1,y,2,x) failed at offset={}", result.offset);
+    let result = run_program(&program, "=LET(x,1,y,2,x)");
+    eprintln!(
+        "formula '=LET(x,1,y,2,x)': success={} offset={}",
+        result.success, result.offset
+    );
+    assert!(
+        result.success,
+        "LET(x,1,y,2,x) failed at offset={}",
+        result.offset
+    );
 
     // Test nested functions
-    let mut interp = Interpreter::new(&program, "=LET(x,SUM(A1:A10),x)");
-    let result = interp.run();
-    eprintln!("nested LET: success={} offset={}", result.success, result.offset);
-    assert!(result.success, "nested LET failed at offset={}", result.offset);
+    let result = run_program(&program, "=LET(x,SUM(A1:A10),x)");
+    eprintln!(
+        "nested LET: success={} offset={}",
+        result.success, result.offset
+    );
+    assert!(
+        result.success,
+        "nested LET failed at offset={}",
+        result.offset
+    );
 
     // Test empty args
-    let mut interp = Interpreter::new(&program, "=INDEX(A1,,3)");
-    let result = interp.run();
-    eprintln!("empty args: success={} offset={}", result.success, result.offset);
+    let result = run_program(&program, "=INDEX(A1,,3)");
+    eprintln!(
+        "empty args: success={} offset={}",
+        result.success, result.offset
+    );
 
     // Progressively more complex
     let tests = [
@@ -376,65 +433,143 @@ fn pipeline_google_sheets_formula() {
         r#"=IF(count>0, MAKEARRAY(count, 3, LAMBDA(r, c, INDEX(filtered, r, c))), "No data")"#,
     ];
     for t in tests {
-        let mut interp = Interpreter::new(&program, t);
-        let result = interp.run();
+        let result = run_program(&program, t);
         let ok = result.success && result.offset as usize == t.len();
-        eprintln!("  {} [{}] offset={}/{}", if ok { "OK" } else { "FAIL" }, &t[..t.len().min(60)], result.offset, t.len());
+        eprintln!(
+            "  {} [{}] offset={}/{}",
+            if ok { "OK" } else { "FAIL" },
+            &t[..t.len().min(60)],
+            result.offset,
+            t.len()
+        );
     }
 
     // LET with nested functions
     let input = r#"=LET(data, A1:Z100, filtered, FILTER(data, INDEX(data,,1)>0), count, ROWS(filtered), IF(count>0, MAKEARRAY(count, 3, LAMBDA(r, c, INDEX(filtered, r, c))), "No data"))"#;
     let mut interp = Interpreter::new(&program, input);
     let result = interp.run();
-    eprintln!("LET formula: success={} offset={} len={} remaining='{}'",
-        result.success, result.offset, input.len(),
-        &input[result.offset as usize..]);
-    assert!(result.success, "failed to parse LET formula: offset={}", result.offset);
-    assert_eq!(result.offset as usize, input.len(), "should consume all input");
+    eprintln!(
+        "LET formula: success={} offset={} len={} remaining='{}'",
+        result.success,
+        result.offset,
+        input.len(),
+        &input[result.offset as usize..]
+    );
+    assert!(
+        result.success,
+        "failed to parse LET formula: offset={}",
+        result.offset
+    );
+    assert_eq!(
+        result.offset as usize,
+        input.len(),
+        "should consume all input"
+    );
 
     // Test func_call rule directly
     let (fc_ok, fc_off) = test_rule(&ir, "func_call", "IF(1,2)", false);
-    assert!(fc_ok, "func_call should parse 'IF(1,2)' at offset {}", fc_off);
+    assert!(
+        fc_ok,
+        "func_call should parse 'IF(1,2)' at offset {}",
+        fc_off
+    );
 
     // Formatting via gorgeous VM
     let value = result.value.as_ref().unwrap();
-    let printer = &gorgeous::PrinterConfig { max_width: 80, indent: 2, use_tabs: false };
+    let printer = &gorgeous::PrinterConfig {
+        max_width: 80,
+        indent: 2,
+        use_tabs: false,
+    };
     let formatted = gorgeous::vm::format_value(&ir, value, input, printer);
     assert!(formatted.is_some(), "formatting should produce output");
     let formatted = formatted.unwrap();
     eprintln!("Formatted output:\n{}", formatted);
-    assert!(formatted.contains("LET"), "formatted output should contain LET");
-    assert!(formatted.contains('\n'), "formatted output should contain line breaks");
+    assert!(
+        formatted.contains("LET"),
+        "formatted output should contain LET"
+    );
+    assert!(
+        formatted.contains('\n'),
+        "formatted output should contain line breaks"
+    );
 
     // Pathological formula: deeply nested LET + IF + LAMBDA
     let pathological = r#"=LET(raw, A2:E1000, filtered, FILTER(raw, (INDEX(raw,,3)>100)*(INDEX(raw,,5)="Active")), sorted, SORT(filtered, 3, FALSE), IF(ROWS(sorted)>0, MAP(SEQUENCE(MIN(10, ROWS(sorted))), LAMBDA(i, INDEX(sorted, i, 1)&" - "&TEXT(INDEX(sorted, i, 3), "$#,##0"))), "No results"))"#;
     let mut interp = Interpreter::new(&program, pathological);
     let result = interp.run();
-    assert!(result.success, "pathological formula failed at offset={}", result.offset);
-    assert_eq!(result.offset as usize, pathological.len(), "should consume all input");
+    assert!(
+        result.success,
+        "pathological formula failed at offset={}",
+        result.offset
+    );
+    assert_eq!(
+        result.offset as usize,
+        pathological.len(),
+        "should consume all input"
+    );
     let value = result.value.as_ref().unwrap();
-    let formatted = gorgeous::vm::format_value(&ir, value, pathological, &gorgeous::PrinterConfig { max_width: 80, indent: 2, use_tabs: false });
+    let formatted = gorgeous::vm::format_value(
+        &ir,
+        value,
+        pathological,
+        &gorgeous::PrinterConfig {
+            max_width: 80,
+            indent: 2,
+            use_tabs: false,
+        },
+    );
     let formatted = formatted.unwrap();
     eprintln!("Pathological:\n{}", formatted);
-    assert!(formatted.contains('\n'), "pathological should have line breaks");
-    assert!(formatted.lines().count() >= 5, "pathological should have 5+ lines");
+    assert!(
+        formatted.contains('\n'),
+        "pathological should have line breaks"
+    );
+    assert!(
+        formatted.lines().count() >= 5,
+        "pathological should have 5+ lines"
+    );
 
     // Test with trailing space before final paren
     let with_space = r#"=LET(raw, A2:E1000, filtered, FILTER(raw, (INDEX(raw,,3)>100)*(INDEX(raw,,5)="Active")), sorted, SORT(filtered, 3, FALSE), IF(ROWS(sorted)>0, MAP(SEQUENCE(MIN(10, ROWS(sorted))), LAMBDA(i, INDEX(sorted, i, 1)&" - "&TEXT(INDEX(sorted, i, 3), "$#,##0"))), "No results") )"#;
     let mut interp = Interpreter::new(&program, with_space);
     let result = interp.run();
-    eprintln!("with_space: success={} offset={} len={} remaining='{}'",
-        result.success, result.offset, with_space.len(),
-        &with_space[result.offset as usize..]);
-    assert!(result.success, "with_space formula failed at offset={}", result.offset);
-    assert_eq!(result.offset as usize, with_space.len(), "should consume all input");
+    eprintln!(
+        "with_space: success={} offset={} len={} remaining='{}'",
+        result.success,
+        result.offset,
+        with_space.len(),
+        &with_space[result.offset as usize..]
+    );
+    assert!(
+        result.success,
+        "with_space formula failed at offset={}",
+        result.offset
+    );
+    assert_eq!(
+        result.offset as usize,
+        with_space.len(),
+        "should consume all input"
+    );
     let value = result.value.as_ref().unwrap();
-    let formatted_space = gorgeous::vm::format_value(&ir, value, with_space, &gorgeous::PrinterConfig { max_width: 80, indent: 2, use_tabs: false });
+    let formatted_space = gorgeous::vm::format_value(
+        &ir,
+        value,
+        with_space,
+        &gorgeous::PrinterConfig {
+            max_width: 80,
+            indent: 2,
+            use_tabs: false,
+        },
+    );
     let formatted_space = formatted_space.unwrap();
     eprintln!("With space formatted:\n{}", formatted_space);
     // Both should produce identical formatted output (whitespace is insignificant)
     eprintln!("Without space formatted:\n{}", formatted);
-    assert_eq!(formatted_space, formatted, "trailing space should not change formatting");
+    assert_eq!(
+        formatted_space, formatted,
+        "trailing space should not change formatting"
+    );
 }
 
 #[test]
@@ -445,14 +580,21 @@ fn pipeline_google_sheets_multiline_let() {
     let program = compile_bytecode(&ir);
 
     let test_rule = |name: &str, input: &str| -> (bool, u32) {
-        let rule = ir.find_rule(name).unwrap_or_else(|| panic!("{} not found", name));
+        let rule = ir
+            .find_rule(name)
+            .unwrap_or_else(|| panic!("{} not found", name));
         let mut test_ir = ir.clone();
         test_ir.entry = rule.id;
         let prog = compile_bytecode(&test_ir);
-        let mut interp = Interpreter::new(&prog, input);
-        let result = interp.run();
-        eprintln!("  {} '{}': success={} offset={}/{}", name,
-            &input[..input.len().min(60)], result.success, result.offset, input.len());
+        let result = run_program(&prog, input);
+        eprintln!(
+            "  {} '{}': success={} offset={}/{}",
+            name,
+            &input[..input.len().min(60)],
+            result.success,
+            result.offset,
+            input.len()
+        );
         (result.success, result.offset)
     };
 
@@ -467,18 +609,36 @@ fn pipeline_google_sheets_multiline_let() {
         ("expression", r#"B3:B <> """#),
         ("func_call", r#"FILTER(B3:B, B3:B <> "")"#),
         ("lambda_call", "LAMBDA(x, LOWER(TRIM(TO_TEXT(x))))"),
-        ("expression", "(sheet1Psus = psu) * (sheet1Providers = provider)"),
-        ("func_call", "MATCH(1, (sheet1Psus = psu) * (sheet1Providers = provider), 0)"),
+        (
+            "expression",
+            "(sheet1Psus = psu) * (sheet1Providers = provider)",
+        ),
+        (
+            "func_call",
+            "MATCH(1, (sheet1Psus = psu) * (sheet1Providers = provider), 0)",
+        ),
         ("func_call", "N(INDEX(recurring, r, c))"),
-        ("func_call", "IFERROR(INDEX(oneTimeCosts, MATCH(1, (sheet1Psus = psu) * (sheet1Providers = provider), 0)), 0)"),
+        (
+            "func_call",
+            "IFERROR(INDEX(oneTimeCosts, MATCH(1, (sheet1Psus = psu) * (sheet1Providers = provider), 0)), 0)",
+        ),
         ("expression", "monthlyValue * scale + N(oneTimeCost)"),
-        ("func_call", "IF(monthlyValue > 0, monthlyValue * scale + N(oneTimeCost), 0)"),
+        (
+            "func_call",
+            "IF(monthlyValue > 0, monthlyValue * scale + N(oneTimeCost), 0)",
+        ),
         ("func_call", "VSTACK(providers, values)"),
     ];
     for (rule_name, sub) in subs {
         let (ok, off) = test_rule(rule_name, sub);
-        assert!(ok && off as usize == sub.len(),
-            "{} should fully parse '{}' (offset={}/{})", rule_name, sub, off, sub.len());
+        assert!(
+            ok && off as usize == sub.len(),
+            "{} should fully parse '{}' (offset={}/{})",
+            rule_name,
+            sub,
+            off,
+            sub.len()
+        );
     }
 
     // Full multiline formula
@@ -526,28 +686,64 @@ fn pipeline_google_sheets_multiline_let() {
 
     let mut interp = Interpreter::new(&program, input);
     let result = interp.run();
-    eprintln!("multiline LET: success={} offset={} len={} remaining='{}'",
-        result.success, result.offset, input.len(),
-        &input[result.offset as usize..]);
-    assert!(result.success, "multiline LET failed at offset={}", result.offset);
-    assert_eq!(result.offset as usize, input.len(), "should consume all input");
+    eprintln!(
+        "multiline LET: success={} offset={} len={} remaining='{}'",
+        result.success,
+        result.offset,
+        input.len(),
+        &input[result.offset as usize..]
+    );
+    assert!(
+        result.success,
+        "multiline LET failed at offset={}",
+        result.offset
+    );
+    assert_eq!(
+        result.offset as usize,
+        input.len(),
+        "should consume all input"
+    );
 
     // Format via VM
     let value = result.value.as_ref().unwrap();
-    let formatted = gorgeous::vm::format_value(&ir, value, input, &gorgeous::PrinterConfig { max_width: 80, indent: 2, use_tabs: false });
+    let formatted = gorgeous::vm::format_value(
+        &ir,
+        value,
+        input,
+        &gorgeous::PrinterConfig {
+            max_width: 80,
+            indent: 2,
+            use_tabs: false,
+        },
+    );
     let formatted = formatted.unwrap();
     eprintln!("VM formatted:\n{}", formatted);
 
     // Each let_binding (name, value) should stay on one line when it fits
-    assert!(formatted.contains("scale, DURATION"), "name-value pair should stay on one line");
+    assert!(
+        formatted.contains("scale, DURATION"),
+        "name-value pair should stay on one line"
+    );
 
     // Same formula without leading =
     let no_eq = &input[1..];
-    let mut interp = Interpreter::new(&program, no_eq);
-    let result = interp.run();
-    eprintln!("no-eq LET: success={} offset={} len={}", result.success, result.offset, no_eq.len());
-    assert!(result.success, "formula without = failed at offset={}", result.offset);
-    assert_eq!(result.offset as usize, no_eq.len(), "should consume all input without =");
+    let result = run_program(&program, no_eq);
+    eprintln!(
+        "no-eq LET: success={} offset={} len={}",
+        result.success,
+        result.offset,
+        no_eq.len()
+    );
+    assert!(
+        result.success,
+        "formula without = failed at offset={}",
+        result.offset
+    );
+    assert_eq!(
+        result.offset as usize,
+        no_eq.len(),
+        "should consume all input without ="
+    );
 }
 
 #[test]
@@ -564,7 +760,9 @@ fn pipeline_span_capture_type_inference() {
     let ir = compile_grammar(grammar, &PipelineOptions::default()).unwrap();
 
     // Find the "captured" rule and verify its type is Span.
-    let captured_rule = ir.find_rule("captured").expect("rule 'captured' should exist");
+    let captured_rule = ir
+        .find_rule("captured")
+        .expect("rule 'captured' should exist");
     let captured_id = captured_rule.id;
     let captured_type = ir
         .types
@@ -579,8 +777,7 @@ fn pipeline_span_capture_type_inference() {
 
     // Verify it parses correctly via the interpreter.
     let program = bbnf_ir::compiler::compile(&ir);
-    let mut interp = Interpreter::new(&program, "123,456");
-    let result = interp.run();
+    let result = run_program(&program, "123,456");
     assert!(result.success, "span capture should parse '123,456'");
     assert_eq!(result.offset as usize, 7);
 }

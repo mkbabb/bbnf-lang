@@ -4,8 +4,9 @@
 //! The interpreter uses a tight loop with explicit stacks for call frames,
 //! checkpoints, and values.
 
-use std::collections::HashSet;
+use std::{collections::HashSet, fmt, ops::Deref, ptr::NonNull};
 
+use parse_that::BumpArena;
 use rustc_hash::FxHashMap;
 
 use super::bytecode::{BytecodeProgram, Op};
@@ -74,6 +75,44 @@ pub struct DebugState {
 
 // ── Value types ─────────────────────────────────────────────────────────────
 
+#[derive(Clone, Copy)]
+pub struct ValueSlice(NonNull<[Value]>);
+
+impl ValueSlice {
+    #[inline(always)]
+    pub fn from_slice(values: &[Value]) -> Self {
+        Self(NonNull::from(values))
+    }
+
+    #[inline(always)]
+    pub fn empty() -> Self {
+        let values: &[Value] = &[];
+        Self::from_slice(values)
+    }
+}
+
+impl Deref for ValueSlice {
+    type Target = [Value];
+
+    fn deref(&self) -> &Self::Target {
+        unsafe { self.0.as_ref() }
+    }
+}
+
+impl fmt::Debug for ValueSlice {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.deref().fmt(f)
+    }
+}
+
+impl PartialEq for ValueSlice {
+    fn eq(&self, other: &Self) -> bool {
+        self.deref() == other.deref()
+    }
+}
+
+impl Eq for ValueSlice {}
+
 /// A generic parse tree node produced by the interpreter.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Value {
@@ -83,14 +122,13 @@ pub enum Value {
     Tagged {
         tag: RuleId,
         span: (u32, u32),
-        children: Vec<Value>,
+        children: ValueSlice,
     },
     /// An array of values (from repeat/collect).
-    Array(Vec<Value>),
+    Array(ValueSlice),
     /// Nothing matched (Epsilon).
     Nil,
 }
-
 
 // ── Internal stack frames ───────────────────────────────────────────────────
 
@@ -133,21 +171,33 @@ pub struct ParseDiagnostic {
     pub expected: Vec<u8>,
 }
 
-#[derive(Clone, Debug)]
 pub struct ParseResult {
     pub value: Option<Value>,
     pub offset: u32,
     pub success: bool,
     /// Diagnostics collected during parsing (populated when FOLLOW sets are available).
     pub diagnostics: Vec<ParseDiagnostic>,
+    _arena: BumpArena<Value>,
+}
+
+impl fmt::Debug for ParseResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ParseResult")
+            .field("value", &self.value)
+            .field("offset", &self.offset)
+            .field("success", &self.success)
+            .field("diagnostics", &self.diagnostics)
+            .finish()
+    }
 }
 
 // ── Interpreter ─────────────────────────────────────────────────────────────
 
-pub struct Interpreter<'a> {
-    program: &'a BytecodeProgram,
-    input: &'a str,
-    input_bytes: &'a [u8],
+pub struct Interpreter<'prog> {
+    program: &'prog BytecodeProgram,
+    input: &'prog str,
+    input_bytes: &'prog [u8],
+    arena: BumpArena<Value>,
 
     pc: u32,
     offset: u32,
@@ -185,12 +235,14 @@ pub struct Interpreter<'a> {
     pub debug_state: Option<DebugState>,
 }
 
-impl<'a> Interpreter<'a> {
-    pub fn new(program: &'a BytecodeProgram, input: &'a str) -> Self {
+impl<'prog> Interpreter<'prog> {
+    #[inline(always)]
+    pub fn new(program: &'prog BytecodeProgram, input: &'prog str) -> Self {
         Self {
             program,
             input,
             input_bytes: input.as_bytes(),
+            arena: BumpArena::with_capacity(input.len() / 16),
             pc: 0,
             offset: 0,
             is_error: false,
@@ -228,8 +280,12 @@ impl<'a> Interpreter<'a> {
             if self.trace {
                 eprintln!(
                     "  pc={:3} off={:3} err={} vs={} cs={} cp={} | {:?}",
-                    self.pc, self.offset, self.is_error as u8,
-                    self.values.len(), self.call_stack.len(), self.checkpoints.len(),
+                    self.pc,
+                    self.offset,
+                    self.is_error as u8,
+                    self.values.len(),
+                    self.call_stack.len(),
+                    self.checkpoints.len(),
                     self.program.code[pc]
                 );
             }
@@ -281,7 +337,9 @@ impl<'a> Interpreter<'a> {
                 Op::DiscardLeft => {
                     let left_right_boundary = self.value_depth_stack.pop().unwrap_or(0);
                     let context_depth = self.value_depth_stack.pop().unwrap_or(0);
-                    if left_right_boundary > context_depth && left_right_boundary <= self.values.len() {
+                    if left_right_boundary > context_depth
+                        && left_right_boundary <= self.values.len()
+                    {
                         self.values.drain(context_depth..left_right_boundary);
                     }
                     self.pc += 1;
@@ -302,7 +360,11 @@ impl<'a> Interpreter<'a> {
                     } else {
                         255
                     };
-                    let branch_idx = if byte < 128 { data.table[byte as usize] } else { 255 };
+                    let branch_idx = if byte < 128 {
+                        data.table[byte as usize]
+                    } else {
+                        255
+                    };
                     if (branch_idx as usize) < data.offsets.len() {
                         self.pc = data.offsets[branch_idx as usize];
                     } else {
@@ -367,10 +429,19 @@ impl<'a> Interpreter<'a> {
             value,
             offset: self.offset,
             diagnostics: std::mem::take(&mut self.diagnostics),
+            _arena: std::mem::take(&mut self.arena),
         }
     }
 
+    #[inline(always)]
+    fn collect_values_from(&mut self, start: usize) -> ValueSlice {
+        let collected = ValueSlice::from_slice(self.arena.alloc_slice_clone(&self.values[start..]));
+        self.values.truncate(start);
+        collected
+    }
+
     /// Track the furthest offset reached for best-effort error reporting.
+    #[inline(always)]
     fn track_furthest(&mut self) {
         if self.offset > self.furthest_offset {
             self.furthest_offset = self.offset;
@@ -381,12 +452,14 @@ impl<'a> Interpreter<'a> {
     /// Emit a diagnostic at the furthest offset using FOLLOW sets.
     fn emit_furthest_diagnostic(&mut self) {
         let rule_name = self.furthest_rule.and_then(|rid| {
-            self.program.rule_names.get(rid as usize).and_then(|&sid| {
-                self.program.strings.get(sid as usize).cloned()
-            })
+            self.program
+                .rule_names
+                .get(rid as usize)
+                .and_then(|&sid| self.program.strings.get(sid as usize).cloned())
         });
 
-        let expected: Vec<u8> = self.furthest_rule
+        let expected: Vec<u8> = self
+            .furthest_rule
             .and_then(|rid| self.program.follow_sets.get(&rid))
             .map(|cs| cs.iter().collect())
             .unwrap_or_default();
@@ -403,7 +476,8 @@ impl<'a> Interpreter<'a> {
 
 // ── Leaf ops ────────────────────────────────────────────────────────────────
 
-impl<'a> Interpreter<'a> {
+impl<'prog> Interpreter<'prog> {
+    #[inline(always)]
     fn exec_match_string(&mut self, sid: u32) {
         let s = &self.program.strings[sid as usize];
         let start = self.offset as usize;
@@ -421,13 +495,15 @@ impl<'a> Interpreter<'a> {
         self.pc += 1;
     }
 
+    #[inline(always)]
     fn exec_match_regex(&mut self, sid: u32) {
         let start = self.offset as usize;
         let bytes = self.input.as_bytes();
 
         // Use pre-compiled DFA from the program (zero per-parse compilation).
         // find_at returns the absolute end position in bytes (not a length).
-        let dfa = self.program.compiled_regexes[sid as usize].as_ref()
+        let dfa = self.program.compiled_regexes[sid as usize]
+            .as_ref()
             .expect("MatchRegex references non-regex StringId");
 
         if let Some(end) = dfa.find_at(bytes, start) {
@@ -447,6 +523,7 @@ impl<'a> Interpreter<'a> {
         self.pc += 1;
     }
 
+    #[inline(always)]
     fn exec_epsilon(&mut self) {
         self.values.push(Value::Nil);
         self.is_error = false;
@@ -456,7 +533,8 @@ impl<'a> Interpreter<'a> {
 
 // ── Call/Return ─────────────────────────────────────────────────────────────
 
-impl<'a> Interpreter<'a> {
+impl<'prog> Interpreter<'prog> {
+    #[inline(always)]
     fn exec_call(&mut self, rule_id: u32) {
         self.call_stack.push(CallFrame {
             return_pc: self.pc + 1,
@@ -468,6 +546,7 @@ impl<'a> Interpreter<'a> {
     }
 
     /// Returns false if top-level return (halt).
+    #[inline(always)]
     fn exec_return(&mut self) -> bool {
         self.rule_stack.pop();
         if let Some(frame) = self.call_stack.pop() {
@@ -481,7 +560,8 @@ impl<'a> Interpreter<'a> {
 
 // ── State management ────────────────────────────────────────────────────────
 
-impl<'a> Interpreter<'a> {
+impl<'prog> Interpreter<'prog> {
+    #[inline(always)]
     fn exec_save_state(&mut self) {
         self.checkpoints.push(Checkpoint {
             offset: self.offset,
@@ -490,6 +570,7 @@ impl<'a> Interpreter<'a> {
         self.pc += 1;
     }
 
+    #[inline(always)]
     fn exec_restore_state(&mut self) {
         if let Some(cp) = self.checkpoints.pop() {
             self.offset = cp.offset;
@@ -499,11 +580,13 @@ impl<'a> Interpreter<'a> {
         self.pc += 1;
     }
 
+    #[inline(always)]
     fn exec_drop_state(&mut self) {
         self.checkpoints.pop();
         self.pc += 1;
     }
 
+    #[inline(always)]
     fn exec_trim_ws(&mut self) {
         let mut pos = self.offset as usize;
         while pos < self.input_bytes.len() {
@@ -518,10 +601,12 @@ impl<'a> Interpreter<'a> {
 
     /// Trim whitespace using a custom `@ws` DFA pattern.
     /// Advances offset without pushing a value (like TrimWs). Always succeeds.
+    #[inline(always)]
     fn exec_trim_ws_pattern(&mut self, sid: u32) {
         let start = self.offset as usize;
         let bytes = self.input.as_bytes();
-        let dfa = self.program.compiled_regexes[sid as usize].as_ref()
+        let dfa = self.program.compiled_regexes[sid as usize]
+            .as_ref()
             .expect("TrimWsPattern references non-regex StringId");
         // find_at returns the absolute end position in bytes.
         if let Some(end) = dfa.find_at(bytes, start) {
@@ -534,7 +619,8 @@ impl<'a> Interpreter<'a> {
 
 // ── Repetition ──────────────────────────────────────────────────────────────
 
-impl<'a> Interpreter<'a> {
+impl<'prog> Interpreter<'prog> {
+    #[inline(always)]
     fn exec_repeat_begin(&mut self, lo: u32, hi: u32, body_end: u32) {
         self.repeats.push(RepeatState {
             count: 0,
@@ -548,8 +634,11 @@ impl<'a> Interpreter<'a> {
         self.pc += 1;
     }
 
+    #[inline(always)]
     fn exec_repeat_end(&mut self) {
-        let repeat = self.repeats.last_mut()
+        let repeat = self
+            .repeats
+            .last_mut()
             .expect("repeat stack should not be empty at RepeatEnd");
 
         if self.is_error || repeat.iter_start_offset == self.offset {
@@ -577,13 +666,16 @@ impl<'a> Interpreter<'a> {
     /// backtracking (`RestoreState`) and discard ops (`>>`, `<<`) within the
     /// repeat body can legitimately truncate the values stack below the level
     /// recorded at `RepeatBegin`.
+    #[inline(always)]
     fn finalize_repeat(&mut self) {
-        let repeat = self.repeats.pop()
+        let repeat = self
+            .repeats
+            .pop()
             .expect("repeat stack should not be empty during finalize");
         let depth = repeat.value_depth.min(self.values.len());
 
         if repeat.count >= repeat.lo {
-            let collected: Vec<Value> = self.values.drain(depth..).collect();
+            let collected = self.collect_values_from(depth);
             self.values.push(Value::Array(collected));
             self.is_error = false;
         } else {
@@ -596,23 +688,27 @@ impl<'a> Interpreter<'a> {
 
 // ── Value construction ──────────────────────────────────────────────────────
 
-impl<'a> Interpreter<'a> {
+impl<'prog> Interpreter<'prog> {
+    #[inline(always)]
     fn exec_make_array(&mut self, count: u32) {
         let n = count as usize;
         let start = self.values.len().saturating_sub(n);
-        let collected: Vec<Value> = self.values.drain(start..).collect();
+        let collected = self.collect_values_from(start);
         self.values.push(Value::Array(collected));
         self.pc += 1;
     }
 
+    #[inline(always)]
     fn exec_make_tagged(&mut self, tag: u32) {
         // Collect ALL values pushed since the call frame was entered,
         // so sequences produce multiple children instead of losing all but the last.
-        let (start, depth) = self.call_stack.last()
+        let (start, depth) = self
+            .call_stack
+            .last()
             .map(|f| (f.start_offset, f.value_depth))
             .unwrap_or((0, 0));
         let depth = depth.min(self.values.len());
-        let children: Vec<Value> = self.values.drain(depth..).collect();
+        let children = self.collect_values_from(depth);
         if !children.is_empty() {
             self.values.push(Value::Tagged {
                 tag,
@@ -626,8 +722,13 @@ impl<'a> Interpreter<'a> {
 
 // ── Memoization ─────────────────────────────────────────────────────────────
 
-impl<'a> Interpreter<'a> {
+impl<'prog> Interpreter<'prog> {
+    #[inline(always)]
     fn exec_memo_check(&mut self, rule_id: u32, hit_offset: u32) {
+        if !self.program.memo_enabled {
+            self.pc += 1;
+            return;
+        }
         let start_offset = self.offset;
         let key = (rule_id, start_offset);
         if let Some((result_offset, value, was_error)) = self.memo.get(&key) {
@@ -642,12 +743,17 @@ impl<'a> Interpreter<'a> {
         }
     }
 
+    #[inline(always)]
     fn exec_memo_store(&mut self, _rule_id: u32) {
-        let value = self.values.last()
-            .cloned()
-            .unwrap_or(Value::Nil);
+        if !self.program.memo_enabled {
+            self.pc += 1;
+            return;
+        }
+        let value = self.values.last().cloned().unwrap_or(Value::Nil);
         // Pop the start offset saved by MemoCheck.
-        let (rule_id, start_offset) = self.memo_starts.pop()
+        let (rule_id, start_offset) = self
+            .memo_starts
+            .pop()
             .expect("MemoStore without matching MemoCheck");
         let key = (rule_id, start_offset);
         self.memo.insert(key, (self.offset, value, self.is_error));

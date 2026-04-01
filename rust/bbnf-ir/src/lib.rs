@@ -10,8 +10,8 @@
 
 pub mod charset;
 pub mod passes;
-pub mod vm;
 pub mod regex_first;
+pub mod vm;
 
 // Backward-compat re-exports: downstream crates can still use
 // `bbnf_ir::bytecode`, `bbnf_ir::compiler`, `bbnf_ir::interpreter`.
@@ -57,7 +57,6 @@ pub struct GrammarSpan {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum IrNode {
     // ── Leaves ──────────────────────────────────────────────────────────
-
     /// A literal string match. The `StringId` indexes `GrammarIR::strings`.
     Literal(StringId),
 
@@ -68,7 +67,6 @@ pub enum IrNode {
     Epsilon,
 
     // ── Combinators (N-ary flat) ────────────────────────────────────────
-
     /// Sequential concatenation: all children must match in order.
     Seq(Vec<IrNode>),
 
@@ -91,7 +89,6 @@ pub enum IrNode {
     Ref(RuleId),
 
     // ── Binary ──────────────────────────────────────────────────────────
-
     /// `a << b` — parse both, keep left result.
     Skip(Box<IrNode>, Box<IrNode>),
 
@@ -102,26 +99,19 @@ pub enum IrNode {
     Minus(Box<IrNode>, Box<IrNode>),
 
     // ── Lookahead ───────────────────────────────────────────────────────
-
     /// Zero-width negative assertion: fails if inner matches, consumes nothing.
     Negate(Box<IrNode>),
 
     // ── Host integration ────────────────────────────────────────────────
-
     /// Apply a host function to the parse result.
-    Map {
-        inner: Box<IrNode>,
-        fn_id: FnId,
-    },
+    Map { inner: Box<IrNode>, fn_id: FnId },
 
     // ── Whitespace ──────────────────────────────────────────────────────
-
     /// Marks the inner expression as having optional surrounding whitespace.
     /// This is a flag-level concept: backends translate it to `trim_whitespace(inner)`.
     OptionalWhitespace(Box<IrNode>),
 
     // ── Lexer-Parser Fusion ──────────────────────────────────────────
-
     /// Parse a token once, then dispatch on its string value.
     /// Eliminates sequential checkpoint/restore for alternations where multiple
     /// branches start with the same token class (e.g., identifier-led CSS values).
@@ -322,7 +312,6 @@ pub struct SubVariant {
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct RuleMeta {
     // ── Analysis ────────────────────────────────────────────────────────
-
     /// FIRST set for this rule.
     pub first_set: CharSet128,
 
@@ -336,7 +325,6 @@ pub struct RuleMeta {
     pub is_cyclic: bool,
 
     // ── Optimization hints ──────────────────────────────────────────────
-
     /// Memoization strategy.
     pub memo: MemoStrategy,
 
@@ -358,7 +346,6 @@ pub struct RuleMeta {
     pub is_transparent: bool,
 
     // ── Pretty ──────────────────────────────────────────────────────────
-
     /// Pretty-printing hints from `@pretty` directives.
     pub pretty: Option<PrettyHints>,
 
@@ -377,7 +364,6 @@ pub struct RuleMeta {
     pub is_token: bool,
 
     // ── Sub-variants ────────────────────────────────────────────────────
-
     /// Sub-variants for heterogeneous alternation branches.
     /// Empty if the rule is not an alternation or if all branches have the same type.
     #[serde(default)]
@@ -450,7 +436,6 @@ pub struct GrammarIR {
     #[serde(default)]
     pub b1_span_collapse: bool,
 
-
     /// When true, all rules are instrumented for debugging.
     /// Set by `@debug * ;` directive or `#[parser(debug)]` attribute.
     #[serde(default)]
@@ -460,7 +445,6 @@ pub struct GrammarIR {
     /// Preserved through lowering for display in debug adapters.
     #[serde(default)]
     pub debug_labels: Vec<(RuleId, StringId)>,
-
 }
 
 impl GrammarIR {

@@ -62,8 +62,11 @@ fn factor(node: IrNode, strings: &mut Vec<String>) -> IrNode {
                 .collect();
 
             if factored.len() == 1 {
-                factored.into_iter().next()
-                    .expect("factored branch set verified non-empty").node
+                factored
+                    .into_iter()
+                    .next()
+                    .expect("factored branch set verified non-empty")
+                    .node
             } else {
                 IrNode::Alt(factored, dispatch)
             }
@@ -126,7 +129,9 @@ fn strip_leading(node: IrNode) -> IrNode {
         IrNode::Seq(mut children) if children.len() > 1 => {
             children.remove(0);
             if children.len() == 1 {
-                children.into_iter().next()
+                children
+                    .into_iter()
+                    .next()
                     .expect("Seq child list verified non-empty")
             } else {
                 IrNode::Seq(children)
@@ -174,10 +179,7 @@ fn factor_branches(branches: Vec<AltBranch>) -> Vec<AltBranch> {
             // If all remainders are Epsilon, the branches were identical single
             // nodes — factoring just wraps in Seq(leader, Alt([Eps,...])) which
             // is non-productive. Keep the original branches as-is.
-            if remainder_branches
-                .iter()
-                .all(|b| b.node == IrNode::Epsilon)
-            {
+            if remainder_branches.iter().all(|b| b.node == IrNode::Epsilon) {
                 for b in &branches[i..j] {
                     result.push(b.clone());
                 }
@@ -186,8 +188,11 @@ fn factor_branches(branches: Vec<AltBranch>) -> Vec<AltBranch> {
             }
 
             let remainder_alt = if remainder_branches.len() == 1 {
-                remainder_branches.into_iter().next()
-                    .expect("remainder branch set verified non-empty").node
+                remainder_branches
+                    .into_iter()
+                    .next()
+                    .expect("remainder branch set verified non-empty")
+                    .node
             } else {
                 IrNode::Alt(remainder_branches, None)
             };
@@ -244,10 +249,7 @@ fn intern_or_reuse(s: &str, strings: &mut Vec<String>, dedup: &mut HashMap<Strin
 ///
 /// Map wrappers are preserved on the continuation, not the prefix:
 /// `Map(Literal("rem"), fn)` → prefix `Literal("r")` + continuation `Map(Literal("em"), fn)`.
-fn factor_literal_prefixes(
-    branches: Vec<AltBranch>,
-    strings: &mut Vec<String>,
-) -> Vec<AltBranch> {
+fn factor_literal_prefixes(branches: Vec<AltBranch>, strings: &mut Vec<String>) -> Vec<AltBranch> {
     if branches.len() < 2 {
         return branches;
     }
@@ -309,7 +311,8 @@ fn factor_literal_prefixes(
                 // Collect remainders (clone strings to avoid borrow conflict).
                 let remainders: Vec<(String, Option<FnId>)> = (i..j)
                     .map(|k| {
-                        let li = literal_infos[k].as_ref()
+                        let li = literal_infos[k]
+                            .as_ref()
                             .expect("literal info must exist for branch in literal group");
                         let full_str = strings[li.literal_sid as usize].clone();
                         (full_str[1..].to_owned(), li.map_fn)
@@ -342,8 +345,11 @@ fn factor_literal_prefixes(
                 }
 
                 let continuation = if continuation_branches.len() == 1 {
-                    continuation_branches.into_iter().next()
-                        .expect("continuation branch set verified non-empty").node
+                    continuation_branches
+                        .into_iter()
+                        .next()
+                        .expect("continuation branch set verified non-empty")
+                        .node
                 } else {
                     IrNode::Alt(continuation_branches, None)
                 };
@@ -372,10 +378,7 @@ fn factor_literal_prefixes(
 /// Classify a branch node as a splittable literal.
 /// Returns `Some(info)` if the node is `Literal(sid)` or `Map { inner: Literal(sid), fn_id }`
 /// and the literal has length >= 2 (single-byte literals can't be split further).
-fn classify_literal_branch(
-    node: &IrNode,
-    strings: &[String],
-) -> Option<LiteralBranchInfo> {
+fn classify_literal_branch(node: &IrNode, strings: &[String]) -> Option<LiteralBranchInfo> {
     match node {
         IrNode::Literal(sid) => {
             let s = &strings[*sid as usize];

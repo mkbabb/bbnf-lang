@@ -85,7 +85,10 @@ atRule = /@[a-z]+/ , /[^;]+/ , ";" ;
     let pg = result.expect("should parse recover with alternation sync");
 
     assert_eq!(pg.recovers.len(), 1);
-    assert!(matches!(pg.recovers[0].sync_expr, Expression::Alternation(_)));
+    assert!(matches!(
+        pg.recovers[0].sync_expr,
+        Expression::Alternation(_)
+    ));
 }
 
 #[test]

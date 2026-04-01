@@ -1,7 +1,7 @@
+use std::path::Path;
+use tower_lsp_server::LanguageServer;
 use tower_lsp_server::jsonrpc::Result;
 use tower_lsp_server::ls_types::*;
-use tower_lsp_server::LanguageServer;
-use std::path::Path;
 
 use crate::features;
 
@@ -130,7 +130,11 @@ impl LanguageServer for BbnfLanguageServer {
         &self,
         params: GotoDefinitionParams,
     ) -> Result<Option<GotoDefinitionResponse>> {
-        let uri = params.text_document_position_params.text_document.uri.clone();
+        let uri = params
+            .text_document_position_params
+            .text_document
+            .uri
+            .clone();
         let pos = params.text_document_position_params.position;
         let docs = self.documents.read().await;
         let Some(state) = docs.get(&uri) else {
@@ -270,17 +274,26 @@ impl LanguageServer for BbnfLanguageServer {
                     let source_file = Path::new(&import_info.path)
                         .file_name()
                         .and_then(|n| n.to_str())
-                        .unwrap_or_else(|| panic!("invalid import path for completion label: `{}`", import_info.path));
+                        .unwrap_or_else(|| {
+                            panic!(
+                                "invalid import path for completion label: `{}`",
+                                import_info.path
+                            )
+                        });
                     if let Some(ref items) = import_info.items {
                         // Selective: only listed names.
                         for item in items {
-                            if let Some(&idx) = target_state.info.rule_index.get(item.name.as_str()) {
+                            if let Some(&idx) = target_state.info.rule_index.get(item.name.as_str())
+                            {
                                 let rule = &target_state.info.rules[idx];
                                 if let CompletionResponse::Array(ref mut arr) = response {
                                     arr.push(CompletionItem {
                                         label: rule.name.clone(),
                                         kind: Some(CompletionItemKind::FUNCTION),
-                                        detail: Some(format!("{} (from {})", rule.rhs_text, source_file)),
+                                        detail: Some(format!(
+                                            "{} (from {})",
+                                            rule.rhs_text, source_file
+                                        )),
                                         ..Default::default()
                                     });
                                 }
@@ -293,7 +306,10 @@ impl LanguageServer for BbnfLanguageServer {
                                 arr.push(CompletionItem {
                                     label: rule.name.clone(),
                                     kind: Some(CompletionItemKind::FUNCTION),
-                                    detail: Some(format!("{} (from {})", rule.rhs_text, source_file)),
+                                    detail: Some(format!(
+                                        "{} (from {})",
+                                        rule.rhs_text, source_file
+                                    )),
                                     ..Default::default()
                                 });
                             }
@@ -348,10 +364,7 @@ impl LanguageServer for BbnfLanguageServer {
         )))
     }
 
-    async fn formatting(
-        &self,
-        params: DocumentFormattingParams,
-    ) -> Result<Option<Vec<TextEdit>>> {
+    async fn formatting(&self, params: DocumentFormattingParams) -> Result<Option<Vec<TextEdit>>> {
         let uri = params.text_document.uri;
         let docs = self.documents.read().await;
         let Some(state) = docs.get(&uri) else {
@@ -378,7 +391,10 @@ impl LanguageServer for BbnfLanguageServer {
         let Some(state) = docs.get(&uri) else {
             return Ok(None);
         };
-        Ok(Some(features::inlay_hints::inlay_hints(state, params.range)))
+        Ok(Some(features::inlay_hints::inlay_hints(
+            state,
+            params.range,
+        )))
     }
 
     async fn selection_range(

@@ -238,8 +238,7 @@ fn is_digit_repetition(hir: &Hir) -> bool {
 fn is_digit_class(hir: &Hir) -> bool {
     if let HirKind::Class(Class::Bytes(bc)) = hir.kind() {
         let ranges = bc.ranges();
-        return ranges.len() == 1
-            && ranges[0] == ClassBytesRange::new(b'0', b'9');
+        return ranges.len() == 1 && ranges[0] == ClassBytesRange::new(b'0', b'9');
     }
     false
 }
@@ -451,9 +450,15 @@ fn is_hex_class(hir: &Hir) -> bool {
         let ranges = bc.ranges();
         // Canonical hex: [0-9A-Fa-f] → 3 ranges after normalization.
         if ranges.len() == 3 {
-            let has_digits = ranges.iter().any(|r| *r == ClassBytesRange::new(b'0', b'9'));
-            let has_upper = ranges.iter().any(|r| *r == ClassBytesRange::new(b'A', b'F'));
-            let has_lower = ranges.iter().any(|r| *r == ClassBytesRange::new(b'a', b'f'));
+            let has_digits = ranges
+                .iter()
+                .any(|r| *r == ClassBytesRange::new(b'0', b'9'));
+            let has_upper = ranges
+                .iter()
+                .any(|r| *r == ClassBytesRange::new(b'A', b'F'));
+            let has_lower = ranges
+                .iter()
+                .any(|r| *r == ClassBytesRange::new(b'a', b'f'));
             return has_digits && has_upper && has_lower;
         }
     }
@@ -516,7 +521,9 @@ fn is_word_class(hir: &Hir) -> bool {
         let ranges = bc.ranges();
         // Word class contains at least alphanumeric ranges.
         let has_lower = ranges.iter().any(|r| r.start() <= b'a' && r.end() >= b'z');
-        let has_digit = ranges.iter().any(|r| *r == ClassBytesRange::new(b'0', b'9'));
+        let has_digit = ranges
+            .iter()
+            .any(|r| *r == ClassBytesRange::new(b'0', b'9'));
         return has_lower && has_digit;
     }
     false

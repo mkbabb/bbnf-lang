@@ -87,10 +87,7 @@ pub fn complex_values(depth: usize) -> String {
 pub fn media_query_nesting(depth: usize) -> String {
     let mut s = String::new();
     for i in 0..depth {
-        s.push_str(&format!(
-            "@media (min-width: {}px) {{\n",
-            (i + 1) * 100
-        ));
+        s.push_str(&format!("@media (min-width: {}px) {{\n", (i + 1) * 100));
     }
     s.push_str(".inner { color: red; }\n");
     for _ in 0..depth {

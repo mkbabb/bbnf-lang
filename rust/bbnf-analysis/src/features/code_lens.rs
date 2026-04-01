@@ -16,7 +16,9 @@ pub fn code_lens(state: &DocumentState) -> Vec<CodeLens> {
                 .filter(|r| r.name == rule.name)
                 .count();
 
-            let range = state.line_index.span_to_range(rule.name_span.0, rule.name_span.1);
+            let range = state
+                .line_index
+                .span_to_range(rule.name_span.0, rule.name_span.1);
 
             CodeLens {
                 range,

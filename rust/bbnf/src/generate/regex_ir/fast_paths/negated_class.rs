@@ -72,7 +72,10 @@ pub(crate) fn try_strip_ws_padded_literal(pattern: &str) -> Option<String> {
     let after = &rest[literal_end..];
     if after == r"\s*" {
         // Verify the literal contains only plain ASCII (no regex metacharacters)
-        if literal.chars().all(|c| !r"\.+*?^${}[]|()/".contains(c) || c == '.' || c == '/' ) {
+        if literal
+            .chars()
+            .all(|c| !r"\.+*?^${}[]|()/".contains(c) || c == '.' || c == '/')
+        {
             // Only accept if the literal has no regex metacharacters
             if literal.chars().all(|c| matches!(c, ',' | '>' | '+' | '~' | ':' | ';' | '(' | ')' | '{' | '}' | '!' | '=' | '#' | '.' | '/' | '-' | '_' | 'a'..='z' | 'A'..='Z' | '0'..='9')) {
                 return Some(literal.to_string());

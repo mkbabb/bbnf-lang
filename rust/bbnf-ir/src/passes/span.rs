@@ -60,7 +60,9 @@ fn node_is_span_eligible(node: &IrNode, eligible_rules: &HashSet<RuleId>) -> boo
     match node {
         IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => true,
 
-        IrNode::Seq(children) => children.iter().all(|c| node_is_span_eligible(c, eligible_rules)),
+        IrNode::Seq(children) => children
+            .iter()
+            .all(|c| node_is_span_eligible(c, eligible_rules)),
 
         IrNode::Alt(branches, _) => branches
             .iter()
@@ -135,9 +137,7 @@ fn can_be_span_parser(node: &IrNode, sp_set: &HashSet<RuleId>) -> bool {
         IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => true,
         IrNode::Ref(id) => sp_set.contains(id),
         IrNode::Seq(children) => children.iter().all(|c| can_be_span_parser(c, sp_set)),
-        IrNode::Alt(branches, _) => {
-            branches.iter().all(|b| can_be_span_parser(&b.node, sp_set))
-        }
+        IrNode::Alt(branches, _) => branches.iter().all(|b| can_be_span_parser(&b.node, sp_set)),
         IrNode::Repeat { inner, .. } => can_be_span_parser(inner, sp_set),
         IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
             can_be_span_parser(a, sp_set) && can_be_span_parser(b, sp_set)

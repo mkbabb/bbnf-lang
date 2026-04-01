@@ -105,7 +105,7 @@ mod mapping {
 
     #[test]
     fn resolve_breakpoint_finds_rule() {
-        use bbnf::pipeline::{compile_grammar, PipelineOptions};
+        use bbnf::pipeline::{PipelineOptions, compile_grammar};
 
         let source = "value = /[0-9]+/ ;\nentry = value ;";
         let ir = compile_grammar(source, &PipelineOptions::default()).unwrap();
@@ -118,7 +118,7 @@ mod mapping {
 
     #[test]
     fn rule_at_offset_basic() {
-        use bbnf::pipeline::{compile_grammar, PipelineOptions};
+        use bbnf::pipeline::{PipelineOptions, compile_grammar};
 
         let source = "value = /[0-9]+/ ;";
         let ir = compile_grammar(source, &PipelineOptions::default()).unwrap();
@@ -154,7 +154,11 @@ mod adapter {
             ..Default::default()
         };
         let adapter = DapAdapter::launch(&args);
-        assert!(adapter.is_ok(), "launch should succeed: {:?}", adapter.err());
+        assert!(
+            adapter.is_ok(),
+            "launch should succeed: {:?}",
+            adapter.err()
+        );
     }
 
     #[test]
@@ -177,7 +181,9 @@ mod adapter {
         };
         let mut adapter = DapAdapter::launch(&args).unwrap();
         let bps = adapter.set_function_breakpoints(&SetFunctionBreakpointsArgs {
-            breakpoints: vec![FunctionBreakpoint { name: "value".into() }],
+            breakpoints: vec![FunctionBreakpoint {
+                name: "value".into(),
+            }],
         });
         assert_eq!(bps.len(), 1);
         assert!(bps[0].verified, "breakpoint on 'value' should be verified");
@@ -193,10 +199,15 @@ mod adapter {
         };
         let mut adapter = DapAdapter::launch(&args).unwrap();
         let bps = adapter.set_function_breakpoints(&SetFunctionBreakpointsArgs {
-            breakpoints: vec![FunctionBreakpoint { name: "nonexistent".into() }],
+            breakpoints: vec![FunctionBreakpoint {
+                name: "nonexistent".into(),
+            }],
         });
         assert_eq!(bps.len(), 1);
-        assert!(!bps[0].verified, "breakpoint on nonexistent rule should not verify");
+        assert!(
+            !bps[0].verified,
+            "breakpoint on nonexistent rule should not verify"
+        );
     }
 
     #[test]
@@ -231,7 +242,10 @@ mod adapter {
             values_depth: 0,
         };
         let vars = adapter.build_state_variables(&snapshot);
-        assert!(vars.len() >= 4, "should have offset, isError, currentRule, isEntry vars");
+        assert!(
+            vars.len() >= 4,
+            "should have offset, isError, currentRule, isEntry vars"
+        );
         assert_eq!(vars[0].name, "offset");
     }
 }

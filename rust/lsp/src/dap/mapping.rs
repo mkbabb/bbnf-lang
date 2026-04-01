@@ -18,7 +18,9 @@ impl LineIndex {
                 starts.push((i + 1) as u32);
             }
         }
-        Self { line_starts: starts }
+        Self {
+            line_starts: starts,
+        }
     }
 
     /// Convert a 1-based line number to a byte offset (start of that line).
@@ -88,4 +90,3 @@ pub fn rule_name(ir: &GrammarIR, rule_id: RuleId) -> &str {
     let rule = &ir.rules[rule_id as usize];
     ir.get_string(rule.name)
 }
-

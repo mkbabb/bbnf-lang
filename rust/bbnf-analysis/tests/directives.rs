@@ -152,7 +152,10 @@ value = string | number | bool | null | array ;
     let value_meta = info.ir_meta.get("value");
     assert!(value_meta.is_some(), "value rule should have IR metadata");
     let vm = value_meta.unwrap();
-    assert!(vm.inferred_type.is_some(), "value should have an inferred type");
+    assert!(
+        vm.inferred_type.is_some(),
+        "value should have an inferred type"
+    );
 }
 
 #[test]
@@ -161,7 +164,10 @@ fn ir_meta_has_follow_sets() {
     let info = analyze(grammar, &LineIndex::new(grammar));
     // After the full pipeline, at least one rule should have a FOLLOW set.
     let has_follow = info.ir_meta.values().any(|m| m.follow_set_label.is_some());
-    assert!(has_follow, "at least one rule should have a FOLLOW set label");
+    assert!(
+        has_follow,
+        "at least one rule should have a FOLLOW set label"
+    );
 }
 
 #[test]
@@ -179,9 +185,15 @@ fn ir_meta_has_memo_and_span_info() {
     assert!(meta.is_some(), "value should have IR metadata");
     let m = meta.unwrap();
     // Memo strategy should be reported (even if "None").
-    assert!(!m.memo_strategy.is_empty(), "memo_strategy should be non-empty");
+    assert!(
+        !m.memo_strategy.is_empty(),
+        "memo_strategy should be non-empty"
+    );
     // Span eligibility should be set for a simple literal alternation.
-    assert!(m.span_eligible, "literal alternation should be span-eligible");
+    assert!(
+        m.span_eligible,
+        "literal alternation should be span-eligible"
+    );
 }
 
 // ── Import semantic tokens ───────────────────────────────────────────────────

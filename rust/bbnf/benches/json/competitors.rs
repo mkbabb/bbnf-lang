@@ -19,7 +19,7 @@
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-use bencher::{benchmark_group, benchmark_main, black_box, Bencher};
+use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
 
 fn load_json(name: &str) -> String {
     let path = format!("../../data/json/{}", name);
@@ -33,7 +33,8 @@ macro_rules! bench_serde {
         fn $name(b: &mut Bencher) {
             let input = load_json($file);
             b.bytes = input.len() as u64;
-            serde_json::from_str::<serde_json::Value>(&input).expect(concat!($file, ": serde_json parse failed"));
+            serde_json::from_str::<serde_json::Value>(&input)
+                .expect(concat!($file, ": serde_json parse failed"));
             b.iter(|| serde_json::from_str::<serde_json::Value>(black_box(&input)).unwrap());
         }
     };
@@ -55,9 +56,7 @@ macro_rules! bench_serde_borrow {
             b.bytes = input.len() as u64;
             serde_json::from_str::<serde_json_borrow::Value>(&input)
                 .expect(concat!($file, ": serde_json_borrow parse failed"));
-            b.iter(|| {
-                serde_json::from_str::<serde_json_borrow::Value>(black_box(&input)).unwrap()
-            });
+            b.iter(|| serde_json::from_str::<serde_json_borrow::Value>(black_box(&input)).unwrap());
         }
     };
 }
@@ -76,7 +75,8 @@ macro_rules! bench_sonic {
         fn $name(b: &mut Bencher) {
             let input = load_json($file);
             b.bytes = input.len() as u64;
-            sonic_rs::from_str::<sonic_rs::Value>(&input).expect(concat!($file, ": sonic-rs parse failed"));
+            sonic_rs::from_str::<sonic_rs::Value>(&input)
+                .expect(concat!($file, ": sonic-rs parse failed"));
             b.iter(|| sonic_rs::from_str::<sonic_rs::Value>(black_box(&input)).unwrap());
         }
     };
@@ -98,7 +98,8 @@ macro_rules! bench_simd {
             b.bytes = input.len() as u64;
             {
                 let mut bytes = input.as_bytes().to_vec();
-                simd_json::to_owned_value(&mut bytes).expect(concat!($file, ": simd-json parse failed"));
+                simd_json::to_owned_value(&mut bytes)
+                    .expect(concat!($file, ": simd-json parse failed"));
             }
             b.iter(|| {
                 let mut bytes = input.as_bytes().to_vec();
@@ -142,6 +143,7 @@ mod nom_json {
     use std::collections::HashMap;
 
     use nom::{
+        IResult,
         branch::alt,
         bytes::complete::{escaped, tag, take_while, take_while1},
         character::complete::{char, one_of},
@@ -149,7 +151,6 @@ mod nom_json {
         multi::separated_list0,
         number::complete::double,
         sequence::{delimited, pair, preceded, separated_pair, terminated},
-        IResult,
     };
 
     #[derive(Debug)]
@@ -180,7 +181,11 @@ mod nom_json {
             char('"'),
             cut(terminated(
                 alt((
-                    escaped(take_while1(is_string_character), '\\', one_of("\"bfnrt\\/u")),
+                    escaped(
+                        take_while1(is_string_character),
+                        '\\',
+                        one_of("\"bfnrt\\/u"),
+                    ),
                     tag(""),
                 )),
                 char('"'),
@@ -272,11 +277,11 @@ bench_nom!(nom_data_supermaxx, "data_supermaxx.json");
 mod winnow_json {
     use std::collections::HashMap;
 
+    use winnow::ascii::float;
     use winnow::combinator::{
         delimited, dispatch, fail, peek, preceded, separated, separated_pair, terminated,
     };
     use winnow::prelude::*;
-    use winnow::ascii::float;
     use winnow::token::{any, take, take_while};
 
     #[derive(Debug, Clone)]
@@ -317,8 +322,7 @@ mod winnow_json {
     fn string_content<'i>(input: &mut &'i str) -> ModalResult<&'i str> {
         let start = *input;
         loop {
-            let _: &str =
-                take_while(0.., |c: char| c != '"' && c != '\\').parse_next(input)?;
+            let _: &str = take_while(0.., |c: char| c != '"' && c != '\\').parse_next(input)?;
 
             if input.is_empty() || input.starts_with('"') {
                 let consumed = start.len() - input.len();
@@ -371,7 +375,9 @@ macro_rules! bench_winnow {
             use winnow::prelude::*;
             let input = load_json($file);
             b.bytes = input.len() as u64;
-            winnow_json::json.parse(input.as_str()).expect(concat!($file, ": winnow parse failed"));
+            winnow_json::json
+                .parse(input.as_str())
+                .expect(concat!($file, ": winnow parse failed"));
             b.iter(|| winnow_json::json.parse(black_box(input.as_str())).unwrap());
         }
     };
@@ -436,10 +442,7 @@ mod pest_json {
     }
 
     pub fn parse(data: &str) -> Json {
-        let pair = JsonParser::parse(Rule::json, data)
-            .unwrap()
-            .next()
-            .unwrap();
+        let pair = JsonParser::parse(Rule::json, data).unwrap().next().unwrap();
         // json → value → actual type
         consume_value(pair.into_inner().next().unwrap())
     }
@@ -471,11 +474,14 @@ macro_rules! bench_tree_sitter {
             let input = load_json($file);
             b.bytes = input.len() as u64;
             let mut parser = tree_sitter::Parser::new();
-            parser.set_language(&tree_sitter_json::LANGUAGE.into()).unwrap();
-            assert!(parser.parse(&input, None).is_some(), concat!($file, ": tree-sitter parse failed"));
-            b.iter(|| {
-                parser.parse(black_box(&input), None).unwrap()
-            });
+            parser
+                .set_language(&tree_sitter_json::LANGUAGE.into())
+                .unwrap();
+            assert!(
+                parser.parse(&input, None).is_some(),
+                concat!($file, ": tree-sitter parse failed")
+            );
+            b.iter(|| parser.parse(black_box(&input), None).unwrap());
         }
     };
 }
@@ -489,15 +495,87 @@ bench_tree_sitter!(tree_sitter_data_supermaxx, "data_supermaxx.json");
 
 // ── Groups ──────────────────────────────────────────────────────────────────
 
-benchmark_group!(bench_serde, serde_data, serde_twitter, serde_citm, serde_canada, serde_data_xl, serde_data_supermaxx);
-benchmark_group!(bench_serde_borrow, serde_borrow_data, serde_borrow_twitter, serde_borrow_citm, serde_borrow_canada, serde_borrow_data_xl, serde_borrow_data_supermaxx);
-benchmark_group!(bench_sonic, sonic_data, sonic_twitter, sonic_citm, sonic_canada, sonic_data_xl, sonic_data_supermaxx);
-benchmark_group!(bench_simd, simd_data, simd_twitter, simd_citm, simd_canada, simd_data_xl, simd_data_supermaxx);
-benchmark_group!(bench_jiter, jiter_data, jiter_twitter, jiter_citm, jiter_canada, jiter_data_xl, jiter_data_supermaxx);
-benchmark_group!(bench_nom, nom_data, nom_twitter, nom_citm, nom_canada, nom_data_xl, nom_data_supermaxx);
-benchmark_group!(bench_winnow, winnow_data, winnow_twitter, winnow_citm, winnow_canada, winnow_data_xl, winnow_data_supermaxx);
-benchmark_group!(bench_pest, pest_data, pest_twitter, pest_citm, pest_canada, pest_data_xl, pest_data_supermaxx);
-benchmark_group!(bench_tree_sitter, tree_sitter_data, tree_sitter_twitter, tree_sitter_citm, tree_sitter_canada, tree_sitter_data_xl, tree_sitter_data_supermaxx);
+benchmark_group!(
+    bench_serde,
+    serde_data,
+    serde_twitter,
+    serde_citm,
+    serde_canada,
+    serde_data_xl,
+    serde_data_supermaxx
+);
+benchmark_group!(
+    bench_serde_borrow,
+    serde_borrow_data,
+    serde_borrow_twitter,
+    serde_borrow_citm,
+    serde_borrow_canada,
+    serde_borrow_data_xl,
+    serde_borrow_data_supermaxx
+);
+benchmark_group!(
+    bench_sonic,
+    sonic_data,
+    sonic_twitter,
+    sonic_citm,
+    sonic_canada,
+    sonic_data_xl,
+    sonic_data_supermaxx
+);
+benchmark_group!(
+    bench_simd,
+    simd_data,
+    simd_twitter,
+    simd_citm,
+    simd_canada,
+    simd_data_xl,
+    simd_data_supermaxx
+);
+benchmark_group!(
+    bench_jiter,
+    jiter_data,
+    jiter_twitter,
+    jiter_citm,
+    jiter_canada,
+    jiter_data_xl,
+    jiter_data_supermaxx
+);
+benchmark_group!(
+    bench_nom,
+    nom_data,
+    nom_twitter,
+    nom_citm,
+    nom_canada,
+    nom_data_xl,
+    nom_data_supermaxx
+);
+benchmark_group!(
+    bench_winnow,
+    winnow_data,
+    winnow_twitter,
+    winnow_citm,
+    winnow_canada,
+    winnow_data_xl,
+    winnow_data_supermaxx
+);
+benchmark_group!(
+    bench_pest,
+    pest_data,
+    pest_twitter,
+    pest_citm,
+    pest_canada,
+    pest_data_xl,
+    pest_data_supermaxx
+);
+benchmark_group!(
+    bench_tree_sitter,
+    tree_sitter_data,
+    tree_sitter_twitter,
+    tree_sitter_citm,
+    tree_sitter_canada,
+    tree_sitter_data_xl,
+    tree_sitter_data_supermaxx
+);
 
 benchmark_main!(
     bench_serde,

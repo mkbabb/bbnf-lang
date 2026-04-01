@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use bbnf_ir::{GrammarIR, IrNode, IrRule, RuleId, RuleMeta};
 use bbnf_ir::passes::canonicalize_aliases;
+use bbnf_ir::{GrammarIR, IrNode, IrRule, RuleId, RuleMeta};
 
 fn make_rule(id: RuleId, name_id: u32, body: IrNode, alias: Option<RuleId>) -> IrRule {
     IrRule {
@@ -20,9 +20,9 @@ fn make_rule(id: RuleId, name_id: u32, body: IrNode, alias: Option<RuleId>) -> I
 fn resolve_direct_alias() {
     let mut ir = GrammarIR {
         rules: vec![
-            make_rule(0, 0, IrNode::Ref(1), None),          // start -> a
-            make_rule(1, 1, IrNode::Ref(2), Some(2)),        // a -> b (alias)
-            make_rule(2, 2, IrNode::Literal(3), None),       // b -> "x"
+            make_rule(0, 0, IrNode::Ref(1), None),     // start -> a
+            make_rule(1, 1, IrNode::Ref(2), Some(2)),  // a -> b (alias)
+            make_rule(2, 2, IrNode::Literal(3), None), // b -> "x"
         ],
         entry: 0,
         strings: vec!["start".into(), "a".into(), "b".into(), "x".into()],
@@ -48,14 +48,18 @@ fn resolve_direct_alias() {
 fn resolve_chain_alias() {
     let mut ir = GrammarIR {
         rules: vec![
-            make_rule(0, 0, IrNode::Ref(1), None),          // start -> a
-            make_rule(1, 1, IrNode::Ref(2), Some(2)),        // a -> b (alias)
-            make_rule(2, 2, IrNode::Ref(3), Some(3)),        // b -> c (alias)
-            make_rule(3, 3, IrNode::Literal(4), None),       // c -> "x"
+            make_rule(0, 0, IrNode::Ref(1), None),     // start -> a
+            make_rule(1, 1, IrNode::Ref(2), Some(2)),  // a -> b (alias)
+            make_rule(2, 2, IrNode::Ref(3), Some(3)),  // b -> c (alias)
+            make_rule(3, 3, IrNode::Literal(4), None), // c -> "x"
         ],
         entry: 0,
         strings: vec![
-            "start".into(), "a".into(), "b".into(), "c".into(), "x".into(),
+            "start".into(),
+            "a".into(),
+            "b".into(),
+            "c".into(),
+            "x".into(),
         ],
         fns: vec![],
         types: vec![],

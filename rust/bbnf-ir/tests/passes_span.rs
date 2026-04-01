@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use bbnf_ir::{FnDescriptor, GrammarIR, IrNode, IrRule, RuleId, RuleMeta};
 use bbnf_ir::passes::refine_span_eligibility;
+use bbnf_ir::{FnDescriptor, GrammarIR, IrNode, IrRule, RuleId, RuleMeta};
 
 fn make_rule(id: RuleId, body: IrNode) -> IrRule {
     IrRule {

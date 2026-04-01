@@ -4,8 +4,8 @@ use std::collections::{HashMap, HashSet};
 
 use indexmap::IndexMap;
 
-use crate::types::{Expression, AST};
 use super::deps::Dependencies;
+use crate::types::{AST, Expression};
 
 /// Result of Tarjan's strongly-connected-component analysis.
 #[derive(Debug)]
@@ -146,9 +146,8 @@ pub fn topological_sort_scc<'a>(
         }
     }
 
-    let mut queue: std::collections::VecDeque<usize> = (0..num_sccs)
-        .filter(|&i| in_degree[i] == 0)
-        .collect();
+    let mut queue: std::collections::VecDeque<usize> =
+        (0..num_sccs).filter(|&i| in_degree[i] == 0).collect();
 
     let mut topo_order: Vec<usize> = Vec::with_capacity(num_sccs);
     while let Some(scc_idx) = queue.pop_front() {
@@ -177,8 +176,7 @@ pub fn topological_sort_scc<'a>(
         let mut scc_entries: Vec<_> = ast
             .iter()
             .filter(|(key, _)| {
-                scc_result.scc_index.get(*key) == Some(&scc_idx)
-                    && !new_ast.contains_key(*key)
+                scc_result.scc_index.get(*key) == Some(&scc_idx) && !new_ast.contains_key(*key)
             })
             .collect();
         scc_entries.sort_by_key(|(key, _)| depth_score.get(*key).copied().unwrap_or(0));

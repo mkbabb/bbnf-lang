@@ -5,8 +5,8 @@
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-use bencher::{benchmark_group, benchmark_main, black_box, Bencher};
 use bbnf_derive::Parser;
+use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
 
 #[derive(Parser)]
 #[parser(path = "../../grammar/google-sheets/google-sheets.bbnf", prettify)]
@@ -20,7 +20,9 @@ fn generate_large_formula(n_bindings: usize) -> String {
         parts.push(format!("v{}", i));
         parts.push(format!(
             "IF(v{}>0, FILTER(A1:Z100, INDEX(A1:Z100,,{})>0), SUM(A1:A{}))",
-            i, i + 1, i + 10
+            i,
+            i + 1,
+            i + 10
         ));
     }
     parts.push(format!("v{}", n_bindings - 1));
@@ -30,7 +32,10 @@ fn generate_large_formula(n_bindings: usize) -> String {
 fn parse_pathological(b: &mut Bencher) {
     let parser = GoogleSheetsParser::formula();
     b.bytes = PATHOLOGICAL.len() as u64;
-    assert!(parser.parse(PATHOLOGICAL).is_some(), "pathological: parse failed");
+    assert!(
+        parser.parse(PATHOLOGICAL).is_some(),
+        "pathological: parse failed"
+    );
     b.iter(|| parser.parse(black_box(PATHOLOGICAL)).unwrap());
 }
 

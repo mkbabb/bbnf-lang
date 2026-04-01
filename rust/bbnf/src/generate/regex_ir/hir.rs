@@ -110,8 +110,10 @@ fn emit_literal(bytes: &[u8]) -> Option<TokenStream> {
             state.offset += 1;
         })
     } else {
-        let byte_lits: Vec<proc_macro2::Literal> =
-            bytes.iter().map(|b| proc_macro2::Literal::byte_character(*b)).collect();
+        let byte_lits: Vec<proc_macro2::Literal> = bytes
+            .iter()
+            .map(|b| proc_macro2::Literal::byte_character(*b))
+            .collect();
         Some(quote! {
             if state.src_bytes.get(state.offset..state.offset + #len)
                 != Some(&[#(#byte_lits),*] as &[u8])
@@ -372,11 +374,7 @@ fn emit_optional(sub: &Hir) -> Option<TokenStream> {
 ///
 /// No checkpoint save/restore per iteration — just a while loop with
 /// direct byte checks.
-fn emit_class_loop(
-    predicate: &TokenStream,
-    min: u32,
-    max: Option<u32>,
-) -> Option<TokenStream> {
+fn emit_class_loop(predicate: &TokenStream, min: u32, max: Option<u32>) -> Option<TokenStream> {
     match max {
         None => {
             // Unbounded: `+` or `*`

@@ -1,8 +1,8 @@
 //! Tests for character-class-aware regex parsing in BBNF grammars.
 //! Verifies that `/` inside `[...]` is treated as literal, not as a closing delimiter.
 
-use bbnf::types::Expression;
 use bbnf::BBNFGrammar;
+use bbnf::types::Expression;
 
 /// Extract the regex body string from a single-rule grammar `name = /pattern/ ;`.
 fn extract_regex(source: &str) -> String {

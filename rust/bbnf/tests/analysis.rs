@@ -2,10 +2,7 @@ mod common;
 
 use std::collections::{HashMap, HashSet};
 
-use bbnf::analysis::{
-    compute_ref_counts, regex_first_chars, tarjan_scc, CharSet,
-    Dependencies,
-};
+use bbnf::analysis::{CharSet, Dependencies, compute_ref_counts, regex_first_chars, tarjan_scc};
 use common::nt;
 
 // -- CharSet tests --
@@ -162,24 +159,9 @@ fn tarjan_no_cycles() {
     assert!(result.cyclic_rules.is_empty());
 
     // Verify reverse-topo order: C should come before B, B before A.
-    let scc_idx_a = result
-        .scc_index
-        .iter()
-        .find(|(k, _)| ***k == a)
-        .unwrap()
-        .1;
-    let scc_idx_b = result
-        .scc_index
-        .iter()
-        .find(|(k, _)| ***k == b)
-        .unwrap()
-        .1;
-    let scc_idx_c = result
-        .scc_index
-        .iter()
-        .find(|(k, _)| ***k == c)
-        .unwrap()
-        .1;
+    let scc_idx_a = result.scc_index.iter().find(|(k, _)| ***k == a).unwrap().1;
+    let scc_idx_b = result.scc_index.iter().find(|(k, _)| ***k == b).unwrap().1;
+    let scc_idx_c = result.scc_index.iter().find(|(k, _)| ***k == c).unwrap().1;
     assert!(scc_idx_c < scc_idx_b || scc_idx_b < scc_idx_a);
 }
 
@@ -254,4 +236,3 @@ fn ref_counts_basic() {
     let c_count = counts.iter().find(|(k, _)| ***k == c).unwrap().1;
     assert_eq!(*c_count, 2);
 }
-

@@ -87,19 +87,16 @@ pub fn serve_dap() {
                     let args: SetBreakpointsArgs =
                         serde_json::from_value(request.arguments.clone()).unwrap_or_else(|_| {
                             SetBreakpointsArgs {
-                                source: Source { path: None, name: None },
+                                source: Source {
+                                    path: None,
+                                    name: None,
+                                },
                                 breakpoints: Vec::new(),
                             }
                         });
                     let verified = a.set_breakpoints(&args);
                     let body = serde_json::json!({ "breakpoints": verified });
-                    send_response(
-                        &mut writer,
-                        &mut seq_counter,
-                        &request,
-                        true,
-                        Some(body),
-                    );
+                    send_response(&mut writer, &mut seq_counter, &request, true, Some(body));
                 } else {
                     send_response(&mut writer, &mut seq_counter, &request, true, None);
                 }
@@ -109,17 +106,13 @@ pub fn serve_dap() {
                 if let Some(ref mut a) = adapter {
                     let args: SetFunctionBreakpointsArgs =
                         serde_json::from_value(request.arguments.clone()).unwrap_or_else(|_| {
-                            SetFunctionBreakpointsArgs { breakpoints: Vec::new() }
+                            SetFunctionBreakpointsArgs {
+                                breakpoints: Vec::new(),
+                            }
                         });
                     let verified = a.set_function_breakpoints(&args);
                     let body = serde_json::json!({ "breakpoints": verified });
-                    send_response(
-                        &mut writer,
-                        &mut seq_counter,
-                        &request,
-                        true,
-                        Some(body),
-                    );
+                    send_response(&mut writer, &mut seq_counter, &request, true, Some(body));
                 } else {
                     send_response(&mut writer, &mut seq_counter, &request, true, None);
                 }
@@ -154,13 +147,7 @@ pub fn serve_dap() {
                 let body = serde_json::json!({
                     "threads": [Thread { id: 1, name: "parse".into() }]
                 });
-                send_response(
-                    &mut writer,
-                    &mut seq_counter,
-                    &request,
-                    true,
-                    Some(body),
-                );
+                send_response(&mut writer, &mut seq_counter, &request, true, Some(body));
             }
 
             "stackTrace" => {
@@ -193,13 +180,7 @@ pub fn serve_dap() {
                     "stackFrames": frames,
                     "totalFrames": frames.len(),
                 });
-                send_response(
-                    &mut writer,
-                    &mut seq_counter,
-                    &request,
-                    true,
-                    Some(body),
-                );
+                send_response(&mut writer, &mut seq_counter, &request, true, Some(body));
             }
 
             "scopes" => {
@@ -209,30 +190,17 @@ pub fn serve_dap() {
                     expensive: false,
                 }];
                 let body = serde_json::json!({ "scopes": scopes });
-                send_response(
-                    &mut writer,
-                    &mut seq_counter,
-                    &request,
-                    true,
-                    Some(body),
-                );
+                send_response(&mut writer, &mut seq_counter, &request, true, Some(body));
             }
 
             "variables" => {
-                let variables =
-                    if let (Some(a), Some(snap)) = (&adapter, &last_snapshot) {
-                        a.build_state_variables(snap)
-                    } else {
-                        Vec::new()
-                    };
+                let variables = if let (Some(a), Some(snap)) = (&adapter, &last_snapshot) {
+                    a.build_state_variables(snap)
+                } else {
+                    Vec::new()
+                };
                 let body = serde_json::json!({ "variables": variables });
-                send_response(
-                    &mut writer,
-                    &mut seq_counter,
-                    &request,
-                    true,
-                    Some(body),
-                );
+                send_response(&mut writer, &mut seq_counter, &request, true, Some(body));
             }
 
             "continue" => {

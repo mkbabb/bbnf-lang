@@ -5,10 +5,10 @@
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-use bencher::{benchmark_group, benchmark_main, black_box, Bencher};
-use bbnf::pipeline::{compile_grammar, PipelineOptions};
+use bbnf::pipeline::{PipelineOptions, compile_grammar};
 use bbnf_ir::compiler::compile as compile_bytecode;
 use bbnf_ir::interpreter::Interpreter;
+use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
 
 fn load(name: &str) -> String {
     let path = format!("../../data/css/{}", name);

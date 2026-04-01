@@ -4,7 +4,7 @@
 //! pipeline. JSON grammar should have NO memoized rules — all alternations
 //! are total-dispatch, so memoization would only add cache overhead.
 
-use bbnf::pipeline::{compile_grammar, PipelineOptions};
+use bbnf::pipeline::{PipelineOptions, compile_grammar};
 use bbnf_ir::MemoStrategy;
 
 const JSON_GRAMMAR: &str = r#"

@@ -170,29 +170,25 @@ pub fn collect_semantic_tokens(expr: &Expression<'_>, tokens: &mut Vec<SemanticT
 /// Compute the end byte offset of an expression.
 pub fn compute_expression_end(expr: &Expression<'_>) -> Option<usize> {
     match expr {
-        Expression::Literal(tok)
-        | Expression::Nonterminal(tok)
-        | Expression::Regex(tok) => Some(tok.span.end),
+        Expression::Literal(tok) | Expression::Nonterminal(tok) | Expression::Regex(tok) => {
+            Some(tok.span.end)
+        }
         Expression::MappingFn(tok) => Some(tok.span.end),
         Expression::Epsilon(tok) => Some(tok.span.end),
-        Expression::Alternation(inner) | Expression::Concatenation(inner) => {
-            inner.inner()
-                .last()
-                .and_then(|e| compute_expression_end(e))
-                .or(Some(inner.span.end))
-        }
+        Expression::Alternation(inner) | Expression::Concatenation(inner) => inner
+            .inner()
+            .last()
+            .and_then(|e| compute_expression_end(e))
+            .or(Some(inner.span.end)),
         Expression::Skip(_, r) | Expression::Next(_, r) | Expression::Minus(_, r) => {
-            compute_expression_end(r.inner())
-                .or(Some(r.span.end))
+            compute_expression_end(r.inner()).or(Some(r.span.end))
         }
         Expression::Group(inner)
         | Expression::Optional(inner)
         | Expression::Many(inner)
         | Expression::Many1(inner)
         | Expression::OptionalWhitespace(inner)
-        | Expression::SpanCapture(inner) => {
-            Some(inner.span.end)
-        }
+        | Expression::SpanCapture(inner) => Some(inner.span.end),
         Expression::Rule(rhs, mapping) => {
             if let Some(m) = mapping {
                 compute_expression_end(m)
@@ -201,12 +197,8 @@ pub fn compute_expression_end(expr: &Expression<'_>) -> Option<usize> {
             }
         }
         Expression::ProductionRule(_, rhs) => compute_expression_end(rhs),
-        Expression::MappedExpression((_, mapping_tok)) => {
-            Some(mapping_tok.span.end)
-        }
-        Expression::DebugExpression((expr_tok, _)) => {
-            compute_expression_end(expr_tok.inner())
-        }
+        Expression::MappedExpression((_, mapping_tok)) => Some(mapping_tok.span.end),
+        Expression::DebugExpression((expr_tok, _)) => compute_expression_end(expr_tok.inner()),
     }
 }
 
@@ -230,7 +222,7 @@ pub fn format_expression_short(expr: &Expression<'_>) -> String {
             format!("@{{{}}}", format_expression_short(inner.inner()))
         }
         Expression::Many(inner) => {
-            format!("{{{}}}",  format_expression_short(inner.inner()))
+            format!("{{{}}}", format_expression_short(inner.inner()))
         }
         Expression::Many1(inner) => {
             format!("{}+", format_expression_short(inner.inner()))
@@ -256,12 +248,14 @@ pub fn format_expression_short(expr: &Expression<'_>) -> String {
                 format_expression_short(r.inner())
             )
         }
-        Expression::Concatenation(inner) => inner.inner()
+        Expression::Concatenation(inner) => inner
+            .inner()
             .iter()
             .map(|e| format_expression_short(e))
             .collect::<Vec<_>>()
             .join(", "),
-        Expression::Alternation(inner) => inner.inner()
+        Expression::Alternation(inner) => inner
+            .inner()
             .iter()
             .map(|e| format_expression_short(e))
             .collect::<Vec<_>>()
@@ -274,12 +268,8 @@ pub fn format_expression_short(expr: &Expression<'_>) -> String {
                 format_expression_short(rhs)
             )
         }
-        Expression::MappedExpression((expr_tok, _)) => {
-            format_expression_short(expr_tok.inner())
-        }
-        Expression::DebugExpression((expr_tok, _)) => {
-            format_expression_short(expr_tok.inner())
-        }
+        Expression::MappedExpression((expr_tok, _)) => format_expression_short(expr_tok.inner()),
+        Expression::DebugExpression((expr_tok, _)) => format_expression_short(expr_tok.inner()),
         Expression::MappingFn(tok) => format!("=> {}", tok.value),
     }
 }
@@ -291,7 +281,11 @@ pub fn format_expression_short(expr: &Expression<'_>) -> String {
 ///
 /// A2: Uses a reverse index (`name_to_deps`) for O(1) lookup of a rule's dependencies
 /// instead of scanning all entries in `deps` for each step.
-pub fn build_cycle_path(start: &str, scc_members: &[&str], deps: &HashMap<Expression<'_>, HashSet<Expression<'_>>>) -> String {
+pub fn build_cycle_path(
+    start: &str,
+    scc_members: &[&str],
+    deps: &HashMap<Expression<'_>, HashSet<Expression<'_>>>,
+) -> String {
     let member_set: HashSet<&str> = scc_members.iter().copied().collect();
 
     // A2: Build reverse index from rule name to its dependency set.

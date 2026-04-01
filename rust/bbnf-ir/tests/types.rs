@@ -140,11 +140,7 @@ fn seq_mixed_tuple() {
         ),
         rule(
             0,
-            IrNode::Seq(vec![
-                IrNode::Literal(2),
-                IrNode::Ref(1),
-                IrNode::Literal(3),
-            ]),
+            IrNode::Seq(vec![IrNode::Literal(2), IrNode::Ref(1), IrNode::Literal(3)]),
         ),
     ]);
     infer_types(&mut ir);
@@ -181,10 +177,7 @@ fn pair_flattening() {
 fn skip_keeps_left() {
     let mut ir = make_ir(vec![rule(
         0,
-        IrNode::Skip(
-            Box::new(IrNode::Literal(2)),
-            Box::new(IrNode::Literal(3)),
-        ),
+        IrNode::Skip(Box::new(IrNode::Literal(2)), Box::new(IrNode::Literal(3))),
     )]);
     infer_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::Span);
@@ -194,10 +187,7 @@ fn skip_keeps_left() {
 fn next_keeps_right() {
     let mut ir = make_ir(vec![rule(
         0,
-        IrNode::Next(
-            Box::new(IrNode::Literal(2)),
-            Box::new(IrNode::Literal(3)),
-        ),
+        IrNode::Next(Box::new(IrNode::Literal(2)), Box::new(IrNode::Literal(3))),
     )]);
     infer_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::Span);

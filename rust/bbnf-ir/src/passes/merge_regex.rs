@@ -12,7 +12,10 @@ use crate::{AltBranch, GrammarIR, IrNode};
 /// Merge adjacent regex alternatives across the entire IR.
 pub fn merge_regex_alts(ir: &mut GrammarIR) {
     for rule in &mut ir.rules {
-        rule.body = merge_regex_in_node(std::mem::replace(&mut rule.body, IrNode::Epsilon), &mut ir.strings);
+        rule.body = merge_regex_in_node(
+            std::mem::replace(&mut rule.body, IrNode::Epsilon),
+            &mut ir.strings,
+        );
     }
 }
 
@@ -23,7 +26,9 @@ fn merge_regex_in_node(node: IrNode, strings: &mut Vec<String>) -> IrNode {
             // Only merge when there's no dispatch table (dispatch handles perf already).
             let all_regex_or_lit = dispatch.is_none()
                 && branches.len() >= 2
-                && branches.iter().all(|b| matches!(&b.node, IrNode::Regex(_) | IrNode::Literal(_)))
+                && branches
+                    .iter()
+                    .all(|b| matches!(&b.node, IrNode::Regex(_) | IrNode::Literal(_)))
                 && branches.iter().any(|b| matches!(&b.node, IrNode::Regex(_)));
 
             if all_regex_or_lit {
@@ -63,9 +68,12 @@ fn merge_regex_in_node(node: IrNode, strings: &mut Vec<String>) -> IrNode {
                 IrNode::Alt(branches, dispatch)
             }
         }
-        IrNode::Seq(children) => {
-            IrNode::Seq(children.into_iter().map(|c| merge_regex_in_node(c, strings)).collect())
-        }
+        IrNode::Seq(children) => IrNode::Seq(
+            children
+                .into_iter()
+                .map(|c| merge_regex_in_node(c, strings))
+                .collect(),
+        ),
         IrNode::Repeat { inner, lo, hi } => IrNode::Repeat {
             inner: Box::new(merge_regex_in_node(*inner, strings)),
             lo,
@@ -83,9 +91,7 @@ fn merge_regex_in_node(node: IrNode, strings: &mut Vec<String>) -> IrNode {
             Box::new(merge_regex_in_node(*a, strings)),
             Box::new(merge_regex_in_node(*b, strings)),
         ),
-        IrNode::Negate(inner) => {
-            IrNode::Negate(Box::new(merge_regex_in_node(*inner, strings)))
-        }
+        IrNode::Negate(inner) => IrNode::Negate(Box::new(merge_regex_in_node(*inner, strings))),
         IrNode::OptionalWhitespace(inner) => {
             IrNode::OptionalWhitespace(Box::new(merge_regex_in_node(*inner, strings)))
         }
@@ -93,12 +99,19 @@ fn merge_regex_in_node(node: IrNode, strings: &mut Vec<String>) -> IrNode {
             inner: Box::new(merge_regex_in_node(*inner, strings)),
             fn_id,
         },
-        IrNode::TokenDispatch { token, arms, fallback } => IrNode::TokenDispatch {
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => IrNode::TokenDispatch {
             token: Box::new(merge_regex_in_node(*token, strings)),
-            arms: arms.into_iter().map(|mut a| {
-                a.continuation = merge_regex_in_node(a.continuation, strings);
-                a
-            }).collect(),
+            arms: arms
+                .into_iter()
+                .map(|mut a| {
+                    a.continuation = merge_regex_in_node(a.continuation, strings);
+                    a
+                })
+                .collect(),
             fallback: Box::new(merge_regex_in_node(*fallback, strings)),
         },
         // Leaves — no recursion needed.

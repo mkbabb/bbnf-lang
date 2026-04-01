@@ -27,7 +27,9 @@ pub fn generate_dispatch_tables(ir: &mut GrammarIR) {
     // Clone follow sets, strings, and rules metadata to avoid borrow conflicts.
     let follow_sets = ir.follow_sets.clone();
     let strings = ir.strings.clone();
-    let rule_metas: Vec<(CharSet128, bool)> = ir.rules.iter()
+    let rule_metas: Vec<(CharSet128, bool)> = ir
+        .rules
+        .iter()
         .map(|r| (r.meta.first_set.clone(), r.meta.nullable))
         .collect();
 
@@ -54,7 +56,11 @@ pub fn generate_dispatch_tables(ir: &mut GrammarIR) {
 ///
 /// Returns `Some(charset)` for non-nullable nodes, `None` for nullable ones.
 /// `rule_metas` provides pre-computed (first_set, nullable) for rule references.
-fn node_first_set(node: &IrNode, rule_metas: &[(CharSet128, bool)], strings: &[String]) -> Option<CharSet128> {
+fn node_first_set(
+    node: &IrNode,
+    rule_metas: &[(CharSet128, bool)],
+    strings: &[String],
+) -> Option<CharSet128> {
     match node {
         IrNode::Literal(sid) => {
             let s = &strings[*sid as usize];
@@ -68,8 +74,7 @@ fn node_first_set(node: &IrNode, rule_metas: &[(CharSet128, bool)], strings: &[S
         }
         IrNode::Regex(sid) => {
             let pattern = &strings[*sid as usize];
-            regex_first::regex_first_chars(pattern)
-                .filter(|cs| !cs.is_empty())
+            regex_first::regex_first_chars(pattern).filter(|cs| !cs.is_empty())
         }
         IrNode::Ref(rule_id) => {
             let (ref first_set, nullable) = rule_metas[*rule_id as usize];
@@ -117,11 +122,18 @@ fn node_first_set(node: &IrNode, rule_metas: &[(CharSet128, bool)], strings: &[S
 }
 
 /// Get the FIRST set contribution from a nullable node (the non-None part).
-fn node_first_set_nullable_part(node: &IrNode, rule_metas: &[(CharSet128, bool)]) -> Option<CharSet128> {
+fn node_first_set_nullable_part(
+    node: &IrNode,
+    rule_metas: &[(CharSet128, bool)],
+) -> Option<CharSet128> {
     match node {
         IrNode::Ref(rule_id) => {
             let (ref first_set, _) = rule_metas[*rule_id as usize];
-            if first_set.is_empty() { None } else { Some(first_set.clone()) }
+            if first_set.is_empty() {
+                None
+            } else {
+                Some(first_set.clone())
+            }
         }
         IrNode::Repeat { inner, .. } => node_first_set_nullable_part(inner, rule_metas),
         _ => None,
@@ -155,7 +167,11 @@ fn suffix_follow(
     if let Some(follow) = rule_follow {
         combined.union(follow);
     }
-    if combined.is_empty() { None } else { Some(combined) }
+    if combined.is_empty() {
+        None
+    } else {
+        Some(combined)
+    }
 }
 
 /// Recursively walk an IrNode tree and annotate eligible Alt nodes.
@@ -207,7 +223,12 @@ fn annotate_node(
                 } else {
                     containing_follow.cloned()
                 };
-                annotate_node(&mut children[i], child_follow.as_ref().or(containing_follow), rule_metas, strings);
+                annotate_node(
+                    &mut children[i],
+                    child_follow.as_ref().or(containing_follow),
+                    rule_metas,
+                    strings,
+                );
             }
         }
         IrNode::Repeat { inner, .. }
@@ -220,10 +241,19 @@ fn annotate_node(
             annotate_node(a, containing_follow, rule_metas, strings);
             annotate_node(b, containing_follow, rule_metas, strings);
         }
-        IrNode::TokenDispatch { token, arms, fallback } => {
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => {
             annotate_node(token, containing_follow, rule_metas, strings);
             for arm in arms {
-                annotate_node(&mut arm.continuation, containing_follow, rule_metas, strings);
+                annotate_node(
+                    &mut arm.continuation,
+                    containing_follow,
+                    rule_metas,
+                    strings,
+                );
             }
             annotate_node(fallback, containing_follow, rule_metas, strings);
         }
@@ -296,7 +326,10 @@ fn try_build_dispatch(
         }
     }
 
-    Some(AltDispatch { table, fallback_idx: None })
+    Some(AltDispatch {
+        table,
+        fallback_idx: None,
+    })
 }
 
 /// Build a dispatch table with a fallback branch.

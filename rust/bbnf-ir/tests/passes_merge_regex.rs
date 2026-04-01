@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use bbnf_ir::{AltBranch, GrammarIR, IrNode, IrRule, RuleMeta};
 use bbnf_ir::passes::merge_regex_alts;
+use bbnf_ir::{AltBranch, GrammarIR, IrNode, IrRule, RuleMeta};
 
 fn make_ir(body: IrNode, strings: Vec<String>) -> GrammarIR {
     GrammarIR {
@@ -29,8 +29,14 @@ fn merges_two_regex_alts() {
     let mut ir = make_ir(
         IrNode::Alt(
             vec![
-                AltBranch { node: IrNode::Regex(1), first_set: None },
-                AltBranch { node: IrNode::Regex(2), first_set: None },
+                AltBranch {
+                    node: IrNode::Regex(1),
+                    first_set: None,
+                },
+                AltBranch {
+                    node: IrNode::Regex(2),
+                    first_set: None,
+                },
             ],
             None,
         ),
@@ -51,9 +57,18 @@ fn merges_three_css_property_regex() {
     let mut ir = make_ir(
         IrNode::Alt(
             vec![
-                AltBranch { node: IrNode::Regex(1), first_set: None },
-                AltBranch { node: IrNode::Regex(2), first_set: None },
-                AltBranch { node: IrNode::Regex(3), first_set: None },
+                AltBranch {
+                    node: IrNode::Regex(1),
+                    first_set: None,
+                },
+                AltBranch {
+                    node: IrNode::Regex(2),
+                    first_set: None,
+                },
+                AltBranch {
+                    node: IrNode::Regex(3),
+                    first_set: None,
+                },
             ],
             None,
         ),
@@ -82,8 +97,14 @@ fn merges_mixed_regex_and_literal() {
     let mut ir = make_ir(
         IrNode::Alt(
             vec![
-                AltBranch { node: IrNode::Regex(1), first_set: None },
-                AltBranch { node: IrNode::Literal(2), first_set: None },
+                AltBranch {
+                    node: IrNode::Regex(1),
+                    first_set: None,
+                },
+                AltBranch {
+                    node: IrNode::Literal(2),
+                    first_set: None,
+                },
             ],
             None,
         ),
@@ -105,8 +126,14 @@ fn skips_all_literal_alts() {
     let mut ir = make_ir(
         IrNode::Alt(
             vec![
-                AltBranch { node: IrNode::Literal(1), first_set: None },
-                AltBranch { node: IrNode::Literal(2), first_set: None },
+                AltBranch {
+                    node: IrNode::Literal(1),
+                    first_set: None,
+                },
+                AltBranch {
+                    node: IrNode::Literal(2),
+                    first_set: None,
+                },
             ],
             None,
         ),
@@ -121,8 +148,14 @@ fn escapes_special_chars_in_literal() {
     let mut ir = make_ir(
         IrNode::Alt(
             vec![
-                AltBranch { node: IrNode::Regex(1), first_set: None },
-                AltBranch { node: IrNode::Literal(2), first_set: None },
+                AltBranch {
+                    node: IrNode::Regex(1),
+                    first_set: None,
+                },
+                AltBranch {
+                    node: IrNode::Literal(2),
+                    first_set: None,
+                },
             ],
             None,
         ),
@@ -142,8 +175,14 @@ fn wraps_pipe_containing_patterns() {
     let mut ir = make_ir(
         IrNode::Alt(
             vec![
-                AltBranch { node: IrNode::Regex(1), first_set: None },
-                AltBranch { node: IrNode::Regex(2), first_set: None },
+                AltBranch {
+                    node: IrNode::Regex(1),
+                    first_set: None,
+                },
+                AltBranch {
+                    node: IrNode::Regex(2),
+                    first_set: None,
+                },
             ],
             None,
         ),

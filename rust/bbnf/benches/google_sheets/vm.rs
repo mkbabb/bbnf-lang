@@ -5,10 +5,10 @@
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-use bencher::{benchmark_group, benchmark_main, black_box, Bencher};
-use bbnf::pipeline::{compile_grammar, PipelineOptions};
+use bbnf::pipeline::{PipelineOptions, compile_grammar};
 use bbnf_ir::compiler::compile as compile_bytecode;
 use bbnf_ir::interpreter::Interpreter;
+use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
 
 const PATHOLOGICAL: &str = r#"=LET(raw, A2:E1000, filtered, FILTER(raw, (INDEX(raw,,3)>100)*(INDEX(raw,,5)="Active")), sorted, SORT(filtered, 3, FALSE), IF(ROWS(sorted)>0, MAP(SEQUENCE(MIN(10, ROWS(sorted))), LAMBDA(i, INDEX(sorted, i, 1)&" - "&TEXT(INDEX(sorted, i, 3), "$#,##0"))), "No results"))"#;
 
@@ -26,7 +26,9 @@ fn generate_large_formula(n_bindings: usize) -> String {
         parts.push(format!("v{}", i));
         parts.push(format!(
             "IF(v{}>0, FILTER(A1:Z100, INDEX(A1:Z100,,{})>0), SUM(A1:A{}))",
-            i, i + 1, i + 10
+            i,
+            i + 1,
+            i + 10
         ));
     }
     parts.push(format!("v{}", n_bindings - 1));

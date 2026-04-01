@@ -1,6 +1,6 @@
 use std::fs;
 
-use bbnf::imports::{load_module_graph, ImportError};
+use bbnf::imports::{ImportError, load_module_graph};
 
 fn setup_test_dir() -> tempfile::TempDir {
     tempfile::tempdir().expect("Failed to create temp dir")
@@ -167,10 +167,7 @@ value = number;"#,
         .iter()
         .filter(|e| matches!(e, ImportError::MissingRule { .. }))
         .collect();
-    assert!(
-        !missing_errors.is_empty(),
-        "Expected missing rule error"
-    );
+    assert!(!missing_errors.is_empty(), "Expected missing rule error");
 }
 
 #[test]
@@ -278,10 +275,7 @@ value = percentage;"#,
     assert!(registry.errors.is_empty(), "Errors: {:?}", registry.errors);
 
     let imported = registry.imported_rule_names(&main.canonicalize().unwrap());
-    assert!(
-        imported.contains("percentage"),
-        "Should import percentage"
-    );
+    assert!(imported.contains("percentage"), "Should import percentage");
     assert!(
         imported.contains("number"),
         "Should unfurl transitive dep: number"

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use bbnf_ir::{AltBranch, CharSet128, GrammarIR, IrNode, IrRule, RuleMeta};
 use bbnf_ir::passes::generate_dispatch_tables;
+use bbnf_ir::{AltBranch, CharSet128, GrammarIR, IrNode, IrRule, RuleMeta};
 
 #[test]
 fn dispatch_for_disjoint_branches() {
@@ -16,20 +16,23 @@ fn dispatch_for_disjoint_branches() {
         rules: vec![IrRule {
             id: 0,
             name: 0,
-            body: IrNode::Alt(vec![
-                AltBranch {
-                    node: IrNode::Literal(1),
-                    first_set: Some(first_a),
-                },
-                AltBranch {
-                    node: IrNode::Literal(2),
-                    first_set: Some(first_b),
-                },
-                AltBranch {
-                    node: IrNode::Literal(3),
-                    first_set: Some(first_c),
-                },
-            ], None),
+            body: IrNode::Alt(
+                vec![
+                    AltBranch {
+                        node: IrNode::Literal(1),
+                        first_set: Some(first_a),
+                    },
+                    AltBranch {
+                        node: IrNode::Literal(2),
+                        first_set: Some(first_b),
+                    },
+                    AltBranch {
+                        node: IrNode::Literal(3),
+                        first_set: Some(first_c),
+                    },
+                ],
+                None,
+            ),
             meta: RuleMeta::default(),
             source_span: None,
         }],
@@ -68,16 +71,19 @@ fn no_dispatch_for_overlapping_branches() {
         rules: vec![IrRule {
             id: 0,
             name: 0,
-            body: IrNode::Alt(vec![
-                AltBranch {
-                    node: IrNode::Literal(1),
-                    first_set: Some(first_a),
-                },
-                AltBranch {
-                    node: IrNode::Literal(2),
-                    first_set: Some(first_b),
-                },
-            ], None),
+            body: IrNode::Alt(
+                vec![
+                    AltBranch {
+                        node: IrNode::Literal(1),
+                        first_set: Some(first_a),
+                    },
+                    AltBranch {
+                        node: IrNode::Literal(2),
+                        first_set: Some(first_b),
+                    },
+                ],
+                None,
+            ),
             meta: RuleMeta::default(),
             source_span: None,
         }],
@@ -112,10 +118,19 @@ fn dispatch_for_nested_alt() {
             id: 0,
             name: 0,
             body: IrNode::Seq(vec![
-                IrNode::Alt(vec![
-                    AltBranch { node: IrNode::Literal(1), first_set: Some(first_a) },
-                    AltBranch { node: IrNode::Literal(2), first_set: Some(first_b) },
-                ], None),
+                IrNode::Alt(
+                    vec![
+                        AltBranch {
+                            node: IrNode::Literal(1),
+                            first_set: Some(first_a),
+                        },
+                        AltBranch {
+                            node: IrNode::Literal(2),
+                            first_set: Some(first_b),
+                        },
+                    ],
+                    None,
+                ),
                 IrNode::Literal(3),
             ]),
             meta: RuleMeta::default(),
@@ -162,16 +177,19 @@ fn dispatch_with_nullable_branch_via_follow() {
         rules: vec![IrRule {
             id: 0,
             name: 0,
-            body: IrNode::Alt(vec![
-                AltBranch {
-                    node: IrNode::Literal(1),
-                    first_set: Some(first_a),
-                },
-                AltBranch {
-                    node: IrNode::Epsilon,
-                    first_set: None, // Nullable branch.
-                },
-            ], None),
+            body: IrNode::Alt(
+                vec![
+                    AltBranch {
+                        node: IrNode::Literal(1),
+                        first_set: Some(first_a),
+                    },
+                    AltBranch {
+                        node: IrNode::Epsilon,
+                        first_set: None, // Nullable branch.
+                    },
+                ],
+                None,
+            ),
             meta: RuleMeta::default(),
             source_span: None,
         }],
@@ -218,16 +236,19 @@ fn no_dispatch_when_nullable_overlaps_follow() {
         rules: vec![IrRule {
             id: 0,
             name: 0,
-            body: IrNode::Alt(vec![
-                AltBranch {
-                    node: IrNode::Literal(1),
-                    first_set: Some(first_a),
-                },
-                AltBranch {
-                    node: IrNode::Epsilon,
-                    first_set: None,
-                },
-            ], None),
+            body: IrNode::Alt(
+                vec![
+                    AltBranch {
+                        node: IrNode::Literal(1),
+                        first_set: Some(first_a),
+                    },
+                    AltBranch {
+                        node: IrNode::Epsilon,
+                        first_set: None,
+                    },
+                ],
+                None,
+            ),
             meta: RuleMeta::default(),
             source_span: None,
         }],
@@ -270,17 +291,38 @@ fn fallback_dispatch_typed_plus_catchall() {
         rules: vec![IrRule {
             id: 0,
             name: 0,
-            body: IrNode::Alt(vec![
-                AltBranch { node: IrNode::Literal(1), first_set: Some(first_a) },
-                AltBranch { node: IrNode::Literal(2), first_set: Some(first_b) },
-                AltBranch { node: IrNode::Literal(3), first_set: Some(first_c) },
-                AltBranch { node: IrNode::Regex(4), first_set: Some(first_all) },
-            ], None),
+            body: IrNode::Alt(
+                vec![
+                    AltBranch {
+                        node: IrNode::Literal(1),
+                        first_set: Some(first_a),
+                    },
+                    AltBranch {
+                        node: IrNode::Literal(2),
+                        first_set: Some(first_b),
+                    },
+                    AltBranch {
+                        node: IrNode::Literal(3),
+                        first_set: Some(first_c),
+                    },
+                    AltBranch {
+                        node: IrNode::Regex(4),
+                        first_set: Some(first_all),
+                    },
+                ],
+                None,
+            ),
             meta: RuleMeta::default(),
             source_span: None,
         }],
         entry: 0,
-        strings: vec!["rule".into(), "aa".into(), "bb".into(), "cc".into(), "[a-z]+".into()],
+        strings: vec![
+            "rule".into(),
+            "aa".into(),
+            "bb".into(),
+            "cc".into(),
+            "[a-z]+".into(),
+        ],
         fns: vec![],
         types: vec![],
         follow_sets: HashMap::new(),
@@ -320,11 +362,23 @@ fn fallback_dispatch_not_superset() {
         rules: vec![IrRule {
             id: 0,
             name: 0,
-            body: IrNode::Alt(vec![
-                AltBranch { node: IrNode::Literal(1), first_set: Some(first_a) },
-                AltBranch { node: IrNode::Literal(2), first_set: Some(first_b) },
-                AltBranch { node: IrNode::Regex(3), first_set: Some(first_partial) },
-            ], None),
+            body: IrNode::Alt(
+                vec![
+                    AltBranch {
+                        node: IrNode::Literal(1),
+                        first_set: Some(first_a),
+                    },
+                    AltBranch {
+                        node: IrNode::Literal(2),
+                        first_set: Some(first_b),
+                    },
+                    AltBranch {
+                        node: IrNode::Regex(3),
+                        first_set: Some(first_partial),
+                    },
+                ],
+                None,
+            ),
             meta: RuleMeta::default(),
             source_span: None,
         }],
@@ -361,10 +415,19 @@ fn fallback_dispatch_too_few_branches() {
         rules: vec![IrRule {
             id: 0,
             name: 0,
-            body: IrNode::Alt(vec![
-                AltBranch { node: IrNode::Literal(1), first_set: Some(first_a) },
-                AltBranch { node: IrNode::Regex(2), first_set: Some(first_all) },
-            ], None),
+            body: IrNode::Alt(
+                vec![
+                    AltBranch {
+                        node: IrNode::Literal(1),
+                        first_set: Some(first_a),
+                    },
+                    AltBranch {
+                        node: IrNode::Regex(2),
+                        first_set: Some(first_all),
+                    },
+                ],
+                None,
+            ),
             meta: RuleMeta::default(),
             source_span: None,
         }],

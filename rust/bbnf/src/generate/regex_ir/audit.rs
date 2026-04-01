@@ -3,10 +3,10 @@
 //! Used for coverage tracking: every regex pattern in a grammar should
 //! resolve to a tier without falling back to LazyLock.
 
-use super::hir;
 use super::fast_paths;
+use super::hir;
 
-use super::classify::{classify_regex, RegexClass};
+use super::classify::{RegexClass, classify_regex};
 
 /// Which emission tier handles a regex pattern.
 #[derive(Debug, Clone)]

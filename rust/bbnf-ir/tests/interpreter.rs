@@ -2,11 +2,11 @@
 //!
 //! Exercises the full IR → bytecode → interpret pipeline using hand-built IR trees.
 
-use std::collections::HashMap;
 use bbnf_ir::interpreter::{Value, parse_with_ir};
 use bbnf_ir::{
     AltBranch, AltDispatch, CharSet128, GrammarIR, IrNode, IrRule, MemoStrategy, RuleMeta,
 };
+use std::collections::HashMap;
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -82,7 +82,10 @@ fn parse_regex() {
     let result = parse_with_ir(&ir, "12345abc");
     assert!(result.success);
     assert_eq!(result.offset, 5);
-    assert_eq!(unwrap_tagged(result.value.as_ref().unwrap()), &Value::Span(0, 5));
+    assert_eq!(
+        unwrap_tagged(result.value.as_ref().unwrap()),
+        &Value::Span(0, 5)
+    );
 }
 
 // ── Sequences ───────────────────────────────────────────────────────────────
@@ -129,22 +132,28 @@ fn parse_alt_first_branch() {
         vec![rule(
             0,
             0,
-            IrNode::Alt(vec![
-                AltBranch {
-                    node: IrNode::Literal(1),
-                    first_set: None,
-                },
-                AltBranch {
-                    node: IrNode::Literal(2),
-                    first_set: None,
-                },
-            ], None),
+            IrNode::Alt(
+                vec![
+                    AltBranch {
+                        node: IrNode::Literal(1),
+                        first_set: None,
+                    },
+                    AltBranch {
+                        node: IrNode::Literal(2),
+                        first_set: None,
+                    },
+                ],
+                None,
+            ),
         )],
         vec!["start".into(), "yes".into(), "no".into()],
     );
     let result = parse_with_ir(&ir, "yes");
     assert!(result.success);
-    assert_eq!(unwrap_tagged(result.value.as_ref().unwrap()), &Value::Span(0, 3));
+    assert_eq!(
+        unwrap_tagged(result.value.as_ref().unwrap()),
+        &Value::Span(0, 3)
+    );
 }
 
 #[test]
@@ -153,22 +162,28 @@ fn parse_alt_second_branch() {
         vec![rule(
             0,
             0,
-            IrNode::Alt(vec![
-                AltBranch {
-                    node: IrNode::Literal(1),
-                    first_set: None,
-                },
-                AltBranch {
-                    node: IrNode::Literal(2),
-                    first_set: None,
-                },
-            ], None),
+            IrNode::Alt(
+                vec![
+                    AltBranch {
+                        node: IrNode::Literal(1),
+                        first_set: None,
+                    },
+                    AltBranch {
+                        node: IrNode::Literal(2),
+                        first_set: None,
+                    },
+                ],
+                None,
+            ),
         )],
         vec!["start".into(), "yes".into(), "no".into()],
     );
     let result = parse_with_ir(&ir, "no");
     assert!(result.success);
-    assert_eq!(unwrap_tagged(result.value.as_ref().unwrap()), &Value::Span(0, 2));
+    assert_eq!(
+        unwrap_tagged(result.value.as_ref().unwrap()),
+        &Value::Span(0, 2)
+    );
 }
 
 // ── Repetition ──────────────────────────────────────────────────────────────
@@ -266,10 +281,7 @@ fn parse_optional() {
 #[test]
 fn parse_call() {
     let ir = make_ir(
-        vec![
-            rule(0, 0, IrNode::Ref(1)),
-            rule(1, 1, IrNode::Literal(2)),
-        ],
+        vec![rule(0, 0, IrNode::Ref(1)), rule(1, 1, IrNode::Literal(2))],
         vec!["start".into(), "item".into(), "hello".into()],
     );
     let result = parse_with_ir(&ir, "hello");
@@ -285,10 +297,7 @@ fn parse_next() {
         vec![rule(
             0,
             0,
-            IrNode::Next(
-                Box::new(IrNode::Literal(1)),
-                Box::new(IrNode::Literal(2)),
-            ),
+            IrNode::Next(Box::new(IrNode::Literal(1)), Box::new(IrNode::Literal(2))),
         )],
         vec!["start".into(), "a".into(), "b".into()],
     );
@@ -304,10 +313,7 @@ fn parse_skip() {
         vec![rule(
             0,
             0,
-            IrNode::Skip(
-                Box::new(IrNode::Literal(1)),
-                Box::new(IrNode::Literal(2)),
-            ),
+            IrNode::Skip(Box::new(IrNode::Literal(1)), Box::new(IrNode::Literal(2))),
         )],
         vec!["start".into(), "a".into(), "b".into()],
     );
@@ -352,16 +358,19 @@ fn parse_alt_dispatch() {
         vec![rule(
             0,
             0,
-            IrNode::Alt(vec![
-                AltBranch {
-                    node: IrNode::Literal(1), // "alpha"
-                    first_set: Some(fs_a),
-                },
-                AltBranch {
-                    node: IrNode::Literal(2), // "beta"
-                    first_set: Some(fs_b),
-                },
-            ], None),
+            IrNode::Alt(
+                vec![
+                    AltBranch {
+                        node: IrNode::Literal(1), // "alpha"
+                        first_set: Some(fs_a),
+                    },
+                    AltBranch {
+                        node: IrNode::Literal(2), // "beta"
+                        first_set: Some(fs_b),
+                    },
+                ],
+                None,
+            ),
         )],
         vec!["start".into(), "alpha".into(), "beta".into()],
     );
@@ -370,13 +379,19 @@ fn parse_alt_dispatch() {
     let result = parse_with_ir(&ir, "alpha");
     assert!(result.success);
     assert_eq!(result.offset, 5);
-    assert_eq!(unwrap_tagged(result.value.as_ref().unwrap()), &Value::Span(0, 5));
+    assert_eq!(
+        unwrap_tagged(result.value.as_ref().unwrap()),
+        &Value::Span(0, 5)
+    );
 
     // Second branch
     let result = parse_with_ir(&ir, "beta");
     assert!(result.success);
     assert_eq!(result.offset, 4);
-    assert_eq!(unwrap_tagged(result.value.as_ref().unwrap()), &Value::Span(0, 4));
+    assert_eq!(
+        unwrap_tagged(result.value.as_ref().unwrap()),
+        &Value::Span(0, 4)
+    );
 
     // No matching branch (dispatch fallback)
     let result = parse_with_ir(&ir, "gamma");
@@ -386,30 +401,62 @@ fn parse_alt_dispatch() {
 #[test]
 fn parse_dispatch_multi_branch() {
     // 4-branch dispatch + fallback.
-    let mut fs_t = CharSet128::new(); fs_t.add(b't');
-    let mut fs_f = CharSet128::new(); fs_f.add(b'f');
-    let mut fs_n = CharSet128::new(); fs_n.add(b'n');
-    let mut fs_d = CharSet128::new(); fs_d.add(b'0');
-    for b in b'1'..=b'9' { fs_d.add(b); }
+    let mut fs_t = CharSet128::new();
+    fs_t.add(b't');
+    let mut fs_f = CharSet128::new();
+    fs_f.add(b'f');
+    let mut fs_n = CharSet128::new();
+    fs_n.add(b'n');
+    let mut fs_d = CharSet128::new();
+    fs_d.add(b'0');
+    for b in b'1'..=b'9' {
+        fs_d.add(b);
+    }
 
     let mut table = vec![255u8; 128];
     table[b't' as usize] = 0;
     table[b'f' as usize] = 1;
     table[b'n' as usize] = 2;
-    for b in b'0'..=b'9' { table[b as usize] = 3; }
+    for b in b'0'..=b'9' {
+        table[b as usize] = 3;
+    }
 
     let ir = make_ir(
         vec![rule(
             0,
             0,
-            IrNode::Alt(vec![
-                AltBranch { node: IrNode::Literal(1), first_set: Some(fs_t) },  // "true"
-                AltBranch { node: IrNode::Literal(2), first_set: Some(fs_f) },  // "false"
-                AltBranch { node: IrNode::Literal(3), first_set: Some(fs_n) },  // "null"
-                AltBranch { node: IrNode::Regex(4),   first_set: Some(fs_d) },  // /[0-9]+/
-            ], Some(AltDispatch { table, fallback_idx: None })),
+            IrNode::Alt(
+                vec![
+                    AltBranch {
+                        node: IrNode::Literal(1),
+                        first_set: Some(fs_t),
+                    }, // "true"
+                    AltBranch {
+                        node: IrNode::Literal(2),
+                        first_set: Some(fs_f),
+                    }, // "false"
+                    AltBranch {
+                        node: IrNode::Literal(3),
+                        first_set: Some(fs_n),
+                    }, // "null"
+                    AltBranch {
+                        node: IrNode::Regex(4),
+                        first_set: Some(fs_d),
+                    }, // /[0-9]+/
+                ],
+                Some(AltDispatch {
+                    table,
+                    fallback_idx: None,
+                }),
+            ),
         )],
-        vec!["start".into(), "true".into(), "false".into(), "null".into(), "[0-9]+".into()],
+        vec![
+            "start".into(),
+            "true".into(),
+            "false".into(),
+            "null".into(),
+            "[0-9]+".into(),
+        ],
     );
 
     assert!(parse_with_ir(&ir, "true").success);
@@ -449,7 +496,7 @@ fn parse_minus() {
             0,
             IrNode::Minus(
                 Box::new(IrNode::Regex(1)),   // lhs: /[a-z]+/
-                Box::new(IrNode::Literal(2)),  // rhs: "if"
+                Box::new(IrNode::Literal(2)), // rhs: "if"
             ),
         )],
         vec!["start".into(), "[a-z]+".into(), "if".into()],
@@ -472,8 +519,8 @@ fn parse_negate() {
             0,
             0,
             IrNode::Seq(vec![
-                IrNode::Negate(Box::new(IrNode::Literal(1))),  // !("end")
-                IrNode::Regex(2),                                // /./
+                IrNode::Negate(Box::new(IrNode::Literal(1))), // !("end")
+                IrNode::Regex(2),                             // /./
             ]),
         )],
         vec!["start".into(), "end".into(), ".".into()],
@@ -505,37 +552,53 @@ fn parse_memo_correctness() {
             rule(
                 0,
                 0,
-                IrNode::Alt(vec![
-                    AltBranch {
-                        node: IrNode::Seq(vec![IrNode::Ref(1), IrNode::Literal(3)]),
-                        first_set: None,
-                    },
-                    AltBranch {
-                        node: IrNode::Ref(1),
-                        first_set: None,
-                    },
-                ], None),
+                IrNode::Alt(
+                    vec![
+                        AltBranch {
+                            node: IrNode::Seq(vec![IrNode::Ref(1), IrNode::Literal(3)]),
+                            first_set: None,
+                        },
+                        AltBranch {
+                            node: IrNode::Ref(1),
+                            first_set: None,
+                        },
+                    ],
+                    None,
+                ),
             ),
             rule(1, 1, IrNode::Literal(2)),
         ],
-        vec!["start".into(), "memo_rule".into(), "hello".into(), "NOPE".into()],
+        vec![
+            "start".into(),
+            "memo_rule".into(),
+            "hello".into(),
+            "NOPE".into(),
+        ],
     );
     ir.rules[1].meta.memo = MemoStrategy::Full;
 
     let result = parse_with_ir(&ir, "hello");
-    assert!(result.success, "Memoized parse should succeed: {:?}", result);
+    assert!(
+        result.success,
+        "Memoized parse should succeed: {:?}",
+        result
+    );
     assert_eq!(result.offset, 5);
 
     let val = result.value.as_ref().unwrap();
     match val {
-        Value::Tagged { tag: 0, children, .. } => {
-            match &children[0] {
-                Value::Tagged { tag: 1, children: inner, .. } => {
-                    assert_eq!(inner[0], Value::Span(0, 5));
-                }
-                other => panic!("expected Tagged(memo_rule), got {:?}", other),
+        Value::Tagged {
+            tag: 0, children, ..
+        } => match &children[0] {
+            Value::Tagged {
+                tag: 1,
+                children: inner,
+                ..
+            } => {
+                assert_eq!(inner[0], Value::Span(0, 5));
             }
-        }
+            other => panic!("expected Tagged(memo_rule), got {:?}", other),
+        },
         other => panic!("expected Tagged(start), got {:?}", other),
     }
 }
@@ -554,11 +617,23 @@ fn end_to_end_json_like_grammar() {
             rule(
                 0,
                 0,
-                IrNode::Alt(vec![
-                    AltBranch { node: IrNode::Ref(1), first_set: None },
-                    AltBranch { node: IrNode::Ref(2), first_set: None },
-                    AltBranch { node: IrNode::Ref(3), first_set: None },
-                ], None),
+                IrNode::Alt(
+                    vec![
+                        AltBranch {
+                            node: IrNode::Ref(1),
+                            first_set: None,
+                        },
+                        AltBranch {
+                            node: IrNode::Ref(2),
+                            first_set: None,
+                        },
+                        AltBranch {
+                            node: IrNode::Ref(3),
+                            first_set: None,
+                        },
+                    ],
+                    None,
+                ),
             ),
             rule(1, 1, IrNode::Regex(4)),
             rule(2, 2, IrNode::Regex(5)),

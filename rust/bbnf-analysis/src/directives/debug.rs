@@ -61,10 +61,7 @@ pub fn validate_debugs(
                 && !imported_names.contains(dbg.rule_name.as_str())
             {
                 diagnostics.push(Diagnostic {
-                    range: line_index.span_to_range(
-                        dbg.rule_name_span.0,
-                        dbg.rule_name_span.1,
-                    ),
+                    range: line_index.span_to_range(dbg.rule_name_span.0, dbg.rule_name_span.1),
                     severity: Some(DiagnosticSeverity::WARNING),
                     source: Some("bbnf".into()),
                     message: format!("`@debug` targets undefined rule: `{}`", dbg.rule_name),

@@ -10,11 +10,8 @@ use crate::{GrammarIR, IrNode, RuleId};
 /// Resolve alias chains and rewrite Ref nodes to point to canonical targets.
 pub fn canonicalize_aliases(ir: &mut GrammarIR) {
     // Build O(1) lookup from RuleId → alias target.
-    let alias_targets: HashMap<RuleId, Option<RuleId>> = ir
-        .rules
-        .iter()
-        .map(|r| (r.id, r.meta.is_alias))
-        .collect();
+    let alias_targets: HashMap<RuleId, Option<RuleId>> =
+        ir.rules.iter().map(|r| (r.id, r.meta.is_alias)).collect();
 
     // Phase 1: Build alias chain resolution map.
     let mut canonical: HashMap<RuleId, RuleId> = HashMap::new();
@@ -96,7 +93,11 @@ fn rewrite_refs(node: &mut IrNode, aliases: &HashMap<RuleId, RuleId>) {
         IrNode::Map { inner, .. } => {
             rewrite_refs(inner, aliases);
         }
-        IrNode::TokenDispatch { token, arms, fallback } => {
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => {
             rewrite_refs(token, aliases);
             for arm in arms {
                 rewrite_refs(&mut arm.continuation, aliases);

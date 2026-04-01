@@ -24,7 +24,6 @@ pub struct DispatchData {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum Op {
     // ── Leaves ──────────────────────────────────────────────────────────
-
     /// Match a literal string. Fails if the input at current offset doesn't match.
     MatchString(StringId),
 
@@ -35,7 +34,6 @@ pub enum Op {
     Epsilon,
 
     // ── Control Flow ────────────────────────────────────────────────────
-
     /// Jump to an absolute bytecode offset.
     Jump(u32),
 
@@ -52,7 +50,6 @@ pub enum Op {
     Return,
 
     // ── State Management ────────────────────────────────────────────────
-
     /// Push current offset + error state onto the checkpoint stack.
     SaveState,
 
@@ -70,7 +67,6 @@ pub enum Op {
     TrimWsPattern(StringId),
 
     // ── Combinators ─────────────────────────────────────────────────────
-
     /// Set-difference: execute next two instructions, fail if both succeed.
     /// Layout: Minus → [lhs instruction(s)] → [rhs instruction(s)]
     /// Uses SaveState/RestoreState internally in the interpreter.
@@ -80,25 +76,18 @@ pub enum Op {
     Negate,
 
     // ── Dispatch ────────────────────────────────────────────────────────
-
     /// O(1) byte dispatch table: index into `BytecodeProgram::dispatch_tables`.
     Dispatch(u16),
 
     // ── Repetition ──────────────────────────────────────────────────────
-
     /// Begin a repeat loop. Pushes repeat state (count = 0).
     /// `body_end` is the bytecode offset of the instruction after the body.
-    RepeatBegin {
-        lo: u32,
-        hi: u32,
-        body_end: u32,
-    },
+    RepeatBegin { lo: u32, hi: u32, body_end: u32 },
 
     /// End of repeat body. Increments count, checks bounds, loops or exits.
     RepeatEnd,
 
     // ── Value Construction ──────────────────────────────────────────────
-
     /// Push a span (start_offset, end_offset) for the just-matched input.
     CaptureSpan,
 
@@ -118,26 +107,18 @@ pub enum Op {
     MakeTagged(StringId),
 
     // ── Memoization ─────────────────────────────────────────────────────
-
     /// Check memo table for this rule at current offset.
     /// If cached: restore state from cache, jump to `hit_offset`.
     /// If not cached: continue to next instruction.
-    MemoCheck {
-        rule_id: RuleId,
-        hit_offset: u32,
-    },
+    MemoCheck { rule_id: RuleId, hit_offset: u32 },
 
     /// Store current result in memo table for this rule.
     MemoStore(RuleId),
 
     // ── Debug ───────────────────────────────────────────────────────────
-
     /// Debug breakpoint. No-op when interpreter has no debug state.
     /// Emitted at rule entry/exit for `@debug`-annotated rules.
-    DebugBreak {
-        rule_id: RuleId,
-        is_entry: bool,
-    },
+    DebugBreak { rule_id: RuleId, is_entry: bool },
 
     /// No-op. Used for padding/alignment.
     Nop,
@@ -160,6 +141,10 @@ pub struct BytecodeProgram {
 
     /// Entry rule ID.
     pub entry: RuleId,
+
+    /// Whether this program contains direct left recursion that warrants VM memoization.
+    #[serde(default)]
+    pub memo_enabled: bool,
 
     /// Dispatch tables referenced by `Op::Dispatch(idx)`.
     #[serde(default)]

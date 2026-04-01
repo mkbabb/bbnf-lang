@@ -96,7 +96,11 @@ fn collect_refs(node: &IrNode, out: &mut Vec<RuleId>) {
         IrNode::Map { inner, .. } => {
             collect_refs(inner, out);
         }
-        IrNode::TokenDispatch { token, arms, fallback } => {
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => {
             collect_refs(token, out);
             for arm in arms {
                 collect_refs(&arm.continuation, out);
@@ -137,7 +141,11 @@ fn remap_refs(node: &mut IrNode, mapping: &HashMap<RuleId, RuleId>) {
         IrNode::Map { inner, .. } => {
             remap_refs(inner, mapping);
         }
-        IrNode::TokenDispatch { token, arms, fallback } => {
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => {
             remap_refs(token, mapping);
             for arm in arms {
                 remap_refs(&mut arm.continuation, mapping);

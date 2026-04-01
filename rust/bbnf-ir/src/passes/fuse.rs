@@ -65,10 +65,7 @@ pub fn fuse_single_use(ir: &mut GrammarIR) {
 
     // Rewrite all rule bodies, inlining single-use refs.
     for rule in &mut ir.rules {
-        rule.body = inline_single_use(
-            std::mem::replace(&mut rule.body, IrNode::Epsilon),
-            &bodies,
-        );
+        rule.body = inline_single_use(std::mem::replace(&mut rule.body, IrNode::Epsilon), &bodies);
     }
 }
 
@@ -98,7 +95,11 @@ fn count_refs(node: &IrNode, counts: &mut [u32]) {
             count_refs(a, counts);
             count_refs(b, counts);
         }
-        IrNode::TokenDispatch { token, arms, fallback } => {
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => {
             count_refs(token, counts);
             for a in arms {
                 count_refs(&a.continuation, counts);
@@ -119,9 +120,12 @@ fn inline_single_use(node: IrNode, bodies: &[Option<IrNode>]) -> IrNode {
                 IrNode::Ref(id)
             }
         }
-        IrNode::Seq(children) => {
-            IrNode::Seq(children.into_iter().map(|c| inline_single_use(c, bodies)).collect())
-        }
+        IrNode::Seq(children) => IrNode::Seq(
+            children
+                .into_iter()
+                .map(|c| inline_single_use(c, bodies))
+                .collect(),
+        ),
         IrNode::Alt(branches, _dispatch) => {
             // Clear dispatch — branch structure may have changed.
             let branches = branches
@@ -163,12 +167,19 @@ fn inline_single_use(node: IrNode, bodies: &[Option<IrNode>]) -> IrNode {
             inner: Box::new(inline_single_use(*inner, bodies)),
             fn_id,
         },
-        IrNode::TokenDispatch { token, arms, fallback } => IrNode::TokenDispatch {
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => IrNode::TokenDispatch {
             token: Box::new(inline_single_use(*token, bodies)),
-            arms: arms.into_iter().map(|mut a| {
-                a.continuation = inline_single_use(a.continuation, bodies);
-                a
-            }).collect(),
+            arms: arms
+                .into_iter()
+                .map(|mut a| {
+                    a.continuation = inline_single_use(a.continuation, bodies);
+                    a
+                })
+                .collect(),
             fallback: Box::new(inline_single_use(*fallback, bodies)),
         },
         other => other,

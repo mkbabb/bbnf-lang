@@ -5,7 +5,7 @@
 
 use std::collections::HashSet;
 
-use bbnf::pipeline::{compile_grammar, PipelineOptions};
+use bbnf::pipeline::{PipelineOptions, compile_grammar};
 use bbnf_ir::bytecode::BytecodeProgram;
 use bbnf_ir::compiler::compile_with_debug;
 use bbnf_ir::interpreter::{
@@ -110,7 +110,10 @@ impl DapAdapter {
     }
 
     /// Set function breakpoints (by rule name).
-    pub fn set_function_breakpoints(&mut self, args: &SetFunctionBreakpointsArgs) -> Vec<Breakpoint> {
+    pub fn set_function_breakpoints(
+        &mut self,
+        args: &SetFunctionBreakpointsArgs,
+    ) -> Vec<Breakpoint> {
         let mut verified = Vec::new();
         for (i, fbp) in args.breakpoints.iter().enumerate() {
             if let Some(rule) = self.ir.find_rule(&fbp.name) {
@@ -118,7 +121,10 @@ impl DapAdapter {
                 verified.push(Breakpoint {
                     id: Some(i as i64),
                     verified: true,
-                    line: rule.source_span.as_ref().map(|s| self.line_index.offset_to_line(s.start)),
+                    line: rule
+                        .source_span
+                        .as_ref()
+                        .map(|s| self.line_index.offset_to_line(s.start)),
                     message: None,
                 });
             } else {

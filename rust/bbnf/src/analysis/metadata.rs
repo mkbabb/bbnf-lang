@@ -2,9 +2,9 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::types::{Expression, AST};
 use super::deps::Dependencies;
 use super::first_sets::unwrap_rule;
+use crate::types::{AST, Expression};
 
 /// Count how many times each nonterminal appears as a dependency of other rules.
 pub fn compute_ref_counts<'a>(deps: &'a Dependencies<'a>) -> HashMap<&'a Expression<'a>, usize> {
@@ -86,9 +86,9 @@ pub fn find_transparent_alternations<'a>(
             _ => continue,
         };
 
-        let all_simple = branches.iter().all(|branch| {
-            matches!(branch, Expression::Nonterminal(_))
-        });
+        let all_simple = branches
+            .iter()
+            .all(|branch| matches!(branch, Expression::Nonterminal(_)));
 
         if all_simple {
             transparent.insert(name.to_string());
@@ -110,9 +110,7 @@ fn expr_is_span_eligible<'a>(
         | Expression::OptionalWhitespace(inner)
         | Expression::Many(inner)
         | Expression::Many1(inner)
-        | Expression::SpanCapture(inner) => {
-            expr_is_span_eligible(&inner.value, cyclic_rules, ast)
-        }
+        | Expression::SpanCapture(inner) => expr_is_span_eligible(&inner.value, cyclic_rules, ast),
         Expression::Skip(left, right) | Expression::Next(left, right) => {
             expr_is_span_eligible(&left.value, cyclic_rules, ast)
                 && expr_is_span_eligible(&right.value, cyclic_rules, ast)

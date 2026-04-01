@@ -5,8 +5,8 @@
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-use bencher::{benchmark_group, benchmark_main, black_box, Bencher};
 use bbnf_derive::Parser;
+use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
 use parse_that::BumpArena;
 
 /// Semantic CSS value types for direct-to-struct parsing.
@@ -63,22 +63,57 @@ mod css_types {
     #[repr(u8)]
     #[derive(Debug, Clone, Copy)]
     pub enum LengthUnit {
-        Px = 0, Em = 1, Rem = 2, Vh = 3, Vw = 4, Vmin = 5, Vmax = 6,
-        Ch = 7, Ex = 8, Cm = 9, Mm = 10, In = 11, Pt = 12, Pc = 13,
-        Lh = 14, Rlh = 15, Svw = 16, Svh = 17, Dvw = 18, Dvh = 19,
-        Lvw = 20, Lvh = 21, Cqw = 22, Cqh = 23, Cqi = 24, Cqb = 25,
+        Px = 0,
+        Em = 1,
+        Rem = 2,
+        Vh = 3,
+        Vw = 4,
+        Vmin = 5,
+        Vmax = 6,
+        Ch = 7,
+        Ex = 8,
+        Cm = 9,
+        Mm = 10,
+        In = 11,
+        Pt = 12,
+        Pc = 13,
+        Lh = 14,
+        Rlh = 15,
+        Svw = 16,
+        Svh = 17,
+        Dvw = 18,
+        Dvh = 19,
+        Lvw = 20,
+        Lvh = 21,
+        Cqw = 22,
+        Cqh = 23,
+        Cqi = 24,
+        Cqb = 25,
     }
 
     #[repr(u8)]
     #[derive(Debug, Clone, Copy)]
-    pub enum AngleUnit { Deg = 0, Rad = 1, Grad = 2, Turn = 3 }
+    pub enum AngleUnit {
+        Deg = 0,
+        Rad = 1,
+        Grad = 2,
+        Turn = 3,
+    }
 
     #[repr(u8)]
     #[derive(Debug, Clone, Copy)]
-    pub enum TimeUnit { Ms = 0, S = 1 }
+    pub enum TimeUnit {
+        Ms = 0,
+        S = 1,
+    }
 
     #[derive(Debug, Clone, Copy)]
-    pub struct CssColor { pub r: u8, pub g: u8, pub b: u8, pub a: u8 }
+    pub struct CssColor {
+        pub r: u8,
+        pub g: u8,
+        pub b: u8,
+        pub a: u8,
+    }
 
     pub fn parse_rgb_color(s: &str) -> CssColor {
         let inner = s.find('(').map(|i| &s[i + 1..]).unwrap_or(s);
@@ -124,7 +159,9 @@ macro_rules! bench {
             b.iter(|| {
                 let arena = BumpArena::<CssL4ParserArenaEnum<'_>>::with_capacity(input.len() / 32);
                 let parser = CssL4Parser::stylesheet_arena();
-                let ast = parser.parse_with_context(black_box(&input), &arena).unwrap();
+                let ast = parser
+                    .parse_with_context(black_box(&input), &arena)
+                    .unwrap();
                 black_box(&ast as *const _);
             });
         }

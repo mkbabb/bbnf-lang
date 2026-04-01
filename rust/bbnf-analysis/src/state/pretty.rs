@@ -117,16 +117,12 @@ pub fn validate_pretties(
             for (i, hint) in pretty.hints.iter().enumerate() {
                 let valid_modes = ["auto", "minimal", "off"];
                 if !valid_modes.contains(&hint.as_str()) {
-                    let span = pretty
-                        .hint_spans
-                        .get(i)
-                        .copied()
-                        .unwrap_or_else(|| {
-                            panic!(
-                                "missing @pretty mode hint span for `{}` at index {}",
-                                hint, i
-                            )
-                        });
+                    let span = pretty.hint_spans.get(i).copied().unwrap_or_else(|| {
+                        panic!(
+                            "missing @pretty mode hint span for `{}` at index {}",
+                            hint, i
+                        )
+                    });
                     diagnostics.push(Diagnostic {
                         range: line_index.span_to_range(span.0, span.1),
                         severity: Some(DiagnosticSeverity::WARNING),
@@ -154,32 +150,19 @@ pub fn validate_pretties(
             && !imported_names.contains(pretty.rule_name.as_str())
         {
             diagnostics.push(Diagnostic {
-                range: line_index.span_to_range(
-                    pretty.rule_name_span.0,
-                    pretty.rule_name_span.1,
-                ),
+                range: line_index.span_to_range(pretty.rule_name_span.0, pretty.rule_name_span.1),
                 severity: Some(DiagnosticSeverity::WARNING),
                 source: Some("bbnf".into()),
-                message: format!(
-                    "`@pretty` targets undefined rule: `{}`",
-                    pretty.rule_name
-                ),
+                message: format!("`@pretty` targets undefined rule: `{}`", pretty.rule_name),
                 ..Default::default()
             });
         }
 
         // Validate each hint keyword.
         for (i, hint) in pretty.hints.iter().enumerate() {
-            let span = pretty
-                .hint_spans
-                .get(i)
-                .copied()
-                .unwrap_or_else(|| {
-                    panic!(
-                        "missing @pretty hint span for `{}` at index {}",
-                        hint, i
-                    )
-                });
+            let span = pretty.hint_spans.get(i).copied().unwrap_or_else(|| {
+                panic!("missing @pretty hint span for `{}` at index {}", hint, i)
+            });
 
             if !is_valid_hint(hint) {
                 let mut msg = format!("Unknown `@pretty` hint: `{}`", hint);

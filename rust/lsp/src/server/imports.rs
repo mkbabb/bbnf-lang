@@ -21,10 +21,13 @@ impl BbnfLanguageServer {
         // Add new entries.
         if let Some(state) = docs.get(uri) {
             for (idx, rule) in state.info.rules.iter().enumerate() {
-                global.entry(rule.name.clone()).or_default().push(GlobalRule {
-                    uri: uri.clone(),
-                    rule_index: idx,
-                });
+                global
+                    .entry(rule.name.clone())
+                    .or_default()
+                    .push(GlobalRule {
+                        uri: uri.clone(),
+                        rule_index: idx,
+                    });
             }
         }
     }
@@ -34,7 +37,10 @@ impl BbnfLanguageServer {
         let docs = self.documents.read().await;
         let Some(state) = docs.get(uri) else { return };
 
-        let new_imports: Vec<Uri> = state.info.imports.iter()
+        let new_imports: Vec<Uri> = state
+            .info
+            .imports
+            .iter()
             .filter_map(|imp| Self::resolve_import_uri(uri, &imp.path))
             .collect();
 
@@ -54,7 +60,10 @@ impl BbnfLanguageServer {
 
         // Add new reverse entries.
         for new_uri in &new_imports {
-            reverse.entry(new_uri.clone()).or_default().insert(uri.clone());
+            reverse
+                .entry(new_uri.clone())
+                .or_default()
+                .insert(uri.clone());
         }
 
         graph.insert(uri.clone(), new_imports);
@@ -91,7 +100,11 @@ impl BbnfLanguageServer {
                     if let Some(ref items) = import_info.items {
                         // Selective import.
                         for item in items {
-                            if target_state.info.rule_index.contains_key(item.name.as_str()) {
+                            if target_state
+                                .info
+                                .rule_index
+                                .contains_key(item.name.as_str())
+                            {
                                 available_rules.insert(item.name.clone());
                             }
                         }
@@ -114,7 +127,11 @@ impl BbnfLanguageServer {
             .filter(|d| {
                 // Suppress "Undefined rule: `name`" if `name` is imported.
                 if d.message.starts_with("Undefined rule: `") {
-                    if let Some(name) = d.message.strip_prefix("Undefined rule: `").and_then(|s| s.strip_suffix('`')) {
+                    if let Some(name) = d
+                        .message
+                        .strip_prefix("Undefined rule: `")
+                        .and_then(|s| s.strip_suffix('`'))
+                    {
                         return !available_rules.contains(name);
                     }
                 }
@@ -124,7 +141,10 @@ impl BbnfLanguageServer {
     }
 
     /// Apply incremental text edits to the stored document text.
-    pub(crate) fn apply_incremental_changes(text: &mut String, changes: Vec<TextDocumentContentChangeEvent>) {
+    pub(crate) fn apply_incremental_changes(
+        text: &mut String,
+        changes: Vec<TextDocumentContentChangeEvent>,
+    ) {
         fn offset_for_position(text: &str, position: Position) -> usize {
             let mut current_line: u32 = 0;
             let mut current_col: u32 = 0;

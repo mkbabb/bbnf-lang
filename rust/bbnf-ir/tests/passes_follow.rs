@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use bbnf_ir::{CharSet128, GrammarIR, IrNode, IrRule, RuleMeta};
 use bbnf_ir::passes::compute_follow_sets;
+use bbnf_ir::{CharSet128, GrammarIR, IrNode, IrRule, RuleMeta};
 
 #[test]
 fn follow_set_basic_seq() {
@@ -104,8 +104,12 @@ fn follow_set_propagates_through_nullable() {
         ],
         entry: 0,
         strings: vec![
-            "start".into(), "a".into(), "b".into(),
-            "z".into(), "x".into(), "y".into(),
+            "start".into(),
+            "a".into(),
+            "b".into(),
+            "z".into(),
+            "x".into(),
+            "y".into(),
         ],
         fns: vec![],
         types: vec![],

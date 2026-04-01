@@ -7,9 +7,7 @@ use std::collections::{HashMap, HashSet};
 
 use bbnf_ir::GrammarIR;
 
-use crate::analysis::{
-    compute_first_sets, tarjan_scc, topological_sort_scc,
-};
+use crate::analysis::{compute_first_sets, tarjan_scc, topological_sort_scc};
 use crate::grammar::BBNFGrammar;
 use crate::lower::{DirectiveSet, lower_to_ir};
 use crate::types::{AST, Expression};
@@ -55,7 +53,11 @@ pub fn compile_grammar(source: &str, options: &PipelineOptions) -> Result<Gramma
     for name in &parsed.token_rules {
         token_set.insert(name.to_string());
     }
-    let token_ref = if token_set.is_empty() { None } else { Some(&token_set) };
+    let token_ref = if token_set.is_empty() {
+        None
+    } else {
+        Some(&token_set)
+    };
 
     let mut debug_set: HashSet<String> = HashSet::new();
     let mut debug_all = false;
@@ -66,12 +68,24 @@ pub fn compile_grammar(source: &str, options: &PipelineOptions) -> Result<Gramma
             debug_set.insert(name.to_string());
         }
     }
-    let debug_ref = if debug_set.is_empty() { None } else { Some(&debug_set) };
+    let debug_ref = if debug_set.is_empty() {
+        None
+    } else {
+        Some(&debug_set)
+    };
 
     let ast = parsed.rules;
 
-    let recovers_ref = if recover_map.is_empty() { None } else { Some(&recover_map) };
-    let pretties_ref = if pretty_map.is_empty() { None } else { Some(&pretty_map) };
+    let recovers_ref = if recover_map.is_empty() {
+        None
+    } else {
+        Some(&recover_map)
+    };
+    let pretties_ref = if pretty_map.is_empty() {
+        None
+    } else {
+        Some(&pretty_map)
+    };
 
     let directives = DirectiveSet {
         recovers: recovers_ref,
@@ -115,12 +129,7 @@ pub fn compile_ast<'a>(
     let first_sets = compute_first_sets(&ast, &deps, &scc_result);
 
     // Lower to IR.
-    let mut ir = lower_to_ir(
-        &ast,
-        &first_sets,
-        &scc_result,
-        directives,
-    );
+    let mut ir = lower_to_ir(&ast, &first_sets, &scc_result, directives);
 
     // Set the correct entry rule (last rule in original source order).
     if let Some(ref name) = entry_rule_name {

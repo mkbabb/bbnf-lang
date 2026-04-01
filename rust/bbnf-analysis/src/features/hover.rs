@@ -1,7 +1,7 @@
 use crate::directives::hints::{extract_sep_string, extract_split_delim, hint_documentation};
 use ls_types::*;
 
-use crate::analysis::{symbol_at_offset, SymbolAtOffset};
+use crate::analysis::{SymbolAtOffset, symbol_at_offset};
 use crate::state::DocumentState;
 
 pub fn hover(state: &DocumentState, position: Position) -> Option<Hover> {
@@ -78,16 +78,24 @@ pub fn hover(state: &DocumentState, position: Position) -> Option<Hover> {
             // IR-derived metadata — compact line.
             if let Some(ir_meta) = state.info.ir_meta.get(&rule.name) {
                 let mut tags: Vec<&str> = Vec::new();
-                if ir_meta.has_dispatch { tags.push("dispatch"); }
-                if ir_meta.span_eligible { tags.push("span"); }
-                if ir_meta.memo_strategy != "None" { tags.push("memo"); }
+                if ir_meta.has_dispatch {
+                    tags.push("dispatch");
+                }
+                if ir_meta.span_eligible {
+                    tags.push("span");
+                }
+                if ir_meta.memo_strategy != "None" {
+                    tags.push("memo");
+                }
 
                 let mut line = String::new();
                 if !tags.is_empty() {
                     line.push_str(&tags.join(" · "));
                 }
                 if let Some(ref ty) = ir_meta.inferred_type {
-                    if !line.is_empty() { line.push_str(" · "); }
+                    if !line.is_empty() {
+                        line.push_str(" · ");
+                    }
                     line.push_str(&format!("`{}`", ty));
                 }
                 if !line.is_empty() {
@@ -148,11 +156,17 @@ pub fn hover(state: &DocumentState, position: Position) -> Option<Hover> {
                 }
                 if let Some(ir_meta) = state.info.ir_meta.get(&def.name) {
                     let mut tags: Vec<&str> = Vec::new();
-                    if ir_meta.has_dispatch { tags.push("dispatch"); }
-                    if ir_meta.span_eligible { tags.push("span"); }
+                    if ir_meta.has_dispatch {
+                        tags.push("dispatch");
+                    }
+                    if ir_meta.span_eligible {
+                        tags.push("span");
+                    }
                     if let Some(ref ty) = ir_meta.inferred_type {
                         let mut line = tags.join(" · ");
-                        if !line.is_empty() { line.push_str(" · "); }
+                        if !line.is_empty() {
+                            line.push_str(" · ");
+                        }
                         line.push_str(&format!("`{}`", ty));
                         s.push_str(&format!("\n\n{}", line));
                     } else if !tags.is_empty() {
@@ -207,10 +221,7 @@ fn hover_import(state: &DocumentState, offset: usize) -> Option<Hover> {
         if let Some(ref items) = imp.items {
             for item in items {
                 if offset >= item.span.0 && offset <= item.span.1 {
-                    let content = format!(
-                        "Imported rule `{}` from `\"{}\"`",
-                        item.name, imp.path
-                    );
+                    let content = format!("Imported rule `{}` from `\"{}\"`", item.name, imp.path);
                     return Some(Hover {
                         contents: HoverContents::Markup(MarkupContent {
                             kind: MarkupKind::Markdown,
@@ -423,10 +434,14 @@ fn build_hint_hover(hint: &str, rule_name: &str, all_hints: &[String]) -> String
              on the break branch).\n\n\
              Without `group`: uses `\"{}\"` as a flat separator between all elements.\n\n\
              ```bbnf\n@pretty {} {} ;\n```",
-            sep_str, rule_name, sep_str,
-            sep_str, sep_str.trim_end(),
             sep_str,
-            rule_name, all_hints.join(" ")
+            rule_name,
+            sep_str,
+            sep_str,
+            sep_str.trim_end(),
+            sep_str,
+            rule_name,
+            all_hints.join(" ")
         );
     }
 
@@ -440,8 +455,11 @@ fn build_hint_hover(hint: &str, rule_name: &str, all_hints: &[String]) -> String
              joined with `sep(\"...\")` or formatted with `group`/`indent`.\n\n\
              Uses `memchr` fast-path: skips the full scan when the delimiter isn't present.\n\n\
              ```bbnf\n@pretty {} {} ;\n```",
-            delim, rule_name, delim,
-            rule_name, all_hints.join(" ")
+            delim,
+            rule_name,
+            delim,
+            rule_name,
+            all_hints.join(" ")
         );
     }
 
@@ -450,8 +468,11 @@ fn build_hint_hover(hint: &str, rule_name: &str, all_hints: &[String]) -> String
             "### `{}` — `@pretty` Hint\n\n{}\n\n\
              Applied to rule `{}`.\n\n\
              ```bbnf\n@pretty {} {} ;\n```",
-            hint, doc, rule_name,
-            rule_name, all_hints.join(" ")
+            hint,
+            doc,
+            rule_name,
+            rule_name,
+            all_hints.join(" ")
         )
     } else {
         format!("`@pretty` hint: **{}**\n\nUnknown hint.", hint)

@@ -2,6 +2,7 @@
 
 mod key_dispatch;
 mod literal;
+pub mod perfect_hash;
 
 use bbnf_ir::{AltBranch, FnDescriptor, IrNode, TypeDesc};
 

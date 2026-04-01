@@ -25,8 +25,8 @@ macro_rules! bench {
             let input = load($file);
             b.bytes = input.len() as u64;
             b.iter(|| {
-                let ctx = __JsonParserArenaEnumCtx::with_capacity(input.len() / 32);
-                let parser = JsonParser::value_arena();
+                let ctx = __JsonParserEnumCtx::with_capacity(input.len() / 32);
+                let parser = JsonParser::value();
                 let ast = parser
                     .parse_with_context(black_box(&input), &ctx)
                     .unwrap();

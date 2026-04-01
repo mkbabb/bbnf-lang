@@ -23,15 +23,15 @@ fn main() {
 
         // Span cold — single parse, fresh parser construction
         let start = std::time::Instant::now();
-        let span_p = P::value();
+        let span_p = P::value_span();
         let _ = std::hint::black_box(span_p.parse(std::hint::black_box(&input)));
         let span_cold = start.elapsed();
 
         // Arena — fresh BumpArena + parser per iteration
         let start = std::time::Instant::now();
         for _ in 0..n {
-            let a = parse_that::BumpArena::<PArenaEnum<'_>>::with_capacity(input.len() / 32);
-            let p = P::value_arena();
+            let a = __PEnumCtx::with_capacity(input.len() / 32);
+            let p = P::value();
             let r = p
                 .parse_with_context(std::hint::black_box(&input), &a)
                 .unwrap();

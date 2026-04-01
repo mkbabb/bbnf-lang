@@ -32,7 +32,7 @@ fn bench_file(name: &str) {
 
     // Cold span — single parse, fresh parser construction
     let start = std::time::Instant::now();
-    let span_p = JsonParser::value();
+    let span_p = JsonParser::value_span();
     let _ = std::hint::black_box(span_p.parse(std::hint::black_box(&input)));
     let span_cold = start.elapsed();
 
@@ -40,11 +40,11 @@ fn bench_file(name: &str) {
     let n = if len > 1_000_000 { 5 } else { 20 };
     let start = std::time::Instant::now();
     for _ in 0..n {
-        let arena =
-            parse_that::BumpArena::<JsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-        let arena_parser = JsonParser::value_arena();
+        let ctx =
+            __JsonParserEnumCtx::with_capacity(input.len() / 32);
+        let arena_parser = JsonParser::value();
         let ast = arena_parser
-            .parse_with_context(std::hint::black_box(&input), &arena)
+            .parse_with_context(std::hint::black_box(&input), &ctx)
             .unwrap();
         let _ = std::hint::black_box(ast as *const _);
     }

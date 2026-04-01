@@ -36,16 +36,16 @@ macro_rules! bench_rules {
             b.bytes = input.len() as u64;
             {
                 let arena =
-                    BumpArena::<CssFastParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = CssFastParser::stylesheet_arena();
+                    BumpArena::<CssFastParserEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = CssFastParser::stylesheet();
                 let (_result, state) = parser.parse_return_state_with_context(&input, &arena);
                 let pct = state.offset * 100 / input.len().max(1);
                 assert!(pct >= 95, "many_rules_{}: only consumed {}%", $count, pct,);
             }
             b.iter(|| {
                 let arena =
-                    BumpArena::<CssFastParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = CssFastParser::stylesheet_arena();
+                    BumpArena::<CssFastParserEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = CssFastParser::stylesheet();
                 let ast = parser
                     .parse_with_context(black_box(&input), &arena)
                     .unwrap();
@@ -68,8 +68,8 @@ macro_rules! bench_decls {
             b.bytes = input.len() as u64;
             {
                 let arena =
-                    BumpArena::<CssFastParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = CssFastParser::stylesheet_arena();
+                    BumpArena::<CssFastParserEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = CssFastParser::stylesheet();
                 let (_result, state) = parser.parse_return_state_with_context(&input, &arena);
                 let pct = state.offset * 100 / input.len().max(1);
                 assert!(
@@ -81,8 +81,8 @@ macro_rules! bench_decls {
             }
             b.iter(|| {
                 let arena =
-                    BumpArena::<CssFastParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = CssFastParser::stylesheet_arena();
+                    BumpArena::<CssFastParserEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = CssFastParser::stylesheet();
                 let ast = parser
                     .parse_with_context(black_box(&input), &arena)
                     .unwrap();
@@ -104,8 +104,8 @@ macro_rules! bench_selectors {
             b.bytes = input.len() as u64;
             {
                 let arena =
-                    BumpArena::<CssFastParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = CssFastParser::stylesheet_arena();
+                    BumpArena::<CssFastParserEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = CssFastParser::stylesheet();
                 let (_result, state) = parser.parse_return_state_with_context(&input, &arena);
                 let pct = state.offset * 100 / input.len().max(1);
                 assert!(
@@ -117,8 +117,8 @@ macro_rules! bench_selectors {
             }
             b.iter(|| {
                 let arena =
-                    BumpArena::<CssFastParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = CssFastParser::stylesheet_arena();
+                    BumpArena::<CssFastParserEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = CssFastParser::stylesheet();
                 let ast = parser
                     .parse_with_context(black_box(&input), &arena)
                     .unwrap();
@@ -140,8 +140,8 @@ macro_rules! bench_nesting {
             b.bytes = input.len() as u64;
             {
                 let arena =
-                    BumpArena::<CssFastParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = CssFastParser::stylesheet_arena();
+                    BumpArena::<CssFastParserEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = CssFastParser::stylesheet();
                 let (_result, state) = parser.parse_return_state_with_context(&input, &arena);
                 let pct = state.offset * 100 / input.len().max(1);
                 assert!(
@@ -153,8 +153,8 @@ macro_rules! bench_nesting {
             }
             b.iter(|| {
                 let arena =
-                    BumpArena::<CssFastParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = CssFastParser::stylesheet_arena();
+                    BumpArena::<CssFastParserEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = CssFastParser::stylesheet();
                 let ast = parser
                     .parse_with_context(black_box(&input), &arena)
                     .unwrap();

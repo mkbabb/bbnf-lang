@@ -13,15 +13,9 @@ use super::ir_types::IrCodegenCtx;
 use super::unescape_literal;
 use super::{MonoCtx, emit_mono_expr, emit_ws_trim};
 
-/// Internal function name for a rule.
-///
-/// Arena mode: `__rule_arena`. Owned mode: `__rule`.
-pub(crate) fn mono_fn_ident(name: &str, is_arena: bool) -> syn::Ident {
-    if is_arena {
-        format_ident!("__{}_arena", name)
-    } else {
-        format_ident!("__{}", name)
-    }
+/// Internal function name for a rule: `__rule`.
+pub(crate) fn mono_fn_ident(name: &str) -> syn::Ident {
+    format_ident!("__{}", name)
 }
 
 /// Emit a discarded expression (separator, open/close delimiter).
@@ -104,7 +98,7 @@ pub(crate) fn emit_mono_discarded(
             }
             // Always use monolithic fn call — never construct SpanParser combinators.
             // The monolithic function does the same parsing work without combinator overhead.
-            let fn_ident = mono_fn_ident(ctx.resolve_rule_name(*rule_id), ctx.uses_arena());
+            let fn_ident = mono_fn_ident(ctx.resolve_rule_name(*rule_id));
             quote! { Self::#fn_ident(state) }
         }
         // Regex/other — emit via standard path.

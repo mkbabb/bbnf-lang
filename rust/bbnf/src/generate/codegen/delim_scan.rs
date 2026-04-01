@@ -537,7 +537,7 @@ pub(super) fn emit_arena(
     // Block branch: rewind to item start, call the block rule's arena function.
     let on_block = if let Some(block_rule_id) = config.block_fn {
         let name = ctx.ir.get_string(ctx.ir.rules[block_rule_id as usize].name);
-        let fn_ident = mono_fn_ident(name, ctx.uses_arena());
+        let fn_ident = mono_fn_ident(name);
         let push = &scratch_push_v;
         quote! {
             state.offset = __item;
@@ -561,12 +561,12 @@ pub(super) fn emit_arena(
     let on_pivot = if let Some(pivot_rule_id) = config.pivot_fn {
         let pivot_rule = &ctx.ir.rules[pivot_rule_id as usize];
         let pivot_name = ctx.ir.get_string(pivot_rule.name);
-        let pivot_fn = mono_fn_ident(pivot_name, ctx.uses_arena());
+        let pivot_fn = mono_fn_ident(pivot_name);
 
         // Fallback: if the pivot function fails, try the block branch.
         let fallback = if let Some(block_rule_id) = config.block_fn {
             let block_name = ctx.ir.get_string(ctx.ir.rules[block_rule_id as usize].name);
-            let block_fn = mono_fn_ident(block_name, ctx.uses_arena());
+            let block_fn = mono_fn_ident(block_name);
             let push = &scratch_push_v;
             quote! {
                 state.offset = __item;
@@ -703,7 +703,7 @@ mod tests {
     use bbnf_ir::{GrammarIR, IrRule, RuleMeta, TypeDesc};
 
     use super::*;
-    use crate::generate::codegen::ir_types::{IrCodegenCtx, ParserAttributes, StorageMode};
+    use crate::generate::codegen::ir_types::{IrCodegenCtx, ParserAttributes};
 
     #[test]
     fn emit_arena_uses_local_close_lookahead_capacity() {
@@ -749,7 +749,7 @@ mod tests {
             arena: true,
             ..Default::default()
         };
-        let ctx = IrCodegenCtx::new(&ir, &ident, &attrs, StorageMode::Arena);
+        let ctx = IrCodegenCtx::new(&ir, &ident, &attrs);
         let config = DelimScanConfig {
             open_byte: b'[',
             close_byte: b']',

@@ -30,8 +30,8 @@ macro_rules! bench_depth_obj {
             let input = generators::json_gen::deeply_nested_objects($depth);
             b.bytes = input.len() as u64;
             {
-                let arena = BumpArena::<JsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = JsonParser::value_arena();
+                let arena = BumpArena::<JsonParserEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = JsonParser::value();
                 assert!(
                     parser.parse_with_context(&input, &arena).is_some(),
                     "depth_obj_{}: parse failed",
@@ -39,8 +39,8 @@ macro_rules! bench_depth_obj {
                 );
             }
             b.iter(|| {
-                let arena = BumpArena::<JsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = JsonParser::value_arena();
+                let arena = BumpArena::<JsonParserEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = JsonParser::value();
                 let ast = parser
                     .parse_with_context(black_box(&input), &arena)
                     .unwrap();
@@ -62,8 +62,8 @@ macro_rules! bench_depth_arr {
             let input = generators::json_gen::deeply_nested_arrays($depth);
             b.bytes = input.len() as u64;
             {
-                let arena = BumpArena::<JsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = JsonParser::value_arena();
+                let arena = BumpArena::<JsonParserEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = JsonParser::value();
                 assert!(
                     parser.parse_with_context(&input, &arena).is_some(),
                     "depth_arr_{}: parse failed",
@@ -71,8 +71,8 @@ macro_rules! bench_depth_arr {
                 );
             }
             b.iter(|| {
-                let arena = BumpArena::<JsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = JsonParser::value_arena();
+                let arena = BumpArena::<JsonParserEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = JsonParser::value();
                 let ast = parser
                     .parse_with_context(black_box(&input), &arena)
                     .unwrap();
@@ -94,8 +94,8 @@ macro_rules! bench_wide_arr {
             let input = generators::json_gen::wide_array($count);
             b.bytes = input.len() as u64;
             {
-                let arena = BumpArena::<JsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = JsonParser::value_arena();
+                let arena = BumpArena::<JsonParserEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = JsonParser::value();
                 assert!(
                     parser.parse_with_context(&input, &arena).is_some(),
                     "wide_arr_{}: parse failed",
@@ -103,8 +103,8 @@ macro_rules! bench_wide_arr {
                 );
             }
             b.iter(|| {
-                let arena = BumpArena::<JsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = JsonParser::value_arena();
+                let arena = BumpArena::<JsonParserEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = JsonParser::value();
                 let ast = parser
                     .parse_with_context(black_box(&input), &arena)
                     .unwrap();
@@ -126,8 +126,8 @@ macro_rules! bench_wide_obj {
             let input = generators::json_gen::wide_object($count);
             b.bytes = input.len() as u64;
             {
-                let arena = BumpArena::<JsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = JsonParser::value_arena();
+                let arena = BumpArena::<JsonParserEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = JsonParser::value();
                 assert!(
                     parser.parse_with_context(&input, &arena).is_some(),
                     "wide_obj_{}: parse failed",
@@ -135,8 +135,8 @@ macro_rules! bench_wide_obj {
                 );
             }
             b.iter(|| {
-                let arena = BumpArena::<JsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = JsonParser::value_arena();
+                let arena = BumpArena::<JsonParserEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = JsonParser::value();
                 let ast = parser
                     .parse_with_context(black_box(&input), &arena)
                     .unwrap();
@@ -158,8 +158,8 @@ macro_rules! bench_strings {
             let input = generators::json_gen::long_strings($count, $len);
             b.bytes = input.len() as u64;
             {
-                let arena = BumpArena::<JsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = JsonParser::value_arena();
+                let arena = BumpArena::<JsonParserEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = JsonParser::value();
                 assert!(
                     parser.parse_with_context(&input, &arena).is_some(),
                     "strings_{}x{}: parse failed",
@@ -168,8 +168,8 @@ macro_rules! bench_strings {
                 );
             }
             b.iter(|| {
-                let arena = BumpArena::<JsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = JsonParser::value_arena();
+                let arena = BumpArena::<JsonParserEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = JsonParser::value();
                 let ast = parser
                     .parse_with_context(black_box(&input), &arena)
                     .unwrap();
@@ -191,8 +191,8 @@ macro_rules! bench_escapes {
             let input = generators::json_gen::escape_heavy($count);
             b.bytes = input.len() as u64;
             {
-                let arena = BumpArena::<JsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = JsonParser::value_arena();
+                let arena = BumpArena::<JsonParserEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = JsonParser::value();
                 assert!(
                     parser.parse_with_context(&input, &arena).is_some(),
                     "escapes_{}: parse failed",
@@ -200,8 +200,8 @@ macro_rules! bench_escapes {
                 );
             }
             b.iter(|| {
-                let arena = BumpArena::<JsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = JsonParser::value_arena();
+                let arena = BumpArena::<JsonParserEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = JsonParser::value();
                 let ast = parser
                     .parse_with_context(black_box(&input), &arena)
                     .unwrap();
@@ -222,8 +222,8 @@ macro_rules! bench_mixed {
             let input = generators::json_gen::mixed_types($count);
             b.bytes = input.len() as u64;
             {
-                let arena = BumpArena::<JsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = JsonParser::value_arena();
+                let arena = BumpArena::<JsonParserEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = JsonParser::value();
                 assert!(
                     parser.parse_with_context(&input, &arena).is_some(),
                     "mixed_{}: parse failed",
@@ -231,8 +231,8 @@ macro_rules! bench_mixed {
                 );
             }
             b.iter(|| {
-                let arena = BumpArena::<JsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = JsonParser::value_arena();
+                let arena = BumpArena::<JsonParserEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = JsonParser::value();
                 let ast = parser
                     .parse_with_context(black_box(&input), &arena)
                     .unwrap();

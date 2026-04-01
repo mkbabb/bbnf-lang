@@ -3,14 +3,14 @@
 //! Instead of building combinator chains (`lazy → dispatch → sep_by → map_with_ctx`)
 //! that allocate ~30 `Parser` objects with ~60 heap allocations per parse, the
 //! monolithic emitter generates **direct recursive functions** —
-//! `fn __rule_arena(state) -> Option<ArenaEnum>` — with zero combinator overhead.
+//! `fn __rule(state) -> Option<Enum>` — with zero combinator overhead.
 //!
-//! Each public `rule_arena()` method wraps a single function pointer in
+//! Each public `rule()` method wraps a single function pointer in
 //! `Parser::new()`: one SmallBox, zero vtable dispatches, O(1) construction.
 //!
-//! All internal functions return `Option<ArenaEnum<'a>>` (the unboxed enum type).
+//! All internal functions return `Option<Enum<'a>>` (the unboxed enum type).
 //! Arena allocation (`arena.alloc`) happens at:
-//! - Non-elide_box Ref call sites (producing `&'a ArenaEnum<'a>`)
+//! - Non-elide_box Ref call sites (producing `&'a Enum<'a>`)
 //! - The public method wrapper for transparent rules
 //!
 //! Sub-modules:
@@ -39,7 +39,7 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use super::regex_ir::fast_paths;
-use ir_types::{IrCodegenCtx, StorageMode};
+use ir_types::IrCodegenCtx;
 
 /// Unescape a BBNF literal string (e.g. `\n` → newline, `\t` → tab).
 /// BBNF literals store escape sequences as raw characters (backslash + letter)
@@ -226,7 +226,7 @@ pub(super) fn emit_mono_expr(
             // Phase 2: try direct scanner call (bypasses SpanParser dispatch stack).
             // Arena context: fuse number conversion (returns (Span, f64) for JSON numbers).
             // Skip fusing when prettify is enabled — formatters only need Spans.
-            let fuse = ctx.storage_mode == StorageMode::Arena && !ctx.parser_attrs.prettify;
+            let fuse = !ctx.parser_attrs.prettify;
             // 1. Try known fast paths (scan_ident, scan_number_f64, etc.)
             if let Some(direct) = fast_paths::emit_regex_direct_call_with_fuse(pattern, fuse) {
                 direct

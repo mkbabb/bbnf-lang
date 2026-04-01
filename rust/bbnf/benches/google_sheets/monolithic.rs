@@ -7,9 +7,10 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 use bbnf_derive::Parser;
 use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
+use parse_that::BumpArena;
 
 #[derive(Parser)]
-#[parser(path = "../../grammar/google-sheets/google-sheets.bbnf", prettify)]
+#[parser(path = "../../grammar/google-sheets/google-sheets.bbnf", prettify, arena)]
 struct GoogleSheetsParser;
 
 const PATHOLOGICAL: &str = r#"=LET(raw, A2:E1000, filtered, FILTER(raw, (INDEX(raw,,3)>100)*(INDEX(raw,,5)="Active")), sorted, SORT(filtered, 3, FALSE), IF(ROWS(sorted)>0, MAP(SEQUENCE(MIN(10, ROWS(sorted))), LAMBDA(i, INDEX(sorted, i, 1)&" - "&TEXT(INDEX(sorted, i, 3), "$#,##0"))), "No results"))"#;
@@ -30,57 +31,71 @@ fn generate_large_formula(n_bindings: usize) -> String {
 }
 
 fn parse_pathological(b: &mut Bencher) {
-    let parser = GoogleSheetsParser::formula();
     b.bytes = PATHOLOGICAL.len() as u64;
+    let arena = BumpArena::<GoogleSheetsParserEnum<'_>>::with_capacity(PATHOLOGICAL.len() / 16);
+    let parser = GoogleSheetsParser::formula();
     assert!(
-        parser.parse(PATHOLOGICAL).is_some(),
+        parser.parse_with_context(PATHOLOGICAL, &arena).is_some(),
         "pathological: parse failed"
     );
-    b.iter(|| parser.parse(black_box(PATHOLOGICAL)).unwrap());
+    b.iter(|| {
+        let arena = BumpArena::<GoogleSheetsParserEnum<'_>>::with_capacity(PATHOLOGICAL.len() / 16);
+        let parser = GoogleSheetsParser::formula();
+        parser.parse_with_context(black_box(PATHOLOGICAL), &arena).unwrap()
+    });
 }
 
 fn parse_1kb(b: &mut Bencher) {
     let input = generate_large_formula(10);
-    let parser = GoogleSheetsParser::formula();
     b.bytes = input.len() as u64;
-    b.iter(|| parser.parse(black_box(&input)).unwrap());
+    b.iter(|| {
+        let arena = BumpArena::<GoogleSheetsParserEnum<'_>>::with_capacity(input.len() / 16);
+        let parser = GoogleSheetsParser::formula();
+        parser.parse_with_context(black_box(&input), &arena).unwrap()
+    });
 }
 
 fn parse_10kb(b: &mut Bencher) {
     let input = generate_large_formula(100);
-    let parser = GoogleSheetsParser::formula();
     b.bytes = input.len() as u64;
-    b.iter(|| parser.parse(black_box(&input)).unwrap());
+    b.iter(|| {
+        let arena = BumpArena::<GoogleSheetsParserEnum<'_>>::with_capacity(input.len() / 16);
+        let parser = GoogleSheetsParser::formula();
+        parser.parse_with_context(black_box(&input), &arena).unwrap()
+    });
 }
 
 fn format_pathological(b: &mut Bencher) {
-    let parser = GoogleSheetsParser::formula();
     let config = pprint::Printer::new(80, 2, false);
     b.bytes = PATHOLOGICAL.len() as u64;
     b.iter(|| {
-        let ast = parser.parse(black_box(PATHOLOGICAL)).unwrap();
+        let arena = BumpArena::<GoogleSheetsParserEnum<'_>>::with_capacity(PATHOLOGICAL.len() / 16);
+        let parser = GoogleSheetsParser::formula();
+        let ast = parser.parse_with_context(black_box(PATHOLOGICAL), &arena).unwrap();
         pprint::pprint(ast.to_doc(), config)
     });
 }
 
 fn format_1kb(b: &mut Bencher) {
     let input = generate_large_formula(10);
-    let parser = GoogleSheetsParser::formula();
     let config = pprint::Printer::new(80, 2, false);
     b.bytes = input.len() as u64;
     b.iter(|| {
-        let ast = parser.parse(black_box(&input)).unwrap();
+        let arena = BumpArena::<GoogleSheetsParserEnum<'_>>::with_capacity(input.len() / 16);
+        let parser = GoogleSheetsParser::formula();
+        let ast = parser.parse_with_context(black_box(&input), &arena).unwrap();
         pprint::pprint(ast.to_doc(), config)
     });
 }
 
 fn format_10kb(b: &mut Bencher) {
     let input = generate_large_formula(100);
-    let parser = GoogleSheetsParser::formula();
     let config = pprint::Printer::new(80, 2, false);
     b.bytes = input.len() as u64;
     b.iter(|| {
-        let ast = parser.parse(black_box(&input)).unwrap();
+        let arena = BumpArena::<GoogleSheetsParserEnum<'_>>::with_capacity(input.len() / 16);
+        let parser = GoogleSheetsParser::formula();
+        let ast = parser.parse_with_context(black_box(&input), &arena).unwrap();
         pprint::pprint(ast.to_doc(), config)
     });
 }

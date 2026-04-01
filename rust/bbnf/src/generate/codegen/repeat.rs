@@ -164,7 +164,7 @@ pub(super) fn emit_mono_sep_by_core(
     };
 
     // ── Arena slice mode: scratch-based collection ──────────────────────────
-    if ctx.uses_arena() && !ctx.parser_attrs.prettify {
+    if !ctx.parser_attrs.prettify {
         let depth_var = mctx.fresh("depth");
         let init_code = ctx.emit_scratch_init(&elem_ty, &depth_var);
         let push_first = ctx.emit_scratch_push(&elem_ty, &quote! { __value });
@@ -341,7 +341,7 @@ fn emit_mono_optional(
     // Ref nodes: skip Box in Optional context.
     if let IrNode::Ref(rule_id) = inner {
         let rule = &ctx.ir.rules[*rule_id as usize];
-        let fn_ident = mono_fn_ident(ctx.resolve_rule_name(*rule_id), ctx.uses_arena());
+        let fn_ident = mono_fn_ident(ctx.resolve_rule_name(*rule_id));
         let cp_var = mctx.fresh("opt_cp");
 
         if rule.meta.is_transparent || elide_box {
@@ -528,7 +528,7 @@ fn emit_mono_many(
     };
 
     // ── Arena slice mode: scratch-based collection ──────────────────────────
-    if ctx.uses_arena() && !ctx.parser_attrs.prettify {
+    if !ctx.parser_attrs.prettify {
         let depth_var = mctx.fresh("depth");
         let init_code = ctx.emit_scratch_init(&elem_ty, &depth_var);
         let push_code = ctx.emit_scratch_push(&elem_ty, &quote! { __value });
@@ -665,7 +665,7 @@ mod tests {
     use bbnf_ir::{GrammarIR, IrRule, RuleMeta, TypeDesc};
 
     use super::*;
-    use crate::generate::codegen::ir_types::{IrCodegenCtx, ParserAttributes, StorageMode};
+    use crate::generate::codegen::ir_types::{IrCodegenCtx, ParserAttributes};
 
     #[test]
     fn sep_by_ws_until_uses_scratch_for_arena_mode() {
@@ -713,7 +713,7 @@ mod tests {
             arena: true,
             ..Default::default()
         };
-        let ctx = IrCodegenCtx::new(&ir, &ident, &attrs, StorageMode::Arena);
+        let ctx = IrCodegenCtx::new(&ir, &ident, &attrs);
         let mut mctx = MonoCtx::new(vec![false, false], vec![false, false]);
         mctx.current_rule_id = Some(0);
 

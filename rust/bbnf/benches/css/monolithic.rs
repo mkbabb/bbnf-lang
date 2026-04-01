@@ -24,8 +24,8 @@ macro_rules! bench {
             let input = load($file);
             let (bytes, consumed_pct) = {
                 let arena =
-                    BumpArena::<CssPrettyParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = CssPrettyParser::stylesheet_arena();
+                    BumpArena::<CssPrettyParserEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = CssPrettyParser::stylesheet();
                 let (_result, state) = parser.parse_return_state_with_context(&input, &arena);
                 (state.offset as u64, state.offset * 100 / input.len().max(1))
             };
@@ -37,8 +37,8 @@ macro_rules! bench {
             b.bytes = bytes;
             b.iter(|| {
                 let arena =
-                    BumpArena::<CssPrettyParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = CssPrettyParser::stylesheet_arena();
+                    BumpArena::<CssPrettyParserEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = CssPrettyParser::stylesheet();
                 let ast = parser
                     .parse_with_context(black_box(&input), &arena)
                     .unwrap();

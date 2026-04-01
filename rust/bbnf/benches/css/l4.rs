@@ -150,15 +150,15 @@ macro_rules! bench {
         fn $name(b: &mut Bencher) {
             let input = load($file);
             let bytes = {
-                let arena = BumpArena::<CssL4ParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = CssL4Parser::stylesheet_arena();
+                let arena = BumpArena::<CssL4ParserEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = CssL4Parser::stylesheet();
                 let (_result, state) = parser.parse_return_state_with_context(&input, &arena);
                 state.offset as u64
             };
             b.bytes = bytes;
             b.iter(|| {
-                let arena = BumpArena::<CssL4ParserArenaEnum<'_>>::with_capacity(input.len() / 32);
-                let parser = CssL4Parser::stylesheet_arena();
+                let arena = BumpArena::<CssL4ParserEnum<'_>>::with_capacity(input.len() / 32);
+                let parser = CssL4Parser::stylesheet();
                 let ast = parser
                     .parse_with_context(black_box(&input), &arena)
                     .unwrap();

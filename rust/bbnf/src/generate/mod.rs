@@ -1,7 +1,6 @@
 //! Rust parser code generation from BBNF grammars.
 //!
-//! All codegen goes through the monolithic path. Arena and Owned modes differ
-//! only in allocation strategy (arena.alloc vs Box::new).
+//! All codegen goes through the monolithic arena path.
 
 // ── Codegen modules ────────────────────────────────────────────────────────
 pub mod regex_ir;
@@ -17,14 +16,12 @@ pub use codegen::ir_types::ParserAttributes;
 
 use quote::quote;
 
-use self::ir_types::StorageMode;
 
 // ── Entry point ────────────────────────────────────────────────────────────
 
 /// Generate all parser code from IR: enum, parser methods, and optionally prettify.
 ///
-/// All codegen goes through the monolithic path. Arena and Owned modes differ
-/// only in allocation strategy (arena.alloc vs Box::new).
+/// All codegen goes through the monolithic arena path.
 pub fn generate_all(
     ir: &mut bbnf_ir::GrammarIR,
     parser_attrs: &ParserAttributes,
@@ -49,9 +46,9 @@ pub fn generate_all(
     // Run type inference with correct sp_method info.
     bbnf_ir::passes::infer_types(ir);
 
-    // ── Owned-mode monolithic methods ───────────────────────────────────────
+    // ── Arena-mode monolithic methods (the only data-producing path) ──────
 
-    let mut ctx = ir_types::IrCodegenCtx::new(ir, ident, parser_attrs, StorageMode::Owned);
+    let mut ctx = ir_types::IrCodegenCtx::new(ir, ident, parser_attrs);
 
     // Copy has_sp_method from IR metadata to ctx.sp_method_rules for codegen.
     ctx.sp_method_rules = ir
@@ -61,64 +58,52 @@ pub fn generate_all(
         .map(|r| ir.get_string(r.name).to_string())
         .collect();
 
+    // Detect fused number rules for enum variant override.
+    if !parser_attrs.prettify {
+        for rule in &ir.rules {
+            if let bbnf_ir::IrNode::Regex(sid) = &rule.body {
+                if regex_ir::fast_paths::is_fused_number_regex(ir.get_string(*sid)) {
+                    ctx.fused_number_rules.insert(rule.id);
+                }
+            }
+        }
+    }
+
     let grammar_arr = ir_enums::generate_grammar_arr(parser_attrs, ident);
     let grammar_enum = ir_enums::generate_enum(&ctx);
     let parser_methods = codegen::generate_monolithic(ir, &ctx);
 
-    // ── Arena-mode monolithic methods (optional) ────────────────────────────
+    // Recovered static for @recover directives.
+    let has_recovers = ctx.ir.rules.iter().any(|r| r.meta.recover.is_some())
+        && !ctx.parser_attrs.skip_recover;
+    let enum_ident = &ctx.enum_ident;
+    let recovered_static = if has_recovers {
+        let recovered_ident = ctx.recovered_static_ident();
+        quote! {
+            static #recovered_ident: #enum_ident<'static> = #enum_ident::Recovered;
+        }
+    } else {
+        quote! {}
+    };
 
-    let (arena_enum, arena_helper, arena_methods, arena_recovered) = if parser_attrs.arena {
-        let mut arena_ctx =
-            ir_types::IrCodegenCtx::new(ir, ident, parser_attrs, StorageMode::Arena);
-        arena_ctx.sp_method_rules = ctx.sp_method_rules.clone();
-
-        // Detect fused number rules for arena-specific enum variant override.
-        if !parser_attrs.prettify {
-            for rule in &ir.rules {
-                if let bbnf_ir::IrNode::Regex(sid) = &rule.body {
-                    if regex_ir::fast_paths::is_fused_number_regex(ir.get_string(*sid)) {
-                        arena_ctx.fused_number_rules.insert(rule.id);
-                    }
-                }
+    // Arena context struct + helper function.
+    let arena_helper_code = if !parser_attrs.prettify {
+        let (arena_ctx_struct, arena_ctx_helper) = ctx.generate_arena_ctx();
+        quote! { #arena_ctx_struct #arena_ctx_helper }
+    } else {
+        // Prettify+arena: use BumpArena directly until IR fusion wrapping is fixed.
+        let arena_helper_ident = ctx.arena_helper_ident();
+        let enum_ident = &ctx.enum_ident;
+        quote! {
+            #[allow(non_snake_case)]
+            #[inline(always)]
+            fn #arena_helper_ident<'a>(
+                state: &::parse_that::ParserState<'a>,
+            ) -> &'a ::parse_that::BumpArena<#enum_ident<'a>> {
+                debug_assert!(!state.context_ptr.is_null(), "arena parser requires parse_with_context()");
+                unsafe { &*(state.context_ptr as *const ::parse_that::BumpArena<#enum_ident<'a>>) }
             }
         }
-        let has_recovers = arena_ctx.ir.rules.iter().any(|r| r.meta.recover.is_some())
-            && !arena_ctx.parser_attrs.skip_recover;
-        let arena_enum_ident = &arena_ctx.enum_ident;
-        let recovered_static = if has_recovers {
-            let recovered_ident = arena_ctx.recovered_static_ident();
-            quote! {
-                static #recovered_ident: #arena_enum_ident<'static> = #arena_enum_ident::Recovered;
-            }
-        } else {
-            quote! {}
-        };
-        let arena_helper_code = if !parser_attrs.prettify {
-            let (arena_ctx_struct, arena_ctx_helper) = arena_ctx.generate_arena_ctx();
-            quote! { #arena_ctx_struct #arena_ctx_helper }
-        } else {
-            // Prettify+arena: use BumpArena directly until IR fusion wrapping is fixed.
-            let arena_helper_ident = arena_ctx.arena_helper_ident();
-            let arena_enum_ident = &arena_ctx.enum_ident;
-            quote! {
-                #[allow(non_snake_case)]
-                #[inline(always)]
-                fn #arena_helper_ident<'a>(
-                    state: &::parse_that::ParserState<'a>,
-                ) -> &'a ::parse_that::BumpArena<#arena_enum_ident<'a>> {
-                    debug_assert!(!state.context_ptr.is_null(), "arena parser requires parse_with_context()");
-                    unsafe { &*(state.context_ptr as *const ::parse_that::BumpArena<#arena_enum_ident<'a>>) }
-                }
-            }
-        };
-        (
-            ir_enums::generate_enum(&arena_ctx),
-            arena_helper_code,
-            codegen::generate_monolithic(ir, &arena_ctx),
-            recovered_static,
-        )
-    } else {
-        (quote! {}, quote! {}, quote! {}, quote! {})
     };
 
     // ── Span-only monolithic mode ───────────────────────────────────────────
@@ -143,13 +128,11 @@ pub fn generate_all(
         #grammar_arr
 
         #grammar_enum
-        #arena_enum
-        #arena_helper
-        #arena_recovered
+        #arena_helper_code
+        #recovered_static
 
         impl #ident {
             #parser_methods
-            #arena_methods
             #span_methods
             #prettify_methods
         }

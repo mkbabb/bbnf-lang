@@ -13,9 +13,9 @@ mod css_types {
 struct CssL4Parser;
 
 fn test_input(label: &str, input: &str) {
-    let arena = BumpArena::<CssL4ParserArenaEnum<'_>>::with_capacity(64);
+    let arena = BumpArena::<CssL4ParserEnum<'_>>::with_capacity(64);
     let (result, state) =
-        CssL4Parser::stylesheet_arena().parse_return_state_with_context(input, &arena);
+        CssL4Parser::stylesheet().parse_return_state_with_context(input, &arena);
     let pct = if input.is_empty() {
         100
     } else {

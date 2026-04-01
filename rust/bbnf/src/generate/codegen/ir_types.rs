@@ -27,24 +27,19 @@ pub struct ParserAttributes {
     pub span: bool,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum StorageMode {
-    Owned,
-    Arena,
-}
-
 /// Central context for IR-based code generation.
+///
+/// Arena is the only storage mode — all data-producing codegen uses arena allocation.
 pub struct IrCodegenCtx<'a> {
     pub ir: &'a GrammarIR,
     /// Parser struct name (e.g., `Json`).
     pub ident: &'a syn::Ident,
-    /// Enum name (e.g., `JsonEnum` / `JsonArenaEnum`).
+    /// Enum name (e.g., `JsonParserEnum`).
     pub enum_ident: syn::Ident,
-    /// `JsonEnum<'a>` / `JsonArenaEnum<'a>`.
+    /// `JsonParserEnum<'a>`.
     pub enum_type: Type,
-    /// `Box<JsonEnum<'a>>` / `&'a JsonArenaEnum<'a>`.
+    /// `&'a JsonParserEnum<'a>`.
     pub boxed_enum_type: Type,
-    pub storage_mode: StorageMode,
     /// Parser container attributes.
     pub parser_attrs: &'a ParserAttributes,
     /// Span-eligible rules that successfully produce `_sp()` methods.
@@ -64,22 +59,15 @@ impl<'a> IrCodegenCtx<'a> {
         ir: &'a GrammarIR,
         ident: &'a syn::Ident,
         parser_attrs: &'a ParserAttributes,
-        storage_mode: StorageMode,
     ) -> Self {
-        let enum_ident = match storage_mode {
-            StorageMode::Owned => quote::format_ident!("{}Enum", ident),
-            StorageMode::Arena => quote::format_ident!("{}ArenaEnum", ident),
-        };
+        let enum_ident = quote::format_ident!("{}Enum", ident);
         let enum_type: Type = parse_quote!(#enum_ident<'a>);
-        let boxed_enum_type: Type = match storage_mode {
-            StorageMode::Owned => parse_quote!(Box<#enum_ident<'a>>),
-            StorageMode::Arena => parse_quote!(&'a #enum_ident<'a>),
-        };
+        let boxed_enum_type: Type = parse_quote!(&'a #enum_ident<'a>);
 
-        // Use ir.types for rule_types. Arena mode (non-prettify) uses &'a [T];
+        // Arena mode (non-prettify) uses &'a [T];
         // prettify+arena keeps Vec<T> until the IR-level fusion wrapping fix
         // resolves the nested Repeat type divergence.
-        let use_slices = storage_mode == StorageMode::Arena && !parser_attrs.prettify;
+        let use_slices = !parser_attrs.prettify;
         let mut rule_types = HashMap::new();
         for (rule_id, type_desc) in &ir.types {
             let ty = type_desc_to_syn_raw(
@@ -87,18 +75,13 @@ impl<'a> IrCodegenCtx<'a> {
                 &enum_type,
                 &boxed_enum_type,
                 ir,
-                storage_mode,
                 use_slices,
             );
             rule_types.insert(*rule_id, ty);
         }
 
-        // Collect distinct Vec element types for scratch Vec generation (arena mode).
-        let scratch_types = if storage_mode == StorageMode::Arena {
-            collect_vec_element_types(ir)
-        } else {
-            vec![]
-        };
+        // Collect distinct Vec element types for scratch Vec generation.
+        let scratch_types = collect_vec_element_types(ir);
 
         Self {
             ir,
@@ -106,18 +89,12 @@ impl<'a> IrCodegenCtx<'a> {
             enum_ident,
             enum_type,
             boxed_enum_type,
-            storage_mode,
             parser_attrs,
             sp_method_rules: HashSet::new(),
             rule_types,
             fused_number_rules: HashSet::new(),
             scratch_types,
         }
-    }
-
-    #[inline]
-    pub fn uses_arena(&self) -> bool {
-        self.storage_mode == StorageMode::Arena
     }
 
     /// Look up the infer_node type for a sub-expression from the InferMap.
@@ -216,13 +193,8 @@ impl<'a> IrCodegenCtx<'a> {
         let rule = &self.ir.rules[rule_id as usize];
         let enum_ident = &self.enum_ident;
         if rule.meta.is_transparent {
-            match self.storage_mode {
-                StorageMode::Owned => quote::quote! { Box::new(#enum_ident::Recovered) },
-                StorageMode::Arena => {
-                    let recovered_ident = self.recovered_static_ident();
-                    quote::quote! { &#recovered_ident }
-                }
-            }
+            let recovered_ident = self.recovered_static_ident();
+            quote::quote! { &#recovered_ident }
         } else {
             quote::quote! { #enum_ident::Recovered }
         }
@@ -266,17 +238,11 @@ impl<'a> IrCodegenCtx<'a> {
     }
 
     pub fn method_ident_for_name(&self, name: &str) -> syn::Ident {
-        match self.storage_mode {
-            StorageMode::Owned => format_ident!("{}", name),
-            StorageMode::Arena => format_ident!("{}_arena", name),
-        }
+        format_ident!("{}", name)
     }
 
     pub fn unboxed_method_ident_for_name(&self, name: &str) -> syn::Ident {
-        match self.storage_mode {
-            StorageMode::Owned => format_ident!("{}_unboxed", name),
-            StorageMode::Arena => format_ident!("{}_arena_unboxed", name),
-        }
+        format_ident!("{}_unboxed", name)
     }
 
     pub fn wrap_recur_expr_with_state(
@@ -284,18 +250,13 @@ impl<'a> IrCodegenCtx<'a> {
         expr: TokenStream,
         state_ident: &syn::Ident,
     ) -> TokenStream {
-        match self.storage_mode {
-            StorageMode::Owned => quote::quote! { Box::new(#expr) },
-            StorageMode::Arena => {
-                let helper_ident = self.arena_helper_ident();
-                let helper_call = quote::quote! { #helper_ident(#state_ident) };
-                let alloc = self.arena_alloc_tokens(helper_call, &quote::quote! { #expr });
-                quote::quote! {{
-                    let __arena_alloc = #alloc;
-                    &*__arena_alloc
-                }}
-            }
-        }
+        let helper_ident = self.arena_helper_ident();
+        let helper_call = quote::quote! { #helper_ident(#state_ident) };
+        let alloc = self.arena_alloc_tokens(helper_call, &quote::quote! { #expr });
+        quote::quote! {{
+            let __arena_alloc = #alloc;
+            &*__arena_alloc
+        }}
     }
 
     pub fn wrap_recur_expr(&self, expr: TokenStream) -> TokenStream {
@@ -309,11 +270,8 @@ impl<'a> IrCodegenCtx<'a> {
         body: TokenStream,
         state_ident: &syn::Ident,
     ) -> TokenStream {
-        match self.storage_mode {
-            StorageMode::Owned => quote::quote! { #parser.map(|x| #body) },
-            StorageMode::Arena => quote::quote! {
-                #parser.map_with_ctx(|x, #state_ident| #body)
-            },
+        quote::quote! {
+            #parser.map_with_ctx(|x, #state_ident| #body)
         }
     }
 
@@ -325,44 +283,28 @@ impl<'a> IrCodegenCtx<'a> {
         format_ident!("__{}_arena", self.enum_ident)
     }
 
-    /// Emit code that boxes/allocs a value expression into the `boxed_enum_type`.
+    /// Emit code that allocs a value expression into the `boxed_enum_type`.
     ///
-    /// - Arena mode: `&*helper(state).alloc(expr)`
-    /// - Owned mode: `Box::new(expr)`
+    /// `&*helper(state).arena().alloc(expr)` (or `.alloc()` for prettify).
     pub fn emit_box_alloc(&self, value_expr: &TokenStream) -> TokenStream {
-        match self.storage_mode {
-            StorageMode::Arena => {
-                let helper = self.arena_helper_ident();
-                let helper_call = quote::quote! { #helper(state) };
-                let alloc = self.arena_alloc_tokens(helper_call, value_expr);
-                quote::quote! { &*#alloc }
-            }
-            StorageMode::Owned => {
-                quote::quote! { Box::new(#value_expr) }
-            }
-        }
+        let helper = self.arena_helper_ident();
+        let helper_call = quote::quote! { #helper(state) };
+        let alloc = self.arena_alloc_tokens(helper_call, value_expr);
+        quote::quote! { &*#alloc }
     }
 
-    /// Emit code that boxes/allocs a value via a let binding + alloc.
+    /// Emit code that allocs a value via a let binding + alloc.
     ///
-    /// - Arena mode: `let __alloc = helper(state).alloc(expr); &*__alloc`
-    /// - Owned mode: `Box::new(expr)`
+    /// `let __alloc = helper(state).arena().alloc(expr); &*__alloc`
     ///
-    /// The let-binding form is needed in Arena mode to extend the borrow lifetime.
+    /// The let-binding form extends the borrow lifetime.
     pub fn emit_box_alloc_let(&self, value_expr: &TokenStream) -> TokenStream {
-        match self.storage_mode {
-            StorageMode::Arena => {
-                let helper = self.arena_helper_ident();
-                let helper_call = quote::quote! { #helper(state) };
-                let alloc = self.arena_alloc_tokens(helper_call, value_expr);
-                quote::quote! {
-                    let __alloc = #alloc;
-                    &*__alloc
-                }
-            }
-            StorageMode::Owned => {
-                quote::quote! { Box::new(#value_expr) }
-            }
+        let helper = self.arena_helper_ident();
+        let helper_call = quote::quote! { #helper(state) };
+        let alloc = self.arena_alloc_tokens(helper_call, value_expr);
+        quote::quote! {
+            let __alloc = #alloc;
+            &*__alloc
         }
     }
 
@@ -372,7 +314,6 @@ impl<'a> IrCodegenCtx<'a> {
             &self.enum_type,
             &self.boxed_enum_type,
             self.ir,
-            self.storage_mode,
             false, // collection builder is always Vec (the BUILD type, not the final type)
         );
         parse_quote!(Vec<#elem_ty>)
@@ -635,8 +576,7 @@ pub fn type_desc_to_syn(desc: &TypeDesc, ctx: &IrCodegenCtx<'_>) -> Type {
         &ctx.enum_type,
         &ctx.boxed_enum_type,
         ctx.ir,
-        ctx.storage_mode,
-        ctx.uses_arena(),
+        !ctx.parser_attrs.prettify,
     )
 }
 
@@ -645,7 +585,6 @@ fn type_desc_to_syn_raw(
     enum_type: &Type,
     boxed_enum_type: &Type,
     ir: &GrammarIR,
-    storage_mode: StorageMode,
     use_slices: bool,
 ) -> Type {
     match desc {
@@ -653,11 +592,11 @@ fn type_desc_to_syn_raw(
         TypeDesc::F64 => parse_quote!(f64),
         TypeDesc::U32 => parse_quote!(u32),
         TypeDesc::Option(inner) => {
-            let inner = type_desc_to_syn_raw(inner, enum_type, boxed_enum_type, ir, storage_mode, use_slices);
+            let inner = type_desc_to_syn_raw(inner, enum_type, boxed_enum_type, ir, use_slices);
             parse_quote!(Option<#inner>)
         }
         TypeDesc::Vec(inner) => {
-            let inner_ty = type_desc_to_syn_raw(inner, enum_type, boxed_enum_type, ir, storage_mode, use_slices);
+            let inner_ty = type_desc_to_syn_raw(inner, enum_type, boxed_enum_type, ir, use_slices);
             if use_slices {
                 parse_quote!(&'a [#inner_ty])
             } else {
@@ -670,7 +609,7 @@ fn type_desc_to_syn_raw(
             } else {
                 let types: Vec<_> = elems
                     .iter()
-                    .map(|e| type_desc_to_syn_raw(e, enum_type, boxed_enum_type, ir, storage_mode, use_slices))
+                    .map(|e| type_desc_to_syn_raw(e, enum_type, boxed_enum_type, ir, use_slices))
                     .collect();
                 parse_quote!((#(#types),*))
             }

@@ -1,8 +1,8 @@
 //! Monolithic entry-point generation.
 //!
-//! Contains `generate_monolithic` (handles both Arena and Owned storage modes)
-//! and supporting helper functions for fusion eligibility, single-site inline
-//! detection, and expansion cost estimation.
+//! Contains `generate_monolithic` (arena-only storage mode) and supporting
+//! helper functions for fusion eligibility, single-site inline detection,
+//! and expansion cost estimation.
 
 use bbnf_ir::{GrammarIR, IrNode, RuleId};
 
@@ -18,9 +18,7 @@ use super::{MonoCtx, emit_mono_expr};
 
 /// Generate all monolithic methods for all rules.
 ///
-/// Supports both Arena and Owned storage modes:
-/// - Arena: `fn __rule_arena<'a>(state) -> Option<ArenaEnum<'a>>` with arena.alloc
-/// - Owned: `fn __rule<'a>(state) -> Option<Enum<'a>>` with Box::new
+/// Arena-only: `fn __rule<'a>(state) -> Option<Enum<'a>>` with arena.alloc.
 ///
 /// For each rule, emits:
 /// 1. A private associated fn (internal dispatch)
@@ -76,7 +74,7 @@ pub fn generate_monolithic(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStrea
 
     for rule in &ir.rules {
         let name = ir.get_string(rule.name);
-        let fn_ident = mono_fn_ident(name, ctx.uses_arena());
+        let fn_ident = mono_fn_ident(name);
         let pub_ident = ctx.method_ident_for_name(name);
         let return_type = ctx.rule_return_type(rule.id);
 

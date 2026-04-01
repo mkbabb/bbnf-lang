@@ -10,10 +10,10 @@ use bbnf_ir::AltBranch;
 use proc_macro2::TokenStream;
 use quote::quote;
 
+use super::super::MonoCtx;
 use super::super::ir_types::IrCodegenCtx;
 use super::super::unescape_literal;
-use super::super::MonoCtx;
-use super::{extract_literal_through_map, LitThroughMap};
+use super::{LitThroughMap, extract_literal_through_map};
 
 /// Try to emit an all-literal Alt. Returns `None` if branches aren't all literal-like.
 pub(in super::super) fn try_emit_all_literal_alt(
@@ -55,7 +55,10 @@ pub(in super::super) fn try_emit_all_literal_alt(
 
     // Large all-bare sets: first-byte trie dispatch for >16 entries,
     // sequential inline byte matching for <=16.
-    debug_assert!(all_bare, "mapped literals should always use sequential path");
+    debug_assert!(
+        all_bare,
+        "mapped literals should always use sequential path"
+    );
     Some(emit_bare_literal_alt(&entries, mctx, ctx))
 }
 
@@ -73,8 +76,10 @@ fn emit_sequential_literal_alt(
         let s = unescape_literal(raw);
         let bytes = s.as_bytes();
         let len = bytes.len();
-        let byte_lits: Vec<proc_macro2::Literal> =
-            bytes.iter().map(|b| proc_macro2::Literal::byte_character(*b)).collect();
+        let byte_lits: Vec<proc_macro2::Literal> = bytes
+            .iter()
+            .map(|b| proc_macro2::Literal::byte_character(*b))
+            .collect();
 
         // The return expression: Span for bare literals, constant value for mapped.
         let ret_expr = if let Some(const_sid) = info.constant_value {
@@ -165,8 +170,7 @@ fn emit_first_byte_trie(
     _mctx: &mut MonoCtx,
 ) -> TokenStream {
     // Group literals by first byte.
-    let mut groups: std::collections::BTreeMap<u8, Vec<usize>> =
-        std::collections::BTreeMap::new();
+    let mut groups: std::collections::BTreeMap<u8, Vec<usize>> = std::collections::BTreeMap::new();
     for (i, s) in lit_strings.iter().enumerate() {
         if let Some(&b) = s.as_bytes().first() {
             groups.entry(b).or_default().push(i);
@@ -181,8 +185,10 @@ fn emit_first_byte_trie(
             let s = &lit_strings[idx];
             let bytes = s.as_bytes();
             let len = bytes.len();
-            let byte_lits: Vec<proc_macro2::Literal> =
-                bytes.iter().map(|b| proc_macro2::Literal::byte_character(*b)).collect();
+            let byte_lits: Vec<proc_macro2::Literal> = bytes
+                .iter()
+                .map(|b| proc_macro2::Literal::byte_character(*b))
+                .collect();
             if len == 1 {
                 checks.push(quote! {
                     state.offset += 1;
@@ -215,16 +221,15 @@ fn emit_first_byte_trie(
 }
 
 /// Emit sequential inline byte matching for bare-literal sets (<=16).
-fn emit_sequential_bare(
-    lit_strings: &[String],
-    cp_var: &syn::Ident,
-) -> TokenStream {
+fn emit_sequential_bare(lit_strings: &[String], cp_var: &syn::Ident) -> TokenStream {
     let mut arms: Vec<TokenStream> = Vec::new();
     for (i, s) in lit_strings.iter().enumerate() {
         let bytes = s.as_bytes();
         let len = bytes.len();
-        let byte_lits: Vec<proc_macro2::Literal> =
-            bytes.iter().map(|b| proc_macro2::Literal::byte_character(*b)).collect();
+        let byte_lits: Vec<proc_macro2::Literal> = bytes
+            .iter()
+            .map(|b| proc_macro2::Literal::byte_character(*b))
+            .collect();
 
         let check = if len == 1 {
             quote! {

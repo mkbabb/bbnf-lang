@@ -19,7 +19,7 @@ use quote::{format_ident, quote};
 
 use super::ir_types::IrCodegenCtx;
 use super::unescape_literal;
-use super::{emit_ws_trim, mono_fn_ident, MonoCtx};
+use super::{MonoCtx, emit_ws_trim, mono_fn_ident};
 
 // ── Configuration ────────────────────────────────────────────────────────────
 
@@ -163,7 +163,10 @@ fn trailing_delimiter_byte(node: &IrNode, ir: &GrammarIR) -> Option<u8> {
 
 /// Unwrap through OW/Map/Ref/Next/Skip layers to find a Repeat node.
 /// Returns (Repeat inner node, Option<RuleId of the Ref that was followed>).
-fn unwrap_to_repeat_with_rule<'a>(node: &'a IrNode, ir: &'a GrammarIR) -> Option<(&'a IrNode, Option<RuleId>)> {
+fn unwrap_to_repeat_with_rule<'a>(
+    node: &'a IrNode,
+    ir: &'a GrammarIR,
+) -> Option<(&'a IrNode, Option<RuleId>)> {
     match node {
         IrNode::Repeat { inner, lo: 0, .. } => Some((inner, None)),
         IrNode::OptionalWhitespace(inner) | IrNode::Map { inner, .. } => {
@@ -186,9 +189,7 @@ fn unwrap_to_repeat_with_rule<'a>(node: &'a IrNode, ir: &'a GrammarIR) -> Option
 fn unwrap_to_alt<'a>(node: &'a IrNode, ir: &'a GrammarIR) -> Option<&'a [bbnf_ir::AltBranch]> {
     match node {
         IrNode::Alt(branches, dispatch) if dispatch.is_none() => Some(branches),
-        IrNode::OptionalWhitespace(inner) | IrNode::Map { inner, .. } => {
-            unwrap_to_alt(inner, ir)
-        }
+        IrNode::OptionalWhitespace(inner) | IrNode::Map { inner, .. } => unwrap_to_alt(inner, ir),
         IrNode::Ref(rule_id) => {
             let rule = &ir.rules[*rule_id as usize];
             unwrap_to_alt(&rule.body, ir)
@@ -384,11 +385,20 @@ fn emit_scan_loop(
         }
         match structural_lits.len() {
             3 => {
-                let (a, b, c) = (&structural_lits[0], &structural_lits[1], &structural_lits[2]);
+                let (a, b, c) = (
+                    &structural_lits[0],
+                    &structural_lits[1],
+                    &structural_lits[2],
+                );
                 quote! { ::parse_that::find_first_of_3(__rem, #a, #b, #c) }
             }
             4 => {
-                let (a, b, c, d) = (&structural_lits[0], &structural_lits[1], &structural_lits[2], &structural_lits[3]);
+                let (a, b, c, d) = (
+                    &structural_lits[0],
+                    &structural_lits[1],
+                    &structural_lits[2],
+                    &structural_lits[3],
+                );
                 quote! { ::parse_that::find_first_of_4(__rem, #a, #b, #c, #d) }
             }
             _ => {
@@ -513,14 +523,26 @@ pub(super) fn emit_arena(
     let open_lit = proc_macro2::Literal::byte_character(config.open_byte);
     let close_lit = proc_macro2::Literal::byte_character(config.close_byte);
 
+    // Determine the scratch push expression for use in on_block / on_pivot.
+    let content_rule_for_scratch = config.content_rule.expect("content_rule required for arena");
+    let elem_desc_for_push = match ctx.rule_body_desc(content_rule_for_scratch) {
+        Some(bbnf_ir::TypeDesc::Vec(inner)) => inner.as_ref().clone(),
+        _ => bbnf_ir::TypeDesc::Enum,
+    };
+    let scratch_push_v = ctx.emit_scratch_push(&elem_desc_for_push, &quote! { __v });
+    let scratch_push_direct = |expr: proc_macro2::TokenStream| -> proc_macro2::TokenStream {
+        ctx.emit_scratch_push(&elem_desc_for_push, &expr)
+    };
+
     // Block branch: rewind to item start, call the block rule's arena function.
     let on_block = if let Some(block_rule_id) = config.block_fn {
         let name = ctx.ir.get_string(ctx.ir.rules[block_rule_id as usize].name);
         let fn_ident = mono_fn_ident(name, ctx.uses_arena());
+        let push = &scratch_push_v;
         quote! {
             state.offset = __item;
             if let Some(__v) = Self::#fn_ident(state) {
-                __vals.push(__v);
+                #push;
             } else {
                 break;
             }
@@ -545,10 +567,11 @@ pub(super) fn emit_arena(
         let fallback = if let Some(block_rule_id) = config.block_fn {
             let block_name = ctx.ir.get_string(ctx.ir.rules[block_rule_id as usize].name);
             let block_fn = mono_fn_ident(block_name, ctx.uses_arena());
+            let push = &scratch_push_v;
             quote! {
                 state.offset = __item;
                 if let Some(__v) = Self::#block_fn(state) {
-                    __vals.push(__v);
+                    #push;
                 } else {
                     break;
                 }
@@ -568,18 +591,22 @@ pub(super) fn emit_arena(
             // Build Span from __item to state.offset (post-trail-consume).
             let variant_ident = format_ident!("{}", pivot_name);
             let enum_ident = &ctx.enum_ident;
+            let push_direct = scratch_push_direct(quote! {
+                #enum_ident::#variant_ident(
+                    ::parse_that::Span::new(__item, state.offset, state.src)
+                )
+            });
             quote! {
                 // Scanner already consumed the item — construct Span directly.
-                __vals.push(#enum_ident::#variant_ident(
-                    ::parse_that::Span::new(__item, state.offset, state.src)
-                ));
+                #push_direct;
             }
         } else {
             // Non-Span result: rewind and re-parse with the pivot function.
+            let push = &scratch_push_v;
             quote! {
                 state.offset = __item;
                 if let Some(__v) = Self::#pivot_fn(state) {
-                    __vals.push(__v);
+                    #push;
                 } else {
                     #fallback
                 }
@@ -605,7 +632,17 @@ pub(super) fn emit_arena(
         return quote! { compile_error!("delim_scan: content rule not found") };
     };
 
+    let content_rule = config.content_rule.expect("content_rule required");
+    let elem_desc = match ctx.rule_body_desc(content_rule) {
+        Some(bbnf_ir::TypeDesc::Vec(inner)) => inner.as_ref().clone(),
+        _ => {
+            return quote! { compile_error!("delim_scan: content rule is not a vector type") };
+        }
+    };
     let start_var = mctx.fresh("ds_start");
+    let depth_var = mctx.fresh("ds_depth");
+    let init_code = ctx.emit_scratch_init(&elem_desc, &depth_var);
+    let collect_expr = ctx.emit_scratch_collect(&elem_desc, &depth_var);
 
     quote! {
         {
@@ -613,14 +650,14 @@ pub(super) fn emit_arena(
             if state.src_bytes.get(state.offset).copied() != Some(#open_lit) { return None; }
             state.offset += 1;
 
-            let mut __vals = Vec::with_capacity(4);
+            #init_code
 
             #loop_body
 
             #ws_post
             if state.src_bytes.get(state.offset).copied() != Some(#close_lit) { return None; }
             state.offset += 1;
-            Some(&*#helper(state).alloc(#wrap_variant(__vals)))
+            Some(&*#helper(state).arena().alloc(#wrap_variant(#collect_expr)))
         }
     }
 }
@@ -655,6 +692,88 @@ pub(super) fn try_emit_arena_wrap(
 ) -> Option<TokenStream> {
     let config = try_detect(open, middle, close, ir)?;
     // Arena path requires content_rule for Vec variant construction.
-    config.content_rule?;
+    let content_rule = config.content_rule?;
+    // Guard: only use delim_scan when the Vec inner type is Enum.
+    // When the inner is a Tuple (due to pretty_preserve or Seq structure in ir.types
+    // vs codegen inference), the loop pushes bare Enum values which won't match.
+    if let Some(td) = ctx.rule_body_desc(content_rule) {
+        if let bbnf_ir::TypeDesc::Vec(inner) = td {
+            if !matches!(inner.as_ref(), bbnf_ir::TypeDesc::Enum) {
+                return None;
+            }
+        }
+    }
     Some(emit_arena(&config, ctx, mctx))
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashMap;
+
+    use bbnf_ir::{GrammarIR, IrRule, RuleMeta, TypeDesc};
+
+    use super::*;
+    use crate::generate::codegen::ir_types::{IrCodegenCtx, ParserAttributes, StorageMode};
+
+    #[test]
+    fn emit_arena_uses_local_close_lookahead_capacity() {
+        let ir = GrammarIR {
+            rules: vec![
+                IrRule {
+                    id: 0,
+                    name: 0,
+                    // Body infers to Vec(Enum) because Repeat(Ref(1)) → Vec(Enum).
+                    body: IrNode::Repeat {
+                        inner: Box::new(IrNode::Ref(1)),
+                        lo: 0,
+                        hi: u32::MAX,
+                    },
+                    meta: RuleMeta::default(),
+                    source_span: None,
+                },
+                IrRule {
+                    id: 1,
+                    name: 1,
+                    body: IrNode::Literal(2),
+                    meta: RuleMeta::default(),
+                    source_span: None,
+                },
+            ],
+            entry: 0,
+            strings: vec!["items".into(), "item".into(), "x".into()],
+            fns: vec![],
+            types: vec![
+                (0, TypeDesc::Vec(Box::new(TypeDesc::Enum))),
+                (1, TypeDesc::Span),
+            ],
+            follow_sets: HashMap::new(),
+            ws_pattern: None,
+            b1_span_collapse: false,
+            debug_all: false,
+            debug_labels: Vec::new(),
+        };
+
+        let ident = quote::format_ident!("TestParser");
+        let attrs = ParserAttributes {
+            arena: true,
+            ..Default::default()
+        };
+        let ctx = IrCodegenCtx::new(&ir, &ident, &attrs, StorageMode::Arena);
+        let config = DelimScanConfig {
+            open_byte: b'[',
+            close_byte: b']',
+            pivot_byte: b':',
+            trail_byte: None,
+            block_fn: None,
+            pivot_fn: None,
+            content_rule: Some(0),
+            self_recurse_name: None,
+        };
+        let mut mctx = MonoCtx::new(vec![false, false], vec![false, false]);
+
+        let tokens = emit_arena(&config, &ctx, &mut mctx).to_string();
+        // Arena mode uses scratch-based collection.
+        assert!(tokens.contains("__s0"), "should use scratch push: {}", tokens);
+        assert!(tokens.contains("__c0"), "should use scratch collect: {}", tokens);
+    }
 }

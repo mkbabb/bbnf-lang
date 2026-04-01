@@ -5,8 +5,8 @@ use bbnf_ir::{AltBranch, AltDispatch, GrammarIR, IrNode};
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use super::super::ir_types::IrCodegenCtx;
 use super::super::MonoCtx;
+use super::super::ir_types::IrCodegenCtx;
 use super::emit_prettify_expr;
 
 /// Emit an Alt for prettify: dispatch table or sequential trial.
@@ -65,11 +65,14 @@ fn emit_prettify_dispatch(
 
     // Find nullable branch for default + EOF handling.
     let nullable_idx = disp.fallback_idx.or_else(|| {
-        branches.iter().position(|b| {
-            matches!(b.node, IrNode::Epsilon)
-                || matches!(b.node, IrNode::Repeat { lo: 0, .. })
-                || b.first_set.is_none()
-        }).map(|i| i as u8)
+        branches
+            .iter()
+            .position(|b| {
+                matches!(b.node, IrNode::Epsilon)
+                    || matches!(b.node, IrNode::Repeat { lo: 0, .. })
+                    || b.first_set.is_none()
+            })
+            .map(|i| i as u8)
     });
 
     let default_arm = if let Some(nul_idx) = nullable_idx {

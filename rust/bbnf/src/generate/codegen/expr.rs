@@ -5,13 +5,34 @@ use bbnf_ir::{FnDescriptor, IrNode};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::ir_types::IrCodegenCtx;
-use super::unescape_literal;
+use super::super::regex_ir::fast_paths;
 use super::helpers::try_sep_by;
-use super::repeat::{emit_mono_sep_by_ws, emit_mono_sep_by_core, try_unchecked_sep, SepByConfig};
-use super::{emit_mono_discarded, emit_mono_expr, mono_fn_ident, MonoCtx};
+use super::ir_types::IrCodegenCtx;
+use super::repeat::{SepByConfig, emit_mono_sep_by_core, emit_mono_sep_by_ws, try_unchecked_sep};
+use super::unescape_literal;
+use super::{MonoCtx, emit_mono_discarded, emit_mono_expr, mono_fn_ident};
 
 // ── Ref ──────────────────────────────────────────────────────────────────────
+
+#[inline(always)]
+fn is_json_number_inner(inner: &IrNode, ctx: &IrCodegenCtx<'_>) -> bool {
+    match inner {
+        IrNode::Regex(sid) => fast_paths::is_fused_number_regex(ctx.ir.get_string(*sid)),
+        IrNode::OptionalWhitespace(next) | IrNode::Map { inner: next, .. } => {
+            is_json_number_inner(next, ctx)
+        }
+        IrNode::Ref(rule_id) => is_json_number_inner(&ctx.ir.rules[*rule_id as usize].body, ctx),
+        _ => false,
+    }
+}
+
+#[inline(always)]
+fn emit_number_convert_call(inner: &IrNode, ctx: &IrCodegenCtx<'_>) -> TokenStream {
+    if is_json_number_inner(inner, ctx) {
+        return quote! { ::parse_that::scan_number_f64_json(state) };
+    }
+    quote! { ::parse_that::scan_number_f64(state) }
+}
 
 /// Emit a monolithic Ref — direct function call, or inline body for fusion-eligible rules.
 ///
@@ -31,11 +52,7 @@ pub(super) fn emit_mono_ref(
     // Phase 3: Inline fusion-eligible rule bodies at call sites (non-cyclic rules).
     // Phase 9: Also inline single-site cyclic rules (e.g. `pair` called only from `object`).
     let can_inline = mctx.fusion_eligible.get(rule_id as usize).copied() == Some(true)
-        || mctx
-            .single_site_inline
-            .get(rule_id as usize)
-            .copied()
-            == Some(true);
+        || mctx.single_site_inline.get(rule_id as usize).copied() == Some(true);
     if can_inline {
         let rule = &ctx.ir.rules[rule_id as usize];
 
@@ -61,7 +78,8 @@ pub(super) fn emit_mono_ref(
             if elide_box {
                 quote! { #inner.map(|__x| #enum_ident::#variant_ident(__x)) }
             } else {
-                let alloc_code = ctx.emit_box_alloc_let(&quote! { #enum_ident::#variant_ident(__x) });
+                let alloc_code =
+                    ctx.emit_box_alloc_let(&quote! { #enum_ident::#variant_ident(__x) });
                 quote! {
                     #inner.map(|__x| {
                         #alloc_code
@@ -189,7 +207,8 @@ pub(super) fn emit_mono_wrap(
     }
 
     // Delimiter-scan optimization for arena path.
-    if let Some(ts) = super::delim_scan::try_emit_arena_wrap(open, middle, close, ctx.ir, ctx, mctx) {
+    if let Some(ts) = super::delim_scan::try_emit_arena_wrap(open, middle, close, ctx.ir, ctx, mctx)
+    {
         return ts;
     }
 
@@ -260,26 +279,28 @@ pub(super) fn emit_mono_map(
                 let vname = ctx.ir.get_string(*variant);
                 let vident = format_ident!("{}", vname);
                 let enum_ident = &ctx.enum_ident;
+                let scan_call = emit_number_convert_call(inner2.as_ref(), ctx);
                 if elide_box {
                     return quote! {
-                        ::parse_that::scan_number_f64(state).map(|__x| #enum_ident::#vident(__x))
+                        #scan_call.map(|__x| #enum_ident::#vident(__x))
                     };
                 } else {
                     let alloc_code = ctx.emit_box_alloc_let(&quote! { #enum_ident::#vident(__x) });
                     return quote! {
-                        ::parse_that::scan_number_f64(state).map(|__x| {
+                        #scan_call.map(|__x| {
                             #alloc_code
                         })
                     };
                 }
             }
             (FnDescriptor::NumberConvert, FnDescriptor::BoxWrap) => {
+                let scan_call = emit_number_convert_call(inner2.as_ref(), ctx);
                 if elide_box {
-                    return quote! { ::parse_that::scan_number_f64(state) };
+                    return quote! { #scan_call };
                 } else {
                     let alloc_code = ctx.emit_box_alloc_let(&quote! { __x });
                     return quote! {
-                        ::parse_that::scan_number_f64(state).map(|__x| {
+                        #scan_call.map(|__x| {
                             #alloc_code
                         })
                     };
@@ -294,7 +315,8 @@ pub(super) fn emit_mono_map(
                 if elide_box {
                     return quote! { #inner_expr.map(|_| #enum_ident::#vident(#val_expr)) };
                 } else {
-                    let alloc_code = ctx.emit_box_alloc_let(&quote! { #enum_ident::#vident(#val_expr) });
+                    let alloc_code =
+                        ctx.emit_box_alloc_let(&quote! { #enum_ident::#vident(#val_expr) });
                     return quote! {
                         #inner_expr.map(|_| {
                             #alloc_code
@@ -311,14 +333,13 @@ pub(super) fn emit_mono_map(
         FnDescriptor::NumberConvert => {
             // Strength reduction: direct fused CSS number scanner → f64
             // No regex, no Span, no closure overhead
-            quote! { ::parse_that::scan_number_f64(state) }
+            emit_number_convert_call(inner, ctx)
         }
         FnDescriptor::HexConvert { fn_path } => {
             let inner_expr = emit_mono_expr(inner, ctx, mctx, elide_box);
             let fn_src = ctx.ir.get_string(*fn_path);
-            let fn_expr: syn::Expr = syn::parse_str(fn_src).unwrap_or_else(|e| {
-                panic!("Invalid HexConvert function `{}`: {}", fn_src, e)
-            });
+            let fn_expr: syn::Expr = syn::parse_str(fn_src)
+                .unwrap_or_else(|e| panic!("Invalid HexConvert function `{}`: {}", fn_src, e));
             // Inner produces Span; the user function expects &str.
             quote! { #inner_expr.map(|__s| #fn_expr(__s.as_str())) }
         }

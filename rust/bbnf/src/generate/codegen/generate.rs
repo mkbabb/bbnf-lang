@@ -10,9 +10,9 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use super::super::regex_ir::fast_paths;
-use super::ir_types::IrCodegenCtx;
 use super::helpers::mono_fn_ident;
-use super::{emit_mono_expr, MonoCtx};
+use super::ir_types::IrCodegenCtx;
+use super::{MonoCtx, emit_mono_expr};
 
 // ── Entry Point ──────────────────────────────────────────────────────────────
 
@@ -26,11 +26,7 @@ use super::{emit_mono_expr, MonoCtx};
 /// 1. A private associated fn (internal dispatch)
 /// 2. A public method returning `Parser<'a, ReturnType>`
 /// 3. For transparent rules: an unboxed variant
-pub fn generate_monolithic(
-    ir: &GrammarIR,
-    ctx: &IrCodegenCtx<'_>,
-) -> TokenStream {
-
+pub fn generate_monolithic(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
     let mut methods: Vec<TokenStream> = Vec::new();
     let enum_type = &ctx.enum_type;
 
@@ -59,10 +55,7 @@ pub fn generate_monolithic(
                 return true;
             }
             // Don't inline cyclic, recoverable, or pretty rules.
-            if rule.meta.is_cyclic
-                || rule.meta.recover.is_some()
-                || rule.meta.pretty.is_some()
-            {
+            if rule.meta.is_cyclic || rule.meta.recover.is_some() || rule.meta.pretty.is_some() {
                 return false;
             }
             // Inline rules with moderate expansion cost.
@@ -99,6 +92,7 @@ pub fn generate_monolithic(
         // ── Generate internal function body ──────────────────────────────
 
         let mut mctx = MonoCtx::new(fusion_eligible.clone(), single_site_inline.clone());
+        mctx.current_rule_id = Some(rule.id);
 
         // Fused number scan+convert: if the rule body is a JSON number regex,
         // emit number_scan_convert which returns (Span, f64) in one pass.
@@ -357,9 +351,7 @@ fn estimate_expansion_cost(node: &IrNode) -> usize {
     match node {
         IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => 2,
         IrNode::Ref(_) => 8, // IIFE closure + checkpoint save + fn call + restore
-        IrNode::Seq(children) => {
-            1 + children.iter().map(estimate_expansion_cost).sum::<usize>()
-        }
+        IrNode::Seq(children) => 1 + children.iter().map(estimate_expansion_cost).sum::<usize>(),
         IrNode::Alt(branches, _) => {
             // Each branch: checkpoint save (1) + IIFE (2) + body + checkpoint restore (1) + error check (1)
             branches
@@ -418,7 +410,11 @@ fn count_refs_vec(node: &IrNode, counts: &mut [u32]) {
             count_refs_vec(a, counts);
             count_refs_vec(b, counts);
         }
-        IrNode::TokenDispatch { token, arms, fallback } => {
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => {
             count_refs_vec(token, counts);
             for arm in arms {
                 count_refs_vec(&arm.continuation, counts);
@@ -434,9 +430,7 @@ fn body_has_self_ref(node: &IrNode, rule_id: RuleId) -> bool {
     match node {
         IrNode::Ref(id) => *id == rule_id,
         IrNode::Seq(children) => children.iter().any(|c| body_has_self_ref(c, rule_id)),
-        IrNode::Alt(branches, _) => {
-            branches.iter().any(|b| body_has_self_ref(&b.node, rule_id))
-        }
+        IrNode::Alt(branches, _) => branches.iter().any(|b| body_has_self_ref(&b.node, rule_id)),
         IrNode::Repeat { inner, .. }
         | IrNode::Negate(inner)
         | IrNode::OptionalWhitespace(inner)
@@ -444,9 +438,15 @@ fn body_has_self_ref(node: &IrNode, rule_id: RuleId) -> bool {
         IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
             body_has_self_ref(a, rule_id) || body_has_self_ref(b, rule_id)
         }
-        IrNode::TokenDispatch { token, arms, fallback } => {
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => {
             body_has_self_ref(token, rule_id)
-                || arms.iter().any(|a| body_has_self_ref(&a.continuation, rule_id))
+                || arms
+                    .iter()
+                    .any(|a| body_has_self_ref(&a.continuation, rule_id))
                 || body_has_self_ref(fallback, rule_id)
         }
         IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => false,

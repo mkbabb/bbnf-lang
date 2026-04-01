@@ -5,9 +5,8 @@
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-use bencher::{benchmark_group, benchmark_main, black_box, Bencher};
 use bbnf_derive::Parser;
-use parse_that::BumpArena;
+use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
 
 #[derive(Parser)]
 #[parser(path = "../../grammar/json/json.bbnf", arena)]
@@ -26,9 +25,11 @@ macro_rules! bench {
             let input = load($file);
             b.bytes = input.len() as u64;
             b.iter(|| {
-                let arena = BumpArena::<JsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
+                let ctx = __JsonParserArenaEnumCtx::with_capacity(input.len() / 32);
                 let parser = JsonParser::value_arena();
-                let ast = parser.parse_with_context(black_box(&input), &arena).unwrap();
+                let ast = parser
+                    .parse_with_context(black_box(&input), &ctx)
+                    .unwrap();
                 black_box(ast as *const _);
             });
         }

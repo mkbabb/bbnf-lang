@@ -5,8 +5,8 @@ use bbnf_ir::{GrammarIR, IrNode};
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use super::super::ir_types::IrCodegenCtx;
 use super::super::MonoCtx;
+use super::super::ir_types::IrCodegenCtx;
 use super::{emit_prettify_expr, prettify_fn_ident};
 
 // ── Ref ──────────────────────────────────────────────────────────────────────
@@ -28,9 +28,7 @@ pub(super) fn emit_prettify_ref(
     // Detect whitespace rules: body is a Regex matching the @ws pattern.
     // Emit inline spaces (no newlines) to preserve source formatting.
     // Newlines/indentation are suppressed — the @pretty hints handle those.
-    let is_ws_rule = if let (IrNode::Regex(body_sid), Some(ws_sid)) =
-        (&rule.body, ir.ws_pattern)
-    {
+    let is_ws_rule = if let (IrNode::Regex(body_sid), Some(ws_sid)) = (&rule.body, ir.ws_pattern) {
         *body_sid == ws_sid
     } else {
         false

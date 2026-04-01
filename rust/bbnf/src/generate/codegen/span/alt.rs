@@ -1,13 +1,13 @@
 //! Span-only alternation emission: dispatch-table and flat checkpoint chain.
 
-use bbnf_ir::{IrNode, GrammarIR};
+use bbnf_ir::{GrammarIR, IrNode};
 
 use proc_macro2::TokenStream;
 use quote::quote;
 
+use super::super::MonoCtx;
 use super::super::ir_types::IrCodegenCtx;
 use super::super::unescape_literal;
-use super::super::MonoCtx;
 use super::emit_span_expr;
 
 /// Emit a span-only Alt.
@@ -26,12 +26,16 @@ pub(super) fn emit_span_alt(
     }
 
     // All-literal → direct byte matching.
-    let all_literal = branches.iter().all(|b| matches!(&b.node, IrNode::Literal(_)));
+    let all_literal = branches
+        .iter()
+        .all(|b| matches!(&b.node, IrNode::Literal(_)));
     if all_literal {
         let lit_strings: Vec<String> = branches
             .iter()
             .map(|b| {
-                let IrNode::Literal(sid) = &b.node else { unreachable!() };
+                let IrNode::Literal(sid) = &b.node else {
+                    unreachable!()
+                };
                 unescape_literal(ir.get_string(*sid))
             })
             .collect();
@@ -42,8 +46,10 @@ pub(super) fn emit_span_alt(
             for (i, s) in lit_strings.iter().enumerate() {
                 let bytes = s.as_bytes();
                 let len = bytes.len();
-                let byte_lits: Vec<proc_macro2::Literal> =
-                    bytes.iter().map(|b| proc_macro2::Literal::byte_character(*b)).collect();
+                let byte_lits: Vec<proc_macro2::Literal> = bytes
+                    .iter()
+                    .map(|b| proc_macro2::Literal::byte_character(*b))
+                    .collect();
                 let check = if len == 1 {
                     quote! {
                         if state.src_bytes.get(state.offset).copied() == Some(#(#byte_lits)*) {
@@ -83,8 +89,10 @@ pub(super) fn emit_span_alt(
             for (i, s) in lit_strings.iter().enumerate() {
                 let bytes = s.as_bytes();
                 let len = bytes.len();
-                let byte_lits: Vec<proc_macro2::Literal> =
-                    bytes.iter().map(|b| proc_macro2::Literal::byte_character(*b)).collect();
+                let byte_lits: Vec<proc_macro2::Literal> = bytes
+                    .iter()
+                    .map(|b| proc_macro2::Literal::byte_character(*b))
+                    .collect();
                 let check = if len == 1 {
                     quote! {
                         if state.src_bytes.get(state.offset).copied() == Some(#(#byte_lits)*) {
@@ -134,9 +142,9 @@ fn emit_span_dispatch(
     mctx: &mut MonoCtx,
 ) -> TokenStream {
     // Generate fallback expression if present.
-    let fallback_expr = disp.fallback_idx.map(|fb_idx| {
-        emit_span_expr(&branches[fb_idx as usize].node, ir, ctx, mctx)
-    });
+    let fallback_expr = disp
+        .fallback_idx
+        .map(|fb_idx| emit_span_expr(&branches[fb_idx as usize].node, ir, ctx, mctx));
 
     let mut match_arms: Vec<TokenStream> = Vec::new();
     let mut used = vec![false; branches.len()];
@@ -146,12 +154,16 @@ fn emit_span_dispatch(
     }
 
     for (idx, branch) in branches.iter().enumerate() {
-        if used[idx] { continue; }
+        if used[idx] {
+            continue;
+        }
         used[idx] = true;
         let bytes: Vec<u8> = (0u8..128)
             .filter(|&c| disp.table.get(c as usize).copied() == Some(idx as u8))
             .collect();
-        if bytes.is_empty() { continue; }
+        if bytes.is_empty() {
+            continue;
+        }
 
         let byte_patterns: Vec<TokenStream> = bytes
             .iter()
@@ -161,7 +173,11 @@ fn emit_span_dispatch(
             })
             .collect();
 
-        mctx.dispatch_guaranteed_byte = if bytes.len() == 1 { Some(bytes[0]) } else { None };
+        mctx.dispatch_guaranteed_byte = if bytes.len() == 1 {
+            Some(bytes[0])
+        } else {
+            None
+        };
         let branch_expr = emit_span_expr(&branch.node, ir, ctx, mctx);
         mctx.dispatch_guaranteed_byte = None;
 

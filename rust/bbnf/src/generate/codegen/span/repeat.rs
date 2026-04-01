@@ -1,14 +1,14 @@
 //! Span-only repetition emission: many, sep_by, optional.
 //! No Vec collection — just track start/end offsets.
 
-use bbnf_ir::{IrNode, GrammarIR};
+use bbnf_ir::{GrammarIR, IrNode};
 
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use super::super::ir_types::IrCodegenCtx;
 use super::super::MonoCtx;
-use super::{emit_span_expr, emit_span_discarded};
+use super::super::ir_types::IrCodegenCtx;
+use super::{emit_span_discarded, emit_span_expr};
 
 /// Emit a span-only Repeat (many).
 pub(super) fn emit_span_repeat(
@@ -147,7 +147,9 @@ pub(super) fn emit_span_optional(
     if let IrNode::Regex(sid) = inner {
         let pattern = ir.get_string(*sid);
         // 1. Try known fast paths.
-        if let Some(direct) = super::super::super::regex_ir::fast_paths::emit_regex_direct_call(pattern) {
+        if let Some(direct) =
+            super::super::super::regex_ir::fast_paths::emit_regex_direct_call(pattern)
+        {
             return quote! {
                 {
                     let #start_var = state.offset;

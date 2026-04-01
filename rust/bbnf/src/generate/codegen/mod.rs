@@ -27,10 +27,10 @@ mod helpers;
 pub mod infer;
 pub mod ir_enums;
 pub mod ir_types;
+pub mod prettify;
 mod repeat;
 mod seq;
 pub mod span;
-pub mod prettify;
 mod token_dispatch;
 pub mod trace;
 
@@ -80,8 +80,7 @@ pub use generate::generate_monolithic;
 // Re-export items used by sub-modules via `super::`.
 pub(super) use generate::compute_single_site_inline;
 pub(super) use helpers::{
-    emit_literal_inline, emit_literal_inline_unchecked, emit_mono_discarded,
-    mono_fn_ident,
+    emit_literal_inline, emit_literal_inline_unchecked, emit_mono_discarded, mono_fn_ident,
 };
 
 /// Emit the whitespace-trimming call for `?w` (OptionalWhitespace).
@@ -127,13 +126,8 @@ pub(super) fn is_simple_expr(node: &IrNode, mctx: &MonoCtx) -> bool {
             // If the Ref gets inlined (fusion or single-site), the emitted code
             // may contain `?` operators that need IIFE scoping.
             // Only direct function calls (non-inlined) are guaranteed simple.
-            let is_inlined =
-                mctx.fusion_eligible.get(*rule_id as usize).copied() == Some(true)
-                    || mctx
-                        .single_site_inline
-                        .get(*rule_id as usize)
-                        .copied()
-                        == Some(true);
+            let is_inlined = mctx.fusion_eligible.get(*rule_id as usize).copied() == Some(true)
+                || mctx.single_site_inline.get(*rule_id as usize).copied() == Some(true);
             !is_inlined
         }
         IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => true,
@@ -167,6 +161,9 @@ pub(super) struct MonoCtx {
     /// Name of the rule currently being generated. Used by delim_scan for
     /// self-recursion (nested blocks call the enclosing wrap function).
     pub current_rule_name: Option<String>,
+    /// ID of the rule currently being generated. Used for scratch type lookup
+    /// in arena mode to ensure type agreement with ir.types.
+    pub current_rule_id: Option<bbnf_ir::RuleId>,
     /// @pretty hints for the current rule. Used by the prettify repeat codegen
     /// to determine the separator between items (softline, hardline, blankline,
     /// sep("str"), etc.).
@@ -182,6 +179,7 @@ impl MonoCtx {
             single_site_inline,
             dispatch_guaranteed_byte: None,
             current_rule_name: None,
+            current_rule_id: None,
             current_pretty_hints: None,
         }
     }
@@ -191,7 +189,6 @@ impl MonoCtx {
         self.counter += 1;
         format_ident!("__{}{}", prefix, id)
     }
-
 }
 
 // ── Expression Dispatch ──────────────────────────────────────────────────────
@@ -309,8 +306,10 @@ pub(super) fn emit_mono_expr(
 
         IrNode::OptionalWhitespace(inner) => expr::emit_mono_ow(inner, ctx, mctx, elide_box),
 
-        IrNode::TokenDispatch { token, arms, fallback } => {
-            token_dispatch::emit_token_dispatch(token, arms, fallback, ctx, mctx, elide_box)
-        }
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => token_dispatch::emit_token_dispatch(token, arms, fallback, ctx, mctx, elide_box),
     }
 }

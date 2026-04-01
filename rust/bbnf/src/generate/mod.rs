@@ -84,7 +84,6 @@ pub fn generate_all(
         }
         let has_recovers = arena_ctx.ir.rules.iter().any(|r| r.meta.recover.is_some())
             && !arena_ctx.parser_attrs.skip_recover;
-        let arena_helper_ident = arena_ctx.arena_helper_ident();
         let arena_enum_ident = &arena_ctx.enum_ident;
         let recovered_static = if has_recovers {
             let recovered_ident = arena_ctx.recovered_static_ident();
@@ -94,8 +93,16 @@ pub fn generate_all(
         } else {
             quote! {}
         };
-        (
-            ir_enums::generate_enum(&arena_ctx),
+        let arena_helper_code = if arena_ctx.use_arena_slices {
+            let (arena_ctx_struct, arena_ctx_helper) = arena_ctx.generate_arena_ctx();
+            quote! {
+                #arena_ctx_struct
+                #arena_ctx_helper
+            }
+        } else {
+            // Prettify+arena: use BumpArena directly (no scratch, no context struct).
+            let arena_helper_ident = arena_ctx.arena_helper_ident();
+            let arena_enum_ident = &arena_ctx.enum_ident;
             quote! {
                 #[allow(non_snake_case)]
                 #[inline(always)]
@@ -107,7 +114,11 @@ pub fn generate_all(
                         &*(state.context_ptr as *const ::parse_that::BumpArena<#arena_enum_ident<'a>>)
                     }
                 }
-            },
+            }
+        };
+        (
+            ir_enums::generate_enum(&arena_ctx),
+            arena_helper_code,
             codegen::generate_monolithic(ir, &arena_ctx),
             recovered_static,
         )

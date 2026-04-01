@@ -5,8 +5,8 @@ use bbnf_ir::{GrammarIR, IrNode};
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use super::super::ir_types::IrCodegenCtx;
 use super::super::MonoCtx;
+use super::super::ir_types::IrCodegenCtx;
 use super::emit_prettify_expr;
 
 /// Emit a Seq for prettify: parse children in order, emit FmtOps for each.

@@ -8,9 +8,9 @@ use bbnf_ir::{IrNode, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use super::ir_types::IrCodegenCtx;
 use super::infer::infer_node_type;
-use super::{emit_mono_expr, MonoCtx};
+use super::ir_types::IrCodegenCtx;
+use super::{MonoCtx, emit_mono_expr};
 
 /// Emit a monolithic Seq — sequential let bindings with span compression.
 ///
@@ -184,29 +184,69 @@ pub(super) fn emit_mono_seq(
             if **inner == effective_types[0] {
                 let first = &result_vars[0];
                 let rest = &result_vars[1];
-                return quote! {
-                    {
-                        #(#stmts)*
-                        let mut __v = Vec::with_capacity(1 + #rest.len());
-                        __v.push(#first);
-                        __v.extend(#rest);
-                        Some(__v)
-                    }
-                };
+                let scratch_inner = inner.as_ref();
+                if ctx.use_arena_slices {
+                    // Arena slice mode: push first + extend from rest slice into scratch,
+                    // then collect to arena slice.
+                    let depth_var = quote::format_ident!("__flat_depth");
+                    let init = ctx.emit_scratch_init(scratch_inner, &depth_var);
+                    let push_first = ctx.emit_scratch_push(scratch_inner, &quote! { #first });
+                    let extend = ctx.emit_scratch_extend_slice(scratch_inner, &quote! { #rest });
+                    let collect = ctx.emit_scratch_collect(scratch_inner, &depth_var);
+                    return quote! {
+                        {
+                            #(#stmts)*
+                            #init
+                            #push_first;
+                            #extend;
+                            Some(#collect)
+                        }
+                    };
+                } else {
+                    let collection_ty = ctx.collection_builder_type_from_elem_desc(inner);
+                    return quote! {
+                        {
+                            #(#stmts)*
+                            let mut __v: #collection_ty = <#collection_ty>::with_capacity(1 + #rest.len());
+                            __v.push(#first);
+                            __v.extend(#rest);
+                            Some(__v)
+                        }
+                    };
+                }
             }
         }
         if let TypeDesc::Vec(inner) = &effective_types[0] {
             if **inner == effective_types[1] {
                 let vec_var = &result_vars[0];
                 let last = &result_vars[1];
-                return quote! {
-                    {
-                        #(#stmts)*
-                        let mut __v = #vec_var;
-                        __v.push(#last);
-                        Some(__v)
-                    }
-                };
+                let scratch_inner = inner.as_ref();
+                if ctx.use_arena_slices {
+                    // Arena slice mode: extend from existing slice + push last.
+                    let depth_var = quote::format_ident!("__flat_depth");
+                    let init = ctx.emit_scratch_init(scratch_inner, &depth_var);
+                    let extend = ctx.emit_scratch_extend_slice(scratch_inner, &quote! { #vec_var });
+                    let push_last = ctx.emit_scratch_push(scratch_inner, &quote! { #last });
+                    let collect = ctx.emit_scratch_collect(scratch_inner, &depth_var);
+                    return quote! {
+                        {
+                            #(#stmts)*
+                            #init
+                            #extend;
+                            #push_last;
+                            Some(#collect)
+                        }
+                    };
+                } else {
+                    return quote! {
+                        {
+                            #(#stmts)*
+                            let mut __v = #vec_var;
+                            __v.push(#last);
+                            Some(__v)
+                        }
+                    };
+                }
             }
         }
     }

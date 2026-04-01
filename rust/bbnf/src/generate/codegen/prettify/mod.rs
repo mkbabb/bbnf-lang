@@ -18,8 +18,8 @@ use bbnf_ir::{GrammarIR, IrNode};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::ir_types::IrCodegenCtx;
 use super::MonoCtx;
+use super::ir_types::IrCodegenCtx;
 
 /// Function name for a prettify rule: `__rule_prettify`.
 pub(in crate::generate) fn prettify_fn_ident(name: &str) -> syn::Ident {
@@ -27,26 +27,18 @@ pub(in crate::generate) fn prettify_fn_ident(name: &str) -> syn::Ident {
 }
 
 /// Generate all fused parse+format monolithic methods.
-pub fn generate_monolithic_prettify(
-    ir: &GrammarIR,
-    ctx: &IrCodegenCtx<'_>,
-) -> TokenStream {
+pub fn generate_monolithic_prettify(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
     let mut methods: Vec<TokenStream> = Vec::new();
 
     let fusion_eligible: Vec<bool> = ir
         .rules
         .iter()
-        .map(|rule| {
-            rule.meta.is_token
-                || (!rule.meta.is_cyclic
-                    && rule.meta.recover.is_none())
-        })
+        .map(|rule| rule.meta.is_token || (!rule.meta.is_cyclic && rule.meta.recover.is_none()))
         .collect();
 
     let single_site_inline = super::compute_single_site_inline(ir);
 
     for rule in &ir.rules {
-
         let name = ir.get_string(rule.name);
         let fn_ident = prettify_fn_ident(name);
         let pub_ident = format_ident!("{}_prettify", name);
@@ -66,13 +58,12 @@ pub fn generate_monolithic_prettify(
         // These are parsed for side effects but their text is NOT emitted —
         // the @pretty hints handle spacing, and emitting source whitespace
         // would break idempotency.
-        let is_ws_rule = if let (IrNode::Regex(body_sid), Some(ws_sid)) =
-            (&rule.body, ir.ws_pattern)
-        {
-            *body_sid == ws_sid
-        } else {
-            false
-        };
+        let is_ws_rule =
+            if let (IrNode::Regex(body_sid), Some(ws_sid)) = (&rule.body, ir.ws_pattern) {
+                *body_sid == ws_sid
+            } else {
+                false
+            };
 
         // Generate the body expression.
         let body_expr = emit_prettify_expr(&rule.body, ir, ctx, &mut mctx);
@@ -231,7 +222,9 @@ pub(super) fn emit_prettify_expr(
                 }
             };
 
-            if let Some(direct) = crate::generate::regex_ir::fast_paths::emit_regex_direct_call(pattern) {
+            if let Some(direct) =
+                crate::generate::regex_ir::fast_paths::emit_regex_direct_call(pattern)
+            {
                 quote! { {
                     let __start = state.offset;
                     if #direct.is_none() { return false; }
@@ -265,9 +258,13 @@ pub(super) fn emit_prettify_expr(
 
         IrNode::Seq(children) => seq::emit_prettify_seq(children, ir, ctx, mctx),
 
-        IrNode::Alt(branches, dispatch) => alt::emit_prettify_alt(branches, dispatch.as_ref(), ir, ctx, mctx),
+        IrNode::Alt(branches, dispatch) => {
+            alt::emit_prettify_alt(branches, dispatch.as_ref(), ir, ctx, mctx)
+        }
 
-        IrNode::Repeat { inner, lo, hi } => repeat::emit_prettify_repeat(inner, *lo as usize, *hi as usize, ir, ctx, mctx),
+        IrNode::Repeat { inner, lo, hi } => {
+            repeat::emit_prettify_repeat(inner, *lo as usize, *hi as usize, ir, ctx, mctx)
+        }
 
         IrNode::Skip(left, right) => expr::emit_prettify_skip(left, right, ir, ctx, mctx),
         IrNode::Next(left, right) => expr::emit_prettify_next(left, right, ir, ctx, mctx),
@@ -341,7 +338,11 @@ pub(super) fn emit_prettify_expr(
             } }
         }
 
-        IrNode::TokenDispatch { token, arms, fallback } => {
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => {
             // For prettify, TokenDispatch: parse the token, then dispatch
             // on the matched text to select the continuation.
             let token_expr = emit_prettify_expr(token, ir, ctx, mctx);
@@ -349,11 +350,15 @@ pub(super) fn emit_prettify_expr(
             let arm_exprs: Vec<TokenStream> = arms
                 .iter()
                 .map(|arm| {
-                    let patterns: Vec<TokenStream> = arm.patterns.iter().map(|sid| {
-                        let key_str = ir.get_string(*sid);
-                        let key_lit = proc_macro2::Literal::string(key_str);
-                        quote! { #key_lit }
-                    }).collect();
+                    let patterns: Vec<TokenStream> = arm
+                        .patterns
+                        .iter()
+                        .map(|sid| {
+                            let key_str = ir.get_string(*sid);
+                            let key_lit = proc_macro2::Literal::string(key_str);
+                            quote! { #key_lit }
+                        })
+                        .collect();
                     let cont_expr = emit_prettify_expr(&arm.continuation, ir, ctx, mctx);
                     quote! {
                         #(#patterns)|* => { #cont_expr; }

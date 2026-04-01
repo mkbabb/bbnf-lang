@@ -16,10 +16,10 @@ use proc_macro2::TokenStream;
 use quote::quote;
 
 use super::super::ir_types::{self, IrCodegenCtx};
-use crate::generate::regex_ir::classify::{classify_regex, RegexClass};
-use crate::generate::codegen::unescape_literal;
-use crate::generate::codegen::{emit_mono_expr, MonoCtx};
 use super::{coerce_mono_branch, coerce_mono_branch_by_value};
+use crate::generate::codegen::unescape_literal;
+use crate::generate::codegen::{MonoCtx, emit_mono_expr};
+use crate::generate::regex_ir::classify::{RegexClass, classify_regex};
 
 // ── Helpers ────────────────────────────────────────────────────
 
@@ -113,7 +113,9 @@ fn classify_fallback_key(fallback: &IrNode, ctx: &IrCodegenCtx<'_>) -> Option<Ke
         RegexClass::QuotedString {
             quote_char,
             allows_escapes: _,
-        } => Some(KeyClass::QuotedString { _quote_char: quote_char }),
+        } => Some(KeyClass::QuotedString {
+            _quote_char: quote_char,
+        }),
         // Numeric and unknown patterns: don't dispatch (not enough structure).
         _ => None,
     }

@@ -6,13 +6,12 @@ use proc_macro2::TokenStream;
 use quote::quote;
 
 use super::super::regex_ir::fast_paths;
-use super::ir_types::IrCodegenCtx;
-use super::infer::infer_node_type;
-use super::unescape_literal;
 use super::helpers::try_sep_by;
+use super::infer::{infer_node_type, infer_node_type_elide_box};
+use super::ir_types::IrCodegenCtx;
+use super::unescape_literal;
 use super::{
-    emit_literal_inline_unchecked, emit_mono_expr, is_simple_expr,
-    mono_fn_ident, MonoCtx,
+    MonoCtx, emit_literal_inline_unchecked, emit_mono_expr, is_simple_expr, mono_fn_ident,
 };
 
 // ── Unified sep_by configuration ─────────────────────────────────────────────
@@ -42,7 +41,11 @@ fn single_byte_separator(separator: &IrNode, ctx: &IrCodegenCtx<'_>) -> Option<u
         let raw = ctx.ir.get_string(sid);
         let unesc = unescape_literal(raw);
         let bytes = unesc.as_bytes();
-        if bytes.len() == 1 { Some(bytes[0]) } else { None }
+        if bytes.len() == 1 {
+            Some(bytes[0])
+        } else {
+            None
+        }
     };
     match separator {
         IrNode::Literal(sid) => check(*sid),
@@ -95,8 +98,11 @@ pub(super) fn emit_mono_sep_by_core(
     mctx: &mut MonoCtx,
 ) -> TokenStream {
     let elem_expr = emit_mono_expr(element, ctx, mctx, true);
+    // Use the rule's Vec inner type from codegen_type_cache (authoritative for
+    // enum variant type) instead of re-inferring via infer_node_in_vec which can
+    // disagree with infer_node for the same elements.
+    let elem_ty = infer_node_type_elide_box(element, ctx);
     let lo_usize = lo as usize;
-    let vals_var = mctx.fresh("vals");
     let cp_var = mctx.fresh("cp");
 
     // Phase 6: IIFE elision for simple expressions.
@@ -110,42 +116,6 @@ pub(super) fn emit_mono_sep_by_core(
     // Separator: strip_ow when ws is handled explicitly.
     let sep_expr = super::emit_mono_discarded(separator, config.ws, ctx, mctx);
     let loop_sep = config.unchecked_sep.as_ref().unwrap_or(&sep_expr);
-
-    // Pre-allocation strategy: for any single-byte separator, use SIMD-accelerated
-    // memchr to count separator occurrences. In delimited contexts, count up to the
-    // first terminator byte for an exact capacity. In non-delimited contexts, count
-    // in the entire remaining input for an upper-bound estimate.
-    let lo_cap = lo.max(1) as usize;
-    let capacity_code = if let Some(sep_byte) = single_byte_separator(separator, ctx) {
-        let sep_lit = proc_macro2::Literal::byte_character(sep_byte);
-        if let Some(ref term_bytes) = config.terminator_bytes {
-            // Delimited: count separator bytes up to first terminator → exact capacity.
-            let term_lit = proc_macro2::Literal::byte_character(term_bytes[0]);
-            quote! {
-                let mut #vals_var = {
-                    let __rem = &state.src_bytes[state.offset..];
-                    let __cap = match memchr::memchr(#term_lit, __rem) {
-                        Some(__end) => memchr::memchr_iter(#sep_lit, &__rem[..__end]).count() + 1,
-                        None => #lo_cap,
-                    };
-                    Vec::with_capacity(__cap)
-                };
-            }
-        } else {
-            // Non-delimited: count separator bytes in remaining input → upper bound.
-            // Cap at 64 to avoid over-allocating on large inputs with many separators.
-            quote! {
-                let mut #vals_var = {
-                    let __rem = &state.src_bytes[state.offset..];
-                    let __cap = (memchr::memchr_iter(#sep_lit, __rem).count() + 1).min(64);
-                    Vec::with_capacity(__cap)
-                };
-            }
-        }
-    } else {
-        // No single-byte separator detected — use lo bound as hint.
-        quote! { let mut #vals_var = Vec::with_capacity(#lo_cap); }
-    };
 
     // ── Whitespace fragments (use custom @ws pattern if configured) ──
     let ws_trim = super::emit_ws_trim(ctx, mctx);
@@ -170,8 +140,10 @@ pub(super) fn emit_mono_sep_by_core(
                 let b = proc_macro2::Literal::byte_character(term_bytes[0]);
                 quote! { __b == #b }
             } else {
-                let byte_lits: Vec<proc_macro2::Literal> =
-                    term_bytes.iter().map(|b| proc_macro2::Literal::byte_character(*b)).collect();
+                let byte_lits: Vec<proc_macro2::Literal> = term_bytes
+                    .iter()
+                    .map(|b| proc_macro2::Literal::byte_character(*b))
+                    .collect();
                 quote! { [#(#byte_lits),*].contains(&__b) }
             };
             let ws = &ws_trim;
@@ -188,9 +160,96 @@ pub(super) fn emit_mono_sep_by_core(
         quote! {}
     };
 
-    // ── Post-loop: ws trim placement differs for delimited vs non-delimited ──
+    // Pre-separator ws trim in the loop body.
+    let pre_sep_ws = if config.ws && config.terminator_bytes.is_none() {
+        ws_trim.clone()
+    } else {
+        quote! {}
+    };
+
+    // ── Arena slice mode: scratch-based collection ──────────────────────────
+    if ctx.use_arena_slices {
+        let depth_var = mctx.fresh("depth");
+        let init_code = ctx.emit_scratch_init(&elem_ty, &depth_var);
+        let push_first = ctx.emit_scratch_push(&elem_ty, &quote! { __value });
+        let push_elem = ctx.emit_scratch_push(&elem_ty, &quote! { __value });
+        let count_expr = ctx.emit_scratch_count(&elem_ty, &depth_var);
+        let collect_expr = ctx.emit_scratch_collect(&elem_ty, &depth_var);
+        let truncate_expr = ctx.emit_scratch_truncate(&elem_ty, &depth_var);
+
+        let final_check = if let Some(close) = &config.close_expr {
+            let ws = &ws_trim;
+            quote! {
+                #ws
+                if #count_expr >= #lo_usize {
+                    #close?;
+                    Some(#collect_expr)
+                } else {
+                    #truncate_expr
+                    None
+                }
+            }
+        } else if config.ws {
+            let ws = &ws_trim;
+            quote! {
+                if #count_expr >= #lo_usize {
+                    #ws
+                    Some(#collect_expr)
+                } else {
+                    #truncate_expr
+                    None
+                }
+            }
+        } else {
+            quote! {
+                if #count_expr >= #lo_usize {
+                    Some(#collect_expr)
+                } else {
+                    #truncate_expr
+                    None
+                }
+            }
+        };
+
+        return quote! {
+            {
+                #open_code
+                #init_code
+                #pre_ws
+                let __first = #first_call;
+                if let Some(__value) = __first {
+                    #push_first;
+                    loop {
+                        let #cp_var = state.offset;
+                        #pre_sep_ws
+                        if (#loop_sep).is_none() {
+                            state.offset = #cp_var;
+                            break;
+                        }
+                        #post_sep_in_loop
+                        let __elem = #elem_call;
+                        if let Some(__value) = __elem {
+                            #push_elem;
+                        } else {
+                            state.offset = #cp_var;
+                            break;
+                        }
+                    }
+                }
+                #final_check
+            }
+        };
+    }
+
+    // ── Owned mode: Vec-based collection (unchanged) ────────────────────────
+    let collection_ty = ctx.collection_builder_type_from_elem_desc(&elem_ty);
+    let vals_var = mctx.fresh("vals");
+    let lo_cap = lo.max(1) as usize;
+    let capacity_code = quote! {
+        let mut #vals_var: #collection_ty = <#collection_ty>::with_capacity(#lo_cap);
+    };
+
     let final_check = if let Some(close) = &config.close_expr {
-        // Delimited: ws trim before close delimiter, outside the len check.
         let ws = &ws_trim;
         quote! {
             #ws
@@ -202,7 +261,6 @@ pub(super) fn emit_mono_sep_by_core(
             }
         }
     } else if config.ws {
-        // Non-delimited ws: trailing trim inside the success branch.
         let ws = &ws_trim;
         quote! {
             if #vals_var.len() >= #lo_usize {
@@ -213,7 +271,6 @@ pub(super) fn emit_mono_sep_by_core(
             }
         }
     } else {
-        // Bare: no ws.
         quote! {
             if #vals_var.len() >= #lo_usize {
                 Some(#vals_var)
@@ -221,16 +278,6 @@ pub(super) fn emit_mono_sep_by_core(
                 None
             }
         }
-    };
-
-    // Pre-separator ws trim in the loop body.
-    // Phase 7: in delimited contexts (terminator_bytes set), ws before the
-    // separator is skipped — the separator byte immediately follows the element.
-    // In non-delimited contexts, ws before the separator IS needed.
-    let pre_sep_ws = if config.ws && config.terminator_bytes.is_none() {
-        ws_trim.clone()
-    } else {
-        quote! {}
     };
 
     quote! {
@@ -351,8 +398,10 @@ fn emit_mono_optional(
             }
             // Multi-byte optional literal: inline slice check.
             let len = bytes.len();
-            let byte_lits: Vec<proc_macro2::Literal> =
-                bytes.iter().map(|b| proc_macro2::Literal::byte_character(*b)).collect();
+            let byte_lits: Vec<proc_macro2::Literal> = bytes
+                .iter()
+                .map(|b| proc_macro2::Literal::byte_character(*b))
+                .collect();
             return quote! {
                 {
                     let __start = state.offset;
@@ -470,10 +519,9 @@ fn emit_mono_many(
         };
     }
 
+    let elem_ty = infer_node_type_elide_box(inner, ctx);
     let elem_expr = emit_mono_expr(inner, ctx, mctx, true);
     let lo_usize = lo as usize;
-
-    let vals_var = mctx.fresh("vals");
     let prev_var = mctx.fresh("prev");
 
     // Phase 6: elide IIFE for simple expressions (no `?` operator).
@@ -483,7 +531,55 @@ fn emit_mono_many(
         quote! { (|| #elem_expr)() }
     };
 
-    // When lo == 0, the length check is always true — elide it.
+    // ── Arena slice mode: scratch-based collection ──────────────────────────
+    if ctx.use_arena_slices {
+        let depth_var = mctx.fresh("depth");
+        let init_code = ctx.emit_scratch_init(&elem_ty, &depth_var);
+        let push_code = ctx.emit_scratch_push(&elem_ty, &quote! { __value });
+        let count_expr = ctx.emit_scratch_count(&elem_ty, &depth_var);
+        let collect_expr = ctx.emit_scratch_collect(&elem_ty, &depth_var);
+        let truncate_expr = ctx.emit_scratch_truncate(&elem_ty, &depth_var);
+
+        let check = if lo == 0 {
+            quote! { Some(#collect_expr) }
+        } else {
+            quote! {
+                if #count_expr >= #lo_usize {
+                    Some(#collect_expr)
+                } else {
+                    #truncate_expr
+                    None
+                }
+            }
+        };
+
+        return quote! {
+            {
+                #init_code
+                loop {
+                    let #prev_var = state.offset;
+                    let __elem = #elem_call;
+                    match __elem {
+                        Some(__value) => {
+                            #push_code;
+                            if state.offset == #prev_var { break; }
+                        }
+                        None => {
+                            state.offset = #prev_var;
+                            break;
+                        }
+                    }
+                }
+                #check
+            }
+        };
+    }
+
+    // ── Owned mode: Vec-based collection ────────────────────────────────────
+    let collection_ty = ctx.collection_builder_type_from_elem_desc(&elem_ty);
+    let vals_var = mctx.fresh("vals");
+    let init_cap = if lo == 0 { 4usize } else { lo as usize };
+
     let check = if lo == 0 {
         quote! { Some(#vals_var) }
     } else {
@@ -496,12 +592,9 @@ fn emit_mono_many(
         }
     };
 
-    // Use lo bound as capacity hint: lo=0 → 4 (small default), lo>=1 → lo.
-    let init_cap = if lo == 0 { 4usize } else { lo as usize };
-
     quote! {
         {
-            let mut #vals_var = Vec::with_capacity(#init_cap);
+            let mut #vals_var: #collection_ty = <#collection_ty>::with_capacity(#init_cap);
             loop {
                 let #prev_var = state.offset;
                 let __elem = #elem_call;
@@ -567,4 +660,82 @@ pub(super) fn emit_mono_sep_by_ws(
         ctx,
         mctx,
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashMap;
+
+    use bbnf_ir::{GrammarIR, IrRule, RuleMeta, TypeDesc};
+
+    use super::*;
+    use crate::generate::codegen::ir_types::{IrCodegenCtx, ParserAttributes, StorageMode};
+
+    #[test]
+    fn sep_by_ws_until_uses_scratch_for_arena_mode() {
+        let ir = GrammarIR {
+            rules: vec![
+                IrRule {
+                    id: 0,
+                    name: 0,
+                    // Body = Repeat(Ref(1)) → infers to Vec(Enum).
+                    body: IrNode::Repeat {
+                        inner: Box::new(IrNode::Ref(1)),
+                        lo: 0,
+                        hi: u32::MAX,
+                    },
+                    meta: RuleMeta::default(),
+                    source_span: None,
+                },
+                IrRule {
+                    id: 1,
+                    name: 1,
+                    body: IrNode::Literal(2),
+                    meta: RuleMeta::default(),
+                    source_span: None,
+                },
+            ],
+            entry: 0,
+            strings: vec!["items".into(), "comma".into(), ",".into()],
+            fns: vec![],
+            types: vec![
+                (0, TypeDesc::Vec(Box::new(TypeDesc::Enum))),
+                (1, TypeDesc::Span),
+            ],
+            follow_sets: HashMap::new(),
+            ws_pattern: None,
+            b1_span_collapse: false,
+            debug_all: false,
+            debug_labels: Vec::new(),
+        };
+
+        let ident = quote::format_ident!("TestParser");
+        let attrs = ParserAttributes {
+            arena: true,
+            ..Default::default()
+        };
+        let ctx = IrCodegenCtx::new(&ir, &ident, &attrs, StorageMode::Arena);
+        let mut mctx = MonoCtx::new(vec![false, false], vec![false, false]);
+        mctx.current_rule_id = Some(0);
+
+        let tokens = emit_mono_sep_by_core(
+            &IrNode::Ref(1),
+            &IrNode::Literal(2),
+            0,
+            &SepByConfig {
+                ws: true,
+                open_expr: None,
+                close_expr: None,
+                terminator_bytes: Some(vec![b']']),
+                unchecked_sep: None,
+            },
+            &ctx,
+            &mut mctx,
+        )
+        .to_string();
+
+        // Arena mode uses scratch-based collection.
+        assert!(tokens.contains("__s0"), "should use scratch push: {}", tokens);
+        assert!(tokens.contains("__c0"), "should use scratch collect: {}", tokens);
+    }
 }

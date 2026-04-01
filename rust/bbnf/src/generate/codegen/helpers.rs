@@ -11,7 +11,7 @@ use quote::{format_ident, quote};
 
 use super::ir_types::IrCodegenCtx;
 use super::unescape_literal;
-use super::{emit_mono_expr, emit_ws_trim, MonoCtx};
+use super::{MonoCtx, emit_mono_expr, emit_ws_trim};
 
 /// Internal function name for a rule.
 ///
@@ -40,9 +40,7 @@ pub(crate) fn emit_mono_discarded(
             match fd {
                 FnDescriptor::EnumWrap { .. }
                 | FnDescriptor::BoxWrap
-                | FnDescriptor::Constant { .. } => {
-                    emit_mono_discarded(inner, strip_ow, ctx, mctx)
-                }
+                | FnDescriptor::Constant { .. } => emit_mono_discarded(inner, strip_ow, ctx, mctx),
                 _ => emit_mono_expr(node, ctx, mctx, false),
             }
         }
@@ -98,11 +96,7 @@ pub(crate) fn emit_mono_discarded(
         IrNode::Ref(rule_id) => {
             // Fusion: inline discarded body of non-cyclic or single-site cyclic rules.
             let can_inline = mctx.fusion_eligible.get(*rule_id as usize).copied() == Some(true)
-                || mctx
-                    .single_site_inline
-                    .get(*rule_id as usize)
-                    .copied()
-                    == Some(true);
+                || mctx.single_site_inline.get(*rule_id as usize).copied() == Some(true);
             if can_inline {
                 let rule = &ctx.ir.rules[*rule_id as usize];
                 let result = emit_mono_discarded(&rule.body, strip_ow, ctx, mctx);
@@ -160,8 +154,10 @@ pub(crate) fn emit_literal_inline(unescaped: &str, need_span: bool) -> TokenStre
         }
     } else {
         let len = bytes.len();
-        let byte_lits: Vec<proc_macro2::Literal> =
-            bytes.iter().map(|b| proc_macro2::Literal::byte_character(*b)).collect();
+        let byte_lits: Vec<proc_macro2::Literal> = bytes
+            .iter()
+            .map(|b| proc_macro2::Literal::byte_character(*b))
+            .collect();
         if need_span {
             quote! {
                 {

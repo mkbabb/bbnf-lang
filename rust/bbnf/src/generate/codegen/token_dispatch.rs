@@ -11,7 +11,7 @@ use quote::quote;
 
 use super::ir_types::IrCodegenCtx;
 use super::unescape_literal;
-use super::{emit_mono_expr, MonoCtx};
+use super::{MonoCtx, emit_mono_expr};
 
 /// Emit monolithic code for a TokenDispatch node.
 ///
@@ -42,14 +42,20 @@ pub(super) fn emit_token_dispatch(
         let continuation_expr = emit_mono_expr(&arm.continuation, ctx, mctx, elide_box);
 
         // Generate byte comparisons for each pattern string.
-        let comparisons: Vec<TokenStream> = arm.patterns.iter().map(|&sid| {
-            let pat = unescape_literal(ctx.ir.get_string(sid));
-            let bytes = pat.as_bytes();
-            let byte_lits: Vec<proc_macro2::Literal> =
-                bytes.iter().map(|b| proc_macro2::Literal::byte_character(*b)).collect();
-            let len = bytes.len();
-            quote! { (__td_len == #len && __td_bytes == &[#(#byte_lits),*]) }
-        }).collect();
+        let comparisons: Vec<TokenStream> = arm
+            .patterns
+            .iter()
+            .map(|&sid| {
+                let pat = unescape_literal(ctx.ir.get_string(sid));
+                let bytes = pat.as_bytes();
+                let byte_lits: Vec<proc_macro2::Literal> = bytes
+                    .iter()
+                    .map(|b| proc_macro2::Literal::byte_character(*b))
+                    .collect();
+                let len = bytes.len();
+                quote! { (__td_len == #len && __td_bytes == &[#(#byte_lits),*]) }
+            })
+            .collect();
 
         // If there's a guard byte, check it after the pattern match.
         let body = if let Some(guard) = arm.guard_byte {

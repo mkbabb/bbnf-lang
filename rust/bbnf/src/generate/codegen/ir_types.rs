@@ -9,7 +9,7 @@ use bbnf_ir::{GrammarIR, RuleId, TypeDesc};
 
 use proc_macro2::TokenStream;
 use quote::format_ident;
-use syn::{parse_quote, Type};
+use syn::{Type, parse_quote};
 
 /// Container-level parser attributes parsed from `#[parser(...)]`.
 #[derive(Clone, Debug, Default)]
@@ -54,6 +54,17 @@ pub struct IrCodegenCtx<'a> {
     /// Rule IDs with fused number scan+convert. These rules produce `(Span, f64)`
     /// instead of `Span` in the arena enum. Only set for arena codegen context.
     pub fused_number_rules: HashSet<RuleId>,
+    /// Distinct Vec element TypeDescs for scratch Vec generation (arena mode only).
+    /// Each entry gets a scratch field `__s{index}` and collect method `__c{index}`.
+    pub scratch_types: Vec<TypeDesc>,
+    /// Codegen-consistent type cache (cyclic_context=false, pretty_preserve=false).
+    /// Used by `CodegenInfer` so that Ref lookups during inline inference see
+    /// the same types as enum variants.
+    pub codegen_type_cache: HashMap<RuleId, TypeDesc>,
+    /// True when arena collections use `&'a [T]` + scratch Vecs.
+    /// False for prettify+arena (where Vec covariance is needed to handle
+    /// inference divergence between ir.types and codegen).
+    pub use_arena_slices: bool,
 }
 
 impl<'a> IrCodegenCtx<'a> {
@@ -73,11 +84,55 @@ impl<'a> IrCodegenCtx<'a> {
             StorageMode::Arena => parse_quote!(&'a #enum_ident<'a>),
         };
 
-        let mut rule_types = HashMap::new();
-        for (rule_id, type_desc) in &ir.types {
-            let ty = type_desc_to_syn_raw(type_desc, &enum_type, &boxed_enum_type, ir);
-            rule_types.insert(*rule_id, ty);
-        }
+        // For arena mode: recompute rule types from scratch using codegen inference
+        // (cyclic_context=false, pretty_preserve=false). This ensures enum variant
+        // types match function body types exactly. Builds the cache incrementally
+        // so Ref lookups see codegen-consistent types.
+        //
+        // For owned mode: use ir.types (Vec covariance handles minor differences).
+        let (rule_types, codegen_cache) = if storage_mode == StorageMode::Arena {
+            use bbnf_ir::passes::{InferCtx, infer_node};
+            let mut cache: HashMap<RuleId, TypeDesc> = HashMap::new();
+            let mut rt = HashMap::new();
+            let acyclic: HashSet<RuleId> = ir
+                .rules
+                .iter()
+                .filter(|r| !r.meta.is_cyclic)
+                .map(|r| r.id)
+                .collect();
+            for rule in &ir.rules {
+                let infer_ctx = InferCtx {
+                    ir,
+                    cache: &cache,
+                    acyclic_rules: &acyclic,
+                    cyclic_context: false,
+                    pretty_preserve: false,
+                };
+                let td = infer_node(&rule.body, &infer_ctx);
+                cache.insert(rule.id, td.clone());
+                let use_slices = !parser_attrs.prettify; // arena slices only when not prettify
+                let ty = type_desc_to_syn_raw(&td, &enum_type, &boxed_enum_type, ir, storage_mode, use_slices);
+                rt.insert(rule.id, ty);
+            }
+            (rt, cache)
+        } else {
+            let mut rt = HashMap::new();
+            for (rule_id, type_desc) in &ir.types {
+                let ty = type_desc_to_syn_raw(
+                    type_desc, &enum_type, &boxed_enum_type, ir, storage_mode, false,
+                );
+                rt.insert(*rule_id, ty);
+            }
+            let cache = ir.types.iter().cloned().collect();
+            (rt, cache)
+        };
+
+        // Collect distinct Vec element types for scratch Vec generation (arena mode).
+        let scratch_types = if storage_mode == StorageMode::Arena {
+            collect_vec_element_types(ir)
+        } else {
+            vec![]
+        };
 
         Self {
             ir,
@@ -90,12 +145,45 @@ impl<'a> IrCodegenCtx<'a> {
             sp_method_rules: HashSet::new(),
             rule_types,
             fused_number_rules: HashSet::new(),
+            scratch_types,
+            codegen_type_cache: codegen_cache,
+            use_arena_slices: storage_mode == StorageMode::Arena && !parser_attrs.prettify,
         }
     }
 
     #[inline]
     pub fn uses_arena(&self) -> bool {
         self.storage_mode == StorageMode::Arena
+    }
+
+    /// Look up the scratch Vec index for a given collection element TypeDesc.
+    /// Panics if the element type wasn't pre-registered (should never happen
+    /// if `collect_vec_element_types` is correct).
+    pub fn scratch_index_for_elem(&self, elem_desc: &TypeDesc) -> usize {
+        self.scratch_types
+            .iter()
+            .position(|t| t == elem_desc)
+            .unwrap_or_else(|| {
+                panic!(
+                    "scratch type not registered for {:?}; known types: {:?}",
+                    elem_desc, self.scratch_types
+                )
+            })
+    }
+
+    /// Emit the scratch accessor ident for a given index: `__s0`, `__s1`, etc.
+    pub fn scratch_accessor(&self, idx: usize) -> syn::Ident {
+        format_ident!("__s{}", idx)
+    }
+
+    /// Emit the collect method ident for a given index: `__c0`, `__c1`, etc.
+    pub fn collect_accessor(&self, idx: usize) -> syn::Ident {
+        format_ident!("__c{}", idx)
+    }
+
+    /// Get the context struct ident: `__JsonArenaCtx`.
+    pub fn arena_ctx_ident(&self) -> syn::Ident {
+        format_ident!("__{}Ctx", self.enum_ident)
     }
 
     pub fn rule_return_type(&self, rule_id: RuleId) -> Type {
@@ -127,6 +215,26 @@ impl<'a> IrCodegenCtx<'a> {
             }
         } else {
             quote::quote! { #enum_ident::Recovered }
+        }
+    }
+
+    /// Get the Vec inner TypeDesc for the current rule from the codegen type cache.
+    /// Returns None if the rule isn't Vec-typed or rule_id is None.
+    pub fn current_rule_vec_inner(&self, rule_id: Option<RuleId>) -> Option<&TypeDesc> {
+        let rid = rule_id?;
+        let td = self.codegen_type_cache.get(&rid)?;
+        match td {
+            TypeDesc::Vec(inner) => Some(inner.as_ref()),
+            _ => None,
+        }
+    }
+
+    /// Emit the alloc path: `.arena().alloc` for arena-slice mode, `.alloc` for plain arena.
+    fn arena_alloc_tokens(&self, helper_call: TokenStream, value: &TokenStream) -> TokenStream {
+        if self.use_arena_slices {
+            quote::quote! { #helper_call.arena().alloc(#value) }
+        } else {
+            quote::quote! { #helper_call.alloc(#value) }
         }
     }
 
@@ -170,8 +278,10 @@ impl<'a> IrCodegenCtx<'a> {
             StorageMode::Owned => quote::quote! { Box::new(#expr) },
             StorageMode::Arena => {
                 let helper_ident = self.arena_helper_ident();
+                let helper_call = quote::quote! { #helper_ident(#state_ident) };
+                let alloc = self.arena_alloc_tokens(helper_call, &quote::quote! { #expr });
                 quote::quote! {{
-                    let __arena_alloc = #helper_ident(#state_ident).alloc(#expr);
+                    let __arena_alloc = #alloc;
                     &*__arena_alloc
                 }}
             }
@@ -213,7 +323,9 @@ impl<'a> IrCodegenCtx<'a> {
         match self.storage_mode {
             StorageMode::Arena => {
                 let helper = self.arena_helper_ident();
-                quote::quote! { &*#helper(state).alloc(#value_expr) }
+                let helper_call = quote::quote! { #helper(state) };
+                let alloc = self.arena_alloc_tokens(helper_call, value_expr);
+                quote::quote! { &*#alloc }
             }
             StorageMode::Owned => {
                 quote::quote! { Box::new(#value_expr) }
@@ -231,8 +343,10 @@ impl<'a> IrCodegenCtx<'a> {
         match self.storage_mode {
             StorageMode::Arena => {
                 let helper = self.arena_helper_ident();
+                let helper_call = quote::quote! { #helper(state) };
+                let alloc = self.arena_alloc_tokens(helper_call, value_expr);
                 quote::quote! {
-                    let __alloc = #helper(state).alloc(#value_expr);
+                    let __alloc = #alloc;
                     &*__alloc
                 }
             }
@@ -241,10 +355,281 @@ impl<'a> IrCodegenCtx<'a> {
             }
         }
     }
+
+    pub fn collection_builder_type_from_elem_desc(&self, elem_desc: &TypeDesc) -> Type {
+        let elem_ty = type_desc_to_syn_raw(
+            elem_desc,
+            &self.enum_type,
+            &self.boxed_enum_type,
+            self.ir,
+            self.storage_mode,
+            false, // collection builder is always Vec (the BUILD type, not the final type)
+        );
+        parse_quote!(Vec<#elem_ty>)
+    }
+
+    pub fn rule_body_desc(&self, rule_id: RuleId) -> Option<&TypeDesc> {
+        // Use codegen_type_cache for arena mode to match the codegen inference.
+        // For owned mode, ir.types is fine (Vec covariance handles minor differences).
+        if self.uses_arena() {
+            self.codegen_type_cache.get(&rule_id)
+        } else {
+            self.ir.types.iter().find_map(|(id, ty)| (*id == rule_id).then_some(ty))
+        }
+    }
+
+    /// Emit scratch-based collection init: records scratch depth.
+    pub fn emit_scratch_init(&self, elem_desc: &TypeDesc, depth_var: &syn::Ident) -> TokenStream {
+        let idx = self.scratch_index_for_elem(elem_desc);
+        let s_fn = self.scratch_accessor(idx);
+        let helper = self.arena_helper_ident();
+        quote::quote! {
+            let #depth_var = #helper(state).#s_fn().len();
+        }
+    }
+
+    /// Emit scratch push for a value expression.
+    pub fn emit_scratch_push(&self, elem_desc: &TypeDesc, value_expr: &TokenStream) -> TokenStream {
+        let idx = self.scratch_index_for_elem(elem_desc);
+        let s_fn = self.scratch_accessor(idx);
+        let helper = self.arena_helper_ident();
+        quote::quote! { #helper(state).#s_fn().push(#value_expr) }
+    }
+
+    /// Emit scratch collect: copies scratch[depth..] to arena slice, truncates.
+    pub fn emit_scratch_collect(&self, elem_desc: &TypeDesc, depth_var: &syn::Ident) -> TokenStream {
+        let idx = self.scratch_index_for_elem(elem_desc);
+        let c_fn = self.collect_accessor(idx);
+        let helper = self.arena_helper_ident();
+        quote::quote! { #helper(state).#c_fn(#depth_var) }
+    }
+
+    /// Emit scratch truncate on failure path.
+    pub fn emit_scratch_truncate(
+        &self,
+        elem_desc: &TypeDesc,
+        depth_var: &syn::Ident,
+    ) -> TokenStream {
+        let idx = self.scratch_index_for_elem(elem_desc);
+        let s_fn = self.scratch_accessor(idx);
+        let helper = self.arena_helper_ident();
+        quote::quote! { #helper(state).#s_fn().truncate(#depth_var); }
+    }
+
+    /// Emit scratch len - depth expression (element count).
+    pub fn emit_scratch_count(
+        &self,
+        elem_desc: &TypeDesc,
+        depth_var: &syn::Ident,
+    ) -> TokenStream {
+        let idx = self.scratch_index_for_elem(elem_desc);
+        let s_fn = self.scratch_accessor(idx);
+        let helper = self.arena_helper_ident();
+        quote::quote! { (#helper(state).#s_fn().len() - #depth_var) }
+    }
+
+    /// Emit scratch extend from a slice (for Seq flattening).
+    pub fn emit_scratch_extend_slice(
+        &self,
+        elem_desc: &TypeDesc,
+        slice_expr: &TokenStream,
+    ) -> TokenStream {
+        let idx = self.scratch_index_for_elem(elem_desc);
+        let s_fn = self.scratch_accessor(idx);
+        let helper = self.arena_helper_ident();
+        quote::quote! { #helper(state).#s_fn().extend_from_slice(#slice_expr) }
+    }
+
+    /// Generate the arena context struct definition + impl + helper function.
+    ///
+    /// Returns (struct_def, helper_fn) as TokenStreams.
+    pub fn generate_arena_ctx(&self) -> (TokenStream, TokenStream) {
+        let ctx_ident = self.arena_ctx_ident();
+        let enum_ident = &self.enum_ident;
+        let helper_ident = self.arena_helper_ident();
+
+        // Generate scratch fields, accessors, and collect methods.
+        let mut fields = vec![];
+        let mut accessors = vec![];
+        let mut new_fields = vec![];
+
+        for (i, elem_td) in self.scratch_types.iter().enumerate() {
+            let s_ident = self.scratch_accessor(i);
+            let c_ident = self.collect_accessor(i);
+            let elem_ty = type_desc_to_syn(elem_td, self);
+
+            fields.push(quote::quote! {
+                #s_ident: ::std::cell::UnsafeCell<Vec<#elem_ty>>
+            });
+
+            new_fields.push(quote::quote! {
+                #s_ident: ::std::cell::UnsafeCell::new(Vec::with_capacity(64))
+            });
+
+            accessors.push(quote::quote! {
+                #[inline(always)]
+                #[allow(non_snake_case)]
+                fn #s_ident(&self) -> &mut Vec<#elem_ty> {
+                    unsafe { &mut *self.#s_ident.get() }
+                }
+
+                #[inline(always)]
+                #[allow(non_snake_case)]
+                fn #c_ident(&'a self, depth: usize) -> &'a [#elem_ty] {
+                    let s = self.#s_ident();
+                    let slice = self.__arena.alloc_slice_clone(&s[depth..]);
+                    s.truncate(depth);
+                    slice
+                }
+            });
+        }
+
+        let struct_def = quote::quote! {
+            #[allow(non_camel_case_types)]
+            struct #ctx_ident<'a> {
+                __arena: ::parse_that::BumpArena<#enum_ident<'a>>,
+                #(#fields),*
+            }
+
+            #[allow(non_snake_case)]
+            impl<'a> #ctx_ident<'a> {
+                fn with_capacity(n: usize) -> Self {
+                    Self {
+                        __arena: ::parse_that::BumpArena::with_capacity(n),
+                        #(#new_fields),*
+                    }
+                }
+
+                #[inline(always)]
+                fn arena(&'a self) -> &'a ::parse_that::BumpArena<#enum_ident<'a>> {
+                    &self.__arena
+                }
+
+                #(#accessors)*
+            }
+        };
+
+        let helper_fn = quote::quote! {
+            #[allow(non_snake_case)]
+            #[inline(always)]
+            fn #helper_ident<'a>(
+                state: &::parse_that::ParserState<'a>,
+            ) -> &'a #ctx_ident<'a> {
+                debug_assert!(
+                    !state.context_ptr.is_null(),
+                    "arena parser requires parse_with_context()"
+                );
+                unsafe {
+                    &*(state.context_ptr as *const #ctx_ident<'a>)
+                }
+            }
+        };
+
+        (struct_def, helper_fn)
+    }
+}
+
+/// Collect distinct Vec element types from both IR types and per-rule inference.
+///
+/// Uses both sources to handle the divergence between the IR pass (which uses
+/// `pretty_preserve=true` / `cyclic_context=true` for some rules) and codegen
+/// (which uses `false` / `false`). Both sets of types are registered so that
+/// scratch lookups work regardless of which inference the callsite uses.
+fn collect_vec_element_types(ir: &GrammarIR) -> Vec<TypeDesc> {
+    use bbnf_ir::IrNode;
+    use bbnf_ir::passes::{InferCtx, infer_node_in_vec};
+
+    let mut seen = Vec::new();
+
+    // Source 1: from ir.types (matches the IR pass).
+    for (_rule_id, td) in &ir.types {
+        collect_vec_inner(td, &mut seen);
+    }
+
+    // Source 2: from per-node inference with codegen flags (pretty_preserve=false,
+    // cyclic_context=false) to catch any types that diverge from ir.types.
+    let cache: HashMap<RuleId, TypeDesc> = ir.types.iter().cloned().collect();
+    let acyclic: HashSet<RuleId> = ir
+        .rules
+        .iter()
+        .filter(|r| !r.meta.is_cyclic)
+        .map(|r| r.id)
+        .collect();
+    let infer_ctx = InferCtx {
+        ir,
+        cache: &cache,
+        acyclic_rules: &acyclic,
+        cyclic_context: false,
+        pretty_preserve: false,
+    };
+
+    fn walk_node(node: &IrNode, ctx: &InferCtx<'_>, out: &mut Vec<TypeDesc>) {
+        match node {
+            IrNode::Repeat { inner, lo, hi } => {
+                if !(*lo == 0 && *hi == 1) {
+                    let elem_ty = infer_node_in_vec(inner, ctx);
+                    if elem_ty != TypeDesc::Span && !out.contains(&elem_ty) {
+                        out.push(elem_ty);
+                    }
+                }
+                walk_node(inner, ctx, out);
+            }
+            IrNode::Seq(children) => {
+                for child in children {
+                    walk_node(child, ctx, out);
+                }
+            }
+            IrNode::Alt(branches, _) => {
+                for b in branches {
+                    walk_node(&b.node, ctx, out);
+                }
+            }
+            IrNode::Skip(l, r) | IrNode::Next(l, r) | IrNode::Minus(l, r) => {
+                walk_node(l, ctx, out);
+                walk_node(r, ctx, out);
+            }
+            IrNode::OptionalWhitespace(inner)
+            | IrNode::Map { inner, .. }
+            | IrNode::Negate(inner) => {
+                walk_node(inner, ctx, out);
+            }
+            _ => {}
+        }
+    }
+
+    for rule in &ir.rules {
+        walk_node(&rule.body, &infer_ctx, &mut seen);
+    }
+    seen
+}
+
+fn collect_vec_inner(td: &TypeDesc, out: &mut Vec<TypeDesc>) {
+    match td {
+        TypeDesc::Vec(inner) => {
+            if !out.contains(inner.as_ref()) {
+                out.push(inner.as_ref().clone());
+            }
+            collect_vec_inner(inner, out);
+        }
+        TypeDesc::Option(inner) => collect_vec_inner(inner, out),
+        TypeDesc::Tuple(elems) => {
+            for e in elems {
+                collect_vec_inner(e, out);
+            }
+        }
+        _ => {}
+    }
 }
 
 pub fn type_desc_to_syn(desc: &TypeDesc, ctx: &IrCodegenCtx<'_>) -> Type {
-    type_desc_to_syn_raw(desc, &ctx.enum_type, &ctx.boxed_enum_type, ctx.ir)
+    type_desc_to_syn_raw(
+        desc,
+        &ctx.enum_type,
+        &ctx.boxed_enum_type,
+        ctx.ir,
+        ctx.storage_mode,
+        ctx.use_arena_slices,
+    )
 }
 
 fn type_desc_to_syn_raw(
@@ -252,18 +637,24 @@ fn type_desc_to_syn_raw(
     enum_type: &Type,
     boxed_enum_type: &Type,
     ir: &GrammarIR,
+    storage_mode: StorageMode,
+    use_slices: bool,
 ) -> Type {
     match desc {
         TypeDesc::Span => parse_quote!(::parse_that::Span<'a>),
         TypeDesc::F64 => parse_quote!(f64),
         TypeDesc::U32 => parse_quote!(u32),
         TypeDesc::Option(inner) => {
-            let inner = type_desc_to_syn_raw(inner, enum_type, boxed_enum_type, ir);
+            let inner = type_desc_to_syn_raw(inner, enum_type, boxed_enum_type, ir, storage_mode, use_slices);
             parse_quote!(Option<#inner>)
         }
         TypeDesc::Vec(inner) => {
-            let inner = type_desc_to_syn_raw(inner, enum_type, boxed_enum_type, ir);
-            parse_quote!(Vec<#inner>)
+            let inner_ty = type_desc_to_syn_raw(inner, enum_type, boxed_enum_type, ir, storage_mode, use_slices);
+            if use_slices {
+                parse_quote!(&'a [#inner_ty])
+            } else {
+                parse_quote!(Vec<#inner_ty>)
+            }
         }
         TypeDesc::Tuple(elems) => {
             if elems.is_empty() {
@@ -271,7 +662,7 @@ fn type_desc_to_syn_raw(
             } else {
                 let types: Vec<_> = elems
                     .iter()
-                    .map(|e| type_desc_to_syn_raw(e, enum_type, boxed_enum_type, ir))
+                    .map(|e| type_desc_to_syn_raw(e, enum_type, boxed_enum_type, ir, storage_mode, use_slices))
                     .collect();
                 parse_quote!((#(#types),*))
             }

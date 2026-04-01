@@ -16,15 +16,15 @@ mod alt;
 mod expr;
 mod repeat;
 
-use bbnf_ir::{IrNode, GrammarIR};
+use bbnf_ir::{GrammarIR, IrNode};
 
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::ir_types::IrCodegenCtx;
 use super::super::regex_ir::fast_paths;
+use super::ir_types::IrCodegenCtx;
 use super::unescape_literal;
-use super::{emit_ws_trim, MonoCtx};
+use super::{MonoCtx, emit_ws_trim};
 
 /// Function name for a span-only rule: `__rule_span`.
 pub(in crate::generate) fn span_fn_ident(name: &str) -> syn::Ident {
@@ -32,10 +32,7 @@ pub(in crate::generate) fn span_fn_ident(name: &str) -> syn::Ident {
 }
 
 /// Generate all span-only monolithic methods for all rules.
-pub fn generate_monolithic_span(
-    ir: &GrammarIR,
-    ctx: &IrCodegenCtx<'_>,
-) -> TokenStream {
+pub fn generate_monolithic_span(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
     let mut methods: Vec<TokenStream> = Vec::new();
 
     let fusion_eligible: Vec<bool> = ir
@@ -45,8 +42,7 @@ pub fn generate_monolithic_span(
             rule.meta.is_token
                 || (!rule.meta.is_cyclic
                     && rule.meta.recover.is_none()
-                    && rule.meta.pretty.is_none()
-                    )
+                    && rule.meta.pretty.is_none())
         })
         .collect();
 
@@ -68,8 +64,7 @@ pub fn generate_monolithic_span(
         let rule_debug = ir.debug_all || rule.meta.debug;
         let instrumented_body = if rule_debug {
             let trace_entry = super::trace::emit_trace_entry(name);
-            let result_ident =
-                syn::Ident::new("__trace_result", proc_macro2::Span::call_site());
+            let result_ident = syn::Ident::new("__trace_result", proc_macro2::Span::call_site());
             let trace_exit = super::trace::emit_trace_exit(name, &result_ident);
             quote! {
                 #trace_entry

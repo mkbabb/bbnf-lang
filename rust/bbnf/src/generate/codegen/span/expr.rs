@@ -1,13 +1,13 @@
 //! Span-only expression helpers: Ref, Seq, Skip/Next/Wrap, OW, sep_by_ws variants.
 
-use bbnf_ir::{IrNode, GrammarIR};
+use bbnf_ir::{GrammarIR, IrNode};
 
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use super::super::ir_types::IrCodegenCtx;
 use super::super::MonoCtx;
-use super::{span_fn_ident, emit_span_expr, emit_span_discarded, emit_ws_trim};
+use super::super::ir_types::IrCodegenCtx;
+use super::{emit_span_discarded, emit_span_expr, emit_ws_trim, span_fn_ident};
 
 // ── Ref ──────────────────────────────────────────────────────────────────────
 
@@ -155,13 +155,26 @@ pub(super) fn emit_span_wrap(
     // sep_by_ws_until optimization.
     if let IrNode::Literal(_) = close {
         if let IrNode::OptionalWhitespace(ow_inner) = middle {
-            if let IrNode::Repeat { inner: rep_inner, lo, hi } = ow_inner.as_ref() {
+            if let IrNode::Repeat {
+                inner: rep_inner,
+                lo,
+                hi,
+            } = ow_inner.as_ref()
+            {
                 if !(*lo == 0 && *hi == 1) {
-                    if let Some((element, separator)) = super::super::helpers::try_sep_by(rep_inner) {
+                    if let Some((element, separator)) = super::super::helpers::try_sep_by(rep_inner)
+                    {
                         let open_expr = emit_span_discarded(open, ir, ctx, mctx);
                         let close_expr = emit_span_discarded(close, ir, ctx, mctx);
                         return emit_span_sep_by_ws_until(
-                            element, separator, *lo, &open_expr, &close_expr, ir, ctx, mctx,
+                            element,
+                            separator,
+                            *lo,
+                            &open_expr,
+                            &close_expr,
+                            ir,
+                            ctx,
+                            mctx,
                         );
                     }
                 }
@@ -173,7 +186,13 @@ pub(super) fn emit_span_wrap(
     {
         let rule_name = mctx.current_rule_name.clone();
         if let Some(ts) = super::super::delim_scan::try_emit_span_wrap(
-            open, middle, close, rule_name.as_deref(), ir, ctx, mctx,
+            open,
+            middle,
+            close,
+            rule_name.as_deref(),
+            ir,
+            ctx,
+            mctx,
         ) {
             return ts;
         }
@@ -269,7 +288,12 @@ pub(super) fn emit_span_ow(
     mctx: &mut MonoCtx,
 ) -> TokenStream {
     // sep_by_ws detection.
-    if let IrNode::Repeat { inner: rep_inner, lo, hi } = inner {
+    if let IrNode::Repeat {
+        inner: rep_inner,
+        lo,
+        hi,
+    } = inner
+    {
         if !(*lo == 0 && *hi == 1) {
             if let Some((element, separator)) = super::super::helpers::try_sep_by(rep_inner) {
                 return emit_span_sep_by_ws(element, separator, *lo, ir, ctx, mctx);

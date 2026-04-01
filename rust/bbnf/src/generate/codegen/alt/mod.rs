@@ -8,9 +8,9 @@ use bbnf_ir::{AltBranch, FnDescriptor, IrNode, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::ir_types::{self, IrCodegenCtx};
 use super::infer::{infer_node_type, infer_node_type_elide_box};
-use super::{emit_mono_expr, MonoCtx};
+use super::ir_types::{self, IrCodegenCtx};
+use super::{MonoCtx, emit_mono_expr};
 
 use key_dispatch::try_emit_key_dispatch;
 
@@ -27,10 +27,7 @@ struct LitThroughMap {
 /// wrappers. Returns the literal's StringId and the constant value StringId
 /// (if wrapped), allowing the caller to emit the constant value directly
 /// instead of constructing a Span.
-fn extract_literal_through_map(
-    node: &IrNode,
-    ctx: &IrCodegenCtx<'_>,
-) -> Option<LitThroughMap> {
+fn extract_literal_through_map(node: &IrNode, ctx: &IrCodegenCtx<'_>) -> Option<LitThroughMap> {
     match node {
         IrNode::Literal(sid) => Some(LitThroughMap {
             lit_sid: *sid,
@@ -188,7 +185,9 @@ fn emit_mono_dispatch(
         let fb = &branches[fb_idx as usize];
         let fb_expr = emit_mono_expr(&fb.node, ctx, mctx, elide_box);
         if needs_coercion {
-            let sv_name = local_sub_variants.get(fb_idx as usize).and_then(|s| s.as_deref());
+            let sv_name = local_sub_variants
+                .get(fb_idx as usize)
+                .and_then(|s| s.as_deref());
             if elide_box {
                 coerce_mono_branch_by_value(fb_expr, &branch_tys[fb_idx as usize], sv_name, ctx)
             } else {

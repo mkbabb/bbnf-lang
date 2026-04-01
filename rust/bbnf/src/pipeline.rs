@@ -148,20 +148,29 @@ pub fn compile_ast<'a>(
     bbnf_ir::passes::compute_aliases(&mut ir);
     bbnf_ir::passes::compute_transparent(&mut ir);
 
-    // Run IR optimization passes.
-    bbnf_ir::passes::canonicalize_aliases(&mut ir);
-    bbnf_ir::passes::prune_unreachable(&mut ir);
-    bbnf_ir::passes::inline_acyclic(&mut ir);
-    // Second prune: inlined rules may now be unreachable.
-    bbnf_ir::passes::prune_unreachable(&mut ir);
-    // Fuse single-use rules into their call sites for better dispatch coverage.
-    bbnf_ir::passes::fuse_single_use(&mut ir);
-    // Third prune: fused rules may now be unreachable.
-    bbnf_ir::passes::prune_unreachable(&mut ir);
-    bbnf_ir::passes::eliminate_epsilon(&mut ir);
-    bbnf_ir::passes::merge_literals(&mut ir);
-    bbnf_ir::passes::merge_regex_alts(&mut ir);
-    bbnf_ir::passes::factor_common_prefixes(&mut ir);
+    // Fixed-point optimization loop (Phase 4.3).
+    // LLVM-style: track structural fingerprint to detect convergence.
+    // Later passes (fuse_single_use) can create new optimization opportunities
+    // that earlier passes (merge_literals, factor_common_prefixes) can exploit.
+    loop {
+        let fingerprint = ir.structural_fingerprint();
+
+        bbnf_ir::passes::canonicalize_aliases(&mut ir);
+        bbnf_ir::passes::prune_unreachable(&mut ir);
+        bbnf_ir::passes::inline_acyclic(&mut ir);
+        bbnf_ir::passes::prune_unreachable(&mut ir);
+        bbnf_ir::passes::fuse_single_use(&mut ir);
+        bbnf_ir::passes::prune_unreachable(&mut ir);
+        bbnf_ir::passes::eliminate_epsilon(&mut ir);
+        bbnf_ir::passes::merge_literals(&mut ir);
+        bbnf_ir::passes::simplify_regex_algebra(&mut ir);
+        bbnf_ir::passes::merge_regex_alts(&mut ir);
+        bbnf_ir::passes::factor_common_prefixes(&mut ir);
+
+        if ir.structural_fingerprint() == fingerprint {
+            break;
+        }
+    }
     bbnf_ir::passes::sort_alt_branches(&mut ir);
     bbnf_ir::passes::refine_span_eligibility(&mut ir);
 

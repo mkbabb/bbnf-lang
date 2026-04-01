@@ -471,6 +471,41 @@ impl GrammarIR {
     pub fn find_rule(&self, name: &str) -> Option<&IrRule> {
         self.rules.iter().find(|r| self.get_string(r.name) == name)
     }
+
+    /// Compute a structural fingerprint of the IR for fixed-point convergence detection.
+    ///
+    /// Uses rule count + total node count + string pool size as a coarse-grained
+    /// change detector. Used as a `debug_assert!` backup for the Changed-flag loop.
+    pub fn structural_fingerprint(&self) -> (usize, usize, usize) {
+        let node_count: usize = self.rules.iter().map(|r| count_nodes(&r.body)).sum();
+        (self.rules.len(), node_count, self.strings.len())
+    }
+}
+
+/// Count the total number of nodes in an IrNode tree.
+fn count_nodes(node: &IrNode) -> usize {
+    match node {
+        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon | IrNode::Ref(_) => 1,
+        IrNode::Seq(children) => 1 + children.iter().map(|c| count_nodes(c)).sum::<usize>(),
+        IrNode::Alt(branches, _) => {
+            1 + branches.iter().map(|b| count_nodes(&b.node)).sum::<usize>()
+        }
+        IrNode::Repeat { inner, .. } => 1 + count_nodes(inner),
+        IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
+            1 + count_nodes(a) + count_nodes(b)
+        }
+        IrNode::Negate(inner) | IrNode::OptionalWhitespace(inner) => 1 + count_nodes(inner),
+        IrNode::Map { inner, .. } => 1 + count_nodes(inner),
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => {
+            1 + count_nodes(token)
+                + arms.iter().map(|a| count_nodes(&a.continuation)).sum::<usize>()
+                + count_nodes(fallback)
+        }
+    }
 }
 
 // ─── Serialization ──────────────────────────────────────────────────────────

@@ -187,6 +187,17 @@ fn try_factor_alt(
     strings: &[String],
     rule_metas: &[(CharSet128, bool)],
 ) -> Option<IrNode> {
+    // Phase 4.1: Generalized to N branches. Group by leading regex SID.
+    if branches.len() < 2 {
+        return None;
+    }
+
+    // Try grouping by leading regex SID.
+    if let Some(factored) = try_factor_n_branch(branches, strings, rule_metas) {
+        return Some(factored);
+    }
+
+    // Legacy 2-branch path for edge cases.
     if branches.len() != 2 {
         return None;
     }
@@ -275,6 +286,130 @@ fn try_factor_alt(
         IrNode::Regex(common_regex_sid),
         inner_alt,
     ]))
+}
+
+/// Phase 4.1: N-branch regex prefix factoring.
+///
+/// Groups Alt branches by leading regex SID. For each group of >=2 branches
+/// with the same leading regex, checks if continuation FIRST sets are pairwise
+/// disjoint. If so, factors out the shared regex prefix and builds dispatch.
+fn try_factor_n_branch(
+    branches: &[AltBranch],
+    strings: &[String],
+    rule_metas: &[(CharSet128, bool)],
+) -> Option<IrNode> {
+    use std::collections::HashMap;
+
+    // Group branch indices by leading regex SID.
+    let mut groups: HashMap<u32, Vec<usize>> = HashMap::new();
+    for (i, branch) in branches.iter().enumerate() {
+        if let Some(IrNode::Regex(sid)) = leading_expr(&branch.node) {
+            groups.entry(*sid).or_default().push(i);
+        }
+    }
+
+    // Find the largest group with >=2 members where continuations have disjoint FIRST.
+    let mut best_group: Option<(u32, Vec<usize>)> = None;
+
+    for (regex_sid, indices) in &groups {
+        if indices.len() < 2 {
+            continue;
+        }
+
+        // Check pairwise disjointness of continuation FIRST sets.
+        let cont_firsts: Vec<Option<CharSet128>> = indices
+            .iter()
+            .map(|&i| continuation_first(&branches[i].node, strings, rule_metas))
+            .collect();
+
+        // All must have computable continuation FIRST.
+        if cont_firsts.iter().any(|f| f.is_none()) {
+            continue;
+        }
+
+        let cont_firsts: Vec<&CharSet128> = cont_firsts.iter().map(|f| f.as_ref().unwrap()).collect();
+
+        // Pairwise disjoint check.
+        let mut pairwise_disjoint = true;
+        'outer: for i in 0..cont_firsts.len() {
+            for j in i + 1..cont_firsts.len() {
+                if !cont_firsts[i].is_disjoint(cont_firsts[j]) {
+                    pairwise_disjoint = false;
+                    break 'outer;
+                }
+            }
+        }
+
+        if !pairwise_disjoint {
+            continue;
+        }
+
+        // This group is eligible. Prefer the largest group.
+        if best_group.as_ref().is_none_or(|(_, g)| g.len() < indices.len()) {
+            best_group = Some((*regex_sid, indices.clone()));
+        }
+    }
+
+    let (regex_sid, group_indices) = best_group?;
+
+    // Build the factored node.
+    // Collect continuation branches with their FIRST sets.
+    let mut cont_branches: Vec<AltBranch> = Vec::new();
+    for &i in &group_indices {
+        let cont = strip_leading_seq(&branches[i].node)?;
+        let cont_first = continuation_first(&branches[i].node, strings, rule_metas);
+        cont_branches.push(AltBranch {
+            node: cont,
+            first_set: cont_first,
+        });
+    }
+
+    // Build dispatch table for the inner Alt.
+    let mut table = vec![255u8; 128];
+    for (idx, branch) in cont_branches.iter().enumerate() {
+        if let Some(ref fs) = branch.first_set {
+            for b in 0..128u8 {
+                if fs.has(b) && table[b as usize] == 255 {
+                    table[b as usize] = idx as u8;
+                }
+            }
+        }
+    }
+
+    let inner_alt = IrNode::Alt(
+        cont_branches,
+        Some(AltDispatch {
+            table,
+            fallback_idx: None,
+        }),
+    );
+
+    // Build the result: remaining branches + the factored group.
+    let group_set: std::collections::HashSet<usize> = group_indices.iter().copied().collect();
+    let mut result_branches: Vec<AltBranch> = Vec::new();
+
+    // Insert non-grouped branches in original order, and insert the factored
+    // group at the position of its first member.
+    let mut group_inserted = false;
+    for (i, branch) in branches.iter().enumerate() {
+        if group_set.contains(&i) {
+            if !group_inserted {
+                result_branches.push(AltBranch {
+                    node: IrNode::Seq(vec![IrNode::Regex(regex_sid), inner_alt.clone()]),
+                    first_set: None,
+                });
+                group_inserted = true;
+            }
+        } else {
+            result_branches.push(branch.clone());
+        }
+    }
+
+    if result_branches.len() == 1 {
+        Some(result_branches.into_iter().next().unwrap().node)
+    } else {
+        Some(IrNode::Alt(result_branches, None))
+    }
 }
 
 /// Check if charset A is a subset of charset B.

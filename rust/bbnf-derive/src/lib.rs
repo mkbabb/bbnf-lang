@@ -454,17 +454,26 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     bbnf_ir::passes::compute_aliases(&mut grammar_ir);
     bbnf_ir::passes::compute_transparent(&mut grammar_ir);
 
-    // Run all IR optimization passes.
-    bbnf_ir::passes::canonicalize_aliases(&mut grammar_ir);
-    bbnf_ir::passes::prune_unreachable(&mut grammar_ir);
-    bbnf_ir::passes::inline_acyclic(&mut grammar_ir);
-    bbnf_ir::passes::prune_unreachable(&mut grammar_ir);
-    bbnf_ir::passes::fuse_single_use(&mut grammar_ir);
-    bbnf_ir::passes::prune_unreachable(&mut grammar_ir);
-    bbnf_ir::passes::eliminate_epsilon(&mut grammar_ir);
-    bbnf_ir::passes::merge_literals(&mut grammar_ir);
-    bbnf_ir::passes::merge_regex_alts(&mut grammar_ir);
-    bbnf_ir::passes::factor_common_prefixes(&mut grammar_ir);
+    // Fixed-point optimization loop (mirrors pipeline.rs).
+    loop {
+        let fingerprint = grammar_ir.structural_fingerprint();
+
+        bbnf_ir::passes::canonicalize_aliases(&mut grammar_ir);
+        bbnf_ir::passes::prune_unreachable(&mut grammar_ir);
+        bbnf_ir::passes::inline_acyclic(&mut grammar_ir);
+        bbnf_ir::passes::prune_unreachable(&mut grammar_ir);
+        bbnf_ir::passes::fuse_single_use(&mut grammar_ir);
+        bbnf_ir::passes::prune_unreachable(&mut grammar_ir);
+        bbnf_ir::passes::eliminate_epsilon(&mut grammar_ir);
+        bbnf_ir::passes::merge_literals(&mut grammar_ir);
+        bbnf_ir::passes::simplify_regex_algebra(&mut grammar_ir);
+        bbnf_ir::passes::merge_regex_alts(&mut grammar_ir);
+        bbnf_ir::passes::factor_common_prefixes(&mut grammar_ir);
+
+        if grammar_ir.structural_fingerprint() == fingerprint {
+            break;
+        }
+    }
     bbnf_ir::passes::sort_alt_branches(&mut grammar_ir);
     bbnf_ir::passes::refine_span_eligibility(&mut grammar_ir);
     grammar_ir.follow_sets = bbnf_ir::passes::compute_follow_sets(&grammar_ir);

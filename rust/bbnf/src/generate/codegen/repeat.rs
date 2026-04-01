@@ -97,16 +97,7 @@ pub(super) fn emit_mono_sep_by_core(
     mctx: &mut MonoCtx,
 ) -> TokenStream {
     let elem_expr = emit_mono_expr(element, ctx, mctx, true);
-    // For arena mode, prefer the rule's Vec inner type from ir.types (authoritative
-    // for enum variant type). The InferMap's elem type can disagree after
-    // IR transformations (e.g., Next→Seq from inlining) + Seq flattening.
-    let elem_ty = if ctx.uses_arena() {
-        ctx.current_rule_vec_inner(mctx.current_rule_id)
-            .cloned()
-            .unwrap_or_else(|| ctx.infer_vec_elem_type(element))
-    } else {
-        ctx.infer_vec_elem_type(element)
-    };
+    let elem_ty = ctx.infer_vec_elem_type(element);
     let lo_usize = lo as usize;
     let cp_var = mctx.fresh("cp");
 
@@ -173,7 +164,7 @@ pub(super) fn emit_mono_sep_by_core(
     };
 
     // ── Arena slice mode: scratch-based collection ──────────────────────────
-    if ctx.uses_arena() {
+    if ctx.uses_arena() && !ctx.parser_attrs.prettify {
         let depth_var = mctx.fresh("depth");
         let init_code = ctx.emit_scratch_init(&elem_ty, &depth_var);
         let push_first = ctx.emit_scratch_push(&elem_ty, &quote! { __value });
@@ -524,13 +515,7 @@ fn emit_mono_many(
         };
     }
 
-    let elem_ty = if ctx.uses_arena() {
-        ctx.current_rule_vec_inner(mctx.current_rule_id)
-            .cloned()
-            .unwrap_or_else(|| ctx.infer_vec_elem_type(inner))
-    } else {
-        ctx.infer_vec_elem_type(inner)
-    };
+    let elem_ty = ctx.infer_vec_elem_type(inner);
     let elem_expr = emit_mono_expr(inner, ctx, mctx, true);
     let lo_usize = lo as usize;
     let prev_var = mctx.fresh("prev");
@@ -543,7 +528,7 @@ fn emit_mono_many(
     };
 
     // ── Arena slice mode: scratch-based collection ──────────────────────────
-    if ctx.uses_arena() {
+    if ctx.uses_arena() && !ctx.parser_attrs.prettify {
         let depth_var = mctx.fresh("depth");
         let init_code = ctx.emit_scratch_init(&elem_ty, &depth_var);
         let push_code = ctx.emit_scratch_push(&elem_ty, &quote! { __value });
@@ -684,7 +669,7 @@ mod tests {
 
     #[test]
     fn sep_by_ws_until_uses_scratch_for_arena_mode() {
-        let ir = GrammarIR {
+        let mut ir = GrammarIR {
             rules: vec![
                 IrRule {
                     id: 0,
@@ -721,6 +706,8 @@ mod tests {
             infer_map: None,
         };
 
+        bbnf_ir::passes::infer_types(&mut ir);
+
         let ident = quote::format_ident!("TestParser");
         let attrs = ParserAttributes {
             arena: true,
@@ -730,8 +717,14 @@ mod tests {
         let mut mctx = MonoCtx::new(vec![false, false], vec![false, false]);
         mctx.current_rule_id = Some(0);
 
+        // Use a reference to the Repeat's inner node from the IR body so
+        // the pointer matches what the InferMap recorded.
+        let repeat_inner = match &ir.rules[0].body {
+            IrNode::Repeat { inner, .. } => inner.as_ref(),
+            _ => panic!("expected Repeat body"),
+        };
         let tokens = emit_mono_sep_by_core(
-            &IrNode::Ref(1),
+            repeat_inner,
             &IrNode::Literal(2),
             0,
             &SepByConfig {

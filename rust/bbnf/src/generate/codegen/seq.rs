@@ -169,7 +169,7 @@ pub(super) fn emit_mono_seq(
                 let first = &result_vars[0];
                 let rest = &result_vars[1];
                 let scratch_inner = inner.as_ref();
-                if ctx.uses_arena() {
+                if ctx.uses_arena() && !ctx.parser_attrs.prettify {
                     // Arena slice mode: push first + extend from rest slice into scratch,
                     // then collect to arena slice.
                     let depth_var = quote::format_ident!("__flat_depth");
@@ -205,7 +205,7 @@ pub(super) fn emit_mono_seq(
                 let vec_var = &result_vars[0];
                 let last = &result_vars[1];
                 let scratch_inner = inner.as_ref();
-                if ctx.uses_arena() {
+                if ctx.uses_arena() && !ctx.parser_attrs.prettify {
                     // Arena slice mode: extend from existing slice + push last.
                     let depth_var = quote::format_ident!("__flat_depth");
                     let init = ctx.emit_scratch_init(scratch_inner, &depth_var);

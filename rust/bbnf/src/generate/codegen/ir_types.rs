@@ -76,10 +76,10 @@ impl<'a> IrCodegenCtx<'a> {
             StorageMode::Arena => parse_quote!(&'a #enum_ident<'a>),
         };
 
-        // Use ir.types (the single authoritative source from the IR pass) for
-        // rule_types. The InferMap provides sub-expression types so codegen never
-        // re-infers. Arena mode uses &'a [T] for Vec types; owned mode uses Vec<T>.
-        let use_slices = storage_mode == StorageMode::Arena;
+        // Use ir.types for rule_types. Arena mode (non-prettify) uses &'a [T];
+        // prettify+arena keeps Vec<T> until the IR-level fusion wrapping fix
+        // resolves the nested Repeat type divergence.
+        let use_slices = storage_mode == StorageMode::Arena && !parser_attrs.prettify;
         let mut rule_types = HashMap::new();
         for (rule_id, type_desc) in &ir.types {
             let ty = type_desc_to_syn_raw(
@@ -239,9 +239,13 @@ impl<'a> IrCodegenCtx<'a> {
         }
     }
 
-    /// Emit arena alloc: always `.arena().alloc()` (ArenaCtx wraps BumpArena).
+    /// Emit arena alloc. ArenaCtx uses `.arena().alloc()`; BumpArena uses `.alloc()`.
     fn arena_alloc_tokens(&self, helper_call: TokenStream, value: &TokenStream) -> TokenStream {
-        quote::quote! { #helper_call.arena().alloc(#value) }
+        if !self.parser_attrs.prettify {
+            quote::quote! { #helper_call.arena().alloc(#value) }
+        } else {
+            quote::quote! { #helper_call.alloc(#value) }
+        }
     }
 
     pub fn has_sp_method(&self, name: &str) -> bool {

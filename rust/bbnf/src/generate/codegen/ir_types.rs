@@ -22,9 +22,6 @@ pub struct ParserAttributes {
     pub prettify: bool,
     pub skip_recover: bool,
     pub arena: bool,
-    /// Span-only monolithic parse mode: all rules return `Span<'a>`, zero allocations.
-    /// Requires that the grammar has no custom Map functions (all rules are span-compatible).
-    pub span: bool,
 }
 
 /// Central context for IR-based code generation.

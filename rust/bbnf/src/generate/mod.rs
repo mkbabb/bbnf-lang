@@ -114,14 +114,6 @@ pub fn generate_all(
         (quote! {}, quote! {}, quote! {}, quote! {})
     };
 
-    // ── Span-only monolithic mode ───────────────────────────────────────────
-
-    let span_methods = if parser_attrs.span {
-        codegen::span::generate_monolithic_span(ir, &ctx)
-    } else {
-        quote! {}
-    };
-
     // ── Fused parse+format ──────────────────────────────────────────────────
 
     let prettify_methods = if parser_attrs.prettify {
@@ -141,7 +133,6 @@ pub fn generate_all(
 
         impl #ident {
             #parser_methods
-            #span_methods
             #prettify_methods
         }
     }

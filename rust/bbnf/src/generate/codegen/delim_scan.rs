@@ -40,8 +40,6 @@ pub(super) struct DelimScanConfig {
     pub pivot_fn: Option<RuleId>,
     /// RuleId of the content rule containing the Repeat(Alt) — used for Vec variant name.
     pub content_rule: Option<RuleId>,
-    /// For span-path: self-recurse name for nested blocks. Set by the caller.
-    pub self_recurse_name: Option<String>,
 }
 
 // ── Detection ────────────────────────────────────────────────────────────────
@@ -123,7 +121,6 @@ pub(super) fn try_detect(
         block_fn,
         pivot_fn,
         content_rule,
-        self_recurse_name: None,
     })
 }
 
@@ -458,47 +455,6 @@ fn emit_scan_loop(
     (loop_body, ws_post)
 }
 
-// ── Span Emission ────────────────────────────────────────────────────────────
-
-/// Emit a span-path flat delimiter scanner.
-pub(super) fn emit_span(
-    config: &DelimScanConfig,
-    ctx: &IrCodegenCtx<'_>,
-    mctx: &mut MonoCtx,
-) -> TokenStream {
-    let open_lit = proc_macro2::Literal::byte_character(config.open_byte);
-    let close_lit = proc_macro2::Literal::byte_character(config.close_byte);
-
-    let on_block = if let Some(ref name) = config.self_recurse_name {
-        let fn_ident = super::span::span_fn_ident(name);
-        quote! { Self::#fn_ident(state)?; }
-    } else {
-        quote! { state.offset += 1; }
-    };
-
-    // Pivot branch in span mode: nothing to construct, just advance.
-    let on_pivot = quote! {};
-
-    let (loop_body, ws_post) = emit_scan_loop(config, ctx, mctx, &on_pivot, &on_block);
-
-    let start_var = mctx.fresh("ds_start");
-
-    quote! {
-        {
-            let #start_var = state.offset;
-            if state.src_bytes.get(state.offset).copied() != Some(#open_lit) { return None; }
-            state.offset += 1;
-
-            #loop_body
-
-            #ws_post
-            if state.src_bytes.get(state.offset).copied() != Some(#close_lit) { return None; }
-            state.offset += 1;
-            Some(::parse_that::Span::new(#start_var, state.offset, state.src))
-        }
-    }
-}
-
 // ── Arena Emission ───────────────────────────────────────────────────────────
 
 /// Emit an arena-path delimiter scanner.
@@ -664,23 +620,6 @@ pub(super) fn emit_arena(
 
 // ── Combined detect + emit (convenience) ─────────────────────────────────────
 
-/// Try to detect and emit a span-path delimiter scanner for a wrap pattern.
-pub(super) fn try_emit_span_wrap(
-    open: &IrNode,
-    middle: &IrNode,
-    close: &IrNode,
-    containing_rule_name: Option<&str>,
-    ir: &GrammarIR,
-    ctx: &IrCodegenCtx<'_>,
-    mctx: &mut MonoCtx,
-) -> Option<TokenStream> {
-    let mut config = try_detect(open, middle, close, ir)?;
-    if config.block_fn.is_some() {
-        config.self_recurse_name = containing_rule_name.map(String::from);
-    }
-    Some(emit_span(&config, ctx, mctx))
-}
-
 /// Try to detect and emit an arena-path delimiter scanner for a wrap pattern.
 pub(super) fn try_emit_arena_wrap(
     open: &IrNode,
@@ -692,7 +631,7 @@ pub(super) fn try_emit_arena_wrap(
 ) -> Option<TokenStream> {
     let config = try_detect(open, middle, close, ir)?;
     // Arena path requires content_rule for Vec variant construction.
-    let content_rule = config.content_rule?;
+    let _content_rule = config.content_rule?;
     Some(emit_arena(&config, ctx, mctx))
 }
 
@@ -758,7 +697,6 @@ mod tests {
             block_fn: None,
             pivot_fn: None,
             content_rule: Some(0),
-            self_recurse_name: None,
         };
         let mut mctx = MonoCtx::new(vec![false, false], vec![false, false]);
 

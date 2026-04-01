@@ -29,7 +29,6 @@ pub mod ir_types;
 pub mod prettify;
 mod repeat;
 mod seq;
-pub mod span;
 mod token_dispatch;
 pub mod trace;
 

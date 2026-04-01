@@ -119,7 +119,6 @@ fn compute_cache_key(paths: &[PathBuf], attrs: &ParserAttributes, ident_name: &s
     attrs.prettify.hash(&mut hasher);
     attrs.skip_recover.hash(&mut hasher);
     attrs.arena.hash(&mut hasher);
-    attrs.span.hash(&mut hasher);
     for p in &attrs.paths {
         // Hash canonical paths so that the same file via different relative
         // paths produces the same key.
@@ -231,9 +230,6 @@ fn parse_parser_attrs(attrs: &[Attribute]) -> ParserAttributes {
                 }
                 Meta::Path(p) if p.is_ident("arena") => {
                     parser_attr.arena = true;
-                }
-                Meta::Path(p) if p.is_ident("span") => {
-                    parser_attr.span = true;
                 }
                 _ => {}
             }

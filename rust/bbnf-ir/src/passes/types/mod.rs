@@ -177,11 +177,85 @@ pub fn infer_types(ir: &mut GrammarIR) {
         }
     }
 
-    ir.types = cache.into_iter().collect();
-    ir.types.sort_by_key(|(id, _)| *id);
-
     // Store the precomputed sub-expression type map for codegen.
-    ir.infer_map = Some(recorder.into_map());
+    let mut infer_map = recorder.into_map();
+
+    // Correction pass: align Repeat vec_elem_types with ir.types.
+    // The inference may compute different Vec inner types than ir.types because
+    // infer_seq applies Span compression + try_flatten_pair AFTER computing child
+    // types. The Repeat inner's infer_node_in_vec result may disagree with the
+    // post-flattened Vec inner in ir.types.
+    let types_map: HashMap<RuleId, TypeDesc> =
+        cache.into_iter().collect();
+    for rule in &ir.rules {
+        let rule_td = types_map.get(&rule.id);
+        if let Some(td) = rule_td {
+            correct_repeat_elem_types(&rule.body, td, &mut infer_map);
+        }
+    }
+
+    ir.infer_map = Some(infer_map);
+    ir.types = types_map.into_iter().collect();
+    ir.types.sort_by_key(|(id, _)| *id);
+}
+
+/// Correct Repeat vec_elem_types to match the Vec inner from ir.types.
+///
+/// When a rule's type is `Vec(T)` (direct or via try_flatten_pair), the Repeat
+/// inner's vec_elem_type should be `T`. The initial inference may have recorded
+/// a different type (e.g., Tuple) due to Seq compression/flattening differences.
+fn correct_repeat_elem_types(
+    node: &IrNode,
+    rule_type: &TypeDesc,
+    map: &mut utils::InferMap,
+) {
+    // Extract the Vec inner from the rule type, searching through Tuples
+    // (for rules like `Tuple(Span, Vec(Enum))` where Seq didn't fully flatten).
+    fn extract_all_vec_inners<'a>(td: &'a TypeDesc, out: &mut Vec<&'a TypeDesc>) {
+        match td {
+            TypeDesc::Vec(inner) => out.push(inner.as_ref()),
+            TypeDesc::Tuple(elems) => {
+                for e in elems {
+                    extract_all_vec_inners(e, out);
+                }
+            }
+            TypeDesc::Option(inner) => extract_all_vec_inners(inner, out),
+            _ => {}
+        }
+    }
+
+    let mut vec_inners = Vec::new();
+    extract_all_vec_inners(rule_type, &mut vec_inners);
+    // Only correct if there's exactly one Vec (unambiguous).
+    let vec_inner = match vec_inners.as_slice() {
+        [inner] => *inner,
+        _ => return,
+    };
+
+    // Walk the body to find Repeat nodes (with hi > 1, i.e., Many/Many1).
+    fn walk_and_correct(node: &IrNode, vec_inner: &TypeDesc, map: &mut utils::InferMap) {
+        match node {
+            IrNode::Repeat { inner, lo: _, hi } if *hi > 1 => {
+                // Override the Repeat inner's vec_elem_type with the authoritative inner.
+                map.set_vec_elem_type(inner.as_ref(), vec_inner.clone());
+            }
+            IrNode::Seq(children) => {
+                for c in children {
+                    walk_and_correct(c, vec_inner, map);
+                }
+            }
+            IrNode::Skip(l, r) | IrNode::Next(l, r) | IrNode::Minus(l, r) => {
+                walk_and_correct(l, vec_inner, map);
+                walk_and_correct(r, vec_inner, map);
+            }
+            IrNode::OptionalWhitespace(inner) => {
+                walk_and_correct(inner, vec_inner, map);
+            }
+            _ => {}
+        }
+    }
+
+    walk_and_correct(node, vec_inner, map);
 }
 
 /// Walk every node in the tree and record both `infer_node` and `infer_node_in_vec`

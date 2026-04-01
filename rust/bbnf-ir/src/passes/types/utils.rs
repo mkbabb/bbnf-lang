@@ -40,6 +40,12 @@ impl InferMap {
             .map(|v| v.as_slice())
     }
 
+    /// Override the vec_elem_type for a node (used by correction pass).
+    pub fn set_vec_elem_type(&mut self, node: &IrNode, ty: TypeDesc) {
+        self.vec_elem_types
+            .insert(node as *const IrNode as usize, ty);
+    }
+
     /// Number of entries in the node_types map.
     pub fn node_types_len(&self) -> usize {
         self.node_types.len()

@@ -97,7 +97,11 @@ pub(super) fn emit_mono_sep_by_core(
     mctx: &mut MonoCtx,
 ) -> TokenStream {
     let elem_expr = emit_mono_expr(element, ctx, mctx, true);
-    let elem_ty = ctx.infer_vec_elem_type(element);
+    // Use ir.types Vec inner (authoritative) when available, falling back to InferMap.
+    let elem_ty = ctx
+        .current_rule_vec_inner(mctx.current_rule_id)
+        .cloned()
+        .unwrap_or_else(|| ctx.infer_vec_elem_type(element));
     let lo_usize = lo as usize;
     let cp_var = mctx.fresh("cp");
 
@@ -163,7 +167,7 @@ pub(super) fn emit_mono_sep_by_core(
         quote! {}
     };
 
-    // ── Arena slice mode: scratch-based collection ──────────────────────────
+    // ── Scratch-based collection ────────────────────────────────────────────
     if !ctx.parser_attrs.prettify {
         let depth_var = mctx.fresh("depth");
         let init_code = ctx.emit_scratch_init(&elem_ty, &depth_var);
@@ -515,7 +519,10 @@ fn emit_mono_many(
         };
     }
 
-    let elem_ty = ctx.infer_vec_elem_type(inner);
+    let elem_ty = ctx
+        .current_rule_vec_inner(mctx.current_rule_id)
+        .cloned()
+        .unwrap_or_else(|| ctx.infer_vec_elem_type(inner));
     let elem_expr = emit_mono_expr(inner, ctx, mctx, true);
     let lo_usize = lo as usize;
     let prev_var = mctx.fresh("prev");
@@ -527,7 +534,7 @@ fn emit_mono_many(
         quote! { (|| #elem_expr)() }
     };
 
-    // ── Arena slice mode: scratch-based collection ──────────────────────────
+    // ── Scratch-based collection ────────────────────────────────────────────
     if !ctx.parser_attrs.prettify {
         let depth_var = mctx.fresh("depth");
         let init_code = ctx.emit_scratch_init(&elem_ty, &depth_var);

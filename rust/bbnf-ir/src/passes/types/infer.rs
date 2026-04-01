@@ -304,11 +304,6 @@ fn infer_seq(children: &[IrNode], ctx: &InferCtx<'_>) -> TypeDesc {
         child_types
     };
 
-    // Record the per-child effective types for codegen's emit_mono_seq.
-    if let Some(rec) = ctx.recorder {
-        rec.record_seq_children(children, &effective_types);
-    }
-
     // B.2: Consume pretty_preserve flag. Only the top-level Seq preserves all-Span tuples.
     let pretty_preserve =
         ctx.pretty_preserve && effective_types.iter().all(|t| *t == TypeDesc::Span);

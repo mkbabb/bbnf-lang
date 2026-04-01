@@ -70,40 +70,48 @@ pub fn generate_all(
     }
 
     let grammar_arr = ir_enums::generate_grammar_arr(parser_attrs, ident);
-    let grammar_enum = ir_enums::generate_enum(&ctx);
-    let parser_methods = codegen::generate_monolithic(ir, &ctx);
 
-    // Recovered static for @recover directives.
-    let has_recovers = ctx.ir.rules.iter().any(|r| r.meta.recover.is_some())
-        && !ctx.parser_attrs.skip_recover;
-    let enum_ident = &ctx.enum_ident;
-    let recovered_static = if has_recovers {
-        let recovered_ident = ctx.recovered_static_ident();
-        quote! {
-            static #recovered_ident: #enum_ident<'static> = #enum_ident::Recovered;
-        }
-    } else {
-        quote! {}
-    };
+    // Data-producing codegen (enum + parser methods + arena context).
+    // Skipped for prettify-only parsers — they use _prettify() methods exclusively.
+    let needs_data_codegen = parser_attrs.arena || !parser_attrs.prettify;
+    let (grammar_enum, parser_methods, recovered_static, arena_helper_code) = if needs_data_codegen
+    {
+        let grammar_enum = ir_enums::generate_enum(&ctx);
+        let parser_methods = codegen::generate_monolithic(ir, &ctx);
 
-    // Arena context struct + helper function.
-    let arena_helper_code = if !parser_attrs.prettify {
-        let (arena_ctx_struct, arena_ctx_helper) = ctx.generate_arena_ctx();
-        quote! { #arena_ctx_struct #arena_ctx_helper }
-    } else {
-        // Prettify+arena: use BumpArena directly until IR fusion wrapping is fixed.
-        let arena_helper_ident = ctx.arena_helper_ident();
+        let has_recovers = ctx.ir.rules.iter().any(|r| r.meta.recover.is_some())
+            && !ctx.parser_attrs.skip_recover;
         let enum_ident = &ctx.enum_ident;
-        quote! {
-            #[allow(non_snake_case)]
-            #[inline(always)]
-            fn #arena_helper_ident<'a>(
-                state: &::parse_that::ParserState<'a>,
-            ) -> &'a ::parse_that::BumpArena<#enum_ident<'a>> {
-                debug_assert!(!state.context_ptr.is_null(), "arena parser requires parse_with_context()");
-                unsafe { &*(state.context_ptr as *const ::parse_that::BumpArena<#enum_ident<'a>>) }
+        let recovered_static = if has_recovers {
+            let recovered_ident = ctx.recovered_static_ident();
+            quote! {
+                static #recovered_ident: #enum_ident<'static> = #enum_ident::Recovered;
             }
-        }
+        } else {
+            quote! {}
+        };
+
+        let arena_helper_code = if !parser_attrs.prettify {
+            let (arena_ctx_struct, arena_ctx_helper) = ctx.generate_arena_ctx();
+            quote! { #arena_ctx_struct #arena_ctx_helper }
+        } else {
+            let arena_helper_ident = ctx.arena_helper_ident();
+            let enum_ident = &ctx.enum_ident;
+            quote! {
+                #[allow(non_snake_case)]
+                #[inline(always)]
+                fn #arena_helper_ident<'a>(
+                    state: &::parse_that::ParserState<'a>,
+                ) -> &'a ::parse_that::BumpArena<#enum_ident<'a>> {
+                    debug_assert!(!state.context_ptr.is_null(), "arena parser requires parse_with_context()");
+                    unsafe { &*(state.context_ptr as *const ::parse_that::BumpArena<#enum_ident<'a>>) }
+                }
+            }
+        };
+
+        (grammar_enum, parser_methods, recovered_static, arena_helper_code)
+    } else {
+        (quote! {}, quote! {}, quote! {}, quote! {})
     };
 
     // ── Span-only monolithic mode ───────────────────────────────────────────

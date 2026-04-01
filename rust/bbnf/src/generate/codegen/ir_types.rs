@@ -64,9 +64,8 @@ impl<'a> IrCodegenCtx<'a> {
         let enum_type: Type = parse_quote!(#enum_ident<'a>);
         let boxed_enum_type: Type = parse_quote!(&'a #enum_ident<'a>);
 
-        // Arena mode (non-prettify) uses &'a [T];
-        // prettify+arena keeps Vec<T> until the IR-level fusion wrapping fix
-        // resolves the nested Repeat type divergence.
+        // Arena slices for non-prettify. Prettify needs Vec until the codegen's
+        // Seq emission respects pretty_preserve/cyclic_context for exact type alignment.
         let use_slices = !parser_attrs.prettify;
         let mut rule_types = HashMap::new();
         for (rule_id, type_desc) in &ir.types {
@@ -201,7 +200,7 @@ impl<'a> IrCodegenCtx<'a> {
     }
 
     /// Get the Vec inner TypeDesc for the current rule from ir.types.
-    /// Returns None if the rule isn't Vec-typed or rule_id is None.
+    /// Only matches top-level Vec (not Vec nested in Tuple).
     pub fn current_rule_vec_inner(&self, rule_id: Option<RuleId>) -> Option<&TypeDesc> {
         let rid = rule_id?;
         let td = self.ir.types.iter().find(|(id, _)| *id == rid).map(|(_, t)| t)?;
@@ -211,7 +210,7 @@ impl<'a> IrCodegenCtx<'a> {
         }
     }
 
-    /// Emit arena alloc. ArenaCtx uses `.arena().alloc()`; BumpArena uses `.alloc()`.
+    /// Emit arena alloc. ArenaCtx: `.arena().alloc()`. BumpArena (prettify): `.alloc()`.
     fn arena_alloc_tokens(&self, helper_call: TokenStream, value: &TokenStream) -> TokenStream {
         if !self.parser_attrs.prettify {
             quote::quote! { #helper_call.arena().alloc(#value) }

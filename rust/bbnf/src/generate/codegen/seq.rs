@@ -162,42 +162,77 @@ pub(super) fn emit_mono_seq(
     }
 
     // ── Step 4: (T, Vec<T>) / (Vec<T>, T) flattening ────────────────────
+    //
+    // Use ir.types (authoritative) to determine if the current rule's Seq was
+    // flattened to Vec. This avoids relying on effective_types child matching
+    // which can disagree with ir.types for prettify grammars due to
+    // pretty_preserve affecting Span compression.
+    let rule_vec_inner = ctx.current_rule_vec_inner(mctx.current_rule_id);
 
-    if effective_types.len() == 2 {
+    if let Some(vec_inner) = rule_vec_inner.filter(|_| !ctx.parser_attrs.prettify) {
+        // ir.types says this rule produces Vec(inner). The Seq was flattened.
+        // Determine which child is the "head" (T) and which is the "rest" (Vec<T>).
+        if effective_types.len() == 2 {
+            let scratch_inner = vec_inner;
+            if matches!(&effective_types[1], TypeDesc::Vec(_)) {
+                // (T, Vec<T>) → Vec<T): first is head, second is rest.
+                let first = &result_vars[0];
+                let rest = &result_vars[1];
+                let depth_var = quote::format_ident!("__flat_depth");
+                let init = ctx.emit_scratch_init(scratch_inner, &depth_var);
+                let push_first = ctx.emit_scratch_push(scratch_inner, &quote! { #first });
+                let extend = ctx.emit_scratch_extend_slice(scratch_inner, &quote! { #rest });
+                let collect = ctx.emit_scratch_collect(scratch_inner, &depth_var);
+                return quote! {
+                    {
+                        #(#stmts)*
+                        #init
+                        #push_first;
+                        #extend;
+                        Some(#collect)
+                    }
+                };
+            } else if matches!(&effective_types[0], TypeDesc::Vec(_)) {
+                // (Vec<T>, T) → Vec<T>: first is rest, second is last.
+                let vec_var = &result_vars[0];
+                let last = &result_vars[1];
+                let depth_var = quote::format_ident!("__flat_depth");
+                let init = ctx.emit_scratch_init(scratch_inner, &depth_var);
+                let extend = ctx.emit_scratch_extend_slice(scratch_inner, &quote! { #vec_var });
+                let push_last = ctx.emit_scratch_push(scratch_inner, &quote! { #last });
+                let collect = ctx.emit_scratch_collect(scratch_inner, &depth_var);
+                return quote! {
+                    {
+                        #(#stmts)*
+                        #init
+                        #extend;
+                        #push_last;
+                        Some(#collect)
+                    }
+                };
+            }
+        }
+    } else if effective_types.len() == 2 && !ctx.parser_attrs.prettify {
+        // Non-Vec rule: check effective_types for local flattening.
         if let TypeDesc::Vec(inner) = &effective_types[1] {
             if **inner == effective_types[0] {
                 let first = &result_vars[0];
                 let rest = &result_vars[1];
                 let scratch_inner = inner.as_ref();
-                if !ctx.parser_attrs.prettify {
-                    // Arena slice mode: push first + extend from rest slice into scratch,
-                    // then collect to arena slice.
-                    let depth_var = quote::format_ident!("__flat_depth");
-                    let init = ctx.emit_scratch_init(scratch_inner, &depth_var);
-                    let push_first = ctx.emit_scratch_push(scratch_inner, &quote! { #first });
-                    let extend = ctx.emit_scratch_extend_slice(scratch_inner, &quote! { #rest });
-                    let collect = ctx.emit_scratch_collect(scratch_inner, &depth_var);
-                    return quote! {
-                        {
-                            #(#stmts)*
-                            #init
-                            #push_first;
-                            #extend;
-                            Some(#collect)
-                        }
-                    };
-                } else {
-                    let collection_ty = ctx.collection_builder_type_from_elem_desc(inner);
-                    return quote! {
-                        {
-                            #(#stmts)*
-                            let mut __v: #collection_ty = <#collection_ty>::with_capacity(1 + #rest.len());
-                            __v.push(#first);
-                            __v.extend(#rest);
-                            Some(__v)
-                        }
-                    };
-                }
+                let depth_var = quote::format_ident!("__flat_depth");
+                let init = ctx.emit_scratch_init(scratch_inner, &depth_var);
+                let push_first = ctx.emit_scratch_push(scratch_inner, &quote! { #first });
+                let extend = ctx.emit_scratch_extend_slice(scratch_inner, &quote! { #rest });
+                let collect = ctx.emit_scratch_collect(scratch_inner, &depth_var);
+                return quote! {
+                    {
+                        #(#stmts)*
+                        #init
+                        #push_first;
+                        #extend;
+                        Some(#collect)
+                    }
+                };
             }
         }
         if let TypeDesc::Vec(inner) = &effective_types[0] {
@@ -205,32 +240,20 @@ pub(super) fn emit_mono_seq(
                 let vec_var = &result_vars[0];
                 let last = &result_vars[1];
                 let scratch_inner = inner.as_ref();
-                if !ctx.parser_attrs.prettify {
-                    // Arena slice mode: extend from existing slice + push last.
-                    let depth_var = quote::format_ident!("__flat_depth");
-                    let init = ctx.emit_scratch_init(scratch_inner, &depth_var);
-                    let extend = ctx.emit_scratch_extend_slice(scratch_inner, &quote! { #vec_var });
-                    let push_last = ctx.emit_scratch_push(scratch_inner, &quote! { #last });
-                    let collect = ctx.emit_scratch_collect(scratch_inner, &depth_var);
-                    return quote! {
-                        {
-                            #(#stmts)*
-                            #init
-                            #extend;
-                            #push_last;
-                            Some(#collect)
-                        }
-                    };
-                } else {
-                    return quote! {
-                        {
-                            #(#stmts)*
-                            let mut __v = #vec_var;
-                            __v.push(#last);
-                            Some(__v)
-                        }
-                    };
-                }
+                let depth_var = quote::format_ident!("__flat_depth");
+                let init = ctx.emit_scratch_init(scratch_inner, &depth_var);
+                let extend = ctx.emit_scratch_extend_slice(scratch_inner, &quote! { #vec_var });
+                let push_last = ctx.emit_scratch_push(scratch_inner, &quote! { #last });
+                let collect = ctx.emit_scratch_collect(scratch_inner, &depth_var);
+                return quote! {
+                    {
+                        #(#stmts)*
+                        #init
+                        #extend;
+                        #push_last;
+                        Some(#collect)
+                    }
+                };
             }
         }
     }

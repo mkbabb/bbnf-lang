@@ -21,6 +21,7 @@ fn make_ir(body: IrNode, strings: Vec<String>) -> GrammarIR {
         b1_span_collapse: false,
         debug_all: false,
         debug_labels: Vec::new(),
+        infer_map: None,
     }
 }
 

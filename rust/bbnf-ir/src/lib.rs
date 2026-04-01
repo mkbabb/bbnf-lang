@@ -445,6 +445,12 @@ pub struct GrammarIR {
     /// Preserved through lowering for display in debug adapters.
     #[serde(default)]
     pub debug_labels: Vec<(RuleId, StringId)>,
+
+    /// Precomputed sub-expression types for codegen. Built by `infer_types` pass.
+    /// Keyed by `IrNode` raw pointer — valid only within the process that ran
+    /// `infer_types`. Not serializable (skipped for WASM boundary transfer).
+    #[serde(skip)]
+    pub infer_map: Option<passes::InferMap>,
 }
 
 impl GrammarIR {

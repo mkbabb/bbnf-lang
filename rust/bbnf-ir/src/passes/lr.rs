@@ -355,6 +355,7 @@ mod tests {
             b1_span_collapse: false,
             debug_all: false,
             debug_labels: Vec::new(),
+            infer_map: None,
         }
     }
 

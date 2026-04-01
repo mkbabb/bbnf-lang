@@ -46,6 +46,7 @@ fn follow_set_basic_seq() {
         b1_span_collapse: false,
         debug_all: false,
         debug_labels: Vec::new(),
+        infer_map: None,
     };
 
     let follow = compute_follow_sets(&ir);
@@ -118,6 +119,7 @@ fn follow_set_propagates_through_nullable() {
         b1_span_collapse: false,
         debug_all: false,
         debug_labels: Vec::new(),
+        infer_map: None,
     };
 
     let follow = compute_follow_sets(&ir);

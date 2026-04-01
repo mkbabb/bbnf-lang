@@ -15,6 +15,7 @@ fn make_ir(rules: Vec<IrRule>) -> GrammarIR {
         b1_span_collapse: false,
         debug_all: false,
         debug_labels: Vec::new(),
+        infer_map: None,
     }
 }
 
@@ -241,6 +242,7 @@ fn map_enum_wrap() {
         b1_span_collapse: false,
         debug_all: false,
         debug_labels: Vec::new(),
+        infer_map: None,
     };
     infer_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::Enum);
@@ -265,6 +267,7 @@ fn map_box_wrap() {
         b1_span_collapse: false,
         debug_all: false,
         debug_labels: Vec::new(),
+        infer_map: None,
     };
     infer_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::BoxedEnum);

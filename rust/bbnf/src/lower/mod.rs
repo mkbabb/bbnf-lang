@@ -194,5 +194,6 @@ pub fn lower_to_ir<'a>(
         b1_span_collapse: false, // Set by generate_all based on prettify flag.
         debug_all: ctx.debug_all,
         debug_labels: Vec::new(),
+        infer_map: None,
     }
 }

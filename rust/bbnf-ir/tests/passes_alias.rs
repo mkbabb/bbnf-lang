@@ -33,6 +33,7 @@ fn resolve_direct_alias() {
         b1_span_collapse: false,
         debug_all: false,
         debug_labels: Vec::new(),
+        infer_map: None,
     };
 
     canonicalize_aliases(&mut ir);
@@ -68,6 +69,7 @@ fn resolve_chain_alias() {
         b1_span_collapse: false,
         debug_all: false,
         debug_labels: Vec::new(),
+        infer_map: None,
     };
 
     canonicalize_aliases(&mut ir);

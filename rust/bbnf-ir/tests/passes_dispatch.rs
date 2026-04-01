@@ -45,6 +45,7 @@ fn dispatch_for_disjoint_branches() {
         b1_span_collapse: false,
         debug_all: false,
         debug_labels: Vec::new(),
+        infer_map: None,
     };
 
     generate_dispatch_tables(&mut ir);
@@ -96,6 +97,7 @@ fn no_dispatch_for_overlapping_branches() {
         b1_span_collapse: false,
         debug_all: false,
         debug_labels: Vec::new(),
+        infer_map: None,
     };
 
     generate_dispatch_tables(&mut ir);
@@ -145,6 +147,7 @@ fn dispatch_for_nested_alt() {
         b1_span_collapse: false,
         debug_all: false,
         debug_labels: Vec::new(),
+        infer_map: None,
     };
 
     generate_dispatch_tables(&mut ir);
@@ -202,6 +205,7 @@ fn dispatch_with_nullable_branch_via_follow() {
         b1_span_collapse: false,
         debug_all: false,
         debug_labels: Vec::new(),
+        infer_map: None,
     };
 
     generate_dispatch_tables(&mut ir);
@@ -261,6 +265,7 @@ fn no_dispatch_when_nullable_overlaps_follow() {
         b1_span_collapse: false,
         debug_all: false,
         debug_labels: Vec::new(),
+        infer_map: None,
     };
 
     generate_dispatch_tables(&mut ir);
@@ -330,6 +335,7 @@ fn fallback_dispatch_typed_plus_catchall() {
         b1_span_collapse: false,
         debug_all: false,
         debug_labels: Vec::new(),
+        infer_map: None,
     };
 
     generate_dispatch_tables(&mut ir);
@@ -391,6 +397,7 @@ fn fallback_dispatch_not_superset() {
         b1_span_collapse: false,
         debug_all: false,
         debug_labels: Vec::new(),
+        infer_map: None,
     };
 
     generate_dispatch_tables(&mut ir);
@@ -440,6 +447,7 @@ fn fallback_dispatch_too_few_branches() {
         b1_span_collapse: false,
         debug_all: false,
         debug_labels: Vec::new(),
+        infer_map: None,
     };
 
     generate_dispatch_tables(&mut ir);

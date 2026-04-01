@@ -93,32 +93,13 @@ pub fn generate_all(
         } else {
             quote! {}
         };
-        let arena_helper_code = if arena_ctx.use_arena_slices {
-            let (arena_ctx_struct, arena_ctx_helper) = arena_ctx.generate_arena_ctx();
+        let (arena_ctx_struct, arena_ctx_helper) = arena_ctx.generate_arena_ctx();
+        (
+            ir_enums::generate_enum(&arena_ctx),
             quote! {
                 #arena_ctx_struct
                 #arena_ctx_helper
-            }
-        } else {
-            // Prettify+arena: use BumpArena directly (no scratch, no context struct).
-            let arena_helper_ident = arena_ctx.arena_helper_ident();
-            let arena_enum_ident = &arena_ctx.enum_ident;
-            quote! {
-                #[allow(non_snake_case)]
-                #[inline(always)]
-                fn #arena_helper_ident<'a>(
-                    state: &::parse_that::ParserState<'a>,
-                ) -> &'a ::parse_that::BumpArena<#arena_enum_ident<'a>> {
-                    debug_assert!(!state.context_ptr.is_null(), "arena parser requires parse_with_context()");
-                    unsafe {
-                        &*(state.context_ptr as *const ::parse_that::BumpArena<#arena_enum_ident<'a>>)
-                    }
-                }
-            }
-        };
-        (
-            ir_enums::generate_enum(&arena_ctx),
-            arena_helper_code,
+            },
             codegen::generate_monolithic(ir, &arena_ctx),
             recovered_static,
         )

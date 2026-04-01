@@ -24,7 +24,6 @@ mod delim_scan;
 mod expr;
 mod generate;
 mod helpers;
-pub mod infer;
 pub mod ir_enums;
 pub mod ir_types;
 pub mod prettify;

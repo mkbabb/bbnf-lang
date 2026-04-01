@@ -26,6 +26,7 @@ fn literal_is_span_eligible() {
         b1_span_collapse: false,
         debug_all: false,
         debug_labels: Vec::new(),
+        infer_map: None,
     };
 
     refine_span_eligibility(&mut ir);
@@ -51,6 +52,7 @@ fn map_not_span_eligible() {
         b1_span_collapse: false,
         debug_all: false,
         debug_labels: Vec::new(),
+        infer_map: None,
     };
 
     refine_span_eligibility(&mut ir);
@@ -75,6 +77,7 @@ fn transitive_span_eligibility() {
         b1_span_collapse: false,
         debug_all: false,
         debug_labels: Vec::new(),
+        infer_map: None,
     };
 
     refine_span_eligibility(&mut ir);
@@ -104,6 +107,7 @@ fn cyclic_not_span_eligible() {
         b1_span_collapse: false,
         debug_all: false,
         debug_labels: Vec::new(),
+        infer_map: None,
     };
 
     refine_span_eligibility(&mut ir);
@@ -126,6 +130,7 @@ fn seq_of_literals_span_eligible() {
         b1_span_collapse: false,
         debug_all: false,
         debug_labels: Vec::new(),
+        infer_map: None,
     };
 
     refine_span_eligibility(&mut ir);

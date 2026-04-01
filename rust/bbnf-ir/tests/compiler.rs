@@ -22,6 +22,7 @@ fn make_simple_ir(body: IrNode) -> GrammarIR {
         b1_span_collapse: false,
         debug_all: false,
         debug_labels: Vec::new(),
+        infer_map: None,
     }
 }
 
@@ -136,6 +137,7 @@ fn compile_memo_rule() {
         b1_span_collapse: false,
         debug_all: false,
         debug_labels: Vec::new(),
+        infer_map: None,
     };
     let program = compile(&ir);
 
@@ -183,6 +185,7 @@ fn compile_direct_left_recursive_rule_keeps_memo() {
         b1_span_collapse: false,
         debug_all: false,
         debug_labels: Vec::new(),
+        infer_map: None,
     };
     let program = compile(&ir);
 
@@ -299,6 +302,7 @@ fn compile_call() {
         b1_span_collapse: false,
         debug_all: false,
         debug_labels: Vec::new(),
+        infer_map: None,
     };
     let program = compile(&ir);
 

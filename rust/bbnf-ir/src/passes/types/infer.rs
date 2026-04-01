@@ -6,6 +6,14 @@ use super::utils::{InferCtx, try_flatten_pair};
 
 /// Infer the output type of a single IR node.
 pub fn infer_node(node: &IrNode, ctx: &InferCtx<'_>) -> TypeDesc {
+    let ty = infer_node_inner(node, ctx);
+    if let Some(rec) = ctx.recorder {
+        rec.record_node(node, &ty);
+    }
+    ty
+}
+
+fn infer_node_inner(node: &IrNode, ctx: &InferCtx<'_>) -> TypeDesc {
     match node {
         IrNode::Literal(_) | IrNode::Regex(_) => TypeDesc::Span,
 
@@ -133,6 +141,14 @@ pub fn infer_node(node: &IrNode, ctx: &InferCtx<'_>) -> TypeDesc {
 /// It does NOT propagate into Seq children (multi-element Seq produces a tuple),
 /// Alt branches (they produce compound types), or Repeat (which starts its own context).
 pub fn infer_node_in_vec(node: &IrNode, ctx: &InferCtx<'_>) -> TypeDesc {
+    let ty = infer_node_in_vec_inner(node, ctx);
+    if let Some(rec) = ctx.recorder {
+        rec.record_vec_elem(node, &ty);
+    }
+    ty
+}
+
+fn infer_node_in_vec_inner(node: &IrNode, ctx: &InferCtx<'_>) -> TypeDesc {
     match node {
         // In Vec context, ALL refs return Enum (no boxing needed).
         // Non-transparent: codegen emits Self::rule() without Box.
@@ -229,6 +245,10 @@ fn infer_seq(children: &[IrNode], ctx: &InferCtx<'_>) -> TypeDesc {
             if let IrNode::Ref(id) = c {
                 let rule = &ctx.ir.rules[*id as usize];
                 if rule.meta.has_sp_method && !rule.meta.is_transparent {
+                    // B.1 override: record the overridden type so codegen can look it up.
+                    if let Some(rec) = ctx.recorder {
+                        rec.record_node(c, &TypeDesc::Span);
+                    }
                     return TypeDesc::Span;
                 }
             }
@@ -283,6 +303,11 @@ fn infer_seq(children: &[IrNode], ctx: &InferCtx<'_>) -> TypeDesc {
     } else {
         child_types
     };
+
+    // Record the per-child effective types for codegen's emit_mono_seq.
+    if let Some(rec) = ctx.recorder {
+        rec.record_seq_children(children, &effective_types);
+    }
 
     // B.2: Consume pretty_preserve flag. Only the top-level Seq preserves all-Span tuples.
     let pretty_preserve =

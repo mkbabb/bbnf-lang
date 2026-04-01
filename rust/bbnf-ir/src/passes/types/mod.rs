@@ -17,9 +17,9 @@ use crate::{GrammarIR, IrNode, RuleId, SubVariant, TypeDesc};
 
 use subvariants::{collect_sub_variants_raw, validate_sub_variant_uniqueness_raw};
 
-// Re-export for codegen to use the SAME inference functions (no divergence).
+// Re-export for codegen.
 pub use infer::{infer_node, infer_node_in_vec};
-pub use utils::{InferCtx, try_flatten_pair};
+pub use utils::{InferCtx, InferMap, InferRecorder, try_flatten_pair};
 
 /// Infer types for all rules and populate `ir.types`.
 ///
@@ -62,33 +62,50 @@ pub fn infer_types(ir: &mut GrammarIR) {
         .collect();
 
     // Process rules in order (topological after pipeline passes).
-    let rules_snapshot: Vec<(RuleId, IrNode, bool)> = ir
+    // Record sub-expression types for codegen via InferRecorder.
+    let recorder = InferRecorder::new();
+
+    // Collect rule IDs + metadata to avoid borrowing ir during inference.
+    let rule_ids: Vec<(RuleId, bool, bool)> = ir
         .rules
         .iter()
-        .map(|r| (r.id, r.body.clone(), r.meta.is_transparent))
+        .map(|r| {
+            let is_cyclic = rule_meta.get(&r.id).copied().unwrap_or_default().0;
+            let pretty_preserve = pretty_preserve_rules.get(&r.id).copied().unwrap_or(false);
+            (r.id, is_cyclic, pretty_preserve)
+        })
         .collect();
 
-    for (id, body, _is_transparent) in &rules_snapshot {
-        let (is_cyclic, _span_eligible) = rule_meta.get(id).copied().unwrap_or_default();
-
-        // B.4: For cyclic rules, override acyclic Ref types to BoxedEnum.
-        // This matches AST codegen's behavior where acyclic deps in cyclic context
-        // get boxed_enum_type to enable (Vec<A>, A) → Vec<A> flattening.
-        let cyclic_context = is_cyclic;
-
-        // B.2: Set pretty_preserve for the top-level call only.
-        let pretty_preserve = pretty_preserve_rules.get(id).copied().unwrap_or(false);
-
+    for &(id, is_cyclic, pretty_preserve) in &rule_ids {
         let ctx = InferCtx {
             ir,
             cache: &cache,
             acyclic_rules: &acyclic_rules,
-            cyclic_context,
+            cyclic_context: is_cyclic,
             pretty_preserve,
+            recorder: Some(&recorder),
         };
 
-        let ty = infer_node(body, &ctx);
-        cache.insert(*id, ty);
+        // Infer on the ORIGINAL body (not a clone) so pointers match codegen.
+        let ty = infer_node(&ir.rules[id as usize].body, &ctx);
+        cache.insert(id, ty);
+    }
+
+    // Comprehensive recording pass: walk every node in every rule body and record
+    // both infer_node and infer_node_in_vec results. The cache is fully populated,
+    // so this is just lookups + recording. Ensures the InferMap covers all nodes
+    // that codegen might query (including B.1-overridden Ref children and
+    // nodes skipped by the main inference path).
+    for &(id, is_cyclic, pretty_preserve) in &rule_ids {
+        let ctx = InferCtx {
+            ir,
+            cache: &cache,
+            acyclic_rules: &acyclic_rules,
+            cyclic_context: is_cyclic,
+            pretty_preserve,
+            recorder: Some(&recorder),
+        };
+        record_all_nodes(&ir.rules[id as usize].body, &ctx);
     }
 
     // B.5: Collect sub-variants for heterogeneous alternations.
@@ -101,24 +118,25 @@ pub fn infer_types(ir: &mut GrammarIR) {
 
     let mut raw_sub_variants: HashMap<RuleId, Vec<subvariants::RawSubVariant>> = HashMap::new();
 
-    for (id, body, is_transparent) in &rules_snapshot {
-        if *is_transparent {
+    for &(id, is_cyclic, _) in &rule_ids {
+        let rule = &ir.rules[id as usize];
+        if rule.meta.is_transparent {
             continue;
         }
-        let (is_cyclic, _) = rule_meta.get(id).copied().unwrap_or_default();
         let ctx = InferCtx {
             ir,
             cache: &cache,
             acyclic_rules: &acyclic_rules,
             cyclic_context: is_cyclic,
             pretty_preserve: false,
+            recorder: None, // No recording needed for sub-variants
         };
         let rule_name = rule_names
-            .get(id)
+            .get(&id)
             .expect("rule ID must exist in rule_names map");
-        let svs = collect_sub_variants_raw(rule_name, body, &ctx);
+        let svs = collect_sub_variants_raw(rule_name, &rule.body, &ctx);
         if !svs.is_empty() {
-            raw_sub_variants.insert(*id, svs);
+            raw_sub_variants.insert(id, svs);
         }
     }
 
@@ -161,4 +179,56 @@ pub fn infer_types(ir: &mut GrammarIR) {
 
     ir.types = cache.into_iter().collect();
     ir.types.sort_by_key(|(id, _)| *id);
+
+    // Store the precomputed sub-expression type map for codegen.
+    ir.infer_map = Some(recorder.into_map());
+}
+
+/// Walk every node in the tree and record both `infer_node` and `infer_node_in_vec`
+/// results. The cache must be fully populated before calling this.
+fn record_all_nodes(node: &IrNode, ctx: &utils::InferCtx<'_>) {
+    // Record types only if not already recorded by the main inference pass.
+    // This preserves B.1 override types while filling in nodes that the main
+    // pass didn't visit (e.g., discarded sides of Skip/Next).
+    let node_ty = infer::infer_node(node, &ctx.with_no_recorder());
+    let vec_ty = infer::infer_node_in_vec(node, &ctx.with_no_recorder());
+    if let Some(rec) = ctx.recorder {
+        rec.record_node_if_absent(node, &node_ty);
+        rec.record_vec_elem_if_absent(node, &vec_ty);
+    }
+
+    // Recurse into children.
+    match node {
+        IrNode::Seq(children) => {
+            let consumed = ctx.consumed();
+            for c in children {
+                record_all_nodes(c, &consumed);
+            }
+        }
+        IrNode::Alt(branches, _) => {
+            let consumed = ctx.consumed();
+            for b in branches {
+                record_all_nodes(&b.node, &consumed);
+            }
+        }
+        IrNode::Repeat { inner, .. } => {
+            let consumed = ctx.consumed();
+            record_all_nodes(inner, &consumed);
+        }
+        IrNode::Skip(l, r) | IrNode::Next(l, r) | IrNode::Minus(l, r) => {
+            let consumed = ctx.consumed();
+            record_all_nodes(l, &consumed);
+            record_all_nodes(r, &consumed);
+        }
+        IrNode::OptionalWhitespace(inner) | IrNode::Map { inner, .. } | IrNode::Negate(inner) => {
+            record_all_nodes(inner, ctx);
+        }
+        IrNode::TokenDispatch { arms, .. } => {
+            let consumed = ctx.consumed();
+            for arm in arms {
+                record_all_nodes(&arm.continuation, &consumed);
+            }
+        }
+        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon | IrNode::Ref(_) => {}
+    }
 }

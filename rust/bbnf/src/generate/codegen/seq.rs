@@ -8,7 +8,6 @@ use bbnf_ir::{IrNode, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use super::infer::infer_node_type;
 use super::ir_types::IrCodegenCtx;
 use super::{MonoCtx, emit_mono_expr};
 
@@ -32,49 +31,34 @@ pub(super) fn emit_mono_seq(
         return emit_mono_expr(&children[0], ctx, mctx, _elide_box);
     }
 
-    // ── Step 1: Determine per-child types with B.1 sp_method override ────
+    // ── Step 1: Get per-child types from InferMap (authoritative) ──────────
+    //
+    // The InferMap records the per-child effective types after B.1 override +
+    // all-Span guard, as computed by infer_seq during the IR pass. This
+    // guarantees exact agreement between the types used here and the types
+    // stored in ir.types (which determine enum variant types).
+    let child_types: Vec<TypeDesc> = ctx
+        .infer_seq_child_types(children)
+        .unwrap_or_else(|| {
+            // Fallback for nodes not in InferMap (shouldn't happen after
+            // comprehensive recording, but handles edge cases gracefully).
+            children.iter().map(|c| ctx.infer_node_type(c)).collect()
+        });
 
-    let mut child_types: Vec<TypeDesc> = Vec::new();
-    let mut sp_override: Vec<bool> = Vec::new();
-
-    for child in children {
-        if let IrNode::Ref(id) = child {
-            let rule = &ctx.ir.rules[*id as usize];
-            if rule.meta.has_sp_method && !rule.meta.is_transparent {
-                child_types.push(TypeDesc::Span);
-                sp_override.push(true);
-                continue;
-            }
-        }
-        child_types.push(infer_node_type(child, ctx));
-        sp_override.push(false);
-    }
-
-    // All-Span guard: keep B.1 only when every child is a simple Span leaf
-    // or a B.1-overridden Ref. Complex children (Repeat, Skip, etc.) that
-    // infer to Span through collapse may compress differently.
-    // Optional children (Repeat { lo: 0, hi: 1 }) produce Option<Span>,
-    // not Span, so they must exclude from B.1 collapse.
-    let all_span = child_types.iter().all(|t| *t == TypeDesc::Span);
-    let all_simple_span = all_span
-        && ctx.ir.b1_span_collapse
-        && children.iter().zip(child_types.iter()).all(|(c, ty)| {
-            // Optional(Span) produces Option<Span>, not Span — exclude.
-            if let IrNode::Repeat { lo: 0, hi: 1, .. } = c {
-                return false;
-            }
+    // Determine sp_override from the child types: if a Ref child was given
+    // type Span by B.1, it's sp-overridden.
+    let sp_override: Vec<bool> = children
+        .iter()
+        .zip(child_types.iter())
+        .map(|(c, ty)| {
             if let IrNode::Ref(id) = c {
                 let rule = &ctx.ir.rules[*id as usize];
-                if rule.meta.has_sp_method && !rule.meta.is_transparent {
-                    return true;
-                }
+                rule.meta.has_sp_method && !rule.meta.is_transparent && *ty == TypeDesc::Span
+            } else {
+                false
             }
-            *ty == TypeDesc::Span
-        });
-    if all_span && !all_simple_span {
-        child_types = children.iter().map(|c| infer_node_type(c, ctx)).collect();
-        sp_override = vec![false; children.len()];
-    }
+        })
+        .collect();
 
     // ── Step 2: Still-all-Span handling ───────────────────────────────────
 
@@ -185,7 +169,7 @@ pub(super) fn emit_mono_seq(
                 let first = &result_vars[0];
                 let rest = &result_vars[1];
                 let scratch_inner = inner.as_ref();
-                if ctx.use_arena_slices {
+                if ctx.uses_arena() {
                     // Arena slice mode: push first + extend from rest slice into scratch,
                     // then collect to arena slice.
                     let depth_var = quote::format_ident!("__flat_depth");
@@ -221,7 +205,7 @@ pub(super) fn emit_mono_seq(
                 let vec_var = &result_vars[0];
                 let last = &result_vars[1];
                 let scratch_inner = inner.as_ref();
-                if ctx.use_arena_slices {
+                if ctx.uses_arena() {
                     // Arena slice mode: extend from existing slice + push last.
                     let depth_var = quote::format_ident!("__flat_depth");
                     let init = ctx.emit_scratch_init(scratch_inner, &depth_var);

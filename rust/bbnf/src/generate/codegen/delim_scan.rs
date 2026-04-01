@@ -693,16 +693,6 @@ pub(super) fn try_emit_arena_wrap(
     let config = try_detect(open, middle, close, ir)?;
     // Arena path requires content_rule for Vec variant construction.
     let content_rule = config.content_rule?;
-    // Guard: only use delim_scan when the Vec inner type is Enum.
-    // When the inner is a Tuple (due to pretty_preserve or Seq structure in ir.types
-    // vs codegen inference), the loop pushes bare Enum values which won't match.
-    if let Some(td) = ctx.rule_body_desc(content_rule) {
-        if let bbnf_ir::TypeDesc::Vec(inner) = td {
-            if !matches!(inner.as_ref(), bbnf_ir::TypeDesc::Enum) {
-                return None;
-            }
-        }
-    }
     Some(emit_arena(&config, ctx, mctx))
 }
 
@@ -751,6 +741,7 @@ mod tests {
             b1_span_collapse: false,
             debug_all: false,
             debug_labels: Vec::new(),
+            infer_map: None,
         };
 
         let ident = quote::format_ident!("TestParser");

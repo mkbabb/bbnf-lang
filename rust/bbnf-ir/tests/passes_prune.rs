@@ -36,6 +36,7 @@ fn prune_removes_unreachable() {
         b1_span_collapse: false,
         debug_all: false,
         debug_labels: Vec::new(),
+        infer_map: None,
     };
 
     prune_unreachable(&mut ir);
@@ -64,6 +65,7 @@ fn prune_keeps_all_when_all_reachable() {
         b1_span_collapse: false,
         debug_all: false,
         debug_labels: Vec::new(),
+        infer_map: None,
     };
 
     prune_unreachable(&mut ir);
@@ -112,6 +114,7 @@ fn prune_follows_alt_branches() {
         b1_span_collapse: false,
         debug_all: false,
         debug_labels: Vec::new(),
+        infer_map: None,
     };
 
     prune_unreachable(&mut ir);

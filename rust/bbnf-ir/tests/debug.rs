@@ -44,6 +44,7 @@ fn make_debug_ir() -> GrammarIR {
         b1_span_collapse: false,
         debug_all: false,
         debug_labels: Vec::new(),
+        infer_map: None,
     }
 }
 
@@ -87,6 +88,7 @@ fn compiler_no_debug_break_without_flag() {
         b1_span_collapse: false,
         debug_all: false,
         debug_labels: Vec::new(),
+        infer_map: None,
     };
     let program = compile(&ir);
 

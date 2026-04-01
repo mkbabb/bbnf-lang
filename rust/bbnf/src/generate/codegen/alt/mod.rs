@@ -8,7 +8,6 @@ use bbnf_ir::{AltBranch, FnDescriptor, IrNode, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::infer::{infer_node_type, infer_node_type_elide_box};
 use super::ir_types::{self, IrCodegenCtx};
 use super::{MonoCtx, emit_mono_expr};
 
@@ -78,7 +77,7 @@ pub(super) fn emit_mono_alt(
     let effective_elide_box = if elide_box {
         let elide_tys: Vec<TypeDesc> = branches
             .iter()
-            .map(|b| infer_node_type_elide_box(&b.node, ctx))
+            .map(|b| ctx.infer_vec_elem_type(&b.node))
             .collect();
         elide_tys.windows(2).all(|w| w[0] == w[1])
     } else {
@@ -88,12 +87,12 @@ pub(super) fn emit_mono_alt(
     let branch_tys: Vec<TypeDesc> = if effective_elide_box {
         branches
             .iter()
-            .map(|b| infer_node_type_elide_box(&b.node, ctx))
+            .map(|b| ctx.infer_vec_elem_type(&b.node))
             .collect()
     } else {
         branches
             .iter()
-            .map(|b| infer_node_type(&b.node, ctx))
+            .map(|b| ctx.infer_node_type(&b.node))
             .collect()
     };
     let all_same = branch_tys.windows(2).all(|w| w[0] == w[1]);

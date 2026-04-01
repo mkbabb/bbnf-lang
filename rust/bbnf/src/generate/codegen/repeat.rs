@@ -7,7 +7,6 @@ use quote::quote;
 
 use super::super::regex_ir::fast_paths;
 use super::helpers::try_sep_by;
-use super::infer::{infer_node_type, infer_node_type_elide_box};
 use super::ir_types::IrCodegenCtx;
 use super::unescape_literal;
 use super::{
@@ -98,10 +97,16 @@ pub(super) fn emit_mono_sep_by_core(
     mctx: &mut MonoCtx,
 ) -> TokenStream {
     let elem_expr = emit_mono_expr(element, ctx, mctx, true);
-    // Use the rule's Vec inner type from codegen_type_cache (authoritative for
-    // enum variant type) instead of re-inferring via infer_node_in_vec which can
-    // disagree with infer_node for the same elements.
-    let elem_ty = infer_node_type_elide_box(element, ctx);
+    // For arena mode, prefer the rule's Vec inner type from ir.types (authoritative
+    // for enum variant type). The InferMap's elem type can disagree after
+    // IR transformations (e.g., Next→Seq from inlining) + Seq flattening.
+    let elem_ty = if ctx.uses_arena() {
+        ctx.current_rule_vec_inner(mctx.current_rule_id)
+            .cloned()
+            .unwrap_or_else(|| ctx.infer_vec_elem_type(element))
+    } else {
+        ctx.infer_vec_elem_type(element)
+    };
     let lo_usize = lo as usize;
     let cp_var = mctx.fresh("cp");
 
@@ -168,7 +173,7 @@ pub(super) fn emit_mono_sep_by_core(
     };
 
     // ── Arena slice mode: scratch-based collection ──────────────────────────
-    if ctx.use_arena_slices {
+    if ctx.uses_arena() {
         let depth_var = mctx.fresh("depth");
         let init_code = ctx.emit_scratch_init(&elem_ty, &depth_var);
         let push_first = ctx.emit_scratch_push(&elem_ty, &quote! { __value });
@@ -340,7 +345,7 @@ fn emit_mono_optional(
     mctx: &mut MonoCtx,
     elide_box: bool,
 ) -> TokenStream {
-    let inner_ty = infer_node_type(inner, ctx);
+    let inner_ty = ctx.infer_node_type(inner);
 
     // Ref nodes: skip Box in Optional context.
     if let IrNode::Ref(rule_id) = inner {
@@ -478,7 +483,7 @@ fn emit_mono_many(
     mctx: &mut MonoCtx,
 ) -> TokenStream {
     // Repeat(Span) collapses to Span: loop consuming, produce combined Span.
-    let inner_ty = infer_node_type(inner, ctx);
+    let inner_ty = ctx.infer_node_type(inner);
     if inner_ty == TypeDesc::Span {
         let elem_expr = emit_mono_expr(inner, ctx, mctx, false);
         let start_var = mctx.fresh("sp_start");
@@ -519,7 +524,13 @@ fn emit_mono_many(
         };
     }
 
-    let elem_ty = infer_node_type_elide_box(inner, ctx);
+    let elem_ty = if ctx.uses_arena() {
+        ctx.current_rule_vec_inner(mctx.current_rule_id)
+            .cloned()
+            .unwrap_or_else(|| ctx.infer_vec_elem_type(inner))
+    } else {
+        ctx.infer_vec_elem_type(inner)
+    };
     let elem_expr = emit_mono_expr(inner, ctx, mctx, true);
     let lo_usize = lo as usize;
     let prev_var = mctx.fresh("prev");
@@ -532,7 +543,7 @@ fn emit_mono_many(
     };
 
     // ── Arena slice mode: scratch-based collection ──────────────────────────
-    if ctx.use_arena_slices {
+    if ctx.uses_arena() {
         let depth_var = mctx.fresh("depth");
         let init_code = ctx.emit_scratch_init(&elem_ty, &depth_var);
         let push_code = ctx.emit_scratch_push(&elem_ty, &quote! { __value });
@@ -707,6 +718,7 @@ mod tests {
             b1_span_collapse: false,
             debug_all: false,
             debug_labels: Vec::new(),
+            infer_map: None,
         };
 
         let ident = quote::format_ident!("TestParser");

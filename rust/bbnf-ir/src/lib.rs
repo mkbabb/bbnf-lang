@@ -379,7 +379,7 @@ pub struct RuleMeta {
 ///
 /// This captures the essential structure of the Rust/TS type that the rule produces,
 /// without depending on `syn` or any specific type system representation.
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum TypeDesc {
     /// A borrowed string span: `Span<'a>` in Rust, `string` in TS.
     Span,

@@ -100,8 +100,9 @@ pub(super) fn emit_mono_alt(
     let needs_coercion = !all_same;
 
     // Build a local sub-variant map for THIS specific Alt's branches.
-    // This avoids the global lookup ambiguity when two rules produce
-    // structurally identical sub-variant types.
+    // Non-Span types are globally unique (validated at compile time), so
+    // the precomputed HashMap gives O(1) lookup. For Span types, search
+    // the current rule first to pick the correct variant name.
     let local_sub_variants: Vec<Option<String>> = if needs_coercion {
         branch_tys
             .iter()
@@ -109,25 +110,23 @@ pub(super) fn emit_mono_alt(
                 if *ty == TypeDesc::BoxedEnum || *ty == TypeDesc::Enum {
                     return None;
                 }
-                // Search the current rule first (handles non-fused bodies).
-                if let Some(ref name) = mctx.current_rule_name {
-                    if let Some(rule) = ctx.ir.find_rule(name) {
-                        for sv in &rule.meta.sub_variants {
-                            if sv.ty == *ty {
-                                return Some(ctx.ir.get_string(sv.variant_name).to_string());
+                // For Span types, prefer the current rule's sub-variant
+                // (multiple rules may have Span sub-variants with different names).
+                if *ty == TypeDesc::Span {
+                    if let Some(ref name) = mctx.current_rule_name {
+                        if let Some(rule) = ctx.ir.find_rule(name) {
+                            for sv in &rule.meta.sub_variants {
+                                if sv.ty == *ty {
+                                    return Some(
+                                        ctx.ir.get_string(sv.variant_name).to_string(),
+                                    );
+                                }
                             }
                         }
                     }
                 }
-                // Fallback: search all rules (handles fused/inlined bodies).
-                for r in &ctx.ir.rules {
-                    for sv in &r.meta.sub_variants {
-                        if sv.ty == *ty {
-                            return Some(ctx.ir.get_string(sv.variant_name).to_string());
-                        }
-                    }
-                }
-                None
+                // O(1) global lookup (first-seen wins; non-Span uniqueness guaranteed).
+                ctx.global_sub_variants.get(ty).cloned()
             })
             .collect()
     } else {

@@ -46,6 +46,10 @@ pub struct IrCodegenCtx<'a> {
     /// Distinct Vec element TypeDescs for scratch Vec generation (arena mode only).
     /// Each entry gets a scratch field `__s{index}` and collect method `__c{index}`.
     pub scratch_types: Vec<TypeDesc>,
+    /// Precomputed TypeDesc → variant name map from all rules' sub_variants.
+    /// Non-Span types are globally unique (validated by `validate_sub_variant_uniqueness`),
+    /// so first-seen wins and O(1) lookup replaces O(n*m) linear search.
+    pub global_sub_variants: HashMap<TypeDesc, String>,
 }
 
 impl<'a> IrCodegenCtx<'a> {
@@ -79,6 +83,17 @@ impl<'a> IrCodegenCtx<'a> {
             .map(|m| m.scratch_types().to_vec())
             .unwrap_or_default();
 
+        // Build global sub-variant lookup: TypeDesc → variant_name.
+        // First-seen wins; non-Span types are globally unique per validation.
+        let mut global_sub_variants = HashMap::new();
+        for rule in &ir.rules {
+            for sv in &rule.meta.sub_variants {
+                global_sub_variants
+                    .entry(sv.ty.clone())
+                    .or_insert_with(|| ir.get_string(sv.variant_name).to_string());
+            }
+        }
+
         Self {
             ir,
             ident,
@@ -90,6 +105,7 @@ impl<'a> IrCodegenCtx<'a> {
             rule_types,
             fused_number_rules: HashSet::new(),
             scratch_types,
+            global_sub_variants,
         }
     }
 

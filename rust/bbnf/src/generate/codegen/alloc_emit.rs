@@ -83,6 +83,11 @@ impl IrCodegenCtx<'_> {
         let helper_ident = self.alloc_helper_ident();
 
         // Generate scratch fields, accessors, and collect methods.
+        //
+        // Each scratch type gets a staging Vec (for push/truncate during loops)
+        // and a BumpArena for permanent allocation (alloc_slice_clone).
+        // Enum-typed scratch reuses the main __arena; all other types get a
+        // dedicated per-type BumpArena to satisfy the monomorphic constraint.
         let mut fields = vec![];
         let mut accessors = vec![];
         let mut new_fields = vec![];
@@ -90,34 +95,32 @@ impl IrCodegenCtx<'_> {
         for (i, elem_td) in self.scratch_types.iter().enumerate() {
             let s_ident = self.scratch_accessor(i);
             let c_ident = self.collect_accessor(i);
+            let a_ident = quote::format_ident!("__a{}", i);
             let elem_ty = type_desc_to_syn(elem_td, self);
+            let is_enum = *elem_td == TypeDesc::Enum;
 
+            // Scratch staging Vec.
             fields.push(quote::quote! {
                 #s_ident: ::std::cell::UnsafeCell<Vec<#elem_ty>>
             });
-
             new_fields.push(quote::quote! {
                 #s_ident: ::std::cell::UnsafeCell::new(Vec::with_capacity(64))
             });
 
-            // For Enum-typed scratch, use the arena's alloc_slice_clone (zero-copy
-            // bump allocation). For all other scratch types, the BumpArena<Enum>
-            // can't alloc non-Enum slices, so use Box::leak(Vec::into_boxed_slice)
-            // to produce a 'a-lifetime slice from the scratch Vec.
-            let collect_body = if *elem_td == TypeDesc::Enum {
-                quote::quote! {
-                    let s = self.#s_ident();
-                    let slice = self.__arena.alloc_slice_clone(&s[depth..]);
-                    s.truncate(depth);
-                    slice
-                }
+            // Per-type arena for non-Enum scratch (Enum reuses __arena).
+            if !is_enum {
+                fields.push(quote::quote! {
+                    #a_ident: ::parse_that::BumpArena<#elem_ty>
+                });
+                new_fields.push(quote::quote! {
+                    #a_ident: ::parse_that::BumpArena::with_capacity(0)
+                });
+            }
+
+            let arena_ref = if is_enum {
+                quote::quote! { self.__arena }
             } else {
-                quote::quote! {
-                    let s = self.#s_ident();
-                    let v: Vec<#elem_ty> = s[depth..].to_vec();
-                    s.truncate(depth);
-                    Box::leak(v.into_boxed_slice())
-                }
+                quote::quote! { self.#a_ident }
             };
 
             accessors.push(quote::quote! {
@@ -130,7 +133,10 @@ impl IrCodegenCtx<'_> {
                 #[inline(always)]
                 #[allow(non_snake_case)]
                 fn #c_ident(&'a self, depth: usize) -> &'a [#elem_ty] {
-                    #collect_body
+                    let s = self.#s_ident();
+                    let slice = #arena_ref.alloc_slice_clone(&s[depth..]);
+                    s.truncate(depth);
+                    slice
                 }
             });
         }

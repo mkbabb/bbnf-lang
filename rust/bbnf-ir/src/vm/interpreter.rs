@@ -507,15 +507,12 @@ impl<'prog> Interpreter<'prog> {
             .expect("MatchRegex references non-regex StringId");
 
         if let Some(end) = dfa.find_at(bytes, start) {
-            if end > start {
-                self.values.push(Value::Span(self.offset, end as u32));
-                self.offset = end as u32;
-                self.is_error = false;
-                self.track_furthest();
-            } else {
-                self.is_error = true;
-                self.track_furthest();
-            }
+            // Zero-width matches are valid (e.g., /=?/ matching empty).
+            // Produce a zero-length Span and succeed.
+            self.values.push(Value::Span(self.offset, end as u32));
+            self.offset = end as u32;
+            self.is_error = false;
+            self.track_furthest();
         } else {
             self.is_error = true;
             self.track_furthest();

@@ -9,7 +9,7 @@ use bbnf_derive::Parser;
 use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
 
 #[derive(Parser)]
-#[parser(path = "../../grammar/google-sheets/google-sheets.bbnf", prettify, arena)]
+#[parser(path = "../../grammar/google-sheets/google-sheets.bbnf", prettify)]
 struct GoogleSheetsParser;
 
 const PATHOLOGICAL: &str = r#"=LET(raw, A2:E1000, filtered, FILTER(raw, (INDEX(raw,,3)>100)*(INDEX(raw,,5)="Active")), sorted, SORT(filtered, 3, FALSE), IF(ROWS(sorted)>0, MAP(SEQUENCE(MIN(10, ROWS(sorted))), LAMBDA(i, INDEX(sorted, i, 1)&" - "&TEXT(INDEX(sorted, i, 3), "$#,##0"))), "No results"))"#;
@@ -40,7 +40,10 @@ fn parse_pathological(b: &mut Bencher) {
     b.iter(|| {
         let arena = __GoogleSheetsParserEnumCtx::with_capacity(PATHOLOGICAL.len() / 16);
         let parser = GoogleSheetsParser::formula();
-        parser.parse_with_context(black_box(PATHOLOGICAL), &arena).unwrap()
+        let ast = parser
+            .parse_with_context(black_box(PATHOLOGICAL), &arena)
+            .unwrap();
+        black_box(&ast as *const _ as usize)
     });
 }
 
@@ -50,7 +53,10 @@ fn parse_1kb(b: &mut Bencher) {
     b.iter(|| {
         let arena = __GoogleSheetsParserEnumCtx::with_capacity(input.len() / 16);
         let parser = GoogleSheetsParser::formula();
-        parser.parse_with_context(black_box(&input), &arena).unwrap()
+        let ast = parser
+            .parse_with_context(black_box(&input), &arena)
+            .unwrap();
+        black_box(&ast as *const _ as usize)
     });
 }
 
@@ -60,7 +66,10 @@ fn parse_10kb(b: &mut Bencher) {
     b.iter(|| {
         let arena = __GoogleSheetsParserEnumCtx::with_capacity(input.len() / 16);
         let parser = GoogleSheetsParser::formula();
-        parser.parse_with_context(black_box(&input), &arena).unwrap()
+        let ast = parser
+            .parse_with_context(black_box(&input), &arena)
+            .unwrap();
+        black_box(&ast as *const _ as usize)
     });
 }
 

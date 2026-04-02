@@ -810,7 +810,7 @@ fn pipeline_css_vm_backdrop_block() {
     let ir = compile_grammar(&grammar, &PipelineOptions::default()).unwrap();
     let program = compile_bytecode(&ir);
 
-    // Extract the exact block that fails — the backdrop-filter rule
+    // Full tailwind backdrop-filter block with 9 var() calls per line
     let input = r#"
 .\32xl\:backdrop-filter {
     --tw-backdrop-blur: var(--tw-empty,/*!*/ /*!*/);
@@ -822,8 +822,8 @@ fn pipeline_css_vm_backdrop_block() {
     --tw-backdrop-opacity: var(--tw-empty,/*!*/ /*!*/);
     --tw-backdrop-saturate: var(--tw-empty,/*!*/ /*!*/);
     --tw-backdrop-sepia: var(--tw-empty,/*!*/ /*!*/);
-    -webkit-backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast);
-            backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast);
+    -webkit-backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);
+            backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);
   }
 "#.trim();
     let r = run_program(&program, input);
@@ -833,4 +833,3 @@ fn pipeline_css_vm_backdrop_block() {
     }
     assert_eq!(r.offset as usize, input.len(), "should consume all");
 }
-

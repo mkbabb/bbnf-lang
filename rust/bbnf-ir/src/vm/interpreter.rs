@@ -145,6 +145,7 @@ struct CallFrame {
 struct Checkpoint {
     offset: u32,
     value_depth: usize,
+    value_depth_stack_depth: usize,
 }
 
 #[derive(Clone, Debug)]
@@ -558,6 +559,7 @@ impl<'prog> Interpreter<'prog> {
         self.checkpoints.push(Checkpoint {
             offset: self.offset,
             value_depth: self.values.len(),
+            value_depth_stack_depth: self.value_depth_stack.len(),
         });
         self.pc += 1;
     }
@@ -567,6 +569,7 @@ impl<'prog> Interpreter<'prog> {
         if let Some(cp) = self.checkpoints.pop() {
             self.offset = cp.offset;
             self.values.truncate(cp.value_depth);
+            self.value_depth_stack.truncate(cp.value_depth_stack_depth);
             self.is_error = true;
         }
         self.pc += 1;

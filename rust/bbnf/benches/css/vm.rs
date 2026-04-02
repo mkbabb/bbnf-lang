@@ -51,8 +51,11 @@ macro_rules! bench {
 
 bench!(normalize, "normalize.css");
 bench!(bootstrap, "bootstrap.css");
-// TODO: tailwind.css — VM interpreter drops ~8.5KB at byte 3633741.
-// Monolithic codegen parses 100%. Isolated blocks pass. Full-file accumulation bug.
+// TODO: tailwind.css — VM DFA regex fidelity gap. The VM's DFA-compiled regexes
+// produce different match behavior than monolithic inline scanners for certain CSS
+// constructs (vendor-prefix declarations after /*!*/ comments). Isolated blocks
+// parse correctly; the gap manifests only in full-file context. Requires systematic
+// DFA-vs-monolithic regex comparison.
 // bench!(tailwind, "tailwind.css");
 
 benchmark_group!(benches, normalize, bootstrap);

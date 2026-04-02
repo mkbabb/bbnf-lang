@@ -75,10 +75,6 @@ impl TypeMap {
         self.scratch_types = types;
     }
 
-    /// Iterate over all distinct vec_elem_type values in the map.
-    pub fn all_vec_elem_type_values(&self) -> impl Iterator<Item = &TypeDesc> {
-        self.vec_elem_types.values()
-    }
 
     /// Override the vec_elem_type for a node (used by correction pass).
     pub fn set_vec_elem_type(&mut self, node: &IrNode, ty: TypeDesc) {

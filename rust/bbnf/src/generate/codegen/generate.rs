@@ -1,6 +1,6 @@
 //! Monolithic entry-point generation.
 //!
-//! Contains `generate_monolithic`  and supporting
+//! Contains `generate_monolithic` and supporting
 //! helper functions for fusion eligibility, single-site inline detection,
 //! and expansion cost estimation.
 

@@ -18,7 +18,7 @@ use super::{MonoCtx, emit_mono_expr};
 
 /// Generate all monolithic methods for all rules.
 ///
-/// Arena-only: `fn __rule<'a>(state) -> Option<Enum<'a>>` with slab.alloc.
+/// Slab-only: `fn __rule<'a>(state) -> Option<Enum<'a>>` with slab.alloc.
 ///
 /// For each rule, emits:
 /// 1. A private associated fn (internal dispatch)
@@ -177,7 +177,7 @@ pub fn generate_monolithic(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStrea
         // ── Emit public method(s) ────────────────────────────────────────
 
         if rule.meta.is_transparent {
-            // Transparent: public method wraps result in Box (Owned) or arena.alloc (Arena).
+            // Transparent: public method wraps result in Box (Owned) or slab.alloc (Slab).
             let alloc_code = ctx.emit_alloc(&quote! { __v });
 
             let mut pub_parser = quote! {

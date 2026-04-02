@@ -110,7 +110,7 @@ Generates an enum and per-rule parser methods. Available attributes:
 | `remove_left_recursion` | Apply Paull transform |
 | `ignore_whitespace` | Auto-trim whitespace |
 | `debug` | Instrument all rules for trace output |
-| `arena` | Monolithic arena codegen with BumpSlab |
+| `slab` | Monolithic slab codegen with BumpSlab |
 | `span` | Span-only monolithic codegen (zero allocation) |
 
 ### Parser Combinators

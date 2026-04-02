@@ -23,7 +23,7 @@ pub struct ParserAttributes {
 
 /// Central context for IR-based code generation.
 ///
-/// Arena is the only storage mode — all data-producing codegen uses arena allocation.
+/// Slab is the only storage mode — all data-producing codegen uses slab allocation.
 pub struct IrCodegenCtx<'a> {
     pub ir: &'a GrammarIR,
     /// Parser struct name (e.g., `Json`).
@@ -41,9 +41,9 @@ pub struct IrCodegenCtx<'a> {
     /// Pre-computed syn::Type per rule (from IR TypeDesc).
     pub rule_types: HashMap<RuleId, Type>,
     /// Rule IDs with fused number scan+convert. These rules produce `(Span, f64)`
-    /// instead of `Span` in the arena enum. Only set for arena codegen context.
+    /// instead of `Span` in the slab enum. Only set for slab codegen context.
     pub fused_number_rules: HashSet<RuleId>,
-    /// Distinct Vec element TypeDescs for scratch Vec generation (arena mode only).
+    /// Distinct Vec element TypeDescs for scratch Vec generation (slab mode only).
     /// Each entry gets a scratch field `__s{index}` and collect method `__c{index}`.
     pub scratch_types: Vec<TypeDesc>,
     /// Precomputed TypeDesc → variant name map from all rules' sub_variants.
@@ -62,7 +62,7 @@ impl<'a> IrCodegenCtx<'a> {
         let enum_type: Type = parse_quote!(#enum_ident<'a>);
         let boxed_enum_type: Type = parse_quote!(&'a #enum_ident<'a>);
 
-        // Always use arena slices — TypeMap records seq_preserve_spans
+        // Always use slab slices — TypeMap records seq_preserve_spans
         // so codegen Seq emission respects span preservation for exact type alignment.
         let mut rule_types = HashMap::new();
         for (rule_id, type_desc) in &ir.types {
@@ -71,7 +71,7 @@ impl<'a> IrCodegenCtx<'a> {
                 &enum_type,
                 &boxed_enum_type,
                 ir,
-                true, // always arena slices
+                true, // always slab slices
             );
             rule_types.insert(*rule_id, ty);
         }
@@ -347,7 +347,7 @@ pub fn type_desc_to_syn(desc: &TypeDesc, ctx: &IrCodegenCtx<'_>) -> Type {
         &ctx.enum_type,
         &ctx.boxed_enum_type,
         ctx.ir,
-        true, // always arena slices
+        true, // always slab slices
     )
 }
 

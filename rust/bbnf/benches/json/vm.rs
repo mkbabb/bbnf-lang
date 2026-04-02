@@ -29,10 +29,21 @@ macro_rules! bench {
             let input = load($file);
             let (_ir, program) = compiled_vm();
             b.bytes = input.len() as u64;
+            {
+                let mut interp = Interpreter::new(&program, &input);
+                let r = interp.run();
+                assert!(r.success, concat!($file, ": VM parse failed"));
+                assert!(
+                    r.offset as usize >= input.trim_end().len(),
+                    concat!($file, ": VM incomplete parse ({}/{})"),
+                    r.offset,
+                    input.len(),
+                );
+            }
             b.iter(|| {
                 let mut interp = Interpreter::new(&program, black_box(&input));
                 let r = interp.run();
-                assert!(r.success);
+                black_box(r.offset);
             });
         }
     };

@@ -1,6 +1,6 @@
 #![feature(cold_path)]
 
-//! BBNF CSS L4 typed arena benchmark — cold per-parse (l4/stylesheet.bbnf).
+//! BBNF CSS L4 typed slab benchmark — cold per-parse (l4/stylesheet.bbnf).
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -136,7 +136,7 @@ mod css_types {
 }
 
 #[derive(Parser)]
-#[parser(path = "../../grammar/css/l4/stylesheet.bbnf", skip_recover, arena)]
+#[parser(path = "../../grammar/css/l4/stylesheet.bbnf", skip_recover, slab)]
 struct CssL4Parser;
 
 fn load(name: &str) -> String {
@@ -148,18 +148,25 @@ macro_rules! bench {
     ($name:ident, $file:expr) => {
         fn $name(b: &mut Bencher) {
             let input = load($file);
-            let bytes = {
-                let arena = __CssL4ParserEnumCtx::with_capacity(input.len() / 32);
+            b.bytes = input.len() as u64;
+            {
+                let slab = __CssL4ParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = CssL4Parser::stylesheet();
-                let (_result, state) = parser.parse_return_state_with_context(&input, &arena);
-                state.offset as u64
-            };
-            b.bytes = bytes;
+                let (result, state) =
+                    parser.parse_return_state_with_context(&input, &slab);
+                assert!(result.is_some(), concat!($file, ": parse failed"));
+                assert!(
+                    state.offset >= input.trim_end().len(),
+                    concat!($file, ": incomplete parse ({}/{})"),
+                    state.offset,
+                    input.len(),
+                );
+            }
             b.iter(|| {
-                let arena = __CssL4ParserEnumCtx::with_capacity(input.len() / 32);
+                let slab = __CssL4ParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = CssL4Parser::stylesheet();
                 let ast = parser
-                    .parse_with_context(black_box(&input), &arena)
+                    .parse_with_context(black_box(&input), &slab)
                     .unwrap();
                 black_box(&ast as *const _);
             });

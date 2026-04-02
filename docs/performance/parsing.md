@@ -8,27 +8,27 @@ section: Performance
 
 parse_that (Rust) and parse-that (TypeScript) are the parsing backbone. Both use dispatch tables, FIRST-set routing, and memoization tuned for their respective runtimes.
 
-## Rust: `JSON` — Arena
+## Rust: `JSON` — Slab
 
-Arena parsing returns typed enum trees allocated via `BumpSlab`. Each iteration constructs a fresh slab and parser—cold per-parse throughput.
+Slab parsing returns typed enum trees allocated via `BumpSlab`. Each iteration constructs a fresh slab and parser—cold per-parse throughput.
 
 ```bench-chart
-{ "title": "JSON Arena", "unit": "MB/s",
+{ "title": "JSON Slab", "unit": "MB/s",
   "datasets": [
     { "name": "data.json (35 KB)", "icon": "rust",
-      "labels": ["BBNF arena"],
+      "labels": ["BBNF slab"],
       "series": [{"label": "Throughput", "values": [1197]}] },
     { "name": "twitter (631 KB)", "icon": "rust",
-      "labels": ["BBNF arena"],
+      "labels": ["BBNF slab"],
       "series": [{"label": "Throughput", "values": [1340]}] },
     { "name": "citm_catalog (1.7 MB)", "icon": "rust",
-      "labels": ["BBNF arena"],
+      "labels": ["BBNF slab"],
       "series": [{"label": "Throughput", "values": [1610]}] },
     { "name": "canada (2.3 MB)", "icon": "rust",
-      "labels": ["BBNF arena"],
+      "labels": ["BBNF slab"],
       "series": [{"label": "Throughput", "values": [964]}] },
     { "name": "data_xl (20 MB)", "icon": "rust",
-      "labels": ["BBNF arena"],
+      "labels": ["BBNF slab"],
       "series": [{"label": "Throughput", "values": [810]}] }
   ] }
 ```
@@ -87,26 +87,26 @@ Full escape decoding with owned or `Cow` string allocation. Cold per-parse with 
 
 All Rust benchmarks use mimalloc. BBNF parsers are generated from a [`.bbnf` grammar](../../grammar/json/json.bbnf) via `#[derive(Parser)]` with zero hand-written Rust.
 
-## Rust: `CSS` — Arena + Span
+## Rust: `CSS` — Slab + Span
 
 BBNF uses [`@ws`](../../grammar/BBNF.md) for SIMD comment-aware whitespace, `@inline` for trivial helper rules, and `@token` for lexical tokens with fusion-style inlining. Cold per-parse with `BumpSlab`. cssparser (Mozilla's tokenizer) uses a visitor pattern that counts rules and declarations without building an AST.
 
 ```bench-chart
-{ "title": "CSS Arena + Span", "unit": "MB/s",
+{ "title": "CSS Slab + Span", "unit": "MB/s",
   "datasets": [
     { "name": "normalize (6 KB)", "icon": "rust",
-      "labels": ["BBNF arena", "BBNF span", "cssparser"],
+      "labels": ["BBNF slab", "BBNF span", "cssparser"],
       "series": [{"label": "Throughput", "values": [2378, 2571, 655]}] },
     { "name": "bootstrap (281 KB)", "icon": "rust",
-      "labels": ["BBNF arena", "BBNF span", "cssparser"],
+      "labels": ["BBNF slab", "BBNF span", "cssparser"],
       "series": [{"label": "Throughput", "values": [1421, 1639, 424]}] },
     { "name": "tailwind (3.6 MB)", "icon": "rust",
-      "labels": ["BBNF arena", "BBNF span", "cssparser"],
+      "labels": ["BBNF slab", "BBNF span", "cssparser"],
       "series": [{"label": "Throughput", "values": [1370, 1425, 402]}] }
   ] }
 ```
 
-BBNF arena is 3x cssparser across all three datasets; BBNF span widens the gap further with zero-allocation parsing. Inline optional Span codegen, direct Span construction in delim_scan, `@token` fusion, and generalized regex strength reduction eliminated the per-rule overhead that previously made recursive descent slower than cssparser's flat tokenizer loop on utility-heavy stylesheets.
+BBNF slab is 3x cssparser across all three datasets; BBNF span widens the gap further with zero-allocation parsing. Inline optional Span codegen, direct Span construction in delim_scan, `@token` fusion, and generalized regex strength reduction eliminated the per-rule overhead that previously made recursive descent slower than cssparser's flat tokenizer loop on utility-heavy stylesheets.
 
 ## Rust: `CSS` — Structural AST
 
@@ -180,7 +180,7 @@ The VM tier interprets bytecode compiled from `.bbnf` grammars at runtime. It do
 | Tier | normalize | bootstrap | tailwind | Work |
 |------|-----------|-----------|----------|------|
 | span | 2,571 | 1,639 | 1,425 | Byte-range validation |
-| arena | 2,378 | 1,421 | 1,370 | Typed enum tree (opaque values) |
+| slab | 2,378 | 1,421 | 1,370 | Typed enum tree (opaque values) |
 | structural/pretty | 711 | 299 | 296 | Formatted AST with `@pretty` |
 | semantic (L4) | 289 | 135 | 121 | Full CSS L4 property types |
 | VM | 143 | 75 | 55 | Bytecode interpreter |

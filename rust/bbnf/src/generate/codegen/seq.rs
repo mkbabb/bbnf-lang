@@ -63,7 +63,7 @@ pub(super) fn emit_mono_seq(
     let still_all_span = child_types.iter().all(|t| *t == TypeDesc::Span);
     if still_all_span {
         // All-Span: monolithic span compression.
-        // Span-method overridden Refs use _sp() (no enum wrapping, no arena alloc).
+        // Span-method overridden Refs use _sp() (no enum wrapping, no slab alloc).
         let start_var = mctx.fresh("sp_start");
         let mut stmts: Vec<TokenStream> = Vec::new();
         stmts.push(quote! { let #start_var = state.offset; });

@@ -18,9 +18,9 @@ Early benchmarks reused a pre-constructed `Parser` across iterations, which meas
 
 Three optimization rounds took the TS parser from 746 to 4,779 ops/s (6.4x): mutable `ParserState` eliminated ~4,700 heap objects per parse (3.3x), Tarjan SCC with FIRST-set dispatch tables gave O(1) alternation (1.9x), and V8-specific tuning—`RegExp.test()` replacing `exec()`, megamorphic IC mitigation, `wrap()` inlining—closed the remaining gap. The full chronicle is in the TypeScript optimization document.
 
-## Monolithic Arena Codegen
+## Monolithic Slab Codegen
 
-Combinator chains construct ~30 `Parser` objects with ~60 heap allocations per parse. Monolithic codegen generates direct recursive functions—`fn __rule_arena(state) → Option<ArenaEnum>`—with zero combinator overhead. `BumpSlab`, a byte-based bump allocator with no `RefCell` borrow tracking, replaced `typed_arena`.
+Combinator chains construct ~30 `Parser` objects with ~60 heap allocations per parse. Monolithic codegen generates direct recursive functions—`fn __rule_slab(state) → Option<SlabEnum>`—with zero combinator overhead. `BumpSlab`, a byte-based bump allocator with no `RefCell` borrow tracking, replaced `typed_arena`.
 
 Sub-phases: IIFE closure elision, whitespace trim coalescing, single-site cyclic inlining, discarded Span skip, unified `SepByConfig`, type-aware Alt elision, B.1 Span collapse for non-prettify grammars.
 
@@ -34,7 +34,7 @@ CSS bootstrap.css went from ~7 MB/s to 300–760 MB/s.
 
 `Wrap(Repeat(Alt))` is the dominant structure in CSS—selector lists, declaration blocks, media query lists. When Alt branches have overlapping FIRST sets, the dispatch table can't route on the first byte alone. Delimiter scanning detects single-byte "pivot" literals that distinguish branches and emits a forward `memchr` scanner loop, replacing recursive descent in the inner loop.
 
-The arena path uses speculative dispatch: the scanner selects the branch, then existing recursive descent constructs the typed value. The span path replaces descent entirely—Span constructed directly from scanner offsets.
+The slab path uses speculative dispatch: the scanner selects the branch, then existing recursive descent constructs the typed value. The span path replaces descent entirely—Span constructed directly from scanner offsets.
 
 CSS bootstrap.css: 21→258 MB/s (12.3x).
 
@@ -139,7 +139,7 @@ All numbers are cold per-parse throughput in MB/s. Fresh `BumpSlab` + `Parser` p
 
 ### JSON
 
-| File | Arena | Borrow | Copy |
+| File | Slab | Borrow | Copy |
 |------|-------|--------|------|
 | data.json (35 KB) | 1,197 | 1,029 | 877 |
 | twitter.json (632 KB) | 1,340 | 1,165 | 916 |
@@ -148,7 +148,7 @@ All numbers are cold per-parse throughput in MB/s. Fresh `BumpSlab` + `Parser` p
 
 ### CSS
 
-| File | Arena | Span | L4 Semantic |
+| File | Slab | Span | L4 Semantic |
 |------|-------|------|-------------|
 | normalize.css (6 KB) | 2,378 | 2,571 | 289 |
 | bootstrap.css (281 KB) | 1,421 | 1,639 | 135 |

@@ -30,7 +30,7 @@ impl IrCodegenCtx<'_> {
         quote::quote! { #helper(state).#s_fn().push(#value_expr) }
     }
 
-    /// Emit scratch collect: copies scratch[depth..] to arena slice, truncates.
+    /// Emit scratch collect: copies scratch[depth..] to slab slice, truncates.
     pub fn emit_scratch_collect(&self, elem_desc: &TypeDesc, depth_var: &syn::Ident) -> TokenStream {
         let idx = self.scratch_index_for_elem(elem_desc);
         let c_fn = self.collect_accessor(idx);
@@ -153,7 +153,7 @@ impl IrCodegenCtx<'_> {
             ) -> &'a #ctx_ident<'a> {
                 debug_assert!(
                     !state.context_ptr.is_null(),
-                    "arena parser requires parse_with_context()"
+                    "slab parser requires parse_with_context()"
                 );
                 unsafe {
                     &*(state.context_ptr as *const #ctx_ident<'a>)

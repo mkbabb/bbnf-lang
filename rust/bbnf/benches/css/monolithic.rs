@@ -1,6 +1,6 @@
 #![feature(cold_path)]
 
-//! BBNF CSS monolithic arena benchmark — cold per-parse (pretty.bbnf).
+//! BBNF CSS monolithic slab benchmark — cold per-parse (pretty.bbnf).
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -9,7 +9,7 @@ use bbnf_derive::Parser;
 use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
 
 #[derive(Parser)]
-#[parser(path = "../../grammar/css/pretty.bbnf", skip_recover, arena)]
+#[parser(path = "../../grammar/css/pretty.bbnf", skip_recover, slab)]
 struct CssPrettyParser;
 
 fn load(name: &str) -> String {
@@ -21,25 +21,27 @@ macro_rules! bench {
     ($name:ident, $file:expr) => {
         fn $name(b: &mut Bencher) {
             let input = load($file);
-            let (bytes, consumed_pct) = {
-                let arena =
+            b.bytes = input.len() as u64;
+            {
+                let slab =
                     __CssPrettyParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = CssPrettyParser::stylesheet();
-                let (_result, state) = parser.parse_return_state_with_context(&input, &arena);
-                (state.offset as u64, state.offset * 100 / input.len().max(1))
-            };
-            assert!(
-                consumed_pct >= 95,
-                concat!($file, ": only consumed {}%"),
-                consumed_pct
-            );
-            b.bytes = bytes;
+                let (result, state) =
+                    parser.parse_return_state_with_context(&input, &slab);
+                assert!(result.is_some(), concat!($file, ": parse failed"));
+                assert!(
+                    state.offset >= input.trim_end().len(),
+                    concat!($file, ": incomplete parse ({}/{})"),
+                    state.offset,
+                    input.len(),
+                );
+            }
             b.iter(|| {
-                let arena =
+                let slab =
                     __CssPrettyParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = CssPrettyParser::stylesheet();
                 let ast = parser
-                    .parse_with_context(black_box(&input), &arena)
+                    .parse_with_context(black_box(&input), &slab)
                     .unwrap();
                 black_box(&ast as *const _);
             });

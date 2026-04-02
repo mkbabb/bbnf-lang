@@ -74,7 +74,7 @@ pub(super) fn emit_mono_alt(
     // Check branch homogeneity for elide_box propagation.
     // Only propagate elide_box when branches are homogeneous in the elide_box
     // context. Heterogeneous branches require sub-variant coercion to BoxedEnum
-    // (arena ref), which must match the enum variant type from `project_types`.
+    // (slab ref), which must match the enum variant type from `project_types`.
     let effective_elide_box = if elide_box {
         let elide_tys: Vec<TypeDesc> = branches
             .iter()
@@ -300,7 +300,7 @@ fn emit_mono_flat_alt(
     // - Homogeneous BoxedEnum -> &'a Enum (boxed_enum_type)
     // - Homogeneous Enum -> Enum (enum_type)
     // - Heterogeneous + elide_box -> Enum (enum_type, by value)
-    // - Heterogeneous + !elide_box -> &'a Enum (boxed_enum_type, arena ref)
+    // - Heterogeneous + !elide_box -> &'a Enum (boxed_enum_type, slab ref)
     let return_type = if needs_coercion {
         if elide_box {
             ctx.enum_type.clone()

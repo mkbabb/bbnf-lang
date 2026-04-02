@@ -9,7 +9,7 @@
 //! `Parser::new()`: one SmallBox, zero vtable dispatches, O(1) construction.
 //!
 //! All internal functions return `Option<Enum<'a>>` (the unboxed enum type).
-//! Arena allocation (`arena.alloc`) happens at:
+//! Slab allocation (`slab.alloc`) happens at:
 //! - Non-elide_box Ref call sites (producing `&'a Enum<'a>`)
 //! - The public method wrapper for transparent rules
 //!
@@ -132,7 +132,7 @@ pub(super) struct MonoCtx {
     pub hoisted: Vec<TokenStream>,
     counter: usize,
     /// Per-rule flag: true if the rule's body can be inlined at call sites.
-    /// Indexed by RuleId. Computed once in `generate_monolithic_arena`.
+    /// Indexed by RuleId. Computed once in `generate_monolithic`.
     pub fusion_eligible: Vec<bool>,
     /// Phase 9: Per-rule flag for single-site inline eligibility.
     /// A cyclic rule can be inlined at its single call site when:
@@ -149,7 +149,7 @@ pub(super) struct MonoCtx {
     /// self-recursion (nested blocks call the enclosing wrap function).
     pub current_rule_name: Option<String>,
     /// ID of the rule currently being generated. Used for scratch type lookup
-    /// in arena mode to ensure type agreement with ir.types.
+    /// in slab mode to ensure type agreement with ir.types.
     pub current_rule_id: Option<bbnf_ir::RuleId>,
     /// @pretty hints for the current rule. Used by the prettify repeat codegen
     /// to determine the separator between items (softline, hardline, blankline,
@@ -211,7 +211,7 @@ pub(super) fn emit_mono_expr(
 
         IrNode::Regex(sid) => {
             let pattern = ctx.ir.get_string(*sid);
-            // Arena context: fuse number conversion (returns (Span, f64) for JSON numbers).
+            // Slab context: fuse number conversion (returns (Span, f64) for JSON numbers).
             // Skip fusing when prettify is enabled — formatters only need Spans.
             let fuse = !ctx.parser_attrs.prettify;
             let opts = super::regex::EmitOpts::new(&super::regex::CostModel::DEFAULT)

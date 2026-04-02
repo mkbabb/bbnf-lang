@@ -434,7 +434,7 @@ pub struct GrammarIR {
     pub ws_pattern: Option<StringId>,
 
     /// When true, Seq nodes where all children are simple Span leaves collapse
-    /// to a single Span, eliminating arena allocation. Enabled when prettify is
+    /// to a single Span, eliminating slab allocation. Enabled when prettify is
     /// disabled (no @pretty formatting constraints require individual Span identity).
     #[serde(default)]
     pub collapse_simple_spans: bool,

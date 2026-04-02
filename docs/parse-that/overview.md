@@ -16,7 +16,7 @@ A parser combinator library with isomorphic TypeScript and Rust implementations.
 - **Memoization**—built-in packrat memoization with left-recursion support
 - **O(1) dispatch**—first-character lookup tables for fast alternation
 - **Bespoke regex engine**—NFA→DFA compilation with Hopcroft minimization, no `regex` crate at runtime (Rust)
-- **BumpSlab**—byte-based bump allocator for zero-overhead arena parsing (Rust)
+- **BumpSlab**—byte-based bump allocator for zero-overhead slab parsing (Rust)
 - **Zero runtime deps**—the TypeScript package has no dependencies; Rust has no `regex` crate dependency
 
 ## Installation

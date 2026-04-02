@@ -38,7 +38,7 @@ fn emit_number_convert_call(inner: &IrNode, ctx: &IrCodegenCtx<'_>) -> TokenStre
 ///
 /// All internal fns return `Option<Enum<'a>>`.
 /// - `elide_box = true`:  return Enum directly
-/// - `elide_box = false`: arena.alloc → `&'a Enum<'a>`
+/// - `elide_box = false`: slab.alloc → `&'a Enum<'a>`
 ///
 /// **Fusion**: When the target rule is fusion-eligible (non-cyclic, no @recover/@pretty),
 /// its body is inlined at the call site. This lets LLVM see through the code and hoists

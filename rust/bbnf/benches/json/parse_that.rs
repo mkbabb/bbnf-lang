@@ -17,6 +17,17 @@ macro_rules! bench {
         fn $name(b: &mut Bencher) {
             let input = load($file);
             b.bytes = input.len() as u64;
+            {
+                let parser = parse_that::parsers::json::json_parser();
+                let (result, state) = parser.parse_return_state(&input);
+                assert!(result.is_some(), concat!($file, ": parse_that parse failed"));
+                assert!(
+                    state.offset >= input.trim_end().len(),
+                    concat!($file, ": parse_that incomplete parse ({}/{})"),
+                    state.offset,
+                    input.len(),
+                );
+            }
             b.iter(|| {
                 let parser = parse_that::parsers::json::json_parser();
                 let ast = parser.parse(black_box(&input)).unwrap();

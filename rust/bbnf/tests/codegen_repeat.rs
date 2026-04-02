@@ -7,7 +7,7 @@ use bbnf_ir::{GrammarIR, IrNode, IrRule, RuleMeta, TypeDesc};
 use bbnf::generate::codegen::ir_types::{IrCodegenCtx, ParserAttributes};
 
 #[test]
-fn sep_by_ws_until_uses_scratch_for_arena_mode() {
+fn sep_by_ws_until_uses_scratch_for_slab_mode() {
     let mut ir = GrammarIR {
         rules: vec![
             IrRule {
@@ -56,6 +56,6 @@ fn sep_by_ws_until_uses_scratch_for_arena_mode() {
     let (struct_def, helper_fn) = ctx.generate_alloc_ctx();
     let struct_str = struct_def.to_string();
     let helper_str = helper_fn.to_string();
-    assert!(struct_str.contains("__s0"), "arena ctx should have scratch field: {}", struct_str);
+    assert!(struct_str.contains("__s0"), "slab ctx should have scratch field: {}", struct_str);
     assert!(helper_str.contains("__TestParserEnum"), "helper should reference ctx type: {}", helper_str);
 }

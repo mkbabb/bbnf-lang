@@ -312,7 +312,7 @@ fn find_block_ref(node: &IrNode, _open_byte: u8, _ir: &GrammarIR) -> Option<Rule
 // ── Shared Emission Helpers ───────────────────────────────────────────────────
 
 /// Build the core delimiter-scan loop body tokens, parameterized by what happens
-/// on each dispatch case. Shared between span and arena emission.
+/// on each dispatch case. Shared between span and slab emission.
 ///
 /// The loop body:
 /// 1. Skip whitespace
@@ -455,16 +455,16 @@ fn emit_scan_loop(
     (loop_body, ws_post)
 }
 
-// ── Arena Emission ───────────────────────────────────────────────────────────
+// ── Slab Emission ────────────────────────────────────────────────────────────
 
 /// Emit an monolithic delimiter scanner.
 ///
 /// Grammar-agnostic speculative dispatch: the scanner determines WHICH branch
-/// to try, then calls the existing arena function for that branch from the
+/// to try, then calls the existing slab function for that branch from the
 /// item start. No manual type construction, no grammar-specific code.
 ///
-/// - Pivot found → call pivot branch's arena function from item start
-/// - Block delimiter found → call block branch's arena function from item start
+/// - Pivot found → call pivot branch's slab function from item start
+/// - Block delimiter found → call block branch's slab function from item start
 /// - Close delimiter → exit loop
 /// - Trail delimiter → skip
 ///
@@ -490,7 +490,7 @@ pub(super) fn emit_scan(
         ctx.emit_scratch_push(&elem_desc_for_push, &expr)
     };
 
-    // Block branch: rewind to item start, call the block rule's arena function.
+    // Block branch: rewind to item start, call the block rule's slab function.
     let on_block = if let Some(block_rule_id) = config.block_fn {
         let name = ctx.ir.get_string(ctx.ir.rules[block_rule_id as usize].name);
         let fn_ident = mono_fn_ident(name);
@@ -701,7 +701,7 @@ mod tests {
         let mut mctx = MonoCtx::new(vec![false, false], vec![false, false]);
 
         let tokens = emit_scan(&config, &ctx, &mut mctx).to_string();
-        // Arena mode uses scratch-based collection.
+        // Slab mode uses scratch-based collection.
         assert!(tokens.contains("__s0"), "should use scratch push: {}", tokens);
         assert!(tokens.contains("__c0"), "should use scratch collect: {}", tokens);
     }

@@ -2,7 +2,7 @@ use bbnf_derive::Parser;
 use parse_that::BumpSlab;
 
 #[derive(Parser)]
-#[parser(path = "../../grammar/css/pretty.bbnf", skip_recover, arena)]
+#[parser(path = "../../grammar/css/pretty.bbnf", skip_recover, slab)]
 struct CssPrettyParser;
 
 fn main() {

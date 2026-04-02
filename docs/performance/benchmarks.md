@@ -68,11 +68,11 @@ Four tiers of BBNF CSS parsing on 3 datasets:
 | Tier | Grammar | What |
 |------|---------|------|
 | **span** | `css/pretty.bbnf` | Opaque spans, `@ws` SIMD whitespace, `@token` lexical fusion (L0) |
-| **arena** | `css/pretty.bbnf` | Typed enum tree with opaque values (L0.5) |
+| **slab** | `css/pretty.bbnf` | Typed enum tree with opaque values (L0.5) |
 | **l4** | `css/l4/stylesheet.bbnf` | Full CSS L4 via `@import` composition — property-aware dispatch, typed selectors, typed values |
 | **vm** | `css/pretty.bbnf` | Bytecode interpreter |
 
-Groups: `arena`, `span`, `l4`, `vm` — 4 groups x 3 datasets = 12 bench fns. Cold per-parse with `BumpSlab`.
+Groups: `slab`, `span`, `l4`, `vm` — 4 groups x 3 datasets = 12 bench fns. Cold per-parse with `BumpSlab`.
 
 ### CSS — Competitors (`css_competitors.rs`)
 
@@ -134,7 +134,7 @@ Every bench fn validates parse success ONCE before the hot loop. The bench binar
 - All benchmarks use mimalloc as the global allocator
 - Input data is loaded once before benchmarking (not included in timing)
 - VM benchmarks create a new `Interpreter` per iteration (includes allocation)
-- Arena benchmarks create a fresh `BumpSlab` + `Parser` per iteration (cold per-parse)
+- Slab benchmarks create a fresh `BumpSlab` + `Parser` per iteration (cold per-parse)
 - simd-json requires `.to_vec()` per iteration — inherent library cost
 - Benchmark data files are in `data/json/` and `data/css/`
 - Bench profile uses `lto = "fat"` and `codegen-units = 1` for maximum optimization

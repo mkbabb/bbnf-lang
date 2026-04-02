@@ -9,7 +9,7 @@ mod css_types {
 }
 
 #[derive(Parser)]
-#[parser(path = "../../grammar/css/l4/stylesheet.bbnf", skip_recover, arena)]
+#[parser(path = "../../grammar/css/l4/stylesheet.bbnf", skip_recover, slab)]
 struct CssL4Parser;
 
 fn test_input(label: &str, input: &str) {

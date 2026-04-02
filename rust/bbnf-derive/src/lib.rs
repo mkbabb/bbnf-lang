@@ -27,7 +27,7 @@ use parse_that::utils::get_cargo_root_path;
 // The full pipeline (parse → lower → 17 IR passes → codegen) is expensive.
 // We cache the generated TokenStream on disk, keyed by a hash of:
 //   - All grammar file contents (entry + transitive imports)
-//   - Parser attributes (arena, span, prettify, skip_recover, etc.)
+//   - Parser attributes (slab, span, prettify, skip_recover, etc.)
 //   - The struct ident name (determines generated type names)
 //   - The bbnf crate version (invalidates on compiler changes)
 

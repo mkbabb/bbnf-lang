@@ -48,10 +48,22 @@ fn compile(b: &mut Bencher) {
 fn parse_pathological(b: &mut Bencher) {
     let (_ir, program) = compiled();
     b.bytes = PATHOLOGICAL.len() as u64;
+    {
+        let mut interp = Interpreter::new(&program, PATHOLOGICAL);
+        let r = interp.run();
+        assert!(r.success, "pathological: VM parse failed");
+        assert_eq!(
+            r.offset as usize,
+            PATHOLOGICAL.len(),
+            "pathological: VM incomplete parse ({}/{})",
+            r.offset as usize,
+            PATHOLOGICAL.len(),
+        );
+    }
     b.iter(|| {
         let mut interp = Interpreter::new(&program, black_box(PATHOLOGICAL));
         let r = interp.run();
-        assert!(r.success);
+        black_box(r.offset);
     });
 }
 
@@ -59,10 +71,22 @@ fn parse_1kb(b: &mut Bencher) {
     let (_ir, program) = compiled();
     let input = generate_large_formula(10);
     b.bytes = input.len() as u64;
+    {
+        let mut interp = Interpreter::new(&program, &input);
+        let r = interp.run();
+        assert!(r.success, "parse_1kb: VM parse failed");
+        assert_eq!(
+            r.offset as usize,
+            input.len(),
+            "parse_1kb: VM incomplete parse ({}/{})",
+            r.offset as usize,
+            input.len(),
+        );
+    }
     b.iter(|| {
         let mut interp = Interpreter::new(&program, black_box(&input));
         let r = interp.run();
-        assert!(r.success);
+        black_box(r.offset);
     });
 }
 
@@ -70,10 +94,22 @@ fn parse_10kb(b: &mut Bencher) {
     let (_ir, program) = compiled();
     let input = generate_large_formula(100);
     b.bytes = input.len() as u64;
+    {
+        let mut interp = Interpreter::new(&program, &input);
+        let r = interp.run();
+        assert!(r.success, "parse_10kb: VM parse failed");
+        assert_eq!(
+            r.offset as usize,
+            input.len(),
+            "parse_10kb: VM incomplete parse ({}/{})",
+            r.offset as usize,
+            input.len(),
+        );
+    }
     b.iter(|| {
         let mut interp = Interpreter::new(&program, black_box(&input));
         let r = interp.run();
-        assert!(r.success);
+        black_box(r.offset);
     });
 }
 

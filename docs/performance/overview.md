@@ -14,7 +14,7 @@ Each pipeline stage is benchmarked independently.
 { "title": "Formatting Pipeline",
   "nodes": [
     {"label": "Source text", "color": "cyan"},
-    {"label": "parse_that / parse-that", "detail": "289–2,571 MB/s (Rust arena+span, cold) · 4,252–22,959 ops/s (TS)", "color": "blue"},
+    {"label": "parse_that / parse-that", "detail": "289–2,571 MB/s (Rust slab+span, cold) · 4,252–22,959 ops/s (TS)", "color": "blue"},
     {"label": "to_doc()", "detail": "158–356 MB/s (CSS)", "color": "green"},
     {"label": "pprint::render", "detail": "179–254 MB/s (CSS)", "color": "purple"},
     {"label": "Formatted output", "detail": "22–115 MB/s end-to-end", "color": "amber"}
@@ -34,8 +34,8 @@ Three codegen paths feed this pipeline:
 ```bench-chart
 { "title": "Aggregate Throughput", "unit": "MB/s",
   "datasets": [
-    { "name": "Parsing — Arena (Rust, cold)", "icon": "rust",
-      "labels": ["BBNF arena", "nom", "winnow", "pest"],
+    { "name": "Parsing — Slab (Rust, cold)", "icon": "rust",
+      "labels": ["BBNF slab", "nom", "winnow", "pest"],
       "series": [{"label": "data.json 35 KB", "values": [1197, 417, 416, 112]}] },
     { "name": "Formatting (Rust)", "icon": "rust",
       "labels": ["gorgeous E2E", "gorgeous (cached)", "Biome"],

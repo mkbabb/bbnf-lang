@@ -5,7 +5,7 @@ use bbnf_derive::Parser;
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 #[derive(Parser)]
-#[parser(path = "../../grammar/json/json.bbnf", arena)]
+#[parser(path = "../../grammar/json/json.bbnf", slab)]
 struct JsonParser;
 
 fn bench_file(name: &str) {
@@ -36,27 +36,27 @@ fn bench_file(name: &str) {
     let _ = std::hint::black_box(span_p.parse(std::hint::black_box(&input)));
     let span_cold = start.elapsed();
 
-    // Arena — fresh BumpSlab + parser per iteration
+    // Slab — fresh BumpSlab + parser per iteration
     let n = if len > 1_000_000 { 5 } else { 20 };
     let start = std::time::Instant::now();
     for _ in 0..n {
         let ctx =
             __JsonParserEnumCtx::with_capacity(input.len() / 32);
-        let arena_parser = JsonParser::value();
-        let ast = arena_parser
+        let slab_parser = JsonParser::value();
+        let ast = slab_parser
             .parse_with_context(std::hint::black_box(&input), &ctx)
             .unwrap();
         let _ = std::hint::black_box(ast as *const _);
     }
-    let arena = start.elapsed() / n as u32;
+    let slab = start.elapsed() / n as u32;
 
     let mb = |d: std::time::Duration| len as f64 / d.as_secs_f64() / 1e6;
     println!(
-        "{:25} {:>8}B  span_cold:{:>6.0}  arena:{:>6.0} MB/s",
+        "{:25} {:>8}B  span_cold:{:>6.0}  slab:{:>6.0} MB/s",
         name,
         len,
         mb(span_cold),
-        mb(arena)
+        mb(slab)
     );
 }
 

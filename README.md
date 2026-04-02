@@ -120,24 +120,24 @@ import-aware—imported rule names suppress "undefined rule" warnings.
 
 BBNF's `@pretty` directives drive pretty-printing in the playground and Prettier plugin.
 
-### Arena Parsing
+### Slab Parsing
 
-`#[parser(arena)]` on the derive macro generates a second set of parser methods that use `BumpSlab` for allocation instead of `Box<T>`. The arena path emits monolithic recursive functions—direct `match` dispatch on the first byte, inlined rule bodies, zero combinator construction overhead. Fresh slab and parser per parse; bulk deallocation on drop.
+`#[parser(slab)]` on the derive macro generates a second set of parser methods that use `BumpSlab` for allocation instead of `Box<T>`. The slab path emits monolithic recursive functions—direct `match` dispatch on the first byte, inlined rule bodies, zero combinator construction overhead. Fresh slab and parser per parse; bulk deallocation on drop.
 
 ```rust
 #[derive(Parser)]
-#[parser(path = "json.bbnf", arena)]
+#[parser(path = "json.bbnf", slab)]
 struct JsonParser;
 
 let slab = BumpSlab::with_capacity(input.len() / 32 * 32);
-let ast = JsonParser::value_arena()
+let ast = JsonParser::value_slab()
     .parse_with_context(&input, &slab)
     .unwrap();
 ```
 
 ### Span-Only Parsing
 
-`#[parser(span)]` generates zero-allocation `__rule_span` functions returning `Option<Span<'a>>`. No enum variants, no arena, no Vec. Validation-only parsing at maximum throughput.
+`#[parser(span)]` generates zero-allocation `__rule_span` functions returning `Option<Span<'a>>`. No enum variants, no slab, no Vec. Validation-only parsing at maximum throughput.
 
 ## Playground
 

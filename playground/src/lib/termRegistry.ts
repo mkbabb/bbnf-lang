@@ -54,10 +54,10 @@ export const TERM_REGISTRY: Record<string, TermEntry> = {
         docAnchor: "imports",
         category: "directive",
     },
-    "@arena": {
+    "@slab": {
         description:
-            "Triggers monolithic arena codegen — direct recursive functions using BumpSlab instead of combinator chains.",
-        docSlug: "performance/arena-handoff",
+            "Triggers monolithic slab codegen — direct recursive functions using BumpSlab instead of combinator chains.",
+        docSlug: "performance/slab-handoff",
         category: "directive",
     },
     "skip_recover": {
@@ -132,14 +132,14 @@ export const TERM_REGISTRY: Record<string, TermEntry> = {
     "monolithic codegen": {
         description:
             "Code generation mode that emits direct recursive functions instead of combinator chains. Zero vtable dispatches.",
-        docSlug: "performance/arena-handoff",
+        docSlug: "performance/slab-handoff",
         docAnchor: "monolithic-codegen",
         category: "concept",
     },
-    "arena allocation": {
+    "slab allocation": {
         description:
             "Bump allocation strategy where objects are allocated contiguously and freed all at once. Used via BumpSlab.",
-        docSlug: "performance/arena-handoff",
+        docSlug: "performance/slab-handoff",
         docAnchor: "bumpslab",
         category: "concept",
     },
@@ -170,7 +170,7 @@ export const TERM_REGISTRY: Record<string, TermEntry> = {
     "BumpSlab": {
         description:
             "Byte-based bump allocator in parse_that. Generic alloc<T>/alloc_slice_clone<T> methods — faster than typed_arena.",
-        docSlug: "performance/arena-handoff",
+        docSlug: "performance/slab-handoff",
         docAnchor: "bumpslab",
         category: "type",
     },

@@ -23,7 +23,7 @@ use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
 use bbnf_derive::Parser;
 
 #[derive(Parser)]
-#[parser(path = "../../grammar/css/pretty.bbnf", skip_recover, arena)]
+#[parser(path = "../../grammar/css/pretty.bbnf", skip_recover, slab)]
 struct CssFastParser;
 
 // ── CSS rules: many separate rules ─────────────────────────────────────
@@ -34,19 +34,27 @@ macro_rules! bench_rules {
             let input = generators::css_gen::many_rules($count);
             b.bytes = input.len() as u64;
             {
-                let arena =
+                let slab =
                     __CssFastParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = CssFastParser::stylesheet();
-                let (_result, state) = parser.parse_return_state_with_context(&input, &arena);
-                let pct = state.offset * 100 / input.len().max(1);
-                assert!(pct >= 95, "many_rules_{}: only consumed {}%", $count, pct,);
+                let (result, state) =
+                    parser.parse_return_state_with_context(&input, &slab);
+                assert!(result.is_some(), "many_rules_{}: parse failed", $count);
+                assert_eq!(
+                    state.offset,
+                    input.len(),
+                    "many_rules_{}: incomplete parse ({}/{})",
+                    $count,
+                    state.offset,
+                    input.len(),
+                );
             }
             b.iter(|| {
-                let arena =
+                let slab =
                     __CssFastParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = CssFastParser::stylesheet();
                 let ast = parser
-                    .parse_with_context(black_box(&input), &arena)
+                    .parse_with_context(black_box(&input), &slab)
                     .unwrap();
                 black_box(&ast as *const _);
             });
@@ -66,24 +74,31 @@ macro_rules! bench_decls {
             let input = generators::css_gen::many_declarations($count);
             b.bytes = input.len() as u64;
             {
-                let arena =
+                let slab =
                     __CssFastParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = CssFastParser::stylesheet();
-                let (_result, state) = parser.parse_return_state_with_context(&input, &arena);
-                let pct = state.offset * 100 / input.len().max(1);
+                let (result, state) =
+                    parser.parse_return_state_with_context(&input, &slab);
                 assert!(
-                    pct >= 95,
-                    "many_declarations_{}: only consumed {}%",
+                    result.is_some(),
+                    "many_declarations_{}: parse failed",
                     $count,
-                    pct,
+                );
+                assert_eq!(
+                    state.offset,
+                    input.len(),
+                    "many_declarations_{}: incomplete parse ({}/{})",
+                    $count,
+                    state.offset,
+                    input.len(),
                 );
             }
             b.iter(|| {
-                let arena =
+                let slab =
                     __CssFastParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = CssFastParser::stylesheet();
                 let ast = parser
-                    .parse_with_context(black_box(&input), &arena)
+                    .parse_with_context(black_box(&input), &slab)
                     .unwrap();
                 black_box(&ast as *const _);
             });
@@ -102,24 +117,31 @@ macro_rules! bench_selectors {
             let input = generators::css_gen::wide_selector_list($count);
             b.bytes = input.len() as u64;
             {
-                let arena =
+                let slab =
                     __CssFastParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = CssFastParser::stylesheet();
-                let (_result, state) = parser.parse_return_state_with_context(&input, &arena);
-                let pct = state.offset * 100 / input.len().max(1);
+                let (result, state) =
+                    parser.parse_return_state_with_context(&input, &slab);
                 assert!(
-                    pct >= 95,
-                    "wide_selector_list_{}: only consumed {}%",
+                    result.is_some(),
+                    "wide_selector_list_{}: parse failed",
                     $count,
-                    pct,
+                );
+                assert_eq!(
+                    state.offset,
+                    input.len(),
+                    "wide_selector_list_{}: incomplete parse ({}/{})",
+                    $count,
+                    state.offset,
+                    input.len(),
                 );
             }
             b.iter(|| {
-                let arena =
+                let slab =
                     __CssFastParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = CssFastParser::stylesheet();
                 let ast = parser
-                    .parse_with_context(black_box(&input), &arena)
+                    .parse_with_context(black_box(&input), &slab)
                     .unwrap();
                 black_box(&ast as *const _);
             });
@@ -138,24 +160,31 @@ macro_rules! bench_nesting {
             let input = generators::css_gen::media_query_nesting($depth);
             b.bytes = input.len() as u64;
             {
-                let arena =
+                let slab =
                     __CssFastParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = CssFastParser::stylesheet();
-                let (_result, state) = parser.parse_return_state_with_context(&input, &arena);
-                let pct = state.offset * 100 / input.len().max(1);
+                let (result, state) =
+                    parser.parse_return_state_with_context(&input, &slab);
                 assert!(
-                    pct >= 95,
-                    "media_query_nesting_{}: only consumed {}%",
+                    result.is_some(),
+                    "media_query_nesting_{}: parse failed",
                     $depth,
-                    pct,
+                );
+                assert_eq!(
+                    state.offset,
+                    input.len(),
+                    "media_query_nesting_{}: incomplete parse ({}/{})",
+                    $depth,
+                    state.offset,
+                    input.len(),
                 );
             }
             b.iter(|| {
-                let arena =
+                let slab =
                     __CssFastParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = CssFastParser::stylesheet();
                 let ast = parser
-                    .parse_with_context(black_box(&input), &arena)
+                    .parse_with_context(black_box(&input), &slab)
                     .unwrap();
                 black_box(&ast as *const _);
             });

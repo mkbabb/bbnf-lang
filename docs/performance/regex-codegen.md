@@ -108,7 +108,7 @@ All regex patterns across the JSON, CSS, EBNF, BNF, BBNF, and Google Sheets gram
 
 ## Integration with Monolithic Codegen
 
-In the monolithic arena and span codegen paths (`ir_codegen/monolithic/`), regex emission is called directly from expression codegen. When the compiler encounters an `IrNode::Regex(pattern)`, it tries each tier in order:
+In the monolithic slab and span codegen paths (`ir_codegen/monolithic/`), regex emission is called directly from expression codegen. When the compiler encounters an `IrNode::Regex(pattern)`, it tries each tier in order:
 
 1. `fast_paths::emit_regex_direct_call` — returns inline `Option<Span>` code if a fast path matches
 2. `regex_emit::try_emit_regex_inline` — HIR walker

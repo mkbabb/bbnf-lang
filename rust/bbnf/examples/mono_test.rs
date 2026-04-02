@@ -3,7 +3,7 @@ use bbnf_derive::Parser;
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 #[derive(Parser)]
-#[parser(path = "../../grammar/json/json.bbnf", arena)]
+#[parser(path = "../../grammar/json/json.bbnf", slab)]
 struct P;
 fn main() {
     for name in [
@@ -27,7 +27,7 @@ fn main() {
         let _ = std::hint::black_box(span_p.parse(std::hint::black_box(&input)));
         let span_cold = start.elapsed();
 
-        // Arena — fresh BumpSlab + parser per iteration
+        // Slab — fresh BumpSlab + parser per iteration
         let start = std::time::Instant::now();
         for _ in 0..n {
             let a = __PEnumCtx::with_capacity(input.len() / 32);
@@ -37,14 +37,14 @@ fn main() {
                 .unwrap();
             std::hint::black_box(r as *const _);
         }
-        let arena = start.elapsed() / n as u32;
+        let slab = start.elapsed() / n as u32;
 
         eprintln!(
-            "{:25} {:>8}B  span_cold:{:>6.0}  arena:{:>6.0} MB/s",
+            "{:25} {:>8}B  span_cold:{:>6.0}  slab:{:>6.0} MB/s",
             name,
             len,
             len as f64 / span_cold.as_secs_f64() / 1e6,
-            len as f64 / arena.as_secs_f64() / 1e6
+            len as f64 / slab.as_secs_f64() / 1e6
         );
     }
 }

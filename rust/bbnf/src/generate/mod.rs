@@ -37,7 +37,7 @@ pub fn generate_all(
     }
 
     // Enable simple Span collapse when prettify is disabled — allows Seqs of
-    // simple Span children to collapse to a single Span, eliminating arena allocs.
+    // simple Span children to collapse to a single Span, eliminating slab allocs.
     ir.collapse_simple_spans = !parser_attrs.prettify;
 
     // Compute sp_method_rules via iterative fixed-point BEFORE type inference,
@@ -46,7 +46,7 @@ pub fn generate_all(
     // Run type inference with correct sp_method info.
     bbnf_ir::passes::project_types(ir);
 
-    // ── Arena-mode monolithic methods (the only data-producing path) ──────
+    // ── Slab-mode monolithic methods (the only data-producing path) ───────
 
     let mut ctx = ir_types::IrCodegenCtx::new(ir, ident, parser_attrs);
 
@@ -71,8 +71,8 @@ pub fn generate_all(
 
     let grammar_arr = ir_enums::generate_grammar_arr(parser_attrs, ident);
 
-    // Data-producing codegen: enum + parser methods + arena context.
-    // Always generated — prettify parsers also need the data path for ArenaCtx.
+    // Data-producing codegen: enum + parser methods + slab context.
+    // Always generated — prettify parsers also need the data path for SlabCtx.
     let grammar_enum = ir_enums::generate_enum(&ctx);
     let parser_methods = codegen::generate_monolithic(ir, &ctx);
 

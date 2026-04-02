@@ -1,6 +1,6 @@
 #![feature(cold_path)]
 
-//! BBNF JSON monolithic arena benchmark — cold per-parse.
+//! BBNF JSON monolithic slab benchmark — cold per-parse.
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -9,7 +9,7 @@ use bbnf_derive::Parser;
 use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
 
 #[derive(Parser)]
-#[parser(path = "../../grammar/json/json.bbnf", arena)]
+#[parser(path = "../../grammar/json/json.bbnf", slab)]
 struct JsonParser;
 
 const _: () = assert!(std::mem::size_of::<JsonParserEnum>() <= 48);
@@ -24,6 +24,19 @@ macro_rules! bench {
         fn $name(b: &mut Bencher) {
             let input = load($file);
             b.bytes = input.len() as u64;
+            {
+                let ctx = __JsonParserEnumCtx::with_capacity(input.len() / 32);
+                let parser = JsonParser::value();
+                let (result, state) =
+                    parser.parse_return_state_with_context(&input, &ctx);
+                assert!(result.is_some(), concat!($file, ": parse failed"));
+                assert!(
+                    state.offset >= input.trim_end().len(),
+                    concat!($file, ": incomplete parse ({}/{})"),
+                    state.offset,
+                    input.len(),
+                );
+            }
             b.iter(|| {
                 let ctx = __JsonParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = JsonParser::value();

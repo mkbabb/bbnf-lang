@@ -36,7 +36,7 @@ bbnf/
 │   │   │   ├── inline_scanners.rs  Inline scanner codegen (CSS ident, string, ws, etc.)
 │   │   │   └── negated_class.rs  Negated char-class memchr emission
 │   │   ├── hir_classify.rs HIR-based regex classification (Numeric, HexDigits, Identifier, QuotedString)
-│   │   ├── codegen/      Monolithic Rust codegen (Arena, Owned, Span, Prettify modes)
+│   │   ├── codegen/      Monolithic Rust codegen
 │   │   │   ├── mod.rs    Entry point, generate_all(), expression dispatch
 │   │   │   ├── generate.rs  Top-level codegen orchestration
 │   │   │   ├── helpers.rs   Shared codegen helpers
@@ -45,9 +45,10 @@ bbnf/
 │   │   │   │   ├── key_dispatch.rs  Key-based dispatch codegen
 │   │   │   │   └── literal.rs  All-literal fast path
 │   │   │   ├── seq.rs    Concatenation/sequence codegen
-│   │   │   ├── repeat.rs Repetition codegen (many, sep_by, optional)
+│   │   │   ├── repeat.rs Repetition codegen (many, optional)
+│   │   │   ├── sep_by.rs Sep-by loop emission (bare, ws-aware, delimited-with-terminator)
 │   │   │   ├── expr.rs   Leaf expression codegen
-│   │   │   ├── infer.rs  IrNode → syn::Type inference
+│   │   │   ├── alloc_emit.rs  Scratch emission + context generation
 │   │   │   ├── delim_scan.rs  Delimiter-driven flat scanning optimization
 │   │   │   ├── token_dispatch.rs  Token-level dispatch codegen
 │   │   │   ├── trace.rs  Debug trace codegen (#[cfg(feature = "parser-trace")] instrumentation)
@@ -63,7 +64,7 @@ bbnf/
 │   │   │       ├── expr.rs   Span expression codegen
 │   │   │       └── repeat.rs Span repetition codegen
 │   │   ├── ir_enums.rs   Enum type generation from IR alternations
-│   │   ├── ir_types.rs   IR-level type inference and mapping
+│   │   ├── ir_types.rs   IR-level type projection and TypeMap lookup
 │   │   └── regex_emit/   DFA-based regex emission
 │   │       ├── mod.rs    Entry point
 │   │       ├── audit.rs  Regex audit/validation
@@ -112,7 +113,7 @@ Entry points: `BBNFGrammar::grammar()`, `BBNFGrammar::grammar_with_imports()`.
 ### generate/ — Code Generation
 Emits `proc_macro2::TokenStream` for Rust parser methods. Single monolithic codegen path:
 
-- **codegen/**: Monolithic Rust codegen. Takes a `GrammarIR` and produces `TokenStream`. Handles four modes: Arena (`#[parser(arena)]`), Owned (default), Span (`#[parser(span)]`), and Prettify (`#[parser(prettify)]`). Split into sub-modules: `alt/` (alternation + dispatch tables + literal fast paths), `seq.rs` (concatenation), `repeat.rs` (repetition + sep_by), `expr.rs` (leaf expressions), `infer.rs` (IrNode → syn::Type), `delim_scan.rs` (delimiter-driven scanning), `trace.rs` (debug instrumentation). Sub-directories: `span/` (span-only codegen), `prettify/` (prettify-mode codegen). The `in_vec` parameter is threaded through codegen to emit `Vec<Enum>` instead of `Vec<Box<Enum>>` where safe.
+- **codegen/**: Monolithic Rust codegen. Takes a `GrammarIR` and produces `TokenStream`. Single codegen path with arena allocation + optional prettify sub-path for `#[parser(prettify)]`. Split into sub-modules: `alt/` (alternation + dispatch tables + literal fast paths), `seq.rs` (concatenation), `repeat.rs` (repetition + optional), `sep_by.rs` (sep-by loop emission), `expr.rs` (leaf expressions), `alloc_emit.rs` (scratch emission + context generation), `delim_scan.rs` (delimiter-driven scanning), `trace.rs` (debug instrumentation). Sub-directory: `prettify/` (fused parse+format codegen). The `in_vec` parameter is threaded through codegen to emit `Vec<Enum>` instead of `Vec<Box<Enum>>` where safe. Type lookup via `TypeMap` populated by the `project_types` IR pass.
 - **hir_classify.rs**: HIR-based regex classification via `regex-syntax` (`RegexClass` enum). `classify_regex()` decomposes patterns into Numeric/HexDigits/Identifier/QuotedString structurally. Aliased as `regex_classify` for backward compat. Used by `fast_paths/` for inline scanner selection and by `lower/expression.rs` for `FnDescriptor` specialization.
 - **types.rs**: `ParserAttributes`, `GeneratedNonterminalParser`, cache types, `DEFAULT_PARSERS`.
 - **fast_paths/**: Inline byte scanner emission. `detect.rs` for pattern detection, `inline_scanners.rs` for CSS ident/string/ws fast paths, `negated_class.rs` for memchr emission, `generalized.rs` for generalized regex-to-scanner.

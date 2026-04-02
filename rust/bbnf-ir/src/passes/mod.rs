@@ -37,5 +37,5 @@ pub use prefix::factor_common_prefixes;
 pub use prune::prune_unreachable;
 pub use sort::sort_alt_branches;
 pub use span::{compute_sp_method_rules, refine_span_eligibility};
-pub use types::infer_types;
-pub use types::{InferCtx, InferMap, InferRecorder, infer_node, infer_node_in_vec};
+pub use types::project_types;
+pub use types::{ProjectionCtx, ProjectionRules, TypeMap, TypeRecorder, project_node, project_node_in_vec};

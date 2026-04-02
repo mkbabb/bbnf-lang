@@ -120,7 +120,7 @@ fn extract_closure_fn_path(source: &str) -> Option<String> {
 
 /// Lower a mapping function expression to a `FnId`.
 ///
-/// B.3: Parses the closure's `-> ReturnType` annotation (if present) and stores
+/// Parses the closure's `-> ReturnType` annotation (if present) and stores
 /// it as a `TypeDesc::Named` in the `FnDescriptor::Custom` variant. This allows
 /// IR type inference to use the actual return type instead of the closure source text.
 ///

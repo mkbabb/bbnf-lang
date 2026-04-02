@@ -12,6 +12,8 @@
 //! This is grammar-agnostic: any grammar with overlapping-FIRST Alts and
 //! `@token` declarations benefits.
 
+use std::collections::HashSet;
+
 use crate::{AltBranch, CharSet128, GrammarIR, IrNode, IrRule, RuleMeta, StringId};
 
 /// Shared mutable context threaded through the recursive factoring pass.
@@ -153,6 +155,47 @@ fn try_factor_alt(node: IrNode, ctx: &mut FactorCtx<'_>) -> IrNode {
     }
 }
 
+/// Check if a node's leading expression is a Ref to a @token rule other than `exclude_token_id`.
+///
+/// Branches that start with a different @token rule have distinct scanning semantics
+/// (e.g., `selectorSpan` uses `[^{};]+` while `propertyName` uses `[a-zA-Z-]+`).
+/// Folding such branches under the wrong token's regex replaces their scanner,
+/// causing parse failures.
+fn starts_with_different_token(
+    node: &IrNode,
+    exclude_token_id: u32,
+    token_rule_ids: &HashSet<u32>,
+    rule_bodies: &[(u32, IrNode)],
+) -> bool {
+    match node {
+        IrNode::Ref(id) => {
+            if token_rule_ids.contains(id) && *id != exclude_token_id {
+                return true;
+            }
+            // Follow Ref to check if the referenced rule's body starts with a different token.
+            if let Some((_, ref_body)) = rule_bodies.iter().find(|(rid, _)| *rid == *id) {
+                return starts_with_different_token(
+                    ref_body,
+                    exclude_token_id,
+                    token_rule_ids,
+                    rule_bodies,
+                );
+            }
+            false
+        }
+        IrNode::Seq(children) if !children.is_empty() => starts_with_different_token(
+            &children[0],
+            exclude_token_id,
+            token_rule_ids,
+            rule_bodies,
+        ),
+        IrNode::OptionalWhitespace(inner) => {
+            starts_with_different_token(inner, exclude_token_id, token_rule_ids, rule_bodies)
+        }
+        _ => false,
+    }
+}
+
 /// Try to factor an Alt using a specific @token rule.
 fn factor_with_token(
     branches: &[AltBranch],
@@ -221,6 +264,10 @@ fn factor_with_token(
 
     let mut continuations: Vec<ContinuationInfo> = Vec::new();
 
+    // Collect all @token rule IDs so we can detect branches that start with a
+    // different token rule than the one being used for factoring.
+    let token_ids: HashSet<u32> = ctx.token_rules.iter().map(|(id, _, _)| *id).collect();
+
     for &i in &overlap_indices {
         let branch = &branches[i];
 
@@ -239,6 +286,15 @@ fn factor_with_token(
             IrNode::Seq(_) | IrNode::OptionalWhitespace(_) => (None, branch.node.clone()),
             _ => continue,
         };
+
+        // Reject branches that start with a different @token rule — their scanning
+        // semantics differ from the factoring token. E.g., `selectorSpan` uses
+        // `[^{};]+` while `propertyName` uses `[a-zA-Z-]+`; folding `selectorSpan`
+        // branches under `propertyName`'s regex replaces the scanner incorrectly.
+        if starts_with_different_token(&body, token_rule_id, &token_ids, ctx.rule_bodies) {
+            non_overlap_indices.push(i);
+            continue;
+        }
 
         // Strip the leading keyword from the body (follows Refs to detect
         // property group rules like colorProps = "color" | "background-color" | ...).

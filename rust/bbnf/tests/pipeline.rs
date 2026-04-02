@@ -286,8 +286,8 @@ number = /-?\d+/ ;
         "generate_dispatch_tables broke it"
     );
 
-    bbnf_ir::passes::infer_types(&mut ir);
-    assert!(test_parse(&ir, "11-infer_types"), "infer_types broke it");
+    bbnf_ir::passes::project_types(&mut ir);
+    assert!(test_parse(&ir, "11-project_types"), "project_types broke it");
 }
 
 #[test]
@@ -474,7 +474,8 @@ fn pipeline_google_sheets_formula() {
         fc_off
     );
 
-    // Formatting via gorgeous VM
+    #[cfg(feature = "gorgeous")]
+    {
     let value = result.value.as_ref().unwrap();
     let printer = &gorgeous::PrinterConfig {
         max_width: 80,

@@ -648,7 +648,7 @@ fn try_compile_ir(cached: &CachedParseResult<'_>) -> HashMap<String, IrRuleMeta>
             .get(&rule.id)
             .map(|cs| format_charset_iter(cs.iter()));
 
-        let inferred_type = type_map.get(&rule.id).map(|td| format_type_desc(td, &ir));
+        let projected_type = type_map.get(&rule.id).map(|td| format_type_desc(td, &ir));
 
         result.insert(
             name,
@@ -658,7 +658,7 @@ fn try_compile_ir(cached: &CachedParseResult<'_>) -> HashMap<String, IrRuleMeta>
                 memo_strategy: format!("{:?}", rule.meta.memo),
                 span_eligible: rule.meta.span_eligible,
                 has_sp_method: rule.meta.has_sp_method,
-                inferred_type,
+                projected_type,
                 is_transparent: rule.meta.is_transparent,
             },
         );

@@ -28,7 +28,7 @@ Applied in order, each pass is idempotent:
     {"label": "refine_span_eligibility", "detail": "Fixed-point iteration marking non-cyclic rules as span-eligible when their entire body can produce a Span without semantic transforms.", "color": "purple", "href": "#refine_span_eligibility"},
     {"label": "compute_follow_sets", "detail": "Computes FOLLOW(A) for every rule using fixed-point iteration, propagating through Seq, Alt, Repeat, and binary operators.", "color": "purple", "href": "#compute_follow_sets"},
     {"label": "generate_dispatch_tables", "detail": "Annotates Alt nodes with disjoint FIRST sets with a 128-byte O(1) lookup table mapping each ASCII byte to a branch index.", "color": "purple", "href": "#generate_dispatch_tables"},
-    {"label": "infer_types", "detail": "Walks rule bodies in topological order assigning TypeDesc values consumed by all codegen backends for typed parser emission.", "color": "purple", "href": "#infer_types"}
+    {"label": "project_types", "detail": "Walks rule bodies in topological order assigning TypeDesc values consumed by all codegen backends for typed parser emission.", "color": "purple", "href": "#project_types"}
   ] }
 ```
 
@@ -98,7 +98,7 @@ Fires on patterns like `"if" ident | "if" "(" expr ")"`, keyword tables, or any 
 
 Iterates to a fixed point over all non-cyclic rules, marking each as span-eligible if its entire body—leaves, combinators, and all transitively referenced rules—can produce a `Span<'a>` without semantic transformations (`Map`, boxing, enum wrapping). Cyclic rules are excluded because SpanParser has no recursive variant.
 
-Enables `_sp()` method generation in AOT codegen (zero-copy, vtable-free parsing) and allows `infer_types` to assign `Span` instead of `BoxedEnum` for references to span-eligible rules inside concatenations.
+Enables `_sp()` method generation in AOT codegen (zero-copy, vtable-free parsing) and allows `project_types` to assign `Span` instead of `BoxedEnum` for references to span-eligible rules inside concatenations.
 
 ## `compute_follow_sets`
 
@@ -112,7 +112,7 @@ Walks the entire IR tree and annotates each `Alt` node whose branches have pairw
 
 Converts O(n) linear branch trial in the interpreter to O(1) table lookup, which is the single largest performance improvement for grammars with many-branch alternations (e.g., JSON `value` with 6+ branches).
 
-## `infer_types`
+## `project_types`
 
 Walks each rule body in topological order and assigns a `TypeDesc` (`Span`, `Vec<T>`, `Option<T>`, `Tuple(...)`, `BoxedEnum`, `Enum`, `Named`) describing the Rust/TS output type. Handles five special cases: sp_method Span overrides in Seq nodes (B.1), `@pretty`/`@no_collapse` tuple preservation (B.2), custom mapping return types (B.3), cyclic-context BoxedEnum overrides for acyclic references (B.4), and sub-variant collection for heterogeneous alternations with cross-rule uniqueness validation (B.5).
 
@@ -218,7 +218,7 @@ Bytecode programs are serialized via MessagePack for crossing the WASM boundary.
 
 ### Phase 2a: Vec unboxing
 
-The `in_vec` context parameter is threaded through codegen to emit `Vec<Enum>` instead of `Vec<Box<Enum>>`. `infer_node_in_vec` is a sub-pass in types.rs that determines when unboxing is safe. Transparent rules generate an `_unboxed()` method for zero-cost enum extraction. Results on JSON benchmarks:
+The `in_vec` context parameter is threaded through codegen to emit `Vec<Enum>` instead of `Vec<Box<Enum>>`. `project_node_in_vec` is a sub-pass in `project.rs` that determines when unboxing is safe. Transparent rules generate an `_unboxed()` method for zero-cost enum extraction. Results on JSON benchmarks:
 
 | Dataset | Before (MB/s) | After (MB/s) | Gain |
 |---------|---------------|--------------|------|

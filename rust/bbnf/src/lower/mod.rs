@@ -191,9 +191,9 @@ pub fn lower_to_ir<'a>(
         types: Vec::new(), // Type info populated by a later pass or backend.
         follow_sets: HashMap::new(), // Populated by compute_follow_sets pass.
         ws_pattern: ws_pattern_id,
-        b1_span_collapse: false, // Set by generate_all based on prettify flag.
+        collapse_simple_spans: false, // Set by generate_all based on prettify flag.
         debug_all: ctx.debug_all,
         debug_labels: Vec::new(),
-        infer_map: None,
+        type_map: None,
     }
 }

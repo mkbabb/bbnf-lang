@@ -352,10 +352,10 @@ mod tests {
             types: Vec::new(),
             follow_sets: HashMap::new(),
             ws_pattern: None,
-            b1_span_collapse: false,
+            collapse_simple_spans: false,
             debug_all: false,
             debug_labels: Vec::new(),
-            infer_map: None,
+            type_map: None,
         }
     }
 

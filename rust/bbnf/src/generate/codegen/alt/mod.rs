@@ -74,11 +74,11 @@ pub(super) fn emit_mono_alt(
     // Check branch homogeneity for elide_box propagation.
     // Only propagate elide_box when branches are homogeneous in the elide_box
     // context. Heterogeneous branches require sub-variant coercion to BoxedEnum
-    // (arena ref), which must match the enum variant type from `infer_types`.
+    // (arena ref), which must match the enum variant type from `project_types`.
     let effective_elide_box = if elide_box {
         let elide_tys: Vec<TypeDesc> = branches
             .iter()
-            .map(|b| ctx.infer_vec_elem_type(&b.node))
+            .map(|b| ctx.vec_elem_type(&b.node))
             .collect();
         elide_tys.windows(2).all(|w| w[0] == w[1])
     } else {
@@ -88,12 +88,12 @@ pub(super) fn emit_mono_alt(
     let branch_tys: Vec<TypeDesc> = if effective_elide_box {
         branches
             .iter()
-            .map(|b| ctx.infer_vec_elem_type(&b.node))
+            .map(|b| ctx.vec_elem_type(&b.node))
             .collect()
     } else {
         branches
             .iter()
-            .map(|b| ctx.infer_node_type(&b.node))
+            .map(|b| ctx.node_type(&b.node))
             .collect()
     };
     let all_same = branch_tys.windows(2).all(|w| w[0] == w[1]);
@@ -298,10 +298,10 @@ fn emit_mono_flat_alt(
 ) -> TokenStream {
     let cp_var = mctx.fresh("alt_cp");
     // Return type must match what branches actually produce.
-    // - Homogeneous BoxedEnum -> &'a ArenaEnum (boxed_enum_type)
-    // - Homogeneous Enum -> ArenaEnum (enum_type)
-    // - Heterogeneous + elide_box -> ArenaEnum (enum_type, by value)
-    // - Heterogeneous + !elide_box -> &'a ArenaEnum (boxed_enum_type, arena ref)
+    // - Homogeneous BoxedEnum -> &'a Enum (boxed_enum_type)
+    // - Homogeneous Enum -> Enum (enum_type)
+    // - Heterogeneous + elide_box -> Enum (enum_type, by value)
+    // - Heterogeneous + !elide_box -> &'a Enum (boxed_enum_type, arena ref)
     let return_type = if needs_coercion {
         if elide_box {
             ctx.enum_type.clone()
@@ -377,7 +377,7 @@ fn coerce_mono_branch(
     variant_name: Option<&str>,
     ctx: &IrCodegenCtx<'_>,
 ) -> TokenStream {
-    // Already BoxedEnum (&ArenaEnum / Box<Enum>) -- no coercion needed.
+    // Already BoxedEnum (&Enum / Box<Enum>) -- no coercion needed.
     if *branch_ty == TypeDesc::BoxedEnum {
         return expr;
     }
@@ -387,16 +387,16 @@ fn coerce_mono_branch(
     if let Some(variant_name) = variant_name {
         let variant_ident = format_ident!("{}", variant_name);
         let alloc_expr = quote! { #enum_ident::#variant_ident(__x) };
-        let alloc_code = ctx.emit_box_alloc_let(&alloc_expr);
+        let alloc_code = ctx.emit_alloc_let(&alloc_expr);
         quote! {
             #expr.map(|__x| {
                 #alloc_code
             })
         }
     } else if *branch_ty == TypeDesc::Enum {
-        // Enum (ArenaEnum) -> boxed/alloc'd -> BoxedEnum.
+        // Enum (Enum) -> boxed/alloc'd -> BoxedEnum.
         let inner = quote! { __x };
-        let alloc_code = ctx.emit_box_alloc_let(&inner);
+        let alloc_code = ctx.emit_alloc_let(&inner);
         quote! {
             #expr.map(|__x| {
                 #alloc_code
@@ -407,7 +407,7 @@ fn coerce_mono_branch(
         // (Shouldn't happen in practice; IR always generates sub-variants
         // for heterogeneous Alt branches.)
         let inner = quote! { __x };
-        let alloc_code = ctx.emit_box_alloc_let(&inner);
+        let alloc_code = ctx.emit_alloc_let(&inner);
         quote! {
             #expr.map(|__x| {
                 #alloc_code

@@ -66,7 +66,7 @@ Compile-time code generation. Reads `.bbnf`, emits Rust `TokenStream`.
 `force_inline` → `prune_unreachable` → `fuse_single_use` → `prune_unreachable` →
 `eliminate_epsilon` → `merge_literals` → `merge_regex_alts` →
 `factor_common_prefixes` → `refine_span_eligibility` → `compute_follow_sets` →
-`factor_regex_with_lookahead` → `generate_dispatch_tables` → `infer_types`
+`factor_regex_with_lookahead` → `generate_dispatch_tables` → `project_types`
 
 **Generated code per struct:**
 - `ParserFn` trait impl — one method per rule, returns `Parser<'a, Enum<'a>>`
@@ -183,7 +183,7 @@ rust/
       analysis/         FIRST/FOLLOW, SCC, span eligibility
       lower/            AST → GrammarIR (mod, string_interner, fn_table, expression, metadata)
       generate/
-        ir_codegen/     IR → Rust TokenStream (mod, alt, seq, repeat, wrap, infer, inline, trace)
+        ir_codegen/     IR → Rust TokenStream (mod, alt, seq, repeat, wrap, inline, trace)
         ir_span.rs      IR → SpanParser methods
         ir_pretty/      IR → to_doc() methods (mod, patterns, heuristics, codegen, utils)
         prettify/       Doc generation helpers
@@ -204,7 +204,7 @@ rust/
         factor_common_prefixes,
         refine_span_eligibility, compute_follow_sets,
         factor_lookahead.rs (factor_regex_with_lookahead),
-        generate_dispatch_tables, infer_types
+        generate_dispatch_tables, project_types
       compiler.rs       IR → BytecodeProgram (VM path only)
       interpreter.rs    BytecodeProgram → ParseResult (VM path only)
       bytecode.rs       Op enum, BytecodeProgram struct (VM path only)

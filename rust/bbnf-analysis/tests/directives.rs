@@ -153,7 +153,7 @@ value = string | number | bool | null | array ;
     assert!(value_meta.is_some(), "value rule should have IR metadata");
     let vm = value_meta.unwrap();
     assert!(
-        vm.inferred_type.is_some(),
+        vm.projected_type.is_some(),
         "value should have an inferred type"
     );
 }

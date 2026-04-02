@@ -4,8 +4,8 @@ use std::collections::HashMap;
 
 use crate::{IrNode, RuleId, TypeDesc};
 
-use super::infer::infer_node;
-use super::utils::InferCtx;
+use super::project::project_node;
+use super::utils::ProjectionCtx;
 
 /// Raw sub-variant data before string interning.
 pub(super) struct RawSubVariant {
@@ -23,7 +23,7 @@ pub(super) struct RawSubVariant {
 pub(super) fn collect_sub_variants_raw(
     rule_name: &str,
     body: &IrNode,
-    ctx: &InferCtx<'_>,
+    ctx: &ProjectionCtx<'_>,
 ) -> Vec<RawSubVariant> {
     let mut variants = Vec::new();
     let mut counter: u32 = 0;
@@ -35,7 +35,7 @@ pub(super) fn collect_sub_variants_raw(
 fn collect_sub_variants_walk(
     rule_name: &str,
     node: &IrNode,
-    ctx: &InferCtx<'_>,
+    ctx: &ProjectionCtx<'_>,
     variants: &mut Vec<RawSubVariant>,
     counter: &mut u32,
 ) {
@@ -44,7 +44,7 @@ fn collect_sub_variants_walk(
             let consumed = ctx.consumed();
             let tys: Vec<TypeDesc> = branches
                 .iter()
-                .map(|b| infer_node(&b.node, &consumed))
+                .map(|b| project_node(&b.node, &consumed))
                 .collect();
 
             let is_heterogeneous = tys.len() >= 2 && !tys.windows(2).all(|w| w[0] == w[1]);

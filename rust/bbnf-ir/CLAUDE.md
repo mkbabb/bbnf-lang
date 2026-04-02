@@ -33,17 +33,17 @@ bbnf-ir/
 │       ├── dispatch.rs    generate_dispatch_tables — O(1) byte-dispatch for disjoint alts
 │       ├── fuse_token.rs  fuse_token_dispatch — inline @token bodies at dispatch call sites
 │       ├── sort.rs        sort_alt_branches — deterministic branch ordering
-│       └── types/         infer_types — IrNode → TypeDesc inference
-│           ├── mod.rs     Entry point (infer_types), orchestration
-│           ├── infer.rs   Core recursive inference (infer_node, infer_node_in_vec, infer_seq)
+│       └── types/         project_types — IrNode → TypeDesc type projection
+│           ├── mod.rs     Entry point (project_types), orchestration
+│           ├── project.rs Core recursive projection (project_node, project_node_in_vec, project_seq)
 │           ├── subvariants.rs  Sub-variant collection, walking, uniqueness validation
-│           └── utils.rs   InferCtx struct, try_flatten_pair helper
+│           └── utils.rs   ProjectionCtx struct, ProjectionRules struct, TypeRecorder, try_flatten_pair helper
 ```
 
 ## Key Types
 
 - **`IrNode`** — Expression tree node (Literal, Regex, Epsilon, Seq, Alt, Repeat, Ref, Skip, Next, Minus, Negate, Map, OptionalWhitespace).
-- **`GrammarIR`** — Top-level container: rules, entry point, string interning table, host function table, types, FOLLOW sets, `ws_pattern`, `b1_span_collapse`, `debug_all`, `debug_labels`.
+- **`GrammarIR`** — Top-level container: rules, entry point, string interning table, host function table, types, FOLLOW sets, `ws_pattern`, `collapse_simple_spans`, `debug_all`, `debug_labels`.
 - **`GrammarSpan`** / **`SourceMapEntry`** — Source location tracking for debug and error reporting.
 - **`IrRule`** — Rule id + name + body (`IrNode`) + metadata (`RuleMeta`).
 - **`RuleMeta`** — FIRST set, nullable, SCC info, memo strategy, dispatch hint, span eligibility, pretty hints, recover sync, sub-variants, `is_token`, `debug`.
@@ -75,7 +75,7 @@ with `bbnf/src/pipeline.rs` and `bbnf-derive/src/lib.rs`):
 14. `factor_regex_with_lookahead` — factor Alt branches with overlapping regex FIRST sets but disjoint continuation FIRST sets
 15. `fuse_token_dispatch` — fuse `@token`-marked rules at dispatch call sites (inline body, preserve variant)
 16. `generate_dispatch_tables` — build O(1) byte-dispatch for disjoint alternations (regex FIRST sets via `regex_first` module)
-17. `infer_types` — populate `GrammarIR::types` with `TypeDesc` for each rule; `infer_node_in_vec` sub-pass handles Vec context inference
+17. `project_types` — populate `GrammarIR::types` with `TypeDesc` for each rule; `project_node_in_vec` sub-pass handles Vec context type projection
 
 ## Serialization
 

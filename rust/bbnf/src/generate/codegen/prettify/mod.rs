@@ -6,7 +6,7 @@
 //!
 //! Activated by `#[parser(prettify)]` on grammars with `@pretty` directives.
 //! Uses the same dispatch tables, SIMD scanners, and `find_first_of`
-//! infrastructure as the arena/span paths.
+//! infrastructure as the main paths.
 
 mod alt;
 mod expr;

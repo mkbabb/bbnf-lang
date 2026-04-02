@@ -92,7 +92,7 @@ pub fn hover(state: &DocumentState, position: Position) -> Option<Hover> {
                 if !tags.is_empty() {
                     line.push_str(&tags.join(" · "));
                 }
-                if let Some(ref ty) = ir_meta.inferred_type {
+                if let Some(ref ty) = ir_meta.projected_type {
                     if !line.is_empty() {
                         line.push_str(" · ");
                     }
@@ -162,7 +162,7 @@ pub fn hover(state: &DocumentState, position: Position) -> Option<Hover> {
                     if ir_meta.span_eligible {
                         tags.push("span");
                     }
-                    if let Some(ref ty) = ir_meta.inferred_type {
+                    if let Some(ref ty) = ir_meta.projected_type {
                         let mut line = tags.join(" · ");
                         if !line.is_empty() {
                             line.push_str(" · ");

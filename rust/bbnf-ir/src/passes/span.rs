@@ -92,7 +92,7 @@ fn node_is_span_eligible(node: &IrNode, eligible_rules: &HashSet<RuleId>) -> boo
 /// (after unwrapping Map wrappers) can be fully expressed as a SpanParser, which
 /// requires all referenced rules to also have `_sp()` methods.
 ///
-/// Stores the result in `RuleMeta::has_sp_method` for use by `infer_types`.
+/// Stores the result in `RuleMeta::has_sp_method` for use by `project_types`.
 pub fn compute_sp_method_rules(ir: &mut GrammarIR) {
     let mut sp_set: HashSet<RuleId> = HashSet::new();
 

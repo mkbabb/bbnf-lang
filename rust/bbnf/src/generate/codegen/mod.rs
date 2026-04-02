@@ -1,4 +1,4 @@
-//! Monolithic arena code generation.
+//! Monolithic code generation.
 //!
 //! Instead of building combinator chains (`lazy → dispatch → sep_by → map_with_ctx`)
 //! that allocate ~30 `Parser` objects with ~60 heap allocations per parse, the
@@ -20,6 +20,7 @@
 //! - `expr`: Leaf, Ref, Skip/Next, Wrap, Map, OptionalWhitespace
 
 mod alt;
+mod alloc_emit;
 mod delim_scan;
 mod expr;
 mod generate;
@@ -28,6 +29,7 @@ pub mod ir_enums;
 pub mod ir_types;
 pub mod prettify;
 mod repeat;
+mod sep_by;
 mod seq;
 mod token_dispatch;
 pub mod trace;

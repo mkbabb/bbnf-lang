@@ -92,7 +92,7 @@ pub(super) fn try_detect(
             if trail.is_some() {
                 trail_byte = trail;
             }
-            // Track the pivot branch's rule for arena-path fallback.
+            // Track the pivot branch's rule for monolithic fallback.
             if let IrNode::Ref(id) = inner {
                 pivot_fn = Some(*id);
             }
@@ -457,7 +457,7 @@ fn emit_scan_loop(
 
 // ── Arena Emission ───────────────────────────────────────────────────────────
 
-/// Emit an arena-path delimiter scanner.
+/// Emit an monolithic delimiter scanner.
 ///
 /// Grammar-agnostic speculative dispatch: the scanner determines WHICH branch
 /// to try, then calls the existing arena function for that branch from the
@@ -471,7 +471,7 @@ fn emit_scan_loop(
 /// The pivot branch's function handles all the typed field construction via
 /// the normal recursive descent codegen. The scanner just eliminates the
 /// Alt's checkpoint/backtrack overhead by selecting the right branch upfront.
-pub(super) fn emit_arena(
+pub(super) fn emit_scan(
     config: &DelimScanConfig,
     ctx: &IrCodegenCtx<'_>,
     mctx: &mut MonoCtx,
@@ -480,7 +480,7 @@ pub(super) fn emit_arena(
     let close_lit = proc_macro2::Literal::byte_character(config.close_byte);
 
     // Determine the scratch push expression for use in on_block / on_pivot.
-    let content_rule_for_scratch = config.content_rule.expect("content_rule required for arena");
+    let content_rule_for_scratch = config.content_rule.expect("content_rule required for scan");
     let elem_desc_for_push = match ctx.rule_body_desc(content_rule_for_scratch) {
         Some(bbnf_ir::TypeDesc::Vec(inner)) => inner.as_ref().clone(),
         _ => bbnf_ir::TypeDesc::Enum,
@@ -575,7 +575,7 @@ pub(super) fn emit_arena(
     let _ws_trim = emit_ws_trim(ctx, mctx);
     let (loop_body, ws_post) = emit_scan_loop(config, ctx, mctx, &on_pivot, &on_block);
 
-    let helper = ctx.arena_helper_ident();
+    let helper = ctx.alloc_helper_ident();
     let enum_ident = &ctx.enum_ident;
 
     // Content rule variant name (from the Ref followed during detection).
@@ -620,8 +620,8 @@ pub(super) fn emit_arena(
 
 // ── Combined detect + emit (convenience) ─────────────────────────────────────
 
-/// Try to detect and emit an arena-path delimiter scanner for a wrap pattern.
-pub(super) fn try_emit_arena_wrap(
+/// Try to detect and emit an monolithic delimiter scanner for a wrap pattern.
+pub(super) fn try_emit_alloc_wrap(
     open: &IrNode,
     middle: &IrNode,
     close: &IrNode,
@@ -630,9 +630,9 @@ pub(super) fn try_emit_arena_wrap(
     mctx: &mut MonoCtx,
 ) -> Option<TokenStream> {
     let config = try_detect(open, middle, close, ir)?;
-    // Arena path requires content_rule for Vec variant construction.
+    // Monolithic path requires content_rule for Vec variant construction.
     let _content_rule = config.content_rule?;
-    Some(emit_arena(&config, ctx, mctx))
+    Some(emit_scan(&config, ctx, mctx))
 }
 
 #[cfg(test)]
@@ -645,7 +645,7 @@ mod tests {
     use crate::generate::codegen::ir_types::{IrCodegenCtx, ParserAttributes};
 
     #[test]
-    fn emit_arena_uses_local_close_lookahead_capacity() {
+    fn emit_alloc_uses_local_close_lookahead_capacity() {
         let ir = GrammarIR {
             rules: vec![
                 IrRule {
@@ -677,17 +677,14 @@ mod tests {
             ],
             follow_sets: HashMap::new(),
             ws_pattern: None,
-            b1_span_collapse: false,
+            collapse_simple_spans: false,
             debug_all: false,
             debug_labels: Vec::new(),
-            infer_map: None,
+            type_map: None,
         };
 
         let ident = quote::format_ident!("TestParser");
-        let attrs = ParserAttributes {
-            arena: true,
-            ..Default::default()
-        };
+        let attrs = ParserAttributes::default();
         let ctx = IrCodegenCtx::new(&ir, &ident, &attrs);
         let config = DelimScanConfig {
             open_byte: b'[',
@@ -700,7 +697,7 @@ mod tests {
         };
         let mut mctx = MonoCtx::new(vec![false, false], vec![false, false]);
 
-        let tokens = emit_arena(&config, &ctx, &mut mctx).to_string();
+        let tokens = emit_scan(&config, &ctx, &mut mctx).to_string();
         // Arena mode uses scratch-based collection.
         assert!(tokens.contains("__s0"), "should use scratch push: {}", tokens);
         assert!(tokens.contains("__c0"), "should use scratch collect: {}", tokens);

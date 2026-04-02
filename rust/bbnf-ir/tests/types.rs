@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use bbnf_ir::passes::types::infer_types;
+use bbnf_ir::passes::types::project_types;
 use bbnf_ir::{AltBranch, FnDescriptor, GrammarIR, IrNode, IrRule, RuleId, RuleMeta, TypeDesc};
 
 fn make_ir(rules: Vec<IrRule>) -> GrammarIR {
@@ -12,10 +12,10 @@ fn make_ir(rules: Vec<IrRule>) -> GrammarIR {
         types: vec![],
         follow_sets: HashMap::new(),
         ws_pattern: None,
-        b1_span_collapse: false,
+        collapse_simple_spans: false,
         debug_all: false,
         debug_labels: Vec::new(),
-        infer_map: None,
+        type_map: None,
     }
 }
 
@@ -53,14 +53,14 @@ fn get_type(ir: &GrammarIR, id: RuleId) -> &TypeDesc {
 #[test]
 fn literal_is_span() {
     let mut ir = make_ir(vec![rule(0, IrNode::Literal(3))]);
-    infer_types(&mut ir);
+    project_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::Span);
 }
 
 #[test]
 fn regex_is_span() {
     let mut ir = make_ir(vec![rule(0, IrNode::Regex(3))]);
-    infer_types(&mut ir);
+    project_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::Span);
 }
 
@@ -75,7 +75,7 @@ fn optional_span_collapses() {
             hi: 1,
         },
     )]);
-    infer_types(&mut ir);
+    project_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::Span);
 }
 
@@ -89,7 +89,7 @@ fn many_span_collapses() {
             hi: u32::MAX,
         },
     )]);
-    infer_types(&mut ir);
+    project_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::Span);
 }
 
@@ -109,7 +109,7 @@ fn many_non_span_is_vec() {
     ]);
     // Rule 1: Alt(Span, Span) -> Span. Ref(1) in Vec context returns Enum
     // (Vec provides heap indirection, so Box is unnecessary), so many(Enum) -> Vec(Enum).
-    infer_types(&mut ir);
+    project_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::Vec(Box::new(TypeDesc::Enum)));
 }
 
@@ -124,7 +124,7 @@ fn seq_consecutive_span_compression() {
             IrNode::Regex(3),
         ]),
     )]);
-    infer_types(&mut ir);
+    project_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::Span);
 }
 
@@ -144,7 +144,7 @@ fn seq_mixed_tuple() {
             IrNode::Seq(vec![IrNode::Literal(2), IrNode::Ref(1), IrNode::Literal(3)]),
         ),
     ]);
-    infer_types(&mut ir);
+    project_types(&mut ir);
     // Rule 1: Alt(Span, Span) -> Span
     // Rule 0: Seq(Span, Ref(1)→BoxedEnum, Span) -> Tuple(Span, BoxedEnum, Span)
     // Ref(1) always returns BoxedEnum (matching emit_ref's Box::new wrapping).
@@ -169,7 +169,7 @@ fn pair_flattening() {
             },
         ]),
     )]);
-    infer_types(&mut ir);
+    project_types(&mut ir);
     // Repeat(Span) -> Span, Seq(Span, Span) -> Span
     assert_eq!(*get_type(&ir, 0), TypeDesc::Span);
 }
@@ -180,7 +180,7 @@ fn skip_keeps_left() {
         0,
         IrNode::Skip(Box::new(IrNode::Literal(2)), Box::new(IrNode::Literal(3))),
     )]);
-    infer_types(&mut ir);
+    project_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::Span);
 }
 
@@ -190,7 +190,7 @@ fn next_keeps_right() {
         0,
         IrNode::Next(Box::new(IrNode::Literal(2)), Box::new(IrNode::Literal(3))),
     )]);
-    infer_types(&mut ir);
+    project_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::Span);
 }
 
@@ -209,7 +209,7 @@ fn alt_homogeneous_span() {
             },
         ]),
     )]);
-    infer_types(&mut ir);
+    project_types(&mut ir);
     // Literal -> Span, Optional(Span) -> Span, Alt(Span, Span) -> Span
     assert_eq!(*get_type(&ir, 0), TypeDesc::Span);
 }
@@ -219,7 +219,7 @@ fn cyclic_ref_defaults_to_boxed_enum() {
     // Rule 0 references rule 1, rule 1 references rule 0 (cycle).
     // Rule 0 is processed first -> Ref(1) is unknown -> BoxedEnum.
     let mut ir = make_ir(vec![rule(0, IrNode::Ref(1)), rule(1, IrNode::Ref(0))]);
-    infer_types(&mut ir);
+    project_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::BoxedEnum);
 }
 
@@ -239,12 +239,12 @@ fn map_enum_wrap() {
         types: vec![],
         follow_sets: HashMap::new(),
         ws_pattern: None,
-        b1_span_collapse: false,
+        collapse_simple_spans: false,
         debug_all: false,
         debug_labels: Vec::new(),
-        infer_map: None,
+        type_map: None,
     };
-    infer_types(&mut ir);
+    project_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::Enum);
 }
 
@@ -264,11 +264,11 @@ fn map_box_wrap() {
         types: vec![],
         follow_sets: HashMap::new(),
         ws_pattern: None,
-        b1_span_collapse: false,
+        collapse_simple_spans: false,
         debug_all: false,
         debug_labels: Vec::new(),
-        infer_map: None,
+        type_map: None,
     };
-    infer_types(&mut ir);
+    project_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::BoxedEnum);
 }

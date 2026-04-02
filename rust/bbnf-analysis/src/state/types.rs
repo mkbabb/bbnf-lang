@@ -104,7 +104,7 @@ pub struct IrRuleMeta {
     /// Whether this rule gets an `_sp()` SpanParser method.
     pub has_sp_method: bool,
     /// Inferred output type (formatted for display).
-    pub inferred_type: Option<String>,
+    pub projected_type: Option<String>,
     /// Whether this rule is a transparent alternation.
     pub is_transparent: bool,
 }

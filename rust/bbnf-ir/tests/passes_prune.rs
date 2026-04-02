@@ -33,10 +33,10 @@ fn prune_removes_unreachable() {
         types: vec![],
         follow_sets: HashMap::new(),
         ws_pattern: None,
-        b1_span_collapse: false,
+        collapse_simple_spans: false,
         debug_all: false,
         debug_labels: Vec::new(),
-        infer_map: None,
+        type_map: None,
     };
 
     prune_unreachable(&mut ir);
@@ -62,10 +62,10 @@ fn prune_keeps_all_when_all_reachable() {
         types: vec![],
         follow_sets: HashMap::new(),
         ws_pattern: None,
-        b1_span_collapse: false,
+        collapse_simple_spans: false,
         debug_all: false,
         debug_labels: Vec::new(),
-        infer_map: None,
+        type_map: None,
     };
 
     prune_unreachable(&mut ir);
@@ -111,10 +111,10 @@ fn prune_follows_alt_branches() {
         types: vec![],
         follow_sets: HashMap::new(),
         ws_pattern: None,
-        b1_span_collapse: false,
+        collapse_simple_spans: false,
         debug_all: false,
         debug_labels: Vec::new(),
-        infer_map: None,
+        type_map: None,
     };
 
     prune_unreachable(&mut ir);

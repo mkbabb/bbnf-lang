@@ -433,11 +433,11 @@ pub struct GrammarIR {
     #[serde(default)]
     pub ws_pattern: Option<StringId>,
 
-    /// When true, the B.1 all-Span guard keeps overrides for simple Seqs,
-    /// collapsing them to Span and eliminating arena allocation.
-    /// Set to true when prettify is disabled (no @pretty formatting constraints).
+    /// When true, Seq nodes where all children are simple Span leaves collapse
+    /// to a single Span, eliminating arena allocation. Enabled when prettify is
+    /// disabled (no @pretty formatting constraints require individual Span identity).
     #[serde(default)]
-    pub b1_span_collapse: bool,
+    pub collapse_simple_spans: bool,
 
     /// When true, all rules are instrumented for debugging.
     /// Set by `@debug * ;` directive or `#[parser(debug)]` attribute.
@@ -449,11 +449,11 @@ pub struct GrammarIR {
     #[serde(default)]
     pub debug_labels: Vec<(RuleId, StringId)>,
 
-    /// Precomputed sub-expression types for codegen. Built by `infer_types` pass.
+    /// Precomputed sub-expression types for codegen. Built by `project_types` pass.
     /// Keyed by `IrNode` raw pointer — valid only within the process that ran
-    /// `infer_types`. Not serializable (skipped for WASM boundary transfer).
+    /// `project_types`. Not serializable (skipped for WASM boundary transfer).
     #[serde(skip)]
-    pub infer_map: Option<passes::InferMap>,
+    pub type_map: Option<passes::TypeMap>,
 }
 
 impl GrammarIR {

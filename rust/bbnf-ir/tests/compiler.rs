@@ -19,10 +19,10 @@ fn make_simple_ir(body: IrNode) -> GrammarIR {
         types: vec![],
         follow_sets: HashMap::new(),
         ws_pattern: None,
-        b1_span_collapse: false,
+        collapse_simple_spans: false,
         debug_all: false,
         debug_labels: Vec::new(),
-        infer_map: None,
+        type_map: None,
     }
 }
 
@@ -134,10 +134,10 @@ fn compile_memo_rule() {
         types: vec![],
         follow_sets: HashMap::new(),
         ws_pattern: None,
-        b1_span_collapse: false,
+        collapse_simple_spans: false,
         debug_all: false,
         debug_labels: Vec::new(),
-        infer_map: None,
+        type_map: None,
     };
     let program = compile(&ir);
 
@@ -182,10 +182,10 @@ fn compile_direct_left_recursive_rule_keeps_memo() {
         types: vec![],
         follow_sets: HashMap::new(),
         ws_pattern: None,
-        b1_span_collapse: false,
+        collapse_simple_spans: false,
         debug_all: false,
         debug_labels: Vec::new(),
-        infer_map: None,
+        type_map: None,
     };
     let program = compile(&ir);
 
@@ -299,10 +299,10 @@ fn compile_call() {
         types: vec![],
         follow_sets: HashMap::new(),
         ws_pattern: None,
-        b1_span_collapse: false,
+        collapse_simple_spans: false,
         debug_all: false,
         debug_labels: Vec::new(),
-        infer_map: None,
+        type_map: None,
     };
     let program = compile(&ir);
 

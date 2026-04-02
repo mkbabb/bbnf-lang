@@ -190,7 +190,7 @@ pub fn compile_ast<'a>(
     bbnf_ir::passes::generate_dispatch_tables(&mut ir);
 
     // Type inference (populates GrammarIR::types for codegen backends).
-    bbnf_ir::passes::infer_types(&mut ir);
+    bbnf_ir::passes::project_types(&mut ir);
 
     Ok(ir)
 }

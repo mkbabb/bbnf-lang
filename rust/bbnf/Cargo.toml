@@ -29,6 +29,7 @@ dhat-heap = ["dep:dhat"]
 tempfile = "3"
 bbnf_derive = { version = "0.2", path = "../bbnf-derive" }
 pprint = "0.3"
+gorgeous = { version = "0.1", features = ["vm"] }
 parse_that = "0.4"
 bencher = "0.1"
 mimalloc = "0.1"
@@ -56,8 +57,6 @@ lightningcss = "1.0.0-alpha.70"
 # Number parsing for borrow/owned tiers
 fast-float2 = "0.2"
 
-# Formatting engine (VM-based pretty-printing)
-gorgeous = { version = "0.1", features = ["vm"] }
 
 [[bench]]
 name = "json_monolithic"

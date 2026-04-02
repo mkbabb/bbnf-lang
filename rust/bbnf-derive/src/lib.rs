@@ -112,13 +112,10 @@ fn compute_cache_key(paths: &[PathBuf], attrs: &ParserAttributes, ident_name: &s
 
     // Hash all parser attributes that affect codegen output.
     ident_name.hash(&mut hasher);
-    attrs.ignore_whitespace.hash(&mut hasher);
     attrs.debug.hash(&mut hasher);
-    attrs.use_string.hash(&mut hasher);
     attrs.remove_left_recursion.hash(&mut hasher);
     attrs.prettify.hash(&mut hasher);
     attrs.skip_recover.hash(&mut hasher);
-    attrs.arena.hash(&mut hasher);
     for p in &attrs.paths {
         // Hash canonical paths so that the same file via different relative
         // paths produces the same key.
@@ -210,14 +207,8 @@ fn parse_parser_attrs(attrs: &[Attribute]) -> ParserAttributes {
                         parser_attr.paths.push(path);
                     }
                 }
-                Meta::Path(p) if p.is_ident("ignore_whitespace") => {
-                    parser_attr.ignore_whitespace = true;
-                }
                 Meta::Path(p) if p.is_ident("debug") => {
                     parser_attr.debug = true;
-                }
-                Meta::Path(p) if p.is_ident("use_string") => {
-                    parser_attr.use_string = true;
                 }
                 Meta::Path(p) if p.is_ident("remove_left_recursion") => {
                     parser_attr.remove_left_recursion = true;
@@ -227,9 +218,6 @@ fn parse_parser_attrs(attrs: &[Attribute]) -> ParserAttributes {
                 }
                 Meta::Path(p) if p.is_ident("skip_recover") => {
                     parser_attr.skip_recover = true;
-                }
-                Meta::Path(p) if p.is_ident("arena") => {
-                    parser_attr.arena = true;
                 }
                 _ => {}
             }
@@ -480,7 +468,7 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     bbnf_ir::passes::factor_regex_with_lookahead(&mut grammar_ir);
     bbnf_ir::passes::fuse_token_dispatch(&mut grammar_ir);
     bbnf_ir::passes::generate_dispatch_tables(&mut grammar_ir);
-    // NOTE: infer_types is called inside generate_all() AFTER sp_method_rules
+    // NOTE: project_types is called inside generate_all() AFTER sp_method_rules
     // computation, so that type inference uses the correct has_sp_method flags.
 
     // ── IR-based codegen (active) ──────────────────────────────────────

@@ -1,11 +1,7 @@
 //! Debug trace codegen helpers.
 //!
-//! Shared by all three compiled codegen paths (combinator, monolithic arena,
-//! span-only monolithic). Generates `#[cfg(feature = "parser-trace")]` guarded
-//! trace calls at rule entry/exit.
-//!
-//! The combinator path delegates to parse_that's `.debug("name")` combinator,
-//! so only the monolithic paths use the raw trace emission functions here.
+//! Generates `#[cfg(feature = "parser-trace")]` guarded trace calls at
+//! rule entry/exit for the monolithic codegen path.
 
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -53,12 +49,4 @@ pub fn emit_trace_exit(rule_name: &str, result_expr: &syn::Ident) -> TokenStream
             __TRACE_DEPTH.with(|d| d.set(d.get() - 1));
         }
     }
-}
-
-/// Wrap a combinator parser with `.debug("name")` for the combinator codegen path.
-///
-/// parse_that's `.debug()` is feature-gated via `diagnostics` — when disabled,
-/// it compiles to a no-op passthrough (zero overhead).
-pub fn emit_combinator_debug(parser: TokenStream, rule_name: &str) -> TokenStream {
-    quote! { #parser.debug(#rule_name) }
 }

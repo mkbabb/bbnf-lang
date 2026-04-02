@@ -8,7 +8,7 @@ use quote::{format_ident, quote};
 use super::super::regex;
 use super::helpers::try_sep_by;
 use super::ir_types::IrCodegenCtx;
-use super::repeat::{SepByConfig, emit_mono_sep_by_core, emit_mono_sep_by_ws, try_unchecked_sep};
+use super::sep_by::{SepByConfig, emit_mono_sep_by_core, emit_mono_sep_by_ws, try_unchecked_sep};
 use super::unescape_literal;
 use super::{MonoCtx, emit_mono_discarded, emit_mono_expr, mono_fn_ident};
 
@@ -36,9 +36,9 @@ fn emit_number_convert_call(inner: &IrNode, ctx: &IrCodegenCtx<'_>) -> TokenStre
 
 /// Emit a monolithic Ref — direct function call, or inline body for fusion-eligible rules.
 ///
-/// All internal fns return `Option<ArenaEnum<'a>>`.
-/// - `elide_box = true`:  return ArenaEnum directly
-/// - `elide_box = false`: arena.alloc → `&'a ArenaEnum<'a>`
+/// All internal fns return `Option<Enum<'a>>`.
+/// - `elide_box = true`:  return Enum directly
+/// - `elide_box = false`: arena.alloc → `&'a Enum<'a>`
 ///
 /// **Fusion**: When the target rule is fusion-eligible (non-cyclic, no @recover/@pretty),
 /// its body is inlined at the call site. This lets LLVM see through the code and hoists
@@ -62,7 +62,7 @@ pub(super) fn emit_mono_ref(
             if elide_box {
                 body
             } else {
-                let alloc_code = ctx.emit_box_alloc_let(&quote! { __v });
+                let alloc_code = ctx.emit_alloc_let(&quote! { __v });
                 quote! {
                     #body.map(|__v| {
                         #alloc_code
@@ -79,7 +79,7 @@ pub(super) fn emit_mono_ref(
                 quote! { #inner.map(|__x| #enum_ident::#variant_ident(__x)) }
             } else {
                 let alloc_code =
-                    ctx.emit_box_alloc_let(&quote! { #enum_ident::#variant_ident(__x) });
+                    ctx.emit_alloc_let(&quote! { #enum_ident::#variant_ident(__x) });
                 quote! {
                     #inner.map(|__x| {
                         #alloc_code
@@ -95,11 +95,11 @@ pub(super) fn emit_mono_ref(
     let fn_ident = mono_fn_ident(ctx.resolve_rule_name(rule_id));
 
     if elide_box {
-        // Direct call → ArenaEnum<'a>
+        // Direct call → Enum<'a>
         quote! { Self::#fn_ident(state) }
     } else {
-        // Call + alloc → Option<&'a ArenaEnum<'a>> / Option<Box<Enum>>
-        let alloc_code = ctx.emit_box_alloc_let(&quote! { __v });
+        // Call + alloc → Option<&'a Enum<'a>> / Option<Box<Enum>>
+        let alloc_code = ctx.emit_alloc_let(&quote! { __v });
         quote! {
             Self::#fn_ident(state).map(|__v| {
                 #alloc_code
@@ -206,8 +206,8 @@ pub(super) fn emit_mono_wrap(
         }
     }
 
-    // Delimiter-scan optimization for arena path.
-    if let Some(ts) = super::delim_scan::try_emit_arena_wrap(open, middle, close, ctx.ir, ctx, mctx)
+    // Delimiter-scan optimization for monolithic path.
+    if let Some(ts) = super::delim_scan::try_emit_alloc_wrap(open, middle, close, ctx.ir, ctx, mctx)
     {
         return ts;
     }
@@ -255,7 +255,7 @@ pub(super) fn emit_mono_map(
                 if elide_box {
                     return quote! { #inner_expr.map(|__x| #enum_ident::#vident(__x)) };
                 } else {
-                    let alloc_code = ctx.emit_box_alloc_let(&quote! { #enum_ident::#vident(__x) });
+                    let alloc_code = ctx.emit_alloc_let(&quote! { #enum_ident::#vident(__x) });
                     return quote! {
                         #inner_expr.map(|__x| {
                             #alloc_code
@@ -268,7 +268,7 @@ pub(super) fn emit_mono_map(
                 let vname = ctx.ir.get_string(*variant);
                 let vident = format_ident!("{}", vname);
                 let enum_ident = &ctx.enum_ident;
-                let alloc_code = ctx.emit_box_alloc(&quote! { __x });
+                let alloc_code = ctx.emit_alloc(&quote! { __x });
                 return quote! {
                     #inner_expr.map(|__x| {
                         #enum_ident::#vident(#alloc_code)
@@ -285,7 +285,7 @@ pub(super) fn emit_mono_map(
                         #scan_call.map(|__x| #enum_ident::#vident(__x))
                     };
                 } else {
-                    let alloc_code = ctx.emit_box_alloc_let(&quote! { #enum_ident::#vident(__x) });
+                    let alloc_code = ctx.emit_alloc_let(&quote! { #enum_ident::#vident(__x) });
                     return quote! {
                         #scan_call.map(|__x| {
                             #alloc_code
@@ -298,7 +298,7 @@ pub(super) fn emit_mono_map(
                 if elide_box {
                     return quote! { #scan_call };
                 } else {
-                    let alloc_code = ctx.emit_box_alloc_let(&quote! { __x });
+                    let alloc_code = ctx.emit_alloc_let(&quote! { __x });
                     return quote! {
                         #scan_call.map(|__x| {
                             #alloc_code
@@ -316,7 +316,7 @@ pub(super) fn emit_mono_map(
                     return quote! { #inner_expr.map(|_| #enum_ident::#vident(#val_expr)) };
                 } else {
                     let alloc_code =
-                        ctx.emit_box_alloc_let(&quote! { #enum_ident::#vident(#val_expr) });
+                        ctx.emit_alloc_let(&quote! { #enum_ident::#vident(#val_expr) });
                     return quote! {
                         #inner_expr.map(|_| {
                             #alloc_code
@@ -356,7 +356,7 @@ pub(super) fn emit_mono_map(
                     if elide_box {
                         inner_expr
                     } else {
-                        let alloc_code = ctx.emit_box_alloc_let(&quote! { __x });
+                        let alloc_code = ctx.emit_alloc_let(&quote! { __x });
                         quote! {
                             #inner_expr.map(|__x| {
                                 #alloc_code

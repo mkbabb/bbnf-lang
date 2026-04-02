@@ -15,13 +15,10 @@ use syn::{Type, parse_quote};
 #[derive(Clone, Debug, Default)]
 pub struct ParserAttributes {
     pub paths: Vec<std::path::PathBuf>,
-    pub ignore_whitespace: bool,
     pub debug: bool,
-    pub use_string: bool,
     pub remove_left_recursion: bool,
     pub prettify: bool,
     pub skip_recover: bool,
-    pub arena: bool,
 }
 
 /// Central context for IR-based code generation.
@@ -61,9 +58,8 @@ impl<'a> IrCodegenCtx<'a> {
         let enum_type: Type = parse_quote!(#enum_ident<'a>);
         let boxed_enum_type: Type = parse_quote!(&'a #enum_ident<'a>);
 
-        // Arena slices for non-prettify. Prettify needs Vec until the codegen's
-        // Seq emission respects pretty_preserve/cyclic_context for exact type alignment.
-        let use_slices = !parser_attrs.prettify;
+        // Always use arena slices — TypeMap records seq_preserve_spans
+        // so codegen Seq emission respects span preservation for exact type alignment.
         let mut rule_types = HashMap::new();
         for (rule_id, type_desc) in &ir.types {
             let ty = type_desc_to_syn_raw(
@@ -71,13 +67,17 @@ impl<'a> IrCodegenCtx<'a> {
                 &enum_type,
                 &boxed_enum_type,
                 ir,
-                use_slices,
+                true, // always arena slices
             );
             rule_types.insert(*rule_id, ty);
         }
 
-        // Collect distinct Vec element types for scratch Vec generation.
-        let scratch_types = collect_vec_element_types(ir);
+        // Read distinct Vec element types from TypeMap (precomputed by project_types).
+        let scratch_types = ir
+            .type_map
+            .as_ref()
+            .map(|m| m.scratch_types().to_vec())
+            .unwrap_or_default();
 
         Self {
             ir,
@@ -93,50 +93,65 @@ impl<'a> IrCodegenCtx<'a> {
         }
     }
 
-    /// Look up the infer_node type for a sub-expression from the InferMap.
-    /// Panics on miss — the InferMap must cover all nodes the codegen queries.
-    pub fn infer_node_type(&self, node: &bbnf_ir::IrNode) -> TypeDesc {
+    /// Look up the project_node type for a sub-expression from the TypeMap.
+    /// Panics on miss — the TypeMap must cover all nodes the codegen queries.
+    pub fn node_type(&self, node: &bbnf_ir::IrNode) -> TypeDesc {
         self.ir
-            .infer_map
+            .type_map
             .as_ref()
-            .expect("InferMap not populated")
+            .expect("TypeMap not populated")
             .node_type(node)
             .cloned()
             .unwrap_or_else(|| {
                 panic!(
-                    "InferMap node_type miss: {:?} at {:p}",
+                    "TypeMap node_type miss: {:?} at {:p}",
                     std::mem::discriminant(node),
                     node
                 );
             })
     }
 
-    /// Look up the infer_node_in_vec type for a sub-expression from the InferMap.
-    pub fn infer_vec_elem_type(&self, node: &bbnf_ir::IrNode) -> TypeDesc {
+    /// Look up the project_node_in_vec type for a sub-expression from the TypeMap.
+    pub fn vec_elem_type(&self, node: &bbnf_ir::IrNode) -> TypeDesc {
         self.ir
-            .infer_map
+            .type_map
             .as_ref()
-            .expect("InferMap not populated")
+            .expect("TypeMap not populated")
             .vec_elem_type(node)
             .cloned()
             .unwrap_or_else(|| {
                 panic!(
-                    "InferMap vec_elem_type miss: {:?} at {:p}",
+                    "TypeMap vec_elem_type miss: {:?} at {:p}",
                     std::mem::discriminant(node),
                     node
                 );
             })
     }
 
-    /// Look up the precomputed Seq child types from the InferMap.
-    pub fn infer_seq_child_types(&self, children: &[bbnf_ir::IrNode]) -> Option<Vec<TypeDesc>> {
+    /// Look up the precomputed Seq child types from the TypeMap.
+    pub fn seq_child_types(&self, children: &[bbnf_ir::IrNode]) -> Option<Vec<TypeDesc>> {
         self.ir
-            .infer_map
+            .type_map
             .as_ref()
             .and_then(|m| {
                 m.seq_child_types_by_ptr(children.as_ptr() as usize)
                     .map(|s| s.to_vec())
             })
+    }
+
+    /// Look up the result type of a Seq (post-compression, post-flattening).
+    pub fn seq_result_type(&self, children: &[bbnf_ir::IrNode]) -> Option<TypeDesc> {
+        self.ir
+            .type_map
+            .as_ref()
+            .and_then(|m| m.seq_result_type(children.as_ptr() as usize).cloned())
+    }
+
+    pub fn seq_preserve_spans(&self, children: &[bbnf_ir::IrNode]) -> bool {
+        self.ir
+            .type_map
+            .as_ref()
+            .is_some_and(|m| m.seq_preserve_spans(children.as_ptr() as usize))
     }
 
     /// Look up the scratch Vec index for a given collection element TypeDesc.
@@ -164,8 +179,8 @@ impl<'a> IrCodegenCtx<'a> {
         format_ident!("__c{}", idx)
     }
 
-    /// Get the context struct ident: `__JsonArenaCtx`.
-    pub fn arena_ctx_ident(&self) -> syn::Ident {
+    /// Get the context struct ident: `__JsonEnumCtx`.
+    pub fn alloc_ctx_ident(&self) -> syn::Ident {
         format_ident!("__{}Ctx", self.enum_ident)
     }
 
@@ -196,24 +211,9 @@ impl<'a> IrCodegenCtx<'a> {
         }
     }
 
-    /// Get the Vec inner TypeDesc for the current rule from ir.types.
-    /// Only matches top-level Vec (not Vec nested in Tuple).
-    pub fn current_rule_vec_inner(&self, rule_id: Option<RuleId>) -> Option<&TypeDesc> {
-        let rid = rule_id?;
-        let td = self.ir.types.iter().find(|(id, _)| *id == rid).map(|(_, t)| t)?;
-        match td {
-            TypeDesc::Vec(inner) => Some(inner.as_ref()),
-            _ => None,
-        }
-    }
-
-    /// Emit arena alloc. ArenaCtx: `.arena().alloc()`. BumpArena (prettify): `.alloc()`.
-    fn arena_alloc_tokens(&self, helper_call: TokenStream, value: &TokenStream) -> TokenStream {
-        if !self.parser_attrs.prettify {
-            quote::quote! { #helper_call.arena().alloc(#value) }
-        } else {
-            quote::quote! { #helper_call.alloc(#value) }
-        }
+    /// Emit alloc via AllocCtx: `.arena().alloc()`.
+    fn alloc_tokens(&self, helper_call: TokenStream, value: &TokenStream) -> TokenStream {
+        quote::quote! { #helper_call.arena().alloc(#value) }
     }
 
     pub fn has_sp_method(&self, name: &str) -> bool {
@@ -246,9 +246,9 @@ impl<'a> IrCodegenCtx<'a> {
         expr: TokenStream,
         state_ident: &syn::Ident,
     ) -> TokenStream {
-        let helper_ident = self.arena_helper_ident();
+        let helper_ident = self.alloc_helper_ident();
         let helper_call = quote::quote! { #helper_ident(#state_ident) };
-        let alloc = self.arena_alloc_tokens(helper_call, &quote::quote! { #expr });
+        let alloc = self.alloc_tokens(helper_call, &quote::quote! { #expr });
         quote::quote! {{
             let __arena_alloc = #alloc;
             &*__arena_alloc
@@ -275,17 +275,17 @@ impl<'a> IrCodegenCtx<'a> {
         format_ident!("__{}_RECOVERED", self.enum_ident)
     }
 
-    pub fn arena_helper_ident(&self) -> syn::Ident {
-        format_ident!("__{}_arena", self.enum_ident)
+    pub fn alloc_helper_ident(&self) -> syn::Ident {
+        format_ident!("__{}_alloc", self.enum_ident)
     }
 
     /// Emit code that allocs a value expression into the `boxed_enum_type`.
     ///
-    /// `&*helper(state).arena().alloc(expr)` (or `.alloc()` for prettify).
-    pub fn emit_box_alloc(&self, value_expr: &TokenStream) -> TokenStream {
-        let helper = self.arena_helper_ident();
+    /// `&*helper(state).arena().alloc(expr)`.
+    pub fn emit_alloc(&self, value_expr: &TokenStream) -> TokenStream {
+        let helper = self.alloc_helper_ident();
         let helper_call = quote::quote! { #helper(state) };
-        let alloc = self.arena_alloc_tokens(helper_call, value_expr);
+        let alloc = self.alloc_tokens(helper_call, value_expr);
         quote::quote! { &*#alloc }
     }
 
@@ -294,10 +294,10 @@ impl<'a> IrCodegenCtx<'a> {
     /// `let __alloc = helper(state).arena().alloc(expr); &*__alloc`
     ///
     /// The let-binding form extends the borrow lifetime.
-    pub fn emit_box_alloc_let(&self, value_expr: &TokenStream) -> TokenStream {
-        let helper = self.arena_helper_ident();
+    pub fn emit_alloc_let(&self, value_expr: &TokenStream) -> TokenStream {
+        let helper = self.alloc_helper_ident();
         let helper_call = quote::quote! { #helper(state) };
-        let alloc = self.arena_alloc_tokens(helper_call, value_expr);
+        let alloc = self.alloc_tokens(helper_call, value_expr);
         quote::quote! {
             let __alloc = #alloc;
             &*__alloc
@@ -322,248 +322,7 @@ impl<'a> IrCodegenCtx<'a> {
             .find_map(|(id, ty)| (*id == rule_id).then_some(ty))
     }
 
-    /// Emit scratch-based collection init: records scratch depth.
-    pub fn emit_scratch_init(&self, elem_desc: &TypeDesc, depth_var: &syn::Ident) -> TokenStream {
-        let idx = self.scratch_index_for_elem(elem_desc);
-        let s_fn = self.scratch_accessor(idx);
-        let helper = self.arena_helper_ident();
-        quote::quote! {
-            let #depth_var = #helper(state).#s_fn().len();
-        }
-    }
-
-    /// Emit scratch push for a value expression.
-    pub fn emit_scratch_push(&self, elem_desc: &TypeDesc, value_expr: &TokenStream) -> TokenStream {
-        let idx = self.scratch_index_for_elem(elem_desc);
-        let s_fn = self.scratch_accessor(idx);
-        let helper = self.arena_helper_ident();
-        quote::quote! { #helper(state).#s_fn().push(#value_expr) }
-    }
-
-    /// Emit scratch collect: copies scratch[depth..] to arena slice, truncates.
-    pub fn emit_scratch_collect(&self, elem_desc: &TypeDesc, depth_var: &syn::Ident) -> TokenStream {
-        let idx = self.scratch_index_for_elem(elem_desc);
-        let c_fn = self.collect_accessor(idx);
-        let helper = self.arena_helper_ident();
-        quote::quote! { #helper(state).#c_fn(#depth_var) }
-    }
-
-    /// Emit scratch truncate on failure path.
-    pub fn emit_scratch_truncate(
-        &self,
-        elem_desc: &TypeDesc,
-        depth_var: &syn::Ident,
-    ) -> TokenStream {
-        let idx = self.scratch_index_for_elem(elem_desc);
-        let s_fn = self.scratch_accessor(idx);
-        let helper = self.arena_helper_ident();
-        quote::quote! { #helper(state).#s_fn().truncate(#depth_var); }
-    }
-
-    /// Emit scratch len - depth expression (element count).
-    pub fn emit_scratch_count(
-        &self,
-        elem_desc: &TypeDesc,
-        depth_var: &syn::Ident,
-    ) -> TokenStream {
-        let idx = self.scratch_index_for_elem(elem_desc);
-        let s_fn = self.scratch_accessor(idx);
-        let helper = self.arena_helper_ident();
-        quote::quote! { (#helper(state).#s_fn().len() - #depth_var) }
-    }
-
-    /// Emit scratch extend from a slice (for Seq flattening).
-    pub fn emit_scratch_extend_slice(
-        &self,
-        elem_desc: &TypeDesc,
-        slice_expr: &TokenStream,
-    ) -> TokenStream {
-        let idx = self.scratch_index_for_elem(elem_desc);
-        let s_fn = self.scratch_accessor(idx);
-        let helper = self.arena_helper_ident();
-        quote::quote! { #helper(state).#s_fn().extend_from_slice(#slice_expr) }
-    }
-
-    /// Generate the arena context struct definition + impl + helper function.
-    ///
-    /// Returns (struct_def, helper_fn) as TokenStreams.
-    pub fn generate_arena_ctx(&self) -> (TokenStream, TokenStream) {
-        let ctx_ident = self.arena_ctx_ident();
-        let enum_ident = &self.enum_ident;
-        let helper_ident = self.arena_helper_ident();
-
-        // Generate scratch fields, accessors, and collect methods.
-        let mut fields = vec![];
-        let mut accessors = vec![];
-        let mut new_fields = vec![];
-
-        for (i, elem_td) in self.scratch_types.iter().enumerate() {
-            let s_ident = self.scratch_accessor(i);
-            let c_ident = self.collect_accessor(i);
-            let elem_ty = type_desc_to_syn(elem_td, self);
-
-            fields.push(quote::quote! {
-                #s_ident: ::std::cell::UnsafeCell<Vec<#elem_ty>>
-            });
-
-            new_fields.push(quote::quote! {
-                #s_ident: ::std::cell::UnsafeCell::new(Vec::with_capacity(64))
-            });
-
-            accessors.push(quote::quote! {
-                #[inline(always)]
-                #[allow(non_snake_case)]
-                fn #s_ident(&self) -> &mut Vec<#elem_ty> {
-                    unsafe { &mut *self.#s_ident.get() }
-                }
-
-                #[inline(always)]
-                #[allow(non_snake_case)]
-                fn #c_ident(&'a self, depth: usize) -> &'a [#elem_ty] {
-                    let s = self.#s_ident();
-                    let slice = self.__arena.alloc_slice_clone(&s[depth..]);
-                    s.truncate(depth);
-                    slice
-                }
-            });
-        }
-
-        let struct_def = quote::quote! {
-            #[allow(non_camel_case_types)]
-            struct #ctx_ident<'a> {
-                __arena: ::parse_that::BumpArena<#enum_ident<'a>>,
-                #(#fields),*
-            }
-
-            #[allow(non_snake_case)]
-            impl<'a> #ctx_ident<'a> {
-                fn with_capacity(n: usize) -> Self {
-                    Self {
-                        __arena: ::parse_that::BumpArena::with_capacity(n),
-                        #(#new_fields),*
-                    }
-                }
-
-                #[inline(always)]
-                fn arena(&'a self) -> &'a ::parse_that::BumpArena<#enum_ident<'a>> {
-                    &self.__arena
-                }
-
-                #(#accessors)*
-            }
-        };
-
-        let helper_fn = quote::quote! {
-            #[allow(non_snake_case)]
-            #[inline(always)]
-            fn #helper_ident<'a>(
-                state: &::parse_that::ParserState<'a>,
-            ) -> &'a #ctx_ident<'a> {
-                debug_assert!(
-                    !state.context_ptr.is_null(),
-                    "arena parser requires parse_with_context()"
-                );
-                unsafe {
-                    &*(state.context_ptr as *const #ctx_ident<'a>)
-                }
-            }
-        };
-
-        (struct_def, helper_fn)
-    }
-}
-
-/// Collect distinct Vec element types from both IR types and per-rule inference.
-///
-/// Uses both sources to handle the divergence between the IR pass (which uses
-/// `pretty_preserve=true` / `cyclic_context=true` for some rules) and codegen
-/// (which uses `false` / `false`). Both sets of types are registered so that
-/// scratch lookups work regardless of which inference the callsite uses.
-fn collect_vec_element_types(ir: &GrammarIR) -> Vec<TypeDesc> {
-    use bbnf_ir::IrNode;
-    use bbnf_ir::passes::{InferCtx, infer_node_in_vec};
-
-    let mut seen = Vec::new();
-
-    // Source 1: from ir.types (matches the IR pass).
-    for (_rule_id, td) in &ir.types {
-        collect_vec_inner(td, &mut seen);
-    }
-
-    // Source 2: from per-node inference with codegen flags (pretty_preserve=false,
-    // cyclic_context=false) to catch any types that diverge from ir.types.
-    let cache: HashMap<RuleId, TypeDesc> = ir.types.iter().cloned().collect();
-    let acyclic: HashSet<RuleId> = ir
-        .rules
-        .iter()
-        .filter(|r| !r.meta.is_cyclic)
-        .map(|r| r.id)
-        .collect();
-    let infer_ctx = InferCtx {
-        ir,
-        cache: &cache,
-        acyclic_rules: &acyclic,
-        cyclic_context: false,
-        pretty_preserve: false,
-        recorder: None,
-    };
-
-    fn walk_node(node: &IrNode, ctx: &InferCtx<'_>, out: &mut Vec<TypeDesc>) {
-        match node {
-            IrNode::Repeat { inner, lo, hi } => {
-                if !(*lo == 0 && *hi == 1) {
-                    let elem_ty = infer_node_in_vec(inner, ctx);
-                    if elem_ty != TypeDesc::Span && !out.contains(&elem_ty) {
-                        out.push(elem_ty);
-                    }
-                }
-                walk_node(inner, ctx, out);
-            }
-            IrNode::Seq(children) => {
-                for child in children {
-                    walk_node(child, ctx, out);
-                }
-            }
-            IrNode::Alt(branches, _) => {
-                for b in branches {
-                    walk_node(&b.node, ctx, out);
-                }
-            }
-            IrNode::Skip(l, r) | IrNode::Next(l, r) | IrNode::Minus(l, r) => {
-                walk_node(l, ctx, out);
-                walk_node(r, ctx, out);
-            }
-            IrNode::OptionalWhitespace(inner)
-            | IrNode::Map { inner, .. }
-            | IrNode::Negate(inner) => {
-                walk_node(inner, ctx, out);
-            }
-            _ => {}
-        }
-    }
-
-    for rule in &ir.rules {
-        walk_node(&rule.body, &infer_ctx, &mut seen);
-    }
-    seen
-}
-
-fn collect_vec_inner(td: &TypeDesc, out: &mut Vec<TypeDesc>) {
-    match td {
-        TypeDesc::Vec(inner) => {
-            if !out.contains(inner.as_ref()) {
-                out.push(inner.as_ref().clone());
-            }
-            collect_vec_inner(inner, out);
-        }
-        TypeDesc::Option(inner) => collect_vec_inner(inner, out),
-        TypeDesc::Tuple(elems) => {
-            for e in elems {
-                collect_vec_inner(e, out);
-            }
-        }
-        _ => {}
-    }
+    // NOTE: emit_scratch_*, generate_alloc_ctx are in alloc_emit.rs (separate impl block).
 }
 
 pub fn type_desc_to_syn(desc: &TypeDesc, ctx: &IrCodegenCtx<'_>) -> Type {
@@ -572,7 +331,7 @@ pub fn type_desc_to_syn(desc: &TypeDesc, ctx: &IrCodegenCtx<'_>) -> Type {
         &ctx.enum_type,
         &ctx.boxed_enum_type,
         ctx.ir,
-        !ctx.parser_attrs.prettify,
+        true, // always arena slices
     )
 }
 

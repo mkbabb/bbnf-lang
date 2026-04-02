@@ -18,10 +18,10 @@ fn make_ir(body: IrNode) -> GrammarIR {
         types: vec![],
         follow_sets: HashMap::new(),
         ws_pattern: None,
-        b1_span_collapse: false,
+        collapse_simple_spans: false,
         debug_all: false,
         debug_labels: Vec::new(),
-        infer_map: None,
+        type_map: None,
     }
 }
 
@@ -40,10 +40,10 @@ fn make_ir_with_strings(body: IrNode, strings: Vec<String>) -> GrammarIR {
         types: vec![],
         follow_sets: HashMap::new(),
         ws_pattern: None,
-        b1_span_collapse: false,
+        collapse_simple_spans: false,
         debug_all: false,
         debug_labels: Vec::new(),
-        infer_map: None,
+        type_map: None,
     }
 }
 

@@ -21,7 +21,6 @@ mod generators;
 use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
 
 use bbnf_derive::Parser;
-use parse_that::BumpArena;
 
 #[derive(Parser)]
 #[parser(path = "../../grammar/css/pretty.bbnf", skip_recover, arena)]
@@ -36,7 +35,7 @@ macro_rules! bench_rules {
             b.bytes = input.len() as u64;
             {
                 let arena =
-                    BumpArena::<CssFastParserEnum<'_>>::with_capacity(input.len() / 32);
+                    __CssFastParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = CssFastParser::stylesheet();
                 let (_result, state) = parser.parse_return_state_with_context(&input, &arena);
                 let pct = state.offset * 100 / input.len().max(1);
@@ -44,7 +43,7 @@ macro_rules! bench_rules {
             }
             b.iter(|| {
                 let arena =
-                    BumpArena::<CssFastParserEnum<'_>>::with_capacity(input.len() / 32);
+                    __CssFastParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = CssFastParser::stylesheet();
                 let ast = parser
                     .parse_with_context(black_box(&input), &arena)
@@ -68,7 +67,7 @@ macro_rules! bench_decls {
             b.bytes = input.len() as u64;
             {
                 let arena =
-                    BumpArena::<CssFastParserEnum<'_>>::with_capacity(input.len() / 32);
+                    __CssFastParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = CssFastParser::stylesheet();
                 let (_result, state) = parser.parse_return_state_with_context(&input, &arena);
                 let pct = state.offset * 100 / input.len().max(1);
@@ -81,7 +80,7 @@ macro_rules! bench_decls {
             }
             b.iter(|| {
                 let arena =
-                    BumpArena::<CssFastParserEnum<'_>>::with_capacity(input.len() / 32);
+                    __CssFastParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = CssFastParser::stylesheet();
                 let ast = parser
                     .parse_with_context(black_box(&input), &arena)
@@ -104,7 +103,7 @@ macro_rules! bench_selectors {
             b.bytes = input.len() as u64;
             {
                 let arena =
-                    BumpArena::<CssFastParserEnum<'_>>::with_capacity(input.len() / 32);
+                    __CssFastParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = CssFastParser::stylesheet();
                 let (_result, state) = parser.parse_return_state_with_context(&input, &arena);
                 let pct = state.offset * 100 / input.len().max(1);
@@ -117,7 +116,7 @@ macro_rules! bench_selectors {
             }
             b.iter(|| {
                 let arena =
-                    BumpArena::<CssFastParserEnum<'_>>::with_capacity(input.len() / 32);
+                    __CssFastParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = CssFastParser::stylesheet();
                 let ast = parser
                     .parse_with_context(black_box(&input), &arena)
@@ -140,7 +139,7 @@ macro_rules! bench_nesting {
             b.bytes = input.len() as u64;
             {
                 let arena =
-                    BumpArena::<CssFastParserEnum<'_>>::with_capacity(input.len() / 32);
+                    __CssFastParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = CssFastParser::stylesheet();
                 let (_result, state) = parser.parse_return_state_with_context(&input, &arena);
                 let pct = state.offset * 100 / input.len().max(1);
@@ -153,7 +152,7 @@ macro_rules! bench_nesting {
             }
             b.iter(|| {
                 let arena =
-                    BumpArena::<CssFastParserEnum<'_>>::with_capacity(input.len() / 32);
+                    __CssFastParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = CssFastParser::stylesheet();
                 let ast = parser
                     .parse_with_context(black_box(&input), &arena)

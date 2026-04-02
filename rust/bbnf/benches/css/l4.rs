@@ -7,7 +7,6 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 use bbnf_derive::Parser;
 use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
-use parse_that::BumpArena;
 
 /// Semantic CSS value types for direct-to-struct parsing.
 #[allow(dead_code)]
@@ -150,14 +149,14 @@ macro_rules! bench {
         fn $name(b: &mut Bencher) {
             let input = load($file);
             let bytes = {
-                let arena = BumpArena::<CssL4ParserEnum<'_>>::with_capacity(input.len() / 32);
+                let arena = __CssL4ParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = CssL4Parser::stylesheet();
                 let (_result, state) = parser.parse_return_state_with_context(&input, &arena);
                 state.offset as u64
             };
             b.bytes = bytes;
             b.iter(|| {
-                let arena = BumpArena::<CssL4ParserEnum<'_>>::with_capacity(input.len() / 32);
+                let arena = __CssL4ParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = CssL4Parser::stylesheet();
                 let ast = parser
                     .parse_with_context(black_box(&input), &arena)

@@ -1,6 +1,6 @@
 //! Monolithic entry-point generation.
 //!
-//! Contains `generate_monolithic` (arena-only storage mode) and supporting
+//! Contains `generate_monolithic`  and supporting
 //! helper functions for fusion eligibility, single-site inline detection,
 //! and expansion cost estimation.
 
@@ -78,15 +78,6 @@ pub fn generate_monolithic(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStrea
         let pub_ident = ctx.method_ident_for_name(name);
         let return_type = ctx.rule_return_type(rule.id);
 
-        // State-based memo is disabled for monolithic arena fns.
-        // Rationale: monolithic fns have zero lazy/combinator construction overhead,
-        // dispatch tables provide O(1) branch selection without ambiguity, and the
-        // memo cache is dropped after each parse (no cross-iteration benefit).
-        // The clone + HashMap insert per memoized call is pure overhead.
-        // If a grammar truly needs packrat memo for correctness (ambiguous grammars),
-        // this can be re-enabled selectively.
-        let memo_id: Option<usize> = None;
-
         // ── Generate internal function body ──────────────────────────────
 
         let mut mctx = MonoCtx::new(fusion_eligible.clone(), single_site_inline.clone());
@@ -108,8 +99,8 @@ pub fn generate_monolithic(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStrea
             }
         };
 
-        // All internal fns return Option<ArenaEnum<'a>>.
-        // Transparent rules: body emitted with elide_box=true (returns ArenaEnum directly).
+        // All internal fns return Option<Enum<'a>>.
+        // Transparent rules: body emitted with elide_box=true (returns Enum directly).
         // Non-transparent rules: body emitted with elide_box=false, wrapped in enum variant.
         let body_expr = if is_fused_number && !rule.meta.is_transparent {
             let variant_ident = format_ident!("{}", name);
@@ -129,44 +120,9 @@ pub fn generate_monolithic(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStrea
 
         let hoisted = &mctx.hoisted;
 
-        // ── Wrap body in memo check/store if memoized ────────────────────
-
-        let fn_body = if let Some(id) = memo_id {
-            let id_lit = proc_macro2::Literal::usize_unsuffixed(id);
-            quote! {
-                // Memo check.
-                let __memo_key = state.offset;
-                {
-                    let __cache = state.memo.table_mut::<#enum_type>(#id_lit);
-                    if let Some(__entry) = __cache.get(&__memo_key).cloned() {
-                        return match __entry {
-                            Some((__end, __val)) => {
-                                state.offset = __end;
-                                Some(__val)
-                            }
-                            None => None,
-                        };
-                    }
-                }
-
-                // Hoisted leaf parsers.
-                #(#hoisted)*
-
-                // Parse.
-                let __result = (|| -> Option<#enum_type> {
-                    #body_expr
-                })();
-
-                // Memo store.
-                let __entry = __result.as_ref().map(|__v| (state.offset, __v.clone()));
-                state.memo.table_mut::<#enum_type>(#id_lit).insert(__memo_key, __entry);
-                __result
-            }
-        } else {
-            quote! {
-                #(#hoisted)*
-                #body_expr
-            }
+        let fn_body = quote! {
+            #(#hoisted)*
+            #body_expr
         };
 
         // ── Emit internal function ───────────────────────────────────────
@@ -222,7 +178,7 @@ pub fn generate_monolithic(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStrea
 
         if rule.meta.is_transparent {
             // Transparent: public method wraps result in Box (Owned) or arena.alloc (Arena).
-            let alloc_code = ctx.emit_box_alloc(&quote! { __v });
+            let alloc_code = ctx.emit_alloc(&quote! { __v });
 
             let mut pub_parser = quote! {
                 Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
@@ -255,7 +211,7 @@ pub fn generate_monolithic(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStrea
                 }
             });
         } else {
-            // Non-transparent: direct delegation (fn already returns ArenaEnum).
+            // Non-transparent: direct delegation (fn already returns Enum).
             let mut pub_parser = quote! { Parser::new(Self::#fn_ident) };
 
             if has_recover {

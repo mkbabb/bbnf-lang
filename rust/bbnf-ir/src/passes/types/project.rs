@@ -31,7 +31,7 @@ fn project_node_inner(node: &IrNode, ctx: &ProjectionCtx<'_>) -> TypeDesc {
         }
 
         IrNode::Seq(children) => {
-            // B.1 + B.2: Seq projection with sp_method_rules override and preserve_spans.
+            // Seq projection with span-method override and span preservation.
             project_seq(children, ctx)
         }
 
@@ -101,7 +101,7 @@ fn project_node_inner(node: &IrNode, ctx: &ProjectionCtx<'_>) -> TypeDesc {
             match fd {
                 FnDescriptor::EnumWrap { .. } => TypeDesc::Enum,
                 FnDescriptor::BoxWrap => TypeDesc::BoxedEnum,
-                // B.3: Use parsed return type if available.
+                // Annotated return type: use parsed return type if available.
                 FnDescriptor::Custom {
                     return_type,
                     source,
@@ -222,8 +222,8 @@ fn project_node_in_vec_inner(node: &IrNode, ctx: &ProjectionCtx<'_>) -> TypeDesc
 /// Project the output type of a Seq (concatenation) node.
 ///
 /// Applies:
-/// - B.1: sp_method_rules Span override (with all-Span guard)
-/// - B.2: @pretty tuple preservation (consume flag)
+/// - Span-method override (with safety guard)
+/// - Span preservation (consumed at top-level Seq)
 /// - Consecutive-Span compression
 /// - `(T, Vec<T>)` flattening
 fn project_seq(children: &[IrNode], ctx: &ProjectionCtx<'_>) -> TypeDesc {
@@ -234,18 +234,18 @@ fn project_seq(children: &[IrNode], ctx: &ProjectionCtx<'_>) -> TypeDesc {
         return project_node(&children[0], ctx);
     }
 
-    // B.1: Override Ref to rules with _sp() methods with Span type.
-    // Matches emit_seq's sp_method_rules override: refs to rules with _sp()
-    // methods get their _sp() method called (producing Span) instead of the
-    // normal parser (producing BoxedEnum). Transparent rules are excluded
-    // because the codegen doesn't override them.
+    // Span-method override: Ref to rules with _sp() methods produce Span.
+    // Matches emit_seq's dispatch: refs to rules with _sp() methods get their
+    // _sp() method called (producing Span) instead of the normal parser
+    // (producing BoxedEnum). Transparent rules are excluded because the codegen
+    // doesn't override them.
     let child_types: Vec<TypeDesc> = children
         .iter()
         .map(|c| {
             if let IrNode::Ref(id) = c {
                 let rule = &ctx.ir.rules[*id as usize];
                 if rule.meta.has_sp_method && !rule.meta.is_transparent {
-                    // B.1 override: record the overridden type so codegen can look it up.
+                    // Record the overridden type so codegen can look it up.
                     if let Some(rec) = ctx.recorder {
                         rec.record_node(c, &TypeDesc::Span);
                     }
@@ -257,31 +257,32 @@ fn project_seq(children: &[IrNode], ctx: &ProjectionCtx<'_>) -> TypeDesc {
         })
         .collect();
 
-    // B.1 guard: when all children are Span after B.1 override, decide whether
-    // to keep the override (collapsing the whole Seq to Span) or undo it.
+    // Span-method safety guard: when all children are Span after the override,
+    // decide whether to keep the override (collapsing the whole Seq to Span) or
+    // revert it.
     //
-    // Keep B.1 when: every child is EITHER a naturally-Span leaf (Literal/Regex/
-    // Epsilon/inlined) OR a B.1-overridden Ref, AND !preserve_spans.
+    // Keep override when: every child is EITHER a naturally-Span leaf (Literal/
+    // Regex/Epsilon/inlined) OR a span-method overridden Ref, AND !preserve_spans.
     // This limits the optimization to simple Seqs like `(propertyName, ":", value)`
     // where compression to Span is unambiguous.
     //
-    // Undo B.1 when: any child is Span through projection of a complex expression
-    // (Repeat, Skip, etc.) — these have different compression behavior between
-    // IR and codegen, causing type mismatches.
+    // Revert override when: any child is Span through projection of a complex
+    // expression (Repeat, Skip, etc.) — these have different compression behavior
+    // between IR and codegen, causing type mismatches.
     let all_span = child_types.iter().all(|t| *t == TypeDesc::Span);
     // Check if every child is Span through simple, unambiguous means:
-    // either naturally Span (leaf), B.1-overridden Ref, or projects to Span
-    // through the same logic the codegen will use.
+    // either naturally Span (leaf), span-method overridden Ref, or projects to
+    // Span through the same logic the codegen will use.
     let all_simple_span = all_span
-        && ctx.ir.b1_span_collapse
+        && ctx.ir.collapse_simple_spans
         && !ctx.rules.preserve_spans
         && children.iter().zip(child_types.iter()).all(|(c, ty)| {
             // Optional(Span) produces Option<Span> at runtime, not Span —
-            // exclude from B.1 collapse to match codegen behavior in seq.rs.
+            // exclude from simple-Span collapse to match codegen behavior in seq.rs.
             if let IrNode::Repeat { lo: 0, hi: 1, .. } = c {
                 return false;
             }
-            // B.1-overridden Ref — codegen will call _sp().
+            // Span-method overridden Ref — codegen will call _sp().
             if let IrNode::Ref(id) = c {
                 let rule = &ctx.ir.rules[*id as usize];
                 if rule.meta.has_sp_method && !rule.meta.is_transparent {
@@ -304,19 +305,19 @@ fn project_seq(children: &[IrNode], ctx: &ProjectionCtx<'_>) -> TypeDesc {
         child_types
     };
 
-    // B.2: Consume preserve_spans flag. Only the top-level Seq preserves all-Span tuples.
+    // Consume preserve_spans flag (only applies to top-level Seq).
     let preserve_spans =
         ctx.rules.preserve_spans && effective_types.iter().all(|t| *t == TypeDesc::Span);
 
     // Record effective child types BEFORE compression so codegen can look them up.
     // Also record whether preserve_spans was applied for this Seq.
     //
-    // When the all-Span guard undoes B.1, re-record per-node types for children
-    // whose B.1 override was reverted. Without this, the per-node TypeMap retains
-    // the B.1 Span type, but seq_child_types returns the correct non-B.1 type,
-    // causing a disagreement between the two lookup paths in codegen.
+    // When the safety guard reverts the span-method override, re-record per-node
+    // types for children whose override was reverted. Without this, the per-node
+    // TypeMap retains the overridden Span type, but seq_child_types returns the
+    // correct non-override type, causing divergence between the two lookup paths.
     if let Some(rec) = ctx.recorder {
-        // Re-record per-node types to match effective_types (fixes B.1-undo divergence).
+        // Re-record per-node types to match effective_types (fixes span-method revert divergence).
         for (c, ty) in children.iter().zip(effective_types.iter()) {
             rec.record_node(c, ty);
         }
@@ -324,7 +325,7 @@ fn project_seq(children: &[IrNode], ctx: &ProjectionCtx<'_>) -> TypeDesc {
         rec.record_seq_preserve_spans(children, preserve_spans);
     }
 
-    // Consecutive Span compression (skip if preserve_spans).
+    // Consecutive Span compression (skipped when preserve_spans is set).
     let compressed = if preserve_spans {
         effective_types
     } else {

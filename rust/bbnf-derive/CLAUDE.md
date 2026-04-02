@@ -15,7 +15,7 @@ bbnf-derive/
 
 ```rust
 #[derive(Parser)]
-#[parser(path = "grammar.bbnf", ignore_whitespace, remove_left_recursion)]
+#[parser(path = "grammar.bbnf", remove_left_recursion)]
 pub struct MyParser;
 
 // Generates:
@@ -27,9 +27,7 @@ pub struct MyParser;
 ## Attributes
 
 - `path = "..."` — Grammar file path(s). Required.
-- `ignore_whitespace` — Wrap parsers with whitespace trimming.
-- `debug` — Emit `.debug(name)` on each rule parser.
-- `use_string` — Convert `Span<'a>` outputs to `&'a str`.
+- `debug` — Emit trace instrumentation on each rule parser.
 - `remove_left_recursion` — Eliminate direct left-recursion before codegen.
 
 ## Compilation Pipeline
@@ -48,7 +46,7 @@ Grammar file(s)
       5. fuse_single_use           14. factor_regex_with_lookahead
       6. prune_unreachable (3rd)   15. fuse_token_dispatch
       7. eliminate_epsilon         16. generate_dispatch_tables
-      8. merge_literals            17. infer_types
+      8. merge_literals            17. project_types
       9. merge_regex_alts
   → Rust codegen: codegen/ → TokenStream (enum + parser methods)
   → Grammar array embedding (include_str!)

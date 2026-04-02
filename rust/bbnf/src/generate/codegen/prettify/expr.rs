@@ -19,8 +19,8 @@ pub(super) fn emit_prettify_ref(
 ) -> TokenStream {
     // Always inline — the prettify path doesn't need separate functions
     // per rule. Each Ref is expanded at its call site. Cyclic rules are
-    // handled by the surrounding `lazy` wrapper in the combinator path,
-    // or by the function-level recursion in the arena path. For prettify,
+    // handled by the surrounding `lazy` wrapper in the monolithic path,
+    // or by the function-level recursion in the monolithic path. For prettify,
     // we just inline the body — Rust's own function recursion handles cycles
     // since each non-transparent rule gets its own `__rule_prettify` function.
     let rule = &ir.rules[rule_id as usize];

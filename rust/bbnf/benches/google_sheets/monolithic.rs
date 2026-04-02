@@ -7,7 +7,6 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 use bbnf_derive::Parser;
 use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
-use parse_that::BumpArena;
 
 #[derive(Parser)]
 #[parser(path = "../../grammar/google-sheets/google-sheets.bbnf", prettify, arena)]
@@ -32,14 +31,14 @@ fn generate_large_formula(n_bindings: usize) -> String {
 
 fn parse_pathological(b: &mut Bencher) {
     b.bytes = PATHOLOGICAL.len() as u64;
-    let arena = BumpArena::<GoogleSheetsParserEnum<'_>>::with_capacity(PATHOLOGICAL.len() / 16);
+    let arena = __GoogleSheetsParserEnumCtx::with_capacity(PATHOLOGICAL.len() / 16);
     let parser = GoogleSheetsParser::formula();
     assert!(
         parser.parse_with_context(PATHOLOGICAL, &arena).is_some(),
         "pathological: parse failed"
     );
     b.iter(|| {
-        let arena = BumpArena::<GoogleSheetsParserEnum<'_>>::with_capacity(PATHOLOGICAL.len() / 16);
+        let arena = __GoogleSheetsParserEnumCtx::with_capacity(PATHOLOGICAL.len() / 16);
         let parser = GoogleSheetsParser::formula();
         parser.parse_with_context(black_box(PATHOLOGICAL), &arena).unwrap()
     });
@@ -49,7 +48,7 @@ fn parse_1kb(b: &mut Bencher) {
     let input = generate_large_formula(10);
     b.bytes = input.len() as u64;
     b.iter(|| {
-        let arena = BumpArena::<GoogleSheetsParserEnum<'_>>::with_capacity(input.len() / 16);
+        let arena = __GoogleSheetsParserEnumCtx::with_capacity(input.len() / 16);
         let parser = GoogleSheetsParser::formula();
         parser.parse_with_context(black_box(&input), &arena).unwrap()
     });
@@ -59,7 +58,7 @@ fn parse_10kb(b: &mut Bencher) {
     let input = generate_large_formula(100);
     b.bytes = input.len() as u64;
     b.iter(|| {
-        let arena = BumpArena::<GoogleSheetsParserEnum<'_>>::with_capacity(input.len() / 16);
+        let arena = __GoogleSheetsParserEnumCtx::with_capacity(input.len() / 16);
         let parser = GoogleSheetsParser::formula();
         parser.parse_with_context(black_box(&input), &arena).unwrap()
     });
@@ -69,10 +68,9 @@ fn format_pathological(b: &mut Bencher) {
     let config = pprint::Printer::new(80, 2, false);
     b.bytes = PATHOLOGICAL.len() as u64;
     b.iter(|| {
-        let arena = BumpArena::<GoogleSheetsParserEnum<'_>>::with_capacity(PATHOLOGICAL.len() / 16);
-        let parser = GoogleSheetsParser::formula();
-        let ast = parser.parse_with_context(black_box(PATHOLOGICAL), &arena).unwrap();
-        pprint::pprint(ast.to_doc(), config)
+        let parser = GoogleSheetsParser::formula_prettify();
+        let ops = parser.parse(black_box(PATHOLOGICAL)).unwrap();
+        pprint::render(&ops, config)
     });
 }
 
@@ -81,10 +79,9 @@ fn format_1kb(b: &mut Bencher) {
     let config = pprint::Printer::new(80, 2, false);
     b.bytes = input.len() as u64;
     b.iter(|| {
-        let arena = BumpArena::<GoogleSheetsParserEnum<'_>>::with_capacity(input.len() / 16);
-        let parser = GoogleSheetsParser::formula();
-        let ast = parser.parse_with_context(black_box(&input), &arena).unwrap();
-        pprint::pprint(ast.to_doc(), config)
+        let parser = GoogleSheetsParser::formula_prettify();
+        let ops = parser.parse(black_box(&input)).unwrap();
+        pprint::render(&ops, config)
     });
 }
 
@@ -93,10 +90,9 @@ fn format_10kb(b: &mut Bencher) {
     let config = pprint::Printer::new(80, 2, false);
     b.bytes = input.len() as u64;
     b.iter(|| {
-        let arena = BumpArena::<GoogleSheetsParserEnum<'_>>::with_capacity(input.len() / 16);
-        let parser = GoogleSheetsParser::formula();
-        let ast = parser.parse_with_context(black_box(&input), &arena).unwrap();
-        pprint::pprint(ast.to_doc(), config)
+        let parser = GoogleSheetsParser::formula_prettify();
+        let ops = parser.parse(black_box(&input)).unwrap();
+        pprint::render(&ops, config)
     });
 }
 

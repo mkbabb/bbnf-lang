@@ -604,6 +604,217 @@ fn parse_memo_correctness() {
     }
 }
 
+// ── Stress tests ───────────────────────────────────────────────────────────
+
+#[test]
+fn stress_deep_nesting_1000() {
+    // Grammar: value = "[" >> value << "]" | "x" ;
+    // Input: "[[[...x...]]]" with 1000 levels of nesting.
+    let ir = {
+        let mut ir = make_ir(
+            vec![
+                rule(
+                    0,
+                    0,
+                    IrNode::Alt(
+                        vec![
+                            AltBranch {
+                                node: IrNode::Skip(
+                                    Box::new(IrNode::Next(
+                                        Box::new(IrNode::Literal(1)), // "["
+                                        Box::new(IrNode::Ref(0)),    // value (recursive)
+                                    )),
+                                    Box::new(IrNode::Literal(2)), // "]"
+                                ),
+                                first_set: None,
+                            },
+                            AltBranch {
+                                node: IrNode::Literal(3), // "x"
+                                first_set: None,
+                            },
+                        ],
+                        None,
+                    ),
+                ),
+            ],
+            vec!["value".into(), "[".into(), "]".into(), "x".into()],
+        );
+        ir.rules[0].meta.is_cyclic = true;
+        ir.rules[0].meta.memo = MemoStrategy::Full;
+        ir
+    };
+
+    let depth = 1000;
+    let mut input = String::with_capacity(depth * 2 + 1);
+    for _ in 0..depth {
+        input.push('[');
+    }
+    input.push('x');
+    for _ in 0..depth {
+        input.push(']');
+    }
+
+    let result = parse_with_ir(&ir, &input);
+    assert!(result.success, "deep nesting (1000) should parse");
+    assert_eq!(
+        result.offset as usize,
+        input.len(),
+        "should consume all {} bytes",
+        input.len()
+    );
+}
+
+#[test]
+fn stress_wide_alternation_100() {
+    // Grammar: rule = "kw_001" | "kw_002" | ... | "kw_100" ;
+    // Fixed-width keywords avoid prefix ambiguity in linear-scan alternation.
+    let mut strings: Vec<String> = vec!["start".into()];
+    let mut branches = Vec::new();
+
+    for i in 1..=100 {
+        let s = format!("kw_{:03}", i);
+        let str_id = strings.len() as u32;
+        strings.push(s);
+        branches.push(AltBranch {
+            node: IrNode::Literal(str_id),
+            first_set: None,
+        });
+    }
+
+    let ir = make_ir(
+        vec![rule(0, 0, IrNode::Alt(branches, None))],
+        strings.clone(),
+    );
+
+    // Test every branch.
+    for i in 1..=100u32 {
+        let input = format!("kw_{:03}", i);
+        let result = parse_with_ir(&ir, &input);
+        assert!(
+            result.success,
+            "branch '{}' should parse, got {:?}",
+            input, result
+        );
+        assert_eq!(
+            result.offset as usize,
+            input.len(),
+            "branch '{}' should consume all bytes",
+            input
+        );
+    }
+
+    // Non-matching input should fail.
+    let result = parse_with_ir(&ir, "kw_000");
+    assert!(!result.success, "'kw_000' should not match any branch");
+}
+
+#[test]
+fn stress_long_repeat_10000() {
+    // Grammar:
+    //   list = item ("," >> item)* ;
+    //   item = /\w+/ ;
+    // Input: "w0,w1,w2,...,w9999" (10000 comma-separated items).
+
+    let ir = make_ir(
+        vec![
+            rule(
+                0,
+                0,
+                IrNode::Seq(vec![
+                    IrNode::Ref(1), // item
+                    IrNode::Repeat {
+                        inner: Box::new(IrNode::Next(
+                            Box::new(IrNode::Literal(2)), // ","
+                            Box::new(IrNode::Ref(1)),     // item
+                        )),
+                        lo: 0,
+                        hi: u32::MAX,
+                    },
+                ]),
+            ),
+            rule(1, 1, IrNode::Regex(3)), // item = /\w+/
+        ],
+        vec!["list".into(), "item".into(), ",".into(), r"\w+".into()],
+    );
+
+    let count = 10_000;
+    let mut input = String::with_capacity(count * 6);
+    for i in 0..count {
+        if i > 0 {
+            input.push(',');
+        }
+        input.push_str(&format!("w{}", i));
+    }
+
+    let result = parse_with_ir(&ir, &input);
+    assert!(result.success, "long repeat (10000) should parse");
+    assert_eq!(
+        result.offset as usize,
+        input.len(),
+        "should consume all {} bytes",
+        input.len()
+    );
+}
+
+#[test]
+fn stress_value_stack_deep_seq() {
+    // Grammar: root = a , b , c , d , e , f , g , h ;
+    // Each sub-rule is itself a 4-element sequence of literals.
+    // This produces many values on the stack (8 * 4 = 32 leaves).
+    let mut strings: Vec<String> = vec!["root".into()]; // 0
+    let mut sub_rules = Vec::new();
+    let mut seq_refs = Vec::new();
+
+    for rule_idx in 0u32..8 {
+        let rule_id = rule_idx + 1;
+        let rule_name_id = strings.len() as u32;
+        strings.push(format!("sub{}", rule_idx));
+
+        let mut literals = Vec::new();
+        for lit_idx in 0u32..4 {
+            let lit_str_id = strings.len() as u32;
+            let ch = (b'A' + (rule_idx * 4 + lit_idx) as u8) as char;
+            strings.push(ch.to_string());
+            literals.push(IrNode::Literal(lit_str_id));
+        }
+
+        sub_rules.push(rule(rule_id, rule_name_id, IrNode::Seq(literals)));
+        seq_refs.push(IrNode::Ref(rule_id));
+    }
+
+    let mut all_rules = vec![rule(0, 0, IrNode::Seq(seq_refs))];
+    all_rules.extend(sub_rules);
+
+    let ir = make_ir(all_rules, strings);
+
+    // Input: "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "[\]^" (32 ASCII chars from 'A')
+    let input: String = (0..32).map(|i| (b'A' + i) as char).collect();
+
+    let result = parse_with_ir(&ir, &input);
+    assert!(result.success, "deep seq (32 values) should parse");
+    assert_eq!(
+        result.offset as usize,
+        input.len(),
+        "should consume all {} bytes",
+        input.len()
+    );
+
+    // Verify the value tree has the expected structure: Tagged(root) -> Seq of 8 Tagged sub-rules.
+    let root = result.value.as_ref().unwrap();
+    match root {
+        Value::Tagged {
+            tag: 0, children, ..
+        } => {
+            // Root should contain a flattened or nested structure with 8 sub-rule results.
+            assert!(
+                !children.is_empty(),
+                "root should have children from 8 sub-rules"
+            );
+        }
+        other => panic!("expected Tagged(root), got {:?}", other),
+    }
+}
+
 // ── End-to-end ──────────────────────────────────────────────────────────────
 
 #[test]

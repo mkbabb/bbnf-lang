@@ -26,6 +26,7 @@ dhat = { version = "0.3", optional = true }
 dhat-heap = ["dep:dhat"]
 
 [dev-dependencies]
+regex = "1"
 tempfile = "3"
 bbnf_derive = { version = "0.2", path = "../bbnf-derive" }
 pprint = "0.3"

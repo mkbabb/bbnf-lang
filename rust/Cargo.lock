@@ -114,6 +114,7 @@ dependencies = [
  "pprint",
  "proc-macro2",
  "quote",
+ "regex",
  "regex-syntax",
  "serde",
  "serde_json",
@@ -147,6 +148,7 @@ version = "0.1.6"
 dependencies = [
  "parse_that",
  "rayon",
+ "regex",
  "regex-syntax",
  "rmp-serde",
  "rustc-hash 2.1.2",

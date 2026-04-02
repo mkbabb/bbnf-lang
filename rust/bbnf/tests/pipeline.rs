@@ -803,6 +803,52 @@ fn pipeline_css_vm_comment_in_value() {
 }
 
 
+// ── Full-file VM parsing ───────────────────────────────────────────────────
+
+fn assert_vm_full_parse(grammar_path: &str, data_path: &str) {
+    let grammar = std::fs::read_to_string(grammar_path)
+        .unwrap_or_else(|e| panic!("{}: {}", grammar_path, e));
+    let ir = compile_grammar(&grammar, &PipelineOptions::default()).unwrap();
+    let program = compile_bytecode(&ir);
+    let input = std::fs::read_to_string(data_path)
+        .unwrap_or_else(|e| panic!("{}: {}", data_path, e));
+    let mut interp = Interpreter::new(&program, &input);
+    let r = interp.run();
+    assert!(r.success, "{}: VM parse failed", data_path);
+    assert!(
+        r.offset as usize >= input.trim_end().len(),
+        "{}: VM incomplete parse ({}/{})",
+        data_path,
+        r.offset,
+        input.len(),
+    );
+}
+
+#[test]
+fn pipeline_vm_full_json_data() {
+    assert_vm_full_parse("../../grammar/json/json.bbnf", "../../data/json/data.json");
+}
+
+#[test]
+fn pipeline_vm_full_json_twitter() {
+    assert_vm_full_parse("../../grammar/json/json.bbnf", "../../data/json/twitter.json");
+}
+
+#[test]
+fn pipeline_vm_full_json_canada() {
+    assert_vm_full_parse("../../grammar/json/json.bbnf", "../../data/json/canada.json");
+}
+
+#[test]
+fn pipeline_vm_full_css_normalize() {
+    assert_vm_full_parse("../../grammar/css/pretty.bbnf", "../../data/css/normalize.css");
+}
+
+#[test]
+fn pipeline_vm_full_css_bootstrap() {
+    assert_vm_full_parse("../../grammar/css/pretty.bbnf", "../../data/css/bootstrap.css");
+}
+
 #[test]
 fn pipeline_css_vm_backdrop_block() {
     let grammar = std::fs::read_to_string("../../grammar/css/pretty.bbnf")

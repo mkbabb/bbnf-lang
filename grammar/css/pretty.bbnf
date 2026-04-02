@@ -5,10 +5,12 @@
 // Uses explicit `ws` (comment-aware whitespace) instead of `?w` (which only
 // trims \s) so inline comments like `/* 1 */` are consumed correctly.
 
-// Comments + whitespace — single regex hits sp_css_ws_comment() SIMD fast path
-// @ws overrides ?w for the delimiter-scan optimizer (same pattern as the explicit ws rule)
-@ws /(?s)(?:\s|\/\*.*?\*\/)*/ ;
-ws = /(?s)(?:\s|\/\*.*?\*\/)*/ ;
+// Comments + whitespace — single regex hits sp_css_ws_comment() SIMD fast path.
+// Uses DFA-compatible comment body: [^*]* matches non-star chars, then (\*+[^/][^*]*)*
+// handles star sequences that aren't followed by /, and \*+/ matches the closing.
+// This avoids non-greedy .*? which DFA engines compile as greedy .* .
+@ws /(?s)(?:\s|\/\*[^*]*(?:\*+[^\/][^*]*)*\*+\/)*/ ;
+ws = /(?s)(?:\s|\/\*[^*]*(?:\*+[^\/][^*]*)*\*+\/)*/ ;
 
 // Opaque tokens — @token forces fusion-style inlining + span eligibility.
 // Variant preserved (unlike @inline), so @pretty can still reference them.

@@ -783,3 +783,54 @@ fn pipeline_span_capture_type_inference() {
     assert!(result.success, "span capture should parse '123,456'");
     assert_eq!(result.offset as usize, 7);
 }
+
+#[test]
+fn pipeline_css_vm_comment_in_value() {
+    let grammar = std::fs::read_to_string("../../grammar/css/pretty.bbnf")
+        .expect("failed to read pretty.bbnf");
+    let ir = compile_grammar(&grammar, &PipelineOptions::default()).unwrap();
+    let program = compile_bytecode(&ir);
+
+    // Minimal reproduce: /*!*/ comment inside var() value
+    let input = ".foo { --tw-sepia: var(--tw-empty,/*!*/ /*!*/); -webkit-filter: blur(1px); }";
+    let r = run_program(&program, input);
+    eprintln!("comment-in-value: success={} offset={}/{}", r.success, r.offset, input.len());
+    if (r.offset as usize) < input.len() {
+        eprintln!("REMAINING: {:?}", &input[r.offset as usize..]);
+    }
+    assert!(r.success, "should parse CSS with /*!*/ in value");
+    assert_eq!(r.offset as usize, input.len(), "should consume all input");
+}
+
+
+#[test]
+fn pipeline_css_vm_backdrop_block() {
+    let grammar = std::fs::read_to_string("../../grammar/css/pretty.bbnf")
+        .expect("failed to read pretty.bbnf");
+    let ir = compile_grammar(&grammar, &PipelineOptions::default()).unwrap();
+    let program = compile_bytecode(&ir);
+
+    // Extract the exact block that fails — the backdrop-filter rule
+    let input = r#"
+.\32xl\:backdrop-filter {
+    --tw-backdrop-blur: var(--tw-empty,/*!*/ /*!*/);
+    --tw-backdrop-brightness: var(--tw-empty,/*!*/ /*!*/);
+    --tw-backdrop-contrast: var(--tw-empty,/*!*/ /*!*/);
+    --tw-backdrop-grayscale: var(--tw-empty,/*!*/ /*!*/);
+    --tw-backdrop-hue-rotate: var(--tw-empty,/*!*/ /*!*/);
+    --tw-backdrop-invert: var(--tw-empty,/*!*/ /*!*/);
+    --tw-backdrop-opacity: var(--tw-empty,/*!*/ /*!*/);
+    --tw-backdrop-saturate: var(--tw-empty,/*!*/ /*!*/);
+    --tw-backdrop-sepia: var(--tw-empty,/*!*/ /*!*/);
+    -webkit-backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast);
+            backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast);
+  }
+"#.trim();
+    let r = run_program(&program, input);
+    eprintln!("backdrop: success={} offset={}/{}", r.success, r.offset, input.len());
+    if (r.offset as usize) < input.len() {
+        eprintln!("REMAINING: {:?}", &input[r.offset as usize..]);
+    }
+    assert_eq!(r.offset as usize, input.len(), "should consume all");
+}
+

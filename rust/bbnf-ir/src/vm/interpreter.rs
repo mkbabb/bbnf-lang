@@ -498,17 +498,12 @@ impl<'prog> Interpreter<'prog> {
     #[inline(always)]
     fn exec_match_regex(&mut self, sid: u32) {
         let start = self.offset as usize;
-        let bytes = self.input.as_bytes();
 
-        // Use pre-compiled DFA from the program (zero per-parse compilation).
-        // find_at returns the absolute end position in bytes (not a length).
         let dfa = self.program.compiled_regexes[sid as usize]
             .as_ref()
             .expect("MatchRegex references non-regex StringId");
 
-        if let Some(end) = dfa.find_at(bytes, start) {
-            // Zero-width matches are valid (e.g., /=?/ matching empty).
-            // Produce a zero-length Span and succeed.
+        if let Some(end) = dfa.find_at(self.input.as_bytes(), start) {
             self.values.push(Value::Span(self.offset, end as u32));
             self.offset = end as u32;
             self.is_error = false;
@@ -601,15 +596,12 @@ impl<'prog> Interpreter<'prog> {
     #[inline(always)]
     fn exec_trim_ws_pattern(&mut self, sid: u32) {
         let start = self.offset as usize;
-        let bytes = self.input.as_bytes();
         let dfa = self.program.compiled_regexes[sid as usize]
             .as_ref()
             .expect("TrimWsPattern references non-regex StringId");
-        // find_at returns the absolute end position in bytes.
-        if let Some(end) = dfa.find_at(bytes, start) {
+        if let Some(end) = dfa.find_at(self.input.as_bytes(), start) {
             self.offset = end as u32;
         }
-        // Always succeed — whitespace is optional.
         self.pc += 1;
     }
 }

@@ -151,9 +151,10 @@ pub struct BytecodeProgram {
     pub dispatch_tables: Vec<DispatchData>,
 
     /// Pre-compiled DFA patterns, indexed by StringId.
-    /// `None` for string IDs that are not regex patterns.
+    /// `None` for string IDs that are not regex patterns (or DFA compilation failed).
     #[serde(skip)]
     pub compiled_regexes: Vec<Option<parse_that::regex_engine::Dfa>>,
+
 
     /// FOLLOW sets per rule, for error recovery and expected-token reporting.
     /// Populated from `GrammarIR::follow_sets` during compilation.

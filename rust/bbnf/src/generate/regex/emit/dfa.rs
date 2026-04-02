@@ -390,7 +390,19 @@ fn emit_tier_b(dfa: &Dfa) -> TokenStream {
 
     let num_cls_lit = proc_macro2::Literal::usize_unsuffixed(num_cls);
     let trans_len_lit = proc_macro2::Literal::usize_unsuffixed(num_states * num_cls);
-    let accept_mask_lit = proc_macro2::Literal::u64_unsuffixed(dfa.accept_mask);
+
+    // Build accept bitset — one u64 per 64 states. No arbitrary limit.
+    let num_words = (num_states + 63) / 64;
+    let mut accept_words = vec![0u64; num_words];
+    for (i, s) in dfa.states.iter().enumerate() {
+        if s.is_accept {
+            accept_words[i / 64] |= 1u64 << (i % 64);
+        }
+    }
+    let accept_lits: Vec<_> = accept_words.iter()
+        .map(|w| proc_macro2::Literal::u64_unsuffixed(*w))
+        .collect();
+    let num_words_lit = proc_macro2::Literal::usize_unsuffixed(num_words);
 
     let start_accept = if dfa.states[0].is_accept {
         quote! { let mut __last_accept: Option<usize> = Some(__start); }
@@ -402,7 +414,7 @@ fn emit_tier_b(dfa: &Dfa) -> TokenStream {
         {
             static __CLASSES: [u8; 256] = [#(#class_bytes),*];
             static __TRANS: [u8; #trans_len_lit] = [#(#trans_bytes),*];
-            const __ACCEPT: u64 = #accept_mask_lit;
+            static __ACCEPT: [u64; #num_words_lit] = [#(#accept_lits),*];
 
             let __start = state.offset;
             let __end = state.src_bytes.len();
@@ -419,7 +431,7 @@ fn emit_tier_b(dfa: &Dfa) -> TokenStream {
                 if __next == 0xFF { break; }
                 __s = __next;
                 __pos += 1;
-                if __ACCEPT & (1u64 << __s as u64) != 0 {
+                if __ACCEPT[__s as usize / 64] & (1u64 << (__s as usize % 64)) != 0 {
                     __last_accept = Some(__pos);
                 }
             }

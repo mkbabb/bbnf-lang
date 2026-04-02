@@ -571,6 +571,7 @@ fn pipeline_google_sheets_formula() {
         formatted_space, formatted,
         "trailing space should not change formatting"
     );
+    }
 }
 
 #[test]

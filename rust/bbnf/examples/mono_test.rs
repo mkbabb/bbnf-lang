@@ -23,7 +23,7 @@ fn main() {
 
         // Span cold — single parse, fresh parser construction
         let start = std::time::Instant::now();
-        let span_p = P::value_span();
+        let span_p = P::value();
         let _ = std::hint::black_box(span_p.parse(std::hint::black_box(&input)));
         let span_cold = start.elapsed();
 

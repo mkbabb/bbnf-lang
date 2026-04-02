@@ -48,15 +48,12 @@ fn sep_by_ws_until_uses_scratch_for_arena_mode() {
     bbnf_ir::passes::project_types(&mut ir);
 
     let ident = quote::format_ident!("TestParser");
-    let attrs = ParserAttributes {
-        arena: true,
-        ..Default::default()
-    };
+    let attrs = ParserAttributes::default();
     let ctx = IrCodegenCtx::new(&ir, &ident, &attrs);
 
-    // Verify that scratch types were collected and arena ctx generates correctly.
+    // Verify that scratch types were collected and alloc ctx generates correctly.
     assert!(!ctx.scratch_types.is_empty(), "scratch types should be collected");
-    let (struct_def, helper_fn) = ctx.generate_arena_ctx();
+    let (struct_def, helper_fn) = ctx.generate_alloc_ctx();
     let struct_str = struct_def.to_string();
     let helper_str = helper_fn.to_string();
     assert!(struct_str.contains("__s0"), "arena ctx should have scratch field: {}", struct_str);

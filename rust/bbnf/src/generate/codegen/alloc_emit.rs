@@ -100,6 +100,26 @@ impl IrCodegenCtx<'_> {
                 #s_ident: ::std::cell::UnsafeCell::new(Vec::with_capacity(64))
             });
 
+            // For Enum-typed scratch, use the arena's alloc_slice_clone (zero-copy
+            // bump allocation). For all other scratch types, the BumpArena<Enum>
+            // can't alloc non-Enum slices, so use Box::leak(Vec::into_boxed_slice)
+            // to produce a 'a-lifetime slice from the scratch Vec.
+            let collect_body = if *elem_td == TypeDesc::Enum {
+                quote::quote! {
+                    let s = self.#s_ident();
+                    let slice = self.__arena.alloc_slice_clone(&s[depth..]);
+                    s.truncate(depth);
+                    slice
+                }
+            } else {
+                quote::quote! {
+                    let s = self.#s_ident();
+                    let v: Vec<#elem_ty> = s[depth..].to_vec();
+                    s.truncate(depth);
+                    Box::leak(v.into_boxed_slice())
+                }
+            };
+
             accessors.push(quote::quote! {
                 #[inline(always)]
                 #[allow(non_snake_case)]
@@ -110,10 +130,7 @@ impl IrCodegenCtx<'_> {
                 #[inline(always)]
                 #[allow(non_snake_case)]
                 fn #c_ident(&'a self, depth: usize) -> &'a [#elem_ty] {
-                    let s = self.#s_ident();
-                    let slice = self.__arena.alloc_slice_clone(&s[depth..]);
-                    s.truncate(depth);
-                    slice
+                    #collect_body
                 }
             });
         }

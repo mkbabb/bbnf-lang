@@ -191,10 +191,6 @@ pub fn project_types(ir: &mut GrammarIR) {
     let mut type_map = recorder.into_map();
 
     // Correction pass: align Repeat vec_elem_types with ir.types.
-    // The projection may compute different Vec inner types than ir.types because
-    // project_seq applies Span compression + try_flatten_pair AFTER computing child
-    // types. The Repeat inner's project_node_in_vec result may disagree with the
-    // post-flattened Vec inner in ir.types.
     let types_map: HashMap<RuleId, TypeDesc> =
         cache.into_iter().collect();
     for rule in &ir.rules {
@@ -205,18 +201,69 @@ pub fn project_types(ir: &mut GrammarIR) {
     }
 
     // Collect distinct scratch types for codegen Vec generation.
-    // Two sources: (a) all vec_elem_type values from the TypeMap, and
-    // (b) Vec inners extracted from ir.types (authoritative post-correction).
+    //
+    // Only collect from actual Repeat inners (hi > 1), not from all vec_elem_type
+    // values in the TypeMap. The TypeMap records vec_elem_types for every node
+    // (including non-Repeat nodes like Seq and Alt), and those "ghost" types would
+    // create scratch fields that call alloc_slice_clone on BumpArena<Enum> with
+    // incompatible element types.
+    //
+    // Two sources, both targeted at actual Vec elements:
+    // (a) Walk rule bodies to find Repeat inners and collect their vec_elem_types
+    // (b) Vec inners extracted from ir.types (handles nested Vecs in rule types)
     let mut scratch: Vec<TypeDesc> = Vec::new();
-    for ty in type_map.all_vec_elem_type_values() {
-        if *ty != TypeDesc::Span && !scratch.contains(ty) {
-            scratch.push(ty.clone());
+
+    fn collect_repeat_scratch(node: &IrNode, map: &utils::TypeMap, out: &mut Vec<TypeDesc>) {
+        match node {
+            IrNode::Repeat { inner, hi, .. } if *hi > 1 => {
+                if let Some(ty) = map.vec_elem_type(inner) {
+                    if *ty != TypeDesc::Span && !out.contains(ty) {
+                        out.push(ty.clone());
+                    }
+                }
+                collect_repeat_scratch(inner, map, out);
+            }
+            IrNode::Seq(children) => {
+                for c in children {
+                    collect_repeat_scratch(c, map, out);
+                }
+            }
+            IrNode::Alt(branches, _) => {
+                for b in branches {
+                    collect_repeat_scratch(&b.node, map, out);
+                }
+            }
+            IrNode::Skip(l, r) | IrNode::Next(l, r) | IrNode::Minus(l, r) => {
+                collect_repeat_scratch(l, map, out);
+                collect_repeat_scratch(r, map, out);
+            }
+            IrNode::OptionalWhitespace(inner)
+            | IrNode::Map { inner, .. }
+            | IrNode::Negate(inner) => {
+                collect_repeat_scratch(inner, map, out);
+            }
+            IrNode::Repeat { inner, .. } => {
+                collect_repeat_scratch(inner, map, out);
+            }
+            IrNode::TokenDispatch { arms, fallback, .. } => {
+                for arm in arms {
+                    collect_repeat_scratch(&arm.continuation, map, out);
+                }
+                collect_repeat_scratch(fallback, map, out);
+            }
+            IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon | IrNode::Ref(_) => {}
         }
     }
+    for rule in &ir.rules {
+        collect_repeat_scratch(&rule.body, &type_map, &mut scratch);
+    }
+
+    // Also collect Vec inners from rule types (handles nested Vecs like
+    // Vec(Vec(Enum)) where the inner Vec is a valid scratch element type).
     fn collect_scratch_from_td(td: &TypeDesc, out: &mut Vec<TypeDesc>) {
         match td {
             TypeDesc::Vec(inner) => {
-                if !out.contains(inner.as_ref()) {
+                if *inner.as_ref() != TypeDesc::Span && !out.contains(inner.as_ref()) {
                     out.push(inner.as_ref().clone());
                 }
                 collect_scratch_from_td(inner, out);

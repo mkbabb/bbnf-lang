@@ -125,7 +125,7 @@ pub fn emit_nibble_lut_scan(targets: &[u8]) -> Option<TokenStream> {
                 &state.src_bytes[__start..],
                 &__LO_LUT,
                 &__HI_LUT,
-            )
+            ).map(|(pos, _)| pos)
         }
     })
 }

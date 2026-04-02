@@ -32,7 +32,7 @@ fn bench_file(name: &str) {
 
     // Cold span — single parse, fresh parser construction
     let start = std::time::Instant::now();
-    let span_p = JsonParser::value_span();
+    let span_p = JsonParser::value();
     let _ = std::hint::black_box(span_p.parse(std::hint::black_box(&input)));
     let span_cold = start.elapsed();
 

@@ -683,6 +683,9 @@ mod tests {
             type_map: None,
         };
 
+        let mut ir = ir;
+        bbnf_ir::passes::project_types(&mut ir);
+
         let ident = quote::format_ident!("TestParser");
         let attrs = ParserAttributes::default();
         let ctx = IrCodegenCtx::new(&ir, &ident, &attrs);

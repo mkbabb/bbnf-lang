@@ -12,7 +12,7 @@ What follows is the chronological arc of performance work, from the TypeScript p
 
 ## Cold Benchmarks
 
-Early benchmarks reused a pre-constructed `Parser` across iterations, which measured combinator cache retrieval rather than actual parsing. Cold-parse numbers were 40–60% lower. All benchmarks now construct a fresh `BumpArena` and `Parser` per iteration—no shared state, no warm cache.
+Early benchmarks reused a pre-constructed `Parser` across iterations, which measured combinator cache retrieval rather than actual parsing. Cold-parse numbers were 40–60% lower. All benchmarks now construct a fresh `BumpSlab` and `Parser` per iteration—no shared state, no warm cache.
 
 ## TypeScript Foundations
 
@@ -20,7 +20,7 @@ Three optimization rounds took the TS parser from 746 to 4,779 ops/s (6.4x): mut
 
 ## Monolithic Arena Codegen
 
-Combinator chains construct ~30 `Parser` objects with ~60 heap allocations per parse. Monolithic codegen generates direct recursive functions—`fn __rule_arena(state) → Option<ArenaEnum>`—with zero combinator overhead. `BumpArena<T>`, an `UnsafeCell`-based bump allocator with no `RefCell` borrow tracking, replaced `typed_arena`.
+Combinator chains construct ~30 `Parser` objects with ~60 heap allocations per parse. Monolithic codegen generates direct recursive functions—`fn __rule_arena(state) → Option<ArenaEnum>`—with zero combinator overhead. `BumpSlab`, a byte-based bump allocator with no `RefCell` borrow tracking, replaced `typed_arena`.
 
 Sub-phases: IIFE closure elision, whitespace trim coalescing, single-site cyclic inlining, discarded Span skip, unified `SepByConfig`, type-aware Alt elision, B.1 Span collapse for non-prettify grammars.
 
@@ -135,7 +135,7 @@ The gap widens on tailwind because dispatch tables and inline byte scanners amor
 
 ## Current Numbers
 
-All numbers are cold per-parse throughput in MB/s. Fresh `BumpArena` + `Parser` per iteration. `mimalloc` global allocator.
+All numbers are cold per-parse throughput in MB/s. Fresh `BumpSlab` + `Parser` per iteration. `mimalloc` global allocator.
 
 ### JSON
 

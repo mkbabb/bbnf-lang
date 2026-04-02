@@ -613,7 +613,7 @@ pub(super) fn emit_scan(
             #ws_post
             if state.src_bytes.get(state.offset).copied() != Some(#close_lit) { return None; }
             state.offset += 1;
-            Some(&*#helper(state).arena().alloc(#wrap_variant(#collect_expr)))
+            Some(&*#helper(state).slab().alloc(#wrap_variant(#collect_expr)))
         }
     }
 }

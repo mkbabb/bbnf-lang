@@ -5,7 +5,7 @@
 //! Exercises generated worst-case inputs: deep nesting, wide collections,
 //! long strings, escape-heavy content, and mixed-type arrays.
 //!
-//! Fresh BumpArena + Parser per iteration. No warm-cache benchmarks.
+//! Fresh BumpSlab + Parser per iteration. No warm-cache benchmarks.
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;

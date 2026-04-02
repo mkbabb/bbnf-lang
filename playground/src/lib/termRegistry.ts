@@ -56,7 +56,7 @@ export const TERM_REGISTRY: Record<string, TermEntry> = {
     },
     "@arena": {
         description:
-            "Triggers monolithic arena codegen — direct recursive functions using BumpArena instead of combinator chains.",
+            "Triggers monolithic arena codegen — direct recursive functions using BumpSlab instead of combinator chains.",
         docSlug: "performance/arena-handoff",
         category: "directive",
     },
@@ -138,9 +138,9 @@ export const TERM_REGISTRY: Record<string, TermEntry> = {
     },
     "arena allocation": {
         description:
-            "Bump allocation strategy where objects are allocated contiguously and freed all at once. Used via BumpArena.",
+            "Bump allocation strategy where objects are allocated contiguously and freed all at once. Used via BumpSlab.",
         docSlug: "performance/arena-handoff",
-        docAnchor: "bumparena",
+        docAnchor: "bumpslab",
         category: "concept",
     },
     "span eligibility": {
@@ -167,11 +167,11 @@ export const TERM_REGISTRY: Record<string, TermEntry> = {
     },
 
     // ── Types ───────────────────────────────────────────────────
-    "BumpArena": {
+    "BumpSlab": {
         description:
-            "UnsafeCell-based bump allocator in parse_that. Zero RefCell borrow tracking per alloc — faster than typed_arena.",
+            "Byte-based bump allocator in parse_that. Generic alloc<T>/alloc_slice_clone<T> methods — faster than typed_arena.",
         docSlug: "performance/arena-handoff",
-        docAnchor: "bumparena",
+        docAnchor: "bumpslab",
         category: "type",
     },
     "GrammarIR": {

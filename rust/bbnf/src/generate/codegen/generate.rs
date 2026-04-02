@@ -18,7 +18,7 @@ use super::{MonoCtx, emit_mono_expr};
 
 /// Generate all monolithic methods for all rules.
 ///
-/// Arena-only: `fn __rule<'a>(state) -> Option<Enum<'a>>` with arena.alloc.
+/// Arena-only: `fn __rule<'a>(state) -> Option<Enum<'a>>` with slab.alloc.
 ///
 /// For each rule, emits:
 /// 1. A private associated fn (internal dispatch)

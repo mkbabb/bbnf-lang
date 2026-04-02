@@ -36,7 +36,7 @@ fn bench_file(name: &str) {
     let _ = std::hint::black_box(span_p.parse(std::hint::black_box(&input)));
     let span_cold = start.elapsed();
 
-    // Arena — fresh BumpArena + parser per iteration
+    // Arena — fresh BumpSlab + parser per iteration
     let n = if len > 1_000_000 { 5 } else { 20 };
     let start = std::time::Instant::now();
     for _ in 0..n {

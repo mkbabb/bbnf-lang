@@ -84,7 +84,7 @@ Compile-time code generation. Reads `.bbnf`, emits Rust `TokenStream`.
 | `remove_left_recursion` | Paull transform before codegen |
 | `ignore_whitespace` | Auto-trim |
 | `debug` | Instrument all rules for trace output |
-| `arena` | Monolithic arena codegen with BumpArena |
+| `arena` | Monolithic arena codegen with BumpSlab |
 | `span` | Span-only monolithic codegen (zero allocation) |
 
 **Consumers:** gorgeous (5 built-in formatters), WASM AOT wrappers

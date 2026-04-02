@@ -1,5 +1,5 @@
 use bbnf_derive::Parser;
-use parse_that::BumpArena;
+use parse_that::BumpSlab;
 
 #[allow(dead_code)]
 mod css_types {
@@ -13,9 +13,9 @@ mod css_types {
 struct CssL4Parser;
 
 fn test_input(label: &str, input: &str) {
-    let arena = BumpArena::<CssL4ParserEnum<'_>>::with_capacity(64);
+    let slab = BumpSlab::with_capacity(64 * std::mem::size_of::<CssL4ParserEnum>());
     let (result, state) =
-        CssL4Parser::stylesheet().parse_return_state_with_context(input, &arena);
+        CssL4Parser::stylesheet().parse_return_state_with_context(input, &slab);
     let pct = if input.is_empty() {
         100
     } else {

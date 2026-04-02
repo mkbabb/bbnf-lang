@@ -6,7 +6,7 @@
 
 use std::{collections::HashSet, fmt, ops::Deref, ptr::NonNull};
 
-use parse_that::BumpArena;
+use parse_that::BumpSlab;
 use rustc_hash::FxHashMap;
 
 use super::bytecode::{BytecodeProgram, Op};
@@ -177,7 +177,7 @@ pub struct ParseResult {
     pub success: bool,
     /// Diagnostics collected during parsing (populated when FOLLOW sets are available).
     pub diagnostics: Vec<ParseDiagnostic>,
-    _arena: BumpArena<Value>,
+    _slab: BumpSlab,
 }
 
 impl fmt::Debug for ParseResult {
@@ -197,7 +197,7 @@ pub struct Interpreter<'prog> {
     program: &'prog BytecodeProgram,
     input: &'prog str,
     input_bytes: &'prog [u8],
-    arena: BumpArena<Value>,
+    slab: BumpSlab,
 
     pc: u32,
     offset: u32,
@@ -242,7 +242,7 @@ impl<'prog> Interpreter<'prog> {
             program,
             input,
             input_bytes: input.as_bytes(),
-            arena: BumpArena::with_capacity(input.len() / 16),
+            slab: BumpSlab::with_capacity(input.len() / 16 * std::mem::size_of::<Value>()),
             pc: 0,
             offset: 0,
             is_error: false,
@@ -429,13 +429,13 @@ impl<'prog> Interpreter<'prog> {
             value,
             offset: self.offset,
             diagnostics: std::mem::take(&mut self.diagnostics),
-            _arena: std::mem::take(&mut self.arena),
+            _slab: std::mem::take(&mut self.slab),
         }
     }
 
     #[inline(always)]
     fn collect_values_from(&mut self, start: usize) -> ValueSlice {
-        let collected = ValueSlice::from_slice(self.arena.alloc_slice_clone(&self.values[start..]));
+        let collected = ValueSlice::from_slice(self.slab.alloc_slice_clone(&self.values[start..]));
         self.values.truncate(start);
         collected
     }

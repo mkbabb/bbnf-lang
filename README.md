@@ -122,16 +122,16 @@ BBNF's `@pretty` directives drive pretty-printing in the playground and Prettier
 
 ### Arena Parsing
 
-`#[parser(arena)]` on the derive macro generates a second set of parser methods that use `BumpArena<T>` for allocation instead of `Box<T>`. The arena path emits monolithic recursive functions—direct `match` dispatch on the first byte, inlined rule bodies, zero combinator construction overhead. Fresh arena and parser per parse; bulk deallocation on drop.
+`#[parser(arena)]` on the derive macro generates a second set of parser methods that use `BumpSlab` for allocation instead of `Box<T>`. The arena path emits monolithic recursive functions—direct `match` dispatch on the first byte, inlined rule bodies, zero combinator construction overhead. Fresh slab and parser per parse; bulk deallocation on drop.
 
 ```rust
 #[derive(Parser)]
 #[parser(path = "json.bbnf", arena)]
 struct JsonParser;
 
-let arena = BumpArena::<JsonParserArenaEnum<'_>>::with_capacity(input.len() / 32);
+let slab = BumpSlab::with_capacity(input.len() / 32 * 32);
 let ast = JsonParser::value_arena()
-    .parse_with_context(&input, &arena)
+    .parse_with_context(&input, &slab)
     .unwrap();
 ```
 

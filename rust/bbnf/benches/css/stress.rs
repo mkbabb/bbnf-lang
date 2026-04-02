@@ -5,7 +5,7 @@
 //! Exercises generated worst-case inputs: many rules, wide selectors,
 //! deep media nesting, and large declaration blocks.
 //!
-//! Fresh BumpArena + Parser per iteration. No warm-cache benchmarks.
+//! Fresh BumpSlab + Parser per iteration. No warm-cache benchmarks.
 
 #[cfg(feature = "dhat-heap")]
 #[global_allocator]

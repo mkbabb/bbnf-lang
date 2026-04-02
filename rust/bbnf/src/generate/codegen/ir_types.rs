@@ -227,9 +227,9 @@ impl<'a> IrCodegenCtx<'a> {
         }
     }
 
-    /// Emit alloc via AllocCtx: `.arena().alloc()`.
+    /// Emit alloc via AllocCtx: `.slab().alloc()`.
     fn alloc_tokens(&self, helper_call: TokenStream, value: &TokenStream) -> TokenStream {
-        quote::quote! { #helper_call.arena().alloc(#value) }
+        quote::quote! { #helper_call.slab().alloc(#value) }
     }
 
     pub fn has_sp_method(&self, name: &str) -> bool {
@@ -266,8 +266,8 @@ impl<'a> IrCodegenCtx<'a> {
         let helper_call = quote::quote! { #helper_ident(#state_ident) };
         let alloc = self.alloc_tokens(helper_call, &quote::quote! { #expr });
         quote::quote! {{
-            let __arena_alloc = #alloc;
-            &*__arena_alloc
+            let __slab_alloc = #alloc;
+            &*__slab_alloc
         }}
     }
 
@@ -297,7 +297,7 @@ impl<'a> IrCodegenCtx<'a> {
 
     /// Emit code that allocs a value expression into the `boxed_enum_type`.
     ///
-    /// `&*helper(state).arena().alloc(expr)`.
+    /// `&*helper(state).slab().alloc(expr)`.
     pub fn emit_alloc(&self, value_expr: &TokenStream) -> TokenStream {
         let helper = self.alloc_helper_ident();
         let helper_call = quote::quote! { #helper(state) };
@@ -307,7 +307,7 @@ impl<'a> IrCodegenCtx<'a> {
 
     /// Emit code that allocs a value via a let binding + alloc.
     ///
-    /// `let __alloc = helper(state).arena().alloc(expr); &*__alloc`
+    /// `let __alloc = helper(state).slab().alloc(expr); &*__alloc`
     ///
     /// The let-binding form extends the borrow lifetime.
     pub fn emit_alloc_let(&self, value_expr: &TokenStream) -> TokenStream {

@@ -205,7 +205,7 @@ pub fn project_types(ir: &mut GrammarIR) {
     // Only collect from actual Repeat inners (hi > 1), not from all vec_elem_type
     // values in the TypeMap. The TypeMap records vec_elem_types for every node
     // (including non-Repeat nodes like Seq and Alt), and those "ghost" types would
-    // create scratch fields that call alloc_slice_clone on BumpArena<Enum> with
+    // create scratch fields that call alloc_slice_clone on BumpSlab with
     // incompatible element types.
     //
     // Two sources, both targeted at actual Vec elements:

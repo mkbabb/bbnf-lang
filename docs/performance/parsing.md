@@ -10,7 +10,7 @@ parse_that (Rust) and parse-that (TypeScript) are the parsing backbone. Both use
 
 ## Rust: `JSON` — Arena
 
-Arena parsing returns typed enum trees allocated via `BumpArena`. Each iteration constructs a fresh arena and parser—cold per-parse throughput.
+Arena parsing returns typed enum trees allocated via `BumpSlab`. Each iteration constructs a fresh slab and parser—cold per-parse throughput.
 
 ```bench-chart
 { "title": "JSON Arena", "unit": "MB/s",
@@ -35,7 +35,7 @@ Arena parsing returns typed enum trees allocated via `BumpArena`. Each iteration
 
 ## Rust: `JSON` — Borrow
 
-Numbers parsed to f64, strings borrowed from input without escape decoding. Cold per-parse with `BumpArena`. BBNF uses `Vec<(K,V)>` for objects; nom, winnow, and pest use `HashMap<&str,V>`.
+Numbers parsed to f64, strings borrowed from input without escape decoding. Cold per-parse with `BumpSlab`. BBNF uses `Vec<(K,V)>` for objects; nom, winnow, and pest use `HashMap<&str,V>`.
 
 ```bench-chart
 { "title": "JSON Borrow — No Decode", "unit": "MB/s",
@@ -62,7 +62,7 @@ All benchmarks use mimalloc. nom, winnow, and pest construct per-iteration (cold
 
 ## Rust: `JSON` — Copy
 
-Full escape decoding with owned or `Cow` string allocation. Cold per-parse with `BumpArena` for BBNF. sonic-rs uses SIMD + its own arena. serde_json_borrow and jiter use `Cow`/borrowed output with decode. simd-json uses SIMD scanning.
+Full escape decoding with owned or `Cow` string allocation. Cold per-parse with `BumpSlab` for BBNF. sonic-rs uses SIMD + its own arena. serde_json_borrow and jiter use `Cow`/borrowed output with decode. simd-json uses SIMD scanning.
 
 ```bench-chart
 { "title": "JSON Copy", "unit": "MB/s",
@@ -89,7 +89,7 @@ All Rust benchmarks use mimalloc. BBNF parsers are generated from a [`.bbnf` gra
 
 ## Rust: `CSS` — Arena + Span
 
-BBNF uses [`@ws`](../../grammar/BBNF.md) for SIMD comment-aware whitespace, `@inline` for trivial helper rules, and `@token` for lexical tokens with fusion-style inlining. Cold per-parse with `BumpArena`. cssparser (Mozilla's tokenizer) uses a visitor pattern that counts rules and declarations without building an AST.
+BBNF uses [`@ws`](../../grammar/BBNF.md) for SIMD comment-aware whitespace, `@inline` for trivial helper rules, and `@token` for lexical tokens with fusion-style inlining. Cold per-parse with `BumpSlab`. cssparser (Mozilla's tokenizer) uses a visitor pattern that counts rules and declarations without building an AST.
 
 ```bench-chart
 { "title": "CSS Arena + Span", "unit": "MB/s",

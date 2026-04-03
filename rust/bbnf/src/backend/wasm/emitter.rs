@@ -197,85 +197,18 @@ impl Emitter for WasmEmitter {
 
     fn emit_alt_dispatch(
         &mut self,
-        table: &AltDispatch,
-        branches: Vec<(AltBranchInfo, String)>,
+        _table: &AltDispatch,
+        mut branches: Vec<(AltBranchInfo, String)>,
         fallback: Option<(AltBranchInfo, String)>,
-        _alloc: AllocStrategy,
+        alloc: AllocStrategy,
         ctx: &mut WasmEmitCtx,
     ) -> String {
-        // WASM br_table dispatch.
-        let save = ctx.fresh("disp_save");
-        let result = ctx.fresh("disp_result");
-
-        // Build branch table: byte → branch index.
-        // We need a block per branch + default.
-        let n_branches = branches.len();
-        let fb_body = fallback
-            .as_ref()
-            .map(|(_, b)| b.as_str())
-            .unwrap_or("(i32.const -1)");
-
-        let mut block_start = String::new();
-        let mut block_bodies = String::new();
-
-        // Open blocks: one per branch + one for default.
-        for i in 0..=n_branches {
-            block_start.push_str(&format!("(block $b{i} "));
+        // Delegate to checkpoint chain — correct and portable.
+        // Block-based br_table dispatch is a future optimization.
+        if let Some(fb) = fallback {
+            branches.push(fb);
         }
-
-        // br_table instruction: dispatch based on a lookup.
-        // For simplicity, use a chain of br_if instead of actual br_table
-        // (br_table needs a contiguous index, our dispatch table maps bytes to indices).
-        let byte_var = ctx.fresh("byte");
-        let mut dispatch = format!(
-            "(local.set {byte_var} (i32.load8_u (local.get {save}))) "
-        );
-
-        for (idx, (_info, _body)) in branches.iter().enumerate() {
-            let byte_patterns: Vec<u8> = table
-                .table
-                .iter()
-                .enumerate()
-                .filter(|&(_, &b)| b as usize == idx)
-                .map(|(bv, _)| bv as u8)
-                .collect();
-
-            for byte in &byte_patterns {
-                dispatch.push_str(&format!(
-                    "(br_if $b{idx} (i32.eq (local.get {byte_var}) (i32.const {byte}))) "
-                ));
-            }
-        }
-
-        // Default: jump to fallback block.
-        dispatch.push_str(&format!("(br $b{n_branches}) "));
-
-        // Close blocks with bodies (reverse order for WASM block nesting).
-        let mut result_body = format!(
-            "(local.set {save} (local.get $off)) \
-             {block_start} {dispatch}"
-        );
-
-        // Close inner blocks + emit branch bodies.
-        for (idx, (_info, body)) in branches.iter().enumerate() {
-            result_body.push_str(&format!(
-                ") ;; end $b{idx} \
-                 (local.set $off (local.get {save})) \
-                 (local.set {result} {body}) \
-                 (if (i32.ne (local.get {result}) (i32.const -1)) \
-                   (then (return (local.get {result})))) "
-            ));
-        }
-
-        // Fallback block.
-        result_body.push_str(&format!(
-            ") ;; end $b{n_branches} \
-             (local.set $off (local.get {save})) \
-             (return {fb_body}) "
-        ));
-
-        result_body.push_str("(unreachable)");
-        result_body
+        self.emit_alt_checkpoint(branches, alloc, ctx)
     }
 
     fn emit_alt_checkpoint(
@@ -592,13 +525,12 @@ impl Emitter for WasmEmitter {
         _analysis: &BackendAnalysis,
         _ctx: &mut WasmEmitCtx,
     ) -> String {
-        // WASM module header: memory declaration, imports.
-        format!(
-            "  (memory (export \"memory\") 1)\n  \
-             ;; Host imports for regex matching and number conversion\n  \
-             (import \"host\" \"match_regex\" (func $__match_regex (param i32 i32) (result i32)))\n  \
-             (import \"host\" \"number_convert\" (func $__number_convert (param i32 i32) (result i32)))\n"
-        )
+        // WASM module header: imports MUST come before all other definitions.
+        "  ;; Host imports for regex matching and number conversion\n  \
+         (import \"host\" \"match_regex\" (func $__match_regex (param i32 i32) (result i32)))\n  \
+         (import \"host\" \"number_convert\" (func $__number_convert (param i32 i32) (result i32)))\n  \
+         (memory (export \"memory\") 1)\n"
+            .to_string()
     }
 
     fn emit_grammar(

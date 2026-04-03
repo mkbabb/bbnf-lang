@@ -55,6 +55,9 @@ tree-sitter-json = "0.24"
 cssparser = "0.34"
 lightningcss = "1.0.0-alpha.70"
 
+# WASM runtime for benchmarks
+wasmtime = "29"
+
 # Number parsing for borrow/owned tiers
 fast-float2 = "0.2"
 
@@ -117,4 +120,14 @@ harness = false
 [[bench]]
 name = "google_sheets_vm"
 path = "benches/google_sheets/vm.rs"
+harness = false
+
+[[bench]]
+name = "json_ts"
+path = "benches/json/ts.rs"
+harness = false
+
+[[bench]]
+name = "json_wasm"
+path = "benches/json/wasm.rs"
 harness = false

@@ -1,136 +1,16 @@
-//! HIR-based regex classification for during-parse value conversion.
+//! Structural HIR classifiers for regex patterns.
 //!
-//! Uses `regex_syntax` to parse patterns into HIR (High-level Intermediate
-//! Representation) and classify structurally. More robust than string-level
-//! matching: normalizes `\d` / `[0-9]`, class orderings, group nesting, etc.
-//!
-//! Known-pattern detection via exact string match takes priority over HIR
-//! structural analysis, providing stable classification for canonical patterns.
+//! Pure HIR analyzers that decompose regex patterns into semantic categories
+//! (Numeric, QuotedString, HexDigits, Identifier) by walking the
+//! `regex_syntax` HIR tree.
 
 use regex_syntax::hir::{Class, ClassBytesRange, Hir, HirKind};
 
-/// Classification result for a regex pattern.
-#[derive(Debug, Clone, PartialEq)]
-pub enum RegexClass {
-    /// Matches numeric values convertible to f64.
-    Numeric {
-        allows_sign: bool,
-        allows_fraction: bool,
-        allows_exponent: bool,
-    },
-
-    /// Matches quoted strings: `"content"` or `'content'`.
-    QuotedString {
-        quote_char: u8,
-        allows_escapes: bool,
-    },
-
-    /// Matches hex digit runs: `[0-9a-fA-F]+` or similar.
-    HexDigits,
-
-    /// Matches identifier-class tokens: `[a-zA-Z_][\w-]*` or similar.
-    Identifier,
-
-    /// Canonical JSON string regex — exact-match fast path.
-    JsonString,
-
-    /// Canonical JSON number regex — exact-match fast path.
-    JsonNumber,
-
-    /// Whitespace + block-comment regex (`(?s)(?:\s|/\*.*?\*/)*`).
-    WsBlockComment,
-
-    /// CSS identifier regex (known patterns with custom-property support).
-    CssIdent,
-
-    /// CSS quoted string regex (double or single, with general escapes).
-    CssQuotedString,
-
-    /// Not classifiable — use general regex engine.
-    Unknown,
-}
-
-// ── Known-pattern constants ───────────────────────────────────────────────
-
-const JSON_STRING_PATTERNS: &[&str] = &[
-    r#""(?:[^"\\]|\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4}))*""#,
-    r#""(?:[^"\\]|\\(?:["\\\/bfnrt]|u[0-9A-Fa-f]{4}))*""#,
-    r#""(?:[^"\\]|\\(?:["\\bfnrt]|u[0-9a-fA-F]{4}))*""#,
-];
-
-const JSON_NUMBER_PATTERNS: &[&str] = &[
-    r"-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?",
-    r"-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?",
-];
-
-const WS_BLOCK_COMMENT_PATTERNS: &[&str] = &[r"(?s)(?:\s|/\*.*?\*/)*", r"(?s)(?:\s|\/\*.*?\*\/)*"];
-
-const IDENT_PATTERNS: &[&str] = &[
-    r"[\-]?[a-zA-Z_][\w-]*|--[\w-]+",
-    r"-?[a-zA-Z_][\w-]*|--[\w-]+",
-    r"[a-zA-Z_][\w-]*|--[\w-]+|-[a-zA-Z][\w-]*",
-    r"[a-zA-Z_][\w-]*",
-    r"[a-zA-Z][\w-]*",
-];
-
-const QUOTED_STRING_PATTERNS: &[&str] = &[r#""(?:[^"\\]|\\[\s\S])*"|'(?:[^'\\]|\\[\s\S])*'"#];
-
-/// Classify by exact match against known canonical patterns.
-fn classify_known_pattern(pattern: &str) -> Option<RegexClass> {
-    if JSON_STRING_PATTERNS.contains(&pattern) {
-        return Some(RegexClass::JsonString);
-    }
-    if JSON_NUMBER_PATTERNS.contains(&pattern) {
-        return Some(RegexClass::JsonNumber);
-    }
-    if WS_BLOCK_COMMENT_PATTERNS.contains(&pattern) {
-        return Some(RegexClass::WsBlockComment);
-    }
-    if IDENT_PATTERNS.contains(&pattern) {
-        return Some(RegexClass::CssIdent);
-    }
-    if QUOTED_STRING_PATTERNS.contains(&pattern) {
-        return Some(RegexClass::CssQuotedString);
-    }
-    None
-}
-
-/// Classify a regex pattern structurally via HIR, with known-pattern
-/// fast path checked first.
-pub fn classify_regex(pattern: &str) -> RegexClass {
-    // Fast path: exact match against known canonical patterns.
-    if let Some(class) = classify_known_pattern(pattern) {
-        return class;
-    }
-
-    let hir = match regex_syntax::ParserBuilder::new()
-        .utf8(false)
-        .unicode(false)
-        .build()
-        .parse(pattern)
-    {
-        Ok(h) => h,
-        Err(_) => return RegexClass::Unknown,
-    };
-
-    if let Some(class) = try_classify_numeric(&hir) {
-        return class;
-    }
-    if let Some(class) = try_classify_quoted_string(&hir) {
-        return class;
-    }
-    if try_classify_hex(&hir) {
-        return RegexClass::HexDigits;
-    }
-    if try_classify_identifier(&hir) {
-        return RegexClass::Identifier;
-    }
-    RegexClass::Unknown
-}
+use super::{RegexClass, is_literal_byte, is_negated_class_materialization, unwrap_group};
 
 // ── Numeric ────────────────────────────────────────────────────────────────
 
-fn try_classify_numeric(hir: &Hir) -> Option<RegexClass> {
+pub(super) fn try_classify_numeric(hir: &Hir) -> Option<RegexClass> {
     // Flatten the top-level concat (or treat a single node as a 1-element list).
     let parts = match hir.kind() {
         HirKind::Concat(parts) => parts.as_slice(),
@@ -382,7 +262,7 @@ fn is_exponent_letter_class(hir: &Hir) -> bool {
 
 // ── QuotedString ───────────────────────────────────────────────────────────
 
-fn try_classify_quoted_string(hir: &Hir) -> Option<RegexClass> {
+pub(super) fn try_classify_quoted_string(hir: &Hir) -> Option<RegexClass> {
     let parts = match hir.kind() {
         HirKind::Concat(parts) => parts.as_slice(),
         _ => return None,
@@ -435,7 +315,7 @@ fn contains_backslash_pattern(hir: &Hir) -> bool {
 
 // ── HexDigits ──────────────────────────────────────────────────────────────
 
-fn try_classify_hex(hir: &Hir) -> bool {
+pub(super) fn try_classify_hex(hir: &Hir) -> bool {
     // Match: [0-9a-fA-F]+ or [0-9a-fA-F]{n,m}
     if let HirKind::Repetition(rep) = hir.kind() {
         if rep.min >= 1 || rep.max.is_none() {
@@ -467,7 +347,7 @@ fn is_hex_class(hir: &Hir) -> bool {
 
 // ── Identifier ─────────────────────────────────────────────────────────────
 
-fn try_classify_identifier(hir: &Hir) -> bool {
+pub(super) fn try_classify_identifier(hir: &Hir) -> bool {
     let parts = match hir.kind() {
         HirKind::Concat(parts) => parts.as_slice(),
         _ => {
@@ -484,7 +364,7 @@ fn try_classify_identifier(hir: &Hir) -> bool {
     }
 
     // First part: must be a letter/underscore class (possibly with repetition).
-    let first = unwrap_repetition(&parts[0]).unwrap_or(&parts[0]);
+    let first = super::unwrap_repetition(&parts[0]).unwrap_or(&parts[0]);
     if !is_letter_class(first) {
         return false;
     }
@@ -535,46 +415,4 @@ fn is_word_class(hir: &Hir) -> bool {
         return has_lower && has_digit;
     }
     false
-}
-
-/// Detect regex-syntax 0.8's materialized negated classes.
-///
-/// When regex-syntax parses `[^XYZ]`, it has no `.negated()` flag — the complement
-/// is materialized as positive ranges. Legitimate letter/word classes cover at most
-/// ~62 bytes (`[a-zA-Z0-9]`). Negated classes cover 250+.
-fn is_negated_class_materialization(bc: &regex_syntax::hir::ClassBytes) -> bool {
-    let total_bytes: usize = bc
-        .ranges()
-        .iter()
-        .map(|r| (r.end() - r.start()) as usize + 1)
-        .sum();
-    total_bytes > 100
-}
-
-// ── Utility ────────────────────────────────────────────────────────────────
-
-fn is_literal_byte(hir: &Hir, byte: u8) -> bool {
-    if let HirKind::Literal(lit) = hir.kind() {
-        return lit.0.len() == 1 && lit.0[0] == byte;
-    }
-    // Escaped literal (e.g., \.)
-    if let HirKind::Literal(lit) = hir.kind() {
-        return lit.0.as_ref() == [byte];
-    }
-    false
-}
-
-fn unwrap_group(hir: &Hir) -> &Hir {
-    match hir.kind() {
-        HirKind::Capture(cap) => unwrap_group(&cap.sub),
-        _ => hir,
-    }
-}
-
-fn unwrap_repetition(hir: &Hir) -> Option<&Hir> {
-    if let HirKind::Repetition(rep) = hir.kind() {
-        Some(&rep.sub)
-    } else {
-        None
-    }
 }

@@ -1,19 +1,25 @@
-//! DFA → inline TokenStream code emission.
+//! DFA -> inline TokenStream code emission.
 //!
 //! Converts a compiled `parse_that::regex_engine::Dfa` into inline Rust code
 //! that performs anchored regex matching via direct byte operations.
 //!
 //! Three emission tiers based on DFA size:
-//! - **Tier A** (≤ 8 states): Inline match-chain state machine. LLVM sees
+//! - **Tier A** (<=12 states): Inline match-chain state machine. LLVM sees
 //!   every transition and can optimize aggressively.
-//! - **Tier B** (9–64 states): Static transition table + driver loop.
+//! - **Tier B** (13--64 states): Static transition table + driver loop.
 //!   Compact, cache-friendly, with SIMD acceleration for self-loop states.
-//! - **Tier C** (65+ states): Reference to a runtime `PackedDfa` (future).
+//! - **Tier C** (65+ states): Fallback to Tier B (PackedDfa runtime is future).
 //!
 //! All tiers emit code that evaluates to `Option<Span<'a>>`, reading from
 //! `state.src_bytes` and advancing `state.offset`.
 
-use parse_that::regex_engine::accel::{AccelStrategy, detect_accel};
+mod helpers;
+mod table;
+
+use helpers::{build_class_predicate, try_emit_accel_scan};
+use table::emit_tier_b;
+
+use parse_that::regex_engine::accel::detect_accel;
 use parse_that::regex_engine::dfa::Dfa;
 use parse_that::regex_engine::nfa::DEAD;
 use proc_macro2::TokenStream;
@@ -42,7 +48,7 @@ pub fn try_emit_dfa_inline(pattern: &str) -> Option<TokenStream> {
 ///
 /// Unified tier selection (Phase 3.2):
 /// - 1-12 states: Decision-tree codegen (inline match-chain, LLVM-friendly).
-///   Subsumes the old Tier A — a match-chain is a degenerate decision tree.
+///   Subsumes the old Tier A -- a match-chain is a degenerate decision tree.
 /// - 13-64 states: Static transition table + driver loop (Tier B).
 /// - 65+ states: Fallback to Tier B (PackedDfa runtime integration is future).
 fn emit_dfa(dfa: &Dfa) -> TokenStream {
@@ -62,7 +68,7 @@ fn emit_dfa(dfa: &Dfa) -> TokenStream {
     }
 }
 
-// ── Tier A: Inline match-chain (≤ 8 states) ────────────────────────────
+// ── Tier A: Inline match-chain (<=12 states) ───────────────────────────
 
 /// Emit an inline state machine with explicit state transitions.
 ///
@@ -110,7 +116,7 @@ fn emit_tier_a(dfa: &Dfa) -> TokenStream {
     emit_general_state_machine(dfa, &accels, &state_transitions)
 }
 
-/// Try to emit a simple two-state loop pattern: start → loop(accept).
+/// Try to emit a simple two-state loop pattern: start -> loop(accept).
 ///
 /// Matches patterns like `[a-z]+`, `\d+`, `[^"]+` where there's exactly one
 /// non-start state that self-loops and is accepting.
@@ -326,7 +332,7 @@ fn emit_general_state_machine(
                     if __pos >= __end { break; }
                     let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
                     #(#checks)*
-                    break; // no transition matched → stop
+                    break; // no transition matched -> stop
                 }
             });
         }
@@ -363,143 +369,7 @@ fn emit_general_state_machine(
     }
 }
 
-// ── Tier B: Static transition table (9–64 states) ──────────────────────
-
-/// Emit a static transition table + driver loop.
-fn emit_tier_b(dfa: &Dfa) -> TokenStream {
-    let num_states = dfa.state_count();
-    let num_cls = dfa.num_classes as usize;
-
-    // Emit the equivalence class table.
-    let class_bytes: Vec<proc_macro2::Literal> = dfa
-        .byte_classes
-        .iter()
-        .map(|&c| proc_macro2::Literal::u8_unsuffixed(c))
-        .collect();
-
-    // Emit the flattened transition table: state * num_classes + class → next_state.
-    let mut trans_bytes: Vec<proc_macro2::Literal> = Vec::with_capacity(num_states * num_cls);
-    for state in &dfa.states {
-        for cls in 0..num_cls {
-            let target = state.transitions[cls];
-            // Encode DEAD as 0xFF (works for ≤ 254 states).
-            let encoded = if target == DEAD { 0xFF } else { target as u8 };
-            trans_bytes.push(proc_macro2::Literal::u8_unsuffixed(encoded));
-        }
-    }
-
-    let num_cls_lit = proc_macro2::Literal::usize_unsuffixed(num_cls);
-    let trans_len_lit = proc_macro2::Literal::usize_unsuffixed(num_states * num_cls);
-
-    // Build accept bitset — one u64 per 64 states. No arbitrary limit.
-    let num_words = (num_states + 63) / 64;
-    let mut accept_words = vec![0u64; num_words];
-    for (i, s) in dfa.states.iter().enumerate() {
-        if s.is_accept {
-            accept_words[i / 64] |= 1u64 << (i % 64);
-        }
-    }
-    let accept_lits: Vec<_> = accept_words.iter()
-        .map(|w| proc_macro2::Literal::u64_unsuffixed(*w))
-        .collect();
-    let num_words_lit = proc_macro2::Literal::usize_unsuffixed(num_words);
-
-    let start_accept = if dfa.states[0].is_accept {
-        quote! { let mut __last_accept: Option<usize> = Some(__start); }
-    } else {
-        quote! { let mut __last_accept: Option<usize> = None; }
-    };
-
-    quote! {
-        {
-            static __CLASSES: [u8; 256] = [#(#class_bytes),*];
-            static __TRANS: [u8; #trans_len_lit] = [#(#trans_bytes),*];
-            static __ACCEPT: [u64; #num_words_lit] = [#(#accept_lits),*];
-
-            let __start = state.offset;
-            let __end = state.src_bytes.len();
-            let mut __s: u8 = 0;
-            let mut __pos = __start;
-            #start_accept
-
-            while __pos < __end {
-                let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                let __c = unsafe { *__CLASSES.get_unchecked(__b as usize) };
-                let __next = unsafe {
-                    *__TRANS.get_unchecked(__s as usize * #num_cls_lit + __c as usize)
-                };
-                if __next == 0xFF { break; }
-                __s = __next;
-                __pos += 1;
-                if __ACCEPT[__s as usize / 64] & (1u64 << (__s as usize % 64)) != 0 {
-                    __last_accept = Some(__pos);
-                }
-            }
-
-            if let Some(__end) = __last_accept {
-                state.offset = __end;
-                Some(::parse_that::Span::new(__start, __end, state.src))
-            } else {
-                None
-            }
-        }
-    }
-}
-
-// ── Helpers ─────────────────────────────────────────────────────────────
-
-/// Build a boolean predicate for a set of equivalence classes.
-///
-/// Expands the classes back to byte ranges and emits `__b` checks.
-fn build_class_predicate(dfa: &Dfa, classes: &[u8]) -> TokenStream {
-    // Collect all bytes belonging to these classes.
-    let mut bytes: Vec<u8> = Vec::new();
-    for (b, &cls) in dfa.byte_classes.iter().enumerate() {
-        if classes.contains(&cls) {
-            bytes.push(b as u8);
-        }
-    }
-
-    if bytes.is_empty() {
-        return quote! { false };
-    }
-
-    // Try to emit efficient predicates.
-    // Check for known shorthand patterns.
-    if let Some(shorthand) = detect_shorthand(&bytes) {
-        return shorthand;
-    }
-
-    // Build ranges for compact emission.
-    let ranges = bytes_to_ranges(&bytes);
-
-    if ranges.len() == 1 {
-        let (lo, hi) = ranges[0];
-        if lo == hi {
-            let lit = proc_macro2::Literal::byte_character(lo);
-            return quote! { __b == #lit };
-        }
-        let lo_lit = proc_macro2::Literal::byte_character(lo);
-        let hi_lit = proc_macro2::Literal::byte_character(hi);
-        return quote! { __b >= #lo_lit && __b <= #hi_lit };
-    }
-
-    let mut conditions: Vec<TokenStream> = Vec::new();
-    for (lo, hi) in &ranges {
-        if lo == hi {
-            let lit = proc_macro2::Literal::byte_character(*lo);
-            conditions.push(quote! { __b == #lit });
-        } else {
-            let lo_lit = proc_macro2::Literal::byte_character(*lo);
-            let hi_lit = proc_macro2::Literal::byte_character(*hi);
-            conditions.push(quote! { (__b >= #lo_lit && __b <= #hi_lit) });
-        }
-    }
-
-    quote! { #(#conditions)||* }
-}
-
-// ── Phase 6: DFA Canonical Hashing for Cross-Rule Deduplication ──────────
+// ── Phase 6: DFA Canonical Hashing for Cross-Rule Deduplication ─────────
 
 /// Compute a canonical hash of a compiled DFA's structure.
 ///
@@ -518,162 +388,5 @@ pub fn canonical_dfa_hash(pattern: &str) -> Option<u64> {
     }
 
     let dfa = Dfa::compile(pattern)?;
-    Some(hash_dfa_structure(&dfa))
-}
-
-/// Hash the DFA's state machine structure (transitions + accept states).
-fn hash_dfa_structure(dfa: &Dfa) -> u64 {
-    let mut hash: u64 = 0xcbf29ce484222325; // FNV-1a offset basis (64-bit)
-    let prime: u64 = 0x100000001b3;
-
-    // Hash state count.
-    hash ^= dfa.state_count() as u64;
-    hash = hash.wrapping_mul(prime);
-
-    // Hash number of byte classes.
-    hash ^= dfa.num_classes as u64;
-    hash = hash.wrapping_mul(prime);
-
-    // Hash byte class table.
-    for &b in &dfa.byte_classes {
-        hash ^= b as u64;
-        hash = hash.wrapping_mul(prime);
-    }
-
-    // Hash each state's transitions and accept flag.
-    for state in &dfa.states {
-        hash ^= state.is_accept as u64;
-        hash = hash.wrapping_mul(prime);
-        for &t in &state.transitions {
-            hash ^= t as u64;
-            hash = hash.wrapping_mul(prime);
-        }
-    }
-
-    hash
-}
-
-/// Detect well-known shorthand predicates.
-fn detect_shorthand(bytes: &[u8]) -> Option<TokenStream> {
-    let set: std::collections::HashSet<u8> = bytes.iter().copied().collect();
-
-    // \d = [0-9]
-    if set.len() == 10
-        && (b'0'..=b'9').all(|b| set.contains(&b))
-        && set.iter().all(|b| b.is_ascii_digit())
-    {
-        return Some(quote! { __b.is_ascii_digit() });
-    }
-
-    // \w = [0-9A-Za-z_]
-    let word_chars: std::collections::HashSet<u8> = (b'0'..=b'9')
-        .chain(b'A'..=b'Z')
-        .chain(b'a'..=b'z')
-        .chain(std::iter::once(b'_'))
-        .collect();
-    if set == word_chars {
-        return Some(quote! { (__b.is_ascii_alphanumeric() || __b == b'_') });
-    }
-
-    // [a-zA-Z]
-    let alpha: std::collections::HashSet<u8> = (b'A'..=b'Z').chain(b'a'..=b'z').collect();
-    if set == alpha {
-        return Some(quote! { __b.is_ascii_alphabetic() });
-    }
-
-    // \s = ASCII whitespace
-    let ws: std::collections::HashSet<u8> = [b' ', b'\t', b'\n', b'\r', 0x0B, 0x0C]
-        .iter()
-        .copied()
-        .collect();
-    if set == ws {
-        return Some(quote! { __b.is_ascii_whitespace() });
-    }
-
-    // [0-9a-fA-F]
-    let hex: std::collections::HashSet<u8> = (b'0'..=b'9')
-        .chain(b'A'..=b'F')
-        .chain(b'a'..=b'f')
-        .collect();
-    if set == hex {
-        return Some(quote! { __b.is_ascii_hexdigit() });
-    }
-
-    None
-}
-
-/// Convert a sorted list of bytes to inclusive ranges.
-fn bytes_to_ranges(bytes: &[u8]) -> Vec<(u8, u8)> {
-    if bytes.is_empty() {
-        return Vec::new();
-    }
-    let mut sorted = bytes.to_vec();
-    sorted.sort_unstable();
-    sorted.dedup();
-
-    let mut ranges = Vec::new();
-    let mut start = sorted[0];
-    let mut end = sorted[0];
-
-    for &b in &sorted[1..] {
-        if b == end + 1 {
-            end = b;
-        } else {
-            ranges.push((start, end));
-            start = b;
-            end = b;
-        }
-    }
-    ranges.push((start, end));
-
-    ranges
-}
-
-/// Try to emit SIMD-accelerated scanning code for a self-loop state.
-fn try_emit_accel_scan(accel: &parse_that::regex_engine::accel::StateAccel) -> Option<TokenStream> {
-    match &accel.strategy {
-        AccelStrategy::Memchr1(b) => {
-            let b_lit = proc_macro2::Literal::byte_character(*b);
-            Some(quote! {
-                if let Some(__skip) = ::parse_that::memchr::memchr(
-                    #b_lit,
-                    &state.src_bytes[state.offset..]
-                ) {
-                    state.offset += __skip;
-                } else {
-                    state.offset = state.src_bytes.len();
-                }
-            })
-        }
-        AccelStrategy::Memchr2(b1, b2) => {
-            let b1_lit = proc_macro2::Literal::byte_character(*b1);
-            let b2_lit = proc_macro2::Literal::byte_character(*b2);
-            Some(quote! {
-                if let Some(__skip) = ::parse_that::memchr::memchr2(
-                    #b1_lit, #b2_lit,
-                    &state.src_bytes[state.offset..]
-                ) {
-                    state.offset += __skip;
-                } else {
-                    state.offset = state.src_bytes.len();
-                }
-            })
-        }
-        AccelStrategy::Memchr3(b1, b2, b3) => {
-            let b1_lit = proc_macro2::Literal::byte_character(*b1);
-            let b2_lit = proc_macro2::Literal::byte_character(*b2);
-            let b3_lit = proc_macro2::Literal::byte_character(*b3);
-            Some(quote! {
-                if let Some(__skip) = ::parse_that::memchr::memchr3(
-                    #b1_lit, #b2_lit, #b3_lit,
-                    &state.src_bytes[state.offset..]
-                ) {
-                    state.offset += __skip;
-                } else {
-                    state.offset = state.src_bytes.len();
-                }
-            })
-        }
-        _ => None,
-    }
+    Some(helpers::hash_dfa_structure(&dfa))
 }

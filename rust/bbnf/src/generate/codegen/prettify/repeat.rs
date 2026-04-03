@@ -1,12 +1,13 @@
-//! Prettify Repeat emission — repetition with hint-driven separator formatting.
+//! Prettify Repeat emission - repetition with policy-driven separator formatting.
 
-use bbnf_ir::{GrammarIR, IrNode};
+use bbnf_ir::IrNode;
 
 use proc_macro2::TokenStream;
 use quote::quote;
 
 use super::super::MonoCtx;
-use super::super::ir_types::IrCodegenCtx;
+use super::attempt::{emit_prettify_attempt, emits_only_on_success};
+use super::policy::{emit_separator, PrettifyCtx, SeparatorPolicy};
 use super::emit_prettify_expr;
 
 /// Emit a Repeat for prettify.
@@ -14,28 +15,53 @@ pub(super) fn emit_prettify_repeat(
     inner: &IrNode,
     lo: usize,
     hi: usize,
-    ir: &GrammarIR,
-    ctx: &IrCodegenCtx<'_>,
+    pctx: &PrettifyCtx<'_>,
+    current_rule: bbnf_ir::RuleId,
     mctx: &mut MonoCtx,
 ) -> TokenStream {
     if lo == 0 && hi == 1 {
-        // Optional: try once, succeed either way.
-        return emit_prettify_optional(inner, ir, ctx, mctx);
+        return emit_prettify_optional(inner, pctx, current_rule, mctx);
     }
 
-    // Many / Many1: loop with hint-driven separator.
-    let inner_expr = emit_prettify_expr(inner, ir, ctx, mctx);
+    let plan = pctx.plan(current_rule);
+    let sep_expr = emit_separator(&plan.policy);
+    let has_separator = !matches!(plan.policy.separator, SeparatorPolicy::None);
+
+    let inner_expr = emit_prettify_expr(inner, pctx, current_rule, mctx);
+    let inner_try = if has_separator {
+        emit_prettify_attempt(inner_expr, false, Some((inner, pctx)), mctx)
+    } else {
+        emit_prettify_attempt(inner_expr, !emits_only_on_success(inner, pctx), Some((inner, pctx)), mctx)
+    };
+
     let count_var = mctx.fresh("rep_count");
     let cp_var = mctx.fresh("rep_cp");
-
-    // Determine separator from @pretty hints on the current rule.
-    let sep_expr = emit_separator(mctx);
+    let loop_start_state = if lo > 0 {
+        Some(mctx.fresh("rep_start"))
+    } else {
+        None
+    };
+    let loop_start_builder = if lo > 0 {
+        Some(mctx.fresh("rep_bcp"))
+    } else {
+        None
+    };
 
     let lo_check = if lo > 0 {
         let lo_lit = proc_macro2::Literal::usize_unsuffixed(lo);
-        quote! {
-            if #count_var < #lo_lit {
-                return false;
+        if let (Some(start_state), Some(start_builder)) = (&loop_start_state, &loop_start_builder) {
+            quote! {
+                if #count_var < #lo_lit {
+                    state.offset = #start_state;
+                    __builder.restore(#start_builder);
+                    return false;
+                }
+            }
+        } else {
+            quote! {
+                if #count_var < #lo_lit {
+                    return false;
+                }
             }
         }
     } else {
@@ -49,87 +75,76 @@ pub(super) fn emit_prettify_repeat(
         quote! { true }
     };
 
-    quote! { {
-        let mut #count_var = 0usize;
-        while #hi_check {
-            let #cp_var = state.offset;
-            let __bcp = __builder.checkpoint();
-            // Emit separator between items (not before the first).
-            if #count_var > 0 {
-                #sep_expr
-            }
-            let __ok = (|| -> bool { #inner_expr; true })();
-            if !__ok {
-                state.offset = #cp_var;
-                __builder.restore(__bcp);
-                break;
-            }
-            // Guard against zero-length match to prevent infinite loops.
-            if state.offset == #cp_var {
-                break;
-            }
-            #count_var += 1;
+    let loop_cp = if let (Some(start_state), Some(start_builder)) = (&loop_start_state, &loop_start_builder) {
+        quote! {
+            let #start_state = state.offset;
+            let #start_builder = __builder.checkpoint();
         }
-        #lo_check
-    } }
-}
-
-/// Emit the separator expression based on @pretty hints.
-fn emit_separator(mctx: &MonoCtx) -> TokenStream {
-    let hints = match &mctx.current_pretty_hints {
-        Some(h) => h,
-        // No @pretty hint on this rule — no separator between repeat items.
-        None => return quote! {},
+    } else {
+        quote! {}
     };
 
-    // Custom separator: sep("str") → IfBreak(hardline, "str")
-    if let Some(ref sep_str) = hints.sep {
-        let sep_lit = proc_macro2::Literal::string(sep_str);
-        return quote! {
-            __builder.if_break(
-                |b| { b.hardline(); },
-                |b| { b.text(#sep_lit); },
-            );
-        };
-    }
-
-    if hints.blankline {
-        // Double hardline (blank line between items).
-        quote! { __builder.hardline(); __builder.hardline(); }
-    } else if hints.block || hints.hardbreak || hints.fast {
-        // Single hardline.
-        quote! { __builder.hardline(); }
-    } else if hints.nobreak {
-        // Space separator (never break).
-        quote! { __builder.text(" "); }
-    } else if hints.compact || hints.off {
-        // No separator.
-        quote! {}
-    } else if hints.softbreak {
-        // Explicit softline.
-        quote! { __builder.softline(); }
+    if has_separator {
+        // With separator: checkpoint covers sep + inner so we can undo the
+        // separator if the inner expression fails on the next iteration.
+        quote! { {
+            #loop_cp
+            let mut #count_var = 0usize;
+            while #hi_check {
+                let #cp_var = state.offset;
+                let __iter_cp = if #count_var > 0 {
+                    Some(__builder.checkpoint())
+                } else {
+                    None
+                };
+                if #count_var > 0 {
+                    #sep_expr
+                };
+                if !#inner_try {
+                    state.offset = #cp_var;
+                    if let Some(__bcp) = __iter_cp {
+                        __builder.restore(__bcp);
+                    }
+                    break;
+                }
+                if state.offset == #cp_var {
+                    break;
+                }
+                #count_var += 1;
+            }
+            #lo_check
+        } }
     } else {
-        // No explicit separator hint — no separator.
-        // @pretty rules with specific separator needs should use explicit hints.
-        quote! {}
+        // No separator: simplified loop with just state checkpoint.
+        quote! { {
+            #loop_cp
+            let mut #count_var = 0usize;
+            while #hi_check {
+                let #cp_var = state.offset;
+                if !#inner_try {
+                    state.offset = #cp_var;
+                    break;
+                }
+                if state.offset == #cp_var {
+                    break;
+                }
+                #count_var += 1;
+            }
+            #lo_check
+        } }
     }
 }
 
 fn emit_prettify_optional(
     inner: &IrNode,
-    ir: &GrammarIR,
-    ctx: &IrCodegenCtx<'_>,
+    pctx: &PrettifyCtx<'_>,
+    current_rule: bbnf_ir::RuleId,
     mctx: &mut MonoCtx,
 ) -> TokenStream {
-    let inner_expr = emit_prettify_expr(inner, ir, ctx, mctx);
-    let cp_var = mctx.fresh("opt_cp");
+    let inner_expr = emit_prettify_expr(inner, pctx, current_rule, mctx);
+    let inner_try = emit_prettify_attempt(inner_expr, !emits_only_on_success(inner, pctx), Some((inner, pctx)), mctx);
     quote! { {
-        let #cp_var = state.offset;
-        let __bcp = __builder.checkpoint();
-        let __ok = (|| -> bool { #inner_expr; true })();
-        if !__ok {
-            state.offset = #cp_var;
-            __builder.restore(__bcp);
-        }
+        let _ = #inner_try;
+        true
     } }
 }

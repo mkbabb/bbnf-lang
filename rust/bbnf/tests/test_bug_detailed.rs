@@ -1,4 +1,4 @@
-use bbnf::generate::regex::classify::{classify_regex, RegexClass};
+use bbnf::generate::regex::classify::classify_regex;
 
 #[test]
 fn test_negated_patterns_that_trigger_bug() {
@@ -12,7 +12,7 @@ fn test_negated_patterns_that_trigger_bug() {
     for (pattern, desc) in test_cases {
         let result = classify_regex(pattern);
         println!("{}: {} -> {:?}", pattern, desc, result);
-        
+
         // Demonstrate the negation detection
         use regex_syntax::hir::{Class, HirKind};
         let hir = regex_syntax::ParserBuilder::new()
@@ -25,8 +25,15 @@ fn test_negated_patterns_that_trigger_bug() {
         if let HirKind::Repetition(rep) = hir.kind() {
             if let HirKind::Class(Class::Bytes(bc)) = rep.sub.kind() {
                 let ranges = bc.ranges();
-                let total_bytes: usize = ranges.iter().map(|r| (r.end() - r.start() + 1) as usize).sum();
-                println!("  -> {} ranges, {} bytes covered", ranges.len(), total_bytes);
+                let total_bytes: usize = ranges
+                    .iter()
+                    .map(|r| (r.end() - r.start() + 1) as usize)
+                    .sum();
+                println!(
+                    "  -> {} ranges, {} bytes covered",
+                    ranges.len(),
+                    total_bytes
+                );
                 println!("  -> is_negated_class should be: ranges > 3 AND total_bytes > 200");
             }
         }
@@ -45,7 +52,7 @@ fn test_positive_patterns() {
     for (pattern, desc) in test_cases {
         let result = classify_regex(pattern);
         println!("{}: {} -> {:?}", pattern, desc, result);
-        
+
         use regex_syntax::hir::{Class, HirKind};
         let hir = regex_syntax::ParserBuilder::new()
             .utf8(false)
@@ -57,9 +64,18 @@ fn test_positive_patterns() {
         if let HirKind::Repetition(rep) = hir.kind() {
             if let HirKind::Class(Class::Bytes(bc)) = rep.sub.kind() {
                 let ranges = bc.ranges();
-                let total_bytes: usize = ranges.iter().map(|r| (r.end() - r.start() + 1) as usize).sum();
-                println!("  -> {} ranges, {} bytes covered", ranges.len(), total_bytes);
-                println!("  -> is_negated_class should be: ranges > 3 OR total_bytes > 200? NO - positive");
+                let total_bytes: usize = ranges
+                    .iter()
+                    .map(|r| (r.end() - r.start() + 1) as usize)
+                    .sum();
+                println!(
+                    "  -> {} ranges, {} bytes covered",
+                    ranges.len(),
+                    total_bytes
+                );
+                println!(
+                    "  -> is_negated_class should be: ranges > 3 OR total_bytes > 200? NO - positive"
+                );
             }
         }
     }

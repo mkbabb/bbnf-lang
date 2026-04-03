@@ -1,0 +1,573 @@
+//! Shared compilation driver.
+//!
+//! Walks `GrammarIR`, makes target-agnostic structural decisions (dispatch strategy,
+//! span compression, inlining, sep_by detection, etc.), and delegates target-specific
+//! code emission to the [`Emitter`] trait.
+//!
+//! ## Naming convention
+//! - **`compile_*`** functions in this module make shared decisions
+//! - **`emit_*`** methods on [`Emitter`] produce target syntax
+
+use bbnf_ir::{FnDescriptor, GrammarIR, IrNode, RuleId, TypeDesc};
+
+use super::analysis::BackendAnalysis;
+use super::{
+    AllocStrategy, AltBranchInfo, CallStrategy, Emitter, FlattenStrategy, SepByConfig,
+    SeqChildGroup,
+};
+
+// ─── Driver State ───────────────────────────────────────────────────────────
+
+/// Shared mutable state for the compilation driver.
+///
+/// Tracks target-agnostic traversal state that flows through the recursive walk.
+/// This is the shared subset of what was formerly `MonoCtx`.
+pub struct DriverState {
+    /// Per-rule call strategy (inline vs direct call).
+    /// Indexed by `RuleId`.
+    pub call_strategies: Vec<CallStrategy>,
+
+    /// When set, the byte at `state.offset` is guaranteed to equal this value
+    /// (from a preceding dispatch-table match). The next single-byte literal
+    /// check that matches can skip the bounds check.
+    /// Consumed (set to `None`) after use.
+    pub dispatch_guaranteed_byte: Option<u8>,
+
+    /// Name of the rule currently being compiled.
+    pub current_rule_name: Option<String>,
+
+    /// ID of the rule currently being compiled.
+    pub current_rule_id: Option<RuleId>,
+}
+
+impl DriverState {
+    pub fn new(call_strategies: Vec<CallStrategy>) -> Self {
+        Self {
+            call_strategies,
+            dispatch_guaranteed_byte: None,
+            current_rule_name: None,
+            current_rule_id: None,
+        }
+    }
+
+    /// Look up the call strategy for a rule.
+    pub fn call_strategy(&self, rule_id: RuleId) -> CallStrategy {
+        self.call_strategies
+            .get(rule_id as usize)
+            .copied()
+            .unwrap_or(CallStrategy::DirectCall)
+    }
+}
+
+// ─── Grammar-Level Compilation ──────────────────────────────────────────────
+
+/// Compile an entire grammar to backend output.
+///
+/// This is the top-level entry point. It:
+/// 1. Emits type definitions (enum, discriminated union, etc.)
+/// 2. Compiles each rule body via [`compile_node`]
+/// 3. Wraps each body in a rule function definition
+/// 4. Assembles everything via `emitter.emit_grammar()`
+pub fn compile_grammar<E: Emitter>(
+    ir: &GrammarIR,
+    analysis: &BackendAnalysis,
+    dstate: &mut DriverState,
+    emitter: &mut E,
+    ctx: &mut E::Ctx,
+) -> E::Output {
+    // 1. Type definitions.
+    let type_defs = emitter.emit_type_definitions(ir, analysis, ctx);
+
+    // 2. Compile each rule.
+    let mut rule_functions = Vec::with_capacity(ir.rules.len());
+    for rule in &ir.rules {
+        dstate.current_rule_name = Some(ir.get_string(rule.name).to_string());
+        dstate.current_rule_id = Some(rule.id);
+
+        // Compile the rule body.
+        let body = compile_node(&rule.body, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+
+        // Wrap in a rule function definition.
+        let rule_fn = emitter.emit_rule_function(rule, body, ir, ctx);
+        rule_functions.push(rule_fn);
+    }
+
+    // 3. Assemble.
+    emitter.emit_grammar(type_defs, rule_functions, ir, ctx)
+}
+
+// ─── Node-Level Compilation ─────────────────────────────────────────────────
+
+/// Compile a single IR node, making target-agnostic decisions and delegating
+/// emission to the [`Emitter`].
+///
+/// `alloc` controls whether the result should be heap-allocated or returned inline.
+/// This corresponds to the former `elide_box` parameter (inverted: `Elide` = `elide_box=true`).
+pub fn compile_node<E: Emitter>(
+    node: &IrNode,
+    alloc: AllocStrategy,
+    ir: &GrammarIR,
+    dstate: &mut DriverState,
+    emitter: &mut E,
+    ctx: &mut E::Ctx,
+) -> E::Output {
+    match node {
+        // ── Leaves ──────────────────────────────────────────────────────
+        IrNode::Literal(sid) => {
+            let raw = ir.get_string(*sid);
+            // Decision: can we use the dispatch-guaranteed byte optimization?
+            let guaranteed = check_guaranteed_byte(raw, dstate);
+            emitter.emit_literal_match(raw, guaranteed, ctx)
+        }
+
+        IrNode::Regex(sid) => {
+            let pattern = ir.get_string(*sid);
+            emitter.emit_regex_match(pattern, ir, ctx)
+        }
+
+        IrNode::Epsilon => emitter.emit_epsilon(ctx),
+
+        // ── Structural ─────────────────────────────────────────────────
+        IrNode::Seq(children) => compile_seq(children, alloc, ir, dstate, emitter, ctx),
+
+        IrNode::Alt(branches, dispatch) => {
+            compile_alt(branches, dispatch.as_ref(), alloc, ir, dstate, emitter, ctx)
+        }
+
+        IrNode::Repeat { inner, lo, hi } => {
+            compile_repeat(inner, *lo, *hi, alloc, ir, dstate, emitter, ctx)
+        }
+
+        IrNode::Ref(rule_id) => compile_ref(*rule_id, alloc, ir, dstate, emitter, ctx),
+
+        // ── Binary operators ───────────────────────────────────────────
+        IrNode::Skip(left, right) => {
+            // Decision: detect Wrap pattern (Skip(Next(open, middle), close)).
+            if let IrNode::Next(open, middle) = left.as_ref() {
+                // This is a Wrap: open >> middle << close
+                compile_wrap(open, middle, right, alloc, ir, dstate, emitter, ctx)
+            } else {
+                let kept = compile_node(left, alloc, ir, dstate, emitter, ctx);
+                let discarded = compile_node(right, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+                emitter.emit_skip(kept, discarded, ctx)
+            }
+        }
+
+        IrNode::Next(left, right) => {
+            // Decision: detect Wrap pattern (Next(open, Skip(middle, close))).
+            if let IrNode::Skip(middle, close) = right.as_ref() {
+                compile_wrap(left, middle, close, alloc, ir, dstate, emitter, ctx)
+            } else {
+                let discarded =
+                    compile_node(left, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+                let kept = compile_node(right, alloc, ir, dstate, emitter, ctx);
+                emitter.emit_next(discarded, kept, ctx)
+            }
+        }
+
+        IrNode::Minus(left, right) => {
+            // Checkpoint/restore: try right (excluded), if it matches, reject.
+            let rhs = compile_node(right, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+            let lhs = compile_node(left, alloc, ir, dstate, emitter, ctx);
+            emitter.emit_minus(lhs, rhs, ctx)
+        }
+
+        IrNode::Negate(inner) => {
+            let inner_out = compile_node(inner, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+            emitter.emit_negate(inner_out, ctx)
+        }
+
+        // ── Host integration ───────────────────────────────────────────
+        IrNode::Map { inner, fn_id } => {
+            compile_map(inner, *fn_id, alloc, ir, dstate, emitter, ctx)
+        }
+
+        // ── Whitespace ─────────────────────────────────────────────────
+        IrNode::OptionalWhitespace(inner) => {
+            // Emit ws trim before and after inner.
+            let ws_pattern = ir.ws_pattern.map(|sid| ir.get_string(sid));
+            let pre_ws = emitter.emit_ws_trim(ws_pattern, ctx);
+            let inner_out = compile_node(inner, alloc, ir, dstate, emitter, ctx);
+            let post_ws = emitter.emit_ws_trim(ws_pattern, ctx);
+            // The emitter's emit_seq or a dedicated method assembles these.
+            // For now, use skip/next pattern: pre_ws >> inner << post_ws
+            let after_pre = emitter.emit_next(pre_ws, inner_out, ctx);
+            emitter.emit_skip(after_pre, post_ws, ctx)
+        }
+
+        // ── Lexer-parser fusion ────────────────────────────────────────
+        IrNode::TokenDispatch {
+            token,
+            arms: _,
+            fallback,
+        } => {
+            // TokenDispatch is complex and Rust-specific in current implementation.
+            // For now, compile token + fallback path. Full dispatch support to come.
+            // Each backend will need to handle this eventually.
+            let token_out = compile_node(token, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+            let fallback_out = compile_node(fallback, alloc, ir, dstate, emitter, ctx);
+            // TODO: proper token dispatch via emitter method
+            emitter.emit_next(token_out, fallback_out, ctx)
+        }
+    }
+}
+
+// ─── Structural Node Compilation ────────────────────────────────────────────
+
+/// Compile a Seq node.
+///
+/// Decisions made here (shared across all backends):
+/// - All-Span detection: if all children are Span-typed, compress to single Span
+/// - Span grouping: consecutive Span children merge into compressed groups
+/// - Vec flattening: `(T, Vec<T>)` or `(Vec<T>, T)` pairs flatten to `Vec<T>`
+fn compile_seq<E: Emitter>(
+    children: &[IrNode],
+    _alloc: AllocStrategy,
+    ir: &GrammarIR,
+    dstate: &mut DriverState,
+    emitter: &mut E,
+    ctx: &mut E::Ctx,
+) -> E::Output {
+    let type_map = ir.type_map.as_ref();
+
+    // Classify child types.
+    let child_types: Vec<TypeDesc> = children
+        .iter()
+        .map(|c| {
+            type_map
+                .and_then(|tm| tm.node_type(c).cloned())
+                .unwrap_or(TypeDesc::Span)
+        })
+        .collect();
+
+    let all_span = child_types.iter().all(|t| *t == TypeDesc::Span);
+
+    if all_span {
+        // Decision: all-Span → compress.
+        let outputs: Vec<_> = children
+            .iter()
+            .map(|c| compile_node(c, AllocStrategy::Elide, ir, dstate, emitter, ctx))
+            .collect();
+        emitter.emit_seq_all_span(outputs, ctx)
+    } else {
+        // Decision: group consecutive Spans, emit mixed.
+        let mut groups = Vec::new();
+        let mut span_run: Vec<E::Output> = Vec::new();
+
+        for (child, ty) in children.iter().zip(child_types.iter()) {
+            if *ty == TypeDesc::Span {
+                let out = compile_node(child, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+                span_run.push(out);
+            } else {
+                // Flush any accumulated Span run.
+                if !span_run.is_empty() {
+                    groups.push(SeqChildGroup::SpanCompressed {
+                        outputs: std::mem::take(&mut span_run),
+                    });
+                }
+                let out = compile_node(child, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+                groups.push(SeqChildGroup::Single {
+                    output: out,
+                    ty: ty.clone(),
+                });
+            }
+        }
+        if !span_run.is_empty() {
+            groups.push(SeqChildGroup::SpanCompressed { outputs: span_run });
+        }
+
+        // Compute result type.
+        let result_type = type_map
+            .and_then(|tm| tm.node_type(&IrNode::Seq(children.to_vec())).cloned())
+            .unwrap_or(TypeDesc::Span);
+
+        // Decision: detect (T, Vec<T>) or (Vec<T>, T) flattening.
+        let flatten = detect_flatten(&result_type, &child_types);
+
+        emitter.emit_seq_grouped(groups, &result_type, flatten, ctx)
+    }
+}
+
+/// Compile an Alt node.
+///
+/// Decisions made here (shared across all backends):
+/// - All-literal fast path
+/// - Dispatch table (O(1) byte lookup)
+/// - Checkpoint chain fallback
+fn compile_alt<E: Emitter>(
+    branches: &[bbnf_ir::AltBranch],
+    dispatch: Option<&bbnf_ir::AltDispatch>,
+    alloc: AllocStrategy,
+    ir: &GrammarIR,
+    dstate: &mut DriverState,
+    emitter: &mut E,
+    ctx: &mut E::Ctx,
+) -> E::Output {
+    let type_map = ir.type_map.as_ref();
+
+    // Classify branch types.
+    let branch_infos: Vec<AltBranchInfo> = branches
+        .iter()
+        .map(|b| {
+            let ty = type_map
+                .and_then(|tm| tm.node_type(&b.node).cloned())
+                .unwrap_or(TypeDesc::Span);
+            AltBranchInfo {
+                ty,
+                coercion_variant: None, // Set by emitter if needed
+            }
+        })
+        .collect();
+
+    // Decision: check for all-literal fast path.
+    let all_literal = branches.iter().all(|b| matches!(b.node, IrNode::Literal(_)));
+
+    if all_literal {
+        let literals: Vec<_> = branches
+            .iter()
+            .map(|b| {
+                let IrNode::Literal(sid) = &b.node else {
+                    unreachable!()
+                };
+                let value = ir.get_string(*sid).to_string();
+                let output = compile_node(&b.node, alloc, ir, dstate, emitter, ctx);
+                (value, output)
+            })
+            .collect();
+        return emitter.emit_alt_all_literal(literals, alloc, ctx);
+    }
+
+    // Decision: use dispatch table if available.
+    if let Some(table) = dispatch {
+        let mut branch_outputs = Vec::with_capacity(branches.len());
+        let mut fallback = None;
+
+        for (i, (branch, info)) in branches.iter().zip(branch_infos.into_iter()).enumerate() {
+            let output = compile_node(&branch.node, alloc, ir, dstate, emitter, ctx);
+            if table.fallback_idx == Some(i as u8) {
+                fallback = Some((info, output));
+            } else {
+                branch_outputs.push((info, output));
+            }
+        }
+
+        return emitter.emit_alt_dispatch(table, branch_outputs, fallback, alloc, ctx);
+    }
+
+    // Fallback: checkpoint chain.
+    let branch_outputs: Vec<_> = branches
+        .iter()
+        .zip(branch_infos)
+        .map(|(branch, info)| {
+            let output = compile_node(&branch.node, alloc, ir, dstate, emitter, ctx);
+            (info, output)
+        })
+        .collect();
+
+    emitter.emit_alt_checkpoint(branch_outputs, alloc, ctx)
+}
+
+/// Compile a Repeat node.
+///
+/// Decisions made here:
+/// - sep_by pattern detection
+/// - Optional (0..1) vs Many (0+/1+)
+fn compile_repeat<E: Emitter>(
+    inner: &IrNode,
+    lo: u32,
+    hi: u32,
+    alloc: AllocStrategy,
+    ir: &GrammarIR,
+    dstate: &mut DriverState,
+    emitter: &mut E,
+    ctx: &mut E::Ctx,
+) -> E::Output {
+    let type_map = ir.type_map.as_ref();
+
+    // Decision: detect sep_by pattern.
+    // Pattern: Repeat(Skip(element, Repeat(separator, 0, 1)), lo, MAX)
+    if hi == u32::MAX {
+        if let Some((element, separator)) = detect_sep_by(inner) {
+            let elem_type = type_map
+                .and_then(|tm| tm.node_type(element).cloned())
+                .unwrap_or(TypeDesc::Span);
+
+            let element_out = compile_node(element, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+            let sep_out =
+                compile_node(separator, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+
+            let config = SepByConfig {
+                ws: false,
+                lo,
+                terminator_bytes: None,
+            };
+
+            return emitter.emit_sep_by(element_out, sep_out, &config, &elem_type, ctx);
+        }
+    }
+
+    // Decision: optional (0..1) vs many.
+    if lo == 0 && hi == 1 {
+        let inner_type = type_map
+            .and_then(|tm| tm.node_type(inner).cloned())
+            .unwrap_or(TypeDesc::Span);
+        let body = compile_node(inner, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+        emitter.emit_repeat_optional(body, &inner_type, alloc, ctx)
+    } else {
+        let elem_type = type_map
+            .and_then(|tm| tm.node_type(inner).cloned())
+            .unwrap_or(TypeDesc::Span);
+        let body = compile_node(inner, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+        emitter.emit_repeat_many(body, lo, hi, &elem_type, ctx)
+    }
+}
+
+/// Compile a Ref node.
+///
+/// Decision: inline body vs direct call (from inline analysis).
+fn compile_ref<E: Emitter>(
+    rule_id: RuleId,
+    alloc: AllocStrategy,
+    ir: &GrammarIR,
+    dstate: &mut DriverState,
+    emitter: &mut E,
+    ctx: &mut E::Ctx,
+) -> E::Output {
+    let rule = ir.get_rule(rule_id);
+    let rule_name = ir.get_string(rule.name);
+    let strategy = dstate.call_strategy(rule_id);
+
+    match strategy {
+        CallStrategy::DirectCall => emitter.emit_call(rule_id, rule_name, alloc, ctx),
+        CallStrategy::InlineBody | CallStrategy::InlineFusion => {
+            // Inline: compile the rule body at this call site.
+            let body = compile_node(&rule.body, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+            let variant_name = if rule.meta.is_transparent {
+                None
+            } else {
+                Some(rule_name)
+            };
+            emitter.emit_inline_wrap(body, variant_name, alloc, ctx)
+        }
+    }
+}
+
+/// Compile a Map node.
+///
+/// Decisions: classify FnDescriptor, detect strength reductions.
+fn compile_map<E: Emitter>(
+    inner: &IrNode,
+    fn_id: bbnf_ir::FnId,
+    alloc: AllocStrategy,
+    ir: &GrammarIR,
+    dstate: &mut DriverState,
+    emitter: &mut E,
+    ctx: &mut E::Ctx,
+) -> E::Output {
+    let fn_desc = &ir.fns[fn_id as usize];
+
+    match fn_desc {
+        FnDescriptor::NumberConvert => {
+            // Fused regex → f64: the emitter handles the regex + conversion.
+            emitter.emit_number_convert(ctx)
+        }
+
+        FnDescriptor::Constant { value, .. } => {
+            let value_str = ir.get_string(*value);
+            let inner_out = compile_node(inner, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+            emitter.emit_constant(inner_out, value_str, ctx)
+        }
+
+        FnDescriptor::EnumWrap { variant } => {
+            let variant_name = ir.get_string(*variant);
+            let inner_out = compile_node(inner, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+            emitter.emit_enum_wrap(inner_out, variant_name, alloc, ctx)
+        }
+
+        FnDescriptor::BoxWrap => {
+            // Box allocation — delegate inner with alloc.
+            compile_node(inner, alloc, ir, dstate, emitter, ctx)
+        }
+
+        _ => {
+            // Custom, HexConvert, SpanCapture — compile inner and let emitter handle.
+            compile_node(inner, alloc, ir, dstate, emitter, ctx)
+        }
+    }
+}
+
+/// Compile a Wrap pattern: `open >> middle << close`.
+fn compile_wrap<E: Emitter>(
+    open: &IrNode,
+    middle: &IrNode,
+    close: &IrNode,
+    alloc: AllocStrategy,
+    ir: &GrammarIR,
+    dstate: &mut DriverState,
+    emitter: &mut E,
+    ctx: &mut E::Ctx,
+) -> E::Output {
+    let open_out = compile_node(open, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+    let middle_out = compile_node(middle, alloc, ir, dstate, emitter, ctx);
+    let close_out = compile_node(close, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+    // open >> middle << close = Next(open, Skip(middle, close))
+    let after_open = emitter.emit_next(open_out, middle_out, ctx);
+    emitter.emit_skip(after_open, close_out, ctx)
+}
+
+// ─── Decision Helpers ───────────────────────────────────────────────────────
+
+/// Check if a literal can use the dispatch-guaranteed-byte optimization.
+///
+/// If the literal is a single byte matching the guaranteed byte, consumes
+/// the guarantee and returns `Some(byte)`.
+fn check_guaranteed_byte(raw_literal: &str, dstate: &mut DriverState) -> Option<u8> {
+    let unescaped = super::super::generate::codegen::unescape_literal(raw_literal);
+    let bytes = unescaped.as_bytes();
+    if bytes.len() == 1 {
+        if let Some(guaranteed) = dstate.dispatch_guaranteed_byte {
+            if guaranteed == bytes[0] {
+                dstate.dispatch_guaranteed_byte = None;
+                return Some(guaranteed);
+            }
+        }
+    }
+    None
+}
+
+/// Detect the sep_by pattern in a Repeat body.
+///
+/// Pattern: `Skip(element, Repeat(separator, 0, 1))` — element followed by optional separator.
+fn detect_sep_by(inner: &IrNode) -> Option<(&IrNode, &IrNode)> {
+    if let IrNode::Skip(element, opt_sep) = inner {
+        if let IrNode::Repeat {
+            inner: separator,
+            lo: 0,
+            hi: 1,
+        } = opt_sep.as_ref()
+        {
+            return Some((element.as_ref(), separator.as_ref()));
+        }
+    }
+    None
+}
+
+/// Detect Vec flattening opportunities in a Seq result.
+///
+/// Returns `Some(FlattenStrategy)` if the result type is `Vec<T>` and the
+/// children contain exactly one Vec and one scalar of the same element type.
+fn detect_flatten(result_type: &TypeDesc, child_types: &[TypeDesc]) -> Option<FlattenStrategy> {
+    let TypeDesc::Vec(_) = result_type else {
+        return None;
+    };
+
+    if child_types.len() != 2 {
+        return None;
+    }
+
+    match (&child_types[0], &child_types[1]) {
+        (_, TypeDesc::Vec(_)) => Some(FlattenStrategy::HeadThenVec),
+        (TypeDesc::Vec(_), _) => Some(FlattenStrategy::VecThenTail),
+        _ => None,
+    }
+}

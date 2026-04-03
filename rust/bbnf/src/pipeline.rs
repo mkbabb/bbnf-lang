@@ -28,10 +28,14 @@ pub struct PipelineOptions {
 /// Backend-specific compilation target.
 #[derive(Clone, Debug)]
 pub enum CompileTarget {
-    /// Prepare the grammar for AOT codegen.
-    Aot { requested_prettify: bool },
+    /// Prepare the grammar for Rust codegen (monolithic recursive descent).
+    Rust { requested_prettify: bool },
     /// Produce a VM-ready `GrammarIR`.
     Vm,
+    /// Emit TypeScript source code (direct recursive descent).
+    Ts,
+    /// Emit a WASM module directly via wasm-encoder.
+    Wasm,
 }
 
 impl Default for CompileTarget {
@@ -50,8 +54,12 @@ pub struct CompileRequest {
 /// Output of a compilation request.
 #[derive(Debug)]
 pub enum CompileOutput {
-    Aot(crate::backend::PreparedAotGrammar),
+    Rust(crate::backend::PreparedGrammar),
     Vm(GrammarIR),
+    /// Generated TypeScript source code.
+    Ts(String),
+    /// Generated WASM module bytes.
+    Wasm(Vec<u8>),
 }
 
 /// Structured pipeline/compiler failure.

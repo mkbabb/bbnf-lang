@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use bbnf::backend::PreparedAotGrammar;
+use bbnf::backend::PreparedGrammar;
 use bbnf::generate::generate_all;
 use bbnf::lower::DirectiveSet;
 use bbnf::pipeline::{
@@ -14,11 +14,11 @@ use tempfile::tempdir;
 fn aot_request(requested_prettify: bool) -> CompileRequest {
     CompileRequest {
         options: PipelineOptions::default(),
-        target: CompileTarget::Aot { requested_prettify },
+        target: CompileTarget::Rust { requested_prettify },
     }
 }
 
-fn render_tokens(prepared: &PreparedAotGrammar, attrs: &ParserAttributes, ident: &str) -> String {
+fn render_tokens(prepared: &PreparedGrammar, attrs: &ParserAttributes, ident: &str) -> String {
     let ident = quote::format_ident!("{ident}");
     generate_all(prepared, attrs, &ident).to_string()
 }
@@ -31,8 +31,8 @@ fn source_aot_enables_prettify_for_pretty_directive() {
     "#;
 
     let prepared = match compile_grammar_request(grammar, &aot_request(false)).unwrap() {
-        CompileOutput::Aot(prepared) => prepared,
-        CompileOutput::Vm(_) => panic!("expected AOT output"),
+        CompileOutput::Rust(prepared) => prepared,
+        _ => panic!("expected Rust output"),
     };
 
     assert!(prepared.prep.effective_prettify);
@@ -50,8 +50,8 @@ fn source_aot_respects_explicit_prettify_without_directives() {
     "#;
 
     let prepared = match compile_grammar_request(grammar, &aot_request(true)).unwrap() {
-        CompileOutput::Aot(prepared) => prepared,
-        CompileOutput::Vm(_) => panic!("expected AOT output"),
+        CompileOutput::Rust(prepared) => prepared,
+        _ => panic!("expected Rust output"),
     };
 
     assert!(prepared.prep.effective_prettify);
@@ -73,8 +73,8 @@ fn source_aot_skips_prettify_without_flag_or_directive() {
     "#;
 
     let prepared = match compile_grammar_request(grammar, &aot_request(false)).unwrap() {
-        CompileOutput::Aot(prepared) => prepared,
-        CompileOutput::Vm(_) => panic!("expected AOT output"),
+        CompileOutput::Rust(prepared) => prepared,
+        _ => panic!("expected Rust output"),
     };
 
     assert!(!prepared.prep.effective_prettify);
@@ -108,8 +108,8 @@ fn compile_request_preserves_split_pretty_hint_for_codegen_error() {
     "#;
 
     let prepared = match compile_grammar_request(grammar, &aot_request(false)).unwrap() {
-        CompileOutput::Aot(prepared) => prepared,
-        CompileOutput::Vm(_) => panic!("expected AOT output"),
+        CompileOutput::Rust(prepared) => prepared,
+        _ => panic!("expected Rust output"),
     };
 
     assert!(prepared.prep.effective_prettify);
@@ -190,8 +190,8 @@ fn compile_paths_preserves_pretty_directives_across_multiple_explicit_paths() {
 
     let paths = vec![first.clone(), second.clone()];
     let prepared = match compile_paths_request(&paths, &aot_request(false)).unwrap() {
-        CompileOutput::Aot(prepared) => prepared,
-        CompileOutput::Vm(_) => panic!("expected AOT output"),
+        CompileOutput::Rust(prepared) => prepared,
+        _ => panic!("expected Rust output"),
     };
 
     assert!(prepared.prep.effective_prettify);
@@ -231,8 +231,8 @@ fn compile_paths_preserves_pretty_directives_through_import_resolution() {
 
     let paths = vec![entry.clone()];
     let prepared = match compile_paths_request(&paths, &aot_request(false)).unwrap() {
-        CompileOutput::Aot(prepared) => prepared,
-        CompileOutput::Vm(_) => panic!("expected AOT output"),
+        CompileOutput::Rust(prepared) => prepared,
+        _ => panic!("expected Rust output"),
     };
 
     assert!(prepared.prep.effective_prettify);

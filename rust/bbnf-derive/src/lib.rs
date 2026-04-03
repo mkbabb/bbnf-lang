@@ -252,14 +252,14 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
             remove_left_recursion: parser_container_attrs.remove_left_recursion,
             entry_rule: None,
         },
-        target: CompileTarget::Aot {
+        target: CompileTarget::Rust {
             requested_prettify: parser_container_attrs.prettify,
         },
     };
 
     let prepared = match compile_paths_request(&parser_container_attrs.paths, &request) {
-        Ok(CompileOutput::Aot(prepared)) => prepared,
-        Ok(CompileOutput::Vm(_)) => unreachable!("AOT derive received VM pipeline output"),
+        Ok(CompileOutput::Rust(prepared)) => prepared,
+        Ok(_) => unreachable!("Rust derive received non-Rust pipeline output"),
         Err(err) => panic!("{err}"),
     };
 

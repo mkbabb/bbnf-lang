@@ -1,7 +1,8 @@
-//! AOT backend preparation.
+//! Shared backend preparation.
 //!
-//! This module owns the immutable preparation artifacts consumed by the AOT
-//! code generator. The generator itself should remain read-only.
+//! This module owns the immutable preparation artifacts consumed by all
+//! code-generating backends (Rust, TS, WASM). The generator itself should
+//! remain read-only.
 
 use std::collections::HashSet;
 
@@ -9,7 +10,7 @@ use bbnf_ir::{GrammarIR, RuleId, TypeDesc};
 
 use crate::generate::regex;
 
-/// Immutable type-analysis snapshot handed off to AOT preparation.
+/// Immutable type-analysis snapshot handed off to backend preparation.
 #[derive(Clone, Debug, Default)]
 pub struct TypeAnalysis {
     pub rule_types: Vec<(RuleId, TypeDesc)>,
@@ -31,14 +32,14 @@ impl TypeAnalysis {
 
 /// Finalized AOT prep configuration.
 #[derive(Clone, Debug)]
-pub struct EffectiveAotConfig {
+pub struct EffectiveBackendConfig {
     pub effective_prettify: bool,
     pub collapse_simple_spans: bool,
 }
 
 /// Full AOT analysis bundle handed to codegen.
 #[derive(Clone, Debug, Default)]
-pub struct AotAnalysis {
+pub struct BackendAnalysis {
     pub type_analysis: TypeAnalysis,
     pub sp_method_rules: HashSet<String>,
     pub fused_number_rules: HashSet<RuleId>,
@@ -47,47 +48,47 @@ pub struct AotAnalysis {
 
 /// Immutable AOT preparation snapshot produced by the shared pipeline.
 #[derive(Clone, Debug, Default)]
-pub struct AotPreparation {
+pub struct BackendPreparation {
     pub effective_prettify: bool,
-    pub analysis: AotAnalysis,
+    pub analysis: BackendAnalysis,
 }
 
 /// Fully prepared grammar bundle consumed by codegen.
 #[derive(Clone, Debug)]
-pub struct PreparedAotGrammar {
+pub struct PreparedGrammar {
     pub ir: GrammarIR,
-    pub prep: AotPreparation,
+    pub prep: BackendPreparation,
 }
 
 /// Prepare a fully-lowered IR for AOT code generation.
-pub fn prepare_aot(mut ir: GrammarIR, requested_prettify: bool) -> PreparedAotGrammar {
-    let config = resolve_aot_config(&ir, requested_prettify);
-    apply_aot_ir_prep(&mut ir, &config);
-    let analysis = analyze_aot(&mut ir, &config);
+pub fn prepare_grammar(mut ir: GrammarIR, requested_prettify: bool) -> PreparedGrammar {
+    let config = resolve_backend_config(&ir, requested_prettify);
+    apply_ir_prep(&mut ir, &config);
+    let analysis = analyze_grammar(&mut ir, &config);
 
-    PreparedAotGrammar {
+    PreparedGrammar {
         ir,
-        prep: AotPreparation {
+        prep: BackendPreparation {
             effective_prettify: config.effective_prettify,
             analysis,
         },
     }
 }
 
-pub fn resolve_aot_config(ir: &GrammarIR, requested_prettify: bool) -> EffectiveAotConfig {
+pub fn resolve_backend_config(ir: &GrammarIR, requested_prettify: bool) -> EffectiveBackendConfig {
     let has_pretty_directive = ir
         .rules
         .iter()
         .any(|rule| rule.meta.directives.pretty.is_some());
     let effective_prettify = requested_prettify || has_pretty_directive;
 
-    EffectiveAotConfig {
+    EffectiveBackendConfig {
         effective_prettify,
         collapse_simple_spans: !effective_prettify,
     }
 }
 
-pub fn apply_aot_ir_prep(ir: &mut GrammarIR, config: &EffectiveAotConfig) {
+pub fn apply_ir_prep(ir: &mut GrammarIR, config: &EffectiveBackendConfig) {
     // When prettify is not enabled, clear @pretty metadata so that
     // preserve_spans is not applied — this allows span compression
     // in Seq codegen, which is critical for throughput.
@@ -102,7 +103,7 @@ pub fn apply_aot_ir_prep(ir: &mut GrammarIR, config: &EffectiveAotConfig) {
     ir.collapse_simple_spans = config.collapse_simple_spans;
 }
 
-pub fn analyze_aot(ir: &mut GrammarIR, config: &EffectiveAotConfig) -> AotAnalysis {
+pub fn analyze_grammar(ir: &mut GrammarIR, config: &EffectiveBackendConfig) -> BackendAnalysis {
     // Compute sp_method_rules via iterative fixed-point BEFORE type inference,
     // so that project_types uses the correct has_sp_method flags for span-method override.
     bbnf_ir::passes::compute_sp_method_rules(ir);
@@ -138,7 +139,7 @@ pub fn analyze_aot(ir: &mut GrammarIR, config: &EffectiveAotConfig) -> AotAnalys
         .map(|rule| rule.id)
         .collect();
 
-    AotAnalysis {
+    BackendAnalysis {
         type_analysis: TypeAnalysis::from_ir(ir),
         sp_method_rules,
         fused_number_rules,

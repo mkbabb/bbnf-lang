@@ -14,7 +14,7 @@ pub use codegen::ir_enums;
 pub use codegen::ir_types;
 pub use codegen::ir_types::ParserAttributes;
 
-use crate::backend::PreparedAotGrammar;
+use crate::backend::PreparedGrammar;
 use quote::quote;
 
 // ── Entry point ────────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@ use quote::quote;
 /// Generate all parser code from a prepared AOT bundle: enum, parser methods,
 /// and optionally prettify.
 pub fn generate_all(
-    prepared: &PreparedAotGrammar,
+    prepared: &PreparedGrammar,
     parser_attrs: &ParserAttributes,
     ident: &syn::Ident,
 ) -> proc_macro2::TokenStream {

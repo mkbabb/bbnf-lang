@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use bbnf_ir::GrammarIR;
 
 use crate::analysis::{compute_first_sets, tarjan_scc, topological_sort_scc};
-use crate::backend::prepare_aot;
+use crate::backend::prepare_grammar;
 use crate::grammar::BBNFGrammar;
 use crate::lower::{DirectiveSet, lower_to_ir};
 use crate::pipeline::loader::{DirectiveMaps, load_merged_paths};
@@ -24,7 +24,7 @@ pub fn compile_grammar(source: &str, options: &PipelineOptions) -> Result<Gramma
     };
     match compile_grammar_request(source, &request) {
         Ok(CompileOutput::Vm(ir)) => Ok(ir),
-        Ok(CompileOutput::Aot(_)) => unreachable!("VM wrapper received AOT output"),
+        Ok(_) => unreachable!("VM wrapper received non-VM output"),
         Err(err) => Err(err.to_string()),
     }
 }
@@ -75,7 +75,7 @@ pub fn compile_ast<'a>(
     };
     match compile_ast_request(ast, directives, &request) {
         Ok(CompileOutput::Vm(ir)) => Ok(ir),
-        Ok(CompileOutput::Aot(_)) => unreachable!("VM wrapper received AOT output"),
+        Ok(_) => unreachable!("VM wrapper received non-VM output"),
         Err(err) => Err(err.to_string()),
     }
 }
@@ -105,13 +105,25 @@ fn finalize_compile(
     target: &CompileTarget,
 ) -> Result<CompileOutput, CompileError> {
     match target {
-        CompileTarget::Aot { requested_prettify } => Ok(CompileOutput::Aot(prepare_aot(
+        CompileTarget::Rust { requested_prettify } => Ok(CompileOutput::Rust(prepare_grammar(
             ir,
             *requested_prettify,
         ))),
         CompileTarget::Vm => {
             bbnf_ir::passes::project_types(&mut ir);
             Ok(CompileOutput::Vm(ir))
+        }
+        CompileTarget::Ts => {
+            bbnf_ir::passes::project_types(&mut ir);
+            // TODO: Wire up TsEmitter when TypeScript backend is implemented.
+            Ok(CompileOutput::Ts(String::from(
+                "// TypeScript backend not yet implemented",
+            )))
+        }
+        CompileTarget::Wasm => {
+            bbnf_ir::passes::project_types(&mut ir);
+            // TODO: Wire up WasmEmitter when WASM backend is implemented.
+            Ok(CompileOutput::Wasm(Vec::new()))
         }
     }
 }

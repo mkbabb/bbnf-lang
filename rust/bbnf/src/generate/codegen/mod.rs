@@ -19,14 +19,17 @@
 //! - `repeat`: Quantifiers, sep_by, sep_by_ws loops
 //! - `expr`: Leaf, Ref, Skip/Next, Wrap, Map, OptionalWhitespace
 
-mod alt;
+pub mod analysis;
 mod alloc_emit;
+mod alt;
 mod delim_scan;
 mod expr;
 mod generate;
 mod helpers;
 pub mod ir_enums;
 pub mod ir_types;
+mod loop_emit;
+mod operator_chain;
 pub mod prettify;
 mod repeat;
 mod sep_by;
@@ -39,6 +42,7 @@ use bbnf_ir::IrNode;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
+use analysis::inline::CallMode;
 use ir_types::IrCodegenCtx;
 
 /// Unescape a BBNF literal string (e.g. `\n` → newline, `\t` → tab).
@@ -77,7 +81,6 @@ pub fn unescape_literal(s: &str) -> String {
 pub use generate::generate_monolithic;
 
 // Re-export items used by sub-modules via `super::`.
-pub(super) use generate::compute_single_site_inline;
 pub(super) use helpers::{
     emit_literal_inline, emit_literal_inline_unchecked, emit_mono_discarded, mono_fn_ident,
 };
@@ -109,14 +112,7 @@ pub(super) fn emit_ws_trim(ctx: &IrCodegenCtx<'_>, _mctx: &mut MonoCtx) -> Token
 /// are NOT simple — the IIFE is needed to scope the `?` operator.
 pub(super) fn is_simple_expr(node: &IrNode, mctx: &MonoCtx) -> bool {
     match node {
-        IrNode::Ref(rule_id) => {
-            // If the Ref gets inlined (fusion or single-site), the emitted code
-            // may contain `?` operators that need IIFE scoping.
-            // Only direct function calls (non-inlined) are guaranteed simple.
-            let is_inlined = mctx.fusion_eligible.get(*rule_id as usize).copied() == Some(true)
-                || mctx.single_site_inline.get(*rule_id as usize).copied() == Some(true);
-            !is_inlined
-        }
+        IrNode::Ref(rule_id) => !mctx.call_mode(*rule_id).is_inline(),
         IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => true,
         IrNode::Map { inner, .. } => is_simple_expr(inner, mctx),
         IrNode::OptionalWhitespace(inner) => is_simple_expr(inner, mctx),
@@ -131,15 +127,8 @@ pub(super) fn is_simple_expr(node: &IrNode, mctx: &MonoCtx) -> bool {
 pub(super) struct MonoCtx {
     pub hoisted: Vec<TokenStream>,
     counter: usize,
-    /// Per-rule flag: true if the rule's body can be inlined at call sites.
-    /// Indexed by RuleId. Computed once in `generate_monolithic`.
-    pub fusion_eligible: Vec<bool>,
-    /// Phase 9: Per-rule flag for single-site inline eligibility.
-    /// A cyclic rule can be inlined at its single call site when:
-    /// 1. It does NOT contain a direct self-reference (Ref(self))
-    /// 2. It has exactly 1 reference across all rule bodies
-    /// 3. It is NOT the grammar entry point
-    pub single_site_inline: Vec<bool>,
+    /// Per-rule call mode chosen by shared codegen analysis.
+    pub call_modes: Vec<CallMode>,
     /// When set, the byte at `state.offset` is guaranteed to equal this value
     /// (from a preceding dispatch-table match). The next single-byte literal
     /// check that matches can skip the bounds check — just advance offset.
@@ -151,23 +140,17 @@ pub(super) struct MonoCtx {
     /// ID of the rule currently being generated. Used for scratch type lookup
     /// in slab mode to ensure type agreement with ir.types.
     pub current_rule_id: Option<bbnf_ir::RuleId>,
-    /// @pretty hints for the current rule. Used by the prettify repeat codegen
-    /// to determine the separator between items (softline, hardline, blankline,
-    /// sep("str"), etc.).
-    pub current_pretty_hints: Option<bbnf_ir::PrettyHints>,
 }
 
 impl MonoCtx {
-    pub fn new(fusion_eligible: Vec<bool>, single_site_inline: Vec<bool>) -> Self {
+    pub fn new(call_modes: Vec<CallMode>) -> Self {
         Self {
             hoisted: Vec::new(),
             counter: 0,
-            fusion_eligible,
-            single_site_inline,
+            call_modes,
             dispatch_guaranteed_byte: None,
             current_rule_name: None,
             current_rule_id: None,
-            current_pretty_hints: None,
         }
     }
 
@@ -175,6 +158,13 @@ impl MonoCtx {
         let id = self.counter;
         self.counter += 1;
         format_ident!("__{}{}", prefix, id)
+    }
+
+    pub fn call_mode(&self, rule_id: bbnf_ir::RuleId) -> CallMode {
+        self.call_modes
+            .get(rule_id as usize)
+            .copied()
+            .unwrap_or(CallMode::DirectCall)
     }
 }
 
@@ -213,9 +203,9 @@ pub(super) fn emit_mono_expr(
             let pattern = ctx.ir.get_string(*sid);
             // Slab context: fuse number conversion (returns (Span, f64) for JSON numbers).
             // Skip fusing when prettify is enabled — formatters only need Spans.
-            let fuse = !ctx.parser_attrs.prettify;
-            let opts = super::regex::EmitOpts::new(&super::regex::CostModel::DEFAULT)
-                .with_fuse(fuse);
+            let fuse = !ctx.effective_prettify;
+            let opts =
+                super::regex::EmitOpts::new(&super::regex::CostModel::DEFAULT).with_fuse(fuse);
             super::regex::emit_regex(pattern, &opts)
         }
 

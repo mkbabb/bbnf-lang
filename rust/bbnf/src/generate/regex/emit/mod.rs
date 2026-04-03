@@ -7,17 +7,17 @@
 mod dfa;
 mod generalized;
 mod hir;
-mod inline_scanners;
 mod negated_class;
+pub(crate) mod scanner_plan;
 pub mod simd;
 
 // Re-export the negated class detection (used by fast_paths below)
-pub use negated_class::{NegCharClassQuantifier, is_negated_char_class_regex};
+pub use negated_class::{is_negated_char_class_regex, NegCharClassQuantifier};
 
 // Phase 6: DFA canonical hashing for cross-rule deduplication.
 pub use dfa::canonical_dfa_hash;
 
-use crate::generate::regex::classify::{RegexClass, classify_regex};
+use crate::generate::regex::classify::{classify_regex, RegexClass};
 use crate::generate::regex::cost_model::EmitOpts;
 
 use proc_macro2::TokenStream;
@@ -73,35 +73,8 @@ pub fn emit_regex_direct_call(pattern: &str) -> Option<TokenStream> {
 
 /// Emit a direct scanner call with optional fused number conversion.
 fn emit_regex_fast_path(pattern: &str, fuse_numbers: bool) -> Option<TokenStream> {
-    match classify_regex(pattern) {
-        RegexClass::JsonString => {
-            return Some(quote! { ::parse_that::scan_json_string(state) });
-        }
-        RegexClass::JsonNumber => {
-            if fuse_numbers {
-                return Some(quote! { ::parse_that::scan_number_convert_json(state) });
-            } else {
-                return Some(quote! { ::parse_that::scan_number_span_json(state) });
-            }
-        }
-        RegexClass::WsBlockComment => {
-            return Some(inline_scanners::emit_inline_ws_comment_scanner());
-        }
-        RegexClass::CssIdent => {
-            return Some(inline_scanners::emit_inline_ident_scanner());
-        }
-        RegexClass::CssQuotedString => {
-            return Some(inline_scanners::emit_inline_string_scanner());
-        }
-        RegexClass::Numeric { allows_sign, .. } => {
-            if !allows_sign {
-                return Some(quote! { ::parse_that::scan_number_span_json(state) });
-            }
-        }
-        RegexClass::Identifier => {
-            return Some(inline_scanners::emit_inline_ident_scanner());
-        }
-        _ => {}
+    if let Some(plan) = scanner_plan::plan_regex_scanner(pattern, fuse_numbers) {
+        return Some(plan.into_tokens());
     }
 
     // Comma-or-whitespace separator: ,|\s+
@@ -383,5 +356,9 @@ fn parse_positive_class_ranges(class_str: &str) -> Option<Vec<(u8, u8)>> {
         }
     }
 
-    if ranges.is_empty() { None } else { Some(ranges) }
+    if ranges.is_empty() {
+        None
+    } else {
+        Some(ranges)
+    }
 }

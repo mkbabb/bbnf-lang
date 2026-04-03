@@ -2,7 +2,6 @@
 
 mod key_dispatch;
 mod literal;
-pub mod perfect_hash;
 
 use bbnf_ir::{AltBranch, FnDescriptor, IrNode, TypeDesc};
 
@@ -91,10 +90,7 @@ pub(super) fn emit_mono_alt(
             .map(|b| ctx.vec_elem_type(&b.node))
             .collect()
     } else {
-        branches
-            .iter()
-            .map(|b| ctx.node_type(&b.node))
-            .collect()
+        branches.iter().map(|b| ctx.node_type(&b.node)).collect()
     };
     let all_same = branch_tys.windows(2).all(|w| w[0] == w[1]);
     let needs_coercion = !all_same;
@@ -117,9 +113,7 @@ pub(super) fn emit_mono_alt(
                         if let Some(rule) = ctx.ir.find_rule(name) {
                             for sv in &rule.meta.sub_variants {
                                 if sv.ty == *ty {
-                                    return Some(
-                                        ctx.ir.get_string(sv.variant_name).to_string(),
-                                    );
+                                    return Some(ctx.ir.get_string(sv.variant_name).to_string());
                                 }
                             }
                         }

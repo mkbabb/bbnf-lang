@@ -9,6 +9,7 @@ use bbnf_ir::{FnDescriptor, IrNode};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
+use super::analysis::inline::CallMode;
 use super::ir_types::IrCodegenCtx;
 use super::unescape_literal;
 use super::{MonoCtx, emit_mono_expr, emit_ws_trim};
@@ -89,8 +90,7 @@ pub(crate) fn emit_mono_discarded(
         // For Ref: try fusion first (inline body in discarded context), then _sp path.
         IrNode::Ref(rule_id) => {
             // Fusion: inline discarded body of non-cyclic or single-site cyclic rules.
-            let can_inline = mctx.fusion_eligible.get(*rule_id as usize).copied() == Some(true)
-                || mctx.single_site_inline.get(*rule_id as usize).copied() == Some(true);
+            let can_inline = mctx.call_mode(*rule_id) == CallMode::InlineBody;
             if can_inline {
                 let rule = &ctx.ir.rules[*rule_id as usize];
                 let result = emit_mono_discarded(&rule.body, strip_ow, ctx, mctx);

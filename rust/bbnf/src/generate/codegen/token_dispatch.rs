@@ -11,7 +11,9 @@ use quote::quote;
 
 use super::ir_types::IrCodegenCtx;
 use super::unescape_literal;
-use super::{MonoCtx, emit_mono_expr};
+use super::{emit_mono_expr, MonoCtx};
+use crate::generate::regex;
+use crate::generate::regex::emit::scanner_plan;
 
 /// Emit monolithic code for a TokenDispatch node.
 ///
@@ -31,8 +33,20 @@ pub(super) fn emit_token_dispatch(
         return emit_mono_expr(fallback, ctx, mctx, elide_box);
     }
 
-    // Emit the token scanner. For identifier tokens, this is scan_ident.
-    let token_expr = emit_mono_expr(token, ctx, mctx, elide_box);
+    // Emit the token scanner as a span-only scan. TokenDispatch slices the
+    // source bytes directly, so regex tokens must not fuse to converted values.
+    let token_expr = match token {
+        IrNode::Regex(sid) => {
+            let pattern = ctx.ir.get_string(*sid);
+            if let Some(plan) = scanner_plan::plan_regex_scanner(pattern, false) {
+                plan.into_tokens()
+            } else {
+                let opts = regex::EmitOpts::new(&regex::CostModel::DEFAULT).with_fuse(false);
+                regex::emit_regex(pattern, &opts)
+            }
+        }
+        _ => emit_mono_expr(token, ctx, mctx, elide_box),
+    };
     let cp_var = mctx.fresh("td_cp");
 
     // Build if-else chain for each arm's patterns.

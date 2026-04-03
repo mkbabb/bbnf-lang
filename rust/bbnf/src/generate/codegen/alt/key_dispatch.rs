@@ -18,8 +18,9 @@ use quote::quote;
 use super::super::ir_types::{self, IrCodegenCtx};
 use super::{coerce_mono_branch, coerce_mono_branch_by_value};
 use crate::generate::codegen::unescape_literal;
-use crate::generate::codegen::{MonoCtx, emit_mono_expr};
-use crate::generate::regex::classify::{RegexClass, classify_regex};
+use crate::generate::codegen::{emit_mono_expr, MonoCtx};
+use crate::generate::regex::classify::{classify_regex, RegexClass};
+use crate::generate::regex::emit::scanner_plan;
 
 // ── Helpers ────────────────────────────────────────────────────
 
@@ -215,12 +216,8 @@ fn extract_seq_separator(node: &IrNode, ctx: &IrCodegenCtx<'_>) -> Option<String
 /// Emit the scanner call for the detected key class.
 fn emit_key_scanner(class: &KeyClass) -> TokenStream {
     match class {
-        KeyClass::Identifier => quote! { ::parse_that::scan_ident(state) },
-        KeyClass::QuotedString { .. } => {
-            // scan_string_quoted returns Span including delimiters.
-            // We use it as-is; the byte comparison strips quotes from keys.
-            quote! { ::parse_that::scan_string_quoted(state) }
-        }
+        KeyClass::Identifier => scanner_plan::shared_ident_scanner().into_tokens(),
+        KeyClass::QuotedString { .. } => scanner_plan::shared_quoted_string_scanner().into_tokens(),
     }
 }
 

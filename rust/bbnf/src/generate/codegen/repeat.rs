@@ -10,6 +10,7 @@ use quote::quote;
 use super::super::regex;
 use super::helpers::try_sep_by;
 use super::ir_types::IrCodegenCtx;
+use super::loop_emit::{RestoringLoop, emit_restoring_loop};
 use super::sep_by::emit_mono_sep_by;
 use super::unescape_literal;
 use super::{MonoCtx, emit_mono_expr, is_simple_expr, mono_fn_ident};
@@ -256,25 +257,15 @@ fn emit_mono_many(
         }
     };
 
-    quote! {
-        {
-            #init_code
-            loop {
-                let #prev_var = state.offset;
-                let __elem = #elem_call;
-                match __elem {
-                    Some(__value) => {
-                        #push_code;
-                        if state.offset == #prev_var { break; }
-                    }
-                    None => {
-                        state.offset = #prev_var;
-                        break;
-                    }
-                }
-            }
-            #check
-        }
-    }
+    emit_restoring_loop(RestoringLoop {
+        init: init_code,
+        prev_var: &prev_var,
+        step: quote! { #elem_call },
+        on_success: quote! {
+            #push_code;
+            if state.offset == #prev_var { break; }
+        },
+        on_failure: quote! { break; },
+        finish: check,
+    })
 }
-

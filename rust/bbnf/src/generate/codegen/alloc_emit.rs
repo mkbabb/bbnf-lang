@@ -31,7 +31,11 @@ impl IrCodegenCtx<'_> {
     }
 
     /// Emit scratch collect: copies scratch[depth..] to slab slice, truncates.
-    pub fn emit_scratch_collect(&self, elem_desc: &TypeDesc, depth_var: &syn::Ident) -> TokenStream {
+    pub fn emit_scratch_collect(
+        &self,
+        elem_desc: &TypeDesc,
+        depth_var: &syn::Ident,
+    ) -> TokenStream {
         let idx = self.scratch_index_for_elem(elem_desc);
         let c_fn = self.collect_accessor(idx);
         let helper = self.alloc_helper_ident();
@@ -51,11 +55,7 @@ impl IrCodegenCtx<'_> {
     }
 
     /// Emit scratch len - depth expression (element count).
-    pub fn emit_scratch_count(
-        &self,
-        elem_desc: &TypeDesc,
-        depth_var: &syn::Ident,
-    ) -> TokenStream {
+    pub fn emit_scratch_count(&self, elem_desc: &TypeDesc, depth_var: &syn::Ident) -> TokenStream {
         let idx = self.scratch_index_for_elem(elem_desc);
         let s_fn = self.scratch_accessor(idx);
         let helper = self.alloc_helper_ident();
@@ -164,4 +164,3 @@ impl IrCodegenCtx<'_> {
         (struct_def, helper_fn)
     }
 }
-

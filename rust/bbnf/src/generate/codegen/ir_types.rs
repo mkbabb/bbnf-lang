@@ -36,6 +36,8 @@ pub struct IrCodegenCtx<'a> {
     pub boxed_enum_type: Type,
     /// Parser container attributes.
     pub parser_attrs: &'a ParserAttributes,
+    /// Whether prettify codegen is enabled after backend preparation.
+    pub effective_prettify: bool,
     /// Span-eligible rules that successfully produce `_sp()` methods.
     pub sp_method_rules: HashSet<String>,
     /// Pre-computed syn::Type per rule (from IR TypeDesc).
@@ -43,6 +45,9 @@ pub struct IrCodegenCtx<'a> {
     /// Rule IDs with fused number scan+convert. These rules produce `(Span, f64)`
     /// instead of `Span` in the slab enum. Only set for slab codegen context.
     pub fused_number_rules: HashSet<RuleId>,
+    /// Rules that match the operator-chain hot path shape
+    /// `Seq(head, Repeat(Seq(op, rhs)))`.
+    pub operator_chain_rules: HashSet<RuleId>,
     /// Distinct Vec element TypeDescs for scratch Vec generation (slab mode only).
     /// Each entry gets a scratch field `__s{index}` and collect method `__c{index}`.
     pub scratch_types: Vec<TypeDesc>,
@@ -57,6 +62,7 @@ impl<'a> IrCodegenCtx<'a> {
         ir: &'a GrammarIR,
         ident: &'a syn::Ident,
         parser_attrs: &'a ParserAttributes,
+        effective_prettify: bool,
     ) -> Self {
         let enum_ident = quote::format_ident!("{}Enum", ident);
         let enum_type: Type = parse_quote!(#enum_ident<'a>);
@@ -101,9 +107,11 @@ impl<'a> IrCodegenCtx<'a> {
             enum_type,
             boxed_enum_type,
             parser_attrs,
+            effective_prettify,
             sp_method_rules: HashSet::new(),
             rule_types,
             fused_number_rules: HashSet::new(),
+            operator_chain_rules: HashSet::new(),
             scratch_types,
             global_sub_variants,
         }
@@ -146,13 +154,10 @@ impl<'a> IrCodegenCtx<'a> {
 
     /// Look up the precomputed Seq child types from the TypeMap.
     pub fn seq_child_types(&self, children: &[bbnf_ir::IrNode]) -> Option<Vec<TypeDesc>> {
-        self.ir
-            .type_map
-            .as_ref()
-            .and_then(|m| {
-                m.seq_child_types_by_ptr(children.as_ptr() as usize)
-                    .map(|s| s.to_vec())
-            })
+        self.ir.type_map.as_ref().and_then(|m| {
+            m.seq_child_types_by_ptr(children.as_ptr() as usize)
+                .map(|s| s.to_vec())
+        })
     }
 
     /// Look up the result type of a Seq (post-compression, post-flattening).

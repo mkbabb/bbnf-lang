@@ -6,6 +6,7 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use super::super::regex;
+use super::analysis::inline::CallMode;
 use super::helpers::try_sep_by;
 use super::ir_types::IrCodegenCtx;
 use super::sep_by::{SepByConfig, emit_mono_sep_by_core, emit_mono_sep_by_ws, try_unchecked_sep};
@@ -51,8 +52,7 @@ pub(super) fn emit_mono_ref(
 ) -> TokenStream {
     // Phase 3: Inline fusion-eligible rule bodies at call sites (non-cyclic rules).
     // Phase 9: Also inline single-site cyclic rules (e.g. `pair` called only from `object`).
-    let can_inline = mctx.fusion_eligible.get(rule_id as usize).copied() == Some(true)
-        || mctx.single_site_inline.get(rule_id as usize).copied() == Some(true);
+    let can_inline = mctx.call_mode(rule_id) == CallMode::InlineBody;
     if can_inline {
         let rule = &ctx.ir.rules[rule_id as usize];
 
@@ -78,8 +78,7 @@ pub(super) fn emit_mono_ref(
             if elide_box {
                 quote! { #inner.map(|__x| #enum_ident::#variant_ident(__x)) }
             } else {
-                let alloc_code =
-                    ctx.emit_alloc_let(&quote! { #enum_ident::#variant_ident(__x) });
+                let alloc_code = ctx.emit_alloc_let(&quote! { #enum_ident::#variant_ident(__x) });
                 quote! {
                     #inner.map(|__x| {
                         #alloc_code

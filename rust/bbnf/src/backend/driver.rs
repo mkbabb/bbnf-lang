@@ -500,6 +500,8 @@ fn compile_map<E: Emitter>(
 }
 
 /// Compile a Wrap pattern: `open >> middle << close`.
+///
+/// Detects delimited sep_by: `open >> OW(Repeat(sep_by)) << close` with terminator.
 fn compile_wrap<E: Emitter>(
     open: &IrNode,
     middle: &IrNode,
@@ -510,10 +512,66 @@ fn compile_wrap<E: Emitter>(
     emitter: &mut E,
     ctx: &mut E::Ctx,
 ) -> E::Output {
+    let type_map = ir.type_map.as_ref();
+
+    // Decision: detect delimited sep_by with terminator.
+    // Pattern: open >> OW(Repeat(Skip(element, Optional(separator)))) << close
+    // where close is a single-byte Literal.
+    if let Some((inner_repeat, is_ow)) = unwrap_ow(middle) {
+        if let IrNode::Repeat {
+            inner,
+            lo,
+            hi: u32::MAX,
+        } = inner_repeat
+        {
+            if let Some((element, separator)) = detect_sep_by(inner) {
+                // Extract terminator byte(s) from close literal.
+                let terminator_bytes = if let IrNode::Literal(sid) = close {
+                    let raw = ir.get_string(*sid);
+                    let unesc = super::rust::unescape_literal(raw);
+                    Some(unesc.into_bytes())
+                } else {
+                    None
+                };
+
+                let elem_type = type_map
+                    .and_then(|tm| tm.node_type(element).cloned())
+                    .unwrap_or(TypeDesc::Span);
+
+                let open_out =
+                    compile_node(open, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+                let element_out =
+                    compile_node(element, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+                let sep_out =
+                    compile_node(separator, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+                let close_out =
+                    compile_node(close, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+
+                let config = SepByConfig {
+                    ws: is_ow,
+                    lo: *lo,
+                    terminator_bytes,
+                };
+
+                let ws_pattern = ir.ws_pattern.map(|sid| ir.get_string(sid));
+                let sep_by_out = emitter.emit_sep_by(element_out, sep_out, &config, &elem_type, ctx);
+
+                // Wrap: open >> ws_trim(sep_by) << close
+                let middle_out = if is_ow {
+                    emitter.emit_with_ws_trim(sep_by_out, ws_pattern, ctx)
+                } else {
+                    sep_by_out
+                };
+                let after_open = emitter.emit_next(open_out, middle_out, ctx);
+                return emitter.emit_skip(after_open, close_out, ctx);
+            }
+        }
+    }
+
+    // Generic wrap: open >> middle << close.
     let open_out = compile_node(open, AllocStrategy::Elide, ir, dstate, emitter, ctx);
     let middle_out = compile_node(middle, alloc, ir, dstate, emitter, ctx);
     let close_out = compile_node(close, AllocStrategy::Elide, ir, dstate, emitter, ctx);
-    // open >> middle << close = Next(open, Skip(middle, close))
     let after_open = emitter.emit_next(open_out, middle_out, ctx);
     emitter.emit_skip(after_open, close_out, ctx)
 }
@@ -553,6 +611,14 @@ fn detect_sep_by(inner: &IrNode) -> Option<(&IrNode, &IrNode)> {
         }
     }
     None
+}
+
+/// Unwrap an OptionalWhitespace wrapper. Returns `(inner, is_ow)`.
+fn unwrap_ow(node: &IrNode) -> Option<(&IrNode, bool)> {
+    match node {
+        IrNode::OptionalWhitespace(inner) => Some((inner.as_ref(), true)),
+        other => Some((other, false)),
+    }
 }
 
 /// Detect operator chain pattern: `Seq([head, Repeat(Seq([op, rhs]), 0, MAX)])`.

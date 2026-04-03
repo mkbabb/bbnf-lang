@@ -14,8 +14,8 @@ use bbnf::pipeline::{
 use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
 
 fn load_grammar() -> String {
-    std::fs::read_to_string("../../grammar/json/json-pure.bbnf")
-        .expect("failed to read json-pure.bbnf")
+    std::fs::read_to_string("../../grammar/json/json.bbnf")
+        .expect("failed to read json.bbnf")
 }
 
 fn ts_request() -> CompileRequest {

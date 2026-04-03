@@ -576,6 +576,30 @@ impl Emitter for RustEmitter {
         }
     }
 
+    fn emit_with_ws_trim(
+        &mut self,
+        inner: TokenStream,
+        ws_pattern: Option<&str>,
+        _ctx: &mut Self::Ctx,
+    ) -> TokenStream {
+        let trim = if let Some(pattern) = ws_pattern {
+            let opts =
+                crate::generate::regex::EmitOpts::new(&crate::generate::regex::CostModel::DEFAULT);
+            let code = crate::generate::regex::emit_regex(pattern, &opts);
+            quote! { #code; }
+        } else {
+            quote! { ::parse_that::trim_leading_whitespace_mut(state); }
+        };
+        quote! {
+            {
+                #trim
+                let __ws_inner = #inner;
+                #trim
+                __ws_inner
+            }
+        }
+    }
+
     // ── Rule-level emission ─────────────────────────────────────────────
 
     fn emit_rule_function(

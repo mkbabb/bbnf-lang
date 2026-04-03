@@ -8,8 +8,8 @@ use bbnf::pipeline::{
 };
 
 fn json_grammar() -> String {
-    std::fs::read_to_string("../../grammar/json/json-pure.bbnf")
-        .expect("failed to read json-pure.bbnf")
+    std::fs::read_to_string("../../grammar/json/json.bbnf")
+        .expect("failed to read json.bbnf")
 }
 
 #[test]

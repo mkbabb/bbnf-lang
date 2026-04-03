@@ -29,6 +29,9 @@ use crate::backend::{
 pub struct WasmEmitter {
     /// Module name for the WASM output.
     pub module_name: String,
+    /// Regex patterns referenced by the grammar, in order of first encounter.
+    /// The index into this Vec is the `pattern_id` passed to the host `match_regex`.
+    pub regex_patterns: Vec<String>,
 }
 
 /// Mutable context for WASM emission.
@@ -140,14 +143,21 @@ impl Emitter for WasmEmitter {
 
     fn emit_regex_match(
         &mut self,
-        _pattern: &str,
+        pattern: &str,
         _ir: &GrammarIR,
         _ctx: &mut WasmEmitCtx,
     ) -> String {
-        // Regex matching in pure WASM requires an imported host function.
-        // For now, emit a call to an imported function placeholder.
-        // The host module provides: (import "host" "match_regex" (func ...))
-        "(call $__match_regex (local.get $off) (local.get $len))".to_string()
+        // Look up or assign pattern index.
+        let pattern_id = match self.regex_patterns.iter().position(|p| p == pattern) {
+            Some(idx) => idx,
+            None => {
+                let idx = self.regex_patterns.len();
+                self.regex_patterns.push(pattern.to_string());
+                idx
+            }
+        };
+        // Call host with (pattern_id, offset, input_len).
+        format!("(call $__match_regex (i32.const {pattern_id}) (local.get $off) (local.get $len))")
     }
 
     fn emit_epsilon(&mut self, _ctx: &mut WasmEmitCtx) -> String {
@@ -501,6 +511,37 @@ impl Emitter for WasmEmitter {
             .to_string()
     }
 
+    fn emit_with_ws_trim(
+        &mut self,
+        inner: String,
+        _ws_pattern: Option<&str>,
+        ctx: &mut WasmEmitCtx,
+    ) -> String {
+        let result = ctx.fresh("ws_inner");
+        // WS trim loop (same as emit_ws_trim), then inner, then ws trim again.
+        let ws_loop = "\
+            (block $ws_done (loop $ws_loop \
+              (br_if $ws_done (i32.ge_u (local.get $off) (local.get $len))) \
+              (br_if $ws_done (i32.and \
+                (i32.ne (i32.load8_u (local.get $off)) (i32.const 32)) \
+                (i32.and \
+                  (i32.ne (i32.load8_u (local.get $off)) (i32.const 9)) \
+                  (i32.and \
+                    (i32.ne (i32.load8_u (local.get $off)) (i32.const 10)) \
+                    (i32.ne (i32.load8_u (local.get $off)) (i32.const 13)))))) \
+              (local.set $off (i32.add (local.get $off) (i32.const 1))) \
+              (br $ws_loop) \
+            ))";
+        format!(
+            "{ws_loop} \
+             (local.set {result} {inner}) \
+             (if (i32.eq (local.get {result}) (i32.const -1)) (then (return (i32.const -1)))) \
+             (local.set $off (local.get {result})) \
+             {ws_loop} \
+             (local.get $off)"
+        )
+    }
+
     // ── Rule-level emission ─────────────────────────────────────────────
 
     fn emit_rule_function(
@@ -526,8 +567,9 @@ impl Emitter for WasmEmitter {
         _ctx: &mut WasmEmitCtx,
     ) -> String {
         // WASM module header: imports MUST come before all other definitions.
-        "  ;; Host imports for regex matching and number conversion\n  \
-         (import \"host\" \"match_regex\" (func $__match_regex (param i32 i32) (result i32)))\n  \
+        // match_regex takes (pattern_id: i32, offset: i32, input_len: i32) → new_offset or -1.
+        "  ;; Host imports: our DFA regex engine + number scanner\n  \
+         (import \"host\" \"match_regex\" (func $__match_regex (param i32 i32 i32) (result i32)))\n  \
          (import \"host\" \"number_convert\" (func $__number_convert (param i32 i32) (result i32)))\n  \
          (memory (export \"memory\") 1)\n"
             .to_string()

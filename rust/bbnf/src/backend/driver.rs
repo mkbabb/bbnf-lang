@@ -184,15 +184,9 @@ pub fn compile_node<E: Emitter>(
 
         // ── Whitespace ─────────────────────────────────────────────────
         IrNode::OptionalWhitespace(inner) => {
-            // Emit ws trim before and after inner.
             let ws_pattern = ir.ws_pattern.map(|sid| ir.get_string(sid));
-            let pre_ws = emitter.emit_ws_trim(ws_pattern, ctx);
             let inner_out = compile_node(inner, alloc, ir, dstate, emitter, ctx);
-            let post_ws = emitter.emit_ws_trim(ws_pattern, ctx);
-            // The emitter's emit_seq or a dedicated method assembles these.
-            // For now, use skip/next pattern: pre_ws >> inner << post_ws
-            let after_pre = emitter.emit_next(pre_ws, inner_out, ctx);
-            emitter.emit_skip(after_pre, post_ws, ctx)
+            emitter.emit_with_ws_trim(inner_out, ws_pattern, ctx)
         }
 
         // ── Lexer-parser fusion ────────────────────────────────────────

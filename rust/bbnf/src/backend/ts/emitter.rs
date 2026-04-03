@@ -135,10 +135,11 @@ impl Emitter for TsEmitter {
         ctx: &mut TsEmitCtx,
     ) -> String {
         let var = ctx.fresh("re");
-        // Use sticky flag (y) for anchored matching at current offset.
-        let escaped_pattern = pattern.replace('\\', "\\\\").replace('/', "\\/");
+        // Use RegExp constructor with raw pattern (no double-escaping).
+        // BBNF IR stores regex patterns as literal source text.
+        let escaped_for_string = ts_escape(pattern);
         format!(
-            "((() => {{ const {var} = /{escaped_pattern}/y; \
+            "((() => {{ const {var} = new RegExp(\"{escaped_for_string}\", \"y\"); \
              {var}.lastIndex = s.offset; \
              const __m = {var}.exec(s.input); \
              if (!__m) return null; \
@@ -512,8 +513,24 @@ impl Emitter for TsEmitter {
         _ws_pattern: Option<&str>,
         _ctx: &mut TsEmitCtx,
     ) -> String {
-        // Default: skip ASCII whitespace.
         "((() => { while (s.offset < s.input.length && \" \\t\\n\\r\".includes(s.input[s.offset])) s.offset++; return {}; })())".to_string()
+    }
+
+    fn emit_with_ws_trim(
+        &mut self,
+        inner: String,
+        _ws_pattern: Option<&str>,
+        _ctx: &mut TsEmitCtx,
+    ) -> String {
+        format!(
+            "((() => {{ \
+             while (s.offset < s.input.length && \" \\t\\n\\r\".includes(s.input[s.offset])) s.offset++; \
+             const __ws_inner = {inner}; \
+             if (__ws_inner === null) return null; \
+             while (s.offset < s.input.length && \" \\t\\n\\r\".includes(s.input[s.offset])) s.offset++; \
+             return __ws_inner; \
+             }})())"
+        )
     }
 
     // ── Rule-level emission ─────────────────────────────────────────────

@@ -333,9 +333,21 @@ pub trait Emitter {
         ctx: &mut Self::Ctx,
     ) -> Self::Output;
 
-    /// Emit whitespace trimming (from `?w` / OptionalWhitespace).
+    /// Emit whitespace trimming (from `?w` / OptionalWhitespace) as a side effect.
     fn emit_ws_trim(
         &mut self,
+        ws_pattern: Option<&str>,
+        ctx: &mut Self::Ctx,
+    ) -> Self::Output;
+
+    /// Emit an expression wrapped with optional whitespace trimming.
+    ///
+    /// Trims whitespace before and after `inner`, returning `inner`'s value.
+    /// This is the correct compilation of `?w` (OptionalWhitespace):
+    /// ws_trim is a side-effect (advances offset), inner's value propagates.
+    fn emit_with_ws_trim(
+        &mut self,
+        inner: Self::Output,
         ws_pattern: Option<&str>,
         ctx: &mut Self::Ctx,
     ) -> Self::Output;

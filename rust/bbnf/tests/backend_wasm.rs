@@ -7,10 +7,10 @@ use bbnf::pipeline::{
     CompileOutput, CompileRequest, CompileTarget, PipelineOptions, compile_grammar_request,
 };
 
-/// Load the cross-backend JSON grammar from `grammar/json/json-pure.bbnf`.
+/// Load the cross-backend JSON grammar from `grammar/json/json.bbnf`.
 fn json_grammar() -> String {
-    std::fs::read_to_string("../../grammar/json/json-pure.bbnf")
-        .expect("failed to read json-pure.bbnf")
+    std::fs::read_to_string("../../grammar/json/json.bbnf")
+        .expect("failed to read json.bbnf")
 }
 
 fn wasm_request() -> CompileRequest {

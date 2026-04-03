@@ -207,13 +207,19 @@ macro_rules! bench {
             let input = load($file);
             let bundle = compiled_wasm();
             b.bytes = input.len() as u64;
+
+            // Instantiate ONCE outside the loop (same as VM pre-compiles once).
+            let (mut store, instance, input_len) =
+                instantiate_with_input(&bundle, &input).unwrap();
+            let parse = instance
+                .get_typed_func::<(i32, i32), i32>(&mut store, "parse")
+                .unwrap();
+            let memory = instance
+                .get_memory(&mut store, "memory")
+                .expect("missing memory export");
+
             {
                 // Warmup + correctness: assert the parse consumed full input.
-                let (mut store, instance, input_len) =
-                    instantiate_with_input(&bundle, &input).unwrap();
-                let parse = instance
-                    .get_typed_func::<(i32, i32), i32>(&mut store, "parse")
-                    .unwrap();
                 let result = parse.call(&mut store, (0, input_len as i32)).unwrap();
                 assert!(
                     result >= 0 && (result as usize) >= input.trim_end().len(),
@@ -223,11 +229,10 @@ macro_rules! bench {
                 );
             }
             b.iter(|| {
-                let (mut store, instance, input_len) =
-                    instantiate_with_input(&bundle, black_box(&input)).unwrap();
-                let parse = instance
-                    .get_typed_func::<(i32, i32), i32>(&mut store, "parse")
-                    .unwrap();
+                // Re-copy input bytes (parser may have mutated linear memory state).
+                let input_bytes = black_box(&input).as_bytes();
+                memory.data_mut(&mut store)[..input_bytes.len()]
+                    .copy_from_slice(input_bytes);
                 let result = parse.call(&mut store, (0, input_len as i32)).unwrap();
                 black_box(result);
             });

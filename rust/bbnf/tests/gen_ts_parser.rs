@@ -32,64 +32,73 @@ fn generate_ts_parser_for_bench() {
     eprintln!("Wrote {} bytes to {}", js.len(), out_path.display());
 }
 
-/// Minimal TS → JS strip: remove type annotations, interfaces, and type aliases.
-/// Sufficient for the BBNF-generated output which uses simple TS syntax.
+/// Strip TypeScript type annotations to produce valid ESM JavaScript.
+///
+/// Handles the patterns emitted by TsEmitter:
+/// - `interface Foo { ... }` blocks → removed
+/// - `type Foo = ...;` declarations → removed
+/// - `(s: ParserState): RetType | null {` → `(s) {`
+/// - `as const` → removed
+/// - `start: number, end: number` → `start, end`
 fn strip_ts_types(ts: &str) -> String {
     let mut lines: Vec<String> = Vec::new();
-    let mut skip_block = false;
+    let mut brace_depth: i32 = 0;
+    let mut skipping = false;
 
     for line in ts.lines() {
         let trimmed = line.trim();
 
-        // Skip interface blocks.
-        if trimmed.starts_with("interface ") {
-            skip_block = true;
-            continue;
-        }
-        // Skip type alias lines.
-        if trimmed.starts_with("type ") {
-            // Multi-line type: skip until we see a lone `;`
-            if !trimmed.ends_with(';') {
-                skip_block = true;
+        // Start skipping interface/type blocks.
+        if !skipping
+            && (trimmed.starts_with("interface ") || trimmed.starts_with("type "))
+        {
+            // Single-line type: `type Foo = bar;`
+            if trimmed.ends_with(';') && !trimmed.contains('{') {
+                continue;
             }
-            continue;
+            // Multi-line: skip until matching brace close.
+            skipping = true;
+            brace_depth = 0;
         }
-        if skip_block {
-            if trimmed == "}" || trimmed.ends_with(';') {
-                skip_block = false;
+
+        if skipping {
+            for ch in trimmed.chars() {
+                if ch == '{' {
+                    brace_depth += 1;
+                }
+                if ch == '}' {
+                    brace_depth -= 1;
+                }
+            }
+            // Multi-line type aliases end with `;` at depth 0.
+            if brace_depth <= 0 && (trimmed.ends_with(';') || trimmed == "}") {
+                skipping = false;
             }
             continue;
         }
 
-        // Strip inline type annotations:
-        // `(s: ParserState): FooValue | null` → `(s)`
-        // `as const` → ``
         let mut cleaned = line.to_string();
-        // Remove `: TypeName` from function params and return types.
-        // Simple regex-free approach: handle the patterns we emit.
+
+        // Remove `as const`.
         cleaned = cleaned.replace(" as const", "");
 
-        // Strip parameter types: `(s: ParserState)` → `(s)`
-        if let Some(start) = cleaned.find("(s: ParserState)") {
-            cleaned = cleaned.replace("(s: ParserState)", "(s)");
-        }
+        // Strip parameter types: `(s: ParserState)` → `(s)`.
+        cleaned = cleaned.replace("(s: ParserState)", "(s)");
+        cleaned = cleaned.replace("(input: string)", "(input)");
 
-        // Strip return type annotations: `): FooValue | null {` → `) {`
+        // Strip parameter types in function declarations:
+        // `(start: number, end: number)` → `(start, end)`
+        cleaned = cleaned.replace("start: number, end: number", "start, end");
+        cleaned = cleaned.replace("input: string", "input");
+
+        // Strip return type: `): RetType | null {` → `) {`
+        // For object return types like `): { result: ...; offset: ... } {`,
+        // find the LAST `{` on the line as the function body start.
         if let Some(idx) = cleaned.find("): ") {
-            if let Some(brace) = cleaned[idx..].find('{') {
-                let before = &cleaned[..idx + 1];
-                let after = &cleaned[idx + brace..];
-                cleaned = format!("{before} {after}");
-            }
-        }
-
-        // Strip `: { result: ... }` return type from export function
-        if cleaned.contains("export function parse(input: string)") {
-            cleaned = cleaned.replace("input: string", "input");
-            if let Some(idx) = cleaned.find("): ") {
-                if let Some(brace) = cleaned[idx..].find('{') {
+            if let Some(last_brace) = cleaned.rfind('{') {
+                if last_brace > idx {
                     let before = &cleaned[..idx + 1];
-                    let after = &cleaned[idx + brace..];
+                    let after = &cleaned[last_brace..];
                     cleaned = format!("{before} {after}");
                 }
             }

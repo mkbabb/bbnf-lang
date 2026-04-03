@@ -2,17 +2,13 @@
 
 // ── Runtime types ────────────────────────────────────────────────
 
-  offset: number;
-}
 
-  end: number;
-}
 
-function span(start: number, end: number) {
+function span(start, end) {
   return { start, end };
 }
 
-function createState(input: string) {
+function createState(input) {
   return { input, offset: 0 };
 }
 
@@ -26,6 +22,16 @@ function __number(s) {
   return __r !== null ? { tag: "number", value: __r } : null;
 }
 
+function __comma(s) {
+  const __r = ((() => { const __kept = ((() => { if ((((() => { while (s.offset < s.input.length && " \t\n\r".includes(s.input[s.offset])) s.offset++; return {}; })())) === null) return null; return (s.offset < s.input.length && s.input.charCodeAt(s.offset) === 44 ? (() => { const __start = s.offset; s.offset += 1; return span(__start, s.offset); })() : null); })()); if (__kept === null) return null; if ((((() => { while (s.offset < s.input.length && " \t\n\r".includes(s.input[s.offset])) s.offset++; return {}; })())) === null) return null; return __kept; })());
+  return __r !== null ? { tag: "comma", value: __r } : null;
+}
+
+function __colon(s) {
+  const __r = ((() => { const __kept = ((() => { if ((((() => { while (s.offset < s.input.length && " \t\n\r".includes(s.input[s.offset])) s.offset++; return {}; })())) === null) return null; return (s.offset < s.input.length && s.input.charCodeAt(s.offset) === 58 ? (() => { const __start = s.offset; s.offset += 1; return span(__start, s.offset); })() : null); })()); if (__kept === null) return null; if ((((() => { while (s.offset < s.input.length && " \t\n\r".includes(s.input[s.offset])) s.offset++; return {}; })())) === null) return null; return __kept; })());
+  return __r !== null ? { tag: "colon", value: __r } : null;
+}
+
 function __bool(s) {
   const __r = ((() => {
   const __cp1 = s.offset; { const __r = (s.input.startsWith("false", s.offset) ? (() => { const __start = s.offset; s.offset += 5; return span(__start, s.offset); })() : null); if (__r !== null) return __r; } s.offset = __cp1;
@@ -35,24 +41,14 @@ function __bool(s) {
   return __r !== null ? { tag: "bool", value: __r } : null;
 }
 
-function __colon(s) {
-  const __r = ((() => { const __kept = ((() => { if ((((() => { while (s.offset < s.input.length && " \t\n\r".includes(s.input[s.offset])) s.offset++; return {}; })())) === null) return null; return (s.offset < s.input.length && s.input.charCodeAt(s.offset) === 58 ? (() => { const __start = s.offset; s.offset += 1; return span(__start, s.offset); })() : null); })()); if (__kept === null) return null; if ((((() => { while (s.offset < s.input.length && " \t\n\r".includes(s.input[s.offset])) s.offset++; return {}; })())) === null) return null; return __kept; })());
-  return __r !== null ? { tag: "colon", value: __r } : null;
+function __null(s) {
+  const __r = (s.input.startsWith("null", s.offset) ? (() => { const __start = s.offset; s.offset += 4; return span(__start, s.offset); })() : null);
+  return __r !== null ? { tag: "null", value: __r } : null;
 }
 
 function __string(s) {
   const __r = ((() => { const __re3 = /"(?:[^"\\\\]|\\\\(?:["\\\\\\\/bfnrt]|u[0-9a-fA-F]{4}))*"/y; __re3.lastIndex = s.offset; const __m = __re3.exec(s.input); if (!__m) return null; const __start = s.offset; s.offset = __re3.lastIndex; return span(__start, s.offset); })());
   return __r !== null ? { tag: "string", value: __r } : null;
-}
-
-function __comma(s) {
-  const __r = ((() => { const __kept = ((() => { if ((((() => { while (s.offset < s.input.length && " \t\n\r".includes(s.input[s.offset])) s.offset++; return {}; })())) === null) return null; return (s.offset < s.input.length && s.input.charCodeAt(s.offset) === 44 ? (() => { const __start = s.offset; s.offset += 1; return span(__start, s.offset); })() : null); })()); if (__kept === null) return null; if ((((() => { while (s.offset < s.input.length && " \t\n\r".includes(s.input[s.offset])) s.offset++; return {}; })())) === null) return null; return __kept; })());
-  return __r !== null ? { tag: "comma", value: __r } : null;
-}
-
-function __null(s) {
-  const __r = (s.input.startsWith("null", s.offset) ? (() => { const __start = s.offset; s.offset += 4; return span(__start, s.offset); })() : null);
-  return __r !== null ? { tag: "null", value: __r } : null;
 }
 
 function __object(s) {
@@ -105,7 +101,7 @@ function __pair(s) {
 
 // ── Public API ──────────────────────────────────────────────────
 
-export function parse(input) { result: valueValue | null; offset: number } {
+export function parse(input) {
   const s = createState(input);
   const result = __value(s);
   return { result, offset: s.offset };

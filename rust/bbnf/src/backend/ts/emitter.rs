@@ -433,6 +433,30 @@ impl Emitter for TsEmitter {
         }
     }
 
+    // ── Operator chains ──────────────────────────────────────────────────
+
+    fn emit_operator_chain(
+        &mut self,
+        head: String,
+        op: String,
+        rhs: String,
+        _ctx: &mut TsEmitCtx,
+    ) -> String {
+        format!(
+            "((() => {{ \
+             const __head = {head}; if (__head === null) return null; \
+             while (true) {{ \
+               const __cp = s.offset; \
+               const __op = {op}; \
+               if (__op === null) {{ s.offset = __cp; break; }} \
+               const __rhs = {rhs}; \
+               if (__rhs === null) {{ s.offset = __cp; break; }} \
+             }} \
+             return __head; \
+             }})())"
+        )
+    }
+
     // ── Binary operators ────────────────────────────────────────────────
 
     fn emit_skip(

@@ -275,6 +275,20 @@ pub trait Emitter {
         ctx: &mut Self::Ctx,
     ) -> Self::Output;
 
+    // ── Operator chains ──────────────────────────────────────────────────
+
+    /// Emit an operator chain: `head (op rhs)*` as an iterative loop.
+    ///
+    /// This is the optimized form of `Seq(head, Repeat(Seq(op, rhs)))` —
+    /// emitted as a flat loop instead of nested closures/calls.
+    fn emit_operator_chain(
+        &mut self,
+        head: Self::Output,
+        op: Self::Output,
+        rhs: Self::Output,
+        ctx: &mut Self::Ctx,
+    ) -> Self::Output;
+
     // ── Binary operators ────────────────────────────────────────────────
 
     /// Emit Skip: parse both sides, return the left result.

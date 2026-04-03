@@ -383,6 +383,38 @@ impl Emitter for WasmEmitter {
         body
     }
 
+    // ── Operator chains ──────────────────────────────────────────────────
+
+    fn emit_operator_chain(
+        &mut self,
+        head: String,
+        op: String,
+        rhs: String,
+        ctx: &mut WasmEmitCtx,
+    ) -> String {
+        let head_var = ctx.fresh("oc_head");
+        let cp = ctx.fresh("oc_cp");
+        let op_var = ctx.fresh("oc_op");
+        let rhs_var = ctx.fresh("oc_rhs");
+        format!(
+            "(local.set {head_var} {head}) \
+             (if (i32.eq (local.get {head_var}) (i32.const -1)) (then (return (i32.const -1)))) \
+             (local.set $off (local.get {head_var})) \
+             (block $oc_exit (loop $oc_loop \
+               (local.set {cp} (local.get $off)) \
+               (local.set {op_var} {op}) \
+               (br_if $oc_exit (i32.eq (local.get {op_var}) (i32.const -1))) \
+               (local.set $off (local.get {op_var})) \
+               (local.set {rhs_var} {rhs}) \
+               (if (i32.eq (local.get {rhs_var}) (i32.const -1)) \
+                 (then (local.set $off (local.get {cp})) (br $oc_exit))) \
+               (local.set $off (local.get {rhs_var})) \
+               (br $oc_loop) \
+             )) \
+             (local.get $off)"
+        )
+    }
+
     // ── Binary operators ────────────────────────────────────────────────
 
     fn emit_skip(

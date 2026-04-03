@@ -454,6 +454,31 @@ impl Emitter for RustEmitter {
         }
     }
 
+    // ── Operator chains ──────────────────────────────────────────────────
+
+    fn emit_operator_chain(
+        &mut self,
+        head: TokenStream,
+        op: TokenStream,
+        rhs: TokenStream,
+        _ctx: &mut Self::Ctx,
+    ) -> TokenStream {
+        quote! {
+            (|| {
+                let __head = #head?;
+                let __sp_start = state.offset;
+                loop {
+                    let __cp = state.offset;
+                    let __op = #op;
+                    if __op.is_none() { state.offset = __cp; break; }
+                    let __rhs = #rhs;
+                    if __rhs.is_none() { state.offset = __cp; break; }
+                }
+                Some(::parse_that::Span::new(__sp_start, state.offset, state.src))
+            })()
+        }
+    }
+
     // ── Binary operators ────────────────────────────────────────────────
 
     fn emit_skip(

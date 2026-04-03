@@ -128,7 +128,16 @@ pub fn compile_node<E: Emitter>(
         IrNode::Epsilon => emitter.emit_epsilon(ctx),
 
         // ── Structural ─────────────────────────────────────────────────
-        IrNode::Seq(children) => compile_seq(children, alloc, ir, dstate, emitter, ctx),
+        IrNode::Seq(children) => {
+            // Decision: detect operator chain pattern Seq(head, Repeat(Seq(op, rhs))).
+            if let Some((head, op, rhs)) = detect_operator_chain(children) {
+                let head_out = compile_node(head, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+                let op_out = compile_node(op, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+                let rhs_out = compile_node(rhs, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+                return emitter.emit_operator_chain(head_out, op_out, rhs_out, ctx);
+            }
+            compile_seq(children, alloc, ir, dstate, emitter, ctx)
+        }
 
         IrNode::Alt(branches, dispatch) => {
             compile_alt(branches, dispatch.as_ref(), alloc, ir, dstate, emitter, ctx)
@@ -541,6 +550,28 @@ fn detect_sep_by(inner: &IrNode) -> Option<(&IrNode, &IrNode)> {
         } = opt_sep.as_ref()
         {
             return Some((element.as_ref(), separator.as_ref()));
+        }
+    }
+    None
+}
+
+/// Detect operator chain pattern: `Seq([head, Repeat(Seq([op, rhs]), 0, MAX)])`.
+///
+/// Returns `(head, op, rhs)` if the pattern matches.
+fn detect_operator_chain(children: &[IrNode]) -> Option<(&IrNode, &IrNode, &IrNode)> {
+    if children.len() != 2 {
+        return None;
+    }
+    if let IrNode::Repeat {
+        inner,
+        lo: 0,
+        hi: u32::MAX,
+    } = &children[1]
+    {
+        if let IrNode::Seq(link) = inner.as_ref() {
+            if link.len() == 2 {
+                return Some((&children[0], &link[0], &link[1]));
+            }
         }
     }
     None

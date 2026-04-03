@@ -6,4 +6,5 @@
 
 pub mod bytecode;
 pub mod compiler;
+pub mod debug;
 pub mod interpreter;

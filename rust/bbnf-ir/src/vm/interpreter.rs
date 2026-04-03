@@ -4,74 +4,14 @@
 //! The interpreter uses a tight loop with explicit stacks for call frames,
 //! checkpoints, and values.
 
-use std::{collections::HashSet, fmt, ops::Deref, ptr::NonNull};
+use std::{fmt, ops::Deref, ptr::NonNull};
 
 use parse_that::BumpSlab;
 use rustc_hash::FxHashMap;
 
 use super::bytecode::{BytecodeProgram, Op};
+pub use super::debug::*;
 use crate::RuleId;
-
-// ── Debug types ─────────────────────────────────────────────────────────────
-
-/// Step mode for interactive debugging.
-#[derive(Clone, Debug, PartialEq)]
-pub enum StepMode {
-    /// Run until a breakpoint is hit.
-    Continue,
-    /// Stop at the next rule entry/exit.
-    StepRule,
-    /// Stop at the next `DebugBreak` opcode.
-    StepNode,
-    /// Stop at every opcode.
-    StepInstruction,
-}
-
-/// Action returned by the debug callback to control execution.
-#[derive(Clone, Debug, PartialEq)]
-pub enum DebugAction {
-    Continue,
-    StepRule,
-    StepNode,
-    StepInstruction,
-    Stop,
-}
-
-/// Snapshot of interpreter state at a debug break.
-#[derive(Clone, Debug)]
-pub struct DebugSnapshot {
-    pub pc: u32,
-    pub offset: u32,
-    pub rule_stack: Vec<RuleId>,
-    pub rule_id: RuleId,
-    pub is_entry: bool,
-    pub is_error: bool,
-    pub values_depth: usize,
-}
-
-/// A recorded trace entry for deterministic replay.
-#[derive(Clone, Debug)]
-pub struct TraceEntry {
-    pub pc: u32,
-    pub offset: u32,
-    pub rule_id: RuleId,
-    pub is_entry: bool,
-}
-
-/// Interactive debug state attached to the interpreter.
-///
-/// When `None`, `DebugBreak` opcodes are a single branch (`self.pc += 1`) —
-/// negligible overhead. When `Some`, enables breakpoints, stepping, and replay.
-pub struct DebugState {
-    /// Rules with active breakpoints.
-    pub breakpoints: HashSet<RuleId>,
-    /// Current step mode.
-    pub step_mode: StepMode,
-    /// Trace log for deterministic replay (`stepBack`).
-    pub trace: Vec<TraceEntry>,
-    /// Callback invoked when the interpreter hits a debug point.
-    pub on_break: Box<dyn FnMut(&DebugSnapshot) -> DebugAction>,
-}
 
 // ── Value types ─────────────────────────────────────────────────────────────
 
@@ -336,8 +276,14 @@ impl<'prog> Interpreter<'prog> {
                     self.pc += 1;
                 }
                 Op::DiscardLeft => {
-                    let left_right_boundary = self.value_depth_stack.pop().unwrap_or(0);
-                    let context_depth = self.value_depth_stack.pop().unwrap_or(0);
+                    let left_right_boundary = self
+                        .value_depth_stack
+                        .pop()
+                        .expect("DiscardLeft: value_depth_stack missing left_right_boundary");
+                    let context_depth = self
+                        .value_depth_stack
+                        .pop()
+                        .expect("DiscardLeft: value_depth_stack missing context_depth");
                     if left_right_boundary > context_depth
                         && left_right_boundary <= self.values.len()
                     {
@@ -373,6 +319,7 @@ impl<'prog> Interpreter<'prog> {
                         self.pc = fallback;
                     }
                 }
+                Op::DispatchToken(table_idx) => self.exec_dispatch_token(table_idx),
                 Op::DebugBreak { rule_id, is_entry } => {
                     if let Some(ref mut dbg) = self.debug_state {
                         dbg.trace.push(TraceEntry {
@@ -521,6 +468,40 @@ impl<'prog> Interpreter<'prog> {
         self.values.push(Value::Nil);
         self.is_error = false;
         self.pc += 1;
+    }
+
+    #[inline(always)]
+    fn exec_dispatch_token(&mut self, table_idx: u16) {
+        let data = &self.program.token_dispatch_tables[table_idx as usize];
+        let Some(Value::Span(start, end)) = self.values.last().cloned() else {
+            self.is_error = true;
+            self.pc = data.fallback;
+            return;
+        };
+
+        let token_bytes = &self.input_bytes[start as usize..end as usize];
+        for arm in &data.arms {
+            let matched = arm
+                .patterns
+                .iter()
+                .any(|sid| self.program.strings[*sid as usize].as_bytes() == token_bytes);
+            if !matched {
+                continue;
+            }
+            if let Some(guard) = arm.guard_byte {
+                if self.input_bytes.get(self.offset as usize).copied() != Some(guard) {
+                    continue;
+                }
+            }
+
+            self.values.pop();
+            self.is_error = false;
+            self.pc = arm.offset;
+            return;
+        }
+
+        self.is_error = true;
+        self.pc = data.fallback;
     }
 }
 

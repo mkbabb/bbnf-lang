@@ -137,9 +137,24 @@ fn finalize_compile(
             Ok(CompileOutput::Ts(output))
         }
         CompileTarget::Wasm => {
+            bbnf_ir::passes::compute_sp_method_rules(&mut ir);
             bbnf_ir::passes::project_types(&mut ir);
-            // TODO: Wire up WasmEmitter when WASM backend is implemented.
-            Ok(CompileOutput::Wasm(Vec::new()))
+
+            let entry_name = ir.get_string(ir.rules[ir.entry as usize].name).to_string();
+            let module_name = format!("{entry_name}_parser");
+
+            let analysis = crate::backend::analysis::BackendAnalysis::default();
+            let call_strategies = vec![
+                crate::backend::CallStrategy::DirectCall;
+                ir.rules.len()
+            ];
+            let mut dstate = crate::backend::driver::DriverState::new(call_strategies);
+            let mut emitter = crate::backend::wasm::WasmEmitter { module_name };
+            let mut ctx = crate::backend::wasm::emitter::WasmEmitCtx::default();
+
+            let wat_source =
+                crate::backend::driver::compile_grammar(&ir, &analysis, &mut dstate, &mut emitter, &mut ctx);
+            Ok(CompileOutput::Wasm(wat_source.into_bytes()))
         }
     }
 }

@@ -292,6 +292,49 @@ fn ts_backend_emits_discriminated_union() {
     assert!(output.contains("tag: \"list\""), "missing list variant: {output}");
 }
 
+// ── WASM backend tests ──────────────────────────────────────────────────
+
+fn wasm_request() -> CompileRequest {
+    CompileRequest {
+        options: PipelineOptions::default(),
+        target: CompileTarget::Wasm,
+    }
+}
+
+#[test]
+fn wasm_backend_produces_valid_wat() {
+    let grammar = r#"
+        value = "true" | "false" | "null" ;
+    "#;
+
+    let output = match compile_grammar_request(grammar, &wasm_request()).unwrap() {
+        CompileOutput::Wasm(bytes) => String::from_utf8(bytes).unwrap(),
+        _ => panic!("expected WASM output"),
+    };
+
+    // Structural checks: valid WAT module with functions and exports.
+    assert!(output.contains("(module $"), "missing module declaration: {output}");
+    assert!(output.contains("(func $__value"), "missing __value function: {output}");
+    assert!(output.contains("(export \"parse\""), "missing parse export: {output}");
+    assert!(output.contains("(memory"), "missing memory declaration: {output}");
+}
+
+#[test]
+fn wasm_backend_emits_literal_matching() {
+    let grammar = r#"
+        item = "hello" ;
+    "#;
+
+    let output = match compile_grammar_request(grammar, &wasm_request()).unwrap() {
+        CompileOutput::Wasm(bytes) => String::from_utf8(bytes).unwrap(),
+        _ => panic!("expected WASM output"),
+    };
+
+    // Should contain byte-level comparisons for "hello" (h=104, e=101, l=108, l=108, o=111).
+    assert!(output.contains("i32.const 104"), "missing 'h' byte check: {output}");
+    assert!(output.contains("i32.load8_u"), "missing byte load: {output}");
+}
+
 #[test]
 fn ts_backend_handles_alternation_dispatch() {
     let grammar = r#"

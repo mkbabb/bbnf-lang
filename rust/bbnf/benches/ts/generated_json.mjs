@@ -21,24 +21,19 @@ const __RE0 = new RegExp("\"(?:[^\"\\\\]|\\\\(?:[\"\\\\\\/bfnrt]|u[0-9a-fA-F]{4}
 
 // ── Parser functions ─────────────────────────────────────────────
 
-function __null(s) {
-  const __r = ((() => { if (((s.input.startsWith("null", s.offset) ? (() => { const __start = s.offset; s.offset += 4; return span(__start, s.offset); })() : null)) === null) return null; return 0; })());
-  return __r !== null ? { tag: "null", value: __r } : null;
-}
-
 function __string(s) {
   const __r = ((() => { __RE0.lastIndex = s.offset; const __m = __RE0.exec(s.input); if (!__m) return null; const __start = s.offset; s.offset = __RE0.lastIndex; return span(__start, s.offset); })());
   return __r !== null ? { tag: "string", value: __r } : null;
 }
 
-function __comma(s) {
-  const __r = ((() => { while (s.offset < s.input.length) { const __c = s.input.charCodeAt(s.offset); if (__c === 32 || __c === 9 || __c === 10 || __c === 13) s.offset++; else break; } const __ws_inner = (s.offset < s.input.length && s.input.charCodeAt(s.offset) === 44 ? (() => { const __start = s.offset; s.offset += 1; return span(__start, s.offset); })() : null); if (__ws_inner === null) return null; while (s.offset < s.input.length) { const __c = s.input.charCodeAt(s.offset); if (__c === 32 || __c === 9 || __c === 10 || __c === 13) s.offset++; else break; } return __ws_inner; })());
-  return __r !== null ? { tag: "comma", value: __r } : null;
+function __number(s) {
+  const __r = ((() => { const __re0 = /[-+]?(?:[0-9]*\.)?[0-9]+(?:[eE][-+]?[0-9]+)?/y; __re0.lastIndex = s.offset; const __m = __re0.exec(s.input); if (!__m) return null; s.offset = __re0.lastIndex; return parseFloat(__m[0]); })());
+  return __r !== null ? { tag: "number", value: __r } : null;
 }
 
-function __colon(s) {
-  const __r = ((() => { while (s.offset < s.input.length) { const __c = s.input.charCodeAt(s.offset); if (__c === 32 || __c === 9 || __c === 10 || __c === 13) s.offset++; else break; } const __ws_inner = (s.offset < s.input.length && s.input.charCodeAt(s.offset) === 58 ? (() => { const __start = s.offset; s.offset += 1; return span(__start, s.offset); })() : null); if (__ws_inner === null) return null; while (s.offset < s.input.length) { const __c = s.input.charCodeAt(s.offset); if (__c === 32 || __c === 9 || __c === 10 || __c === 13) s.offset++; else break; } return __ws_inner; })());
-  return __r !== null ? { tag: "colon", value: __r } : null;
+function __null(s) {
+  const __r = ((() => { if (((s.input.startsWith("null", s.offset) ? (() => { const __start = s.offset; s.offset += 4; return span(__start, s.offset); })() : null)) === null) return null; return 0; })());
+  return __r !== null ? { tag: "null", value: __r } : null;
 }
 
 function __bool(s) {
@@ -52,9 +47,14 @@ function __bool(s) {
   return __r !== null ? { tag: "bool", value: __r } : null;
 }
 
-function __number(s) {
-  const __r = ((() => { const __re0 = /[-+]?(?:[0-9]*\.)?[0-9]+(?:[eE][-+]?[0-9]+)?/y; __re0.lastIndex = s.offset; const __m = __re0.exec(s.input); if (!__m) return null; s.offset = __re0.lastIndex; return parseFloat(__m[0]); })());
-  return __r !== null ? { tag: "number", value: __r } : null;
+function __comma(s) {
+  const __r = ((() => { while (s.offset < s.input.length) { const __c = s.input.charCodeAt(s.offset); if (__c === 32 || __c === 9 || __c === 10 || __c === 13) s.offset++; else break; } const __ws_inner = (s.offset < s.input.length && s.input.charCodeAt(s.offset) === 44 ? (() => { const __start = s.offset; s.offset += 1; return span(__start, s.offset); })() : null); if (__ws_inner === null) return null; while (s.offset < s.input.length) { const __c = s.input.charCodeAt(s.offset); if (__c === 32 || __c === 9 || __c === 10 || __c === 13) s.offset++; else break; } return __ws_inner; })());
+  return __r !== null ? { tag: "comma", value: __r } : null;
+}
+
+function __colon(s) {
+  const __r = ((() => { while (s.offset < s.input.length) { const __c = s.input.charCodeAt(s.offset); if (__c === 32 || __c === 9 || __c === 10 || __c === 13) s.offset++; else break; } const __ws_inner = (s.offset < s.input.length && s.input.charCodeAt(s.offset) === 58 ? (() => { const __start = s.offset; s.offset += 1; return span(__start, s.offset); })() : null); if (__ws_inner === null) return null; while (s.offset < s.input.length) { const __c = s.input.charCodeAt(s.offset); if (__c === 32 || __c === 9 || __c === 10 || __c === 13) s.offset++; else break; } return __ws_inner; })());
+  return __r !== null ? { tag: "colon", value: __r } : null;
 }
 
 function __object(s) {

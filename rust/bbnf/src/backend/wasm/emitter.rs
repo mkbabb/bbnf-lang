@@ -196,18 +196,87 @@ impl Emitter for WasmEmitter {
 
     fn emit_alt_dispatch(
         &mut self,
-        _table: &AltDispatch,
-        mut branches: Vec<(AltBranchInfo, String)>,
+        table: &AltDispatch,
+        branches: Vec<(AltBranchInfo, String)>,
         fallback: Option<(AltBranchInfo, String)>,
-        alloc: AllocStrategy,
+        _alloc: AllocStrategy,
         ctx: &mut WasmEmitCtx,
     ) -> String {
-        // Delegate to checkpoint chain — correct and portable.
-        // Block-based br_table dispatch is a future optimization.
-        if let Some(fb) = fallback {
-            branches.push(fb);
+        // Build a 128-entry br_table: byte → branch block index.
+        // WASM blocks close innermost-first, so the first opened block
+        // is the OUTERMOST and gets the HIGHEST branch index in br_table.
+        //
+        // Layout:
+        //   (block $exit         ;; outermost — final result
+        //     (block $fb         ;; fallback target
+        //       (block $b{n-1}   ;; last branch
+        //         ...
+        //           (block $b0   ;; first branch (innermost)
+        //             br_table [mapping] $fb
+        //           ) ;; end $b0
+        //           <branch 0 body>
+        //         ) ;; end $b1
+        //         <branch 1 body>
+        //       ...
+        //     ) ;; end $fb
+        //     <fallback body>
+        //   ) ;; end $exit
+
+        let save = ctx.fresh("dt_save");
+        let result = ctx.fresh("dt_result");
+        let n = branches.len();
+
+        // Build br_table entries: table[byte] → block depth to break to.
+        // Block $b0 is innermost (depth 0), $b{n-1} is depth n-1, $fb is depth n.
+        let mut br_entries = vec![n as u32; 128]; // default → fallback
+        for (branch_idx, _) in branches.iter().enumerate() {
+            for (byte_val, &mapped) in table.table.iter().enumerate() {
+                if mapped as usize == branch_idx {
+                    br_entries[byte_val] = branch_idx as u32;
+                }
+            }
         }
-        self.emit_alt_checkpoint(branches, alloc, ctx)
+
+        // Format br_table target list.
+        let br_targets: String = br_entries.iter().map(|t| t.to_string()).collect::<Vec<_>>().join(" ");
+
+        // Open blocks: outermost $exit, then $fb, then $b{n-1} .. $b0 (innermost).
+        let mut body = format!("(local.set {save} (local.get $off)) ");
+        body.push_str("(block $dt_exit ");
+        body.push_str("(block $dt_fb ");
+        for i in (0..n).rev() {
+            body.push_str(&format!("(block $dt_b{i} "));
+        }
+
+        // br_table instruction inside innermost block.
+        body.push_str(&format!(
+            "(br_table {br_targets} $dt_fb (i32.load8_u (local.get {save})))"
+        ));
+
+        // Close blocks and emit branch bodies (innermost first = branch 0 first).
+        for (i, (_info, branch_body)) in branches.iter().enumerate() {
+            body.push_str(&format!(
+                ") \
+                 (local.set $off (local.get {save})) \
+                 (local.set {result} {branch_body}) \
+                 (br_if $dt_exit (i32.ne (local.get {result}) (i32.const -1))) "
+            ));
+        }
+
+        // Fallback block.
+        let fb_body = fallback
+            .as_ref()
+            .map(|(_, b)| b.as_str())
+            .unwrap_or("(i32.const -1)");
+        body.push_str(&format!(
+            ") \
+             (local.set $off (local.get {save})) \
+             (local.set {result} {fb_body}) "
+        ));
+
+        // Exit block — return result.
+        body.push_str(&format!(") (local.get {result})"));
+        body
     }
 
     fn emit_alt_checkpoint(

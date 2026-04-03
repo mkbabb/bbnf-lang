@@ -7,6 +7,8 @@ pub use grammar::*;
 pub mod generate;
 pub use generate::*;
 
+pub mod backend;
+
 pub mod analysis;
 pub use analysis::*;
 

@@ -287,7 +287,10 @@ number = /-?\d+/ ;
     );
 
     bbnf_ir::passes::project_types(&mut ir);
-    assert!(test_parse(&ir, "11-project_types"), "project_types broke it");
+    assert!(
+        test_parse(&ir, "11-project_types"),
+        "project_types broke it"
+    );
 }
 
 #[test]
@@ -476,101 +479,101 @@ fn pipeline_google_sheets_formula() {
 
     #[cfg(feature = "gorgeous")]
     {
-    let value = result.value.as_ref().unwrap();
-    let printer = &gorgeous::PrinterConfig {
-        max_width: 80,
-        indent: 2,
-        use_tabs: false,
-    };
-    let formatted = gorgeous::vm::format_value(&ir, value, input, printer);
-    assert!(formatted.is_some(), "formatting should produce output");
-    let formatted = formatted.unwrap();
-    eprintln!("Formatted output:\n{}", formatted);
-    assert!(
-        formatted.contains("LET"),
-        "formatted output should contain LET"
-    );
-    assert!(
-        formatted.contains('\n'),
-        "formatted output should contain line breaks"
-    );
-
-    // Pathological formula: deeply nested LET + IF + LAMBDA
-    let pathological = r#"=LET(raw, A2:E1000, filtered, FILTER(raw, (INDEX(raw,,3)>100)*(INDEX(raw,,5)="Active")), sorted, SORT(filtered, 3, FALSE), IF(ROWS(sorted)>0, MAP(SEQUENCE(MIN(10, ROWS(sorted))), LAMBDA(i, INDEX(sorted, i, 1)&" - "&TEXT(INDEX(sorted, i, 3), "$#,##0"))), "No results"))"#;
-    let mut interp = Interpreter::new(&program, pathological);
-    let result = interp.run();
-    assert!(
-        result.success,
-        "pathological formula failed at offset={}",
-        result.offset
-    );
-    assert_eq!(
-        result.offset as usize,
-        pathological.len(),
-        "should consume all input"
-    );
-    let value = result.value.as_ref().unwrap();
-    let formatted = gorgeous::vm::format_value(
-        &ir,
-        value,
-        pathological,
-        &gorgeous::PrinterConfig {
+        let value = result.value.as_ref().unwrap();
+        let printer = &gorgeous::PrinterConfig {
             max_width: 80,
             indent: 2,
             use_tabs: false,
-        },
-    );
-    let formatted = formatted.unwrap();
-    eprintln!("Pathological:\n{}", formatted);
-    assert!(
-        formatted.contains('\n'),
-        "pathological should have line breaks"
-    );
-    assert!(
-        formatted.lines().count() >= 5,
-        "pathological should have 5+ lines"
-    );
+        };
+        let formatted = gorgeous::vm::format_value(&ir, value, input, printer);
+        assert!(formatted.is_some(), "formatting should produce output");
+        let formatted = formatted.unwrap();
+        eprintln!("Formatted output:\n{}", formatted);
+        assert!(
+            formatted.contains("LET"),
+            "formatted output should contain LET"
+        );
+        assert!(
+            formatted.contains('\n'),
+            "formatted output should contain line breaks"
+        );
 
-    // Test with trailing space before final paren
-    let with_space = r#"=LET(raw, A2:E1000, filtered, FILTER(raw, (INDEX(raw,,3)>100)*(INDEX(raw,,5)="Active")), sorted, SORT(filtered, 3, FALSE), IF(ROWS(sorted)>0, MAP(SEQUENCE(MIN(10, ROWS(sorted))), LAMBDA(i, INDEX(sorted, i, 1)&" - "&TEXT(INDEX(sorted, i, 3), "$#,##0"))), "No results") )"#;
-    let mut interp = Interpreter::new(&program, with_space);
-    let result = interp.run();
-    eprintln!(
-        "with_space: success={} offset={} len={} remaining='{}'",
-        result.success,
-        result.offset,
-        with_space.len(),
-        &with_space[result.offset as usize..]
-    );
-    assert!(
-        result.success,
-        "with_space formula failed at offset={}",
-        result.offset
-    );
-    assert_eq!(
-        result.offset as usize,
-        with_space.len(),
-        "should consume all input"
-    );
-    let value = result.value.as_ref().unwrap();
-    let formatted_space = gorgeous::vm::format_value(
-        &ir,
-        value,
-        with_space,
-        &gorgeous::PrinterConfig {
-            max_width: 80,
-            indent: 2,
-            use_tabs: false,
-        },
-    );
-    let formatted_space = formatted_space.unwrap();
-    eprintln!("With space formatted:\n{}", formatted_space);
-    // Both should produce identical formatted output (whitespace is insignificant)
-    eprintln!("Without space formatted:\n{}", formatted);
-    assert_eq!(
-        formatted_space, formatted,
-        "trailing space should not change formatting"
-    );
+        // Pathological formula: deeply nested LET + IF + LAMBDA
+        let pathological = r#"=LET(raw, A2:E1000, filtered, FILTER(raw, (INDEX(raw,,3)>100)*(INDEX(raw,,5)="Active")), sorted, SORT(filtered, 3, FALSE), IF(ROWS(sorted)>0, MAP(SEQUENCE(MIN(10, ROWS(sorted))), LAMBDA(i, INDEX(sorted, i, 1)&" - "&TEXT(INDEX(sorted, i, 3), "$#,##0"))), "No results"))"#;
+        let mut interp = Interpreter::new(&program, pathological);
+        let result = interp.run();
+        assert!(
+            result.success,
+            "pathological formula failed at offset={}",
+            result.offset
+        );
+        assert_eq!(
+            result.offset as usize,
+            pathological.len(),
+            "should consume all input"
+        );
+        let value = result.value.as_ref().unwrap();
+        let formatted = gorgeous::vm::format_value(
+            &ir,
+            value,
+            pathological,
+            &gorgeous::PrinterConfig {
+                max_width: 80,
+                indent: 2,
+                use_tabs: false,
+            },
+        );
+        let formatted = formatted.unwrap();
+        eprintln!("Pathological:\n{}", formatted);
+        assert!(
+            formatted.contains('\n'),
+            "pathological should have line breaks"
+        );
+        assert!(
+            formatted.lines().count() >= 5,
+            "pathological should have 5+ lines"
+        );
+
+        // Test with trailing space before final paren
+        let with_space = r#"=LET(raw, A2:E1000, filtered, FILTER(raw, (INDEX(raw,,3)>100)*(INDEX(raw,,5)="Active")), sorted, SORT(filtered, 3, FALSE), IF(ROWS(sorted)>0, MAP(SEQUENCE(MIN(10, ROWS(sorted))), LAMBDA(i, INDEX(sorted, i, 1)&" - "&TEXT(INDEX(sorted, i, 3), "$#,##0"))), "No results") )"#;
+        let mut interp = Interpreter::new(&program, with_space);
+        let result = interp.run();
+        eprintln!(
+            "with_space: success={} offset={} len={} remaining='{}'",
+            result.success,
+            result.offset,
+            with_space.len(),
+            &with_space[result.offset as usize..]
+        );
+        assert!(
+            result.success,
+            "with_space formula failed at offset={}",
+            result.offset
+        );
+        assert_eq!(
+            result.offset as usize,
+            with_space.len(),
+            "should consume all input"
+        );
+        let value = result.value.as_ref().unwrap();
+        let formatted_space = gorgeous::vm::format_value(
+            &ir,
+            value,
+            with_space,
+            &gorgeous::PrinterConfig {
+                max_width: 80,
+                indent: 2,
+                use_tabs: false,
+            },
+        );
+        let formatted_space = formatted_space.unwrap();
+        eprintln!("With space formatted:\n{}", formatted_space);
+        // Both should produce identical formatted output (whitespace is insignificant)
+        eprintln!("Without space formatted:\n{}", formatted);
+        assert_eq!(
+            formatted_space, formatted,
+            "trailing space should not change formatting"
+        );
     }
 }
 
@@ -794,7 +797,12 @@ fn pipeline_css_vm_comment_in_value() {
     // Minimal reproduce: /*!*/ comment inside var() value
     let input = ".foo { --tw-sepia: var(--tw-empty,/*!*/ /*!*/); -webkit-filter: blur(1px); }";
     let r = run_program(&program, input);
-    eprintln!("comment-in-value: success={} offset={}/{}", r.success, r.offset, input.len());
+    eprintln!(
+        "comment-in-value: success={} offset={}/{}",
+        r.success,
+        r.offset,
+        input.len()
+    );
     if (r.offset as usize) < input.len() {
         eprintln!("REMAINING: {:?}", &input[r.offset as usize..]);
     }
@@ -802,16 +810,15 @@ fn pipeline_css_vm_comment_in_value() {
     assert_eq!(r.offset as usize, input.len(), "should consume all input");
 }
 
-
 // ── Full-file VM parsing ───────────────────────────────────────────────────
 
 fn assert_vm_full_parse(grammar_path: &str, data_path: &str) {
-    let grammar = std::fs::read_to_string(grammar_path)
-        .unwrap_or_else(|e| panic!("{}: {}", grammar_path, e));
+    let grammar =
+        std::fs::read_to_string(grammar_path).unwrap_or_else(|e| panic!("{}: {}", grammar_path, e));
     let ir = compile_grammar(&grammar, &PipelineOptions::default()).unwrap();
     let program = compile_bytecode(&ir);
-    let input = std::fs::read_to_string(data_path)
-        .unwrap_or_else(|e| panic!("{}: {}", data_path, e));
+    let input =
+        std::fs::read_to_string(data_path).unwrap_or_else(|e| panic!("{}: {}", data_path, e));
     let mut interp = Interpreter::new(&program, &input);
     let r = interp.run();
     assert!(r.success, "{}: VM parse failed", data_path);
@@ -831,22 +838,34 @@ fn pipeline_vm_full_json_data() {
 
 #[test]
 fn pipeline_vm_full_json_twitter() {
-    assert_vm_full_parse("../../grammar/json/json.bbnf", "../../data/json/twitter.json");
+    assert_vm_full_parse(
+        "../../grammar/json/json.bbnf",
+        "../../data/json/twitter.json",
+    );
 }
 
 #[test]
 fn pipeline_vm_full_json_canada() {
-    assert_vm_full_parse("../../grammar/json/json.bbnf", "../../data/json/canada.json");
+    assert_vm_full_parse(
+        "../../grammar/json/json.bbnf",
+        "../../data/json/canada.json",
+    );
 }
 
 #[test]
 fn pipeline_vm_full_css_normalize() {
-    assert_vm_full_parse("../../grammar/css/pretty.bbnf", "../../data/css/normalize.css");
+    assert_vm_full_parse(
+        "../../grammar/css/pretty.bbnf",
+        "../../data/css/normalize.css",
+    );
 }
 
 #[test]
 fn pipeline_vm_full_css_bootstrap() {
-    assert_vm_full_parse("../../grammar/css/pretty.bbnf", "../../data/css/bootstrap.css");
+    assert_vm_full_parse(
+        "../../grammar/css/pretty.bbnf",
+        "../../data/css/bootstrap.css",
+    );
 }
 
 #[test]
@@ -873,7 +892,12 @@ fn pipeline_css_vm_backdrop_block() {
   }
 "#.trim();
     let r = run_program(&program, input);
-    eprintln!("backdrop: success={} offset={}/{}", r.success, r.offset, input.len());
+    eprintln!(
+        "backdrop: success={} offset={}/{}",
+        r.success,
+        r.offset,
+        input.len()
+    );
     if (r.offset as usize) < input.len() {
         eprintln!("REMAINING: {:?}", &input[r.offset as usize..]);
     }

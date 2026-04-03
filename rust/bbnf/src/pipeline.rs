@@ -1,19 +1,23 @@
 //! Full analysis + IR lowering pipeline.
 //!
-//! Orchestrates: parse → analysis → lower → IR passes, producing a `GrammarIR`
-//! ready for consumption by any backend (Rust codegen, bytecode VM, TS interpreter).
+//! This module is a thin facade over the loader, validation, and compilation
+//! submodules under `pipeline/`.
 
-use std::collections::{HashMap, HashSet};
+use std::fmt;
 
 use bbnf_ir::GrammarIR;
 
-use crate::analysis::{compute_first_sets, tarjan_scc, topological_sort_scc};
-use crate::grammar::BBNFGrammar;
-use crate::lower::{DirectiveSet, lower_to_ir};
-use crate::types::{AST, Expression};
+pub mod compile;
+pub mod loader;
+pub mod validate;
+
+pub use compile::{
+    compile_ast, compile_ast_request, compile_grammar, compile_grammar_request,
+    compile_paths_request,
+};
 
 /// Options for the compilation pipeline.
-#[derive(Default)]
+#[derive(Clone, Debug, Default)]
 pub struct PipelineOptions {
     /// Whether to apply left-recursion elimination.
     pub remove_left_recursion: bool,
@@ -21,176 +25,75 @@ pub struct PipelineOptions {
     pub entry_rule: Option<String>,
 }
 
-/// Compile a BBNF grammar source string to a `GrammarIR`.
-///
-/// This is the main entry point for the WASM bytecode VM path.
-/// Parses the grammar, runs all analysis passes, lowers to IR, and runs IR passes.
-pub fn compile_grammar(source: &str, options: &PipelineOptions) -> Result<GrammarIR, String> {
-    // Leak to get 'static lifetime — the AST borrows from the source string.
-    // For WASM usage this is fine: each grammar compilation is a one-shot operation.
-    let source_static: &'static str = Box::leak(source.to_string().into_boxed_str());
-
-    let parser = BBNFGrammar::grammar_with_imports();
-    let (parsed, _state) = parser.parse_return_state(source_static);
-
-    let parsed = parsed.ok_or_else(|| "Failed to parse grammar".to_string())?;
-
-    // Extract directives.
-    let mut recover_map: HashMap<String, Expression<'static>> = HashMap::new();
-    let mut pretty_map: HashMap<String, Vec<String>> = HashMap::new();
-    for rec in &parsed.recovers {
-        recover_map.insert(rec.rule_name.to_string(), rec.sync_expr.clone());
-    }
-    for p in &parsed.pretties {
-        pretty_map.insert(
-            p.rule_name.to_string(),
-            p.hints.iter().map(|h| h.to_string()).collect(),
-        );
-    }
-
-    let ws_pat = parsed.ws_pattern;
-    let mut token_set: HashSet<String> = HashSet::new();
-    for name in &parsed.token_rules {
-        token_set.insert(name.to_string());
-    }
-    let token_ref = if token_set.is_empty() {
-        None
-    } else {
-        Some(&token_set)
-    };
-
-    let mut debug_set: HashSet<String> = HashSet::new();
-    let mut debug_all = false;
-    for name in &parsed.debug_rules {
-        if name.as_ref() == "*" {
-            debug_all = true;
-        } else {
-            debug_set.insert(name.to_string());
-        }
-    }
-    let debug_ref = if debug_set.is_empty() {
-        None
-    } else {
-        Some(&debug_set)
-    };
-
-    let ast = parsed.rules;
-
-    let recovers_ref = if recover_map.is_empty() {
-        None
-    } else {
-        Some(&recover_map)
-    };
-    let pretties_ref = if pretty_map.is_empty() {
-        None
-    } else {
-        Some(&pretty_map)
-    };
-
-    let directives = DirectiveSet {
-        recovers: recovers_ref,
-        pretties: pretties_ref,
-        ws_pattern: ws_pat.as_deref(),
-        token_rules: token_ref,
-        debug_rules: debug_ref,
-        debug_all,
-    };
-
-    compile_ast(ast, &directives, options)
+/// Backend-specific compilation target.
+#[derive(Clone, Debug)]
+pub enum CompileTarget {
+    /// Prepare the grammar for AOT codegen.
+    Aot { requested_prettify: bool },
+    /// Produce a VM-ready `GrammarIR`.
+    Vm,
 }
 
-/// Compile an already-parsed AST to `GrammarIR`.
-///
-/// Useful when the AST is already available (e.g., from `DocumentState`).
-pub fn compile_ast<'a>(
-    ast: AST<'a>,
-    directives: &'a DirectiveSet<'a>,
-    options: &PipelineOptions,
-) -> Result<GrammarIR, String> {
-    // Determine the entry rule name: use override if provided, otherwise last rule in source order.
-    let entry_rule_name: Option<String> = options.entry_rule.clone().or_else(|| {
-        ast.keys().last().and_then(|lhs| {
-            if let Expression::Nonterminal(tok) = lhs {
-                Some(tok.value.to_string())
-            } else {
-                None
+impl Default for CompileTarget {
+    fn default() -> Self {
+        Self::Vm
+    }
+}
+
+/// Shared compilation request.
+#[derive(Clone, Debug, Default)]
+pub struct CompileRequest {
+    pub options: PipelineOptions,
+    pub target: CompileTarget,
+}
+
+/// Output of a compilation request.
+#[derive(Debug)]
+pub enum CompileOutput {
+    Aot(crate::backend::PreparedAotGrammar),
+    Vm(GrammarIR),
+}
+
+/// Structured pipeline/compiler failure.
+#[derive(Debug, Clone)]
+pub enum CompileError {
+    Parse(String),
+    Import(String),
+    UnknownPrettyHint { rule: String, hint: String },
+    UndefinedPrettyRule { rule: String },
+    UnknownNonterminal { rule: String, name: String },
+    InvalidMappingFn { rule: String },
+    InvalidProductionRule { rule: String },
+}
+
+impl fmt::Display for CompileError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Parse(msg) => write!(f, "parse error: {msg}"),
+            Self::Import(msg) => write!(f, "import error: {msg}"),
+            Self::UnknownPrettyHint { rule, hint } => {
+                write!(f, "unknown @pretty hint `{hint}` on rule `{rule}`")
             }
-        })
-    });
-
-    // Dependency analysis.
-    let deps = crate::calculate_ast_deps(&ast);
-
-    // SCC detection + topological ordering.
-    let scc_result = tarjan_scc(&deps);
-    let ast = topological_sort_scc(&ast, &scc_result, &deps);
-
-    // FIRST set computation.
-    let first_sets = compute_first_sets(&ast, &deps, &scc_result);
-
-    // Lower to IR.
-    let mut ir = lower_to_ir(&ast, &first_sets, &scc_result, directives);
-
-    // Set the correct entry rule (last rule in original source order).
-    if let Some(ref name) = entry_rule_name {
-        if let Some(rule) = ir.find_rule(name) {
-            ir.entry = rule.id;
+            Self::UndefinedPrettyRule { rule } => {
+                write!(f, "`@pretty` targets undefined rule `{rule}`")
+            }
+            Self::UnknownNonterminal { rule, name } => {
+                write!(f, "rule `{rule}` references unknown nonterminal `{name}`")
+            }
+            Self::InvalidMappingFn { rule } => {
+                write!(
+                    f,
+                    "rule `{rule}` contains a mapping function in expression position"
+                )
+            }
+            Self::InvalidProductionRule { rule } => {
+                write!(
+                    f,
+                    "rule `{rule}` contains a production rule in expression position"
+                )
+            }
         }
     }
-
-    // Optional: eliminate left-recursion at IR level (indirect via Paull's, then direct).
-    if options.remove_left_recursion {
-        bbnf_ir::passes::eliminate_indirect_lr(&mut ir);
-        bbnf_ir::passes::eliminate_direct_lr(&mut ir);
-    }
-
-    // Run IR metadata passes (alias + transparent detection from IR structure).
-    bbnf_ir::passes::compute_aliases(&mut ir);
-    bbnf_ir::passes::compute_transparent(&mut ir);
-
-    // Fixed-point optimization loop (Phase 4.3).
-    // LLVM-style: track structural fingerprint to detect convergence.
-    // Later passes (fuse_single_use) can create new optimization opportunities
-    // that earlier passes (merge_literals, factor_common_prefixes) can exploit.
-    loop {
-        let fingerprint = ir.structural_fingerprint();
-
-        bbnf_ir::passes::canonicalize_aliases(&mut ir);
-        bbnf_ir::passes::prune_unreachable(&mut ir);
-        bbnf_ir::passes::inline_acyclic(&mut ir);
-        bbnf_ir::passes::prune_unreachable(&mut ir);
-        bbnf_ir::passes::fuse_single_use(&mut ir);
-        bbnf_ir::passes::prune_unreachable(&mut ir);
-        bbnf_ir::passes::eliminate_epsilon(&mut ir);
-        bbnf_ir::passes::merge_literals(&mut ir);
-        bbnf_ir::passes::simplify_regex_algebra(&mut ir);
-        bbnf_ir::passes::merge_regex_alts(&mut ir);
-        bbnf_ir::passes::factor_common_prefixes(&mut ir);
-
-        if ir.structural_fingerprint() == fingerprint {
-            break;
-        }
-    }
-    bbnf_ir::passes::sort_alt_branches(&mut ir);
-    bbnf_ir::passes::refine_span_eligibility(&mut ir);
-
-    // Compute FOLLOW sets before dispatch and memo passes that consume them.
-    ir.follow_sets = bbnf_ir::passes::compute_follow_sets(&ir);
-
-    // Factor regex prefixes with lookahead dispatch — restructures Alts where
-    // branches share a leading regex but have disjoint continuation FIRST sets.
-    bbnf_ir::passes::factor_regex_with_lookahead(&mut ir);
-
-    // @token-guided prefix factoring: factor overlapping-FIRST Alts through Refs,
-    // creating synthetic continuation rules and shared token prefixes.
-    // Must run BEFORE dispatch tables so the restructured Alts get dispatch.
-    bbnf_ir::passes::fuse_token_dispatch(&mut ir);
-
-    // Dispatch tables use FOLLOW sets for nullable branch optimization.
-    bbnf_ir::passes::generate_dispatch_tables(&mut ir);
-
-    // Type inference (populates GrammarIR::types for codegen backends).
-    bbnf_ir::passes::project_types(&mut ir);
-
-    Ok(ir)
 }
+
+impl std::error::Error for CompileError {}

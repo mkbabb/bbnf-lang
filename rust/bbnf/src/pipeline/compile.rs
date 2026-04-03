@@ -141,7 +141,14 @@ fn finalize_compile(
             let analysis = crate::backend::analysis::BackendAnalysis::default();
             let call_strategies = compute_call_strategies(&ir);
             let mut dstate = crate::backend::driver::DriverState::new(call_strategies);
-            let mut emitter = crate::backend::wasm::WasmEmitter { module_name };
+            // Pre-register ws pattern so the emitter knows its ID.
+            let ws_regex_id = ir.ws_pattern.map(|ws_sid| {
+                dstate.register_regex(ir.get_string(ws_sid))
+            });
+            let mut emitter = crate::backend::wasm::WasmEmitter {
+                module_name,
+                ws_regex_id,
+            };
             let mut ctx = crate::backend::wasm::emitter::WasmEmitCtx::default();
 
             let wat_source =

@@ -29,6 +29,8 @@ use crate::backend::{
 pub struct WasmEmitter {
     /// Module name for the WASM output.
     pub module_name: String,
+    /// Regex ID for the custom @ws pattern (set on first emit_ws_trim call).
+    pub ws_regex_id: Option<usize>,
 }
 
 /// Mutable context for WASM emission.
@@ -581,47 +583,46 @@ impl Emitter for WasmEmitter {
 
     fn emit_ws_trim(
         &mut self,
-        _ws_pattern: Option<&str>,
+        ws_pattern: Option<&str>,
         _ctx: &mut WasmEmitCtx,
     ) -> String {
-        // Skip ASCII whitespace: space (32), tab (9), newline (10), carriage return (13).
-        "(block $ws_done (loop $ws_loop \
-           (br_if $ws_done (i32.ge_u (local.get $off) (local.get $len))) \
-           (br_if $ws_done (i32.and \
-             (i32.ne (i32.load8_u (local.get $off)) (i32.const 32)) \
-             (i32.and \
-               (i32.ne (i32.load8_u (local.get $off)) (i32.const 9)) \
-               (i32.and \
-                 (i32.ne (i32.load8_u (local.get $off)) (i32.const 10)) \
-                 (i32.ne (i32.load8_u (local.get $off)) (i32.const 13)))))) \
-           (local.set $off (i32.add (local.get $off) (i32.const 1))) \
-           (br $ws_loop) \
-         )) \
-         (local.get $off)"
-            .to_string()
+        if let Some(ws_id) = self.ws_regex_id {
+            // Custom @ws: call host regex with the registered pattern ID.
+            format!("(call $__match_regex (i32.const {ws_id}) (local.get $off) (local.get $len))")
+        } else {
+            "(block $ws_done (loop $ws_loop \
+               (br_if $ws_done (i32.ge_u (local.get $off) (local.get $len))) \
+               (br_if $ws_done (i32.and \
+                 (i32.ne (i32.load8_u (local.get $off)) (i32.const 32)) \
+                 (i32.and \
+                   (i32.ne (i32.load8_u (local.get $off)) (i32.const 9)) \
+                   (i32.and \
+                     (i32.ne (i32.load8_u (local.get $off)) (i32.const 10)) \
+                     (i32.ne (i32.load8_u (local.get $off)) (i32.const 13)))))) \
+               (local.set $off (i32.add (local.get $off) (i32.const 1))) \
+               (br $ws_loop) \
+             )) \
+             (local.get $off)"
+                .to_string()
+        }
     }
 
     fn emit_with_ws_trim(
         &mut self,
         inner: String,
-        _ws_pattern: Option<&str>,
+        ws_pattern: Option<&str>,
         ctx: &mut WasmEmitCtx,
     ) -> String {
         let result = ctx.fresh("ws_inner");
-        // WS trim loop (same as emit_ws_trim), then inner, then ws trim again.
-        let ws_loop = "\
-            (block $ws_done (loop $ws_loop \
-              (br_if $ws_done (i32.ge_u (local.get $off) (local.get $len))) \
-              (br_if $ws_done (i32.and \
-                (i32.ne (i32.load8_u (local.get $off)) (i32.const 32)) \
-                (i32.and \
-                  (i32.ne (i32.load8_u (local.get $off)) (i32.const 9)) \
-                  (i32.and \
-                    (i32.ne (i32.load8_u (local.get $off)) (i32.const 10)) \
-                    (i32.ne (i32.load8_u (local.get $off)) (i32.const 13)))))) \
-              (local.set $off (i32.add (local.get $off) (i32.const 1))) \
-              (br $ws_loop) \
-            ))";
+        let ws_call = self.emit_ws_trim(ws_pattern, ctx);
+        // For custom ws: the host regex returns new offset; update $off.
+        let ws_block = if ws_pattern.is_some() {
+            format!("(local.set $off {ws_call}) ")
+        } else {
+            // ASCII ws loop already updates $off in-place.
+            format!("{ws_call} ")
+        };
+        let ws_loop = ws_block.clone();
         format!(
             "{ws_loop} \
              (local.set {result} {inner}) \

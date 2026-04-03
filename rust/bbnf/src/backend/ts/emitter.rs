@@ -165,9 +165,28 @@ fn translate_rust_constant_to_js(value: &str) -> String {
         .to_string()
 }
 
-/// Inline whitespace-skip statements (charCode checks).
-fn ws_skip_stmts() -> &'static str {
-    "while (s.offset < s.input.length) { const __c = s.input.charCodeAt(s.offset); if (__c === 32 || __c === 9 || __c === 10 || __c === 13) s.offset++; else break; }\n"
+/// Inline whitespace-skip statements.
+/// When `ws_pattern` is None, uses direct charCode checks for ASCII ws.
+/// When `ws_pattern` is Some, uses a hoisted regex for the pattern.
+fn ws_skip_stmts(ws_pattern: Option<&str>, ctx: &mut TsEmitCtx) -> String {
+    if let Some(pattern) = ws_pattern {
+        // Custom @ws pattern (e.g., CSS comment-aware whitespace).
+        let re_idx = ctx.hoisted_regexes.len();
+        let re_var = format!("__WS_RE");
+        if !ctx.hoisted_regexes.iter().any(|s| s.contains(&re_var)) {
+            let escaped = ts_escape(pattern);
+            ctx.hoisted_regexes.push(format!(
+                "const {re_var} = new RegExp(\"{escaped}\", \"y\");"
+            ));
+        }
+        format!(
+            "{re_var}.lastIndex = s.offset; \
+             const __wsm = {re_var}.exec(s.input); \
+             if (__wsm) s.offset = {re_var}.lastIndex;\n"
+        )
+    } else {
+        "while (s.offset < s.input.length) { const __c = s.input.charCodeAt(s.offset); if (__c === 32 || __c === 9 || __c === 10 || __c === 13) s.offset++; else break; }\n".to_string()
+    }
 }
 
 // ─── Emitter Impl ───────────────────────────────────────────────────────────
@@ -642,26 +661,26 @@ impl Emitter for TsEmitter {
 
     fn emit_ws_trim(
         &mut self,
-        _ws_pattern: Option<&str>,
-        _ctx: &mut TsEmitCtx,
+        ws_pattern: Option<&str>,
+        ctx: &mut TsEmitCtx,
     ) -> TsCode {
-        TsCode::new(ws_skip_stmts().to_string(), "{}")
+        TsCode::new(ws_skip_stmts(ws_pattern, ctx), "{}")
     }
 
     fn emit_with_ws_trim(
         &mut self,
         inner: TsCode,
-        _ws_pattern: Option<&str>,
-        _ctx: &mut TsEmitCtx,
+        ws_pattern: Option<&str>,
+        ctx: &mut TsEmitCtx,
     ) -> TsCode {
-        let mut stmts = ws_skip_stmts().to_string();
+        let mut stmts = ws_skip_stmts(ws_pattern, ctx);
         let inner_expr = inner.dissolve(&mut stmts);
         let v = "__ws_inner";
         stmts.push_str(&format!(
             "const {v} = {inner_expr};\n\
              if ({v} === null) return null;\n"
         ));
-        stmts.push_str(ws_skip_stmts());
+        stmts.push_str(&ws_skip_stmts(ws_pattern, ctx));
         TsCode::new(stmts, v)
     }
 

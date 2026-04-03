@@ -131,3 +131,13 @@ harness = false
 name = "json_wasm"
 path = "benches/json/wasm.rs"
 harness = false
+
+[[bench]]
+name = "css_ts"
+path = "benches/css/ts.rs"
+harness = false
+
+[[bench]]
+name = "css_wasm"
+path = "benches/css/wasm.rs"
+harness = false

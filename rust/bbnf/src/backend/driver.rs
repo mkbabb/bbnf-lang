@@ -43,6 +43,10 @@ pub struct DriverState {
     /// Each pattern gets a stable `regex_id` (index). Backends use these IDs for
     /// hoisting (TS: module-level const, WASM: host function index).
     pub regex_patterns: Vec<String>,
+
+    /// Regex ID of the `@ws` whitespace pattern (if custom `@ws` is set).
+    /// Emitters use this to reference the ws regex by ID rather than sentinel.
+    pub ws_regex_id: Option<usize>,
 }
 
 impl DriverState {
@@ -53,6 +57,7 @@ impl DriverState {
             current_rule_name: None,
             current_rule_id: None,
             regex_patterns: Vec::new(),
+            ws_regex_id: None,
         }
     }
 
@@ -93,6 +98,13 @@ pub fn compile_grammar<E: Emitter>(
     emitter: &mut E,
     ctx: &mut E::Ctx,
 ) -> E::Output {
+    // 0. Register ws pattern as a regex if custom @ws is set.
+    if let Some(ws_sid) = ir.ws_pattern {
+        let ws_pat = ir.get_string(ws_sid);
+        let id = dstate.register_regex(ws_pat);
+        dstate.ws_regex_id = Some(id);
+    }
+
     // 1. Type definitions.
     let type_defs = emitter.emit_type_definitions(ir, analysis, ctx);
 

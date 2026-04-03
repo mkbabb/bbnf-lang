@@ -153,9 +153,13 @@ pub trait Emitter {
     ) -> Self::Output;
 
     /// Emit a regex pattern match.
+    ///
+    /// `regex_id` is a stable index assigned by the driver's `DriverState::register_regex`.
+    /// Backends use this for hoisting (TS: `__RE{id}`, WASM: host function arg).
     fn emit_regex_match(
         &mut self,
         pattern: &str,
+        regex_id: usize,
         ir: &GrammarIR,
         ctx: &mut Self::Ctx,
     ) -> Self::Output;

@@ -29,9 +29,6 @@ use crate::backend::{
 pub struct WasmEmitter {
     /// Module name for the WASM output.
     pub module_name: String,
-    /// Regex patterns referenced by the grammar, in order of first encounter.
-    /// The index into this Vec is the `pattern_id` passed to the host `match_regex`.
-    pub regex_patterns: Vec<String>,
 }
 
 /// Mutable context for WASM emission.
@@ -143,21 +140,13 @@ impl Emitter for WasmEmitter {
 
     fn emit_regex_match(
         &mut self,
-        pattern: &str,
+        _pattern: &str,
+        regex_id: usize,
         _ir: &GrammarIR,
         _ctx: &mut WasmEmitCtx,
     ) -> String {
-        // Look up or assign pattern index.
-        let pattern_id = match self.regex_patterns.iter().position(|p| p == pattern) {
-            Some(idx) => idx,
-            None => {
-                let idx = self.regex_patterns.len();
-                self.regex_patterns.push(pattern.to_string());
-                idx
-            }
-        };
-        // Call host with (pattern_id, offset, input_len).
-        format!("(call $__match_regex (i32.const {pattern_id}) (local.get $off) (local.get $len))")
+        // Use driver-assigned regex_id as host function argument.
+        format!("(call $__match_regex (i32.const {regex_id}) (local.get $off) (local.get $len))")
     }
 
     fn emit_epsilon(&mut self, _ctx: &mut WasmEmitCtx) -> String {

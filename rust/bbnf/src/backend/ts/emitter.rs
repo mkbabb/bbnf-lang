@@ -162,15 +162,17 @@ impl Emitter for TsEmitter {
     fn emit_regex_match(
         &mut self,
         pattern: &str,
+        regex_id: usize,
         _ir: &GrammarIR,
         ctx: &mut TsEmitCtx,
     ) -> String {
-        // Hoist regex to module scope — avoid re-constructing per call.
-        let re_idx = ctx.hoisted_regexes.len();
-        let escaped_for_string = ts_escape(pattern);
-        ctx.hoisted_regexes
-            .push(format!("const __RE{re_idx} = new RegExp(\"{escaped_for_string}\", \"y\");"));
-        let var = format!("__RE{re_idx}");
+        // Hoist regex to module scope using driver-assigned stable ID.
+        let var = format!("__RE{regex_id}");
+        if !ctx.hoisted_regexes.iter().any(|s| s.contains(&var)) {
+            let escaped_for_string = ts_escape(pattern);
+            ctx.hoisted_regexes
+                .push(format!("const {var} = new RegExp(\"{escaped_for_string}\", \"y\");"));
+        }
         format!(
             "((() => {{ {var}.lastIndex = s.offset; \
              const __m = {var}.exec(s.input); \

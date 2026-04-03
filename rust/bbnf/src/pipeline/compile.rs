@@ -149,10 +149,7 @@ fn finalize_compile(
                 ir.rules.len()
             ];
             let mut dstate = crate::backend::driver::DriverState::new(call_strategies);
-            let mut emitter = crate::backend::wasm::WasmEmitter {
-                module_name,
-                regex_patterns: Vec::new(),
-            };
+            let mut emitter = crate::backend::wasm::WasmEmitter { module_name };
             let mut ctx = crate::backend::wasm::emitter::WasmEmitCtx::default();
 
             let wat_source =

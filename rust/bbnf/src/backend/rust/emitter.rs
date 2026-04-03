@@ -112,6 +112,7 @@ impl Emitter for RustEmitter {
     fn emit_regex_match(
         &mut self,
         pattern: &str,
+        _regex_id: usize,
         _ir: &GrammarIR,
         _ctx: &mut Self::Ctx,
     ) -> TokenStream {

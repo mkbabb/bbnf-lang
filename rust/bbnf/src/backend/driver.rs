@@ -38,6 +38,11 @@ pub struct DriverState {
 
     /// ID of the rule currently being compiled.
     pub current_rule_id: Option<RuleId>,
+
+    /// Regex patterns encountered during compilation, in order of first encounter.
+    /// Each pattern gets a stable `regex_id` (index). Backends use these IDs for
+    /// hoisting (TS: module-level const, WASM: host function index).
+    pub regex_patterns: Vec<String>,
 }
 
 impl DriverState {
@@ -47,6 +52,19 @@ impl DriverState {
             dispatch_guaranteed_byte: None,
             current_rule_name: None,
             current_rule_id: None,
+            regex_patterns: Vec::new(),
+        }
+    }
+
+    /// Register a regex pattern and return its stable ID.
+    /// If the pattern was already seen, returns the existing ID.
+    pub fn register_regex(&mut self, pattern: &str) -> usize {
+        if let Some(idx) = self.regex_patterns.iter().position(|p| p == pattern) {
+            idx
+        } else {
+            let idx = self.regex_patterns.len();
+            self.regex_patterns.push(pattern.to_string());
+            idx
         }
     }
 
@@ -122,7 +140,8 @@ pub fn compile_node<E: Emitter>(
 
         IrNode::Regex(sid) => {
             let pattern = ir.get_string(*sid);
-            emitter.emit_regex_match(pattern, ir, ctx)
+            let regex_id = dstate.register_regex(pattern);
+            emitter.emit_regex_match(pattern, regex_id, ir, ctx)
         }
 
         IrNode::Epsilon => emitter.emit_epsilon(ctx),

@@ -65,7 +65,6 @@ fn compiled_wasm() -> WasmBundle {
     let mut dstate = bbnf::backend::driver::DriverState::new(call_strategies);
     let mut emitter = bbnf::backend::wasm::WasmEmitter {
         module_name: "json_parser".into(),
-        regex_patterns: Vec::new(),
     };
     let mut ctx = bbnf::backend::wasm::emitter::WasmEmitCtx::default();
 
@@ -73,8 +72,8 @@ fn compiled_wasm() -> WasmBundle {
         bbnf::backend::driver::compile_grammar(&ir, &analysis, &mut dstate, &mut emitter, &mut ctx);
     let wat_bytes = wat_source.into_bytes();
 
-    // Build DFAs from the emitter's pattern list (guaranteed matching order).
-    let dfas: Vec<Dfa> = emitter
+    // Build DFAs from the driver's pattern list (guaranteed matching order).
+    let dfas: Vec<Dfa> = dstate
         .regex_patterns
         .iter()
         .map(|pattern| {

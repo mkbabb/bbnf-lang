@@ -121,9 +121,12 @@ fn ts_multi_byte_literal_uses_starts_with() {
 // ── Regex matching ──────────────────────────────────────────────────────────
 
 #[test]
-fn ts_regex_uses_sticky_flag() {
+fn ts_regex_hoisted_with_sticky_flag() {
     let source = compile_ts(r#"x = /[a-z]+/ ;"#);
-    assert!(source.contains("/y"), "regex should use sticky flag: {source}");
+    // Regex should be hoisted to module scope with sticky flag.
+    assert!(source.contains("new RegExp("), "regex should use RegExp constructor: {source}");
+    assert!(source.contains("\"y\""), "regex should use sticky flag: {source}");
+    assert!(source.contains("__RE"), "regex should be hoisted: {source}");
     assert!(source.contains(".exec("), "regex should use .exec(): {source}");
 }
 
@@ -202,9 +205,10 @@ fn ts_next_keeps_right() {
 #[test]
 fn ts_optional_whitespace_trims() {
     let source = compile_ts(r#"x = "a" ?w ;"#);
+    // Should use charCode checks for ws trim (32=space, 9=tab, 10=newline, 13=CR).
     assert!(
-        source.contains("\\t\\n\\r") || source.contains("trim") || source.contains("includes"),
-        "should emit whitespace trimming: {source}"
+        source.contains("=== 32") || source.contains("=== 9") || source.contains("charCodeAt"),
+        "should emit charCode ws trimming: {source}"
     );
 }
 

@@ -114,20 +114,14 @@ fn finalize_compile(
             Ok(CompileOutput::Vm(ir))
         }
         CompileTarget::Ts => {
-            // Run type projection before codegen.
             bbnf_ir::passes::compute_sp_method_rules(&mut ir);
             bbnf_ir::passes::project_types(&mut ir);
 
-            // Derive enum name from entry rule.
             let entry_name = ir.get_string(ir.rules[ir.entry as usize].name).to_string();
             let enum_name = format!("{entry_name}Value");
 
-            // Build analysis + driver state.
             let analysis = crate::backend::analysis::BackendAnalysis::default();
-            let call_strategies = vec![
-                crate::backend::CallStrategy::DirectCall;
-                ir.rules.len()
-            ];
+            let call_strategies = compute_call_strategies(&ir);
             let mut dstate = crate::backend::driver::DriverState::new(call_strategies);
             let mut emitter = crate::backend::ts::TsEmitter { enum_name };
             let mut ctx = crate::backend::ts::emitter::TsEmitCtx::default();
@@ -144,10 +138,7 @@ fn finalize_compile(
             let module_name = format!("{entry_name}_parser");
 
             let analysis = crate::backend::analysis::BackendAnalysis::default();
-            let call_strategies = vec![
-                crate::backend::CallStrategy::DirectCall;
-                ir.rules.len()
-            ];
+            let call_strategies = compute_call_strategies(&ir);
             let mut dstate = crate::backend::driver::DriverState::new(call_strategies);
             let mut emitter = crate::backend::wasm::WasmEmitter { module_name };
             let mut ctx = crate::backend::wasm::emitter::WasmEmitCtx::default();
@@ -157,6 +148,54 @@ fn finalize_compile(
             Ok(CompileOutput::Wasm(wat_source.into_bytes()))
         }
     }
+}
+
+/// Compute call strategies using the shared inline analysis.
+///
+/// Converts `CallMode::DirectCall` → `CallStrategy::DirectCall`,
+/// `CallMode::InlineBody` → `CallStrategy::InlineBody`.
+fn compute_call_strategies(ir: &GrammarIR) -> Vec<crate::backend::CallStrategy> {
+    use crate::backend::CallStrategy;
+    use std::collections::HashSet;
+
+    // Detect operator chain rules for the inline plan.
+    let operator_chain_rules: HashSet<bbnf_ir::RuleId> = ir
+        .rules
+        .iter()
+        .filter(|rule| {
+            if let bbnf_ir::IrNode::Seq(children) = &rule.body {
+                if children.len() == 2 {
+                    if let bbnf_ir::IrNode::Repeat {
+                        inner,
+                        lo: 0,
+                        hi: u32::MAX,
+                    } = &children[1]
+                    {
+                        if let bbnf_ir::IrNode::Seq(link) = inner.as_ref() {
+                            return link.len() == 2;
+                        }
+                    }
+                }
+            }
+            false
+        })
+        .map(|r| r.id)
+        .collect();
+
+    let plan =
+        crate::backend::rust::analysis::inline::analyze_parse_inline_plan(ir, &operator_chain_rules);
+
+    plan.parse_call_modes
+        .iter()
+        .map(|mode| match mode {
+            crate::backend::rust::analysis::inline::CallMode::DirectCall => {
+                CallStrategy::DirectCall
+            }
+            crate::backend::rust::analysis::inline::CallMode::InlineBody => {
+                CallStrategy::InlineBody
+            }
+        })
+        .collect()
 }
 
 fn compile_ast_common<'a>(

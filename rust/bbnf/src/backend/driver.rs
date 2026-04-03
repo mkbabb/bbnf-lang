@@ -97,8 +97,18 @@ pub fn compile_grammar<E: Emitter>(
     let type_defs = emitter.emit_type_definitions(ir, analysis, ctx);
 
     // 2. Compile each rule.
+    // Skip rules that are always inlined — they don't need standalone functions.
+    // Exception: the entry rule always needs a function (it's the public API).
     let mut rule_functions = Vec::with_capacity(ir.rules.len());
     for rule in &ir.rules {
+        let strategy = dstate.call_strategy(rule.id);
+        let is_entry = rule.id == ir.entry;
+        if !is_entry
+            && (strategy == CallStrategy::InlineBody || strategy == CallStrategy::InlineFusion)
+        {
+            continue;
+        }
+
         dstate.current_rule_name = Some(ir.get_string(rule.name).to_string());
         dstate.current_rule_id = Some(rule.id);
 

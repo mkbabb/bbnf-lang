@@ -67,14 +67,18 @@ fn wat_emits_parse_export() {
 // ── Function generation ─────────────────────────────────────────────────────
 
 #[test]
-fn wat_emits_function_per_rule() {
+fn wat_emits_functions_for_non_inlined_rules() {
     let wat = compile_wat(&json_grammar());
-    for rule in &["value", "object", "array", "string", "number", "bool", "null", "pair"] {
-        assert!(
-            wat.contains(&format!("(func $__{rule}")),
-            "missing $__{rule} function: {wat}"
-        );
-    }
+    // Entry + recursive rules get functions. Small rules may be inlined.
+    assert!(wat.contains("(func $__value"), "missing __value function");
+    assert!(
+        wat.contains("(func $__object") || wat.contains("call $__object"),
+        "missing object rule"
+    );
+    assert!(
+        wat.contains("(func $__array") || wat.contains("call $__array"),
+        "missing array rule"
+    );
 }
 
 #[test]

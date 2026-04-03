@@ -1,184 +1,52 @@
 //! Fused parse+format monolithic code generation.
 //!
-//! Emits `fn __rule_prettify(state, builder) -> bool` for every rule — direct
-//! recursive functions that parse input AND construct FmtOp instructions
-//! simultaneously. No intermediate AST. The parser IS the formatter.
-//!
-//! Activated by `#[parser(prettify)]` on grammars with `@pretty` directives.
-//! Uses the same dispatch tables, SIMD scanners, and `find_first_of`
-//! infrastructure as the main paths.
+//! Emits `fn __rule_prettify(state, builder) -> bool` for every rule.
 
 mod alt;
+mod attempt;
+mod entry;
 mod expr;
+mod policy;
 mod repeat;
 mod seq;
 
-use bbnf_ir::{GrammarIR, IrNode};
+pub(crate) use entry::generate_monolithic_prettify;
+
+use bbnf_ir::IrNode;
 
 use proc_macro2::TokenStream;
-use quote::{format_ident, quote};
+use quote::quote;
 
 use super::MonoCtx;
-use super::ir_types::IrCodegenCtx;
+use self::policy::{PrettyRulePlan, PrettifyCtx};
 
 /// Function name for a prettify rule: `__rule_prettify`.
-pub(in crate::generate) fn prettify_fn_ident(name: &str) -> syn::Ident {
-    format_ident!("__{}_prettify", name)
+fn prettify_fn_ident(name: &str) -> syn::Ident {
+    syn::Ident::new(&format!("__{}_prettify", name), proc_macro2::Span::call_site())
 }
 
-/// Generate all fused parse+format monolithic methods.
-pub fn generate_monolithic_prettify(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
-    let mut methods: Vec<TokenStream> = Vec::new();
+fn new_prettify_ctx<'a>(
+    ir: &'a bbnf_ir::GrammarIR,
+    ctx: &'a super::ir_types::IrCodegenCtx<'a>,
+    plans: &'a [PrettyRulePlan],
+) -> PrettifyCtx<'a> {
+    PrettifyCtx { ir, ctx, plans }
+}
 
-    let fusion_eligible: Vec<bool> = ir
-        .rules
-        .iter()
-        .map(|rule| rule.meta.directives.token || (!rule.meta.is_cyclic && rule.meta.directives.recover.is_none()))
-        .collect();
-
-    let single_site_inline = super::compute_single_site_inline(ir);
-
-    for rule in &ir.rules {
-        let name = ir.get_string(rule.name);
-        let fn_ident = prettify_fn_ident(name);
-        let pub_ident = format_ident!("{}_prettify", name);
-
-        let mut mctx = MonoCtx::new(fusion_eligible.clone(), single_site_inline.clone());
-        mctx.current_rule_name = Some(name.to_string());
-        mctx.current_pretty_hints = rule.meta.directives.pretty.clone();
-
-        // Determine @pretty hints for this rule.
-        let ph = rule.meta.directives.pretty.as_ref();
-        let has_group = ph.is_some_and(|p| p.group);
-        let has_block = ph.is_some_and(|p| p.block);
-        let has_indent = ph.is_some_and(|p| p.indent);
-        let is_off = ph.is_some_and(|p| p.off);
-
-        // Detect whitespace-only rules (body is a Regex matching the @ws pattern).
-        // These are parsed for side effects but their text is NOT emitted —
-        // the @pretty hints handle spacing, and emitting source whitespace
-        // would break idempotency.
-        let is_ws_rule =
-            if let (IrNode::Regex(body_sid), Some(ws_sid)) = (&rule.body, ir.ws_pattern) {
-                *body_sid == ws_sid
-            } else {
-                false
-            };
-
-        // Generate the body expression.
-        let body_expr = emit_prettify_expr(&rule.body, ir, ctx, &mut mctx);
-        let hoisted = mctx.hoisted.clone();
-
-        // Wrap body in structural ops based on @pretty hints.
-        // Uses explicit open/close instead of closures to avoid
-        // `return false;` escaping closure scope issues.
-        let wrapped_body = if is_ws_rule {
-            // Whitespace rule: parse for side effects (advance offset) but
-            // don't emit FmtOps. Checkpoint/restore discards any ops.
-            let ws_cp = mctx.fresh("ws_cp");
-            quote! {
-                #(#hoisted)*
-                let #ws_cp = __builder.checkpoint();
-                #body_expr;
-                __builder.restore(#ws_cp);
-                true
-            }
-        } else if is_off {
-            // @pretty off: emit body without any structural wrapping.
-            quote! {
-                #(#hoisted)*
-                #body_expr;
-                true
-            }
-        } else if has_block && has_indent {
-            quote! {
-                #(#hoisted)*
-                __builder.indent_open();
-                __builder.hardline();
-                #body_expr;
-                __builder.indent_close();
-                __builder.hardline();
-                true
-            }
-        } else if has_block {
-            quote! {
-                #(#hoisted)*
-                #body_expr;
-                true
-            }
-        } else if has_group && has_indent {
-            quote! {
-                #(#hoisted)*
-                __builder.group_open();
-                __builder.indent_open();
-                #body_expr;
-                __builder.indent_close();
-                __builder.group_close();
-                true
-            }
-        } else if has_group {
-            quote! {
-                #(#hoisted)*
-                __builder.group_open();
-                #body_expr;
-                __builder.group_close();
-                true
-            }
-        } else {
-            quote! {
-                #(#hoisted)*
-                #body_expr;
-                true
-            }
-        };
-
-        // Internal function: parses + appends FmtOps. Returns bool (success).
-        // On failure, both builder and parser state are restored.
-        methods.push(quote! {
-            #[allow(non_snake_case)]
-            fn #fn_ident<'a>(
-                state: &mut ::parse_that::ParserState<'a>,
-                __builder: &mut ::pprint::FmtBuilder<'a>,
-            ) -> bool {
-                let __bcp = __builder.checkpoint();
-                let __scp = state.offset;
-                let __result = (|| -> bool { #wrapped_body })();
-                if !__result {
-                    __builder.restore(__bcp);
-                    state.offset = __scp;
-                }
-                __result
-            }
-        });
-
-        // Public method: returns Parser<Vec<FmtOp>>.
-        methods.push(quote! {
-            pub fn #pub_ident<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-                Parser::new(move |state: &mut ::parse_that::ParserState<'a>| {
-                    let mut __builder = ::pprint::FmtBuilder::with_capacity(state.src.len() * 2);
-                    if Self::#fn_ident(state, &mut __builder) {
-                        Some(__builder.finish())
-                    } else {
-                        None
-                    }
-                })
-            }
-        });
-    }
-
-    quote! { #(#methods)* }
+fn new_prettify_mctx() -> MonoCtx {
+    MonoCtx::new(Vec::new())
 }
 
 /// Emit a prettify expression — dispatches by IrNode type.
-pub(super) fn emit_prettify_expr(
+fn emit_prettify_expr(
     node: &IrNode,
-    ir: &GrammarIR,
-    ctx: &IrCodegenCtx<'_>,
+    pctx: &PrettifyCtx<'_>,
+    current_rule: bbnf_ir::RuleId,
     mctx: &mut MonoCtx,
 ) -> TokenStream {
     match node {
         IrNode::Literal(sid) => {
-            let raw = ir.get_string(*sid);
+            let raw = pctx.ir.get_string(*sid);
             let unescaped = super::unescape_literal(raw);
             let bytes = unescaped.as_bytes();
             if bytes.len() == 1 {
@@ -211,7 +79,7 @@ pub(super) fn emit_prettify_expr(
         }
 
         IrNode::Regex(sid) => {
-            let pattern = ir.get_string(*sid);
+            let pattern = pctx.ir.get_string(*sid);
 
             // Emit matched text as-is. Whitespace nullification happens only
             // at the OptionalWhitespace level (for @ws patterns), not here.
@@ -223,11 +91,13 @@ pub(super) fn emit_prettify_expr(
             };
 
             {
-                let opts = crate::generate::regex::EmitOpts::new(&crate::generate::regex::CostModel::DEFAULT);
+                let opts = crate::generate::regex::EmitOpts::new(
+                    &crate::generate::regex::CostModel::DEFAULT,
+                );
                 let code = crate::generate::regex::emit_regex(pattern, &opts);
                 quote! { {
                     let __start = state.offset;
-                    if #code.is_none() { return false; }
+                    if #code.is_none() { return false; };
                     #emit_text
                 } }
             }
@@ -235,62 +105,83 @@ pub(super) fn emit_prettify_expr(
 
         IrNode::Epsilon => quote! { {} },
 
-        IrNode::Ref(rule_id) => expr::emit_prettify_ref(*rule_id, ir, ctx, mctx),
+        IrNode::Ref(rule_id) => expr::emit_prettify_ref(*rule_id, pctx, mctx),
 
-        IrNode::Seq(children) => seq::emit_prettify_seq(children, ir, ctx, mctx),
+        IrNode::Seq(children) => seq::emit_prettify_seq(children, pctx, current_rule, mctx),
 
         IrNode::Alt(branches, dispatch) => {
-            alt::emit_prettify_alt(branches, dispatch.as_ref(), ir, ctx, mctx)
+            alt::emit_prettify_alt(branches, dispatch.as_ref(), pctx, current_rule, mctx)
         }
 
         IrNode::Repeat { inner, lo, hi } => {
-            repeat::emit_prettify_repeat(inner, *lo as usize, *hi as usize, ir, ctx, mctx)
+            repeat::emit_prettify_repeat(inner, *lo as usize, *hi as usize, pctx, current_rule, mctx)
         }
 
-        IrNode::Skip(left, right) => expr::emit_prettify_skip(left, right, ir, ctx, mctx),
-        IrNode::Next(left, right) => expr::emit_prettify_next(left, right, ir, ctx, mctx),
+        IrNode::Skip(left, right) => expr::emit_prettify_skip(left, right, pctx, current_rule, mctx),
+        IrNode::Next(left, right) => expr::emit_prettify_next(left, right, pctx, current_rule, mctx),
 
         IrNode::OptionalWhitespace(inner) => {
             // ?w whitespace: parse and emit inline spaces (e.g., after ":" in
             // declarations). Newlines/indentation are suppressed — only single-line
             // whitespace (spaces/tabs) is emitted. The @ws rule handles structural
             // whitespace nullification separately.
-            let ws_trim = super::emit_ws_trim(ctx, mctx);
-            let inner_expr = emit_prettify_expr(inner, ir, ctx, mctx);
-            let ws_start1 = mctx.fresh("ows");
-            let ws_start2 = mctx.fresh("ows");
-            quote! { {
-                let #ws_start1 = state.offset;
-                #ws_trim
-                {
-                    let __ws = &state.src[#ws_start1..state.offset];
-                    // Emit inline spaces (no newlines) to preserve source formatting.
-                    if !__ws.is_empty() && !__ws.contains('\n') {
-                        __builder.text(__ws);
+            let ws_trim = super::emit_ws_trim(pctx.ctx, mctx);
+            let inner_expr = emit_prettify_expr(inner, pctx, current_rule, mctx);
+
+            if attempt::emits_only_on_success(inner, pctx) {
+                // Deferred pattern: scan leading ws, try inner, then emit ws
+                // only after inner succeeds. No checkpoint needed because the
+                // inner expression fails atomically (before emitting any ops).
+                let ws1 = mctx.fresh("ows");
+                let ws2 = mctx.fresh("ows");
+                let ws3 = mctx.fresh("ows");
+                quote! { {
+                    let #ws1 = state.offset;
+                    #ws_trim
+                    let #ws2 = state.offset;
+                    #inner_expr;
+                    __builder.text_inline_ws(&state.src[#ws1..#ws2]);
+                    let #ws3 = state.offset;
+                    #ws_trim
+                    __builder.text_inline_ws(&state.src[#ws3..state.offset]);
+                } }
+            } else {
+                // Non-atomic inner: must checkpoint because the inner expression
+                // might emit ops before failing. Leading ws is emitted eagerly.
+                let ws_start1 = mctx.fresh("ows");
+                let ws_start2 = mctx.fresh("ows");
+                let ws_emit1 = policy::emit_whitespace_segment(&ws_start1);
+                let ws_emit2 = policy::emit_whitespace_segment(&ws_start2);
+                let body = quote! {{
+                    let #ws_start1 = state.offset;
+                    #ws_trim
+                    #ws_emit1
+                    #inner_expr;
+                    let #ws_start2 = state.offset;
+                    #ws_trim
+                    #ws_emit2
+                }};
+                let body_try = attempt::emit_prettify_attempt(body, true, Some((inner, pctx)), mctx);
+                quote! { {
+                    if !#body_try {
+                        return false;
                     }
-                }
-                #inner_expr;
-                let #ws_start2 = state.offset;
-                #ws_trim
-                {
-                    let __ws = &state.src[#ws_start2..state.offset];
-                    if !__ws.is_empty() && !__ws.contains('\n') {
-                        __builder.text(__ws);
-                    }
-                }
-            } }
+                } }
+            }
         }
 
         IrNode::Map { inner, .. } => {
             // For prettify, Map is transparent — just emit the inner expression.
             // The mapping function is irrelevant for formatting.
-            emit_prettify_expr(inner, ir, ctx, mctx)
+            emit_prettify_expr(inner, pctx, current_rule, mctx)
         }
 
         IrNode::Minus(left, right) => {
-            let right_expr = emit_prettify_expr(right, ir, ctx, mctx);
-            let left_expr = emit_prettify_expr(left, ir, ctx, mctx);
+            let right_expr = emit_prettify_expr(right, pctx, current_rule, mctx);
+            let left_expr = emit_prettify_expr(left, pctx, current_rule, mctx);
             let cp_var = mctx.fresh("minus_cp");
+            // Full checkpoint: the excluded expression may call rules with
+            // group wrappers that leave group_stack entries on failure.
             quote! { {
                 let __save = state.offset;
                 let #cp_var = __builder.checkpoint();
@@ -305,7 +196,7 @@ pub(super) fn emit_prettify_expr(
         }
 
         IrNode::Negate(inner) => {
-            let inner_expr = emit_prettify_expr(inner, ir, ctx, mctx);
+            let inner_expr = emit_prettify_expr(inner, pctx, current_rule, mctx);
             let cp_var = mctx.fresh("neg_cp");
             quote! { {
                 let __save = state.offset;
@@ -326,8 +217,8 @@ pub(super) fn emit_prettify_expr(
         } => {
             // For prettify, TokenDispatch: parse the token, then dispatch
             // on the matched text to select the continuation.
-            let token_expr = emit_prettify_expr(token, ir, ctx, mctx);
-            let fallback_expr = emit_prettify_expr(fallback, ir, ctx, mctx);
+            let token_expr = emit_prettify_expr(token, pctx, current_rule, mctx);
+            let fallback_expr = emit_prettify_expr(fallback, pctx, current_rule, mctx);
             let arm_exprs: Vec<TokenStream> = arms
                 .iter()
                 .map(|arm| {
@@ -335,12 +226,12 @@ pub(super) fn emit_prettify_expr(
                         .patterns
                         .iter()
                         .map(|sid| {
-                            let key_str = ir.get_string(*sid);
+                            let key_str = pctx.ir.get_string(*sid);
                             let key_lit = proc_macro2::Literal::string(key_str);
                             quote! { #key_lit }
                         })
                         .collect();
-                    let cont_expr = emit_prettify_expr(&arm.continuation, ir, ctx, mctx);
+                    let cont_expr = emit_prettify_expr(&arm.continuation, pctx, current_rule, mctx);
                     quote! {
                         #(#patterns)|* => { #cont_expr; }
                     }

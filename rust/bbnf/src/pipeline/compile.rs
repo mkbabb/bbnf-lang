@@ -126,8 +126,9 @@ fn finalize_compile(
             let mut emitter = crate::backend::ts::TsEmitter { enum_name };
             let mut ctx = crate::backend::ts::emitter::TsEmitCtx::default();
 
-            let output =
+            let code =
                 crate::backend::driver::compile_grammar(&ir, &analysis, &mut dstate, &mut emitter, &mut ctx);
+            let output = if code.stmts.is_empty() { code.expr } else { format!("{}\n{}", code.stmts, code.expr) };
             Ok(CompileOutput::Ts(output))
         }
         CompileTarget::Wasm => {

@@ -1,7 +1,7 @@
 //! TypeScript Emitter: implements [`Emitter`] to produce self-contained TS source.
 //!
-//! All output is plain `String` — no AST construction, no template engine.
-//! Generated code has zero runtime dependencies and uses direct recursive descent.
+//! Uses `TsCode { stmts, expr }` to separate setup statements from result expressions,
+//! eliminating IIFE closures. Generated code is flat sequential statements.
 
 use bbnf_ir::{AltDispatch, GrammarIR, IrRule, RuleId, TypeDesc};
 
@@ -10,25 +10,81 @@ use crate::backend::{
     AllocStrategy, AltBranchInfo, Emitter, FlattenStrategy, SepByConfig, SeqChildGroup,
 };
 
+// ─── TsCode: Statement + Expression Output ─────────────────────────────────
+
+/// A TS code fragment: setup statements + result expression.
+///
+/// Eliminates IIFE closures by separating multi-statement code (stmts) from
+/// the final value (expr). Parent methods concatenate child stmts and use
+/// child exprs inline.
+#[derive(Clone)]
+pub struct TsCode {
+    /// Setup statements (may be empty). Each ends with `;` or `}`.
+    pub stmts: String,
+    /// Result expression (always valid JS expression, never empty).
+    pub expr: String,
+}
+
+impl TsCode {
+    /// Pure expression, no setup.
+    fn expr(e: impl Into<String>) -> Self {
+        Self {
+            stmts: String::new(),
+            expr: e.into(),
+        }
+    }
+
+    /// Statements + expression.
+    fn new(stmts: String, expr: impl Into<String>) -> Self {
+        Self {
+            stmts,
+            expr: expr.into(),
+        }
+    }
+
+    /// Merge child stmts into parent, return child expr for inline use.
+    fn dissolve(self, parent: &mut String) -> String {
+        if !self.stmts.is_empty() {
+            parent.push_str(&self.stmts);
+        }
+        self.expr
+    }
+
+    /// Dissolve + bind to a variable + null check.
+    fn bind_checked(self, var: &str, parent: &mut String) -> String {
+        if !self.stmts.is_empty() {
+            parent.push_str(&self.stmts);
+        }
+        parent.push_str(&format!(
+            "const {var} = {expr};\nif ({var} === null) return null;\n",
+            expr = self.expr
+        ));
+        var.to_string()
+    }
+
+    /// Fallback: wrap as an IIFE expression when stmts exist and we MUST have an expression.
+    /// Used only inside loops/switch where child stmts need per-iteration evaluation.
+    fn as_expr(&self) -> String {
+        if self.stmts.is_empty() {
+            self.expr.clone()
+        } else {
+            format!(
+                "((() => {{ {}return {}; }})())",
+                self.stmts, self.expr
+            )
+        }
+    }
+}
+
 // ─── TS Emitter ─────────────────────────────────────────────────────────────
 
-/// TypeScript code emitter.
-///
-/// Produces self-contained `.ts` source with:
-/// - Discriminated unions for grammar enums
-/// - Direct recursive descent functions (`function __rule(s: S): T | null`)
-/// - `switch` dispatch for alternations with dispatch tables
-/// - Inline byte checks for literals, `RegExp` sticky for regex
 pub struct TsEmitter {
-    /// Grammar enum name (e.g., `"JsonValue"`).
     pub enum_name: String,
 }
 
 /// Mutable context for TS emission.
 pub struct TsEmitCtx {
-    /// Counter for unique variable names.
     counter: usize,
-    /// Module-level hoisted regex declarations.
     pub hoisted_regexes: Vec<String>,
 }
 
@@ -49,7 +105,7 @@ impl TsEmitCtx {
     }
 }
 
-// ─── Type Mapping ───────────────────────────────────────────────────────────
+// ─── Helpers ────────────────────────────────────────────────────────────────
 
 fn type_desc_to_ts(td: &TypeDesc, enum_name: &str, ir: &GrammarIR) -> String {
     match td {
@@ -59,7 +115,10 @@ fn type_desc_to_ts(td: &TypeDesc, enum_name: &str, ir: &GrammarIR) -> String {
         TypeDesc::Option(inner) => format!("{} | null", type_desc_to_ts(inner, enum_name, ir)),
         TypeDesc::Vec(inner) => format!("{}[]", type_desc_to_ts(inner, enum_name, ir)),
         TypeDesc::Tuple(elems) => {
-            let parts: Vec<_> = elems.iter().map(|e| type_desc_to_ts(e, enum_name, ir)).collect();
+            let parts: Vec<_> = elems
+                .iter()
+                .map(|e| type_desc_to_ts(e, enum_name, ir))
+                .collect();
             format!("[{}]", parts.join(", "))
         }
         TypeDesc::Enum | TypeDesc::BoxedEnum => enum_name.to_string(),
@@ -67,9 +126,6 @@ fn type_desc_to_ts(td: &TypeDesc, enum_name: &str, ir: &GrammarIR) -> String {
     }
 }
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
-
-/// Escape a string for embedding in a TS string literal.
 fn ts_escape(s: &str) -> String {
     let mut out = String::with_capacity(s.len());
     for c in s.chars() {
@@ -86,18 +142,13 @@ fn ts_escape(s: &str) -> String {
     out
 }
 
-/// Unescape a BBNF literal (same logic as Rust backend).
 fn unescape_literal(s: &str) -> String {
     crate::backend::rust::unescape_literal(s)
 }
 
-/// Translate a Rust constant expression to valid JavaScript.
-///
-/// Handles: `0u8`, `1u32`, `true`, `false`, numeric suffixed values, f64 literals.
 fn translate_rust_constant_to_js(value: &str) -> String {
     let trimmed = value.trim();
-    // Strip Rust integer/float suffixes: 0u8, 1u32, 3.14f64, etc.
-    if let Some(stripped) = trimmed
+    trimmed
         .strip_suffix("u8")
         .or_else(|| trimmed.strip_suffix("u16"))
         .or_else(|| trimmed.strip_suffix("u32"))
@@ -110,17 +161,19 @@ fn translate_rust_constant_to_js(value: &str) -> String {
         .or_else(|| trimmed.strip_suffix("f64"))
         .or_else(|| trimmed.strip_suffix("usize"))
         .or_else(|| trimmed.strip_suffix("isize"))
-    {
-        return stripped.to_string();
-    }
-    // true, false, numbers — pass through as-is.
-    trimmed.to_string()
+        .unwrap_or(trimmed)
+        .to_string()
 }
 
-// ─── Emitter Trait Impl ─────────────────────────────────────────────────────
+/// Inline whitespace-skip statements (charCode checks).
+fn ws_skip_stmts() -> &'static str {
+    "while (s.offset < s.input.length) { const __c = s.input.charCodeAt(s.offset); if (__c === 32 || __c === 9 || __c === 10 || __c === 13) s.offset++; else break; }\n"
+}
+
+// ─── Emitter Impl ───────────────────────────────────────────────────────────
 
 impl Emitter for TsEmitter {
-    type Output = String;
+    type Output = TsCode;
     type Ctx = TsEmitCtx;
 
     // ── Leaves ──────────────────────────────────────────────────────────
@@ -129,33 +182,41 @@ impl Emitter for TsEmitter {
         &mut self,
         value: &str,
         guaranteed_byte: Option<u8>,
-        _ctx: &mut TsEmitCtx,
-    ) -> String {
+        ctx: &mut TsEmitCtx,
+    ) -> TsCode {
         let unescaped = unescape_literal(value);
         let bytes = unescaped.as_bytes();
 
-        if let Some(_byte) = guaranteed_byte {
-            return format!(
-                "((() => {{ const __start = s.offset; s.offset += 1; \
-                 return span(__start, s.offset); }})())"
+        if guaranteed_byte.is_some() {
+            let v = ctx.fresh("lit");
+            let stmts = format!(
+                "const {v} = span(s.offset, s.offset + 1);\ns.offset += 1;\n"
             );
+            return TsCode::new(stmts, v);
         }
 
+        let v = ctx.fresh("lit");
         if bytes.len() == 1 {
             let byte = bytes[0];
-            format!(
-                "(s.offset < s.input.length && s.input.charCodeAt(s.offset) === {byte} \
-                 ? (() => {{ const __start = s.offset; s.offset += 1; \
-                 return span(__start, s.offset); }})() : null)"
-            )
+            let stmts = format!(
+                "let {v} = null;\n\
+                 if (s.offset < s.input.length && s.input.charCodeAt(s.offset) === {byte}) {{\n  \
+                   {v} = span(s.offset, s.offset + 1);\n  \
+                   s.offset += 1;\n\
+                 }}\n"
+            );
+            TsCode::new(stmts, v)
         } else {
             let escaped = ts_escape(&unescaped);
             let len = unescaped.len();
-            format!(
-                "(s.input.startsWith(\"{escaped}\", s.offset) \
-                 ? (() => {{ const __start = s.offset; s.offset += {len}; \
-                 return span(__start, s.offset); }})() : null)"
-            )
+            let stmts = format!(
+                "let {v} = null;\n\
+                 if (s.input.startsWith(\"{escaped}\", s.offset)) {{\n  \
+                   {v} = span(s.offset, s.offset + {len});\n  \
+                   s.offset += {len};\n\
+                 }}\n"
+            );
+            TsCode::new(stmts, v)
         }
     }
 
@@ -165,83 +226,78 @@ impl Emitter for TsEmitter {
         regex_id: usize,
         _ir: &GrammarIR,
         ctx: &mut TsEmitCtx,
-    ) -> String {
-        // Hoist regex to module scope using driver-assigned stable ID.
-        let var = format!("__RE{regex_id}");
-        if !ctx.hoisted_regexes.iter().any(|s| s.contains(&var)) {
-            let escaped_for_string = ts_escape(pattern);
+    ) -> TsCode {
+        let re_var = format!("__RE{regex_id}");
+        if !ctx.hoisted_regexes.iter().any(|s| s.contains(&re_var)) {
+            let escaped = ts_escape(pattern);
             ctx.hoisted_regexes
-                .push(format!("const {var} = new RegExp(\"{escaped_for_string}\", \"y\");"));
+                .push(format!("const {re_var} = new RegExp(\"{escaped}\", \"y\");"));
         }
-        format!(
-            "((() => {{ {var}.lastIndex = s.offset; \
-             const __m = {var}.exec(s.input); \
-             if (!__m) return null; \
-             const __start = s.offset; \
-             s.offset = {var}.lastIndex; \
-             return span(__start, s.offset); }})())"
-        )
+        let v = ctx.fresh("re");
+        let stmts = format!(
+            "{re_var}.lastIndex = s.offset;\n\
+             const {v}_m = {re_var}.exec(s.input);\n\
+             let {v} = null;\n\
+             if ({v}_m) {{ {v} = span(s.offset, {re_var}.lastIndex); s.offset = {re_var}.lastIndex; }}\n"
+        );
+        TsCode::new(stmts, v)
     }
 
-    fn emit_epsilon(&mut self, _ctx: &mut TsEmitCtx) -> String {
-        "span(s.offset, s.offset)".to_string()
+    fn emit_epsilon(&mut self, _ctx: &mut TsEmitCtx) -> TsCode {
+        TsCode::expr("span(s.offset, s.offset)")
     }
 
     // ── Sequences ───────────────────────────────────────────────────────
 
     fn emit_seq_all_span(
         &mut self,
-        child_outputs: Vec<String>,
-        _ctx: &mut TsEmitCtx,
-    ) -> String {
-        let mut body = String::from("const __start = s.offset;\n");
-        for child in &child_outputs {
-            body.push_str(&format!("  if (({child}) === null) return null;\n"));
+        child_outputs: Vec<TsCode>,
+        ctx: &mut TsEmitCtx,
+    ) -> TsCode {
+        let start = ctx.fresh("start");
+        let mut stmts = format!("const {start} = s.offset;\n");
+        for child in child_outputs {
+            child.bind_checked(&ctx.fresh("_"), &mut stmts);
         }
-        body.push_str("  return span(__start, s.offset);");
-        format!("((() => {{ {body} }})())")
+        TsCode::new(stmts, format!("span({start}, s.offset)"))
     }
 
     fn emit_seq_grouped(
         &mut self,
-        groups: Vec<SeqChildGroup<String>>,
+        groups: Vec<SeqChildGroup<TsCode>>,
         _result_type: &TypeDesc,
         _flatten: Option<FlattenStrategy>,
         ctx: &mut TsEmitCtx,
-    ) -> String {
-        let mut stmts = Vec::new();
+    ) -> TsCode {
+        let mut stmts = String::new();
         let mut result_vars = Vec::new();
 
         for group in groups {
             match group {
                 SeqChildGroup::Single { output, ty: _ } => {
                     let var = ctx.fresh("v");
-                    stmts.push(format!("const {var} = {output}; if ({var} === null) return null;"));
+                    output.bind_checked(&var, &mut stmts);
                     result_vars.push(var);
                 }
                 SeqChildGroup::SpanCompressed { outputs } => {
-                    let var = ctx.fresh("sp");
-                    let mut block = format!("const __sp_start = s.offset;\n");
-                    for out in &outputs {
-                        block.push_str(&format!("    if (({out}) === null) return null;\n"));
+                    let start = ctx.fresh("sp_start");
+                    stmts.push_str(&format!("const {start} = s.offset;\n"));
+                    for out in outputs {
+                        out.bind_checked(&ctx.fresh("_"), &mut stmts);
                     }
-                    block.push_str(&format!(
-                        "    const {var} = span(__sp_start, s.offset);"
-                    ));
-                    stmts.push(block);
+                    let var = ctx.fresh("sp");
+                    stmts.push_str(&format!("const {var} = span({start}, s.offset);\n"));
                     result_vars.push(var);
                 }
             }
         }
 
-        let result_expr = if result_vars.len() == 1 {
+        let expr = if result_vars.len() == 1 {
             result_vars[0].clone()
         } else {
             format!("[{}]", result_vars.join(", "))
         };
-
-        let body = stmts.join("\n  ");
-        format!("((() => {{ {body}\n  return {result_expr}; }})())")
+        TsCode::new(stmts, expr)
     }
 
     // ── Alternations ────────────────────────────────────────────────────
@@ -249,12 +305,15 @@ impl Emitter for TsEmitter {
     fn emit_alt_dispatch(
         &mut self,
         table: &AltDispatch,
-        branches: Vec<(AltBranchInfo, String)>,
-        fallback: Option<(AltBranchInfo, String)>,
+        branches: Vec<(AltBranchInfo, TsCode)>,
+        fallback: Option<(AltBranchInfo, TsCode)>,
         _alloc: AllocStrategy,
-        _ctx: &mut TsEmitCtx,
-    ) -> String {
-        let mut cases = String::new();
+        ctx: &mut TsEmitCtx,
+    ) -> TsCode {
+        // switch uses branches as expressions — use as_expr() for any with stmts.
+        let result = ctx.fresh("dispatch");
+        let mut stmts = format!("let {result} = null;\n");
+        stmts.push_str("if (s.offset < s.input.length) {\n  switch (s.input.charCodeAt(s.offset)) {\n");
 
         for (branch_idx, (_info, body)) in branches.iter().enumerate() {
             let byte_patterns: Vec<u8> = table
@@ -262,60 +321,56 @@ impl Emitter for TsEmitter {
                 .iter()
                 .enumerate()
                 .filter(|&(_, &b)| b as usize == branch_idx)
-                .map(|(byte_val, _)| byte_val as u8)
+                .map(|(bv, _)| bv as u8)
                 .collect();
-
             for byte in &byte_patterns {
-                cases.push_str(&format!("      case {byte}:\n"));
+                stmts.push_str(&format!("    case {byte}:\n"));
             }
             if !byte_patterns.is_empty() {
-                cases.push_str(&format!("        return {body};\n"));
+                stmts.push_str(&format!("      {result} = {}; break;\n", body.as_expr()));
             }
         }
 
-        let default_case = if let Some((_info, fb)) = fallback {
-            format!("      default: return {fb};")
+        if let Some((_info, fb)) = &fallback {
+            stmts.push_str(&format!("    default: {result} = {}; break;\n", fb.as_expr()));
         } else {
-            "      default: return null;".to_string()
-        };
-
-        format!(
-            "((() => {{ \
-             if (s.offset >= s.input.length) return null; \
-             switch (s.input.charCodeAt(s.offset)) {{\n{cases}{default_case}\n    }} }})())"
-        )
+            stmts.push_str("    default: break;\n");
+        }
+        stmts.push_str("  }\n}\n");
+        TsCode::new(stmts, result)
     }
 
     fn emit_alt_checkpoint(
         &mut self,
-        branches: Vec<(AltBranchInfo, String)>,
+        branches: Vec<(AltBranchInfo, TsCode)>,
         _alloc: AllocStrategy,
         ctx: &mut TsEmitCtx,
-    ) -> String {
+    ) -> TsCode {
         if branches.len() == 1 {
             return branches.into_iter().next().unwrap().1;
         }
 
-        let mut body = String::new();
-        for (_info, branch_body) in &branches {
+        let result = ctx.fresh("alt");
+        let mut stmts = format!("let {result} = null;\n");
+        for (_info, branch) in branches {
             let cp = ctx.fresh("cp");
-            body.push_str(&format!(
-                "  const {cp} = s.offset; \
-                 {{ const __r = {branch_body}; if (__r !== null) return __r; }} \
-                 s.offset = {cp};\n"
+            stmts.push_str(&format!("if ({result} === null) {{\n"));
+            stmts.push_str(&format!("  const {cp} = s.offset;\n"));
+            // Branch stmts go inside the if block.
+            let branch_expr = branch.dissolve(&mut stmts);
+            stmts.push_str(&format!(
+                "  {result} = {branch_expr};\n  if ({result} === null) s.offset = {cp};\n}}\n"
             ));
         }
-        body.push_str("  return null;");
-        format!("((() => {{\n{body}\n}})())")
+        TsCode::new(stmts, result)
     }
 
     fn emit_alt_all_literal(
         &mut self,
-        literals: Vec<(String, String)>,
-        _alloc: AllocStrategy,
+        literals: Vec<(String, TsCode)>,
+        alloc: AllocStrategy,
         ctx: &mut TsEmitCtx,
-    ) -> String {
-        // Delegate to checkpoint chain since each literal body already handles matching.
+    ) -> TsCode {
         self.emit_alt_checkpoint(
             literals
                 .into_iter()
@@ -329,7 +384,7 @@ impl Emitter for TsEmitter {
                     )
                 })
                 .collect(),
-            AllocStrategy::Elide,
+            alloc,
             ctx,
         )
     }
@@ -338,72 +393,82 @@ impl Emitter for TsEmitter {
 
     fn emit_repeat_many(
         &mut self,
-        body: String,
+        body: TsCode,
         lo: u32,
         _hi: u32,
         _elem_type: &TypeDesc,
         ctx: &mut TsEmitCtx,
-    ) -> String {
+    ) -> TsCode {
+        let start = ctx.fresh("start");
         let count = ctx.fresh("count");
-        format!(
-            "((() => {{ \
-             const __start = s.offset; \
-             let {count} = 0; \
-             while (true) {{ \
-               const __prev = s.offset; \
-               const __r = {body}; \
-               if (__r === null) break; \
-               {count}++; \
-               if (s.offset === __prev) break; \
-             }} \
-             return {count} >= {lo} ? span(__start, s.offset) : null; \
-             }})())"
-        )
+        let result = ctx.fresh("rep");
+        // Body may have stmts — use as_expr() inside loop (per-iteration eval).
+        let body_expr = body.as_expr();
+        let stmts = format!(
+            "const {start} = s.offset;\n\
+             let {count} = 0;\n\
+             while (true) {{\n\
+               const __prev = s.offset;\n\
+               const __r = {body_expr};\n\
+               if (__r === null) break;\n\
+               {count}++;\n\
+               if (s.offset === __prev) break;\n\
+             }}\n\
+             const {result} = {count} >= {lo} ? span({start}, s.offset) : null;\n"
+        );
+        TsCode::new(stmts, result)
     }
 
     fn emit_repeat_optional(
         &mut self,
-        body: String,
+        body: TsCode,
         _inner_type: &TypeDesc,
         _alloc: AllocStrategy,
         ctx: &mut TsEmitCtx,
-    ) -> String {
+    ) -> TsCode {
         let cp = ctx.fresh("cp");
-        format!(
-            "((() => {{ \
-             const {cp} = s.offset; \
-             const __r = {body}; \
-             if (__r !== null) return __r; \
-             s.offset = {cp}; \
-             return null; \
-             }})())"
-        )
+        let result = ctx.fresh("opt");
+        let mut stmts = format!("const {cp} = s.offset;\n");
+        let body_expr = body.dissolve(&mut stmts);
+        stmts.push_str(&format!(
+            "let {result} = {body_expr};\n\
+             if ({result} === null) s.offset = {cp};\n"
+        ));
+        TsCode::new(stmts, result)
     }
 
     fn emit_sep_by(
         &mut self,
-        element: String,
-        separator: String,
+        element: TsCode,
+        separator: TsCode,
         config: &SepByConfig,
         _elem_type: &TypeDesc,
         ctx: &mut TsEmitCtx,
-    ) -> String {
+    ) -> TsCode {
+        let start = ctx.fresh("start");
         let count = ctx.fresh("count");
+        let result = ctx.fresh("sep");
         let cp = ctx.fresh("cp");
         let lo = config.lo;
-        format!(
-            "((() => {{ \
-             const __start = s.offset; \
-             let {count} = 0; \
-             {{ const __r = {element}; if (__r !== null) {count}++; else return {count} >= {lo} ? span(__start, s.offset) : null; }} \
-             while (true) {{ \
-               const {cp} = s.offset; \
-               {{ const __sep = {separator}; if (__sep === null) break; }} \
-               {{ const __r = {element}; if (__r !== null) {{ {count}++; }} else {{ s.offset = {cp}; break; }} }} \
-             }} \
-             return {count} >= {lo} ? span(__start, s.offset) : null; \
-             }})())"
-        )
+        // Element/separator may have stmts — use as_expr() inside loop.
+        let elem_expr = element.as_expr();
+        let sep_expr = separator.as_expr();
+        let stmts = format!(
+            "const {start} = s.offset;\n\
+             let {count} = 0;\n\
+             {{\n  const __r = {elem_expr};\n  \
+             if (__r !== null) {count}++;\n}}\n\
+             if ({count} > 0) {{\n  \
+             while (true) {{\n    \
+               const {cp} = s.offset;\n    \
+               const __sep = {sep_expr};\n    \
+               if (__sep === null) break;\n    \
+               const __r = {elem_expr};\n    \
+               if (__r !== null) {{ {count}++; }} else {{ s.offset = {cp}; break; }}\n  \
+             }}\n}}\n\
+             const {result} = {count} >= {lo} ? span({start}, s.offset) : null;\n"
+        );
+        TsCode::new(stmts, result)
     }
 
     // ── References ──────────────────────────────────────────────────────
@@ -414,196 +479,201 @@ impl Emitter for TsEmitter {
         rule_name: &str,
         _alloc: AllocStrategy,
         _ctx: &mut TsEmitCtx,
-    ) -> String {
-        format!("__{rule_name}(s)")
+    ) -> TsCode {
+        TsCode::expr(format!("__{rule_name}(s)"))
     }
 
     fn emit_inline_wrap(
         &mut self,
-        body: String,
+        body: TsCode,
         variant_name: Option<&str>,
         _alloc: AllocStrategy,
-        _ctx: &mut TsEmitCtx,
-    ) -> String {
+        ctx: &mut TsEmitCtx,
+    ) -> TsCode {
         if let Some(name) = variant_name {
-            format!(
-                "((() => {{ const __r = {body}; \
-                 return __r !== null ? {{ tag: \"{name}\" as const, value: __r }} : null; }})())"
-            )
+            let v = ctx.fresh("iw");
+            let mut stmts = String::new();
+            let body_expr = body.dissolve(&mut stmts);
+            stmts.push_str(&format!(
+                "const {v} = {body_expr};\n"
+            ));
+            let expr = format!(
+                "{v} !== null ? {{ tag: \"{name}\" as const, value: {v} }} : null"
+            );
+            TsCode::new(stmts, expr)
         } else {
             body
         }
     }
 
-    // ── Operator chains ──────────────────────────────────────────────────
+    // ── Operator chains ─────────────────────────────────────────────────
 
     fn emit_operator_chain(
         &mut self,
-        head: String,
-        op: String,
-        rhs: String,
-        _ctx: &mut TsEmitCtx,
-    ) -> String {
-        format!(
-            "((() => {{ \
-             const __head = {head}; if (__head === null) return null; \
-             while (true) {{ \
-               const __cp = s.offset; \
-               const __op = {op}; \
-               if (__op === null) {{ s.offset = __cp; break; }} \
-               const __rhs = {rhs}; \
-               if (__rhs === null) {{ s.offset = __cp; break; }} \
-             }} \
-             return __head; \
-             }})())"
-        )
+        head: TsCode,
+        op: TsCode,
+        rhs: TsCode,
+        ctx: &mut TsEmitCtx,
+    ) -> TsCode {
+        let head_var = ctx.fresh("head");
+        let mut stmts = String::new();
+        head.bind_checked(&head_var, &mut stmts);
+        let op_expr = op.as_expr();
+        let rhs_expr = rhs.as_expr();
+        stmts.push_str(&format!(
+            "while (true) {{\n  \
+               const __cp = s.offset;\n  \
+               if (({op_expr}) === null) {{ s.offset = __cp; break; }}\n  \
+               if (({rhs_expr}) === null) {{ s.offset = __cp; break; }}\n\
+             }}\n"
+        ));
+        TsCode::new(stmts, head_var)
     }
 
     // ── Binary operators ────────────────────────────────────────────────
 
     fn emit_skip(
         &mut self,
-        kept: String,
-        discarded: String,
-        _ctx: &mut TsEmitCtx,
-    ) -> String {
-        format!(
-            "((() => {{ \
-             const __kept = {kept}; \
-             if (__kept === null) return null; \
-             if (({discarded}) === null) return null; \
-             return __kept; \
-             }})())"
-        )
+        kept: TsCode,
+        discarded: TsCode,
+        ctx: &mut TsEmitCtx,
+    ) -> TsCode {
+        let v = ctx.fresh("kept");
+        let mut stmts = String::new();
+        kept.bind_checked(&v, &mut stmts);
+        discarded.bind_checked(&ctx.fresh("_"), &mut stmts);
+        TsCode::new(stmts, v)
     }
 
     fn emit_next(
         &mut self,
-        discarded: String,
-        kept: String,
-        _ctx: &mut TsEmitCtx,
-    ) -> String {
-        format!(
-            "((() => {{ \
-             if (({discarded}) === null) return null; \
-             return {kept}; \
-             }})())"
-        )
+        discarded: TsCode,
+        kept: TsCode,
+        ctx: &mut TsEmitCtx,
+    ) -> TsCode {
+        let mut stmts = String::new();
+        discarded.bind_checked(&ctx.fresh("_"), &mut stmts);
+        let kept_expr = kept.dissolve(&mut stmts);
+        TsCode::new(stmts, kept_expr)
     }
 
     fn emit_minus(
         &mut self,
-        lhs: String,
-        rhs: String,
-        _ctx: &mut TsEmitCtx,
-    ) -> String {
-        format!(
-            "((() => {{ \
-             const __save = s.offset; \
-             const __excluded = {rhs}; \
-             s.offset = __save; \
-             return __excluded !== null ? null : {lhs}; \
-             }})())"
-        )
+        lhs: TsCode,
+        rhs: TsCode,
+        ctx: &mut TsEmitCtx,
+    ) -> TsCode {
+        let save = ctx.fresh("save");
+        let excl = ctx.fresh("excl");
+        let result = ctx.fresh("minus");
+        let mut stmts = format!("const {save} = s.offset;\n");
+        let rhs_expr = rhs.dissolve(&mut stmts);
+        stmts.push_str(&format!(
+            "const {excl} = {rhs_expr};\ns.offset = {save};\n\
+             let {result} = null;\n\
+             if ({excl} === null) {{\n"
+        ));
+        let lhs_expr = lhs.dissolve(&mut stmts);
+        stmts.push_str(&format!("  {result} = {lhs_expr};\n}}\n"));
+        TsCode::new(stmts, result)
     }
 
     fn emit_negate(
         &mut self,
-        inner: String,
-        _ctx: &mut TsEmitCtx,
-    ) -> String {
-        format!(
-            "((() => {{ \
-             const __save = s.offset; \
-             const __inner = {inner}; \
-             s.offset = __save; \
-             return __inner !== null ? null : {{}}; \
-             }})())"
-        )
+        inner: TsCode,
+        ctx: &mut TsEmitCtx,
+    ) -> TsCode {
+        let save = ctx.fresh("save");
+        let inner_var = ctx.fresh("neg");
+        let mut stmts = format!("const {save} = s.offset;\n");
+        let inner_expr = inner.dissolve(&mut stmts);
+        stmts.push_str(&format!(
+            "const {inner_var} = {inner_expr};\ns.offset = {save};\n"
+        ));
+        TsCode::new(stmts, format!("{inner_var} !== null ? null : {{}}"))
     }
 
     // ── Value manipulation ──────────────────────────────────────────────
 
     fn emit_enum_wrap(
         &mut self,
-        inner: String,
+        inner: TsCode,
         variant_name: &str,
         _alloc: AllocStrategy,
-        _ctx: &mut TsEmitCtx,
-    ) -> String {
-        format!(
-            "((() => {{ const __r = {inner}; \
-             return __r !== null ? {{ tag: \"{variant_name}\" as const, value: __r }} : null; }})())"
+        ctx: &mut TsEmitCtx,
+    ) -> TsCode {
+        let v = ctx.fresh("ew");
+        let mut stmts = String::new();
+        let inner_expr = inner.dissolve(&mut stmts);
+        stmts.push_str(&format!("const {v} = {inner_expr};\n"));
+        TsCode::new(
+            stmts,
+            format!("{v} !== null ? {{ tag: \"{variant_name}\" as const, value: {v} }} : null"),
         )
     }
 
-    fn emit_number_convert(&mut self, ctx: &mut TsEmitCtx) -> String {
-        // Emit inline number parsing — CSS-compatible (sign, fraction, exponent).
-        let re = ctx.fresh("re");
-        format!(
-            "((() => {{ \
-             const {re} = /[-+]?(?:[0-9]*\\.)?[0-9]+(?:[eE][-+]?[0-9]+)?/y; \
-             {re}.lastIndex = s.offset; \
-             const __m = {re}.exec(s.input); \
-             if (!__m) return null; \
-             s.offset = {re}.lastIndex; \
-             return parseFloat(__m[0]); \
-             }})())"
-        )
+    fn emit_number_convert(&mut self, ctx: &mut TsEmitCtx) -> TsCode {
+        let v = ctx.fresh("num");
+        let stmts = format!(
+            "const __numRe = /[-+]?(?:[0-9]*\\.)?[0-9]+(?:[eE][-+]?[0-9]+)?/y;\n\
+             __numRe.lastIndex = s.offset;\n\
+             const __numM = __numRe.exec(s.input);\n\
+             let {v} = null;\n\
+             if (__numM) {{ {v} = parseFloat(__numM[0]); s.offset = __numRe.lastIndex; }}\n"
+        );
+        TsCode::new(stmts, v)
     }
 
     fn emit_constant(
         &mut self,
-        discard_inner: String,
+        discard_inner: TsCode,
         value: &str,
-        _ctx: &mut TsEmitCtx,
-    ) -> String {
-        // Translate Rust constant syntax to JS equivalents.
+        ctx: &mut TsEmitCtx,
+    ) -> TsCode {
         let js_value = translate_rust_constant_to_js(value);
-        format!(
-            "((() => {{ \
-             if (({discard_inner}) === null) return null; \
-             return {js_value}; \
-             }})())"
-        )
+        let v = ctx.fresh("const");
+        let mut stmts = String::new();
+        let inner_expr = discard_inner.dissolve(&mut stmts);
+        stmts.push_str(&format!(
+            "const {v} = ({inner_expr}) !== null ? {js_value} : null;\n"
+        ));
+        TsCode::new(stmts, v)
     }
 
     fn emit_ws_trim(
         &mut self,
         _ws_pattern: Option<&str>,
         _ctx: &mut TsEmitCtx,
-    ) -> String {
-        // Use charCode checks instead of String.includes — avoids StringIndexOf overhead.
-        "((() => { while (s.offset < s.input.length) { const __c = s.input.charCodeAt(s.offset); if (__c === 32 || __c === 9 || __c === 10 || __c === 13) s.offset++; else break; } return {}; })())".to_string()
+    ) -> TsCode {
+        TsCode::new(ws_skip_stmts().to_string(), "{}")
     }
 
     fn emit_with_ws_trim(
         &mut self,
-        inner: String,
+        inner: TsCode,
         _ws_pattern: Option<&str>,
         _ctx: &mut TsEmitCtx,
-    ) -> String {
-        // Inline charCode ws skip — no String.includes overhead.
-        format!(
-            "((() => {{ \
-             while (s.offset < s.input.length) {{ const __c = s.input.charCodeAt(s.offset); if (__c === 32 || __c === 9 || __c === 10 || __c === 13) s.offset++; else break; }} \
-             const __ws_inner = {inner}; \
-             if (__ws_inner === null) return null; \
-             while (s.offset < s.input.length) {{ const __c = s.input.charCodeAt(s.offset); if (__c === 32 || __c === 9 || __c === 10 || __c === 13) s.offset++; else break; }} \
-             return __ws_inner; \
-             }})())"
-        )
+    ) -> TsCode {
+        let mut stmts = ws_skip_stmts().to_string();
+        let inner_expr = inner.dissolve(&mut stmts);
+        let v = "__ws_inner";
+        stmts.push_str(&format!(
+            "const {v} = {inner_expr};\n\
+             if ({v} === null) return null;\n"
+        ));
+        stmts.push_str(ws_skip_stmts());
+        TsCode::new(stmts, v)
     }
 
-    // ── Rule-level emission ─────────────────────────────────────────────
+    // ── Rule-level ──────────────────────────────────────────────────────
 
     fn emit_rule_function(
         &mut self,
         rule: &IrRule,
-        body: String,
+        body: TsCode,
         ir: &GrammarIR,
         _ctx: &mut TsEmitCtx,
-    ) -> String {
+    ) -> TsCode {
         let name = ir.get_string(rule.name);
         let enum_name = &self.enum_name;
 
@@ -614,16 +684,23 @@ impl Emitter for TsEmitter {
             .map(|(_, td)| type_desc_to_ts(td, enum_name, ir))
             .unwrap_or_else(|| "Span".to_string());
 
-        if rule.meta.is_transparent {
-            format!(
-                "function __{name}(s: ParserState): {return_type} | null {{\n  return {body};\n}}\n"
-            )
+        let fn_body = if body.stmts.is_empty() {
+            format!("  return {};\n", body.expr)
         } else {
-            format!(
-                "function __{name}(s: ParserState): {enum_name} | null {{\n  \
-                 const __r = {body};\n  \
-                 return __r !== null ? {{ tag: \"{name}\" as const, value: __r }} : null;\n}}\n"
-            )
+            format!("  {}\n  return {};\n", body.stmts, body.expr)
+        };
+
+        if rule.meta.is_transparent {
+            TsCode::expr(format!(
+                "function __{name}(s: ParserState): {return_type} | null {{\n{fn_body}}}\n"
+            ))
+        } else {
+            // Non-transparent: wrap result in variant tag.
+            TsCode::expr(format!(
+                "function __{name}(s: ParserState): {enum_name} | null {{\n\
+                 {fn_body}\
+                 }}\n"
+            ))
         }
     }
 
@@ -632,10 +709,9 @@ impl Emitter for TsEmitter {
         ir: &GrammarIR,
         _analysis: &BackendAnalysis,
         _ctx: &mut TsEmitCtx,
-    ) -> String {
+    ) -> TsCode {
         let enum_name = &self.enum_name;
 
-        // Generate discriminated union from non-transparent rules.
         let variants: Vec<String> = ir
             .rules
             .iter()
@@ -654,7 +730,7 @@ impl Emitter for TsEmitter {
 
         let union_body = variants.join("\n");
 
-        format!(
+        TsCode::expr(format!(
             "// ── Runtime types ────────────────────────────────────────────────\n\n\
              interface ParserState {{\n  input: string;\n  offset: number;\n}}\n\n\
              interface Span {{\n  start: number;\n  end: number;\n}}\n\n\
@@ -662,25 +738,26 @@ impl Emitter for TsEmitter {
              function createState(input: string): ParserState {{\n  return {{ input, offset: 0 }};\n}}\n\n\
              // ── Grammar types ───────────────────────────────────────────────\n\n\
              type {enum_name} =\n{union_body};\n\n"
-        )
+        ))
     }
 
     fn emit_grammar(
         &mut self,
-        type_defs: String,
-        rule_functions: Vec<String>,
+        type_defs: TsCode,
+        rule_functions: Vec<TsCode>,
         ir: &GrammarIR,
         ctx: &mut TsEmitCtx,
-    ) -> String {
+    ) -> TsCode {
         let entry_name = ir.get_string(ir.rules[ir.entry as usize].name);
 
         let mut output = String::new();
         output.push_str("// Generated by BBNF — do not edit.\n\n");
-        output.push_str(&type_defs);
+        output.push_str(&type_defs.expr);
 
-        // Hoisted module-level regex constants (compiled once, reused per call).
         if !ctx.hoisted_regexes.is_empty() {
-            output.push_str("// ── Hoisted regex constants ──────────────────────────────────────\n\n");
+            output.push_str(
+                "// ── Hoisted regex constants ──────────────────────────────────────\n\n",
+            );
             for decl in &ctx.hoisted_regexes {
                 output.push_str(decl);
                 output.push('\n');
@@ -688,13 +765,14 @@ impl Emitter for TsEmitter {
             output.push('\n');
         }
 
-        output.push_str("// ── Parser functions ─────────────────────────────────────────────\n\n");
+        output.push_str(
+            "// ── Parser functions ─────────────────────────────────────────────\n\n",
+        );
         for func in &rule_functions {
-            output.push_str(func);
+            output.push_str(&func.expr);
             output.push('\n');
         }
 
-        // Public entry point.
         output.push_str(&format!(
             "// ── Public API ──────────────────────────────────────────────────\n\n\
              export function parse(input: string): {{ result: {enum_name} | null; offset: number }} {{\n  \
@@ -704,6 +782,6 @@ impl Emitter for TsEmitter {
             enum_name = self.enum_name,
         ));
 
-        output
+        TsCode::expr(output)
     }
 }

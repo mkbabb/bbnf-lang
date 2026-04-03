@@ -14,9 +14,10 @@ pub mod regex_first;
 pub mod vm;
 
 // Backward-compat re-exports: downstream crates can still use
-// `bbnf_ir::bytecode`, `bbnf_ir::compiler`, `bbnf_ir::interpreter`.
+// `bbnf_ir::bytecode`, `bbnf_ir::compiler`, `bbnf_ir::interpreter`, `bbnf_ir::debug`.
 pub use vm::bytecode;
 pub use vm::compiler;
+pub use vm::debug;
 pub use vm::interpreter;
 
 use std::collections::HashMap;
@@ -278,6 +279,7 @@ pub struct PrettyHints {
     /// Custom separator string (from `sep("...")`).
     pub sep: Option<String>,
     /// Format-time balanced splitting delimiter (from `split("...")`).
+    /// Currently preserved for prettify codegen to reject explicitly.
     pub split: Option<String>,
 }
 
@@ -482,30 +484,73 @@ impl GrammarIR {
     }
 }
 
-/// Count the total number of nodes in an IrNode tree.
-fn count_nodes(node: &IrNode) -> usize {
-    match node {
-        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon | IrNode::Ref(_) => 1,
-        IrNode::Seq(children) => 1 + children.iter().map(|c| count_nodes(c)).sum::<usize>(),
-        IrNode::Alt(branches, _) => {
-            1 + branches.iter().map(|b| count_nodes(&b.node)).sum::<usize>()
-        }
-        IrNode::Repeat { inner, .. } => 1 + count_nodes(inner),
-        IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
-            1 + count_nodes(a) + count_nodes(b)
-        }
-        IrNode::Negate(inner) | IrNode::OptionalWhitespace(inner) => 1 + count_nodes(inner),
-        IrNode::Map { inner, .. } => 1 + count_nodes(inner),
-        IrNode::TokenDispatch {
-            token,
-            arms,
-            fallback,
-        } => {
-            1 + count_nodes(token)
-                + arms.iter().map(|a| count_nodes(&a.continuation)).sum::<usize>()
-                + count_nodes(fallback)
+impl IrNode {
+    /// Visit each direct child node, calling `f` on each.
+    ///
+    /// Leaves (Literal, Regex, Epsilon, Ref) have no children.
+    /// For Alt, visits the `node` field of each `AltBranch`.
+    /// For TokenDispatch, visits `token`, each arm's `continuation`, and `fallback`.
+    pub fn for_each_child(&self, f: &mut impl FnMut(&IrNode)) {
+        match self {
+            IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon | IrNode::Ref(_) => {}
+            IrNode::Seq(children) => children.iter().for_each(f),
+            IrNode::Alt(branches, _) => branches.iter().for_each(|b| f(&b.node)),
+            IrNode::Repeat { inner, .. }
+            | IrNode::Negate(inner)
+            | IrNode::OptionalWhitespace(inner)
+            | IrNode::Map { inner, .. } => f(inner),
+            IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
+                f(a);
+                f(b);
+            }
+            IrNode::TokenDispatch {
+                token,
+                arms,
+                fallback,
+            } => {
+                f(token);
+                for arm in arms {
+                    f(&arm.continuation);
+                }
+                f(fallback);
+            }
         }
     }
+
+    /// Mutable version of `for_each_child`.
+    pub fn for_each_child_mut(&mut self, f: &mut impl FnMut(&mut IrNode)) {
+        match self {
+            IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon | IrNode::Ref(_) => {}
+            IrNode::Seq(children) => children.iter_mut().for_each(f),
+            IrNode::Alt(branches, _) => branches.iter_mut().for_each(|b| f(&mut b.node)),
+            IrNode::Repeat { inner, .. }
+            | IrNode::Negate(inner)
+            | IrNode::OptionalWhitespace(inner)
+            | IrNode::Map { inner, .. } => f(inner),
+            IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
+                f(a);
+                f(b);
+            }
+            IrNode::TokenDispatch {
+                token,
+                arms,
+                fallback,
+            } => {
+                f(token);
+                for arm in arms {
+                    f(&mut arm.continuation);
+                }
+                f(fallback);
+            }
+        }
+    }
+}
+
+/// Count the total number of nodes in an IrNode tree.
+fn count_nodes(node: &IrNode) -> usize {
+    let mut count = 0;
+    node.for_each_child(&mut |child| count += count_nodes(child));
+    1 + count
 }
 
 // ─── Serialization ──────────────────────────────────────────────────────────

@@ -17,42 +17,44 @@ function createState(input) {
 
 // ── Parser functions ─────────────────────────────────────────────
 
+function __null(s) {
+  const __r = ((() => { if (((s.input.startsWith("null", s.offset) ? (() => { const __start = s.offset; s.offset += 4; return span(__start, s.offset); })() : null)) === null) return null; return 0; })());
+  return __r !== null ? { tag: "null", value: __r } : null;
+}
+
+function __bool(s) {
+  const __r = ((() => { if (s.offset >= s.input.length) return null; switch (s.input.charCodeAt(s.offset)) {
+      case 102:
+        return ((() => { if (((s.input.startsWith("false", s.offset) ? (() => { const __start = s.offset; s.offset += 5; return span(__start, s.offset); })() : null)) === null) return null; return false; })());
+      case 116:
+        return ((() => { if (((s.input.startsWith("true", s.offset) ? (() => { const __start = s.offset; s.offset += 4; return span(__start, s.offset); })() : null)) === null) return null; return true; })());
+      default: return null;
+    } })());
+  return __r !== null ? { tag: "bool", value: __r } : null;
+}
+
+function __string(s) {
+  const __r = ((() => { const __re0 = new RegExp("\"(?:[^\"\\\\]|\\\\(?:[\"\\\\\\/bfnrt]|u[0-9a-fA-F]{4}))*\"", "y"); __re0.lastIndex = s.offset; const __m = __re0.exec(s.input); if (!__m) return null; const __start = s.offset; s.offset = __re0.lastIndex; return span(__start, s.offset); })());
+  return __r !== null ? { tag: "string", value: __r } : null;
+}
+
 function __number(s) {
-  const __r = ((() => { const __re0 = /-?(0|[1-9]\\d*)(\\.\\d+)?([eE][+-]?\\d+)?/y; __re0.lastIndex = s.offset; const __m = __re0.exec(s.input); if (!__m) return null; const __start = s.offset; s.offset = __re0.lastIndex; return span(__start, s.offset); })());
+  const __r = ((() => { const __re1 = /[-+]?(?:[0-9]*\.)?[0-9]+(?:[eE][-+]?[0-9]+)?/y; __re1.lastIndex = s.offset; const __m = __re1.exec(s.input); if (!__m) return null; s.offset = __re1.lastIndex; return parseFloat(__m[0]); })());
   return __r !== null ? { tag: "number", value: __r } : null;
 }
 
 function __comma(s) {
-  const __r = ((() => { const __kept = ((() => { if ((((() => { while (s.offset < s.input.length && " \t\n\r".includes(s.input[s.offset])) s.offset++; return {}; })())) === null) return null; return (s.offset < s.input.length && s.input.charCodeAt(s.offset) === 44 ? (() => { const __start = s.offset; s.offset += 1; return span(__start, s.offset); })() : null); })()); if (__kept === null) return null; if ((((() => { while (s.offset < s.input.length && " \t\n\r".includes(s.input[s.offset])) s.offset++; return {}; })())) === null) return null; return __kept; })());
+  const __r = ((() => { while (s.offset < s.input.length && " \t\n\r".includes(s.input[s.offset])) s.offset++; const __ws_inner = (s.offset < s.input.length && s.input.charCodeAt(s.offset) === 44 ? (() => { const __start = s.offset; s.offset += 1; return span(__start, s.offset); })() : null); if (__ws_inner === null) return null; while (s.offset < s.input.length && " \t\n\r".includes(s.input[s.offset])) s.offset++; return __ws_inner; })());
   return __r !== null ? { tag: "comma", value: __r } : null;
 }
 
 function __colon(s) {
-  const __r = ((() => { const __kept = ((() => { if ((((() => { while (s.offset < s.input.length && " \t\n\r".includes(s.input[s.offset])) s.offset++; return {}; })())) === null) return null; return (s.offset < s.input.length && s.input.charCodeAt(s.offset) === 58 ? (() => { const __start = s.offset; s.offset += 1; return span(__start, s.offset); })() : null); })()); if (__kept === null) return null; if ((((() => { while (s.offset < s.input.length && " \t\n\r".includes(s.input[s.offset])) s.offset++; return {}; })())) === null) return null; return __kept; })());
+  const __r = ((() => { while (s.offset < s.input.length && " \t\n\r".includes(s.input[s.offset])) s.offset++; const __ws_inner = (s.offset < s.input.length && s.input.charCodeAt(s.offset) === 58 ? (() => { const __start = s.offset; s.offset += 1; return span(__start, s.offset); })() : null); if (__ws_inner === null) return null; while (s.offset < s.input.length && " \t\n\r".includes(s.input[s.offset])) s.offset++; return __ws_inner; })());
   return __r !== null ? { tag: "colon", value: __r } : null;
 }
 
-function __bool(s) {
-  const __r = ((() => {
-  const __cp1 = s.offset; { const __r = (s.input.startsWith("false", s.offset) ? (() => { const __start = s.offset; s.offset += 5; return span(__start, s.offset); })() : null); if (__r !== null) return __r; } s.offset = __cp1;
-  const __cp2 = s.offset; { const __r = (s.input.startsWith("true", s.offset) ? (() => { const __start = s.offset; s.offset += 4; return span(__start, s.offset); })() : null); if (__r !== null) return __r; } s.offset = __cp2;
-  return null;
-})());
-  return __r !== null ? { tag: "bool", value: __r } : null;
-}
-
-function __null(s) {
-  const __r = (s.input.startsWith("null", s.offset) ? (() => { const __start = s.offset; s.offset += 4; return span(__start, s.offset); })() : null);
-  return __r !== null ? { tag: "null", value: __r } : null;
-}
-
-function __string(s) {
-  const __r = ((() => { const __re3 = /"(?:[^"\\\\]|\\\\(?:["\\\\\\\/bfnrt]|u[0-9a-fA-F]{4}))*"/y; __re3.lastIndex = s.offset; const __m = __re3.exec(s.input); if (!__m) return null; const __start = s.offset; s.offset = __re3.lastIndex; return span(__start, s.offset); })());
-  return __r !== null ? { tag: "string", value: __r } : null;
-}
-
 function __object(s) {
-  const __r = ((() => { const __kept = ((() => { if (((s.offset < s.input.length && s.input.charCodeAt(s.offset) === 123 ? (() => { const __start = s.offset; s.offset += 1; return span(__start, s.offset); })() : null)) === null) return null; return ((() => { const __kept = ((() => { if ((((() => { while (s.offset < s.input.length && " \t\n\r".includes(s.input[s.offset])) s.offset++; return {}; })())) === null) return null; return ((() => { const __start = s.offset; let __count4 = 0; { const __r = __pair(s); if (__r !== null) __count4++; else return __count4 >= 0 ? span(__start, s.offset) : null; } while (true) { const __cp5 = s.offset; { const __sep = __comma(s); if (__sep === null) break; } { const __r = __pair(s); if (__r !== null) { __count4++; } else { s.offset = __cp5; break; } } } return __count4 >= 0 ? span(__start, s.offset) : null; })()); })()); if (__kept === null) return null; if ((((() => { while (s.offset < s.input.length && " \t\n\r".includes(s.input[s.offset])) s.offset++; return {}; })())) === null) return null; return __kept; })()); })()); if (__kept === null) return null; if (((s.offset < s.input.length && s.input.charCodeAt(s.offset) === 125 ? (() => { const __start = s.offset; s.offset += 1; return span(__start, s.offset); })() : null)) === null) return null; return __kept; })());
+  const __r = ((() => { const __kept = ((() => { if (((s.offset < s.input.length && s.input.charCodeAt(s.offset) === 123 ? (() => { const __start = s.offset; s.offset += 1; return span(__start, s.offset); })() : null)) === null) return null; return ((() => { while (s.offset < s.input.length && " \t\n\r".includes(s.input[s.offset])) s.offset++; const __ws_inner = ((() => { const __start = s.offset; let __count2 = 0; { const __r = __pair(s); if (__r !== null) __count2++; else return __count2 >= 0 ? span(__start, s.offset) : null; } while (true) { const __cp3 = s.offset; { const __sep = __comma(s); if (__sep === null) break; } { const __r = __pair(s); if (__r !== null) { __count2++; } else { s.offset = __cp3; break; } } } return __count2 >= 0 ? span(__start, s.offset) : null; })()); if (__ws_inner === null) return null; while (s.offset < s.input.length && " \t\n\r".includes(s.input[s.offset])) s.offset++; return __ws_inner; })()); })()); if (__kept === null) return null; if (((s.offset < s.input.length && s.input.charCodeAt(s.offset) === 125 ? (() => { const __start = s.offset; s.offset += 1; return span(__start, s.offset); })() : null)) === null) return null; return __kept; })());
   return __r !== null ? { tag: "object", value: __r } : null;
 }
 
@@ -86,16 +88,16 @@ function __value(s) {
 }
 
 function __array(s) {
-  const __r = ((() => { const __kept = ((() => { if (((s.offset < s.input.length && s.input.charCodeAt(s.offset) === 91 ? (() => { const __start = s.offset; s.offset += 1; return span(__start, s.offset); })() : null)) === null) return null; return ((() => { const __kept = ((() => { if ((((() => { while (s.offset < s.input.length && " \t\n\r".includes(s.input[s.offset])) s.offset++; return {}; })())) === null) return null; return ((() => { const __start = s.offset; let __count6 = 0; { const __r = __value(s); if (__r !== null) __count6++; else return __count6 >= 0 ? span(__start, s.offset) : null; } while (true) { const __cp7 = s.offset; { const __sep = __comma(s); if (__sep === null) break; } { const __r = __value(s); if (__r !== null) { __count6++; } else { s.offset = __cp7; break; } } } return __count6 >= 0 ? span(__start, s.offset) : null; })()); })()); if (__kept === null) return null; if ((((() => { while (s.offset < s.input.length && " \t\n\r".includes(s.input[s.offset])) s.offset++; return {}; })())) === null) return null; return __kept; })()); })()); if (__kept === null) return null; if (((s.offset < s.input.length && s.input.charCodeAt(s.offset) === 93 ? (() => { const __start = s.offset; s.offset += 1; return span(__start, s.offset); })() : null)) === null) return null; return __kept; })());
+  const __r = ((() => { const __kept = ((() => { if (((s.offset < s.input.length && s.input.charCodeAt(s.offset) === 91 ? (() => { const __start = s.offset; s.offset += 1; return span(__start, s.offset); })() : null)) === null) return null; return ((() => { while (s.offset < s.input.length && " \t\n\r".includes(s.input[s.offset])) s.offset++; const __ws_inner = ((() => { const __start = s.offset; let __count4 = 0; { const __r = __value(s); if (__r !== null) __count4++; else return __count4 >= 0 ? span(__start, s.offset) : null; } while (true) { const __cp5 = s.offset; { const __sep = __comma(s); if (__sep === null) break; } { const __r = __value(s); if (__r !== null) { __count4++; } else { s.offset = __cp5; break; } } } return __count4 >= 0 ? span(__start, s.offset) : null; })()); if (__ws_inner === null) return null; while (s.offset < s.input.length && " \t\n\r".includes(s.input[s.offset])) s.offset++; return __ws_inner; })()); })()); if (__kept === null) return null; if (((s.offset < s.input.length && s.input.charCodeAt(s.offset) === 93 ? (() => { const __start = s.offset; s.offset += 1; return span(__start, s.offset); })() : null)) === null) return null; return __kept; })());
   return __r !== null ? { tag: "array", value: __r } : null;
 }
 
 function __pair(s) {
   const __r = ((() => { const __sp_start = s.offset;
     if ((__string(s)) === null) return null;
-    const __sp8 = span(__sp_start, s.offset);
-  const __v9 = ((() => { if ((__colon(s)) === null) return null; return __value(s); })()); if (__v9 === null) return null;
-  return [__sp8, __v9]; })());
+    const __sp6 = span(__sp_start, s.offset);
+  const __v7 = ((() => { if ((__colon(s)) === null) return null; return __value(s); })()); if (__v7 === null) return null;
+  return [__sp6, __v7]; })());
   return __r !== null ? { tag: "pair", value: __r } : null;
 }
 

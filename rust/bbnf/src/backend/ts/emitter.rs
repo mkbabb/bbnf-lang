@@ -86,6 +86,32 @@ fn unescape_literal(s: &str) -> String {
     crate::backend::rust::unescape_literal(s)
 }
 
+/// Translate a Rust constant expression to valid JavaScript.
+///
+/// Handles: `0u8`, `1u32`, `true`, `false`, numeric suffixed values, f64 literals.
+fn translate_rust_constant_to_js(value: &str) -> String {
+    let trimmed = value.trim();
+    // Strip Rust integer/float suffixes: 0u8, 1u32, 3.14f64, etc.
+    if let Some(stripped) = trimmed
+        .strip_suffix("u8")
+        .or_else(|| trimmed.strip_suffix("u16"))
+        .or_else(|| trimmed.strip_suffix("u32"))
+        .or_else(|| trimmed.strip_suffix("u64"))
+        .or_else(|| trimmed.strip_suffix("i8"))
+        .or_else(|| trimmed.strip_suffix("i16"))
+        .or_else(|| trimmed.strip_suffix("i32"))
+        .or_else(|| trimmed.strip_suffix("i64"))
+        .or_else(|| trimmed.strip_suffix("f32"))
+        .or_else(|| trimmed.strip_suffix("f64"))
+        .or_else(|| trimmed.strip_suffix("usize"))
+        .or_else(|| trimmed.strip_suffix("isize"))
+    {
+        return stripped.to_string();
+    }
+    // true, false, numbers — pass through as-is.
+    trimmed.to_string()
+}
+
 // ─── Emitter Trait Impl ─────────────────────────────────────────────────────
 
 impl Emitter for TsEmitter {
@@ -500,10 +526,12 @@ impl Emitter for TsEmitter {
         value: &str,
         _ctx: &mut TsEmitCtx,
     ) -> String {
+        // Translate Rust constant syntax to JS equivalents.
+        let js_value = translate_rust_constant_to_js(value);
         format!(
             "((() => {{ \
              if (({discard_inner}) === null) return null; \
-             return {value}; \
+             return {js_value}; \
              }})())"
         )
     }

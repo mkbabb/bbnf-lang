@@ -5,7 +5,7 @@ use bbnf_ir::{FnDescriptor, IrNode};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::super::regex;
+use crate::generate::regex;
 use super::analysis::inline::CallMode;
 use super::helpers::try_sep_by;
 use super::ir_types::IrCodegenCtx;

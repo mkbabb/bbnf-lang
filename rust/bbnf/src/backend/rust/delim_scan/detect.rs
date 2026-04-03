@@ -6,14 +6,14 @@
 use bbnf_ir::{GrammarIR, IrNode, RuleId};
 
 use super::DelimScanConfig;
-use crate::generate::codegen::unescape_literal;
+use crate::backend::rust::unescape_literal;
 
 // ── Public Entry Point ──────────────────────────────────────────────────────
 
 /// Try to detect a delimiter-scannable Wrap(open, Repeat(Alt(...)), close) pattern.
 ///
 /// Returns `None` if the pattern doesn't match or the extracted bytes collide.
-pub(in crate::generate::codegen) fn try_detect(
+pub(in crate::backend::rust) fn try_detect(
     open: &IrNode,
     middle: &IrNode,
     close: &IrNode,

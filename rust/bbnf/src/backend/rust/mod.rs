@@ -20,6 +20,7 @@
 //! - `expr`: Leaf, Ref, Skip/Next, Wrap, Map, OptionalWhitespace
 
 pub mod analysis;
+pub mod emitter;
 mod alloc_emit;
 mod alt;
 mod delim_scan;
@@ -95,8 +96,8 @@ pub(super) use helpers::{
 pub(super) fn emit_ws_trim(ctx: &IrCodegenCtx<'_>, _mctx: &mut MonoCtx) -> TokenStream {
     if let Some(ws_sid) = ctx.ir.ws_pattern {
         let pattern = ctx.ir.get_string(ws_sid);
-        let opts = super::regex::EmitOpts::new(&super::regex::CostModel::DEFAULT);
-        let code = super::regex::emit_regex(pattern, &opts);
+        let opts = crate::generate::regex::EmitOpts::new(&crate::generate::regex::CostModel::DEFAULT);
+        let code = crate::generate::regex::emit_regex(pattern, &opts);
         // Emit as statement — we just need the side effect (advance offset).
         quote! { #code; }
     } else {
@@ -205,8 +206,8 @@ pub(super) fn emit_mono_expr(
             // Skip fusing when prettify is enabled — formatters only need Spans.
             let fuse = !ctx.effective_prettify;
             let opts =
-                super::regex::EmitOpts::new(&super::regex::CostModel::DEFAULT).with_fuse(fuse);
-            super::regex::emit_regex(pattern, &opts)
+                crate::generate::regex::EmitOpts::new(&crate::generate::regex::CostModel::DEFAULT).with_fuse(fuse);
+            crate::generate::regex::emit_regex(pattern, &opts)
         }
 
         IrNode::Epsilon => {

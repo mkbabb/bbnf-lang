@@ -6,8 +6,8 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use super::DelimScanConfig;
-use crate::generate::codegen::ir_types::IrCodegenCtx;
-use crate::generate::codegen::{MonoCtx, emit_ws_trim, mono_fn_ident};
+use crate::backend::rust::ir_types::IrCodegenCtx;
+use crate::backend::rust::{MonoCtx, emit_ws_trim, mono_fn_ident};
 
 // ── Shared Emission Helpers ─────────────────────────────────────────────────
 
@@ -171,7 +171,7 @@ fn emit_scan_loop(
 /// The pivot branch's function handles all the typed field construction via
 /// the normal recursive descent codegen. The scanner just eliminates the
 /// Alt's checkpoint/backtrack overhead by selecting the right branch upfront.
-pub(in crate::generate::codegen) fn emit_scan(
+pub(in crate::backend::rust) fn emit_scan(
     config: &DelimScanConfig,
     ctx: &IrCodegenCtx<'_>,
     mctx: &mut MonoCtx,
@@ -321,7 +321,7 @@ pub(in crate::generate::codegen) fn emit_scan(
 // ── Combined detect + emit (convenience) ────────────────────────────────────
 
 /// Try to detect and emit a monolithic delimiter scanner for a wrap pattern.
-pub(in crate::generate::codegen) fn try_emit_alloc_wrap(
+pub(in crate::backend::rust) fn try_emit_alloc_wrap(
     open: &IrNode,
     middle: &IrNode,
     close: &IrNode,

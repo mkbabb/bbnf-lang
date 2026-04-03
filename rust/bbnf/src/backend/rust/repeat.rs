@@ -7,7 +7,7 @@ use bbnf_ir::{IrNode, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use super::super::regex;
+use crate::generate::regex;
 use super::helpers::try_sep_by;
 use super::ir_types::IrCodegenCtx;
 use super::loop_emit::{RestoringLoop, emit_restoring_loop};

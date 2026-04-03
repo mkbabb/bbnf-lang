@@ -53,7 +53,7 @@ mod tests {
     use bbnf_ir::{GrammarIR, IrNode, IrRule, RuleMeta, TypeDesc};
 
     use super::*;
-    use crate::generate::codegen::ir_types::{IrCodegenCtx, ParserAttributes};
+    use crate::backend::rust::ir_types::{IrCodegenCtx, ParserAttributes};
 
     #[test]
     fn emit_alloc_uses_local_close_lookahead_capacity() {
@@ -110,8 +110,8 @@ mod tests {
             content_rule: Some(0),
         };
         let mut mctx = super::super::MonoCtx::new(vec![
-            crate::generate::codegen::analysis::inline::CallMode::DirectCall,
-            crate::generate::codegen::analysis::inline::CallMode::DirectCall,
+            crate::backend::rust::analysis::inline::CallMode::DirectCall,
+            crate::backend::rust::analysis::inline::CallMode::DirectCall,
         ]);
 
         let tokens = emit::emit_scan(&config, &ctx, &mut mctx).to_string();

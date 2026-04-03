@@ -17,8 +17,8 @@ use quote::quote;
 
 use super::super::ir_types::{self, IrCodegenCtx};
 use super::{coerce_mono_branch, coerce_mono_branch_by_value};
-use crate::generate::codegen::unescape_literal;
-use crate::generate::codegen::{emit_mono_expr, MonoCtx};
+use crate::backend::rust::unescape_literal;
+use crate::backend::rust::{emit_mono_expr, MonoCtx};
 use crate::generate::regex::classify::{classify_regex, RegexClass};
 use crate::generate::regex::emit::scanner_plan;
 

@@ -522,7 +522,7 @@ fn compile_wrap<E: Emitter>(
 /// If the literal is a single byte matching the guaranteed byte, consumes
 /// the guarantee and returns `Some(byte)`.
 fn check_guaranteed_byte(raw_literal: &str, dstate: &mut DriverState) -> Option<u8> {
-    let unescaped = super::super::generate::codegen::unescape_literal(raw_literal);
+    let unescaped = super::rust::unescape_literal(raw_literal);
     let bytes = unescaped.as_bytes();
     if bytes.len() == 1 {
         if let Some(guaranteed) = dstate.dispatch_guaranteed_byte {

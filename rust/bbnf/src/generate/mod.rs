@@ -8,7 +8,8 @@ pub mod regex;
 // Backward-compat alias — existing callers that reference regex_classify.
 pub use regex::classify as regex_classify;
 
-pub mod codegen;
+// Rust codegen lives in backend::rust; re-export for backward-compat paths.
+pub use crate::backend::rust as codegen;
 
 pub use codegen::ir_enums;
 pub use codegen::ir_types;

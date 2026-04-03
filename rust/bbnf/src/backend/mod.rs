@@ -10,7 +10,7 @@
 
 pub mod analysis;
 pub mod driver;
-pub mod rust_emitter;
+pub mod rust;
 
 pub use analysis::{
     BackendAnalysis, BackendPreparation, EffectiveBackendConfig, PreparedGrammar, TypeAnalysis,

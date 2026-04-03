@@ -9,8 +9,8 @@ use bbnf_ir::{AltDispatch, GrammarIR, IrRule, RuleId, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::analysis::BackendAnalysis;
-use super::{
+use crate::backend::analysis::BackendAnalysis;
+use crate::backend::{
     AllocStrategy, AltBranchInfo, Emitter, FlattenStrategy, SepByConfig, SeqChildGroup,
 };
 
@@ -67,7 +67,7 @@ impl Emitter for RustEmitter {
         guaranteed_byte: Option<u8>,
         _ctx: &mut Self::Ctx,
     ) -> TokenStream {
-        let unescaped = crate::generate::codegen::unescape_literal(value);
+        let unescaped = crate::backend::rust::unescape_literal(value);
         let bytes = unescaped.as_bytes();
 
         if let Some(_byte) = guaranteed_byte {

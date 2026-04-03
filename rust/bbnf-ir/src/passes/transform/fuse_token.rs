@@ -183,12 +183,9 @@ fn starts_with_different_token(
             }
             false
         }
-        IrNode::Seq(children) if !children.is_empty() => starts_with_different_token(
-            &children[0],
-            exclude_token_id,
-            token_rule_ids,
-            rule_bodies,
-        ),
+        IrNode::Seq(children) if !children.is_empty() => {
+            starts_with_different_token(&children[0], exclude_token_id, token_rule_ids, rule_bodies)
+        }
         IrNode::OptionalWhitespace(inner) => {
             starts_with_different_token(inner, exclude_token_id, token_rule_ids, rule_bodies)
         }

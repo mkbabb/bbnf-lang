@@ -221,9 +221,7 @@ impl RewriteRule for SupersetAbsorption {
                     }
                     if let Some(set_j) = &char_sets[j] {
                         // If set_j is a strict subset of set_i, remove set_j.
-                        if set_j.len() < set_i.len()
-                            && set_j.iter().all(|b| set_i.contains(b))
-                        {
+                        if set_j.len() < set_i.len() && set_j.iter().all(|b| set_i.contains(b)) {
                             to_remove.push(j);
                         }
                     }
@@ -273,7 +271,10 @@ impl RewriteRule for UnionMerge {
         let mut merged = false;
         let mut i = 0;
         while i + 1 < branches.len() {
-            if let (Some(set_a), Some(set_b)) = (&char_sets[i], &char_sets.get(i + 1).and_then(|s| s.as_ref())) {
+            if let (Some(set_a), Some(set_b)) = (
+                &char_sets[i],
+                &char_sets.get(i + 1).and_then(|s| s.as_ref()),
+            ) {
                 // Check if ranges are adjacent or overlapping.
                 let mut combined: Vec<u8> = set_a.clone();
                 combined.extend_from_slice(set_b);
@@ -443,8 +444,14 @@ mod tests {
     fn redundant_elimination() {
         let mut strings = vec!["[a-z]".to_string()];
         let mut branches = vec![
-            AltBranch { node: IrNode::Regex(0), first_set: None },
-            AltBranch { node: IrNode::Regex(0), first_set: None },
+            AltBranch {
+                node: IrNode::Regex(0),
+                first_set: None,
+            },
+            AltBranch {
+                node: IrNode::Regex(0),
+                first_set: None,
+            },
         ];
         let rule = RedundantAlternation;
         assert!(rule.apply(&mut branches, &mut strings));

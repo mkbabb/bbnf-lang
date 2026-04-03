@@ -192,100 +192,8 @@ fn try_factor_alt(
         return None;
     }
 
-    // Try grouping by leading regex SID.
-    if let Some(factored) = try_factor_n_branch(branches, strings, rule_metas) {
-        return Some(factored);
-    }
-
-    // Legacy 2-branch path for edge cases.
-    if branches.len() != 2 {
-        return None;
-    }
-
-    // Both branches must be Seq-like.
-    let seq_a = unwrap_to_seq(&branches[0].node)?;
-    let seq_b = unwrap_to_seq(&branches[1].node)?;
-
-    if seq_a.len() < 2 || seq_b.len() < 2 {
-        return None;
-    }
-
-    // Leading expressions must both be Regex.
-    let lead_a = leading_expr(&branches[0].node)?;
-    let lead_b = leading_expr(&branches[1].node)?;
-
-    // Both must be Regex (not Ref or other).
-    let (regex_a_sid, regex_b_sid) = match (lead_a, lead_b) {
-        (IrNode::Regex(a), IrNode::Regex(b)) => (*a, *b),
-        _ => return None,
-    };
-
-    // FIRST sets must overlap (otherwise factor_common_prefixes or dispatch already handles it).
-    let first_a = regex_first::regex_first_chars(&strings[regex_a_sid as usize])?;
-    let first_b = regex_first::regex_first_chars(&strings[regex_b_sid as usize])?;
-
-    if first_a.is_disjoint(&first_b) {
-        return None; // No overlap — dispatch table can handle this directly.
-    }
-
-    // Continuation FIRST sets must be disjoint for dispatch.
-    let cont_a = continuation_first(&branches[0].node, strings, rule_metas)?;
-    let cont_b = continuation_first(&branches[1].node, strings, rule_metas)?;
-
-    if !cont_a.is_disjoint(&cont_b) {
-        return None; // Continuations also overlap — can't dispatch.
-    }
-
-    // Choose the more restrictive regex as the common prefix.
-    // If A ⊆ B (A's FIRST is subset of B's), use A as the prefix.
-    // Otherwise, if the regexes are the same, use either.
-    // Otherwise, we can't safely factor (the prefix regex might match
-    // different lengths for different inputs).
-    let common_regex_sid = if regex_a_sid == regex_b_sid {
-        regex_a_sid
-    } else if is_subset(&first_a, &first_b) {
-        // A is more restrictive — use it as prefix.
-        // But this means branch B's inputs that don't match A won't get the prefix scan.
-        // We'd need to keep branch B for those inputs — too complex for now.
-        return None;
-    } else {
-        return None; // Different regexes with overlapping but non-subset FIRST — can't factor.
-    };
-
-    // Build continuations from each branch (everything after the first element).
-    let cont_a_nodes = strip_leading_seq(&branches[0].node)?;
-    let cont_b_nodes = strip_leading_seq(&branches[1].node)?;
-
-    // Build dispatch table for the inner Alt.
-    let mut table = vec![255u8; 128];
-    for code in cont_a.iter() {
-        table[code as usize] = 0;
-    }
-    for code in cont_b.iter() {
-        table[code as usize] = 1;
-    }
-
-    let inner_alt = IrNode::Alt(
-        vec![
-            AltBranch {
-                node: cont_a_nodes,
-                first_set: Some(cont_a),
-            },
-            AltBranch {
-                node: cont_b_nodes,
-                first_set: Some(cont_b),
-            },
-        ],
-        Some(AltDispatch {
-            table,
-            fallback_idx: None,
-        }),
-    );
-
-    Some(IrNode::Seq(vec![
-        IrNode::Regex(common_regex_sid),
-        inner_alt,
-    ]))
+    // Group branches by leading regex SID and factor groups with disjoint continuations.
+    try_factor_n_branch(branches, strings, rule_metas)
 }
 
 /// Phase 4.1: N-branch regex prefix factoring.
@@ -327,7 +235,8 @@ fn try_factor_n_branch(
             continue;
         }
 
-        let cont_firsts: Vec<&CharSet128> = cont_firsts.iter().map(|f| f.as_ref().unwrap()).collect();
+        let cont_firsts: Vec<&CharSet128> =
+            cont_firsts.iter().map(|f| f.as_ref().unwrap()).collect();
 
         // Pairwise disjoint check.
         let mut pairwise_disjoint = true;
@@ -345,7 +254,10 @@ fn try_factor_n_branch(
         }
 
         // This group is eligible. Prefer the largest group.
-        if best_group.as_ref().is_none_or(|(_, g)| g.len() < indices.len()) {
+        if best_group
+            .as_ref()
+            .is_none_or(|(_, g)| g.len() < indices.len())
+        {
             best_group = Some((*regex_sid, indices.clone()));
         }
     }
@@ -410,12 +322,6 @@ fn try_factor_n_branch(
     } else {
         Some(IrNode::Alt(result_branches, None))
     }
-}
-
-/// Check if charset A is a subset of charset B.
-fn is_subset(a: &CharSet128, b: &CharSet128) -> bool {
-    // A ⊆ B iff A ∩ B = A iff (A & ~B) = 0
-    (a.bits[0] & !b.bits[0]) == 0 && (a.bits[1] & !b.bits[1]) == 0
 }
 
 /// Strip the leading element from a branch's Seq, preserving Map/OW wrappers.

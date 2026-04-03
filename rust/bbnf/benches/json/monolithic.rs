@@ -27,8 +27,7 @@ macro_rules! bench {
             {
                 let ctx = __JsonParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = JsonParser::value();
-                let (result, state) =
-                    parser.parse_return_state_with_context(&input, &ctx);
+                let (result, state) = parser.parse_return_state_with_context(&input, &ctx);
                 assert!(result.is_some(), concat!($file, ": parse failed"));
                 assert!(
                     state.offset >= input.trim_end().len(),
@@ -40,9 +39,7 @@ macro_rules! bench {
             b.iter(|| {
                 let ctx = __JsonParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = JsonParser::value();
-                let ast = parser
-                    .parse_with_context(black_box(&input), &ctx)
-                    .unwrap();
+                let ast = parser.parse_with_context(black_box(&input), &ctx).unwrap();
                 black_box(ast as *const _);
             });
         }

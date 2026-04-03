@@ -347,8 +347,7 @@ fn factor_literal_prefixes(branches: Vec<AltBranch>, strings: &mut Vec<String>) 
                 // Phase 4.2: Recursively factor continuation branches (deep trie).
                 // After splitting on first byte, the remainders may still share
                 // a common second byte → recurse to build a full trie.
-                let continuation_branches =
-                    factor_literal_prefixes(continuation_branches, strings);
+                let continuation_branches = factor_literal_prefixes(continuation_branches, strings);
 
                 let continuation = if continuation_branches.len() == 1 {
                     continuation_branches

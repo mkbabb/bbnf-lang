@@ -40,8 +40,7 @@ fn bench_file(name: &str) {
     let n = if len > 1_000_000 { 5 } else { 20 };
     let start = std::time::Instant::now();
     for _ in 0..n {
-        let ctx =
-            __JsonParserEnumCtx::with_capacity(input.len() / 32);
+        let ctx = __JsonParserEnumCtx::with_capacity(input.len() / 32);
         let slab_parser = JsonParser::value();
         let ast = slab_parser
             .parse_with_context(std::hint::black_box(&input), &ctx)

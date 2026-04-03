@@ -34,11 +34,9 @@ macro_rules! bench_rules {
             let input = generators::css_gen::many_rules($count);
             b.bytes = input.len() as u64;
             {
-                let slab =
-                    __CssFastParserEnumCtx::with_capacity(input.len() / 32);
+                let slab = __CssFastParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = CssFastParser::stylesheet();
-                let (result, state) =
-                    parser.parse_return_state_with_context(&input, &slab);
+                let (result, state) = parser.parse_return_state_with_context(&input, &slab);
                 assert!(result.is_some(), "many_rules_{}: parse failed", $count);
                 assert_eq!(
                     state.offset,
@@ -50,12 +48,9 @@ macro_rules! bench_rules {
                 );
             }
             b.iter(|| {
-                let slab =
-                    __CssFastParserEnumCtx::with_capacity(input.len() / 32);
+                let slab = __CssFastParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = CssFastParser::stylesheet();
-                let ast = parser
-                    .parse_with_context(black_box(&input), &slab)
-                    .unwrap();
+                let ast = parser.parse_with_context(black_box(&input), &slab).unwrap();
                 black_box(&ast as *const _);
             });
         }
@@ -74,11 +69,9 @@ macro_rules! bench_decls {
             let input = generators::css_gen::many_declarations($count);
             b.bytes = input.len() as u64;
             {
-                let slab =
-                    __CssFastParserEnumCtx::with_capacity(input.len() / 32);
+                let slab = __CssFastParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = CssFastParser::stylesheet();
-                let (result, state) =
-                    parser.parse_return_state_with_context(&input, &slab);
+                let (result, state) = parser.parse_return_state_with_context(&input, &slab);
                 assert!(
                     result.is_some(),
                     "many_declarations_{}: parse failed",
@@ -94,12 +87,9 @@ macro_rules! bench_decls {
                 );
             }
             b.iter(|| {
-                let slab =
-                    __CssFastParserEnumCtx::with_capacity(input.len() / 32);
+                let slab = __CssFastParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = CssFastParser::stylesheet();
-                let ast = parser
-                    .parse_with_context(black_box(&input), &slab)
-                    .unwrap();
+                let ast = parser.parse_with_context(black_box(&input), &slab).unwrap();
                 black_box(&ast as *const _);
             });
         }
@@ -117,11 +107,9 @@ macro_rules! bench_selectors {
             let input = generators::css_gen::wide_selector_list($count);
             b.bytes = input.len() as u64;
             {
-                let slab =
-                    __CssFastParserEnumCtx::with_capacity(input.len() / 32);
+                let slab = __CssFastParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = CssFastParser::stylesheet();
-                let (result, state) =
-                    parser.parse_return_state_with_context(&input, &slab);
+                let (result, state) = parser.parse_return_state_with_context(&input, &slab);
                 assert!(
                     result.is_some(),
                     "wide_selector_list_{}: parse failed",
@@ -137,12 +125,9 @@ macro_rules! bench_selectors {
                 );
             }
             b.iter(|| {
-                let slab =
-                    __CssFastParserEnumCtx::with_capacity(input.len() / 32);
+                let slab = __CssFastParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = CssFastParser::stylesheet();
-                let ast = parser
-                    .parse_with_context(black_box(&input), &slab)
-                    .unwrap();
+                let ast = parser.parse_with_context(black_box(&input), &slab).unwrap();
                 black_box(&ast as *const _);
             });
         }
@@ -160,11 +145,9 @@ macro_rules! bench_nesting {
             let input = generators::css_gen::media_query_nesting($depth);
             b.bytes = input.len() as u64;
             {
-                let slab =
-                    __CssFastParserEnumCtx::with_capacity(input.len() / 32);
+                let slab = __CssFastParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = CssFastParser::stylesheet();
-                let (result, state) =
-                    parser.parse_return_state_with_context(&input, &slab);
+                let (result, state) = parser.parse_return_state_with_context(&input, &slab);
                 assert!(
                     result.is_some(),
                     "media_query_nesting_{}: parse failed",
@@ -180,12 +163,9 @@ macro_rules! bench_nesting {
                 );
             }
             b.iter(|| {
-                let slab =
-                    __CssFastParserEnumCtx::with_capacity(input.len() / 32);
+                let slab = __CssFastParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = CssFastParser::stylesheet();
-                let ast = parser
-                    .parse_with_context(black_box(&input), &slab)
-                    .unwrap();
+                let ast = parser.parse_with_context(black_box(&input), &slab).unwrap();
                 black_box(&ast as *const _);
             });
         }

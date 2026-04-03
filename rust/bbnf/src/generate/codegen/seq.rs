@@ -39,9 +39,7 @@ pub(super) fn emit_mono_seq(
     // stored in ir.types (which determine enum variant types).
     let child_types: Vec<TypeDesc> = ctx
         .seq_child_types(children)
-        .unwrap_or_else(|| {
-            children.iter().map(|c| ctx.node_type(c)).collect()
-        });
+        .unwrap_or_else(|| children.iter().map(|c| ctx.node_type(c)).collect());
 
     // Determine sp_override from the child types: if a Ref child was given
     // type Span by the span-method override, it's sp-overridden.
@@ -179,7 +177,8 @@ pub(super) fn emit_mono_seq(
     if let Some(vec_inner) = projected_vec_inner {
         // Projection says this Seq produces Vec(inner) via (T, Vec<T>) flattening.
         debug_assert_eq!(
-            result_vars.len(), 2,
+            result_vars.len(),
+            2,
             "Vec-flattened Seq must have exactly 2 groups after Span compression"
         );
         if result_is_vec[1] {

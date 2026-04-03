@@ -152,8 +152,7 @@ macro_rules! bench {
             {
                 let slab = __CssL4ParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = CssL4Parser::stylesheet();
-                let (result, state) =
-                    parser.parse_return_state_with_context(&input, &slab);
+                let (result, state) = parser.parse_return_state_with_context(&input, &slab);
                 assert!(result.is_some(), concat!($file, ": parse failed"));
                 assert!(
                     state.offset >= input.trim_end().len(),
@@ -165,9 +164,7 @@ macro_rules! bench {
             b.iter(|| {
                 let slab = __CssL4ParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = CssL4Parser::stylesheet();
-                let ast = parser
-                    .parse_with_context(black_box(&input), &slab)
-                    .unwrap();
+                let ast = parser.parse_with_context(black_box(&input), &slab).unwrap();
                 black_box(&ast as *const _);
             });
         }

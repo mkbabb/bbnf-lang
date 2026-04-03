@@ -9,16 +9,14 @@ fn main() {
     let input = "body { color: red; }";
     let slab = BumpSlab::with_capacity(64 * std::mem::size_of::<CssPrettyParserEnum>());
 
-    let (r, s) =
-        CssPrettyParser::selectorSpan().parse_return_state_with_context(input, &slab);
+    let (r, s) = CssPrettyParser::selectorSpan().parse_return_state_with_context(input, &slab);
     eprintln!("selectorSpan: ok={} offset={}", r.is_some(), s.offset);
 
-    let (r, s) = CssPrettyParser::ruleBlock()
-        .parse_return_state_with_context("{ color: red; }", &slab);
+    let (r, s) =
+        CssPrettyParser::ruleBlock().parse_return_state_with_context("{ color: red; }", &slab);
     eprintln!("ruleBlock: ok={} offset={}", r.is_some(), s.offset);
 
-    let (r, s) =
-        CssPrettyParser::qualifiedRule().parse_return_state_with_context(input, &slab);
+    let (r, s) = CssPrettyParser::qualifiedRule().parse_return_state_with_context(input, &slab);
     eprintln!("qualifiedRule: ok={} offset={}", r.is_some(), s.offset);
 
     let (r, s) = CssPrettyParser::ruleItem().parse_return_state_with_context(input, &slab);

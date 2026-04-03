@@ -20,7 +20,10 @@ macro_rules! bench {
             {
                 let parser = parse_that::parsers::json::json_parser();
                 let (result, state) = parser.parse_return_state(&input);
-                assert!(result.is_some(), concat!($file, ": parse_that parse failed"));
+                assert!(
+                    result.is_some(),
+                    concat!($file, ": parse_that parse failed")
+                );
                 assert!(
                     state.offset >= input.trim_end().len(),
                     concat!($file, ": parse_that incomplete parse ({}/{})"),

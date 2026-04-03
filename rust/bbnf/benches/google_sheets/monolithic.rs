@@ -34,8 +34,7 @@ fn parse_pathological(b: &mut Bencher) {
     {
         let slab = __GoogleSheetsParserEnumCtx::with_capacity(PATHOLOGICAL.len() / 16);
         let parser = GoogleSheetsParser::formula();
-        let (result, state) =
-            parser.parse_return_state_with_context(PATHOLOGICAL, &slab);
+        let (result, state) = parser.parse_return_state_with_context(PATHOLOGICAL, &slab);
         assert!(result.is_some(), "pathological: parse failed");
         assert_eq!(
             state.offset,
@@ -61,8 +60,7 @@ fn parse_1kb(b: &mut Bencher) {
     {
         let slab = __GoogleSheetsParserEnumCtx::with_capacity(input.len() / 16);
         let parser = GoogleSheetsParser::formula();
-        let (result, state) =
-            parser.parse_return_state_with_context(&input, &slab);
+        let (result, state) = parser.parse_return_state_with_context(&input, &slab);
         assert!(result.is_some(), "parse_1kb: parse failed");
         assert_eq!(
             state.offset,
@@ -75,9 +73,7 @@ fn parse_1kb(b: &mut Bencher) {
     b.iter(|| {
         let slab = __GoogleSheetsParserEnumCtx::with_capacity(input.len() / 16);
         let parser = GoogleSheetsParser::formula();
-        let ast = parser
-            .parse_with_context(black_box(&input), &slab)
-            .unwrap();
+        let ast = parser.parse_with_context(black_box(&input), &slab).unwrap();
         black_box(&ast as *const _ as usize)
     });
 }
@@ -88,8 +84,7 @@ fn parse_10kb(b: &mut Bencher) {
     {
         let slab = __GoogleSheetsParserEnumCtx::with_capacity(input.len() / 16);
         let parser = GoogleSheetsParser::formula();
-        let (result, state) =
-            parser.parse_return_state_with_context(&input, &slab);
+        let (result, state) = parser.parse_return_state_with_context(&input, &slab);
         assert!(result.is_some(), "parse_10kb: parse failed");
         assert_eq!(
             state.offset,
@@ -102,9 +97,7 @@ fn parse_10kb(b: &mut Bencher) {
     b.iter(|| {
         let slab = __GoogleSheetsParserEnumCtx::with_capacity(input.len() / 16);
         let parser = GoogleSheetsParser::formula();
-        let ast = parser
-            .parse_with_context(black_box(&input), &slab)
-            .unwrap();
+        let ast = parser.parse_with_context(black_box(&input), &slab).unwrap();
         black_box(&ast as *const _ as usize)
     });
 }

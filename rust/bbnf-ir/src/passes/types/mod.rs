@@ -191,8 +191,7 @@ pub fn project_types(ir: &mut GrammarIR) {
     let mut type_map = recorder.into_map();
 
     // Correction pass: align Repeat vec_elem_types with ir.types.
-    let types_map: HashMap<RuleId, TypeDesc> =
-        cache.into_iter().collect();
+    let types_map: HashMap<RuleId, TypeDesc> = cache.into_iter().collect();
     for rule in &ir.rules {
         let rule_td = types_map.get(&rule.id);
         if let Some(td) = rule_td {
@@ -292,11 +291,7 @@ pub fn project_types(ir: &mut GrammarIR) {
 /// When a rule's type is `Vec(T)` (direct or via try_flatten_pair), the Repeat
 /// inner's vec_elem_type should be `T`. The initial projection may have recorded
 /// a different type (e.g., Tuple) due to Seq compression/flattening differences.
-fn correct_repeat_elem_types(
-    node: &IrNode,
-    rule_type: &TypeDesc,
-    map: &mut utils::TypeMap,
-) {
+fn correct_repeat_elem_types(node: &IrNode, rule_type: &TypeDesc, map: &mut utils::TypeMap) {
     // Extract the Vec inner from the rule type, searching through Tuples
     // (for rules like `Tuple(Span, Vec(Enum))` where Seq didn't fully flatten).
     fn extract_all_vec_inners<'a>(td: &'a TypeDesc, out: &mut Vec<&'a TypeDesc>) {

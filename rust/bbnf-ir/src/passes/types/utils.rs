@@ -75,7 +75,6 @@ impl TypeMap {
         self.scratch_types = types;
     }
 
-
     /// Override the vec_elem_type for a node (used by correction pass).
     pub fn set_vec_elem_type(&mut self, node: &IrNode, ty: TypeDesc) {
         self.vec_elem_types

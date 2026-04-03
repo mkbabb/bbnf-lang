@@ -49,9 +49,7 @@ impl CharClassAnalysis {
         for &b in &included {
             included_set[b as usize] = true;
         }
-        let excluded: Vec<u8> = (0u8..128)
-            .filter(|b| !included_set[*b as usize])
-            .collect();
+        let excluded: Vec<u8> = (0u8..128).filter(|b| !included_set[*b as usize]).collect();
 
         let strategy = select_strategy(excluded.len(), cost, length_hint);
 
@@ -63,11 +61,7 @@ impl CharClassAnalysis {
     }
 
     /// Analyze a negated character class given its excluded bytes.
-    pub fn from_excluded_bytes(
-        excluded: &[u8],
-        cost: &CostModel,
-        length_hint: LengthHint,
-    ) -> Self {
+    pub fn from_excluded_bytes(excluded: &[u8], cost: &CostModel, length_hint: LengthHint) -> Self {
         let mut excluded = excluded.to_vec();
         excluded.sort_unstable();
         excluded.dedup();
@@ -76,9 +70,7 @@ impl CharClassAnalysis {
         for &b in &excluded {
             excluded_set[b as usize] = true;
         }
-        let included: Vec<u8> = (0u8..128)
-            .filter(|b| !excluded_set[*b as usize])
-            .collect();
+        let included: Vec<u8> = (0u8..128).filter(|b| !excluded_set[*b as usize]).collect();
 
         let strategy = select_strategy(excluded.len(), cost, length_hint);
 

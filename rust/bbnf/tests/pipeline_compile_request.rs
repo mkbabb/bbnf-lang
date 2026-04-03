@@ -246,3 +246,68 @@ fn compile_paths_preserves_pretty_directives_through_import_resolution() {
         "missing prettify method: {tokens}"
     );
 }
+
+// ── TypeScript backend tests ────────────────────────────────────────────────
+
+fn ts_request() -> CompileRequest {
+    CompileRequest {
+        options: PipelineOptions::default(),
+        target: CompileTarget::Ts,
+    }
+}
+
+#[test]
+fn ts_backend_produces_valid_structure() {
+    let grammar = r#"
+        value = "true" | "false" | "null" ;
+    "#;
+
+    let output = match compile_grammar_request(grammar, &ts_request()).unwrap() {
+        CompileOutput::Ts(source) => source,
+        _ => panic!("expected TS output"),
+    };
+
+    // Structural checks: has runtime types, parser functions, public API.
+    assert!(output.contains("interface ParserState"), "missing ParserState: {output}");
+    assert!(output.contains("interface Span"), "missing Span: {output}");
+    assert!(output.contains("function __value"), "missing __value function: {output}");
+    assert!(output.contains("export function parse"), "missing public parse: {output}");
+    assert!(output.contains("type valueValue"), "missing discriminated union: {output}");
+}
+
+#[test]
+fn ts_backend_emits_discriminated_union() {
+    let grammar = r#"
+        item = "x" | "y" ;
+        list = item, { item } ;
+    "#;
+
+    let output = match compile_grammar_request(grammar, &ts_request()).unwrap() {
+        CompileOutput::Ts(source) => source,
+        _ => panic!("expected TS output"),
+    };
+
+    // Non-transparent rules should appear as union variants.
+    assert!(output.contains("tag: \"item\""), "missing item variant: {output}");
+    assert!(output.contains("tag: \"list\""), "missing list variant: {output}");
+}
+
+#[test]
+fn ts_backend_handles_alternation_dispatch() {
+    let grammar = r#"
+        digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+    "#;
+
+    let output = match compile_grammar_request(grammar, &ts_request()).unwrap() {
+        CompileOutput::Ts(source) => source,
+        _ => panic!("expected TS output"),
+    };
+
+    // Should contain either a switch dispatch or checkpoint chain.
+    let has_switch = output.contains("switch (s.input.charCodeAt");
+    let has_checkpoint = output.contains("const __cp");
+    assert!(
+        has_switch || has_checkpoint,
+        "missing dispatch or checkpoint in alternation: {output}"
+    );
+}

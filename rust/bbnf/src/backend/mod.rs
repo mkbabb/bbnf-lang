@@ -11,6 +11,7 @@
 pub mod analysis;
 pub mod driver;
 pub mod rust;
+pub mod ts;
 
 pub use analysis::{
     BackendAnalysis, BackendPreparation, EffectiveBackendConfig, PreparedGrammar, TypeAnalysis,

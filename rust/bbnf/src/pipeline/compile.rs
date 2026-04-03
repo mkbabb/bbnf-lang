@@ -114,11 +114,27 @@ fn finalize_compile(
             Ok(CompileOutput::Vm(ir))
         }
         CompileTarget::Ts => {
+            // Run type projection before codegen.
+            bbnf_ir::passes::compute_sp_method_rules(&mut ir);
             bbnf_ir::passes::project_types(&mut ir);
-            // TODO: Wire up TsEmitter when TypeScript backend is implemented.
-            Ok(CompileOutput::Ts(String::from(
-                "// TypeScript backend not yet implemented",
-            )))
+
+            // Derive enum name from entry rule.
+            let entry_name = ir.get_string(ir.rules[ir.entry as usize].name).to_string();
+            let enum_name = format!("{entry_name}Value");
+
+            // Build analysis + driver state.
+            let analysis = crate::backend::analysis::BackendAnalysis::default();
+            let call_strategies = vec![
+                crate::backend::CallStrategy::DirectCall;
+                ir.rules.len()
+            ];
+            let mut dstate = crate::backend::driver::DriverState::new(call_strategies);
+            let mut emitter = crate::backend::ts::TsEmitter { enum_name };
+            let mut ctx = crate::backend::ts::emitter::TsEmitCtx::default();
+
+            let output =
+                crate::backend::driver::compile_grammar(&ir, &analysis, &mut dstate, &mut emitter, &mut ctx);
+            Ok(CompileOutput::Ts(output))
         }
         CompileTarget::Wasm => {
             bbnf_ir::passes::project_types(&mut ir);

@@ -4,17 +4,13 @@
 //! NOT computed here -- they are handled by IR passes (`compute_aliases`,
 //! `compute_transparent`, `refine_span_eligibility`) that run post-lowering.
 
-use bbnf_ir::{CharSet128, MemoStrategy, PrettyHints, RuleDirectives, RuleMeta};
+use bbnf_ir::{MemoStrategy, PrettyHints, RuleDirectives, RuleMeta};
 
 use crate::types::Expression;
 
 use super::LowerCtx;
+use super::charset_to_128;
 use super::expression::lower_expression;
-
-/// Convert a `CharSet` ([u32; 4]) to a `CharSet128` ([u64; 2]).
-fn charset_to_128(cs: &crate::analysis::CharSet) -> CharSet128 {
-    CharSet128::from_u32x4(&cs.bits)
-}
 
 /// Build rule metadata from analysis results.
 ///
@@ -57,6 +53,7 @@ pub(crate) fn build_rule_meta<'a>(
 
     // Recovery expression (lowered with recovery_mode = true).
     let recover = ctx.recovers.and_then(|r| r.get(name)).map(|sync_expr| {
+        debug_assert!(!ctx.recovery_mode, "nested recovery_mode is a bug");
         ctx.recovery_mode = true;
         let node = lower_expression(sync_expr, ctx);
         ctx.recovery_mode = false;
@@ -81,7 +78,7 @@ pub(crate) fn build_rule_meta<'a>(
             pretty,
             recover,
             token: is_token,
-            debug: false,     // Set by caller from @debug directives.
+            debug: false, // Set by caller from @debug directives.
         },
         has_sp_method: false, // Computed by compute_sp_method_rules pass.
         sub_variants: Vec::new(),
@@ -113,7 +110,8 @@ fn lower_pretty_hints(hint_strs: &[String]) -> PrettyHints {
                 } else if let Some(split) = bbnf_ir::parse_split_hint(h) {
                     ph.split = Some(split.to_string());
                 }
-                // Unknown hints are silently ignored (validation happens earlier).
+                // Validation owns unknown-hint errors. `split("...")` is preserved
+                // so prettify codegen can surface the explicit unsupported-path error.
             }
         }
     }

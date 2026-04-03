@@ -12,13 +12,19 @@ use std::collections::{HashMap, HashSet};
 
 use bbnf_ir::{GrammarIR, IrRule, RuleId};
 
+use crate::analysis::first_sets::unwrap_rule;
 use crate::analysis::{FirstSets, SccResult};
 use crate::types::{AST, Expression, Token};
 
-use expression::{lower_expression, unwrap_rule};
+use expression::lower_expression;
 use fn_table::FnTable;
 use metadata::build_rule_meta;
 use string_interner::StringInterner;
+
+/// Convert a `CharSet` ([u32; 4]) to a `CharSet128` ([u64; 2]).
+pub(crate) fn charset_to_128(cs: &crate::analysis::CharSet) -> bbnf_ir::CharSet128 {
+    bbnf_ir::CharSet128::from_u32x4(&cs.bits)
+}
 
 /// All directive data extracted from a parsed grammar.
 ///
@@ -165,7 +171,8 @@ pub fn lower_to_ir<'a>(
         let mut meta = build_rule_meta(lhs, name, &mut ctx);
 
         // Set debug flag from @debug directive.
-        meta.directives.debug = ctx.debug_all || ctx.debug_rules.is_some_and(|set| set.contains(name));
+        meta.directives.debug =
+            ctx.debug_all || ctx.debug_rules.is_some_and(|set| set.contains(name));
 
         rules.push(IrRule {
             id: rule_id,

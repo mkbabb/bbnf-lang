@@ -57,6 +57,10 @@ pub fn compute_first_sets<'a>(
         } else {
             loop {
                 let mut changed = false;
+                // SAFETY: The AST (IndexMap) is immutable during compute_first_sets.
+                // Pointer identity is stable because no reallocation occurs.
+                // This cache is scoped to a single SCC fixed-point iteration and
+                // dropped before the next iteration's fresh cache is created.
                 let mut memo_cache: HashMap<*const Expression<'a>, (CharSet, bool)> =
                     HashMap::new();
                 for &lhs in scc {

@@ -5,6 +5,7 @@
 use bbnf_ir::interpreter::{Value, parse_with_ir};
 use bbnf_ir::{
     AltBranch, AltDispatch, CharSet128, GrammarIR, IrNode, IrRule, MemoStrategy, RuleMeta,
+    TokenDispatchArm,
 };
 use std::collections::HashMap;
 
@@ -470,6 +471,111 @@ fn parse_dispatch_multi_branch() {
     assert!(!parse_with_ir(&ir, "xyz").success);
 }
 
+#[test]
+fn parse_fallback_dispatch_restores_and_uses_fallback() {
+    let mut fs_a = CharSet128::new();
+    fs_a.add(b'a');
+    let mut fs_b = CharSet128::new();
+    fs_b.add(b'b');
+    let mut fs_ab = CharSet128::new();
+    fs_ab.add(b'a');
+    fs_ab.add(b'b');
+
+    let mut table = vec![255u8; 128];
+    table[b'a' as usize] = 0;
+    table[b'b' as usize] = 1;
+
+    let ir = make_ir(
+        vec![rule(
+            0,
+            0,
+            IrNode::Alt(
+                vec![
+                    AltBranch {
+                        node: IrNode::Literal(1),
+                        first_set: Some(fs_a),
+                    },
+                    AltBranch {
+                        node: IrNode::Literal(2),
+                        first_set: Some(fs_b),
+                    },
+                    AltBranch {
+                        node: IrNode::Regex(3),
+                        first_set: Some(fs_ab),
+                    },
+                ],
+                Some(AltDispatch {
+                    table,
+                    fallback_idx: Some(2),
+                }),
+            ),
+        )],
+        vec![
+            "start".into(),
+            "alpha".into(),
+            "beta".into(),
+            "[ab]+".into(),
+        ],
+    );
+
+    let result = parse_with_ir(&ir, "abba");
+    assert!(result.success);
+    assert_eq!(result.offset, 4);
+    assert_eq!(
+        unwrap_tagged(result.value.as_ref().unwrap()),
+        &Value::Span(0, 4)
+    );
+}
+
+#[test]
+fn parse_token_dispatch_matches_pattern_and_falls_back() {
+    let ir = make_ir(
+        vec![rule(
+            0,
+            0,
+            IrNode::TokenDispatch {
+                token: Box::new(IrNode::Regex(1)),
+                arms: vec![
+                    TokenDispatchArm {
+                        patterns: vec![2],
+                        guard_byte: Some(b'('),
+                        continuation: IrNode::Literal(4),
+                        map_fn: None,
+                    },
+                    TokenDispatchArm {
+                        patterns: vec![3],
+                        guard_byte: None,
+                        continuation: IrNode::Literal(5),
+                        map_fn: None,
+                    },
+                ],
+                fallback: Box::new(IrNode::Literal(6)),
+            },
+        )],
+        vec![
+            "start".into(),
+            "[a-z]+".into(),
+            "calc".into(),
+            "min".into(),
+            "(".into(),
+            "!".into(),
+            "fallback".into(),
+        ],
+    );
+
+    let calc_result = parse_with_ir(&ir, "calc(");
+    assert!(calc_result.success);
+    assert_eq!(calc_result.offset, 5);
+
+    let min_result = parse_with_ir(&ir, "min!");
+    assert!(min_result.success);
+    assert_eq!(min_result.offset, 4);
+
+    let fallback_result = parse_with_ir(&ir, "fallback");
+    assert!(fallback_result.success);
+    assert_eq!(fallback_result.offset, 8);
+}
+
 // ── Whitespace ──────────────────────────────────────────────────────────────
 
 #[test]
@@ -612,31 +718,29 @@ fn stress_deep_nesting_1000() {
     // Input: "[[[...x...]]]" with 1000 levels of nesting.
     let ir = {
         let mut ir = make_ir(
-            vec![
-                rule(
-                    0,
-                    0,
-                    IrNode::Alt(
-                        vec![
-                            AltBranch {
-                                node: IrNode::Skip(
-                                    Box::new(IrNode::Next(
-                                        Box::new(IrNode::Literal(1)), // "["
-                                        Box::new(IrNode::Ref(0)),    // value (recursive)
-                                    )),
-                                    Box::new(IrNode::Literal(2)), // "]"
-                                ),
-                                first_set: None,
-                            },
-                            AltBranch {
-                                node: IrNode::Literal(3), // "x"
-                                first_set: None,
-                            },
-                        ],
-                        None,
-                    ),
+            vec![rule(
+                0,
+                0,
+                IrNode::Alt(
+                    vec![
+                        AltBranch {
+                            node: IrNode::Skip(
+                                Box::new(IrNode::Next(
+                                    Box::new(IrNode::Literal(1)), // "["
+                                    Box::new(IrNode::Ref(0)),     // value (recursive)
+                                )),
+                                Box::new(IrNode::Literal(2)), // "]"
+                            ),
+                            first_set: None,
+                        },
+                        AltBranch {
+                            node: IrNode::Literal(3), // "x"
+                            first_set: None,
+                        },
+                    ],
+                    None,
                 ),
-            ],
+            )],
             vec!["value".into(), "[".into(), "]".into(), "x".into()],
         );
         ir.rules[0].meta.is_cyclic = true;

@@ -19,7 +19,10 @@ fn make_debug_ir() -> GrammarIR {
                 name: 0,
                 body: IrNode::Ref(1),
                 meta: RuleMeta {
-                    directives: RuleDirectives { debug: true, ..Default::default() },
+                    directives: RuleDirectives {
+                        debug: true,
+                        ..Default::default()
+                    },
                     ..Default::default()
                 },
                 source_span: Some(GrammarSpan { start: 0, end: 10 }),
@@ -29,7 +32,10 @@ fn make_debug_ir() -> GrammarIR {
                 name: 1,
                 body: IrNode::Literal(2),
                 meta: RuleMeta {
-                    directives: RuleDirectives { debug: true, ..Default::default() },
+                    directives: RuleDirectives {
+                        debug: true,
+                        ..Default::default()
+                    },
                     ..Default::default()
                 },
                 source_span: Some(GrammarSpan { start: 12, end: 25 }),

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use bbnf_ir::bytecode::Op;
 use bbnf_ir::compiler::compile;
-use bbnf_ir::{AltBranch, GrammarIR, IrNode, IrRule, MemoStrategy, RuleMeta};
+use bbnf_ir::{AltBranch, GrammarIR, IrNode, IrRule, MemoStrategy, RuleMeta, TokenDispatchArm};
 
 fn make_simple_ir(body: IrNode) -> GrammarIR {
     GrammarIR {
@@ -245,6 +245,98 @@ fn compile_alt_dispatch() {
     assert!(
         program.code.iter().any(|op| matches!(op, Op::RestoreState)),
         "Dispatch should use RestoreState for offset restoration on branch failure"
+    );
+}
+
+#[test]
+fn compile_alt_fallback_dispatch_uses_dispatch() {
+    use bbnf_ir::AltDispatch;
+    use bbnf_ir::CharSet128;
+
+    let mut fs_a = CharSet128::new();
+    fs_a.add(b'a');
+    let mut fs_b = CharSet128::new();
+    fs_b.add(b'b');
+    let mut fs_ab = CharSet128::new();
+    fs_ab.add(b'a');
+    fs_ab.add(b'b');
+
+    let mut table = vec![255u8; 128];
+    table[b'a' as usize] = 0;
+    table[b'b' as usize] = 1;
+
+    let ir = make_simple_ir(IrNode::Alt(
+        vec![
+            AltBranch {
+                node: IrNode::Literal(1),
+                first_set: Some(fs_a),
+            },
+            AltBranch {
+                node: IrNode::Literal(2),
+                first_set: Some(fs_b),
+            },
+            AltBranch {
+                node: IrNode::Regex(1),
+                first_set: Some(fs_ab),
+            },
+        ],
+        Some(AltDispatch {
+            table,
+            fallback_idx: Some(2),
+        }),
+    ));
+    let program = compile(&ir);
+
+    assert!(
+        program.code.iter().any(|op| matches!(op, Op::Dispatch(..))),
+        "Fallback-aware dispatch should still compile to Dispatch"
+    );
+}
+
+#[test]
+fn compile_token_dispatch_emits_dispatch_token() {
+    let ir = GrammarIR {
+        rules: vec![IrRule {
+            id: 0,
+            name: 0,
+            body: IrNode::TokenDispatch {
+                token: Box::new(IrNode::Regex(1)),
+                arms: vec![TokenDispatchArm {
+                    patterns: vec![2],
+                    guard_byte: Some(b'('),
+                    continuation: IrNode::Literal(3),
+                    map_fn: None,
+                }],
+                fallback: Box::new(IrNode::Literal(4)),
+            },
+            meta: RuleMeta::default(),
+            source_span: None,
+        }],
+        entry: 0,
+        strings: vec![
+            "rule".into(),
+            "[a-z]+".into(),
+            "calc".into(),
+            "(".into(),
+            "fallback".into(),
+        ],
+        fns: vec![],
+        types: vec![],
+        follow_sets: HashMap::new(),
+        ws_pattern: None,
+        collapse_simple_spans: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
+        type_map: None,
+    };
+    let program = compile(&ir);
+
+    assert!(
+        program
+            .code
+            .iter()
+            .any(|op| matches!(op, Op::DispatchToken(..))),
+        "TokenDispatch should compile to DispatchToken"
     );
 }
 

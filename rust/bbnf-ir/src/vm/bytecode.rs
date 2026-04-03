@@ -20,6 +20,26 @@ pub struct DispatchData {
     pub fallback: u32,
 }
 
+/// A single token-dispatch arm stored in a side table.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct TokenDispatchArmData {
+    /// Literal patterns that select this continuation.
+    pub patterns: Vec<StringId>,
+    /// Optional guard byte that must follow the token.
+    pub guard_byte: Option<u8>,
+    /// Bytecode offset for this continuation.
+    pub offset: u32,
+}
+
+/// Token-dispatch data stored in a side table, referenced by index.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct TokenDispatchData {
+    /// Token-dispatch arms in source order.
+    pub arms: Vec<TokenDispatchArmData>,
+    /// Bytecode offset for the fallback path.
+    pub fallback: u32,
+}
+
 /// A single bytecode instruction.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum Op {
@@ -78,6 +98,10 @@ pub enum Op {
     // ── Dispatch ────────────────────────────────────────────────────────
     /// O(1) byte dispatch table: index into `BytecodeProgram::dispatch_tables`.
     Dispatch(u16),
+
+    /// Dispatch on the just-consumed token span: compare against literal
+    /// patterns and optional guard bytes, then jump to the matching arm.
+    DispatchToken(u16),
 
     // ── Repetition ──────────────────────────────────────────────────────
     /// Begin a repeat loop. Pushes repeat state (count = 0).
@@ -150,11 +174,14 @@ pub struct BytecodeProgram {
     #[serde(default)]
     pub dispatch_tables: Vec<DispatchData>,
 
+    /// Token-dispatch tables referenced by `Op::DispatchToken(idx)`.
+    #[serde(default)]
+    pub token_dispatch_tables: Vec<TokenDispatchData>,
+
     /// Pre-compiled DFA patterns, indexed by StringId.
     /// `None` for string IDs that are not regex patterns (or DFA compilation failed).
     #[serde(skip)]
     pub compiled_regexes: Vec<Option<parse_that::regex_engine::Dfa>>,
-
 
     /// FOLLOW sets per rule, for error recovery and expected-token reporting.
     /// Populated from `GrammarIR::follow_sets` during compilation.

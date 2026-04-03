@@ -2,8 +2,10 @@
 //!
 //! Compiles a `GrammarIR` into a `BytecodeProgram` for the VM interpreter.
 
-use super::bytecode::{BytecodeProgram, DispatchData, Op, SourceMapEntry};
-use crate::{AltBranch, GrammarIR, IrNode, MemoStrategy};
+use super::bytecode::{
+    BytecodeProgram, DispatchData, Op, SourceMapEntry, TokenDispatchArmData, TokenDispatchData,
+};
+use crate::{AltBranch, GrammarIR, IrNode, MemoStrategy, TokenDispatchArm};
 
 /// Compile a GrammarIR to bytecode.
 pub fn compile(ir: &GrammarIR) -> BytecodeProgram {
@@ -21,6 +23,7 @@ pub fn compile_with_debug(ir: &GrammarIR, debug: bool) -> BytecodeProgram {
         code: Vec::new(),
         entries: vec![0; ir.rules.len()],
         dispatch_tables: Vec::new(),
+        token_dispatch_tables: Vec::new(),
         source_map: Vec::new(),
         debug,
         debug_all: ir.debug_all,
@@ -43,6 +46,7 @@ pub fn compile_with_debug(ir: &GrammarIR, debug: bool) -> BytecodeProgram {
         entry: ir.entry,
         memo_enabled,
         dispatch_tables: compiler.dispatch_tables,
+        token_dispatch_tables: compiler.token_dispatch_tables,
         compiled_regexes: Vec::new(),
         follow_sets: ir.follow_sets.clone(),
         rule_names,
@@ -60,6 +64,8 @@ struct Compiler {
     entries: Vec<u32>,
     /// Dispatch tables stored by index (referenced via `Op::Dispatch(idx)`).
     dispatch_tables: Vec<DispatchData>,
+    /// Token-dispatch tables stored by index (referenced via `Op::DispatchToken(idx)`).
+    token_dispatch_tables: Vec<TokenDispatchData>,
     /// Source map entries (only populated when `debug` is true).
     source_map: Vec<SourceMapEntry>,
     /// Whether to generate debug info.
@@ -68,6 +74,35 @@ struct Compiler {
     debug_all: bool,
     /// Whether the program should emit VM memo ops at all.
     memo_enabled: bool,
+}
+
+/// Common scratch state for lowering backtracking dispatches.
+struct DispatchPatchPlan {
+    branch_offsets: Vec<u32>,
+    fail_jumps: Vec<usize>,
+    success_jumps: Vec<usize>,
+}
+
+impl DispatchPatchPlan {
+    fn with_capacity(capacity: usize) -> Self {
+        Self {
+            branch_offsets: Vec::with_capacity(capacity),
+            fail_jumps: Vec::with_capacity(capacity),
+            success_jumps: Vec::with_capacity(capacity),
+        }
+    }
+
+    fn record_branch(&mut self, offset: u32) {
+        self.branch_offsets.push(offset);
+    }
+
+    fn record_fail(&mut self, idx: usize) {
+        self.fail_jumps.push(idx);
+    }
+
+    fn record_success(&mut self, idx: usize) {
+        self.success_jumps.push(idx);
+    }
 }
 
 fn grammar_needs_memo(ir: &GrammarIR) -> bool {
@@ -224,8 +259,12 @@ impl Compiler {
                     self.emit(Op::TrimWs);
                 }
             }
-            IrNode::TokenDispatch { .. } => {
-                todo!("TokenDispatch bytecode compilation not yet implemented")
+            IrNode::TokenDispatch {
+                token,
+                arms,
+                fallback,
+            } => {
+                self.compile_token_dispatch(token, arms, fallback, ir);
             }
         }
     }
@@ -286,13 +325,11 @@ impl Compiler {
             return;
         }
 
-        // Use pre-computed dispatch table if available (strict dispatch only;
-        // fallback-aware dispatch is only used by the monolithic codegen path).
+        // Use pre-computed dispatch table when available, including fallback-aware
+        // dispatch tables from the shared IR dispatch pass.
         if let Some(alt_dispatch) = dispatch {
-            if alt_dispatch.fallback_idx.is_none() {
-                self.compile_dispatch(branches, &alt_dispatch.table, ir);
-                return;
-            }
+            self.compile_dispatch(branches, alt_dispatch, ir);
+            return;
         }
 
         // Fallback: linear backtracking.
@@ -335,70 +372,161 @@ impl Compiler {
         self.patch(skip_drop_fail, Op::JumpIfFail(self.current_offset()));
     }
 
+    fn finalize_dispatch_backtracking(
+        &mut self,
+        plan: DispatchPatchPlan,
+        restore_offset: u32,
+        drop_offset: u32,
+        fallback_jump: usize,
+        end_jump: usize,
+        after_offset: u32,
+        patch_table: impl FnOnce(&mut Self, Vec<u32>, u32),
+    ) {
+        patch_table(self, plan.branch_offsets, restore_offset);
+
+        for idx in plan.fail_jumps {
+            self.patch(idx, Op::JumpIfFail(restore_offset));
+        }
+        for idx in plan.success_jumps {
+            self.patch(idx, Op::Jump(drop_offset));
+        }
+        self.patch(fallback_jump, Op::Jump(after_offset));
+        self.patch(end_jump, Op::Jump(after_offset));
+    }
+
     /// Emit a Dispatch instruction using a pre-computed table from the dispatch pass.
     ///
     /// Wraps the entire dispatch in SaveState/RestoreState so that when a
     /// dispatch-selected branch partially matches then fails, the offset is
     /// correctly restored (mirroring the linear Alt pattern).
-    fn compile_dispatch(&mut self, branches: &[AltBranch], table: &[u8], ir: &GrammarIR) {
+    fn compile_dispatch(
+        &mut self,
+        branches: &[AltBranch],
+        dispatch: &crate::AltDispatch,
+        ir: &GrammarIR,
+    ) {
         // Save state before dispatch so we can restore on branch failure.
         self.emit(Op::SaveState);
 
         // Reserve a dispatch table index and emit a placeholder Dispatch op.
         let table_idx = self.dispatch_tables.len() as u16;
         self.dispatch_tables.push(DispatchData {
-            table: table.to_vec(),
+            table: dispatch.table.clone(),
             offsets: vec![0; branches.len()],
             fallback: 0,
         });
         let _dispatch_idx = self.emit(Op::Dispatch(table_idx));
 
-        let mut branch_offsets = Vec::with_capacity(branches.len());
-        let mut fail_jumps: Vec<usize> = Vec::new();
-        let mut success_jumps: Vec<usize> = Vec::new();
+        let mut plan = DispatchPatchPlan::with_capacity(branches.len());
+        let fallback_idx = dispatch.fallback_idx.map(|idx| idx as usize);
 
         for branch in branches.iter() {
-            branch_offsets.push(self.current_offset());
+            plan.record_branch(self.current_offset());
             self.compile_node(&branch.node, ir);
             // Check if branch failed → jump to restore.
-            fail_jumps.push(self.emit(Op::JumpIfFail(0)));
+            plan.record_fail(self.emit(Op::JumpIfFail(0)));
             // Branch succeeded → jump to drop state.
-            success_jumps.push(self.emit(Op::Jump(0)));
+            plan.record_success(self.emit(Op::Jump(0)));
         }
 
-        // Fallback: dispatch couldn't find a matching branch (is_error already set by exec_dispatch).
-        let fallback = self.current_offset();
-        let fallback_jump = self.emit(Op::Jump(0));
+        let restore_offset = self.current_offset();
+        self.emit(Op::RestoreState);
+        let fallback_jump = if let Some(idx) = fallback_idx {
+            self.compile_node(&branches[idx].node, ir);
+            self.emit(Op::Jump(0))
+        } else {
+            self.emit(Op::Jump(0))
+        };
 
         // Success path: drop the checkpoint.
         let drop_offset = self.current_offset();
         self.emit(Op::DropState);
         let end_jump = self.emit(Op::Jump(0));
 
-        // Failure path: restore the checkpoint.
-        let restore_offset = self.current_offset();
-        self.emit(Op::RestoreState);
         let after = self.current_offset();
 
-        // Patch the dispatch table with computed offsets.
-        self.dispatch_tables[table_idx as usize] = DispatchData {
-            table: table.to_vec(),
-            offsets: branch_offsets,
-            fallback,
-        };
+        self.finalize_dispatch_backtracking(
+            plan,
+            restore_offset,
+            drop_offset,
+            fallback_jump,
+            end_jump,
+            after,
+            |this, branch_offsets, fallback| {
+                this.dispatch_tables[table_idx as usize] = DispatchData {
+                    table: dispatch.table.clone(),
+                    offsets: branch_offsets,
+                    fallback,
+                };
+            },
+        );
+    }
 
-        // Patch fail jumps → RestoreState.
-        for idx in fail_jumps {
-            self.patch(idx, Op::JumpIfFail(restore_offset));
+    fn compile_token_dispatch(
+        &mut self,
+        token: &IrNode,
+        arms: &[TokenDispatchArm],
+        fallback: &IrNode,
+        ir: &GrammarIR,
+    ) {
+        if arms.is_empty() {
+            self.compile_node(fallback, ir);
+            return;
         }
-        // Patch success jumps → DropState.
-        for idx in success_jumps {
-            self.patch(idx, Op::Jump(drop_offset));
+
+        self.emit(Op::SaveState);
+        self.compile_node(token, ir);
+        let token_fail = self.emit(Op::JumpIfFail(0));
+
+        let table_idx = self.token_dispatch_tables.len() as u16;
+        self.token_dispatch_tables.push(TokenDispatchData {
+            arms: Vec::new(),
+            fallback: 0,
+        });
+        self.emit(Op::DispatchToken(table_idx));
+
+        let mut plan = DispatchPatchPlan::with_capacity(arms.len());
+
+        for arm in arms {
+            plan.record_branch(self.current_offset());
+            self.compile_node(&arm.continuation, ir);
+            plan.record_fail(self.emit(Op::JumpIfFail(0)));
+            plan.record_success(self.emit(Op::Jump(0)));
         }
-        // Patch fallback → RestoreState.
-        self.patch(fallback_jump, Op::Jump(restore_offset));
-        // Patch end → after RestoreState.
-        self.patch(end_jump, Op::Jump(after));
+
+        let restore_offset = self.current_offset();
+        self.emit(Op::RestoreState);
+        self.compile_node(fallback, ir);
+        let fallback_jump = self.emit(Op::Jump(0));
+
+        let drop_offset = self.current_offset();
+        self.emit(Op::DropState);
+        let end_jump = self.emit(Op::Jump(0));
+        let after = self.current_offset();
+
+        self.patch(token_fail, Op::JumpIfFail(restore_offset));
+        self.finalize_dispatch_backtracking(
+            plan,
+            restore_offset,
+            drop_offset,
+            fallback_jump,
+            end_jump,
+            after,
+            |this, arm_offsets, fallback| {
+                this.token_dispatch_tables[table_idx as usize] = TokenDispatchData {
+                    arms: arms
+                        .iter()
+                        .zip(arm_offsets)
+                        .map(|(arm, offset)| TokenDispatchArmData {
+                            patterns: arm.patterns.clone(),
+                            guard_byte: arm.guard_byte,
+                            offset,
+                        })
+                        .collect(),
+                    fallback,
+                };
+            },
+        );
     }
 
     /// Compile repetition: RepeatBegin → body → RepeatEnd.

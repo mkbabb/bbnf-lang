@@ -22,12 +22,14 @@ fn dfa_greedy_star_is_documented() {
     let pattern = r"(?s)\/\*.*?\*\/";
     let input = "/* c1 */ code; /* c2 */";
 
-    let dfa = parse_that::regex_engine::Dfa::compile(pattern)
-        .expect("DFA should compile");
+    let dfa = parse_that::regex_engine::Dfa::compile(pattern).expect("DFA should compile");
 
     let dfa_end = dfa.find_at(input.as_bytes(), 0);
     // DFA matches greedily: from first /* to LAST */ = entire string (22 chars + trailing)
-    assert!(dfa_end.unwrap() >= 22, "DFA greedy: should consume through last */");
+    assert!(
+        dfa_end.unwrap() >= 22,
+        "DFA greedy: should consume through last */"
+    );
     // regex crate would match non-greedy: first /* to first */ = 8 bytes
     // This divergence is expected — grammar patterns must be DFA-compatible.
 }
@@ -38,15 +40,17 @@ fn dfa_compatible_comment_pattern() {
     let pattern = r"(?s)(?:\s|\/\*[^*]*(?:\*+[^/][^*]*)*\*+\/)*";
     let input = "/* c1 */ code; /* c2 */";
 
-    let dfa = parse_that::regex_engine::Dfa::compile(pattern)
-        .expect("DFA should compile");
+    let dfa = parse_that::regex_engine::Dfa::compile(pattern).expect("DFA should compile");
     let re = Regex::new(&format!(r"\A(?:{})", pattern)).unwrap();
 
     let dfa_end = dfa.find_at(input.as_bytes(), 0);
     let re_end = re.find(input).map(|m| m.end());
 
     // Both stop after first comment + trailing space
-    assert_eq!(dfa_end, re_end, "DFA-compatible pattern agrees with regex crate");
+    assert_eq!(
+        dfa_end, re_end,
+        "DFA-compatible pattern agrees with regex crate"
+    );
 }
 
 /// Full fidelity sweep: every compiled DFA regex in the CSS grammar vs regex crate,
@@ -175,10 +179,7 @@ fn pipeline_css_dfa_fidelity() {
     eprintln!("\n=== SUMMARY ===");
     eprintln!("Total offsets tested: {}", offsets.len());
     eprintln!("Total patterns tested: {}", references.len());
-    eprintln!(
-        "Total comparisons: {}",
-        offsets.len() * references.len()
-    );
+    eprintln!("Total comparisons: {}", offsets.len() * references.len());
     eprintln!("Mismatches found: {}", mismatches.len());
 
     if !mismatches.is_empty() {

@@ -4,7 +4,7 @@ pub mod charset;
 pub mod deps;
 pub mod dispatch;
 pub mod first_sets;
-pub mod metadata;
+mod metadata;
 pub mod scc;
 
 pub use charset::*;
@@ -12,7 +12,7 @@ pub use deps::*;
 pub use dispatch::FirstSetConflict;
 pub use dispatch::find_first_set_conflicts;
 pub use first_sets::*;
-pub use metadata::*;
+pub use metadata::{compute_ref_counts, find_aliases};
 pub use scc::*;
 
 /// Extract the set of possible first bytes from a regex pattern.

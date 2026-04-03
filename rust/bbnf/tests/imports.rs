@@ -1,5 +1,7 @@
 use std::fs;
+use std::path::PathBuf;
 
+use bbnf::grammar::BBNFGrammar;
 use bbnf::imports::{ImportError, load_module_graph};
 
 fn setup_test_dir() -> tempfile::TempDir {
@@ -232,6 +234,55 @@ c = /z/;"#,
     assert!(registry.get_module(&a.canonicalize().unwrap()).is_some());
     assert!(registry.get_module(&b.canonicalize().unwrap()).is_some());
     assert!(registry.get_module(&c.canonicalize().unwrap()).is_some());
+}
+
+#[test]
+fn test_css_l4_media_module_keeps_recursive_local_rules() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let stylesheet = root.join("../../grammar/css/l4/stylesheet.bbnf");
+    let media = root.join("../../grammar/css/l4/media.bbnf").canonicalize().unwrap();
+
+    let registry = load_module_graph(&stylesheet).unwrap();
+    assert!(registry.errors.is_empty(), "Errors: {:?}", registry.errors);
+
+    let module = registry
+        .get_module(&media)
+        .expect("media.bbnf should be loaded");
+    assert!(module.local_rule_names.iter().any(|name| name == "mediaNot"));
+    assert!(
+        module
+            .local_rule_names
+            .iter()
+            .any(|name| name == "mediaInParens"),
+        "media.bbnf lost mediaInParens: {:?}",
+        module.local_rule_names
+    );
+}
+
+#[test]
+fn test_css_l4_media_file_parses_to_end() {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../grammar/css/l4/media.bbnf");
+    let source = fs::read_to_string(&path).unwrap();
+    let source_static: &'static str = Box::leak(source.clone().into_boxed_str());
+
+    let parser = BBNFGrammar::grammar_with_imports();
+    let (parsed, state) = parser.parse_return_state(source_static);
+    let parsed = parsed.expect("media.bbnf should parse");
+
+    assert!(
+        state.offset >= source.trim_end().len(),
+        "partial parse at {} of {} bytes; parsed rules: {:?}",
+        state.offset,
+        source.len(),
+        parsed
+            .rules
+            .keys()
+            .filter_map(|lhs| match lhs {
+                bbnf::Expression::Nonterminal(token) => Some(token.value.to_string()),
+                _ => None,
+            })
+            .collect::<Vec<_>>()
+    );
 }
 
 #[test]

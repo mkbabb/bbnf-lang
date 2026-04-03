@@ -240,9 +240,17 @@ impl<'a> BBNFGrammar<'a> {
         })
     }
 
+    fn standalone_optional_whitespace() -> Parser<'a, Expression<'a>> {
+        string_span("?w").map(|span| {
+            let inner = Expression::Epsilon(Token::new((), span.clone()));
+            Expression::OptionalWhitespace(Box::new(Token::new(inner, span)))
+        })
+    }
+
     fn term() -> Parser<'a, Expression<'a>> {
         Self::epsilon()
             | Self::span_capture()
+            | Self::standalone_optional_whitespace()
             | Self::group()
             | Self::optional_group()
             | Self::many_group()
@@ -381,11 +389,18 @@ impl<'a> BBNFGrammar<'a> {
     }
 
     fn concatenation() -> Parser<'a, Expression<'a>> {
-        let delim = string_span(",").trim_whitespace();
-
         Self::binary_factor()
-            .sep_by(delim, ..)
-            .map_with_state(|exprs, prev_offset, state| {
+            .then(
+                string_span(",")
+                    .trim_whitespace()
+                    .opt_span()
+                    .next(Self::binary_factor().trim_whitespace())
+                    .many(..),
+            )
+            .map_with_state(|(first, rest), prev_offset, state| {
+                let mut exprs = Vec::with_capacity(rest.len() + 1);
+                exprs.push(first);
+                exprs.extend(rest);
                 if exprs.len() == 1 {
                     exprs.into_iter().next().unwrap()
                 } else {

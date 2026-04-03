@@ -1,18 +1,13 @@
 extern crate proc_macro;
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 
-use bbnf::calculate_ast_deps;
-
-use bbnf::BBNFGrammar;
-use bbnf::Expression;
 use bbnf::ParserAttributes;
-use bbnf::analysis::{compute_first_sets, tarjan_scc, topological_sort_scc};
-use bbnf::imports::load_module_graph;
-use bbnf::lower::{DirectiveSet, lower_to_ir};
-use indexmap::IndexMap;
+use bbnf::pipeline::{
+    CompileOutput, CompileRequest, CompileTarget, PipelineOptions, compile_paths_request,
+};
 
 use proc_macro::TokenStream;
 
@@ -33,10 +28,10 @@ use parse_that::utils::get_cargo_root_path;
 
 /// Version tag baked into the cache key to invalidate on compiler changes.
 ///
-/// Combines the crate version with a build-time ID emitted by `build.rs`.
-/// Since Cargo recompiles bbnf-derive whenever any transitive dependency
-/// (bbnf, bbnf-ir, parse_that) changes, the build ID changes on every
-/// recompilation — invalidating stale caches even without a version bump.
+/// Combines the crate version with a source fingerprint emitted by `build.rs`
+/// over the derive/runtime codegen crates. This invalidates stale proc-macro
+/// cache entries when the shared pipeline or codegen implementation changes,
+/// even if the on-disk `.bbnf-cache` survives between builds.
 const CACHE_VERSION: &str = concat!(env!("CARGO_PKG_VERSION"), "-", env!("BBNF_DERIVE_BUILD_ID"),);
 
 /// Recursively collect all grammar file contents for hashing.
@@ -252,227 +247,24 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
         }
     }
 
-    // Try import-aware loading first: if the first file contains @import directives,
-    // use load_module_graph() which handles DFS traversal, cycle detection, and
-    // selective import resolution. Otherwise fall back to simple fold.
-    let mut recover_map: HashMap<String, Expression<'static>> = HashMap::new();
-    let mut pretty_map: HashMap<String, Vec<String>> = HashMap::new();
-    let mut token_set: HashSet<String> = HashSet::new();
-    let mut debug_set: HashSet<String> = HashSet::new();
-    let mut debug_all = parser_container_attrs.debug;
-    let mut ws_pattern: Option<String> = None;
-
-    let ast = if parser_container_attrs.paths.len() == 1 {
-        let entry = &parser_container_attrs.paths[0];
-        // Try parsing with import support to check for @import directives.
-        let source = std::fs::read_to_string(entry)
-            .unwrap_or_else(|_| panic!("Unable to read file: {}", entry.display()));
-        // SAFETY: Leak the source string to get 'static lifetime for the AST.
-        // Acceptable in a proc-macro context — the compiler process exits after expansion.
-        let source_static: &'static str = Box::leak(source.clone().into_boxed_str());
-        let parser = BBNFGrammar::grammar_with_imports();
-        let (parsed, _) = parser.parse_return_state(source_static);
-
-        if let Some(ref pg) = parsed {
-            // Extract @recover directives.
-            for rec in &pg.recovers {
-                recover_map.insert(rec.rule_name.to_string(), rec.sync_expr.clone());
-            }
-            // Extract @pretty directives.
-            for p in &pg.pretties {
-                pretty_map.insert(
-                    p.rule_name.to_string(),
-                    p.hints.iter().map(|h| h.to_string()).collect(),
-                );
-            }
-            // Extract @ws directive.
-            if let Some(ref pat) = pg.ws_pattern {
-                ws_pattern = Some(pat.to_string());
-            }
-            // Extract @token directives.
-            for name in &pg.token_rules {
-                token_set.insert(name.to_string());
-            }
-            // Extract @debug directives.
-            for name in &pg.debug_rules {
-                if name.as_ref() == "*" {
-                    debug_all = true;
-                } else {
-                    debug_set.insert(name.to_string());
-                }
-            }
-
-            if !pg.imports.is_empty() {
-                // File has imports — use module graph loader.
-                let registry = load_module_graph(entry)
-                    .unwrap_or_else(|e| panic!("Import resolution failed: {}", e));
-                if !registry.errors.is_empty() {
-                    let msgs: Vec<String> = registry.errors.iter().map(|e| e.to_string()).collect();
-                    panic!("Import errors:\n{}", msgs.join("\n"));
-                }
-                // Merge all modules: imported modules first, entry module last.
-                // The entry module's local rules override imported ones (e.g.,
-                // css-stylesheet.bbnf can override calcFunction from css-func-body.bbnf).
-                let entry_canonical = entry.canonicalize().unwrap_or_else(|_| entry.to_path_buf());
-                let mut merged = IndexMap::new();
-                // First pass: all non-entry modules.
-                for path in registry.paths() {
-                    if *path == entry_canonical {
-                        continue; // Process entry last.
-                    }
-                    if let Some(module) = registry.get_module(path) {
-                        for rec in &module.grammar.recovers {
-                            recover_map
-                                .entry(rec.rule_name.to_string())
-                                .or_insert_with(|| rec.sync_expr.clone());
-                        }
-                        for p in &module.grammar.pretties {
-                            pretty_map
-                                .entry(p.rule_name.to_string())
-                                .or_insert_with(|| p.hints.iter().map(|h| h.to_string()).collect());
-                        }
-                        for (name, expr) in &module.grammar.rules {
-                            merged.insert(name.clone(), expr.clone());
-                        }
-                    }
-                }
-                // Second pass: entry module (its rules override imports).
-                if let Some(module) = registry.get_module(&entry_canonical) {
-                    for rec in &module.grammar.recovers {
-                        recover_map
-                            .entry(rec.rule_name.to_string())
-                            .or_insert_with(|| rec.sync_expr.clone());
-                    }
-                    for p in &module.grammar.pretties {
-                        pretty_map
-                            .entry(p.rule_name.to_string())
-                            .or_insert_with(|| p.hints.iter().map(|h| h.to_string()).collect());
-                    }
-                    for (name, expr) in &module.grammar.rules {
-                        merged.insert(name.clone(), expr.clone());
-                    }
-                }
-                merged
-            } else {
-                // No imports — use the already-parsed rules directly.
-                pg.rules.clone()
-            }
-        } else {
-            panic!("Unable to parse grammar: {}", entry.display());
-        }
-    } else {
-        // Multiple explicit paths: simple fold (legacy behavior).
-        // Leak strings to get 'static lifetime (proc-macro runs once at compile time).
-        let file_strs: Vec<&'static str> = parser_container_attrs
-            .paths
-            .iter()
-            .map(|path| {
-                let s = std::fs::read_to_string(path)
-                    .unwrap_or_else(|_| panic!("Unable to read file: {}", path.display()));
-                // SAFETY: Leak to get 'static lifetime — acceptable in proc-macro context.
-                &*Box::leak(s.into_boxed_str())
-            })
-            .collect();
-
-        file_strs
-            .iter()
-            .map(|file_string| {
-                BBNFGrammar::grammar()
-                    .parse(file_string)
-                    .expect("Unable to parse grammar")
-            })
-            .fold(IndexMap::new(), |mut acc, ast| {
-                for (name, expr) in ast {
-                    acc.insert(name, expr);
-                }
-                acc
-            })
+    let request = CompileRequest {
+        options: PipelineOptions {
+            remove_left_recursion: parser_container_attrs.remove_left_recursion,
+            entry_rule: None,
+        },
+        target: CompileTarget::Aot {
+            requested_prettify: parser_container_attrs.prettify,
+        },
     };
 
-    let deps = calculate_ast_deps(&ast);
-
-    // Phase 1.1: Tarjan SCC — O(V+E) cycle detection + topological ordering
-    let scc_result = tarjan_scc(&deps);
-    let ast = topological_sort_scc(&ast, &scc_result, &deps);
-
-    // Phase 1.2: Compute FIRST sets for dispatch table generation
-    let first_sets = compute_first_sets(&ast, &deps, &scc_result);
-
-    let recovers_ref = if recover_map.is_empty() {
-        None
-    } else {
-        Some(&recover_map)
+    let prepared = match compile_paths_request(&parser_container_attrs.paths, &request) {
+        Ok(CompileOutput::Aot(prepared)) => prepared,
+        Ok(CompileOutput::Vm(_)) => unreachable!("AOT derive received VM pipeline output"),
+        Err(err) => panic!("{err}"),
     };
-    let pretties_ref = if pretty_map.is_empty() {
-        None
-    } else {
-        Some(&pretty_map)
-    };
-    let token_ref = if token_set.is_empty() {
-        None
-    } else {
-        Some(&token_set)
-    };
-    let debug_ref = if debug_set.is_empty() {
-        None
-    } else {
-        Some(&debug_set)
-    };
-
-    let directives = DirectiveSet {
-        recovers: recovers_ref,
-        pretties: pretties_ref,
-        ws_pattern: ws_pattern.as_deref(),
-        token_rules: token_ref,
-        debug_rules: debug_ref,
-        debug_all,
-    };
-
-    // ── IR Lowering ──────────────────────────────────────────────────────────
-    // Lower the parsed + analysed grammar to the canonical GrammarIR.
-    let mut grammar_ir = lower_to_ir(&ast, &first_sets, &scc_result, &directives);
-
-    // Optional: eliminate left-recursion at IR level (indirect via Paull's, then direct).
-    if parser_container_attrs.remove_left_recursion {
-        bbnf_ir::passes::eliminate_indirect_lr(&mut grammar_ir);
-        bbnf_ir::passes::eliminate_direct_lr(&mut grammar_ir);
-    }
-
-    // Run IR metadata passes (alias + transparent detection from IR structure).
-    bbnf_ir::passes::compute_aliases(&mut grammar_ir);
-    bbnf_ir::passes::compute_transparent(&mut grammar_ir);
-
-    // Fixed-point optimization loop (mirrors pipeline.rs).
-    loop {
-        let fingerprint = grammar_ir.structural_fingerprint();
-
-        bbnf_ir::passes::canonicalize_aliases(&mut grammar_ir);
-        bbnf_ir::passes::prune_unreachable(&mut grammar_ir);
-        bbnf_ir::passes::inline_acyclic(&mut grammar_ir);
-        bbnf_ir::passes::prune_unreachable(&mut grammar_ir);
-        bbnf_ir::passes::fuse_single_use(&mut grammar_ir);
-        bbnf_ir::passes::prune_unreachable(&mut grammar_ir);
-        bbnf_ir::passes::eliminate_epsilon(&mut grammar_ir);
-        bbnf_ir::passes::merge_literals(&mut grammar_ir);
-        bbnf_ir::passes::simplify_regex_algebra(&mut grammar_ir);
-        bbnf_ir::passes::merge_regex_alts(&mut grammar_ir);
-        bbnf_ir::passes::factor_common_prefixes(&mut grammar_ir);
-
-        if grammar_ir.structural_fingerprint() == fingerprint {
-            break;
-        }
-    }
-    bbnf_ir::passes::sort_alt_branches(&mut grammar_ir);
-    bbnf_ir::passes::refine_span_eligibility(&mut grammar_ir);
-    grammar_ir.follow_sets = bbnf_ir::passes::compute_follow_sets(&grammar_ir);
-    bbnf_ir::passes::factor_regex_with_lookahead(&mut grammar_ir);
-    bbnf_ir::passes::fuse_token_dispatch(&mut grammar_ir);
-    bbnf_ir::passes::generate_dispatch_tables(&mut grammar_ir);
-    // NOTE: project_types is called inside generate_all() AFTER sp_method_rules
-    // computation, so that type inference uses the correct has_sp_method flags.
 
     // ── IR-based codegen (active) ──────────────────────────────────────
-    let output = bbnf::generate::generate_all(&mut grammar_ir, &parser_container_attrs, ident);
+    let output = bbnf::generate::generate_all(&prepared, &parser_container_attrs, ident);
 
     // ── Cache write ──────────────────────────────────────────────────────────
     if let Some(key) = cache_key {

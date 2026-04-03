@@ -5,20 +5,7 @@ use bbnf_ir::{AltBranch, FnDescriptor, FnId, IrNode, TypeDesc};
 use crate::generate::regex::classify::{RegexClass, classify_regex};
 use crate::types::{Expression, Token};
 
-use super::LowerCtx;
-
-/// Convert a `CharSet` ([u32; 4]) to a `CharSet128` ([u64; 2]).
-fn charset_to_128(cs: &crate::analysis::CharSet) -> bbnf_ir::CharSet128 {
-    bbnf_ir::CharSet128::from_u32x4(&cs.bits)
-}
-
-/// Unwrap a `Rule(inner, mapping)` to get the inner expression.
-pub(crate) fn unwrap_rule<'a>(expr: &'a Expression<'a>) -> &'a Expression<'a> {
-    match expr {
-        Expression::Rule(inner, _) => inner,
-        other => other,
-    }
-}
+use super::{LowerCtx, charset_to_128};
 
 /// Attempt to replace a `FnDescriptor::Custom` with a specialized descriptor
 /// based on the combination of inner node type and closure return type annotation.
@@ -260,10 +247,10 @@ pub(crate) fn lower_expression<'a>(expr: &'a Expression<'a>, ctx: &mut LowerCtx<
                 Some(&rule_id) => IrNode::Ref(rule_id),
                 None if ctx.recovery_mode => IrNode::Epsilon,
                 None => {
-                    // Unknown nonterminal — emit as literal for robustness.
-                    // Backends should validate and report this as an error.
-                    let id = ctx.strings.intern(name);
-                    IrNode::Literal(id)
+                    panic!(
+                        "unknown nonterminal `{}` — should have been caught by validate_ast()",
+                        name,
+                    );
                 }
             }
         }

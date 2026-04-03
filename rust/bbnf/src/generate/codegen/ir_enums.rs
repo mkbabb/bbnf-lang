@@ -75,8 +75,12 @@ pub fn generate_enum(ctx: &IrCodegenCtx<'_>) -> TokenStream {
     }
 
     // Recovered variant if any @recover directives exist.
-    let has_recovers =
-        ctx.ir.rules.iter().any(|r| r.meta.directives.recover.is_some()) && !ctx.parser_attrs.skip_recover;
+    let has_recovers = ctx
+        .ir
+        .rules
+        .iter()
+        .any(|r| r.meta.directives.recover.is_some())
+        && !ctx.parser_attrs.skip_recover;
     let has_sub_variants = !sub_variant_values.is_empty();
     // Collect all variants into a single Vec for clean comma handling.
     let mut all_variants: Vec<TokenStream> = enum_values.collect();
@@ -113,7 +117,9 @@ pub fn generate_grammar_arr(parser_attrs: &ParserAttributes, ident: &syn::Ident)
     let grammar_arr_name = format_ident!("GRAMMAR_{}", ident);
     let len = parser_attrs.paths.len();
     let include_strs = parser_attrs.paths.iter().map(|path| {
-        let path = path.to_str().unwrap();
+        let path = path
+            .to_str()
+            .unwrap_or_else(|| panic!("non-UTF8 grammar path: {:?}", path));
         quote! { include_str!(#path) }
     });
 

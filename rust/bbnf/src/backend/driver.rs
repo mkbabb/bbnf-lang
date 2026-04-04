@@ -128,10 +128,15 @@ pub fn compile_grammar<E: Emitter>(
         let body = if let Some(override_body) = emitter.emit_rule_body_override(rule, ir, ctx) {
             override_body
         } else {
-            // Non-transparent rule bodies are compiled with Elide (raw types).
-            // The rule function wrapper handles variant wrapping.
-            // Transparent rule bodies also use Elide (passed through directly).
-            compile_node(&rule.body, AllocStrategy::Elide, ir, dstate, emitter, ctx)
+            // Non-transparent: Alloc makes Refs produce boxed (&'a Enum) to match
+            // TypeMap projections. Leaves (Literal/Regex) ignore alloc and return Span.
+            // Transparent: Elide makes Refs produce unboxed Enum (function returns directly).
+            let body_alloc = if rule.meta.is_transparent {
+                AllocStrategy::Elide
+            } else {
+                AllocStrategy::Alloc
+            };
+            compile_node(&rule.body, body_alloc, ir, dstate, emitter, ctx)
         };
 
         // Wrap in a rule function definition.
@@ -584,7 +589,14 @@ fn compile_ref<E: Emitter>(
         CallStrategy::DirectCall => emitter.emit_call(rule_id, rule_name, alloc, ctx),
         CallStrategy::InlineBody | CallStrategy::InlineFusion => {
             // Inline: compile the rule body at this call site.
-            let body = compile_node(&rule.body, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+            // Non-transparent: body compiled with Alloc so Refs produce boxed.
+            // Transparent: body compiled with Elide (returns inner type directly).
+            let inline_alloc = if rule.meta.is_transparent {
+                AllocStrategy::Elide
+            } else {
+                AllocStrategy::Alloc
+            };
+            let body = compile_node(&rule.body, inline_alloc, ir, dstate, emitter, ctx);
             let variant_name = if rule.meta.is_transparent {
                 None
             } else {

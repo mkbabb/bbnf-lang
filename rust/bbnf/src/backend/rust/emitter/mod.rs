@@ -112,18 +112,20 @@ impl Emitter for RustEmitter {
         &mut self,
         groups: Vec<SeqChildGroup<TokenStream>>,
         result_type: &TypeDesc,
-        _flatten: Option<FlattenStrategy>,
+        flatten: Option<FlattenStrategy>,
         ctx: &mut Self::Ctx,
     ) -> TokenStream {
         let mut stmts = Vec::new();
         let mut result_vars = Vec::new();
+        let mut result_types = Vec::new();
 
         for group in groups {
             match group {
-                SeqChildGroup::Single { output, ty: _ } => {
+                SeqChildGroup::Single { output, ty } => {
                     let var = ctx.fresh("v");
                     stmts.push(quote! { let #var = #output?; });
                     result_vars.push(var);
+                    result_types.push(ty);
                 }
                 SeqChildGroup::SpanCompressed { outputs } => {
                     let var = ctx.fresh("sp");
@@ -133,6 +135,56 @@ impl Emitter for RustEmitter {
                         let #var = ::parse_that::Span::new(__sp_start, state.offset, state.src);
                     });
                     result_vars.push(var);
+                    result_types.push(TypeDesc::Span);
+                }
+            }
+        }
+
+        // Handle Vec flattening: (T, Vec<T>) → Vec<T> via scratch.
+        if let Some(flatten_strat) = flatten {
+            if let TypeDesc::Vec(elem_td) = result_type {
+                let ir_ctx = ctx.ir_ctx();
+                let depth_var = ctx.fresh("depth");
+                let init = ir_ctx.emit_scratch_init(elem_td, &depth_var);
+                let collect = ir_ctx.emit_scratch_collect(elem_td, &depth_var);
+
+                match flatten_strat {
+                    FlattenStrategy::HeadThenVec => {
+                        // (head, &[T]) → push head, extend from slice
+                        if result_vars.len() == 2 {
+                            let head = &result_vars[0];
+                            let tail = &result_vars[1];
+                            let push = ir_ctx.emit_scratch_push(elem_td, &quote! { #head });
+                            let extend = ir_ctx.emit_scratch_extend_slice(elem_td, &quote! { #tail });
+                            return quote! {
+                                (|| {
+                                    #init
+                                    #( #stmts )*
+                                    #push;
+                                    #extend;
+                                    Some(#collect)
+                                })()
+                            };
+                        }
+                    }
+                    FlattenStrategy::VecThenTail => {
+                        // (&[T], tail) → extend from slice, push tail
+                        if result_vars.len() == 2 {
+                            let vec_part = &result_vars[0];
+                            let tail = &result_vars[1];
+                            let extend = ir_ctx.emit_scratch_extend_slice(elem_td, &quote! { #vec_part });
+                            let push = ir_ctx.emit_scratch_push(elem_td, &quote! { #tail });
+                            return quote! {
+                                (|| {
+                                    #init
+                                    #( #stmts )*
+                                    #extend;
+                                    #push;
+                                    Some(#collect)
+                                })()
+                            };
+                        }
+                    }
                 }
             }
         }
@@ -144,8 +196,6 @@ impl Emitter for RustEmitter {
         } else {
             quote! { ( #( #result_vars ),* ) }
         };
-
-        let _ = result_type;
 
         quote! {
             (|| {
@@ -226,26 +276,50 @@ impl Emitter for RustEmitter {
         &mut self,
         _rule_id: RuleId,
         rule_name: &str,
-        _alloc: AllocStrategy,
-        _ctx: &mut Self::Ctx,
+        alloc: AllocStrategy,
+        ctx: &mut Self::Ctx,
     ) -> TokenStream {
         let fn_ident = format_ident!("__{}", rule_name);
-        quote! { Self::#fn_ident(state) }
+        if alloc == AllocStrategy::Alloc {
+            let ir_ctx = ctx.ir_ctx();
+            let val = quote! { __v };
+            let alloc_expr = ir_ctx.emit_alloc(&val);
+            quote! { Self::#fn_ident(state).map(|__v| #alloc_expr) }
+        } else {
+            quote! { Self::#fn_ident(state) }
+        }
     }
 
     fn emit_inline_wrap(
         &mut self,
         body: TokenStream,
         variant_name: Option<&str>,
-        _alloc: AllocStrategy,
-        _ctx: &mut Self::Ctx,
+        alloc: AllocStrategy,
+        ctx: &mut Self::Ctx,
     ) -> TokenStream {
         if let Some(name) = variant_name {
             let enum_ident = &self.enum_ident;
             let variant = format_ident!("{}", name);
-            quote! {
-                #body.map(|__v| #enum_ident::#variant(__v))
+            if alloc == AllocStrategy::Alloc {
+                let ir_ctx = ctx.ir_ctx();
+                let val = quote! { __v };
+                let alloc_expr = ir_ctx.emit_alloc(&val);
+                quote! {
+                    #body.map(|__inner| {
+                        let __v = #enum_ident::#variant(__inner);
+                        #alloc_expr
+                    })
+                }
+            } else {
+                quote! {
+                    #body.map(|__v| #enum_ident::#variant(__v))
+                }
             }
+        } else if alloc == AllocStrategy::Alloc {
+            let ir_ctx = ctx.ir_ctx();
+            let val = quote! { __v };
+            let alloc_expr = ir_ctx.emit_alloc(&val);
+            quote! { #body.map(|__v| #alloc_expr) }
         } else {
             body
         }
@@ -352,13 +426,25 @@ impl Emitter for RustEmitter {
         &mut self,
         inner: TokenStream,
         variant_name: &str,
-        _alloc: AllocStrategy,
-        _ctx: &mut Self::Ctx,
+        alloc: AllocStrategy,
+        ctx: &mut Self::Ctx,
     ) -> TokenStream {
         let enum_ident = &self.enum_ident;
         let variant = format_ident!("{}", variant_name);
-        quote! {
-            #inner.map(|__v| #enum_ident::#variant(__v))
+        if alloc == AllocStrategy::Alloc {
+            let ir_ctx = ctx.ir_ctx();
+            let val = quote! { __v };
+            let alloc_expr = ir_ctx.emit_alloc(&val);
+            quote! {
+                #inner.map(|__inner| {
+                    let __v = #enum_ident::#variant(__inner);
+                    #alloc_expr
+                })
+            }
+        } else {
+            quote! {
+                #inner.map(|__v| #enum_ident::#variant(__v))
+            }
         }
     }
 

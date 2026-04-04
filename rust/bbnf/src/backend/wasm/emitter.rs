@@ -162,17 +162,29 @@ impl Emitter for WasmEmitter {
         child_outputs: Vec<String>,
         ctx: &mut WasmEmitCtx,
     ) -> String {
-        // Sequential: each child advances offset, fail if any returns -1.
-        let mut body = String::new();
+        // Sequential: evaluate each child, fail (-1) if any returns -1.
+        // Use result variable + conditional skip (no `return` or `br`).
+        if child_outputs.is_empty() {
+            return "(local.get $off)".to_string();
+        }
+        let result = ctx.fresh("seq_ok");
+        let mut body = format!("(local.set {result} (i32.const 1)) ");
         for child in &child_outputs {
-            let tmp = ctx.fresh("seq");
+            let v = ctx.fresh("seq");
             body.push_str(&format!(
-                "(local.set {tmp} {child}) \
-                 (if (i32.eq (local.get {tmp}) (i32.const -1)) (then (return (i32.const -1)))) \
-                 (local.set $off (local.get {tmp})) "
+                "(if (local.get {result}) (then \
+                   (local.set {v} {child}) \
+                   (if (i32.eq (local.get {v}) (i32.const -1)) \
+                     (then (local.set {result} (i32.const 0))) \
+                     (else (local.set $off (local.get {v})))) \
+                 )) "
             ));
         }
-        body.push_str("(local.get $off)");
+        body.push_str(&format!(
+            "(if (result i32) (local.get {result}) \
+               (then (local.get $off)) \
+               (else (i32.const -1)))"
+        ));
         body
     }
 
@@ -198,8 +210,8 @@ impl Emitter for WasmEmitter {
 
     fn emit_alt_dispatch(
         &mut self,
-        table: &AltDispatch,
-        branches: Vec<(AltBranchInfo, String)>,
+        _table: &AltDispatch,
+        mut branches: Vec<(AltBranchInfo, String)>,
         fallback: Option<(AltBranchInfo, String)>,
         _alloc: AllocStrategy,
         ctx: &mut WasmEmitCtx,
@@ -208,77 +220,11 @@ impl Emitter for WasmEmitter {
         // WASM blocks close innermost-first, so the first opened block
         // is the OUTERMOST and gets the HIGHEST branch index in br_table.
         //
-        // Layout:
-        //   (block $exit         ;; outermost — final result
-        //     (block $fb         ;; fallback target
-        //       (block $b{n-1}   ;; last branch
-        //         ...
-        //           (block $b0   ;; first branch (innermost)
-        //             br_table [mapping] $fb
-        //           ) ;; end $b0
-        //           <branch 0 body>
-        //         ) ;; end $b1
-        //         <branch 1 body>
-        //       ...
-        //     ) ;; end $fb
-        //     <fallback body>
-        //   ) ;; end $exit
-
-        let save = ctx.fresh("dt_save");
-        let result = ctx.fresh("dt_result");
-        let n = branches.len();
-
-        // Build br_table entries: table[byte] → block depth to break to.
-        // Block $b0 is innermost (depth 0), $b{n-1} is depth n-1, $fb is depth n.
-        let mut br_entries = vec![n as u32; 128]; // default → fallback
-        for (branch_idx, _) in branches.iter().enumerate() {
-            for (byte_val, &mapped) in table.table.iter().enumerate() {
-                if mapped as usize == branch_idx {
-                    br_entries[byte_val] = branch_idx as u32;
-                }
-            }
+        // Checkpoint chain — WAT br_table typing is complex.
+        if let Some(fb) = fallback {
+            branches.push(fb);
         }
-
-        // Format br_table target list.
-        let br_targets: String = br_entries.iter().map(|t| t.to_string()).collect::<Vec<_>>().join(" ");
-
-        // Open blocks: outermost $exit, then $fb, then $b{n-1} .. $b0 (innermost).
-        let mut body = format!("(local.set {save} (local.get $off)) ");
-        body.push_str("(block $dt_exit ");
-        body.push_str("(block $dt_fb ");
-        for i in (0..n).rev() {
-            body.push_str(&format!("(block $dt_b{i} "));
-        }
-
-        // br_table instruction inside innermost block.
-        body.push_str(&format!(
-            "(br_table {br_targets} $dt_fb (i32.load8_u (local.get {save})))"
-        ));
-
-        // Close blocks and emit branch bodies (innermost first = branch 0 first).
-        for (i, (_info, branch_body)) in branches.iter().enumerate() {
-            body.push_str(&format!(
-                ") \
-                 (local.set $off (local.get {save})) \
-                 (local.set {result} {branch_body}) \
-                 (br_if $dt_exit (i32.ne (local.get {result}) (i32.const -1))) "
-            ));
-        }
-
-        // Fallback block.
-        let fb_body = fallback
-            .as_ref()
-            .map(|(_, b)| b.as_str())
-            .unwrap_or("(i32.const -1)");
-        body.push_str(&format!(
-            ") \
-             (local.set $off (local.get {save})) \
-             (local.set {result} {fb_body}) "
-        ));
-
-        // Exit block — return result.
-        body.push_str(&format!(") (local.get {result})"));
-        body
+        self.emit_alt_checkpoint(branches, _alloc, ctx)
     }
 
     fn emit_alt_checkpoint(
@@ -291,20 +237,25 @@ impl Emitter for WasmEmitter {
             return branches.into_iter().next().unwrap().1;
         }
 
+        // Checkpoint chain: try each branch, restore offset on failure.
+        // No `return` — use result variable + conditional skip.
         let save = ctx.fresh("alt_save");
         let result = ctx.fresh("alt_result");
-        let mut body = format!("(local.set {save} (local.get $off)) ");
+        let mut body = format!(
+            "(local.set {save} (local.get $off)) \
+             (local.set {result} (i32.const -1)) "
+        );
 
         for (_info, branch) in &branches {
             body.push_str(&format!(
-                "(local.set $off (local.get {save})) \
-                 (local.set {result} {branch}) \
-                 (if (i32.ne (local.get {result}) (i32.const -1)) \
-                   (then (return (local.get {result})))) "
+                "(if (i32.eq (local.get {result}) (i32.const -1)) (then \
+                   (local.set $off (local.get {save})) \
+                   (local.set {result} {branch}) \
+                 )) "
             ));
         }
 
-        body.push_str("(i32.const -1)");
+        body.push_str(&format!("(local.get {result})"));
         body
     }
 
@@ -458,7 +409,7 @@ impl Emitter for WasmEmitter {
         let rhs_var = ctx.fresh("oc_rhs");
         format!(
             "(local.set {head_var} {head}) \
-             (if (i32.eq (local.get {head_var}) (i32.const -1)) (then (return (i32.const -1)))) \
+             (if (result i32) (i32.eq (local.get {head_var}) (i32.const -1)) (then (i32.const -1)) (else \
              (local.set $off (local.get {head_var})) \
              (block $oc_exit (loop $oc_loop \
                (local.set {cp} (local.get $off)) \
@@ -471,7 +422,7 @@ impl Emitter for WasmEmitter {
                (local.set $off (local.get {rhs_var})) \
                (br $oc_loop) \
              )) \
-             (local.get $off)"
+             (local.get $off) ))"
         )
     }
 
@@ -662,13 +613,18 @@ impl Emitter for WasmEmitter {
             format!("{ws_call} ")
         };
         let ws_loop = ws_block.clone();
+        // ws_trim → inner → check null → ws_trim → return result.
+        // Do NOT use `return` for null propagation — it exits the entire function.
+        // Instead, return -1 as the value if inner fails.
         format!(
-            "{ws_loop} \
+            "{ws_block} \
              (local.set {result} {inner}) \
-             (if (i32.eq (local.get {result}) (i32.const -1)) (then (return (i32.const -1)))) \
-             (local.set $off (local.get {result})) \
-             {ws_loop} \
-             (local.get $off)"
+             (if (result i32) (i32.eq (local.get {result}) (i32.const -1)) \
+               (then (i32.const -1)) \
+               (else \
+                 (local.set $off (local.get {result})) \
+                 {ws_block} \
+                 (local.get $off)))"
         )
     }
 

@@ -32,12 +32,14 @@ if (___8 === null) return null;
 while (s.offset < s.input.length) { const __c = s.input.charCodeAt(s.offset); if (__c === 32 || __c === 9 || __c === 10 || __c === 13) s.offset++; else break; }
 const __start4 = s.offset;
 let __count5 = 0;
-{
+if (s.offset < s.input.length && s.input.charCodeAt(s.offset) === 125) break;
+    {
   const __r = __pair(s);
   if (__r !== null) __count5++;
 }
 if (__count5 > 0) {
   while (true) {
+    if (s.offset < s.input.length && s.input.charCodeAt(s.offset) === 125) break;
     const __cp7 = s.offset;
     const __sep = ((() => { while (s.offset < s.input.length) { const __c = s.input.charCodeAt(s.offset); if (__c === 32 || __c === 9 || __c === 10 || __c === 13) s.offset++; else break; }
 let __lit1 = null;
@@ -158,12 +160,14 @@ if (___33 === null) return null;
 while (s.offset < s.input.length) { const __c = s.input.charCodeAt(s.offset); if (__c === 32 || __c === 9 || __c === 10 || __c === 13) s.offset++; else break; }
 const __start29 = s.offset;
 let __count30 = 0;
-{
+if (s.offset < s.input.length && s.input.charCodeAt(s.offset) === 93) break;
+    {
   const __r = __value(s);
   if (__r !== null) __count30++;
 }
 if (__count30 > 0) {
   while (true) {
+    if (s.offset < s.input.length && s.input.charCodeAt(s.offset) === 93) break;
     const __cp32 = s.offset;
     const __sep = ((() => { while (s.offset < s.input.length) { const __c = s.input.charCodeAt(s.offset); if (__c === 32 || __c === 9 || __c === 10 || __c === 13) s.offset++; else break; }
 let __lit26 = null;

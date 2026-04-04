@@ -270,7 +270,7 @@ impl Emitter for TsEmitter {
         op: TsCode,
         rhs: TsCode,
         ctx: &mut TsEmitCtx,
-    ) -> TsCode {
+    ) -> Option<TsCode> {
         let head_var = ctx.fresh("head");
         let mut stmts = String::new();
         head.bind_checked(&head_var, &mut stmts);
@@ -283,7 +283,7 @@ impl Emitter for TsEmitter {
                if (({rhs_expr}) === null) {{ s.offset = __cp; break; }}\n\
              }}\n"
         ));
-        TsCode::new(stmts, head_var)
+        Some(TsCode::new(stmts, head_var))
     }
 
     // ── Binary operators ────────────────────────────────────────────────

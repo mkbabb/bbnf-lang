@@ -187,7 +187,10 @@ pub fn compile_node<E: Emitter>(
                 let head_out = compile_node(head, AllocStrategy::Elide, ir, dstate, emitter, ctx);
                 let op_out = compile_node(op, AllocStrategy::Elide, ir, dstate, emitter, ctx);
                 let rhs_out = compile_node(rhs, AllocStrategy::Elide, ir, dstate, emitter, ctx);
-                return emitter.emit_operator_chain(head_out, op_out, rhs_out, ctx);
+                if let Some(chain) = emitter.emit_operator_chain(head_out, op_out, rhs_out, ctx) {
+                    return chain;
+                }
+                // Emitter declined — fall through to normal Seq compilation.
             }
             compile_seq(children, alloc, ir, dstate, emitter, ctx)
         }

@@ -237,14 +237,14 @@ impl Emitter for WasmEmitter {
         op: String,
         rhs: String,
         ctx: &mut WasmEmitCtx,
-    ) -> String {
+    ) -> Option<String> {
         let head_var = ctx.fresh("oc_head");
         let cp = ctx.fresh("oc_cp");
         let op_var = ctx.fresh("oc_op");
         let rhs_var = ctx.fresh("oc_rhs");
         let exit = ctx.fresh_label("oc_exit");
         let lp = ctx.fresh_label("oc_loop");
-        format!(
+        Some(format!(
             "(local.set {head_var} {head}) \
              (if (result i32) (i32.eq (local.get {head_var}) (i32.const -1)) (then (i32.const -1)) (else \
              (local.set $off (local.get {head_var})) \
@@ -260,7 +260,7 @@ impl Emitter for WasmEmitter {
                (br {lp}) \
              )) \
              (local.get $off) ))"
-        )
+        ))
     }
 
     // ── Binary operators ────────────────────────────────────────────────

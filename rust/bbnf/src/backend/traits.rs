@@ -138,13 +138,18 @@ pub trait Emitter {
 
     // ── Operator chains ─────────────────────────────────────────────────
 
+    /// Returns `None` if the emitter can't produce the correct typed output
+    /// for operator chains — driver falls back to normal Seq compilation.
     fn emit_operator_chain(
         &mut self,
         head: Self::Output,
         op: Self::Output,
         rhs: Self::Output,
         ctx: &mut Self::Ctx,
-    ) -> Self::Output;
+    ) -> Option<Self::Output> {
+        let _ = (head, op, rhs, ctx);
+        None
+    }
 
     // ── Binary operators ────────────────────────────────────────────────
 

@@ -329,25 +329,16 @@ impl Emitter for RustEmitter {
 
     fn emit_operator_chain(
         &mut self,
-        head: TokenStream,
-        op: TokenStream,
-        rhs: TokenStream,
+        _head: TokenStream,
+        _op: TokenStream,
+        _rhs: TokenStream,
         _ctx: &mut Self::Ctx,
-    ) -> TokenStream {
-        quote! {
-            (|| {
-                let __head = #head?;
-                let __sp_start = state.offset;
-                loop {
-                    let __cp = state.offset;
-                    let __op = #op;
-                    if __op.is_none() { state.offset = __cp; break; }
-                    let __rhs = #rhs;
-                    if __rhs.is_none() { state.offset = __cp; break; }
-                }
-                Some(::parse_that::Span::new(__sp_start, state.offset, state.src))
-            })()
-        }
+    ) -> Option<TokenStream> {
+        // Rust backend declines Seq-level operator chain detection.
+        // Typed operator chains are handled by emit_rule_body_override
+        // which delegates to the monolithic operator_chain module.
+        // The driver falls back to normal Seq compilation.
+        None
     }
 
     // ── Binary operators ────────────────────────────────────────────────
@@ -529,10 +520,8 @@ impl Emitter for RustEmitter {
         &mut self,
         rule: &IrRule,
         ir: &GrammarIR,
-        _ctx: &mut Self::Ctx,
+        ctx: &mut Self::Ctx,
     ) -> Option<TokenStream> {
-        let name = ir.get_string(rule.name);
-
         // Fused number: bare JSON number regex → number_scan_convert → (Span, f64).
         if self.fused_number_rules.contains(&rule.id) && !rule.meta.is_transparent {
             return Some(quote! {
@@ -540,10 +529,31 @@ impl Emitter for RustEmitter {
             });
         }
 
-        // Operator chain hot path: Seq(head, Repeat(Seq(op, rhs))).
-        // TODO: Port operator_chain::emit_operator_chain_rule when wiring to bbnf-derive.
-        // For now, fall through to the driver's generic compile_node.
-        let _ = name;
+        // Operator chain: delegate to the monolithic operator_chain module.
+        if self.operator_chain_rules.contains(&rule.id) {
+            let ir_ctx = ctx.ir_ctx();
+            // Create a MonoCtx for the operator chain emission.
+            let call_strategies = crate::pipeline::compute_call_strategies(ir);
+            let call_modes: Vec<_> = call_strategies.iter().map(|s| match s {
+                crate::backend::CallStrategy::DirectCall => {
+                    crate::backend::rust::analysis::inline::CallMode::DirectCall
+                }
+                crate::backend::CallStrategy::InlineBody | crate::backend::CallStrategy::InlineFusion => {
+                    crate::backend::rust::analysis::inline::CallMode::InlineBody
+                }
+            }).collect();
+            let mut mctx = crate::backend::rust::MonoCtx::new(call_modes);
+            mctx.current_rule_id = Some(rule.id);
+            mctx.current_rule_name = Some(ir.get_string(rule.name).to_string());
+            if let Some(chain_expr) =
+                crate::backend::rust::operator_chain::emit_operator_chain_rule(
+                    rule.id, ir_ctx, &mut mctx,
+                )
+            {
+                ctx.hoisted.extend(mctx.hoisted);
+                return Some(chain_expr);
+            }
+        }
 
         None
     }

@@ -131,115 +131,35 @@ impl Emitter for WasmEmitter {
         self.emit_seq_all_span(all_outputs, ctx)
     }
 
-    // ── Alternations ────────────────────────────────────────────────────
+    // ── Alternations (delegated to alt.rs) ──────────────────────────────
 
     fn emit_alt_dispatch(
         &mut self,
         table: &AltDispatch,
         branches: Vec<(AltBranchInfo, String)>,
         fallback: Option<(AltBranchInfo, String)>,
-        _alloc: AllocStrategy,
+        alloc: AllocStrategy,
         ctx: &mut WasmEmitCtx,
     ) -> String {
-        // Byte-based dispatch: load one byte, try only the matching branch.
-        let byte_var = ctx.fresh("d_byte");
-        let result = ctx.fresh("d_result");
-        let save = ctx.fresh("d_save");
-
-        let mut body = format!(
-            "(local.set {save} (local.get $off)) \
-             (local.set {result} (i32.const -1)) "
-        );
-        body.push_str(&format!(
-            "(if (i32.lt_u (local.get $off) (local.get $len)) (then \
-               (local.set {byte_var} (i32.load8_u (local.get $off))) "
-        ));
-        for (branch_idx, (_info, branch_body)) in branches.iter().enumerate() {
-            let byte_patterns: Vec<u8> = table
-                .table
-                .iter()
-                .enumerate()
-                .filter(|&(_, &b)| b as usize == branch_idx)
-                .map(|(bv, _)| bv as u8)
-                .collect();
-            if byte_patterns.is_empty() {
-                continue;
-            }
-            let byte_cond = WasmEmitter::byte_match_condition(&byte_var, &byte_patterns);
-            body.push_str(&format!(
-                "(if (i32.and (i32.eq (local.get {result}) (i32.const -1)) {byte_cond}) (then \
-                   (local.set $off (local.get {save})) \
-                   (local.set {result} {branch_body}) \
-                 )) "
-            ));
-        }
-        body.push_str(")) ");
-        if let Some((_info, fb_body)) = &fallback {
-            body.push_str(&format!(
-                "(if (i32.eq (local.get {result}) (i32.const -1)) (then \
-                   (local.set $off (local.get {save})) \
-                   (local.set {result} {fb_body}) \
-                 )) "
-            ));
-        }
-        body.push_str(&format!("(local.get {result})"));
-        body
+        self.alt_dispatch(table, branches, fallback, alloc, ctx)
     }
 
     fn emit_alt_checkpoint(
         &mut self,
         branches: Vec<(AltBranchInfo, String)>,
-        _alloc: AllocStrategy,
+        alloc: AllocStrategy,
         ctx: &mut WasmEmitCtx,
     ) -> String {
-        if branches.len() == 1 {
-            return branches.into_iter().next().unwrap().1;
-        }
-
-        let save = ctx.fresh("alt_save");
-        let result = ctx.fresh("alt_result");
-        let mut body = format!(
-            "(local.set {save} (local.get $off)) \
-             (local.set {result} (i32.const -1)) "
-        );
-
-        for (_info, branch) in &branches {
-            body.push_str(&format!(
-                "(if (i32.eq (local.get {result}) (i32.const -1)) (then \
-                   (local.set $off (local.get {save})) \
-                   (local.set {result} {branch}) \
-                 )) "
-            ));
-        }
-
-        body.push_str(&format!("(local.get {result})"));
-        body
+        self.alt_checkpoint(branches, alloc, ctx)
     }
 
     fn emit_alt_all_literal(
         &mut self,
         literals: Vec<(String, String)>,
-        _alloc: AllocStrategy,
+        alloc: AllocStrategy,
         ctx: &mut WasmEmitCtx,
     ) -> String {
-        if literals.len() == 1 {
-            return literals.into_iter().next().unwrap().1;
-        }
-        // Literal matching is non-destructive — no checkpoint needed.
-        let result = ctx.fresh("alt_result");
-        let mut body = String::new();
-        let mut iter = literals.into_iter();
-        let (_, first) = iter.next().unwrap();
-        body.push_str(&format!("(local.set {result} {first}) "));
-        for (_, branch) in iter {
-            body.push_str(&format!(
-                "(if (i32.eq (local.get {result}) (i32.const -1)) (then \
-                   (local.set {result} {branch}) \
-                 )) "
-            ));
-        }
-        body.push_str(&format!("(local.get {result})"));
-        body
+        self.alt_all_literal(literals, alloc, ctx)
     }
 
     fn emit_key_dispatch(
@@ -247,105 +167,33 @@ impl Emitter for WasmEmitter {
         config: &KeyDispatchConfig,
         branches: Vec<KeyDispatchBranch<String>>,
         fallback: Option<(AltBranchInfo, String)>,
-        _alloc: AllocStrategy,
+        alloc: AllocStrategy,
         ctx: &mut WasmEmitCtx,
     ) -> String {
-        let save = ctx.fresh("kd_save");
-        let result = ctx.fresh("kd_result");
-        let key_end = ctx.fresh("kd_end");
-        let key_len = ctx.fresh("kd_len");
-        let regex_id = config
-            .key_scanner_regex_id
-            .expect("key_scanner_regex_id must be set by driver");
-
-        let mut body = format!(
-            "(local.set {save} (local.get $off)) \
-             (local.set {result} (i32.const -1)) \
-             (local.set {key_end} (call $__match_regex (i32.const {regex_id}) \
-             (local.get $off) (local.get $len))) "
-        );
-        body.push_str(&format!(
-            "(if (i32.ne (local.get {key_end}) (i32.const -1)) (then \
-             (local.set {key_len} (i32.sub (local.get {key_end}) (local.get {save}))) "
-        ));
-        for kd_branch in &branches {
-            for key in &kd_branch.key_bytes {
-                let len = key.len();
-                let mut cond = format!("(i32.eq (local.get {key_len}) (i32.const {len}))");
-                for (i, &b) in key.iter().enumerate() {
-                    cond = format!(
-                        "(i32.and {cond} (i32.eq (i32.load8_u (i32.add (local.get {save}) \
-                         (i32.const {i}))) (i32.const {b})))"
-                    );
-                }
-                let branch_body = &kd_branch.body;
-                body.push_str(&format!(
-                    "(if (i32.and (i32.eq (local.get {result}) (i32.const -1)) {cond}) \
-                       (then (local.set $off (local.get {save})) \
-                             (local.set {result} {branch_body}))) "
-                ));
-            }
-        }
-        body.push_str(")) ");
-        if let Some((_info, fb_body)) = &fallback {
-            body.push_str(&format!(
-                "(if (i32.eq (local.get {result}) (i32.const -1)) (then \
-                   (local.set $off (local.get {save})) \
-                   (local.set {result} {fb_body}))) "
-            ));
-        }
-        body.push_str(&format!("(local.get {result})"));
-        body
+        self.key_dispatch(config, branches, fallback, alloc, ctx)
     }
 
-    // ── Repetition ──────────────────────────────────────────────────────
+    // ── Repetition (delegated to repeat.rs) ─────────────────────────────
 
     fn emit_repeat_many(
         &mut self,
         body: String,
         lo: u32,
-        _hi: u32,
-        _elem_type: &TypeDesc,
+        hi: u32,
+        elem_type: &TypeDesc,
         ctx: &mut WasmEmitCtx,
     ) -> String {
-        let count = ctx.fresh("rep_count");
-        let prev = ctx.fresh("rep_prev");
-        let result = ctx.fresh("rep_result");
-        let start = ctx.fresh("rep_start");
-        format!(
-            "(local.set {start} (local.get $off)) \
-             (local.set {count} (i32.const 0)) \
-             (block $rep_exit (loop $rep_loop \
-               (local.set {prev} (local.get $off)) \
-               (local.set {result} {body}) \
-               (br_if $rep_exit (i32.eq (local.get {result}) (i32.const -1))) \
-               (local.set $off (local.get {result})) \
-               (local.set {count} (i32.add (local.get {count}) (i32.const 1))) \
-               (br_if $rep_exit (i32.eq (local.get $off) (local.get {prev}))) \
-               (br $rep_loop) \
-             )) \
-             (if (result i32) (i32.ge_u (local.get {count}) (i32.const {lo})) \
-               (then (local.get $off)) \
-               (else (i32.const -1)))"
-        )
+        self.repeat_many(body, lo, hi, elem_type, ctx)
     }
 
     fn emit_repeat_optional(
         &mut self,
         body: String,
-        _inner_type: &TypeDesc,
-        _alloc: AllocStrategy,
+        inner_type: &TypeDesc,
+        alloc: AllocStrategy,
         ctx: &mut WasmEmitCtx,
     ) -> String {
-        let save = ctx.fresh("opt_save");
-        let result = ctx.fresh("opt_result");
-        format!(
-            "(local.set {save} (local.get $off)) \
-             (local.set {result} {body}) \
-             (if (result i32) (i32.ne (local.get {result}) (i32.const -1)) \
-               (then (local.get {result})) \
-               (else (local.get {save})))"
-        )
+        self.repeat_optional(body, inner_type, alloc, ctx)
     }
 
     fn emit_sep_by(
@@ -353,55 +201,10 @@ impl Emitter for WasmEmitter {
         element: String,
         separator: String,
         config: &SepByConfig,
-        _elem_type: &TypeDesc,
+        elem_type: &TypeDesc,
         ctx: &mut WasmEmitCtx,
     ) -> String {
-        let count = ctx.fresh("sep_count");
-        let save = ctx.fresh("sep_save");
-        let result = ctx.fresh("sep_result");
-        let lo = config.lo;
-
-        // Terminator byte early-exit check.
-        let terminator_check = if let Some(ref tb) = config.terminator_bytes {
-            if tb.len() == 1 {
-                let byte = tb[0];
-                format!(
-                    "(br_if $sep_exit (i32.and \
-                       (i32.lt_u (local.get $off) (local.get $len)) \
-                       (i32.eq (i32.load8_u (local.get $off)) (i32.const {byte})))) "
-                )
-            } else {
-                String::new()
-            }
-        } else {
-            String::new()
-        };
-
-        format!(
-            "(local.set {count} (i32.const 0)) \
-             (local.set {result} {element}) \
-             (if (i32.ne (local.get {result}) (i32.const -1)) \
-               (then \
-                 (local.set $off (local.get {result})) \
-                 (local.set {count} (i32.const 1)) \
-                 (block $sep_exit (loop $sep_loop \
-                   {terminator_check}\
-                   (local.set {save} (local.get $off)) \
-                   (local.set {result} {separator}) \
-                   (br_if $sep_exit (i32.eq (local.get {result}) (i32.const -1))) \
-                   (local.set $off (local.get {result})) \
-                   (local.set {result} {element}) \
-                   (if (i32.eq (local.get {result}) (i32.const -1)) \
-                     (then (local.set $off (local.get {save})) (br $sep_exit))) \
-                   (local.set $off (local.get {result})) \
-                   (local.set {count} (i32.add (local.get {count}) (i32.const 1))) \
-                   (br $sep_loop) \
-                 )) \
-               )) \
-             (if (result i32) (i32.ge_u (local.get {count}) (i32.const {lo})) \
-               (then (local.get $off)) \
-               (else (i32.const -1)))"
-        )
+        self.sep_by(element, separator, config, elem_type, ctx)
     }
 
     // ── References ──────────────────────────────────────────────────────
@@ -439,20 +242,22 @@ impl Emitter for WasmEmitter {
         let cp = ctx.fresh("oc_cp");
         let op_var = ctx.fresh("oc_op");
         let rhs_var = ctx.fresh("oc_rhs");
+        let exit = ctx.fresh_label("oc_exit");
+        let lp = ctx.fresh_label("oc_loop");
         format!(
             "(local.set {head_var} {head}) \
              (if (result i32) (i32.eq (local.get {head_var}) (i32.const -1)) (then (i32.const -1)) (else \
              (local.set $off (local.get {head_var})) \
-             (block $oc_exit (loop $oc_loop \
+             (block {exit} (loop {lp} \
                (local.set {cp} (local.get $off)) \
                (local.set {op_var} {op}) \
-               (br_if $oc_exit (i32.eq (local.get {op_var}) (i32.const -1))) \
+               (br_if {exit} (i32.eq (local.get {op_var}) (i32.const -1))) \
                (local.set $off (local.get {op_var})) \
                (local.set {rhs_var} {rhs}) \
                (if (i32.eq (local.get {rhs_var}) (i32.const -1)) \
-                 (then (local.set $off (local.get {cp})) (br $oc_exit))) \
+                 (then (local.set $off (local.get {cp})) (br {exit}))) \
                (local.set $off (local.get {rhs_var})) \
-               (br $oc_loop) \
+               (br {lp}) \
              )) \
              (local.get $off) ))"
         )
@@ -562,64 +367,14 @@ impl Emitter for WasmEmitter {
         )
     }
 
+    // ── Whitespace (delegated to ws.rs) ─────────────────────────────────
+
     fn emit_ws_trim(
         &mut self,
         ws_pattern: Option<&str>,
-        _ctx: &mut WasmEmitCtx,
+        ctx: &mut WasmEmitCtx,
     ) -> String {
-        if let Some(pattern) = ws_pattern {
-            if pattern.contains("/*") || pattern.contains(r"\/\*") {
-                "(block $ws_done (loop $ws_loop \
-                   (br_if $ws_done (i32.ge_u (local.get $off) (local.get $len))) \
-                   (if (i32.or \
-                     (i32.or \
-                       (i32.eq (i32.load8_u (local.get $off)) (i32.const 32)) \
-                       (i32.eq (i32.load8_u (local.get $off)) (i32.const 9))) \
-                     (i32.or \
-                       (i32.eq (i32.load8_u (local.get $off)) (i32.const 10)) \
-                       (i32.eq (i32.load8_u (local.get $off)) (i32.const 13)))) \
-                     (then (local.set $off (i32.add (local.get $off) (i32.const 1))) (br $ws_loop))) \
-                   (if (i32.and \
-                     (i32.lt_u (i32.add (local.get $off) (i32.const 1)) (local.get $len)) \
-                     (i32.and \
-                       (i32.eq (i32.load8_u (local.get $off)) (i32.const 47)) \
-                       (i32.eq (i32.load8_u (i32.add (local.get $off) (i32.const 1))) (i32.const 42)))) \
-                     (then \
-                       (local.set $off (i32.add (local.get $off) (i32.const 2))) \
-                       (block $comment_done (loop $comment_loop \
-                         (br_if $comment_done (i32.ge_u (i32.add (local.get $off) (i32.const 1)) (local.get $len))) \
-                         (if (i32.and \
-                           (i32.eq (i32.load8_u (local.get $off)) (i32.const 42)) \
-                           (i32.eq (i32.load8_u (i32.add (local.get $off) (i32.const 1))) (i32.const 47))) \
-                           (then (local.set $off (i32.add (local.get $off) (i32.const 2))) (br $ws_loop))) \
-                         (local.set $off (i32.add (local.get $off) (i32.const 1))) \
-                         (br $comment_loop) \
-                       )) \
-                     )) \
-                 )) \
-                 (local.get $off)"
-                    .to_string()
-            } else if let Some(ws_id) = self.ws_regex_id {
-                format!("(call $__match_regex (i32.const {ws_id}) (local.get $off) (local.get $len))")
-            } else {
-                self.emit_ws_trim(None, _ctx)
-            }
-        } else {
-            "(block $ws_done (loop $ws_loop \
-               (br_if $ws_done (i32.ge_u (local.get $off) (local.get $len))) \
-               (br_if $ws_done (i32.and \
-                 (i32.ne (i32.load8_u (local.get $off)) (i32.const 32)) \
-                 (i32.and \
-                   (i32.ne (i32.load8_u (local.get $off)) (i32.const 9)) \
-                   (i32.and \
-                     (i32.ne (i32.load8_u (local.get $off)) (i32.const 10)) \
-                     (i32.ne (i32.load8_u (local.get $off)) (i32.const 13)))))) \
-               (local.set $off (i32.add (local.get $off) (i32.const 1))) \
-               (br $ws_loop) \
-             )) \
-             (local.get $off)"
-                .to_string()
-        }
+        self.ws_trim(ws_pattern, ctx)
     }
 
     fn emit_with_ws_trim(
@@ -628,46 +383,10 @@ impl Emitter for WasmEmitter {
         ws_pattern: Option<&str>,
         ctx: &mut WasmEmitCtx,
     ) -> String {
-        let result = ctx.fresh("ws_inner");
-        let ws_side_effect = if let Some(pattern) = ws_pattern {
-            if pattern.contains("/*") || pattern.contains(r"\/\*") {
-                "(block $ws_done (loop $ws_loop \
-                   (br_if $ws_done (i32.ge_u (local.get $off) (local.get $len))) \
-                   (if (i32.or \
-                     (i32.or (i32.eq (i32.load8_u (local.get $off)) (i32.const 32)) (i32.eq (i32.load8_u (local.get $off)) (i32.const 9))) \
-                     (i32.or (i32.eq (i32.load8_u (local.get $off)) (i32.const 10)) (i32.eq (i32.load8_u (local.get $off)) (i32.const 13)))) \
-                     (then (local.set $off (i32.add (local.get $off) (i32.const 1))) (br $ws_loop))) \
-                   (if (i32.and (i32.lt_u (i32.add (local.get $off) (i32.const 1)) (local.get $len)) \
-                     (i32.and (i32.eq (i32.load8_u (local.get $off)) (i32.const 47)) (i32.eq (i32.load8_u (i32.add (local.get $off) (i32.const 1))) (i32.const 42)))) \
-                     (then (local.set $off (i32.add (local.get $off) (i32.const 2))) \
-                       (block $c_done (loop $c_loop \
-                         (br_if $c_done (i32.ge_u (i32.add (local.get $off) (i32.const 1)) (local.get $len))) \
-                         (if (i32.and (i32.eq (i32.load8_u (local.get $off)) (i32.const 42)) (i32.eq (i32.load8_u (i32.add (local.get $off) (i32.const 1))) (i32.const 47))) \
-                           (then (local.set $off (i32.add (local.get $off) (i32.const 2))) (br $ws_loop))) \
-                         (local.set $off (i32.add (local.get $off) (i32.const 1))) (br $c_loop) \
-                       )) )) \
-                 )) ".to_string()
-            } else if let Some(ws_id) = self.ws_regex_id {
-                format!("(local.set $off (call $__match_regex (i32.const {ws_id}) (local.get $off) (local.get $len))) ")
-            } else {
-                WasmEmitter::ascii_ws_side_effect()
-            }
-        } else {
-            WasmEmitter::ascii_ws_side_effect()
-        };
-        format!(
-            "{ws_side_effect}\
-             (local.set {result} {inner}) \
-             (if (result i32) (i32.eq (local.get {result}) (i32.const -1)) \
-               (then (i32.const -1)) \
-               (else \
-                 (local.set $off (local.get {result})) \
-                 {ws_side_effect}\
-                 (local.get $off)))"
-        )
+        self.with_ws_trim(inner, ws_pattern, ctx)
     }
 
-    // ── Token dispatch ─────────────────────────────────────────────────
+    // ── Token dispatch (delegated to dispatch.rs) ───────────────────────
 
     fn emit_token_dispatch(
         &mut self,
@@ -676,123 +395,17 @@ impl Emitter for WasmEmitter {
         fallback: String,
         ctx: &mut WasmEmitCtx,
     ) -> String {
-        let save = ctx.fresh("td_save");
-        let tok = ctx.fresh("td_tok");
-        let result = ctx.fresh("td_result");
-        let td_len = ctx.fresh("td_len");
-        let mut body = format!(
-            "(local.set {save} (local.get $off)) \
-             (local.set {tok} {token}) \
-             (local.set {result} (i32.const -1)) "
-        );
-        body.push_str(&format!(
-            "(if (i32.ne (local.get {tok}) (i32.const -1)) (then \
-             (local.set {td_len} (i32.sub (local.get {tok}) (local.get {save}))) \
-             (local.set $off (local.get {tok})) "
-        ));
-        for arm in &arms {
-            for pat in &arm.patterns {
-                let len = pat.len();
-                let mut cond = format!("(i32.eq (local.get {td_len}) (i32.const {len}))");
-                for (i, &b) in pat.iter().enumerate() {
-                    cond = format!(
-                        "(i32.and {cond} (i32.eq (i32.load8_u (i32.add (local.get {save}) \
-                         (i32.const {i}))) (i32.const {b})))"
-                    );
-                }
-                if let Some(guard) = arm.guard_byte {
-                    cond = format!(
-                        "(i32.and {cond} (i32.and \
-                           (i32.lt_u (local.get $off) (local.get $len)) \
-                           (i32.eq (i32.load8_u (local.get $off)) (i32.const {guard}))))"
-                    );
-                }
-                let cont = &arm.continuation;
-                body.push_str(&format!(
-                    "(if (i32.and (i32.eq (local.get {result}) (i32.const -1)) {cond}) \
-                       (then (local.set {result} {cont}))) "
-                ));
-            }
-        }
-        body.push_str(")) ");
-        body.push_str(&format!(
-            "(if (i32.eq (local.get {result}) (i32.const -1)) (then \
-               (local.set $off (local.get {save})) \
-               (local.set {result} {fallback}))) \
-             (local.get {result})"
-        ));
-        body
+        self.token_dispatch(token, arms, fallback, ctx)
     }
 
-    // ── Delimiter scan ─────────────────────────────────────────────────
+    // ── Delimiter scan (delegated to dispatch.rs) ───────────────────────
 
     fn emit_delim_scan(
         &mut self,
         config: &DelimScanConfig,
         ctx: &mut WasmEmitCtx,
     ) -> Option<String> {
-        let start = ctx.fresh("ds_start");
-        let result = ctx.fresh("ds_result");
-        let byte_var = ctx.fresh("ds_byte");
-        let open = config.open_byte;
-        let close = config.close_byte;
-        let pivot = config.pivot_byte;
-        let block_call = config.block_rule.as_ref()
-            .map(|(_, name)| format!("(call $__{name} (local.get $off) (local.get $len))"))
-            .unwrap_or_else(|| "(i32.const -1)".to_string());
-        let pivot_call = config.pivot_rule.as_ref()
-            .map(|(_, name)| format!("(call $__{name} (local.get $off) (local.get $len))"))
-            .unwrap_or_else(|| "(i32.const -1)".to_string());
-        let trail_consume = if let Some(tb) = config.trail_byte {
-            format!(
-                "(if (i32.and (i32.lt_u (local.get $off) (local.get $len)) \
-                    (i32.eq (i32.load8_u (local.get $off)) (i32.const {tb}))) \
-                   (then (local.set $off (i32.add (local.get $off) (i32.const 1))))) "
-            )
-        } else { String::new() };
-        Some(format!(
-            "(local.set {start} (local.get $off)) \
-             (local.set {result} (i32.const -1)) \
-             (if (i32.and (i32.lt_u (local.get $off) (local.get $len)) \
-                  (i32.eq (i32.load8_u (local.get $off)) (i32.const {open}))) \
-               (then \
-                 (local.set $off (i32.add (local.get $off) (i32.const 1))) \
-                 (block $ds_exit (loop $ds_loop \
-                   (br_if $ds_exit (i32.ge_u (local.get $off) (local.get $len))) \
-                   (local.set {byte_var} (i32.load8_u (local.get $off))) \
-                   (if (i32.eq (local.get {byte_var}) (i32.const {close})) (then \
-                     (local.set $off (i32.add (local.get $off) (i32.const 1))) \
-                     (local.set {result} (local.get $off)) \
-                     (br $ds_exit))) \
-                   (if (i32.eq (local.get {byte_var}) (i32.const {open})) (then \
-                     (local.set {result} {block_call}) \
-                     (br_if $ds_exit (i32.eq (local.get {result}) (i32.const -1))) \
-                     (local.set $off (local.get {result})) \
-                     (local.set {result} (i32.const -1)) \
-                     (br $ds_loop))) \
-                   (block $piv_scan (loop $piv_loop \
-                     (br_if $piv_scan (i32.ge_u (local.get $off) (local.get $len))) \
-                     (if (i32.eq (i32.load8_u (local.get $off)) (i32.const {pivot})) (then \
-                       (local.set $off (i32.add (local.get $off) (i32.const 1))) \
-                       {trail_consume}\
-                       (local.set {result} {pivot_call}) \
-                       (br_if $ds_exit (i32.eq (local.get {result}) (i32.const -1))) \
-                       (local.set $off (local.get {result})) \
-                       (local.set {result} (i32.const -1)) \
-                       (br $ds_loop))) \
-                     (if (i32.or (i32.eq (i32.load8_u (local.get $off)) (i32.const {close})) \
-                                 (i32.eq (i32.load8_u (local.get $off)) (i32.const {open}))) \
-                       (then (br $piv_scan))) \
-                     (local.set $off (i32.add (local.get $off) (i32.const 1))) \
-                     (br $piv_loop) \
-                   )) \
-                   (br $ds_exit) \
-                 )) \
-               )) \
-             (if (i32.eq (local.get {result}) (i32.const -1)) (then \
-               (local.set $off (local.get {start})))) \
-             (local.get {result})"
-        ))
+        self.delim_scan(config, ctx)
     }
 
     // ── Rule-level emission ─────────────────────────────────────────────

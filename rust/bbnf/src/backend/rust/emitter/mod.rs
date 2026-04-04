@@ -1,14 +1,19 @@
 //! Emitter trait implementation for the Rust backend.
 
-use bbnf_ir::{AltDispatch, GrammarIR, IrRule, RuleId, TypeDesc};
+mod alt;
+mod dispatch;
+mod repeat;
+mod ws;
+
+use bbnf_ir::{GrammarIR, IrRule, RuleId, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use crate::backend::analysis::BackendAnalysis;
-use crate::backend::key_dispatch::{KeyClass, KeyDispatchConfig};
+use crate::backend::key_dispatch::KeyDispatchConfig;
 use crate::backend::{
-    AllocStrategy, AltBranchInfo, Emitter, FlattenStrategy, KeyDispatchBranch, SepByConfig,
-    SeqChildGroup, TokenDispatchArmCompiled,
+    AllocStrategy, AltBranchInfo, DelimScanConfig, Emitter, FlattenStrategy, KeyDispatchBranch,
+    SepByConfig, SeqChildGroup, TokenDispatchArmCompiled,
 };
 
 pub use super::emitter_types::{RustEmitCtx, RustEmitter};
@@ -140,8 +145,7 @@ impl Emitter for RustEmitter {
             quote! { ( #( #result_vars ),* ) }
         };
 
-        // Handle Vec result type (flatten would go here).
-        let _ = result_type; // Used for future flatten/scratch logic
+        let _ = result_type;
 
         quote! {
             (|| {
@@ -151,185 +155,58 @@ impl Emitter for RustEmitter {
         }
     }
 
-    // ── Alternations ────────────────────────────────────────────────────
+    // ── Alternations (delegated) ────────────────────────────────────────
 
     fn emit_alt_dispatch(
         &mut self,
-        table: &AltDispatch,
+        table: &bbnf_ir::AltDispatch,
         branches: Vec<(AltBranchInfo, TokenStream)>,
         fallback: Option<(AltBranchInfo, TokenStream)>,
-        _alloc: AllocStrategy,
-        _ctx: &mut Self::Ctx,
+        alloc: AllocStrategy,
+        ctx: &mut Self::Ctx,
     ) -> TokenStream {
-        // Build match arms from dispatch table.
-        let mut arms = Vec::new();
-
-        for (branch_idx, (_info, body)) in branches.iter().enumerate() {
-            // Collect all bytes that map to this branch.
-            let byte_patterns: Vec<u8> = table
-                .table
-                .iter()
-                .enumerate()
-                .filter(|&(_, &b)| b as usize == branch_idx)
-                .map(|(byte_val, _)| byte_val as u8)
-                .collect();
-
-            if byte_patterns.is_empty() {
-                continue;
-            }
-
-            let patterns: Vec<_> = byte_patterns.iter().map(|b| quote! { #b }).collect();
-            arms.push(quote! {
-                #( #patterns )|* => { #body }
-            });
-        }
-
-        // Fallback arm.
-        let fallback_expr = if let Some((_info, fb_body)) = fallback {
-            quote! { _ => { #fb_body } }
-        } else {
-            quote! { _ => None }
-        };
-        arms.push(fallback_expr);
-
-        quote! {
-            if state.offset < state.src.len() {
-                match state.src.as_bytes()[state.offset] {
-                    #( #arms ),*
-                }
-            } else {
-                None
-            }
-        }
+        self.emit_alt_dispatch_impl(table, branches, fallback, alloc, ctx)
     }
 
     fn emit_alt_checkpoint(
         &mut self,
         branches: Vec<(AltBranchInfo, TokenStream)>,
-        _alloc: AllocStrategy,
-        _ctx: &mut Self::Ctx,
+        alloc: AllocStrategy,
+        ctx: &mut Self::Ctx,
     ) -> TokenStream {
-        if branches.len() == 1 {
-            let (_, body) = &branches[0];
-            return body.clone();
-        }
-
-        let mut chain = Vec::new();
-        for (_info, body) in &branches {
-            chain.push(quote! {
-                {
-                    let __cp = state.offset;
-                    let __result = #body;
-                    if __result.is_some() {
-                        return __result;
-                    }
-                    state.offset = __cp;
-                }
-            });
-        }
-
-        quote! {
-            (|| {
-                #( #chain )*
-                None
-            })()
-        }
+        self.emit_alt_checkpoint_impl(branches, alloc, ctx)
     }
 
     fn emit_alt_all_literal(
         &mut self,
         literals: Vec<(String, TokenStream)>,
-        _alloc: AllocStrategy,
-        _ctx: &mut Self::Ctx,
+        alloc: AllocStrategy,
+        ctx: &mut Self::Ctx,
     ) -> TokenStream {
-        // Sequential literal matching — try each in order.
-        let mut arms = Vec::new();
-        for (value, _body) in &literals {
-            let len = value.len();
-            let lit = proc_macro2::Literal::string(value);
-            arms.push(quote! {
-                if state.src[state.offset..].starts_with(#lit) {
-                    state.offset += #len;
-                    return Some(::parse_that::Span::new(state.offset - #len, state.offset, state.src));
-                }
-            });
-        }
-        // Fallback to body outputs for Map(Literal, Constant) patterns.
-        let _ = arms;
-
-        // Simple approach: checkpoint/restore chain.
-        self.emit_alt_checkpoint(
-            literals
-                .into_iter()
-                .map(|(_, body)| {
-                    (
-                        AltBranchInfo {
-                            ty: TypeDesc::Span,
-                            coercion_variant: None,
-                        },
-                        body,
-                    )
-                })
-                .collect(),
-            AllocStrategy::Elide,
-            _ctx,
-        )
+        self.emit_alt_all_literal_impl(literals, alloc, ctx)
     }
 
-    // ── Repetition ──────────────────────────────────────────────────────
+    // ── Repetition (delegated) ──────────────────────────────────────────
 
     fn emit_repeat_many(
         &mut self,
         body: TokenStream,
         lo: u32,
-        _hi: u32,
-        _elem_type: &TypeDesc,
+        hi: u32,
+        elem_type: &TypeDesc,
         ctx: &mut Self::Ctx,
     ) -> TokenStream {
-        let count_var = ctx.fresh("count");
-        let lo_lit = lo as usize;
-        quote! {
-            (|| {
-                let __sp_start = state.offset;
-                let mut #count_var: usize = 0;
-                loop {
-                    let __prev = state.offset;
-                    match #body {
-                        Some(_) => {
-                            #count_var += 1;
-                            if state.offset == __prev { break; }
-                        }
-                        None => break,
-                    }
-                }
-                if #count_var >= #lo_lit {
-                    Some(::parse_that::Span::new(__sp_start, state.offset, state.src))
-                } else {
-                    None
-                }
-            })()
-        }
+        self.emit_repeat_many_impl(body, lo, hi, elem_type, ctx)
     }
 
     fn emit_repeat_optional(
         &mut self,
         body: TokenStream,
-        _inner_type: &TypeDesc,
-        _alloc: AllocStrategy,
-        _ctx: &mut Self::Ctx,
+        inner_type: &TypeDesc,
+        alloc: AllocStrategy,
+        ctx: &mut Self::Ctx,
     ) -> TokenStream {
-        quote! {
-            {
-                let __cp = state.offset;
-                match #body {
-                    Some(__v) => Some(Some(__v)),
-                    None => {
-                        state.offset = __cp;
-                        Some(None)
-                    }
-                }
-            }
-        }
+        self.emit_repeat_optional_impl(body, inner_type, alloc, ctx)
     }
 
     fn emit_sep_by(
@@ -337,51 +214,10 @@ impl Emitter for RustEmitter {
         element: TokenStream,
         separator: TokenStream,
         config: &SepByConfig,
-        _elem_type: &TypeDesc,
+        elem_type: &TypeDesc,
         ctx: &mut Self::Ctx,
     ) -> TokenStream {
-        let count_var = ctx.fresh("count");
-        let lo_lit = config.lo as usize;
-        quote! {
-            (|| {
-                let __sp_start = state.offset;
-                let mut #count_var: usize = 0;
-
-                // First element.
-                match #element {
-                    Some(_) => { #count_var += 1; }
-                    None => {
-                        return if #count_var >= #lo_lit {
-                            Some(::parse_that::Span::new(__sp_start, state.offset, state.src))
-                        } else {
-                            None
-                        };
-                    }
-                }
-
-                // Separator + element loop.
-                loop {
-                    let __cp = state.offset;
-                    match #separator {
-                        Some(_) => {}
-                        None => break,
-                    }
-                    match #element {
-                        Some(_) => { #count_var += 1; }
-                        None => {
-                            state.offset = __cp;
-                            break;
-                        }
-                    }
-                }
-
-                if #count_var >= #lo_lit {
-                    Some(::parse_that::Span::new(__sp_start, state.offset, state.src))
-                } else {
-                    None
-                }
-            })()
-        }
+        self.emit_sep_by_impl(element, separator, config, elem_type, ctx)
     }
 
     // ── References ──────────────────────────────────────────────────────
@@ -547,102 +383,39 @@ impl Emitter for RustEmitter {
         }
     }
 
+    // ── Whitespace (delegated) ──────────────────────────────────────────
+
     fn emit_ws_trim(
         &mut self,
         ws_pattern: Option<&str>,
-        _ctx: &mut Self::Ctx,
+        ctx: &mut Self::Ctx,
     ) -> TokenStream {
-        if let Some(pattern) = ws_pattern {
-            let opts =
-                crate::generate::regex::EmitOpts::new(&crate::generate::regex::CostModel::DEFAULT);
-            let code = crate::generate::regex::emit_regex(pattern, &opts);
-            quote! { { #code; Some(()) } }
-        } else {
-            quote! { { ::parse_that::trim_leading_whitespace_mut(state); Some(()) } }
-        }
+        self.emit_ws_trim_impl(ws_pattern, ctx)
     }
 
     fn emit_with_ws_trim(
         &mut self,
         inner: TokenStream,
         ws_pattern: Option<&str>,
-        _ctx: &mut Self::Ctx,
+        ctx: &mut Self::Ctx,
     ) -> TokenStream {
-        let trim = if let Some(pattern) = ws_pattern {
-            let opts =
-                crate::generate::regex::EmitOpts::new(&crate::generate::regex::CostModel::DEFAULT);
-            let code = crate::generate::regex::emit_regex(pattern, &opts);
-            quote! { #code; }
-        } else {
-            quote! { ::parse_that::trim_leading_whitespace_mut(state); }
-        };
-        quote! {
-            {
-                #trim
-                let __ws_inner = #inner;
-                #trim
-                __ws_inner
-            }
-        }
+        self.emit_with_ws_trim_impl(inner, ws_pattern, ctx)
     }
 
-    // ── Key dispatch ────────────────────────────────────────────────────
+    // ── Key dispatch (delegated) ────────────────────────────────────────
 
     fn emit_key_dispatch(
         &mut self,
         config: &KeyDispatchConfig,
         branches: Vec<KeyDispatchBranch<TokenStream>>,
         fallback: Option<(AltBranchInfo, TokenStream)>,
-        _alloc: AllocStrategy,
+        alloc: AllocStrategy,
         ctx: &mut Self::Ctx,
     ) -> TokenStream {
-        let cp = ctx.fresh("kd_cp");
-        let scanner = match config.key_class {
-            KeyClass::Identifier => quote! { ::parse_that::scan_ident(state) },
-            KeyClass::QuotedString { .. } => quote! { ::parse_that::scan_string_quoted(state) },
-        };
-        let arm_checks: Vec<TokenStream> = branches
-            .into_iter()
-            .map(|kd| {
-                let comparisons: Vec<TokenStream> = kd
-                    .key_bytes
-                    .iter()
-                    .map(|key| {
-                        let byte_lits: Vec<proc_macro2::Literal> =
-                            key.iter().map(|b| proc_macro2::Literal::byte_character(*b)).collect();
-                        let len = key.len();
-                        quote! { (__kd_len == #len && __kd_bytes == &[#(#byte_lits),*]) }
-                    })
-                    .collect();
-                let body = kd.body;
-                quote! {
-                    if #(#comparisons)||* {
-                        state.offset = #cp;
-                        return #body;
-                    }
-                }
-            })
-            .collect();
-        let fallback_expr = if let Some((_, fb)) = fallback {
-            fb
-        } else {
-            quote! { None }
-        };
-        quote! {
-            {
-                let #cp = state.offset;
-                if let Some(ref __kd_s) = #scanner {
-                    let __kd_bytes = &state.src_bytes[__kd_s.start..__kd_s.end];
-                    let __kd_len = __kd_bytes.len();
-                    #(#arm_checks)*
-                }
-                state.offset = #cp;
-                #fallback_expr
-            }
-        }
+        self.emit_key_dispatch_impl(config, branches, fallback, alloc, ctx)
     }
 
-    // ── Token dispatch ─────────────────────────────────────────────────
+    // ── Token dispatch (delegated) ─────────────────────────────────────
 
     fn emit_token_dispatch(
         &mut self,
@@ -651,53 +424,17 @@ impl Emitter for RustEmitter {
         fallback: TokenStream,
         ctx: &mut Self::Ctx,
     ) -> TokenStream {
-        let token_var = ctx.fresh("tok");
-        let mut arm_checks = Vec::new();
-        for arm in &arms {
-            let patterns: Vec<TokenStream> = arm.patterns.iter().map(|pat| {
-                let byte_lits: Vec<proc_macro2::Literal> =
-                    pat.iter().map(|b| proc_macro2::Literal::byte_character(*b)).collect();
-                let len = pat.len();
-                quote! { (__td_len == #len && __td_bytes == &[#(#byte_lits),*]) }
-            }).collect();
-            let cont = &arm.continuation;
-            if let Some(guard) = arm.guard_byte {
-                arm_checks.push(quote! {
-                    if (#(#patterns)||*) && state.offset < state.src.len()
-                        && state.src.as_bytes()[state.offset] == #guard
-                    {
-                        return #cont;
-                    }
-                });
-            } else {
-                arm_checks.push(quote! {
-                    if #(#patterns)||* {
-                        return #cont;
-                    }
-                });
-            }
-        }
-        quote! {
-            (|| {
-                if let Some(#token_var) = #token {
-                    let __td_bytes = &state.src_bytes[#token_var.start..#token_var.end];
-                    let __td_len = __td_bytes.len();
-                    #(#arm_checks)*
-                }
-                #fallback
-            })()
-        }
+        self.emit_token_dispatch_impl(token, arms, fallback, ctx)
     }
 
-    // ── Delimiter scan ─────────────────────────────────────────────────
+    // ── Delimiter scan (delegated) ─────────────────────────────────────
 
     fn emit_delim_scan(
         &mut self,
-        _config: &super::super::DelimScanConfig,
-        _ctx: &mut Self::Ctx,
+        config: &DelimScanConfig,
+        ctx: &mut Self::Ctx,
     ) -> Option<TokenStream> {
-        // Rust backend uses the existing monolithic delim_scan path.
-        None
+        self.emit_delim_scan_impl(config, ctx)
     }
 
     // ── Rule-level emission ─────────────────────────────────────────────

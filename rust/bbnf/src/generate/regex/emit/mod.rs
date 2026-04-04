@@ -6,7 +6,7 @@
 
 mod dfa;
 mod generalized;
-mod hir;
+pub mod hir;
 mod negated_class;
 pub(crate) mod scanner_plan;
 pub mod simd;

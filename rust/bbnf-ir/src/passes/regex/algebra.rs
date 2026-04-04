@@ -143,7 +143,7 @@ fn simplify_node(
 // ── Rewrite Rule Implementations ────────────────────────────────────────
 
 /// Remove duplicate regex branches: `R|R` → `R`.
-struct RedundantAlternation;
+pub struct RedundantAlternation;
 
 impl RewriteRule for RedundantAlternation {
     fn name(&self) -> &'static str {
@@ -306,7 +306,7 @@ impl RewriteRule for UnionMerge {
 
 /// Extract the byte set from a single char class regex like `[a-z]` or `[0-9a-fA-F]`.
 /// Returns None for non-char-class patterns.
-fn extract_single_char_class(pattern: &str) -> Option<Vec<u8>> {
+pub fn extract_single_char_class(pattern: &str) -> Option<Vec<u8>> {
     // Must be `[...]` optionally with `+` or `*`.
     let class_str = pattern
         .strip_suffix('+')
@@ -357,7 +357,7 @@ fn extract_single_char_class(pattern: &str) -> Option<Vec<u8>> {
 }
 
 /// Convert a sorted byte set to a character class pattern string.
-fn bytes_to_char_class(bytes: &[u8]) -> String {
+pub fn bytes_to_char_class(bytes: &[u8]) -> String {
     let mut result = String::from("[");
 
     // Build ranges from sorted bytes.
@@ -404,57 +404,5 @@ fn ir_nodes_eq(a: &IrNode, b: &IrNode) -> bool {
                     .all(|(x, y)| ir_nodes_eq(&x.node, &y.node))
         }
         _ => false,
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn extract_char_class_simple() {
-        assert_eq!(
-            extract_single_char_class("[a-z]"),
-            Some((b'a'..=b'z').collect())
-        );
-        assert_eq!(
-            extract_single_char_class("[a-c]"),
-            Some(vec![b'a', b'b', b'c'])
-        );
-    }
-
-    #[test]
-    fn extract_char_class_multi_range() {
-        let result = extract_single_char_class("[0-9a-fA-F]").unwrap();
-        assert!(result.contains(&b'0'));
-        assert!(result.contains(&b'9'));
-        assert!(result.contains(&b'a'));
-        assert!(result.contains(&b'f'));
-        assert!(result.contains(&b'A'));
-        assert!(result.contains(&b'F'));
-    }
-
-    #[test]
-    fn bytes_to_class_roundtrip() {
-        let bytes: Vec<u8> = (b'a'..=b'z').collect();
-        assert_eq!(bytes_to_char_class(&bytes), "[a-z]");
-    }
-
-    #[test]
-    fn redundant_elimination() {
-        let mut strings = vec!["[a-z]".to_string()];
-        let mut branches = vec![
-            AltBranch {
-                node: IrNode::Regex(0),
-                first_set: None,
-            },
-            AltBranch {
-                node: IrNode::Regex(0),
-                first_set: None,
-            },
-        ];
-        let rule = RedundantAlternation;
-        assert!(rule.apply(&mut branches, &mut strings));
-        assert_eq!(branches.len(), 1);
     }
 }

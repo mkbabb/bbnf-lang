@@ -171,7 +171,7 @@ fn emit_scan_loop(
 /// The pivot branch's function handles all the typed field construction via
 /// the normal recursive descent codegen. The scanner just eliminates the
 /// Alt's checkpoint/backtrack overhead by selecting the right branch upfront.
-pub(in crate::backend::rust) fn emit_scan(
+pub fn emit_scan(
     config: &DelimScanConfig,
     ctx: &IrCodegenCtx<'_>,
     mctx: &mut MonoCtx,

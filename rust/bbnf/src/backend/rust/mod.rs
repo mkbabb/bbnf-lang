@@ -23,7 +23,7 @@ pub mod analysis;
 pub mod emitter;
 mod alloc_emit;
 mod alt;
-mod delim_scan;
+pub mod delim_scan;
 mod expr;
 mod generate;
 mod helpers;
@@ -125,7 +125,7 @@ pub(super) fn is_simple_expr(node: &IrNode, mctx: &MonoCtx) -> bool {
 
 /// Context for monolithic code generation — tracks hoisted leaf-parser bindings,
 /// generates unique variable names, and tracks fusion-eligible rules.
-pub(super) struct MonoCtx {
+pub struct MonoCtx {
     pub hoisted: Vec<TokenStream>,
     counter: usize,
     /// Per-rule call mode chosen by shared codegen analysis.

@@ -134,7 +134,7 @@ fn regex_escape_literal(s: &str) -> String {
 /// Check if a regex pattern contains a top-level `|` (pipe) character.
 /// We track parenthesis/bracket depth to avoid false positives from `|` inside
 /// groups like `(?:a|b)` or character classes like `[a|b]`.
-fn pattern_has_top_level_pipe(pattern: &str) -> bool {
+pub fn pattern_has_top_level_pipe(pattern: &str) -> bool {
     let mut depth = 0u32;
     let mut in_bracket = false;
     let mut escape = false;
@@ -163,18 +163,4 @@ fn pattern_has_top_level_pipe(pattern: &str) -> bool {
         }
     }
     false
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn top_level_pipe_detection() {
-        assert!(pattern_has_top_level_pipe("a|b"));
-        assert!(!pattern_has_top_level_pipe("(?:a|b)"));
-        assert!(!pattern_has_top_level_pipe("[a|b]"));
-        assert!(pattern_has_top_level_pipe("(?:a|b)|c"));
-        assert!(!pattern_has_top_level_pipe(r"a\|b"));
-    }
 }

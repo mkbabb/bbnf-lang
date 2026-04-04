@@ -1,9 +1,5 @@
-//! TypeScript backend: emits self-contained recursive descent parser source code.
-//!
-//! Produces direct TS functions with zero runtime dependencies.
-//! Uses discriminated unions for grammar enums, `T | null` for optionals,
-//! `T[]` for vectors, `switch` for dispatch tables.
-
+//! TypeScript backend: generates self-contained TS parser source.
+pub mod code;
 pub mod emitter;
-
-pub use emitter::TsEmitter;
+pub mod helpers;
+pub use code::{TsCode, TsEmitCtx, TsEmitter};

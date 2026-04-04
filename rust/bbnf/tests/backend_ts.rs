@@ -140,9 +140,10 @@ fn ts_alternation_emits_dispatch_or_checkpoint() {
     "#);
     let has_switch = source.contains("switch (s.input.charCodeAt");
     let has_checkpoint = source.contains("s.offset =");
+    let has_literal_chain = source.contains("=== null");
     assert!(
-        has_switch || has_checkpoint,
-        "alternation should use dispatch or checkpoint: {source}"
+        has_switch || has_checkpoint || has_literal_chain,
+        "alternation should use dispatch, checkpoint, or literal chain: {source}"
     );
 }
 

@@ -12,8 +12,8 @@ use bbnf_ir::{FnDescriptor, GrammarIR, IrNode, RuleId, TypeDesc};
 
 use super::analysis::BackendAnalysis;
 use super::{
-    AllocStrategy, AltBranchInfo, CallStrategy, Emitter, FlattenStrategy, SepByConfig,
-    SeqChildGroup,
+    AllocStrategy, AltBranchInfo, CallStrategy, Emitter, FlattenStrategy, KeyDispatchBranch,
+    SepByConfig, SeqChildGroup, TokenDispatchArmCompiled,
 };
 
 // ─── Driver State ───────────────────────────────────────────────────────────
@@ -242,16 +242,35 @@ pub fn compile_node<E: Emitter>(
         // ── Lexer-parser fusion ────────────────────────────────────────
         IrNode::TokenDispatch {
             token,
-            arms: _,
+            arms,
             fallback,
         } => {
-            // TokenDispatch is complex and Rust-specific in current implementation.
-            // For now, compile token + fallback path. Full dispatch support to come.
-            // Each backend will need to handle this eventually.
+            if arms.is_empty() {
+                let token_out =
+                    compile_node(token, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+                let fallback_out = compile_node(fallback, alloc, ir, dstate, emitter, ctx);
+                return emitter.emit_next(token_out, fallback_out, ctx);
+            }
             let token_out = compile_node(token, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+            let compiled_arms: Vec<TokenDispatchArmCompiled<E::Output>> = arms
+                .iter()
+                .map(|arm| {
+                    let patterns = arm
+                        .patterns
+                        .iter()
+                        .map(|&sid| super::unescape_literal(ir.get_string(sid)).into_bytes())
+                        .collect();
+                    let continuation =
+                        compile_node(&arm.continuation, alloc, ir, dstate, emitter, ctx);
+                    TokenDispatchArmCompiled {
+                        patterns,
+                        guard_byte: arm.guard_byte,
+                        continuation,
+                    }
+                })
+                .collect();
             let fallback_out = compile_node(fallback, alloc, ir, dstate, emitter, ctx);
-            // TODO: proper token dispatch via emitter method
-            emitter.emit_next(token_out, fallback_out, ctx)
+            emitter.emit_token_dispatch(token_out, compiled_arms, fallback_out, ctx)
         }
     }
 }
@@ -387,7 +406,19 @@ fn compile_alt<E: Emitter>(
         let mut fallback = None;
 
         for (i, (branch, info)) in branches.iter().zip(branch_infos.into_iter()).enumerate() {
+            // Set guaranteed byte for single-byte dispatch branches.
+            let byte_patterns: Vec<u8> = table
+                .table
+                .iter()
+                .enumerate()
+                .filter(|&(_, &b)| b as usize == i)
+                .map(|(bv, _)| bv as u8)
+                .collect();
+            if byte_patterns.len() == 1 {
+                dstate.dispatch_guaranteed_byte = Some(byte_patterns[0]);
+            }
             let output = compile_node(&branch.node, alloc, ir, dstate, emitter, ctx);
+            dstate.dispatch_guaranteed_byte = None;
             if table.fallback_idx == Some(i as u8) {
                 fallback = Some((info, output));
             } else {
@@ -396,6 +427,53 @@ fn compile_alt<E: Emitter>(
         }
 
         return emitter.emit_alt_dispatch(table, branch_outputs, fallback, alloc, ctx);
+    }
+
+    // Decision: try key dispatch.
+    if let Some((mut config, detected, fallback_idx)) =
+        super::key_dispatch::try_detect(branches, ir)
+    {
+        // Register scanner regex.
+        let pattern = super::key_dispatch::key_class_regex_pattern(&config.key_class);
+        config.key_scanner_regex_id = Some(dstate.register_regex(pattern));
+
+        let mut kd_branches = Vec::with_capacity(detected.len());
+        for det in &detected {
+            let branch = &branches[det.branch_idx];
+            let info = AltBranchInfo {
+                ty: ir
+                    .type_map
+                    .as_ref()
+                    .and_then(|tm| tm.node_type(&branch.node).cloned())
+                    .unwrap_or(TypeDesc::Span),
+                coercion_variant: None,
+            };
+            let body = compile_node(&branch.node, alloc, ir, dstate, emitter, ctx);
+            let key_bytes = det
+                .key_literals
+                .iter()
+                .map(|k| k.as_bytes().to_vec())
+                .collect();
+            kd_branches.push(KeyDispatchBranch {
+                key_bytes,
+                body,
+                info,
+            });
+        }
+        let fallback = fallback_idx.map(|fi| {
+            let branch = &branches[fi];
+            let info = AltBranchInfo {
+                ty: ir
+                    .type_map
+                    .as_ref()
+                    .and_then(|tm| tm.node_type(&branch.node).cloned())
+                    .unwrap_or(TypeDesc::Span),
+                coercion_variant: None,
+            };
+            let body = compile_node(&branch.node, alloc, ir, dstate, emitter, ctx);
+            (info, body)
+        });
+        return emitter.emit_key_dispatch(&config, kd_branches, fallback, alloc, ctx);
     }
 
     // Fallback: checkpoint chain.
@@ -569,7 +647,7 @@ fn compile_wrap<E: Emitter>(
                 // Extract terminator byte(s) from close literal.
                 let terminator_bytes = if let IrNode::Literal(sid) = close {
                     let raw = ir.get_string(*sid);
-                    let unesc = super::rust::unescape_literal(raw);
+                    let unesc = super::unescape_literal(raw);
                     Some(unesc.into_bytes())
                 } else {
                     None
@@ -609,6 +687,13 @@ fn compile_wrap<E: Emitter>(
         }
     }
 
+    // Decision: try delimiter-scan optimization.
+    if let Some(config) = super::delim_scan::try_detect(open, middle, close, ir) {
+        if let Some(output) = emitter.emit_delim_scan(&config, ctx) {
+            return output;
+        }
+    }
+
     // Generic wrap: open >> middle << close.
     let open_out = compile_node(open, AllocStrategy::Elide, ir, dstate, emitter, ctx);
     let middle_out = compile_node(middle, alloc, ir, dstate, emitter, ctx);
@@ -624,7 +709,7 @@ fn compile_wrap<E: Emitter>(
 /// If the literal is a single byte matching the guaranteed byte, consumes
 /// the guarantee and returns `Some(byte)`.
 fn check_guaranteed_byte(raw_literal: &str, dstate: &mut DriverState) -> Option<u8> {
-    let unescaped = super::rust::unescape_literal(raw_literal);
+    let unescaped = super::unescape_literal(raw_literal);
     let bytes = unescaped.as_bytes();
     if bytes.len() == 1 {
         if let Some(guaranteed) = dstate.dispatch_guaranteed_byte {

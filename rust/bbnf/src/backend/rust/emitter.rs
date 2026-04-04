@@ -1,57 +1,17 @@
-//! Rust backend: implements [`Emitter`] to produce `proc_macro2::TokenStream`.
-//!
-//! This module bridges the shared compilation driver with the existing Rust codegen
-//! infrastructure. Each trait method produces Rust code via `quote!`.
-
-use std::collections::HashSet;
+//! Emitter trait implementation for the Rust backend.
 
 use bbnf_ir::{AltDispatch, GrammarIR, IrRule, RuleId, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use crate::backend::analysis::BackendAnalysis;
+use crate::backend::key_dispatch::{KeyClass, KeyDispatchConfig};
 use crate::backend::{
-    AllocStrategy, AltBranchInfo, Emitter, FlattenStrategy, SepByConfig, SeqChildGroup,
+    AllocStrategy, AltBranchInfo, Emitter, FlattenStrategy, KeyDispatchBranch, SepByConfig,
+    SeqChildGroup, TokenDispatchArmCompiled,
 };
 
-// ─── Rust Emitter ───────────────────────────────────────────────────────────
-
-/// Rust code emitter implementing the [`Emitter`] trait.
-///
-/// Produces `proc_macro2::TokenStream` for monolithic recursive descent parsers
-/// with slab allocation.
-pub struct RustEmitter {
-    /// Enum name (e.g., `JsonParserEnum`).
-    pub enum_ident: syn::Ident,
-    /// Whether prettify codegen is active.
-    pub effective_prettify: bool,
-    /// Rules with fused number scan+convert.
-    pub fused_number_rules: HashSet<RuleId>,
-}
-
-/// Mutable context for Rust emission — backend-specific state.
-pub struct RustEmitCtx {
-    /// Hoisted let-bindings emitted before rule bodies.
-    pub hoisted: Vec<TokenStream>,
-    /// Counter for generating unique variable names.
-    pub counter: usize,
-}
-
-impl RustEmitCtx {
-    pub fn new() -> Self {
-        Self {
-            hoisted: Vec::new(),
-            counter: 0,
-        }
-    }
-
-    /// Generate a fresh unique identifier.
-    pub fn fresh(&mut self, prefix: &str) -> syn::Ident {
-        let id = self.counter;
-        self.counter += 1;
-        format_ident!("__{}{}", prefix, id)
-    }
-}
+pub use super::emitter_types::{RustEmitCtx, RustEmitter};
 
 // ─── Emitter Implementation ────────────────────────────────────────────────
 
@@ -624,6 +584,120 @@ impl Emitter for RustEmitter {
                 __ws_inner
             }
         }
+    }
+
+    // ── Key dispatch ────────────────────────────────────────────────────
+
+    fn emit_key_dispatch(
+        &mut self,
+        config: &KeyDispatchConfig,
+        branches: Vec<KeyDispatchBranch<TokenStream>>,
+        fallback: Option<(AltBranchInfo, TokenStream)>,
+        _alloc: AllocStrategy,
+        ctx: &mut Self::Ctx,
+    ) -> TokenStream {
+        let cp = ctx.fresh("kd_cp");
+        let scanner = match config.key_class {
+            KeyClass::Identifier => quote! { ::parse_that::scan_ident(state) },
+            KeyClass::QuotedString { .. } => quote! { ::parse_that::scan_string_quoted(state) },
+        };
+        let arm_checks: Vec<TokenStream> = branches
+            .into_iter()
+            .map(|kd| {
+                let comparisons: Vec<TokenStream> = kd
+                    .key_bytes
+                    .iter()
+                    .map(|key| {
+                        let byte_lits: Vec<proc_macro2::Literal> =
+                            key.iter().map(|b| proc_macro2::Literal::byte_character(*b)).collect();
+                        let len = key.len();
+                        quote! { (__kd_len == #len && __kd_bytes == &[#(#byte_lits),*]) }
+                    })
+                    .collect();
+                let body = kd.body;
+                quote! {
+                    if #(#comparisons)||* {
+                        state.offset = #cp;
+                        return #body;
+                    }
+                }
+            })
+            .collect();
+        let fallback_expr = if let Some((_, fb)) = fallback {
+            fb
+        } else {
+            quote! { None }
+        };
+        quote! {
+            {
+                let #cp = state.offset;
+                if let Some(ref __kd_s) = #scanner {
+                    let __kd_bytes = &state.src_bytes[__kd_s.start..__kd_s.end];
+                    let __kd_len = __kd_bytes.len();
+                    #(#arm_checks)*
+                }
+                state.offset = #cp;
+                #fallback_expr
+            }
+        }
+    }
+
+    // ── Token dispatch ─────────────────────────────────────────────────
+
+    fn emit_token_dispatch(
+        &mut self,
+        token: TokenStream,
+        arms: Vec<TokenDispatchArmCompiled<TokenStream>>,
+        fallback: TokenStream,
+        ctx: &mut Self::Ctx,
+    ) -> TokenStream {
+        let token_var = ctx.fresh("tok");
+        let mut arm_checks = Vec::new();
+        for arm in &arms {
+            let patterns: Vec<TokenStream> = arm.patterns.iter().map(|pat| {
+                let byte_lits: Vec<proc_macro2::Literal> =
+                    pat.iter().map(|b| proc_macro2::Literal::byte_character(*b)).collect();
+                let len = pat.len();
+                quote! { (__td_len == #len && __td_bytes == &[#(#byte_lits),*]) }
+            }).collect();
+            let cont = &arm.continuation;
+            if let Some(guard) = arm.guard_byte {
+                arm_checks.push(quote! {
+                    if (#(#patterns)||*) && state.offset < state.src.len()
+                        && state.src.as_bytes()[state.offset] == #guard
+                    {
+                        return #cont;
+                    }
+                });
+            } else {
+                arm_checks.push(quote! {
+                    if #(#patterns)||* {
+                        return #cont;
+                    }
+                });
+            }
+        }
+        quote! {
+            (|| {
+                if let Some(#token_var) = #token {
+                    let __td_bytes = &state.src_bytes[#token_var.start..#token_var.end];
+                    let __td_len = __td_bytes.len();
+                    #(#arm_checks)*
+                }
+                #fallback
+            })()
+        }
+    }
+
+    // ── Delimiter scan ─────────────────────────────────────────────────
+
+    fn emit_delim_scan(
+        &mut self,
+        _config: &super::super::DelimScanConfig,
+        _ctx: &mut Self::Ctx,
+    ) -> Option<TokenStream> {
+        // Rust backend uses the existing monolithic delim_scan path.
+        None
     }
 
     // ── Rule-level emission ─────────────────────────────────────────────

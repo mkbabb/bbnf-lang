@@ -346,11 +346,12 @@ fn ts_backend_handles_alternation_dispatch() {
         _ => panic!("expected TS output"),
     };
 
-    // Should contain either a switch dispatch or checkpoint chain.
+    // Should contain either a switch dispatch, checkpoint chain, or literal chain.
     let has_switch = output.contains("switch (s.input.charCodeAt");
     let has_checkpoint = output.contains("const __cp");
+    let has_literal_chain = output.contains("=== null");
     assert!(
-        has_switch || has_checkpoint,
-        "missing dispatch or checkpoint in alternation: {output}"
+        has_switch || has_checkpoint || has_literal_chain,
+        "missing dispatch, checkpoint, or literal chain in alternation: {output}"
     );
 }

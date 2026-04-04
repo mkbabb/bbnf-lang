@@ -33,6 +33,22 @@ pub struct WasmEmitter {
     pub ws_regex_id: Option<usize>,
 }
 
+impl WasmEmitter {
+    /// ASCII whitespace skip as side-effect only (no return value).
+    fn ascii_ws_side_effect() -> String {
+        "(block $ws_done (loop $ws_loop \
+           (br_if $ws_done (i32.ge_u (local.get $off) (local.get $len))) \
+           (br_if $ws_done (i32.and \
+             (i32.ne (i32.load8_u (local.get $off)) (i32.const 32)) \
+             (i32.and (i32.ne (i32.load8_u (local.get $off)) (i32.const 9)) \
+               (i32.and (i32.ne (i32.load8_u (local.get $off)) (i32.const 10)) \
+                 (i32.ne (i32.load8_u (local.get $off)) (i32.const 13)))))) \
+           (local.set $off (i32.add (local.get $off) (i32.const 1))) \
+           (br $ws_loop) \
+         )) ".to_string()
+    }
+}
+
 /// Mutable context for WASM emission.
 pub struct WasmEmitCtx {
     /// Local variable counter for unique names.
@@ -604,26 +620,43 @@ impl Emitter for WasmEmitter {
         ctx: &mut WasmEmitCtx,
     ) -> String {
         let result = ctx.fresh("ws_inner");
-        let ws_call = self.emit_ws_trim(ws_pattern, ctx);
-        // For custom ws: the host regex returns new offset; update $off.
-        let ws_block = if ws_pattern.is_some() {
-            format!("(local.set $off {ws_call}) ")
+        // Side-effect-only ws skip (no return value — just advances $off).
+        let ws_side_effect = if let Some(pattern) = ws_pattern {
+            if pattern.contains("/*") || pattern.contains(r"\/\*") {
+                // CSS comment-aware ws: inline state machine (modifies $off in place).
+                "(block $ws_done (loop $ws_loop \
+                   (br_if $ws_done (i32.ge_u (local.get $off) (local.get $len))) \
+                   (if (i32.or \
+                     (i32.or (i32.eq (i32.load8_u (local.get $off)) (i32.const 32)) (i32.eq (i32.load8_u (local.get $off)) (i32.const 9))) \
+                     (i32.or (i32.eq (i32.load8_u (local.get $off)) (i32.const 10)) (i32.eq (i32.load8_u (local.get $off)) (i32.const 13)))) \
+                     (then (local.set $off (i32.add (local.get $off) (i32.const 1))) (br $ws_loop))) \
+                   (if (i32.and (i32.lt_u (i32.add (local.get $off) (i32.const 1)) (local.get $len)) \
+                     (i32.and (i32.eq (i32.load8_u (local.get $off)) (i32.const 47)) (i32.eq (i32.load8_u (i32.add (local.get $off) (i32.const 1))) (i32.const 42)))) \
+                     (then (local.set $off (i32.add (local.get $off) (i32.const 2))) \
+                       (block $c_done (loop $c_loop \
+                         (br_if $c_done (i32.ge_u (i32.add (local.get $off) (i32.const 1)) (local.get $len))) \
+                         (if (i32.and (i32.eq (i32.load8_u (local.get $off)) (i32.const 42)) (i32.eq (i32.load8_u (i32.add (local.get $off) (i32.const 1))) (i32.const 47))) \
+                           (then (local.set $off (i32.add (local.get $off) (i32.const 2))) (br $ws_loop))) \
+                         (local.set $off (i32.add (local.get $off) (i32.const 1))) (br $c_loop) \
+                       )) )) \
+                 )) ".to_string()
+            } else if let Some(ws_id) = self.ws_regex_id {
+                format!("(local.set $off (call $__match_regex (i32.const {ws_id}) (local.get $off) (local.get $len))) ")
+            } else {
+                Self::ascii_ws_side_effect()
+            }
         } else {
-            // ASCII ws loop already updates $off in-place.
-            format!("{ws_call} ")
+            Self::ascii_ws_side_effect()
         };
-        let ws_loop = ws_block.clone();
         // ws_trim → inner → check null → ws_trim → return result.
-        // Do NOT use `return` for null propagation — it exits the entire function.
-        // Instead, return -1 as the value if inner fails.
         format!(
-            "{ws_block} \
+            "{ws_side_effect}\
              (local.set {result} {inner}) \
              (if (result i32) (i32.eq (local.get {result}) (i32.const -1)) \
                (then (i32.const -1)) \
                (else \
                  (local.set $off (local.get {result})) \
-                 {ws_block} \
+                 {ws_side_effect}\
                  (local.get $off)))"
         )
     }

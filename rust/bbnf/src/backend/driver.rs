@@ -128,6 +128,9 @@ pub fn compile_grammar<E: Emitter>(
         let body = if let Some(override_body) = emitter.emit_rule_body_override(rule, ir, ctx) {
             override_body
         } else {
+            // Non-transparent rule bodies are compiled with Elide (raw types).
+            // The rule function wrapper handles variant wrapping.
+            // Transparent rule bodies also use Elide (passed through directly).
             compile_node(&rule.body, AllocStrategy::Elide, ir, dstate, emitter, ctx)
         };
 

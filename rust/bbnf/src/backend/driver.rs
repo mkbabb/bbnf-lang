@@ -530,8 +530,10 @@ fn compile_repeat<E: Emitter>(
     // Pattern: Repeat(Skip(element, Repeat(separator, 0, 1)), lo, MAX)
     if hi == u32::MAX {
         if let Some((element, separator)) = detect_sep_by(inner) {
+            // Use vec_elem_type for sep_by (scratch Vec collection context).
             let elem_type = type_map
-                .and_then(|tm| tm.node_type(element).cloned())
+                .and_then(|tm| tm.vec_elem_type(element).cloned())
+                .or_else(|| type_map.and_then(|tm| tm.node_type(element).cloned()))
                 .unwrap_or(TypeDesc::Span);
 
             let element_out = compile_node(element, AllocStrategy::Elide, ir, dstate, emitter, ctx);
@@ -562,8 +564,14 @@ fn compile_repeat<E: Emitter>(
         let body = compile_node(inner, inner_alloc, ir, dstate, emitter, ctx);
         emitter.emit_repeat_optional(body, &inner_type, alloc, ctx)
     } else {
+        // Use vec_elem_type for repeat-many: this is the element type for
+        // scratch Vec collection, not the node's projected type. Falls back
+        // to node_type → Span if vec_elem_type not populated.
         let elem_type = type_map
-            .and_then(|tm| tm.node_type(inner).cloned())
+            .and_then(|tm| tm.vec_elem_type(inner).cloned())
+            .or_else(|| {
+                type_map.and_then(|tm| tm.node_type(inner).cloned())
+            })
             .unwrap_or(TypeDesc::Span);
         let body = compile_node(inner, AllocStrategy::Elide, ir, dstate, emitter, ctx);
         emitter.emit_repeat_many(body, lo, hi, &elem_type, ctx)

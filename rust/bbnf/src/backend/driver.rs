@@ -545,7 +545,13 @@ fn compile_repeat<E: Emitter>(
         let inner_type = type_map
             .and_then(|tm| tm.node_type(inner).cloned())
             .unwrap_or(TypeDesc::Span);
-        let body = compile_node(inner, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+        // BoxedEnum optionals need Alloc so the inner Ref produces &'a Enum.
+        let inner_alloc = if matches!(inner_type, TypeDesc::BoxedEnum) {
+            AllocStrategy::Alloc
+        } else {
+            AllocStrategy::Elide
+        };
+        let body = compile_node(inner, inner_alloc, ir, dstate, emitter, ctx);
         emitter.emit_repeat_optional(body, &inner_type, alloc, ctx)
     } else {
         let elem_type = type_map

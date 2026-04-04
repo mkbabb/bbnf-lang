@@ -113,8 +113,8 @@ impl RustEmitter {
         &mut self,
         body: TokenStream,
         inner_type: &TypeDesc,
-        alloc: AllocStrategy,
-        ctx: &mut RustEmitCtx,
+        _alloc: AllocStrategy,
+        _ctx: &mut RustEmitCtx,
     ) -> TokenStream {
         // Span case: Optional(Span) collapses to Span — zero-width on failure.
         if *inner_type == TypeDesc::Span {
@@ -129,25 +129,9 @@ impl RustEmitter {
             };
         }
 
-        // BoxedEnum case: slab-allocate on success when alloc is requested.
-        if matches!(inner_type, TypeDesc::BoxedEnum) && alloc == AllocStrategy::Alloc {
-            let ir_ctx = ctx.ir_ctx();
-            let alloc_expr = ir_ctx.emit_alloc(&quote! { __v });
-            return quote! {
-                {
-                    let __cp = state.offset;
-                    match (|| #body)() {
-                        Some(__v) => Some(Some(#alloc_expr)),
-                        None => {
-                            state.offset = __cp;
-                            Some(None)
-                        }
-                    }
-                }
-            };
-        }
-
-        // General case: Option<T>.
+        // General case: body is already compiled with appropriate allocation.
+        // The driver passes Alloc for BoxedEnum inner types, so emit_call
+        // already wraps in slab alloc. No double-allocation needed here.
         quote! {
             {
                 let __cp = state.offset;

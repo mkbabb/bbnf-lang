@@ -172,23 +172,25 @@ impl RustEmitter {
     ) -> TokenStream {
         let lo_lit = config.lo as usize;
 
-        // Terminator byte early-exit check.
-        let terminator_check = if let Some(ref tb) = config.terminator_bytes {
+        // Terminator byte condition expression (no control flow).
+        let terminator_cond = if let Some(ref tb) = config.terminator_bytes {
             if tb.len() == 1 {
                 let byte = tb[0];
-                quote! {
-                    if state.offset < state.src.len()
+                Some(quote! {
+                    state.offset < state.src.len()
                         && state.src.as_bytes()[state.offset] == #byte
-                    {
-                        break;
-                    }
-                }
+                })
             } else {
-                quote! {}
+                None
             }
         } else {
-            quote! {}
+            None
         };
+
+        // `break` version for inside loop.
+        let terminator_break = terminator_cond.as_ref().map(|cond| {
+            quote! { if #cond { break; } }
+        }).unwrap_or_default();
 
         // Span case: collapse to a single Span.
         if *elem_type == TypeDesc::Span {
@@ -198,7 +200,6 @@ impl RustEmitter {
                     let __sp_start = state.offset;
                     let mut #count_var: usize = 0;
 
-                    #terminator_check
                     match #element {
                         Some(_) => { #count_var += 1; }
                         None => {
@@ -211,7 +212,7 @@ impl RustEmitter {
                     }
 
                     loop {
-                        #terminator_check
+                        #terminator_break
                         let __cp = state.offset;
                         match #separator {
                             Some(_) => {}
@@ -251,7 +252,6 @@ impl RustEmitter {
                 #init_code
                 let mut #count_var: usize = 0;
 
-                #terminator_check
                 match #element {
                     Some(__value) => {
                         #push_code;
@@ -268,7 +268,7 @@ impl RustEmitter {
                 }
 
                 loop {
-                    #terminator_check
+                    #terminator_break
                     let __cp = state.offset;
                     match #separator {
                         Some(_) => {}

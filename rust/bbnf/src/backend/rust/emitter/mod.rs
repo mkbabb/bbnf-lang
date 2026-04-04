@@ -728,6 +728,8 @@ impl Emitter for RustEmitter {
             quote! {}
         };
 
+        let extra = &self.extra_impl_methods;
+
         quote! {
             use ::parse_that::*;
 
@@ -741,6 +743,7 @@ impl Emitter for RustEmitter {
             impl #ident {
                 #depth_counter
                 #( #rule_functions )*
+                #extra
             }
         }
     }

@@ -29,7 +29,7 @@ pub fn generate_all(
 ) -> proc_macro2::TokenStream {
     let ir = &prepared.ir;
 
-    // ── Slab-mode monolithic methods (the only data-producing path) ───────
+    // ── Build the codegen context (type bridge, scratch types, etc.) ─────
 
     let mut ctx = ir_types::IrCodegenCtx::new(
         ir,
@@ -43,33 +43,7 @@ pub fn generate_all(
     ctx.fused_number_rules = prepared.prep.analysis.fused_number_rules.clone();
     ctx.operator_chain_rules = prepared.prep.analysis.operator_chain_rules.clone();
 
-    let grammar_arr = ir_enums::generate_grammar_arr(parser_attrs, ident);
-
-    // Data-producing codegen: enum + parser methods + slab context.
-    // Always generated — prettify parsers also need the data path for SlabCtx.
-    let grammar_enum = ir_enums::generate_enum(&ctx);
-    let parser_methods = codegen::generate_monolithic(ir, &ctx);
-
-    let has_recovers = ctx
-        .ir
-        .rules
-        .iter()
-        .any(|r| r.meta.directives.recover.is_some())
-        && !ctx.parser_attrs.skip_recover;
-    let enum_ident = &ctx.enum_ident;
-    let recovered_static = if has_recovers {
-        let recovered_ident = ctx.recovered_static_ident();
-        quote! {
-            static #recovered_ident: #enum_ident<'static> = #enum_ident::Recovered;
-        }
-    } else {
-        quote! {}
-    };
-
-    let (alloc_ctx_struct, alloc_ctx_helper) = ctx.generate_alloc_ctx();
-    let alloc_helper_code = quote! { #alloc_ctx_struct #alloc_ctx_helper };
-
-    // ── Fused parse+format ──────────────────────────────────────────────────
+    // ── Generate prettify methods first (injected into impl block) ───────
 
     let prettify_methods = if prepared.prep.effective_prettify {
         codegen::prettify::generate_monolithic_prettify(ir, &ctx)
@@ -77,18 +51,22 @@ pub fn generate_all(
         quote! {}
     };
 
-    quote! {
-        use ::parse_that::*;
+    // ── Shared-driver parse codegen ─────────────────────────────────────
 
-        #grammar_arr
+    let analysis = crate::backend::analysis::BackendAnalysis::default();
+    let call_strategies = crate::pipeline::compute_call_strategies(ir);
+    let mut dstate = crate::backend::driver::DriverState::new(call_strategies);
 
-        #grammar_enum
-        #alloc_helper_code
-        #recovered_static
+    let mut emitter = crate::backend::rust::emitter_types::RustEmitter {
+        enum_ident: ctx.enum_ident.clone(),
+        effective_prettify: prepared.prep.effective_prettify,
+        fused_number_rules: ctx.fused_number_rules.clone(),
+        operator_chain_rules: ctx.operator_chain_rules.clone(),
+        extra_impl_methods: prettify_methods,
+    };
+    let mut emit_ctx = crate::backend::rust::emitter_types::RustEmitCtx::new(&ctx);
 
-        impl #ident {
-            #parser_methods
-            #prettify_methods
-        }
-    }
+    crate::backend::driver::compile_grammar(
+        ir, &analysis, &mut dstate, &mut emitter, &mut emit_ctx,
+    )
 }

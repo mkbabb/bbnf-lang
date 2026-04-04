@@ -19,6 +19,8 @@ pub struct RustEmitter {
     pub effective_prettify: bool,
     pub fused_number_rules: HashSet<RuleId>,
     pub operator_chain_rules: HashSet<RuleId>,
+    /// Extra methods to inject into the `impl` block (e.g., prettify methods).
+    pub extra_impl_methods: TokenStream,
 }
 
 /// Mutable context for Rust emission.

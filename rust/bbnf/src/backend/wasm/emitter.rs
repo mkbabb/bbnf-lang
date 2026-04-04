@@ -586,9 +586,48 @@ impl Emitter for WasmEmitter {
         ws_pattern: Option<&str>,
         _ctx: &mut WasmEmitCtx,
     ) -> String {
-        if let Some(ws_id) = self.ws_regex_id {
-            // Custom @ws: call host regex with the registered pattern ID.
-            format!("(call $__match_regex (i32.const {ws_id}) (local.get $off) (local.get $len))")
+        if let Some(pattern) = ws_pattern {
+            if pattern.contains("/*") || pattern.contains(r"\/\*") {
+                // CSS comment-aware ws: inline state machine.
+                // Loop: skip ASCII ws bytes, then try /* ... */ block comments.
+                // Avoids DFA non-greedy limitation.
+                "(block $ws_done (loop $ws_loop \
+                   (br_if $ws_done (i32.ge_u (local.get $off) (local.get $len))) \
+                   (if (i32.or \
+                     (i32.or \
+                       (i32.eq (i32.load8_u (local.get $off)) (i32.const 32)) \
+                       (i32.eq (i32.load8_u (local.get $off)) (i32.const 9))) \
+                     (i32.or \
+                       (i32.eq (i32.load8_u (local.get $off)) (i32.const 10)) \
+                       (i32.eq (i32.load8_u (local.get $off)) (i32.const 13)))) \
+                     (then (local.set $off (i32.add (local.get $off) (i32.const 1))) (br $ws_loop))) \
+                   (if (i32.and \
+                     (i32.lt_u (i32.add (local.get $off) (i32.const 1)) (local.get $len)) \
+                     (i32.and \
+                       (i32.eq (i32.load8_u (local.get $off)) (i32.const 47)) \
+                       (i32.eq (i32.load8_u (i32.add (local.get $off) (i32.const 1))) (i32.const 42)))) \
+                     (then \
+                       (local.set $off (i32.add (local.get $off) (i32.const 2))) \
+                       (block $comment_done (loop $comment_loop \
+                         (br_if $comment_done (i32.ge_u (i32.add (local.get $off) (i32.const 1)) (local.get $len))) \
+                         (if (i32.and \
+                           (i32.eq (i32.load8_u (local.get $off)) (i32.const 42)) \
+                           (i32.eq (i32.load8_u (i32.add (local.get $off) (i32.const 1))) (i32.const 47))) \
+                           (then (local.set $off (i32.add (local.get $off) (i32.const 2))) (br $ws_loop))) \
+                         (local.set $off (i32.add (local.get $off) (i32.const 1))) \
+                         (br $comment_loop) \
+                       )) \
+                     )) \
+                 )) \
+                 (local.get $off)"
+                    .to_string()
+            } else if let Some(ws_id) = self.ws_regex_id {
+                // Generic custom @ws: use host regex.
+                format!("(call $__match_regex (i32.const {ws_id}) (local.get $off) (local.get $len))")
+            } else {
+                // Fallback to ASCII ws.
+                self.emit_ws_trim(None, _ctx)
+            }
         } else {
             "(block $ws_done (loop $ws_loop \
                (br_if $ws_done (i32.ge_u (local.get $off) (local.get $len))) \

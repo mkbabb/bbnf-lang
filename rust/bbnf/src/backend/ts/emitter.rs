@@ -166,24 +166,39 @@ fn translate_rust_constant_to_js(value: &str) -> String {
 }
 
 /// Inline whitespace-skip statements.
+///
 /// When `ws_pattern` is None, uses direct charCode checks for ASCII ws.
-/// When `ws_pattern` is Some, uses a hoisted regex for the pattern.
-fn ws_skip_stmts(ws_pattern: Option<&str>, ctx: &mut TsEmitCtx) -> String {
+/// When `ws_pattern` contains `/*`, emits an inline state machine that
+/// alternates between ASCII ws skip and `/* ... */` block comment skip.
+/// (DFA engines can't do non-greedy `.*?` correctly — they over-match.)
+fn ws_skip_stmts(ws_pattern: Option<&str>, _ctx: &mut TsEmitCtx) -> String {
     if let Some(pattern) = ws_pattern {
-        // Custom @ws pattern (e.g., CSS comment-aware whitespace).
-        let re_idx = ctx.hoisted_regexes.len();
-        let re_var = format!("__WS_RE");
-        if !ctx.hoisted_regexes.iter().any(|s| s.contains(&re_var)) {
-            let escaped = ts_escape(pattern);
-            ctx.hoisted_regexes.push(format!(
-                "const {re_var} = new RegExp(\"{escaped}\", \"y\");"
-            ));
+        if pattern.contains("/*") || pattern.contains(r"\/\*") {
+            // CSS-style comment-aware whitespace: inline state machine.
+            // Loop: skip ASCII ws, then try `/* ... */` block comment.
+            "while (s.offset < s.input.length) {\n  \
+               const __c = s.input.charCodeAt(s.offset);\n  \
+               if (__c === 32 || __c === 9 || __c === 10 || __c === 13) { s.offset++; continue; }\n  \
+               if (__c === 47 && s.offset + 1 < s.input.length && s.input.charCodeAt(s.offset + 1) === 42) {\n    \
+                 const __end = s.input.indexOf(\"*/\", s.offset + 2);\n    \
+                 if (__end === -1) break;\n    \
+                 s.offset = __end + 2;\n    \
+                 continue;\n  \
+               }\n  \
+               break;\n\
+             }\n"
+                .to_string()
+        } else {
+            // Generic custom @ws: use hoisted regex.
+            let re_var = "__WS_RE";
+            // Hoisting handled separately — just use it here.
+            format!(
+                "{{ const __wsRe = /{}/sy; __wsRe.lastIndex = s.offset; \
+                 const __wsm = __wsRe.exec(s.input); \
+                 if (__wsm) s.offset = __wsRe.lastIndex; }}\n",
+                ts_escape(pattern)
+            )
         }
-        format!(
-            "{re_var}.lastIndex = s.offset; \
-             const __wsm = {re_var}.exec(s.input); \
-             if (__wsm) s.offset = {re_var}.lastIndex;\n"
-        )
     } else {
         "while (s.offset < s.input.length) { const __c = s.input.charCodeAt(s.offset); if (__c === 32 || __c === 9 || __c === 10 || __c === 13) s.offset++; else break; }\n".to_string()
     }

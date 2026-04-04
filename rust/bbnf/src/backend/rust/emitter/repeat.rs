@@ -9,17 +9,6 @@ use crate::backend::{AllocStrategy, SepByConfig};
 use super::RustEmitCtx;
 use super::RustEmitter;
 
-/// Map BoxedEnum → Enum for scratch type lookup.
-/// Scratch Vecs store unboxed Enum values; the slab pointer is computed
-/// at collect time. The driver may pass BoxedEnum from node_type(), but
-/// the scratch system registers Enum.
-fn scratch_elem_type(ty: &TypeDesc) -> TypeDesc {
-    match ty {
-        TypeDesc::BoxedEnum => TypeDesc::Enum,
-        other => other.clone(),
-    }
-}
-
 impl RustEmitter {
     pub(super) fn emit_repeat_many_impl(
         &mut self,
@@ -65,7 +54,7 @@ impl RustEmitter {
         }
 
         // Typed case: scratch-based slab collection.
-        let scratch_ty = scratch_elem_type(elem_type);
+        let scratch_ty = elem_type;
         let ir_ctx = ctx.ir_ctx();
         let depth_var = ctx.fresh("depth");
         let prev_var = ctx.fresh("prev");
@@ -221,7 +210,7 @@ impl RustEmitter {
         }
 
         // Typed case: scratch-based slab collection.
-        let scratch_ty = scratch_elem_type(elem_type);
+        let scratch_ty = elem_type;
         let ir_ctx = ctx.ir_ctx();
         let depth_var = ctx.fresh("depth");
         let count_var = ctx.fresh("count");

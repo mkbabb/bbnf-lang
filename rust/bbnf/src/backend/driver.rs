@@ -115,7 +115,11 @@ pub fn compile_grammar<E: Emitter>(
     for rule in &ir.rules {
         let strategy = dstate.call_strategy(rule.id);
         let is_entry = rule.id == ir.entry;
+        // Skip inlined rules that don't need standalone functions.
+        // Exception: transparent rules are never inlined (compile_ref falls back
+        // to emit_call), so they always need standalone functions.
         if !is_entry
+            && !rule.meta.is_transparent
             && (strategy == CallStrategy::InlineBody || strategy == CallStrategy::InlineFusion)
         {
             continue;
@@ -392,15 +396,21 @@ fn compile_alt<E: Emitter>(
     let type_map = ir.type_map.as_ref();
 
     // Classify branch types.
+    // In Elide context (Vec elements, elide_box=true), map BoxedEnum → Enum
+    // to match the TypeMap's Vec projection. Elements are collected unboxed
+    // in scratch Vecs; the slab allocates the entire slice at collect time.
     let branch_infos: Vec<AltBranchInfo> = branches
         .iter()
         .map(|b| {
-            let ty = type_map
+            let mut ty = type_map
                 .and_then(|tm| tm.node_type(&b.node).cloned())
                 .unwrap_or(TypeDesc::Span);
+            if alloc == AllocStrategy::Elide && ty == TypeDesc::BoxedEnum {
+                ty = TypeDesc::Enum;
+            }
             AltBranchInfo {
                 ty,
-                coercion_variant: None, // Set by emitter if needed
+                coercion_variant: None,
             }
         })
         .collect();
@@ -599,14 +609,14 @@ fn compile_ref<E: Emitter>(
     match strategy {
         CallStrategy::DirectCall => emitter.emit_call(rule_id, rule_name, alloc, ctx),
         CallStrategy::InlineBody | CallStrategy::InlineFusion => {
-            // Inline: compile the rule body at this call site.
-            // Non-transparent: body compiled with Alloc so Refs produce boxed.
-            // Transparent: body compiled with Elide (returns inner type directly).
-            let inline_alloc = if rule.meta.is_transparent {
-                AllocStrategy::Elide
-            } else {
-                AllocStrategy::Alloc
-            };
+            // Don't inline transparent rules — their identity is type-significant.
+            // Inlining a transparent rule's body produces the raw inner type (tuple, etc.)
+            // but the TypeMap projects the Ref result as the rule's return type (Enum).
+            if rule.meta.is_transparent {
+                return emitter.emit_call(rule_id, rule_name, alloc, ctx);
+            }
+            // Inline non-transparent: body compiled with Alloc so Refs produce boxed.
+            let inline_alloc = AllocStrategy::Alloc;
             let body = compile_node(&rule.body, inline_alloc, ir, dstate, emitter, ctx);
             let variant_name = if rule.meta.is_transparent {
                 None

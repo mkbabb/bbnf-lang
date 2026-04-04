@@ -25,6 +25,7 @@ pub fn generate_all(
 
     let grammar_arr = ir_enums::generate_grammar_arr(parser_attrs, ident);
     let grammar_enum = ir_enums::generate_enum(&ctx);
+    // Monolithic path — the shared driver path is not yet complete for Rust.
     let parser_methods = codegen::generate_monolithic(ir, &ctx);
 
     let has_recovers = ctx.ir.rules.iter().any(|r| r.meta.directives.recover.is_some())

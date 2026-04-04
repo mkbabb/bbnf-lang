@@ -162,7 +162,7 @@ fn finalize_compile(
 ///
 /// Converts `CallMode::DirectCall` → `CallStrategy::DirectCall`,
 /// `CallMode::InlineBody` → `CallStrategy::InlineBody`.
-fn compute_call_strategies(ir: &GrammarIR) -> Vec<crate::backend::CallStrategy> {
+pub fn compute_call_strategies(ir: &GrammarIR) -> Vec<crate::backend::CallStrategy> {
     use crate::backend::CallStrategy;
     use std::collections::HashSet;
 

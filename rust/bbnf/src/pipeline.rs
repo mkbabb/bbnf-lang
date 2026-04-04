@@ -13,7 +13,7 @@ pub mod validate;
 
 pub use compile::{
     compile_ast, compile_ast_request, compile_grammar, compile_grammar_request,
-    compile_paths_request,
+    compile_paths_request, compute_call_strategies,
 };
 
 /// Options for the compilation pipeline.

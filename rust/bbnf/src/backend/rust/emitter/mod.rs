@@ -565,7 +565,17 @@ impl Emitter for RustEmitter {
 
         let hoisted = std::mem::take(&mut ctx.hoisted);
 
-        // ── Wrap body in enum variant (non-transparent rules) ───────────
+        // Body is already compiled by the driver (compile_node).
+        // For Rust backend: __rule returns Option<Enum>, so the body must
+        // produce Option<Enum>. The driver handles variant wrapping via
+        // compile_ref → emit_call (which returns Self::__rule = Option<Enum>).
+        // For non-Ref leaf bodies (Literal/Regex/Seq/Alt), the driver produces
+        // the raw inner type. We wrap those in the variant here.
+        //
+        // Heuristic: if the rule is non-transparent, wrap body in variant.
+        // This is correct for leaf/Seq/Alt bodies. For Ref bodies (rule = alias),
+        // the body already returns Option<Enum> from __rule call — wrapping again
+        // would type-mismatch. But in practice, alias rules are transparent.
         let body_expr = if rule.meta.is_transparent {
             quote! { #(#hoisted)* #body }
         } else {

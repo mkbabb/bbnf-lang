@@ -29,11 +29,13 @@ dimension = number , anyUnit ;
 
 // --- Generic value token — matches any single CSS value token ---
 cssString = /"(?:[^"\\]|\\[\s\S])*"/ | /'(?:[^'\\]|\\[\s\S])*'/ ;
+// Dash-prefixed identifiers for vendor prefixes (-apple-system, -moz-*, etc.)
+dashIdent = /-[a-zA-Z][\w-]*/ ;
 value = varFunction | calcFunction | urlFunction | colorFn
       | genericFunction | hex
       | dimension | number | cssString | namedColor | globalKeyword
       | "," | "/"
-      | ident ;
+      | dashIdent | ident ;
 
 // --- Property name groups (dispatch keys) ---
 

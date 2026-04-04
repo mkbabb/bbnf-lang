@@ -90,7 +90,8 @@ pub fn fuse_token_dispatch(ir: &mut GrammarIR) {
         rule_names: &rule_names,
     };
     for rule in &mut rules {
-        let new_body = try_factor_alt(std::mem::replace(&mut rule.body, IrNode::Epsilon), &mut ctx);
+        let old_body = std::mem::replace(&mut rule.body, IrNode::Epsilon);
+        let new_body = try_factor_alt(old_body, &mut ctx);
         rule.body = new_body;
     }
     ir.rules = rules;
@@ -216,13 +217,11 @@ fn factor_with_token(
         });
 
         if let Some(fs) = branch_first {
-            let intersection_count = fs.intersection(token_first).len();
-            let branch_count = fs.len();
-            // Require at least 50% of the branch's FIRST set to overlap with the
-            // token. Branches that share only 1-2 marginal characters (like `-`)
-            // stay in the outer Alt — they start with distinct character classes.
-            if intersection_count > 0 && branch_count > 0 && intersection_count * 2 >= branch_count
-            {
+            // The branch's FIRST set must be a subset of the token's FIRST set.
+            // If the branch accepts characters the token can't scan (e.g.,
+            // genericDecl accepts `-` but ident doesn't), factoring under
+            // the token would silently drop those inputs.
+            if fs.is_subset(token_first) && !fs.is_empty() {
                 overlap_indices.push(i);
             } else {
                 non_overlap_indices.push(i);
@@ -348,12 +347,44 @@ fn factor_with_token(
         });
     }
 
+    // Exclude continuations with overlapping FIRST sets. When two continuations
+    // both start with the same byte (e.g., `(` for both urlFunction and
+    // genericFunction), the factored Alt can't dispatch correctly since the
+    // keyword has been stripped. Remove ALL overlapping continuations from the
+    // factored group — they stay in the outer Alt with their original keyword check.
+    // `None` FIRST means unknown/nullable — conservatively treat as overlapping.
+    {
+        let mut to_remove = vec![false; continuations.len()];
+        for i in 0..continuations.len() {
+            for j in i + 1..continuations.len() {
+                let dominated = match (&continuations[i].cont_first, &continuations[j].cont_first) {
+                    (Some(fi), Some(fj)) => !fi.is_disjoint(fj),
+                    (None, _) | (_, None) => true,
+                };
+                if dominated {
+                    to_remove[i] = true;
+                    to_remove[j] = true;
+                }
+            }
+        }
+        let mut idx = 0;
+        continuations.retain(|c| {
+            let keep = !to_remove[idx];
+            if !keep {
+                non_overlap_indices.push(c.branch_idx);
+            }
+            idx += 1;
+            keep
+        });
+    }
+
     let actual_overlap: Vec<usize> = continuations.iter().map(|c| c.branch_idx).collect();
 
     // Need at least 3 actual continuation branches.
     if actual_overlap.len() < 3 {
         return None;
     }
+
 
     // Always produce Seq+Alt. The dispatch table pass handles disjoint FIRST
     // sets. For shared FIRST sets (key-value patterns like CSS declarations),
@@ -520,6 +551,22 @@ fn leading_first_set(
         }
         IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
             leading_first_set(inner, rule_first_sets, strings)
+        }
+        // Next(a, b) parses a then b, FIRST = FIRST(a).
+        IrNode::Next(a, _) => leading_first_set(a, rule_first_sets, strings),
+        // Skip(a, b) parses a then b, FIRST = FIRST(a).
+        IrNode::Skip(a, _) => leading_first_set(a, rule_first_sets, strings),
+        IrNode::Alt(branches, _) if !branches.is_empty() => {
+            // Union of all branch FIRST sets.
+            let mut result = CharSet128::new();
+            for b in branches {
+                if let Some(fs) = leading_first_set(&b.node, rule_first_sets, strings) {
+                    result.union(&fs);
+                } else {
+                    return None; // Nullable branch → unknown.
+                }
+            }
+            Some(result)
         }
         IrNode::Epsilon => None, // Nullable.
         _ => None,

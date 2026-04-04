@@ -55,6 +55,11 @@ impl CharSet128 {
         (self.bits[0] & other.bits[0]) == 0 && (self.bits[1] & other.bits[1]) == 0
     }
 
+    /// Check if `self` is a subset of `other` (every element in self is also in other).
+    pub fn is_subset(&self, other: &CharSet128) -> bool {
+        (self.bits[0] & !other.bits[0]) == 0 && (self.bits[1] & !other.bits[1]) == 0
+    }
+
     /// Compute the intersection of two sets.
     pub fn intersection(&self, other: &CharSet128) -> CharSet128 {
         CharSet128 {

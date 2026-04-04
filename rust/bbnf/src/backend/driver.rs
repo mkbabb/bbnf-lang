@@ -47,6 +47,7 @@ pub struct DriverState {
     /// Regex ID of the `@ws` whitespace pattern (if custom `@ws` is set).
     /// Emitters use this to reference the ws regex by ID rather than sentinel.
     pub ws_regex_id: Option<usize>,
+
 }
 
 impl DriverState {
@@ -110,14 +111,12 @@ pub fn compile_grammar<E: Emitter>(
 
     // 2. Compile each rule.
     // Skip rules that are always inlined — they don't need standalone functions.
-    // Exception: the entry rule always needs a function (it's the public API).
+    // Exception: transparent rules are never inlined (compile_ref falls back
+    // to emit_call), so they always need standalone functions.
     let mut rule_functions = Vec::with_capacity(ir.rules.len());
     for rule in &ir.rules {
         let strategy = dstate.call_strategy(rule.id);
         let is_entry = rule.id == ir.entry;
-        // Skip inlined rules that don't need standalone functions.
-        // Exception: transparent rules are never inlined (compile_ref falls back
-        // to emit_call), so they always need standalone functions.
         if !is_entry
             && !rule.meta.is_transparent
             && (strategy == CallStrategy::InlineBody || strategy == CallStrategy::InlineFusion)
@@ -617,9 +616,8 @@ fn compile_ref<E: Emitter>(
     match strategy {
         CallStrategy::DirectCall => emitter.emit_call(rule_id, rule_name, alloc, ctx),
         CallStrategy::InlineBody | CallStrategy::InlineFusion => {
-            // Don't inline transparent rules — their identity is type-significant.
-            // Inlining a transparent rule's body produces the raw inner type (tuple, etc.)
-            // but the TypeMap projects the Ref result as the rule's return type (Enum).
+            // Don't inline transparent rules or when inlining is suppressed
+            // (e.g., inside heterogeneous Alt branches where types must match node_type).
             if rule.meta.is_transparent {
                 return emitter.emit_call(rule_id, rule_name, alloc, ctx);
             }

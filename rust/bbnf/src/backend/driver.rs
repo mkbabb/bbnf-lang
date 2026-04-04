@@ -332,7 +332,15 @@ fn compile_seq<E: Emitter>(
                         outputs: std::mem::take(&mut span_run),
                     });
                 }
-                let out = compile_node(child, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+                // Non-Span children use Alloc — Refs produce boxed (&'a Enum)
+                // to match the TypeMap's projected type. Backends without
+                // allocation (TS, WASM) ignore the alloc parameter.
+                let child_alloc = if matches!(ty, TypeDesc::BoxedEnum) {
+                    AllocStrategy::Alloc
+                } else {
+                    AllocStrategy::Elide
+                };
+                let out = compile_node(child, child_alloc, ir, dstate, emitter, ctx);
                 groups.push(SeqChildGroup::Single {
                     output: out,
                     ty: ty.clone(),

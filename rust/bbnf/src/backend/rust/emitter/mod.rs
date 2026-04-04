@@ -525,74 +525,213 @@ impl Emitter for RustEmitter {
 
     // ── Rule-level emission ─────────────────────────────────────────────
 
+    fn emit_rule_body_override(
+        &mut self,
+        rule: &IrRule,
+        ir: &GrammarIR,
+        _ctx: &mut Self::Ctx,
+    ) -> Option<TokenStream> {
+        let name = ir.get_string(rule.name);
+
+        // Fused number: bare JSON number regex → number_scan_convert → (Span, f64).
+        if self.fused_number_rules.contains(&rule.id) && !rule.meta.is_transparent {
+            return Some(quote! {
+                ::parse_that::number_scan_convert(state)
+            });
+        }
+
+        // Operator chain hot path: Seq(head, Repeat(Seq(op, rhs))).
+        // TODO: Port operator_chain::emit_operator_chain_rule when wiring to bbnf-derive.
+        // For now, fall through to the driver's generic compile_node.
+        let _ = name;
+
+        None
+    }
+
     fn emit_rule_function(
         &mut self,
         rule: &IrRule,
         body: TokenStream,
         ir: &GrammarIR,
-        _ctx: &mut Self::Ctx,
+        ctx: &mut Self::Ctx,
     ) -> TokenStream {
-        let rule_name = ir.get_string(rule.name);
-        let fn_ident = format_ident!("__{}", rule_name);
+        let ir_ctx = ctx.ir_ctx();
+        let name = ir.get_string(rule.name);
+        let fn_ident = format_ident!("__{}", name);
+        let pub_ident = ir_ctx.method_ident_for_name(name);
+        let return_type = ir_ctx.rule_return_type(rule.id);
         let enum_ident = &self.enum_ident;
+        let enum_type = &ir_ctx.enum_type;
 
-        if rule.meta.is_transparent {
+        let hoisted = std::mem::take(&mut ctx.hoisted);
+
+        // ── Wrap body in enum variant (non-transparent rules) ───────────
+        let body_expr = if rule.meta.is_transparent {
+            quote! { #(#hoisted)* #body }
+        } else {
+            let variant = format_ident!("{}", name);
             quote! {
-                fn #fn_ident<'a>(state: &mut ::parse_that::ParserState<'a>) -> Option<#enum_ident<'a>> {
-                    #body
-                }
+                #(#hoisted)*
+                (#body).map(|__x| #enum_ident::#variant(__x))
+            }
+        };
+
+        // ── Debug instrumentation ───────────────────────────────────────
+        let rule_debug = ir.debug_all || rule.meta.directives.debug;
+        let fn_body = if rule_debug {
+            let trace_entry = crate::backend::rust::trace::emit_trace_entry(name);
+            let result_ident = syn::Ident::new("__trace_result", proc_macro2::Span::call_site());
+            let trace_exit = crate::backend::rust::trace::emit_trace_exit(name, &result_ident);
+            quote! {
+                #trace_entry
+                let #result_ident = (|| -> Option<#enum_type> { #body_expr })();
+                #trace_exit
+                #result_ident
             }
         } else {
-            let variant = format_ident!("{}", rule_name);
-            quote! {
-                fn #fn_ident<'a>(state: &mut ::parse_that::ParserState<'a>) -> Option<#enum_ident<'a>> {
-                    let __result = #body;
-                    __result.map(|__v| #enum_ident::#variant(__v))
-                }
+            body_expr
+        };
+
+        let mut methods = Vec::new();
+
+        // ── Internal function ───────────────────────────────────────────
+        methods.push(quote! {
+            #[allow(non_snake_case)]
+            fn #fn_ident<'a>(
+                state: &mut ::parse_that::ParserState<'a>,
+            ) -> Option<#enum_type> {
+                #fn_body
             }
+        });
+
+        // ── Sync function for @recover ──────────────────────────────────
+        let has_recover = rule.meta.directives.recover.is_some()
+            && !ir_ctx.parser_attrs.skip_recover;
+
+        // Note: sync function body compilation is deferred — the driver compiled it
+        // as part of the rule body or the grammar will need a separate pass.
+        // For now, emit a stub that syncs on the recovery expression if present.
+        // TODO: Full sync compilation requires a second compile_node pass for
+        // the recovery expression. This will be wired when replacing generate_all().
+
+        // ── Public method(s) ────────────────────────────────────────────
+        if rule.meta.is_transparent {
+            let alloc_code = ir_ctx.emit_alloc(&quote! { __v });
+            let mut pub_parser = quote! {
+                Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                    let __v = Self::#fn_ident(state)?;
+                    Some(#alloc_code)
+                })
+            };
+
+            if has_recover {
+                let sync_ident = format_ident!("__sync_{}", name);
+                let sentinel = ir_ctx.recover_sentinel(rule.id);
+                pub_parser = quote! {
+                    #pub_parser.recover(Parser::new(Self::#sync_ident), #sentinel)
+                };
+            }
+
+            methods.push(quote! {
+                pub fn #pub_ident<'a>() -> Parser<'a, #return_type> {
+                    #pub_parser
+                }
+            });
+
+            // Unboxed variant.
+            let unboxed_ident = ir_ctx.unboxed_method_ident_for_name(name);
+            methods.push(quote! {
+                #[inline(always)]
+                pub fn #unboxed_ident<'a>() -> Parser<'a, #enum_type> {
+                    Parser::new(Self::#fn_ident)
+                }
+            });
+        } else {
+            let mut pub_parser = quote! { Parser::new(Self::#fn_ident) };
+
+            if has_recover {
+                let sync_ident = format_ident!("__sync_{}", name);
+                let sentinel = ir_ctx.recover_sentinel(rule.id);
+                pub_parser = quote! {
+                    #pub_parser.recover(Parser::new(Self::#sync_ident), #sentinel)
+                };
+            }
+
+            methods.push(quote! {
+                pub fn #pub_ident<'a>() -> Parser<'a, #return_type> {
+                    #pub_parser
+                }
+            });
         }
+
+        quote! { #(#methods)* }
     }
 
     fn emit_type_definitions(
         &mut self,
-        ir: &GrammarIR,
+        _ir: &GrammarIR,
         _analysis: &BackendAnalysis,
-        _ctx: &mut Self::Ctx,
+        ctx: &mut Self::Ctx,
     ) -> TokenStream {
-        // Minimal enum generation — the full version uses ir_enums::generate_enum.
-        let enum_ident = &self.enum_ident;
-        let variants: Vec<_> = ir
-            .rules
-            .iter()
-            .filter(|r| !r.meta.is_transparent)
-            .map(|r| {
-                let name = format_ident!("{}", ir.get_string(r.name));
-                // Simplified: all variants hold Span for now.
-                quote! { #name(::parse_that::Span<'a>) }
-            })
-            .collect();
-
-        quote! {
-            #[derive(Debug, Clone)]
-            pub enum #enum_ident<'a> {
-                #( #variants ),*
-            }
-        }
+        let ir_ctx = ctx.ir_ctx();
+        crate::backend::rust::ir_enums::generate_enum(ir_ctx)
     }
 
     fn emit_grammar(
         &mut self,
         type_defs: TokenStream,
         rule_functions: Vec<TokenStream>,
-        _ir: &GrammarIR,
-        _ctx: &mut Self::Ctx,
+        ir: &GrammarIR,
+        ctx: &mut Self::Ctx,
     ) -> TokenStream {
+        let ir_ctx = ctx.ir_ctx();
+        let ident = ir_ctx.ident;
+        let parser_attrs = ir_ctx.parser_attrs;
+
+        // Grammar string array.
+        let grammar_arr = crate::backend::rust::ir_enums::generate_grammar_arr(parser_attrs, ident);
+
+        // Slab context struct + helper.
+        let (alloc_ctx_struct, alloc_ctx_helper) = ir_ctx.generate_alloc_ctx();
+
+        // Recovered static (if any rule has @recover).
+        let has_recovers = ir
+            .rules
+            .iter()
+            .any(|r| r.meta.directives.recover.is_some())
+            && !parser_attrs.skip_recover;
+        let enum_ident = &self.enum_ident;
+        let recovered_static = if has_recovers {
+            let recovered_ident = ir_ctx.recovered_static_ident();
+            quote! {
+                static #recovered_ident: #enum_ident<'static> = #enum_ident::Recovered;
+            }
+        } else {
+            quote! {}
+        };
+
+        // Debug trace depth counter.
+        let has_debug = ir.debug_all || ir.rules.iter().any(|r| r.meta.directives.debug);
+        let depth_counter = if has_debug {
+            crate::backend::rust::trace::emit_depth_counter()
+        } else {
+            quote! {}
+        };
+
         quote! {
             use ::parse_that::*;
 
-            #type_defs
+            #grammar_arr
 
-            #( #rule_functions )*
+            #type_defs
+            #alloc_ctx_struct
+            #alloc_ctx_helper
+            #recovered_static
+
+            impl #ident {
+                #depth_counter
+                #( #rule_functions )*
+            }
         }
     }
 }

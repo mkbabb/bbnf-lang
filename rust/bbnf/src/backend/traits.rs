@@ -230,6 +230,19 @@ pub trait Emitter {
 
     // ── Rule-level emission ─────────────────────────────────────────────
 
+    /// Override the rule body compilation. If this returns `Some(output)`,
+    /// the driver skips `compile_node` for this rule's body and uses the
+    /// override directly. Used by the Rust backend for fused-number rules
+    /// and operator-chain hot paths.
+    fn emit_rule_body_override(
+        &mut self,
+        _rule: &IrRule,
+        _ir: &GrammarIR,
+        _ctx: &mut Self::Ctx,
+    ) -> Option<Self::Output> {
+        None
+    }
+
     fn emit_rule_function(
         &mut self,
         rule: &IrRule,

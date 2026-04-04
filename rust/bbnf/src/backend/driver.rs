@@ -124,8 +124,12 @@ pub fn compile_grammar<E: Emitter>(
         dstate.current_rule_name = Some(ir.get_string(rule.name).to_string());
         dstate.current_rule_id = Some(rule.id);
 
-        // Compile the rule body.
-        let body = compile_node(&rule.body, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+        // Allow backend to override rule body (fused numbers, operator chains).
+        let body = if let Some(override_body) = emitter.emit_rule_body_override(rule, ir, ctx) {
+            override_body
+        } else {
+            compile_node(&rule.body, AllocStrategy::Elide, ir, dstate, emitter, ctx)
+        };
 
         // Wrap in a rule function definition.
         let rule_fn = emitter.emit_rule_function(rule, body, ir, ctx);

@@ -120,7 +120,7 @@ impl RustEmitter {
                 body.clone()
             };
             arms.push(quote! {
-                #( #patterns )|* => { #coerced }
+                #( #patterns )|* => { (|| { #coerced })() }
             });
         }
 
@@ -130,7 +130,7 @@ impl RustEmitter {
             } else {
                 fb_body
             };
-            quote! { _ => { #coerced } }
+            quote! { _ => { (|| { #coerced })() } }
         } else {
             quote! { _ => None }
         };
@@ -170,7 +170,7 @@ impl RustEmitter {
             chain.push(quote! {
                 {
                     let __cp = state.offset;
-                    let __result = #coerced;
+                    let __result = (|| { #coerced })();
                     if __result.is_some() {
                         return __result;
                     }

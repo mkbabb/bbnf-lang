@@ -328,7 +328,9 @@ fn try_build_dispatch(
 
     Some(AltDispatch {
         table,
-        fallback_idx: None,
+        // A nullable branch dispatched via FOLLOW is semantically a fallback:
+        // it matches when no other branch does (unmatched bytes + EOF).
+        fallback_idx: nullable_idx.map(|i| i as u8),
     })
 }
 

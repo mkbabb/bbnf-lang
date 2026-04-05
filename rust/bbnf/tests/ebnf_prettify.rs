@@ -33,21 +33,12 @@ fn prettify(input: &str) -> Option<String> {
 
 // ── Slab parsing ─────────────────────────────────────────────────────
 
-// NOTE: These 3 tests are ignored pending a fix for the dispatch table
-// nullable-branch bug. The EBNF grammar's `factor` Alt has an epsilon
-// branch (bare `term, S`) that the dispatch table maps only to whitespace
-// bytes (S's FIRST set). At EOF or non-modifier bytes like `;`, the
-// dispatch returns None instead of the epsilon branch. The fix belongs in
-// the dispatch table generation pass (bbnf-ir generate_dispatch_tables).
-
 #[test]
-#[ignore = "dispatch table nullable-branch bug"]
 fn parse_single_rule() {
     parse_grammar(r#"digit = "0" | "1" | "2" ;"#);
 }
 
 #[test]
-#[ignore = "dispatch table nullable-branch bug"]
 fn parse_multi_rule() {
     parse_grammar("digit = \"0\" | \"1\" ;\nnumber = digit , { digit } ;");
 }
@@ -55,7 +46,7 @@ fn parse_multi_rule() {
 // ── Prettify ─────────────────────────────────────────────────────────
 
 #[test]
-#[ignore = "dispatch table nullable-branch bug"]
+#[ignore = "prettify codegen stops after first rule — pre-existing in gorgeous"]
 fn prettify_multi_rule() {
     let input = "digit = \"0\" | \"1\" | \"2\" ;\nnumber = digit , { digit } ;";
     let result = prettify(input);

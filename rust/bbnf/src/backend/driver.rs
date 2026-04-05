@@ -127,11 +127,21 @@ pub fn compile_grammar<E: Emitter>(
         dstate.current_rule_name = Some(ir.get_string(rule.name).to_string());
         dstate.current_rule_id = Some(rule.id);
 
+        // Transparent rules compile with Elide (no boxing — the public method wraps).
+        // Non-transparent rules compile with Alloc (boxing throughout — the inner fn
+        // produces BoxedEnum values that the variant wrapper receives directly).
+        // This matches the monolithic path's elide_box=true/false split.
+        let body_alloc = if rule.meta.is_transparent {
+            AllocStrategy::Elide
+        } else {
+            AllocStrategy::Alloc
+        };
+
         // Allow backend to override rule body (fused numbers, operator chains).
         let body = if let Some(override_body) = emitter.emit_rule_body_override(rule, ir, ctx) {
             override_body
         } else {
-            compile_node(&rule.body, AllocStrategy::Elide, ir, dstate, emitter, ctx)
+            compile_node(&rule.body, body_alloc, ir, dstate, emitter, ctx)
         };
 
         // Compile recovery sync expression if @recover is present.
@@ -423,7 +433,9 @@ fn compile_alt<E: Emitter>(
 
     // Decision: check for all-literal fast path.
     // Also detects Map(Literal, Expr{constant}) — literal with constant value mapping.
-    let all_literal_like = branches.iter().all(|b| {
+    // Skip this fast path when alloc == Alloc: the raw constants need sub-variant
+    // wrapping + slab allocation, which the all-literal path doesn't provide.
+    let all_literal_like = alloc == AllocStrategy::Elide && branches.iter().all(|b| {
         matches!(b.node, IrNode::Literal(_))
             || matches!(&b.node, IrNode::Map { inner, fn_id } if {
                 matches!(inner.as_ref(), IrNode::Literal(_))

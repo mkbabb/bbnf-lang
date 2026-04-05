@@ -590,9 +590,23 @@ impl Emitter for RustEmitter {
             quote! { #(#hoisted)* #body }
         } else {
             let variant = format_ident!("{}", name);
-            quote! {
-                #(#hoisted)*
-                (#body).map(|__x| #enum_ident::#variant(__x))
+            // For single-Ref bodies (alias rules like `rhs = alternation`):
+            // the body produces Enum (from __rule call with Elide) but the
+            // variant may expect BoxedEnum. Check and alloc if needed.
+            let rule_inner_is_boxed = matches!(&rule.body, bbnf_ir::IrNode::Ref(_))
+                && ir_ctx.ir.types.iter()
+                    .any(|(id, td)| *id == rule.id && *td == TypeDesc::BoxedEnum);
+            if rule_inner_is_boxed {
+                let alloc_expr = ir_ctx.emit_alloc(&quote! { __x });
+                quote! {
+                    #(#hoisted)*
+                    (#body).map(|__x| #enum_ident::#variant(#alloc_expr))
+                }
+            } else {
+                quote! {
+                    #(#hoisted)*
+                    (#body).map(|__x| #enum_ident::#variant(__x))
+                }
             }
         };
 

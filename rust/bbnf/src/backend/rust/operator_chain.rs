@@ -135,6 +135,21 @@ fn emit_projected_child(
 ) -> TokenStream {
     if *projected_ty == TypeDesc::Span {
         if let IrNode::Ref(rule_id) = child {
+            // Check if the rule is inlined (no standalone function).
+            // If inlined, emit the body directly instead of calling Self::__rule.
+            let can_inline = mctx.call_mode(*rule_id) == super::analysis::inline::CallMode::InlineBody;
+            if can_inline {
+                let rule = &ctx.ir.rules[*rule_id as usize];
+                let body = emit_mono_expr(&rule.body, ctx, mctx, true);
+                return quote! {
+                    {
+                        let __sp_b1 = state.offset;
+                        (#body).map(|_| {
+                            ::parse_that::Span::new(__sp_b1, state.offset, state.src)
+                        })
+                    }
+                };
+            }
             let fn_ident = super::mono_fn_ident(ctx.resolve_rule_name(*rule_id));
             return quote! {
                 {

@@ -20,7 +20,6 @@ pub fn generate_all(
 ) -> proc_macro2::TokenStream {
     let ir = &prepared.ir;
 
-    // (debug diagnostics removed)
 
     let mut ir_ctx = ir_types::IrCodegenCtx::new(ir, ident, parser_attrs, prepared.prep.effective_prettify);
     ir_ctx.sp_method_rules = prepared.prep.analysis.sp_method_rules.clone();

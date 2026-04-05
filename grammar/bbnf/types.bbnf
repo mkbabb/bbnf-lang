@@ -1,0 +1,5 @@
+// Type annotations for value expressions.
+type_name = "u8" | "u16" | "u32" | "u64"
+          | "i32" | "i64"
+          | "f32" | "f64"
+          | "bool" | "usize" ;

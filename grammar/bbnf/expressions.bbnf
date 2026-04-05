@@ -1,0 +1,36 @@
+// Value expressions — the right side of -> in map syntax.
+
+@import { type_name } from "types" ;
+
+// Atoms
+int_lit = /[0-9]+/ ;
+float_lit = /[0-9]*\.[0-9]+/ ;
+bool_lit = "true" | "false" ;
+string_lit = "\"" , /(\\.|[^"\\])*/ , "\"" ;
+
+value_ident = /[_a-zA-Z][_a-zA-Z0-9]*/ ;
+value_input = "input" , ( "." , value_ident ) * ;
+value_fn_call = value_ident , "(" , ( value_expr , ( "," ?w , value_expr ) * ) ? , ")" ;
+
+value_atom = int_lit | float_lit | bool_lit | string_lit
+           | value_fn_call | value_input | value_ident
+           | "(" , value_expr ?w , ")" ;
+
+// Operators (precedence climbing)
+mul_op = "*" | "/" | "%" ;
+add_op = "+" | "-" ;
+cmp_op = "==" | "!=" | "<=" | ">=" | "<" | ">" ;
+
+value_unary = ( "!" | "-" ) , value_atom | value_atom ;
+value_mul = value_unary , ( mul_op ?w , value_unary ) * ;
+value_add = value_mul , ( add_op ?w , value_mul ) * ;
+value_cmp = value_add , ( cmp_op ?w , value_add ) * ;
+value_and = value_cmp , ( "&&" ?w , value_cmp ) * ;
+value_or = value_and , ( "||" ?w , value_and ) * ;
+
+// Top level: closure or bare expression
+value_closure = "|" , value_ident , ( "," ?w , value_ident ) * , "|" , value_expr ;
+value_expr = value_closure | value_or ;
+
+// Type annotation
+type_annotation = ":" ?w , type_name ;

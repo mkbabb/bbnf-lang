@@ -316,7 +316,7 @@ pub fn compile_node<E: Emitter>(
 /// - Vec flattening: `(T, Vec<T>)` or `(Vec<T>, T)` pairs flatten to `Vec<T>`
 fn compile_seq<E: Emitter>(
     children: &[IrNode],
-    _alloc: ValuePlacement,
+    alloc: ValuePlacement,
     ir: &GrammarIR,
     dstate: &mut DriverState,
     emitter: &mut E,
@@ -362,19 +362,18 @@ fn compile_seq<E: Emitter>(
                 let out = compile_node(child, ValuePlacement::Inline, ir, dstate, emitter, ctx);
                 span_run.push(out);
             } else {
-                // Flush any accumulated Span run.
                 if !span_run.is_empty() {
                     groups.push(SeqChildGroup::SpanCompressed {
                         outputs: std::mem::take(&mut span_run),
                     });
                 }
-                // Non-Span children use Alloc — Refs produce boxed (&'a Enum)
-                // to match the TypeMap's projected type. Backends without
-                // allocation (TS, WASM) ignore the alloc parameter.
-                let child_alloc = if matches!(ty, TypeDesc::BoxedEnum) {
-                    ValuePlacement::Alloc
-                } else {
-                    ValuePlacement::Inline
+                // Child alloc: BoxedEnum → Alloc (Refs produce &Enum),
+                // Enum in Alloc context → Alloc (non-transparent Refs need boxing).
+                // All other types → Inline (leaves produce their natural type).
+                let child_alloc = match ty {
+                    TypeDesc::BoxedEnum => ValuePlacement::Alloc,
+                    TypeDesc::Enum if alloc == ValuePlacement::Alloc => ValuePlacement::Alloc,
+                    _ => ValuePlacement::Inline,
                 };
                 let out = compile_node(child, child_alloc, ir, dstate, emitter, ctx);
                 groups.push(SeqChildGroup::Single {

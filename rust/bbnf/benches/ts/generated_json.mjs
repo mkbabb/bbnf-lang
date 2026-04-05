@@ -95,8 +95,8 @@ if (s.input.startsWith("null", s.offset)) {
   __lit13 = span(s.offset, s.offset + 4);
   s.offset += 4;
 }
-const __const14 = (__lit13) !== null ? 0 : null;
-const __iw15 = __const14;
+const __map14 = (__lit13) !== null ? 0 : null;
+const __iw15 = __map14;
 return __iw15 !== null ? { tag: "null", value: __iw15 } : null; })()); break;
     case 102:
     case 116:
@@ -109,16 +109,16 @@ if (s.input.startsWith("false", s.offset)) {
   __lit16 = span(s.offset, s.offset + 5);
   s.offset += 5;
 }
-const __const17 = (__lit16) !== null ? false : null;
-return __const17; })()); break;
+const __map17 = (__lit16) !== null ? false : null;
+return __map17; })()); break;
     case 116:
       __dispatch20 = ((() => { let __lit18 = null;
 if (s.input.startsWith("true", s.offset)) {
   __lit18 = span(s.offset, s.offset + 4);
   s.offset += 4;
 }
-const __const19 = (__lit18) !== null ? true : null;
-return __const19; })()); break;
+const __map19 = (__lit18) !== null ? true : null;
+return __map19; })()); break;
     default: break;
   }
 }

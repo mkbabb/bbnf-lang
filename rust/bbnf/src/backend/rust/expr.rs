@@ -14,21 +14,44 @@ use super::unescape_literal;
 use super::{MonoCtx, emit_mono_discarded, emit_mono_expr, mono_fn_ident};
 
 /// Compile a constant MapExpr to TokenStream (monolithic path).
-fn compile_constant_map_expr_mono(expr: &MapExpr, _ctx: &IrCodegenCtx<'_>) -> TokenStream {
+/// Uses `return_type` for correct Rust type suffix on literals.
+fn compile_constant_map_expr_mono(
+    expr: &MapExpr,
+    return_type: Option<&bbnf_ir::TypeDesc>,
+    ctx: &IrCodegenCtx<'_>,
+) -> TokenStream {
     match expr {
         MapExpr::IntLit(n) => {
-            let lit = proc_macro2::Literal::i64_unsuffixed(*n);
-            quote! { #lit }
+            if let Some(bbnf_ir::TypeDesc::Named(sid)) = return_type {
+                let type_name = ctx.ir.get_string(*sid);
+                let suffixed = format!("{}{}", n, type_name);
+                suffixed.parse::<TokenStream>().unwrap_or_else(|_| {
+                    let lit = proc_macro2::Literal::i64_unsuffixed(*n);
+                    quote! { #lit }
+                })
+            } else {
+                let lit = proc_macro2::Literal::i64_unsuffixed(*n);
+                quote! { #lit }
+            }
         }
         MapExpr::FloatLit(f) => {
-            let lit = proc_macro2::Literal::f64_unsuffixed(*f);
-            quote! { #lit }
+            if let Some(bbnf_ir::TypeDesc::Named(sid)) = return_type {
+                let type_name = ctx.ir.get_string(*sid);
+                let suffixed = format!("{}{}", f, type_name);
+                suffixed.parse::<TokenStream>().unwrap_or_else(|_| {
+                    let lit = proc_macro2::Literal::f64_unsuffixed(*f);
+                    quote! { #lit }
+                })
+            } else {
+                let lit = proc_macro2::Literal::f64_unsuffixed(*f);
+                quote! { #lit }
+            }
         }
         MapExpr::BoolLit(b) => {
             if *b { quote! { true } } else { quote! { false } }
         }
         MapExpr::StringLit(sid) => {
-            let s = _ctx.ir.get_string(*sid);
+            let s = ctx.ir.get_string(*sid);
             quote! { #s }
         }
         _ => quote! { () },
@@ -37,15 +60,37 @@ fn compile_constant_map_expr_mono(expr: &MapExpr, _ctx: &IrCodegenCtx<'_>) -> To
 
 /// Compile a MapExpr to TokenStream (monolithic path).
 /// `__input` variable is in scope as the parse result.
-fn compile_map_expr_mono(expr: &MapExpr, ctx: &IrCodegenCtx<'_>) -> TokenStream {
+fn compile_map_expr_mono(
+    expr: &MapExpr,
+    return_type: Option<&bbnf_ir::TypeDesc>,
+    ctx: &IrCodegenCtx<'_>,
+) -> TokenStream {
     match expr {
         MapExpr::IntLit(n) => {
-            let lit = proc_macro2::Literal::i64_unsuffixed(*n);
-            quote! { #lit }
+            if let Some(bbnf_ir::TypeDesc::Named(sid)) = return_type {
+                let type_name = ctx.ir.get_string(*sid);
+                let suffixed = format!("{}{}", n, type_name);
+                suffixed.parse::<TokenStream>().unwrap_or_else(|_| {
+                    let lit = proc_macro2::Literal::i64_unsuffixed(*n);
+                    quote! { #lit }
+                })
+            } else {
+                let lit = proc_macro2::Literal::i64_unsuffixed(*n);
+                quote! { #lit }
+            }
         }
         MapExpr::FloatLit(f) => {
-            let lit = proc_macro2::Literal::f64_unsuffixed(*f);
-            quote! { #lit }
+            if let Some(bbnf_ir::TypeDesc::Named(sid)) = return_type {
+                let type_name = ctx.ir.get_string(*sid);
+                let suffixed = format!("{}{}", f, type_name);
+                suffixed.parse::<TokenStream>().unwrap_or_else(|_| {
+                    let lit = proc_macro2::Literal::f64_unsuffixed(*f);
+                    quote! { #lit }
+                })
+            } else {
+                let lit = proc_macro2::Literal::f64_unsuffixed(*f);
+                quote! { #lit }
+            }
         }
         MapExpr::BoolLit(b) => {
             if *b { quote! { true } } else { quote! { false } }
@@ -65,7 +110,7 @@ fn compile_map_expr_mono(expr: &MapExpr, ctx: &IrCodegenCtx<'_>) -> TokenStream 
             if let Ok(fn_path) = fn_name_str.parse::<TokenStream>() {
                 let compiled_args: Vec<TokenStream> = args
                     .iter()
-                    .map(|a| compile_map_expr_mono(a, ctx))
+                    .map(|a| compile_map_expr_mono(a, None, ctx))
                     .collect();
                 if compiled_args.is_empty() {
                     quote! { (#fn_path)(__input) }
@@ -77,8 +122,8 @@ fn compile_map_expr_mono(expr: &MapExpr, ctx: &IrCodegenCtx<'_>) -> TokenStream 
             }
         }
         MapExpr::BinOp { op, lhs, rhs } => {
-            let l = compile_map_expr_mono(lhs, ctx);
-            let r = compile_map_expr_mono(rhs, ctx);
+            let l = compile_map_expr_mono(lhs, None, ctx);
+            let r = compile_map_expr_mono(rhs, None, ctx);
             let op_token = match op {
                 bbnf_ir::MapBinOp::Add => quote! { + },
                 bbnf_ir::MapBinOp::Sub => quote! { - },
@@ -101,7 +146,7 @@ fn compile_map_expr_mono(expr: &MapExpr, ctx: &IrCodegenCtx<'_>) -> TokenStream 
             quote! { (#l #op_token #r) }
         }
         MapExpr::UnaryOp { op, inner } => {
-            let i = compile_map_expr_mono(inner, ctx);
+            let i = compile_map_expr_mono(inner, None, ctx);
             match op {
                 bbnf_ir::MapUnaryOp::Neg => quote! { (-#i) },
                 bbnf_ir::MapUnaryOp::Not => quote! { (!#i) },
@@ -402,8 +447,8 @@ pub(super) fn emit_mono_map(
                     };
                 }
             }
-            (FnDescriptor::Expr { expr, .. }, FnDescriptor::EnumWrap { variant }) if expr.is_constant() => {
-                let val_tokens = compile_constant_map_expr_mono(expr, ctx);
+            (FnDescriptor::Expr { expr, return_type }, FnDescriptor::EnumWrap { variant }) if expr.is_constant() => {
+                let val_tokens = compile_constant_map_expr_mono(expr, return_type.as_ref(), ctx);
                 let vident = format_ident!("{}", ctx.ir.get_string(*variant));
                 let enum_ident = &ctx.enum_ident;
                 let inner_expr = emit_mono_expr(inner2.as_ref(), ctx, mctx, elide_box);
@@ -459,12 +504,12 @@ pub(super) fn emit_mono_map(
                         }
                     }
                 }
-                FnDescriptor::Expr { expr, .. } => {
+                FnDescriptor::Expr { expr, return_type } => {
                     if expr.is_constant() {
-                        let val_tokens = compile_constant_map_expr_mono(expr, ctx);
+                        let val_tokens = compile_constant_map_expr_mono(expr, return_type.as_ref(), ctx);
                         quote! { #inner_expr.map(|_| #val_tokens) }
                     } else {
-                        let body_tokens = compile_map_expr_mono(expr, ctx);
+                        let body_tokens = compile_map_expr_mono(expr, return_type.as_ref(), ctx);
                         quote! { #inner_expr.map(|__input| #body_tokens) }
                     }
                 }

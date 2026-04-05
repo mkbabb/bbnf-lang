@@ -14,16 +14,38 @@ use super::super::MonoCtx;
 use super::super::ir_types::IrCodegenCtx;
 use super::super::unescape_literal;
 
-/// Compile a constant MapExpr to a TokenStream value.
-fn compile_constant_map_expr(expr: &MapExpr, _ctx: &IrCodegenCtx<'_>) -> TokenStream {
+/// Compile a constant MapExpr to a TokenStream value with correct type suffix.
+fn compile_constant_map_expr(
+    expr: &MapExpr,
+    return_type: Option<&bbnf_ir::TypeDesc>,
+    ctx: &IrCodegenCtx<'_>,
+) -> TokenStream {
     match expr {
         MapExpr::IntLit(n) => {
-            let lit = proc_macro2::Literal::i64_unsuffixed(*n);
-            quote! { #lit }
+            if let Some(bbnf_ir::TypeDesc::Named(sid)) = return_type {
+                let type_name = ctx.ir.get_string(*sid);
+                let suffixed = format!("{}{}", n, type_name);
+                suffixed.parse::<TokenStream>().unwrap_or_else(|_| {
+                    let lit = proc_macro2::Literal::i64_unsuffixed(*n);
+                    quote! { #lit }
+                })
+            } else {
+                let lit = proc_macro2::Literal::i64_unsuffixed(*n);
+                quote! { #lit }
+            }
         }
         MapExpr::FloatLit(f) => {
-            let lit = proc_macro2::Literal::f64_unsuffixed(*f);
-            quote! { #lit }
+            if let Some(bbnf_ir::TypeDesc::Named(sid)) = return_type {
+                let type_name = ctx.ir.get_string(*sid);
+                let suffixed = format!("{}{}", f, type_name);
+                suffixed.parse::<TokenStream>().unwrap_or_else(|_| {
+                    let lit = proc_macro2::Literal::f64_unsuffixed(*f);
+                    quote! { #lit }
+                })
+            } else {
+                let lit = proc_macro2::Literal::f64_unsuffixed(*f);
+                quote! { #lit }
+            }
         }
         MapExpr::BoolLit(b) => {
             if *b { quote! { true } } else { quote! { false } }
@@ -102,8 +124,8 @@ fn emit_sequential_literal_alt(
         // The return expression: Span for bare literals, constant value for mapped.
         let ret_expr = if let Some(fn_id) = info.constant_fn_id {
             let fd = &ctx.ir.fns[fn_id as usize];
-            if let bbnf_ir::FnDescriptor::Expr { expr, .. } = fd {
-                compile_constant_map_expr(expr, ctx)
+            if let bbnf_ir::FnDescriptor::Expr { expr, return_type } = fd {
+                compile_constant_map_expr(expr, return_type.as_ref(), ctx)
             } else {
                 quote! { () }
             }

@@ -422,17 +422,29 @@ fn compile_alt<E: Emitter>(
         .collect();
 
     // Decision: check for all-literal fast path.
-    let all_literal = branches.iter().all(|b| matches!(b.node, IrNode::Literal(_)));
+    // Also detects Map(Literal, Expr{constant}) — literal with constant value mapping.
+    let all_literal_like = branches.iter().all(|b| {
+        matches!(b.node, IrNode::Literal(_))
+            || matches!(&b.node, IrNode::Map { inner, fn_id } if {
+                matches!(inner.as_ref(), IrNode::Literal(_))
+                    && matches!(&ir.fns[*fn_id as usize], FnDescriptor::Expr { expr, .. } if expr.is_constant())
+            })
+    });
 
-    if all_literal {
+    if all_literal_like {
         let literals: Vec<_> = branches
             .iter()
             .map(|b| {
-                let IrNode::Literal(sid) = &b.node else {
-                    unreachable!()
+                let (lit_sid, node_to_compile) = match &b.node {
+                    IrNode::Literal(sid) => (*sid, &b.node),
+                    IrNode::Map { inner, .. } if matches!(inner.as_ref(), IrNode::Literal(_)) => {
+                        let IrNode::Literal(sid) = inner.as_ref() else { unreachable!() };
+                        (*sid, &b.node)
+                    }
+                    _ => unreachable!(),
                 };
-                let value = ir.get_string(*sid).to_string();
-                let output = compile_node(&b.node, alloc, ir, dstate, emitter, ctx);
+                let value = ir.get_string(lit_sid).to_string();
+                let output = compile_node(node_to_compile, alloc, ir, dstate, emitter, ctx);
                 (value, output)
             })
             .collect();

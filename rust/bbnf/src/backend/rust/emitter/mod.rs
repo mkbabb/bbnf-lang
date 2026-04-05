@@ -22,16 +22,43 @@ pub use super::emitter_types::{RustEmitCtx, RustEmitter};
 
 impl RustEmitter {
     /// Compile a `MapExpr` tree to a Rust `TokenStream` expression.
+    ///
+    /// `return_type` carries the type annotation from `FnDescriptor::Expr` —
+    /// used to emit correctly-suffixed Rust literals (e.g., `0u8` not `0i64`).
     /// The variable `__input` is in scope and holds the parse result.
-    fn compile_map_expr_to_tokens(&self, expr: &MapExpr, ir: &GrammarIR) -> TokenStream {
+    fn compile_map_expr_to_tokens(
+        &self,
+        expr: &MapExpr,
+        return_type: Option<&TypeDesc>,
+        ir: &GrammarIR,
+    ) -> TokenStream {
         match expr {
             MapExpr::IntLit(n) => {
-                let lit = proc_macro2::Literal::i64_unsuffixed(*n);
-                quote! { #lit }
+                // Use return_type to emit correctly-suffixed literal.
+                if let Some(TypeDesc::Named(sid)) = return_type {
+                    let type_name = ir.get_string(*sid);
+                    let suffixed = format!("{}{}", n, type_name);
+                    suffixed.parse::<TokenStream>().unwrap_or_else(|_| {
+                        let lit = proc_macro2::Literal::i64_unsuffixed(*n);
+                        quote! { #lit }
+                    })
+                } else {
+                    let lit = proc_macro2::Literal::i64_unsuffixed(*n);
+                    quote! { #lit }
+                }
             }
             MapExpr::FloatLit(f) => {
-                let lit = proc_macro2::Literal::f64_unsuffixed(*f);
-                quote! { #lit }
+                if let Some(TypeDesc::Named(sid)) = return_type {
+                    let type_name = ir.get_string(*sid);
+                    let suffixed = format!("{}{}", f, type_name);
+                    suffixed.parse::<TokenStream>().unwrap_or_else(|_| {
+                        let lit = proc_macro2::Literal::f64_unsuffixed(*f);
+                        quote! { #lit }
+                    })
+                } else {
+                    let lit = proc_macro2::Literal::f64_unsuffixed(*f);
+                    quote! { #lit }
+                }
             }
             MapExpr::BoolLit(b) => {
                 if *b { quote! { true } } else { quote! { false } }
@@ -48,14 +75,12 @@ impl RustEmitter {
             }
             MapExpr::FnCall { name, args } => {
                 let fn_name_str = ir.get_string(*name);
-                // Try to parse as a Rust path (e.g., `crate::foo::bar`).
                 if let Ok(fn_path) = fn_name_str.parse::<TokenStream>() {
                     let compiled_args: Vec<TokenStream> = args
                         .iter()
-                        .map(|a| self.compile_map_expr_to_tokens(a, ir))
+                        .map(|a| self.compile_map_expr_to_tokens(a, None, ir))
                         .collect();
                     if compiled_args.is_empty() {
-                        // No args: emit as closure-style (the name IS the closure source).
                         quote! { (#fn_path)(__input) }
                     } else {
                         quote! { #fn_path(#(#compiled_args),*) }
@@ -65,8 +90,8 @@ impl RustEmitter {
                 }
             }
             MapExpr::BinOp { op, lhs, rhs } => {
-                let l = self.compile_map_expr_to_tokens(lhs, ir);
-                let r = self.compile_map_expr_to_tokens(rhs, ir);
+                let l = self.compile_map_expr_to_tokens(lhs, None, ir);
+                let r = self.compile_map_expr_to_tokens(rhs, None, ir);
                 let op_token = match op {
                     bbnf_ir::MapBinOp::Add => quote! { + },
                     bbnf_ir::MapBinOp::Sub => quote! { - },
@@ -89,7 +114,7 @@ impl RustEmitter {
                 quote! { (#l #op_token #r) }
             }
             MapExpr::UnaryOp { op, inner } => {
-                let i = self.compile_map_expr_to_tokens(inner, ir);
+                let i = self.compile_map_expr_to_tokens(inner, None, ir);
                 match op {
                     bbnf_ir::MapUnaryOp::Neg => quote! { (-#i) },
                     bbnf_ir::MapUnaryOp::Not => quote! { (!#i) },
@@ -552,7 +577,7 @@ impl Emitter for RustEmitter {
     ) -> TokenStream {
         // Check if this is a constant expression (no input dependency).
         if expr.is_constant() {
-            let value_tokens = self.compile_map_expr_to_tokens(expr, ir);
+            let value_tokens = self.compile_map_expr_to_tokens(expr, return_type, ir);
             return quote! {
                 {
                     #inner?;
@@ -562,8 +587,7 @@ impl Emitter for RustEmitter {
         }
 
         // General case: map parse result through the expression.
-        let body_tokens = self.compile_map_expr_to_tokens(expr, ir);
-        let _ = return_type; // Type annotation used by specialization, not emission.
+        let body_tokens = self.compile_map_expr_to_tokens(expr, return_type, ir);
         quote! {
             #inner.map(|__input| #body_tokens)
         }
@@ -656,11 +680,11 @@ impl Emitter for RustEmitter {
                 })
             }
             // Expr + EnumWrap → fused expr + variant
-            (FnDescriptor::Expr { expr, .. }, FnDescriptor::EnumWrap { variant }) => {
+            (FnDescriptor::Expr { expr, return_type }, FnDescriptor::EnumWrap { variant }) => {
                 let vname = ir.get_string(*variant);
                 let vident = format_ident!("{}", vname);
                 if expr.is_constant() {
-                    let value_tokens = self.compile_map_expr_to_tokens(expr, ir);
+                    let value_tokens = self.compile_map_expr_to_tokens(expr, return_type.as_ref(), ir);
                     Some(quote! {
                         {
                             #inner?;
@@ -668,7 +692,7 @@ impl Emitter for RustEmitter {
                         }
                     })
                 } else {
-                    let body = self.compile_map_expr_to_tokens(expr, ir);
+                    let body = self.compile_map_expr_to_tokens(expr, return_type.as_ref(), ir);
                     Some(quote! {
                         #inner.map(|__input| #enum_ident::#vident(#body))
                     })
@@ -809,12 +833,11 @@ impl Emitter for RustEmitter {
             quote! { #(#hoisted)* #body }
         } else {
             let variant = format_ident!("{}", name);
-            // For single-Ref bodies (alias rules like `rhs = alternation`):
-            // the body produces Enum (from __rule call with Elide) but the
-            // variant may expect BoxedEnum. Check and alloc if needed.
-            let rule_inner_is_boxed = matches!(&rule.body, bbnf_ir::IrNode::Ref(_))
-                && ir_ctx.ir.types.iter()
-                    .any(|(id, td)| *id == rule.id && *td == TypeDesc::BoxedEnum);
+            // Check if the rule's projected type is BoxedEnum — if so, the body
+            // must be slab-allocated before wrapping in the variant.
+            // Uses authoritative TypeMap instead of pattern-matching on body structure.
+            let rule_inner_is_boxed = ir_ctx.ir.types.iter()
+                .any(|(id, td)| *id == rule.id && *td == TypeDesc::BoxedEnum);
             if rule_inner_is_boxed {
                 let alloc_expr = ir_ctx.emit_alloc(&quote! { __x });
                 quote! {

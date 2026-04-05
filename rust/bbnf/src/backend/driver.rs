@@ -127,14 +127,18 @@ pub fn compile_grammar<E: Emitter>(
         dstate.current_rule_name = Some(ir.get_string(rule.name).to_string());
         dstate.current_rule_id = Some(rule.id);
 
-        // Transparent rules compile with Inline (no boxing — the public method wraps).
-        // Non-transparent rules compile with Alloc (boxing throughout — the inner fn
-        // produces BoxedEnum values that the variant wrapper receives directly).
-        // This matches the monolithic path's elide_box=true/false split.
+        // Transparent rules compile with Inline (public method wraps).
+        // Non-transparent BoxedEnum rules compile with Alloc (variant expects &Enum,
+        // so body must produce &Enum via alloc propagation to Refs).
+        // Non-transparent concrete-type rules compile with Inline (variant accepts
+        // the raw type, no boxing needed).
+        let rule_type = ir.types.iter().find(|(id, _)| *id == rule.id).map(|(_, td)| td);
         let body_alloc = if rule.meta.is_transparent {
             ValuePlacement::Inline
-        } else {
+        } else if matches!(rule_type, Some(TypeDesc::BoxedEnum)) || rule_type.is_none() {
             ValuePlacement::Alloc
+        } else {
+            ValuePlacement::Inline
         };
 
         // Tier 2: backend-specific rule body specializations.

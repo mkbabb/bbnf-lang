@@ -31,7 +31,7 @@ regex = "1"
 tempfile = "3"
 bbnf_derive = { version = "0.2", path = "../bbnf-derive" }
 pprint = "0.3"
-gorgeous = { version = "0.1", features = ["vm"] }
+# gorgeous = { version = "0.1", features = ["vm"] }
 parse_that = "0.4"
 bencher = "0.1"
 mimalloc = "0.1"

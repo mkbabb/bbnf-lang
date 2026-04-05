@@ -900,16 +900,17 @@ impl Emitter for RustEmitter {
                 }
             };
             if rule_inner_is_boxed {
-                // The variant holds &Enum. The body must produce &Enum (boxed)
-                // via alloc=Alloc propagation. Wrap directly in variant — no extra alloc.
+                // The variant holds &Enum. Body produces &Enum via Alloc coercion.
+                // Wrap body in closure to capture `return` from key dispatch arms.
                 quote! {
                     #(#hoisted)*
-                    (#body).map(|__x| #enum_ident::#variant(__x))
+                    (|| { #body })().map(|__x| #enum_ident::#variant(__x))
                 }
             } else {
+                // Concrete variant type. Wrap body in closure for same reason.
                 quote! {
                     #(#hoisted)*
-                    (#body).map(|__x| #enum_ident::#variant(__x))
+                    (|| { #body })().map(|__x| #enum_ident::#variant(__x))
                 }
             }
         };

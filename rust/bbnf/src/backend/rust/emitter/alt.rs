@@ -24,42 +24,55 @@ fn needs_coercion(branches: &[(AltBranchInfo, TokenStream)], fallback: Option<&(
     all_types.iter().any(|t| **t != *all_types[0])
 }
 
-/// Coerce a branch body to the common Alt result type (BoxedEnum).
-/// Heterogeneous Alts ALWAYS produce BoxedEnum — every branch gets
-/// sub-variant wrapped + slab allocated, matching the monolithic path's
-/// `effective_elide_box=false` for mixed-type Alts.
+/// Coerce a branch body to the common Alt result type.
+///
+/// When `alloc = Alloc`: produces BoxedEnum (&Enum) via sub-variant + slab alloc.
+/// When `alloc = Inline`: produces Enum via sub-variant wrapping only (no alloc).
 fn coerce_branch(
     info: &AltBranchInfo,
     body: &TokenStream,
+    alloc: ValuePlacement,
     ctx: &RustEmitCtx,
     enum_ident: &syn::Ident,
 ) -> TokenStream {
-    // If the branch already produces BoxedEnum (slab ref), no coercion needed.
+    // If the branch already produces the target type, no coercion needed.
     if info.ty == TypeDesc::BoxedEnum {
+        if alloc == ValuePlacement::Alloc {
+            return body.clone(); // already &Enum
+        }
+        // BoxedEnum → Enum not possible without deref; pass through.
         return body.clone();
     }
 
     let ir_ctx = ctx.ir_ctx();
 
-    // If the branch produces Enum (unboxed), slab-allocate it.
     if info.ty == TypeDesc::Enum {
-        let alloc_expr = ir_ctx.emit_alloc(&quote! { __coerce_v });
-        return quote! { (#body).map(|__coerce_v| #alloc_expr) };
+        if alloc == ValuePlacement::Alloc {
+            let alloc_expr = ir_ctx.emit_alloc(&quote! { __coerce_v });
+            return quote! { (#body).map(|__coerce_v| #alloc_expr) };
+        }
+        return body.clone(); // already Enum, Inline context
     }
 
-    // Branch produces a simpler type (Span, Tuple, etc.) — wrap in sub-variant + alloc.
-    // Try exact match first, then normalized (BoxedEnum→Enum in nested positions).
+    // Branch produces a simpler type (Span, Tuple, Named, etc.) — wrap in sub-variant.
     let normalized = normalize_type(&info.ty);
     if let Some(variant_name) = ir_ctx.global_sub_variants.get(&info.ty)
         .or_else(|| ir_ctx.global_sub_variants.get(&normalized))
     {
         let variant = format_ident!("{}", variant_name);
-        let alloc_expr = ir_ctx.emit_alloc(&quote! { #enum_ident::#variant(__sv) });
-        quote! { (#body).map(|__sv| #alloc_expr) }
+        if alloc == ValuePlacement::Alloc {
+            let alloc_expr = ir_ctx.emit_alloc(&quote! { #enum_ident::#variant(__sv) });
+            quote! { (#body).map(|__sv| #alloc_expr) }
+        } else {
+            quote! { (#body).map(|__sv| #enum_ident::#variant(__sv)) }
+        }
     } else {
-        // No sub-variant — just slab-allocate the value as-is.
-        let alloc_expr = ir_ctx.emit_alloc(&quote! { __coerce_v });
-        quote! { (#body).map(|__coerce_v| #alloc_expr) }
+        if alloc == ValuePlacement::Alloc {
+            let alloc_expr = ir_ctx.emit_alloc(&quote! { __coerce_v });
+            quote! { (#body).map(|__coerce_v| #alloc_expr) }
+        } else {
+            body.clone()
+        }
     }
 }
 
@@ -80,7 +93,7 @@ impl RustEmitter {
         table: &AltDispatch,
         branches: Vec<(AltBranchInfo, TokenStream)>,
         fallback: Option<(AltBranchInfo, TokenStream)>,
-        _alloc: ValuePlacement,
+        alloc: ValuePlacement,
         ctx: &mut RustEmitCtx,
     ) -> TokenStream {
         let do_coerce = needs_coercion(&branches, fallback.as_ref());
@@ -102,7 +115,7 @@ impl RustEmitter {
 
             let patterns: Vec<_> = byte_patterns.iter().map(|b| quote! { #b }).collect();
             let coerced = if do_coerce {
-                coerce_branch(info, body, ctx, &self.enum_ident)
+                coerce_branch(info, body, alloc, ctx, &self.enum_ident)
             } else {
                 body.clone()
             };
@@ -113,7 +126,7 @@ impl RustEmitter {
 
         let fallback_expr = if let Some((info, fb_body)) = fallback {
             let coerced = if do_coerce {
-                coerce_branch(&info, &fb_body, ctx, &self.enum_ident)
+                coerce_branch(&info, &fb_body, alloc, ctx, &self.enum_ident)
             } else {
                 fb_body
             };
@@ -137,7 +150,7 @@ impl RustEmitter {
     pub(super) fn emit_alt_checkpoint_impl(
         &mut self,
         branches: Vec<(AltBranchInfo, TokenStream)>,
-        _alloc: ValuePlacement,
+        alloc: ValuePlacement,
         ctx: &mut RustEmitCtx,
     ) -> TokenStream {
         if branches.len() == 1 {
@@ -150,7 +163,7 @@ impl RustEmitter {
         let mut chain = Vec::new();
         for (info, body) in &branches {
             let coerced = if do_coerce {
-                coerce_branch(info, body, ctx, &self.enum_ident)
+                coerce_branch(info, body, alloc, ctx, &self.enum_ident)
             } else {
                 body.clone()
             };
@@ -177,7 +190,7 @@ impl RustEmitter {
     pub(super) fn emit_alt_all_literal_impl(
         &mut self,
         literals: Vec<(String, TokenStream)>,
-        _alloc: ValuePlacement,
+        alloc: ValuePlacement,
         _ctx: &mut RustEmitCtx,
     ) -> TokenStream {
         let mut chain = Vec::new();
@@ -200,7 +213,7 @@ impl RustEmitter {
         config: &KeyDispatchConfig,
         branches: Vec<KeyDispatchBranch<TokenStream>>,
         fallback: Option<(AltBranchInfo, TokenStream)>,
-        _alloc: ValuePlacement,
+        alloc: ValuePlacement,
         ctx: &mut RustEmitCtx,
     ) -> TokenStream {
         // Check if branches need coercion (heterogeneous types → BoxedEnum).
@@ -234,7 +247,7 @@ impl RustEmitter {
                     })
                     .collect();
                 let body = if do_coerce {
-                    coerce_branch(&kd.info, &kd.body, ctx, &self.enum_ident)
+                    coerce_branch(&kd.info, &kd.body, alloc, ctx, &self.enum_ident)
                 } else {
                     kd.body
                 };
@@ -248,7 +261,7 @@ impl RustEmitter {
             .collect();
         let fallback_expr = if let Some((info, fb)) = fallback {
             if do_coerce {
-                coerce_branch(&info, &fb, ctx, &self.enum_ident)
+                coerce_branch(&info, &fb, alloc, ctx, &self.enum_ident)
             } else {
                 fb
             }

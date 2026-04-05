@@ -3,7 +3,7 @@
 use bbnf_ir::AltDispatch;
 
 use crate::backend::key_dispatch::{KeyClass, KeyDispatchConfig};
-use crate::backend::{AllocStrategy, AltBranchInfo, KeyDispatchBranch};
+use crate::backend::{ValuePlacement, AltBranchInfo, KeyDispatchBranch};
 
 use super::code::{TsCode, TsEmitCtx, TsEmitter};
 use super::helpers::{ts_escape, unescape_literal};
@@ -14,7 +14,7 @@ impl TsEmitter {
         table: &AltDispatch,
         branches: Vec<(AltBranchInfo, TsCode)>,
         fallback: Option<(AltBranchInfo, TsCode)>,
-        _alloc: AllocStrategy,
+        _alloc: ValuePlacement,
         ctx: &mut TsEmitCtx,
     ) -> TsCode {
         let result = ctx.fresh("dispatch");
@@ -54,7 +54,7 @@ impl TsEmitter {
     pub(super) fn alt_checkpoint(
         &mut self,
         branches: Vec<(AltBranchInfo, TsCode)>,
-        _alloc: AllocStrategy,
+        _alloc: ValuePlacement,
         ctx: &mut TsEmitCtx,
     ) -> TsCode {
         if branches.len() == 1 {
@@ -78,7 +78,7 @@ impl TsEmitter {
     pub(super) fn alt_all_literal(
         &mut self,
         literals: Vec<(String, TsCode)>,
-        _alloc: AllocStrategy,
+        _alloc: ValuePlacement,
         ctx: &mut TsEmitCtx,
     ) -> TsCode {
         let result = ctx.fresh("lit_alt");
@@ -99,7 +99,7 @@ impl TsEmitter {
         config: &KeyDispatchConfig,
         branches: Vec<KeyDispatchBranch<TsCode>>,
         fallback: Option<(AltBranchInfo, TsCode)>,
-        _alloc: AllocStrategy,
+        _alloc: ValuePlacement,
         ctx: &mut TsEmitCtx,
     ) -> TsCode {
         let cp = ctx.fresh("kd_cp");

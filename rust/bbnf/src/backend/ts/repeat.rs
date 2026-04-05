@@ -2,7 +2,7 @@
 
 use bbnf_ir::TypeDesc;
 
-use crate::backend::{AllocStrategy, SepByConfig};
+use crate::backend::{ValuePlacement, SepByConfig};
 
 use super::code::{TsCode, TsEmitCtx, TsEmitter};
 
@@ -38,7 +38,7 @@ impl TsEmitter {
         &mut self,
         body: TsCode,
         _inner_type: &TypeDesc,
-        _alloc: AllocStrategy,
+        _alloc: ValuePlacement,
         ctx: &mut TsEmitCtx,
     ) -> TsCode {
         let cp = ctx.fresh("cp");

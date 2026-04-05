@@ -2,7 +2,7 @@
 
 use bbnf_ir::TypeDesc;
 
-use crate::backend::{AllocStrategy, SepByConfig};
+use crate::backend::{ValuePlacement, SepByConfig};
 
 use super::code::{WasmEmitCtx, WasmEmitter};
 
@@ -45,7 +45,7 @@ impl WasmEmitter {
         &mut self,
         body: String,
         _inner_type: &TypeDesc,
-        _alloc: AllocStrategy,
+        _alloc: ValuePlacement,
         ctx: &mut WasmEmitCtx,
     ) -> String {
         let save = ctx.fresh("opt_save");

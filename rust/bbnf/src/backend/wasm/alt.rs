@@ -3,7 +3,7 @@
 use bbnf_ir::AltDispatch;
 
 use crate::backend::key_dispatch::KeyDispatchConfig;
-use crate::backend::{AllocStrategy, AltBranchInfo, KeyDispatchBranch};
+use crate::backend::{ValuePlacement, AltBranchInfo, KeyDispatchBranch};
 
 use super::code::{WasmEmitCtx, WasmEmitter};
 
@@ -14,7 +14,7 @@ impl WasmEmitter {
         table: &AltDispatch,
         branches: Vec<(AltBranchInfo, String)>,
         fallback: Option<(AltBranchInfo, String)>,
-        _alloc: AllocStrategy,
+        _alloc: ValuePlacement,
         ctx: &mut WasmEmitCtx,
     ) -> String {
         let byte_var = ctx.fresh("d_byte");
@@ -65,7 +65,7 @@ impl WasmEmitter {
     pub(super) fn alt_checkpoint(
         &mut self,
         branches: Vec<(AltBranchInfo, String)>,
-        _alloc: AllocStrategy,
+        _alloc: ValuePlacement,
         ctx: &mut WasmEmitCtx,
     ) -> String {
         if branches.len() == 1 {
@@ -96,7 +96,7 @@ impl WasmEmitter {
     pub(super) fn alt_all_literal(
         &mut self,
         literals: Vec<(String, String)>,
-        _alloc: AllocStrategy,
+        _alloc: ValuePlacement,
         ctx: &mut WasmEmitCtx,
     ) -> String {
         if literals.len() == 1 {
@@ -124,7 +124,7 @@ impl WasmEmitter {
         config: &KeyDispatchConfig,
         branches: Vec<KeyDispatchBranch<String>>,
         fallback: Option<(AltBranchInfo, String)>,
-        _alloc: AllocStrategy,
+        _alloc: ValuePlacement,
         ctx: &mut WasmEmitCtx,
     ) -> String {
         let save = ctx.fresh("kd_save");

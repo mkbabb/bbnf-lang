@@ -63,21 +63,21 @@ pub trait Emitter {
         table: &AltDispatch,
         branches: Vec<(AltBranchInfo, Self::Output)>,
         fallback: Option<(AltBranchInfo, Self::Output)>,
-        alloc: AllocStrategy,
+        alloc: ValuePlacement,
         ctx: &mut Self::Ctx,
     ) -> Self::Output;
 
     fn emit_alt_checkpoint(
         &mut self,
         branches: Vec<(AltBranchInfo, Self::Output)>,
-        alloc: AllocStrategy,
+        alloc: ValuePlacement,
         ctx: &mut Self::Ctx,
     ) -> Self::Output;
 
     fn emit_alt_all_literal(
         &mut self,
         literals: Vec<(String, Self::Output)>,
-        alloc: AllocStrategy,
+        alloc: ValuePlacement,
         ctx: &mut Self::Ctx,
     ) -> Self::Output;
 
@@ -86,7 +86,7 @@ pub trait Emitter {
         config: &KeyDispatchConfig,
         branches: Vec<KeyDispatchBranch<Self::Output>>,
         fallback: Option<(AltBranchInfo, Self::Output)>,
-        alloc: AllocStrategy,
+        alloc: ValuePlacement,
         ctx: &mut Self::Ctx,
     ) -> Self::Output;
 
@@ -105,7 +105,7 @@ pub trait Emitter {
         &mut self,
         body: Self::Output,
         inner_type: &TypeDesc,
-        alloc: AllocStrategy,
+        alloc: ValuePlacement,
         ctx: &mut Self::Ctx,
     ) -> Self::Output;
 
@@ -124,7 +124,7 @@ pub trait Emitter {
         &mut self,
         rule_id: RuleId,
         rule_name: &str,
-        alloc: AllocStrategy,
+        alloc: ValuePlacement,
         ctx: &mut Self::Ctx,
     ) -> Self::Output;
 
@@ -132,7 +132,7 @@ pub trait Emitter {
         &mut self,
         body: Self::Output,
         variant_name: Option<&str>,
-        alloc: AllocStrategy,
+        alloc: ValuePlacement,
         ctx: &mut Self::Ctx,
     ) -> Self::Output;
 
@@ -186,7 +186,7 @@ pub trait Emitter {
         &mut self,
         inner: Self::Output,
         variant_name: &str,
-        alloc: AllocStrategy,
+        alloc: ValuePlacement,
         ctx: &mut Self::Ctx,
     ) -> Self::Output;
 
@@ -206,7 +206,7 @@ pub trait Emitter {
         inner: Self::Output,
         expr: &bbnf_ir::MapExpr,
         return_type: Option<&bbnf_ir::TypeDesc>,
-        alloc: AllocStrategy,
+        alloc: ValuePlacement,
         ir: &GrammarIR,
         ctx: &mut Self::Ctx,
     ) -> Self::Output;
@@ -234,7 +234,7 @@ pub trait Emitter {
         _inner: Self::Output,
         _inner_fd: &FnDescriptor,
         _outer_fd: &FnDescriptor,
-        _alloc: AllocStrategy,
+        _alloc: ValuePlacement,
         _ir: &GrammarIR,
         _ctx: &mut Self::Ctx,
     ) -> Option<Self::Output> {
@@ -277,11 +277,22 @@ pub trait Emitter {
 
     // ── Rule-level emission ─────────────────────────────────────────────
 
-    /// Override the rule body compilation. If this returns `Some(output)`,
-    /// the driver skips `compile_node` for this rule's body and uses the
-    /// override directly. Used by the Rust backend for fused-number rules
-    /// and operator-chain hot paths.
-    fn emit_rule_body_override(
+    /// Emit a fused number rule body (JSON number → f64 specialization).
+    /// Returns `Some` if the backend handles fused number rules, `None` to
+    /// fall through to normal `compile_node`.
+    fn emit_fused_number_rule(
+        &mut self,
+        _rule: &IrRule,
+        _ir: &GrammarIR,
+        _ctx: &mut Self::Ctx,
+    ) -> Option<Self::Output> {
+        None
+    }
+
+    /// Emit an operator chain rule body (precedence climbing specialization).
+    /// Returns `Some` if the backend handles operator chains, `None` to
+    /// fall through to normal `compile_node`.
+    fn emit_operator_chain_rule(
         &mut self,
         _rule: &IrRule,
         _ir: &GrammarIR,

@@ -61,8 +61,8 @@ pub struct AltBranchInfo {
 
 /// How allocation should be handled for a value.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum AllocStrategy {
-    Elide,
+pub enum ValuePlacement {
+    Inline,
     Alloc,
 }
 

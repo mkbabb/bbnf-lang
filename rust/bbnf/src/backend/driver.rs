@@ -12,7 +12,7 @@ use bbnf_ir::{FnDescriptor, GrammarIR, IrNode, RuleId, TypeDesc};
 
 use super::analysis::BackendAnalysis;
 use super::{
-    AllocStrategy, AltBranchInfo, CallStrategy, Emitter, FlattenStrategy, KeyDispatchBranch,
+    ValuePlacement, AltBranchInfo, CallStrategy, Emitter, FlattenStrategy, KeyDispatchBranch,
     SepByConfig, SeqChildGroup, TokenDispatchArmCompiled,
 };
 
@@ -127,26 +127,32 @@ pub fn compile_grammar<E: Emitter>(
         dstate.current_rule_name = Some(ir.get_string(rule.name).to_string());
         dstate.current_rule_id = Some(rule.id);
 
-        // Transparent rules compile with Elide (no boxing — the public method wraps).
+        // Transparent rules compile with Inline (no boxing — the public method wraps).
         // Non-transparent rules compile with Alloc (boxing throughout — the inner fn
         // produces BoxedEnum values that the variant wrapper receives directly).
         // This matches the monolithic path's elide_box=true/false split.
         let body_alloc = if rule.meta.is_transparent {
-            AllocStrategy::Elide
+            ValuePlacement::Inline
         } else {
-            AllocStrategy::Alloc
+            ValuePlacement::Alloc
         };
 
-        // Allow backend to override rule body (fused numbers, operator chains).
-        let body = if let Some(override_body) = emitter.emit_rule_body_override(rule, ir, ctx) {
-            override_body
+        // Tier 2: backend-specific rule body specializations.
+        let body = if analysis.fused_number_rules.contains(&rule.id) {
+            emitter
+                .emit_fused_number_rule(rule, ir, ctx)
+                .unwrap_or_else(|| compile_node(&rule.body, body_alloc, ir, dstate, emitter, ctx))
+        } else if analysis.operator_chain_rules.contains(&rule.id) {
+            emitter
+                .emit_operator_chain_rule(rule, ir, ctx)
+                .unwrap_or_else(|| compile_node(&rule.body, body_alloc, ir, dstate, emitter, ctx))
         } else {
             compile_node(&rule.body, body_alloc, ir, dstate, emitter, ctx)
         };
 
         // Compile recovery sync expression if @recover is present.
         let sync_body = rule.meta.directives.recover.as_ref().map(|sync_node| {
-            compile_node(sync_node, AllocStrategy::Elide, ir, dstate, emitter, ctx)
+            compile_node(sync_node, ValuePlacement::Inline, ir, dstate, emitter, ctx)
         });
 
         // Wrap in a rule function definition.
@@ -164,10 +170,10 @@ pub fn compile_grammar<E: Emitter>(
 /// emission to the [`Emitter`].
 ///
 /// `alloc` controls whether the result should be heap-allocated or returned inline.
-/// This corresponds to the former `elide_box` parameter (inverted: `Elide` = `elide_box=true`).
+/// This corresponds to the former `elide_box` parameter (inverted: `Inline` = `elide_box=true`).
 pub fn compile_node<E: Emitter>(
     node: &IrNode,
-    alloc: AllocStrategy,
+    alloc: ValuePlacement,
     ir: &GrammarIR,
     dstate: &mut DriverState,
     emitter: &mut E,
@@ -194,9 +200,9 @@ pub fn compile_node<E: Emitter>(
         IrNode::Seq(children) => {
             // Decision: detect operator chain pattern Seq(head, Repeat(Seq(op, rhs))).
             if let Some((head, op, rhs)) = detect_operator_chain(children) {
-                let head_out = compile_node(head, AllocStrategy::Elide, ir, dstate, emitter, ctx);
-                let op_out = compile_node(op, AllocStrategy::Elide, ir, dstate, emitter, ctx);
-                let rhs_out = compile_node(rhs, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+                let head_out = compile_node(head, ValuePlacement::Inline, ir, dstate, emitter, ctx);
+                let op_out = compile_node(op, ValuePlacement::Inline, ir, dstate, emitter, ctx);
+                let rhs_out = compile_node(rhs, ValuePlacement::Inline, ir, dstate, emitter, ctx);
                 if let Some(chain) = emitter.emit_operator_chain(head_out, op_out, rhs_out, ctx) {
                     return chain;
                 }
@@ -223,7 +229,7 @@ pub fn compile_node<E: Emitter>(
                 compile_wrap(open, middle, right, alloc, ir, dstate, emitter, ctx)
             } else {
                 let kept = compile_node(left, alloc, ir, dstate, emitter, ctx);
-                let discarded = compile_node(right, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+                let discarded = compile_node(right, ValuePlacement::Inline, ir, dstate, emitter, ctx);
                 emitter.emit_skip(kept, discarded, ctx)
             }
         }
@@ -234,7 +240,7 @@ pub fn compile_node<E: Emitter>(
                 compile_wrap(left, middle, close, alloc, ir, dstate, emitter, ctx)
             } else {
                 let discarded =
-                    compile_node(left, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+                    compile_node(left, ValuePlacement::Inline, ir, dstate, emitter, ctx);
                 let kept = compile_node(right, alloc, ir, dstate, emitter, ctx);
                 emitter.emit_next(discarded, kept, ctx)
             }
@@ -242,13 +248,13 @@ pub fn compile_node<E: Emitter>(
 
         IrNode::Minus(left, right) => {
             // Checkpoint/restore: try right (excluded), if it matches, reject.
-            let rhs = compile_node(right, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+            let rhs = compile_node(right, ValuePlacement::Inline, ir, dstate, emitter, ctx);
             let lhs = compile_node(left, alloc, ir, dstate, emitter, ctx);
             emitter.emit_minus(lhs, rhs, ctx)
         }
 
         IrNode::Negate(inner) => {
-            let inner_out = compile_node(inner, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+            let inner_out = compile_node(inner, ValuePlacement::Inline, ir, dstate, emitter, ctx);
             emitter.emit_negate(inner_out, ctx)
         }
 
@@ -272,11 +278,11 @@ pub fn compile_node<E: Emitter>(
         } => {
             if arms.is_empty() {
                 let token_out =
-                    compile_node(token, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+                    compile_node(token, ValuePlacement::Inline, ir, dstate, emitter, ctx);
                 let fallback_out = compile_node(fallback, alloc, ir, dstate, emitter, ctx);
                 return emitter.emit_next(token_out, fallback_out, ctx);
             }
-            let token_out = compile_node(token, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+            let token_out = compile_node(token, ValuePlacement::Inline, ir, dstate, emitter, ctx);
             let compiled_arms: Vec<TokenDispatchArmCompiled<E::Output>> = arms
                 .iter()
                 .map(|arm| {
@@ -310,7 +316,7 @@ pub fn compile_node<E: Emitter>(
 /// - Vec flattening: `(T, Vec<T>)` or `(Vec<T>, T)` pairs flatten to `Vec<T>`
 fn compile_seq<E: Emitter>(
     children: &[IrNode],
-    _alloc: AllocStrategy,
+    _alloc: ValuePlacement,
     ir: &GrammarIR,
     dstate: &mut DriverState,
     emitter: &mut E,
@@ -343,7 +349,7 @@ fn compile_seq<E: Emitter>(
         // Decision: all-Span → compress.
         let outputs: Vec<_> = children
             .iter()
-            .map(|c| compile_node(c, AllocStrategy::Elide, ir, dstate, emitter, ctx))
+            .map(|c| compile_node(c, ValuePlacement::Inline, ir, dstate, emitter, ctx))
             .collect();
         emitter.emit_seq_all_span(outputs, ctx)
     } else {
@@ -353,7 +359,7 @@ fn compile_seq<E: Emitter>(
 
         for (child, ty) in children.iter().zip(child_types.iter()) {
             if *ty == TypeDesc::Span {
-                let out = compile_node(child, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+                let out = compile_node(child, ValuePlacement::Inline, ir, dstate, emitter, ctx);
                 span_run.push(out);
             } else {
                 // Flush any accumulated Span run.
@@ -366,9 +372,9 @@ fn compile_seq<E: Emitter>(
                 // to match the TypeMap's projected type. Backends without
                 // allocation (TS, WASM) ignore the alloc parameter.
                 let child_alloc = if matches!(ty, TypeDesc::BoxedEnum) {
-                    AllocStrategy::Alloc
+                    ValuePlacement::Alloc
                 } else {
-                    AllocStrategy::Elide
+                    ValuePlacement::Inline
                 };
                 let out = compile_node(child, child_alloc, ir, dstate, emitter, ctx);
                 groups.push(SeqChildGroup::Single {
@@ -403,7 +409,7 @@ fn compile_seq<E: Emitter>(
 fn compile_alt<E: Emitter>(
     branches: &[bbnf_ir::AltBranch],
     dispatch: Option<&bbnf_ir::AltDispatch>,
-    alloc: AllocStrategy,
+    alloc: ValuePlacement,
     ir: &GrammarIR,
     dstate: &mut DriverState,
     emitter: &mut E,
@@ -412,7 +418,7 @@ fn compile_alt<E: Emitter>(
     let type_map = ir.type_map.as_ref();
 
     // Classify branch types.
-    // In Elide context (Vec elements, elide_box=true), map BoxedEnum → Enum
+    // In Inline context (Vec elements, elide_box=true), map BoxedEnum → Enum
     // to match the TypeMap's Vec projection. Elements are collected unboxed
     // in scratch Vecs; the slab allocates the entire slice at collect time.
     let branch_infos: Vec<AltBranchInfo> = branches
@@ -421,7 +427,7 @@ fn compile_alt<E: Emitter>(
             let mut ty = type_map
                 .and_then(|tm| tm.node_type(&b.node).cloned())
                 .unwrap_or(TypeDesc::Span);
-            if alloc == AllocStrategy::Elide && ty == TypeDesc::BoxedEnum {
+            if alloc == ValuePlacement::Inline && ty == TypeDesc::BoxedEnum {
                 ty = TypeDesc::Enum;
             }
             AltBranchInfo {
@@ -435,7 +441,7 @@ fn compile_alt<E: Emitter>(
     // Also detects Map(Literal, Expr{constant}) — literal with constant value mapping.
     // Skip this fast path when alloc == Alloc: the raw constants need sub-variant
     // wrapping + slab allocation, which the all-literal path doesn't provide.
-    let all_literal_like = alloc == AllocStrategy::Elide && branches.iter().all(|b| {
+    let all_literal_like = alloc == ValuePlacement::Inline && branches.iter().all(|b| {
         matches!(b.node, IrNode::Literal(_))
             || matches!(&b.node, IrNode::Map { inner, fn_id } if {
                 matches!(inner.as_ref(), IrNode::Literal(_))
@@ -561,7 +567,7 @@ fn compile_repeat<E: Emitter>(
     inner: &IrNode,
     lo: u32,
     hi: u32,
-    alloc: AllocStrategy,
+    alloc: ValuePlacement,
     ir: &GrammarIR,
     dstate: &mut DriverState,
     emitter: &mut E,
@@ -584,13 +590,13 @@ fn compile_repeat<E: Emitter>(
                 .unwrap_or(TypeDesc::Span);
 
             let elem_alloc = if elem_type == TypeDesc::BoxedEnum {
-                AllocStrategy::Alloc
+                ValuePlacement::Alloc
             } else {
-                AllocStrategy::Elide
+                ValuePlacement::Inline
             };
             let element_out = compile_node(element, elem_alloc, ir, dstate, emitter, ctx);
             let sep_out =
-                compile_node(separator, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+                compile_node(separator, ValuePlacement::Inline, ir, dstate, emitter, ctx);
 
             let config = SepByConfig {
                 ws: false,
@@ -609,9 +615,9 @@ fn compile_repeat<E: Emitter>(
             .unwrap_or(TypeDesc::Span);
         // BoxedEnum optionals need Alloc so the inner Ref produces &'a Enum.
         let inner_alloc = if matches!(inner_type, TypeDesc::BoxedEnum) {
-            AllocStrategy::Alloc
+            ValuePlacement::Alloc
         } else {
-            AllocStrategy::Elide
+            ValuePlacement::Inline
         };
         let body = compile_node(inner, inner_alloc, ir, dstate, emitter, ctx);
         emitter.emit_repeat_optional(body, &inner_type, alloc, ctx)
@@ -630,12 +636,12 @@ fn compile_repeat<E: Emitter>(
             })
             .unwrap_or(TypeDesc::Span);
         // Match elem_type: if BoxedEnum, inner must produce &Enum (Alloc).
-        // If Enum, inner produces Enum (Elide). Monolithic uses elide_box=true
+        // If Enum, inner produces Enum (Inline). Monolithic uses elide_box=true
         // when elem_type is Enum, elide_box=false when BoxedEnum.
         let inner_alloc = if elem_type == TypeDesc::BoxedEnum {
-            AllocStrategy::Alloc
+            ValuePlacement::Alloc
         } else {
-            AllocStrategy::Elide
+            ValuePlacement::Inline
         };
         let body = compile_node(inner, inner_alloc, ir, dstate, emitter, ctx);
         emitter.emit_repeat_many(body, lo, hi, &elem_type, ctx)
@@ -647,7 +653,7 @@ fn compile_repeat<E: Emitter>(
 /// Decision: inline body vs direct call (from inline analysis).
 fn compile_ref<E: Emitter>(
     rule_id: RuleId,
-    alloc: AllocStrategy,
+    alloc: ValuePlacement,
     ir: &GrammarIR,
     dstate: &mut DriverState,
     emitter: &mut E,
@@ -666,7 +672,7 @@ fn compile_ref<E: Emitter>(
                 return emitter.emit_call(rule_id, rule_name, alloc, ctx);
             }
             // Inline non-transparent: body compiled with Alloc so Refs produce boxed.
-            let inline_alloc = AllocStrategy::Alloc;
+            let inline_alloc = ValuePlacement::Alloc;
             let body = compile_node(&rule.body, inline_alloc, ir, dstate, emitter, ctx);
             let variant_name = if rule.meta.is_transparent {
                 None
@@ -684,7 +690,7 @@ fn compile_ref<E: Emitter>(
 fn compile_map<E: Emitter>(
     inner: &IrNode,
     fn_id: bbnf_ir::FnId,
-    alloc: AllocStrategy,
+    alloc: ValuePlacement,
     ir: &GrammarIR,
     dstate: &mut DriverState,
     emitter: &mut E,
@@ -695,7 +701,7 @@ fn compile_map<E: Emitter>(
     // Map fusion: if inner is also a Map, try to fuse both operations.
     if let IrNode::Map { inner: inner2, fn_id: fn_id2 } = inner {
         let inner_fd = &ir.fns[*fn_id2 as usize];
-        let inner_out = compile_node(inner2, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+        let inner_out = compile_node(inner2, ValuePlacement::Inline, ir, dstate, emitter, ctx);
         if let Some(fused) = emitter.emit_fused_map(inner_out, inner_fd, fn_desc, alloc, ir, ctx) {
             return fused;
         }
@@ -710,7 +716,7 @@ fn compile_map<E: Emitter>(
 
         FnDescriptor::EnumWrap { variant } => {
             let variant_name = ir.get_string(*variant);
-            let inner_out = compile_node(inner, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+            let inner_out = compile_node(inner, ValuePlacement::Inline, ir, dstate, emitter, ctx);
             emitter.emit_enum_wrap(inner_out, variant_name, alloc, ctx)
         }
 
@@ -720,18 +726,18 @@ fn compile_map<E: Emitter>(
         }
 
         FnDescriptor::SpanCapture => {
-            let inner_out = compile_node(inner, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+            let inner_out = compile_node(inner, ValuePlacement::Inline, ir, dstate, emitter, ctx);
             emitter.emit_span_capture(inner_out, ctx)
         }
 
         FnDescriptor::HexConvert { fn_path } => {
             let path_str = ir.get_string(*fn_path);
-            let inner_out = compile_node(inner, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+            let inner_out = compile_node(inner, ValuePlacement::Inline, ir, dstate, emitter, ctx);
             emitter.emit_hex_convert(inner_out, path_str, ctx)
         }
 
         FnDescriptor::Expr { expr, return_type } => {
-            let inner_out = compile_node(inner, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+            let inner_out = compile_node(inner, ValuePlacement::Inline, ir, dstate, emitter, ctx);
             emitter.emit_map_expr(inner_out, expr, return_type.as_ref(), alloc, ir, ctx)
         }
     }
@@ -744,7 +750,7 @@ fn compile_wrap<E: Emitter>(
     open: &IrNode,
     middle: &IrNode,
     close: &IrNode,
-    alloc: AllocStrategy,
+    alloc: ValuePlacement,
     ir: &GrammarIR,
     dstate: &mut DriverState,
     emitter: &mut E,
@@ -782,18 +788,18 @@ fn compile_wrap<E: Emitter>(
                     .unwrap_or(TypeDesc::Span);
 
                 let elem_alloc = if elem_type == TypeDesc::BoxedEnum {
-                    AllocStrategy::Alloc
+                    ValuePlacement::Alloc
                 } else {
-                    AllocStrategy::Elide
+                    ValuePlacement::Inline
                 };
                 let open_out =
-                    compile_node(open, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+                    compile_node(open, ValuePlacement::Inline, ir, dstate, emitter, ctx);
                 let element_out =
                     compile_node(element, elem_alloc, ir, dstate, emitter, ctx);
                 let sep_out =
-                    compile_node(separator, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+                    compile_node(separator, ValuePlacement::Inline, ir, dstate, emitter, ctx);
                 let close_out =
-                    compile_node(close, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+                    compile_node(close, ValuePlacement::Inline, ir, dstate, emitter, ctx);
 
                 let config = SepByConfig {
                     ws: is_ow,
@@ -824,9 +830,9 @@ fn compile_wrap<E: Emitter>(
     }
 
     // Generic wrap: open >> middle << close.
-    let open_out = compile_node(open, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+    let open_out = compile_node(open, ValuePlacement::Inline, ir, dstate, emitter, ctx);
     let middle_out = compile_node(middle, alloc, ir, dstate, emitter, ctx);
-    let close_out = compile_node(close, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+    let close_out = compile_node(close, ValuePlacement::Inline, ir, dstate, emitter, ctx);
     let after_open = emitter.emit_next(open_out, middle_out, ctx);
     emitter.emit_skip(after_open, close_out, ctx)
 }

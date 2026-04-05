@@ -5,7 +5,7 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use crate::backend::key_dispatch::{KeyClass, KeyDispatchConfig};
-use crate::backend::{AllocStrategy, AltBranchInfo, KeyDispatchBranch};
+use crate::backend::{ValuePlacement, AltBranchInfo, KeyDispatchBranch};
 
 use super::RustEmitter;
 use super::RustEmitCtx;
@@ -80,7 +80,7 @@ impl RustEmitter {
         table: &AltDispatch,
         branches: Vec<(AltBranchInfo, TokenStream)>,
         fallback: Option<(AltBranchInfo, TokenStream)>,
-        _alloc: AllocStrategy,
+        _alloc: ValuePlacement,
         ctx: &mut RustEmitCtx,
     ) -> TokenStream {
         let do_coerce = needs_coercion(&branches, fallback.as_ref());
@@ -137,7 +137,7 @@ impl RustEmitter {
     pub(super) fn emit_alt_checkpoint_impl(
         &mut self,
         branches: Vec<(AltBranchInfo, TokenStream)>,
-        _alloc: AllocStrategy,
+        _alloc: ValuePlacement,
         ctx: &mut RustEmitCtx,
     ) -> TokenStream {
         if branches.len() == 1 {
@@ -177,7 +177,7 @@ impl RustEmitter {
     pub(super) fn emit_alt_all_literal_impl(
         &mut self,
         literals: Vec<(String, TokenStream)>,
-        _alloc: AllocStrategy,
+        _alloc: ValuePlacement,
         _ctx: &mut RustEmitCtx,
     ) -> TokenStream {
         let mut chain = Vec::new();
@@ -200,7 +200,7 @@ impl RustEmitter {
         config: &KeyDispatchConfig,
         branches: Vec<KeyDispatchBranch<TokenStream>>,
         fallback: Option<(AltBranchInfo, TokenStream)>,
-        _alloc: AllocStrategy,
+        _alloc: ValuePlacement,
         ctx: &mut RustEmitCtx,
     ) -> TokenStream {
         let cp = ctx.fresh("kd_cp");

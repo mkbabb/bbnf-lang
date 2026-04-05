@@ -14,7 +14,7 @@ use bbnf_ir::{AltDispatch, FnDescriptor, GrammarIR, IrRule, MapExpr, RuleId, Typ
 use crate::backend::analysis::BackendAnalysis;
 use crate::backend::key_dispatch::KeyDispatchConfig;
 use crate::backend::{
-    AllocStrategy, AltBranchInfo, DelimScanConfig, Emitter, FlattenStrategy, KeyDispatchBranch,
+    ValuePlacement, AltBranchInfo, DelimScanConfig, Emitter, FlattenStrategy, KeyDispatchBranch,
     SepByConfig, SeqChildGroup, TokenDispatchArmCompiled,
 };
 
@@ -161,7 +161,7 @@ impl Emitter for TsEmitter {
         table: &AltDispatch,
         branches: Vec<(AltBranchInfo, TsCode)>,
         fallback: Option<(AltBranchInfo, TsCode)>,
-        alloc: AllocStrategy,
+        alloc: ValuePlacement,
         ctx: &mut TsEmitCtx,
     ) -> TsCode {
         self.alt_dispatch(table, branches, fallback, alloc, ctx)
@@ -170,7 +170,7 @@ impl Emitter for TsEmitter {
     fn emit_alt_checkpoint(
         &mut self,
         branches: Vec<(AltBranchInfo, TsCode)>,
-        alloc: AllocStrategy,
+        alloc: ValuePlacement,
         ctx: &mut TsEmitCtx,
     ) -> TsCode {
         self.alt_checkpoint(branches, alloc, ctx)
@@ -179,7 +179,7 @@ impl Emitter for TsEmitter {
     fn emit_alt_all_literal(
         &mut self,
         literals: Vec<(String, TsCode)>,
-        alloc: AllocStrategy,
+        alloc: ValuePlacement,
         ctx: &mut TsEmitCtx,
     ) -> TsCode {
         self.alt_all_literal(literals, alloc, ctx)
@@ -190,7 +190,7 @@ impl Emitter for TsEmitter {
         config: &KeyDispatchConfig,
         branches: Vec<KeyDispatchBranch<TsCode>>,
         fallback: Option<(AltBranchInfo, TsCode)>,
-        alloc: AllocStrategy,
+        alloc: ValuePlacement,
         ctx: &mut TsEmitCtx,
     ) -> TsCode {
         self.key_dispatch(config, branches, fallback, alloc, ctx)
@@ -213,7 +213,7 @@ impl Emitter for TsEmitter {
         &mut self,
         body: TsCode,
         inner_type: &TypeDesc,
-        alloc: AllocStrategy,
+        alloc: ValuePlacement,
         ctx: &mut TsEmitCtx,
     ) -> TsCode {
         self.repeat_optional(body, inner_type, alloc, ctx)
@@ -236,7 +236,7 @@ impl Emitter for TsEmitter {
         &mut self,
         _rule_id: RuleId,
         rule_name: &str,
-        _alloc: AllocStrategy,
+        _alloc: ValuePlacement,
         _ctx: &mut TsEmitCtx,
     ) -> TsCode {
         TsCode::expr(format!("__{rule_name}(s)"))
@@ -246,7 +246,7 @@ impl Emitter for TsEmitter {
         &mut self,
         body: TsCode,
         variant_name: Option<&str>,
-        _alloc: AllocStrategy,
+        _alloc: ValuePlacement,
         ctx: &mut TsEmitCtx,
     ) -> TsCode {
         if let Some(name) = variant_name {
@@ -356,7 +356,7 @@ impl Emitter for TsEmitter {
         &mut self,
         inner: TsCode,
         variant_name: &str,
-        _alloc: AllocStrategy,
+        _alloc: ValuePlacement,
         ctx: &mut TsEmitCtx,
     ) -> TsCode {
         let v = ctx.fresh("ew");
@@ -402,7 +402,7 @@ impl Emitter for TsEmitter {
         inner: TsCode,
         expr: &MapExpr,
         _return_type: Option<&TypeDesc>,
-        _alloc: AllocStrategy,
+        _alloc: ValuePlacement,
         ir: &GrammarIR,
         ctx: &mut TsEmitCtx,
     ) -> TsCode {
@@ -463,7 +463,7 @@ impl Emitter for TsEmitter {
         _inner: TsCode,
         _inner_fd: &FnDescriptor,
         _outer_fd: &FnDescriptor,
-        _alloc: AllocStrategy,
+        _alloc: ValuePlacement,
         _ir: &GrammarIR,
         _ctx: &mut TsEmitCtx,
     ) -> Option<TsCode> {

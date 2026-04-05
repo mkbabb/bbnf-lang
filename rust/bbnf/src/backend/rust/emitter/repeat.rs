@@ -4,7 +4,7 @@ use bbnf_ir::TypeDesc;
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use crate::backend::{AllocStrategy, SepByConfig};
+use crate::backend::{ValuePlacement, SepByConfig};
 
 use super::RustEmitCtx;
 use super::RustEmitter;
@@ -102,7 +102,7 @@ impl RustEmitter {
         &mut self,
         body: TokenStream,
         inner_type: &TypeDesc,
-        _alloc: AllocStrategy,
+        _alloc: ValuePlacement,
         _ctx: &mut RustEmitCtx,
     ) -> TokenStream {
         // Span case: Optional(Span) collapses to Span — zero-width on failure.

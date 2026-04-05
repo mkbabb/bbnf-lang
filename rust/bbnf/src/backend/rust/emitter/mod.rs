@@ -12,7 +12,7 @@ use quote::{format_ident, quote};
 use crate::backend::analysis::BackendAnalysis;
 use crate::backend::key_dispatch::KeyDispatchConfig;
 use crate::backend::{
-    AllocStrategy, AltBranchInfo, DelimScanConfig, Emitter, FlattenStrategy, KeyDispatchBranch,
+    ValuePlacement, AltBranchInfo, DelimScanConfig, Emitter, FlattenStrategy, KeyDispatchBranch,
     SepByConfig, SeqChildGroup, TokenDispatchArmCompiled,
 };
 
@@ -318,7 +318,7 @@ impl Emitter for RustEmitter {
         table: &bbnf_ir::AltDispatch,
         branches: Vec<(AltBranchInfo, TokenStream)>,
         fallback: Option<(AltBranchInfo, TokenStream)>,
-        alloc: AllocStrategy,
+        alloc: ValuePlacement,
         ctx: &mut Self::Ctx,
     ) -> TokenStream {
         self.emit_alt_dispatch_impl(table, branches, fallback, alloc, ctx)
@@ -327,7 +327,7 @@ impl Emitter for RustEmitter {
     fn emit_alt_checkpoint(
         &mut self,
         branches: Vec<(AltBranchInfo, TokenStream)>,
-        alloc: AllocStrategy,
+        alloc: ValuePlacement,
         ctx: &mut Self::Ctx,
     ) -> TokenStream {
         self.emit_alt_checkpoint_impl(branches, alloc, ctx)
@@ -336,7 +336,7 @@ impl Emitter for RustEmitter {
     fn emit_alt_all_literal(
         &mut self,
         literals: Vec<(String, TokenStream)>,
-        alloc: AllocStrategy,
+        alloc: ValuePlacement,
         ctx: &mut Self::Ctx,
     ) -> TokenStream {
         self.emit_alt_all_literal_impl(literals, alloc, ctx)
@@ -359,7 +359,7 @@ impl Emitter for RustEmitter {
         &mut self,
         body: TokenStream,
         inner_type: &TypeDesc,
-        alloc: AllocStrategy,
+        alloc: ValuePlacement,
         ctx: &mut Self::Ctx,
     ) -> TokenStream {
         self.emit_repeat_optional_impl(body, inner_type, alloc, ctx)
@@ -382,11 +382,11 @@ impl Emitter for RustEmitter {
         &mut self,
         _rule_id: RuleId,
         rule_name: &str,
-        alloc: AllocStrategy,
+        alloc: ValuePlacement,
         ctx: &mut Self::Ctx,
     ) -> TokenStream {
         let fn_ident = format_ident!("__{}", rule_name);
-        if alloc == AllocStrategy::Alloc {
+        if alloc == ValuePlacement::Alloc {
             let ir_ctx = ctx.ir_ctx();
             let val = quote! { __v };
             let alloc_expr = ir_ctx.emit_alloc(&val);
@@ -400,13 +400,13 @@ impl Emitter for RustEmitter {
         &mut self,
         body: TokenStream,
         variant_name: Option<&str>,
-        alloc: AllocStrategy,
+        alloc: ValuePlacement,
         ctx: &mut Self::Ctx,
     ) -> TokenStream {
         if let Some(name) = variant_name {
             let enum_ident = &self.enum_ident;
             let variant = format_ident!("{}", name);
-            if alloc == AllocStrategy::Alloc {
+            if alloc == ValuePlacement::Alloc {
                 let ir_ctx = ctx.ir_ctx();
                 let val = quote! { __v };
                 let alloc_expr = ir_ctx.emit_alloc(&val);
@@ -421,7 +421,7 @@ impl Emitter for RustEmitter {
                     #body.map(|__v| #enum_ident::#variant(__v))
                 }
             }
-        } else if alloc == AllocStrategy::Alloc {
+        } else if alloc == ValuePlacement::Alloc {
             let ir_ctx = ctx.ir_ctx();
             let val = quote! { __v };
             let alloc_expr = ir_ctx.emit_alloc(&val);
@@ -441,7 +441,7 @@ impl Emitter for RustEmitter {
         _ctx: &mut Self::Ctx,
     ) -> Option<TokenStream> {
         // Rust backend declines Seq-level operator chain detection.
-        // Typed operator chains are handled by emit_rule_body_override
+        // Typed operator chains are handled by emit_operator_chain_rule
         // which delegates to the monolithic operator_chain module.
         // The driver falls back to normal Seq compilation.
         None
@@ -523,12 +523,12 @@ impl Emitter for RustEmitter {
         &mut self,
         inner: TokenStream,
         variant_name: &str,
-        alloc: AllocStrategy,
+        alloc: ValuePlacement,
         ctx: &mut Self::Ctx,
     ) -> TokenStream {
         let enum_ident = &self.enum_ident;
         let variant = format_ident!("{}", variant_name);
-        if alloc == AllocStrategy::Alloc {
+        if alloc == ValuePlacement::Alloc {
             let ir_ctx = ctx.ir_ctx();
             let val = quote! { __v };
             let alloc_expr = ir_ctx.emit_alloc(&val);
@@ -571,7 +571,7 @@ impl Emitter for RustEmitter {
         inner: TokenStream,
         expr: &MapExpr,
         return_type: Option<&TypeDesc>,
-        _alloc: AllocStrategy,
+        _alloc: ValuePlacement,
         ir: &GrammarIR,
         _ctx: &mut Self::Ctx,
     ) -> TokenStream {
@@ -625,7 +625,7 @@ impl Emitter for RustEmitter {
         inner: TokenStream,
         inner_fd: &FnDescriptor,
         outer_fd: &FnDescriptor,
-        alloc: AllocStrategy,
+        alloc: ValuePlacement,
         ir: &GrammarIR,
         ctx: &mut Self::Ctx,
     ) -> Option<TokenStream> {
@@ -636,7 +636,7 @@ impl Emitter for RustEmitter {
                 let vname = ir.get_string(*variant);
                 let vident = format_ident!("{}", vname);
                 let ir_ctx = ctx.ir_ctx();
-                if alloc == AllocStrategy::Alloc {
+                if alloc == ValuePlacement::Alloc {
                     let alloc_code = ir_ctx.emit_alloc_let(&quote! { #enum_ident::#vident(__x) });
                     Some(quote! {
                         #inner.map(|__x| {
@@ -728,7 +728,7 @@ impl Emitter for RustEmitter {
         config: &KeyDispatchConfig,
         branches: Vec<KeyDispatchBranch<TokenStream>>,
         fallback: Option<(AltBranchInfo, TokenStream)>,
-        alloc: AllocStrategy,
+        alloc: ValuePlacement,
         ctx: &mut Self::Ctx,
     ) -> TokenStream {
         self.emit_key_dispatch_impl(config, branches, fallback, alloc, ctx)
@@ -758,45 +758,48 @@ impl Emitter for RustEmitter {
 
     // ── Rule-level emission ─────────────────────────────────────────────
 
-    fn emit_rule_body_override(
+    fn emit_fused_number_rule(
+        &mut self,
+        rule: &IrRule,
+        _ir: &GrammarIR,
+        _ctx: &mut Self::Ctx,
+    ) -> Option<TokenStream> {
+        if !rule.meta.is_transparent {
+            Some(quote! {
+                ::parse_that::number_scan_convert(state)
+            })
+        } else {
+            None
+        }
+    }
+
+    fn emit_operator_chain_rule(
         &mut self,
         rule: &IrRule,
         ir: &GrammarIR,
         ctx: &mut Self::Ctx,
     ) -> Option<TokenStream> {
-        // Fused number: bare JSON number regex → number_scan_convert → (Span, f64).
-        if self.fused_number_rules.contains(&rule.id) && !rule.meta.is_transparent {
-            return Some(quote! {
-                ::parse_that::number_scan_convert(state)
-            });
-        }
-
-        // Operator chain: delegate to the monolithic operator_chain module.
-        if self.operator_chain_rules.contains(&rule.id) {
-            let ir_ctx = ctx.ir_ctx();
-            // Create a MonoCtx for the operator chain emission.
-            let call_strategies = crate::pipeline::compute_call_strategies(ir);
-            let call_modes: Vec<_> = call_strategies.iter().map(|s| match s {
-                crate::backend::CallStrategy::DirectCall => {
-                    crate::backend::rust::analysis::inline::CallMode::DirectCall
-                }
-                crate::backend::CallStrategy::InlineBody | crate::backend::CallStrategy::InlineFusion => {
-                    crate::backend::rust::analysis::inline::CallMode::InlineBody
-                }
-            }).collect();
-            let mut mctx = crate::backend::rust::MonoCtx::new(call_modes);
-            mctx.current_rule_id = Some(rule.id);
-            mctx.current_rule_name = Some(ir.get_string(rule.name).to_string());
-            if let Some(chain_expr) =
-                crate::backend::rust::operator_chain::emit_operator_chain_rule(
-                    rule.id, ir_ctx, &mut mctx,
-                )
-            {
-                ctx.hoisted.extend(mctx.hoisted);
-                return Some(chain_expr);
+        let ir_ctx = ctx.ir_ctx();
+        let call_strategies = crate::pipeline::compute_call_strategies(ir);
+        let call_modes: Vec<_> = call_strategies.iter().map(|s| match s {
+            crate::backend::CallStrategy::DirectCall => {
+                crate::backend::rust::analysis::inline::CallMode::DirectCall
             }
+            crate::backend::CallStrategy::InlineBody | crate::backend::CallStrategy::InlineFusion => {
+                crate::backend::rust::analysis::inline::CallMode::InlineBody
+            }
+        }).collect();
+        let mut mctx = crate::backend::rust::MonoCtx::new(call_modes);
+        mctx.current_rule_id = Some(rule.id);
+        mctx.current_rule_name = Some(ir.get_string(rule.name).to_string());
+        if let Some(chain_expr) =
+            crate::backend::rust::operator_chain::emit_operator_chain_rule(
+                rule.id, ir_ctx, &mut mctx,
+            )
+        {
+            ctx.hoisted.extend(mctx.hoisted);
+            return Some(chain_expr);
         }
-
         None
     }
 

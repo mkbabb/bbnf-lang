@@ -5,7 +5,7 @@ use bbnf_ir::{AltDispatch, FnDescriptor, GrammarIR, IrRule, MapExpr, RuleId, Typ
 use crate::backend::analysis::BackendAnalysis;
 use crate::backend::key_dispatch::KeyDispatchConfig;
 use crate::backend::{
-    AllocStrategy, AltBranchInfo, DelimScanConfig, Emitter, FlattenStrategy, KeyDispatchBranch,
+    ValuePlacement, AltBranchInfo, DelimScanConfig, Emitter, FlattenStrategy, KeyDispatchBranch,
     SepByConfig, SeqChildGroup, TokenDispatchArmCompiled,
 };
 
@@ -138,7 +138,7 @@ impl Emitter for WasmEmitter {
         table: &AltDispatch,
         branches: Vec<(AltBranchInfo, String)>,
         fallback: Option<(AltBranchInfo, String)>,
-        alloc: AllocStrategy,
+        alloc: ValuePlacement,
         ctx: &mut WasmEmitCtx,
     ) -> String {
         self.alt_dispatch(table, branches, fallback, alloc, ctx)
@@ -147,7 +147,7 @@ impl Emitter for WasmEmitter {
     fn emit_alt_checkpoint(
         &mut self,
         branches: Vec<(AltBranchInfo, String)>,
-        alloc: AllocStrategy,
+        alloc: ValuePlacement,
         ctx: &mut WasmEmitCtx,
     ) -> String {
         self.alt_checkpoint(branches, alloc, ctx)
@@ -156,7 +156,7 @@ impl Emitter for WasmEmitter {
     fn emit_alt_all_literal(
         &mut self,
         literals: Vec<(String, String)>,
-        alloc: AllocStrategy,
+        alloc: ValuePlacement,
         ctx: &mut WasmEmitCtx,
     ) -> String {
         self.alt_all_literal(literals, alloc, ctx)
@@ -167,7 +167,7 @@ impl Emitter for WasmEmitter {
         config: &KeyDispatchConfig,
         branches: Vec<KeyDispatchBranch<String>>,
         fallback: Option<(AltBranchInfo, String)>,
-        alloc: AllocStrategy,
+        alloc: ValuePlacement,
         ctx: &mut WasmEmitCtx,
     ) -> String {
         self.key_dispatch(config, branches, fallback, alloc, ctx)
@@ -190,7 +190,7 @@ impl Emitter for WasmEmitter {
         &mut self,
         body: String,
         inner_type: &TypeDesc,
-        alloc: AllocStrategy,
+        alloc: ValuePlacement,
         ctx: &mut WasmEmitCtx,
     ) -> String {
         self.repeat_optional(body, inner_type, alloc, ctx)
@@ -213,7 +213,7 @@ impl Emitter for WasmEmitter {
         &mut self,
         _rule_id: RuleId,
         rule_name: &str,
-        _alloc: AllocStrategy,
+        _alloc: ValuePlacement,
         _ctx: &mut WasmEmitCtx,
     ) -> String {
         format!("(call $__{rule_name} (local.get $off) (local.get $len))")
@@ -223,7 +223,7 @@ impl Emitter for WasmEmitter {
         &mut self,
         body: String,
         _variant_name: Option<&str>,
-        _alloc: AllocStrategy,
+        _alloc: ValuePlacement,
         _ctx: &mut WasmEmitCtx,
     ) -> String {
         body
@@ -342,7 +342,7 @@ impl Emitter for WasmEmitter {
         &mut self,
         inner: String,
         _variant_name: &str,
-        _alloc: AllocStrategy,
+        _alloc: ValuePlacement,
         _ctx: &mut WasmEmitCtx,
     ) -> String {
         inner
@@ -372,7 +372,7 @@ impl Emitter for WasmEmitter {
         inner: String,
         expr: &MapExpr,
         _return_type: Option<&TypeDesc>,
-        _alloc: AllocStrategy,
+        _alloc: ValuePlacement,
         _ir: &GrammarIR,
         ctx: &mut WasmEmitCtx,
     ) -> String {
@@ -438,7 +438,7 @@ impl Emitter for WasmEmitter {
         _inner: String,
         _inner_fd: &FnDescriptor,
         _outer_fd: &FnDescriptor,
-        _alloc: AllocStrategy,
+        _alloc: ValuePlacement,
         _ir: &GrammarIR,
         _ctx: &mut WasmEmitCtx,
     ) -> Option<String> {

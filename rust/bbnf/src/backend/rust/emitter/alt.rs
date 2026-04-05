@@ -120,21 +120,22 @@ impl RustEmitter {
                 body.clone()
             };
             arms.push(quote! {
-                #( #patterns )|* => { (|| { #coerced })() }
+                #( #patterns )|* => { #coerced }
             });
         }
 
-        let fallback_expr = if let Some((info, fb_body)) = fallback {
+        let (fallback_arm, eof_expr) = if let Some((info, fb_body)) = fallback {
             let coerced = if do_coerce {
                 coerce_branch(&info, &fb_body, alloc, ctx, &self.enum_ident)
             } else {
                 fb_body
             };
-            quote! { _ => { (|| { #coerced })() } }
+            // Fallback branch is tried both for unmatched bytes AND at EOF.
+            (quote! { _ => { #coerced } }, quote! { #coerced })
         } else {
-            quote! { _ => None }
+            (quote! { _ => None }, quote! { None })
         };
-        arms.push(fallback_expr);
+        arms.push(fallback_arm);
 
         quote! {
             if state.offset < state.src.len() {
@@ -142,7 +143,7 @@ impl RustEmitter {
                     #( #arms ),*
                 }
             } else {
-                None
+                #eof_expr
             }
         }
     }
@@ -170,7 +171,7 @@ impl RustEmitter {
             chain.push(quote! {
                 {
                     let __cp = state.offset;
-                    let __result = (|| { #coerced })();
+                    let __result = #coerced;
                     if __result.is_some() {
                         return __result;
                     }

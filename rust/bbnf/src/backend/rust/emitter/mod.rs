@@ -603,10 +603,7 @@ impl Emitter for RustEmitter {
     ) -> TokenStream {
         let value_tokens: TokenStream = value.parse().unwrap_or_else(|_| quote! { () });
         quote! {
-            {
-                #discard_inner?;
-                Some(#value_tokens)
-            }
+            #discard_inner.map(|_| #value_tokens)
         }
     }
 
@@ -619,14 +616,13 @@ impl Emitter for RustEmitter {
         ir: &GrammarIR,
         _ctx: &mut Self::Ctx,
     ) -> TokenStream {
-        // Check if this is a constant expression (no input dependency).
+        // Constant expression: discard parse result, return constant.
+        // Uses .map(|_| val) to keep failure propagation compositional —
+        // bare `?` would escape to the enclosing closure scope.
         if expr.is_constant() {
             let value_tokens = self.compile_map_expr_to_tokens(expr, return_type, ir);
             return quote! {
-                {
-                    #inner?;
-                    Some(#value_tokens)
-                }
+                #inner.map(|_| #value_tokens)
             };
         }
 
@@ -642,13 +638,14 @@ impl Emitter for RustEmitter {
         inner: TokenStream,
         _ctx: &mut Self::Ctx,
     ) -> TokenStream {
+        // Capture start before inner runs, end after. Uses IIFE to scope
+        // the start binding while keeping failure propagation compositional.
         quote! {
-            {
-                let __start = state.offset();
+            (|| {
+                let __start = state.offset;
                 #inner?;
-                let __end = state.offset();
-                Some(::parse_that::Span::new(state.input(), __start, __end))
-            }
+                Some(::parse_that::Span::new(__start, state.offset, state.src))
+            })()
         }
     }
 
@@ -730,10 +727,7 @@ impl Emitter for RustEmitter {
                 if expr.is_constant() {
                     let value_tokens = self.compile_map_expr_to_tokens(expr, return_type.as_ref(), ir);
                     Some(quote! {
-                        {
-                            #inner?;
-                            Some(#enum_ident::#vident(#value_tokens))
-                        }
+                        #inner.map(|_| #enum_ident::#vident(#value_tokens))
                     })
                 } else {
                     let body = self.compile_map_expr_to_tokens(expr, return_type.as_ref(), ir);

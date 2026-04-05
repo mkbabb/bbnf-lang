@@ -23,6 +23,18 @@ pub struct RustEmitter {
     pub extra_impl_methods: TokenStream,
 }
 
+impl RustEmitter {
+    pub fn new(enum_ident: syn::Ident, effective_prettify: bool) -> Self {
+        Self {
+            enum_ident,
+            effective_prettify,
+            fused_number_rules: HashSet::new(),
+            operator_chain_rules: HashSet::new(),
+            extra_impl_methods: TokenStream::new(),
+        }
+    }
+}
+
 /// Mutable context for Rust emission.
 ///
 /// Holds a pointer to `IrCodegenCtx` for type lookups and slab codegen.

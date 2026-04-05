@@ -331,12 +331,12 @@ fn literal_byte_split_with_map_wrapper() {
         ]),
         vec!["start".into(), "rem".into(), "rlh".into()],
     );
-    ir.fns.push(FnDescriptor::Constant {
-        value: 0,
+    ir.fns.push(FnDescriptor::Expr {
+        expr: bbnf_ir::MapExpr::IntLit(0),
         return_type: None,
     });
-    ir.fns.push(FnDescriptor::Constant {
-        value: 0,
+    ir.fns.push(FnDescriptor::Expr {
+        expr: bbnf_ir::MapExpr::IntLit(0),
         return_type: None,
     });
 

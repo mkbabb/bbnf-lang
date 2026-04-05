@@ -1,6 +1,6 @@
 //! Monolithic expression helpers: Ref, Skip/Next, Wrap, Map, OptionalWhitespace.
 
-use bbnf_ir::{FnDescriptor, IrNode};
+use bbnf_ir::{FnDescriptor, IrNode, MapExpr};
 
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
@@ -12,6 +12,103 @@ use super::ir_types::IrCodegenCtx;
 use super::sep_by::{SepByConfig, emit_mono_sep_by_core, emit_mono_sep_by_ws, try_unchecked_sep};
 use super::unescape_literal;
 use super::{MonoCtx, emit_mono_discarded, emit_mono_expr, mono_fn_ident};
+
+/// Compile a constant MapExpr to TokenStream (monolithic path).
+fn compile_constant_map_expr_mono(expr: &MapExpr, _ctx: &IrCodegenCtx<'_>) -> TokenStream {
+    match expr {
+        MapExpr::IntLit(n) => {
+            let lit = proc_macro2::Literal::i64_unsuffixed(*n);
+            quote! { #lit }
+        }
+        MapExpr::FloatLit(f) => {
+            let lit = proc_macro2::Literal::f64_unsuffixed(*f);
+            quote! { #lit }
+        }
+        MapExpr::BoolLit(b) => {
+            if *b { quote! { true } } else { quote! { false } }
+        }
+        MapExpr::StringLit(sid) => {
+            let s = _ctx.ir.get_string(*sid);
+            quote! { #s }
+        }
+        _ => quote! { () },
+    }
+}
+
+/// Compile a MapExpr to TokenStream (monolithic path).
+/// `__input` variable is in scope as the parse result.
+fn compile_map_expr_mono(expr: &MapExpr, ctx: &IrCodegenCtx<'_>) -> TokenStream {
+    match expr {
+        MapExpr::IntLit(n) => {
+            let lit = proc_macro2::Literal::i64_unsuffixed(*n);
+            quote! { #lit }
+        }
+        MapExpr::FloatLit(f) => {
+            let lit = proc_macro2::Literal::f64_unsuffixed(*f);
+            quote! { #lit }
+        }
+        MapExpr::BoolLit(b) => {
+            if *b { quote! { true } } else { quote! { false } }
+        }
+        MapExpr::StringLit(sid) => {
+            let s = ctx.ir.get_string(*sid);
+            quote! { #s }
+        }
+        MapExpr::Input => quote! { __input },
+        MapExpr::InputProp { prop } => {
+            let prop_name = ctx.ir.get_string(*prop);
+            let prop_ident = format_ident!("{}", prop_name);
+            quote! { __input.#prop_ident() }
+        }
+        MapExpr::FnCall { name, args } => {
+            let fn_name_str = ctx.ir.get_string(*name);
+            if let Ok(fn_path) = fn_name_str.parse::<TokenStream>() {
+                let compiled_args: Vec<TokenStream> = args
+                    .iter()
+                    .map(|a| compile_map_expr_mono(a, ctx))
+                    .collect();
+                if compiled_args.is_empty() {
+                    quote! { (#fn_path)(__input) }
+                } else {
+                    quote! { #fn_path(#(#compiled_args),*) }
+                }
+            } else {
+                quote! { todo!("invalid fn path") }
+            }
+        }
+        MapExpr::BinOp { op, lhs, rhs } => {
+            let l = compile_map_expr_mono(lhs, ctx);
+            let r = compile_map_expr_mono(rhs, ctx);
+            let op_token = match op {
+                bbnf_ir::MapBinOp::Add => quote! { + },
+                bbnf_ir::MapBinOp::Sub => quote! { - },
+                bbnf_ir::MapBinOp::Mul => quote! { * },
+                bbnf_ir::MapBinOp::Div => quote! { / },
+                bbnf_ir::MapBinOp::Mod => quote! { % },
+                bbnf_ir::MapBinOp::Eq => quote! { == },
+                bbnf_ir::MapBinOp::Ne => quote! { != },
+                bbnf_ir::MapBinOp::Lt => quote! { < },
+                bbnf_ir::MapBinOp::Gt => quote! { > },
+                bbnf_ir::MapBinOp::Le => quote! { <= },
+                bbnf_ir::MapBinOp::Ge => quote! { >= },
+                bbnf_ir::MapBinOp::And => quote! { && },
+                bbnf_ir::MapBinOp::Or => quote! { || },
+                bbnf_ir::MapBinOp::BitAnd => quote! { & },
+                bbnf_ir::MapBinOp::BitOr => quote! { | },
+                bbnf_ir::MapBinOp::Shl => quote! { << },
+                bbnf_ir::MapBinOp::Shr => quote! { >> },
+            };
+            quote! { (#l #op_token #r) }
+        }
+        MapExpr::UnaryOp { op, inner } => {
+            let i = compile_map_expr_mono(inner, ctx);
+            match op {
+                bbnf_ir::MapUnaryOp::Neg => quote! { (-#i) },
+                bbnf_ir::MapUnaryOp::Not => quote! { (!#i) },
+            }
+        }
+    }
+}
 
 // ── Ref ──────────────────────────────────────────────────────────────────────
 
@@ -305,17 +402,16 @@ pub(super) fn emit_mono_map(
                     };
                 }
             }
-            (FnDescriptor::Constant { value, .. }, FnDescriptor::EnumWrap { variant }) => {
-                let val_src = ctx.ir.get_string(*value);
-                let val_expr: syn::Expr = syn::parse_str(val_src).unwrap();
+            (FnDescriptor::Expr { expr, .. }, FnDescriptor::EnumWrap { variant }) if expr.is_constant() => {
+                let val_tokens = compile_constant_map_expr_mono(expr, ctx);
                 let vident = format_ident!("{}", ctx.ir.get_string(*variant));
                 let enum_ident = &ctx.enum_ident;
                 let inner_expr = emit_mono_expr(inner2.as_ref(), ctx, mctx, elide_box);
                 if elide_box {
-                    return quote! { #inner_expr.map(|_| #enum_ident::#vident(#val_expr)) };
+                    return quote! { #inner_expr.map(|_| #enum_ident::#vident(#val_tokens)) };
                 } else {
                     let alloc_code =
-                        ctx.emit_alloc_let(&quote! { #enum_ident::#vident(#val_expr) });
+                        ctx.emit_alloc_let(&quote! { #enum_ident::#vident(#val_tokens) });
                     return quote! {
                         #inner_expr.map(|_| {
                             #alloc_code
@@ -363,26 +459,14 @@ pub(super) fn emit_mono_map(
                         }
                     }
                 }
-                FnDescriptor::Custom { source, .. } => {
-                    let closure_src = ctx.ir.get_string(*source);
-                    let closure: syn::ExprClosure =
-                        syn::parse_str(closure_src).unwrap_or_else(|e| {
-                            panic!(
-                                "Invalid mapping closure `{}` in monolithic codegen: {}",
-                                closure_src, e
-                            )
-                        });
-                    quote! { #inner_expr.map(#closure) }
-                }
-                FnDescriptor::Constant { value, .. } => {
-                    let val_src = ctx.ir.get_string(*value);
-                    let val_expr: syn::Expr = syn::parse_str(val_src).unwrap_or_else(|e| {
-                        panic!(
-                            "Invalid constant expression `{}` in monolithic codegen: {}",
-                            val_src, e
-                        )
-                    });
-                    quote! { #inner_expr.map(|_| #val_expr) }
+                FnDescriptor::Expr { expr, .. } => {
+                    if expr.is_constant() {
+                        let val_tokens = compile_constant_map_expr_mono(expr, ctx);
+                        quote! { #inner_expr.map(|_| #val_tokens) }
+                    } else {
+                        let body_tokens = compile_map_expr_mono(expr, ctx);
+                        quote! { #inner_expr.map(|__input| #body_tokens) }
+                    }
                 }
                 FnDescriptor::SpanCapture => {
                     // @{expr}: parse inner for validation, discard result, return Span.

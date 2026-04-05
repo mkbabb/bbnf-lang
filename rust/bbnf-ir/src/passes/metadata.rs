@@ -32,9 +32,8 @@ fn extract_alias_target(node: &IrNode) -> Option<RuleId> {
     match node {
         IrNode::Ref(id) => Some(*id),
         // Map wrappers (EnumWrap, BoxWrap) are transparent for alias detection.
-        // However, a Custom/NumberConvert/etc. map changes semantics, so we only
-        // unwrap if the inner is a Ref. This is conservative: we detect `A = B`
-        // but not `A = f(B)`.
+        // However, value-changing maps (Expr, NumberConvert, etc.) change semantics,
+        // so we only unwrap if the inner is a Ref. Conservative: `A = B` yes, `A = f(B)` no.
         _ => None,
     }
 }

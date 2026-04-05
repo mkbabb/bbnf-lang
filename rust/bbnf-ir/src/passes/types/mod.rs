@@ -34,8 +34,8 @@ pub use utils::{ProjectionCtx, ProjectionRules, TypeMap, TypeRecorder, try_flatt
 /// 2. Span preservation: When `preserve_spans` is set, the top-level Seq preserves
 ///    individual Span identity (skips consecutive-Span compression). Currently
 ///    sourced from `@pretty` directives; flag is consumed after the first Seq.
-/// 3. Annotated return type: Map nodes with FnDescriptor::Custom use the parsed
-///    return type annotation from the closure, falling back to Named.
+/// 3. Annotated return type: Map nodes with FnDescriptor::Expr use the return
+///    type from the MapExpr, falling back to Span.
 /// 4. Cyclic-context boxing: (infrastructure only) Would override acyclic Ref
 ///    types to BoxedEnum when referenced from cyclic rules.
 /// 5. Sub-variant collection: Heterogeneous alternation branches get generated

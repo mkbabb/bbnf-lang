@@ -5,7 +5,7 @@ mod dispatch;
 mod repeat;
 mod ws;
 
-use bbnf_ir::{GrammarIR, IrRule, RuleId, TypeDesc};
+use bbnf_ir::{FnDescriptor, GrammarIR, IrRule, MapExpr, RuleId, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
@@ -17,6 +17,87 @@ use crate::backend::{
 };
 
 pub use super::emitter_types::{RustEmitCtx, RustEmitter};
+
+// ─── MapExpr → TokenStream ─────────────────────────────────────────────────
+
+impl RustEmitter {
+    /// Compile a `MapExpr` tree to a Rust `TokenStream` expression.
+    /// The variable `__input` is in scope and holds the parse result.
+    fn compile_map_expr_to_tokens(&self, expr: &MapExpr, ir: &GrammarIR) -> TokenStream {
+        match expr {
+            MapExpr::IntLit(n) => {
+                let lit = proc_macro2::Literal::i64_unsuffixed(*n);
+                quote! { #lit }
+            }
+            MapExpr::FloatLit(f) => {
+                let lit = proc_macro2::Literal::f64_unsuffixed(*f);
+                quote! { #lit }
+            }
+            MapExpr::BoolLit(b) => {
+                if *b { quote! { true } } else { quote! { false } }
+            }
+            MapExpr::StringLit(sid) => {
+                let s = ir.get_string(*sid);
+                quote! { #s }
+            }
+            MapExpr::Input => quote! { __input },
+            MapExpr::InputProp { prop } => {
+                let prop_name = ir.get_string(*prop);
+                let prop_ident = format_ident!("{}", prop_name);
+                quote! { __input.#prop_ident() }
+            }
+            MapExpr::FnCall { name, args } => {
+                let fn_name_str = ir.get_string(*name);
+                // Try to parse as a Rust path (e.g., `crate::foo::bar`).
+                if let Ok(fn_path) = fn_name_str.parse::<TokenStream>() {
+                    let compiled_args: Vec<TokenStream> = args
+                        .iter()
+                        .map(|a| self.compile_map_expr_to_tokens(a, ir))
+                        .collect();
+                    if compiled_args.is_empty() {
+                        // No args: emit as closure-style (the name IS the closure source).
+                        quote! { (#fn_path)(__input) }
+                    } else {
+                        quote! { #fn_path(#(#compiled_args),*) }
+                    }
+                } else {
+                    quote! { todo!("invalid fn path") }
+                }
+            }
+            MapExpr::BinOp { op, lhs, rhs } => {
+                let l = self.compile_map_expr_to_tokens(lhs, ir);
+                let r = self.compile_map_expr_to_tokens(rhs, ir);
+                let op_token = match op {
+                    bbnf_ir::MapBinOp::Add => quote! { + },
+                    bbnf_ir::MapBinOp::Sub => quote! { - },
+                    bbnf_ir::MapBinOp::Mul => quote! { * },
+                    bbnf_ir::MapBinOp::Div => quote! { / },
+                    bbnf_ir::MapBinOp::Mod => quote! { % },
+                    bbnf_ir::MapBinOp::Eq => quote! { == },
+                    bbnf_ir::MapBinOp::Ne => quote! { != },
+                    bbnf_ir::MapBinOp::Lt => quote! { < },
+                    bbnf_ir::MapBinOp::Gt => quote! { > },
+                    bbnf_ir::MapBinOp::Le => quote! { <= },
+                    bbnf_ir::MapBinOp::Ge => quote! { >= },
+                    bbnf_ir::MapBinOp::And => quote! { && },
+                    bbnf_ir::MapBinOp::Or => quote! { || },
+                    bbnf_ir::MapBinOp::BitAnd => quote! { & },
+                    bbnf_ir::MapBinOp::BitOr => quote! { | },
+                    bbnf_ir::MapBinOp::Shl => quote! { << },
+                    bbnf_ir::MapBinOp::Shr => quote! { >> },
+                };
+                quote! { (#l #op_token #r) }
+            }
+            MapExpr::UnaryOp { op, inner } => {
+                let i = self.compile_map_expr_to_tokens(inner, ir);
+                match op {
+                    bbnf_ir::MapUnaryOp::Neg => quote! { (-#i) },
+                    bbnf_ir::MapUnaryOp::Not => quote! { (!#i) },
+                }
+            }
+        }
+    }
+}
 
 // ─── Emitter Implementation ────────────────────────────────────────────────
 
@@ -460,6 +541,143 @@ impl Emitter for RustEmitter {
         }
     }
 
+    fn emit_map_expr(
+        &mut self,
+        inner: TokenStream,
+        expr: &MapExpr,
+        return_type: Option<&TypeDesc>,
+        _alloc: AllocStrategy,
+        ir: &GrammarIR,
+        _ctx: &mut Self::Ctx,
+    ) -> TokenStream {
+        // Check if this is a constant expression (no input dependency).
+        if expr.is_constant() {
+            let value_tokens = self.compile_map_expr_to_tokens(expr, ir);
+            return quote! {
+                {
+                    #inner?;
+                    Some(#value_tokens)
+                }
+            };
+        }
+
+        // General case: map parse result through the expression.
+        let body_tokens = self.compile_map_expr_to_tokens(expr, ir);
+        let _ = return_type; // Type annotation used by specialization, not emission.
+        quote! {
+            #inner.map(|__input| #body_tokens)
+        }
+    }
+
+    fn emit_span_capture(
+        &mut self,
+        inner: TokenStream,
+        _ctx: &mut Self::Ctx,
+    ) -> TokenStream {
+        quote! {
+            {
+                let __start = state.offset();
+                #inner?;
+                let __end = state.offset();
+                Some(::parse_that::Span::new(state.input(), __start, __end))
+            }
+        }
+    }
+
+    fn emit_hex_convert(
+        &mut self,
+        inner: TokenStream,
+        fn_path: &str,
+        _ctx: &mut Self::Ctx,
+    ) -> TokenStream {
+        let fn_path_tokens: TokenStream = fn_path.parse().unwrap_or_else(|_| quote! { todo!() });
+        quote! {
+            #inner.map(|__s| #fn_path_tokens(__s.as_str()))
+        }
+    }
+
+    fn emit_fused_map(
+        &mut self,
+        inner: TokenStream,
+        inner_fd: &FnDescriptor,
+        outer_fd: &FnDescriptor,
+        alloc: AllocStrategy,
+        ir: &GrammarIR,
+        ctx: &mut Self::Ctx,
+    ) -> Option<TokenStream> {
+        let enum_ident = &self.enum_ident;
+        match (inner_fd, outer_fd) {
+            // EnumWrap + BoxWrap → variant wrap + alloc
+            (FnDescriptor::EnumWrap { variant }, FnDescriptor::BoxWrap) => {
+                let vname = ir.get_string(*variant);
+                let vident = format_ident!("{}", vname);
+                let ir_ctx = ctx.ir_ctx();
+                if alloc == AllocStrategy::Alloc {
+                    let alloc_code = ir_ctx.emit_alloc_let(&quote! { #enum_ident::#vident(__x) });
+                    Some(quote! {
+                        #inner.map(|__x| {
+                            #alloc_code
+                        })
+                    })
+                } else {
+                    Some(quote! {
+                        #inner.map(|__x| #enum_ident::#vident(__x))
+                    })
+                }
+            }
+            // BoxWrap + EnumWrap → alloc + variant wrap
+            (FnDescriptor::BoxWrap, FnDescriptor::EnumWrap { variant }) => {
+                let vname = ir.get_string(*variant);
+                let vident = format_ident!("{}", vname);
+                let ir_ctx = ctx.ir_ctx();
+                let alloc_code = ir_ctx.emit_alloc(&quote! { __x });
+                Some(quote! {
+                    #inner.map(|__x| {
+                        #enum_ident::#vident(#alloc_code)
+                    })
+                })
+            }
+            // NumberConvert + EnumWrap → fused number + variant
+            (FnDescriptor::NumberConvert, FnDescriptor::EnumWrap { variant }) => {
+                let vname = ir.get_string(*variant);
+                let vident = format_ident!("{}", vname);
+                Some(quote! {
+                    ::parse_that::css_number_scan_f64(state).map(|__v| #enum_ident::#vident(__v))
+                })
+            }
+            // HexConvert + EnumWrap → fused hex + variant
+            (FnDescriptor::HexConvert { fn_path }, FnDescriptor::EnumWrap { variant }) => {
+                let vname = ir.get_string(*variant);
+                let vident = format_ident!("{}", vname);
+                let path_str = ir.get_string(*fn_path);
+                let path_tokens: TokenStream = path_str.parse().unwrap_or_else(|_| quote! { todo!() });
+                Some(quote! {
+                    #inner.map(|__s| #enum_ident::#vident(#path_tokens(__s.as_str())))
+                })
+            }
+            // Expr + EnumWrap → fused expr + variant
+            (FnDescriptor::Expr { expr, .. }, FnDescriptor::EnumWrap { variant }) => {
+                let vname = ir.get_string(*variant);
+                let vident = format_ident!("{}", vname);
+                if expr.is_constant() {
+                    let value_tokens = self.compile_map_expr_to_tokens(expr, ir);
+                    Some(quote! {
+                        {
+                            #inner?;
+                            Some(#enum_ident::#vident(#value_tokens))
+                        }
+                    })
+                } else {
+                    let body = self.compile_map_expr_to_tokens(expr, ir);
+                    Some(quote! {
+                        #inner.map(|__input| #enum_ident::#vident(#body))
+                    })
+                }
+            }
+            _ => None,
+        }
+    }
+
     // ── Whitespace (delegated) ──────────────────────────────────────────
 
     fn emit_ws_trim(
@@ -562,6 +780,7 @@ impl Emitter for RustEmitter {
         &mut self,
         rule: &IrRule,
         body: TokenStream,
+        sync_body: Option<TokenStream>,
         ir: &GrammarIR,
         ctx: &mut Self::Ctx,
     ) -> TokenStream {
@@ -642,11 +861,19 @@ impl Emitter for RustEmitter {
         let has_recover = rule.meta.directives.recover.is_some()
             && !ir_ctx.parser_attrs.skip_recover;
 
-        // Note: sync function body compilation is deferred — the driver compiled it
-        // as part of the rule body or the grammar will need a separate pass.
-        // For now, emit a stub that syncs on the recovery expression if present.
-        // TODO: Full sync compilation requires a second compile_node pass for
-        // the recovery expression. This will be wired when replacing generate_all().
+        if has_recover {
+            if let Some(sync_expr) = sync_body {
+                let sync_ident = format_ident!("__sync_{}", name);
+                methods.push(quote! {
+                    #[allow(non_snake_case)]
+                    fn #sync_ident<'a>(
+                        state: &mut ::parse_that::ParserState<'a>,
+                    ) -> Option<()> {
+                        (#sync_expr).map(|_| ())
+                    }
+                });
+            }
+        }
 
         // ── Public method(s) ────────────────────────────────────────────
         if rule.meta.is_transparent {

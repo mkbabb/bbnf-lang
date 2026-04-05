@@ -134,8 +134,13 @@ pub fn compile_grammar<E: Emitter>(
             compile_node(&rule.body, AllocStrategy::Elide, ir, dstate, emitter, ctx)
         };
 
+        // Compile recovery sync expression if @recover is present.
+        let sync_body = rule.meta.directives.recover.as_ref().map(|sync_node| {
+            compile_node(sync_node, AllocStrategy::Elide, ir, dstate, emitter, ctx)
+        });
+
         // Wrap in a rule function definition.
-        let rule_fn = emitter.emit_rule_function(rule, body, ir, ctx);
+        let rule_fn = emitter.emit_rule_function(rule, body, sync_body, ir, ctx);
         rule_functions.push(rule_fn);
     }
 
@@ -663,16 +668,20 @@ fn compile_map<E: Emitter>(
 ) -> E::Output {
     let fn_desc = &ir.fns[fn_id as usize];
 
+    // Map fusion: if inner is also a Map, try to fuse both operations.
+    if let IrNode::Map { inner: inner2, fn_id: fn_id2 } = inner {
+        let inner_fd = &ir.fns[*fn_id2 as usize];
+        let inner_out = compile_node(inner2, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+        if let Some(fused) = emitter.emit_fused_map(inner_out, inner_fd, fn_desc, alloc, ir, ctx) {
+            return fused;
+        }
+        // Fusion not handled — fall through to single-map path with re-compiled inner.
+    }
+
     match fn_desc {
         FnDescriptor::NumberConvert => {
             // Fused regex → f64: the emitter handles the regex + conversion.
             emitter.emit_number_convert(ctx)
-        }
-
-        FnDescriptor::Constant { value, .. } => {
-            let value_str = ir.get_string(*value);
-            let inner_out = compile_node(inner, AllocStrategy::Elide, ir, dstate, emitter, ctx);
-            emitter.emit_constant(inner_out, value_str, ctx)
         }
 
         FnDescriptor::EnumWrap { variant } => {
@@ -686,9 +695,20 @@ fn compile_map<E: Emitter>(
             compile_node(inner, alloc, ir, dstate, emitter, ctx)
         }
 
-        _ => {
-            // Custom, HexConvert, SpanCapture — compile inner and let emitter handle.
-            compile_node(inner, alloc, ir, dstate, emitter, ctx)
+        FnDescriptor::SpanCapture => {
+            let inner_out = compile_node(inner, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+            emitter.emit_span_capture(inner_out, ctx)
+        }
+
+        FnDescriptor::HexConvert { fn_path } => {
+            let path_str = ir.get_string(*fn_path);
+            let inner_out = compile_node(inner, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+            emitter.emit_hex_convert(inner_out, path_str, ctx)
+        }
+
+        FnDescriptor::Expr { expr, return_type } => {
+            let inner_out = compile_node(inner, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+            emitter.emit_map_expr(inner_out, expr, return_type.as_ref(), alloc, ir, ctx)
         }
     }
 }

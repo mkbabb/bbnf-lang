@@ -35,7 +35,7 @@ pub(crate) fn emit_mono_discarded(
             match fd {
                 FnDescriptor::EnumWrap { .. }
                 | FnDescriptor::BoxWrap
-                | FnDescriptor::Constant { .. } => emit_mono_discarded(inner, strip_ow, ctx, mctx),
+                | FnDescriptor::Expr { .. } => emit_mono_discarded(inner, strip_ow, ctx, mctx),
                 _ => emit_mono_expr(node, ctx, mctx, false),
             }
         }

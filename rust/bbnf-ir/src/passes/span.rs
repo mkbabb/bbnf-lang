@@ -144,7 +144,7 @@ fn can_be_span_parser(node: &IrNode, sp_set: &HashSet<RuleId>) -> bool {
         }
         IrNode::Negate(inner) => can_be_span_parser(inner, sp_set),
         IrNode::OptionalWhitespace(inner) => can_be_span_parser(inner, sp_set),
-        IrNode::Map { .. } => false, // Custom maps can't be span parsers.
+        IrNode::Map { .. } => false, // Value maps change the result type.
         IrNode::TokenDispatch { .. } => false, // Complex dispatch node.
     }
 }

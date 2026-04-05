@@ -9,7 +9,7 @@
 //! - `dispatch.rs` — token dispatch, delimiter scan
 //! - `ws.rs` — whitespace trim
 
-use bbnf_ir::{AltDispatch, GrammarIR, IrRule, RuleId, TypeDesc};
+use bbnf_ir::{AltDispatch, FnDescriptor, GrammarIR, IrRule, MapExpr, RuleId, TypeDesc};
 
 use crate::backend::analysis::BackendAnalysis;
 use crate::backend::key_dispatch::KeyDispatchConfig;
@@ -20,7 +20,8 @@ use crate::backend::{
 
 pub use super::code::{TsCode, TsEmitCtx, TsEmitter};
 pub use super::helpers::{
-    translate_rust_constant_to_js, ts_escape, type_desc_to_ts, unescape_literal, ws_skip_stmts,
+    compile_map_expr_to_js, translate_rust_constant_to_js, ts_escape, type_desc_to_ts,
+    unescape_literal, ws_skip_stmts,
 };
 
 // ─── Emitter Impl ───────────────────────────────────────────────────────────
@@ -396,6 +397,80 @@ impl Emitter for TsEmitter {
         TsCode::new(stmts, v)
     }
 
+    fn emit_map_expr(
+        &mut self,
+        inner: TsCode,
+        expr: &MapExpr,
+        _return_type: Option<&TypeDesc>,
+        _alloc: AllocStrategy,
+        ir: &GrammarIR,
+        ctx: &mut TsEmitCtx,
+    ) -> TsCode {
+        let v = ctx.fresh("map");
+        let mut stmts = String::new();
+        let inner_expr = inner.dissolve(&mut stmts);
+
+        if expr.is_constant() {
+            let value_js = compile_map_expr_to_js(expr, ir);
+            stmts.push_str(&format!(
+                "const {v} = ({inner_expr}) !== null ? {value_js} : null;\n"
+            ));
+        } else {
+            let body_js = compile_map_expr_to_js(expr, ir);
+            stmts.push_str(&format!(
+                "const __input = {inner_expr};\n\
+                 const {v} = __input !== null ? {body_js} : null;\n"
+            ));
+        }
+        TsCode::new(stmts, v)
+    }
+
+    fn emit_span_capture(
+        &mut self,
+        inner: TsCode,
+        ctx: &mut TsEmitCtx,
+    ) -> TsCode {
+        let v = ctx.fresh("span");
+        let mut stmts = String::new();
+        let inner_expr = inner.dissolve(&mut stmts);
+        stmts.push_str(&format!(
+            "const __start = s.offset;\n\
+             const __inner = {inner_expr};\n\
+             const {v} = __inner !== null ? {{ start: __start, end: s.offset }} : null;\n"
+        ));
+        TsCode::new(stmts, v)
+    }
+
+    fn emit_hex_convert(
+        &mut self,
+        inner: TsCode,
+        fn_path: &str,
+        ctx: &mut TsEmitCtx,
+    ) -> TsCode {
+        let v = ctx.fresh("hex");
+        let mut stmts = String::new();
+        let inner_expr = inner.dissolve(&mut stmts);
+        // fn_path is a Rust path — translate to a host function call.
+        let js_fn = fn_path.rsplit("::").next().unwrap_or(fn_path);
+        stmts.push_str(&format!(
+            "const {v} = ({inner_expr}) !== null ? hostFns.{js_fn}({inner_expr}) : null;\n"
+        ));
+        TsCode::new(stmts, v)
+    }
+
+    fn emit_fused_map(
+        &mut self,
+        _inner: TsCode,
+        _inner_fd: &FnDescriptor,
+        _outer_fd: &FnDescriptor,
+        _alloc: AllocStrategy,
+        _ir: &GrammarIR,
+        _ctx: &mut TsEmitCtx,
+    ) -> Option<TsCode> {
+        // TS doesn't need fusion — no slab allocation overhead.
+        None
+    }
+
     // ── Whitespace (delegated to ws.rs) ─────────────────────────────────
 
     fn emit_ws_trim(
@@ -443,6 +518,7 @@ impl Emitter for TsEmitter {
         &mut self,
         rule: &IrRule,
         body: TsCode,
+        _sync_body: Option<TsCode>,
         ir: &GrammarIR,
         _ctx: &mut TsEmitCtx,
     ) -> TsCode {

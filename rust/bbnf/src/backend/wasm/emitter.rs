@@ -1,6 +1,6 @@
 //! Emitter trait implementation for the WASM backend.
 
-use bbnf_ir::{AltDispatch, GrammarIR, IrRule, RuleId, TypeDesc};
+use bbnf_ir::{AltDispatch, FnDescriptor, GrammarIR, IrRule, MapExpr, RuleId, TypeDesc};
 
 use crate::backend::analysis::BackendAnalysis;
 use crate::backend::key_dispatch::KeyDispatchConfig;
@@ -367,6 +367,84 @@ impl Emitter for WasmEmitter {
         )
     }
 
+    fn emit_map_expr(
+        &mut self,
+        inner: String,
+        expr: &MapExpr,
+        _return_type: Option<&TypeDesc>,
+        _alloc: AllocStrategy,
+        _ir: &GrammarIR,
+        ctx: &mut WasmEmitCtx,
+    ) -> String {
+        // WASM map expressions: simple cases only.
+        let result = ctx.fresh("map_r");
+        match expr {
+            MapExpr::IntLit(n) => {
+                format!(
+                    "(local.set {result} {inner}) \
+                     (if (result i32) (i32.ne (local.get {result}) (i32.const -1)) \
+                       (then (i32.const {n})) \
+                       (else (i32.const -1)))"
+                )
+            }
+            MapExpr::BoolLit(b) => {
+                let val = if *b { 1 } else { 0 };
+                format!(
+                    "(local.set {result} {inner}) \
+                     (if (result i32) (i32.ne (local.get {result}) (i32.const -1)) \
+                       (then (i32.const {val})) \
+                       (else (i32.const -1)))"
+                )
+            }
+            _ => {
+                // General case: pass through (WASM doesn't evaluate complex expressions).
+                format!(
+                    "(local.set {result} {inner}) \
+                     (local.get {result})"
+                )
+            }
+        }
+    }
+
+    fn emit_span_capture(
+        &mut self,
+        inner: String,
+        ctx: &mut WasmEmitCtx,
+    ) -> String {
+        let result = ctx.fresh("span_r");
+        format!(
+            "(local.set {result} {inner}) \
+             (local.get {result})"
+        )
+    }
+
+    fn emit_hex_convert(
+        &mut self,
+        inner: String,
+        _fn_path: &str,
+        ctx: &mut WasmEmitCtx,
+    ) -> String {
+        let result = ctx.fresh("hex_r");
+        format!(
+            "(local.set {result} {inner}) \
+             (if (result i32) (i32.ne (local.get {result}) (i32.const -1)) \
+               (then (call $__hex_convert (local.get {result}))) \
+               (else (i32.const -1)))"
+        )
+    }
+
+    fn emit_fused_map(
+        &mut self,
+        _inner: String,
+        _inner_fd: &FnDescriptor,
+        _outer_fd: &FnDescriptor,
+        _alloc: AllocStrategy,
+        _ir: &GrammarIR,
+        _ctx: &mut WasmEmitCtx,
+    ) -> Option<String> {
+        None
+    }
+
     // ── Whitespace (delegated to ws.rs) ─────────────────────────────────
 
     fn emit_ws_trim(
@@ -414,6 +492,7 @@ impl Emitter for WasmEmitter {
         &mut self,
         rule: &IrRule,
         body: String,
+        _sync_body: Option<String>,
         ir: &GrammarIR,
         ctx: &mut WasmEmitCtx,
     ) -> String {

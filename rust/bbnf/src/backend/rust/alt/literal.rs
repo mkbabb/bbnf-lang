@@ -1,11 +1,11 @@
 //! All-literal Alt detection and emission.
 //!
-//! Handles alternations where every branch is a `Literal` or `Map(Literal, Constant)`.
+//! Handles alternations where every branch is a `Literal` or `Map(Literal, Expr{constant})`.
 //! Two strategies:
 //! - Small sets (<=8 for mapped, <=16 for bare): sequential inline byte comparison.
 //! - Large bare sets (>16): first-byte trie dispatch via `match` on the leading byte.
 
-use bbnf_ir::AltBranch;
+use bbnf_ir::{AltBranch, MapExpr};
 
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -13,6 +13,24 @@ use quote::quote;
 use super::super::MonoCtx;
 use super::super::ir_types::IrCodegenCtx;
 use super::super::unescape_literal;
+
+/// Compile a constant MapExpr to a TokenStream value.
+fn compile_constant_map_expr(expr: &MapExpr, _ctx: &IrCodegenCtx<'_>) -> TokenStream {
+    match expr {
+        MapExpr::IntLit(n) => {
+            let lit = proc_macro2::Literal::i64_unsuffixed(*n);
+            quote! { #lit }
+        }
+        MapExpr::FloatLit(f) => {
+            let lit = proc_macro2::Literal::f64_unsuffixed(*f);
+            quote! { #lit }
+        }
+        MapExpr::BoolLit(b) => {
+            if *b { quote! { true } } else { quote! { false } }
+        }
+        _ => quote! { () },
+    }
+}
 use super::{LitThroughMap, extract_literal_through_map};
 
 /// Try to emit an all-literal Alt. Returns `None` if branches aren't all literal-like.
@@ -33,7 +51,7 @@ pub(in super::super) fn try_emit_all_literal_alt(
 
     let entries: Vec<LitThroughMap> = lit_infos.into_iter().map(|x| x.unwrap()).collect();
 
-    let any_mapped = entries.iter().any(|e| e.constant_value.is_some());
+    let any_mapped = entries.iter().any(|e| e.constant_fn_id.is_some());
     let all_bare = !any_mapped;
 
     // All-bare-literal path: Span return (any_span for large sets, sequential for small).
@@ -82,10 +100,13 @@ fn emit_sequential_literal_alt(
             .collect();
 
         // The return expression: Span for bare literals, constant value for mapped.
-        let ret_expr = if let Some(const_sid) = info.constant_value {
-            let val_src = ctx.ir.get_string(const_sid);
-            let val_expr: syn::Expr = syn::parse_str(val_src).unwrap();
-            quote! { #val_expr }
+        let ret_expr = if let Some(fn_id) = info.constant_fn_id {
+            let fd = &ctx.ir.fns[fn_id as usize];
+            if let bbnf_ir::FnDescriptor::Expr { expr, .. } = fd {
+                compile_constant_map_expr(expr, ctx)
+            } else {
+                quote! { () }
+            }
         } else {
             // Bare literal -- return Span.
             if len == 1 {

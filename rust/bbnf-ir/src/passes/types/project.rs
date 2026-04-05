@@ -101,27 +101,17 @@ fn project_node_inner(node: &IrNode, ctx: &ProjectionCtx<'_>) -> TypeDesc {
             match fd {
                 FnDescriptor::EnumWrap { .. } => TypeDesc::Enum,
                 FnDescriptor::BoxWrap => TypeDesc::BoxedEnum,
-                // Annotated return type: use parsed return type if available.
-                FnDescriptor::Custom {
-                    return_type,
-                    source,
-                } => {
-                    if let Some(rt) = return_type {
-                        rt.clone()
-                    } else {
-                        TypeDesc::Named(*source)
-                    }
-                }
                 FnDescriptor::NumberConvert => TypeDesc::F64,
                 FnDescriptor::HexConvert { .. } => TypeDesc::U32,
-                FnDescriptor::Constant { return_type, value } => {
+                FnDescriptor::SpanCapture => TypeDesc::Span,
+                FnDescriptor::Expr { return_type, .. } => {
                     if let Some(rt) = return_type {
                         rt.clone()
                     } else {
-                        TypeDesc::Named(*value)
+                        // No return type annotation — falls back to Span (raw parse result).
+                        TypeDesc::Span
                     }
                 }
-                FnDescriptor::SpanCapture => TypeDesc::Span,
             }
         }
 
@@ -173,26 +163,16 @@ fn project_node_in_vec_inner(node: &IrNode, ctx: &ProjectionCtx<'_>) -> TypeDesc
             match fd {
                 FnDescriptor::EnumWrap { .. } => TypeDesc::Enum,
                 FnDescriptor::BoxWrap => TypeDesc::BoxedEnum,
-                FnDescriptor::Custom {
-                    return_type,
-                    source,
-                } => {
-                    if let Some(rt) = return_type {
-                        rt.clone()
-                    } else {
-                        TypeDesc::Named(*source)
-                    }
-                }
                 FnDescriptor::NumberConvert => TypeDesc::F64,
                 FnDescriptor::HexConvert { .. } => TypeDesc::U32,
-                FnDescriptor::Constant { return_type, value } => {
+                FnDescriptor::SpanCapture => TypeDesc::Span,
+                FnDescriptor::Expr { return_type, .. } => {
                     if let Some(rt) = return_type {
                         rt.clone()
                     } else {
-                        TypeDesc::Named(*value)
+                        TypeDesc::Span
                     }
                 }
-                FnDescriptor::SpanCapture => TypeDesc::Span,
             }
         }
         // Alt: try in_vec projection. Only apply if branches are homogeneous

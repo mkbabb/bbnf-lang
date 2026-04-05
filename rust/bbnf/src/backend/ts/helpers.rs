@@ -1,6 +1,6 @@
 //! TS codegen helper functions.
 
-use bbnf_ir::{GrammarIR, TypeDesc};
+use bbnf_ir::{GrammarIR, MapExpr, TypeDesc};
 
 use super::code::TsEmitCtx;
 
@@ -57,6 +57,65 @@ pub fn translate_rust_constant_to_js(value: &str) -> String {
         .or_else(|| trimmed.strip_suffix("isize"))
         .unwrap_or(trimmed)
         .to_string()
+}
+
+/// Compile a MapExpr tree to a JavaScript expression string.
+/// `__input` is in scope as the parse result variable.
+pub fn compile_map_expr_to_js(expr: &MapExpr, ir: &GrammarIR) -> String {
+    match expr {
+        MapExpr::IntLit(n) => format!("{n}"),
+        MapExpr::FloatLit(f) => format!("{f}"),
+        MapExpr::BoolLit(b) => if *b { "true".to_string() } else { "false".to_string() },
+        MapExpr::StringLit(sid) => {
+            let s = ir.get_string(*sid);
+            format!("\"{}\"", ts_escape(s))
+        }
+        MapExpr::Input => "__input".to_string(),
+        MapExpr::InputProp { prop } => {
+            let prop_name = ir.get_string(*prop);
+            format!("__input.{prop_name}")
+        }
+        MapExpr::FnCall { name, args } => {
+            let fn_name = ir.get_string(*name);
+            let compiled_args: Vec<String> = args.iter().map(|a| compile_map_expr_to_js(a, ir)).collect();
+            if compiled_args.is_empty() {
+                format!("{fn_name}(__input)")
+            } else {
+                format!("{fn_name}({})", compiled_args.join(", "))
+            }
+        }
+        MapExpr::BinOp { op, lhs, rhs } => {
+            let l = compile_map_expr_to_js(lhs, ir);
+            let r = compile_map_expr_to_js(rhs, ir);
+            let op_str = match op {
+                bbnf_ir::MapBinOp::Add => "+",
+                bbnf_ir::MapBinOp::Sub => "-",
+                bbnf_ir::MapBinOp::Mul => "*",
+                bbnf_ir::MapBinOp::Div => "/",
+                bbnf_ir::MapBinOp::Mod => "%",
+                bbnf_ir::MapBinOp::Eq => "===",
+                bbnf_ir::MapBinOp::Ne => "!==",
+                bbnf_ir::MapBinOp::Lt => "<",
+                bbnf_ir::MapBinOp::Gt => ">",
+                bbnf_ir::MapBinOp::Le => "<=",
+                bbnf_ir::MapBinOp::Ge => ">=",
+                bbnf_ir::MapBinOp::And => "&&",
+                bbnf_ir::MapBinOp::Or => "||",
+                bbnf_ir::MapBinOp::BitAnd => "&",
+                bbnf_ir::MapBinOp::BitOr => "|",
+                bbnf_ir::MapBinOp::Shl => "<<",
+                bbnf_ir::MapBinOp::Shr => ">>",
+            };
+            format!("({l} {op_str} {r})")
+        }
+        MapExpr::UnaryOp { op, inner } => {
+            let i = compile_map_expr_to_js(inner, ir);
+            match op {
+                bbnf_ir::MapUnaryOp::Neg => format!("(-{i})"),
+                bbnf_ir::MapUnaryOp::Not => format!("(!{i})"),
+            }
+        }
+    }
 }
 
 /// Inline whitespace-skip statements.

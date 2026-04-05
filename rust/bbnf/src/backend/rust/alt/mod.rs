@@ -14,12 +14,12 @@ use super::{MonoCtx, emit_mono_expr};
 use key_dispatch::try_emit_key_dispatch;
 
 /// Result of extracting a literal through a Map wrapper.
-/// `lit_sid` is the StringId of the literal; `constant_value` is `Some(StringId)`
-/// when the node is `Map(Literal, Constant { value, .. })`.
+/// `lit_sid` is the StringId of the literal; `constant_fn_id` is `Some(FnId)`
+/// when the node is `Map(Literal, Expr { constant_expr, .. })`.
 #[derive(Clone, Copy)]
 struct LitThroughMap {
     lit_sid: bbnf_ir::StringId,
-    constant_value: Option<bbnf_ir::StringId>,
+    constant_fn_id: Option<bbnf_ir::FnId>,
 }
 
 /// Extract a literal StringId from a node, looking through Map(_, Constant)
@@ -30,17 +30,18 @@ fn extract_literal_through_map(node: &IrNode, ctx: &IrCodegenCtx<'_>) -> Option<
     match node {
         IrNode::Literal(sid) => Some(LitThroughMap {
             lit_sid: *sid,
-            constant_value: None,
+            constant_fn_id: None,
         }),
         IrNode::Map { inner, fn_id } => {
             let fd = &ctx.ir.fns[*fn_id as usize];
             match fd {
-                FnDescriptor::Constant { value, .. } => {
-                    // Recurse through nested Maps, but attach the outermost constant value.
+                FnDescriptor::Expr { expr, .. } if expr.is_constant() => {
+                    // Recurse through nested Maps, but flag that a constant expr exists.
                     let inner_info = extract_literal_through_map(inner, ctx)?;
+                    // For constant MapExpr, we use the fn_id to look up the constant later.
                     Some(LitThroughMap {
                         lit_sid: inner_info.lit_sid,
-                        constant_value: Some(*value),
+                        constant_fn_id: Some(*fn_id),
                     })
                 }
                 _ => None,

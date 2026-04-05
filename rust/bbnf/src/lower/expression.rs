@@ -1,26 +1,27 @@
 //! Expression/node lowering logic — the recursive `lower_expression` function.
 
-use bbnf_ir::{AltBranch, FnDescriptor, FnId, IrNode, TypeDesc};
+use bbnf_ir::{AltBranch, FnDescriptor, FnId, IrNode, MapExpr, TypeDesc};
 
 use crate::generate::regex::classify::{RegexClass, classify_regex};
 use crate::types::{Expression, Token};
 
 use super::{LowerCtx, charset_to_128};
 
-/// Attempt to replace a `FnDescriptor::Custom` with a specialized descriptor
-/// based on the combination of inner node type and closure return type annotation.
+/// Attempt to replace a `FnDescriptor::Expr` with a specialized descriptor
+/// based on the combination of inner node type and MapExpr pattern.
 ///
 /// Recognized patterns:
-/// - `Regex(numeric_pattern) -> f64` → `FnDescriptor::NumberConvert`
-/// - `Regex(hex_pattern) -> u32` → `FnDescriptor::HexConvert { fn_path }`
+/// - `Regex(numeric_pattern) + Expr { Input, return_type: f64 }` → `FnDescriptor::NumberConvert`
+/// - `Regex(hex_pattern) + Expr { FnCall(name, [Input]), return_type: u32 }` → `FnDescriptor::HexConvert`
 fn try_specialize_map_fn(inner: &IrNode, fn_id: FnId, ctx: &mut LowerCtx<'_>) -> FnId {
     let desc = &ctx.fns.fns[fn_id as usize];
 
-    let (source_sid, type_sid) = match desc {
-        FnDescriptor::Custom {
-            source,
+    // Only specialize Expr variants with a named return type.
+    let (expr, type_sid) = match desc {
+        FnDescriptor::Expr {
+            expr,
             return_type: Some(TypeDesc::Named(sid)),
-        } => (*source, *sid),
+        } => (expr.clone(), *sid),
         _ => return fn_id,
     };
 
@@ -29,32 +30,35 @@ fn try_specialize_map_fn(inner: &IrNode, fn_id: FnId, ctx: &mut LowerCtx<'_>) ->
         _ => return fn_id,
     };
 
-    // Copy strings upfront to avoid holding immutable borrows across the
-    // mutable `ctx.strings.intern()` / `ctx.fns.push()` calls below.
     let type_name = ctx.strings.resolve(type_sid).to_owned();
     let pattern = ctx.strings.resolve(regex_sid).to_owned();
 
     match type_name.as_str() {
         "f64" => {
-            if matches!(
-                classify_regex(&pattern),
-                RegexClass::Numeric { .. } | RegexClass::JsonNumber
-            ) {
+            // Expr { Input, return_type: f64 } on a numeric regex → NumberConvert
+            if matches!(expr, MapExpr::Input)
+                && matches!(
+                    classify_regex(&pattern),
+                    RegexClass::Numeric { .. } | RegexClass::JsonNumber
+                )
+            {
                 ctx.fns.push(FnDescriptor::NumberConvert)
             } else {
                 fn_id
             }
         }
         "u32" => {
-            if matches!(classify_regex(&pattern), RegexClass::HexDigits) {
-                // Extract the function path from the closure body.
-                let source_str = ctx.strings.resolve(source_sid).to_owned();
-                match extract_closure_fn_path(&source_str) {
-                    Some(fn_path) => {
-                        let path_sid = ctx.strings.intern(&fn_path);
-                        ctx.fns.push(FnDescriptor::HexConvert { fn_path: path_sid })
-                    }
-                    None => fn_id,
+            // Expr { FnCall(name, [Input]), return_type: u32 } on a hex regex → HexConvert
+            if let MapExpr::FnCall { name, args } = &expr {
+                if args.len() == 1
+                    && matches!(args[0], MapExpr::Input | MapExpr::InputProp { .. })
+                    && matches!(classify_regex(&pattern), RegexClass::HexDigits)
+                {
+                    let fn_path_str = ctx.strings.resolve(*name).to_owned();
+                    let path_sid = ctx.strings.intern(&fn_path_str);
+                    ctx.fns.push(FnDescriptor::HexConvert { fn_path: path_sid })
+                } else {
+                    fn_id
                 }
             } else {
                 fn_id
@@ -70,7 +74,6 @@ fn try_specialize_map_fn(inner: &IrNode, fn_id: FnId, ctx: &mut LowerCtx<'_>) ->
 /// parses it with `syn` and extracts the function path `crate::foo::bar`.
 fn extract_closure_fn_path(source: &str) -> Option<String> {
     let closure: syn::ExprClosure = syn::parse_str(source).ok()?;
-    // The body should be a block containing a single expression (the call).
     let body_expr = match closure.body.as_ref() {
         syn::Expr::Block(block) => {
             let stmt = block.block.stmts.last()?;
@@ -79,24 +82,17 @@ fn extract_closure_fn_path(source: &str) -> Option<String> {
                 _ => return None,
             }
         }
-        // Could also be a bare expression (no block braces).
         other => other,
     };
 
-    // Unwrap `.unwrap_or(...)` or other method chains to find the inner call.
     let call_expr = match body_expr {
-        syn::Expr::MethodCall(mc) => {
-            // e.g., `foo(x).unwrap_or(0)` — the receiver is the actual call.
-            mc.receiver.as_ref()
-        }
+        syn::Expr::MethodCall(mc) => mc.receiver.as_ref(),
         syn::Expr::Call(_) => body_expr,
         _ => return None,
     };
 
     if let syn::Expr::Call(call) = call_expr {
-        // The function position should be a path expression.
         if let syn::Expr::Path(path_expr) = call.func.as_ref() {
-            // Convert the path back to a string, normalizing `::` spacing.
             let path_str = quote::ToTokens::to_token_stream(&path_expr.path).to_string();
             return Some(path_str.replace(" :: ", "::"));
         }
@@ -107,123 +103,162 @@ fn extract_closure_fn_path(source: &str) -> Option<String> {
 
 /// Lower a mapping function expression to a `FnId`.
 ///
-/// Parses the closure's `-> ReturnType` annotation (if present) and stores
-/// it as a `TypeDesc::Named` in the `FnDescriptor::Custom` variant. This allows
-/// IR type inference to use the actual return type instead of the closure source text.
+/// Produces `FnDescriptor::Expr` with structured `MapExpr` for all user-facing maps.
+/// Uses `syn` to parse legacy raw-text mapper syntax (to be replaced by structured
+/// value expression parser in Phase B).
 ///
-/// Shorthand forms:
-/// - Constant literal: `"px" -> 0u8` — parsed as `FnDescriptor::Constant`
-/// - Path expression: `hexDigits -> crate::parse_hex_color` — parsed as `FnDescriptor::Constant`
+/// Recognized forms:
+/// - Type shorthand: `-> f64` → `Expr { Input, return_type: Named("f64") }`
+/// - Constant literal: `-> 0u8` → `Expr { IntLit(0), return_type: Named("u8") }`
+/// - Boolean constant: `-> true` → `Expr { BoolLit(true), return_type: Named("bool") }`
+/// - Rust closure: `-> |s| fn(s)` → `Expr { FnCall(fn, [Input]), return_type }`
+/// - Path expression: `-> crate::func` → `Expr { FnCall(path, [Input]), return_type: None }`
 fn lower_mapping_fn<'a>(expr: &Expression<'a>, ctx: &mut LowerCtx<'a>) -> FnId {
     match expr {
         Expression::MappingFn(token) => {
             let mapper_str = token.value.as_ref().trim();
-            let string_id = ctx.strings.intern(mapper_str);
 
             // Type-shorthand: bare type name like `f64` or `u32`.
-            // Lowers as a Custom with the named return type so that
-            // `try_specialize_map_fn` can detect `Regex(numeric) -> f64`
-            // and emit `NumberConvert` / `HexConvert`.
-            if syn::parse_str::<syn::Type>(mapper_str).is_ok()
-                && syn::parse_str::<syn::ExprLit>(mapper_str).is_err()
-                && matches!(
-                    mapper_str,
-                    "f64" | "f32" | "u32" | "u64" | "i32" | "i64" | "usize"
-                )
-            {
+            if matches!(
+                mapper_str,
+                "f64" | "f32" | "u32" | "u64" | "i32" | "i64" | "usize"
+            ) {
                 let type_sid = ctx.strings.intern(mapper_str);
-                return ctx.fns.push(FnDescriptor::Custom {
-                    source: string_id,
-                    return_type: Some(bbnf_ir::TypeDesc::Named(type_sid)),
+                return ctx.fns.push(FnDescriptor::Expr {
+                    expr: MapExpr::Input,
+                    return_type: Some(TypeDesc::Named(type_sid)),
                 });
             }
 
-            // Try as closure first (existing path).
-            if syn::parse_str::<syn::ExprClosure>(mapper_str).is_ok() {
-                let return_type = parse_closure_return_type(mapper_str, ctx);
-                return ctx.fns.push(FnDescriptor::Custom {
-                    source: string_id,
+            // Try as constant literal.
+            if let Some((map_expr, return_type)) = try_parse_constant(mapper_str, ctx) {
+                return ctx.fns.push(FnDescriptor::Expr {
+                    expr: map_expr,
                     return_type,
                 });
             }
 
-            // Try as constant/literal/path expression (shorthand syntax).
-            if syn::parse_str::<syn::Expr>(mapper_str).is_ok() {
-                let return_type = infer_expr_type(mapper_str, ctx);
-                return ctx.fns.push(FnDescriptor::Constant {
-                    value: string_id,
+            // Try as Rust closure — extract function path and return type.
+            if let Ok(closure) = syn::parse_str::<syn::ExprClosure>(mapper_str) {
+                let return_type = if let syn::ReturnType::Type(_, ty) = &closure.output {
+                    let ty_str = quote::ToTokens::to_token_stream(ty).to_string();
+                    let sid = ctx.strings.intern(&ty_str);
+                    Some(TypeDesc::Named(sid))
+                } else {
+                    None
+                };
+
+                // Extract function path from closure body.
+                if let Some(fn_path) = extract_closure_fn_path(mapper_str) {
+                    let name_sid = ctx.strings.intern(&fn_path);
+                    return ctx.fns.push(FnDescriptor::Expr {
+                        expr: MapExpr::FnCall {
+                            name: name_sid,
+                            args: vec![MapExpr::Input],
+                        },
+                        return_type,
+                    });
+                }
+
+                // Closure without extractable fn path — store source as FnCall name
+                // (Rust backend emits it verbatim as a closure).
+                let source_sid = ctx.strings.intern(mapper_str);
+                return ctx.fns.push(FnDescriptor::Expr {
+                    expr: MapExpr::FnCall {
+                        name: source_sid,
+                        args: vec![],
+                    },
                     return_type,
                 });
             }
 
-            // Fallback: treat as opaque custom.
-            ctx.fns.push(FnDescriptor::Custom {
-                source: string_id,
+            // Try as path expression (e.g., `crate::parse_hex_color`).
+            if syn::parse_str::<syn::ExprPath>(mapper_str).is_ok() {
+                let name_sid = ctx.strings.intern(mapper_str);
+                return ctx.fns.push(FnDescriptor::Expr {
+                    expr: MapExpr::FnCall {
+                        name: name_sid,
+                        args: vec![MapExpr::Input],
+                    },
+                    return_type: None,
+                });
+            }
+
+            // Fallback: treat as opaque function call on input.
+            let source_sid = ctx.strings.intern(mapper_str);
+            ctx.fns.push(FnDescriptor::Expr {
+                expr: MapExpr::FnCall {
+                    name: source_sid,
+                    args: vec![MapExpr::Input],
+                },
                 return_type: None,
             })
         }
         _ => {
             let text = format!("{:?}", expr);
             let string_id = ctx.strings.intern(&text);
-            ctx.fns.push(FnDescriptor::Custom {
-                source: string_id,
+            ctx.fns.push(FnDescriptor::Expr {
+                expr: MapExpr::FnCall {
+                    name: string_id,
+                    args: vec![],
+                },
                 return_type: None,
             })
         }
     }
 }
 
-/// Infer the return type of a non-closure expression for `FnDescriptor::Constant`.
-///
-/// Recognizes:
-/// - Suffixed integer literals (`0u8`, `42i32`) → `TypeDesc::Named("u8")` etc.
-/// - `true`/`false` → `TypeDesc::Named("bool")`
-/// - Float literals (`3.14f64`) → `TypeDesc::Named("f64")`
-/// - String literals → `TypeDesc::Named("&str")`
-/// - Path expressions → `None` (type must come from context)
-fn infer_expr_type(source: &str, ctx: &mut LowerCtx<'_>) -> Option<bbnf_ir::TypeDesc> {
+/// Try to parse a mapper string as a constant literal, returning the MapExpr and type.
+fn try_parse_constant(source: &str, ctx: &mut LowerCtx<'_>) -> Option<(MapExpr, Option<TypeDesc>)> {
+    // Boolean constants.
+    if source == "true" {
+        let sid = ctx.strings.intern("bool");
+        return Some((MapExpr::BoolLit(true), Some(TypeDesc::Named(sid))));
+    }
+    if source == "false" {
+        let sid = ctx.strings.intern("bool");
+        return Some((MapExpr::BoolLit(false), Some(TypeDesc::Named(sid))));
+    }
+
+    // Try integer literal with suffix.
     if let Ok(lit) = syn::parse_str::<syn::ExprLit>(source) {
         match &lit.lit {
             syn::Lit::Int(int_lit) => {
+                let value: i64 = int_lit.base10_parse().ok()?;
                 let suffix = int_lit.suffix();
-                if !suffix.is_empty() {
+                let return_type = if !suffix.is_empty() {
                     let sid = ctx.strings.intern(suffix);
-                    return Some(bbnf_ir::TypeDesc::Named(sid));
-                }
+                    Some(TypeDesc::Named(sid))
+                } else {
+                    None
+                };
+                return Some((MapExpr::IntLit(value), return_type));
             }
             syn::Lit::Float(float_lit) => {
+                let value: f64 = float_lit.base10_parse().ok()?;
                 let suffix = float_lit.suffix();
-                if !suffix.is_empty() {
+                let return_type = if !suffix.is_empty() {
                     let sid = ctx.strings.intern(suffix);
-                    return Some(bbnf_ir::TypeDesc::Named(sid));
-                }
+                    Some(TypeDesc::Named(sid))
+                } else {
+                    None
+                };
+                return Some((MapExpr::FloatLit(value), return_type));
             }
-            syn::Lit::Bool(_) => {
+            syn::Lit::Bool(b) => {
                 let sid = ctx.strings.intern("bool");
-                return Some(bbnf_ir::TypeDesc::Named(sid));
+                return Some((MapExpr::BoolLit(b.value), Some(TypeDesc::Named(sid))));
             }
-            syn::Lit::Str(_) => {
-                let sid = ctx.strings.intern("& str");
-                return Some(bbnf_ir::TypeDesc::Named(sid));
+            syn::Lit::Str(s) => {
+                let str_sid = ctx.strings.intern(&s.value());
+                let type_sid = ctx.strings.intern("& str");
+                return Some((MapExpr::StringLit(str_sid), Some(TypeDesc::Named(type_sid))));
             }
             _ => {}
         }
     }
-    None
-}
 
-/// Parse a Rust closure source string to extract the return type annotation.
-/// Returns `Some(TypeDesc::Named(sid))` if the closure has `-> ReturnType`, None otherwise.
-fn parse_closure_return_type(source: &str, ctx: &mut LowerCtx<'_>) -> Option<bbnf_ir::TypeDesc> {
-    let closure = syn::parse_str::<syn::ExprClosure>(source).ok()?;
-    if let syn::ReturnType::Type(_, ty) = &closure.output {
-        // Intern the return type as a string for TypeDesc::Named.
-        let ty_str = quote::ToTokens::to_token_stream(ty).to_string();
-        let sid = ctx.strings.intern(&ty_str);
-        Some(bbnf_ir::TypeDesc::Named(sid))
-    } else {
-        None
-    }
+    None
 }
 
 /// Lower a single `Expression` to an `IrNode`.
@@ -256,12 +291,10 @@ pub(crate) fn lower_expression<'a>(expr: &'a Expression<'a>, ctx: &mut LowerCtx<
         }
 
         Expression::Group(inner) => {
-            // Group is purely syntactic — lower the inner expression directly.
             lower_expression(&inner.value, ctx)
         }
 
         Expression::SpanCapture(inner) => {
-            // @{expr}: parse inner for validation, return Span of consumed input.
             let inner_node = lower_expression(&inner.value, ctx);
             let fn_id = ctx.fns.push(bbnf_ir::FnDescriptor::SpanCapture);
             IrNode::Map {
@@ -341,7 +374,6 @@ pub(crate) fn lower_expression<'a>(expr: &'a Expression<'a>, ctx: &mut LowerCtx<
                 .map(|(i, child)| {
                     let node = lower_expression(child, ctx);
 
-                    // Attach per-branch FIRST set if available.
                     let first_set = ctx
                         .current_lhs
                         .and_then(|lhs| ctx.first_sets.branch_firsts.get(lhs))
@@ -383,8 +415,6 @@ pub(crate) fn lower_expression<'a>(expr: &'a Expression<'a>, ctx: &mut LowerCtx<
         }
 
         Expression::DebugExpression((inner, label)) => {
-            // Debug expressions are transparent in the IR — the label is preserved
-            // in GrammarIR::debug_labels for display in debug adapters.
             if !label.is_empty() {
                 if let Some(rule_id) = ctx.current_lhs.and_then(|lhs| {
                     if let Expression::Nonterminal(Token { value, .. }) = lhs {
@@ -394,8 +424,6 @@ pub(crate) fn lower_expression<'a>(expr: &'a Expression<'a>, ctx: &mut LowerCtx<
                     }
                 }) {
                     let label_id = ctx.strings.intern(label);
-                    // Note: debug_labels is collected post-lowering via GrammarIR.
-                    // We store the pair for later attachment.
                     let _ = (rule_id, label_id);
                 }
             }
@@ -403,8 +431,6 @@ pub(crate) fn lower_expression<'a>(expr: &'a Expression<'a>, ctx: &mut LowerCtx<
         }
 
         Expression::MappingFn(_) => {
-            // A standalone mapping function reference shouldn't appear as a body,
-            // but handle gracefully by treating it as a custom function with Epsilon input.
             let fn_id = lower_mapping_fn(expr, ctx);
             IrNode::Map {
                 inner: Box::new(IrNode::Epsilon),
@@ -417,8 +443,6 @@ pub(crate) fn lower_expression<'a>(expr: &'a Expression<'a>, ctx: &mut LowerCtx<
 
             if let Some(mapping_expr) = mapping {
                 let fn_id = lower_mapping_fn(mapping_expr.as_ref(), ctx);
-
-                // Check for specialized conversion patterns (numeric, hex).
                 let fn_id = try_specialize_map_fn(&inner_node, fn_id, ctx);
 
                 IrNode::Map {
@@ -431,8 +455,6 @@ pub(crate) fn lower_expression<'a>(expr: &'a Expression<'a>, ctx: &mut LowerCtx<
         }
 
         Expression::ProductionRule(_lhs, rhs) => {
-            // Production rules shouldn't appear in the body, but handle gracefully.
-            // Lower the RHS as the body.
             lower_expression(rhs, ctx)
         }
     }

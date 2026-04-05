@@ -1,6 +1,6 @@
 //! The [`Emitter`] trait — backend-specific code emission.
 
-use bbnf_ir::{AltDispatch, GrammarIR, IrRule, RuleId, TypeDesc};
+use bbnf_ir::{AltDispatch, FnDescriptor, GrammarIR, IrRule, RuleId, TypeDesc};
 
 use super::analysis::BackendAnalysis;
 use super::key_dispatch::KeyDispatchConfig;
@@ -199,6 +199,48 @@ pub trait Emitter {
         ctx: &mut Self::Ctx,
     ) -> Self::Output;
 
+    /// Emit a structured value expression (MapExpr).
+    /// Walks the expression tree and generates native code for the target backend.
+    fn emit_map_expr(
+        &mut self,
+        inner: Self::Output,
+        expr: &bbnf_ir::MapExpr,
+        return_type: Option<&bbnf_ir::TypeDesc>,
+        alloc: AllocStrategy,
+        ir: &GrammarIR,
+        ctx: &mut Self::Ctx,
+    ) -> Self::Output;
+
+    /// Emit a span capture: parse inner for validation, return Span.
+    fn emit_span_capture(
+        &mut self,
+        inner: Self::Output,
+        ctx: &mut Self::Ctx,
+    ) -> Self::Output;
+
+    /// Emit a hex conversion: inline char-class scan + user function call.
+    fn emit_hex_convert(
+        &mut self,
+        inner: Self::Output,
+        fn_path: &str,
+        ctx: &mut Self::Ctx,
+    ) -> Self::Output;
+
+    /// Try to fuse two chained Map operations into one emission.
+    /// Returns `None` if fusion is not supported for this pair — driver falls back
+    /// to compiling the full inner Map node separately.
+    fn emit_fused_map(
+        &mut self,
+        _inner: Self::Output,
+        _inner_fd: &FnDescriptor,
+        _outer_fd: &FnDescriptor,
+        _alloc: AllocStrategy,
+        _ir: &GrammarIR,
+        _ctx: &mut Self::Ctx,
+    ) -> Option<Self::Output> {
+        None
+    }
+
     fn emit_ws_trim(
         &mut self,
         ws_pattern: Option<&str>,
@@ -252,6 +294,7 @@ pub trait Emitter {
         &mut self,
         rule: &IrRule,
         body: Self::Output,
+        sync_body: Option<Self::Output>,
         ir: &GrammarIR,
         ctx: &mut Self::Ctx,
     ) -> Self::Output;

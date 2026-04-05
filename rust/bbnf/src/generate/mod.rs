@@ -26,19 +26,20 @@ pub fn generate_all(
     ir_ctx.fused_number_rules = prepared.prep.analysis.fused_number_rules.clone();
     ir_ctx.operator_chain_rules = prepared.prep.analysis.operator_chain_rules.clone();
 
-    // Compute prettify methods via the existing monolithic prettify path.
-    let prettify_methods = if prepared.prep.effective_prettify {
-        codegen::prettify::generate_monolithic_prettify(ir, &ir_ctx)
-    } else {
-        proc_macro2::TokenStream::new()
-    };
-
     // Create emitter and context.
     let enum_ident = ir_ctx.enum_ident.clone();
     let mut emitter = RustEmitter::new(enum_ident, prepared.prep.effective_prettify);
     emitter.fused_number_rules = prepared.prep.analysis.fused_number_rules.clone();
     emitter.operator_chain_rules = prepared.prep.analysis.operator_chain_rules.clone();
-    emitter.extra_impl_methods = prettify_methods;
+
+    // Compute prettify methods via the driver/emitter path.
+    if prepared.prep.effective_prettify {
+        let mut prettify_ctx = RustEmitCtx::new(&ir_ctx);
+        let prettify_methods = crate::backend::driver_prettify::compile_prettify_grammar(
+            ir, &mut emitter, &mut prettify_ctx,
+        );
+        emitter.extra_impl_methods = prettify_methods;
+    }
 
     let mut emit_ctx = RustEmitCtx::new(&ir_ctx);
 

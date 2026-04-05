@@ -2,6 +2,7 @@
 
 mod alt;
 mod dispatch;
+mod prettify;
 mod repeat;
 mod ws;
 
@@ -11,6 +12,7 @@ use quote::{format_ident, quote};
 
 use crate::backend::analysis::BackendAnalysis;
 use crate::backend::key_dispatch::KeyDispatchConfig;
+use crate::backend::prettify::{PrettyPolicy, PrettyRulePlan};
 use crate::backend::{
     ValuePlacement, AltBranchInfo, DelimScanConfig, Emitter, FlattenStrategy, KeyDispatchBranch,
     SepByConfig, SeqChildGroup, TokenDispatchArmCompiled,
@@ -1060,5 +1062,47 @@ impl Emitter for RustEmitter {
                 #extra
             }
         }
+    }
+
+    // ── Prettify trait delegations ──────────────────────────────────────
+
+    fn emit_prettify_literal(&mut self, value: &str, ctx: &mut Self::Ctx) -> TokenStream {
+        self.emit_prettify_literal_impl(value, ctx)
+    }
+    fn emit_prettify_regex(&mut self, pattern: &str, regex_id: usize, ir: &GrammarIR, ctx: &mut Self::Ctx) -> TokenStream {
+        self.emit_prettify_regex_impl(pattern, regex_id, ir, ctx)
+    }
+    fn emit_prettify_ref(&mut self, rule_id: RuleId, rule_name: &str, plan: &PrettyRulePlan, ir: &GrammarIR, ctx: &mut Self::Ctx) -> TokenStream {
+        self.emit_prettify_ref_impl(rule_id, rule_name, plan, ir, ctx)
+    }
+    fn emit_prettify_seq(&mut self, children: Vec<TokenStream>, ctx: &mut Self::Ctx) -> TokenStream {
+        self.emit_prettify_seq_impl(children, ctx)
+    }
+    fn emit_prettify_alt_dispatch(&mut self, table: &bbnf_ir::AltDispatch, branches: Vec<TokenStream>, fallback: Option<TokenStream>, ctx: &mut Self::Ctx) -> TokenStream {
+        self.emit_prettify_alt_dispatch_impl(table, branches, fallback, ctx)
+    }
+    fn emit_prettify_alt_sequential(&mut self, branches: Vec<(TokenStream, bool)>, ctx: &mut Self::Ctx) -> TokenStream {
+        self.emit_prettify_alt_sequential_impl(branches, ctx)
+    }
+    fn emit_prettify_repeat(&mut self, body: TokenStream, lo: u32, hi: u32, policy: &PrettyPolicy, ctx: &mut Self::Ctx) -> TokenStream {
+        self.emit_prettify_repeat_impl(body, lo, hi, policy, ctx)
+    }
+    fn emit_prettify_skip(&mut self, left: TokenStream, right: TokenStream, ctx: &mut Self::Ctx) -> TokenStream {
+        self.emit_prettify_skip_impl(left, right, ctx)
+    }
+    fn emit_prettify_next(&mut self, left: TokenStream, right: TokenStream, ctx: &mut Self::Ctx) -> TokenStream {
+        self.emit_prettify_next_impl(left, right, ctx)
+    }
+    fn emit_prettify_optional_ws(&mut self, inner: TokenStream, is_atomic: bool, ctx: &mut Self::Ctx) -> TokenStream {
+        self.emit_prettify_optional_ws_impl(inner, is_atomic, ctx)
+    }
+    fn emit_prettify_attempt(&mut self, expr: TokenStream, rollback_builder: bool, use_light: bool, ctx: &mut Self::Ctx) -> TokenStream {
+        self.emit_prettify_attempt_impl(expr, rollback_builder, use_light, ctx)
+    }
+    fn emit_prettify_rule_function(&mut self, rule: &IrRule, body: TokenStream, policy: &PrettyPolicy, ir: &GrammarIR, ctx: &mut Self::Ctx) -> TokenStream {
+        self.emit_prettify_rule_function_impl(rule, body, policy, ir, ctx)
+    }
+    fn emit_prettify_grammar(&mut self, rule_functions: Vec<TokenStream>, ir: &GrammarIR, ctx: &mut Self::Ctx) -> TokenStream {
+        self.emit_prettify_grammar_impl(rule_functions, ir, ctx)
     }
 }

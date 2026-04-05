@@ -4,6 +4,7 @@ use bbnf_ir::{AltDispatch, FnDescriptor, GrammarIR, IrRule, RuleId, TypeDesc};
 
 use super::analysis::BackendAnalysis;
 use super::key_dispatch::KeyDispatchConfig;
+use super::prettify::{PrettyPolicy, PrettyRulePlan};
 use super::types::*;
 
 /// Backend-specific code emission.
@@ -328,4 +329,46 @@ pub trait Emitter {
         ir: &GrammarIR,
         ctx: &mut Self::Ctx,
     ) -> Self::Output;
+
+    // ── Prettify emission ──────────────────────────────────────────────
+
+    fn emit_prettify_literal(&mut self, _value: &str, _ctx: &mut Self::Ctx) -> Self::Output {
+        unimplemented!("prettify not supported")
+    }
+    fn emit_prettify_regex(&mut self, _pattern: &str, _regex_id: usize, _ir: &GrammarIR, _ctx: &mut Self::Ctx) -> Self::Output {
+        unimplemented!("prettify not supported")
+    }
+    fn emit_prettify_ref(&mut self, _rule_id: RuleId, _rule_name: &str, _plan: &PrettyRulePlan, _ir: &GrammarIR, _ctx: &mut Self::Ctx) -> Self::Output {
+        unimplemented!("prettify not supported")
+    }
+    fn emit_prettify_seq(&mut self, _children: Vec<Self::Output>, _ctx: &mut Self::Ctx) -> Self::Output {
+        unimplemented!("prettify not supported")
+    }
+    fn emit_prettify_alt_dispatch(&mut self, _table: &AltDispatch, _branches: Vec<Self::Output>, _fallback: Option<Self::Output>, _ctx: &mut Self::Ctx) -> Self::Output {
+        unimplemented!("prettify not supported")
+    }
+    fn emit_prettify_alt_sequential(&mut self, _branches: Vec<(Self::Output, bool)>, _ctx: &mut Self::Ctx) -> Self::Output {
+        unimplemented!("prettify not supported")
+    }
+    fn emit_prettify_repeat(&mut self, _body: Self::Output, _lo: u32, _hi: u32, _policy: &PrettyPolicy, _ctx: &mut Self::Ctx) -> Self::Output {
+        unimplemented!("prettify not supported")
+    }
+    fn emit_prettify_skip(&mut self, _left: Self::Output, _right: Self::Output, _ctx: &mut Self::Ctx) -> Self::Output {
+        unimplemented!("prettify not supported")
+    }
+    fn emit_prettify_next(&mut self, _left: Self::Output, _right: Self::Output, _ctx: &mut Self::Ctx) -> Self::Output {
+        unimplemented!("prettify not supported")
+    }
+    fn emit_prettify_optional_ws(&mut self, _inner: Self::Output, _is_atomic: bool, _ctx: &mut Self::Ctx) -> Self::Output {
+        unimplemented!("prettify not supported")
+    }
+    fn emit_prettify_attempt(&mut self, _expr: Self::Output, _rollback_builder: bool, _use_light: bool, _ctx: &mut Self::Ctx) -> Self::Output {
+        unimplemented!("prettify not supported")
+    }
+    fn emit_prettify_rule_function(&mut self, _rule: &IrRule, _body: Self::Output, _policy: &PrettyPolicy, _ir: &GrammarIR, _ctx: &mut Self::Ctx) -> Self::Output {
+        unimplemented!("prettify not supported")
+    }
+    fn emit_prettify_grammar(&mut self, _rule_functions: Vec<Self::Output>, _ir: &GrammarIR, _ctx: &mut Self::Ctx) -> Self::Output {
+        unimplemented!("prettify not supported")
+    }
 }

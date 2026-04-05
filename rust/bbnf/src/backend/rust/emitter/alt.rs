@@ -268,8 +268,10 @@ impl RustEmitter {
         } else {
             quote! { None }
         };
+        // Wrap in closure so `return` in arm_checks exits the closure,
+        // not the enclosing function — preventing bypass of outer .map() wrapping.
         quote! {
-            {
+            (|| {
                 let #cp = state.offset;
                 if let Some(ref __kd_s) = #scanner {
                     let __kd_bytes = &state.src_bytes[__kd_s.start..__kd_s.end];
@@ -278,7 +280,7 @@ impl RustEmitter {
                 }
                 state.offset = #cp;
                 #fallback_expr
-            }
+            })()
         }
     }
 }

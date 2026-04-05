@@ -373,10 +373,6 @@ fn compile_seq<E: Emitter>(
         });
 
     // Use the Seq result type from TypeMap to decide compression.
-    // The TypeMap's seq_result_type accounts for collapse_simple_spans and
-    // span-method overrides. If the result IS Span, collapse. If NOT Span,
-    // DON'T collapse even if all children project as Span (the type system
-    // expects the full tuple).
     let seq_result_type = type_map
         .and_then(|tm| tm.seq_result_type(children.as_ptr() as usize).cloned());
     let all_span = match &seq_result_type {
@@ -384,6 +380,23 @@ fn compile_seq<E: Emitter>(
         Some(_) => false, // TypeMap says non-Span → don't collapse
         None => child_types.iter().all(|t| *t == TypeDesc::Span), // fallback
     };
+
+    // Override child_types from seq_result_type when it's a Tuple.
+    // The seq_result_type is authoritative — it accounts for enum variant types.
+    // The child_types from seq_child_types_by_ptr may have span-method overrides
+    // that conflict with what the enum variant actually expects.
+    let child_types = if let Some(TypeDesc::Tuple(result_elems)) = &seq_result_type {
+        if result_elems.len() == child_types.len() {
+            // Use result tuple elements as child types — more accurate than
+            // span-overridden child_types.
+            result_elems.clone()
+        } else {
+            child_types
+        }
+    } else {
+        child_types
+    };
+
 
 
     if all_span {
@@ -414,6 +427,10 @@ fn compile_seq<E: Emitter>(
                 let child_alloc = match ty {
                     TypeDesc::BoxedEnum => ValuePlacement::Alloc,
                     TypeDesc::Enum if alloc == ValuePlacement::Alloc => ValuePlacement::Alloc,
+                    // Vec(non-Span) in a Repeat: force Alloc to prevent Span compression.
+                    // The Repeat's compile_repeat uses Alloc to decide elem_type, which
+                    // prevents collapsing to Span when the expected type is Vec(Enum).
+                    TypeDesc::Vec(inner) if **inner != TypeDesc::Span => ValuePlacement::Alloc,
                     _ => ValuePlacement::Inline,
                 };
                 let out = compile_node(child, child_alloc, ir, dstate, emitter, ctx);
@@ -675,14 +692,19 @@ fn compile_repeat<E: Emitter>(
                 })
             })
             .unwrap_or_else(|| {
-                // Fallback: check if inner is complex (Seq, Alt, Ref) → use Enum.
-                // Simple leaves (Literal, Regex, Epsilon) → use Span.
                 match inner {
                     IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => TypeDesc::Span,
                     IrNode::Ref(_) => TypeDesc::Enum,
                     _ => TypeDesc::BoxedEnum,
                 }
             });
+        // Override: when parent forces Alloc (Vec(non-Span) expected), prevent
+        // Span compression even if elem_type fell back to Span from TypeMap.
+        let elem_type = if alloc == ValuePlacement::Alloc && elem_type == TypeDesc::Span {
+            TypeDesc::Enum
+        } else {
+            elem_type
+        };
         // Match elem_type: if BoxedEnum, inner must produce &Enum (Alloc).
         // If Enum, inner produces Enum (Inline). Monolithic uses elide_box=true
         // when elem_type is Enum, elide_box=false when BoxedEnum.

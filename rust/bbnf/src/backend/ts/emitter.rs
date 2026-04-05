@@ -270,6 +270,9 @@ impl Emitter for TsEmitter {
         head: TsCode,
         op: TsCode,
         rhs: TsCode,
+        _head_type: &TypeDesc,
+        _link_elem_type: &TypeDesc,
+        _ir: &GrammarIR,
         ctx: &mut TsEmitCtx,
     ) -> Option<TsCode> {
         let head_var = ctx.fresh("head");

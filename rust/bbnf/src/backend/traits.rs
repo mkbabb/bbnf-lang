@@ -138,16 +138,20 @@ pub trait Emitter {
 
     // ── Operator chains ─────────────────────────────────────────────────
 
-    /// Returns `None` if the emitter can't produce the correct typed output
-    /// for operator chains — driver falls back to normal Seq compilation.
+    /// Emit a specialized operator chain: `head (op rhs)*`.
+    /// The driver pre-compiles head, op, rhs via `compile_node`.
+    /// Returns `None` if the emitter declines — driver falls back to normal Seq.
     fn emit_operator_chain(
         &mut self,
         head: Self::Output,
         op: Self::Output,
         rhs: Self::Output,
+        head_type: &TypeDesc,
+        link_elem_type: &TypeDesc,
+        ir: &GrammarIR,
         ctx: &mut Self::Ctx,
     ) -> Option<Self::Output> {
-        let _ = (head, op, rhs, ctx);
+        let _ = (head, op, rhs, head_type, link_elem_type, ir, ctx);
         None
     }
 

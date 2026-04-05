@@ -236,6 +236,9 @@ impl Emitter for WasmEmitter {
         head: String,
         op: String,
         rhs: String,
+        _head_type: &TypeDesc,
+        _link_elem_type: &TypeDesc,
+        _ir: &GrammarIR,
         ctx: &mut WasmEmitCtx,
     ) -> Option<String> {
         let head_var = ctx.fresh("oc_head");

@@ -199,14 +199,39 @@ pub fn compile_node<E: Emitter>(
         // ── Structural ─────────────────────────────────────────────────
         IrNode::Seq(children) => {
             // Decision: detect operator chain pattern Seq(head, Repeat(Seq(op, rhs))).
-            if let Some((head, op, rhs)) = detect_operator_chain(children) {
-                let head_out = compile_node(head, ValuePlacement::Inline, ir, dstate, emitter, ctx);
-                let op_out = compile_node(op, ValuePlacement::Inline, ir, dstate, emitter, ctx);
-                let rhs_out = compile_node(rhs, ValuePlacement::Inline, ir, dstate, emitter, ctx);
-                if let Some(chain) = emitter.emit_operator_chain(head_out, op_out, rhs_out, ctx) {
-                    return chain;
+            if let Some((head, link, op, rhs)) = detect_operator_chain(children) {
+                let type_map = ir.type_map.as_ref();
+
+                // Compute types from TypeMap. Fall back to node_type if seq_result unavailable.
+                let seq_result = type_map
+                    .and_then(|tm| tm.seq_result_type(children.as_ptr() as usize).cloned());
+                let head_type = seq_result
+                    .as_ref()
+                    .and_then(|t| match t {
+                        TypeDesc::Tuple(elems) if elems.len() == 2 => Some(elems[0].clone()),
+                        _ => None,
+                    })
+                    .or_else(|| {
+                        type_map.and_then(|tm| tm.node_type(head).cloned())
+                    })
+                    .unwrap_or(TypeDesc::Span);
+
+                let link_elem_type = type_map
+                    .and_then(|tm| tm.vec_elem_type(link).cloned())
+                    .unwrap_or(TypeDesc::Span);
+
+                // Skip if head is Span — operator chain not beneficial for all-Span chains.
+                if head_type != TypeDesc::Span {
+                    let head_out = compile_node(head, alloc, ir, dstate, emitter, ctx);
+                    let op_out = compile_node(op, ValuePlacement::Inline, ir, dstate, emitter, ctx);
+                    let rhs_out = compile_node(rhs, ValuePlacement::Inline, ir, dstate, emitter, ctx);
+                    if let Some(chain) = emitter.emit_operator_chain(
+                        head_out, op_out, rhs_out, &head_type, &link_elem_type, ir, ctx,
+                    ) {
+                        return chain;
+                    }
                 }
-                // Emitter declined — fall through to normal Seq compilation.
+                // Emitter declined — fall through to normal Seq.
             }
             compile_seq(children, alloc, ir, dstate, emitter, ctx)
         }
@@ -883,8 +908,9 @@ fn unwrap_ow(node: &IrNode) -> Option<(&IrNode, bool)> {
 
 /// Detect operator chain pattern: `Seq([head, Repeat(Seq([op, rhs]), 0, MAX)])`.
 ///
-/// Returns `(head, op, rhs)` if the pattern matches.
-fn detect_operator_chain(children: &[IrNode]) -> Option<(&IrNode, &IrNode, &IrNode)> {
+/// Returns `(head, link_node, op, rhs)` if the pattern matches.
+/// `link_node` is the Seq(op, rhs) inside Repeat — needed for type computation.
+fn detect_operator_chain(children: &[IrNode]) -> Option<(&IrNode, &IrNode, &IrNode, &IrNode)> {
     if children.len() != 2 {
         return None;
     }
@@ -896,7 +922,7 @@ fn detect_operator_chain(children: &[IrNode]) -> Option<(&IrNode, &IrNode, &IrNo
     {
         if let IrNode::Seq(link) = inner.as_ref() {
             if link.len() == 2 {
-                return Some((&children[0], &link[0], &link[1]));
+                return Some((&children[0], inner.as_ref(), &link[0], &link[1]));
             }
         }
     }

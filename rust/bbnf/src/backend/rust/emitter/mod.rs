@@ -435,16 +435,58 @@ impl Emitter for RustEmitter {
 
     fn emit_operator_chain(
         &mut self,
-        _head: TokenStream,
-        _op: TokenStream,
-        _rhs: TokenStream,
-        _ctx: &mut Self::Ctx,
+        head: TokenStream,
+        op: TokenStream,
+        rhs: TokenStream,
+        head_type: &TypeDesc,
+        link_elem_type: &TypeDesc,
+        _ir: &GrammarIR,
+        ctx: &mut Self::Ctx,
     ) -> Option<TokenStream> {
-        // Rust backend declines Seq-level operator chain detection.
-        // Typed operator chains are handled by emit_operator_chain_rule
-        // which delegates to the monolithic operator_chain module.
-        // The driver falls back to normal Seq compilation.
-        None
+        let ir_ctx = ctx.ir_ctx();
+
+        // Only handle typed chains (not all-Span).
+        if *head_type == TypeDesc::Span {
+            return None;
+        }
+
+        let depth_var = ctx.fresh("chain_depth");
+        let head_var = ctx.fresh("chain_head");
+        let prev_var = ctx.fresh("chain_prev");
+        let op_var = ctx.fresh("chain_op");
+        let rhs_var = ctx.fresh("chain_rhs");
+
+        let init_code = ir_ctx.emit_scratch_init(link_elem_type, &depth_var);
+        let push_code = ir_ctx.emit_scratch_push(link_elem_type, &quote! { (#op_var, #rhs_var) });
+        let collect_code = ir_ctx.emit_scratch_collect(link_elem_type, &depth_var);
+
+        Some(quote! {
+            {
+                let #head_var = #head?;
+                #init_code
+                loop {
+                    let #prev_var = state.offset;
+                    match (|| {
+                        let #op_var = #op?;
+                        let #rhs_var = #rhs?;
+                        Some((#op_var, #rhs_var))
+                    })() {
+                        Some(__value) => {
+                            let (#op_var, #rhs_var) = __value;
+                            #push_code;
+                            if state.offset == #prev_var {
+                                break;
+                            }
+                        }
+                        None => {
+                            state.offset = #prev_var;
+                            break;
+                        }
+                    }
+                }
+                Some((#head_var, #collect_code))
+            }
+        })
     }
 
     // ── Binary operators ────────────────────────────────────────────────
@@ -779,6 +821,8 @@ impl Emitter for RustEmitter {
         ir: &GrammarIR,
         ctx: &mut Self::Ctx,
     ) -> Option<TokenStream> {
+        // Fallback: use monolithic operator_chain module for grammars where the
+        // Seq-level emit_operator_chain doesn't fire (missing TypeMap entries).
         let ir_ctx = ctx.ir_ctx();
         let call_strategies = crate::pipeline::compute_call_strategies(ir);
         let call_modes: Vec<_> = call_strategies.iter().map(|s| match s {
@@ -836,11 +880,16 @@ impl Emitter for RustEmitter {
             quote! { #(#hoisted)* #body }
         } else {
             let variant = format_ident!("{}", name);
-            // Check if the rule's projected type is BoxedEnum — if so, the body
-            // must be slab-allocated before wrapping in the variant.
-            // Uses authoritative TypeMap instead of pattern-matching on body structure.
-            let rule_inner_is_boxed = ir_ctx.ir.types.iter()
-                .any(|(id, td)| *id == rule.id && *td == TypeDesc::BoxedEnum);
+            // Check if the variant expects BoxedEnum (&'a Enum).
+            // Match the enum generation logic: explicit BoxedEnum in ir.types,
+            // OR missing from ir.types entirely (fallback to boxed_enum_type).
+            let rule_type_entry = ir_ctx.ir.types.iter()
+                .find(|(id, _)| *id == rule.id);
+            let rule_inner_is_boxed = match rule_type_entry {
+                Some((_, TypeDesc::BoxedEnum)) => true,
+                None => true, // fallback: enum gen uses boxed_enum_type
+                _ => false,
+            };
             if rule_inner_is_boxed {
                 let alloc_expr = ir_ctx.emit_alloc(&quote! { __x });
                 quote! {

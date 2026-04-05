@@ -8,7 +8,7 @@ pub use codegen::ir_types;
 pub use codegen::ir_types::ParserAttributes;
 
 use crate::backend::PreparedGrammar;
-use quote::quote;
+use crate::backend::rust::emitter_types::{RustEmitCtx, RustEmitter};
 
 /// Generate all parser code from a prepared AOT bundle.
 pub fn generate_all(
@@ -18,43 +18,38 @@ pub fn generate_all(
 ) -> proc_macro2::TokenStream {
     let ir = &prepared.ir;
 
-    let mut ctx = ir_types::IrCodegenCtx::new(ir, ident, parser_attrs, prepared.prep.effective_prettify);
-    ctx.sp_method_rules = prepared.prep.analysis.sp_method_rules.clone();
-    ctx.fused_number_rules = prepared.prep.analysis.fused_number_rules.clone();
-    ctx.operator_chain_rules = prepared.prep.analysis.operator_chain_rules.clone();
+    let mut ir_ctx = ir_types::IrCodegenCtx::new(ir, ident, parser_attrs, prepared.prep.effective_prettify);
+    ir_ctx.sp_method_rules = prepared.prep.analysis.sp_method_rules.clone();
+    ir_ctx.fused_number_rules = prepared.prep.analysis.fused_number_rules.clone();
+    ir_ctx.operator_chain_rules = prepared.prep.analysis.operator_chain_rules.clone();
 
-    let grammar_arr = ir_enums::generate_grammar_arr(parser_attrs, ident);
-    let grammar_enum = ir_enums::generate_enum(&ctx);
-    let parser_methods = codegen::generate_monolithic(ir, &ctx);
-
-    let has_recovers = ctx.ir.rules.iter().any(|r| r.meta.directives.recover.is_some())
-        && !ctx.parser_attrs.skip_recover;
-    let enum_ident = &ctx.enum_ident;
-    let recovered_static = if has_recovers {
-        let recovered_ident = ctx.recovered_static_ident();
-        quote! { static #recovered_ident: #enum_ident<'static> = #enum_ident::Recovered; }
-    } else {
-        quote! {}
-    };
-
-    let (alloc_ctx_struct, alloc_ctx_helper) = ctx.generate_alloc_ctx();
-
+    // Compute prettify methods via the existing monolithic prettify path.
+    // Prettify uses its own IR walker (not Map-aware), so it stays monolithic.
     let prettify_methods = if prepared.prep.effective_prettify {
-        codegen::prettify::generate_monolithic_prettify(ir, &ctx)
+        codegen::prettify::generate_monolithic_prettify(ir, &ir_ctx)
     } else {
-        quote! {}
+        proc_macro2::TokenStream::new()
     };
 
-    quote! {
-        use ::parse_that::*;
-        #grammar_arr
-        #grammar_enum
-        #alloc_ctx_struct
-        #alloc_ctx_helper
-        #recovered_static
-        impl #ident {
-            #parser_methods
-            #prettify_methods
-        }
-    }
+    // Create emitter and context.
+    let enum_ident = ir_ctx.enum_ident.clone();
+    let mut emitter = RustEmitter::new(enum_ident, prepared.prep.effective_prettify);
+    emitter.fused_number_rules = prepared.prep.analysis.fused_number_rules.clone();
+    emitter.operator_chain_rules = prepared.prep.analysis.operator_chain_rules.clone();
+    emitter.extra_impl_methods = prettify_methods;
+
+    let mut emit_ctx = RustEmitCtx::new(&ir_ctx);
+
+    // Compute call strategies from the IR analysis.
+    let call_strategies = crate::pipeline::compile::compute_call_strategies(ir);
+    let mut dstate = crate::backend::driver::DriverState::new(call_strategies);
+
+    // Use the shared driver.
+    crate::backend::driver::compile_grammar(
+        ir,
+        &prepared.prep.analysis,
+        &mut dstate,
+        &mut emitter,
+        &mut emit_ctx,
+    )
 }

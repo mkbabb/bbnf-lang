@@ -20,6 +20,27 @@ pub fn generate_all(
 ) -> proc_macro2::TokenStream {
     let ir = &prepared.ir;
 
+    // DEBUG: check Alt branch types for fontLengthUnit
+    for rule in &ir.rules {
+        let name = ir.get_string(rule.name);
+        if name == "fontLengthUnit" {
+            if let bbnf_ir::IrNode::Alt(branches, _) = &rule.body {
+                for (i, b) in branches.iter().enumerate() {
+                    let node_kind = match &b.node {
+                        bbnf_ir::IrNode::Map { fn_id, .. } => {
+                            let fd = &ir.fns[*fn_id as usize];
+                            format!("Map(fn={:?})", fd)
+                        }
+                        bbnf_ir::IrNode::Seq(children) => format!("Seq({})", children.len()),
+                        other => format!("{:?}", std::mem::discriminant(other)),
+                    };
+                    eprintln!("  fontLengthUnit branch {} = {}", i, node_kind);
+                    if i > 3 { break; }
+                }
+            }
+        }
+    }
+
     let mut ir_ctx = ir_types::IrCodegenCtx::new(ir, ident, parser_attrs, prepared.prep.effective_prettify);
     ir_ctx.sp_method_rules = prepared.prep.analysis.sp_method_rules.clone();
     ir_ctx.fused_number_rules = prepared.prep.analysis.fused_number_rules.clone();

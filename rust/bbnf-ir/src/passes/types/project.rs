@@ -115,8 +115,42 @@ fn project_node_inner(node: &IrNode, ctx: &ProjectionCtx<'_>) -> TypeDesc {
             }
         }
 
-        // TokenDispatch is a heterogeneous alternation dispatched by token value.
-        IrNode::TokenDispatch { .. } => TypeDesc::BoxedEnum,
+        // TokenDispatch: check if all arms + fallback produce the same type.
+        // If homogeneous, return that type directly instead of BoxedEnum.
+        // This matters for CSS unit rules (e.g., fontLengthUnit = "rem" -> 2u8 | ...)
+        // where all branches produce u8 via constant maps.
+        IrNode::TokenDispatch { token: _, arms, fallback } => {
+            let fallback_ty = project_node(fallback, ctx);
+            let mut all_same = true;
+            for arm in arms {
+                // Compute arm type: map_fn applied to continuation, or just continuation.
+                let cont_ty = project_node(&arm.continuation, ctx);
+                let arm_ty = if let Some(fn_id) = arm.map_fn {
+                    let fd = &ctx.ir.fns[fn_id as usize];
+                    match fd {
+                        FnDescriptor::EnumWrap { .. } => TypeDesc::Enum,
+                        FnDescriptor::BoxWrap => TypeDesc::BoxedEnum,
+                        FnDescriptor::NumberConvert => TypeDesc::F64,
+                        FnDescriptor::HexConvert { .. } => TypeDesc::U32,
+                        FnDescriptor::SpanCapture => TypeDesc::Span,
+                        FnDescriptor::Expr { return_type, .. } => {
+                            return_type.clone().unwrap_or(cont_ty)
+                        }
+                    }
+                } else {
+                    cont_ty
+                };
+                if arm_ty != fallback_ty {
+                    all_same = false;
+                    break;
+                }
+            }
+            if all_same && !arms.is_empty() {
+                fallback_ty
+            } else {
+                TypeDesc::BoxedEnum
+            }
+        }
     }
 }
 

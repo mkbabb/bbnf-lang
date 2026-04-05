@@ -203,6 +203,18 @@ impl RustEmitter {
         _alloc: ValuePlacement,
         ctx: &mut RustEmitCtx,
     ) -> TokenStream {
+        // Check if branches need coercion (heterogeneous types → BoxedEnum).
+        let all_infos: Vec<&AltBranchInfo> = branches
+            .iter()
+            .map(|kd| &kd.info)
+            .chain(fallback.as_ref().map(|(info, _)| info))
+            .collect();
+        let do_coerce = if all_infos.len() <= 1 {
+            false
+        } else {
+            all_infos.iter().any(|i| i.ty != all_infos[0].ty)
+        };
+
         let cp = ctx.fresh("kd_cp");
         let scanner = match config.key_class {
             KeyClass::Identifier => quote! { ::parse_that::scan_ident(state) },
@@ -221,7 +233,11 @@ impl RustEmitter {
                         quote! { (__kd_len == #len && __kd_bytes == &[#(#byte_lits),*]) }
                     })
                     .collect();
-                let body = kd.body;
+                let body = if do_coerce {
+                    coerce_branch(&kd.info, &kd.body, ctx, &self.enum_ident)
+                } else {
+                    kd.body
+                };
                 quote! {
                     if #(#comparisons)||* {
                         state.offset = #cp;
@@ -230,8 +246,12 @@ impl RustEmitter {
                 }
             })
             .collect();
-        let fallback_expr = if let Some((_, fb)) = fallback {
-            fb
+        let fallback_expr = if let Some((info, fb)) = fallback {
+            if do_coerce {
+                coerce_branch(&info, &fb, ctx, &self.enum_ident)
+            } else {
+                fb
+            }
         } else {
             quote! { None }
         };

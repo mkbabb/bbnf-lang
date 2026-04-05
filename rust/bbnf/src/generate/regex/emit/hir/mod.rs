@@ -57,6 +57,18 @@ pub fn try_emit_regex_inline(pattern: &str) -> Option<TokenStream> {
 
     let body = emit_hir(&hir)?;
 
+    // Nullable regexes (minimum_len == 0) can match zero characters.
+    // Use >= for these so zero-width matches return Some(empty_span).
+    // This matches the DFA path behavior (which initializes __last_accept
+    // to Some(__start) when state 0 is accepting). Repeat loops have their
+    // own infinite-loop guard (`if state.offset == prev { break; }`).
+    let nullable = hir.properties().minimum_len() == Some(0);
+    let guard = if nullable {
+        quote! { __result.is_some() }
+    } else {
+        quote! { __result.is_some() && state.offset > __start }
+    };
+
     Some(quote! {
         {
             let __start = state.offset;
@@ -64,7 +76,7 @@ pub fn try_emit_regex_inline(pattern: &str) -> Option<TokenStream> {
                 #body
                 Some(())
             })();
-            if __result.is_some() && state.offset > __start {
+            if #guard {
                 Some(::parse_that::Span::new(__start, state.offset, state.src))
             } else {
                 state.offset = __start;

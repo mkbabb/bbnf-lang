@@ -372,7 +372,18 @@ fn compile_seq<E: Emitter>(
                 .collect()
         });
 
-    let all_span = child_types.iter().all(|t| *t == TypeDesc::Span);
+    // Use the Seq result type from TypeMap to decide compression.
+    // The TypeMap's seq_result_type accounts for collapse_simple_spans and
+    // span-method overrides. If the result IS Span, collapse. If NOT Span,
+    // DON'T collapse even if all children project as Span (the type system
+    // expects the full tuple).
+    let seq_result_type = type_map
+        .and_then(|tm| tm.seq_result_type(children.as_ptr() as usize).cloned());
+    let all_span = match &seq_result_type {
+        Some(TypeDesc::Span) => true,
+        Some(_) => false, // TypeMap says non-Span → don't collapse
+        None => child_types.iter().all(|t| *t == TypeDesc::Span), // fallback
+    };
 
     if all_span {
         // Decision: all-Span → compress.

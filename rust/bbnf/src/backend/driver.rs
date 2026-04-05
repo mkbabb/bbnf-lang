@@ -385,6 +385,7 @@ fn compile_seq<E: Emitter>(
         None => child_types.iter().all(|t| *t == TypeDesc::Span), // fallback
     };
 
+
     if all_span {
         // Decision: all-Span → compress.
         let outputs: Vec<_> = children

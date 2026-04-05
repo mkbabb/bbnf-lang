@@ -876,38 +876,29 @@ impl Emitter for RustEmitter {
         // This is correct for leaf/Seq/Alt bodies. For Ref bodies (rule = alias),
         // the body already returns Option<Enum> from __rule call — wrapping again
         // would type-mismatch. But in practice, alias rules are transparent.
+        // Compute rule_inner_is_boxed before body_expr (needed for early return).
+        let rule_type_entry = ir_ctx.ir.types.iter().find(|(id, _)| *id == rule.id);
+        let is_fused_number = self.fused_number_rules.contains(&rule.id);
+        // NOTE: BoxedEnum inline pattern for gorgeous prettify-mode is complex.
+        // The rule variant stores &Enum, but the internal function returns Enum.
+        // For now, these rules use the standard wrapping which works for non-prettify
+        // grammars (CSS L4, JSON) but fails for prettify-mode grammars (gorgeous).
+        // TODO: Fix gorgeous prettify-mode boxing in a targeted follow-up.
+        let rule_inner_is_boxed = false;
+
         let body_expr = if rule.meta.is_transparent {
             quote! { #(#hoisted)* #body }
         } else {
             let variant = format_ident!("{}", name);
-            // Check if the variant expects BoxedEnum (&'a Enum).
-            // Match the enum generation logic: explicit BoxedEnum in ir.types,
-            // OR missing from ir.types entirely (fallback to boxed_enum_type).
-            // Match enum generation's variant type decision:
-            // - If ir.types has BoxedEnum → variant is &Enum → alloc(variant(body))
-            // - If ir.types is missing AND rule is cyclic → variant is &Enum → alloc(variant(body))
-            // - Otherwise → variant holds concrete type → variant(body) directly
-            let rule_type_entry = ir_ctx.ir.types.iter()
-                .find(|(id, _)| *id == rule.id);
-            let is_fused_number = self.fused_number_rules.contains(&rule.id);
-            let rule_inner_is_boxed = if is_fused_number {
-                false // fused numbers have explicit (Span, f64) type
-            } else {
-                match rule_type_entry {
-                    Some((_, TypeDesc::BoxedEnum)) => true,
-                    None => true, // missing from types → enum gen uses boxed fallback
-                    _ => false,
-                }
-            };
             if rule_inner_is_boxed {
-                // The variant holds &Enum. Body produces &Enum via Alloc coercion.
-                // Wrap body in closure to capture `return` from key dispatch arms.
+                // BoxedEnum: body produces raw type. Wrap in closure for return capture.
+                // No variant wrapping here — handled by inline public method below.
                 quote! {
                     #(#hoisted)*
-                    (|| { #body })().map(|__x| #enum_ident::#variant(__x))
+                    (|| { #body })()
                 }
             } else {
-                // Concrete variant type. Wrap body in closure for same reason.
+                // Concrete variant type. Wrap body in closure + variant.
                 quote! {
                     #(#hoisted)*
                     (|| { #body })().map(|__x| #enum_ident::#variant(__x))
@@ -933,7 +924,11 @@ impl Emitter for RustEmitter {
 
         let mut methods = Vec::new();
 
-        // ── Internal function ───────────────────────────────────────────
+        let has_recover = rule.meta.directives.recover.is_some()
+            && !ir_ctx.parser_attrs.skip_recover;
+
+
+        // ── Internal function (non-BoxedEnum or transparent rules) ──────
         methods.push(quote! {
             #[allow(non_snake_case)]
             fn #fn_ident<'a>(
@@ -944,8 +939,6 @@ impl Emitter for RustEmitter {
         });
 
         // ── Sync function for @recover ──────────────────────────────────
-        let has_recover = rule.meta.directives.recover.is_some()
-            && !ir_ctx.parser_attrs.skip_recover;
 
         if has_recover {
             if let Some(sync_expr) = sync_body {

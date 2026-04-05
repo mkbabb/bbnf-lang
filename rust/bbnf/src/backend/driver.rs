@@ -131,15 +131,7 @@ pub fn compile_grammar<E: Emitter>(
         let body = if let Some(override_body) = emitter.emit_rule_body_override(rule, ir, ctx) {
             override_body
         } else {
-            // Non-transparent: Alloc makes Refs produce boxed (&'a Enum) to match
-            // TypeMap projections. Leaves (Literal/Regex) ignore alloc and return Span.
-            // Transparent: Elide makes Refs produce unboxed Enum (function returns directly).
-            let body_alloc = if rule.meta.is_transparent {
-                AllocStrategy::Elide
-            } else {
-                AllocStrategy::Alloc
-            };
-            compile_node(&rule.body, body_alloc, ir, dstate, emitter, ctx)
+            compile_node(&rule.body, AllocStrategy::Elide, ir, dstate, emitter, ctx)
         };
 
         // Wrap in a rule function definition.
@@ -311,15 +303,24 @@ fn compile_seq<E: Emitter>(
 ) -> E::Output {
     let type_map = ir.type_map.as_ref();
 
-    // Classify child types.
-    let child_types: Vec<TypeDesc> = children
-        .iter()
-        .map(|c| {
-            type_map
-                .and_then(|tm| tm.node_type(c).cloned())
-                .unwrap_or(TypeDesc::Span)
+    // Classify child types using seq_child_types (from TypeMap's project_seq)
+    // when available. These apply span-method override and all-Span guard.
+    // Fallback to per-child node_type for grammars without TypeMap.
+    let child_types: Vec<TypeDesc> = type_map
+        .and_then(|tm| {
+            tm.seq_child_types_by_ptr(children.as_ptr() as usize)
+                .map(|s| s.to_vec())
         })
-        .collect();
+        .unwrap_or_else(|| {
+            children
+                .iter()
+                .map(|c| {
+                    type_map
+                        .and_then(|tm| tm.node_type(c).cloned())
+                        .unwrap_or(TypeDesc::Span)
+                })
+                .collect()
+        });
 
     let all_span = child_types.iter().all(|t| *t == TypeDesc::Span);
 
@@ -365,9 +366,10 @@ fn compile_seq<E: Emitter>(
             groups.push(SeqChildGroup::SpanCompressed { outputs: span_run });
         }
 
-        // Compute result type.
+        // Compute result type from TypeMap's seq_result_type (uses original
+        // children pointer). Falls back to Span if not available.
         let result_type = type_map
-            .and_then(|tm| tm.node_type(&IrNode::Seq(children.to_vec())).cloned())
+            .and_then(|tm| tm.seq_result_type(children.as_ptr() as usize).cloned())
             .unwrap_or(TypeDesc::Span);
 
         // Decision: detect (T, Vec<T>) or (Vec<T>, T) flattening.
@@ -552,7 +554,12 @@ fn compile_repeat<E: Emitter>(
                 }))
                 .unwrap_or(TypeDesc::Span);
 
-            let element_out = compile_node(element, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+            let elem_alloc = if elem_type == TypeDesc::BoxedEnum {
+                AllocStrategy::Alloc
+            } else {
+                AllocStrategy::Elide
+            };
+            let element_out = compile_node(element, elem_alloc, ir, dstate, emitter, ctx);
             let sep_out =
                 compile_node(separator, AllocStrategy::Elide, ir, dstate, emitter, ctx);
 
@@ -593,7 +600,15 @@ fn compile_repeat<E: Emitter>(
                 })
             })
             .unwrap_or(TypeDesc::Span);
-        let body = compile_node(inner, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+        // Match elem_type: if BoxedEnum, inner must produce &Enum (Alloc).
+        // If Enum, inner produces Enum (Elide). Monolithic uses elide_box=true
+        // when elem_type is Enum, elide_box=false when BoxedEnum.
+        let inner_alloc = if elem_type == TypeDesc::BoxedEnum {
+            AllocStrategy::Alloc
+        } else {
+            AllocStrategy::Elide
+        };
+        let body = compile_node(inner, inner_alloc, ir, dstate, emitter, ctx);
         emitter.emit_repeat_many(body, lo, hi, &elem_type, ctx)
     }
 }
@@ -722,10 +737,15 @@ fn compile_wrap<E: Emitter>(
                     })
                     .unwrap_or(TypeDesc::Span);
 
+                let elem_alloc = if elem_type == TypeDesc::BoxedEnum {
+                    AllocStrategy::Alloc
+                } else {
+                    AllocStrategy::Elide
+                };
                 let open_out =
                     compile_node(open, AllocStrategy::Elide, ir, dstate, emitter, ctx);
                 let element_out =
-                    compile_node(element, AllocStrategy::Elide, ir, dstate, emitter, ctx);
+                    compile_node(element, elem_alloc, ir, dstate, emitter, ctx);
                 let sep_out =
                     compile_node(separator, AllocStrategy::Elide, ir, dstate, emitter, ctx);
                 let close_out =
@@ -846,6 +866,7 @@ fn detect_flatten(result_type: &TypeDesc, child_types: &[TypeDesc]) -> Option<Fl
     if child_types.len() != 2 {
         return None;
     }
+    
 
     match (&child_types[0], &child_types[1]) {
         (_, TypeDesc::Vec(_)) => Some(FlattenStrategy::HeadThenVec),

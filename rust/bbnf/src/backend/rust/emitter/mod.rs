@@ -883,18 +883,28 @@ impl Emitter for RustEmitter {
             // Check if the variant expects BoxedEnum (&'a Enum).
             // Match the enum generation logic: explicit BoxedEnum in ir.types,
             // OR missing from ir.types entirely (fallback to boxed_enum_type).
+            // Match enum generation's variant type decision:
+            // - If ir.types has BoxedEnum → variant is &Enum → alloc(variant(body))
+            // - If ir.types is missing AND rule is cyclic → variant is &Enum → alloc(variant(body))
+            // - Otherwise → variant holds concrete type → variant(body) directly
             let rule_type_entry = ir_ctx.ir.types.iter()
                 .find(|(id, _)| *id == rule.id);
-            let rule_inner_is_boxed = match rule_type_entry {
-                Some((_, TypeDesc::BoxedEnum)) => true,
-                None => true, // fallback: enum gen uses boxed_enum_type
-                _ => false,
+            let is_fused_number = self.fused_number_rules.contains(&rule.id);
+            let rule_inner_is_boxed = if is_fused_number {
+                false // fused numbers have explicit (Span, f64) type
+            } else {
+                match rule_type_entry {
+                    Some((_, TypeDesc::BoxedEnum)) => true,
+                    None => true, // missing from types → enum gen uses boxed fallback
+                    _ => false,
+                }
             };
             if rule_inner_is_boxed {
-                let alloc_expr = ir_ctx.emit_alloc(&quote! { __x });
+                // The variant holds &Enum. The body must produce &Enum (boxed)
+                // via alloc=Alloc propagation. Wrap directly in variant — no extra alloc.
                 quote! {
                     #(#hoisted)*
-                    (#body).map(|__x| #enum_ident::#variant(#alloc_expr))
+                    (#body).map(|__x| #enum_ident::#variant(__x))
                 }
             } else {
                 quote! {

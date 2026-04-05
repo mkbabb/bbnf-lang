@@ -191,7 +191,7 @@ impl RustEmitter {
     pub(super) fn emit_alt_all_literal_impl(
         &mut self,
         literals: Vec<(String, TokenStream)>,
-        alloc: ValuePlacement,
+        _alloc: ValuePlacement,
         _ctx: &mut RustEmitCtx,
     ) -> TokenStream {
         let mut chain = Vec::new();

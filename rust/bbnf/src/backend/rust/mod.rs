@@ -32,7 +32,6 @@ pub mod ir_enums;
 pub mod ir_types;
 mod loop_emit;
 mod operator_chain;
-pub mod prettify;
 mod repeat;
 mod sep_by;
 mod seq;

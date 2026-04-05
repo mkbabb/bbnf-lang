@@ -673,7 +673,15 @@ fn compile_repeat<E: Emitter>(
                     Some(if ty == TypeDesc::BoxedEnum { TypeDesc::Enum } else { ty })
                 })
             })
-            .unwrap_or(TypeDesc::Span);
+            .unwrap_or_else(|| {
+                // Fallback: check if inner is complex (Seq, Alt, Ref) → use Enum.
+                // Simple leaves (Literal, Regex, Epsilon) → use Span.
+                match inner {
+                    IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => TypeDesc::Span,
+                    IrNode::Ref(_) => TypeDesc::Enum,
+                    _ => TypeDesc::BoxedEnum,
+                }
+            });
         // Match elem_type: if BoxedEnum, inner must produce &Enum (Alloc).
         // If Enum, inner produces Enum (Inline). Monolithic uses elide_box=true
         // when elem_type is Enum, elide_box=false when BoxedEnum.
@@ -862,9 +870,13 @@ fn compile_wrap<E: Emitter>(
     }
 
     // Decision: try delimiter-scan optimization.
-    if let Some(config) = super::delim_scan::try_detect(open, middle, close, ir) {
-        if let Some(output) = emitter.emit_delim_scan(&config, ctx) {
-            return output;
+    // Skip when alloc=Alloc — delim scan always produces Span, but BoxedEnum
+    // rules need the full typed result for variant wrapping.
+    if alloc == ValuePlacement::Inline {
+        if let Some(config) = super::delim_scan::try_detect(open, middle, close, ir) {
+            if let Some(output) = emitter.emit_delim_scan(&config, ctx) {
+                return output;
+            }
         }
     }
 

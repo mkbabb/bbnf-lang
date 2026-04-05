@@ -876,33 +876,17 @@ impl Emitter for RustEmitter {
         // This is correct for leaf/Seq/Alt bodies. For Ref bodies (rule = alias),
         // the body already returns Option<Enum> from __rule call — wrapping again
         // would type-mismatch. But in practice, alias rules are transparent.
-        // Compute rule_inner_is_boxed before body_expr (needed for early return).
-        let rule_type_entry = ir_ctx.ir.types.iter().find(|(id, _)| *id == rule.id);
-        let is_fused_number = self.fused_number_rules.contains(&rule.id);
-        // NOTE: BoxedEnum inline pattern for gorgeous prettify-mode is complex.
-        // The rule variant stores &Enum, but the internal function returns Enum.
-        // For now, these rules use the standard wrapping which works for non-prettify
-        // grammars (CSS L4, JSON) but fails for prettify-mode grammars (gorgeous).
-        // TODO: Fix gorgeous prettify-mode boxing in a targeted follow-up.
-        let rule_inner_is_boxed = false;
-
+        // For all non-transparent rules, wrap body in variant.
+        // The body produces the inner type; wrapping maps it into Enum::Variant(inner).
+        // For BoxedEnum rules, body_alloc=Alloc makes inner refs return &Enum,
+        // and the variant wrapping produces Enum::Variant(&Enum) = Enum.
         let body_expr = if rule.meta.is_transparent {
             quote! { #(#hoisted)* #body }
         } else {
             let variant = format_ident!("{}", name);
-            if rule_inner_is_boxed {
-                // BoxedEnum: body produces raw type. Wrap in closure for return capture.
-                // No variant wrapping here — handled by inline public method below.
-                quote! {
-                    #(#hoisted)*
-                    (|| { #body })()
-                }
-            } else {
-                // Concrete variant type. Wrap body in closure + variant.
-                quote! {
-                    #(#hoisted)*
-                    (|| { #body })().map(|__x| #enum_ident::#variant(__x))
-                }
+            quote! {
+                #(#hoisted)*
+                (|| { #body })().map(|__x| #enum_ident::#variant(__x))
             }
         };
 

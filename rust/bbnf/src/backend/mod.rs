@@ -4,6 +4,7 @@ pub mod analysis;
 pub mod delim_scan;
 pub mod driver;
 pub mod key_dispatch;
+pub mod prettify;
 pub mod rust;
 mod traits;
 pub mod ts;

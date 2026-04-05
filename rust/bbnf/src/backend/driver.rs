@@ -226,9 +226,18 @@ pub fn compile_node<E: Emitter>(
 
                 // Skip if head is Span — operator chain not beneficial for all-Span chains.
                 if head_type != TypeDesc::Span {
+                    // Compute per-element alloc from link tuple types.
+                    // BoxedEnum elements need Alloc (scratch Vec stores references).
+                    let (op_alloc, rhs_alloc) = match &link_elem_type {
+                        TypeDesc::Tuple(elems) if elems.len() == 2 => (
+                            if matches!(elems[0], TypeDesc::BoxedEnum) { ValuePlacement::Alloc } else { ValuePlacement::Inline },
+                            if matches!(elems[1], TypeDesc::BoxedEnum) { ValuePlacement::Alloc } else { ValuePlacement::Inline },
+                        ),
+                        _ => (ValuePlacement::Inline, ValuePlacement::Inline),
+                    };
                     let head_out = compile_node(head, alloc, ir, dstate, emitter, ctx);
-                    let op_out = compile_node(op, ValuePlacement::Inline, ir, dstate, emitter, ctx);
-                    let rhs_out = compile_node(rhs, ValuePlacement::Inline, ir, dstate, emitter, ctx);
+                    let op_out = compile_node(op, op_alloc, ir, dstate, emitter, ctx);
+                    let rhs_out = compile_node(rhs, rhs_alloc, ir, dstate, emitter, ctx);
                     if let Some(chain) = emitter.emit_operator_chain(
                         head_out, op_out, rhs_out, &head_type, &link_elem_type, ir, ctx,
                     ) {

@@ -215,9 +215,15 @@ fn compute_seq_plan(children: &[IrNode], ir: &GrammarIR, ctx: &IrCodegenCtx) -> 
         };
 
         if tuple_len == decision.child_types.len() {
-            // 1:1 mapping: each child has a Tuple position (override was applied).
+            // 1:1 mapping. Use raw node_type to detect Options hidden by overrides.
             for (i, (child, ty)) in children.iter().zip(decision.child_types.iter()).enumerate() {
-                if *ty == TypeDesc::Span {
+                let raw_ty = ir.type_map.as_ref()
+                    .and_then(|tm| tm.node_type(child).cloned())
+                    .unwrap_or(TypeDesc::Span);
+
+                // Check BOTH the overridden type AND the raw type.
+                // If the override says Span but the raw type is Option, use TupleValue.
+                if *ty == TypeDesc::Span && !matches!(raw_ty, TypeDesc::Option(_)) {
                     plan_children.push(SeqChild::TupleSpan { index: i });
                 } else {
                     let child_plan = compute_node_plan(child, ir, ctx);
@@ -259,10 +265,18 @@ fn compute_seq_plan(children: &[IrNode], ir: &GrammarIR, ctx: &IrCodegenCtx) -> 
             // If counts differ, compression alignment is off — fall back to
             // treating each result element as a TupleValue.
             if groups.len() == result_elems.len() {
-                // Aligned: map groups to Tuple elements 1:1.
+                // Aligned: map groups to Tuple elements. The RESULT ELEMENT type
+                // is authoritative (not the group type, which may have overrides).
                 for (group_idx, (_group_type, child_indices)) in groups.iter().enumerate() {
                     let result_elem = &result_elems[group_idx];
-                    if *result_elem == TypeDesc::Span {
+                    // Check raw type of primary child to detect Options.
+                    let ci0 = child_indices[0];
+                    let raw_ty = ir.type_map.as_ref()
+                        .and_then(|tm| tm.node_type(&children[ci0]).cloned())
+                        .unwrap_or(TypeDesc::Span);
+
+                    if *result_elem == TypeDesc::Span && !matches!(raw_ty, TypeDesc::Option(_)) {
+                        // Span in result and raw: TupleSpan + structural.
                         for (j, &ci) in child_indices.iter().enumerate() {
                             if j == 0 {
                                 plan_children.push(SeqChild::TupleSpan { index: group_idx });
@@ -273,33 +287,37 @@ fn compute_seq_plan(children: &[IrNode], ir: &GrammarIR, ctx: &IrCodegenCtx) -> 
                             }
                         }
                     } else {
-                        for &ci in child_indices {
-                            let child_plan = compute_node_plan(&children[ci], ir, ctx);
-                            plan_children.push(SeqChild::TupleValue {
-                                index: group_idx,
-                                plan: Box::new(child_plan),
-                            });
-                        }
+                        // Non-Span OR Optional: emit as TupleValue.
+                        let child_plan = compute_node_plan(&children[ci0], ir, ctx);
+                        plan_children.push(SeqChild::TupleValue {
+                            index: group_idx,
+                            plan: Box::new(child_plan),
+                        });
                     }
                 }
             } else {
                 // Misaligned: iterate result elements directly.
-                // Each result element gets its value from position in the Tuple.
+                // ALL non-Span result elements become TupleValue.
+                // Span result elements become TupleSpan.
+                let mut non_span_cursor = 0usize;
+                let non_span_children: Vec<&IrNode> = children.iter()
+                    .zip(decision.child_types.iter())
+                    .filter(|(_, ty)| **ty != TypeDesc::Span)
+                    .map(|(c, _)| c)
+                    .collect();
+
                 for (tuple_idx, elem_type) in result_elems.iter().enumerate() {
                     if *elem_type == TypeDesc::Span {
                         plan_children.push(SeqChild::TupleSpan { index: tuple_idx });
                     } else {
-                        // Find the corresponding non-Span child by counting.
-                        let non_span_child = children.iter()
-                            .zip(decision.child_types.iter())
-                            .filter(|(_, ty)| **ty != TypeDesc::Span)
-                            .nth(tuple_idx - result_elems[..tuple_idx].iter().filter(|t| **t == TypeDesc::Span).count());
-                        if let Some((child, _)) = non_span_child {
+                        if non_span_cursor < non_span_children.len() {
+                            let child = non_span_children[non_span_cursor];
                             let child_plan = compute_node_plan(child, ir, ctx);
                             plan_children.push(SeqChild::TupleValue {
                                 index: tuple_idx,
                                 plan: Box::new(child_plan),
                             });
+                            non_span_cursor += 1;
                         }
                     }
                 }

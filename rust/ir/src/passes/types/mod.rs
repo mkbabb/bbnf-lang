@@ -144,6 +144,12 @@ pub fn project_types(ir: &mut GrammarIR) {
         }
     }
 
+    // Phase 3.5: Compute structural (pre-collapse) types for emission.
+    // Walk the IR and detect where collapsed types differ from structural.
+    for rule in &ir.rules {
+        compute_structural_types_for_node(&rule.body, &mut type_map);
+    }
+
     // Phase 4: Build ir.types from rule variables.
     let mut types_map: HashMap<RuleId, TypeDesc> = HashMap::new();
     for (&rule_id, &var_id) in &system.rule_vars {
@@ -368,4 +374,84 @@ fn correct_repeat_elem_types(node: &IrNode, rule_type: &TypeDesc, map: &mut util
     }
 
     walk_and_correct(node, vec_inner, map);
+}
+
+/// Compute structural (pre-collapse) types for nodes where collapsed types
+/// differ from the actual runtime topology. This enables the emit codegen to
+/// generate correct destructuring code.
+///
+/// Walks the IR tree and detects collapse points:
+/// 1. Optional(Span) → Span: Repeat(inner, 0, 1) with collapsed Span → structural Option(Span)
+/// 2. Seq Span compression: result_type has fewer elements than children
+/// 3. try_flatten_pair: (T, Vec(T)) collapsed to Vec(T)
+fn compute_structural_types_for_node(node: &IrNode, type_map: &mut utils::TypeMap) {
+    match node {
+        IrNode::Repeat { inner, lo, hi } => {
+            // Collapse 1: Optional(Span) → Span
+            if *lo == 0 && *hi == 1 {
+                let node_ptr = node as *const IrNode as usize;
+                if let Some(collapsed) = type_map.node_type(node).cloned() {
+                    if collapsed == TypeDesc::Span {
+                        // The CSP collapsed Option(Span) → Span. Record the structural type.
+                        if let Some(inner_ty) = type_map.node_type(inner.as_ref()).cloned() {
+                            type_map.insert_structural_type(
+                                node_ptr,
+                                TypeDesc::Option(Box::new(inner_ty)),
+                            );
+                        }
+                    }
+                }
+            }
+            compute_structural_types_for_node(inner, type_map);
+        }
+
+        IrNode::Seq(children) => {
+            // Collapse 2-3: Seq compression / try_flatten_pair.
+            // The seq_result_type is the COLLAPSED type. The structural type
+            // is the un-compressed, un-flattened Tuple of all child types.
+            let seq_ptr = children.as_ptr() as usize;
+            if let Some(result_type) = type_map.seq_result_type(seq_ptr).cloned() {
+                if let Some(child_types) = type_map.seq_child_types_by_ptr(seq_ptr) {
+                    let child_types = child_types.to_vec();
+                    // Build the un-compressed Tuple (no Span compression, no flatten).
+                    let structural_elems: Vec<TypeDesc> = child_types.clone();
+                    let structural_result = match structural_elems.len() {
+                        0 => TypeDesc::Tuple(vec![]),
+                        1 => structural_elems.into_iter().next().unwrap(),
+                        _ => TypeDesc::Tuple(structural_elems),
+                    };
+                    // Only record if it differs from collapsed.
+                    if structural_result != result_type {
+                        let node_ptr = node as *const IrNode as usize;
+                        type_map.insert_structural_type(node_ptr, structural_result);
+                    }
+                }
+            }
+            for child in children {
+                compute_structural_types_for_node(child, type_map);
+            }
+        }
+
+        // Recurse into all sub-nodes.
+        IrNode::Alt(branches, _) => {
+            for b in branches {
+                compute_structural_types_for_node(&b.node, type_map);
+            }
+        }
+        IrNode::Skip(l, r) | IrNode::Next(l, r) | IrNode::Minus(l, r) => {
+            compute_structural_types_for_node(l, type_map);
+            compute_structural_types_for_node(r, type_map);
+        }
+        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) | IrNode::Negate(inner) => {
+            compute_structural_types_for_node(inner, type_map);
+        }
+        IrNode::TokenDispatch { token, arms, fallback } => {
+            compute_structural_types_for_node(token, type_map);
+            for arm in arms {
+                compute_structural_types_for_node(&arm.continuation, type_map);
+            }
+            compute_structural_types_for_node(fallback, type_map);
+        }
+        _ => {} // Leaf nodes: Literal, Regex, Epsilon, Ref
+    }
 }

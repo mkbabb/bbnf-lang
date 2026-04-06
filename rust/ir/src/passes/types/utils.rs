@@ -16,7 +16,11 @@ use crate::{IrNode, TypeDesc};
 #[derive(Default, Debug, Clone)]
 pub struct TypeMap {
     /// TypeDesc from normal-context projection for each visited node.
+    /// May include parse-optimizing collapses (Optional(Span)→Span, Seq compression, etc.)
     node_types: HashMap<usize, TypeDesc>,
+    /// Structural types: pre-collapse types that reflect the actual runtime topology.
+    /// Only populated where structural differs from collapsed. Used by emit codegen.
+    structural_types: HashMap<usize, TypeDesc>,
     /// TypeDesc from vec-context projection for each visited node.
     vec_elem_types: HashMap<usize, TypeDesc>,
     /// Per-Seq effective child types after span-method override (pre-compression).
@@ -39,6 +43,15 @@ impl TypeMap {
     #[inline]
     pub fn node_type(&self, node: &IrNode) -> Option<&TypeDesc> {
         self.node_types.get(&(node as *const IrNode as usize))
+    }
+
+    /// Look up the structural (pre-collapse) type of a node for emission.
+    /// Returns the structural type if it differs from the collapsed type,
+    /// otherwise falls back to the collapsed type.
+    #[inline]
+    pub fn structural_type(&self, node: &IrNode) -> Option<&TypeDesc> {
+        let ptr = node as *const IrNode as usize;
+        self.structural_types.get(&ptr).or_else(|| self.node_types.get(&ptr))
     }
 
     /// Look up the effective child types for a Seq by its children slice pointer.
@@ -96,6 +109,12 @@ impl TypeMap {
     /// Insert a node type (normal context).
     pub(super) fn insert_node_type(&mut self, node_id: usize, ty: TypeDesc) {
         self.node_types.insert(node_id, ty);
+    }
+
+    /// Insert a structural (pre-collapse) type for a node.
+    /// Only call when the structural type DIFFERS from the collapsed type.
+    pub(super) fn insert_structural_type(&mut self, node_id: usize, ty: TypeDesc) {
+        self.structural_types.insert(node_id, ty);
     }
 
     /// Insert a vec-element type.

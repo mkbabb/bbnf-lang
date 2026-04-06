@@ -142,3 +142,8 @@ harness = false
 name = "css_wasm"
 path = "benches/css/wasm.rs"
 harness = false
+
+[[bench]]
+name = "compile_pipeline"
+path = "benches/compile_pipeline.rs"
+harness = false

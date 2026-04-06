@@ -3,7 +3,7 @@
 //! Fixed-point iteration computing rule-level FIRST sets, nullable flags,
 //! and per-branch FIRST sets for alternation nodes.
 //!
-//! Replaces the AST-level `bbnf::analysis::first_sets` module.
+//! Equivalent to the AST-level `bbnf::graph::first_sets` module.
 
 use std::collections::HashMap;
 

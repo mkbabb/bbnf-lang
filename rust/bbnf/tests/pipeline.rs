@@ -1,4 +1,4 @@
-use bbnf::analysis::{compute_first_sets, tarjan_scc, topological_sort_scc};
+use bbnf::graph::{compute_first_sets, tarjan_scc, topological_sort_scc};
 use bbnf::grammar;
 use bbnf::lower::{DirectiveSet, lower_to_ir};
 use bbnf::pipeline::{PipelineOptions, compile_grammar};

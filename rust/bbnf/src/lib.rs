@@ -8,8 +8,8 @@ pub use generate::*;
 
 pub mod backend;
 
-pub mod analysis;
-pub use analysis::*;
+pub mod graph;
+pub use graph::*;
 
 pub mod imports;
 

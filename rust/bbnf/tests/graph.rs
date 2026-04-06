@@ -2,7 +2,7 @@ mod common;
 
 use std::collections::{HashMap, HashSet};
 
-use bbnf::analysis::{CharSet, Dependencies, compute_ref_counts, regex_first_chars, tarjan_scc};
+use bbnf::graph::{CharSet, Dependencies, regex_first_chars, tarjan_scc};
 use common::nt;
 
 // -- CharSet tests --
@@ -201,38 +201,3 @@ fn tarjan_mutual_cycle() {
     assert!(result.cyclic_rules.contains(&b));
 }
 
-// -- Reference counting tests --
-
-#[test]
-fn ref_counts_basic() {
-    let a = nt("A");
-    let b = nt("B");
-    let c = nt("C");
-
-    let mut deps: Dependencies = HashMap::new();
-    // A depends on B and C
-    let mut a_deps = HashSet::new();
-    a_deps.insert(b.clone());
-    a_deps.insert(c.clone());
-    deps.insert(a.clone(), a_deps);
-    // B depends on C
-    let mut b_deps = HashSet::new();
-    b_deps.insert(c.clone());
-    deps.insert(b.clone(), b_deps);
-    // C has no dependencies
-    deps.insert(c.clone(), HashSet::new());
-
-    let counts = compute_ref_counts(&deps);
-
-    // A is referenced by nobody.
-    let a_count = counts.iter().find(|(k, _)| ***k == a).unwrap().1;
-    assert_eq!(*a_count, 0);
-
-    // B is referenced by A.
-    let b_count = counts.iter().find(|(k, _)| ***k == b).unwrap().1;
-    assert_eq!(*b_count, 1);
-
-    // C is referenced by A and B.
-    let c_count = counts.iter().find(|(k, _)| ***k == c).unwrap().1;
-    assert_eq!(*c_count, 2);
-}

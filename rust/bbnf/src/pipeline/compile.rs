@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use bbnf_ir::GrammarIR;
 
-use crate::analysis::{compute_first_sets, tarjan_scc, topological_sort_scc};
+use crate::graph::{compute_first_sets, tarjan_scc, topological_sort_scc};
 use crate::backend::prepare_grammar;
 use crate::grammar;
 use crate::lower::{DirectiveSet, lower_to_ir};

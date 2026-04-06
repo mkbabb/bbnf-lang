@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use bbnf::analysis::{calculate_ast_deps, compute_first_sets, tarjan_scc};
+use bbnf::graph::{calculate_ast_deps, compute_first_sets, tarjan_scc};
 use bbnf::lower::{DirectiveSet, lower_to_ir};
 
 use bbnf_ir::{GrammarIR, IrNode, MemoStrategy};

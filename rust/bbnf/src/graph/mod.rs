@@ -1,4 +1,4 @@
-//! Grammar analysis passes: SCC detection, FIRST sets, conflict detection, and more.
+//! Grammar dependency graph: SCC detection, topological sort, FIRST sets, conflict detection.
 
 pub mod charset;
 pub mod deps;
@@ -12,7 +12,7 @@ pub use deps::*;
 pub use dispatch::FirstSetConflict;
 pub use dispatch::find_first_set_conflicts;
 pub use first_sets::*;
-pub use metadata::{compute_ref_counts, find_aliases};
+pub use metadata::find_aliases;
 pub use scc::*;
 
 /// Extract the set of possible first bytes from a regex pattern.

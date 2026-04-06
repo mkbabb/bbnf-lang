@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use bbnf::analysis::{CharSet, get_nonterminal_name};
+use bbnf::graph::{CharSet, get_nonterminal_name};
 use bbnf::types::Expression;
 
 use super::types::{ReferenceInfo, RuleInfo, SemanticTokenInfo, token_types};

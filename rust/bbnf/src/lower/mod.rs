@@ -12,8 +12,8 @@ use std::collections::{HashMap, HashSet};
 
 use bbnf_ir::{GrammarIR, IrRule, RuleId};
 
-use crate::analysis::first_sets::unwrap_rule;
-use crate::analysis::{FirstSets, SccResult};
+use crate::graph::first_sets::unwrap_rule;
+use crate::graph::{FirstSets, SccResult};
 use crate::types::{AST, Expression, Token};
 
 use expression::lower_expression;
@@ -22,7 +22,7 @@ use metadata::build_rule_meta;
 use string_interner::StringInterner;
 
 /// Convert a `CharSet` ([u32; 4]) to a `CharSet128` ([u64; 2]).
-pub(crate) fn charset_to_128(cs: &crate::analysis::CharSet) -> bbnf_ir::CharSet128 {
+pub(crate) fn charset_to_128(cs: &crate::graph::CharSet) -> bbnf_ir::CharSet128 {
     bbnf_ir::CharSet128::from_u32x4(&cs.bits)
 }
 

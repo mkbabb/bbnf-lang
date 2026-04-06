@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use bbnf::analysis::{
+use bbnf::graph::{
     calculate_ast_deps, compute_first_sets, find_aliases, find_first_set_conflicts,
     get_nonterminal_name, tarjan_scc,
 };

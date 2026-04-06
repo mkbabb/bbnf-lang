@@ -1,29 +1,9 @@
-//! Reference counting and alias detection for AST-level diagnostics.
+//! Alias detection for AST-level diagnostics.
 
 use std::collections::{HashMap, HashSet};
 
-use super::deps::Dependencies;
 use super::first_sets::unwrap_rule;
 use crate::types::{AST, Expression};
-
-/// Count how many times each nonterminal appears as a dependency of other rules.
-pub fn compute_ref_counts<'a>(deps: &'a Dependencies<'a>) -> HashMap<&'a Expression<'a>, usize> {
-    let mut counts: HashMap<&'a Expression<'a>, usize> = HashMap::new();
-
-    for lhs in deps.keys() {
-        counts.entry(lhs).or_insert(0);
-    }
-
-    for sub_deps in deps.values() {
-        for dep in sub_deps {
-            if let Some((key, _)) = deps.get_key_value(dep) {
-                *counts.entry(key).or_insert(0) += 1;
-            }
-        }
-    }
-
-    counts
-}
 
 /// Find rules whose RHS is simply a reference to another nonterminal.
 pub fn find_aliases<'a>(

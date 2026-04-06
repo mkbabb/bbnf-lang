@@ -9,11 +9,11 @@ BBNF extends EBNF for defining context-free grammars, used by the
 ```
 bbnf-lang/
 ├── rust/                       Rust workspace (Cargo)
-│   ├── bbnf/                   Core grammar parser, IR lowering, codegen (lib)
+│   ├── core/                   Core grammar parser, IR lowering, codegen (lib)
 │   │   └── generate/codegen/trace.rs  Debug trace codegen (#[cfg(feature = "parser-trace")])
-│   ├── bbnf-ir/                Canonical grammar IR, bytecode compiler, interpreter
-│   ├── bbnf-derive/            Proc-macro: #[derive(Parser)] from .bbnf files
-│   ├── bbnf-analysis/          LSP analysis engine (DocumentState, 14 feature providers, state management)
+│   ├── ir/                  Canonical grammar IR, bytecode compiler, interpreter
+│   ├── derive/            Proc-macro: #[derive(Parser)] from .bbnf files
+│   ├── analysis/          LSP analysis engine (DocumentState, 14 feature providers, state management)
 │   └── lsp/                    Language server (bbnf-lsp binary)
 │       └── src/dap/            DAP server (mod, adapter, protocol, mapping)
 ├── wasm/                       bbnf-wasm crate (wasm-pack → playground)
@@ -122,13 +122,13 @@ bbnf-lsp uses workspace-relative paths to bbnf; cross-repo deps are version-only
 - **Vec unboxing**: `in_vec` parameter threading through codegen, `ir_node_to_tokens_vec`, `project_node_in_vec`. Transparent rule `_unboxed()` generation for zero-cost enum extraction.
 - **`try_flatten_pair`**: Extension for `(BoxedEnum, Vec<Enum>)` patterns — flattens pair into unboxed Vec.
 - **`merge_regex_alts` pass**: Fuses `Alt([Regex, Regex, ...])` into a single combined regex pattern. Runs after `merge_literals` and before `factor_common_prefixes` in the IR pipeline.
-- **Pipeline synchronization**: The IR pass ordering in `pipeline.rs` and `bbnf-derive/src/lib.rs` must be kept in sync—both run the same 18-operation sequence (16 unique passes, including `sort_alt_branches`, `factor_regex_with_lookahead`, and `fuse_token_dispatch` after `compute_follow_sets`).
+- **Pipeline synchronization**: The IR pass ordering in `pipeline.rs` and `derive/src/lib.rs` must be kept in sync—both run the same 18-operation sequence (16 unique passes, including `sort_alt_branches`, `factor_regex_with_lookahead`, and `fuse_token_dispatch` after `compute_follow_sets`).
 - **`fuse_single_use` pass**: Inlines single-use rules at their call site regardless of body size, guarded by SCC membership. Runs after `inline_acyclic` + prune, before `eliminate_epsilon`.
 - **`fuse_token_dispatch` pass**: Fuses `@token`-marked rules at dispatch call sites—inlines the token body for direct matching while preserving the enum variant. Runs after `factor_regex_with_lookahead`, before `generate_dispatch_tables`.
 - **`no_collapse` gating**: Rules annotated with `@no_collapse` are excluded from inlining and fusing passes to preserve their identity in the generated AST.
 - **`emit_discarded` for Skip/Next**: Skip and Next codegen emits the discarded side for its side effects (e.g., whitespace consumption) even though the value is unused.
 - **mimalloc in bench files**: Benchmark binaries use `#[global_allocator] static GLOBAL: mimalloc::MiMalloc` for consistent, high-performance allocation during benchmarking.
-- **Prettify codegen**: `@pretty` directives control Doc emission. Hint vocabulary: `group`, `indent`, `dedent`, `block`, `blankline`, `nobreak`, `softbreak`, `hardbreak`, `compact`, `fast`, `off`. `generate_prettify()` produces `to_doc()` + `source_range()` impls. Sub-variant coercion for heterogeneous alternation branches. Shared hint definitions in `bbnf-analysis/src/directives/hints.rs` — single source of truth for codegen + LSP.
+- **Prettify codegen**: `@pretty` directives control Doc emission. Hint vocabulary: `group`, `indent`, `dedent`, `block`, `blankline`, `nobreak`, `softbreak`, `hardbreak`, `compact`, `fast`, `off`. `generate_prettify()` produces `to_doc()` + `source_range()` impls. Sub-variant coercion for heterogeneous alternation branches. Shared hint definitions in `analysis/src/directives/hints.rs` — single source of truth for codegen + LSP.
 - **Wrapped vec formatting**: Delimiter-wrapped repetitions (e.g. `"{" >> items << "}"`) emit IfBreak concat — one item per line when Group breaks, comma-separated inline when it fits.
 - **`skip_recover`**: Parser attribute that suppresses `@recover` codegen and the `Recovered` enum variant. Used by formatting-only parsers that assume well-formed input.
 - **Type comparison**: `types_eq()` compares `syn::Type` structurally via per-token-tree comparison—no string serialization.
@@ -137,7 +137,7 @@ bbnf-lsp uses workspace-relative paths to bbnf; cross-repo deps are version-only
 - **Span-only codegen**: `codegen/span/` (4 sub-modules: `mod.rs`, `alt.rs`, `expr.rs`, `repeat.rs`). Triggered by `#[parser(span)]`. Generates `fn __rule_span(state) -> Option<Span>` for every rule—zero allocations, no enum variants, no Vec.
 - **Inline optional Span codegen**: Optional Span expressions (Literal/Regex with fast-path) in `codegen/repeat.rs` and `codegen/span/repeat.rs` emit inline byte checks instead of constructing a SpanParser per call.
 - **Delimiter-driven flat scanning**: `codegen/delim_scan.rs`. Grammar-agnostic codegen optimization for `Wrap(Repeat(Alt))` patterns where the Alt's FIRST sets overlap. Detects single-byte "pivot" Literals that distinguish branches, emits a forward `memchr` scanner loop. Span path replaces the descent entirely; slab path uses speculative dispatch (scan selects branch, then calls existing recursive descent for typed construction). Pseudo-class guard: if value after pivot terminates at the open byte, falls back to block branch. When the pivot rule returns Span (`is_token` or `TypeDesc::Span`), constructs the result directly from scanner offsets, eliminating speculative rewind + re-parse.
-- **`factor_regex_with_lookahead` pass**: `bbnf-ir/src/passes/factor_lookahead.rs`. Detects Alt branches with overlapping regex FIRST sets but disjoint continuation FIRST sets. Factors common prefix and builds dispatch table on continuation. Runs after `compute_follow_sets`, before `generate_dispatch_tables`.
+- **`factor_regex_with_lookahead` pass**: `ir/src/passes/factor_lookahead.rs`. Detects Alt branches with overlapping regex FIRST sets but disjoint continuation FIRST sets. Factors common prefix and builds dispatch table on continuation. Runs after `compute_follow_sets`, before `generate_dispatch_tables`.
 - **Direct memchr emission**: `fast_paths::emit_regex_direct_call` handles negated character class patterns `[^XYZ]+` and `[^XYZ]*`, emitting inline `memchr::memchr1/2/3` calls that bypass SpanParser enum dispatch. Also handles positive character classes (`[a-z]`, `[abc]`) and their repetitions (`[a-z]+`, `[a-z]*`) via direct inline byte-range/set checks.
 - **BumpSlab**: `parse_that::BumpSlab`—byte-based bump allocator (no type parameter). Generic methods: `alloc<T>`, `alloc_slice_clone<T>`, `alloc_slice_copy<T>`. Zero RefCell borrow tracking per alloc. Used via `parse_with_context(&input, &slab)`.
 - **`@ws` directive**: `@ws /regex/ ;` overrides what `?w` compiles to. Stored as `GrammarIR::ws_pattern: Option<StringId>`. Codegen uses `emit_ws_trim()` which checks `ir.ws_pattern` and emits `fast_paths::emit_regex_direct_call` for known SIMD fast paths (e.g., CSS comment-aware whitespace → `css_ws_comment_fast`).
@@ -156,7 +156,7 @@ bbnf-lsp uses workspace-relative paths to bbnf; cross-repo deps are version-only
 - **`FnDescriptor::HexConvert`**: Inline char-class loop + user conversion function. Codegen emits a hand-rolled `[0-9a-fA-F]` scanner that feeds accumulated bytes to the user's function path.
 - **`FnDescriptor::Constant`**: Direct value emission, skips Span construction entirely. `"px" -> 0u8` lowers to `Map(Literal("px"), Constant { value: "0u8", return_type })`.
 - **`css_number_scan_f64`**: Fused CSS number scanner in `parse_that`. Handles sign, fraction, exponent via Eisel-Lemire algorithm. Used by `NumberConvert` codegen path.
-- **Literal prefix factoring**: `bbnf-ir/src/passes/prefix.rs` performs trie-style byte-level splitting of Literal alternation branches. `Alt([Literal("rem"), Literal("rlh")])` becomes `Seq(Literal("r"), Alt([Literal("em"), Literal("lh")]))`, enabling dispatch tables for branches sharing a first byte.
+- **Literal prefix factoring**: `ir/src/passes/prefix.rs` performs trie-style byte-level splitting of Literal alternation branches. `Alt([Literal("rem"), Literal("rlh")])` becomes `Seq(Literal("r"), Alt([Literal("em"), Literal("lh")]))`, enabling dispatch tables for branches sharing a first byte.
 - **Map-transparent all-literal detection**: `codegen/alt/` sees through `Map(Literal, Constant)` wrappers. An alternation of mapped literals (`"px" -> 0u8 | "em" -> 1u8`) uses the sequential literal fast path — byte-compare first, then emit the constant.
 - **Regex structural classifier**: `generate/hir_classify.rs` uses `regex-syntax` HIR for structural classification — detects Numeric/HexDigits/Identifier/QuotedString patterns (aliased as `regex_classify` for backward compat). Drives `FnDescriptor` specialization in `try_specialize_map_fn` and inline scanner selection in `fast_paths.rs`.
 - **Inline byte scanners**: `fast_paths.rs` emits direct inline code for patterns beyond JSON: `css_ident_fast` for `[a-zA-Z_][\w-]*`, `css_string_fast` for quoted strings, `css_ws_comment_fast` for comment-aware whitespace, comma-or-whitespace `,|\s+`, and generalized char-class/negated-class loops via `emit_generalized_regex_direct`.

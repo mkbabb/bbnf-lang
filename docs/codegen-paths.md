@@ -177,7 +177,7 @@ typescript/
     imports-loader.ts   Module graph loading
 
 rust/
-  bbnf/                 Core library
+  core/                 Core library
     src/
       grammar.rs        Parse BBNF → AST
       analysis/         FIRST/FOLLOW, SCC, span eligibility
@@ -194,7 +194,7 @@ rust/
       imports.rs        @import resolution
       pipeline.rs       Orchestrate parse → analyze → lower → pass → codegen
 
-  bbnf-ir/              Canonical IR — shared by AOT and VM
+  ir/                Canonical IR — shared by AOT and VM
     src/
       lib.rs            GrammarIR, IrNode, IrRule, RuleMeta, TypeDesc types
       passes/           16 IR operations, 14 unique passes (used by both AOT and VM)
@@ -209,10 +209,10 @@ rust/
       interpreter.rs    BytecodeProgram → ParseResult (VM path only)
       bytecode.rs       Op enum, BytecodeProgram struct (VM path only)
 
-  bbnf-derive/          Proc macro
+  derive/          Proc macro
     src/lib.rs          #[derive(Parser)] entry point
 
-  bbnf-analysis/        Shared analysis for LSP
+  analysis/        Shared analysis for LSP
     src/                DocumentState, 17 LSP providers
 
   lsp/                  Language server binary (stdio)

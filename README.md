@@ -11,10 +11,10 @@ BBNF extends EBNF for defining context-free grammars, used by the
 
 ```
 rust/                   Rust workspace
-  bbnf/                 BBNF grammar framework, IR lowering, codegen (lib)
-  bbnf-ir/              Canonical grammar IR, bytecode compiler, interpreter
-  bbnf-derive/          Proc-macro derive for BBNF
-  bbnf-analysis/        LSP analysis engine (DocumentState, feature providers)
+  core/                 BBNF grammar framework, IR lowering, codegen (lib)
+  ir/                Canonical grammar IR, bytecode compiler, interpreter
+  derive/          Proc-macro derive for BBNF
+  analysis/        LSP analysis engine (DocumentState, feature providers)
   lsp/                  Language Server Protocol server
 wasm/                   bbnf-wasm crate (wasm-pack → playground, bytecode VM)
 typescript/             TS library (@mkbabb/bbnf-lang)

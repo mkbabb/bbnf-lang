@@ -7,10 +7,10 @@ Cargo workspace containing the core BBNF compiler and language server.
 ```
 rust/
 ├── Cargo.toml          Workspace manifest (resolver = "2")
-├── bbnf/               Core library: grammar parsing, analysis, Rust codegen
-├── bbnf-ir/            Canonical grammar IR, passes, bytecode compiler, interpreter
-├── bbnf-derive/        Proc-macro crate: #[derive(Parser)]
-├── bbnf-analysis/      LSP analysis engine (DocumentState, 14 feature providers)
+├── core/               Core library: grammar parsing, analysis, Rust codegen
+├── ir/              Canonical grammar IR, passes, bytecode compiler, interpreter
+├── derive/        Proc-macro crate: #[derive(Parser)]
+├── analysis/      LSP analysis engine (DocumentState, 14 feature providers)
 └── lsp/                Language server binary (bbnf-lsp)
 ```
 

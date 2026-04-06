@@ -7,7 +7,9 @@
 
 use std::collections::HashMap;
 
-use crate::{CharSet128, GrammarIR, IrNode, RuleId, regex_first};
+use crate::{CharSet128, GrammarIR, IrNode, RuleId};
+
+use super::first_sets::{compute_node_first, compute_node_nullable};
 
 /// FOLLOW sets for all rules in the grammar.
 pub type FollowSets = HashMap<RuleId, CharSet128>;
@@ -29,8 +31,8 @@ pub fn compute_follow_sets(ir: &GrammarIR) -> FollowSets {
     }
 
     // Build FIRST set + nullable lookup per rule.
-    let first_of: HashMap<RuleId, &CharSet128> =
-        ir.rules.iter().map(|r| (r.id, &r.meta.first_set)).collect();
+    let first_of: HashMap<RuleId, CharSet128> =
+        ir.rules.iter().map(|r| (r.id, r.meta.first_set.clone())).collect();
     let nullable: HashMap<RuleId, bool> =
         ir.rules.iter().map(|r| (r.id, r.meta.nullable)).collect();
 
@@ -63,7 +65,7 @@ pub fn compute_follow_sets(ir: &GrammarIR) -> FollowSets {
 fn propagate_follow(
     node: &IrNode,
     container_rule: RuleId,
-    first_of: &HashMap<RuleId, &CharSet128>,
+    first_of: &HashMap<RuleId, CharSet128>,
     nullable: &HashMap<RuleId, bool>,
     ir: &GrammarIR,
     follow: &mut HashMap<RuleId, CharSet128>,
@@ -92,7 +94,7 @@ fn propagate_follow(
                     for sibling in children.iter().skip(i + 1) {
                         let child_first = compute_node_first(sibling, first_of, ir);
                         suffix_first.union(&child_first);
-                        if !is_node_nullable(sibling, nullable, ir) {
+                        if !compute_node_nullable(sibling, nullable) {
                             suffix_nullable = false;
                             break;
                         }
@@ -171,7 +173,7 @@ fn propagate_follow(
                                 *changed = true;
                             }
                         }
-                        if !is_node_nullable(child, nullable, ir) {
+                        if !compute_node_nullable(child, nullable) {
                             break;
                         }
                     }
@@ -260,78 +262,3 @@ fn propagate_follow(
     }
 }
 
-/// Compute FIRST set for an IrNode (not just rules).
-fn compute_node_first(
-    node: &IrNode,
-    first_of: &HashMap<RuleId, &CharSet128>,
-    ir: &GrammarIR,
-) -> CharSet128 {
-    match node {
-        IrNode::Literal(sid) => {
-            let mut cs = CharSet128::new();
-            let s = ir.get_string(*sid);
-            if let Some(&b) = s.as_bytes().first() {
-                if b < 128 {
-                    cs.add(b);
-                }
-            }
-            cs
-        }
-        IrNode::Regex(sid) => {
-            let pattern = ir.get_string(*sid);
-            regex_first::regex_first_chars(pattern).unwrap_or_default()
-        }
-        IrNode::Epsilon => CharSet128::new(),
-        IrNode::Ref(id) => first_of.get(id).map(|cs| (*cs).clone()).unwrap_or_default(),
-        IrNode::Seq(children) => {
-            let mut cs = CharSet128::new();
-            for child in children {
-                let child_first = compute_node_first(child, first_of, ir);
-                cs.union(&child_first);
-                if !is_node_nullable_simple(child) {
-                    break;
-                }
-            }
-            cs
-        }
-        IrNode::Alt(branches, _) => {
-            let mut cs = CharSet128::new();
-            for branch in branches {
-                if let Some(ref fs) = branch.first_set {
-                    cs.union(fs);
-                } else {
-                    cs.union(&compute_node_first(&branch.node, first_of, ir));
-                }
-            }
-            cs
-        }
-        IrNode::Repeat { inner, .. } => compute_node_first(inner, first_of, ir),
-        IrNode::Skip(a, _) | IrNode::Next(a, _) | IrNode::Minus(a, _) => {
-            compute_node_first(a, first_of, ir)
-        }
-        IrNode::Negate(_) => CharSet128::new(),
-        IrNode::OptionalWhitespace(inner) | IrNode::Map { inner, .. } => {
-            compute_node_first(inner, first_of, ir)
-        }
-        IrNode::TokenDispatch { token, .. } => compute_node_first(token, first_of, ir),
-    }
-}
-
-/// Check if a node is nullable (simplified — doesn't do full analysis).
-fn is_node_nullable(node: &IrNode, nullable: &HashMap<RuleId, bool>, _ir: &GrammarIR) -> bool {
-    match node {
-        IrNode::Epsilon => true,
-        IrNode::Repeat { lo: 0, .. } => true,
-        IrNode::Ref(id) => nullable.get(id).copied().unwrap_or(false),
-        IrNode::OptionalWhitespace(_) => true,
-        _ => false,
-    }
-}
-
-/// Quick nullable check without rule lookup.
-fn is_node_nullable_simple(node: &IrNode) -> bool {
-    matches!(
-        node,
-        IrNode::Epsilon | IrNode::Repeat { lo: 0, .. } | IrNode::OptionalWhitespace(_)
-    )
-}

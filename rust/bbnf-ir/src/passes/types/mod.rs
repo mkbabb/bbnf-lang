@@ -86,6 +86,32 @@ pub fn project_types(ir: &mut GrammarIR) {
         })
         .collect();
 
+    // Fixed-point iteration: project all rules, repeat until cache stabilizes.
+    // This makes type projection order-invariant — rules can be in any order.
+    loop {
+        let mut changed = false;
+        for &(id, idx, is_cyclic, preserve_spans) in &rule_meta_vec {
+            let ctx = ProjectionCtx {
+                ir,
+                cache: &cache,
+                acyclic_rules: &acyclic_rules,
+                cyclic_context: is_cyclic,
+                rules: utils::ProjectionRules { preserve_spans },
+                recorder: None, // Recording happens in the final pass below.
+            };
+
+            let ty = project_node(&ir.rules[idx].body, &ctx);
+            if cache.get(&id) != Some(&ty) {
+                cache.insert(id, ty);
+                changed = true;
+            }
+        }
+        if !changed {
+            break;
+        }
+    }
+
+    // Final recording pass with the converged cache.
     for &(id, idx, is_cyclic, preserve_spans) in &rule_meta_vec {
         let ctx = ProjectionCtx {
             ir,
@@ -95,8 +121,6 @@ pub fn project_types(ir: &mut GrammarIR) {
             rules: utils::ProjectionRules { preserve_spans },
             recorder: Some(&recorder),
         };
-
-        // Project on the ORIGINAL body (not a clone) so pointers match codegen.
         let ty = project_node(&ir.rules[idx].body, &ctx);
         cache.insert(id, ty);
     }

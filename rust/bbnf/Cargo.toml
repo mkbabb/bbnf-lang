@@ -14,6 +14,7 @@ path = "src/lib.rs"
 pprint = "0.3"
 parse_that = "0.4"
 bbnf-ir = { version = "0.1", path = "../bbnf-ir" }
+csp-solver = "0.1"
 
 syn = { version = "2", features = ["full"] }
 quote = "1"

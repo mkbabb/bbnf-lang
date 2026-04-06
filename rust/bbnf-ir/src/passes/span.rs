@@ -3,10 +3,18 @@
 //! Identifies rules whose entire body can be expressed as a SpanParser
 //! (zero-copy, enum-dispatched, vtable-free). Also identifies spannable
 //! sub-expressions within non-span-eligible rules.
+//!
+//! Uses the `csp-solver` crate with a `BoolDomain` lattice for propagation.
 
+use std::collections::HashMap;
 use std::collections::HashSet;
 
+use csp_solver::Csp;
+use csp_solver::constraint::VarId;
+
 use crate::{GrammarIR, IrNode, RuleId};
+
+use super::csp_domains::{BoolAndConstraint, BoolDomain, BoolEqualConstraint, BoolGroundConstraint};
 
 /// Refine span eligibility by analyzing the IR structure.
 ///
@@ -20,69 +28,134 @@ use crate::{GrammarIR, IrNode, RuleId};
 /// - Map is never span-eligible (transforms the output type).
 /// - Negate is zero-width — span-eligible.
 /// - OptionalWhitespace is span-eligible if inner is span-eligible.
+///
+/// Uses CSP AC-3 propagation to reach the fixed point.
 pub fn refine_span_eligibility(ir: &mut GrammarIR) {
-    // Fixed-point iteration: span eligibility of Ref nodes depends on
-    // the eligibility of the referenced rule, which may not be computed yet.
-    let mut eligible: HashSet<RuleId> = HashSet::new();
+    let mut csp: Csp<BoolDomain> = Csp::new();
 
-    loop {
-        let mut changed = false;
+    // Allocate a variable for each rule.
+    let rule_vars: HashMap<RuleId, VarId> = ir
+        .rules
+        .iter()
+        .map(|r| (r.id, csp.add_variable(BoolDomain::unsolved())))
+        .collect();
 
-        for rule in &ir.rules {
-            // Skip cyclic rules — they can't be fully span-eligible
-            // (would require recursive SpanParser which doesn't exist).
-            if rule.meta.is_cyclic {
-                continue;
-            }
+    // Generate constraints from each rule's body.
+    for rule in &ir.rules {
+        let rule_var = rule_vars[&rule.id];
 
-            let was_eligible = eligible.contains(&rule.id);
-            let is_eligible = node_is_span_eligible(&rule.body, &eligible);
-
-            if is_eligible && !was_eligible {
-                eligible.insert(rule.id);
-                changed = true;
-            }
+        // Cyclic rules can't be span-eligible.
+        if rule.meta.is_cyclic {
+            csp.add_constraint(BoolGroundConstraint::new(rule_var, false));
+            continue;
         }
 
-        if !changed {
-            break;
-        }
+        // Walk the body to generate a variable + constraints for it, then
+        // equate the rule variable with the body variable.
+        let body_var = generate_span_constraints(&rule.body, &rule_vars, &mut csp);
+        csp.add_constraint(BoolEqualConstraint::new(rule_var, body_var));
     }
 
-    // Update the rules. @token rules are unconditionally span-eligible.
+    csp.finalize();
+    let _ = csp.propagate();
+
+    // Extract results. @token rules are unconditionally span-eligible.
     for rule in &mut ir.rules {
-        rule.meta.span_eligible = eligible.contains(&rule.id) || rule.meta.directives.token;
+        let solved = csp.variables[rule_vars[&rule.id] as usize]
+            .domain
+            .solved
+            .unwrap_or(false);
+        rule.meta.span_eligible = solved || rule.meta.directives.token;
     }
 }
 
-/// Check if an IrNode is span-eligible (can be expressed as SpanParser).
-fn node_is_span_eligible(node: &IrNode, eligible_rules: &HashSet<RuleId>) -> bool {
+/// Walk an IrNode and emit BoolDomain constraints, returning the variable
+/// representing this node's span eligibility.
+fn generate_span_constraints(
+    node: &IrNode,
+    rule_vars: &HashMap<RuleId, VarId>,
+    csp: &mut Csp<BoolDomain>,
+) -> VarId {
     match node {
-        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => true,
-
-        IrNode::Seq(children) => children
-            .iter()
-            .all(|c| node_is_span_eligible(c, eligible_rules)),
-
-        IrNode::Alt(branches, _) => branches
-            .iter()
-            .all(|b| node_is_span_eligible(&b.node, eligible_rules)),
-
-        IrNode::Repeat { inner, .. } => node_is_span_eligible(inner, eligible_rules),
-
-        IrNode::Ref(id) => eligible_rules.contains(id),
-
-        IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
-            node_is_span_eligible(a, eligible_rules) && node_is_span_eligible(b, eligible_rules)
+        // Leaves are always span-eligible.
+        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => {
+            let var = csp.add_variable(BoolDomain::unsolved());
+            csp.add_constraint(BoolGroundConstraint::new(var, true));
+            var
         }
 
-        IrNode::Negate(_) => true, // Zero-width assertion.
+        // Negate is zero-width — always span-eligible.
+        IrNode::Negate(_) => {
+            let var = csp.add_variable(BoolDomain::unsolved());
+            csp.add_constraint(BoolGroundConstraint::new(var, true));
+            var
+        }
 
-        IrNode::OptionalWhitespace(inner) => node_is_span_eligible(inner, eligible_rules),
+        // Map/TokenDispatch break span eligibility.
+        IrNode::Map { .. } | IrNode::TokenDispatch { .. } => {
+            let var = csp.add_variable(BoolDomain::unsolved());
+            csp.add_constraint(BoolGroundConstraint::new(var, false));
+            var
+        }
 
-        IrNode::Map { .. } => false, // Transforms output type.
+        // Ref: eligibility propagates from the referenced rule.
+        IrNode::Ref(id) => {
+            let var = csp.add_variable(BoolDomain::unsolved());
+            if let Some(&rule_var) = rule_vars.get(id) {
+                csp.add_constraint(BoolEqualConstraint::new(var, rule_var));
+            } else {
+                // Unknown rule — not eligible.
+                csp.add_constraint(BoolGroundConstraint::new(var, false));
+            }
+            var
+        }
 
-        IrNode::TokenDispatch { .. } => false, // Complex dispatch node.
+        // Seq: all children must be eligible.
+        IrNode::Seq(children) => {
+            let var = csp.add_variable(BoolDomain::unsolved());
+            let child_vars: Vec<VarId> = children
+                .iter()
+                .map(|c| generate_span_constraints(c, rule_vars, csp))
+                .collect();
+            csp.add_constraint(BoolAndConstraint::new(var, child_vars));
+            var
+        }
+
+        // Alt: all branches must be eligible.
+        IrNode::Alt(branches, _) => {
+            let var = csp.add_variable(BoolDomain::unsolved());
+            let branch_vars: Vec<VarId> = branches
+                .iter()
+                .map(|b| generate_span_constraints(&b.node, rule_vars, csp))
+                .collect();
+            csp.add_constraint(BoolAndConstraint::new(var, branch_vars));
+            var
+        }
+
+        // Repeat: inner must be eligible.
+        IrNode::Repeat { inner, .. } => {
+            let var = csp.add_variable(BoolDomain::unsolved());
+            let inner_var = generate_span_constraints(inner, rule_vars, csp);
+            csp.add_constraint(BoolEqualConstraint::new(var, inner_var));
+            var
+        }
+
+        // Binary ops: both sides must be eligible.
+        IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
+            let var = csp.add_variable(BoolDomain::unsolved());
+            let a_var = generate_span_constraints(a, rule_vars, csp);
+            let b_var = generate_span_constraints(b, rule_vars, csp);
+            csp.add_constraint(BoolAndConstraint::new(var, vec![a_var, b_var]));
+            var
+        }
+
+        // OptionalWhitespace: transparent.
+        IrNode::OptionalWhitespace(inner) => {
+            let var = csp.add_variable(BoolDomain::unsolved());
+            let inner_var = generate_span_constraints(inner, rule_vars, csp);
+            csp.add_constraint(BoolEqualConstraint::new(var, inner_var));
+            var
+        }
     }
 }
 

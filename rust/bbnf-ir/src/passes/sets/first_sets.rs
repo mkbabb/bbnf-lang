@@ -1,29 +1,32 @@
 //! FIRST set computation for the IR.
 //!
-//! Fixed-point iteration computing rule-level FIRST sets, nullable flags,
-//! and per-branch FIRST sets for alternation nodes.
+//! Uses the `csp-solver` crate with a `CharSetDomain` lattice for fixed-point
+//! propagation. Nullable flags are computed as a separate pre-pass (simple boolean
+//! fixed-point, no CSP needed).
 //!
 //! Equivalent to the AST-level `bbnf::graph::first_sets` module.
 
 use std::collections::HashMap;
 
+use csp_solver::Csp;
+use csp_solver::constraint::VarId;
+
 use crate::{CharSet128, GrammarIR, IrNode, RuleId, regex_first};
+
+use super::super::csp_domains::{
+    CharSetDomain, CharSetGroundConstraint, CharSetMultiUnionConstraint,
+    CharSetSeqFirstConstraint, CharSetUnionConstraint,
+};
 
 /// Compute FIRST sets and nullable flags for all rules, and populate
 /// per-branch FIRST sets on all `Alt` nodes.
 pub fn compute_first_sets(ir: &mut GrammarIR) {
     let n = ir.rules.len();
 
-    // Fixed-point: iterate until no rule's FIRST set or nullable flag changes.
+    // Phase 1: Compute nullable flags via simple fixed-point iteration.
+    // (No CSP needed — boolean convergence is trivial.)
     loop {
         let mut changed = false;
-
-        // Snapshot current rule FIRST/nullable for lookup during computation.
-        let first_of: HashMap<RuleId, CharSet128> = ir
-            .rules
-            .iter()
-            .map(|r| (r.id, r.meta.first_set.clone()))
-            .collect();
         let nullable_of: HashMap<RuleId, bool> = ir
             .rules
             .iter()
@@ -31,16 +34,9 @@ pub fn compute_first_sets(ir: &mut GrammarIR) {
             .collect();
 
         for i in 0..n {
-            let new_first = compute_node_first(&ir.rules[i].body, &first_of, ir);
             let new_nullable = compute_node_nullable(&ir.rules[i].body, &nullable_of);
-
-            let meta = &mut ir.rules[i].meta;
-            if meta.first_set != new_first {
-                meta.first_set = new_first;
-                changed = true;
-            }
-            if meta.nullable != new_nullable {
-                meta.nullable = new_nullable;
+            if ir.rules[i].meta.nullable != new_nullable {
+                ir.rules[i].meta.nullable = new_nullable;
                 changed = true;
             }
         }
@@ -50,8 +46,165 @@ pub fn compute_first_sets(ir: &mut GrammarIR) {
         }
     }
 
-    // Populate per-branch FIRST sets for all Alt nodes.
+    // Phase 2: Compute FIRST sets via CSP propagation.
+    let mut csp: Csp<CharSetDomain> = Csp::new();
+
+    // Allocate a variable for each rule.
+    let rule_vars: HashMap<RuleId, VarId> = ir
+        .rules
+        .iter()
+        .map(|r| (r.id, csp.add_variable(CharSetDomain::empty())))
+        .collect();
+
+    // Build nullable snapshot for SeqFirst constraints.
+    let nullable_of: HashMap<RuleId, bool> = ir
+        .rules
+        .iter()
+        .map(|r| (r.id, r.meta.nullable))
+        .collect();
+
+    // Generate constraints from each rule's body.
+    for rule in &ir.rules {
+        let rule_var = rule_vars[&rule.id];
+        let body_var = generate_first_constraints(&rule.body, &rule_vars, &nullable_of, ir, &mut csp);
+        csp.add_constraint(CharSetUnionConstraint::new(rule_var, body_var));
+    }
+
+    csp.finalize();
+    let _ = csp.propagate();
+
+    // Extract results into rule metadata.
+    for rule in &mut ir.rules {
+        let var = rule_vars[&rule.id];
+        rule.meta.first_set = csp.variables[var as usize].domain.solved.clone();
+    }
+
+    // Phase 3: Populate per-branch FIRST sets for all Alt nodes.
     populate_branch_first_sets(ir);
+}
+
+/// Walk an IrNode and emit CharSetDomain constraints, returning the variable
+/// representing this node's FIRST set.
+fn generate_first_constraints(
+    node: &IrNode,
+    rule_vars: &HashMap<RuleId, VarId>,
+    nullable_of: &HashMap<RuleId, bool>,
+    ir: &GrammarIR,
+    csp: &mut Csp<CharSetDomain>,
+) -> VarId {
+    match node {
+        IrNode::Literal(sid) => {
+            let var = csp.add_variable(CharSetDomain::empty());
+            let mut cs = CharSet128::new();
+            let s = ir.get_string(*sid);
+            if let Some(&b) = s.as_bytes().first() {
+                if b < 128 {
+                    cs.add(b);
+                }
+            }
+            csp.add_constraint(CharSetGroundConstraint::new(var, cs));
+            var
+        }
+
+        IrNode::Regex(sid) => {
+            let var = csp.add_variable(CharSetDomain::empty());
+            let pattern = ir.get_string(*sid);
+            let cs = regex_first::regex_first_chars(pattern).unwrap_or_default();
+            csp.add_constraint(CharSetGroundConstraint::new(var, cs));
+            var
+        }
+
+        IrNode::Epsilon => {
+            csp.add_variable(CharSetDomain::empty())
+            // No ground constraint needed — empty set is already the initial value.
+        }
+
+        IrNode::Ref(id) => {
+            let var = csp.add_variable(CharSetDomain::empty());
+            if let Some(&rule_var) = rule_vars.get(id) {
+                csp.add_constraint(CharSetUnionConstraint::new(var, rule_var));
+            }
+            var
+        }
+
+        IrNode::Seq(children) => {
+            let var = csp.add_variable(CharSetDomain::empty());
+            let child_vars: Vec<VarId> = children
+                .iter()
+                .map(|c| generate_first_constraints(c, rule_vars, nullable_of, ir, csp))
+                .collect();
+            let nullable_flags: Vec<bool> = children
+                .iter()
+                .map(|c| is_node_nullable_with_map(c, nullable_of))
+                .collect();
+            csp.add_constraint(CharSetSeqFirstConstraint::new(var, child_vars, nullable_flags));
+            var
+        }
+
+        IrNode::Alt(branches, _) => {
+            let var = csp.add_variable(CharSetDomain::empty());
+            let branch_vars: Vec<VarId> = branches
+                .iter()
+                .map(|b| generate_first_constraints(&b.node, rule_vars, nullable_of, ir, csp))
+                .collect();
+            csp.add_constraint(CharSetMultiUnionConstraint::new(var, branch_vars));
+            var
+        }
+
+        IrNode::Repeat { inner, .. } => {
+            let var = csp.add_variable(CharSetDomain::empty());
+            let inner_var = generate_first_constraints(inner, rule_vars, nullable_of, ir, csp);
+            csp.add_constraint(CharSetUnionConstraint::new(var, inner_var));
+            var
+        }
+
+        IrNode::Skip(a, _) | IrNode::Next(a, _) | IrNode::Minus(a, _) => {
+            let var = csp.add_variable(CharSetDomain::empty());
+            let a_var = generate_first_constraints(a, rule_vars, nullable_of, ir, csp);
+            csp.add_constraint(CharSetUnionConstraint::new(var, a_var));
+            var
+        }
+
+        IrNode::Negate(_) => {
+            // Zero-width assertion — empty FIRST set.
+            csp.add_variable(CharSetDomain::empty())
+        }
+
+        IrNode::OptionalWhitespace(inner) | IrNode::Map { inner, .. } => {
+            let var = csp.add_variable(CharSetDomain::empty());
+            let inner_var = generate_first_constraints(inner, rule_vars, nullable_of, ir, csp);
+            csp.add_constraint(CharSetUnionConstraint::new(var, inner_var));
+            var
+        }
+
+        IrNode::TokenDispatch { token, .. } => {
+            let var = csp.add_variable(CharSetDomain::empty());
+            let token_var = generate_first_constraints(token, rule_vars, nullable_of, ir, csp);
+            csp.add_constraint(CharSetUnionConstraint::new(var, token_var));
+            var
+        }
+    }
+}
+
+/// Check if a node is nullable, using the rule-level nullable map for Ref lookups.
+/// This is a richer check than `is_node_nullable_simple` — it handles Ref nodes.
+fn is_node_nullable_with_map(node: &IrNode, nullable_of: &HashMap<RuleId, bool>) -> bool {
+    match node {
+        IrNode::Epsilon | IrNode::OptionalWhitespace(_) => true,
+        IrNode::Repeat { lo: 0, .. } => true,
+        IrNode::Literal(_) | IrNode::Regex(_) => false,
+        IrNode::Negate(_) => false,
+        IrNode::Ref(id) => nullable_of.get(id).copied().unwrap_or(false),
+        IrNode::Seq(children) => children.iter().all(|c| is_node_nullable_with_map(c, nullable_of)),
+        IrNode::Alt(branches, _) => branches.iter().any(|b| is_node_nullable_with_map(&b.node, nullable_of)),
+        IrNode::Repeat { inner, .. } => is_node_nullable_with_map(inner, nullable_of),
+        IrNode::Skip(a, b) | IrNode::Next(a, b) => {
+            is_node_nullable_with_map(a, nullable_of) && is_node_nullable_with_map(b, nullable_of)
+        }
+        IrNode::Minus(a, _) => is_node_nullable_with_map(a, nullable_of),
+        IrNode::Map { inner, .. } => is_node_nullable_with_map(inner, nullable_of),
+        IrNode::TokenDispatch { token, .. } => is_node_nullable_with_map(token, nullable_of),
+    }
 }
 
 /// Compute FIRST set for an arbitrary `IrNode`.

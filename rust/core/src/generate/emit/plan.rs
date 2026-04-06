@@ -207,16 +207,31 @@ fn compute_seq_plan(children: &[IrNode], ir: &GrammarIR, ctx: &IrCodegenCtx) -> 
     let mut plan_children = Vec::with_capacity(children.len());
 
     if is_tuple {
-        // Tuple: every position has a value. Span → TupleSpan, non-Span → TupleValue.
-        for (i, (child, ty)) in children.iter().zip(decision.child_types.iter()).enumerate() {
+        // Tuple: positions account for Span compression (consecutive Spans → one element).
+        // Track tuple_idx: advances for each non-Span child AND for each transition
+        // from non-Span to Span (the first Span in a run gets a position).
+        let mut tuple_idx = 0usize;
+        let mut prev_was_span = false;
+
+        for (child, ty) in children.iter().zip(decision.child_types.iter()) {
             if *ty == TypeDesc::Span {
-                plan_children.push(SeqChild::TupleSpan { index: i });
+                if !prev_was_span {
+                    // First Span in a run: gets a Tuple position.
+                    plan_children.push(SeqChild::TupleSpan { index: tuple_idx });
+                    tuple_idx += 1;
+                } else {
+                    // Consecutive Span: compressed into previous, emit structural.
+                    plan_children.push(SeqChild::Structural(collect_structural(child, ir)));
+                }
+                prev_was_span = true;
             } else {
                 let child_plan = compute_node_plan(child, ir, ctx);
                 plan_children.push(SeqChild::TupleValue {
-                    index: i,
+                    index: tuple_idx,
                     plan: Box::new(child_plan),
                 });
+                tuple_idx += 1;
+                prev_was_span = false;
             }
         }
     } else if non_span_count == 1 {
@@ -321,12 +336,9 @@ fn compute_alt_plan(branches: &[bbnf_ir::AltBranch], ir: &GrammarIR, ctx: &IrCod
                         }]
                     }
                     AltVariantKind::Direct => {
-                        // Enum/BoxedEnum — the branch body is already the enum type.
-                        let plan = compute_node_plan(&branch.node, ir, ctx);
-                        vec![AltBranch {
-                            variant_name: "__direct".to_string(),
-                            plan: Box::new(plan),
-                        }]
+                        // Enum/BoxedEnum — the branch produces the enum directly.
+                        // Lift its inner structure (same as transparent).
+                        lift_transparent_branches(&branch.node, ir, ctx)
                     }
                 }
             }).flatten().collect();

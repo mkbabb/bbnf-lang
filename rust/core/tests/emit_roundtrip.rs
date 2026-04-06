@@ -19,9 +19,9 @@ struct JsonEmit;
 #[parser(path = "../../grammar/misc/csv.bbnf", emit)]
 struct CsvEmit;
 
-// BNF/EBNF/Math: plan computation handles the basic patterns (JSON, CSV).
-// These grammars expose Tuple indexing overflow and transparent Alt lifting
-// edge cases that need plan computation fixes. Tracked for next commit.
+// BNF/EBNF: transparent Alt lifting produces correct variant names but
+// typed let bindings create reference mismatches through the lifted branches.
+// Needs deeper investigation of reference flow through lift_transparent_branches.
 
 // #[derive(Parser)]
 // #[parser(path = "../../grammar/bnf/bnf.bbnf", emit)]
@@ -30,6 +30,9 @@ struct CsvEmit;
 // #[derive(Parser)]
 // #[parser(path = "../../grammar/ebnf/ebnf.bbnf", emit)]
 // struct EbnfEmit;
+
+// Math: enum has unused lifetime 'a (all variants are Span/Copy).
+// This is a pre-existing codegen issue, not emit-specific.
 
 // #[derive(Parser)]
 // #[parser(path = "../../grammar/misc/math.bbnf", emit)]
@@ -134,4 +137,10 @@ fn csv_round_trip(input: &str) {
 // BNF round-trip tests
 // ═══════════════════════════════════════════════════════════════════════════
 
-// BNF/EBNF/Math tests — tracked for next commit after plan computation fixes.
+// BNF/EBNF tests deferred — transparent Alt lifting needs reference flow fix.
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Math
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Math tests deferred — unused lifetime in generated enum.

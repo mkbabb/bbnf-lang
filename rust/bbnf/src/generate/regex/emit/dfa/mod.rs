@@ -25,6 +25,15 @@ use parse_that::regex::nfa::DEAD;
 use proc_macro2::TokenStream;
 use quote::quote;
 
+/// DFA accept-state semantics.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum MatchMode {
+    /// Return the longest (last) accept position. Default for greedy patterns.
+    Greedy,
+    /// Return the shortest (first) accept position. For patterns with lazy quantifiers.
+    Shortest,
+}
+
 /// Try to compile a regex pattern to inline DFA code.
 ///
 /// Returns `None` if the pattern uses unsupported features (backreferences)
@@ -33,35 +42,33 @@ use quote::quote;
 pub fn try_emit_dfa_inline(pattern: &str) -> Option<TokenStream> {
     let hir = parse_that::regex::parse_with(pattern, &parse_that::regex::ParseOptions::byte_mode())
         .ok()?;
-    let lazy = super::hir::contains_lazy_quantifier(&hir);
+    let mode = if super::hir::contains_lazy_quantifier(&hir) {
+        MatchMode::Shortest
+    } else {
+        MatchMode::Greedy
+    };
 
     let dfa = Dfa::compile(pattern)?;
-    Some(emit_dfa(&dfa, lazy))
+    Some(emit_dfa(&dfa, mode))
 }
 
 /// Emit inline code for a compiled DFA.
 ///
-/// Unified tier selection (Phase 3.2):
-/// - 1-12 states: Decision-tree codegen (inline match-chain, LLVM-friendly).
-///   Subsumes the old Tier A -- a match-chain is a degenerate decision tree.
-/// - 13-64 states: Static transition table + driver loop (Tier B).
-/// - 65+ states: Fallback to Tier B (PackedDfa runtime integration is future).
-fn emit_dfa(dfa: &Dfa, lazy: bool) -> TokenStream {
+/// Tier selection by state count, with match mode determining accept behavior:
+/// - `Greedy`: track last accept (longest match). Tiers A/B.
+/// - `Shortest`: return on first accept. Table-driven shortest-match codegen.
+fn emit_dfa(dfa: &Dfa, mode: MatchMode) -> TokenStream {
     let n = dfa.state_count();
     if n == 0 {
         return quote! { None };
     }
 
-    if lazy {
-        // Shortest-match mode: emit first-accept return logic.
+    if mode == MatchMode::Shortest {
         return emit_dfa_shortest(dfa);
     }
 
-    // Longest-match (greedy) mode.
     if n <= 12 {
         emit_tier_a(dfa)
-    } else if n <= 64 {
-        emit_tier_b(dfa)
     } else {
         emit_tier_b(dfa)
     }

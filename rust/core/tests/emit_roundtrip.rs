@@ -26,6 +26,15 @@ struct MathEmit;
 #[parser(path = "../../grammar/google-sheets/google-sheets.bbnf", emit)]
 struct SheetsEmit;
 
+#[derive(Parser)]
+#[parser(path = "../../grammar/bbnf/bbnf.bbnf", emit)]
+struct BbnfEmit;
+
+// CSS pretty grammar (no @import composition)
+#[derive(Parser)]
+#[parser(path = "../../grammar/css/pretty.bbnf", emit)]
+struct CssPrettyEmit;
+
 // ── JSON ─────────────────────────────────────────────────────────────────────
 
 fn json_emit(input: &str) -> String {
@@ -85,7 +94,7 @@ fn bnf_emit(input: &str) -> String {
 #[test]
 fn bnf_rule() {
     let e = bnf_emit("<expr> ::= <term> | <expr> \"+\" <term>\n");
-    assert!(!e.is_empty(), "BNF empty output");
+    assert!(!e.is_empty(), "BNF empty");
 }
 
 // ── EBNF ─────────────────────────────────────────────────────────────────────
@@ -99,7 +108,7 @@ fn ebnf_emit(input: &str) -> String {
 #[test]
 fn ebnf_rule() {
     let e = ebnf_emit("digit = \"0\" | \"1\" | \"2\" ;\n");
-    assert!(!e.is_empty(), "EBNF empty output");
+    assert!(!e.is_empty(), "EBNF empty");
 }
 
 // ── Math ─────────────────────────────────────────────────────────────────────
@@ -113,7 +122,7 @@ fn math_emit(input: &str) -> String {
 #[test]
 fn math_num() {
     let e = math_emit("42");
-    assert!(!e.is_empty(), "Math empty output");
+    assert!(!e.is_empty(), "Math empty");
 }
 
 // ── Google Sheets ────────────────────────────────────────────────────────────
@@ -127,5 +136,35 @@ fn sheets_emit(input: &str) -> String {
 #[test]
 fn sheets_simple() {
     let e = sheets_emit("=1+2");
-    assert!(!e.is_empty(), "Sheets empty output");
+    assert!(!e.is_empty(), "Sheets empty");
+}
+
+// ── BBNF ─────────────────────────────────────────────────────────────────────
+
+fn bbnf_emit(input: &str) -> String {
+    let ctx = __BbnfEmitEnumCtx::with_capacity(input.len() / 8);
+    let (result, _) = BbnfEmit::grammar().parse_return_state_with_context(input, &ctx);
+    let val = result.expect("BBNF parse failed");
+    BbnfEmit::emit_compact(&val)
+}
+
+#[test]
+fn bbnf_rule() {
+    let e = bbnf_emit("rule = \"a\" | \"b\" ;\n");
+    assert!(!e.is_empty(), "BBNF empty");
+}
+
+// ── CSS Pretty ───────────────────────────────────────────────────────────────
+
+fn css_emit(input: &str) -> String {
+    let ctx = __CssPrettyEmitEnumCtx::with_capacity(input.len() / 8);
+    let (result, _) = CssPrettyEmit::stylesheet().parse_return_state_with_context(input, &ctx);
+    let val = result.expect("CSS parse failed");
+    CssPrettyEmit::emit_compact(&val)
+}
+
+#[test]
+fn css_simple() {
+    let e = css_emit("body { color: red; }");
+    assert!(!e.is_empty(), "CSS empty");
 }

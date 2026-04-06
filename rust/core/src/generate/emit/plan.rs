@@ -209,31 +209,100 @@ fn compute_seq_plan(children: &[IrNode], ir: &GrammarIR, ctx: &IrCodegenCtx) -> 
     let mut plan_children = Vec::with_capacity(children.len());
 
     if is_tuple {
-        // Tuple: positions account for Span compression (consecutive Spans → one element).
-        // Track tuple_idx: advances for each non-Span child AND for each transition
-        // from non-Span to Span (the first Span in a run gets a position).
-        let mut tuple_idx = 0usize;
-        let mut prev_was_span = false;
+        let tuple_len = match &decision.result_type {
+            TypeDesc::Tuple(elems) => elems.len(),
+            _ => unreachable!(),
+        };
 
-        for (child, ty) in children.iter().zip(decision.child_types.iter()) {
-            if *ty == TypeDesc::Span {
-                if !prev_was_span {
-                    // First Span in a run: gets a Tuple position.
-                    plan_children.push(SeqChild::TupleSpan { index: tuple_idx });
-                    tuple_idx += 1;
+        if tuple_len == decision.child_types.len() {
+            // 1:1 mapping: each child has a Tuple position (override was applied).
+            for (i, (child, ty)) in children.iter().zip(decision.child_types.iter()).enumerate() {
+                if *ty == TypeDesc::Span {
+                    plan_children.push(SeqChild::TupleSpan { index: i });
                 } else {
-                    // Consecutive Span: compressed into previous, emit structural.
-                    plan_children.push(SeqChild::Structural(collect_structural(child, ir)));
+                    let child_plan = compute_node_plan(child, ir, ctx);
+                    plan_children.push(SeqChild::TupleValue {
+                        index: i,
+                        plan: Box::new(child_plan),
+                    });
                 }
-                prev_was_span = true;
+            }
+        } else {
+            // Span compression: result Tuple has fewer elements than children.
+            // Result Tuple elements are authoritative. Use the same grouping
+            // strategy as the parse driver: consecutive Span children compress
+            // into one Span group, non-Span children map 1:1.
+            let result_elems = match &decision.result_type {
+                TypeDesc::Tuple(elems) => elems.clone(),
+                _ => unreachable!("is_tuple but result_type is not Tuple"),
+            };
+
+            // Build groups from child_types (matches project_seq_type's compression).
+            let mut groups: Vec<(TypeDesc, Vec<usize>)> = Vec::new();
+            let mut span_run: Vec<usize> = Vec::new();
+
+            for (i, ty) in decision.child_types.iter().enumerate() {
+                if *ty == TypeDesc::Span {
+                    span_run.push(i);
+                } else {
+                    if !span_run.is_empty() {
+                        groups.push((TypeDesc::Span, std::mem::take(&mut span_run)));
+                    }
+                    groups.push((ty.clone(), vec![i]));
+                }
+            }
+            if !span_run.is_empty() {
+                groups.push((TypeDesc::Span, span_run));
+            }
+
+            // Map groups to result Tuple elements.
+            // If counts differ, compression alignment is off — fall back to
+            // treating each result element as a TupleValue.
+            if groups.len() == result_elems.len() {
+                // Aligned: map groups to Tuple elements 1:1.
+                for (group_idx, (_group_type, child_indices)) in groups.iter().enumerate() {
+                    let result_elem = &result_elems[group_idx];
+                    if *result_elem == TypeDesc::Span {
+                        for (j, &ci) in child_indices.iter().enumerate() {
+                            if j == 0 {
+                                plan_children.push(SeqChild::TupleSpan { index: group_idx });
+                            } else {
+                                plan_children.push(SeqChild::Structural(
+                                    collect_structural(&children[ci], ir),
+                                ));
+                            }
+                        }
+                    } else {
+                        for &ci in child_indices {
+                            let child_plan = compute_node_plan(&children[ci], ir, ctx);
+                            plan_children.push(SeqChild::TupleValue {
+                                index: group_idx,
+                                plan: Box::new(child_plan),
+                            });
+                        }
+                    }
+                }
             } else {
-                let child_plan = compute_node_plan(child, ir, ctx);
-                plan_children.push(SeqChild::TupleValue {
-                    index: tuple_idx,
-                    plan: Box::new(child_plan),
-                });
-                tuple_idx += 1;
-                prev_was_span = false;
+                // Misaligned: iterate result elements directly.
+                // Each result element gets its value from position in the Tuple.
+                for (tuple_idx, elem_type) in result_elems.iter().enumerate() {
+                    if *elem_type == TypeDesc::Span {
+                        plan_children.push(SeqChild::TupleSpan { index: tuple_idx });
+                    } else {
+                        // Find the corresponding non-Span child by counting.
+                        let non_span_child = children.iter()
+                            .zip(decision.child_types.iter())
+                            .filter(|(_, ty)| **ty != TypeDesc::Span)
+                            .nth(tuple_idx - result_elems[..tuple_idx].iter().filter(|t| **t == TypeDesc::Span).count());
+                        if let Some((child, _)) = non_span_child {
+                            let child_plan = compute_node_plan(child, ir, ctx);
+                            plan_children.push(SeqChild::TupleValue {
+                                index: tuple_idx,
+                                plan: Box::new(child_plan),
+                            });
+                        }
+                    }
+                }
             }
         }
     } else if non_span_count == 1 {
@@ -294,6 +363,17 @@ fn compute_flat_vec_plan(
 // ── Alt ──────────────────────────────────────────────────────────────────────
 
 fn compute_alt_plan(branches: &[bbnf_ir::AltBranch], ir: &GrammarIR, ctx: &IrCodegenCtx) -> EmitPlan {
+    // All-Span Alt: every branch produces Span (e.g., Alt of Literals).
+    // No variant match needed — emit the value as Span text.
+    let all_span = branches.iter().all(|b| {
+        ir.type_map.as_ref()
+            .and_then(|tm| tm.node_type(&b.node).cloned())
+            .unwrap_or(TypeDesc::Span) == TypeDesc::Span
+    });
+    if all_span {
+        return EmitPlan::Leaf(Leaf::SpanText);
+    }
+
     let decision = decisions::decide_alt(branches, ir, &ctx.global_sub_variants);
 
     match decision.kind {
@@ -385,11 +465,28 @@ fn lift_transparent_branches(body: &IrNode, ir: &GrammarIR, ctx: &IrCodegenCtx) 
             }
         }
         _ => {
-            let plan = compute_node_plan(body, ir, ctx);
-            vec![AltBranch {
-                variant_name: "__leaf".to_string(),
-                plan: Box::new(plan),
-            }]
+            // Leaf transparent body (Literal, Map, etc.). Look up the sub-variant
+            // for its type in global_sub_variants.
+            let ty = ir.type_map.as_ref()
+                .and_then(|tm| tm.node_type(body).cloned())
+                .unwrap_or(TypeDesc::Span);
+            let variant_name = ctx.global_sub_variants.get(&ty)
+                .or_else(|| {
+                    let normalized = match &ty {
+                        TypeDesc::BoxedEnum => &TypeDesc::Enum,
+                        other => other,
+                    };
+                    ctx.global_sub_variants.get(normalized)
+                })
+                .cloned();
+            if let Some(name) = variant_name {
+                let plan = compute_node_plan(body, ir, ctx);
+                vec![AltBranch { variant_name: name, plan: Box::new(plan) }]
+            } else {
+                // No variant found — this node's type matches no sub-variant.
+                // Skip (the value is emitted via another branch).
+                vec![]
+            }
         }
     }
 }

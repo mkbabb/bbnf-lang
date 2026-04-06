@@ -124,7 +124,8 @@ impl IrCodegenCtx<'_> {
             #[allow(non_camel_case_types)]
             struct #ctx_ident<'a> {
                 __slab: ::parse_that::BumpSlab,
-                #(#fields),*
+                #(#fields,)*
+                __phantom: ::core::marker::PhantomData<&'a ()>,
             }
 
             #[allow(non_snake_case)]
@@ -132,7 +133,8 @@ impl IrCodegenCtx<'_> {
                 fn with_capacity(n: usize) -> Self {
                     Self {
                         __slab: ::parse_that::BumpSlab::with_capacity(n * 32),
-                        #(#new_fields),*
+                        #(#new_fields,)*
+                        __phantom: ::core::marker::PhantomData,
                     }
                 }
 

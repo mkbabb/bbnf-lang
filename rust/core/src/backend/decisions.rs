@@ -25,8 +25,11 @@ pub struct SeqDecision {
     pub result_type: TypeDesc,
     /// All children are Span → pure structural.
     pub all_span: bool,
-    /// Per-child resolved types (post Tuple-element override).
+    /// Per-child resolved types (post Tuple-element override, may have span-method overrides).
     pub child_types: Vec<TypeDesc>,
+    /// Per-child raw types (from node_type, NO span-method overrides).
+    /// Used by emit plan for compression alignment.
+    pub raw_child_types: Vec<TypeDesc>,
     /// Flatten strategy for `(T, Vec<T>) → Vec<T)`.
     pub flatten: Option<FlattenStrategy>,
 }
@@ -171,13 +174,24 @@ pub fn decide_seq(children: &[IrNode], ir: &GrammarIR) -> SeqDecision {
         child_types
     };
 
-    // Step 5: flatten detection.
+    // Step 5: raw child types (from node_type, no seq_child_types override).
+    let raw_child_types: Vec<TypeDesc> = children
+        .iter()
+        .map(|c| {
+            type_map
+                .and_then(|tm| tm.node_type(c).cloned())
+                .unwrap_or(TypeDesc::Span)
+        })
+        .collect();
+
+    // Step 6: flatten detection.
     let flatten = detect_flatten(&result_type, &child_types);
 
     SeqDecision {
         result_type,
         all_span,
         child_types,
+        raw_child_types,
         flatten,
     }
 }

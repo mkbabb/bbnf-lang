@@ -10,7 +10,11 @@ use bbnf_derive::Parser;
 #[parser(path = "../../grammar/json/json.bbnf", emit)]
 struct JsonEmit;
 
-// CSV and other grammars deferred — requires deeper Seq/Repeat type resolution.
+// ── CSV ──────────────────────────────────────────────────────────────────────
+
+#[derive(Parser)]
+#[parser(path = "../../grammar/misc/csv.bbnf", emit)]
+struct CsvEmit;
 
 fn parse_and_emit(input: &str) -> String {
     let ctx = __JsonEmitEnumCtx::with_capacity(input.len() / 32);
@@ -90,5 +94,48 @@ fn emit_object() {
 #[test]
 fn emit_nested() {
     round_trip(r#"{"a": [1, 2], "b": {"c": true}}"#);
+}
+
+// ── CSV tests ────────────────────────────────────────────────────────────────
+
+fn csv_parse_and_emit(input: &str) -> String {
+    let ctx = __CsvEmitEnumCtx::with_capacity(input.len() / 8);
+    let parser = CsvEmit::csv();
+    let (result, _state) = parser.parse_return_state_with_context(input, &ctx);
+    let value = result.expect("CSV parse failed");
+    CsvEmit::emit_compact(&value)
+}
+
+fn csv_round_trip(input: &str) {
+    let emitted = csv_parse_and_emit(input);
+    let ctx2 = __CsvEmitEnumCtx::with_capacity(emitted.len() / 8);
+    let parser2 = CsvEmit::csv();
+    let (result2, state2) = parser2.parse_return_state_with_context(&emitted, &ctx2);
+    assert!(result2.is_some(), "CSV re-parse failed: {:?}", emitted);
+    assert!(
+        state2.offset >= emitted.trim_end().len(),
+        "CSV incomplete re-parse ({}/{}): {:?}",
+        state2.offset, emitted.len(), emitted
+    );
+}
+
+#[test]
+fn csv_simple() {
+    csv_round_trip("a,b,c");
+}
+
+#[test]
+fn csv_multiline() {
+    csv_round_trip("a,b,c\n1,2,3");
+}
+
+#[test]
+fn csv_quoted() {
+    csv_round_trip(r#""hello","world""#);
+}
+
+#[test]
+fn csv_single_field() {
+    csv_round_trip("hello");
 }
 

@@ -58,6 +58,10 @@ pub fn emit_node(
                 // Transparent rules are inlined — recurse into their body.
                 emit_node(&ref_rule.body, val, ir, ctx)
             } else {
+                // Non-transparent Ref: call the rule's emit function directly.
+                // The value's type at this site matches the rule's projected type
+                // (the enclosing context — Seq tuple, Alt unwrapped variant, etc.
+                // — ensures the correct type is passed).
                 let ref_name = ir.get_string(ref_rule.name);
                 let emit_fn = format_ident!("{}_emit", ref_name);
                 quote! { Self::#emit_fn(#val, __sink); }
@@ -135,12 +139,19 @@ fn emit_structural(node: &IrNode, ir: &GrammarIR) -> TokenStream {
                 quote! { __sink.text(#s); }
             }
         }
+        IrNode::Ref(rule_id) => {
+            // Structural Ref: recurse into the rule body to find the literal content.
+            let ref_rule = &ir.rules[*rule_id as usize];
+            emit_structural(&ref_rule.body, ir)
+        }
         IrNode::Epsilon | IrNode::Negate(_) => quote! {},
         IrNode::OptionalWhitespace(inner) => emit_structural(inner, ir),
         IrNode::Seq(children) => {
             let parts: Vec<_> = children.iter().map(|c| emit_structural(c, ir)).collect();
             quote! { #(#parts)* }
         }
+        IrNode::Skip(left, _right) => emit_structural(left, ir),
+        IrNode::Next(_left, right) => emit_structural(right, ir),
         IrNode::Repeat { inner, .. } => emit_structural(inner, ir),
         // For structural nodes that are unexpectedly value-producing,
         // emit nothing rather than generate broken code.

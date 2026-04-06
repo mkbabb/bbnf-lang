@@ -24,11 +24,6 @@ pub fn generate_emit_methods(ir: &GrammarIR, ctx: &IrCodegenCtx) -> TokenStream 
     let mut methods = Vec::new();
 
     for rule in &ir.rules {
-        // Transparent rules are inlined into their callers — no standalone emit fn.
-        if rule.meta.is_transparent {
-            continue;
-        }
-
         let rule_name = ir.get_string(rule.name);
         let fn_ident = format_ident!("{}_emit", rule_name);
 
@@ -41,7 +36,7 @@ pub fn generate_emit_methods(ir: &GrammarIR, ctx: &IrCodegenCtx) -> TokenStream 
         let body = node::emit_node(&rule.body, &val, ir, ctx);
 
         methods.push(quote! {
-            pub fn #fn_ident<'__e, __S: ::bbnf_emit::EmitSink<'__e>>(
+            pub fn #fn_ident<'a, __S: ::bbnf_emit::EmitSink<'a>>(
                 #val: &#rule_type,
                 __sink: &mut __S,
             ) {
@@ -51,31 +46,29 @@ pub fn generate_emit_methods(ir: &GrammarIR, ctx: &IrCodegenCtx) -> TokenStream 
     }
 
     // Top-level convenience methods on the parser struct.
-    if let Some(entry_rule) = ir.rules.last() {
-        if !entry_rule.meta.is_transparent {
-            let entry_name = ir.get_string(entry_rule.name);
-            let emit_fn = format_ident!("{}_emit", entry_name);
-            let entry_type = ctx.rule_types.get(&entry_rule.id)
-                .cloned()
-                .unwrap_or_else(|| ctx.enum_type.clone());
+    // Top-level convenience: use the entry rule (ir.entry) and boxed enum type.
+    {
+        let entry_rule = &ir.rules[ir.entry as usize];
+        let entry_name = ir.get_string(entry_rule.name);
+        let emit_fn = format_ident!("{}_emit", entry_name);
+        let boxed_enum = &ctx.boxed_enum_type;
 
-            methods.push(quote! {
-                /// Emit a value as compact text (no formatting).
-                pub fn emit_compact(__v: &#entry_type) -> String {
-                    let mut __sink = ::bbnf_emit::StringSink::new();
-                    Self::#emit_fn(__v, &mut __sink);
-                    __sink.finish()
-                }
+        methods.push(quote! {
+            /// Emit a value as compact text (no formatting).
+            pub fn emit_compact<'a>(__v: #boxed_enum) -> String {
+                let mut __sink = ::bbnf_emit::StringSink::new();
+                Self::#emit_fn(&__v, &mut __sink);
+                __sink.finish()
+            }
 
-                /// Emit a value through an [`EmitSink`].
-                pub fn emit<'__e, __S: ::bbnf_emit::EmitSink<'__e>>(
-                    __v: &#entry_type,
-                    __sink: &mut __S,
-                ) {
-                    Self::#emit_fn(__v, __sink);
-                }
-            });
-        }
+            /// Emit a value through an [`EmitSink`].
+            pub fn emit<'a, __S: ::bbnf_emit::EmitSink<'a>>(
+                __v: #boxed_enum,
+                __sink: &mut __S,
+            ) {
+                Self::#emit_fn(&__v, __sink);
+            }
+        });
     }
 
     quote! { #(#methods)* }

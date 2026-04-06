@@ -49,8 +49,9 @@ pub fn emit_seq(
                 val.clone()
             } else {
                 // Multiple value children: tuple destructuring.
+                // Use & to get a reference to the tuple element.
                 let idx = Index::from(value_pos);
-                quote! { #val.#idx }
+                quote! { &(#val.#idx) }
             };
             parts.push(super::node::emit_node(child, &child_val, ir, ctx));
         }

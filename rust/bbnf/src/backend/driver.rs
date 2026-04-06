@@ -226,18 +226,30 @@ pub fn compile_node<E: Emitter>(
 
                 // Skip if head is Span — operator chain not beneficial for all-Span chains.
                 if head_type != TypeDesc::Span {
-                    // Compute per-element alloc from link tuple types.
-                    // BoxedEnum elements need Alloc (scratch Vec stores references).
-                    let (op_alloc, rhs_alloc) = match &link_elem_type {
-                        TypeDesc::Tuple(elems) if elems.len() == 2 => (
-                            if matches!(elems[0], TypeDesc::BoxedEnum) { ValuePlacement::Alloc } else { ValuePlacement::Inline },
-                            if matches!(elems[1], TypeDesc::BoxedEnum) { ValuePlacement::Alloc } else { ValuePlacement::Inline },
-                        ),
-                        _ => (ValuePlacement::Inline, ValuePlacement::Inline),
+                    // Compute per-element alloc and Span projection from types.
+                    let link_elem_types = match &link_elem_type {
+                        TypeDesc::Tuple(elems) if elems.len() == 2 => Some((&elems[0], &elems[1])),
+                        _ => None,
                     };
-                    let head_out = compile_node(head, alloc, ir, dstate, emitter, ctx);
-                    let op_out = compile_node(op, op_alloc, ir, dstate, emitter, ctx);
-                    let rhs_out = compile_node(rhs, rhs_alloc, ir, dstate, emitter, ctx);
+
+                    // Alloc: BoxedEnum → Alloc, else Inline.
+                    fn alloc_for(ty: &TypeDesc) -> ValuePlacement {
+                        if matches!(ty, TypeDesc::BoxedEnum) { ValuePlacement::Alloc } else { ValuePlacement::Inline }
+                    }
+
+                    let head_alloc = alloc_for(&head_type);
+                    let (op_alloc, rhs_alloc) = link_elem_types
+                        .map(|(o, r)| (alloc_for(o), alloc_for(r)))
+                        .unwrap_or((ValuePlacement::Inline, ValuePlacement::Inline));
+
+                    // Compile each child. Span-projected children get span capture
+                    // wrapping: parse the child for side effects, return Span.
+                    let head_out = compile_chain_child(head, &head_type, head_alloc, ir, dstate, emitter, ctx);
+                    let op_out = link_elem_types.map(|(ot, _)| compile_chain_child(op, ot, op_alloc, ir, dstate, emitter, ctx))
+                        .unwrap_or_else(|| compile_node(op, ValuePlacement::Inline, ir, dstate, emitter, ctx));
+                    let rhs_out = link_elem_types.map(|(_, rt)| compile_chain_child(rhs, rt, rhs_alloc, ir, dstate, emitter, ctx))
+                        .unwrap_or_else(|| compile_node(rhs, ValuePlacement::Inline, ir, dstate, emitter, ctx));
+
                     if let Some(chain) = emitter.emit_operator_chain(
                         head_out, op_out, rhs_out, &head_type, &link_elem_type, ir, ctx,
                     ) {
@@ -962,6 +974,29 @@ fn unwrap_ow(node: &IrNode) -> Option<(&IrNode, bool)> {
     match node {
         IrNode::OptionalWhitespace(inner) => Some((inner.as_ref(), true)),
         other => Some((other, false)),
+    }
+}
+
+/// Compile an operator chain child with type-aware alloc and Span projection.
+///
+/// When the projected type is Span, the child is compiled for its side effects
+/// (advancing state.offset) and wrapped in a Span capture. This matches the
+/// monolithic `emit_projected_child` behavior.
+fn compile_chain_child<E: Emitter>(
+    child: &IrNode,
+    projected_ty: &TypeDesc,
+    alloc: ValuePlacement,
+    ir: &GrammarIR,
+    dstate: &mut DriverState,
+    emitter: &mut E,
+    ctx: &mut E::Ctx,
+) -> E::Output {
+    if *projected_ty == TypeDesc::Span {
+        // Span projection: compile child and wrap in span capture.
+        let inner = compile_node(child, ValuePlacement::Inline, ir, dstate, emitter, ctx);
+        emitter.emit_span_capture(inner, ctx)
+    } else {
+        compile_node(child, alloc, ir, dstate, emitter, ctx)
     }
 }
 

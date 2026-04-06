@@ -813,33 +813,13 @@ impl Emitter for RustEmitter {
 
     fn emit_operator_chain_rule(
         &mut self,
-        rule: &IrRule,
-        ir: &GrammarIR,
-        ctx: &mut Self::Ctx,
+        _rule: &IrRule,
+        _ir: &GrammarIR,
+        _ctx: &mut Self::Ctx,
     ) -> Option<TokenStream> {
-        // Fallback: use monolithic operator_chain module for grammars where the
-        // Seq-level emit_operator_chain doesn't fire (missing TypeMap entries).
-        let ir_ctx = ctx.ir_ctx();
-        let call_strategies = crate::pipeline::compute_call_strategies(ir);
-        let call_modes: Vec<_> = call_strategies.iter().map(|s| match s {
-            crate::backend::CallStrategy::DirectCall => {
-                crate::backend::rust::analysis::inline::CallMode::DirectCall
-            }
-            crate::backend::CallStrategy::InlineBody | crate::backend::CallStrategy::InlineFusion => {
-                crate::backend::rust::analysis::inline::CallMode::InlineBody
-            }
-        }).collect();
-        let mut mctx = crate::backend::rust::MonoCtx::new(call_modes);
-        mctx.current_rule_id = Some(rule.id);
-        mctx.current_rule_name = Some(ir.get_string(rule.name).to_string());
-        if let Some(chain_expr) =
-            crate::backend::rust::operator_chain::emit_operator_chain_rule(
-                rule.id, ir_ctx, &mut mctx,
-            )
-        {
-            ctx.hoisted.extend(mctx.hoisted);
-            return Some(chain_expr);
-        }
+        // Operator chains are handled at the Seq level via emit_operator_chain.
+        // The driver compiles head/op/rhs with type-aware alloc and Span projection
+        // before calling emit_operator_chain.
         None
     }
 

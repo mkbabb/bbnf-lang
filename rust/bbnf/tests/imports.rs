@@ -1,7 +1,7 @@
 use std::fs;
 use std::path::PathBuf;
 
-use bbnf::grammar::BBNFGrammar;
+use bbnf::grammar;
 use bbnf::imports::{ImportError, load_module_graph};
 
 fn setup_test_dir() -> tempfile::TempDir {
@@ -265,7 +265,7 @@ fn test_css_l4_media_file_parses_to_end() {
     let source = fs::read_to_string(&path).unwrap();
     let source_static: &'static str = Box::leak(source.clone().into_boxed_str());
 
-    let parser = BBNFGrammar::grammar_with_imports();
+    let parser = grammar::parse();
     let (parsed, state) = parser.parse_return_state(source_static);
     let parsed = parsed.expect("media.bbnf should parse");
 

@@ -1,5 +1,5 @@
 use bbnf::analysis::{compute_first_sets, tarjan_scc, topological_sort_scc};
-use bbnf::grammar::BBNFGrammar;
+use bbnf::grammar;
 use bbnf::lower::{DirectiveSet, lower_to_ir};
 use bbnf::pipeline::{PipelineOptions, compile_grammar};
 use bbnf::{Expression, calculate_ast_deps};
@@ -182,7 +182,7 @@ number = /-?\d+/ ;
         "#;
 
     let source_static: &'static str = Box::leak(grammar.to_string().into_boxed_str());
-    let parser = BBNFGrammar::grammar_with_imports();
+    let parser = grammar::parse();
     let (parsed, _) = parser.parse_return_state(source_static);
     let parsed = parsed.unwrap();
     let ast = parsed.rules;

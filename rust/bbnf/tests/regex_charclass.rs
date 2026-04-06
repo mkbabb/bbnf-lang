@@ -1,15 +1,15 @@
 //! Tests for character-class-aware regex parsing in BBNF grammars.
 //! Verifies that `/` inside `[...]` is treated as literal, not as a closing delimiter.
 
-use bbnf::BBNFGrammar;
 use bbnf::types::Expression;
 
 /// Extract the regex body string from a single-rule grammar `name = /pattern/ ;`.
 fn extract_regex(source: &str) -> String {
     let source_static: &'static str = Box::leak(source.to_string().into_boxed_str());
-    let ast = BBNFGrammar::grammar()
+    let ast = bbnf::grammar::parse()
         .parse(source_static)
-        .expect("failed to parse grammar");
+        .expect("failed to parse grammar")
+        .rules;
     let (_, rhs) = ast.into_iter().next().expect("expected at least one rule");
 
     // grammar() yields ProductionRule(lhs, Rule(expr, mapping_fn)).
@@ -103,8 +103,8 @@ b = ("," , /[^)]+/) ;
 c = "y" ;
 "#;
     let source_static: &'static str = Box::leak(source.to_string().into_boxed_str());
-    let parser = BBNFGrammar::grammar();
-    let ast = parser.parse(source_static).expect("grammar parse failed");
+    let parser = bbnf::grammar::parse();
+    let ast = parser.parse(source_static).expect("grammar parse failed").rules;
     let rule_names: Vec<&str> = ast
         .keys()
         .filter_map(|e| match e {

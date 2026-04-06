@@ -4,7 +4,7 @@ use bbnf_ir::GrammarIR;
 
 use crate::analysis::{compute_first_sets, tarjan_scc, topological_sort_scc};
 use crate::backend::prepare_grammar;
-use crate::grammar::BBNFGrammar;
+use crate::grammar;
 use crate::lower::{DirectiveSet, lower_to_ir};
 use crate::pipeline::loader::{DirectiveMaps, load_merged_paths};
 use crate::pipeline::validate::{validate_ast, validate_pretty_directives};
@@ -34,7 +34,7 @@ pub fn compile_grammar_request(
     source: &str,
     request: &CompileRequest,
 ) -> Result<CompileOutput, CompileError> {
-    let parser = BBNFGrammar::grammar_with_imports();
+    let parser = grammar::parse();
     let (parsed, _state) = parser.parse_return_state(source);
     let parsed =
         parsed.ok_or_else(|| CompileError::Parse("failed to parse grammar".to_string()))?;

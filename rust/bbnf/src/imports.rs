@@ -8,7 +8,7 @@ use std::collections::{HashMap, HashSet};
 use std::fmt;
 use std::path::{Path, PathBuf};
 
-use crate::grammar::BBNFGrammar;
+use crate::grammar;
 use crate::types::ParsedGrammar;
 
 // ---------------------------------------------------------------------------
@@ -271,7 +271,7 @@ fn load_recursive(
         }
     };
 
-    // Parse using grammar_with_imports.
+    // Parse using grammar::parse().
     // SAFETY: We leak the source string to get 'static lifetime for the AST.
     // This is acceptable because `load_module_graph()` is only called from:
     //   1. The proc-macro derive path (`bbnf-derive`), where the process exits after compilation.
@@ -279,7 +279,7 @@ fn load_recursive(
     // The LSP does NOT use this function — it uses `self_cell::self_cell!` in
     // `lsp/src/state/parsing.rs` for safe self-referential ownership without leaking.
     let source_static: &'static str = Box::leak(source.clone().into_boxed_str());
-    let parser = BBNFGrammar::grammar_with_imports();
+    let parser = grammar::parse();
     let (result, _parser_state) = parser.parse_return_state(source_static);
 
     let parsed = match result {

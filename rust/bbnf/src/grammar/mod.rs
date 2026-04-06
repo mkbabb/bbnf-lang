@@ -47,86 +47,68 @@ fn production_rule<'a>() -> Parser<'a, Expression<'a>> {
     tokens::trim_comment(rule, comment.opt())
 }
 
-pub struct BBNFGrammar<'a> {
-    _marker: std::marker::PhantomData<&'a ()>,
-}
+/// Parse a BBNF grammar file with all directives and imports.
+///
+/// This is the single entry point for all grammar parsing.
+pub fn parse<'a>() -> Parser<'a, ParsedGrammar<'a>> {
+    let import = tokens::skip_comments()
+        .next(directives::import_directive().trim_whitespace())
+        .map(TopLevelItem::Import);
+    let recover = tokens::skip_comments()
+        .next(directives::recover_directive(expressions::rhs()).trim_whitespace())
+        .map(TopLevelItem::Recover);
+    let pretty = tokens::skip_comments()
+        .next(directives::pretty_directive().trim_whitespace())
+        .map(TopLevelItem::Pretty);
+    let ws_pat = tokens::skip_comments()
+        .next(directives::ws_directive().trim_whitespace())
+        .map(TopLevelItem::WsPattern);
+    let debug_dir = tokens::skip_comments()
+        .next(directives::debug_directive().trim_whitespace())
+        .map(TopLevelItem::Debug);
+    let token_dir = tokens::skip_comments()
+        .next(directives::token_directive().trim_whitespace())
+        .map(TopLevelItem::Token);
+    let rule = tokens::skip_comments()
+        .next(production_rule().trim_whitespace())
+        .map(TopLevelItem::Rule);
 
-impl<'a> BBNFGrammar<'a> {
-    /// Parse a grammar file with all directives and imports.
-    pub fn grammar_with_imports() -> Parser<'a, ParsedGrammar<'a>> {
-        let import = tokens::skip_comments()
-            .next(directives::import_directive().trim_whitespace())
-            .map(TopLevelItem::Import);
-        let recover = tokens::skip_comments()
-            .next(directives::recover_directive(expressions::rhs()).trim_whitespace())
-            .map(TopLevelItem::Recover);
-        let pretty = tokens::skip_comments()
-            .next(directives::pretty_directive().trim_whitespace())
-            .map(TopLevelItem::Pretty);
-        let ws_pat = tokens::skip_comments()
-            .next(directives::ws_directive().trim_whitespace())
-            .map(TopLevelItem::WsPattern);
-        let debug_dir = tokens::skip_comments()
-            .next(directives::debug_directive().trim_whitespace())
-            .map(TopLevelItem::Debug);
-        let token_dir = tokens::skip_comments()
-            .next(directives::token_directive().trim_whitespace())
-            .map(TopLevelItem::Token);
-        let rule = tokens::skip_comments()
-            .next(production_rule().trim_whitespace())
-            .map(TopLevelItem::Rule);
+    let item = import | recover | pretty | ws_pat | debug_dir | token_dir | rule;
 
-        let item = import | recover | pretty | ws_pat | debug_dir | token_dir | rule;
-
-        tokens::skip_comments().next(item.many(..)).map(|items| {
-            let mut imports = Vec::new();
-            let mut recovers = Vec::new();
-            let mut pretties = Vec::new();
-            let mut ws_pattern = None;
-            let mut debug_rules = Vec::new();
-            let mut token_rules = Vec::new();
-            let mut rules_vec = Vec::new();
-            for item in items {
-                match item {
-                    TopLevelItem::Import(imp) => imports.push(imp),
-                    TopLevelItem::Recover(rec) => recovers.push(rec),
-                    TopLevelItem::Pretty(p) => pretties.push(p),
-                    TopLevelItem::WsPattern(pat) => ws_pattern = Some(pat),
-                    TopLevelItem::Debug(name) => debug_rules.push(name),
-                    TopLevelItem::Token(name) => token_rules.push(name),
-                    TopLevelItem::Rule(r) => rules_vec.push(r),
-                }
+    tokens::skip_comments().next(item.many(..)).map(|items| {
+        let mut imports = Vec::new();
+        let mut recovers = Vec::new();
+        let mut pretties = Vec::new();
+        let mut ws_pattern = None;
+        let mut debug_rules = Vec::new();
+        let mut token_rules = Vec::new();
+        let mut rules_vec = Vec::new();
+        for item in items {
+            match item {
+                TopLevelItem::Import(imp) => imports.push(imp),
+                TopLevelItem::Recover(rec) => recovers.push(rec),
+                TopLevelItem::Pretty(p) => pretties.push(p),
+                TopLevelItem::WsPattern(pat) => ws_pattern = Some(pat),
+                TopLevelItem::Debug(name) => debug_rules.push(name),
+                TopLevelItem::Token(name) => token_rules.push(name),
+                TopLevelItem::Rule(r) => rules_vec.push(r),
             }
-            let ast: AST<'a> = rules_vec
-                .into_iter()
-                .map(|expr| match expr {
-                    Expression::ProductionRule(lhs, rhs) => (*lhs, *rhs),
-                    _ => unreachable!(),
-                })
-                .collect();
-            ParsedGrammar {
-                imports,
-                recovers,
-                pretties,
-                rules: ast,
-                ws_pattern,
-                debug_rules,
-                token_rules,
-            }
-        })
-    }
-
-    /// Parse a grammar file (rules only, no directives).
-    pub fn grammar() -> Parser<'a, AST<'a>> {
-        let rule = production_rule().trim_whitespace().many(..);
-        rule.trim_whitespace().map(|rules| {
-            rules
-                .into_iter()
-                .map(|expr| match expr {
-                    Expression::ProductionRule(lhs, rhs) => (*lhs, *rhs),
-                    _ => unreachable!(),
-                })
-                .collect()
-        })
-    }
+        }
+        let ast: AST<'a> = rules_vec
+            .into_iter()
+            .map(|expr| match expr {
+                Expression::ProductionRule(lhs, rhs) => (*lhs, *rhs),
+                _ => unreachable!(),
+            })
+            .collect();
+        ParsedGrammar {
+            imports,
+            recovers,
+            pretties,
+            rules: ast,
+            ws_pattern,
+            debug_rules,
+            token_rules,
+        }
+    })
 }

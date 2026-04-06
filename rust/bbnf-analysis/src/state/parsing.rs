@@ -1,4 +1,4 @@
-use bbnf::grammar::BBNFGrammar;
+use bbnf::grammar;
 use bbnf::types::AST;
 
 use self_cell::self_cell;
@@ -39,7 +39,7 @@ pub struct CachedParseResult<'a> {
 /// Both are extracted from a single parse call.
 pub fn parse_once(src: &str) -> (Option<CachedParseResult<'_>>, ParseDiagnostics) {
     let parse_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        let parser = BBNFGrammar::grammar_with_imports();
+        let parser = grammar::parse();
         parser.parse_return_state(src)
     }));
 

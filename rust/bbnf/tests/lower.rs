@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use bbnf::BBNFGrammar;
 use bbnf::analysis::{calculate_ast_deps, compute_first_sets, tarjan_scc};
 use bbnf::lower::{DirectiveSet, lower_to_ir};
 
@@ -8,9 +7,10 @@ use bbnf_ir::{GrammarIR, IrNode, MemoStrategy};
 
 fn lower_grammar(source: &str) -> GrammarIR {
     let source_static: &'static str = Box::leak(source.to_string().into_boxed_str());
-    let ast = BBNFGrammar::grammar()
+    let ast = bbnf::grammar::parse()
         .parse(source_static)
-        .expect("failed to parse grammar");
+        .expect("failed to parse grammar")
+        .rules;
 
     let deps = calculate_ast_deps(&ast);
     let scc_result = tarjan_scc(&deps);
@@ -224,9 +224,10 @@ fn lower_with_pretty_hints() {
     let ir = {
         let source = r#"items = "x" * ;"#;
         let source_static: &'static str = Box::leak(source.to_string().into_boxed_str());
-        let ast = BBNFGrammar::grammar()
+        let ast = bbnf::grammar::parse()
             .parse(source_static)
-            .expect("failed to parse grammar");
+            .expect("failed to parse grammar")
+            .rules;
 
         let deps = calculate_ast_deps(&ast);
         let scc_result = tarjan_scc(&deps);

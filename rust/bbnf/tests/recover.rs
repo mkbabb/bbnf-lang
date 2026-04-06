@@ -1,6 +1,6 @@
 //! Tests for `@recover` directive parsing and codegen integration.
 
-use bbnf::grammar::BBNFGrammar;
+use bbnf::grammar;
 use bbnf::types::Expression;
 
 #[test]
@@ -11,7 +11,7 @@ fn parse_recover_directive() {
 stmt = /[a-z]+/ , ";" ;
 program = stmt * ;
 "#;
-    let parser = BBNFGrammar::grammar_with_imports();
+    let parser = grammar::parse();
     let result = parser.parse(input);
     let pg = result.expect("should parse grammar with @recover");
 
@@ -30,7 +30,7 @@ fn parse_multiple_recover_directives() {
 decl = /[a-z]+/ , ":" , /[^;]+/ , ";" ;
 rule = /[a-z]+/ , "{" , decl * , "}" ;
 "#;
-    let parser = BBNFGrammar::grammar_with_imports();
+    let parser = grammar::parse();
     let result = parser.parse(input);
     let pg = result.expect("should parse grammar with multiple @recover");
 
@@ -49,7 +49,7 @@ fn parse_recover_mixed_with_imports() {
 stmt = /[a-z]+/ , ";" ;
 program = stmt * ;
 "#;
-    let parser = BBNFGrammar::grammar_with_imports();
+    let parser = grammar::parse();
     let result = parser.parse(input);
     let pg = result.expect("should parse grammar with @import and @recover");
 
@@ -65,7 +65,7 @@ fn parse_recover_nonexistent_target() {
 
 stmt = /[a-z]+/ , ";" ;
 "#;
-    let parser = BBNFGrammar::grammar_with_imports();
+    let parser = grammar::parse();
     let result = parser.parse(input);
     let pg = result.expect("should parse even with nonexistent target");
 
@@ -80,7 +80,7 @@ fn parse_recover_with_alternation_sync_expr() {
 
 atRule = /@[a-z]+/ , /[^;]+/ , ";" ;
 "#;
-    let parser = BBNFGrammar::grammar_with_imports();
+    let parser = grammar::parse();
     let result = parser.parse(input);
     let pg = result.expect("should parse recover with alternation sync");
 
@@ -99,7 +99,7 @@ fn parse_recover_without_terminator() {
 
 stmt = /[a-z]+/ , ";" ;
 "#;
-    let parser = BBNFGrammar::grammar_with_imports();
+    let parser = grammar::parse();
     let result = parser.parse(input);
     let pg = result.expect("should parse recover without terminator");
 

@@ -26,6 +26,4 @@ pub use transform::{
     merge_literals, prune_unreachable,
 };
 pub use types::project_types;
-pub use types::{
-    ProjectionCtx, ProjectionRules, TypeMap, TypeRecorder, project_node, project_node_in_vec,
-};
+pub use types::{TypeMap, try_flatten_pair};

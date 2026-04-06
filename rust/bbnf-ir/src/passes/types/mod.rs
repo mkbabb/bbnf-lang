@@ -1,15 +1,15 @@
 //! Pass: Type projection for IR rules.
 //!
-//! Uses a CSP (Constraint Satisfaction Problem) solver to infer types for all
-//! IR nodes. The solver assigns a `TypeDesc` to every node in both normal and
-//! vec-context, then exports the results into the `TypeMap` consumed by codegen.
+//! Uses the `csp-solver` crate to infer types for all IR nodes via AC-3
+//! propagation. The solver assigns a `TypeDesc` to every node in both normal
+//! and vec-context, then exports the results into the `TypeMap` consumed by
+//! codegen.
 //!
 //! Also collects sub-variants for heterogeneous alternations and stores them
 //! in `RuleMeta::sub_variants`.
 
 pub mod constraint;
 pub mod generate;
-pub mod solver;
 mod subvariants;
 mod utils;
 
@@ -17,8 +17,8 @@ use std::collections::HashMap;
 
 use crate::{GrammarIR, IrNode, RuleId, SubVariant, TypeDesc};
 
+use constraint::SeqChildKind;
 use generate::generate_constraints;
-use solver::solve;
 use subvariants::{collect_sub_variants_raw, validate_sub_variant_uniqueness_raw};
 
 // Re-export for codegen.
@@ -26,8 +26,8 @@ pub use utils::{TypeMap, try_flatten_pair};
 
 /// Project types for all rules and populate `ir.types`.
 ///
-/// Uses a CSP solver with AC-3 propagation to infer types for every IR node.
-/// The solver handles:
+/// Uses the `csp-solver` crate with AC-3 propagation to infer types for every
+/// IR node. The solver handles:
 /// 1. Span-method override: Ref nodes to rules with `_sp()` methods project as
 ///    Span in Seq context, with a safety guard that reverts the override when any
 ///    child is Span through complex expressions (Repeat, Skip, etc.).
@@ -41,112 +41,105 @@ pub use utils::{TypeMap, try_flatten_pair};
 /// 5. Sub-variant collection: Heterogeneous alternation branches get generated
 ///    variant names for codegen coercion.
 pub fn project_types(ir: &mut GrammarIR) {
-    // Phase 1: Generate constraints from the IR structure.
+    // Phase 1: Generate constraint system from the IR structure.
     let mut system = generate_constraints(ir);
 
-    // Phase 2: Solve the constraint system via AC-3 propagation.
-    solve(&mut system);
+    // Phase 2: Solve via AC-3 propagation.
+    let _ = system.csp.propagate();
 
     // Phase 3: Extract solved types into TypeMap.
     let mut type_map = TypeMap::default();
 
     // Build node_types and vec_elem_types from solved variables.
     for (&node_id, &var_id) in &system.node_vars {
-        if let Some(ty) = &system.vars[var_id as usize].solved {
+        if let Some(ty) = &system.csp.variables[var_id as usize].domain.solved {
             type_map.insert_node_type(node_id, ty.clone());
         }
     }
     for (&node_id, &var_id) in &system.vec_context_vars {
-        if let Some(ty) = &system.vars[var_id as usize].solved {
+        if let Some(ty) = &system.csp.variables[var_id as usize].domain.solved {
             type_map.insert_vec_elem_type(node_id, ty.clone());
         }
     }
 
-    // Build seq metadata from solved constraint system.
-    // For each Seq, we need to:
-    // 1. Record effective child types (what the Seq constraint used)
-    // 2. Record the Seq result type
-    // 3. Record preserve_spans
-    for constraint in &system.constraints {
-        if let constraint::TypeConstraint::Seq {
+    // Build seq metadata from the tracked Seq constraints.
+    for seq_meta in &system.seq_constraints {
+        let generate::SeqConstraintMeta {
             var,
             children,
             preserve_spans,
             sp_override_originals,
             collapse_simple_spans,
             child_node_kinds,
-        } = constraint
-        {
-            // Resolve child types from solver.
-            let child_types: Vec<TypeDesc> = children
+        } = seq_meta;
+
+        // Resolve child types from solver.
+        let child_types: Vec<TypeDesc> = children
+            .iter()
+            .map(|&c| {
+                system.csp.variables[c as usize]
+                    .domain
+                    .solved
+                    .clone()
+                    .unwrap_or(TypeDesc::Span)
+            })
+            .collect();
+
+        // Replicate the span-method safety guard logic to determine effective types.
+        let all_span = child_types.iter().all(|t| *t == TypeDesc::Span);
+        let all_simple_span = all_span
+            && *collapse_simple_spans
+            && !preserve_spans
+            && child_node_kinds
                 .iter()
-                .map(|&c| {
-                    system.vars[c as usize]
-                        .solved
-                        .clone()
-                        .unwrap_or(TypeDesc::Span)
+                .zip(child_types.iter())
+                .all(|(kind, ty)| match kind {
+                    SeqChildKind::Optional => false,
+                    SeqChildKind::SpOverrideRef => true,
+                    SeqChildKind::Other => *ty == TypeDesc::Span,
+                });
+
+        let effective_types = if all_span && !all_simple_span {
+            children
+                .iter()
+                .zip(sp_override_originals.iter())
+                .map(|(child_var, orig)| {
+                    if let Some(orig_var) = orig {
+                        system.csp.variables[*orig_var as usize]
+                            .domain
+                            .solved
+                            .clone()
+                            .unwrap_or(TypeDesc::Span)
+                    } else {
+                        system.csp.variables[*child_var as usize]
+                            .domain
+                            .solved
+                            .clone()
+                            .unwrap_or(TypeDesc::Span)
+                    }
                 })
-                .collect();
+                .collect::<Vec<_>>()
+        } else {
+            child_types
+        };
 
-            // Replicate the span-method safety guard logic from the solver
-            // to determine effective types for the TypeMap.
-            let all_span = child_types.iter().all(|t| *t == TypeDesc::Span);
-            let all_simple_span = all_span
-                && *collapse_simple_spans
-                && !preserve_spans
-                && child_node_kinds
-                    .iter()
-                    .zip(child_types.iter())
-                    .all(|(kind, ty)| match kind {
-                        constraint::SeqChildKind::Optional => false,
-                        constraint::SeqChildKind::SpOverrideRef => true,
-                        constraint::SeqChildKind::Other => *ty == TypeDesc::Span,
-                    });
-
-            let effective_types = if all_span && !all_simple_span {
-                // Revert: use original types.
-                children
-                    .iter()
-                    .zip(sp_override_originals.iter())
-                    .map(|(child_var, orig)| {
-                        if let Some(orig_var) = orig {
-                            system.vars[*orig_var as usize]
-                                .solved
-                                .clone()
-                                .unwrap_or(TypeDesc::Span)
-                        } else {
-                            system.vars[*child_var as usize]
-                                .solved
-                                .clone()
-                                .unwrap_or(TypeDesc::Span)
-                        }
-                    })
-                    .collect::<Vec<_>>()
-            } else {
-                child_types
-            };
-
-            // Re-record per-node types for the children in this Seq.
-            // When span-method override is active (or reverted), the per-node type
-            // must match what the Seq actually uses.
-            for (child_var, eff_ty) in children.iter().zip(effective_types.iter()) {
-                let node_id = system.vars[*child_var as usize].node_id;
-                type_map.insert_node_type(node_id, eff_ty.clone());
+        // Re-record per-node types for the children in this Seq.
+        for (child_var, eff_ty) in children.iter().zip(effective_types.iter()) {
+            let node_id = find_node_id_for_var(&system, *child_var);
+            if let Some(nid) = node_id {
+                type_map.insert_node_type(nid, eff_ty.clone());
             }
+        }
 
-            let preserve = *preserve_spans
-                && effective_types.iter().all(|t| *t == TypeDesc::Span);
+        let preserve = *preserve_spans
+            && effective_types.iter().all(|t| *t == TypeDesc::Span);
 
-            // Find the Seq's children slice pointer from the seq_metadata.
-            // The seq_metadata was recorded during constraint generation with
-            // the children pointer as key.
-            if let Some(seq_ptr) = find_seq_ptr_for_constraint(&system, children) {
-                type_map.insert_seq_child_types(seq_ptr, effective_types);
-                type_map.insert_seq_preserve_spans(seq_ptr, preserve);
+        if let Some(seq_ptr) = find_seq_ptr_for_constraint(&system, children) {
+            type_map.insert_seq_child_types(seq_ptr, effective_types);
+            type_map.insert_seq_preserve_spans(seq_ptr, preserve);
 
-                if let Some(result_ty) = &system.vars[*var as usize].solved {
-                    type_map.insert_seq_result_type(seq_ptr, result_ty.clone());
-                }
+            if let Some(result_ty) = &system.csp.variables[*var as usize].domain.solved {
+                type_map.insert_seq_result_type(seq_ptr, result_ty.clone());
             }
         }
     }
@@ -154,7 +147,7 @@ pub fn project_types(ir: &mut GrammarIR) {
     // Phase 4: Build ir.types from rule variables.
     let mut types_map: HashMap<RuleId, TypeDesc> = HashMap::new();
     for (&rule_id, &var_id) in &system.rule_vars {
-        if let Some(ty) = &system.vars[var_id as usize].solved {
+        if let Some(ty) = &system.csp.variables[var_id as usize].domain.solved {
             types_map.insert(rule_id, ty.clone());
         }
     }
@@ -213,7 +206,7 @@ pub fn project_types(ir: &mut GrammarIR) {
         }
     }
 
-    // Phase 6: Correction pass — align Repeat vec_elem_types with ir.types.
+    // Phase 6: Correction pass -- align Repeat vec_elem_types with ir.types.
     for rule in &ir.rules {
         let rule_td = types_map.get(&rule.id);
         if let Some(td) = rule_td {
@@ -297,11 +290,31 @@ pub fn project_types(ir: &mut GrammarIR) {
     ir.types.sort_by_key(|(id, _)| *id);
 }
 
+/// Find the node_id associated with a variable ID, by scanning the node_vars map.
+fn find_node_id_for_var(
+    system: &generate::ConstraintSystem,
+    var_id: csp_solver::constraint::VarId,
+) -> Option<usize> {
+    // Check if any node maps directly to this var.
+    for (&node_id, &v) in &system.node_vars {
+        if v == var_id {
+            return Some(node_id);
+        }
+    }
+    // Also check vec_context_vars.
+    for (&node_id, &v) in &system.vec_context_vars {
+        if v == var_id {
+            return Some(node_id);
+        }
+    }
+    None
+}
+
 /// Find the Seq's children slice pointer from the seq_metadata,
 /// matching by the child variable IDs stored during constraint generation.
 fn find_seq_ptr_for_constraint(
     system: &generate::ConstraintSystem,
-    child_vars: &[constraint::TypeVarId],
+    child_vars: &[csp_solver::constraint::VarId],
 ) -> Option<usize> {
     for (&ptr, meta) in &system.seq_metadata {
         if meta.child_vars == child_vars {
@@ -312,10 +325,6 @@ fn find_seq_ptr_for_constraint(
 }
 
 /// Correct Repeat vec_elem_types to match the Vec inner from ir.types.
-///
-/// When a rule's type is `Vec(T)` (direct or via try_flatten_pair), the Repeat
-/// inner's vec_elem_type should be `T`. The initial projection may have recorded
-/// a different type (e.g., Tuple) due to Seq compression/flattening differences.
 fn correct_repeat_elem_types(node: &IrNode, rule_type: &TypeDesc, map: &mut utils::TypeMap) {
     fn extract_all_vec_inners<'a>(td: &'a TypeDesc, out: &mut Vec<&'a TypeDesc>) {
         match td {

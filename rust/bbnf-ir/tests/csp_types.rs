@@ -1,7 +1,6 @@
 //! Verify CSP type solver produces correct type inference.
 
 use bbnf_ir::passes::types::generate::generate_constraints;
-use bbnf_ir::passes::types::solver::solve;
 use bbnf_ir::*;
 
 fn make_ir(rules: Vec<IrRule>, fns: Vec<FnDescriptor>) -> GrammarIR {
@@ -38,9 +37,10 @@ fn rule(id: RuleId, body: IrNode) -> IrRule {
 
 fn solve_rule_type(ir: &GrammarIR, rule_id: RuleId) -> TypeDesc {
     let mut system = generate_constraints(ir);
-    solve(&mut system);
+    let _ = system.csp.propagate();
     let var = system.rule_vars[&rule_id];
-    system.vars[var as usize]
+    system.csp.variables[var as usize]
+        .domain
         .solved
         .clone()
         .expect("Rule type should be solved")

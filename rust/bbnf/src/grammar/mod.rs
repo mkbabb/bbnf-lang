@@ -25,7 +25,7 @@ enum TopLevelItem<'a> {
     WsPattern(Cow<'a, str>),
     Debug(Cow<'a, str>),
     Token(Cow<'a, str>),
-    Host(Cow<'a, str>),
+    Host(HostFnDecl<'a>),
     Rule(Expression<'a>),
 }
 

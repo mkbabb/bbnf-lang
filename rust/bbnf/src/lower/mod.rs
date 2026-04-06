@@ -37,7 +37,8 @@ pub struct DirectiveSet<'a> {
     pub token_rules: Option<&'a HashSet<String>>,
     pub debug_rules: Option<&'a HashSet<String>>,
     pub debug_all: bool,
-    pub host_fns: Option<&'a HashSet<String>>,
+    /// Host function declarations: name → optional abstract return type.
+    pub host_fns: Option<&'a HashMap<String, Option<String>>>,
 }
 
 impl<'a> DirectiveSet<'a> {
@@ -88,7 +89,7 @@ pub(crate) struct LowerCtx<'a> {
     pub(crate) token_rules: Option<&'a HashSet<String>>,
     pub(crate) debug_rules: Option<&'a HashSet<String>>,
     pub(crate) debug_all: bool,
-    pub(crate) host_fns: Option<&'a HashSet<String>>,
+    pub(crate) host_fns: Option<&'a HashMap<String, Option<String>>>,
 
     /// The current LHS expression being lowered (for branch_firsts lookup).
     pub(crate) current_lhs: Option<&'a Expression<'a>>,

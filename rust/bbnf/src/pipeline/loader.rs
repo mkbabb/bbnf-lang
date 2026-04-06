@@ -16,7 +16,7 @@ pub(crate) struct DirectiveMaps<'a> {
     token_set: HashSet<String>,
     debug_set: HashSet<String>,
     debug_all: bool,
-    host_set: HashSet<String>,
+    host_map: HashMap<String, Option<String>>,
 }
 
 impl<'a> DirectiveMaps<'a> {
@@ -50,8 +50,11 @@ impl<'a> DirectiveMaps<'a> {
         for name in token_rules {
             maps.token_set.insert(name.into_owned());
         }
-        for name in host_fns {
-            maps.host_set.insert(name.into_owned());
+        for decl in host_fns {
+            maps.host_map.insert(
+                decl.name.into_owned(),
+                decl.return_type.map(|t| t.into_owned()),
+            );
         }
         for name in debug_rules {
             if name.as_ref() == "*" {
@@ -72,7 +75,7 @@ impl<'a> DirectiveMaps<'a> {
             token_rules: (!self.token_set.is_empty()).then_some(&self.token_set),
             debug_rules: (!self.debug_set.is_empty()).then_some(&self.debug_set),
             debug_all: self.debug_all,
-            host_fns: (!self.host_set.is_empty()).then_some(&self.host_set),
+            host_fns: (!self.host_map.is_empty()).then_some(&self.host_map),
         }
     }
 }
@@ -155,8 +158,11 @@ fn merge_module(
         directives.token_set.insert(name.to_string());
     }
 
-    for name in &module.grammar.host_fns {
-        directives.host_set.insert(name.to_string());
+    for decl in &module.grammar.host_fns {
+        directives.host_map.insert(
+            decl.name.to_string(),
+            decl.return_type.as_ref().map(|t| t.to_string()),
+        );
     }
 
     for name in &module.grammar.debug_rules {

@@ -317,6 +317,27 @@ fn lower_map_arrow<'a>(arrow: &MapArrow<'a>, ctx: &mut LowerCtx<'a>) -> FnId {
         }
     });
 
+    // @host return type propagation: if no explicit annotation and the expression
+    // is a bare identifier or function call matching a typed @host declaration,
+    // inherit the @host's return type. The @host declaration is the single source
+    // of truth for the function's abstract return type.
+    let return_type = return_type.or_else(|| {
+        let func_name = match &arrow.expr {
+            ValueExpr::Ident(tok) => Some(tok.value.as_ref()),
+            ValueExpr::FnCall(tok, _) => Some(tok.value.as_ref()),
+            _ => None,
+        };
+        func_name.and_then(|name| {
+            ctx.host_fns
+                .and_then(|hosts| hosts.get(name))
+                .and_then(|opt_type| opt_type.as_ref())
+                .map(|type_name| {
+                    let sid = ctx.strings.intern(type_name);
+                    TypeDesc::Named(sid)
+                })
+        })
+    });
+
     let map_expr = lower_value_expr(&arrow.expr, ctx);
 
     ctx.fns.push(FnDescriptor::Expr {

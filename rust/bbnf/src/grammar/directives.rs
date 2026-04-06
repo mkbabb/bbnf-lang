@@ -127,13 +127,26 @@ fn split_hint<'a>() -> Parser<'a, Span<'a>> {
         .then_span(string_span(")"))
 }
 
-/// Parse a `@host funcName ;` directive — declare an external host function.
-pub(super) fn host_directive<'a>() -> Parser<'a, Cow<'a, str>> {
+/// Parse a `@host funcName ;` or `@host funcName : ReturnType ;` directive.
+///
+/// Declares an external host function with an optional abstract return type.
+/// The return type is backend-agnostic — each backend resolves the name to
+/// its native type representation.
+pub(super) fn host_directive<'a>() -> Parser<'a, HostFnDecl<'a>> {
     string("@host")
         .trim_whitespace()
         .next(tokens::identifier().trim_whitespace())
+        .then(
+            string(":")
+                .trim_whitespace()
+                .next(tokens::identifier().trim_whitespace())
+                .opt(),
+        )
         .skip(any_span(&[";", "."]).opt().trim_whitespace())
-        .map(|name_span| Cow::Borrowed(name_span.as_str()))
+        .map(|(name_span, return_type_span)| HostFnDecl {
+            name: Cow::Borrowed(name_span.as_str()),
+            return_type: return_type_span.map(|s| Cow::Borrowed(s.as_str())),
+        })
 }
 
 /// Parse a `@pretty` directive: `@pretty ruleName hint1 hint2 ... ;`

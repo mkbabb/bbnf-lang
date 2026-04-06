@@ -27,17 +27,16 @@ use quote::quote;
 
 /// Try to compile a regex pattern to inline DFA code.
 ///
-/// Returns `None` if the pattern uses unsupported features (backreferences,
-/// lazy quantifiers) or the DFA exceeds the state limit (exponential blowup).
+/// Returns `None` if the pattern uses unsupported features (backreferences)
+/// or the DFA exceeds the state limit (exponential blowup).
+/// Lazy quantifiers are supported via shortest-match (first-accept) semantics.
 pub fn try_emit_dfa_inline(pattern: &str) -> Option<TokenStream> {
     let hir = parse_that::regex::parse_with(pattern, &parse_that::regex::ParseOptions::byte_mode())
         .ok()?;
-    if super::hir::contains_lazy_quantifier(&hir) {
-        return None;
-    }
+    let lazy = super::hir::contains_lazy_quantifier(&hir);
 
     let dfa = Dfa::compile(pattern)?;
-    Some(emit_dfa(&dfa))
+    Some(emit_dfa(&dfa, lazy))
 }
 
 /// Emit inline code for a compiled DFA.
@@ -47,20 +46,96 @@ pub fn try_emit_dfa_inline(pattern: &str) -> Option<TokenStream> {
 ///   Subsumes the old Tier A -- a match-chain is a degenerate decision tree.
 /// - 13-64 states: Static transition table + driver loop (Tier B).
 /// - 65+ states: Fallback to Tier B (PackedDfa runtime integration is future).
-fn emit_dfa(dfa: &Dfa) -> TokenStream {
+fn emit_dfa(dfa: &Dfa, lazy: bool) -> TokenStream {
     let n = dfa.state_count();
     if n == 0 {
         return quote! { None };
     }
 
-    // Unified decision-tree tier: handles 1-12 states.
-    // CostModel.decision_tree_max_states = 12 (default).
+    if lazy {
+        // Shortest-match mode: emit first-accept return logic.
+        return emit_dfa_shortest(dfa);
+    }
+
+    // Longest-match (greedy) mode.
     if n <= 12 {
         emit_tier_a(dfa)
     } else if n <= 64 {
         emit_tier_b(dfa)
     } else {
         emit_tier_b(dfa)
+    }
+}
+
+/// Emit a DFA with shortest-match (first-accept) semantics.
+///
+/// Returns on the first accept state reached, not the last. Used for
+/// patterns containing lazy quantifiers (`*?`, `+?`).
+fn emit_dfa_shortest(dfa: &Dfa) -> TokenStream {
+    let num_cls = dfa.num_classes as usize;
+    let byte_classes: Vec<proc_macro2::Literal> = dfa
+        .byte_classes
+        .iter()
+        .map(|&c| proc_macro2::Literal::u8_unsuffixed(c))
+        .collect();
+
+    let num_states = dfa.state_count();
+    let num_cls_lit = proc_macro2::Literal::usize_unsuffixed(num_cls);
+
+    // Build flat transition table as literals.
+    let flat: Vec<proc_macro2::Literal> = dfa
+        .flat_transitions
+        .iter()
+        .map(|&s| proc_macro2::Literal::u32_unsuffixed(s))
+        .collect();
+
+    // Accept-state set.
+    let mut accept_arms = Vec::new();
+    for (i, s) in dfa.states.iter().enumerate() {
+        if s.is_accept {
+            let i_lit = proc_macro2::Literal::u32_unsuffixed(i as u32);
+            accept_arms.push(quote! { #i_lit });
+        }
+    }
+
+    let start_is_accept = dfa.states[0].is_accept;
+    let start_check = if start_is_accept {
+        quote! {
+            // Start state is accepting — empty match is shortest.
+            return Some(::parse_that::Span::new(__start, __start, state.src));
+        }
+    } else {
+        quote! {}
+    };
+
+    // Table-driven state machine with first-accept return.
+    let dead = proc_macro2::Literal::u32_unsuffixed(DEAD);
+
+    quote! {
+        {
+            static __BYTE_CLASSES: [u8; 256] = [#(#byte_classes),*];
+            static __TRANSITIONS: [u32; #num_states * #num_cls_lit] = [#(#flat),*];
+            let __start = state.offset;
+            #start_check
+            let __end = state.src_bytes.len();
+            let mut __s: u32 = 0;
+            let mut __pos = __start;
+            while __pos < __end {
+                let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                let __cls = __BYTE_CLASSES[__b as usize] as usize;
+                let __next = __TRANSITIONS[__s as usize * #num_cls_lit + __cls];
+                if __next == #dead {
+                    break;
+                }
+                __s = __next;
+                __pos += 1;
+                if matches!(__s, #(#accept_arms)|*) {
+                    state.offset = __pos;
+                    return Some(::parse_that::Span::new(__start, __pos, state.src));
+                }
+            }
+            None
+        }
     }
 }
 
@@ -373,12 +448,8 @@ fn emit_general_state_machine(
 /// (same transitions, same accept states) will hash to the same value.
 /// Used for cross-rule deduplication in MonoCtx.
 pub fn canonical_dfa_hash(pattern: &str) -> Option<u64> {
-    let hir = parse_that::regex::parse_with(pattern, &parse_that::regex::ParseOptions::byte_mode())
+    let _hir = parse_that::regex::parse_with(pattern, &parse_that::regex::ParseOptions::byte_mode())
         .ok()?;
-    if super::hir::contains_lazy_quantifier(&hir) {
-        return None;
-    }
-
     let dfa = Dfa::compile(pattern)?;
     Some(helpers::hash_dfa_structure(&dfa))
 }

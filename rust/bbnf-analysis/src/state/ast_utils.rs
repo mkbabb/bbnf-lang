@@ -106,6 +106,18 @@ pub fn collect_references(expr: &Expression<'_>, refs: &mut Vec<ReferenceInfo>) 
         Expression::DebugExpression((expr_tok, _)) => {
             collect_references(expr_tok.inner(), refs);
         }
+        Expression::Closure(_params, body) => {
+            collect_references(body.inner(), refs);
+        }
+        Expression::GrammarCall(name_tok, args) => {
+            refs.push(ReferenceInfo {
+                name: name_tok.value.to_string(),
+                span: (name_tok.span.start, name_tok.span.end),
+            });
+            for arg in args {
+                collect_references(arg, refs);
+            }
+        }
         _ => {}
     }
 }
@@ -163,6 +175,18 @@ pub fn collect_semantic_tokens(expr: &Expression<'_>, tokens: &mut Vec<SemanticT
         Expression::DebugExpression((expr_tok, _)) => {
             collect_semantic_tokens(expr_tok.inner(), tokens);
         }
+        Expression::Closure(_params, body) => {
+            collect_semantic_tokens(body.inner(), tokens);
+        }
+        Expression::GrammarCall(name_tok, args) => {
+            tokens.push(SemanticTokenInfo {
+                span: (name_tok.span.start, name_tok.span.end),
+                token_type: token_types::RULE_REFERENCE,
+            });
+            for arg in args {
+                collect_semantic_tokens(arg, tokens);
+            }
+        }
         _ => {}
     }
 }
@@ -198,6 +222,14 @@ pub fn compute_expression_end(expr: &Expression<'_>) -> Option<usize> {
         Expression::ProductionRule(_, rhs) => compute_expression_end(rhs),
         Expression::MappedExpression(_, arrow) => Some(arrow.span.end),
         Expression::DebugExpression((expr_tok, _)) => compute_expression_end(expr_tok.inner()),
+        Expression::Closure(_params, body) => Some(body.span.end),
+        Expression::GrammarCall(name_tok, args) => {
+            if let Some(last) = args.last() {
+                compute_expression_end(last)
+            } else {
+                Some(name_tok.span.end)
+            }
+        }
     }
 }
 
@@ -271,6 +303,14 @@ pub fn format_expression_short(expr: &Expression<'_>) -> String {
             format!("{} -> {}", format_expression_short(expr_tok.inner()), format_value_expr_short(&arrow.expr))
         }
         Expression::DebugExpression((expr_tok, _)) => format_expression_short(expr_tok.inner()),
+        Expression::Closure(params, body) => {
+            let params_str: Vec<&str> = params.iter().map(|p| p.value.as_ref()).collect();
+            format!("|{}| {}", params_str.join(", "), format_expression_short(body.inner()))
+        }
+        Expression::GrammarCall(name_tok, args) => {
+            let args_str: Vec<String> = args.iter().map(|a| format_expression_short(a)).collect();
+            format!("{}({})", name_tok.value, args_str.join(", "))
+        }
     }
 }
 
@@ -296,6 +336,10 @@ pub fn format_value_expr_short(expr: &bbnf::ValueExpr<'_>) -> String {
         }
         ValueExpr::Paren(inner) => {
             format!("({})", format_value_expr_short(inner))
+        }
+        ValueExpr::Closure(params, body) => {
+            let params_str: Vec<&str> = params.iter().map(|p| p.value.as_ref()).collect();
+            format!("|{}| {}", params_str.join(", "), format_value_expr_short(body))
         }
     }
 }

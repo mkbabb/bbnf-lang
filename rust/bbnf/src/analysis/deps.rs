@@ -58,6 +58,20 @@ pub fn traverse_ast<'a>(ast: &'a AST, visitor: &mut Visitor<'a>) {
             Expression::Rule(rhs, _) => {
                 visit(nonterminal, rhs, visitor);
             }
+            Expression::MappedExpression(inner, _)
+            | Expression::DebugExpression((inner, _)) => {
+                let inner_expr = inner.inner();
+                visit(nonterminal, inner_expr, visitor);
+            }
+            Expression::Closure(_params, body) => {
+                let body_expr = body.inner();
+                visit(nonterminal, body_expr, visitor);
+            }
+            Expression::GrammarCall(_, args) => {
+                for arg in args {
+                    visit(nonterminal, arg, visitor);
+                }
+            }
             _ => {}
         }
     }

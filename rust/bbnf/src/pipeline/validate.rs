@@ -167,6 +167,32 @@ fn validate_expr(
                 validate_unknown_nonterminals,
             )
         }
+        Expression::Closure(_params, body) => {
+            validate_expr(
+                rule_name,
+                &body.value,
+                defined_rules,
+                validate_unknown_nonterminals,
+            )
+        }
+        Expression::GrammarCall(name_tok, args) => {
+            // Validate the called name exists (treat like a nonterminal reference).
+            if validate_unknown_nonterminals && !defined_rules.contains(name_tok.value.as_ref()) {
+                return Err(CompileError::UnknownNonterminal {
+                    rule: rule_name.to_string(),
+                    name: name_tok.value.to_string(),
+                });
+            }
+            // Validate each argument expression.
+            args.iter().try_for_each(|arg| {
+                validate_expr(
+                    rule_name,
+                    arg,
+                    defined_rules,
+                    validate_unknown_nonterminals,
+                )
+            })
+        }
         Expression::ProductionRule(_, _) => Err(CompileError::InvalidProductionRule {
             rule: rule_name.to_string(),
         }),

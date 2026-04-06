@@ -556,6 +556,15 @@ fn collect_nonterminal_refs(expr: &crate::types::Expression) -> Vec<String> {
         Expression::Rule(lhs, _) => {
             refs.extend(collect_nonterminal_refs(lhs));
         }
+        Expression::Closure(_params, body) => {
+            refs.extend(collect_nonterminal_refs(&body.value));
+        }
+        Expression::GrammarCall(name_tok, args) => {
+            refs.push(name_tok.value.to_string());
+            for arg in args {
+                refs.extend(collect_nonterminal_refs(arg));
+            }
+        }
         _ => {} // Literal, Regex, Epsilon
     }
     refs

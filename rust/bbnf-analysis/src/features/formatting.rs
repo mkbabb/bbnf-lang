@@ -260,5 +260,20 @@ fn format_expression(expr: &Expression<'_>, indent_level: usize) -> String {
                 label,
             )
         }
+        Expression::Closure(params, body) => {
+            let params_str: Vec<&str> = params.iter().map(|p| p.value.as_ref()).collect();
+            format!(
+                "|{}| {}",
+                params_str.join(", "),
+                format_expression(get_inner_expression(body), indent_level),
+            )
+        }
+        Expression::GrammarCall(name_tok, args) => {
+            let args_str: Vec<String> = args
+                .iter()
+                .map(|a| format_expression(a, indent_level))
+                .collect();
+            format!("{}({})", name_tok.value, args_str.join(", "))
+        }
     }
 }

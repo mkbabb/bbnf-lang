@@ -134,6 +134,20 @@ fn collect_spans(expr: &Expression<'_>, offset: usize, spans: &mut Vec<(usize, u
         Expression::DebugExpression((expr_tok, _)) => {
             collect_spans(get_inner_expression(expr_tok), offset, spans);
         }
+        Expression::Closure(_params, body) => {
+            if offset >= body.span.start && offset <= body.span.end {
+                spans.push((body.span.start, body.span.end));
+            }
+            collect_spans(get_inner_expression(body), offset, spans);
+        }
+        Expression::GrammarCall(name_tok, args) => {
+            if offset >= name_tok.span.start && offset <= name_tok.span.end {
+                spans.push((name_tok.span.start, name_tok.span.end));
+            }
+            for arg in args {
+                collect_spans(arg, offset, spans);
+            }
+        }
         _ => {}
     }
 }

@@ -1,6 +1,10 @@
 //! Grammar expression hierarchy: term → factor → mapped_factor → ... → alternation.
+//!
+//! Extended with closures (`|params| body`) and grammar calls (`name(args)`).
 
-use parse_that::{Parser, ParserSpan, ParserState, Span, any_span, lazy, string_span};
+use std::borrow::Cow;
+
+use parse_that::{Parser, ParserSpan, ParserState, Span, any_span, lazy, string, string_span};
 
 use crate::types::*;
 
@@ -107,6 +111,32 @@ fn standalone_optional_whitespace<'a>() -> Parser<'a, Expression<'a>> {
     })
 }
 
+/// Parse a nonterminal or grammar call: `ident` or `ident(arg1, arg2)`.
+fn nonterminal_or_call<'a>() -> Parser<'a, Expression<'a>> {
+    tokens::identifier()
+        .then(
+            lazy(|| {
+                rhs()
+                    .trim_whitespace()
+                    .sep_by(string(",").trim_whitespace(), 1..)
+                    .trim_whitespace()
+                    .wrap(string_span("("), string_span(")"))
+            })
+            .opt(),
+        )
+        .map(|(ident_span, args_opt)| {
+            let name = ident_span.as_str();
+            if let Some(args) = args_opt {
+                Expression::GrammarCall(
+                    Token::new(Cow::Borrowed(name), ident_span),
+                    args,
+                )
+            } else {
+                Expression::Nonterminal(Token::new(Cow::Borrowed(name), ident_span))
+            }
+        })
+}
+
 fn term<'a>() -> Parser<'a, Expression<'a>> {
     tokens::epsilon()
         | span_capture()
@@ -114,7 +144,7 @@ fn term<'a>() -> Parser<'a, Expression<'a>> {
         | group()
         | optional_group()
         | many_group()
-        | tokens::nonterminal()
+        | nonterminal_or_call()
         | tokens::literal()
         | tokens::regex()
 }
@@ -201,10 +231,114 @@ pub(super) fn alternation<'a>() -> Parser<'a, Expression<'a>> {
         })
 }
 
+/// Parse a grammar closure: `|params| body`.
+///
+/// Uses lookahead to disambiguate from alternation `|`:
+/// if `|` is followed by identifier(s) separated by `,` then `|`, it's a closure.
+fn grammar_closure<'a>() -> Parser<'a, Expression<'a>> {
+    lazy(|| {
+        Parser::new(move |state: &mut ParserState<'a>| {
+            let bytes = state.src_bytes;
+            let start = state.offset;
+
+            if start >= state.end || bytes[start] != b'|' {
+                return None;
+            }
+
+            let saved = state.offset;
+            state.offset = start + 1;
+
+            // Skip whitespace.
+            while state.offset < state.end && bytes[state.offset].is_ascii_whitespace() {
+                state.offset += 1;
+            }
+
+            // First param: simple identifier.
+            let first_start = state.offset;
+            if state.offset >= state.end
+                || !(bytes[state.offset].is_ascii_alphabetic() || bytes[state.offset] == b'_')
+            {
+                state.offset = saved;
+                return None;
+            }
+            while state.offset < state.end
+                && (bytes[state.offset].is_ascii_alphanumeric() || bytes[state.offset] == b'_')
+            {
+                state.offset += 1;
+            }
+            let first_end = state.offset;
+
+            while state.offset < state.end && bytes[state.offset].is_ascii_whitespace() {
+                state.offset += 1;
+            }
+
+            // Must see `,` or `|` to confirm closure.
+            if state.offset >= state.end
+                || (bytes[state.offset] != b',' && bytes[state.offset] != b'|')
+            {
+                state.offset = saved;
+                return None;
+            }
+
+            let mut params = vec![Token::new(
+                Cow::Borrowed(&state.src[first_start..first_end]),
+                Span::new(first_start, first_end, state.src),
+            )];
+
+            while state.offset < state.end && bytes[state.offset] == b',' {
+                state.offset += 1;
+                while state.offset < state.end && bytes[state.offset].is_ascii_whitespace() {
+                    state.offset += 1;
+                }
+                let p_start = state.offset;
+                if state.offset >= state.end
+                    || !(bytes[state.offset].is_ascii_alphabetic()
+                        || bytes[state.offset] == b'_')
+                {
+                    state.offset = saved;
+                    return None;
+                }
+                while state.offset < state.end
+                    && (bytes[state.offset].is_ascii_alphanumeric()
+                        || bytes[state.offset] == b'_')
+                {
+                    state.offset += 1;
+                }
+                let p_end = state.offset;
+                params.push(Token::new(
+                    Cow::Borrowed(&state.src[p_start..p_end]),
+                    Span::new(p_start, p_end, state.src),
+                ));
+                while state.offset < state.end && bytes[state.offset].is_ascii_whitespace() {
+                    state.offset += 1;
+                }
+            }
+
+            // Closing `|`.
+            if state.offset >= state.end || bytes[state.offset] != b'|' {
+                state.offset = saved;
+                return None;
+            }
+            state.offset += 1;
+
+            // Params parsed. Now parse body as rhs().
+            let body_parser = rhs();
+            let body = body_parser.call(state)?;
+            let body_token =
+                Token::new(body, Span::new(start, state.offset, state.src));
+            Some(Expression::Closure(params, Box::new(body_token)))
+        })
+    })
+}
+
 pub(super) fn lhs<'a>() -> Parser<'a, Expression<'a>> {
     tokens::nonterminal()
 }
 
+/// Top-level expression: closure | alternation.
+///
+/// Per the spec: `expr = closure | map_expr | grammar_expr ;`
+/// Closures take priority over alternation (which subsumes map_expr via mapped_factor).
 pub(super) fn rhs<'a>() -> Parser<'a, Expression<'a>> {
-    alternation()
+    grammar_closure() | alternation()
 }

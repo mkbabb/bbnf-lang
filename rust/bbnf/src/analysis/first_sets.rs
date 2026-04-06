@@ -273,6 +273,22 @@ pub(crate) fn compute_expr_first<'a>(
             compute_expr_first(&inner.value, first_sets, nullable_set, name_to_key, out)
         }
 
+        Expression::Closure(_, body) => {
+            compute_expr_first(&body.value, first_sets, nullable_set, name_to_key, out)
+        }
+
+        Expression::GrammarCall(name_tok, _) => {
+            let name: &str = &name_tok.value;
+            if let Some(&key) = name_to_key.get(name) {
+                if let Some(cs) = first_sets.get(key) {
+                    out.union(cs);
+                }
+                nullable_set.contains(key)
+            } else {
+                false
+            }
+        }
+
         Expression::ProductionRule(_, _) => false,
     }
 }

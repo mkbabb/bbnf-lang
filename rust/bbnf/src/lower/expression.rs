@@ -144,6 +144,10 @@ fn lower_value_expr<'a>(expr: &ValueExpr<'a>, ctx: &mut LowerCtx<'a>) -> MapExpr
             inner: Box::new(lower_value_expr(inner, ctx)),
         },
         ValueExpr::Paren(inner) => lower_value_expr(inner, ctx),
+        ValueExpr::Closure(_params, body) => {
+            // Value closure: |params| body — lower body; param binding is handled upstream.
+            lower_value_expr(body, ctx)
+        }
     }
 }
 
@@ -433,6 +437,24 @@ pub(crate) fn lower_expression<'a>(expr: &'a Expression<'a>, ctx: &mut LowerCtx<
                 }
             } else {
                 inner_node
+            }
+        }
+
+        Expression::Closure(_params, body) => {
+            // Grammar closure: lower the body expression directly.
+            lower_expression(&body.value, ctx)
+        }
+
+        Expression::GrammarCall(name_tok, _args) => {
+            // Grammar function call: treat as a nonterminal reference for now.
+            // Full closure expansion will be a separate pass.
+            let name: &str = name_tok.value.as_ref();
+            match ctx.name_to_rule_id.get(name) {
+                Some(&rule_id) => IrNode::Ref(rule_id),
+                None if ctx.recovery_mode => IrNode::Epsilon,
+                None => {
+                    panic!("unknown grammar function `{}`", name);
+                }
             }
         }
 

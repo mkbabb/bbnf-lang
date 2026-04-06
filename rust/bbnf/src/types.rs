@@ -103,6 +103,8 @@ pub enum ValueExpr<'a> {
     UnaryOp(UnaryOpKind, Box<ValueExpr<'a>>),
     /// Parenthesized expression: `(a + b)`.
     Paren(Box<ValueExpr<'a>>),
+    /// Value closure: `|params| body` — explicit parameter binding in value context.
+    Closure(Vec<Token<'a, Cow<'a, str>>>, Box<ValueExpr<'a>>),
 }
 
 /// A `->` value-expression mapping with optional type annotation.
@@ -153,6 +155,12 @@ pub enum Expression<'a> {
 
     Concatenation(TokenExpression<'a, Vec<Expression<'a>>>),
     Alternation(TokenExpression<'a, Vec<Expression<'a>>>),
+
+    /// Grammar closure: `|params| body` — compile-time grammar function.
+    Closure(Vec<Token<'a, Cow<'a, str>>>, TokenExpression<'a>),
+
+    /// Grammar function call: `name(arg1, arg2)` — invokes a closure-bound rule.
+    GrammarCall(Token<'a, Cow<'a, str>>, Vec<Expression<'a>>),
 
     Rule(Box<Expression<'a>>, Option<MapArrow<'a>>),
 
@@ -287,7 +295,9 @@ pub fn set_expression_comments<'a>(expr: &mut Expression<'a>, comments: Comments
             token.comments = Some(comments)
         }
 
-        Expression::MappedExpression(inner, _) => inner.comments = Some(comments),
+        Expression::MappedExpression(inner, _) | Expression::Closure(_, inner) => {
+            inner.comments = Some(comments)
+        }
 
         _ => {}
     }

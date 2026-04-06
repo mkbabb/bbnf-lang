@@ -7,7 +7,10 @@
 //! Also collects sub-variants for heterogeneous alternations and stores them
 //! in `RuleMeta::sub_variants`.
 
+pub mod constraint;
+pub mod generate;
 mod project;
+pub mod solver;
 mod subvariants;
 mod utils;
 

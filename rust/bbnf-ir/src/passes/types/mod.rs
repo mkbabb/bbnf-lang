@@ -1,15 +1,14 @@
 //! Pass: Type projection for IR rules.
 //!
-//! Walks each rule's body and projects a `TypeDesc` describing the Rust/TS type
-//! that the rule produces. Populates `GrammarIR::types` with `(RuleId, TypeDesc)`
-//! pairs consumed by codegen backends.
+//! Uses a CSP (Constraint Satisfaction Problem) solver to infer types for all
+//! IR nodes. The solver assigns a `TypeDesc` to every node in both normal and
+//! vec-context, then exports the results into the `TypeMap` consumed by codegen.
 //!
 //! Also collects sub-variants for heterogeneous alternations and stores them
 //! in `RuleMeta::sub_variants`.
 
 pub mod constraint;
 pub mod generate;
-mod project;
 pub mod solver;
 mod subvariants;
 mod utils;
@@ -18,19 +17,17 @@ use std::collections::HashMap;
 
 use crate::{GrammarIR, IrNode, RuleId, SubVariant, TypeDesc};
 
+use generate::generate_constraints;
+use solver::solve;
 use subvariants::{collect_sub_variants_raw, validate_sub_variant_uniqueness_raw};
 
 // Re-export for codegen.
-pub use project::{project_node, project_node_in_vec};
-pub use utils::{ProjectionCtx, ProjectionRules, TypeMap, TypeRecorder, try_flatten_pair};
+pub use utils::{TypeMap, try_flatten_pair};
 
 /// Project types for all rules and populate `ir.types`.
 ///
-/// Rules are processed in topological order (the order they appear in `ir.rules`),
-/// so a rule's dependencies are always projected before the rule itself. Cyclic
-/// rules are assigned `BoxedEnum` for any back-references.
-///
-/// Implements 5 projection rules:
+/// Uses a CSP solver with AC-3 propagation to infer types for every IR node.
+/// The solver handles:
 /// 1. Span-method override: Ref nodes to rules with `_sp()` methods project as
 ///    Span in Seq context, with a safety guard that reverts the override when any
 ///    child is Span through complex expressions (Repeat, Skip, etc.).
@@ -39,90 +36,130 @@ pub use utils::{ProjectionCtx, ProjectionRules, TypeMap, TypeRecorder, try_flatt
 ///    sourced from `@pretty` directives; flag is consumed after the first Seq.
 /// 3. Annotated return type: Map nodes with FnDescriptor::Expr use the return
 ///    type from the MapExpr, falling back to Span.
-/// 4. Cyclic-context boxing: (infrastructure only) Would override acyclic Ref
-///    types to BoxedEnum when referenced from cyclic rules.
+/// 4. Vec-context types: Ref nodes in Vec context produce Enum (not BoxedEnum),
+///    since Vec provides heap indirection.
 /// 5. Sub-variant collection: Heterogeneous alternation branches get generated
 ///    variant names for codegen coercion.
 pub fn project_types(ir: &mut GrammarIR) {
-    let mut cache: HashMap<RuleId, TypeDesc> = HashMap::new();
+    // Phase 1: Generate constraints from the IR structure.
+    let mut system = generate_constraints(ir);
 
-    // Collect metadata before projection (avoids borrow issues).
-    let rule_meta: HashMap<RuleId, (bool, bool)> = ir
-        .rules
-        .iter()
-        .map(|r| (r.id, (r.meta.is_cyclic, r.meta.span_eligible)))
-        .collect();
+    // Phase 2: Solve the constraint system via AC-3 propagation.
+    solve(&mut system);
 
-    // Collect which rules have @pretty (for span preservation).
-    let pretty_preserve_rules: HashMap<RuleId, bool> = ir
-        .rules
-        .iter()
-        .map(|r| {
-            let has_pretty = r.meta.directives.pretty.is_some();
-            (r.id, has_pretty)
-        })
-        .collect();
+    // Phase 3: Extract solved types into TypeMap.
+    let mut type_map = TypeMap::default();
 
-    // Identify acyclic rules (for cyclic-context boxing, not yet implemented).
-    let acyclic_rules: std::collections::HashSet<RuleId> = ir
-        .rules
-        .iter()
-        .filter(|r| !r.meta.is_cyclic)
-        .map(|r| r.id)
-        .collect();
-
-    // Process rules in order (topological after pipeline passes).
-    // Record sub-expression types for codegen via TypeRecorder.
-    let recorder = TypeRecorder::new();
-
-    // Collect rule IDs + metadata to avoid borrowing ir during projection.
-    // Process rules in their array order (topological).
-    // Use array index for body access, rule.id for cache key.
-    let rule_meta_vec: Vec<(RuleId, usize, bool, bool)> = ir
-        .rules
-        .iter()
-        .enumerate()
-        .map(|(idx, r)| {
-            let is_cyclic = rule_meta.get(&r.id).copied().unwrap_or_default().0;
-            let preserve_spans = pretty_preserve_rules.get(&r.id).copied().unwrap_or(false);
-            (r.id, idx, is_cyclic, preserve_spans)
-        })
-        .collect();
-
-    for &(id, idx, is_cyclic, preserve_spans) in &rule_meta_vec {
-        let ctx = ProjectionCtx {
-            ir,
-            cache: &cache,
-            acyclic_rules: &acyclic_rules,
-            cyclic_context: is_cyclic,
-            rules: utils::ProjectionRules { preserve_spans },
-            recorder: Some(&recorder),
-        };
-
-        // Project on the ORIGINAL body (not a clone) so pointers match codegen.
-        let ty = project_node(&ir.rules[idx].body, &ctx);
-        cache.insert(id, ty);
+    // Build node_types and vec_elem_types from solved variables.
+    for (&node_id, &var_id) in &system.node_vars {
+        if let Some(ty) = &system.vars[var_id as usize].solved {
+            type_map.insert_node_type(node_id, ty.clone());
+        }
+    }
+    for (&node_id, &var_id) in &system.vec_context_vars {
+        if let Some(ty) = &system.vars[var_id as usize].solved {
+            type_map.insert_vec_elem_type(node_id, ty.clone());
+        }
     }
 
-    // Comprehensive recording pass: walk every node in every rule body and record
-    // both project_node and project_node_in_vec results. The cache is fully populated,
-    // so this is just lookups + recording. Ensures the TypeMap covers all nodes
-    // that codegen might query (including span-method overridden Ref children and
-    // nodes skipped by the main projection path).
-    for &(_id, idx, is_cyclic, preserve_spans) in &rule_meta_vec {
-        let ctx = ProjectionCtx {
-            ir,
-            cache: &cache,
-            acyclic_rules: &acyclic_rules,
-            cyclic_context: is_cyclic,
-            rules: utils::ProjectionRules { preserve_spans },
-            recorder: Some(&recorder),
-        };
-        record_all_node_types(&ir.rules[idx].body, &ctx);
+    // Build seq metadata from solved constraint system.
+    // For each Seq, we need to:
+    // 1. Record effective child types (what the Seq constraint used)
+    // 2. Record the Seq result type
+    // 3. Record preserve_spans
+    for constraint in &system.constraints {
+        if let constraint::TypeConstraint::Seq {
+            var,
+            children,
+            preserve_spans,
+            sp_override_originals,
+            collapse_simple_spans,
+            child_node_kinds,
+        } = constraint
+        {
+            // Resolve child types from solver.
+            let child_types: Vec<TypeDesc> = children
+                .iter()
+                .map(|&c| {
+                    system.vars[c as usize]
+                        .solved
+                        .clone()
+                        .unwrap_or(TypeDesc::Span)
+                })
+                .collect();
+
+            // Replicate the span-method safety guard logic from the solver
+            // to determine effective types for the TypeMap.
+            let all_span = child_types.iter().all(|t| *t == TypeDesc::Span);
+            let all_simple_span = all_span
+                && *collapse_simple_spans
+                && !preserve_spans
+                && child_node_kinds
+                    .iter()
+                    .zip(child_types.iter())
+                    .all(|(kind, ty)| match kind {
+                        constraint::SeqChildKind::Optional => false,
+                        constraint::SeqChildKind::SpOverrideRef => true,
+                        constraint::SeqChildKind::Other => *ty == TypeDesc::Span,
+                    });
+
+            let effective_types = if all_span && !all_simple_span {
+                // Revert: use original types.
+                children
+                    .iter()
+                    .zip(sp_override_originals.iter())
+                    .map(|(child_var, orig)| {
+                        if let Some(orig_var) = orig {
+                            system.vars[*orig_var as usize]
+                                .solved
+                                .clone()
+                                .unwrap_or(TypeDesc::Span)
+                        } else {
+                            system.vars[*child_var as usize]
+                                .solved
+                                .clone()
+                                .unwrap_or(TypeDesc::Span)
+                        }
+                    })
+                    .collect::<Vec<_>>()
+            } else {
+                child_types
+            };
+
+            // Re-record per-node types for the children in this Seq.
+            // When span-method override is active (or reverted), the per-node type
+            // must match what the Seq actually uses.
+            for (child_var, eff_ty) in children.iter().zip(effective_types.iter()) {
+                let node_id = system.vars[*child_var as usize].node_id;
+                type_map.insert_node_type(node_id, eff_ty.clone());
+            }
+
+            let preserve = *preserve_spans
+                && effective_types.iter().all(|t| *t == TypeDesc::Span);
+
+            // Find the Seq's children slice pointer from the seq_metadata.
+            // The seq_metadata was recorded during constraint generation with
+            // the children pointer as key.
+            if let Some(seq_ptr) = find_seq_ptr_for_constraint(&system, children) {
+                type_map.insert_seq_child_types(seq_ptr, effective_types);
+                type_map.insert_seq_preserve_spans(seq_ptr, preserve);
+
+                if let Some(result_ty) = &system.vars[*var as usize].solved {
+                    type_map.insert_seq_result_type(seq_ptr, result_ty.clone());
+                }
+            }
+        }
     }
 
-    // Sub-variant collection for heterogeneous alternations.
-    // Two-pass: first collect raw (String name, TypeDesc, branch_index), then intern names.
+    // Phase 4: Build ir.types from rule variables.
+    let mut types_map: HashMap<RuleId, TypeDesc> = HashMap::new();
+    for (&rule_id, &var_id) in &system.rule_vars {
+        if let Some(ty) = &system.vars[var_id as usize].solved {
+            types_map.insert(rule_id, ty.clone());
+        }
+    }
+
+    // Phase 5: Sub-variant collection using the solved TypeMap.
     let rule_names: HashMap<RuleId, String> = ir
         .rules
         .iter()
@@ -131,36 +168,23 @@ pub fn project_types(ir: &mut GrammarIR) {
 
     let mut raw_sub_variants: HashMap<RuleId, Vec<subvariants::RawSubVariant>> = HashMap::new();
 
-    for &(id, idx, is_cyclic, _) in &rule_meta_vec {
-        let rule = &ir.rules[idx];
+    for rule in &ir.rules {
         if rule.meta.is_transparent {
             continue;
         }
-        let ctx = ProjectionCtx {
-            ir,
-            cache: &cache,
-            acyclic_rules: &acyclic_rules,
-            cyclic_context: is_cyclic,
-            rules: utils::ProjectionRules::default(),
-            recorder: None, // No recording needed for sub-variants
-        };
         let rule_name = rule_names
-            .get(&id)
+            .get(&rule.id)
             .expect("rule ID must exist in rule_names map");
-        let svs = collect_sub_variants_raw(rule_name, &rule.body, &ctx);
+        let svs = collect_sub_variants_raw(rule_name, &rule.body, &type_map);
         if !svs.is_empty() {
-            raw_sub_variants.insert(id, svs);
+            raw_sub_variants.insert(rule.id, svs);
         }
     }
 
-    // Validate cross-rule sub-variant uniqueness (using raw names).
+    // Validate cross-rule sub-variant uniqueness.
     validate_sub_variant_uniqueness_raw(&raw_sub_variants, &rule_names);
 
     // Clear all existing sub-variants before writing new ones.
-    // This is critical when project_types runs multiple times (e.g., pipeline call
-    // with collapse_simple_spans=false, then generate_all with collapse_simple_spans=true).
-    // Without clearing, stale sub-variants from the first run persist and cause
-    // type mismatches in codegen.
     for rule in &mut ir.rules {
         rule.meta.sub_variants.clear();
     }
@@ -171,7 +195,6 @@ pub fn project_types(ir: &mut GrammarIR) {
             rule.meta.sub_variants = raw_svs
                 .into_iter()
                 .map(|rsv| {
-                    // Intern the variant name into the string table.
                     let name_id =
                         if let Some(pos) = ir.strings.iter().position(|s| s == &rsv.variant_name) {
                             pos as u32
@@ -190,11 +213,7 @@ pub fn project_types(ir: &mut GrammarIR) {
         }
     }
 
-    // Store the precomputed sub-expression type map for codegen.
-    let mut type_map = recorder.into_map();
-
-    // Correction pass: align Repeat vec_elem_types with ir.types.
-    let types_map: HashMap<RuleId, TypeDesc> = cache.into_iter().collect();
+    // Phase 6: Correction pass — align Repeat vec_elem_types with ir.types.
     for rule in &ir.rules {
         let rule_td = types_map.get(&rule.id);
         if let Some(td) = rule_td {
@@ -202,17 +221,7 @@ pub fn project_types(ir: &mut GrammarIR) {
         }
     }
 
-    // Collect distinct scratch types for codegen Vec generation.
-    //
-    // Only collect from actual Repeat inners (hi > 1), not from all vec_elem_type
-    // values in the TypeMap. The TypeMap records vec_elem_types for every node
-    // (including non-Repeat nodes like Seq and Alt), and those "ghost" types would
-    // create scratch fields that call alloc_slice_clone on BumpSlab with
-    // incompatible element types.
-    //
-    // Two sources, both targeted at actual Vec elements:
-    // (a) Walk rule bodies to find Repeat inners and collect their vec_elem_types
-    // (b) Vec inners extracted from ir.types (handles nested Vecs in rule types)
+    // Phase 7: Collect distinct scratch types for codegen Vec generation.
     let mut scratch: Vec<TypeDesc> = Vec::new();
 
     fn collect_repeat_scratch(node: &IrNode, map: &utils::TypeMap, out: &mut Vec<TypeDesc>) {
@@ -260,8 +269,7 @@ pub fn project_types(ir: &mut GrammarIR) {
         collect_repeat_scratch(&rule.body, &type_map, &mut scratch);
     }
 
-    // Also collect Vec inners from rule types (handles nested Vecs like
-    // Vec(Vec(Enum)) where the inner Vec is a valid scratch element type).
+    // Also collect Vec inners from rule types.
     fn collect_scratch_from_td(td: &TypeDesc, out: &mut Vec<TypeDesc>) {
         match td {
             TypeDesc::Vec(inner) => {
@@ -289,14 +297,26 @@ pub fn project_types(ir: &mut GrammarIR) {
     ir.types.sort_by_key(|(id, _)| *id);
 }
 
+/// Find the Seq's children slice pointer from the seq_metadata,
+/// matching by the child variable IDs stored during constraint generation.
+fn find_seq_ptr_for_constraint(
+    system: &generate::ConstraintSystem,
+    child_vars: &[constraint::TypeVarId],
+) -> Option<usize> {
+    for (&ptr, meta) in &system.seq_metadata {
+        if meta.child_vars == child_vars {
+            return Some(ptr);
+        }
+    }
+    None
+}
+
 /// Correct Repeat vec_elem_types to match the Vec inner from ir.types.
 ///
 /// When a rule's type is `Vec(T)` (direct or via try_flatten_pair), the Repeat
 /// inner's vec_elem_type should be `T`. The initial projection may have recorded
 /// a different type (e.g., Tuple) due to Seq compression/flattening differences.
 fn correct_repeat_elem_types(node: &IrNode, rule_type: &TypeDesc, map: &mut utils::TypeMap) {
-    // Extract the Vec inner from the rule type, searching through Tuples
-    // (for rules like `Tuple(Span, Vec(Enum))` where Seq didn't fully flatten).
     fn extract_all_vec_inners<'a>(td: &'a TypeDesc, out: &mut Vec<&'a TypeDesc>) {
         match td {
             TypeDesc::Vec(inner) => out.push(inner.as_ref()),
@@ -312,17 +332,14 @@ fn correct_repeat_elem_types(node: &IrNode, rule_type: &TypeDesc, map: &mut util
 
     let mut vec_inners = Vec::new();
     extract_all_vec_inners(rule_type, &mut vec_inners);
-    // Only correct if there's exactly one Vec (unambiguous).
     let vec_inner = match vec_inners.as_slice() {
         [inner] => *inner,
         _ => return,
     };
 
-    // Walk the body to find Repeat nodes (with hi > 1, i.e., Many/Many1).
     fn walk_and_correct(node: &IrNode, vec_inner: &TypeDesc, map: &mut utils::TypeMap) {
         match node {
             IrNode::Repeat { inner, lo: _, hi } if *hi > 1 => {
-                // Override the Repeat inner's vec_elem_type with the authoritative inner.
                 map.set_vec_elem_type(inner.as_ref(), vec_inner.clone());
             }
             IrNode::Seq(children) => {
@@ -342,63 +359,4 @@ fn correct_repeat_elem_types(node: &IrNode, rule_type: &TypeDesc, map: &mut util
     }
 
     walk_and_correct(node, vec_inner, map);
-}
-
-/// Walk every node in the tree and record both `project_node` and `project_node_in_vec`
-/// results. The cache must be fully populated before calling this.
-fn record_all_node_types(node: &IrNode, ctx: &utils::ProjectionCtx<'_>) {
-    // Record types only if not already recorded by the main projection pass.
-    // This preserves span-method override types while filling in nodes that the main
-    // pass didn't visit (e.g., discarded sides of Skip/Next).
-    let node_ty = project::project_node(node, &ctx.with_no_recorder());
-    let vec_ty = project::project_node_in_vec(node, &ctx.with_no_recorder());
-    if let Some(rec) = ctx.recorder {
-        rec.record_node_if_absent(node, &node_ty);
-        rec.record_vec_elem_if_absent(node, &vec_ty);
-    }
-
-    // Recurse into children.
-    match node {
-        IrNode::Seq(children) => {
-            // Record seq_child_types + seq_result for nested Seqs not covered
-            // by the main projection pass (which only processes top-level rule bodies).
-            if children.len() > 1 {
-                if let Some(rec) = ctx.recorder {
-                    if !rec.has_seq_children(children) {
-                        // Re-project the Seq to record all its type data.
-                        let _ = project::project_node(node, ctx);
-                    }
-                }
-            }
-            let consumed = ctx.consumed();
-            for c in children {
-                record_all_node_types(c, &consumed);
-            }
-        }
-        IrNode::Alt(branches, _) => {
-            let consumed = ctx.consumed();
-            for b in branches {
-                record_all_node_types(&b.node, &consumed);
-            }
-        }
-        IrNode::Repeat { inner, .. } => {
-            let consumed = ctx.consumed();
-            record_all_node_types(inner, &consumed);
-        }
-        IrNode::Skip(l, r) | IrNode::Next(l, r) | IrNode::Minus(l, r) => {
-            let consumed = ctx.consumed();
-            record_all_node_types(l, &consumed);
-            record_all_node_types(r, &consumed);
-        }
-        IrNode::OptionalWhitespace(inner) | IrNode::Map { inner, .. } | IrNode::Negate(inner) => {
-            record_all_node_types(inner, ctx);
-        }
-        IrNode::TokenDispatch { arms, .. } => {
-            let consumed = ctx.consumed();
-            for arm in arms {
-                record_all_node_types(&arm.continuation, &consumed);
-            }
-        }
-        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon | IrNode::Ref(_) => {}
-    }
 }

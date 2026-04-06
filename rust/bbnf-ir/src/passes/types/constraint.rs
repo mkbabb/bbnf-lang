@@ -51,6 +51,14 @@ pub enum TypeConstraint {
         children: Vec<TypeVarId>,
         /// Whether to preserve consecutive Span identity (@pretty).
         preserve_spans: bool,
+        /// Parallel children vars for span-method override tracking.
+        /// Each entry is `Some(original_var)` for a Ref child that has has_sp_method
+        /// (the child's primary var is already set to Span), or `None` for non-overridden children.
+        sp_override_originals: Vec<Option<TypeVarId>>,
+        /// Whether collapse_simple_spans is enabled on the grammar.
+        collapse_simple_spans: bool,
+        /// IrNode pointer keys for the children (for span-method override revert checks).
+        child_node_kinds: Vec<SeqChildKind>,
     },
 
     /// τ = join(τ_b₁, ..., τ_bₙ) (alternation — least upper bound)
@@ -61,13 +69,25 @@ pub enum TypeConstraint {
         branches: Vec<TypeVarId>,
     },
 
+    /// τ = join_in_vec(τ_b₁, ..., τ_bₙ) (alternation in Vec context)
+    /// Like Alt but uses in-vec projection for branch types.
+    AltInVec {
+        var: TypeVarId,
+        branches: Vec<TypeVarId>,
+        /// Fallback var for heterogeneous case (standard Alt projection).
+        standard_var: TypeVarId,
+    },
+
     /// τ = Option(τ_inner) (optional — repeat 0..1)
     Optional {
         var: TypeVarId,
         inner: TypeVarId,
+        /// Whether the inner is a transparent Ref (produces Option<Enum>).
+        transparent_ref: bool,
     },
 
     /// τ = Vec(τ_inner) (repetition — repeat 1..∞ or 0..∞)
+    /// inner is the VEC-CONTEXT variable for the inner node.
     Repeat {
         var: TypeVarId,
         inner: TypeVarId,
@@ -85,6 +105,17 @@ pub enum TypeConstraint {
         var: TypeVarId,
         return_type: TypeDesc,
     },
+}
+
+/// Metadata about a Seq child for span-method override revert decisions.
+#[derive(Clone, Debug)]
+pub enum SeqChildKind {
+    /// A Ref child with span-method override active.
+    SpOverrideRef,
+    /// An Optional (Repeat 0..1) child.
+    Optional,
+    /// Any other node.
+    Other,
 }
 
 /// Index into the TypeVar array.

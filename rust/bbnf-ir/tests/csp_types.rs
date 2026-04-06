@@ -117,9 +117,12 @@ fn csp_repeat_boxedenum() {
         ],
         vec![],
     );
+    // In Vec context, Ref produces Enum (Vec provides heap indirection,
+    // so Box is unnecessary). The old CSP test expected BoxedEnum which was
+    // the incorrect pre-vec-context behavior.
     assert_eq!(
         solve_rule_type(&ir, 1),
-        TypeDesc::Vec(Box::new(TypeDesc::BoxedEnum))
+        TypeDesc::Vec(Box::new(TypeDesc::Enum))
     );
 }
 

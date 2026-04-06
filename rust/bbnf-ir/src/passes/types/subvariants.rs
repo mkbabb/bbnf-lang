@@ -4,8 +4,7 @@ use std::collections::HashMap;
 
 use crate::{IrNode, RuleId, TypeDesc};
 
-use super::project::project_node;
-use super::utils::ProjectionCtx;
+use super::utils::TypeMap;
 
 /// Raw sub-variant data before string interning.
 pub(super) struct RawSubVariant {
@@ -20,14 +19,16 @@ pub(super) struct RawSubVariant {
 /// inside a Seq child), not just top-level ones. Each non-BoxedEnum branch of a
 /// heterogeneous Alt gets a sub-variant so `coerce_branches` in the codegen can
 /// box every branch into `Box<Enum>`.
+///
+/// Uses the solved TypeMap for node type lookup instead of re-projecting.
 pub(super) fn collect_sub_variants_raw(
     rule_name: &str,
     body: &IrNode,
-    ctx: &ProjectionCtx<'_>,
+    type_map: &TypeMap,
 ) -> Vec<RawSubVariant> {
     let mut variants = Vec::new();
     let mut counter: u32 = 0;
-    collect_sub_variants_walk(rule_name, body, ctx, &mut variants, &mut counter);
+    collect_sub_variants_walk(rule_name, body, type_map, &mut variants, &mut counter);
     variants
 }
 
@@ -35,16 +36,20 @@ pub(super) fn collect_sub_variants_raw(
 fn collect_sub_variants_walk(
     rule_name: &str,
     node: &IrNode,
-    ctx: &ProjectionCtx<'_>,
+    type_map: &TypeMap,
     variants: &mut Vec<RawSubVariant>,
     counter: &mut u32,
 ) {
     match node {
         IrNode::Alt(branches, _) => {
-            let consumed = ctx.consumed();
             let tys: Vec<TypeDesc> = branches
                 .iter()
-                .map(|b| project_node(&b.node, &consumed))
+                .map(|b| {
+                    type_map
+                        .node_type(&b.node)
+                        .cloned()
+                        .unwrap_or(TypeDesc::Span)
+                })
                 .collect();
 
             let is_heterogeneous = tys.len() >= 2 && !tys.windows(2).all(|w| w[0] == w[1]);
@@ -77,28 +82,28 @@ fn collect_sub_variants_walk(
 
             // Recurse into branches.
             for b in branches {
-                collect_sub_variants_walk(rule_name, &b.node, ctx, variants, counter);
+                collect_sub_variants_walk(rule_name, &b.node, type_map, variants, counter);
             }
         }
 
         // Recurse into children of composite nodes.
         IrNode::Seq(children) => {
             for c in children {
-                collect_sub_variants_walk(rule_name, c, ctx, variants, counter);
+                collect_sub_variants_walk(rule_name, c, type_map, variants, counter);
             }
         }
         IrNode::Repeat { inner, .. } => {
-            collect_sub_variants_walk(rule_name, inner, ctx, variants, counter);
+            collect_sub_variants_walk(rule_name, inner, type_map, variants, counter);
         }
         IrNode::Map { inner, .. } => {
-            collect_sub_variants_walk(rule_name, inner, ctx, variants, counter);
+            collect_sub_variants_walk(rule_name, inner, type_map, variants, counter);
         }
         IrNode::Skip(left, right) | IrNode::Next(left, right) | IrNode::Minus(left, right) => {
-            collect_sub_variants_walk(rule_name, left, ctx, variants, counter);
-            collect_sub_variants_walk(rule_name, right, ctx, variants, counter);
+            collect_sub_variants_walk(rule_name, left, type_map, variants, counter);
+            collect_sub_variants_walk(rule_name, right, type_map, variants, counter);
         }
         IrNode::OptionalWhitespace(inner) | IrNode::Negate(inner) => {
-            collect_sub_variants_walk(rule_name, inner, ctx, variants, counter);
+            collect_sub_variants_walk(rule_name, inner, type_map, variants, counter);
         }
 
         IrNode::TokenDispatch {
@@ -106,11 +111,11 @@ fn collect_sub_variants_walk(
             arms,
             fallback,
         } => {
-            collect_sub_variants_walk(rule_name, token, ctx, variants, counter);
+            collect_sub_variants_walk(rule_name, token, type_map, variants, counter);
             for arm in arms {
-                collect_sub_variants_walk(rule_name, &arm.continuation, ctx, variants, counter);
+                collect_sub_variants_walk(rule_name, &arm.continuation, type_map, variants, counter);
             }
-            collect_sub_variants_walk(rule_name, fallback, ctx, variants, counter);
+            collect_sub_variants_walk(rule_name, fallback, type_map, variants, counter);
         }
 
         // Leaf nodes — nothing to recurse into.

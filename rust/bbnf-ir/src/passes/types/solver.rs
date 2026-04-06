@@ -39,7 +39,9 @@ pub fn solve(system: &mut ConstraintSystem) {
             // For simplicity, re-enqueue all constraints — AC-3 is idempotent.
             // A production implementation would maintain dependency lists.
             for i in 0..system.constraints.len() {
-                if i != constraint_idx && depends_on(&system.constraints[i], &system.constraints[constraint_idx]) {
+                if i != constraint_idx
+                    && depends_on(&system.constraints[i], &system.constraints[constraint_idx])
+                {
                     worklist.push_back(i);
                 }
             }
@@ -54,9 +56,7 @@ pub fn solve(system: &mut ConstraintSystem) {
 /// "assign the type".
 fn revise(constraint: &TypeConstraint, vars: &mut [TypeVar]) -> bool {
     match constraint {
-        TypeConstraint::Ground { var, ty } => {
-            assign(vars, *var, ty.clone())
-        }
+        TypeConstraint::Ground { var, ty } => assign(vars, *var, ty.clone()),
 
         TypeConstraint::Equal { target, source } => {
             if let Some(ty) = vars[*source as usize].solved.clone() {
@@ -68,7 +68,14 @@ fn revise(constraint: &TypeConstraint, vars: &mut [TypeVar]) -> bool {
             }
         }
 
-        TypeConstraint::Seq { var, children, preserve_spans } => {
+        TypeConstraint::Seq {
+            var,
+            children,
+            preserve_spans,
+            sp_override_originals,
+            collapse_simple_spans,
+            child_node_kinds,
+        } => {
             // All children must be solved.
             let child_types: Vec<TypeDesc> = children
                 .iter()
@@ -79,7 +86,53 @@ fn revise(constraint: &TypeConstraint, vars: &mut [TypeVar]) -> bool {
                 return false; // Not all children solved yet
             }
 
-            let result = project_seq_type(&child_types, *preserve_spans);
+            // Span-method safety guard: when all children are Span after override,
+            // decide whether to keep override (all-Span → Span) or revert.
+            let all_span = child_types.iter().all(|t| *t == TypeDesc::Span);
+            let all_simple_span = all_span
+                && *collapse_simple_spans
+                && !preserve_spans
+                && child_node_kinds.iter().zip(child_types.iter()).all(
+                    |(kind, ty)| {
+                        match kind {
+                            // Optional(Span) produces Option<Span> at runtime, not Span.
+                            SeqChildKind::Optional => false,
+                            // Span-method overridden Ref — codegen will call _sp().
+                            SeqChildKind::SpOverrideRef => true,
+                            // Naturally Span — leaf or collapsed expression.
+                            SeqChildKind::Other => *ty == TypeDesc::Span,
+                        }
+                    },
+                );
+
+            let effective_types = if all_span && !all_simple_span {
+                // Revert span-method overrides: use original (non-override) child types.
+                children
+                    .iter()
+                    .zip(sp_override_originals.iter())
+                    .map(|(child_var, orig)| {
+                        if let Some(orig_var) = orig {
+                            // Use the original (non-overridden) type.
+                            vars[*orig_var as usize]
+                                .solved
+                                .clone()
+                                .unwrap_or(TypeDesc::Span)
+                        } else {
+                            vars[*child_var as usize]
+                                .solved
+                                .clone()
+                                .unwrap_or(TypeDesc::Span)
+                        }
+                    })
+                    .collect::<Vec<_>>()
+            } else {
+                child_types
+            };
+
+            let preserve = *preserve_spans
+                && effective_types.iter().all(|t| *t == TypeDesc::Span);
+
+            let result = project_seq_type(&effective_types, preserve);
             assign(vars, *var, result)
         }
 
@@ -98,10 +151,46 @@ fn revise(constraint: &TypeConstraint, vars: &mut [TypeVar]) -> bool {
             assign(vars, *var, result)
         }
 
-        TypeConstraint::Optional { var, inner } => {
+        TypeConstraint::AltInVec {
+            var,
+            branches,
+            standard_var,
+        } => {
+            // All vec-context branch types must be solved.
+            let branch_types: Vec<TypeDesc> = branches
+                .iter()
+                .filter_map(|&b| vars[b as usize].solved.clone())
+                .collect();
+
+            if branch_types.len() != branches.len() {
+                return false;
+            }
+
+            let first = &branch_types[0];
+            let all_same = branch_types.iter().all(|t| t == first);
+            if all_same {
+                assign(vars, *var, first.clone())
+            } else {
+                // Heterogeneous even with in_vec — fall back to standard Alt projection.
+                if let Some(std_ty) = vars[*standard_var as usize].solved.clone() {
+                    assign(vars, *var, std_ty)
+                } else {
+                    false // Standard var not yet solved
+                }
+            }
+        }
+
+        TypeConstraint::Optional {
+            var,
+            inner,
+            transparent_ref,
+        } => {
             if let Some(inner_ty) = vars[*inner as usize].solved.clone() {
                 let result = if inner_ty == TypeDesc::Span {
                     TypeDesc::Span // Optional Span collapses
+                } else if *transparent_ref {
+                    // Transparent refs get unboxed in Optional context.
+                    TypeDesc::Option(Box::new(TypeDesc::Enum))
                 } else {
                     TypeDesc::Option(Box::new(inner_ty))
                 };
@@ -152,21 +241,24 @@ fn assign(vars: &mut [TypeVar], var: TypeVarId, ty: TypeDesc) -> bool {
 
 /// Check if constraint `a` depends on any variable that constraint `b` writes.
 fn depends_on(a: &TypeConstraint, b: &TypeConstraint) -> bool {
-    let written_by_b = written_var(b);
-    reads(a).iter().any(|&r| Some(r) == written_by_b)
+    let written_by_b = written_vars(b);
+    reads(a)
+        .iter()
+        .any(|r| written_by_b.iter().any(|w| *w == *r))
 }
 
-/// Get the variable written by a constraint (if any).
-fn written_var(c: &TypeConstraint) -> Option<TypeVarId> {
+/// Get the variables written by a constraint.
+fn written_vars(c: &TypeConstraint) -> Vec<TypeVarId> {
     match c {
         TypeConstraint::Ground { var, .. }
         | TypeConstraint::Seq { var, .. }
         | TypeConstraint::Alt { var, .. }
+        | TypeConstraint::AltInVec { var, .. }
         | TypeConstraint::Optional { var, .. }
         | TypeConstraint::Repeat { var, .. }
         | TypeConstraint::Project { var, .. }
-        | TypeConstraint::Map { var, .. } => Some(*var),
-        TypeConstraint::Equal { target, source: _ } => Some(*target),
+        | TypeConstraint::Map { var, .. } => vec![*var],
+        TypeConstraint::Equal { target, source } => vec![*target, *source],
     }
 }
 
@@ -175,8 +267,29 @@ fn reads(c: &TypeConstraint) -> Vec<TypeVarId> {
     match c {
         TypeConstraint::Ground { .. } | TypeConstraint::Map { .. } => vec![],
         TypeConstraint::Equal { target, source } => vec![*target, *source],
-        TypeConstraint::Seq { children, .. } => children.clone(),
+        TypeConstraint::Seq {
+            children,
+            sp_override_originals,
+            ..
+        } => {
+            let mut r: Vec<TypeVarId> = children.clone();
+            for orig in sp_override_originals {
+                if let Some(v) = orig {
+                    r.push(*v);
+                }
+            }
+            r
+        }
         TypeConstraint::Alt { branches, .. } => branches.clone(),
+        TypeConstraint::AltInVec {
+            branches,
+            standard_var,
+            ..
+        } => {
+            let mut r = branches.clone();
+            r.push(*standard_var);
+            r
+        }
         TypeConstraint::Optional { inner, .. } | TypeConstraint::Repeat { inner, .. } => {
             vec![*inner]
         }
@@ -189,10 +302,10 @@ fn reads(c: &TypeConstraint) -> Vec<TypeVarId> {
 /// Compute the type of a Seq node from its children's types.
 ///
 /// Applies Span compression: consecutive Span children collapse to a single Span.
-/// Applies try_flatten_pair: (T, Vec<T>) → Vec<T).
+/// Applies try_flatten_pair: (T, Vec<T)) → Vec<T).
 fn project_seq_type(child_types: &[TypeDesc], preserve_spans: bool) -> TypeDesc {
     if child_types.is_empty() {
-        return TypeDesc::Span;
+        return TypeDesc::Tuple(vec![]);
     }
     if child_types.len() == 1 {
         return child_types[0].clone();
@@ -220,7 +333,7 @@ fn project_seq_type(child_types: &[TypeDesc], preserve_spans: bool) -> TypeDesc 
         0 => TypeDesc::Span,
         1 => effective[0].clone(),
         2 => {
-            // Try flatten: (T, Vec<T>) → Vec<T>
+            // Try flatten: (T, Vec<T)) → Vec<T)
             if let Some(flat) = try_flatten_pair(effective[0], effective[1]) {
                 flat
             } else {
@@ -237,7 +350,7 @@ fn project_seq_type(child_types: &[TypeDesc], preserve_spans: bool) -> TypeDesc 
 /// Otherwise, produce BoxedEnum (heterogeneous alternation).
 fn join_types(branch_types: &[TypeDesc]) -> TypeDesc {
     if branch_types.is_empty() {
-        return TypeDesc::Span;
+        return TypeDesc::Tuple(vec![]);
     }
     let first = &branch_types[0];
     if branch_types.iter().all(|t| t == first) {

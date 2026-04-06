@@ -1,6 +1,7 @@
+mod tokens;
+
 use std::borrow::Cow;
 
-use parse_that::parsers::utils::escaped_span;
 use parse_that::{
     Parser, ParserSpan, ParserState, Span, any_span, lazy, next_span, string, string_span,
     take_while_span,
@@ -471,123 +472,6 @@ pub struct BBNFGrammar<'a> {
 }
 
 impl<'a> BBNFGrammar<'a> {
-    fn block_comment() -> Parser<'a, Comment<'a>> {
-        let not_comment = take_while_span(|c| c != '*' && c != '/');
-
-        let comment = not_comment.many_span(1..);
-
-        comment
-            .wrap_span(string_span("/*"), string_span("*/"))
-            .trim_whitespace()
-            .many_span(1..)
-            .map(|s| Comment::Block(s.as_str().into()))
-    }
-
-    fn line_comment() -> Parser<'a, Comment<'a>> {
-        let not_newline = take_while_span(|c| c != '\n').opt_span();
-        let end = string_span("\r").opt_span().then_span(string_span("\n"));
-
-        not_newline
-            .wrap_span(string_span("//"), end)
-            .many_span(1..)
-            .map(|s| Comment::Line(s.as_str().into()))
-    }
-
-    fn identifier() -> Parser<'a, Span<'a>> {
-        let first_part = take_while_span(|c| c.is_alphabetic() || c == '_');
-        let rest_part =
-            take_while_span(|c| c.is_alphanumeric() || c == '_' || c == '-' || c == '.')
-                .many_span(..);
-        first_part.then_span(rest_part)
-    }
-
-    fn literal() -> Parser<'a, Expression<'a>> {
-        let quoted = |quote: &'a str| {
-            let not_quote = take_while_span(|c| c != quote.chars().next().unwrap() && c != '\\');
-            (not_quote | escaped_span())
-                .many_span(..)
-                .wrap_span(string_span(quote), string_span(quote))
-        };
-
-        (quoted("\"") | quoted("'") | quoted("`")).map(|s| {
-            let token = Token::new(s.as_str().into(), s);
-            Expression::Literal(token)
-        })
-    }
-
-    fn epsilon() -> Parser<'a, Expression<'a>> {
-        string_span("epsilon").map(|s| {
-            let token = Token::new((), s);
-            Expression::Epsilon(token)
-        })
-    }
-
-    fn nonterminal() -> Parser<'a, Expression<'a>> {
-        Self::identifier().map(|s| {
-            let token = Token::new(s.as_str().into(), s);
-            Expression::Nonterminal(token)
-        })
-    }
-
-    /// Scan a regex body between `/` delimiters, aware of character classes (`[...]`)
-    /// where `/` is literal and not a closing delimiter.
-    fn regex_body() -> Parser<'a, Span<'a>> {
-        let body = move |state: &mut ParserState<'a>| {
-            let start = state.offset;
-            let bytes = state.src_bytes;
-            let end = state.end;
-            let mut i = start;
-            let mut bracket_depth: u32 = 0;
-
-            while i < end {
-                match bytes[i] {
-                    b'\\' => {
-                        // Escape sequence: consume backslash + next char.
-                        i += 1;
-                        if i < end {
-                            i += 1;
-                        }
-                    }
-                    b'[' if bracket_depth == 0 => {
-                        bracket_depth += 1;
-                        i += 1;
-                    }
-                    b']' if bracket_depth > 0 => {
-                        bracket_depth -= 1;
-                        i += 1;
-                    }
-                    b'/' if bracket_depth == 0 => {
-                        // Closing delimiter — stop before it.
-                        break;
-                    }
-                    _ => {
-                        i += 1;
-                    }
-                }
-            }
-
-            if i == start {
-                // Empty body is valid (e.g. `//`), produce an empty span.
-                return Some(Span::new(start, start, state.src));
-            }
-            state.offset = i;
-            Some(Span::new(start, i, state.src))
-        };
-        Parser::new(body)
-    }
-
-    fn regex() -> Parser<'a, Expression<'a>> {
-        let string = Self::regex_body().wrap_span(string_span("/"), string_span("/"));
-
-        string.map(|s| {
-            if let Err(e) = regex_syntax::Parser::new().parse(s.as_str()) {
-                panic!("invalid regex: {:?}, {:?}", s.as_str(), e);
-            }
-            let token = Token::new(s.as_str().into(), s);
-            Expression::Regex(token)
-        })
-    }
-
     fn group() -> Parser<'a, Expression<'a>> {
         lazy(|| {
             Self::rhs()
@@ -639,42 +523,29 @@ impl<'a> BBNFGrammar<'a> {
 
     fn standalone_optional_whitespace() -> Parser<'a, Expression<'a>> {
         string_span("?w").map(|span| {
-            let inner = Expression::Epsilon(Token::new((), span.clone()));
+            let inner = Expression::Epsilon(Token::new((), span));
             Expression::OptionalWhitespace(Box::new(Token::new(inner, span)))
         })
     }
 
     fn term() -> Parser<'a, Expression<'a>> {
-        Self::epsilon()
+        tokens::epsilon()
             | Self::span_capture()
             | Self::standalone_optional_whitespace()
             | Self::group()
             | Self::optional_group()
             | Self::many_group()
-            | Self::nonterminal()
-            | Self::literal()
-            | Self::regex()
-    }
-
-    fn trim_comment(
-        p: Parser<'a, Expression<'a>>,
-        comment_parser: Parser<'a, Option<Comment<'a>>>,
-    ) -> Parser<'a, Expression<'a>> {
-        p.trim_keep(comment_parser).map(|(left, mut expr, right)| {
-            if left.is_some() || right.is_some() {
-                let comments = Comments { left, right };
-                set_expression_comments(&mut expr, comments);
-            }
-            expr
-        })
+            | tokens::nonterminal()
+            | tokens::literal()
+            | tokens::regex()
     }
 
     fn factor() -> Parser<'a, Expression<'a>> {
-        Self::trim_comment(
+        tokens::trim_comment(
             Self::term()
                 .then(any_span(&["?w", "*", "+", "?"]).trim_whitespace().many(..))
                 .map_with_state(map_factor),
-            Self::block_comment().opt(),
+            tokens::block_comment().opt(),
         )
     }
 
@@ -756,7 +627,7 @@ impl<'a> BBNFGrammar<'a> {
     }
 
     fn lhs() -> Parser<'a, Expression<'a>> {
-        Self::nonterminal()
+        tokens::nonterminal()
     }
 
     fn rhs() -> Parser<'a, Expression<'a>> {
@@ -764,7 +635,7 @@ impl<'a> BBNFGrammar<'a> {
     }
 
     fn production_rule() -> Parser<'a, Expression<'a>> {
-        let comment = Self::block_comment() | Self::line_comment();
+        let comment = tokens::block_comment() | tokens::line_comment();
         let eq = string("=").trim_whitespace();
 
         let terminator = (any_span(&[";", "."])).trim_whitespace();
@@ -780,21 +651,12 @@ impl<'a> BBNFGrammar<'a> {
                 )
             });
 
-        Self::trim_comment(production_rule, comment.opt())
-    }
-
-    /// Parse an import path string: `"path/to/file.bbnf"`.
-    fn import_path() -> Parser<'a, Cow<'a, str>> {
-        let not_quote = take_while_span(|c| c != '"' && c != '\\');
-        let path_content = (not_quote | escaped_span()).many_span(..);
-        path_content
-            .wrap_span(string_span("\""), string_span("\""))
-            .map(|s| Cow::Borrowed(s.as_str()))
+        tokens::trim_comment(production_rule, comment.opt())
     }
 
     /// Parse a list of identifiers in `{ a, b, c }` form.
     fn import_items() -> Parser<'a, Vec<ImportedName<'a>>> {
-        let ident = Self::identifier().map(|s: Span<'a>| ImportedName {
+        let ident = tokens::identifier().map(|s: Span<'a>| ImportedName {
             name: Cow::Borrowed(s.as_str()),
             span: s,
         });
@@ -815,10 +677,10 @@ impl<'a> BBNFGrammar<'a> {
     fn import_directive() -> Parser<'a, ImportDirective<'a>> {
         let selective = Self::import_items()
             .skip(string("from").trim_whitespace())
-            .then(Self::import_path())
+            .then(tokens::import_path())
             .map(|(items, path)| (Some(items), path));
 
-        let glob = Self::import_path().map(|path| (None, path));
+        let glob = tokens::import_path().map(|path| (None, path));
 
         string("@import")
             .trim_whitespace()
@@ -837,7 +699,7 @@ impl<'a> BBNFGrammar<'a> {
         string("@recover")
             .trim_whitespace()
             .next(
-                Self::identifier()
+                tokens::identifier()
                     .trim_whitespace()
                     .then(Self::rhs().trim_whitespace()),
             )
@@ -856,7 +718,7 @@ impl<'a> BBNFGrammar<'a> {
         string("@debug")
             .trim_whitespace()
             .next(
-                (string_span("*") | Self::identifier())
+                (string_span("*") | tokens::identifier())
                     .trim_whitespace()
                     .map(|span| Cow::Borrowed(span.as_str())),
             )
@@ -867,7 +729,7 @@ impl<'a> BBNFGrammar<'a> {
     fn token_directive() -> Parser<'a, Cow<'a, str>> {
         string("@token")
             .trim_whitespace()
-            .next(Self::identifier().trim_whitespace())
+            .next(tokens::identifier().trim_whitespace())
             .skip(any_span(&[";", "."]).opt().trim_whitespace())
             .map(|name_span| Cow::Borrowed(name_span.as_str()))
     }
@@ -876,7 +738,7 @@ impl<'a> BBNFGrammar<'a> {
     fn ws_directive() -> Parser<'a, Cow<'a, str>> {
         string("@ws")
             .trim_whitespace()
-            .next(Self::regex().trim_whitespace())
+            .next(tokens::regex().trim_whitespace())
             .skip(any_span(&[";", "."]).opt().trim_whitespace())
             .map(|regex_expr| {
                 // Extract the regex pattern string from Expression::Regex.
@@ -917,12 +779,12 @@ impl<'a> BBNFGrammar<'a> {
     /// `@pretty ruleName hint1 hint2 ... ;`
     /// Hints can be identifiers (e.g. `group`), `sep("...")`, or `split("...")` expressions.
     fn pretty_directive() -> Parser<'a, PrettyDirective<'a>> {
-        let hint = Self::sep_hint() | Self::split_hint() | Self::identifier();
+        let hint = Self::sep_hint() | Self::split_hint() | tokens::identifier();
 
         string("@pretty")
             .trim_whitespace()
             .next(
-                Self::identifier()
+                tokens::identifier()
                     .trim_whitespace()
                     .then(hint.trim_whitespace().many(1..)),
             )
@@ -934,42 +796,34 @@ impl<'a> BBNFGrammar<'a> {
             })
     }
 
-    /// Skip any number of line/block comments (used between top-level items).
-    fn skip_comments() -> Parser<'a, ()> {
-        (Self::block_comment() | Self::line_comment())
-            .trim_whitespace()
-            .many(..)
-            .map(|_| ())
-    }
-
     /// Parse a grammar file: interleaved import directives, recover directives, and rules.
     /// Returns a `ParsedGrammar` with imports, recovers, and the AST.
     pub fn grammar_with_imports() -> Parser<'a, ParsedGrammar<'a>> {
-        let import = Self::skip_comments()
+        let import = tokens::skip_comments()
             .next(Self::import_directive().trim_whitespace())
             .map(TopLevelItem::Import);
-        let recover = Self::skip_comments()
+        let recover = tokens::skip_comments()
             .next(Self::recover_directive().trim_whitespace())
             .map(TopLevelItem::Recover);
-        let pretty = Self::skip_comments()
+        let pretty = tokens::skip_comments()
             .next(Self::pretty_directive().trim_whitespace())
             .map(TopLevelItem::Pretty);
-        let ws_pat = Self::skip_comments()
+        let ws_pat = tokens::skip_comments()
             .next(Self::ws_directive().trim_whitespace())
             .map(TopLevelItem::WsPattern);
-        let debug_dir = Self::skip_comments()
+        let debug_dir = tokens::skip_comments()
             .next(Self::debug_directive().trim_whitespace())
             .map(TopLevelItem::Debug);
-        let token_dir = Self::skip_comments()
+        let token_dir = tokens::skip_comments()
             .next(Self::token_directive().trim_whitespace())
             .map(TopLevelItem::Token);
-        let rule = Self::skip_comments()
+        let rule = tokens::skip_comments()
             .next(Self::production_rule().trim_whitespace())
             .map(TopLevelItem::Rule);
 
         let item = import | recover | pretty | ws_pat | debug_dir | token_dir | rule;
 
-        Self::skip_comments().next(item.many(..)).map(|items| {
+        tokens::skip_comments().next(item.many(..)).map(|items| {
             let mut imports = Vec::new();
             let mut recovers = Vec::new();
             let mut pretties = Vec::new();

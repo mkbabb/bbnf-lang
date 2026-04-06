@@ -16,6 +16,7 @@ pub(crate) struct DirectiveMaps<'a> {
     token_set: HashSet<String>,
     debug_set: HashSet<String>,
     debug_all: bool,
+    host_set: HashSet<String>,
 }
 
 impl<'a> DirectiveMaps<'a> {
@@ -28,6 +29,7 @@ impl<'a> DirectiveMaps<'a> {
             ws_pattern,
             debug_rules,
             token_rules,
+            host_fns,
         } = parsed;
 
         let mut maps = Self {
@@ -48,6 +50,9 @@ impl<'a> DirectiveMaps<'a> {
         for name in token_rules {
             maps.token_set.insert(name.into_owned());
         }
+        for name in host_fns {
+            maps.host_set.insert(name.into_owned());
+        }
         for name in debug_rules {
             if name.as_ref() == "*" {
                 maps.debug_all = true;
@@ -67,6 +72,7 @@ impl<'a> DirectiveMaps<'a> {
             token_rules: (!self.token_set.is_empty()).then_some(&self.token_set),
             debug_rules: (!self.debug_set.is_empty()).then_some(&self.debug_set),
             debug_all: self.debug_all,
+            host_fns: (!self.host_set.is_empty()).then_some(&self.host_set),
         }
     }
 }
@@ -147,6 +153,10 @@ fn merge_module(
 
     for name in &module.grammar.token_rules {
         directives.token_set.insert(name.to_string());
+    }
+
+    for name in &module.grammar.host_fns {
+        directives.host_set.insert(name.to_string());
     }
 
     for name in &module.grammar.debug_rules {

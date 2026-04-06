@@ -37,6 +37,7 @@ pub struct DirectiveSet<'a> {
     pub token_rules: Option<&'a HashSet<String>>,
     pub debug_rules: Option<&'a HashSet<String>>,
     pub debug_all: bool,
+    pub host_fns: Option<&'a HashSet<String>>,
 }
 
 impl<'a> DirectiveSet<'a> {
@@ -49,6 +50,7 @@ impl<'a> DirectiveSet<'a> {
             token_rules: None,
             debug_rules: None,
             debug_all: false,
+            host_fns: None,
         }
     }
 }
@@ -72,6 +74,7 @@ pub(crate) struct LowerCtx<'a> {
     pub(crate) token_rules: Option<&'a HashSet<String>>,
     pub(crate) debug_rules: Option<&'a HashSet<String>>,
     pub(crate) debug_all: bool,
+    pub(crate) host_fns: Option<&'a HashSet<String>>,
 
     /// The current LHS expression being lowered (for branch_firsts lookup).
     pub(crate) current_lhs: Option<&'a Expression<'a>>,
@@ -113,6 +116,7 @@ pub fn lower_to_ir<'a>(
         token_rules: directives.token_rules,
         debug_rules: directives.debug_rules,
         debug_all: directives.debug_all,
+        host_fns: directives.host_fns,
         current_lhs: None,
         recovery_mode: false,
     };

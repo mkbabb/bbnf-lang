@@ -25,6 +25,7 @@ enum TopLevelItem<'a> {
     WsPattern(Cow<'a, str>),
     Debug(Cow<'a, str>),
     Token(Cow<'a, str>),
+    Host(Cow<'a, str>),
     Rule(Expression<'a>),
 }
 
@@ -69,11 +70,14 @@ pub fn parse<'a>() -> Parser<'a, ParsedGrammar<'a>> {
     let token_dir = tokens::skip_comments()
         .next(directives::token_directive().trim_whitespace())
         .map(TopLevelItem::Token);
+    let host_dir = tokens::skip_comments()
+        .next(directives::host_directive().trim_whitespace())
+        .map(TopLevelItem::Host);
     let rule = tokens::skip_comments()
         .next(production_rule().trim_whitespace())
         .map(TopLevelItem::Rule);
 
-    let item = import | recover | pretty | ws_pat | debug_dir | token_dir | rule;
+    let item = import | recover | pretty | ws_pat | debug_dir | token_dir | host_dir | rule;
 
     tokens::skip_comments().next(item.many(..)).map(|items| {
         let mut imports = Vec::new();
@@ -82,6 +86,7 @@ pub fn parse<'a>() -> Parser<'a, ParsedGrammar<'a>> {
         let mut ws_pattern = None;
         let mut debug_rules = Vec::new();
         let mut token_rules = Vec::new();
+        let mut host_fns = Vec::new();
         let mut rules_vec = Vec::new();
         for item in items {
             match item {
@@ -91,6 +96,7 @@ pub fn parse<'a>() -> Parser<'a, ParsedGrammar<'a>> {
                 TopLevelItem::WsPattern(pat) => ws_pattern = Some(pat),
                 TopLevelItem::Debug(name) => debug_rules.push(name),
                 TopLevelItem::Token(name) => token_rules.push(name),
+                TopLevelItem::Host(name) => host_fns.push(name),
                 TopLevelItem::Rule(r) => rules_vec.push(r),
             }
         }
@@ -109,6 +115,7 @@ pub fn parse<'a>() -> Parser<'a, ParsedGrammar<'a>> {
             ws_pattern,
             debug_rules,
             token_rules,
+            host_fns,
         }
     })
 }

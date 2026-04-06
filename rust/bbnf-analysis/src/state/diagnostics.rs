@@ -626,6 +626,7 @@ fn try_compile_ir(cached: &CachedParseResult<'_>) -> HashMap<String, IrRuleMeta>
         token_rules: token_ref,
         debug_rules: debug_ref,
         debug_all,
+        host_fns: None,
     };
 
     let options = PipelineOptions::default();

@@ -127,6 +127,15 @@ fn split_hint<'a>() -> Parser<'a, Span<'a>> {
         .then_span(string_span(")"))
 }
 
+/// Parse a `@host funcName ;` directive — declare an external host function.
+pub(super) fn host_directive<'a>() -> Parser<'a, Cow<'a, str>> {
+    string("@host")
+        .trim_whitespace()
+        .next(tokens::identifier().trim_whitespace())
+        .skip(any_span(&[";", "."]).opt().trim_whitespace())
+        .map(|name_span| Cow::Borrowed(name_span.as_str()))
+}
+
 /// Parse a `@pretty` directive: `@pretty ruleName hint1 hint2 ... ;`
 pub(super) fn pretty_directive<'a>() -> Parser<'a, PrettyDirective<'a>> {
     let hint = sep_hint() | split_hint() | tokens::identifier();

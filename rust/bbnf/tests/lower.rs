@@ -250,6 +250,7 @@ fn lower_with_pretty_hints() {
             token_rules: None,
             debug_rules: None,
             debug_all: false,
+            host_fns: None,
         };
 
         lower_to_ir(&ast, &first_sets, &scc_result, &directives)

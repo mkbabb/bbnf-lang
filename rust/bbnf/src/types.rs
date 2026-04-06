@@ -270,6 +270,8 @@ pub struct ParsedGrammar<'a> {
     pub debug_rules: Vec<Cow<'a, str>>,
     /// Rules marked as lexical tokens from `@token ruleName ;` directives.
     pub token_rules: Vec<Cow<'a, str>>,
+    /// Host function declarations from `@host funcName ;` directives.
+    pub host_fns: Vec<Cow<'a, str>>,
 }
 
 pub fn set_expression_comments<'a>(expr: &mut Expression<'a>, comments: Comments<'a>) {

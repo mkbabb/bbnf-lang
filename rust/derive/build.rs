@@ -14,10 +14,10 @@ fn main() {
         manifest_dir.join("Cargo.toml"),
         manifest_dir.join("build.rs"),
         manifest_dir.join("src"),
-        manifest_dir.join("../bbnf/Cargo.toml"),
-        manifest_dir.join("../bbnf/src"),
-        manifest_dir.join("../bbnf-ir/Cargo.toml"),
-        manifest_dir.join("../bbnf-ir/src"),
+        manifest_dir.join("../core/Cargo.toml"),
+        manifest_dir.join("../core/src"),
+        manifest_dir.join("../ir/Cargo.toml"),
+        manifest_dir.join("../ir/src"),
     ];
 
     let mut files = Vec::new();

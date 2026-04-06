@@ -7,7 +7,7 @@
 
 use proc_macro2::TokenStream;
 use quote::quote;
-use regex_syntax::hir::{Class, Hir, HirKind};
+use parse_that::regex::hir::{CharClass, Hir};
 
 use super::emit_hir;
 
@@ -82,30 +82,36 @@ fn try_emit_byte_match_alt(alts: &[Hir]) -> Option<TokenStream> {
     // Collect all possible byte values from each branch.
     let mut all_bytes: Vec<u8> = Vec::new();
     for alt in alts {
-        match alt.kind() {
-            HirKind::Literal(lit) if lit.0.len() == 1 => {
-                all_bytes.push(lit.0[0]);
+        match alt {
+            Hir::Literal(bytes) if bytes.len() == 1 => {
+                all_bytes.push(bytes[0]);
             }
-            HirKind::Class(Class::Bytes(cb)) => {
-                for r in cb.ranges() {
-                    for b in r.start()..=r.end() {
+            Hir::Class(CharClass::Bytes { ranges, negated }) => {
+                if *negated {
+                    return None;
+                }
+                for r in ranges {
+                    for b in r.start..=r.end {
                         all_bytes.push(b);
                     }
                     // If the range is too large, bail.
-                    if r.end() as u32 - r.start() as u32 > 64 {
+                    if r.end as u32 - r.start as u32 > 64 {
                         return None;
                     }
                 }
             }
-            HirKind::Class(Class::Unicode(cu)) => {
-                for r in cu.ranges() {
-                    if r.end() > '\x7F' {
+            Hir::Class(CharClass::Unicode { ranges, negated }) => {
+                if *negated {
+                    return None;
+                }
+                for r in ranges {
+                    if r.end > '\x7F' {
                         return None;
                     }
-                    for c in r.start()..=r.end() {
+                    for c in r.start..=r.end {
                         all_bytes.push(c as u8);
                     }
-                    if r.end() as u32 - r.start() as u32 > 64 {
+                    if r.end as u32 - r.start as u32 > 64 {
                         return None;
                     }
                 }
@@ -197,28 +203,28 @@ fn try_emit_first_byte_dispatch_alt(alts: &[Hir]) -> Option<TokenStream> {
 /// Returns the set of all possible first bytes, or `None` if the first byte
 /// cannot be determined statically (nullable expressions, complex constructs).
 fn extract_first_bytes(hir: &Hir) -> Option<Vec<u8>> {
-    match hir.kind() {
-        HirKind::Literal(lit) => {
-            if lit.0.is_empty() {
+    match hir {
+        Hir::Literal(bytes) => {
+            if bytes.is_empty() {
                 return None;
             }
-            Some(vec![lit.0[0]])
+            Some(vec![bytes[0]])
         }
-        HirKind::Class(class) => {
+        Hir::Class(class) => {
             let bytes = class_to_byte_vec(class)?;
             if bytes.is_empty() || bytes.len() > 64 {
                 return None;
             }
             Some(bytes)
         }
-        HirKind::Concat(subs) => {
+        Hir::Concat(subs) => {
             if subs.is_empty() {
                 return None;
             }
             extract_first_bytes(&subs[0])
         }
-        HirKind::Capture(cap) => extract_first_bytes(&cap.sub),
-        HirKind::Repetition(rep) => {
+        Hir::Group(sub) => extract_first_bytes(sub),
+        Hir::Repetition(rep) => {
             if rep.min == 0 {
                 return None; // nullable -- first byte is ambiguous
             }
@@ -229,33 +235,39 @@ fn extract_first_bytes(hir: &Hir) -> Option<Vec<u8>> {
 }
 
 /// Convert a character class to a flat list of matching bytes.
-/// Returns `None` for non-ASCII Unicode classes or classes with > 64 bytes.
-fn class_to_byte_vec(class: &Class) -> Option<Vec<u8>> {
+/// Returns `None` for non-ASCII Unicode classes, negated classes, or classes with > 64 bytes.
+fn class_to_byte_vec(class: &CharClass) -> Option<Vec<u8>> {
     match class {
-        Class::Bytes(cb) => {
+        CharClass::Bytes { ranges, negated } => {
+            if *negated {
+                return None; // negated classes expand to too many bytes
+            }
             let mut bytes = Vec::new();
-            for r in cb.ranges() {
-                let span = r.end() as u32 - r.start() as u32;
+            for r in ranges {
+                let span = r.end as u32 - r.start as u32;
                 if span > 64 {
                     return None;
                 }
-                for b in r.start()..=r.end() {
+                for b in r.start..=r.end {
                     bytes.push(b);
                 }
             }
             Some(bytes)
         }
-        Class::Unicode(cu) => {
+        CharClass::Unicode { ranges, negated } => {
+            if *negated {
+                return None;
+            }
             let mut bytes = Vec::new();
-            for r in cu.ranges() {
-                if r.end() > '\x7F' {
+            for r in ranges {
+                if r.end > '\x7F' {
                     return None;
                 }
-                let span = r.end() as u32 - r.start() as u32;
+                let span = r.end as u32 - r.start as u32;
                 if span > 64 {
                     return None;
                 }
-                for c in r.start()..=r.end() {
+                for c in r.start..=r.end {
                     bytes.push(c as u8);
                 }
             }

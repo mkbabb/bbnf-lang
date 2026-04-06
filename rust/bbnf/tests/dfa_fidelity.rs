@@ -22,7 +22,7 @@ fn dfa_greedy_star_is_documented() {
     let pattern = r"(?s)\/\*.*?\*\/";
     let input = "/* c1 */ code; /* c2 */";
 
-    let dfa = parse_that::regex_engine::Dfa::compile(pattern).expect("DFA should compile");
+    let dfa = parse_that::regex::Dfa::compile(pattern).expect("DFA should compile");
 
     let dfa_end = dfa.find_at(input.as_bytes(), 0);
     // DFA matches greedily: from first /* to LAST */ = entire string (22 chars + trailing)
@@ -40,7 +40,7 @@ fn dfa_compatible_comment_pattern() {
     let pattern = r"(?s)(?:\s|\/\*[^*]*(?:\*+[^/][^*]*)*\*+\/)*";
     let input = "/* c1 */ code; /* c2 */";
 
-    let dfa = parse_that::regex_engine::Dfa::compile(pattern).expect("DFA should compile");
+    let dfa = parse_that::regex::Dfa::compile(pattern).expect("DFA should compile");
     let re = Regex::new(&format!(r"\A(?:{})", pattern)).unwrap();
 
     let dfa_end = dfa.find_at(input.as_bytes(), 0);
@@ -78,7 +78,7 @@ fn pipeline_css_dfa_fidelity() {
     );
 
     // Collect all (sid, pattern, dfa) tuples.
-    let regexes: Vec<(usize, &str, &parse_that::regex_engine::Dfa)> = program
+    let regexes: Vec<(usize, &str, &parse_that::regex::Dfa)> = program
         .compiled_regexes
         .iter()
         .enumerate()
@@ -94,7 +94,7 @@ fn pipeline_css_dfa_fidelity() {
     }
 
     // Compile reference regexes (anchored).
-    let references: Vec<(usize, &str, &parse_that::regex_engine::Dfa, Regex)> = regexes
+    let references: Vec<(usize, &str, &parse_that::regex::Dfa, Regex)> = regexes
         .iter()
         .map(|&(sid, pattern, dfa)| {
             let anchored = format!(r"\A(?:{})", pattern);

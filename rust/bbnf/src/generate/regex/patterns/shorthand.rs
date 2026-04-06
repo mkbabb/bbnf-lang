@@ -9,7 +9,7 @@
 
 use proc_macro2::TokenStream;
 use quote::quote;
-use regex_syntax::hir::ClassBytesRange;
+use parse_that::regex::hir::ByteRange;
 
 /// Recognized shorthand character classes.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -28,37 +28,37 @@ pub enum ShorthandClass {
     Hex,
 }
 
-/// Detect a shorthand class from canonical `ClassBytesRange` slices
-/// (as produced by `regex-syntax` normalization).
-pub fn detect_from_ranges(ranges: &[ClassBytesRange]) -> Option<ShorthandClass> {
+/// Detect a shorthand class from canonical `ByteRange` slices
+/// (as produced by the bespoke regex parser normalization).
+pub fn detect_from_ranges(ranges: &[ByteRange]) -> Option<ShorthandClass> {
     match ranges.len() {
-        1 if ranges[0].start() == b'0' && ranges[0].end() == b'9' => Some(ShorthandClass::Digit),
-        2 if ranges[0] == ClassBytesRange::new(0x09, 0x0D)
-            && ranges[1] == ClassBytesRange::new(0x20, 0x20) =>
+        1 if ranges[0].start == b'0' && ranges[0].end == b'9' => Some(ShorthandClass::Digit),
+        2 if ranges[0] == ByteRange::new(0x09, 0x0D)
+            && ranges[1] == ByteRange::new(0x20, 0x20) =>
         {
             Some(ShorthandClass::Whitespace)
         }
-        2 if ranges[0] == ClassBytesRange::new(b'A', b'Z')
-            && ranges[1] == ClassBytesRange::new(b'a', b'z') =>
+        2 if ranges[0] == ByteRange::new(b'A', b'Z')
+            && ranges[1] == ByteRange::new(b'a', b'z') =>
         {
             Some(ShorthandClass::Alpha)
         }
-        3 if ranges[0] == ClassBytesRange::new(b'0', b'9')
-            && ranges[1] == ClassBytesRange::new(b'A', b'Z')
-            && ranges[2] == ClassBytesRange::new(b'a', b'z') =>
+        3 if ranges[0] == ByteRange::new(b'0', b'9')
+            && ranges[1] == ByteRange::new(b'A', b'Z')
+            && ranges[2] == ByteRange::new(b'a', b'z') =>
         {
             Some(ShorthandClass::Alphanumeric)
         }
-        3 if ranges[0] == ClassBytesRange::new(b'0', b'9')
-            && ranges[1] == ClassBytesRange::new(b'A', b'F')
-            && ranges[2] == ClassBytesRange::new(b'a', b'f') =>
+        3 if ranges[0] == ByteRange::new(b'0', b'9')
+            && ranges[1] == ByteRange::new(b'A', b'F')
+            && ranges[2] == ByteRange::new(b'a', b'f') =>
         {
             Some(ShorthandClass::Hex)
         }
-        4 if ranges[0] == ClassBytesRange::new(b'0', b'9')
-            && ranges[1] == ClassBytesRange::new(b'A', b'Z')
-            && ranges[2] == ClassBytesRange::new(b'_', b'_')
-            && ranges[3] == ClassBytesRange::new(b'a', b'z') =>
+        4 if ranges[0] == ByteRange::new(b'0', b'9')
+            && ranges[1] == ByteRange::new(b'A', b'Z')
+            && ranges[2] == ByteRange::new(b'_', b'_')
+            && ranges[3] == ByteRange::new(b'a', b'z') =>
         {
             Some(ShorthandClass::Word)
         }
@@ -88,8 +88,8 @@ pub fn emit_predicate(class: ShorthandClass) -> TokenStream {
     }
 }
 
-/// Convert sorted byte slice to `ClassBytesRange` for range-based detection.
-fn bytes_to_ranges(sorted: &[u8]) -> Vec<ClassBytesRange> {
+/// Convert sorted byte slice to `ByteRange` for range-based detection.
+fn bytes_to_ranges(sorted: &[u8]) -> Vec<ByteRange> {
     if sorted.is_empty() {
         return Vec::new();
     }
@@ -100,11 +100,11 @@ fn bytes_to_ranges(sorted: &[u8]) -> Vec<ClassBytesRange> {
         if b == end + 1 {
             end = b;
         } else {
-            ranges.push(ClassBytesRange::new(start, end));
+            ranges.push(ByteRange::new(start, end));
             start = b;
             end = b;
         }
     }
-    ranges.push(ClassBytesRange::new(start, end));
+    ranges.push(ByteRange::new(start, end));
     ranges
 }

@@ -3,8 +3,8 @@
 //! Emits a byte-class table, flattened transition table, and accept bitset
 //! as `static` arrays, driven by a compact while-loop.
 
-use parse_that::regex_engine::dfa::Dfa;
-use parse_that::regex_engine::nfa::DEAD;
+use parse_that::regex::dfa::Dfa;
+use parse_that::regex::nfa::DEAD;
 use proc_macro2::TokenStream;
 use quote::quote;
 

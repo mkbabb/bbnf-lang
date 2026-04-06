@@ -156,7 +156,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "regex",
- "regex-syntax",
  "serde",
  "serde_json",
  "serde_json_borrow",
@@ -189,7 +188,6 @@ dependencies = [
  "parse_that",
  "rayon",
  "regex",
- "regex-syntax",
  "rmp-serde",
  "rustc-hash 2.1.2",
  "serde",
@@ -1545,7 +1543,6 @@ dependencies = [
  "fast-float2",
  "memchr",
  "pprint",
- "regex-syntax",
  "smallbox",
  "smallvec",
 ]

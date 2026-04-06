@@ -3,7 +3,7 @@
 //! BBNF JSON WASM backend benchmark — native WASM execution throughput.
 //!
 //! Compiles grammar → WAT, instantiates via wasmtime with real DFA regex
-//! host functions from `parse_that::regex_engine`. Measures parse throughput.
+//! host functions from `parse_that::regex`. Measures parse throughput.
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -14,7 +14,7 @@ use bbnf::pipeline::{
     CompileOutput, CompileRequest, CompileTarget, PipelineOptions, compile_grammar_request,
 };
 use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
-use parse_that::regex_engine::Dfa;
+use parse_that::regex::Dfa;
 use wasmtime::*;
 
 fn load(name: &str) -> String {

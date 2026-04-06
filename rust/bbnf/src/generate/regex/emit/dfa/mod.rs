@@ -1,6 +1,6 @@
 //! DFA -> inline TokenStream code emission.
 //!
-//! Converts a compiled `parse_that::regex_engine::Dfa` into inline Rust code
+//! Converts a compiled `parse_that::regex::Dfa` into inline Rust code
 //! that performs anchored regex matching via direct byte operations.
 //!
 //! Three emission tiers based on DFA size:
@@ -19,9 +19,9 @@ mod table;
 use helpers::{build_class_predicate, try_emit_accel_scan};
 use table::emit_tier_b;
 
-use parse_that::regex_engine::accel::detect_accel;
-use parse_that::regex_engine::dfa::Dfa;
-use parse_that::regex_engine::nfa::DEAD;
+use parse_that::regex::accel::detect_accel;
+use parse_that::regex::dfa::Dfa;
+use parse_that::regex::nfa::DEAD;
 use proc_macro2::TokenStream;
 use quote::quote;
 
@@ -30,11 +30,7 @@ use quote::quote;
 /// Returns `None` if the pattern uses unsupported features (backreferences,
 /// lazy quantifiers) or the DFA exceeds the state limit (exponential blowup).
 pub fn try_emit_dfa_inline(pattern: &str) -> Option<TokenStream> {
-    let hir = regex_syntax::ParserBuilder::new()
-        .utf8(false)
-        .unicode(false)
-        .build()
-        .parse(pattern)
+    let hir = parse_that::regex::parse_with(pattern, &parse_that::regex::ParseOptions::byte_mode())
         .ok()?;
     if super::hir::contains_lazy_quantifier(&hir) {
         return None;
@@ -122,7 +118,7 @@ fn emit_tier_a(dfa: &Dfa) -> TokenStream {
 /// non-start state that self-loops and is accepting.
 fn try_emit_simple_loop(
     dfa: &Dfa,
-    accels: &[parse_that::regex_engine::accel::StateAccel],
+    accels: &[parse_that::regex::accel::StateAccel],
     _state_transitions: &[Vec<(TokenStream, u32)>],
 ) -> Option<TokenStream> {
     let state0 = &dfa.states[0];
@@ -214,7 +210,7 @@ fn try_emit_simple_loop(
 /// Emit a general state machine loop for small DFAs.
 fn emit_general_state_machine(
     dfa: &Dfa,
-    accels: &[parse_that::regex_engine::accel::StateAccel],
+    accels: &[parse_that::regex::accel::StateAccel],
     state_transitions: &[Vec<(TokenStream, u32)>],
 ) -> TokenStream {
     let _num_states = dfa.state_count();
@@ -377,11 +373,7 @@ fn emit_general_state_machine(
 /// (same transitions, same accept states) will hash to the same value.
 /// Used for cross-rule deduplication in MonoCtx.
 pub fn canonical_dfa_hash(pattern: &str) -> Option<u64> {
-    let hir = regex_syntax::ParserBuilder::new()
-        .utf8(false)
-        .unicode(false)
-        .build()
-        .parse(pattern)
+    let hir = parse_that::regex::parse_with(pattern, &parse_that::regex::ParseOptions::byte_mode())
         .ok()?;
     if super::hir::contains_lazy_quantifier(&hir) {
         return None;

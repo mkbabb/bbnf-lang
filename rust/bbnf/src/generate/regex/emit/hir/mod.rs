@@ -1,6 +1,6 @@
 //! HIR walker that emits inline Rust byte operations for regex patterns.
 //!
-//! Parses a regex pattern via `regex_syntax::ParserBuilder` in byte mode,
+//! Parses a regex pattern via `parse_that::regex::parse_with` in byte mode,
 //! walks the resulting HIR tree, and emits `proc_macro2::TokenStream` with
 //! direct byte operations on `state.src_bytes` / `state.offset`.
 //!
@@ -15,7 +15,7 @@ mod repetition;
 
 use proc_macro2::TokenStream;
 use quote::quote;
-use regex_syntax::hir::{Class, Hir, HirKind};
+use parse_that::regex::hir::{CharClass, Hir};
 
 use alternation::emit_alternation;
 use leaf::{emit_class_single, emit_literal, emit_look};
@@ -28,13 +28,26 @@ use repetition::emit_repetition;
 /// Used by the DFA emitter to bail on patterns with lazy quantifiers,
 /// since DFA-based matching always produces longest-match semantics.
 pub(crate) fn contains_lazy_quantifier(hir: &Hir) -> bool {
-    match hir.kind() {
-        HirKind::Repetition(rep) => !rep.greedy || contains_lazy_quantifier(&rep.sub),
-        HirKind::Concat(subs) | HirKind::Alternation(subs) => {
+    match hir {
+        Hir::Repetition(rep) => !rep.greedy || contains_lazy_quantifier(&rep.sub),
+        Hir::Concat(subs) | Hir::Alternation(subs) => {
             subs.iter().any(contains_lazy_quantifier)
         }
-        HirKind::Capture(cap) => contains_lazy_quantifier(&cap.sub),
+        Hir::Group(sub) => contains_lazy_quantifier(sub),
         _ => false,
+    }
+}
+
+/// Compute whether an HIR is nullable (can match zero characters).
+fn is_nullable(hir: &Hir) -> bool {
+    match hir {
+        Hir::Empty => true,
+        Hir::Literal(bytes) => bytes.is_empty(),
+        Hir::Class(_) | Hir::Look(_) => false,
+        Hir::Repetition(rep) => rep.min == 0 || is_nullable(&rep.sub),
+        Hir::Group(sub) => is_nullable(sub),
+        Hir::Concat(subs) => subs.iter().all(is_nullable),
+        Hir::Alternation(alts) => alts.iter().any(is_nullable),
     }
 }
 
@@ -46,14 +59,13 @@ pub(crate) fn contains_lazy_quantifier(hir: &Hir) -> bool {
 /// Returns `None` if the pattern contains features that cannot be inlined:
 /// - Lookahead / lookbehind assertions (`Look` variants other than `Start`/`End`)
 /// - Unicode properties beyond ASCII
-/// - Patterns that regex-syntax cannot parse
+/// - Patterns that the parser cannot parse
 pub fn try_emit_regex_inline(pattern: &str) -> Option<TokenStream> {
-    let hir = regex_syntax::ParserBuilder::new()
-        .utf8(false)
-        .unicode(false)
-        .build()
-        .parse(pattern)
-        .ok()?;
+    let hir = parse_that::regex::parse_with(
+        pattern,
+        &parse_that::regex::ParseOptions::byte_mode(),
+    )
+    .ok()?;
 
     let body = emit_hir(&hir)?;
 
@@ -62,7 +74,7 @@ pub fn try_emit_regex_inline(pattern: &str) -> Option<TokenStream> {
     // This matches the DFA path behavior (which initializes __last_accept
     // to Some(__start) when state 0 is accepting). Repeat loops have their
     // own infinite-loop guard (`if state.offset == prev { break; }`).
-    let nullable = hir.properties().minimum_len() == Some(0);
+    let nullable = is_nullable(&hir);
     let guard = if nullable {
         quote! { __result.is_some() }
     } else {
@@ -92,22 +104,22 @@ pub fn try_emit_regex_inline(pattern: &str) -> Option<TokenStream> {
 /// `?` (the try operator) for early exit on mismatch. The caller wraps
 /// everything in an IIFE closure that returns `Option<()>`.
 pub(super) fn emit_hir(hir: &Hir) -> Option<TokenStream> {
-    match hir.kind() {
-        HirKind::Empty => Some(quote! {}),
+    match hir {
+        Hir::Empty => Some(quote! {}),
 
-        HirKind::Literal(lit) => emit_literal(&lit.0),
+        Hir::Literal(bytes) => emit_literal(bytes),
 
-        HirKind::Class(class) => emit_class_single(class),
+        Hir::Class(class) => emit_class_single(class),
 
-        HirKind::Look(look) => emit_look(*look),
+        Hir::Look(look) => emit_look(*look),
 
-        HirKind::Repetition(rep) => emit_repetition(rep),
+        Hir::Repetition(rep) => emit_repetition(rep),
 
-        HirKind::Capture(cap) => emit_hir(&cap.sub),
+        Hir::Group(sub) => emit_hir(sub),
 
-        HirKind::Concat(subs) => emit_concat(subs),
+        Hir::Concat(subs) => emit_concat(subs),
 
-        HirKind::Alternation(alts) => emit_alternation(alts),
+        Hir::Alternation(alts) => emit_alternation(alts),
     }
 }
 
@@ -148,8 +160,8 @@ fn try_emit_lazy_literal_scan(subs: &[Hir]) -> Option<(TokenStream, usize)> {
         return None;
     }
 
-    let rep = match subs[0].kind() {
-        HirKind::Repetition(rep) if !rep.greedy => rep,
+    let rep = match &subs[0] {
+        Hir::Repetition(rep) if !rep.greedy => rep,
         _ => return None,
     };
 
@@ -159,8 +171,8 @@ fn try_emit_lazy_literal_scan(subs: &[Hir]) -> Option<(TokenStream, usize)> {
         return None;
     }
 
-    let lit_bytes = match subs[1].kind() {
-        HirKind::Literal(lit) if !lit.0.is_empty() => &lit.0,
+    let lit_bytes = match &subs[1] {
+        Hir::Literal(bytes) if !bytes.is_empty() => bytes,
         _ => return None,
     };
 
@@ -196,28 +208,36 @@ fn try_emit_lazy_literal_scan(subs: &[Hir]) -> Option<(TokenStream, usize)> {
 /// Check if an HIR node represents a broad byte class (covers >= 240 out of 256 bytes).
 /// This matches `.` (non-dotall: 255 bytes) and `(?s).` (dotall: 256 bytes).
 fn is_broad_byte_class(hir: &Hir) -> bool {
-    match hir.kind() {
-        HirKind::Class(Class::Bytes(cb)) => {
-            let total: usize = cb
-                .ranges()
+    match hir {
+        Hir::Class(CharClass::Bytes { ranges, negated }) => {
+            // For negated classes: few excluded bytes means broad coverage.
+            if *negated {
+                let excluded: usize = ranges
+                    .iter()
+                    .map(|r| (r.end as usize - r.start as usize) + 1)
+                    .sum();
+                return excluded <= 16; // at most 16 excluded bytes = 240+ included
+            }
+            let total: usize = ranges
                 .iter()
-                .map(|r| (r.end() as usize - r.start() as usize) + 1)
+                .map(|r| (r.end as usize - r.start as usize) + 1)
                 .sum();
             total >= 240
         }
-        HirKind::Class(Class::Unicode(cu)) => {
+        Hir::Class(CharClass::Unicode { ranges, negated }) => {
+            if *negated {
+                return true; // negated Unicode class covers nearly everything
+            }
             // Check if it's an ASCII-only broad class.
-            let ranges = cu.ranges();
-            if ranges.iter().any(|r| r.end() > '\u{FF}') {
+            if ranges.iter().any(|r| r.end > '\u{FF}') {
                 return true; // Unicode broad class -- covers everything
             }
             let total: usize = ranges
                 .iter()
-                .map(|r| (r.end() as usize - r.start() as usize) + 1)
+                .map(|r| (r.end as usize - r.start as usize) + 1)
                 .sum();
             total >= 240
         }
         _ => false,
     }
 }
-

@@ -14,7 +14,7 @@ use bbnf::pipeline::{
     CompileOutput, CompileRequest, CompileTarget, PipelineOptions, compile_paths_request,
 };
 use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
-use parse_that::regex_engine::Dfa;
+use parse_that::regex::Dfa;
 use wasmtime::*;
 
 fn load(name: &str) -> String {

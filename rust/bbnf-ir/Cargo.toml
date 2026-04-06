@@ -13,7 +13,6 @@ rmp-serde = "1"
 parse_that = "0.4"
 rustc-hash = "2"
 rayon = "1"
-regex-syntax = "0.8.10"
 
 [dev-dependencies]
 regex = "1"

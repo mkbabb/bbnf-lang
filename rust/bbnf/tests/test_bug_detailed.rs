@@ -13,28 +13,26 @@ fn test_negated_patterns_that_trigger_bug() {
         let result = classify_regex(pattern);
         println!("{}: {} -> {:?}", pattern, desc, result);
 
-        // Demonstrate the negation detection
-        use regex_syntax::hir::{Class, HirKind};
-        let hir = regex_syntax::ParserBuilder::new()
-            .utf8(false)
-            .unicode(false)
-            .build()
-            .parse(pattern)
-            .unwrap();
+        // Demonstrate the negation detection using the bespoke HIR.
+        use parse_that::regex::hir::{CharClass, Hir};
+        let hir = parse_that::regex::parse_with(
+            pattern,
+            &parse_that::regex::ParseOptions::byte_mode(),
+        )
+        .unwrap();
 
-        if let HirKind::Repetition(rep) = hir.kind() {
-            if let HirKind::Class(Class::Bytes(bc)) = rep.sub.kind() {
-                let ranges = bc.ranges();
+        if let Hir::Repetition(ref rep) = hir {
+            if let Hir::Class(CharClass::Bytes { ref ranges, negated }) = *rep.sub {
                 let total_bytes: usize = ranges
                     .iter()
-                    .map(|r| (r.end() - r.start() + 1) as usize)
+                    .map(|r| (r.end - r.start + 1) as usize)
                     .sum();
                 println!(
-                    "  -> {} ranges, {} bytes covered",
+                    "  -> {} ranges, {} bytes covered, negated={}",
                     ranges.len(),
-                    total_bytes
+                    total_bytes,
+                    negated,
                 );
-                println!("  -> is_negated_class should be: ranges > 3 AND total_bytes > 200");
             }
         }
     }
@@ -53,28 +51,24 @@ fn test_positive_patterns() {
         let result = classify_regex(pattern);
         println!("{}: {} -> {:?}", pattern, desc, result);
 
-        use regex_syntax::hir::{Class, HirKind};
-        let hir = regex_syntax::ParserBuilder::new()
-            .utf8(false)
-            .unicode(false)
-            .build()
-            .parse(pattern)
-            .unwrap();
+        use parse_that::regex::hir::{CharClass, Hir};
+        let hir = parse_that::regex::parse_with(
+            pattern,
+            &parse_that::regex::ParseOptions::byte_mode(),
+        )
+        .unwrap();
 
-        if let HirKind::Repetition(rep) = hir.kind() {
-            if let HirKind::Class(Class::Bytes(bc)) = rep.sub.kind() {
-                let ranges = bc.ranges();
+        if let Hir::Repetition(ref rep) = hir {
+            if let Hir::Class(CharClass::Bytes { ref ranges, negated }) = *rep.sub {
                 let total_bytes: usize = ranges
                     .iter()
-                    .map(|r| (r.end() - r.start() + 1) as usize)
+                    .map(|r| (r.end - r.start + 1) as usize)
                     .sum();
                 println!(
-                    "  -> {} ranges, {} bytes covered",
+                    "  -> {} ranges, {} bytes covered, negated={}",
                     ranges.len(),
-                    total_bytes
-                );
-                println!(
-                    "  -> is_negated_class should be: ranges > 3 OR total_bytes > 200? NO - positive"
+                    total_bytes,
+                    negated,
                 );
             }
         }

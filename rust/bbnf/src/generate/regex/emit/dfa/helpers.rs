@@ -6,8 +6,8 @@
 //! - SIMD-accelerated self-loop scanning.
 //! - Canonical DFA hashing for cross-rule deduplication.
 
-use parse_that::regex_engine::accel::{AccelStrategy, StateAccel};
-use parse_that::regex_engine::dfa::Dfa;
+use parse_that::regex::accel::{AccelStrategy, StateAccel};
+use parse_that::regex::dfa::Dfa;
 use proc_macro2::TokenStream;
 use quote::quote;
 

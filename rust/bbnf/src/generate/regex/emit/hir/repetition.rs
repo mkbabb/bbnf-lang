@@ -3,9 +3,9 @@
 //! Handles both tight byte-predicate loops for character classes and
 //! general-purpose checkpoint loops for arbitrary sub-expressions.
 
+use parse_that::regex::hir::{Hir, Repetition};
 use proc_macro2::TokenStream;
 use quote::quote;
-use regex_syntax::hir::{HirKind, Repetition};
 
 use super::emit_hir;
 use super::leaf::emit_class_predicate;
@@ -33,7 +33,7 @@ pub(super) fn emit_repetition(rep: &Repetition) -> Option<TokenStream> {
 
     // Special case: class-based loops (`[a-z]+`, `\d*`, etc.)
     // For a tight byte-predicate loop without per-iteration IIFE overhead.
-    if let HirKind::Class(class) = rep.sub.kind() {
+    if let Hir::Class(class) = &*rep.sub {
         if let Some(predicate) = emit_class_predicate(class) {
             return emit_class_loop(&predicate, min, max);
         }
@@ -44,7 +44,7 @@ pub(super) fn emit_repetition(rep: &Repetition) -> Option<TokenStream> {
 }
 
 /// Emit an optional match (`?` quantifier): try, succeed either way.
-fn emit_optional(sub: &regex_syntax::hir::Hir) -> Option<TokenStream> {
+fn emit_optional(sub: &Hir) -> Option<TokenStream> {
     let body = emit_hir(sub)?;
     Some(quote! {
         {
@@ -128,7 +128,7 @@ fn emit_class_loop(predicate: &TokenStream, min: u32, max: Option<u32>) -> Optio
 /// Uses checkpoint save/restore per iteration. More overhead than the
 /// class-specific loop, but handles any HIR sub-expression.
 fn emit_general_loop(
-    sub: &regex_syntax::hir::Hir,
+    sub: &Hir,
     min: u32,
     max: Option<u32>,
 ) -> Option<TokenStream> {

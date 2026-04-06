@@ -181,7 +181,7 @@ pub struct BytecodeProgram {
     /// Pre-compiled DFA patterns, indexed by StringId.
     /// `None` for string IDs that are not regex patterns (or DFA compilation failed).
     #[serde(skip)]
-    pub compiled_regexes: Vec<Option<parse_that::regex_engine::Dfa>>,
+    pub compiled_regexes: Vec<Option<parse_that::regex::Dfa>>,
 
     /// FOLLOW sets per rule, for error recovery and expected-token reporting.
     /// Populated from `GrammarIR::follow_sets` during compilation.
@@ -235,7 +235,7 @@ impl BytecodeProgram {
 
         for sid in regex_sids {
             let pattern = &self.strings[sid as usize];
-            let dfa = parse_that::regex_engine::Dfa::compile(pattern)
+            let dfa = parse_that::regex::Dfa::compile(pattern)
                 .unwrap_or_else(|| panic!("DFA compilation failed for regex: {}", pattern));
             self.compiled_regexes[sid as usize] = Some(dfa);
         }

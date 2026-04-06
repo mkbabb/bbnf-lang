@@ -19,7 +19,6 @@ syn = { version = "2", features = ["full"] }
 quote = "1"
 proc-macro2 = "1"
 indexmap = "2"
-regex-syntax = "0.8.10"
 dhat = { version = "0.3", optional = true }
 
 [features]

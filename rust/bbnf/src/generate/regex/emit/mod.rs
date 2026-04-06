@@ -196,7 +196,7 @@ pub fn audit_regex_pattern(pattern: &str) -> RegexTier {
     if hir::try_emit_regex_inline(pattern).is_some() {
         return RegexTier::HirInline;
     }
-    if let Some(dfa) = parse_that::regex_engine::Dfa::compile(pattern) {
+    if let Some(dfa) = parse_that::regex::Dfa::compile(pattern) {
         return RegexTier::DfaCompiled {
             states: dfa.state_count(),
             classes: dfa.class_count(),

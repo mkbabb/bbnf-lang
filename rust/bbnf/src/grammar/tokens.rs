@@ -135,7 +135,7 @@ pub(super) fn regex_body<'a>() -> Parser<'a, Span<'a>> {
 pub(super) fn regex<'a>() -> Parser<'a, Expression<'a>> {
     let string = regex_body().wrap_span(string_span("/"), string_span("/"));
     string.map(|s| {
-        if let Err(e) = regex_syntax::Parser::new().parse(s.as_str()) {
+        if let Err(e) = parse_that::regex::parse(s.as_str()) {
             panic!("invalid regex: {:?}, {:?}", s.as_str(), e);
         }
         let token = Token::new(s.as_str().into(), s);

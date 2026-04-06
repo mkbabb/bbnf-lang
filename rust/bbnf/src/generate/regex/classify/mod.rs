@@ -1,15 +1,16 @@
 //! HIR-based regex classification for during-parse value conversion.
 //!
-//! Uses `regex_syntax` to parse patterns into HIR (High-level Intermediate
-//! Representation) and classify structurally. More robust than string-level
-//! matching: normalizes `\d` / `[0-9]`, class orderings, group nesting, etc.
+//! Uses the bespoke `parse_that::regex` HIR to parse patterns into HIR
+//! (High-level Intermediate Representation) and classify structurally.
+//! More robust than string-level matching: normalizes `\d` / `[0-9]`,
+//! class orderings, group nesting, etc.
 //!
 //! Known-pattern detection via exact string match takes priority over HIR
 //! structural analysis, providing stable classification for canonical patterns.
 
 mod structural;
 
-use regex_syntax::hir::{Hir, HirKind};
+use parse_that::regex::hir::Hir;
 
 use structural::{
     try_classify_hex, try_classify_identifier, try_classify_numeric, try_classify_quoted_string,
@@ -109,12 +110,10 @@ pub fn classify_regex(pattern: &str) -> RegexClass {
         return class;
     }
 
-    let hir = match regex_syntax::ParserBuilder::new()
-        .utf8(false)
-        .unicode(false)
-        .build()
-        .parse(pattern)
-    {
+    let hir = match parse_that::regex::parse_with(
+        pattern,
+        &parse_that::regex::ParseOptions::byte_mode(),
+    ) {
         Ok(h) => h,
         Err(_) => return RegexClass::Unknown,
     };
@@ -137,41 +136,23 @@ pub fn classify_regex(pattern: &str) -> RegexClass {
 // ── Utility ────────────────────────────────────────────────────────────────
 
 pub(crate) fn is_literal_byte(hir: &Hir, byte: u8) -> bool {
-    if let HirKind::Literal(lit) = hir.kind() {
-        return lit.0.len() == 1 && lit.0[0] == byte;
-    }
-    // Escaped literal (e.g., \.)
-    if let HirKind::Literal(lit) = hir.kind() {
-        return lit.0.as_ref() == [byte];
+    if let Hir::Literal(bytes) = hir {
+        return bytes.len() == 1 && bytes[0] == byte;
     }
     false
 }
 
 pub(crate) fn unwrap_group(hir: &Hir) -> &Hir {
-    match hir.kind() {
-        HirKind::Capture(cap) => unwrap_group(&cap.sub),
+    match hir {
+        Hir::Group(sub) => unwrap_group(sub),
         _ => hir,
     }
 }
 
 pub(crate) fn unwrap_repetition(hir: &Hir) -> Option<&Hir> {
-    if let HirKind::Repetition(rep) = hir.kind() {
+    if let Hir::Repetition(rep) = hir {
         Some(&rep.sub)
     } else {
         None
     }
-}
-
-/// Detect regex-syntax 0.8's materialized negated classes.
-///
-/// When regex-syntax parses `[^XYZ]`, it has no `.negated()` flag — the complement
-/// is materialized as positive ranges. Legitimate letter/word classes cover at most
-/// ~62 bytes (`[a-zA-Z0-9]`). Negated classes cover 250+.
-pub(crate) fn is_negated_class_materialization(bc: &regex_syntax::hir::ClassBytes) -> bool {
-    let total_bytes: usize = bc
-        .ranges()
-        .iter()
-        .map(|r| (r.end() - r.start()) as usize + 1)
-        .sum();
-    total_bytes > 100
 }

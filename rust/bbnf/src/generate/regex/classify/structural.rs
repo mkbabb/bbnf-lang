@@ -2,18 +2,18 @@
 //!
 //! Pure HIR analyzers that decompose regex patterns into semantic categories
 //! (Numeric, QuotedString, HexDigits, Identifier) by walking the
-//! `regex_syntax` HIR tree.
+//! bespoke `parse_that::regex::hir` tree.
 
-use regex_syntax::hir::{Class, ClassBytesRange, Hir, HirKind};
+use parse_that::regex::hir::{ByteRange, CharClass, Hir};
 
-use super::{RegexClass, is_literal_byte, is_negated_class_materialization, unwrap_group};
+use super::{RegexClass, is_literal_byte, unwrap_group};
 
 // ── Numeric ────────────────────────────────────────────────────────────────
 
 pub(super) fn try_classify_numeric(hir: &Hir) -> Option<RegexClass> {
     // Flatten the top-level concat (or treat a single node as a 1-element list).
-    let parts = match hir.kind() {
-        HirKind::Concat(parts) => parts.as_slice(),
+    let parts = match hir {
+        Hir::Concat(parts) => parts.as_slice(),
         _ => std::slice::from_ref(hir),
     };
 
@@ -35,13 +35,10 @@ pub(super) fn try_classify_numeric(hir: &Hir) -> Option<RegexClass> {
     if is_digit_repetition(&parts[idx]) {
         idx += 1;
     } else if is_digit_class(&parts[idx]) {
-        // Single digit character (no repetition) — could be numeric
         idx += 1;
     } else if is_json_integer_alternation(&parts[idx]) {
-        // (0|[1-9]\d*) style
         idx += 1;
     } else if is_css_number_body(&parts[idx]) {
-        // (\d+(\.\d+)?|\.\d+) style — inherently includes fraction
         allows_fraction = true;
         idx += 1;
     } else {
@@ -60,7 +57,6 @@ pub(super) fn try_classify_numeric(hir: &Hir) -> Option<RegexClass> {
         idx += 1;
     }
 
-    // Must have consumed everything.
     if idx != parts.len() {
         return None;
     }
@@ -74,51 +70,52 @@ pub(super) fn try_classify_numeric(hir: &Hir) -> Option<RegexClass> {
 
 /// Check if HIR is an optional sign class: `[-+]?` or `-?`
 fn is_optional_sign_class(hir: &Hir) -> bool {
-    if let HirKind::Repetition(rep) = hir.kind() {
+    if let Hir::Repetition(rep) = hir {
         if rep.min == 0 && rep.max == Some(1) {
             return is_sign_class(&rep.sub);
         }
     }
-    // Also handle capture group wrapping.
-    if let HirKind::Capture(cap) = hir.kind() {
-        return is_optional_sign_class(&cap.sub);
+    if let Hir::Group(sub) = hir {
+        return is_optional_sign_class(sub);
     }
     false
 }
 
 fn is_sign_class(hir: &Hir) -> bool {
-    if let HirKind::Class(Class::Bytes(bc)) = hir.kind() {
-        let ranges = bc.ranges();
-        // [-+] or [+-] → two single-byte ranges or one range
-        let has_plus = ranges.iter().any(|r| r.start() <= b'+' && r.end() >= b'+');
-        let has_minus = ranges.iter().any(|r| r.start() <= b'-' && r.end() >= b'-');
+    if let Hir::Class(CharClass::Bytes { ranges, negated }) = hir {
+        if *negated {
+            return false;
+        }
+        let has_plus = ranges.iter().any(|r| r.start <= b'+' && r.end >= b'+');
+        let has_minus = ranges.iter().any(|r| r.start <= b'-' && r.end >= b'-');
         return has_minus && (has_plus || ranges.len() == 1);
     }
-    // Literal '-'
-    if let HirKind::Literal(lit) = hir.kind() {
-        return lit.0.as_ref() == b"-";
+    if let Hir::Literal(bytes) = hir {
+        return bytes.as_slice() == b"-";
     }
     false
 }
 
 /// Check if HIR is a digit repetition: `\d+`, `[0-9]+`, etc.
 fn is_digit_repetition(hir: &Hir) -> bool {
-    if let HirKind::Repetition(rep) = hir.kind() {
+    if let Hir::Repetition(rep) = hir {
         if rep.min >= 1 || (rep.min == 0 && rep.max.is_none()) {
             return is_digit_class(&rep.sub);
         }
     }
-    if let HirKind::Capture(cap) = hir.kind() {
-        return is_digit_repetition(&cap.sub);
+    if let Hir::Group(sub) = hir {
+        return is_digit_repetition(sub);
     }
     false
 }
 
 /// Check if HIR is a digit class: `\d`, `[0-9]`
 fn is_digit_class(hir: &Hir) -> bool {
-    if let HirKind::Class(Class::Bytes(bc)) = hir.kind() {
-        let ranges = bc.ranges();
-        return ranges.len() == 1 && ranges[0] == ClassBytesRange::new(b'0', b'9');
+    if let Hir::Class(CharClass::Bytes { ranges, negated }) = hir {
+        if *negated {
+            return false;
+        }
+        return ranges.len() == 1 && ranges[0] == ByteRange::new(b'0', b'9');
     }
     false
 }
@@ -126,7 +123,7 @@ fn is_digit_class(hir: &Hir) -> bool {
 /// Check if HIR matches `(0|[1-9]\d*)` (JSON integer alternation).
 fn is_json_integer_alternation(hir: &Hir) -> bool {
     let inner = unwrap_group(hir);
-    if let HirKind::Alternation(alts) = inner.kind() {
+    if let Hir::Alternation(alts) = inner {
         if alts.len() == 2 {
             let is_zero = is_literal_byte(&alts[0], b'0');
             let is_nonzero_seq = is_nonzero_digit_seq(&alts[1]);
@@ -138,24 +135,26 @@ fn is_json_integer_alternation(hir: &Hir) -> bool {
 
 /// Check if HIR matches `[1-9]\d*`
 fn is_nonzero_digit_seq(hir: &Hir) -> bool {
-    let parts = match hir.kind() {
-        HirKind::Concat(parts) => parts.as_slice(),
+    let parts = match hir {
+        Hir::Concat(parts) => parts.as_slice(),
         _ => return false,
     };
     if parts.len() != 2 {
         return false;
     }
     // [1-9]
-    if let HirKind::Class(Class::Bytes(bc)) = parts[0].kind() {
-        let ranges = bc.ranges();
-        if !(ranges.len() == 1 && ranges[0] == ClassBytesRange::new(b'1', b'9')) {
+    if let Hir::Class(CharClass::Bytes { ranges, negated }) = &parts[0] {
+        if *negated {
+            return false;
+        }
+        if !(ranges.len() == 1 && ranges[0] == ByteRange::new(b'1', b'9')) {
             return false;
         }
     } else {
         return false;
     }
     // \d*
-    if let HirKind::Repetition(rep) = parts[1].kind() {
+    if let Hir::Repetition(rep) = &parts[1] {
         return rep.min == 0 && rep.max.is_none() && is_digit_class(&rep.sub);
     }
     false
@@ -164,10 +163,8 @@ fn is_nonzero_digit_seq(hir: &Hir) -> bool {
 /// Check if HIR matches `(\d+(\.\d+)?|\.\d+)` (CSS non-nullable number body).
 fn is_css_number_body(hir: &Hir) -> bool {
     let inner = unwrap_group(hir);
-    if let HirKind::Alternation(alts) = inner.kind() {
+    if let Hir::Alternation(alts) = inner {
         if alts.len() == 2 {
-            // First alt: \d+(\.\d+)?
-            // Second alt: \.\d+
             return is_digits_with_optional_fraction(&alts[0]) && is_dot_digits(&alts[1]);
         }
     }
@@ -175,8 +172,8 @@ fn is_css_number_body(hir: &Hir) -> bool {
 }
 
 fn is_digits_with_optional_fraction(hir: &Hir) -> bool {
-    let parts = match hir.kind() {
-        HirKind::Concat(parts) => parts.as_slice(),
+    let parts = match hir {
+        Hir::Concat(parts) => parts.as_slice(),
         _ => return is_digit_repetition(hir),
     };
     if parts.len() != 2 {
@@ -186,8 +183,8 @@ fn is_digits_with_optional_fraction(hir: &Hir) -> bool {
 }
 
 fn is_dot_digits(hir: &Hir) -> bool {
-    let parts = match hir.kind() {
-        HirKind::Concat(parts) => parts.as_slice(),
+    let parts = match hir {
+        Hir::Concat(parts) => parts.as_slice(),
         _ => return false,
     };
     if parts.len() != 2 {
@@ -198,20 +195,18 @@ fn is_dot_digits(hir: &Hir) -> bool {
 
 /// Check if HIR is an optional fraction: `(\.\d+)?` or `\.\d+`.
 fn is_fraction_part(hir: &Hir) -> bool {
-    // Optional group: (\.\d+)?
-    if let HirKind::Repetition(rep) = hir.kind() {
+    if let Hir::Repetition(rep) = hir {
         if rep.min == 0 && rep.max == Some(1) {
             return is_dot_digits_inner(&rep.sub);
         }
     }
-    // Direct: \.\d+
     is_dot_digits_inner(hir)
 }
 
 fn is_dot_digits_inner(hir: &Hir) -> bool {
     let inner = unwrap_group(hir);
-    let parts = match inner.kind() {
-        HirKind::Concat(parts) => parts.as_slice(),
+    let parts = match inner {
+        Hir::Concat(parts) => parts.as_slice(),
         _ => return false,
     };
     if parts.len() != 2 {
@@ -222,7 +217,7 @@ fn is_dot_digits_inner(hir: &Hir) -> bool {
 
 /// Check if HIR is an optional exponent: `([eE][+-]?\d+)?`.
 fn is_exponent_part(hir: &Hir) -> bool {
-    if let HirKind::Repetition(rep) = hir.kind() {
+    if let Hir::Repetition(rep) = hir {
         if rep.min == 0 && rep.max == Some(1) {
             return is_exponent_inner(&rep.sub);
         }
@@ -232,11 +227,10 @@ fn is_exponent_part(hir: &Hir) -> bool {
 
 fn is_exponent_inner(hir: &Hir) -> bool {
     let inner = unwrap_group(hir);
-    let parts = match inner.kind() {
-        HirKind::Concat(parts) => parts.as_slice(),
+    let parts = match inner {
+        Hir::Concat(parts) => parts.as_slice(),
         _ => return false,
     };
-    // [eE] [+-]? \d+  (2-3 parts)
     if parts.len() < 2 || parts.len() > 3 {
         return false;
     }
@@ -251,10 +245,12 @@ fn is_exponent_inner(hir: &Hir) -> bool {
 }
 
 fn is_exponent_letter_class(hir: &Hir) -> bool {
-    if let HirKind::Class(Class::Bytes(bc)) = hir.kind() {
-        let ranges = bc.ranges();
-        let has_e = ranges.iter().any(|r| r.start() <= b'e' && r.end() >= b'e');
-        let has_upper_e = ranges.iter().any(|r| r.start() <= b'E' && r.end() >= b'E');
+    if let Hir::Class(CharClass::Bytes { ranges, negated }) = hir {
+        if *negated {
+            return false;
+        }
+        let has_e = ranges.iter().any(|r| r.start <= b'e' && r.end >= b'e');
+        let has_upper_e = ranges.iter().any(|r| r.start <= b'E' && r.end >= b'E');
         return has_e && has_upper_e;
     }
     false
@@ -263,8 +259,8 @@ fn is_exponent_letter_class(hir: &Hir) -> bool {
 // ── QuotedString ───────────────────────────────────────────────────────────
 
 pub(super) fn try_classify_quoted_string(hir: &Hir) -> Option<RegexClass> {
-    let parts = match hir.kind() {
-        HirKind::Concat(parts) => parts.as_slice(),
+    let parts = match hir {
+        Hir::Concat(parts) => parts.as_slice(),
         _ => return None,
     };
     if parts.len() < 3 {
@@ -272,9 +268,9 @@ pub(super) fn try_classify_quoted_string(hir: &Hir) -> Option<RegexClass> {
     }
 
     // First element: literal quote char.
-    let quote_char = match parts[0].kind() {
-        HirKind::Literal(lit) if lit.0.len() == 1 => {
-            let b = lit.0[0];
+    let quote_char = match &parts[0] {
+        Hir::Literal(bytes) if bytes.len() == 1 => {
+            let b = bytes[0];
             if b == b'"' || b == b'\'' {
                 b
             } else {
@@ -286,13 +282,12 @@ pub(super) fn try_classify_quoted_string(hir: &Hir) -> Option<RegexClass> {
 
     // Last element: literal closing quote (same char).
     let last = parts.last()?;
-    match last.kind() {
-        HirKind::Literal(lit) if lit.0.len() == 1 && lit.0[0] == quote_char => {}
+    match last {
+        Hir::Literal(bytes) if bytes.len() == 1 && bytes[0] == quote_char => {}
         _ => return None,
     }
 
     // Middle: repetition containing the content pattern.
-    // Check for escape handling.
     let middle = &parts[1..parts.len() - 1];
     let allows_escapes = middle.iter().any(contains_backslash_pattern);
 
@@ -303,12 +298,12 @@ pub(super) fn try_classify_quoted_string(hir: &Hir) -> Option<RegexClass> {
 }
 
 fn contains_backslash_pattern(hir: &Hir) -> bool {
-    match hir.kind() {
-        HirKind::Literal(lit) => lit.0.contains(&b'\\'),
-        HirKind::Concat(parts) => parts.iter().any(contains_backslash_pattern),
-        HirKind::Alternation(alts) => alts.iter().any(contains_backslash_pattern),
-        HirKind::Repetition(rep) => contains_backslash_pattern(&rep.sub),
-        HirKind::Capture(cap) => contains_backslash_pattern(&cap.sub),
+    match hir {
+        Hir::Literal(bytes) => bytes.contains(&b'\\'),
+        Hir::Concat(parts) => parts.iter().any(contains_backslash_pattern),
+        Hir::Alternation(alts) => alts.iter().any(contains_backslash_pattern),
+        Hir::Repetition(rep) => contains_backslash_pattern(&rep.sub),
+        Hir::Group(sub) => contains_backslash_pattern(sub),
         _ => false,
     }
 }
@@ -316,8 +311,7 @@ fn contains_backslash_pattern(hir: &Hir) -> bool {
 // ── HexDigits ──────────────────────────────────────────────────────────────
 
 pub(super) fn try_classify_hex(hir: &Hir) -> bool {
-    // Match: [0-9a-fA-F]+ or [0-9a-fA-F]{n,m}
-    if let HirKind::Repetition(rep) = hir.kind() {
+    if let Hir::Repetition(rep) = hir {
         if rep.min >= 1 || rep.max.is_none() {
             return is_hex_class(&rep.sub);
         }
@@ -326,19 +320,14 @@ pub(super) fn try_classify_hex(hir: &Hir) -> bool {
 }
 
 fn is_hex_class(hir: &Hir) -> bool {
-    if let HirKind::Class(Class::Bytes(bc)) = hir.kind() {
-        let ranges = bc.ranges();
-        // Canonical hex: [0-9A-Fa-f] → 3 ranges after normalization.
+    if let Hir::Class(CharClass::Bytes { ranges, negated }) = hir {
+        if *negated {
+            return false;
+        }
         if ranges.len() == 3 {
-            let has_digits = ranges
-                .iter()
-                .any(|r| *r == ClassBytesRange::new(b'0', b'9'));
-            let has_upper = ranges
-                .iter()
-                .any(|r| *r == ClassBytesRange::new(b'A', b'F'));
-            let has_lower = ranges
-                .iter()
-                .any(|r| *r == ClassBytesRange::new(b'a', b'f'));
+            let has_digits = ranges.iter().any(|r| *r == ByteRange::new(b'0', b'9'));
+            let has_upper = ranges.iter().any(|r| *r == ByteRange::new(b'A', b'F'));
+            let has_lower = ranges.iter().any(|r| *r == ByteRange::new(b'a', b'f'));
             return has_digits && has_upper && has_lower;
         }
     }
@@ -348,11 +337,10 @@ fn is_hex_class(hir: &Hir) -> bool {
 // ── Identifier ─────────────────────────────────────────────────────────────
 
 pub(super) fn try_classify_identifier(hir: &Hir) -> bool {
-    let parts = match hir.kind() {
-        HirKind::Concat(parts) => parts.as_slice(),
+    let parts = match hir {
+        Hir::Concat(parts) => parts.as_slice(),
         _ => {
-            // Single class with repetition: [a-zA-Z]+
-            if let HirKind::Repetition(rep) = hir.kind() {
+            if let Hir::Repetition(rep) = hir {
                 return is_letter_class(&rep.sub);
             }
             return false;
@@ -363,13 +351,11 @@ pub(super) fn try_classify_identifier(hir: &Hir) -> bool {
         return false;
     }
 
-    // First part: must be a letter/underscore class (possibly with repetition).
     let first = super::unwrap_repetition(&parts[0]).unwrap_or(&parts[0]);
     if !is_letter_class(first) {
         return false;
     }
 
-    // Remaining parts: word-class continuation ([\w-]*, [\w]*, etc.)
     for part in &parts[1..] {
         if !is_word_continuation(part) {
             return false;
@@ -380,38 +366,31 @@ pub(super) fn try_classify_identifier(hir: &Hir) -> bool {
 }
 
 fn is_letter_class(hir: &Hir) -> bool {
-    if let HirKind::Class(Class::Bytes(bc)) = hir.kind() {
-        // Guard: reject materialized negated classes. regex-syntax 0.8 normalizes
-        // [^{};] into positive ranges spanning most of ASCII (250+ bytes).
-        // Legitimate letter classes cover at most ~60 bytes (a-zA-Z0-9_-).
-        if is_negated_class_materialization(bc) {
+    if let Hir::Class(CharClass::Bytes { ranges, negated }) = hir {
+        if *negated {
             return false;
         }
-        let ranges = bc.ranges();
-        let has_lower = ranges.iter().any(|r| r.start() <= b'a' && r.end() >= b'z');
-        let has_upper = ranges.iter().any(|r| r.start() <= b'A' && r.end() >= b'Z');
+        let has_lower = ranges.iter().any(|r| r.start <= b'a' && r.end >= b'z');
+        let has_upper = ranges.iter().any(|r| r.start <= b'A' && r.end >= b'Z');
         return has_lower || has_upper;
     }
     false
 }
 
 fn is_word_continuation(hir: &Hir) -> bool {
-    if let HirKind::Repetition(rep) = hir.kind() {
+    if let Hir::Repetition(rep) = hir {
         return is_word_class(&rep.sub);
     }
     false
 }
 
 fn is_word_class(hir: &Hir) -> bool {
-    if let HirKind::Class(Class::Bytes(bc)) = hir.kind() {
-        if is_negated_class_materialization(bc) {
+    if let Hir::Class(CharClass::Bytes { ranges, negated }) = hir {
+        if *negated {
             return false;
         }
-        let ranges = bc.ranges();
-        let has_lower = ranges.iter().any(|r| r.start() <= b'a' && r.end() >= b'z');
-        let has_digit = ranges
-            .iter()
-            .any(|r| *r == ClassBytesRange::new(b'0', b'9'));
+        let has_lower = ranges.iter().any(|r| r.start <= b'a' && r.end >= b'z');
+        let has_digit = ranges.iter().any(|r| *r == ByteRange::new(b'0', b'9'));
         return has_lower && has_digit;
     }
     false

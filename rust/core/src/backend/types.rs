@@ -40,6 +40,7 @@ pub enum SeqResultStrategy {
 }
 
 /// How to flatten a `(T, Vec<T>)` pair into `Vec<T>`.
+#[derive(Debug)]
 pub enum FlattenStrategy {
     HeadThenVec,
     VecThenTail,

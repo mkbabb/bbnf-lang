@@ -1,6 +1,7 @@
 //! Backend infrastructure: shared analysis, compilation driver, and emission trait.
 
 pub mod analysis;
+pub mod decisions;
 pub mod delim_scan;
 pub mod driver;
 pub mod driver_prettify;

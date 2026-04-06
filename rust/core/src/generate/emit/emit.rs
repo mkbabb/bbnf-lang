@@ -9,6 +9,8 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::Index;
 
+use super::super::ir_types::type_desc_to_syn;
+
 use crate::generate::ir_types::IrCodegenCtx;
 
 // ─── Main dispatch ───────────────────────────────────────────────────────────
@@ -34,11 +36,22 @@ pub fn emit_node(
         IrNode::Ref(rule_id) => {
             let ref_rule = &ir.rules[*rule_id as usize];
             if ref_rule.meta.is_transparent {
+                // Transparent: inline the body with the current value.
                 emit_node(&ref_rule.body, val, ir, ctx)
             } else {
+                // Non-transparent: call the rule's emit function with a typed
+                // let binding that coerces the value to &RuleType via deref.
+                let rule_type = ctx.rule_types.get(&ref_rule.id)
+                    .cloned()
+                    .unwrap_or_else(|| ctx.enum_type.clone());
                 let name = ir.get_string(ref_rule.name);
                 let emit_fn = format_ident!("{}_emit", name);
-                quote! { Self::#emit_fn(&#val, __sink); }
+                quote! {
+                    {
+                        let __ref: &#rule_type = &#val;
+                        Self::#emit_fn(__ref, __sink);
+                    }
+                }
             }
         }
 
@@ -237,9 +250,17 @@ fn emit_alt(
             if ref_rule.meta.is_transparent {
                 emit_node(&ref_rule.body, &inner, ir, ctx)
             } else {
+                let rule_type = ctx.rule_types.get(&ref_rule.id)
+                    .cloned()
+                    .unwrap_or_else(|| ctx.enum_type.clone());
                 let name = ir.get_string(ref_rule.name);
                 let emit_fn = format_ident!("{}_emit", name);
-                quote! { Self::#emit_fn(&#inner, __sink); }
+                quote! {
+                    {
+                        let __ref: &#rule_type = &#inner;
+                        Self::#emit_fn(__ref, __sink);
+                    }
+                }
             }
         } else {
             emit_node(&branch.node, &inner, ir, ctx)
@@ -380,9 +401,13 @@ fn emit_ref_item(
     let emit_fn = format_ident!("{}_emit", name);
     let variant = format_ident!("{}", name);
     let enum_ident = &ctx.enum_ident;
+    let rule_type = ctx.rule_types.get(&ref_rule.id)
+        .cloned()
+        .unwrap_or_else(|| ctx.enum_type.clone());
     quote! {
         if let #enum_ident::#variant(__ref_inner) = #item_val {
-            Self::#emit_fn(__ref_inner, __sink);
+            let __ref: &#rule_type = __ref_inner;
+            Self::#emit_fn(__ref, __sink);
         }
     }
 }

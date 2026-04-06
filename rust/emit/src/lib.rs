@@ -43,6 +43,12 @@ pub trait EmitSink<'a> {
     /// Emit a 64-bit float (ryu fast path recommended).
     fn f64(&mut self, v: f64);
 
+    /// Emit a signed 128-bit integer.
+    fn i128(&mut self, v: i128);
+
+    /// Emit an unsigned 128-bit integer.
+    fn u128(&mut self, v: u128);
+
     // ── Line control ─────────────────────────────────────────────────
 
     /// Unconditional line break + indent.
@@ -185,6 +191,27 @@ impl<'a, W: Write> EmitSink<'a> for CompactSink<W> {
     }
 
     #[inline]
+    fn i128(&mut self, v: i128) {
+        // itoa doesn't support i128; use fmt::Write.
+        use std::io::Write as _;
+        if self.error.is_none() {
+            if let Err(e) = write!(self.writer, "{v}") {
+                self.error = Some(e);
+            }
+        }
+    }
+
+    #[inline]
+    fn u128(&mut self, v: u128) {
+        use std::io::Write as _;
+        if self.error.is_none() {
+            if let Err(e) = write!(self.writer, "{v}") {
+                self.error = Some(e);
+            }
+        }
+    }
+
+    #[inline]
     fn hardline(&mut self) {}
     #[inline]
     fn softline(&mut self) {}
@@ -281,6 +308,18 @@ impl<'a> EmitSink<'a> for StringSink {
     fn f64(&mut self, v: f64) {
         let mut b = ryu::Buffer::new();
         self.buf.push_str(b.format(v));
+    }
+
+    #[inline]
+    fn i128(&mut self, v: i128) {
+        use std::fmt::Write;
+        let _ = write!(self.buf, "{v}");
+    }
+
+    #[inline]
+    fn u128(&mut self, v: u128) {
+        use std::fmt::Write;
+        let _ = write!(self.buf, "{v}");
     }
 
     #[inline]

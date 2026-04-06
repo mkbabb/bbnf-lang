@@ -19,6 +19,7 @@ pub struct ParserAttributes {
     pub remove_left_recursion: bool,
     pub prettify: bool,
     pub skip_recover: bool,
+    pub emit: bool,
 }
 
 /// Central context for IR-based code generation.

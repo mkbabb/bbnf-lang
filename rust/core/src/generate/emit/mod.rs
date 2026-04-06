@@ -17,9 +17,9 @@ use crate::generate::ir_types::IrCodegenCtx;
 
 /// Generate emit methods for all rules in the grammar.
 ///
-/// Returns a `Vec<TokenStream>` of impl methods to include in the parser struct.
-pub fn generate_emit_methods(ir: &GrammarIR, ctx: &IrCodegenCtx) -> Vec<TokenStream> {
-    let enum_ident = &ctx.enum_ident;
+/// Returns a single `TokenStream` of impl methods to include in the parser struct.
+pub fn generate_emit_methods(ir: &GrammarIR, ctx: &IrCodegenCtx) -> TokenStream {
+    let _enum_ident = &ctx.enum_ident;
     let mut methods = Vec::new();
 
     for rule in &ir.rules {
@@ -66,5 +66,5 @@ pub fn generate_emit_methods(ir: &GrammarIR, ctx: &IrCodegenCtx) -> Vec<TokenStr
         });
     }
 
-    methods
+    quote! { #(#methods)* }
 }

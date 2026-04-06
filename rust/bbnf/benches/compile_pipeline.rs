@@ -19,7 +19,10 @@ fn vm_request() -> CompileRequest {
 }
 
 fn grammar_path(name: &str) -> std::path::PathBuf {
-    std::path::PathBuf::from(format!("../../grammar/{}", name))
+    // Resolve relative to the workspace root so profilers (samply) work
+    // regardless of cwd.
+    let manifest = std::env!("CARGO_MANIFEST_DIR");
+    std::path::PathBuf::from(manifest).join("../../grammar").join(name)
 }
 
 fn load_grammar(name: &str) -> String {

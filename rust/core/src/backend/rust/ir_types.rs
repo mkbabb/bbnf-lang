@@ -136,19 +136,6 @@ impl<'a> IrCodegenCtx<'a> {
             })
     }
 
-    /// Look up the structural (pre-collapse) type for a node.
-    /// Returns the structural type if it differs from collapsed, else the collapsed type.
-    /// Used by emit codegen — gives the ACTUAL runtime type topology.
-    pub fn structural_type(&self, node: &bbnf_ir::IrNode) -> TypeDesc {
-        self.ir
-            .type_map
-            .as_ref()
-            .expect("TypeMap not populated")
-            .structural_type(node)
-            .cloned()
-            .unwrap_or_else(|| self.node_type(node))
-    }
-
     /// Look up the project_node_in_vec type for a sub-expression from the TypeMap.
     pub fn vec_elem_type(&self, node: &bbnf_ir::IrNode) -> TypeDesc {
         self.ir

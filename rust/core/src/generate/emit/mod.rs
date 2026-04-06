@@ -1,7 +1,7 @@
-//! Emission codegen — structural-type-driven.
+//! Type-only emission codegen.
 //!
-//! One recursive function dispatches on `ctx.structural_type(node)`.
-//! The structural TypeMap IS the plan. No intermediate plan.rs. No decisions.rs queries.
+//! Recurse on collapsed TypeDesc. The type IS the value.
+//! No plan. No decisions. No IR walking.
 
 mod emit;
 
@@ -9,7 +9,7 @@ use bbnf_ir::GrammarIR;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use crate::generate::ir_types::IrCodegenCtx;
+use crate::generate::ir_types::{IrCodegenCtx, type_desc_to_syn};
 
 /// Generate emit methods for all rules in the grammar.
 pub fn generate_emit_methods(ir: &GrammarIR, ctx: &IrCodegenCtx) -> TokenStream {
@@ -23,8 +23,14 @@ pub fn generate_emit_methods(ir: &GrammarIR, ctx: &IrCodegenCtx) -> TokenStream 
             .cloned()
             .unwrap_or_else(|| ctx.enum_type.clone());
 
+        // The type of this rule's value — drives the entire emit.
+        let type_desc = ir.types.iter()
+            .find(|(id, _)| *id == rule.id)
+            .map(|(_, td)| td.clone())
+            .unwrap_or(bbnf_ir::TypeDesc::Span);
+
         let val = quote! { __v };
-        let body = emit::emit_node(&rule.body, &val, ir, ctx);
+        let body = emit::emit_type(&type_desc, &val, ir, ctx);
 
         methods.push(quote! {
             pub fn #fn_ident<'a, __S: ::bbnf_emit::EmitSink<'a>>(

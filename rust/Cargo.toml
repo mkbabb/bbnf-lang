@@ -1,5 +1,5 @@
 [workspace]
-members = ["bbnf", "bbnf-derive", "bbnf-analysis", "bbnf-ir", "lsp"]
+members = ["core", "derive", "analysis", "ir", "lsp", "emit"]
 resolver = "2"
 
 [profile.release]

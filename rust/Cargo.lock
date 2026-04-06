@@ -137,6 +137,7 @@ dependencies = [
 name = "bbnf"
 version = "0.2.11"
 dependencies = [
+ "bbnf-emit",
  "bbnf-ir",
  "bbnf_derive",
  "bencher",
@@ -181,6 +182,14 @@ dependencies = [
  "ls-types",
  "pprint",
  "self_cell",
+]
+
+[[package]]
+name = "bbnf-emit"
+version = "0.1.0"
+dependencies = [
+ "itoa",
+ "ryu",
 ]
 
 [[package]]

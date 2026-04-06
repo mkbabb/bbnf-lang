@@ -1,0 +1,10 @@
+[package]
+name = "bbnf-emit"
+version = "0.1.0"
+edition = "2024"
+description = "EmitSink trait and CompactSink for grammar-guided serialization"
+license = "MIT"
+
+[dependencies]
+ryu = "1"
+itoa = "1"

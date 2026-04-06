@@ -1,5 +1,6 @@
 //! Rust parser code generation from BBNF grammars.
 
+pub mod emit;
 pub mod regex;
 pub use regex::classify as regex_classify;
 pub use crate::backend::rust as codegen;

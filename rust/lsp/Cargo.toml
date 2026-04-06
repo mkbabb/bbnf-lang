@@ -18,9 +18,9 @@ tower-lsp-server = "0.23"
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-bbnf = { version = "0.2", path = "../bbnf" }
-bbnf-ir = { version = "0.1", path = "../bbnf-ir" }
-bbnf-analysis = { version = "0.1", path = "../bbnf-analysis" }
+bbnf = { version = "0.2", path = "../core" }
+bbnf-ir = { version = "0.1", path = "../ir" }
+bbnf-analysis = { version = "0.1", path = "../analysis" }
 
 [dev-dependencies]
 tempfile = "3"

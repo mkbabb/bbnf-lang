@@ -7,8 +7,8 @@ description = "Pure analysis logic for BBNF grammars (shared by LSP + WASM)"
 
 [dependencies]
 ls-types = "0.0.6"
-bbnf = { version = "0.2", path = "../bbnf" }
-bbnf-ir = { version = "0.1", path = "../bbnf-ir" }
+bbnf = { version = "0.2", path = "../core" }
+bbnf-ir = { version = "0.1", path = "../ir" }
 pprint = "0.3"
 indexmap = "2"
 self_cell = "1.2.2"

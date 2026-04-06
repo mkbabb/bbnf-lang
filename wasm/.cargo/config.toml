@@ -10,6 +10,6 @@ gorgeous = { path = "../../gorgeous" }
 pprint = { path = "../../pprint/rust" }
 pprint_derive = { path = "../../pprint/rust/derive" }
 parse_that = { path = "../../parse-that/rust/parse_that" }
-bbnf-ir = { path = "../rust/bbnf-ir" }
-bbnf = { path = "../rust/bbnf" }
-bbnf_derive = { path = "../rust/bbnf-derive" }
+bbnf-ir = { path = "../rust/ir" }
+bbnf = { path = "../rust/core" }
+bbnf_derive = { path = "../rust/derive" }

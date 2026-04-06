@@ -13,7 +13,8 @@ path = "src/lib.rs"
 [dependencies]
 pprint = "0.3"
 parse_that = "0.4"
-bbnf-ir = { version = "0.1", path = "../bbnf-ir" }
+bbnf-ir = { version = "0.1", path = "../ir" }
+bbnf-emit = { version = "0.1", path = "../emit" }
 csp-solver = "0.1"
 rustc-hash = "2"
 
@@ -30,7 +31,7 @@ dhat-heap = ["dep:dhat"]
 quote = "1"
 regex = "1"
 tempfile = "3"
-bbnf_derive = { version = "0.2", path = "../bbnf-derive" }
+bbnf_derive = { version = "0.2", path = "../derive" }
 pprint = "0.3"
 gorgeous = { version = "0.1", features = ["vm"] }
 parse_that = "0.4"

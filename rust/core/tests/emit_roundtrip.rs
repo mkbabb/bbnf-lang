@@ -19,10 +19,9 @@ struct JsonEmit;
 #[parser(path = "../../grammar/misc/csv.bbnf", emit)]
 struct CsvEmit;
 
-// BNF, EBNF, Math: transparent rule Alt inlining not yet implemented.
-// These grammars use transparent rules in Alt branches (e.g., `field = escaped | textdata`)
-// which require the emit codegen to flatten transparent Ref branches instead of
-// matching on nonexistent enum variants.
+// BNF/EBNF/Math: plan computation handles the basic patterns (JSON, CSV).
+// These grammars expose Tuple indexing overflow and transparent Alt lifting
+// edge cases that need plan computation fixes. Tracked for next commit.
 
 // #[derive(Parser)]
 // #[parser(path = "../../grammar/bnf/bnf.bbnf", emit)]
@@ -31,6 +30,10 @@ struct CsvEmit;
 // #[derive(Parser)]
 // #[parser(path = "../../grammar/ebnf/ebnf.bbnf", emit)]
 // struct EbnfEmit;
+
+// #[derive(Parser)]
+// #[parser(path = "../../grammar/misc/math.bbnf", emit)]
+// struct MathEmit;
 
 // #[derive(Parser)]
 // #[parser(path = "../../grammar/misc/math.bbnf", emit)]
@@ -131,4 +134,4 @@ fn csv_round_trip(input: &str) {
 // BNF round-trip tests
 // ═══════════════════════════════════════════════════════════════════════════
 
-// BNF, EBNF, Math tests commented out — see grammar declarations above.
+// BNF/EBNF/Math tests — tracked for next commit after plan computation fixes.

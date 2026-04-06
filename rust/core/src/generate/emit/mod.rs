@@ -1,14 +1,10 @@
-//! Type-driven emission codegen.
+//! Emission codegen: shared-decision EmitPlan + trivial codegen walk.
 //!
-//! Generates `EmitSink`-based traversal code from grammar IR. The traversal is
-//! driven by `TypeDesc` (what type does `value` have?) not by `IrNode` (what
-//! grammar construct produced it?). The IR provides structural content (literals,
-//! separators); the type provides the destructuring strategy.
-//!
-//! This mirrors the parse codegen's driver, which queries TypeMap at every
-//! decision point. The emit codegen queries the same TypeMap.
+//! 1. `plan.rs` consumes `decisions::decide_*()` to build an EmitPlan tree
+//! 2. `codegen.rs` walks the EmitPlan → TokenStream (zero type queries)
 
-mod emit;
+pub mod plan;
+pub mod codegen;
 
 use bbnf_ir::GrammarIR;
 use proc_macro2::TokenStream;
@@ -24,13 +20,13 @@ pub fn generate_emit_methods(ir: &GrammarIR, ctx: &IrCodegenCtx) -> TokenStream 
     for rule in &ir.rules {
         let rule_name = ir.get_string(rule.name);
         let fn_ident = format_ident!("{}_emit", rule_name);
-
         let rule_type = ctx.rule_types.get(&rule.id)
             .cloned()
             .unwrap_or_else(|| ctx.enum_type.clone());
 
+        let emit_plan = plan::compute_rule_plan(rule, ir, ctx);
         let val = quote! { __v };
-        let body = emit::emit_node(&rule.body, &val, ir, ctx);
+        let body = codegen::emit_from_plan(&emit_plan, &val, ctx);
 
         methods.push(quote! {
             pub fn #fn_ident<'a, __S: ::bbnf_emit::EmitSink<'a>>(
@@ -42,7 +38,7 @@ pub fn generate_emit_methods(ir: &GrammarIR, ctx: &IrCodegenCtx) -> TokenStream 
         });
     }
 
-    // Entry point convenience methods.
+    // Entry point.
     {
         let entry_rule = &ir.rules[ir.entry as usize];
         let entry_name = ir.get_string(entry_rule.name);

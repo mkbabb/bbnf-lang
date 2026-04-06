@@ -8,16 +8,296 @@
 //! table — if `next_char ∈ FOLLOW(rule)` and FOLLOW is disjoint from other
 //! branches' FIRST sets, the nullable branch gets O(1) dispatch instead of
 //! falling through as a linear fallback.
+//!
+//! ## CSP Pre-computation
+//!
+//! Before the main tree walk, `precompute_dispatch_eligibility` collects every
+//! Alt node (identified by pointer), resolves its effective FIRST sets, and uses
+//! a `csp_solver::Csp<DispatchDomain>` with AC-3 propagation to determine
+//! dispatchability in a single pass. The results are stored in a side table
+//! (`DispatchEligibility`) that `annotate_node` reads — avoiding redundant
+//! pairwise FIRST set recomputation during the tree walk.
+
+use std::collections::HashMap;
 
 use rayon::prelude::*;
 
+use csp_solver::Csp;
+use csp_solver::constraint::{Constraint, Revision, VarId};
+use csp_solver::domain::{Domain, LatticeDomain};
+use csp_solver::variable::Variable;
+
 use crate::{AltBranch, AltDispatch, CharSet128, GrammarIR, IrNode, regex_first};
+
+// ── CSP Domain for Dispatch Eligibility ───────────────────────────────────────
+
+/// Tri-state dispatch eligibility: Unknown → Dispatchable or NonDispatchable.
+///
+/// Models each Alt node as a CSP variable whose domain monotonically
+/// converges from `Unknown` to a concrete decision.
+#[derive(Clone, Debug, PartialEq)]
+enum DispatchDecision {
+    Unknown,
+    Dispatchable,
+    NonDispatchable,
+}
+
+/// Lattice domain wrapping `DispatchDecision`.
+///
+/// Bottom = Unknown. Once resolved to Dispatchable/NonDispatchable, the
+/// domain is a singleton — no search needed, AC-3 propagation suffices.
+#[derive(Clone, Debug, PartialEq)]
+struct DispatchDomain {
+    decision: DispatchDecision,
+}
+
+impl DispatchDomain {
+    fn unknown() -> Self {
+        Self {
+            decision: DispatchDecision::Unknown,
+        }
+    }
+}
+
+impl Domain for DispatchDomain {
+    type Value = DispatchDecision;
+
+    fn size(&self) -> usize {
+        1
+    }
+
+    fn is_singleton(&self) -> bool {
+        true
+    }
+
+    fn singleton_value(&self) -> Option<Self::Value> {
+        Some(self.decision.clone())
+    }
+
+    fn contains(&self, val: &Self::Value) -> bool {
+        self.decision == *val
+    }
+
+    fn remove(&mut self, _val: &Self::Value) -> bool {
+        false
+    }
+
+    fn add(&mut self, _val: &Self::Value) {}
+
+    fn values(&self) -> Vec<Self::Value> {
+        vec![self.decision.clone()]
+    }
+}
+
+impl LatticeDomain for DispatchDomain {
+    fn bottom() -> Self {
+        Self::unknown()
+    }
+
+    fn join(&mut self, other: &Self) -> bool {
+        match (&self.decision, &other.decision) {
+            (DispatchDecision::Unknown, d) if *d != DispatchDecision::Unknown => {
+                self.decision = d.clone();
+                true
+            }
+            _ => false,
+        }
+    }
+}
+
+// ── CSP Constraint: Disjoint FIRST sets ───────────────────────────────────────
+
+/// Constraint that resolves an Alt's dispatch eligibility from its branch FIRST
+/// sets. Checks pairwise disjointness and immediately assigns the result.
+#[derive(Debug)]
+struct DisjointConstraint {
+    var: VarId,
+    dispatchable: bool,
+}
+
+impl DisjointConstraint {
+    fn new(var: VarId, dispatchable: bool) -> Self {
+        Self { var, dispatchable }
+    }
+}
+
+impl Constraint<DispatchDomain> for DisjointConstraint {
+    fn scope(&self) -> &[VarId] {
+        std::slice::from_ref(&self.var)
+    }
+
+    fn check(&self, assignment: &[Option<DispatchDecision>]) -> bool {
+        match &assignment[self.var as usize] {
+            Some(d) => {
+                if self.dispatchable {
+                    *d == DispatchDecision::Dispatchable
+                } else {
+                    *d == DispatchDecision::NonDispatchable
+                }
+            }
+            None => true,
+        }
+    }
+
+    fn revise(&self, vars: &mut [Variable<DispatchDomain>], _depth: usize) -> Revision {
+        let target = if self.dispatchable {
+            DispatchDecision::Dispatchable
+        } else {
+            DispatchDecision::NonDispatchable
+        };
+        let slot = &mut vars[self.var as usize].domain.decision;
+        if *slot == DispatchDecision::Unknown {
+            *slot = target;
+            Revision::Changed
+        } else {
+            Revision::Unchanged
+        }
+    }
+}
+
+// ── Pre-computed eligibility table ────────────────────────────────────────────
+
+/// Pre-computed dispatch eligibility for all Alt nodes, keyed by pointer.
+type DispatchEligibility = HashMap<usize, bool>;
+
+/// Collect all Alt nodes from the IR tree and determine dispatch eligibility
+/// via CSP propagation.
+///
+/// For each Alt node with >=2 branches and <=127 branches, checks pairwise
+/// FIRST set disjointness (without FOLLOW context). The result maps Alt
+/// pointer → bool. The tree walk uses this to skip redundant disjointness
+/// checks for non-dispatchable Alts.
+fn precompute_dispatch_eligibility(
+    ir: &GrammarIR,
+    rule_metas: &[(CharSet128, bool)],
+    strings: &[String],
+) -> DispatchEligibility {
+    let mut alts: Vec<(usize, Vec<Option<CharSet128>>)> = Vec::new();
+
+    // Phase 1: Collect every Alt node in the IR.
+    for rule in &ir.rules {
+        collect_alts(&rule.body, rule_metas, strings, &mut alts);
+        if let Some(ref recover) = rule.meta.directives.recover {
+            collect_alts(recover, rule_metas, strings, &mut alts);
+        }
+    }
+
+    if alts.is_empty() {
+        return HashMap::new();
+    }
+
+    // Phase 2: Build CSP — one variable per Alt, one constraint per Alt.
+    let mut csp: Csp<DispatchDomain> = Csp::new();
+    let mut var_ids: Vec<VarId> = Vec::with_capacity(alts.len());
+    let mut alt_ptrs: Vec<usize> = Vec::with_capacity(alts.len());
+
+    for (ptr, branch_firsts) in &alts {
+        let var = csp.add_variable(DispatchDomain::unknown());
+        var_ids.push(var);
+        alt_ptrs.push(*ptr);
+
+        let dispatchable = is_pairwise_disjoint(branch_firsts);
+        csp.add_constraint(DisjointConstraint::new(var, dispatchable));
+    }
+
+    // Phase 3: Propagate.
+    csp.finalize();
+    let _ = csp.propagate();
+
+    // Phase 4: Extract results.
+    let mut result = HashMap::with_capacity(alts.len());
+    for (i, ptr) in alt_ptrs.iter().enumerate() {
+        let decision = &csp.variables[var_ids[i] as usize].domain.decision;
+        let eligible = matches!(decision, DispatchDecision::Dispatchable);
+        result.insert(*ptr, eligible);
+    }
+
+    result
+}
+
+/// Check if a set of branch FIRST sets are pairwise disjoint.
+fn is_pairwise_disjoint(branch_firsts: &[Option<CharSet128>]) -> bool {
+    let sets: Vec<&CharSet128> = match branch_firsts
+        .iter()
+        .map(|f| f.as_ref())
+        .collect::<Option<Vec<_>>>()
+    {
+        Some(v) => v,
+        None => return false,
+    };
+
+    for i in 0..sets.len() {
+        for j in (i + 1)..sets.len() {
+            if !sets[i].is_disjoint(sets[j]) {
+                return false;
+            }
+        }
+    }
+    true
+}
+
+/// Recursively collect Alt nodes and their branch FIRST sets.
+fn collect_alts(
+    node: &IrNode,
+    rule_metas: &[(CharSet128, bool)],
+    strings: &[String],
+    out: &mut Vec<(usize, Vec<Option<CharSet128>>)>,
+) {
+    match node {
+        IrNode::Alt(branches, dispatch) => {
+            for branch in branches {
+                collect_alts(&branch.node, rule_metas, strings, out);
+            }
+
+            if dispatch.is_none() && branches.len() >= 2 && branches.len() <= 127 {
+                let ptr = node as *const IrNode as usize;
+                let firsts: Vec<Option<CharSet128>> = branches
+                    .iter()
+                    .map(|b| {
+                        b.first_set
+                            .clone()
+                            .or_else(|| node_first_set(&b.node, rule_metas, strings))
+                    })
+                    .collect();
+                out.push((ptr, firsts));
+            }
+        }
+        IrNode::Seq(children) => {
+            for child in children {
+                collect_alts(child, rule_metas, strings, out);
+            }
+        }
+        IrNode::Repeat { inner, .. }
+        | IrNode::Negate(inner)
+        | IrNode::OptionalWhitespace(inner)
+        | IrNode::Map { inner, .. } => {
+            collect_alts(inner, rule_metas, strings, out);
+        }
+        IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
+            collect_alts(a, rule_metas, strings, out);
+            collect_alts(b, rule_metas, strings, out);
+        }
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => {
+            collect_alts(token, rule_metas, strings, out);
+            for arm in arms {
+                collect_alts(&arm.continuation, rule_metas, strings, out);
+            }
+            collect_alts(fallback, rule_metas, strings, out);
+        }
+        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon | IrNode::Ref(_) => {}
+    }
+}
+
+// ── Main Pass ────────────────────────────────────────────────────────────────
 
 /// Generate dispatch tables for all eligible Alt nodes in the IR.
 ///
-/// Walks the entire IR tree (not just rule-level bodies), annotating each
-/// `Alt` node whose branches have pairwise disjoint FIRST sets with an
-/// `AltDispatch` table for O(1) branch selection.
+/// First runs CSP pre-computation to classify all Alts as dispatchable or not,
+/// then walks the tree to annotate eligible Alts with `AltDispatch` tables.
 ///
 /// Uses contextual FOLLOW sets for nullable branch dispatch: within a Seq,
 /// a nested Alt uses `FIRST(suffix)` (the first set of the remaining sequence
@@ -33,20 +313,35 @@ pub fn generate_dispatch_tables(ir: &mut GrammarIR) {
         .map(|r| (r.meta.first_set.clone(), r.meta.nullable))
         .collect();
 
+    // Pre-compute dispatch eligibility for all Alt nodes via CSP.
+    let eligibility = precompute_dispatch_eligibility(ir, &rule_metas, &strings);
+
     if ir.rules.len() >= 16 {
         ir.rules.par_iter_mut().for_each(|rule| {
             let follow = follow_sets.get(&rule.id);
-            annotate_node(&mut rule.body, follow, &rule_metas, &strings);
+            annotate_node(
+                &mut rule.body,
+                follow,
+                &rule_metas,
+                &strings,
+                &eligibility,
+            );
             if let Some(ref mut recover) = rule.meta.directives.recover {
-                annotate_node(recover, follow, &rule_metas, &strings);
+                annotate_node(recover, follow, &rule_metas, &strings, &eligibility);
             }
         });
     } else {
         for rule in &mut ir.rules {
             let follow = follow_sets.get(&rule.id);
-            annotate_node(&mut rule.body, follow, &rule_metas, &strings);
+            annotate_node(
+                &mut rule.body,
+                follow,
+                &rule_metas,
+                &strings,
+                &eligibility,
+            );
             if let Some(ref mut recover) = rule.meta.directives.recover {
-                annotate_node(recover, follow, &rule_metas, &strings);
+                annotate_node(recover, follow, &rule_metas, &strings, &eligibility);
             }
         }
     }
@@ -179,17 +474,32 @@ fn suffix_follow(
 /// `containing_follow` is the contextual FOLLOW set — for top-level nodes this
 /// is `FOLLOW(rule)`, but for nodes inside a Seq it is `FIRST(suffix)` (the
 /// first set of the remaining sequence elements).
+///
+/// `eligibility` is the CSP pre-computed dispatch eligibility table: when an
+/// Alt is marked non-dispatchable (without FOLLOW context), the walk can skip
+/// the full `try_build_dispatch` call. FOLLOW-aware dispatch still proceeds
+/// for nullable branches, since that context is only available during the walk.
 fn annotate_node(
     node: &mut IrNode,
     containing_follow: Option<&CharSet128>,
     rule_metas: &[(CharSet128, bool)],
     strings: &[String],
+    eligibility: &DispatchEligibility,
 ) {
+    // Capture the node pointer before the mutable destructuring borrow.
+    let node_ptr = node as *const IrNode as usize;
+
     match node {
         IrNode::Alt(branches, dispatch) => {
             // Recurse into children first.
             for branch in branches.iter_mut() {
-                annotate_node(&mut branch.node, containing_follow, rule_metas, strings);
+                annotate_node(
+                    &mut branch.node,
+                    containing_follow,
+                    rule_metas,
+                    strings,
+                    eligibility,
+                );
             }
 
             // Skip if already annotated.
@@ -203,6 +513,22 @@ fn annotate_node(
                 if branch.first_set.is_none() {
                     branch.first_set = node_first_set(&branch.node, rule_metas, strings);
                 }
+            }
+
+            // Consult the CSP pre-computed eligibility.
+            // When the pre-computation determined non-dispatchable AND there are
+            // no nullable branches (where FOLLOW context could rescue dispatch),
+            // we skip the full try_build_dispatch and go straight to fallback.
+            let pre_eligible = eligibility.get(&node_ptr).copied();
+            let has_nullable = branches.iter().any(|b| b.first_set.is_none());
+
+            if pre_eligible == Some(false) && !has_nullable {
+                // CSP says non-dispatchable, no nullable branch could be rescued
+                // by FOLLOW — try fallback dispatch only.
+                if let Some(table) = try_build_fallback_dispatch(branches) {
+                    *dispatch = Some(table);
+                }
+                return;
             }
 
             // Try to build a full dispatch table (all branches disjoint).
@@ -228,6 +554,7 @@ fn annotate_node(
                     child_follow.as_ref().or(containing_follow),
                     rule_metas,
                     strings,
+                    eligibility,
                 );
             }
         }
@@ -235,27 +562,34 @@ fn annotate_node(
         | IrNode::Negate(inner)
         | IrNode::OptionalWhitespace(inner)
         | IrNode::Map { inner, .. } => {
-            annotate_node(inner, containing_follow, rule_metas, strings);
+            annotate_node(inner, containing_follow, rule_metas, strings, eligibility);
         }
         IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
-            annotate_node(a, containing_follow, rule_metas, strings);
-            annotate_node(b, containing_follow, rule_metas, strings);
+            annotate_node(a, containing_follow, rule_metas, strings, eligibility);
+            annotate_node(b, containing_follow, rule_metas, strings, eligibility);
         }
         IrNode::TokenDispatch {
             token,
             arms,
             fallback,
         } => {
-            annotate_node(token, containing_follow, rule_metas, strings);
+            annotate_node(token, containing_follow, rule_metas, strings, eligibility);
             for arm in arms {
                 annotate_node(
                     &mut arm.continuation,
                     containing_follow,
                     rule_metas,
                     strings,
+                    eligibility,
                 );
             }
-            annotate_node(fallback, containing_follow, rule_metas, strings);
+            annotate_node(
+                fallback,
+                containing_follow,
+                rule_metas,
+                strings,
+                eligibility,
+            );
         }
         IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon | IrNode::Ref(_) => {}
     }

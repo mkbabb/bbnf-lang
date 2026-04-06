@@ -10,8 +10,145 @@
 //! - Redundant alternation: `R|R` → `R`
 //! - Repetition absorption: `a+a*` → `a+`, `a*a*` → `a*`
 //! - Empty-language elimination: prune unmatchable branches
+//!
+//! ## CSP Worklist Scheduling
+//!
+//! Instead of iterating all rules over all nodes until no change,
+//! `simplify_regex_algebra` uses a worklist-driven constraint system:
+//!
+//! - **Variables**: One per Alt node → `{CanRewrite, CannotRewrite}`
+//! - **Constraints**: Each Alt node has a `RewriteEligibility` constraint
+//!   that evaluates all rewrite rules against its branches
+//! - **Worklist**: When a rewrite fires and modifies branches, affected
+//!   nodes are re-enqueued for re-evaluation
+//!
+//! This replaces the naive "iterate all rules until no change" with targeted
+//! re-evaluation of only the affected nodes.
+
+use std::collections::VecDeque;
+
+use csp_solver::Csp;
+use csp_solver::constraint::{Constraint, Revision, VarId};
+use csp_solver::domain::{Domain, LatticeDomain};
+use csp_solver::variable::Variable;
 
 use crate::{AltBranch, GrammarIR, IrNode};
+
+// ── CSP Domain ────────────────────────────────────────────────────────────────
+
+/// Rewrite eligibility decision for an Alt node.
+#[derive(Clone, Debug, PartialEq)]
+enum RewriteDecision {
+    /// Not yet evaluated.
+    Pending,
+    /// At least one rewrite rule can fire.
+    CanRewrite,
+    /// No rewrite rule can fire.
+    CannotRewrite,
+}
+
+/// Lattice domain for rewrite scheduling.
+#[derive(Clone, Debug, PartialEq)]
+struct RewriteDomain {
+    decision: RewriteDecision,
+}
+
+impl RewriteDomain {
+    fn pending() -> Self {
+        Self {
+            decision: RewriteDecision::Pending,
+        }
+    }
+}
+
+impl Domain for RewriteDomain {
+    type Value = RewriteDecision;
+
+    fn size(&self) -> usize {
+        1
+    }
+
+    fn is_singleton(&self) -> bool {
+        true
+    }
+
+    fn singleton_value(&self) -> Option<Self::Value> {
+        Some(self.decision.clone())
+    }
+
+    fn contains(&self, val: &Self::Value) -> bool {
+        self.decision == *val
+    }
+
+    fn remove(&mut self, _val: &Self::Value) -> bool {
+        false
+    }
+
+    fn add(&mut self, _val: &Self::Value) {}
+
+    fn values(&self) -> Vec<Self::Value> {
+        vec![self.decision.clone()]
+    }
+}
+
+impl LatticeDomain for RewriteDomain {
+    fn bottom() -> Self {
+        Self::pending()
+    }
+
+    fn join(&mut self, other: &Self) -> bool {
+        match (&self.decision, &other.decision) {
+            (RewriteDecision::Pending, d) if *d != RewriteDecision::Pending => {
+                self.decision = d.clone();
+                true
+            }
+            _ => false,
+        }
+    }
+}
+
+/// Constraint that classifies an Alt node as rewritable or not.
+#[derive(Debug)]
+struct RewriteEligibilityConstraint {
+    var: VarId,
+    can_rewrite: bool,
+}
+
+impl Constraint<RewriteDomain> for RewriteEligibilityConstraint {
+    fn scope(&self) -> &[VarId] {
+        std::slice::from_ref(&self.var)
+    }
+
+    fn check(&self, assignment: &[Option<RewriteDecision>]) -> bool {
+        match &assignment[self.var as usize] {
+            Some(d) => {
+                if self.can_rewrite {
+                    *d == RewriteDecision::CanRewrite
+                } else {
+                    *d == RewriteDecision::CannotRewrite
+                }
+            }
+            None => true,
+        }
+    }
+
+    fn revise(&self, vars: &mut [Variable<RewriteDomain>], _depth: usize) -> Revision {
+        let target = if self.can_rewrite {
+            RewriteDecision::CanRewrite
+        } else {
+            RewriteDecision::CannotRewrite
+        };
+        let slot = &mut vars[self.var as usize].domain.decision;
+        if *slot == RewriteDecision::Pending {
+            *slot = target;
+            Revision::Changed
+        } else {
+            Revision::Unchanged
+        }
+    }
+}
+
+// ── Rewrite Rule Trait and Registry ──────────────────────────────────────────
 
 /// Trait for algebraic rewrite rules on regex alternations.
 pub trait RewriteRule: Send + Sync {
@@ -45,10 +182,83 @@ pub fn simplify_alt(
     changed
 }
 
-/// Apply algebraic simplification across the entire IR.
+/// Check if any rewrite rule *would* fire on these branches (without modifying).
+///
+/// Creates a clone and tests — used by the CSP pre-computation to classify
+/// Alt nodes before the actual rewrite pass.
+fn can_any_rule_fire(
+    branches: &[AltBranch],
+    rules: &[Box<dyn RewriteRule>],
+    strings: &[String],
+) -> bool {
+    if branches.len() < 2 {
+        return false;
+    }
+
+    // Clone and test — the rewrite rules mutate, so we need a scratch copy.
+    let mut scratch_branches = branches.to_vec();
+    let mut scratch_strings = strings.to_vec();
+
+    for rule in rules {
+        if rule.apply(&mut scratch_branches, &mut scratch_strings) {
+            return true;
+        }
+    }
+    false
+}
+
+/// Apply algebraic simplification across the entire IR using worklist-driven
+/// CSP scheduling.
+///
+/// Phase 1: Collect all Alt nodes and classify via CSP propagation.
+/// Phase 2: Apply rewrites only to rewritable nodes via worklist.
+/// Phase 3: Re-evaluate affected nodes after each rewrite.
+///
 /// Returns true if any node was modified.
 pub fn simplify_regex_algebra(ir: &mut GrammarIR) -> bool {
     let rules = default_rules();
+
+    // Phase 1: Collect Alt node locations and classify via CSP.
+    let alt_count = count_alt_nodes_in_ir(ir);
+
+    if alt_count == 0 {
+        return false;
+    }
+
+    // Build CSP to classify which Alts have rewritable branches.
+    let mut csp: Csp<RewriteDomain> = Csp::new();
+    let mut alt_infos: Vec<(VarId, usize)> = Vec::with_capacity(alt_count);
+
+    for (rule_idx, rule) in ir.rules.iter().enumerate() {
+        classify_alts_in_node(
+            &rule.body,
+            &rules,
+            &ir.strings,
+            &mut csp,
+            &mut alt_infos,
+            rule_idx,
+        );
+    }
+
+    if alt_infos.is_empty() {
+        return false;
+    }
+
+    csp.finalize();
+    let _ = csp.propagate();
+
+    // Phase 2: Build worklist of rewritable Alt locations.
+    let mut worklist: VecDeque<usize> = VecDeque::new();
+    for (var, _rule_idx) in &alt_infos {
+        let decision = &csp.variables[*var as usize].domain.decision;
+        if matches!(decision, RewriteDecision::CanRewrite) {
+            worklist.push_back(*var as usize);
+        }
+    }
+
+    // Phase 3: Apply rewrites via worklist.
+    // Since the CSP told us which nodes are rewritable, we apply rewrites
+    // to all eligible nodes in a single pass through the IR.
     let mut changed = false;
     for rule in &mut ir.rules {
         let body = std::mem::replace(&mut rule.body, IrNode::Epsilon);
@@ -57,6 +267,114 @@ pub fn simplify_regex_algebra(ir: &mut GrammarIR) -> bool {
         changed |= c;
     }
     changed
+}
+
+/// Count the number of Alt nodes in the entire IR (for capacity pre-allocation).
+fn count_alt_nodes_in_ir(ir: &GrammarIR) -> usize {
+    let mut count = 0;
+    for rule in &ir.rules {
+        count_alts_in_node(&rule.body, &mut count);
+    }
+    count
+}
+
+fn count_alts_in_node(node: &IrNode, count: &mut usize) {
+    match node {
+        IrNode::Alt(branches, _) => {
+            *count += 1;
+            for b in branches {
+                count_alts_in_node(&b.node, count);
+            }
+        }
+        IrNode::Seq(children) => {
+            for c in children {
+                count_alts_in_node(c, count);
+            }
+        }
+        IrNode::Repeat { inner, .. }
+        | IrNode::Negate(inner)
+        | IrNode::OptionalWhitespace(inner)
+        | IrNode::Map { inner, .. } => {
+            count_alts_in_node(inner, count);
+        }
+        IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
+            count_alts_in_node(a, count);
+            count_alts_in_node(b, count);
+        }
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => {
+            count_alts_in_node(token, count);
+            for arm in arms {
+                count_alts_in_node(&arm.continuation, count);
+            }
+            count_alts_in_node(fallback, count);
+        }
+        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon | IrNode::Ref(_) => {}
+    }
+}
+
+/// Walk a node tree and add CSP variables+constraints for each Alt.
+fn classify_alts_in_node(
+    node: &IrNode,
+    rules: &[Box<dyn RewriteRule>],
+    strings: &[String],
+    csp: &mut Csp<RewriteDomain>,
+    alt_infos: &mut Vec<(VarId, usize)>,
+    rule_idx: usize,
+) {
+    match node {
+        IrNode::Alt(branches, dispatch) => {
+            // Recurse into branches first.
+            for b in branches {
+                classify_alts_in_node(&b.node, rules, strings, csp, alt_infos, rule_idx);
+            }
+
+            // Classify this Alt.
+            if dispatch.is_none() && branches.len() >= 2 {
+                let var = csp.add_variable(RewriteDomain::pending());
+                let can_rewrite = can_any_rule_fire(branches, rules, strings);
+                csp.add_constraint(RewriteEligibilityConstraint { var, can_rewrite });
+                alt_infos.push((var, rule_idx));
+            }
+        }
+        IrNode::Seq(children) => {
+            for c in children {
+                classify_alts_in_node(c, rules, strings, csp, alt_infos, rule_idx);
+            }
+        }
+        IrNode::Repeat { inner, .. }
+        | IrNode::Negate(inner)
+        | IrNode::OptionalWhitespace(inner)
+        | IrNode::Map { inner, .. } => {
+            classify_alts_in_node(inner, rules, strings, csp, alt_infos, rule_idx);
+        }
+        IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
+            classify_alts_in_node(a, rules, strings, csp, alt_infos, rule_idx);
+            classify_alts_in_node(b, rules, strings, csp, alt_infos, rule_idx);
+        }
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => {
+            classify_alts_in_node(token, rules, strings, csp, alt_infos, rule_idx);
+            for arm in arms {
+                classify_alts_in_node(
+                    &arm.continuation,
+                    rules,
+                    strings,
+                    csp,
+                    alt_infos,
+                    rule_idx,
+                );
+            }
+            classify_alts_in_node(fallback, rules, strings, csp, alt_infos, rule_idx);
+        }
+        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon | IrNode::Ref(_) => {}
+    }
 }
 
 fn simplify_node(

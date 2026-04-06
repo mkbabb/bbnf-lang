@@ -1,8 +1,32 @@
+//! Inline plan analysis using CSP constraint propagation.
+//!
+//! Models the inlining decision for each rule as a Constraint Satisfaction
+//! Problem:
+//!
+//! - **Variables**: One per rule → domain `{InlineBody, DirectCall}`
+//! - **Constraints**:
+//!   - Forced DirectCall: cyclic, recover, prettify, operator-chain rules
+//!   - Forced InlineBody: single-site inline, @token rules
+//!   - Cost budget: `cost(rule) * ref_count <= MAX_TOTAL_BUDGET`
+//!   - Alt branch limit: `max_alt_branches <= MAX_ALT_BRANCHES`
+//!   - Shape guard: heavy-wrapper / high-ref / high-control-flow → DirectCall
+//!
+//! Uses AC-3 propagation via `csp_solver::Csp<InlineDomain>` to resolve all
+//! decisions in a single pass — the constraints are all unary (each rule's
+//! decision is independent given the pre-computed metrics), so propagation
+//! converges immediately.
+
 use std::collections::HashSet;
 
 use bbnf_ir::{GrammarIR, IrNode, RuleId};
+use csp_solver::Csp;
+use csp_solver::constraint::{Constraint, Revision, VarId};
+use csp_solver::domain::{Domain, LatticeDomain};
+use csp_solver::variable::Variable;
 
 use super::specialize::gather_inline_shape_stats;
+
+// ── Domain ────────────────────────────────────────────────────────────────────
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum CallMode {
@@ -17,6 +41,179 @@ impl CallMode {
     }
 }
 
+/// Lattice domain for inline decisions.
+///
+/// Bottom = `Undecided`. Monotonically resolves to either `Decided(InlineBody)`
+/// or `Decided(DirectCall)`. Once assigned, it does not change.
+#[derive(Clone, Debug, PartialEq)]
+enum InlineDecision {
+    Undecided,
+    Decided(CallMode),
+}
+
+#[derive(Clone, Debug, PartialEq)]
+struct InlineDomain {
+    decision: InlineDecision,
+}
+
+impl InlineDomain {
+    fn undecided() -> Self {
+        Self {
+            decision: InlineDecision::Undecided,
+        }
+    }
+}
+
+impl Domain for InlineDomain {
+    type Value = InlineDecision;
+
+    fn size(&self) -> usize {
+        1
+    }
+
+    fn is_singleton(&self) -> bool {
+        true
+    }
+
+    fn singleton_value(&self) -> Option<Self::Value> {
+        Some(self.decision.clone())
+    }
+
+    fn contains(&self, val: &Self::Value) -> bool {
+        self.decision == *val
+    }
+
+    fn remove(&mut self, _val: &Self::Value) -> bool {
+        false
+    }
+
+    fn add(&mut self, _val: &Self::Value) {}
+
+    fn values(&self) -> Vec<Self::Value> {
+        vec![self.decision.clone()]
+    }
+}
+
+impl LatticeDomain for InlineDomain {
+    fn bottom() -> Self {
+        Self::undecided()
+    }
+
+    fn join(&mut self, other: &Self) -> bool {
+        match (&self.decision, &other.decision) {
+            (InlineDecision::Undecided, InlineDecision::Decided(_)) => {
+                self.decision = other.decision.clone();
+                true
+            }
+            _ => false,
+        }
+    }
+}
+
+// ── Constraints ───────────────────────────────────────────────────────────────
+
+/// Unary constraint that forces a rule to a specific call mode.
+#[derive(Debug)]
+struct ForceCallMode {
+    var: VarId,
+    mode: CallMode,
+}
+
+impl ForceCallMode {
+    fn new(var: VarId, mode: CallMode) -> Self {
+        Self { var, mode }
+    }
+}
+
+impl Constraint<InlineDomain> for ForceCallMode {
+    fn scope(&self) -> &[VarId] {
+        std::slice::from_ref(&self.var)
+    }
+
+    fn check(&self, assignment: &[Option<InlineDecision>]) -> bool {
+        match &assignment[self.var as usize] {
+            Some(InlineDecision::Decided(m)) => *m == self.mode,
+            _ => true,
+        }
+    }
+
+    fn revise(&self, vars: &mut [Variable<InlineDomain>], _depth: usize) -> Revision {
+        let slot = &mut vars[self.var as usize].domain.decision;
+        if *slot == InlineDecision::Undecided {
+            *slot = InlineDecision::Decided(self.mode);
+            Revision::Changed
+        } else {
+            Revision::Unchanged
+        }
+    }
+}
+
+/// Cost-budget constraint: decides InlineBody or DirectCall based on the
+/// pre-computed expansion cost, ref count, alt branch count, and shape stats.
+///
+/// This consolidates all the heuristic checks from the original imperative code
+/// into a single constraint that fires once during propagation.
+#[derive(Debug)]
+struct CostBudgetConstraint {
+    var: VarId,
+    local_cost: usize,
+    total_budget: usize,
+    max_alt_branches: usize,
+    shape_control_nodes: usize,
+    shape_refs: usize,
+    shape_wrapper_heavy: bool,
+}
+
+impl CostBudgetConstraint {
+    const MAX_ALT_BRANCHES: usize = 32;
+    const MAX_LOCAL_COST: usize = 80;
+    const MAX_TOTAL_BUDGET: usize = 4096;
+}
+
+impl Constraint<InlineDomain> for CostBudgetConstraint {
+    fn scope(&self) -> &[VarId] {
+        std::slice::from_ref(&self.var)
+    }
+
+    fn check(&self, _assignment: &[Option<InlineDecision>]) -> bool {
+        true // Always satisfiable — just decides which mode.
+    }
+
+    fn revise(&self, vars: &mut [Variable<InlineDomain>], _depth: usize) -> Revision {
+        let slot = &mut vars[self.var as usize].domain.decision;
+        if *slot != InlineDecision::Undecided {
+            return Revision::Unchanged;
+        }
+
+        // Shape-based force-to-DirectCall (same logic as `should_force_direct_call`).
+        let force_direct = if self.shape_control_nodes == 0 {
+            false
+        } else if self.shape_refs > 2 && self.local_cost > 48 {
+            true
+        } else if self.shape_wrapper_heavy && self.shape_refs > 1 && self.total_budget > 1024 {
+            true
+        } else {
+            self.shape_control_nodes > 2 && self.total_budget > 1536
+        };
+
+        let mode = if force_direct {
+            CallMode::DirectCall
+        } else if self.max_alt_branches <= Self::MAX_ALT_BRANCHES
+            && self.local_cost <= Self::MAX_LOCAL_COST
+            && self.total_budget <= Self::MAX_TOTAL_BUDGET
+        {
+            CallMode::InlineBody
+        } else {
+            CallMode::DirectCall
+        };
+
+        *slot = InlineDecision::Decided(mode);
+        Revision::Changed
+    }
+}
+
+// ── Public API ────────────────────────────────────────────────────────────────
+
 #[derive(Clone, Debug, Default)]
 pub struct InlinePlan {
     pub parse_call_modes: Vec<CallMode>,
@@ -27,51 +224,82 @@ pub fn analyze_parse_inline_plan(
     ir: &GrammarIR,
     operator_chain_rules: &HashSet<RuleId>,
 ) -> InlinePlan {
-    const MAX_ALT_BRANCHES: usize = 32;
-    const MAX_LOCAL_COST: usize = 80;
-    const MAX_TOTAL_BUDGET: usize = 4096;
-
+    // Phase 1: Compute ref counts.
     let mut ref_counts = vec![0u32; ir.rules.len()];
     for rule in &ir.rules {
         count_refs_vec(&rule.body, &mut ref_counts);
     }
 
+    // Phase 2: Compute single-site inline eligibility.
     let single_site_inline = compute_single_site_inline_with_ref_counts(ir, &ref_counts);
-    let parse_call_modes = ir
+
+    // Phase 3: Build CSP — one variable per rule.
+    let mut csp: Csp<InlineDomain> = Csp::new();
+    let var_ids: Vec<VarId> = ir
         .rules
         .iter()
-        .enumerate()
-        .map(|(idx, rule)| {
-            if single_site_inline[idx] {
-                return CallMode::InlineBody;
-            }
-            if operator_chain_rules.contains(&rule.id) {
-                return CallMode::DirectCall;
-            }
-            if rule.meta.directives.token {
-                return CallMode::InlineBody;
-            }
-            if rule.meta.is_cyclic
-                || rule.meta.directives.recover.is_some()
-                || rule.meta.directives.pretty.is_some()
-            {
-                return CallMode::DirectCall;
-            }
+        .map(|_| csp.add_variable(InlineDomain::undecided()))
+        .collect();
 
-            let alt_branches = max_alt_branches(&rule.body);
-            let local_cost = estimate_expansion_cost(&rule.body);
-            let total_budget = local_cost.saturating_mul(ref_counts[idx] as usize);
-            let shape = gather_inline_shape_stats(&rule.body);
+    // Phase 4: Add constraints.
+    for (idx, rule) in ir.rules.iter().enumerate() {
+        let var = var_ids[idx];
 
-            if should_force_direct_call(shape, local_cost, total_budget) {
-                CallMode::DirectCall
-            } else if alt_branches <= MAX_ALT_BRANCHES
-                && local_cost <= MAX_LOCAL_COST
-                && total_budget <= MAX_TOTAL_BUDGET
-            {
-                CallMode::InlineBody
-            } else {
-                CallMode::DirectCall
+        // Priority 1: Single-site inline → forced InlineBody.
+        if single_site_inline[idx] {
+            csp.add_constraint(ForceCallMode::new(var, CallMode::InlineBody));
+            continue;
+        }
+
+        // Priority 2: Operator chain → forced DirectCall.
+        if operator_chain_rules.contains(&rule.id) {
+            csp.add_constraint(ForceCallMode::new(var, CallMode::DirectCall));
+            continue;
+        }
+
+        // Priority 3: @token → forced InlineBody.
+        if rule.meta.directives.token {
+            csp.add_constraint(ForceCallMode::new(var, CallMode::InlineBody));
+            continue;
+        }
+
+        // Priority 4: Cyclic / recover / prettify → forced DirectCall.
+        if rule.meta.is_cyclic
+            || rule.meta.directives.recover.is_some()
+            || rule.meta.directives.pretty.is_some()
+        {
+            csp.add_constraint(ForceCallMode::new(var, CallMode::DirectCall));
+            continue;
+        }
+
+        // Priority 5: Cost-budget constraint (consolidates all heuristics).
+        let alt_branches = max_alt_branches(&rule.body);
+        let local_cost = estimate_expansion_cost(&rule.body);
+        let total_budget = local_cost.saturating_mul(ref_counts[idx] as usize);
+        let shape = gather_inline_shape_stats(&rule.body);
+
+        csp.add_constraint(CostBudgetConstraint {
+            var,
+            local_cost,
+            total_budget,
+            max_alt_branches: alt_branches,
+            shape_control_nodes: shape.control_nodes(),
+            shape_refs: shape.refs,
+            shape_wrapper_heavy: shape.is_wrapper_heavy(),
+        });
+    }
+
+    // Phase 5: Solve via AC-3 propagation.
+    csp.finalize();
+    let _ = csp.propagate();
+
+    // Phase 6: Extract results.
+    let parse_call_modes = var_ids
+        .iter()
+        .map(|&var| {
+            match &csp.variables[var as usize].domain.decision {
+                InlineDecision::Decided(mode) => *mode,
+                InlineDecision::Undecided => CallMode::DirectCall, // conservative default
             }
         })
         .collect();
@@ -81,6 +309,8 @@ pub fn analyze_parse_inline_plan(
         single_site_inline,
     }
 }
+
+// ── Re-exported helpers (unchanged from original) ─────────────────────────────
 
 pub fn should_force_direct_call(
     shape: super::specialize::InlineShapeStats,
@@ -239,4 +469,3 @@ fn body_has_self_ref(node: &IrNode, rule_id: RuleId) -> bool {
         IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => false,
     }
 }
-

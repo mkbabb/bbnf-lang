@@ -157,6 +157,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "regex",
+ "rustc-hash 2.1.2",
  "serde",
  "serde_json",
  "serde_json_borrow",

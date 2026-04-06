@@ -12,6 +12,7 @@
 //!
 //! Both are opt-in via flag, matching the TypeScript design.
 
+use rustc_hash::FxHashMap;
 use std::collections::HashMap;
 
 use crate::{AltBranch, GrammarIR, IrNode, IrRule, RuleId, RuleMeta};
@@ -28,7 +29,7 @@ pub fn eliminate_direct_lr(ir: &mut GrammarIR) {
     let mut new_rules: Vec<IrRule> = Vec::new();
 
     // String dedup for interning tail rule names.
-    let mut string_dedup: HashMap<String, u32> = ir
+    let mut string_dedup: FxHashMap<String, u32> = ir
         .strings
         .iter()
         .enumerate()
@@ -305,7 +306,7 @@ pub fn substitute_leading_ref(
 }
 
 /// Intern a string, reusing an existing entry if present.
-pub fn intern_string(s: String, strings: &mut Vec<String>, dedup: &mut HashMap<String, u32>) -> u32 {
+pub fn intern_string(s: String, strings: &mut Vec<String>, dedup: &mut FxHashMap<String, u32>) -> u32 {
     if let Some(&existing) = dedup.get(&s) {
         return existing;
     }

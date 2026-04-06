@@ -7,7 +7,7 @@
 //! `Alt([Literal("rem"), Literal("rlh")])` → `Seq(Literal("r"), Alt([Literal("em"), Literal("lh")]))`
 //! This enables dispatch tables for alternations where branches share a first byte.
 
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 
 use crate::{AltBranch, FnId, GrammarIR, IrNode, StringId};
 
@@ -223,7 +223,7 @@ struct LiteralBranchInfo {
 }
 
 /// Intern a string, deduplicating against existing entries.
-fn intern_or_reuse(s: &str, strings: &mut Vec<String>, dedup: &mut HashMap<String, u32>) -> u32 {
+fn intern_or_reuse(s: &str, strings: &mut Vec<String>, dedup: &mut FxHashMap<String, u32>) -> u32 {
     if let Some(&existing) = dedup.get(s) {
         return existing;
     }
@@ -272,7 +272,7 @@ fn factor_literal_prefixes(branches: Vec<AltBranch>, strings: &mut Vec<String>) 
 
     // Collect runs of literal branches that share a first byte.
     let mut result: Vec<AltBranch> = Vec::new();
-    let mut dedup: HashMap<String, u32> = HashMap::new();
+    let mut dedup: FxHashMap<String, u32> = FxHashMap::default();
 
     // Pre-populate dedup with existing strings for efficient reuse.
     for (i, s) in strings.iter().enumerate() {

@@ -1,20 +1,20 @@
 //! String interning table used during lowering.
 
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 
 use bbnf_ir::StringId;
 
 /// String interning table used during lowering.
 pub(crate) struct StringInterner {
     pub(crate) strings: Vec<String>,
-    map: HashMap<String, StringId>,
+    map: FxHashMap<String, StringId>,
 }
 
 impl StringInterner {
     pub(crate) fn new() -> Self {
         Self {
             strings: Vec::new(),
-            map: HashMap::new(),
+            map: FxHashMap::default(),
         }
     }
 

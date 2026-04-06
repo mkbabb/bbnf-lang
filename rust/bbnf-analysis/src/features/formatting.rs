@@ -1,10 +1,21 @@
 use ls_types::*;
 
-use bbnf::types::{AST, Expression, Token};
+use bbnf::types::{AST, Expression, MapArrow, Token};
+use crate::state::ast_utils::format_value_expr_short;
 
 /// Extract the inner value from a TokenExpression.
 fn get_inner_expression<'a, T>(tok: &'a Token<'a, T>) -> &'a T {
     &tok.value
+}
+
+/// Format a `MapArrow` (value expression + optional type annotation).
+fn format_map_arrow(arrow: &MapArrow<'_>) -> String {
+    let expr_str = format_value_expr_short(&arrow.expr);
+    if let Some(ref ty) = arrow.return_type {
+        format!("{} : {}", expr_str, ty.value)
+    } else {
+        expr_str
+    }
 }
 
 use crate::state::DocumentState;
@@ -220,10 +231,10 @@ fn format_expression(expr: &Expression<'_>, indent_level: usize) -> String {
                 format!("\n{}{}", indent, parts.join(&sep))
             }
         }
-        Expression::Rule(rhs, mapping) => {
+        Expression::Rule(rhs, arrow) => {
             let rhs_str = format_expression(rhs, indent_level);
-            if let Some(m) = mapping {
-                format!("{} {}", rhs_str, format_expression(m, indent_level))
+            if let Some(a) = arrow {
+                format!("{} -> {}", rhs_str, format_map_arrow(a))
             } else {
                 rhs_str
             }
@@ -235,11 +246,11 @@ fn format_expression(expr: &Expression<'_>, indent_level: usize) -> String {
                 format_expression(rhs, indent_level),
             )
         }
-        Expression::MappedExpression((expr_tok, mapping_tok)) => {
+        Expression::MappedExpression(expr_tok, arrow) => {
             format!(
-                "{} {}",
+                "{} -> {}",
                 format_expression(get_inner_expression(expr_tok), indent_level),
-                format_expression(get_inner_expression(mapping_tok), indent_level),
+                format_map_arrow(arrow),
             )
         }
         Expression::DebugExpression((expr_tok, label)) => {
@@ -249,6 +260,5 @@ fn format_expression(expr: &Expression<'_>, indent_level: usize) -> String {
                 label,
             )
         }
-        Expression::MappingFn(tok) => format!("=> {}", tok.value),
     }
 }

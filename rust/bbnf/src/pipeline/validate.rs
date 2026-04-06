@@ -113,23 +113,13 @@ fn validate_expr(
                 })
             }
         }
-        Expression::MappingFn(_) => Err(CompileError::InvalidMappingFn {
-            rule: rule_name.to_string(),
-        }),
-        Expression::MappedExpression((inner, mapping)) => {
+        Expression::MappedExpression(inner, _arrow) => {
             validate_expr(
                 rule_name,
                 &inner.value,
                 defined_rules,
                 validate_unknown_nonterminals,
-            )?;
-            if matches!(&mapping.value, Expression::MappingFn(_)) {
-                Ok(())
-            } else {
-                Err(CompileError::InvalidMappingFn {
-                    rule: rule_name.to_string(),
-                })
-            }
+            )
         }
         Expression::DebugExpression((inner, _))
         | Expression::Group(inner)
@@ -169,22 +159,13 @@ fn validate_expr(
                 )
             })
         }
-        Expression::Rule(inner, mapping) => {
+        Expression::Rule(inner, _arrow) => {
             validate_expr(
                 rule_name,
                 inner,
                 defined_rules,
                 validate_unknown_nonterminals,
-            )?;
-            if mapping
-                .as_ref()
-                .is_some_and(|expr| !matches!(expr.as_ref(), Expression::MappingFn(_)))
-            {
-                return Err(CompileError::InvalidMappingFn {
-                    rule: rule_name.to_string(),
-                });
-            }
-            Ok(())
+            )
         }
         Expression::ProductionRule(_, _) => Err(CompileError::InvalidProductionRule {
             rule: rule_name.to_string(),

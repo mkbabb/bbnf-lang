@@ -135,21 +135,6 @@ fn compile_request_rejects_unknown_nonterminal() {
 }
 
 #[test]
-fn compile_request_rejects_standalone_mapping_fn_bodies() {
-    let lhs = Expression::Nonterminal(Token::new_without_span(Cow::Borrowed("value")));
-    let rhs = Expression::MappingFn(Token::new_without_span(Cow::Borrowed("f64")));
-    let mut ast = IndexMap::new();
-    ast.insert(lhs, rhs);
-
-    let directives = DirectiveSet::empty();
-    let err = compile_ast_request(ast, &directives, &aot_request(false)).unwrap_err();
-    assert!(matches!(
-        err,
-        CompileError::InvalidMappingFn { ref rule } if rule == "value"
-    ));
-}
-
-#[test]
 fn compile_request_rejects_nested_production_rules() {
     let lhs = Expression::Nonterminal(Token::new_without_span(Cow::Borrowed("value")));
     let nested_lhs = Expression::Nonterminal(Token::new_without_span(Cow::Borrowed("other")));

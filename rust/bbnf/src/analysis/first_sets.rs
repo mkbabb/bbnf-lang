@@ -265,7 +265,7 @@ pub(crate) fn compute_expr_first<'a>(
             compute_expr_first(&left.value, first_sets, nullable_set, name_to_key, out)
         }
 
-        Expression::MappedExpression((inner, _)) | Expression::DebugExpression((inner, _)) => {
+        Expression::MappedExpression(inner, _) | Expression::DebugExpression((inner, _)) => {
             compute_expr_first(&inner.value, first_sets, nullable_set, name_to_key, out)
         }
 
@@ -273,6 +273,6 @@ pub(crate) fn compute_expr_first<'a>(
             compute_expr_first(&inner.value, first_sets, nullable_set, name_to_key, out)
         }
 
-        Expression::MappingFn(_) | Expression::ProductionRule(_, _) => false,
+        Expression::ProductionRule(_, _) => false,
     }
 }

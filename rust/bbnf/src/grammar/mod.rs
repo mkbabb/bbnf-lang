@@ -2,11 +2,408 @@ use std::borrow::Cow;
 
 use parse_that::parsers::utils::escaped_span;
 use parse_that::{
-    Parser, ParserFlat, ParserSpan, ParserState, Span, any_span, lazy, next_span, string,
-    string_span, take_while_span,
+    Parser, ParserSpan, ParserState, Span, any_span, lazy, next_span, string, string_span,
+    take_while_span,
 };
 
 use crate::types::*;
+
+// ─── Value Expression Parser (recursive descent) ────────────────────────────
+//
+// Precedence (lowest to highest):
+//   ||  →  &&  →  == !=  →  < > <= >=  →  + -  →  * / %  →  ! - (unary)  →  .prop  →  atom
+
+fn ve_skip_ws(state: &mut ParserState<'_>) {
+    let bytes = state.src_bytes;
+    while state.offset < state.end && bytes[state.offset].is_ascii_whitespace() {
+        state.offset += 1;
+    }
+}
+
+fn ve_peek(state: &ParserState<'_>) -> Option<u8> {
+    if state.offset < state.end {
+        Some(state.src_bytes[state.offset])
+    } else {
+        None
+    }
+}
+
+fn ve_peek_at(state: &ParserState<'_>, off: usize) -> Option<u8> {
+    let pos = state.offset + off;
+    if pos < state.end {
+        Some(state.src_bytes[pos])
+    } else {
+        None
+    }
+}
+
+/// Try to consume an exact byte sequence. Returns true on success.
+fn ve_try_consume(state: &mut ParserState<'_>, pattern: &[u8]) -> bool {
+    let end = state.offset + pattern.len();
+    if end <= state.end && &state.src_bytes[state.offset..end] == pattern {
+        state.offset = end;
+        true
+    } else {
+        false
+    }
+}
+
+/// Parse a simple identifier: `[a-zA-Z_][a-zA-Z0-9_]*`.
+fn ve_simple_ident<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
+    let start = state.offset;
+    let bytes = state.src_bytes;
+    if start >= state.end || !(bytes[start].is_ascii_alphabetic() || bytes[start] == b'_') {
+        return None;
+    }
+    let mut i = start + 1;
+    while i < state.end && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'_') {
+        i += 1;
+    }
+    state.offset = i;
+    Some(Span::new(start, i, state.src))
+}
+
+/// Parse a value-expression identifier (allows `::` path separators):
+/// `[a-zA-Z_][a-zA-Z0-9_]* ("::" [a-zA-Z_][a-zA-Z0-9_]*)*`.
+fn ve_ident<'a>(state: &mut ParserState<'a>) -> Option<Span<'a>> {
+    let start = state.offset;
+    ve_simple_ident(state)?;
+    // Consume `::segment` suffixes.
+    loop {
+        let saved = state.offset;
+        if ve_try_consume(state, b"::") {
+            if ve_simple_ident(state).is_some() {
+                continue;
+            }
+            // `::` without a following ident — backtrack.
+            state.offset = saved;
+        }
+        break;
+    }
+    Some(Span::new(start, state.offset, state.src))
+}
+
+/// Parse a number literal (integer or float, with optional suffix and hex support).
+fn ve_number<'a>(state: &mut ParserState<'a>) -> Option<ValueExpr<'a>> {
+    let start = state.offset;
+    let bytes = state.src_bytes;
+    let mut i = start;
+    let mut is_float = false;
+
+    // Hex: 0x...
+    if i + 1 < state.end && bytes[i] == b'0' && (bytes[i + 1] == b'x' || bytes[i + 1] == b'X') {
+        i += 2;
+        let hex_start = i;
+        while i < state.end && bytes[i].is_ascii_hexdigit() {
+            i += 1;
+        }
+        if i == hex_start {
+            return None; // `0x` with no digits
+        }
+    } else {
+        // Decimal digits.
+        while i < state.end && bytes[i].is_ascii_digit() {
+            i += 1;
+        }
+        if i == start {
+            return None;
+        }
+        // Fractional part.
+        if i < state.end && bytes[i] == b'.' {
+            let dot_pos = i;
+            i += 1;
+            let frac_start = i;
+            while i < state.end && bytes[i].is_ascii_digit() {
+                i += 1;
+            }
+            if i == frac_start {
+                // No digits after `.` — backtrack the dot (could be property access).
+                i = dot_pos;
+            } else {
+                is_float = true;
+            }
+        }
+        // Exponent.
+        if i < state.end && (bytes[i] == b'e' || bytes[i] == b'E') {
+            let exp_start = i;
+            i += 1;
+            if i < state.end && (bytes[i] == b'+' || bytes[i] == b'-') {
+                i += 1;
+            }
+            let digit_start = i;
+            while i < state.end && bytes[i].is_ascii_digit() {
+                i += 1;
+            }
+            if i == digit_start {
+                // No digits after exponent — backtrack.
+                i = exp_start;
+            } else {
+                is_float = true;
+            }
+        }
+    }
+
+    // Optional type suffix: [a-zA-Z_][a-zA-Z0-9_]*
+    if i < state.end && (bytes[i].is_ascii_alphabetic() || bytes[i] == b'_') {
+        i += 1;
+        while i < state.end && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'_') {
+            i += 1;
+        }
+    }
+
+    state.offset = i;
+    let span = Span::new(start, i, state.src);
+    let text: Cow<'a, str> = Cow::Borrowed(span.as_str());
+    let token = Token::new(text, span);
+    Some(if is_float {
+        ValueExpr::FloatLit(token)
+    } else {
+        ValueExpr::IntLit(token)
+    })
+}
+
+/// Parse a double-quoted string literal.
+fn ve_string<'a>(state: &mut ParserState<'a>) -> Option<ValueExpr<'a>> {
+    let start = state.offset;
+    let bytes = state.src_bytes;
+    if ve_peek(state) != Some(b'"') {
+        return None;
+    }
+    let mut i = start + 1;
+    while i < state.end {
+        match bytes[i] {
+            b'\\' => {
+                i += 2; // skip escape
+            }
+            b'"' => {
+                i += 1;
+                state.offset = i;
+                // Inner content (without quotes).
+                let inner = &state.src[start + 1..i - 1];
+                let span = Span::new(start, i, state.src);
+                return Some(ValueExpr::StringLit(Token::new(
+                    Cow::Borrowed(inner),
+                    span,
+                )));
+            }
+            _ => i += 1,
+        }
+    }
+    None // unterminated string
+}
+
+/// Parse a value expression atom.
+fn ve_atom<'a>(state: &mut ParserState<'a>) -> Option<ValueExpr<'a>> {
+    ve_skip_ws(state);
+
+    // String literal.
+    if ve_peek(state) == Some(b'"') {
+        return ve_string(state);
+    }
+
+    // Parenthesized expression.
+    if ve_peek(state) == Some(b'(') {
+        state.offset += 1;
+        let inner = ve_or(state)?;
+        ve_skip_ws(state);
+        if ve_peek(state) != Some(b')') {
+            return None;
+        }
+        state.offset += 1;
+        return Some(ValueExpr::Paren(Box::new(inner)));
+    }
+
+    // Number literal (must check before identifiers for `0x` hex).
+    if ve_peek(state).is_some_and(|b| b.is_ascii_digit()) {
+        return ve_number(state);
+    }
+
+    // Identifier, keyword, or function call.
+    if ve_peek(state).is_some_and(|b| b.is_ascii_alphabetic() || b == b'_') {
+        let ident_span = ve_ident(state)?;
+        let name = ident_span.as_str();
+
+        match name {
+            "true" => {
+                return Some(ValueExpr::BoolLit(Token::new(true, ident_span)));
+            }
+            "false" => {
+                return Some(ValueExpr::BoolLit(Token::new(false, ident_span)));
+            }
+            "input" => {
+                // Check for property access: `input.prop`.
+                let input_span = ident_span;
+                ve_skip_ws(state);
+                if ve_peek(state) == Some(b'.') {
+                    let saved = state.offset;
+                    state.offset += 1;
+                    if let Some(prop_span) = ve_simple_ident(state) {
+                        let prop = Token::new(Cow::Borrowed(prop_span.as_str()), prop_span);
+                        return Some(ValueExpr::InputProp(input_span, prop));
+                    }
+                    state.offset = saved;
+                }
+                return Some(ValueExpr::Input(input_span));
+            }
+            _ => {}
+        }
+
+        // Check for function call: `ident(args)`.
+        ve_skip_ws(state);
+        if ve_peek(state) == Some(b'(') {
+            state.offset += 1;
+            let mut args = Vec::new();
+            ve_skip_ws(state);
+            if ve_peek(state) != Some(b')') {
+                args.push(ve_or(state)?);
+                loop {
+                    ve_skip_ws(state);
+                    if ve_peek(state) != Some(b',') {
+                        break;
+                    }
+                    state.offset += 1;
+                    args.push(ve_or(state)?);
+                }
+            }
+            ve_skip_ws(state);
+            if ve_peek(state) != Some(b')') {
+                return None;
+            }
+            state.offset += 1;
+            let fn_name = Token::new(Cow::Borrowed(name), ident_span);
+            return Some(ValueExpr::FnCall(fn_name, args));
+        }
+
+        return Some(ValueExpr::Ident(Token::new(Cow::Borrowed(name), ident_span)));
+    }
+
+    None
+}
+
+/// Parse postfix: `atom ("." IDENT)*` (property access on non-input is unsupported for now).
+fn ve_postfix<'a>(state: &mut ParserState<'a>) -> Option<ValueExpr<'a>> {
+    ve_atom(state)
+    // Property access on `input` is handled inside ve_atom directly.
+    // General property access (e.g., `result.len`) not supported yet.
+}
+
+/// Parse unary prefix: `("!" | "-") unary | postfix`.
+fn ve_unary<'a>(state: &mut ParserState<'a>) -> Option<ValueExpr<'a>> {
+    ve_skip_ws(state);
+    match ve_peek(state) {
+        Some(b'!') => {
+            state.offset += 1;
+            let inner = ve_unary(state)?;
+            Some(ValueExpr::UnaryOp(UnaryOpKind::Not, Box::new(inner)))
+        }
+        Some(b'-') => {
+            // Make sure it's not `->`.
+            if ve_peek_at(state, 1) == Some(b'>') {
+                return ve_postfix(state);
+            }
+            state.offset += 1;
+            let inner = ve_unary(state)?;
+            Some(ValueExpr::UnaryOp(UnaryOpKind::Neg, Box::new(inner)))
+        }
+        _ => ve_postfix(state),
+    }
+}
+
+/// Left-associative binary operator helper.
+fn ve_binop_left<'a>(
+    state: &mut ParserState<'a>,
+    operand: fn(&mut ParserState<'a>) -> Option<ValueExpr<'a>>,
+    ops: &[(&[u8], BinOpKind)],
+) -> Option<ValueExpr<'a>> {
+    let mut left = operand(state)?;
+    loop {
+        ve_skip_ws(state);
+        let saved = state.offset;
+        let mut matched = None;
+        // Try longer patterns first (they're listed first in each call).
+        for &(pat, kind) in ops {
+            if ve_try_consume(state, pat) {
+                matched = Some(kind);
+                break;
+            }
+        }
+        let Some(kind) = matched else { break };
+        let Some(right) = operand(state) else {
+            state.offset = saved;
+            break;
+        };
+        left = ValueExpr::BinOp(kind, Box::new(left), Box::new(right));
+    }
+    Some(left)
+}
+
+fn ve_mul<'a>(state: &mut ParserState<'a>) -> Option<ValueExpr<'a>> {
+    ve_binop_left(state, ve_unary, &[
+        (b"*", BinOpKind::Mul),
+        (b"/", BinOpKind::Div),
+        (b"%", BinOpKind::Mod),
+    ])
+}
+
+fn ve_add<'a>(state: &mut ParserState<'a>) -> Option<ValueExpr<'a>> {
+    ve_binop_left(state, ve_mul, &[
+        (b"+", BinOpKind::Add),
+        (b"-", BinOpKind::Sub),
+    ])
+}
+
+fn ve_cmp<'a>(state: &mut ParserState<'a>) -> Option<ValueExpr<'a>> {
+    ve_binop_left(state, ve_add, &[
+        (b"<=", BinOpKind::Le),
+        (b">=", BinOpKind::Ge),
+        (b"<", BinOpKind::Lt),
+        (b">", BinOpKind::Gt),
+    ])
+}
+
+fn ve_eq<'a>(state: &mut ParserState<'a>) -> Option<ValueExpr<'a>> {
+    ve_binop_left(state, ve_cmp, &[
+        (b"==", BinOpKind::Eq),
+        (b"!=", BinOpKind::Ne),
+    ])
+}
+
+fn ve_and<'a>(state: &mut ParserState<'a>) -> Option<ValueExpr<'a>> {
+    ve_binop_left(state, ve_eq, &[(b"&&", BinOpKind::And)])
+}
+
+fn ve_or<'a>(state: &mut ParserState<'a>) -> Option<ValueExpr<'a>> {
+    ve_binop_left(state, ve_and, &[(b"||", BinOpKind::Or)])
+}
+
+/// Parse a type annotation: `: TYPE` where TYPE is an identifier.
+fn ve_type_annotation<'a>(state: &mut ParserState<'a>) -> Option<Token<'a, Cow<'a, str>>> {
+    ve_skip_ws(state);
+    if ve_peek(state) != Some(b':') {
+        return None;
+    }
+    // Don't consume `::` (path separator).
+    if ve_peek_at(state, 1) == Some(b':') {
+        return None;
+    }
+    state.offset += 1; // consume `:`
+    ve_skip_ws(state);
+    let span = ve_ident(state)?;
+    Some(Token::new(Cow::Borrowed(span.as_str()), span))
+}
+
+/// Parse a complete map arrow: `-> value_expr (: TYPE)?`.
+fn ve_parse_map_arrow<'a>(state: &mut ParserState<'a>) -> Option<MapArrow<'a>> {
+    let start = state.offset;
+    let expr = ve_or(state)?;
+    let return_type = ve_type_annotation(state);
+    let span = Span::new(start, state.offset, state.src);
+    Some(MapArrow {
+        expr,
+        return_type,
+        span,
+    })
+}
 
 /// Helper enum for interleaving imports, recovers, pretties, and rules during parsing.
 enum TopLevelItem<'a> {
@@ -281,99 +678,32 @@ impl<'a> BBNFGrammar<'a> {
         )
     }
 
-    /// Parse `factor -> mapper_expr` — per-expression map.
-    /// The mapper text is consumed greedily until the next delimiter.
+    /// Parse `factor -> value_expr : TYPE` — per-expression map.
+    /// Uses the structured value expression parser.
     fn mapped_factor() -> Parser<'a, Expression<'a>> {
-        Self::factor().then(Self::map_arrow().opt()).map_with_state(
-            |pair: (Expression<'a>, Option<Span<'a>>), prev_offset, state| {
-                let (expr, mapper_opt) = pair;
-                if let Some(mapper_span) = mapper_opt {
-                    let mapper_str = mapper_span.as_str().trim();
-                    let mapper_token = Token::new(Cow::Borrowed(mapper_str), mapper_span);
-                    let expr_token =
-                        Token::new(expr, Span::new(prev_offset, state.offset, state.src));
-                    let fn_token = Token::new(
-                        Expression::MappingFn(mapper_token),
-                        Span::new(prev_offset, state.offset, state.src),
-                    );
-                    Expression::MappedExpression((Box::new(expr_token), Box::new(fn_token)))
-                } else {
-                    expr
-                }
-            },
-        )
+        Self::factor()
+            .then(Self::map_arrow().opt())
+            .map_with_state(
+                |pair: (Expression<'a>, Option<MapArrow<'a>>), prev_offset, state| {
+                    let (expr, arrow_opt) = pair;
+                    if let Some(arrow) = arrow_opt {
+                        let expr_token =
+                            Token::new(expr, Span::new(prev_offset, state.offset, state.src));
+                        Expression::MappedExpression(Box::new(expr_token), arrow)
+                    } else {
+                        expr
+                    }
+                },
+            )
     }
 
-    /// Parse the `->` operator and its argument text.
-    /// Handles three mapper forms:
-    /// 1. Rust closure: `|params| -> RetType { body }` or `|params| expr`
-    /// 2. Function path: `crate::module::func`
-    /// 3. Literal value: `0u8`, `true`
-    ///
-    /// Balanced `{}`/`()`/`[]` are tracked. Closure `|...|` params are recognized
-    /// when the mapper starts with `|`.
-    fn map_arrow() -> Parser<'a, Span<'a>> {
+    /// Parse the `->` operator followed by a structured value expression
+    /// and optional type annotation.
+    fn map_arrow() -> Parser<'a, MapArrow<'a>> {
         string_span("->")
             .trim_whitespace()
             .next(Parser::new(|state: &mut ParserState<'a>| {
-                let src = &state.src[state.offset..];
-                let start = state.offset;
-                let bytes = src.as_bytes();
-                let len = bytes.len();
-                let mut i = 0;
-
-                // If the mapper starts with `|`, it's a Rust closure.
-                // Consume the parameter list `|...|` first, then the body.
-                if i < len && bytes[i] == b'|' {
-                    // Skip opening `|` and find the matching closing `|`.
-                    i += 1;
-                    while i < len && bytes[i] != b'|' {
-                        i += 1;
-                    }
-                    if i < len {
-                        i += 1; // skip closing `|`
-                    }
-                    // Now consume the closure body with balanced delimiters.
-                    // Stop at depth-0 `,`, `|`, `;` (BBNF delimiters).
-                    let mut depth: usize = 0;
-                    while i < len {
-                        match bytes[i] {
-                            b'{' | b'(' | b'[' => depth += 1,
-                            b'}' | b')' | b']' => {
-                                if depth == 0 {
-                                    break;
-                                }
-                                depth -= 1;
-                            }
-                            b',' | b'|' | b';' if depth == 0 => break,
-                            _ => {}
-                        }
-                        i += 1;
-                    }
-                } else {
-                    // Non-closure mapper: consume until depth-0 delimiter.
-                    let mut depth: usize = 0;
-                    while i < len {
-                        match bytes[i] {
-                            b'{' | b'(' | b'[' => depth += 1,
-                            b'}' | b')' | b']' => {
-                                if depth == 0 {
-                                    break;
-                                }
-                                depth -= 1;
-                            }
-                            b',' | b'|' | b';' if depth == 0 => break,
-                            _ => {}
-                        }
-                        i += 1;
-                    }
-                }
-
-                if i == 0 {
-                    return None;
-                }
-                state.offset += i;
-                Some(Span::new(start, state.offset, state.src))
+                ve_parse_map_arrow(state)
             }))
     }
 
@@ -433,28 +763,6 @@ impl<'a> BBNFGrammar<'a> {
         Self::alternation()
     }
 
-    fn mapping_fn() -> Parser<'a, Option<Box<Expression<'a>>>> {
-        let lhs = string_span(";").skip(Self::lhs().trim_whitespace().skip(string_span("=")));
-        let not_lhs = next_span(1).look_ahead(lhs.negate());
-
-        string_span("=>")
-            .trim_whitespace()
-            .next(not_lhs.many_span(..).then_span(next_span(1)))
-            .map(|s| {
-                let token = Token::new(s.as_str().into(), s);
-                let trimmed = s.as_str().trim();
-                // Accept closures, constant literals, or path expressions.
-                if syn::parse_str::<syn::ExprClosure>(trimmed).is_err()
-                    && syn::parse_str::<syn::Expr>(trimmed).is_err()
-                {
-                    panic!("invalid mapper expression: {:?}", trimmed);
-                }
-
-                Box::new(Expression::MappingFn(token))
-            })
-            .opt()
-    }
-
     fn production_rule() -> Parser<'a, Expression<'a>> {
         let comment = Self::block_comment() | Self::line_comment();
         let eq = string("=").trim_whitespace();
@@ -464,12 +772,11 @@ impl<'a> BBNFGrammar<'a> {
         let production_rule = Self::lhs()
             .skip(eq)
             .then(Self::rhs())
-            .then_flat(Self::mapping_fn())
             .skip(terminator)
-            .map(|(lhs, rhs, mapping_fn)| {
+            .map(|(lhs, rhs)| {
                 Expression::ProductionRule(
                     lhs.into(),
-                    Expression::Rule(Box::new(rhs), mapping_fn).into(),
+                    Expression::Rule(Box::new(rhs), None).into(),
                 )
             });
 

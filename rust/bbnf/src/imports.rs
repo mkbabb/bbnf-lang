@@ -547,20 +547,16 @@ fn collect_nonterminal_refs(expr: &crate::types::Expression) -> Vec<String> {
             refs.extend(collect_nonterminal_refs(lhs));
             refs.extend(collect_nonterminal_refs(rhs));
         }
-        Expression::MappedExpression((a, b)) => {
-            refs.extend(collect_nonterminal_refs(&a.value));
-            refs.extend(collect_nonterminal_refs(&b.value));
+        Expression::MappedExpression(inner, _) => {
+            refs.extend(collect_nonterminal_refs(&inner.value));
         }
         Expression::DebugExpression((inner, _)) => {
             refs.extend(collect_nonterminal_refs(&inner.value));
         }
-        Expression::Rule(lhs, rhs) => {
+        Expression::Rule(lhs, _) => {
             refs.extend(collect_nonterminal_refs(lhs));
-            if let Some(r) = rhs {
-                refs.extend(collect_nonterminal_refs(r));
-            }
         }
-        _ => {} // Literal, Regex, Epsilon, MappingFn
+        _ => {} // Literal, Regex, Epsilon
     }
     refs
 }

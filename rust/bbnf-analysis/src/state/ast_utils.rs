@@ -100,7 +100,7 @@ pub fn collect_references(expr: &Expression<'_>, refs: &mut Vec<ReferenceInfo>) 
         Expression::Rule(rhs, _) => {
             collect_references(rhs, refs);
         }
-        Expression::MappedExpression((expr_tok, _)) => {
+        Expression::MappedExpression(expr_tok, _) => {
             collect_references(expr_tok.inner(), refs);
         }
         Expression::DebugExpression((expr_tok, _)) => {
@@ -157,7 +157,7 @@ pub fn collect_semantic_tokens(expr: &Expression<'_>, tokens: &mut Vec<SemanticT
         Expression::Rule(rhs, _) => {
             collect_semantic_tokens(rhs, tokens);
         }
-        Expression::MappedExpression((expr_tok, _)) => {
+        Expression::MappedExpression(expr_tok, _) => {
             collect_semantic_tokens(expr_tok.inner(), tokens);
         }
         Expression::DebugExpression((expr_tok, _)) => {
@@ -173,7 +173,6 @@ pub fn compute_expression_end(expr: &Expression<'_>) -> Option<usize> {
         Expression::Literal(tok) | Expression::Nonterminal(tok) | Expression::Regex(tok) => {
             Some(tok.span.end)
         }
-        Expression::MappingFn(tok) => Some(tok.span.end),
         Expression::Epsilon(tok) => Some(tok.span.end),
         Expression::Alternation(inner) | Expression::Concatenation(inner) => inner
             .inner()
@@ -189,15 +188,15 @@ pub fn compute_expression_end(expr: &Expression<'_>) -> Option<usize> {
         | Expression::Many1(inner)
         | Expression::OptionalWhitespace(inner)
         | Expression::SpanCapture(inner) => Some(inner.span.end),
-        Expression::Rule(rhs, mapping) => {
-            if let Some(m) = mapping {
-                compute_expression_end(m)
+        Expression::Rule(rhs, arrow) => {
+            if let Some(a) = arrow {
+                Some(a.span.end)
             } else {
                 compute_expression_end(rhs)
             }
         }
         Expression::ProductionRule(_, rhs) => compute_expression_end(rhs),
-        Expression::MappedExpression((_, mapping_tok)) => Some(mapping_tok.span.end),
+        Expression::MappedExpression(_, arrow) => Some(arrow.span.end),
         Expression::DebugExpression((expr_tok, _)) => compute_expression_end(expr_tok.inner()),
     }
 }
@@ -268,9 +267,36 @@ pub fn format_expression_short(expr: &Expression<'_>) -> String {
                 format_expression_short(rhs)
             )
         }
-        Expression::MappedExpression((expr_tok, _)) => format_expression_short(expr_tok.inner()),
+        Expression::MappedExpression(expr_tok, arrow) => {
+            format!("{} -> {}", format_expression_short(expr_tok.inner()), format_value_expr_short(&arrow.expr))
+        }
         Expression::DebugExpression((expr_tok, _)) => format_expression_short(expr_tok.inner()),
-        Expression::MappingFn(tok) => format!("=> {}", tok.value),
+    }
+}
+
+/// Quick formatting of a value expression for hover text.
+pub fn format_value_expr_short(expr: &bbnf::ValueExpr<'_>) -> String {
+    use bbnf::ValueExpr;
+    match expr {
+        ValueExpr::IntLit(tok) | ValueExpr::FloatLit(tok) => tok.value.to_string(),
+        ValueExpr::BoolLit(tok) => if tok.value { "true" } else { "false" }.into(),
+        ValueExpr::StringLit(tok) => format!("\"{}\"", tok.value),
+        ValueExpr::Input(_) => "input".into(),
+        ValueExpr::InputProp(_, prop) => format!("input.{}", prop.value),
+        ValueExpr::Ident(tok) => tok.value.to_string(),
+        ValueExpr::FnCall(name, args) => {
+            let args_str: Vec<String> = args.iter().map(|a| format_value_expr_short(a)).collect();
+            format!("{}({})", name.value, args_str.join(", "))
+        }
+        ValueExpr::BinOp(op, lhs, rhs) => {
+            format!("{} {} {}", format_value_expr_short(lhs), op, format_value_expr_short(rhs))
+        }
+        ValueExpr::UnaryOp(op, inner) => {
+            format!("{}{}", op, format_value_expr_short(inner))
+        }
+        ValueExpr::Paren(inner) => {
+            format!("({})", format_value_expr_short(inner))
+        }
     }
 }
 

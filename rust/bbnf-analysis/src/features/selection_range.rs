@@ -128,7 +128,7 @@ fn collect_spans(expr: &Expression<'_>, offset: usize, spans: &mut Vec<(usize, u
         Expression::Rule(rhs, _) => {
             collect_spans(rhs, offset, spans);
         }
-        Expression::MappedExpression((expr_tok, _)) => {
+        Expression::MappedExpression(expr_tok, _) => {
             collect_spans(get_inner_expression(expr_tok), offset, spans);
         }
         Expression::DebugExpression((expr_tok, _)) => {

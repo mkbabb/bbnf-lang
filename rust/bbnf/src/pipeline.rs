@@ -70,7 +70,6 @@ pub enum CompileError {
     UnknownPrettyHint { rule: String, hint: String },
     UndefinedPrettyRule { rule: String },
     UnknownNonterminal { rule: String, name: String },
-    InvalidMappingFn { rule: String },
     InvalidProductionRule { rule: String },
 }
 
@@ -87,12 +86,6 @@ impl fmt::Display for CompileError {
             }
             Self::UnknownNonterminal { rule, name } => {
                 write!(f, "rule `{rule}` references unknown nonterminal `{name}`")
-            }
-            Self::InvalidMappingFn { rule } => {
-                write!(
-                    f,
-                    "rule `{rule}` contains a mapping function in expression position"
-                )
             }
             Self::InvalidProductionRule { rule } => {
                 write!(

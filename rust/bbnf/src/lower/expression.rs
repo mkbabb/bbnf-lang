@@ -1,9 +1,9 @@
 //! Expression/node lowering logic — the recursive `lower_expression` function.
 
-use bbnf_ir::{AltBranch, FnDescriptor, FnId, IrNode, MapExpr, TypeDesc};
+use bbnf_ir::{AltBranch, FnDescriptor, FnId, IrNode, MapBinOp, MapExpr, MapUnaryOp, TypeDesc};
 
 use crate::generate::regex::classify::{RegexClass, classify_regex};
-use crate::types::{Expression, Token};
+use crate::types::{BinOpKind, Expression, MapArrow, Token, UnaryOpKind, ValueExpr};
 
 use super::{LowerCtx, charset_to_128};
 
@@ -68,198 +68,190 @@ fn try_specialize_map_fn(inner: &IrNode, fn_id: FnId, ctx: &mut LowerCtx<'_>) ->
     }
 }
 
-/// Extract the outermost function path from a closure body expression.
-///
-/// Given a closure like `|s: Span| -> u32 { crate::foo::bar(s.as_str()) }`,
-/// parses it with `syn` and extracts the function path `crate::foo::bar`.
-fn extract_closure_fn_path(source: &str) -> Option<String> {
-    let closure: syn::ExprClosure = syn::parse_str(source).ok()?;
-    let body_expr = match closure.body.as_ref() {
-        syn::Expr::Block(block) => {
-            let stmt = block.block.stmts.last()?;
-            match stmt {
-                syn::Stmt::Expr(expr, _) => expr,
-                _ => return None,
-            }
-        }
-        other => other,
-    };
+// ─── ValueExpr → MapExpr lowering ───────────���──────────────────────────────
 
-    let call_expr = match body_expr {
-        syn::Expr::MethodCall(mc) => mc.receiver.as_ref(),
-        syn::Expr::Call(_) => body_expr,
-        _ => return None,
-    };
-
-    if let syn::Expr::Call(call) = call_expr {
-        if let syn::Expr::Path(path_expr) = call.func.as_ref() {
-            let path_str = quote::ToTokens::to_token_stream(&path_expr.path).to_string();
-            return Some(path_str.replace(" :: ", "::"));
-        }
+fn lower_binop(kind: BinOpKind) -> MapBinOp {
+    match kind {
+        BinOpKind::Add => MapBinOp::Add,
+        BinOpKind::Sub => MapBinOp::Sub,
+        BinOpKind::Mul => MapBinOp::Mul,
+        BinOpKind::Div => MapBinOp::Div,
+        BinOpKind::Mod => MapBinOp::Mod,
+        BinOpKind::Eq => MapBinOp::Eq,
+        BinOpKind::Ne => MapBinOp::Ne,
+        BinOpKind::Lt => MapBinOp::Lt,
+        BinOpKind::Gt => MapBinOp::Gt,
+        BinOpKind::Le => MapBinOp::Le,
+        BinOpKind::Ge => MapBinOp::Ge,
+        BinOpKind::And => MapBinOp::And,
+        BinOpKind::Or => MapBinOp::Or,
     }
-
-    None
 }
 
-/// Lower a mapping function expression to a `FnId`.
-///
-/// Produces `FnDescriptor::Expr` with structured `MapExpr` for all user-facing maps.
-/// Uses `syn` to parse legacy raw-text mapper syntax (to be replaced by structured
-/// value expression parser in Phase B).
-///
-/// Recognized forms:
-/// - Type shorthand: `-> f64` → `Expr { Input, return_type: Named("f64") }`
-/// - Constant literal: `-> 0u8` → `Expr { IntLit(0), return_type: Named("u8") }`
-/// - Boolean constant: `-> true` → `Expr { BoolLit(true), return_type: Named("bool") }`
-/// - Rust closure: `-> |s| fn(s)` → `Expr { FnCall(fn, [Input]), return_type }`
-/// - Path expression: `-> crate::func` → `Expr { FnCall(path, [Input]), return_type: None }`
-fn lower_mapping_fn<'a>(expr: &Expression<'a>, ctx: &mut LowerCtx<'a>) -> FnId {
+fn lower_unaryop(kind: UnaryOpKind) -> MapUnaryOp {
+    match kind {
+        UnaryOpKind::Neg => MapUnaryOp::Neg,
+        UnaryOpKind::Not => MapUnaryOp::Not,
+    }
+}
+
+/// Lower a `ValueExpr` AST node to a `MapExpr` IR node.
+fn lower_value_expr<'a>(expr: &ValueExpr<'a>, ctx: &mut LowerCtx<'a>) -> MapExpr {
     match expr {
-        Expression::MappingFn(token) => {
-            let mapper_str = token.value.as_ref().trim();
-
-            // Type-shorthand: bare type name like `f64` or `u32`.
-            if matches!(
-                mapper_str,
-                "f64" | "f32" | "u32" | "u64" | "i32" | "i64" | "usize"
-            ) {
-                let type_sid = ctx.strings.intern(mapper_str);
-                return ctx.fns.push(FnDescriptor::Expr {
-                    expr: MapExpr::Input,
-                    return_type: Some(TypeDesc::Named(type_sid)),
-                });
+        ValueExpr::IntLit(token) => {
+            let text = token.value.as_ref();
+            parse_int_literal(text)
+        }
+        ValueExpr::FloatLit(token) => {
+            let text = token.value.as_ref();
+            parse_float_literal(text)
+        }
+        ValueExpr::BoolLit(token) => MapExpr::BoolLit(token.value),
+        ValueExpr::StringLit(token) => {
+            let sid = ctx.strings.intern(token.value.as_ref());
+            MapExpr::StringLit(sid)
+        }
+        ValueExpr::Input(_) => MapExpr::Input,
+        ValueExpr::InputProp(_, prop) => {
+            let sid = ctx.strings.intern(prop.value.as_ref());
+            MapExpr::InputProp { prop: sid }
+        }
+        ValueExpr::Ident(token) => {
+            // Bare identifier: could be a type shorthand (handled at MapArrow level)
+            // or a variable reference. At the MapExpr level, treat as a function call
+            // on input (for backward compat with path expressions like `crate::func`).
+            let sid = ctx.strings.intern(token.value.as_ref());
+            MapExpr::FnCall {
+                name: sid,
+                args: vec![MapExpr::Input],
             }
-
-            // Try as constant literal.
-            if let Some((map_expr, return_type)) = try_parse_constant(mapper_str, ctx) {
-                return ctx.fns.push(FnDescriptor::Expr {
-                    expr: map_expr,
-                    return_type,
-                });
+        }
+        ValueExpr::FnCall(name_token, args) => {
+            let sid = ctx.strings.intern(name_token.value.as_ref());
+            let ir_args: Vec<MapExpr> = args.iter().map(|a| lower_value_expr(a, ctx)).collect();
+            MapExpr::FnCall {
+                name: sid,
+                args: ir_args,
             }
+        }
+        ValueExpr::BinOp(kind, lhs, rhs) => MapExpr::BinOp {
+            op: lower_binop(*kind),
+            lhs: Box::new(lower_value_expr(lhs, ctx)),
+            rhs: Box::new(lower_value_expr(rhs, ctx)),
+        },
+        ValueExpr::UnaryOp(kind, inner) => MapExpr::UnaryOp {
+            op: lower_unaryop(*kind),
+            inner: Box::new(lower_value_expr(inner, ctx)),
+        },
+        ValueExpr::Paren(inner) => lower_value_expr(inner, ctx),
+    }
+}
 
-            // Try as Rust closure — extract function path and return type.
-            if let Ok(closure) = syn::parse_str::<syn::ExprClosure>(mapper_str) {
-                let return_type = if let syn::ReturnType::Type(_, ty) = &closure.output {
-                    let ty_str = quote::ToTokens::to_token_stream(ty).to_string();
-                    let sid = ctx.strings.intern(&ty_str);
+/// Parse an integer literal string to `MapExpr::IntLit`.
+/// Handles decimal, hex (`0x`), and optional type suffix.
+fn parse_int_literal(text: &str) -> MapExpr {
+    let (digits, _suffix) = split_numeric_suffix(text);
+    let value = if digits.starts_with("0x") || digits.starts_with("0X") {
+        i64::from_str_radix(&digits[2..], 16).unwrap_or(0)
+    } else {
+        digits.parse::<i64>().unwrap_or(0)
+    };
+    MapExpr::IntLit(value)
+}
+
+/// Parse a float literal string to `MapExpr::FloatLit`.
+fn parse_float_literal(text: &str) -> MapExpr {
+    let (digits, _suffix) = split_numeric_suffix(text);
+    let value = digits.parse::<f64>().unwrap_or(0.0);
+    MapExpr::FloatLit(value)
+}
+
+/// Split a numeric literal into (digits, suffix). E.g. `"42u8"` → `("42", "u8")`.
+fn split_numeric_suffix(text: &str) -> (&str, &str) {
+    // Find where the suffix starts: first alphabetic/underscore after digits.
+    let bytes = text.as_bytes();
+    let mut i = 0;
+    // Skip hex prefix.
+    if bytes.len() > 2 && bytes[0] == b'0' && (bytes[1] == b'x' || bytes[1] == b'X') {
+        i = 2;
+        while i < bytes.len() && bytes[i].is_ascii_hexdigit() {
+            i += 1;
+        }
+    } else {
+        // Skip decimal digits, dots, exponents.
+        while i < bytes.len()
+            && (bytes[i].is_ascii_digit()
+                || bytes[i] == b'.'
+                || bytes[i] == b'e'
+                || bytes[i] == b'E'
+                || bytes[i] == b'+'
+                || bytes[i] == b'-')
+        {
+            i += 1;
+        }
+    }
+    (&text[..i], &text[i..])
+}
+
+/// Lower a `MapArrow` to a `FnId`.
+///
+/// Detects type-shorthand patterns (bare type name like `f64`) and constant
+/// expressions. Delegates to `lower_value_expr` for the general case.
+fn lower_map_arrow<'a>(arrow: &MapArrow<'a>, ctx: &mut LowerCtx<'a>) -> FnId {
+    let return_type = arrow
+        .return_type
+        .as_ref()
+        .map(|tok| {
+            let sid = ctx.strings.intern(tok.value.as_ref());
+            TypeDesc::Named(sid)
+        });
+
+    // Type-shorthand: bare type name like `-> f64`, `-> u32`.
+    if let ValueExpr::Ident(token) = &arrow.expr {
+        let name = token.value.as_ref();
+        if matches!(
+            name,
+            "f64" | "f32" | "u32" | "u64" | "i32" | "i64" | "usize" | "u8" | "u16" | "i8"
+                | "i16"
+        ) && arrow.return_type.is_none()
+        {
+            let type_sid = ctx.strings.intern(name);
+            return ctx.fns.push(FnDescriptor::Expr {
+                expr: MapExpr::Input,
+                return_type: Some(TypeDesc::Named(type_sid)),
+            });
+        }
+    }
+
+    // Extract type suffix from integer/float literals when no explicit type annotation.
+    let return_type = return_type.or_else(|| {
+        match &arrow.expr {
+            ValueExpr::IntLit(token) | ValueExpr::FloatLit(token) => {
+                let (_, suffix) = split_numeric_suffix(token.value.as_ref());
+                if !suffix.is_empty() {
+                    let sid = ctx.strings.intern(suffix);
                     Some(TypeDesc::Named(sid))
                 } else {
                     None
-                };
-
-                // Extract function path from closure body.
-                if let Some(fn_path) = extract_closure_fn_path(mapper_str) {
-                    let name_sid = ctx.strings.intern(&fn_path);
-                    return ctx.fns.push(FnDescriptor::Expr {
-                        expr: MapExpr::FnCall {
-                            name: name_sid,
-                            args: vec![MapExpr::Input],
-                        },
-                        return_type,
-                    });
                 }
-
-                // Closure without extractable fn path — store source as FnCall name
-                // (Rust backend emits it verbatim as a closure).
-                let source_sid = ctx.strings.intern(mapper_str);
-                return ctx.fns.push(FnDescriptor::Expr {
-                    expr: MapExpr::FnCall {
-                        name: source_sid,
-                        args: vec![],
-                    },
-                    return_type,
-                });
             }
-
-            // Try as path expression (e.g., `crate::parse_hex_color`).
-            if syn::parse_str::<syn::ExprPath>(mapper_str).is_ok() {
-                let name_sid = ctx.strings.intern(mapper_str);
-                return ctx.fns.push(FnDescriptor::Expr {
-                    expr: MapExpr::FnCall {
-                        name: name_sid,
-                        args: vec![MapExpr::Input],
-                    },
-                    return_type: None,
-                });
-            }
-
-            // Fallback: treat as opaque function call on input.
-            let source_sid = ctx.strings.intern(mapper_str);
-            ctx.fns.push(FnDescriptor::Expr {
-                expr: MapExpr::FnCall {
-                    name: source_sid,
-                    args: vec![MapExpr::Input],
-                },
-                return_type: None,
-            })
-        }
-        _ => {
-            let text = format!("{:?}", expr);
-            let string_id = ctx.strings.intern(&text);
-            ctx.fns.push(FnDescriptor::Expr {
-                expr: MapExpr::FnCall {
-                    name: string_id,
-                    args: vec![],
-                },
-                return_type: None,
-            })
-        }
-    }
-}
-
-/// Try to parse a mapper string as a constant literal, returning the MapExpr and type.
-fn try_parse_constant(source: &str, ctx: &mut LowerCtx<'_>) -> Option<(MapExpr, Option<TypeDesc>)> {
-    // Boolean constants.
-    if source == "true" {
-        let sid = ctx.strings.intern("bool");
-        return Some((MapExpr::BoolLit(true), Some(TypeDesc::Named(sid))));
-    }
-    if source == "false" {
-        let sid = ctx.strings.intern("bool");
-        return Some((MapExpr::BoolLit(false), Some(TypeDesc::Named(sid))));
-    }
-
-    // Try integer literal with suffix.
-    if let Ok(lit) = syn::parse_str::<syn::ExprLit>(source) {
-        match &lit.lit {
-            syn::Lit::Int(int_lit) => {
-                let value: i64 = int_lit.base10_parse().ok()?;
-                let suffix = int_lit.suffix();
-                let return_type = if !suffix.is_empty() {
-                    let sid = ctx.strings.intern(suffix);
-                    Some(TypeDesc::Named(sid))
-                } else {
-                    None
-                };
-                return Some((MapExpr::IntLit(value), return_type));
-            }
-            syn::Lit::Float(float_lit) => {
-                let value: f64 = float_lit.base10_parse().ok()?;
-                let suffix = float_lit.suffix();
-                let return_type = if !suffix.is_empty() {
-                    let sid = ctx.strings.intern(suffix);
-                    Some(TypeDesc::Named(sid))
-                } else {
-                    None
-                };
-                return Some((MapExpr::FloatLit(value), return_type));
-            }
-            syn::Lit::Bool(b) => {
+            ValueExpr::BoolLit(_) => {
                 let sid = ctx.strings.intern("bool");
-                return Some((MapExpr::BoolLit(b.value), Some(TypeDesc::Named(sid))));
+                Some(TypeDesc::Named(sid))
             }
-            syn::Lit::Str(s) => {
-                let str_sid = ctx.strings.intern(&s.value());
-                let type_sid = ctx.strings.intern("& str");
-                return Some((MapExpr::StringLit(str_sid), Some(TypeDesc::Named(type_sid))));
-            }
-            _ => {}
+            _ => None,
         }
-    }
+    });
 
-    None
+    let map_expr = lower_value_expr(&arrow.expr, ctx);
+
+    ctx.fns.push(FnDescriptor::Expr {
+        expr: map_expr,
+        return_type,
+    })
 }
+
+// ─── Expression lowering ────────────────────────────────────────────────────
 
 /// Lower a single `Expression` to an `IrNode`.
 pub(crate) fn lower_expression<'a>(expr: &'a Expression<'a>, ctx: &mut LowerCtx<'a>) -> IrNode {
@@ -401,11 +393,9 @@ pub(crate) fn lower_expression<'a>(expr: &'a Expression<'a>, ctx: &mut LowerCtx<
             }
         }
 
-        Expression::MappedExpression((inner, mapping_fn)) => {
+        Expression::MappedExpression(inner, arrow) => {
             let inner_node = lower_expression(&inner.value, ctx);
-            let fn_id = lower_mapping_fn(&mapping_fn.value, ctx);
-
-            // Check for specialized conversion patterns (numeric, hex).
+            let fn_id = lower_map_arrow(arrow, ctx);
             let fn_id = try_specialize_map_fn(&inner_node, fn_id, ctx);
 
             IrNode::Map {
@@ -430,19 +420,11 @@ pub(crate) fn lower_expression<'a>(expr: &'a Expression<'a>, ctx: &mut LowerCtx<
             lower_expression(&inner.value, ctx)
         }
 
-        Expression::MappingFn(_) => {
-            let fn_id = lower_mapping_fn(expr, ctx);
-            IrNode::Map {
-                inner: Box::new(IrNode::Epsilon),
-                fn_id,
-            }
-        }
-
         Expression::Rule(inner, mapping) => {
             let inner_node = lower_expression(inner, ctx);
 
-            if let Some(mapping_expr) = mapping {
-                let fn_id = lower_mapping_fn(mapping_expr.as_ref(), ctx);
+            if let Some(arrow) = mapping {
+                let fn_id = lower_map_arrow(arrow, ctx);
                 let fn_id = try_specialize_map_fn(&inner_node, fn_id, ctx);
 
                 IrNode::Map {

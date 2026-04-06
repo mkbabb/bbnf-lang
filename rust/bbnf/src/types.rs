@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use std::fmt;
 
 use parse_that::Span;
 
@@ -18,6 +19,111 @@ pub struct Comments<'a> {
     pub right: Option<Comment<'a>>,
 }
 
+// ─── Value Expression AST ───────────────────────────────────────────────────
+
+/// Binary operators in value expressions after `->`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum BinOpKind {
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Mod,
+    Eq,
+    Ne,
+    Lt,
+    Gt,
+    Le,
+    Ge,
+    And,
+    Or,
+}
+
+impl fmt::Display for BinOpKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            Self::Add => "+",
+            Self::Sub => "-",
+            Self::Mul => "*",
+            Self::Div => "/",
+            Self::Mod => "%",
+            Self::Eq => "==",
+            Self::Ne => "!=",
+            Self::Lt => "<",
+            Self::Gt => ">",
+            Self::Le => "<=",
+            Self::Ge => ">=",
+            Self::And => "&&",
+            Self::Or => "||",
+        })
+    }
+}
+
+/// Unary operators in value expressions after `->`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum UnaryOpKind {
+    Neg,
+    Not,
+}
+
+impl fmt::Display for UnaryOpKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            Self::Neg => "-",
+            Self::Not => "!",
+        })
+    }
+}
+
+/// Structured value expression parsed from `->` map syntax.
+///
+/// Stores raw source text for numeric literals (to preserve suffixes like `u8`, `f64`)
+/// and converts to typed `MapExpr` during lowering.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum ValueExpr<'a> {
+    /// Integer literal: `42`, `0u8`, `0xFF`, `0xF0F8FFFFu32`.
+    IntLit(Token<'a, Cow<'a, str>>),
+    /// Float literal: `3.14`, `1.0f64`.
+    FloatLit(Token<'a, Cow<'a, str>>),
+    /// Boolean literal: `true`, `false`.
+    BoolLit(Token<'a, bool>),
+    /// String literal: `"hello"`.
+    StringLit(Token<'a, Cow<'a, str>>),
+    /// `input` keyword — the parse result.
+    Input(#[allow(dead_code)] Span<'a>),
+    /// Property access on input: `input.len`, `input.as_str`.
+    InputProp(#[allow(dead_code)] Span<'a>, Token<'a, Cow<'a, str>>),
+    /// Bare identifier (type name, variable, or path): `f64`, `crate::module::func`.
+    Ident(Token<'a, Cow<'a, str>>),
+    /// Function call: `parse_hex(input)`, `crate::module::func(input)`.
+    FnCall(Token<'a, Cow<'a, str>>, Vec<ValueExpr<'a>>),
+    /// Binary operation: `a + b`, `input == "on"`.
+    BinOp(BinOpKind, Box<ValueExpr<'a>>, Box<ValueExpr<'a>>),
+    /// Unary operation: `-a`, `!flag`.
+    UnaryOp(UnaryOpKind, Box<ValueExpr<'a>>),
+    /// Parenthesized expression: `(a + b)`.
+    Paren(Box<ValueExpr<'a>>),
+}
+
+/// A `->` value-expression mapping with optional type annotation.
+///
+/// Produced by `factor -> value_expr : TYPE` syntax.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct MapArrow<'a> {
+    pub expr: ValueExpr<'a>,
+    pub return_type: Option<Token<'a, Cow<'a, str>>>,
+    pub span: Span<'a>,
+}
+
+impl<'a> pprint::Pretty<'a> for MapArrow<'a> {
+    fn pretty(&'a self, _b: &mut pprint::FmtBuilder<'a>) {
+        // MapArrow is always #[pprint(skip)] in Expression variants,
+        // but the derive macro still requires the trait bound.
+    }
+}
+
+// ─── Grammar Expression AST ────────────────────────────────────────────────
+
 type TokenExpression<'a, T = Expression<'a>> = Box<Token<'a, T>>;
 
 #[derive(Pretty, Debug, Clone, Eq, PartialEq, Hash)]
@@ -27,8 +133,8 @@ pub enum Expression<'a> {
 
     Regex(Token<'a, Cow<'a, str>>),
 
-    MappingFn(Token<'a, Cow<'a, str>>),
-    MappedExpression((TokenExpression<'a>, TokenExpression<'a>)),
+    /// Per-expression mapping: `factor -> value_expr : TYPE`.
+    MappedExpression(TokenExpression<'a>, #[pprint(skip)] MapArrow<'a>),
 
     DebugExpression((TokenExpression<'a>, String)),
 
@@ -48,7 +154,7 @@ pub enum Expression<'a> {
     Concatenation(TokenExpression<'a, Vec<Expression<'a>>>),
     Alternation(TokenExpression<'a, Vec<Expression<'a>>>),
 
-    Rule(Box<Expression<'a>>, Option<Box<Expression<'a>>>),
+    Rule(Box<Expression<'a>>, Option<MapArrow<'a>>),
 
     ProductionRule(Box<Expression<'a>>, Box<Expression<'a>>),
 
@@ -180,6 +286,8 @@ pub fn set_expression_comments<'a>(expr: &mut Expression<'a>, comments: Comments
         Expression::Concatenation(token) | Expression::Alternation(token) => {
             token.comments = Some(comments)
         }
+
+        Expression::MappedExpression(inner, _) => inner.comments = Some(comments),
 
         _ => {}
     }

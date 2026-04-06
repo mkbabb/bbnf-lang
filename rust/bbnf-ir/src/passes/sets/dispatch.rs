@@ -201,7 +201,7 @@ fn precompute_dispatch_eligibility(
     }
 
     // Phase 3: Propagate.
-    let _ = csp.propagate_monotonic();
+    let _ = csp.propagate();
 
     // Phase 4: Extract results.
     let mut result = HashMap::with_capacity(alts.len());

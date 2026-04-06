@@ -66,7 +66,7 @@ pub fn compute_follow_sets(ir: &GrammarIR) -> FollowSets {
         );
     }
 
-    let _ = csp.propagate_monotonic();
+    let _ = csp.propagate();
 
     // Extract results.
     let mut follow = HashMap::new();

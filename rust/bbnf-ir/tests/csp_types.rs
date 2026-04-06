@@ -37,7 +37,7 @@ fn rule(id: RuleId, body: IrNode) -> IrRule {
 
 fn solve_rule_type(ir: &GrammarIR, rule_id: RuleId) -> TypeDesc {
     let mut system = generate_constraints(ir);
-    let _ = system.csp.propagate_monotonic();
+    let _ = system.csp.propagate();
     let var = system.rule_vars[&rule_id];
     system.csp.variables[var as usize]
         .domain

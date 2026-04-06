@@ -82,7 +82,7 @@ pub fn generate_constraints(ir: &GrammarIR) -> ConstraintSystem {
             .add_constraint(EqualConstraint::new(rule_var, body_var));
     }
 
-    // No finalize() needed — propagate_monotonic() skips adjacency.
+    // No finalize() needed — propagate() auto-selects sweep strategy without adjacency.
 
     ConstraintSystem {
         csp: cg.csp,

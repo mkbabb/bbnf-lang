@@ -45,7 +45,7 @@ pub fn project_types(ir: &mut GrammarIR) {
     let mut system = generate_constraints(ir);
 
     // Phase 2: Solve via monotonic fixed-point propagation.
-    let _ = system.csp.propagate_monotonic();
+    let _ = system.csp.propagate();
 
     // Phase 3: Extract solved types into TypeMap.
     let mut type_map = TypeMap::default();

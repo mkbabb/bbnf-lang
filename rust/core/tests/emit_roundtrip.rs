@@ -1,12 +1,16 @@
 //! Round-trip tests for the emit codegen path.
 //!
-//! Parse JSON → emit_compact → verify output is parseable JSON.
+//! Parse → emit_compact → reparse → verify output is valid.
 
 use bbnf_derive::Parser;
+
+// ── JSON ─────────────────────────────────────────────────────────────────────
 
 #[derive(Parser)]
 #[parser(path = "../../grammar/json/json.bbnf", emit)]
 struct JsonEmit;
+
+// CSV and other grammars deferred — requires deeper Seq/Repeat type resolution.
 
 fn parse_and_emit(input: &str) -> String {
     let ctx = __JsonEmitEnumCtx::with_capacity(input.len() / 32);
@@ -87,3 +91,4 @@ fn emit_object() {
 fn emit_nested() {
     round_trip(r#"{"a": [1, 2], "b": {"c": true}}"#);
 }
+

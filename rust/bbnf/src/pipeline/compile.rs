@@ -11,7 +11,7 @@ use crate::pipeline::validate::{validate_ast, validate_pretty_directives};
 use crate::pipeline::{
     CompileError, CompileOutput, CompileRequest, CompileTarget, PipelineOptions,
 };
-use crate::types::{AST, Expression};
+use crate::types::{AST, Expression, Token};
 
 /// Compile a BBNF grammar source string to a VM-ready `GrammarIR`.
 ///
@@ -206,6 +206,32 @@ pub fn compute_call_strategies(ir: &GrammarIR) -> Vec<crate::backend::CallStrate
         .collect()
 }
 
+/// Separate closure rules from the AST. Returns (closures, non-closure rules).
+fn partition_closures<'a>(ast: AST<'a>) -> (Vec<(String, Expression<'a>)>, AST<'a>) {
+    let mut closures: Vec<(String, Expression<'a>)> = Vec::new();
+    let mut rules: AST<'a> = indexmap::IndexMap::new();
+    for (lhs, rhs) in ast {
+        // Check if the rule body (possibly inside a Rule wrapper) is a Closure.
+        let is_closure = match &rhs {
+            Expression::Rule(inner, _) => matches!(inner.as_ref(), Expression::Closure(_, _)),
+            Expression::Closure(_, _) => true,
+            _ => false,
+        };
+        if is_closure {
+            if let Expression::Nonterminal(Token { value, .. }) = &lhs {
+                let body = match rhs {
+                    Expression::Rule(inner, _) => *inner,
+                    other => other,
+                };
+                closures.push((value.to_string(), body));
+            }
+        } else {
+            rules.insert(lhs, rhs);
+        }
+    }
+    (closures, rules)
+}
+
 fn compile_ast_common<'a>(
     ast: AST<'a>,
     directives: &'a DirectiveSet<'a>,
@@ -222,6 +248,10 @@ fn compile_ast_common<'a>(
         })
     });
 
+    // Partition AST: extract closure rules, keep the rest for graph analysis.
+    // Closures are first-class grammar functions expanded inline during lowering.
+    let (closure_rules, ast) = partition_closures(ast);
+
     // Dependency analysis.
     let deps = crate::calculate_ast_deps(&ast);
 
@@ -233,7 +263,7 @@ fn compile_ast_common<'a>(
     let first_sets = compute_first_sets(&ast, &deps, &scc_result);
 
     // Lower to IR.
-    let mut ir = lower_to_ir(&ast, &first_sets, &scc_result, directives);
+    let mut ir = lower_to_ir(&ast, &first_sets, &scc_result, directives, &closure_rules);
 
     // Set the correct entry rule (last rule in original source order).
     if let Some(ref name) = entry_rule_name {

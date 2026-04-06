@@ -5,6 +5,8 @@ use bbnf_ir::{AltBranch, FnDescriptor, FnId, IrNode, MapBinOp, MapExpr, MapUnary
 use crate::generate::regex::classify::{RegexClass, classify_regex};
 use crate::types::{BinOpKind, Expression, MapArrow, Token, UnaryOpKind, ValueExpr};
 
+use std::collections::HashMap;
+
 use super::{LowerCtx, charset_to_128};
 
 /// Attempt to replace a `FnDescriptor::Expr` with a specialized descriptor
@@ -95,6 +97,73 @@ fn lower_unaryop(kind: UnaryOpKind) -> MapUnaryOp {
     }
 }
 
+/// Lower a value closure body with param→Input bindings.
+///
+/// `|s| parse_hex(s)` → when `s` appears as an Ident or FnCall arg, substitute `Input`.
+fn lower_value_expr_with_bindings<'a>(
+    expr: &ValueExpr<'a>,
+    params: &[Token<'a, std::borrow::Cow<'a, str>>],
+    ctx: &mut LowerCtx<'a>,
+) -> MapExpr {
+    let bindings: HashMap<&str, MapExpr> = params
+        .iter()
+        .enumerate()
+        .map(|(i, p)| {
+            let value = if i == 0 {
+                MapExpr::Input // First param binds to the parse result.
+            } else {
+                // Additional params: bind to InputProp for named access.
+                let sid = ctx.strings.intern(p.value.as_ref());
+                MapExpr::InputProp { prop: sid }
+            };
+            (p.value.as_ref(), value)
+        })
+        .collect();
+
+    lower_value_expr_substituted(expr, &bindings, ctx)
+}
+
+/// Lower a value expression with active param→MapExpr bindings.
+fn lower_value_expr_substituted<'a>(
+    expr: &ValueExpr<'a>,
+    bindings: &HashMap<&str, MapExpr>,
+    ctx: &mut LowerCtx<'a>,
+) -> MapExpr {
+    match expr {
+        ValueExpr::Ident(token) => {
+            let name = token.value.as_ref();
+            if let Some(bound) = bindings.get(name) {
+                return bound.clone();
+            }
+            // Not a bound param — treat as function call on input.
+            let sid = ctx.strings.intern(name);
+            MapExpr::FnCall { name: sid, args: vec![MapExpr::Input] }
+        }
+        ValueExpr::FnCall(name_token, args) => {
+            let sid = ctx.strings.intern(name_token.value.as_ref());
+            let ir_args: Vec<MapExpr> = args.iter()
+                .map(|a| lower_value_expr_substituted(a, bindings, ctx))
+                .collect();
+            MapExpr::FnCall { name: sid, args: ir_args }
+        }
+        ValueExpr::BinOp(kind, lhs, rhs) => MapExpr::BinOp {
+            op: lower_binop(*kind),
+            lhs: Box::new(lower_value_expr_substituted(lhs, bindings, ctx)),
+            rhs: Box::new(lower_value_expr_substituted(rhs, bindings, ctx)),
+        },
+        ValueExpr::UnaryOp(kind, inner) => MapExpr::UnaryOp {
+            op: lower_unaryop(*kind),
+            inner: Box::new(lower_value_expr_substituted(inner, bindings, ctx)),
+        },
+        ValueExpr::Paren(inner) => lower_value_expr_substituted(inner, bindings, ctx),
+        ValueExpr::Closure(inner_params, body) => {
+            lower_value_expr_with_bindings(body, inner_params, ctx)
+        }
+        // Literals and Input don't reference params — delegate to standard lowering.
+        _ => lower_value_expr(expr, ctx),
+    }
+}
+
 /// Lower a `ValueExpr` AST node to a `MapExpr` IR node.
 fn lower_value_expr<'a>(expr: &ValueExpr<'a>, ctx: &mut LowerCtx<'a>) -> MapExpr {
     match expr {
@@ -144,9 +213,10 @@ fn lower_value_expr<'a>(expr: &ValueExpr<'a>, ctx: &mut LowerCtx<'a>) -> MapExpr
             inner: Box::new(lower_value_expr(inner, ctx)),
         },
         ValueExpr::Paren(inner) => lower_value_expr(inner, ctx),
-        ValueExpr::Closure(_params, body) => {
-            // Value closure: |params| body — lower body; param binding is handled upstream.
-            lower_value_expr(body, ctx)
+        ValueExpr::Closure(params, body) => {
+            // Value closure: |s| expr — first param binds to the parse result (Input).
+            // Lower the body with param→Input substitution.
+            lower_value_expr_with_bindings(body, params, ctx)
         }
     }
 }
@@ -253,6 +323,107 @@ fn lower_map_arrow<'a>(arrow: &MapArrow<'a>, ctx: &mut LowerCtx<'a>) -> FnId {
         expr: map_expr,
         return_type,
     })
+}
+
+// ─── Beta-reduction for grammar function application ────────────────────────
+
+/// Apply a grammar function: substitute params with args in the body, then lower.
+///
+/// This is beta-reduction: `(|x| body)(arg)` → `body[x := arg]`.
+/// When the body references a param name as a Nonterminal, we lower the
+/// corresponding arg expression instead. All other nodes lower normally.
+/// Handles nested calls: `parens(csv(expr))` — expanding `parens` encounters
+/// `csv(expr)` which triggers another beta-reduction recursively.
+fn substitute_and_lower<'a>(
+    body: &'a Expression<'a>,
+    subs: &HashMap<&str, &'a Expression<'a>>,
+    ctx: &mut LowerCtx<'a>,
+) -> IrNode {
+    match body {
+        // The key case: a Nonterminal that matches a parameter name is replaced
+        // by the corresponding argument expression, which is then lowered.
+        Expression::Nonterminal(token) => {
+            let name = token.value.as_ref();
+            if let Some(&arg_expr) = subs.get(name) {
+                // Substitute: lower the arg expression (which may itself contain
+                // GrammarCalls that trigger further beta-reduction).
+                lower_expression(arg_expr, ctx)
+            } else {
+                // Not a parameter — lower as a regular nonterminal reference.
+                lower_expression(body, ctx)
+            }
+        }
+
+        // GrammarCall inside the body — lower normally (triggers beta-reduction
+        // if the call targets a closure, via lower_expression's GrammarCall arm).
+        Expression::GrammarCall(_, _) => lower_expression(body, ctx),
+
+        // Recursive structural descent — substitute through all sub-expressions.
+        Expression::Concatenation(token) => {
+            let children: Vec<IrNode> = token.value.iter()
+                .map(|child| substitute_and_lower(child, subs, ctx))
+                .collect();
+            if children.len() == 1 {
+                children.into_iter().next().unwrap()
+            } else {
+                IrNode::Seq(children)
+            }
+        }
+        Expression::Alternation(token) => {
+            let branches: Vec<bbnf_ir::AltBranch> = token.value.iter()
+                .map(|child| bbnf_ir::AltBranch {
+                    node: substitute_and_lower(child, subs, ctx),
+                    first_set: None,
+                })
+                .collect();
+            if branches.len() == 1 {
+                branches.into_iter().next().unwrap().node
+            } else {
+                IrNode::Alt(branches, None)
+            }
+        }
+        Expression::Group(inner) => substitute_and_lower(&inner.value, subs, ctx),
+        Expression::Optional(inner) => {
+            let node = substitute_and_lower(&inner.value, subs, ctx);
+            IrNode::Repeat { inner: Box::new(node), lo: 0, hi: 1 }
+        }
+        Expression::Many(inner) => {
+            let node = substitute_and_lower(&inner.value, subs, ctx);
+            IrNode::Repeat { inner: Box::new(node), lo: 0, hi: u32::MAX }
+        }
+        Expression::Many1(inner) => {
+            let node = substitute_and_lower(&inner.value, subs, ctx);
+            IrNode::Repeat { inner: Box::new(node), lo: 1, hi: u32::MAX }
+        }
+        Expression::OptionalWhitespace(inner) => {
+            let node = substitute_and_lower(&inner.value, subs, ctx);
+            IrNode::OptionalWhitespace(Box::new(node))
+        }
+        Expression::Skip(left, right) => {
+            let l = substitute_and_lower(&left.value, subs, ctx);
+            let r = substitute_and_lower(&right.value, subs, ctx);
+            IrNode::Skip(Box::new(l), Box::new(r))
+        }
+        Expression::Next(left, right) => {
+            let l = substitute_and_lower(&left.value, subs, ctx);
+            let r = substitute_and_lower(&right.value, subs, ctx);
+            IrNode::Next(Box::new(l), Box::new(r))
+        }
+        Expression::Minus(left, right) => {
+            let l = substitute_and_lower(&left.value, subs, ctx);
+            let r = substitute_and_lower(&right.value, subs, ctx);
+            IrNode::Minus(Box::new(l), Box::new(r))
+        }
+        Expression::MappedExpression(inner, arrow) => {
+            let inner_node = substitute_and_lower(&inner.value, subs, ctx);
+            let fn_id = lower_map_arrow(arrow, ctx);
+            let fn_id = try_specialize_map_fn(&inner_node, fn_id, ctx);
+            IrNode::Map { inner: Box::new(inner_node), fn_id }
+        }
+
+        // Leaf expressions that don't contain nonterminals — lower directly.
+        _ => lower_expression(body, ctx),
+    }
 }
 
 // ─── Expression lowering ────────────────────────────────────────────────────
@@ -445,16 +616,37 @@ pub(crate) fn lower_expression<'a>(expr: &'a Expression<'a>, ctx: &mut LowerCtx<
             lower_expression(&body.value, ctx)
         }
 
-        Expression::GrammarCall(name_tok, _args) => {
-            // Grammar function call: treat as a nonterminal reference for now.
-            // Full closure expansion will be a separate pass.
+        Expression::GrammarCall(name_tok, args) => {
             let name: &str = name_tok.value.as_ref();
+
+            // Check if this is a grammar function call (closure application).
+            if let Some(closure) = ctx.closures.get(name) {
+                let params = closure.params;
+                let body = closure.body;
+                assert_eq!(
+                    args.len(),
+                    params.len(),
+                    "arity mismatch: `{}` expects {} args, got {}",
+                    name,
+                    params.len(),
+                    args.len(),
+                );
+
+                // Beta-reduction: substitute params with args, then lower.
+                let subs: HashMap<&str, &Expression<'a>> = params
+                    .iter()
+                    .zip(args.iter())
+                    .map(|(p, a)| (p.value.as_ref(), a))
+                    .collect();
+
+                return substitute_and_lower(body, &subs, ctx);
+            }
+
+            // Not a closure — regular nonterminal reference.
             match ctx.name_to_rule_id.get(name) {
                 Some(&rule_id) => IrNode::Ref(rule_id),
                 None if ctx.recovery_mode => IrNode::Epsilon,
-                None => {
-                    panic!("unknown grammar function `{}`", name);
-                }
+                None => panic!("unknown rule or grammar function `{}`", name),
             }
         }
 

@@ -203,7 +203,7 @@ number = /-?\d+/ ;
 
     let directives = DirectiveSet::empty();
 
-    let mut ir = lower_to_ir(&ast, &first_sets, &scc_result, &directives);
+    let mut ir = lower_to_ir(&ast, &first_sets, &scc_result, &directives, &[]);
 
     // Run IR metadata passes first (alias + transparent detection).
     bbnf_ir::passes::compute_aliases(&mut ir);
@@ -902,4 +902,70 @@ fn pipeline_css_vm_backdrop_block() {
         eprintln!("REMAINING: {:?}", &input[r.offset as usize..]);
     }
     assert_eq!(r.offset as usize, input.len(), "should consume all");
+}
+
+// ── Grammar function (closure) expansion tests ────────────────────────────
+
+fn compile_and_parse(grammar: &str, input: &str) -> ParseResult {
+    let options = PipelineOptions::default();
+    // Verify parse first.
+    let parsed = grammar::parse().parse(grammar)
+        .unwrap_or_else(|| panic!("grammar failed to parse:\n{}", grammar));
+    eprintln!("Parsed {} rules", parsed.rules.len());
+    let ir = compile_grammar(grammar, &options).expect("grammar compilation failed");
+    assert!(!ir.rules.is_empty(), "IR must have at least one rule (got 0 from {} parsed)", parsed.rules.len());
+    let program = compile_bytecode(&ir);
+    run_program(&program, input)
+}
+
+#[test]
+fn closure_single_param() {
+    let grammar = r#"
+parens = |x| "(" x ")" ;
+value = parens("hello") ;
+    "#;
+    let result = compile_and_parse(grammar, "(hello)");
+    assert!(result.success, "parens(\"hello\") should match (hello)");
+}
+
+#[test]
+fn closure_multi_param() {
+    let grammar = r#"
+delimited = |open, body, close| open body close ;
+value = delimited("(", "x", ")") ;
+    "#;
+    let result = compile_and_parse(grammar, "(x)");
+    assert!(result.success, "delimited should match (x)");
+}
+
+#[test]
+fn closure_nested_calls() {
+    let grammar = r#"
+parens = |x| "(" x ")" ;
+csv = |x| x ("," x)* ;
+value = parens(csv("x")) ;
+    "#;
+    let result = compile_and_parse(grammar, "(x,x,x)");
+    assert!(result.success, "parens(csv(\"x\")) should match (x,x,x)");
+}
+
+#[test]
+fn closure_with_rule_ref() {
+    let grammar = r#"
+parens = |x| "(" x ")" ;
+num = /[0-9]+/ ;
+value = parens(num) ;
+    "#;
+    let result = compile_and_parse(grammar, "(42)");
+    assert!(result.success, "parens(num) should match (42)");
+}
+
+#[test]
+fn closure_composition() {
+    let grammar = r#"
+parens = |x| "(" x ")" ;
+value = parens(parens("x")) ;
+    "#;
+    let result = compile_and_parse(grammar, "((x))");
+    assert!(result.success, "parens(parens(\"x\")) should match ((x))");
 }

@@ -55,6 +55,17 @@ impl<'a> DirectiveSet<'a> {
     }
 }
 
+/// A grammar function definition (first-class closure).
+///
+/// Grammar functions are the universal abstraction — `|params| body` binds
+/// parameters to grammar expressions. Application (`name(args)`) performs
+/// beta-reduction at compile time: substitute params with args, then lower
+/// the resulting expression. Closures never reach the IR.
+pub(crate) struct ClosureDef<'a> {
+    pub(crate) params: &'a [Token<'a, std::borrow::Cow<'a, str>>],
+    pub(crate) body: &'a Expression<'a>,
+}
+
 /// Context for the lowering pass.
 pub(crate) struct LowerCtx<'a> {
     pub(crate) strings: StringInterner,
@@ -62,6 +73,9 @@ pub(crate) struct LowerCtx<'a> {
 
     /// Map from nonterminal name -> RuleId.
     pub(crate) name_to_rule_id: HashMap<&'a str, RuleId>,
+
+    /// Registered grammar closures (expanded at call sites, never reach IR).
+    pub(crate) closures: HashMap<&'a str, ClosureDef<'a>>,
 
     /// Analysis results.
     pub(crate) first_sets: &'a FirstSets<'a>,
@@ -103,11 +117,24 @@ pub fn lower_to_ir<'a>(
     first_sets: &'a FirstSets<'a>,
     scc_result: &'a SccResult<'a>,
     directives: &'a DirectiveSet<'a>,
+    closure_defs: &'a [(String, Expression<'a>)],
 ) -> GrammarIR {
+    // Pre-register closure definitions (extracted from AST before graph analysis).
+    let mut closures = HashMap::new();
+    for (name, body) in closure_defs {
+        if let Expression::Closure(params, closure_body) = body {
+            closures.insert(name.as_str(), ClosureDef {
+                params,
+                body: &closure_body.value,
+            });
+        }
+    }
+
     let mut ctx = LowerCtx {
         strings: StringInterner::new(),
         fns: FnTable::new(),
         name_to_rule_id: HashMap::new(),
+        closures,
         first_sets,
         scc_result,
         cyclic_rules: &scc_result.cyclic_rules,
@@ -121,7 +148,9 @@ pub fn lower_to_ir<'a>(
         recovery_mode: false,
     };
 
-    // Phase 1: Assign RuleIds to all nonterminal names.
+    // Phase 1: Assign RuleIds to all rules.
+    // Closure rules have already been stripped from the AST and pre-registered
+    // via closure_defs — only non-closure rules appear here.
     let mut rule_names: Vec<&str> = Vec::new();
     for (lhs, _) in ast.iter() {
         if let Expression::Nonterminal(Token { value, .. }) = lhs {
@@ -131,7 +160,7 @@ pub fn lower_to_ir<'a>(
         }
     }
 
-    // Phase 2: Lower rule bodies (interns all body strings).
+    // Phase 2: Lower non-closure rule bodies.
     type RuleBody<'b> = (
         RuleId,
         bbnf_ir::StringId,
@@ -145,6 +174,10 @@ pub fn lower_to_ir<'a>(
     for (lhs, rhs) in ast.iter() {
         let (name, source_span) = match lhs {
             Expression::Nonterminal(Token { value, span, .. }) => {
+                // Skip closure rules — they were registered in Phase 1, not lowered.
+                if ctx.closures.contains_key(value.as_ref()) {
+                    continue;
+                }
                 let gs = bbnf_ir::GrammarSpan {
                     start: span.start as u32,
                     end: span.end as u32,

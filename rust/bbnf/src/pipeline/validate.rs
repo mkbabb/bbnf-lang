@@ -167,11 +167,16 @@ fn validate_expr(
                 validate_unknown_nonterminals,
             )
         }
-        Expression::Closure(_params, body) => {
+        Expression::Closure(params, body) => {
+            // Closure params are valid nonterminal names within the body.
+            let mut extended_rules = defined_rules.clone();
+            for param in params {
+                extended_rules.insert(param.value.as_ref());
+            }
             validate_expr(
                 rule_name,
                 &body.value,
-                defined_rules,
+                &extended_rules,
                 validate_unknown_nonterminals,
             )
         }

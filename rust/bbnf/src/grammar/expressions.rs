@@ -116,7 +116,8 @@ fn nonterminal_or_call<'a>() -> Parser<'a, Expression<'a>> {
     tokens::identifier()
         .then(
             lazy(|| {
-                rhs()
+                // Each arg is a binary_factor — commas separate args, not concatenate.
+                binary_factor()
                     .trim_whitespace()
                     .sep_by(string(",").trim_whitespace(), 1..)
                     .trim_whitespace()
@@ -321,7 +322,10 @@ fn grammar_closure<'a>() -> Parser<'a, Expression<'a>> {
             }
             state.offset += 1;
 
-            // Params parsed. Now parse body as rhs().
+            // Skip whitespace after closing `|`, then parse body.
+            while state.offset < state.end && state.src_bytes[state.offset].is_ascii_whitespace() {
+                state.offset += 1;
+            }
             let body_parser = rhs();
             let body = body_parser.call(state)?;
             let body_token =

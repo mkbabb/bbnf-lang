@@ -18,7 +18,7 @@ fn lower_grammar(source: &str) -> GrammarIR {
 
     let directives = DirectiveSet::empty();
 
-    let mut ir = lower_to_ir(&ast, &first_sets, &scc_result, &directives);
+    let mut ir = lower_to_ir(&ast, &first_sets, &scc_result, &directives, &[]);
 
     // Run metadata IR passes (alias + transparent + span eligibility detection).
     bbnf_ir::passes::compute_aliases(&mut ir);
@@ -253,7 +253,7 @@ fn lower_with_pretty_hints() {
             host_fns: None,
         };
 
-        lower_to_ir(&ast, &first_sets, &scc_result, &directives)
+        lower_to_ir(&ast, &first_sets, &scc_result, &directives, &[])
     };
 
     let rule = &ir.rules[0];

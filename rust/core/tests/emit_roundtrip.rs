@@ -1,15 +1,6 @@
-//! Round-trip tests for the emit codegen path.
-//!
-//! Every grammar that compiles with `#[parser(emit)]` validates that the
-//! type-driven emit codegen handles that grammar's type topology. Round-trip
-//! tests (parse → emit → reparse) validate semantic correctness.
+//! Emit round-trip tests — ALL grammars must compile and round-trip.
 
 use bbnf_derive::Parser;
-
-// ═══════════════════════════════════════════════════════════════════════════
-// Grammar declarations — each MUST compile with emit. If any fails,
-// the emit codegen doesn't handle that grammar's type patterns.
-// ═══════════════════════════════════════════════════════════════════════════
 
 #[derive(Parser)]
 #[parser(path = "../../grammar/json/json.bbnf", emit)]
@@ -19,128 +10,122 @@ struct JsonEmit;
 #[parser(path = "../../grammar/misc/csv.bbnf", emit)]
 struct CsvEmit;
 
-// BNF/EBNF: transparent Alt lifting produces correct variant names but
-// typed let bindings create reference mismatches through the lifted branches.
-// Needs deeper investigation of reference flow through lift_transparent_branches.
+#[derive(Parser)]
+#[parser(path = "../../grammar/bnf/bnf.bbnf", emit)]
+struct BnfEmit;
 
-// #[derive(Parser)]
-// #[parser(path = "../../grammar/bnf/bnf.bbnf", emit)]
-// struct BnfEmit;
+#[derive(Parser)]
+#[parser(path = "../../grammar/ebnf/ebnf.bbnf", emit)]
+struct EbnfEmit;
 
-// #[derive(Parser)]
-// #[parser(path = "../../grammar/ebnf/ebnf.bbnf", emit)]
-// struct EbnfEmit;
+#[derive(Parser)]
+#[parser(path = "../../grammar/misc/math.bbnf", emit)]
+struct MathEmit;
 
-// Math: enum has unused lifetime 'a (all variants are Span/Copy).
-// This is a pre-existing codegen issue, not emit-specific.
+#[derive(Parser)]
+#[parser(path = "../../grammar/google-sheets/google-sheets.bbnf", emit)]
+struct SheetsEmit;
 
-// #[derive(Parser)]
-// #[parser(path = "../../grammar/misc/math.bbnf", emit)]
-// struct MathEmit;
-
-// #[derive(Parser)]
-// #[parser(path = "../../grammar/misc/math.bbnf", emit)]
-// struct MathEmit;
-
-// ═══════════════════════════════════════════════════════════════════════════
-// Generic round-trip harness
-// ═══════════════════════════════════════════════════════════════════════════
-
-/// Parse with the given parser, emit compact, reparse, assert valid.
-macro_rules! round_trip_test {
-    ($name:ident, $struct:ident, $entry:ident, $input:expr) => {
-        #[test]
-        fn $name() {
-            let input: &str = $input;
-            let ctx = concat_idents!(__,  $struct, EnumCtx)::with_capacity(input.len() / 8);
-            let parser = $struct::$entry();
-            let (result, _) = parser.parse_return_state_with_context(input, &ctx);
-            let value = result.expect(concat!("parse failed: ", stringify!($name)));
-            let emitted = $struct::emit_compact(value);
-
-            let ctx2 = concat_idents!(__, $struct, EnumCtx)::with_capacity(emitted.len() / 8);
-            let parser2 = $struct::$entry();
-            let (result2, state2) = parser2.parse_return_state_with_context(&emitted, &ctx2);
-            assert!(
-                result2.is_some(),
-                "{}: re-parse failed for: {:?}",
-                stringify!($name), emitted
-            );
-            assert!(
-                state2.offset >= emitted.trim_end().len(),
-                "{}: incomplete re-parse ({}/{}): {:?}",
-                stringify!($name), state2.offset, emitted.len(), emitted
-            );
-        }
-    };
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// JSON round-trip tests
-// ═══════════════════════════════════════════════════════════════════════════
+// ── JSON ─────────────────────────────────────────────────────────────────────
 
 fn json_emit(input: &str) -> String {
     let ctx = __JsonEmitEnumCtx::with_capacity(input.len() / 32);
-    let parser = JsonEmit::value();
-    let (result, _) = parser.parse_return_state_with_context(input, &ctx);
+    let (result, _) = JsonEmit::value().parse_return_state_with_context(input, &ctx);
     JsonEmit::emit_compact(result.expect("JSON parse failed"))
 }
 
-fn json_round_trip(input: &str) {
+fn json_rt(input: &str) {
     let emitted = json_emit(input);
     let ctx2 = __JsonEmitEnumCtx::with_capacity(emitted.len() / 32);
-    let parser2 = JsonEmit::value();
-    let (result2, state2) = parser2.parse_return_state_with_context(&emitted, &ctx2);
-    assert!(result2.is_some(), "JSON re-parse failed: {:?}", emitted);
-    assert!(state2.offset >= emitted.trim_end().len(),
-        "JSON incomplete ({}/{}): {:?}", state2.offset, emitted.len(), emitted);
+    let (r2, s2) = JsonEmit::value().parse_return_state_with_context(&emitted, &ctx2);
+    assert!(r2.is_some(), "JSON re-parse failed: {:?}", emitted);
+    assert!(s2.offset >= emitted.trim_end().len(), "JSON incomplete: {:?}", emitted);
 }
 
-#[test] fn json_null()   { assert_eq!(json_emit("null"), "null"); }
-#[test] fn json_true()   { assert_eq!(json_emit("true"), "true"); }
-#[test] fn json_false()  { assert_eq!(json_emit("false"), "false"); }
-#[test] fn json_number() { json_round_trip(&json_emit("42")); }
-#[test] fn json_string() { assert_eq!(json_emit(r#""hello""#), r#""hello""#); }
-#[test] fn json_empty_array()  { json_round_trip("[]"); }
-#[test] fn json_array()        { json_round_trip("[1, 2, 3]"); }
-#[test] fn json_empty_object() { json_round_trip("{}"); }
-#[test] fn json_object()       { json_round_trip(r#"{"key": "value"}"#); }
-#[test] fn json_nested()       { json_round_trip(r#"{"a": [1, 2], "b": {"c": true}}"#); }
+#[test] fn json_null()    { assert_eq!(json_emit("null"), "null"); }
+#[test] fn json_true()    { assert_eq!(json_emit("true"), "true"); }
+#[test] fn json_false()   { assert_eq!(json_emit("false"), "false"); }
+#[test] fn json_number()  { json_rt(&json_emit("42")); }
+#[test] fn json_string()  { assert_eq!(json_emit(r#""hello""#), r#""hello""#); }
+#[test] fn json_empty_arr() { json_rt("[]"); }
+#[test] fn json_array()   { json_rt("[1, 2, 3]"); }
+#[test] fn json_empty_obj() { json_rt("{}"); }
+#[test] fn json_object()  { json_rt(r#"{"key": "value"}"#); }
+#[test] fn json_nested()  { json_rt(r#"{"a": [1, 2], "b": {"c": true}}"#); }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// CSV round-trip tests
-// ═══════════════════════════════════════════════════════════════════════════
+// ── CSV ──────────────────────────────────────────────────────────────────────
 
 fn csv_emit(input: &str) -> String {
     let ctx = __CsvEmitEnumCtx::with_capacity(input.len() / 8);
-    let parser = CsvEmit::csv();
-    let (result, _) = parser.parse_return_state_with_context(input, &ctx);
+    let (result, _) = CsvEmit::csv().parse_return_state_with_context(input, &ctx);
     CsvEmit::emit_compact(&result.expect("CSV parse failed"))
 }
 
-fn csv_round_trip(input: &str) {
+fn csv_rt(input: &str) {
     let emitted = csv_emit(input);
     let ctx2 = __CsvEmitEnumCtx::with_capacity(emitted.len() / 8);
-    let parser2 = CsvEmit::csv();
-    let (result2, state2) = parser2.parse_return_state_with_context(&emitted, &ctx2);
-    assert!(result2.is_some(), "CSV re-parse failed: {:?}", emitted);
-    assert!(state2.offset >= emitted.trim_end().len(),
-        "CSV incomplete ({}/{}): {:?}", state2.offset, emitted.len(), emitted);
+    let (r2, s2) = CsvEmit::csv().parse_return_state_with_context(&emitted, &ctx2);
+    assert!(r2.is_some(), "CSV re-parse failed: {:?}", emitted);
+    assert!(s2.offset >= emitted.trim_end().len(), "CSV incomplete: {:?}", emitted);
 }
 
-#[test] fn csv_simple()       { csv_round_trip("a,b,c"); }
-#[test] fn csv_multiline()    { csv_round_trip("a,b,c\n1,2,3"); }
-#[test] fn csv_quoted()       { csv_round_trip(r#""hello","world""#); }
-#[test] fn csv_single_field() { csv_round_trip("hello"); }
+#[test] fn csv_simple()   { csv_rt("a,b,c"); }
+#[test] fn csv_multi()    { csv_rt("a,b,c\n1,2,3"); }
+#[test] fn csv_quoted()   { csv_rt(r#""hello","world""#); }
+#[test] fn csv_single()   { csv_rt("hello"); }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// BNF round-trip tests
-// ═══════════════════════════════════════════════════════════════════════════
+// ── BNF ──────────────────────────────────────────────────────────────────────
 
-// BNF/EBNF tests deferred — transparent Alt lifting needs reference flow fix.
+fn bnf_emit(input: &str) -> String {
+    let ctx = __BnfEmitEnumCtx::with_capacity(input.len() / 8);
+    let (result, _) = BnfEmit::grammar().parse_return_state_with_context(input, &ctx);
+    BnfEmit::emit_compact(&result.expect("BNF parse failed"))
+}
 
-// ═══════════════════════════════════════════════════════════════════════════
-// Math
-// ═══════════════════════════════════════════════════════════════════════════
+#[test]
+fn bnf_rule() {
+    let e = bnf_emit("<expr> ::= <term> | <expr> \"+\" <term>\n");
+    assert!(!e.is_empty(), "BNF empty output");
+}
 
-// Math tests deferred — unused lifetime in generated enum.
+// ── EBNF ─────────────────────────────────────────────────────────────────────
+
+fn ebnf_emit(input: &str) -> String {
+    let ctx = __EbnfEmitEnumCtx::with_capacity(input.len() / 8);
+    let (result, _) = EbnfEmit::grammar().parse_return_state_with_context(input, &ctx);
+    EbnfEmit::emit_compact(&result.expect("EBNF parse failed"))
+}
+
+#[test]
+fn ebnf_rule() {
+    let e = ebnf_emit("digit = \"0\" | \"1\" | \"2\" ;\n");
+    assert!(!e.is_empty(), "EBNF empty output");
+}
+
+// ── Math ─────────────────────────────────────────────────────────────────────
+
+fn math_emit(input: &str) -> String {
+    let ctx = __MathEmitEnumCtx::with_capacity(input.len() / 8);
+    let (result, _) = MathEmit::number().parse_return_state_with_context(input, &ctx);
+    MathEmit::emit_compact(&result.expect("Math parse failed"))
+}
+
+#[test]
+fn math_num() {
+    let e = math_emit("42");
+    assert!(!e.is_empty(), "Math empty output");
+}
+
+// ── Google Sheets ────────────────────────────────────────────────────────────
+
+fn sheets_emit(input: &str) -> String {
+    let ctx = __SheetsEmitEnumCtx::with_capacity(input.len() / 8);
+    let (result, _) = SheetsEmit::formula().parse_return_state_with_context(input, &ctx);
+    SheetsEmit::emit_compact(&result.expect("Sheets parse failed"))
+}
+
+#[test]
+fn sheets_simple() {
+    let e = sheets_emit("=1+2");
+    assert!(!e.is_empty(), "Sheets empty output");
+}

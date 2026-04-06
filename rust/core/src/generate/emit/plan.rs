@@ -92,12 +92,14 @@ pub struct RefPlan {
 }
 
 pub enum RefStrategy {
-    /// Call rule's emit fn with typed let binding.
-    Call { rule_type: syn::Type },
+    /// Match on enum variant, unwrap, call rule's emit fn.
+    /// Used in Seq (Tuple index) and Repeat (iterator) contexts.
+    Call,
+    /// Call rule's emit fn directly (value is already the inner type).
+    /// Used inside Alt match arms where the variant is already unwrapped.
+    DirectCall,
     /// Transparent rule: inline body plan.
     Inline { body: Box<EmitPlan> },
-    /// Vec item: match on enum variant, unwrap, call emit.
-    VecUnwrap { variant_name: String, rule_type: syn::Type },
 }
 
 /// Map reversal.
@@ -315,16 +317,13 @@ fn compute_alt_plan(branches: &[bbnf_ir::AltBranch], ir: &GrammarIR, ctx: &IrCod
                         // The transparent body's branches should be LIFTED into this Alt.
                         lift_transparent_branches(&ref_rule.body, ir, ctx)
                     }
-                    AltVariantKind::RuleVariant { name, rule_id } => {
-                        let ref_rule = &ir.rules[*rule_id as usize];
-                        let rule_type = ctx.rule_types.get(&ref_rule.id)
-                            .cloned()
-                            .unwrap_or_else(|| ctx.enum_type.clone());
+                    AltVariantKind::RuleVariant { name, .. } => {
+                        // Alt match already unwraps the variant → DirectCall.
                         vec![AltBranch {
                             variant_name: name.clone(),
                             plan: Box::new(EmitPlan::Ref(RefPlan {
                                 rule_name: name.clone(),
-                                strategy: RefStrategy::Call { rule_type },
+                                strategy: RefStrategy::DirectCall,
                             })),
                         }]
                     }
@@ -376,14 +375,11 @@ fn lift_transparent_branches(body: &IrNode, ir: &GrammarIR, ctx: &IrCodegenCtx) 
                 lift_transparent_branches(&ref_rule.body, ir, ctx)
             } else {
                 let name = ir.get_string(ref_rule.name).to_string();
-                let rule_type = ctx.rule_types.get(&ref_rule.id)
-                    .cloned()
-                    .unwrap_or_else(|| ctx.enum_type.clone());
                 vec![AltBranch {
                     variant_name: name.clone(),
                     plan: Box::new(EmitPlan::Ref(RefPlan {
                         rule_name: name,
-                        strategy: RefStrategy::Call { rule_type },
+                        strategy: RefStrategy::DirectCall,
                     })),
                 }]
             }
@@ -447,7 +443,7 @@ fn compute_ref_plan(rule_id: u32, ir: &GrammarIR, ctx: &IrCodegenCtx) -> EmitPla
             .unwrap_or_else(|| ctx.enum_type.clone());
         EmitPlan::Ref(RefPlan {
             rule_name: ir.get_string(ref_rule.name).to_string(),
-            strategy: RefStrategy::Call { rule_type },
+            strategy: RefStrategy::Call,
         })
     }
 }
@@ -466,10 +462,7 @@ fn compute_vec_item_plan(node: &IrNode, ir: &GrammarIR, ctx: &IrCodegenCtx) -> E
                 .unwrap_or_else(|| ctx.enum_type.clone());
             return EmitPlan::Ref(RefPlan {
                 rule_name: name.clone(),
-                strategy: RefStrategy::VecUnwrap {
-                    variant_name: name,
-                    rule_type,
-                },
+                strategy: RefStrategy::Call,
             });
         }
     }
@@ -485,10 +478,7 @@ fn compute_vec_item_plan(node: &IrNode, ir: &GrammarIR, ctx: &IrCodegenCtx) -> E
                     .unwrap_or_else(|| ctx.enum_type.clone());
                 let ref_plan = EmitPlan::Ref(RefPlan {
                     rule_name: name.clone(),
-                    strategy: RefStrategy::VecUnwrap {
-                        variant_name: name,
-                        rule_type,
-                    },
+                    strategy: RefStrategy::Call,
                 });
                 return EmitPlan::Seq(SeqPlan {
                     children: vec![
@@ -505,16 +495,10 @@ fn compute_vec_item_plan(node: &IrNode, ir: &GrammarIR, ctx: &IrCodegenCtx) -> E
             let ref_rule = &ir.rules[*rule_id as usize];
             if !ref_rule.meta.is_transparent {
                 let name = ir.get_string(ref_rule.name).to_string();
-                let rule_type = ctx.rule_types.get(&ref_rule.id)
-                    .cloned()
-                    .unwrap_or_else(|| ctx.enum_type.clone());
                 let s = collect_structural(structural, ir);
                 let ref_plan = EmitPlan::Ref(RefPlan {
                     rule_name: name.clone(),
-                    strategy: RefStrategy::VecUnwrap {
-                        variant_name: name,
-                        rule_type,
-                    },
+                    strategy: RefStrategy::Call,
                 });
                 return EmitPlan::Seq(SeqPlan {
                     children: vec![

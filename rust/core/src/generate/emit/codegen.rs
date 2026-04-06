@@ -105,27 +105,25 @@ pub fn emit_from_plan(plan: &EmitPlan, val: &TokenStream, ctx: &IrCodegenCtx) ->
         },
 
         EmitPlan::Ref(r) => match &r.strategy {
-            RefStrategy::Call { rule_type } => {
+            RefStrategy::Call => {
+                // Match on the enum variant to extract the inner value.
+                // Used in Seq/Repeat contexts where val is the enum.
+                let variant = format_ident!("{}", r.rule_name);
+                let enum_ident = &ctx.enum_ident;
                 let emit_fn = format_ident!("{}_emit", r.rule_name);
                 quote! {
-                    {
-                        let __ref: &#rule_type = &#val;
-                        Self::#emit_fn(__ref, __sink);
+                    if let #enum_ident::#variant(__inner) = #val {
+                        Self::#emit_fn(__inner, __sink);
                     }
                 }
+            }
+            RefStrategy::DirectCall => {
+                // Call rule's emit fn directly — val is already the inner type
+                // (from Alt match arm where the variant was already unwrapped).
+                let emit_fn = format_ident!("{}_emit", r.rule_name);
+                quote! { Self::#emit_fn(#val, __sink); }
             }
             RefStrategy::Inline { body } => emit_from_plan(body, val, ctx),
-            RefStrategy::VecUnwrap { variant_name, rule_type } => {
-                let variant = format_ident!("{}", variant_name);
-                let enum_ident = &ctx.enum_ident;
-                let emit_fn = format_ident!("{}_emit", variant_name);
-                quote! {
-                    if let #enum_ident::#variant(__inner) = #val {
-                        let __ref: &#rule_type = __inner;
-                        Self::#emit_fn(__ref, __sink);
-                    }
-                }
-            }
         },
 
         EmitPlan::Map(m) => match &m.strategy {

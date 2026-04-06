@@ -244,8 +244,7 @@ pub fn simplify_regex_algebra(ir: &mut GrammarIR) -> bool {
         return false;
     }
 
-    csp.finalize();
-    let _ = csp.propagate();
+    let _ = csp.propagate_monotonic();
 
     // Phase 2: Build worklist of rewritable Alt locations.
     let mut worklist: VecDeque<usize> = VecDeque::new();

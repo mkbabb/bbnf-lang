@@ -82,8 +82,7 @@ pub fn generate_constraints(ir: &GrammarIR) -> ConstraintSystem {
             .add_constraint(EqualConstraint::new(rule_var, body_var));
     }
 
-    // Finalize the CSP (builds adjacency graph).
-    cg.csp.finalize();
+    // No finalize() needed — propagate_monotonic() skips adjacency.
 
     ConstraintSystem {
         csp: cg.csp,

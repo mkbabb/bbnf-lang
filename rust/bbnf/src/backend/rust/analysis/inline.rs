@@ -290,8 +290,7 @@ pub fn analyze_parse_inline_plan(
     }
 
     // Phase 5: Solve via AC-3 propagation.
-    csp.finalize();
-    let _ = csp.propagate();
+    let _ = csp.propagate_monotonic();
 
     // Phase 6: Extract results.
     let parse_call_modes = var_ids

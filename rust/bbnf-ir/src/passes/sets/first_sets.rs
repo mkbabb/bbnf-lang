@@ -70,8 +70,7 @@ pub fn compute_first_sets(ir: &mut GrammarIR) {
         csp.add_constraint(CharSetUnionConstraint::new(rule_var, body_var));
     }
 
-    csp.finalize();
-    let _ = csp.propagate();
+    let _ = csp.propagate_monotonic();
 
     // Extract results into rule metadata.
     for rule in &mut ir.rules {

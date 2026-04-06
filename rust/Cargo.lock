@@ -140,6 +140,7 @@ dependencies = [
  "bbnf-ir",
  "bbnf_derive",
  "bencher",
+ "csp-solver",
  "cssparser 0.34.0",
  "dhat",
  "fast-float2",
@@ -185,6 +186,7 @@ dependencies = [
 name = "bbnf-ir"
 version = "0.1.6"
 dependencies = [
+ "csp-solver",
  "parse_that",
  "rayon",
  "regex",
@@ -537,6 +539,10 @@ dependencies = [
  "generic-array",
  "typenum",
 ]
+
+[[package]]
+name = "csp-solver"
+version = "0.1.0"
 
 [[package]]
 name = "cssparser"

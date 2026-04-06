@@ -56,8 +56,7 @@ pub fn refine_span_eligibility(ir: &mut GrammarIR) {
         csp.add_constraint(BoolEqualConstraint::new(rule_var, body_var));
     }
 
-    csp.finalize();
-    let _ = csp.propagate();
+    let _ = csp.propagate_monotonic();
 
     // Extract results. @token rules are unconditionally span-eligible.
     for rule in &mut ir.rules {

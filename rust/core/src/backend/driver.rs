@@ -11,6 +11,7 @@
 use bbnf_ir::{FnDescriptor, GrammarIR, IrNode, RuleId, TypeDesc};
 
 use super::analysis::BackendAnalysis;
+use super::decisions;
 use super::{
     ValuePlacement, AltBranchInfo, CallStrategy, Emitter, FlattenStrategy, KeyDispatchBranch,
     SepByConfig, SeqChildGroup, TokenDispatchArmCompiled,
@@ -372,67 +373,20 @@ fn compile_seq<E: Emitter>(
     emitter: &mut E,
     ctx: &mut E::Ctx,
 ) -> E::Output {
-    let type_map = ir.type_map.as_ref();
+    // Shared decision: resolve types, flatten, all-Span from TypeMap.
+    let decision = decisions::decide_seq(children, ir);
 
-    // Classify child types using seq_child_types (from TypeMap's project_seq)
-    // when available. These apply span-method override and all-Span guard.
-    // Fallback to per-child node_type for grammars without TypeMap.
-    let child_types: Vec<TypeDesc> = type_map
-        .and_then(|tm| {
-            tm.seq_child_types_by_ptr(children.as_ptr() as usize)
-                .map(|s| s.to_vec())
-        })
-        .unwrap_or_else(|| {
-            children
-                .iter()
-                .map(|c| {
-                    type_map
-                        .and_then(|tm| tm.node_type(c).cloned())
-                        .unwrap_or(TypeDesc::Span)
-                })
-                .collect()
-        });
-
-    // Use the Seq result type from TypeMap to decide compression.
-    let seq_result_type = type_map
-        .and_then(|tm| tm.seq_result_type(children.as_ptr() as usize).cloned());
-    let all_span = match &seq_result_type {
-        Some(TypeDesc::Span) => true,
-        Some(_) => false, // TypeMap says non-Span → don't collapse
-        None => child_types.iter().all(|t| *t == TypeDesc::Span), // fallback
-    };
-
-    // Override child_types from seq_result_type when it's a Tuple.
-    // The seq_result_type is authoritative — it accounts for enum variant types.
-    // The child_types from seq_child_types_by_ptr may have span-method overrides
-    // that conflict with what the enum variant actually expects.
-    let child_types = if let Some(TypeDesc::Tuple(result_elems)) = &seq_result_type {
-        if result_elems.len() == child_types.len() {
-            // Use result tuple elements as child types — more accurate than
-            // span-overridden child_types.
-            result_elems.clone()
-        } else {
-            child_types
-        }
-    } else {
-        child_types
-    };
-
-
-
-    if all_span {
-        // Decision: all-Span → compress.
+    if decision.all_span {
         let outputs: Vec<_> = children
             .iter()
             .map(|c| compile_node(c, ValuePlacement::Inline, ir, dstate, emitter, ctx))
             .collect();
         emitter.emit_seq_all_span(outputs, ctx)
     } else {
-        // Decision: group consecutive Spans, emit mixed.
         let mut groups = Vec::new();
         let mut span_run: Vec<E::Output> = Vec::new();
 
-        for (child, ty) in children.iter().zip(child_types.iter()) {
+        for (child, ty) in children.iter().zip(decision.child_types.iter()) {
             if *ty == TypeDesc::Span {
                 let out = compile_node(child, ValuePlacement::Inline, ir, dstate, emitter, ctx);
                 span_run.push(out);
@@ -442,19 +396,8 @@ fn compile_seq<E: Emitter>(
                         outputs: std::mem::take(&mut span_run),
                     });
                 }
-                // Child alloc: BoxedEnum → Alloc (Refs produce &Enum),
-                // Enum in Alloc context → Alloc (non-transparent Refs need boxing).
-                // All other types → Inline (leaves produce their natural type).
-                let child_alloc = match ty {
-                    TypeDesc::BoxedEnum => ValuePlacement::Alloc,
-                    TypeDesc::Enum if alloc == ValuePlacement::Alloc => ValuePlacement::Alloc,
-                    // Vec(non-Span) in a Repeat: force Alloc to prevent Span compression.
-                    // The Repeat's compile_repeat uses Alloc to decide elem_type, which
-                    // prevents collapsing to Span when the expected type is Vec(Enum).
-                    TypeDesc::Vec(inner) if **inner != TypeDesc::Span => ValuePlacement::Alloc,
-                    _ => ValuePlacement::Inline,
-                };
-                let out = compile_node(child, child_alloc, ir, dstate, emitter, ctx);
+                let ca = decisions::child_alloc(ty, alloc);
+                let out = compile_node(child, ca, ir, dstate, emitter, ctx);
                 groups.push(SeqChildGroup::Single {
                     output: out,
                     ty: ty.clone(),
@@ -465,16 +408,7 @@ fn compile_seq<E: Emitter>(
             groups.push(SeqChildGroup::SpanCompressed { outputs: span_run });
         }
 
-        // Compute result type from TypeMap's seq_result_type (uses original
-        // children pointer). Falls back to Span if not available.
-        let result_type = type_map
-            .and_then(|tm| tm.seq_result_type(children.as_ptr() as usize).cloned())
-            .unwrap_or(TypeDesc::Span);
-
-        // Decision: detect (T, Vec<T>) or (Vec<T>, T) flattening.
-        let flatten = detect_flatten(&result_type, &child_types);
-
-        emitter.emit_seq_grouped(groups, &result_type, flatten, ctx)
+        emitter.emit_seq_grouped(groups, &decision.result_type, decision.flatten, ctx)
     }
 }
 
@@ -656,7 +590,7 @@ fn compile_repeat<E: Emitter>(
     // Decision: detect sep_by pattern.
     // Pattern: Repeat(Skip(element, Repeat(separator, 0, 1)), lo, MAX)
     if hi == u32::MAX {
-        if let Some((element, separator)) = detect_sep_by(inner) {
+        if let Some((element, separator)) = decisions::detect_sep_by(inner) {
             // Use vec_elem_type for sep_by (scratch Vec collection context).
             // Fallback maps BoxedEnum→Enum since scratch stores unboxed values.
             let elem_type = type_map
@@ -859,7 +793,7 @@ fn compile_wrap<E: Emitter>(
             hi: u32::MAX,
         } = inner_repeat
         {
-            if let Some((element, separator)) = detect_sep_by(inner) {
+            if let Some((element, separator)) = decisions::detect_sep_by(inner) {
                 // Extract terminator byte(s) from close literal.
                 let terminator_bytes = if let IrNode::Literal(sid) = close {
                     let raw = ir.get_string(*sid);
@@ -952,22 +886,6 @@ fn check_guaranteed_byte(raw_literal: &str, dstate: &mut DriverState) -> Option<
     None
 }
 
-/// Detect the sep_by pattern in a Repeat body.
-///
-/// Pattern: `Skip(element, Repeat(separator, 0, 1))` — element followed by optional separator.
-fn detect_sep_by(inner: &IrNode) -> Option<(&IrNode, &IrNode)> {
-    if let IrNode::Skip(element, opt_sep) = inner {
-        if let IrNode::Repeat {
-            inner: separator,
-            lo: 0,
-            hi: 1,
-        } = opt_sep.as_ref()
-        {
-            return Some((element.as_ref(), separator.as_ref()));
-        }
-    }
-    None
-}
 
 /// Unwrap an OptionalWhitespace wrapper. Returns `(inner, is_ow)`.
 fn unwrap_ow(node: &IrNode) -> Option<(&IrNode, bool)> {
@@ -1023,23 +941,3 @@ fn detect_operator_chain(children: &[IrNode]) -> Option<(&IrNode, &IrNode, &IrNo
     None
 }
 
-/// Detect Vec flattening opportunities in a Seq result.
-///
-/// Returns `Some(FlattenStrategy)` if the result type is `Vec<T>` and the
-/// children contain exactly one Vec and one scalar of the same element type.
-fn detect_flatten(result_type: &TypeDesc, child_types: &[TypeDesc]) -> Option<FlattenStrategy> {
-    let TypeDesc::Vec(_) = result_type else {
-        return None;
-    };
-
-    if child_types.len() != 2 {
-        return None;
-    }
-    
-
-    match (&child_types[0], &child_types[1]) {
-        (_, TypeDesc::Vec(_)) => Some(FlattenStrategy::HeadThenVec),
-        (TypeDesc::Vec(_), _) => Some(FlattenStrategy::VecThenTail),
-        _ => None,
-    }
-}

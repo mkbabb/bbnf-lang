@@ -32,6 +32,9 @@ use csp_solver::constraint::{Constraint, Revision, VarId};
 use csp_solver::domain::{Domain, LatticeDomain};
 use csp_solver::variable::Variable;
 
+use bbnf_regex::algebra;
+use bbnf_regex::sets::byteset::ByteSet;
+
 use crate::{AltBranch, GrammarIR, IrNode};
 
 // ── CSP Domain ────────────────────────────────────────────────────────────────
@@ -513,12 +516,12 @@ impl RewriteRule for SupersetAbsorption {
             return false;
         }
 
-        // Extract character sets for each regex branch.
-        let char_sets: Vec<Option<Vec<u8>>> = branches
+        // Extract byte sets via HIR-based classification.
+        let byte_sets: Vec<Option<ByteSet>> = branches
             .iter()
             .map(|b| {
                 if let IrNode::Regex(sid) = &b.node {
-                    extract_single_char_class(&strings[*sid as usize])
+                    algebra::extract_char_class_bytes(&strings[*sid as usize])
                 } else {
                     None
                 }
@@ -531,14 +534,13 @@ impl RewriteRule for SupersetAbsorption {
             if to_remove.contains(&i) {
                 continue;
             }
-            if let Some(set_i) = &char_sets[i] {
+            if let Some(set_i) = &byte_sets[i] {
                 for j in 0..branches.len() {
                     if i == j || to_remove.contains(&j) {
                         continue;
                     }
-                    if let Some(set_j) = &char_sets[j] {
-                        // If set_j is a strict subset of set_i, remove set_j.
-                        if set_j.len() < set_i.len() && set_j.iter().all(|b| set_i.contains(b)) {
+                    if let Some(set_j) = &byte_sets[j] {
+                        if set_j.len() < set_i.len() && algebra::is_superset(set_i, set_j) {
                             to_remove.push(j);
                         }
                     }
@@ -568,16 +570,16 @@ impl RewriteRule for UnionMerge {
     }
 
     fn apply(&self, branches: &mut Vec<AltBranch>, strings: &mut Vec<String>) -> bool {
-        // Only process Alt where all branches are single char class Regex.
         if branches.len() < 2 {
             return false;
         }
 
-        let char_sets: Vec<Option<Vec<u8>>> = branches
+        // Extract byte sets via HIR-based classification.
+        let byte_sets: Vec<Option<ByteSet>> = branches
             .iter()
             .map(|b| {
                 if let IrNode::Regex(sid) = &b.node {
-                    extract_single_char_class(&strings[*sid as usize])
+                    algebra::extract_char_class_bytes(&strings[*sid as usize])
                 } else {
                     None
                 }
@@ -589,17 +591,11 @@ impl RewriteRule for UnionMerge {
         let mut i = 0;
         while i + 1 < branches.len() {
             if let (Some(set_a), Some(set_b)) = (
-                &char_sets[i],
-                &char_sets.get(i + 1).and_then(|s| s.as_ref()),
+                &byte_sets[i],
+                &byte_sets.get(i + 1).and_then(|s| s.as_ref()),
             ) {
-                // Check if ranges are adjacent or overlapping.
-                let mut combined: Vec<u8> = set_a.clone();
-                combined.extend_from_slice(set_b);
-                combined.sort_unstable();
-                combined.dedup();
-
-                // Build a new char class pattern from the combined set.
-                let new_pattern = bytes_to_char_class(&combined);
+                let combined = algebra::try_union(set_a, set_b);
+                let new_pattern = algebra::byteset_to_pattern(&combined);
                 let sid = strings.len() as u32;
                 strings.push(new_pattern);
 
@@ -609,7 +605,6 @@ impl RewriteRule for UnionMerge {
                 };
                 branches.remove(i + 1);
                 merged = true;
-                // Don't increment i — check the new merged branch against the next.
             } else {
                 i += 1;
             }
@@ -619,90 +614,8 @@ impl RewriteRule for UnionMerge {
     }
 }
 
-// ── Helpers ─────────────────────────────────────────────────────────────
-
-/// Extract the byte set from a single char class regex like `[a-z]` or `[0-9a-fA-F]`.
-/// Returns None for non-char-class patterns.
-pub fn extract_single_char_class(pattern: &str) -> Option<Vec<u8>> {
-    // Must be `[...]` optionally with `+` or `*`.
-    let class_str = pattern
-        .strip_suffix('+')
-        .or_else(|| pattern.strip_suffix('*'))
-        .unwrap_or(pattern);
-
-    let inner = class_str.strip_prefix('[')?.strip_suffix(']')?;
-    if inner.starts_with('^') {
-        return None;
-    }
-
-    let mut bytes = Vec::new();
-    let mut chars = inner.chars().peekable();
-
-    while let Some(c) = chars.next() {
-        if c == '\\' {
-            match chars.next()? {
-                'd' => bytes.extend(b'0'..=b'9'),
-                'w' => {
-                    bytes.extend(b'0'..=b'9');
-                    bytes.extend(b'A'..=b'Z');
-                    bytes.push(b'_');
-                    bytes.extend(b'a'..=b'z');
-                }
-                's' => bytes.extend(&[b'\t', b'\n', 0x0B, 0x0C, b'\r', b' ']),
-                esc if esc.is_ascii() => bytes.push(esc as u8),
-                _ => return None,
-            }
-        } else if c.is_ascii() {
-            if chars.peek() == Some(&'-') {
-                chars.next();
-                let hi = chars.next()?;
-                if !hi.is_ascii() {
-                    return None;
-                }
-                bytes.extend(c as u8..=hi as u8);
-            } else {
-                bytes.push(c as u8);
-            }
-        } else {
-            return None;
-        }
-    }
-
-    bytes.sort_unstable();
-    bytes.dedup();
-    if bytes.is_empty() { None } else { Some(bytes) }
-}
-
-/// Convert a sorted byte set to a character class pattern string.
-pub fn bytes_to_char_class(bytes: &[u8]) -> String {
-    let mut result = String::from("[");
-
-    // Build ranges from sorted bytes.
-    let mut i = 0;
-    while i < bytes.len() {
-        let start = bytes[i];
-        let mut end = start;
-        while i + 1 < bytes.len() && bytes[i + 1] == end + 1 {
-            end = bytes[i + 1];
-            i += 1;
-        }
-
-        if end - start >= 2 {
-            result.push(start as char);
-            result.push('-');
-            result.push(end as char);
-        } else if end > start {
-            result.push(start as char);
-            result.push(end as char);
-        } else {
-            result.push(start as char);
-        }
-        i += 1;
-    }
-
-    result.push(']');
-    result
-}
+// Helpers: extract_single_char_class and bytes_to_char_class are now in
+// bbnf_regex::algebra (HIR-based via extract_char_class_bytes / byteset_to_pattern).
 
 /// Structural equality of IrNode (for deduplication).
 fn ir_nodes_eq(a: &IrNode, b: &IrNode) -> bool {

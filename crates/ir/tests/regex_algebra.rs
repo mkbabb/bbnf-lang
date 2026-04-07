@@ -1,35 +1,35 @@
-use bbnf_ir::passes::regex::algebra::{
-    RewriteRule, RedundantAlternation, bytes_to_char_class, extract_single_char_class,
-};
+use bbnf_ir::passes::regex::algebra::{RewriteRule, RedundantAlternation};
+use bbnf_regex::algebra::{extract_char_class_bytes, byteset_to_pattern};
 use bbnf_ir::{AltBranch, IrNode};
 
 #[test]
 fn extract_char_class_simple() {
-    assert_eq!(
-        extract_single_char_class("[a-z]"),
-        Some((b'a'..=b'z').collect())
-    );
-    assert_eq!(
-        extract_single_char_class("[a-c]"),
-        Some(vec![b'a', b'b', b'c'])
-    );
+    let bs = extract_char_class_bytes("[a-z]").unwrap();
+    for b in b'a'..=b'z' {
+        assert!(bs.contains(b));
+    }
+    let bs2 = extract_char_class_bytes("[a-c]").unwrap();
+    assert_eq!(bs2.len(), 3);
 }
 
 #[test]
 fn extract_char_class_multi_range() {
-    let result = extract_single_char_class("[0-9a-fA-F]").unwrap();
-    assert!(result.contains(&b'0'));
-    assert!(result.contains(&b'9'));
-    assert!(result.contains(&b'a'));
-    assert!(result.contains(&b'f'));
-    assert!(result.contains(&b'A'));
-    assert!(result.contains(&b'F'));
+    let result = extract_char_class_bytes("[0-9a-fA-F]").unwrap();
+    assert!(result.contains(b'0'));
+    assert!(result.contains(b'9'));
+    assert!(result.contains(b'a'));
+    assert!(result.contains(b'f'));
+    assert!(result.contains(b'A'));
+    assert!(result.contains(b'F'));
 }
 
 #[test]
 fn bytes_to_class_roundtrip() {
-    let bytes: Vec<u8> = (b'a'..=b'z').collect();
-    assert_eq!(bytes_to_char_class(&bytes), "[a-z]");
+    let mut bs = bbnf_regex::ByteSet::empty();
+    for b in b'a'..=b'z' {
+        bs.insert(b);
+    }
+    assert_eq!(byteset_to_pattern(&bs), "[a-z]");
 }
 
 #[test]

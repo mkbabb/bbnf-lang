@@ -220,17 +220,27 @@ fn sheets_simple() {
 #[test]
 fn bbnf_rule() {
     let ctx = __BbnfEmitEnumCtx::with_capacity(1024);
-    let input = "x = \"a\" ;\n";
+
+    // Note: double-quoted literals fail in the self-hosted grammar due to a
+    // codegen unescape issue with "\"" in the grammar source. Single-quoted
+    // literals, regex, and epsilon work correctly.
+    let input = "x = /[a-z]+/ ;\ny = 'hello' ;\n";
     let (result, state) = BbnfEmit::grammar().parse_return_state_with_context(input, &ctx);
-    if result.is_none() || state.offset < input.trim_end().len() {
-        // Known: BBNF self-hosted grammar has whitespace/import subtleties.
-        // Parse failure is a grammar issue, not a serialization issue.
-        eprintln!("BBNF parse skipped: offset={}, len={}", state.offset, input.len());
-        return;
-    }
+    assert!(result.is_some(), "BBNF grammar parse failed at offset {}", state.offset);
+    assert!(
+        state.offset >= input.trim_end().len(),
+        "BBNF grammar parse incomplete: {}/{}",
+        state.offset,
+        input.len()
+    );
     let val = result.unwrap();
     let e = BbnfEmit::serialize_compact(&val);
-    assert!(!e.is_empty(), "BBNF empty");
+    assert!(!e.is_empty(), "BBNF serialize empty");
+    // Idempotence: serialize → reparse → serialize → assert equal.
+    let (r2, s2) = BbnfEmit::grammar().parse_return_state_with_context(&e, &ctx);
+    assert!(r2.is_some(), "BBNF reparse failed: {:?}", e);
+    let e2 = BbnfEmit::serialize_compact(&r2.unwrap());
+    assert_eq!(e, e2, "BBNF serialize not idempotent:\n  s1={e:?}\n  s2={e2:?}");
 }
 
 // ── CSS Pretty ───────────────────────────────────────────────────────────────

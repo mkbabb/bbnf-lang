@@ -70,10 +70,7 @@ fn extract_item<'a>(
     match item {
         BbnfBootstrapEnum::rule((lhs, _eq, rhs, _terminator)) => {
             let name = extract_span_text(lhs);
-            let name_span = match lhs {
-                BbnfBootstrapEnum::identifier(s) => *s,
-                _ => Span::default(),
-            };
+            let name_span = extract_identifier_span(lhs);
             rules.insert(name, RuleEntry {
                 name_span,
                 rhs,
@@ -97,7 +94,18 @@ fn extract_item<'a>(
             let target_str = Cow::Owned(extract_span_text(target).to_string());
             let hint_strs: Vec<Cow<'a, str>> = hints
                 .iter()
-                .map(|h| Cow::Owned(extract_span_text(h).to_string()))
+                .map(|h| match h {
+                    BbnfBootstrapEnum::pretty_hint((ident, arg_span)) => {
+                        let name = extract_span_text(ident);
+                        let arg = arg_span.as_str();
+                        if arg.is_empty() {
+                            Cow::Owned(name.to_string())
+                        } else {
+                            Cow::Owned(format!("{}{}", name, arg))
+                        }
+                    }
+                    other => Cow::Owned(extract_span_text(other).to_string()),
+                })
                 .collect();
             pretties.push(PrettyDirective {
                 rule_name: target_str,
@@ -198,6 +206,27 @@ fn identifier_str<'a>(node: &'a BbnfBootstrapEnum<'a>) -> &'a str {
 fn identifier_span<'a>(node: &'a BbnfBootstrapEnum<'a>) -> Span<'a> {
     match node {
         BbnfBootstrapEnum::identifier(s) => *s,
+        BbnfBootstrapEnum::lhs(inner)
+        | BbnfBootstrapEnum::pretty_hint((inner, _))
+        | BbnfBootstrapEnum::term(inner) => identifier_span(inner),
+        _ => Span::default(),
+    }
+}
+
+/// Recursively extract an identifier Span from any wrapped node.
+fn extract_identifier_span<'a>(node: &'a BbnfBootstrapEnum<'a>) -> Span<'a> {
+    match node {
+        BbnfBootstrapEnum::identifier(s) => *s,
+        BbnfBootstrapEnum::lhs(inner)
+        | BbnfBootstrapEnum::term(inner)
+        | BbnfBootstrapEnum::term_1((inner, _))
+        | BbnfBootstrapEnum::value_atom(inner)
+        | BbnfBootstrapEnum::value_unary(inner)
+        | BbnfBootstrapEnum::directive(inner) => extract_identifier_span(inner),
+        BbnfBootstrapEnum::pretty_hint((inner, _)) => extract_identifier_span(inner),
+        BbnfBootstrapEnum::factor((_, t, _, _)) => extract_identifier_span(t),
+        BbnfBootstrapEnum::mapped_factor((i, _)) => extract_identifier_span(i),
+        BbnfBootstrapEnum::binary_factor((f, _)) => extract_identifier_span(f),
         _ => Span::default(),
     }
 }
@@ -230,10 +259,14 @@ pub fn extract_span_text<'a>(node: &'a BbnfBootstrapEnum<'a>) -> &'a str {
         | BbnfBootstrapEnum::term_0(s) => s.as_str(),
 
         // Structural wrappers — unwrap and recurse.
+        // Includes transparent rule aliases preserved by structural mode.
         BbnfBootstrapEnum::term(inner)
+        | BbnfBootstrapEnum::lhs(inner)
         | BbnfBootstrapEnum::value_atom(inner)
         | BbnfBootstrapEnum::value_unary(inner)
         | BbnfBootstrapEnum::directive(inner) => extract_span_text(inner),
+
+        BbnfBootstrapEnum::pretty_hint((inner, _)) => extract_span_text(inner),
 
         BbnfBootstrapEnum::factor((_, t, _, _)) => extract_span_text(t),
         BbnfBootstrapEnum::mapped_factor((inner, _)) => extract_span_text(inner),

@@ -15,7 +15,21 @@ program = stmt * ;
 
     assert_eq!(pg.recovers.len(), 1);
     assert_eq!(pg.recovers[0].rule_name.as_ref(), "stmt");
-    assert!(matches!(pg.recovers[0].sync_expr, BbnfBootstrapEnum::regex(_)));
+    // The sync expression may be wrapped in structural layers (alternation, concatenation, etc.)
+    // Check that a regex exists somewhere in the tree.
+    fn contains_regex(node: &BbnfBootstrapEnum) -> bool {
+        match node {
+            BbnfBootstrapEnum::regex(_) => true,
+            BbnfBootstrapEnum::alternation(b) => b.iter().any(|(x,_)| contains_regex(x)),
+            BbnfBootstrapEnum::concatenation(p) => p.iter().any(|(x,_)| contains_regex(x)),
+            BbnfBootstrapEnum::binary_factor((f,_)) => contains_regex(f),
+            BbnfBootstrapEnum::mapped_factor((i,_)) => contains_regex(i),
+            BbnfBootstrapEnum::factor((_,t,_,_)) => contains_regex(t),
+            BbnfBootstrapEnum::term(i) => contains_regex(i),
+            _ => false,
+        }
+    }
+    assert!(contains_regex(pg.recovers[0].sync_expr), "sync expr should contain a regex");
     assert_eq!(pg.rules.len(), 2);
 }
 

@@ -20,10 +20,16 @@ comment = ( "//" , /.*/ ) ?w ;
 
 lhs = identifier ;
 
+// Grammar function call args: each arg is a single binary_factor
+// (alternation of binary_factors, no comma-concatenation).
+// This avoids ambiguity between call arg commas and concatenation commas.
+call_arg = ( binary_factor ?w , "|" ? ) + ;
+
 term = "ε" | "epsilon"
-     | identifier , ( "(" , rhs ?w , ( "," ?w , rhs ?w ) * , ")" ) ?
+     | identifier , ( "(" , call_arg ?w , ( "," ?w , call_arg ?w ) * , ")" ) ?
      | literal
      | regex
+     | "@{" , rhs ?w , "}"
      | "(" , rhs ?w , ")"
      | "[" , rhs ?w , "]"
      | "{" , rhs ?w , "}" ;
@@ -59,7 +65,7 @@ import_directive = "@import" ?w , (
 
 recover_directive = "@recover" ?w , identifier ?w , rhs ?w , ( ";" | "." ) ? ;
 
-pretty_hint = identifier ;
+pretty_hint = identifier , ( "(" , /[^)]*/ , ")" ) ? ;
 pretty_directive = "@pretty" ?w , ( "*" | identifier ) ?w , (pretty_hint+) ?w , ( ";" | "." ) ? ;
 
 ws_directive = "@ws" ?w , regex ?w , ( ";" | "." ) ? ;

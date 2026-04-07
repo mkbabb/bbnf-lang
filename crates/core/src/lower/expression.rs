@@ -322,7 +322,8 @@ fn substitute_and_lower<'a>(
         }
 
         // Recursive structural descent.
-        BbnfBootstrapEnum::alternation(branches) => {
+        BbnfBootstrapEnum::alternation(branches)
+        | BbnfBootstrapEnum::call_arg(branches) => {
             let alts: Vec<AltBranch> = branches
                 .iter()
                 .map(|(b, _)| AltBranch {

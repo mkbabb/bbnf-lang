@@ -17,7 +17,7 @@ pub use negated_class::{is_negated_char_class_regex, NegCharClassQuantifier};
 // Phase 6: DFA canonical hashing for cross-rule deduplication.
 pub use dfa::canonical_dfa_hash;
 
-use crate::generate::regex::classify::{classify_regex, RegexClass};
+use parse_that::regex::classify::{classify_regex, RegexClass};
 use crate::generate::regex::cost_model::EmitOpts;
 
 use proc_macro2::TokenStream;

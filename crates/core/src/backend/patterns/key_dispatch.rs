@@ -7,7 +7,7 @@
 
 use bbnf_ir::{AltBranch, GrammarIR, IrNode};
 
-use crate::generate::regex_classify::{classify_regex, RegexClass};
+use parse_that::regex::classify::{classify_regex, RegexClass};
 
 use crate::backend::unescape_literal;
 

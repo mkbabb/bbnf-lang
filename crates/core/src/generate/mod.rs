@@ -2,7 +2,6 @@
 
 pub mod serialize;
 pub mod regex;
-pub use regex::classify as regex_classify;
 pub use crate::backend::rust as codegen;
 pub use codegen::ir_enums;
 pub use codegen::ir_types;

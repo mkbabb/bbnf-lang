@@ -2,7 +2,7 @@
 
 use bbnf_ir::{AltBranch, FnDescriptor, FnId, IrNode, MapBinOp, MapExpr, MapUnaryOp, TypeDesc};
 
-use crate::generate::regex::classify::{RegexClass, classify_regex};
+use parse_that::regex::classify::{RegexClass, classify_regex};
 use crate::types::{BinOpKind, Expression, MapArrow, Token, UnaryOpKind, ValueExpr};
 
 use std::collections::HashMap;

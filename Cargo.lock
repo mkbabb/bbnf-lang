@@ -188,6 +188,7 @@ dependencies = [
 name = "bbnf-ir"
 version = "0.1.6"
 dependencies = [
+ "bbnf-regex",
  "csp-solver",
  "parse_that",
  "rayon",
@@ -210,6 +211,14 @@ dependencies = [
  "tempfile",
  "tokio",
  "tower-lsp-server",
+]
+
+[[package]]
+name = "bbnf-regex"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "smallvec",
 ]
 
 [[package]]
@@ -1555,6 +1564,7 @@ name = "parse_that"
 version = "0.4.0"
 dependencies = [
  "aho-corasick",
+ "bbnf-regex",
  "colored",
  "fast-float2",
  "memchr",

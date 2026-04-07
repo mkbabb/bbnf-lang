@@ -1,12 +1,12 @@
-//! Regex classification, compilation, and inline code emission.
+//! Regex compilation and inline code emission.
+//!
+//! Classification lives in the `bbnf-regex` crate (via `parse_that::regex::classify`).
 //!
 //! Layered architecture:
-//! - **classify** — HIR-based structural regex classification (Numeric, HexDigits, Identifier, etc.)
 //! - **cost_model** — Centralized heuristic thresholds (CostModel, LengthHint, EmitOpts).
 //! - **emit/** — Tiered code emission via pattern registry (fast_paths → hir → dfa → error).
 //! - **patterns/** — Pattern detection and analysis utilities.
 
-pub mod classify;
 pub mod cost_model;
 pub mod emit;
 pub mod patterns;

@@ -8,13 +8,16 @@
 //! boundary transfer, and captures all analysis results (FIRST sets, SCC info,
 //! dispatch hints, span eligibility, pretty hints) so backends need not recompute them.
 
-pub mod charset;
 pub mod passes;
-pub mod regex_first;
 pub mod vm;
 
-// Backward-compat re-exports: downstream crates can still use
-// `bbnf_ir::bytecode`, `bbnf_ir::compiler`, `bbnf_ir::interpreter`, `bbnf_ir::debug`.
+// Re-export from bbnf-regex (canonical source of CharSet128, regex_first, classify)
+pub use bbnf_regex::sets::charset::CharSet128;
+pub mod regex_first {
+    //! FIRST set extraction — delegates to bbnf_regex.
+    pub use bbnf_regex::first::regex_first_chars;
+}
+
 pub use vm::bytecode;
 pub use vm::compiler;
 pub use vm::debug;
@@ -23,8 +26,6 @@ pub use vm::interpreter;
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
-
-pub use charset::CharSet128;
 
 // ─── Identifiers ─────────────────────────────────────────────────────────────
 

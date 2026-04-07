@@ -6,7 +6,7 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use crate::generate::regex::classify::{classify_regex, RegexClass};
+use parse_that::regex::classify::{classify_regex, RegexClass};
 
 /// Planned scanner form.
 #[derive(Debug, Clone)]

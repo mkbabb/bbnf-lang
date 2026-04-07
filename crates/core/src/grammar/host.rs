@@ -130,10 +130,13 @@ fn extract_item<'a>(
             debug_rules.push(Cow::Owned(text.to_string()));
         }
 
-        BbnfBootstrapEnum::host_directive((_kw, name, _term)) => {
+        BbnfBootstrapEnum::host_directive((_kw, name, type_ann, _term)) => {
+            let return_type = type_ann.as_ref().map(|(_colon, type_node)| {
+                Cow::Owned(extract_span_text(type_node).to_string())
+            });
             host_fns.push(HostFnDecl {
                 name: Cow::Owned(extract_span_text(name).to_string()),
-                return_type: None,
+                return_type,
             });
         }
 

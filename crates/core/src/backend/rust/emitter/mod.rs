@@ -591,7 +591,7 @@ impl Emitter for RustEmitter {
 
     fn emit_number_convert(&mut self, _ctx: &mut Self::Ctx) -> TokenStream {
         quote! {
-            ::parse_that::css_number_scan_f64(state)
+            ::parse_that::scan_number_f64(state)
         }
     }
 
@@ -707,7 +707,7 @@ impl Emitter for RustEmitter {
                 let vname = ir.get_string(*variant);
                 let vident = format_ident!("{}", vname);
                 Some(quote! {
-                    ::parse_that::css_number_scan_f64(state).map(|__v| #enum_ident::#vident(__v))
+                    ::parse_that::scan_number_f64(state).map(|__v| #enum_ident::#vident(__v))
                 })
             }
             // HexConvert + EnumWrap → fused hex + variant
@@ -804,7 +804,7 @@ impl Emitter for RustEmitter {
     ) -> Option<TokenStream> {
         if !rule.meta.is_transparent {
             Some(quote! {
-                ::parse_that::number_scan_convert(state)
+                ::parse_that::number_fused_scan_convert(state)
             })
         } else {
             None

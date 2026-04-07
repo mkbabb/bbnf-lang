@@ -36,14 +36,14 @@ pub(crate) enum SharedScanner {
 impl SharedScanner {
     fn into_tokens(self) -> TokenStream {
         match self {
-            SharedScanner::JsonString => quote! { ::parse_that::scan_json_string(state) },
+            SharedScanner::JsonString => quote! { ::parse_that::quoted_string_scan_full(state) },
             SharedScanner::JsonNumber { fuse_numbers: true } => {
-                quote! { ::parse_that::scan_number_convert_json(state) }
+                quote! { ::parse_that::number_fused_scan_convert(state) }
             }
             SharedScanner::JsonNumber {
                 fuse_numbers: false,
             } => {
-                quote! { ::parse_that::scan_number_span_json(state) }
+                quote! { ::parse_that::number_span_scan_strict(state) }
             }
             SharedScanner::WsBlockComment => quote! { ::parse_that::scan_ws_block_comments(state) },
             SharedScanner::Ident => quote! { ::parse_that::scan_ident(state) },

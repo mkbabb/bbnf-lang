@@ -260,16 +260,13 @@ fn serialize_for_syn_type(
         return quote! { __ser.text(#val.as_str()); };
     }
     if is_type_name(ty, "f64") {
-        return quote! { __ser.f64(*#val); };
+        return quote! { __ser.text_owned(&format!("{}", #val)); };
     }
-    if is_type_name(ty, "u32") || is_type_name(ty, "u8") {
-        return quote! { __ser.u64(*#val as u64); };
-    }
-    if is_type_name(ty, "i64") {
-        return quote! { __ser.i64(*#val); };
+    if is_type_name(ty, "u32") || is_type_name(ty, "u8") || is_type_name(ty, "i64") {
+        return quote! { __ser.text_owned(&format!("{}", #val)); };
     }
     if is_type_name(ty, "bool") {
-        return quote! { __ser.bool(*#val); };
+        return quote! { __ser.text_owned(&format!("{}", #val)); };
     }
     if let Some(inner) = extract_option_inner(ty) {
         let inner_emit = serialize_for_syn_type(&inner, &quote! { __opt_v }, ir, ctx);

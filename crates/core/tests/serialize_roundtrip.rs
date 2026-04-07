@@ -37,8 +37,82 @@ struct BbnfEmit;
 #[parser(path = "../../grammar/css/pretty.bbnf", serialize)]
 struct CssPrettyEmit;
 
-// CSS L4: requires host type declarations (css_types module) — tested in css_l4.rs
-// TODO: Add serialize attribute once host type integration is resolved.
+// CSS L4 host types — required by grammar mapper expressions (-> 0u8, etc.)
+#[allow(dead_code)]
+mod css_types {
+    pub fn parse_hex_color(s: &str) -> u32 {
+        let hex = s.as_bytes();
+        match hex.len() {
+            3 => {
+                let (r, g, b) = (hex_digit(hex[0]), hex_digit(hex[1]), hex_digit(hex[2]));
+                ((r << 4 | r) << 24) | ((g << 4 | g) << 16) | ((b << 4 | b) << 8) | 0xFF
+            }
+            6 => {
+                let (r, g, b) = (hex_byte(hex[0], hex[1]), hex_byte(hex[2], hex[3]), hex_byte(hex[4], hex[5]));
+                (r << 24) | (g << 16) | (b << 8) | 0xFF
+            }
+            8 => {
+                let (r, g, b, a) = (hex_byte(hex[0], hex[1]), hex_byte(hex[2], hex[3]), hex_byte(hex[4], hex[5]), hex_byte(hex[6], hex[7]));
+                (r << 24) | (g << 16) | (b << 8) | a
+            }
+            _ => 0,
+        }
+    }
+    fn hex_digit(b: u8) -> u32 {
+        match b {
+            b'0'..=b'9' => (b - b'0') as u32,
+            b'a'..=b'f' => (b - b'a' + 10) as u32,
+            b'A'..=b'F' => (b - b'A' + 10) as u32,
+            _ => 0,
+        }
+    }
+    fn hex_byte(hi: u8, lo: u8) -> u32 { (hex_digit(hi) << 4) | hex_digit(lo) }
+
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy)]
+    pub enum LengthUnit {
+        Px = 0, Em = 1, Rem = 2, Vh = 3, Vw = 4, Vmin = 5, Vmax = 6,
+        Ch = 7, Ex = 8, Cm = 9, Mm = 10, In = 11, Pt = 12, Pc = 13,
+        Lh = 14, Rlh = 15, Svw = 16, Svh = 17, Dvw = 18, Dvh = 19,
+        Lvw = 20, Lvh = 21, Cqw = 22, Cqh = 23, Cqi = 24, Cqb = 25,
+    }
+
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy)]
+    pub enum AngleUnit { Deg = 0, Rad = 1, Grad = 2, Turn = 3 }
+
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy)]
+    pub enum TimeUnit { Ms = 0, S = 1 }
+
+    #[derive(Debug, Clone, Copy)]
+    pub struct CssColor { pub r: u8, pub g: u8, pub b: u8, pub a: u8 }
+
+    pub fn parse_rgb_color(s: &str) -> CssColor {
+        let inner = s.find('(').map(|i| &s[i + 1..]).unwrap_or(s);
+        let inner = inner.trim_end_matches(')').trim();
+        let mut nums = inner.split(',').map(|n| {
+            let n = n.trim();
+            if n.ends_with('%') {
+                let pct: f64 = n.trim_end_matches('%').trim().parse().unwrap_or(0.0);
+                (pct * 2.55) as u8
+            } else {
+                n.parse::<f64>().unwrap_or(0.0) as u8
+            }
+        });
+        CssColor {
+            r: nums.next().unwrap_or(0),
+            g: nums.next().unwrap_or(0),
+            b: nums.next().unwrap_or(0),
+            a: nums.next().unwrap_or(255),
+        }
+    }
+}
+
+// CSS L4 grammar (uses @import — 14 modules, host types via css_types)
+#[derive(Parser)]
+#[parser(path = "../../grammar/css/l4/stylesheet.bbnf", serialize, skip_recover)]
+struct CssL4Emit;
 
 // ── JSON ─────────────────────────────────────────────────────────────────────
 
@@ -179,5 +253,32 @@ fn css_simple() {
     css_pretty_rt("body { color: red; }");
 }
 
-// CSS L4 serialize tests deferred — grammar requires host type declarations
-// (css_types module with CssNumber, etc.) which need integration work.
+// ── CSS L4 (@import-based grammar with host types) ──────────────────────────
+
+fn css_l4_emit(input: &str) -> String {
+    let ctx = __CssL4EmitEnumCtx::with_capacity(input.len() / 8);
+    let (result, _) = CssL4Emit::stylesheet().parse_return_state_with_context(input, &ctx);
+    let val = result.expect("CSS L4 parse failed");
+    CssL4Emit::serialize_compact(&val)
+}
+
+fn css_l4_rt(input: &str) {
+    let s1 = css_l4_emit(input);
+    let s2 = css_l4_emit(&s1);
+    assert_eq!(s1, s2, "CSS L4 serialize not idempotent:\n  s1={s1:?}\n  s2={s2:?}");
+}
+
+#[test]
+fn css_l4_simple_rule() {
+    css_l4_rt("h1 { color: red; }");
+}
+
+#[test]
+fn css_l4_multi_property() {
+    css_l4_rt("body { margin: 0; padding: 0; display: flex; }");
+}
+
+#[test]
+fn css_l4_media() {
+    css_l4_rt("@media (max-width: 768px) { .x { display: none; } }");
+}

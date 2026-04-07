@@ -221,10 +221,8 @@ fn sheets_simple() {
 fn bbnf_rule() {
     let ctx = __BbnfEmitEnumCtx::with_capacity(1024);
 
-    // Note: double-quoted literals fail in the self-hosted grammar due to a
-    // codegen unescape issue with "\"" in the grammar source. Single-quoted
-    // literals, regex, and epsilon work correctly.
-    let input = "x = /[a-z]+/ ;\ny = 'hello' ;\n";
+    // Double-quoted literals now work — unescape moved to lowering.
+    let input = "x = /[a-z]+/ ;\ny = \"hello\" ;\n";
     let (result, state) = BbnfEmit::grammar().parse_return_state_with_context(input, &ctx);
     assert!(result.is_some(), "BBNF grammar parse failed at offset {}", state.offset);
     assert!(

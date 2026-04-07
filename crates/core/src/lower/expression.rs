@@ -453,7 +453,8 @@ fn substitute_and_lower<'a>(
 pub(crate) fn lower_expression<'a>(expr: &'a Expression<'a>, ctx: &mut LowerCtx<'a>) -> IrNode {
     match expr {
         Expression::Literal(token) => {
-            let id = ctx.strings.intern(token.value.as_ref());
+            let unescaped = crate::backend::unescape_literal(token.value.as_ref());
+            let id = ctx.strings.intern(&unescaped);
             IrNode::Literal(id)
         }
 

@@ -149,7 +149,7 @@ pub fn try_detect(
 /// Extract leading literal(s) from a branch node.
 fn extract_leading_literals(node: &IrNode, ir: &GrammarIR) -> Option<Vec<String>> {
     match node {
-        IrNode::Literal(sid) => Some(vec![unescape_literal(ir.get_string(*sid))]),
+        IrNode::Literal(sid) => Some(vec![ir.get_string(*sid).to_string()]),
         IrNode::Seq(children) if !children.is_empty() => {
             extract_leading_literals(&children[0], ir)
         }
@@ -273,7 +273,7 @@ fn extract_seq_separator(
         if let IrNode::Seq(children) = &branch.node {
             if children.len() >= 2 {
                 if let IrNode::Literal(sid) = &children[1] {
-                    let sep = unescape_literal(ir.get_string(*sid));
+                    let sep = ir.get_string(*sid).to_string();
                     if let Some(ref cs) = common_sep {
                         if *cs != sep {
                             return None;

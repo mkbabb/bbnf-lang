@@ -84,7 +84,7 @@ impl TsEmitter {
         let result = ctx.fresh("lit_alt");
         let mut stmts = format!("let {result} = null;\n");
         for (value, body) in literals {
-            let unescaped = unescape_literal(&value);
+            let unescaped = value.to_string();
             let escaped = ts_escape(&unescaped);
             let body_expr = body.as_expr();
             stmts.push_str(&format!(

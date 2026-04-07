@@ -26,7 +26,7 @@ impl Emitter for WasmEmitter {
         guaranteed_byte: Option<u8>,
         _ctx: &mut WasmEmitCtx,
     ) -> String {
-        let unescaped = unescape_literal(value);
+        let unescaped = value.to_string();
         let bytes = unescaped.as_bytes();
 
         if let Some(_byte) = guaranteed_byte {

@@ -96,7 +96,7 @@ impl RustEmitter {
         value: &str,
         _ctx: &mut RustEmitCtx,
     ) -> TokenStream {
-        let unescaped = crate::backend::unescape_literal(value);
+        let unescaped = value.to_string();
         let bytes = unescaped.as_bytes();
         if bytes.len() == 1 {
             let b = bytes[0];

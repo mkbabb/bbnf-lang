@@ -38,7 +38,7 @@ impl Emitter for TsEmitter {
         guaranteed_byte: Option<u8>,
         ctx: &mut TsEmitCtx,
     ) -> TsCode {
-        let unescaped = unescape_literal(value);
+        let unescaped = value.to_string();
         let bytes = unescaped.as_bytes();
 
         if guaranteed_byte.is_some() {

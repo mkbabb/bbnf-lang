@@ -343,7 +343,7 @@ pub fn compile_node<E: Emitter>(
                     let patterns = arm
                         .patterns
                         .iter()
-                        .map(|&sid| super::unescape_literal(ir.get_string(sid)).into_bytes())
+                        .map(|&sid| ir.get_string(sid).to_string().into_bytes())
                         .collect();
                     let continuation =
                         compile_node(&arm.continuation, alloc, ir, dstate, emitter, ctx);
@@ -800,7 +800,7 @@ fn compile_wrap<E: Emitter>(
                 // Extract terminator byte(s) from close literal.
                 let terminator_bytes = if let IrNode::Literal(sid) = close {
                     let raw = ir.get_string(*sid);
-                    let unesc = super::unescape_literal(raw);
+                    let unesc = raw.to_string();
                     Some(unesc.into_bytes())
                 } else {
                     None
@@ -876,7 +876,7 @@ fn compile_wrap<E: Emitter>(
 /// If the literal is a single byte matching the guaranteed byte, consumes
 /// the guarantee and returns `Some(byte)`.
 fn check_guaranteed_byte(raw_literal: &str, dstate: &mut DriverState) -> Option<u8> {
-    let unescaped = super::unescape_literal(raw_literal);
+    let unescaped = raw_literal.to_string();
     let bytes = unescaped.as_bytes();
     if bytes.len() == 1 {
         if let Some(guaranteed) = dstate.dispatch_guaranteed_byte {

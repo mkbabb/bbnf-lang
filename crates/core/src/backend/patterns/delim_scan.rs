@@ -79,7 +79,7 @@ pub fn try_detect(
 
 fn single_byte_literal(node: &IrNode, ir: &GrammarIR) -> Option<u8> {
     if let IrNode::Literal(sid) = node {
-        let unescaped = unescape_literal(ir.get_string(*sid));
+        let unescaped = ir.get_string(*sid).to_string();
         let bytes = unescaped.as_bytes();
         if bytes.len() == 1 {
             return Some(bytes[0]);
@@ -90,7 +90,7 @@ fn single_byte_literal(node: &IrNode, ir: &GrammarIR) -> Option<u8> {
 
 fn trailing_delimiter_byte(node: &IrNode, ir: &GrammarIR) -> Option<u8> {
     if let IrNode::Literal(sid) = node {
-        let unescaped = unescape_literal(ir.get_string(*sid));
+        let unescaped = ir.get_string(*sid).to_string();
         let bytes = unescaped.as_bytes();
         if bytes.len() >= 2 {
             let last = *bytes.last()?;

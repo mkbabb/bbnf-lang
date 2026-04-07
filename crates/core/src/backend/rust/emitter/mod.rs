@@ -140,7 +140,7 @@ impl Emitter for RustEmitter {
         guaranteed_byte: Option<u8>,
         _ctx: &mut Self::Ctx,
     ) -> TokenStream {
-        let unescaped = crate::backend::rust::unescape_literal(value);
+        let unescaped = value.to_string();
         let bytes = unescaped.as_bytes();
 
         if let Some(_byte) = guaranteed_byte {

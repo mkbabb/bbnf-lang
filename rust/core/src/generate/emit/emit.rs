@@ -163,6 +163,8 @@ pub fn generate_dispatch_arms(
             .map(|(_, td)| td);
         let needs_deref = rule_td.map_or(false, |td| type_desc_is_ref(td));
 
+        // Match ergonomics (edition 2024): __inner is &FieldType when
+        // matching through &Enum. For ref-type fields (&&'a T), deref once.
         let call = if needs_deref {
             quote! { Self::#emit_fn(*__inner, __sink); }
         } else {

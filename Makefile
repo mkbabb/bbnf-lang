@@ -11,13 +11,13 @@ build: build-lsp build-ext
 
 ## Build the LSP binary (release mode) and copy to server/
 build-lsp:
-	cd rust && cargo build --release -p bbnf-lsp
+	cargo build --release -p bbnf-lsp
 	mkdir -p server
-	cp rust/target/release/bbnf-lsp server/bbnf-lsp
+	cp target/release/bbnf-lsp server/bbnf-lsp
 
 ## Build the LSP binary (debug mode) — faster iteration
 build-lsp-debug:
-	cd rust && cargo build -p bbnf-lsp
+	cargo build -p bbnf-lsp
 
 ## Build the VS Code extension bundle
 build-ext:
@@ -26,36 +26,24 @@ build-ext:
 ## Quick dev build: debug LSP + extension (fast iteration)
 dev: build-lsp-debug build-ext
 	mkdir -p server
-	cp rust/target/debug/bbnf-lsp server/bbnf-lsp
+	cp target/debug/bbnf-lsp server/bbnf-lsp
 
 ## Build the WASM module (bbnf-wasm → playground/src/wasm/)
 build-wasm:
 	cd wasm && wasm-pack build --target web --out-dir ../playground/src/wasm
 
-## Build the TypeScript library
-build-ts:
-	cd typescript && npm run build
-
 # ─── Test ───────────────────────────────────────────────────────────────
 
 ## Run all tests
-test: test-rust test-ts
+test: test-rust
 
 ## Rust workspace tests (bbnf + lsp)
 test-rust:
-	cd rust && cargo test --workspace
-
-## TypeScript library tests
-test-ts:
-	cd typescript && npm test
-
-## Prettier plugin tests (requires build-ts first)
-test-prettier: build-ts
-	cd prettier-plugin-bbnf && npm test
+	cargo test --workspace
 
 ## Run LSP benchmarks
 bench:
-	cd rust && cargo test -p bbnf-lsp --test bench_lsp -- --nocapture
+	cargo test -p bbnf-lsp --test bench_lsp -- --nocapture
 
 # ─── Install / Package ─────────────────────────────────────────────────
 
@@ -116,7 +104,7 @@ release:
 clean:
 	rm -f *.vsix
 	rm -rf extension/dist
-	cd rust && cargo clean
+	cargo clean
 
 ## Remove old .vsix files
 clean-vsix:
@@ -128,4 +116,4 @@ deploy: build-wasm
 
 ## Continuous rebuild on save (requires cargo-watch: cargo install cargo-watch)
 watch:
-	cd rust && cargo watch -p bbnf-lsp -x build
+	cargo watch -p bbnf-lsp -x build

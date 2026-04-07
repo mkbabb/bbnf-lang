@@ -1,7 +1,0 @@
-[workspace]
-members = ["core", "derive", "analysis", "ir", "lsp", "emit"]
-resolver = "2"
-
-[profile.release]
-lto = "thin"
-codegen-units = 1

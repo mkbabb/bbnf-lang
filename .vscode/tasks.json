@@ -21,7 +21,7 @@
             "command": "cargo",
             "args": ["build", "--release", "-p", "bbnf-lsp"],
             "options": {
-                "cwd": "${workspaceFolder}/rust"
+                "cwd": "${workspaceFolder}"
             },
             "problemMatcher": "$rustc"
         },
@@ -31,7 +31,7 @@
             "command": "cargo",
             "args": ["build", "-p", "bbnf-lsp"],
             "options": {
-                "cwd": "${workspaceFolder}/rust"
+                "cwd": "${workspaceFolder}"
             },
             "problemMatcher": "$rustc"
         },
@@ -47,7 +47,7 @@
             "command": "cargo",
             "args": ["test", "--workspace"],
             "options": {
-                "cwd": "${workspaceFolder}/rust"
+                "cwd": "${workspaceFolder}"
             },
             "problemMatcher": "$rustc",
             "group": "test"

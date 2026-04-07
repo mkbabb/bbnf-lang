@@ -40,15 +40,12 @@ jobs:
           targets: ${{ matrix.target }}
 
       - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: rust
 
       - name: Install cross (for cross-compilation)
         if: matrix.cross
         run: cargo install cross
 
       - name: Build LSP binary
-        working-directory: rust
         run: |
           if [ "${{ matrix.cross }}" = "true" ]; then
             cross build --release --target ${{ matrix.target }}
@@ -61,9 +58,9 @@ jobs:
         run: |
           mkdir -p server
           if [ "${{ matrix.target }}" = "x86_64-pc-windows-msvc" ]; then
-            cp rust/target/${{ matrix.target }}/release/bbnf-lsp.exe server/bbnf-lsp.exe
+            cp target/${{ matrix.target }}/release/bbnf-lsp.exe server/bbnf-lsp.exe
           else
-            cp rust/target/${{ matrix.target }}/release/bbnf-lsp server/bbnf-lsp
+            cp target/${{ matrix.target }}/release/bbnf-lsp server/bbnf-lsp
           fi
         shell: bash
 

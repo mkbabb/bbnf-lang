@@ -6,7 +6,7 @@ data/
 !.vscode/launch.json
 !.vscode/tasks.json
 *.vsix
-rust/target/
+target/
 wasm/target/
 wasm/.cargo/
 *.out

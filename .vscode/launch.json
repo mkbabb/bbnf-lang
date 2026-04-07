@@ -28,7 +28,7 @@
             ],
             "preLaunchTask": "Build All (Debug)",
             "env": {
-                "BBNF_SERVER_PATH": "${workspaceFolder}/rust/target/debug/bbnf-lsp"
+                "BBNF_SERVER_PATH": "${workspaceFolder}/target/debug/bbnf-lsp"
             }
         }
     ]

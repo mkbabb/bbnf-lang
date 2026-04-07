@@ -10,17 +10,12 @@ jobs:
   rust:
     name: Rust — cargo test + clippy
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: rust
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
         with:
           components: clippy
       - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: rust
       - run: cargo clippy --all-targets -- -D warnings
       - run: cargo test --workspace
 

@@ -185,6 +185,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "bbnf-bootstrap"
+version = "0.1.0"
+dependencies = [
+ "bbnf_derive",
+ "parse_that",
+ "pprint",
+]
+
+[[package]]
 name = "bbnf-ir"
 version = "0.1.6"
 dependencies = [

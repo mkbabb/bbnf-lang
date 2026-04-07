@@ -12,8 +12,15 @@ use std::collections::{HashMap, HashSet};
 
 use bbnf_ir::{GrammarIR, IrRule, RuleId};
 
-use crate::graph::first_sets::unwrap_rule;
 use crate::graph::SccResult;
+
+/// Unwrap a Rule expression to get the inner body.
+fn unwrap_rule<'a>(expr: &'a Expression<'a>) -> &'a Expression<'a> {
+    match expr {
+        Expression::Rule(inner, _) => inner,
+        other => other,
+    }
+}
 use crate::types::{AST, Expression, Token};
 
 use expression::lower_expression;

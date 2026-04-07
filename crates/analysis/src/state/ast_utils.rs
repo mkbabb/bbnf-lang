@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use bbnf::graph::{CharSet, get_nonterminal_name};
+use bbnf::graph::get_nonterminal_name;
 use bbnf::types::Expression;
 
 use super::types::{ReferenceInfo, RuleInfo, SemanticTokenInfo, token_types};
@@ -19,43 +19,6 @@ pub fn format_char(b: u8) -> String {
     }
 }
 
-/// Format a CharSet as a human-readable string for inlay hints.
-pub fn format_charset(cs: &CharSet) -> String {
-    if cs.is_empty() {
-        return "{}".into();
-    }
-
-    let chars: Vec<u8> = cs.iter().collect();
-
-    // Try to detect ranges.
-    let mut parts: Vec<String> = Vec::new();
-    let mut i = 0;
-    while i < chars.len() {
-        let start = chars[i];
-        let mut end = start;
-        while i + 1 < chars.len() && chars[i + 1] == end + 1 {
-            end = chars[i + 1];
-            i += 1;
-        }
-        if end - start >= 2 {
-            parts.push(format!("{}..{}", format_char(start), format_char(end)));
-        } else if end > start {
-            parts.push(format_char(start));
-            parts.push(format_char(end));
-        } else {
-            parts.push(format_char(start));
-        }
-        i += 1;
-    }
-
-    // Truncate if too many parts.
-    if parts.len() > 6 {
-        let truncated: Vec<&str> = parts.iter().take(5).map(|s| s.as_str()).collect();
-        format!("{{{}, ...}}", truncated.join(", "))
-    } else {
-        format!("{{{}}}", parts.join(", "))
-    }
-}
 
 /// Check if a rule RHS is effectively empty (epsilon only).
 pub fn is_empty_rhs(expr: &Expression<'_>) -> bool {

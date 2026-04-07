@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use bbnf::graph::{
-    calculate_ast_deps, compute_first_sets, find_aliases, find_first_set_conflicts,
+    calculate_ast_deps, find_aliases,
     get_nonterminal_name, tarjan_scc,
 };
 use bbnf::lower::DirectiveSet;
@@ -16,7 +16,7 @@ use crate::analysis::LineIndex;
 
 use super::ast_utils::{
     build_cycle_path, collect_references, collect_semantic_tokens, compute_expression_end,
-    compute_reachable_rules, format_charset, format_expression_short, is_empty_rhs,
+    compute_reachable_rules, format_expression_short, is_empty_rhs,
 };
 use super::parsing::CachedParseResult;
 use super::pretty;
@@ -339,25 +339,9 @@ pub fn analyze_from_cache(
         }
     }
 
-    // FIRST set computation for inlay hints (SCC-ordered, O(n+E)).
-    let first_sets = compute_first_sets(ast, &deps, &scc);
-
-    let mut first_set_labels = HashMap::new();
-    let mut nullable_rules = HashSet::new();
-
+    // Empty rule body detection (AST-level — no FIRST sets needed).
     for (lhs, rhs) in ast.iter() {
         if let Expression::Nonterminal(Token { value: name, .. }) = lhs {
-            let name_str = name.to_string();
-
-            if let Some(cs) = first_sets.first.get(lhs) {
-                first_set_labels.insert(name_str.clone(), format_charset(cs));
-            }
-
-            if first_sets.nullable.contains(lhs) {
-                nullable_rules.insert(name_str.clone());
-            }
-
-            // Enhanced diagnostic: empty rule body detection.
             if is_empty_rhs(rhs) {
                 if let Some(&idx) = rule_index.get(name.as_ref()) {
                     let rule = &rules[idx];
@@ -369,30 +353,6 @@ pub fn analyze_from_cache(
                         ..Default::default()
                     });
                 }
-            }
-        }
-    }
-
-    // FIRST set conflict detection for ambiguous alternations.
-    let conflicts = find_first_set_conflicts(ast, &first_sets);
-    for (rule_name, rule_conflicts) in &conflicts {
-        if let Some(&idx) = rule_index.get(rule_name.as_str()) {
-            let rule = &rules[idx];
-            for conflict in rule_conflicts {
-                let overlap_str = format_charset(&conflict.overlap);
-                diagnostics.push(Diagnostic {
-                    range: line_index.span_to_range(rule.name_span.0, rule.name_span.1),
-                    severity: Some(DiagnosticSeverity::WARNING),
-                    source: Some("bbnf".into()),
-                    message: format!(
-                        "Alternation in `{}` has ambiguous FIRST sets: branches {} and {} both start with {}",
-                        rule_name,
-                        conflict.branch_a + 1,
-                        conflict.branch_b + 1,
-                        overlap_str
-                    ),
-                    ..Default::default()
-                });
             }
         }
     }
@@ -529,21 +489,37 @@ pub fn analyze_from_cache(
     // Sort semantic tokens by offset for encoding.
     semantic_tokens.sort_by_key(|t| t.span.0);
 
-    // IR pipeline: extract rich metadata (FOLLOW sets, dispatch, memo, types).
-    let ir_meta = cached
+    // IR pipeline: extract rich metadata (FOLLOW sets, dispatch, memo, types, FIRST sets).
+    let ir_analysis = cached
         .map(|c| {
             std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| try_compile_ir(c)))
                 .unwrap_or_default()
         })
         .unwrap_or_default();
 
+    // FIRST set conflict diagnostics from IR analysis.
+    for (rule_name, conflicts) in &ir_analysis.first_set_conflicts {
+        if let Some(&idx) = rule_index.get(rule_name.as_str()) {
+            let rule = &rules[idx];
+            for msg in conflicts {
+                diagnostics.push(Diagnostic {
+                    range: line_index.span_to_range(rule.name_span.0, rule.name_span.1),
+                    severity: Some(DiagnosticSeverity::WARNING),
+                    source: Some("bbnf".into()),
+                    message: format!("Alternation in `{rule_name}`: {msg}"),
+                    ..Default::default()
+                });
+            }
+        }
+    }
+
     DocumentInfo {
         rules,
         diagnostics,
         rule_index,
         semantic_tokens,
-        first_set_labels,
-        nullable_rules,
+        first_set_labels: ir_analysis.first_set_labels,
+        nullable_rules: ir_analysis.nullable_rules,
         cyclic_rule_paths,
         imports: import_infos,
         recovers: recover_infos,
@@ -551,7 +527,7 @@ pub fn analyze_from_cache(
         debugs: debug_infos,
         tokens: token_infos,
         ws_pattern: ws_pattern_info,
-        ir_meta,
+        ir_meta: ir_analysis.meta,
     }
 }
 
@@ -564,11 +540,20 @@ pub fn analyze(text: &str, line_index: &LineIndex) -> DocumentInfo {
 
 // ─── IR Pipeline Integration ─────────────────────────────────────────────────
 
+/// Results from the IR pipeline: per-rule metadata + FIRST set analysis.
+#[derive(Default)]
+struct IrAnalysis {
+    meta: HashMap<String, IrRuleMeta>,
+    first_set_labels: HashMap<String, String>,
+    nullable_rules: HashSet<String>,
+    first_set_conflicts: Vec<(String, Vec<String>)>,
+}
+
 /// Run the IR pipeline on a cached parse result and extract per-rule metadata.
 ///
 /// On failure (e.g., the grammar is incomplete or uses features not yet supported
-/// by the IR lowering), returns an empty map — callers degrade gracefully.
-fn try_compile_ir(cached: &CachedParseResult<'_>) -> HashMap<String, IrRuleMeta> {
+/// by the IR lowering), returns defaults — callers degrade gracefully.
+fn try_compile_ir(cached: &CachedParseResult<'_>) -> IrAnalysis {
     let ast = cached.ast.clone();
 
     // Reconstruct directive maps from the analysis-layer types.
@@ -633,16 +618,29 @@ fn try_compile_ir(cached: &CachedParseResult<'_>) -> HashMap<String, IrRuleMeta>
 
     let ir = match compile_ast(ast, &directives, &options) {
         Ok(ir) => ir,
-        Err(_) => return HashMap::new(),
+        Err(_) => return IrAnalysis::default(),
     };
 
     // Build a lookup from RuleId → TypeDesc.
     let type_map: HashMap<u32, &bbnf_ir::TypeDesc> =
         ir.types.iter().map(|(id, td)| (*id, td)).collect();
 
-    let mut result = HashMap::new();
+    let mut meta = HashMap::new();
+    let mut first_set_labels = HashMap::new();
+    let mut nullable_rules = HashSet::new();
+
     for rule in &ir.rules {
         let name = ir.get_string(rule.name).to_string();
+
+        // FIRST set label from IR metadata.
+        if !rule.meta.first_set.is_empty() {
+            first_set_labels.insert(name.clone(), format_charset_iter(rule.meta.first_set.iter()));
+        }
+
+        // Nullable from IR metadata.
+        if rule.meta.nullable {
+            nullable_rules.insert(name.clone());
+        }
 
         let follow_set_label = ir
             .follow_sets
@@ -651,7 +649,7 @@ fn try_compile_ir(cached: &CachedParseResult<'_>) -> HashMap<String, IrRuleMeta>
 
         let projected_type = type_map.get(&rule.id).map(|td| format_type_desc(td, &ir));
 
-        result.insert(
+        meta.insert(
             name,
             IrRuleMeta {
                 follow_set_label,
@@ -665,7 +663,41 @@ fn try_compile_ir(cached: &CachedParseResult<'_>) -> HashMap<String, IrRuleMeta>
         );
     }
 
-    result
+    // FIRST set conflict detection from IR Alt branches.
+    let mut first_set_conflicts = Vec::new();
+    for rule in &ir.rules {
+        let name = ir.get_string(rule.name).to_string();
+        if let bbnf_ir::IrNode::Alt(branches, _) = &rule.body {
+            let mut conflicts = Vec::new();
+            for i in 0..branches.len() {
+                for j in (i + 1)..branches.len() {
+                    if let (Some(fs_i), Some(fs_j)) =
+                        (&branches[i].first_set, &branches[j].first_set)
+                    {
+                        if !fs_i.is_disjoint(fs_j) {
+                            let overlap = fs_i.intersection(fs_j);
+                            conflicts.push(format!(
+                                "branches {} and {} overlap on {}",
+                                i,
+                                j,
+                                format_charset_iter(overlap.iter())
+                            ));
+                        }
+                    }
+                }
+            }
+            if !conflicts.is_empty() {
+                first_set_conflicts.push((name, conflicts));
+            }
+        }
+    }
+
+    IrAnalysis {
+        meta,
+        first_set_labels,
+        nullable_rules,
+        first_set_conflicts,
+    }
 }
 
 /// Format a set of byte values for display (e.g., `{'a', 'b', 0x0a}`).

@@ -2,8 +2,14 @@
 
 use std::collections::{HashMap, HashSet};
 
-use super::first_sets::unwrap_rule;
 use crate::types::{AST, Expression};
+
+fn unwrap_rule<'a>(expr: &'a Expression<'a>) -> &'a Expression<'a> {
+    match expr {
+        Expression::Rule(inner, _) => inner,
+        other => other,
+    }
+}
 
 /// Find rules whose RHS is simply a reference to another nonterminal.
 pub fn find_aliases<'a>(

@@ -2,7 +2,9 @@ mod common;
 
 use std::collections::{HashMap, HashSet};
 
-use bbnf::graph::{CharSet, Dependencies, regex_first_chars, tarjan_scc};
+use bbnf::graph::{Dependencies, tarjan_scc};
+use bbnf_ir::CharSet128 as CharSet;
+use bbnf_ir::regex_first::regex_first_chars;
 use common::nt;
 
 // -- CharSet tests --

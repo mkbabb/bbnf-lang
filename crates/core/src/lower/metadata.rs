@@ -6,10 +6,8 @@
 
 use bbnf_ir::{MemoStrategy, PrettyHints, RuleDirectives, RuleMeta};
 
-use crate::types::Expression;
-
 use super::LowerCtx;
-use super::expression::lower_expression;
+use super::expression::lower_rhs;
 
 /// Build rule metadata from analysis results.
 ///
@@ -17,18 +15,17 @@ use super::expression::lower_expression;
 /// expression, and token flag. Alias detection (`is_alias`), transparent
 /// alternation (`is_transparent`), and span eligibility (`span_eligible`) are
 /// left at their defaults -- they are computed by IR passes post-lowering.
-pub(crate) fn build_rule_meta<'a>(
-    lhs: &'a Expression<'a>,
+pub(crate) fn build_rule_meta(
     name: &str,
-    ctx: &mut LowerCtx<'a>,
+    ctx: &mut LowerCtx<'_>,
 ) -> RuleMeta {
     // FIRST set and nullability are populated by the IR CSP pass post-lowering.
     let first_set = bbnf_ir::CharSet128::new();
     let nullable = false;
 
     // SCC info.
-    let scc_id = ctx.scc_result.scc_index.get(lhs).map(|&id| id as u32);
-    let is_cyclic = ctx.cyclic_rules.contains(lhs);
+    let scc_id = ctx.scc_result.scc_index.get(name).map(|&id| id as u32);
+    let is_cyclic = ctx.cyclic_rules.contains(name);
 
     // Memoization strategy.
     let memo = if is_cyclic {
@@ -47,7 +44,7 @@ pub(crate) fn build_rule_meta<'a>(
     let recover = ctx.recovers.and_then(|r| r.get(name)).map(|sync_expr| {
         debug_assert!(!ctx.recovery_mode, "nested recovery_mode is a bug");
         ctx.recovery_mode = true;
-        let node = lower_expression(sync_expr, ctx);
+        let node = lower_rhs(sync_expr, ctx);
         ctx.recovery_mode = false;
         node
     });
@@ -96,14 +93,11 @@ fn lower_pretty_hints(hint_strs: &[String]) -> PrettyHints {
             "fast" => ph.fast = true,
             "off" => ph.off = true,
             _ => {
-                // Check for parameterized hints.
                 if let Some(sep) = bbnf_ir::parse_sep_hint(h) {
                     ph.sep = Some(sep.to_string());
                 } else if let Some(split) = bbnf_ir::parse_split_hint(h) {
                     ph.split = Some(split.to_string());
                 }
-                // Validation owns unknown-hint errors. `split("...")` is preserved
-                // so prettify codegen can surface the explicit unsupported-path error.
             }
         }
     }

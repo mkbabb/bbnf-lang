@@ -39,8 +39,7 @@ pub struct CachedParseResult<'a> {
 /// Both are extracted from a single parse call.
 pub fn parse_once(src: &str) -> (Option<CachedParseResult<'_>>, ParseDiagnostics) {
     let parse_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        let parser = grammar::parse();
-        parser.parse_return_state(src)
+        grammar::parse_with_state(src)
     }));
 
     match parse_result {

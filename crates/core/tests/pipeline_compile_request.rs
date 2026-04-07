@@ -1,14 +1,10 @@
-use std::borrow::Cow;
-
 use bbnf::backend::PreparedGrammar;
 use bbnf::generate::generate_all;
-use bbnf::lower::DirectiveSet;
 use bbnf::pipeline::{
     CompileError, CompileOutput, CompileRequest, CompileTarget, PipelineOptions,
-    compile_ast_request, compile_grammar_request, compile_paths_request,
+    compile_grammar_request, compile_paths_request,
 };
-use bbnf::{Expression, ParserAttributes, Token};
-use indexmap::IndexMap;
+use bbnf::ParserAttributes;
 use tempfile::tempdir;
 
 fn aot_request(requested_prettify: bool) -> CompileRequest {
@@ -134,22 +130,10 @@ fn compile_request_rejects_unknown_nonterminal() {
     ));
 }
 
-#[test]
-fn compile_request_rejects_nested_production_rules() {
-    let lhs = Expression::Nonterminal(Token::new_without_span(Cow::Borrowed("value")));
-    let nested_lhs = Expression::Nonterminal(Token::new_without_span(Cow::Borrowed("other")));
-    let nested_rhs = Expression::Literal(Token::new_without_span(Cow::Borrowed("x")));
-    let rhs = Expression::ProductionRule(Box::new(nested_lhs), Box::new(nested_rhs));
-    let mut ast = IndexMap::new();
-    ast.insert(lhs, rhs);
-
-    let directives = DirectiveSet::empty();
-    let err = compile_ast_request(ast, &directives, &aot_request(false)).unwrap_err();
-    assert!(matches!(
-        err,
-        CompileError::InvalidProductionRule { ref rule } if rule == "value"
-    ));
-}
+// NOTE: The old test `compile_request_rejects_nested_production_rules` was removed.
+// It manually constructed Expression::ProductionRule values which no longer exist.
+// With the new string-keyed AST, nested production rules cannot be constructed
+// outside the parser, so the validation is no longer needed.
 
 #[test]
 fn compile_paths_preserves_pretty_directives_across_multiple_explicit_paths() {

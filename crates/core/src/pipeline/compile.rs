@@ -2,16 +2,17 @@ use std::path::PathBuf;
 
 use bbnf_ir::GrammarIR;
 
+use crate::grammar;
+use crate::grammar::generated::BbnfBootstrapEnum;
 use crate::graph::{tarjan_scc, topological_sort_scc};
 use crate::backend::prepare_grammar;
-use crate::grammar;
 use crate::lower::{DirectiveSet, lower_to_ir};
 use crate::pipeline::directives::{DirectiveMaps, load_merged_paths};
 use crate::pipeline::validate::{validate_ast, validate_pretty_directives};
 use crate::pipeline::{
     CompileError, CompileOutput, CompileRequest, CompileTarget, PipelineOptions,
 };
-use crate::types::{AST, Expression, Token};
+use crate::types::AST;
 
 /// Compile a BBNF grammar source string to a VM-ready `GrammarIR`.
 ///
@@ -34,10 +35,8 @@ pub fn compile_grammar_request(
     source: &str,
     request: &CompileRequest,
 ) -> Result<CompileOutput, CompileError> {
-    let parser = grammar::parse();
-    let (parsed, _state) = parser.parse_return_state(source);
-    let parsed =
-        parsed.ok_or_else(|| CompileError::Parse("failed to parse grammar".to_string()))?;
+    let parsed = grammar::parse(source)
+        .ok_or_else(|| CompileError::Parse("failed to parse grammar".to_string()))?;
 
     if !parsed.imports.is_empty() {
         return Err(CompileError::Import(
@@ -207,29 +206,41 @@ pub fn compute_call_strategies(ir: &GrammarIR) -> Vec<crate::backend::CallStrate
 }
 
 /// Separate closure rules from the AST. Returns (closures, non-closure rules).
-fn partition_closures<'a>(ast: AST<'a>) -> (Vec<(String, Expression<'a>)>, AST<'a>) {
-    let mut closures: Vec<(String, Expression<'a>)> = Vec::new();
+fn partition_closures<'a>(
+    ast: AST<'a>,
+) -> (Vec<(&'a str, &'a BbnfBootstrapEnum<'a>)>, AST<'a>) {
+    let mut closures: Vec<(&'a str, &'a BbnfBootstrapEnum<'a>)> = Vec::new();
     let mut rules: AST<'a> = indexmap::IndexMap::new();
-    for (lhs, rhs) in ast {
-        // Check if the rule body (possibly inside a Rule wrapper) is a Closure.
-        let is_closure = match &rhs {
-            Expression::Rule(inner, _) => matches!(inner.as_ref(), Expression::Closure(_, _)),
-            Expression::Closure(_, _) => true,
-            _ => false,
-        };
-        if is_closure {
-            if let Expression::Nonterminal(Token { value, .. }) = &lhs {
-                let body = match rhs {
-                    Expression::Rule(inner, _) => *inner,
-                    other => other,
-                };
-                closures.push((value.to_string(), body));
-            }
+
+    for (&name, entry) in &ast {
+        if is_closure_rhs(entry.rhs) {
+            closures.push((name, entry.rhs));
         } else {
-            rules.insert(lhs, rhs);
+            rules.insert(name, entry.clone());
         }
     }
+
     (closures, rules)
+}
+
+/// Check if a bootstrap RHS node is a closure, unwrapping structural wrappers.
+fn is_closure_rhs(node: &BbnfBootstrapEnum<'_>) -> bool {
+    match node {
+        BbnfBootstrapEnum::closure(_) => true,
+        // Unwrap single-element alternation/concatenation wrappers.
+        BbnfBootstrapEnum::alternation(branches) if branches.len() == 1 => {
+            is_closure_rhs(branches[0].0)
+        }
+        BbnfBootstrapEnum::concatenation(parts) if parts.len() == 1 => {
+            is_closure_rhs(parts[0].0)
+        }
+        BbnfBootstrapEnum::binary_factor((first, rest)) if rest.is_empty() => {
+            is_closure_rhs(first)
+        }
+        BbnfBootstrapEnum::mapped_factor((inner, None)) => is_closure_rhs(inner),
+        BbnfBootstrapEnum::factor((None, inner, None, None)) => is_closure_rhs(inner),
+        _ => false,
+    }
 }
 
 fn compile_ast_common<'a>(
@@ -238,15 +249,10 @@ fn compile_ast_common<'a>(
     options: &PipelineOptions,
 ) -> GrammarIR {
     // Determine the entry rule name: use override if provided, otherwise last rule in source order.
-    let entry_rule_name: Option<String> = options.entry_rule.clone().or_else(|| {
-        ast.keys().last().and_then(|lhs| {
-            if let Expression::Nonterminal(tok) = lhs {
-                Some(tok.value.to_string())
-            } else {
-                None
-            }
-        })
-    });
+    let entry_rule_name: Option<String> = options
+        .entry_rule
+        .clone()
+        .or_else(|| ast.keys().last().map(|name| name.to_string()));
 
     // Partition AST: extract closure rules, keep the rest for graph analysis.
     // Closures are first-class grammar functions expanded inline during lowering.

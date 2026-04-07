@@ -1,26 +1,47 @@
 //! Tests for character-class-aware regex parsing in BBNF grammars.
 //! Verifies that `/` inside `[...]` is treated as literal, not as a closing delimiter.
 
-use bbnf::types::Expression;
+use bbnf::grammar;
 
 /// Extract the regex body string from a single-rule grammar `name = /pattern/ ;`.
+///
+/// The bootstrap AST stores the regex span including the `/` delimiters.
+/// We strip those to get the inner pattern.
 fn extract_regex(source: &str) -> String {
-    let source_static: &'static str = Box::leak(source.to_string().into_boxed_str());
-    let ast = bbnf::grammar::parse()
-        .parse(source_static)
-        .expect("failed to parse grammar")
-        .rules;
-    let (_, rhs) = ast.into_iter().next().expect("expected at least one rule");
+    let pg = grammar::parse(source).expect("failed to parse grammar");
+    let (_name, entry) = pg.rules.into_iter().next().expect("expected at least one rule");
 
-    // grammar() yields ProductionRule(lhs, Rule(expr, mapping_fn)).
-    // After destructuring in grammar(), rhs = Rule(expr, mapping_fn).
-    match rhs {
-        Expression::Rule(inner, _) => match *inner {
-            Expression::Regex(token) => token.span.as_str().to_string(),
-            other => panic!("expected Regex inside Rule, got: {:?}", other),
-        },
-        other => panic!("expected Rule expression, got: {:?}", other),
+    // The RHS of a simple regex rule is a regex node whose span includes the `/` delimiters.
+    // Walk through the bootstrap AST to find the regex span.
+    fn find_regex_span<'a>(node: &'a bbnf::grammar::generated::BbnfBootstrapEnum<'a>) -> &'a str {
+        use bbnf::grammar::generated::BbnfBootstrapEnum;
+        match node {
+            BbnfBootstrapEnum::regex(span) => {
+                let s = span.as_str();
+                if s.starts_with('/') && s.ends_with('/') {
+                    &s[1..s.len() - 1]
+                } else {
+                    s
+                }
+            }
+            // Unwrap structural wrappers to find the regex.
+            BbnfBootstrapEnum::alternation(branches) if branches.len() == 1 => {
+                find_regex_span(branches[0].0)
+            }
+            BbnfBootstrapEnum::concatenation(parts) if parts.len() == 1 => {
+                find_regex_span(parts[0].0)
+            }
+            BbnfBootstrapEnum::binary_factor((first, rest)) if rest.is_empty() => {
+                find_regex_span(first)
+            }
+            BbnfBootstrapEnum::mapped_factor((inner, _)) => find_regex_span(inner),
+            BbnfBootstrapEnum::factor((_, term, _, _)) => find_regex_span(term),
+            BbnfBootstrapEnum::term(inner) => find_regex_span(inner),
+            _ => panic!("expected regex in rule RHS, got: {:?}", std::mem::discriminant(node)),
+        }
     }
+
+    find_regex_span(entry.rhs).to_string()
 }
 
 #[test]
@@ -102,16 +123,8 @@ a = "x" ;
 b = ("," , /[^)]+/) ;
 c = "y" ;
 "#;
-    let source_static: &'static str = Box::leak(source.to_string().into_boxed_str());
-    let parser = bbnf::grammar::parse();
-    let ast = parser.parse(source_static).expect("grammar parse failed").rules;
-    let rule_names: Vec<&str> = ast
-        .keys()
-        .filter_map(|e| match e {
-            Expression::Nonterminal(tok) => Some(tok.value.as_ref()),
-            _ => None,
-        })
-        .collect();
+    let pg = grammar::parse(source).expect("grammar parse failed");
+    let rule_names: Vec<&str> = pg.rules.keys().copied().collect();
     assert!(
         rule_names.contains(&"c"),
         "rule 'c' not found — parser stopped at regex with ) in char class. Found: {:?}",

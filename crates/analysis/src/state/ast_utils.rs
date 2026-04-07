@@ -1,9 +1,8 @@
 use std::collections::{HashMap, HashSet};
 
-use bbnf::graph::get_nonterminal_name;
-use bbnf::types::Expression;
+use bbnf::grammar::generated::BbnfBootstrapEnum;
 
-use super::types::{ReferenceInfo, RuleInfo, SemanticTokenInfo, token_types};
+use super::types::{token_types, ReferenceInfo, RuleInfo, SemanticTokenInfo};
 
 /// Format a byte as a display-friendly character for inlay hints.
 pub fn format_char(b: u8) -> String {
@@ -19,291 +18,617 @@ pub fn format_char(b: u8) -> String {
     }
 }
 
-
 /// Check if a rule RHS is effectively empty (epsilon only).
-pub fn is_empty_rhs(expr: &Expression<'_>) -> bool {
-    match expr {
-        Expression::Epsilon(_) => true,
-        Expression::Rule(rhs, _) => is_empty_rhs(rhs),
+pub fn is_empty_rhs(node: &BbnfBootstrapEnum<'_>) -> bool {
+    match node {
+        BbnfBootstrapEnum::term_0(_) => true,
+        // Unwrap structural wrappers
+        BbnfBootstrapEnum::term(inner) => is_empty_rhs(inner),
+        BbnfBootstrapEnum::factor((_, inner, None, _)) => is_empty_rhs(inner),
+        BbnfBootstrapEnum::mapped_factor((inner, None)) => is_empty_rhs(inner),
+        BbnfBootstrapEnum::binary_factor((first, rest)) if rest.is_empty() => is_empty_rhs(first),
+        BbnfBootstrapEnum::concatenation(parts) if parts.len() == 1 => is_empty_rhs(parts[0].0),
+        BbnfBootstrapEnum::alternation(branches) if branches.len() == 1 => {
+            is_empty_rhs(branches[0].0)
+        }
         _ => false,
     }
 }
 
 /// Public wrapper for `compute_expression_end` (used by selection_range).
-pub fn compute_expression_end_pub(expr: &Expression<'_>) -> Option<usize> {
-    compute_expression_end(expr)
+pub fn compute_expression_end_pub(node: &BbnfBootstrapEnum<'_>) -> Option<usize> {
+    compute_expression_end(node)
 }
 
-/// Recursively collect nonterminal references from an expression.
-pub fn collect_references(expr: &Expression<'_>, refs: &mut Vec<ReferenceInfo>) {
-    match expr {
-        Expression::Nonterminal(tok) => {
+/// Recursively collect nonterminal references from a bootstrap AST node.
+pub fn collect_references(node: &BbnfBootstrapEnum<'_>, refs: &mut Vec<ReferenceInfo>) {
+    match node {
+        // Leaf: identifier reference
+        BbnfBootstrapEnum::identifier(s) => {
             refs.push(ReferenceInfo {
-                name: tok.value.to_string(),
-                span: (tok.span.start, tok.span.end),
+                name: s.as_str().to_string(),
+                span: (s.start, s.end),
             });
         }
-        Expression::Alternation(inner) | Expression::Concatenation(inner) => {
-            for child in inner.inner() {
-                collect_references(child, refs);
-            }
-        }
-        Expression::Skip(l, r) | Expression::Next(l, r) | Expression::Minus(l, r) => {
-            collect_references(l.inner(), refs);
-            collect_references(r.inner(), refs);
-        }
-        Expression::Group(inner)
-        | Expression::Optional(inner)
-        | Expression::Many(inner)
-        | Expression::Many1(inner)
-        | Expression::OptionalWhitespace(inner)
-        | Expression::SpanCapture(inner) => {
-            collect_references(inner.inner(), refs);
-        }
-        Expression::Rule(rhs, _) => {
-            collect_references(rhs, refs);
-        }
-        Expression::MappedExpression(expr_tok, _) => {
-            collect_references(expr_tok.inner(), refs);
-        }
-        Expression::DebugExpression((expr_tok, _)) => {
-            collect_references(expr_tok.inner(), refs);
-        }
-        Expression::Closure(_params, body) => {
-            collect_references(body.inner(), refs);
-        }
-        Expression::GrammarCall(name_tok, args) => {
+
+        // term_1: identifier + optional call args
+        BbnfBootstrapEnum::term_1((ident, call_args)) => {
             refs.push(ReferenceInfo {
-                name: name_tok.value.to_string(),
-                span: (name_tok.span.start, name_tok.span.end),
+                name: ident.as_str().to_string(),
+                span: (ident.start, ident.end),
             });
-            for arg in args {
-                collect_references(arg, refs);
+            if let Some((_open, first_arg, rest_args, _close)) = call_args {
+                collect_references(first_arg, refs);
+                for (_comma, arg) in *rest_args {
+                    collect_references(arg, refs);
+                }
             }
         }
+
+        // Structural: alternation, concatenation
+        BbnfBootstrapEnum::alternation(branches) => {
+            for (branch, _pipe) in *branches {
+                collect_references(branch, refs);
+            }
+        }
+        BbnfBootstrapEnum::concatenation(parts) => {
+            for (part, _comma) in *parts {
+                collect_references(part, refs);
+            }
+        }
+
+        // Binary factor: first + [(op, operand)]
+        BbnfBootstrapEnum::binary_factor((first, rest)) => {
+            collect_references(first, refs);
+            for (_, operand) in *rest {
+                collect_references(operand, refs);
+            }
+        }
+
+        // Mapped factor: inner + optional mapping
+        BbnfBootstrapEnum::mapped_factor((inner, _mapping)) => {
+            collect_references(inner, refs);
+        }
+
+        // Factor: (comment?, term, modifier?, comment?)
+        BbnfBootstrapEnum::factor((_, term, _, _)) => {
+            collect_references(term, refs);
+        }
+
+        // Term variants
+        BbnfBootstrapEnum::term(inner) => {
+            collect_references(inner, refs);
+        }
+        BbnfBootstrapEnum::term_2((_open, inner, _close)) => {
+            collect_references(inner, refs);
+        }
+
+        // Closure: |params| body
+        BbnfBootstrapEnum::closure((_pipe, _params, _pipe2, body)) => {
+            collect_references(body, refs);
+        }
+
+        // Terminals: literal, regex, modifier, epsilon, comments — no refs
+        BbnfBootstrapEnum::literal(_)
+        | BbnfBootstrapEnum::regex(_)
+        | BbnfBootstrapEnum::modifier(_)
+        | BbnfBootstrapEnum::term_0(_)
+        | BbnfBootstrapEnum::comment(_)
+        | BbnfBootstrapEnum::big_comment(_)
+        | BbnfBootstrapEnum::binary_operators(_) => {}
+
+        // Value expression variants — no grammar nonterminal refs
+        BbnfBootstrapEnum::value_or(_)
+        | BbnfBootstrapEnum::value_and(_)
+        | BbnfBootstrapEnum::value_cmp(_)
+        | BbnfBootstrapEnum::value_add(_)
+        | BbnfBootstrapEnum::value_mul(_)
+        | BbnfBootstrapEnum::value_unary(_)
+        | BbnfBootstrapEnum::value_unary_0(_)
+        | BbnfBootstrapEnum::value_atom(_)
+        | BbnfBootstrapEnum::value_atom_0(_)
+        | BbnfBootstrapEnum::value_input(_)
+        | BbnfBootstrapEnum::value_fn_call(_)
+        | BbnfBootstrapEnum::value_closure(_)
+        | BbnfBootstrapEnum::int_lit(_)
+        | BbnfBootstrapEnum::float_lit(_)
+        | BbnfBootstrapEnum::bool_lit(_)
+        | BbnfBootstrapEnum::string_lit(_)
+        | BbnfBootstrapEnum::value_ident(_)
+        | BbnfBootstrapEnum::type_annotation(_)
+        | BbnfBootstrapEnum::type_name(_)
+        | BbnfBootstrapEnum::cmp_op(_)
+        | BbnfBootstrapEnum::mul_op(_)
+        | BbnfBootstrapEnum::add_op(_) => {}
+
+        // Directive variants — no grammar nonterminal refs
+        BbnfBootstrapEnum::import_directive(_)
+        | BbnfBootstrapEnum::import_directive_0(_)
+        | BbnfBootstrapEnum::import_path(_)
+        | BbnfBootstrapEnum::import_items(_)
+        | BbnfBootstrapEnum::recover_directive(_)
+        | BbnfBootstrapEnum::pretty_directive(_)
+        | BbnfBootstrapEnum::pretty_directive_0(_)
+        | BbnfBootstrapEnum::ws_directive(_)
+        | BbnfBootstrapEnum::token_directive(_)
+        | BbnfBootstrapEnum::debug_directive(_)
+        | BbnfBootstrapEnum::debug_directive_0(_)
+        | BbnfBootstrapEnum::host_directive(_) => {}
+
+        // Grammar/rule level — should not appear inside rule RHS
+        BbnfBootstrapEnum::grammar(_)
+        | BbnfBootstrapEnum::rule(_)
+        | BbnfBootstrapEnum::directive(_) => {}
+
+        // Phantom + catch-all
         _ => {}
     }
 }
 
-/// Collect semantic tokens from an expression tree.
-pub fn collect_semantic_tokens(expr: &Expression<'_>, tokens: &mut Vec<SemanticTokenInfo>) {
-    match expr {
-        Expression::Nonterminal(tok) => {
+/// Collect semantic tokens from a bootstrap AST node.
+pub fn collect_semantic_tokens(node: &BbnfBootstrapEnum<'_>, tokens: &mut Vec<SemanticTokenInfo>) {
+    match node {
+        // Identifier — nonterminal reference
+        BbnfBootstrapEnum::identifier(s) => {
             tokens.push(SemanticTokenInfo {
-                span: (tok.span.start, tok.span.end),
+                span: (s.start, s.end),
                 token_type: token_types::RULE_REFERENCE,
             });
         }
-        Expression::Literal(tok) => {
+
+        // term_1: identifier + optional call args
+        BbnfBootstrapEnum::term_1((ident, call_args)) => {
             tokens.push(SemanticTokenInfo {
-                span: (tok.span.start, tok.span.end),
+                span: (ident.start, ident.end),
+                token_type: token_types::RULE_REFERENCE,
+            });
+            if let Some((_open, first_arg, rest_args, _close)) = call_args {
+                collect_semantic_tokens(first_arg, tokens);
+                for (_comma, arg) in *rest_args {
+                    collect_semantic_tokens(arg, tokens);
+                }
+            }
+        }
+
+        // Literals
+        BbnfBootstrapEnum::literal(s) => {
+            tokens.push(SemanticTokenInfo {
+                span: (s.start, s.end),
                 token_type: token_types::STRING,
             });
         }
-        Expression::Regex(tok) => {
+
+        // Regex
+        BbnfBootstrapEnum::regex(s) => {
             tokens.push(SemanticTokenInfo {
-                span: (tok.span.start, tok.span.end),
+                span: (s.start, s.end),
                 token_type: token_types::REGEXP,
             });
         }
-        Expression::Epsilon(tok) => {
+
+        // Epsilon
+        BbnfBootstrapEnum::term_0(s) => {
             tokens.push(SemanticTokenInfo {
-                span: (tok.span.start, tok.span.end),
+                span: (s.start, s.end),
                 token_type: token_types::KEYWORD,
             });
         }
-        Expression::Alternation(inner) | Expression::Concatenation(inner) => {
-            for child in inner.inner() {
-                collect_semantic_tokens(child, tokens);
+
+        // Structural: alternation, concatenation
+        BbnfBootstrapEnum::alternation(branches) => {
+            for (branch, _pipe) in *branches {
+                collect_semantic_tokens(branch, tokens);
             }
         }
-        Expression::Skip(l, r) | Expression::Next(l, r) | Expression::Minus(l, r) => {
-            collect_semantic_tokens(l.inner(), tokens);
-            collect_semantic_tokens(r.inner(), tokens);
-        }
-        Expression::Group(inner)
-        | Expression::Optional(inner)
-        | Expression::Many(inner)
-        | Expression::Many1(inner)
-        | Expression::OptionalWhitespace(inner)
-        | Expression::SpanCapture(inner) => {
-            collect_semantic_tokens(inner.inner(), tokens);
-        }
-        Expression::Rule(rhs, _) => {
-            collect_semantic_tokens(rhs, tokens);
-        }
-        Expression::MappedExpression(expr_tok, _) => {
-            collect_semantic_tokens(expr_tok.inner(), tokens);
-        }
-        Expression::DebugExpression((expr_tok, _)) => {
-            collect_semantic_tokens(expr_tok.inner(), tokens);
-        }
-        Expression::Closure(_params, body) => {
-            collect_semantic_tokens(body.inner(), tokens);
-        }
-        Expression::GrammarCall(name_tok, args) => {
-            tokens.push(SemanticTokenInfo {
-                span: (name_tok.span.start, name_tok.span.end),
-                token_type: token_types::RULE_REFERENCE,
-            });
-            for arg in args {
-                collect_semantic_tokens(arg, tokens);
+        BbnfBootstrapEnum::concatenation(parts) => {
+            for (part, _comma) in *parts {
+                collect_semantic_tokens(part, tokens);
             }
         }
+
+        // Binary factor
+        BbnfBootstrapEnum::binary_factor((first, rest)) => {
+            collect_semantic_tokens(first, tokens);
+            for (_, operand) in *rest {
+                collect_semantic_tokens(operand, tokens);
+            }
+        }
+
+        // Mapped factor
+        BbnfBootstrapEnum::mapped_factor((inner, _mapping)) => {
+            collect_semantic_tokens(inner, tokens);
+        }
+
+        // Factor
+        BbnfBootstrapEnum::factor((_, term, _, _)) => {
+            collect_semantic_tokens(term, tokens);
+        }
+
+        // Term variants
+        BbnfBootstrapEnum::term(inner) => {
+            collect_semantic_tokens(inner, tokens);
+        }
+        BbnfBootstrapEnum::term_2((_open, inner, _close)) => {
+            collect_semantic_tokens(inner, tokens);
+        }
+
+        // Closure
+        BbnfBootstrapEnum::closure((_pipe, _params, _pipe2, body)) => {
+            collect_semantic_tokens(body, tokens);
+        }
+
+        // Everything else — no tokens to emit
         _ => {}
     }
 }
 
-/// Compute the end byte offset of an expression.
-pub fn compute_expression_end(expr: &Expression<'_>) -> Option<usize> {
-    match expr {
-        Expression::Literal(tok) | Expression::Nonterminal(tok) | Expression::Regex(tok) => {
-            Some(tok.span.end)
+/// Compute the end byte offset of a bootstrap AST node.
+pub fn compute_expression_end(node: &BbnfBootstrapEnum<'_>) -> Option<usize> {
+    match node {
+        // Span leaves
+        BbnfBootstrapEnum::identifier(s)
+        | BbnfBootstrapEnum::literal(s)
+        | BbnfBootstrapEnum::regex(s)
+        | BbnfBootstrapEnum::term_0(s)
+        | BbnfBootstrapEnum::modifier(s)
+        | BbnfBootstrapEnum::binary_operators(s)
+        | BbnfBootstrapEnum::comment(s)
+        | BbnfBootstrapEnum::big_comment(s) => Some(s.end),
+
+        // Alternation: end of last branch's pipe separator
+        BbnfBootstrapEnum::alternation(branches) => {
+            branches.last().map(|(branch, pipe)| {
+                // Use the pipe separator end if it's non-empty, otherwise the branch end
+                if pipe.end > pipe.start {
+                    pipe.end
+                } else {
+                    compute_expression_end(branch).unwrap_or(pipe.end)
+                }
+            })
         }
-        Expression::Epsilon(tok) => Some(tok.span.end),
-        Expression::Alternation(inner) | Expression::Concatenation(inner) => inner
-            .inner()
-            .last()
-            .and_then(|e| compute_expression_end(e))
-            .or(Some(inner.span.end)),
-        Expression::Skip(_, r) | Expression::Next(_, r) | Expression::Minus(_, r) => {
-            compute_expression_end(r.inner()).or(Some(r.span.end))
-        }
-        Expression::Group(inner)
-        | Expression::Optional(inner)
-        | Expression::Many(inner)
-        | Expression::Many1(inner)
-        | Expression::OptionalWhitespace(inner)
-        | Expression::SpanCapture(inner) => Some(inner.span.end),
-        Expression::Rule(rhs, arrow) => {
-            if let Some(a) = arrow {
-                Some(a.span.end)
+
+        // Concatenation: end of last part's comma separator
+        BbnfBootstrapEnum::concatenation(parts) => parts.last().map(|(part, comma)| {
+            if comma.end > comma.start {
+                comma.end
             } else {
-                compute_expression_end(rhs)
+                compute_expression_end(part).unwrap_or(comma.end)
+            }
+        }),
+
+        // Binary factor: end of last operand, or first if no rest
+        BbnfBootstrapEnum::binary_factor((first, rest)) => {
+            if let Some((_, last_operand)) = rest.last() {
+                compute_expression_end(last_operand)
+            } else {
+                compute_expression_end(first)
             }
         }
-        Expression::ProductionRule(_, rhs) => compute_expression_end(rhs),
-        Expression::MappedExpression(_, arrow) => Some(arrow.span.end),
-        Expression::DebugExpression((expr_tok, _)) => compute_expression_end(expr_tok.inner()),
-        Expression::Closure(_params, body) => Some(body.span.end),
-        Expression::GrammarCall(name_tok, args) => {
-            if let Some(last) = args.last() {
+
+        // Mapped factor: end of mapping if present, else inner
+        BbnfBootstrapEnum::mapped_factor((inner, mapping)) => {
+            if let Some((_arrow, (value_expr, type_ann))) = mapping {
+                if let Some(ta) = type_ann {
+                    compute_expression_end(ta)
+                } else {
+                    compute_expression_end(value_expr)
+                }
+            } else {
+                compute_expression_end(inner)
+            }
+        }
+
+        // Factor: rightmost non-None component
+        BbnfBootstrapEnum::factor((_, term, modifier, trailing_comment)) => {
+            if let Some(tc) = trailing_comment {
+                compute_expression_end(tc)
+            } else if let Some(m) = modifier {
+                compute_expression_end(m)
+            } else {
+                compute_expression_end(term)
+            }
+        }
+
+        // Term: delegate to inner
+        BbnfBootstrapEnum::term(inner) => compute_expression_end(inner),
+
+        // term_1: identifier + optional call
+        BbnfBootstrapEnum::term_1((ident, call_args)) => {
+            if let Some((_open, _first, _rest, close)) = call_args {
+                Some(close.end)
+            } else {
+                Some(ident.end)
+            }
+        }
+
+        // term_2: grouped (open, inner, close)
+        BbnfBootstrapEnum::term_2((_open, _inner, close)) => Some(close.end),
+
+        // Closure: end of body
+        BbnfBootstrapEnum::closure((_pipe, _params, _pipe2, body)) => compute_expression_end(body),
+
+        // Value expression leaves
+        BbnfBootstrapEnum::int_lit(s)
+        | BbnfBootstrapEnum::float_lit(s)
+        | BbnfBootstrapEnum::bool_lit(s)
+        | BbnfBootstrapEnum::string_lit(s)
+        | BbnfBootstrapEnum::value_ident(s) => Some(s.end),
+
+        // Value expression compounds — recurse to find end
+        BbnfBootstrapEnum::value_or((first, rest))
+        | BbnfBootstrapEnum::value_and((first, rest)) => {
+            if let Some((_, last)) = rest.last() {
                 compute_expression_end(last)
             } else {
-                Some(name_tok.span.end)
+                compute_expression_end(first)
             }
         }
+        BbnfBootstrapEnum::value_cmp((first, rest))
+        | BbnfBootstrapEnum::value_add((first, rest))
+        | BbnfBootstrapEnum::value_mul((first, rest)) => {
+            if let Some((_, last)) = rest.last() {
+                compute_expression_end(last)
+            } else {
+                compute_expression_end(first)
+            }
+        }
+        BbnfBootstrapEnum::value_unary(inner) | BbnfBootstrapEnum::value_atom(inner) => {
+            compute_expression_end(inner)
+        }
+        BbnfBootstrapEnum::value_unary_0((_op, inner)) => compute_expression_end(inner),
+        BbnfBootstrapEnum::value_atom_0((_open, _inner, close)) => Some(close.end),
+        BbnfBootstrapEnum::value_fn_call((_name, _args, close)) => Some(close.end),
+        BbnfBootstrapEnum::value_input((ident, props)) => {
+            if let Some((_, last)) = props.last() {
+                compute_expression_end(last)
+            } else {
+                Some(ident.end)
+            }
+        }
+        BbnfBootstrapEnum::value_closure((_pipe, _params, _pipe2, body)) => {
+            compute_expression_end(body)
+        }
+        BbnfBootstrapEnum::type_annotation((_colon, ty)) => compute_expression_end(ty),
+        BbnfBootstrapEnum::type_name(s) => Some(s.end),
+
+        // Directives, grammar-level — shouldn't appear in RHS but handle gracefully
+        _ => None,
     }
 }
 
-/// Quick one-line formatting of an expression for hover text.
-pub fn format_expression_short(expr: &Expression<'_>) -> String {
-    match expr {
-        Expression::Literal(tok) => format!("\"{}\"", tok.value),
-        Expression::Nonterminal(tok) => tok.value.to_string(),
-        Expression::Regex(tok) => format!("/{}/", tok.value),
-        Expression::Epsilon(_) => "\u{03b5}".into(),
-        Expression::Group(inner) => {
-            format!("({})", format_expression_short(inner.inner()))
-        }
-        Expression::Optional(inner) => {
-            format!("[{}]", format_expression_short(inner.inner()))
-        }
-        Expression::OptionalWhitespace(inner) => {
-            format!("{}?w", format_expression_short(inner.inner()))
-        }
-        Expression::SpanCapture(inner) => {
-            format!("@{{{}}}", format_expression_short(inner.inner()))
-        }
-        Expression::Many(inner) => {
-            format!("{{{}}}", format_expression_short(inner.inner()))
-        }
-        Expression::Many1(inner) => {
-            format!("{}+", format_expression_short(inner.inner()))
-        }
-        Expression::Skip(l, r) => {
-            format!(
-                "{} << {}",
-                format_expression_short(l.inner()),
-                format_expression_short(r.inner())
-            )
-        }
-        Expression::Next(l, r) => {
-            format!(
-                "{} >> {}",
-                format_expression_short(l.inner()),
-                format_expression_short(r.inner())
-            )
-        }
-        Expression::Minus(l, r) => {
-            format!(
-                "{} - {}",
-                format_expression_short(l.inner()),
-                format_expression_short(r.inner())
-            )
-        }
-        Expression::Concatenation(inner) => inner
-            .inner()
+/// Quick one-line formatting of a bootstrap AST node for hover text.
+pub fn format_expression_short(node: &BbnfBootstrapEnum<'_>) -> String {
+    match node {
+        BbnfBootstrapEnum::identifier(s) => s.as_str().to_string(),
+        BbnfBootstrapEnum::literal(s) => s.as_str().to_string(),
+        BbnfBootstrapEnum::regex(s) => s.as_str().to_string(),
+        BbnfBootstrapEnum::term_0(_) => "\u{03b5}".into(),
+
+        BbnfBootstrapEnum::alternation(branches) => branches
             .iter()
-            .map(|e| format_expression_short(e))
-            .collect::<Vec<_>>()
-            .join(", "),
-        Expression::Alternation(inner) => inner
-            .inner()
-            .iter()
-            .map(|e| format_expression_short(e))
+            .map(|(branch, _)| format_expression_short(branch))
             .collect::<Vec<_>>()
             .join(" | "),
-        Expression::Rule(rhs, _) => format_expression_short(rhs),
-        Expression::ProductionRule(lhs, rhs) => {
+
+        BbnfBootstrapEnum::concatenation(parts) => parts
+            .iter()
+            .map(|(part, _)| format_expression_short(part))
+            .collect::<Vec<_>>()
+            .join(", "),
+
+        BbnfBootstrapEnum::binary_factor((first, rest)) => {
+            if rest.is_empty() {
+                format_expression_short(first)
+            } else {
+                let mut s = format_expression_short(first);
+                for (op, operand) in *rest {
+                    s.push_str(&format!(
+                        " {} {}",
+                        format_expression_short(op),
+                        format_expression_short(operand)
+                    ));
+                }
+                s
+            }
+        }
+
+        BbnfBootstrapEnum::mapped_factor((inner, mapping)) => {
+            let inner_str = format_expression_short(inner);
+            if let Some((_arrow, (value_expr, type_ann))) = mapping {
+                let val_str = format_value_expr_short(value_expr);
+                if let Some(ta) = type_ann {
+                    format!(
+                        "{} -> {} : {}",
+                        inner_str,
+                        val_str,
+                        format_value_expr_short(ta)
+                    )
+                } else {
+                    format!("{} -> {}", inner_str, val_str)
+                }
+            } else {
+                inner_str
+            }
+        }
+
+        BbnfBootstrapEnum::factor((_comment, term, modifier, _trailing)) => {
+            let term_str = format_expression_short(term);
+            if let Some(m) = modifier {
+                format!("{}{}", term_str, format_expression_short(m))
+            } else {
+                term_str
+            }
+        }
+
+        BbnfBootstrapEnum::term(inner) => format_expression_short(inner),
+
+        BbnfBootstrapEnum::term_1((ident, call_args)) => {
+            if let Some((_open, first_arg, rest_args, _close)) = call_args {
+                let mut args = vec![format_expression_short(first_arg)];
+                for (_comma, arg) in *rest_args {
+                    args.push(format_expression_short(arg));
+                }
+                format!("{}({})", ident.as_str(), args.join(", "))
+            } else {
+                ident.as_str().to_string()
+            }
+        }
+
+        BbnfBootstrapEnum::term_2((open, inner, _close)) => {
+            let inner_str = format_expression_short(inner);
+            let bracket = open.as_str();
+            match bracket {
+                "(" => format!("({})", inner_str),
+                "[" => format!("[{}]", inner_str),
+                "{" => format!("{{{}}}", inner_str),
+                _ => format!("({})", inner_str),
+            }
+        }
+
+        BbnfBootstrapEnum::modifier(s) => s.as_str().to_string(),
+        BbnfBootstrapEnum::binary_operators(s) => s.as_str().to_string(),
+
+        BbnfBootstrapEnum::closure((pipe_and_first, rest_params, _pipe2, body)) => {
+            // The generated parser folds "|" + first identifier into a single Span,
+            // then the rest params are (comma, identifier)* pairs.
+            // Extract the first param name by stripping the leading "|".
+            let first_name = pipe_and_first.as_str().trim_start_matches('|').trim();
+            let mut param_names: Vec<&str> = vec![first_name];
+            for (_comma, p) in *rest_params {
+                if let BbnfBootstrapEnum::identifier(s) = p {
+                    param_names.push(s.as_str());
+                }
+            }
             format!(
-                "{} = {}",
-                format_expression_short(lhs),
-                format_expression_short(rhs)
+                "|{}| {}",
+                param_names.join(", "),
+                format_expression_short(body)
             )
         }
-        Expression::MappedExpression(expr_tok, arrow) => {
-            format!("{} -> {}", format_expression_short(expr_tok.inner()), format_value_expr_short(&arrow.expr))
-        }
-        Expression::DebugExpression((expr_tok, _)) => format_expression_short(expr_tok.inner()),
-        Expression::Closure(params, body) => {
-            let params_str: Vec<&str> = params.iter().map(|p| p.value.as_ref()).collect();
-            format!("|{}| {}", params_str.join(", "), format_expression_short(body.inner()))
-        }
-        Expression::GrammarCall(name_tok, args) => {
-            let args_str: Vec<String> = args.iter().map(|a| format_expression_short(a)).collect();
-            format!("{}({})", name_tok.value, args_str.join(", "))
-        }
+
+        // Value expression formatting
+        BbnfBootstrapEnum::int_lit(s)
+        | BbnfBootstrapEnum::float_lit(s)
+        | BbnfBootstrapEnum::bool_lit(s)
+        | BbnfBootstrapEnum::string_lit(s)
+        | BbnfBootstrapEnum::value_ident(s) => s.as_str().to_string(),
+
+        BbnfBootstrapEnum::comment(_) | BbnfBootstrapEnum::big_comment(_) => String::new(),
+
+        _ => "...".into(),
     }
 }
 
 /// Quick formatting of a value expression for hover text.
-pub fn format_value_expr_short(expr: &bbnf::ValueExpr<'_>) -> String {
-    use bbnf::ValueExpr;
-    match expr {
-        ValueExpr::IntLit(tok) | ValueExpr::FloatLit(tok) => tok.value.to_string(),
-        ValueExpr::BoolLit(tok) => if tok.value { "true" } else { "false" }.into(),
-        ValueExpr::StringLit(tok) => format!("\"{}\"", tok.value),
-        ValueExpr::Input(_) => "input".into(),
-        ValueExpr::InputProp(_, prop) => format!("input.{}", prop.value),
-        ValueExpr::Ident(tok) => tok.value.to_string(),
-        ValueExpr::FnCall(name, args) => {
-            let args_str: Vec<String> = args.iter().map(|a| format_value_expr_short(a)).collect();
-            format!("{}({})", name.value, args_str.join(", "))
+pub fn format_value_expr_short(node: &BbnfBootstrapEnum<'_>) -> String {
+    match node {
+        BbnfBootstrapEnum::int_lit(s)
+        | BbnfBootstrapEnum::float_lit(s)
+        | BbnfBootstrapEnum::bool_lit(s)
+        | BbnfBootstrapEnum::string_lit(s)
+        | BbnfBootstrapEnum::value_ident(s) => s.as_str().to_string(),
+
+        BbnfBootstrapEnum::value_input((ident, props)) => {
+            if props.is_empty() {
+                ident.as_str().to_string()
+            } else {
+                let mut s = ident.as_str().to_string();
+                for (_dot, prop) in *props {
+                    s.push('.');
+                    s.push_str(&format_value_expr_short(prop));
+                }
+                s
+            }
         }
-        ValueExpr::BinOp(op, lhs, rhs) => {
-            format!("{} {} {}", format_value_expr_short(lhs), op, format_value_expr_short(rhs))
+
+        BbnfBootstrapEnum::value_fn_call((name, args, _close)) => {
+            if let Some((first, rest)) = args {
+                let mut arg_strs = vec![format_value_expr_short(first)];
+                for (_comma, arg) in *rest {
+                    arg_strs.push(format_value_expr_short(arg));
+                }
+                format!("{}({})", name.as_str(), arg_strs.join(", "))
+            } else {
+                format!("{}()", name.as_str())
+            }
         }
-        ValueExpr::UnaryOp(op, inner) => {
-            format!("{}{}", op, format_value_expr_short(inner))
+
+        BbnfBootstrapEnum::value_or((first, rest))
+        | BbnfBootstrapEnum::value_and((first, rest)) => {
+            if rest.is_empty() {
+                format_value_expr_short(first)
+            } else {
+                let mut s = format_value_expr_short(first);
+                for (op, operand) in *rest {
+                    s.push_str(&format!(
+                        " {} {}",
+                        op.as_str(),
+                        format_value_expr_short(operand)
+                    ));
+                }
+                s
+            }
         }
-        ValueExpr::Paren(inner) => {
+
+        BbnfBootstrapEnum::value_cmp((first, rest))
+        | BbnfBootstrapEnum::value_add((first, rest))
+        | BbnfBootstrapEnum::value_mul((first, rest)) => {
+            if rest.is_empty() {
+                format_value_expr_short(first)
+            } else {
+                let mut s = format_value_expr_short(first);
+                for (op, operand) in *rest {
+                    s.push_str(&format!(
+                        " {} {}",
+                        format_value_expr_short(op),
+                        format_value_expr_short(operand)
+                    ));
+                }
+                s
+            }
+        }
+
+        BbnfBootstrapEnum::value_unary(inner) | BbnfBootstrapEnum::value_atom(inner) => {
+            format_value_expr_short(inner)
+        }
+
+        BbnfBootstrapEnum::value_unary_0((op, inner)) => {
+            format!("{}{}", op.as_str(), format_value_expr_short(inner))
+        }
+
+        BbnfBootstrapEnum::value_atom_0((_open, inner, _close)) => {
             format!("({})", format_value_expr_short(inner))
         }
-        ValueExpr::Closure(params, body) => {
-            let params_str: Vec<&str> = params.iter().map(|p| p.value.as_ref()).collect();
-            format!("|{}| {}", params_str.join(", "), format_value_expr_short(body))
+
+        BbnfBootstrapEnum::value_closure((pipe_and_first, rest_params, _pipe2, body)) => {
+            // Same structure as grammar closure: first Span = "|" + first param,
+            // rest_params = (comma, identifier)* pairs.
+            let first_name = pipe_and_first.as_str().trim_start_matches('|').trim();
+            let mut param_names: Vec<&str> = vec![first_name];
+            for (_comma, p) in *rest_params {
+                if let BbnfBootstrapEnum::value_ident(s) = p {
+                    param_names.push(s.as_str());
+                } else if let BbnfBootstrapEnum::identifier(s) = p {
+                    param_names.push(s.as_str());
+                }
+            }
+            format!(
+                "|{}| {}",
+                param_names.join(", "),
+                format_value_expr_short(body)
+            )
         }
+
+        BbnfBootstrapEnum::type_annotation((_colon, ty)) => {
+            format!(": {}", format_value_expr_short(ty))
+        }
+        BbnfBootstrapEnum::type_name(s) => s.as_str().to_string(),
+
+        BbnfBootstrapEnum::cmp_op(s)
+        | BbnfBootstrapEnum::mul_op(s)
+        | BbnfBootstrapEnum::add_op(s) => s.as_str().to_string(),
+
+        _ => "...".into(),
     }
 }
 
@@ -311,21 +636,12 @@ pub fn format_value_expr_short(expr: &bbnf::ValueExpr<'_>) -> String {
 ///
 /// Walks the dependency graph from `start` following only edges within the SCC members,
 /// until it returns to `start`, producing a string like "expr -> term -> factor -> expr".
-///
-/// A2: Uses a reverse index (`name_to_deps`) for O(1) lookup of a rule's dependencies
-/// instead of scanning all entries in `deps` for each step.
 pub fn build_cycle_path(
     start: &str,
     scc_members: &[&str],
-    deps: &HashMap<Expression<'_>, HashSet<Expression<'_>>>,
+    deps: &HashMap<&str, HashSet<&str>>,
 ) -> String {
     let member_set: HashSet<&str> = scc_members.iter().copied().collect();
-
-    // A2: Build reverse index from rule name to its dependency set.
-    let name_to_deps: HashMap<&str, &HashSet<Expression>> = deps
-        .iter()
-        .filter_map(|(k, v)| get_nonterminal_name(k).map(|n| (n, v)))
-        .collect();
 
     let mut path = vec![start];
     let mut visited = HashSet::new();
@@ -333,24 +649,20 @@ pub fn build_cycle_path(
     let mut current = start;
 
     loop {
-        // A2: O(1) lookup for `current`'s dependencies.
         let mut found_next = false;
-        if let Some(dep_set) = name_to_deps.get(current) {
-            // Walk deps looking for a member of the SCC.
-            for dep in *dep_set {
-                if let Some(dep_name) = get_nonterminal_name(dep) {
-                    if dep_name == start && path.len() > 1 {
-                        // Completed the cycle.
-                        path.push(start);
-                        return path.join(" \u{2192} ");
-                    }
-                    if member_set.contains(dep_name) && !visited.contains(dep_name) {
-                        visited.insert(dep_name);
-                        path.push(dep_name);
-                        current = dep_name;
-                        found_next = true;
-                        break;
-                    }
+        if let Some(dep_set) = deps.get(current) {
+            for dep_name in dep_set {
+                if *dep_name == start && path.len() > 1 {
+                    // Completed the cycle.
+                    path.push(start);
+                    return path.join(" \u{2192} ");
+                }
+                if member_set.contains(dep_name) && !visited.contains(dep_name) {
+                    visited.insert(dep_name);
+                    path.push(dep_name);
+                    current = dep_name;
+                    found_next = true;
+                    break;
                 }
             }
         }

@@ -1,7 +1,7 @@
-//! Lowering pass: Expression AST -> GrammarIR.
+//! Lowering pass: BbnfBootstrapEnum → GrammarIR.
 //!
-//! This module converts the parsed BBNF `Expression` AST (with all analysis results)
-//! into the canonical `GrammarIR` consumed by all backends.
+//! Converts the bootstrap parse tree directly into the canonical `GrammarIR`
+//! consumed by all backends. No intermediate Expression AST.
 
 mod expression;
 mod fn_table;
@@ -12,61 +12,24 @@ use std::collections::{HashMap, HashSet};
 
 use bbnf_ir::{GrammarIR, IrRule, RuleId};
 
+use crate::grammar::generated::BbnfBootstrapEnum;
 use crate::graph::SccResult;
+use crate::types::AST;
 
-/// Unwrap a Rule expression to get the inner body.
-fn unwrap_rule<'a>(expr: &'a Expression<'a>) -> &'a Expression<'a> {
-    match expr {
-        Expression::Rule(inner, _) => inner,
-        other => other,
-    }
-}
-use crate::types::{AST, Expression, Token};
-
-use expression::lower_expression;
+use expression::lower_rhs;
 use fn_table::FnTable;
 use metadata::build_rule_meta;
 use string_interner::StringInterner;
-
-/// All directive data extracted from a parsed grammar.
-///
-/// Encapsulates the 6 directive parameters that were previously passed individually
-/// to `lower_to_ir` and `compile_ast`.
-pub struct DirectiveSet<'a> {
-    pub recovers: Option<&'a HashMap<String, Expression<'a>>>,
-    pub pretties: Option<&'a HashMap<String, Vec<String>>>,
-    pub ws_pattern: Option<&'a str>,
-    pub token_rules: Option<&'a HashSet<String>>,
-    pub debug_rules: Option<&'a HashSet<String>>,
-    pub debug_all: bool,
-    /// Host function declarations: name → optional abstract return type.
-    pub host_fns: Option<&'a HashMap<String, Option<String>>>,
-}
-
-impl<'a> DirectiveSet<'a> {
-    /// Create a `DirectiveSet` with all directives empty/disabled.
-    pub fn empty() -> Self {
-        Self {
-            recovers: None,
-            pretties: None,
-            ws_pattern: None,
-            token_rules: None,
-            debug_rules: None,
-            debug_all: false,
-            host_fns: None,
-        }
-    }
-}
 
 /// A grammar function definition (first-class closure).
 ///
 /// Grammar functions are the universal abstraction — `|params| body` binds
 /// parameters to grammar expressions. Application (`name(args)`) performs
-/// beta-reduction at compile time: substitute params with args, then lower
-/// the resulting expression. Closures never reach the IR.
+/// beta-reduction at compile time: substitute params with args, then lower.
+/// Closures never reach the IR.
 pub(crate) struct ClosureDef<'a> {
-    pub(crate) params: &'a [Token<'a, std::borrow::Cow<'a, str>>],
-    pub(crate) body: &'a Expression<'a>,
+    pub(crate) params: Vec<&'a str>,
+    pub(crate) body: &'a BbnfBootstrapEnum<'a>,
 }
 
 /// Context for the lowering pass.
@@ -82,47 +45,58 @@ pub(crate) struct LowerCtx<'a> {
 
     /// Analysis results.
     pub(crate) scc_result: &'a SccResult<'a>,
-    pub(crate) cyclic_rules: &'a HashSet<Expression<'a>>,
+    pub(crate) cyclic_rules: &'a HashSet<&'a str>,
 
     /// Directives.
-    pub(crate) recovers: Option<&'a HashMap<String, Expression<'a>>>,
+    pub(crate) recovers: Option<&'a HashMap<String, &'a BbnfBootstrapEnum<'a>>>,
     pub(crate) pretties: Option<&'a HashMap<String, Vec<String>>>,
     pub(crate) token_rules: Option<&'a HashSet<String>>,
     pub(crate) debug_rules: Option<&'a HashSet<String>>,
     pub(crate) debug_all: bool,
     pub(crate) host_fns: Option<&'a HashMap<String, Option<String>>>,
 
-    /// When true, unknown nonterminals emit Epsilon instead of Literal fallback,
-    /// and unsupported expressions emit Epsilon. Used for recovery sync expressions.
+    /// When true, unknown nonterminals emit Epsilon instead of panicking.
+    /// Used for recovery sync expressions.
     pub(crate) recovery_mode: bool,
 }
 
+/// All directive data extracted from a parsed grammar.
+pub struct DirectiveSet<'a> {
+    pub recovers: Option<&'a HashMap<String, &'a BbnfBootstrapEnum<'a>>>,
+    pub pretties: Option<&'a HashMap<String, Vec<String>>>,
+    pub ws_pattern: Option<&'a str>,
+    pub token_rules: Option<&'a HashSet<String>>,
+    pub debug_rules: Option<&'a HashSet<String>>,
+    pub debug_all: bool,
+    pub host_fns: Option<&'a HashMap<String, Option<String>>>,
+}
+
+impl<'a> DirectiveSet<'a> {
+    pub fn empty() -> Self {
+        Self {
+            recovers: None,
+            pretties: None,
+            ws_pattern: None,
+            token_rules: None,
+            debug_rules: None,
+            debug_all: false,
+            host_fns: None,
+        }
+    }
+}
+
 /// Lower a full BBNF grammar (AST + analysis results) to the canonical `GrammarIR`.
-///
-/// Alias detection, transparent alternation detection, and span eligibility are
-/// computed by IR passes (`compute_aliases`, `compute_transparent`,
-/// `refine_span_eligibility`) that run post-lowering. FIRST sets and per-branch
-/// FIRST annotations are computed by the IR CSP pass post-lowering.
-///
-/// # Arguments
-///
-/// * `ast` -- Topologically sorted AST.
-/// * `scc_result` -- SCC analysis results.
-/// * `directives` -- All directive data from the parsed grammar.
 pub fn lower_to_ir<'a>(
     ast: &'a AST<'a>,
     scc_result: &'a SccResult<'a>,
     directives: &'a DirectiveSet<'a>,
-    closure_defs: &'a [(String, Expression<'a>)],
+    closure_defs: &'a [(&'a str, &'a BbnfBootstrapEnum<'a>)],
 ) -> GrammarIR {
-    // Pre-register closure definitions (extracted from AST before graph analysis).
+    // Pre-register closure definitions.
     let mut closures = HashMap::new();
-    for (name, body) in closure_defs {
-        if let Expression::Closure(params, closure_body) = body {
-            closures.insert(name.as_str(), ClosureDef {
-                params,
-                body: &closure_body.value,
-            });
+    for &(name, body) in closure_defs {
+        if let Some(def) = extract_closure_def(body) {
+            closures.insert(name, def);
         }
     }
 
@@ -143,15 +117,14 @@ pub fn lower_to_ir<'a>(
     };
 
     // Phase 1: Assign RuleIds to all rules.
-    // Closure rules have already been stripped from the AST and pre-registered
-    // via closure_defs — only non-closure rules appear here.
     let mut rule_names: Vec<&str> = Vec::new();
-    for (lhs, _) in ast.iter() {
-        if let Expression::Nonterminal(Token { value, .. }) = lhs {
-            let id = rule_names.len() as RuleId;
-            ctx.name_to_rule_id.insert(value.as_ref(), id);
-            rule_names.push(value.as_ref());
+    for (&name, _) in ast.iter() {
+        if ctx.closures.contains_key(name) {
+            continue;
         }
+        let id = rule_names.len() as RuleId;
+        ctx.name_to_rule_id.insert(name, id);
+        rule_names.push(name);
     }
 
     // Phase 2: Lower non-closure rule bodies.
@@ -160,45 +133,33 @@ pub fn lower_to_ir<'a>(
         bbnf_ir::StringId,
         bbnf_ir::IrNode,
         &'b str,
-        &'b Expression<'b>,
         Option<bbnf_ir::GrammarSpan>,
     );
     let mut rule_bodies: Vec<RuleBody<'_>> = Vec::with_capacity(rule_names.len());
 
-    for (lhs, rhs) in ast.iter() {
-        let (name, source_span) = match lhs {
-            Expression::Nonterminal(Token { value, span, .. }) => {
-                // Skip closure rules — they were registered in Phase 1, not lowered.
-                if ctx.closures.contains_key(value.as_ref()) {
-                    continue;
-                }
-                let gs = bbnf_ir::GrammarSpan {
-                    start: span.start as u32,
-                    end: span.end as u32,
-                };
-                (value.as_ref(), Some(gs))
-            }
-            _ => continue,
-        };
+    for (&name, entry) in ast.iter() {
+        if ctx.closures.contains_key(name) {
+            continue;
+        }
 
         let rule_id = ctx.name_to_rule_id[name];
         let name_id = ctx.strings.intern(name);
 
-        // Unwrap Rule wrapper to get the body expression.
-        let body_expr = unwrap_rule(rhs);
+        let source_span = Some(bbnf_ir::GrammarSpan {
+            start: entry.name_span.start as u32,
+            end: entry.name_span.end as u32,
+        });
 
-        // Lower the body expression.
-        let body = lower_expression(body_expr, &mut ctx);
+        let body = lower_rhs(entry.rhs, &mut ctx);
 
-        rule_bodies.push((rule_id, name_id, body, name, lhs, source_span));
+        rule_bodies.push((rule_id, name_id, body, name, source_span));
     }
 
-    // Phase 3: Build metadata (recovery expressions can now intern strings too).
+    // Phase 3: Build metadata.
     let mut rules = Vec::with_capacity(rule_bodies.len());
-    for (rule_id, name_id, body, name, lhs, source_span) in rule_bodies {
-        let mut meta = build_rule_meta(lhs, name, &mut ctx);
+    for (rule_id, name_id, body, name, source_span) in rule_bodies {
+        let mut meta = build_rule_meta(name, &mut ctx);
 
-        // Set debug flag from @debug directive.
         meta.directives.debug =
             ctx.debug_all || ctx.debug_rules.is_some_and(|set| set.contains(name));
 
@@ -211,11 +172,7 @@ pub fn lower_to_ir<'a>(
         });
     }
 
-    // Default entry: last rule in the (topologically sorted) IR.
-    // Callers should override this with the actual entry rule from the
-    // original source order (e.g., the last rule in the grammar file).
     let entry = rules.last().map(|r| r.id).unwrap_or(0);
-
     let ws_pattern_id = directives.ws_pattern.map(|pat| ctx.strings.intern(pat));
 
     GrammarIR {
@@ -223,12 +180,44 @@ pub fn lower_to_ir<'a>(
         entry,
         strings: ctx.strings.strings,
         fns: ctx.fns.fns,
-        types: Vec::new(), // Type info populated by a later pass or backend.
-        follow_sets: HashMap::new(), // Populated by compute_follow_sets pass.
+        types: Vec::new(),
+        follow_sets: HashMap::new(),
         ws_pattern: ws_pattern_id,
-        collapse_simple_spans: false, // Set by generate_all based on prettify flag.
+        collapse_simple_spans: false,
         debug_all: ctx.debug_all,
         debug_labels: Vec::new(),
         type_map: None,
+    }
+}
+
+/// Extract a ClosureDef from a bootstrap node if it's a closure.
+fn extract_closure_def<'a>(node: &'a BbnfBootstrapEnum<'a>) -> Option<ClosureDef<'a>> {
+    match node {
+        BbnfBootstrapEnum::closure((_pipe, params, _pipe2, body)) => {
+            let param_names: Vec<&'a str> = params
+                .iter()
+                .map(|(_comma, name)| match name {
+                    BbnfBootstrapEnum::identifier(s) => s.as_str(),
+                    _ => "",
+                })
+                .collect();
+            Some(ClosureDef {
+                params: param_names,
+                body,
+            })
+        }
+        // Unwrap alternation/concatenation wrappers that might wrap a closure.
+        BbnfBootstrapEnum::alternation(branches) if branches.len() == 1 => {
+            extract_closure_def(branches[0].0)
+        }
+        BbnfBootstrapEnum::concatenation(parts) if parts.len() == 1 => {
+            extract_closure_def(parts[0].0)
+        }
+        BbnfBootstrapEnum::binary_factor((first, rest)) if rest.is_empty() => {
+            extract_closure_def(first)
+        }
+        BbnfBootstrapEnum::mapped_factor((inner, None)) => extract_closure_def(inner),
+        BbnfBootstrapEnum::factor((None, inner, None, None)) => extract_closure_def(inner),
+        _ => None,
     }
 }

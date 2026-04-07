@@ -8,15 +8,10 @@ use gorgeous::PrinterConfig;
 
 /// Extract rule names from a BBNF grammar source string.
 fn extract_rule_names(grammar_src: &str) -> Vec<String> {
-    let parser = bbnf::grammar::parse();
-    let Some(parsed) = parser.parse(grammar_src) else {
+    let Some(parsed) = bbnf::grammar::parse(grammar_src) else {
         return Vec::new();
     };
-    parsed
-        .rules
-        .keys()
-        .filter_map(|expr| bbnf::get_nonterminal_name(expr).map(String::from))
-        .collect()
+    parsed.rules.keys().map(|name| name.to_string()).collect()
 }
 
 /// Stable hash of grammar content → hex string (for cache key).

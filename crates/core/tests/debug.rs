@@ -8,8 +8,7 @@ use bbnf::pipeline::{PipelineOptions, compile_grammar};
 #[test]
 fn parse_debug_single_rule() {
     let source = "@debug value ;\nvalue = /[0-9]+/ ;";
-    let parser = grammar::parse();
-    let result = parser.parse(source).unwrap();
+    let result = grammar::parse(source).unwrap();
     assert_eq!(result.debug_rules.len(), 1);
     assert_eq!(result.debug_rules[0].as_ref(), "value");
 }
@@ -17,8 +16,7 @@ fn parse_debug_single_rule() {
 #[test]
 fn parse_debug_wildcard() {
     let source = "@debug * ;\nvalue = /[0-9]+/ ;";
-    let parser = grammar::parse();
-    let result = parser.parse(source).unwrap();
+    let result = grammar::parse(source).unwrap();
     assert_eq!(result.debug_rules.len(), 1);
     assert_eq!(result.debug_rules[0].as_ref(), "*");
 }
@@ -26,8 +24,7 @@ fn parse_debug_wildcard() {
 #[test]
 fn parse_debug_multiple_rules() {
     let source = "@debug value ;\n@debug pair ;\nvalue = /[0-9]+/ ;\npair = value , value ;";
-    let parser = grammar::parse();
-    let result = parser.parse(source).unwrap();
+    let result = grammar::parse(source).unwrap();
     assert_eq!(result.debug_rules.len(), 2);
     assert_eq!(result.debug_rules[0].as_ref(), "value");
     assert_eq!(result.debug_rules[1].as_ref(), "pair");
@@ -36,8 +33,7 @@ fn parse_debug_multiple_rules() {
 #[test]
 fn parse_debug_with_other_directives() {
     let source = "@debug value ;\nhelper = \"x\" ;\nvalue = helper ;";
-    let parser = grammar::parse();
-    let result = parser.parse(source).unwrap();
+    let result = grammar::parse(source).unwrap();
     assert_eq!(result.debug_rules.len(), 1);
 }
 

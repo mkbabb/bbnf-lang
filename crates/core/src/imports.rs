@@ -9,6 +9,7 @@ use std::fmt;
 use std::path::{Path, PathBuf};
 
 use crate::grammar;
+use crate::graph::deps;
 use crate::types::ParsedGrammar;
 
 // ---------------------------------------------------------------------------
@@ -66,9 +67,9 @@ impl fmt::Display for ImportError {
                     chain.iter().map(|p| p.display().to_string()).collect();
                 write!(
                     f,
-                    "Circular import: `{}` (chain: {} → {})",
+                    "Circular import: `{}` (chain: {} \u{2192} {})",
                     path.display(),
-                    chain_str.join(" → "),
+                    chain_str.join(" \u{2192} "),
                     path.display()
                 )
             }
@@ -145,9 +146,9 @@ pub struct ImportCycle {
 /// Registry of all loaded modules in an import graph.
 #[derive(Debug)]
 pub struct ModuleRegistry {
-    /// Canonical path → module data.
+    /// Canonical path -> module data.
     modules: HashMap<PathBuf, ModuleData>,
-    /// Canonical path → resolved imports (which rules are visible from imports).
+    /// Canonical path -> resolved imports (which rules are visible from imports).
     resolved_imports: HashMap<PathBuf, Vec<ResolvedImport>>,
     /// All errors encountered during loading.
     pub errors: Vec<ImportError>,
@@ -279,10 +280,7 @@ fn load_recursive(
     // The LSP does NOT use this function — it uses `self_cell::self_cell!` in
     // `lsp/src/state/parsing.rs` for safe self-referential ownership without leaking.
     let source_static: &'static str = Box::leak(source.clone().into_boxed_str());
-    let parser = grammar::parse();
-    let (result, _parser_state) = parser.parse_return_state(source_static);
-
-    let parsed = match result {
+    let parsed = match grammar::parse(source_static) {
         Some(g) => g,
         None => {
             registry.errors.push(ImportError::ParseError {
@@ -293,18 +291,8 @@ fn load_recursive(
         }
     };
 
-    // Extract local rule names.
-    let local_rule_names: Vec<String> = parsed
-        .rules
-        .keys()
-        .filter_map(|expr| {
-            if let crate::types::Expression::Nonterminal(tok) = expr {
-                Some(tok.value.to_string())
-            } else {
-                None
-            }
-        })
-        .collect();
+    // Extract local rule names — keys are already &str in the new AST.
+    let local_rule_names: Vec<String> = parsed.rules.keys().map(|k| k.to_string()).collect();
 
     // Register BEFORE recursing (partial-init, like Python module loading).
     // This allows cyclic imports to find the module already registered.
@@ -487,87 +475,29 @@ fn resolve_imports_for(path: &Path, registry: &mut ModuleRegistry) {
 /// within the given module. Returns a set of all rule names that `rule_name`
 /// transitively depends on (including itself).
 fn transitive_local_deps(rule_name: &str, module: &ModuleData) -> HashSet<String> {
-    let mut deps = HashSet::new();
+    let mut result = HashSet::new();
     let mut queue = vec![rule_name.to_string()];
 
     while let Some(name) = queue.pop() {
-        if deps.contains(&name) {
+        if result.contains(&name) {
             continue;
         }
-        deps.insert(name.clone());
+        result.insert(name.clone());
 
-        // Find the rule in the module's grammar.
-        let rule_expr = module.grammar.rules.iter().find_map(|(lhs, rhs)| {
-            if let crate::types::Expression::Nonterminal(tok) = lhs {
-                if tok.value == name {
-                    return Some(rhs);
-                }
-            }
-            None
-        });
-
-        if let Some(expr) = rule_expr {
-            let refs = collect_nonterminal_refs(expr);
+        // Look up the rule by string key in the new AST.
+        if let Some(entry) = module.grammar.rules.get(name.as_str()) {
+            let mut refs = HashSet::new();
+            deps::collect_nonterminal_refs(entry.rhs, &mut refs);
             for r in refs {
-                if module.local_rule_names.contains(&r) && !deps.contains(&r) {
-                    queue.push(r);
+                let r_owned = r.to_string();
+                if module.local_rule_names.contains(&r_owned) && !result.contains(&r_owned) {
+                    queue.push(r_owned);
                 }
             }
         }
     }
 
-    deps
-}
-
-/// Collect all nonterminal references from an expression.
-fn collect_nonterminal_refs(expr: &crate::types::Expression) -> Vec<String> {
-    use crate::types::Expression;
-    let mut refs = Vec::new();
-    match expr {
-        Expression::Nonterminal(tok) => {
-            refs.push(tok.value.to_string());
-        }
-        Expression::Alternation(items) | Expression::Concatenation(items) => {
-            for item in &items.value {
-                refs.extend(collect_nonterminal_refs(item));
-            }
-        }
-        Expression::Group(inner)
-        | Expression::Optional(inner)
-        | Expression::OptionalWhitespace(inner)
-        | Expression::Many(inner)
-        | Expression::Many1(inner) => {
-            refs.extend(collect_nonterminal_refs(&inner.value));
-        }
-        Expression::Skip(a, b) | Expression::Next(a, b) | Expression::Minus(a, b) => {
-            refs.extend(collect_nonterminal_refs(&a.value));
-            refs.extend(collect_nonterminal_refs(&b.value));
-        }
-        Expression::ProductionRule(lhs, rhs) => {
-            refs.extend(collect_nonterminal_refs(lhs));
-            refs.extend(collect_nonterminal_refs(rhs));
-        }
-        Expression::MappedExpression(inner, _) => {
-            refs.extend(collect_nonterminal_refs(&inner.value));
-        }
-        Expression::DebugExpression((inner, _)) => {
-            refs.extend(collect_nonterminal_refs(&inner.value));
-        }
-        Expression::Rule(lhs, _) => {
-            refs.extend(collect_nonterminal_refs(lhs));
-        }
-        Expression::Closure(_params, body) => {
-            refs.extend(collect_nonterminal_refs(&body.value));
-        }
-        Expression::GrammarCall(name_tok, args) => {
-            refs.push(name_tok.value.to_string());
-            for arg in args {
-                refs.extend(collect_nonterminal_refs(arg));
-            }
-        }
-        _ => {} // Literal, Regex, Epsilon
-    }
-    refs
+    result
 }
 
 /// Resolve an import path relative to the importing file's directory.

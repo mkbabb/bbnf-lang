@@ -145,7 +145,6 @@ dependencies = [
  "cssparser 0.34.0",
  "dhat",
  "fast-float2",
- "gorgeous",
  "indexmap",
  "jiter",
  "lightningcss",

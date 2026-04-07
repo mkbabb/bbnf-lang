@@ -1,7 +1,6 @@
 use std::fs;
 use std::path::PathBuf;
 
-use bbnf::grammar;
 use bbnf::imports::{ImportError, load_module_graph};
 
 fn setup_test_dir() -> tempfile::TempDir {
@@ -263,10 +262,7 @@ fn test_css_l4_media_module_keeps_recursive_local_rules() {
 fn test_css_l4_media_file_parses_to_end() {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../grammar/css/l4/media.bbnf");
     let source = fs::read_to_string(&path).unwrap();
-    let source_static: &'static str = Box::leak(source.clone().into_boxed_str());
-
-    let parser = grammar::parse();
-    let (parsed, state) = parser.parse_return_state(source_static);
+    let (parsed, state) = bbnf::grammar::parse_with_state(&source);
     let parsed = parsed.expect("media.bbnf should parse");
 
     assert!(
@@ -277,10 +273,7 @@ fn test_css_l4_media_file_parses_to_end() {
         parsed
             .rules
             .keys()
-            .filter_map(|lhs| match lhs {
-                bbnf::Expression::Nonterminal(token) => Some(token.value.to_string()),
-                _ => None,
-            })
+            .map(|name| name.to_string())
             .collect::<Vec<_>>()
     );
 }

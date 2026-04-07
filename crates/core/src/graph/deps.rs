@@ -1,97 +1,146 @@
-//! Dependency graph construction and AST traversal.
+//! Dependency graph construction from grammar AST.
 
-use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
-use std::rc::Rc;
 
-use crate::types::{AST, Expression, Token};
+use crate::grammar::generated::BbnfBootstrapEnum;
+use crate::types::AST;
 
-pub type Visitor<'a> = dyn FnMut(&'a Expression<'a>, &'a Expression<'a>) + 'a;
+/// Rule name → set of referenced rule names.
+pub type Dependencies<'a> = HashMap<&'a str, HashSet<&'a str>>;
 
-pub type Dependencies<'a> = HashMap<Expression<'a>, HashSet<Expression<'a>>>;
-
-pub fn get_nonterminal_name<'a>(expr: &'a Expression<'a>) -> Option<&'a str> {
-    if let Expression::Nonterminal(Token { value, .. }) = expr {
-        Some(value)
-    } else {
-        None
+/// Build a dependency graph from the grammar AST.
+pub fn calculate_ast_deps<'a>(ast: &AST<'a>) -> Dependencies<'a> {
+    let mut deps = HashMap::new();
+    for (&name, entry) in ast.iter() {
+        let mut refs = HashSet::new();
+        collect_nonterminal_refs(entry.rhs, &mut refs);
+        deps.insert(name, refs);
     }
+    deps
 }
 
-pub fn traverse_ast<'a>(ast: &'a AST, visitor: &mut Visitor<'a>) {
-    fn visit<'a>(
-        nonterminal: &'a Expression<'a>,
-        expr: &'a Expression<'a>,
-        visitor: &mut Visitor<'a>,
-    ) {
-        visitor(nonterminal, expr);
-        match expr {
-            Expression::Alternation(inner_exprs) => {
-                let inner_exprs = inner_exprs.inner();
-                for inner_expr in inner_exprs {
-                    visit(nonterminal, inner_expr, visitor)
-                }
-            }
-            Expression::Concatenation(inner_exprs) => {
-                let inner_exprs = inner_exprs.inner();
-                for inner_expr in inner_exprs {
-                    visit(nonterminal, inner_expr, visitor)
-                }
-            }
-            Expression::Skip(left_expr, right_expr)
-            | Expression::Next(left_expr, right_expr)
-            | Expression::Minus(left_expr, right_expr) => {
-                let left_expr = left_expr.inner();
-                let right_expr = right_expr.inner();
-                visit(nonterminal, left_expr, visitor);
-                visit(nonterminal, right_expr, visitor);
-            }
-            Expression::Group(inner_expr)
-            | Expression::Optional(inner_expr)
-            | Expression::Many(inner_expr)
-            | Expression::Many1(inner_expr)
-            | Expression::OptionalWhitespace(inner_expr)
-            | Expression::SpanCapture(inner_expr) => {
-                let inner_expr = inner_expr.inner();
-                visit(nonterminal, inner_expr, visitor);
-            }
-            Expression::Rule(rhs, _) => {
-                visit(nonterminal, rhs, visitor);
-            }
-            Expression::MappedExpression(inner, _)
-            | Expression::DebugExpression((inner, _)) => {
-                let inner_expr = inner.inner();
-                visit(nonterminal, inner_expr, visitor);
-            }
-            Expression::Closure(_params, body) => {
-                let body_expr = body.inner();
-                visit(nonterminal, body_expr, visitor);
-            }
-            Expression::GrammarCall(_, args) => {
-                for arg in args {
-                    visit(nonterminal, arg, visitor);
-                }
-            }
-            _ => {}
+/// Recursively collect nonterminal (identifier) references from a bootstrap AST node.
+pub fn collect_nonterminal_refs<'a>(
+    node: &'a BbnfBootstrapEnum<'a>,
+    refs: &mut HashSet<&'a str>,
+) {
+    match node {
+        // Leaf: identifier reference (nonterminal)
+        BbnfBootstrapEnum::identifier(s) => {
+            refs.insert(s.as_str());
         }
+
+        // Structural: alternation, concatenation
+        BbnfBootstrapEnum::alternation(branches) => {
+            for (branch, _pipe) in *branches {
+                collect_nonterminal_refs(branch, refs);
+            }
+        }
+        BbnfBootstrapEnum::concatenation(parts) => {
+            for (part, _comma) in *parts {
+                collect_nonterminal_refs(part, refs);
+            }
+        }
+
+        // Binary factor: first + [(op, operand)]
+        BbnfBootstrapEnum::binary_factor((first, rest)) => {
+            collect_nonterminal_refs(first, refs);
+            for (_, operand) in *rest {
+                collect_nonterminal_refs(operand, refs);
+            }
+        }
+
+        // Mapped factor: inner + optional mapping
+        BbnfBootstrapEnum::mapped_factor((inner, _mapping)) => {
+            collect_nonterminal_refs(inner, refs);
+        }
+
+        // Factor: (comment?, term, modifier?, comment?)
+        BbnfBootstrapEnum::factor((_, term, _, _)) => {
+            collect_nonterminal_refs(term, refs);
+        }
+
+        // Term variants
+        BbnfBootstrapEnum::term(inner) => {
+            collect_nonterminal_refs(inner, refs);
+        }
+        BbnfBootstrapEnum::term_1((ident, call_args)) => {
+            refs.insert(ident.as_str());
+            if let Some((_open, first_arg, rest_args, _close)) = call_args {
+                collect_nonterminal_refs(first_arg, refs);
+                for (_comma, arg) in *rest_args {
+                    collect_nonterminal_refs(arg, refs);
+                }
+            }
+        }
+        BbnfBootstrapEnum::term_2((_open, inner, _close)) => {
+            collect_nonterminal_refs(inner, refs);
+        }
+
+        // RHS: closure | alternation
+        BbnfBootstrapEnum::closure((_pipe, _params, _pipe2, body)) => {
+            collect_nonterminal_refs(body, refs);
+        }
+
+        // Transparent wrappers
+        BbnfBootstrapEnum::directive(inner) => {
+            collect_nonterminal_refs(inner, refs);
+        }
+
+        // Terminals: literal, regex, modifier, epsilon, comments — no refs
+        BbnfBootstrapEnum::literal(_)
+        | BbnfBootstrapEnum::regex(_)
+        | BbnfBootstrapEnum::modifier(_)
+        | BbnfBootstrapEnum::term_0(_)
+        | BbnfBootstrapEnum::comment(_)
+        | BbnfBootstrapEnum::big_comment(_)
+        | BbnfBootstrapEnum::binary_operators(_) => {}
+
+        // Value expression variants — no grammar nonterminal refs
+        BbnfBootstrapEnum::value_or(_)
+        | BbnfBootstrapEnum::value_and(_)
+        | BbnfBootstrapEnum::value_cmp(_)
+        | BbnfBootstrapEnum::value_add(_)
+        | BbnfBootstrapEnum::value_mul(_)
+        | BbnfBootstrapEnum::value_unary(_)
+        | BbnfBootstrapEnum::value_unary_0(_)
+        | BbnfBootstrapEnum::value_atom(_)
+        | BbnfBootstrapEnum::value_atom_0(_)
+        | BbnfBootstrapEnum::value_input(_)
+        | BbnfBootstrapEnum::value_fn_call(_)
+        | BbnfBootstrapEnum::value_closure(_)
+        | BbnfBootstrapEnum::int_lit(_)
+        | BbnfBootstrapEnum::float_lit(_)
+        | BbnfBootstrapEnum::bool_lit(_)
+        | BbnfBootstrapEnum::string_lit(_)
+        | BbnfBootstrapEnum::value_ident(_)
+        | BbnfBootstrapEnum::type_annotation(_)
+        | BbnfBootstrapEnum::type_name(_)
+        | BbnfBootstrapEnum::cmp_op(_)
+        | BbnfBootstrapEnum::mul_op(_)
+        | BbnfBootstrapEnum::add_op(_) => {}
+
+        // Directive variants — no grammar nonterminal refs
+        BbnfBootstrapEnum::import_directive(_)
+        | BbnfBootstrapEnum::import_directive_0(_)
+        | BbnfBootstrapEnum::import_path(_)
+        | BbnfBootstrapEnum::import_items(_)
+        | BbnfBootstrapEnum::recover_directive(_)
+        | BbnfBootstrapEnum::pretty_directive(_)
+        | BbnfBootstrapEnum::pretty_directive_0(_)
+        | BbnfBootstrapEnum::ws_directive(_)
+        | BbnfBootstrapEnum::token_directive(_)
+        | BbnfBootstrapEnum::debug_directive(_)
+        | BbnfBootstrapEnum::debug_directive_0(_)
+        | BbnfBootstrapEnum::host_directive(_) => {}
+
+        // Grammar/rule level — should not appear inside rule RHS
+        BbnfBootstrapEnum::grammar(_) | BbnfBootstrapEnum::rule(_) => {}
+
+        // Phantom
+        BbnfBootstrapEnum::__Phantom(_) => {}
+
+        // Catch any remaining generated sub-variants
+        _ => {}
     }
-
-    ast.into_iter()
-        .for_each(|(lhs, rhs)| visit(lhs, rhs, visitor));
-}
-
-pub fn calculate_ast_deps<'a>(ast: &'a AST<'a>) -> Dependencies<'a> {
-    let deps = Rc::new(RefCell::new(HashMap::new()));
-    let mut visitor = {
-        let deps = deps.clone();
-        move |nonterminal: &'a Expression, expr: &'a Expression| {
-            let mut deps = deps.borrow_mut();
-            let sub_deps = deps.entry(nonterminal.clone()).or_insert(HashSet::new());
-            if let Expression::Nonterminal(_) = expr {
-                sub_deps.insert(expr.clone());
-            }
-        }
-    };
-    traverse_ast(ast, &mut visitor);
-    deps.take()
 }

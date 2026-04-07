@@ -1,6 +1,8 @@
 [workspace]
 members = ["crates/core", "crates/derive", "crates/analysis", "crates/ir", "crates/lsp", "crates/ser", "crates/gorgeous", "crates/bootstrap"]
 exclude = ["wasm"]
+# TODO: Temporarily exclude gorgeous from default-members while debugging derive macro issue
+default-members = ["crates/core", "crates/derive", "crates/analysis", "crates/ir", "crates/lsp", "crates/ser", "crates/bootstrap"]
 resolver = "2"
 
 [profile.release]

@@ -1,36 +1,36 @@
-//! Tarjan's SCC algorithm and topological sorting.
+//! Tarjan's SCC algorithm and topological sorting — string-keyed.
 
 use std::collections::{HashMap, HashSet};
 
 use indexmap::IndexMap;
 
 use super::deps::Dependencies;
-use crate::types::{AST, Expression};
+use crate::types::AST;
 
 /// Result of Tarjan's strongly-connected-component analysis.
 #[derive(Debug)]
 pub struct SccResult<'a> {
     /// SCCs in reverse-topological order (leaf SCCs first).
-    pub sccs: Vec<Vec<&'a Expression<'a>>>,
-    /// Set of rules that participate in a cycle.
-    pub cyclic_rules: HashSet<Expression<'a>>,
-    /// Maps each expression to the index of its SCC in `sccs`.
-    pub scc_index: HashMap<&'a Expression<'a>, usize>,
+    pub sccs: Vec<Vec<&'a str>>,
+    /// Set of rule names that participate in a cycle.
+    pub cyclic_rules: HashSet<&'a str>,
+    /// Maps each rule name to the index of its SCC in `sccs`.
+    pub scc_index: HashMap<&'a str, usize>,
 }
 
-/// Tarjan's SCC algorithm over the dependency graph.
+/// Tarjan's SCC algorithm over the string-keyed dependency graph.
 pub fn tarjan_scc<'a>(deps: &'a Dependencies<'a>) -> SccResult<'a> {
     struct State<'a> {
         index_counter: usize,
-        stack: Vec<&'a Expression<'a>>,
-        on_stack: HashSet<&'a Expression<'a>>,
-        indices: HashMap<&'a Expression<'a>, usize>,
-        lowlinks: HashMap<&'a Expression<'a>, usize>,
-        sccs: Vec<Vec<&'a Expression<'a>>>,
+        stack: Vec<&'a str>,
+        on_stack: HashSet<&'a str>,
+        indices: HashMap<&'a str, usize>,
+        lowlinks: HashMap<&'a str, usize>,
+        sccs: Vec<Vec<&'a str>>,
         deps: &'a Dependencies<'a>,
     }
 
-    fn strongconnect<'a>(v: &'a Expression<'a>, state: &mut State<'a>) {
+    fn strongconnect<'a>(v: &'a str, state: &mut State<'a>) {
         state.indices.insert(v, state.index_counter);
         state.lowlinks.insert(v, state.index_counter);
         state.index_counter += 1;
@@ -38,22 +38,22 @@ pub fn tarjan_scc<'a>(deps: &'a Dependencies<'a>) -> SccResult<'a> {
         state.on_stack.insert(v);
 
         if let Some(successors) = state.deps.get(v) {
-            for w in successors {
-                let w_key = match state.deps.get_key_value(w) {
-                    Some((k, _)) => k,
-                    None => continue,
-                };
+            for &w in successors {
+                // Only consider successors that are keys in deps (defined rules).
+                if !state.deps.contains_key(w) {
+                    continue;
+                }
 
-                if !state.indices.contains_key(w_key) {
-                    strongconnect(w_key, state);
-                    let low_w = state.lowlinks[w_key];
-                    let low_v = state.lowlinks[&v];
+                if !state.indices.contains_key(w) {
+                    strongconnect(w, state);
+                    let low_w = state.lowlinks[w];
+                    let low_v = state.lowlinks[v];
                     if low_w < low_v {
                         state.lowlinks.insert(v, low_w);
                     }
-                } else if state.on_stack.contains(w_key) {
-                    let idx_w = state.indices[w_key];
-                    let low_v = state.lowlinks[&v];
+                } else if state.on_stack.contains(w) {
+                    let idx_w = state.indices[w];
+                    let low_v = state.lowlinks[v];
                     if idx_w < low_v {
                         state.lowlinks.insert(v, idx_w);
                     }
@@ -61,13 +61,13 @@ pub fn tarjan_scc<'a>(deps: &'a Dependencies<'a>) -> SccResult<'a> {
             }
         }
 
-        if state.lowlinks[&v] == state.indices[&v] {
+        if state.lowlinks[v] == state.indices[v] {
             let mut scc = Vec::new();
             loop {
                 let w = state.stack.pop().unwrap();
                 state.on_stack.remove(w);
                 scc.push(w);
-                if std::ptr::eq(w, v) {
+                if w == v {
                     break;
                 }
             }
@@ -85,7 +85,7 @@ pub fn tarjan_scc<'a>(deps: &'a Dependencies<'a>) -> SccResult<'a> {
         deps,
     };
 
-    for v in deps.keys() {
+    for &v in deps.keys() {
         if !state.indices.contains_key(v) {
             strongconnect(v, &mut state);
         }
@@ -95,19 +95,19 @@ pub fn tarjan_scc<'a>(deps: &'a Dependencies<'a>) -> SccResult<'a> {
     let mut cyclic_rules = HashSet::new();
 
     for (i, scc) in state.sccs.iter().enumerate() {
-        for &expr in scc {
-            scc_index.insert(expr, i);
+        for &name in scc {
+            scc_index.insert(name, i);
         }
 
         if scc.len() > 1 {
-            for &expr in scc {
-                cyclic_rules.insert(expr.clone());
+            for &name in scc {
+                cyclic_rules.insert(name);
             }
         } else {
-            let expr = scc[0];
-            if let Some(successors) = deps.get(expr) {
-                if successors.contains(expr) {
-                    cyclic_rules.insert(expr.clone());
+            let name = scc[0];
+            if let Some(successors) = deps.get(name) {
+                if successors.contains(name) {
+                    cyclic_rules.insert(name);
                 }
             }
         }
@@ -131,12 +131,13 @@ pub fn topological_sort_scc<'a>(
         return ast.clone();
     }
 
+    // Kahn's algorithm on the SCC condensation DAG.
     let mut in_degree = vec![0u32; num_sccs];
     let mut scc_dependents: Vec<HashSet<usize>> = vec![HashSet::new(); num_sccs];
 
-    for (node, successors) in deps {
+    for (&node, successors) in deps {
         if let Some(&src_scc) = scc_result.scc_index.get(node) {
-            for succ in successors {
+            for &succ in successors {
                 if let Some(&dst_scc) = scc_result.scc_index.get(succ) {
                     if src_scc != dst_scc && scc_dependents[dst_scc].insert(src_scc) {
                         in_degree[src_scc] += 1;
@@ -160,14 +161,15 @@ pub fn topological_sort_scc<'a>(
         }
     }
 
-    let depth_score: HashMap<&Expression<'a>, usize> = deps
+    // Depth score: order within SCCs by transitive dependency count.
+    let depth_score: HashMap<&str, usize> = deps
         .iter()
-        .map(|(expr, sub_deps)| {
+        .map(|(&name, sub_deps)| {
             let score: usize = sub_deps
                 .iter()
                 .map(|d| deps.get(d).map_or(0, |dd| dd.len()))
                 .sum();
-            (expr, score)
+            (name, score)
         })
         .collect();
 
@@ -182,13 +184,14 @@ pub fn topological_sort_scc<'a>(
         scc_entries.sort_by_key(|(key, _)| depth_score.get(*key).copied().unwrap_or(0));
 
         for (key, val) in scc_entries {
-            new_ast.insert(key.clone(), val.clone());
+            new_ast.insert(*key, val.clone());
         }
     }
 
+    // Any rules not in the SCC index (shouldn't happen, but safety net).
     for (lhs, rhs) in ast {
-        if !new_ast.contains_key(lhs) {
-            new_ast.insert(lhs.clone(), rhs.clone());
+        if !new_ast.contains_key(*lhs) {
+            new_ast.insert(*lhs, rhs.clone());
         }
     }
 
@@ -201,21 +204,17 @@ pub fn calculate_acyclic_deps_scc<'a>(
     _scc_result: &SccResult<'a>,
 ) -> Dependencies<'a> {
     fn is_acyclic_dfs<'a>(
-        expr: &'a Expression<'a>,
+        name: &'a str,
         deps: &'a Dependencies<'a>,
-        visited: &mut HashSet<&'a Expression<'a>>,
+        visited: &mut HashSet<&'a str>,
     ) -> bool {
-        if visited.contains(expr) {
+        if visited.contains(name) {
             return false;
         }
-        visited.insert(expr);
-        if let Some(sub_deps) = deps.get(expr) {
-            for sub in sub_deps {
-                let sub_canonical = match deps.get_key_value(sub) {
-                    Some((k, _)) => k,
-                    None => continue,
-                };
-                if !is_acyclic_dfs(sub_canonical, deps, visited) {
+        visited.insert(name);
+        if let Some(sub_deps) = deps.get(name) {
+            for &sub in sub_deps {
+                if deps.contains_key(sub) && !is_acyclic_dfs(sub, deps, visited) {
                     return false;
                 }
             }
@@ -228,7 +227,7 @@ pub fn calculate_acyclic_deps_scc<'a>(
             let mut visited = HashSet::new();
             is_acyclic_dfs(name, deps, &mut visited)
         })
-        .map(|(name, sub_deps)| (name.clone(), sub_deps.clone()))
+        .map(|(name, sub_deps)| (*name, sub_deps.clone()))
         .collect()
 }
 
@@ -239,6 +238,6 @@ pub fn calculate_non_acyclic_deps_scc<'a>(
 ) -> Dependencies<'a> {
     deps.iter()
         .filter(|(lhs, _)| !acyclic_deps.contains_key(*lhs))
-        .map(|(lhs, deps)| (lhs.clone(), deps.clone()))
+        .map(|(lhs, deps)| (*lhs, deps.clone()))
         .collect()
 }

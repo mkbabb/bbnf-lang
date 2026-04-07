@@ -1,12 +1,9 @@
 use std::collections::{HashMap, HashSet};
 
-use bbnf::graph::{
-    calculate_ast_deps, find_aliases,
-    get_nonterminal_name, tarjan_scc,
-};
+use bbnf::grammar::generated::BbnfBootstrapEnum;
+use bbnf::graph::{calculate_ast_deps, find_aliases, tarjan_scc};
 use bbnf::lower::DirectiveSet;
-use bbnf::pipeline::{PipelineOptions, compile_ast};
-use bbnf::types::{Expression, Token};
+use bbnf::pipeline::{compile_ast, PipelineOptions};
 
 use super::types::IrRuleMeta;
 
@@ -20,7 +17,7 @@ use super::ast_utils::{
 };
 use super::parsing::CachedParseResult;
 use super::pretty;
-use super::types::{DocumentInfo, ParseDiagnostics, RuleInfo, SemanticTokenInfo, token_types};
+use super::types::{token_types, DocumentInfo, ParseDiagnostics, RuleInfo, SemanticTokenInfo};
 
 /// Analyze a BBNF document using pre-parsed AST and diagnostics from `parse_once()`.
 /// This avoids double-parsing: the OwnedAst parses once, and we reuse its results here.
@@ -157,68 +154,63 @@ pub fn analyze_from_cache(
         };
     }
 
-    // Extract rule info from AST.
-    for (lhs, rhs) in ast.iter() {
-        if let Expression::Nonterminal(Token {
-            value: name,
-            span: name_span,
-            ..
-        }) = lhs
-        {
-            let name_str = name.to_string();
-            let name_byte_span = (name_span.start, name_span.end);
+    // Extract rule info from AST (string-keyed: name → RuleEntry).
+    for (&name, entry) in ast.iter() {
+        let name_str = name.to_string();
+        let name_span = &entry.name_span;
+        let name_byte_span = (name_span.start, name_span.end);
+        let rhs = entry.rhs;
 
-            // Compute full span (from LHS start to RHS end).
-            let full_start = name_span.start;
-            let full_end = compute_expression_end(rhs).unwrap_or_else(|| {
-                panic!(
-                    "analyze_from_cache could not compute expression end for rule `{}`",
-                    name
-                )
-            });
+        // Compute full span (from LHS start to RHS end).
+        let full_start = name_span.start;
+        let full_end = compute_expression_end(rhs).unwrap_or_else(|| {
+            panic!(
+                "analyze_from_cache could not compute expression end for rule `{}`",
+                name
+            )
+        });
 
-            // Collect nonterminal references in RHS.
-            let mut references = Vec::new();
-            collect_references(rhs, &mut references);
+        // Collect nonterminal references in RHS.
+        let mut references = Vec::new();
+        collect_references(rhs, &mut references);
 
-            // Collect semantic tokens from RHS.
-            collect_semantic_tokens(rhs, &mut semantic_tokens);
+        // Collect semantic tokens from RHS.
+        collect_semantic_tokens(rhs, &mut semantic_tokens);
 
-            // Semantic token for rule definition (LHS).
-            semantic_tokens.push(SemanticTokenInfo {
-                span: name_byte_span,
-                token_type: token_types::RULE_DEFINITION,
-            });
+        // Semantic token for rule definition (LHS).
+        semantic_tokens.push(SemanticTokenInfo {
+            span: name_byte_span,
+            token_type: token_types::RULE_DEFINITION,
+        });
 
-            // Pretty-print RHS for hover.
-            let rhs_text = format_expression_short(rhs);
+        // Pretty-print RHS for hover.
+        let rhs_text = format_expression_short(rhs);
 
-            // Check for duplicate rule.
-            if let Some(&existing_idx) = rule_index.get(&name_str) {
-                let previous = &rules[existing_idx];
-                diagnostics.push(Diagnostic {
-                    range: line_index.span_to_range(name_byte_span.0, name_byte_span.1),
-                    severity: Some(DiagnosticSeverity::ERROR),
-                    source: Some("bbnf".into()),
-                    message: format!(
-                        "Duplicate rule: `{}` (previous definition at bytes {}..{})",
-                        name_str, previous.name_span.0, previous.name_span.1
-                    ),
-                    ..Default::default()
-                });
-            }
-
-            let idx = rules.len();
-            rule_index.insert(name_str.clone(), idx);
-
-            rules.push(RuleInfo {
-                name: name_str,
-                name_span: name_byte_span,
-                full_span: (full_start, full_end),
-                rhs_text,
-                references,
+        // Check for duplicate rule.
+        if let Some(&existing_idx) = rule_index.get(&name_str) {
+            let previous = &rules[existing_idx];
+            diagnostics.push(Diagnostic {
+                range: line_index.span_to_range(name_byte_span.0, name_byte_span.1),
+                severity: Some(DiagnosticSeverity::ERROR),
+                source: Some("bbnf".into()),
+                message: format!(
+                    "Duplicate rule: `{}` (previous definition at bytes {}..{})",
+                    name_str, previous.name_span.0, previous.name_span.1
+                ),
+                ..Default::default()
             });
         }
+
+        let idx = rules.len();
+        rule_index.insert(name_str.clone(), idx);
+
+        rules.push(RuleInfo {
+            name: name_str,
+            name_span: name_byte_span,
+            full_span: (full_start, full_end),
+            rhs_text,
+            references,
+        });
     }
 
     // Diagnostics: undefined nonterminals and unused rules.
@@ -301,14 +293,14 @@ pub fn analyze_from_cache(
         let is_multi = scc_group.len() > 1;
         let cyclic_members: Vec<&str> = scc_group
             .iter()
-            .filter_map(|e| {
-                let name = get_nonterminal_name(e)?;
-                if is_multi || scc.cyclic_rules.contains(*e) {
-                    Some(name)
+            .filter(|&&name| {
+                if is_multi {
+                    true
                 } else {
-                    None
+                    scc.cyclic_rules.contains(name)
                 }
             })
+            .copied()
             .collect();
 
         if cyclic_members.is_empty() {
@@ -339,48 +331,41 @@ pub fn analyze_from_cache(
         }
     }
 
-    // Empty rule body detection (AST-level — no FIRST sets needed).
-    for (lhs, rhs) in ast.iter() {
-        if let Expression::Nonterminal(Token { value: name, .. }) = lhs {
-            if is_empty_rhs(rhs) {
-                if let Some(&idx) = rule_index.get(name.as_ref()) {
-                    let rule = &rules[idx];
-                    diagnostics.push(Diagnostic {
-                        range: line_index.span_to_range(rule.name_span.0, rule.name_span.1),
-                        severity: Some(DiagnosticSeverity::WARNING),
-                        source: Some("bbnf".into()),
-                        message: format!("Rule `{}` has an empty body", name),
-                        ..Default::default()
-                    });
-                }
+    // Empty rule body detection (AST-level -- no FIRST sets needed).
+    for (&name, entry) in ast.iter() {
+        if is_empty_rhs(entry.rhs) {
+            if let Some(&idx) = rule_index.get(name) {
+                let rule = &rules[idx];
+                diagnostics.push(Diagnostic {
+                    range: line_index.span_to_range(rule.name_span.0, rule.name_span.1),
+                    severity: Some(DiagnosticSeverity::WARNING),
+                    source: Some("bbnf".into()),
+                    message: format!("Rule `{}` has an empty body", name),
+                    ..Default::default()
+                });
             }
         }
     }
 
     // Alias detection: rules whose RHS is just a nonterminal reference.
     let aliases = find_aliases(ast, &scc.cyclic_rules);
-    for (alias_lhs, target) in &aliases {
-        if let (Some(alias_name), Some(target_name)) = (
-            get_nonterminal_name(alias_lhs),
-            get_nonterminal_name(target),
-        ) {
-            // Skip aliases of imported rules (intentional re-exports).
-            if imported_names.contains(alias_name) {
-                continue;
-            }
-            if let Some(&idx) = rule_index.get(alias_name) {
-                let rule = &rules[idx];
-                diagnostics.push(Diagnostic {
-                    range: line_index.span_to_range(rule.name_span.0, rule.name_span.1),
-                    severity: Some(DiagnosticSeverity::HINT),
-                    source: Some("bbnf".into()),
-                    message: format!(
-                        "Rule `{}` is an alias of `{}` -- consider using `{}` directly",
-                        alias_name, target_name, target_name
-                    ),
-                    ..Default::default()
-                });
-            }
+    for (&alias_name, &target_name) in &aliases {
+        // Skip aliases of imported rules (intentional re-exports).
+        if imported_names.contains(alias_name) {
+            continue;
+        }
+        if let Some(&idx) = rule_index.get(alias_name) {
+            let rule = &rules[idx];
+            diagnostics.push(Diagnostic {
+                range: line_index.span_to_range(rule.name_span.0, rule.name_span.1),
+                severity: Some(DiagnosticSeverity::HINT),
+                source: Some("bbnf".into()),
+                message: format!(
+                    "Rule `{}` is an alias of `{}` -- consider using `{}` directly",
+                    alias_name, target_name, target_name
+                ),
+                ..Default::default()
+            });
         }
     }
 
@@ -552,12 +537,12 @@ struct IrAnalysis {
 /// Run the IR pipeline on a cached parse result and extract per-rule metadata.
 ///
 /// On failure (e.g., the grammar is incomplete or uses features not yet supported
-/// by the IR lowering), returns defaults — callers degrade gracefully.
+/// by the IR lowering), returns defaults -- callers degrade gracefully.
 fn try_compile_ir(cached: &CachedParseResult<'_>) -> IrAnalysis {
     let ast = cached.ast.clone();
 
     // Reconstruct directive maps from the analysis-layer types.
-    let recover_map: HashMap<String, Expression<'_>> = HashMap::new();
+    let recover_map: HashMap<String, &BbnfBootstrapEnum<'_>> = HashMap::new();
 
     let pretty_map: HashMap<String, Vec<String>> = cached
         .pretties
@@ -621,7 +606,7 @@ fn try_compile_ir(cached: &CachedParseResult<'_>) -> IrAnalysis {
         Err(_) => return IrAnalysis::default(),
     };
 
-    // Build a lookup from RuleId → TypeDesc.
+    // Build a lookup from RuleId -> TypeDesc.
     let type_map: HashMap<u32, &bbnf_ir::TypeDesc> =
         ir.types.iter().map(|(id, td)| (*id, td)).collect();
 
@@ -634,7 +619,10 @@ fn try_compile_ir(cached: &CachedParseResult<'_>) -> IrAnalysis {
 
         // FIRST set label from IR metadata.
         if !rule.meta.first_set.is_empty() {
-            first_set_labels.insert(name.clone(), format_charset_iter(rule.meta.first_set.iter()));
+            first_set_labels.insert(
+                name.clone(),
+                format_charset_iter(rule.meta.first_set.iter()),
+            );
         }
 
         // Nullable from IR metadata.
@@ -704,7 +692,7 @@ fn try_compile_ir(cached: &CachedParseResult<'_>) -> IrAnalysis {
 fn format_charset_iter(iter: impl IntoIterator<Item = u8>) -> String {
     let chars: Vec<u8> = iter.into_iter().collect();
     if chars.is_empty() {
-        return "\u{2205}".into(); // ∅
+        return "\u{2205}".into(); // empty set
     }
     let formatted: Vec<String> = chars
         .iter()

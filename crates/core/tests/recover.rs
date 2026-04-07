@@ -1,7 +1,7 @@
 //! Tests for `@recover` directive parsing and codegen integration.
 
 use bbnf::grammar;
-use bbnf::types::Expression;
+use bbnf::grammar::generated::BbnfBootstrapEnum;
 
 #[test]
 fn parse_recover_directive() {
@@ -11,13 +11,11 @@ fn parse_recover_directive() {
 stmt = /[a-z]+/ , ";" ;
 program = stmt * ;
 "#;
-    let parser = grammar::parse();
-    let result = parser.parse(input);
-    let pg = result.expect("should parse grammar with @recover");
+    let pg = grammar::parse(input).expect("should parse grammar with @recover");
 
     assert_eq!(pg.recovers.len(), 1);
     assert_eq!(pg.recovers[0].rule_name.as_ref(), "stmt");
-    assert!(matches!(pg.recovers[0].sync_expr, Expression::Regex(_)));
+    assert!(matches!(pg.recovers[0].sync_expr, BbnfBootstrapEnum::regex(_)));
     assert_eq!(pg.rules.len(), 2);
 }
 
@@ -30,9 +28,7 @@ fn parse_multiple_recover_directives() {
 decl = /[a-z]+/ , ":" , /[^;]+/ , ";" ;
 rule = /[a-z]+/ , "{" , decl * , "}" ;
 "#;
-    let parser = grammar::parse();
-    let result = parser.parse(input);
-    let pg = result.expect("should parse grammar with multiple @recover");
+    let pg = grammar::parse(input).expect("should parse grammar with multiple @recover");
 
     assert_eq!(pg.recovers.len(), 2);
     assert_eq!(pg.recovers[0].rule_name.as_ref(), "decl");
@@ -49,9 +45,7 @@ fn parse_recover_mixed_with_imports() {
 stmt = /[a-z]+/ , ";" ;
 program = stmt * ;
 "#;
-    let parser = grammar::parse();
-    let result = parser.parse(input);
-    let pg = result.expect("should parse grammar with @import and @recover");
+    let pg = grammar::parse(input).expect("should parse grammar with @import and @recover");
 
     assert_eq!(pg.imports.len(), 1);
     assert_eq!(pg.recovers.len(), 1);
@@ -65,9 +59,7 @@ fn parse_recover_nonexistent_target() {
 
 stmt = /[a-z]+/ , ";" ;
 "#;
-    let parser = grammar::parse();
-    let result = parser.parse(input);
-    let pg = result.expect("should parse even with nonexistent target");
+    let pg = grammar::parse(input).expect("should parse even with nonexistent target");
 
     assert_eq!(pg.recovers.len(), 1);
     assert_eq!(pg.recovers[0].rule_name.as_ref(), "nonexistent");
@@ -80,14 +72,12 @@ fn parse_recover_with_alternation_sync_expr() {
 
 atRule = /@[a-z]+/ , /[^;]+/ , ";" ;
 "#;
-    let parser = grammar::parse();
-    let result = parser.parse(input);
-    let pg = result.expect("should parse recover with alternation sync");
+    let pg = grammar::parse(input).expect("should parse recover with alternation sync");
 
     assert_eq!(pg.recovers.len(), 1);
     assert!(matches!(
         pg.recovers[0].sync_expr,
-        Expression::Alternation(_)
+        BbnfBootstrapEnum::alternation(_)
     ));
 }
 
@@ -99,9 +89,7 @@ fn parse_recover_without_terminator() {
 
 stmt = /[a-z]+/ , ";" ;
 "#;
-    let parser = grammar::parse();
-    let result = parser.parse(input);
-    let pg = result.expect("should parse recover without terminator");
+    let pg = grammar::parse(input).expect("should parse recover without terminator");
 
     assert_eq!(pg.recovers.len(), 1);
 }

@@ -383,7 +383,7 @@ impl<'a> ::core::clone::Clone for BbnfBootstrapEnum<'a> {
     }
 }
 #[allow(non_camel_case_types)]
-struct __BbnfBootstrapEnumCtx<'a> {
+pub(crate) struct __BbnfBootstrapEnumCtx<'a> {
     __slab: ::parse_that::BumpSlab,
     __s0: ::std::cell::UnsafeCell<
         Vec<(::parse_that::Span<'a>, &'a BbnfBootstrapEnum<'a>)>,
@@ -408,7 +408,7 @@ struct __BbnfBootstrapEnumCtx<'a> {
 }
 #[allow(non_snake_case)]
 impl<'a> __BbnfBootstrapEnumCtx<'a> {
-    fn with_capacity(n: usize) -> Self {
+    pub(crate) fn with_capacity(n: usize) -> Self {
         Self {
             __slab: ::parse_that::BumpSlab::with_capacity(n * 32),
             __s0: ::std::cell::UnsafeCell::new(Vec::with_capacity(64)),

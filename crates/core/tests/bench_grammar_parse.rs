@@ -1,4 +1,7 @@
-//! Grammar parser benchmarks — measure before/after self-hosting.
+//! Grammar parser benchmarks — generated (self-hosted) parser only.
+//!
+//! The hand-written combinator parser has been removed; only the generated
+//! bootstrap parser remains.
 //!
 //! Run: cargo test -p bbnf --test bench_grammar_parse -- --nocapture
 
@@ -25,7 +28,7 @@ fn load_grammar(name: &str) -> &'static str {
 }
 
 #[test]
-fn bench_handwritten_vs_generated() {
+fn bench_generated_parser() {
     let grammars = [
         ("json/json.bbnf", "JSON"),
         ("ebnf/ebnf.bbnf", "EBNF"),
@@ -36,27 +39,6 @@ fn bench_handwritten_vs_generated() {
     for (path, label) in &grammars {
         let source = load_grammar(path);
         let iterations = 2000;
-
-        // ── Hand-written parser ──────────────────────────────────
-        {
-            let parser = bbnf::grammar::parse();
-            let _ = parser.parse(source); // warm
-
-            let start = Instant::now();
-            for _ in 0..iterations {
-                let parser = bbnf::grammar::parse();
-                let _ = parser.parse(source);
-            }
-            let elapsed = start.elapsed();
-            let per_parse = elapsed / iterations as u32;
-            let throughput = (source.len() as f64 * iterations as f64)
-                / elapsed.as_secs_f64()
-                / 1_000_000.0;
-            eprintln!(
-                "{label:>6} hand-written: {per_parse:>8.1?}  ({throughput:.1} MB/s, {len} bytes)",
-                len = source.len()
-            );
-        }
 
         // ── Generated parser ─────────────────────────────────────
         {
@@ -74,7 +56,8 @@ fn bench_handwritten_vs_generated() {
                 / elapsed.as_secs_f64()
                 / 1_000_000.0;
             eprintln!(
-                "{label:>6}    generated: {per_parse:>8.1?}  ({throughput:.1} MB/s)",
+                "{label:>6}    generated: {per_parse:>8.1?}  ({throughput:.1} MB/s, {len} bytes)",
+                len = source.len()
             );
         }
 

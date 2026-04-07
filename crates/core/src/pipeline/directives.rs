@@ -3,14 +3,15 @@ use std::path::PathBuf;
 
 use indexmap::IndexMap;
 
+use crate::grammar::generated::BbnfBootstrapEnum;
 use crate::imports::load_module_graph;
-use crate::pipeline::CompileError;
 use crate::lower::DirectiveSet;
-use crate::types::{AST, Expression, ParsedGrammar};
+use crate::pipeline::CompileError;
+use crate::types::{AST, ParsedGrammar, RuleEntry};
 
 #[derive(Default)]
 pub(crate) struct DirectiveMaps<'a> {
-    recover_map: HashMap<String, Expression<'a>>,
+    recover_map: HashMap<String, &'a BbnfBootstrapEnum<'a>>,
     pretty_map: HashMap<String, Vec<String>>,
     ws_pattern: Option<String>,
     token_set: HashSet<String>,
@@ -140,7 +141,7 @@ fn merge_module(
     for rec in &module.grammar.recovers {
         directives
             .recover_map
-            .insert(rec.rule_name.to_string(), rec.sync_expr.clone());
+            .insert(rec.rule_name.to_string(), rec.sync_expr);
     }
 
     for pretty in &module.grammar.pretties {
@@ -173,7 +174,10 @@ fn merge_module(
         }
     }
 
-    for (name, expr) in &module.grammar.rules {
-        ast.insert(name.clone(), expr.clone());
+    for (&name, entry) in &module.grammar.rules {
+        ast.insert(name, RuleEntry {
+            name_span: entry.name_span,
+            rhs: entry.rhs,
+        });
     }
 }

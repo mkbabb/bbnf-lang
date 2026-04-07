@@ -2,7 +2,7 @@ use bbnf::graph::{tarjan_scc, topological_sort_scc};
 use bbnf::grammar;
 use bbnf::lower::{DirectiveSet, lower_to_ir};
 use bbnf::pipeline::{PipelineOptions, compile_grammar};
-use bbnf::{Expression, calculate_ast_deps};
+use bbnf::calculate_ast_deps;
 use bbnf_ir::GrammarIR;
 use bbnf_ir::bytecode::BytecodeProgram;
 use bbnf_ir::compiler::compile as compile_bytecode;
@@ -181,23 +181,14 @@ string = /"[^"]*"/ ;
 number = /-?\d+/ ;
         "#;
 
-    let source_static: &'static str = Box::leak(grammar.to_string().into_boxed_str());
-    let parser = grammar::parse();
-    let (parsed, _) = parser.parse_return_state(source_static);
-    let parsed = parsed.unwrap();
+    let parsed = grammar::parse(grammar).unwrap();
     let ast = parsed.rules;
 
     // Lower to IR without running passes.
     let deps = calculate_ast_deps(&ast);
     let scc_result = tarjan_scc(&deps);
     let ast = topological_sort_scc(&ast, &scc_result, &deps);
-    let entry_rule_name: Option<String> = ast.keys().last().and_then(|lhs| {
-        if let Expression::Nonterminal(tok) = lhs {
-            Some(tok.value.to_string())
-        } else {
-            None
-        }
-    });
+    let entry_rule_name: Option<String> = ast.keys().last().map(|name| name.to_string());
 
     let directives = DirectiveSet::empty();
 
@@ -710,26 +701,29 @@ fn pipeline_google_sheets_multiline_let() {
         "should consume all input"
     );
 
-    // Format via VM
-    let value = result.value.as_ref().unwrap();
-    let formatted = gorgeous::vm::format_value(
-        &ir,
-        value,
-        input,
-        &gorgeous::PrinterConfig {
-            max_width: 80,
-            indent: 2,
-            use_tabs: false,
-        },
-    );
-    let formatted = formatted.unwrap();
-    eprintln!("VM formatted:\n{}", formatted);
+    // Format via VM (requires gorgeous dev-dependency)
+    #[cfg(feature = "gorgeous")]
+    {
+        let value = result.value.as_ref().unwrap();
+        let formatted = gorgeous::vm::format_value(
+            &ir,
+            value,
+            input,
+            &gorgeous::PrinterConfig {
+                max_width: 80,
+                indent: 2,
+                use_tabs: false,
+            },
+        );
+        let formatted = formatted.unwrap();
+        eprintln!("VM formatted:\n{}", formatted);
 
-    // Each let_binding (name, value) should stay on one line when it fits
-    assert!(
-        formatted.contains("scale, DURATION"),
-        "name-value pair should stay on one line"
-    );
+        // Each let_binding (name, value) should stay on one line when it fits
+        assert!(
+            formatted.contains("scale, DURATION"),
+            "name-value pair should stay on one line"
+        );
+    }
 
     // Same formula without leading =
     let no_eq = &input[1..];
@@ -907,13 +901,13 @@ fn pipeline_css_vm_backdrop_block() {
 
 // ── Grammar function (closure) expansion tests ────────────────────────────
 
-fn compile_and_parse(grammar: &str, input: &str) -> ParseResult {
+fn compile_and_parse(grammar_src: &str, input: &str) -> ParseResult {
     let options = PipelineOptions::default();
     // Verify parse first.
-    let parsed = grammar::parse().parse(grammar)
-        .unwrap_or_else(|| panic!("grammar failed to parse:\n{}", grammar));
+    let parsed = grammar::parse(grammar_src)
+        .unwrap_or_else(|| panic!("grammar failed to parse:\n{}", grammar_src));
     eprintln!("Parsed {} rules", parsed.rules.len());
-    let ir = compile_grammar(grammar, &options).expect("grammar compilation failed");
+    let ir = compile_grammar(grammar_src, &options).expect("grammar compilation failed");
     assert!(!ir.rules.is_empty(), "IR must have at least one rule (got 0 from {} parsed)", parsed.rules.len());
     let program = compile_bytecode(&ir);
     run_program(&program, input)

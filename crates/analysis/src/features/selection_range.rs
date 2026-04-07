@@ -1,13 +1,8 @@
 use ls_types::*;
 
-use bbnf::types::{Expression, Token};
+use bbnf::grammar::generated::BbnfBootstrapEnum;
 
 use crate::state::DocumentState;
-
-/// Extract the inner value from a TokenExpression.
-fn get_inner_expression<'a, T>(tok: &'a Token<'a, T>) -> &'a T {
-    &tok.value
-}
 
 /// Compute selection ranges for each requested position.
 ///
@@ -40,114 +35,216 @@ fn compute_selection_range(
     offset: usize,
 ) -> Option<SelectionRange> {
     // Find which rule contains this offset.
-    for (lhs, rhs) in ast.iter() {
-        if let Expression::Nonterminal(Token {
-            span: name_span, ..
-        }) = lhs
-        {
-            let rule_start = name_span.start;
-            let rule_end = crate::state::compute_expression_end_pub(rhs).unwrap_or_else(|| {
-                panic!(
-                    "compute_selection_range could not compute expression end for rule at {}",
-                    name_span.start
-                )
-            });
+    for (_name, entry) in ast.iter() {
+        let name_span = &entry.name_span;
+        let rule_start = name_span.start;
+        let rule_end = crate::state::compute_expression_end_pub(entry.rhs).unwrap_or_else(|| {
+            panic!(
+                "compute_selection_range could not compute expression end for rule at {}",
+                name_span.start
+            )
+        });
 
-            if offset < rule_start || offset > rule_end {
-                continue;
-            }
-
-            // Collect nested spans from the RHS expression tree.
-            let mut spans = Vec::new();
-            collect_spans(rhs, offset, &mut spans);
-
-            // Add the full rule span as the outermost.
-            spans.push((rule_start, rule_end));
-
-            // Sort spans innermost-first (smallest to largest).
-            spans.sort_by_key(|(start, end)| *end - *start);
-            spans.dedup();
-
-            // Build the chain from innermost to outermost.
-            let mut result: Option<SelectionRange> = None;
-            for (start, end) in spans.into_iter().rev() {
-                let range = line_index.span_to_range(start, end);
-                result = Some(SelectionRange {
-                    range,
-                    parent: result.map(Box::new),
-                });
-            }
-
-            return result;
+        if offset < rule_start || offset > rule_end {
+            continue;
         }
+
+        // Collect nested spans from the RHS expression tree.
+        let mut spans = Vec::new();
+        collect_spans(entry.rhs, offset, &mut spans);
+
+        // Add the full rule span as the outermost.
+        spans.push((rule_start, rule_end));
+
+        // Sort spans innermost-first (smallest to largest).
+        spans.sort_by_key(|(start, end)| *end - *start);
+        spans.dedup();
+
+        // Build the chain from innermost to outermost.
+        let mut result: Option<SelectionRange> = None;
+        for (start, end) in spans.into_iter().rev() {
+            let range = line_index.span_to_range(start, end);
+            result = Some(SelectionRange {
+                range,
+                parent: result.map(Box::new),
+            });
+        }
+
+        return result;
     }
     None
 }
 
 /// Recursively collect all expression spans that contain the given offset.
-fn collect_spans(expr: &Expression<'_>, offset: usize, spans: &mut Vec<(usize, usize)>) {
-    match expr {
-        Expression::Literal(tok) | Expression::Nonterminal(tok) | Expression::Regex(tok) => {
-            if offset >= tok.span.start && offset <= tok.span.end {
-                spans.push((tok.span.start, tok.span.end));
+fn collect_spans(node: &BbnfBootstrapEnum<'_>, offset: usize, spans: &mut Vec<(usize, usize)>) {
+    match node {
+        // Span leaves
+        BbnfBootstrapEnum::identifier(s)
+        | BbnfBootstrapEnum::literal(s)
+        | BbnfBootstrapEnum::regex(s)
+        | BbnfBootstrapEnum::modifier(s)
+        | BbnfBootstrapEnum::binary_operators(s)
+        | BbnfBootstrapEnum::comment(s)
+        | BbnfBootstrapEnum::big_comment(s) => {
+            if offset >= s.start && offset <= s.end {
+                spans.push((s.start, s.end));
             }
         }
-        Expression::Epsilon(tok) => {
-            if offset >= tok.span.start && offset <= tok.span.end {
-                spans.push((tok.span.start, tok.span.end));
+
+        BbnfBootstrapEnum::term_0(s) => {
+            if offset >= s.start && offset <= s.end {
+                spans.push((s.start, s.end));
             }
         }
-        Expression::Alternation(inner) | Expression::Concatenation(inner) => {
-            if offset >= inner.span.start && offset <= inner.span.end {
-                spans.push((inner.span.start, inner.span.end));
+
+        // Alternation
+        BbnfBootstrapEnum::alternation(branches) => {
+            // Compute overall span from first to last branch.
+            if let (Some(first), Some(last)) = (branches.first(), branches.last()) {
+                if let (Some(first_start), Some(last_end)) =
+                    (span_start(first.0), span_end_or_pipe(last))
+                {
+                    if offset >= first_start && offset <= last_end {
+                        spans.push((first_start, last_end));
+                    }
+                }
             }
-            for child in get_inner_expression(inner) {
-                collect_spans(child, offset, spans);
+            for (branch, _pipe) in *branches {
+                collect_spans(branch, offset, spans);
             }
         }
-        Expression::Group(inner)
-        | Expression::Optional(inner)
-        | Expression::Many(inner)
-        | Expression::Many1(inner)
-        | Expression::OptionalWhitespace(inner) => {
-            if offset >= inner.span.start && offset <= inner.span.end {
-                spans.push((inner.span.start, inner.span.end));
+
+        // Concatenation
+        BbnfBootstrapEnum::concatenation(parts) => {
+            if let (Some(first), Some(last)) = (parts.first(), parts.last()) {
+                if let (Some(first_start), Some(last_end)) =
+                    (span_start(first.0), span_end_or_comma(last))
+                {
+                    if offset >= first_start && offset <= last_end {
+                        spans.push((first_start, last_end));
+                    }
+                }
             }
-            collect_spans(get_inner_expression(inner), offset, spans);
+            for (part, _comma) in *parts {
+                collect_spans(part, offset, spans);
+            }
         }
-        Expression::Skip(l, r) | Expression::Next(l, r) | Expression::Minus(l, r) => {
-            // Use the combined span of both operands.
-            let start = l.span.start;
-            let end = r.span.end;
+
+        // Binary factor
+        BbnfBootstrapEnum::binary_factor((first, rest)) => {
+            collect_spans(first, offset, spans);
+            for (op, operand) in *rest {
+                collect_spans(op, offset, spans);
+                collect_spans(operand, offset, spans);
+            }
+        }
+
+        // Mapped factor
+        BbnfBootstrapEnum::mapped_factor((inner, _mapping)) => {
+            collect_spans(inner, offset, spans);
+        }
+
+        // Factor
+        BbnfBootstrapEnum::factor((_, term, modifier, _)) => {
+            collect_spans(term, offset, spans);
+            if let Some(m) = modifier {
+                collect_spans(m, offset, spans);
+            }
+        }
+
+        // Term
+        BbnfBootstrapEnum::term(inner) => {
+            collect_spans(inner, offset, spans);
+        }
+
+        // term_1: identifier + optional call
+        BbnfBootstrapEnum::term_1((ident, call_args)) => {
+            if offset >= ident.start && offset <= ident.end {
+                spans.push((ident.start, ident.end));
+            }
+            if let Some((_open, first_arg, rest_args, _close)) = call_args {
+                collect_spans(first_arg, offset, spans);
+                for (_comma, arg) in *rest_args {
+                    collect_spans(arg, offset, spans);
+                }
+            }
+        }
+
+        // term_2: grouped
+        BbnfBootstrapEnum::term_2((open, inner, close)) => {
+            let start = open.start;
+            let end = close.end;
             if offset >= start && offset <= end {
                 spans.push((start, end));
             }
-            collect_spans(get_inner_expression(l), offset, spans);
-            collect_spans(get_inner_expression(r), offset, spans);
+            collect_spans(inner, offset, spans);
         }
-        Expression::Rule(rhs, _) => {
-            collect_spans(rhs, offset, spans);
+
+        // Closure
+        BbnfBootstrapEnum::closure((_pipe, _params, _pipe2, body)) => {
+            collect_spans(body, offset, spans);
         }
-        Expression::MappedExpression(expr_tok, _) => {
-            collect_spans(get_inner_expression(expr_tok), offset, spans);
-        }
-        Expression::DebugExpression((expr_tok, _)) => {
-            collect_spans(get_inner_expression(expr_tok), offset, spans);
-        }
-        Expression::Closure(_params, body) => {
-            if offset >= body.span.start && offset <= body.span.end {
-                spans.push((body.span.start, body.span.end));
-            }
-            collect_spans(get_inner_expression(body), offset, spans);
-        }
-        Expression::GrammarCall(name_tok, args) => {
-            if offset >= name_tok.span.start && offset <= name_tok.span.end {
-                spans.push((name_tok.span.start, name_tok.span.end));
-            }
-            for arg in args {
-                collect_spans(arg, offset, spans);
+
+        // Value expression leaves
+        BbnfBootstrapEnum::int_lit(s)
+        | BbnfBootstrapEnum::float_lit(s)
+        | BbnfBootstrapEnum::bool_lit(s)
+        | BbnfBootstrapEnum::string_lit(s)
+        | BbnfBootstrapEnum::value_ident(s) => {
+            if offset >= s.start && offset <= s.end {
+                spans.push((s.start, s.end));
             }
         }
+
+        // Everything else — no spans to contribute
         _ => {}
+    }
+}
+
+/// Get the start offset of a node (best-effort).
+fn span_start(node: &BbnfBootstrapEnum<'_>) -> Option<usize> {
+    match node {
+        BbnfBootstrapEnum::identifier(s)
+        | BbnfBootstrapEnum::literal(s)
+        | BbnfBootstrapEnum::regex(s)
+        | BbnfBootstrapEnum::term_0(s)
+        | BbnfBootstrapEnum::modifier(s)
+        | BbnfBootstrapEnum::binary_operators(s)
+        | BbnfBootstrapEnum::comment(s)
+        | BbnfBootstrapEnum::big_comment(s) => Some(s.start),
+
+        BbnfBootstrapEnum::term(inner) => span_start(inner),
+        BbnfBootstrapEnum::factor((_, term, _, _)) => span_start(term),
+        BbnfBootstrapEnum::mapped_factor((inner, _)) => span_start(inner),
+        BbnfBootstrapEnum::binary_factor((first, _)) => span_start(first),
+        BbnfBootstrapEnum::term_1((ident, _)) => Some(ident.start),
+        BbnfBootstrapEnum::term_2((open, _, _)) => Some(open.start),
+
+        BbnfBootstrapEnum::alternation(branches) => {
+            branches.first().and_then(|(b, _)| span_start(b))
+        }
+        BbnfBootstrapEnum::concatenation(parts) => parts.first().and_then(|(p, _)| span_start(p)),
+
+        _ => None,
+    }
+}
+
+/// Get the end offset for an alternation element (branch, pipe).
+fn span_end_or_pipe(elem: &(&BbnfBootstrapEnum<'_>, bbnf::Span<'_>)) -> Option<usize> {
+    let (branch, pipe) = elem;
+    if pipe.end > pipe.start {
+        Some(pipe.end)
+    } else {
+        crate::state::ast_utils::compute_expression_end(branch)
+    }
+}
+
+/// Get the end offset for a concatenation element (part, comma).
+fn span_end_or_comma(elem: &(&BbnfBootstrapEnum<'_>, bbnf::Span<'_>)) -> Option<usize> {
+    let (part, comma) = elem;
+    if comma.end > comma.start {
+        Some(comma.end)
+    } else {
+        crate::state::ast_utils::compute_expression_end(part)
     }
 }

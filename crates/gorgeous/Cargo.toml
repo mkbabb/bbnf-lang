@@ -1,0 +1,28 @@
+[package]
+name = "gorgeous"
+version = "0.1.10"
+edition = "2024"
+license = "MIT"
+description = "Grammar-driven pretty printers auto-generated from BBNF grammars"
+repository = "https://github.com/mkbabb/gorgeous"
+
+[[bin]]
+name = "gorg"
+path = "src/main.rs"
+
+[lib]
+name = "gorgeous"
+path = "src/lib.rs"
+
+[features]
+default = []
+vm = ["dep:bbnf-ir"]
+
+[dependencies]
+parse_that = { version = "0.4", features = ["diagnostics"] }
+bbnf_derive = { version = "0.2", path = "../derive" }
+bbnf = { version = "0.2", path = "../core" }
+bbnf-ir = { version = "0.1", path = "../ir", optional = true }
+pprint = "0.3"
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+mimalloc = "0.1"

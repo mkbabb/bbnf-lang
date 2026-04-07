@@ -1,0 +1,228 @@
+#![cfg(feature = "vm")]
+
+use std::collections::HashMap;
+
+use bbnf_ir::interpreter::Value;
+use bbnf_ir::{GrammarIR, IrNode, IrRule, PrettyHints, RuleDirectives, RuleMeta};
+use gorgeous::vm::{format_ir, format_value};
+use gorgeous::PrinterConfig;
+
+/// Build a minimal IR with one rule that has the given pretty hints.
+fn make_ir(hints: PrettyHints) -> GrammarIR {
+    GrammarIR {
+        entry: 0,
+        rules: vec![IrRule {
+            id: 0,
+            name: 0,
+            body: IrNode::Epsilon,
+            meta: RuleMeta {
+                directives: RuleDirectives {
+                    pretty: Some(hints),
+                    ..RuleDirectives::default()
+                },
+                ..RuleMeta::default()
+            },
+        }],
+        strings: vec!["root".into()],
+        fns: vec![],
+        types: vec![],
+        follow_sets: HashMap::new(),
+        ws_pattern: None,
+        collapse_simple_spans: false,
+        debug_all: false,
+        debug_labels: vec![],
+        type_map: None,
+    }
+}
+
+/// Build a Tagged value with N Span children at distinct offsets.
+fn tagged_spans(input: &str, n: usize) -> Value {
+    let chunk = input.len() / n;
+    let children: Vec<Value> = (0..n)
+        .map(|i| Value::Span((i * chunk) as u32, ((i + 1) * chunk) as u32))
+        .collect();
+    Value::Tagged {
+        tag: 0,
+        span: (0, input.len() as u32),
+        children: bbnf_ir::interpreter::ValueSlice::from_slice(Box::leak(children.into_boxed_slice())),
+    }
+}
+
+/// Format a tagged value with the given hints.
+fn fmt(hints: PrettyHints, input: &str, n: usize, max_width: usize) -> String {
+    let ir = make_ir(hints);
+    let value = tagged_spans(input, n);
+    let printer = pprint::Printer::new(max_width, 2, false);
+    format_value(&ir, &value, input, printer).unwrap()
+}
+
+fn default_hints() -> PrettyHints {
+    PrettyHints::default()
+}
+
+#[test]
+fn hint_blankline() {
+    let hints = PrettyHints { blankline: true, ..default_hints() };
+    let output = fmt(hints, "aaabbbccc", 3, 80);
+    assert!(
+        output.contains("\n\n"),
+        "blankline should produce double newline, got: {:?}",
+        output
+    );
+}
+
+#[test]
+fn hint_block() {
+    let hints = PrettyHints { block: true, ..default_hints() };
+    let output = fmt(hints, "aaabbb", 2, 80);
+    assert!(
+        output.contains('\n'),
+        "block should produce newlines, got: {:?}",
+        output
+    );
+    // Should NOT produce double newline (that's blankline).
+    assert!(
+        !output.contains("\n\n"),
+        "block should not produce blank lines, got: {:?}",
+        output
+    );
+}
+
+#[test]
+fn hint_sep() {
+    let hints = PrettyHints {
+        sep: Some(", ".to_string()),
+        ..default_hints()
+    };
+    let output = fmt(hints, "aaabbbccc", 3, 80);
+    assert!(
+        output.contains(", "),
+        "sep should produce comma-space separator, got: {:?}",
+        output
+    );
+}
+
+#[test]
+fn hint_group_sep() {
+    let hints = PrettyHints {
+        group: true,
+        sep: Some(", ".to_string()),
+        ..default_hints()
+    };
+    // Narrow width forces break.
+    let output = fmt(hints, "alphbetagram", 3, 10);
+    assert!(
+        output.contains('\n'),
+        "group sep should break when width exceeded, got: {:?}",
+        output
+    );
+}
+
+#[test]
+fn hint_compact() {
+    let hints = PrettyHints { compact: true, ..default_hints() };
+    let output = fmt(hints, "aaabbb", 2, 80);
+    assert_eq!(output, "aaabbb", "compact should concatenate without separator");
+}
+
+#[test]
+fn hint_indent_group() {
+    let hints = PrettyHints {
+        indent: true,
+        group: true,
+        sep: Some(", ".to_string()),
+        ..default_hints()
+    };
+    let output = fmt(hints, "alphbetagram", 3, 10);
+    let has_indent = output.lines().skip(1).any(|l| l.starts_with("  "));
+    assert!(
+        has_indent,
+        "indent group should produce indented lines, got: {:?}",
+        output
+    );
+}
+
+#[test]
+fn hint_off() {
+    // off disables group/indent/dedent wrapping.
+    let hints = PrettyHints {
+        off: true,
+        group: true,
+        indent: true,
+        ..default_hints()
+    };
+    let output = fmt(hints, "aaabbb", 2, 80);
+    // Should just concatenate -- no group or indent applied.
+    assert_eq!(output, "aaabbb", "off should disable formatting wrappers");
+}
+
+#[test]
+fn hint_split() {
+    let hints = PrettyHints {
+        split: Some(",".to_string()),
+        sep: Some(", ".to_string()),
+        ..default_hints()
+    };
+    // Two span children -- split breaks the comma-containing spans.
+    let input = "a,bc,d";
+    let ir = make_ir(hints);
+    let children = vec![Value::Span(0, 3), Value::Span(3, 6)];
+    let value = Value::Tagged {
+        tag: 0,
+        span: (0, 6),
+        children: bbnf_ir::interpreter::ValueSlice::from_slice(Box::leak(children.into_boxed_slice())),
+    };
+    let printer = pprint::Printer::new(80, 2, false);
+    let output = format_value(&ir, &value, input, printer).unwrap();
+    assert!(
+        output.contains(", "),
+        "split should separate by delimiter, got: {:?}",
+        output
+    );
+}
+
+#[test]
+fn hint_softbreak() {
+    // Softline in flat mode renders as nothing -- items are concatenated.
+    let hints = PrettyHints { softbreak: true, ..default_hints() };
+    let output = fmt(hints, "aaabbb", 2, 80);
+    // In flat mode (no group), softline is empty -- same as compact.
+    assert_eq!(output, "aaabbb", "softbreak flat should concatenate");
+}
+
+#[test]
+fn hint_nobreak() {
+    let hints = PrettyHints { nobreak: true, ..default_hints() };
+    let output = fmt(hints, "aaabbb", 2, 80);
+    assert!(
+        output.contains(' '),
+        "nobreak should join with space, got: {:?}",
+        output
+    );
+    assert!(
+        !output.contains('\n'),
+        "nobreak should never break, got: {:?}",
+        output
+    );
+}
+
+#[test]
+fn hint_fast() {
+    let hints = PrettyHints { fast: true, ..default_hints() };
+    let output = fmt(hints, "aaabbb", 2, 80);
+    assert!(
+        output.contains('\n'),
+        "fast should produce newlines, got: {:?}",
+        output
+    );
+}
+
+#[test]
+fn format_ir_convenience() {
+    let hints = PrettyHints { block: true, ..default_hints() };
+    let ir = make_ir(hints);
+    let value = tagged_spans("aaabbb", 2);
+    let config = PrinterConfig::new(80, 2);
+    let output = format_ir(&ir, &value, "aaabbb", &config).unwrap();
+    assert!(output.contains('\n'), "format_ir should work like format_value");
+}

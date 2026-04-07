@@ -1,0 +1,62 @@
+// CSS Stylesheet Grammar — Prettifier edition (slab-compatible)
+// Models CSS nesting (CSS Nesting Module Level 1) to create structural AST.
+// Treats selectors and values as opaque spans for formatting.
+//
+// Uses explicit `ws` (comment-aware whitespace) instead of `?w` (which only
+// trims \s) so inline comments like `/* 1 */` are consumed correctly.
+//
+// NOTE: Uses concatenation (`,`) instead of skip/next (`>>` / `<<`) for
+// slab monolithic codegen compatibility. The `@pretty ruleBlock off` hint
+// ensures braces are handled by parent rules during formatting.
+
+// Comments + whitespace — single regex hits sp_css_ws_comment() SIMD fast path
+@ws /(?s)(?:\s|\/\*.*?\*\/)*/ ;
+ws = /(?s)(?:\s|\/\*.*?\*\/)*/ ;
+
+// Opaque tokens — @token forces fusion-style inlining + span eligibility.
+@token selectorSpan ;
+@token valueSpan ;
+@token propertyName ;
+selectorSpan = /[^{};]+/ ;
+valueSpan    = /[^;{}!,]+/ ;
+
+// Declarations
+propertyName = /[a-zA-Z_][\w-]*/ | /--[\w-]+/ | /-[a-zA-Z][\w-]*/ ;
+important    = "!" , ws , "important" ;
+optSemicolon = ";" ? ;
+declaration  = propertyName , ws , ":" , ws , (valueSpan , ("," , ws , valueSpan) *) ? ,
+               important ? , optSemicolon , ws ;
+
+// Block contents: declarations and nested rules (CSS Nesting Level 1)
+blockContent = (ws , (declaration | ruleItem)) * ;
+ruleBlock    = "{" , ws , blockContent , ws , "}" ;
+
+// Qualified rules
+qualifiedRule = selectorSpan , ws , ruleBlock ;
+
+// At-rules
+mediaRule      = "@media" , /[^{]+/ , ruleBlock ;
+supportsRule   = "@supports" , /[^{]+/ , ruleBlock ;
+fontFaceRule   = "@font-face" , ws , ruleBlock ;
+importRule     = "@import" , valueSpan , ("," , ws , valueSpan) * , ";" ;
+atRuleBody     = ruleBlock | ";" ;
+genericAtRule  = /@[a-zA-Z][\w-]*/ , /[^;{}]*/ , atRuleBody ;
+
+atRule = mediaRule | supportsRule | fontFaceRule | importRule | genericAtRule ;
+
+// Rule item
+ruleItem = qualifiedRule | atRule ;
+
+// Rule list (top-level)
+ruleList = (ws , ruleItem) * ;
+
+// Entry point
+stylesheet = ws , ruleList , ws ;
+
+@pretty stylesheet block ;
+@pretty ruleList blankline ;
+@pretty blockContent block indent ;
+@pretty ruleBlock off ;
+@pretty qualifiedRule group ;
+@pretty declaration group ;
+@pretty atRule group ;

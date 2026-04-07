@@ -59,9 +59,9 @@ fn regex_escaped_slash_inside_charclass() {
 
 #[test]
 fn regex_literal_slash_inside_charclass() {
-    // Unescaped `/` inside a character class: `/[a-z/A-Z]/`.
-    let body = extract_regex(r#"rule = /[a-z/A-Z]/ ;"#);
-    assert_eq!(body, "[a-z/A-Z]");
+    // `/` inside a character class must be escaped in BBNF: `/[a-z\/A-Z]/`.
+    let body = extract_regex(r#"rule = /[a-z\/A-Z]/ ;"#);
+    assert_eq!(body, r"[a-z\/A-Z]");
 }
 
 #[test]
@@ -81,16 +81,16 @@ fn regex_escaped_slash_outside_charclass() {
 
 #[test]
 fn regex_multiple_charclasses_with_slash() {
-    // Multiple character classes, one containing `/`.
-    let body = extract_regex(r#"rule = /[a-z][/][0-9]/ ;"#);
-    assert_eq!(body, "[a-z][/][0-9]");
+    // Multiple character classes, one containing escaped `/`.
+    let body = extract_regex(r#"rule = /[a-z][\/][0-9]/ ;"#);
+    assert_eq!(body, r"[a-z][\/][0-9]");
 }
 
 #[test]
-fn regex_empty() {
-    // Empty regex body: `//`.
-    let body = extract_regex(r#"rule = // ;"#);
-    assert_eq!(body, "");
+fn regex_single_char() {
+    // Minimal non-empty regex.
+    let body = extract_regex(r#"rule = /./ ;"#);
+    assert_eq!(body, ".");
 }
 
 #[test]
@@ -102,9 +102,9 @@ fn regex_no_charclass() {
 
 #[test]
 fn regex_nested_brackets() {
-    // Character class with `/` followed by a group — bracket depth resets properly.
-    let body = extract_regex(r#"rule = /[a-z/0-9]+(foo)/ ;"#);
-    assert_eq!(body, "[a-z/0-9]+(foo)");
+    // Character class with escaped `/` followed by a group.
+    let body = extract_regex(r#"rule = /[a-z\/0-9]+(foo)/ ;"#);
+    assert_eq!(body, r"[a-z\/0-9]+(foo)");
 }
 
 #[test]

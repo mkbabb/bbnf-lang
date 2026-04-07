@@ -27,7 +27,8 @@ pub(crate) fn lower_rhs<'a>(node: &'a BbnfBootstrapEnum<'a>, ctx: &mut LowerCtx<
             // (Closures are expanded at call sites via beta-reduction.)
             lower_rhs(body, ctx)
         }
-        BbnfBootstrapEnum::alternation(branches) => lower_alternation(branches, ctx),
+        BbnfBootstrapEnum::alternation(branches)
+        | BbnfBootstrapEnum::call_arg(branches) => lower_alternation(branches, ctx),
         other => lower_node(other, ctx),
     }
 }
@@ -215,17 +216,13 @@ fn lower_term_dispatch<'a>(
         | BbnfBootstrapEnum::value_atom_0((open, inner, _close)) => {
             let expr = lower_rhs(inner, ctx);
             match open.as_str() {
-                "(" => expr, // Group is transparent.
-                "[" => IrNode::Repeat {
-                    inner: Box::new(expr),
-                    lo: 0,
-                    hi: 1,
-                },
-                "{" => IrNode::Repeat {
-                    inner: Box::new(expr),
-                    lo: 0,
-                    hi: u32::MAX,
-                },
+                "(" => expr,
+                "[" => IrNode::Repeat { inner: Box::new(expr), lo: 0, hi: 1 },
+                "@{" => {
+                    let fn_id = ctx.fns.push(bbnf_ir::FnDescriptor::SpanCapture);
+                    IrNode::Map { inner: Box::new(expr), fn_id }
+                }
+                "{" => IrNode::Repeat { inner: Box::new(expr), lo: 0, hi: u32::MAX },
                 _ => expr,
             }
         }
@@ -268,7 +265,8 @@ fn lower_nonterminal(name: &str, ctx: &LowerCtx<'_>) -> IrNode {
 /// through the appropriate layer.
 fn lower_node<'a>(node: &'a BbnfBootstrapEnum<'a>, ctx: &mut LowerCtx<'a>) -> IrNode {
     match node {
-        BbnfBootstrapEnum::alternation(branches) => lower_alternation(branches, ctx),
+        BbnfBootstrapEnum::alternation(branches)
+        | BbnfBootstrapEnum::call_arg(branches) => lower_alternation(branches, ctx),
         BbnfBootstrapEnum::concatenation(parts) => lower_concatenation(parts, ctx),
         BbnfBootstrapEnum::binary_factor(_) => lower_binary_factor_dispatch(node, ctx),
         BbnfBootstrapEnum::mapped_factor(_) => lower_mapped_factor_dispatch(node, ctx),
@@ -398,6 +396,10 @@ fn substitute_and_lower<'a>(
             match open.as_str() {
                 "(" => expr,
                 "[" => IrNode::Repeat { inner: Box::new(expr), lo: 0, hi: 1 },
+                "@{" => {
+                    let fn_id = ctx.fns.push(bbnf_ir::FnDescriptor::SpanCapture);
+                    IrNode::Map { inner: Box::new(expr), fn_id }
+                }
                 "{" => IrNode::Repeat { inner: Box::new(expr), lo: 0, hi: u32::MAX },
                 _ => expr,
             }

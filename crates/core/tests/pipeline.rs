@@ -749,12 +749,13 @@ fn pipeline_google_sheets_multiline_let() {
 #[test]
 fn pipeline_span_capture_type_inference() {
     // @{expr} should always infer TypeDesc::Span, regardless of inner expression type.
+    // captured is the last rule (entry) to prevent it from being pruned.
     let grammar = r#"
         number = /[0-9]+/ ;
         comma  = "," ;
         pair   = number , comma , number ;
-        captured = @{ pair } ;
         value  = captured | number ;
+        captured = @{ pair } ;
     "#;
 
     let ir = compile_grammar(grammar, &PipelineOptions::default()).unwrap();

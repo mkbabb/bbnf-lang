@@ -4,7 +4,7 @@
 //! Convert TypeDesc → syn::Type via type_desc_to_syn, then pattern-match
 //! on the syn::Type structure to generate emit code.
 
-use bbnf_ir::{GrammarIR, TypeDesc};
+use bbnf_ir::{FnDescriptor, GrammarIR, IrNode, MapExpr, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::{self, Type};
@@ -21,7 +21,7 @@ pub fn type_desc_is_ref(td: &TypeDesc) -> bool {
 
 // ─── Public entry ────────────────────────────────────────────────────────────
 
-/// Emit code for a value whose TypeDesc is known.
+/// Emit code for a value whose TypeDesc is known (no IR context).
 pub fn emit_for_type(
     td: &TypeDesc,
     val: &TokenStream,
@@ -30,6 +30,222 @@ pub fn emit_for_type(
 ) -> TokenStream {
     let syn_ty = type_desc_to_syn(td, ctx);
     emit_for_syn_type(&syn_ty, val, ir, ctx)
+}
+
+/// Emit code for a rule body: type-driven destructuring + IR structural content.
+pub fn emit_for_node(
+    node: &IrNode,
+    td: &TypeDesc,
+    val: &TokenStream,
+    ir: &GrammarIR,
+    ctx: &IrCodegenCtx,
+) -> TokenStream {
+    // Map reversal: if the node is a Map, emit the original literal (for constants)
+    // or use the FnDescriptor to reverse the transformation.
+    if let IrNode::Map { inner, fn_id } = node {
+        return emit_map_reverse(inner, *fn_id, td, val, ir, ctx);
+    }
+
+    // Skip/Next: emit structural content + value.
+    if let IrNode::Skip(kept, structural) = node {
+        let kept_emit = emit_for_node(kept, td, val, ir, ctx);
+        let structural_emit = emit_structural(structural, ir);
+        return quote! { #kept_emit #structural_emit };
+    }
+    if let IrNode::Next(structural, kept) = node {
+        let structural_emit = emit_structural(structural, ir);
+        let kept_emit = emit_for_node(kept, td, val, ir, ctx);
+        return quote! { #structural_emit #kept_emit };
+    }
+
+    // OptionalWhitespace: delegate to inner.
+    if let IrNode::OptionalWhitespace(inner) = node {
+        return emit_for_node(inner, td, val, ir, ctx);
+    }
+
+    // Seq: type says Tuple, IR says children. Use both.
+    if let (TypeDesc::Tuple(elems), IrNode::Seq(children)) = (td, node) {
+        return emit_tuple_with_ir(children, elems, val, ir, ctx);
+    }
+
+    // Repeat: type says Vec or Option, IR might have sep_by.
+    if let IrNode::Repeat { inner, lo, hi } = node {
+        if *lo == 0 && *hi == 1 {
+            if let TypeDesc::Option(inner_td) = td {
+                let inner_emit = emit_for_node(inner, inner_td, &quote! { __opt_v }, ir, ctx);
+                return quote! { if let Some(__opt_v) = #val { #inner_emit } };
+            }
+        }
+        // Vec with sep_by detection.
+        if let TypeDesc::Vec(elem_td) = td {
+            return emit_vec_with_ir(inner, elem_td, val, ir, ctx);
+        }
+    }
+
+    // Alt with constant reverse.
+    if let IrNode::Alt(branches, _) = node {
+        if let Some(cr) = try_constant_reverse_from_ir(branches, val, ir) {
+            return cr;
+        }
+    }
+
+    // Ref: delegate to rule's emit fn.
+    if let IrNode::Ref(rule_id) = node {
+        let ref_rule = &ir.rules[*rule_id as usize];
+        if ref_rule.meta.is_transparent {
+            return emit_for_node(&ref_rule.body, td, val, ir, ctx);
+        }
+    }
+
+    // Fallback: type-only emit.
+    emit_for_type(td, val, ir, ctx)
+}
+
+/// Emit map reversal (constant literals, number→text, etc.)
+fn emit_map_reverse(
+    inner: &IrNode,
+    fn_id: u32,
+    td: &TypeDesc,
+    val: &TokenStream,
+    ir: &GrammarIR,
+    ctx: &IrCodegenCtx,
+) -> TokenStream {
+    match &ir.fns[fn_id as usize] {
+        FnDescriptor::NumberConvert => quote! { __sink.f64(*#val); },
+        FnDescriptor::HexConvert { .. } => quote! {
+            { use ::std::fmt::Write as _; let mut __b = String::new();
+              let _ = write!(__b, "{:x}", #val); __sink.text_owned(&__b); }
+        },
+        FnDescriptor::SpanCapture => quote! { __sink.text(#val.as_str()); },
+        FnDescriptor::EnumWrap { .. } | FnDescriptor::BoxWrap => {
+            emit_for_node(inner, td, val, ir, ctx)
+        }
+        FnDescriptor::Expr { expr, .. } => {
+            match expr {
+                MapExpr::IntLit(_) | MapExpr::FloatLit(_) | MapExpr::StringLit(_)
+                | MapExpr::BoolLit(_) => {
+                    // Constant: emit the original literal from the inner IR node.
+                    emit_structural(inner, ir)
+                }
+                MapExpr::Input => emit_for_node(inner, td, val, ir, ctx),
+                _ => quote! {
+                    { use ::std::fmt::Write as _; let mut __b = String::new();
+                      let _ = write!(__b, "{}", #val); __sink.text_owned(&__b); }
+                },
+            }
+        }
+    }
+}
+
+/// Emit a Tuple using IR Seq children for structural content.
+fn emit_tuple_with_ir(
+    children: &[IrNode],
+    elems: &[TypeDesc],
+    val: &TokenStream,
+    ir: &GrammarIR,
+    ctx: &IrCodegenCtx,
+) -> TokenStream {
+    if elems.len() != children.len() {
+        // Mismatch: fall back to type-only Tuple emit.
+        let parts: Vec<_> = elems.iter().enumerate().map(|(i, elem_ty)| {
+            let idx = syn::Index::from(i);
+            let binding = format_ident!("__t{}", i);
+            let syn_ty = type_desc_to_syn(elem_ty, ctx);
+            let child_emit = emit_for_syn_type(&syn_ty, &quote! { #binding }, ir, ctx);
+            quote! { let #binding = #val.#idx; #child_emit }
+        }).collect();
+        return quote! { #(#parts)* };
+    }
+
+    let parts: Vec<_> = children.iter().zip(elems.iter()).enumerate().map(|(i, (child, elem_td))| {
+        let idx = syn::Index::from(i);
+        let binding = format_ident!("__t{}", i);
+        let child_emit = emit_for_node(child, elem_td, &quote! { #binding }, ir, ctx);
+        quote! { let #binding = #val.#idx; #child_emit }
+    }).collect();
+    quote! { #(#parts)* }
+}
+
+/// Emit Vec iteration with IR-derived separator.
+fn emit_vec_with_ir(
+    inner: &IrNode,
+    elem_td: &TypeDesc,
+    val: &TokenStream,
+    ir: &GrammarIR,
+    ctx: &IrCodegenCtx,
+) -> TokenStream {
+    use crate::backend::decisions;
+
+    // Detect sep_by pattern.
+    if let Some((elem_node, sep_node)) = decisions::detect_sep_by(inner) {
+        let sep_emit = emit_structural(sep_node, ir);
+        let ref_elem_td: TypeDesc = TypeDesc::BoxedEnum; // placeholder — item is &Enum from iter
+        let syn_ty = type_desc_to_syn(elem_td, ctx);
+        let ref_syn_ty: Type = syn::parse_quote! { &#syn_ty };
+        let item_emit = emit_for_syn_type(&ref_syn_ty, &quote! { __item }, ir, ctx);
+        return quote! {
+            let mut __first = true;
+            for __item in #val.iter() {
+                if !__first { #sep_emit }
+                __first = false;
+                #item_emit
+            }
+        };
+    }
+
+    // Plain iteration.
+    let syn_ty = type_desc_to_syn(elem_td, ctx);
+    let ref_syn_ty: Type = syn::parse_quote! { &#syn_ty };
+    let item_emit = emit_for_syn_type(&ref_syn_ty, &quote! { __item }, ir, ctx);
+    quote! { for __item in #val.iter() { #item_emit } }
+}
+
+/// Try to emit constant-reverse from IR Alt branches.
+fn try_constant_reverse_from_ir(
+    branches: &[bbnf_ir::AltBranch],
+    val: &TokenStream,
+    ir: &GrammarIR,
+) -> Option<TokenStream> {
+    let mut arms = Vec::new();
+    for branch in branches {
+        let IrNode::Map { inner, fn_id } = &branch.node else { return None };
+        let IrNode::Literal(sid) = inner.as_ref() else { return None };
+        let FnDescriptor::Expr { expr, .. } = &ir.fns[*fn_id as usize] else { return None };
+        let lit = ir.get_string(*sid);
+        let pat = match expr {
+            MapExpr::BoolLit(true) => quote! { true },
+            MapExpr::BoolLit(false) => quote! { false },
+            MapExpr::IntLit(n) => { let l = proc_macro2::Literal::i64_unsuffixed(*n); quote! { #l } }
+            MapExpr::FloatLit(f) => { let l = proc_macro2::Literal::f64_unsuffixed(*f); quote! { #l } }
+            _ => return None,
+        };
+        arms.push(quote! { #pat => { __sink.text(#lit); } });
+    }
+    Some(quote! { match *#val { #(#arms)* _ => {} } })
+}
+
+/// Emit structural content from an IR node.
+fn emit_structural(node: &IrNode, ir: &GrammarIR) -> TokenStream {
+    match node {
+        IrNode::Literal(sid) => {
+            let s = ir.get_string(*sid);
+            if s.len() == 1 {
+                let b = s.as_bytes()[0];
+                quote! { __sink.char(#b); }
+            } else {
+                quote! { __sink.text(#s); }
+            }
+        }
+        IrNode::Ref(rule_id) => emit_structural(&ir.rules[*rule_id as usize].body, ir),
+        IrNode::Seq(children) => {
+            let parts: Vec<_> = children.iter().map(|c| emit_structural(c, ir)).collect();
+            quote! { #(#parts)* }
+        }
+        IrNode::OptionalWhitespace(inner) => emit_structural(inner, ir),
+        IrNode::Skip(l, _) | IrNode::Next(_, l) => emit_structural(l, ir),
+        IrNode::Repeat { inner, .. } => emit_structural(inner, ir),
+        _ => quote! {},
+    }
 }
 
 // ─── Recursive syn::Type dispatch ────────────────────────────────────────────

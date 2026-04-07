@@ -29,7 +29,7 @@ pub fn generate_emit_methods(ir: &GrammarIR, ctx: &IrCodegenCtx) -> TokenStream 
             .unwrap_or(bbnf_ir::TypeDesc::Span);
 
         let val = quote! { __v };
-        let body = emit::emit_for_type(&type_desc, &val, ir, ctx);
+        let body = emit::emit_for_node(&rule.body, &type_desc, &val, ir, ctx);
 
         // Ref-type rules (BoxedEnum, Vec) take the type directly.
         // Value-type rules take &type.

@@ -49,7 +49,7 @@ fn emit_for_syn_type(
     if is_type_name(ty, "u32") || is_type_name(ty, "u8") || is_type_name(ty, "i64") {
         return quote! {
             { use ::std::fmt::Write as _; let mut __b = String::new();
-              let _ = write!(__b, "{}", #val); __sink.text(&__b); }
+              let _ = write!(__b, "{}", #val); __sink.text_owned(&__b); }
         };
     }
     if is_type_name(ty, "bool") {
@@ -71,8 +71,9 @@ fn emit_for_syn_type(
     if let Some(elems) = extract_tuple_elems(ty) {
         let parts: Vec<_> = elems.iter().enumerate().map(|(i, elem_ty)| {
             let idx = syn::Index::from(i);
-            let child_val = quote! { #val.#idx };
-            emit_for_syn_type(elem_ty, &child_val, ir, ctx)
+            let binding = format_ident!("__t{}", i);
+            let child_emit = emit_for_syn_type(elem_ty, &quote! { #binding }, ir, ctx);
+            quote! { let #binding = #val.#idx; #child_emit }
         }).collect();
         return quote! { #(#parts)* };
     }
@@ -89,7 +90,7 @@ fn emit_for_syn_type(
     // Fallback: Display
     quote! {
         { use ::std::fmt::Write as _; let mut __b = String::new();
-          let _ = write!(__b, "{}", #val); __sink.text(&__b); }
+          let _ = write!(__b, "{}", #val); __sink.text_owned(&__b); }
     }
 }
 
@@ -120,7 +121,9 @@ fn emit_leaf_syn_type(
     if let Some(elems) = extract_tuple_elems(ty) {
         let parts: Vec<_> = elems.iter().enumerate().map(|(i, elem_ty)| {
             let idx = syn::Index::from(i);
-            emit_leaf_syn_type(elem_ty, &quote! { #val.#idx }, ir, ctx)
+            let binding = format_ident!("__t{}", i);
+            let child_emit = emit_leaf_syn_type(elem_ty, &quote! { #binding }, ir, ctx);
+            quote! { let #binding = #val.#idx; #child_emit }
         }).collect();
         return quote! { #(#parts)* };
     }
@@ -163,16 +166,19 @@ pub fn generate_dispatch_arms(
             .map(|(_, td)| td);
         let needs_deref = rule_td.map_or(false, |td| type_desc_is_ref(td));
 
-        // Match ergonomics (edition 2024): __inner is &FieldType when
-        // matching through &Enum. For ref-type fields (&&'a T), deref once.
+        // Explicitly destructure through &: match &Enum → &Enum::V(inner).
+        // This avoids edition 2024 match ergonomics issues.
+        // inner: FieldType (by-value access to the field inside &Enum).
         let call = if needs_deref {
-            quote! { Self::#emit_fn(*__inner, __sink); }
-        } else {
+            // Ref-type field: inner is &'a T already. Pass directly.
             quote! { Self::#emit_fn(__inner, __sink); }
+        } else {
+            // Value-type field: inner is T. Pass &inner.
+            quote! { Self::#emit_fn(&__inner, __sink); }
         };
 
         arms.push(quote! {
-            #enum_ident::#variant(__inner) => { #call }
+            &#enum_ident::#variant(ref __inner) => { #call }
         });
     }
 
@@ -191,7 +197,7 @@ pub fn generate_dispatch_arms(
         let inner_ty = type_desc_to_syn(ty_desc, ctx);
         let inner_emit = emit_leaf_syn_type(&inner_ty, &quote! { __inner }, ir, ctx);
         arms.push(quote! {
-            #enum_ident::#variant(__inner) => { #inner_emit }
+            &#enum_ident::#variant(ref __inner) => { #inner_emit }
         });
     }
 

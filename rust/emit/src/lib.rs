@@ -24,8 +24,18 @@ pub trait EmitSink<'a> {
 
     // ── Content primitives ───────────────────────────────────────────
 
-    /// Emit a borrowed string slice.
+    /// Emit a borrowed string slice (from the input, lifetime 'a).
     fn text(&mut self, s: &'a str);
+
+    /// Emit a string with any lifetime (for locally-constructed values like
+    /// Display-formatted numbers). Default impl uses text() with lifetime erase.
+    fn text_owned(&mut self, s: &str) {
+        // SAFETY: the sink copies/processes the string immediately. The data
+        // doesn't escape the method call. This is safe for CompactSink (writes
+        // bytes), StringSink (copies to String), and FmtBuilder (copies to op).
+        let s_a: &'a str = unsafe { std::mem::transmute(s) };
+        self.text(s_a);
+    }
 
     /// Emit a single ASCII byte.
     fn char(&mut self, c: u8);
@@ -281,6 +291,7 @@ impl<'a> EmitSink<'a> for StringSink {
     fn text(&mut self, s: &'a str) {
         self.buf.push_str(s);
     }
+
 
     #[inline]
     fn char(&mut self, c: u8) {

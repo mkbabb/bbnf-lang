@@ -13,7 +13,9 @@ use crate::generate::ir_types::IrCodegenCtx;
 pub fn generate_emit_methods(ir: &GrammarIR, ctx: &IrCodegenCtx) -> TokenStream {
     let mut methods = Vec::new();
     let enum_ident = &ctx.enum_ident;
+    let boxed_enum = &ctx.boxed_enum_type;
 
+    // Per-rule emit functions.
     for rule in &ir.rules {
         let rule_name = ir.get_string(rule.name);
         let fn_ident = format_ident!("{}_emit", rule_name);
@@ -29,10 +31,9 @@ pub fn generate_emit_methods(ir: &GrammarIR, ctx: &IrCodegenCtx) -> TokenStream 
         let val = quote! { __v };
         let body = emit::emit_for_type(&type_desc, &val, ir, ctx);
 
-        // If the rule type is already a reference (BoxedEnum → &'a Enum),
-        // take it directly. Otherwise take &rule_type.
-        let is_ref = matches!(&type_desc, bbnf_ir::TypeDesc::BoxedEnum);
-        let param = if is_ref {
+        // Ref-type rules (BoxedEnum, Vec) take the type directly.
+        // Value-type rules take &type.
+        let param = if emit::type_desc_is_ref(&type_desc) {
             quote! { #val: #rule_type }
         } else {
             quote! { #val: &#rule_type }
@@ -48,19 +49,36 @@ pub fn generate_emit_methods(ir: &GrammarIR, ctx: &IrCodegenCtx) -> TokenStream 
         });
     }
 
-    // Entry point.
+    // __dispatch_emit: takes &'a Enum<'a>, matches all variants.
+    // Used by emit_for_syn_type and emit_leaf_syn_type to avoid infinite recursion.
+    {
+        let arms = emit::generate_dispatch_arms(ir, ctx);
+        methods.push(quote! {
+            fn __dispatch_emit<'a, __S: ::bbnf_emit::EmitSink<'a>>(
+                __v: #boxed_enum,
+                __sink: &mut __S,
+            ) {
+                match __v {
+                    #(#arms)*
+                    _ => {}
+                }
+            }
+        });
+    }
+
+    // Entry points.
     {
         let entry_rule = &ir.rules[ir.entry as usize];
         let entry_name = ir.get_string(entry_rule.name);
         let emit_fn = format_ident!("{}_emit", entry_name);
-        let boxed_enum = &ctx.boxed_enum_type;
+
+        let entry_td = ir.types.iter()
+            .find(|(id, _)| *id == entry_rule.id)
+            .map(|(_, td)| td);
+        let entry_is_ref = entry_td.map_or(false, |td| emit::type_desc_is_ref(td));
 
         if entry_rule.meta.is_transparent {
-            // Transparent entry: value IS the enum.
-            // The entry emit fn takes &&Enum (ref to the ref).
-            // We need to bind __v to a let so the & borrow lives long enough.
-            // Transparent entry: rule type is BoxedEnum (already a ref).
-            // emit fn takes it directly (no extra &).
+            // Transparent entry: type is BoxedEnum (&'a Enum). emit fn takes it directly.
             methods.push(quote! {
                 pub fn emit_compact<'a>(__v: #boxed_enum) -> String {
                     let mut __sink = ::bbnf_emit::StringSink::new();
@@ -74,20 +92,35 @@ pub fn generate_emit_methods(ir: &GrammarIR, ctx: &IrCodegenCtx) -> TokenStream 
                 }
             });
         } else {
+            // Non-transparent entry: unwrap enum variant.
             let variant = format_ident!("{}", entry_name);
+
+            // Match ergonomics: __inner from `if let Enum::V(__inner) = __v` is &FieldType.
+            // For ref-type rules, pass *__inner. For value-type rules, pass __inner.
+            let call = if entry_is_ref {
+                quote! { Self::#emit_fn(*__inner, &mut __sink); }
+            } else {
+                quote! { Self::#emit_fn(__inner, &mut __sink); }
+            };
+            let call2 = if entry_is_ref {
+                quote! { Self::#emit_fn(*__inner, __sink); }
+            } else {
+                quote! { Self::#emit_fn(__inner, __sink); }
+            };
+
             methods.push(quote! {
                 pub fn emit_compact<'a>(__v: #boxed_enum) -> String {
                     let mut __sink = ::bbnf_emit::StringSink::new();
-                    if let #enum_ident::#variant(ref __inner) = *__v {
-                        Self::#emit_fn(__inner, &mut __sink);
+                    if let #enum_ident::#variant(__inner) = __v {
+                        #call
                     }
                     __sink.finish()
                 }
                 pub fn emit<'a, __S: ::bbnf_emit::EmitSink<'a>>(
                     __v: #boxed_enum, __sink: &mut __S,
                 ) {
-                    if let #enum_ident::#variant(ref __inner) = *__v {
-                        Self::#emit_fn(__inner, __sink);
+                    if let #enum_ident::#variant(__inner) = __v {
+                        #call2
                     }
                 }
             });

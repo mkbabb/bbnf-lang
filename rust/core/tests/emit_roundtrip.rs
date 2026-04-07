@@ -40,7 +40,8 @@ struct CssPrettyEmit;
 fn json_emit(input: &str) -> String {
     let ctx = __JsonEmitEnumCtx::with_capacity(input.len() / 32);
     let (result, _) = JsonEmit::value().parse_return_state_with_context(input, &ctx);
-    JsonEmit::emit_compact(result.expect("JSON parse failed"))
+    let value = result.expect("JSON parse failed");
+    JsonEmit::emit_compact(value)
 }
 
 fn json_rt(input: &str) {

@@ -36,8 +36,6 @@ term = "ε" | "epsilon"
      | "{" , rhs ?w , "}" ;
 
 modifier = "?w" | "?" | "*" | "+" ;
-
-modifier = "?w" | "?" | "*" | "+" ;
 factor = big_comment ? , term ?w , modifier ? , big_comment ? ;
 
 // Map syntax: factor -> value_expr : type

@@ -157,17 +157,20 @@ fn split_into_statements(source: &str) -> Vec<&str> {
     let bytes = source.as_bytes();
     let mut start = 0;
     let mut i = 0;
-    let mut in_string = false;
+    let mut in_string: Option<u8> = None; // tracks the quote char (' or ")
     let mut in_regex = false;
 
     while i < bytes.len() {
         let b = bytes[i];
         match b {
-            b'"' if !in_regex => {
-                in_string = !in_string;
-                i += 1;
+            b'"' | b'\'' if !in_regex => {
+                match in_string {
+                    None => { in_string = Some(b); i += 1; }
+                    Some(q) if q == b => { in_string = None; i += 1; }
+                    _ => { i += 1; } // different quote char inside a string
+                }
             }
-            b'/' if !in_string && !in_regex => {
+            b'/' if in_string.is_none() && !in_regex => {
                 // Check if this starts a comment or regex.
                 if i + 1 < bytes.len() && bytes[i + 1] == b'/' {
                     // Line comment — skip to end of line.
@@ -190,10 +193,10 @@ fn split_into_statements(source: &str) -> Vec<&str> {
                 in_regex = false;
                 i += 1;
             }
-            b'\\' if in_string || in_regex => {
+            b'\\' if in_string.is_some() || in_regex => {
                 i += 2; // skip escaped char
             }
-            b';' | b'.' if !in_string && !in_regex => {
+            b';' | b'.' if in_string.is_none() && !in_regex => {
                 segments.push(&source[start..=i]);
                 start = i + 1;
                 i += 1;

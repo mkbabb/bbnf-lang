@@ -7,33 +7,38 @@ BBNF extends EBNF for defining context-free grammars, used by the
 ## Structure
 
 ```
-bbnf-lang/
-├── rust/                       Rust workspace (Cargo)
-│   ├── core/                   Core grammar parser, IR lowering, codegen (lib)
-│   │   └── generate/codegen/trace.rs  Debug trace codegen (#[cfg(feature = "parser-trace")])
-│   ├── ir/                  Canonical grammar IR, bytecode compiler, interpreter
-│   ├── derive/            Proc-macro: #[derive(Parser)] from .bbnf files
-│   ├── analysis/          LSP analysis engine (DocumentState, 14 feature providers, state management)
-│   └── lsp/                    Language server (bbnf-lsp binary)
-│       └── src/dap/            DAP server (mod, adapter, protocol, mapping)
-├── wasm/                       bbnf-wasm crate (wasm-pack → playground)
-│   └── src/                    lib.rs + analysis.rs, gorgeous.rs, lsp.rs, vm.rs
-├── typescript/                 @mkbabb/bbnf-lang — runtime parser + codegen
-├── prettier-plugin-bbnf/       Prettier plugin for .bbnf formatting
-├── playground/                 Vue 3 + Monaco playground (uses bbnf-wasm)
-│   ├── src/components/debug/   Debug pane components (breakpoints, call stack, parse state)
-│   └── src/composables/        wasm/, usePlaygroundQuery, useSplitPane, usePipeline, useExamples, useWalkthrough, useDocs, useHeroState, useTypewriter, useMouseParallax, useScrollTimeline, useScrollMorph, useMarkdownComponents, useChartData, useDebugSession
-├── extension/                  VS Code extension (LSP client)
-├── docs/                       Documentation (markdown, rendered by playground)
-├── grammar/                    Example grammars + language specification
-│   └── lang/                   Language grammars (json, css, bnf, ebnf, bbnf, google-sheets)
-├── data/                       Benchmark datasets
-├── scripts/                    Build automation scripts
-├── server/                     Compiled LSP binary (copied by Makefile)
-├── .github/workflows/          CI (ci.yml) + release pipeline (release.yml)
-├── .vscode/                    Launch configs, tasks, settings
-├── Makefile                    Build automation
-└── package.json                NPM workspaces root
+bbnf-lang/                              Repo root = Cargo workspace root
+├── Cargo.toml                          Workspace manifest
+├── crates/                             Rust crates
+│   ├── core/                           bbnf — grammar parser, IR lowering, codegen
+│   │   └── src/
+│   │       ├── backend/
+│   │       │   ├── driver/             Parse codegen orchestration
+│   │       │   ├── patterns/           Pattern detection (decisions, key_dispatch, delim_scan)
+│   │       │   ├── emitter.rs          Emitter trait (target-agnostic)
+│   │       │   ├── rust/               Rust backend emitter
+│   │       │   ├── ts/                 TypeScript backend emitter
+│   │       │   ├── wasm/              WASM backend emitter
+│   │       │   └── prettify/           Prettify analysis + plan
+│   │       ├── generate/
+│   │       │   ├── serialize/          Grammar-guided serialization codegen
+│   │       │   └── regex/              Regex → TokenStream codegen (DFA, HIR, generalized)
+│   │       ├── lower/                  AST → IR lowering
+│   │       └── pipeline/               Compilation orchestrator + directives + validation
+│   ├── ir/                             bbnf-ir — canonical grammar IR, CSP passes, VM
+│   ├── ser/                            bbnf-ser — Serializer/Deserializer traits
+│   ├── derive/                         bbnf-derive — #[derive(Parser)] proc-macro
+│   ├── analysis/                       bbnf-analysis — LSP analysis engine
+│   ├── lsp/                            bbnf-lsp — language server binary
+│   └── gorgeous/                       gorgeous — grammar-driven formatters
+├── wasm/                               bbnf-wasm (standalone, not workspace member)
+├── playground/                         Vue 3 + Monaco playground
+├── extension/                          VS Code extension (LSP client)
+├── grammar/                            Example grammars + language specification
+├── docs/                               Documentation
+├── data/                               Benchmark datasets
+├── Makefile                            Build automation
+└── package.json                        NPM workspaces (playground)
 ```
 
 ## Build Commands
@@ -41,7 +46,7 @@ bbnf-lang/
 ```bash
 make build          # Release LSP + extension
 make dev            # Debug LSP + extension (fast iteration)
-make test           # All Rust + TypeScript tests
+make test           # All Rust tests
 make bench          # LSP performance benchmarks
 make install        # Build, package .vsix, install into VS Code
 make package        # Build + create bbnf-lang.vsix
@@ -52,14 +57,8 @@ make clean          # Remove artifacts
 ## Manual Builds
 
 ```bash
-# Rust (requires nightly)
-cd rust && cargo test --workspace && cargo build --release -p bbnf-lsp
-
-# TypeScript
-cd typescript && npm ci && npm test
-
-# Prettier plugin (build TS first)
-npm ci && cd typescript && npm run build && cd ../prettier-plugin-bbnf && npm test
+# Rust (requires nightly) — from repo root
+cargo test --workspace && cargo build --release -p bbnf-lsp
 
 # Extension
 cd extension && npm ci && npm run build
@@ -72,7 +71,7 @@ cd wasm && wasm-pack build --target web --out-dir ../playground/src/wasm
 
 - **F5 workflow**: `make dev` then F5 in VS Code
 - **Install locally**: `make install` then reload VS Code
-- **Integration tests**: `cargo test -p bbnf-lsp --test integration -- --nocapture`
+- **Integration tests**: `cargo test -p bbnf-lsp --test integration -- --nocapture` (from repo root)
 - **LSP binary path resolution** (priority order):
   1. VS Code setting `BBNF.server.path`
   2. Environment variable `BBNF_SERVER_PATH`
@@ -93,30 +92,39 @@ Requires `VSCE_PAT` secret in GitHub repo settings.
 ## Dependency Graph
 
 ```
-Rust:                                 NPM:
-  pprint → parse_that → bbnf           @mkbabb/parse-that → @mkbabb/bbnf-lang
-                          ↓
-                      bbnf_derive
-                          ↓
-                       gorgeous
-                          ↓
-                      bbnf_wasm (wasm-pack → playground)
+bbnf-ser  ────────────────────────────────────── leaf crate (itoa, ryu)
+   ↑
+pprint  (impl Serializer for FmtBuilder)
+   ↑
+bbnf-regex  ──────────────────────────────────── leaf crate (smallvec)
+   ↑        HIR, NFA/DFA, classify, algebra, charset, first
+parse_that  (re-exports bbnf-regex)
+   ↑
+csp-solver ──→ bbnf-ir ──→ bbnf (core) ──→ bbnf-ser
+                  ↑             ↑
+              bbnf-derive ──────┘
+                  ↑
+              bbnf-analysis ──→ bbnf-lsp
+                  ↑
+              gorgeous (workspace member)
+                  ↑
+              bbnf-wasm (standalone, wasm-pack → playground)
 ```
 
-bbnf and bbnf_derive sit in the middle of the Rust crate graph.
-bbnf-lsp uses workspace-relative paths to bbnf; cross-repo deps are version-only.
+**Leaf crates** (`bbnf-ser`, `bbnf-regex`) have zero bbnf dependencies.
+Generated parser code references `::bbnf_ser::Serializer` directly.
+External deps (`parse_that`, `pprint`, `csp-solver`) resolved via `.cargo/config.toml` patches for local dev.
 
 ## Conventions
 
 - **Rust**: Nightly toolchain, edition 2024. Clippy with `-D warnings`.
-- **TypeScript**: ES2022 target, strict mode, ESM. Vite for bundling, vitest for tests.
 - **Extension**: esbuild, CommonJS output (Node.js), `vscode` external.
 - **Grammars**: `.bbnf` extension. `@import` for composition. `@recover` for error recovery. `;` terminators.
 - **Crate deps**: `parse_that` and `pprint` from crates.io; local dev via `.cargo/config.toml` `[patch.crates-io]`.
 - **Lifetimes**: Borrowed `'a` throughout Rust AST; `Box::leak()` for import module graphs.
 - **Import system**: Cyclic imports handled via partial-init before recursion. Selective imports expand transitive local deps automatically. `@import` directives can appear at any position in a file.
 - **Recovery**: `@recover rule syncExpr ;` — per-rule annotation specifying a sync expression for multi-error parsing. Any valid BBNF expression (regex, alternation, concatenation, etc.) is valid as the sync. Emits `.recover(syncParser, null)` in TS codegen and a `Recovered` enum variant in Rust proc-macro codegen.
-- **Analysis pipeline**: Tarjan SCC → topological sort → FIRST sets (128-bit `CharSet`) → dispatch tables (constant-time alternation selection by leading character).
+- **Analysis pipeline**: Tarjan SCC → topological sort → IR lowering → CSP FIRST sets (128-bit `CharSet128` from `bbnf-regex`) → dispatch tables. All fixed-point analyses go through the CSP solver.
 - **Recursive SpanParser codegen**: `try_generate_span_parser()` handles all expression types (concat, alt, many, skip/next, minus, nonterminal refs). Iterative fixed-point loop on `sp_method_rules` — start empty, try generating for all eligible rules, add successes, repeat until convergence (2–3 iterations). Literal unescape via `unescape_literal()` + `proc_macro2::Literal::string()`.
 - **Codegen**: Grammar → `lower/` (5 sub-modules: `mod.rs`, `string_interner.rs`, `fn_table.rs`, `expression.rs`, `metadata.rs`) → bbnf-ir `Module` → `codegen/` (single monolithic path + optional prettify) + `ir_enums.rs`/`ir_types.rs`. `pipeline.rs` orchestrates the full lowering + codegen sequence.
 - **Vec unboxing**: `in_vec` parameter threading through codegen, `ir_node_to_tokens_vec`, `project_node_in_vec`. Transparent rule `_unboxed()` generation for zero-cost enum extraction.

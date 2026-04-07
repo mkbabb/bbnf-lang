@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use bbnf_ir::GrammarIR;
 
-use crate::graph::{compute_first_sets, tarjan_scc, topological_sort_scc};
+use crate::graph::{tarjan_scc, topological_sort_scc};
 use crate::backend::prepare_grammar;
 use crate::grammar;
 use crate::lower::{DirectiveSet, lower_to_ir};
@@ -259,11 +259,11 @@ fn compile_ast_common<'a>(
     let scc_result = tarjan_scc(&deps);
     let ast = topological_sort_scc(&ast, &scc_result, &deps);
 
-    // FIRST set computation.
-    let first_sets = compute_first_sets(&ast, &deps, &scc_result);
-
     // Lower to IR.
-    let mut ir = lower_to_ir(&ast, &first_sets, &scc_result, directives, &closure_rules);
+    let mut ir = lower_to_ir(&ast, &scc_result, directives, &closure_rules);
+
+    // Compute FIRST sets via IR CSP pass (replaces AST-level computation).
+    bbnf_ir::passes::compute_first_sets(&mut ir);
 
     // Set the correct entry rule (last rule in original source order).
     if let Some(ref name) = entry_rule_name {

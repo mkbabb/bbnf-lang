@@ -13,18 +13,13 @@ use std::collections::{HashMap, HashSet};
 use bbnf_ir::{GrammarIR, IrRule, RuleId};
 
 use crate::graph::first_sets::unwrap_rule;
-use crate::graph::{FirstSets, SccResult};
+use crate::graph::SccResult;
 use crate::types::{AST, Expression, Token};
 
 use expression::lower_expression;
 use fn_table::FnTable;
 use metadata::build_rule_meta;
 use string_interner::StringInterner;
-
-/// Convert a `CharSet` ([u32; 4]) to a `CharSet128` ([u64; 2]).
-pub(crate) fn charset_to_128(cs: &crate::graph::CharSet) -> bbnf_ir::CharSet128 {
-    bbnf_ir::CharSet128::from_u32x4(&cs.bits)
-}
 
 /// All directive data extracted from a parsed grammar.
 ///
@@ -79,7 +74,6 @@ pub(crate) struct LowerCtx<'a> {
     pub(crate) closures: HashMap<&'a str, ClosureDef<'a>>,
 
     /// Analysis results.
-    pub(crate) first_sets: &'a FirstSets<'a>,
     pub(crate) scc_result: &'a SccResult<'a>,
     pub(crate) cyclic_rules: &'a HashSet<Expression<'a>>,
 
@@ -91,9 +85,6 @@ pub(crate) struct LowerCtx<'a> {
     pub(crate) debug_all: bool,
     pub(crate) host_fns: Option<&'a HashMap<String, Option<String>>>,
 
-    /// The current LHS expression being lowered (for branch_firsts lookup).
-    pub(crate) current_lhs: Option<&'a Expression<'a>>,
-
     /// When true, unknown nonterminals emit Epsilon instead of Literal fallback,
     /// and unsupported expressions emit Epsilon. Used for recovery sync expressions.
     pub(crate) recovery_mode: bool,
@@ -103,19 +94,16 @@ pub(crate) struct LowerCtx<'a> {
 ///
 /// Alias detection, transparent alternation detection, and span eligibility are
 /// computed by IR passes (`compute_aliases`, `compute_transparent`,
-/// `refine_span_eligibility`) that run post-lowering. This function only needs
-/// FIRST sets and SCC results (which are required during expression lowering for
-/// per-branch FIRST sets and cycle/memo metadata).
+/// `refine_span_eligibility`) that run post-lowering. FIRST sets and per-branch
+/// FIRST annotations are computed by the IR CSP pass post-lowering.
 ///
 /// # Arguments
 ///
 /// * `ast` -- Topologically sorted AST.
-/// * `first_sets` -- Pre-computed FIRST sets.
 /// * `scc_result` -- SCC analysis results.
 /// * `directives` -- All directive data from the parsed grammar.
 pub fn lower_to_ir<'a>(
     ast: &'a AST<'a>,
-    first_sets: &'a FirstSets<'a>,
     scc_result: &'a SccResult<'a>,
     directives: &'a DirectiveSet<'a>,
     closure_defs: &'a [(String, Expression<'a>)],
@@ -136,7 +124,6 @@ pub fn lower_to_ir<'a>(
         fns: FnTable::new(),
         name_to_rule_id: HashMap::new(),
         closures,
-        first_sets,
         scc_result,
         cyclic_rules: &scc_result.cyclic_rules,
         recovers: directives.recovers,
@@ -145,7 +132,6 @@ pub fn lower_to_ir<'a>(
         debug_rules: directives.debug_rules,
         debug_all: directives.debug_all,
         host_fns: directives.host_fns,
-        current_lhs: None,
         recovery_mode: false,
     };
 
@@ -193,9 +179,6 @@ pub fn lower_to_ir<'a>(
 
         // Unwrap Rule wrapper to get the body expression.
         let body_expr = unwrap_rule(rhs);
-
-        // Set current LHS for branch_firsts lookup during alternation lowering.
-        ctx.current_lhs = Some(lhs);
 
         // Lower the body expression.
         let body = lower_expression(body_expr, &mut ctx);

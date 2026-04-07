@@ -9,7 +9,6 @@ use bbnf_ir::{MemoStrategy, PrettyHints, RuleDirectives, RuleMeta};
 use crate::types::Expression;
 
 use super::LowerCtx;
-use super::charset_to_128;
 use super::expression::lower_expression;
 
 /// Build rule metadata from analysis results.
@@ -23,16 +22,9 @@ pub(crate) fn build_rule_meta<'a>(
     name: &str,
     ctx: &mut LowerCtx<'a>,
 ) -> RuleMeta {
-    // FIRST set.
-    let first_set = ctx
-        .first_sets
-        .first
-        .get(lhs)
-        .map(charset_to_128)
-        .unwrap_or_default();
-
-    // Nullability.
-    let nullable = ctx.first_sets.nullable.contains(lhs);
+    // FIRST set and nullability are populated by the IR CSP pass post-lowering.
+    let first_set = bbnf_ir::CharSet128::new();
+    let nullable = false;
 
     // SCC info.
     let scc_id = ctx.scc_result.scc_index.get(lhs).map(|&id| id as u32);

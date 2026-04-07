@@ -1,4 +1,4 @@
-use bbnf::graph::{compute_first_sets, tarjan_scc, topological_sort_scc};
+use bbnf::graph::{tarjan_scc, topological_sort_scc};
 use bbnf::grammar;
 use bbnf::lower::{DirectiveSet, lower_to_ir};
 use bbnf::pipeline::{PipelineOptions, compile_grammar};
@@ -191,8 +191,6 @@ number = /-?\d+/ ;
     let deps = calculate_ast_deps(&ast);
     let scc_result = tarjan_scc(&deps);
     let ast = topological_sort_scc(&ast, &scc_result, &deps);
-    let first_sets = compute_first_sets(&ast, &deps, &scc_result);
-
     let entry_rule_name: Option<String> = ast.keys().last().and_then(|lhs| {
         if let Expression::Nonterminal(tok) = lhs {
             Some(tok.value.to_string())
@@ -203,9 +201,12 @@ number = /-?\d+/ ;
 
     let directives = DirectiveSet::empty();
 
-    let mut ir = lower_to_ir(&ast, &first_sets, &scc_result, &directives, &[]);
+    let mut ir = lower_to_ir(&ast, &scc_result, &directives, &[]);
 
-    // Run IR metadata passes first (alias + transparent detection).
+    // Compute FIRST sets at IR level (replaces AST-level computation).
+    bbnf_ir::passes::compute_first_sets(&mut ir);
+
+    // Run IR metadata passes (alias + transparent detection).
     bbnf_ir::passes::compute_aliases(&mut ir);
     bbnf_ir::passes::compute_transparent(&mut ir);
 

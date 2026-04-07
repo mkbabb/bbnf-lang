@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use bbnf::graph::{calculate_ast_deps, compute_first_sets, tarjan_scc};
+use bbnf::graph::{calculate_ast_deps, tarjan_scc};
 use bbnf::lower::{DirectiveSet, lower_to_ir};
 
 use bbnf_ir::{GrammarIR, IrNode, MemoStrategy};
@@ -14,11 +14,13 @@ fn lower_grammar(source: &str) -> GrammarIR {
 
     let deps = calculate_ast_deps(&ast);
     let scc_result = tarjan_scc(&deps);
-    let first_sets = compute_first_sets(&ast, &deps, &scc_result);
 
     let directives = DirectiveSet::empty();
 
-    let mut ir = lower_to_ir(&ast, &first_sets, &scc_result, &directives, &[]);
+    let mut ir = lower_to_ir(&ast, &scc_result, &directives, &[]);
+
+    // Compute FIRST sets at IR level.
+    bbnf_ir::passes::compute_first_sets(&mut ir);
 
     // Run metadata IR passes (alias + transparent + span eligibility detection).
     bbnf_ir::passes::compute_aliases(&mut ir);
@@ -231,7 +233,6 @@ fn lower_with_pretty_hints() {
 
         let deps = calculate_ast_deps(&ast);
         let scc_result = tarjan_scc(&deps);
-        let first_sets = compute_first_sets(&ast, &deps, &scc_result);
 
         let mut pretties = HashMap::new();
         pretties.insert(
@@ -253,7 +254,7 @@ fn lower_with_pretty_hints() {
             host_fns: None,
         };
 
-        lower_to_ir(&ast, &first_sets, &scc_result, &directives, &[])
+        lower_to_ir(&ast, &scc_result, &directives, &[])
     };
 
     let rule = &ir.rules[0];

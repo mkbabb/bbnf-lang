@@ -7,7 +7,7 @@ use crate::types::{BinOpKind, Expression, MapArrow, Token, UnaryOpKind, ValueExp
 
 use std::collections::HashMap;
 
-use super::{LowerCtx, charset_to_128};
+use super::LowerCtx;
 
 /// Attempt to replace a `FnDescriptor::Expr` with a specialized descriptor
 /// based on the combination of inner node type and MapExpr pattern.
@@ -562,23 +562,8 @@ pub(crate) fn lower_expression<'a>(expr: &'a Expression<'a>, ctx: &mut LowerCtx<
                 .map(|(i, child)| {
                     let node = lower_expression(child, ctx);
 
-                    let first_set = ctx
-                        .current_lhs
-                        .and_then(|lhs| ctx.first_sets.branch_firsts.get(lhs))
-                        .and_then(|branch_firsts| {
-                            if i < branch_firsts.len() {
-                                let (ref cs, nullable) = branch_firsts[i];
-                                if !nullable && !cs.is_empty() {
-                                    Some(charset_to_128(cs))
-                                } else {
-                                    None
-                                }
-                            } else {
-                                None
-                            }
-                        });
-
-                    AltBranch { node, first_set }
+                    // Branch FIRST sets are populated by the IR CSP pass post-lowering.
+                    AltBranch { node, first_set: None }
                 })
                 .collect();
 
@@ -600,19 +585,7 @@ pub(crate) fn lower_expression<'a>(expr: &'a Expression<'a>, ctx: &mut LowerCtx<
             }
         }
 
-        Expression::DebugExpression((inner, label)) => {
-            if !label.is_empty() {
-                if let Some(rule_id) = ctx.current_lhs.and_then(|lhs| {
-                    if let Expression::Nonterminal(Token { value, .. }) = lhs {
-                        ctx.name_to_rule_id.get(value.as_ref()).copied()
-                    } else {
-                        None
-                    }
-                }) {
-                    let label_id = ctx.strings.intern(label);
-                    let _ = (rule_id, label_id);
-                }
-            }
+        Expression::DebugExpression((inner, _label)) => {
             lower_expression(&inner.value, ctx)
         }
 

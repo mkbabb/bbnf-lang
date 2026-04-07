@@ -1,8 +1,6 @@
 {
     "private": true,
     "workspaces": [
-        "typescript",
-        "prettier-plugin-bbnf",
         "playground"
     ]
 }

@@ -10,7 +10,7 @@
 //! access) + parent context (ValuePlacement) and returns a decision struct describing
 //! the resolved types, child classification, and structural strategy.
 
-use bbnf_ir::{AltBranch, FnDescriptor, GrammarIR, IrNode, MapExpr, RuleId, TypeDesc};
+use bbnf_ir::{GrammarIR, IrNode, TypeDesc};
 
 use super::types::{FlattenStrategy, ValuePlacement};
 
@@ -42,86 +42,6 @@ pub fn child_alloc(ty: &TypeDesc, parent_alloc: ValuePlacement) -> ValuePlacemen
         TypeDesc::Vec(inner) if **inner != TypeDesc::Span => ValuePlacement::Alloc,
         _ => ValuePlacement::Inline,
     }
-}
-
-/// Resolved Alt decomposition.
-#[derive(Debug)]
-pub struct AltDecision {
-    pub kind: AltDecisionKind,
-}
-
-#[derive(Debug)]
-pub enum AltDecisionKind {
-    /// All branches are `Map(Literal, Expr(constant))` → value-based match.
-    ConstantReverse(Vec<ConstantReverseArm>),
-    /// Enum variant dispatch.
-    Dispatch(Vec<AltBranchDecision>),
-}
-
-/// A constant-reverse arm: literal text → constant value.
-#[derive(Debug)]
-pub struct ConstantReverseArm {
-    pub literal: String,
-    pub expr: ConstantKind,
-}
-
-#[derive(Debug)]
-pub enum ConstantKind {
-    Bool(bool),
-    Int(i64),
-    Float(f64),
-}
-
-/// A resolved Alt branch.
-#[derive(Debug)]
-pub struct AltBranchDecision {
-    pub branch_index: usize,
-    pub ty: TypeDesc,
-    pub variant: AltVariantKind,
-}
-
-/// How an Alt branch maps to an enum variant.
-#[derive(Debug)]
-pub enum AltVariantKind {
-    /// Ref to non-transparent rule → variant name = rule name.
-    RuleVariant { rule_id: RuleId, name: String },
-    /// Ref to transparent rule → no enum variant; inline body.
-    Transparent { rule_id: RuleId },
-    /// Sub-variant from global_sub_variants (heterogeneous non-Ref branch).
-    SubVariant { name: String },
-    /// Enum/BoxedEnum branch with no sub-variant wrapping.
-    Direct,
-}
-
-/// Resolved Repeat decomposition.
-#[derive(Debug)]
-pub struct RepeatDecision {
-    pub kind: RepeatKind,
-    pub elem_type: TypeDesc,
-}
-
-#[derive(Debug)]
-pub enum RepeatKind {
-    Optional,
-    SepBy,
-    Plain,
-}
-
-/// Resolved Map reversal.
-#[derive(Debug, Clone)]
-pub enum MapReverse {
-    /// NumberConvert → emit f64.
-    F64,
-    /// HexConvert → emit hex format.
-    Hex,
-    /// SpanCapture → emit span text.
-    SpanText,
-    /// EnumWrap / BoxWrap → transparent (emit inner).
-    Passthrough,
-    /// Constant literal → emit the matched literal from IR.
-    Constant,
-    /// General Expr → Display fallback.
-    Display,
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -196,141 +116,8 @@ pub fn decide_seq(children: &[IrNode], ir: &GrammarIR) -> SeqDecision {
     }
 }
 
-/// Resolve Alt variant assignment.
-///
-/// Mirrors decision logic in `driver.rs:compile_alt`.
-pub fn decide_alt(
-    branches: &[AltBranch],
-    ir: &GrammarIR,
-    global_sub_variants: &std::collections::HashMap<TypeDesc, String>,
-) -> AltDecision {
-    // Check constant-reverse.
-    if let Some(arms) = try_constant_reverse(branches, ir) {
-        return AltDecision {
-            kind: AltDecisionKind::ConstantReverse(arms),
-        };
-    }
-
-    let type_map = ir.type_map.as_ref();
-
-    let decisions: Vec<AltBranchDecision> = branches
-        .iter()
-        .enumerate()
-        .map(|(i, branch)| {
-            let ty = type_map
-                .and_then(|tm| tm.node_type(&branch.node).cloned())
-                .unwrap_or(TypeDesc::Span);
-
-            let variant = match &branch.node {
-                IrNode::Ref(rule_id) => {
-                    let ref_rule = &ir.rules[*rule_id as usize];
-                    if ref_rule.meta.is_transparent {
-                        AltVariantKind::Transparent { rule_id: *rule_id }
-                    } else {
-                        let name = ir.get_string(ref_rule.name).to_string();
-                        AltVariantKind::RuleVariant {
-                            rule_id: *rule_id,
-                            name,
-                        }
-                    }
-                }
-                _ => {
-                    // Non-Ref branch: look up sub-variant by type.
-                    if let Some(name) = global_sub_variants.get(&ty) {
-                        AltVariantKind::SubVariant {
-                            name: name.clone(),
-                        }
-                    } else {
-                        // Normalize BoxedEnum → Enum for lookup.
-                        let normalized = match &ty {
-                            TypeDesc::BoxedEnum => TypeDesc::Enum,
-                            other => other.clone(),
-                        };
-                        if let Some(name) = global_sub_variants.get(&normalized) {
-                            AltVariantKind::SubVariant {
-                                name: name.clone(),
-                            }
-                        } else {
-                            AltVariantKind::Direct
-                        }
-                    }
-                }
-            };
-
-            AltBranchDecision {
-                branch_index: i,
-                ty,
-                variant,
-            }
-        })
-        .collect();
-
-    AltDecision {
-        kind: AltDecisionKind::Dispatch(decisions),
-    }
-}
-
-/// Resolve Repeat element type and structure.
-pub fn decide_repeat(inner: &IrNode, lo: u32, hi: u32, ir: &GrammarIR) -> RepeatDecision {
-    let type_map = ir.type_map.as_ref();
-
-    if lo == 0 && hi == 1 {
-        let elem_type = type_map
-            .and_then(|tm| tm.node_type(inner).cloned())
-            .unwrap_or(TypeDesc::Span);
-        return RepeatDecision {
-            kind: RepeatKind::Optional,
-            elem_type,
-        };
-    }
-
-    let is_sep_by = detect_sep_by(inner).is_some();
-
-    let elem_type = type_map
-        .and_then(|tm| tm.vec_elem_type(inner).cloned())
-        .or_else(|| {
-            type_map.and_then(|tm| {
-                let ty = tm.node_type(inner).cloned()?;
-                Some(if ty == TypeDesc::BoxedEnum {
-                    TypeDesc::Enum
-                } else {
-                    ty
-                })
-            })
-        })
-        .unwrap_or_else(|| match inner {
-            IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => TypeDesc::Span,
-            IrNode::Ref(_) => TypeDesc::Enum,
-            _ => TypeDesc::BoxedEnum,
-        });
-
-    RepeatDecision {
-        kind: if is_sep_by {
-            RepeatKind::SepBy
-        } else {
-            RepeatKind::Plain
-        },
-        elem_type,
-    }
-}
-
-/// Resolve Map FnDescriptor reversal.
-pub fn decide_map(fn_id: u32, ir: &GrammarIR) -> MapReverse {
-    match &ir.fns[fn_id as usize] {
-        FnDescriptor::NumberConvert => MapReverse::F64,
-        FnDescriptor::HexConvert { .. } => MapReverse::Hex,
-        FnDescriptor::SpanCapture => MapReverse::SpanText,
-        FnDescriptor::EnumWrap { .. } | FnDescriptor::BoxWrap => MapReverse::Passthrough,
-        FnDescriptor::Expr { expr, .. } => match expr {
-            MapExpr::IntLit(_) | MapExpr::FloatLit(_) | MapExpr::StringLit(_)
-            | MapExpr::BoolLit(_) | MapExpr::Input => MapReverse::Constant,
-            _ => MapReverse::Display,
-        },
-    }
-}
-
 // ═════════════════════════════════════════════════════════════════════════════
-// Helpers (moved from driver.rs)
+// Helpers
 // ═════════════════════════════════════════════════════════════════════════════
 
 /// Detect sep_by pattern: `Skip(element, Repeat(separator, 0, 1))`.
@@ -366,27 +153,3 @@ pub fn detect_flatten(
     }
 }
 
-/// Check if all Alt branches are Map(Literal, Expr(constant)).
-fn try_constant_reverse(branches: &[AltBranch], ir: &GrammarIR) -> Option<Vec<ConstantReverseArm>> {
-    let mut arms = Vec::new();
-    for branch in branches {
-        let IrNode::Map { inner, fn_id } = &branch.node else {
-            return None;
-        };
-        let IrNode::Literal(sid) = inner.as_ref() else {
-            return None;
-        };
-        let FnDescriptor::Expr { expr, .. } = &ir.fns[*fn_id as usize] else {
-            return None;
-        };
-        let lit = ir.get_string(*sid).to_string();
-        let kind = match expr {
-            MapExpr::BoolLit(b) => ConstantKind::Bool(*b),
-            MapExpr::IntLit(n) => ConstantKind::Int(*n),
-            MapExpr::FloatLit(f) => ConstantKind::Float(*f),
-            _ => return None,
-        };
-        arms.push(ConstantReverseArm { literal: lit, expr: kind });
-    }
-    Some(arms)
-}

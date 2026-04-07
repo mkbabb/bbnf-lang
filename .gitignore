@@ -21,5 +21,8 @@ extension/server/
 
 scripts/
 
+# Rust compiler ICE dumps
+rustc-ice-*.txt
+
 # Screenshot artifacts (root only, not assets/)
 /*.png

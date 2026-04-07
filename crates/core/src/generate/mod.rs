@@ -1,6 +1,6 @@
 //! Rust parser code generation from BBNF grammars.
 
-pub mod emit;
+pub mod serialize;
 pub mod regex;
 pub use regex::classify as regex_classify;
 pub use crate::backend::rust as codegen;
@@ -42,10 +42,10 @@ pub fn generate_all(
         emitter.extra_impl_methods = prettify_methods;
     }
 
-    // Generate EmitSink-based emission methods when `#[parser(emit)]` is set.
-    if parser_attrs.emit {
-        let emit_tokens = emit::generate_emit_methods(ir, &ir_ctx);
-        emitter.extra_impl_methods.extend(emit_tokens);
+    // Generate Serializer-based methods when `#[parser(serialize)]` is set.
+    if parser_attrs.serialize {
+        let ser_tokens = serialize::generate_serialize_methods(ir, &ir_ctx);
+        emitter.extra_impl_methods.extend(ser_tokens);
     }
 
     let mut emit_ctx = RustEmitCtx::new(&ir_ctx);

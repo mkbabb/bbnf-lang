@@ -111,7 +111,7 @@ fn compute_cache_key(paths: &[PathBuf], attrs: &ParserAttributes, ident_name: &s
     attrs.remove_left_recursion.hash(&mut hasher);
     attrs.prettify.hash(&mut hasher);
     attrs.skip_recover.hash(&mut hasher);
-    attrs.emit.hash(&mut hasher);
+    attrs.serialize.hash(&mut hasher);
     for p in &attrs.paths {
         // Hash canonical paths so that the same file via different relative
         // paths produces the same key.
@@ -215,8 +215,8 @@ fn parse_parser_attrs(attrs: &[Attribute]) -> ParserAttributes {
                 Meta::Path(p) if p.is_ident("skip_recover") => {
                     parser_attr.skip_recover = true;
                 }
-                Meta::Path(p) if p.is_ident("emit") => {
-                    parser_attr.emit = true;
+                Meta::Path(p) if p.is_ident("serialize") => {
+                    parser_attr.serialize = true;
                 }
                 _ => {}
             }

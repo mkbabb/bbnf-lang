@@ -22,18 +22,18 @@ pub fn type_desc_is_ref(td: &TypeDesc) -> bool {
 // ─── Public entry ────────────────────────────────────────────────────────────
 
 /// Emit code for a value whose TypeDesc is known (no IR context).
-pub fn emit_for_type(
+pub fn serialize_for_type(
     td: &TypeDesc,
     val: &TokenStream,
     ir: &GrammarIR,
     ctx: &IrCodegenCtx,
 ) -> TokenStream {
     let syn_ty = type_desc_to_syn(td, ctx);
-    emit_for_syn_type(&syn_ty, val, ir, ctx)
+    serialize_for_syn_type(&syn_ty, val, ir, ctx)
 }
 
 /// Emit code for a rule body: type-driven destructuring + IR structural content.
-pub fn emit_for_node(
+pub fn serialize_for_node(
     node: &IrNode,
     td: &TypeDesc,
     val: &TokenStream,
@@ -43,24 +43,24 @@ pub fn emit_for_node(
     // Map reversal: if the node is a Map, emit the original literal (for constants)
     // or use the FnDescriptor to reverse the transformation.
     if let IrNode::Map { inner, fn_id } = node {
-        return emit_map_reverse(inner, *fn_id, td, val, ir, ctx);
+        return serialize_map_reverse(inner, *fn_id, td, val, ir, ctx);
     }
 
     // Skip/Next: emit structural content + value.
     if let IrNode::Skip(kept, structural) = node {
-        let kept_emit = emit_for_node(kept, td, val, ir, ctx);
-        let structural_emit = emit_structural(structural, ir);
+        let kept_emit = serialize_for_node(kept, td, val, ir, ctx);
+        let structural_emit = serialize_structural(structural, ir);
         return quote! { #kept_emit #structural_emit };
     }
     if let IrNode::Next(structural, kept) = node {
-        let structural_emit = emit_structural(structural, ir);
-        let kept_emit = emit_for_node(kept, td, val, ir, ctx);
+        let structural_emit = serialize_structural(structural, ir);
+        let kept_emit = serialize_for_node(kept, td, val, ir, ctx);
         return quote! { #structural_emit #kept_emit };
     }
 
     // OptionalWhitespace: delegate to inner.
     if let IrNode::OptionalWhitespace(inner) = node {
-        return emit_for_node(inner, td, val, ir, ctx);
+        return serialize_for_node(inner, td, val, ir, ctx);
     }
 
     // Seq: type says Tuple, IR says children. Use both.
@@ -72,7 +72,7 @@ pub fn emit_for_node(
     if let IrNode::Repeat { inner, lo, hi } = node {
         if *lo == 0 && *hi == 1 {
             if let TypeDesc::Option(inner_td) = td {
-                let inner_emit = emit_for_node(inner, inner_td, &quote! { __opt_v }, ir, ctx);
+                let inner_emit = serialize_for_node(inner, inner_td, &quote! { __opt_v }, ir, ctx);
                 return quote! { if let Some(__opt_v) = #val { #inner_emit } };
             }
         }
@@ -93,16 +93,16 @@ pub fn emit_for_node(
     if let IrNode::Ref(rule_id) = node {
         let ref_rule = &ir.rules[*rule_id as usize];
         if ref_rule.meta.is_transparent {
-            return emit_for_node(&ref_rule.body, td, val, ir, ctx);
+            return serialize_for_node(&ref_rule.body, td, val, ir, ctx);
         }
     }
 
     // Fallback: type-only emit.
-    emit_for_type(td, val, ir, ctx)
+    serialize_for_type(td, val, ir, ctx)
 }
 
 /// Emit map reversal (constant literals, number→text, etc.)
-fn emit_map_reverse(
+fn serialize_map_reverse(
     inner: &IrNode,
     fn_id: u32,
     td: &TypeDesc,
@@ -111,26 +111,26 @@ fn emit_map_reverse(
     ctx: &IrCodegenCtx,
 ) -> TokenStream {
     match &ir.fns[fn_id as usize] {
-        FnDescriptor::NumberConvert => quote! { __sink.f64(*#val); },
+        FnDescriptor::NumberConvert => quote! { __ser.f64(*#val); },
         FnDescriptor::HexConvert { .. } => quote! {
             { use ::std::fmt::Write as _; let mut __b = String::new();
-              let _ = write!(__b, "{:x}", #val); __sink.text_owned(&__b); }
+              let _ = write!(__b, "{:x}", #val); __ser.text_owned(&__b); }
         },
-        FnDescriptor::SpanCapture => quote! { __sink.text(#val.as_str()); },
+        FnDescriptor::SpanCapture => quote! { __ser.text(#val.as_str()); },
         FnDescriptor::EnumWrap { .. } | FnDescriptor::BoxWrap => {
-            emit_for_node(inner, td, val, ir, ctx)
+            serialize_for_node(inner, td, val, ir, ctx)
         }
         FnDescriptor::Expr { expr, .. } => {
             match expr {
                 MapExpr::IntLit(_) | MapExpr::FloatLit(_) | MapExpr::StringLit(_)
                 | MapExpr::BoolLit(_) => {
                     // Constant: emit the original literal from the inner IR node.
-                    emit_structural(inner, ir)
+                    serialize_structural(inner, ir)
                 }
-                MapExpr::Input => emit_for_node(inner, td, val, ir, ctx),
+                MapExpr::Input => serialize_for_node(inner, td, val, ir, ctx),
                 _ => quote! {
                     { use ::std::fmt::Write as _; let mut __b = String::new();
-                      let _ = write!(__b, "{}", #val); __sink.text_owned(&__b); }
+                      let _ = write!(__b, "{}", #val); __ser.text_owned(&__b); }
                 },
             }
         }
@@ -151,7 +151,7 @@ fn emit_tuple_with_ir(
             let idx = syn::Index::from(i);
             let binding = format_ident!("__t{}", i);
             let syn_ty = type_desc_to_syn(elem_ty, ctx);
-            let child_emit = emit_for_syn_type(&syn_ty, &quote! { #binding }, ir, ctx);
+            let child_emit = serialize_for_syn_type(&syn_ty, &quote! { #binding }, ir, ctx);
             quote! { let #binding = #val.#idx; #child_emit }
         }).collect();
         return quote! { #(#parts)* };
@@ -160,7 +160,7 @@ fn emit_tuple_with_ir(
     let parts: Vec<_> = children.iter().zip(elems.iter()).enumerate().map(|(i, (child, elem_td))| {
         let idx = syn::Index::from(i);
         let binding = format_ident!("__t{}", i);
-        let child_emit = emit_for_node(child, elem_td, &quote! { #binding }, ir, ctx);
+        let child_emit = serialize_for_node(child, elem_td, &quote! { #binding }, ir, ctx);
         quote! { let #binding = #val.#idx; #child_emit }
     }).collect();
     quote! { #(#parts)* }
@@ -178,11 +178,11 @@ fn emit_vec_with_ir(
 
     // Detect sep_by pattern.
     if let Some((elem_node, sep_node)) = decisions::detect_sep_by(inner) {
-        let sep_emit = emit_structural(sep_node, ir);
+        let sep_emit = serialize_structural(sep_node, ir);
         let ref_elem_td: TypeDesc = TypeDesc::BoxedEnum; // placeholder — item is &Enum from iter
         let syn_ty = type_desc_to_syn(elem_td, ctx);
         let ref_syn_ty: Type = syn::parse_quote! { &#syn_ty };
-        let item_emit = emit_for_syn_type(&ref_syn_ty, &quote! { __item }, ir, ctx);
+        let item_emit = serialize_for_syn_type(&ref_syn_ty, &quote! { __item }, ir, ctx);
         return quote! {
             let mut __first = true;
             for __item in #val.iter() {
@@ -196,7 +196,7 @@ fn emit_vec_with_ir(
     // Plain iteration.
     let syn_ty = type_desc_to_syn(elem_td, ctx);
     let ref_syn_ty: Type = syn::parse_quote! { &#syn_ty };
-    let item_emit = emit_for_syn_type(&ref_syn_ty, &quote! { __item }, ir, ctx);
+    let item_emit = serialize_for_syn_type(&ref_syn_ty, &quote! { __item }, ir, ctx);
     quote! { for __item in #val.iter() { #item_emit } }
 }
 
@@ -219,107 +219,107 @@ fn try_constant_reverse_from_ir(
             MapExpr::FloatLit(f) => { let l = proc_macro2::Literal::f64_unsuffixed(*f); quote! { #l } }
             _ => return None,
         };
-        arms.push(quote! { #pat => { __sink.text(#lit); } });
+        arms.push(quote! { #pat => { __ser.text(#lit); } });
     }
     Some(quote! { match *#val { #(#arms)* _ => {} } })
 }
 
 /// Emit structural content from an IR node.
-fn emit_structural(node: &IrNode, ir: &GrammarIR) -> TokenStream {
+fn serialize_structural(node: &IrNode, ir: &GrammarIR) -> TokenStream {
     match node {
         IrNode::Literal(sid) => {
             let s = ir.get_string(*sid);
             if s.len() == 1 {
                 let b = s.as_bytes()[0];
-                quote! { __sink.char(#b); }
+                quote! { __ser.char(#b); }
             } else {
-                quote! { __sink.text(#s); }
+                quote! { __ser.text(#s); }
             }
         }
-        IrNode::Ref(rule_id) => emit_structural(&ir.rules[*rule_id as usize].body, ir),
+        IrNode::Ref(rule_id) => serialize_structural(&ir.rules[*rule_id as usize].body, ir),
         IrNode::Seq(children) => {
-            let parts: Vec<_> = children.iter().map(|c| emit_structural(c, ir)).collect();
+            let parts: Vec<_> = children.iter().map(|c| serialize_structural(c, ir)).collect();
             quote! { #(#parts)* }
         }
-        IrNode::OptionalWhitespace(inner) => emit_structural(inner, ir),
-        IrNode::Skip(l, _) | IrNode::Next(_, l) => emit_structural(l, ir),
-        IrNode::Repeat { inner, .. } => emit_structural(inner, ir),
+        IrNode::OptionalWhitespace(inner) => serialize_structural(inner, ir),
+        IrNode::Skip(l, _) | IrNode::Next(_, l) => serialize_structural(l, ir),
+        IrNode::Repeat { inner, .. } => serialize_structural(inner, ir),
         _ => quote! {},
     }
 }
 
 // ─── Recursive syn::Type dispatch ────────────────────────────────────────────
 
-fn emit_for_syn_type(
+fn serialize_for_syn_type(
     ty: &Type,
     val: &TokenStream,
     ir: &GrammarIR,
     ctx: &IrCodegenCtx,
 ) -> TokenStream {
     if is_span_type(ty) {
-        return quote! { __sink.text(#val.as_str()); };
+        return quote! { __ser.text(#val.as_str()); };
     }
     if is_type_name(ty, "f64") {
-        return quote! { __sink.f64(*#val); };
+        return quote! { __ser.f64(*#val); };
     }
     if is_type_name(ty, "u32") || is_type_name(ty, "u8") || is_type_name(ty, "i64") {
         return quote! {
             { use ::std::fmt::Write as _; let mut __b = String::new();
-              let _ = write!(__b, "{}", #val); __sink.text_owned(&__b); }
+              let _ = write!(__b, "{}", #val); __ser.text_owned(&__b); }
         };
     }
     if is_type_name(ty, "bool") {
         return quote! {
-            if *#val { __sink.text("true"); } else { __sink.text("false"); }
+            if *#val { __ser.text("true"); } else { __ser.text("false"); }
         };
     }
     if let Some(inner) = extract_option_inner(ty) {
-        let inner_emit = emit_for_syn_type(&inner, &quote! { __opt_v }, ir, ctx);
+        let inner_emit = serialize_for_syn_type(&inner, &quote! { __opt_v }, ir, ctx);
         return quote! { if let Some(__opt_v) = #val { #inner_emit } };
     }
     if let Some(inner) = extract_slice_inner(ty) {
         // .iter() yields &ElemType. If ElemType is Enum, __item is &Enum.
         // Wrap inner type in a reference so dispatch doesn't add another &.
         let ref_inner: Type = syn::parse_quote! { &#inner };
-        let item_emit = emit_for_syn_type(&ref_inner, &quote! { __item }, ir, ctx);
+        let item_emit = serialize_for_syn_type(&ref_inner, &quote! { __item }, ir, ctx);
         return quote! { for __item in #val.iter() { #item_emit } };
     }
     if let Some(elems) = extract_tuple_elems(ty) {
         let parts: Vec<_> = elems.iter().enumerate().map(|(i, elem_ty)| {
             let idx = syn::Index::from(i);
             let binding = format_ident!("__t{}", i);
-            let child_emit = emit_for_syn_type(elem_ty, &quote! { #binding }, ir, ctx);
+            let child_emit = serialize_for_syn_type(elem_ty, &quote! { #binding }, ir, ctx);
             quote! { let #binding = #val.#idx; #child_emit }
         }).collect();
         return quote! { #(#parts)* };
     }
     if let Some(inner) = extract_reference_inner(ty) {
         if is_enum_type(&inner, ctx) {
-            return emit_dispatch_call(val, ctx);
+            return serialize_dispatch_call(val, ctx);
         }
-        return emit_for_syn_type(&inner, val, ir, ctx);
+        return serialize_for_syn_type(&inner, val, ir, ctx);
     }
     if is_enum_type(ty, ctx) {
-        return emit_dispatch_call(&quote! { &#val }, ctx);
+        return serialize_dispatch_call(&quote! { &#val }, ctx);
     }
 
     // Fallback: Display
     quote! {
         { use ::std::fmt::Write as _; let mut __b = String::new();
-          let _ = write!(__b, "{}", #val); __sink.text_owned(&__b); }
+          let _ = write!(__b, "{}", #val); __ser.text_owned(&__b); }
     }
 }
 
-/// Call the generated __dispatch_emit function.
-fn emit_dispatch_call(val: &TokenStream, ctx: &IrCodegenCtx) -> TokenStream {
-    quote! { Self::__dispatch_emit(#val, __sink); }
+/// Call the generated __dispatch_serialize function.
+fn serialize_dispatch_call(val: &TokenStream, ctx: &IrCodegenCtx) -> TokenStream {
+    quote! { Self::__dispatch_serialize(#val, __ser); }
 }
 
 // ─── Leaf sub-variant emit (guards against codegen recursion) ────────────────
 
-/// Same as emit_for_syn_type but Enum/&Enum calls __dispatch_emit
+/// Same as serialize_for_syn_type but Enum/&Enum calls __dispatch_serialize
 /// instead of inlining the match (prevents infinite codegen recursion).
-fn emit_leaf_syn_type(
+fn serialize_leaf_syn_type(
     ty: &Type,
     val: &TokenStream,
     ir: &GrammarIR,
@@ -327,35 +327,35 @@ fn emit_leaf_syn_type(
 ) -> TokenStream {
     if let Some(inner) = extract_reference_inner(ty) {
         if is_enum_type(&inner, ctx) {
-            return emit_dispatch_call(val, ctx);
+            return serialize_dispatch_call(val, ctx);
         }
-        return emit_leaf_syn_type(&inner, val, ir, ctx);
+        return serialize_leaf_syn_type(&inner, val, ir, ctx);
     }
     if is_enum_type(ty, ctx) {
-        return emit_dispatch_call(&quote! { &#val }, ctx);
+        return serialize_dispatch_call(&quote! { &#val }, ctx);
     }
     if let Some(elems) = extract_tuple_elems(ty) {
         let parts: Vec<_> = elems.iter().enumerate().map(|(i, elem_ty)| {
             let idx = syn::Index::from(i);
             let binding = format_ident!("__t{}", i);
-            let child_emit = emit_leaf_syn_type(elem_ty, &quote! { #binding }, ir, ctx);
+            let child_emit = serialize_leaf_syn_type(elem_ty, &quote! { #binding }, ir, ctx);
             quote! { let #binding = #val.#idx; #child_emit }
         }).collect();
         return quote! { #(#parts)* };
     }
     if let Some(inner) = extract_option_inner(ty) {
-        let inner_emit = emit_leaf_syn_type(&inner, &quote! { __opt_v }, ir, ctx);
+        let inner_emit = serialize_leaf_syn_type(&inner, &quote! { __opt_v }, ir, ctx);
         return quote! { if let Some(__opt_v) = #val { #inner_emit } };
     }
     if let Some(inner) = extract_slice_inner(ty) {
         let ref_inner: Type = syn::parse_quote! { &#inner };
-        let item_emit = emit_leaf_syn_type(&ref_inner, &quote! { __item }, ir, ctx);
+        let item_emit = serialize_leaf_syn_type(&ref_inner, &quote! { __item }, ir, ctx);
         return quote! { for __item in #val.iter() { #item_emit } };
     }
-    emit_for_syn_type(ty, val, ir, ctx)
+    serialize_for_syn_type(ty, val, ir, ctx)
 }
 
-// ─── Dispatch match body (used by __dispatch_emit and inline) ────────────────
+// ─── Dispatch match body (used by __dispatch_serialize and inline) ────────────────
 
 /// Generate the match arms for variant dispatch.
 /// `val` is `&'a Enum<'a>` (single reference to the enum).
@@ -375,7 +375,7 @@ pub fn generate_dispatch_arms(
         }
         let name = ir.get_string(rule.name);
         let variant = format_ident!("{}", name);
-        let emit_fn = format_ident!("{}_emit", name);
+        let emit_fn = format_ident!("serialize_{}", name);
 
         let rule_td = ir.types.iter()
             .find(|(id, _)| *id == rule.id)
@@ -387,10 +387,10 @@ pub fn generate_dispatch_arms(
         // inner: FieldType (by-value access to the field inside &Enum).
         let call = if needs_deref {
             // Ref-type field: inner is &'a T already. Pass directly.
-            quote! { Self::#emit_fn(__inner, __sink); }
+            quote! { Self::#emit_fn(__inner, __ser); }
         } else {
             // Value-type field: inner is T. Pass &inner.
-            quote! { Self::#emit_fn(&__inner, __sink); }
+            quote! { Self::#emit_fn(&__inner, __ser); }
         };
 
         arms.push(quote! {
@@ -411,7 +411,7 @@ pub fn generate_dispatch_arms(
         }
         let variant = format_ident!("{}", variant_name);
         let inner_ty = type_desc_to_syn(ty_desc, ctx);
-        let inner_emit = emit_leaf_syn_type(&inner_ty, &quote! { __inner }, ir, ctx);
+        let inner_emit = serialize_leaf_syn_type(&inner_ty, &quote! { __inner }, ir, ctx);
         arms.push(quote! {
             &#enum_ident::#variant(ref __inner) => { #inner_emit }
         });

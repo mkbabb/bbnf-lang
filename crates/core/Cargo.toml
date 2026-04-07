@@ -14,7 +14,7 @@ path = "src/lib.rs"
 pprint = "0.3"
 parse_that = "0.4"
 bbnf-ir = { version = "0.1", path = "../ir" }
-bbnf-emit = { version = "0.1", path = "../emit" }
+bbnf-ser = { version = "0.1", path = "../ser" }
 csp-solver = "0.1"
 rustc-hash = "2"
 

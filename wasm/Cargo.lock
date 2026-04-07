@@ -21,8 +21,8 @@ checksum = "c08606f8c3cbf4ce6ec8e28fb0014a2c086708fe954eaa885384a6165172e7e8"
 name = "bbnf"
 version = "0.2.11"
 dependencies = [
- "bbnf-emit",
  "bbnf-ir",
+ "bbnf-ser",
  "csp-solver",
  "indexmap",
  "parse_that",
@@ -46,14 +46,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bbnf-emit"
-version = "0.1.0"
-dependencies = [
- "itoa",
- "ryu",
-]
-
-[[package]]
 name = "bbnf-ir"
 version = "0.1.6"
 dependencies = [
@@ -64,6 +56,14 @@ dependencies = [
  "rustc-hash",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "bbnf-ser"
+version = "0.1.0"
+dependencies = [
+ "itoa",
+ "ryu",
 ]
 
 [[package]]

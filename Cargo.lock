@@ -137,8 +137,8 @@ dependencies = [
 name = "bbnf"
 version = "0.2.11"
 dependencies = [
- "bbnf-emit",
  "bbnf-ir",
+ "bbnf-ser",
  "bbnf_derive",
  "bencher",
  "csp-solver",
@@ -185,14 +185,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bbnf-emit"
-version = "0.1.0"
-dependencies = [
- "itoa",
- "ryu",
-]
-
-[[package]]
 name = "bbnf-ir"
 version = "0.1.6"
 dependencies = [
@@ -218,6 +210,14 @@ dependencies = [
  "tempfile",
  "tokio",
  "tower-lsp-server",
+]
+
+[[package]]
+name = "bbnf-ser"
+version = "0.1.0"
+dependencies = [
+ "itoa",
+ "ryu",
 ]
 
 [[package]]

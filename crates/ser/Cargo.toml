@@ -1,0 +1,10 @@
+[package]
+name = "bbnf-ser"
+version = "0.1.0"
+edition = "2024"
+description = "Grammar-guided Serializer/Deserializer traits for BBNF"
+license = "MIT"
+
+[dependencies]
+ryu = "1"
+itoa = "1"

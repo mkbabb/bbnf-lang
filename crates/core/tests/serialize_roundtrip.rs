@@ -3,36 +3,36 @@
 use bbnf_derive::Parser;
 
 #[derive(Parser)]
-#[parser(path = "../../grammar/json/json.bbnf", emit)]
+#[parser(path = "../../grammar/json/json.bbnf", serialize)]
 struct JsonEmit;
 
 #[derive(Parser)]
-#[parser(path = "../../grammar/misc/csv.bbnf", emit)]
+#[parser(path = "../../grammar/misc/csv.bbnf", serialize)]
 struct CsvEmit;
 
 #[derive(Parser)]
-#[parser(path = "../../grammar/bnf/bnf.bbnf", emit)]
+#[parser(path = "../../grammar/bnf/bnf.bbnf", serialize)]
 struct BnfEmit;
 
 #[derive(Parser)]
-#[parser(path = "../../grammar/ebnf/ebnf.bbnf", emit)]
+#[parser(path = "../../grammar/ebnf/ebnf.bbnf", serialize)]
 struct EbnfEmit;
 
 #[derive(Parser)]
-#[parser(path = "../../grammar/misc/math.bbnf", emit)]
+#[parser(path = "../../grammar/misc/math.bbnf", serialize)]
 struct MathEmit;
 
 #[derive(Parser)]
-#[parser(path = "../../grammar/google-sheets/google-sheets.bbnf", emit)]
+#[parser(path = "../../grammar/google-sheets/google-sheets.bbnf", serialize)]
 struct SheetsEmit;
 
 #[derive(Parser)]
-#[parser(path = "../../grammar/bbnf/bbnf.bbnf", emit)]
+#[parser(path = "../../grammar/bbnf/bbnf.bbnf", serialize)]
 struct BbnfEmit;
 
 // CSS pretty grammar (no @import composition)
 #[derive(Parser)]
-#[parser(path = "../../grammar/css/pretty.bbnf", emit)]
+#[parser(path = "../../grammar/css/pretty.bbnf", serialize)]
 struct CssPrettyEmit;
 
 // ── JSON ─────────────────────────────────────────────────────────────────────
@@ -41,7 +41,7 @@ fn json_emit(input: &str) -> String {
     let ctx = __JsonEmitEnumCtx::with_capacity(input.len() / 32);
     let (result, _) = JsonEmit::value().parse_return_state_with_context(input, &ctx);
     let value = result.expect("JSON parse failed");
-    JsonEmit::emit_compact(value)
+    JsonEmit::serialize_compact(value)
 }
 
 fn json_rt(input: &str) {
@@ -68,7 +68,7 @@ fn json_rt(input: &str) {
 fn csv_emit(input: &str) -> String {
     let ctx = __CsvEmitEnumCtx::with_capacity(input.len() / 8);
     let (result, _) = CsvEmit::csv().parse_return_state_with_context(input, &ctx);
-    CsvEmit::emit_compact(&result.expect("CSV parse failed"))
+    CsvEmit::serialize_compact(&result.expect("CSV parse failed"))
 }
 
 fn csv_rt(input: &str) {
@@ -89,7 +89,7 @@ fn csv_rt(input: &str) {
 fn bnf_emit(input: &str) -> String {
     let ctx = __BnfEmitEnumCtx::with_capacity(input.len() / 8);
     let (result, _) = BnfEmit::grammar().parse_return_state_with_context(input, &ctx);
-    BnfEmit::emit_compact(&result.expect("BNF parse failed"))
+    BnfEmit::serialize_compact(&result.expect("BNF parse failed"))
 }
 
 #[test]
@@ -103,7 +103,7 @@ fn bnf_rule() {
 fn ebnf_emit(input: &str) -> String {
     let ctx = __EbnfEmitEnumCtx::with_capacity(input.len() / 8);
     let (result, _) = EbnfEmit::grammar().parse_return_state_with_context(input, &ctx);
-    EbnfEmit::emit_compact(&result.expect("EBNF parse failed"))
+    EbnfEmit::serialize_compact(&result.expect("EBNF parse failed"))
 }
 
 #[test]
@@ -117,7 +117,7 @@ fn ebnf_rule() {
 fn math_emit(input: &str) -> String {
     let ctx = __MathEmitEnumCtx::with_capacity(input.len() / 8);
     let (result, _) = MathEmit::number().parse_return_state_with_context(input, &ctx);
-    MathEmit::emit_compact(&result.expect("Math parse failed"))
+    MathEmit::serialize_compact(&result.expect("Math parse failed"))
 }
 
 #[test]
@@ -131,7 +131,7 @@ fn math_num() {
 fn sheets_emit(input: &str) -> String {
     let ctx = __SheetsEmitEnumCtx::with_capacity(input.len() / 8);
     let (result, _) = SheetsEmit::formula().parse_return_state_with_context(input, &ctx);
-    SheetsEmit::emit_compact(&result.expect("Sheets parse failed"))
+    SheetsEmit::serialize_compact(&result.expect("Sheets parse failed"))
 }
 
 #[test]
@@ -146,7 +146,7 @@ fn bbnf_emit(input: &str) -> String {
     let ctx = __BbnfEmitEnumCtx::with_capacity(input.len() / 8);
     let (result, _) = BbnfEmit::grammar().parse_return_state_with_context(input, &ctx);
     let val = result.expect("BBNF parse failed");
-    BbnfEmit::emit_compact(&val)
+    BbnfEmit::serialize_compact(&val)
 }
 
 #[test]
@@ -162,7 +162,7 @@ fn bbnf_rule() {
         return;
     }
     let val = result.unwrap();
-    let e = BbnfEmit::emit_compact(&val);
+    let e = BbnfEmit::serialize_compact(&val);
     assert!(!e.is_empty(), "BBNF empty");
 }
 
@@ -172,7 +172,7 @@ fn css_emit(input: &str) -> String {
     let ctx = __CssPrettyEmitEnumCtx::with_capacity(input.len() / 8);
     let (result, _) = CssPrettyEmit::stylesheet().parse_return_state_with_context(input, &ctx);
     let val = result.expect("CSS parse failed");
-    CssPrettyEmit::emit_compact(&val)
+    CssPrettyEmit::serialize_compact(&val)
 }
 
 #[test]

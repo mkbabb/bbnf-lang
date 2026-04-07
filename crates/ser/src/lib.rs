@@ -1,48 +1,40 @@
-//! Grammar-guided emission traits and compact sink implementation.
+//! Grammar-guided serialization and deserialization traits.
 //!
-//! `EmitSink` is the inverse of parsing: where a grammar-derived parser
-//! reads text into typed values, an `EmitSink`-based emitter walks those
-//! values and writes text back out. The trait is grammar-agnostic — codegen
-//! produces the traversal, the sink determines the output format.
+//! `Serializer` is the inverse of parsing: where a grammar-derived parser reads
+//! text into typed values, a `Serializer`-based emitter walks those values and
+//! writes text back out. The trait is grammar-agnostic — codegen produces the
+//! traversal, the sink determines the output format.
+//!
+//! `Deserializer` is the inverse of serialization: type-guided reading of
+//! structured text back into typed values. Unlike the full parser (which
+//! handles backtracking, error recovery, span tracking), the deserializer
+//! knows the exact structure from `TypeMap` and reads accordingly.
 
 use std::io::{self, Write};
 
-/// Strategy trait for grammar-guided emission.
+/// Strategy trait for grammar-guided serialization.
 ///
 /// Grammar-generated code calls these methods to emit structured output.
 /// Implementations control the output format:
-/// - [`CompactSink`]: minimal bytes, no formatting (serde_json::to_string equivalent)
-/// - [`StringSink`]: compact emit into an owned `String` with checkpoint/restore
-/// - `DocSink` (in pprint): pretty-printed via Wadler-Lindig algorithm
+/// - [`CompactSerializer`]: minimal bytes, no formatting
+/// - [`StringSerializer`]: compact emit into an owned `String` with checkpoint/restore
+/// - `FmtBuilder` (in pprint): pretty-printed via Wadler-Lindig algorithm
 ///
-/// Primitive methods are the minimal vocabulary. Composite methods have default
-/// implementations that decompose into primitives — specialized sinks (pprint)
-/// override them with fused operations.
-pub trait EmitSink<'a> {
+/// No lifetime parameter — `text()` takes `&str`, not `&'a str`.
+pub trait Serializer {
     /// Opaque checkpoint for speculative emission / backtracking.
     type Checkpoint: Copy;
 
     // ── Content primitives ───────────────────────────────────────────
 
-    /// Emit a borrowed string slice (from the input, lifetime 'a).
-    fn text(&mut self, s: &'a str);
-
-    /// Emit a string with any lifetime (for locally-constructed values like
-    /// Display-formatted numbers). Default impl uses text() with lifetime erase.
-    fn text_owned(&mut self, s: &str) {
-        // SAFETY: the sink copies/processes the string immediately. The data
-        // doesn't escape the method call. This is safe for CompactSink (writes
-        // bytes), StringSink (copies to String), and FmtBuilder (copies to op).
-        let s_a: &'a str = unsafe { std::mem::transmute(s) };
-        self.text(s_a);
-    }
+    /// Emit a string slice.
+    fn text(&mut self, s: &str);
 
     /// Emit a single ASCII byte.
     fn char(&mut self, c: u8);
 
     /// Emit text that may contain inline whitespace (spaces/tabs).
-    /// Sinks that track line width should count only the non-ws content.
-    fn text_inline_ws(&mut self, s: &'a str);
+    fn text_inline_ws(&mut self, s: &str);
 
     /// Emit a signed 64-bit integer.
     fn i64(&mut self, v: i64);
@@ -98,10 +90,6 @@ pub trait EmitSink<'a> {
     fn restore(&mut self, cp: Self::Checkpoint);
 
     // ── Composites (default decompositions) ──────────────────────────
-    //
-    // These have default implementations that decompose into primitives.
-    // pprint overrides with fused 24-byte ops (WrapStart/WrapEnd/CommaSep).
-    // CompactSink gets correct behavior via the defaults (char + no-ops).
 
     /// Open a delimiter-wrapped group: group + open char + indent + break.
     fn wrap_open(&mut self, open: u8) {
@@ -125,16 +113,63 @@ pub trait EmitSink<'a> {
     }
 }
 
-// ── CompactSink ──────────────────────────────────────────────────────────
+/// Type-guided deserialization. Inverse of [`Serializer`].
+///
+/// Where `Serializer` walks typed values and emits text, `Deserializer` reads
+/// structured text and constructs typed values. The deserializer knows the
+/// exact type topology from codegen and reads accordingly — no backtracking
+/// or error recovery, just direct structural parsing.
+pub trait Deserializer<'a> {
+    /// Opaque checkpoint for speculative reads.
+    type Checkpoint: Copy;
 
-/// Minimal-bytes emitter over [`Write`]. Writes content directly, ignores all
-/// formatting (groups, indentation, line breaks).
-pub struct CompactSink<W: Write> {
+    /// Consume exact text. Returns `true` if matched.
+    fn text_exact(&mut self, s: &str) -> bool;
+
+    /// Read a span of text (until the next structural boundary).
+    fn text_span(&mut self) -> Option<&'a str>;
+
+    /// Consume exact byte. Returns `true` if matched.
+    fn char_exact(&mut self, c: u8) -> bool;
+
+    /// Skip whitespace.
+    fn skip_ws(&mut self);
+
+    /// Parse a signed 64-bit integer.
+    fn i64(&mut self) -> Option<i64>;
+
+    /// Parse an unsigned 64-bit integer.
+    fn u64(&mut self) -> Option<u64>;
+
+    /// Parse a 64-bit float.
+    fn f64(&mut self) -> Option<f64>;
+
+    /// Peek at the next byte without consuming.
+    fn peek_byte(&self) -> Option<u8>;
+
+    /// Check if at end of input.
+    fn at_eof(&self) -> bool;
+
+    /// Current byte offset in the input.
+    fn offset(&self) -> usize;
+
+    /// Save current position for potential rollback.
+    fn checkpoint(&mut self) -> Self::Checkpoint;
+
+    /// Restore to a previously saved position.
+    fn restore(&mut self, cp: Self::Checkpoint);
+}
+
+// ── CompactSerializer ──────────────────────────────────────────────────
+
+/// Minimal-bytes serializer over [`Write`]. Writes content directly, ignores
+/// all formatting (groups, indentation, line breaks).
+pub struct CompactSerializer<W: Write> {
     writer: W,
     error: Option<io::Error>,
 }
 
-impl<W: Write> CompactSink<W> {
+impl<W: Write> CompactSerializer<W> {
     pub fn new(writer: W) -> Self {
         Self {
             writer,
@@ -142,7 +177,6 @@ impl<W: Write> CompactSink<W> {
         }
     }
 
-    /// Consume the sink and return the underlying writer, or the first IO error.
     pub fn finish(self) -> Result<W, io::Error> {
         match self.error {
             Some(e) => Err(e),
@@ -164,11 +198,11 @@ impl<W: Write> CompactSink<W> {
     }
 }
 
-impl<'a, W: Write> EmitSink<'a> for CompactSink<W> {
+impl<W: Write> Serializer for CompactSerializer<W> {
     type Checkpoint = u64;
 
     #[inline]
-    fn text(&mut self, s: &'a str) {
+    fn text(&mut self, s: &str) {
         self.write(s.as_bytes());
     }
 
@@ -178,7 +212,7 @@ impl<'a, W: Write> EmitSink<'a> for CompactSink<W> {
     }
 
     #[inline]
-    fn text_inline_ws(&mut self, s: &'a str) {
+    fn text_inline_ws(&mut self, s: &str) {
         self.write(s.as_bytes());
     }
 
@@ -202,7 +236,6 @@ impl<'a, W: Write> EmitSink<'a> for CompactSink<W> {
 
     #[inline]
     fn i128(&mut self, v: i128) {
-        // itoa doesn't support i128; use fmt::Write.
         use std::io::Write as _;
         if self.error.is_none() {
             if let Err(e) = write!(self.writer, "{v}") {
@@ -250,15 +283,15 @@ impl<'a, W: Write> EmitSink<'a> for CompactSink<W> {
     fn restore(&mut self, _cp: Self::Checkpoint) {}
 }
 
-// ── StringSink ───────────────────────────────────────────────────────────
+// ── StringSerializer ───────────────────────────────────────────────────
 
-/// Compact emitter into an owned `String`. Supports checkpoint/restore via
-/// truncation. Use this for `emit_compact() -> String`.
-pub struct StringSink {
+/// Compact serializer into an owned `String`. Supports checkpoint/restore via
+/// truncation. Use this for `to_string()`.
+pub struct StringSerializer {
     buf: String,
 }
 
-impl StringSink {
+impl StringSerializer {
     pub fn new() -> Self {
         Self { buf: String::new() }
     }
@@ -278,20 +311,19 @@ impl StringSink {
     }
 }
 
-impl Default for StringSink {
+impl Default for StringSerializer {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<'a> EmitSink<'a> for StringSink {
+impl Serializer for StringSerializer {
     type Checkpoint = usize;
 
     #[inline]
-    fn text(&mut self, s: &'a str) {
+    fn text(&mut self, s: &str) {
         self.buf.push_str(s);
     }
-
 
     #[inline]
     fn char(&mut self, c: u8) {
@@ -299,7 +331,7 @@ impl<'a> EmitSink<'a> for StringSink {
     }
 
     #[inline]
-    fn text_inline_ws(&mut self, s: &'a str) {
+    fn text_inline_ws(&mut self, s: &str) {
         self.buf.push_str(s);
     }
 
@@ -361,5 +393,122 @@ impl<'a> EmitSink<'a> for StringSink {
     #[inline]
     fn restore(&mut self, cp: Self::Checkpoint) {
         self.buf.truncate(cp);
+    }
+}
+
+// ── SliceDeserializer ──────────────────────────────────────────────────
+
+/// Byte-slice deserializer. Reads from a `&'a str` input with checkpoint/restore.
+pub struct SliceDeserializer<'a> {
+    input: &'a str,
+    pos: usize,
+}
+
+impl<'a> SliceDeserializer<'a> {
+    pub fn new(input: &'a str) -> Self {
+        Self { input, pos: 0 }
+    }
+
+    fn remaining(&self) -> &'a str {
+        &self.input[self.pos..]
+    }
+}
+
+impl<'a> Deserializer<'a> for SliceDeserializer<'a> {
+    type Checkpoint = usize;
+
+    fn text_exact(&mut self, s: &str) -> bool {
+        if self.remaining().starts_with(s) {
+            self.pos += s.len();
+            true
+        } else {
+            false
+        }
+    }
+
+    fn text_span(&mut self) -> Option<&'a str> {
+        let rest = self.remaining();
+        if rest.is_empty() {
+            return None;
+        }
+        // Read until next structural byte or EOF.
+        let end = rest
+            .bytes()
+            .position(|b| matches!(b, b'{' | b'}' | b'[' | b']' | b',' | b':'))
+            .unwrap_or(rest.len());
+        if end == 0 {
+            return None;
+        }
+        let span = &rest[..end];
+        self.pos += end;
+        Some(span)
+    }
+
+    fn char_exact(&mut self, c: u8) -> bool {
+        if self.remaining().as_bytes().first() == Some(&c) {
+            self.pos += 1;
+            true
+        } else {
+            false
+        }
+    }
+
+    fn skip_ws(&mut self) {
+        let rest = self.remaining();
+        let trimmed = rest.trim_ascii_start();
+        self.pos += rest.len() - trimmed.len();
+    }
+
+    fn i64(&mut self) -> Option<i64> {
+        let rest = self.remaining();
+        let end = rest
+            .bytes()
+            .position(|b| !b.is_ascii_digit() && b != b'-')
+            .unwrap_or(rest.len());
+        let val: i64 = rest[..end].parse().ok()?;
+        self.pos += end;
+        Some(val)
+    }
+
+    fn u64(&mut self) -> Option<u64> {
+        let rest = self.remaining();
+        let end = rest
+            .bytes()
+            .position(|b| !b.is_ascii_digit())
+            .unwrap_or(rest.len());
+        let val: u64 = rest[..end].parse().ok()?;
+        self.pos += end;
+        Some(val)
+    }
+
+    fn f64(&mut self) -> Option<f64> {
+        let rest = self.remaining();
+        let end = rest
+            .bytes()
+            .position(|b| !matches!(b, b'0'..=b'9' | b'.' | b'-' | b'+' | b'e' | b'E'))
+            .unwrap_or(rest.len());
+        let val: f64 = rest[..end].parse().ok()?;
+        self.pos += end;
+        Some(val)
+    }
+
+    fn peek_byte(&self) -> Option<u8> {
+        self.remaining().as_bytes().first().copied()
+    }
+
+    fn at_eof(&self) -> bool {
+        self.pos >= self.input.len()
+    }
+
+    fn offset(&self) -> usize {
+        self.pos
+    }
+
+    fn checkpoint(&mut self) -> Self::Checkpoint {
+        self.pos
+    }
+
+    fn restore(&mut self, cp: Self::Checkpoint) {
+        self.pos = cp;
     }
 }

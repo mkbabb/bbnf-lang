@@ -1,4 +1,4 @@
-# CLAUDE.md — rust/bbnf-ir/
+# CLAUDE.md — crates/ir/
 
 Canonical grammar IR between the BBNF frontend and all backends (Rust codegen,
 bytecode VM, TS interpreter, pretty-printing). Fully owned (no lifetimes),

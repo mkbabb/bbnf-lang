@@ -1,40 +1,48 @@
 //! Grammar-guided serialization and deserialization traits.
 //!
-//! `Serializer` is the inverse of parsing: where a grammar-derived parser reads
-//! text into typed values, a `Serializer`-based emitter walks those values and
-//! writes text back out. The trait is grammar-agnostic — codegen produces the
-//! traversal, the sink determines the output format.
+//! `Serializer<'a>` is the inverse of parsing: where a grammar-derived parser
+//! reads text into typed values, a serializer walks those values and writes
+//! text back out. The trait is grammar-agnostic — codegen produces the
+//! traversal, the serializer controls the output format.
 //!
-//! `Deserializer` is the inverse of serialization: type-guided reading of
-//! structured text back into typed values. Unlike the full parser (which
-//! handles backtracking, error recovery, span tracking), the deserializer
-//! knows the exact structure from `TypeMap` and reads accordingly.
+//! `Deserializer<'a>` is the inverse of serialization: type-guided reading
+//! of structured text back into typed values.
+//!
+//! ## Implementations
+//!
+//! - [`WriterSerializer`]: minimal bytes to any `io::Write`
+//! - [`StringSerializer`]: compact output into owned `String`
+//! - `FmtBuilder` (in pprint): pretty-printed via Wadler-Lindig algorithm
+//! - [`SliceDeserializer`]: reads from `&'a str` input
 
 use std::io::{self, Write};
 
 /// Strategy trait for grammar-guided serialization.
 ///
-/// Grammar-generated code calls these methods to emit structured output.
-/// Implementations control the output format:
-/// - [`CompactSerializer`]: minimal bytes, no formatting
-/// - [`StringSerializer`]: compact emit into an owned `String` with checkpoint/restore
-/// - `FmtBuilder` (in pprint): pretty-printed via Wadler-Lindig algorithm
-///
-/// No lifetime parameter — `text()` takes `&str`, not `&'a str`.
-pub trait Serializer {
+/// Two text paths: [`text()`](Serializer::text) for zero-copy borrowed input
+/// (the 99% path), [`text_owned()`](Serializer::text_owned) for computed
+/// values (hex, Display fallbacks) where the caller constructs a local string.
+pub trait Serializer<'a> {
     /// Opaque checkpoint for speculative emission / backtracking.
     type Checkpoint: Copy;
 
     // ── Content primitives ───────────────────────────────────────────
 
-    /// Emit a string slice.
-    fn text(&mut self, s: &str);
+    /// Emit a borrowed string slice from the input (zero-copy path).
+    fn text(&mut self, s: &'a str);
+
+    /// Emit a computed string (hex formatting, Display, etc.).
+    /// The serializer copies/writes immediately — no borrowing.
+    fn text_owned(&mut self, s: &str);
 
     /// Emit a single ASCII byte.
     fn char(&mut self, c: u8);
 
     /// Emit text that may contain inline whitespace (spaces/tabs).
-    fn text_inline_ws(&mut self, s: &str);
+    fn text_inline_ws(&mut self, s: &'a str);
+
+    /// Emit a boolean value.
+    fn bool(&mut self, v: bool);
 
     /// Emit a signed 64-bit integer.
     fn i64(&mut self, v: i64);
@@ -42,7 +50,7 @@ pub trait Serializer {
     /// Emit an unsigned 64-bit integer.
     fn u64(&mut self, v: u64);
 
-    /// Emit a 64-bit float (ryu fast path recommended).
+    /// Emit a 64-bit float.
     fn f64(&mut self, v: f64);
 
     /// Emit a signed 128-bit integer.
@@ -64,7 +72,7 @@ pub trait Serializer {
 
     // ── Structure ────────────────────────────────────────────────────
 
-    /// Open a formatting group. Content inside may be laid out flat or broken.
+    /// Open a formatting group.
     fn group_open(&mut self);
 
     /// Close the current formatting group.
@@ -78,7 +86,7 @@ pub trait Serializer {
 
     // ── Separators ───────────────────────────────────────────────────
 
-    /// Emit a separator: `flat` variant in flat mode, `brk` variant + newline in break mode.
+    /// Emit a separator: `flat` in flat mode, `brk` + newline in break mode.
     fn sep(&mut self, flat: &str, brk: &str);
 
     // ── Backtracking ─────────────────────────────────────────────────
@@ -86,7 +94,7 @@ pub trait Serializer {
     /// Save current emission state for potential rollback.
     fn checkpoint(&mut self) -> Self::Checkpoint;
 
-    /// Restore emission state to a previous checkpoint, discarding output since then.
+    /// Restore emission state to a previous checkpoint.
     fn restore(&mut self, cp: Self::Checkpoint);
 
     // ── Composites (default decompositions) ──────────────────────────
@@ -107,69 +115,41 @@ pub trait Serializer {
         self.group_close();
     }
 
-    /// Emit standard comma separator: `", "` flat, `","` + newline when broken.
+    /// Emit standard comma separator.
     fn comma_sep(&mut self) {
         self.sep(", ", ",");
     }
 }
 
 /// Type-guided deserialization. Inverse of [`Serializer`].
-///
-/// Where `Serializer` walks typed values and emits text, `Deserializer` reads
-/// structured text and constructs typed values. The deserializer knows the
-/// exact type topology from codegen and reads accordingly — no backtracking
-/// or error recovery, just direct structural parsing.
 pub trait Deserializer<'a> {
     /// Opaque checkpoint for speculative reads.
     type Checkpoint: Copy;
 
-    /// Consume exact text. Returns `true` if matched.
     fn text_exact(&mut self, s: &str) -> bool;
-
-    /// Read a span of text (until the next structural boundary).
     fn text_span(&mut self) -> Option<&'a str>;
-
-    /// Consume exact byte. Returns `true` if matched.
     fn char_exact(&mut self, c: u8) -> bool;
-
-    /// Skip whitespace.
     fn skip_ws(&mut self);
-
-    /// Parse a signed 64-bit integer.
     fn i64(&mut self) -> Option<i64>;
-
-    /// Parse an unsigned 64-bit integer.
     fn u64(&mut self) -> Option<u64>;
-
-    /// Parse a 64-bit float.
     fn f64(&mut self) -> Option<f64>;
-
-    /// Peek at the next byte without consuming.
     fn peek_byte(&self) -> Option<u8>;
-
-    /// Check if at end of input.
     fn at_eof(&self) -> bool;
-
-    /// Current byte offset in the input.
     fn offset(&self) -> usize;
-
-    /// Save current position for potential rollback.
     fn checkpoint(&mut self) -> Self::Checkpoint;
-
-    /// Restore to a previously saved position.
     fn restore(&mut self, cp: Self::Checkpoint);
 }
 
-// ── CompactSerializer ──────────────────────────────────────────────────
+// ── WriterSerializer ───────────────────────────────────────────────────
 
-/// Minimal-bytes serializer over [`Write`]. Writes content directly, ignores
-/// all formatting (groups, indentation, line breaks).
-pub struct CompactSerializer<W: Write> {
+/// Minimal-bytes serializer over [`Write`]. Writes content directly,
+/// ignores all formatting (groups, indentation, line breaks).
+pub struct WriterSerializer<W: Write> {
     writer: W,
     error: Option<io::Error>,
 }
 
-impl<W: Write> CompactSerializer<W> {
+impl<W: Write> WriterSerializer<W> {
     pub fn new(writer: W) -> Self {
         Self {
             writer,
@@ -198,11 +178,16 @@ impl<W: Write> CompactSerializer<W> {
     }
 }
 
-impl<W: Write> Serializer for CompactSerializer<W> {
+impl<'a, W: Write> Serializer<'a> for WriterSerializer<W> {
     type Checkpoint = u64;
 
     #[inline]
-    fn text(&mut self, s: &str) {
+    fn text(&mut self, s: &'a str) {
+        self.write(s.as_bytes());
+    }
+
+    #[inline]
+    fn text_owned(&mut self, s: &str) {
         self.write(s.as_bytes());
     }
 
@@ -212,8 +197,13 @@ impl<W: Write> Serializer for CompactSerializer<W> {
     }
 
     #[inline]
-    fn text_inline_ws(&mut self, s: &str) {
+    fn text_inline_ws(&mut self, s: &'a str) {
         self.write(s.as_bytes());
+    }
+
+    #[inline]
+    fn bool(&mut self, v: bool) {
+        self.write(if v { b"true" } else { b"false" });
     }
 
     #[inline]
@@ -285,8 +275,8 @@ impl<W: Write> Serializer for CompactSerializer<W> {
 
 // ── StringSerializer ───────────────────────────────────────────────────
 
-/// Compact serializer into an owned `String`. Supports checkpoint/restore via
-/// truncation. Use this for `to_string()`.
+/// Compact serializer into an owned `String`. Supports checkpoint/restore
+/// via truncation.
 pub struct StringSerializer {
     buf: String,
 }
@@ -317,11 +307,16 @@ impl Default for StringSerializer {
     }
 }
 
-impl Serializer for StringSerializer {
+impl<'a> Serializer<'a> for StringSerializer {
     type Checkpoint = usize;
 
     #[inline]
-    fn text(&mut self, s: &str) {
+    fn text(&mut self, s: &'a str) {
+        self.buf.push_str(s);
+    }
+
+    #[inline]
+    fn text_owned(&mut self, s: &str) {
         self.buf.push_str(s);
     }
 
@@ -331,8 +326,13 @@ impl Serializer for StringSerializer {
     }
 
     #[inline]
-    fn text_inline_ws(&mut self, s: &str) {
+    fn text_inline_ws(&mut self, s: &'a str) {
         self.buf.push_str(s);
+    }
+
+    #[inline]
+    fn bool(&mut self, v: bool) {
+        self.buf.push_str(if v { "true" } else { "false" });
     }
 
     #[inline]
@@ -431,7 +431,6 @@ impl<'a> Deserializer<'a> for SliceDeserializer<'a> {
         if rest.is_empty() {
             return None;
         }
-        // Read until next structural byte or EOF.
         let end = rest
             .bytes()
             .position(|b| matches!(b, b'{' | b'}' | b'[' | b']' | b',' | b':'))

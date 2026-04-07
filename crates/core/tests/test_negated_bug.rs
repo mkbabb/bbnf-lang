@@ -1,4 +1,4 @@
-use bbnf::generate::regex::classify::{RegexClass, classify_regex};
+use parse_that::regex::classify::{RegexClass, classify_regex};
 
 #[test]
 fn test_negated_class_misclassification() {

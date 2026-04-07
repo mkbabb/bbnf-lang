@@ -1,4 +1,4 @@
-# CLAUDE.md — rust/bbnf-analysis/
+# CLAUDE.md — crates/analysis/
 
 LSP analysis engine. Pure analysis logic shared by the LSP server and WASM crate.
 

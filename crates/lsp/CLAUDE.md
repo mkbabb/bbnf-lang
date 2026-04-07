@@ -1,4 +1,4 @@
-# CLAUDE.md — rust/lsp/
+# CLAUDE.md — crates/lsp/
 
 BBNF language server. Binary: `bbnf-lsp`. Communicates over stdio (JSON-RPC).
 

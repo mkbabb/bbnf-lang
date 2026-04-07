@@ -1,4 +1,4 @@
-# CLAUDE.md — rust/bbnf-derive/
+# CLAUDE.md — crates/derive/
 
 Proc-macro crate. Generates parser code from `.bbnf` grammar files at compile time.
 

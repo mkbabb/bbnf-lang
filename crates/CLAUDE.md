@@ -1,11 +1,11 @@
-# CLAUDE.md — rust/
+# CLAUDE.md — crates/
 
 Cargo workspace containing the core BBNF compiler and language server.
 
 ## Structure
 
 ```
-rust/
+crates/
 ├── Cargo.toml          Workspace manifest (resolver = "2")
 ├── core/               Core library: grammar parsing, analysis, Rust codegen
 ├── ir/              Canonical grammar IR, passes, bytecode compiler, interpreter

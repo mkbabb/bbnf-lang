@@ -1,4 +1,4 @@
-# CLAUDE.md — rust/bbnf/
+# CLAUDE.md — crates/core/
 
 Core BBNF library: grammar parsing, static analysis, and Rust code generation.
 

@@ -40,7 +40,7 @@ pub fn generate_serialize_methods(ir: &GrammarIR, ctx: &IrCodegenCtx) -> TokenSt
         };
 
         methods.push(quote! {
-            pub fn #fn_ident<'a, __S: ::bbnf_ser::Serializer>(
+            pub fn #fn_ident<'a, __S: ::bbnf_ser::Serializer<'a>>(
                 #param,
                 __ser: &mut __S,
             ) {
@@ -54,7 +54,7 @@ pub fn generate_serialize_methods(ir: &GrammarIR, ctx: &IrCodegenCtx) -> TokenSt
     {
         let arms = serialize::generate_dispatch_arms(ir, ctx);
         methods.push(quote! {
-            fn __dispatch_serialize<'a, __S: ::bbnf_ser::Serializer>(
+            fn __dispatch_serialize<'a, __S: ::bbnf_ser::Serializer<'a>>(
                 __v: #boxed_enum,
                 __ser: &mut __S,
             ) {
@@ -91,7 +91,7 @@ pub fn generate_serialize_methods(ir: &GrammarIR, ctx: &IrCodegenCtx) -> TokenSt
                     Self::#emit_fn(__v, &mut __ser);
                     __ser.finish()
                 }
-                pub fn serialize<'a, __S: ::bbnf_ser::Serializer>(
+                pub fn serialize<'a, __S: ::bbnf_ser::Serializer<'a>>(
                     __v: #boxed_enum, __ser: &mut __S,
                 ) {
                     Self::#emit_fn(__v, __ser);
@@ -122,7 +122,7 @@ pub fn generate_serialize_methods(ir: &GrammarIR, ctx: &IrCodegenCtx) -> TokenSt
                     }
                     __ser.finish()
                 }
-                pub fn serialize<'a, __S: ::bbnf_ser::Serializer>(
+                pub fn serialize<'a, __S: ::bbnf_ser::Serializer<'a>>(
                     __v: #boxed_enum, __ser: &mut __S,
                 ) {
                     if let #enum_ident::#variant(__inner) = __v {

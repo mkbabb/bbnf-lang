@@ -262,16 +262,14 @@ fn serialize_for_syn_type(
     if is_type_name(ty, "f64") {
         return quote! { __ser.f64(*#val); };
     }
-    if is_type_name(ty, "u32") || is_type_name(ty, "u8") || is_type_name(ty, "i64") {
-        return quote! {
-            { use ::std::fmt::Write as _; let mut __b = String::new();
-              let _ = write!(__b, "{}", #val); __ser.text_owned(&__b); }
-        };
+    if is_type_name(ty, "u32") || is_type_name(ty, "u8") {
+        return quote! { __ser.u64(*#val as u64); };
+    }
+    if is_type_name(ty, "i64") {
+        return quote! { __ser.i64(*#val); };
     }
     if is_type_name(ty, "bool") {
-        return quote! {
-            if *#val { __ser.text("true"); } else { __ser.text("false"); }
-        };
+        return quote! { __ser.bool(*#val); };
     }
     if let Some(inner) = extract_option_inner(ty) {
         let inner_emit = serialize_for_syn_type(&inner, &quote! { __opt_v }, ir, ctx);
@@ -303,7 +301,7 @@ fn serialize_for_syn_type(
         return serialize_dispatch_call(&quote! { &#val }, ctx);
     }
 
-    // Fallback: Display
+    // Fallback: Display via text_owned
     quote! {
         { use ::std::fmt::Write as _; let mut __b = String::new();
           let _ = write!(__b, "{}", #val); __ser.text_owned(&__b); }

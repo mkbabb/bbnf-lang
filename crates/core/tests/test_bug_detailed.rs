@@ -1,4 +1,4 @@
-use bbnf::generate::regex::classify::classify_regex;
+use parse_that::regex::classify::classify_regex;
 
 #[test]
 fn test_negated_patterns_that_trigger_bug() {

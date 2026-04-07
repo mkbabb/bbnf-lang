@@ -1,5 +1,5 @@
 // Test using the regex/classify.rs directly (the one used by emit)
-use bbnf::generate::regex::classify::classify_regex;
+use parse_that::regex::classify::classify_regex;
 
 #[test]
 fn test_negated_class_from_regex_classify() {

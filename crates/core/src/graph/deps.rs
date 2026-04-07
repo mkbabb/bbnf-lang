@@ -115,6 +115,7 @@ pub fn collect_nonterminal_refs<'a>(
         | BbnfBootstrapEnum::bool_lit(_)
         | BbnfBootstrapEnum::string_lit(_)
         | BbnfBootstrapEnum::value_ident(_)
+        | BbnfBootstrapEnum::value_path(_)
         | BbnfBootstrapEnum::type_annotation(_)
         | BbnfBootstrapEnum::type_name(_)
         | BbnfBootstrapEnum::cmp_op(_)

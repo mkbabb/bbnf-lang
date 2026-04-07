@@ -5,7 +5,6 @@ use std::collections::{HashMap, HashSet};
 use bbnf::graph::{Dependencies, tarjan_scc};
 use bbnf_ir::CharSet128 as CharSet;
 use bbnf_ir::regex_first::regex_first_chars;
-use common::nt;
 
 // -- CharSet tests --
 
@@ -141,65 +140,43 @@ fn regex_first_space_escape() {
 #[test]
 fn tarjan_no_cycles() {
     // A -> B -> C (linear chain, no cycles)
-    let a = nt("A");
-    let b = nt("B");
-    let c = nt("C");
-
     let mut deps: Dependencies = HashMap::new();
-    let mut a_deps = HashSet::new();
-    a_deps.insert(b.clone());
-    deps.insert(a.clone(), a_deps);
-
-    let mut b_deps = HashSet::new();
-    b_deps.insert(c.clone());
-    deps.insert(b.clone(), b_deps);
-
-    deps.insert(c.clone(), HashSet::new());
+    deps.insert("A", HashSet::from(["B"]));
+    deps.insert("B", HashSet::from(["C"]));
+    deps.insert("C", HashSet::new());
 
     let result = tarjan_scc(&deps);
     assert_eq!(result.sccs.len(), 3);
     assert!(result.cyclic_rules.is_empty());
 
     // Verify reverse-topo order: C should come before B, B before A.
-    let scc_idx_a = result.scc_index.iter().find(|(k, _)| ***k == a).unwrap().1;
-    let scc_idx_b = result.scc_index.iter().find(|(k, _)| ***k == b).unwrap().1;
-    let scc_idx_c = result.scc_index.iter().find(|(k, _)| ***k == c).unwrap().1;
+    let scc_idx_a = result.scc_index["A"];
+    let scc_idx_b = result.scc_index["B"];
+    let scc_idx_c = result.scc_index["C"];
     assert!(scc_idx_c < scc_idx_b || scc_idx_b < scc_idx_a);
 }
 
 #[test]
 fn tarjan_self_cycle() {
     // A -> A (self-referencing)
-    let a = nt("A");
-
     let mut deps: Dependencies = HashMap::new();
-    let mut a_deps = HashSet::new();
-    a_deps.insert(a.clone());
-    deps.insert(a.clone(), a_deps);
+    deps.insert("A", HashSet::from(["A"]));
 
     let result = tarjan_scc(&deps);
     assert_eq!(result.sccs.len(), 1);
-    assert!(result.cyclic_rules.contains(&a));
+    assert!(result.cyclic_rules.contains("A"));
 }
 
 #[test]
 fn tarjan_mutual_cycle() {
     // A -> B, B -> A
-    let a = nt("A");
-    let b = nt("B");
-
     let mut deps: Dependencies = HashMap::new();
-    let mut a_deps = HashSet::new();
-    a_deps.insert(b.clone());
-    deps.insert(a.clone(), a_deps);
-
-    let mut b_deps = HashSet::new();
-    b_deps.insert(a.clone());
-    deps.insert(b.clone(), b_deps);
+    deps.insert("A", HashSet::from(["B"]));
+    deps.insert("B", HashSet::from(["A"]));
 
     let result = tarjan_scc(&deps);
     assert_eq!(result.sccs.len(), 1);
-    assert!(result.cyclic_rules.contains(&a));
-    assert!(result.cyclic_rules.contains(&b));
+    assert!(result.cyclic_rules.contains("A"));
+    assert!(result.cyclic_rules.contains("B"));
 }
 

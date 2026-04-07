@@ -248,6 +248,7 @@ pub fn extract_span_text<'a>(node: &'a BbnfBootstrapEnum<'a>) -> &'a str {
     match node {
         // Leaf span variants.
         BbnfBootstrapEnum::identifier(s)
+        | BbnfBootstrapEnum::value_ident(s)
         | BbnfBootstrapEnum::literal(s)
         | BbnfBootstrapEnum::regex(s)
         | BbnfBootstrapEnum::modifier(s)
@@ -267,6 +268,7 @@ pub fn extract_span_text<'a>(node: &'a BbnfBootstrapEnum<'a>) -> &'a str {
         | BbnfBootstrapEnum::directive(inner) => extract_span_text(inner),
 
         BbnfBootstrapEnum::pretty_hint((inner, _)) => extract_span_text(inner),
+        BbnfBootstrapEnum::value_path((first, _rest)) => extract_span_text(first),
 
         BbnfBootstrapEnum::factor((_, t, _, _)) => extract_span_text(t),
         BbnfBootstrapEnum::mapped_factor((inner, _)) => extract_span_text(inner),
@@ -284,5 +286,31 @@ pub fn extract_span_text<'a>(node: &'a BbnfBootstrapEnum<'a>) -> &'a str {
         }
 
         _ => "",
+    }
+}
+
+/// Extract the full path text from a `value_path` node, joining segments with `::`.
+///
+/// For a single `value_ident`, returns the identifier text.
+/// For a `value_path` `(first, [("::", seg), ...])`, returns `first::seg::...`.
+pub fn extract_path_text(node: &BbnfBootstrapEnum<'_>) -> String {
+    match node {
+        BbnfBootstrapEnum::value_path((first, rest)) => {
+            let first_str = extract_span_text(first);
+            if rest.is_empty() {
+                first_str.to_string()
+            } else {
+                let mut path = String::with_capacity(first_str.len() + rest.len() * 10);
+                path.push_str(first_str);
+                for (_sep, segment) in *rest {
+                    path.push_str("::");
+                    path.push_str(extract_span_text(segment));
+                }
+                path
+            }
+        }
+        BbnfBootstrapEnum::value_ident(s) => s.as_str().to_string(),
+        BbnfBootstrapEnum::identifier(s) => s.as_str().to_string(),
+        _ => extract_span_text(node).to_string(),
     }
 }

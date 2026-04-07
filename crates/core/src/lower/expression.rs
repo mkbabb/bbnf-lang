@@ -435,8 +435,8 @@ fn lower_map_arrow<'a>(
     });
 
     // Type-shorthand: bare type name like `-> f64`.
-    if let BbnfBootstrapEnum::value_ident(s) = value_expr {
-        let name = s.as_str();
+    // unwrap_value_ident_str recursively peels value expression wrappers.
+    if let Some(name) = unwrap_value_ident_str(value_expr) {
         if is_type_name(name) && return_type.is_none() {
             let type_sid = ctx.strings.intern(name);
             return ctx.fns.push(FnDescriptor::Expr {
@@ -445,30 +445,13 @@ fn lower_map_arrow<'a>(
             });
         }
     }
-    // Unwrap transparent wrappers to detect type shorthand.
-    if let Some(inner) = unwrap_value_atom(value_expr) {
-        if let BbnfBootstrapEnum::value_ident(s) = inner {
-            let name = s.as_str();
-            if is_type_name(name) && return_type.is_none() {
-                let type_sid = ctx.strings.intern(name);
-                return ctx.fns.push(FnDescriptor::Expr {
-                    expr: MapExpr::Input,
-                    return_type: Some(TypeDesc::Named(type_sid)),
-                });
-            }
-        }
-    }
 
     // Extract type suffix from integer/float literals when no explicit type annotation.
     let return_type = return_type.or_else(|| {
-        let text = match value_expr {
+        let leaf = deep_unwrap_value(value_expr);
+        let text = match leaf {
             BbnfBootstrapEnum::int_lit(s) | BbnfBootstrapEnum::float_lit(s) => Some(s.as_str()),
-            _ => unwrap_value_atom(value_expr).and_then(|inner| match inner {
-                BbnfBootstrapEnum::int_lit(s) | BbnfBootstrapEnum::float_lit(s) => {
-                    Some(s.as_str())
-                }
-                _ => None,
-            }),
+            _ => None,
         };
         text.and_then(|t| {
             let (_, suffix) = split_numeric_suffix(t);
@@ -483,10 +466,8 @@ fn lower_map_arrow<'a>(
 
     // Bool literal → bool type.
     let return_type = return_type.or_else(|| {
-        let is_bool = matches!(value_expr, BbnfBootstrapEnum::bool_lit(_))
-            || unwrap_value_atom(value_expr)
-                .is_some_and(|inner| matches!(inner, BbnfBootstrapEnum::bool_lit(_)));
-        if is_bool {
+        let leaf = deep_unwrap_value(value_expr);
+        if matches!(leaf, BbnfBootstrapEnum::bool_lit(_)) {
             let sid = ctx.strings.intern("bool");
             Some(TypeDesc::Named(sid))
         } else {
@@ -496,11 +477,10 @@ fn lower_map_arrow<'a>(
 
     // @host return type propagation.
     let return_type = return_type.or_else(|| {
-        let func_name = extract_value_func_name(value_expr)
-            .or_else(|| unwrap_value_atom(value_expr).and_then(extract_value_func_name));
+        let func_name = extract_value_func_name(deep_unwrap_value(value_expr));
         func_name.and_then(|name| {
             ctx.host_fns
-                .and_then(|hosts| hosts.get(name))
+                .and_then(|hosts| hosts.get(name.as_str()))
                 .and_then(|opt_type| opt_type.as_ref())
                 .map(|type_name| {
                     let sid = ctx.strings.intern(type_name);
@@ -517,7 +497,38 @@ fn lower_map_arrow<'a>(
     })
 }
 
+/// Extract a `&str` from a `value_ident` or a single-segment `value_path`,
+/// recursively unwrapping value expression precedence wrappers.
+fn unwrap_value_ident_str<'a>(node: &'a BbnfBootstrapEnum<'a>) -> Option<&'a str> {
+    match node {
+        BbnfBootstrapEnum::value_ident(s) => Some(s.as_str()),
+        BbnfBootstrapEnum::value_path((first, rest)) if rest.is_empty() => {
+            unwrap_value_ident_str(first)
+        }
+        // Unwrap value expression precedence chain.
+        BbnfBootstrapEnum::value_or((first, rest)) if rest.is_empty() => {
+            unwrap_value_ident_str(first)
+        }
+        BbnfBootstrapEnum::value_and((first, rest)) if rest.is_empty() => {
+            unwrap_value_ident_str(first)
+        }
+        BbnfBootstrapEnum::value_cmp((first, rest)) if rest.is_empty() => {
+            unwrap_value_ident_str(first)
+        }
+        BbnfBootstrapEnum::value_add((first, rest)) if rest.is_empty() => {
+            unwrap_value_ident_str(first)
+        }
+        BbnfBootstrapEnum::value_mul((first, rest)) if rest.is_empty() => {
+            unwrap_value_ident_str(first)
+        }
+        BbnfBootstrapEnum::value_unary(inner)
+        | BbnfBootstrapEnum::value_atom(inner) => unwrap_value_ident_str(inner),
+        _ => None,
+    }
+}
+
 /// Unwrap transparent value wrappers to reach the inner value node.
+/// Peels one layer of value expression wrapper.
 fn unwrap_value_atom<'a>(node: &'a BbnfBootstrapEnum<'a>) -> Option<&'a BbnfBootstrapEnum<'a>> {
     match node {
         BbnfBootstrapEnum::value_atom(inner)
@@ -528,15 +539,25 @@ fn unwrap_value_atom<'a>(node: &'a BbnfBootstrapEnum<'a>) -> Option<&'a BbnfBoot
         BbnfBootstrapEnum::value_add((first, rest)) if rest.is_empty() => Some(first),
         BbnfBootstrapEnum::value_mul((first, rest)) if rest.is_empty() => Some(first),
         BbnfBootstrapEnum::value_atom_0((_open, inner, _close)) => Some(inner),
+        BbnfBootstrapEnum::value_path((first, rest)) if rest.is_empty() => Some(first),
         _ => None,
     }
 }
 
-fn extract_value_func_name<'a>(node: &'a BbnfBootstrapEnum<'a>) -> Option<&'a str> {
+/// Recursively unwrap the full value expression chain to reach a leaf node.
+fn deep_unwrap_value<'a>(node: &'a BbnfBootstrapEnum<'a>) -> &'a BbnfBootstrapEnum<'a> {
+    match unwrap_value_atom(node) {
+        Some(inner) => deep_unwrap_value(inner),
+        None => node,
+    }
+}
+
+fn extract_value_func_name(node: &BbnfBootstrapEnum<'_>) -> Option<String> {
     match node {
-        BbnfBootstrapEnum::value_ident(s) => Some(s.as_str()),
+        BbnfBootstrapEnum::value_ident(s) => Some(s.as_str().to_string()),
+        BbnfBootstrapEnum::value_path(_) => Some(crate::grammar::host::extract_path_text(node)),
         BbnfBootstrapEnum::value_fn_call((name, _, _, _)) => {
-            Some(crate::grammar::host::extract_span_text(name))
+            Some(crate::grammar::host::extract_path_text(name))
         }
         _ => None,
     }
@@ -625,8 +646,8 @@ fn lower_value_expr<'a>(node: &'a BbnfBootstrapEnum<'a>, ctx: &mut LowerCtx<'a>)
 
         // Function call
         BbnfBootstrapEnum::value_fn_call((name_enum, _open, args_opt, _close)) => {
-            let name_str = crate::grammar::host::extract_span_text(name_enum);
-            let sid = ctx.strings.intern(name_str);
+            let name_str = crate::grammar::host::extract_path_text(name_enum);
+            let sid = ctx.strings.intern(&name_str);
             let ir_args: Vec<MapExpr> = match args_opt {
                 Some((first_arg, rest_args)) => {
                     let mut args = vec![lower_value_expr(first_arg, ctx)];
@@ -640,6 +661,20 @@ fn lower_value_expr<'a>(node: &'a BbnfBootstrapEnum<'a>, ctx: &mut LowerCtx<'a>)
             MapExpr::FnCall {
                 name: sid,
                 args: ir_args,
+            }
+        }
+
+        // Path (e.g., crate::module::func — treat as bare function reference)
+        BbnfBootstrapEnum::value_path((first, rest)) => {
+            if rest.is_empty() {
+                lower_value_expr(first, ctx)
+            } else {
+                let path = crate::grammar::host::extract_path_text(node);
+                let sid = ctx.strings.intern(&path);
+                MapExpr::FnCall {
+                    name: sid,
+                    args: vec![MapExpr::Input],
+                }
             }
         }
 
@@ -770,9 +805,21 @@ fn lower_value_expr_substituted<'a>(
                 args: vec![MapExpr::Input],
             }
         }
+        BbnfBootstrapEnum::value_path((first, rest)) => {
+            if rest.is_empty() {
+                lower_value_expr_substituted(first, bindings, ctx)
+            } else {
+                let path = crate::grammar::host::extract_path_text(node);
+                let sid = ctx.strings.intern(&path);
+                MapExpr::FnCall {
+                    name: sid,
+                    args: vec![MapExpr::Input],
+                }
+            }
+        }
         BbnfBootstrapEnum::value_fn_call((name_enum, _open, args_opt, _close)) => {
-            let name_str = crate::grammar::host::extract_span_text(name_enum);
-            let sid = ctx.strings.intern(name_str);
+            let name_str = crate::grammar::host::extract_path_text(name_enum);
+            let sid = ctx.strings.intern(&name_str);
             let ir_args: Vec<MapExpr> = match args_opt {
                 Some((first_arg, rest_args)) => {
                     let mut args = vec![lower_value_expr_substituted(first_arg, bindings, ctx)];

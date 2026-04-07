@@ -9,11 +9,12 @@ bool_lit = "true" | "false" ;
 string_lit = "\"" , /(\\.|[^"\\])*/ , "\"" ;
 
 value_ident = /[_a-zA-Z][_a-zA-Z0-9]*/ ;
+value_path = value_ident , ( "::" , value_ident ) * ;
 value_input = "input" , ( "." , value_ident ) * ;
-value_fn_call = value_ident , "(" , ( value_expr , ( "," ?w , value_expr ) * ) ? , ")" ;
+value_fn_call = value_path , "(" , ( value_expr , ( "," ?w , value_expr ) * ) ? , ")" ;
 
 value_atom = int_lit | float_lit | bool_lit | string_lit
-           | value_fn_call | value_input | value_ident
+           | value_fn_call | value_input | value_path
            | "(" , value_expr ?w , ")" ;
 
 // Operators (precedence climbing)

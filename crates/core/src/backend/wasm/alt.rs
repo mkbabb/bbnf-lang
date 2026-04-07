@@ -2,7 +2,7 @@
 
 use bbnf_ir::AltDispatch;
 
-use crate::backend::key_dispatch::KeyDispatchConfig;
+use crate::backend::patterns::key_dispatch::KeyDispatchConfig;
 use crate::backend::{ValuePlacement, AltBranchInfo, KeyDispatchBranch};
 
 use super::code::{WasmEmitCtx, WasmEmitter};

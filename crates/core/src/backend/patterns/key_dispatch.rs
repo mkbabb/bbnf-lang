@@ -9,7 +9,7 @@ use bbnf_ir::{AltBranch, GrammarIR, IrNode};
 
 use crate::generate::regex_classify::{classify_regex, RegexClass};
 
-use super::unescape_literal;
+use crate::backend::unescape_literal;
 
 // ─── Public Types ──────────────────────────────────────────────────────────
 

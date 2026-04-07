@@ -10,8 +10,8 @@ use bbnf_ir::{FnDescriptor, GrammarIR, IrRule, MapExpr, RuleId, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use crate::backend::analysis::BackendAnalysis;
-use crate::backend::key_dispatch::KeyDispatchConfig;
+use crate::backend::driver::analysis::BackendAnalysis;
+use crate::backend::patterns::key_dispatch::KeyDispatchConfig;
 use crate::backend::prettify::{PrettyPolicy, PrettyRulePlan};
 use crate::backend::{
     ValuePlacement, AltBranchInfo, DelimScanConfig, Emitter, FlattenStrategy, KeyDispatchBranch,

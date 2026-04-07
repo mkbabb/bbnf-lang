@@ -6,8 +6,8 @@
 
 use bbnf_ir::{GrammarIR, IrNode, RuleId};
 
-use super::unescape_literal;
-use super::types::DelimScanConfig;
+use crate::backend::unescape_literal;
+use crate::backend::types::DelimScanConfig;
 
 // ─── Public Entry Point ────────────────────────────────────────────────────
 

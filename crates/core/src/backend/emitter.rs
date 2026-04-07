@@ -2,8 +2,8 @@
 
 use bbnf_ir::{AltDispatch, FnDescriptor, GrammarIR, IrRule, RuleId, TypeDesc};
 
-use super::analysis::BackendAnalysis;
-use super::key_dispatch::KeyDispatchConfig;
+use super::driver::analysis::BackendAnalysis;
+use super::patterns::key_dispatch::KeyDispatchConfig;
 use super::prettify::{PrettyPolicy, PrettyRulePlan};
 use super::types::*;
 

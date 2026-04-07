@@ -8,10 +8,13 @@
 //! - **`compile_*`** functions in this module make shared decisions
 //! - **`emit_*`** methods on [`Emitter`] produce target syntax
 
+pub mod analysis;
+pub mod prettify;
+
 use bbnf_ir::{FnDescriptor, GrammarIR, IrNode, RuleId, TypeDesc};
 
-use super::analysis::BackendAnalysis;
-use super::decisions;
+use self::analysis::BackendAnalysis;
+use super::patterns::decisions;
 use super::{
     ValuePlacement, AltBranchInfo, CallStrategy, Emitter, FlattenStrategy, KeyDispatchBranch,
     SepByConfig, SeqChildGroup, TokenDispatchArmCompiled,
@@ -512,10 +515,10 @@ fn compile_alt<E: Emitter>(
 
     // Decision: try key dispatch.
     if let Some((mut config, detected, fallback_idx)) =
-        super::key_dispatch::try_detect(branches, ir)
+        super::patterns::key_dispatch::try_detect(branches, ir)
     {
         // Register scanner regex.
-        let pattern = super::key_dispatch::key_class_regex_pattern(&config.key_class);
+        let pattern = super::patterns::key_dispatch::key_class_regex_pattern(&config.key_class);
         config.key_scanner_regex_id = Some(dstate.register_regex(pattern));
 
         let mut kd_branches = Vec::with_capacity(detected.len());
@@ -851,7 +854,7 @@ fn compile_wrap<E: Emitter>(
     // Skip when alloc=Alloc — delim scan always produces Span, but BoxedEnum
     // rules need the full typed result for variant wrapping.
     if alloc == ValuePlacement::Inline {
-        if let Some(config) = super::delim_scan::try_detect(open, middle, close, ir) {
+        if let Some(config) = super::patterns::delim_scan::try_detect(open, middle, close, ir) {
             if let Some(output) = emitter.emit_delim_scan(&config, ctx) {
                 return output;
             }

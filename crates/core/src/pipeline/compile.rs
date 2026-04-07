@@ -6,7 +6,7 @@ use crate::graph::{compute_first_sets, tarjan_scc, topological_sort_scc};
 use crate::backend::prepare_grammar;
 use crate::grammar;
 use crate::lower::{DirectiveSet, lower_to_ir};
-use crate::pipeline::loader::{DirectiveMaps, load_merged_paths};
+use crate::pipeline::directives::{DirectiveMaps, load_merged_paths};
 use crate::pipeline::validate::{validate_ast, validate_pretty_directives};
 use crate::pipeline::{
     CompileError, CompileOutput, CompileRequest, CompileTarget, PipelineOptions,
@@ -120,7 +120,7 @@ fn finalize_compile(
             let entry_name = ir.get_string(ir.rules[ir.entry as usize].name).to_string();
             let enum_name = format!("{entry_name}Value");
 
-            let analysis = crate::backend::analysis::BackendAnalysis::default();
+            let analysis = crate::backend::driver::analysis::BackendAnalysis::default();
             let call_strategies = compute_call_strategies(&ir);
             let mut dstate = crate::backend::driver::DriverState::new(call_strategies);
             let mut emitter = crate::backend::ts::TsEmitter { enum_name };
@@ -138,7 +138,7 @@ fn finalize_compile(
             let entry_name = ir.get_string(ir.rules[ir.entry as usize].name).to_string();
             let module_name = format!("{entry_name}_parser");
 
-            let analysis = crate::backend::analysis::BackendAnalysis::default();
+            let analysis = crate::backend::driver::analysis::BackendAnalysis::default();
             let call_strategies = compute_call_strategies(&ir);
             let mut dstate = crate::backend::driver::DriverState::new(call_strategies);
             // Pre-register ws pattern so the emitter knows its ID.

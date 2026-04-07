@@ -59,7 +59,7 @@ fn compiled_wasm() -> WasmBundle {
     bbnf_ir::passes::project_types(&mut ir);
 
     // Run driver + WASM emitter manually to access regex_patterns.
-    let analysis = bbnf::backend::analysis::BackendAnalysis::default();
+    let analysis = bbnf::backend::driver::analysis::BackendAnalysis::default();
     let call_strategies =
         vec![bbnf::backend::CallStrategy::DirectCall; ir.rules.len()];
     let mut dstate = bbnf::backend::driver::DriverState::new(call_strategies);

@@ -36,7 +36,7 @@ pub fn generate_all(
     // Compute prettify methods via the driver/emitter path.
     if prepared.prep.effective_prettify {
         let mut prettify_ctx = RustEmitCtx::new(&ir_ctx);
-        let prettify_methods = crate::backend::driver_prettify::compile_prettify_grammar(
+        let prettify_methods = crate::backend::driver::prettify::compile_prettify_grammar(
             ir, &mut emitter, &mut prettify_ctx,
         );
         emitter.extra_impl_methods = prettify_methods;

@@ -21,12 +21,15 @@ checksum = "c08606f8c3cbf4ce6ec8e28fb0014a2c086708fe954eaa885384a6165172e7e8"
 name = "bbnf"
 version = "0.2.11"
 dependencies = [
+ "bbnf-emit",
  "bbnf-ir",
+ "csp-solver",
  "indexmap",
  "parse_that",
  "pprint",
  "proc-macro2",
  "quote",
+ "rustc-hash",
  "syn",
 ]
 
@@ -43,9 +46,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "bbnf-emit"
+version = "0.1.0"
+dependencies = [
+ "itoa",
+ "ryu",
+]
+
+[[package]]
 name = "bbnf-ir"
 version = "0.1.6"
 dependencies = [
+ "csp-solver",
  "parse_that",
  "rayon",
  "rmp-serde",
@@ -164,6 +176,10 @@ name = "crossbeam-utils"
 version = "0.8.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d0a5c400df2834b80a4c3327b3aad3a4c4cd4de0629063962b03235697506a28"
+
+[[package]]
+name = "csp-solver"
+version = "0.1.0"
 
 [[package]]
 name = "either"

@@ -6,8 +6,8 @@
 
 use bbnf_ir::{GrammarIR, IrNode, RuleId};
 
-use super::prettify::{PrettyRulePlan, analysis, build_rule_plans};
-use super::traits::Emitter;
+use crate::backend::prettify::{PrettyRulePlan, analysis, build_rule_plans};
+use crate::backend::Emitter;
 
 /// Compile prettify grammar: build plans, compile each rule, assemble.
 pub fn compile_prettify_grammar<E: Emitter>(

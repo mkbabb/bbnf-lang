@@ -2,8 +2,8 @@
 
 use bbnf_ir::{AltDispatch, FnDescriptor, GrammarIR, IrRule, MapExpr, RuleId, TypeDesc};
 
-use crate::backend::analysis::BackendAnalysis;
-use crate::backend::key_dispatch::KeyDispatchConfig;
+use crate::backend::driver::analysis::BackendAnalysis;
+use crate::backend::patterns::key_dispatch::KeyDispatchConfig;
 use crate::backend::{
     ValuePlacement, AltBranchInfo, DelimScanConfig, Emitter, FlattenStrategy, KeyDispatchBranch,
     SepByConfig, SeqChildGroup, TokenDispatchArmCompiled,

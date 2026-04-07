@@ -8,7 +8,7 @@ use std::fmt;
 use bbnf_ir::GrammarIR;
 
 pub mod compile;
-pub mod loader;
+pub mod directives;
 pub mod validate;
 
 pub use compile::{

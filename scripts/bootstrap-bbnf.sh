@@ -16,19 +16,72 @@ echo "Expanding bbnf-bootstrap..."
 cd "$ROOT_DIR"
 rm -rf target/.bbnf-cache/
 
-{
-    echo '#![allow(unused, non_snake_case, non_camel_case_types, non_upper_case_globals, clippy::all)]'
-    echo '//! AUTO-GENERATED from grammar/bbnf/bbnf.bbnf — do not edit manually.'
-    echo '//! Regenerate: scripts/bootstrap-bbnf.sh'
-    echo ''
-    cargo expand -p bbnf-bootstrap --lib 2>/dev/null \
-        | grep -v '^#!\[' \
-        | grep -v '^#\[prelude_import\]' \
-        | grep -v '^use std::prelude::' \
-        | grep -v '^extern crate' \
-        | sed 's/use bbnf_derive::Parser;//' \
-        | sed 's/#\[parser(.*)\]//' \
-        | sed 's/^pub struct BbnfBootstrap;//'
-} > "$OUTPUT"
+TEMP="$(mktemp)"
+cargo expand -p bbnf-bootstrap --lib 2>/dev/null > "$TEMP"
 
-echo "Generated: $OUTPUT ($(wc -l < "$OUTPUT" | tr -d ' ') lines)"
+echo "Post-processing..."
+python3 -c "
+import re, sys
+
+with open('$TEMP') as f:
+    text = f.read()
+
+# Strip crate-level attributes and prelude
+text = re.sub(r'#!\[.*?\]\n', '', text)
+text = re.sub(r'#\[prelude_import\]\nuse std::prelude::rust_2024::\*;\n', '', text)
+text = re.sub(r'extern crate std;\n', '', text)
+
+# Strip the derive macro attribute and struct declaration (already in bootstrap crate)
+text = re.sub(r'use bbnf_derive::Parser;\n', '', text)
+text = re.sub(r'#\[parser\(.*?\)\]\n', '', text)
+text = re.sub(r'pub struct BbnfBootstrap;\n', '', text)
+
+# Replace the expanded Debug impl with a derive attribute
+# The expanded Debug uses fmt_helpers_for_derive which is unstable.
+# Remove the entire #[automatically_derived] impl Debug block.
+text = re.sub(
+    r'#\[automatically_derived\]\nimpl<.a> ::core::fmt::Debug for BbnfBootstrapEnum<.a> \{.*?^\}\n',
+    '',
+    text,
+    flags=re.DOTALL | re.MULTILINE
+)
+
+# Add #[derive(Debug)] to the enum
+text = text.replace(
+    'pub enum BbnfBootstrapEnum',
+    '#[derive(Debug)]\npub enum BbnfBootstrapEnum'
+)
+
+# Also handle the context struct Debug
+text = re.sub(
+    r'#\[automatically_derived\]\nimpl ::core::fmt::Debug for __BbnfBootstrapEnumCtx \{.*?^\}\n',
+    '',
+    text,
+    flags=re.DOTALL | re.MULTILINE
+)
+
+# Remove doc comments from bootstrap crate
+lines = text.split('\n')
+filtered = []
+skip_doc = False
+for line in lines:
+    stripped = line.strip()
+    if stripped.startswith('//!'):
+        continue
+    filtered.append(line)
+text = '\n'.join(filtered)
+
+# Clean up multiple blank lines
+text = re.sub(r'\n{3,}', '\n\n', text)
+
+header = '''//! AUTO-GENERATED from grammar/bbnf/bbnf.bbnf — do not edit manually.
+//! Regenerate: scripts/bootstrap-bbnf.sh
+
+'''
+
+print(header + text.strip() + '\n')
+" > "$OUTPUT"
+
+rm "$TEMP"
+LINES=$(wc -l < "$OUTPUT" | tr -d ' ')
+echo "Generated: $OUTPUT ($LINES lines)"

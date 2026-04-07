@@ -1,13 +1,22 @@
 //! BBNF grammar parser.
 //!
+//! Two paths:
+//! - `parse()` — hand-written combinator parser (legacy, full feature support)
+//! - `parse_generated()` — self-hosted generated parser + host fold (fast)
+//!
 //! Sub-modules:
 //! - `tokens` — terminal parsers (identifiers, literals, regexes, comments)
 //! - `expressions` — grammar expression hierarchy (term → alternation)
 //! - `directives` — @-directive parsers (@import, @recover, @pretty, etc.)
 //! - `value_expr` — value expression parser for `->` map syntax
+//! - `generated` — auto-generated parser from bbnf.bbnf (10K lines)
+//! - `host` — fold: BbnfBootstrapEnum → ParsedGrammar
 
 mod directives;
 mod expressions;
+#[allow(unused, non_snake_case, non_camel_case_types, non_upper_case_globals, clippy::all)]
+pub mod generated;
+pub mod host;
 mod tokens;
 mod value_expr;
 

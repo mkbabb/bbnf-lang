@@ -29,19 +29,30 @@ pub fn parse(source: &str) -> Option<ParsedGrammar<'_>> {
         if segment.is_empty() || segment.chars().all(|c| c.is_whitespace()) {
             continue;
         }
-        // Skip comment-only segments.
-        if segment.lines().all(|l| {
-            let t = l.trim();
-            t.is_empty() || t.starts_with("//") || t.starts_with("/*")
-        }) {
+
+        // Strip standalone comment lines from the segment. The bootstrap
+        // parser's grammar rule can't handle consecutive comments before
+        // a directive/rule (the old generated grammar requires exactly one
+        // item per iteration).
+        let stripped: String = segment
+            .lines()
+            .filter(|l| {
+                let t = l.trim();
+                !t.starts_with("//") && !t.starts_with("/*")
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+        let stripped = stripped.trim();
+
+        if stripped.is_empty() {
             continue;
         }
 
         // Ensure segment ends with a terminator for the bootstrap parser.
-        let with_term = if segment.ends_with(';') || segment.ends_with('.') {
-            segment.to_string()
+        let with_term = if stripped.ends_with(';') || stripped.ends_with('.') {
+            stripped.to_string()
         } else {
-            format!("{} ;", segment)
+            format!("{} ;", stripped)
         };
         let leaked: &str = Box::leak(with_term.into_boxed_str());
 

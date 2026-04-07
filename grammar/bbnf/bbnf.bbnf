@@ -30,9 +30,8 @@ term = "ε" | "epsilon"
 
 modifier = "?w" | "?" | "*" | "+" ;
 
-// Factor: optional term with optional modifier.
-// When term is absent but modifier is ?w, acts as standalone whitespace consumer.
-factor = big_comment ? , ( term ?w , modifier ? | modifier ) , big_comment ? ;
+modifier = "?w" | "?" | "*" | "+" ;
+factor = big_comment ? , term ?w , modifier ? , big_comment ? ;
 
 // Map syntax: factor -> value_expr : type
 mapped_factor = factor , ( "->" ?w , ( value_expr , type_annotation ? ) ) ? ;
@@ -77,7 +76,7 @@ directive = import_directive
           | host_directive ;
 
 // Grammar: sequence of comments, directives, and rules in any order.
-grammar = ( comment | directive | rule ) * ;
+grammar = ( comment ? , ( directive | rule ) ?w , comment ? ) * ;
 
 @pretty grammar block ;
 @pretty rule group ;

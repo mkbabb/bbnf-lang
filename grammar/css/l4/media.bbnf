@@ -18,7 +18,7 @@ mediaFeature = "(" ?w , mediaFeatureName ?w , (":" ?w , mediaFeatureValue ?w) ? 
 mediaNot       = "not" ?w , mediaInParens ;
 mediaAnd       = mediaInParens , ("and" ?w >> mediaInParens) + ;
 mediaOr        = mediaInParens , ("or" ?w >> mediaInParens) + ;
-mediaInParens  = mediaFeature | "(" ?w >> mediaCondition << ?w ")" ;
+mediaInParens  = mediaFeature | "(" ?w >> mediaCondition ?w << ")" ;
 mediaCondition = mediaNot | mediaAnd | mediaOr | mediaInParens ;
 
 // --- Full media query ---

@@ -209,7 +209,10 @@ fn lower_term_dispatch<'a>(
         }
 
         // Grouped: "(" rhs ")", "[" rhs "]", "{" rhs "}"
-        BbnfBootstrapEnum::term_2((open, inner, _close)) => {
+        // Note: the bootstrap parser may produce term_2 OR value_atom_0 for
+        // parenthesized expressions (both have the same (Span, &Enum, Span) shape).
+        BbnfBootstrapEnum::term_2((open, inner, _close))
+        | BbnfBootstrapEnum::value_atom_0((open, inner, _close)) => {
             let expr = lower_rhs(inner, ctx);
             match open.as_str() {
                 "(" => expr, // Group is transparent.
@@ -274,6 +277,7 @@ fn lower_node<'a>(node: &'a BbnfBootstrapEnum<'a>, ctx: &mut LowerCtx<'a>) -> Ir
         | BbnfBootstrapEnum::term_0(_)
         | BbnfBootstrapEnum::term_1(_)
         | BbnfBootstrapEnum::term_2(_)
+        | BbnfBootstrapEnum::value_atom_0(_)
         | BbnfBootstrapEnum::literal(_)
         | BbnfBootstrapEnum::regex(_)
         | BbnfBootstrapEnum::identifier(_) => lower_term_dispatch(node, ctx),
@@ -387,7 +391,8 @@ fn substitute_and_lower<'a>(
             }
         }
         BbnfBootstrapEnum::term(inner) => substitute_and_lower(inner, subs, ctx),
-        BbnfBootstrapEnum::term_2((open, inner, _close)) => {
+        BbnfBootstrapEnum::term_2((open, inner, _close))
+        | BbnfBootstrapEnum::value_atom_0((open, inner, _close)) => {
             let expr = substitute_and_lower(inner, subs, ctx);
             match open.as_str() {
                 "(" => expr,

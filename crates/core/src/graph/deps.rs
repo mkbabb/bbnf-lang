@@ -73,7 +73,8 @@ pub fn collect_nonterminal_refs<'a>(
                 }
             }
         }
-        BbnfBootstrapEnum::term_2((_open, inner, _close)) => {
+        BbnfBootstrapEnum::term_2((_open, inner, _close))
+        | BbnfBootstrapEnum::value_atom_0((_open, inner, _close)) => {
             collect_nonterminal_refs(inner, refs);
         }
 

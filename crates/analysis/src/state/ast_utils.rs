@@ -53,9 +53,14 @@ pub fn collect_references(node: &BbnfBootstrapEnum<'_>, refs: &mut Vec<Reference
 
         // term_1: identifier + optional call args
         BbnfBootstrapEnum::term_1((ident, call_args)) => {
+            let name = bbnf::grammar::host::extract_span_text(ident);
+            let ident_span = match ident {
+                BbnfBootstrapEnum::identifier(s) => (s.start, s.end),
+                _ => (0, 0),
+            };
             refs.push(ReferenceInfo {
-                name: ident.as_str().to_string(),
-                span: (ident.start, ident.end),
+                name: name.to_string(),
+                span: ident_span,
             });
             if let Some((_open, first_arg, rest_args, _close)) = call_args {
                 collect_references(first_arg, refs);
@@ -104,7 +109,7 @@ pub fn collect_references(node: &BbnfBootstrapEnum<'_>, refs: &mut Vec<Reference
         }
 
         // Closure: |params| body
-        BbnfBootstrapEnum::closure((_pipe, _params, _pipe2, body)) => {
+        BbnfBootstrapEnum::closure((_pipe, _first_param, _params, _pipe2, body)) => {
             collect_references(body, refs);
         }
 
@@ -178,8 +183,12 @@ pub fn collect_semantic_tokens(node: &BbnfBootstrapEnum<'_>, tokens: &mut Vec<Se
 
         // term_1: identifier + optional call args
         BbnfBootstrapEnum::term_1((ident, call_args)) => {
+            let ident_span = match ident {
+                BbnfBootstrapEnum::identifier(s) => (s.start, s.end),
+                _ => (0, 0),
+            };
             tokens.push(SemanticTokenInfo {
-                span: (ident.start, ident.end),
+                span: ident_span,
                 token_type: token_types::RULE_REFERENCE,
             });
             if let Some((_open, first_arg, rest_args, _close)) = call_args {
@@ -253,7 +262,7 @@ pub fn collect_semantic_tokens(node: &BbnfBootstrapEnum<'_>, tokens: &mut Vec<Se
         }
 
         // Closure
-        BbnfBootstrapEnum::closure((_pipe, _params, _pipe2, body)) => {
+        BbnfBootstrapEnum::closure((_pipe, _first_param, _params, _pipe2, body)) => {
             collect_semantic_tokens(body, tokens);
         }
 
@@ -337,7 +346,7 @@ pub fn compute_expression_end(node: &BbnfBootstrapEnum<'_>) -> Option<usize> {
             if let Some((_open, _first, _rest, close)) = call_args {
                 Some(close.end)
             } else {
-                Some(ident.end)
+                compute_expression_end(ident)
             }
         }
 
@@ -345,7 +354,7 @@ pub fn compute_expression_end(node: &BbnfBootstrapEnum<'_>) -> Option<usize> {
         BbnfBootstrapEnum::term_2((_open, _inner, close)) => Some(close.end),
 
         // Closure: end of body
-        BbnfBootstrapEnum::closure((_pipe, _params, _pipe2, body)) => compute_expression_end(body),
+        BbnfBootstrapEnum::closure((_pipe, _first_param, _params, _pipe2, body)) => compute_expression_end(body),
 
         // Value expression leaves
         BbnfBootstrapEnum::int_lit(s)
@@ -377,7 +386,7 @@ pub fn compute_expression_end(node: &BbnfBootstrapEnum<'_>) -> Option<usize> {
         }
         BbnfBootstrapEnum::value_unary_0((_op, inner)) => compute_expression_end(inner),
         BbnfBootstrapEnum::value_atom_0((_open, _inner, close)) => Some(close.end),
-        BbnfBootstrapEnum::value_fn_call((_name, _args, close)) => Some(close.end),
+        BbnfBootstrapEnum::value_fn_call((_name, _open, _args, close)) => Some(close.end),
         BbnfBootstrapEnum::value_input((ident, props)) => {
             if let Some((_, last)) = props.last() {
                 compute_expression_end(last)
@@ -385,7 +394,7 @@ pub fn compute_expression_end(node: &BbnfBootstrapEnum<'_>) -> Option<usize> {
                 Some(ident.end)
             }
         }
-        BbnfBootstrapEnum::value_closure((_pipe, _params, _pipe2, body)) => {
+        BbnfBootstrapEnum::value_closure((_pipe, _first_param, _params, _pipe2, body)) => {
             compute_expression_end(body)
         }
         BbnfBootstrapEnum::type_annotation((_colon, ty)) => compute_expression_end(ty),
@@ -463,14 +472,15 @@ pub fn format_expression_short(node: &BbnfBootstrapEnum<'_>) -> String {
         BbnfBootstrapEnum::term(inner) => format_expression_short(inner),
 
         BbnfBootstrapEnum::term_1((ident, call_args)) => {
+            let name = bbnf::grammar::host::extract_span_text(ident);
             if let Some((_open, first_arg, rest_args, _close)) = call_args {
                 let mut args = vec![format_expression_short(first_arg)];
                 for (_comma, arg) in *rest_args {
                     args.push(format_expression_short(arg));
                 }
-                format!("{}({})", ident.as_str(), args.join(", "))
+                format!("{}({})", name, args.join(", "))
             } else {
-                ident.as_str().to_string()
+                name.to_string()
             }
         }
 
@@ -488,11 +498,8 @@ pub fn format_expression_short(node: &BbnfBootstrapEnum<'_>) -> String {
         BbnfBootstrapEnum::modifier(s) => s.as_str().to_string(),
         BbnfBootstrapEnum::binary_operators(s) => s.as_str().to_string(),
 
-        BbnfBootstrapEnum::closure((pipe_and_first, rest_params, _pipe2, body)) => {
-            // The generated parser folds "|" + first identifier into a single Span,
-            // then the rest params are (comma, identifier)* pairs.
-            // Extract the first param name by stripping the leading "|".
-            let first_name = pipe_and_first.as_str().trim_start_matches('|').trim();
+        BbnfBootstrapEnum::closure((_pipe, first_param, rest_params, _pipe2, body)) => {
+            let first_name = bbnf::grammar::host::extract_span_text(first_param);
             let mut param_names: Vec<&str> = vec![first_name];
             for (_comma, p) in *rest_params {
                 if let BbnfBootstrapEnum::identifier(s) = p {
@@ -541,15 +548,16 @@ pub fn format_value_expr_short(node: &BbnfBootstrapEnum<'_>) -> String {
             }
         }
 
-        BbnfBootstrapEnum::value_fn_call((name, args, _close)) => {
+        BbnfBootstrapEnum::value_fn_call((name, _open, args, _close)) => {
+            let name_str = bbnf::grammar::host::extract_span_text(name);
             if let Some((first, rest)) = args {
                 let mut arg_strs = vec![format_value_expr_short(first)];
                 for (_comma, arg) in *rest {
                     arg_strs.push(format_value_expr_short(arg));
                 }
-                format!("{}({})", name.as_str(), arg_strs.join(", "))
+                format!("{}({})", name_str, arg_strs.join(", "))
             } else {
-                format!("{}()", name.as_str())
+                format!("{}()", name_str)
             }
         }
 
@@ -600,10 +608,8 @@ pub fn format_value_expr_short(node: &BbnfBootstrapEnum<'_>) -> String {
             format!("({})", format_value_expr_short(inner))
         }
 
-        BbnfBootstrapEnum::value_closure((pipe_and_first, rest_params, _pipe2, body)) => {
-            // Same structure as grammar closure: first Span = "|" + first param,
-            // rest_params = (comma, identifier)* pairs.
-            let first_name = pipe_and_first.as_str().trim_start_matches('|').trim();
+        BbnfBootstrapEnum::value_closure((_pipe, first_param, rest_params, _pipe2, body)) => {
+            let first_name = bbnf::grammar::host::extract_span_text(first_param);
             let mut param_names: Vec<&str> = vec![first_name];
             for (_comma, p) in *rest_params {
                 if let BbnfBootstrapEnum::value_ident(s) = p {

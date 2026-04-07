@@ -3,8 +3,8 @@
 @import { type_name } from "types" ;
 
 // Atoms
-int_lit = /[0-9]+/ ;
-float_lit = /[0-9]*\.[0-9]+/ ;
+int_lit = /0[xX][0-9a-fA-F]+[a-zA-Z_]*|[0-9]+[a-zA-Z_]*/ ;
+float_lit = /[0-9]*\.[0-9]+([eE][+-]?[0-9]+)?[a-zA-Z_]*/ ;
 bool_lit = "true" | "false" ;
 string_lit = "\"" , /(\\.|[^"\\])*/ , "\"" ;
 

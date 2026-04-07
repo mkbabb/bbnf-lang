@@ -68,15 +68,14 @@ fn extract_item<'a>(
     rules: &mut AST<'a>,
 ) {
     match item {
-        BbnfBootstrapEnum::rule((lhs_span, rhs, _terminator)) => {
-            // The lhs_span may include trailing `= ` from the concatenation collapsing.
-            // Extract just the identifier: leading sequence of [_a-zA-Z][_a-zA-Z0-9-]*.
-            let full = lhs_span.as_str();
-            let name = full
-                .find(|c: char| !c.is_ascii_alphanumeric() && c != '_' && c != '-')
-                .map_or(full, |i| &full[..i]);
+        BbnfBootstrapEnum::rule((lhs, _eq, rhs, _terminator)) => {
+            let name = extract_span_text(lhs);
+            let name_span = match lhs {
+                BbnfBootstrapEnum::identifier(s) => *s,
+                _ => Span::default(),
+            };
             rules.insert(name, RuleEntry {
-                name_span: *lhs_span,
+                name_span,
                 rhs,
             });
         }
@@ -142,23 +141,34 @@ fn extract_item<'a>(
 fn extract_import<'a>(inner: &'a BbnfBootstrapEnum<'a>, imports: &mut Vec<ImportDirective<'a>>) {
     match inner {
         // Selective: @import { items } from "path"
-        BbnfBootstrapEnum::import_directive_0((items_or_path, path_span)) => {
-            if let BbnfBootstrapEnum::import_items((_open, items, _close)) = items_or_path {
-                let names: Vec<ImportedName<'a>> = std::iter::once(items.first())
-                    .flatten()
-                    .chain(items.iter().skip(1))
-                    .map(|(_comma, name)| {
-                        let s = identifier_span(name);
-                        ImportedName {
+        BbnfBootstrapEnum::import_directive_0((items_enum, _from_kw, path_enum)) => {
+            if let BbnfBootstrapEnum::import_items((_open, first, rest, _close)) = items_enum {
+                let mut names = Vec::new();
+                // First identifier (no comma prefix).
+                let s = identifier_span(first);
+                if !s.as_str().is_empty() {
+                    names.push(ImportedName {
+                        name: Cow::Borrowed(s.as_str()),
+                        span: s,
+                    });
+                }
+                for (_comma, name) in *rest {
+                    let s = identifier_span(name);
+                    if !s.as_str().is_empty() {
+                        names.push(ImportedName {
                             name: Cow::Borrowed(s.as_str()),
                             span: s,
-                        }
-                    })
-                    .collect();
-                let path = extract_import_path(path_span);
+                        });
+                    }
+                }
+                let path_span = match path_enum {
+                    BbnfBootstrapEnum::import_path(s) => *s,
+                    _ => Span::default(),
+                };
+                let path = extract_import_path(&path_span);
                 imports.push(ImportDirective {
                     path: Cow::Borrowed(path),
-                    span: *path_span,
+                    span: path_span,
                     items: Some(names),
                 });
             }
@@ -205,7 +215,7 @@ fn extract_import_path<'a>(span: &Span<'a>) -> &'a str {
 /// unwrapping structural wrappers to find a leaf span. This is robust against
 /// codegen optimization differences that may wrap simple values in structural
 /// variants (e.g., `*` arriving as a `binary_factor` wrapper).
-fn extract_span_text<'a>(node: &'a BbnfBootstrapEnum<'a>) -> &'a str {
+pub fn extract_span_text<'a>(node: &'a BbnfBootstrapEnum<'a>) -> &'a str {
     match node {
         // Leaf span variants.
         BbnfBootstrapEnum::identifier(s)
@@ -228,7 +238,7 @@ fn extract_span_text<'a>(node: &'a BbnfBootstrapEnum<'a>) -> &'a str {
         BbnfBootstrapEnum::factor((_, t, _, _)) => extract_span_text(t),
         BbnfBootstrapEnum::mapped_factor((inner, _)) => extract_span_text(inner),
         BbnfBootstrapEnum::binary_factor((first, _)) => extract_span_text(first),
-        BbnfBootstrapEnum::term_1((s, _)) => s.as_str(),
+        BbnfBootstrapEnum::term_1((ident, _)) => extract_span_text(ident),
         BbnfBootstrapEnum::term_2((_, inner, _))
         | BbnfBootstrapEnum::value_atom_0((_, inner, _)) => extract_span_text(inner),
 

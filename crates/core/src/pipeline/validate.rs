@@ -65,6 +65,7 @@ fn is_valid_pretty_hint(hint: &str) -> bool {
 pub(crate) fn validate_ast<'a>(
     ast: &AST<'a>,
     validate_unknown_nonterminals: bool,
+    extra_known: &HashSet<&str>,
 ) -> Result<(), CompileError> {
     if !validate_unknown_nonterminals {
         return Ok(());
@@ -77,7 +78,7 @@ pub(crate) fn validate_ast<'a>(
         collect_nonterminal_refs(entry.rhs, &mut refs);
 
         for &referenced in &refs {
-            if !defined_rules.contains(referenced) {
+            if !defined_rules.contains(referenced) && !extra_known.contains(referenced) {
                 return Err(CompileError::UnknownNonterminal {
                     rule: rule_name.to_string(),
                     name: referenced.to_string(),

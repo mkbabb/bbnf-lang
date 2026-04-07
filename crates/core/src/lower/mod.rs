@@ -193,14 +193,21 @@ pub fn lower_to_ir<'a>(
 /// Extract a ClosureDef from a bootstrap node if it's a closure.
 fn extract_closure_def<'a>(node: &'a BbnfBootstrapEnum<'a>) -> Option<ClosureDef<'a>> {
     match node {
-        BbnfBootstrapEnum::closure((_pipe, params, _pipe2, body)) => {
-            let param_names: Vec<&'a str> = params
-                .iter()
-                .map(|(_comma, name)| match name {
+        BbnfBootstrapEnum::closure((_pipe, first_param, rest_params, _pipe2, body)) => {
+            let mut param_names: Vec<&'a str> = Vec::new();
+            let first_name = crate::grammar::host::extract_span_text(first_param);
+            if !first_name.is_empty() {
+                param_names.push(first_name);
+            }
+            for (_comma, name) in *rest_params {
+                let n = match name {
                     BbnfBootstrapEnum::identifier(s) => s.as_str(),
-                    _ => "",
-                })
-                .collect();
+                    other => crate::grammar::host::extract_span_text(other),
+                };
+                if !n.is_empty() {
+                    param_names.push(n);
+                }
+            }
             Some(ClosureDef {
                 params: param_names,
                 body,

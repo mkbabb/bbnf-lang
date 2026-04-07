@@ -65,7 +65,7 @@ pub fn collect_nonterminal_refs<'a>(
             collect_nonterminal_refs(inner, refs);
         }
         BbnfBootstrapEnum::term_1((ident, call_args)) => {
-            refs.insert(ident.as_str());
+            refs.insert(crate::grammar::host::extract_span_text(ident));
             if let Some((_open, first_arg, rest_args, _close)) = call_args {
                 collect_nonterminal_refs(first_arg, refs);
                 for (_comma, arg) in *rest_args {
@@ -79,7 +79,7 @@ pub fn collect_nonterminal_refs<'a>(
         }
 
         // RHS: closure | alternation
-        BbnfBootstrapEnum::closure((_pipe, _params, _pipe2, body)) => {
+        BbnfBootstrapEnum::closure((_pipe, _first_param, _params, _pipe2, body)) => {
             collect_nonterminal_refs(body, refs);
         }
 

@@ -31,28 +31,25 @@ text = re.sub(r'#!\[.*?\]\n', '', text)
 text = re.sub(r'#\[prelude_import\]\nuse std::prelude::rust_2024::\*;\n', '', text)
 text = re.sub(r'extern crate std;\n', '', text)
 
-# Strip the derive macro attribute and struct declaration (already in bootstrap crate)
+# Strip the derive macro attribute and struct declaration (we re-add it below)
 text = re.sub(r'use bbnf_derive::Parser;\n', '', text)
 text = re.sub(r'#\[parser\(.*?\)\]\n', '', text)
 text = re.sub(r'pub struct BbnfBootstrap;\n', '', text)
 
-# Replace the expanded Debug impl with a derive attribute
+# Replace the expanded Debug impl with a derive attribute.
 # The expanded Debug uses fmt_helpers_for_derive which is unstable.
-# Remove the entire #[automatically_derived] impl Debug block.
 text = re.sub(
     r'#\[automatically_derived\]\nimpl<.a> ::core::fmt::Debug for BbnfBootstrapEnum<.a> \{.*?^\}\n',
     '',
     text,
     flags=re.DOTALL | re.MULTILINE
 )
-
-# Add #[derive(Debug)] to the enum
 text = text.replace(
     'pub enum BbnfBootstrapEnum',
     '#[derive(Debug)]\npub enum BbnfBootstrapEnum'
 )
 
-# Also handle the context struct Debug
+# Also remove the context struct Debug impl
 text = re.sub(
     r'#\[automatically_derived\]\nimpl ::core::fmt::Debug for __BbnfBootstrapEnumCtx \{.*?^\}\n',
     '',
@@ -60,15 +57,29 @@ text = re.sub(
     flags=re.DOTALL | re.MULTILINE
 )
 
+# Make context struct and with_capacity pub(crate) for grammar/mod.rs access
+text = text.replace(
+    'struct __BbnfBootstrapEnumCtx',
+    'pub(crate) struct __BbnfBootstrapEnumCtx'
+)
+text = text.replace(
+    '    fn with_capacity(n: usize)',
+    '    pub(crate) fn with_capacity(n: usize)'
+)
+
+# Replace unstable panic_fmt with panic! macro.
+# The expanded form is: ::core::panicking::panic_fmt(format_args!("..."),);
+# We replace the entire block { panic_fmt(...); } with panic!("...");
+text = re.sub(
+    r'\{\s*::core::panicking::panic_fmt\(\s*format_args!\((.*?)\),?\s*\);?\s*\}',
+    r'{ panic!(\1); }',
+    text,
+    flags=re.DOTALL
+)
+
 # Remove doc comments from bootstrap crate
 lines = text.split('\n')
-filtered = []
-skip_doc = False
-for line in lines:
-    stripped = line.strip()
-    if stripped.startswith('//!'):
-        continue
-    filtered.append(line)
+filtered = [line for line in lines if not line.strip().startswith('//!')]
 text = '\n'.join(filtered)
 
 # Clean up multiple blank lines
@@ -77,7 +88,14 @@ text = re.sub(r'\n{3,}', '\n\n', text)
 header = '''//! AUTO-GENERATED from grammar/bbnf/bbnf.bbnf — do not edit manually.
 //! Regenerate: scripts/bootstrap-bbnf.sh
 
+use ::parse_that::*;
+
+pub struct BbnfBootstrap;
+
 '''
+
+# Strip the existing 'use ::parse_that::*;' since we put it in the header
+text = text.replace('use ::parse_that::*;\n', '', 1)
 
 print(header + text.strip() + '\n')
 " > "$OUTPUT"

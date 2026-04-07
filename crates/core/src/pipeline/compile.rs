@@ -94,8 +94,7 @@ fn compile_ast_request_internal<'a>(
     request: &CompileRequest,
 ) -> Result<CompileOutput, CompileError> {
     validate_pretty_directives(&ast, directives.pretties)?;
-    validate_ast(&ast, true)?;
-    let ir = compile_ast_common(ast, directives, &request.options);
+    let ir = compile_ast_common(ast, directives, &request.options)?;
     finalize_compile(ir, &request.target)
 }
 
@@ -247,7 +246,7 @@ fn compile_ast_common<'a>(
     ast: AST<'a>,
     directives: &'a DirectiveSet<'a>,
     options: &PipelineOptions,
-) -> GrammarIR {
+) -> Result<GrammarIR, CompileError> {
     // Determine the entry rule name: use override if provided, otherwise last rule in source order.
     let entry_rule_name: Option<String> = options
         .entry_rule
@@ -257,6 +256,20 @@ fn compile_ast_common<'a>(
     // Partition AST: extract closure rules, keep the rest for graph analysis.
     // Closures are first-class grammar functions expanded inline during lowering.
     let (closure_rules, ast) = partition_closures(ast);
+
+    // Collect closure parameter names — these are valid identifiers that should
+    // not be flagged as unknown nonterminals during validation.
+    let mut closure_params: std::collections::HashSet<&str> = std::collections::HashSet::new();
+    for &(name, _) in &closure_rules {
+        closure_params.insert(name);
+    }
+    // Also collect the parameter names from inside the closures themselves.
+    for &(_, body) in &closure_rules {
+        collect_closure_param_names(body, &mut closure_params);
+    }
+
+    // Validate after partitioning — closure params are now known.
+    validate_ast(&ast, true, &closure_params)?;
 
     // Dependency analysis.
     let deps = crate::calculate_ast_deps(&ast);
@@ -318,7 +331,9 @@ fn compile_ast_common<'a>(
         );
     }
     bbnf_ir::passes::sort_alt_branches(&mut ir);
-    bbnf_ir::passes::refine_span_eligibility(&mut ir);
+    if !options.skip_span {
+        bbnf_ir::passes::refine_span_eligibility(&mut ir);
+    }
 
     // Compute FOLLOW sets before dispatch and memo passes that consume them.
     ir.follow_sets = bbnf_ir::passes::compute_follow_sets(&ir);
@@ -332,5 +347,46 @@ fn compile_ast_common<'a>(
     // Dispatch tables use FOLLOW sets for nullable branch optimization.
     bbnf_ir::passes::generate_dispatch_tables(&mut ir);
 
-    ir
+    Ok(ir)
+}
+
+/// Collect closure parameter names from a bootstrap AST node.
+fn collect_closure_param_names<'a>(
+    node: &'a BbnfBootstrapEnum<'a>,
+    params: &mut std::collections::HashSet<&'a str>,
+) {
+    match node {
+        BbnfBootstrapEnum::closure((_pipe, first_param, rest_params, _pipe2, _body)) => {
+            let first = crate::grammar::host::extract_span_text(first_param);
+            if !first.is_empty() {
+                params.insert(first);
+            }
+            for (_comma, p) in *rest_params {
+                let name = match p {
+                    BbnfBootstrapEnum::identifier(s) => s.as_str(),
+                    other => crate::grammar::host::extract_span_text(other),
+                };
+                if !name.is_empty() {
+                    params.insert(name);
+                }
+            }
+        }
+        // Unwrap structural wrappers.
+        BbnfBootstrapEnum::alternation(b) if b.len() == 1 => {
+            collect_closure_param_names(b[0].0, params)
+        }
+        BbnfBootstrapEnum::concatenation(p) if p.len() == 1 => {
+            collect_closure_param_names(p[0].0, params)
+        }
+        BbnfBootstrapEnum::binary_factor((f, r)) if r.is_empty() => {
+            collect_closure_param_names(f, params)
+        }
+        BbnfBootstrapEnum::mapped_factor((inner, None)) => {
+            collect_closure_param_names(inner, params)
+        }
+        BbnfBootstrapEnum::factor((None, inner, None, None)) => {
+            collect_closure_param_names(inner, params)
+        }
+        _ => {}
+    }
 }

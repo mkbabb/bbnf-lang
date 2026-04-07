@@ -22,7 +22,7 @@ use super::LowerCtx;
 /// Lower the RHS of a rule: `rhs = closure | alternation`.
 pub(crate) fn lower_rhs<'a>(node: &'a BbnfBootstrapEnum<'a>, ctx: &mut LowerCtx<'a>) -> IrNode {
     match node {
-        BbnfBootstrapEnum::closure((_pipe1, params, _pipe2, body)) => {
+        BbnfBootstrapEnum::closure((_pipe1, _first_param, _params, _pipe2, body)) => {
             // Grammar closure at rule level — lower the body directly.
             // (Closures are expanded at call sites via beta-reduction.)
             lower_rhs(body, ctx)
@@ -169,8 +169,8 @@ fn lower_term_dispatch<'a>(
         BbnfBootstrapEnum::term_0(_) => IrNode::Epsilon,
 
         // Identifier with optional call: identifier ( "(" rhs ("," rhs)* ")" )?
-        BbnfBootstrapEnum::term_1((ident_span, call_args)) => {
-            let name = ident_span.as_str();
+        BbnfBootstrapEnum::term_1((ident, call_args)) => {
+            let name = crate::grammar::host::extract_span_text(ident);
 
             if let Some((_open, first_arg, rest_args, _close)) = call_args {
                 // Grammar function call — check for beta-reduction.
@@ -281,7 +281,7 @@ fn lower_node<'a>(node: &'a BbnfBootstrapEnum<'a>, ctx: &mut LowerCtx<'a>) -> Ir
         | BbnfBootstrapEnum::literal(_)
         | BbnfBootstrapEnum::regex(_)
         | BbnfBootstrapEnum::identifier(_) => lower_term_dispatch(node, ctx),
-        BbnfBootstrapEnum::closure((_pipe1, _params, _pipe2, body)) => lower_rhs(body, ctx),
+        BbnfBootstrapEnum::closure((_pipe1, _first_param, _params, _pipe2, body)) => lower_rhs(body, ctx),
         BbnfBootstrapEnum::comment(_) | BbnfBootstrapEnum::big_comment(_) => IrNode::Epsilon,
         _ => {
             if ctx.recovery_mode {
@@ -310,8 +310,8 @@ fn substitute_and_lower<'a>(
                 lower_nonterminal(name, ctx)
             }
         }
-        BbnfBootstrapEnum::term_1((ident_span, call_args)) => {
-            let name = ident_span.as_str();
+        BbnfBootstrapEnum::term_1((ident, call_args)) => {
+            let name = crate::grammar::host::extract_span_text(ident);
             if call_args.is_none() {
                 if let Some(&arg) = subs.get(name) {
                     return lower_rhs(arg, ctx);
@@ -532,7 +532,9 @@ fn unwrap_value_atom<'a>(node: &'a BbnfBootstrapEnum<'a>) -> Option<&'a BbnfBoot
 fn extract_value_func_name<'a>(node: &'a BbnfBootstrapEnum<'a>) -> Option<&'a str> {
     match node {
         BbnfBootstrapEnum::value_ident(s) => Some(s.as_str()),
-        BbnfBootstrapEnum::value_fn_call((name, _, _)) => Some(name.as_str()),
+        BbnfBootstrapEnum::value_fn_call((name, _, _, _)) => {
+            Some(crate::grammar::host::extract_span_text(name))
+        }
         _ => None,
     }
 }
@@ -619,8 +621,9 @@ fn lower_value_expr<'a>(node: &'a BbnfBootstrapEnum<'a>, ctx: &mut LowerCtx<'a>)
         }
 
         // Function call
-        BbnfBootstrapEnum::value_fn_call((name_span, args_opt, _close)) => {
-            let sid = ctx.strings.intern(name_span.as_str());
+        BbnfBootstrapEnum::value_fn_call((name_enum, _open, args_opt, _close)) => {
+            let name_str = crate::grammar::host::extract_span_text(name_enum);
+            let sid = ctx.strings.intern(name_str);
             let ir_args: Vec<MapExpr> = match args_opt {
                 Some((first_arg, rest_args)) => {
                     let mut args = vec![lower_value_expr(first_arg, ctx)];
@@ -647,8 +650,8 @@ fn lower_value_expr<'a>(node: &'a BbnfBootstrapEnum<'a>, ctx: &mut LowerCtx<'a>)
         }
 
         // Value closure: |params| body
-        BbnfBootstrapEnum::value_closure((_pipe, params, _pipe2, body)) => {
-            lower_value_expr_with_bindings(body, params, ctx)
+        BbnfBootstrapEnum::value_closure((_pipe, first_param, rest_params, _pipe2, body)) => {
+            lower_value_expr_with_bindings(body, first_param, rest_params, ctx)
         }
 
         // Fallback
@@ -718,28 +721,31 @@ fn fold_binop_chain_enum<'a>(
 }
 
 /// Lower a value closure body with param→Input bindings.
+///
+/// `first_param` is the first closure parameter (mapped to `MapExpr::Input`).
+/// `rest_params` are the remaining `(comma, param)` pairs (mapped to `InputProp`).
 fn lower_value_expr_with_bindings<'a>(
     body: &'a BbnfBootstrapEnum<'a>,
-    params: &'a [(Span<'a>, &'a BbnfBootstrapEnum<'a>)],
+    first_param: &'a BbnfBootstrapEnum<'a>,
+    rest_params: &'a [(Span<'a>, &'a BbnfBootstrapEnum<'a>)],
     ctx: &mut LowerCtx<'a>,
 ) -> MapExpr {
-    let bindings: HashMap<&str, MapExpr> = params
-        .iter()
-        .enumerate()
-        .map(|(i, (_comma, param_node))| {
-            let name = match param_node {
-                BbnfBootstrapEnum::value_ident(s) | BbnfBootstrapEnum::identifier(s) => s.as_str(),
-                _ => "",
-            };
-            let value = if i == 0 {
-                MapExpr::Input
-            } else {
-                let sid = ctx.strings.intern(name);
-                MapExpr::InputProp { prop: sid }
-            };
-            (name, value)
-        })
-        .collect();
+    let mut bindings: HashMap<&str, MapExpr> = HashMap::new();
+
+    let first_name = match first_param {
+        BbnfBootstrapEnum::value_ident(s) | BbnfBootstrapEnum::identifier(s) => s.as_str(),
+        _ => "",
+    };
+    bindings.insert(first_name, MapExpr::Input);
+
+    for (_comma, param_node) in rest_params {
+        let name = match param_node {
+            BbnfBootstrapEnum::value_ident(s) | BbnfBootstrapEnum::identifier(s) => s.as_str(),
+            _ => "",
+        };
+        let sid = ctx.strings.intern(name);
+        bindings.insert(name, MapExpr::InputProp { prop: sid });
+    }
 
     lower_value_expr_substituted(body, &bindings, ctx)
 }
@@ -761,8 +767,9 @@ fn lower_value_expr_substituted<'a>(
                 args: vec![MapExpr::Input],
             }
         }
-        BbnfBootstrapEnum::value_fn_call((name_span, args_opt, _close)) => {
-            let sid = ctx.strings.intern(name_span.as_str());
+        BbnfBootstrapEnum::value_fn_call((name_enum, _open, args_opt, _close)) => {
+            let name_str = crate::grammar::host::extract_span_text(name_enum);
+            let sid = ctx.strings.intern(name_str);
             let ir_args: Vec<MapExpr> = match args_opt {
                 Some((first_arg, rest_args)) => {
                     let mut args = vec![lower_value_expr_substituted(first_arg, bindings, ctx)];
@@ -784,8 +791,8 @@ fn lower_value_expr_substituted<'a>(
         BbnfBootstrapEnum::value_atom_0((_open, inner, _close)) => {
             lower_value_expr_substituted(inner, bindings, ctx)
         }
-        BbnfBootstrapEnum::value_closure((_pipe, inner_params, _pipe2, body)) => {
-            lower_value_expr_with_bindings(body, inner_params, ctx)
+        BbnfBootstrapEnum::value_closure((_pipe, first_param, rest_params, _pipe2, body)) => {
+            lower_value_expr_with_bindings(body, first_param, rest_params, ctx)
         }
         // Literals and Input don't reference params — delegate to standard lowering.
         _ => lower_value_expr(node, ctx),

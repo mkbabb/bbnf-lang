@@ -144,14 +144,15 @@ fn format_expression(node: &BbnfBootstrapEnum<'_>, indent_level: usize) -> Strin
         BbnfBootstrapEnum::term(inner) => format_expression(inner, indent_level),
 
         BbnfBootstrapEnum::term_1((ident, call_args)) => {
+            let name = bbnf::grammar::host::extract_span_text(ident);
             if let Some((_open, first_arg, rest_args, _close)) = call_args {
                 let mut args = vec![format_expression(first_arg, indent_level)];
                 for (_comma, arg) in *rest_args {
                     args.push(format_expression(arg, indent_level));
                 }
-                format!("{}({})", ident.as_str(), args.join(", "))
+                format!("{}({})", name, args.join(", "))
             } else {
-                ident.as_str().to_string()
+                name.to_string()
             }
         }
 
@@ -245,10 +246,8 @@ fn format_expression(node: &BbnfBootstrapEnum<'_>, indent_level: usize) -> Strin
             }
         }
 
-        BbnfBootstrapEnum::closure((pipe_and_first, rest_params, _pipe2, body)) => {
-            // The generated parser folds "|" + first identifier into a single Span,
-            // then the rest params are (comma, identifier)* pairs.
-            let first_name = pipe_and_first.as_str().trim_start_matches('|').trim();
+        BbnfBootstrapEnum::closure((_pipe, first_param, rest_params, _pipe2, body)) => {
+            let first_name = bbnf::grammar::host::extract_span_text(first_param);
             let mut param_names: Vec<&str> = vec![first_name];
             for (_comma, p) in *rest_params {
                 if let BbnfBootstrapEnum::identifier(s) = p {

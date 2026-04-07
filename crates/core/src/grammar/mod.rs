@@ -143,15 +143,9 @@ pub fn parse_with_state(source: &str) -> (Option<ParsedGrammar<'_>>, parse_that:
         _ => 0,
     };
 
-    let state = parse_that::ParserState {
-        src: source,
-        src_bytes: source.as_bytes(),
-        offset,
-        end: source.len(),
-        furthest_offset: offset,
-        context_ptr: std::ptr::null(),
-        memo: Default::default(),
-    };
+    let mut state = parse_that::ParserState::new(source);
+    state.offset = offset;
+    state.furthest_offset = offset;
 
     (parsed, state)
 }

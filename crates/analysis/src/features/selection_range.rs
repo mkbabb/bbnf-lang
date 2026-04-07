@@ -159,8 +159,10 @@ fn collect_spans(node: &BbnfBootstrapEnum<'_>, offset: usize, spans: &mut Vec<(u
 
         // term_1: identifier + optional call
         BbnfBootstrapEnum::term_1((ident, call_args)) => {
-            if offset >= ident.start && offset <= ident.end {
-                spans.push((ident.start, ident.end));
+            if let BbnfBootstrapEnum::identifier(s) = ident {
+                if offset >= s.start && offset <= s.end {
+                    spans.push((s.start, s.end));
+                }
             }
             if let Some((_open, first_arg, rest_args, _close)) = call_args {
                 collect_spans(first_arg, offset, spans);
@@ -181,7 +183,7 @@ fn collect_spans(node: &BbnfBootstrapEnum<'_>, offset: usize, spans: &mut Vec<(u
         }
 
         // Closure
-        BbnfBootstrapEnum::closure((_pipe, _params, _pipe2, body)) => {
+        BbnfBootstrapEnum::closure((_pipe, _first_param, _params, _pipe2, body)) => {
             collect_spans(body, offset, spans);
         }
 
@@ -217,7 +219,7 @@ fn span_start(node: &BbnfBootstrapEnum<'_>) -> Option<usize> {
         BbnfBootstrapEnum::factor((_, term, _, _)) => span_start(term),
         BbnfBootstrapEnum::mapped_factor((inner, _)) => span_start(inner),
         BbnfBootstrapEnum::binary_factor((first, _)) => span_start(first),
-        BbnfBootstrapEnum::term_1((ident, _)) => Some(ident.start),
+        BbnfBootstrapEnum::term_1((ident, _)) => span_start(ident),
         BbnfBootstrapEnum::term_2((open, _, _)) => Some(open.start),
 
         BbnfBootstrapEnum::alternation(branches) => {

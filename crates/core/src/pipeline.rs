@@ -23,6 +23,9 @@ pub struct PipelineOptions {
     pub remove_left_recursion: bool,
     /// Override the entry rule name. If `None`, defaults to the last rule in source order.
     pub entry_rule: Option<String>,
+    /// Disable span eligibility analysis. Preserves all structural variants
+    /// in the generated enum (no Span collapsing). Used by the bootstrap parser.
+    pub skip_span: bool,
 }
 
 /// Backend-specific compilation target.

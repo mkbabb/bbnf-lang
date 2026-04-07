@@ -77,7 +77,13 @@ pub fn generate_emit_methods(ir: &GrammarIR, ctx: &IrCodegenCtx) -> TokenStream 
             .map(|(_, td)| td);
         let entry_is_ref = entry_td.map_or(false, |td| emit::type_desc_is_ref(td));
 
-        if entry_rule.meta.is_transparent {
+        // Check if the entry rule's type is Enum/BoxedEnum (transparent behavior)
+        // or a specific type (non-transparent, wrapped in variant).
+        let entry_is_transparent = entry_td
+            .map_or(true, |td| matches!(td, bbnf_ir::TypeDesc::Enum | bbnf_ir::TypeDesc::BoxedEnum))
+            || entry_rule.meta.is_transparent;
+
+        if entry_is_transparent {
             // Transparent entry: type is BoxedEnum (&'a Enum). emit fn takes it directly.
             methods.push(quote! {
                 pub fn emit_compact<'a>(__v: #boxed_enum) -> String {

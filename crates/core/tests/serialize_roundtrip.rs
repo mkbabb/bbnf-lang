@@ -1,4 +1,6 @@
-//! Emit round-trip tests — ALL grammars must compile and round-trip.
+//! Serialize round-trip tests — ALL grammars must compile and round-trip.
+//!
+//! Each test verifies idempotence: parse → serialize → reparse → serialize → assert eq.
 
 use bbnf_derive::Parser;
 
@@ -30,10 +32,13 @@ struct SheetsEmit;
 #[parser(path = "../../grammar/bbnf/bbnf.bbnf", serialize)]
 struct BbnfEmit;
 
-// CSS pretty grammar (no @import composition)
+// CSS pretty grammar (no @import)
 #[derive(Parser)]
 #[parser(path = "../../grammar/css/pretty.bbnf", serialize)]
 struct CssPrettyEmit;
+
+// CSS L4: requires host type declarations (css_types module) — tested in css_l4.rs
+// TODO: Add serialize attribute once host type integration is resolved.
 
 // ── JSON ─────────────────────────────────────────────────────────────────────
 
@@ -45,23 +50,21 @@ fn json_emit(input: &str) -> String {
 }
 
 fn json_rt(input: &str) {
-    let emitted = json_emit(input);
-    let ctx2 = __JsonEmitEnumCtx::with_capacity(emitted.len() / 32);
-    let (r2, s2) = JsonEmit::value().parse_return_state_with_context(&emitted, &ctx2);
-    assert!(r2.is_some(), "JSON re-parse failed: {:?}", emitted);
-    assert!(s2.offset >= emitted.trim_end().len(), "JSON incomplete: {:?}", emitted);
+    let s1 = json_emit(input);
+    let s2 = json_emit(&s1);
+    assert_eq!(s1, s2, "JSON serialize not idempotent:\n  s1={s1:?}\n  s2={s2:?}");
 }
 
-#[test] fn json_null()    { assert_eq!(json_emit("null"), "null"); }
-#[test] fn json_true()    { assert_eq!(json_emit("true"), "true"); }
-#[test] fn json_false()   { assert_eq!(json_emit("false"), "false"); }
-#[test] fn json_number()  { json_rt(&json_emit("42")); }
-#[test] fn json_string()  { assert_eq!(json_emit(r#""hello""#), r#""hello""#); }
+#[test] fn json_null()      { assert_eq!(json_emit("null"), "null"); }
+#[test] fn json_true()      { assert_eq!(json_emit("true"), "true"); }
+#[test] fn json_false()     { assert_eq!(json_emit("false"), "false"); }
+#[test] fn json_number()    { json_rt("42"); }
+#[test] fn json_string()    { assert_eq!(json_emit(r#""hello""#), r#""hello""#); }
 #[test] fn json_empty_arr() { json_rt("[]"); }
-#[test] fn json_array()   { json_rt("[1, 2, 3]"); }
+#[test] fn json_array()     { json_rt("[1, 2, 3]"); }
 #[test] fn json_empty_obj() { json_rt("{}"); }
-#[test] fn json_object()  { json_rt(r#"{"key": "value"}"#); }
-#[test] fn json_nested()  { json_rt(r#"{"a": [1, 2], "b": {"c": true}}"#); }
+#[test] fn json_object()    { json_rt(r#"{"key": "value"}"#); }
+#[test] fn json_nested()    { json_rt(r#"{"a": [1, 2], "b": {"c": true}}"#); }
 
 // ── CSV ──────────────────────────────────────────────────────────────────────
 
@@ -72,17 +75,15 @@ fn csv_emit(input: &str) -> String {
 }
 
 fn csv_rt(input: &str) {
-    let emitted = csv_emit(input);
-    let ctx2 = __CsvEmitEnumCtx::with_capacity(emitted.len() / 8);
-    let (r2, s2) = CsvEmit::csv().parse_return_state_with_context(&emitted, &ctx2);
-    assert!(r2.is_some(), "CSV re-parse failed: {:?}", emitted);
-    assert!(s2.offset >= emitted.trim_end().len(), "CSV incomplete: {:?}", emitted);
+    let s1 = csv_emit(input);
+    let s2 = csv_emit(&s1);
+    assert_eq!(s1, s2, "CSV serialize not idempotent:\n  s1={s1:?}\n  s2={s2:?}");
 }
 
-#[test] fn csv_simple()   { csv_rt("a,b,c"); }
-#[test] fn csv_multi()    { csv_rt("a,b,c\n1,2,3"); }
-#[test] fn csv_quoted()   { csv_rt(r#""hello","world""#); }
-#[test] fn csv_single()   { csv_rt("hello"); }
+#[test] fn csv_simple()     { csv_rt("a,b,c"); }
+#[test] fn csv_multi()      { csv_rt("a,b,c\n1,2,3"); }
+#[test] fn csv_quoted()     { csv_rt(r#""hello","world""#); }
+#[test] fn csv_single()     { csv_rt("hello"); }
 
 // ── BNF ──────────────────────────────────────────────────────────────────────
 
@@ -142,23 +143,15 @@ fn sheets_simple() {
 
 // ── BBNF ─────────────────────────────────────────────────────────────────────
 
-fn bbnf_emit(input: &str) -> String {
-    let ctx = __BbnfEmitEnumCtx::with_capacity(input.len() / 8);
-    let (result, _) = BbnfEmit::grammar().parse_return_state_with_context(input, &ctx);
-    let val = result.expect("BBNF parse failed");
-    BbnfEmit::serialize_compact(&val)
-}
-
 #[test]
 fn bbnf_rule() {
-    // BBNF grammar might not parse this simple input — the self-hosted grammar
-    // has complex import/directive requirements. Skip if parse fails.
     let ctx = __BbnfEmitEnumCtx::with_capacity(1024);
     let input = "x = \"a\" ;\n";
     let (result, state) = BbnfEmit::grammar().parse_return_state_with_context(input, &ctx);
     if result.is_none() || state.offset < input.trim_end().len() {
-        // Parse failed — BBNF grammar can't parse this simple input.
-        // This is a parse issue, not an emit issue. Mark as ok.
+        // Known: BBNF self-hosted grammar has whitespace/import subtleties.
+        // Parse failure is a grammar issue, not a serialization issue.
+        eprintln!("BBNF parse skipped: offset={}, len={}", state.offset, input.len());
         return;
     }
     let val = result.unwrap();
@@ -168,15 +161,23 @@ fn bbnf_rule() {
 
 // ── CSS Pretty ───────────────────────────────────────────────────────────────
 
-fn css_emit(input: &str) -> String {
+fn css_pretty_emit(input: &str) -> String {
     let ctx = __CssPrettyEmitEnumCtx::with_capacity(input.len() / 8);
     let (result, _) = CssPrettyEmit::stylesheet().parse_return_state_with_context(input, &ctx);
-    let val = result.expect("CSS parse failed");
+    let val = result.expect("CSS Pretty parse failed");
     CssPrettyEmit::serialize_compact(&val)
+}
+
+fn css_pretty_rt(input: &str) {
+    let s1 = css_pretty_emit(input);
+    let s2 = css_pretty_emit(&s1);
+    assert_eq!(s1, s2, "CSS Pretty serialize not idempotent:\n  s1={s1:?}\n  s2={s2:?}");
 }
 
 #[test]
 fn css_simple() {
-    let e = css_emit("body { color: red; }");
-    assert!(!e.is_empty(), "CSS empty");
+    css_pretty_rt("body { color: red; }");
 }
+
+// CSS L4 serialize tests deferred — grammar requires host type declarations
+// (css_types module with CssNumber, etc.) which need integration work.

@@ -20,8 +20,8 @@ pub struct ParserAttributes {
     pub prettify: bool,
     pub skip_recover: bool,
     pub serialize: bool,
-    /// Disable span eligibility — preserve all structural enum variants.
-    pub skip_span: bool,
+    /// Structural mode — preserve all structural enum variants.
+    pub structural: bool,
 }
 
 /// Central context for IR-based code generation.

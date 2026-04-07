@@ -301,51 +301,50 @@ fn compile_ast_common<'a>(
     bbnf_ir::passes::compute_aliases(&mut ir);
     bbnf_ir::passes::compute_transparent(&mut ir);
 
-    // Fixed-point optimization loop.
-    // Passes are monotonically shrinking; convergence happens in 1-3 iterations.
-    // The bound guards against buggy passes that oscillate.
-    const MAX_OPT_ITERATIONS: usize = 64;
-    for iteration in 0..MAX_OPT_ITERATIONS {
-        let fingerprint = ir.structural_fingerprint();
+    if !options.structural {
+        // Fixed-point optimization loop.
+        // Passes are monotonically shrinking; convergence happens in 1-3 iterations.
+        const MAX_OPT_ITERATIONS: usize = 64;
+        for iteration in 0..MAX_OPT_ITERATIONS {
+            let fingerprint = ir.structural_fingerprint();
 
-        bbnf_ir::passes::canonicalize_aliases(&mut ir);
-        bbnf_ir::passes::prune_unreachable(&mut ir);
-        bbnf_ir::passes::inline_acyclic(&mut ir);
-        bbnf_ir::passes::prune_unreachable(&mut ir);
-        bbnf_ir::passes::fuse_single_use(&mut ir);
-        bbnf_ir::passes::prune_unreachable(&mut ir);
-        bbnf_ir::passes::eliminate_epsilon(&mut ir);
-        bbnf_ir::passes::merge_literals(&mut ir);
-        bbnf_ir::passes::simplify_regex_algebra(&mut ir);
-        bbnf_ir::passes::merge_regex_alts(&mut ir);
-        bbnf_ir::passes::factor_common_prefixes(&mut ir);
+            bbnf_ir::passes::canonicalize_aliases(&mut ir);
+            bbnf_ir::passes::prune_unreachable(&mut ir);
+            bbnf_ir::passes::inline_acyclic(&mut ir);
+            bbnf_ir::passes::prune_unreachable(&mut ir);
+            bbnf_ir::passes::fuse_single_use(&mut ir);
+            bbnf_ir::passes::prune_unreachable(&mut ir);
+            bbnf_ir::passes::eliminate_epsilon(&mut ir);
+            bbnf_ir::passes::merge_literals(&mut ir);
+            bbnf_ir::passes::simplify_regex_algebra(&mut ir);
+            bbnf_ir::passes::merge_regex_alts(&mut ir);
+            bbnf_ir::passes::factor_common_prefixes(&mut ir);
 
-        if ir.structural_fingerprint() == fingerprint {
-            break;
+            if ir.structural_fingerprint() == fingerprint {
+                break;
+            }
+            assert!(
+                iteration < MAX_OPT_ITERATIONS - 1,
+                "IR optimization did not converge after {MAX_OPT_ITERATIONS} iterations \
+                 (fingerprint: {:?})",
+                ir.structural_fingerprint(),
+            );
         }
-        assert!(
-            iteration < MAX_OPT_ITERATIONS - 1,
-            "IR optimization did not converge after {MAX_OPT_ITERATIONS} iterations \
-             (fingerprint: {:?})",
-            ir.structural_fingerprint(),
-        );
-    }
-    bbnf_ir::passes::sort_alt_branches(&mut ir);
-    if !options.skip_span {
+        bbnf_ir::passes::sort_alt_branches(&mut ir);
         bbnf_ir::passes::refine_span_eligibility(&mut ir);
+
+        // Compute FOLLOW sets before dispatch and memo passes that consume them.
+        ir.follow_sets = bbnf_ir::passes::compute_follow_sets(&ir);
+
+        // Factor regex prefixes with lookahead dispatch.
+        bbnf_ir::passes::factor_regex_with_lookahead(&mut ir);
+
+        // @token-guided prefix factoring.
+        bbnf_ir::passes::fuse_token_dispatch(&mut ir);
+
+        // Dispatch tables use FOLLOW sets for nullable branch optimization.
+        bbnf_ir::passes::generate_dispatch_tables(&mut ir);
     }
-
-    // Compute FOLLOW sets before dispatch and memo passes that consume them.
-    ir.follow_sets = bbnf_ir::passes::compute_follow_sets(&ir);
-
-    // Factor regex prefixes with lookahead dispatch.
-    bbnf_ir::passes::factor_regex_with_lookahead(&mut ir);
-
-    // @token-guided prefix factoring.
-    bbnf_ir::passes::fuse_token_dispatch(&mut ir);
-
-    // Dispatch tables use FOLLOW sets for nullable branch optimization.
-    bbnf_ir::passes::generate_dispatch_tables(&mut ir);
 
     Ok(ir)
 }

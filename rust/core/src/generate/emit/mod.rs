@@ -1,7 +1,6 @@
-//! Type-only emission codegen.
+//! Concrete-type-driven emission codegen.
 //!
-//! Recurse on collapsed TypeDesc. The type IS the value.
-//! No plan. No decisions. No IR walking.
+//! Recurses on syn::Type (the actual Rust type). No abstraction gap.
 
 mod emit;
 
@@ -9,9 +8,8 @@ use bbnf_ir::GrammarIR;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use crate::generate::ir_types::{IrCodegenCtx, type_desc_to_syn};
+use crate::generate::ir_types::IrCodegenCtx;
 
-/// Generate emit methods for all rules in the grammar.
 pub fn generate_emit_methods(ir: &GrammarIR, ctx: &IrCodegenCtx) -> TokenStream {
     let mut methods = Vec::new();
     let enum_ident = &ctx.enum_ident;
@@ -23,18 +21,26 @@ pub fn generate_emit_methods(ir: &GrammarIR, ctx: &IrCodegenCtx) -> TokenStream 
             .cloned()
             .unwrap_or_else(|| ctx.enum_type.clone());
 
-        // The type of this rule's value — drives the entire emit.
         let type_desc = ir.types.iter()
             .find(|(id, _)| *id == rule.id)
             .map(|(_, td)| td.clone())
             .unwrap_or(bbnf_ir::TypeDesc::Span);
 
         let val = quote! { __v };
-        let body = emit::emit_type(&type_desc, &val, ir, ctx);
+        let body = emit::emit_for_type(&type_desc, &val, ir, ctx);
+
+        // If the rule type is already a reference (BoxedEnum → &'a Enum),
+        // take it directly. Otherwise take &rule_type.
+        let is_ref = matches!(&type_desc, bbnf_ir::TypeDesc::BoxedEnum);
+        let param = if is_ref {
+            quote! { #val: #rule_type }
+        } else {
+            quote! { #val: &#rule_type }
+        };
 
         methods.push(quote! {
             pub fn #fn_ident<'a, __S: ::bbnf_emit::EmitSink<'a>>(
-                #val: &#rule_type,
+                #param,
                 __sink: &mut __S,
             ) {
                 #body
@@ -50,16 +56,21 @@ pub fn generate_emit_methods(ir: &GrammarIR, ctx: &IrCodegenCtx) -> TokenStream 
         let boxed_enum = &ctx.boxed_enum_type;
 
         if entry_rule.meta.is_transparent {
+            // Transparent entry: value IS the enum.
+            // The entry emit fn takes &&Enum (ref to the ref).
+            // We need to bind __v to a let so the & borrow lives long enough.
+            // Transparent entry: rule type is BoxedEnum (already a ref).
+            // emit fn takes it directly (no extra &).
             methods.push(quote! {
                 pub fn emit_compact<'a>(__v: #boxed_enum) -> String {
                     let mut __sink = ::bbnf_emit::StringSink::new();
-                    Self::#emit_fn(&__v, &mut __sink);
+                    Self::#emit_fn(__v, &mut __sink);
                     __sink.finish()
                 }
                 pub fn emit<'a, __S: ::bbnf_emit::EmitSink<'a>>(
                     __v: #boxed_enum, __sink: &mut __S,
                 ) {
-                    Self::#emit_fn(&__v, __sink);
+                    Self::#emit_fn(__v, __sink);
                 }
             });
         } else {
@@ -67,7 +78,7 @@ pub fn generate_emit_methods(ir: &GrammarIR, ctx: &IrCodegenCtx) -> TokenStream 
             methods.push(quote! {
                 pub fn emit_compact<'a>(__v: #boxed_enum) -> String {
                     let mut __sink = ::bbnf_emit::StringSink::new();
-                    if let #enum_ident::#variant(__inner) = __v {
+                    if let #enum_ident::#variant(ref __inner) = *__v {
                         Self::#emit_fn(__inner, &mut __sink);
                     }
                     __sink.finish()
@@ -75,7 +86,7 @@ pub fn generate_emit_methods(ir: &GrammarIR, ctx: &IrCodegenCtx) -> TokenStream 
                 pub fn emit<'a, __S: ::bbnf_emit::EmitSink<'a>>(
                     __v: #boxed_enum, __sink: &mut __S,
                 ) {
-                    if let #enum_ident::#variant(__inner) = __v {
+                    if let #enum_ident::#variant(ref __inner) = *__v {
                         Self::#emit_fn(__inner, __sink);
                     }
                 }

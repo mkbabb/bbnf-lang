@@ -7,6 +7,7 @@ mod expression;
 mod fn_table;
 mod metadata;
 mod string_interner;
+pub(crate) mod value_expr;
 
 use std::collections::{HashMap, HashSet};
 
@@ -187,6 +188,7 @@ pub fn lower_to_ir<'a>(
         debug_all: ctx.debug_all,
         debug_labels: Vec::new(),
         type_map: None,
+        pattern_annotations: HashMap::new(),
     }
 }
 

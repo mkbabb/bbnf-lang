@@ -16,6 +16,7 @@ fn make_ir(rules: Vec<IrRule>) -> GrammarIR {
         debug_all: false,
         debug_labels: Vec::new(),
         type_map: None,
+        pattern_annotations: std::collections::HashMap::new(),
     }
 }
 
@@ -243,6 +244,7 @@ fn map_enum_wrap() {
         debug_all: false,
         debug_labels: Vec::new(),
         type_map: None,
+        pattern_annotations: std::collections::HashMap::new(),
     };
     project_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::Enum);
@@ -268,6 +270,7 @@ fn map_box_wrap() {
         debug_all: false,
         debug_labels: Vec::new(),
         type_map: None,
+        pattern_annotations: std::collections::HashMap::new(),
     };
     project_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::BoxedEnum);

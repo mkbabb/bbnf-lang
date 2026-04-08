@@ -27,6 +27,7 @@ fn literal_is_span_eligible() {
         debug_all: false,
         debug_labels: Vec::new(),
         type_map: None,
+        pattern_annotations: std::collections::HashMap::new(),
     };
 
     refine_span_eligibility(&mut ir);
@@ -53,6 +54,7 @@ fn map_not_span_eligible() {
         debug_all: false,
         debug_labels: Vec::new(),
         type_map: None,
+        pattern_annotations: std::collections::HashMap::new(),
     };
 
     refine_span_eligibility(&mut ir);
@@ -78,6 +80,7 @@ fn transitive_span_eligibility() {
         debug_all: false,
         debug_labels: Vec::new(),
         type_map: None,
+        pattern_annotations: std::collections::HashMap::new(),
     };
 
     refine_span_eligibility(&mut ir);
@@ -108,6 +111,7 @@ fn cyclic_not_span_eligible() {
         debug_all: false,
         debug_labels: Vec::new(),
         type_map: None,
+        pattern_annotations: std::collections::HashMap::new(),
     };
 
     refine_span_eligibility(&mut ir);
@@ -131,6 +135,7 @@ fn seq_of_literals_span_eligible() {
         debug_all: false,
         debug_labels: Vec::new(),
         type_map: None,
+        pattern_annotations: std::collections::HashMap::new(),
     };
 
     refine_span_eligibility(&mut ir);

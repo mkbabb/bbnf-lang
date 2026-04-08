@@ -357,6 +357,9 @@ fn compile_ast_common<'a>(
 
         // Dispatch tables use FOLLOW sets for nullable branch optimization.
         bbnf_ir::passes::generate_dispatch_tables(&mut ir);
+
+        // Structural pattern recognition — annotates rules with optimization patterns.
+        bbnf_ir::passes::recognize_patterns(&mut ir);
     }
 
     Ok(ir)

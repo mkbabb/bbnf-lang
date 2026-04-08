@@ -24,6 +24,7 @@ fn make_ir(rules: Vec<IrRule>, strings: Vec<String>) -> GrammarIR {
         debug_all: false,
         debug_labels: Vec::new(),
         type_map: None,
+        pattern_annotations: std::collections::HashMap::new(),
     }
 }
 

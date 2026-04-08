@@ -47,6 +47,7 @@ fn follow_set_basic_seq() {
         debug_all: false,
         debug_labels: Vec::new(),
         type_map: None,
+        pattern_annotations: std::collections::HashMap::new(),
     };
 
     let follow = compute_follow_sets(&ir);
@@ -120,6 +121,7 @@ fn follow_set_propagates_through_nullable() {
         debug_all: false,
         debug_labels: Vec::new(),
         type_map: None,
+        pattern_annotations: std::collections::HashMap::new(),
     };
 
     let follow = compute_follow_sets(&ir);

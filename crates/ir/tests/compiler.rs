@@ -23,6 +23,7 @@ fn make_simple_ir(body: IrNode) -> GrammarIR {
         debug_all: false,
         debug_labels: Vec::new(),
         type_map: None,
+        pattern_annotations: std::collections::HashMap::new(),
     }
 }
 
@@ -138,6 +139,7 @@ fn compile_memo_rule() {
         debug_all: false,
         debug_labels: Vec::new(),
         type_map: None,
+        pattern_annotations: std::collections::HashMap::new(),
     };
     let program = compile(&ir);
 
@@ -186,6 +188,7 @@ fn compile_direct_left_recursive_rule_keeps_memo() {
         debug_all: false,
         debug_labels: Vec::new(),
         type_map: None,
+        pattern_annotations: std::collections::HashMap::new(),
     };
     let program = compile(&ir);
 
@@ -328,6 +331,7 @@ fn compile_token_dispatch_emits_dispatch_token() {
         debug_all: false,
         debug_labels: Vec::new(),
         type_map: None,
+        pattern_annotations: std::collections::HashMap::new(),
     };
     let program = compile(&ir);
 
@@ -395,6 +399,7 @@ fn compile_call() {
         debug_all: false,
         debug_labels: Vec::new(),
         type_map: None,
+        pattern_annotations: std::collections::HashMap::new(),
     };
     let program = compile(&ir);
 

@@ -34,6 +34,7 @@ fn resolve_direct_alias() {
         debug_all: false,
         debug_labels: Vec::new(),
         type_map: None,
+        pattern_annotations: std::collections::HashMap::new(),
     };
 
     canonicalize_aliases(&mut ir);
@@ -70,6 +71,7 @@ fn resolve_chain_alias() {
         debug_all: false,
         debug_labels: Vec::new(),
         type_map: None,
+        pattern_annotations: std::collections::HashMap::new(),
     };
 
     canonicalize_aliases(&mut ir);

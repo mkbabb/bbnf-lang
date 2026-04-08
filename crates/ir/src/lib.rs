@@ -590,6 +590,10 @@ pub struct GrammarIR {
     /// `project_types`. Not serializable (skipped for WASM boundary transfer).
     #[serde(skip)]
     pub type_map: Option<passes::TypeMap>,
+
+    /// Structural pattern annotations per rule. Built by `recognize_patterns` pass.
+    #[serde(default)]
+    pub pattern_annotations: std::collections::HashMap<RuleId, passes::patterns::PatternAnnotations>,
 }
 
 impl GrammarIR {

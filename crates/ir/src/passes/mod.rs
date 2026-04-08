@@ -6,6 +6,7 @@
 pub mod csp_domains;
 pub mod lr;
 pub mod metadata;
+pub mod patterns;
 pub mod prefix;
 pub mod regex;
 pub mod sets;
@@ -26,5 +27,6 @@ pub use transform::{
     canonicalize_aliases, eliminate_epsilon, fuse_single_use, fuse_token_dispatch, inline_acyclic,
     merge_literals, prune_unreachable,
 };
+pub use patterns::recognize_patterns;
 pub use types::project_types;
 pub use types::{TypeMap, try_flatten_pair};

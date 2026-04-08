@@ -5,9 +5,11 @@
 //! model picks the preferred form at the end.
 
 mod normalize;
+mod regex;
 mod structural;
 
 pub use normalize::MergeLiterals;
+pub use regex::{DeduplicateAltBranches, SupersetAbsorbAlt, UnionMergeAlt};
 pub use structural::{CanonicalizeAlias, build_alias_map};
 
 use egraph::RewriteFn;
@@ -18,10 +20,12 @@ use super::node::GrammarENode;
 use crate::GrammarIR;
 
 /// Default rule set: normalization (epsilon + singleton unwrap + literal
-/// merging) + grammar-aware structural rewrites (alias canonicalization).
+/// merging) + regex algebra (dedupe + superset absorb + union merge) +
+/// grammar-aware structural rewrites (alias canonicalization).
 ///
 /// `ir` supplies pre-computed metadata (alias chains); `pool` is the
-/// shared string interner used by rules that produce new literals.
+/// shared string interner used by rules that produce new literals or
+/// new regex patterns.
 pub fn default_rules(
     ir: &GrammarIR,
     pool: &SharedStrings,
@@ -31,6 +35,9 @@ pub fn default_rules(
         Box::new(normalize::UnwrapSingletonSeq),
         Box::new(normalize::UnwrapSingletonAlt),
         Box::new(normalize::MergeLiterals::new(pool.clone())),
+        Box::new(DeduplicateAltBranches),
+        Box::new(SupersetAbsorbAlt::new(pool.clone())),
+        Box::new(UnionMergeAlt::new(pool.clone())),
         Box::new(CanonicalizeAlias::new(ir)),
     ]
 }

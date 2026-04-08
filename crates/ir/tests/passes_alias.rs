@@ -37,6 +37,7 @@ fn resolve_direct_alias() {
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
+        dag: None,
     };
 
     canonicalize_aliases(&mut ir);
@@ -76,6 +77,7 @@ fn resolve_chain_alias() {
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
+        dag: None,
     };
 
     canonicalize_aliases(&mut ir);

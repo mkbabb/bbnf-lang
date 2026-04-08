@@ -46,7 +46,7 @@ fn make_ir(rules: Vec<(&str, IrNode, Option<u32>, bool)>) -> GrammarIR {
         pattern_annotations: HashMap::new(),
         regex_info: HashMap::new(),
         node_facts: HashMap::new(),
-    }
+        dag: None,    }
 }
 
 fn intern(s: &str, strings: &mut Vec<String>, dedup: &mut HashMap<String, u32>) -> u32 {

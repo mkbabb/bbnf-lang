@@ -19,7 +19,7 @@ fn make_ir(rules: Vec<IrRule>, entry: RuleId) -> GrammarIR {
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
-    }
+        dag: None,    }
 }
 
 #[test]

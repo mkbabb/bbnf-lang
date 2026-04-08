@@ -298,23 +298,13 @@ fn compile_ast_common<'a>(
     bbnf_ir::passes::compute_transparent(&mut ir);
 
     if !options.structural {
-        // Body-transforming optimization loop + analysis passes.
-        // Structural mode skips all of this because these passes change the IR
-        // structure and thus the generated CST types that walkers depend on.
-        // The preserve_identity flag on RuleMeta guards individual passes
-        // (prune, alias, inline, fuse) for non-structural grammars that mix
-        // preserved and optimizable rules.
-        //
-        // The e-graph infrastructure (build_and_saturate + write_back_optimized)
-        // is in place and validated via the B-9 structural equivalence
-        // harness, but the switch itself is gated on additional semantic
-        // correctness work — specifically, the interaction between e-graph
-        // rule-boundary preservation and downstream walks like
-        // is_leading_regex needs more care for mutually-recursive grammars.
-        // Until that lands, the destructive fixed-point loop remains the
-        // default path.
-        const MAX_OPT_ITERATIONS: usize = 64;
-        for iteration in 0..MAX_OPT_ITERATIONS {
+        // Layer 1 — structural normalization. Primary cross-rule
+        // optimizer. Destructive tree rewrites iterated to fixed
+        // point: handles the inline→merge→factor→inline cascading
+        // feedback that equality saturation cannot express in a
+        // single pass.
+        const MAX_OPT_ITER: usize = 64;
+        for iteration in 0..MAX_OPT_ITER {
             let fingerprint = ir.structural_fingerprint();
 
             bbnf_ir::passes::canonicalize_aliases(&mut ir);
@@ -333,31 +323,65 @@ fn compile_ast_common<'a>(
                 break;
             }
             assert!(
-                iteration < MAX_OPT_ITERATIONS - 1,
-                "IR optimization did not converge after {MAX_OPT_ITERATIONS} iterations \
-                 (fingerprint: {:?})",
-                ir.structural_fingerprint(),
+                iteration < MAX_OPT_ITER - 1,
+                "structural normalizer loop did not converge after {MAX_OPT_ITER} iterations",
             );
         }
+
+        // Layer 1b — equivalence discovery. Single e-graph saturation
+        // on the normalized IR. Retained rules target ordering-
+        // independent equivalences and regex-algebra rewrites the
+        // normalizer's fixed pass order can miss; cost-guided
+        // extraction picks the cheapest canonical form per rule via
+        // `GrammarCostModel` (shared with bbnf-regex HIR e-graph in
+        // Tranche H).
+        let (egraph, pool, rule_body_ids) =
+            bbnf_ir::egraph::build_and_saturate(&ir);
+        let cost = bbnf_ir::egraph::GrammarCostModel::default();
+        bbnf_ir::egraph::write_back_optimized(
+            &egraph,
+            &mut ir,
+            &rule_body_ids,
+            &cost,
+        );
+        pool.write_back(&mut ir);
+        drop(egraph);
+
+        #[cfg(debug_assertions)]
+        for rule in &ir.rules {
+            if let bbnf_ir::IrNode::Ref(target) = &rule.body {
+                assert_ne!(
+                    *target, rule.id,
+                    "e-graph write-back produced self-cycle: rule {} = Ref({})",
+                    rule.id, target
+                );
+            }
+        }
+
         bbnf_ir::passes::sort_alt_branches(&mut ir);
         bbnf_ir::passes::refine_span_eligibility(&mut ir);
 
-        // Compute FOLLOW sets before dispatch and memo passes that consume them.
+        // Refresh SCC metadata: the normalizer + e-graph write-back
+        // may have restructured the rule reference graph (alias
+        // canonicalization, inlining, fusing), so `is_cyclic` and
+        // `scc_id` computed during initial lowering can be stale.
+        // Downstream inline planning relies on these flags to break
+        // mutual-recursion cycles; re-running Tarjan here ensures
+        // they reflect the final optimized graph.
+        bbnf_ir::passes::compute_scc(&mut ir);
+
+        // Durable post-extraction canonical DAG. Mandatory — the
+        // reverse pointer map inside is the identity substrate for
+        // every downstream NodeId-keyed pass (Tranches D, F, G).
+        ir.dag = Some(bbnf_ir::dag::GrammarDag::from_ir(&ir));
+
+        // Layer 2 — facts computation. Monotone properties the
+        // downstream strategy solvers and backend consume.
         ir.follow_sets = bbnf_ir::passes::compute_follow_sets(&ir);
-
-        // Factor regex prefixes with lookahead dispatch.
         bbnf_ir::passes::factor_regex_with_lookahead(&mut ir);
-
-        // @token-guided prefix factoring.
         bbnf_ir::passes::fuse_token_dispatch(&mut ir);
-
-        // Dispatch tables use FOLLOW sets for nullable branch optimization.
         bbnf_ir::passes::generate_dispatch_tables(&mut ir);
-
-        // Cache regex analysis (classification, FIRST, width, etc.) for all patterns.
         bbnf_ir::passes::compute_regex_info(&mut ir);
-
-        // Structural pattern recognition — annotates rules with optimization patterns.
         bbnf_ir::passes::recognize_patterns(&mut ir);
     }
 

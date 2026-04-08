@@ -36,7 +36,7 @@ fn make_ir(hints: PrettyHints) -> GrammarIR {
         pattern_annotations: HashMap::new(),
         regex_info: HashMap::new(),
         node_facts: HashMap::new(),
-    }
+        dag: None,    }
 }
 
 /// Build a Tagged value with N Span children at distinct offsets.

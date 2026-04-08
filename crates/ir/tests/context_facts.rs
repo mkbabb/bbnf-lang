@@ -26,7 +26,7 @@ fn base_ir() -> GrammarIR {
         pattern_annotations: HashMap::new(),
         regex_info: HashMap::new(),
         node_facts: HashMap::new(),
-    }
+        dag: None,    }
 }
 
 fn lit(ir: &mut GrammarIR, s: &str) -> IrNode {

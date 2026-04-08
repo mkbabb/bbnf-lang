@@ -49,7 +49,7 @@ fn dispatch_for_disjoint_branches() {
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
-    };
+        dag: None,    };
 
     generate_dispatch_tables(&mut ir);
 
@@ -104,7 +104,7 @@ fn no_dispatch_for_overlapping_branches() {
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
-    };
+        dag: None,    };
 
     generate_dispatch_tables(&mut ir);
     match &ir.rules[0].body {
@@ -157,7 +157,7 @@ fn dispatch_for_nested_alt() {
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
-    };
+        dag: None,    };
 
     generate_dispatch_tables(&mut ir);
 
@@ -218,7 +218,7 @@ fn dispatch_with_nullable_branch_via_follow() {
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
-    };
+        dag: None,    };
 
     generate_dispatch_tables(&mut ir);
 
@@ -281,7 +281,7 @@ fn no_dispatch_when_nullable_overlaps_follow() {
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
-    };
+        dag: None,    };
 
     generate_dispatch_tables(&mut ir);
 
@@ -354,7 +354,7 @@ fn fallback_dispatch_typed_plus_catchall() {
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
-    };
+        dag: None,    };
 
     generate_dispatch_tables(&mut ir);
 
@@ -419,7 +419,7 @@ fn fallback_dispatch_not_superset() {
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
-    };
+        dag: None,    };
 
     generate_dispatch_tables(&mut ir);
 
@@ -472,7 +472,7 @@ fn fallback_dispatch_too_few_branches() {
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
-    };
+        dag: None,    };
 
     generate_dispatch_tables(&mut ir);
 

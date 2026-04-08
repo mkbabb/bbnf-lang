@@ -1,13 +1,27 @@
-//! Cost model for grammar e-graph extraction.
+//! Shared cost model for equality-saturation extraction.
+//!
+//! `GrammarCostModel` is the single source of truth for extraction
+//! cost across:
+//!
+//! - the grammar-level e-graph (this crate)
+//! - the bbnf-regex HIR e-graph (Tranche H, via shared import)
+//! - CSP/COP strategy solvers that need a cost function
+//!
+//! Splitting this model creates parallel cost sources that drift
+//! out of sync — forbidden. Per-domain solvers pull their objective
+//! weights from here so a rewrite's "price" is consistent whether
+//! it fires at grammar compile time or inside the regex engine's
+//! own saturation pass.
 
 use egraph::{CostModel, Id};
 
 use super::node::GrammarENode;
 
-/// Cost model for grammar extraction: minimize total node count with a
-/// slight penalty for `Alt` branches (encourages prefix factoring) and a
-/// reward for nodes already carrying an `AltDispatch` (extraction keeps
-/// dispatch-eligible structures intact).
+/// Cost model for grammar extraction: minimize total node count
+/// with a slight penalty for `Alt` branches (encourages prefix
+/// factoring) and a reward for nodes already carrying an
+/// `AltDispatch` (extraction keeps dispatch-eligible structures
+/// intact).
 #[derive(Clone, Copy, Debug)]
 pub struct GrammarCostModel {
     pub literal_cost: f64,
@@ -23,6 +37,13 @@ impl Default for GrammarCostModel {
         Self {
             literal_cost: 1.0,
             regex_cost: 2.0,
+            // `Ref` is cheap: the structural normalizer runs first
+            // and has already inlined the acyclic/small/single-use
+            // rules the extractor would otherwise try to unfold.
+            // After normalizer convergence, any surviving `Ref` is
+            // deliberately load-bearing (cyclic, shared, or
+            // identity-preserving) and its indirection is the
+            // desired form.
             ref_cost: 0.5,
             seq_per_child: 1.0,
             alt_per_branch: 1.5,

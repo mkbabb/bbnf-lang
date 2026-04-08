@@ -1,5 +1,19 @@
-//! Structural graph rewrites: inlining, fusing, pruning, alias resolution,
-//! epsilon elimination, and literal merging.
+//! Structural normalizer — the primary cross-rule optimizer.
+//!
+//! Destructive tree rewrites iterated to fixed point: alias
+//! canonicalization, pruning, inlining, fusing, epsilon elimination,
+//! literal merging, and prefix factoring. This layer handles the
+//! iterative cross-rule cascading feedback
+//! (inline→merge→factor→inline) that equality saturation
+//! architecturally cannot express in a single pass.
+//!
+//! The grammar e-graph (`crate::egraph`) runs once **after**
+//! normalizer convergence as a permanent secondary equivalence
+//! discoverer, catching ordering-independent rewrites and regex
+//! algebra the normalizer's fixed pass order can miss. The two
+//! layers are genuinely complementary: the normalizer does the
+//! iterative cross-rule work; the e-graph does cost-guided
+//! canonical-form selection on the normalized IR.
 
 mod alias;
 mod fuse;

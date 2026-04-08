@@ -5,7 +5,9 @@
 //! Instead of checkpoint/restore per branch, the driver can scan the key
 //! token once and dispatch on the consumed bytes.
 
-use bbnf_ir::{AltBranch, GrammarIR, IrNode};
+use std::collections::HashSet;
+
+use bbnf_ir::{AltBranch, GrammarIR, IrNode, RuleId};
 
 use parse_that::regex::classify::{classify_regex, RegexClass};
 
@@ -63,7 +65,8 @@ pub fn try_detect(
     }
 
     // Check if last branch is a regex fallback.
-    let fallback_idx = if is_leading_regex(&branches[branches.len() - 1].node, ir) {
+    let mut visited = HashSet::new();
+    let fallback_idx = if is_leading_regex(&branches[branches.len() - 1].node, ir, &mut visited) {
         Some(branches.len() - 1)
     } else {
         None
@@ -75,7 +78,8 @@ pub fn try_detect(
         if Some(i) == fallback_idx {
             continue;
         }
-        let lits = extract_leading_literals(&branch.node, ir)?;
+        let mut visited = HashSet::new();
+        let lits = extract_leading_literals(&branch.node, ir, &mut visited)?;
         if lits.is_empty() {
             return None;
         }
@@ -147,24 +151,38 @@ pub fn try_detect(
 // ─── Detection Helpers ─────────────────────────────────────────────────────
 
 /// Extract leading literal(s) from a branch node.
-fn extract_leading_literals(node: &IrNode, ir: &GrammarIR) -> Option<Vec<String>> {
+///
+/// `visited` tracks rules currently in the call stack; entering an
+/// already-visited rule indicates a cyclic Ref chain, which is not
+/// dispatch-eligible (deterministic FIRST sets require acyclic leading
+/// positions) — the walker returns `None` to bail the whole chain.
+fn extract_leading_literals(
+    node: &IrNode,
+    ir: &GrammarIR,
+    visited: &mut HashSet<RuleId>,
+) -> Option<Vec<String>> {
     match node {
         IrNode::Literal(sid) => Some(vec![ir.get_string(*sid).to_string()]),
         IrNode::Seq(children) if !children.is_empty() => {
-            extract_leading_literals(&children[0], ir)
+            extract_leading_literals(&children[0], ir, visited)
         }
         IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
-            extract_leading_literals(inner, ir)
+            extract_leading_literals(inner, ir, visited)
         }
         IrNode::Ref(rule_id) => {
+            if !visited.insert(*rule_id) {
+                return None;
+            }
             let rule = &ir.rules[*rule_id as usize];
-            extract_leading_literals(&rule.body, ir)
+            let result = extract_leading_literals(&rule.body, ir, visited);
+            visited.remove(rule_id);
+            result
         }
         IrNode::Alt(branches, _) => {
             // Inner Alt: collect literals from all branches.
             let mut all = Vec::new();
             for branch in branches {
-                let lits = extract_leading_literals(&branch.node, ir)?;
+                let lits = extract_leading_literals(&branch.node, ir, visited)?;
                 all.extend(lits);
             }
             Some(all)
@@ -174,34 +192,58 @@ fn extract_leading_literals(node: &IrNode, ir: &GrammarIR) -> Option<Vec<String>
 }
 
 /// Check if a node has a regex in leading position.
-fn is_leading_regex(node: &IrNode, ir: &GrammarIR) -> bool {
+///
+/// `visited` tracks rules currently in the call stack; a cyclic Ref
+/// chain terminates the walk with `false` because cyclic rules have
+/// recursive FIRST sets that are ill-defined for dispatch-table
+/// eligibility.
+fn is_leading_regex(node: &IrNode, ir: &GrammarIR, visited: &mut HashSet<RuleId>) -> bool {
     match node {
         IrNode::Regex(_) => true,
-        IrNode::Seq(children) if !children.is_empty() => is_leading_regex(&children[0], ir),
+        IrNode::Seq(children) if !children.is_empty() => {
+            is_leading_regex(&children[0], ir, visited)
+        }
         IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
-            is_leading_regex(inner, ir)
+            is_leading_regex(inner, ir, visited)
         }
         IrNode::Ref(rule_id) => {
+            if !visited.insert(*rule_id) {
+                return false;
+            }
             let rule = &ir.rules[*rule_id as usize];
-            is_leading_regex(&rule.body, ir)
+            let result = is_leading_regex(&rule.body, ir, visited);
+            visited.remove(rule_id);
+            result
         }
         _ => false,
     }
 }
 
 /// Extract the leading regex pattern string from a node.
-fn extract_leading_regex_pattern<'a>(node: &'a IrNode, ir: &'a GrammarIR) -> Option<&'a str> {
+///
+/// `visited` tracks rules currently in the call stack; a cyclic Ref
+/// chain terminates with `None`.
+fn extract_leading_regex_pattern<'a>(
+    node: &'a IrNode,
+    ir: &'a GrammarIR,
+    visited: &mut HashSet<RuleId>,
+) -> Option<&'a str> {
     match node {
         IrNode::Regex(sid) => Some(ir.get_string(*sid)),
         IrNode::Seq(children) if !children.is_empty() => {
-            extract_leading_regex_pattern(&children[0], ir)
+            extract_leading_regex_pattern(&children[0], ir, visited)
         }
         IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
-            extract_leading_regex_pattern(inner, ir)
+            extract_leading_regex_pattern(inner, ir, visited)
         }
         IrNode::Ref(rule_id) => {
+            if !visited.insert(*rule_id) {
+                return None;
+            }
             let rule = &ir.rules[*rule_id as usize];
-            extract_leading_regex_pattern(&rule.body, ir)
+            let result = extract_leading_regex_pattern(&rule.body, ir, visited);
+            visited.remove(rule_id);
+            result
         }
         _ => None,
     }
@@ -209,7 +251,8 @@ fn extract_leading_regex_pattern<'a>(node: &'a IrNode, ir: &'a GrammarIR) -> Opt
 
 /// Classify the fallback regex to determine key class.
 fn classify_fallback_key(fallback: &IrNode, ir: &GrammarIR) -> Option<KeyClass> {
-    let pattern = extract_leading_regex_pattern(fallback, ir)?;
+    let mut visited = HashSet::new();
+    let pattern = extract_leading_regex_pattern(fallback, ir, &mut visited)?;
     match classify_regex(pattern) {
         RegexClass::Identifier | RegexClass::CssIdent => Some(KeyClass::Identifier),
         RegexClass::QuotedString {

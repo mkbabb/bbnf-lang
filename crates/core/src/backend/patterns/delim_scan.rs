@@ -4,6 +4,8 @@
 //! branches can be distinguished by a forward scan for a pivot byte.
 //! Detection is target-agnostic; each backend emits its own scanning code.
 
+use std::collections::HashSet;
+
 use bbnf_ir::{GrammarIR, IrNode, RuleId};
 
 use crate::backend::unescape_literal;
@@ -24,8 +26,10 @@ pub fn try_detect(
         return None;
     }
 
-    let repeat_inner = unwrap_to_repeat(middle, ir)?;
-    let branches = unwrap_to_alt(repeat_inner, ir)?;
+    let mut visited = HashSet::new();
+    let repeat_inner = unwrap_to_repeat(middle, ir, &mut visited)?;
+    let mut visited = HashSet::new();
+    let branches = unwrap_to_alt(repeat_inner, ir, &mut visited)?;
     if branches.len() < 2 {
         return None;
     }
@@ -37,7 +41,8 @@ pub fn try_detect(
 
     for branch in branches {
         let inner = unwrap_map_ow(&branch.node);
-        if let Some((piv, trail)) = find_pivot_in_seq(inner, ir) {
+        let mut visited = HashSet::new();
+        if let Some((piv, trail)) = find_pivot_in_seq(inner, ir, &mut visited) {
             if pivot_byte.is_some() && pivot_byte != Some(piv) {
                 return None;
             }
@@ -102,26 +107,50 @@ fn trailing_delimiter_byte(node: &IrNode, ir: &GrammarIR) -> Option<u8> {
     None
 }
 
-fn unwrap_to_repeat<'a>(node: &'a IrNode, ir: &'a GrammarIR) -> Option<&'a IrNode> {
+fn unwrap_to_repeat<'a>(
+    node: &'a IrNode,
+    ir: &'a GrammarIR,
+    visited: &mut HashSet<RuleId>,
+) -> Option<&'a IrNode> {
     match node {
         IrNode::Repeat { inner, lo: 0, .. } => Some(inner),
         IrNode::OptionalWhitespace(inner) | IrNode::Map { inner, .. } => {
-            unwrap_to_repeat(inner, ir)
+            unwrap_to_repeat(inner, ir, visited)
         }
-        IrNode::Ref(rule_id) => unwrap_to_repeat(&ir.rules[*rule_id as usize].body, ir),
-        IrNode::Next(_, b) => unwrap_to_repeat(b, ir),
-        IrNode::Skip(a, _) => unwrap_to_repeat(a, ir),
+        IrNode::Ref(rule_id) => {
+            if !visited.insert(*rule_id) {
+                return None;
+            }
+            let result = unwrap_to_repeat(&ir.rules[*rule_id as usize].body, ir, visited);
+            visited.remove(rule_id);
+            result
+        }
+        IrNode::Next(_, b) => unwrap_to_repeat(b, ir, visited),
+        IrNode::Skip(a, _) => unwrap_to_repeat(a, ir, visited),
         _ => None,
     }
 }
 
-fn unwrap_to_alt<'a>(node: &'a IrNode, ir: &'a GrammarIR) -> Option<&'a [bbnf_ir::AltBranch]> {
+fn unwrap_to_alt<'a>(
+    node: &'a IrNode,
+    ir: &'a GrammarIR,
+    visited: &mut HashSet<RuleId>,
+) -> Option<&'a [bbnf_ir::AltBranch]> {
     match node {
         IrNode::Alt(branches, dispatch) if dispatch.is_none() => Some(branches),
-        IrNode::OptionalWhitespace(inner) | IrNode::Map { inner, .. } => unwrap_to_alt(inner, ir),
-        IrNode::Ref(rule_id) => unwrap_to_alt(&ir.rules[*rule_id as usize].body, ir),
-        IrNode::Next(_, b) => unwrap_to_alt(b, ir),
-        IrNode::Skip(a, _) => unwrap_to_alt(a, ir),
+        IrNode::OptionalWhitespace(inner) | IrNode::Map { inner, .. } => {
+            unwrap_to_alt(inner, ir, visited)
+        }
+        IrNode::Ref(rule_id) => {
+            if !visited.insert(*rule_id) {
+                return None;
+            }
+            let result = unwrap_to_alt(&ir.rules[*rule_id as usize].body, ir, visited);
+            visited.remove(rule_id);
+            result
+        }
+        IrNode::Next(_, b) => unwrap_to_alt(b, ir, visited),
+        IrNode::Skip(a, _) => unwrap_to_alt(a, ir, visited),
         _ => None,
     }
 }
@@ -133,17 +162,31 @@ fn unwrap_map_ow(node: &IrNode) -> &IrNode {
     }
 }
 
-fn find_pivot_in_seq(node: &IrNode, ir: &GrammarIR) -> Option<(u8, Option<u8>)> {
+fn find_pivot_in_seq(
+    node: &IrNode,
+    ir: &GrammarIR,
+    visited: &mut HashSet<RuleId>,
+) -> Option<(u8, Option<u8>)> {
     match node {
         IrNode::Seq(children) => find_pivot_in_children(children, ir),
         IrNode::Ref(rule_id) => {
-            find_pivot_in_seq(unwrap_map_ow(&ir.rules[*rule_id as usize].body), ir)
+            if !visited.insert(*rule_id) {
+                return None;
+            }
+            let result = find_pivot_in_seq(
+                unwrap_map_ow(&ir.rules[*rule_id as usize].body),
+                ir,
+                visited,
+            );
+            visited.remove(rule_id);
+            result
         }
         IrNode::Alt(branches, _) => {
             let mut common_pivot: Option<u8> = None;
             let mut common_trail: Option<u8> = None;
             for branch in branches {
-                let (piv, trail) = find_pivot_in_seq(unwrap_map_ow(&branch.node), ir)?;
+                let (piv, trail) =
+                    find_pivot_in_seq(unwrap_map_ow(&branch.node), ir, visited)?;
                 if let Some(cp) = common_pivot {
                     if cp != piv {
                         return None;
@@ -158,7 +201,7 @@ fn find_pivot_in_seq(node: &IrNode, ir: &GrammarIR) -> Option<(u8, Option<u8>)> 
             common_pivot.map(|p| (p, common_trail))
         }
         IrNode::OptionalWhitespace(inner) | IrNode::Map { inner, .. } => {
-            find_pivot_in_seq(inner, ir)
+            find_pivot_in_seq(inner, ir, visited)
         }
         _ => None,
     }

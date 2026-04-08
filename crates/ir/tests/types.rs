@@ -19,7 +19,7 @@ fn make_ir(rules: Vec<IrRule>) -> GrammarIR {
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
-    }
+        dag: None,    }
 }
 
 fn rule(id: RuleId, body: IrNode) -> IrRule {
@@ -249,7 +249,7 @@ fn map_enum_wrap() {
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
-    };
+        dag: None,    };
     project_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::Enum);
 }
@@ -277,7 +277,7 @@ fn map_box_wrap() {
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
-    };
+        dag: None,    };
     project_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::BoxedEnum);
 }

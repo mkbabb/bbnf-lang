@@ -30,9 +30,15 @@ impl GrammarDagBuilder {
     }
 
     /// Intern an `IrNode` (recursive) and return its `NodeId`.
+    ///
+    /// Also records the reverse mapping `*const IrNode → NodeId` so
+    /// downstream consumers can look up the stable id for any visited
+    /// tree position via [`GrammarDag::node_for`].
     pub fn intern_ir(&mut self, node: &IrNode) -> NodeId {
         let dag_node = self.project_ir(node);
-        self.dag.intern(dag_node)
+        let id = self.dag.intern(dag_node);
+        self.dag.record_ir_occurrence(node, id);
+        id
     }
 
     /// Register a rule's root node (after interning its body).

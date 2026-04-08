@@ -608,6 +608,21 @@ pub struct GrammarIR {
     /// the pass. Not serializable.
     #[serde(skip)]
     pub node_facts: std::collections::HashMap<usize, passes::patterns::NodeFacts>,
+
+    /// Durable post-extraction canonical DAG over the optimized IR tree.
+    ///
+    /// Populated after the intra-rule e-graph optimization + post-extraction
+    /// inline/fuse loop finalizes `rules[*].body`. Downstream passes that
+    /// need stable sub-expression identity (e.g., `NodeFacts`, type
+    /// projection, alt strategy solving) query this via
+    /// [`dag::GrammarDag::node_for`] to obtain a `NodeId` instead of
+    /// pointer-keyed `HashMap<usize, _>`.
+    ///
+    /// Any pass that rewrites rule bodies after this is populated must
+    /// rebuild the DAG (or clear this field); the reverse pointer map
+    /// inside it goes stale on mutation.
+    #[serde(skip)]
+    pub dag: Option<dag::GrammarDag>,
 }
 
 impl GrammarIR {

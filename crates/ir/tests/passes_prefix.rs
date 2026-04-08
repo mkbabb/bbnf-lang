@@ -25,6 +25,7 @@ fn make_ir(body: IrNode) -> GrammarIR {
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
+        dag: None,
     }
 }
 
@@ -50,6 +51,7 @@ fn make_ir_with_strings(body: IrNode, strings: Vec<String>) -> GrammarIR {
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
+        dag: None,
     }
 }
 

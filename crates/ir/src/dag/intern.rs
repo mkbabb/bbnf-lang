@@ -30,12 +30,20 @@ impl GrammarDag {
             nodes: Vec::new(),
             intern_map: Default::default(),
             rule_roots: Default::default(),
+            ir_node_to_id: Default::default(),
         }
     }
 
     /// Set the root `NodeId` for a rule.
     pub(super) fn set_rule_root(&mut self, rule_id: crate::RuleId, node_id: NodeId) {
         self.rule_roots.insert(rule_id, node_id);
+    }
+
+    /// Record that a specific `IrNode` tree position maps to a `NodeId`.
+    /// Called by the builder for every visited tree occurrence.
+    pub(super) fn record_ir_occurrence(&mut self, node: &crate::IrNode, id: NodeId) {
+        self.ir_node_to_id
+            .insert(node as *const crate::IrNode as usize, id);
     }
 }
 

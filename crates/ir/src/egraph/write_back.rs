@@ -15,8 +15,8 @@
 //! recursion (JSON: `value ↔ object ↔ array ↔ value`).
 //!
 //! An additional per-walk `visiting` set guards against
-//! non-rule-rooted cycles that can arise if an `InlineEligibleRef`-
-//! style rule unions a non-root class with its own expansion.
+//! non-rule-rooted cycles that can arise if a rewrite rule unions
+//! a non-root class with its own expansion.
 
 use std::collections::HashMap;
 
@@ -58,10 +58,9 @@ pub fn write_back_optimized(
         // best non-self-referential node from the class and walks
         // its children. "Non-self-referential" matters because the
         // e-graph can unify a rule's body class with a Ref-to-self
-        // form (e.g. `pretty_hint`'s body is `Ref(identifier)` and
-        // CanonicalizeAlias adds `Ref(pretty_hint)` to the same
-        // class via another rule's rewrite). Extracting the naive
-        // best would produce `rule_X = Ref(rule_X)`, a self-cycle.
+        // form whenever a rewrite adds such a form. Extracting the
+        // naive best would produce `rule_X = Ref(rule_X)`, a
+        // self-cycle.
         let mut visiting = HashMap::new();
         let canonical = egraph.find_ref(root_id);
         visiting.insert(canonical, ());
@@ -86,7 +85,8 @@ pub fn write_back_optimized(
 /// the extractor can pick `Ref(rule_id)` as the root form whenever
 /// the e-graph has unified the rule's body class with a self-Ref
 /// alternative (a benign consequence of hash-consing combined with
-/// CanonicalizeAlias), producing a self-cycle in the extracted IR.
+/// alias-style rewrites), producing a self-cycle in the extracted
+/// IR.
 fn materialize_best_at_root(
     egraph: &EGraph<GrammarENode, GrammarAnalysis>,
     extractor: &Extractor<

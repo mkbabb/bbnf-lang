@@ -29,7 +29,7 @@ pub use node::{DagNode, NodeId};
 
 use std::collections::HashMap;
 
-use crate::{GrammarIR, RuleId};
+use crate::{GrammarIR, IrNode, RuleId};
 
 /// The canonical grammar DAG — an arena of hash-consed nodes with per-rule
 /// entry points.
@@ -44,6 +44,18 @@ pub struct GrammarDag {
     /// Per-rule entry points. `rule_roots[rule_id]` is the `NodeId` of the
     /// rule's body in the DAG.
     rule_roots: HashMap<RuleId, NodeId>,
+    /// Reverse map: `*const IrNode` → `NodeId` for the source tree this DAG
+    /// was built from. Populated during `from_ir` for every visited
+    /// `IrNode`. Valid as long as the source IR tree is alive and
+    /// unmodified. Downstream passes query via [`GrammarDag::node_for`]
+    /// to obtain a stable `NodeId` for any sub-expression without
+    /// re-walking the tree.
+    ///
+    /// Note: hash-consing means multiple distinct tree positions can
+    /// collapse to the same `NodeId` (sharing). The reverse map records
+    /// the `NodeId` for each *tree occurrence*, so repeated calls with
+    /// structurally-equal but pointer-distinct nodes return the same id.
+    ir_node_to_id: HashMap<usize, NodeId>,
 }
 
 impl GrammarDag {
@@ -78,6 +90,24 @@ impl GrammarDag {
     /// Iterate over (rule_id, root_id) pairs.
     pub fn rule_roots(&self) -> impl Iterator<Item = (RuleId, NodeId)> + '_ {
         self.rule_roots.iter().map(|(&r, &n)| (r, n))
+    }
+
+    /// Look up the `NodeId` for an `IrNode` tree occurrence.
+    ///
+    /// Returns `Some(id)` if this exact tree position was visited during
+    /// `from_ir` (identified by pointer address). Returns `None` for
+    /// newly-constructed `IrNode`s that weren't present when the DAG
+    /// was built.
+    ///
+    /// The caller must guarantee the source IR tree is still alive —
+    /// the lookup uses the `IrNode`'s address, which is invalidated if
+    /// the tree is mutated or freed. Any pipeline step that rewrites
+    /// `ir.rules[*].body` must rebuild the DAG afterwards.
+    #[inline]
+    pub fn node_for(&self, node: &IrNode) -> Option<NodeId> {
+        self.ir_node_to_id
+            .get(&(node as *const IrNode as usize))
+            .copied()
     }
 
     /// Structural sharing ratio: `nodes_in_tree / nodes_in_dag`. Higher

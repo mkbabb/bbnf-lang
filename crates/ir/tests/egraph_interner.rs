@@ -29,7 +29,7 @@ fn empty_ir(strings: Vec<&str>) -> GrammarIR {
         pattern_annotations: HashMap::new(),
         regex_info: HashMap::new(),
         node_facts: HashMap::new(),
-    }
+        dag: None,    }
 }
 
 #[test]

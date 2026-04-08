@@ -1,25 +1,29 @@
-//! Grammar e-graph — equality saturation over IR nodes.
+//! Grammar e-graph — permanent secondary equivalence discoverer
+//! running on the normalized IR.
 //!
-//! Wraps the general-purpose `egraph` crate with a grammar-specific e-node
-//! type (`GrammarENode`), analysis (`GrammarAnalysis`), rewrite rules, and
-//! an extraction cost model (`GrammarCostModel`).
+//! # Role in the four-layer optimizer
 //!
-//! # Pipeline integration
+//! The structural normalizer (`passes/transform/*`, `passes/regex/*`,
+//! `passes/prefix.rs`) is the primary cross-rule optimizer. It iterates
+//! the inline→merge→factor→inline cascade to fixed point — work that
+//! one-pass equality saturation architecturally cannot express.
+//!
+//! The grammar e-graph runs **once** after the normalizer converges,
+//! catching equivalences the normalizer's fixed pass order misses via
+//! e-class canonical matching, and picking cost-cheapest canonical
+//! forms via `GrammarCostModel` (the shared cost model, also consumed
+//! by the bbnf-regex HIR e-graph in Tranche H and by CSP strategy
+//! solvers).
 //!
 //! ```text
-//!      IrNode tree            EGraph<GrammarENode>        optimized IrNode tree
-//!      ──────────────►        ──────────────────────►     ──────────────────────►
-//!        build                    saturate                  extract + write-back
+//!   normalized IR          EGraph<GrammarENode>          optimized IR
+//!   ─────────────►         ──────────────────►           ─────────────►
+//!       build                  saturate                 extract + write-back
 //! ```
 //!
-//! Consumers invoke `run_grammar_egraph(&mut ir)` as a drop-in that builds
-//! the e-graph, runs equality saturation with default rules, extracts the
-//! cheapest form per rule, and writes the result back into `ir.rules`.
-//!
-//! This coexists with the current destructive passes. The caller picks
-//! which pipeline to run — the e-graph path is opt-in via
-//! `bbnf_ir::egraph::run_grammar_egraph` while the existing
-//! `pipeline::compile` loop remains the default.
+//! Wraps the general-purpose `egraph` crate with a grammar-specific
+//! e-node type (`GrammarENode`), analysis (`GrammarAnalysis`), rewrite
+//! rules (`rules/`), and the cost model (`cost::GrammarCostModel`).
 
 mod analysis;
 mod build_egraph;
@@ -33,21 +37,12 @@ pub use analysis::GrammarAnalysis;
 pub use cost::GrammarCostModel;
 pub use interner::SharedStrings;
 pub use node::GrammarENode;
-pub use rules::{default_rules, normalize_rules};
+pub use rules::default_rules;
 pub use write_back::{extract_ir_node, write_back_optimized};
 
 use egraph::EGraph;
 
 use crate::GrammarIR;
-
-/// Run the grammar e-graph pipeline: build → saturate → extract → write-back.
-///
-/// Experimental — runs alongside the existing destructive passes. Opt-in
-/// via callers that want non-destructive optimization with cost-model-guided
-/// extraction.
-pub fn run_grammar_egraph(ir: &mut GrammarIR) {
-    let _ = build_and_saturate(ir);
-}
 
 /// Build an e-graph from the IR and saturate it with default rules.
 /// Returns the populated e-graph, the shared string pool (which may
@@ -86,6 +81,21 @@ pub fn build_and_saturate(
     let scheduler = egraph::BackoffScheduler::default();
     use egraph::Scheduler;
     let _report = scheduler.run(&mut egraph, &rule_refs);
+    if std::env::var("BBNF_EGRAPH_REPORT").is_ok() {
+        eprintln!(
+            "egraph saturation: rules={} rules_count={} iters={} applied={} initial_nodes={} final_nodes={} final_classes={} saturated={} iter_hit={} growth_hit={}",
+            rule_refs.len(),
+            rule_refs.iter().map(|r| r.name()).collect::<Vec<_>>().join(","),
+            _report.iterations,
+            _report.total_applied,
+            egraph.total_nodes(),
+            _report.final_nodes,
+            _report.final_classes,
+            _report.saturated,
+            _report.iter_limit_hit,
+            _report.growth_limit_hit,
+        );
+    }
     // Drop the rules explicitly so they release their `SharedStrings`
     // clones, letting `into_vec()` unwrap without a fallback clone.
     drop(rule_refs);

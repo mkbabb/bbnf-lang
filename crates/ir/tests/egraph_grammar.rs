@@ -338,6 +338,102 @@ fn rule_superset_absorb_alt() {
 }
 
 #[test]
+fn rule_inline_single_use_ref() {
+    // Rule 0 (entry) = Ref(1)
+    // Rule 1 (single-use, acyclic, small body) = Literal("x")
+    //
+    // The Ref(1) e-class should saturate into being equivalent to
+    // Literal("x") after InlineEligibleRef fires.
+    let mut ir = make_ir_with(IrNode::Epsilon);
+    ir.strings.push("r1".to_string());
+    ir.strings.push("x".to_string());
+    let x_sid = 2u32;
+
+    // Rule 0 body = Ref(1)
+    ir.rules[0].body = IrNode::Ref(1);
+
+    // Rule 1 body = Literal("x") — acyclic, small, referenced once.
+    ir.rules.push(IrRule {
+        id: 1,
+        name: 1,
+        body: IrNode::Literal(x_sid),
+        meta: RuleMeta::default(),
+        source_span: None,
+    });
+
+    let (egraph, _pool) = build_and_saturate(&ir);
+
+    // The e-class of Ref(1) should now also contain Literal("x").
+    let mut found_unified = false;
+    for class in egraph.classes() {
+        let has_ref = class.iter().any(|n| matches!(n, GrammarENode::Ref(1)));
+        let has_lit = class.iter().any(|n| matches!(n, GrammarENode::Literal(sid) if *sid == x_sid));
+        if has_ref && has_lit {
+            found_unified = true;
+            break;
+        }
+    }
+    assert!(
+        found_unified,
+        "InlineEligibleRef should union Ref(1) with its body Literal(\"x\")"
+    );
+}
+
+#[test]
+fn rule_inline_small_acyclic_ref() {
+    // Rule 0 (entry) = Seq([Ref(1), Ref(1)])  — two uses, so fuse_single_use
+    // does NOT apply. But rule 1's body has ≤4 nodes, so acyclic
+    // inlining should still fire.
+    // Rule 1 = Seq([Lit("a"), Lit("b")])  (3 nodes: Seq + 2 Lits)
+    let mut ir = make_ir_with(IrNode::Epsilon);
+    ir.strings.push("r1".to_string());
+    ir.strings.push("a".to_string());
+    ir.strings.push("b".to_string());
+    let a_sid = 2u32;
+    let b_sid = 3u32;
+
+    ir.rules[0].body = IrNode::Seq(vec![IrNode::Ref(1), IrNode::Ref(1)]);
+    ir.rules.push(IrRule {
+        id: 1,
+        name: 1,
+        body: IrNode::Seq(vec![IrNode::Literal(a_sid), IrNode::Literal(b_sid)]),
+        meta: RuleMeta::default(),
+        source_span: None,
+    });
+
+    let (egraph, _pool) = build_and_saturate(&ir);
+
+    // Ref(1)'s class should now also contain a Seq(Lit(a), Lit(b)) — or
+    // a form unioned with it. We check by looking for a Seq class that
+    // contains both Ref(1) and the Seq(Lit(a), Lit(b)) form.
+    let mut found_inlined = false;
+    for class in egraph.classes() {
+        let has_ref = class.iter().any(|n| matches!(n, GrammarENode::Ref(1)));
+        let has_seq = class.iter().any(|n| {
+            if let GrammarENode::Seq(children) = n {
+                children.len() == 2
+                    && egraph.class(children[0]).iter().any(|n2| {
+                        matches!(n2, GrammarENode::Literal(s) if *s == a_sid)
+                    })
+                    && egraph.class(children[1]).iter().any(|n2| {
+                        matches!(n2, GrammarENode::Literal(s) if *s == b_sid)
+                    })
+            } else {
+                false
+            }
+        });
+        if has_ref && has_seq {
+            found_inlined = true;
+            break;
+        }
+    }
+    assert!(
+        found_inlined,
+        "InlineEligibleRef should union Ref(1) with Seq(Lit(a), Lit(b))"
+    );
+}
+
+#[test]
 fn rule_factor_literal_byte_trie() {
     // Alt([Literal("rem"), Literal("rlh")]) should factor the shared
     // first byte 'r', producing Seq(Literal("r"), Alt([Literal("em"),

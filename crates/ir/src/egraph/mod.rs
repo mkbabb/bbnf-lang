@@ -54,12 +54,24 @@ pub fn run_grammar_egraph(ir: &mut GrammarIR) {
 pub fn build_and_saturate(
     ir: &GrammarIR,
 ) -> (EGraph<GrammarENode, GrammarAnalysis>, SharedStrings) {
+    use std::collections::HashMap;
+    use crate::RuleId;
+
     let pool = SharedStrings::from_ir(ir);
     let mut egraph: EGraph<GrammarENode, GrammarAnalysis> = EGraph::new();
-    build_egraph::insert_ir(&mut egraph, ir);
+    let rule_root_ids = build_egraph::insert_ir(&mut egraph, ir);
     egraph.rebuild();
 
-    let rules = default_rules(ir, &pool);
+    // Map RuleId → root e-class Id for rules that have a root (every
+    // rule should, but iterate defensively over the returned vec).
+    let rule_body_ids: HashMap<RuleId, egraph::Id> = ir
+        .rules
+        .iter()
+        .enumerate()
+        .filter_map(|(i, r)| rule_root_ids.get(i).map(|&id| (r.id, id)))
+        .collect();
+
+    let rules = default_rules(ir, &pool, rule_body_ids);
     let rule_refs: Vec<&dyn egraph::RewriteFn<GrammarENode, GrammarAnalysis>> =
         rules.iter().map(|r| r.as_ref()).collect();
 

@@ -4,11 +4,13 @@
 //! e-class rather than replacing the existing one. The extraction cost
 //! model picks the preferred form at the end.
 
+mod inline;
 mod normalize;
 mod prefix;
 mod regex;
 mod structural;
 
+pub use inline::{INLINE_SIZE_THRESHOLD, InlineEligibleRef};
 pub use normalize::MergeLiterals;
 pub use prefix::{FactorLiteralByteTrie, FactorSharedSeqPrefix};
 pub use regex::{
@@ -16,23 +18,29 @@ pub use regex::{
 };
 pub use structural::{CanonicalizeAlias, build_alias_map};
 
-use egraph::RewriteFn;
+use std::collections::HashMap;
+
+use egraph::{Id, RewriteFn};
 
 use super::analysis::GrammarAnalysis;
 use super::interner::SharedStrings;
 use super::node::GrammarENode;
-use crate::GrammarIR;
+use crate::{GrammarIR, RuleId};
 
 /// Default rule set: normalization (epsilon + singleton unwrap + literal
-/// merging) + regex algebra (dedupe + superset absorb + union merge) +
+/// merging) + regex algebra (dedupe + superset absorb + union merge +
+/// all-regex fusion) + prefix factoring (shared Seq leader + literal
+/// byte trie) + ref inlining (acyclic-and-small + single-use) +
 /// grammar-aware structural rewrites (alias canonicalization).
 ///
-/// `ir` supplies pre-computed metadata (alias chains); `pool` is the
-/// shared string interner used by rules that produce new literals or
-/// new regex patterns.
+/// `ir` supplies pre-computed metadata (alias chains, ref counts, SCC);
+/// `pool` is the shared string interner used by rules that produce new
+/// literals or new regex patterns; `rule_body_ids` maps `RuleId` to
+/// the e-graph root of that rule's body (populated by the build phase).
 pub fn default_rules(
     ir: &GrammarIR,
     pool: &SharedStrings,
+    rule_body_ids: HashMap<RuleId, Id>,
 ) -> Vec<Box<dyn RewriteFn<GrammarENode, GrammarAnalysis>>> {
     vec![
         Box::new(normalize::EliminateEpsilon),
@@ -45,6 +53,7 @@ pub fn default_rules(
         Box::new(FuseAltRegexBranches::new(pool.clone())),
         Box::new(FactorSharedSeqPrefix),
         Box::new(FactorLiteralByteTrie::new(pool.clone())),
+        Box::new(InlineEligibleRef::new(ir, rule_body_ids)),
         Box::new(CanonicalizeAlias::new(ir)),
     ]
 }

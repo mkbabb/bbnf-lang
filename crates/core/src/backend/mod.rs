@@ -5,6 +5,7 @@ mod emitter;
 pub mod patterns;
 pub mod prettify;
 pub mod rust;
+pub mod strategy;
 pub mod ts;
 mod types;
 mod util;

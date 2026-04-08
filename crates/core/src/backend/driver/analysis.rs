@@ -51,6 +51,8 @@ pub struct BackendAnalysis {
 pub struct BackendPreparation {
     pub effective_prettify: bool,
     pub analysis: BackendAnalysis,
+    /// Solved Alt strategies per node pointer. Built by `solve_alt_strategies`.
+    pub alt_strategies: std::collections::HashMap<usize, crate::backend::strategy::alt_strategy::AltStrategy>,
 }
 
 /// Fully prepared grammar bundle consumed by codegen.
@@ -66,11 +68,15 @@ pub fn prepare_grammar(mut ir: GrammarIR, requested_prettify: bool) -> PreparedG
     apply_ir_prep(&mut ir, &config);
     let analysis = analyze_grammar(&mut ir, &config);
 
+    // Solve Alt strategies from NodeFacts + dispatch tables.
+    let alt_strategies = crate::backend::strategy::alt_strategy::solve_alt_strategies(&ir);
+
     PreparedGrammar {
         ir,
         prep: BackendPreparation {
             effective_prettify: config.effective_prettify,
             analysis,
+            alt_strategies,
         },
     }
 }

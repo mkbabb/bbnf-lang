@@ -52,6 +52,15 @@ pub(crate) struct LowerCtx<'a> {
     /// expands a grammar call, popped after the body is lowered.
     pub(crate) env: Vec<HashMap<&'a str, &'a BbnfBootstrapEnum<'a>>>,
 
+    /// Value-expression beta-reduction environment stack. Mirrors `env` but
+    /// for the value-expression sub-language: each frame maps a value-closure
+    /// parameter name to the already-lowered `MapExpr` it's bound to. Pushed
+    /// by `lower_value_expr_with_bindings`, popped after the body is lowered.
+    /// `lower_value_expr` consults this stack at `value_ident` before
+    /// constructing a `FnCall` — eliminates the `lower_value_expr_substituted`
+    /// parallel walker.
+    pub(crate) value_env: Vec<HashMap<&'a str, bbnf_ir::MapExpr>>,
+
     /// Analysis results.
     pub(crate) scc_result: &'a SccResult<'a>,
     pub(crate) cyclic_rules: &'a HashSet<&'a str>,
@@ -115,6 +124,7 @@ pub fn lower_to_ir<'a>(
         name_to_rule_id: HashMap::new(),
         closures,
         env: Vec::new(),
+        value_env: Vec::new(),
         scc_result,
         cyclic_rules: &scc_result.cyclic_rules,
         recovers: directives.recovers,

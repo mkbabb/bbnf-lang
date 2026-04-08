@@ -217,6 +217,11 @@ pub(crate) fn lower_value_expr<'a>(
                 lower_value_expr(first, ctx)
             } else {
                 let path = join_value_path(node);
+                // Single-segment paths that match a value-closure binding
+                // resolve to the bound MapExpr instead of a function call.
+                if let Some(bound) = lookup_value_env(&path, &ctx.value_env) {
+                    return bound;
+                }
                 let sid = ctx.strings.intern(&path);
                 MapExpr::FnCall {
                     name: sid,
@@ -225,9 +230,14 @@ pub(crate) fn lower_value_expr<'a>(
             }
         }
 
-        // Identifier (bare name — treat as function call on input)
+        // Identifier (bare name — treat as function call on input, unless
+        // shadowed by a value-closure parameter binding).
         BbnfBootstrapEnum::value_ident(s) => {
-            let sid = ctx.strings.intern(s.as_str());
+            let name = s.as_str();
+            if let Some(bound) = lookup_value_env(name, &ctx.value_env) {
+                return bound;
+            }
+            let sid = ctx.strings.intern(name);
             MapExpr::FnCall {
                 name: sid,
                 args: vec![MapExpr::Input],
@@ -282,23 +292,27 @@ fn join_value_path(node: &BbnfBootstrapEnum<'_>) -> String {
 
 // ─── Value closure bindings ───────────────────────────────────────────────────
 
-/// Lower a value closure body with param→Input bindings.
+/// Lower a value closure body with param→Input bindings via env push/pop.
 ///
 /// `first_param` is the first closure parameter (mapped to `MapExpr::Input`).
 /// `rest_params` are the remaining `(comma, param)` pairs (mapped to `InputProp`).
+///
+/// Pushes a frame onto `ctx.value_env` before lowering the body, pops
+/// afterwards. `lower_value_expr` consults the stack at `value_ident` /
+/// single-segment `value_path` sites — no parallel substitution walker.
 pub(crate) fn lower_value_expr_with_bindings<'a>(
     body: &'a BbnfBootstrapEnum<'a>,
     first_param: &'a BbnfBootstrapEnum<'a>,
     rest_params: &'a [(Span<'a>, &'a BbnfBootstrapEnum<'a>)],
     ctx: &mut LowerCtx<'a>,
 ) -> MapExpr {
-    let mut bindings: HashMap<&str, MapExpr> = HashMap::new();
+    let mut frame: HashMap<&'a str, MapExpr> = HashMap::new();
 
     let first_name = match first_param {
         BbnfBootstrapEnum::value_ident(s) | BbnfBootstrapEnum::identifier(s) => s.as_str(),
         _ => "",
     };
-    bindings.insert(first_name, MapExpr::Input);
+    frame.insert(first_name, MapExpr::Input);
 
     for (_comma, param_node) in rest_params {
         let name = match param_node {
@@ -306,71 +320,24 @@ pub(crate) fn lower_value_expr_with_bindings<'a>(
             _ => "",
         };
         let sid = ctx.strings.intern(name);
-        bindings.insert(name, MapExpr::InputProp { prop: sid });
+        frame.insert(name, MapExpr::InputProp { prop: sid });
     }
 
-    lower_value_expr_substituted(body, &bindings, ctx)
+    ctx.value_env.push(frame);
+    let result = lower_value_expr(body, ctx);
+    ctx.value_env.pop();
+    result
 }
 
-pub(crate) fn lower_value_expr_substituted<'a>(
-    node: &'a BbnfBootstrapEnum<'a>,
-    bindings: &HashMap<&str, MapExpr>,
-    ctx: &mut LowerCtx<'a>,
-) -> MapExpr {
-    match node {
-        BbnfBootstrapEnum::value_ident(s) => {
-            let name = s.as_str();
-            if let Some(bound) = bindings.get(name) {
-                return bound.clone();
-            }
-            let sid = ctx.strings.intern(name);
-            MapExpr::FnCall {
-                name: sid,
-                args: vec![MapExpr::Input],
-            }
+/// Look up a name in the value-environment stack (top frame first, mirroring
+/// lexical scope). Returns a clone of the bound `MapExpr` if found.
+fn lookup_value_env(name: &str, env: &[HashMap<&str, MapExpr>]) -> Option<MapExpr> {
+    for frame in env.iter().rev() {
+        if let Some(bound) = frame.get(name) {
+            return Some(bound.clone());
         }
-        BbnfBootstrapEnum::value_path((first, rest)) => {
-            if rest.is_empty() {
-                lower_value_expr_substituted(first, bindings, ctx)
-            } else {
-                let path = join_value_path(node);
-                let sid = ctx.strings.intern(&path);
-                MapExpr::FnCall {
-                    name: sid,
-                    args: vec![MapExpr::Input],
-                }
-            }
-        }
-        BbnfBootstrapEnum::value_fn_call((name_enum, _open, args_opt, _close)) => {
-            let name_str = join_value_path(name_enum);
-            let sid = ctx.strings.intern(&name_str);
-            let ir_args: Vec<MapExpr> = match args_opt {
-                Some((first_arg, rest_args)) => {
-                    let mut args = vec![lower_value_expr_substituted(first_arg, bindings, ctx)];
-                    for (_comma, arg) in *rest_args {
-                        args.push(lower_value_expr_substituted(arg, bindings, ctx));
-                    }
-                    args
-                }
-                None => vec![],
-            };
-            MapExpr::FnCall {
-                name: sid,
-                args: ir_args,
-            }
-        }
-        BbnfBootstrapEnum::value_atom(inner) | BbnfBootstrapEnum::value_unary(inner) => {
-            lower_value_expr_substituted(inner, bindings, ctx)
-        }
-        BbnfBootstrapEnum::value_atom_0((_open, inner, _close)) => {
-            lower_value_expr_substituted(inner, bindings, ctx)
-        }
-        BbnfBootstrapEnum::value_closure((_pipe, first_param, rest_params, _pipe2, body)) => {
-            lower_value_expr_with_bindings(body, first_param, rest_params, ctx)
-        }
-        // Literals and Input don't reference params — delegate to standard lowering.
-        _ => lower_value_expr(node, ctx),
     }
+    None
 }
 
 // ─── Value expression helpers ─────────────────────────────────────────────────

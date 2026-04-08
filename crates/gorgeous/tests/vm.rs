@@ -22,6 +22,7 @@ fn make_ir(hints: PrettyHints) -> GrammarIR {
                 },
                 ..RuleMeta::default()
             },
+            source_span: None,
         }],
         strings: vec!["root".into()],
         fns: vec![],
@@ -32,6 +33,9 @@ fn make_ir(hints: PrettyHints) -> GrammarIR {
         debug_all: false,
         debug_labels: vec![],
         type_map: None,
+        pattern_annotations: HashMap::new(),
+        regex_info: HashMap::new(),
+        node_facts: HashMap::new(),
     }
 }
 
@@ -52,8 +56,8 @@ fn tagged_spans(input: &str, n: usize) -> Value {
 fn fmt(hints: PrettyHints, input: &str, n: usize, max_width: usize) -> String {
     let ir = make_ir(hints);
     let value = tagged_spans(input, n);
-    let printer = pprint::Printer::new(max_width, 2, false);
-    format_value(&ir, &value, input, printer).unwrap()
+    let config = PrinterConfig::new(max_width, 2);
+    format_value(&ir, &value, input, &config).unwrap()
 }
 
 fn default_hints() -> PrettyHints {
@@ -172,8 +176,8 @@ fn hint_split() {
         span: (0, 6),
         children: bbnf_ir::interpreter::ValueSlice::from_slice(Box::leak(children.into_boxed_slice())),
     };
-    let printer = pprint::Printer::new(80, 2, false);
-    let output = format_value(&ir, &value, input, printer).unwrap();
+    let config = PrinterConfig::new(80, 2);
+    let output = format_value(&ir, &value, input, &config).unwrap();
     assert!(
         output.contains(", "),
         "split should separate by delimiter, got: {:?}",

@@ -24,5 +24,15 @@ bbnf_derive = { version = "0.2", path = "../derive" }
 bbnf = { version = "0.2", path = "../core" }
 bbnf-ir = { version = "0.1", path = "../ir", optional = true }
 pprint = "0.3"
+
+[dev-dependencies]
+# The crates.io biome_css_* 0.5.7/0.5.8 publishes have a version skew
+# (biome_rowan 0.5.8 added a SyntaxKind::is_trivia method that
+# biome_json_syntax 0.5.7 never implemented), making them uncompilable
+# on modern nightly. Pin both to a known-good tag from the upstream
+# monorepo instead.
+biome_css_parser = { git = "https://github.com/biomejs/biome", tag = "cli/v1.9.4" }
+biome_css_formatter = { git = "https://github.com/biomejs/biome", tag = "cli/v1.9.4" }
+
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 mimalloc = "0.1"

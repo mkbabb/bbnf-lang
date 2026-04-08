@@ -141,7 +141,7 @@ fn absorb_import<'a>(
             };
             imports.push(ImportDirective {
                 path: Cow::Borrowed(strip_quotes(path_span.as_str())),
-                span: path_span,
+                span: directive_span,
                 items: Some(names),
             });
         }
@@ -149,7 +149,7 @@ fn absorb_import<'a>(
         BbnfBootstrapEnum::import_path(path_span) => {
             imports.push(ImportDirective {
                 path: Cow::Borrowed(strip_quotes(path_span.as_str())),
-                span: *path_span,
+                span: directive_span,
                 items: None,
             });
         }

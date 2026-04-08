@@ -10,7 +10,7 @@ use quote::{format_ident, quote};
 
 use super::ir_types::IrCodegenCtx;
 
-/// Generate visitor infrastructure: `children_of()` + `span_text()` + trait.
+/// Generate visitor infrastructure: associated functions on the enum + Visitor trait.
 pub fn generate_visitor(ctx: &IrCodegenCtx<'_>) -> TokenStream {
     let enum_ident = &ctx.enum_ident;
     let children_fn = generate_children_of(ctx);
@@ -18,14 +18,16 @@ pub fn generate_visitor(ctx: &IrCodegenCtx<'_>) -> TokenStream {
     let visitor_trait = generate_visitor_trait(ctx);
 
     quote! {
-        /// Extract child enum references from a node for recursive traversal.
-        pub fn children_of<'a>(node: &'a #enum_ident<'a>) -> Vec<&'a #enum_ident<'a>> {
-            #children_fn
-        }
+        impl<'a> #enum_ident<'a> {
+            /// Extract child enum references from a node for recursive traversal.
+            pub fn children(node: &'a #enum_ident<'a>) -> Vec<&'a #enum_ident<'a>> {
+                #children_fn
+            }
 
-        /// Extract text from a terminal node by finding its leaf Span.
-        pub fn span_text<'a>(node: &'a #enum_ident<'a>) -> &'a str {
-            #span_text_fn
+            /// Extract text from a terminal node by finding its leaf Span.
+            pub fn span_text(node: &'a #enum_ident<'a>) -> &'a str {
+                #span_text_fn
+            }
         }
 
         #visitor_trait
@@ -271,7 +273,7 @@ fn generate_span_text(ctx: &IrCodegenCtx<'_>) -> TokenStream {
             // Single-child enum ref (alias): recurse.
             Some(TypeDesc::BoxedEnum | TypeDesc::Enum) => {
                 arms.push(quote! {
-                    #enum_ident::#ident(inner) => span_text(inner)
+                    #enum_ident::#ident(inner) => Self::span_text(inner)
                 });
             }
             _ => {}
@@ -286,17 +288,18 @@ fn generate_span_text(ctx: &IrCodegenCtx<'_>) -> TokenStream {
     }
 }
 
-/// Generate a basic visitor trait.
+/// Generate a basic visitor trait, namespaced per-enum.
 fn generate_visitor_trait(ctx: &IrCodegenCtx<'_>) -> TokenStream {
     let enum_ident = &ctx.enum_ident;
+    let trait_ident = format_ident!("{}Visitor", enum_ident);
 
     quote! {
         /// Auto-generated visitor trait for the parser enum.
         ///
         /// Default `visit()` calls `walk()` which extracts children via
-        /// `children_of()` and recurses. Override `visit()` to inject behavior
-        /// at specific nodes.
-        pub trait Visitor<'a> {
+        /// the enum's `children()` associated function and recurses.
+        /// Override `visit()` to inject behavior at specific nodes.
+        pub trait #trait_ident<'a> {
             type Output: Default;
 
             fn combine(&mut self, outputs: Vec<Self::Output>) -> Self::Output {
@@ -309,7 +312,7 @@ fn generate_visitor_trait(ctx: &IrCodegenCtx<'_>) -> TokenStream {
             }
 
             fn walk(&mut self, node: &'a #enum_ident<'a>) -> Self::Output {
-                let ch = children_of(node);
+                let ch = #enum_ident::children(node);
                 if ch.is_empty() {
                     Self::Output::default()
                 } else {

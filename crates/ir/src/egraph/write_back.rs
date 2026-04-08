@@ -52,18 +52,24 @@ pub fn write_back_optimized(
         let Some(&root_id) = rule_body_ids.get(&rule_id) else {
             continue;
         };
-        // Top-level extraction: materialize the root class directly
-        // (skipping the root_to_rule shortcut, which would otherwise
-        // emit `Ref(rule_id)` as the body and turn every rule into
-        // an alias for itself). Children descend via `rebuild` and
-        // emit Ref at every rule boundary, including self.
+        // Top-level extraction. The top level cannot delegate to
+        // `rebuild` (which always short-circuits at rule boundaries
+        // via Ref); instead, `materialize_best_at_root` picks the
+        // best non-self-referential node from the class and walks
+        // its children. "Non-self-referential" matters because the
+        // e-graph can unify a rule's body class with a Ref-to-self
+        // form (e.g. `pretty_hint`'s body is `Ref(identifier)` and
+        // CanonicalizeAlias adds `Ref(pretty_hint)` to the same
+        // class via another rule's rewrite). Extracting the naive
+        // best would produce `rule_X = Ref(rule_X)`, a self-cycle.
         let mut visiting = HashMap::new();
         let canonical = egraph.find_ref(root_id);
         visiting.insert(canonical, ());
-        if let Some(body) = materialize_best(
+        if let Some(body) = materialize_best_at_root(
             egraph,
             &extractor,
             canonical,
+            rule_id,
             &root_to_rule,
             &mut visiting,
         ) {
@@ -72,6 +78,44 @@ pub fn write_back_optimized(
             }
         }
     }
+}
+
+/// Top-level-only variant of [`materialize_best`]: picks the
+/// cost-cheapest node in `canonical` that is **not** `Ref(rule_id)`,
+/// then descends via `rebuild` for each child. Without this filter,
+/// the extractor can pick `Ref(rule_id)` as the root form whenever
+/// the e-graph has unified the rule's body class with a self-Ref
+/// alternative (a benign consequence of hash-consing combined with
+/// CanonicalizeAlias), producing a self-cycle in the extracted IR.
+fn materialize_best_at_root(
+    egraph: &EGraph<GrammarENode, GrammarAnalysis>,
+    extractor: &Extractor<
+        '_,
+        GrammarENode,
+        GrammarAnalysis,
+        GrammarCostModel,
+    >,
+    canonical: Id,
+    rule_id: RuleId,
+    root_to_rule: &HashMap<Id, RuleId>,
+    visiting: &mut HashMap<Id, ()>,
+) -> Option<IrNode> {
+    // Pick a node from the class that is NOT `Ref(rule_id)`. We
+    // prefer the extractor's best if it passes the filter, otherwise
+    // scan the class for the first suitable node. (The class is
+    // guaranteed non-empty by construction.)
+    let best_filtered: Option<GrammarENode> = match extractor.best_node(canonical) {
+        Some(node) if !matches!(node, GrammarENode::Ref(r) if *r == rule_id) => {
+            Some(node.clone())
+        }
+        _ => egraph
+            .class(canonical)
+            .iter()
+            .find(|n| !matches!(n, GrammarENode::Ref(r) if *r == rule_id))
+            .cloned(),
+    };
+    let best = best_filtered?;
+    Some(materialize_node(egraph, extractor, best, root_to_rule, visiting))
 }
 
 /// Rebuild a single `IrNode` by recursively extracting the best form
@@ -135,9 +179,7 @@ fn rebuild(
 /// Shared body of the reconstruction: given a canonical e-class that
 /// already passed any rule-boundary / cycle checks, pick the best
 /// e-node for it via the extractor and convert it into an `IrNode`,
-/// descending into children via [`rebuild`]. Called from both the
-/// top-level walk (which pre-inserts the class into `visiting` to
-/// allow self-recursion to emit `Ref`) and the recursive descent.
+/// descending into children via [`rebuild`].
 fn materialize_best(
     egraph: &EGraph<GrammarENode, GrammarAnalysis>,
     extractor: &Extractor<
@@ -150,9 +192,28 @@ fn materialize_best(
     root_to_rule: &HashMap<Id, RuleId>,
     visiting: &mut HashMap<Id, ()>,
 ) -> Option<IrNode> {
-    let current_rule: Option<RuleId> = None; // retained for the rebuild signature
-
     let best = extractor.best_node(canonical)?.clone();
+    Some(materialize_node(egraph, extractor, best, root_to_rule, visiting))
+}
+
+/// Convert a single `GrammarENode` (already selected via the
+/// extractor) into an `IrNode`, descending into children via
+/// [`rebuild`]. This is the pure node-to-IrNode translation — no
+/// class-lookup or visiting bookkeeping (the caller owns those).
+fn materialize_node(
+    egraph: &EGraph<GrammarENode, GrammarAnalysis>,
+    extractor: &Extractor<
+        '_,
+        GrammarENode,
+        GrammarAnalysis,
+        GrammarCostModel,
+    >,
+    best: GrammarENode,
+    root_to_rule: &HashMap<Id, RuleId>,
+    visiting: &mut HashMap<Id, ()>,
+) -> IrNode {
+    let current_rule: Option<RuleId> = None;
+
     let result = match best {
         GrammarENode::Literal(sid) => IrNode::Literal(sid as StringId),
         GrammarENode::Regex(sid) => IrNode::Regex(sid as StringId),
@@ -271,6 +332,5 @@ fn materialize_best(
         }
     };
 
-    visiting.remove(&canonical);
-    Some(result)
+    result
 }

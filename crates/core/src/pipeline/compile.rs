@@ -304,6 +304,15 @@ fn compile_ast_common<'a>(
         // The preserve_identity flag on RuleMeta guards individual passes
         // (prune, alias, inline, fuse) for non-structural grammars that mix
         // preserved and optimizable rules.
+        //
+        // The e-graph infrastructure (build_and_saturate + write_back_optimized)
+        // is in place and validated via the B-9 structural equivalence
+        // harness, but the switch itself is gated on additional semantic
+        // correctness work — specifically, the interaction between e-graph
+        // rule-boundary preservation and downstream walks like
+        // is_leading_regex needs more care for mutually-recursive grammars.
+        // Until that lands, the destructive fixed-point loop remains the
+        // default path.
         const MAX_OPT_ITERATIONS: usize = 64;
         for iteration in 0..MAX_OPT_ITERATIONS {
             let fingerprint = ir.structural_fingerprint();

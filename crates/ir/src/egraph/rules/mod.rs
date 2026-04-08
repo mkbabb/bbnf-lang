@@ -45,6 +45,11 @@ pub fn default_rules(
     pool: &SharedStrings,
     rule_body_ids: HashMap<RuleId, Id>,
 ) -> Vec<Box<dyn RewriteFn<GrammarENode, GrammarAnalysis>>> {
+    // `rule_body_ids` is retained in the signature for future reuse
+    // (e.g. a cost model that consults per-rule ref counts). The
+    // only rule that previously used it — InlineEligibleRef — is
+    // excluded from the default set; see the comment below.
+    let _ = rule_body_ids;
     vec![
         Box::new(normalize::EliminateEpsilon),
         Box::new(normalize::EliminateEpsilonInAlt),
@@ -59,7 +64,15 @@ pub fn default_rules(
         Box::new(FuseAltRegexBranches::new(pool.clone())),
         Box::new(FactorSharedSeqPrefix),
         Box::new(FactorLiteralByteTrie::new(pool.clone())),
-        Box::new(InlineEligibleRef::new(ir, rule_body_ids)),
+        // Rule inlining (inline_acyclic + fuse_single_use) is NOT
+        // an e-graph rewrite: it's inherently cross-rule — it
+        // dissolves a rule boundary and exposes the inlined body as
+        // part of the caller. The e-graph cost model doesn't favor
+        // inlined forms over cheap Ref indirections, so an
+        // InlineEligibleRef rule can't fire productively via
+        // extraction. Inlining stays as a post-extraction pass
+        // running *after* `write_back_optimized` and *before* the
+        // analysis phases.
         Box::new(CanonicalizeAlias::new(ir)),
     ]
 }

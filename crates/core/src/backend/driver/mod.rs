@@ -31,6 +31,13 @@ pub struct DriverState {
     /// Indexed by `RuleId`.
     pub call_strategies: Vec<CallStrategy>,
 
+    /// Pre-solved Alt strategies keyed by `*const IrNode as usize`. Populated
+    /// by `solve_alt_strategies` during `prepare_grammar` and read by
+    /// `compile_alt` to skip inline detection passes that would otherwise
+    /// re-derive the same decision.
+    pub alt_strategies:
+        std::collections::HashMap<usize, crate::backend::strategy::alt_strategy::AltStrategy>,
+
     /// When set, the byte at `state.offset` is guaranteed to equal this value
     /// (from a preceding dispatch-table match). The next single-byte literal
     /// check that matches can skip the bounds check.
@@ -58,12 +65,22 @@ impl DriverState {
     pub fn new(call_strategies: Vec<CallStrategy>) -> Self {
         Self {
             call_strategies,
+            alt_strategies: std::collections::HashMap::new(),
             dispatch_guaranteed_byte: None,
             current_rule_name: None,
             current_rule_id: None,
             regex_patterns: Vec::new(),
             ws_regex_id: None,
         }
+    }
+
+    /// Look up the solved Alt strategy for a node, if one exists.
+    pub fn alt_strategy(
+        &self,
+        node: &IrNode,
+    ) -> Option<&crate::backend::strategy::alt_strategy::AltStrategy> {
+        let ptr = node as *const IrNode as usize;
+        self.alt_strategies.get(&ptr)
     }
 
     /// Register a regex pattern and return its stable ID.
@@ -270,7 +287,7 @@ pub fn compile_node<E: Emitter>(
         }
 
         IrNode::Alt(branches, dispatch) => {
-            compile_alt(branches, dispatch.as_ref(), alloc, ir, dstate, emitter, ctx)
+            compile_alt(node, branches, dispatch.as_ref(), alloc, ir, dstate, emitter, ctx)
         }
 
         IrNode::Repeat { inner, lo, hi } => {
@@ -426,6 +443,7 @@ fn compile_seq<E: Emitter>(
 /// - Dispatch table (O(1) byte lookup)
 /// - Checkpoint chain fallback
 fn compile_alt<E: Emitter>(
+    alt_node: &IrNode,
     branches: &[bbnf_ir::AltBranch],
     dispatch: Option<&bbnf_ir::AltDispatch>,
     alloc: ValuePlacement,
@@ -435,6 +453,12 @@ fn compile_alt<E: Emitter>(
     ctx: &mut E::Ctx,
 ) -> E::Output {
     let type_map = ir.type_map.as_ref();
+
+    // Look up the pre-solved strategy for this Alt node. If present, we can
+    // skip inline detection passes that would re-derive the same decision.
+    // Cloned out of dstate to avoid borrowing conflicts with the subsequent
+    // &mut DriverState passes.
+    let solved_strategy = dstate.alt_strategy(alt_node).cloned();
 
     // Classify branch types.
     // In Inline context (Vec elements, elide_box=true), map BoxedEnum → Enum
@@ -457,16 +481,20 @@ fn compile_alt<E: Emitter>(
         .collect();
 
     // Decision: check for all-literal fast path.
-    // Also detects Map(Literal, Expr{constant}) — literal with constant value mapping.
-    // Skip this fast path when alloc == Alloc: the raw constants need sub-variant
-    // wrapping + slab allocation, which the all-literal path doesn't provide.
-    let all_literal_like = alloc == ValuePlacement::Inline && branches.iter().all(|b| {
-        matches!(b.node, IrNode::Literal(_))
-            || matches!(&b.node, IrNode::Map { inner, fn_id } if {
-                matches!(inner.as_ref(), IrNode::Literal(_))
-                    && matches!(&ir.fns[*fn_id as usize], FnDescriptor::Expr { expr, .. } if expr.is_constant())
-            })
-    });
+    // Pre-solved strategy short-circuits inline detection when it already
+    // classified the Alt.
+    use crate::backend::strategy::alt_strategy::AltStrategy;
+    let all_literal_like = match &solved_strategy {
+        Some(AltStrategy::AllLiteral) => alloc == ValuePlacement::Inline,
+        Some(_) => false,
+        None => alloc == ValuePlacement::Inline && branches.iter().all(|b| {
+            matches!(b.node, IrNode::Literal(_))
+                || matches!(&b.node, IrNode::Map { inner, fn_id } if {
+                    matches!(inner.as_ref(), IrNode::Literal(_))
+                        && matches!(&ir.fns[*fn_id as usize], FnDescriptor::Expr { expr, .. } if expr.is_constant())
+                })
+        }),
+    };
 
     if all_literal_like {
         let literals: Vec<_> = branches
@@ -517,9 +545,21 @@ fn compile_alt<E: Emitter>(
         return emitter.emit_alt_dispatch(table, branch_outputs, fallback, alloc, ctx);
     }
 
-    // Decision: try key dispatch.
-    if let Some((mut config, detected, fallback_idx)) =
+    // Decision: try key dispatch. Skip the detection call when the solver
+    // already classified this Alt as non-key-dispatch — `try_detect` is one
+    // of the more expensive detection passes, and when the strategy is
+    // known to be Checkpoint/AllLiteral, the call is guaranteed to fail.
+    let try_key_dispatch = !matches!(
+        solved_strategy,
+        Some(AltStrategy::Checkpoint)
+            | Some(AltStrategy::AllLiteral)
+            | Some(AltStrategy::DispatchTable),
+    );
+    if let Some((mut config, detected, fallback_idx)) = if try_key_dispatch {
         super::patterns::key_dispatch::try_detect(branches, ir)
+    } else {
+        None
+    }
     {
         // Register scanner regex.
         let pattern = super::patterns::key_dispatch::key_class_regex_pattern(&config.key_class);

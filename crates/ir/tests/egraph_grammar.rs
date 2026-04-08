@@ -51,50 +51,55 @@ fn build_literal() {
     let body = lit(&mut ir, "hello");
     ir.rules[0].body = body;
 
-    let egraph = build_and_saturate(&ir);
+    let (egraph, _pool) = build_and_saturate(&ir);
     // Should have 1 class (the Literal) after interning.
     assert!(egraph.classes().count() >= 1);
 }
 
 #[test]
 fn rule_eliminate_epsilon_in_seq() {
-    // Seq([Literal("a"), Epsilon, Literal("b")]) should become equivalent
-    // to Seq([Literal("a"), Literal("b")]) after saturation.
+    // Seq([Literal("a"), Epsilon, Literal("c")]) should saturate all the
+    // way down: EliminateEpsilon removes the epsilon, then MergeLiterals
+    // collapses the two adjacent literals into a single "ac" literal,
+    // then UnwrapSingletonSeq collapses the 1-element Seq to that literal.
+    //
+    // We use "a" + "c" to avoid accidentally hitting an existing entry
+    // in the pool, and verify the merged literal exists in the pool.
     let mut ir = make_ir_with(IrNode::Epsilon);
     let a = lit(&mut ir, "a");
-    let b = lit(&mut ir, "b");
-    let seq = IrNode::Seq(vec![a, IrNode::Epsilon, b]);
+    let c = lit(&mut ir, "c");
+    let seq = IrNode::Seq(vec![a, IrNode::Epsilon, c]);
     ir.rules[0].body = seq;
 
-    let egraph = build_and_saturate(&ir);
+    let (egraph, pool) = build_and_saturate(&ir);
 
-    // Extract — cost model should prefer the smaller (2-element) Seq.
+    // Extract — cost model should prefer the merged literal over the Seq.
     let cost = GrammarCostModel::default();
     let extractor = Extractor::new(&egraph, &cost);
 
-    // Find a class containing a Seq and verify the best node is a 2-element Seq.
-    let mut found_optimized = false;
+    // The pool should now contain "ac" (interned by MergeLiterals).
+    let strings = pool.into_vec();
+    assert!(
+        strings.iter().any(|s| s == "ac"),
+        "MergeLiterals should have interned 'ac' into the shared pool, got: {:?}",
+        strings
+    );
+
+    // At least one class should extract to Literal("ac").
+    let ac_sid = strings.iter().position(|s| s == "ac").unwrap() as u32;
+    let mut found_merged = false;
     for class in egraph.classes() {
         if let Some(best) = extractor.best_node(class.id) {
-            if let GrammarENode::Seq(children) = best {
-                if children.len() == 2 && !found_optimized {
-                    // Check that neither child is Epsilon.
-                    let all_non_eps = children.iter().all(|&c| {
-                        !egraph
-                            .class(c)
-                            .iter()
-                            .any(|n| matches!(n, GrammarENode::Epsilon))
-                    });
-                    if all_non_eps {
-                        found_optimized = true;
-                    }
-                }
+            if matches!(best, GrammarENode::Literal(sid) if *sid == ac_sid) {
+                found_merged = true;
+                break;
             }
         }
     }
     assert!(
-        found_optimized,
-        "EliminateEpsilon rule should produce a 2-element Seq without epsilons"
+        found_merged,
+        "EliminateEpsilon + MergeLiterals + UnwrapSingletonSeq should \
+         produce Literal(\"ac\") as the best form"
     );
 }
 
@@ -112,7 +117,7 @@ fn rule_unwrap_singleton_alt() {
     );
     ir.rules[0].body = alt;
 
-    let egraph = build_and_saturate(&ir);
+    let (egraph, _pool) = build_and_saturate(&ir);
 
     // The Alt class should now be unioned with the Literal class.
     let cost = GrammarCostModel::default();
@@ -180,7 +185,7 @@ fn rule_canonicalize_alias() {
     // Rule 0 references the alias.
     ir.rules[0].body = IrNode::Ref(1);
 
-    let egraph = build_and_saturate(&ir);
+    let (egraph, _pool) = build_and_saturate(&ir);
 
     // The class containing Ref(1) should also contain Ref(0) after saturation.
     let mut found_canonical = false;
@@ -195,6 +200,66 @@ fn rule_canonicalize_alias() {
     assert!(
         found_canonical,
         "CanonicalizeAlias should union Ref(alias_id) with Ref(canonical_id)"
+    );
+}
+
+#[test]
+fn rule_merge_literals_concatenates_run() {
+    // Seq([Lit("foo"), Lit("bar"), Lit("baz")]) should saturate to
+    // Literal("foobarbaz") via MergeLiterals + UnwrapSingletonSeq.
+    let mut ir = make_ir_with(IrNode::Epsilon);
+    let a = lit(&mut ir, "foo");
+    let b = lit(&mut ir, "bar");
+    let c = lit(&mut ir, "baz");
+    ir.rules[0].body = IrNode::Seq(vec![a, b, c]);
+
+    let (egraph, pool) = build_and_saturate(&ir);
+    let strings = pool.into_vec();
+
+    assert!(
+        strings.iter().any(|s| s == "foobarbaz"),
+        "MergeLiterals should intern 'foobarbaz', got: {:?}",
+        strings
+    );
+
+    let target = strings.iter().position(|s| s == "foobarbaz").unwrap() as u32;
+    let cost = GrammarCostModel::default();
+    let extractor = Extractor::new(&egraph, &cost);
+
+    let mut found = false;
+    for class in egraph.classes() {
+        if let Some(best) = extractor.best_node(class.id) {
+            if matches!(best, GrammarENode::Literal(sid) if *sid == target) {
+                found = true;
+                break;
+            }
+        }
+    }
+    assert!(found, "MergeLiterals should fully merge a pure-literal Seq");
+}
+
+#[test]
+fn rule_merge_literals_leaves_non_literal_breaks() {
+    // Seq([Lit("a"), Lit("b"), Ref(7), Lit("c"), Lit("d")]) should merge
+    // into Seq([Lit("ab"), Ref(7), Lit("cd")]). Two merged literals, one
+    // structural break.
+    let mut ir = make_ir_with(IrNode::Epsilon);
+    let a = lit(&mut ir, "a");
+    let b = lit(&mut ir, "b");
+    let c = lit(&mut ir, "c");
+    let d = lit(&mut ir, "d");
+    ir.rules[0].body = IrNode::Seq(vec![a, b, IrNode::Ref(7), c, d]);
+
+    let (_egraph, pool) = build_and_saturate(&ir);
+    let strings = pool.into_vec();
+
+    assert!(
+        strings.iter().any(|s| s == "ab"),
+        "MergeLiterals should intern the 'ab' prefix-run"
+    );
+    assert!(
+        strings.iter().any(|s| s == "cd"),
+        "MergeLiterals should intern the 'cd' suffix-run"
     );
 }
 
@@ -228,7 +293,7 @@ fn rule_canonicalize_alias_chain() {
 
     ir.rules[0].body = IrNode::Ref(2);
 
-    let egraph = build_and_saturate(&ir);
+    let (egraph, _pool) = build_and_saturate(&ir);
 
     let mut found_terminal = false;
     for class in egraph.classes() {

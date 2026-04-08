@@ -24,11 +24,13 @@
 mod analysis;
 mod build_egraph;
 mod cost;
+mod interner;
 mod node;
 mod rules;
 
 pub use analysis::GrammarAnalysis;
 pub use cost::GrammarCostModel;
+pub use interner::SharedStrings;
 pub use node::GrammarENode;
 pub use rules::{default_rules, normalize_rules};
 
@@ -46,19 +48,28 @@ pub fn run_grammar_egraph(ir: &mut GrammarIR) {
 }
 
 /// Build an e-graph from the IR and saturate it with default rules.
-/// Returns the populated e-graph (for tests and diagnostics).
-pub fn build_and_saturate(ir: &GrammarIR) -> EGraph<GrammarENode, GrammarAnalysis> {
+/// Returns the populated e-graph together with the shared string pool
+/// (which may contain new entries produced by string-mutating rules
+/// like `MergeLiterals`).
+pub fn build_and_saturate(
+    ir: &GrammarIR,
+) -> (EGraph<GrammarENode, GrammarAnalysis>, SharedStrings) {
+    let pool = SharedStrings::from_ir(ir);
     let mut egraph: EGraph<GrammarENode, GrammarAnalysis> = EGraph::new();
     build_egraph::insert_ir(&mut egraph, ir);
     egraph.rebuild();
 
-    let rules = default_rules(ir);
+    let rules = default_rules(ir, &pool);
     let rule_refs: Vec<&dyn egraph::RewriteFn<GrammarENode, GrammarAnalysis>> =
         rules.iter().map(|r| r.as_ref()).collect();
 
     let scheduler = egraph::BackoffScheduler::default();
     use egraph::Scheduler;
     let _report = scheduler.run(&mut egraph, &rule_refs);
+    // Drop the rules explicitly so they release their `SharedStrings`
+    // clones, letting `into_vec()` unwrap without a fallback clone.
+    drop(rule_refs);
+    drop(rules);
 
-    egraph
+    (egraph, pool)
 }

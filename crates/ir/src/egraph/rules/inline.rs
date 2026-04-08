@@ -42,15 +42,22 @@ pub struct InlineEligibleRef {
     /// the current e-graph. Populated by `build_and_saturate` after
     /// inserting all rule bodies, before running saturation.
     rule_body_ids: HashMap<RuleId, Id>,
+    /// Reverse lookup: the set of rule-root e-classes. Used as a
+    /// guard against firing inside *another* rule's root class,
+    /// which would fold the rule's body into the Ref site and
+    /// dissolve rule boundaries during extraction.
+    root_classes: HashSet<Id>,
 }
 
 impl InlineEligibleRef {
     /// Construct the rule from grammar metadata and per-rule body
     /// root Ids (returned by the e-graph build phase).
     pub fn new(ir: &GrammarIR, rule_body_ids: HashMap<RuleId, Id>) -> Self {
+        let root_classes: HashSet<Id> = rule_body_ids.values().copied().collect();
         Self {
             eligible: compute_eligible(ir),
             rule_body_ids,
+            root_classes,
         }
     }
 }
@@ -64,7 +71,23 @@ impl Rewrite<GrammarENode, GrammarAnalysis> for InlineEligibleRef {
 
     fn search(&self, egraph: &EGraph<GrammarENode, GrammarAnalysis>) -> Vec<(Id, Self::Match)> {
         let mut matches = Vec::new();
+        // Snapshot the canonical form of every rule root — after
+        // rebuilds, the canonical ids shift, so we recompute here.
+        let canonical_roots: HashSet<Id> = self
+            .root_classes
+            .iter()
+            .map(|&id| egraph.find_ref(id))
+            .collect();
         for class in egraph.classes() {
+            // Guard: never fire inside a class that IS the root of
+            // any rule. Unioning a rule root with another rule's
+            // body would dissolve the rule boundary during extraction
+            // (both rules' write_backs would see the same class and
+            // could extract each other's Ref/body interchangeably,
+            // producing self-referential `rule_X = Ref(rule_X)`).
+            if canonical_roots.contains(&egraph.find_ref(class.id)) {
+                continue;
+            }
             for node in class.iter() {
                 let GrammarENode::Ref(rule_id) = node else {
                     continue;

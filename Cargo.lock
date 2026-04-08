@@ -144,6 +144,7 @@ dependencies = [
  "csp-solver",
  "cssparser 0.34.0",
  "dhat",
+ "egraph",
  "fast-float2",
  "gorgeous",
  "indexmap",

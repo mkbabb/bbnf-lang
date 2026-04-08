@@ -50,12 +50,18 @@ pub fn run_grammar_egraph(ir: &mut GrammarIR) {
 }
 
 /// Build an e-graph from the IR and saturate it with default rules.
-/// Returns the populated e-graph together with the shared string pool
-/// (which may contain new entries produced by string-mutating rules
-/// like `MergeLiterals`).
+/// Returns the populated e-graph, the shared string pool (which may
+/// contain new entries produced by string-mutating rules like
+/// `MergeLiterals`), and the per-rule body root ids captured during
+/// insertion. Consumers use the returned `rule_body_ids` to feed
+/// `write_back_optimized`.
 pub fn build_and_saturate(
     ir: &GrammarIR,
-) -> (EGraph<GrammarENode, GrammarAnalysis>, SharedStrings) {
+) -> (
+    EGraph<GrammarENode, GrammarAnalysis>,
+    SharedStrings,
+    std::collections::HashMap<crate::RuleId, egraph::Id>,
+) {
     use std::collections::HashMap;
     use crate::RuleId;
 
@@ -64,8 +70,8 @@ pub fn build_and_saturate(
     let rule_root_ids = build_egraph::insert_ir(&mut egraph, ir);
     egraph.rebuild();
 
-    // Map RuleId → root e-class Id for rules that have a root (every
-    // rule should, but iterate defensively over the returned vec).
+    // Map RuleId → root e-class Id using the Vec<Id> insert_ir
+    // returned — the i-th entry is the root of ir.rules[i].body.
     let rule_body_ids: HashMap<RuleId, egraph::Id> = ir
         .rules
         .iter()
@@ -73,7 +79,7 @@ pub fn build_and_saturate(
         .filter_map(|(i, r)| rule_root_ids.get(i).map(|&id| (r.id, id)))
         .collect();
 
-    let rules = default_rules(ir, &pool, rule_body_ids);
+    let rules = default_rules(ir, &pool, rule_body_ids.clone());
     let rule_refs: Vec<&dyn egraph::RewriteFn<GrammarENode, GrammarAnalysis>> =
         rules.iter().map(|r| r.as_ref()).collect();
 
@@ -85,5 +91,5 @@ pub fn build_and_saturate(
     drop(rule_refs);
     drop(rules);
 
-    (egraph, pool)
+    (egraph, pool, rule_body_ids)
 }

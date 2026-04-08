@@ -29,9 +29,7 @@
 use std::collections::HashMap;
 
 use bbnf_ir::egraph::{build_and_saturate, write_back_optimized, GrammarCostModel};
-use bbnf_ir::{
-    passes, AltBranch, GrammarIR, IrNode, IrRule, RuleId, RuleMeta,
-};
+use bbnf_ir::{passes, AltBranch, GrammarIR, IrNode, IrRule, RuleMeta};
 
 fn make_ir(name: &str) -> GrammarIR {
     GrammarIR {
@@ -105,13 +103,7 @@ fn run_destructive(mut ir: GrammarIR) -> GrammarIR {
 }
 
 fn run_egraph(mut ir: GrammarIR) -> GrammarIR {
-    let (egraph, pool) = build_and_saturate(&ir);
-    let rule_body_ids: HashMap<RuleId, egraph::Id> = ir
-        .rules
-        .iter()
-        .enumerate()
-        .map(|(i, r)| (r.id, egraph::Id(i as u32)))
-        .collect();
+    let (egraph, pool, rule_body_ids) = build_and_saturate(&ir);
     let cost = GrammarCostModel::default();
     write_back_optimized(&egraph, &mut ir, &rule_body_ids, &cost);
     pool.write_back(&mut ir);

@@ -51,7 +51,7 @@ fn build_literal() {
     let body = lit(&mut ir, "hello");
     ir.rules[0].body = body;
 
-    let (egraph, _pool) = build_and_saturate(&ir);
+    let (egraph, _pool, _rule_body_ids) = build_and_saturate(&ir);
     // Should have 1 class (the Literal) after interning.
     assert!(egraph.classes().count() >= 1);
 }
@@ -71,7 +71,7 @@ fn rule_eliminate_epsilon_in_seq() {
     let seq = IrNode::Seq(vec![a, IrNode::Epsilon, c]);
     ir.rules[0].body = seq;
 
-    let (egraph, pool) = build_and_saturate(&ir);
+    let (egraph, pool, _rule_body_ids) = build_and_saturate(&ir);
 
     // Extract — cost model should prefer the merged literal over the Seq.
     let cost = GrammarCostModel::default();
@@ -117,7 +117,7 @@ fn rule_unwrap_singleton_alt() {
     );
     ir.rules[0].body = alt;
 
-    let (egraph, _pool) = build_and_saturate(&ir);
+    let (egraph, _pool, _rule_body_ids) = build_and_saturate(&ir);
 
     // The Alt class should now be unioned with the Literal class.
     let cost = GrammarCostModel::default();
@@ -185,7 +185,7 @@ fn rule_canonicalize_alias() {
     // Rule 0 references the alias.
     ir.rules[0].body = IrNode::Ref(1);
 
-    let (egraph, _pool) = build_and_saturate(&ir);
+    let (egraph, _pool, _rule_body_ids) = build_and_saturate(&ir);
 
     // The class containing Ref(1) should also contain Ref(0) after saturation.
     let mut found_canonical = false;
@@ -213,7 +213,7 @@ fn rule_merge_literals_concatenates_run() {
     let c = lit(&mut ir, "baz");
     ir.rules[0].body = IrNode::Seq(vec![a, b, c]);
 
-    let (egraph, pool) = build_and_saturate(&ir);
+    let (egraph, pool, _rule_body_ids) = build_and_saturate(&ir);
     let strings = pool.into_vec();
 
     assert!(
@@ -250,7 +250,7 @@ fn rule_merge_literals_leaves_non_literal_breaks() {
     let d = lit(&mut ir, "d");
     ir.rules[0].body = IrNode::Seq(vec![a, b, IrNode::Ref(7), c, d]);
 
-    let (_egraph, pool) = build_and_saturate(&ir);
+    let (_egraph, pool, _rule_body_ids) = build_and_saturate(&ir);
     let strings = pool.into_vec();
 
     assert!(
@@ -279,7 +279,7 @@ fn rule_deduplicate_alt_branches() {
     );
     ir.rules[0].body = alt;
 
-    let (egraph, _pool) = build_and_saturate(&ir);
+    let (egraph, _pool, _rule_body_ids) = build_and_saturate(&ir);
     let cost = GrammarCostModel::default();
     let extractor = Extractor::new(&egraph, &cost);
 
@@ -318,7 +318,7 @@ fn rule_superset_absorb_alt() {
     );
     ir.rules[0].body = alt;
 
-    let (egraph, _pool) = build_and_saturate(&ir);
+    let (egraph, _pool, _rule_body_ids) = build_and_saturate(&ir);
     let cost = GrammarCostModel::default();
     let extractor = Extractor::new(&egraph, &cost);
 
@@ -338,21 +338,23 @@ fn rule_superset_absorb_alt() {
 }
 
 #[test]
-fn rule_inline_single_use_ref() {
-    // Rule 0 (entry) = Ref(1)
+fn rule_inline_single_use_ref_nested() {
+    // Rule 0 (entry) = Seq([Lit("prefix"), Ref(1)])
     // Rule 1 (single-use, acyclic, small body) = Literal("x")
     //
-    // The Ref(1) e-class should saturate into being equivalent to
-    // Literal("x") after InlineEligibleRef fires.
+    // The nested Ref(1) e-class should saturate into being equivalent
+    // to Literal("x") after InlineEligibleRef fires. The rule applies
+    // only to Ref sites that are NOT themselves a rule's root — at
+    // the root, inlining would dissolve the rule boundary, which the
+    // rule's `canonical_roots` guard prevents.
     let mut ir = make_ir_with(IrNode::Epsilon);
     ir.strings.push("r1".to_string());
+    let prefix_sid = ir.strings.len() as u32;
+    ir.strings.push("prefix".to_string());
+    let x_sid = ir.strings.len() as u32;
     ir.strings.push("x".to_string());
-    let x_sid = 2u32;
 
-    // Rule 0 body = Ref(1)
-    ir.rules[0].body = IrNode::Ref(1);
-
-    // Rule 1 body = Literal("x") — acyclic, small, referenced once.
+    ir.rules[0].body = IrNode::Seq(vec![IrNode::Literal(prefix_sid), IrNode::Ref(1)]);
     ir.rules.push(IrRule {
         id: 1,
         name: 1,
@@ -361,9 +363,9 @@ fn rule_inline_single_use_ref() {
         source_span: None,
     });
 
-    let (egraph, _pool) = build_and_saturate(&ir);
+    let (egraph, _pool, _rule_body_ids) = build_and_saturate(&ir);
 
-    // The e-class of Ref(1) should now also contain Literal("x").
+    // The nested Ref(1) class should now also contain Literal("x").
     let mut found_unified = false;
     for class in egraph.classes() {
         let has_ref = class.iter().any(|n| matches!(n, GrammarENode::Ref(1)));
@@ -375,7 +377,7 @@ fn rule_inline_single_use_ref() {
     }
     assert!(
         found_unified,
-        "InlineEligibleRef should union Ref(1) with its body Literal(\"x\")"
+        "InlineEligibleRef should union nested Ref(1) with its body Literal(\"x\")"
     );
 }
 
@@ -401,7 +403,7 @@ fn rule_inline_small_acyclic_ref() {
         source_span: None,
     });
 
-    let (egraph, _pool) = build_and_saturate(&ir);
+    let (egraph, _pool, _rule_body_ids) = build_and_saturate(&ir);
 
     // Ref(1)'s class should now also contain a Seq(Lit(a), Lit(b)) — or
     // a form unioned with it. We check by looking for a Seq class that
@@ -453,7 +455,7 @@ fn rule_factor_literal_byte_trie() {
     );
     ir.rules[0].body = alt;
 
-    let (egraph, pool) = build_and_saturate(&ir);
+    let (egraph, pool, _rule_body_ids) = build_and_saturate(&ir);
     let strings = pool.into_vec();
 
     // The prefix byte "r", and the tails "em" and "lh", must all be interned.
@@ -542,7 +544,7 @@ fn rule_factor_shared_seq_prefix() {
     );
     ir.rules[0].body = alt;
 
-    let (egraph, _pool) = build_and_saturate(&ir);
+    let (egraph, _pool, _rule_body_ids) = build_and_saturate(&ir);
 
     // Look for an equivalence class containing a Seq where the first
     // child's class has Literal(a) and the second child's class has
@@ -611,7 +613,7 @@ fn rule_fuse_alt_regex_branches() {
     );
     ir.rules[0].body = alt;
 
-    let (egraph, pool) = build_and_saturate(&ir);
+    let (egraph, pool, _rule_body_ids) = build_and_saturate(&ir);
     let strings = pool.into_vec();
 
     assert!(
@@ -657,7 +659,7 @@ fn rule_union_merge_alt() {
     );
     ir.rules[0].body = alt;
 
-    let (egraph, pool) = build_and_saturate(&ir);
+    let (egraph, pool, _rule_body_ids) = build_and_saturate(&ir);
     let strings = pool.into_vec();
 
     // The algebra should intern a merged pattern covering [a-f].
@@ -733,7 +735,7 @@ fn rule_canonicalize_alias_chain() {
 
     ir.rules[0].body = IrNode::Ref(2);
 
-    let (egraph, _pool) = build_and_saturate(&ir);
+    let (egraph, _pool, _rule_body_ids) = build_and_saturate(&ir);
 
     let mut found_terminal = false;
     for class in egraph.classes() {

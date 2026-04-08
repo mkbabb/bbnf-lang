@@ -2,16 +2,21 @@
 //!
 //! After saturation, the e-graph contains every equivalent form of
 //! each rule's body. This module walks each rule's root e-class via
-//! `Extractor` (cost-model-guided), rebuilds a concrete `IrNode` tree
-//! from the chosen best e-nodes, and writes the results back into a
-//! `GrammarIR`.
+//! `Extractor` (cost-model-guided), rebuilds a concrete `IrNode`
+//! tree from the chosen best e-nodes, and writes the results back
+//! into a `GrammarIR`.
 //!
-//! The reconstruction handles cycles defensively: e-classes visited
-//! during a recursive walk are cached to prevent infinite recursion
-//! via self-referential class structure (which can happen if the
-//! e-graph collapses a `Ref(x)` class with its expansion via
-//! `InlineEligibleRef`). On cycle detection the walk emits a
-//! fallback `Ref` node.
+//! **Rule boundaries are preserved**: when walking rule X's body
+//! and the walk descends into a class whose canonical id is another
+//! rule Y's root, the walker emits `Ref(Y)` instead of inlining Y's
+//! full body. This matches the destructive pipeline's behavior
+//! (rules reference each other via `Ref` and walks don't descend
+//! across rule boundaries) and is essential for preserving mutual
+//! recursion (JSON: `value ↔ object ↔ array ↔ value`).
+//!
+//! An additional per-walk `visiting` set guards against
+//! non-rule-rooted cycles that can arise if an `InlineEligibleRef`-
+//! style rule unions a non-root class with its own expansion.
 
 use std::collections::HashMap;
 
@@ -33,14 +38,35 @@ pub fn write_back_optimized(
     cost: &GrammarCostModel,
 ) {
     let extractor = Extractor::new(egraph, cost);
+    // Reverse map: canonical e-class Id → owning RuleId. Used by
+    // the reconstruction walk to re-emit cross-rule references as
+    // `Ref(RuleId)` instead of inlining the target rule's body.
+    let root_to_rule: HashMap<Id, RuleId> = rule_body_ids
+        .iter()
+        .map(|(&rid, &id)| (egraph.find_ref(id), rid))
+        .collect();
+
     // Snapshot original rule ids (we mutate ir.rules in the loop).
     let rule_ids: Vec<RuleId> = ir.rules.iter().map(|r| r.id).collect();
     for rule_id in rule_ids {
         let Some(&root_id) = rule_body_ids.get(&rule_id) else {
             continue;
         };
+        // Top-level extraction: materialize the root class directly
+        // (skipping the root_to_rule shortcut, which would otherwise
+        // emit `Ref(rule_id)` as the body and turn every rule into
+        // an alias for itself). Children descend via `rebuild` and
+        // emit Ref at every rule boundary, including self.
         let mut visiting = HashMap::new();
-        if let Some(body) = rebuild(egraph, &extractor, root_id, &mut visiting) {
+        let canonical = egraph.find_ref(root_id);
+        visiting.insert(canonical, ());
+        if let Some(body) = materialize_best(
+            egraph,
+            &extractor,
+            canonical,
+            &root_to_rule,
+            &mut visiting,
+        ) {
             if let Some(rule) = ir.rules.iter_mut().find(|r| r.id == rule_id) {
                 rule.body = body;
             }
@@ -49,21 +75,27 @@ pub fn write_back_optimized(
 }
 
 /// Rebuild a single `IrNode` by recursively extracting the best form
-/// for `root` and its transitive children. `visiting` guards against
-/// cycles.
+/// for `root` and its transitive children. Without a `root_to_rule`
+/// mapping, cross-rule references are not preserved — use
+/// [`write_back_optimized`] for full IR reconstruction.
 pub fn extract_ir_node(
     egraph: &EGraph<GrammarENode, GrammarAnalysis>,
     cost: &GrammarCostModel,
     root: Id,
 ) -> Option<IrNode> {
     let extractor = Extractor::new(egraph, cost);
+    let empty = HashMap::new();
     let mut visiting = HashMap::new();
-    rebuild(egraph, &extractor, root, &mut visiting)
+    let canonical = egraph.find_ref(root);
+    visiting.insert(canonical, ());
+    materialize_best(egraph, &extractor, canonical, &empty, &mut visiting)
 }
 
-/// Recursive best-node → IrNode reconstruction. Uses `visiting` to
-/// short-circuit cycles (cache the placeholder Ref the first time we
-/// see a class, so recursive calls back to it don't loop).
+/// Child-descent entry point — called for every non-top-level
+/// walk. Unconditionally emits `Ref(rule_id)` when `id`'s canonical
+/// is any rule's root, preserving the grammar's inter-rule structure
+/// (including self-recursion). Only non-root classes descend into
+/// their best node via [`materialize_best`].
 fn rebuild(
     egraph: &EGraph<GrammarENode, GrammarAnalysis>,
     extractor: &Extractor<
@@ -73,22 +105,52 @@ fn rebuild(
         GrammarCostModel,
     >,
     id: Id,
+    root_to_rule: &HashMap<Id, RuleId>,
+    current_rule: Option<RuleId>,
     visiting: &mut HashMap<Id, ()>,
 ) -> Option<IrNode> {
+    let _ = current_rule; // no longer consulted; Refs are always emitted at rule boundaries
     let canonical = egraph.find_ref(id);
+
+    // Rule boundary: emit `Ref(rule_id)` and stop descending. The
+    // referenced rule's body is reconstructed independently in its
+    // own top-level `write_back_optimized` iteration. This preserves
+    // both cross-rule references AND self-recursion (e.g.,
+    // `expr = expr "+" term | term`).
+    if let Some(&target_rule) = root_to_rule.get(&canonical) {
+        return Some(IrNode::Ref(target_rule));
+    }
+
     if visiting.contains_key(&canonical) {
-        // Cycle — emit a placeholder. The only sensible cycle target
-        // at the IR level is a `Ref` (which can self-reference via the
-        // rule graph). If the best form isn't a Ref, drop to Epsilon
-        // so extraction still terminates.
-        for node in egraph.class(canonical).iter() {
-            if let GrammarENode::Ref(rid) = node {
-                return Some(IrNode::Ref(*rid));
-            }
-        }
+        // Non-rule-rooted cycle — emit Epsilon so extraction
+        // terminates.
         return Some(IrNode::Epsilon);
     }
     visiting.insert(canonical, ());
+    let result = materialize_best(egraph, extractor, canonical, root_to_rule, visiting);
+    visiting.remove(&canonical);
+    return result;
+}
+
+/// Shared body of the reconstruction: given a canonical e-class that
+/// already passed any rule-boundary / cycle checks, pick the best
+/// e-node for it via the extractor and convert it into an `IrNode`,
+/// descending into children via [`rebuild`]. Called from both the
+/// top-level walk (which pre-inserts the class into `visiting` to
+/// allow self-recursion to emit `Ref`) and the recursive descent.
+fn materialize_best(
+    egraph: &EGraph<GrammarENode, GrammarAnalysis>,
+    extractor: &Extractor<
+        '_,
+        GrammarENode,
+        GrammarAnalysis,
+        GrammarCostModel,
+    >,
+    canonical: Id,
+    root_to_rule: &HashMap<Id, RuleId>,
+    visiting: &mut HashMap<Id, ()>,
+) -> Option<IrNode> {
+    let current_rule: Option<RuleId> = None; // retained for the rebuild signature
 
     let best = extractor.best_node(canonical)?.clone();
     let result = match best {
@@ -99,7 +161,7 @@ fn rebuild(
         GrammarENode::Seq(children) => {
             let rebuilt: Vec<IrNode> = children
                 .iter()
-                .filter_map(|&cid| rebuild(egraph, extractor, cid, visiting))
+                .filter_map(|&cid| rebuild(egraph, extractor, cid, root_to_rule, current_rule, visiting))
                 .collect();
             if rebuilt.is_empty() {
                 IrNode::Epsilon
@@ -113,7 +175,7 @@ fn rebuild(
             let branches: Vec<AltBranch> = children
                 .iter()
                 .filter_map(|&cid| {
-                    rebuild(egraph, extractor, cid, visiting).map(|node| AltBranch {
+                    rebuild(egraph, extractor, cid, root_to_rule, current_rule, visiting).map(|node| AltBranch {
                         node,
                         // `first_set` is re-computed by the post-switch
                         // `compute_follow_sets` pass; leaving None
@@ -131,7 +193,7 @@ fn rebuild(
             }
         }
         GrammarENode::Repeat { inner, lo, hi } => {
-            let inner = rebuild(egraph, extractor, inner, visiting)
+            let inner = rebuild(egraph, extractor, inner, root_to_rule, current_rule, visiting)
                 .unwrap_or(IrNode::Epsilon);
             IrNode::Repeat {
                 inner: Box::new(inner),
@@ -140,32 +202,32 @@ fn rebuild(
             }
         }
         GrammarENode::Skip([a, b]) => {
-            let a = rebuild(egraph, extractor, a, visiting).unwrap_or(IrNode::Epsilon);
-            let b = rebuild(egraph, extractor, b, visiting).unwrap_or(IrNode::Epsilon);
+            let a = rebuild(egraph, extractor, a, root_to_rule, current_rule, visiting).unwrap_or(IrNode::Epsilon);
+            let b = rebuild(egraph, extractor, b, root_to_rule, current_rule, visiting).unwrap_or(IrNode::Epsilon);
             IrNode::Skip(Box::new(a), Box::new(b))
         }
         GrammarENode::Next([a, b]) => {
-            let a = rebuild(egraph, extractor, a, visiting).unwrap_or(IrNode::Epsilon);
-            let b = rebuild(egraph, extractor, b, visiting).unwrap_or(IrNode::Epsilon);
+            let a = rebuild(egraph, extractor, a, root_to_rule, current_rule, visiting).unwrap_or(IrNode::Epsilon);
+            let b = rebuild(egraph, extractor, b, root_to_rule, current_rule, visiting).unwrap_or(IrNode::Epsilon);
             IrNode::Next(Box::new(a), Box::new(b))
         }
         GrammarENode::Minus([a, b]) => {
-            let a = rebuild(egraph, extractor, a, visiting).unwrap_or(IrNode::Epsilon);
-            let b = rebuild(egraph, extractor, b, visiting).unwrap_or(IrNode::Epsilon);
+            let a = rebuild(egraph, extractor, a, root_to_rule, current_rule, visiting).unwrap_or(IrNode::Epsilon);
+            let b = rebuild(egraph, extractor, b, root_to_rule, current_rule, visiting).unwrap_or(IrNode::Epsilon);
             IrNode::Minus(Box::new(a), Box::new(b))
         }
         GrammarENode::Negate(inner) => {
-            let inner = rebuild(egraph, extractor, inner, visiting)
+            let inner = rebuild(egraph, extractor, inner, root_to_rule, current_rule, visiting)
                 .unwrap_or(IrNode::Epsilon);
             IrNode::Negate(Box::new(inner))
         }
         GrammarENode::OptionalWhitespace(inner) => {
-            let inner = rebuild(egraph, extractor, inner, visiting)
+            let inner = rebuild(egraph, extractor, inner, root_to_rule, current_rule, visiting)
                 .unwrap_or(IrNode::Epsilon);
             IrNode::OptionalWhitespace(Box::new(inner))
         }
         GrammarENode::Map { inner, fn_id } => {
-            let inner = rebuild(egraph, extractor, inner, visiting)
+            let inner = rebuild(egraph, extractor, inner, root_to_rule, current_rule, visiting)
                 .unwrap_or(IrNode::Epsilon);
             IrNode::Map {
                 inner: Box::new(inner),
@@ -177,9 +239,9 @@ fn rebuild(
             arms,
             fallback,
         } => {
-            let token = rebuild(egraph, extractor, token, visiting)
+            let token = rebuild(egraph, extractor, token, root_to_rule, current_rule, visiting)
                 .unwrap_or(IrNode::Epsilon);
-            let fallback = rebuild(egraph, extractor, fallback, visiting)
+            let fallback = rebuild(egraph, extractor, fallback, root_to_rule, current_rule, visiting)
                 .unwrap_or(IrNode::Epsilon);
             // TokenDispatch arms carry Id continuations via the opaque
             // `arms` metadata — unchanged across the e-graph walk.
@@ -193,6 +255,8 @@ fn rebuild(
                         egraph,
                         extractor,
                         arm.continuation,
+                        root_to_rule,
+                        current_rule,
                         visiting,
                     )
                     .unwrap_or(IrNode::Epsilon),

@@ -27,12 +27,14 @@ mod cost;
 mod interner;
 mod node;
 mod rules;
+mod write_back;
 
 pub use analysis::GrammarAnalysis;
 pub use cost::GrammarCostModel;
 pub use interner::SharedStrings;
 pub use node::GrammarENode;
 pub use rules::{default_rules, normalize_rules};
+pub use write_back::{extract_ir_node, write_back_optimized};
 
 use egraph::EGraph;
 

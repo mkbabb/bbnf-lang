@@ -200,6 +200,7 @@ dependencies = [
  "bbnf-regex",
  "csp-solver",
  "egraph",
+ "egraph-derive",
  "parse_that",
  "rayon",
  "regex",

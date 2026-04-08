@@ -1,38 +1,48 @@
 //! `#[derive(Language)]` — generate `Language` impl for an e-node enum.
 //!
-//! The derive targets a consumer-defined e-node enum whose recursive
-//! positions have already been replaced with `Id` (or `Box<[Id]>`). It
-//! generates `impl Language` by walking fields tagged with
-//! `#[language(child)]` (a single `Id` field) or `#[language(children)]`
-//! (a `Box<[Id]>` / `Vec<Id>` slice-like field).
+//! The derive walks each variant of the input enum and projects child-bearing
+//! fields into a single `children(&self) -> &[Id]` slice. Field classification
+//! is **automatic** based on type:
+//!
+//! - `Id` → a single child
+//! - `Box<[Id]>`, `Vec<Id>`, `[Id; N]` → a variadic child slice
+//! - Anything else → a leaf (metadata, scalars, non-recursive types)
+//!
+//! Explicit `#[language(child)]` / `#[language(children)]` attributes are
+//! still honored for disambiguation, but are no longer required for the
+//! common cases.
+//!
+//! ## Multi-child variants
+//!
+//! The e-graph requires `children()` to return a contiguous `&[Id]` slice.
+//! Variants with a single tagged field project directly. Variants with
+//! multiple tagged fields must store them in a single `[Id; N]` or
+//! `Box<[Id]>` field — the derive refuses scattered `Id` fields because
+//! there's no portable way to return a slice over non-adjacent struct
+//! fields without relying on layout guarantees.
+//!
+//! ## Example
 //!
 //! ```rust,ignore
 //! use egraph::Id;
 //! use egraph_derive::Language;
 //!
 //! #[derive(Clone, Eq, PartialEq, Hash, Language)]
-//! pub enum IrNodeENode {
-//!     Literal(u32),                               // leaf
-//!     Seq(#[language(children)] Box<[Id]>),       // variadic
-//!     Repeat {
-//!         #[language(child)] inner: Id,           // single child
-//!         lo: u32,
-//!         hi: u32,
-//!     },
+//! pub enum Expr {
+//!     Num(i64),                        // leaf (auto — not an Id type)
+//!     Neg(Id),                         // single child (auto)
+//!     Sum(Box<[Id]>),                  // variadic (auto)
+//!     Pow { base: Id, exp: u32 },      // field + scalar (auto)
+//!     Pair([Id; 2]),                   // two children via fixed array
 //! }
 //! ```
 //!
-//! Each variant contributes one arm to a generated `children(&self) -> &[Id]`
-//! and `children_mut(&mut self) -> &mut [Id]` match. Variants with multiple
-//! tagged fields require the fields to be adjacent `Id` fields that can be
-//! returned as a contiguous slice via unsafe transmute — for portability
-//! the derive instead refuses mixed shapes and directs the user to use a
-//! single `Box<[Id]>` field.
+//! Each variant generates one arm of the `children`/`children_mut` match.
 
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::{format_ident, quote};
-use syn::{parse_macro_input, Data, DeriveInput, Fields, Ident};
+use syn::{parse_macro_input, Data, DeriveInput, Fields, Ident, Type};
 
 /// The `#[derive(Language)]` proc macro.
 #[proc_macro_derive(Language, attributes(language))]
@@ -71,6 +81,7 @@ pub fn derive_language(input: TokenStream) -> TokenStream {
     }
 
     let expanded = quote! {
+        #[automatically_derived]
         impl #impl_generics ::egraph::Language for #name #ty_generics #where_clause {
             fn children(&self) -> &[::egraph::Id] {
                 match self {
@@ -110,7 +121,7 @@ fn variant_arms(
     fields: &syn::punctuated::Punctuated<syn::Field, syn::Token![,]>,
     named: bool,
 ) -> syn::Result<VariantArms> {
-    // Collect one (binding, kind) per field.
+    // Collect one (binding, field_ident, kind) per field.
     let mut pairs: Vec<(Ident, Option<syn::Ident>, FieldKind)> = Vec::new();
     for (i, field) in fields.iter().enumerate() {
         let binding = format_ident!("__f{}", i);
@@ -128,34 +139,41 @@ fn variant_arms(
     let pattern = if named {
         let binds: Vec<TokenStream2> = pairs
             .iter()
-            .map(|(binding, field_name, _)| {
+            .map(|(binding, field_name, kind)| {
                 let n = field_name.as_ref().expect("named field");
-                quote! { #n: #binding }
+                if matches!(kind, FieldKind::Leaf) {
+                    quote! { #n: _ }
+                } else {
+                    quote! { #n: #binding }
+                }
             })
             .collect();
         quote! { #name::#variant { #(#binds),* } }
     } else {
-        let binds: Vec<&Ident> = pairs.iter().map(|(b, _, _)| b).collect();
+        let binds: Vec<TokenStream2> = pairs
+            .iter()
+            .map(|(binding, _, kind)| {
+                if matches!(kind, FieldKind::Leaf) {
+                    quote! { _ }
+                } else {
+                    quote! { #binding }
+                }
+            })
+            .collect();
         quote! { #name::#variant(#(#binds),*) }
     };
 
     // No tagged fields: empty slice.
     if tagged.is_empty() {
-        let ignore = pairs.iter().map(|(_, _, _)| quote! { _ });
-        let ignore2 = ignore.clone();
         let pattern_ignore = if named {
             quote! { #name::#variant { .. } }
         } else {
-            quote! { #name::#variant(#(#ignore),*) }
-        };
-        let pattern_ignore2 = if named {
-            quote! { #name::#variant { .. } }
-        } else {
-            quote! { #name::#variant(#(#ignore2),*) }
+            let ignores: Vec<TokenStream2> = pairs.iter().map(|_| quote! { _ }).collect();
+            quote! { #name::#variant(#(#ignores),*) }
         };
         return Ok(VariantArms {
             children: quote! { #pattern_ignore => &[] },
-            children_mut: quote! { #pattern_ignore2 => &mut [] },
+            children_mut: quote! { #pattern_ignore => &mut [] },
         });
     }
 
@@ -172,6 +190,10 @@ fn variant_arms(
                 quote! { &#binding[..] },
                 quote! { &mut #binding[..] },
             ),
+            FieldKind::ArrayId => (
+                quote! { &#binding[..] },
+                quote! { &mut #binding[..] },
+            ),
         };
         return Ok(VariantArms {
             children: quote! { #pattern => #child_expr },
@@ -179,34 +201,37 @@ fn variant_arms(
         });
     }
 
-    // Multiple tagged fields. We require ALL tagged fields to be
-    // `#[language(child)] Id` AND to occupy adjacent positions so we
-    // can return them as a contiguous `&[Id]`. This holds for variants
-    // like `Skip(#[language(child)] Id, #[language(child)] Id)` where
-    // Rust guarantees tuple field layout.
+    // Multiple tagged fields: reject with an actionable error. The e-graph
+    // algorithms require `children()` to return a contiguous slice, and
+    // there's no portable way to project two non-adjacent `Id` fields
+    // into a single slice without relying on #[repr(C)] layout guarantees.
     //
-    // NOTE: relying on tuple layout for `&[Id]` projection would require
-    // `#[repr(C)]`. Rather than impose that, we reject multi-child variants
-    // and direct the user to use a `Box<[Id]>` field instead. This is the
-    // same limitation as `egg` imposes via its Symbol/Node separation.
+    // Users should rewrap their children into a single `[Id; N]` or
+    // `Box<[Id]>` field. For example, `Skip(Id, Id)` becomes
+    // `Skip([Id; 2])` and call sites destructure the array.
     let span = variant.span();
     Err(syn::Error::new(
         span,
-        "Language derive: variants with multiple tagged fields must use a single \
-         `Box<[Id]>` or `Vec<Id>` field annotated `#[language(children)]`. Split \
-         the variant or rewrap children in a slice.",
+        "Language derive: variants with multiple recursive fields must combine \
+         them into a single `[Id; N]` or `Box<[Id]>` field. The e-graph \
+         requires contiguous child storage for `children() -> &[Id]`.",
     ))
 }
 
+#[derive(Debug)]
 enum FieldKind {
+    /// Non-recursive / metadata field (scalars, byte strings, etc.).
     Leaf,
-    /// `#[language(child)]` on an `Id` field.
+    /// A single `Id` field.
     SingleId,
-    /// `#[language(children)]` on a `Box<[Id]>` / `Vec<Id>` field.
+    /// A `Box<[Id]>` or `Vec<Id>` field.
     SliceId,
+    /// A `[Id; N]` fixed-size array.
+    ArrayId,
 }
 
 fn classify_field(field: &syn::Field) -> syn::Result<FieldKind> {
+    // Explicit attributes still win for disambiguation.
     for attr in &field.attrs {
         if !attr.path().is_ident("language") {
             continue;
@@ -219,12 +244,106 @@ fn classify_field(field: &syn::Field) -> syn::Result<FieldKind> {
             } else if meta.path.is_ident("children") {
                 kind = Some(FieldKind::SliceId);
                 Ok(())
+            } else if meta.path.is_ident("skip") {
+                kind = Some(FieldKind::Leaf);
+                Ok(())
             } else {
-                Err(meta.error("unknown #[language(...)] attribute — expected `child` or `children`"))
+                Err(meta.error(
+                    "unknown #[language(...)] attribute — expected `child`, `children`, or `skip`",
+                ))
             }
         })?;
-        return Ok(kind.unwrap_or(FieldKind::Leaf));
+        if let Some(k) = kind {
+            return Ok(k);
+        }
     }
-    Ok(FieldKind::Leaf)
+    // No explicit annotation — infer from the field type.
+    Ok(infer_field_kind(&field.ty))
 }
 
+/// Infer field classification from its `syn::Type`.
+///
+/// Recognizes:
+/// - `Id` → SingleId
+/// - `Box<[Id]>` → SliceId
+/// - `Vec<Id>` → SliceId
+/// - `[Id; N]` → ArrayId
+/// - anything else → Leaf (metadata)
+fn infer_field_kind(ty: &Type) -> FieldKind {
+    if type_is_id(ty) {
+        return FieldKind::SingleId;
+    }
+    if type_is_boxed_id_slice(ty) || type_is_vec_of_id(ty) {
+        return FieldKind::SliceId;
+    }
+    if type_is_id_array(ty) {
+        return FieldKind::ArrayId;
+    }
+    FieldKind::Leaf
+}
+
+/// Match the last path segment — accept fully-qualified (`::egraph::Id`,
+/// `egraph::Id`) or bare (`Id`) forms.
+fn path_tail_is(ty: &Type, want: &str) -> bool {
+    if let Type::Path(tp) = ty {
+        if let Some(last) = tp.path.segments.last() {
+            return last.ident == want;
+        }
+    }
+    false
+}
+
+fn type_is_id(ty: &Type) -> bool {
+    path_tail_is(ty, "Id")
+}
+
+/// `[Id; N]` for any N — used for multi-child variants like `Skip([Id; 2])`.
+fn type_is_id_array(ty: &Type) -> bool {
+    if let Type::Array(arr) = ty {
+        return type_is_id(&arr.elem);
+    }
+    false
+}
+
+/// `Box<[Id]>` — single type param `Box`, inner is a slice of `Id`.
+fn type_is_boxed_id_slice(ty: &Type) -> bool {
+    let Type::Path(tp) = ty else {
+        return false;
+    };
+    let Some(last) = tp.path.segments.last() else {
+        return false;
+    };
+    if last.ident != "Box" {
+        return false;
+    }
+    let syn::PathArguments::AngleBracketed(args) = &last.arguments else {
+        return false;
+    };
+    let Some(syn::GenericArgument::Type(inner)) = args.args.first() else {
+        return false;
+    };
+    if let Type::Slice(slice) = inner {
+        return type_is_id(&slice.elem);
+    }
+    false
+}
+
+/// `Vec<Id>` — single type param `Vec`, inner is `Id`.
+fn type_is_vec_of_id(ty: &Type) -> bool {
+    let Type::Path(tp) = ty else {
+        return false;
+    };
+    let Some(last) = tp.path.segments.last() else {
+        return false;
+    };
+    if last.ident != "Vec" {
+        return false;
+    }
+    let syn::PathArguments::AngleBracketed(args) = &last.arguments else {
+        return false;
+    };
+    let Some(syn::GenericArgument::Type(inner)) = args.args.first() else {
+        return false;
+    };
+    type_is_id(inner)
+}

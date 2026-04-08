@@ -55,9 +55,9 @@ impl CostModel<GrammarENode> for GrammarCostModel {
                 }
             }
             GrammarENode::Repeat { inner, .. } => 1.0 + child_cost(*inner),
-            GrammarENode::Skip(a, b)
-            | GrammarENode::Next(a, b)
-            | GrammarENode::Minus(a, b) => 1.0 + child_cost(*a) + child_cost(*b),
+            GrammarENode::Skip([a, b])
+            | GrammarENode::Next([a, b])
+            | GrammarENode::Minus([a, b]) => 1.0 + child_cost(*a) + child_cost(*b),
             GrammarENode::Negate(inner) | GrammarENode::OptionalWhitespace(inner) => {
                 1.0 + child_cost(*inner)
             }

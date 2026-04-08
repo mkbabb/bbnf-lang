@@ -38,9 +38,9 @@ impl Analysis<GrammarENode> for GrammarAnalysis {
             | GrammarENode::Negate(inner)
             | GrammarENode::OptionalWhitespace(inner)
             | GrammarENode::Map { inner, .. } => 1 + child_size(*inner),
-            GrammarENode::Skip(a, b)
-            | GrammarENode::Next(a, b)
-            | GrammarENode::Minus(a, b) => 1 + child_size(*a) + child_size(*b),
+            GrammarENode::Skip([a, b])
+            | GrammarENode::Next([a, b])
+            | GrammarENode::Minus([a, b]) => 1 + child_size(*a) + child_size(*b),
             GrammarENode::TokenDispatch {
                 token,
                 arms,

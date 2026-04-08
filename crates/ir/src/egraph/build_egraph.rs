@@ -51,17 +51,17 @@ pub fn insert_node(
         IrNode::Skip(a, b) => {
             let a_id = insert_node(egraph, a);
             let b_id = insert_node(egraph, b);
-            GrammarENode::Skip(a_id, b_id)
+            GrammarENode::Skip([a_id, b_id])
         }
         IrNode::Next(a, b) => {
             let a_id = insert_node(egraph, a);
             let b_id = insert_node(egraph, b);
-            GrammarENode::Next(a_id, b_id)
+            GrammarENode::Next([a_id, b_id])
         }
         IrNode::Minus(a, b) => {
             let a_id = insert_node(egraph, a);
             let b_id = insert_node(egraph, b);
-            GrammarENode::Minus(a_id, b_id)
+            GrammarENode::Minus([a_id, b_id])
         }
         IrNode::Negate(inner) => {
             let inner_id = insert_node(egraph, inner);

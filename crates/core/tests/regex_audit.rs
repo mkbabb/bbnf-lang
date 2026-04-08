@@ -150,38 +150,52 @@ fn audit_all_grammar_regex_patterns() {
         return;
     }
 
-    let mut tier_counts = [0usize; 5]; // fast_path, hir_inline, dfa, lazylock, total
+    use bbnf::generate::regex::{CostModel, EmitOpts, RegexStrategy, solve_regex_strategy};
+
+    let cost = CostModel::DEFAULT;
+    let opts = EmitOpts::new(&cost);
+
+    // fast_path, hir_inline, dfa_a, dfa_b, unsupported, total
+    let mut tier_counts = [0usize; 6];
     let mut fallbacks: Vec<(String, String)> = Vec::new();
 
     for (file, pattern) in &all_patterns {
-        let tier = bbnf::generate::regex::audit_regex_pattern(pattern);
-        tier_counts[4] += 1;
+        let strategy = solve_regex_strategy(pattern, &opts);
+        tier_counts[5] += 1;
 
-        match &tier {
-            bbnf::generate::regex::RegexTier::FastPath(_)
-            | bbnf::generate::regex::RegexTier::FastPathFused(_) => {
+        match &strategy {
+            RegexStrategy::FastPath(_) | RegexStrategy::FastPathFused(_) => {
                 tier_counts[0] += 1;
             }
-            bbnf::generate::regex::RegexTier::HirInline => {
+            RegexStrategy::HirInline => {
                 tier_counts[1] += 1;
             }
-            bbnf::generate::regex::RegexTier::DfaCompiled { states, classes } => {
+            RegexStrategy::DfaTierA { states, classes } => {
                 tier_counts[2] += 1;
-                eprintln!("  DFA: /{pattern}/ ({states} states, {classes} classes) [{file}]");
+                eprintln!(
+                    "  DFA-A: /{pattern}/ ({states} states, {classes} classes) [{file}]"
+                );
             }
-            bbnf::generate::regex::RegexTier::Unsupported => {
+            RegexStrategy::DfaTierB { states, classes } => {
                 tier_counts[3] += 1;
+                eprintln!(
+                    "  DFA-B: /{pattern}/ ({states} states, {classes} classes) [{file}]"
+                );
+            }
+            RegexStrategy::Unsupported => {
+                tier_counts[4] += 1;
                 fallbacks.push((file.clone(), pattern.clone()));
             }
         }
     }
 
-    eprintln!("\n=== Regex Tier Audit ===");
-    eprintln!("  Total patterns: {}", tier_counts[4]);
-    eprintln!("  Tier 1 (fast paths): {}", tier_counts[0]);
-    eprintln!("  Tier 2 (HIR inline): {}", tier_counts[1]);
-    eprintln!("  Tier 3 (DFA compiled): {}", tier_counts[2]);
-    eprintln!("  Tier 4 (Unsupported): {}", tier_counts[3]);
+    eprintln!("\n=== Regex Strategy Audit ===");
+    eprintln!("  Total patterns: {}", tier_counts[5]);
+    eprintln!("  Tier 1 (fast paths):       {}", tier_counts[0]);
+    eprintln!("  Tier 2 (HIR inline):       {}", tier_counts[1]);
+    eprintln!("  Tier 3a (DFA decision tree): {}", tier_counts[2]);
+    eprintln!("  Tier 3b (DFA table lookup):  {}", tier_counts[3]);
+    eprintln!("  Tier 4 (Unsupported):      {}", tier_counts[4]);
 
     if !fallbacks.is_empty() {
         eprintln!("\n  LazyLock fallbacks:");
@@ -194,11 +208,11 @@ fn audit_all_grammar_regex_patterns() {
     // LazyLock fallback should be zero.
     // (Relaxed for now — some patterns may use features like backreferences
     // that neither DFA nor HIR can handle.)
-    if tier_counts[3] > 0 {
+    if tier_counts[4] > 0 {
         eprintln!(
-            "\nWARNING: {} patterns fell through to LazyLock. \
+            "\nWARNING: {} patterns fell through to Unsupported. \
              These should be handled by the DFA tier.",
-            tier_counts[3]
+            tier_counts[4]
         );
     }
 }

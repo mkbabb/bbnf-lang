@@ -27,26 +27,24 @@ use quote::quote;
 
 /// Unified regex emission entry point.
 ///
-/// Tries tiers in fallback order: fast_paths → hir → dfa → compile_error.
-/// All callers should use this instead of calling individual tiers directly.
+/// Solves the regex strategy (via [`solve_regex_strategy`]), then
+/// dispatches to the tier-specific emitter. The strategy enum is both
+/// the planner's output and the diagnostic type — no separate audit
+/// path exists.
 pub fn emit_regex(pattern: &str, opts: &EmitOpts) -> TokenStream {
-    // Tier 1: Fast paths (known patterns, classified scanners, generalized).
-    if let Some(ts) = emit_regex_fast_path(pattern, opts) {
-        return ts;
+    match solve_regex_strategy(pattern, opts) {
+        RegexStrategy::FastPath(_) | RegexStrategy::FastPathFused(_) => {
+            emit_regex_fast_path(pattern, opts)
+                .expect("solve_regex_strategy returned FastPath — emission must succeed")
+        }
+        RegexStrategy::HirInline => hir::try_emit_regex_inline(pattern)
+            .expect("solve_regex_strategy returned HirInline — emission must succeed"),
+        RegexStrategy::DfaTierA { .. } | RegexStrategy::DfaTierB { .. } => {
+            dfa::try_emit_dfa_inline(pattern, opts)
+                .expect("solve_regex_strategy returned DfaTier — emission must succeed")
+        }
+        RegexStrategy::Unsupported => emit_regex_unsupported(pattern),
     }
-
-    // Tier 2: HIR-based inline byte operations.
-    if let Some(ts) = hir::try_emit_regex_inline(pattern) {
-        return ts;
-    }
-
-    // Tier 3: DFA-compiled inline state machine.
-    if let Some(ts) = dfa::try_emit_dfa_inline(pattern, opts) {
-        return ts;
-    }
-
-    // Tier 4: Unsupported — compile-time error.
-    emit_regex_unsupported(pattern)
 }
 
 /// Emit a compile-time error for regex patterns unsupported by all tiers.
@@ -183,42 +181,67 @@ fn emit_regex_fast_path(pattern: &str, opts: &EmitOpts) -> Option<TokenStream> {
     None
 }
 
-// ── Audit support ────────────────────────────────────────────────────────
+// ── Strategy planner ─────────────────────────────────────────────────────
 
-/// Which emission tier handles a regex pattern (diagnostic only).
-#[derive(Debug, Clone)]
-pub enum RegexTier {
+/// Which emission strategy handles a regex pattern.
+///
+/// Returned by [`solve_regex_strategy`] and consumed by [`emit_regex`].
+/// The DFA tier split (A vs B) is driven by `CostModel`, replacing the
+/// hardcoded 12-state threshold previously baked into the emitter.
+#[derive(Debug, Clone, PartialEq)]
+pub enum RegexStrategy {
     /// Tier 1: Known fast-path scanner.
     FastPath(&'static str),
     /// Tier 1b: Known fast-path scanner with fused number conversion.
     FastPathFused(&'static str),
     /// Tier 2: HIR-based inline byte operations.
     HirInline,
-    /// Tier 3: DFA-compiled inline state machine or table.
-    DfaCompiled { states: usize, classes: usize },
+    /// Tier 3a: DFA-compiled decision tree
+    /// (`states <= cost.decision_tree_max_states`).
+    DfaTierA { states: usize, classes: usize },
+    /// Tier 3b: DFA-compiled static transition table
+    /// (`states > cost.decision_tree_max_states`).
+    DfaTierB { states: usize, classes: usize },
     /// Tier 4: Unsupported — compile-time error.
     Unsupported,
 }
 
-/// Audit a regex pattern to determine which emission tier handles it.
-pub fn audit_regex_pattern(pattern: &str) -> RegexTier {
+/// Solve the emission strategy for a regex pattern.
+///
+/// Probes each tier in order; the first that applies determines the
+/// strategy. The DFA tier is split into A (decision-tree) and B
+/// (table-lookup) by `opts.cost.decision_tree_max_states`.
+///
+/// This is the canonical planner used by both [`emit_regex`] and the
+/// grammar-wide regex audit test. It replaces the former
+/// `audit_regex_pattern` + `RegexTier` pair.
+pub fn solve_regex_strategy(pattern: &str, opts: &EmitOpts) -> RegexStrategy {
     if emit_regex_direct_call(pattern).is_some() {
-        return RegexTier::FastPath(classify_fast_path(pattern));
-    }
-    if hir::try_emit_regex_inline(pattern).is_some() {
-        return RegexTier::HirInline;
-    }
-    if let Some(dfa) = parse_that::regex::Dfa::compile(pattern) {
-        return RegexTier::DfaCompiled {
-            states: dfa.state_count(),
-            classes: dfa.class_count(),
+        let kind = classify_fast_path(pattern, opts);
+        return if opts.fuse_numbers && matches!(opts.classify_regex(pattern), RegexClass::JsonNumber)
+        {
+            RegexStrategy::FastPathFused(kind)
+        } else {
+            RegexStrategy::FastPath(kind)
         };
     }
-    RegexTier::Unsupported
+    if hir::try_emit_regex_inline(pattern).is_some() {
+        return RegexStrategy::HirInline;
+    }
+    if let Some(dfa) = parse_that::regex::Dfa::compile(pattern) {
+        let states = dfa.state_count();
+        let classes = dfa.class_count();
+        return if states <= opts.cost.decision_tree_max_states {
+            RegexStrategy::DfaTierA { states, classes }
+        } else {
+            RegexStrategy::DfaTierB { states, classes }
+        };
+    }
+    RegexStrategy::Unsupported
 }
 
-fn classify_fast_path(pattern: &str) -> &'static str {
-    match classify_regex(pattern) {
+fn classify_fast_path(pattern: &str, opts: &EmitOpts) -> &'static str {
+    match opts.classify_regex(pattern) {
         RegexClass::JsonNumber => "json_number",
         RegexClass::JsonString => "json_string",
         RegexClass::WsBlockComment => "ws_block_comment",

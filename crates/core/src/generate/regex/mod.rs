@@ -14,6 +14,6 @@ pub mod patterns;
 // Re-exports for common use.
 pub use cost_model::{CostModel, EmitOpts, LengthHint};
 pub use emit::{
-    RegexTier, audit_regex_pattern, emit_regex, emit_regex_direct_call, emit_regex_unsupported,
-    is_fused_number_regex, is_fused_number_regex_cached,
+    RegexStrategy, emit_regex, emit_regex_direct_call, emit_regex_unsupported,
+    is_fused_number_regex, is_fused_number_regex_cached, solve_regex_strategy,
 };

@@ -9,6 +9,7 @@
 //! dispatch hints, span eligibility, pretty hints) so backends need not recompute them.
 
 pub mod dag;
+pub mod egraph;
 pub mod passes;
 pub mod vm;
 

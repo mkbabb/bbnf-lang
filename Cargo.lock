@@ -199,6 +199,7 @@ version = "0.1.6"
 dependencies = [
  "bbnf-regex",
  "csp-solver",
+ "egraph",
  "parse_that",
  "rayon",
  "regex",

@@ -120,7 +120,7 @@ fn json_emit(input: &str) -> String {
     let ctx = __JsonEmitEnumCtx::with_capacity(input.len() / 32);
     let (result, _) = JsonEmit::value().parse_return_state_with_context(input, &ctx);
     let value = result.expect("JSON parse failed");
-    JsonEmit::serialize_compact(value)
+    JsonEmit::serialize_compact(&value)
 }
 
 fn json_rt(input: &str) {

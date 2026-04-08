@@ -974,7 +974,12 @@ impl Emitter for RustEmitter {
         ctx: &mut Self::Ctx,
     ) -> TokenStream {
         let ir_ctx = ctx.ir_ctx();
-        crate::backend::rust::ir_enums::generate_enum(ir_ctx)
+        let enum_def = crate::backend::rust::ir_enums::generate_enum(ir_ctx);
+        let visitor_def = crate::backend::rust::ir_visitor::generate_visitor(ir_ctx);
+        quote::quote! {
+            #enum_def
+            #visitor_def
+        }
     }
 
     fn emit_grammar(

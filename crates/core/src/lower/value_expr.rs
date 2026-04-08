@@ -2,6 +2,11 @@
 //!
 //! Lowers the value expression sub-language (arithmetic, boolean, function
 //! calls, closures, literals) from `BbnfBootstrapEnum` nodes into `MapExpr`.
+//!
+//! Operator chains (`value_or`/`and`/`cmp`/`add`/`mul`) all share the same
+//! left-associative fold shape; the precedence + symbol → `MapBinOp` mapping
+//! lives in the `PRECEDENCE` table and is consumed by the single
+//! `fold_precedence_layer` helper. There is no per-layer hand-written fold.
 
 use std::collections::HashMap;
 
@@ -12,6 +17,89 @@ use crate::grammar::generated::BbnfBootstrapEnum;
 
 use super::LowerCtx;
 
+// ─── Precedence table (declarative) ───────────────────────────────────────────
+
+/// One precedence layer: a set of operator symbols mapping to `MapBinOp`.
+struct PrecedenceLayer {
+    ops: &'static [(&'static str, MapBinOp)],
+}
+
+/// All binary operator layers in order from lowest to highest precedence.
+/// Indices match the rule names: `value_or`/`and`/`cmp`/`add`/`mul`.
+const PRECEDENCE: &[PrecedenceLayer] = &[
+    // value_or
+    PrecedenceLayer {
+        ops: &[("||", MapBinOp::Or)],
+    },
+    // value_and
+    PrecedenceLayer {
+        ops: &[("&&", MapBinOp::And)],
+    },
+    // value_cmp
+    PrecedenceLayer {
+        ops: &[
+            ("==", MapBinOp::Eq),
+            ("!=", MapBinOp::Ne),
+            ("<", MapBinOp::Lt),
+            (">", MapBinOp::Gt),
+            ("<=", MapBinOp::Le),
+            (">=", MapBinOp::Ge),
+        ],
+    },
+    // value_add
+    PrecedenceLayer {
+        ops: &[("+", MapBinOp::Add), ("-", MapBinOp::Sub)],
+    },
+    // value_mul
+    PrecedenceLayer {
+        ops: &[
+            ("*", MapBinOp::Mul),
+            ("/", MapBinOp::Div),
+            ("%", MapBinOp::Mod),
+        ],
+    },
+];
+
+const LAYER_OR: &PrecedenceLayer = &PRECEDENCE[0];
+const LAYER_AND: &PrecedenceLayer = &PRECEDENCE[1];
+const LAYER_CMP: &PrecedenceLayer = &PRECEDENCE[2];
+const LAYER_ADD: &PrecedenceLayer = &PRECEDENCE[3];
+const LAYER_MUL: &PrecedenceLayer = &PRECEDENCE[4];
+
+/// Single generic left-associative fold over a binary operator chain.
+///
+/// `op_text` extracts the operator's textual form from each `(op_repr, operand)`
+/// pair (it varies between `Span` and `&Enum` shapes across rules). The text
+/// is looked up in `layer.ops` to recover the canonical `MapBinOp`.
+fn fold_precedence_layer<'a, OpT, I, F>(
+    first: &'a BbnfBootstrapEnum<'a>,
+    rest: I,
+    op_text: F,
+    layer: &PrecedenceLayer,
+    ctx: &mut LowerCtx<'a>,
+) -> MapExpr
+where
+    I: IntoIterator<Item = (OpT, &'a BbnfBootstrapEnum<'a>)>,
+    F: Fn(&OpT) -> &str,
+{
+    let mut result = lower_value_expr(first, ctx);
+    for (op_repr, operand) in rest {
+        let text = op_text(&op_repr);
+        let op = layer
+            .ops
+            .iter()
+            .find(|(t, _)| *t == text)
+            .map(|(_, o)| *o)
+            .unwrap_or_else(|| layer.ops[0].1);
+        result = MapExpr::BinOp {
+            op,
+            lhs: Box::new(result),
+            rhs: Box::new(lower_value_expr(operand, ctx)),
+        };
+    }
+    result
+}
+
 // ─── ValueExpr lowering ────────────────────────────────────────────────────────
 
 /// Lower a value expression bootstrap node to a `MapExpr`.
@@ -21,27 +109,41 @@ pub(crate) fn lower_value_expr<'a>(
 ) -> MapExpr {
     match node {
         // Precedence chain: or → and → cmp → add → mul → unary → atom
-        BbnfBootstrapEnum::value_or((first, rest)) => {
-            fold_binop_chain(first, rest, |s| match s.as_str() {
-                "||" => MapBinOp::Or,
-                _ => MapBinOp::Or,
-            }, ctx)
-        }
-        BbnfBootstrapEnum::value_and((first, rest)) => {
-            fold_binop_chain(first, rest, |s| match s.as_str() {
-                "&&" => MapBinOp::And,
-                _ => MapBinOp::And,
-            }, ctx)
-        }
-        BbnfBootstrapEnum::value_cmp((first, rest)) => {
-            fold_binop_chain_enum(first, rest, ctx)
-        }
-        BbnfBootstrapEnum::value_add((first, rest)) => {
-            fold_binop_chain_enum(first, rest, ctx)
-        }
-        BbnfBootstrapEnum::value_mul((first, rest)) => {
-            fold_binop_chain_enum(first, rest, ctx)
-        }
+        BbnfBootstrapEnum::value_or((first, rest)) => fold_precedence_layer(
+            first,
+            rest.iter().map(|(s, e)| (*s, *e)),
+            |s: &Span<'a>| s.as_str(),
+            LAYER_OR,
+            ctx,
+        ),
+        BbnfBootstrapEnum::value_and((first, rest)) => fold_precedence_layer(
+            first,
+            rest.iter().map(|(s, e)| (*s, *e)),
+            |s: &Span<'a>| s.as_str(),
+            LAYER_AND,
+            ctx,
+        ),
+        BbnfBootstrapEnum::value_cmp((first, rest)) => fold_precedence_layer(
+            first,
+            rest.iter().map(|(op, e)| (*op, *e)),
+            |op: &&BbnfBootstrapEnum<'a>| op_node_text(op),
+            LAYER_CMP,
+            ctx,
+        ),
+        BbnfBootstrapEnum::value_add((first, rest)) => fold_precedence_layer(
+            first,
+            rest.iter().map(|(op, e)| (*op, *e)),
+            |op: &&BbnfBootstrapEnum<'a>| op_node_text(op),
+            LAYER_ADD,
+            ctx,
+        ),
+        BbnfBootstrapEnum::value_mul((first, rest)) => fold_precedence_layer(
+            first,
+            rest.iter().map(|(op, e)| (*op, *e)),
+            |op: &&BbnfBootstrapEnum<'a>| op_node_text(op),
+            LAYER_MUL,
+            ctx,
+        ),
 
         // Unary
         BbnfBootstrapEnum::value_unary(inner) => lower_value_expr(inner, ctx),
@@ -142,67 +244,17 @@ pub(crate) fn lower_value_expr<'a>(
     }
 }
 
-// ─── Binary operator folding ──────────────────────────────────────────────────
+// ─── Op-node text extraction ─────────────────────────────────────────────────
 
-/// Fold a left-associative binary operator chain with Span-keyed ops (value_or, value_and).
-fn fold_binop_chain<'a>(
-    first: &'a BbnfBootstrapEnum<'a>,
-    rest: &'a [(Span<'a>, &'a BbnfBootstrapEnum<'a>)],
-    op_map: impl Fn(Span<'a>) -> MapBinOp,
-    ctx: &mut LowerCtx<'a>,
-) -> MapExpr {
-    if rest.is_empty() {
-        return lower_value_expr(first, ctx);
+/// Extract the textual operator from a `cmp_op`/`add_op`/`mul_op` enum node.
+/// Used by `fold_precedence_layer` to look up the canonical `MapBinOp`.
+fn op_node_text<'a>(node: &BbnfBootstrapEnum<'a>) -> &'a str {
+    match node {
+        BbnfBootstrapEnum::cmp_op(s)
+        | BbnfBootstrapEnum::add_op(s)
+        | BbnfBootstrapEnum::mul_op(s) => s.as_str(),
+        _ => "",
     }
-    let mut result = lower_value_expr(first, ctx);
-    for (op_span, operand) in rest {
-        result = MapExpr::BinOp {
-            op: op_map(*op_span),
-            lhs: Box::new(result),
-            rhs: Box::new(lower_value_expr(operand, ctx)),
-        };
-    }
-    result
-}
-
-/// Fold a left-associative binary operator chain with enum-keyed ops (cmp, add, mul).
-fn fold_binop_chain_enum<'a>(
-    first: &'a BbnfBootstrapEnum<'a>,
-    rest: &'a [(&'a BbnfBootstrapEnum<'a>, &'a BbnfBootstrapEnum<'a>)],
-    ctx: &mut LowerCtx<'a>,
-) -> MapExpr {
-    if rest.is_empty() {
-        return lower_value_expr(first, ctx);
-    }
-    let mut result = lower_value_expr(first, ctx);
-    for (op_node, operand) in rest {
-        let op_str = match op_node {
-            BbnfBootstrapEnum::cmp_op(s)
-            | BbnfBootstrapEnum::add_op(s)
-            | BbnfBootstrapEnum::mul_op(s) => s.as_str(),
-            _ => "+",
-        };
-        let op = match op_str {
-            "+" => MapBinOp::Add,
-            "-" => MapBinOp::Sub,
-            "*" => MapBinOp::Mul,
-            "/" => MapBinOp::Div,
-            "%" => MapBinOp::Mod,
-            "==" => MapBinOp::Eq,
-            "!=" => MapBinOp::Ne,
-            "<" => MapBinOp::Lt,
-            ">" => MapBinOp::Gt,
-            "<=" => MapBinOp::Le,
-            ">=" => MapBinOp::Ge,
-            _ => MapBinOp::Add,
-        };
-        result = MapExpr::BinOp {
-            op,
-            lhs: Box::new(result),
-            rhs: Box::new(lower_value_expr(operand, ctx)),
-        };
-    }
-    result
 }
 
 // ─── Value closure bindings ───────────────────────────────────────────────────

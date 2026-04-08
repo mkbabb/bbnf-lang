@@ -52,6 +52,7 @@ fn make_debug_ir() -> GrammarIR {
         debug_labels: Vec::new(),
         type_map: None,
         pattern_annotations: std::collections::HashMap::new(),
+        regex_info: std::collections::HashMap::new(),
     }
 }
 
@@ -97,6 +98,7 @@ fn compiler_no_debug_break_without_flag() {
         debug_labels: Vec::new(),
         type_map: None,
         pattern_annotations: std::collections::HashMap::new(),
+        regex_info: std::collections::HashMap::new(),
     };
     let program = compile(&ir);
 

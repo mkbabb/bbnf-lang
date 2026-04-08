@@ -189,6 +189,8 @@ pub fn lower_to_ir<'a>(
         debug_labels: Vec::new(),
         type_map: None,
         pattern_annotations: HashMap::new(),
+        regex_info: HashMap::new(),
+        node_facts: HashMap::new(),
     }
 }
 

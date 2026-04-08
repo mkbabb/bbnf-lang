@@ -38,6 +38,7 @@ fn prune_removes_unreachable() {
         debug_labels: Vec::new(),
         type_map: None,
         pattern_annotations: std::collections::HashMap::new(),
+        regex_info: std::collections::HashMap::new(),
     };
 
     prune_unreachable(&mut ir);
@@ -68,6 +69,7 @@ fn prune_keeps_all_when_all_reachable() {
         debug_labels: Vec::new(),
         type_map: None,
         pattern_annotations: std::collections::HashMap::new(),
+        regex_info: std::collections::HashMap::new(),
     };
 
     prune_unreachable(&mut ir);
@@ -118,6 +120,7 @@ fn prune_follows_alt_branches() {
         debug_labels: Vec::new(),
         type_map: None,
         pattern_annotations: std::collections::HashMap::new(),
+        regex_info: std::collections::HashMap::new(),
     };
 
     prune_unreachable(&mut ir);

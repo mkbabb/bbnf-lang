@@ -23,6 +23,7 @@ fn make_ir(body: IrNode, strings: Vec<String>) -> GrammarIR {
         debug_labels: Vec::new(),
         type_map: None,
         pattern_annotations: std::collections::HashMap::new(),
+        regex_info: std::collections::HashMap::new(),
     }
 }
 

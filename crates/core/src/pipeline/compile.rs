@@ -358,6 +358,9 @@ fn compile_ast_common<'a>(
         // Dispatch tables use FOLLOW sets for nullable branch optimization.
         bbnf_ir::passes::generate_dispatch_tables(&mut ir);
 
+        // Cache regex analysis (classification, FIRST, width, etc.) for all patterns.
+        bbnf_ir::passes::compute_regex_info(&mut ir);
+
         // Structural pattern recognition — annotates rules with optimization patterns.
         bbnf_ir::passes::recognize_patterns(&mut ir);
     }

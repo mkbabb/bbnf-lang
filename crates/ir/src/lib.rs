@@ -594,6 +594,17 @@ pub struct GrammarIR {
     /// Structural pattern annotations per rule. Built by `recognize_patterns` pass.
     #[serde(default)]
     pub pattern_annotations: std::collections::HashMap<RuleId, passes::patterns::PatternAnnotations>,
+
+    /// Cached regex analysis per interned regex pattern. Built by `compute_regex_info` pass.
+    /// Pointer-stable within a compile session. Not serializable.
+    #[serde(skip)]
+    pub regex_info: std::collections::HashMap<StringId, bbnf_regex::RegexInfo>,
+
+    /// Per-node structural facts. Built by `recognize_patterns` pass (tree walk).
+    /// Keyed by `IrNode` raw pointer — valid only within the process that ran
+    /// the pass. Not serializable.
+    #[serde(skip)]
+    pub node_facts: std::collections::HashMap<usize, passes::patterns::NodeFacts>,
 }
 
 impl GrammarIR {

@@ -5,10 +5,12 @@
 //! model picks the preferred form at the end.
 
 mod normalize;
+mod prefix;
 mod regex;
 mod structural;
 
 pub use normalize::MergeLiterals;
+pub use prefix::{FactorLiteralByteTrie, FactorSharedSeqPrefix};
 pub use regex::{
     DeduplicateAltBranches, FuseAltRegexBranches, SupersetAbsorbAlt, UnionMergeAlt,
 };
@@ -41,6 +43,8 @@ pub fn default_rules(
         Box::new(SupersetAbsorbAlt::new(pool.clone())),
         Box::new(UnionMergeAlt::new(pool.clone())),
         Box::new(FuseAltRegexBranches::new(pool.clone())),
+        Box::new(FactorSharedSeqPrefix),
+        Box::new(FactorLiteralByteTrie::new(pool.clone())),
         Box::new(CanonicalizeAlias::new(ir)),
     ]
 }

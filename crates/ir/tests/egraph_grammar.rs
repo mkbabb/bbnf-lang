@@ -338,6 +338,162 @@ fn rule_superset_absorb_alt() {
 }
 
 #[test]
+fn rule_factor_literal_byte_trie() {
+    // Alt([Literal("rem"), Literal("rlh")]) should factor the shared
+    // first byte 'r', producing Seq(Literal("r"), Alt([Literal("em"),
+    // Literal("lh")])).
+    let mut ir = make_ir_with(IrNode::Epsilon);
+    let rem_sid = ir.strings.len() as u32;
+    ir.strings.push("rem".to_string());
+    let rlh_sid = ir.strings.len() as u32;
+    ir.strings.push("rlh".to_string());
+
+    let alt = IrNode::Alt(
+        vec![
+            AltBranch { node: IrNode::Literal(rem_sid), first_set: None },
+            AltBranch { node: IrNode::Literal(rlh_sid), first_set: None },
+        ],
+        None,
+    );
+    ir.rules[0].body = alt;
+
+    let (egraph, pool) = build_and_saturate(&ir);
+    let strings = pool.into_vec();
+
+    // The prefix byte "r", and the tails "em" and "lh", must all be interned.
+    for expected in ["r", "em", "lh"] {
+        assert!(
+            strings.iter().any(|s| s == expected),
+            "FactorLiteralByteTrie should intern '{}', got: {:?}",
+            expected, strings
+        );
+    }
+
+    // The e-class containing the original Alt should now also contain
+    // a Seq whose first child is Literal("r") and second is an Alt
+    // of Literal("em")/Literal("lh") — confirming the factored form.
+    let r_sid = strings.iter().position(|s| s == "r").unwrap() as u32;
+    let em_sid = strings.iter().position(|s| s == "em").unwrap() as u32;
+    let lh_sid = strings.iter().position(|s| s == "lh").unwrap() as u32;
+
+    let mut found_factored = false;
+    for class in egraph.classes() {
+        for node in class.iter() {
+            if let GrammarENode::Seq(children) = node {
+                if children.len() == 2 {
+                    // First child should be Literal("r")
+                    let first_is_r = egraph.class(children[0]).iter().any(|n| {
+                        matches!(n, GrammarENode::Literal(sid) if *sid == r_sid)
+                    });
+                    // Second child should be Alt containing Lit("em") and Lit("lh")
+                    let second_is_tails = egraph.class(children[1]).iter().any(|n| {
+                        if let GrammarENode::Alt(inner, _) = n {
+                            inner.iter().any(|&id| {
+                                egraph.class(id).iter().any(|n2| {
+                                    matches!(n2, GrammarENode::Literal(s) if *s == em_sid)
+                                })
+                            }) && inner.iter().any(|&id| {
+                                egraph.class(id).iter().any(|n2| {
+                                    matches!(n2, GrammarENode::Literal(s) if *s == lh_sid)
+                                })
+                            })
+                        } else {
+                            false
+                        }
+                    });
+                    if first_is_r && second_is_tails {
+                        found_factored = true;
+                        break;
+                    }
+                }
+            }
+        }
+        if found_factored {
+            break;
+        }
+    }
+    assert!(
+        found_factored,
+        "FactorLiteralByteTrie should produce Seq(Lit(r), Alt([Lit(em), Lit(lh)]))"
+    );
+}
+
+#[test]
+fn rule_factor_shared_seq_prefix() {
+    // Alt([Seq([Lit("a"), Lit("x")]), Seq([Lit("a"), Lit("y")])]) should
+    // factor out the shared Lit("a") leader, producing Seq([Lit("a"),
+    // Alt([Lit("x"), Lit("y")])]).
+    let mut ir = make_ir_with(IrNode::Epsilon);
+    let a_sid = ir.strings.len() as u32;
+    ir.strings.push("a".to_string());
+    let x_sid = ir.strings.len() as u32;
+    ir.strings.push("x".to_string());
+    let y_sid = ir.strings.len() as u32;
+    ir.strings.push("y".to_string());
+
+    let alt = IrNode::Alt(
+        vec![
+            AltBranch {
+                node: IrNode::Seq(vec![IrNode::Literal(a_sid), IrNode::Literal(x_sid)]),
+                first_set: None,
+            },
+            AltBranch {
+                node: IrNode::Seq(vec![IrNode::Literal(a_sid), IrNode::Literal(y_sid)]),
+                first_set: None,
+            },
+        ],
+        None,
+    );
+    ir.rules[0].body = alt;
+
+    let (egraph, _pool) = build_and_saturate(&ir);
+
+    // Look for an equivalence class containing a Seq where the first
+    // child's class has Literal(a) and the second child's class has
+    // an Alt of Literal(x), Literal(y).
+    let mut found = false;
+    for class in egraph.classes() {
+        for node in class.iter() {
+            if let GrammarENode::Seq(children) = node {
+                if children.len() == 2 {
+                    let first_is_a = egraph.class(children[0]).iter().any(|n| {
+                        matches!(n, GrammarENode::Literal(s) if *s == a_sid)
+                    });
+                    let second_is_xy = egraph.class(children[1]).iter().any(|n| {
+                        if let GrammarENode::Alt(inner, _) = n {
+                            inner.len() == 2
+                                && inner.iter().any(|&id| {
+                                    egraph.class(id).iter().any(|n2| {
+                                        matches!(n2, GrammarENode::Literal(s) if *s == x_sid)
+                                    })
+                                })
+                                && inner.iter().any(|&id| {
+                                    egraph.class(id).iter().any(|n2| {
+                                        matches!(n2, GrammarENode::Literal(s) if *s == y_sid)
+                                    })
+                                })
+                        } else {
+                            false
+                        }
+                    });
+                    if first_is_a && second_is_xy {
+                        found = true;
+                        break;
+                    }
+                }
+            }
+        }
+        if found {
+            break;
+        }
+    }
+    assert!(
+        found,
+        "FactorSharedSeqPrefix should produce Seq(Lit(a), Alt([Lit(x), Lit(y)]))"
+    );
+}
+
+#[test]
 fn rule_fuse_alt_regex_branches() {
     // Alt([Regex("foo"), Regex("bar"), Literal("baz")]) without a
     // dispatch table should fuse to Regex("foo|bar|baz").

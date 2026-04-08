@@ -30,7 +30,7 @@ mod rules;
 pub use analysis::GrammarAnalysis;
 pub use cost::GrammarCostModel;
 pub use node::GrammarENode;
-pub use rules::default_rules;
+pub use rules::{default_rules, normalize_rules};
 
 use egraph::EGraph;
 
@@ -52,7 +52,7 @@ pub fn build_and_saturate(ir: &GrammarIR) -> EGraph<GrammarENode, GrammarAnalysi
     build_egraph::insert_ir(&mut egraph, ir);
     egraph.rebuild();
 
-    let rules = default_rules();
+    let rules = default_rules(ir);
     let rule_refs: Vec<&dyn egraph::RewriteFn<GrammarENode, GrammarAnalysis>> =
         rules.iter().map(|r| r.as_ref()).collect();
 

@@ -44,6 +44,14 @@ pub(crate) struct LowerCtx<'a> {
     /// Registered grammar closures (expanded at call sites, never reach IR).
     pub(crate) closures: HashMap<&'a str, ClosureDef<'a>>,
 
+    /// Beta-reduction environment stack. Each frame maps a closure parameter
+    /// name to the CST node it's bound to. Identifier resolution checks the
+    /// stack from top to bottom *before* falling back to the rule table —
+    /// this is what makes grammar function applications work without a
+    /// parallel substitution walker. Pushed by `lower_term_dispatch` when it
+    /// expands a grammar call, popped after the body is lowered.
+    pub(crate) env: Vec<HashMap<&'a str, &'a BbnfBootstrapEnum<'a>>>,
+
     /// Analysis results.
     pub(crate) scc_result: &'a SccResult<'a>,
     pub(crate) cyclic_rules: &'a HashSet<&'a str>,
@@ -106,6 +114,7 @@ pub fn lower_to_ir<'a>(
         fns: FnTable::new(),
         name_to_rule_id: HashMap::new(),
         closures,
+        env: Vec::new(),
         scc_result,
         cyclic_rules: &scc_result.cyclic_rules,
         recovers: directives.recovers,

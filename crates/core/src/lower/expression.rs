@@ -6,6 +6,12 @@
 //!
 //! Produces IrNode directly from the bootstrap parse tree — no intermediate
 //! Expression AST.
+//!
+//! Beta reduction is environment-driven, not walker-driven: when a grammar
+//! closure is applied, we push a frame on `LowerCtx.env` mapping each param
+//! to its argument CST node, lower the body recursively, and pop. Identifier
+//! resolution (`resolve_name`) checks the env stack first before the rule
+//! table. This eliminates the parallel `substitute_and_lower` walker.
 
 use std::collections::HashMap;
 
@@ -176,40 +182,10 @@ fn lower_term_dispatch<'a>(
         // Identifier with optional call: identifier ( "(" rhs ("," rhs)* ")" )?
         BbnfBootstrapEnum::term_1((ident, call_args)) => {
             let name = crate::grammar::host::extract_span_text(ident);
-
             if let Some((_open, first_arg, rest_args, _close)) = call_args {
-                // Grammar function call — check for beta-reduction.
-                if let Some(closure) = ctx.closures.get(name) {
-                    let params = closure.params.clone();
-                    let body = closure.body;
-
-                    let mut args = vec![*first_arg];
-                    for (_comma, arg) in *rest_args {
-                        args.push(arg);
-                    }
-
-                    assert_eq!(
-                        args.len(),
-                        params.len(),
-                        "arity mismatch: `{}` expects {} args, got {}",
-                        name,
-                        params.len(),
-                        args.len(),
-                    );
-
-                    let subs: HashMap<&str, &'a BbnfBootstrapEnum<'a>> = params
-                        .iter()
-                        .zip(args.iter())
-                        .map(|(&p, &a)| (p, a))
-                        .collect();
-
-                    return substitute_and_lower(body, &subs, ctx);
-                }
-
-                // Not a closure — fall through to nonterminal reference.
-                lower_nonterminal(name, ctx)
+                lower_grammar_call(name, first_arg, rest_args, ctx)
             } else {
-                lower_nonterminal(name, ctx)
+                resolve_name(name, ctx)
             }
         }
 
@@ -245,14 +221,25 @@ fn lower_term_dispatch<'a>(
             let id = ctx.strings.intern(inner);
             IrNode::Regex(id)
         }
-        BbnfBootstrapEnum::identifier(s) => lower_nonterminal(s.as_str(), ctx),
+        BbnfBootstrapEnum::identifier(s) => resolve_name(s.as_str(), ctx),
 
         // Fallback
         other => lower_node(other, ctx),
     }
 }
 
-fn lower_nonterminal(name: &str, ctx: &LowerCtx<'_>) -> IrNode {
+/// Resolve a bare nonterminal name to an `IrNode`.
+///
+/// Lookup order:
+/// 1. **Beta-reduction environment** — if the name is bound by an enclosing
+///    grammar closure application, lower the bound CST node in the current
+///    context (which itself sees the same env, supporting nested closures).
+/// 2. **Rule table** — emit `IrNode::Ref(rule_id)`.
+/// 3. **Recovery fallback** — emit `Epsilon` if `recovery_mode`, else panic.
+fn resolve_name<'a>(name: &'a str, ctx: &mut LowerCtx<'a>) -> IrNode {
+    if let Some(bound) = lookup_env(name, &ctx.env) {
+        return lower_rhs(bound, ctx);
+    }
     match ctx.name_to_rule_id.get(name) {
         Some(&rule_id) => IrNode::Ref(rule_id),
         None if ctx.recovery_mode => IrNode::Epsilon,
@@ -261,6 +248,65 @@ fn lower_nonterminal(name: &str, ctx: &LowerCtx<'_>) -> IrNode {
             name,
         ),
     }
+}
+
+/// Beta-reduction: apply a grammar closure call.
+///
+/// Pushes a fresh env frame mapping each parameter to its argument CST node,
+/// lowers the closure body in the augmented context (so identifier sites
+/// inside the body see the bindings via `resolve_name`), then pops the
+/// frame.  If `name` doesn't refer to a closure, falls back to a normal
+/// nonterminal reference.
+fn lower_grammar_call<'a>(
+    name: &'a str,
+    first_arg: &'a BbnfBootstrapEnum<'a>,
+    rest_args: &'a [(Span<'a>, &'a BbnfBootstrapEnum<'a>)],
+    ctx: &mut LowerCtx<'a>,
+) -> IrNode {
+    let Some(closure) = ctx.closures.get(name) else {
+        return resolve_name(name, ctx);
+    };
+    // Snapshot params + body so we can take `&mut ctx` for env push/pop.
+    let params: Vec<&'a str> = closure.params.clone();
+    let body: &'a BbnfBootstrapEnum<'a> = closure.body;
+
+    let mut args: Vec<&'a BbnfBootstrapEnum<'a>> = Vec::with_capacity(1 + rest_args.len());
+    args.push(first_arg);
+    for (_comma, arg) in rest_args {
+        args.push(arg);
+    }
+
+    assert_eq!(
+        args.len(),
+        params.len(),
+        "arity mismatch: `{}` expects {} args, got {}",
+        name,
+        params.len(),
+        args.len(),
+    );
+
+    let mut frame: HashMap<&'a str, &'a BbnfBootstrapEnum<'a>> = HashMap::with_capacity(args.len());
+    for (param, arg) in params.iter().zip(args.iter()) {
+        frame.insert(*param, *arg);
+    }
+    ctx.env.push(frame);
+    let result = lower_rhs(body, ctx);
+    ctx.env.pop();
+    result
+}
+
+/// Walk the env stack from innermost to outermost, returning the first
+/// binding for `name` (if any).
+fn lookup_env<'a>(
+    name: &str,
+    env: &[HashMap<&'a str, &'a BbnfBootstrapEnum<'a>>],
+) -> Option<&'a BbnfBootstrapEnum<'a>> {
+    for frame in env.iter().rev() {
+        if let Some(&bound) = frame.get(name) {
+            return Some(bound);
+        }
+    }
+    None
 }
 
 // ─── Generic node dispatcher ──────────────────────────────────────────────────
@@ -292,125 +338,6 @@ fn lower_node<'a>(node: &'a BbnfBootstrapEnum<'a>, ctx: &mut LowerCtx<'a>) -> Ir
                 IrNode::Epsilon
             }
         }
-    }
-}
-
-// ─── Beta-reduction for grammar function application ────────────────────────
-
-fn substitute_and_lower<'a>(
-    body: &'a BbnfBootstrapEnum<'a>,
-    subs: &HashMap<&str, &'a BbnfBootstrapEnum<'a>>,
-    ctx: &mut LowerCtx<'a>,
-) -> IrNode {
-    match body {
-        // Identifier matching a param → substitute with arg.
-        BbnfBootstrapEnum::identifier(s) => {
-            let name = s.as_str();
-            if let Some(&arg) = subs.get(name) {
-                lower_rhs(arg, ctx)
-            } else {
-                lower_nonterminal(name, ctx)
-            }
-        }
-        BbnfBootstrapEnum::term_1((ident, call_args)) => {
-            let name = crate::grammar::host::extract_span_text(ident);
-            if call_args.is_none() {
-                if let Some(&arg) = subs.get(name) {
-                    return lower_rhs(arg, ctx);
-                }
-            }
-            // Not a substitution — lower normally (may trigger nested beta-reduction).
-            lower_term_dispatch(body, ctx)
-        }
-
-        // Recursive structural descent.
-        BbnfBootstrapEnum::alternation(branches)
-        | BbnfBootstrapEnum::call_arg(branches) => {
-            let alts: Vec<AltBranch> = branches
-                .iter()
-                .map(|(b, _)| AltBranch {
-                    node: substitute_and_lower(b, subs, ctx),
-                    first_set: None,
-                })
-                .collect();
-            if alts.len() == 1 {
-                alts.into_iter().next().unwrap().node
-            } else {
-                IrNode::Alt(alts, None)
-            }
-        }
-        BbnfBootstrapEnum::concatenation(parts) => {
-            let children: Vec<IrNode> = parts
-                .iter()
-                .map(|(p, _)| substitute_and_lower(p, subs, ctx))
-                .collect();
-            if children.len() == 1 {
-                children.into_iter().next().unwrap()
-            } else {
-                IrNode::Seq(children)
-            }
-        }
-        BbnfBootstrapEnum::binary_factor((first, rest)) => {
-            let mut result = substitute_and_lower(first, subs, ctx);
-            for (op, operand) in *rest {
-                let rhs = substitute_and_lower(operand, subs, ctx);
-                let op_str = match op {
-                    BbnfBootstrapEnum::binary_operators(s) => s.as_str(),
-                    _ => "",
-                };
-                result = match op_str {
-                    "<<" => IrNode::Skip(Box::new(result), Box::new(rhs)),
-                    ">>" => IrNode::Next(Box::new(result), Box::new(rhs)),
-                    "-" => IrNode::Minus(Box::new(result), Box::new(rhs)),
-                    _ => result,
-                };
-            }
-            result
-        }
-        BbnfBootstrapEnum::mapped_factor((inner, mapping)) => {
-            let base = substitute_and_lower(inner, subs, ctx);
-            if let Some((_arrow, (value_expr, type_ann))) = mapping {
-                let fn_id = lower_map_arrow(value_expr, type_ann.as_deref(), ctx);
-                let fn_id = try_specialize_map_fn(&base, fn_id, ctx);
-                IrNode::Map {
-                    inner: Box::new(base),
-                    fn_id,
-                }
-            } else {
-                base
-            }
-        }
-        BbnfBootstrapEnum::factor((_comment, term, modifier, _comment2)) => {
-            let base = substitute_and_lower(term, subs, ctx);
-            match modifier {
-                Some(BbnfBootstrapEnum::modifier(s)) => match s.as_str() {
-                    "?" => IrNode::Repeat { inner: Box::new(base), lo: 0, hi: 1 },
-                    "*" => IrNode::Repeat { inner: Box::new(base), lo: 0, hi: u32::MAX },
-                    "+" => IrNode::Repeat { inner: Box::new(base), lo: 1, hi: u32::MAX },
-                    "?w" => IrNode::OptionalWhitespace(Box::new(base)),
-                    _ => base,
-                },
-                _ => base,
-            }
-        }
-        BbnfBootstrapEnum::term(inner) => substitute_and_lower(inner, subs, ctx),
-        BbnfBootstrapEnum::term_2((open, inner, _close))
-        | BbnfBootstrapEnum::value_atom_0((open, inner, _close)) => {
-            let expr = substitute_and_lower(inner, subs, ctx);
-            match open.as_str() {
-                "(" => expr,
-                "[" => IrNode::Repeat { inner: Box::new(expr), lo: 0, hi: 1 },
-                "@{" => {
-                    let fn_id = ctx.fns.push(bbnf_ir::FnDescriptor::SpanCapture);
-                    IrNode::Map { inner: Box::new(expr), fn_id }
-                }
-                "{" => IrNode::Repeat { inner: Box::new(expr), lo: 0, hi: u32::MAX },
-                _ => expr,
-            }
-        }
-
-        // Leaf: lower directly (no substitution targets).
-        _ => lower_node(body, ctx),
     }
 }
 

@@ -8,6 +8,7 @@
 //! boundary transfer, and captures all analysis results (FIRST sets, SCC info,
 //! dispatch hints, span eligibility, pretty hints) so backends need not recompute them.
 
+pub mod dag;
 pub mod passes;
 pub mod vm;
 
@@ -154,7 +155,7 @@ pub struct AltBranch {
 
 /// Pre-computed dispatch table for an `Alt` node with disjoint FIRST sets.
 /// Set by the dispatch pass; consumed directly by the bytecode compiler.
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct AltDispatch {
     /// 128-entry table: `table[byte]` = branch index, or 255 for no match.
     pub table: Vec<u8>,

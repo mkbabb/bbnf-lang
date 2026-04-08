@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 
 use bbnf_ir::passes::lr::{
     eliminate_direct_lr, eliminate_indirect_lr, intern_string, starts_with_ref, strip_leading_ref,
@@ -9,7 +9,7 @@ use bbnf_ir::{AltBranch, GrammarIR, IrNode, IrRule, RuleId, RuleMeta};
 /// Build a minimal GrammarIR for testing.
 fn make_ir(rules: Vec<(&str, IrNode, Option<u32>, bool)>) -> GrammarIR {
     let mut strings = Vec::new();
-    let mut string_dedup: HashMap<String, u32> = HashMap::new();
+    let mut string_dedup: FxHashMap<String, u32> = FxHashMap::default();
     let mut ir_rules = Vec::new();
 
     for (i, (name, body, scc_id, is_cyclic)) in rules.into_iter().enumerate() {
@@ -35,7 +35,7 @@ fn make_ir(rules: Vec<(&str, IrNode, Option<u32>, bool)>) -> GrammarIR {
         strings,
         fns: Vec::new(),
         types: Vec::new(),
-        follow_sets: HashMap::new(),
+        follow_sets: std::collections::HashMap::new(),
         ws_pattern: None,
         collapse_simple_spans: false,
         debug_all: false,
@@ -43,7 +43,7 @@ fn make_ir(rules: Vec<(&str, IrNode, Option<u32>, bool)>) -> GrammarIR {
         type_map: None,
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
-        node_facts: HashMap::new(),
+        node_facts: std::collections::HashMap::new(),
     }
 }
 

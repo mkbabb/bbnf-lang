@@ -49,6 +49,7 @@ fn follow_set_basic_seq() {
         type_map: None,
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
+        node_facts: HashMap::new(),
     };
 
     let follow = compute_follow_sets(&ir);
@@ -124,6 +125,7 @@ fn follow_set_propagates_through_nullable() {
         type_map: None,
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
+        node_facts: HashMap::new(),
     };
 
     let follow = compute_follow_sets(&ir);

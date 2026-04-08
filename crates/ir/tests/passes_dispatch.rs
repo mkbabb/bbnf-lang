@@ -48,6 +48,7 @@ fn dispatch_for_disjoint_branches() {
         type_map: None,
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
+        node_facts: HashMap::new(),
     };
 
     generate_dispatch_tables(&mut ir);
@@ -102,6 +103,7 @@ fn no_dispatch_for_overlapping_branches() {
         type_map: None,
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
+        node_facts: HashMap::new(),
     };
 
     generate_dispatch_tables(&mut ir);
@@ -154,6 +156,7 @@ fn dispatch_for_nested_alt() {
         type_map: None,
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
+        node_facts: HashMap::new(),
     };
 
     generate_dispatch_tables(&mut ir);
@@ -214,6 +217,7 @@ fn dispatch_with_nullable_branch_via_follow() {
         type_map: None,
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
+        node_facts: HashMap::new(),
     };
 
     generate_dispatch_tables(&mut ir);
@@ -276,6 +280,7 @@ fn no_dispatch_when_nullable_overlaps_follow() {
         type_map: None,
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
+        node_facts: HashMap::new(),
     };
 
     generate_dispatch_tables(&mut ir);
@@ -348,6 +353,7 @@ fn fallback_dispatch_typed_plus_catchall() {
         type_map: None,
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
+        node_facts: HashMap::new(),
     };
 
     generate_dispatch_tables(&mut ir);
@@ -412,6 +418,7 @@ fn fallback_dispatch_not_superset() {
         type_map: None,
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
+        node_facts: HashMap::new(),
     };
 
     generate_dispatch_tables(&mut ir);
@@ -464,6 +471,7 @@ fn fallback_dispatch_too_few_branches() {
         type_map: None,
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
+        node_facts: HashMap::new(),
     };
 
     generate_dispatch_tables(&mut ir);

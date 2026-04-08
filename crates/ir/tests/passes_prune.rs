@@ -39,6 +39,7 @@ fn prune_removes_unreachable() {
         type_map: None,
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
+        node_facts: HashMap::new(),
     };
 
     prune_unreachable(&mut ir);
@@ -70,6 +71,7 @@ fn prune_keeps_all_when_all_reachable() {
         type_map: None,
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
+        node_facts: HashMap::new(),
     };
 
     prune_unreachable(&mut ir);
@@ -121,6 +123,7 @@ fn prune_follows_alt_branches() {
         type_map: None,
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
+        node_facts: HashMap::new(),
     };
 
     prune_unreachable(&mut ir);

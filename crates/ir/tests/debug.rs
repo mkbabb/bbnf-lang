@@ -53,6 +53,7 @@ fn make_debug_ir() -> GrammarIR {
         type_map: None,
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
+        node_facts: HashMap::new(),
     }
 }
 
@@ -99,6 +100,7 @@ fn compiler_no_debug_break_without_flag() {
         type_map: None,
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
+        node_facts: HashMap::new(),
     };
     let program = compile(&ir);
 

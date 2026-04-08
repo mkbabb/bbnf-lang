@@ -25,6 +25,7 @@ fn make_simple_ir(body: IrNode) -> GrammarIR {
         type_map: None,
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
+        node_facts: HashMap::new(),
     }
 }
 
@@ -142,6 +143,7 @@ fn compile_memo_rule() {
         type_map: None,
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
+        node_facts: HashMap::new(),
     };
     let program = compile(&ir);
 
@@ -192,6 +194,7 @@ fn compile_direct_left_recursive_rule_keeps_memo() {
         type_map: None,
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
+        node_facts: HashMap::new(),
     };
     let program = compile(&ir);
 
@@ -336,6 +339,7 @@ fn compile_token_dispatch_emits_dispatch_token() {
         type_map: None,
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
+        node_facts: HashMap::new(),
     };
     let program = compile(&ir);
 
@@ -405,6 +409,7 @@ fn compile_call() {
         type_map: None,
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
+        node_facts: HashMap::new(),
     };
     let program = compile(&ir);
 

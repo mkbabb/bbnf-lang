@@ -135,7 +135,10 @@ pub fn analyze_grammar(ir: &mut GrammarIR, config: &EffectiveBackendConfig) -> B
     let operator_chain_rules = ir
         .rules
         .iter()
-        .filter(|rule| matches_operator_chain(&rule.body))
+        .filter(|rule| {
+            let body_ptr = &rule.body as *const bbnf_ir::IrNode as usize;
+            ir.node_facts.get(&body_ptr).is_some_and(|f| f.operator_chain)
+        })
         .map(|rule| rule.id)
         .collect();
 
@@ -147,23 +150,3 @@ pub fn analyze_grammar(ir: &mut GrammarIR, config: &EffectiveBackendConfig) -> B
     }
 }
 
-fn matches_operator_chain(node: &bbnf_ir::IrNode) -> bool {
-    let bbnf_ir::IrNode::Seq(children) = node else {
-        return false;
-    };
-    if children.len() != 2 {
-        return false;
-    }
-
-    let bbnf_ir::IrNode::Repeat { inner, lo, hi } = &children[1] else {
-        return false;
-    };
-    if *lo != 0 || *hi != u32::MAX {
-        return false;
-    }
-
-    let bbnf_ir::IrNode::Seq(link_children) = inner.as_ref() else {
-        return false;
-    };
-    link_children.len() == 2
-}

@@ -206,8 +206,11 @@ pub fn compile_node<E: Emitter>(
 
         // ── Structural ─────────────────────────────────────────────────
         IrNode::Seq(children) => {
-            // Decision: detect operator chain pattern Seq(head, Repeat(Seq(op, rhs))).
-            if let Some((head, link, op, rhs)) = detect_operator_chain(children) {
+            // Decision: operator chain from NodeFacts, extract components inline.
+            let node_ptr = node as *const IrNode as usize;
+            let is_op_chain = ir.node_facts.get(&node_ptr).is_some_and(|f| f.operator_chain);
+            if is_op_chain {
+            if let Some((head, link, op, rhs)) = extract_operator_chain(children) {
                 let type_map = ir.type_map.as_ref();
 
                 // Compute types from TypeMap. Fall back to node_type if seq_result unavailable.
@@ -261,6 +264,7 @@ pub fn compile_node<E: Emitter>(
                     }
                 }
                 // Emitter declined — fall through to normal Seq.
+            }
             }
             compile_seq(children, alloc, ir, dstate, emitter, ctx)
         }
@@ -921,11 +925,10 @@ fn compile_chain_child<E: Emitter>(
     }
 }
 
-/// Detect operator chain pattern: `Seq([head, Repeat(Seq([op, rhs]), 0, MAX)])`.
+/// Extract operator chain components from a Seq already known to be an operator chain.
 ///
-/// Returns `(head, link_node, op, rhs)` if the pattern matches.
-/// `link_node` is the Seq(op, rhs) inside Repeat — needed for type computation.
-fn detect_operator_chain(children: &[IrNode]) -> Option<(&IrNode, &IrNode, &IrNode, &IrNode)> {
+/// Returns `(head, link_node, op, rhs)`. `link_node` is the Seq(op, rhs) inside Repeat.
+fn extract_operator_chain(children: &[IrNode]) -> Option<(&IrNode, &IrNode, &IrNode, &IrNode)> {
     if children.len() != 2 {
         return None;
     }

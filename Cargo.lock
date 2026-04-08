@@ -731,6 +731,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "egraph"
+version = "0.1.0"
+dependencies = [
+ "egraph-derive",
+ "rustc-hash 2.1.2",
+ "smallvec",
+]
+
+[[package]]
+name = "egraph-derive"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
+]
+
+[[package]]
 name = "either"
 version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

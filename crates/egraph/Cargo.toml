@@ -1,0 +1,13 @@
+[package]
+name = "egraph"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "General-purpose e-graph: equality saturation, rewrite rules, cost-model extraction"
+
+[dependencies]
+smallvec = "1"
+rustc-hash = "2"
+
+[dev-dependencies]
+egraph-derive = { path = "../egraph-derive" }

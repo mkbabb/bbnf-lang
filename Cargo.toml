@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/core", "crates/derive", "crates/analysis", "crates/ir", "crates/lsp", "crates/ser", "crates/gorgeous", "crates/bootstrap"]
+members = ["crates/core", "crates/derive", "crates/analysis", "crates/ir", "crates/lsp", "crates/ser", "crates/gorgeous", "crates/bootstrap", "crates/egraph", "crates/egraph-derive"]
 exclude = ["wasm"]
 resolver = "2"
 

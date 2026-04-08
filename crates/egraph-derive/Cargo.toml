@@ -1,0 +1,14 @@
+[package]
+name = "egraph-derive"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "#[derive(Language)] proc-macro for the egraph crate"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = "2", features = ["full", "extra-traits"] }
+quote = "1"
+proc-macro2 = "1"

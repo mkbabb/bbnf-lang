@@ -973,13 +973,11 @@ impl Emitter for RustEmitter {
         _analysis: &BackendAnalysis,
         ctx: &mut Self::Ctx,
     ) -> TokenStream {
+        // CST helpers (children/span_text/walk_children/visitor) are emitted
+        // by the frontend `grammar::schema::emit::rust` track. The backend
+        // only emits the enum type definition.
         let ir_ctx = ctx.ir_ctx();
-        let enum_def = crate::backend::rust::ir_enums::generate_enum(ir_ctx);
-        let visitor_def = crate::backend::rust::ir_visitor::generate_visitor(ir_ctx);
-        quote::quote! {
-            #enum_def
-            #visitor_def
-        }
+        crate::backend::rust::ir_enums::generate_enum(ir_ctx)
     }
 
     fn emit_grammar(

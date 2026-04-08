@@ -9,6 +9,7 @@
 #[allow(unused, non_snake_case, non_camel_case_types, non_upper_case_globals, clippy::all)]
 pub mod generated;
 pub mod host;
+pub mod schema;
 
 use crate::types::ParsedGrammar;
 

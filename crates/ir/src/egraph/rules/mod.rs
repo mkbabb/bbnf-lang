@@ -11,7 +11,10 @@ mod regex;
 mod structural;
 
 pub use inline::{INLINE_SIZE_THRESHOLD, InlineEligibleRef};
-pub use normalize::MergeLiterals;
+pub use normalize::{
+    EliminateEpsilon, EliminateEpsilonInAlt, EliminateEpsilonInRepeat,
+    EliminateEpsilonInSkipNext, MergeLiterals, UnwrapSingletonAlt, UnwrapSingletonSeq,
+};
 pub use prefix::{FactorLiteralByteTrie, FactorSharedSeqPrefix};
 pub use regex::{
     DeduplicateAltBranches, FuseAltRegexBranches, SupersetAbsorbAlt, UnionMergeAlt,
@@ -44,6 +47,9 @@ pub fn default_rules(
 ) -> Vec<Box<dyn RewriteFn<GrammarENode, GrammarAnalysis>>> {
     vec![
         Box::new(normalize::EliminateEpsilon),
+        Box::new(normalize::EliminateEpsilonInAlt),
+        Box::new(normalize::EliminateEpsilonInRepeat),
+        Box::new(normalize::EliminateEpsilonInSkipNext),
         Box::new(normalize::UnwrapSingletonSeq),
         Box::new(normalize::UnwrapSingletonAlt),
         Box::new(normalize::MergeLiterals::new(pool.clone())),
@@ -65,6 +71,9 @@ pub fn normalize_rules(
 ) -> Vec<Box<dyn RewriteFn<GrammarENode, GrammarAnalysis>>> {
     vec![
         Box::new(normalize::EliminateEpsilon),
+        Box::new(normalize::EliminateEpsilonInAlt),
+        Box::new(normalize::EliminateEpsilonInRepeat),
+        Box::new(normalize::EliminateEpsilonInSkipNext),
         Box::new(normalize::UnwrapSingletonSeq),
         Box::new(normalize::UnwrapSingletonAlt),
         Box::new(normalize::MergeLiterals::new(pool.clone())),

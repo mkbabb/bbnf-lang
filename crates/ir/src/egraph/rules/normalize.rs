@@ -122,6 +122,175 @@ impl Rewrite<GrammarENode, GrammarAnalysis> for UnwrapSingletonSeq {
     }
 }
 
+// ── Rule: Alt([.., Epsilon, ..]) ≡ Alt with epsilon branch removed ─────────
+
+/// Drop `Epsilon` branches from `Alt` nodes. Unlike `Seq`, removing
+/// an epsilon branch changes meaning — the alt becomes non-nullable.
+/// The rewrite keeps both forms in the e-class; the cost model picks
+/// between them (usually the smaller one when the alt's surrounding
+/// context already handles nullability via FOLLOW sets).
+pub struct EliminateEpsilonInAlt;
+
+impl Rewrite<GrammarENode, GrammarAnalysis> for EliminateEpsilonInAlt {
+    type Match = (Box<[Id]>, Option<crate::AltDispatch>);
+
+    fn name(&self) -> &str {
+        "eliminate-epsilon-in-alt"
+    }
+
+    fn search(&self, egraph: &EGraph<GrammarENode, GrammarAnalysis>) -> Vec<(Id, Self::Match)> {
+        let mut matches = Vec::new();
+        for class in egraph.classes() {
+            for node in class.iter() {
+                let GrammarENode::Alt(children, dispatch) = node else {
+                    continue;
+                };
+                let filtered: Vec<Id> = children
+                    .iter()
+                    .copied()
+                    .filter(|&id| {
+                        !egraph
+                            .class(id)
+                            .iter()
+                            .any(|n| matches!(n, GrammarENode::Epsilon))
+                    })
+                    .collect();
+                if !filtered.is_empty() && filtered.len() < children.len() {
+                    matches.push((
+                        class.id,
+                        (filtered.into_boxed_slice(), dispatch.clone()),
+                    ));
+                    break;
+                }
+            }
+        }
+        matches
+    }
+
+    fn apply(
+        &self,
+        egraph: &mut EGraph<GrammarENode, GrammarAnalysis>,
+        class_id: Id,
+        (filtered, dispatch): Self::Match,
+    ) -> bool {
+        let new_id = if filtered.len() == 1 {
+            filtered[0]
+        } else {
+            egraph.add(GrammarENode::Alt(filtered, dispatch))
+        };
+        let before = egraph.find(class_id);
+        egraph.union(class_id, new_id);
+        egraph.find(class_id) != before
+    }
+}
+
+// ── Rule: Repeat(Epsilon, 0, _) ≡ Epsilon ───────────────────────────────────
+
+/// `Repeat(Epsilon, 0, _)` is exactly `Epsilon` — repeating nothing
+/// is nothing. This catches the degenerate case that the legacy
+/// `eliminate_epsilon` pass handled via a special-case check.
+pub struct EliminateEpsilonInRepeat;
+
+impl Rewrite<GrammarENode, GrammarAnalysis> for EliminateEpsilonInRepeat {
+    type Match = ();
+
+    fn name(&self) -> &str {
+        "eliminate-epsilon-in-repeat"
+    }
+
+    fn search(&self, egraph: &EGraph<GrammarENode, GrammarAnalysis>) -> Vec<(Id, Self::Match)> {
+        let mut matches = Vec::new();
+        for class in egraph.classes() {
+            for node in class.iter() {
+                if let GrammarENode::Repeat { inner, lo, .. } = node {
+                    if *lo == 0
+                        && egraph
+                            .class(*inner)
+                            .iter()
+                            .any(|n| matches!(n, GrammarENode::Epsilon))
+                    {
+                        matches.push((class.id, ()));
+                        break;
+                    }
+                }
+            }
+        }
+        matches
+    }
+
+    fn apply(
+        &self,
+        egraph: &mut EGraph<GrammarENode, GrammarAnalysis>,
+        class_id: Id,
+        _m: (),
+    ) -> bool {
+        let eps = egraph.add(GrammarENode::Epsilon);
+        let before = egraph.find(class_id);
+        egraph.union(class_id, eps);
+        egraph.find(class_id) != before
+    }
+}
+
+// ── Rule: Skip(Epsilon, x) ≡ x and Next(x, Epsilon) ≡ x ─────────────────────
+
+/// Collapse `Skip(Epsilon, x)` → `x` and `Next(x, Epsilon)` → `x`.
+/// Both forms arise when the epsilon elimination rule for `Seq`
+/// creates a singleton `Skip`/`Next` — the remaining "live" side is
+/// what the expression actually denotes.
+pub struct EliminateEpsilonInSkipNext;
+
+impl Rewrite<GrammarENode, GrammarAnalysis> for EliminateEpsilonInSkipNext {
+    /// The `Id` of the surviving side (for Skip: right; for Next: left).
+    type Match = Id;
+
+    fn name(&self) -> &str {
+        "eliminate-epsilon-in-skip-next"
+    }
+
+    fn search(&self, egraph: &EGraph<GrammarENode, GrammarAnalysis>) -> Vec<(Id, Self::Match)> {
+        let mut matches = Vec::new();
+        for class in egraph.classes() {
+            for node in class.iter() {
+                match node {
+                    GrammarENode::Skip([a, b]) => {
+                        if egraph
+                            .class(*a)
+                            .iter()
+                            .any(|n| matches!(n, GrammarENode::Epsilon))
+                        {
+                            matches.push((class.id, *b));
+                            break;
+                        }
+                    }
+                    GrammarENode::Next([a, b]) => {
+                        if egraph
+                            .class(*b)
+                            .iter()
+                            .any(|n| matches!(n, GrammarENode::Epsilon))
+                        {
+                            matches.push((class.id, *a));
+                            break;
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+        matches
+    }
+
+    fn apply(
+        &self,
+        egraph: &mut EGraph<GrammarENode, GrammarAnalysis>,
+        class_id: Id,
+        survivor: Self::Match,
+    ) -> bool {
+        let before = egraph.find(class_id);
+        egraph.union(class_id, survivor);
+        egraph.find(class_id) != before
+    }
+}
+
 // ── Rule: Seq([.., Lit(a), Lit(b), ..]) ≡ Seq([.., Lit(a+b), ..]) ────────────
 
 /// Collapse consecutive literal children in `Seq` into a single

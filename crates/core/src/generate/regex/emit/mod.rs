@@ -18,7 +18,7 @@ pub use negated_class::{is_negated_char_class_regex, NegCharClassQuantifier};
 pub use dfa::canonical_dfa_hash;
 
 use parse_that::regex::classify::{classify_regex, RegexClass};
-use crate::generate::regex::cost_model::EmitOpts;
+use crate::generate::regex::cost_model::{CostModel, EmitOpts};
 
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -31,7 +31,7 @@ use quote::quote;
 /// All callers should use this instead of calling individual tiers directly.
 pub fn emit_regex(pattern: &str, opts: &EmitOpts) -> TokenStream {
     // Tier 1: Fast paths (known patterns, classified scanners, generalized).
-    if let Some(ts) = emit_regex_fast_path(pattern, opts.fuse_numbers) {
+    if let Some(ts) = emit_regex_fast_path(pattern, opts) {
         return ts;
     }
 
@@ -60,20 +60,32 @@ pub fn emit_regex_unsupported(pattern: &str) -> TokenStream {
 
 /// Check if a regex pattern returns a fused `(Span, f64)` instead of plain `Span`.
 /// Used by type inference to determine the correct enum variant type.
+///
+/// Prefer passing an `EmitOpts` with `ir` set so the classification is
+/// resolved from the cache. This shim exists for call sites where the
+/// caller only has the pattern string; it pays a full HIR parse.
 pub fn is_fused_number_regex(pattern: &str) -> bool {
     matches!(classify_regex(pattern), RegexClass::JsonNumber)
+}
+
+/// Cached variant of [`is_fused_number_regex`] — resolves via
+/// `ir.regex_info[sid].classification` when the pattern is interned.
+pub fn is_fused_number_regex_cached(ir: &bbnf_ir::GrammarIR, pattern: &str) -> bool {
+    let opts = EmitOpts::new(&CostModel::DEFAULT).with_ir(ir);
+    matches!(opts.classify_regex(pattern), RegexClass::JsonNumber)
 }
 
 // ── Fast-path emission (Tier 1) ──────────────────────────────────────────
 
 /// Emit a direct scanner call, without fused number conversion.
 pub fn emit_regex_direct_call(pattern: &str) -> Option<TokenStream> {
-    emit_regex_fast_path(pattern, false)
+    let opts = EmitOpts::new(&CostModel::DEFAULT);
+    emit_regex_fast_path(pattern, &opts)
 }
 
 /// Emit a direct scanner call with optional fused number conversion.
-fn emit_regex_fast_path(pattern: &str, fuse_numbers: bool) -> Option<TokenStream> {
-    if let Some(plan) = scanner_plan::plan_regex_scanner(pattern, fuse_numbers) {
+fn emit_regex_fast_path(pattern: &str, opts: &EmitOpts) -> Option<TokenStream> {
+    if let Some(plan) = scanner_plan::plan_regex_scanner(pattern, opts) {
         return Some(plan.into_tokens());
     }
 

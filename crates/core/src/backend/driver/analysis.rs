@@ -129,7 +129,7 @@ pub fn analyze_grammar(ir: &mut GrammarIR, config: &EffectiveBackendConfig) -> B
             .iter()
             .filter_map(|rule| match &rule.body {
                 bbnf_ir::IrNode::Regex(sid)
-                    if regex::is_fused_number_regex(ir.get_string(*sid)) =>
+                    if regex::is_fused_number_regex_cached(ir, ir.get_string(*sid)) =>
                 {
                     Some(rule.id)
                 }

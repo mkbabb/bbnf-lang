@@ -6,7 +6,8 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use parse_that::regex::classify::{classify_regex, RegexClass};
+use crate::generate::regex::cost_model::EmitOpts;
+use parse_that::regex::classify::RegexClass;
 
 /// Planned scanner form.
 #[derive(Debug, Clone)]
@@ -73,10 +74,14 @@ pub(crate) fn shared_quoted_string_scanner() -> ScannerPlan {
 }
 
 /// Map a regex class to a preferred scanner plan.
-pub(crate) fn plan_regex_scanner(pattern: &str, fuse_numbers: bool) -> Option<ScannerPlan> {
-    match classify_regex(pattern) {
+///
+/// Uses `opts.classify_regex(pattern)` — hits the `ir.regex_info` cache
+/// when `opts.ir` is set, avoiding a redundant HIR parse on the
+/// codegen hot path.
+pub(crate) fn plan_regex_scanner(pattern: &str, opts: &EmitOpts) -> Option<ScannerPlan> {
+    match opts.classify_regex(pattern) {
         RegexClass::JsonString => Some(shared_json_string_scanner()),
-        RegexClass::JsonNumber => Some(shared_json_number_scanner(fuse_numbers)),
+        RegexClass::JsonNumber => Some(shared_json_number_scanner(opts.fuse_numbers)),
         RegexClass::WsBlockComment => Some(shared_ws_block_comment_scanner()),
         RegexClass::CssIdent | RegexClass::Identifier => Some(shared_ident_scanner()),
         RegexClass::CssQuotedString | RegexClass::QuotedString { .. } => {

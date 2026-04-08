@@ -92,6 +92,11 @@ pub struct EmitOpts<'a> {
     pub length_hint: LengthHint,
     /// Cost model for threshold-based decisions.
     pub cost: &'a CostModel,
+    /// Grammar IR — when set, regex classification is resolved via the
+    /// `ir.regex_info` cache (populated by `compute_regex_info` pass)
+    /// instead of re-parsing the HIR. Callers without an IR (e.g.
+    /// standalone fast-path tests) leave this `None` and pay the parse.
+    pub ir: Option<&'a bbnf_ir::GrammarIR>,
 }
 
 impl<'a> EmitOpts<'a> {
@@ -100,6 +105,7 @@ impl<'a> EmitOpts<'a> {
             fuse_numbers: false,
             length_hint: LengthHint::Unknown,
             cost,
+            ir: None,
         }
     }
 
@@ -112,4 +118,34 @@ impl<'a> EmitOpts<'a> {
         self.length_hint = hint;
         self
     }
+
+    pub fn with_ir(mut self, ir: &'a bbnf_ir::GrammarIR) -> Self {
+        self.ir = Some(ir);
+        self
+    }
+
+    /// Classify a regex pattern via the `ir.regex_info` cache when
+    /// available, else fall back to a fresh HIR parse.
+    pub fn classify_regex(
+        &self,
+        pattern: &str,
+    ) -> ::parse_that::regex::classify::RegexClass {
+        if let Some(ir) = self.ir {
+            if let Some(info) = find_regex_info(ir, pattern) {
+                return info.classification.clone();
+            }
+        }
+        ::parse_that::regex::classify::classify_regex(pattern)
+    }
+}
+
+/// Resolve `pattern` → `&RegexInfo` via reverse-lookup through the
+/// string pool. Interning is O(n) over `ir.strings`, but that's still
+/// a handful of byte comparisons vs. a full HIR parse on cache miss.
+fn find_regex_info<'a>(
+    ir: &'a bbnf_ir::GrammarIR,
+    pattern: &str,
+) -> Option<&'a ::parse_that::regex::RegexInfo> {
+    let sid = ir.strings.iter().position(|s| s == pattern)? as u32;
+    ir.regex_info.get(&sid)
 }

@@ -186,12 +186,13 @@ impl Emitter for RustEmitter {
         &mut self,
         pattern: &str,
         _regex_id: usize,
-        _ir: &GrammarIR,
+        ir: &GrammarIR,
         _ctx: &mut Self::Ctx,
     ) -> TokenStream {
         let opts =
             crate::generate::regex::EmitOpts::new(&crate::generate::regex::CostModel::DEFAULT)
-                .with_fuse(!self.effective_prettify);
+                .with_fuse(!self.effective_prettify)
+                .with_ir(ir);
         crate::generate::regex::emit_regex(pattern, &opts)
     }
 

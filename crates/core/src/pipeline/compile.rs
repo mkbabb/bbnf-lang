@@ -297,13 +297,26 @@ fn compile_ast_common<'a>(
         bbnf_ir::passes::eliminate_direct_lr(&mut ir);
     }
 
+    // In structural mode, mark all rules as preserve_identity so no rule is
+    // pruned, aliased, or made transparent — but bodies are still fully optimized.
+    if options.structural {
+        for rule in &mut ir.rules {
+            rule.meta.preserve_identity = true;
+        }
+    }
+
     // Run IR metadata passes (alias + transparent detection from IR structure).
+    // preserve_identity rules are automatically skipped by these passes.
     bbnf_ir::passes::compute_aliases(&mut ir);
     bbnf_ir::passes::compute_transparent(&mut ir);
 
     if !options.structural {
-        // Fixed-point optimization loop.
-        // Passes are monotonically shrinking; convergence happens in 1-3 iterations.
+        // Body-transforming optimization loop + analysis passes.
+        // Structural mode skips all of this because these passes change the IR
+        // structure and thus the generated CST types that walkers depend on.
+        // The preserve_identity flag on RuleMeta guards individual passes
+        // (prune, alias, inline, fuse) for non-structural grammars that mix
+        // preserved and optimizable rules.
         const MAX_OPT_ITERATIONS: usize = 64;
         for iteration in 0..MAX_OPT_ITERATIONS {
             let fingerprint = ir.structural_fingerprint();

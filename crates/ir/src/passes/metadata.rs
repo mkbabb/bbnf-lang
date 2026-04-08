@@ -16,7 +16,7 @@ use crate::{GrammarIR, IrNode, RuleId};
 /// Must run BEFORE `canonicalize_aliases` (which resolves alias chains).
 pub fn compute_aliases(ir: &mut GrammarIR) {
     for rule in &mut ir.rules {
-        if rule.meta.is_cyclic {
+        if rule.meta.is_cyclic || rule.meta.preserve_identity {
             continue;
         }
 
@@ -48,7 +48,7 @@ fn extract_alias_target(node: &IrNode) -> Option<RuleId> {
 /// Sets `RuleMeta::is_transparent = true` for each detected transparent rule.
 pub fn compute_transparent(ir: &mut GrammarIR) {
     for rule in &mut ir.rules {
-        if !rule.meta.is_cyclic {
+        if rule.meta.preserve_identity || !rule.meta.is_cyclic {
             rule.meta.is_transparent = false;
             continue;
         }

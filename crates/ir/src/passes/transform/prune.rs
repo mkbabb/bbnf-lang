@@ -25,6 +25,13 @@ pub fn prune_unreachable(ir: &mut GrammarIR) {
     let mut reachable = HashSet::new();
     let mut stack = vec![ir.entry];
 
+    // preserve_identity rules are additional DFS roots — never pruned.
+    for rule in &ir.rules {
+        if rule.meta.preserve_identity {
+            stack.push(rule.id);
+        }
+    }
+
     while let Some(rule_id) = stack.pop() {
         if !reachable.insert(rule_id) {
             continue;

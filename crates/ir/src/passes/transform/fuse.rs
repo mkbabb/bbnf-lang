@@ -46,6 +46,7 @@ pub fn fuse_single_use(ir: &mut GrammarIR) {
         .filter(|r| {
             r.id != ir.entry
                 && !r.meta.is_cyclic
+                && !r.meta.preserve_identity
                 && r.meta.scc_id.is_none()
                 && ref_counts.get(r.id as usize).copied().unwrap_or(0) == 1
         })

@@ -63,6 +63,7 @@ pub(crate) fn build_rule_meta(
         span_eligible: false,  // Populated by refine_span_eligibility IR pass.
         is_alias: None,        // Populated by compute_aliases IR pass.
         is_transparent: false, // Populated by compute_transparent IR pass.
+        preserve_identity: false, // Set by pipeline for structural mode.
         directives: RuleDirectives {
             pretty,
             recover,

@@ -492,6 +492,11 @@ pub struct RuleMeta {
     /// Whether this rule is a transparent alternation of nonterminals.
     pub is_transparent: bool,
 
+    /// Whether this rule's identity must be preserved through optimization.
+    /// When true, the rule is never pruned (treated as a DFS root), never aliased,
+    /// and never marked transparent — but its body IS fully optimized.
+    pub preserve_identity: bool,
+
     // ── Directives ──────────────────────────────────────────────────────
     /// Per-rule `@` directives (pretty, recover, token, debug).
     #[serde(default)]

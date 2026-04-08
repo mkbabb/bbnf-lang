@@ -28,6 +28,7 @@ pub fn inline_acyclic(ir: &mut GrammarIR) {
         .filter(|r| {
             r.id != ir.entry
                 && !r.meta.is_cyclic
+                && !r.meta.preserve_identity
                 && r.meta.scc_id.is_none()
                 && node_count(&r.body) <= INLINE_THRESHOLD
         })

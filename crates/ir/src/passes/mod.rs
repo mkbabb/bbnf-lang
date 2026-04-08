@@ -3,6 +3,7 @@
 //! Each pass is an independent function `GrammarIR → GrammarIR` (or `&mut GrammarIR`).
 //! Passes can be composed in any order (though some orderings are more efficient).
 
+pub mod context;
 pub mod csp_domains;
 pub mod lr;
 pub mod metadata;

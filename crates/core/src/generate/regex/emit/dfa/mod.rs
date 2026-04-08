@@ -3,15 +3,18 @@
 //! Converts a compiled `parse_that::regex::Dfa` into inline Rust code
 //! that performs anchored regex matching via direct byte operations.
 //!
-//! Three emission tiers based on DFA size:
-//! - **Tier A** (<=12 states): Inline match-chain state machine. LLVM sees
-//!   every transition and can optimize aggressively.
-//! - **Tier B** (13--64 states): Static transition table + driver loop.
-//!   Compact, cache-friendly, with SIMD acceleration for self-loop states.
-//! - **Tier C** (65+ states): Fallback to Tier B (PackedDfa runtime is future).
+//! Tier selection is driven by [`CostModel`]:
+//! - **Tier A** (<= `cost.decision_tree_max_states`): Inline match-chain
+//!   state machine. LLVM sees every transition and can optimize
+//!   aggressively.
+//! - **Tier B** (> `decision_tree_max_states`): Static transition table
+//!   + driver loop. Compact, cache-friendly, with SIMD acceleration for
+//!   self-loop states.
 //!
 //! All tiers emit code that evaluates to `Option<Span<'a>>`, reading from
 //! `state.src_bytes` and advancing `state.offset`.
+//!
+//! [`CostModel`]: crate::generate::regex::cost_model::CostModel
 
 mod helpers;
 mod table;
@@ -19,6 +22,7 @@ mod table;
 use helpers::{build_class_predicate, try_emit_accel_scan};
 use table::emit_tier_b;
 
+use crate::generate::regex::cost_model::EmitOpts;
 use parse_that::regex::accel::detect_accel;
 use parse_that::regex::dfa::Dfa;
 use parse_that::regex::nfa::DEAD;
@@ -39,7 +43,7 @@ enum MatchMode {
 /// Returns `None` if the pattern uses unsupported features (backreferences)
 /// or the DFA exceeds the state limit (exponential blowup).
 /// Lazy quantifiers are supported via shortest-match (first-accept) semantics.
-pub fn try_emit_dfa_inline(pattern: &str) -> Option<TokenStream> {
+pub fn try_emit_dfa_inline(pattern: &str, opts: &EmitOpts) -> Option<TokenStream> {
     let hir = parse_that::regex::parse_with(pattern, &parse_that::regex::ParseOptions::byte_mode())
         .ok()?;
     let mode = if super::hir::contains_lazy_quantifier(&hir) {
@@ -49,15 +53,16 @@ pub fn try_emit_dfa_inline(pattern: &str) -> Option<TokenStream> {
     };
 
     let dfa = Dfa::compile(pattern)?;
-    Some(emit_dfa(&dfa, mode))
+    Some(emit_dfa(&dfa, mode, opts))
 }
 
 /// Emit inline code for a compiled DFA.
 ///
-/// Tier selection by state count, with match mode determining accept behavior:
+/// Tier selection by state count (gated by `opts.cost`), with match mode
+/// determining accept behavior:
 /// - `Greedy`: track last accept (longest match). Tiers A/B.
 /// - `Shortest`: return on first accept. Table-driven shortest-match codegen.
-fn emit_dfa(dfa: &Dfa, mode: MatchMode) -> TokenStream {
+fn emit_dfa(dfa: &Dfa, mode: MatchMode, opts: &EmitOpts) -> TokenStream {
     let n = dfa.state_count();
     if n == 0 {
         return quote! { None };
@@ -67,7 +72,7 @@ fn emit_dfa(dfa: &Dfa, mode: MatchMode) -> TokenStream {
         return emit_dfa_shortest(dfa);
     }
 
-    if n <= 12 {
+    if n <= opts.cost.decision_tree_max_states {
         emit_tier_a(dfa)
     } else {
         emit_tier_b(dfa)

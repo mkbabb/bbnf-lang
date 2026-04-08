@@ -41,7 +41,7 @@ pub fn emit_regex(pattern: &str, opts: &EmitOpts) -> TokenStream {
     }
 
     // Tier 3: DFA-compiled inline state machine.
-    if let Some(ts) = dfa::try_emit_dfa_inline(pattern) {
+    if let Some(ts) = dfa::try_emit_dfa_inline(pattern, opts) {
         return ts;
     }
 

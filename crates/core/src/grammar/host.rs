@@ -26,8 +26,12 @@ pub fn extract_grammar<'a>(ast: &'a BbnfBootstrapEnum<'a>) -> ParsedGrammar<'a> 
     let mut host_fns = Vec::new();
     let mut rules: AST<'a> = indexmap::IndexMap::new();
 
-    for (_comment_before, item, _comment_after) in items.iter() {
+    for item in items.iter() {
         let inner = match item {
+            BbnfBootstrapEnum::grammar_item(inner) => inner,
+            other => other,
+        };
+        let inner = match inner {
             BbnfBootstrapEnum::directive(d) => d,
             other => other,
         };
@@ -153,7 +157,7 @@ fn extract_import<'a>(inner: &'a BbnfBootstrapEnum<'a>, imports: &mut Vec<Import
     match inner {
         // Selective: @import { items } from "path"
         BbnfBootstrapEnum::import_directive_0((items_enum, _from_kw, path_enum)) => {
-            if let BbnfBootstrapEnum::import_items((_open, first, rest, _close)) = items_enum {
+            if let BbnfBootstrapEnum::import_items((_open, (first, rest), _close)) = items_enum {
                 let mut names = Vec::new();
                 // First identifier (no comma prefix).
                 let s = identifier_span(first);

@@ -56,11 +56,11 @@ rhs = closure | alternation ;
 rule = lhs , "=" ?w , rhs ?w , ( ";" | "." ) ;
 
 import_path = "\"" , /(\\.|[^"\\])*/ , "\"" ;
-import_items = "{" ?w , identifier , ( "," ?w , identifier ) * , "}" ;
+import_items = "{" ?w , ( identifier , ( "," ?w , identifier ) * ) ?w , "}" ;
 import_directive = "@import" ?w , (
       import_items ?w , "from" ?w , import_path
     | import_path
-) , ( ";" | "." ) ? ;
+) ?w , ( ";" | "." ) ? ;
 
 recover_directive = "@recover" ?w , identifier ?w , rhs ?w , ( ";" | "." ) ? ;
 
@@ -80,8 +80,9 @@ directive = import_directive
           | debug_directive
           | host_directive ;
 
-// Grammar: sequence of comments, directives, and rules in any order.
-grammar = ( comment ? , ( directive | rule ) ?w , comment ? ) * ;
+// Grammar: top-level items in any order.
+grammar_item = comment | big_comment | directive | rule ;
+grammar = ( grammar_item ?w ) * ;
 
 @pretty grammar block ;
 @pretty rule group ;

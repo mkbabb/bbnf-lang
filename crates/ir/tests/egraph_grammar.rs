@@ -338,6 +338,56 @@ fn rule_superset_absorb_alt() {
 }
 
 #[test]
+fn rule_fuse_alt_regex_branches() {
+    // Alt([Regex("foo"), Regex("bar"), Literal("baz")]) without a
+    // dispatch table should fuse to Regex("foo|bar|baz").
+    let mut ir = make_ir_with(IrNode::Epsilon);
+    let foo_sid = ir.strings.len() as u32;
+    ir.strings.push("foo".to_string());
+    let bar_sid = ir.strings.len() as u32;
+    ir.strings.push("bar".to_string());
+    let baz_sid = ir.strings.len() as u32;
+    ir.strings.push("baz".to_string());
+
+    let alt = IrNode::Alt(
+        vec![
+            AltBranch { node: IrNode::Regex(foo_sid), first_set: None },
+            AltBranch { node: IrNode::Regex(bar_sid), first_set: None },
+            AltBranch { node: IrNode::Literal(baz_sid), first_set: None },
+        ],
+        None,
+    );
+    ir.rules[0].body = alt;
+
+    let (egraph, pool) = build_and_saturate(&ir);
+    let strings = pool.into_vec();
+
+    assert!(
+        strings.iter().any(|s| s == "foo|bar|baz"),
+        "FuseAltRegexBranches should intern 'foo|bar|baz', got: {:?}",
+        strings
+    );
+
+    let fused_sid = strings.iter().position(|s| s == "foo|bar|baz").unwrap() as u32;
+    let cost = GrammarCostModel::default();
+    let extractor = Extractor::new(&egraph, &cost);
+
+    let mut found_fused = false;
+    for class in egraph.classes() {
+        if let Some(best) = extractor.best_node(class.id) {
+            if matches!(best, GrammarENode::Regex(sid) if *sid == fused_sid) {
+                found_fused = true;
+                break;
+            }
+        }
+    }
+    assert!(
+        found_fused,
+        "FuseAltRegexBranches should produce Regex('foo|bar|baz') as the best form"
+    );
+}
+
+#[test]
 fn rule_union_merge_alt() {
     // Alt([Regex("[a-c]"), Regex("[d-f]")]) should merge into Regex("[a-f]").
     let mut ir = make_ir_with(IrNode::Epsilon);

@@ -9,7 +9,9 @@ mod regex;
 mod structural;
 
 pub use normalize::MergeLiterals;
-pub use regex::{DeduplicateAltBranches, SupersetAbsorbAlt, UnionMergeAlt};
+pub use regex::{
+    DeduplicateAltBranches, FuseAltRegexBranches, SupersetAbsorbAlt, UnionMergeAlt,
+};
 pub use structural::{CanonicalizeAlias, build_alias_map};
 
 use egraph::RewriteFn;
@@ -38,6 +40,7 @@ pub fn default_rules(
         Box::new(DeduplicateAltBranches),
         Box::new(SupersetAbsorbAlt::new(pool.clone())),
         Box::new(UnionMergeAlt::new(pool.clone())),
+        Box::new(FuseAltRegexBranches::new(pool.clone())),
         Box::new(CanonicalizeAlias::new(ir)),
     ]
 }

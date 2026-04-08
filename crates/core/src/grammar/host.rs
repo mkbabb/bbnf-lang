@@ -1,8 +1,13 @@
 //! Grammar extraction: `BbnfBootstrapEnum` → `ParsedGrammar`.
 //!
-//! Walks the top-level `grammar` variant and extracts rules + directives.
-//! No intermediate AST types — rules store direct references into the
-//! bootstrap parse tree.
+//! Walks the top-level `grammar` variant and assembles the typed
+//! `ParsedGrammar` from the schema-emitted `as_*_directive()` accessors
+//! and rule destructuring.
+//!
+//! All structural CST traversal lives in the schema-emitted helpers
+//! (`span_text`, `identifier_text`, `identifier_span`, `as_*_directive`).
+//! This module only handles the *typed*-grammar mapping (CST → public
+//! `crate::types::*` structs).
 
 use std::borrow::Cow;
 
@@ -17,182 +22,133 @@ pub fn extract_grammar<'a>(ast: &'a BbnfBootstrapEnum<'a>) -> ParsedGrammar<'a> 
         panic!("expected grammar variant, got {:?}", std::mem::discriminant(ast));
     };
 
-    let mut imports = Vec::new();
-    let mut recovers = Vec::new();
-    let mut pretties = Vec::new();
-    let mut ws_pattern = None;
-    let mut debug_rules = Vec::new();
-    let mut token_rules = Vec::new();
-    let mut host_fns = Vec::new();
-    let mut rules: AST<'a> = indexmap::IndexMap::new();
+    let mut grammar = ParsedGrammar::empty();
 
     for item in items.iter() {
-        let inner = match item {
-            BbnfBootstrapEnum::grammar_item(inner) => inner,
-            other => other,
-        };
-        let inner = match inner {
-            BbnfBootstrapEnum::directive(d) => d,
-            other => other,
-        };
-        extract_item(
-            inner,
-            &mut imports,
-            &mut recovers,
-            &mut pretties,
-            &mut ws_pattern,
-            &mut debug_rules,
-            &mut token_rules,
-            &mut host_fns,
-            &mut rules,
-        );
+        // grammar_item / directive are transparent wrappers — peel them.
+        let inner = peel_wrappers(item);
+        absorb_item(inner, &mut grammar);
     }
 
-    ParsedGrammar {
-        imports,
-        recovers,
-        pretties,
-        rules,
-        ws_pattern,
-        debug_rules,
-        token_rules,
-        host_fns,
+    grammar
+}
+
+fn peel_wrappers<'a>(node: &'a BbnfBootstrapEnum<'a>) -> &'a BbnfBootstrapEnum<'a> {
+    match node {
+        BbnfBootstrapEnum::grammar_item(inner) | BbnfBootstrapEnum::directive(inner) => {
+            peel_wrappers(inner)
+        }
+        other => other,
     }
 }
 
-fn extract_item<'a>(
-    item: &'a BbnfBootstrapEnum<'a>,
+/// Map a single grammar item (rule or directive) into the typed `ParsedGrammar`.
+fn absorb_item<'a>(item: &'a BbnfBootstrapEnum<'a>, grammar: &mut ParsedGrammar<'a>) {
+    // Rules: tuple shape `(lhs, "=", rhs, terminator)`.
+    if let BbnfBootstrapEnum::rule((lhs, _eq, rhs, _term)) = item {
+        let name = BbnfBootstrapEnum::span_text(lhs);
+        let name_span = BbnfBootstrapEnum::identifier_span(lhs);
+        grammar.rules.insert(name, RuleEntry { name_span, rhs });
+        return;
+    }
+
+    // Directives: schema-emitted typed accessors.
+    if let Some(d) = item.as_recover_directive() {
+        grammar.recovers.push(RecoverDirective {
+            rule_name: Cow::Borrowed(d.rule_name),
+            sync_expr: d.sync_expr,
+            span: d.span,
+        });
+        return;
+    }
+
+    if let Some(d) = item.as_pretty_directive() {
+        let hints: Vec<Cow<'a, str>> = d.hints.iter().map(pretty_hint_text).collect();
+        grammar.pretties.push(PrettyDirective {
+            rule_name: Cow::Owned(d.target.to_string()),
+            hints,
+            span: d.span,
+        });
+        return;
+    }
+
+    if let Some(d) = item.as_token_directive() {
+        grammar.token_rules.push(Cow::Owned(d.name.to_string()));
+        return;
+    }
+
+    if let Some(d) = item.as_debug_directive() {
+        grammar.debug_rules.push(Cow::Owned(d.target.to_string()));
+        return;
+    }
+
+    if let Some(d) = item.as_ws_directive() {
+        // The inner is a `regex` Span variant; strip the surrounding `/.../`.
+        let raw = BbnfBootstrapEnum::span_text(d.value);
+        let stripped = raw
+            .strip_prefix('/')
+            .and_then(|s| s.strip_suffix('/'))
+            .unwrap_or(raw);
+        grammar.ws_pattern = Some(Cow::Borrowed(stripped));
+        return;
+    }
+
+    if let Some(d) = item.as_host_directive() {
+        let return_type = d
+            .type_annotation
+            .map(|t| Cow::Owned(BbnfBootstrapEnum::span_text(t).to_string()));
+        grammar.host_fns.push(HostFnDecl {
+            name: Cow::Owned(d.name.to_string()),
+            return_type,
+        });
+        return;
+    }
+
+    if let Some(d) = item.as_import_directive() {
+        absorb_import(d.inner, d.span, &mut grammar.imports);
+    }
+}
+
+/// Decode the inner of an `import_directive` — either a glob `import_path`
+/// or a selective `import_directive_0` (`{ items } from "path"`).
+fn absorb_import<'a>(
+    inner: &'a BbnfBootstrapEnum<'a>,
+    directive_span: Span<'a>,
     imports: &mut Vec<ImportDirective<'a>>,
-    recovers: &mut Vec<RecoverDirective<'a>>,
-    pretties: &mut Vec<PrettyDirective<'a>>,
-    ws_pattern: &mut Option<Cow<'a, str>>,
-    debug_rules: &mut Vec<Cow<'a, str>>,
-    token_rules: &mut Vec<Cow<'a, str>>,
-    host_fns: &mut Vec<HostFnDecl<'a>>,
-    rules: &mut AST<'a>,
 ) {
-    match item {
-        BbnfBootstrapEnum::rule((lhs, _eq, rhs, _terminator)) => {
-            let name = extract_span_text(lhs);
-            let name_span = extract_identifier_span(lhs);
-            rules.insert(name, RuleEntry {
-                name_span,
-                rhs,
-            });
-        }
-
-        BbnfBootstrapEnum::import_directive((_kw, inner, _term)) => {
-            extract_import(inner, imports);
-        }
-
-        BbnfBootstrapEnum::recover_directive((_kw, name, rhs, term)) => {
-            let name_span = identifier_span(name);
-            recovers.push(RecoverDirective {
-                rule_name: Cow::Borrowed(name_span.as_str()),
-                sync_expr: rhs,
-                span: *term,
-            });
-        }
-
-        BbnfBootstrapEnum::pretty_directive((_kw, target, hints, term)) => {
-            let target_str = Cow::Owned(extract_span_text(target).to_string());
-            let hint_strs: Vec<Cow<'a, str>> = hints
-                .iter()
-                .map(|h| match h {
-                    BbnfBootstrapEnum::pretty_hint((ident, arg_span)) => {
-                        let name = extract_span_text(ident);
-                        let arg = arg_span.as_str();
-                        if arg.is_empty() {
-                            Cow::Owned(name.to_string())
-                        } else {
-                            Cow::Owned(format!("{}{}", name, arg))
-                        }
-                    }
-                    other => Cow::Owned(extract_span_text(other).to_string()),
-                })
-                .collect();
-            pretties.push(PrettyDirective {
-                rule_name: target_str,
-                hints: hint_strs,
-                span: *term,
-            });
-        }
-
-        BbnfBootstrapEnum::ws_directive((_kw, regex_enum, _term)) => {
-            if let BbnfBootstrapEnum::regex(s) = regex_enum {
-                let inner = &s.as_str()[1..s.as_str().len() - 1];
-                *ws_pattern = Some(Cow::Borrowed(inner));
-            }
-        }
-
-        BbnfBootstrapEnum::token_directive((_kw, name, _term)) => {
-            token_rules.push(Cow::Owned(extract_span_text(name).to_string()));
-        }
-
-        BbnfBootstrapEnum::debug_directive((_kw, target, _term)) => {
-            let text = extract_span_text(target);
-            debug_rules.push(Cow::Owned(text.to_string()));
-        }
-
-        BbnfBootstrapEnum::host_directive((_kw, name, type_ann, _term)) => {
-            let return_type = type_ann.as_ref().map(|(_colon, type_node)| {
-                Cow::Owned(extract_span_text(type_node).to_string())
-            });
-            host_fns.push(HostFnDecl {
-                name: Cow::Owned(extract_span_text(name).to_string()),
-                return_type,
-            });
-        }
-
-        // Directive wrapper — unwrap and recurse.
-        BbnfBootstrapEnum::directive(inner) => {
-            extract_item(inner, imports, recovers, pretties, ws_pattern, debug_rules, token_rules, host_fns, rules);
-        }
-
-        _ => {}
-    }
-}
-
-fn extract_import<'a>(inner: &'a BbnfBootstrapEnum<'a>, imports: &mut Vec<ImportDirective<'a>>) {
     match inner {
         // Selective: @import { items } from "path"
         BbnfBootstrapEnum::import_directive_0((items_enum, _from_kw, path_enum)) => {
+            let mut names = Vec::new();
             if let BbnfBootstrapEnum::import_items((_open, (first, rest), _close)) = items_enum {
-                let mut names = Vec::new();
-                // First identifier (no comma prefix).
-                let s = identifier_span(first);
-                if !s.as_str().is_empty() {
-                    names.push(ImportedName {
-                        name: Cow::Borrowed(s.as_str()),
-                        span: s,
-                    });
-                }
-                for (_comma, name) in *rest {
-                    let s = identifier_span(name);
+                let push_name = |names: &mut Vec<ImportedName<'a>>, n: &'a BbnfBootstrapEnum<'a>| {
+                    let s = BbnfBootstrapEnum::identifier_span(n);
                     if !s.as_str().is_empty() {
                         names.push(ImportedName {
                             name: Cow::Borrowed(s.as_str()),
                             span: s,
                         });
                     }
-                }
-                let path_span = match path_enum {
-                    BbnfBootstrapEnum::import_path(s) => *s,
-                    _ => Span::default(),
                 };
-                let path = extract_import_path(&path_span);
-                imports.push(ImportDirective {
-                    path: Cow::Borrowed(path),
-                    span: path_span,
-                    items: Some(names),
-                });
+                push_name(&mut names, first);
+                for (_comma, name) in *rest {
+                    push_name(&mut names, name);
+                }
             }
+            let path_span = match path_enum {
+                BbnfBootstrapEnum::import_path(s) => *s,
+                _ => directive_span,
+            };
+            imports.push(ImportDirective {
+                path: Cow::Borrowed(strip_quotes(path_span.as_str())),
+                span: path_span,
+                items: Some(names),
+            });
         }
         // Glob: @import "path"
         BbnfBootstrapEnum::import_path(path_span) => {
-            let path = extract_import_path(path_span);
             imports.push(ImportDirective {
-                path: Cow::Borrowed(path),
+                path: Cow::Borrowed(strip_quotes(path_span.as_str())),
                 span: *path_span,
                 items: None,
             });
@@ -201,109 +157,52 @@ fn extract_import<'a>(inner: &'a BbnfBootstrapEnum<'a>, imports: &mut Vec<Import
     }
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────────
-
-fn identifier_str<'a>(node: &'a BbnfBootstrapEnum<'a>) -> &'a str {
-    match node {
-        BbnfBootstrapEnum::identifier(s) => s.as_str(),
-        _ => "",
-    }
-}
-
-fn identifier_span<'a>(node: &'a BbnfBootstrapEnum<'a>) -> Span<'a> {
-    match node {
-        BbnfBootstrapEnum::identifier(s) => *s,
-        BbnfBootstrapEnum::lhs(inner)
-        | BbnfBootstrapEnum::pretty_hint((inner, _))
-        | BbnfBootstrapEnum::term(inner) => identifier_span(inner),
-        _ => Span::default(),
-    }
-}
-
-/// Recursively extract an identifier Span from any wrapped node.
-fn extract_identifier_span<'a>(node: &'a BbnfBootstrapEnum<'a>) -> Span<'a> {
-    match node {
-        BbnfBootstrapEnum::identifier(s) => *s,
-        BbnfBootstrapEnum::lhs(inner)
-        | BbnfBootstrapEnum::term(inner)
-        | BbnfBootstrapEnum::term_1((inner, _))
-        | BbnfBootstrapEnum::value_atom(inner)
-        | BbnfBootstrapEnum::value_unary(inner)
-        | BbnfBootstrapEnum::directive(inner) => extract_identifier_span(inner),
-        BbnfBootstrapEnum::pretty_hint((inner, _)) => extract_identifier_span(inner),
-        BbnfBootstrapEnum::factor((_, t, _, _)) => extract_identifier_span(t),
-        BbnfBootstrapEnum::mapped_factor((i, _)) => extract_identifier_span(i),
-        BbnfBootstrapEnum::binary_factor((f, _)) => extract_identifier_span(f),
-        _ => Span::default(),
-    }
-}
-
-fn extract_import_path<'a>(span: &Span<'a>) -> &'a str {
-    let raw = span.as_str();
-    if raw.starts_with('"') && raw.ends_with('"') {
+fn strip_quotes(raw: &str) -> &str {
+    if raw.starts_with('"') && raw.ends_with('"') && raw.len() >= 2 {
         &raw[1..raw.len() - 1]
     } else {
         raw
     }
 }
 
-/// Extract the text content from any bootstrap enum variant by recursively
-/// unwrapping structural wrappers to find a leaf span. This is robust against
-/// codegen optimization differences that may wrap simple values in structural
-/// variants (e.g., `*` arriving as a `binary_factor` wrapper).
-pub fn extract_span_text<'a>(node: &'a BbnfBootstrapEnum<'a>) -> &'a str {
+/// Format a single `pretty_hint` node as `name` or `name(arg)`.
+///
+/// `pretty_hint = identifier , ("(" , string_lit , ")")?` — the parsed
+/// shape is `(identifier_node, paren_arg_span)`. The arg span includes
+/// any parens; if non-empty we just append the raw text.
+fn pretty_hint_text<'a>(node: &BbnfBootstrapEnum<'a>) -> Cow<'a, str> {
     match node {
-        // Leaf span variants.
-        BbnfBootstrapEnum::identifier(s)
-        | BbnfBootstrapEnum::value_ident(s)
-        | BbnfBootstrapEnum::literal(s)
-        | BbnfBootstrapEnum::regex(s)
-        | BbnfBootstrapEnum::modifier(s)
-        | BbnfBootstrapEnum::comment(s)
-        | BbnfBootstrapEnum::big_comment(s)
-        | BbnfBootstrapEnum::binary_operators(s)
-        | BbnfBootstrapEnum::debug_directive_0(s)
-        | BbnfBootstrapEnum::pretty_directive_0(s)
-        | BbnfBootstrapEnum::term_0(s) => s.as_str(),
-
-        // Structural wrappers — unwrap and recurse.
-        // Includes transparent rule aliases preserved by structural mode.
-        BbnfBootstrapEnum::term(inner)
-        | BbnfBootstrapEnum::lhs(inner)
-        | BbnfBootstrapEnum::value_atom(inner)
-        | BbnfBootstrapEnum::value_unary(inner)
-        | BbnfBootstrapEnum::directive(inner) => extract_span_text(inner),
-
-        BbnfBootstrapEnum::pretty_hint((inner, _)) => extract_span_text(inner),
-        BbnfBootstrapEnum::value_path((first, _rest)) => extract_span_text(first),
-
-        BbnfBootstrapEnum::factor((_, t, _, _)) => extract_span_text(t),
-        BbnfBootstrapEnum::mapped_factor((inner, _)) => extract_span_text(inner),
-        BbnfBootstrapEnum::binary_factor((first, _)) => extract_span_text(first),
-        BbnfBootstrapEnum::term_1((ident, _)) => extract_span_text(ident),
-        BbnfBootstrapEnum::term_2((_, inner, _))
-        | BbnfBootstrapEnum::value_atom_0((_, inner, _)) => extract_span_text(inner),
-
-        // Alternation/concatenation with single element.
-        BbnfBootstrapEnum::alternation(branches) if !branches.is_empty() => {
-            extract_span_text(branches[0].0)
+        BbnfBootstrapEnum::pretty_hint((ident, arg_span)) => {
+            let name = BbnfBootstrapEnum::span_text(ident);
+            let arg = arg_span.as_str();
+            if arg.is_empty() {
+                Cow::Owned(name.to_string())
+            } else {
+                Cow::Owned(format!("{}{}", name, arg))
+            }
         }
-        BbnfBootstrapEnum::concatenation(parts) if !parts.is_empty() => {
-            extract_span_text(parts[0].0)
-        }
-
-        _ => "",
+        other => Cow::Owned(BbnfBootstrapEnum::span_text(other).to_string()),
     }
 }
 
-/// Extract the full path text from a `value_path` node, joining segments with `::`.
-///
-/// For a single `value_ident`, returns the identifier text.
-/// For a `value_path` `(first, [("::", seg), ...])`, returns `first::seg::...`.
+// ─── Backwards-compat facades ───────────────────────────────────────────────
+//
+// External consumers (lower/, analysis/, graph/) still call into these
+// helpers. They delegate to the schema-emitted accessors. Phase E will
+// migrate the consumers and delete these.
+
+/// Recursively extract a leaf `Span` from any wrapped node — kept as a
+/// thin facade over the schema-emitted accessor for back-compat.
+pub fn extract_span_text<'a>(node: &'a BbnfBootstrapEnum<'a>) -> &'a str {
+    BbnfBootstrapEnum::span_text(node)
+}
+
+/// Extract the full path text from a `value_path` node, joining segments
+/// with `::`. For a single `value_ident`, returns the identifier text.
 pub fn extract_path_text(node: &BbnfBootstrapEnum<'_>) -> String {
     match node {
         BbnfBootstrapEnum::value_path((first, rest)) => {
-            let first_str = extract_span_text(first);
+            let first_str = BbnfBootstrapEnum::span_text(first);
             if rest.is_empty() {
                 first_str.to_string()
             } else {
@@ -311,13 +210,11 @@ pub fn extract_path_text(node: &BbnfBootstrapEnum<'_>) -> String {
                 path.push_str(first_str);
                 for (_sep, segment) in *rest {
                     path.push_str("::");
-                    path.push_str(extract_span_text(segment));
+                    path.push_str(BbnfBootstrapEnum::span_text(segment));
                 }
                 path
             }
         }
-        BbnfBootstrapEnum::value_ident(s) => s.as_str().to_string(),
-        BbnfBootstrapEnum::identifier(s) => s.as_str().to_string(),
-        _ => extract_span_text(node).to_string(),
+        other => BbnfBootstrapEnum::span_text(other).to_string(),
     }
 }

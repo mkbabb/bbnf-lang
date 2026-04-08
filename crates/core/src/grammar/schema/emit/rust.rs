@@ -22,7 +22,9 @@ use bbnf_ir::{RuleId, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::super::model::{CstSchema, FieldRole, VariantCategory, VariantDescriptor};
+use super::super::model::{
+    CstSchema, DirectiveKind, FieldRole, VariantCategory, VariantDescriptor,
+};
 
 /// Generate the full Rust CST helper bundle from a `CstSchema`.
 ///
@@ -37,7 +39,10 @@ pub fn generate(schema: &CstSchema, fused_number_rules: &HashSet<RuleId>) -> Tok
     let walk_children_fn = generate_walk_children_fn(schema, &enum_ident, fused_number_rules);
     let span_text_fn = generate_span_text_fn(schema, &enum_ident);
     let identifier_text_fn = generate_identifier_text_fn(schema, &enum_ident);
+    let identifier_span_fn = generate_identifier_span_fn(schema, &enum_ident);
     let visitor_trait = generate_visitor_trait(&enum_ident, &visitor_ident);
+    let directive_module = generate_directive_module(schema, &enum_ident);
+    let directive_accessors = generate_directive_accessors(schema, &enum_ident);
 
     quote! {
         impl<'a> #enum_ident<'a> {
@@ -60,6 +65,12 @@ pub fn generate(schema: &CstSchema, fused_number_rules: &HashSet<RuleId>) -> Tok
                 #identifier_text_fn
             }
 
+            /// Recursively extract an identifier carrier's `Span`. Returns
+            /// `Span::default()` if no identifier is reachable.
+            pub fn identifier_span(node: &'a #enum_ident<'a>) -> ::parse_that::Span<'a> {
+                #identifier_span_fn
+            }
+
             /// Direct per-variant dispatch: visit each enum-typed child via
             /// the supplied visitor and collect their `Output`s. No intermediate
             /// allocation of a `Vec<&Enum>`.
@@ -69,9 +80,13 @@ pub fn generate(schema: &CstSchema, fused_number_rules: &HashSet<RuleId>) -> Tok
             ) -> ::std::vec::Vec<__V::Output> {
                 #walk_children_fn
             }
+
+            #directive_accessors
         }
 
         #visitor_trait
+
+        #directive_module
     }
 }
 
@@ -434,6 +449,20 @@ fn generate_span_text_fn(schema: &CstSchema, enum_ident: &syn::Ident) -> TokenSt
                     #enum_ident::#ident(inner) => Self::span_text(inner)
                 });
             }
+            TypeDesc::Tuple(elems) => {
+                // Tuple variant: recurse on the first "meaningful" child.
+                // Priority: PrimaryChild → IdentifierCarrier → first BoxedEnum/Enum
+                // → first Span. Mirrors the v1 host::extract_span_text logic.
+                if let Some(arm) = generate_tuple_span_arm(variant, elems, enum_ident, &ident) {
+                    arms.push(arm);
+                }
+            }
+            TypeDesc::Vec(inner) => {
+                // Vec variant (alternation/concatenation): recurse on first element.
+                if let Some(arm) = generate_vec_span_arm(inner, enum_ident, &ident) {
+                    arms.push(arm);
+                }
+            }
             _ => {}
         }
     }
@@ -443,6 +472,146 @@ fn generate_span_text_fn(schema: &CstSchema, enum_ident: &syn::Ident) -> TokenSt
             #(#arms,)*
             _ => ""
         }
+    }
+}
+
+/// For a Vec-payload variant (alternation/concatenation), recurse on the
+/// first element. Handles `Vec<BoxedEnum>` and `Vec<Tuple([BoxedEnum, ...])>`.
+fn generate_vec_span_arm(
+    inner: &TypeDesc,
+    enum_ident: &syn::Ident,
+    variant_ident: &syn::Ident,
+) -> Option<TokenStream> {
+    match inner {
+        TypeDesc::BoxedEnum | TypeDesc::Enum => Some(quote! {
+            #enum_ident::#variant_ident(items) if !items.is_empty() => Self::span_text(&items[0])
+        }),
+        TypeDesc::Tuple(elems) => {
+            // Recurse on the first BoxedEnum field of the first element.
+            let first_enum_idx = elems
+                .iter()
+                .position(|e| matches!(e, TypeDesc::BoxedEnum | TypeDesc::Enum))?;
+            let idx = syn::Index::from(first_enum_idx);
+            Some(quote! {
+                #enum_ident::#variant_ident(items) if !items.is_empty() => Self::span_text(items[0].#idx)
+            })
+        }
+        _ => None,
+    }
+}
+
+/// For a tuple-payload variant, find the first field that should carry the
+/// span and emit a match arm that recurses (or returns directly for Span).
+fn generate_tuple_span_arm(
+    variant: &VariantDescriptor,
+    elems: &[TypeDesc],
+    enum_ident: &syn::Ident,
+    variant_ident: &syn::Ident,
+) -> Option<TokenStream> {
+    // Pick the highest-priority field to recurse on.
+    let pick = |role_filter: fn(&FieldRole) -> bool| -> Option<usize> {
+        variant
+            .fields
+            .iter()
+            .position(|f| role_filter(&f.role))
+    };
+
+    let idx = pick(|r| matches!(r, FieldRole::PrimaryChild))
+        .or_else(|| pick(|r| matches!(r, FieldRole::IdentifierCarrier)))
+        .or_else(|| {
+            elems
+                .iter()
+                .position(|e| matches!(e, TypeDesc::BoxedEnum | TypeDesc::Enum))
+        })
+        .or_else(|| elems.iter().position(|e| matches!(e, TypeDesc::Span)))?;
+
+    let elem = elems.get(idx)?;
+    let tuple_idx = syn::Index::from(idx);
+
+    match elem {
+        TypeDesc::Span => Some(quote! {
+            #enum_ident::#variant_ident(value) => (value).#tuple_idx.as_str()
+        }),
+        TypeDesc::BoxedEnum | TypeDesc::Enum => Some(quote! {
+            #enum_ident::#variant_ident(value) => Self::span_text((value).#tuple_idx)
+        }),
+        _ => None,
+    }
+}
+
+// ─── identifier_span() ──────────────────────────────────────────────────────
+
+fn generate_identifier_span_fn(schema: &CstSchema, enum_ident: &syn::Ident) -> TokenStream {
+    let mut arms = Vec::new();
+
+    for variant in &schema.variants {
+        if matches!(
+            variant.category,
+            VariantCategory::Phantom | VariantCategory::Recovered
+        ) {
+            continue;
+        }
+        let ident = format_ident!("{}", variant.name);
+        let Some(td) = &variant.type_desc else { continue };
+
+        // The `identifier` rule itself is a Span carrier — return it directly.
+        if matches!(td, TypeDesc::Span) && variant.name == "identifier" {
+            arms.push(quote! {
+                #enum_ident::#ident(s) => *s
+            });
+            continue;
+        }
+
+        // Variants whose first field is an IdentifierCarrier — recurse into it.
+        if let Some(idx) = variant
+            .fields
+            .iter()
+            .position(|f| f.role == FieldRole::IdentifierCarrier)
+        {
+            if let Some(extr) = identifier_span_extraction_from_field(td, idx) {
+                arms.push(quote! {
+                    #enum_ident::#ident(value) => { #extr }
+                });
+                continue;
+            }
+        }
+    }
+
+    quote! {
+        match node {
+            #(#arms,)*
+            _ => {
+                let ch = Self::children(node);
+                if let Some(first) = ch.first() {
+                    Self::identifier_span(first)
+                } else {
+                    ::parse_that::Span::default()
+                }
+            }
+        }
+    }
+}
+
+fn identifier_span_extraction_from_field(td: &TypeDesc, field_idx: usize) -> Option<TokenStream> {
+    match td {
+        TypeDesc::Tuple(elems) => {
+            let elem = elems.get(field_idx)?;
+            let idx = syn::Index::from(field_idx);
+            match elem {
+                TypeDesc::BoxedEnum | TypeDesc::Enum => {
+                    Some(quote! { Self::identifier_span((value).#idx) })
+                }
+                // Span is Copy; tuple field access returns it by value.
+                TypeDesc::Span => Some(quote! { (value).#idx }),
+                _ => None,
+            }
+        }
+        // Top-level Span variant: `value` is `&Span<'a>`, so deref.
+        TypeDesc::Span => Some(quote! { *value }),
+        TypeDesc::BoxedEnum | TypeDesc::Enum => {
+            Some(quote! { Self::identifier_span(value) })
+        }
+        _ => None,
     }
 }
 
@@ -570,6 +739,219 @@ fn generate_visitor_trait(enum_ident: &syn::Ident, visitor_ident: &syn::Ident) -
             }
         }
     }
+}
+
+// ─── Directive accessors ─────────────────────────────────────────────────────
+
+/// Generate the `cst_directives` sub-module containing one struct per directive
+/// variant. Field names are conventional per `DirectiveKind`.
+fn generate_directive_module(schema: &CstSchema, enum_ident: &syn::Ident) -> TokenStream {
+    let mut structs = Vec::new();
+
+    for variant in &schema.variants {
+        let VariantCategory::Directive(ref kind) = variant.category else {
+            continue;
+        };
+        let Some(layout) = directive_field_layout(kind) else {
+            continue;
+        };
+        let struct_ident = format_ident!("{}", layout.struct_name);
+        let mut fields = Vec::new();
+        for slot in layout.slots {
+            let name = format_ident!("{}", slot.name);
+            let ty: TokenStream = match slot.kind {
+                DirectiveFieldKind::Identifier => quote! { &'a str },
+                DirectiveFieldKind::TextSpan => quote! { &'a str },
+                DirectiveFieldKind::SpanRaw => quote! { ::parse_that::Span<'a> },
+                DirectiveFieldKind::Inner => quote! { &'a #enum_ident<'a> },
+                DirectiveFieldKind::OptionInner => quote! { ::std::option::Option<&'a #enum_ident<'a>> },
+                DirectiveFieldKind::Slice => quote! { &'a [#enum_ident<'a>] },
+            };
+            fields.push(quote! { pub #name: #ty });
+        }
+        // Always include the directive's source span as `.span`.
+        fields.push(quote! { pub span: ::parse_that::Span<'a> });
+        // No `#[derive(Debug)]`: these structs are produced/consumed in
+        // hot paths (host extraction, lowering) and Debug expands to the
+        // nightly `fmt_helpers_for_derive` API which the bootstrap pipeline
+        // (`cargo expand`) cannot embed in stable output.
+        structs.push(quote! {
+            #[derive(Clone, Copy)]
+            pub struct #struct_ident<'a> {
+                #(#fields),*
+            }
+        });
+    }
+
+    if structs.is_empty() {
+        return quote! {};
+    }
+
+    quote! {
+        /// Schema-emitted directive value structs. Returned by the
+        /// `as_*_directive` accessors on the parser enum.
+        #[allow(dead_code, non_snake_case)]
+        pub mod cst_directives {
+            use super::#enum_ident;
+
+            #(#structs)*
+        }
+    }
+}
+
+/// Generate `as_*_directive()` accessor methods that destructure the
+/// matching enum variant and return the corresponding struct.
+fn generate_directive_accessors(schema: &CstSchema, enum_ident: &syn::Ident) -> TokenStream {
+    let mut methods = Vec::new();
+
+    for variant in &schema.variants {
+        let VariantCategory::Directive(ref kind) = variant.category else {
+            continue;
+        };
+        let Some(layout) = directive_field_layout(kind) else {
+            continue;
+        };
+        let Some(td) = &variant.type_desc else { continue };
+        let TypeDesc::Tuple(elems) = td else { continue };
+
+        let variant_ident = format_ident!("{}", variant.name);
+        let struct_ident = format_ident!("{}", layout.struct_name);
+        let method_ident = format_ident!("as_{}", variant.name);
+
+        // Build a tuple destructuring pattern + field assignments.
+        // Convention: field 0 = leading keyword span (skip), last field =
+        // trailing terminator span (captured as `.span`). Middle fields map
+        // to the slots in `layout`.
+        let arity = elems.len();
+        if arity < 2 {
+            continue;
+        }
+        let mut pat_parts: Vec<TokenStream> = Vec::with_capacity(arity);
+        // Skip leading keyword.
+        pat_parts.push(quote! { _ });
+        // Bind middle fields by index.
+        let mut middle_idents: Vec<syn::Ident> = Vec::new();
+        for (i, _) in elems.iter().enumerate().skip(1).take(arity - 2) {
+            let id = format_ident!("__f{}", i);
+            pat_parts.push(quote! { #id });
+            middle_idents.push(id);
+        }
+        // Bind trailing terminator span.
+        let term_ident = format_ident!("__term");
+        pat_parts.push(quote! { #term_ident });
+
+        // Build the slot → value assignments.
+        // Each slot consumes the corresponding middle ident.
+        if middle_idents.len() != layout.slots.len() {
+            // Layout mismatch — skip this directive (defensive).
+            continue;
+        }
+        let mut slot_assignments = Vec::new();
+        for (slot, ident) in layout.slots.iter().zip(middle_idents.iter()) {
+            let name = format_ident!("{}", slot.name);
+            let value: TokenStream = match slot.kind {
+                DirectiveFieldKind::Identifier => quote! {
+                    #enum_ident::identifier_text(#ident)
+                },
+                DirectiveFieldKind::TextSpan => quote! {
+                    #enum_ident::span_text(#ident)
+                },
+                DirectiveFieldKind::SpanRaw => quote! { *#ident },
+                DirectiveFieldKind::Inner => quote! { #ident },
+                DirectiveFieldKind::OptionInner => quote! { #ident.as_ref().map(|t| t.1) },
+                DirectiveFieldKind::Slice => quote! { #ident },
+            };
+            slot_assignments.push(quote! { #name: #value });
+        }
+
+        let pat = quote! { (#(#pat_parts),*) };
+        methods.push(quote! {
+            /// Schema-generated directive accessor.
+            pub fn #method_ident(&'a self) -> ::std::option::Option<cst_directives::#struct_ident<'a>> {
+                if let #enum_ident::#variant_ident(#pat) = self {
+                    ::std::option::Option::Some(cst_directives::#struct_ident {
+                        #(#slot_assignments,)*
+                        span: *#term_ident,
+                    })
+                } else {
+                    ::std::option::Option::None
+                }
+            }
+        });
+    }
+
+    quote! { #(#methods)* }
+}
+
+/// Layout for a directive variant's semantic fields. Driven by `DirectiveKind`.
+struct DirectiveLayout {
+    struct_name: &'static str,
+    slots: &'static [DirectiveSlot],
+}
+
+struct DirectiveSlot {
+    name: &'static str,
+    kind: DirectiveFieldKind,
+}
+
+#[derive(Clone, Copy)]
+enum DirectiveFieldKind {
+    /// `&'a Enum<'a>` — extract via `identifier_text(...)`.
+    Identifier,
+    /// `&'a Enum<'a>` — extract via `span_text(...)` (returns the leaf span).
+    TextSpan,
+    /// `Span<'a>` — pass through (`*field`).
+    SpanRaw,
+    /// `&'a Enum<'a>` — pass through reference.
+    Inner,
+    /// `Option<(Span, &'a Enum)>` — extract `.1` (the inner enum) into Option.
+    OptionInner,
+    /// `&'a [Enum<'a>]` — pass through slice.
+    Slice,
+}
+
+fn directive_field_layout(kind: &DirectiveKind) -> Option<DirectiveLayout> {
+    use DirectiveFieldKind as F;
+    Some(match kind {
+        DirectiveKind::Recover => DirectiveLayout {
+            struct_name: "RecoverDirective",
+            slots: &[
+                DirectiveSlot { name: "rule_name", kind: F::Identifier },
+                DirectiveSlot { name: "sync_expr", kind: F::Inner },
+            ],
+        },
+        DirectiveKind::Pretty => DirectiveLayout {
+            struct_name: "PrettyDirective",
+            slots: &[
+                DirectiveSlot { name: "target", kind: F::TextSpan },
+                DirectiveSlot { name: "hints", kind: F::Slice },
+            ],
+        },
+        DirectiveKind::Import => DirectiveLayout {
+            struct_name: "ImportDirective",
+            slots: &[DirectiveSlot { name: "inner", kind: F::Inner }],
+        },
+        DirectiveKind::Ws => DirectiveLayout {
+            struct_name: "WsDirective",
+            slots: &[DirectiveSlot { name: "value", kind: F::Inner }],
+        },
+        DirectiveKind::Token => DirectiveLayout {
+            struct_name: "TokenDirective",
+            slots: &[DirectiveSlot { name: "name", kind: F::Identifier }],
+        },
+        DirectiveKind::Debug => DirectiveLayout {
+            struct_name: "DebugDirective",
+            slots: &[DirectiveSlot { name: "target", kind: F::TextSpan }],
+        },
+        DirectiveKind::Host => DirectiveLayout {
+            struct_name: "HostDirective",
+            slots: &[
+                DirectiveSlot { name: "name", kind: F::Identifier },
+                DirectiveSlot { name: "type_annotation", kind: F::OptionInner },
+            ],
+        },
+        DirectiveKind::Other(_) => return None,
+    })
 }
 
 // ─── helpers ─────────────────────────────────────────────────────────────────

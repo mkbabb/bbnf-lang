@@ -208,14 +208,14 @@ fn extract_closure_def<'a>(node: &'a BbnfBootstrapEnum<'a>) -> Option<ClosureDef
     match node {
         BbnfBootstrapEnum::closure((_pipe, first_param, rest_params, _pipe2, body)) => {
             let mut param_names: Vec<&'a str> = Vec::new();
-            let first_name = crate::grammar::host::extract_span_text(first_param);
+            let first_name = crate::grammar::generated::BbnfBootstrapEnum::span_text(first_param);
             if !first_name.is_empty() {
                 param_names.push(first_name);
             }
             for (_comma, name) in *rest_params {
                 let n = match name {
                     BbnfBootstrapEnum::identifier(s) => s.as_str(),
-                    other => crate::grammar::host::extract_span_text(other),
+                    other => crate::grammar::generated::BbnfBootstrapEnum::span_text(other),
                 };
                 if !n.is_empty() {
                     param_names.push(n);

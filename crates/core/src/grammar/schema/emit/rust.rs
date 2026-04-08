@@ -452,7 +452,7 @@ fn generate_span_text_fn(schema: &CstSchema, enum_ident: &syn::Ident) -> TokenSt
             TypeDesc::Tuple(elems) => {
                 // Tuple variant: recurse on the first "meaningful" child.
                 // Priority: PrimaryChild → IdentifierCarrier → first BoxedEnum/Enum
-                // → first Span. Mirrors the v1 host::extract_span_text logic.
+                // → first Span. Mirrors the v1 hand-coded leaf-text descent.
                 if let Some(arm) = generate_tuple_span_arm(variant, elems, enum_ident, &ident) {
                     arms.push(arm);
                 }

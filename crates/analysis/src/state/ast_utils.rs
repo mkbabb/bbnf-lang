@@ -53,7 +53,7 @@ pub fn collect_references(node: &BbnfBootstrapEnum<'_>, refs: &mut Vec<Reference
 
         // term_1: identifier + optional call args
         BbnfBootstrapEnum::term_1((ident, call_args)) => {
-            let name = bbnf::grammar::host::extract_span_text(ident);
+            let name = bbnf::grammar::generated::BbnfBootstrapEnum::span_text(ident);
             let ident_span = match ident {
                 BbnfBootstrapEnum::identifier(s) => (s.start, s.end),
                 _ => (0, 0),
@@ -472,7 +472,7 @@ pub fn format_expression_short(node: &BbnfBootstrapEnum<'_>) -> String {
         BbnfBootstrapEnum::term(inner) => format_expression_short(inner),
 
         BbnfBootstrapEnum::term_1((ident, call_args)) => {
-            let name = bbnf::grammar::host::extract_span_text(ident);
+            let name = bbnf::grammar::generated::BbnfBootstrapEnum::span_text(ident);
             if let Some((_open, first_arg, rest_args, _close)) = call_args {
                 let mut args = vec![format_expression_short(first_arg)];
                 for (_comma, arg) in *rest_args {
@@ -499,7 +499,7 @@ pub fn format_expression_short(node: &BbnfBootstrapEnum<'_>) -> String {
         BbnfBootstrapEnum::binary_operators(s) => s.as_str().to_string(),
 
         BbnfBootstrapEnum::closure((_pipe, first_param, rest_params, _pipe2, body)) => {
-            let first_name = bbnf::grammar::host::extract_span_text(first_param);
+            let first_name = bbnf::grammar::generated::BbnfBootstrapEnum::span_text(first_param);
             let mut param_names: Vec<&str> = vec![first_name];
             for (_comma, p) in *rest_params {
                 if let BbnfBootstrapEnum::identifier(s) = p {
@@ -549,7 +549,7 @@ pub fn format_value_expr_short(node: &BbnfBootstrapEnum<'_>) -> String {
         }
 
         BbnfBootstrapEnum::value_fn_call((name, _open, args, _close)) => {
-            let name_str = bbnf::grammar::host::extract_span_text(name);
+            let name_str = bbnf::grammar::generated::BbnfBootstrapEnum::span_text(name);
             if let Some((first, rest)) = args {
                 let mut arg_strs = vec![format_value_expr_short(first)];
                 for (_comma, arg) in *rest {
@@ -609,7 +609,7 @@ pub fn format_value_expr_short(node: &BbnfBootstrapEnum<'_>) -> String {
         }
 
         BbnfBootstrapEnum::value_closure((_pipe, first_param, rest_params, _pipe2, body)) => {
-            let first_name = bbnf::grammar::host::extract_span_text(first_param);
+            let first_name = bbnf::grammar::generated::BbnfBootstrapEnum::span_text(first_param);
             let mut param_names: Vec<&str> = vec![first_name];
             for (_comma, p) in *rest_params {
                 if let BbnfBootstrapEnum::value_ident(s) = p {

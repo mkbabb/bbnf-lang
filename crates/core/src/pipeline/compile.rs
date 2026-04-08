@@ -362,14 +362,14 @@ fn collect_closure_param_names<'a>(
 ) {
     match node {
         BbnfBootstrapEnum::closure((_pipe, first_param, rest_params, _pipe2, _body)) => {
-            let first = crate::grammar::host::extract_span_text(first_param);
+            let first = crate::grammar::generated::BbnfBootstrapEnum::span_text(first_param);
             if !first.is_empty() {
                 params.insert(first);
             }
             for (_comma, p) in *rest_params {
                 let name = match p {
                     BbnfBootstrapEnum::identifier(s) => s.as_str(),
-                    other => crate::grammar::host::extract_span_text(other),
+                    other => crate::grammar::generated::BbnfBootstrapEnum::span_text(other),
                 };
                 if !name.is_empty() {
                     params.insert(name);

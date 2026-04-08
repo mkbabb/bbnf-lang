@@ -144,7 +144,7 @@ fn format_expression(node: &BbnfBootstrapEnum<'_>, indent_level: usize) -> Strin
         BbnfBootstrapEnum::term(inner) => format_expression(inner, indent_level),
 
         BbnfBootstrapEnum::term_1((ident, call_args)) => {
-            let name = bbnf::grammar::host::extract_span_text(ident);
+            let name = bbnf::grammar::generated::BbnfBootstrapEnum::span_text(ident);
             if let Some((_open, first_arg, rest_args, _close)) = call_args {
                 let mut args = vec![format_expression(first_arg, indent_level)];
                 for (_comma, arg) in *rest_args {
@@ -247,7 +247,7 @@ fn format_expression(node: &BbnfBootstrapEnum<'_>, indent_level: usize) -> Strin
         }
 
         BbnfBootstrapEnum::closure((_pipe, first_param, rest_params, _pipe2, body)) => {
-            let first_name = bbnf::grammar::host::extract_span_text(first_param);
+            let first_name = bbnf::grammar::generated::BbnfBootstrapEnum::span_text(first_param);
             let mut param_names: Vec<&str> = vec![first_name];
             for (_comma, p) in *rest_params {
                 if let BbnfBootstrapEnum::identifier(s) = p {

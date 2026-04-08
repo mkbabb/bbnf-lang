@@ -37,7 +37,7 @@ impl<'a> BbnfBootstrapEnumVisitor<'a> for RefCollector<'a> {
             }
             // term_1: identifier with optional call args.
             BbnfBootstrapEnum::term_1((ident, _call_args)) => {
-                self.refs.insert(crate::grammar::host::extract_span_text(ident));
+                self.refs.insert(crate::grammar::generated::BbnfBootstrapEnum::span_text(ident));
                 self.walk(node);
             }
             // All other variants: delegate to generated walk for structural recursion.

@@ -185,36 +185,3 @@ fn pretty_hint_text<'a>(node: &BbnfBootstrapEnum<'a>) -> Cow<'a, str> {
     }
 }
 
-// ─── Backwards-compat facades ───────────────────────────────────────────────
-//
-// External consumers (lower/, analysis/, graph/) still call into these
-// helpers. They delegate to the schema-emitted accessors. Phase E will
-// migrate the consumers and delete these.
-
-/// Recursively extract a leaf `Span` from any wrapped node — kept as a
-/// thin facade over the schema-emitted accessor for back-compat.
-pub fn extract_span_text<'a>(node: &'a BbnfBootstrapEnum<'a>) -> &'a str {
-    BbnfBootstrapEnum::span_text(node)
-}
-
-/// Extract the full path text from a `value_path` node, joining segments
-/// with `::`. For a single `value_ident`, returns the identifier text.
-pub fn extract_path_text(node: &BbnfBootstrapEnum<'_>) -> String {
-    match node {
-        BbnfBootstrapEnum::value_path((first, rest)) => {
-            let first_str = BbnfBootstrapEnum::span_text(first);
-            if rest.is_empty() {
-                first_str.to_string()
-            } else {
-                let mut path = String::with_capacity(first_str.len() + rest.len() * 10);
-                path.push_str(first_str);
-                for (_sep, segment) in *rest {
-                    path.push_str("::");
-                    path.push_str(BbnfBootstrapEnum::span_text(segment));
-                }
-                path
-            }
-        }
-        other => BbnfBootstrapEnum::span_text(other).to_string(),
-    }
-}

@@ -193,7 +193,7 @@ pub(crate) fn lower_value_expr<'a>(
 
         // Function call
         BbnfBootstrapEnum::value_fn_call((name_enum, _open, args_opt, _close)) => {
-            let name_str = crate::grammar::host::extract_path_text(name_enum);
+            let name_str = join_value_path(name_enum);
             let sid = ctx.strings.intern(&name_str);
             let ir_args: Vec<MapExpr> = match args_opt {
                 Some((first_arg, rest_args)) => {
@@ -216,7 +216,7 @@ pub(crate) fn lower_value_expr<'a>(
             if rest.is_empty() {
                 lower_value_expr(first, ctx)
             } else {
-                let path = crate::grammar::host::extract_path_text(node);
+                let path = join_value_path(node);
                 let sid = ctx.strings.intern(&path);
                 MapExpr::FnCall {
                     name: sid,
@@ -254,6 +254,29 @@ fn op_node_text<'a>(node: &BbnfBootstrapEnum<'a>) -> &'a str {
         | BbnfBootstrapEnum::add_op(s)
         | BbnfBootstrapEnum::mul_op(s) => s.as_str(),
         _ => "",
+    }
+}
+
+/// Join a `value_path` node's segments with `::`. Returns the leaf text
+/// for non-path nodes. Used by value-expression lowering to recover
+/// fully-qualified function paths (e.g. `crate::module::func`).
+fn join_value_path(node: &BbnfBootstrapEnum<'_>) -> String {
+    match node {
+        BbnfBootstrapEnum::value_path((first, rest)) => {
+            let first_str = BbnfBootstrapEnum::span_text(first);
+            if rest.is_empty() {
+                first_str.to_string()
+            } else {
+                let mut path = String::with_capacity(first_str.len() + rest.len() * 10);
+                path.push_str(first_str);
+                for (_sep, segment) in *rest {
+                    path.push_str("::");
+                    path.push_str(BbnfBootstrapEnum::span_text(segment));
+                }
+                path
+            }
+        }
+        other => BbnfBootstrapEnum::span_text(other).to_string(),
     }
 }
 
@@ -310,7 +333,7 @@ pub(crate) fn lower_value_expr_substituted<'a>(
             if rest.is_empty() {
                 lower_value_expr_substituted(first, bindings, ctx)
             } else {
-                let path = crate::grammar::host::extract_path_text(node);
+                let path = join_value_path(node);
                 let sid = ctx.strings.intern(&path);
                 MapExpr::FnCall {
                     name: sid,
@@ -319,7 +342,7 @@ pub(crate) fn lower_value_expr_substituted<'a>(
             }
         }
         BbnfBootstrapEnum::value_fn_call((name_enum, _open, args_opt, _close)) => {
-            let name_str = crate::grammar::host::extract_path_text(name_enum);
+            let name_str = join_value_path(name_enum);
             let sid = ctx.strings.intern(&name_str);
             let ir_args: Vec<MapExpr> = match args_opt {
                 Some((first_arg, rest_args)) => {
@@ -410,9 +433,9 @@ pub(crate) fn deep_unwrap_value<'a>(node: &'a BbnfBootstrapEnum<'a>) -> &'a Bbnf
 pub(crate) fn extract_value_func_name(node: &BbnfBootstrapEnum<'_>) -> Option<String> {
     match node {
         BbnfBootstrapEnum::value_ident(s) => Some(s.as_str().to_string()),
-        BbnfBootstrapEnum::value_path(_) => Some(crate::grammar::host::extract_path_text(node)),
+        BbnfBootstrapEnum::value_path(_) => Some(join_value_path(node)),
         BbnfBootstrapEnum::value_fn_call((name, _, _, _)) => {
-            Some(crate::grammar::host::extract_path_text(name))
+            Some(join_value_path(name))
         }
         _ => None,
     }

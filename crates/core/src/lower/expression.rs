@@ -181,7 +181,7 @@ fn lower_term_dispatch<'a>(
 
         // Identifier with optional call: identifier ( "(" rhs ("," rhs)* ")" )?
         BbnfBootstrapEnum::term_1((ident, call_args)) => {
-            let name = crate::grammar::host::extract_span_text(ident);
+            let name = crate::grammar::generated::BbnfBootstrapEnum::span_text(ident);
             if let Some((_open, first_arg, rest_args, _close)) = call_args {
                 lower_grammar_call(name, first_arg, rest_args, ctx)
             } else {

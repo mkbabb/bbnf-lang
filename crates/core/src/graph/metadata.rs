@@ -35,7 +35,7 @@ fn extract_alias_target<'a>(node: &'a BbnfBootstrapEnum<'a>) -> Option<&'a str> 
 
         // term_1 without call args = plain nonterminal reference
         BbnfBootstrapEnum::term_1((ident, None)) => {
-            Some(crate::grammar::host::extract_span_text(ident))
+            Some(crate::grammar::generated::BbnfBootstrapEnum::span_text(ident))
         }
 
         // Unwrap structural wrappers

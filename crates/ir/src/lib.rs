@@ -11,6 +11,7 @@
 pub mod dag;
 pub mod egraph;
 pub mod passes;
+pub mod recognizer;
 pub mod vm;
 
 // Re-export from bbnf-regex (canonical source of CharSet128, regex_first, classify)

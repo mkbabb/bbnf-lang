@@ -19,7 +19,7 @@ use super::{FnDescriptor, IrNode, IrRule, RuleId, StringId, TypeDesc, count_node
 
 /// The canonical Grammar IR — the single intermediary between the BBNF frontend
 /// and all backends.
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct GrammarIR {
     /// All rules in topological order.
     pub rules: Vec<IrRule>,
@@ -107,6 +107,14 @@ pub struct GrammarIR {
     /// inside it goes stale on mutation.
     #[serde(skip)]
     pub dag: Option<dag::GrammarDag>,
+
+    /// Per-compile cost / scheduling configuration. Single source of
+    /// truth for every cost-model and scheduler in the pipeline. Built
+    /// at IR construction via [`crate::CostConfig::from_env`] (so
+    /// `BBNF_COST_*` benchmarking knobs apply automatically), then
+    /// read by every downstream consumer.
+    #[serde(skip, default)]
+    pub cost_config: crate::CostConfig,
 }
 
 impl GrammarIR {

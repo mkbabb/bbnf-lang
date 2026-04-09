@@ -38,7 +38,7 @@ fn resolve_direct_alias() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
-        dag: None,
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),
     };
 
     canonicalize_aliases(&mut ir);
@@ -79,7 +79,7 @@ fn resolve_chain_alias() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
-        dag: None,
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),
     };
 
     canonicalize_aliases(&mut ir);

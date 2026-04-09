@@ -31,7 +31,7 @@ fn literal_is_span_eligible() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
-        dag: None,    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 
     refine_span_eligibility(&mut ir);
     assert!(ir.rules[0].meta.span_eligible);
@@ -61,7 +61,7 @@ fn map_not_span_eligible() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
-        dag: None,    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 
     refine_span_eligibility(&mut ir);
     assert!(!ir.rules[0].meta.span_eligible);
@@ -90,7 +90,7 @@ fn transitive_span_eligibility() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
-        dag: None,    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 
     refine_span_eligibility(&mut ir);
     assert!(ir.rules[0].meta.span_eligible);
@@ -124,7 +124,7 @@ fn cyclic_not_span_eligible() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
-        dag: None,    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 
     refine_span_eligibility(&mut ir);
     assert!(!ir.rules[0].meta.span_eligible);
@@ -151,7 +151,7 @@ fn seq_of_literals_span_eligible() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
-        dag: None,    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 
     refine_span_eligibility(&mut ir);
     assert!(ir.rules[0].meta.span_eligible);

@@ -51,7 +51,7 @@ fn follow_set_basic_seq() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
-        dag: None,    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 
     let follow = compute_follow_sets(&ir);
     assert!(follow[&1].has(b'x'));
@@ -128,7 +128,7 @@ fn follow_set_propagates_through_nullable() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
-        dag: None,    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 
     let follow = compute_follow_sets(&ir);
     // FOLLOW(a) should contain 'y' (from FIRST(b?)) and 'z' (from literal after nullable b?).

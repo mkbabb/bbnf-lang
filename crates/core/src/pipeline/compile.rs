@@ -367,7 +367,7 @@ fn compile_ast_common<'a>(
         // Tranche H).
         let (egraph, pool, rule_body_ids) =
             bbnf_ir::egraph::build_and_saturate(&ir);
-        let cost = bbnf_ir::egraph::GrammarCostModel::default();
+        let cost = bbnf_ir::egraph::GrammarCostModel::from_config(&ir.cost_config);
         bbnf_ir::egraph::write_back_optimized(
             &egraph,
             &mut ir,

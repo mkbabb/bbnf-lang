@@ -41,7 +41,7 @@ fn make_ir(rules: Vec<(&str, IrNode)>) -> GrammarIR {
         regex_info: HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
-        dag: None,    }
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),    }
 }
 
 fn lit(ir: &mut GrammarIR, s: &str) -> IrNode {

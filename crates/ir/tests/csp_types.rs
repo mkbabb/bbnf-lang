@@ -21,7 +21,7 @@ fn make_ir(rules: Vec<IrRule>, fns: Vec<FnDescriptor>) -> GrammarIR {
         regex_info: std::collections::HashMap::new(),
         node_facts: std::collections::HashMap::new(),
         recognizer_decisions: std::collections::HashMap::new(),
-        dag: None,
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),
         follow_sets: std::collections::HashMap::new(),
         ws_pattern: None,
         collapse_simple_spans: false,

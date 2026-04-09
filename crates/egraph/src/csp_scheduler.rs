@@ -171,9 +171,22 @@ pub struct CspScheduler {
 
 impl Default for CspScheduler {
     fn default() -> Self {
+        let cfg = crate::cost_config::CostConfig::default();
         Self {
-            iter_limit: 64,
-            node_limit: 100_000,
+            iter_limit: cfg.egraph_iter_limit,
+            node_limit: cfg.egraph_node_limit,
+        }
+    }
+}
+
+impl CspScheduler {
+    /// Build a scheduler from a [`crate::CostConfig`]. The constructor
+    /// is the gestalt entry point — every consumer that has a config
+    /// in scope should call this instead of the bare `Default::default`.
+    pub fn from_config(cfg: &crate::cost_config::CostConfig) -> Self {
+        Self {
+            iter_limit: cfg.egraph_iter_limit,
+            node_limit: cfg.egraph_node_limit,
         }
     }
 }

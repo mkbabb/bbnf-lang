@@ -28,7 +28,7 @@ fn make_ir(rules: Vec<IrRule>, strings: Vec<String>) -> GrammarIR {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
-        dag: None,    }
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),    }
 }
 
 fn rule(id: u32, name: u32, body: IrNode) -> IrRule {

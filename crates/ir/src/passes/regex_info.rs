@@ -1,8 +1,12 @@
 //! Regex analysis cache pass.
 //!
-//! Populates `GrammarIR::regex_info` by calling `bbnf_regex::RegexInfo::analyze()`
-//! for each unique regex pattern in the grammar. Run after all regex merging and
-//! simplification passes to ensure patterns are in their final form.
+//! Populates `GrammarIR::regex_info` by calling
+//! `bbnf_regex::RegexInfo::analyze_with_cost` for each unique regex
+//! pattern in the grammar. The HIR-tier extraction cost is built from
+//! `ir.cost_config` so the per-compile knobs apply uniformly across
+//! both tiers — see `crate::cost_config::CostConfig`. Run after all
+//! regex merging and simplification passes to ensure patterns are in
+//! their final form.
 
 use std::collections::HashMap;
 
@@ -11,8 +15,9 @@ use crate::{GrammarIR, IrNode, StringId};
 /// Compute and cache `RegexInfo` for all regex patterns in the grammar.
 ///
 /// Walks all rules, collects unique `Regex(StringId)` nodes, and calls
-/// `bbnf_regex::RegexInfo::analyze()` for each. Results are cached on
-/// `ir.regex_info` keyed by `StringId`.
+/// `bbnf_regex::RegexInfo::analyze_with_cost` for each, threading the
+/// per-compile `CostConfig` through to the HIR-tier extractor. Results
+/// are cached on `ir.regex_info` keyed by `StringId`.
 pub fn compute_regex_info(ir: &mut GrammarIR) {
     let mut seen = HashMap::<StringId, ()>::new();
     let mut info_map = HashMap::new();
@@ -22,10 +27,23 @@ pub fn compute_regex_info(ir: &mut GrammarIR) {
         collect_regex_ids(&rule.body, &mut seen);
     }
 
-    // Analyze each unique pattern.
+    // Build the HIR-tier cost from the per-compile CostConfig: the
+    // shared `weights` substrate flows from `ir.cost_config.egraph`,
+    // and the HIR-specific knobs (`hir_*`) flow from the bbnf-ir
+    // wrapper. Both halves come from the same struct, no
+    // `Default::default` calls.
+    let cost = bbnf_regex::egraph::RegexExtractionCost {
+        weights: ir.cost_config.egraph.weights,
+        literal_per_byte: ir.cost_config.hir_literal_per_byte,
+        class_cost: ir.cost_config.hir_class_cost,
+        repeat_cost: ir.cost_config.hir_repeat_cost,
+        merged_bonus: ir.cost_config.hir_merged_bonus,
+    };
+
+    // Analyze each unique pattern with the explicit cost.
     for &sid in seen.keys() {
         let pattern = ir.get_string(sid);
-        if let Some(info) = bbnf_regex::RegexInfo::analyze(pattern) {
+        if let Some(info) = bbnf_regex::RegexInfo::analyze_with_cost(pattern, &cost) {
             info_map.insert(sid, info);
         }
     }

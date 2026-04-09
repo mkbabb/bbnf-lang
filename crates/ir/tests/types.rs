@@ -20,7 +20,7 @@ fn make_ir(rules: Vec<IrRule>) -> GrammarIR {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
-        dag: None,    }
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),    }
 }
 
 fn rule(id: RuleId, body: IrNode) -> IrRule {
@@ -263,7 +263,7 @@ fn map_enum_wrap() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
-        dag: None,    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
     bbnf_ir::dag::ensure_dag(&mut ir);
     project_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::Enum);
@@ -293,7 +293,7 @@ fn map_box_wrap() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
-        dag: None,    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
     bbnf_ir::dag::ensure_dag(&mut ir);
     project_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::BoxedEnum);

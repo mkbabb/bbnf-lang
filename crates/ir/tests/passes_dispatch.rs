@@ -50,7 +50,7 @@ fn dispatch_for_disjoint_branches() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
-        dag: None,    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
     generate_dispatch_tables(&mut ir);
@@ -107,7 +107,7 @@ fn no_dispatch_for_overlapping_branches() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
-        dag: None,    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
     generate_dispatch_tables(&mut ir);
@@ -162,7 +162,7 @@ fn dispatch_for_nested_alt() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
-        dag: None,    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
     generate_dispatch_tables(&mut ir);
@@ -225,7 +225,7 @@ fn dispatch_with_nullable_branch_via_follow() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
-        dag: None,    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
     generate_dispatch_tables(&mut ir);
@@ -290,7 +290,7 @@ fn no_dispatch_when_nullable_overlaps_follow() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
-        dag: None,    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
     generate_dispatch_tables(&mut ir);
@@ -365,7 +365,7 @@ fn fallback_dispatch_typed_plus_catchall() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
-        dag: None,    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
     generate_dispatch_tables(&mut ir);
@@ -432,7 +432,7 @@ fn fallback_dispatch_not_superset() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
-        dag: None,    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
     generate_dispatch_tables(&mut ir);
@@ -487,7 +487,7 @@ fn fallback_dispatch_too_few_branches() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
-        dag: None,    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
     generate_dispatch_tables(&mut ir);

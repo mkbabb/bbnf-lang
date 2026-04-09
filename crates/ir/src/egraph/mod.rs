@@ -91,7 +91,9 @@ pub fn build_and_saturate(
     let rule_refs: Vec<&dyn egraph::RewriteFn<GrammarENode, NoAnalysis>> =
         rules.iter().map(|r| r.as_ref()).collect();
 
-    let scheduler = egraph::CspScheduler::default();
+    // Read scheduler caps from the per-compile cost config — single
+    // source of truth for iter_limit and node_limit.
+    let scheduler = egraph::CspScheduler::from_config(&ir.cost_config.egraph);
     use egraph::Scheduler;
     let _report = scheduler.run(&mut egraph, &rule_refs);
     if std::env::var("BBNF_EGRAPH_REPORT").is_ok() {

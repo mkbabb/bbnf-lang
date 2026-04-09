@@ -30,7 +30,7 @@ fn empty_ir(strings: Vec<&str>) -> GrammarIR {
         regex_info: HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
-        dag: None,    }
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),    }
 }
 
 #[test]

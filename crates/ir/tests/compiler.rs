@@ -27,7 +27,7 @@ fn make_simple_ir(body: IrNode) -> GrammarIR {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
-        dag: None,    }
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),    }
 }
 
 #[test]
@@ -146,7 +146,7 @@ fn compile_memo_rule() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
-        dag: None,    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
     let program = compile(&ir);
 
     assert!(!program.memo_enabled);
@@ -198,7 +198,7 @@ fn compile_direct_left_recursive_rule_keeps_memo() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
-        dag: None,    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
     let program = compile(&ir);
 
     assert!(program.memo_enabled);
@@ -344,7 +344,7 @@ fn compile_token_dispatch_emits_dispatch_token() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
-        dag: None,    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
     let program = compile(&ir);
 
     assert!(
@@ -415,7 +415,7 @@ fn compile_call() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
-        dag: None,    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
     let program = compile(&ir);
 
     assert!(program.code.iter().any(|op| matches!(op, Op::Call(1))));

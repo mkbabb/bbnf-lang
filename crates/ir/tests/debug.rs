@@ -55,7 +55,7 @@ fn make_debug_ir() -> GrammarIR {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
-        dag: None,    }
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),    }
 }
 
 // ── DebugBreak opcodes ───────────────────────────────────────────────────────
@@ -103,7 +103,7 @@ fn compiler_no_debug_break_without_flag() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
-        dag: None,    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
     let program = compile(&ir);
 
     let debug_breaks: Vec<_> = program

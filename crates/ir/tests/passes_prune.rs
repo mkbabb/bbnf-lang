@@ -41,7 +41,7 @@ fn prune_removes_unreachable() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
-        dag: None,    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 
     prune_unreachable(&mut ir);
 
@@ -74,7 +74,7 @@ fn prune_keeps_all_when_all_reachable() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
-        dag: None,    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 
     prune_unreachable(&mut ir);
     assert_eq!(ir.rules.len(), 2);
@@ -127,7 +127,7 @@ fn prune_follows_alt_branches() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
-        dag: None,    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 
     prune_unreachable(&mut ir);
     assert_eq!(ir.rules.len(), 3); // start, a, b -- dead removed

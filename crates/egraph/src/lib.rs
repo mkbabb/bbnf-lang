@@ -31,6 +31,7 @@
 #![cfg_attr(not(test), warn(missing_docs))]
 
 mod analysis;
+mod cost_config;
 mod cost_weights;
 mod csp_scheduler;
 mod eclass;
@@ -43,6 +44,7 @@ mod scheduler;
 mod unionfind;
 
 pub use analysis::{Analysis, NoAnalysis};
+pub use cost_config::CostConfig;
 pub use cost_weights::CostWeights;
 pub use csp_scheduler::{CspScheduler, DirtyDomain, ParentDirtyProp};
 pub use eclass::EClass;

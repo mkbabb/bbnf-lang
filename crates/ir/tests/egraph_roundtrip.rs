@@ -24,7 +24,7 @@ fn empty_ir() -> GrammarIR {
         regex_info: HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
-        dag: None,    }
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),    }
 }
 
 fn intern(ir: &mut GrammarIR, s: &str) -> u32 {

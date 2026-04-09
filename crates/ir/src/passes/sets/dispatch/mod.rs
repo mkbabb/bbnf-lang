@@ -45,14 +45,6 @@ use crate::{CharSet128, GrammarIR};
 use self::annotate::annotate_node;
 use self::eligibility::precompute_dispatch_eligibility;
 
-/// Minimum rule count before the tree-walk phase parallelizes via rayon.
-///
-/// Below this, the wait-and-reset cost on the rayon `LockLatch` exceeds
-/// the work the dispatch annotator does per rule. CSS L4 (~265 rules)
-/// crosses the threshold and benefits; BBNF (~50 rules) stays serial.
-/// Tranche W phase 3a will move this constant onto `CostConfig`.
-const RAYON_RULE_THRESHOLD: usize = 128;
-
 /// Generate dispatch tables for all eligible Alt nodes in the IR.
 ///
 /// First runs CSP pre-computation to classify all Alts as dispatchable or not,
@@ -83,6 +75,9 @@ pub fn generate_dispatch_tables(ir: &mut GrammarIR) {
         precompute_dispatch_eligibility(ir, dag, &rule_metas)
     };
 
+    // Read the parallelism threshold from the per-compile cost config.
+    let parallelism_threshold = ir.cost_config.egraph.parallelism_threshold;
+
     // Split-borrow `ir` so we can mutably iterate `ir.rules` while still
     // reading `ir.dag` / `ir.follow_sets` / `ir.strings` from the closure.
     // Destructuring through `&mut *ir` gives Rust's borrow checker the
@@ -100,7 +95,7 @@ pub fn generate_dispatch_tables(ir: &mut GrammarIR) {
     let follow_sets = &*follow_sets;
     let strings = &*strings;
 
-    let parallel = rules.len() >= RAYON_RULE_THRESHOLD;
+    let parallel = rules.len() >= parallelism_threshold;
 
     if parallel {
         rules.par_iter_mut().for_each(|rule| {

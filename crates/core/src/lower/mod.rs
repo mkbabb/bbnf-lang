@@ -212,6 +212,7 @@ pub fn lower_to_ir<'a>(
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
         dag: None,
+        cost_config: bbnf_ir::CostConfig::from_env(),
     }
 }
 

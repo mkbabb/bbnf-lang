@@ -26,7 +26,7 @@ fn make_ir(body: IrNode, strings: Vec<String>) -> GrammarIR {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
-        dag: None,
+        dag: None, cost_config: bbnf_ir::CostConfig::default(),
     }
 }
 

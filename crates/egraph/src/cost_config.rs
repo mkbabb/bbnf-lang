@@ -1,0 +1,113 @@
+//! Shared cost / scheduling configuration container.
+//!
+//! `CostConfig` is the single per-compile substrate every e-graph
+//! consumer reads from. It owns:
+//!
+//! - The shared [`CostWeights`] (per-node structural, alt-branch
+//!   penalty, dispatch bonus) — the cross-tier extraction knobs that
+//!   stay in lockstep between the grammar tier and the regex HIR tier.
+//! - Scheduler caps for [`crate::CspScheduler`] (`iter_limit`,
+//!   `node_limit`).
+//! - The rayon parallelism threshold consumed by every per-rule
+//!   parallel pass — gating parallelism on grammar size keeps the
+//!   `LockLatch::wait_and_reset` overhead from dominating small
+//!   grammars (the post-V profile measured this at ~25% of
+//!   `compile_bbnf`).
+//!
+//! Domain-specific cost-model knobs (literal/regex/ref weights for
+//! the grammar tier; literal-byte / class / repeat weights for the
+//! regex tier) live on each tier's wrapper struct, not here. The
+//! split keeps the egraph crate domain-agnostic while still letting
+//! both tiers share a single source of truth for the cross-cutting
+//! decisions.
+//!
+//! # Tunability
+//!
+//! [`CostConfig::from_env`] applies a small set of `BBNF_COST_*`
+//! environment variables for benchmarking. The grammar-author-facing
+//! `@cost` directive lands in a future tranche and reads the same
+//! struct.
+
+use crate::cost_weights::CostWeights;
+
+/// Shared cost / scheduling substrate. See module docs.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct CostConfig {
+    /// Cross-tier extraction weights — read by both
+    /// `GrammarCostModel` and `RegexExtractionCost`.
+    pub weights: CostWeights,
+
+    /// Maximum saturation iterations the [`crate::CspScheduler`]
+    /// will run before giving up. Mirrors the previous default.
+    pub egraph_iter_limit: usize,
+
+    /// Absolute cap on total e-nodes across both tiers' e-graphs.
+    /// Mirrors the previous default.
+    pub egraph_node_limit: usize,
+
+    /// Minimum rule count before per-rule parallel passes
+    /// (`generate_dispatch_tables`, `eliminate_epsilon`, etc.) use
+    /// `rayon::par_iter_mut`. Below this threshold, the per-iteration
+    /// `LockLatch::wait_and_reset` cost exceeds the work the closure
+    /// does on each rule.
+    pub parallelism_threshold: usize,
+}
+
+impl Default for CostConfig {
+    fn default() -> Self {
+        Self {
+            weights: CostWeights::default(),
+            egraph_iter_limit: 64,
+            egraph_node_limit: 100_000,
+            parallelism_threshold: 128,
+        }
+    }
+}
+
+impl CostConfig {
+    /// Apply `BBNF_COST_*` environment variable overrides for benchmarking.
+    ///
+    /// Recognized variables:
+    /// - `BBNF_COST_PARALLELISM_THRESHOLD`
+    /// - `BBNF_COST_EGRAPH_ITER_LIMIT`
+    /// - `BBNF_COST_EGRAPH_NODE_LIMIT`
+    /// - `BBNF_COST_ALT_PER_BRANCH`
+    /// - `BBNF_COST_DISPATCH_BONUS`
+    /// - `BBNF_COST_STRUCTURAL`
+    pub fn from_env() -> Self {
+        let mut c = Self::default();
+
+        if let Ok(s) = std::env::var("BBNF_COST_PARALLELISM_THRESHOLD") {
+            if let Ok(v) = s.parse() {
+                c.parallelism_threshold = v;
+            }
+        }
+        if let Ok(s) = std::env::var("BBNF_COST_EGRAPH_ITER_LIMIT") {
+            if let Ok(v) = s.parse() {
+                c.egraph_iter_limit = v;
+            }
+        }
+        if let Ok(s) = std::env::var("BBNF_COST_EGRAPH_NODE_LIMIT") {
+            if let Ok(v) = s.parse() {
+                c.egraph_node_limit = v;
+            }
+        }
+        if let Ok(s) = std::env::var("BBNF_COST_ALT_PER_BRANCH") {
+            if let Ok(v) = s.parse() {
+                c.weights.alt_per_branch = v;
+            }
+        }
+        if let Ok(s) = std::env::var("BBNF_COST_DISPATCH_BONUS") {
+            if let Ok(v) = s.parse() {
+                c.weights.dispatch_bonus = v;
+            }
+        }
+        if let Ok(s) = std::env::var("BBNF_COST_STRUCTURAL") {
+            if let Ok(v) = s.parse() {
+                c.weights.structural = v;
+            }
+        }
+
+        c
+    }
+}

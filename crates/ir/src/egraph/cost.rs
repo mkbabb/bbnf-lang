@@ -32,10 +32,20 @@ pub struct GrammarCostModel {
 
 impl Default for GrammarCostModel {
     fn default() -> Self {
+        Self::from_config(&crate::CostConfig::default())
+    }
+}
+
+impl GrammarCostModel {
+    /// Build a `GrammarCostModel` from the per-compile
+    /// [`crate::CostConfig`]. This is the gestalt entry point — every
+    /// production call site reads from `ir.cost_config` instead of
+    /// calling `Default::default` directly.
+    pub fn from_config(cfg: &crate::CostConfig) -> Self {
         Self {
-            weights: CostWeights::default(),
-            literal_cost: 1.0,
-            regex_cost: 2.0,
+            weights: cfg.egraph.weights,
+            literal_cost: cfg.literal_cost,
+            regex_cost: cfg.regex_cost,
             // `Ref` is cheap: the structural normalizer runs first
             // and has already inlined the acyclic/small/single-use
             // rules the extractor would otherwise try to unfold.
@@ -43,8 +53,8 @@ impl Default for GrammarCostModel {
             // deliberately load-bearing (cyclic, shared, or
             // identity-preserving) and its indirection is the
             // desired form.
-            ref_cost: 0.5,
-            seq_per_child: 1.0,
+            ref_cost: cfg.ref_cost,
+            seq_per_child: cfg.seq_per_child,
         }
     }
 }

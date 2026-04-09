@@ -12,12 +12,15 @@
 //! crate root re-exports them so the existing `bbnf_ir::IrNode` etc. paths
 //! remain stable.
 
+pub mod cost_config;
 pub mod dag;
 pub mod egraph;
 pub mod passes;
 pub mod recognizer;
 pub mod types;
 pub mod vm;
+
+pub use cost_config::CostConfig;
 
 // Re-export from bbnf-regex (canonical source of CharSet128, regex_first, classify)
 pub use bbnf_regex::sets::charset::CharSet128;

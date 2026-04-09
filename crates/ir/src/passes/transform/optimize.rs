@@ -18,12 +18,13 @@ use crate::{GrammarIR, IrNode};
 /// - `Seq([single])` → `single` (unwrap singleton sequences)
 /// - `Alt([single], _)` → `single.node` (unwrap singleton alternations)
 ///
-/// The body rewrite is purely tree-local and very cheap; the rayon threshold
-/// is the same conservative cutoff used by the dispatch pass (`128`), under
-/// which `LockLatch::wait_and_reset` exceeds the work.
+/// The body rewrite is purely tree-local and very cheap; the rayon
+/// threshold is read from `ir.cost_config.egraph.parallelism_threshold`
+/// — the cross-pass per-compile knob — so it tracks the dispatch pass
+/// in lockstep.
 pub fn eliminate_epsilon(ir: &mut GrammarIR) {
-    const RAYON_RULE_THRESHOLD: usize = 128;
-    if ir.rules.len() >= RAYON_RULE_THRESHOLD {
+    let parallelism_threshold = ir.cost_config.egraph.parallelism_threshold;
+    if ir.rules.len() >= parallelism_threshold {
         ir.rules.par_iter_mut().for_each(|rule| {
             rule.body = elim_epsilon(std::mem::replace(&mut rule.body, IrNode::Epsilon));
         });

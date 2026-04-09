@@ -1,8 +1,12 @@
 //! Shared recognizer fact types.
 
-use bbnf_regex::CharSet128;
+use bbnf_regex::{CharSet128, EngineSet, RegexClass};
 
 /// What kind of recognizer an implementor represents.
+///
+/// These are *architectural roles*, not family classifications. The
+/// regex-domain family taxonomy lives in `bbnf_regex::RegexClass` and is
+/// surfaced via `RecognizerInfo::regex_class()`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RecognizerKind {
     /// A literal byte string.
@@ -63,5 +67,28 @@ pub trait RecognizerInfo {
     /// (no backtracking).
     fn scanable(&self) -> bool {
         false
+    }
+
+    /// Tranche V: regex-domain family classification, if applicable.
+    ///
+    /// Literals, tokens, and dispatch groups return `None`; only the
+    /// `RegexRecognizer` wrapper returns `Some(class)`. This is the
+    /// single touch point that lets every consumer reach family
+    /// information through the trait without breaking the leaf-crate
+    /// boundary — `RegexClass` lives in `bbnf-regex` and is referenced
+    /// here, not duplicated.
+    fn regex_class(&self) -> Option<&RegexClass> {
+        None
+    }
+
+    /// Tranche V: bitset of engines that can drive this recognizer.
+    ///
+    /// Monotone derivation from the underlying facts. Used as the legal
+    /// domain for the per-pattern `RegexEngine` variable in the
+    /// recognizer-tier CSP. Defaults to a generic family-helper bit so
+    /// that recognizers without a feasibility analysis still have a
+    /// nonempty domain.
+    fn feasible_engines(&self) -> EngineSet {
+        EngineSet::FAMILY_HELPER
     }
 }

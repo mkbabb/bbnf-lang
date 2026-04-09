@@ -66,6 +66,9 @@ dependencies = [
 name = "bbnf-regex"
 version = "0.1.0"
 dependencies = [
+ "csp-solver",
+ "egraph",
+ "egraph-derive",
  "serde",
  "smallvec",
 ]
@@ -197,6 +200,7 @@ version = "0.1.0"
 name = "egraph"
 version = "0.1.0"
 dependencies = [
+ "csp-solver",
  "rustc-hash",
  "smallvec",
 ]

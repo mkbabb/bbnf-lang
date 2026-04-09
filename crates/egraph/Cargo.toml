@@ -8,6 +8,7 @@ description = "General-purpose e-graph: equality saturation, rewrite rules, cost
 [dependencies]
 smallvec = "1"
 rustc-hash = "2"
+csp-solver = "0.1"
 
 [dev-dependencies]
 egraph-derive = { path = "../egraph-derive" }

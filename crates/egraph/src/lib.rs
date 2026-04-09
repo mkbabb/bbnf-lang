@@ -32,6 +32,7 @@
 
 mod analysis;
 mod cost_weights;
+mod csp_scheduler;
 mod eclass;
 mod egraph;
 mod extract;
@@ -43,6 +44,7 @@ mod unionfind;
 
 pub use analysis::{Analysis, NoAnalysis};
 pub use cost_weights::CostWeights;
+pub use csp_scheduler::{CspScheduler, DirtyDomain, ParentDirtyProp};
 pub use eclass::EClass;
 pub use egraph::EGraph;
 pub use extract::{AstSize, CostModel, Extractor};

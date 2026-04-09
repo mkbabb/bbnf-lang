@@ -78,7 +78,7 @@ pub fn build_and_saturate(
     let rule_refs: Vec<&dyn egraph::RewriteFn<GrammarENode, GrammarAnalysis>> =
         rules.iter().map(|r| r.as_ref()).collect();
 
-    let scheduler = egraph::BackoffScheduler::default();
+    let scheduler = egraph::CspScheduler::default();
     use egraph::Scheduler;
     let _report = scheduler.run(&mut egraph, &rule_refs);
     if std::env::var("BBNF_EGRAPH_REPORT").is_ok() {

@@ -5,6 +5,8 @@
 //! in the matched class). Unlike destructive rewrites, applying a rewrite
 //! never removes the original form — it only adds a new equivalence.
 
+use std::collections::HashSet;
+
 use crate::analysis::Analysis;
 use crate::egraph::EGraph;
 use crate::id::Id;
@@ -59,6 +61,16 @@ pub trait RewriteFn<N: Language, A: Analysis<N>>: Send + Sync {
     /// count, `find(class_id)` stays fixed even though the union
     /// happened.
     fn run(&self, egraph: &mut EGraph<N, A>) -> usize;
+
+    /// Like `run`, but only apply matches whose canonical class id is
+    /// in `dirty`. Used by `CspScheduler` to skip re-probing clean
+    /// classes between iterations. Returns work-done delta.
+    ///
+    /// The default implementation runs the full search then filters
+    /// applies post-hoc — this saves apply-time but not search-time.
+    /// Individual rules can override to skip search on clean classes
+    /// as well.
+    fn run_on_dirty(&self, egraph: &mut EGraph<N, A>, dirty: &HashSet<Id>) -> usize;
 }
 
 /// Blanket erasure: any `Rewrite` is also a `RewriteFn`.
@@ -78,6 +90,20 @@ where
         let matches = self.search(egraph);
         for (class_id, m) in matches {
             self.apply(egraph, class_id, m);
+        }
+        let node_delta = egraph.total_nodes().saturating_sub(before_nodes);
+        let union_delta = (egraph.union_count() - before_unions) as usize;
+        node_delta + union_delta
+    }
+
+    fn run_on_dirty(&self, egraph: &mut EGraph<N, A>, dirty: &HashSet<Id>) -> usize {
+        let before_nodes = egraph.total_nodes();
+        let before_unions = egraph.union_count();
+        let matches = self.search(egraph);
+        for (class_id, m) in matches {
+            if dirty.contains(&egraph.find_ref(class_id)) {
+                self.apply(egraph, class_id, m);
+            }
         }
         let node_delta = egraph.total_nodes().saturating_sub(before_nodes);
         let union_delta = (egraph.union_count() - before_unions) as usize;

@@ -1057,6 +1057,7 @@ checksum = "d0881ea181b1df73ff77ffaaf9c7544ecc11e82fba9b5f27b262a3c73a332555"
 name = "egraph"
 version = "0.1.0"
 dependencies = [
+ "csp-solver",
  "egraph-derive",
  "rustc-hash 2.1.2",
  "smallvec",

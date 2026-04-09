@@ -438,7 +438,7 @@ fn compile_ast_common<'a>(
         // because they depend on optimizer output.
         bbnf_ir::passes::generate_dispatch_tables(&mut ir);
         bbnf_ir::passes::compute_regex_info(&mut ir);
-        bbnf_ir::passes::recognize_patterns(&mut ir);
+        bbnf_ir::passes::mine_recognizers(&mut ir);
     }
 
     Ok(ir)

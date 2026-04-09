@@ -13,5 +13,5 @@
 mod facts;
 mod propagate;
 
-pub use facts::{ContextFacts, DiscriminationStrength, ScanSafety};
+pub use facts::{ContextFacts, ContextFactsMap, DiscriminationStrength, ScanSafety};
 pub use propagate::compute_context_facts;

@@ -9,6 +9,7 @@ pub mod lr;
 pub mod metadata;
 pub mod patterns;
 pub mod prefix;
+pub mod recognizers;
 pub mod regex_info;
 pub mod sets;
 pub mod span;
@@ -34,7 +35,7 @@ pub use transform::{
     canonicalize_aliases, eliminate_epsilon, fuse_single_use, fuse_token_dispatch, inline_acyclic,
     merge_literals, prune_unreachable,
 };
-pub use patterns::recognize_patterns;
+pub use recognizers::mine_recognizers;
 pub use regex_info::compute_regex_info;
 pub use types::project_types;
 pub use types::{TypeMap, try_flatten_pair};

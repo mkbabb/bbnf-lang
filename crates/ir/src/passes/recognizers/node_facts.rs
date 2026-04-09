@@ -1,46 +1,20 @@
-//! Recursive tree walk: inspect IR node structure and assign per-node facts.
+//! Per-node structural fact recognition (operator_chain, sep_by,
+//! all_span_collapse). This is the migrated body of the old
+//! `passes/patterns/recognize.rs` — the implementation is verbatim
+//! and the entry points are re-exported through the new
+//! `mine_recognizers` phase.
 
 use std::collections::HashMap;
 
 use crate::dag::{GrammarDag, NodeId};
+use crate::passes::patterns::{
+    AltPattern, NodeFacts, NodeKind, PatternAnnotations, SeqPattern,
+};
 use crate::{AltBranch, GrammarIR, IrNode};
-
-use super::{AltPattern, NodeFacts, NodeKind, PatternAnnotations, SeqPattern};
-
-/// Recognize structural patterns on all rules.
-///
-/// Populates the legacy `ir.pattern_annotations` (per-rule) and
-/// `ir.node_facts` (per-node, keyed by stable `NodeId`). Requires
-/// `ir.dag` to be populated — facts are written only for nodes the
-/// DAG knows about. If the DAG is absent (e.g. a raw IR built by a
-/// unit test), `node_facts` is cleared.
-pub fn recognize_patterns(ir: &mut GrammarIR) {
-    let mut legacy_annotations = HashMap::new();
-    let mut node_facts = HashMap::new();
-
-    // Legacy per-rule annotations don't need the DAG.
-    for rule in &ir.rules {
-        let mut ann = PatternAnnotations::default();
-        recognize_body(&rule.body, &mut ann, ir);
-        if ann.alt_pattern.is_some() || ann.seq_pattern.is_some() || ann.is_operator_chain {
-            legacy_annotations.insert(rule.id, ann);
-        }
-    }
-
-    // Per-node facts require the durable DAG to map `&IrNode` → `NodeId`.
-    if let Some(dag) = ir.dag.as_ref() {
-        for rule in &ir.rules {
-            recognize_tree(&rule.body, &mut node_facts, ir, dag);
-        }
-    }
-
-    ir.pattern_annotations = legacy_annotations;
-    ir.node_facts = node_facts;
-}
 
 // ── Recursive tree walk (per-node facts, NodeId-keyed) ──────────────────
 
-fn recognize_tree(
+pub(super) fn recognize_tree(
     node: &IrNode,
     facts: &mut HashMap<NodeId, NodeFacts>,
     ir: &GrammarIR,
@@ -173,9 +147,9 @@ fn is_span_leaf(node: &IrNode) -> bool {
     )
 }
 
-// ── Legacy recognition (kept during migration) ──────────────────────────
+// ── Legacy per-rule recognition (kept during migration) ─────────────────
 
-fn recognize_body(node: &IrNode, ann: &mut PatternAnnotations, ir: &GrammarIR) {
+pub(super) fn recognize_body(node: &IrNode, ann: &mut PatternAnnotations, ir: &GrammarIR) {
     match node {
         IrNode::Seq(children) => recognize_seq_legacy(children, ann, ir),
         IrNode::Alt(branches, dispatch) => {

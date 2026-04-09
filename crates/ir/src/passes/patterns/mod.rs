@@ -12,10 +12,6 @@
 //! 3. Never serialized (pointer keys are process-local).
 //! 4. Tests cover optimized and non-optimized equivalent shapes.
 
-mod recognize;
-
-pub use recognize::recognize_patterns;
-
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};

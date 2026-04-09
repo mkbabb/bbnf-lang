@@ -20,16 +20,15 @@
 
 use std::collections::HashSet;
 
-use egraph::{EGraph, Id, Rewrite};
+use egraph::{EGraph, Id, NoAnalysis, Rewrite};
 
-use crate::egraph::analysis::GrammarAnalysis;
 use crate::egraph::interner::SharedStrings;
 use crate::egraph::node::GrammarENode;
 use crate::{AltDispatch, StringId};
 
 /// Find the `StringId` of a class's Regex form, if any.
 fn class_regex(
-    egraph: &EGraph<GrammarENode, GrammarAnalysis>,
+    egraph: &EGraph<GrammarENode, NoAnalysis>,
     id: Id,
 ) -> Option<StringId> {
     egraph.class(id).iter().find_map(|n| {
@@ -55,14 +54,14 @@ pub struct DedupMatch {
     pub dispatch: Option<AltDispatch>,
 }
 
-impl Rewrite<GrammarENode, GrammarAnalysis> for DeduplicateAltBranches {
+impl Rewrite<GrammarENode, NoAnalysis> for DeduplicateAltBranches {
     type Match = DedupMatch;
 
     fn name(&self) -> &str {
         "deduplicate-alt-branches"
     }
 
-    fn search(&self, egraph: &EGraph<GrammarENode, GrammarAnalysis>) -> Vec<(Id, Self::Match)> {
+    fn search(&self, egraph: &EGraph<GrammarENode, NoAnalysis>) -> Vec<(Id, Self::Match)> {
         let mut matches = Vec::new();
         for class in egraph.classes() {
             for node in class.iter() {
@@ -94,7 +93,7 @@ impl Rewrite<GrammarENode, GrammarAnalysis> for DeduplicateAltBranches {
 
     fn apply(
         &self,
-        egraph: &mut EGraph<GrammarENode, GrammarAnalysis>,
+        egraph: &mut EGraph<GrammarENode, NoAnalysis>,
         class_id: Id,
         m: Self::Match,
     ) {
@@ -128,14 +127,14 @@ pub struct AbsorbMatch {
     pub dispatch: Option<AltDispatch>,
 }
 
-impl Rewrite<GrammarENode, GrammarAnalysis> for SupersetAbsorbAlt {
+impl Rewrite<GrammarENode, NoAnalysis> for SupersetAbsorbAlt {
     type Match = AbsorbMatch;
 
     fn name(&self) -> &str {
         "superset-absorb-alt"
     }
 
-    fn search(&self, egraph: &EGraph<GrammarENode, GrammarAnalysis>) -> Vec<(Id, Self::Match)> {
+    fn search(&self, egraph: &EGraph<GrammarENode, NoAnalysis>) -> Vec<(Id, Self::Match)> {
         let mut matches = Vec::new();
         for class in egraph.classes() {
             for node in class.iter() {
@@ -185,7 +184,7 @@ impl Rewrite<GrammarENode, GrammarAnalysis> for SupersetAbsorbAlt {
 
     fn apply(
         &self,
-        egraph: &mut EGraph<GrammarENode, GrammarAnalysis>,
+        egraph: &mut EGraph<GrammarENode, NoAnalysis>,
         class_id: Id,
         m: Self::Match,
     ) {
@@ -253,14 +252,14 @@ pub struct FuseMatch {
     pub fused_sid: StringId,
 }
 
-impl Rewrite<GrammarENode, GrammarAnalysis> for FuseAltRegexBranches {
+impl Rewrite<GrammarENode, NoAnalysis> for FuseAltRegexBranches {
     type Match = FuseMatch;
 
     fn name(&self) -> &str {
         "fuse-alt-regex-branches"
     }
 
-    fn search(&self, egraph: &EGraph<GrammarENode, GrammarAnalysis>) -> Vec<(Id, Self::Match)> {
+    fn search(&self, egraph: &EGraph<GrammarENode, NoAnalysis>) -> Vec<(Id, Self::Match)> {
         let mut matches = Vec::new();
         for class in egraph.classes() {
             for node in class.iter() {
@@ -319,7 +318,7 @@ impl Rewrite<GrammarENode, GrammarAnalysis> for FuseAltRegexBranches {
 
     fn apply(
         &self,
-        egraph: &mut EGraph<GrammarENode, GrammarAnalysis>,
+        egraph: &mut EGraph<GrammarENode, NoAnalysis>,
         class_id: Id,
         m: Self::Match,
     ) {
@@ -375,14 +374,14 @@ fn pattern_has_top_level_pipe(pattern: &str) -> bool {
     false
 }
 
-impl Rewrite<GrammarENode, GrammarAnalysis> for UnionMergeAlt {
+impl Rewrite<GrammarENode, NoAnalysis> for UnionMergeAlt {
     type Match = UnionMatch;
 
     fn name(&self) -> &str {
         "union-merge-alt"
     }
 
-    fn search(&self, egraph: &EGraph<GrammarENode, GrammarAnalysis>) -> Vec<(Id, Self::Match)> {
+    fn search(&self, egraph: &EGraph<GrammarENode, NoAnalysis>) -> Vec<(Id, Self::Match)> {
         let mut matches = Vec::new();
         'outer: for class in egraph.classes() {
             for node in class.iter() {
@@ -430,7 +429,7 @@ impl Rewrite<GrammarENode, GrammarAnalysis> for UnionMergeAlt {
 
     fn apply(
         &self,
-        egraph: &mut EGraph<GrammarENode, GrammarAnalysis>,
+        egraph: &mut EGraph<GrammarENode, NoAnalysis>,
         class_id: Id,
         m: Self::Match,
     ) {

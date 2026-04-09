@@ -33,9 +33,8 @@ pub use regex::{
 
 use std::collections::HashMap;
 
-use egraph::{Id, RewriteFn};
+use egraph::{Id, NoAnalysis, RewriteFn};
 
-use super::analysis::GrammarAnalysis;
 use super::interner::SharedStrings;
 use super::node::GrammarENode;
 use crate::{GrammarIR, RuleId};
@@ -55,7 +54,7 @@ pub fn default_rules(
     _ir: &GrammarIR,
     pool: &SharedStrings,
     _rule_body_ids: HashMap<RuleId, Id>,
-) -> Vec<Box<dyn RewriteFn<GrammarENode, GrammarAnalysis>>> {
+) -> Vec<Box<dyn RewriteFn<GrammarENode, NoAnalysis>>> {
     vec![
         Box::new(DeduplicateAltBranches),
         Box::new(SupersetAbsorbAlt::new(pool.clone())),

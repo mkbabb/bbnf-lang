@@ -650,6 +650,61 @@ impl GrammarIR {
         let node_count: usize = self.rules.iter().map(|r| count_nodes(&r.body)).sum();
         (self.rules.len(), node_count, self.strings.len())
     }
+
+    // ── NodeId-resolved TypeMap convenience accessors ───────────────────
+    //
+    // Chain `self.dag.node_for(node)` → `self.type_map.XXX(id)` so call
+    // sites don't have to spell out both lookups. All return `None`
+    // when either the DAG or the TypeMap is absent.
+
+    /// Look up the node's type from the TypeMap.
+    #[inline]
+    pub fn node_type(&self, node: &IrNode) -> Option<&TypeDesc> {
+        let id = self.dag.as_ref()?.node_for(node)?;
+        self.type_map.as_ref()?.node_type(id)
+    }
+
+    /// Look up the structural (pre-collapse) type of a node.
+    #[inline]
+    pub fn structural_type(&self, node: &IrNode) -> Option<&TypeDesc> {
+        let id = self.dag.as_ref()?.node_for(node)?;
+        self.type_map.as_ref()?.structural_type(id)
+    }
+
+    /// Look up the Vec-element type of a node.
+    #[inline]
+    pub fn vec_elem_type(&self, node: &IrNode) -> Option<&TypeDesc> {
+        let id = self.dag.as_ref()?.node_for(node)?;
+        self.type_map.as_ref()?.vec_elem_type(id)
+    }
+
+    /// Look up the effective child types for a Seq node.
+    #[inline]
+    pub fn seq_child_types(&self, seq_node: &IrNode) -> Option<&[TypeDesc]> {
+        let id = self.dag.as_ref()?.node_for(seq_node)?;
+        self.type_map.as_ref()?.seq_child_types(id)
+    }
+
+    /// Look up the result type of a Seq (post-compression,
+    /// post-flattening) by the Seq node.
+    #[inline]
+    pub fn seq_result_type(&self, seq_node: &IrNode) -> Option<&TypeDesc> {
+        let id = self.dag.as_ref()?.node_for(seq_node)?;
+        self.type_map.as_ref()?.seq_result_type(id)
+    }
+
+    /// Whether the Seq preserved individual Span identity
+    /// (skipped compression). Defaults to `false` when the DAG or
+    /// TypeMap is absent.
+    #[inline]
+    pub fn seq_preserve_spans(&self, seq_node: &IrNode) -> bool {
+        self.dag
+            .as_ref()
+            .and_then(|dag| dag.node_for(seq_node))
+            .zip(self.type_map.as_ref())
+            .map(|(id, tm)| tm.seq_preserve_spans(id))
+            .unwrap_or(false)
+    }
 }
 
 impl IrNode {

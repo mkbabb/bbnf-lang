@@ -120,62 +120,48 @@ impl<'a> IrCodegenCtx<'a> {
         }
     }
 
-    /// Look up the project_node type for a sub-expression from the TypeMap.
-    /// Panics on miss — the TypeMap must cover all nodes the codegen queries.
+    /// Look up the project_node type for a sub-expression from the
+    /// TypeMap. Panics on miss — the TypeMap must cover every node
+    /// the codegen queries.
     pub fn node_type(&self, node: &bbnf_ir::IrNode) -> TypeDesc {
-        self.ir
-            .type_map
-            .as_ref()
-            .expect("TypeMap not populated")
-            .node_type(node)
-            .cloned()
-            .unwrap_or_else(|| {
-                panic!(
-                    "TypeMap node_type miss: {:?} at {:p}",
-                    std::mem::discriminant(node),
-                    node
-                );
-            })
-    }
-
-    /// Look up the project_node_in_vec type for a sub-expression from the TypeMap.
-    pub fn vec_elem_type(&self, node: &bbnf_ir::IrNode) -> TypeDesc {
-        self.ir
-            .type_map
-            .as_ref()
-            .expect("TypeMap not populated")
-            .vec_elem_type(node)
-            .cloned()
-            .unwrap_or_else(|| {
-                panic!(
-                    "TypeMap vec_elem_type miss: {:?} at {:p}",
-                    std::mem::discriminant(node),
-                    node
-                );
-            })
-    }
-
-    /// Look up the precomputed Seq child types from the TypeMap.
-    pub fn seq_child_types(&self, children: &[bbnf_ir::IrNode]) -> Option<Vec<TypeDesc>> {
-        self.ir.type_map.as_ref().and_then(|m| {
-            m.seq_child_types_by_ptr(children.as_ptr() as usize)
-                .map(|s| s.to_vec())
+        self.ir.node_type(node).cloned().unwrap_or_else(|| {
+            panic!(
+                "TypeMap node_type miss: {:?} at {:p}",
+                std::mem::discriminant(node),
+                node
+            );
         })
     }
 
-    /// Look up the result type of a Seq (post-compression, post-flattening).
-    pub fn seq_result_type(&self, children: &[bbnf_ir::IrNode]) -> Option<TypeDesc> {
-        self.ir
-            .type_map
-            .as_ref()
-            .and_then(|m| m.seq_result_type(children.as_ptr() as usize).cloned())
+    /// Look up the project_node_in_vec type for a sub-expression
+    /// from the TypeMap.
+    pub fn vec_elem_type(&self, node: &bbnf_ir::IrNode) -> TypeDesc {
+        self.ir.vec_elem_type(node).cloned().unwrap_or_else(|| {
+            panic!(
+                "TypeMap vec_elem_type miss: {:?} at {:p}",
+                std::mem::discriminant(node),
+                node
+            );
+        })
     }
 
-    pub fn seq_preserve_spans(&self, children: &[bbnf_ir::IrNode]) -> bool {
-        self.ir
-            .type_map
-            .as_ref()
-            .is_some_and(|m| m.seq_preserve_spans(children.as_ptr() as usize))
+    /// Look up the precomputed Seq child types from the TypeMap.
+    ///
+    /// `seq_node` must be the `IrNode::Seq(_)` itself (not the child
+    /// slice) — the Seq-keyed TypeMap entries are keyed by the Seq
+    /// node's `NodeId` via `ir.dag`.
+    pub fn seq_child_types(&self, seq_node: &bbnf_ir::IrNode) -> Option<Vec<TypeDesc>> {
+        self.ir.seq_child_types(seq_node).map(|s| s.to_vec())
+    }
+
+    /// Look up the result type of a Seq (post-compression,
+    /// post-flattening).
+    pub fn seq_result_type(&self, seq_node: &bbnf_ir::IrNode) -> Option<TypeDesc> {
+        self.ir.seq_result_type(seq_node).cloned()
+    }
+
+    pub fn seq_preserve_spans(&self, seq_node: &bbnf_ir::IrNode) -> bool {
+        self.ir.seq_preserve_spans(seq_node)
     }
 
     /// Look up the scratch Vec index for a given collection element TypeDesc.

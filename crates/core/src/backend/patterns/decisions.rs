@@ -50,36 +50,37 @@ pub fn child_alloc(ty: &TypeDesc, parent_alloc: ValuePlacement) -> ValuePlacemen
 
 /// Resolve Seq type decomposition from TypeMap.
 ///
-/// Mirrors the decision logic in `driver.rs:compile_seq` lines 375-475.
-pub fn decide_seq(children: &[IrNode], ir: &GrammarIR) -> SeqDecision {
-    let type_map = ir.type_map.as_ref();
+/// `seq_node` must be the `IrNode::Seq(children)` itself — the
+/// Seq-keyed TypeMap entries are indexed by the Seq node's `NodeId`,
+/// not the children slice.
+pub fn decide_seq(seq_node: &IrNode, ir: &GrammarIR) -> SeqDecision {
+    let IrNode::Seq(children) = seq_node else {
+        unreachable!("decide_seq called on non-Seq node");
+    };
+    let has_type_map = ir.type_map.is_some();
 
-    // Step 1: child types from seq_child_types (pointer-based lookup).
-    let child_types: Vec<TypeDesc> = type_map
-        .and_then(|tm| {
-            tm.seq_child_types_by_ptr(children.as_ptr() as usize)
-                .map(|s| s.to_vec())
-        })
+    // Step 1: child types from seq_child_types (keyed by the Seq
+    // node's NodeId via `GrammarIR::seq_child_types`).
+    let child_types: Vec<TypeDesc> = ir
+        .seq_child_types(seq_node)
+        .map(|s| s.to_vec())
         .unwrap_or_else(|| {
             children
                 .iter()
-                .map(|c| {
-                    type_map
-                        .and_then(|tm| tm.node_type(c).cloned())
-                        .unwrap_or(TypeDesc::Span)
-                })
+                .map(|c| ir.node_type(c).cloned().unwrap_or(TypeDesc::Span))
                 .collect()
         });
 
     // Step 2: result type.
-    let result_type = type_map
-        .and_then(|tm| tm.seq_result_type(children.as_ptr() as usize).cloned())
+    let result_type = ir
+        .seq_result_type(seq_node)
+        .cloned()
         .unwrap_or(TypeDesc::Span);
 
     // Step 3: all-Span check.
     let all_span = match &result_type {
         TypeDesc::Span => true,
-        _ if child_types.iter().all(|t| *t == TypeDesc::Span) && !type_map.is_some() => true,
+        _ if child_types.iter().all(|t| *t == TypeDesc::Span) && !has_type_map => true,
         _ => result_type == TypeDesc::Span,
     };
 
@@ -97,11 +98,7 @@ pub fn decide_seq(children: &[IrNode], ir: &GrammarIR) -> SeqDecision {
     // Step 5: raw child types (from node_type, no seq_child_types override).
     let raw_child_types: Vec<TypeDesc> = children
         .iter()
-        .map(|c| {
-            type_map
-                .and_then(|tm| tm.node_type(c).cloned())
-                .unwrap_or(TypeDesc::Span)
-        })
+        .map(|c| ir.node_type(c).cloned().unwrap_or(TypeDesc::Span))
         .collect();
 
     // Step 6: flatten detection.

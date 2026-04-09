@@ -32,7 +32,7 @@ pub(super) fn compile_seq<E: Emitter>(
         return output;
     }
 
-    compile_seq_grouped(children, alloc, ir, dstate, emitter, ctx)
+    compile_seq_grouped(node, children, alloc, ir, dstate, emitter, ctx)
 }
 
 /// If this Seq is an operator chain (per `NodeFacts`) and the emitter
@@ -58,28 +58,27 @@ fn try_operator_chain<E: Emitter>(
     }
 
     let (head, link, op, rhs) = extract_operator_chain(children)?;
-    let type_map = ir.type_map.as_ref();
 
-    // Compute types from TypeMap. Fall back to node_type if seq_result unavailable.
-    let seq_result =
-        type_map.and_then(|tm| tm.seq_result_type(children.as_ptr() as usize).cloned());
+    // Compute types from TypeMap via the DAG-keyed convenience
+    // accessors. Fall back to `node_type` if `seq_result` is
+    // unavailable.
+    let seq_result = ir.seq_result_type(node).cloned();
     let head_type = seq_result
         .as_ref()
         .and_then(|t| match t {
             TypeDesc::Tuple(elems) if elems.len() == 2 => Some(elems[0].clone()),
             _ => None,
         })
-        .or_else(|| type_map.and_then(|tm| tm.node_type(head).cloned()))
+        .or_else(|| ir.node_type(head).cloned())
         .unwrap_or(TypeDesc::Span);
 
-    // Skip if head is Span — operator chain not beneficial for all-Span chains.
+    // Skip if head is Span — operator chain not beneficial for
+    // all-Span chains.
     if head_type == TypeDesc::Span {
         return None;
     }
 
-    let link_elem_type = type_map
-        .and_then(|tm| tm.vec_elem_type(link).cloned())
-        .unwrap_or(TypeDesc::Span);
+    let link_elem_type = ir.vec_elem_type(link).cloned().unwrap_or(TypeDesc::Span);
 
     let link_elem_types = match &link_elem_type {
         TypeDesc::Tuple(elems) if elems.len() == 2 => Some((&elems[0], &elems[1])),
@@ -122,6 +121,7 @@ fn try_operator_chain<E: Emitter>(
 }
 
 fn compile_seq_grouped<E: Emitter>(
+    node: &IrNode,
     children: &[IrNode],
     alloc: ValuePlacement,
     ir: &GrammarIR,
@@ -129,7 +129,7 @@ fn compile_seq_grouped<E: Emitter>(
     emitter: &mut E,
     ctx: &mut E::Ctx,
 ) -> E::Output {
-    let decision = decisions::decide_seq(children, ir);
+    let decision = decisions::decide_seq(node, ir);
 
     if decision.all_span {
         let outputs: Vec<_> = children

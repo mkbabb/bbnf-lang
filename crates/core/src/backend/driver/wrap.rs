@@ -25,8 +25,6 @@ pub(super) fn compile_wrap<E: Emitter>(
     emitter: &mut E,
     ctx: &mut E::Ctx,
 ) -> E::Output {
-    let type_map = ir.type_map.as_ref();
-
     // Delimited sep_by with terminator:
     // `open >> OW(Repeat(Skip(element, Optional(separator)))) << close`
     // where close is a single-byte Literal.
@@ -45,15 +43,15 @@ pub(super) fn compile_wrap<E: Emitter>(
                     None
                 };
 
-                let elem_type = type_map
-                    .and_then(|tm| {
-                        tm.vec_elem_type(element).cloned().or_else(|| {
-                            let ty = tm.node_type(element).cloned()?;
-                            Some(if ty == TypeDesc::BoxedEnum {
-                                TypeDesc::Enum
-                            } else {
-                                ty
-                            })
+                let elem_type = ir
+                    .vec_elem_type(element)
+                    .cloned()
+                    .or_else(|| {
+                        let ty = ir.node_type(element).cloned()?;
+                        Some(if ty == TypeDesc::BoxedEnum {
+                            TypeDesc::Enum
+                        } else {
+                            ty
                         })
                     })
                     .unwrap_or(TypeDesc::Span);

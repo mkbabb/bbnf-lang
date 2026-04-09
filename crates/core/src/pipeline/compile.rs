@@ -375,16 +375,25 @@ fn compile_ast_common<'a>(
         // they reflect the final optimized graph.
         bbnf_ir::passes::compute_scc(&mut ir);
 
-        // Durable post-extraction canonical DAG. Mandatory — the
-        // reverse pointer map inside is the identity substrate for
-        // every downstream NodeId-keyed pass (Tranches D, F, G).
-        ir.dag = Some(bbnf_ir::dag::GrammarDag::from_ir(&ir));
-
-        // Layer 2 — facts computation. Monotone properties the
-        // downstream strategy solvers and backend consume.
+        // Layer 2a — body-mutating facts/restructuring passes.
+        // `factor_regex_with_lookahead` and `fuse_token_dispatch`
+        // rewrite rule bodies in place (lookahead dispatch factoring,
+        // @token fusion). Running them before the durable DAG is
+        // built keeps the reverse pointer map valid for every
+        // NodeId-keyed consumer downstream.
         ir.follow_sets = bbnf_ir::passes::compute_follow_sets(&ir);
         bbnf_ir::passes::factor_regex_with_lookahead(&mut ir);
         bbnf_ir::passes::fuse_token_dispatch(&mut ir);
+
+        // Durable post-extraction canonical DAG. Mandatory — the
+        // reverse pointer map inside is the identity substrate for
+        // every downstream NodeId-keyed pass (Tranches D, F, G) and
+        // for `project_types` in `finalize_compile`. Built after
+        // the body-mutating facts passes converge so the pointer
+        // index remains valid.
+        ir.dag = Some(bbnf_ir::dag::GrammarDag::from_ir(&ir));
+
+        // Layer 2b — non-mutating facts on the stable DAG.
         bbnf_ir::passes::generate_dispatch_tables(&mut ir);
         bbnf_ir::passes::compute_regex_info(&mut ir);
         bbnf_ir::passes::recognize_patterns(&mut ir);

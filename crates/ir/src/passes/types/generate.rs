@@ -15,24 +15,35 @@ use std::collections::HashMap;
 
 use csp_solver::Csp;
 
+use crate::dag::NodeId;
 use crate::{FnDescriptor, GrammarIR, IrNode, RuleId, TypeDesc};
 
 use super::constraint::*;
 
 /// Result of constraint generation: CSP + rule-to-var mapping + metadata.
+///
+/// Internal pointer-keyed maps (`node_vars`, `vec_context_vars`,
+/// `seq_metadata`) are an implementation detail of constraint
+/// generation. A parallel `node_id_for_ptr` side map translates
+/// those pointer keys to stable `NodeId`s at extraction time so the
+/// public `TypeMap` can use DAG-resolved keys.
 pub struct ConstraintSystem {
     pub csp: Csp<TypeDomain>,
-    /// Maps RuleId -> TypeVarId for rule-level type variables.
+    /// Maps `RuleId -> TypeVarId` for rule-level type variables.
     pub rule_vars: HashMap<RuleId, TypeVarId>,
-    /// Maps node_id (pointer) -> TypeVarId for normal-context type variables.
+    /// Maps pointer -> `TypeVarId` for normal-context type variables.
     pub node_vars: HashMap<usize, TypeVarId>,
-    /// Maps node_id (pointer) -> TypeVarId for vec-context type variables.
+    /// Maps pointer -> `TypeVarId` for vec-context type variables.
     pub vec_context_vars: HashMap<usize, TypeVarId>,
-    /// Per-Seq metadata: children pointer -> (child var IDs, preserve_spans).
+    /// Per-Seq metadata: pointer -> `(child var IDs, preserve_spans)`.
     pub seq_metadata: HashMap<usize, SeqMetadata>,
-    /// Seq constraints tracked for TypeMap export (var, children, preserve_spans,
-    /// sp_override_originals, collapse_simple_spans, child_node_kinds).
+    /// Seq constraints tracked for TypeMap export.
     pub seq_constraints: Vec<SeqConstraintMeta>,
+    /// Side map: pointer -> stable `NodeId` from `ir.dag`. Populated
+    /// during `generate_node` when the DAG knows the node; used at
+    /// extraction to key the public `TypeMap` by `NodeId` rather
+    /// than by pointer.
+    pub node_id_for_ptr: HashMap<usize, NodeId>,
 }
 
 /// Metadata recorded during constraint generation for Seq nodes.
@@ -45,6 +56,10 @@ pub struct SeqMetadata {
 
 /// Metadata for Seq constraints, used during TypeMap export.
 pub struct SeqConstraintMeta {
+    /// The Seq node's stable `NodeId`, populated from `ir.dag` during
+    /// constraint generation. `None` when the DAG doesn't know about
+    /// the node (tests without a DAG).
+    pub seq_node_id: Option<NodeId>,
     pub var: TypeVarId,
     pub children: Vec<TypeVarId>,
     pub preserve_spans: bool,
@@ -62,6 +77,7 @@ pub fn generate_constraints(ir: &GrammarIR) -> ConstraintSystem {
         vec_context_vars: HashMap::new(),
         seq_metadata: HashMap::new(),
         seq_constraints: Vec::new(),
+        node_id_for_ptr: HashMap::new(),
         ir,
     };
 
@@ -82,8 +98,6 @@ pub fn generate_constraints(ir: &GrammarIR) -> ConstraintSystem {
             .add_constraint(EqualConstraint::new(rule_var, body_var));
     }
 
-    // No finalize() needed — propagate() auto-selects sweep strategy without adjacency.
-
     ConstraintSystem {
         csp: cg.csp,
         rule_vars: cg.rule_vars,
@@ -91,6 +105,7 @@ pub fn generate_constraints(ir: &GrammarIR) -> ConstraintSystem {
         vec_context_vars: cg.vec_context_vars,
         seq_metadata: cg.seq_metadata,
         seq_constraints: cg.seq_constraints,
+        node_id_for_ptr: cg.node_id_for_ptr,
     }
 }
 
@@ -101,6 +116,7 @@ struct ConstraintGenerator<'a> {
     vec_context_vars: HashMap<usize, TypeVarId>,
     seq_metadata: HashMap<usize, SeqMetadata>,
     seq_constraints: Vec<SeqConstraintMeta>,
+    node_id_for_ptr: HashMap<usize, NodeId>,
     ir: &'a GrammarIR,
 }
 
@@ -116,6 +132,17 @@ impl<'a> ConstraintGenerator<'a> {
         let node_id = node as *const IrNode as usize;
         let var = self.new_var();
         self.node_vars.insert(node_id, var);
+
+        // Record the `NodeId` for this tree position so the extractor
+        // can translate the internal pointer key to a stable id when
+        // building the public `TypeMap`. If the DAG isn't populated,
+        // the side map stays empty for this pointer and the extractor
+        // skips it.
+        if let Some(dag) = self.ir.dag.as_ref() {
+            if let Some(nid) = dag.node_for(node) {
+                self.node_id_for_ptr.insert(node_id, nid);
+            }
+        }
 
         // Create vec-context variable for this node.
         let vec_var = self.new_var();
@@ -190,8 +217,12 @@ impl<'a> ConstraintGenerator<'a> {
                     },
                 );
 
-                // Track metadata for TypeMap export.
+                // Track metadata for TypeMap export. The Seq's
+                // `NodeId` (if known to the DAG) keys the public
+                // `TypeMap` Seq entries at extraction.
+                let seq_node_id = self.node_id_for_ptr.get(&node_id).copied();
                 self.seq_constraints.push(SeqConstraintMeta {
+                    seq_node_id,
                     var,
                     children: child_vars.clone(),
                     preserve_spans,

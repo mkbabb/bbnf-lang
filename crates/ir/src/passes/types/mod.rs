@@ -3,7 +3,8 @@
 //! Uses the `csp-solver` crate to infer types for all IR nodes via AC-3
 //! propagation. The solver assigns a `TypeDesc` to every node in both normal
 //! and vec-context, then exports the results into the `TypeMap` consumed by
-//! codegen.
+//! codegen. The public `TypeMap` is keyed by stable `NodeId` via `ir.dag`;
+//! the CSP's internal pointer-keyed bookkeeping is translated at extraction.
 //!
 //! Also collects sub-variants for heterogeneous alternations and stores them
 //! in `RuleMeta::sub_variants`.
@@ -15,6 +16,7 @@ mod utils;
 
 use std::collections::HashMap;
 
+use crate::dag::{GrammarDag, NodeId};
 use crate::{GrammarIR, IrNode, RuleId, SubVariant, TypeDesc};
 
 use constraint::SeqChildKind;
@@ -41,30 +43,49 @@ pub use utils::{TypeMap, try_flatten_pair};
 /// 5. Sub-variant collection: Heterogeneous alternation branches get generated
 ///    variant names for codegen coercion.
 pub fn project_types(ir: &mut GrammarIR) {
+    // Ensure the durable DAG substrate exists. Production runs
+    // `pipeline::compile` populate `ir.dag` before this pass;
+    // unit tests that call `project_types` directly on a raw IR
+    // trigger this fallback so the TypeMap's NodeId keys stay
+    // valid either way.
+    if ir.dag.is_none() {
+        ir.dag = Some(crate::dag::GrammarDag::from_ir(ir));
+    }
+
     // Phase 1: Generate constraint system from the IR structure.
     let mut system = generate_constraints(ir);
 
     // Phase 2: Solve via monotonic fixed-point propagation.
     let _ = system.csp.propagate();
 
-    // Phase 3: Extract solved types into TypeMap.
+    // Phase 3: Extract solved types into TypeMap keyed by `NodeId`.
     let mut type_map = TypeMap::default();
 
     // Build node_types and vec_elem_types from solved variables.
-    for (&node_id, &var_id) in &system.node_vars {
+    // Internal pointer keys are translated to stable `NodeId` via
+    // the side map populated by `generate_node`; entries without a
+    // `NodeId` (DAG-absent paths) are silently dropped.
+    for (node_ptr, &var_id) in &system.node_vars {
+        let Some(&nid) = system.node_id_for_ptr.get(node_ptr) else {
+            continue;
+        };
         if let Some(ty) = &system.csp.variables[var_id as usize].domain.solved {
-            type_map.insert_node_type(node_id, ty.clone());
+            type_map.insert_node_type(nid, ty.clone());
         }
     }
-    for (&node_id, &var_id) in &system.vec_context_vars {
+    for (node_ptr, &var_id) in &system.vec_context_vars {
+        let Some(&nid) = system.node_id_for_ptr.get(node_ptr) else {
+            continue;
+        };
         if let Some(ty) = &system.csp.variables[var_id as usize].domain.solved {
-            type_map.insert_vec_elem_type(node_id, ty.clone());
+            type_map.insert_vec_elem_type(nid, ty.clone());
         }
     }
 
     // Build seq metadata from the tracked Seq constraints.
     for seq_meta in &system.seq_constraints {
         let generate::SeqConstraintMeta {
+            seq_node_id,
             var,
             children,
             preserve_spans,
@@ -125,8 +146,7 @@ pub fn project_types(ir: &mut GrammarIR) {
 
         // Re-record per-node types for the children in this Seq.
         for (child_var, eff_ty) in children.iter().zip(effective_types.iter()) {
-            let node_id = find_node_id_for_var(&system, *child_var);
-            if let Some(nid) = node_id {
+            if let Some(nid) = find_node_id_for_var(&system, *child_var) {
                 type_map.insert_node_type(nid, eff_ty.clone());
             }
         }
@@ -134,20 +154,27 @@ pub fn project_types(ir: &mut GrammarIR) {
         let preserve = *preserve_spans
             && effective_types.iter().all(|t| *t == TypeDesc::Span);
 
-        if let Some(seq_ptr) = find_seq_ptr_for_constraint(&system, children) {
-            type_map.insert_seq_child_types(seq_ptr, effective_types);
-            type_map.insert_seq_preserve_spans(seq_ptr, preserve);
+        // Seq-keyed entries go under the Seq node's `NodeId`. Tests
+        // that run `project_types` without a DAG still get here
+        // because `project_types` builds the DAG at the top, so
+        // `seq_node_id` is always populated in practice.
+        if let Some(seq_nid) = seq_node_id {
+            type_map.insert_seq_child_types(*seq_nid, effective_types);
+            type_map.insert_seq_preserve_spans(*seq_nid, preserve);
 
             if let Some(result_ty) = &system.csp.variables[*var as usize].domain.solved {
-                type_map.insert_seq_result_type(seq_ptr, result_ty.clone());
+                type_map.insert_seq_result_type(*seq_nid, result_ty.clone());
             }
         }
     }
 
-    // Phase 3.5: Compute structural (pre-collapse) types for emission.
-    // Walk the IR and detect where collapsed types differ from structural.
-    for rule in &ir.rules {
-        compute_structural_types_for_node(&rule.body, &mut type_map);
+    // Phase 3.5: Compute structural (pre-collapse) types for
+    // emission. Walk the IR and detect where collapsed types differ
+    // from structural.
+    if let Some(dag) = ir.dag.as_ref() {
+        for rule in &ir.rules {
+            compute_structural_types_for_node(&rule.body, &mut type_map, dag);
+        }
     }
 
     // Phase 4: Build ir.types from rule variables.
@@ -167,16 +194,18 @@ pub fn project_types(ir: &mut GrammarIR) {
 
     let mut raw_sub_variants: HashMap<RuleId, Vec<subvariants::RawSubVariant>> = HashMap::new();
 
-    for rule in &ir.rules {
-        if rule.meta.is_transparent {
-            continue;
-        }
-        let rule_name = rule_names
-            .get(&rule.id)
-            .expect("rule ID must exist in rule_names map");
-        let svs = collect_sub_variants_raw(rule_name, &rule.body, &type_map);
-        if !svs.is_empty() {
-            raw_sub_variants.insert(rule.id, svs);
+    if let Some(dag) = ir.dag.as_ref() {
+        for rule in &ir.rules {
+            if rule.meta.is_transparent {
+                continue;
+            }
+            let rule_name = rule_names
+                .get(&rule.id)
+                .expect("rule ID must exist in rule_names map");
+            let svs = collect_sub_variants_raw(rule_name, &rule.body, &type_map, dag);
+            if !svs.is_empty() {
+                raw_sub_variants.insert(rule.id, svs);
+            }
         }
     }
 
@@ -213,59 +242,69 @@ pub fn project_types(ir: &mut GrammarIR) {
     }
 
     // Phase 6: Correction pass -- align Repeat vec_elem_types with ir.types.
-    for rule in &ir.rules {
-        let rule_td = types_map.get(&rule.id);
-        if let Some(td) = rule_td {
-            correct_repeat_elem_types(&rule.body, td, &mut type_map);
+    if let Some(dag) = ir.dag.as_ref() {
+        for rule in &ir.rules {
+            if let Some(td) = types_map.get(&rule.id) {
+                correct_repeat_elem_types(&rule.body, td, &mut type_map, dag);
+            }
         }
     }
 
     // Phase 7: Collect distinct scratch types for codegen Vec generation.
     let mut scratch: Vec<TypeDesc> = Vec::new();
 
-    fn collect_repeat_scratch(node: &IrNode, map: &utils::TypeMap, out: &mut Vec<TypeDesc>) {
+    fn collect_repeat_scratch(
+        node: &IrNode,
+        map: &utils::TypeMap,
+        dag: &GrammarDag,
+        out: &mut Vec<TypeDesc>,
+    ) {
         match node {
             IrNode::Repeat { inner, hi, .. } if *hi > 1 => {
-                if let Some(ty) = map.vec_elem_type(inner) {
-                    if *ty != TypeDesc::Span && !out.contains(ty) {
-                        out.push(ty.clone());
+                if let Some(nid) = dag.node_for(inner.as_ref()) {
+                    if let Some(ty) = map.vec_elem_type(nid) {
+                        if *ty != TypeDesc::Span && !out.contains(ty) {
+                            out.push(ty.clone());
+                        }
                     }
                 }
-                collect_repeat_scratch(inner, map, out);
+                collect_repeat_scratch(inner, map, dag, out);
             }
             IrNode::Seq(children) => {
                 for c in children {
-                    collect_repeat_scratch(c, map, out);
+                    collect_repeat_scratch(c, map, dag, out);
                 }
             }
             IrNode::Alt(branches, _) => {
                 for b in branches {
-                    collect_repeat_scratch(&b.node, map, out);
+                    collect_repeat_scratch(&b.node, map, dag, out);
                 }
             }
             IrNode::Skip(l, r) | IrNode::Next(l, r) | IrNode::Minus(l, r) => {
-                collect_repeat_scratch(l, map, out);
-                collect_repeat_scratch(r, map, out);
+                collect_repeat_scratch(l, map, dag, out);
+                collect_repeat_scratch(r, map, dag, out);
             }
             IrNode::OptionalWhitespace(inner)
             | IrNode::Map { inner, .. }
             | IrNode::Negate(inner) => {
-                collect_repeat_scratch(inner, map, out);
+                collect_repeat_scratch(inner, map, dag, out);
             }
             IrNode::Repeat { inner, .. } => {
-                collect_repeat_scratch(inner, map, out);
+                collect_repeat_scratch(inner, map, dag, out);
             }
             IrNode::TokenDispatch { arms, fallback, .. } => {
                 for arm in arms {
-                    collect_repeat_scratch(&arm.continuation, map, out);
+                    collect_repeat_scratch(&arm.continuation, map, dag, out);
                 }
-                collect_repeat_scratch(fallback, map, out);
+                collect_repeat_scratch(fallback, map, dag, out);
             }
             IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon | IrNode::Ref(_) => {}
         }
     }
-    for rule in &ir.rules {
-        collect_repeat_scratch(&rule.body, &type_map, &mut scratch);
+    if let Some(dag) = ir.dag.as_ref() {
+        for rule in &ir.rules {
+            collect_repeat_scratch(&rule.body, &type_map, dag, &mut scratch);
+        }
     }
 
     // Also collect Vec inners from rule types.
@@ -296,42 +335,34 @@ pub fn project_types(ir: &mut GrammarIR) {
     ir.types.sort_by_key(|(id, _)| *id);
 }
 
-/// Find the node_id associated with a variable ID, by scanning the node_vars map.
+/// Find the `NodeId` associated with a CSP variable ID by scanning
+/// the generator's pointer-keyed var maps and translating through
+/// `node_id_for_ptr`.
 fn find_node_id_for_var(
     system: &generate::ConstraintSystem,
     var_id: csp_solver::constraint::VarId,
-) -> Option<usize> {
-    // Check if any node maps directly to this var.
-    for (&node_id, &v) in &system.node_vars {
+) -> Option<NodeId> {
+    for (node_ptr, &v) in &system.node_vars {
         if v == var_id {
-            return Some(node_id);
+            return system.node_id_for_ptr.get(node_ptr).copied();
         }
     }
-    // Also check vec_context_vars.
-    for (&node_id, &v) in &system.vec_context_vars {
+    for (node_ptr, &v) in &system.vec_context_vars {
         if v == var_id {
-            return Some(node_id);
+            return system.node_id_for_ptr.get(node_ptr).copied();
         }
     }
     None
 }
 
-/// Find the Seq's children slice pointer from the seq_metadata,
-/// matching by the child variable IDs stored during constraint generation.
-fn find_seq_ptr_for_constraint(
-    system: &generate::ConstraintSystem,
-    child_vars: &[csp_solver::constraint::VarId],
-) -> Option<usize> {
-    for (&ptr, meta) in &system.seq_metadata {
-        if meta.child_vars == child_vars {
-            return Some(ptr);
-        }
-    }
-    None
-}
-
-/// Correct Repeat vec_elem_types to match the Vec inner from ir.types.
-fn correct_repeat_elem_types(node: &IrNode, rule_type: &TypeDesc, map: &mut utils::TypeMap) {
+/// Correct Repeat vec_elem_types to match the Vec inner from
+/// `ir.types`.
+fn correct_repeat_elem_types(
+    node: &IrNode,
+    rule_type: &TypeDesc,
+    map: &mut utils::TypeMap,
+    dag: &GrammarDag,
+) {
     fn extract_all_vec_inners<'a>(td: &'a TypeDesc, out: &mut Vec<&'a TypeDesc>) {
         match td {
             TypeDesc::Vec(inner) => out.push(inner.as_ref()),
@@ -352,28 +383,35 @@ fn correct_repeat_elem_types(node: &IrNode, rule_type: &TypeDesc, map: &mut util
         _ => return,
     };
 
-    fn walk_and_correct(node: &IrNode, vec_inner: &TypeDesc, map: &mut utils::TypeMap) {
+    fn walk_and_correct(
+        node: &IrNode,
+        vec_inner: &TypeDesc,
+        map: &mut utils::TypeMap,
+        dag: &GrammarDag,
+    ) {
         match node {
             IrNode::Repeat { inner, lo: _, hi } if *hi > 1 => {
-                map.set_vec_elem_type(inner.as_ref(), vec_inner.clone());
+                if let Some(nid) = dag.node_for(inner.as_ref()) {
+                    map.set_vec_elem_type(nid, vec_inner.clone());
+                }
             }
             IrNode::Seq(children) => {
                 for c in children {
-                    walk_and_correct(c, vec_inner, map);
+                    walk_and_correct(c, vec_inner, map, dag);
                 }
             }
             IrNode::Skip(l, r) | IrNode::Next(l, r) | IrNode::Minus(l, r) => {
-                walk_and_correct(l, vec_inner, map);
-                walk_and_correct(r, vec_inner, map);
+                walk_and_correct(l, vec_inner, map, dag);
+                walk_and_correct(r, vec_inner, map, dag);
             }
             IrNode::OptionalWhitespace(inner) => {
-                walk_and_correct(inner, vec_inner, map);
+                walk_and_correct(inner, vec_inner, map, dag);
             }
             _ => {}
         }
     }
 
-    walk_and_correct(node, vec_inner, map);
+    walk_and_correct(node, vec_inner, map, dag);
 }
 
 /// Compute structural (pre-collapse) types for nodes where collapsed types
@@ -384,74 +422,79 @@ fn correct_repeat_elem_types(node: &IrNode, rule_type: &TypeDesc, map: &mut util
 /// 1. Optional(Span) → Span: Repeat(inner, 0, 1) with collapsed Span → structural Option(Span)
 /// 2. Seq Span compression: result_type has fewer elements than children
 /// 3. try_flatten_pair: (T, Vec(T)) collapsed to Vec(T)
-fn compute_structural_types_for_node(node: &IrNode, type_map: &mut utils::TypeMap) {
+fn compute_structural_types_for_node(
+    node: &IrNode,
+    type_map: &mut utils::TypeMap,
+    dag: &GrammarDag,
+) {
     match node {
         IrNode::Repeat { inner, lo, hi } => {
-            // Collapse 1: Optional(Span) → Span
+            // Collapse 1: Optional(Span) → Span.
             if *lo == 0 && *hi == 1 {
-                let node_ptr = node as *const IrNode as usize;
-                if let Some(collapsed) = type_map.node_type(node).cloned() {
-                    if collapsed == TypeDesc::Span {
-                        // The CSP collapsed Option(Span) → Span. Record the structural type.
-                        if let Some(inner_ty) = type_map.node_type(inner.as_ref()).cloned() {
-                            type_map.insert_structural_type(
-                                node_ptr,
-                                TypeDesc::Option(Box::new(inner_ty)),
-                            );
+                if let (Some(node_nid), Some(inner_nid)) =
+                    (dag.node_for(node), dag.node_for(inner.as_ref()))
+                {
+                    if let Some(collapsed) = type_map.node_type(node_nid).cloned() {
+                        if collapsed == TypeDesc::Span {
+                            if let Some(inner_ty) = type_map.node_type(inner_nid).cloned() {
+                                type_map.insert_structural_type(
+                                    node_nid,
+                                    TypeDesc::Option(Box::new(inner_ty)),
+                                );
+                            }
                         }
                     }
                 }
             }
-            compute_structural_types_for_node(inner, type_map);
+            compute_structural_types_for_node(inner, type_map, dag);
         }
 
         IrNode::Seq(children) => {
-            // Collapse 2-3: Seq compression / try_flatten_pair.
-            // The seq_result_type is the COLLAPSED type. The structural type
-            // is the un-compressed, un-flattened Tuple of all child types.
-            let seq_ptr = children.as_ptr() as usize;
-            if let Some(result_type) = type_map.seq_result_type(seq_ptr).cloned() {
-                if let Some(child_types) = type_map.seq_child_types_by_ptr(seq_ptr) {
-                    let child_types = child_types.to_vec();
-                    // Build the un-compressed Tuple (no Span compression, no flatten).
-                    let structural_elems: Vec<TypeDesc> = child_types.clone();
-                    let structural_result = match structural_elems.len() {
-                        0 => TypeDesc::Tuple(vec![]),
-                        1 => structural_elems.into_iter().next().unwrap(),
-                        _ => TypeDesc::Tuple(structural_elems),
-                    };
-                    // Only record if it differs from collapsed.
-                    if structural_result != result_type {
-                        let node_ptr = node as *const IrNode as usize;
-                        type_map.insert_structural_type(node_ptr, structural_result);
+            // Collapse 2-3: Seq compression / try_flatten_pair. The
+            // seq_result_type is the COLLAPSED type; the structural
+            // type is the un-compressed, un-flattened Tuple of all
+            // child types.
+            if let Some(seq_nid) = dag.node_for(node) {
+                if let Some(result_type) = type_map.seq_result_type(seq_nid).cloned() {
+                    if let Some(child_types) = type_map.seq_child_types(seq_nid) {
+                        let child_types = child_types.to_vec();
+                        let structural_result = match child_types.len() {
+                            0 => TypeDesc::Tuple(vec![]),
+                            1 => child_types.into_iter().next().unwrap(),
+                            _ => TypeDesc::Tuple(child_types),
+                        };
+                        if structural_result != result_type {
+                            type_map.insert_structural_type(seq_nid, structural_result);
+                        }
                     }
                 }
             }
             for child in children {
-                compute_structural_types_for_node(child, type_map);
+                compute_structural_types_for_node(child, type_map, dag);
             }
         }
 
-        // Recurse into all sub-nodes.
         IrNode::Alt(branches, _) => {
             for b in branches {
-                compute_structural_types_for_node(&b.node, type_map);
+                compute_structural_types_for_node(&b.node, type_map, dag);
             }
         }
         IrNode::Skip(l, r) | IrNode::Next(l, r) | IrNode::Minus(l, r) => {
-            compute_structural_types_for_node(l, type_map);
-            compute_structural_types_for_node(r, type_map);
+            compute_structural_types_for_node(l, type_map, dag);
+            compute_structural_types_for_node(r, type_map, dag);
         }
-        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) | IrNode::Negate(inner) => {
-            compute_structural_types_for_node(inner, type_map);
+        IrNode::Map { inner, .. }
+        | IrNode::OptionalWhitespace(inner)
+        | IrNode::Negate(inner) => {
+            compute_structural_types_for_node(inner, type_map, dag);
         }
         IrNode::TokenDispatch { token, arms, fallback } => {
-            compute_structural_types_for_node(token, type_map);
+            compute_structural_types_for_node(token, type_map, dag);
             for arm in arms {
-                compute_structural_types_for_node(&arm.continuation, type_map);
+                compute_structural_types_for_node(&arm.continuation, type_map, dag);
             }
-            compute_structural_types_for_node(fallback, type_map);
+            compute_structural_types_for_node(fallback, type_map, dag);
         }
-        _ => {} // Leaf nodes: Literal, Regex, Epsilon, Ref
+        _ => {} // Leaf nodes: Literal, Regex, Epsilon, Ref.
     }
 }

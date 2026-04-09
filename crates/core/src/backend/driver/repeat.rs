@@ -22,21 +22,18 @@ pub(super) fn compile_repeat<E: Emitter>(
     emitter: &mut E,
     ctx: &mut E::Ctx,
 ) -> E::Output {
-    let type_map = ir.type_map.as_ref();
-
     // sep_by: Repeat(Skip(element, Repeat(separator, 0, 1)), lo, MAX).
     if hi == u32::MAX {
         if let Some((element, separator)) = decisions::detect_sep_by(inner) {
-            let elem_type = type_map
-                .and_then(|tm| tm.vec_elem_type(element).cloned())
+            let elem_type = ir
+                .vec_elem_type(element)
+                .cloned()
                 .or_else(|| {
-                    type_map.and_then(|tm| {
-                        let ty = tm.node_type(element).cloned()?;
-                        Some(if ty == TypeDesc::BoxedEnum {
-                            TypeDesc::Enum
-                        } else {
-                            ty
-                        })
+                    let ty = ir.node_type(element).cloned()?;
+                    Some(if ty == TypeDesc::BoxedEnum {
+                        TypeDesc::Enum
+                    } else {
+                        ty
                     })
                 })
                 .unwrap_or(TypeDesc::Span);
@@ -62,9 +59,7 @@ pub(super) fn compile_repeat<E: Emitter>(
 
     // Optional (0..1) vs many.
     if lo == 0 && hi == 1 {
-        let inner_type = type_map
-            .and_then(|tm| tm.node_type(inner).cloned())
-            .unwrap_or(TypeDesc::Span);
+        let inner_type = ir.node_type(inner).cloned().unwrap_or(TypeDesc::Span);
         // BoxedEnum optionals need Alloc so the inner Ref produces &'a Enum.
         let inner_alloc = if matches!(inner_type, TypeDesc::BoxedEnum) {
             ValuePlacement::Alloc
@@ -75,19 +70,18 @@ pub(super) fn compile_repeat<E: Emitter>(
         return emitter.emit_repeat_optional(body, &inner_type, alloc, ctx);
     }
 
-    // Use vec_elem_type for repeat-many: element type for scratch Vec
-    // collection, mapping BoxedEnum → Enum since scratch Vecs store
-    // unboxed values.
-    let elem_type = type_map
-        .and_then(|tm| tm.vec_elem_type(inner).cloned())
+    // Use vec_elem_type for repeat-many: element type for scratch
+    // Vec collection, mapping BoxedEnum → Enum since scratch Vecs
+    // store unboxed values.
+    let elem_type = ir
+        .vec_elem_type(inner)
+        .cloned()
         .or_else(|| {
-            type_map.and_then(|tm| {
-                let ty = tm.node_type(inner).cloned()?;
-                Some(if ty == TypeDesc::BoxedEnum {
-                    TypeDesc::Enum
-                } else {
-                    ty
-                })
+            let ty = ir.node_type(inner).cloned()?;
+            Some(if ty == TypeDesc::BoxedEnum {
+                TypeDesc::Enum
+            } else {
+                ty
             })
         })
         .unwrap_or_else(|| match inner {

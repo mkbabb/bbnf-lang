@@ -26,8 +26,6 @@ pub(super) fn compile_alt<E: Emitter>(
     emitter: &mut E,
     ctx: &mut E::Ctx,
 ) -> E::Output {
-    let type_map = ir.type_map.as_ref();
-
     // Look up the pre-solved strategy. Cloned to avoid borrowing
     // conflicts with the subsequent &mut DriverState passes.
     let solved_strategy = dstate.alt_strategy(alt_node, ir).cloned();
@@ -37,9 +35,7 @@ pub(super) fn compile_alt<E: Emitter>(
     let branch_infos: Vec<AltBranchInfo> = branches
         .iter()
         .map(|b| {
-            let mut ty = type_map
-                .and_then(|tm| tm.node_type(&b.node).cloned())
-                .unwrap_or(TypeDesc::Span);
+            let mut ty = ir.node_type(&b.node).cloned().unwrap_or(TypeDesc::Span);
             if alloc == ValuePlacement::Inline && ty == TypeDesc::BoxedEnum {
                 ty = TypeDesc::Enum;
             }
@@ -139,11 +135,7 @@ pub(super) fn compile_alt<E: Emitter>(
         for det in &detected {
             let branch = &branches[det.branch_idx];
             let info = AltBranchInfo {
-                ty: ir
-                    .type_map
-                    .as_ref()
-                    .and_then(|tm| tm.node_type(&branch.node).cloned())
-                    .unwrap_or(TypeDesc::Span),
+                ty: ir.node_type(&branch.node).cloned().unwrap_or(TypeDesc::Span),
                 coercion_variant: None,
             };
             let body = compile_node(&branch.node, alloc, ir, dstate, emitter, ctx);
@@ -161,11 +153,7 @@ pub(super) fn compile_alt<E: Emitter>(
         let fallback = fallback_idx.map(|fi| {
             let branch = &branches[fi];
             let info = AltBranchInfo {
-                ty: ir
-                    .type_map
-                    .as_ref()
-                    .and_then(|tm| tm.node_type(&branch.node).cloned())
-                    .unwrap_or(TypeDesc::Span),
+                ty: ir.node_type(&branch.node).cloned().unwrap_or(TypeDesc::Span),
                 coercion_variant: None,
             };
             let body = compile_node(&branch.node, alloc, ir, dstate, emitter, ctx);

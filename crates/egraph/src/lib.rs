@@ -31,6 +31,7 @@
 #![cfg_attr(not(test), warn(missing_docs))]
 
 mod analysis;
+mod cost_weights;
 mod eclass;
 mod egraph;
 mod extract;
@@ -41,6 +42,7 @@ mod scheduler;
 mod unionfind;
 
 pub use analysis::{Analysis, NoAnalysis};
+pub use cost_weights::CostWeights;
 pub use eclass::EClass;
 pub use egraph::EGraph;
 pub use extract::{AstSize, CostModel, Extractor};

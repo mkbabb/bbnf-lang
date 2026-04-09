@@ -24,6 +24,7 @@ dependencies = [
  "bbnf-ir",
  "bbnf-ser",
  "csp-solver",
+ "egraph",
  "indexmap",
  "parse_that",
  "pprint",
@@ -51,6 +52,8 @@ version = "0.1.6"
 dependencies = [
  "bbnf-regex",
  "csp-solver",
+ "egraph",
+ "egraph-derive",
  "parse_that",
  "rayon",
  "rmp-serde",
@@ -189,6 +192,23 @@ checksum = "d0a5c400df2834b80a4c3327b3aad3a4c4cd4de0629063962b03235697506a28"
 [[package]]
 name = "csp-solver"
 version = "0.1.0"
+
+[[package]]
+name = "egraph"
+version = "0.1.0"
+dependencies = [
+ "rustc-hash",
+ "smallvec",
+]
+
+[[package]]
+name = "egraph-derive"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
 
 [[package]]
 name = "either"

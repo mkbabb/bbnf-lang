@@ -229,6 +229,9 @@ dependencies = [
 name = "bbnf-regex"
 version = "0.1.0"
 dependencies = [
+ "csp-solver",
+ "egraph",
+ "egraph-derive",
  "serde",
  "smallvec",
 ]

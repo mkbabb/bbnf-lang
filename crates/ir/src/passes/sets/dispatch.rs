@@ -27,6 +27,7 @@ use csp_solver::constraint::{Constraint, Revision, VarId};
 use csp_solver::domain::{Domain, LatticeDomain};
 use csp_solver::variable::Variable;
 
+use crate::dag::{GrammarDag, NodeId};
 use crate::{AltBranch, AltDispatch, CharSet128, GrammarIR, IrNode, regex_first};
 
 // ── CSP Domain for Dispatch Eligibility ───────────────────────────────────────
@@ -157,28 +158,30 @@ impl Constraint<DispatchDomain> for DisjointConstraint {
 
 // ── Pre-computed eligibility table ────────────────────────────────────────────
 
-/// Pre-computed dispatch eligibility for all Alt nodes, keyed by pointer.
-type DispatchEligibility = HashMap<usize, bool>;
+/// Pre-computed dispatch eligibility for all Alt nodes, keyed on the
+/// stable `NodeId` from `ir.dag`.
+type DispatchEligibility = HashMap<NodeId, bool>;
 
 /// Collect all Alt nodes from the IR tree and determine dispatch eligibility
 /// via CSP propagation.
 ///
 /// For each Alt node with >=2 branches and <=127 branches, checks pairwise
 /// FIRST set disjointness (without FOLLOW context). The result maps Alt
-/// pointer → bool. The tree walk uses this to skip redundant disjointness
+/// `NodeId` → bool. The tree walk uses this to skip redundant disjointness
 /// checks for non-dispatchable Alts.
 fn precompute_dispatch_eligibility(
     ir: &GrammarIR,
+    dag: &GrammarDag,
     rule_metas: &[(CharSet128, bool)],
     strings: &[String],
 ) -> DispatchEligibility {
-    let mut alts: Vec<(usize, Vec<Option<CharSet128>>)> = Vec::new();
+    let mut alts: Vec<(NodeId, Vec<Option<CharSet128>>)> = Vec::new();
 
     // Phase 1: Collect every Alt node in the IR.
     for rule in &ir.rules {
-        collect_alts(&rule.body, rule_metas, strings, &mut alts);
+        collect_alts(&rule.body, dag, rule_metas, strings, &mut alts);
         if let Some(ref recover) = rule.meta.directives.recover {
-            collect_alts(recover, rule_metas, strings, &mut alts);
+            collect_alts(recover, dag, rule_metas, strings, &mut alts);
         }
     }
 
@@ -189,12 +192,12 @@ fn precompute_dispatch_eligibility(
     // Phase 2: Build CSP — one variable per Alt, one constraint per Alt.
     let mut csp: Csp<DispatchDomain> = Csp::new();
     let mut var_ids: Vec<VarId> = Vec::with_capacity(alts.len());
-    let mut alt_ptrs: Vec<usize> = Vec::with_capacity(alts.len());
+    let mut alt_nids: Vec<NodeId> = Vec::with_capacity(alts.len());
 
-    for (ptr, branch_firsts) in &alts {
+    for (nid, branch_firsts) in &alts {
         let var = csp.add_variable(DispatchDomain::unknown());
         var_ids.push(var);
-        alt_ptrs.push(*ptr);
+        alt_nids.push(*nid);
 
         let dispatchable = is_pairwise_disjoint(branch_firsts);
         csp.add_constraint(DisjointConstraint::new(var, dispatchable));
@@ -205,10 +208,10 @@ fn precompute_dispatch_eligibility(
 
     // Phase 4: Extract results.
     let mut result = HashMap::with_capacity(alts.len());
-    for (i, ptr) in alt_ptrs.iter().enumerate() {
+    for (i, nid) in alt_nids.iter().enumerate() {
         let decision = &csp.variables[var_ids[i] as usize].domain.decision;
         let eligible = matches!(decision, DispatchDecision::Dispatchable);
-        result.insert(*ptr, eligible);
+        result.insert(*nid, eligible);
     }
 
     result
@@ -238,18 +241,21 @@ fn is_pairwise_disjoint(branch_firsts: &[Option<CharSet128>]) -> bool {
 /// Recursively collect Alt nodes and their branch FIRST sets.
 fn collect_alts(
     node: &IrNode,
+    dag: &GrammarDag,
     rule_metas: &[(CharSet128, bool)],
     strings: &[String],
-    out: &mut Vec<(usize, Vec<Option<CharSet128>>)>,
+    out: &mut Vec<(NodeId, Vec<Option<CharSet128>>)>,
 ) {
     match node {
         IrNode::Alt(branches, dispatch) => {
             for branch in branches {
-                collect_alts(&branch.node, rule_metas, strings, out);
+                collect_alts(&branch.node, dag, rule_metas, strings, out);
             }
 
             if dispatch.is_none() && branches.len() >= 2 && branches.len() <= 127 {
-                let ptr = node as *const IrNode as usize;
+                let nid = dag
+                    .node_for(node)
+                    .expect("every Alt visited by collect_alts must be in the DAG");
                 let firsts: Vec<Option<CharSet128>> = branches
                     .iter()
                     .map(|b| {
@@ -258,34 +264,34 @@ fn collect_alts(
                             .or_else(|| node_first_set(&b.node, rule_metas, strings))
                     })
                     .collect();
-                out.push((ptr, firsts));
+                out.push((nid, firsts));
             }
         }
         IrNode::Seq(children) => {
             for child in children {
-                collect_alts(child, rule_metas, strings, out);
+                collect_alts(child, dag, rule_metas, strings, out);
             }
         }
         IrNode::Repeat { inner, .. }
         | IrNode::Negate(inner)
         | IrNode::OptionalWhitespace(inner)
         | IrNode::Map { inner, .. } => {
-            collect_alts(inner, rule_metas, strings, out);
+            collect_alts(inner, dag, rule_metas, strings, out);
         }
         IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
-            collect_alts(a, rule_metas, strings, out);
-            collect_alts(b, rule_metas, strings, out);
+            collect_alts(a, dag, rule_metas, strings, out);
+            collect_alts(b, dag, rule_metas, strings, out);
         }
         IrNode::TokenDispatch {
             token,
             arms,
             fallback,
         } => {
-            collect_alts(token, rule_metas, strings, out);
+            collect_alts(token, dag, rule_metas, strings, out);
             for arm in arms {
-                collect_alts(&arm.continuation, rule_metas, strings, out);
+                collect_alts(&arm.continuation, dag, rule_metas, strings, out);
             }
-            collect_alts(fallback, rule_metas, strings, out);
+            collect_alts(fallback, dag, rule_metas, strings, out);
         }
         IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon | IrNode::Ref(_) => {}
     }
@@ -313,34 +319,63 @@ pub fn generate_dispatch_tables(ir: &mut GrammarIR) {
         .collect();
 
     // Pre-compute dispatch eligibility for all Alt nodes via CSP.
-    let eligibility = precompute_dispatch_eligibility(ir, &rule_metas, &strings);
+    // The durable DAG is built exactly once per compile before any
+    // facts/strategy phase runs, so `ir.dag` is always present.
+    let eligibility = {
+        let dag = ir
+            .dag
+            .as_ref()
+            .expect("generate_dispatch_tables requires ir.dag — built by pipeline::compile");
+        precompute_dispatch_eligibility(ir, dag, &rule_metas, &strings)
+    };
 
+    // `ir.dag` is a field of `ir` disjoint from `ir.rules`, so we
+    // can hold an immutable borrow of the former while the latter
+    // is mutably iterated. Bind it in a narrow scope around the
+    // iteration to keep the borrow checker happy under `par_iter_mut`.
     if ir.rules.len() >= 16 {
-        ir.rules.par_iter_mut().for_each(|rule| {
+        // `par_iter_mut` on `ir.rules` requires a 'static-ish
+        // closure over `dag`. The split-borrow trick: move the
+        // `ir.dag` reference into the closure via a local binding
+        // that the borrow checker sees as disjoint.
+        let dag: &GrammarDag = ir
+            .dag
+            .as_ref()
+            .expect("generate_dispatch_tables requires ir.dag");
+        // Re-borrow rules to sidestep the whole-`ir` conflict.
+        let rules = &mut ir.rules;
+        rules.par_iter_mut().for_each(|rule| {
             let follow = follow_sets.get(&rule.id);
             annotate_node(
                 &mut rule.body,
                 follow,
+                dag,
                 &rule_metas,
                 &strings,
                 &eligibility,
             );
             if let Some(ref mut recover) = rule.meta.directives.recover {
-                annotate_node(recover, follow, &rule_metas, &strings, &eligibility);
+                annotate_node(recover, follow, dag, &rule_metas, &strings, &eligibility);
             }
         });
     } else {
-        for rule in &mut ir.rules {
+        let dag: &GrammarDag = ir
+            .dag
+            .as_ref()
+            .expect("generate_dispatch_tables requires ir.dag");
+        let rules = &mut ir.rules;
+        for rule in rules.iter_mut() {
             let follow = follow_sets.get(&rule.id);
             annotate_node(
                 &mut rule.body,
                 follow,
+                dag,
                 &rule_metas,
                 &strings,
                 &eligibility,
             );
             if let Some(ref mut recover) = rule.meta.directives.recover {
-                annotate_node(recover, follow, &rule_metas, &strings, &eligibility);
+                annotate_node(recover, follow, dag, &rule_metas, &strings, &eligibility);
             }
         }
     }
@@ -481,20 +516,31 @@ fn suffix_follow(
 fn annotate_node(
     node: &mut IrNode,
     containing_follow: Option<&CharSet128>,
+    dag: &GrammarDag,
     rule_metas: &[(CharSet128, bool)],
     strings: &[String],
     eligibility: &DispatchEligibility,
 ) {
-    // Capture the node pointer before the mutable destructuring borrow.
-    let node_ptr = node as *const IrNode as usize;
+    // Capture the Alt-arm node id before the mutable destructuring
+    // borrow, so the eligibility lookup below doesn't need another
+    // `&node` read while we hold `&mut branches, dispatch`.
+    let node_nid = match node {
+        IrNode::Alt(_, _) => Some(
+            dag.node_for(node)
+                .expect("every Alt visited by annotate_node must be in the DAG"),
+        ),
+        _ => None,
+    };
 
     match node {
         IrNode::Alt(branches, dispatch) => {
+            let node_nid = node_nid.unwrap();
             // Recurse into children first.
             for branch in branches.iter_mut() {
                 annotate_node(
                     &mut branch.node,
                     containing_follow,
+                    dag,
                     rule_metas,
                     strings,
                     eligibility,
@@ -518,7 +564,7 @@ fn annotate_node(
             // When the pre-computation determined non-dispatchable AND there are
             // no nullable branches (where FOLLOW context could rescue dispatch),
             // we skip the full try_build_dispatch and go straight to fallback.
-            let pre_eligible = eligibility.get(&node_ptr).copied();
+            let pre_eligible = eligibility.get(&node_nid).copied();
             let has_nullable = branches.iter().any(|b| b.first_set.is_none());
 
             if pre_eligible == Some(false) && !has_nullable {
@@ -551,6 +597,7 @@ fn annotate_node(
                 annotate_node(
                     &mut children[i],
                     child_follow.as_ref().or(containing_follow),
+                    dag,
                     rule_metas,
                     strings,
                     eligibility,
@@ -561,22 +608,23 @@ fn annotate_node(
         | IrNode::Negate(inner)
         | IrNode::OptionalWhitespace(inner)
         | IrNode::Map { inner, .. } => {
-            annotate_node(inner, containing_follow, rule_metas, strings, eligibility);
+            annotate_node(inner, containing_follow, dag, rule_metas, strings, eligibility);
         }
         IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
-            annotate_node(a, containing_follow, rule_metas, strings, eligibility);
-            annotate_node(b, containing_follow, rule_metas, strings, eligibility);
+            annotate_node(a, containing_follow, dag, rule_metas, strings, eligibility);
+            annotate_node(b, containing_follow, dag, rule_metas, strings, eligibility);
         }
         IrNode::TokenDispatch {
             token,
             arms,
             fallback,
         } => {
-            annotate_node(token, containing_follow, rule_metas, strings, eligibility);
+            annotate_node(token, containing_follow, dag, rule_metas, strings, eligibility);
             for arm in arms {
                 annotate_node(
                     &mut arm.continuation,
                     containing_follow,
+                    dag,
                     rule_metas,
                     strings,
                     eligibility,
@@ -585,6 +633,7 @@ fn annotate_node(
             annotate_node(
                 fallback,
                 containing_follow,
+                dag,
                 rule_metas,
                 strings,
                 eligibility,

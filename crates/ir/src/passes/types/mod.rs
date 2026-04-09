@@ -64,21 +64,14 @@ pub fn project_types(ir: &mut GrammarIR) {
     let mut type_map = TypeMap::default();
 
     // Build node_types and vec_elem_types from solved variables.
-    // Internal pointer keys are translated to stable `NodeId` via
-    // the side map populated by `generate_node`; entries without a
-    // `NodeId` (DAG-absent paths) are silently dropped.
-    for (node_ptr, &var_id) in &system.node_vars {
-        let Some(&nid) = system.node_id_for_ptr.get(node_ptr) else {
-            continue;
-        };
+    // Maps are keyed on stable `NodeId` directly — the old pointer
+    // side map is gone.
+    for (&nid, &var_id) in &system.node_vars {
         if let Some(ty) = &system.csp.variables[var_id as usize].domain.solved {
             type_map.insert_node_type(nid, ty.clone());
         }
     }
-    for (node_ptr, &var_id) in &system.vec_context_vars {
-        let Some(&nid) = system.node_id_for_ptr.get(node_ptr) else {
-            continue;
-        };
+    for (&nid, &var_id) in &system.vec_context_vars {
         if let Some(ty) = &system.csp.variables[var_id as usize].domain.solved {
             type_map.insert_vec_elem_type(nid, ty.clone());
         }
@@ -156,24 +149,21 @@ pub fn project_types(ir: &mut GrammarIR) {
         let preserve = *preserve_spans
             && effective_types.iter().all(|t| *t == TypeDesc::Span);
 
-        // Seq-keyed entries go under the Seq node's `NodeId`. Tests
-        // that run `project_types` without a DAG still get here
-        // because `project_types` builds the DAG at the top, so
-        // `seq_node_id` is always populated in practice.
-        if let Some(seq_nid) = seq_node_id {
-            type_map.insert_seq_child_types(*seq_nid, effective_types);
-            type_map.insert_seq_preserve_spans(*seq_nid, preserve);
+        // Seq-keyed entries go under the Seq node's `NodeId`.
+        let seq_nid = *seq_node_id;
+        type_map.insert_seq_child_types(seq_nid, effective_types);
+        type_map.insert_seq_preserve_spans(seq_nid, preserve);
 
-            if let Some(result_ty) = &system.csp.variables[*var as usize].domain.solved {
-                type_map.insert_seq_result_type(*seq_nid, result_ty.clone());
-            }
+        if let Some(result_ty) = &system.csp.variables[*var as usize].domain.solved {
+            type_map.insert_seq_result_type(seq_nid, result_ty.clone());
         }
     }
 
     // Phase 3.5: Compute structural (pre-collapse) types for
     // emission. Walk the IR and detect where collapsed types differ
-    // from structural.
-    if let Some(dag) = ir.dag.as_ref() {
+    // from structural. `ir.dag` is asserted non-None at entry.
+    {
+        let dag = ir.dag.as_ref().expect("ir.dag asserted non-None at entry");
         for rule in &ir.rules {
             compute_structural_types_for_node(&rule.body, &mut type_map, dag);
         }
@@ -196,7 +186,8 @@ pub fn project_types(ir: &mut GrammarIR) {
 
     let mut raw_sub_variants: HashMap<RuleId, Vec<subvariants::RawSubVariant>> = HashMap::new();
 
-    if let Some(dag) = ir.dag.as_ref() {
+    {
+        let dag = ir.dag.as_ref().expect("ir.dag asserted non-None at entry");
         for rule in &ir.rules {
             if rule.meta.is_transparent {
                 continue;
@@ -244,7 +235,8 @@ pub fn project_types(ir: &mut GrammarIR) {
     }
 
     // Phase 6: Correction pass -- align Repeat vec_elem_types with ir.types.
-    if let Some(dag) = ir.dag.as_ref() {
+    {
+        let dag = ir.dag.as_ref().expect("ir.dag asserted non-None at entry");
         for rule in &ir.rules {
             if let Some(td) = types_map.get(&rule.id) {
                 correct_repeat_elem_types(&rule.body, td, &mut type_map, dag);
@@ -303,7 +295,8 @@ pub fn project_types(ir: &mut GrammarIR) {
             IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon | IrNode::Ref(_) => {}
         }
     }
-    if let Some(dag) = ir.dag.as_ref() {
+    {
+        let dag = ir.dag.as_ref().expect("ir.dag asserted non-None at entry");
         for rule in &ir.rules {
             collect_repeat_scratch(&rule.body, &type_map, dag, &mut scratch);
         }
@@ -338,23 +331,17 @@ pub fn project_types(ir: &mut GrammarIR) {
 }
 
 /// Find the `NodeId` associated with a CSP variable ID by scanning
-/// the generator's pointer-keyed var maps and translating through
-/// `node_id_for_ptr`.
+/// the generator's `NodeId`-keyed var maps. Linear scan; called at
+/// most once per Seq child during sub-variant resolution.
 fn find_node_id_for_var(
     system: &generate::ConstraintSystem,
     var_id: csp_solver::constraint::VarId,
 ) -> Option<NodeId> {
-    for (node_ptr, &v) in &system.node_vars {
-        if v == var_id {
-            return system.node_id_for_ptr.get(node_ptr).copied();
-        }
-    }
-    for (node_ptr, &v) in &system.vec_context_vars {
-        if v == var_id {
-            return system.node_id_for_ptr.get(node_ptr).copied();
-        }
-    }
-    None
+    system
+        .node_vars
+        .iter()
+        .chain(system.vec_context_vars.iter())
+        .find_map(|(&nid, &v)| if v == var_id { Some(nid) } else { None })
 }
 
 /// Correct Repeat vec_elem_types to match the Vec inner from

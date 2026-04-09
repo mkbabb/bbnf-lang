@@ -1,5 +1,6 @@
 //! Mechanical enforcement of the "DAG built exactly once per
-//! compile" invariant.
+//! compile" invariant plus zero-tolerance for pointer-identity
+//! bookkeeping anywhere under `passes/`.
 //!
 //! `GrammarDag::from_ir` is the constructor for the durable
 //! grammar DAG substrate. It must be called from exactly one
@@ -11,10 +12,17 @@
 //! rebuilding at a second site would produce a DAG whose pointer
 //! map races with the first.
 //!
-//! This test reads the workspace source tree via `include_str!`
-//! and asserts the grep invariant at `cargo test` time — no
-//! process spawn, no external tools. Run as part of the standard
-//! `cargo test -p bbnf-ir` sweep.
+//! `no_pointer_identity_outside_dag` walks every `.rs` file under
+//! `crates/ir/src/passes/` and fails if any of them contain
+//! `*const IrNode as usize` — the legacy pattern Tranche L
+//! eliminated in favor of `GrammarDag::node_for`.
+//!
+//! These tests read the workspace source tree via `include_str!`
+//! and `walkdir`-less directory walk; no process spawn, no external
+//! tools. Run as part of the standard `cargo test -p bbnf-ir` sweep.
+
+use std::fs;
+use std::path::{Path, PathBuf};
 
 const COMPILE_RS: &str = include_str!("../../core/src/pipeline/compile.rs");
 const DAG_MOD_RS: &str = include_str!("../src/dag/mod.rs");
@@ -60,5 +68,55 @@ fn ensure_dag_helper_lives_in_dag_mod() {
         "dag/mod.rs must contain exactly one `GrammarDag::from_ir(...)` \
          call — inside the `ensure_dag` helper. Found {}.",
         dag_mod_occurrences,
+    );
+}
+
+/// Recursively walk `root`, calling `cb` with the absolute path
+/// and contents of every `.rs` file encountered.
+fn walk_rs_files(root: &Path, cb: &mut dyn FnMut(&Path, &str)) {
+    let Ok(entries) = fs::read_dir(root) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_dir() {
+            walk_rs_files(&path, cb);
+        } else if path.extension().and_then(|e| e.to_str()) == Some("rs") {
+            let Ok(contents) = fs::read_to_string(&path) else {
+                continue;
+            };
+            cb(&path, &contents);
+        }
+    }
+}
+
+#[test]
+fn no_pointer_identity_outside_dag() {
+    // Every `.rs` file under `crates/ir/src/passes/` must be free
+    // of `*const IrNode as usize` — Tranche L migrated every
+    // pass-local pointer-keyed map to `NodeId` via
+    // `GrammarDag::node_for`. The only legitimate user of
+    // `*const IrNode as usize` is `crates/ir/src/dag/mod.rs::node_for`
+    // itself, outside this grep scope.
+    let manifest = env!("CARGO_MANIFEST_DIR");
+    let passes_root = PathBuf::from(manifest).join("src").join("passes");
+    let mut violations: Vec<String> = Vec::new();
+    walk_rs_files(&passes_root, &mut |path, contents| {
+        for (lineno, line) in contents.lines().enumerate() {
+            if line.contains("*const IrNode as usize") {
+                violations.push(format!(
+                    "{}:{} — {}",
+                    path.display(),
+                    lineno + 1,
+                    line.trim()
+                ));
+            }
+        }
+    });
+    assert!(
+        violations.is_empty(),
+        "pointer-identity legacy survived in crates/ir/src/passes/ — \
+         Tranche L requires zero such sites:\n  {}",
+        violations.join("\n  "),
     );
 }

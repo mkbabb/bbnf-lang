@@ -51,6 +51,7 @@ fn dispatch_for_disjoint_branches() {
         node_facts: HashMap::new(),
         dag: None,    };
 
+    bbnf_ir::dag::ensure_dag(&mut ir);
     generate_dispatch_tables(&mut ir);
 
     match &ir.rules[0].body {
@@ -106,6 +107,7 @@ fn no_dispatch_for_overlapping_branches() {
         node_facts: HashMap::new(),
         dag: None,    };
 
+    bbnf_ir::dag::ensure_dag(&mut ir);
     generate_dispatch_tables(&mut ir);
     match &ir.rules[0].body {
         IrNode::Alt(_, dispatch) => assert!(dispatch.is_none()),
@@ -159,6 +161,7 @@ fn dispatch_for_nested_alt() {
         node_facts: HashMap::new(),
         dag: None,    };
 
+    bbnf_ir::dag::ensure_dag(&mut ir);
     generate_dispatch_tables(&mut ir);
 
     // The nested Alt should have been annotated.
@@ -220,6 +223,7 @@ fn dispatch_with_nullable_branch_via_follow() {
         node_facts: HashMap::new(),
         dag: None,    };
 
+    bbnf_ir::dag::ensure_dag(&mut ir);
     generate_dispatch_tables(&mut ir);
 
     match &ir.rules[0].body {
@@ -283,6 +287,7 @@ fn no_dispatch_when_nullable_overlaps_follow() {
         node_facts: HashMap::new(),
         dag: None,    };
 
+    bbnf_ir::dag::ensure_dag(&mut ir);
     generate_dispatch_tables(&mut ir);
 
     match &ir.rules[0].body {
@@ -356,6 +361,7 @@ fn fallback_dispatch_typed_plus_catchall() {
         node_facts: HashMap::new(),
         dag: None,    };
 
+    bbnf_ir::dag::ensure_dag(&mut ir);
     generate_dispatch_tables(&mut ir);
 
     match &ir.rules[0].body {
@@ -421,6 +427,7 @@ fn fallback_dispatch_not_superset() {
         node_facts: HashMap::new(),
         dag: None,    };
 
+    bbnf_ir::dag::ensure_dag(&mut ir);
     generate_dispatch_tables(&mut ir);
 
     match &ir.rules[0].body {
@@ -474,6 +481,7 @@ fn fallback_dispatch_too_few_branches() {
         node_facts: HashMap::new(),
         dag: None,    };
 
+    bbnf_ir::dag::ensure_dag(&mut ir);
     generate_dispatch_tables(&mut ir);
 
     match &ir.rules[0].body {

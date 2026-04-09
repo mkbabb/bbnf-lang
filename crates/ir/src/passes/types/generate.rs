@@ -8,58 +8,38 @@
 //! - **Primary**: The node's type in normal context (project_node)
 //! - **Vec-context**: The node's type when used as a Vec element (project_node_in_vec)
 //!
-//! Seq metadata (child types, preserve_spans) is recorded during generation
-//! for later export to the TypeMap.
+//! All per-node bookkeeping is keyed on the stable `NodeId` from
+//! `ir.dag`. `project_types` asserts `ir.dag.is_some()` at entry —
+//! every `IrNode` visited here is guaranteed to have a DAG entry.
 
 use std::collections::HashMap;
 
 use csp_solver::Csp;
 
-use crate::dag::NodeId;
+use crate::dag::{GrammarDag, NodeId};
 use crate::{FnDescriptor, GrammarIR, IrNode, RuleId, TypeDesc};
 
 use super::constraint::*;
 
 /// Result of constraint generation: CSP + rule-to-var mapping + metadata.
-///
-/// Internal pointer-keyed maps (`node_vars`, `vec_context_vars`,
-/// `seq_metadata`) are an implementation detail of constraint
-/// generation. A parallel `node_id_for_ptr` side map translates
-/// those pointer keys to stable `NodeId`s at extraction time so the
-/// public `TypeMap` can use DAG-resolved keys.
 pub struct ConstraintSystem {
     pub csp: Csp<TypeDomain>,
     /// Maps `RuleId -> TypeVarId` for rule-level type variables.
     pub rule_vars: HashMap<RuleId, TypeVarId>,
-    /// Maps pointer -> `TypeVarId` for normal-context type variables.
-    pub node_vars: HashMap<usize, TypeVarId>,
-    /// Maps pointer -> `TypeVarId` for vec-context type variables.
-    pub vec_context_vars: HashMap<usize, TypeVarId>,
-    /// Per-Seq metadata: pointer -> `(child var IDs, preserve_spans)`.
-    pub seq_metadata: HashMap<usize, SeqMetadata>,
+    /// Maps stable `NodeId` -> `TypeVarId` for normal-context type
+    /// variables.
+    pub node_vars: HashMap<NodeId, TypeVarId>,
+    /// Maps stable `NodeId` -> `TypeVarId` for vec-context type
+    /// variables.
+    pub vec_context_vars: HashMap<NodeId, TypeVarId>,
     /// Seq constraints tracked for TypeMap export.
     pub seq_constraints: Vec<SeqConstraintMeta>,
-    /// Side map: pointer -> stable `NodeId` from `ir.dag`. Populated
-    /// during `generate_node` when the DAG knows the node; used at
-    /// extraction to key the public `TypeMap` by `NodeId` rather
-    /// than by pointer.
-    pub node_id_for_ptr: HashMap<usize, NodeId>,
-}
-
-/// Metadata recorded during constraint generation for Seq nodes.
-pub struct SeqMetadata {
-    /// TypeVarIds for each child in the Seq (normal context).
-    pub child_vars: Vec<TypeVarId>,
-    /// Whether preserve_spans was set for this Seq.
-    pub preserve_spans: bool,
 }
 
 /// Metadata for Seq constraints, used during TypeMap export.
 pub struct SeqConstraintMeta {
-    /// The Seq node's stable `NodeId`, populated from `ir.dag` during
-    /// constraint generation. `None` when the DAG doesn't know about
-    /// the node (tests without a DAG).
-    pub seq_node_id: Option<NodeId>,
+    /// The Seq node's stable `NodeId`.
+    pub seq_node_id: NodeId,
     pub var: TypeVarId,
     pub children: Vec<TypeVarId>,
     pub preserve_spans: bool,
@@ -69,16 +49,23 @@ pub struct SeqConstraintMeta {
 }
 
 /// Generate the constraint system from a GrammarIR.
+///
+/// Requires `ir.dag` to be populated — `project_types` asserts this
+/// at entry. Every `IrNode` visited during traversal has a DAG
+/// entry, so `dag.node_for(node)` always succeeds.
 pub fn generate_constraints(ir: &GrammarIR) -> ConstraintSystem {
+    let dag = ir
+        .dag
+        .as_ref()
+        .expect("generate_constraints requires ir.dag — project_types asserts this");
     let mut cg = ConstraintGenerator {
         csp: Csp::new(),
         rule_vars: HashMap::new(),
         node_vars: HashMap::new(),
         vec_context_vars: HashMap::new(),
-        seq_metadata: HashMap::new(),
         seq_constraints: Vec::new(),
-        node_id_for_ptr: HashMap::new(),
         ir,
+        dag,
     };
 
     // Phase 1: Allocate a type variable for each rule.
@@ -103,21 +90,18 @@ pub fn generate_constraints(ir: &GrammarIR) -> ConstraintSystem {
         rule_vars: cg.rule_vars,
         node_vars: cg.node_vars,
         vec_context_vars: cg.vec_context_vars,
-        seq_metadata: cg.seq_metadata,
         seq_constraints: cg.seq_constraints,
-        node_id_for_ptr: cg.node_id_for_ptr,
     }
 }
 
 struct ConstraintGenerator<'a> {
     csp: Csp<TypeDomain>,
     rule_vars: HashMap<RuleId, TypeVarId>,
-    node_vars: HashMap<usize, TypeVarId>,
-    vec_context_vars: HashMap<usize, TypeVarId>,
-    seq_metadata: HashMap<usize, SeqMetadata>,
+    node_vars: HashMap<NodeId, TypeVarId>,
+    vec_context_vars: HashMap<NodeId, TypeVarId>,
     seq_constraints: Vec<SeqConstraintMeta>,
-    node_id_for_ptr: HashMap<usize, NodeId>,
     ir: &'a GrammarIR,
+    dag: &'a GrammarDag,
 }
 
 impl<'a> ConstraintGenerator<'a> {
@@ -125,28 +109,29 @@ impl<'a> ConstraintGenerator<'a> {
         self.csp.add_variable(TypeDomain::unsolved())
     }
 
+    /// Resolve an `IrNode` to its stable `NodeId` via the DAG.
+    ///
+    /// Panics if the node is not in the DAG — `project_types`
+    /// asserts `ir.dag.is_some()` at entry, and the DAG visits every
+    /// tree occurrence in the rule bodies, so every node reachable
+    /// from this traversal is guaranteed to have an id.
+    fn node_id(&self, node: &IrNode) -> NodeId {
+        self.dag
+            .node_for(node)
+            .expect("every IrNode visited by generate_node must be in the DAG")
+    }
+
     /// Generate constraints for an IR node, returning its primary type variable.
     ///
     /// Also generates the vec-context variable and records it in `vec_context_vars`.
     fn generate_node(&mut self, node: &IrNode, preserve_spans: bool) -> TypeVarId {
-        let node_id = node as *const IrNode as usize;
+        let nid = self.node_id(node);
         let var = self.new_var();
-        self.node_vars.insert(node_id, var);
-
-        // Record the `NodeId` for this tree position so the extractor
-        // can translate the internal pointer key to a stable id when
-        // building the public `TypeMap`. If the DAG isn't populated,
-        // the side map stays empty for this pointer and the extractor
-        // skips it.
-        if let Some(dag) = self.ir.dag.as_ref() {
-            if let Some(nid) = dag.node_for(node) {
-                self.node_id_for_ptr.insert(node_id, nid);
-            }
-        }
+        self.node_vars.insert(nid, var);
 
         // Create vec-context variable for this node.
         let vec_var = self.new_var();
-        self.vec_context_vars.insert(node_id, vec_var);
+        self.vec_context_vars.insert(nid, vec_var);
 
         match node {
             // Leaf constraints -- ground types
@@ -207,22 +192,11 @@ impl<'a> ConstraintGenerator<'a> {
                     child_node_kinds.push(child_kind);
                 }
 
-                // Record seq metadata for TypeMap export.
-                let seq_ptr = children.as_ptr() as usize;
-                self.seq_metadata.insert(
-                    seq_ptr,
-                    SeqMetadata {
-                        child_vars: child_vars.clone(),
-                        preserve_spans,
-                    },
-                );
-
                 // Track metadata for TypeMap export. The Seq's
-                // `NodeId` (if known to the DAG) keys the public
-                // `TypeMap` Seq entries at extraction.
-                let seq_node_id = self.node_id_for_ptr.get(&node_id).copied();
+                // `NodeId` keys the public `TypeMap` Seq entries at
+                // extraction.
                 self.seq_constraints.push(SeqConstraintMeta {
-                    seq_node_id,
+                    seq_node_id: nid,
                     var,
                     children: child_vars.clone(),
                     preserve_spans,
@@ -258,8 +232,8 @@ impl<'a> ConstraintGenerator<'a> {
                 let vec_branch_vars: Vec<TypeVarId> = branches
                     .iter()
                     .map(|b| {
-                        let b_id = &b.node as *const IrNode as usize;
-                        self.vec_context_vars[&b_id]
+                        let b_nid = self.node_id(&b.node);
+                        self.vec_context_vars[&b_nid]
                     })
                     .collect();
 
@@ -270,7 +244,7 @@ impl<'a> ConstraintGenerator<'a> {
             // Repetition constraint
             IrNode::Repeat { inner, lo, hi } => {
                 let inner_var = self.generate_node(inner, false);
-                let inner_id = inner.as_ref() as *const IrNode as usize;
+                let inner_nid = self.node_id(inner.as_ref());
 
                 if *lo == 0 && *hi == 1 {
                     // Optional
@@ -290,7 +264,7 @@ impl<'a> ConstraintGenerator<'a> {
                         .add_constraint(EqualConstraint::new(vec_var, var));
                 } else {
                     // Many / Many1: use the vec-context variable for inner elements.
-                    let inner_vec_var = self.vec_context_vars[&inner_id];
+                    let inner_vec_var = self.vec_context_vars[&inner_nid];
                     self.csp
                         .add_constraint(RepeatConstraint::new(var, inner_vec_var));
 
@@ -306,8 +280,8 @@ impl<'a> ConstraintGenerator<'a> {
                 self.csp
                     .add_constraint(ProjectConstraint::new(var, a_var));
 
-                let a_id = a.as_ref() as *const IrNode as usize;
-                let a_vec_var = self.vec_context_vars[&a_id];
+                let a_nid = self.node_id(a.as_ref());
+                let a_vec_var = self.vec_context_vars[&a_nid];
                 self.csp
                     .add_constraint(ProjectConstraint::new(vec_var, a_vec_var));
             }
@@ -317,8 +291,8 @@ impl<'a> ConstraintGenerator<'a> {
                 self.csp
                     .add_constraint(ProjectConstraint::new(var, b_var));
 
-                let b_id = b.as_ref() as *const IrNode as usize;
-                let b_vec_var = self.vec_context_vars[&b_id];
+                let b_nid = self.node_id(b.as_ref());
+                let b_vec_var = self.vec_context_vars[&b_nid];
                 self.csp
                     .add_constraint(ProjectConstraint::new(vec_var, b_vec_var));
             }
@@ -328,8 +302,8 @@ impl<'a> ConstraintGenerator<'a> {
                 self.csp
                     .add_constraint(ProjectConstraint::new(var, a_var));
 
-                let a_id = a.as_ref() as *const IrNode as usize;
-                let a_vec_var = self.vec_context_vars[&a_id];
+                let a_nid = self.node_id(a.as_ref());
+                let a_vec_var = self.vec_context_vars[&a_nid];
                 self.csp
                     .add_constraint(ProjectConstraint::new(vec_var, a_vec_var));
             }
@@ -349,8 +323,8 @@ impl<'a> ConstraintGenerator<'a> {
                 self.csp
                     .add_constraint(EqualConstraint::new(var, inner_var));
 
-                let inner_id = inner.as_ref() as *const IrNode as usize;
-                let inner_vec_var = self.vec_context_vars[&inner_id];
+                let inner_nid = self.node_id(inner.as_ref());
+                let inner_vec_var = self.vec_context_vars[&inner_nid];
                 self.csp
                     .add_constraint(EqualConstraint::new(vec_var, inner_vec_var));
             }

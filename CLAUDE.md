@@ -4,6 +4,61 @@ Monorepo for the BBNF (Better Backus-Naur Form) grammar ecosystem.
 BBNF extends EBNF for defining context-free grammars, used by the
 [`parse-that`](https://github.com/mkbabb/parse-that) parser combinator library.
 
+## Architecture state (post-Tranche H & I)
+
+BBNF's optimizer follows a **four-layer separation**:
+**e-graph** (equivalence generation + cost-guided extraction) /
+**facts** (monotone legality propagation via `NodeFacts` /
+`ContextFacts` / `RegexInfo`) / **CSP/COP** (choice under
+constraints) / **backend** (emission-only code generation). Every
+transformation belongs to exactly one layer — mixing is a design
+smell.
+
+The optimizer is **representation-separated** from the data model:
+`IrNode` (compiler-centric) and `Hir` (regex-centric) stay
+unconstrained by e-graph substrate needs. Parallel optimizer-
+centric enums `GrammarENode` and `HirENode` live inside `egraph/`
+modules, generated their `Language` impl via `#[derive(Language)]`
+from `egraph-derive`, and are hand-maintained. Translation glue
+between owning trees and parallel e-nodes (`build_egraph.rs`,
+`write_back.rs`, `insert_hir`, `extract_hir`) is small and
+localized.
+
+The **grammar tier** (`crates/ir/src/egraph/`) and the
+**bbnf-regex HIR tier**
+(`parse-that/rust/regex/src/egraph/`) are **isomorphic**: same
+`egraph` substrate crate, same `Rewrite` trait, same
+`BackoffScheduler`, mirrored rule files, and shared `CostWeights`
+in `egraph::cost_weights`. `GrammarCostModel` and
+`RegexExtractionCost` embed the same weights struct so branch-
+factoring and dispatch incentives stay in sync across tiers.
+A new optimization lands as a mirrored rule pair — one file per
+tier — or as a single tier if its domain is exclusive.
+
+The **permanent grammar-tier regex layer**
+(`crates/ir/src/egraph/rules/regex.rs`) owns `Alt`-level rewrites
+across sibling branches: dedup, superset absorption, charclass
+union, heterogeneous fusion. The **HIR tier** owns intra-pattern
+simplification (flatten, dedup, superset, union, repetition
+absorption) upstream of `RegexInfo::analyze_from_hir`, so every
+downstream analysis (FIRST sets, nullable, width, DFA sizing)
+sees canonicalized HIR with zero caller awareness. The legacy
+destructive `simplify_regex_algebra` / `merge_regex_alts` passes
+(802 LOC) were deleted in Tranche H-7 after parity with the
+retained e-graph rules was proven across the full test suite.
+
+The **durable DAG** (`crates/ir/src/dag/mod.rs`) is built exactly
+once per compile at a single well-defined pipeline step
+(`crates/core/src/pipeline/compile.rs:409`), enforced by a
+`debug_assert!` and a `cargo test`-time grep invariant in
+`crates/ir/tests/dag_invariant.rs`. Tests and benches that
+exercise a single pass in isolation call the `bbnf_ir::dag::ensure_dag`
+helper. `project_types` asserts `ir.dag.is_some()` at entry.
+`GrammarDag::node_for`'s `HashMap<*const IrNode, NodeId>`
+reverse-pointer map is correct by design (valid for the lifetime
+of the borrowed `&GrammarIR`) and is NOT part of any residual
+pointer-identity cleanup.
+
 ## Structure
 
 ```

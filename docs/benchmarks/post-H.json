@@ -1,0 +1,65 @@
+{
+  "tag": "post-H-I",
+  "description": "Benchmark baseline captured after Tranche H (HIR e-graph substrate landed in bbnf-regex) and Tranche I (DAG invariant assertions + orphan purge + bench sweep). Replaces the destructive simplify_regex_algebra/merge_regex_alts passes with cost-guided equality saturation at two tiers sharing CostWeights.",
+  "arch": "four-layer optimizer: e-graph (equivalence generation) / facts (legality) / CSP (choice) / backend (emission). Grammar tier and bbnf-regex HIR tier are isomorphic — parallel ENode types (GrammarENode, HirENode), same Rewrite trait substrate, same BackoffScheduler, mirrored rule files, shared CostWeights in egraph::cost_weights.",
+  "hardware": "Darwin 25.4.0",
+  "tests": {
+    "total_binaries": 70,
+    "total_passing": 455,
+    "total_failing": 0
+  },
+  "benches": {
+    "json_monolithic": {
+      "canada":  { "ns_per_iter": 2083648,  "mb_per_sec": 1080 },
+      "citm":    { "ns_per_iter": 931277,   "mb_per_sec": 1854 },
+      "data":    { "ns_per_iter": 26680,    "mb_per_sec": 1330 },
+      "data_xl": { "ns_per_iter": 21779178, "mb_per_sec": 977  },
+      "twitter": { "ns_per_iter": 434233,   "mb_per_sec": 1454 }
+    },
+    "css_l4": {
+      "bootstrap": { "ns_per_iter": 1381742,  "mb_per_sec": 202 },
+      "normalize": { "ns_per_iter": 14736,    "mb_per_sec": 416 },
+      "tailwind":  { "ns_per_iter": 17344833, "mb_per_sec": 209 }
+    },
+    "compile_pipeline": {
+      "ns_per_iter": 1159473
+    }
+  },
+  "instrumentation": {
+    "BBNF_EGRAPH_REPORT": "grammar-tier e-graph saturation report (4 retained rules: deduplicate-alt-branches, superset-absorb-alt, union-merge-alt, fuse-alt-regex-branches)",
+    "BBNF_HIR_EGRAPH_REPORT": "bbnf-regex HIR e-graph saturation report (5 rules: hir-flatten-alt-concat, hir-deduplicate-alternation, hir-superset-absorb-class, hir-union-merge-class, hir-absorb-repetition)"
+  },
+  "gates": {
+    "hard": {
+      "all_tests_pass": true,
+      "bootstrap_script_succeeds": true,
+      "grep_invariants_pass": true,
+      "dag_invariant_test_passes": true
+    },
+    "soft": {
+      "compile_time_improvement": "HIR e-graph saturates every regex pattern before downstream analyses. On the compile_pipeline bench, per-pattern saturation reports applied=0 in the scheduler counter — but recall from H-3 that this counts canonical-id changes, not search matches. Rules still install equivalent forms that cost-guided extraction can pick from.",
+      "nonzero_fire_counts": "Grammar-tier and HIR-tier instrumentation both fire on benchmark grammars (confirmed by running compile_pipeline with BBNF_EGRAPH_REPORT=1 BBNF_HIR_EGRAPH_REPORT=1)."
+    }
+  },
+  "deletions": {
+    "crates/ir/src/passes/regex/algebra.rs": 638,
+    "crates/ir/src/passes/regex/merge.rs": 166,
+    "crates/ir/src/passes/regex/mod.rs": 22,
+    "crates/ir/tests/passes_merge_regex.rs": "entire file",
+    "crates/ir/tests/regex_merge.rs": "entire file",
+    "crates/ir/tests/regex_algebra.rs": "entire file",
+    "total_loc_net": "-1123 / +52"
+  },
+  "additions": {
+    "parse-that/rust/regex/src/egraph/analysis.rs": "HirAnalysis (per-class lattice: min_size, nullable)",
+    "parse-that/rust/regex/src/egraph/rules/flatten.rs": "Alt/Concat flatten rule",
+    "parse-that/rust/regex/src/egraph/rules/redundant.rs": "Alternation dedup",
+    "parse-that/rust/regex/src/egraph/rules/superset.rs": "Class subset absorption",
+    "parse-that/rust/regex/src/egraph/rules/union.rs": "Class union merge",
+    "parse-that/rust/regex/src/egraph/rules/repetition.rs": "Adjacent repetition absorption",
+    "parse-that/rust/regex/src/egraph/rules/util.rs": "CharClass <-> ByteSet helpers",
+    "parse-that/rust/regex/src/egraph/mod.rs": "HirEGraph alias + build_hir_egraph + saturate_hir_egraph + extract_canonical + simplify_hir",
+    "crates/ir/src/dag/mod.rs::ensure_dag": "test/bench helper",
+    "crates/ir/tests/dag_invariant.rs": "cargo-test grep enforcement of single-production-call-site invariant"
+  }
+}

@@ -36,6 +36,12 @@ pub struct EGraph<N: Language, A: Analysis<N> = NoAnalysis> {
     analysis_pending: Vec<Id>,
     /// Bookkeeping: total number of rebuilds invoked.
     rebuild_count: u32,
+    /// Bookkeeping: total number of `union` calls that actually merged
+    /// two distinct classes (no-op unions on equal classes are not
+    /// counted). Used by the scheduler's saturation detection — a
+    /// rewrite rule that only unions (without adding new nodes) still
+    /// does real work, and `total_nodes` alone would miss it.
+    union_count: u64,
 }
 
 impl<N: Language> Default for EGraph<N, NoAnalysis> {
@@ -54,6 +60,7 @@ impl<N: Language, A: Analysis<N>> EGraph<N, A> {
             pending: Vec::new(),
             analysis_pending: Vec::new(),
             rebuild_count: 0,
+            union_count: 0,
         }
     }
 
@@ -71,6 +78,13 @@ impl<N: Language, A: Analysis<N>> EGraph<N, A> {
     /// Number of rebuilds performed.
     pub fn rebuild_count(&self) -> u32 {
         self.rebuild_count
+    }
+
+    /// Number of `union` calls that actually merged two distinct
+    /// classes since this e-graph was created. Incremented only when
+    /// `ra != rb`; no-op self-unions are not counted.
+    pub fn union_count(&self) -> u64 {
+        self.union_count
     }
 
     /// Find the canonical `Id` for `id` (with path compression).
@@ -168,6 +182,7 @@ impl<N: Language, A: Analysis<N>> EGraph<N, A> {
         if ra == rb {
             return ra;
         }
+        self.union_count += 1;
         // Pick the bigger class as the merge target.
         let (dst, src) = if self.classes[ra.as_usize()].nodes.len()
             >= self.classes[rb.as_usize()].nodes.len()

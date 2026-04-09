@@ -132,11 +132,8 @@ impl Rewrite<Calc, NoAnalysis> for AddZero {
         egraph: &mut EGraph<Calc, NoAnalysis>,
         class_id: Id,
         matched: Self::Match,
-    ) -> bool {
-        let before_nodes = egraph.total_nodes();
+    ) {
         egraph.union(class_id, matched.non_zero_child);
-        egraph.total_nodes() != before_nodes
-            || egraph.find(class_id) == egraph.find(matched.non_zero_child)
     }
 }
 

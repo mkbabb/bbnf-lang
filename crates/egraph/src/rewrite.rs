@@ -30,8 +30,14 @@ pub trait Rewrite<N: Language, A: Analysis<N>>: Send + Sync {
     fn search(&self, egraph: &EGraph<N, A>) -> Vec<(Id, Self::Match)>;
 
     /// Apply one match, installing the rewritten form and unioning with
-    /// the matched class. Returns whether any new node was added.
-    fn apply(&self, egraph: &mut EGraph<N, A>, class_id: Id, matched: Self::Match) -> bool;
+    /// the matched class. Rules install equivalences unconditionally;
+    /// progress is measured by the scheduler via `egraph.total_nodes()`
+    /// delta, not by a per-match boolean. This mirrors LLVM's `Changed`
+    /// flag pattern — individual rewrites can't reliably tell whether
+    /// they changed the canonical form (a `union` between classes of
+    /// equal size leaves `find(class_id)` unchanged even though the new
+    /// e-node is now reachable from that class).
+    fn apply(&self, egraph: &mut EGraph<N, A>, class_id: Id, matched: Self::Match);
 }
 
 /// A type-erased rewrite wrapper: consumers pass `&[&dyn RewriteFn]` to
@@ -40,7 +46,18 @@ pub trait RewriteFn<N: Language, A: Analysis<N>>: Send + Sync {
     /// Human-readable name.
     fn name(&self) -> &str;
     /// Run one full iteration: search + apply all matches. Returns the
-    /// number of matches that produced a new node.
+    /// amount of **work done** — the sum of `egraph.total_nodes()`
+    /// growth and the number of successful `egraph.union` calls (i.e.,
+    /// `egraph.union_count()` delta). Both operations are the only two
+    /// ways a rewrite rule can change the e-graph state: `add` installs
+    /// a fresh canonical form, `union` merges two classes. Zero work
+    /// means the rule had no effect and saturation has been reached.
+    ///
+    /// This replaces the previous "did `find(class_id)` change?" metric,
+    /// which was fundamentally broken — `union(a, b)` picks the larger
+    /// class as destination, so when both classes have the same node
+    /// count, `find(class_id)` stays fixed even though the union
+    /// happened.
     fn run(&self, egraph: &mut EGraph<N, A>) -> usize;
 }
 
@@ -56,13 +73,14 @@ where
     }
 
     fn run(&self, egraph: &mut EGraph<N, A>) -> usize {
+        let before_nodes = egraph.total_nodes();
+        let before_unions = egraph.union_count();
         let matches = self.search(egraph);
-        let mut applied = 0;
         for (class_id, m) in matches {
-            if self.apply(egraph, class_id, m) {
-                applied += 1;
-            }
+            self.apply(egraph, class_id, m);
         }
-        applied
+        let node_delta = egraph.total_nodes().saturating_sub(before_nodes);
+        let union_delta = (egraph.union_count() - before_unions) as usize;
+        node_delta + union_delta
     }
 }

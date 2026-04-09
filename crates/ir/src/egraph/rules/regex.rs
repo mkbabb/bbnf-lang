@@ -97,15 +97,13 @@ impl Rewrite<GrammarENode, GrammarAnalysis> for DeduplicateAltBranches {
         egraph: &mut EGraph<GrammarENode, GrammarAnalysis>,
         class_id: Id,
         m: Self::Match,
-    ) -> bool {
+    ) {
         let new_id = if m.deduped.len() == 1 {
             m.deduped[0]
         } else {
             egraph.add(GrammarENode::Alt(m.deduped, m.dispatch))
         };
-        let before = egraph.find(class_id);
         egraph.union(class_id, new_id);
-        egraph.find(class_id) != before
     }
 }
 
@@ -190,15 +188,13 @@ impl Rewrite<GrammarENode, GrammarAnalysis> for SupersetAbsorbAlt {
         egraph: &mut EGraph<GrammarENode, GrammarAnalysis>,
         class_id: Id,
         m: Self::Match,
-    ) -> bool {
+    ) {
         let new_id = if m.survivors.len() == 1 {
             m.survivors[0]
         } else {
             egraph.add(GrammarENode::Alt(m.survivors, m.dispatch))
         };
-        let before = egraph.find(class_id);
         egraph.union(class_id, new_id);
-        egraph.find(class_id) != before
     }
 }
 
@@ -326,11 +322,9 @@ impl Rewrite<GrammarENode, GrammarAnalysis> for FuseAltRegexBranches {
         egraph: &mut EGraph<GrammarENode, GrammarAnalysis>,
         class_id: Id,
         m: Self::Match,
-    ) -> bool {
+    ) {
         let new_regex_id = egraph.add(GrammarENode::Regex(m.fused_sid));
-        let before = egraph.find(class_id);
         egraph.union(class_id, new_regex_id);
-        egraph.find(class_id) != before
     }
 }
 
@@ -439,7 +433,7 @@ impl Rewrite<GrammarENode, GrammarAnalysis> for UnionMergeAlt {
         egraph: &mut EGraph<GrammarENode, GrammarAnalysis>,
         class_id: Id,
         m: Self::Match,
-    ) -> bool {
+    ) {
         let new_regex_id = egraph.add(GrammarENode::Regex(m.merged_sid));
         let mut new_children: Vec<Id> = Vec::with_capacity(m.original_children.len() - 1);
         for (k, &id) in m.original_children.iter().enumerate() {
@@ -453,8 +447,6 @@ impl Rewrite<GrammarENode, GrammarAnalysis> for UnionMergeAlt {
         } else {
             egraph.add(GrammarENode::Alt(new_children.into_boxed_slice(), m.dispatch))
         };
-        let before = egraph.find(class_id);
         egraph.union(class_id, new_id);
-        egraph.find(class_id) != before
     }
 }

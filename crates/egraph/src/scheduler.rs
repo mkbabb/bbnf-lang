@@ -13,15 +13,19 @@ use crate::rewrite::RewriteFn;
 /// Summary of a single saturation run.
 #[derive(Clone, Debug, Default)]
 pub struct RunReport {
-    /// Total iterations run (bounded by `BackoffScheduler::iter_limit`).
+    /// Total iterations run (bounded by the scheduler's `iter_limit`).
     pub iterations: usize,
-    /// Total applied rewrites across all iterations.
+    /// Total work done (sum of node-adds and class-unions) across all
+    /// iterations. See `RewriteFn::run` for the decomposition. A positive
+    /// value means at least one rule changed the e-graph state; zero
+    /// across a full iteration means saturation.
     pub total_applied: usize,
     /// Final e-graph size (total e-nodes).
     pub final_nodes: usize,
     /// Final e-graph size (total e-classes).
     pub final_classes: usize,
-    /// Whether saturation reached fixed-point (no rule fired this iteration).
+    /// Whether saturation reached fixed-point (no rule added a new node
+    /// this iteration).
     pub saturated: bool,
     /// Whether the iteration limit was hit.
     pub iter_limit_hit: bool,
@@ -75,7 +79,10 @@ impl<N: Language, A: Analysis<N>> Scheduler<N, A> for BackoffScheduler {
             report.final_nodes = egraph.total_nodes();
             report.final_classes = egraph.classes().count();
 
-            // Stop if nothing fired.
+            // Stop if no rule introduced a new e-node this iteration.
+            // Post-J, `rule.run` returns the `total_nodes` delta, so
+            // `applied_this_iter == 0` is the correct saturation fixed
+            // point: no rule produced a new canonical form.
             if applied_this_iter == 0 {
                 report.saturated = true;
                 return report;

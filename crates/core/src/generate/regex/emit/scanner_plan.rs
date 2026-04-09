@@ -78,6 +78,14 @@ pub(crate) fn shared_quoted_string_scanner() -> ScannerPlan {
 /// Uses `opts.classify_regex(pattern)` — hits the `ir.regex_info` cache
 /// when `opts.ir` is set, avoiding a redundant HIR parse on the
 /// codegen hot path.
+///
+/// Tranche V.7: routes the existing 5 SharedScanner variants and the
+/// three new RegexClass extensions (`CharClassQuantified`,
+/// `PrefixThenClass`, `AccelDriven`) through the kernel registry. The
+/// new variants currently fall back to the generalized emitter via
+/// `None` — the kernel module bodies are stubs that defer to the
+/// existing `generalized/` path until the V.8 driver refactor + kernel
+/// hoisting tranche enables full hoisting.
 pub(crate) fn plan_regex_scanner(pattern: &str, opts: &EmitOpts) -> Option<ScannerPlan> {
     match opts.classify_regex(pattern) {
         RegexClass::JsonString => Some(shared_json_string_scanner()),
@@ -90,6 +98,14 @@ pub(crate) fn plan_regex_scanner(pattern: &str, opts: &EmitOpts) -> Option<Scann
         RegexClass::Numeric {
             allows_sign: false, ..
         } => Some(shared_json_number_scanner(false)),
+        // Tranche V.7: new structural variants intentionally fall to
+        // None so the existing `generalized/` and `hir/` emitters
+        // continue to handle them. The kernel modules in
+        // `crates/core/src/backend/kernels/` exist as the file home
+        // for V.8's hoisted-helper migration.
+        RegexClass::CharClassQuantified(_)
+        | RegexClass::PrefixThenClass { .. }
+        | RegexClass::AccelDriven(_) => None,
         _ => None,
     }
 }

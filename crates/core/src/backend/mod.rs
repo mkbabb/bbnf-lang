@@ -2,6 +2,7 @@
 
 pub mod driver;
 mod emitter;
+pub mod kernels;
 pub mod patterns;
 pub mod prettify;
 pub mod rust;

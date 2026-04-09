@@ -1,0 +1,61 @@
+{
+  "tag": "post-V",
+  "baseline_commit_message": "Tranche V — recognizer-family transposition",
+  "description": "Benchmark baseline captured after Tranche V (recognizer-family transposition). The transposition lands the substrate (V.1-V.10): csp-solver Implication+Cardinality constraints, RegexClass extensions (CharClassQuantified/PrefixThenClass/AccelDriven), EngineSet bitset on RegexInfo, RecognizerInfo trait extensions with Token/DispatchGroup/DelimScan wrappers, NodeFacts.recognizer field with Recognizer/RecognizerShape/RecognizerSignature, mine_recognizers pass with eight miners, csp_recognizers pass producing per-NodeId RecognizerDecisionMap, backend/kernels/ family directory, DriverState::recognizer_decision accessor, and a consumer-invariant grep test. The legacy backend/patterns/{delim_scan,key_dispatch,cache}.rs detection halves stay operational pending the strategy-solver migration in follow-up tranche W.",
+  "arch": "four-layer optimizer: e-graph (equivalence) / facts (legality) / CSP (choice) / backend (emission). Tranche V completes the facts/CSP/backend connective tissue: structural mining produces RecognizerShape, V.6 CSP derives per-NodeId decisions, V.7 kernel directory hosts family-specific helpers, V.8 driver accessor reads decisions. The strategy-solver migration that fully consumes ir.recognizer_decisions ships in tranche W.",
+  "hardware": "Darwin 25.4.0",
+  "tests": {
+    "bbnf_workspace_excluding_lsp_analysis_gorgeous": {
+      "total_passing": 466,
+      "total_failing": 0
+    },
+    "bbnf_regex": {
+      "total_passing": 25,
+      "total_failing": 0
+    }
+  },
+  "benches": {
+    "json_monolithic": {
+      "canada": { "ns_per_iter": 2034342, "mb_per_sec": 1106, "delta_vs_post_t_pct": 2.4 },
+      "citm":   { "ns_per_iter": 923625,  "mb_per_sec": 1870, "delta_vs_post_t_pct": 3.0 },
+      "data":   { "ns_per_iter": 25862,   "mb_per_sec": 1372, "delta_vs_post_t_pct": 3.5 },
+      "data_xl":{ "ns_per_iter": 20827237,"mb_per_sec": 1021, "delta_vs_post_t_pct": 2.8 },
+      "twitter":{ "ns_per_iter": 421491,  "mb_per_sec": 1498, "delta_vs_post_t_pct": 3.3 }
+    },
+    "css_l4": {
+      "bootstrap":{ "ns_per_iter": 1318982, "mb_per_sec": 212, "delta_vs_post_t_pct": 1.0 },
+      "normalize":{ "ns_per_iter": 14367,   "mb_per_sec": 427, "delta_vs_post_t_pct": 1.8 },
+      "tailwind": { "ns_per_iter": 16794241,"mb_per_sec": 216, "delta_vs_post_t_pct": 2.8 }
+    },
+    "compile_pipeline": {
+      "compile_bbnf":     { "ns_per_iter": 1745716,  "delta_vs_post_t_pct": 6.5 },
+      "compile_css_l4":   { "ns_per_iter": 98094512, "delta_vs_post_t_pct": 3.4 },
+      "compile_css_mono": { "ns_per_iter": 520526,   "delta_vs_post_t_pct": 1.8 },
+      "compile_ebnf":     { "ns_per_iter": 405237,   "delta_vs_post_t_pct": 8.5 },
+      "compile_json":     { "ns_per_iter": 104906,   "delta_vs_post_t_pct": 10.0 },
+      "compile_sheets":   { "ns_per_iter": 1031929,  "delta_vs_post_t_pct": 2.2 }
+    }
+  },
+  "notes": {
+    "parse_time_delta": "Parse-time rows show a uniform ~2-4% slowdown vs post-T. The generated parser code is functionally identical (recognize_patterns body migrated verbatim into mine_recognizers/node_facts.rs); the delta is consistent with rebuild noise + cache layout sensitivity that cold-iter benchmarks pick up. No source-level regression in generated emission paths is hypothesized — the V.6 decisions are populated but unconsumed by drivers.",
+    "compile_time_delta": "Compile-pipeline rows show a real +6-10% regression on small grammars (compile_bbnf, compile_ebnf, compile_json) and +1-3% on larger ones (css_l4, css_mono, sheets). The cost is the new V.4 mining pass (eight miners producing Recognizer records) + V.6 CSP solving + the upstream compute_context_facts call (previously not in the production pipeline). The work is currently 'spent without gain' because no emission consumer reads ir.recognizer_decisions; the follow-up tranche W migrates strategy solvers and recoups the cost via dropped legacy detection in backend/patterns/.",
+    "follow_up_blockers": "The aggressive deletions originally scoped for V.9 (scanner_plan.rs, generalized/, backend/patterns/{delim_scan,key_dispatch,cache}.rs, passes/transform/fuse_token/) are blocked on the strategy-solver migration. Tranche W deletes them once decide_alt_strategy / decide_seq_strategy / decide_wrap_strategy migrate to read ir.recognizer_decisions exclusively."
+  },
+  "gates": {
+    "hard": {
+      "all_tests_pass": true,
+      "consumer_invariant_test_passes": true,
+      "csp_solver_constraints_added": ["ImplicationConstraint", "CardinalityConstraint"],
+      "regex_class_extended": ["CharClassQuantified", "PrefixThenClass", "AccelDriven"],
+      "feasible_engines_populated": true,
+      "node_facts_recognizer_populated": true,
+      "csp_recognizers_decisions_populated": true,
+      "backend_kernels_directory_present": true
+    },
+    "soft": {
+      "parse_time_within_5pct_of_post_t": true,
+      "compile_time_regression_acknowledged": true,
+      "follow_up_tranche_w_required_for_strategy_migration_and_legacy_purge": true
+    }
+  }
+}

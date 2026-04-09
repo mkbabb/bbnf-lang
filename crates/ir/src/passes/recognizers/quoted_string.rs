@@ -3,36 +3,32 @@
 
 use bbnf_regex::RegexClass;
 
-use crate::dag::GrammarDag;
+use crate::dag::{GrammarDag, NodeId};
 use crate::passes::patterns::{
-    NodeKind, OnePassGrade, OutputShape, Recognizer, RecognizerRole, RecognizerShape,
+    OnePassGrade, OutputShape, Recognizer, RecognizerRole, RecognizerShape,
 };
-use crate::{GrammarIR, IrNode, StringId};
+use crate::{GrammarIR, IrNode};
 
-use super::install_recognizer;
 use super::signature::compute_shape_hash;
 
-pub(super) fn mine(ir: &mut GrammarIR) {
-    let dag = match ir.dag.as_ref() {
-        Some(d) => d.clone(),
-        None => return,
-    };
-    let regex_info = ir.regex_info.clone();
-    let rules = ir.rules.clone();
-
-    for rule in &rules {
-        walk(&rule.body, ir, &regex_info, &dag);
+pub(super) fn collect(
+    ir: &GrammarIR,
+    dag: &GrammarDag,
+    out: &mut Vec<(NodeId, Recognizer)>,
+) {
+    for rule in &ir.rules {
+        walk(&rule.body, ir, dag, out);
     }
 }
 
 fn walk(
     node: &IrNode,
-    ir: &mut GrammarIR,
-    regex_info: &std::collections::HashMap<StringId, bbnf_regex::RegexInfo>,
+    ir: &GrammarIR,
     dag: &GrammarDag,
+    out: &mut Vec<(NodeId, Recognizer)>,
 ) {
     if let IrNode::Regex(sid) = node {
-        if let Some(info) = regex_info.get(sid) {
+        if let Some(info) = ir.regex_info.get(sid) {
             if matches!(
                 info.classification,
                 RegexClass::QuotedString { .. }
@@ -52,22 +48,19 @@ fn walk(
                         },
                         ir,
                     );
-                    install_recognizer(
-                        &mut ir.node_facts,
+                    out.push((
                         node_id,
-                        NodeKind::Leaf,
                         Recognizer {
                             role: RecognizerRole::Standalone,
                             shape,
                             signature,
                             peer_group: None,
                         },
-                    );
+                    ));
                 }
             }
         }
     }
 
-    super::visit_children_alt(node, |child| walk(child, ir, regex_info, dag));
+    super::visit_children_alt(node, |child| walk(child, ir, dag, out));
 }
-

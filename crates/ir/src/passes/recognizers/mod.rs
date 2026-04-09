@@ -74,19 +74,36 @@ pub fn mine_recognizers(ir: &mut GrammarIR) {
     ir.node_facts = node_facts;
 
     // Phase 3: recognizer-shape miners. Each miner walks the DAG once
-    // and refines `node_facts.recognizer` for nodes it knows about.
+    // (by reference) and returns a Vec of decisions. The orchestrator
+    // merges them into `ir.node_facts` once at the end. Avoids per-
+    // miner clones of `ir.regex_info`/`ir.rules`/`ir.dag` that would
+    // dominate compile time on small grammars.
     //
     // Context facts are computed once here and passed to the miners
     // that need them (token_led_branches reads `discrimination`).
-    if let Some(dag) = ir.dag.clone() {
+    if ir.dag.is_some() {
+        let dag = ir.dag.as_ref().unwrap().clone();
         let context_facts = compute_context_facts(ir, &dag);
 
-        quoted_string::mine(ir);
-        balanced_wrap::mine(ir);
-        comment_ws::mine(ir);
-        identifier::mine(ir);
-        separator_list::mine(ir);
-        token_led_branches::mine(ir, &context_facts);
+        let mut additions: Vec<(crate::dag::NodeId, crate::passes::patterns::Recognizer)> =
+            Vec::new();
+
+        quoted_string::collect(ir, &dag, &mut additions);
+        balanced_wrap::collect(ir, &dag, &mut additions);
+        comment_ws::collect(ir, &dag, &mut additions);
+        identifier::collect(ir, &dag, &mut additions);
+        separator_list::collect(ir, &dag, &mut additions);
+        token_led_branches::collect(ir, &dag, &context_facts, &mut additions);
+
+        for (node_id, rec) in additions {
+            install_recognizer(
+                &mut ir.node_facts,
+                node_id,
+                crate::passes::patterns::NodeKind::Leaf,
+                rec,
+            );
+        }
+
         prefix_shared_group::mine(ir);
     }
 }

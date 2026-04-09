@@ -2,35 +2,35 @@
 //! patterns where the existing `sep_by` flag fires AND the separator is
 //! a single-byte literal.
 
-use crate::dag::GrammarDag;
+use crate::dag::{GrammarDag, NodeId};
 use crate::passes::patterns::{
-    NodeKind, OnePassGrade, OutputShape, Recognizer, RecognizerRole, RecognizerShape,
+    OnePassGrade, OutputShape, Recognizer, RecognizerRole, RecognizerShape,
 };
 use crate::{GrammarIR, IrNode};
 
-use super::install_recognizer;
 use super::signature::compute_shape_hash;
 
-pub(super) fn mine(ir: &mut GrammarIR) {
-    let dag = match ir.dag.as_ref() {
-        Some(d) => d.clone(),
-        None => return,
-    };
-    let rules = ir.rules.clone();
-
-    for rule in &rules {
-        walk(&rule.body, ir, &dag);
+pub(super) fn collect(
+    ir: &GrammarIR,
+    dag: &GrammarDag,
+    out: &mut Vec<(NodeId, Recognizer)>,
+) {
+    for rule in &ir.rules {
+        walk(&rule.body, ir, dag, out);
     }
 }
 
-fn walk(node: &IrNode, ir: &mut GrammarIR, dag: &GrammarDag) {
+fn walk(
+    node: &IrNode,
+    ir: &GrammarIR,
+    dag: &GrammarDag,
+    out: &mut Vec<(NodeId, Recognizer)>,
+) {
     if let IrNode::Skip(element, opt_sep) = node {
         if let IrNode::Repeat { inner, lo: 0, hi: 1 } = opt_sep.as_ref() {
             if let Some(sep_byte) = single_byte_literal(inner, ir) {
                 if let Some(node_id) = dag.node_for(node) {
-                    // Build a thin element shape — the body's own miners
-                    // refine this if they recognize the element shape.
-                    let element_shape = element_shape_from(element, ir);
+                    let element_shape = element_shape_from(element);
                     let element_sig = compute_shape_hash(
                         &element_shape,
                         OutputShape::SpanOnly,
@@ -57,30 +57,24 @@ fn walk(node: &IrNode, ir: &mut GrammarIR, dag: &GrammarDag) {
                         OnePassGrade::OnePass,
                         ir,
                     );
-                    install_recognizer(
-                        &mut ir.node_facts,
+                    out.push((
                         node_id,
-                        NodeKind::Skip,
                         Recognizer {
                             role: RecognizerRole::Standalone,
                             shape,
                             signature,
                             peer_group: None,
                         },
-                    );
+                    ));
                 }
             }
         }
     }
 
-    super::visit_children_alt(node, |child| walk(child, ir, dag));
+    super::visit_children_alt(node, |child| walk(child, ir, dag, out));
 }
 
-fn element_shape_from(node: &IrNode, _ir: &GrammarIR) -> RecognizerShape {
-    // Default: opaque keyword-prefix shell. Specific element shapes
-    // (e.g., the regex inside a sep-by'd item) get refined when the
-    // body's own miners visit those nodes — and the SeparatorList's
-    // signature picks up the canonical hash via the recognizer pointer.
+fn element_shape_from(node: &IrNode) -> RecognizerShape {
     if let IrNode::Regex(sid) = node {
         return RecognizerShape::Regex { sid: *sid };
     }

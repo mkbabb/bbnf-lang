@@ -428,6 +428,10 @@ fn compile_ast_common<'a>(
     // body-mutating facts passes converge (when they run) so the
     // pointer index remains valid.
     ir.dag = Some(bbnf_ir::dag::GrammarDag::from_ir(&ir));
+    debug_assert!(
+        ir.dag.is_some(),
+        "DAG must be built before facts/strategy phases",
+    );
 
     if !options.structural {
         // Non-mutating facts on the stable DAG. Gated on !structural

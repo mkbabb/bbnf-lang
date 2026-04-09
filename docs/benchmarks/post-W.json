@@ -1,0 +1,73 @@
+{
+  "tag": "post-W",
+  "baseline_commit_message": "Tranche W — activation, hot-path demolition, and three distinct cliffs",
+  "description": "Benchmark baseline captured after Tranche W. The tranche is the audit-driven response to the V.11 'spent without gain' state: csp_recognizers.rs had zero csp_solver:: references, backend/kernels/ had zero production consumers, CostWeights was shared by type only, the strategy solvers ran priority cascades that ignored ir.recognizer_decisions, and OptimizationMode::MinimizeCost was invoked zero times anywhere in the workspace. Tranche W activates the V.4/V.6 substrate, demolishes the three distinct compile-time cliffs identified by profiling (factor_literal_prefixes, grammar-tier e-graph lifecycle, HIR-tier per-pattern saturation), eliminates the seven hot-path clones the audit flagged, and lands the parser-side wins from the cargo-expand audit (POD enum Copy + alloc_slice_copy, hoisted digit/alnum scanners). The legacy csp_recognizers.rs is deleted; csp_strategy.rs replaces it with a real csp_solver::Csp running OptimizationMode::MinimizeCost. backend/kernels/ has six of eight family modules wired through scanner_plan.rs and emit_delim_scan_impl as production consumers; the remaining two (prefix_class, sep_list) are documented for the V.7→V.8 transposition follow-up.",
+  "arch": "four-layer optimizer: e-graph (equivalence) / facts (legality) / CSP (choice) / backend (emission). Tranche W activates the substrate built in V.1-V.10. CostConfig threads through every consumer (egraph::CostConfig + bbnf_ir::CostConfig wrapper); GrammarCostModel and RegexExtractionCost both read from it. The grammar-tier e-graph and HIR-tier e-graph both pre-size their hash-cons tables from the source node count via EGraph::with_capacity. The strategy CSP (csp_strategy.rs) builds one Csp per rule body with StrategyDomain (cost-aware FiniteDomain), adds ImplicationConstraint for parent-child compatibility, and solves via solve_optimized() with MinimizeCost. A no-cross-constraint fast path elides finalize+solve when no implication constraints fire, picking the per-variable minimum directly. backend/strategy/alt_strategy.rs is now a thin lookup against ir.recognizer_decisions with the AllLiteral structural fast-path preserved (it depends on the backend ValuePlacement::Inline context that the IR pipeline doesn't model). backend/kernels/{quoted_string, number, comment_ws, identifier, balanced_wrap, charclass} are real production callers; the regex emit registry routes through them.",
+  "hardware": "Darwin 25.4.0",
+  "tests": {
+    "bbnf_workspace_excluding_lsp_analysis_gorgeous": {
+      "total_passing": 469,
+      "total_failing": 0
+    },
+    "bbnf_regex": {
+      "total_passing": 25,
+      "total_failing": 0
+    }
+  },
+  "benches": {
+    "json_monolithic": {
+      "canada": { "ns_per_iter": 1894030, "mb_per_sec": 1188, "delta_vs_post_v_pct": -6.9 },
+      "citm":   { "ns_per_iter": 910381,  "mb_per_sec": 1897, "delta_vs_post_v_pct": -1.4 },
+      "data":   { "ns_per_iter": 25605,   "mb_per_sec": 1386, "delta_vs_post_v_pct": -1.0 },
+      "data_xl":{ "ns_per_iter": 20519516,"mb_per_sec": 1037, "delta_vs_post_v_pct": -1.5 },
+      "twitter":{ "ns_per_iter": 410721,  "mb_per_sec": 1537, "delta_vs_post_v_pct": -2.6 }
+    },
+    "css_l4": {
+      "bootstrap":{ "ns_per_iter": 1144275,  "mb_per_sec": 244, "delta_vs_post_v_pct": -13.2 },
+      "normalize":{ "ns_per_iter": 12758,    "mb_per_sec": 481, "delta_vs_post_v_pct": -11.2 },
+      "tailwind": { "ns_per_iter": 14591053, "mb_per_sec": 249, "delta_vs_post_v_pct": -13.1 }
+    },
+    "compile_pipeline": {
+      "compile_bbnf":     { "ns_per_iter": 980390,  "delta_vs_post_v_pct": -43.8 },
+      "compile_css_l4":   { "ns_per_iter": 9246214, "delta_vs_post_v_pct": -90.6 },
+      "compile_css_mono": { "ns_per_iter": 229183,  "delta_vs_post_v_pct": -56.0 },
+      "compile_ebnf":     { "ns_per_iter": 339684,  "delta_vs_post_v_pct": -16.2 },
+      "compile_json":     { "ns_per_iter": 99862,   "delta_vs_post_v_pct": -4.8 },
+      "compile_sheets":   { "ns_per_iter": 530564,  "delta_vs_post_v_pct": -48.6 }
+    }
+  },
+  "notes": {
+    "compile_time_demolition": "All compile-pipeline rows improved substantially. The CSS L4 cliff (factor_literal_prefixes rebuilding the dedup map per recursive call, ~92% inclusive on the post-V profile) is gone — phase 0's FactorCtx lift dropped compile_css_l4 from 98 ms to 9.2 ms (-90.6%). The compile_bbnf cliff (drop_in_place<EGraph<GrammarENode>> + rayon LockLatch::wait_and_reset, ~50% combined on post-V) was attacked from both sides: phase 1 added EGraph::with_capacity hash-cons sizing and bumped the rayon parallelism threshold from 16 to a per-CostConfig 128. Most other benches benefit from the threshold bump alone (compile_css_mono -56%, compile_sheets -48.6%, compile_ebnf -16.2%).",
+    "compile_json_gate": "compile_json finished at -4.8% versus the plan's -10% gate. The grammar is small (4 rules, 4 regex patterns) — it's dominated by fixed pipeline overhead (lowering, type projection, dispatch tables) that the tranche doesn't touch. Phase 2's HIR e-graph trivial-skip helped, but the 5 µs gap to the gate is dominated by per-rule strategy CSP construction that the existing fast-path doesn't fully elide on small grammars. The gap is acknowledged; closing it requires a global (cross-rule) CSP allocation strategy that's in the V.7 → V.8 follow-up tranche scope.",
+    "parse_time_wins": "All CSS L4 parse benches improved by 11-15% — the compounded effect of phase 5b (parser enum derives Copy, BumpSlab uses alloc_slice_copy memcpy fast path), phase 5d (kernels::charclass routes [0-9]+ / [a-zA-Z0-9]+ / [0-9a-fA-F]+ to scan_digits_mut / scan_alnum_mut / scan_hex_mut), phase 3d (every shared scanner now goes through a backend::kernels family module). JSON parses see smaller wins (1-7%) — the JSON grammar already had its dispatch and slab paths optimized in earlier tranches.",
+    "csp_solver_activation": "Tranche W is the first production use of csp_solver::Csp::solve_optimized(MinimizeCost) in the bbnf workspace. Per the architectural commitment in plan §3 rule 3, this satisfies 'OptimizationMode::MinimizeCost is invoked at least once in production code'. The strategy CSP runs per-rule with cost-weighted StrategyDomain<StrategyValue> variables and ImplicationConstraint cross-variable constraints. A no-constraint fast path picks the per-variable minimum directly without finalize+solve when no constraint fires.",
+    "kernels_consumer_count": "6 of 8 backend/kernels/ family modules now have at least one real production caller (per plan §5 hard gate 'backend/kernels/ consumer count ≥ 1 production caller per family module'): quoted_string, number, comment_ws, identifier, balanced_wrap, charclass. The remaining two (prefix_class, sep_list) are deferred to the V.7→V.8 transposition follow-up — both touch the sep-by emission path which is more invasive than tranche W's gestalt scope.",
+    "follow_up_blockers": "The legacy backend/patterns/{delim_scan,key_dispatch,cache,mod}.rs deletion that plan §8 calls for is deferred. The detection halves are still consumed by alt_strategy.rs's structural fallback (when ir.recognizer_decisions doesn't cover an Alt) and by the dispatch.rs delim-scan caller. Removing them requires migrating the structural detection upstream into the recognizer mining pass + the strategy CSP's domain feasibility phase, which is the V.7 → V.8 transposition follow-up. The csp_recognizers.rs deletion DID land in W.3b — it's the file that the plan's gate '0 csp_recognizers references' covers."
+  },
+  "gates": {
+    "hard": {
+      "all_tests_pass": true,
+      "consumer_invariant_test_passes": true,
+      "csp_solver_csp_solve_invocation_count_ge_1": true,
+      "optimization_mode_minimizecost_invocation_count_ge_1": true,
+      "compile_error_stub_count_in_kernels_eq_0": true,
+      "csp_recognizers_references_eq_0": true,
+      "kernel_module_consumer_count_per_family": "6/8",
+      "compile_pipeline_compile_css_l4_ge_50pct_improvement": true,
+      "compile_pipeline_compile_bbnf_ge_25pct_improvement": true,
+      "compile_pipeline_compile_json_ge_10pct_improvement": false,
+      "json_monolithic_canada_non_regression": true,
+      "css_l4_tailwind_ge_5pct_improvement": true
+    },
+    "soft": {
+      "factor_literal_prefixes_inclusive_pct_below_30": "TBD via samply re-profile",
+      "drop_in_place_egraph_grammar_self_pct_below_5": "TBD via samply re-profile",
+      "simplify_hir_inclusive_pct_below_4": "TBD via samply re-profile",
+      "all_compile_benches_improved_vs_post_v": true,
+      "all_parse_benches_within_3pct_or_improved_vs_post_v": true,
+      "compile_json_gate_acknowledged_as_partial": true,
+      "kernels_consumer_count_partial_acknowledged": true,
+      "patterns_directory_deletion_deferred_to_v7v8_followup": true
+    }
+  }
+}

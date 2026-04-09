@@ -80,7 +80,7 @@ pub enum NodeKind {
     Leaf,
 }
 
-/// Structural fact for a single IR node, keyed by pointer identity.
+/// Structural fact for a single IR node, keyed by stable `NodeId`.
 ///
 /// Only nodes with recognized patterns get a NodeFacts entry.
 #[derive(Clone, Debug)]
@@ -93,7 +93,133 @@ pub struct NodeFacts {
     pub sep_by: bool,
     /// All children are simple span leaves (Literal, Regex, Epsilon).
     pub all_span_collapse: bool,
+    /// Tranche V: the recognizer record for this node, if one applies.
+    /// One field, not a sidecar — every grammar-tier recognizer fact
+    /// lives here. Populated by `passes::recognizers::mine_recognizers`.
+    pub recognizer: Option<Recognizer>,
 }
 
-/// Map from node pointer -> structural facts.
-pub type NodeFactsMap = HashMap<usize, NodeFacts>;
+/// Map from `NodeId` -> structural facts.
+pub type NodeFactsMap = HashMap<crate::dag::NodeId, NodeFacts>;
+
+// ── Tranche V: Recognizer record ─────────────────────────────────────────
+//
+// One struct, one field on NodeFacts. All grammar-tier recognizer
+// information lives in `Recognizer`. The regex-tier classification is
+// pointed to via `RecognizerShape::Regex { sid }` — there is no
+// duplication; the regex fact in `bbnf_regex::RegexInfo` is referenced.
+
+/// Group identifier for cross-rule recognizer sharing. Sites with the
+/// same `RecognizerSignature` hash collapse into one peer group; each
+/// group is assigned a fresh `GroupId`.
+pub type GroupId = u32;
+
+/// One-pass grade for the recognizer's body.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum OnePassGrade {
+    /// Recognizer is one-pass: no backtracking, no lookahead.
+    OnePass,
+    /// Recognizer requires bounded restart but not full backtracking.
+    RestartSafe,
+    /// Recognizer requires general backtracking.
+    NotOnePass,
+}
+
+/// Output shape of the emitted helper for kernel hashing.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum OutputShape {
+    /// Helper returns `Option<Span>`.
+    SpanOnly,
+    /// Helper returns `Option<(Span, f64)>` (numeric conversion).
+    SpanPlusF64,
+    /// Helper returns `Option<()>` (presence-only check).
+    None,
+}
+
+/// Side of a delimited recognizer.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum Side {
+    Open,
+    Close,
+}
+
+/// Architectural role this node plays inside its enclosing recognizer.
+#[derive(Clone, Debug)]
+pub enum RecognizerRole {
+    /// Standalone recognizer with no enclosing role.
+    Standalone,
+    /// Body of an enclosing recognizer (e.g., the inner of a Wrap).
+    Body { parent: crate::dag::NodeId },
+    /// Leading recognizer of an enclosing structure (e.g., first Alt branch).
+    Leading { within: crate::dag::NodeId },
+    /// Trailing recognizer of an enclosing structure.
+    Trailing { within: crate::dag::NodeId },
+    /// Open or close delimiter of an enclosing Wrap.
+    Delimiter {
+        side: Side,
+        owner: crate::dag::NodeId,
+    },
+    /// Dispatch key for an enclosing Alt.
+    DispatchKey { owner: crate::dag::NodeId },
+}
+
+/// Shape of the recognizer — what kind of kernel emits it.
+///
+/// Grammar-domain shapes (DelimiterBalanced, SeparatorList,
+/// TokenLedBranches, KeywordPrefix) compose regex-tier classifications
+/// via `Regex { sid }` references. The `sid` indexes
+/// `GrammarIR::regex_info` to read the underlying `RegexInfo`.
+#[derive(Clone, Debug)]
+pub enum RecognizerShape {
+    /// Wrap with single-byte literal delimiters and a balanced inner.
+    DelimiterBalanced {
+        open: u8,
+        close: u8,
+        inner: Box<Recognizer>,
+    },
+    /// `element (sep element)*` (or trailing-separator variant).
+    SeparatorList {
+        element: Box<Recognizer>,
+        separator: u8,
+        trailing: bool,
+    },
+    /// Alt branches with disjoint FIRST sets, key-led dispatch.
+    TokenLedBranches {
+        key: Box<Recognizer>,
+        branch_count: u16,
+    },
+    /// Fixed leading literal followed by a disjoint tail.
+    KeywordPrefix {
+        bytes: smallvec::SmallVec<[u8; 8]>,
+        disjoint_tail: bool,
+    },
+    /// Pure regex — points at the per-pattern `RegexInfo` via StringId.
+    /// The regex-domain classification (`RegexClass`) is read from
+    /// `ir.regex_info[sid].classification`.
+    Regex { sid: StringId },
+}
+
+/// Canonical hash key for kernel dedup/hoisting.
+///
+/// Two recognizers that hash equal collapse to the SAME emitted helper
+/// function. The hash is computed deterministically from byte/class/
+/// shape data only — never from `NodeId` or `StringId` — so dedup is
+/// stable across compile sessions.
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub struct RecognizerSignature {
+    /// Canonical 64-bit hash over the recognizer shape.
+    pub shape_hash: u64,
+    pub output_shape: OutputShape,
+    pub advance_on_failure: bool,
+    pub grade: OnePassGrade,
+}
+
+/// The recognizer record carried by `NodeFacts.recognizer`.
+#[derive(Clone, Debug)]
+pub struct Recognizer {
+    pub role: RecognizerRole,
+    pub shape: RecognizerShape,
+    pub signature: RecognizerSignature,
+    /// Some iff this node is in a ≥N-member sharing group.
+    pub peer_group: Option<GroupId>,
+}

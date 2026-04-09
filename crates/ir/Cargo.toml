@@ -14,6 +14,7 @@ parse_that = "0.4"
 bbnf-regex = { version = "0.1", features = ["serde"] }
 rustc-hash = "2"
 rayon = "1"
+smallvec = "1.13"
 csp-solver = "0.1"
 egraph = { path = "../egraph" }
 egraph-derive = { path = "../egraph-derive" }

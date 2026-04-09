@@ -62,6 +62,7 @@ fn recognize_tree(
                             operator_chain: is_op_chain,
                             sep_by: false,
                             all_span_collapse: all_span,
+                            recognizer: None,
                         },
                     );
                 }
@@ -90,6 +91,7 @@ fn recognize_tree(
                             operator_chain: false,
                             sep_by: true,
                             all_span_collapse: false,
+                            recognizer: None,
                         },
                     );
                 }

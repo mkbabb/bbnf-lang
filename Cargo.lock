@@ -208,6 +208,7 @@ dependencies = [
  "rustc-hash 2.1.2",
  "serde",
  "serde_json",
+ "smallvec",
 ]
 
 [[package]]

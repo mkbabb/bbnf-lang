@@ -7,19 +7,23 @@ use proc_macro2::TokenStream;
 use quote::quote;
 
 use crate::generate::regex::cost_model::EmitOpts;
-use parse_that::regex::classify::RegexClass;
+use parse_that::regex::classify::{ClassRangeInfo, RegexClass};
 
 /// Planned scanner form.
 #[derive(Debug, Clone)]
 pub(crate) enum ScannerPlan {
     /// Use a shared helper from `parse_that`.
     Shared(SharedScanner),
+    /// Use a backend kernel module call (Tranche W phase 3d).
+    /// The TokenStream is the inline call site emitted by the kernel.
+    Kernel(TokenStream),
 }
 
 impl ScannerPlan {
     pub(crate) fn into_tokens(self) -> TokenStream {
         match self {
             ScannerPlan::Shared(scanner) => scanner.into_tokens(),
+            ScannerPlan::Kernel(tokens) => tokens,
         }
     }
 }
@@ -36,19 +40,27 @@ pub(crate) enum SharedScanner {
 
 impl SharedScanner {
     fn into_tokens(self) -> TokenStream {
+        // Tranche W phase 3d: every shared scanner now routes through
+        // the corresponding `crate::backend::kernels::*` family module.
+        // The kernel modules are the canonical home for family-classified
+        // emission — `parse_that::scan_*` calls only ever land via
+        // `kernels::*::emit_call`. This is the production wiring the V.7
+        // substrate was missing: each kernel module gains a real
+        // production caller, satisfying the tranche-W §5 hard gate
+        // ("backend/kernels/ consumer count ≥ 1 production caller per
+        // family module").
+        use crate::backend::kernels;
         match self {
-            SharedScanner::JsonString => quote! { ::parse_that::quoted_string_scan_full(state) },
+            SharedScanner::JsonString => kernels::quoted_string::emit_json_call(),
             SharedScanner::JsonNumber { fuse_numbers: true } => {
-                quote! { ::parse_that::number_fused_scan_convert(state) }
+                kernels::number::emit_call_fused()
             }
             SharedScanner::JsonNumber {
                 fuse_numbers: false,
-            } => {
-                quote! { ::parse_that::number_span_scan_strict(state) }
-            }
-            SharedScanner::WsBlockComment => quote! { ::parse_that::scan_ws_block_comments(state) },
-            SharedScanner::Ident => quote! { ::parse_that::scan_ident(state) },
-            SharedScanner::QuotedString => quote! { ::parse_that::scan_string_quoted(state) },
+            } => kernels::number::emit_call_span(),
+            SharedScanner::WsBlockComment => kernels::comment_ws::emit_call(),
+            SharedScanner::Ident => kernels::identifier::emit_call(),
+            SharedScanner::QuotedString => kernels::quoted_string::emit_call(),
         }
     }
 }
@@ -98,14 +110,22 @@ pub(crate) fn plan_regex_scanner(pattern: &str, opts: &EmitOpts) -> Option<Scann
         RegexClass::Numeric {
             allows_sign: false, ..
         } => Some(shared_json_number_scanner(false)),
-        // Tranche V.7: new structural variants intentionally fall to
-        // None so the existing `generalized/` and `hir/` emitters
-        // continue to handle them. The kernel modules in
-        // `crates/core/src/backend/kernels/` exist as the file home
-        // for V.8's hoisted-helper migration.
-        RegexClass::CharClassQuantified(_)
-        | RegexClass::PrefixThenClass { .. }
-        | RegexClass::AccelDriven(_) => None,
+        // Tranche W phase 5d: route CharClassQuantified through the
+        // hoisted scanner kernels for the digit / alnum / hex shapes.
+        // Patterns the kernel can't handle (negated, bounded, mixed)
+        // fall through to the generalized emitter.
+        RegexClass::CharClassQuantified(ClassRangeInfo {
+            chars,
+            negated,
+            min,
+            max,
+        }) => crate::backend::kernels::charclass::emit_call_opt(
+            &chars, negated, min, max,
+        )
+        .map(ScannerPlan::Kernel),
+        // PrefixThenClass / AccelDriven fall through to generalized
+        // until the kernel modules grow real bodies for them.
+        RegexClass::PrefixThenClass { .. } | RegexClass::AccelDriven(_) => None,
         _ => None,
     }
 }

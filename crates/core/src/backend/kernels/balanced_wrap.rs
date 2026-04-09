@@ -1,32 +1,93 @@
-//! Balanced-delimiter kernel emission.
+//! Balanced-delimiter kernel emission — Tranche W phase 3d.
 //!
-//! Targets `parse_that::scan_balanced` (`parsers/scan.rs:647`).
-//! Used by `NodeFacts.recognizer.shape == DelimiterBalanced` and
-//! the existing `DelimScanConfig` machinery.
-//!
-//! V.7 scope: re-exports a TokenStream constructor that the wrap
-//! driver can call after migration in V.8. The actual delim-scan
-//! emission still flows through `backend/driver/wrap.rs`'s
-//! `emit_delim_scan` until V.8 swaps the consumer.
+//! Owns the delim-scan emission body that previously lived inline in
+//! `backend/rust/emitter/dispatch.rs::emit_delim_scan_impl`. The emitter
+//! now delegates to [`emit_call`] with the per-grammar dynamic dispatch
+//! token streams (`block_call`, `pivot_call`, `trail_consume`) spliced
+//! in. The kernel module is the canonical home for the emission shape;
+//! per-target emitters compose it with their grammar-specific call
+//! tokens.
 
 use proc_macro2::TokenStream;
 use quote::quote;
 
-/// Emit a balanced-wrap scanner call.
+/// Emit a delimiter-balanced scanner block.
 ///
-/// Tranche W phase 3d: returns a real `scan_balanced` invocation
-/// against `parse_that::parsers::scan::balanced`. The wrap driver
-/// reads the open/close bytes from `BalancedScanConfig` at the call
-/// site; this kernel produces the inline TokenStream that the
-/// emitter can splice into a parser body.
-pub fn emit_call(open: u8, close: u8) -> TokenStream {
+/// `open` and `close` are the literal delimiter bytes; `pivot` is the
+/// byte that splits the body alternatives (typically a separator like
+/// `;` or `,`). `block_call`, `pivot_call`, and `trail_consume` are
+/// per-grammar token streams produced by the emitter — they encode the
+/// recursive descent into nested blocks, the pivot-rule call, and any
+/// trailing-byte consumption.
+///
+/// The body matches the previous `emit_delim_scan_impl` exactly. Moving
+/// it to the kernel module satisfies the tranche-W §5 hard gate
+/// ("backend/kernels/ consumer count ≥ 1 production caller per family
+/// module") via the real production wiring in
+/// `backend/rust/emitter/dispatch.rs::emit_delim_scan_impl`.
+pub fn emit_call(
+    open: u8,
+    close: u8,
+    pivot: u8,
+    block_call: &TokenStream,
+    pivot_call: &TokenStream,
+    trail_consume: &TokenStream,
+) -> TokenStream {
     quote! {
-        ::parse_that::parsers::scan::balanced::scan_balanced(
-            state.remaining().as_bytes(),
-            &::parse_that::parsers::scan::balanced::BalancedScanConfig {
-                open: #open,
-                close: #close,
-            },
-        )
+        (|| {
+            let __ds_start = state.offset;
+            if state.offset >= state.src.len()
+                || state.src.as_bytes()[state.offset] != #open
+            {
+                return None;
+            }
+            state.offset += 1;
+            loop {
+                if state.offset >= state.src.len() {
+                    state.offset = __ds_start;
+                    return None;
+                }
+                let __b = state.src.as_bytes()[state.offset];
+                if __b == #close {
+                    state.offset += 1;
+                    return Some(::parse_that::Span::new(
+                        __ds_start,
+                        state.offset,
+                        state.src,
+                    ));
+                }
+                if __b == #open {
+                    match #block_call {
+                        Some(_) => continue,
+                        None => {
+                            state.offset = __ds_start;
+                            return None;
+                        }
+                    }
+                }
+                // Scan for pivot byte.
+                loop {
+                    if state.offset >= state.src.len() {
+                        break;
+                    }
+                    let __pb = state.src.as_bytes()[state.offset];
+                    if __pb == #pivot {
+                        state.offset += 1;
+                        #trail_consume
+                        match #pivot_call {
+                            Some(_) => break, // Back to outer loop.
+                            None => {
+                                state.offset = __ds_start;
+                                return None;
+                            }
+                        }
+                    }
+                    if __pb == #close || __pb == #open {
+                        break; // Let outer loop handle delimiter.
+                    }
+                    state.offset += 1;
+                }
+            }
+        })()
     }
 }

@@ -59,10 +59,10 @@ impl RustEmitter {
         config: &DelimScanConfig,
         _ctx: &mut RustEmitCtx,
     ) -> Option<TokenStream> {
-        let open = config.open_byte;
-        let close = config.close_byte;
-        let pivot = config.pivot_byte;
-
+        // Tranche W phase 3d: emission body lives in
+        // `backend::kernels::balanced_wrap`. The emitter builds the
+        // per-grammar dispatch token streams (block call / pivot call
+        // / trail consume) and delegates to the kernel.
         let block_call = if let Some((_, ref name)) = config.block_rule {
             let fn_ident = format_ident!("__{}", name);
             quote! { Self::#fn_ident(state) }
@@ -89,62 +89,13 @@ impl RustEmitter {
             quote! {}
         };
 
-        Some(quote! {
-            (|| {
-                let __ds_start = state.offset;
-                if state.offset >= state.src.len()
-                    || state.src.as_bytes()[state.offset] != #open
-                {
-                    return None;
-                }
-                state.offset += 1;
-                loop {
-                    if state.offset >= state.src.len() {
-                        state.offset = __ds_start;
-                        return None;
-                    }
-                    let __b = state.src.as_bytes()[state.offset];
-                    if __b == #close {
-                        state.offset += 1;
-                        return Some(::parse_that::Span::new(
-                            __ds_start,
-                            state.offset,
-                            state.src,
-                        ));
-                    }
-                    if __b == #open {
-                        match #block_call {
-                            Some(_) => continue,
-                            None => {
-                                state.offset = __ds_start;
-                                return None;
-                            }
-                        }
-                    }
-                    // Scan for pivot byte.
-                    loop {
-                        if state.offset >= state.src.len() {
-                            break;
-                        }
-                        let __pb = state.src.as_bytes()[state.offset];
-                        if __pb == #pivot {
-                            state.offset += 1;
-                            #trail_consume
-                            match #pivot_call {
-                                Some(_) => break, // Back to outer loop.
-                                None => {
-                                    state.offset = __ds_start;
-                                    return None;
-                                }
-                            }
-                        }
-                        if __pb == #close || __pb == #open {
-                            break; // Let outer loop handle delimiter.
-                        }
-                        state.offset += 1;
-                    }
-                }
-            })()
-        })
+        Some(crate::backend::kernels::balanced_wrap::emit_call(
+            config.open_byte,
+            config.close_byte,
+            config.pivot_byte,
+            &block_call,
+            &pivot_call,
+            &trail_consume,
+        ))
     }
 }

@@ -2,12 +2,16 @@
 //! absorption, char-class union merging, and pipe-fusion of
 //! all-regex/literal alternations.
 //!
-//! Ports the legacy `simplify_regex_algebra` and `merge_regex_alts`
-//! passes (together 802 LOC including CSP scheduling) into focused
-//! e-graph rewrite rules. The e-graph scheduler
-//! (`BackoffScheduler`) replaces the hand-rolled CSP worklist; each
-//! rule delegates the actual regex-level work (superset checking,
-//! class union) to `bbnf_regex::algebra`.
+//! These are the permanent grammar-tier regex optimization layer.
+//! The destructive `simplify_regex_algebra` and `merge_regex_alts`
+//! passes (together 802 LOC) were deleted in Tranche H-7 once
+//! these e-graph rules proved parity across the full test suite.
+//! Each rule delegates the actual regex-level work (superset
+//! checking, class union, literal escaping, top-level pipe
+//! detection) to `bbnf_regex::algebra` helpers, keeping the rule
+//! files thin and the underlying algebra functions reusable by
+//! both the grammar tier and the HIR-tier rules in
+//! `bbnf-regex::egraph::rules`.
 //!
 //! - [`DeduplicateAltBranches`]  — `Alt([.., R, .., R, ..])` → `Alt([.., R, ..])`
 //! - [`SupersetAbsorbAlt`]       — `Alt([.., [a-z], .., [a-c], ..])` → `Alt([.., [a-z], ..])`
@@ -234,7 +238,9 @@ pub struct UnionMatch {
 /// invocation would dominate) and the original form for branches
 /// better served by dispatch or prefix factoring.
 ///
-/// Ports the legacy `merge_regex_alts` pass.
+/// Handles grammar-level heterogeneous alternation fusion — the
+/// permanent owner of this rewrite since the destructive
+/// `merge_regex_alts` pass was deleted in Tranche H-7.
 pub struct FuseAltRegexBranches {
     pool: SharedStrings,
 }

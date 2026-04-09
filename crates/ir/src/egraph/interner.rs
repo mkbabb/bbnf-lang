@@ -1,11 +1,11 @@
 //! Shared string interner for e-graph rewrite rules that mutate
 //! `GrammarIR::strings`.
 //!
-//! Rewrite rules like `merge_literals`, `merge_regex_alts`, and
-//! `simplify_regex_algebra` create new string literals during
-//! saturation. The `Rewrite::apply` signature has no access to the
-//! grammar, so we route string interning through a shared
-//! `SharedStrings` handle with interior mutability.
+//! Rewrite rules like `UnionMergeAlt` and `FuseAltRegexBranches`
+//! create new string literals during saturation. The
+//! `Rewrite::apply` signature has no access to the grammar, so we
+//! route string interning through a shared `SharedStrings` handle
+//! with interior mutability.
 //!
 //! ```text
 //!    GrammarIR::strings ────► SharedStrings ────► rewrite rules

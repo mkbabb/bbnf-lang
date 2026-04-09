@@ -1,6 +1,6 @@
 mod common;
 
-use std::collections::{HashMap, HashSet};
+use indexmap::{IndexMap, IndexSet};
 
 use bbnf::graph::{Dependencies, tarjan_scc};
 use bbnf_ir::CharSet128 as CharSet;
@@ -140,10 +140,10 @@ fn regex_first_space_escape() {
 #[test]
 fn tarjan_no_cycles() {
     // A -> B -> C (linear chain, no cycles)
-    let mut deps: Dependencies = HashMap::new();
-    deps.insert("A", HashSet::from(["B"]));
-    deps.insert("B", HashSet::from(["C"]));
-    deps.insert("C", HashSet::new());
+    let mut deps: Dependencies = IndexMap::new();
+    deps.insert("A", IndexSet::from(["B"]));
+    deps.insert("B", IndexSet::from(["C"]));
+    deps.insert("C", IndexSet::new());
 
     let result = tarjan_scc(&deps);
     assert_eq!(result.sccs.len(), 3);
@@ -159,8 +159,8 @@ fn tarjan_no_cycles() {
 #[test]
 fn tarjan_self_cycle() {
     // A -> A (self-referencing)
-    let mut deps: Dependencies = HashMap::new();
-    deps.insert("A", HashSet::from(["A"]));
+    let mut deps: Dependencies = IndexMap::new();
+    deps.insert("A", IndexSet::from(["A"]));
 
     let result = tarjan_scc(&deps);
     assert_eq!(result.sccs.len(), 1);
@@ -170,9 +170,9 @@ fn tarjan_self_cycle() {
 #[test]
 fn tarjan_mutual_cycle() {
     // A -> B, B -> A
-    let mut deps: Dependencies = HashMap::new();
-    deps.insert("A", HashSet::from(["B"]));
-    deps.insert("B", HashSet::from(["A"]));
+    let mut deps: Dependencies = IndexMap::new();
+    deps.insert("A", IndexSet::from(["B"]));
+    deps.insert("B", IndexSet::from(["A"]));
 
     let result = tarjan_scc(&deps);
     assert_eq!(result.sccs.len(), 1);

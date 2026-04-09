@@ -1,19 +1,26 @@
 //! Dependency graph construction from grammar AST.
 
-use std::collections::{HashMap, HashSet};
+use indexmap::{IndexMap, IndexSet};
 
 use crate::grammar::generated::{BbnfBootstrapEnum, BbnfBootstrapEnumVisitor};
 use crate::types::AST;
 
 /// Rule name → set of referenced rule names.
-pub type Dependencies<'a> = HashMap<&'a str, HashSet<&'a str>>;
+///
+/// `IndexMap` and `IndexSet` are used (not `HashMap`/`HashSet`)
+/// because both Tarjan SCC and Kahn topological sort iterate this
+/// graph and the iteration order influences the order in which
+/// rules end up in the lowered IR — and therefore the order of
+/// generated enum variants. Insertion-order semantics keep
+/// codegen output byte-stable across runs.
+pub type Dependencies<'a> = IndexMap<&'a str, IndexSet<&'a str>>;
 
 /// Build a dependency graph from the grammar AST.
 pub fn calculate_ast_deps<'a>(ast: &AST<'a>) -> Dependencies<'a> {
-    let mut deps = HashMap::new();
+    let mut deps = Dependencies::new();
     for (&name, entry) in ast.iter() {
         let mut collector = RefCollector {
-            refs: HashSet::new(),
+            refs: IndexSet::new(),
         };
         collector.visit(entry.rhs);
         deps.insert(name, collector.refs);
@@ -23,7 +30,7 @@ pub fn calculate_ast_deps<'a>(ast: &AST<'a>) -> Dependencies<'a> {
 
 /// Visitor that collects nonterminal identifier references from a grammar RHS.
 struct RefCollector<'a> {
-    refs: HashSet<&'a str>,
+    refs: IndexSet<&'a str>,
 }
 
 impl<'a> BbnfBootstrapEnumVisitor<'a> for RefCollector<'a> {
@@ -56,11 +63,9 @@ impl<'a> BbnfBootstrapEnumVisitor<'a> for RefCollector<'a> {
 }
 
 /// Recursively collect nonterminal (identifier) references from a bootstrap AST node.
-///
-/// Backward-compat wrapper around the visitor-based implementation.
 pub fn collect_nonterminal_refs<'a>(
     node: &'a BbnfBootstrapEnum<'a>,
-    refs: &mut HashSet<&'a str>,
+    refs: &mut IndexSet<&'a str>,
 ) {
     let mut collector = RefCollector {
         refs: std::mem::take(refs),

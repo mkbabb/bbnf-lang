@@ -74,7 +74,7 @@ pub(crate) fn validate_ast<'a>(
     let defined_rules: HashSet<&str> = ast.keys().copied().collect();
 
     for (&rule_name, entry) in ast {
-        let mut refs = HashSet::new();
+        let mut refs = indexmap::IndexSet::new();
         collect_nonterminal_refs(entry.rhs, &mut refs);
 
         for &referenced in &refs {

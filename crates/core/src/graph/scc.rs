@@ -1,6 +1,6 @@
 //! Tarjan's SCC algorithm and topological sorting — string-keyed.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 
 use indexmap::IndexMap;
 
@@ -132,8 +132,15 @@ pub fn topological_sort_scc<'a>(
     }
 
     // Kahn's algorithm on the SCC condensation DAG.
+    //
+    // `scc_dependents` was a `Vec<HashSet<usize>>`, but `HashSet`
+    // iteration is non-deterministic — the random hash seed shuffles
+    // the order in which dependent SCCs become enqueued, which
+    // changes the topological order, which changes rule order, which
+    // changes generated enum variant order. `BTreeSet` iterates in
+    // sorted (numeric) order, restoring byte-stable codegen output.
     let mut in_degree = vec![0u32; num_sccs];
-    let mut scc_dependents: Vec<HashSet<usize>> = vec![HashSet::new(); num_sccs];
+    let mut scc_dependents: Vec<BTreeSet<usize>> = vec![BTreeSet::new(); num_sccs];
 
     for (&node, successors) in deps {
         if let Some(&src_scc) = scc_result.scc_index.get(node) {

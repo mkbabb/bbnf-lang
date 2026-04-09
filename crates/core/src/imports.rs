@@ -486,7 +486,7 @@ fn transitive_local_deps(rule_name: &str, module: &ModuleData) -> HashSet<String
 
         // Look up the rule by string key in the new AST.
         if let Some(entry) = module.grammar.rules.get(name.as_str()) {
-            let mut refs = HashSet::new();
+            let mut refs = indexmap::IndexSet::new();
             deps::collect_nonterminal_refs(entry.rhs, &mut refs);
             for r in refs {
                 let r_owned = r.to_string();

@@ -94,6 +94,7 @@ pub struct KeyDispatchBranch<O> {
 // ─── Delimiter Scan Types ──────────────────────────────────────────────────
 
 /// Grammar-agnostic delimiter-scan configuration.
+#[derive(Clone, Debug)]
 pub struct DelimScanConfig {
     pub open_byte: u8,
     pub close_byte: u8,

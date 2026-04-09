@@ -14,8 +14,11 @@ use crate::backend::patterns::decisions;
 use crate::backend::{Emitter, SepByConfig, ValuePlacement};
 
 /// Compile a `Skip(Next(open, middle), close)` or equivalent wrap
-/// pattern.
+/// pattern. `wrap_root` is the outer Skip/Next node — used to look
+/// up the pre-solved delim-scan configuration from the DriverState
+/// cache.
 pub(super) fn compile_wrap<E: Emitter>(
+    wrap_root: &IrNode,
     open: &IrNode,
     middle: &IrNode,
     close: &IrNode,
@@ -92,14 +95,14 @@ pub(super) fn compile_wrap<E: Emitter>(
         }
     }
 
-    // Delimiter-scan optimization. Skip when alloc=Alloc — delim scan
-    // always produces Span, but BoxedEnum rules need the full typed
-    // result for variant wrapping.
+    // Delimiter-scan optimization. Skip when alloc=Alloc — delim
+    // scan always produces Span, but BoxedEnum rules need the full
+    // typed result for variant wrapping. Pre-solved configs live
+    // in `DriverState.delim_scan_configs`, keyed by the wrap
+    // root's `NodeId`.
     if alloc == ValuePlacement::Inline {
-        if let Some(config) =
-            crate::backend::patterns::delim_scan::try_detect(open, middle, close, ir)
-        {
-            if let Some(output) = emitter.emit_delim_scan(&config, ctx) {
+        if let Some(config) = dstate.delim_scan_config(wrap_root, ir) {
+            if let Some(output) = emitter.emit_delim_scan(config, ctx) {
                 return output;
             }
         }

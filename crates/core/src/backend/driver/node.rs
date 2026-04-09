@@ -59,7 +59,7 @@ pub(crate) fn compile_node<E: Emitter>(
         // `Next(open, Skip(middle, close))` match the Wrap pattern.
         IrNode::Skip(left, right) => {
             if let IrNode::Next(open, middle) = left.as_ref() {
-                compile_wrap(open, middle, right, alloc, ir, dstate, emitter, ctx)
+                compile_wrap(node, open, middle, right, alloc, ir, dstate, emitter, ctx)
             } else {
                 let kept = compile_node(left, alloc, ir, dstate, emitter, ctx);
                 let discarded =
@@ -70,7 +70,7 @@ pub(crate) fn compile_node<E: Emitter>(
 
         IrNode::Next(left, right) => {
             if let IrNode::Skip(middle, close) = right.as_ref() {
-                compile_wrap(left, middle, close, alloc, ir, dstate, emitter, ctx)
+                compile_wrap(node, left, middle, close, alloc, ir, dstate, emitter, ctx)
             } else {
                 let discarded =
                     compile_node(left, ValuePlacement::Inline, ir, dstate, emitter, ctx);

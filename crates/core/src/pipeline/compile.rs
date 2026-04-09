@@ -121,6 +121,7 @@ fn finalize_compile(
             let analysis = crate::backend::driver::analysis::BackendAnalysis::default();
             let call_strategies = compute_call_strategies(&ir);
             let mut dstate = crate::backend::driver::DriverState::new(call_strategies);
+            install_pattern_caches(&mut dstate, &ir);
             let mut emitter = crate::backend::ts::TsEmitter { enum_name };
             let mut ctx = crate::backend::ts::emitter::TsEmitCtx::default();
 
@@ -139,6 +140,7 @@ fn finalize_compile(
             let analysis = crate::backend::driver::analysis::BackendAnalysis::default();
             let call_strategies = compute_call_strategies(&ir);
             let mut dstate = crate::backend::driver::DriverState::new(call_strategies);
+            install_pattern_caches(&mut dstate, &ir);
             // Pre-register ws pattern so the emitter knows its ID.
             let ws_regex_id = ir.ws_pattern.map(|ws_sid| {
                 dstate.register_regex(ir.get_string(ws_sid))
@@ -154,6 +156,19 @@ fn finalize_compile(
             Ok(CompileOutput::Wasm(wat_source.into_bytes()))
         }
     }
+}
+
+/// Populate the pattern detection caches on a fresh `DriverState`
+/// (Tranche F): `solve_alt_strategies`, `solve_delim_scan_configs`,
+/// `solve_key_dispatch_configs` run once per grammar; the driver
+/// then looks up the pre-solved results at compile time.
+fn install_pattern_caches(dstate: &mut crate::backend::driver::DriverState, ir: &GrammarIR) {
+    dstate.alt_strategies =
+        crate::backend::strategy::alt_strategy::solve_alt_strategies(ir);
+    dstate.delim_scan_configs =
+        crate::backend::patterns::cache::solve_delim_scan_configs(ir);
+    dstate.key_dispatch_configs =
+        crate::backend::patterns::cache::solve_key_dispatch_configs(ir);
 }
 
 /// Compute call strategies using the shared inline analysis.

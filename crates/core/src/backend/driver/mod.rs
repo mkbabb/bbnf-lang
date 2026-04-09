@@ -60,6 +60,20 @@ pub struct DriverState {
     pub alt_strategies:
         std::collections::HashMap<NodeId, crate::backend::strategy::alt_strategy::AltStrategy>,
 
+    /// Pre-solved delim-scan configurations keyed by the wrap
+    /// node's `NodeId`. Built by
+    /// `patterns::cache::solve_delim_scan_configs`; `compile_wrap`
+    /// reads this cache instead of re-walking the tree.
+    pub delim_scan_configs:
+        std::collections::HashMap<NodeId, crate::backend::types::DelimScanConfig>,
+
+    /// Pre-solved key-dispatch configurations keyed by the Alt
+    /// node's `NodeId`. Built by
+    /// `patterns::cache::solve_key_dispatch_configs`; `compile_alt`
+    /// reads this cache instead of re-walking the tree.
+    pub key_dispatch_configs:
+        std::collections::HashMap<NodeId, crate::backend::patterns::cache::KeyDispatchMatch>,
+
     /// When set, the byte at `state.offset` is guaranteed to equal
     /// this value (from a preceding dispatch-table match). The next
     /// single-byte literal check that matches can skip the bounds
@@ -89,6 +103,8 @@ impl DriverState {
         Self {
             call_strategies,
             alt_strategies: std::collections::HashMap::new(),
+            delim_scan_configs: std::collections::HashMap::new(),
+            key_dispatch_configs: std::collections::HashMap::new(),
             dispatch_guaranteed_byte: None,
             current_rule_name: None,
             current_rule_id: None,
@@ -107,6 +123,28 @@ impl DriverState {
     ) -> Option<&'a crate::backend::strategy::alt_strategy::AltStrategy> {
         let id = ir.dag.as_ref()?.node_for(node)?;
         self.alt_strategies.get(&id)
+    }
+
+    /// Look up the pre-solved delim-scan configuration for a Wrap
+    /// node (the outer `Skip`/`Next` node), resolved via the DAG.
+    pub fn delim_scan_config<'a>(
+        &'a self,
+        wrap_node: &IrNode,
+        ir: &GrammarIR,
+    ) -> Option<&'a crate::backend::types::DelimScanConfig> {
+        let id = ir.dag.as_ref()?.node_for(wrap_node)?;
+        self.delim_scan_configs.get(&id)
+    }
+
+    /// Look up the pre-solved key-dispatch configuration for an Alt
+    /// node, resolved via the DAG.
+    pub fn key_dispatch_config<'a>(
+        &'a self,
+        alt_node: &IrNode,
+        ir: &GrammarIR,
+    ) -> Option<&'a crate::backend::patterns::cache::KeyDispatchMatch> {
+        let id = ir.dag.as_ref()?.node_for(alt_node)?;
+        self.key_dispatch_configs.get(&id)
     }
 
     /// Register a regex pattern and return its stable ID. If the

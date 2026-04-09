@@ -70,9 +70,12 @@ pub fn generate_all(
 
     let call_strategies = crate::pipeline::compile::compute_call_strategies(ir);
     let mut dstate = crate::backend::driver::DriverState::new(call_strategies);
-    // Install pre-solved Alt strategies so compile_alt can skip re-detection
-    // of patterns that were already classified during prepare_grammar.
+    // Install pre-solved Alt strategies and pattern caches so the
+    // compile walk can skip re-detection of patterns that were
+    // already classified during `prepare_grammar`.
     dstate.alt_strategies = prepared.prep.alt_strategies.clone();
+    dstate.delim_scan_configs = prepared.prep.delim_scan_configs.clone();
+    dstate.key_dispatch_configs = prepared.prep.key_dispatch_configs.clone();
 
     // Track 2 — backend parser code (rule functions, dispatch, type defs).
     let backend_output = crate::backend::driver::compile_grammar(

@@ -56,6 +56,16 @@ pub struct BackendPreparation {
     /// `solve_alt_strategies`.
     pub alt_strategies:
         std::collections::HashMap<NodeId, crate::backend::strategy::alt_strategy::AltStrategy>,
+    /// Pre-solved delim-scan configurations, keyed by the Wrap
+    /// root node's `NodeId`. Built by
+    /// `patterns::cache::solve_delim_scan_configs`.
+    pub delim_scan_configs:
+        std::collections::HashMap<NodeId, crate::backend::types::DelimScanConfig>,
+    /// Pre-solved key-dispatch configurations, keyed by the Alt
+    /// node's `NodeId`. Built by
+    /// `patterns::cache::solve_key_dispatch_configs`.
+    pub key_dispatch_configs:
+        std::collections::HashMap<NodeId, crate::backend::patterns::cache::KeyDispatchMatch>,
 }
 
 /// Fully prepared grammar bundle consumed by codegen.
@@ -71,8 +81,11 @@ pub fn prepare_grammar(mut ir: GrammarIR, requested_prettify: bool) -> PreparedG
     apply_ir_prep(&mut ir, &config);
     let analysis = analyze_grammar(&mut ir, &config);
 
-    // Solve Alt strategies from NodeFacts + dispatch tables.
+    // Solve Alt strategies + per-pattern configurations (Tranche F:
+    // detect once, store NodeId-keyed, backend reads at compile).
     let alt_strategies = crate::backend::strategy::alt_strategy::solve_alt_strategies(&ir);
+    let delim_scan_configs = crate::backend::patterns::cache::solve_delim_scan_configs(&ir);
+    let key_dispatch_configs = crate::backend::patterns::cache::solve_key_dispatch_configs(&ir);
 
     PreparedGrammar {
         ir,
@@ -80,6 +93,8 @@ pub fn prepare_grammar(mut ir: GrammarIR, requested_prettify: bool) -> PreparedG
             effective_prettify: config.effective_prettify,
             analysis,
             alt_strategies,
+            delim_scan_configs,
+            key_dispatch_configs,
         },
     }
 }

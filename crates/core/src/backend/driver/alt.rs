@@ -113,20 +113,22 @@ pub(super) fn compile_alt<E: Emitter>(
         return emitter.emit_alt_dispatch(table, branch_outputs, fallback, alloc, ctx);
     }
 
-    // Key dispatch. Skip the detection call when the solver already
-    // classified this Alt as non-key-dispatch — `try_detect` is one of
-    // the more expensive detection passes.
+    // Key dispatch. Pre-solved by `solve_key_dispatch_configs` in
+    // `prepare_grammar` and cached in `DriverState`; skip the
+    // lookup when a non-key-dispatch strategy already claimed the
+    // Alt (the cache entry is irrelevant in that case).
     let try_key_dispatch = !matches!(
         solved_strategy,
         Some(AltStrategy::Checkpoint)
             | Some(AltStrategy::AllLiteral)
             | Some(AltStrategy::DispatchTable),
     );
-    if let Some((mut config, detected, fallback_idx)) = if try_key_dispatch {
-        crate::backend::patterns::key_dispatch::try_detect(branches, ir)
+    let cached_key_dispatch = if try_key_dispatch {
+        dstate.key_dispatch_config(alt_node, ir).cloned()
     } else {
         None
-    } {
+    };
+    if let Some((mut config, detected, fallback_idx)) = cached_key_dispatch {
         let pattern =
             crate::backend::patterns::key_dispatch::key_class_regex_pattern(&config.key_class);
         config.key_scanner_regex_id = Some(dstate.register_regex(pattern));

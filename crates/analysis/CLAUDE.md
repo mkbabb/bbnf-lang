@@ -17,12 +17,31 @@ bbnf-analysis/
 │   │   ├── mod.rs              DocumentState struct, new/update/ast methods
 │   │   ├── types.rs            RuleInfo, ReferenceInfo, SemanticTokenInfo, DocumentInfo, token_types
 │   │   ├── parsing.rs          OwnedAst (self_cell), CachedParseResult, parse_once
-│   │   ├── diagnostics.rs      analyze_from_cache — full diagnostic generation
 │   │   ├── pretty.rs           @pretty extraction, validation, semantic tokens
-│   │   └── ast_utils.rs        collect_references, semantic tokens, format_expression, cycle paths
+│   │   ├── diagnostics/        Full diagnostic generation (directory module)
+│   │   │   ├── mod.rs          analyze_from_cache orchestrator
+│   │   │   ├── early.rs        Parse-panic / failure / empty-AST stub builders
+│   │   │   ├── extract.rs      RuleInfo loop + duplicate detection
+│   │   │   ├── references.rs   Undefined nonterminals + unused rules
+│   │   │   ├── cycles.rs       Tarjan SCC + cycle paths
+│   │   │   ├── structure.rs    Empty body + alias + unreachable
+│   │   │   ├── directives.rs   Validation glue for @import/@recover/@pretty/@debug/@token/@ws
+│   │   │   └── ir_analysis.rs  try_compile_ir + IrAnalysis + format_charset_iter + format_type_desc
+│   │   └── ast_utils/          AST walking helpers (directory module)
+│   │       ├── mod.rs          Re-exports + format_char, is_empty_rhs
+│   │       ├── references.rs   collect_references
+│   │       ├── tokens.rs       collect_semantic_tokens
+│   │       ├── spans.rs        compute_expression_end + wrapper
+│   │       ├── format.rs       format_expression_short + format_value_expr_short
+│   │       └── cycles.rs       build_cycle_path + compute_reachable_rules
 │   └── features/
 │       ├── mod.rs              Module declarations
-│       ├── hover.rs            Rule definition + FIRST/nullable/cycle + @pretty hint info
+│       ├── hover/              Hover orchestrator + per-kind renderers (directory module)
+│       │   ├── mod.rs          Public hover() orchestrator + lowercase_first helper
+│       │   ├── rule.rs         build_rule_definition_hover + build_rule_reference_hover
+│       │   ├── import.rs       hover_import
+│       │   ├── directive.rs    hover_recover / hover_debug / hover_ws
+│       │   └── pretty.rs       hover_pretty + build_hint_hover + build_pretty_directive_hover
 │       ├── goto_definition.rs  Local + cross-file + import path navigation
 │       ├── references.rs       Local + cross-file reference finding
 │       ├── rename.rs           Rule + reference rename (single document)
@@ -62,4 +81,4 @@ Each file in `features/` exports a function that takes `&DocumentState` (plus po
 
 ## IR Pipeline Integration
 
-When a grammar parses successfully, `diagnostics.rs` runs `try_compile_ir()`—the full IR lowering and pass sequence from `bbnf::pipeline`—and caches per-rule `IrRuleMeta` on `DocumentInfo`. This enriches hover with FOLLOW sets, dispatch table presence, memo strategy, span eligibility, and inferred output type. The IR compilation is best-effort; analysis degrades gracefully if lowering fails.
+When a grammar parses successfully, `state/diagnostics/ir_analysis.rs` runs `try_compile_ir()`—the full IR lowering and pass sequence from `bbnf::pipeline`—and caches per-rule `IrRuleMeta` on `DocumentInfo`. This enriches hover with FOLLOW sets, dispatch table presence, memo strategy, span eligibility, and inferred output type. The IR compilation is best-effort; analysis degrades gracefully if lowering fails.

@@ -25,6 +25,8 @@ lsp/
 │       └── mapping.rs          LineIndex, resolve_breakpoint(), rule_at_offset()
 └── tests/
     ├── integration.rs          45+ JSON-RPC integration tests
+    ├── analyze.rs              Analysis-layer integration tests
+    ├── dap.rs                  DAP server integration tests
     └── bench_lsp.rs            Performance benchmarks
 ```
 

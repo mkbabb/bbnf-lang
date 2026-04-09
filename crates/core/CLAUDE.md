@@ -70,12 +70,28 @@ bbnf/
 │   │   │   ├── map.rs    Map (FnDescriptor classification + fusion).
 │   │   │   ├── wrap.rs   `open >> middle << close` (delim sep_by, delim scan, generic wrap).
 │   │   │   └── prettify.rs   Prettify-mode specialization.
-│   │   ├── patterns/     Pattern detection (pre-solved per compile).
-│   │   │   ├── mod.rs    Re-exports.
-│   │   │   ├── cache.rs  `NodeId`-keyed lookup tables consumed by the driver.
-│   │   │   ├── decisions.rs  Shared decision functions.
-│   │   │   ├── delim_scan.rs  Delimiter-scan detection.
-│   │   │   └── key_dispatch.rs  Key-dispatch detection + config.
+│   │   ├── kernels/      Tranche V.7 — recognizer-family kernel emission.
+│   │   │   ├── mod.rs              Module map.
+│   │   │   ├── quoted_string.rs    QuotedString / JsonString / CssQuotedString.
+│   │   │   ├── number.rs           Numeric / JsonNumber (fused + span).
+│   │   │   ├── identifier.rs       CSS / generic identifier.
+│   │   │   ├── comment_ws.rs       Comment-aware whitespace.
+│   │   │   ├── charclass.rs        CharClassQuantified, HexDigits.
+│   │   │   ├── prefix_class.rs     PrefixThenClass / Anchored / AccelDriven.
+│   │   │   ├── balanced_wrap.rs    Balanced delimiter scan (V.8 wires).
+│   │   │   └── sep_list.rs         Separator-list element loop (V.8 wires).
+│   │   ├── patterns/     Legacy pattern detection (Tranche F).
+│   │   │   ├── mod.rs              Re-exports.
+│   │   │   ├── cache.rs            `NodeId`-keyed lookup tables consumed by
+│   │   │   │                        the driver. Populated by `install_pattern_caches`.
+│   │   │   ├── decisions.rs        Shared decision functions (decide_seq /
+│   │   │   │                        decide_alt) — type-resolution layer, kept.
+│   │   │   ├── delim_scan.rs       Delimiter-scan detection.
+│   │   │   └── key_dispatch.rs     Key-dispatch detection + config.
+│   │   │   Note: detection halves of delim_scan/key_dispatch are deletion
+│   │   │   candidates for the follow-up tranche once strategy solvers
+│   │   │   migrate to consume `ir.recognizer_decisions` (V.6 / V.8
+│   │   │   accessor) directly.
 │   │   ├── strategy/     CSP-solved emission strategies (NodeId-keyed).
 │   │   │   ├── mod.rs    `solve_alt_strategies` entry + re-exports.
 │   │   │   ├── alt_strategy.rs  Alt strategy solver.

@@ -82,9 +82,35 @@ bbnf-ir/
 │       │   ├── mod.rs    Re-exports.
 │       │   ├── facts.rs  `ContextFacts`, `DiscriminationStrength`, `ScanSafety`.
 │       │   └── propagate.rs  `compute_context_facts`.
-│       ├── patterns/     Structural shape-fact recognition.
-│       │   ├── mod.rs    Entry point.
-│       │   └── recognize.rs  `recognize_patterns`.
+│       ├── patterns/     Structural shape-fact type definitions
+│       │   └── mod.rs    `NodeFacts`, `Recognizer`, `RecognizerShape`,
+│       │                  `RecognizerSignature`, `OnePassGrade`, etc. The
+│       │                  recognition logic moved to passes/recognizers/
+│       │                  in Tranche V; this directory is now type-only.
+│       ├── recognizers/  Tranche V — eight-miner recognizer mining pass.
+│       │   ├── mod.rs    `mine_recognizers` entry point + shared
+│       │   │              `install_recognizer` and `visit_children_alt`
+│       │   │              helpers.
+│       │   ├── node_facts.rs       Per-node operator_chain / sep_by /
+│       │   │                        all_span_collapse detection (the
+│       │   │                        migrated recognize_patterns body).
+│       │   ├── signature.rs        Canonical 64-bit RecognizerSignature
+│       │   │                        hashing (byte/class/shape only).
+│       │   ├── quoted_string.rs    QuotedString / JsonString / CssQuotedString.
+│       │   ├── balanced_wrap.rs    Wrap(open, body, close) → DelimiterBalanced.
+│       │   ├── comment_ws.rs       WsBlockComment.
+│       │   ├── identifier.rs       Identifier / CssIdent / PrefixThenClass /
+│       │   │                        CharClassQuantified / HexDigits.
+│       │   ├── separator_list.rs   Skip(elem, opt_sep) → SeparatorList.
+│       │   ├── token_led_branches.rs  Strong-discrimination Alts.
+│       │   └── prefix_shared_group.rs Cross-rule signature dedup → peer_group.
+│       ├── csp_recognizers.rs Tranche V.6 — per-NodeId recognizer
+│       │                       decisions. `solve_recognizer_decisions`
+│       │                       walks the DAG and produces a
+│       │                       `RecognizerDecisionMap` (AltMode /
+│       │                       WrapMode / RegexEngine per node) consumed
+│       │                       by the backend kernels (V.7) and the
+│       │                       driver dispatchers (V.8).
 │       ├── transform/    Destructive cross-rule normalizer.
 │       │   ├── mod.rs    Re-exports `canonicalize_aliases` / `prune_unreachable` /
 │       │   │              `inline_acyclic` / `fuse_single_use` / `eliminate_epsilon` /

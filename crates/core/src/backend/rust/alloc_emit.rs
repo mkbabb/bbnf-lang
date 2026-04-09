@@ -112,8 +112,16 @@ impl IrCodegenCtx<'_> {
                 #[inline(always)]
                 #[allow(non_snake_case)]
                 fn #c_ident(&'a self, depth: usize) -> &'a [#elem_ty] {
+                    // Tranche W phase 5b: BBNF parser enums derive `Copy`
+                    // (every variant is Span/refs/slices/tuples — all
+                    // structurally Copy), so the slab can take the
+                    // `copy_nonoverlapping` fast path instead of walking
+                    // `Clone::clone` per element. The audit measured the
+                    // clone walk at 4.01% self time on CSS tailwind plus
+                    // 6.79% in `ptr::write` and 2.57% in
+                    // `alloc_slice_clone` itself.
                     let s = self.#s_ident();
-                    let slice = self.__slab.alloc_slice_clone(&s[depth..]);
+                    let slice = self.__slab.alloc_slice_copy(&s[depth..]);
                     s.truncate(depth);
                     slice
                 }

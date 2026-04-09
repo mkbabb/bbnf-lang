@@ -210,7 +210,9 @@ pub fn lower_to_ir<'a>(
         pattern_annotations: HashMap::new(),
         regex_info: HashMap::new(),
         node_facts: HashMap::new(),
-        dag: None,    }
+        recognizer_decisions: HashMap::new(),
+        dag: None,
+    }
 }
 
 /// Extract a ClosureDef from a bootstrap node if it's a closure.

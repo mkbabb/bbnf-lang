@@ -19,6 +19,7 @@ fn make_ir(rules: Vec<IrRule>) -> GrammarIR {
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
+        recognizer_decisions: HashMap::new(),
         dag: None,    }
 }
 
@@ -261,6 +262,7 @@ fn map_enum_wrap() {
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
+        recognizer_decisions: HashMap::new(),
         dag: None,    };
     bbnf_ir::dag::ensure_dag(&mut ir);
     project_types(&mut ir);
@@ -290,6 +292,7 @@ fn map_box_wrap() {
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
+        recognizer_decisions: HashMap::new(),
         dag: None,    };
     bbnf_ir::dag::ensure_dag(&mut ir);
     project_types(&mut ir);

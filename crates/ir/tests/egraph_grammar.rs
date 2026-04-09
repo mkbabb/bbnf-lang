@@ -37,6 +37,7 @@ fn make_ir_with(body: IrNode) -> GrammarIR {
         pattern_annotations: HashMap::new(),
         regex_info: HashMap::new(),
         node_facts: HashMap::new(),
+        recognizer_decisions: HashMap::new(),
         dag: None,
     }
 }

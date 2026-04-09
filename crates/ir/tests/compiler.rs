@@ -26,6 +26,7 @@ fn make_simple_ir(body: IrNode) -> GrammarIR {
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
+        recognizer_decisions: HashMap::new(),
         dag: None,    }
 }
 
@@ -144,6 +145,7 @@ fn compile_memo_rule() {
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
+        recognizer_decisions: HashMap::new(),
         dag: None,    };
     let program = compile(&ir);
 
@@ -195,6 +197,7 @@ fn compile_direct_left_recursive_rule_keeps_memo() {
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
+        recognizer_decisions: HashMap::new(),
         dag: None,    };
     let program = compile(&ir);
 
@@ -340,6 +343,7 @@ fn compile_token_dispatch_emits_dispatch_token() {
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
+        recognizer_decisions: HashMap::new(),
         dag: None,    };
     let program = compile(&ir);
 
@@ -410,6 +414,7 @@ fn compile_call() {
         pattern_annotations: std::collections::HashMap::new(),
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
+        recognizer_decisions: HashMap::new(),
         dag: None,    };
     let program = compile(&ir);
 

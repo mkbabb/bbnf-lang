@@ -85,6 +85,14 @@ pub struct GrammarIR {
     #[serde(skip)]
     pub node_facts: HashMap<dag::NodeId, passes::patterns::NodeFacts>,
 
+    /// Tranche V.6: per-NodeId recognizer decisions produced by
+    /// `passes::csp_recognizers::solve_recognizer_decisions`. Consumed
+    /// by `crates/core/src/backend/kernels/` (V.7) and the per-kind
+    /// drivers (V.8). Skipped during serialization — decisions are
+    /// always recomputed at compile time, never persisted.
+    #[serde(skip)]
+    pub recognizer_decisions: passes::csp_recognizers::RecognizerDecisionMap,
+
     /// Durable post-extraction canonical DAG over the optimized IR tree.
     ///
     /// Populated after the intra-rule e-graph optimization + post-extraction

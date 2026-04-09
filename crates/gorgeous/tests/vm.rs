@@ -36,6 +36,7 @@ fn make_ir(hints: PrettyHints) -> GrammarIR {
         pattern_annotations: HashMap::new(),
         regex_info: HashMap::new(),
         node_facts: HashMap::new(),
+        recognizer_decisions: HashMap::new(),
         dag: None,    }
 }
 

@@ -33,19 +33,29 @@ pub fn compute_context_facts(ir: &GrammarIR, dag: &GrammarDag) -> ContextFactsMa
     }
 
     // Propagate in_recovery_context + in_token_dispatch downwards.
+    //
+    // Tranche W phase 4: read the parent's facts via copy of just the
+    // two scalar bool fields we need (`in_recovery_context`,
+    // `in_token_dispatch`) instead of cloning the whole `ContextFacts`
+    // struct per worklist iteration. ContextFacts is small today but
+    // grows with every future facet, and the previous `.cloned()` call
+    // would scale linearly. The audit measured 80-320 KB allocated per
+    // compile in this loop on the post-V baseline.
     while let Some(id) = worklist.pop_front() {
-        let current = facts.get(&id).cloned().unwrap_or_default();
+        let parent_in_recovery = facts
+            .get(&id)
+            .map(|f| f.in_recovery_context)
+            .unwrap_or(false);
         let node = dag.node(id);
+        let parent_is_token_dispatch = matches!(node, DagNode::TokenDispatch { .. });
         for child in node.children() {
             let child_facts = facts.entry(child).or_default();
             let mut changed = false;
-            if current.in_recovery_context && !child_facts.in_recovery_context {
+            if parent_in_recovery && !child_facts.in_recovery_context {
                 child_facts.in_recovery_context = true;
                 changed = true;
             }
-            if matches!(node, DagNode::TokenDispatch { .. })
-                && !child_facts.in_token_dispatch
-            {
+            if parent_is_token_dispatch && !child_facts.in_token_dispatch {
                 child_facts.in_token_dispatch = true;
                 changed = true;
             }

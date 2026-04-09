@@ -16,17 +16,21 @@ use crate::{AltBranch, AltDispatch, CharSet128, GrammarIR, IrNode, regex_first};
 
 /// Factor common regex prefixes with lookahead dispatch across the entire IR.
 pub fn factor_regex_with_lookahead(ir: &mut GrammarIR) {
-    let strings = ir.strings.clone();
+    // Tranche W phase 4: split-borrow `ir.strings` instead of cloning
+    // it. Same fix as `sort_alt_branches` — the previous clone scaled
+    // with grammar string count and the audit measured 1-5 KB per
+    // compile.
     let rule_metas: Vec<(CharSet128, bool)> = ir
         .rules
         .iter()
         .map(|r| (r.meta.first_set.clone(), r.meta.nullable))
         .collect();
 
-    for rule in &mut ir.rules {
+    let GrammarIR { rules, strings, .. } = &mut *ir;
+    for rule in rules.iter_mut() {
         rule.body = factor_node(
             std::mem::replace(&mut rule.body, IrNode::Epsilon),
-            &strings,
+            strings,
             &rule_metas,
         );
     }

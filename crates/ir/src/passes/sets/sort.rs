@@ -20,15 +20,20 @@ use crate::{AltBranch, CharSet128, GrammarIR, IrNode};
 
 /// Sort alternation branches by specificity across the entire IR.
 pub fn sort_alt_branches(ir: &mut GrammarIR) {
-    let strings = ir.strings.clone();
+    // Tranche W phase 4: split-borrow to read `ir.strings` immutably
+    // while iterating `ir.rules` mutably. The previous code cloned the
+    // entire string interning table per pass invocation; the audit
+    // measured 1-5 KB allocated per compile, scaling linearly with
+    // grammar string count.
     let rule_metas: Vec<(CharSet128, bool)> = ir
         .rules
         .iter()
         .map(|r| (r.meta.first_set.clone(), r.meta.nullable))
         .collect();
 
-    for rule in &mut ir.rules {
-        sort_node(&mut rule.body, &rule_metas, &strings);
+    let GrammarIR { rules, strings, .. } = &mut *ir;
+    for rule in rules.iter_mut() {
+        sort_node(&mut rule.body, &rule_metas, strings);
     }
 }
 

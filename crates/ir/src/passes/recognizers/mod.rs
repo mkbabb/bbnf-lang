@@ -79,33 +79,38 @@ pub fn mine_recognizers(ir: &mut GrammarIR) {
     // miner clones of `ir.regex_info`/`ir.rules`/`ir.dag` that would
     // dominate compile time on small grammars.
     //
-    // Context facts are computed once here and passed to the miners
-    // that need them (token_led_branches reads `discrimination`).
-    if ir.dag.is_some() {
-        let dag = ir.dag.as_ref().unwrap().clone();
-        let context_facts = compute_context_facts(ir, &dag);
-
+    // The whole-DAG clone the previous version did was a workaround for
+    // a borrow conflict that NLL handles cleanly: the `dag` borrow is
+    // live only for the miner calls, and ends before the `&mut ir`
+    // mutations below. Profile-confirmed cost on the post-V baseline:
+    // 40-200 KB allocated per compile (the entire NodeId→DagNode map).
+    let additions = if let Some(dag) = ir.dag.as_ref() {
+        let context_facts = compute_context_facts(ir, dag);
         let mut additions: Vec<(crate::dag::NodeId, crate::passes::patterns::Recognizer)> =
             Vec::new();
 
-        quoted_string::collect(ir, &dag, &mut additions);
-        balanced_wrap::collect(ir, &dag, &mut additions);
-        comment_ws::collect(ir, &dag, &mut additions);
-        identifier::collect(ir, &dag, &mut additions);
-        separator_list::collect(ir, &dag, &mut additions);
-        token_led_branches::collect(ir, &dag, &context_facts, &mut additions);
+        quoted_string::collect(ir, dag, &mut additions);
+        balanced_wrap::collect(ir, dag, &mut additions);
+        comment_ws::collect(ir, dag, &mut additions);
+        identifier::collect(ir, dag, &mut additions);
+        separator_list::collect(ir, dag, &mut additions);
+        token_led_branches::collect(ir, dag, &context_facts, &mut additions);
+        // `dag` and `context_facts` borrows end here (NLL).
+        additions
+    } else {
+        return;
+    };
 
-        for (node_id, rec) in additions {
-            install_recognizer(
-                &mut ir.node_facts,
-                node_id,
-                crate::passes::patterns::NodeKind::Leaf,
-                rec,
-            );
-        }
-
-        prefix_shared_group::mine(ir);
+    for (node_id, rec) in additions {
+        install_recognizer(
+            &mut ir.node_facts,
+            node_id,
+            crate::passes::patterns::NodeKind::Leaf,
+            rec,
+        );
     }
+
+    prefix_shared_group::mine(ir);
 }
 
 /// Insert or update a recognizer record on the given node.

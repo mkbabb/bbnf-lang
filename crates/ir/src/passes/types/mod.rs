@@ -43,14 +43,16 @@ pub use utils::{TypeMap, try_flatten_pair};
 /// 5. Sub-variant collection: Heterogeneous alternation branches get generated
 ///    variant names for codegen coercion.
 pub fn project_types(ir: &mut GrammarIR) {
-    // Ensure the durable DAG substrate exists. Production runs
-    // `pipeline::compile` populate `ir.dag` before this pass;
-    // unit tests that call `project_types` directly on a raw IR
-    // trigger this fallback so the TypeMap's NodeId keys stay
-    // valid either way.
-    if ir.dag.is_none() {
-        ir.dag = Some(crate::dag::GrammarDag::from_ir(ir));
-    }
+    // The durable DAG substrate is built exactly once per compile
+    // in `pipeline::compile` before any facts/strategy phase runs.
+    // Unit tests that exercise this pass in isolation must call
+    // `bbnf_ir::dag::ensure_dag(&mut ir)` beforehand. Asserting
+    // here keeps the invariant honest instead of papering over
+    // it with a defensive fallback.
+    assert!(
+        ir.dag.is_some(),
+        "project_types requires ir.dag — call bbnf_ir::dag::ensure_dag in tests",
+    );
 
     // Phase 1: Generate constraint system from the IR structure.
     let mut system = generate_constraints(ir);

@@ -77,6 +77,29 @@ with `bbnf/src/pipeline.rs` and `bbnf-derive/src/lib.rs`):
 16. `generate_dispatch_tables` — build O(1) byte-dispatch for disjoint alternations (regex FIRST sets via `regex_first` module)
 17. `project_types` — populate `GrammarIR::types` with `TypeDesc` for each rule; `project_node_in_vec` sub-pass handles Vec context type projection
 
+## Durable DAG substrate
+
+`GrammarDag::from_ir` is called **exactly once per compile** in
+`crates/core/src/pipeline/compile.rs` (currently line 409) after the
+body-mutating facts passes converge (`compute_follow_sets`,
+`factor_regex_with_lookahead`, `fuse_token_dispatch`) and before the
+stable-DAG fact passes (`generate_dispatch_tables`,
+`compute_regex_info`, `recognize_patterns`, `project_types`). Every
+downstream `NodeId`-keyed consumer depends on this invariant.
+
+`project_types` asserts `ir.dag.is_some()` at entry. Tests and
+benches that exercise a single pass in isolation must call
+`bbnf_ir::dag::ensure_dag(&mut ir)` before invoking the pass
+directly. A Tranche I grep test enforces exactly one production
+call site for `GrammarDag::from_ir`, plus the `ensure_dag` helper
+and test files.
+
+`GrammarDag::node_for` maintains a `HashMap<*const IrNode, NodeId>`
+reverse-pointer map for tree-occurrence lookup — valid for the
+lifetime of the borrowed `&GrammarIR` the DAG was built from. This
+is correct by design (the DAG outlives no tree mutation) and is
+not part of the orphan pointer-identity purge.
+
 ## Serialization
 
 MessagePack (`to_msgpack`/`from_msgpack`) for WASM boundary transfer.

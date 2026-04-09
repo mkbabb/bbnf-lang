@@ -400,15 +400,28 @@ fn compile_ast_common<'a>(
         bbnf_ir::passes::factor_regex_with_lookahead(&mut ir);
         bbnf_ir::passes::fuse_token_dispatch(&mut ir);
 
-        // Durable post-extraction canonical DAG. Mandatory — the
-        // reverse pointer map inside is the identity substrate for
-        // every downstream NodeId-keyed pass (Tranches D, F, G) and
-        // for `project_types` in `finalize_compile`. Built after
-        // the body-mutating facts passes converge so the pointer
-        // index remains valid.
-        ir.dag = Some(bbnf_ir::dag::GrammarDag::from_ir(&ir));
+        // Layer 2b — non-mutating facts on the stable DAG. The DAG
+        // is built below (outside the `!structural` branch) because
+        // it is a stable substrate for every downstream NodeId-keyed
+        // pass — including `project_types` in `finalize_compile` —
+        // and must exist whether or not the structural optimizer ran.
+        //
+        // These fact passes only run when optimization is enabled
+        // because they depend on the cleaned-up alternation shapes
+        // produced by the structural normalizer + e-graph.
+    }
 
-        // Layer 2b — non-mutating facts on the stable DAG.
+    // Durable post-extraction canonical DAG. Mandatory — the
+    // reverse pointer map inside is the identity substrate for
+    // every downstream NodeId-keyed pass (Tranches D, F, G) and
+    // for `project_types` in `finalize_compile`. Built after the
+    // body-mutating facts passes converge (when they run) so the
+    // pointer index remains valid.
+    ir.dag = Some(bbnf_ir::dag::GrammarDag::from_ir(&ir));
+
+    if !options.structural {
+        // Non-mutating facts on the stable DAG. Gated on !structural
+        // because they depend on optimizer output.
         bbnf_ir::passes::generate_dispatch_tables(&mut ir);
         bbnf_ir::passes::compute_regex_info(&mut ir);
         bbnf_ir::passes::recognize_patterns(&mut ir);

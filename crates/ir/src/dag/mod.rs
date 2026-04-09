@@ -31,6 +31,28 @@ use std::collections::HashMap;
 
 use crate::{GrammarIR, IrNode, RuleId};
 
+/// Test/bench helper: build `ir.dag` if absent.
+///
+/// Production code builds the DAG exactly once per compile, at a
+/// single well-defined step in `crates/core/src/pipeline/compile.rs`
+/// (after the body-mutating facts passes converge). This helper
+/// exists only for unit tests and benches that exercise a single
+/// pass in isolation — they build a raw `GrammarIR`, call
+/// `ensure_dag` to populate `ir.dag`, and then invoke the pass
+/// directly.
+///
+/// Passes that assert `ir.dag.is_some()` (e.g., `project_types`)
+/// rely on callers to have done this setup. A Tranche I grep test
+/// enforces that exactly one production call site exists for
+/// `GrammarDag::from_ir` — in `pipeline/compile.rs` — plus this
+/// helper and any test files.
+#[doc(hidden)]
+pub fn ensure_dag(ir: &mut GrammarIR) {
+    if ir.dag.is_none() {
+        ir.dag = Some(GrammarDag::from_ir(ir));
+    }
+}
+
 /// The canonical grammar DAG — an arena of hash-consed nodes with per-rule
 /// entry points.
 #[derive(Clone, Debug)]

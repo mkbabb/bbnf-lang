@@ -56,6 +56,7 @@ fn compiled_wasm() -> WasmBundle {
         _ => unreachable!(),
     };
     bbnf_ir::passes::compute_sp_method_rules(&mut ir);
+    bbnf_ir::dag::ensure_dag(&mut ir);
     bbnf_ir::passes::project_types(&mut ir);
 
     // Run driver + WASM emitter manually to access regex_patterns.

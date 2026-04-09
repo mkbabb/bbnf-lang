@@ -219,206 +219,11 @@ pub enum BbnfBootstrapEnum<'a> {
     #[doc(hidden)]
     __Phantom(::core::marker::PhantomData<&'a ()>),
 }
-#[automatically_derived]
+impl<'a> ::core::marker::Copy for BbnfBootstrapEnum<'a> {}
 impl<'a> ::core::clone::Clone for BbnfBootstrapEnum<'a> {
-    #[inline]
-    fn clone(&self) -> BbnfBootstrapEnum<'a> {
-        match self {
-            BbnfBootstrapEnum::int_lit(__self_0) => {
-                BbnfBootstrapEnum::int_lit(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::float_lit(__self_0) => {
-                BbnfBootstrapEnum::float_lit(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::bool_lit(__self_0) => {
-                BbnfBootstrapEnum::bool_lit(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::string_lit(__self_0) => {
-                BbnfBootstrapEnum::string_lit(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::value_ident(__self_0) => {
-                BbnfBootstrapEnum::value_ident(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::mul_op(__self_0) => {
-                BbnfBootstrapEnum::mul_op(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::add_op(__self_0) => {
-                BbnfBootstrapEnum::add_op(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::cmp_op(__self_0) => {
-                BbnfBootstrapEnum::cmp_op(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::type_name(__self_0) => {
-                BbnfBootstrapEnum::type_name(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::identifier(__self_0) => {
-                BbnfBootstrapEnum::identifier(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::literal(__self_0) => {
-                BbnfBootstrapEnum::literal(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::regex(__self_0) => {
-                BbnfBootstrapEnum::regex(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::big_comment(__self_0) => {
-                BbnfBootstrapEnum::big_comment(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::comment(__self_0) => {
-                BbnfBootstrapEnum::comment(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::modifier(__self_0) => {
-                BbnfBootstrapEnum::modifier(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::binary_operators(__self_0) => {
-                BbnfBootstrapEnum::binary_operators(
-                    ::core::clone::Clone::clone(__self_0),
-                )
-            }
-            BbnfBootstrapEnum::import_path(__self_0) => {
-                BbnfBootstrapEnum::import_path(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::value_path(__self_0) => {
-                BbnfBootstrapEnum::value_path(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::value_input(__self_0) => {
-                BbnfBootstrapEnum::value_input(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::type_annotation(__self_0) => {
-                BbnfBootstrapEnum::type_annotation(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::lhs(__self_0) => {
-                BbnfBootstrapEnum::lhs(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::import_items(__self_0) => {
-                BbnfBootstrapEnum::import_items(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::pretty_hint(__self_0) => {
-                BbnfBootstrapEnum::pretty_hint(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::token_directive(__self_0) => {
-                BbnfBootstrapEnum::token_directive(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::debug_directive(__self_0) => {
-                BbnfBootstrapEnum::debug_directive(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::host_directive(__self_0) => {
-                BbnfBootstrapEnum::host_directive(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::ws_directive(__self_0) => {
-                BbnfBootstrapEnum::ws_directive(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::value_mul(__self_0) => {
-                BbnfBootstrapEnum::value_mul(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::value_or(__self_0) => {
-                BbnfBootstrapEnum::value_or(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::value_add(__self_0) => {
-                BbnfBootstrapEnum::value_add(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::value_cmp(__self_0) => {
-                BbnfBootstrapEnum::value_cmp(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::value_and(__self_0) => {
-                BbnfBootstrapEnum::value_and(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::value_closure(__self_0) => {
-                BbnfBootstrapEnum::value_closure(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::value_fn_call(__self_0) => {
-                BbnfBootstrapEnum::value_fn_call(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::value_atom(__self_0) => {
-                BbnfBootstrapEnum::value_atom(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::value_unary(__self_0) => {
-                BbnfBootstrapEnum::value_unary(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::import_directive(__self_0) => {
-                BbnfBootstrapEnum::import_directive(
-                    ::core::clone::Clone::clone(__self_0),
-                )
-            }
-            BbnfBootstrapEnum::pretty_directive(__self_0) => {
-                BbnfBootstrapEnum::pretty_directive(
-                    ::core::clone::Clone::clone(__self_0),
-                )
-            }
-            BbnfBootstrapEnum::alternation(__self_0) => {
-                BbnfBootstrapEnum::alternation(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::call_arg(__self_0) => {
-                BbnfBootstrapEnum::call_arg(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::concatenation(__self_0) => {
-                BbnfBootstrapEnum::concatenation(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::closure(__self_0) => {
-                BbnfBootstrapEnum::closure(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::term(__self_0) => {
-                BbnfBootstrapEnum::term(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::binary_factor(__self_0) => {
-                BbnfBootstrapEnum::binary_factor(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::factor(__self_0) => {
-                BbnfBootstrapEnum::factor(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::mapped_factor(__self_0) => {
-                BbnfBootstrapEnum::mapped_factor(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::rule(__self_0) => {
-                BbnfBootstrapEnum::rule(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::recover_directive(__self_0) => {
-                BbnfBootstrapEnum::recover_directive(
-                    ::core::clone::Clone::clone(__self_0),
-                )
-            }
-            BbnfBootstrapEnum::directive(__self_0) => {
-                BbnfBootstrapEnum::directive(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::grammar_item(__self_0) => {
-                BbnfBootstrapEnum::grammar_item(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::grammar(__self_0) => {
-                BbnfBootstrapEnum::grammar(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::debug_directive_0(__self_0) => {
-                BbnfBootstrapEnum::debug_directive_0(
-                    ::core::clone::Clone::clone(__self_0),
-                )
-            }
-            BbnfBootstrapEnum::value_atom_0(__self_0) => {
-                BbnfBootstrapEnum::value_atom_0(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::value_unary_0(__self_0) => {
-                BbnfBootstrapEnum::value_unary_0(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::import_directive_0(__self_0) => {
-                BbnfBootstrapEnum::import_directive_0(
-                    ::core::clone::Clone::clone(__self_0),
-                )
-            }
-            BbnfBootstrapEnum::pretty_directive_0(__self_0) => {
-                BbnfBootstrapEnum::pretty_directive_0(
-                    ::core::clone::Clone::clone(__self_0),
-                )
-            }
-            BbnfBootstrapEnum::term_0(__self_0) => {
-                BbnfBootstrapEnum::term_0(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::term_1(__self_0) => {
-                BbnfBootstrapEnum::term_1(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::term_2(__self_0) => {
-                BbnfBootstrapEnum::term_2(::core::clone::Clone::clone(__self_0))
-            }
-            BbnfBootstrapEnum::__Phantom(__self_0) => {
-                BbnfBootstrapEnum::__Phantom(::core::clone::Clone::clone(__self_0))
-            }
-        }
+    #[inline(always)]
+    fn clone(&self) -> Self {
+        *self
     }
 }
 #[allow(non_camel_case_types)]
@@ -464,7 +269,7 @@ impl<'a> __BbnfBootstrapEnumCtx<'a> {
         depth: usize,
     ) -> &'a [(::parse_that::Span<'a>, &'a BbnfBootstrapEnum<'a>)] {
         let s = self.__s0();
-        let slice = self.__slab.alloc_slice_clone(&s[depth..]);
+        let slice = self.__slab.alloc_slice_copy(&s[depth..]);
         s.truncate(depth);
         slice
     }
@@ -480,7 +285,7 @@ impl<'a> __BbnfBootstrapEnumCtx<'a> {
         depth: usize,
     ) -> &'a [(&'a BbnfBootstrapEnum<'a>, &'a BbnfBootstrapEnum<'a>)] {
         let s = self.__s1();
-        let slice = self.__slab.alloc_slice_clone(&s[depth..]);
+        let slice = self.__slab.alloc_slice_copy(&s[depth..]);
         s.truncate(depth);
         slice
     }
@@ -493,7 +298,7 @@ impl<'a> __BbnfBootstrapEnumCtx<'a> {
     #[allow(non_snake_case)]
     fn __c2(&'a self, depth: usize) -> &'a [BbnfBootstrapEnum<'a>] {
         let s = self.__s2();
-        let slice = self.__slab.alloc_slice_clone(&s[depth..]);
+        let slice = self.__slab.alloc_slice_copy(&s[depth..]);
         s.truncate(depth);
         slice
     }
@@ -509,7 +314,7 @@ impl<'a> __BbnfBootstrapEnumCtx<'a> {
         depth: usize,
     ) -> &'a [(&'a BbnfBootstrapEnum<'a>, ::parse_that::Span<'a>)] {
         let s = self.__s3();
-        let slice = self.__slab.alloc_slice_clone(&s[depth..]);
+        let slice = self.__slab.alloc_slice_copy(&s[depth..]);
         s.truncate(depth);
         slice
     }

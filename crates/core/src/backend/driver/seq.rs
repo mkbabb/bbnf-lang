@@ -47,12 +47,13 @@ fn try_operator_chain<E: Emitter>(
     emitter: &mut E,
     ctx: &mut E::Ctx,
 ) -> Option<E::Output> {
-    let node_ptr = node as *const IrNode as usize;
-    if !ir
-        .node_facts
-        .get(&node_ptr)
-        .is_some_and(|f| f.operator_chain)
-    {
+    let is_op_chain = ir
+        .dag
+        .as_ref()
+        .and_then(|dag| dag.node_for(node))
+        .and_then(|id| ir.node_facts.get(&id))
+        .is_some_and(|f| f.operator_chain);
+    if !is_op_chain {
         return None;
     }
 

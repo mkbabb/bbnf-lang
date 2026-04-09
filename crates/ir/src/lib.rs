@@ -603,11 +603,12 @@ pub struct GrammarIR {
     #[serde(skip)]
     pub regex_info: std::collections::HashMap<StringId, bbnf_regex::RegexInfo>,
 
-    /// Per-node structural facts. Built by `recognize_patterns` pass (tree walk).
-    /// Keyed by `IrNode` raw pointer — valid only within the process that ran
-    /// the pass. Not serializable.
+    /// Per-node structural facts. Built by `recognize_patterns` pass
+    /// (tree walk). Keyed by stable `NodeId` from the durable
+    /// `GrammarDag` substrate — requires `self.dag` to be populated
+    /// before the pass runs.
     #[serde(skip)]
-    pub node_facts: std::collections::HashMap<usize, passes::patterns::NodeFacts>,
+    pub node_facts: std::collections::HashMap<dag::NodeId, passes::patterns::NodeFacts>,
 
     /// Durable post-extraction canonical DAG over the optimized IR tree.
     ///

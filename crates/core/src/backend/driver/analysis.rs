@@ -6,6 +6,7 @@
 
 use std::collections::HashSet;
 
+use bbnf_ir::dag::NodeId;
 use bbnf_ir::{GrammarIR, RuleId, TypeDesc};
 
 use crate::generate::regex;
@@ -51,8 +52,10 @@ pub struct BackendAnalysis {
 pub struct BackendPreparation {
     pub effective_prettify: bool,
     pub analysis: BackendAnalysis,
-    /// Solved Alt strategies per node pointer. Built by `solve_alt_strategies`.
-    pub alt_strategies: std::collections::HashMap<usize, crate::backend::strategy::alt_strategy::AltStrategy>,
+    /// Solved Alt strategies keyed by stable `NodeId`. Built by
+    /// `solve_alt_strategies`.
+    pub alt_strategies:
+        std::collections::HashMap<NodeId, crate::backend::strategy::alt_strategy::AltStrategy>,
 }
 
 /// Fully prepared grammar bundle consumed by codegen.
@@ -142,8 +145,11 @@ pub fn analyze_grammar(ir: &mut GrammarIR, config: &EffectiveBackendConfig) -> B
         .rules
         .iter()
         .filter(|rule| {
-            let body_ptr = &rule.body as *const bbnf_ir::IrNode as usize;
-            ir.node_facts.get(&body_ptr).is_some_and(|f| f.operator_chain)
+            ir.dag
+                .as_ref()
+                .and_then(|dag| dag.node_for(&rule.body))
+                .and_then(|id| ir.node_facts.get(&id))
+                .is_some_and(|f| f.operator_chain)
         })
         .map(|rule| rule.id)
         .collect();

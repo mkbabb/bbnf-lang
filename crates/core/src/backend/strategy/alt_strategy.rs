@@ -6,6 +6,7 @@
 
 use std::collections::HashMap;
 
+use bbnf_ir::dag::{GrammarDag, NodeId};
 use bbnf_ir::{AltBranch, AltDispatch, FnDescriptor, GrammarIR, IrNode};
 
 /// Resolved strategy for an Alt node.
@@ -23,52 +24,53 @@ pub enum AltStrategy {
 
 /// Solve Alt strategies for all Alt nodes in the grammar.
 ///
-/// Walks the IR tree, finds all Alt nodes, and assigns each a strategy.
-/// Results are keyed by Alt node pointer for O(1) lookup during compilation.
-pub fn solve_alt_strategies(ir: &GrammarIR) -> HashMap<usize, AltStrategy> {
+/// Walks the IR tree, finds all Alt nodes, and assigns each a
+/// strategy. Results are keyed by stable `NodeId` from `ir.dag`;
+/// entries for which no DAG id exists (structurally unreachable
+/// nodes) are dropped.
+pub fn solve_alt_strategies(ir: &GrammarIR) -> HashMap<NodeId, AltStrategy> {
     let mut strategies = HashMap::new();
-    for rule in &ir.rules {
-        collect_alt_strategies(&rule.body, &mut strategies, ir);
+    if let Some(dag) = ir.dag.as_ref() {
+        for rule in &ir.rules {
+            collect_alt_strategies(&rule.body, &mut strategies, ir, dag);
+        }
     }
     strategies
 }
 
 fn collect_alt_strategies(
     node: &IrNode,
-    strategies: &mut HashMap<usize, AltStrategy>,
+    strategies: &mut HashMap<NodeId, AltStrategy>,
     ir: &GrammarIR,
+    dag: &GrammarDag,
 ) {
     match node {
         IrNode::Alt(branches, dispatch) => {
-            let node_ptr = node as *const IrNode as usize;
-            let strategy = decide_alt_strategy(branches, dispatch.as_ref(), ir);
-            strategies.insert(node_ptr, strategy);
-
-            // Recurse into branch bodies.
+            if let Some(id) = dag.node_for(node) {
+                let strategy = decide_alt_strategy(branches, dispatch.as_ref(), ir);
+                strategies.insert(id, strategy);
+            }
             for branch in branches {
-                collect_alt_strategies(&branch.node, strategies, ir);
+                collect_alt_strategies(&branch.node, strategies, ir, dag);
             }
         }
 
         IrNode::Seq(children) => {
             for child in children {
-                collect_alt_strategies(child, strategies, ir);
+                collect_alt_strategies(child, strategies, ir, dag);
             }
         }
 
         IrNode::Repeat { inner, .. }
         | IrNode::Negate(inner)
-        | IrNode::OptionalWhitespace(inner) => {
-            collect_alt_strategies(inner, strategies, ir);
+        | IrNode::OptionalWhitespace(inner)
+        | IrNode::Map { inner, .. } => {
+            collect_alt_strategies(inner, strategies, ir, dag);
         }
 
         IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
-            collect_alt_strategies(a, strategies, ir);
-            collect_alt_strategies(b, strategies, ir);
-        }
-
-        IrNode::Map { inner, .. } => {
-            collect_alt_strategies(inner, strategies, ir);
+            collect_alt_strategies(a, strategies, ir, dag);
+            collect_alt_strategies(b, strategies, ir, dag);
         }
 
         IrNode::TokenDispatch {
@@ -76,11 +78,11 @@ fn collect_alt_strategies(
             arms,
             fallback,
         } => {
-            collect_alt_strategies(token, strategies, ir);
+            collect_alt_strategies(token, strategies, ir, dag);
             for arm in arms {
-                collect_alt_strategies(&arm.continuation, strategies, ir);
+                collect_alt_strategies(&arm.continuation, strategies, ir, dag);
             }
-            collect_alt_strategies(fallback, strategies, ir);
+            collect_alt_strategies(fallback, strategies, ir, dag);
         }
 
         IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon | IrNode::Ref(_) => {}

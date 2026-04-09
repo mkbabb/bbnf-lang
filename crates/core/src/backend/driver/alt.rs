@@ -28,9 +28,9 @@ pub(super) fn compile_alt<E: Emitter>(
 ) -> E::Output {
     let type_map = ir.type_map.as_ref();
 
-    // Look up the pre-solved strategy. Cloned to avoid borrowing conflicts
-    // with the subsequent &mut DriverState passes.
-    let solved_strategy = dstate.alt_strategy(alt_node).cloned();
+    // Look up the pre-solved strategy. Cloned to avoid borrowing
+    // conflicts with the subsequent &mut DriverState passes.
+    let solved_strategy = dstate.alt_strategy(alt_node, ir).cloned();
 
     // Classify branch types. In Inline context (Vec elements), map
     // BoxedEnum → Enum to match the TypeMap's Vec projection.

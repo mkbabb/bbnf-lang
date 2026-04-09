@@ -35,6 +35,7 @@ mod repeat;
 mod seq;
 mod wrap;
 
+use bbnf_ir::dag::NodeId;
 use bbnf_ir::{GrammarIR, IrNode, RuleId, TypeDesc};
 
 use self::analysis::BackendAnalysis;
@@ -52,12 +53,12 @@ pub struct DriverState {
     /// `RuleId`.
     pub call_strategies: Vec<CallStrategy>,
 
-    /// Pre-solved Alt strategies keyed by `*const IrNode as usize`.
-    /// Populated by `solve_alt_strategies` during `prepare_grammar`
-    /// and read by `compile_alt` to skip inline detection passes that
-    /// would re-derive the same decision.
+    /// Pre-solved Alt strategies keyed by stable `NodeId`. Populated
+    /// by `solve_alt_strategies` during `prepare_grammar` and read
+    /// by `compile_alt` to skip inline detection passes that would
+    /// re-derive the same decision.
     pub alt_strategies:
-        std::collections::HashMap<usize, crate::backend::strategy::alt_strategy::AltStrategy>,
+        std::collections::HashMap<NodeId, crate::backend::strategy::alt_strategy::AltStrategy>,
 
     /// When set, the byte at `state.offset` is guaranteed to equal
     /// this value (from a preceding dispatch-table match). The next
@@ -96,13 +97,16 @@ impl DriverState {
         }
     }
 
-    /// Look up the solved Alt strategy for a node, if one exists.
-    pub fn alt_strategy(
-        &self,
+    /// Look up the solved Alt strategy for a node, resolved via the
+    /// durable DAG in `ir.dag`. Returns `None` if the DAG is absent
+    /// or the node was not present when the DAG was built.
+    pub fn alt_strategy<'a>(
+        &'a self,
         node: &IrNode,
-    ) -> Option<&crate::backend::strategy::alt_strategy::AltStrategy> {
-        let ptr = node as *const IrNode as usize;
-        self.alt_strategies.get(&ptr)
+        ir: &GrammarIR,
+    ) -> Option<&'a crate::backend::strategy::alt_strategy::AltStrategy> {
+        let id = ir.dag.as_ref()?.node_for(node)?;
+        self.alt_strategies.get(&id)
     }
 
     /// Register a regex pattern and return its stable ID. If the

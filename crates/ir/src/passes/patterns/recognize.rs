@@ -2,110 +2,113 @@
 
 use std::collections::HashMap;
 
-use crate::{AltBranch, GrammarIR, IrNode, RuleId};
+use crate::dag::{GrammarDag, NodeId};
+use crate::{AltBranch, GrammarIR, IrNode};
 
 use super::{AltPattern, NodeFacts, NodeKind, PatternAnnotations, SeqPattern};
 
 /// Recognize structural patterns on all rules.
 ///
-/// Populates both the legacy `ir.pattern_annotations` (per-rule) and the new
-/// `ir.node_facts` (per-node, pointer-keyed) maps.
+/// Populates the legacy `ir.pattern_annotations` (per-rule) and
+/// `ir.node_facts` (per-node, keyed by stable `NodeId`). Requires
+/// `ir.dag` to be populated — facts are written only for nodes the
+/// DAG knows about. If the DAG is absent (e.g. a raw IR built by a
+/// unit test), `node_facts` is cleared.
 pub fn recognize_patterns(ir: &mut GrammarIR) {
     let mut legacy_annotations = HashMap::new();
     let mut node_facts = HashMap::new();
 
+    // Legacy per-rule annotations don't need the DAG.
     for rule in &ir.rules {
         let mut ann = PatternAnnotations::default();
         recognize_body(&rule.body, &mut ann, ir);
         if ann.alt_pattern.is_some() || ann.seq_pattern.is_some() || ann.is_operator_chain {
             legacy_annotations.insert(rule.id, ann);
         }
+    }
 
-        // Recursive tree walk for per-node facts.
-        recognize_tree(&rule.body, &mut node_facts, ir);
+    // Per-node facts require the durable DAG to map `&IrNode` → `NodeId`.
+    if let Some(dag) = ir.dag.as_ref() {
+        for rule in &ir.rules {
+            recognize_tree(&rule.body, &mut node_facts, ir, dag);
+        }
     }
 
     ir.pattern_annotations = legacy_annotations;
     ir.node_facts = node_facts;
 }
 
-// ── Recursive tree walk (new: per-node facts) ───────────────────────────
+// ── Recursive tree walk (per-node facts, NodeId-keyed) ──────────────────
 
-fn recognize_tree(node: &IrNode, facts: &mut HashMap<usize, NodeFacts>, ir: &GrammarIR) {
-    let node_id = node as *const IrNode as usize;
+fn recognize_tree(
+    node: &IrNode,
+    facts: &mut HashMap<NodeId, NodeFacts>,
+    ir: &GrammarIR,
+    dag: &GrammarDag,
+) {
+    let node_id = dag.node_for(node);
 
     match node {
         IrNode::Seq(children) => {
             let is_op_chain = check_operator_chain(children);
             let all_span = ir.collapse_simple_spans && children.iter().all(is_span_leaf);
 
-            if is_op_chain || all_span {
-                facts.insert(
-                    node_id,
-                    NodeFacts {
-                        node_kind: NodeKind::Seq,
-                        operator_chain: is_op_chain,
-                        sep_by: false,
-                        all_span_collapse: all_span,
-                    },
-                );
+            if let Some(id) = node_id {
+                if is_op_chain || all_span {
+                    facts.insert(
+                        id,
+                        NodeFacts {
+                            node_kind: NodeKind::Seq,
+                            operator_chain: is_op_chain,
+                            sep_by: false,
+                            all_span_collapse: all_span,
+                        },
+                    );
+                }
             }
 
-            // Recurse into children.
             for child in children {
-                recognize_tree(child, facts, ir);
+                recognize_tree(child, facts, ir, dag);
             }
         }
 
         IrNode::Alt(branches, _dispatch) => {
-            // Recurse into branch bodies.
             for branch in branches {
-                recognize_tree(&branch.node, facts, ir);
+                recognize_tree(&branch.node, facts, ir, dag);
             }
         }
 
         IrNode::Skip(element, opt_sep) => {
-            // Check sep_by: Skip(element, Repeat(separator, 0, 1))
             let is_sep_by = check_sep_by(opt_sep);
 
-            if is_sep_by {
-                facts.insert(
-                    node_id,
-                    NodeFacts {
-                        node_kind: NodeKind::Skip,
-                        operator_chain: false,
-                        sep_by: true,
-                        all_span_collapse: false,
-                    },
-                );
+            if let Some(id) = node_id {
+                if is_sep_by {
+                    facts.insert(
+                        id,
+                        NodeFacts {
+                            node_kind: NodeKind::Skip,
+                            operator_chain: false,
+                            sep_by: true,
+                            all_span_collapse: false,
+                        },
+                    );
+                }
             }
 
-            // Also check for wrap pattern: Skip(Next(open, middle), close)
-            // This is how Wrap is represented in the IR after lowering.
-            recognize_tree(element, facts, ir);
-            recognize_tree(opt_sep, facts, ir);
+            recognize_tree(element, facts, ir, dag);
+            recognize_tree(opt_sep, facts, ir, dag);
         }
 
-        IrNode::Next(a, b) => {
-            recognize_tree(a, facts, ir);
-            recognize_tree(b, facts, ir);
+        IrNode::Next(a, b) | IrNode::Minus(a, b) => {
+            recognize_tree(a, facts, ir, dag);
+            recognize_tree(b, facts, ir, dag);
         }
 
-        IrNode::Minus(a, b) => {
-            recognize_tree(a, facts, ir);
-            recognize_tree(b, facts, ir);
-        }
-
-        IrNode::Repeat { inner, .. } => {
-            recognize_tree(inner, facts, ir);
-        }
-
-        IrNode::Negate(inner) | IrNode::OptionalWhitespace(inner) => {
-            recognize_tree(inner, facts, ir);
-        }
-
-        IrNode::Map { inner, .. } => {
-            recognize_tree(inner, facts, ir);
+        IrNode::Repeat { inner, .. }
+        | IrNode::Negate(inner)
+        | IrNode::OptionalWhitespace(inner)
+        | IrNode::Map { inner, .. } => {
+            recognize_tree(inner, facts, ir, dag);
         }
 
         IrNode::TokenDispatch {
@@ -113,11 +116,11 @@ fn recognize_tree(node: &IrNode, facts: &mut HashMap<usize, NodeFacts>, ir: &Gra
             arms,
             fallback,
         } => {
-            recognize_tree(token, facts, ir);
+            recognize_tree(token, facts, ir, dag);
             for arm in arms {
-                recognize_tree(&arm.continuation, facts, ir);
+                recognize_tree(&arm.continuation, facts, ir, dag);
             }
-            recognize_tree(fallback, facts, ir);
+            recognize_tree(fallback, facts, ir, dag);
         }
 
         // Leaves — no recursion needed.

@@ -164,13 +164,18 @@ pub fn compute_call_strategies(ir: &GrammarIR) -> Vec<crate::backend::CallStrate
     use crate::backend::CallStrategy;
     use std::collections::HashSet;
 
-    // Read operator chain rules from NodeFacts (computed by recognize_patterns pass).
+    // Read operator chain rules from NodeFacts (computed by
+    // `recognize_patterns` pass; keyed by stable `NodeId` via
+    // `ir.dag`).
     let operator_chain_rules: HashSet<bbnf_ir::RuleId> = ir
         .rules
         .iter()
         .filter(|rule| {
-            let body_ptr = &rule.body as *const bbnf_ir::IrNode as usize;
-            ir.node_facts.get(&body_ptr).is_some_and(|f| f.operator_chain)
+            ir.dag
+                .as_ref()
+                .and_then(|dag| dag.node_for(&rule.body))
+                .and_then(|id| ir.node_facts.get(&id))
+                .is_some_and(|f| f.operator_chain)
         })
         .map(|r| r.id)
         .collect();

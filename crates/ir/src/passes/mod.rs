@@ -5,7 +5,7 @@
 
 pub mod context;
 pub mod csp_domains;
-pub mod csp_recognizers;
+pub mod csp_strategy;
 pub mod lr;
 pub mod metadata;
 pub mod patterns;
@@ -36,9 +36,9 @@ pub use transform::{
     canonicalize_aliases, eliminate_epsilon, fuse_single_use, fuse_token_dispatch, inline_acyclic,
     merge_literals, prune_unreachable,
 };
-pub use csp_recognizers::{
-    solve_recognizer_decisions, AltMode, RecognizerDecision, RecognizerDecisionMap, RegexEngine,
-    WrapMode,
+pub use csp_strategy::{
+    solve_strategy_decisions, AltMode, RecognizerDecision, RecognizerDecisionMap, RegexEngine,
+    StrategyDomain, StrategyValue, WrapMode,
 };
 pub use recognizers::mine_recognizers;
 pub use regex_info::compute_regex_info;

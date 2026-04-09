@@ -439,10 +439,12 @@ fn compile_ast_common<'a>(
         bbnf_ir::passes::generate_dispatch_tables(&mut ir);
         bbnf_ir::passes::compute_regex_info(&mut ir);
         bbnf_ir::passes::mine_recognizers(&mut ir);
-        // Tranche V.6 — derive per-NodeId recognizer decisions from
-        // the upstream facts. Stored on `ir.recognizer_decisions` for
-        // V.7 (kernel registry) and V.8 (driver dispatchers).
-        ir.recognizer_decisions = bbnf_ir::passes::solve_recognizer_decisions(&ir);
+        // Tranche W phase 3b — derive per-NodeId strategy decisions
+        // from the upstream facts via a real csp_solver::Csp running
+        // OptimizationMode::MinimizeCost. Stored on
+        // `ir.recognizer_decisions` for the kernel registry and the
+        // per-kind drivers.
+        ir.recognizer_decisions = bbnf_ir::passes::solve_strategy_decisions(&ir);
     }
 
     Ok(ir)

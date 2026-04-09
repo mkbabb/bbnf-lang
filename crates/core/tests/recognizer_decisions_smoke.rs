@@ -7,7 +7,7 @@
 //! priority cascades with reads from `recognizer_decisions`.
 
 use bbnf::pipeline::{compile_grammar, PipelineOptions};
-use bbnf_ir::passes::csp_recognizers::AltMode;
+use bbnf_ir::passes::csp_strategy::AltMode;
 
 const JSON_GRAMMAR: &str = r#"
 value = "true" | "false" | "null" | string | number ;

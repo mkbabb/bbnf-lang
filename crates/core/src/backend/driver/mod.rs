@@ -159,7 +159,7 @@ impl DriverState {
         &self,
         node: &IrNode,
         ir: &'a GrammarIR,
-    ) -> Option<&'a bbnf_ir::passes::csp_recognizers::RecognizerDecision> {
+    ) -> Option<&'a bbnf_ir::passes::csp_strategy::RecognizerDecision> {
         let id = ir.dag.as_ref()?.node_for(node)?;
         ir.recognizer_decisions.get(&id)
     }

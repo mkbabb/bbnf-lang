@@ -22,8 +22,8 @@ use std::path::PathBuf;
 const REQUIRED_REFERENCES: &[(&str, &str)] = &[
     // V.6 decision API — must be referenced by at least one driver site.
     ("recognizer_decision", "backend/driver"),
-    // V.6 decision struct — must be defined and exported.
-    ("RecognizerDecision", "passes/csp_recognizers"),
+    // Strategy CSP decision struct — must be defined and exported.
+    ("RecognizerDecision", "passes/csp_strategy"),
     // V.3 fact field — must exist on NodeFacts.
     ("recognizer:", "passes/patterns"),
     // V.7 kernel module — must exist with at least one entry point.

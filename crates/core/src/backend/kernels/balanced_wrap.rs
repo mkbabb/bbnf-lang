@@ -12,9 +12,21 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 
-/// Emit a stub call indicating the balanced-wrap kernel slot. V.8
-/// migrates the wrap driver to consume this in place of the inline
-/// `emit_delim_scan` body.
-pub fn emit_call(_open: u8, _close: u8) -> TokenStream {
-    quote! { compile_error!("backend/kernels/balanced_wrap: V.8 wires this") }
+/// Emit a balanced-wrap scanner call.
+///
+/// Tranche W phase 3d: returns a real `scan_balanced` invocation
+/// against `parse_that::parsers::scan::balanced`. The wrap driver
+/// reads the open/close bytes from `BalancedScanConfig` at the call
+/// site; this kernel produces the inline TokenStream that the
+/// emitter can splice into a parser body.
+pub fn emit_call(open: u8, close: u8) -> TokenStream {
+    quote! {
+        ::parse_that::parsers::scan::balanced::scan_balanced(
+            state.remaining().as_bytes(),
+            &::parse_that::parsers::scan::balanced::BalancedScanConfig {
+                open: #open,
+                close: #close,
+            },
+        )
+    }
 }

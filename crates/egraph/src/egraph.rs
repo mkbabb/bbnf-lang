@@ -64,6 +64,29 @@ impl<N: Language, A: Analysis<N>> EGraph<N, A> {
         }
     }
 
+    /// Create a new empty e-graph pre-sized for `expected_nodes` interned
+    /// e-nodes.
+    ///
+    /// The hash-cons table (`memo`) and the e-class table (`classes`) are
+    /// allocated up front to the requested capacity. This avoids the chain of
+    /// re-hashes / vector growths that would otherwise fire as the e-graph
+    /// fills, AND — critically for small grammars — keeps the dropped capacity
+    /// proportional to actual occupancy. Without a capacity hint the default
+    /// `FxHashMap` settles at the next power of two, which on a ~300-node
+    /// grammar can leave a 1024-bucket table whose teardown dominates the
+    /// compile profile.
+    pub fn with_capacity(expected_nodes: usize) -> Self {
+        Self {
+            unionfind: UnionFind::with_capacity(expected_nodes),
+            classes: Vec::with_capacity(expected_nodes),
+            memo: FxHashMap::with_capacity_and_hasher(expected_nodes, Default::default()),
+            pending: Vec::new(),
+            analysis_pending: Vec::new(),
+            rebuild_count: 0,
+            union_count: 0,
+        }
+    }
+
     /// Total number of e-classes (including canonicalized non-root classes
     /// that still occupy a slot in `classes`).
     pub fn total_classes(&self) -> usize {

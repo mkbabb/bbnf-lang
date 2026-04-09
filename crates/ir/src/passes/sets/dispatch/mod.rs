@@ -24,7 +24,11 @@
 //!   superset-fallback escape hatch.
 //!
 //! Phase 2 (the tree walk) runs in parallel via `rayon` when there are
-//! enough rules to justify the overhead.
+//! enough rules to justify the overhead. The threshold is deliberately
+//! conservative: rayon's per-iteration latch wait dominates the work for
+//! grammars under ~100 rules. The post-V profile attributed ~25% of
+//! `compile_bbnf` to `LockLatch::wait_and_reset` from this pass on a
+//! ~50-rule grammar — far inside the old `>= 16` threshold.
 
 mod annotate;
 mod build;
@@ -41,6 +45,14 @@ use crate::{CharSet128, GrammarIR};
 use self::annotate::annotate_node;
 use self::eligibility::precompute_dispatch_eligibility;
 
+/// Minimum rule count before the tree-walk phase parallelizes via rayon.
+///
+/// Below this, the wait-and-reset cost on the rayon `LockLatch` exceeds
+/// the work the dispatch annotator does per rule. CSS L4 (~265 rules)
+/// crosses the threshold and benefits; BBNF (~50 rules) stays serial.
+/// Tranche W phase 3a will move this constant onto `CostConfig`.
+const RAYON_RULE_THRESHOLD: usize = 128;
+
 /// Generate dispatch tables for all eligible Alt nodes in the IR.
 ///
 /// First runs CSP pre-computation to classify all Alts as dispatchable or not,
@@ -51,9 +63,9 @@ use self::eligibility::precompute_dispatch_eligibility;
 /// elements), not the rule-level FOLLOW. This prevents incorrect dispatch
 /// table entries for nullable branches in non-tail positions.
 pub fn generate_dispatch_tables(ir: &mut GrammarIR) {
-    // Clone follow sets, strings, and rules metadata to avoid borrow conflicts.
-    let follow_sets = ir.follow_sets.clone();
-    let strings = ir.strings.clone();
+    // Per-rule (first_set, nullable) snapshot. Each entry is 17 bytes; this
+    // is a small per-pass allocation that lets the parallel closure read
+    // metadata without re-borrowing `ir.rules` mutably.
     let rule_metas: Vec<(CharSet128, bool)> = ir
         .rules
         .iter()
@@ -68,24 +80,29 @@ pub fn generate_dispatch_tables(ir: &mut GrammarIR) {
             .dag
             .as_ref()
             .expect("generate_dispatch_tables requires ir.dag — built by pipeline::compile");
-        precompute_dispatch_eligibility(ir, dag, &rule_metas, &strings)
+        precompute_dispatch_eligibility(ir, dag, &rule_metas)
     };
 
-    // `ir.dag` is a field of `ir` disjoint from `ir.rules`, so we
-    // can hold an immutable borrow of the former while the latter
-    // is mutably iterated. Bind it in a narrow scope around the
-    // iteration to keep the borrow checker happy under `par_iter_mut`.
-    if ir.rules.len() >= 16 {
-        // `par_iter_mut` on `ir.rules` requires a 'static-ish
-        // closure over `dag`. The split-borrow trick: move the
-        // `ir.dag` reference into the closure via a local binding
-        // that the borrow checker sees as disjoint.
-        let dag: &GrammarDag = ir
-            .dag
-            .as_ref()
-            .expect("generate_dispatch_tables requires ir.dag");
-        // Re-borrow rules to sidestep the whole-`ir` conflict.
-        let rules = &mut ir.rules;
+    // Split-borrow `ir` so we can mutably iterate `ir.rules` while still
+    // reading `ir.dag` / `ir.follow_sets` / `ir.strings` from the closure.
+    // Destructuring through `&mut *ir` gives Rust's borrow checker the
+    // disjoint-field analysis it needs to allow this.
+    let GrammarIR {
+        rules,
+        dag,
+        follow_sets,
+        strings,
+        ..
+    } = &mut *ir;
+    let dag: &GrammarDag = dag
+        .as_ref()
+        .expect("generate_dispatch_tables requires ir.dag");
+    let follow_sets = &*follow_sets;
+    let strings = &*strings;
+
+    let parallel = rules.len() >= RAYON_RULE_THRESHOLD;
+
+    if parallel {
         rules.par_iter_mut().for_each(|rule| {
             let follow = follow_sets.get(&rule.id);
             annotate_node(
@@ -93,19 +110,14 @@ pub fn generate_dispatch_tables(ir: &mut GrammarIR) {
                 follow,
                 dag,
                 &rule_metas,
-                &strings,
+                strings,
                 &eligibility,
             );
             if let Some(ref mut recover) = rule.meta.directives.recover {
-                annotate_node(recover, follow, dag, &rule_metas, &strings, &eligibility);
+                annotate_node(recover, follow, dag, &rule_metas, strings, &eligibility);
             }
         });
     } else {
-        let dag: &GrammarDag = ir
-            .dag
-            .as_ref()
-            .expect("generate_dispatch_tables requires ir.dag");
-        let rules = &mut ir.rules;
         for rule in rules.iter_mut() {
             let follow = follow_sets.get(&rule.id);
             annotate_node(
@@ -113,11 +125,11 @@ pub fn generate_dispatch_tables(ir: &mut GrammarIR) {
                 follow,
                 dag,
                 &rule_metas,
-                &strings,
+                strings,
                 &eligibility,
             );
             if let Some(ref mut recover) = rule.meta.directives.recover {
-                annotate_node(recover, follow, dag, &rule_metas, &strings, &eligibility);
+                annotate_node(recover, follow, dag, &rule_metas, strings, &eligibility);
             }
         }
     }

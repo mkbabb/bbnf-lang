@@ -33,9 +33,9 @@ pub(super) fn precompute_dispatch_eligibility(
     ir: &GrammarIR,
     dag: &GrammarDag,
     rule_metas: &[(CharSet128, bool)],
-    strings: &[String],
 ) -> DispatchEligibility {
     let mut alts: Vec<(NodeId, Vec<Option<CharSet128>>)> = Vec::new();
+    let strings = &ir.strings;
 
     // Phase 1: Collect every Alt node in the IR.
     for rule in &ir.rules {

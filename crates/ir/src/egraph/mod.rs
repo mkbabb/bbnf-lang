@@ -61,7 +61,20 @@ pub fn build_and_saturate(
     use crate::RuleId;
 
     let pool = SharedStrings::from_ir(ir);
-    let mut egraph: EGraph<GrammarENode, NoAnalysis> = EGraph::new();
+
+    // Pre-size the e-graph hash-cons table from the IR node count. Without
+    // this, FxHashMap settles at the next power of two and the dropped
+    // capacity becomes the dominant cost on small grammars (the BBNF
+    // ~300-node case where the post-V profile measured drop_in_place at
+    // 25.52% self time).
+    let expected_nodes: usize = ir
+        .rules
+        .iter()
+        .map(|r| crate::types::count_nodes(&r.body))
+        .sum();
+    let mut egraph: EGraph<GrammarENode, NoAnalysis> =
+        EGraph::with_capacity(expected_nodes);
+
     let rule_root_ids = build_egraph::insert_ir(&mut egraph, ir);
     egraph.rebuild();
 

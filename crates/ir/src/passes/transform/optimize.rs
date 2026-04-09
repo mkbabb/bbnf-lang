@@ -17,8 +17,13 @@ use crate::{GrammarIR, IrNode};
 /// - `Seq([..., Epsilon, ...])` → `Seq([...])` (remove epsilon elements)
 /// - `Seq([single])` → `single` (unwrap singleton sequences)
 /// - `Alt([single], _)` → `single.node` (unwrap singleton alternations)
+///
+/// The body rewrite is purely tree-local and very cheap; the rayon threshold
+/// is the same conservative cutoff used by the dispatch pass (`128`), under
+/// which `LockLatch::wait_and_reset` exceeds the work.
 pub fn eliminate_epsilon(ir: &mut GrammarIR) {
-    if ir.rules.len() >= 16 {
+    const RAYON_RULE_THRESHOLD: usize = 128;
+    if ir.rules.len() >= RAYON_RULE_THRESHOLD {
         ir.rules.par_iter_mut().for_each(|rule| {
             rule.body = elim_epsilon(std::mem::replace(&mut rule.body, IrNode::Epsilon));
         });

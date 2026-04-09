@@ -20,6 +20,14 @@ impl UnionFind {
         Self::default()
     }
 
+    /// Create an empty union-find pre-sized for `expected` elements.
+    pub fn with_capacity(expected: usize) -> Self {
+        Self {
+            parents: Vec::with_capacity(expected),
+            ranks: Vec::with_capacity(expected),
+        }
+    }
+
     /// Allocate a fresh singleton set and return its `Id`.
     pub fn make_set(&mut self) -> Id {
         let idx = self.parents.len() as u32;

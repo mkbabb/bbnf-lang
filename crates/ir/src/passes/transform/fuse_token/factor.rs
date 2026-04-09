@@ -1,108 +1,26 @@
-//! Pass: @token-guided prefix factoring.
-//!
-//! For Alts where multiple branches start with expressions whose FIRST sets
-//! overlap with a `@token` rule's character class, factors the shared token
-//! prefix into a Seq: `Seq(token_regex, Alt(continuations))`.
-//!
-//! The continuations are synthetic rules created by stripping the leading
-//! keyword from each branch's rule body. The continuation Alt typically has
-//! disjoint FIRST sets (e.g., `(` for functions vs Epsilon for bare idents),
-//! enabling dispatch by the subsequent `generate_dispatch_tables` pass.
-//!
-//! This is grammar-agnostic: any grammar with overlapping-FIRST Alts and
-//! `@token` declarations benefits.
+//! Recursive factoring logic: walk a rule body, find Alt nodes whose
+//! branches share an overlapping FIRST set with one of the configured
+//! `@token` rules, and rewrite them into `Seq(token_regex, Alt(continuations))`.
 
 use std::collections::HashSet;
 
-use crate::{AltBranch, CharSet128, GrammarIR, IrNode, IrRule, RuleMeta, StringId};
+use crate::regex_first;
+use crate::{AltBranch, CharSet128, IrNode, IrRule, RuleMeta, StringId};
+
+use super::detect::{leading_first_set, starts_with_different_token, strip_leading_keyword};
 
 /// Shared mutable context threaded through the recursive factoring pass.
-struct FactorCtx<'a> {
-    token_rules: &'a [(u32, CharSet128, StringId)],
-    rule_bodies: &'a [(u32, IrNode)],
-    strings: &'a mut Vec<String>,
-    rule_first_sets: &'a [CharSet128],
-    new_rules: &'a mut Vec<IrRule>,
-    next_id: &'a mut u32,
-    rule_names: &'a [(u32, String)],
+pub(super) struct FactorCtx<'a> {
+    pub(super) token_rules: &'a [(u32, CharSet128, StringId)],
+    pub(super) rule_bodies: &'a [(u32, IrNode)],
+    pub(super) strings: &'a mut Vec<String>,
+    pub(super) rule_first_sets: &'a [CharSet128],
+    pub(super) new_rules: &'a mut Vec<IrRule>,
+    pub(super) next_id: &'a mut u32,
+    pub(super) rule_names: &'a [(u32, String)],
 }
 
-/// Factor overlapping-FIRST Alts using @token hints.
-pub fn fuse_token_dispatch(ir: &mut GrammarIR) {
-    // Find @token rules suitable for prefix factoring.
-    // Criteria: FIRST set has moderate cardinality (2-80 bytes) — narrow enough
-    // to be selective, broad enough to cover multiple branches.
-    // Too narrow (1 byte) = dispatch already handles it.
-    // Too broad (>80 bytes) = matches everything, factoring adds overhead.
-    let token_rules: Vec<(u32, CharSet128, StringId)> = ir
-        .rules
-        .iter()
-        .filter(|r| {
-            if !r.meta.directives.token {
-                return false;
-            }
-            let fs_len = r.meta.first_set.len();
-            // Must be a scannable token (Regex or Alt-of-Literals after merge)
-            // with moderate FIRST set.
-            let is_scannable = matches!(&r.body, IrNode::Regex(_))
-                || matches!(&r.body, IrNode::Alt(branches, _) if branches.iter().all(|b| matches!(&b.node, IrNode::Literal(_))));
-            is_scannable && (2..=80).contains(&fs_len)
-        })
-        .map(|r| (r.id, r.meta.first_set.clone(), r.name))
-        .collect();
-
-    if token_rules.is_empty() {
-        return;
-    }
-
-    // Snapshot rule bodies for analysis.
-    let rule_bodies: Vec<(u32, IrNode)> = ir.rules.iter().map(|r| (r.id, r.body.clone())).collect();
-    // Build ID-indexed FIRST set map (rule IDs may be sparse after pruning).
-    let max_rule_id = ir.rules.iter().map(|r| r.id).max().unwrap_or(0) as usize;
-    let mut rule_first_sets: Vec<CharSet128> = vec![CharSet128::new(); max_rule_id + 1];
-    for r in &ir.rules {
-        if (r.id as usize) < rule_first_sets.len() {
-            rule_first_sets[r.id as usize] = r.meta.first_set.clone();
-        }
-    }
-
-    // Collect synthetic continuation rules to add.
-    let mut new_rules: Vec<IrRule> = Vec::new();
-    let mut next_id = ir.rules.iter().map(|r| r.id).max().unwrap_or(0) + 1;
-
-    // Snapshot rule name→id mapping for lookups.
-    let rule_names: Vec<(u32, String)> = ir
-        .rules
-        .iter()
-        .map(|r| (r.id, ir.get_string(r.name).to_string()))
-        .collect();
-
-    // Process each rule body. Take rules out temporarily to split the borrow
-    // on `ir` (we need `&mut ir.strings` alongside `&mut rules`).
-    let mut rules = std::mem::take(&mut ir.rules);
-    let mut ctx = FactorCtx {
-        token_rules: &token_rules,
-        rule_bodies: &rule_bodies,
-        strings: &mut ir.strings,
-        rule_first_sets: &rule_first_sets,
-        new_rules: &mut new_rules,
-        next_id: &mut next_id,
-        rule_names: &rule_names,
-    };
-    for rule in &mut rules {
-        let old_body = std::mem::replace(&mut rule.body, IrNode::Epsilon);
-        let new_body = try_factor_alt(old_body, &mut ctx);
-        rule.body = new_body;
-    }
-    ir.rules = rules;
-
-    // Add synthetic continuation rules.
-    for new_rule in new_rules {
-        ir.rules.push(new_rule);
-    }
-}
-
-fn try_factor_alt(node: IrNode, ctx: &mut FactorCtx<'_>) -> IrNode {
+pub(super) fn try_factor_alt(node: IrNode, ctx: &mut FactorCtx<'_>) -> IrNode {
     match node {
         IrNode::Alt(branches, dispatch) if dispatch.is_none() && branches.len() >= 4 => {
             // Recurse into branch bodies first.
@@ -116,9 +34,13 @@ fn try_factor_alt(node: IrNode, ctx: &mut FactorCtx<'_>) -> IrNode {
 
             // Try to factor using each @token rule.
             for (token_rule_id, token_first, token_name_sid) in ctx.token_rules {
-                if let Some(factored) =
-                    factor_with_token(&branches, *token_rule_id, token_first, *token_name_sid, ctx)
-                {
+                if let Some(factored) = factor_with_token(
+                    &branches,
+                    *token_rule_id,
+                    token_first,
+                    *token_name_sid,
+                    ctx,
+                ) {
                     return factored;
                 }
             }
@@ -153,44 +75,6 @@ fn try_factor_alt(node: IrNode, ctx: &mut FactorCtx<'_>) -> IrNode {
             Box::new(try_factor_alt(*b, ctx)),
         ),
         other => other,
-    }
-}
-
-/// Check if a node's leading expression is a Ref to a @token rule other than `exclude_token_id`.
-///
-/// Branches that start with a different @token rule have distinct scanning semantics
-/// (e.g., `selectorSpan` uses `[^{};]+` while `propertyName` uses `[a-zA-Z-]+`).
-/// Folding such branches under the wrong token's regex replaces their scanner,
-/// causing parse failures.
-fn starts_with_different_token(
-    node: &IrNode,
-    exclude_token_id: u32,
-    token_rule_ids: &HashSet<u32>,
-    rule_bodies: &[(u32, IrNode)],
-) -> bool {
-    match node {
-        IrNode::Ref(id) => {
-            if token_rule_ids.contains(id) && *id != exclude_token_id {
-                return true;
-            }
-            // Follow Ref to check if the referenced rule's body starts with a different token.
-            if let Some((_, ref_body)) = rule_bodies.iter().find(|(rid, _)| *rid == *id) {
-                return starts_with_different_token(
-                    ref_body,
-                    exclude_token_id,
-                    token_rule_ids,
-                    rule_bodies,
-                );
-            }
-            false
-        }
-        IrNode::Seq(children) if !children.is_empty() => {
-            starts_with_different_token(&children[0], exclude_token_id, token_rule_ids, rule_bodies)
-        }
-        IrNode::OptionalWhitespace(inner) => {
-            starts_with_different_token(inner, exclude_token_id, token_rule_ids, rule_bodies)
-        }
-        _ => false,
     }
 }
 
@@ -385,7 +269,6 @@ fn factor_with_token(
         return None;
     }
 
-
     // Always produce Seq+Alt. The dispatch table pass handles disjoint FIRST
     // sets. For shared FIRST sets (key-value patterns like CSS declarations),
     // the codegen-level ident_dispatch is more efficient than IR-level
@@ -404,7 +287,7 @@ fn factor_with_token(
         ])
     };
 
-    let fused_first = crate::regex_first::regex_first_chars(&ctx.strings[token_regex_sid as usize]);
+    let fused_first = regex_first::regex_first_chars(&ctx.strings[token_regex_sid as usize]);
 
     // For TokenDispatch, the fallback already handles non-matching keys.
     // The outer Alt only needs: non-overlap branches that weren't folded into
@@ -457,118 +340,4 @@ fn new_branches_with_rest(
         }
     }
     new_branches
-}
-
-/// Check whether an IR node is a keyword pattern (ident-like literals, regex,
-/// or a Ref to a rule whose body is a keyword pattern).
-fn is_keyword_node(node: &IrNode, strings: &[String], rule_bodies: &[(u32, IrNode)]) -> bool {
-    match node {
-        IrNode::Literal(sid) => {
-            let s = &strings[*sid as usize];
-            s.bytes()
-                .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
-        }
-        IrNode::Alt(alts, _) => alts
-            .iter()
-            .all(|b| is_keyword_node(&b.node, strings, rule_bodies)),
-        // Seq of keywords is a keyword (e.g., after prefix factoring:
-        // Seq(Literal("b"), Alt(Literal("order-color"), ...)) → "border-color").
-        IrNode::Seq(children) => children
-            .iter()
-            .all(|c| is_keyword_node(c, strings, rule_bodies)),
-        IrNode::Regex(_) => true,
-        IrNode::Epsilon => true,
-        // Follow Refs: check if the referenced rule body is a keyword pattern.
-        IrNode::Ref(id) => {
-            if let Some((_, ref_body)) = rule_bodies.iter().find(|(rid, _)| *rid == *id) {
-                is_keyword_node(ref_body, strings, rule_bodies)
-            } else {
-                false
-            }
-        }
-        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
-            is_keyword_node(inner, strings, rule_bodies)
-        }
-        _ => false,
-    }
-}
-
-/// Strip the leading keyword (Literal, Alt-of-Literals, Regex, or Ref to keyword
-/// rule) from a rule body. Follows Refs to detect keyword patterns in property
-/// group rules like `colorProps = "color" | "background-color" | ...`.
-fn strip_leading_keyword(
-    body: &IrNode,
-    strings: &[String],
-    rule_bodies: &[(u32, IrNode)],
-) -> IrNode {
-    // Unwrap OW.
-    let inner = match body {
-        IrNode::OptionalWhitespace(i) => i.as_ref(),
-        other => other,
-    };
-
-    match inner {
-        IrNode::Seq(children) if children.len() >= 2 => {
-            if is_keyword_node(&children[0], strings, rule_bodies) {
-                if children.len() == 2 {
-                    children[1].clone()
-                } else {
-                    IrNode::Seq(children[1..].to_vec())
-                }
-            } else {
-                body.clone()
-            }
-        }
-        // Body is a single Regex or Literal → continuation is Epsilon.
-        IrNode::Regex(_) | IrNode::Literal(_) => IrNode::Epsilon,
-        // Body is an Alt of Literals → continuation is Epsilon.
-        IrNode::Alt(alts, _) if alts.iter().all(|b| matches!(&b.node, IrNode::Literal(_))) => {
-            IrNode::Epsilon
-        }
-        _ => body.clone(),
-    }
-}
-
-/// Compute FIRST set for a continuation node.
-fn leading_first_set(
-    node: &IrNode,
-    rule_first_sets: &[CharSet128],
-    strings: &[String],
-) -> Option<CharSet128> {
-    match node {
-        IrNode::Literal(sid) => {
-            let s = &strings[*sid as usize];
-            s.bytes().next().map(|b| {
-                let mut cs = CharSet128::new();
-                cs.add(b);
-                cs
-            })
-        }
-        IrNode::Regex(sid) => crate::regex_first::regex_first_chars(&strings[*sid as usize]),
-        IrNode::Ref(id) => rule_first_sets.get(*id as usize).cloned(),
-        IrNode::Seq(children) if !children.is_empty() => {
-            leading_first_set(&children[0], rule_first_sets, strings)
-        }
-        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
-            leading_first_set(inner, rule_first_sets, strings)
-        }
-        // Next(a, b) parses a then b, FIRST = FIRST(a).
-        IrNode::Next(a, _) => leading_first_set(a, rule_first_sets, strings),
-        // Skip(a, b) parses a then b, FIRST = FIRST(a).
-        IrNode::Skip(a, _) => leading_first_set(a, rule_first_sets, strings),
-        IrNode::Alt(branches, _) if !branches.is_empty() => {
-            // Union of all branch FIRST sets.
-            let mut result = CharSet128::new();
-            for b in branches {
-                if let Some(fs) = leading_first_set(&b.node, rule_first_sets, strings) {
-                    result.union(&fs);
-                } else {
-                    return None; // Nullable branch → unknown.
-                }
-            }
-            Some(result)
-        }
-        IrNode::Epsilon => None, // Nullable.
-        _ => None,
-    }
 }

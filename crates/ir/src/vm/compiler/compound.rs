@@ -1,83 +1,15 @@
-//! IR → Bytecode compiler.
-//!
-//! Compiles a `GrammarIR` into a `BytecodeProgram` for the VM interpreter.
+//! Compound-node compilers — sequence, alternation (linear + dispatch),
+//! token dispatch, repetition, Skip/Next, Minus, Negate.
 
-use super::bytecode::{
-    BytecodeProgram, DispatchData, Op, SourceMapEntry, TokenDispatchArmData, TokenDispatchData,
+use crate::vm::bytecode::{
+    DispatchData, Op, TokenDispatchArmData, TokenDispatchData,
 };
-use crate::{AltBranch, GrammarIR, IrNode, MemoStrategy, TokenDispatchArm};
+use crate::{AltBranch, AltDispatch, GrammarIR, IrNode, TokenDispatchArm};
 
-/// Compile a GrammarIR to bytecode.
-pub fn compile(ir: &GrammarIR) -> BytecodeProgram {
-    compile_with_debug(ir, false)
-}
-
-/// Compile a GrammarIR to bytecode, optionally generating debug info.
-///
-/// When `debug` is true:
-/// - Source map entries are emitted for each rule
-/// - `DebugBreak` opcodes are emitted for `@debug`-annotated rules
-pub fn compile_with_debug(ir: &GrammarIR, debug: bool) -> BytecodeProgram {
-    let memo_enabled = grammar_needs_memo(ir);
-    let mut compiler = Compiler {
-        code: Vec::new(),
-        entries: vec![0; ir.rules.len()],
-        dispatch_tables: Vec::new(),
-        token_dispatch_tables: Vec::new(),
-        source_map: Vec::new(),
-        debug,
-        debug_all: ir.debug_all,
-        memo_enabled,
-    };
-
-    for rule in &ir.rules {
-        compiler.compile_rule(rule, ir);
-    }
-
-    compiler.emit(Op::Halt);
-
-    // Collect rule name StringIds for error messages.
-    let rule_names: Vec<u32> = ir.rules.iter().map(|r| r.name).collect();
-
-    let mut program = BytecodeProgram {
-        code: compiler.code,
-        entries: compiler.entries,
-        strings: ir.strings.clone(),
-        entry: ir.entry,
-        memo_enabled,
-        dispatch_tables: compiler.dispatch_tables,
-        token_dispatch_tables: compiler.token_dispatch_tables,
-        compiled_regexes: Vec::new(),
-        follow_sets: ir.follow_sets.clone(),
-        rule_names,
-        source_map: compiler.source_map,
-    };
-
-    // Pre-compile all regex patterns referenced by MatchRegex opcodes.
-    program.prepare_regexes();
-
-    program
-}
-
-struct Compiler {
-    code: Vec<Op>,
-    entries: Vec<u32>,
-    /// Dispatch tables stored by index (referenced via `Op::Dispatch(idx)`).
-    dispatch_tables: Vec<DispatchData>,
-    /// Token-dispatch tables stored by index (referenced via `Op::DispatchToken(idx)`).
-    token_dispatch_tables: Vec<TokenDispatchData>,
-    /// Source map entries (only populated when `debug` is true).
-    source_map: Vec<SourceMapEntry>,
-    /// Whether to generate debug info.
-    debug: bool,
-    /// Whether all rules are instrumented (`@debug *`).
-    debug_all: bool,
-    /// Whether the program should emit VM memo ops at all.
-    memo_enabled: bool,
-}
+use super::Compiler;
 
 /// Common scratch state for lowering backtracking dispatches.
-struct DispatchPatchPlan {
+pub(super) struct DispatchPatchPlan {
     branch_offsets: Vec<u32>,
     fail_jumps: Vec<usize>,
     success_jumps: Vec<usize>,
@@ -105,178 +37,11 @@ impl DispatchPatchPlan {
     }
 }
 
-fn grammar_needs_memo(ir: &GrammarIR) -> bool {
-    ir.rules.iter().any(|rule| {
-        rule.meta.memo != MemoStrategy::None && node_has_direct_left_recursion(&rule.body, rule.id)
-    })
-}
-
-fn node_has_direct_left_recursion(node: &IrNode, rule_id: u32) -> bool {
-    match node {
-        IrNode::Ref(id) => *id == rule_id,
-        IrNode::Seq(children) => children
-            .first()
-            .is_some_and(|first| node_has_direct_left_recursion(first, rule_id)),
-        IrNode::Alt(branches, _) => branches
-            .iter()
-            .any(|branch| node_has_direct_left_recursion(&branch.node, rule_id)),
-        _ => false,
-    }
-}
-
-// ── Core emit/patch helpers ─────────────────────────────────────────────────
-
-impl Compiler {
-    fn emit(&mut self, op: Op) -> usize {
-        let idx = self.code.len();
-        self.code.push(op);
-        idx
-    }
-
-    fn current_offset(&self) -> u32 {
-        self.code.len() as u32
-    }
-
-    /// Patch a previously emitted instruction.
-    fn patch(&mut self, idx: usize, op: Op) {
-        self.code[idx] = op;
-    }
-
-    /// Patch a list of `JumpIfFail` placeholders to the given target.
-    fn patch_fail_jumps(&mut self, indices: &[usize], target: u32) {
-        for &idx in indices {
-            self.code[idx] = Op::JumpIfFail(target);
-        }
-    }
-}
-
-// ── Rule compilation ────────────────────────────────────────────────────────
-
-impl Compiler {
-    fn compile_rule(&mut self, rule: &crate::IrRule, ir: &GrammarIR) {
-        let entry = self.code.len() as u32;
-        self.entries[rule.id as usize] = entry;
-
-        // Emit source map entry when debug info is requested.
-        if self.debug {
-            if let Some(ref span) = rule.source_span {
-                self.source_map.push(SourceMapEntry {
-                    pc: entry,
-                    rule_id: rule.id,
-                    span: span.clone(),
-                });
-            }
-        }
-
-        // Emit debug breakpoint at rule entry for @debug-annotated rules.
-        let rule_debug = self.debug_all || rule.meta.directives.debug;
-        if rule_debug {
-            self.emit(Op::DebugBreak {
-                rule_id: rule.id,
-                is_entry: true,
-            });
-        }
-
-        // Emit memo check for memoized rules.
-        let memo_check_idx = if self.memo_enabled && rule.meta.memo != MemoStrategy::None {
-            Some(self.emit(Op::MemoCheck {
-                rule_id: rule.id,
-                hit_offset: 0,
-            }))
-        } else {
-            None
-        };
-
-        self.compile_node(&rule.body, ir);
-
-        // Tag the result with the rule name for non-transparent, non-alias rules.
-        // Transparent rules and aliases pass through their inner value unwrapped.
-        let should_tag = !rule.meta.is_transparent && rule.meta.is_alias.is_none();
-        if should_tag {
-            self.emit(Op::MakeTagged(rule.name));
-        }
-
-        if self.memo_enabled && rule.meta.memo != MemoStrategy::None {
-            self.emit(Op::MemoStore(rule.id));
-        }
-
-        // Emit debug breakpoint at rule exit.
-        if rule_debug {
-            self.emit(Op::DebugBreak {
-                rule_id: rule.id,
-                is_entry: false,
-            });
-        }
-
-        let return_idx = self.emit(Op::Return);
-
-        // Patch memo check to jump to the Return instruction on cache hit.
-        // The Return is needed to pop the call frame when we entered via Call.
-        if let Some(idx) = memo_check_idx {
-            if let Op::MemoCheck { hit_offset, .. } = &mut self.code[idx] {
-                *hit_offset = return_idx as u32;
-            }
-        }
-    }
-}
-
-// ── Node compilation ────────────────────────────────────────────────────────
-
-impl Compiler {
-    fn compile_node(&mut self, node: &IrNode, ir: &GrammarIR) {
-        match node {
-            IrNode::Literal(sid) => {
-                self.emit(Op::MatchString(*sid));
-            }
-            IrNode::Regex(sid) => {
-                self.emit(Op::MatchRegex(*sid));
-            }
-            IrNode::Epsilon => {
-                self.emit(Op::Epsilon);
-            }
-            IrNode::Ref(rule_id) => {
-                self.emit(Op::Call(*rule_id));
-            }
-            IrNode::Seq(children) => self.compile_seq(children, ir),
-            IrNode::Alt(branches, dispatch) => self.compile_alt(branches, dispatch.as_ref(), ir),
-            IrNode::Repeat { inner, lo, hi } => self.compile_repeat(inner, *lo, *hi, ir),
-            IrNode::Skip(left, right) => self.compile_binary_backtrack(left, right, true, ir),
-            IrNode::Next(left, right) => self.compile_binary_backtrack(left, right, false, ir),
-            IrNode::Minus(left, right) => self.compile_minus(left, right, ir),
-            IrNode::Negate(inner) => self.compile_negate(inner, ir),
-            IrNode::Map { inner, .. } => self.compile_node(inner, ir),
-            IrNode::OptionalWhitespace(inner) => {
-                // Use custom @ws pattern if available; otherwise basic ASCII whitespace.
-                if let Some(ws_sid) = ir.ws_pattern {
-                    self.emit(Op::TrimWsPattern(ws_sid));
-                } else {
-                    self.emit(Op::TrimWs);
-                }
-                self.compile_node(inner, ir);
-                if let Some(ws_sid) = ir.ws_pattern {
-                    self.emit(Op::TrimWsPattern(ws_sid));
-                } else {
-                    self.emit(Op::TrimWs);
-                }
-            }
-            IrNode::TokenDispatch {
-                token,
-                arms,
-                fallback,
-            } => {
-                self.compile_token_dispatch(token, arms, fallback, ir);
-            }
-        }
-    }
-}
-
-// ── Compound node compilation ───────────────────────────────────────────────
-
 impl Compiler {
     /// Compile a sequence: SaveState → child₁ → JumpIfFail → child₂ → ... → DropState.
     ///
     /// Uses a proper fixup list to avoid the global `JumpIfFail(0)` patching bug.
-    fn compile_seq(&mut self, children: &[IrNode], ir: &GrammarIR) {
+    pub(super) fn compile_seq(&mut self, children: &[IrNode], ir: &GrammarIR) {
         if children.len() <= 1 {
             for child in children {
                 self.compile_node(child, ir);
@@ -311,10 +76,10 @@ impl Compiler {
     ///
     /// If the dispatch pass has pre-computed a dispatch table (`AltDispatch`),
     /// emits an O(1) `Dispatch` instruction. Otherwise falls back to linear backtracking.
-    fn compile_alt(
+    pub(super) fn compile_alt(
         &mut self,
         branches: &[AltBranch],
-        dispatch: Option<&crate::AltDispatch>,
+        dispatch: Option<&AltDispatch>,
         ir: &GrammarIR,
     ) {
         if branches.is_empty() {
@@ -402,7 +167,7 @@ impl Compiler {
     fn compile_dispatch(
         &mut self,
         branches: &[AltBranch],
-        dispatch: &crate::AltDispatch,
+        dispatch: &AltDispatch,
         ir: &GrammarIR,
     ) {
         // Save state before dispatch so we can restore on branch failure.
@@ -462,7 +227,7 @@ impl Compiler {
         );
     }
 
-    fn compile_token_dispatch(
+    pub(super) fn compile_token_dispatch(
         &mut self,
         token: &IrNode,
         arms: &[TokenDispatchArm],
@@ -530,7 +295,7 @@ impl Compiler {
     }
 
     /// Compile repetition: RepeatBegin → body → RepeatEnd.
-    fn compile_repeat(&mut self, inner: &IrNode, lo: u32, hi: u32, ir: &GrammarIR) {
+    pub(super) fn compile_repeat(&mut self, inner: &IrNode, lo: u32, hi: u32, ir: &GrammarIR) {
         let begin_idx = self.emit(Op::RepeatBegin {
             lo,
             hi,
@@ -549,7 +314,7 @@ impl Compiler {
     /// Compile Skip (`a << b`) and Next (`a >> b`) — shared backtracking structure.
     ///
     /// `is_skip`: true for Skip (`<<`, keep left), false for Next (`>>`, keep right).
-    fn compile_binary_backtrack(
+    pub(super) fn compile_binary_backtrack(
         &mut self,
         left: &IrNode,
         right: &IrNode,
@@ -590,7 +355,7 @@ impl Compiler {
     }
 
     /// Compile set-difference: match left only if right does NOT match.
-    fn compile_minus(&mut self, left: &IrNode, right: &IrNode, ir: &GrammarIR) {
+    pub(super) fn compile_minus(&mut self, left: &IrNode, right: &IrNode, ir: &GrammarIR) {
         self.emit(Op::SaveState);
 
         // Try right first (to check exclusion).
@@ -616,7 +381,7 @@ impl Compiler {
     }
 
     /// Compile zero-width negative assertion.
-    fn compile_negate(&mut self, inner: &IrNode, ir: &GrammarIR) {
+    pub(super) fn compile_negate(&mut self, inner: &IrNode, ir: &GrammarIR) {
         self.emit(Op::SaveState);
         self.compile_node(inner, ir);
         let inner_ok = self.emit(Op::JumpIfOk(0));

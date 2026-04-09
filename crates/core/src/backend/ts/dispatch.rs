@@ -6,7 +6,7 @@ use super::code::{TsCode, TsEmitCtx, TsEmitter};
 use super::helpers::ts_escape;
 
 impl TsEmitter {
-    pub(super) fn token_dispatch(
+    pub(in crate::backend::ts) fn token_dispatch(
         &mut self,
         token: TsCode,
         arms: Vec<TokenDispatchArmCompiled<TsCode>>,
@@ -53,7 +53,7 @@ impl TsEmitter {
         TsCode::new(stmts, result)
     }
 
-    pub(super) fn delim_scan(
+    pub(in crate::backend::ts) fn delim_scan(
         &mut self,
         config: &DelimScanConfig,
         ctx: &mut TsEmitCtx,

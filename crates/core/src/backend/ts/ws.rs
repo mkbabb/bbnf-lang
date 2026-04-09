@@ -4,7 +4,7 @@ use super::code::{TsCode, TsEmitCtx, TsEmitter};
 use super::helpers::ws_skip_stmts;
 
 impl TsEmitter {
-    pub(super) fn ws_trim(
+    pub(in crate::backend::ts) fn ws_trim(
         &mut self,
         ws_pattern: Option<&str>,
         ctx: &mut TsEmitCtx,
@@ -12,7 +12,7 @@ impl TsEmitter {
         TsCode::new(ws_skip_stmts(ws_pattern, ctx), "{}")
     }
 
-    pub(super) fn with_ws_trim(
+    pub(in crate::backend::ts) fn with_ws_trim(
         &mut self,
         inner: TsCode,
         ws_pattern: Option<&str>,

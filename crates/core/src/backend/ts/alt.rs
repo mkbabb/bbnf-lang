@@ -6,10 +6,10 @@ use crate::backend::patterns::key_dispatch::{KeyClass, KeyDispatchConfig};
 use crate::backend::{ValuePlacement, AltBranchInfo, KeyDispatchBranch};
 
 use super::code::{TsCode, TsEmitCtx, TsEmitter};
-use super::helpers::{ts_escape, unescape_literal};
+use super::helpers::ts_escape;
 
 impl TsEmitter {
-    pub(super) fn alt_dispatch(
+    pub(in crate::backend::ts) fn alt_dispatch(
         &mut self,
         table: &AltDispatch,
         branches: Vec<(AltBranchInfo, TsCode)>,
@@ -51,7 +51,7 @@ impl TsEmitter {
         TsCode::new(stmts, result)
     }
 
-    pub(super) fn alt_checkpoint(
+    pub(in crate::backend::ts) fn alt_checkpoint(
         &mut self,
         branches: Vec<(AltBranchInfo, TsCode)>,
         _alloc: ValuePlacement,
@@ -75,7 +75,7 @@ impl TsEmitter {
         TsCode::new(stmts, result)
     }
 
-    pub(super) fn alt_all_literal(
+    pub(in crate::backend::ts) fn alt_all_literal(
         &mut self,
         literals: Vec<(String, TsCode)>,
         _alloc: ValuePlacement,
@@ -94,7 +94,7 @@ impl TsEmitter {
         TsCode::new(stmts, result)
     }
 
-    pub(super) fn key_dispatch(
+    pub(in crate::backend::ts) fn key_dispatch(
         &mut self,
         config: &KeyDispatchConfig,
         branches: Vec<KeyDispatchBranch<TsCode>>,

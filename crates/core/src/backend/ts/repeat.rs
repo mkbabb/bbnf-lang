@@ -7,7 +7,7 @@ use crate::backend::{ValuePlacement, SepByConfig};
 use super::code::{TsCode, TsEmitCtx, TsEmitter};
 
 impl TsEmitter {
-    pub(super) fn repeat_many(
+    pub(in crate::backend::ts) fn repeat_many(
         &mut self,
         body: TsCode,
         lo: u32,
@@ -34,7 +34,7 @@ impl TsEmitter {
         TsCode::new(stmts, result)
     }
 
-    pub(super) fn repeat_optional(
+    pub(in crate::backend::ts) fn repeat_optional(
         &mut self,
         body: TsCode,
         _inner_type: &TypeDesc,
@@ -52,7 +52,7 @@ impl TsEmitter {
         TsCode::new(stmts, result)
     }
 
-    pub(super) fn sep_by(
+    pub(in crate::backend::ts) fn sep_by(
         &mut self,
         element: TsCode,
         separator: TsCode,

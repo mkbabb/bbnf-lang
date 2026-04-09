@@ -147,6 +147,23 @@ impl DriverState {
         self.key_dispatch_configs.get(&id)
     }
 
+    /// Tranche V.8: look up the V.6 recognizer decision for a node.
+    ///
+    /// Resolves via the durable DAG in `ir.dag`. Consumers (the
+    /// per-kind drivers and the strategy solvers) read this in
+    /// preference to recomputing decisions inline. Returns `None` if
+    /// the DAG is absent, the node was not present when the DAG was
+    /// built, or no decision was produced for the node (e.g.,
+    /// architecturally simple nodes that need no decision).
+    pub fn recognizer_decision<'a>(
+        &self,
+        node: &IrNode,
+        ir: &'a GrammarIR,
+    ) -> Option<&'a bbnf_ir::passes::csp_recognizers::RecognizerDecision> {
+        let id = ir.dag.as_ref()?.node_for(node)?;
+        ir.recognizer_decisions.get(&id)
+    }
+
     /// Register a regex pattern and return its stable ID. If the
     /// pattern was already seen, returns the existing ID.
     pub fn register_regex(&mut self, pattern: &str) -> usize {

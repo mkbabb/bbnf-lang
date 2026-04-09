@@ -204,7 +204,6 @@ dependencies = [
  "egraph-derive",
  "parse_that",
  "rayon",
- "regex",
  "rmp-serde",
  "rustc-hash 2.1.2",
  "serde",

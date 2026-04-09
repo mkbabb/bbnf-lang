@@ -38,16 +38,19 @@ Grammar file(s)
   → Analysis: Tarjan SCC, topological sort, FIRST sets, aliases, span-eligibility
   → Optional left-recursion elimination (Paull's + direct)
   → Lower to IR (lower_to_ir → GrammarIR)
-  → IR passes (18 operations / 16 unique passes, must mirror pipeline.rs ordering):
-      1. canonicalize_aliases      10. factor_common_prefixes
-      2. prune_unreachable         11. sort_alt_branches
-      3. inline_acyclic            12. refine_span_eligibility
-      4. prune_unreachable (2nd)   13. compute_follow_sets
-      5. fuse_single_use           14. factor_regex_with_lookahead
-      6. prune_unreachable (3rd)   15. fuse_token_dispatch
-      7. eliminate_epsilon         16. generate_dispatch_tables
-      8. merge_literals            17. project_types
-      9. merge_regex_alts
+  → IR passes (16 operations / 14 unique passes, must mirror pipeline.rs ordering):
+      1. canonicalize_aliases      9. factor_common_prefixes
+      2. prune_unreachable         10. sort_alt_branches
+      3. inline_acyclic            11. refine_span_eligibility
+      4. prune_unreachable (2nd)   12. compute_follow_sets
+      5. fuse_single_use           13. factor_regex_with_lookahead
+      6. prune_unreachable (3rd)   14. fuse_token_dispatch
+      7. eliminate_epsilon         15. generate_dispatch_tables
+      8. merge_literals            16. project_types
+  (merge_regex_alts and simplify_regex_algebra were deleted in
+  Tranche H-7 — the retained grammar-tier e-graph rules plus the
+  bbnf-regex HIR e-graph saturation cover every rewrite they
+  performed.)
   → Rust codegen: codegen/ → TokenStream (enum + parser methods)
   → Grammar array embedding (include_str!)
 ```

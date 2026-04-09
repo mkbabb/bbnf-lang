@@ -25,7 +25,6 @@ bbnf-ir/
 │       ├── inline.rs      inline_acyclic — inline small acyclic rule bodies
 │       ├── fuse.rs        fuse_single_use — inline single-use rules regardless of size
 │       ├── optimize.rs    eliminate_epsilon, merge_literals
-│       ├── merge_regex.rs merge_regex_alts — fuse Alt([Regex, ...]) into single pattern
 │       ├── prefix.rs      factor_common_prefixes — left-factor shared prefixes
 │       ├── span.rs        refine_span_eligibility, compute_sp_method_rules
 │       ├── follow.rs      compute_follow_sets — FOLLOW set fixed-point iteration
@@ -56,7 +55,7 @@ bbnf-ir/
 
 ## IR Pass Pipeline
 
-18 operations (16 unique passes) run in this exact order (must stay in sync
+16 operations (14 unique passes) run in this exact order (must stay in sync
 with `bbnf/src/pipeline.rs` and `bbnf-derive/src/lib.rs`):
 
 1. `canonicalize_aliases` — resolve alias chains to direct references (O(1) lookup)
@@ -67,15 +66,23 @@ with `bbnf/src/pipeline.rs` and `bbnf-derive/src/lib.rs`):
 6. `prune_unreachable` *(third pass)* — remove rules made dead by fusing
 7. `eliminate_epsilon` — simplify epsilon-containing sequences/alternations; extended to handle `Repeat(Epsilon,0,..)→Epsilon`, `Skip(Epsilon,x)→x`, `Next(x,Epsilon)→x`, nested `OptionalWhitespace` fusion
 8. `merge_literals` — fuse adjacent literals in sequences (with string deduplication)
-9. `merge_regex_alts` — combine regex/literal alternation branches into one pattern (mixed literal+regex fusion)
-10. `factor_common_prefixes` — left-factor shared prefixes in alternations
-11. `sort_alt_branches` — sort alternation branches for deterministic codegen
-12. `refine_span_eligibility` — propagate span eligibility through rule graph
-13. `compute_follow_sets` — FOLLOW set fixed-point iteration (with Repeat inner Seq propagation, regex FIRST sets)
-14. `factor_regex_with_lookahead` — factor Alt branches with overlapping regex FIRST sets but disjoint continuation FIRST sets
-15. `fuse_token_dispatch` — fuse `@token`-marked rules at dispatch call sites (inline body, preserve variant)
-16. `generate_dispatch_tables` — build O(1) byte-dispatch for disjoint alternations (regex FIRST sets via `regex_first` module)
-17. `project_types` — populate `GrammarIR::types` with `TypeDesc` for each rule; `project_node_in_vec` sub-pass handles Vec context type projection
+9. `factor_common_prefixes` — left-factor shared prefixes in alternations
+10. `sort_alt_branches` — sort alternation branches for deterministic codegen
+11. `refine_span_eligibility` — propagate span eligibility through rule graph
+12. `compute_follow_sets` — FOLLOW set fixed-point iteration (with Repeat inner Seq propagation, regex FIRST sets)
+13. `factor_regex_with_lookahead` — factor Alt branches with overlapping regex FIRST sets but disjoint continuation FIRST sets
+14. `fuse_token_dispatch` — fuse `@token`-marked rules at dispatch call sites (inline body, preserve variant)
+15. `generate_dispatch_tables` — build O(1) byte-dispatch for disjoint alternations (regex FIRST sets via `regex_first` module)
+16. `project_types` — populate `GrammarIR::types` with `TypeDesc` for each rule; `project_node_in_vec` sub-pass handles Vec context type projection
+
+**Removed in Tranche H-7**: `merge_regex_alts` and `simplify_regex_algebra`
+used to run between `merge_literals` and `factor_common_prefixes` (18
+operations total). They are now handled by the retained grammar-tier
+e-graph rules (`DeduplicateAltBranches`, `SupersetAbsorbAlt`,
+`UnionMergeAlt`, `FuseAltRegexBranches` in `crate::egraph::rules::regex`)
+plus the HIR e-graph saturation in `bbnf-regex`. Grammar-tier rules run
+during the single post-normalizer e-graph saturation; HIR saturation
+runs inside `RegexInfo::analyze_from_hir` on every pattern string.
 
 ## Durable DAG substrate
 
@@ -108,4 +115,3 @@ JSON (`to_json`/`from_json`) for debugging.
 ## Dependencies
 
 - **serde** + **rmp-serde** — serialization
-- **regex** — used by `merge_regex_alts` pass for pattern validation 

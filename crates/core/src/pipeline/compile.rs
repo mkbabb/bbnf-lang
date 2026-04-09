@@ -335,8 +335,18 @@ fn compile_ast_common<'a>(
             bbnf_ir::passes::prune_unreachable(&mut ir);
             bbnf_ir::passes::eliminate_epsilon(&mut ir);
             bbnf_ir::passes::merge_literals(&mut ir);
-            bbnf_ir::passes::simplify_regex_algebra(&mut ir);
-            bbnf_ir::passes::merge_regex_alts(&mut ir);
+            // simplify_regex_algebra and merge_regex_alts deleted in
+            // Tranche H-7 after Gate B parity proof: the retained
+            // grammar-tier e-graph rules (DeduplicateAltBranches,
+            // SupersetAbsorbAlt, UnionMergeAlt, FuseAltRegexBranches
+            // in crates/ir/src/egraph/rules/regex.rs) cover every
+            // rewrite these destructive passes performed, using the
+            // same bbnf_regex::algebra helpers and the same
+            // pattern_has_top_level_pipe grouping logic. The HIR
+            // e-graph landed in H-3..H-6 additionally canonicalizes
+            // each individual pattern's HIR before these grammar-tier
+            // rules compare them, sharpening the retained rules
+            // without replacing them.
             bbnf_ir::passes::factor_common_prefixes(&mut ir);
 
             if ir.structural_fingerprint() == fingerprint {

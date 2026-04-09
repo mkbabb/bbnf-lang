@@ -17,6 +17,3 @@ rayon = "1"
 csp-solver = "0.1"
 egraph = { path = "../egraph" }
 egraph-derive = { path = "../egraph-derive" }
-
-[dev-dependencies]
-regex = "1"

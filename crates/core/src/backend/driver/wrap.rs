@@ -111,9 +111,12 @@ pub(super) fn compile_wrap<E: Emitter>(
                 .and_then(|id| ir.recognizer_decisions.get(&id))
                 .and_then(|d| d.wrap_mode.as_ref());
             let csp_allows_delim_scan = match csp_wrap_mode {
-                // CSP explicitly chose a delim-scan flavor or left
-                // the decision to the backend (no WrapMode var).
-                Some(WrapMode::DelimScan) | Some(WrapMode::BalancedScan) | None => true,
+                // CSP explicitly chose BalancedScan or left the
+                // decision to the backend (no WrapMode var). The
+                // upstream `delim_scan_configs` sidecar gates the
+                // actual emission; the WrapMode here is just a
+                // veto channel.
+                Some(WrapMode::BalancedScan) | None => true,
                 // CSP chose Generic or SepBy — honor the decision.
                 Some(WrapMode::Generic) | Some(WrapMode::SepBy) => false,
             };

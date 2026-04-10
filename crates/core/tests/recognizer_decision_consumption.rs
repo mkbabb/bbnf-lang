@@ -43,11 +43,19 @@ fn alt_mode_consumer(mode: AltMode) -> &'static str {
 }
 
 /// Exhaustive consumer mapping for `WrapMode`.
+///
+/// Tranche Z.5: the former `WrapMode::DelimScan` variant was deleted
+/// as a ghost — `build_wrap_domain` never added it to the CSP and
+/// `fallback_wrap_mode` never returned it. The two consumer sites
+/// (`backend::driver::wrap` and `backend::recognizer_plan`) treated
+/// it as a synonym of `BalancedScan`. The forward-`memchr`-to-close
+/// emission path is gated on the upstream `delim_scan_configs`
+/// sidecar; the per-NodeId `WrapMode` value never carried delim-scan
+/// semantics independently.
 fn wrap_mode_consumer(mode: WrapMode) -> &'static str {
     match mode {
         WrapMode::Generic => "backend::driver::wrap (generic fallback)",
         WrapMode::SepBy => "backend::driver::wrap (sep_by recognition)",
-        WrapMode::DelimScan => "backend::driver::wrap (emit_delim_scan path)",
         WrapMode::BalancedScan => "backend::driver::wrap (balanced-scan path)",
     }
 }
@@ -120,7 +128,6 @@ fn every_wrap_mode_has_a_consumer() {
     let all = [
         WrapMode::Generic,
         WrapMode::SepBy,
-        WrapMode::DelimScan,
         WrapMode::BalancedScan,
     ];
     for mode in all {

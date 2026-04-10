@@ -139,13 +139,25 @@ pub enum WrapMode {
     Generic,
     /// Separator-by repeat.
     SepBy,
-    /// Delimiter scan (forward memchr to close).
-    DelimScan,
     /// Balanced delimiter scan (handles nested open/close).
+    /// Also covers the forward-`memchr`-to-close case the deleted
+    /// `DelimScan` variant used to gate.
     BalancedScan,
     // Tranche Y.2: `WrapMode::SharedHelper(u64)` deleted alongside
     // its Alt counterpart — same rationale (zero backend consumers,
     // no measurable bench pressure).
+    //
+    // Tranche Z.5: `WrapMode::DelimScan` deleted as a ghost variant.
+    // `build_wrap_domain` never added it to the CSP domain and
+    // `fallback_wrap_mode` never returned it. The two consumer
+    // sites (`backend::driver::wrap` and `backend::recognizer_plan`)
+    // pattern-matched it as a synonym of `BalancedScan`. The
+    // forward-`memchr`-to-close emission path is gated on the
+    // upstream `delim_scan_configs` sidecar (populated by
+    // `delim_scan::collect`) plus a permissive `wrap_mode` check;
+    // the per-NodeId `WrapMode` value never carried delim-scan
+    // semantics independently. Y.13's consumer-invariant test was
+    // updated to drop the variant from its exhaustive match.
 }
 
 /// Engine chosen for a regex pattern at a specific call site.

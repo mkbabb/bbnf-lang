@@ -6,6 +6,7 @@
 //! - Delimiter-scan optimization (forward memchr pivot).
 //! - Generic wrap fallback.
 
+use bbnf_ir::passes::csp_strategy::WrapMode;
 use bbnf_ir::{GrammarIR, IrNode, TypeDesc};
 
 use super::DriverState;
@@ -85,15 +86,44 @@ pub(super) fn compile_wrap<E: Emitter>(
         }
     }
 
-    // Delimiter-scan optimization. Skip when alloc=Alloc — delim
-    // scan always produces Span, but BoxedEnum rules need the full
-    // typed result for variant wrapping. Pre-solved configs live
-    // in `DriverState.delim_scan_configs`, keyed by the wrap
-    // root's `NodeId`.
+    // Delimiter-scan optimization (Tranche X.8c AOT consumption).
+    //
+    // Skip when alloc=Alloc — delim scan always produces Span, but
+    // BoxedEnum rules need the full typed result for variant
+    // wrapping. The pre-solved configs live in
+    // `DriverState.delim_scan_configs` (cloned from
+    // `ir.delim_scan_configs` during `BackendPreparation::from_ir`),
+    // keyed by the wrap root's `NodeId`.
+    //
+    // The IR's per-NodeId `WrapMode` decision in
+    // `ir.recognizer_decisions` is the authoritative CSP-level
+    // strategy flag. When both the config and the decision agree
+    // that DelimScan applies, the backend emits the scanner body.
+    // If the CSP decided against DelimScan the backend honors the
+    // decision and falls through to the generic wrap emitter — this
+    // is the single data path the §8c gate asserts.
     if alloc == ValuePlacement::Inline {
         if let Some(config) = dstate.delim_scan_config(wrap_root, ir) {
-            if let Some(output) = emitter.emit_delim_scan(config, ctx) {
-                return output;
+            let csp_wrap_mode = ir
+                .dag
+                .as_ref()
+                .and_then(|dag| dag.node_for(wrap_root))
+                .and_then(|id| ir.recognizer_decisions.get(&id))
+                .and_then(|d| d.wrap_mode.as_ref());
+            let csp_allows_delim_scan = match csp_wrap_mode {
+                // CSP explicitly chose a delim-scan flavor or left
+                // the decision to the backend (no WrapMode var).
+                Some(WrapMode::DelimScan)
+                | Some(WrapMode::BalancedScan)
+                | Some(WrapMode::SharedHelper(_))
+                | None => true,
+                // CSP chose Generic or SepBy — honor the decision.
+                Some(WrapMode::Generic) | Some(WrapMode::SepBy) => false,
+            };
+            if csp_allows_delim_scan {
+                if let Some(output) = emitter.emit_delim_scan(config, ctx) {
+                    return output;
+                }
             }
         }
     }

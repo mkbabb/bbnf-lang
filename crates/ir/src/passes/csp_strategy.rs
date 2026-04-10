@@ -295,6 +295,25 @@ fn solve_rule(
     };
     let solutions = csp.solve_optimized(&config);
 
+    // Tranche Y.-1: the csp-solver carries a default node budget
+    // (`SolveConfig::node_budget`) so that a pathological search cannot
+    // hang the compile. If the budget fires, fall back to the trivial
+    // per-variable pick — safe because it's the same answer branch-and-
+    // bound would give if all `ImplicationConstraint`s were dropped.
+    // This is the structured failure mode the X.6 global-CSP attempt
+    // lacked, and the precondition for Y.3 / Y.5 broadening the same
+    // failure surface.
+    if csp.stats().budget_exceeded {
+        #[cfg(debug_assertions)]
+        eprintln!(
+            "Note: csp_strategy::solve_rule hit the CSP node budget \
+             (nodes_explored={}); falling back to per-variable trivial pick",
+            csp.stats().nodes_explored
+        );
+        decode_min_cost_per_variable(&csp, &sites, decisions);
+        return;
+    }
+
     // ── Phase 4: decode solution → RecognizerDecisionMap ───────────────────
     if let Some(solution) = solutions.first() {
         for (var_id, site) in &sites {

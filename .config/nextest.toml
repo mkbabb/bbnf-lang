@@ -1,0 +1,50 @@
+# cargo-nextest configuration — Tranche Y.-1.c freezing guards.
+#
+# Complements the CSP node budget (Y.-1.a) and the bench wall-clock
+# guard (Y.-1.b). Without these guards, a performance regression that
+# sends a test into an infinite loop (or runaway CSP search, or
+# pathological backtracking) hangs the whole workspace test run until
+# the operator kills it by hand. With nextest + slow-timeout, a test
+# that stays "slow" for three consecutive 30-second windows is killed
+# automatically.
+#
+# Run with: cargo nextest run  (or make test with nextest installed)
+# Install:  cargo install cargo-nextest --locked
+
+[profile.default]
+# A test is "slow" if it runs longer than 30 seconds. After
+# terminate-after slow periods (3 * 30s = 90s total), nextest kills
+# the test process. 90 seconds is long enough for legitimately slow
+# tests (CSS L4 compile, full workspace fixture runs) and short
+# enough that a freeze doesn't cost a whole coffee break.
+slow-timeout = { period = "30s", terminate-after = 3 }
+
+# A test that produces no output for 100ms after exit is considered
+# a leak. This catches detached threads / background workers that
+# don't clean up — a signal of unreleased resources.
+leak-timeout = "100ms"
+
+# One retry on flake. Most real failures are deterministic; one
+# retry lets genuine flakes pass without masking real regressions.
+retries = { backoff = "fixed", count = 1, delay = "1s" }
+
+[profile.ci]
+# Tighter limits for CI. `terminate-after = 2` means 2 * 60s = 120s
+# max before kill. fail-fast = false so one test's failure doesn't
+# mask others in the same run.
+slow-timeout = { period = "60s", terminate-after = 2 }
+fail-fast = false
+retries = { backoff = "fixed", count = 1, delay = "1s" }
+
+# Specific overrides for tests that are legitimately slow.
+[[profile.default.overrides]]
+# Compile-pipeline integration tests exercise the full IR passes on
+# large grammars (CSS L4, sheets). Give them more headroom.
+filter = "test(compile)"
+slow-timeout = { period = "60s", terminate-after = 3 }
+
+[[profile.default.overrides]]
+# Bench-style tests (if any test is named `bench_*`) run cold
+# benchmarks and may take a few seconds even in the happy path.
+filter = "test(/bench_/)"
+slow-timeout = { period = "120s", terminate-after = 2 }

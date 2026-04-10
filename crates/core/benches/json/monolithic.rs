@@ -12,6 +12,10 @@ use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
 #[parser(path = "../../grammar/json/json.bbnf", slab)]
 struct JsonParser;
 
+#[path = "../common/timeout.rs"]
+mod timeout;
+use timeout::{bench_with_timeout, limits};
+
 const _: () = assert!(std::mem::size_of::<JsonParserEnum>() <= 48);
 
 fn load(name: &str) -> String {
@@ -36,7 +40,7 @@ macro_rules! bench {
                     input.len(),
                 );
             }
-            b.iter(|| {
+            bench_with_timeout(b, limits::JSON_PARSE, || {
                 let ctx = __JsonParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = JsonParser::value();
                 let ast = parser.parse_with_context(black_box(&input), &ctx).unwrap();

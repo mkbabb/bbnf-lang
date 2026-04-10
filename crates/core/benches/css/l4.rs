@@ -139,6 +139,10 @@ mod css_types {
 #[parser(path = "../../grammar/css/l4/stylesheet.bbnf", skip_recover, slab)]
 struct CssL4Parser;
 
+#[path = "../common/timeout.rs"]
+mod timeout;
+use timeout::{bench_with_timeout, limits};
+
 fn load(name: &str) -> String {
     let path = format!("../../data/css/{}", name);
     std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{}: {}", path, e))
@@ -161,7 +165,7 @@ macro_rules! bench {
                     input.len(),
                 );
             }
-            b.iter(|| {
+            bench_with_timeout(b, limits::CSS_TAILWIND_PARSE, || {
                 let slab = __CssL4ParserEnumCtx::with_capacity(input.len() / 32);
                 let parser = CssL4Parser::stylesheet();
                 let ast = parser.parse_with_context(black_box(&input), &slab).unwrap();

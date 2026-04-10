@@ -3,13 +3,21 @@
 //! Measures compile-time (CSP passes, lowering, optimization) not parse-time.
 //! Covers simple grammars (JSON, regex), medium (@import: BBNF, Sheets),
 //! and stress tests (CSS L4: 15 files, 973 lines, deep import chain).
+//!
+//! Each bench runs under a wall-clock guard (Tranche Y.-1.b) so that a
+//! performance regression cannot hang CI indefinitely. See
+//! `benches/common/timeout.rs` for the guard and its per-bench limits.
 
-use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
+use bencher::{Bencher, benchmark_group, benchmark_main};
 
 use bbnf::pipeline::{
     CompileRequest, CompileTarget, PipelineOptions, compile_grammar_request,
     compile_paths_request,
 };
+
+#[path = "common/timeout.rs"]
+mod timeout;
+use timeout::{bench_with_timeout, limits};
 
 fn vm_request() -> CompileRequest {
     CompileRequest {
@@ -35,19 +43,25 @@ fn load_grammar(name: &str) -> String {
 // JSON: 9 rules, ~30 lines
 fn compile_json(b: &mut Bencher) {
     let source = load_grammar("json/json.bbnf");
-    b.iter(|| black_box(compile_grammar_request(&source, &vm_request()).unwrap()));
+    bench_with_timeout(b, limits::COMPILE_JSON, || {
+        compile_grammar_request(&source, &vm_request()).unwrap()
+    });
 }
 
 // EBNF: 51 lines
 fn compile_ebnf(b: &mut Bencher) {
     let source = load_grammar("ebnf/ebnf.bbnf");
-    b.iter(|| black_box(compile_grammar_request(&source, &vm_request()).unwrap()));
+    bench_with_timeout(b, limits::COMPILE_EBNF, || {
+        compile_grammar_request(&source, &vm_request()).unwrap()
+    });
 }
 
 // CSS monolithic: 69 lines, single file (no imports), @pretty directives
 fn compile_css_mono(b: &mut Bencher) {
     let source = load_grammar("css/pretty.bbnf");
-    b.iter(|| black_box(compile_grammar_request(&source, &vm_request()).unwrap()));
+    bench_with_timeout(b, limits::COMPILE_CSS_MONO, || {
+        compile_grammar_request(&source, &vm_request()).unwrap()
+    });
 }
 
 // ── @import grammars ────────────────────────────────────────────────────────
@@ -55,20 +69,26 @@ fn compile_css_mono(b: &mut Bencher) {
 // BBNF: 80 lines, self-describing, uses @import
 fn compile_bbnf(b: &mut Bencher) {
     let path = grammar_path("bbnf/bbnf.bbnf");
-    b.iter(|| black_box(compile_paths_request(&[path.clone()], &vm_request()).unwrap()));
+    bench_with_timeout(b, limits::COMPILE_BBNF, || {
+        compile_paths_request(&[path.clone()], &vm_request()).unwrap()
+    });
 }
 
 // Google Sheets: 115 lines, uses @import
 fn compile_sheets(b: &mut Bencher) {
     let path = grammar_path("google-sheets/google-sheets.bbnf");
-    b.iter(|| black_box(compile_paths_request(&[path.clone()], &vm_request()).unwrap()));
+    bench_with_timeout(b, limits::COMPILE_SHEETS, || {
+        compile_paths_request(&[path.clone()], &vm_request()).unwrap()
+    });
 }
 
 // CSS L4: 15 files, 973 lines, deep @import chain — THE stress test.
 // Exercises type inference, FIRST/FOLLOW, dispatch tables across modules.
 fn compile_css_l4(b: &mut Bencher) {
     let path = grammar_path("css/l4/stylesheet.bbnf");
-    b.iter(|| black_box(compile_paths_request(&[path.clone()], &vm_request()).unwrap()));
+    bench_with_timeout(b, limits::COMPILE_CSS_L4, || {
+        compile_paths_request(&[path.clone()], &vm_request()).unwrap()
+    });
 }
 
 benchmark_group!(

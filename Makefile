@@ -33,13 +33,58 @@ build-wasm:
 	cd wasm && wasm-pack build --target web --out-dir ../playground/src/wasm
 
 # ─── Test ───────────────────────────────────────────────────────────────
+#
+# Tranche Y.-1.c — freezing guards.
+#
+# Prefer cargo-nextest (`.config/nextest.toml` configures slow-timeout
+# / terminate-after / leak-timeout). Install with:
+#   cargo install cargo-nextest --locked
+# If nextest is absent, fall back to `cargo test` under GNU `timeout`
+# (macOS: `gtimeout` via coreutils). As a last resort run plain
+# `cargo test` with a warning — at least CI should have one of
+# nextest or timeout installed.
+
+HAS_NEXTEST := $(shell command -v cargo-nextest 2>/dev/null)
+HAS_TIMEOUT := $(shell command -v timeout 2>/dev/null)
+HAS_GTIMEOUT := $(shell command -v gtimeout 2>/dev/null)
+
+# Per-test-binary wall clock, in seconds. 300s = 5 minutes is the
+# outer cap on an entire cargo test invocation; if your test run
+# legitimately needs more than that, split the target.
+TEST_TIMEOUT_SECS ?= 300
+
+ifdef HAS_NEXTEST
+  TEST_RUNNER := cargo nextest run --workspace
+  TEST_RUNNER_CI := cargo nextest run --workspace --profile ci
+else ifdef HAS_TIMEOUT
+  TEST_RUNNER := timeout $(TEST_TIMEOUT_SECS) cargo test --workspace
+  TEST_RUNNER_CI := timeout $(TEST_TIMEOUT_SECS) cargo test --workspace
+else ifdef HAS_GTIMEOUT
+  TEST_RUNNER := gtimeout $(TEST_TIMEOUT_SECS) cargo test --workspace
+  TEST_RUNNER_CI := gtimeout $(TEST_TIMEOUT_SECS) cargo test --workspace
+else
+  TEST_RUNNER := cargo test --workspace
+  TEST_RUNNER_CI := cargo test --workspace
+endif
 
 ## Run all tests
 test: test-rust
 
 ## Rust workspace tests (bbnf + lsp)
 test-rust:
-	cargo test --workspace
+ifndef HAS_NEXTEST
+  ifndef HAS_TIMEOUT
+    ifndef HAS_GTIMEOUT
+	@echo "warning: no test timeout available (install cargo-nextest or GNU timeout / gtimeout)"
+    endif
+  endif
+endif
+	$(TEST_RUNNER)
+
+## CI target — uses nextest's ci profile or falls back to the same
+## timeout wrapper as test-rust
+test-ci:
+	$(TEST_RUNNER_CI)
 
 ## Run LSP benchmarks
 bench:

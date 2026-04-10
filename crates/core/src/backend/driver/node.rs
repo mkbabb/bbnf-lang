@@ -13,19 +13,21 @@ use super::seq::compile_seq;
 use super::wrap::compile_wrap;
 use crate::backend::{Emitter, TokenDispatchArmCompiled, ValuePlacement};
 
-/// Check whether `node` has a recognizer fact carrying a Tranche X.10
-/// family shape (FunctionHead / HashPrefix / UnitTail / PunctWsRegion)
-/// and, if so, delegate to the emitter's kernel hook. Returns
-/// `Some(out)` to short-circuit the normal child-emission path.
+/// Check whether `node` has a recognizer fact carrying a Tranche
+/// X.11b family shape (`PunctWsRegion` — JSON / dictionary
+/// structural punctuation clusters). The sibling X.10 families
+/// (`FunctionHead`, `HashPrefix`, `UnitTail`) were deleted in
+/// Tranche Y.4 after a production-grammar profile showed zero
+/// matches on any grammar and (in FunctionHead's case) an
+/// architectural mismatch between the kernel's short-circuit
+/// semantics and CSS functions with bodies.
 ///
 /// Tranche Y.0: early-returns on `!ir.has_family_recognizers`. The
 /// flag is set once at the end of `mine_recognizers` iff any node in
-/// the grammar carries a family shape. Post-X profiling showed that
-/// every current production grammar (CSS L4, JSON, BBNF, Sheets,
-/// EBNF) has zero family matches, so the `dag.node_for + node_facts.
-/// get` probe on every node was pure parse-time overhead. Gating on
-/// the flag elides the probe entirely for non-matching grammars and
-/// preserves full behavior for matching ones.
+/// the grammar carries a surviving family shape (`PunctWsRegion`
+/// post-Y.4). Grammars that don't match (JSON, BBNF, Sheets, EBNF)
+/// pay zero per-node lookup overhead; grammars that do (CSS L4
+/// with 56 PunctWsRegion hits) pay the probe at every node.
 #[inline]
 fn try_emit_family_kernel<E: Emitter>(
     node: &IrNode,
@@ -49,10 +51,7 @@ fn try_emit_family_kernel<E: Emitter>(
     let facts = ir.node_facts.get(&node_id)?;
     let rec = facts.recognizer.as_ref()?;
     match &rec.shape {
-        RecognizerShape::FunctionHead { .. }
-        | RecognizerShape::HashPrefix { .. }
-        | RecognizerShape::UnitTail { .. }
-        | RecognizerShape::PunctWsRegion { .. } => {
+        RecognizerShape::PunctWsRegion { .. } => {
             emitter.emit_recognizer_family_kernel(&rec.shape, ctx)
         }
         _ => None,

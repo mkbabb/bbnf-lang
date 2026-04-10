@@ -309,15 +309,10 @@ impl Emitter for RustEmitter {
     ) -> Option<TokenStream> {
         use bbnf_ir::passes::patterns::RecognizerShape;
         match shape {
-            RecognizerShape::FunctionHead { name, paren_byte } => Some(
-                crate::backend::kernels::function_head::emit_call(name.as_slice(), *paren_byte),
-            ),
-            RecognizerShape::HashPrefix { .. } => {
-                Some(crate::backend::kernels::hash_prefix::emit_call())
-            }
-            RecognizerShape::UnitTail { unit } => Some(
-                crate::backend::kernels::unit_tail::emit_call_span(unit.as_slice()),
-            ),
+            // Tranche Y.4: FunctionHead / HashPrefix / UnitTail were
+            // deleted (zero production matches + FunctionHead's
+            // short-circuit kernel couldn't emit function bodies).
+            // Only PunctWsRegion survives from the X.10 / X.11b slate.
             RecognizerShape::PunctWsRegion { puncts } => Some(
                 crate::backend::kernels::punct_ws_region::emit_call(puncts.as_slice()),
             ),

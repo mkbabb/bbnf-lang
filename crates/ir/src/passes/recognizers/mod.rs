@@ -29,8 +29,6 @@
 mod balanced_wrap;
 mod comment_ws;
 pub mod delim_scan;
-mod function_head;
-mod hash_prefix;
 mod identifier;
 pub mod key_dispatch;
 mod node_facts;
@@ -40,7 +38,6 @@ mod quoted_string;
 mod separator_list;
 mod signature;
 mod token_led_branches;
-mod unit_tail;
 
 use crate::GrammarIR;
 use crate::passes::context::compute_context_facts;
@@ -103,12 +100,17 @@ pub fn mine_recognizers(ir: &mut GrammarIR) {
             separator_list::collect(ir, dag, &mut additions);
             token_led_branches::collect(ir, dag, &context_facts, &mut additions);
 
-            // Tranche X.10: CSS recognizer family expansion.
-            function_head::collect(ir, dag, &mut additions);
-            hash_prefix::collect(ir, dag, &mut additions);
-            unit_tail::collect(ir, dag, &mut additions);
-
-            // Tranche X.11b: JSON structural punctuation+ws recognition.
+            // Tranche Y.4: the three ghost-family miners that landed
+            // in Tranche X.10 (function_head, hash_prefix, unit_tail)
+            // produced zero matches on every production grammar —
+            // CSS L4, JSON, BBNF, Sheets, EBNF — and the FunctionHead
+            // kernel's emission semantics are structurally
+            // incompatible with CSS functions that have bodies
+            // anyway (the `try_emit_family_kernel` short-circuit
+            // replaces the entire node's output, dropping the
+            // function body). Y.4 deletes them outright. Only
+            // `punct_ws_region` (56 matches on CSS L4) earned its
+            // keep and stays.
             punct_ws_region::collect(ir, dag, &mut additions);
 
             // Tranche X.8a: upstream structural pattern detection.
@@ -146,26 +148,21 @@ pub fn mine_recognizers(ir: &mut GrammarIR) {
     ir.delim_scan_configs = delim_scan_configs;
     ir.key_dispatch_configs = key_dispatch_configs;
 
-    // Tranche Y.0: compute the family-recognizer flag. The driver
-    // uses this to elide the per-node `try_emit_family_kernel` probe
-    // on grammars whose recognizers never contain a family shape
-    // (every current production grammar — CSS L4, JSON, BBNF, etc. —
-    // reaches this branch as `false`). Post-X cold probe was ~5% of
-    // parse time on every parse-time bench.
+    // Tranche Y.0 / Y.4: the family-recognizer flag gates the driver's
+    // per-node `try_emit_family_kernel` probe. Post-Y.4 the only
+    // surviving family shape is `PunctWsRegion`; grammars that match
+    // it (CSS L4: 56 hits) pay the probe, those that don't (JSON,
+    // BBNF, Sheets, EBNF) pay zero per-node lookup overhead.
     ir.has_family_recognizers = ir.node_facts.values().any(|facts| {
         facts
             .recognizer
             .as_ref()
-            .map(|rec| {
+            .is_some_and(|rec| {
                 matches!(
                     rec.shape,
-                    crate::passes::patterns::RecognizerShape::FunctionHead { .. }
-                        | crate::passes::patterns::RecognizerShape::HashPrefix { .. }
-                        | crate::passes::patterns::RecognizerShape::UnitTail { .. }
-                        | crate::passes::patterns::RecognizerShape::PunctWsRegion { .. }
+                    crate::passes::patterns::RecognizerShape::PunctWsRegion { .. }
                 )
             })
-            .unwrap_or(false)
     });
 
     prefix_shared_group::mine(ir);

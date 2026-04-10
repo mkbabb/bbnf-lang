@@ -30,6 +30,7 @@ pub mod node;
 pub mod recognizer_configs;
 pub mod rule;
 pub mod type_desc;
+pub mod type_desc_interner;
 
 pub use fn_descriptor::FnDescriptor;
 pub use grammar::GrammarIR;
@@ -46,6 +47,7 @@ pub use rule::{
     parse_sep_hint, parse_split_hint,
 };
 pub use type_desc::TypeDesc;
+pub use type_desc_interner::{TypeDescId, TypeDescInterner};
 
 // ── Identifier aliases ──────────────────────────────────────────────────────
 

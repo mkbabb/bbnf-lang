@@ -218,6 +218,7 @@ pub fn lower_to_ir<'a>(
         regex_engine_decisions: HashMap::new(),
         dag: None,
         cost_config: bbnf_ir::CostConfig::from_env(),
+        type_desc_interner: bbnf_ir::TypeDescInterner::new(),
     }
 }
 

@@ -46,7 +46,7 @@ fn prune_removes_unreachable() {
         context_facts: std::collections::HashMap::new(),
         has_family_recognizers: false,
         regex_engine_decisions: std::collections::HashMap::new(),
-        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),    };
 
     prune_unreachable(&mut ir);
 
@@ -84,7 +84,7 @@ fn prune_keeps_all_when_all_reachable() {
         context_facts: std::collections::HashMap::new(),
         has_family_recognizers: false,
         regex_engine_decisions: std::collections::HashMap::new(),
-        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),    };
 
     prune_unreachable(&mut ir);
     assert_eq!(ir.rules.len(), 2);
@@ -142,7 +142,7 @@ fn prune_follows_alt_branches() {
         context_facts: std::collections::HashMap::new(),
         has_family_recognizers: false,
         regex_engine_decisions: std::collections::HashMap::new(),
-        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),    };
 
     prune_unreachable(&mut ir);
     assert_eq!(ir.rules.len(), 3); // start, a, b -- dead removed

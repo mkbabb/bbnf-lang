@@ -17,7 +17,7 @@ use crate::passes;
 
 use super::{
     DelimScanConfig, FnDescriptor, IrNode, IrRule, KeyDispatchMatch, RuleId, StringId, TypeDesc,
-    count_nodes,
+    TypeDescId, TypeDescInterner, count_nodes,
 };
 
 /// The canonical Grammar IR — the single intermediary between the BBNF frontend
@@ -168,6 +168,20 @@ pub struct GrammarIR {
     /// read by every downstream consumer.
     #[serde(skip, default)]
     pub cost_config: crate::CostConfig,
+
+    /// Tranche AA.1 — structural-type hash-cons.
+    ///
+    /// Every `TypeDesc` that appears in the type-projection CSP's
+    /// lattice domain is interned here so `LatticeDomain::join` can
+    /// compare `Option<TypeDescId>` by `Copy` instead of cloning deep
+    /// `TypeDesc::Tuple(Vec<_>)` trees. The interner also provides
+    /// reference-equality structural typing for downstream consumers
+    /// (dispatch-share signatures in AA.5, TaggedUnion narrowing in
+    /// AA.7, tape view codegen in AA.15). Not serialized across the
+    /// WASM boundary: every compile rebuilds it from scratch so the
+    /// wire format stays compact.
+    #[serde(skip, default)]
+    pub type_desc_interner: TypeDescInterner,
 }
 
 impl GrammarIR {
@@ -248,6 +262,24 @@ impl GrammarIR {
             .zip(self.type_map.as_ref())
             .map(|(id, tm)| tm.seq_preserve_spans(id))
             .unwrap_or(false)
+    }
+
+    // ── TypeDesc interner accessors (Tranche AA.1) ──────────────────────
+
+    /// Intern a `TypeDesc`, returning its stable id. Idempotent.
+    ///
+    /// Callers that need reference-equality structural typing (dispatch
+    /// signatures, TaggedUnion discriminants, tape view kinds) should
+    /// use this rather than comparing `TypeDesc` values directly.
+    pub fn intern_type(&mut self, ty: TypeDesc) -> TypeDescId {
+        self.type_desc_interner.intern(ty)
+    }
+
+    /// Resolve a `TypeDescId` back to its canonical `TypeDesc`.
+    /// Panics on out-of-range ids — callers should not fabricate ids.
+    #[inline]
+    pub fn resolve_type(&self, id: TypeDescId) -> &TypeDesc {
+        self.type_desc_interner.resolve(id)
     }
 }
 

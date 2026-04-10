@@ -102,6 +102,35 @@ impl TypeMap {
         self.node_types.len()
     }
 
+    // ── Iterators used by Tranche AA.1 for interning ────────────────────
+
+    /// Iterate every `(NodeId, &TypeDesc)` in the normal-context map.
+    pub fn iter_node_types(&self) -> impl Iterator<Item = (NodeId, &TypeDesc)> {
+        self.node_types.iter().map(|(id, ty)| (*id, ty))
+    }
+
+    /// Iterate every `(NodeId, &TypeDesc)` in the vec-context map.
+    pub fn iter_vec_elem_types(&self) -> impl Iterator<Item = (NodeId, &TypeDesc)> {
+        self.vec_elem_types.iter().map(|(id, ty)| (*id, ty))
+    }
+
+    /// Iterate every `(NodeId, &TypeDesc)` in the structural type map.
+    pub fn iter_structural_types(&self) -> impl Iterator<Item = (NodeId, &TypeDesc)> {
+        self.structural_types.iter().map(|(id, ty)| (*id, ty))
+    }
+
+    /// Iterate every `(NodeId, &TypeDesc)` in the Seq result type map.
+    pub fn iter_seq_result_types(&self) -> impl Iterator<Item = (NodeId, &TypeDesc)> {
+        self.seq_result_types.iter().map(|(id, ty)| (*id, ty))
+    }
+
+    /// Iterate every `(NodeId, &[TypeDesc])` in the Seq child type map.
+    pub fn iter_seq_child_types(&self) -> impl Iterator<Item = (NodeId, &[TypeDesc])> {
+        self.seq_child_types
+            .iter()
+            .map(|(id, v)| (*id, v.as_slice()))
+    }
+
     /// Look up the Vec-element type of a node (from vec-context
     /// projection).
     #[inline]

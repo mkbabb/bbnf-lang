@@ -19,7 +19,7 @@ use std::collections::HashMap;
 use rustc_hash::FxHashMap;
 
 use crate::dag::{GrammarDag, NodeId};
-use crate::{GrammarIR, IrNode, RuleId, SubVariant, TypeDesc};
+use crate::{GrammarIR, IrNode, RuleId, SubVariant, TypeDesc, TypeDescInterner};
 
 use constraint::SeqChildKind;
 use generate::generate_constraints;
@@ -358,9 +358,94 @@ pub fn project_types(ir: &mut GrammarIR) {
     }
     type_map.set_scratch_types(scratch);
 
+    // Tranche AA.1 — populate the type_desc hash-cons interner.
+    // Walk every TypeDesc that survived projection into `type_map`,
+    // `types_map`, and rule-level sub-variants, interning each into
+    // `ir.type_desc_interner`. The interner is then the single stable
+    // source of `TypeDescId` identity for downstream consumers
+    // (AA.5 dispatch signatures, AA.7 TaggedUnion narrowing, AA.15
+    // tape view codegen). Idempotent: structurally equal TypeDescs
+    // collapse to the same id.
+    let mut interner = TypeDescInterner::new();
+    populate_interner(&type_map, &types_map, &ir.rules, &mut interner);
+    ir.type_desc_interner = interner;
+
     ir.type_map = Some(type_map);
     ir.types = types_map.into_iter().collect();
     ir.types.sort_by_key(|(id, _)| *id);
+}
+
+/// Intern every `TypeDesc` that appears anywhere in the projected type
+/// map, rule type map, or rule sub-variants. Called at the end of
+/// [`project_types`] to populate `GrammarIR::type_desc_interner`.
+///
+/// The interner's idempotency makes this a simple walk — duplicate
+/// shapes collapse to the same id, so the resulting table is exactly
+/// as many entries as the grammar has distinct structural types.
+fn populate_interner(
+    type_map: &utils::TypeMap,
+    types_map: &HashMap<RuleId, TypeDesc>,
+    rules: &[crate::IrRule],
+    interner: &mut TypeDescInterner,
+) {
+    // Rule-level types (one entry per rule root).
+    for ty in types_map.values() {
+        intern_recursive(ty, interner);
+    }
+    // Per-node types assigned by the projection CSP.
+    for (_, ty) in type_map.iter_node_types() {
+        intern_recursive(ty, interner);
+    }
+    for (_, ty) in type_map.iter_vec_elem_types() {
+        intern_recursive(ty, interner);
+    }
+    for (_, ty) in type_map.iter_structural_types() {
+        intern_recursive(ty, interner);
+    }
+    for (_, ty) in type_map.iter_seq_result_types() {
+        intern_recursive(ty, interner);
+    }
+    for (_, types) in type_map.iter_seq_child_types() {
+        for ty in types {
+            intern_recursive(ty, interner);
+        }
+    }
+    // Sub-variant types.
+    for rule in rules {
+        for sv in &rule.meta.sub_variants {
+            intern_recursive(&sv.ty, interner);
+        }
+    }
+    // Repeat scratch types (already distinct, but intern them for completeness).
+    for ty in type_map.scratch_types() {
+        intern_recursive(ty, interner);
+    }
+}
+
+/// Recursively intern `ty` and every nested TypeDesc inside it. This
+/// ensures the interner contains not only the outermost shape but
+/// every sub-shape, so a downstream consumer that destructures a
+/// `TypeDesc::Vec(inner)` can intern the inner with a single hash
+/// lookup rather than a full walk.
+fn intern_recursive(ty: &TypeDesc, interner: &mut TypeDescInterner) {
+    // Intern the outermost first so the id order reflects the walk.
+    interner.intern(ty.clone());
+    match ty {
+        TypeDesc::Option(inner) | TypeDesc::Vec(inner) => {
+            intern_recursive(inner, interner);
+        }
+        TypeDesc::Tuple(elems) => {
+            for e in elems {
+                intern_recursive(e, interner);
+            }
+        }
+        TypeDesc::Span
+        | TypeDesc::F64
+        | TypeDesc::U32
+        | TypeDesc::BoxedEnum
+        | TypeDesc::Enum
+        | TypeDesc::Named(_) => {}
+    }
 }
 
 /// Correct Repeat vec_elem_types to match the Vec inner from

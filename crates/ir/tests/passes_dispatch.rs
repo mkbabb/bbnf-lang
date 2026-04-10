@@ -55,7 +55,7 @@ fn dispatch_for_disjoint_branches() {
         context_facts: std::collections::HashMap::new(),
         has_family_recognizers: false,
         regex_engine_decisions: std::collections::HashMap::new(),
-        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),    };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
     generate_dispatch_tables(&mut ir);
@@ -117,7 +117,7 @@ fn no_dispatch_for_overlapping_branches() {
         context_facts: std::collections::HashMap::new(),
         has_family_recognizers: false,
         regex_engine_decisions: std::collections::HashMap::new(),
-        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),    };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
     generate_dispatch_tables(&mut ir);
@@ -177,7 +177,7 @@ fn dispatch_for_nested_alt() {
         context_facts: std::collections::HashMap::new(),
         has_family_recognizers: false,
         regex_engine_decisions: std::collections::HashMap::new(),
-        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),    };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
     generate_dispatch_tables(&mut ir);
@@ -245,7 +245,7 @@ fn dispatch_with_nullable_branch_via_follow() {
         context_facts: std::collections::HashMap::new(),
         has_family_recognizers: false,
         regex_engine_decisions: std::collections::HashMap::new(),
-        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),    };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
     generate_dispatch_tables(&mut ir);
@@ -315,7 +315,7 @@ fn no_dispatch_when_nullable_overlaps_follow() {
         context_facts: std::collections::HashMap::new(),
         has_family_recognizers: false,
         regex_engine_decisions: std::collections::HashMap::new(),
-        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),    };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
     generate_dispatch_tables(&mut ir);
@@ -395,7 +395,7 @@ fn fallback_dispatch_typed_plus_catchall() {
         context_facts: std::collections::HashMap::new(),
         has_family_recognizers: false,
         regex_engine_decisions: std::collections::HashMap::new(),
-        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),    };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
     generate_dispatch_tables(&mut ir);
@@ -467,7 +467,7 @@ fn fallback_dispatch_not_superset() {
         context_facts: std::collections::HashMap::new(),
         has_family_recognizers: false,
         regex_engine_decisions: std::collections::HashMap::new(),
-        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),    };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
     generate_dispatch_tables(&mut ir);
@@ -527,7 +527,7 @@ fn fallback_dispatch_too_few_branches() {
         context_facts: std::collections::HashMap::new(),
         has_family_recognizers: false,
         regex_engine_decisions: std::collections::HashMap::new(),
-        dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),    };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
     generate_dispatch_tables(&mut ir);

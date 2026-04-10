@@ -1,0 +1,16 @@
+[package]
+name = "bbnf-tape"
+version = "0.1.0"
+edition = "2024"
+description = "Tape representation for bbnf-lang parser output. The eager AST replacement: a chunked-arena Vec<TapeRec> that the parser writes and the generated view types read lazily via accessor methods."
+
+[features]
+default = []
+
+[dependencies]
+serde = { version = "1", features = ["derive"], optional = true }
+
+[dev-dependencies]
+
+[lib]
+crate-type = ["lib"]

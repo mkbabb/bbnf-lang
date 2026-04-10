@@ -246,6 +246,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "bbnf-tape"
+version = "0.1.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "bbnf_derive"
 version = "0.2.11"
 dependencies = [

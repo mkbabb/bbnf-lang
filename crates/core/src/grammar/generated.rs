@@ -350,8 +350,8 @@ impl BbnfBootstrap {
                                 let __ws_inner = (|| {
                                     {
                                         let __cp = state.offset;
-                                        let __result = if state.offset < state.src.len()
-                                            && state.src.as_bytes()[state.offset] == 42u8
+                                        let __result = if state.offset < state.src_bytes.len()
+                                            && state.src_bytes[state.offset] == 42u8
                                         {
                                             let __start = state.offset;
                                             state.offset += 1;
@@ -368,8 +368,8 @@ impl BbnfBootstrap {
                                     }
                                     {
                                         let __cp = state.offset;
-                                        let __result = if state.offset < state.src.len()
-                                            && state.src.as_bytes()[state.offset] == 47u8
+                                        let __result = if state.offset < state.src_bytes.len()
+                                            && state.src_bytes[state.offset] == 47u8
                                         {
                                             let __start = state.offset;
                                             state.offset += 1;
@@ -386,8 +386,8 @@ impl BbnfBootstrap {
                                     }
                                     {
                                         let __cp = state.offset;
-                                        let __result = if state.offset < state.src.len()
-                                            && state.src.as_bytes()[state.offset] == 37u8
+                                        let __result = if state.offset < state.src_bytes.len()
+                                            && state.src_bytes[state.offset] == 37u8
                                         {
                                             let __start = state.offset;
                                             state.offset += 1;
@@ -457,8 +457,8 @@ impl BbnfBootstrap {
                                 let __ws_inner = (|| {
                                     {
                                         let __cp = state.offset;
-                                        let __result = if state.offset < state.src.len()
-                                            && state.src.as_bytes()[state.offset] == 43u8
+                                        let __result = if state.offset < state.src_bytes.len()
+                                            && state.src_bytes[state.offset] == 43u8
                                         {
                                             let __start = state.offset;
                                             state.offset += 1;
@@ -475,8 +475,8 @@ impl BbnfBootstrap {
                                     }
                                     {
                                         let __cp = state.offset;
-                                        let __result = if state.offset < state.src.len()
-                                            && state.src.as_bytes()[state.offset] == 45u8
+                                        let __result = if state.offset < state.src_bytes.len()
+                                            && state.src_bytes[state.offset] == 45u8
                                         {
                                             let __start = state.offset;
                                             state.offset += 1;
@@ -546,9 +546,12 @@ impl BbnfBootstrap {
                                 let __ws_inner = (|| {
                                     {
                                         let __cp = state.offset;
-                                        let __result = if state
-                                            .src[state.offset..]
-                                            .starts_with("==")
+                                        let __result = if state.offset + 2usize
+                                            <= state.src_bytes.len()
+                                            && unsafe {
+                                                *(state.src_bytes.as_ptr().add(state.offset)
+                                                    as *const [u8; 2usize])
+                                            } == *b"=="
                                         {
                                             let __start = state.offset;
                                             state.offset += 2usize;
@@ -565,9 +568,12 @@ impl BbnfBootstrap {
                                     }
                                     {
                                         let __cp = state.offset;
-                                        let __result = if state
-                                            .src[state.offset..]
-                                            .starts_with("!=")
+                                        let __result = if state.offset + 2usize
+                                            <= state.src_bytes.len()
+                                            && unsafe {
+                                                *(state.src_bytes.as_ptr().add(state.offset)
+                                                    as *const [u8; 2usize])
+                                            } == *b"!="
                                         {
                                             let __start = state.offset;
                                             state.offset += 2usize;
@@ -584,9 +590,12 @@ impl BbnfBootstrap {
                                     }
                                     {
                                         let __cp = state.offset;
-                                        let __result = if state
-                                            .src[state.offset..]
-                                            .starts_with("<=")
+                                        let __result = if state.offset + 2usize
+                                            <= state.src_bytes.len()
+                                            && unsafe {
+                                                *(state.src_bytes.as_ptr().add(state.offset)
+                                                    as *const [u8; 2usize])
+                                            } == *b"<="
                                         {
                                             let __start = state.offset;
                                             state.offset += 2usize;
@@ -603,9 +612,12 @@ impl BbnfBootstrap {
                                     }
                                     {
                                         let __cp = state.offset;
-                                        let __result = if state
-                                            .src[state.offset..]
-                                            .starts_with(">=")
+                                        let __result = if state.offset + 2usize
+                                            <= state.src_bytes.len()
+                                            && unsafe {
+                                                *(state.src_bytes.as_ptr().add(state.offset)
+                                                    as *const [u8; 2usize])
+                                            } == *b">="
                                         {
                                             let __start = state.offset;
                                             state.offset += 2usize;
@@ -622,8 +634,8 @@ impl BbnfBootstrap {
                                     }
                                     {
                                         let __cp = state.offset;
-                                        let __result = if state.offset < state.src.len()
-                                            && state.src.as_bytes()[state.offset] == 60u8
+                                        let __result = if state.offset < state.src_bytes.len()
+                                            && state.src_bytes[state.offset] == 60u8
                                         {
                                             let __start = state.offset;
                                             state.offset += 1;
@@ -640,8 +652,8 @@ impl BbnfBootstrap {
                                     }
                                     {
                                         let __cp = state.offset;
-                                        let __result = if state.offset < state.src.len()
-                                            && state.src.as_bytes()[state.offset] == 62u8
+                                        let __result = if state.offset < state.src_bytes.len()
+                                            && state.src_bytes[state.offset] == 62u8
                                         {
                                             let __start = state.offset;
                                             state.offset += 1;
@@ -709,9 +721,12 @@ impl BbnfBootstrap {
                             let __sp_start = state.offset;
                             {
                                 ::parse_that::trim_leading_whitespace_mut(state);
-                                let __ws_inner = if state
-                                    .src[state.offset..]
-                                    .starts_with("&&")
+                                let __ws_inner = if state.offset + 2usize
+                                    <= state.src_bytes.len()
+                                    && unsafe {
+                                        *(state.src_bytes.as_ptr().add(state.offset)
+                                            as *const [u8; 2usize])
+                                    } == *b"&&"
                                 {
                                     let __start = state.offset;
                                     state.offset += 2usize;
@@ -766,8 +781,8 @@ impl BbnfBootstrap {
                 let __cp = state.offset;
                 let __result = (|| {
                     let __sp_start = state.offset;
-                    if state.offset < state.src.len()
-                        && state.src.as_bytes()[state.offset] == 124u8
+                    if state.offset < state.src_bytes.len()
+                        && state.src_bytes[state.offset] == 124u8
                     {
                         let __start = state.offset;
                         state.offset += 1;
@@ -793,8 +808,8 @@ impl BbnfBootstrap {
                                 let __sp_start = state.offset;
                                 {
                                     ::parse_that::trim_leading_whitespace_mut(state);
-                                    let __ws_inner = if state.offset < state.src.len()
-                                        && state.src.as_bytes()[state.offset] == 44u8
+                                    let __ws_inner = if state.offset < state.src_bytes.len()
+                                        && state.src_bytes[state.offset] == 44u8
                                     {
                                         let __start = state.offset;
                                         state.offset += 1;
@@ -834,8 +849,8 @@ impl BbnfBootstrap {
                         Some(__BbnfBootstrapEnum_alloc(state).__c0(__depth26))
                     }?;
                     let __sp_start = state.offset;
-                    if state.offset < state.src.len()
-                        && state.src.as_bytes()[state.offset] == 124u8
+                    if state.offset < state.src_bytes.len()
+                        && state.src_bytes[state.offset] == 124u8
                     {
                         let __start = state.offset;
                         state.offset += 1;
@@ -875,9 +890,12 @@ impl BbnfBootstrap {
                                 let __sp_start = state.offset;
                                 {
                                     ::parse_that::trim_leading_whitespace_mut(state);
-                                    let __ws_inner = if state
-                                        .src[state.offset..]
-                                        .starts_with("||")
+                                    let __ws_inner = if state.offset + 2usize
+                                        <= state.src_bytes.len()
+                                        && unsafe {
+                                            *(state.src_bytes.as_ptr().add(state.offset)
+                                                as *const [u8; 2usize])
+                                        } == *b"||"
                                     {
                                         let __start = state.offset;
                                         state.offset += 2usize;
@@ -1124,9 +1142,12 @@ impl BbnfBootstrap {
                     let __result = (|| {
                         {
                             let __cp = state.offset;
-                            let __result = if state
-                                .src[state.offset..]
-                                .starts_with("true")
+                            let __result = if state.offset + 4usize
+                                <= state.src_bytes.len()
+                                && unsafe {
+                                    *(state.src_bytes.as_ptr().add(state.offset)
+                                        as *const [u8; 4usize])
+                                } == *b"true"
                             {
                                 let __start = state.offset;
                                 state.offset += 4usize;
@@ -1143,9 +1164,12 @@ impl BbnfBootstrap {
                         }
                         {
                             let __cp = state.offset;
-                            let __result = if state
-                                .src[state.offset..]
-                                .starts_with("false")
+                            let __result = if state.offset + 5usize
+                                <= state.src_bytes.len()
+                                && unsafe {
+                                    *(state.src_bytes.as_ptr().add(state.offset)
+                                        as *const [u8; 5usize])
+                                } == *b"false"
                             {
                                 let __start = state.offset;
                                 state.offset += 5usize;
@@ -1175,8 +1199,8 @@ impl BbnfBootstrap {
                     let __cp = state.offset;
                     let __result = (|| {
                         let __sp_start = state.offset;
-                        if state.offset < state.src.len()
-                            && state.src.as_bytes()[state.offset] == 34u8
+                        if state.offset < state.src_bytes.len()
+                            && state.src_bytes[state.offset] == 34u8
                         {
                             let __start = state.offset;
                             state.offset += 1;
@@ -1256,8 +1280,8 @@ impl BbnfBootstrap {
                                 None
                             }
                         }?;
-                        if state.offset < state.src.len()
-                            && state.src.as_bytes()[state.offset] == 34u8
+                        if state.offset < state.src_bytes.len()
+                            && state.src_bytes[state.offset] == 34u8
                         {
                             let __start = state.offset;
                             state.offset += 1;
@@ -1297,7 +1321,12 @@ impl BbnfBootstrap {
                                     let __prev42 = state.offset;
                                     match (|| {
                                         let __sp_start = state.offset;
-                                        if state.src[state.offset..].starts_with("::") {
+                                        if state.offset + 2usize <= state.src_bytes.len()
+                                            && unsafe {
+                                                *(state.src_bytes.as_ptr().add(state.offset)
+                                                    as *const [u8; 2usize])
+                                            } == *b"::"
+                                        {
                                             let __start = state.offset;
                                             state.offset += 2usize;
                                             Some(
@@ -1339,8 +1368,8 @@ impl BbnfBootstrap {
                                 &*__BbnfBootstrapEnum_alloc(state).slab().alloc(__v)
                             })?;
                         let __sp_start = state.offset;
-                        if state.offset < state.src.len()
-                            && state.src.as_bytes()[state.offset] == 40u8
+                        if state.offset < state.src_bytes.len()
+                            && state.src_bytes[state.offset] == 40u8
                         {
                             let __start = state.offset;
                             state.offset += 1;
@@ -1372,8 +1401,8 @@ impl BbnfBootstrap {
                                             let __sp_start = state.offset;
                                             {
                                                 ::parse_that::trim_leading_whitespace_mut(state);
-                                                let __ws_inner = if state.offset < state.src.len()
-                                                    && state.src.as_bytes()[state.offset] == 44u8
+                                                let __ws_inner = if state.offset < state.src_bytes.len()
+                                                    && state.src_bytes[state.offset] == 44u8
                                                 {
                                                     let __start = state.offset;
                                                     state.offset += 1;
@@ -1421,8 +1450,8 @@ impl BbnfBootstrap {
                             }
                         }?;
                         let __sp_start = state.offset;
-                        if state.offset < state.src.len()
-                            && state.src.as_bytes()[state.offset] == 41u8
+                        if state.offset < state.src_bytes.len()
+                            && state.src_bytes[state.offset] == 41u8
                         {
                             let __start = state.offset;
                             state.offset += 1;
@@ -1452,7 +1481,12 @@ impl BbnfBootstrap {
                     let __cp = state.offset;
                     let __result = (|| {
                         let __sp_start = state.offset;
-                        if state.src[state.offset..].starts_with("input") {
+                        if state.offset + 5usize <= state.src_bytes.len()
+                            && unsafe {
+                                *(state.src_bytes.as_ptr().add(state.offset)
+                                    as *const [u8; 5usize])
+                            } == *b"input"
+                        {
                             let __start = state.offset;
                             state.offset += 5usize;
                             Some(
@@ -1474,8 +1508,8 @@ impl BbnfBootstrap {
                                 let __prev58 = state.offset;
                                 match (|| {
                                     let __sp_start = state.offset;
-                                    if state.offset < state.src.len()
-                                        && state.src.as_bytes()[state.offset] == 46u8
+                                    if state.offset < state.src_bytes.len()
+                                        && state.src_bytes[state.offset] == 46u8
                                     {
                                         let __start = state.offset;
                                         state.offset += 1;
@@ -1538,7 +1572,12 @@ impl BbnfBootstrap {
                                 let __prev64 = state.offset;
                                 match (|| {
                                     let __sp_start = state.offset;
-                                    if state.src[state.offset..].starts_with("::") {
+                                    if state.offset + 2usize <= state.src_bytes.len()
+                                        && unsafe {
+                                            *(state.src_bytes.as_ptr().add(state.offset)
+                                                as *const [u8; 2usize])
+                                        } == *b"::"
+                                    {
                                         let __start = state.offset;
                                         state.offset += 2usize;
                                         Some(
@@ -1588,8 +1627,8 @@ impl BbnfBootstrap {
                     let __cp = state.offset;
                     let __result = ((|| {
                         let __sp_start = state.offset;
-                        if state.offset < state.src.len()
-                            && state.src.as_bytes()[state.offset] == 40u8
+                        if state.offset < state.src_bytes.len()
+                            && state.src_bytes[state.offset] == 40u8
                         {
                             let __start = state.offset;
                             state.offset += 1;
@@ -1614,8 +1653,8 @@ impl BbnfBootstrap {
                             __ws_inner
                         }?;
                         let __sp_start = state.offset;
-                        if state.offset < state.src.len()
-                            && state.src.as_bytes()[state.offset] == 41u8
+                        if state.offset < state.src_bytes.len()
+                            && state.src_bytes[state.offset] == 41u8
                         {
                             let __start = state.offset;
                             state.offset += 1;
@@ -1661,8 +1700,8 @@ impl BbnfBootstrap {
                     let __result = ((|| {
                         let __sp_start = state.offset;
                         (|| {
-                            let __r = if state.offset < state.src.len()
-                                && state.src.as_bytes()[state.offset] == 33u8
+                            let __r = if state.offset < state.src_bytes.len()
+                                && state.src_bytes[state.offset] == 33u8
                             {
                                 let __start = state.offset;
                                 state.offset += 1;
@@ -1675,8 +1714,8 @@ impl BbnfBootstrap {
                             if __r.is_some() {
                                 return __r;
                             }
-                            let __r = if state.offset < state.src.len()
-                                && state.src.as_bytes()[state.offset] == 45u8
+                            let __r = if state.offset < state.src_bytes.len()
+                                && state.src_bytes[state.offset] == 45u8
                             {
                                 let __start = state.offset;
                                 state.offset += 1;
@@ -1738,7 +1777,11 @@ impl BbnfBootstrap {
                 let __sp_start = state.offset;
                 {
                     ::parse_that::trim_leading_whitespace_mut(state);
-                    let __ws_inner = if state.src[state.offset..].starts_with("@import")
+                    let __ws_inner = if state.offset + 7usize <= state.src_bytes.len()
+                        && unsafe {
+                            *(state.src_bytes.as_ptr().add(state.offset)
+                                as *const [u8; 7usize])
+                        } == *b"@import"
                     {
                         let __start = state.offset;
                         state.offset += 7usize;
@@ -1766,8 +1809,8 @@ impl BbnfBootstrap {
                                         let __sp_start = state.offset;
                                         {
                                             ::parse_that::trim_leading_whitespace_mut(state);
-                                            let __ws_inner = if state.offset < state.src.len()
-                                                && state.src.as_bytes()[state.offset] == 123u8
+                                            let __ws_inner = if state.offset < state.src_bytes.len()
+                                                && state.src_bytes[state.offset] == 123u8
                                             {
                                                 let __start = state.offset;
                                                 state.offset += 1;
@@ -1803,8 +1846,8 @@ impl BbnfBootstrap {
                                                             let __sp_start = state.offset;
                                                             {
                                                                 ::parse_that::trim_leading_whitespace_mut(state);
-                                                                let __ws_inner = if state.offset < state.src.len()
-                                                                    && state.src.as_bytes()[state.offset] == 44u8
+                                                                let __ws_inner = if state.offset < state.src_bytes.len()
+                                                                    && state.src_bytes[state.offset] == 44u8
                                                                 {
                                                                     let __start = state.offset;
                                                                     state.offset += 1;
@@ -1849,8 +1892,8 @@ impl BbnfBootstrap {
                                             __ws_inner
                                         }?;
                                         let __sp_start = state.offset;
-                                        if state.offset < state.src.len()
-                                            && state.src.as_bytes()[state.offset] == 125u8
+                                        if state.offset < state.src_bytes.len()
+                                            && state.src_bytes[state.offset] == 125u8
                                         {
                                             let __start = state.offset;
                                             state.offset += 1;
@@ -1877,9 +1920,12 @@ impl BbnfBootstrap {
                                 let __sp_start = state.offset;
                                 {
                                     ::parse_that::trim_leading_whitespace_mut(state);
-                                    let __ws_inner = if state
-                                        .src[state.offset..]
-                                        .starts_with("from")
+                                    let __ws_inner = if state.offset + 4usize
+                                        <= state.src_bytes.len()
+                                        && unsafe {
+                                            *(state.src_bytes.as_ptr().add(state.offset)
+                                                as *const [u8; 4usize])
+                                        } == *b"from"
                                     {
                                         let __start = state.offset;
                                         state.offset += 4usize;
@@ -1899,8 +1945,8 @@ impl BbnfBootstrap {
                                 );
                                 let __v83 = (|| {
                                     let __sp_start = state.offset;
-                                    if state.offset < state.src.len()
-                                        && state.src.as_bytes()[state.offset] == 34u8
+                                    if state.offset < state.src_bytes.len()
+                                        && state.src_bytes[state.offset] == 34u8
                                     {
                                         let __start = state.offset;
                                         state.offset += 1;
@@ -1980,8 +2026,8 @@ impl BbnfBootstrap {
                                             None
                                         }
                                     }?;
-                                    if state.offset < state.src.len()
-                                        && state.src.as_bytes()[state.offset] == 34u8
+                                    if state.offset < state.src_bytes.len()
+                                        && state.src_bytes[state.offset] == 34u8
                                     {
                                         let __start = state.offset;
                                         state.offset += 1;
@@ -2015,8 +2061,8 @@ impl BbnfBootstrap {
                             let __cp = state.offset;
                             let __result = (|| {
                                 let __sp_start = state.offset;
-                                if state.offset < state.src.len()
-                                    && state.src.as_bytes()[state.offset] == 34u8
+                                if state.offset < state.src_bytes.len()
+                                    && state.src_bytes[state.offset] == 34u8
                                 {
                                     let __start = state.offset;
                                     state.offset += 1;
@@ -2096,8 +2142,8 @@ impl BbnfBootstrap {
                                         None
                                     }
                                 }?;
-                                if state.offset < state.src.len()
-                                    && state.src.as_bytes()[state.offset] == 34u8
+                                if state.offset < state.src_bytes.len()
+                                    && state.src_bytes[state.offset] == 34u8
                                 {
                                     let __start = state.offset;
                                     state.offset += 1;
@@ -2129,8 +2175,8 @@ impl BbnfBootstrap {
                 {
                     let __cp = state.offset;
                     if (|| (|| {
-                        let __r = if state.offset < state.src.len()
-                            && state.src.as_bytes()[state.offset] == 59u8
+                        let __r = if state.offset < state.src_bytes.len()
+                            && state.src_bytes[state.offset] == 59u8
                         {
                             let __start = state.offset;
                             state.offset += 1;
@@ -2143,8 +2189,8 @@ impl BbnfBootstrap {
                         if __r.is_some() {
                             return __r;
                         }
-                        let __r = if state.offset < state.src.len()
-                            && state.src.as_bytes()[state.offset] == 46u8
+                        let __r = if state.offset < state.src_bytes.len()
+                            && state.src_bytes[state.offset] == 46u8
                         {
                             let __start = state.offset;
                             state.offset += 1;
@@ -2210,8 +2256,8 @@ impl BbnfBootstrap {
                                         {
                                             let __cp = state.offset;
                                             if (|| {
-                                                if state.offset < state.src.len()
-                                                    && state.src.as_bytes()[state.offset] == 44u8
+                                                if state.offset < state.src_bytes.len()
+                                                    && state.src_bytes[state.offset] == 44u8
                                                 {
                                                     let __start = state.offset;
                                                     state.offset += 1;
@@ -2267,8 +2313,8 @@ impl BbnfBootstrap {
                         {
                             let __cp = state.offset;
                             if (|| {
-                                if state.offset < state.src.len()
-                                    && state.src.as_bytes()[state.offset] == 124u8
+                                if state.offset < state.src_bytes.len()
+                                    && state.src_bytes[state.offset] == 124u8
                                 {
                                     let __start = state.offset;
                                     state.offset += 1;
@@ -2341,8 +2387,8 @@ impl BbnfBootstrap {
                         {
                             let __cp = state.offset;
                             if (|| {
-                                if state.offset < state.src.len()
-                                    && state.src.as_bytes()[state.offset] == 124u8
+                                if state.offset < state.src_bytes.len()
+                                    && state.src_bytes[state.offset] == 124u8
                                 {
                                     let __start = state.offset;
                                     state.offset += 1;
@@ -2410,9 +2456,12 @@ impl BbnfBootstrap {
                                 let __ws_inner = (|| {
                                     {
                                         let __cp = state.offset;
-                                        let __result = if state
-                                            .src[state.offset..]
-                                            .starts_with("<<")
+                                        let __result = if state.offset + 2usize
+                                            <= state.src_bytes.len()
+                                            && unsafe {
+                                                *(state.src_bytes.as_ptr().add(state.offset)
+                                                    as *const [u8; 2usize])
+                                            } == *b"<<"
                                         {
                                             let __start = state.offset;
                                             state.offset += 2usize;
@@ -2429,9 +2478,12 @@ impl BbnfBootstrap {
                                     }
                                     {
                                         let __cp = state.offset;
-                                        let __result = if state
-                                            .src[state.offset..]
-                                            .starts_with(">>")
+                                        let __result = if state.offset + 2usize
+                                            <= state.src_bytes.len()
+                                            && unsafe {
+                                                *(state.src_bytes.as_ptr().add(state.offset)
+                                                    as *const [u8; 2usize])
+                                            } == *b">>"
                                         {
                                             let __start = state.offset;
                                             state.offset += 2usize;
@@ -2448,8 +2500,8 @@ impl BbnfBootstrap {
                                     }
                                     {
                                         let __cp = state.offset;
-                                        let __result = if state.offset < state.src.len()
-                                            && state.src.as_bytes()[state.offset] == 45u8
+                                        let __result = if state.offset < state.src_bytes.len()
+                                            && state.src_bytes[state.offset] == 45u8
                                         {
                                             let __start = state.offset;
                                             state.offset += 1;
@@ -2510,8 +2562,8 @@ impl BbnfBootstrap {
                 let __cp = state.offset;
                 let __result = (|| {
                     let __sp_start = state.offset;
-                    if state.offset < state.src.len()
-                        && state.src.as_bytes()[state.offset] == 124u8
+                    if state.offset < state.src_bytes.len()
+                        && state.src_bytes[state.offset] == 124u8
                     {
                         let __start = state.offset;
                         state.offset += 1;
@@ -2537,8 +2589,8 @@ impl BbnfBootstrap {
                                 let __sp_start = state.offset;
                                 {
                                     ::parse_that::trim_leading_whitespace_mut(state);
-                                    let __ws_inner = if state.offset < state.src.len()
-                                        && state.src.as_bytes()[state.offset] == 44u8
+                                    let __ws_inner = if state.offset < state.src_bytes.len()
+                                        && state.src_bytes[state.offset] == 44u8
                                     {
                                         let __start = state.offset;
                                         state.offset += 1;
@@ -2580,8 +2632,8 @@ impl BbnfBootstrap {
                     let __sp_start = state.offset;
                     {
                         ::parse_that::trim_leading_whitespace_mut(state);
-                        let __ws_inner = if state.offset < state.src.len()
-                            && state.src.as_bytes()[state.offset] == 124u8
+                        let __ws_inner = if state.offset < state.src_bytes.len()
+                            && state.src_bytes[state.offset] == 124u8
                         {
                             let __start = state.offset;
                             state.offset += 1;
@@ -2638,7 +2690,7 @@ impl BbnfBootstrap {
     ) -> Option<BbnfBootstrapEnum<'a>> {
         (|| {
             (|| {
-                let __v147 = (|| {
+                let __v146 = (|| {
                     let __v136 = {
                         let __cp = state.offset;
                         match (|| {
@@ -2646,7 +2698,12 @@ impl BbnfBootstrap {
                                 ::parse_that::trim_leading_whitespace_mut(state);
                                 let __ws_inner = (|| {
                                     let __sp_start = state.offset;
-                                    if state.src[state.offset..].starts_with("/*") {
+                                    if state.offset + 2usize <= state.src_bytes.len()
+                                        && unsafe {
+                                            *(state.src_bytes.as_ptr().add(state.offset)
+                                                as *const [u8; 2usize])
+                                        } == *b"/*"
+                                    {
                                         let __start = state.offset;
                                         state.offset += 2usize;
                                         Some(
@@ -2671,7 +2728,12 @@ impl BbnfBootstrap {
                                             ::parse_that::Span::new(__start, state.offset, state.src),
                                         )
                                     }?;
-                                    if state.src[state.offset..].starts_with("*/") {
+                                    if state.offset + 2usize <= state.src_bytes.len()
+                                        && unsafe {
+                                            *(state.src_bytes.as_ptr().add(state.offset)
+                                                as *const [u8; 2usize])
+                                        } == *b"*/"
+                                    {
                                         let __start = state.offset;
                                         state.offset += 2usize;
                                         Some(
@@ -2704,9 +2766,12 @@ impl BbnfBootstrap {
                         let __ws_inner = (|| {
                             {
                                 let __cp = state.offset;
-                                let __result = (if state
-                                    .src[state.offset..]
-                                    .starts_with("ε")
+                                let __result = (if state.offset + 2usize
+                                    <= state.src_bytes.len()
+                                    && unsafe {
+                                        *(state.src_bytes.as_ptr().add(state.offset)
+                                            as *const [u8; 2usize])
+                                    } == *b"\xce\xb5"
                                 {
                                     let __start = state.offset;
                                     state.offset += 2usize;
@@ -2728,9 +2793,12 @@ impl BbnfBootstrap {
                             }
                             {
                                 let __cp = state.offset;
-                                let __result = (if state
-                                    .src[state.offset..]
-                                    .starts_with("epsilon")
+                                let __result = (if state.offset + 7usize
+                                    <= state.src_bytes.len()
+                                    && unsafe {
+                                        *(state.src_bytes.as_ptr().add(state.offset)
+                                            as *const [u8; 7usize])
+                                    } == *b"epsilon"
                                 {
                                     let __start = state.offset;
                                     state.offset += 7usize;
@@ -2762,8 +2830,8 @@ impl BbnfBootstrap {
                                         let __cp = state.offset;
                                         match (|| (|| {
                                             let __sp_start = state.offset;
-                                            if state.offset < state.src.len()
-                                                && state.src.as_bytes()[state.offset] == 40u8
+                                            if state.offset < state.src_bytes.len()
+                                                && state.src_bytes[state.offset] == 40u8
                                             {
                                                 let __start = state.offset;
                                                 state.offset += 1;
@@ -2797,8 +2865,8 @@ impl BbnfBootstrap {
                                                         let __sp_start = state.offset;
                                                         {
                                                             ::parse_that::trim_leading_whitespace_mut(state);
-                                                            let __ws_inner = if state.offset < state.src.len()
-                                                                && state.src.as_bytes()[state.offset] == 44u8
+                                                            let __ws_inner = if state.offset < state.src_bytes.len()
+                                                                && state.src_bytes[state.offset] == 44u8
                                                             {
                                                                 let __start = state.offset;
                                                                 state.offset += 1;
@@ -2842,8 +2910,8 @@ impl BbnfBootstrap {
                                                 Some(__BbnfBootstrapEnum_alloc(state).__c0(__depth116))
                                             }?;
                                             let __sp_start = state.offset;
-                                            if state.offset < state.src.len()
-                                                && state.src.as_bytes()[state.offset] == 41u8
+                                            if state.offset < state.src_bytes.len()
+                                                && state.src_bytes[state.offset] == 41u8
                                             {
                                                 let __start = state.offset;
                                                 state.offset += 1;
@@ -2886,8 +2954,8 @@ impl BbnfBootstrap {
                                         let __cp = state.offset;
                                         let __result = (|| {
                                             let __sp_start = state.offset;
-                                            if state.offset < state.src.len()
-                                                && state.src.as_bytes()[state.offset] == 34u8
+                                            if state.offset < state.src_bytes.len()
+                                                && state.src_bytes[state.offset] == 34u8
                                             {
                                                 let __start = state.offset;
                                                 state.offset += 1;
@@ -2967,8 +3035,8 @@ impl BbnfBootstrap {
                                                     None
                                                 }
                                             }?;
-                                            if state.offset < state.src.len()
-                                                && state.src.as_bytes()[state.offset] == 34u8
+                                            if state.offset < state.src_bytes.len()
+                                                && state.src_bytes[state.offset] == 34u8
                                             {
                                                 let __start = state.offset;
                                                 state.offset += 1;
@@ -2991,8 +3059,8 @@ impl BbnfBootstrap {
                                         let __cp = state.offset;
                                         let __result = (|| {
                                             let __sp_start = state.offset;
-                                            if state.offset < state.src.len()
-                                                && state.src.as_bytes()[state.offset] == 39u8
+                                            if state.offset < state.src_bytes.len()
+                                                && state.src_bytes[state.offset] == 39u8
                                             {
                                                 let __start = state.offset;
                                                 state.offset += 1;
@@ -3072,8 +3140,8 @@ impl BbnfBootstrap {
                                                     None
                                                 }
                                             }?;
-                                            if state.offset < state.src.len()
-                                                && state.src.as_bytes()[state.offset] == 39u8
+                                            if state.offset < state.src_bytes.len()
+                                                && state.src_bytes[state.offset] == 39u8
                                             {
                                                 let __start = state.offset;
                                                 state.offset += 1;
@@ -3096,8 +3164,8 @@ impl BbnfBootstrap {
                                         let __cp = state.offset;
                                         let __result = (|| {
                                             let __sp_start = state.offset;
-                                            if state.offset < state.src.len()
-                                                && state.src.as_bytes()[state.offset] == 96u8
+                                            if state.offset < state.src_bytes.len()
+                                                && state.src_bytes[state.offset] == 96u8
                                             {
                                                 let __start = state.offset;
                                                 state.offset += 1;
@@ -3177,8 +3245,8 @@ impl BbnfBootstrap {
                                                     None
                                                 }
                                             }?;
-                                            if state.offset < state.src.len()
-                                                && state.src.as_bytes()[state.offset] == 96u8
+                                            if state.offset < state.src_bytes.len()
+                                                && state.src_bytes[state.offset] == 96u8
                                             {
                                                 let __start = state.offset;
                                                 state.offset += 1;
@@ -3212,8 +3280,8 @@ impl BbnfBootstrap {
                                 let __cp = state.offset;
                                 let __result = (|| {
                                     let __sp_start = state.offset;
-                                    if state.offset < state.src.len()
-                                        && state.src.as_bytes()[state.offset] == 47u8
+                                    if state.offset < state.src_bytes.len()
+                                        && state.src_bytes[state.offset] == 47u8
                                     {
                                         let __start = state.offset;
                                         state.offset += 1;
@@ -3293,8 +3361,8 @@ impl BbnfBootstrap {
                                             None
                                         }
                                     }?;
-                                    if state.offset < state.src.len()
-                                        && state.src.as_bytes()[state.offset] == 47u8
+                                    if state.offset < state.src_bytes.len()
+                                        && state.src_bytes[state.offset] == 47u8
                                     {
                                         let __start = state.offset;
                                         state.offset += 1;
@@ -3321,7 +3389,12 @@ impl BbnfBootstrap {
                                 let __cp = state.offset;
                                 let __result = ((|| {
                                     let __sp_start = state.offset;
-                                    if state.src[state.offset..].starts_with("@{") {
+                                    if state.offset + 2usize <= state.src_bytes.len()
+                                        && unsafe {
+                                            *(state.src_bytes.as_ptr().add(state.offset)
+                                                as *const [u8; 2usize])
+                                        } == *b"@{"
+                                    {
                                         let __start = state.offset;
                                         state.offset += 2usize;
                                         Some(
@@ -3345,8 +3418,8 @@ impl BbnfBootstrap {
                                         __ws_inner
                                     }?;
                                     let __sp_start = state.offset;
-                                    if state.offset < state.src.len()
-                                        && state.src.as_bytes()[state.offset] == 125u8
+                                    if state.offset < state.src_bytes.len()
+                                        && state.src_bytes[state.offset] == 125u8
                                     {
                                         let __start = state.offset;
                                         state.offset += 1;
@@ -3377,8 +3450,8 @@ impl BbnfBootstrap {
                                 let __cp = state.offset;
                                 let __result = ((|| {
                                     let __sp_start = state.offset;
-                                    if state.offset < state.src.len()
-                                        && state.src.as_bytes()[state.offset] == 40u8
+                                    if state.offset < state.src_bytes.len()
+                                        && state.src_bytes[state.offset] == 40u8
                                     {
                                         let __start = state.offset;
                                         state.offset += 1;
@@ -3403,8 +3476,8 @@ impl BbnfBootstrap {
                                         __ws_inner
                                     }?;
                                     let __sp_start = state.offset;
-                                    if state.offset < state.src.len()
-                                        && state.src.as_bytes()[state.offset] == 41u8
+                                    if state.offset < state.src_bytes.len()
+                                        && state.src_bytes[state.offset] == 41u8
                                     {
                                         let __start = state.offset;
                                         state.offset += 1;
@@ -3435,8 +3508,8 @@ impl BbnfBootstrap {
                                 let __cp = state.offset;
                                 let __result = ((|| {
                                     let __sp_start = state.offset;
-                                    if state.offset < state.src.len()
-                                        && state.src.as_bytes()[state.offset] == 91u8
+                                    if state.offset < state.src_bytes.len()
+                                        && state.src_bytes[state.offset] == 91u8
                                     {
                                         let __start = state.offset;
                                         state.offset += 1;
@@ -3461,8 +3534,8 @@ impl BbnfBootstrap {
                                         __ws_inner
                                     }?;
                                     let __sp_start = state.offset;
-                                    if state.offset < state.src.len()
-                                        && state.src.as_bytes()[state.offset] == 93u8
+                                    if state.offset < state.src_bytes.len()
+                                        && state.src_bytes[state.offset] == 93u8
                                     {
                                         let __start = state.offset;
                                         state.offset += 1;
@@ -3493,8 +3566,8 @@ impl BbnfBootstrap {
                                 let __cp = state.offset;
                                 let __result = ((|| {
                                     let __sp_start = state.offset;
-                                    if state.offset < state.src.len()
-                                        && state.src.as_bytes()[state.offset] == 123u8
+                                    if state.offset < state.src_bytes.len()
+                                        && state.src_bytes[state.offset] == 123u8
                                     {
                                         let __start = state.offset;
                                         state.offset += 1;
@@ -3519,8 +3592,8 @@ impl BbnfBootstrap {
                                         __ws_inner
                                     }?;
                                     let __sp_start = state.offset;
-                                    if state.offset < state.src.len()
-                                        && state.src.as_bytes()[state.offset] == 125u8
+                                    if state.offset < state.src_bytes.len()
+                                        && state.src_bytes[state.offset] == 125u8
                                     {
                                         let __start = state.offset;
                                         state.offset += 1;
@@ -3562,9 +3635,12 @@ impl BbnfBootstrap {
                             (|| {
                                 {
                                     let __cp = state.offset;
-                                    let __result = if state
-                                        .src[state.offset..]
-                                        .starts_with("?w")
+                                    let __result = if state.offset + 2usize
+                                        <= state.src_bytes.len()
+                                        && unsafe {
+                                            *(state.src_bytes.as_ptr().add(state.offset)
+                                                as *const [u8; 2usize])
+                                        } == *b"?w"
                                     {
                                         let __start = state.offset;
                                         state.offset += 2usize;
@@ -3581,8 +3657,8 @@ impl BbnfBootstrap {
                                 }
                                 {
                                     let __cp = state.offset;
-                                    let __result = if state.offset < state.src.len()
-                                        && state.src.as_bytes()[state.offset] == 63u8
+                                    let __result = if state.offset < state.src_bytes.len()
+                                        && state.src_bytes[state.offset] == 63u8
                                     {
                                         let __start = state.offset;
                                         state.offset += 1;
@@ -3599,8 +3675,8 @@ impl BbnfBootstrap {
                                 }
                                 {
                                     let __cp = state.offset;
-                                    let __result = if state.offset < state.src.len()
-                                        && state.src.as_bytes()[state.offset] == 42u8
+                                    let __result = if state.offset < state.src_bytes.len()
+                                        && state.src_bytes[state.offset] == 42u8
                                     {
                                         let __start = state.offset;
                                         state.offset += 1;
@@ -3617,8 +3693,8 @@ impl BbnfBootstrap {
                                 }
                                 {
                                     let __cp = state.offset;
-                                    let __result = if state.offset < state.src.len()
-                                        && state.src.as_bytes()[state.offset] == 43u8
+                                    let __result = if state.offset < state.src_bytes.len()
+                                        && state.src_bytes[state.offset] == 43u8
                                     {
                                         let __start = state.offset;
                                         state.offset += 1;
@@ -3654,7 +3730,12 @@ impl BbnfBootstrap {
                                 ::parse_that::trim_leading_whitespace_mut(state);
                                 let __ws_inner = (|| {
                                     let __sp_start = state.offset;
-                                    if state.src[state.offset..].starts_with("/*") {
+                                    if state.offset + 2usize <= state.src_bytes.len()
+                                        && unsafe {
+                                            *(state.src_bytes.as_ptr().add(state.offset)
+                                                as *const [u8; 2usize])
+                                        } == *b"/*"
+                                    {
                                         let __start = state.offset;
                                         state.offset += 2usize;
                                         Some(
@@ -3679,7 +3760,12 @@ impl BbnfBootstrap {
                                             ::parse_that::Span::new(__start, state.offset, state.src),
                                         )
                                     }?;
-                                    if state.src[state.offset..].starts_with("*/") {
+                                    if state.offset + 2usize <= state.src_bytes.len()
+                                        && unsafe {
+                                            *(state.src_bytes.as_ptr().add(state.offset)
+                                                as *const [u8; 2usize])
+                                        } == *b"*/"
+                                    {
                                         let __start = state.offset;
                                         state.offset += 2usize;
                                         Some(
@@ -3713,15 +3799,18 @@ impl BbnfBootstrap {
                         let __v = BbnfBootstrapEnum::factor(__inner);
                         &*__BbnfBootstrapEnum_alloc(state).slab().alloc(__v)
                     })?;
-                let __v148 = {
+                let __v147 = {
                     let __cp = state.offset;
                     match (|| (|| {
                         let __sp_start = state.offset;
                         {
                             ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = if state
-                                .src[state.offset..]
-                                .starts_with("->")
+                            let __ws_inner = if state.offset + 2usize
+                                <= state.src_bytes.len()
+                                && unsafe {
+                                    *(state.src_bytes.as_ptr().add(state.offset)
+                                        as *const [u8; 2usize])
+                                } == *b"->"
                             {
                                 let __start = state.offset;
                                 state.offset += 2usize;
@@ -3734,25 +3823,25 @@ impl BbnfBootstrap {
                             ::parse_that::trim_leading_whitespace_mut(state);
                             __ws_inner
                         }?;
-                        let __sp145 = ::parse_that::Span::new(
+                        let __sp144 = ::parse_that::Span::new(
                             __sp_start,
                             state.offset,
                             state.src,
                         );
-                        let __v146 = (|| {
-                            let __v143 = Self::__value_expr(state)
+                        let __v145 = (|| {
+                            let __v142 = Self::__value_expr(state)
                                 .map(|__v| {
                                     &*__BbnfBootstrapEnum_alloc(state).slab().alloc(__v)
                                 })?;
-                            let __v144 = {
+                            let __v143 = {
                                 let __cp = state.offset;
                                 match (|| {
                                     (|| {
                                         let __sp_start = state.offset;
                                         {
                                             ::parse_that::trim_leading_whitespace_mut(state);
-                                            let __ws_inner = if state.offset < state.src.len()
-                                                && state.src.as_bytes()[state.offset] == 58u8
+                                            let __ws_inner = if state.offset < state.src_bytes.len()
+                                                && state.src_bytes[state.offset] == 58u8
                                             {
                                                 let __start = state.offset;
                                                 state.offset += 1;
@@ -3765,156 +3854,247 @@ impl BbnfBootstrap {
                                             ::parse_that::trim_leading_whitespace_mut(state);
                                             __ws_inner
                                         }?;
-                                        let __sp141 = ::parse_that::Span::new(
+                                        let __sp140 = ::parse_that::Span::new(
                                             __sp_start,
                                             state.offset,
                                             state.src,
                                         );
-                                        let __v142 = (|| {
-                                            let __kd_cp140 = state.offset;
-                                            if let Some(ref __kd_s) = ::parse_that::scan_ident(state) {
-                                                let __kd_bytes = &state.src_bytes[__kd_s.start..__kd_s.end];
-                                                let __kd_len = __kd_bytes.len();
-                                                if (__kd_len == 2usize && __kd_bytes == &[b'u', b'8']) {
-                                                    state.offset = __kd_cp140;
-                                                    return if state.src[state.offset..].starts_with("u8") {
-                                                        let __start = state.offset;
-                                                        state.offset += 2usize;
-                                                        Some(
-                                                            ::parse_that::Span::new(__start, state.offset, state.src),
-                                                        )
-                                                    } else {
-                                                        None
-                                                    };
-                                                }
-                                                if (__kd_len == 3usize && __kd_bytes == &[b'u', b'1', b'6'])
+                                        let __v141 = (|| {
+                                            {
+                                                let __cp = state.offset;
+                                                let __result = if state.offset + 2usize
+                                                    <= state.src_bytes.len()
+                                                    && unsafe {
+                                                        *(state.src_bytes.as_ptr().add(state.offset)
+                                                            as *const [u8; 2usize])
+                                                    } == *b"u8"
                                                 {
-                                                    state.offset = __kd_cp140;
-                                                    return if state.src[state.offset..].starts_with("u16") {
-                                                        let __start = state.offset;
-                                                        state.offset += 3usize;
-                                                        Some(
-                                                            ::parse_that::Span::new(__start, state.offset, state.src),
-                                                        )
-                                                    } else {
-                                                        None
-                                                    };
+                                                    let __start = state.offset;
+                                                    state.offset += 2usize;
+                                                    Some(
+                                                        ::parse_that::Span::new(__start, state.offset, state.src),
+                                                    )
+                                                } else {
+                                                    None
+                                                };
+                                                if __result.is_some() {
+                                                    return __result;
                                                 }
-                                                if (__kd_len == 3usize && __kd_bytes == &[b'u', b'3', b'2'])
-                                                {
-                                                    state.offset = __kd_cp140;
-                                                    return if state.src[state.offset..].starts_with("u32") {
-                                                        let __start = state.offset;
-                                                        state.offset += 3usize;
-                                                        Some(
-                                                            ::parse_that::Span::new(__start, state.offset, state.src),
-                                                        )
-                                                    } else {
-                                                        None
-                                                    };
-                                                }
-                                                if (__kd_len == 3usize && __kd_bytes == &[b'u', b'6', b'4'])
-                                                {
-                                                    state.offset = __kd_cp140;
-                                                    return if state.src[state.offset..].starts_with("u64") {
-                                                        let __start = state.offset;
-                                                        state.offset += 3usize;
-                                                        Some(
-                                                            ::parse_that::Span::new(__start, state.offset, state.src),
-                                                        )
-                                                    } else {
-                                                        None
-                                                    };
-                                                }
-                                                if (__kd_len == 3usize && __kd_bytes == &[b'i', b'3', b'2'])
-                                                {
-                                                    state.offset = __kd_cp140;
-                                                    return if state.src[state.offset..].starts_with("i32") {
-                                                        let __start = state.offset;
-                                                        state.offset += 3usize;
-                                                        Some(
-                                                            ::parse_that::Span::new(__start, state.offset, state.src),
-                                                        )
-                                                    } else {
-                                                        None
-                                                    };
-                                                }
-                                                if (__kd_len == 3usize && __kd_bytes == &[b'i', b'6', b'4'])
-                                                {
-                                                    state.offset = __kd_cp140;
-                                                    return if state.src[state.offset..].starts_with("i64") {
-                                                        let __start = state.offset;
-                                                        state.offset += 3usize;
-                                                        Some(
-                                                            ::parse_that::Span::new(__start, state.offset, state.src),
-                                                        )
-                                                    } else {
-                                                        None
-                                                    };
-                                                }
-                                                if (__kd_len == 3usize && __kd_bytes == &[b'f', b'3', b'2'])
-                                                {
-                                                    state.offset = __kd_cp140;
-                                                    return if state.src[state.offset..].starts_with("f32") {
-                                                        let __start = state.offset;
-                                                        state.offset += 3usize;
-                                                        Some(
-                                                            ::parse_that::Span::new(__start, state.offset, state.src),
-                                                        )
-                                                    } else {
-                                                        None
-                                                    };
-                                                }
-                                                if (__kd_len == 3usize && __kd_bytes == &[b'f', b'6', b'4'])
-                                                {
-                                                    state.offset = __kd_cp140;
-                                                    return if state.src[state.offset..].starts_with("f64") {
-                                                        let __start = state.offset;
-                                                        state.offset += 3usize;
-                                                        Some(
-                                                            ::parse_that::Span::new(__start, state.offset, state.src),
-                                                        )
-                                                    } else {
-                                                        None
-                                                    };
-                                                }
-                                                if (__kd_len == 4usize
-                                                    && __kd_bytes == &[b'b', b'o', b'o', b'l'])
-                                                {
-                                                    state.offset = __kd_cp140;
-                                                    return if state.src[state.offset..].starts_with("bool") {
-                                                        let __start = state.offset;
-                                                        state.offset += 4usize;
-                                                        Some(
-                                                            ::parse_that::Span::new(__start, state.offset, state.src),
-                                                        )
-                                                    } else {
-                                                        None
-                                                    };
-                                                }
-                                                if (__kd_len == 5usize
-                                                    && __kd_bytes == &[b'u', b's', b'i', b'z', b'e'])
-                                                {
-                                                    state.offset = __kd_cp140;
-                                                    return if state.src[state.offset..].starts_with("usize") {
-                                                        let __start = state.offset;
-                                                        state.offset += 5usize;
-                                                        Some(
-                                                            ::parse_that::Span::new(__start, state.offset, state.src),
-                                                        )
-                                                    } else {
-                                                        None
-                                                    };
-                                                }
+                                                state.offset = __cp;
                                             }
-                                            state.offset = __kd_cp140;
-                                            ::parse_that::scan_ident(state)
+                                            {
+                                                let __cp = state.offset;
+                                                let __result = if state.offset + 3usize
+                                                    <= state.src_bytes.len()
+                                                    && unsafe {
+                                                        *(state.src_bytes.as_ptr().add(state.offset)
+                                                            as *const [u8; 3usize])
+                                                    } == *b"u16"
+                                                {
+                                                    let __start = state.offset;
+                                                    state.offset += 3usize;
+                                                    Some(
+                                                        ::parse_that::Span::new(__start, state.offset, state.src),
+                                                    )
+                                                } else {
+                                                    None
+                                                };
+                                                if __result.is_some() {
+                                                    return __result;
+                                                }
+                                                state.offset = __cp;
+                                            }
+                                            {
+                                                let __cp = state.offset;
+                                                let __result = if state.offset + 3usize
+                                                    <= state.src_bytes.len()
+                                                    && unsafe {
+                                                        *(state.src_bytes.as_ptr().add(state.offset)
+                                                            as *const [u8; 3usize])
+                                                    } == *b"u32"
+                                                {
+                                                    let __start = state.offset;
+                                                    state.offset += 3usize;
+                                                    Some(
+                                                        ::parse_that::Span::new(__start, state.offset, state.src),
+                                                    )
+                                                } else {
+                                                    None
+                                                };
+                                                if __result.is_some() {
+                                                    return __result;
+                                                }
+                                                state.offset = __cp;
+                                            }
+                                            {
+                                                let __cp = state.offset;
+                                                let __result = if state.offset + 3usize
+                                                    <= state.src_bytes.len()
+                                                    && unsafe {
+                                                        *(state.src_bytes.as_ptr().add(state.offset)
+                                                            as *const [u8; 3usize])
+                                                    } == *b"u64"
+                                                {
+                                                    let __start = state.offset;
+                                                    state.offset += 3usize;
+                                                    Some(
+                                                        ::parse_that::Span::new(__start, state.offset, state.src),
+                                                    )
+                                                } else {
+                                                    None
+                                                };
+                                                if __result.is_some() {
+                                                    return __result;
+                                                }
+                                                state.offset = __cp;
+                                            }
+                                            {
+                                                let __cp = state.offset;
+                                                let __result = if state.offset + 3usize
+                                                    <= state.src_bytes.len()
+                                                    && unsafe {
+                                                        *(state.src_bytes.as_ptr().add(state.offset)
+                                                            as *const [u8; 3usize])
+                                                    } == *b"i32"
+                                                {
+                                                    let __start = state.offset;
+                                                    state.offset += 3usize;
+                                                    Some(
+                                                        ::parse_that::Span::new(__start, state.offset, state.src),
+                                                    )
+                                                } else {
+                                                    None
+                                                };
+                                                if __result.is_some() {
+                                                    return __result;
+                                                }
+                                                state.offset = __cp;
+                                            }
+                                            {
+                                                let __cp = state.offset;
+                                                let __result = if state.offset + 3usize
+                                                    <= state.src_bytes.len()
+                                                    && unsafe {
+                                                        *(state.src_bytes.as_ptr().add(state.offset)
+                                                            as *const [u8; 3usize])
+                                                    } == *b"i64"
+                                                {
+                                                    let __start = state.offset;
+                                                    state.offset += 3usize;
+                                                    Some(
+                                                        ::parse_that::Span::new(__start, state.offset, state.src),
+                                                    )
+                                                } else {
+                                                    None
+                                                };
+                                                if __result.is_some() {
+                                                    return __result;
+                                                }
+                                                state.offset = __cp;
+                                            }
+                                            {
+                                                let __cp = state.offset;
+                                                let __result = if state.offset + 3usize
+                                                    <= state.src_bytes.len()
+                                                    && unsafe {
+                                                        *(state.src_bytes.as_ptr().add(state.offset)
+                                                            as *const [u8; 3usize])
+                                                    } == *b"f32"
+                                                {
+                                                    let __start = state.offset;
+                                                    state.offset += 3usize;
+                                                    Some(
+                                                        ::parse_that::Span::new(__start, state.offset, state.src),
+                                                    )
+                                                } else {
+                                                    None
+                                                };
+                                                if __result.is_some() {
+                                                    return __result;
+                                                }
+                                                state.offset = __cp;
+                                            }
+                                            {
+                                                let __cp = state.offset;
+                                                let __result = if state.offset + 3usize
+                                                    <= state.src_bytes.len()
+                                                    && unsafe {
+                                                        *(state.src_bytes.as_ptr().add(state.offset)
+                                                            as *const [u8; 3usize])
+                                                    } == *b"f64"
+                                                {
+                                                    let __start = state.offset;
+                                                    state.offset += 3usize;
+                                                    Some(
+                                                        ::parse_that::Span::new(__start, state.offset, state.src),
+                                                    )
+                                                } else {
+                                                    None
+                                                };
+                                                if __result.is_some() {
+                                                    return __result;
+                                                }
+                                                state.offset = __cp;
+                                            }
+                                            {
+                                                let __cp = state.offset;
+                                                let __result = if state.offset + 4usize
+                                                    <= state.src_bytes.len()
+                                                    && unsafe {
+                                                        *(state.src_bytes.as_ptr().add(state.offset)
+                                                            as *const [u8; 4usize])
+                                                    } == *b"bool"
+                                                {
+                                                    let __start = state.offset;
+                                                    state.offset += 4usize;
+                                                    Some(
+                                                        ::parse_that::Span::new(__start, state.offset, state.src),
+                                                    )
+                                                } else {
+                                                    None
+                                                };
+                                                if __result.is_some() {
+                                                    return __result;
+                                                }
+                                                state.offset = __cp;
+                                            }
+                                            {
+                                                let __cp = state.offset;
+                                                let __result = if state.offset + 5usize
+                                                    <= state.src_bytes.len()
+                                                    && unsafe {
+                                                        *(state.src_bytes.as_ptr().add(state.offset)
+                                                            as *const [u8; 5usize])
+                                                    } == *b"usize"
+                                                {
+                                                    let __start = state.offset;
+                                                    state.offset += 5usize;
+                                                    Some(
+                                                        ::parse_that::Span::new(__start, state.offset, state.src),
+                                                    )
+                                                } else {
+                                                    None
+                                                };
+                                                if __result.is_some() {
+                                                    return __result;
+                                                }
+                                                state.offset = __cp;
+                                            }
+                                            {
+                                                let __cp = state.offset;
+                                                let __result = ::parse_that::scan_ident(state);
+                                                if __result.is_some() {
+                                                    return __result;
+                                                }
+                                                state.offset = __cp;
+                                            }
+                                            None
                                         })()
                                             .map(|__inner| {
                                                 let __v = BbnfBootstrapEnum::type_name(__inner);
                                                 &*__BbnfBootstrapEnum_alloc(state).slab().alloc(__v)
                                             })?;
-                                        Some((__sp141, __v142))
+                                        Some((__sp140, __v141))
                                     })()
                                         .map(|__inner| {
                                             let __v = BbnfBootstrapEnum::type_annotation(__inner);
@@ -3928,9 +4108,9 @@ impl BbnfBootstrap {
                                     }
                                 }
                             }?;
-                            Some((__v143, __v144))
+                            Some((__v142, __v143))
                         })()?;
-                        Some((__sp145, __v146))
+                        Some((__sp144, __v145))
                     })())() {
                         Some(__v) => Some(Some(__v)),
                         None => {
@@ -3939,7 +4119,7 @@ impl BbnfBootstrap {
                         }
                     }
                 }?;
-                Some((__v147, __v148))
+                Some((__v146, __v147))
             })()
         })()
             .map(|__x| BbnfBootstrapEnum::mapped_factor(__x))
@@ -3953,7 +4133,7 @@ impl BbnfBootstrap {
     ) -> Option<BbnfBootstrapEnum<'a>> {
         (|| {
             (|| {
-                let __v149 = ::parse_that::scan_ident(state)
+                let __v148 = ::parse_that::scan_ident(state)
                     .map(|__inner| {
                         let __v = BbnfBootstrapEnum::identifier(__inner);
                         &*__BbnfBootstrapEnum_alloc(state).slab().alloc(__v)
@@ -3965,8 +4145,8 @@ impl BbnfBootstrap {
                 let __sp_start = state.offset;
                 {
                     ::parse_that::trim_leading_whitespace_mut(state);
-                    let __ws_inner = if state.offset < state.src.len()
-                        && state.src.as_bytes()[state.offset] == 61u8
+                    let __ws_inner = if state.offset < state.src_bytes.len()
+                        && state.src_bytes[state.offset] == 61u8
                     {
                         let __start = state.offset;
                         state.offset += 1;
@@ -3977,12 +4157,12 @@ impl BbnfBootstrap {
                     ::parse_that::trim_leading_whitespace_mut(state);
                     __ws_inner
                 }?;
-                let __sp150 = ::parse_that::Span::new(
+                let __sp149 = ::parse_that::Span::new(
                     __sp_start,
                     state.offset,
                     state.src,
                 );
-                let __v151 = {
+                let __v150 = {
                     ::parse_that::trim_leading_whitespace_mut(state);
                     let __ws_inner = Self::__rhs(state)
                         .map(|__v| &*__BbnfBootstrapEnum_alloc(state).slab().alloc(__v));
@@ -3991,8 +4171,8 @@ impl BbnfBootstrap {
                 }?;
                 let __sp_start = state.offset;
                 (|| {
-                    let __r = if state.offset < state.src.len()
-                        && state.src.as_bytes()[state.offset] == 59u8
+                    let __r = if state.offset < state.src_bytes.len()
+                        && state.src_bytes[state.offset] == 59u8
                     {
                         let __start = state.offset;
                         state.offset += 1;
@@ -4003,8 +4183,8 @@ impl BbnfBootstrap {
                     if __r.is_some() {
                         return __r;
                     }
-                    let __r = if state.offset < state.src.len()
-                        && state.src.as_bytes()[state.offset] == 46u8
+                    let __r = if state.offset < state.src_bytes.len()
+                        && state.src_bytes[state.offset] == 46u8
                     {
                         let __start = state.offset;
                         state.offset += 1;
@@ -4017,12 +4197,12 @@ impl BbnfBootstrap {
                     }
                     None
                 })()?;
-                let __sp152 = ::parse_that::Span::new(
+                let __sp151 = ::parse_that::Span::new(
                     __sp_start,
                     state.offset,
                     state.src,
                 );
-                Some((__v149, __sp150, __v151, __sp152))
+                Some((__v148, __sp149, __v150, __sp151))
             })()
         })()
             .map(|__x| BbnfBootstrapEnum::rule(__x))
@@ -4051,9 +4231,12 @@ impl BbnfBootstrap {
                         let __sp_start = state.offset;
                         {
                             ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = if state
-                                .src[state.offset..]
-                                .starts_with("@recover")
+                            let __ws_inner = if state.offset + 8usize
+                                <= state.src_bytes.len()
+                                && unsafe {
+                                    *(state.src_bytes.as_ptr().add(state.offset)
+                                        as *const [u8; 8usize])
+                                } == *b"@recover"
                             {
                                 let __start = state.offset;
                                 state.offset += 8usize;
@@ -4066,12 +4249,12 @@ impl BbnfBootstrap {
                             ::parse_that::trim_leading_whitespace_mut(state);
                             __ws_inner
                         }?;
-                        let __sp153 = ::parse_that::Span::new(
+                        let __sp152 = ::parse_that::Span::new(
                             __sp_start,
                             state.offset,
                             state.src,
                         );
-                        let __v154 = {
+                        let __v153 = {
                             ::parse_that::trim_leading_whitespace_mut(state);
                             let __ws_inner = ::parse_that::scan_ident(state)
                                 .map(|__inner| {
@@ -4081,7 +4264,7 @@ impl BbnfBootstrap {
                             ::parse_that::trim_leading_whitespace_mut(state);
                             __ws_inner
                         }?;
-                        let __v155 = {
+                        let __v154 = {
                             ::parse_that::trim_leading_whitespace_mut(state);
                             let __ws_inner = Self::__rhs(state)
                                 .map(|__v| {
@@ -4094,8 +4277,8 @@ impl BbnfBootstrap {
                         {
                             let __cp = state.offset;
                             if (|| (|| {
-                                let __r = if state.offset < state.src.len()
-                                    && state.src.as_bytes()[state.offset] == 59u8
+                                let __r = if state.offset < state.src_bytes.len()
+                                    && state.src_bytes[state.offset] == 59u8
                                 {
                                     let __start = state.offset;
                                     state.offset += 1;
@@ -4108,8 +4291,8 @@ impl BbnfBootstrap {
                                 if __r.is_some() {
                                     return __r;
                                 }
-                                let __r = if state.offset < state.src.len()
-                                    && state.src.as_bytes()[state.offset] == 46u8
+                                let __r = if state.offset < state.src_bytes.len()
+                                    && state.src_bytes[state.offset] == 46u8
                                 {
                                     let __start = state.offset;
                                     state.offset += 1;
@@ -4130,12 +4313,12 @@ impl BbnfBootstrap {
                             }
                             Some(::parse_that::Span::new(__cp, state.offset, state.src))
                         }?;
-                        let __sp156 = ::parse_that::Span::new(
+                        let __sp155 = ::parse_that::Span::new(
                             __sp_start,
                             state.offset,
                             state.src,
                         );
-                        Some((__sp153, __v154, __v155, __sp156))
+                        Some((__sp152, __v153, __v154, __sp155))
                     })()
                         .map(|__inner| {
                             let __v = BbnfBootstrapEnum::recover_directive(__inner);
@@ -4152,9 +4335,12 @@ impl BbnfBootstrap {
                         let __sp_start = state.offset;
                         {
                             ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = if state
-                                .src[state.offset..]
-                                .starts_with("@pretty")
+                            let __ws_inner = if state.offset + 7usize
+                                <= state.src_bytes.len()
+                                && unsafe {
+                                    *(state.src_bytes.as_ptr().add(state.offset)
+                                        as *const [u8; 7usize])
+                                } == *b"@pretty"
                             {
                                 let __start = state.offset;
                                 state.offset += 7usize;
@@ -4167,18 +4353,18 @@ impl BbnfBootstrap {
                             ::parse_that::trim_leading_whitespace_mut(state);
                             __ws_inner
                         }?;
-                        let __sp161 = ::parse_that::Span::new(
+                        let __sp160 = ::parse_that::Span::new(
                             __sp_start,
                             state.offset,
                             state.src,
                         );
-                        let __v162 = {
+                        let __v161 = {
                             ::parse_that::trim_leading_whitespace_mut(state);
                             let __ws_inner = (|| {
                                 {
                                     let __cp = state.offset;
-                                    let __result = (if state.offset < state.src.len()
-                                        && state.src.as_bytes()[state.offset] == 42u8
+                                    let __result = (if state.offset < state.src_bytes.len()
+                                        && state.src_bytes[state.offset] == 42u8
                                     {
                                         let __start = state.offset;
                                         state.offset += 1;
@@ -4215,16 +4401,16 @@ impl BbnfBootstrap {
                             ::parse_that::trim_leading_whitespace_mut(state);
                             __ws_inner
                         }?;
-                        let __v163 = {
+                        let __v162 = {
                             ::parse_that::trim_leading_whitespace_mut(state);
                             let __ws_inner = {
-                                let __depth159 = __BbnfBootstrapEnum_alloc(state)
+                                let __depth158 = __BbnfBootstrapEnum_alloc(state)
                                     .__s2()
                                     .len();
                                 loop {
-                                    let __prev160 = state.offset;
+                                    let __prev159 = state.offset;
                                     match (|| {
-                                        let __v157 = ::parse_that::scan_ident(state)
+                                        let __v156 = ::parse_that::scan_ident(state)
                                             .map(|__inner| {
                                                 let __v = BbnfBootstrapEnum::identifier(__inner);
                                                 &*__BbnfBootstrapEnum_alloc(state).slab().alloc(__v)
@@ -4234,8 +4420,8 @@ impl BbnfBootstrap {
                                             let __cp = state.offset;
                                             if (|| (|| {
                                                 let __sp_start = state.offset;
-                                                if state.offset < state.src.len()
-                                                    && state.src.as_bytes()[state.offset] == 40u8
+                                                if state.offset < state.src_bytes.len()
+                                                    && state.src_bytes[state.offset] == 40u8
                                                 {
                                                     let __start = state.offset;
                                                     state.offset += 1;
@@ -4261,8 +4447,8 @@ impl BbnfBootstrap {
                                                         ::parse_that::Span::new(__start, state.offset, state.src),
                                                     )
                                                 }?;
-                                                if state.offset < state.src.len()
-                                                    && state.src.as_bytes()[state.offset] == 41u8
+                                                if state.offset < state.src_bytes.len()
+                                                    && state.src_bytes[state.offset] == 41u8
                                                 {
                                                     let __start = state.offset;
                                                     state.offset += 1;
@@ -4282,35 +4468,35 @@ impl BbnfBootstrap {
                                             }
                                             Some(::parse_that::Span::new(__cp, state.offset, state.src))
                                         }?;
-                                        let __sp158 = ::parse_that::Span::new(
+                                        let __sp157 = ::parse_that::Span::new(
                                             __sp_start,
                                             state.offset,
                                             state.src,
                                         );
-                                        Some((__v157, __sp158))
+                                        Some((__v156, __sp157))
                                     })()
                                         .map(|__v| BbnfBootstrapEnum::pretty_hint(__v))
                                     {
                                         Some(__value) => {
                                             __BbnfBootstrapEnum_alloc(state).__s2().push(__value);
-                                            if state.offset == __prev160 {
+                                            if state.offset == __prev159 {
                                                 break;
                                             }
                                         }
                                         None => {
-                                            state.offset = __prev160;
+                                            state.offset = __prev159;
                                             break;
                                         }
                                     }
                                 }
                                 if (__BbnfBootstrapEnum_alloc(state).__s2().len()
-                                    - __depth159) >= 1usize
+                                    - __depth158) >= 1usize
                                 {
-                                    Some(__BbnfBootstrapEnum_alloc(state).__c2(__depth159))
+                                    Some(__BbnfBootstrapEnum_alloc(state).__c2(__depth158))
                                 } else {
                                     __BbnfBootstrapEnum_alloc(state)
                                         .__s2()
-                                        .truncate(__depth159);
+                                        .truncate(__depth158);
                                     None
                                 }
                             };
@@ -4321,8 +4507,8 @@ impl BbnfBootstrap {
                         {
                             let __cp = state.offset;
                             if (|| (|| {
-                                let __r = if state.offset < state.src.len()
-                                    && state.src.as_bytes()[state.offset] == 59u8
+                                let __r = if state.offset < state.src_bytes.len()
+                                    && state.src_bytes[state.offset] == 59u8
                                 {
                                     let __start = state.offset;
                                     state.offset += 1;
@@ -4335,8 +4521,8 @@ impl BbnfBootstrap {
                                 if __r.is_some() {
                                     return __r;
                                 }
-                                let __r = if state.offset < state.src.len()
-                                    && state.src.as_bytes()[state.offset] == 46u8
+                                let __r = if state.offset < state.src_bytes.len()
+                                    && state.src_bytes[state.offset] == 46u8
                                 {
                                     let __start = state.offset;
                                     state.offset += 1;
@@ -4357,12 +4543,12 @@ impl BbnfBootstrap {
                             }
                             Some(::parse_that::Span::new(__cp, state.offset, state.src))
                         }?;
-                        let __sp164 = ::parse_that::Span::new(
+                        let __sp163 = ::parse_that::Span::new(
                             __sp_start,
                             state.offset,
                             state.src,
                         );
-                        Some((__sp161, __v162, __v163, __sp164))
+                        Some((__sp160, __v161, __v162, __sp163))
                     })()
                         .map(|__inner| {
                             let __v = BbnfBootstrapEnum::pretty_directive(__inner);
@@ -4379,9 +4565,12 @@ impl BbnfBootstrap {
                         let __sp_start = state.offset;
                         {
                             ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = if state
-                                .src[state.offset..]
-                                .starts_with("@ws")
+                            let __ws_inner = if state.offset + 3usize
+                                <= state.src_bytes.len()
+                                && unsafe {
+                                    *(state.src_bytes.as_ptr().add(state.offset)
+                                        as *const [u8; 3usize])
+                                } == *b"@ws"
                             {
                                 let __start = state.offset;
                                 state.offset += 3usize;
@@ -4394,17 +4583,17 @@ impl BbnfBootstrap {
                             ::parse_that::trim_leading_whitespace_mut(state);
                             __ws_inner
                         }?;
-                        let __sp165 = ::parse_that::Span::new(
+                        let __sp164 = ::parse_that::Span::new(
                             __sp_start,
                             state.offset,
                             state.src,
                         );
-                        let __v166 = {
+                        let __v165 = {
                             ::parse_that::trim_leading_whitespace_mut(state);
                             let __ws_inner = (|| {
                                 let __sp_start = state.offset;
-                                if state.offset < state.src.len()
-                                    && state.src.as_bytes()[state.offset] == 47u8
+                                if state.offset < state.src_bytes.len()
+                                    && state.src_bytes[state.offset] == 47u8
                                 {
                                     let __start = state.offset;
                                     state.offset += 1;
@@ -4484,8 +4673,8 @@ impl BbnfBootstrap {
                                         None
                                     }
                                 }?;
-                                if state.offset < state.src.len()
-                                    && state.src.as_bytes()[state.offset] == 47u8
+                                if state.offset < state.src_bytes.len()
+                                    && state.src_bytes[state.offset] == 47u8
                                 {
                                     let __start = state.offset;
                                     state.offset += 1;
@@ -4510,8 +4699,8 @@ impl BbnfBootstrap {
                         {
                             let __cp = state.offset;
                             if (|| (|| {
-                                let __r = if state.offset < state.src.len()
-                                    && state.src.as_bytes()[state.offset] == 59u8
+                                let __r = if state.offset < state.src_bytes.len()
+                                    && state.src_bytes[state.offset] == 59u8
                                 {
                                     let __start = state.offset;
                                     state.offset += 1;
@@ -4524,8 +4713,8 @@ impl BbnfBootstrap {
                                 if __r.is_some() {
                                     return __r;
                                 }
-                                let __r = if state.offset < state.src.len()
-                                    && state.src.as_bytes()[state.offset] == 46u8
+                                let __r = if state.offset < state.src_bytes.len()
+                                    && state.src_bytes[state.offset] == 46u8
                                 {
                                     let __start = state.offset;
                                     state.offset += 1;
@@ -4546,12 +4735,12 @@ impl BbnfBootstrap {
                             }
                             Some(::parse_that::Span::new(__cp, state.offset, state.src))
                         }?;
-                        let __sp167 = ::parse_that::Span::new(
+                        let __sp166 = ::parse_that::Span::new(
                             __sp_start,
                             state.offset,
                             state.src,
                         );
-                        Some((__sp165, __v166, __sp167))
+                        Some((__sp164, __v165, __sp166))
                     })()
                         .map(|__inner| {
                             let __v = BbnfBootstrapEnum::ws_directive(__inner);
@@ -4568,9 +4757,12 @@ impl BbnfBootstrap {
                         let __sp_start = state.offset;
                         {
                             ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = if state
-                                .src[state.offset..]
-                                .starts_with("@token")
+                            let __ws_inner = if state.offset + 6usize
+                                <= state.src_bytes.len()
+                                && unsafe {
+                                    *(state.src_bytes.as_ptr().add(state.offset)
+                                        as *const [u8; 6usize])
+                                } == *b"@token"
                             {
                                 let __start = state.offset;
                                 state.offset += 6usize;
@@ -4583,12 +4775,12 @@ impl BbnfBootstrap {
                             ::parse_that::trim_leading_whitespace_mut(state);
                             __ws_inner
                         }?;
-                        let __sp168 = ::parse_that::Span::new(
+                        let __sp167 = ::parse_that::Span::new(
                             __sp_start,
                             state.offset,
                             state.src,
                         );
-                        let __v169 = {
+                        let __v168 = {
                             ::parse_that::trim_leading_whitespace_mut(state);
                             let __ws_inner = ::parse_that::scan_ident(state)
                                 .map(|__inner| {
@@ -4602,8 +4794,8 @@ impl BbnfBootstrap {
                         {
                             let __cp = state.offset;
                             if (|| (|| {
-                                let __r = if state.offset < state.src.len()
-                                    && state.src.as_bytes()[state.offset] == 59u8
+                                let __r = if state.offset < state.src_bytes.len()
+                                    && state.src_bytes[state.offset] == 59u8
                                 {
                                     let __start = state.offset;
                                     state.offset += 1;
@@ -4616,8 +4808,8 @@ impl BbnfBootstrap {
                                 if __r.is_some() {
                                     return __r;
                                 }
-                                let __r = if state.offset < state.src.len()
-                                    && state.src.as_bytes()[state.offset] == 46u8
+                                let __r = if state.offset < state.src_bytes.len()
+                                    && state.src_bytes[state.offset] == 46u8
                                 {
                                     let __start = state.offset;
                                     state.offset += 1;
@@ -4638,12 +4830,12 @@ impl BbnfBootstrap {
                             }
                             Some(::parse_that::Span::new(__cp, state.offset, state.src))
                         }?;
-                        let __sp170 = ::parse_that::Span::new(
+                        let __sp169 = ::parse_that::Span::new(
                             __sp_start,
                             state.offset,
                             state.src,
                         );
-                        Some((__sp168, __v169, __sp170))
+                        Some((__sp167, __v168, __sp169))
                     })()
                         .map(|__inner| {
                             let __v = BbnfBootstrapEnum::token_directive(__inner);
@@ -4660,9 +4852,12 @@ impl BbnfBootstrap {
                         let __sp_start = state.offset;
                         {
                             ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = if state
-                                .src[state.offset..]
-                                .starts_with("@debug")
+                            let __ws_inner = if state.offset + 6usize
+                                <= state.src_bytes.len()
+                                && unsafe {
+                                    *(state.src_bytes.as_ptr().add(state.offset)
+                                        as *const [u8; 6usize])
+                                } == *b"@debug"
                             {
                                 let __start = state.offset;
                                 state.offset += 6usize;
@@ -4675,18 +4870,18 @@ impl BbnfBootstrap {
                             ::parse_that::trim_leading_whitespace_mut(state);
                             __ws_inner
                         }?;
-                        let __sp171 = ::parse_that::Span::new(
+                        let __sp170 = ::parse_that::Span::new(
                             __sp_start,
                             state.offset,
                             state.src,
                         );
-                        let __v172 = {
+                        let __v171 = {
                             ::parse_that::trim_leading_whitespace_mut(state);
                             let __ws_inner = (|| {
                                 {
                                     let __cp = state.offset;
-                                    let __result = (if state.offset < state.src.len()
-                                        && state.src.as_bytes()[state.offset] == 42u8
+                                    let __result = (if state.offset < state.src_bytes.len()
+                                        && state.src_bytes[state.offset] == 42u8
                                     {
                                         let __start = state.offset;
                                         state.offset += 1;
@@ -4727,8 +4922,8 @@ impl BbnfBootstrap {
                         {
                             let __cp = state.offset;
                             if (|| (|| {
-                                let __r = if state.offset < state.src.len()
-                                    && state.src.as_bytes()[state.offset] == 59u8
+                                let __r = if state.offset < state.src_bytes.len()
+                                    && state.src_bytes[state.offset] == 59u8
                                 {
                                     let __start = state.offset;
                                     state.offset += 1;
@@ -4741,8 +4936,8 @@ impl BbnfBootstrap {
                                 if __r.is_some() {
                                     return __r;
                                 }
-                                let __r = if state.offset < state.src.len()
-                                    && state.src.as_bytes()[state.offset] == 46u8
+                                let __r = if state.offset < state.src_bytes.len()
+                                    && state.src_bytes[state.offset] == 46u8
                                 {
                                     let __start = state.offset;
                                     state.offset += 1;
@@ -4763,12 +4958,12 @@ impl BbnfBootstrap {
                             }
                             Some(::parse_that::Span::new(__cp, state.offset, state.src))
                         }?;
-                        let __sp173 = ::parse_that::Span::new(
+                        let __sp172 = ::parse_that::Span::new(
                             __sp_start,
                             state.offset,
                             state.src,
                         );
-                        Some((__sp171, __v172, __sp173))
+                        Some((__sp170, __v171, __sp172))
                     })()
                         .map(|__inner| {
                             let __v = BbnfBootstrapEnum::debug_directive(__inner);
@@ -4785,9 +4980,12 @@ impl BbnfBootstrap {
                         let __sp_start = state.offset;
                         {
                             ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = if state
-                                .src[state.offset..]
-                                .starts_with("@host")
+                            let __ws_inner = if state.offset + 5usize
+                                <= state.src_bytes.len()
+                                && unsafe {
+                                    *(state.src_bytes.as_ptr().add(state.offset)
+                                        as *const [u8; 5usize])
+                                } == *b"@host"
                             {
                                 let __start = state.offset;
                                 state.offset += 5usize;
@@ -4800,12 +4998,12 @@ impl BbnfBootstrap {
                             ::parse_that::trim_leading_whitespace_mut(state);
                             __ws_inner
                         }?;
-                        let __sp177 = ::parse_that::Span::new(
+                        let __sp175 = ::parse_that::Span::new(
                             __sp_start,
                             state.offset,
                             state.src,
                         );
-                        let __v178 = {
+                        let __v176 = {
                             ::parse_that::trim_leading_whitespace_mut(state);
                             let __ws_inner = ::parse_that::scan_ident(state)
                                 .map(|__inner| {
@@ -4815,14 +5013,14 @@ impl BbnfBootstrap {
                             ::parse_that::trim_leading_whitespace_mut(state);
                             __ws_inner
                         }?;
-                        let __v179 = {
+                        let __v177 = {
                             let __cp = state.offset;
                             match (|| (|| {
                                 let __sp_start = state.offset;
                                 {
                                     ::parse_that::trim_leading_whitespace_mut(state);
-                                    let __ws_inner = if state.offset < state.src.len()
-                                        && state.src.as_bytes()[state.offset] == 58u8
+                                    let __ws_inner = if state.offset < state.src_bytes.len()
+                                        && state.src_bytes[state.offset] == 58u8
                                     {
                                         let __start = state.offset;
                                         state.offset += 1;
@@ -4835,152 +5033,243 @@ impl BbnfBootstrap {
                                     ::parse_that::trim_leading_whitespace_mut(state);
                                     __ws_inner
                                 }?;
-                                let __sp175 = ::parse_that::Span::new(
+                                let __sp173 = ::parse_that::Span::new(
                                     __sp_start,
                                     state.offset,
                                     state.src,
                                 );
-                                let __v176 = {
+                                let __v174 = {
                                     ::parse_that::trim_leading_whitespace_mut(state);
                                     let __ws_inner = (|| {
-                                        let __kd_cp174 = state.offset;
-                                        if let Some(ref __kd_s) = ::parse_that::scan_ident(state) {
-                                            let __kd_bytes = &state.src_bytes[__kd_s.start..__kd_s.end];
-                                            let __kd_len = __kd_bytes.len();
-                                            if (__kd_len == 2usize && __kd_bytes == &[b'u', b'8']) {
-                                                state.offset = __kd_cp174;
-                                                return if state.src[state.offset..].starts_with("u8") {
-                                                    let __start = state.offset;
-                                                    state.offset += 2usize;
-                                                    Some(
-                                                        ::parse_that::Span::new(__start, state.offset, state.src),
-                                                    )
-                                                } else {
-                                                    None
-                                                };
-                                            }
-                                            if (__kd_len == 3usize && __kd_bytes == &[b'u', b'1', b'6'])
+                                        {
+                                            let __cp = state.offset;
+                                            let __result = if state.offset + 2usize
+                                                <= state.src_bytes.len()
+                                                && unsafe {
+                                                    *(state.src_bytes.as_ptr().add(state.offset)
+                                                        as *const [u8; 2usize])
+                                                } == *b"u8"
                                             {
-                                                state.offset = __kd_cp174;
-                                                return if state.src[state.offset..].starts_with("u16") {
-                                                    let __start = state.offset;
-                                                    state.offset += 3usize;
-                                                    Some(
-                                                        ::parse_that::Span::new(__start, state.offset, state.src),
-                                                    )
-                                                } else {
-                                                    None
-                                                };
+                                                let __start = state.offset;
+                                                state.offset += 2usize;
+                                                Some(
+                                                    ::parse_that::Span::new(__start, state.offset, state.src),
+                                                )
+                                            } else {
+                                                None
+                                            };
+                                            if __result.is_some() {
+                                                return __result;
                                             }
-                                            if (__kd_len == 3usize && __kd_bytes == &[b'u', b'3', b'2'])
-                                            {
-                                                state.offset = __kd_cp174;
-                                                return if state.src[state.offset..].starts_with("u32") {
-                                                    let __start = state.offset;
-                                                    state.offset += 3usize;
-                                                    Some(
-                                                        ::parse_that::Span::new(__start, state.offset, state.src),
-                                                    )
-                                                } else {
-                                                    None
-                                                };
-                                            }
-                                            if (__kd_len == 3usize && __kd_bytes == &[b'u', b'6', b'4'])
-                                            {
-                                                state.offset = __kd_cp174;
-                                                return if state.src[state.offset..].starts_with("u64") {
-                                                    let __start = state.offset;
-                                                    state.offset += 3usize;
-                                                    Some(
-                                                        ::parse_that::Span::new(__start, state.offset, state.src),
-                                                    )
-                                                } else {
-                                                    None
-                                                };
-                                            }
-                                            if (__kd_len == 3usize && __kd_bytes == &[b'i', b'3', b'2'])
-                                            {
-                                                state.offset = __kd_cp174;
-                                                return if state.src[state.offset..].starts_with("i32") {
-                                                    let __start = state.offset;
-                                                    state.offset += 3usize;
-                                                    Some(
-                                                        ::parse_that::Span::new(__start, state.offset, state.src),
-                                                    )
-                                                } else {
-                                                    None
-                                                };
-                                            }
-                                            if (__kd_len == 3usize && __kd_bytes == &[b'i', b'6', b'4'])
-                                            {
-                                                state.offset = __kd_cp174;
-                                                return if state.src[state.offset..].starts_with("i64") {
-                                                    let __start = state.offset;
-                                                    state.offset += 3usize;
-                                                    Some(
-                                                        ::parse_that::Span::new(__start, state.offset, state.src),
-                                                    )
-                                                } else {
-                                                    None
-                                                };
-                                            }
-                                            if (__kd_len == 3usize && __kd_bytes == &[b'f', b'3', b'2'])
-                                            {
-                                                state.offset = __kd_cp174;
-                                                return if state.src[state.offset..].starts_with("f32") {
-                                                    let __start = state.offset;
-                                                    state.offset += 3usize;
-                                                    Some(
-                                                        ::parse_that::Span::new(__start, state.offset, state.src),
-                                                    )
-                                                } else {
-                                                    None
-                                                };
-                                            }
-                                            if (__kd_len == 3usize && __kd_bytes == &[b'f', b'6', b'4'])
-                                            {
-                                                state.offset = __kd_cp174;
-                                                return if state.src[state.offset..].starts_with("f64") {
-                                                    let __start = state.offset;
-                                                    state.offset += 3usize;
-                                                    Some(
-                                                        ::parse_that::Span::new(__start, state.offset, state.src),
-                                                    )
-                                                } else {
-                                                    None
-                                                };
-                                            }
-                                            if (__kd_len == 4usize
-                                                && __kd_bytes == &[b'b', b'o', b'o', b'l'])
-                                            {
-                                                state.offset = __kd_cp174;
-                                                return if state.src[state.offset..].starts_with("bool") {
-                                                    let __start = state.offset;
-                                                    state.offset += 4usize;
-                                                    Some(
-                                                        ::parse_that::Span::new(__start, state.offset, state.src),
-                                                    )
-                                                } else {
-                                                    None
-                                                };
-                                            }
-                                            if (__kd_len == 5usize
-                                                && __kd_bytes == &[b'u', b's', b'i', b'z', b'e'])
-                                            {
-                                                state.offset = __kd_cp174;
-                                                return if state.src[state.offset..].starts_with("usize") {
-                                                    let __start = state.offset;
-                                                    state.offset += 5usize;
-                                                    Some(
-                                                        ::parse_that::Span::new(__start, state.offset, state.src),
-                                                    )
-                                                } else {
-                                                    None
-                                                };
-                                            }
+                                            state.offset = __cp;
                                         }
-                                        state.offset = __kd_cp174;
-                                        ::parse_that::scan_ident(state)
+                                        {
+                                            let __cp = state.offset;
+                                            let __result = if state.offset + 3usize
+                                                <= state.src_bytes.len()
+                                                && unsafe {
+                                                    *(state.src_bytes.as_ptr().add(state.offset)
+                                                        as *const [u8; 3usize])
+                                                } == *b"u16"
+                                            {
+                                                let __start = state.offset;
+                                                state.offset += 3usize;
+                                                Some(
+                                                    ::parse_that::Span::new(__start, state.offset, state.src),
+                                                )
+                                            } else {
+                                                None
+                                            };
+                                            if __result.is_some() {
+                                                return __result;
+                                            }
+                                            state.offset = __cp;
+                                        }
+                                        {
+                                            let __cp = state.offset;
+                                            let __result = if state.offset + 3usize
+                                                <= state.src_bytes.len()
+                                                && unsafe {
+                                                    *(state.src_bytes.as_ptr().add(state.offset)
+                                                        as *const [u8; 3usize])
+                                                } == *b"u32"
+                                            {
+                                                let __start = state.offset;
+                                                state.offset += 3usize;
+                                                Some(
+                                                    ::parse_that::Span::new(__start, state.offset, state.src),
+                                                )
+                                            } else {
+                                                None
+                                            };
+                                            if __result.is_some() {
+                                                return __result;
+                                            }
+                                            state.offset = __cp;
+                                        }
+                                        {
+                                            let __cp = state.offset;
+                                            let __result = if state.offset + 3usize
+                                                <= state.src_bytes.len()
+                                                && unsafe {
+                                                    *(state.src_bytes.as_ptr().add(state.offset)
+                                                        as *const [u8; 3usize])
+                                                } == *b"u64"
+                                            {
+                                                let __start = state.offset;
+                                                state.offset += 3usize;
+                                                Some(
+                                                    ::parse_that::Span::new(__start, state.offset, state.src),
+                                                )
+                                            } else {
+                                                None
+                                            };
+                                            if __result.is_some() {
+                                                return __result;
+                                            }
+                                            state.offset = __cp;
+                                        }
+                                        {
+                                            let __cp = state.offset;
+                                            let __result = if state.offset + 3usize
+                                                <= state.src_bytes.len()
+                                                && unsafe {
+                                                    *(state.src_bytes.as_ptr().add(state.offset)
+                                                        as *const [u8; 3usize])
+                                                } == *b"i32"
+                                            {
+                                                let __start = state.offset;
+                                                state.offset += 3usize;
+                                                Some(
+                                                    ::parse_that::Span::new(__start, state.offset, state.src),
+                                                )
+                                            } else {
+                                                None
+                                            };
+                                            if __result.is_some() {
+                                                return __result;
+                                            }
+                                            state.offset = __cp;
+                                        }
+                                        {
+                                            let __cp = state.offset;
+                                            let __result = if state.offset + 3usize
+                                                <= state.src_bytes.len()
+                                                && unsafe {
+                                                    *(state.src_bytes.as_ptr().add(state.offset)
+                                                        as *const [u8; 3usize])
+                                                } == *b"i64"
+                                            {
+                                                let __start = state.offset;
+                                                state.offset += 3usize;
+                                                Some(
+                                                    ::parse_that::Span::new(__start, state.offset, state.src),
+                                                )
+                                            } else {
+                                                None
+                                            };
+                                            if __result.is_some() {
+                                                return __result;
+                                            }
+                                            state.offset = __cp;
+                                        }
+                                        {
+                                            let __cp = state.offset;
+                                            let __result = if state.offset + 3usize
+                                                <= state.src_bytes.len()
+                                                && unsafe {
+                                                    *(state.src_bytes.as_ptr().add(state.offset)
+                                                        as *const [u8; 3usize])
+                                                } == *b"f32"
+                                            {
+                                                let __start = state.offset;
+                                                state.offset += 3usize;
+                                                Some(
+                                                    ::parse_that::Span::new(__start, state.offset, state.src),
+                                                )
+                                            } else {
+                                                None
+                                            };
+                                            if __result.is_some() {
+                                                return __result;
+                                            }
+                                            state.offset = __cp;
+                                        }
+                                        {
+                                            let __cp = state.offset;
+                                            let __result = if state.offset + 3usize
+                                                <= state.src_bytes.len()
+                                                && unsafe {
+                                                    *(state.src_bytes.as_ptr().add(state.offset)
+                                                        as *const [u8; 3usize])
+                                                } == *b"f64"
+                                            {
+                                                let __start = state.offset;
+                                                state.offset += 3usize;
+                                                Some(
+                                                    ::parse_that::Span::new(__start, state.offset, state.src),
+                                                )
+                                            } else {
+                                                None
+                                            };
+                                            if __result.is_some() {
+                                                return __result;
+                                            }
+                                            state.offset = __cp;
+                                        }
+                                        {
+                                            let __cp = state.offset;
+                                            let __result = if state.offset + 4usize
+                                                <= state.src_bytes.len()
+                                                && unsafe {
+                                                    *(state.src_bytes.as_ptr().add(state.offset)
+                                                        as *const [u8; 4usize])
+                                                } == *b"bool"
+                                            {
+                                                let __start = state.offset;
+                                                state.offset += 4usize;
+                                                Some(
+                                                    ::parse_that::Span::new(__start, state.offset, state.src),
+                                                )
+                                            } else {
+                                                None
+                                            };
+                                            if __result.is_some() {
+                                                return __result;
+                                            }
+                                            state.offset = __cp;
+                                        }
+                                        {
+                                            let __cp = state.offset;
+                                            let __result = if state.offset + 5usize
+                                                <= state.src_bytes.len()
+                                                && unsafe {
+                                                    *(state.src_bytes.as_ptr().add(state.offset)
+                                                        as *const [u8; 5usize])
+                                                } == *b"usize"
+                                            {
+                                                let __start = state.offset;
+                                                state.offset += 5usize;
+                                                Some(
+                                                    ::parse_that::Span::new(__start, state.offset, state.src),
+                                                )
+                                            } else {
+                                                None
+                                            };
+                                            if __result.is_some() {
+                                                return __result;
+                                            }
+                                            state.offset = __cp;
+                                        }
+                                        {
+                                            let __cp = state.offset;
+                                            let __result = ::parse_that::scan_ident(state);
+                                            if __result.is_some() {
+                                                return __result;
+                                            }
+                                            state.offset = __cp;
+                                        }
+                                        None
                                     })()
                                         .map(|__inner| {
                                             let __v = BbnfBootstrapEnum::type_name(__inner);
@@ -4989,7 +5278,7 @@ impl BbnfBootstrap {
                                     ::parse_that::trim_leading_whitespace_mut(state);
                                     __ws_inner
                                 }?;
-                                Some((__sp175, __v176))
+                                Some((__sp173, __v174))
                             })())() {
                                 Some(__v) => Some(Some(__v)),
                                 None => {
@@ -5002,8 +5291,8 @@ impl BbnfBootstrap {
                         {
                             let __cp = state.offset;
                             if (|| (|| {
-                                let __r = if state.offset < state.src.len()
-                                    && state.src.as_bytes()[state.offset] == 59u8
+                                let __r = if state.offset < state.src_bytes.len()
+                                    && state.src_bytes[state.offset] == 59u8
                                 {
                                     let __start = state.offset;
                                     state.offset += 1;
@@ -5016,8 +5305,8 @@ impl BbnfBootstrap {
                                 if __r.is_some() {
                                     return __r;
                                 }
-                                let __r = if state.offset < state.src.len()
-                                    && state.src.as_bytes()[state.offset] == 46u8
+                                let __r = if state.offset < state.src_bytes.len()
+                                    && state.src_bytes[state.offset] == 46u8
                                 {
                                     let __start = state.offset;
                                     state.offset += 1;
@@ -5038,12 +5327,12 @@ impl BbnfBootstrap {
                             }
                             Some(::parse_that::Span::new(__cp, state.offset, state.src))
                         }?;
-                        let __sp180 = ::parse_that::Span::new(
+                        let __sp178 = ::parse_that::Span::new(
                             __sp_start,
                             state.offset,
                             state.src,
                         );
-                        Some((__sp177, __v178, __v179, __sp180))
+                        Some((__sp175, __v176, __v177, __sp178))
                     })()
                         .map(|__inner| {
                             let __v = BbnfBootstrapEnum::host_directive(__inner);
@@ -5074,7 +5363,12 @@ impl BbnfBootstrap {
                         ::parse_that::trim_leading_whitespace_mut(state);
                         let __ws_inner = (|| {
                             let __sp_start = state.offset;
-                            if state.src[state.offset..].starts_with("//") {
+                            if state.offset + 2usize <= state.src_bytes.len()
+                                && unsafe {
+                                    *(state.src_bytes.as_ptr().add(state.offset)
+                                        as *const [u8; 2usize])
+                                } == *b"//"
+                            {
                                 let __start = state.offset;
                                 state.offset += 2usize;
                                 Some(
@@ -5132,7 +5426,12 @@ impl BbnfBootstrap {
                         ::parse_that::trim_leading_whitespace_mut(state);
                         let __ws_inner = (|| {
                             let __sp_start = state.offset;
-                            if state.src[state.offset..].starts_with("/*") {
+                            if state.offset + 2usize <= state.src_bytes.len()
+                                && unsafe {
+                                    *(state.src_bytes.as_ptr().add(state.offset)
+                                        as *const [u8; 2usize])
+                                } == *b"/*"
+                            {
                                 let __start = state.offset;
                                 state.offset += 2usize;
                                 Some(
@@ -5157,7 +5456,12 @@ impl BbnfBootstrap {
                                     ::parse_that::Span::new(__start, state.offset, state.src),
                                 )
                             }?;
-                            if state.src[state.offset..].starts_with("*/") {
+                            if state.offset + 2usize <= state.src_bytes.len()
+                                && unsafe {
+                                    *(state.src_bytes.as_ptr().add(state.offset)
+                                        as *const [u8; 2usize])
+                                } == *b"*/"
+                            {
                                 let __start = state.offset;
                                 state.offset += 2usize;
                                 Some(
@@ -5214,9 +5518,9 @@ impl BbnfBootstrap {
     ) -> Option<BbnfBootstrapEnum<'a>> {
         (|| {
             {
-                let __depth181 = __BbnfBootstrapEnum_alloc(state).__s2().len();
+                let __depth179 = __BbnfBootstrapEnum_alloc(state).__s2().len();
                 loop {
-                    let __prev182 = state.offset;
+                    let __prev180 = state.offset;
                     match {
                         ::parse_that::trim_leading_whitespace_mut(state);
                         let __ws_inner = Self::__grammar_item(state);
@@ -5225,17 +5529,17 @@ impl BbnfBootstrap {
                     } {
                         Some(__value) => {
                             __BbnfBootstrapEnum_alloc(state).__s2().push(__value);
-                            if state.offset == __prev182 {
+                            if state.offset == __prev180 {
                                 break;
                             }
                         }
                         None => {
-                            state.offset = __prev182;
+                            state.offset = __prev180;
                             break;
                         }
                     }
                 }
-                Some(__BbnfBootstrapEnum_alloc(state).__c2(__depth181))
+                Some(__BbnfBootstrapEnum_alloc(state).__c2(__depth179))
             }
         })()
             .map(|__x| BbnfBootstrapEnum::grammar(__x))

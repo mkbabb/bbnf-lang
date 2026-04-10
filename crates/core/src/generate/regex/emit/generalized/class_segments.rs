@@ -4,6 +4,8 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 
+use crate::backend::kernels;
+
 /// A parsed char class segment: predicate expression + quantifier.
 pub(super) struct ClassSegment {
     pub(super) predicate: TokenStream,
@@ -103,6 +105,22 @@ pub(super) fn emit_char_class_loop(pattern: &str) -> Option<TokenStream> {
     let inner = class_str.strip_prefix('[')?.strip_suffix(']')?;
     if inner.starts_with('^') {
         return None; // Negated classes handled by is_negated_char_class_regex.
+    }
+
+    // Tranche X phase 1: route through `kernels::charclass::emit_call_opt`
+    // first. The kernel collapses `[0-9]+`, `[0-9]*`, `[a-zA-Z0-9]+`,
+    // `[0-9a-fA-F]+` onto the hoisted `parse_that::scan_*_mut` helpers.
+    // Falls through to the inline predicate emission for shapes the
+    // kernel doesn't recognize. Per §3 rule 16 this is the structural
+    // kernel routing gate for the generalized char-class loop path.
+    if max_count == usize::MAX && (min_count == 0 || min_count == 1) {
+        if let Some((chars, negated)) = kernels::charclass::charset_from_class_body(inner) {
+            if let Some(call) =
+                kernels::charclass::emit_call_opt(&chars, negated, min_count as u32, None)
+            {
+                return Some(quote! { { #call } });
+            }
+        }
     }
 
     // Build a byte predicate expression from the char class contents.

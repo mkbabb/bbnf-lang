@@ -3,12 +3,13 @@
 //! Handles both tight byte-predicate loops for character classes and
 //! general-purpose checkpoint loops for arbitrary sub-expressions.
 
-use parse_that::regex::hir::{Hir, Repetition};
+use parse_that::regex::hir::{CharClass, Hir, Repetition};
 use proc_macro2::TokenStream;
 use quote::quote;
 
 use super::emit_hir;
 use super::leaf::emit_class_predicate;
+use crate::backend::kernels;
 
 // ── Repetition ──────────────────────────────────────────────────────────────
 
@@ -33,7 +34,19 @@ pub(super) fn emit_repetition(rep: &Repetition) -> Option<TokenStream> {
 
     // Special case: class-based loops (`[a-z]+`, `\d*`, etc.)
     // For a tight byte-predicate loop without per-iteration IIFE overhead.
+    //
+    // Tranche X phase 1: route through `kernels::charclass::emit_stmt_opt`
+    // first. The kernel collapses the four hot shapes
+    // (`[0-9]+`, `[0-9]*`, `[a-zA-Z0-9]+`, `[0-9a-fA-F]+`) onto the
+    // hoisted `parse_that::scan_*_mut` helpers, eliminating the
+    // ~16-line inline `is_ascii_digit()` loop the cargo-expand audit
+    // measured 86 times in CSS L4. Falls through to the inline
+    // `emit_class_loop` for shapes the kernel doesn't recognize
+    // (negated, bounded, `\s`, multi-range mixes).
     if let Hir::Class(class) = &*rep.sub {
+        if let Some(stmt) = try_kernel_class_loop(class, min, max) {
+            return Some(stmt);
+        }
         if let Some(predicate) = emit_class_predicate(class) {
             return emit_class_loop(&predicate, min, max);
         }
@@ -121,6 +134,28 @@ fn emit_class_loop(predicate: &TokenStream, min: u32, max: Option<u32>) -> Optio
             })
         }
     }
+}
+
+/// Tranche X phase 1: try routing a `Hir::Class` repetition through
+/// `kernels::charclass::emit_stmt_opt`. Returns `Some(block)` only for
+/// the recognized hot shapes; falls through to `emit_class_loop` on
+/// `None`. Per §3 rule 16 this is the **structural** kernel routing
+/// gate for the HIR repetition path.
+fn try_kernel_class_loop(class: &CharClass, min: u32, max: Option<u32>) -> Option<TokenStream> {
+    // The kernel only handles unbounded `+` (lo == 1) and `*` (lo == 0)
+    // shapes today. Bounded ranges fall back to the inline emitter.
+    if !(max.is_none() && (min == 0 || min == 1)) {
+        return None;
+    }
+    // Only byte-mode classes — Unicode classes go through the DFA tier.
+    let CharClass::Bytes { ranges, negated } = class else {
+        return None;
+    };
+    if *negated {
+        return None;
+    }
+    let chars = kernels::charclass::charset_from_byte_ranges(ranges);
+    kernels::charclass::emit_stmt_opt(&chars, false, min, max)
 }
 
 /// Emit a general-purpose loop for repetition of arbitrary sub-expressions.

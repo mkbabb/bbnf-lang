@@ -963,21 +963,9 @@ impl BbnfBootstrap {
                                         state.offset += 1;
                                     }
                                     {
-                                        let __loop_start = state.offset;
-                                        let __end = state.src_bytes.len();
-                                        let mut __pos = state.offset;
-                                        while __pos < __end {
-                                            let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                            if __b.is_ascii_hexdigit() {
-                                                __pos += 1;
-                                            } else {
-                                                break;
-                                            }
-                                        }
-                                        if __pos < __loop_start + 1 as usize {
+                                        if ::parse_that::scan_hex_mut(state).is_none() {
                                             return None;
                                         }
-                                        state.offset = __pos;
                                     }
                                     {
                                         let __end = state.src_bytes.len();
@@ -998,21 +986,9 @@ impl BbnfBootstrap {
                                     state.offset = __save_alt;
                                     (|| -> Option<()> {
                                         {
-                                            let __loop_start = state.offset;
-                                            let __end = state.src_bytes.len();
-                                            let mut __pos = state.offset;
-                                            while __pos < __end {
-                                                let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                                if __b.is_ascii_digit() {
-                                                    __pos += 1;
-                                                } else {
-                                                    break;
-                                                }
-                                            }
-                                            if __pos < __loop_start + 1 as usize {
+                                            if ::parse_that::scan_digits_mut(state).is_none() {
                                                 return None;
                                             }
-                                            state.offset = __pos;
                                         }
                                         {
                                             let __end = state.src_bytes.len();
@@ -1062,38 +1038,16 @@ impl BbnfBootstrap {
                         let __start = state.offset;
                         let __result: Option<()> = (|| {
                             {
-                                let __end = state.src_bytes.len();
-                                let mut __pos = state.offset;
-                                while __pos < __end {
-                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                    if __b.is_ascii_digit() {
-                                        __pos += 1;
-                                    } else {
-                                        break;
-                                    }
-                                }
-                                state.offset = __pos;
+                                let _ = ::parse_that::scan_digits_star_mut(state);
                             }
                             if state.src_bytes.get(state.offset).copied() != Some(b'.') {
                                 return None;
                             }
                             state.offset += 1;
                             {
-                                let __loop_start = state.offset;
-                                let __end = state.src_bytes.len();
-                                let mut __pos = state.offset;
-                                while __pos < __end {
-                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                    if __b.is_ascii_digit() {
-                                        __pos += 1;
-                                    } else {
-                                        break;
-                                    }
-                                }
-                                if __pos < __loop_start + 1 as usize {
+                                if ::parse_that::scan_digits_mut(state).is_none() {
                                     return None;
                                 }
-                                state.offset = __pos;
                             }
                             {
                                 let __save = state.offset;
@@ -1122,21 +1076,9 @@ impl BbnfBootstrap {
                                         }
                                     }
                                     {
-                                        let __loop_start = state.offset;
-                                        let __end = state.src_bytes.len();
-                                        let mut __pos = state.offset;
-                                        while __pos < __end {
-                                            let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                            if __b.is_ascii_digit() {
-                                                __pos += 1;
-                                            } else {
-                                                break;
-                                            }
-                                        }
-                                        if __pos < __loop_start + 1 as usize {
+                                        if ::parse_that::scan_digits_mut(state).is_none() {
                                             return None;
                                         }
-                                        state.offset = __pos;
                                     }
                                     Some(())
                                 })();
@@ -5328,21 +5270,9 @@ impl BbnfBootstrap {
                                     state.offset += 1;
                                 }
                                 {
-                                    let __loop_start = state.offset;
-                                    let __end = state.src_bytes.len();
-                                    let mut __pos = state.offset;
-                                    while __pos < __end {
-                                        let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                        if __b.is_ascii_hexdigit() {
-                                            __pos += 1;
-                                        } else {
-                                            break;
-                                        }
-                                    }
-                                    if __pos < __loop_start + 1 as usize {
+                                    if ::parse_that::scan_hex_mut(state).is_none() {
                                         return None;
                                     }
-                                    state.offset = __pos;
                                 }
                                 {
                                     let __end = state.src_bytes.len();
@@ -5363,21 +5293,9 @@ impl BbnfBootstrap {
                                 state.offset = __save_alt;
                                 (|| -> Option<()> {
                                     {
-                                        let __loop_start = state.offset;
-                                        let __end = state.src_bytes.len();
-                                        let mut __pos = state.offset;
-                                        while __pos < __end {
-                                            let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                            if __b.is_ascii_digit() {
-                                                __pos += 1;
-                                            } else {
-                                                break;
-                                            }
-                                        }
-                                        if __pos < __loop_start + 1 as usize {
+                                        if ::parse_that::scan_digits_mut(state).is_none() {
                                             return None;
                                         }
-                                        state.offset = __pos;
                                     }
                                     {
                                         let __end = state.src_bytes.len();
@@ -5445,38 +5363,16 @@ impl BbnfBootstrap {
                     let __start = state.offset;
                     let __result: Option<()> = (|| {
                         {
-                            let __end = state.src_bytes.len();
-                            let mut __pos = state.offset;
-                            while __pos < __end {
-                                let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                if __b.is_ascii_digit() {
-                                    __pos += 1;
-                                } else {
-                                    break;
-                                }
-                            }
-                            state.offset = __pos;
+                            let _ = ::parse_that::scan_digits_star_mut(state);
                         }
                         if state.src_bytes.get(state.offset).copied() != Some(b'.') {
                             return None;
                         }
                         state.offset += 1;
                         {
-                            let __loop_start = state.offset;
-                            let __end = state.src_bytes.len();
-                            let mut __pos = state.offset;
-                            while __pos < __end {
-                                let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                if __b.is_ascii_digit() {
-                                    __pos += 1;
-                                } else {
-                                    break;
-                                }
-                            }
-                            if __pos < __loop_start + 1 as usize {
+                            if ::parse_that::scan_digits_mut(state).is_none() {
                                 return None;
                             }
-                            state.offset = __pos;
                         }
                         {
                             let __save = state.offset;
@@ -5505,21 +5401,9 @@ impl BbnfBootstrap {
                                     }
                                 }
                                 {
-                                    let __loop_start = state.offset;
-                                    let __end = state.src_bytes.len();
-                                    let mut __pos = state.offset;
-                                    while __pos < __end {
-                                        let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                        if __b.is_ascii_digit() {
-                                            __pos += 1;
-                                        } else {
-                                            break;
-                                        }
-                                    }
-                                    if __pos < __loop_start + 1 as usize {
+                                    if ::parse_that::scan_digits_mut(state).is_none() {
                                         return None;
                                     }
-                                    state.offset = __pos;
                                 }
                                 Some(())
                             })();
@@ -9143,21 +9027,9 @@ impl BbnfBootstrap {
                                                 state.offset += 1;
                                             }
                                             {
-                                                let __loop_start = state.offset;
-                                                let __end = state.src_bytes.len();
-                                                let mut __pos = state.offset;
-                                                while __pos < __end {
-                                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                                    if __b.is_ascii_hexdigit() {
-                                                        __pos += 1;
-                                                    } else {
-                                                        break;
-                                                    }
-                                                }
-                                                if __pos < __loop_start + 1 as usize {
+                                                if ::parse_that::scan_hex_mut(state).is_none() {
                                                     return None;
                                                 }
-                                                state.offset = __pos;
                                             }
                                             {
                                                 let __end = state.src_bytes.len();
@@ -9178,21 +9050,9 @@ impl BbnfBootstrap {
                                             state.offset = __save_alt;
                                             (|| -> Option<()> {
                                                 {
-                                                    let __loop_start = state.offset;
-                                                    let __end = state.src_bytes.len();
-                                                    let mut __pos = state.offset;
-                                                    while __pos < __end {
-                                                        let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                                        if __b.is_ascii_digit() {
-                                                            __pos += 1;
-                                                        } else {
-                                                            break;
-                                                        }
-                                                    }
-                                                    if __pos < __loop_start + 1 as usize {
+                                                    if ::parse_that::scan_digits_mut(state).is_none() {
                                                         return None;
                                                     }
-                                                    state.offset = __pos;
                                                 }
                                                 {
                                                     let __end = state.src_bytes.len();
@@ -9253,17 +9113,7 @@ impl BbnfBootstrap {
                                         let __start = state.offset;
                                         let __result: Option<()> = (|| {
                                             {
-                                                let __end = state.src_bytes.len();
-                                                let mut __pos = state.offset;
-                                                while __pos < __end {
-                                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                                    if __b.is_ascii_digit() {
-                                                        __pos += 1;
-                                                    } else {
-                                                        break;
-                                                    }
-                                                }
-                                                state.offset = __pos;
+                                                let _ = ::parse_that::scan_digits_star_mut(state);
                                             }
                                             if state.src_bytes.get(state.offset).copied() != Some(b'.')
                                             {
@@ -9271,21 +9121,9 @@ impl BbnfBootstrap {
                                             }
                                             state.offset += 1;
                                             {
-                                                let __loop_start = state.offset;
-                                                let __end = state.src_bytes.len();
-                                                let mut __pos = state.offset;
-                                                while __pos < __end {
-                                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                                    if __b.is_ascii_digit() {
-                                                        __pos += 1;
-                                                    } else {
-                                                        break;
-                                                    }
-                                                }
-                                                if __pos < __loop_start + 1 as usize {
+                                                if ::parse_that::scan_digits_mut(state).is_none() {
                                                     return None;
                                                 }
-                                                state.offset = __pos;
                                             }
                                             {
                                                 let __save = state.offset;
@@ -9314,21 +9152,9 @@ impl BbnfBootstrap {
                                                         }
                                                     }
                                                     {
-                                                        let __loop_start = state.offset;
-                                                        let __end = state.src_bytes.len();
-                                                        let mut __pos = state.offset;
-                                                        while __pos < __end {
-                                                            let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                                            if __b.is_ascii_digit() {
-                                                                __pos += 1;
-                                                            } else {
-                                                                break;
-                                                            }
-                                                        }
-                                                        if __pos < __loop_start + 1 as usize {
+                                                        if ::parse_that::scan_digits_mut(state).is_none() {
                                                             return None;
                                                         }
-                                                        state.offset = __pos;
                                                     }
                                                     Some(())
                                                 })();

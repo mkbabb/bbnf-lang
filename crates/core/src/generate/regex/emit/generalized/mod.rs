@@ -10,6 +10,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 
 use super::negated_class::try_strip_ws_padded_literal;
+use crate::backend::kernels;
 
 /// Whether a pattern is a simple character range like `[a-z]` or `[0-9]`.
 /// Returns `(lo, hi)` byte range if detected.
@@ -223,6 +224,11 @@ pub fn emit_generalized_regex_direct(pattern: &str) -> Option<TokenStream> {
 ///
 /// These are bare escape sequences (not wrapped in `[...]`) followed by `+` or `*`.
 /// Compiles to a tight byte-predicate loop with no regex engine overhead.
+///
+/// Tranche X phase 1: routes the recognized shapes (`\d+`, `\d*`, `\w+`)
+/// through `kernels::charclass::emit_call_opt` first; falls through to
+/// the inline predicate loop for `\s+`/`\s*` and the unrecognized
+/// shapes per §3 rule 16.
 pub(crate) fn emit_shorthand_class_loop(pattern: &str) -> Option<TokenStream> {
     let (shorthand, is_plus) = if let Some(s) = pattern.strip_suffix('+') {
         (s, true)
@@ -231,6 +237,17 @@ pub(crate) fn emit_shorthand_class_loop(pattern: &str) -> Option<TokenStream> {
     } else {
         return None;
     };
+
+    // Tranche X phase 1: kernel routing short-circuit for the
+    // recognized shapes (`\d+`, `\d*`, `\w+`). The kernel emits a
+    // direct call to `parse_that::scan_*_mut` instead of the
+    // sixteen-line inline `is_ascii_*` while-loop below.
+    if let Some(chars) = kernels::charclass::charset_from_shorthand(shorthand) {
+        let lo = if is_plus { 1u32 } else { 0u32 };
+        if let Some(call) = kernels::charclass::emit_call_opt(&chars, false, lo, None) {
+            return Some(quote! { { #call } });
+        }
+    }
 
     // Must be exactly a shorthand: \s, \d, \w
     let predicate = match shorthand {

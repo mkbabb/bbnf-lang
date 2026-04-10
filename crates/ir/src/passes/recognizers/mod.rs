@@ -28,9 +28,11 @@
 
 mod balanced_wrap;
 mod comment_ws;
+pub mod delim_scan;
 mod function_head;
 mod hash_prefix;
 mod identifier;
+pub mod key_dispatch;
 mod node_facts;
 mod prefix_shared_group;
 mod punct_ws_region;
@@ -88,31 +90,45 @@ pub fn mine_recognizers(ir: &mut GrammarIR) {
     // live only for the miner calls, and ends before the `&mut ir`
     // mutations below. Profile-confirmed cost on the post-V baseline:
     // 40-200 KB allocated per compile (the entire NodeId→DagNode map).
-    let additions = if let Some(dag) = ir.dag.as_ref() {
-        let context_facts = compute_context_facts(ir, dag);
-        let mut additions: Vec<(crate::dag::NodeId, crate::passes::patterns::Recognizer)> =
-            Vec::new();
+    let (additions, context_facts, delim_scan_configs, key_dispatch_configs) =
+        if let Some(dag) = ir.dag.as_ref() {
+            let context_facts = compute_context_facts(ir, dag);
+            let mut additions: Vec<(crate::dag::NodeId, crate::passes::patterns::Recognizer)> =
+                Vec::new();
 
-        quoted_string::collect(ir, dag, &mut additions);
-        balanced_wrap::collect(ir, dag, &mut additions);
-        comment_ws::collect(ir, dag, &mut additions);
-        identifier::collect(ir, dag, &mut additions);
-        separator_list::collect(ir, dag, &mut additions);
-        token_led_branches::collect(ir, dag, &context_facts, &mut additions);
+            quoted_string::collect(ir, dag, &mut additions);
+            balanced_wrap::collect(ir, dag, &mut additions);
+            comment_ws::collect(ir, dag, &mut additions);
+            identifier::collect(ir, dag, &mut additions);
+            separator_list::collect(ir, dag, &mut additions);
+            token_led_branches::collect(ir, dag, &context_facts, &mut additions);
 
-        // Tranche X.10: CSS recognizer family expansion.
-        function_head::collect(ir, dag, &mut additions);
-        hash_prefix::collect(ir, dag, &mut additions);
-        unit_tail::collect(ir, dag, &mut additions);
+            // Tranche X.10: CSS recognizer family expansion.
+            function_head::collect(ir, dag, &mut additions);
+            hash_prefix::collect(ir, dag, &mut additions);
+            unit_tail::collect(ir, dag, &mut additions);
 
-        // Tranche X.11b: JSON structural punctuation+ws recognition.
-        punct_ws_region::collect(ir, dag, &mut additions);
+            // Tranche X.11b: JSON structural punctuation+ws recognition.
+            punct_ws_region::collect(ir, dag, &mut additions);
 
-        // `dag` and `context_facts` borrows end here (NLL).
-        additions
-    } else {
-        return;
-    };
+            // Tranche X.8a: upstream structural pattern detection.
+            // Populates sidecar maps on `GrammarIR` that the backend
+            // reads directly via `ir.delim_scan_configs` /
+            // `ir.key_dispatch_configs`. This replaces the deleted
+            // `backend/patterns/{delim_scan,key_dispatch,cache}.rs`.
+            let delim_scan_configs = delim_scan::collect(ir);
+            let key_dispatch_configs = key_dispatch::collect(ir);
+
+            // `dag` and `context_facts` borrows end here (NLL).
+            (
+                additions,
+                context_facts,
+                delim_scan_configs,
+                key_dispatch_configs,
+            )
+        } else {
+            return;
+        };
 
     for (node_id, rec) in additions {
         install_recognizer(
@@ -122,6 +138,13 @@ pub fn mine_recognizers(ir: &mut GrammarIR) {
             rec,
         );
     }
+
+    // Tranche X.8g: cache context_facts on `GrammarIR` so downstream
+    // passes can read from it without recomputing.
+    ir.context_facts = context_facts;
+    // Tranche X.8a: commit the upstream-mined pattern configs.
+    ir.delim_scan_configs = delim_scan_configs;
+    ir.key_dispatch_configs = key_dispatch_configs;
 
     prefix_shared_group::mine(ir);
 }

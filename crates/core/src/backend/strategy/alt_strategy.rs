@@ -102,8 +102,9 @@ fn collect_alt_strategies(
 
 /// Decide strategy for a single Alt node.
 ///
-/// Tranche W phase 3c: thin lookup against `ir.recognizer_decisions`
-/// + the structural `AllLiteral` fast path.
+/// Tranche X.8b: pure lookup against `ir.recognizer_decisions` plus
+/// the sidecar `ir.key_dispatch_configs` (populated upstream in
+/// `mine_recognizers` during Tranche X.8a).
 ///
 /// 1. `AllLiteral` is checked first because it's a backend emission
 ///    optimization not modeled by the strategy CSP.
@@ -112,11 +113,15 @@ fn collect_alt_strategies(
 ///    `ByteDispatch` becomes `DispatchTable`; `KeyDispatch` becomes
 ///    `KeyDispatch`; everything else (`Checkpoint`, `TokenDispatch`,
 ///    `SharedHelper(_)`) becomes `Checkpoint` until those backend
-///    emission paths are wired (Phase 3d).
-/// 3. When the CSP didn't produce a decision (e.g. nodes without a
-///    DAG entry, or grammars compiled without recognizer mining), fall
-///    back to the structural detection so the migration is incremental
-///    rather than all-or-nothing.
+///    emission paths are wired.
+/// 3. If the upstream `ir.key_dispatch_configs` sidecar has an entry
+///    for this NodeId, elevate the strategy to `KeyDispatch`. This
+///    covers alts where the CSP recognizer-shape input did not yield
+///    a `KeywordPrefix` shape but the structural key-dispatch
+///    detector still identified a shape (common for multi-branch
+///    `"keyword" ":" value` alt patterns with a regex fallback).
+/// 4. The `AltDispatch` precomputed dispatch table wins over the
+///    default `Checkpoint` fallback.
 fn decide_alt_strategy(
     node_id: Option<NodeId>,
     branches: &[AltBranch],
@@ -142,23 +147,36 @@ fn decide_alt_strategy(
             AltMode::KeyDispatch => return AltStrategy::KeyDispatch,
             // The remaining variants (Checkpoint, TokenDispatch,
             // SharedHelper) all fall through to the universal
-            // Checkpoint emission path until the kernel registry
-            // (Phase 3d) wires the specialized helpers.
-            AltMode::Checkpoint
-            | AltMode::TokenDispatch
-            | AltMode::SharedHelper(_) => return AltStrategy::Checkpoint,
+            // Checkpoint emission path. Except: if the upstream
+            // recognizer pass populated a key-dispatch config for
+            // this NodeId (which happens when the alt looks like
+            // `"keyword" ":" value | ... | regex fallback`), prefer
+            // key-dispatch — the structural detector has higher
+            // coverage than the CSP recognizer shapes.
+            AltMode::Checkpoint | AltMode::TokenDispatch | AltMode::SharedHelper(_) => {
+                if node_id
+                    .map(|id| ir.key_dispatch_configs.contains_key(&id))
+                    .unwrap_or(false)
+                {
+                    return AltStrategy::KeyDispatch;
+                }
+                return AltStrategy::Checkpoint;
+            }
         }
     }
 
-    // Priority 3: structural fallback when the CSP didn't produce a
-    // decision. This branch fires for nodes that bypass the recognizer
-    // pipeline entirely (e.g. structural-only compiles where
-    // `mine_recognizers` and `solve_strategy_decisions` are skipped).
+    // Priority 3: authoritative sidecar lookup when the CSP produced
+    // no decision. Structural-only compiles (where `mine_recognizers`
+    // is skipped) end up here with `csp_alt_mode = None` and no
+    // `ir.key_dispatch_configs` entry, so they fall through to the
+    // dispatch table or checkpoint default.
+    if let Some(id) = node_id {
+        if ir.key_dispatch_configs.contains_key(&id) {
+            return AltStrategy::KeyDispatch;
+        }
+    }
     if dispatch.is_some() {
         return AltStrategy::DispatchTable;
-    }
-    if super::super::patterns::key_dispatch::try_detect(branches, ir).is_some() {
-        return AltStrategy::KeyDispatch;
     }
     AltStrategy::Checkpoint
 }

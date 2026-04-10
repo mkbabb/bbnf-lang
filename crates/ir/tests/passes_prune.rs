@@ -41,6 +41,9 @@ fn prune_removes_unreachable() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
+        delim_scan_configs: std::collections::HashMap::new(),
+        key_dispatch_configs: std::collections::HashMap::new(),
+        context_facts: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 
     prune_unreachable(&mut ir);
@@ -74,6 +77,9 @@ fn prune_keeps_all_when_all_reachable() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
+        delim_scan_configs: std::collections::HashMap::new(),
+        key_dispatch_configs: std::collections::HashMap::new(),
+        context_facts: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 
     prune_unreachable(&mut ir);
@@ -127,6 +133,9 @@ fn prune_follows_alt_branches() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
+        delim_scan_configs: std::collections::HashMap::new(),
+        key_dispatch_configs: std::collections::HashMap::new(),
+        context_facts: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 
     prune_unreachable(&mut ir);

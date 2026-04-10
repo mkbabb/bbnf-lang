@@ -129,8 +129,7 @@ pub(super) fn compile_alt<E: Emitter>(
         None
     };
     if let Some((mut config, detected, fallback_idx)) = cached_key_dispatch {
-        let pattern =
-            crate::backend::patterns::key_dispatch::key_class_regex_pattern(&config.key_class);
+        let pattern = bbnf_ir::key_class_regex_pattern(&config.key_class);
         config.key_scanner_regex_id = Some(dstate.register_regex(pattern));
 
         let mut kd_branches = Vec::with_capacity(detected.len());

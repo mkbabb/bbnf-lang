@@ -158,17 +158,18 @@ fn finalize_compile(
     }
 }
 
-/// Populate the pattern detection caches on a fresh `DriverState`
-/// (Tranche F): `solve_alt_strategies`, `solve_delim_scan_configs`,
-/// `solve_key_dispatch_configs` run once per grammar; the driver
-/// then looks up the pre-solved results at compile time.
+/// Populate the driver state's pattern caches from the authoritative
+/// IR sidecars.
+///
+/// Tranche X.8b: `ir.delim_scan_configs` and `ir.key_dispatch_configs`
+/// are populated upstream during `mine_recognizers` (see
+/// `bbnf_ir::passes::recognizers::{delim_scan,key_dispatch}`). The
+/// driver state just clones them.
 fn install_pattern_caches(dstate: &mut crate::backend::driver::DriverState, ir: &GrammarIR) {
     dstate.alt_strategies =
         crate::backend::strategy::alt_strategy::solve_alt_strategies(ir);
-    dstate.delim_scan_configs =
-        crate::backend::patterns::cache::solve_delim_scan_configs(ir);
-    dstate.key_dispatch_configs =
-        crate::backend::patterns::cache::solve_key_dispatch_configs(ir);
+    dstate.delim_scan_configs = ir.delim_scan_configs.clone();
+    dstate.key_dispatch_configs = ir.key_dispatch_configs.clone();
 }
 
 /// Compute call strategies using the shared inline analysis.

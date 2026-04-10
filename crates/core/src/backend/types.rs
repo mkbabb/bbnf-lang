@@ -1,6 +1,15 @@
 //! Shared types for the compilation driver and emitter trait.
 
-use bbnf_ir::{AltDispatch, RuleId, TypeDesc};
+use bbnf_ir::{AltDispatch, TypeDesc};
+
+// Tranche X.8a: `DelimScanConfig` and key-dispatch types (`KeyClass`,
+// `KeyDispatchConfig`, `DetectedBranch`, `KeyDispatchMatch`) moved
+// upstream into `bbnf-ir`. Re-exported here for backward compat until
+// every caller migrates to the `bbnf_ir::` path.
+pub use bbnf_ir::{
+    DelimScanConfig, DetectedBranch, KeyClass, KeyDispatchConfig, KeyDispatchMatch,
+    key_class_regex_pattern,
+};
 
 // ─── Compilation Driver Types ───────────────────────────────────────────────
 
@@ -92,14 +101,5 @@ pub struct KeyDispatchBranch<O> {
 }
 
 // ─── Delimiter Scan Types ──────────────────────────────────────────────────
-
-/// Grammar-agnostic delimiter-scan configuration.
-#[derive(Clone, Debug)]
-pub struct DelimScanConfig {
-    pub open_byte: u8,
-    pub close_byte: u8,
-    pub pivot_byte: u8,
-    pub trail_byte: Option<u8>,
-    pub block_rule: Option<(RuleId, String)>,
-    pub pivot_rule: Option<(RuleId, String)>,
-}
+// `DelimScanConfig` moved to `bbnf_ir::types::recognizer_configs` in
+// Tranche X.8a. Re-exported at the top of this module.

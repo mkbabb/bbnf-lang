@@ -15,7 +15,10 @@ use bbnf_regex::sets::charset::CharSet128;
 use crate::dag;
 use crate::passes;
 
-use super::{FnDescriptor, IrNode, IrRule, RuleId, StringId, TypeDesc, count_nodes};
+use super::{
+    DelimScanConfig, FnDescriptor, IrNode, IrRule, KeyDispatchMatch, RuleId, StringId, TypeDesc,
+    count_nodes,
+};
 
 /// The canonical Grammar IR — the single intermediary between the BBNF frontend
 /// and all backends.
@@ -95,6 +98,28 @@ pub struct GrammarIR {
     /// at compile time, never persisted.
     #[serde(skip)]
     pub recognizer_decisions: passes::csp_strategy::RecognizerDecisionMap,
+
+    /// Per-NodeId delimiter-scan configurations. Populated by
+    /// `passes::recognizers::delim_scan::collect` during
+    /// `mine_recognizers` (Tranche X.8a). Authoritative source for
+    /// delim-scan emission — the backend reads this sidecar instead of
+    /// re-walking the IR. Keyed by the Wrap root's stable `NodeId`.
+    #[serde(skip)]
+    pub delim_scan_configs: HashMap<dag::NodeId, DelimScanConfig>,
+
+    /// Per-NodeId key-dispatch configurations. Populated by
+    /// `passes::recognizers::key_dispatch::collect` during
+    /// `mine_recognizers` (Tranche X.8a). Authoritative source for
+    /// key-dispatch emission — the backend reads this sidecar instead
+    /// of re-walking the IR. Keyed by the Alt node's stable `NodeId`.
+    #[serde(skip)]
+    pub key_dispatch_configs: HashMap<dag::NodeId, KeyDispatchMatch>,
+
+    /// Per-NodeId propagated context facts. Populated by
+    /// `passes::context::compute_context_facts` via `mine_recognizers`
+    /// and consumed by downstream passes (Tranche X.8g).
+    #[serde(skip)]
+    pub context_facts: passes::context::ContextFactsMap,
 
     /// Durable post-extraction canonical DAG over the optimized IR tree.
     ///

@@ -27,6 +27,7 @@ pub mod fn_descriptor;
 pub mod grammar;
 pub mod map_expr;
 pub mod node;
+pub mod recognizer_configs;
 pub mod rule;
 pub mod type_desc;
 
@@ -35,6 +36,10 @@ pub use grammar::GrammarIR;
 pub use map_expr::{MapBinOp, MapExpr, MapUnaryOp};
 pub use node::{
     AltBranch, AltDispatch, GrammarSpan, IrNode, TokenDispatchArm, count_nodes,
+};
+pub use recognizer_configs::{
+    DelimScanConfig, DetectedBranch, KeyClass, KeyDispatchConfig, KeyDispatchMatch,
+    key_class_regex_pattern,
 };
 pub use rule::{
     DispatchHint, IrRule, MemoStrategy, PrettyHints, RuleDirectives, RuleMeta, SubVariant,

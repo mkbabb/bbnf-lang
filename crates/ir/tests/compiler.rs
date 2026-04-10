@@ -27,6 +27,9 @@ fn make_simple_ir(body: IrNode) -> GrammarIR {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
+        delim_scan_configs: std::collections::HashMap::new(),
+        key_dispatch_configs: std::collections::HashMap::new(),
+        context_facts: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(),    }
 }
 
@@ -146,6 +149,9 @@ fn compile_memo_rule() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
+        delim_scan_configs: std::collections::HashMap::new(),
+        key_dispatch_configs: std::collections::HashMap::new(),
+        context_facts: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
     let program = compile(&ir);
 
@@ -198,6 +204,9 @@ fn compile_direct_left_recursive_rule_keeps_memo() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
+        delim_scan_configs: std::collections::HashMap::new(),
+        key_dispatch_configs: std::collections::HashMap::new(),
+        context_facts: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
     let program = compile(&ir);
 
@@ -344,6 +353,9 @@ fn compile_token_dispatch_emits_dispatch_token() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
+        delim_scan_configs: std::collections::HashMap::new(),
+        key_dispatch_configs: std::collections::HashMap::new(),
+        context_facts: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
     let program = compile(&ir);
 
@@ -415,6 +427,9 @@ fn compile_call() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
+        delim_scan_configs: std::collections::HashMap::new(),
+        key_dispatch_configs: std::collections::HashMap::new(),
+        context_facts: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
     let program = compile(&ir);
 

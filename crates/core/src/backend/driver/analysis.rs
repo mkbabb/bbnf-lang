@@ -57,15 +57,15 @@ pub struct BackendPreparation {
     pub alt_strategies:
         std::collections::HashMap<NodeId, crate::backend::strategy::alt_strategy::AltStrategy>,
     /// Pre-solved delim-scan configurations, keyed by the Wrap
-    /// root node's `NodeId`. Built by
-    /// `patterns::cache::solve_delim_scan_configs`.
-    pub delim_scan_configs:
-        std::collections::HashMap<NodeId, crate::backend::types::DelimScanConfig>,
+    /// root node's `NodeId`. Tranche X.8b: cloned directly from
+    /// `ir.delim_scan_configs` (populated upstream by
+    /// `bbnf_ir::passes::recognizers::delim_scan::collect`).
+    pub delim_scan_configs: std::collections::HashMap<NodeId, bbnf_ir::DelimScanConfig>,
     /// Pre-solved key-dispatch configurations, keyed by the Alt
-    /// node's `NodeId`. Built by
-    /// `patterns::cache::solve_key_dispatch_configs`.
-    pub key_dispatch_configs:
-        std::collections::HashMap<NodeId, crate::backend::patterns::cache::KeyDispatchMatch>,
+    /// node's `NodeId`. Tranche X.8b: cloned directly from
+    /// `ir.key_dispatch_configs` (populated upstream by
+    /// `bbnf_ir::passes::recognizers::key_dispatch::collect`).
+    pub key_dispatch_configs: std::collections::HashMap<NodeId, bbnf_ir::KeyDispatchMatch>,
 }
 
 /// Fully prepared grammar bundle consumed by codegen.
@@ -81,11 +81,13 @@ pub fn prepare_grammar(mut ir: GrammarIR, requested_prettify: bool) -> PreparedG
     apply_ir_prep(&mut ir, &config);
     let analysis = analyze_grammar(&mut ir, &config);
 
-    // Solve Alt strategies + per-pattern configurations (Tranche F:
-    // detect once, store NodeId-keyed, backend reads at compile).
+    // Tranche X.8b: read authoritative decisions upstream from the IR.
+    // `ir.delim_scan_configs` and `ir.key_dispatch_configs` were
+    // populated during `mine_recognizers` (see
+    // `bbnf_ir::passes::recognizers::{delim_scan,key_dispatch}`).
     let alt_strategies = crate::backend::strategy::alt_strategy::solve_alt_strategies(&ir);
-    let delim_scan_configs = crate::backend::patterns::cache::solve_delim_scan_configs(&ir);
-    let key_dispatch_configs = crate::backend::patterns::cache::solve_key_dispatch_configs(&ir);
+    let delim_scan_configs = ir.delim_scan_configs.clone();
+    let key_dispatch_configs = ir.key_dispatch_configs.clone();
 
     PreparedGrammar {
         ir,

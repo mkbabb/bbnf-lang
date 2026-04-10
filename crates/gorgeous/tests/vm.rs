@@ -37,6 +37,9 @@ fn make_ir(hints: PrettyHints) -> GrammarIR {
         regex_info: HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
+        delim_scan_configs: std::collections::HashMap::new(),
+        key_dispatch_configs: std::collections::HashMap::new(),
+        context_facts: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(),    }
 }
 

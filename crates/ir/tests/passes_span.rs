@@ -31,6 +31,9 @@ fn literal_is_span_eligible() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
+        delim_scan_configs: std::collections::HashMap::new(),
+        key_dispatch_configs: std::collections::HashMap::new(),
+        context_facts: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 
     refine_span_eligibility(&mut ir);
@@ -61,6 +64,9 @@ fn map_not_span_eligible() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
+        delim_scan_configs: std::collections::HashMap::new(),
+        key_dispatch_configs: std::collections::HashMap::new(),
+        context_facts: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 
     refine_span_eligibility(&mut ir);
@@ -90,6 +96,9 @@ fn transitive_span_eligibility() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
+        delim_scan_configs: std::collections::HashMap::new(),
+        key_dispatch_configs: std::collections::HashMap::new(),
+        context_facts: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 
     refine_span_eligibility(&mut ir);
@@ -124,6 +133,9 @@ fn cyclic_not_span_eligible() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
+        delim_scan_configs: std::collections::HashMap::new(),
+        key_dispatch_configs: std::collections::HashMap::new(),
+        context_facts: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 
     refine_span_eligibility(&mut ir);
@@ -151,6 +163,9 @@ fn seq_of_literals_span_eligible() {
         regex_info: std::collections::HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
+        delim_scan_configs: std::collections::HashMap::new(),
+        key_dispatch_configs: std::collections::HashMap::new(),
+        context_facts: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 
     refine_span_eligibility(&mut ir);

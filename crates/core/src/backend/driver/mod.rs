@@ -61,18 +61,18 @@ pub struct DriverState {
         std::collections::HashMap<NodeId, crate::backend::strategy::alt_strategy::AltStrategy>,
 
     /// Pre-solved delim-scan configurations keyed by the wrap
-    /// node's `NodeId`. Built by
-    /// `patterns::cache::solve_delim_scan_configs`; `compile_wrap`
-    /// reads this cache instead of re-walking the tree.
-    pub delim_scan_configs:
-        std::collections::HashMap<NodeId, crate::backend::types::DelimScanConfig>,
+    /// node's `NodeId`. Tranche X.8b: cloned from
+    /// `ir.delim_scan_configs` (populated upstream during
+    /// `mine_recognizers`). `compile_wrap` reads this sidecar instead
+    /// of re-walking the tree.
+    pub delim_scan_configs: std::collections::HashMap<NodeId, bbnf_ir::DelimScanConfig>,
 
     /// Pre-solved key-dispatch configurations keyed by the Alt
-    /// node's `NodeId`. Built by
-    /// `patterns::cache::solve_key_dispatch_configs`; `compile_alt`
-    /// reads this cache instead of re-walking the tree.
-    pub key_dispatch_configs:
-        std::collections::HashMap<NodeId, crate::backend::patterns::cache::KeyDispatchMatch>,
+    /// node's `NodeId`. Tranche X.8b: cloned from
+    /// `ir.key_dispatch_configs` (populated upstream during
+    /// `mine_recognizers`). `compile_alt` reads this sidecar instead
+    /// of re-walking the tree.
+    pub key_dispatch_configs: std::collections::HashMap<NodeId, bbnf_ir::KeyDispatchMatch>,
 
     /// When set, the byte at `state.offset` is guaranteed to equal
     /// this value (from a preceding dispatch-table match). The next
@@ -131,7 +131,7 @@ impl DriverState {
         &'a self,
         wrap_node: &IrNode,
         ir: &GrammarIR,
-    ) -> Option<&'a crate::backend::types::DelimScanConfig> {
+    ) -> Option<&'a bbnf_ir::DelimScanConfig> {
         let id = ir.dag.as_ref()?.node_for(wrap_node)?;
         self.delim_scan_configs.get(&id)
     }
@@ -142,7 +142,7 @@ impl DriverState {
         &'a self,
         alt_node: &IrNode,
         ir: &GrammarIR,
-    ) -> Option<&'a crate::backend::patterns::cache::KeyDispatchMatch> {
+    ) -> Option<&'a bbnf_ir::KeyDispatchMatch> {
         let id = ir.dag.as_ref()?.node_for(alt_node)?;
         self.key_dispatch_configs.get(&id)
     }

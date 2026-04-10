@@ -607,7 +607,7 @@ fn build_alt_domain(
     if has_byte_dispatch {
         values.push((
             StrategyValue::Alt(AltMode::ByteDispatch),
-            cfg.strategy_dispatch_bonus.abs(),
+            cfg.egraph.weights.dispatch_bonus.abs(),
         ));
     }
 
@@ -623,13 +623,13 @@ fn build_alt_domain(
         {
             values.push((
                 StrategyValue::Alt(AltMode::ByteDispatch),
-                cfg.strategy_dispatch_bonus.abs(),
+                cfg.egraph.weights.dispatch_bonus.abs(),
             ));
         }
         if matches!(rec.shape, RecognizerShape::KeywordPrefix { .. }) {
             values.push((
                 StrategyValue::Alt(AltMode::KeyDispatch),
-                cfg.strategy_dispatch_bonus.abs(),
+                cfg.egraph.weights.dispatch_bonus.abs(),
             ));
         }
     }
@@ -648,11 +648,11 @@ fn build_wrap_domain(fact: Option<&Recognizer>, cfg: &CostConfig) -> StrategyDom
         match &rec.shape {
             RecognizerShape::DelimiterBalanced { .. } => values.push((
                 StrategyValue::Wrap(WrapMode::BalancedScan),
-                cfg.strategy_dispatch_bonus.abs(),
+                cfg.egraph.weights.dispatch_bonus.abs(),
             )),
             RecognizerShape::SeparatorList { .. } => values.push((
                 StrategyValue::Wrap(WrapMode::SepBy),
-                cfg.strategy_dispatch_bonus.abs(),
+                cfg.egraph.weights.dispatch_bonus.abs(),
             )),
             _ => {}
         }
@@ -667,7 +667,7 @@ fn build_wrap_domain(fact: Option<&Recognizer>, cfg: &CostConfig) -> StrategyDom
 /// cost: kernel helpers cheapest, narrow memchr next, then nibble LUT,
 /// one-pass, small DFA, and DFA last.
 fn build_engine_domain(feasible: EngineSet, cfg: &CostConfig) -> StrategyDomain {
-    let dispatch_bonus = cfg.strategy_dispatch_bonus.abs();
+    let dispatch_bonus = cfg.egraph.weights.dispatch_bonus.abs();
     let mut values: Vec<(StrategyValue, f64)> = Vec::with_capacity(8);
 
     if feasible.contains(EngineSet::FAMILY_HELPER) {

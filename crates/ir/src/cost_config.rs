@@ -11,6 +11,24 @@
 //! it; no pass calls `Default::default()` on a cost model directly.
 //! Per-grammar tunability lands in a future tranche via a `@cost`
 //! directive that updates this struct on the parsed `GrammarIR`.
+//!
+//! # Tranche Z.6 — universal strategy cost knob
+//!
+//! Pre-Z, this struct held four `strategy_*` knobs that were grammar-
+//! tier only. Three of them (`strategy_lookahead_penalty`,
+//! `strategy_hoist_savings`, `strategy_unroll_bound`) were ghosts —
+//! defined and env-var-loaded but never read by any production
+//! consumer. The fourth (`strategy_dispatch_bonus`) was a numeric
+//! duplicate of the existing cross-tier
+//! [`egraph::CostWeights::dispatch_bonus`]: same default value, same
+//! semantics, just stored twice.
+//!
+//! Z.6 deletes all four. The strategy CSP now reads
+//! `cfg.egraph.weights.dispatch_bonus` directly — the same field the
+//! `RegexExtractionCost` HIR tier already consumes via
+//! [`hir_extraction_cost`]. The universal cost model is therefore
+//! truly universal: one source of truth at `egraph::CostWeights`,
+//! both tiers read it.
 
 use egraph::CostConfig as EgraphCostConfig;
 
@@ -20,7 +38,8 @@ use egraph::CostConfig as EgraphCostConfig;
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct CostConfig {
     /// Cross-tier extraction weights + scheduler caps shared with the
-    /// regex HIR tier.
+    /// regex HIR tier. The strategy CSP reads
+    /// `egraph.weights.dispatch_bonus` here directly (Z.6).
     pub egraph: EgraphCostConfig,
 
     // ── Grammar e-graph cost-model knobs ────────────────────────────
@@ -45,16 +64,6 @@ pub struct CostConfig {
     pub hir_repeat_cost: f64,
     /// HIR class-merge bonus (negative = reward).
     pub hir_merged_bonus: f64,
-
-    // ── Strategy CSP weights (consumed in Tranche W phase 3b) ───────
-    /// Bonus when an `Alt` resolves to a token-dispatch strategy.
-    pub strategy_dispatch_bonus: f64,
-    /// Penalty for emission strategies that require a lookahead.
-    pub strategy_lookahead_penalty: f64,
-    /// Bonus for hoisting shared sub-recognizers across rules.
-    pub strategy_hoist_savings: f64,
-    /// Bound on inline-unrolling repetitions during strategy synthesis.
-    pub strategy_unroll_bound: u32,
 }
 
 impl Default for CostConfig {
@@ -74,13 +83,6 @@ impl Default for CostConfig {
             hir_class_cost: 1.5,
             hir_repeat_cost: 1.0,
             hir_merged_bonus: -1.0,
-            // Strategy CSP defaults — these are seed values for
-            // Tranche W phase 3b; the empirical sweep happens after
-            // the strategy CSP is wired into the backend.
-            strategy_dispatch_bonus: -2.0,
-            strategy_lookahead_penalty: 0.5,
-            strategy_hoist_savings: 1.0,
-            strategy_unroll_bound: 8,
         }
     }
 }
@@ -115,7 +117,10 @@ impl CostConfig {
     /// Build a `CostConfig` from environment variables.
     ///
     /// Recognized variables (in addition to those handled by
-    /// [`EgraphCostConfig::from_env`]):
+    /// [`EgraphCostConfig::from_env`] — notably
+    /// `BBNF_COST_DISPATCH_BONUS`, which now flows directly into
+    /// `egraph.weights.dispatch_bonus` after the Z.6 ghost-knob
+    /// deletion):
     /// - `BBNF_COST_LITERAL`
     /// - `BBNF_COST_REGEX`
     /// - `BBNF_COST_REF`
@@ -124,10 +129,6 @@ impl CostConfig {
     /// - `BBNF_COST_HIR_CLASS`
     /// - `BBNF_COST_HIR_REPEAT`
     /// - `BBNF_COST_HIR_MERGED_BONUS`
-    /// - `BBNF_COST_STRATEGY_DISPATCH_BONUS`
-    /// - `BBNF_COST_STRATEGY_LOOKAHEAD_PENALTY`
-    /// - `BBNF_COST_STRATEGY_HOIST_SAVINGS`
-    /// - `BBNF_COST_STRATEGY_UNROLL_BOUND`
     pub fn from_env() -> Self {
         let mut c = Self {
             egraph: EgraphCostConfig::from_env(),
@@ -172,26 +173,6 @@ impl CostConfig {
         if let Ok(s) = std::env::var("BBNF_COST_HIR_MERGED_BONUS") {
             if let Ok(v) = s.parse() {
                 c.hir_merged_bonus = v;
-            }
-        }
-        if let Ok(s) = std::env::var("BBNF_COST_STRATEGY_DISPATCH_BONUS") {
-            if let Ok(v) = s.parse() {
-                c.strategy_dispatch_bonus = v;
-            }
-        }
-        if let Ok(s) = std::env::var("BBNF_COST_STRATEGY_LOOKAHEAD_PENALTY") {
-            if let Ok(v) = s.parse() {
-                c.strategy_lookahead_penalty = v;
-            }
-        }
-        if let Ok(s) = std::env::var("BBNF_COST_STRATEGY_HOIST_SAVINGS") {
-            if let Ok(v) = s.parse() {
-                c.strategy_hoist_savings = v;
-            }
-        }
-        if let Ok(s) = std::env::var("BBNF_COST_STRATEGY_UNROLL_BOUND") {
-            if let Ok(v) = s.parse() {
-                c.strategy_unroll_bound = v;
             }
         }
 

@@ -726,3 +726,80 @@ fn fallback_engine(feasible: EngineSet) -> RegexEngine {
     }
     RegexEngine::Dfa
 }
+
+// ── Tranche X.8d — per-StringId regex engine projection ───────────────────
+
+/// Project the per-NodeId regex engine decisions from a
+/// [`RecognizerDecisionMap`] into a per-`StringId` lookup, grouping
+/// all occurrences of the same pattern under one authoritative
+/// decision.
+///
+/// The CSP assigns one `RegexEngine` per occurrence (per `Regex(sid)`
+/// NodeId), which makes cost minimization tractable; the backend's
+/// `scanner_plan::plan_regex_scanner` consumes the result by pattern
+/// string. When the same `StringId` has multiple decisions (e.g., the
+/// same regex appears in two Seq positions that reach different
+/// constraints), this function picks the strongest engine — the one
+/// with the lowest tier-priced cost in [`build_engine_domain`].
+///
+/// Returns an empty map when `ir.dag` is absent or the decision map
+/// is empty.
+pub fn extract_regex_engine_decisions(
+    ir: &GrammarIR,
+    decisions: &RecognizerDecisionMap,
+) -> HashMap<crate::StringId, RegexEngine> {
+    let mut out: HashMap<crate::StringId, RegexEngine> = HashMap::new();
+    let Some(dag) = ir.dag.as_ref() else {
+        return out;
+    };
+
+    for rule in &ir.rules {
+        project_regex_decisions(&rule.body, ir, dag, decisions, &mut out);
+    }
+
+    out
+}
+
+fn project_regex_decisions(
+    node: &IrNode,
+    ir: &GrammarIR,
+    dag: &crate::dag::GrammarDag,
+    decisions: &RecognizerDecisionMap,
+    out: &mut HashMap<crate::StringId, RegexEngine>,
+) {
+    if let IrNode::Regex(sid) = node {
+        if let Some(nid) = dag.node_for(node) {
+            if let Some(engine) = decisions
+                .get(&nid)
+                .and_then(|d| d.regex_engine.as_ref())
+            {
+                // Prefer the lowest-tier (fastest) engine when the
+                // same pattern has multiple per-NodeId decisions.
+                match out.get(sid) {
+                    Some(existing) if engine_tier(existing) <= engine_tier(engine) => {}
+                    _ => {
+                        out.insert(*sid, engine.clone());
+                    }
+                }
+            }
+        }
+    }
+
+    super::recognizers::visit_children_alt(node, |child| {
+        project_regex_decisions(child, ir, dag, decisions, out)
+    });
+}
+
+/// Lower tier = cheaper, preferred.
+fn engine_tier(e: &RegexEngine) -> u8 {
+    match e {
+        RegexEngine::FamilyHelper => 0,
+        RegexEngine::Memchr1 => 1,
+        RegexEngine::Memchr2 => 2,
+        RegexEngine::Memchr3 => 3,
+        RegexEngine::NibbleLut => 4,
+        RegexEngine::OnePass => 5,
+        RegexEngine::SmallDfa => 6,
+        RegexEngine::Dfa => 7,
+    }
+}

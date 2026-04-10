@@ -137,6 +137,21 @@ impl<'a> EmitOpts<'a> {
         }
         ::parse_that::regex::classify::classify_regex(pattern)
     }
+
+    /// Look up the authoritative CSP-decided regex engine for
+    /// `pattern` via the per-compile
+    /// [`bbnf_ir::GrammarIR::regex_engine_decisions`] sidecar
+    /// (Tranche X.8d). Returns `None` when the opts weren't
+    /// constructed with an IR, or when the CSP didn't produce a
+    /// decision for this pattern string.
+    pub fn regex_engine_decision(
+        &self,
+        pattern: &str,
+    ) -> Option<::bbnf_ir::passes::csp_strategy::RegexEngine> {
+        let ir = self.ir?;
+        let sid = ir.strings.iter().position(|s| s == pattern)? as u32;
+        ir.regex_engine_decisions.get(&sid).cloned()
+    }
 }
 
 /// Resolve `pattern` → `&RegexInfo` via reverse-lookup through the

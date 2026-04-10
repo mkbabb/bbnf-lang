@@ -30,6 +30,7 @@ fn make_simple_ir(body: IrNode) -> GrammarIR {
         delim_scan_configs: std::collections::HashMap::new(),
         key_dispatch_configs: std::collections::HashMap::new(),
         context_facts: std::collections::HashMap::new(),
+        regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(),    }
 }
 
@@ -152,6 +153,7 @@ fn compile_memo_rule() {
         delim_scan_configs: std::collections::HashMap::new(),
         key_dispatch_configs: std::collections::HashMap::new(),
         context_facts: std::collections::HashMap::new(),
+        regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
     let program = compile(&ir);
 
@@ -207,6 +209,7 @@ fn compile_direct_left_recursive_rule_keeps_memo() {
         delim_scan_configs: std::collections::HashMap::new(),
         key_dispatch_configs: std::collections::HashMap::new(),
         context_facts: std::collections::HashMap::new(),
+        regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
     let program = compile(&ir);
 
@@ -356,6 +359,7 @@ fn compile_token_dispatch_emits_dispatch_token() {
         delim_scan_configs: std::collections::HashMap::new(),
         key_dispatch_configs: std::collections::HashMap::new(),
         context_facts: std::collections::HashMap::new(),
+        regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
     let program = compile(&ir);
 
@@ -430,6 +434,7 @@ fn compile_call() {
         delim_scan_configs: std::collections::HashMap::new(),
         key_dispatch_configs: std::collections::HashMap::new(),
         context_facts: std::collections::HashMap::new(),
+        regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
     let program = compile(&ir);
 

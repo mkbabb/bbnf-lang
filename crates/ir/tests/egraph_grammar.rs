@@ -41,6 +41,7 @@ fn make_ir_with(body: IrNode) -> GrammarIR {
         delim_scan_configs: std::collections::HashMap::new(),
         key_dispatch_configs: std::collections::HashMap::new(),
         context_facts: std::collections::HashMap::new(),
+        regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(),
     }
 }

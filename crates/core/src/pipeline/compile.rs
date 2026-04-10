@@ -446,6 +446,12 @@ fn compile_ast_common<'a>(
         // `ir.recognizer_decisions` for the kernel registry and the
         // per-kind drivers.
         ir.recognizer_decisions = bbnf_ir::passes::solve_strategy_decisions(&ir);
+        // Tranche X.8d — project the per-NodeId RegexEngine decisions
+        // into a per-StringId map so `scanner_plan::plan_regex_scanner`
+        // can look up the authoritative engine choice by pattern
+        // string instead of re-classifying on every emit.
+        ir.regex_engine_decisions =
+            bbnf_ir::passes::extract_regex_engine_decisions(&ir, &ir.recognizer_decisions);
     }
 
     Ok(ir)

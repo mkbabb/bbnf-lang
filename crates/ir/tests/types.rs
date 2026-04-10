@@ -23,6 +23,7 @@ fn make_ir(rules: Vec<IrRule>) -> GrammarIR {
         delim_scan_configs: std::collections::HashMap::new(),
         key_dispatch_configs: std::collections::HashMap::new(),
         context_facts: std::collections::HashMap::new(),
+        regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(),    }
 }
 
@@ -269,6 +270,7 @@ fn map_enum_wrap() {
         delim_scan_configs: std::collections::HashMap::new(),
         key_dispatch_configs: std::collections::HashMap::new(),
         context_facts: std::collections::HashMap::new(),
+        regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
     bbnf_ir::dag::ensure_dag(&mut ir);
     project_types(&mut ir);
@@ -302,6 +304,7 @@ fn map_box_wrap() {
         delim_scan_configs: std::collections::HashMap::new(),
         key_dispatch_configs: std::collections::HashMap::new(),
         context_facts: std::collections::HashMap::new(),
+        regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
     bbnf_ir::dag::ensure_dag(&mut ir);
     project_types(&mut ir);

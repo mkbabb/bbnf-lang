@@ -121,6 +121,15 @@ pub struct GrammarIR {
     #[serde(skip)]
     pub context_facts: passes::context::ContextFactsMap,
 
+    /// Per-`StringId` regex engine decision. Populated by
+    /// `passes::csp_strategy::solve_strategy_decisions` after the
+    /// strategy CSP picks an engine per regex site (Tranche X.8d).
+    /// The `scanner_plan::plan_regex_scanner` primary path reads from
+    /// this map; `classify_regex` survives only as the fall-through
+    /// when a pattern has no authoritative decision.
+    #[serde(skip)]
+    pub regex_engine_decisions: HashMap<StringId, passes::csp_strategy::RegexEngine>,
+
     /// Durable post-extraction canonical DAG over the optimized IR tree.
     ///
     /// Populated after the intra-rule e-graph optimization + post-extraction

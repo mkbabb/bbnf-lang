@@ -37,8 +37,8 @@ pub use transform::{
     merge_literals, prune_unreachable,
 };
 pub use csp_strategy::{
-    solve_strategy_decisions, AltMode, RecognizerDecision, RecognizerDecisionMap, RegexEngine,
-    StrategyDomain, StrategyValue, WrapMode,
+    extract_regex_engine_decisions, solve_strategy_decisions, AltMode, RecognizerDecision,
+    RecognizerDecisionMap, RegexEngine, StrategyDomain, StrategyValue, WrapMode,
 };
 pub use recognizers::mine_recognizers;
 pub use regex_info::compute_regex_info;

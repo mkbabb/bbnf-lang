@@ -211,6 +211,10 @@ pub fn lower_to_ir<'a>(
         regex_info: HashMap::new(),
         node_facts: HashMap::new(),
         recognizer_decisions: HashMap::new(),
+        delim_scan_configs: HashMap::new(),
+        key_dispatch_configs: HashMap::new(),
+        context_facts: HashMap::new(),
+        regex_engine_decisions: HashMap::new(),
         dag: None,
         cost_config: bbnf_ir::CostConfig::from_env(),
     }

@@ -87,18 +87,46 @@ pub(crate) fn shared_quoted_string_scanner() -> ScannerPlan {
 
 /// Map a regex class to a preferred scanner plan.
 ///
-/// Uses `opts.classify_regex(pattern)` — hits the `ir.regex_info` cache
-/// when `opts.ir` is set, avoiding a redundant HIR parse on the
-/// codegen hot path.
+/// Tranche X.8d: the primary path consults the CSP-decided
+/// `RegexEngine` via [`EmitOpts::regex_engine_decision`]. When the
+/// CSP has an authoritative decision for this pattern and it's a
+/// non-kernel engine (Memchr*, NibbleLut, OnePass, SmallDfa, Dfa),
+/// this function returns `None` so the caller routes through the
+/// generalized/hir/dfa emitters downstream. For `FamilyHelper`
+/// decisions (or no decision), the fall-through classifies the
+/// pattern structurally and routes to the matching shared / kernel
+/// scanner.
 ///
-/// Tranche V.7: routes the existing 5 SharedScanner variants and the
-/// three new RegexClass extensions (`CharClassQuantified`,
-/// `PrefixThenClass`, `AccelDriven`) through the kernel registry. The
-/// new variants currently fall back to the generalized emitter via
-/// `None` — the kernel module bodies are stubs that defer to the
-/// existing `generalized/` path until the V.8 driver refactor + kernel
-/// hoisting tranche enables full hoisting.
+/// The `classify_regex` path survives only as the fall-through.
+///
+/// Uses `opts.classify_regex(pattern)` — hits the `ir.regex_info`
+/// cache when `opts.ir` is set, avoiding a redundant HIR parse on
+/// the codegen hot path.
 pub(crate) fn plan_regex_scanner(pattern: &str, opts: &EmitOpts) -> Option<ScannerPlan> {
+    // Tranche X.8d — primary path: honor the CSP's `RegexEngine`
+    // decision when one exists. The CSP already picked the
+    // lowest-cost feasible engine for this pattern, so we can
+    // shortcut the classify re-walk for non-kernel engines. The
+    // `FamilyHelper` variant falls through because the concrete
+    // family selection is data-driven on `RegexClass`.
+    use bbnf_ir::passes::csp_strategy::RegexEngine;
+    match opts.regex_engine_decision(pattern) {
+        Some(
+            RegexEngine::Memchr1
+            | RegexEngine::Memchr2
+            | RegexEngine::Memchr3
+            | RegexEngine::NibbleLut
+            | RegexEngine::OnePass
+            | RegexEngine::SmallDfa
+            | RegexEngine::Dfa,
+        ) => {
+            return None;
+        }
+        Some(RegexEngine::FamilyHelper) | None => {
+            // Fall through to the classify path below.
+        }
+    }
+
     match opts.classify_regex(pattern) {
         RegexClass::JsonString => Some(shared_json_string_scanner()),
         RegexClass::JsonNumber => Some(shared_json_number_scanner(opts.fuse_numbers)),

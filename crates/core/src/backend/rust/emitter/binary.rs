@@ -68,14 +68,21 @@ impl RustEmitter {
         discarded: TokenStream,
         _ctx: &mut RustEmitCtx,
     ) -> TokenStream {
+        // Tranche AA.8 — `match` instead of let-else because child
+        // outputs can be block-shaped (Rust's let-else forbids a
+        // brace-terminated RHS).
         quote! {
-            (|| {
-                let __kept = #kept?;
-                #discarded?;
+            'skip_blk: {
+                let __kept = match #kept {
+                    Some(__v) => __v,
+                    None => break 'skip_blk None,
+                };
+                if #discarded.is_none() { break 'skip_blk None; }
                 Some(__kept)
-            })()
+            }
         }
     }
+
 
     pub(super) fn emit_next_impl(
         &mut self,
@@ -83,11 +90,12 @@ impl RustEmitter {
         kept: TokenStream,
         _ctx: &mut RustEmitCtx,
     ) -> TokenStream {
+        // Tranche AA.8 — labeled block for `?` short-circuit.
         quote! {
-            (|| {
-                #discarded?;
+            'next_blk: {
+                if #discarded.is_none() { break 'next_blk None; }
                 #kept
-            })()
+            }
         }
     }
 

@@ -189,14 +189,14 @@ impl RustEmitter {
         inner: TokenStream,
         _ctx: &mut RustEmitCtx,
     ) -> TokenStream {
-        // Capture start before inner runs, end after. Uses IIFE to scope
-        // the start binding while keeping failure propagation compositional.
+        // Tranche AA.8 — labeled block scopes the start binding while
+        // keeping failure propagation compositional, without closure setup.
         quote! {
-            (|| {
+            'span_cap_blk: {
                 let __start = state.offset;
-                #inner?;
+                if #inner.is_none() { break 'span_cap_blk None; }
                 Some(::parse_that::Span::new(__start, state.offset, state.src))
-            })()
+            }
         }
     }
 

@@ -31,26 +31,27 @@ impl RustEmitter {
                     if (#(#patterns)||*) && state.offset < state.src.len()
                         && state.src.as_bytes()[state.offset] == #guard
                     {
-                        return #cont;
+                        break 'td_blk #cont;
                     }
                 });
             } else {
                 arm_checks.push(quote! {
                     if #(#patterns)||* {
-                        return #cont;
+                        break 'td_blk #cont;
                     }
                 });
             }
         }
+        // Tranche AA.8 — labeled block for arm_checks.
         quote! {
-            (|| {
+            'td_blk: {
                 if let Some(#token_var) = #token {
                     let __td_bytes = &state.src_bytes[#token_var.start..#token_var.end];
                     let __td_len = __td_bytes.len();
                     #(#arm_checks)*
                 }
                 #fallback
-            })()
+            }
         }
     }
 

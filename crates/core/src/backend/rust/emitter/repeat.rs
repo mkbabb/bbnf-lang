@@ -191,8 +191,10 @@ impl RustEmitter {
         let collect_expr = ir_ctx.emit_scratch_collect(&scratch_ty, &depth_var);
         let truncate_expr = ir_ctx.emit_scratch_truncate(&scratch_ty, &depth_var);
 
+        // Tranche AA.8 — labeled block replaces IIFE for early-exit
+        // on the first-element failure path.
         quote! {
-            (|| {
+            'rpt_blk: {
                 #init_code
                 let mut #count_var: usize = 0;
 
@@ -202,7 +204,7 @@ impl RustEmitter {
                         #count_var += 1;
                     }
                     None => {
-                        return if #count_var >= #lo_lit {
+                        break 'rpt_blk if #count_var >= #lo_lit {
                             Some(#collect_expr)
                         } else {
                             #truncate_expr
@@ -236,7 +238,7 @@ impl RustEmitter {
                     #truncate_expr
                     None
                 }
-            })()
+            }
         }
     }
 }

@@ -167,12 +167,16 @@ impl RustEmitter {
             } else {
                 body.clone()
             };
+            // Tranche AA.8: labeled-block early exit instead of IIFE.
+            // LLVM inlines labeled blocks more aggressively than
+            // closures with `&mut state` captures, and there's no
+            // closure-setup overhead on any path.
             chain.push(quote! {
                 {
                     let __cp = state.offset;
                     let __result = #coerced;
                     if __result.is_some() {
-                        return __result;
+                        break 'alt_blk __result;
                     }
                     state.offset = __cp;
                 }
@@ -180,10 +184,10 @@ impl RustEmitter {
         }
 
         quote! {
-            (|| {
+            'alt_blk: {
                 #( #chain )*
                 None
-            })()
+            }
         }
     }
 
@@ -197,14 +201,14 @@ impl RustEmitter {
         for (_value, body) in &literals {
             chain.push(quote! {
                 let __r = #body;
-                if __r.is_some() { return __r; }
+                if __r.is_some() { break 'alt_lit_blk __r; }
             });
         }
         quote! {
-            (|| {
+            'alt_lit_blk: {
                 #( #chain )*
                 None
-            })()
+            }
         }
     }
 
@@ -254,7 +258,7 @@ impl RustEmitter {
                 quote! {
                     if #(#comparisons)||* {
                         state.offset = #cp;
-                        return #body;
+                        break 'kd_blk #body;
                     }
                 }
             })
@@ -268,10 +272,11 @@ impl RustEmitter {
         } else {
             quote! { None }
         };
-        // Wrap in closure so `return` in arm_checks exits the closure,
-        // not the enclosing function — preventing bypass of outer .map() wrapping.
+        // Tranche AA.8: labeled block for `break` in arm_checks.
+        // LLVM inlines this unconditionally where it used to punt on
+        // closures capturing `&mut state`.
         quote! {
-            (|| {
+            'kd_blk: {
                 let #cp = state.offset;
                 if let Some(ref __kd_s) = #scanner {
                     let __kd_bytes = &state.src_bytes[__kd_s.start..__kd_s.end];
@@ -280,7 +285,7 @@ impl RustEmitter {
                 }
                 state.offset = #cp;
                 #fallback_expr
-            })()
+            }
         }
     }
 }

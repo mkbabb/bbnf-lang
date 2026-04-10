@@ -101,12 +101,17 @@ impl RustEmitter {
         _ctx: &mut RustEmitCtx,
     ) -> TokenStream {
         // All children are Span — emit for side effects, return combined Span.
+        // Tranche AA.8 — labeled block instead of IIFE.
+        let child_checks: Vec<TokenStream> = child_outputs
+            .into_iter()
+            .map(|c| quote! { if #c.is_none() { break 'span_blk None; } })
+            .collect();
         quote! {
-            (|| {
+            'span_blk: {
                 let __sp_start = state.offset;
-                #( #child_outputs?; )*
+                #( #child_checks )*
                 Some(::parse_that::Span::new(__sp_start, state.offset, state.src))
-            })()
+            }
         }
     }
 }

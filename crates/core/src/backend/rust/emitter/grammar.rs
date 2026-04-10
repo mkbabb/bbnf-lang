@@ -60,13 +60,14 @@ impl RustEmitter {
         // The body produces the inner type; wrapping maps it into Enum::Variant(inner).
         // For BoxedEnum rules, body_alloc=Alloc makes inner refs return &Enum,
         // and the variant wrapping produces Enum::Variant(&Enum) = Enum.
+        // Tranche AA.8 — labeled block instead of IIFE for variant wrapping.
         let body_expr = if rule.meta.is_transparent {
             quote! { #(#hoisted)* #body }
         } else {
             let variant = format_ident!("{}", name);
             quote! {
                 #(#hoisted)*
-                (|| { #body })().map(|__x| #enum_ident::#variant(__x))
+                ('rule_body_blk: { #body }).map(|__x| #enum_ident::#variant(__x))
             }
         };
 
@@ -76,9 +77,12 @@ impl RustEmitter {
             let trace_entry = crate::backend::rust::trace::emit_trace_entry(name);
             let result_ident = syn::Ident::new("__trace_result", proc_macro2::Span::call_site());
             let trace_exit = crate::backend::rust::trace::emit_trace_exit(name, &result_ident);
+            // Tranche AA.8 — labeled block scopes the result binding; the
+            // type annotation on the body expression replaces the closure
+            // return type annotation from the IIFE form.
             quote! {
                 #trace_entry
-                let #result_ident = (|| -> Option<#enum_type> { #body_expr })();
+                let #result_ident: Option<#enum_type> = 'trace_blk: { #body_expr };
                 #trace_exit
                 #result_ident
             }

@@ -43,11 +43,20 @@ impl RustEmitter {
                 #init_code
                 loop {
                     let #prev_var = state.offset;
-                    match (|| {
-                        let #op_var = #op?;
-                        let #rhs_var = #rhs?;
+                    // Tranche AA.8 — labeled block inside `match` replaces IIFE.
+                    // Use match arms instead of let-else for brace-shaped RHS.
+                    let __chain_link = 'chain_link_blk: {
+                        let #op_var = match #op {
+                            Some(__v) => __v,
+                            None => break 'chain_link_blk None,
+                        };
+                        let #rhs_var = match #rhs {
+                            Some(__v) => __v,
+                            None => break 'chain_link_blk None,
+                        };
                         Some((#op_var, #rhs_var))
-                    })() {
+                    };
+                    match __chain_link {
                         Some(__value) => {
                             let (#op_var, #rhs_var) = __value;
                             #push_code;

@@ -31,6 +31,12 @@ pub struct RunReport {
     pub iter_limit_hit: bool,
     /// Whether a growth limit stopped saturation early.
     pub growth_limit_hit: bool,
+    /// Per-rule work counts accumulated across all iterations. One entry
+    /// per rule passed to the scheduler; order matches the rules slice.
+    /// `(rule_name, total_work)` where `total_work` is the sum of
+    /// `RewriteFn::run` deltas across every iteration. Load-bearing for
+    /// `BBNF_EGRAPH_REPORT` per-rule attribution (Tranche AA.0).
+    pub per_rule: Vec<(String, usize)>,
 }
 
 /// A scheduler controls saturation — it decides when to stop.
@@ -64,14 +70,17 @@ impl Default for BackoffScheduler {
 impl<N: Language, A: Analysis<N>> Scheduler<N, A> for BackoffScheduler {
     fn run(&self, egraph: &mut EGraph<N, A>, rules: &[&dyn RewriteFn<N, A>]) -> RunReport {
         let mut report = RunReport::default();
+        report.per_rule = rules.iter().map(|r| (r.name().to_string(), 0usize)).collect();
         let initial_nodes = egraph.total_nodes().max(1);
 
         for iter in 0..self.iter_limit {
             report.iterations = iter + 1;
 
             let mut applied_this_iter = 0;
-            for rule in rules {
-                applied_this_iter += rule.run(egraph);
+            for (rule_idx, rule) in rules.iter().enumerate() {
+                let rule_work = rule.run(egraph);
+                applied_this_iter += rule_work;
+                report.per_rule[rule_idx].1 += rule_work;
             }
             egraph.rebuild();
 

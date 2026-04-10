@@ -208,6 +208,7 @@ impl<N: Language, A: Analysis<N>> Scheduler<N, A> for CspScheduler {
         rules: &[&dyn RewriteFn<N, A>],
     ) -> RunReport {
         let mut report = RunReport::default();
+        report.per_rule = rules.iter().map(|r| (r.name().to_string(), 0usize)).collect();
 
         // Snapshot per-class node counts so we can detect "grew since
         // last iteration" between applies. Classes that grow get
@@ -262,8 +263,10 @@ impl<N: Language, A: Analysis<N>> Scheduler<N, A> for CspScheduler {
             let before_nodes = egraph.total_nodes();
             let before_unions = egraph.union_count();
             let mut applied_this_iter = 0usize;
-            for rule in rules {
-                applied_this_iter += rule.run_on_dirty(egraph, &dirty);
+            for (rule_idx, rule) in rules.iter().enumerate() {
+                let rule_work = rule.run_on_dirty(egraph, &dirty);
+                applied_this_iter += rule_work;
+                report.per_rule[rule_idx].1 += rule_work;
             }
             egraph.rebuild();
             let after_nodes = egraph.total_nodes();

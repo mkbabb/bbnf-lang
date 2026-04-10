@@ -98,9 +98,8 @@ pub fn build_and_saturate(
     let _report = scheduler.run(&mut egraph, &rule_refs);
     if std::env::var("BBNF_EGRAPH_REPORT").is_ok() {
         eprintln!(
-            "egraph saturation: rules={} rules_count={} iters={} applied={} initial_nodes={} final_nodes={} final_classes={} saturated={} iter_hit={} growth_hit={}",
+            "egraph saturation: rules={} iters={} applied={} initial_nodes={} final_nodes={} final_classes={} saturated={} iter_hit={} growth_hit={}",
             rule_refs.len(),
-            rule_refs.iter().map(|r| r.name()).collect::<Vec<_>>().join(","),
             _report.iterations,
             _report.total_applied,
             egraph.total_nodes(),
@@ -110,6 +109,9 @@ pub fn build_and_saturate(
             _report.iter_limit_hit,
             _report.growth_limit_hit,
         );
+        for (rule_name, work) in &_report.per_rule {
+            eprintln!("  rule={} work={}", rule_name, work);
+        }
     }
     // Drop the rules explicitly so they release their `SharedStrings`
     // clones, letting `into_vec()` unwrap without a fallback clone.

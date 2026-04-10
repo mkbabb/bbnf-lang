@@ -366,12 +366,16 @@ fn solve_rule(
     // lacked, and the precondition for Y.3 / Y.5 broadening the same
     // failure surface.
     if csp.stats().budget_exceeded {
-        #[cfg(debug_assertions)]
-        eprintln!(
-            "Note: csp_strategy::solve_rule hit the CSP node budget \
-             (nodes_explored={}); falling back to per-variable trivial pick",
-            csp.stats().nodes_explored
-        );
+        if std::env::var("BBNF_CSP_REPORT").is_ok() || cfg!(debug_assertions) {
+            eprintln!(
+                "csp_strategy::solve_rule budget_exceeded nodes_explored={} \
+                 constraints_added={} sites={}; \
+                 falling back to per-variable trivial pick",
+                csp.stats().nodes_explored,
+                constraints_added,
+                sites.len(),
+            );
+        }
         decode_min_cost_per_variable(&csp, &sites, decisions);
         return;
     }

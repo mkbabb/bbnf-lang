@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use std::time::{Duration, Instant};
 
 use bbnf_ir::GrammarIR;
 
@@ -13,6 +14,63 @@ use crate::pipeline::{
     CompileError, CompileOutput, CompileRequest, CompileTarget, PipelineOptions,
 };
 use crate::types::AST;
+
+/// Tranche AA.0 — per-pass timing accumulator.
+///
+/// When `BBNF_PIPELINE_REPORT=1` is set in the environment,
+/// `compile_ast_common` wraps every pipeline pass with [`PipelineTimer::span`]
+/// and, on exit, prints a CSV row to stderr: `pass,elapsed_us` per pass,
+/// plus a final `__total__,<us>` line. This is pure observability — the
+/// `Instant::now()` calls are elided when the env var is unset so the hot
+/// LSP path pays zero cost.
+///
+/// Consumer documentation: every "+X%" claim in `post-AA.json` for a
+/// compile-time phase must cite a `BBNF_PIPELINE_REPORT=1` CSV diff on
+/// `compile_css_l4` or `compile_bbnf`.
+struct PipelineTimer {
+    enabled: bool,
+    total: Instant,
+    rows: Vec<(&'static str, Duration)>,
+}
+
+impl PipelineTimer {
+    fn new() -> Self {
+        Self {
+            enabled: std::env::var("BBNF_PIPELINE_REPORT").is_ok(),
+            total: Instant::now(),
+            rows: Vec::new(),
+        }
+    }
+
+    /// Wrap a pass body, accumulating its wall-clock time when enabled.
+    /// The `pass` argument is a `&'static str` pass name (matches the
+    /// pipeline operation documented in `crates/ir/CLAUDE.md`).
+    #[inline]
+    fn span<R>(&mut self, pass: &'static str, body: impl FnOnce() -> R) -> R {
+        if !self.enabled {
+            return body();
+        }
+        let start = Instant::now();
+        let result = body();
+        self.rows.push((pass, start.elapsed()));
+        result
+    }
+
+    /// Emit the CSV report to stderr and consume the timer. Called at
+    /// the end of `compile_ast_common`.
+    fn finish(self, grammar_label: &str) {
+        if !self.enabled {
+            return;
+        }
+        let total = self.total.elapsed();
+        eprintln!("pipeline_report: grammar={}", grammar_label);
+        eprintln!("  pass,elapsed_us");
+        for (pass, dur) in &self.rows {
+            eprintln!("  {},{}", pass, dur.as_micros());
+        }
+        eprintln!("  __total__,{}", total.as_micros());
+    }
+}
 
 /// Compile a BBNF grammar source string to a VM-ready `GrammarIR`.
 ///
@@ -255,6 +313,8 @@ fn compile_ast_common<'a>(
     directives: &'a DirectiveSet<'a>,
     options: &PipelineOptions,
 ) -> Result<GrammarIR, CompileError> {
+    let mut timer = PipelineTimer::new();
+
     // Determine the entry rule name: use override if provided, otherwise last rule in source order.
     let entry_rule_name: Option<String> = options
         .entry_rule
@@ -277,20 +337,28 @@ fn compile_ast_common<'a>(
     }
 
     // Validate after partitioning — closure params are now known.
-    validate_ast(&ast, true, &closure_params)?;
+    timer.span("validate_ast", || {
+        validate_ast(&ast, true, &closure_params)
+    })?;
 
     // Dependency analysis.
-    let deps = crate::calculate_ast_deps(&ast);
+    let deps = timer.span("calculate_ast_deps", || crate::calculate_ast_deps(&ast));
 
     // SCC detection + topological ordering.
-    let scc_result = tarjan_scc(&deps);
-    let ast = topological_sort_scc(&ast, &scc_result, &deps);
+    let scc_result = timer.span("tarjan_scc", || tarjan_scc(&deps));
+    let ast = timer.span("topological_sort_scc", || {
+        topological_sort_scc(&ast, &scc_result, &deps)
+    });
 
     // Lower to IR.
-    let mut ir = lower_to_ir(&ast, &scc_result, directives, &closure_rules);
+    let mut ir = timer.span("lower_to_ir", || {
+        lower_to_ir(&ast, &scc_result, directives, &closure_rules)
+    });
 
     // Compute FIRST sets via IR CSP pass (replaces AST-level computation).
-    bbnf_ir::passes::compute_first_sets(&mut ir);
+    timer.span("compute_first_sets", || {
+        bbnf_ir::passes::compute_first_sets(&mut ir);
+    });
 
     // Set the correct entry rule (last rule in original source order).
     if let Some(ref name) = entry_rule_name {
@@ -301,8 +369,12 @@ fn compile_ast_common<'a>(
 
     // Optional: eliminate left-recursion at IR level (indirect via Paull's, then direct).
     if options.remove_left_recursion {
-        bbnf_ir::passes::eliminate_indirect_lr(&mut ir);
-        bbnf_ir::passes::eliminate_direct_lr(&mut ir);
+        timer.span("eliminate_indirect_lr", || {
+            bbnf_ir::passes::eliminate_indirect_lr(&mut ir);
+        });
+        timer.span("eliminate_direct_lr", || {
+            bbnf_ir::passes::eliminate_direct_lr(&mut ir);
+        });
     }
 
     // In structural mode, mark all rules as preserve_identity so no rule is
@@ -315,8 +387,12 @@ fn compile_ast_common<'a>(
 
     // Run IR metadata passes (alias + transparent detection from IR structure).
     // preserve_identity rules are automatically skipped by these passes.
-    bbnf_ir::passes::compute_aliases(&mut ir);
-    bbnf_ir::passes::compute_transparent(&mut ir);
+    timer.span("compute_aliases", || {
+        bbnf_ir::passes::compute_aliases(&mut ir);
+    });
+    timer.span("compute_transparent", || {
+        bbnf_ir::passes::compute_transparent(&mut ir);
+    });
 
     if !options.structural {
         // Layer 1 — structural normalization. Primary cross-rule
@@ -324,40 +400,30 @@ fn compile_ast_common<'a>(
         // point: handles the inline→merge→factor→inline cascading
         // feedback that equality saturation cannot express in a
         // single pass.
-        const MAX_OPT_ITER: usize = 64;
-        for iteration in 0..MAX_OPT_ITER {
-            let fingerprint = ir.structural_fingerprint();
+        timer.span("structural_normalizer_loop", || {
+            const MAX_OPT_ITER: usize = 64;
+            for iteration in 0..MAX_OPT_ITER {
+                let fingerprint = ir.structural_fingerprint();
 
-            bbnf_ir::passes::canonicalize_aliases(&mut ir);
-            bbnf_ir::passes::prune_unreachable(&mut ir);
-            bbnf_ir::passes::inline_acyclic(&mut ir);
-            bbnf_ir::passes::prune_unreachable(&mut ir);
-            bbnf_ir::passes::fuse_single_use(&mut ir);
-            bbnf_ir::passes::prune_unreachable(&mut ir);
-            bbnf_ir::passes::eliminate_epsilon(&mut ir);
-            bbnf_ir::passes::merge_literals(&mut ir);
-            // simplify_regex_algebra and merge_regex_alts deleted in
-            // Tranche H-7 after Gate B parity proof: the retained
-            // grammar-tier e-graph rules (DeduplicateAltBranches,
-            // SupersetAbsorbAlt, UnionMergeAlt, FuseAltRegexBranches
-            // in crates/ir/src/egraph/rules/regex.rs) cover every
-            // rewrite these destructive passes performed, using the
-            // same bbnf_regex::algebra helpers and the same
-            // pattern_has_top_level_pipe grouping logic. The HIR
-            // e-graph landed in H-3..H-6 additionally canonicalizes
-            // each individual pattern's HIR before these grammar-tier
-            // rules compare them, sharpening the retained rules
-            // without replacing them.
-            bbnf_ir::passes::factor_common_prefixes(&mut ir);
+                bbnf_ir::passes::canonicalize_aliases(&mut ir);
+                bbnf_ir::passes::prune_unreachable(&mut ir);
+                bbnf_ir::passes::inline_acyclic(&mut ir);
+                bbnf_ir::passes::prune_unreachable(&mut ir);
+                bbnf_ir::passes::fuse_single_use(&mut ir);
+                bbnf_ir::passes::prune_unreachable(&mut ir);
+                bbnf_ir::passes::eliminate_epsilon(&mut ir);
+                bbnf_ir::passes::merge_literals(&mut ir);
+                bbnf_ir::passes::factor_common_prefixes(&mut ir);
 
-            if ir.structural_fingerprint() == fingerprint {
-                break;
+                if ir.structural_fingerprint() == fingerprint {
+                    break;
+                }
+                assert!(
+                    iteration < MAX_OPT_ITER - 1,
+                    "structural normalizer loop did not converge after {MAX_OPT_ITER} iterations",
+                );
             }
-            assert!(
-                iteration < MAX_OPT_ITER - 1,
-                "structural normalizer loop did not converge after {MAX_OPT_ITER} iterations",
-            );
-        }
+        });
 
         // Layer 1b — equivalence discovery. Single e-graph saturation
         // on the normalized IR. Retained rules target ordering-
@@ -366,17 +432,19 @@ fn compile_ast_common<'a>(
         // extraction picks the cheapest canonical form per rule via
         // `GrammarCostModel` (shared with bbnf-regex HIR e-graph in
         // Tranche H).
-        let (egraph, pool, rule_body_ids) =
-            bbnf_ir::egraph::build_and_saturate(&ir);
-        let cost = bbnf_ir::egraph::GrammarCostModel::from_config(&ir.cost_config);
-        bbnf_ir::egraph::write_back_optimized(
-            &egraph,
-            &mut ir,
-            &rule_body_ids,
-            &cost,
-        );
-        pool.write_back(&mut ir);
-        drop(egraph);
+        timer.span("egraph_build_saturate_writeback", || {
+            let (egraph, pool, rule_body_ids) =
+                bbnf_ir::egraph::build_and_saturate(&ir);
+            let cost = bbnf_ir::egraph::GrammarCostModel::from_config(&ir.cost_config);
+            bbnf_ir::egraph::write_back_optimized(
+                &egraph,
+                &mut ir,
+                &rule_body_ids,
+                &cost,
+            );
+            pool.write_back(&mut ir);
+            drop(egraph);
+        });
 
         #[cfg(debug_assertions)]
         for rule in &ir.rules {
@@ -389,8 +457,12 @@ fn compile_ast_common<'a>(
             }
         }
 
-        bbnf_ir::passes::sort_alt_branches(&mut ir);
-        bbnf_ir::passes::refine_span_eligibility(&mut ir);
+        timer.span("sort_alt_branches", || {
+            bbnf_ir::passes::sort_alt_branches(&mut ir);
+        });
+        timer.span("refine_span_eligibility", || {
+            bbnf_ir::passes::refine_span_eligibility(&mut ir);
+        });
 
         // Refresh SCC metadata: the normalizer + e-graph write-back
         // may have restructured the rule reference graph (alias
@@ -399,27 +471,20 @@ fn compile_ast_common<'a>(
         // Downstream inline planning relies on these flags to break
         // mutual-recursion cycles; re-running Tarjan here ensures
         // they reflect the final optimized graph.
-        bbnf_ir::passes::compute_scc(&mut ir);
+        timer.span("compute_scc", || {
+            bbnf_ir::passes::compute_scc(&mut ir);
+        });
 
         // Layer 2a — body-mutating facts/restructuring passes.
-        // `factor_regex_with_lookahead` and `fuse_token_dispatch`
-        // rewrite rule bodies in place (lookahead dispatch factoring,
-        // @token fusion). Running them before the durable DAG is
-        // built keeps the reverse pointer map valid for every
-        // NodeId-keyed consumer downstream.
-        ir.follow_sets = bbnf_ir::passes::compute_follow_sets(&ir);
-        bbnf_ir::passes::factor_regex_with_lookahead(&mut ir);
-        bbnf_ir::passes::fuse_token_dispatch(&mut ir);
-
-        // Layer 2b — non-mutating facts on the stable DAG. The DAG
-        // is built below (outside the `!structural` branch) because
-        // it is a stable substrate for every downstream NodeId-keyed
-        // pass — including `project_types` in `finalize_compile` —
-        // and must exist whether or not the structural optimizer ran.
-        //
-        // These fact passes only run when optimization is enabled
-        // because they depend on the cleaned-up alternation shapes
-        // produced by the structural normalizer + e-graph.
+        timer.span("compute_follow_sets", || {
+            ir.follow_sets = bbnf_ir::passes::compute_follow_sets(&ir);
+        });
+        timer.span("factor_regex_with_lookahead", || {
+            bbnf_ir::passes::factor_regex_with_lookahead(&mut ir);
+        });
+        timer.span("fuse_token_dispatch", || {
+            bbnf_ir::passes::fuse_token_dispatch(&mut ir);
+        });
     }
 
     // Durable post-extraction canonical DAG. Mandatory — the
@@ -428,7 +493,9 @@ fn compile_ast_common<'a>(
     // for `project_types` in `finalize_compile`. Built after the
     // body-mutating facts passes converge (when they run) so the
     // pointer index remains valid.
-    ir.dag = Some(bbnf_ir::dag::GrammarDag::from_ir(&ir));
+    timer.span("build_durable_dag", || {
+        ir.dag = Some(bbnf_ir::dag::GrammarDag::from_ir(&ir));
+    });
     debug_assert!(
         ir.dag.is_some(),
         "DAG must be built before facts/strategy phases",
@@ -437,22 +504,36 @@ fn compile_ast_common<'a>(
     if !options.structural {
         // Non-mutating facts on the stable DAG. Gated on !structural
         // because they depend on optimizer output.
-        bbnf_ir::passes::generate_dispatch_tables(&mut ir);
-        bbnf_ir::passes::compute_regex_info(&mut ir);
-        bbnf_ir::passes::mine_recognizers(&mut ir);
+        timer.span("generate_dispatch_tables", || {
+            bbnf_ir::passes::generate_dispatch_tables(&mut ir);
+        });
+        timer.span("compute_regex_info", || {
+            bbnf_ir::passes::compute_regex_info(&mut ir);
+        });
+        timer.span("mine_recognizers", || {
+            bbnf_ir::passes::mine_recognizers(&mut ir);
+        });
         // Tranche W phase 3b — derive per-NodeId strategy decisions
         // from the upstream facts via a real csp_solver::Csp running
         // OptimizationMode::MinimizeCost. Stored on
         // `ir.recognizer_decisions` for the kernel registry and the
         // per-kind drivers.
-        ir.recognizer_decisions = bbnf_ir::passes::solve_strategy_decisions(&ir);
+        timer.span("solve_strategy_decisions", || {
+            ir.recognizer_decisions = bbnf_ir::passes::solve_strategy_decisions(&ir);
+        });
         // Tranche X.8d — project the per-NodeId RegexEngine decisions
         // into a per-StringId map so `scanner_plan::plan_regex_scanner`
         // can look up the authoritative engine choice by pattern
         // string instead of re-classifying on every emit.
-        ir.regex_engine_decisions =
-            bbnf_ir::passes::extract_regex_engine_decisions(&ir, &ir.recognizer_decisions);
+        timer.span("extract_regex_engine_decisions", || {
+            ir.regex_engine_decisions =
+                bbnf_ir::passes::extract_regex_engine_decisions(&ir, &ir.recognizer_decisions);
+        });
     }
+
+    // Emit the per-pass CSV report when BBNF_PIPELINE_REPORT=1.
+    let label = entry_rule_name.as_deref().unwrap_or("<unknown>");
+    timer.finish(label);
 
     Ok(ir)
 }

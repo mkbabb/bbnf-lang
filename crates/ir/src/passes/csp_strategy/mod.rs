@@ -51,6 +51,38 @@
 //! `SharedHelper(sig)` peer groups) lands in a follow-up tranche
 //! where the SeqMode/RepeatMode/CallStrategy/MemoMode variables also
 //! join the substrate.
+//!
+//! # Tranche Y.5 — connected-components decomposition
+//!
+//! Each rule body is solved as its own [`csp_solver::Csp`] instance.
+//! Under the current constraint topology (the only cross-variable
+//! constraint is `ImplicationConstraint`, wiring an Alt parent to
+//! its child Regex engines within the same rule body), **each rule
+//! body is exactly one connected component** — the per-rule solve
+//! is already the connected-components decomposition the X.6 global-
+//! CSP experiment was trying to approximate with a single giant
+//! `Csp::new()`. The X.6 blow-up (9 ms → 94 ms on `compile_css_l4`)
+//! happened because feeding all rules' variables into one solver let
+//! branch-and-bound explore the cross-product whenever any single
+//! constraint fired; the per-rule decomposition bounds the search
+//! per rule, which is exactly what the connected-components
+//! decomposition would produce under the same topology.
+//!
+//! Y.5 ships the architectural substrate for the first tranche that
+//! adds genuine cross-rule constraints (likely Y.2 `SharedHelper`
+//! cross-rule hoisting or a future type-projection lift): see
+//! [`components::UnionFind`] for the ready-to-use union-find helper
+//! and `components` module docs for the migration path. Under the
+//! current topology there is no behavioral change — the code
+//! structure makes the invariant explicit and provides the bridge
+//! for the next tranche that needs it.
+//!
+//! The Y.-1 node budget on the shared `SolveConfig` means a runaway
+//! component search falls back to per-variable trivial picks rather
+//! than hanging the compile. This is the safety net the X.6
+//! experiment lacked.
+
+pub mod components;
 
 use std::collections::HashMap;
 

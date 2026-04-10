@@ -55,9 +55,9 @@ pub fn build_and_saturate(
 ) -> (
     EGraph<GrammarENode, NoAnalysis>,
     SharedStrings,
-    std::collections::HashMap<crate::RuleId, egraph::Id>,
+    rustc_hash::FxHashMap<crate::RuleId, egraph::Id>,
 ) {
-    use std::collections::HashMap;
+    use rustc_hash::FxHashMap;
     use crate::RuleId;
 
     let pool = SharedStrings::from_ir(ir);
@@ -80,7 +80,7 @@ pub fn build_and_saturate(
 
     // Map RuleId → root e-class Id using the Vec<Id> insert_ir
     // returned — the i-th entry is the root of ir.rules[i].body.
-    let rule_body_ids: HashMap<RuleId, egraph::Id> = ir
+    let rule_body_ids: FxHashMap<RuleId, egraph::Id> = ir
         .rules
         .iter()
         .enumerate()

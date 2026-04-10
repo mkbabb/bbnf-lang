@@ -30,8 +30,9 @@
 //! phase → run saturation → drop rules → `into_vec` to extract the
 //! final pool.
 
-use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
+
+use rustc_hash::FxHashMap;
 
 use crate::{GrammarIR, StringId};
 
@@ -43,14 +44,14 @@ use crate::{GrammarIR, StringId};
 #[derive(Clone, Debug)]
 pub struct SharedStrings {
     strings: Arc<Mutex<Vec<String>>>,
-    dedup: Arc<Mutex<HashMap<String, StringId>>>,
+    dedup: Arc<Mutex<FxHashMap<String, StringId>>>,
 }
 
 impl SharedStrings {
     /// Initialize the shared pool from a grammar's current string table.
     pub fn from_ir(ir: &GrammarIR) -> Self {
         let strings: Vec<String> = ir.strings.clone();
-        let dedup: HashMap<String, StringId> = strings
+        let dedup: FxHashMap<String, StringId> = strings
             .iter()
             .enumerate()
             .map(|(i, s)| (s.clone(), i as StringId))

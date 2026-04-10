@@ -232,6 +232,7 @@ dependencies = [
  "csp-solver",
  "egraph",
  "egraph-derive",
+ "rustc-hash 2.1.2",
  "serde",
  "smallvec",
 ]

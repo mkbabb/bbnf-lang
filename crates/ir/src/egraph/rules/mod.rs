@@ -31,7 +31,7 @@ pub use regex::{
     DeduplicateAltBranches, FuseAltRegexBranches, SupersetAbsorbAlt, UnionMergeAlt,
 };
 
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 
 use egraph::{Id, NoAnalysis, RewriteFn};
 
@@ -53,7 +53,7 @@ use crate::{GrammarIR, RuleId};
 pub fn default_rules(
     _ir: &GrammarIR,
     pool: &SharedStrings,
-    _rule_body_ids: HashMap<RuleId, Id>,
+    _rule_body_ids: FxHashMap<RuleId, Id>,
 ) -> Vec<Box<dyn RewriteFn<GrammarENode, NoAnalysis>>> {
     vec![
         Box::new(DeduplicateAltBranches),

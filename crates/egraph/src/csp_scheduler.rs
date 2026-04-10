@@ -23,6 +23,9 @@
 //! same `Constraint<D>::revise` propagation pattern.
 
 use std::collections::{HashMap, HashSet};
+use std::hash::BuildHasherDefault;
+
+use rustc_hash::FxHasher;
 
 use csp_solver::{
     Csp,
@@ -35,8 +38,15 @@ use crate::analysis::Analysis;
 use crate::egraph::EGraph;
 use crate::id::Id;
 use crate::language::Language;
-use crate::rewrite::RewriteFn;
+use crate::rewrite::{DirtyClassSet, RewriteFn};
 use crate::scheduler::{RunReport, Scheduler};
+
+// Tranche X phase 2: per-iteration scratch maps switch from
+// `RandomState` to the Fx hasher. `Id` is a `u32` newtype, and the
+// post-W samply profile attributed ~10% of `compile_bbnf` self-time
+// to SipHasher work in these per-iteration scratch maps.
+type FxIdMap<V> = HashMap<Id, V, BuildHasherDefault<FxHasher>>;
+type FxIdSet = HashSet<Id, BuildHasherDefault<FxHasher>>;
 
 // ── DirtyDomain ─────────────────────────────────────────────────────────────
 
@@ -202,10 +212,10 @@ impl<N: Language, A: Analysis<N>> Scheduler<N, A> for CspScheduler {
         // Snapshot per-class node counts so we can detect "grew since
         // last iteration" between applies. Classes that grow get
         // marked dirty in the next iteration's seed set.
-        let mut node_count_snapshot: HashMap<Id, usize> = HashMap::new();
+        let mut node_count_snapshot: FxIdMap<usize> = FxIdMap::default();
 
         // Seed iteration 1: every class is dirty.
-        let mut seed_dirty: HashSet<Id> = egraph.classes().map(|c| c.id).collect();
+        let mut seed_dirty: FxIdSet = egraph.classes().map(|c| c.id).collect();
 
         for iter in 0..self.iter_limit {
             report.iterations = iter + 1;
@@ -225,7 +235,7 @@ impl<N: Language, A: Analysis<N>> Scheduler<N, A> for CspScheduler {
             let _ = csp.propagate();
 
             // Harvest the dirty set from the propagated CSP.
-            let dirty: HashSet<Id> = class_var
+            let dirty: DirtyClassSet = class_var
                 .iter()
                 .filter_map(|(&class_id, &var_id)| {
                     if csp.variables[var_id as usize].domain.dirty {
@@ -315,10 +325,10 @@ impl<N: Language, A: Analysis<N>> Scheduler<N, A> for CspScheduler {
 /// lookup map.
 fn build_csp<N: Language, A: Analysis<N>>(
     egraph: &EGraph<N, A>,
-    seed_dirty: &HashSet<Id>,
-) -> (Csp<DirtyDomain>, HashMap<Id, VarId>) {
+    seed_dirty: &FxIdSet,
+) -> (Csp<DirtyDomain>, FxIdMap<VarId>) {
     let mut csp = Csp::<DirtyDomain>::new();
-    let mut class_var: HashMap<Id, VarId> = HashMap::new();
+    let mut class_var: FxIdMap<VarId> = FxIdMap::default();
 
     // One variable per current e-class.
     for class in egraph.classes() {
@@ -337,7 +347,7 @@ fn build_csp<N: Language, A: Analysis<N>>(
         let child_var = class_var[&class.id];
         // Deduplicate parent class ids (canonicalized).
         let mut parent_vars: Vec<VarId> = Vec::with_capacity(class.parents.len());
-        let mut seen: HashSet<Id> = HashSet::new();
+        let mut seen: FxIdSet = FxIdSet::default();
         for (_, parent_id) in &class.parents {
             let canonical = egraph.find_ref(*parent_id);
             if seen.insert(canonical) {

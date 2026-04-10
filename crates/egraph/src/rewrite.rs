@@ -6,11 +6,22 @@
 //! never removes the original form — it only adds a new equivalence.
 
 use std::collections::HashSet;
+use std::hash::BuildHasherDefault;
+
+use rustc_hash::FxHasher;
 
 use crate::analysis::Analysis;
 use crate::egraph::EGraph;
 use crate::id::Id;
 use crate::language::Language;
+
+/// Tranche X phase 2: dirty-class set used by the CSP scheduler and
+/// the per-rule incremental re-search path. `FxHashSet` over the
+/// default `RandomState` HashSet — `Id` is a `u32` newtype, so the
+/// SipHasher cost was 3-10% of `compile_bbnf` self-time per the
+/// post-W samply profile. The Fx hasher collapses to a single
+/// 64-bit multiply.
+pub type DirtyClassSet = HashSet<Id, BuildHasherDefault<FxHasher>>;
 
 /// A rewrite rule over a language `N` with analysis `A`.
 ///
@@ -70,7 +81,7 @@ pub trait RewriteFn<N: Language, A: Analysis<N>>: Send + Sync {
     /// applies post-hoc — this saves apply-time but not search-time.
     /// Individual rules can override to skip search on clean classes
     /// as well.
-    fn run_on_dirty(&self, egraph: &mut EGraph<N, A>, dirty: &HashSet<Id>) -> usize;
+    fn run_on_dirty(&self, egraph: &mut EGraph<N, A>, dirty: &DirtyClassSet) -> usize;
 }
 
 /// Blanket erasure: any `Rewrite` is also a `RewriteFn`.
@@ -96,7 +107,7 @@ where
         node_delta + union_delta
     }
 
-    fn run_on_dirty(&self, egraph: &mut EGraph<N, A>, dirty: &HashSet<Id>) -> usize {
+    fn run_on_dirty(&self, egraph: &mut EGraph<N, A>, dirty: &DirtyClassSet) -> usize {
         let before_nodes = egraph.total_nodes();
         let before_unions = egraph.union_count();
         let matches = self.search(egraph);

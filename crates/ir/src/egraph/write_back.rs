@@ -18,7 +18,7 @@
 //! non-rule-rooted cycles that can arise if a rewrite rule unions
 //! a non-root class with its own expansion.
 
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 
 use egraph::{EGraph, Extractor, Id, NoAnalysis};
 
@@ -33,14 +33,14 @@ use crate::{AltBranch, FnId, GrammarIR, IrNode, RuleId, StringId};
 pub fn write_back_optimized(
     egraph: &EGraph<GrammarENode, NoAnalysis>,
     ir: &mut GrammarIR,
-    rule_body_ids: &HashMap<RuleId, Id>,
+    rule_body_ids: &FxHashMap<RuleId, Id>,
     cost: &GrammarCostModel,
 ) {
     let extractor = Extractor::new(egraph, cost);
     // Reverse map: canonical e-class Id → owning RuleId. Used by
     // the reconstruction walk to re-emit cross-rule references as
     // `Ref(RuleId)` instead of inlining the target rule's body.
-    let root_to_rule: HashMap<Id, RuleId> = rule_body_ids
+    let root_to_rule: FxHashMap<Id, RuleId> = rule_body_ids
         .iter()
         .map(|(&rid, &id)| (egraph.find_ref(id), rid))
         .collect();
@@ -60,7 +60,7 @@ pub fn write_back_optimized(
         // form whenever a rewrite adds such a form. Extracting the
         // naive best would produce `rule_X = Ref(rule_X)`, a
         // self-cycle.
-        let mut visiting = HashMap::new();
+        let mut visiting = FxHashMap::default();
         let canonical = egraph.find_ref(root_id);
         visiting.insert(canonical, ());
         if let Some(body) = materialize_best_at_root(
@@ -96,8 +96,8 @@ fn materialize_best_at_root(
     >,
     canonical: Id,
     rule_id: RuleId,
-    root_to_rule: &HashMap<Id, RuleId>,
-    visiting: &mut HashMap<Id, ()>,
+    root_to_rule: &FxHashMap<Id, RuleId>,
+    visiting: &mut FxHashMap<Id, ()>,
 ) -> Option<IrNode> {
     // Pick a node from the class that is NOT `Ref(rule_id)`. We
     // prefer the extractor's best if it passes the filter, otherwise
@@ -127,8 +127,8 @@ pub fn extract_ir_node(
     root: Id,
 ) -> Option<IrNode> {
     let extractor = Extractor::new(egraph, cost);
-    let empty = HashMap::new();
-    let mut visiting = HashMap::new();
+    let empty = FxHashMap::default();
+    let mut visiting = FxHashMap::default();
     let canonical = egraph.find_ref(root);
     visiting.insert(canonical, ());
     materialize_best(egraph, &extractor, canonical, &empty, &mut visiting)
@@ -148,9 +148,9 @@ fn rebuild(
         GrammarCostModel,
     >,
     id: Id,
-    root_to_rule: &HashMap<Id, RuleId>,
+    root_to_rule: &FxHashMap<Id, RuleId>,
     current_rule: Option<RuleId>,
-    visiting: &mut HashMap<Id, ()>,
+    visiting: &mut FxHashMap<Id, ()>,
 ) -> Option<IrNode> {
     let _ = current_rule; // no longer consulted; Refs are always emitted at rule boundaries
     let canonical = egraph.find_ref(id);
@@ -188,8 +188,8 @@ fn materialize_best(
         GrammarCostModel,
     >,
     canonical: Id,
-    root_to_rule: &HashMap<Id, RuleId>,
-    visiting: &mut HashMap<Id, ()>,
+    root_to_rule: &FxHashMap<Id, RuleId>,
+    visiting: &mut FxHashMap<Id, ()>,
 ) -> Option<IrNode> {
     let best = extractor.best_node(canonical)?.clone();
     Some(materialize_node(egraph, extractor, best, root_to_rule, visiting))
@@ -208,8 +208,8 @@ fn materialize_node(
         GrammarCostModel,
     >,
     best: GrammarENode,
-    root_to_rule: &HashMap<Id, RuleId>,
-    visiting: &mut HashMap<Id, ()>,
+    root_to_rule: &FxHashMap<Id, RuleId>,
+    visiting: &mut FxHashMap<Id, ()>,
 ) -> IrNode {
     let current_rule: Option<RuleId> = None;
 

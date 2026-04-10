@@ -18,7 +18,7 @@
 //! - [`UnionMergeAlt`]           — `Alt([.., [a-c], [d-f], ..])` → `Alt([.., [a-f], ..])`
 //! - [`FuseAltRegexBranches`]    — `Alt([Regex(a), Lit(b), Regex(c)])` → `Regex("a|b|c")`
 
-use std::collections::HashSet;
+use rustc_hash::FxHashSet;
 
 use egraph::{EGraph, Id, NoAnalysis, Rewrite};
 
@@ -68,7 +68,7 @@ impl Rewrite<GrammarENode, NoAnalysis> for DeduplicateAltBranches {
                 let GrammarENode::Alt(children, dispatch) = node else {
                     continue;
                 };
-                let mut seen: HashSet<Id> = HashSet::new();
+                let mut seen: FxHashSet<Id> = FxHashSet::default();
                 let mut deduped: Vec<Id> = Vec::with_capacity(children.len());
                 for &id in children.iter() {
                     let canon = egraph.find_ref(id);

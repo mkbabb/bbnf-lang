@@ -42,6 +42,23 @@ pub trait Rewrite<N: Language, A: Analysis<N>>: Send + Sync {
     /// Find all matches in the e-graph. Called once per saturation iteration.
     fn search(&self, egraph: &EGraph<N, A>) -> Vec<(Id, Self::Match)>;
 
+    /// Tranche AA.5 — per-match predicate guard.
+    ///
+    /// Called between `search` and `apply` to let a rule consult its
+    /// class's `Analysis` data and decide whether applying the match
+    /// is actually worthwhile (e.g., a rewrite that rewrites an Alt
+    /// might abort when `EClassFacts::first_set` shows the dispatch
+    /// is already tight and the rewrite would only bloat the graph).
+    ///
+    /// Default returns `true` — rules that don't need analysis-guided
+    /// gating keep the pre-AA.5 behaviour. Rules that do override can
+    /// read from `egraph.class(class_id).data` without changing their
+    /// `search` signature.
+    #[allow(unused_variables)]
+    fn should_apply(&self, egraph: &EGraph<N, A>, class_id: Id, matched: &Self::Match) -> bool {
+        true
+    }
+
     /// Apply one match, installing the rewritten form and unioning with
     /// the matched class. Rules install equivalences unconditionally;
     /// progress is measured by the scheduler via `egraph.total_nodes()`
@@ -100,7 +117,9 @@ where
         let before_unions = egraph.union_count();
         let matches = self.search(egraph);
         for (class_id, m) in matches {
-            self.apply(egraph, class_id, m);
+            if self.should_apply(egraph, class_id, &m) {
+                self.apply(egraph, class_id, m);
+            }
         }
         let node_delta = egraph.total_nodes().saturating_sub(before_nodes);
         let union_delta = (egraph.union_count() - before_unions) as usize;
@@ -112,7 +131,9 @@ where
         let before_unions = egraph.union_count();
         let matches = self.search(egraph);
         for (class_id, m) in matches {
-            if dirty.contains(&egraph.find_ref(class_id)) {
+            if dirty.contains(&egraph.find_ref(class_id))
+                && self.should_apply(egraph, class_id, &m)
+            {
                 self.apply(egraph, class_id, m);
             }
         }

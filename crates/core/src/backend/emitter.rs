@@ -280,6 +280,23 @@ pub trait Emitter {
         None
     }
 
+    /// Tranche X.10 — CSS recognizer family kernel emission hook.
+    ///
+    /// The driver consults `ir.node_facts[node_id].recognizer.shape`
+    /// at Seq/Next nodes and, when a `FunctionHead`, `HashPrefix`,
+    /// `UnitTail`, or `PunctWsRegion` shape applies, defers to this
+    /// method. Returning `Some(out)` short-circuits the normal
+    /// child-emission path; returning `None` lets the driver proceed
+    /// with its usual compilation strategy (backends that don't
+    /// implement kernel routing transparently fall through).
+    fn emit_recognizer_family_kernel(
+        &mut self,
+        _shape: &bbnf_ir::passes::patterns::RecognizerShape,
+        _ctx: &mut Self::Ctx,
+    ) -> Option<Self::Output> {
+        None
+    }
+
     // ── Rule-level emission ─────────────────────────────────────────────
 
     /// Emit a fused number rule body (JSON number → f64 specialization).

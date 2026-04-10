@@ -62,6 +62,24 @@ fn hash_shape_into(shape: &RecognizerShape, ir: &GrammarIR, hasher: &mut FxHashe
             // so two interned copies of the same pattern collapse.
             hash_regex_class_into(*sid, ir, hasher);
         }
+        RecognizerShape::FunctionHead { name, paren_byte } => {
+            5u8.hash(hasher);
+            name.as_slice().hash(hasher);
+            paren_byte.hash(hasher);
+        }
+        RecognizerShape::HashPrefix { tail_class } => {
+            6u8.hash(hasher);
+            // CharSet128 derives Hash (Tranche W).
+            tail_class.hash(hasher);
+        }
+        RecognizerShape::UnitTail { unit } => {
+            7u8.hash(hasher);
+            unit.as_slice().hash(hasher);
+        }
+        RecognizerShape::PunctWsRegion { puncts } => {
+            8u8.hash(hasher);
+            puncts.as_slice().hash(hasher);
+        }
     }
 }
 

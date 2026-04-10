@@ -28,13 +28,17 @@
 
 mod balanced_wrap;
 mod comment_ws;
+mod function_head;
+mod hash_prefix;
 mod identifier;
 mod node_facts;
 mod prefix_shared_group;
+mod punct_ws_region;
 mod quoted_string;
 mod separator_list;
 mod signature;
 mod token_led_branches;
+mod unit_tail;
 
 use crate::GrammarIR;
 use crate::passes::context::compute_context_facts;
@@ -95,6 +99,15 @@ pub fn mine_recognizers(ir: &mut GrammarIR) {
         identifier::collect(ir, dag, &mut additions);
         separator_list::collect(ir, dag, &mut additions);
         token_led_branches::collect(ir, dag, &context_facts, &mut additions);
+
+        // Tranche X.10: CSS recognizer family expansion.
+        function_head::collect(ir, dag, &mut additions);
+        hash_prefix::collect(ir, dag, &mut additions);
+        unit_tail::collect(ir, dag, &mut additions);
+
+        // Tranche X.11b: JSON structural punctuation+ws recognition.
+        punct_ws_region::collect(ir, dag, &mut additions);
+
         // `dag` and `context_facts` borrows end here (NLL).
         additions
     } else {

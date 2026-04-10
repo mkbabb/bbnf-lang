@@ -193,6 +193,33 @@ pub enum RecognizerShape {
     /// The regex-domain classification (`RegexClass`) is read from
     /// `ir.regex_info[sid].classification`.
     Regex { sid: StringId },
+    // ── Tranche X.10 family expansion ────────────────────────────────
+    /// CSS function head: fixed-name identifier followed by `(`.
+    /// Captures `rgb(`, `rgba(`, `hsl(`, `hsla(`, `calc(`, `var(`,
+    /// `url(`, `attr(` — eight canonical CSS functions whose openers
+    /// match a single memcmp + paren byte check.
+    FunctionHead {
+        name: smallvec::SmallVec<[u8; 8]>,
+        paren_byte: u8,
+    },
+    /// Hash-prefixed hex tail: `#` followed by ≥1 hex digit.
+    /// Captures CSS color literals (`#abcdef`, `#abc`, `#abcdefab`).
+    HashPrefix {
+        /// Fully classified byte set for the tail (always hex for CSS).
+        tail_class: crate::CharSet128,
+    },
+    /// Numeric value with a fixed unit suffix (`12px`, `1.5em`, `100%`).
+    /// `unit` is the raw byte sequence of the suffix literal.
+    UnitTail {
+        unit: smallvec::SmallVec<[u8; 8]>,
+    },
+    /// Punctuation+whitespace region cluster, e.g. JSON object/array
+    /// structural bytes (`,`, `:`, `{`, `}`, `[`, `]`) with surrounding
+    /// whitespace. The byte set is the cluster of punctuation bytes the
+    /// scanner consumes in one pass.
+    PunctWsRegion {
+        puncts: smallvec::SmallVec<[u8; 8]>,
+    },
 }
 
 /// Canonical hash key for kernel dedup/hoisting.

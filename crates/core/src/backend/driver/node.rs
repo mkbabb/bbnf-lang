@@ -1,6 +1,7 @@
 //! Per-node dispatcher — maps `IrNode` variants to the appropriate
 //! per-kind compile function.
 
+use bbnf_ir::passes::patterns::RecognizerShape;
 use bbnf_ir::{GrammarIR, IrNode};
 
 use super::DriverState;
@@ -11,6 +12,37 @@ use super::repeat::compile_repeat;
 use super::seq::compile_seq;
 use super::wrap::compile_wrap;
 use crate::backend::{Emitter, TokenDispatchArmCompiled, ValuePlacement};
+
+/// Check whether `node` has a recognizer fact carrying a Tranche X.10
+/// family shape (FunctionHead / HashPrefix / UnitTail / PunctWsRegion)
+/// and, if so, delegate to the emitter's kernel hook. Returns
+/// `Some(out)` to short-circuit the normal child-emission path.
+fn try_emit_family_kernel<E: Emitter>(
+    node: &IrNode,
+    alloc: ValuePlacement,
+    ir: &GrammarIR,
+    emitter: &mut E,
+    ctx: &mut E::Ctx,
+) -> Option<E::Output> {
+    // Kernel-emitted shapes return `Option<Span>`; they only make sense
+    // for Inline alloc where the caller expects a Span result.
+    if alloc != ValuePlacement::Inline {
+        return None;
+    }
+    let dag = ir.dag.as_ref()?;
+    let node_id = dag.node_for(node)?;
+    let facts = ir.node_facts.get(&node_id)?;
+    let rec = facts.recognizer.as_ref()?;
+    match &rec.shape {
+        RecognizerShape::FunctionHead { .. }
+        | RecognizerShape::HashPrefix { .. }
+        | RecognizerShape::UnitTail { .. }
+        | RecognizerShape::PunctWsRegion { .. } => {
+            emitter.emit_recognizer_family_kernel(&rec.shape, ctx)
+        }
+        _ => None,
+    }
+}
 
 /// Compile a single IR node. Target-agnostic decisions are made here
 /// and in the per-kind helpers; emission is delegated to the
@@ -26,6 +58,14 @@ pub(crate) fn compile_node<E: Emitter>(
     emitter: &mut E,
     ctx: &mut E::Ctx,
 ) -> E::Output {
+    // Tranche X.10/X.11b: recognizer-family kernel short-circuit. When
+    // the current node carries a FunctionHead / HashPrefix / UnitTail /
+    // PunctWsRegion fact and the result is being used inline, defer to
+    // the family kernel instead of descending through Seq/Next.
+    if let Some(out) = try_emit_family_kernel(node, alloc, ir, emitter, ctx) {
+        return out;
+    }
+
     match node {
         // Leaves.
         IrNode::Literal(sid) => {

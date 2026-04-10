@@ -16,8 +16,12 @@
 pub mod balanced_wrap;
 pub mod charclass;
 pub mod comment_ws;
+pub mod function_head;
+pub mod hash_prefix;
 pub mod identifier;
 pub mod number;
 pub mod prefix_class;
+pub mod punct_ws_region;
 pub mod quoted_string;
 pub mod sep_list;
+pub mod unit_tail;

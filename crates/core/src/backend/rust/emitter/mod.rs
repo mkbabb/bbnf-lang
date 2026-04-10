@@ -303,6 +303,29 @@ impl Emitter for RustEmitter {
         self.emit_delim_scan_impl(config, ctx)
     }
 
+    fn emit_recognizer_family_kernel(
+        &mut self,
+        shape: &bbnf_ir::passes::patterns::RecognizerShape,
+        _ctx: &mut Self::Ctx,
+    ) -> Option<TokenStream> {
+        use bbnf_ir::passes::patterns::RecognizerShape;
+        match shape {
+            RecognizerShape::FunctionHead { name, paren_byte } => Some(
+                crate::backend::kernels::function_head::emit_call(name.as_slice(), *paren_byte),
+            ),
+            RecognizerShape::HashPrefix { .. } => {
+                Some(crate::backend::kernels::hash_prefix::emit_call())
+            }
+            RecognizerShape::UnitTail { unit } => Some(
+                crate::backend::kernels::unit_tail::emit_call_span(unit.as_slice()),
+            ),
+            RecognizerShape::PunctWsRegion { puncts } => Some(
+                crate::backend::kernels::punct_ws_region::emit_call(puncts.as_slice()),
+            ),
+            _ => None,
+        }
+    }
+
     fn emit_fused_number_rule(
         &mut self,
         rule: &IrRule,

@@ -16,6 +16,8 @@ mod utils;
 
 use std::collections::HashMap;
 
+use rustc_hash::FxHashMap;
+
 use crate::dag::{GrammarDag, NodeId};
 use crate::{GrammarIR, IrNode, RuleId, SubVariant, TypeDesc};
 
@@ -59,6 +61,30 @@ pub fn project_types(ir: &mut GrammarIR) {
 
     // Phase 2: Solve via monotonic fixed-point propagation.
     let _ = system.csp.propagate();
+
+    // Tranche X Phase 0: build a reverse var→node map ONCE before
+    // the Seq-children loop below. The previous implementation was a
+    // linear `iter().chain().find_map()` scan over `system.node_vars`
+    // + `system.vec_context_vars` called inside that loop, which is
+    // O(rules × children × vars) and dominated `compile_css_l4`
+    // post-Tranche W (23.13% self-time). The reverse map collapses
+    // the lookup to O(1) with one allocation per compile.
+    //
+    // The chain order in the prior `find_node_id_for_var` preferred
+    // `node_vars` over `vec_context_vars` on the (impossible) tie.
+    // We preserve that bias by inserting `vec_context_vars` first
+    // and then overwriting with `node_vars`.
+    let mut var_to_node: FxHashMap<csp_solver::constraint::VarId, NodeId> =
+        FxHashMap::with_capacity_and_hasher(
+            system.node_vars.len() + system.vec_context_vars.len(),
+            Default::default(),
+        );
+    for (&nid, &var_id) in &system.vec_context_vars {
+        var_to_node.insert(var_id, nid);
+    }
+    for (&nid, &var_id) in &system.node_vars {
+        var_to_node.insert(var_id, nid);
+    }
 
     // Phase 3: Extract solved types into TypeMap keyed by `NodeId`.
     let mut type_map = TypeMap::default();
@@ -140,8 +166,9 @@ pub fn project_types(ir: &mut GrammarIR) {
         };
 
         // Re-record per-node types for the children in this Seq.
+        // O(1) lookup via the var_to_node reverse map built above.
         for (child_var, eff_ty) in children.iter().zip(effective_types.iter()) {
-            if let Some(nid) = find_node_id_for_var(&system, *child_var) {
+            if let Some(&nid) = var_to_node.get(child_var) {
                 type_map.insert_node_type(nid, eff_ty.clone());
             }
         }
@@ -328,20 +355,6 @@ pub fn project_types(ir: &mut GrammarIR) {
     ir.type_map = Some(type_map);
     ir.types = types_map.into_iter().collect();
     ir.types.sort_by_key(|(id, _)| *id);
-}
-
-/// Find the `NodeId` associated with a CSP variable ID by scanning
-/// the generator's `NodeId`-keyed var maps. Linear scan; called at
-/// most once per Seq child during sub-variant resolution.
-fn find_node_id_for_var(
-    system: &generate::ConstraintSystem,
-    var_id: csp_solver::constraint::VarId,
-) -> Option<NodeId> {
-    system
-        .node_vars
-        .iter()
-        .chain(system.vec_context_vars.iter())
-        .find_map(|(&nid, &v)| if v == var_id { Some(nid) } else { None })
 }
 
 /// Correct Repeat vec_elem_types to match the Vec inner from

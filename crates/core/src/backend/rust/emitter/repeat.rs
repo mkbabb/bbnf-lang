@@ -145,6 +145,21 @@ impl RustEmitter {
     ) -> TokenStream {
         let lo_lit = config.lo as usize;
 
+        // Span case: Tranche X.9b routes through `kernels::sep_list`
+        // for the canonical `element (SEP element)*` shape. The
+        // kernel owns the loop scaffolding; the emitter's job is
+        // just to allocate the per-site fresh counter variable and
+        // pass the pre-composed element/separator token streams.
+        if *elem_type == TypeDesc::Span {
+            let count_var = ctx.fresh("count");
+            return crate::backend::kernels::sep_list::emit_span_body(
+                &element,
+                &separator,
+                config,
+                &count_var,
+            );
+        }
+
         // Terminator byte condition expression (no control flow).
         let terminator_cond = if let Some(ref tb) = config.terminator_bytes {
             if tb.len() == 1 {
@@ -164,50 +179,6 @@ impl RustEmitter {
         let terminator_break = terminator_cond.as_ref().map(|cond| {
             quote! { if #cond { break; } }
         }).unwrap_or_default();
-
-        // Span case: collapse to a single Span.
-        if *elem_type == TypeDesc::Span {
-            let count_var = ctx.fresh("count");
-            return quote! {
-                (|| {
-                    let __sp_start = state.offset;
-                    let mut #count_var: usize = 0;
-
-                    match #element {
-                        Some(_) => { #count_var += 1; }
-                        None => {
-                            return if #count_var >= #lo_lit {
-                                Some(::parse_that::Span::new(__sp_start, state.offset, state.src))
-                            } else {
-                                None
-                            };
-                        }
-                    }
-
-                    loop {
-                        #terminator_break
-                        let __cp = state.offset;
-                        match #separator {
-                            Some(_) => {}
-                            None => break,
-                        }
-                        match #element {
-                            Some(_) => { #count_var += 1; }
-                            None => {
-                                state.offset = __cp;
-                                break;
-                            }
-                        }
-                    }
-
-                    if #count_var >= #lo_lit {
-                        Some(::parse_that::Span::new(__sp_start, state.offset, state.src))
-                    } else {
-                        None
-                    }
-                })()
-            };
-        }
 
         // Typed case: scratch-based slab collection.
         let scratch_ty = elem_type;

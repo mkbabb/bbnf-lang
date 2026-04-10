@@ -427,6 +427,28 @@ pub(super) fn emit_literal_prefix_class(pattern: &str) -> Option<TokenStream> {
 
     let tail = &pattern[bracket_pos..];
 
+    // Tranche X.9a: kernel routing short-circuit for the common
+    // `prefix[class]+` shape. The kernel collapses the emission onto
+    // the hoisted `scan_<alnum|digits|hex>_mut` helpers for the
+    // recognized tail shapes. Falls through to the inline predicate
+    // emission for shapes the kernel doesn't recognize. Per §3 rule 16
+    // this is the **structural** kernel routing gate for the literal-
+    // prefix+class path.
+    if let Some(tail_inner) = tail.strip_prefix('[') {
+        // Single-segment `+` tail: `[class]+`
+        if let Some(class_body) = tail_inner.strip_suffix('+').and_then(|s| s.strip_suffix(']')) {
+            if let Some((chars, false)) =
+                kernels::charclass::charset_from_class_body(class_body)
+            {
+                if let Some(call) =
+                    kernels::prefix_class::emit_call_opt(&prefix_bytes, &chars)
+                {
+                    return Some(call);
+                }
+            }
+        }
+    }
+
     // Parse the tail as a sequence of char class segments.
     // Each segment: `[class]quantifier?`
     // We fuse them into a single scan loop when possible.

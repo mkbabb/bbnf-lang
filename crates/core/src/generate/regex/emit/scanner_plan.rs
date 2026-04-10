@@ -123,8 +123,21 @@ pub(crate) fn plan_regex_scanner(pattern: &str, opts: &EmitOpts) -> Option<Scann
             &chars, negated, min, max,
         )
         .map(ScannerPlan::Kernel),
-        // PrefixThenClass / AccelDriven fall through to generalized
-        // until the kernel modules grow real bodies for them.
+        // Tranche X.9a: route `PrefixThenClass` through the hoisted
+        // prefix+class kernel for the recognized tail shapes
+        // (alnum / digits / hex). Bounded or unrecognized tail shapes
+        // fall through to the generalized emitter.
+        RegexClass::PrefixThenClass {
+            prefix,
+            tail:
+                ClassRangeInfo {
+                    chars,
+                    negated: false,
+                    min: 1,
+                    max: None,
+                },
+        } => crate::backend::kernels::prefix_class::emit_call_opt(&prefix, &chars)
+            .map(ScannerPlan::Kernel),
         RegexClass::PrefixThenClass { .. } | RegexClass::AccelDriven(_) => None,
         _ => None,
     }

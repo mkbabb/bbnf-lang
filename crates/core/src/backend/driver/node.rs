@@ -17,6 +17,16 @@ use crate::backend::{Emitter, TokenDispatchArmCompiled, ValuePlacement};
 /// family shape (FunctionHead / HashPrefix / UnitTail / PunctWsRegion)
 /// and, if so, delegate to the emitter's kernel hook. Returns
 /// `Some(out)` to short-circuit the normal child-emission path.
+///
+/// Tranche Y.0: early-returns on `!ir.has_family_recognizers`. The
+/// flag is set once at the end of `mine_recognizers` iff any node in
+/// the grammar carries a family shape. Post-X profiling showed that
+/// every current production grammar (CSS L4, JSON, BBNF, Sheets,
+/// EBNF) has zero family matches, so the `dag.node_for + node_facts.
+/// get` probe on every node was pure parse-time overhead. Gating on
+/// the flag elides the probe entirely for non-matching grammars and
+/// preserves full behavior for matching ones.
+#[inline]
 fn try_emit_family_kernel<E: Emitter>(
     node: &IrNode,
     alloc: ValuePlacement,
@@ -24,6 +34,11 @@ fn try_emit_family_kernel<E: Emitter>(
     emitter: &mut E,
     ctx: &mut E::Ctx,
 ) -> Option<E::Output> {
+    // Tranche Y.0 guard — zero-cost when no grammar in the current
+    // compile carries a family shape.
+    if !ir.has_family_recognizers {
+        return None;
+    }
     // Kernel-emitted shapes return `Option<Span>`; they only make sense
     // for Inline alloc where the caller expects a Span result.
     if alloc != ValuePlacement::Inline {

@@ -121,6 +121,22 @@ pub struct GrammarIR {
     #[serde(skip)]
     pub context_facts: passes::context::ContextFactsMap,
 
+    /// `true` iff at least one `NodeFacts.recognizer` carries a
+    /// Tranche-X.10 family shape (`FunctionHead` / `HashPrefix` /
+    /// `UnitTail` / `PunctWsRegion`). Computed once at the end of
+    /// `mine_recognizers` and consumed by
+    /// `backend::driver::node::compile_node` to elide the per-node
+    /// family-kernel probe on grammars with no matches.
+    ///
+    /// This flag exists because post-Tranche-X parse-time regressions
+    /// (`json_canada −3.9%`, `css_tailwind −5.6%`) traced to the
+    /// `try_emit_family_kernel` probe firing on every node of grammars
+    /// (JSON, CSS L4) that match zero families. Gating the probe on
+    /// this flag recovers the regression without deleting the
+    /// families (which Y.4 re-evaluates via staged match-or-delete).
+    #[serde(skip)]
+    pub has_family_recognizers: bool,
+
     /// Per-`StringId` regex engine decision. Populated by
     /// `passes::csp_strategy::solve_strategy_decisions` after the
     /// strategy CSP picks an engine per regex site (Tranche X.8d).

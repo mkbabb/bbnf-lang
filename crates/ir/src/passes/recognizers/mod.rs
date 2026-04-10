@@ -146,6 +146,28 @@ pub fn mine_recognizers(ir: &mut GrammarIR) {
     ir.delim_scan_configs = delim_scan_configs;
     ir.key_dispatch_configs = key_dispatch_configs;
 
+    // Tranche Y.0: compute the family-recognizer flag. The driver
+    // uses this to elide the per-node `try_emit_family_kernel` probe
+    // on grammars whose recognizers never contain a family shape
+    // (every current production grammar — CSS L4, JSON, BBNF, etc. —
+    // reaches this branch as `false`). Post-X cold probe was ~5% of
+    // parse time on every parse-time bench.
+    ir.has_family_recognizers = ir.node_facts.values().any(|facts| {
+        facts
+            .recognizer
+            .as_ref()
+            .map(|rec| {
+                matches!(
+                    rec.shape,
+                    crate::passes::patterns::RecognizerShape::FunctionHead { .. }
+                        | crate::passes::patterns::RecognizerShape::HashPrefix { .. }
+                        | crate::passes::patterns::RecognizerShape::UnitTail { .. }
+                        | crate::passes::patterns::RecognizerShape::PunctWsRegion { .. }
+                )
+            })
+            .unwrap_or(false)
+    });
+
     prefix_shared_group::mine(ir);
 }
 

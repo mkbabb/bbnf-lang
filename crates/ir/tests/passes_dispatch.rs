@@ -53,6 +53,7 @@ fn dispatch_for_disjoint_branches() {
         delim_scan_configs: std::collections::HashMap::new(),
         key_dispatch_configs: std::collections::HashMap::new(),
         context_facts: std::collections::HashMap::new(),
+        has_family_recognizers: false,
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 
@@ -114,6 +115,7 @@ fn no_dispatch_for_overlapping_branches() {
         delim_scan_configs: std::collections::HashMap::new(),
         key_dispatch_configs: std::collections::HashMap::new(),
         context_facts: std::collections::HashMap::new(),
+        has_family_recognizers: false,
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 
@@ -173,6 +175,7 @@ fn dispatch_for_nested_alt() {
         delim_scan_configs: std::collections::HashMap::new(),
         key_dispatch_configs: std::collections::HashMap::new(),
         context_facts: std::collections::HashMap::new(),
+        has_family_recognizers: false,
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 
@@ -240,6 +243,7 @@ fn dispatch_with_nullable_branch_via_follow() {
         delim_scan_configs: std::collections::HashMap::new(),
         key_dispatch_configs: std::collections::HashMap::new(),
         context_facts: std::collections::HashMap::new(),
+        has_family_recognizers: false,
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 
@@ -309,6 +313,7 @@ fn no_dispatch_when_nullable_overlaps_follow() {
         delim_scan_configs: std::collections::HashMap::new(),
         key_dispatch_configs: std::collections::HashMap::new(),
         context_facts: std::collections::HashMap::new(),
+        has_family_recognizers: false,
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 
@@ -388,6 +393,7 @@ fn fallback_dispatch_typed_plus_catchall() {
         delim_scan_configs: std::collections::HashMap::new(),
         key_dispatch_configs: std::collections::HashMap::new(),
         context_facts: std::collections::HashMap::new(),
+        has_family_recognizers: false,
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 
@@ -459,6 +465,7 @@ fn fallback_dispatch_not_superset() {
         delim_scan_configs: std::collections::HashMap::new(),
         key_dispatch_configs: std::collections::HashMap::new(),
         context_facts: std::collections::HashMap::new(),
+        has_family_recognizers: false,
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 
@@ -518,6 +525,7 @@ fn fallback_dispatch_too_few_branches() {
         delim_scan_configs: std::collections::HashMap::new(),
         key_dispatch_configs: std::collections::HashMap::new(),
         context_facts: std::collections::HashMap::new(),
+        has_family_recognizers: false,
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 

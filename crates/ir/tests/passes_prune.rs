@@ -44,6 +44,7 @@ fn prune_removes_unreachable() {
         delim_scan_configs: std::collections::HashMap::new(),
         key_dispatch_configs: std::collections::HashMap::new(),
         context_facts: std::collections::HashMap::new(),
+        has_family_recognizers: false,
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 
@@ -81,6 +82,7 @@ fn prune_keeps_all_when_all_reachable() {
         delim_scan_configs: std::collections::HashMap::new(),
         key_dispatch_configs: std::collections::HashMap::new(),
         context_facts: std::collections::HashMap::new(),
+        has_family_recognizers: false,
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 
@@ -138,6 +140,7 @@ fn prune_follows_alt_branches() {
         delim_scan_configs: std::collections::HashMap::new(),
         key_dispatch_configs: std::collections::HashMap::new(),
         context_facts: std::collections::HashMap::new(),
+        has_family_recognizers: false,
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(),    };
 

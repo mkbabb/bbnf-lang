@@ -214,6 +214,7 @@ pub fn lower_to_ir<'a>(
         delim_scan_configs: HashMap::new(),
         key_dispatch_configs: HashMap::new(),
         context_facts: HashMap::new(),
+        has_family_recognizers: false,
         regex_engine_decisions: HashMap::new(),
         dag: None,
         cost_config: bbnf_ir::CostConfig::from_env(),

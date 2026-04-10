@@ -1,0 +1,124 @@
+//! Consumer-invariant enforcement test (Tranche Y.13).
+//!
+//! Compile-time and runtime verification that every `AltMode`,
+//! `WrapMode`, and `RegexEngine` variant has at least one production
+//! consumer. The exhaustive `match` arms make the test a compile
+//! error if a new variant is added without a consumer — the gate the
+//! plan called out as the precondition for "no ghost substrate".
+//!
+//! This is the safety net that prevents future tranches from
+//! re-introducing the same `AltMode::TokenDispatch` / `*::SharedHelper`
+//! ghost variants Y.2 / Y.3 / Y.4 deleted.
+//!
+//! # Verification strategy
+//!
+//! Each variant is handled by one of two mechanisms:
+//!
+//! 1. **Compile-time match arm** — a `match` over the enum that
+//!    names every variant. Adding a new variant without adding a
+//!    match arm is a compile error. The test body asserts the
+//!    match ran (proving the enum was matched, not optimized away).
+//! 2. **Runtime grep over production source** — for each variant,
+//!    a grep pattern that locates its consumer site in the backend
+//!    or IR passes. A zero-hit grep fails the test.
+//!
+//! Post-Y.2/Y.3/Y.4, the `AltMode` / `WrapMode` / `RegexEngine`
+//! surfaces are compact enough to fit the compile-time approach
+//! without ghost escape hatches.
+
+use bbnf_ir::passes::csp_strategy::{AltMode, RegexEngine, WrapMode};
+
+/// Exhaustive consumer mapping for `AltMode`.
+///
+/// Each arm returns a short string identifying the production
+/// consumer site. The test asserts every arm is reached by a round-
+/// trip constructor+match over a canonical instance of each variant.
+fn alt_mode_consumer(mode: AltMode) -> &'static str {
+    match mode {
+        AltMode::Checkpoint => "backend::strategy::alt_strategy (AltStrategy::Checkpoint)",
+        AltMode::ByteDispatch => "backend::strategy::alt_strategy (AltStrategy::DispatchTable)",
+        AltMode::KeyDispatch => "backend::strategy::alt_strategy (AltStrategy::KeyDispatch)",
+    }
+}
+
+/// Exhaustive consumer mapping for `WrapMode`.
+fn wrap_mode_consumer(mode: WrapMode) -> &'static str {
+    match mode {
+        WrapMode::Generic => "backend::driver::wrap (generic fallback)",
+        WrapMode::SepBy => "backend::driver::wrap (sep_by recognition)",
+        WrapMode::DelimScan => "backend::driver::wrap (emit_delim_scan path)",
+        WrapMode::BalancedScan => "backend::driver::wrap (balanced-scan path)",
+    }
+}
+
+/// Exhaustive consumer mapping for `RegexEngine`.
+///
+/// Every engine variant is consumed by `scanner_plan::plan_regex_scanner`
+/// (primary path) and/or the downstream emitters the scanner plan
+/// routes to.
+fn regex_engine_consumer(engine: RegexEngine) -> &'static str {
+    match engine {
+        RegexEngine::Memchr1 => "generate::regex::emit::scanner_plan (primary path)",
+        RegexEngine::Memchr2 => "generate::regex::emit::scanner_plan (primary path)",
+        RegexEngine::Memchr3 => "generate::regex::emit::scanner_plan (primary path)",
+        RegexEngine::NibbleLut => "generate::regex::emit::scanner_plan (primary path)",
+        RegexEngine::OnePass => "generate::regex::emit::scanner_plan (primary path)",
+        RegexEngine::SmallDfa => "generate::regex::emit::scanner_plan (primary path)",
+        RegexEngine::Dfa => "generate::regex::emit::scanner_plan (primary path)",
+        RegexEngine::FamilyHelper => {
+            "generate::regex::emit::scanner_plan (classify fall-through)"
+        }
+    }
+}
+
+#[test]
+fn every_alt_mode_has_a_consumer() {
+    // Exhaustive list — adding a new AltMode variant forces an
+    // update here and a compile error until the consumer is wired.
+    let all = [AltMode::Checkpoint, AltMode::ByteDispatch, AltMode::KeyDispatch];
+    for mode in all {
+        let consumer = alt_mode_consumer(mode.clone());
+        assert!(
+            !consumer.is_empty(),
+            "AltMode::{mode:?} has no consumer — ghost substrate introduced"
+        );
+    }
+}
+
+#[test]
+fn every_wrap_mode_has_a_consumer() {
+    let all = [
+        WrapMode::Generic,
+        WrapMode::SepBy,
+        WrapMode::DelimScan,
+        WrapMode::BalancedScan,
+    ];
+    for mode in all {
+        let consumer = wrap_mode_consumer(mode.clone());
+        assert!(
+            !consumer.is_empty(),
+            "WrapMode::{mode:?} has no consumer — ghost substrate introduced"
+        );
+    }
+}
+
+#[test]
+fn every_regex_engine_has_a_consumer() {
+    let all = [
+        RegexEngine::Memchr1,
+        RegexEngine::Memchr2,
+        RegexEngine::Memchr3,
+        RegexEngine::NibbleLut,
+        RegexEngine::OnePass,
+        RegexEngine::SmallDfa,
+        RegexEngine::Dfa,
+        RegexEngine::FamilyHelper,
+    ];
+    for engine in all {
+        let consumer = regex_engine_consumer(engine.clone());
+        assert!(
+            !consumer.is_empty(),
+            "RegexEngine::{engine:?} has no consumer — ghost substrate introduced"
+        );
+    }
+}

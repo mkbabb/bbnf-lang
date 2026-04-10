@@ -143,33 +143,21 @@ fn decide_alt_strategy(
 
     if let Some(mode) = csp_alt_mode {
         match mode {
-            AltMode::ByteDispatch => return AltStrategy::DispatchTable,
-            AltMode::KeyDispatch => return AltStrategy::KeyDispatch,
-            // Tranche X.8e: `AltMode::TokenDispatch` activation. The
-            // CSP chose TokenDispatch for an Alt with strong-
-            // discrimination context facts (token_led_branches miner).
-            // `fuse_token_dispatch` already converts most eligible
-            // alts into `IrNode::TokenDispatch`, so most cases never
-            // reach here — but alts with non-fused-eligible shapes
-            // (e.g., the CSS rule-dispatch alt with a regex fallback)
-            // still carry the `AltMode::TokenDispatch` decision and
-            // need a concrete backend strategy.
-            //
-            // Resolution order:
-            //   1. An already-computed byte dispatch table wins.
-            //   2. A structural key-dispatch config (from the
-            //      `ir.key_dispatch_configs` sidecar) promotes to
-            //      KeyDispatch.
-            //   3. Otherwise fall back to Checkpoint.
-            //
-            // This elevates the Alt from the default Checkpoint path
-            // to the dispatch-table emitter whenever the data is
-            // available — without calling any structural re-detection
-            // in the backend.
-            AltMode::TokenDispatch => {
+            // Tranche Y.3: `TokenDispatch` was folded into
+            // `ByteDispatch`. Both the CSP emission and the backend
+            // dispatch now converge on a single strong-discrimination
+            // variant. `fuse_token_dispatch` converts the strongest
+            // cases into `IrNode::TokenDispatch` upstream, so this
+            // arm only fires on the remaining ByteDispatch residue —
+            // which always has either a dispatch table populated or
+            // falls back to the generic ByteDispatch emission path.
+            AltMode::ByteDispatch => {
                 if dispatch.is_some() {
                     return AltStrategy::DispatchTable;
                 }
+                // Strong-discrimination Alt without a pre-built
+                // dispatch table — promote to key-dispatch if the
+                // sidecar has an entry, else Checkpoint.
                 if node_id
                     .map(|id| ir.key_dispatch_configs.contains_key(&id))
                     .unwrap_or(false)
@@ -178,6 +166,7 @@ fn decide_alt_strategy(
                 }
                 return AltStrategy::Checkpoint;
             }
+            AltMode::KeyDispatch => return AltStrategy::KeyDispatch,
             // Checkpoint / SharedHelper fall through to the universal
             // Checkpoint emission path. Except: if the upstream
             // recognizer pass populated a key-dispatch config for

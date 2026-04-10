@@ -74,11 +74,19 @@ pub enum AltMode {
     /// Sequential checkpoint chain (universal fallback for any Alt).
     Checkpoint,
     /// Byte-dispatch table — branches with disjoint FIRST byte sets.
+    ///
+    /// Tranche Y.3 folded the former `TokenDispatch` variant into
+    /// `ByteDispatch`: both model "strong FIRST-byte discrimination",
+    /// and the backend emits both paths identically (through the
+    /// dispatch table when one exists, or through the pre-existing
+    /// `IrNode::TokenDispatch` conversion performed upstream by
+    /// `fuse_token_dispatch`). Keeping them as separate CSP variants
+    /// made the cost model look richer than the backend reality and
+    /// left the decode path with a Checkpoint fallthrough that never
+    /// fired in practice.
     ByteDispatch,
     /// Keyword dispatch — branches with disjoint leading literals.
     KeyDispatch,
-    /// Token-led dispatch — exposed by the disjoint-alt e-graph rule.
-    TokenDispatch,
     /// Hoisted shared helper — N≥`hoist_threshold` peers share one kernel.
     SharedHelper(u64),
 }
@@ -481,8 +489,12 @@ fn walk_token_dispatch(
     if let IrNode::Alt(branches, _) = node {
         if let Some(parent_id) = dag.node_for(node) {
             if let Some((Some(alt_var), _, _)) = by_node.get(&parent_id) {
-                // For each child Regex within the Alt branches,
-                // emit "Alt = TokenDispatch → child Engine ∈ one_pass".
+                // For each child Regex within the Alt branches, emit
+                // "Alt = ByteDispatch → child Engine ∈ one_pass". The
+                // implication models the constraint that a dispatch-
+                // style Alt requires one-pass-eligible child regex
+                // engines; Y.3 folded TokenDispatch into ByteDispatch
+                // so this is now the single trigger value.
                 let mut child_engine_vars = Vec::new();
                 for branch in branches {
                     collect_engine_vars_in(&branch.node, dag, by_node, &mut child_engine_vars);
@@ -491,7 +503,7 @@ fn walk_token_dispatch(
                     csp.add_constraint(ImplicationConstraint::new(
                         *alt_var,
                         child_var,
-                        StrategyValue::Alt(AltMode::TokenDispatch),
+                        StrategyValue::Alt(AltMode::ByteDispatch),
                         one_pass_engines.to_vec(),
                     ));
                     *count += 1;
@@ -553,9 +565,17 @@ fn build_alt_domain(
                 cfg.strategy_dispatch_bonus.abs() - cfg.strategy_hoist_savings,
             ));
         }
-        if matches!(rec.shape, RecognizerShape::TokenLedBranches { .. }) {
+        // Tranche Y.3: TokenLedBranches folds into ByteDispatch. The
+        // previous code added a duplicate entry at the same cost
+        // weight; the cost model is unchanged but the codepath is
+        // unified. `fuse_token_dispatch` converts the strongest
+        // TokenLed shapes into `IrNode::TokenDispatch` upstream
+        // regardless of the CSP choice.
+        if matches!(rec.shape, RecognizerShape::TokenLedBranches { .. })
+            && !has_byte_dispatch
+        {
             values.push((
-                StrategyValue::Alt(AltMode::TokenDispatch),
+                StrategyValue::Alt(AltMode::ByteDispatch),
                 cfg.strategy_dispatch_bonus.abs(),
             ));
         }
@@ -697,8 +717,9 @@ fn fallback_alt_mode(fact: Option<&Recognizer>, has_dispatch: bool) -> AltMode {
         if let Some(group) = rec.peer_group {
             return AltMode::SharedHelper(group as u64);
         }
+        // Tranche Y.3: TokenLedBranches → ByteDispatch (folded variant).
         if matches!(rec.shape, RecognizerShape::TokenLedBranches { .. }) {
-            return AltMode::TokenDispatch;
+            return AltMode::ByteDispatch;
         }
         if matches!(rec.shape, RecognizerShape::KeywordPrefix { .. }) {
             return AltMode::KeyDispatch;

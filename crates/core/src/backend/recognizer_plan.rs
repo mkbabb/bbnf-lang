@@ -114,9 +114,11 @@ pub fn plan_for_id(ir: &GrammarIR, node_id: NodeId) -> ScannerPlanRecord {
         (RecognizerFamily::KeywordPrefix, EmitHint::KeyDispatch)
     } else if let Some(mode) = decision.and_then(|d| d.alt_mode.as_ref()) {
         match mode {
+            // Tranche Y.3: TokenLedBranches folds into ByteDispatch in
+            // the CSP domain, so the match is exhaustive over the
+            // remaining four variants.
             AltMode::ByteDispatch => (RecognizerFamily::TokenLedBranches, EmitHint::ByteDispatch),
             AltMode::KeyDispatch => (RecognizerFamily::KeywordPrefix, EmitHint::KeyDispatch),
-            AltMode::TokenDispatch => (RecognizerFamily::TokenLedBranches, EmitHint::ByteDispatch),
             AltMode::Checkpoint | AltMode::SharedHelper(_) => {
                 (RecognizerFamily::Generic, EmitHint::Generic)
             }

@@ -29,18 +29,12 @@ pub fn compute_regex_info(ir: &mut GrammarIR) {
         collect_regex_ids(&rule.body, &mut seen);
     }
 
-    // Build the HIR-tier cost from the per-compile CostConfig: the
-    // shared `weights` substrate flows from `ir.cost_config.egraph`,
-    // and the HIR-specific knobs (`hir_*`) flow from the bbnf-ir
-    // wrapper. Both halves come from the same struct, no
-    // `Default::default` calls.
-    let cost = bbnf_regex::egraph::RegexExtractionCost {
-        weights: ir.cost_config.egraph.weights,
-        literal_per_byte: ir.cost_config.hir_literal_per_byte,
-        class_cost: ir.cost_config.hir_class_cost,
-        repeat_cost: ir.cost_config.hir_repeat_cost,
-        merged_bonus: ir.cost_config.hir_merged_bonus,
-    };
+    // Tranche Y.6a: single authoritative construction site for the
+    // HIR extraction cost. The helper on `CostConfig` pulls the
+    // shared `weights` substrate from `ir.cost_config.egraph` and the
+    // HIR-specific knobs (`hir_*`) from the bbnf-ir wrapper. No
+    // `::default()` calls, no by-hand field enumeration.
+    let cost = ir.cost_config.hir_extraction_cost();
 
     // Tranche X phase 3: per-compile saturation cache. JSON / CSS L4
     // grammars contain the same regex patterns in multiple positions

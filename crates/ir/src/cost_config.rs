@@ -86,6 +86,32 @@ impl Default for CostConfig {
 }
 
 impl CostConfig {
+    /// Tranche Y.6a: build an authoritative HIR-tier extraction cost
+    /// from this config.
+    ///
+    /// This is the single construction site for
+    /// [`bbnf_regex::egraph::RegexExtractionCost`] in production — every
+    /// call site that used to construct the struct field-by-field (or
+    /// call `RegexExtractionCost::default()`) now goes through this
+    /// method. The cross-tier commitment from Tranche H-5 is that the
+    /// grammar tier and the HIR tier see identical weights, and that
+    /// every HIR knob in `CostConfig.hir_*` flows through to the
+    /// extractor. Both halves are honored here.
+    ///
+    /// Lives on `bbnf_ir::CostConfig` (not `bbnf_regex`) because the
+    /// dependency direction is `bbnf-ir → bbnf-regex`, not the reverse.
+    /// Attaching the constructor here keeps `bbnf-regex` oblivious to
+    /// its grammar-tier consumer.
+    pub fn hir_extraction_cost(&self) -> bbnf_regex::egraph::RegexExtractionCost {
+        bbnf_regex::egraph::RegexExtractionCost {
+            weights: self.egraph.weights,
+            literal_per_byte: self.hir_literal_per_byte,
+            class_cost: self.hir_class_cost,
+            repeat_cost: self.hir_repeat_cost,
+            merged_bonus: self.hir_merged_bonus,
+        }
+    }
+
     /// Build a `CostConfig` from environment variables.
     ///
     /// Recognized variables (in addition to those handled by

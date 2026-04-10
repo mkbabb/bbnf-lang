@@ -49,7 +49,7 @@ pub use cost_weights::CostWeights;
 pub use csp_scheduler::{CspScheduler, DirtyDomain, ParentDirtyProp};
 pub use eclass::EClass;
 pub use egraph::EGraph;
-pub use extract::{AstSize, CostModel, Extractor};
+pub use extract::{AstSize, CostModel, Extractor, Lattice, Scalar};
 pub use id::Id;
 pub use language::{Language, LanguageChildren};
 pub use rewrite::{Rewrite, RewriteFn};

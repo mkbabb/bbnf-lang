@@ -22,12 +22,59 @@ use crate::language::Language;
 
 type FxHashMap<K, V> = HashMap<K, V, BuildHasherDefault<FxHasher>>;
 
-/// A cost model assigns a scalar cost to each e-node, given the costs
+/// Tranche AA.3 — cost lattice marker.
+///
+/// Every extraction cost type implements `Lattice` so that future
+/// multi-objective extraction can reason about dominance without
+/// collapsing to a scalar first. The scalar case is the default via
+/// the `Scalar<T>` newtype; richer Pareto fronts can land later
+/// without churning the `CostModel` trait surface.
+///
+/// **Dominance semantics**: `a.dominated_by(&b)` means `b` is at
+/// least as cheap as `a` on every axis and strictly cheaper on at
+/// least one. The default scalar impl treats this as `<=`.
+pub trait Lattice: Clone + PartialOrd {
+    /// Least upper bound — for scalar cost this is just `max`.
+    fn join(&self, other: &Self) -> Self;
+    /// `other` dominates `self` iff `other <= self` on every axis.
+    fn dominated_by(&self, other: &Self) -> bool;
+}
+
+/// Scalar newtype: turns any `PartialOrd + Clone` scalar into a
+/// `Lattice`. Every existing cost model (`GrammarCostModel`,
+/// `RegexExtractionCost`) already returns a scalar — the blanket
+/// `Lattice for T where T: Clone + PartialOrd + ...` impl would
+/// conflict with future multi-objective tuple types, so we wrap.
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct Scalar<T: Clone + PartialOrd>(pub T);
+
+impl<T: Clone + PartialOrd> Lattice for Scalar<T> {
+    fn join(&self, other: &Self) -> Self {
+        if self.0 > other.0 { self.clone() } else { other.clone() }
+    }
+    fn dominated_by(&self, other: &Self) -> bool {
+        other.0 <= self.0
+    }
+}
+
+// Blanket impl for common scalar cost types so existing CostModel
+// impls don't need to wrap manually.
+impl Lattice for f64 {
+    fn join(&self, other: &Self) -> Self { if self > other { *self } else { *other } }
+    fn dominated_by(&self, other: &Self) -> bool { other <= self }
+}
+impl Lattice for usize {
+    fn join(&self, other: &Self) -> Self { (*self).max(*other) }
+    fn dominated_by(&self, other: &Self) -> bool { other <= self }
+}
+
+/// A cost model assigns a lattice-valued cost to each e-node, given the costs
 /// of its children's best representatives.
 pub trait CostModel<N: Language> {
-    /// The cost type. Must be totally ordered (`PartialOrd` is sufficient
-    /// for extraction since we compare against existing bests).
-    type Cost: Clone + PartialOrd;
+    /// The cost type. Must be a lattice so multi-objective extraction
+    /// can reason about dominance; the default scalar case is covered
+    /// by the `Lattice for f64 / usize` impls.
+    type Cost: Lattice;
 
     /// Cost of an e-node, given a closure that returns the pre-computed
     /// best cost of each child e-class.

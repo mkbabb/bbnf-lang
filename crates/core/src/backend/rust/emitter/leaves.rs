@@ -34,8 +34,8 @@ impl RustEmitter {
         if bytes.len() == 1 {
             let byte = bytes[0];
             quote! {
-                if state.offset < state.src.len()
-                    && state.src.as_bytes()[state.offset] == #byte
+                if state.offset < state.src_bytes.len()
+                    && state.src_bytes[state.offset] == #byte
                 {
                     let __start = state.offset;
                     state.offset += 1;
@@ -45,10 +45,28 @@ impl RustEmitter {
                 }
             }
         } else {
-            let lit = proc_macro2::Literal::string(&unescaped);
+            // Byte-array literal equality: load N bytes as `[u8; N]`
+            // and compare with `*b"..."`. LLVM lowers this to a
+            // single iN load + icmp for N in {2,4,8} and a
+            // half-word + tail-byte combo for N in {3,5,6,7},
+            // never invoking memcmp. UTF-8 length validation and
+            // slice bounds checking are bypassed.
+            //
+            // Prior attempts using `state.src[..].starts_with(#str)`
+            // or `state.src.as_bytes()[..].starts_with(#bytes as &[u8])`
+            // both lose the compile-time length at the
+            // `slice::starts_with` specialization and fall through
+            // to runtime-length `memcmp`, which LLVM's memcmp-
+            // expansion pass only occasionally folds back.
             let len = bytes.len();
+            let lit = proc_macro2::Literal::byte_string(bytes);
             quote! {
-                if state.src[state.offset..].starts_with(#lit) {
+                if state.offset + #len <= state.src_bytes.len()
+                    && unsafe {
+                        *(state.src_bytes.as_ptr().add(state.offset)
+                            as *const [u8; #len])
+                    } == *#lit
+                {
                     let __start = state.offset;
                     state.offset += #len;
                     Some(::parse_that::Span::new(__start, state.offset, state.src))

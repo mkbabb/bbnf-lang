@@ -145,15 +145,46 @@ fn decide_alt_strategy(
         match mode {
             AltMode::ByteDispatch => return AltStrategy::DispatchTable,
             AltMode::KeyDispatch => return AltStrategy::KeyDispatch,
-            // The remaining variants (Checkpoint, TokenDispatch,
-            // SharedHelper) all fall through to the universal
+            // Tranche X.8e: `AltMode::TokenDispatch` activation. The
+            // CSP chose TokenDispatch for an Alt with strong-
+            // discrimination context facts (token_led_branches miner).
+            // `fuse_token_dispatch` already converts most eligible
+            // alts into `IrNode::TokenDispatch`, so most cases never
+            // reach here — but alts with non-fused-eligible shapes
+            // (e.g., the CSS rule-dispatch alt with a regex fallback)
+            // still carry the `AltMode::TokenDispatch` decision and
+            // need a concrete backend strategy.
+            //
+            // Resolution order:
+            //   1. An already-computed byte dispatch table wins.
+            //   2. A structural key-dispatch config (from the
+            //      `ir.key_dispatch_configs` sidecar) promotes to
+            //      KeyDispatch.
+            //   3. Otherwise fall back to Checkpoint.
+            //
+            // This elevates the Alt from the default Checkpoint path
+            // to the dispatch-table emitter whenever the data is
+            // available — without calling any structural re-detection
+            // in the backend.
+            AltMode::TokenDispatch => {
+                if dispatch.is_some() {
+                    return AltStrategy::DispatchTable;
+                }
+                if node_id
+                    .map(|id| ir.key_dispatch_configs.contains_key(&id))
+                    .unwrap_or(false)
+                {
+                    return AltStrategy::KeyDispatch;
+                }
+                return AltStrategy::Checkpoint;
+            }
+            // Checkpoint / SharedHelper fall through to the universal
             // Checkpoint emission path. Except: if the upstream
             // recognizer pass populated a key-dispatch config for
-            // this NodeId (which happens when the alt looks like
-            // `"keyword" ":" value | ... | regex fallback`), prefer
-            // key-dispatch — the structural detector has higher
-            // coverage than the CSP recognizer shapes.
-            AltMode::Checkpoint | AltMode::TokenDispatch | AltMode::SharedHelper(_) => {
+            // this NodeId, prefer key-dispatch — the structural
+            // detector has higher coverage than the CSP recognizer
+            // shapes.
+            AltMode::Checkpoint | AltMode::SharedHelper(_) => {
                 if node_id
                     .map(|id| ir.key_dispatch_configs.contains_key(&id))
                     .unwrap_or(false)

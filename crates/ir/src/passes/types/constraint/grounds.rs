@@ -85,15 +85,21 @@ impl Constraint<TypeDomain> for EqualConstraint {
     }
 
     fn revise(&self, vars: &mut [Variable<TypeDomain>], _depth: usize) -> Revision {
-        let source_ty = vars[self.source as usize].domain.solved.clone();
-        let target_ty = vars[self.target as usize].domain.solved.clone();
+        // Tranche Y.10: peek both sides without cloning, then clone
+        // only the one actually propagated. Saves one clone per revise
+        // vs the previous double-clone pattern.
+        let source_some = vars[self.source as usize].domain.solved.is_some();
+        let target_some = vars[self.target as usize].domain.solved.is_some();
 
-        let mut changed = false;
-        if let Some(ty) = source_ty {
-            changed |= assign(vars, self.target, ty);
-        } else if let Some(ty) = target_ty {
-            changed |= assign(vars, self.source, ty);
-        }
+        let changed = if source_some {
+            let ty = vars[self.source as usize].domain.solved.clone().unwrap();
+            assign(vars, self.target, ty)
+        } else if target_some {
+            let ty = vars[self.target as usize].domain.solved.clone().unwrap();
+            assign(vars, self.source, ty)
+        } else {
+            false
+        };
 
         if changed {
             Revision::Changed

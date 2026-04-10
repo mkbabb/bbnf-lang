@@ -42,17 +42,24 @@ impl Constraint<TypeDomain> for AltConstraint {
     }
 
     fn revise(&self, vars: &mut [Variable<TypeDomain>], _depth: usize) -> Revision {
-        let branch_types: Vec<TypeDesc> = self
-            .branches
-            .iter()
-            .filter_map(|&b| vars[b as usize].domain.solved.clone())
-            .collect();
+        // Tranche Y.10: borrow branch types via `.as_ref()` instead of
+        // cloning N child TypeDescs into a temporary Vec. `join_types`
+        // takes `&[&TypeDesc]` and only clones the representative
+        // branch in the homogeneous case.
+        let result = {
+            let branch_types: Vec<&TypeDesc> = self
+                .branches
+                .iter()
+                .filter_map(|&b| vars[b as usize].domain.solved.as_ref())
+                .collect();
 
-        if branch_types.len() != self.branches.len() {
-            return Revision::Unchanged;
-        }
+            if branch_types.len() != self.branches.len() {
+                return Revision::Unchanged;
+            }
 
-        let result = join_types(&branch_types);
+            join_types(&branch_types)
+        };
+
         if assign(vars, self.var, result) {
             Revision::Changed
         } else {
@@ -97,31 +104,52 @@ impl Constraint<TypeDomain> for AltInVecConstraint {
     }
 
     fn revise(&self, vars: &mut [Variable<TypeDomain>], _depth: usize) -> Revision {
-        let branch_types: Vec<TypeDesc> = self
-            .branches
-            .iter()
-            .filter_map(|&b| vars[b as usize].domain.solved.clone())
-            .collect();
-
-        if branch_types.len() != self.branches.len() {
-            return Revision::Unchanged;
+        // Tranche Y.10: borrow branch types as references, clone only
+        // once at the end (homogeneous case) or not at all
+        // (heterogeneous case — the fallback clone is for `standard_var`).
+        enum Decision {
+            Homogeneous(TypeDesc),
+            Heterogeneous,
+            Wait,
         }
 
-        let first = &branch_types[0];
-        let all_same = branch_types.iter().all(|t| t == first);
+        let decision = {
+            let branch_types: Vec<&TypeDesc> = self
+                .branches
+                .iter()
+                .filter_map(|&b| vars[b as usize].domain.solved.as_ref())
+                .collect();
 
-        if all_same {
-            if assign(vars, self.var, first.clone()) {
-                return Revision::Changed;
+            if branch_types.len() != self.branches.len() {
+                Decision::Wait
+            } else {
+                let first = branch_types[0];
+                if branch_types.iter().all(|t| *t == first) {
+                    Decision::Homogeneous(first.clone())
+                } else {
+                    Decision::Heterogeneous
+                }
             }
-        } else {
-            // Heterogeneous -- fall back to standard Alt projection.
-            if let Some(std_ty) = vars[self.standard_var as usize].domain.solved.clone() {
-                if assign(vars, self.var, std_ty) {
+        };
+
+        match decision {
+            Decision::Homogeneous(ty) => {
+                if assign(vars, self.var, ty) {
                     return Revision::Changed;
                 }
             }
-            // Standard var not yet solved -- wait.
+            Decision::Heterogeneous => {
+                // Fall back to standard Alt projection. One clone for
+                // the owned `std_ty` we pass into `assign`.
+                let std_ty = vars[self.standard_var as usize].domain.solved.clone();
+                if let Some(std_ty) = std_ty {
+                    if assign(vars, self.var, std_ty) {
+                        return Revision::Changed;
+                    }
+                }
+                // Standard var not yet solved -- wait.
+            }
+            Decision::Wait => {}
         }
 
         Revision::Unchanged

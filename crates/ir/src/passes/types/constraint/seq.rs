@@ -76,61 +76,70 @@ impl Constraint<TypeDomain> for SeqConstraint {
     }
 
     fn revise(&self, vars: &mut [Variable<TypeDomain>], _depth: usize) -> Revision {
-        // All children must be solved.
-        let child_types: Vec<TypeDesc> = self
-            .children
-            .iter()
-            .filter_map(|&c| vars[c as usize].domain.solved.clone())
-            .collect();
-
-        if child_types.len() != self.children.len() {
-            return Revision::Unchanged; // Not all children solved yet
-        }
-
-        // Span-method safety guard.
-        let all_span = child_types.iter().all(|t| *t == TypeDesc::Span);
-        let all_simple_span = all_span
-            && self.collapse_simple_spans
-            && !self.preserve_spans
-            && self
-                .child_node_kinds
+        // Tranche Y.10: compute the result while holding borrows into
+        // `vars`, then drop the borrows before calling `assign`. This
+        // collapses the previous 2N clones per revise into N clones
+        // only where `project_seq_type` genuinely needs owned values
+        // (Tuple elements) — and zero clones in the all-Span fast path.
+        let result = {
+            let child_types: Vec<&TypeDesc> = self
+                .children
                 .iter()
-                .zip(child_types.iter())
-                .all(|(kind, ty)| match kind {
-                    SeqChildKind::Optional => false,
-                    SeqChildKind::SpOverrideRef => true,
-                    SeqChildKind::Other => *ty == TypeDesc::Span,
-                });
+                .filter_map(|&c| vars[c as usize].domain.solved.as_ref())
+                .collect();
 
-        let effective_types = if all_span && !all_simple_span {
-            // Revert span-method overrides: use original (non-override) child types.
-            self.children
-                .iter()
-                .zip(self.sp_override_originals.iter())
-                .map(|(child_var, orig)| {
-                    if let Some(orig_var) = orig {
-                        vars[*orig_var as usize]
+            if child_types.len() != self.children.len() {
+                return Revision::Unchanged; // Not all children solved yet
+            }
+
+            // Span-method safety guard.
+            let all_span = child_types.iter().all(|t| **t == TypeDesc::Span);
+            let all_simple_span = all_span
+                && self.collapse_simple_spans
+                && !self.preserve_spans
+                && self
+                    .child_node_kinds
+                    .iter()
+                    .zip(child_types.iter())
+                    .all(|(kind, ty)| match kind {
+                        SeqChildKind::Optional => false,
+                        SeqChildKind::SpOverrideRef => true,
+                        SeqChildKind::Other => **ty == TypeDesc::Span,
+                    });
+
+            // If the all-Span override revert applies, we have to read
+            // the `sp_override_originals` variables — still as borrows.
+            // The Span placeholder is a unit variant so `.unwrap_or` on
+            // a static avoids allocation entirely.
+            const SPAN: TypeDesc = TypeDesc::Span;
+
+            if all_span && !all_simple_span {
+                let effective_refs: Vec<&TypeDesc> = self
+                    .children
+                    .iter()
+                    .zip(self.sp_override_originals.iter())
+                    .map(|(child_var, orig)| {
+                        let target = orig.unwrap_or(*child_var);
+                        vars[target as usize]
                             .domain
                             .solved
-                            .clone()
-                            .unwrap_or(TypeDesc::Span)
-                    } else {
-                        vars[*child_var as usize]
-                            .domain
-                            .solved
-                            .clone()
-                            .unwrap_or(TypeDesc::Span)
-                    }
-                })
-                .collect::<Vec<_>>()
-        } else {
-            child_types
+                            .as_ref()
+                            .unwrap_or(&SPAN)
+                    })
+                    .collect();
+
+                let preserve = self.preserve_spans
+                    && effective_refs.iter().all(|t| **t == TypeDesc::Span);
+
+                project_seq_type(&effective_refs, preserve)
+            } else {
+                let preserve = self.preserve_spans
+                    && child_types.iter().all(|t| **t == TypeDesc::Span);
+
+                project_seq_type(&child_types, preserve)
+            }
         };
 
-        let preserve = self.preserve_spans
-            && effective_types.iter().all(|t| *t == TypeDesc::Span);
-
-        let result = project_seq_type(&effective_types, preserve);
         if assign(vars, self.var, result) {
             Revision::Changed
         } else {

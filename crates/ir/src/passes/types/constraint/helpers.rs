@@ -1,6 +1,13 @@
 //! Internal solver helpers shared by every constraint impl: assign once,
 //! project a Seq's child types into a result type, and join (LUB) Alt
 //! branch types.
+//!
+//! Tranche Y.10: the `project_seq_type` and `join_types` helpers take
+//! `&[&TypeDesc]` instead of `&[TypeDesc]` so that constraint
+//! `revise` methods can extract child types via `.solved.as_ref()`
+//! instead of cloning each child up front. The old contract forced
+//! 2N TypeDesc clones per Seq revise and N+1 clones per Alt revise;
+//! the new contract trims those to N and 1 respectively.
 
 use csp_solver::variable::Variable;
 
@@ -25,7 +32,12 @@ pub(super) fn assign(vars: &mut [Variable<TypeDomain>], var: TypeVarId, ty: Type
 ///
 /// Applies Span compression: consecutive Span children collapse to a single Span.
 /// Applies try_flatten_pair: (T, Vec<T>) -> Vec<T>.
-pub(super) fn project_seq_type(child_types: &[TypeDesc], preserve_spans: bool) -> TypeDesc {
+///
+/// Takes a slice of references so callers can borrow from the CSP
+/// variable array rather than clone each child up front (Tranche Y.10).
+/// The final owned result still requires cloning the specific elements
+/// that become part of `TypeDesc::Tuple` or the recursion target.
+pub(super) fn project_seq_type(child_types: &[&TypeDesc], preserve_spans: bool) -> TypeDesc {
     if child_types.is_empty() {
         return TypeDesc::Tuple(vec![]);
     }
@@ -35,12 +47,12 @@ pub(super) fn project_seq_type(child_types: &[TypeDesc], preserve_spans: bool) -
 
     // Span compression: collapse consecutive Spans (unless preserved).
     let effective: Vec<&TypeDesc> = if preserve_spans {
-        child_types.iter().collect()
+        child_types.to_vec()
     } else {
-        let mut result: Vec<&TypeDesc> = Vec::new();
-        for ty in child_types {
+        let mut result: Vec<&TypeDesc> = Vec::with_capacity(child_types.len());
+        for &ty in child_types {
             if ty == &TypeDesc::Span {
-                if result.last().map_or(true, |last| *last != &TypeDesc::Span) {
+                if result.last().is_none_or(|last| *last != &TypeDesc::Span) {
                     result.push(ty);
                 }
             } else {
@@ -65,12 +77,18 @@ pub(super) fn project_seq_type(child_types: &[TypeDesc], preserve_spans: bool) -
 }
 
 /// Compute the join (least upper bound) of alternation branch types.
-pub(super) fn join_types(branch_types: &[TypeDesc]) -> TypeDesc {
+///
+/// Tranche Y.10: takes `&[&TypeDesc]` so the caller can borrow from
+/// variable slots without cloning N child types per revise call. The
+/// homogeneous case still clones the one representative branch into
+/// the return; the heterogeneous case returns `BoxedEnum` with zero
+/// clones.
+pub(super) fn join_types(branch_types: &[&TypeDesc]) -> TypeDesc {
     if branch_types.is_empty() {
         return TypeDesc::Tuple(vec![]);
     }
-    let first = &branch_types[0];
-    if branch_types.iter().all(|t| t == first) {
+    let first = branch_types[0];
+    if branch_types.iter().all(|t| *t == first) {
         first.clone()
     } else {
         TypeDesc::BoxedEnum

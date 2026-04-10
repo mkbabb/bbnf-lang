@@ -42,19 +42,23 @@ impl Constraint<TypeDomain> for OptionalConstraint {
     }
 
     fn revise(&self, vars: &mut [Variable<TypeDomain>], _depth: usize) -> Revision {
-        if let Some(inner_ty) = vars[self.inner as usize].domain.solved.clone() {
-            let result = if inner_ty == TypeDesc::Span {
-                TypeDesc::Span
-            } else if self.transparent_ref {
-                TypeDesc::Option(Box::new(TypeDesc::Enum))
-            } else {
-                TypeDesc::Option(Box::new(inner_ty))
-            };
-            if assign(vars, self.var, result) {
-                Revision::Changed
-            } else {
-                Revision::Unchanged
+        // Tranche Y.10: peek the inner type by reference so the Span
+        // and transparent_ref fast paths avoid the clone entirely.
+        // Only the fallback branch that wraps the inner type in
+        // `Option<Box<T>>` requires owned access.
+        let result = {
+            let inner_slot = &vars[self.inner as usize].domain.solved;
+            match inner_slot {
+                None => return Revision::Unchanged,
+                Some(ty) if *ty == TypeDesc::Span => TypeDesc::Span,
+                Some(_) if self.transparent_ref => {
+                    TypeDesc::Option(Box::new(TypeDesc::Enum))
+                }
+                Some(ty) => TypeDesc::Option(Box::new(ty.clone())),
             }
+        };
+        if assign(vars, self.var, result) {
+            Revision::Changed
         } else {
             Revision::Unchanged
         }
@@ -90,17 +94,19 @@ impl Constraint<TypeDomain> for RepeatConstraint {
     }
 
     fn revise(&self, vars: &mut [Variable<TypeDomain>], _depth: usize) -> Revision {
-        if let Some(inner_ty) = vars[self.inner as usize].domain.solved.clone() {
-            let result = if inner_ty == TypeDesc::Span {
-                TypeDesc::Span
-            } else {
-                TypeDesc::Vec(Box::new(inner_ty))
-            };
-            if assign(vars, self.var, result) {
-                Revision::Changed
-            } else {
-                Revision::Unchanged
+        // Tranche Y.10: peek the inner type by reference. The Span
+        // fast path avoids the clone; only the wrap-in-Vec path
+        // needs owned access.
+        let result = {
+            let inner_slot = &vars[self.inner as usize].domain.solved;
+            match inner_slot {
+                None => return Revision::Unchanged,
+                Some(ty) if *ty == TypeDesc::Span => TypeDesc::Span,
+                Some(ty) => TypeDesc::Vec(Box::new(ty.clone())),
             }
+        };
+        if assign(vars, self.var, result) {
+            Revision::Changed
         } else {
             Revision::Unchanged
         }
@@ -135,14 +141,36 @@ impl Constraint<TypeDomain> for ProjectConstraint {
     }
 
     fn revise(&self, vars: &mut [Variable<TypeDomain>], _depth: usize) -> Revision {
-        if let Some(ty) = vars[self.kept as usize].domain.solved.clone() {
-            if assign(vars, self.var, ty) {
-                Revision::Changed
-            } else {
-                Revision::Unchanged
+        // Tranche Y.10: projecting one variable's type onto another
+        // still requires a clone because `assign` stores by value, but
+        // we can skip the clone when the target already holds the
+        // same type (assign() is a no-op in that case).
+        let needs_assign = {
+            let kept_slot = &vars[self.kept as usize].domain.solved;
+            let var_slot = &vars[self.var as usize].domain.solved;
+            match kept_slot {
+                None => None,
+                Some(ty) => {
+                    if var_slot.as_ref() == Some(ty) {
+                        Some(false)
+                    } else {
+                        Some(true)
+                    }
+                }
             }
-        } else {
-            Revision::Unchanged
+        };
+
+        match needs_assign {
+            None => Revision::Unchanged,
+            Some(false) => Revision::Unchanged,
+            Some(true) => {
+                let ty = vars[self.kept as usize].domain.solved.clone().unwrap();
+                if assign(vars, self.var, ty) {
+                    Revision::Changed
+                } else {
+                    Revision::Unchanged
+                }
+            }
         }
     }
 }

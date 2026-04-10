@@ -174,7 +174,7 @@ fn emit_vec_with_ir(
     ir: &GrammarIR,
     ctx: &IrCodegenCtx,
 ) -> TokenStream {
-    use crate::backend::patterns::decisions;
+    use crate::backend::types::decisions;
 
     // Detect sep_by pattern.
     if let Some((elem_node, sep_node)) = decisions::detect_sep_by(inner) {

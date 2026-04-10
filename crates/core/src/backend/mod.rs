@@ -1,15 +1,21 @@
-//! Backend infrastructure: compilation driver, pattern detection, and emission trait.
+//! Backend infrastructure: compilation driver, shared types, and emission trait.
+//!
+//! Tranche Y.1 deleted `backend/patterns/` outright. `decisions.rs` —
+//! the only non-shim file in that directory — moved to
+//! `backend/types/decisions.rs`. Every other file was a re-export
+//! shim over `bbnf_ir::{KeyClass, KeyDispatchConfig, ..}` added in
+//! Tranche X.8a; backends now import those types directly from
+//! `bbnf_ir::` or via the `backend::types::*` re-export surface.
 
 pub mod driver;
 mod emitter;
 pub mod kernels;
-pub mod patterns;
 pub mod prettify;
 pub mod recognizer_plan;
 pub mod rust;
 pub mod strategy;
 pub mod ts;
-mod types;
+pub mod types;
 mod util;
 pub mod wasm;
 

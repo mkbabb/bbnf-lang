@@ -1,11 +1,21 @@
 //! Shared types for the compilation driver and emitter trait.
+//!
+//! Tranche Y.1 promoted this from a single `backend/types.rs` file
+//! into a directory so the `decisions` sub-module — previously
+//! buried under `backend/patterns/` as the lone non-shim survivor —
+//! can live alongside the other shared driver types without keeping
+//! an entire legacy directory alive for one file.
+
+pub mod decisions;
 
 use bbnf_ir::{AltDispatch, TypeDesc};
 
-// Tranche X.8a: `DelimScanConfig` and key-dispatch types (`KeyClass`,
-// `KeyDispatchConfig`, `DetectedBranch`, `KeyDispatchMatch`) moved
-// upstream into `bbnf-ir`. Re-exported here for backward compat until
-// every caller migrates to the `bbnf_ir::` path.
+// Re-export the authoritative upstream types from `bbnf-ir` at the
+// shared driver-types surface. `DelimScanConfig` / `KeyClass` /
+// `KeyDispatchConfig` / `DetectedBranch` / `KeyDispatchMatch` were
+// moved upstream in Tranche X.8a. This re-export block is the sole
+// module-local naming for those types — every backend sub-module
+// imports them via `backend::types::*` or directly from `bbnf_ir::`.
 pub use bbnf_ir::{
     DelimScanConfig, DetectedBranch, KeyClass, KeyDispatchConfig, KeyDispatchMatch,
     key_class_regex_pattern,

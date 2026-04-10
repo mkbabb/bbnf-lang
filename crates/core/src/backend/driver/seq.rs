@@ -10,7 +10,7 @@ use bbnf_ir::{GrammarIR, IrNode, TypeDesc};
 
 use super::DriverState;
 use super::node::compile_node;
-use crate::backend::patterns::decisions;
+use crate::backend::types::decisions;
 use crate::backend::{Emitter, SeqChildGroup, ValuePlacement};
 
 /// Compile a Seq node (first tries operator-chain optimization via

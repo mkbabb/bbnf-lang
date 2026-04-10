@@ -9,10 +9,9 @@ mod leaves;
 mod value;
 use bbnf_ir::{AltDispatch, FnDescriptor, GrammarIR, IrRule, MapExpr, RuleId, TypeDesc};
 use crate::backend::driver::analysis::BackendAnalysis;
-use crate::backend::patterns::key_dispatch::KeyDispatchConfig;
 use crate::backend::{
-    AltBranchInfo, DelimScanConfig, Emitter, FlattenStrategy, KeyDispatchBranch, SepByConfig,
-    SeqChildGroup, TokenDispatchArmCompiled, ValuePlacement,
+    AltBranchInfo, DelimScanConfig, Emitter, FlattenStrategy, KeyDispatchBranch, KeyDispatchConfig,
+    SepByConfig, SeqChildGroup, TokenDispatchArmCompiled, ValuePlacement,
 };
 pub use super::code::{WasmEmitCtx, WasmEmitter};
 pub use super::helpers::unescape_literal;

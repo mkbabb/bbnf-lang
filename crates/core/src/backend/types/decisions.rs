@@ -12,7 +12,7 @@
 
 use bbnf_ir::{GrammarIR, IrNode, TypeDesc};
 
-use crate::backend::types::{FlattenStrategy, ValuePlacement};
+use super::{FlattenStrategy, ValuePlacement};
 
 // ═════════════════════════════════════════════════════════════════════════════
 // Decision types

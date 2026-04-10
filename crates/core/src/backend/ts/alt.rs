@@ -2,8 +2,7 @@
 
 use bbnf_ir::AltDispatch;
 
-use crate::backend::patterns::key_dispatch::{KeyClass, KeyDispatchConfig};
-use crate::backend::{ValuePlacement, AltBranchInfo, KeyDispatchBranch};
+use crate::backend::{AltBranchInfo, KeyClass, KeyDispatchBranch, KeyDispatchConfig, ValuePlacement};
 
 use super::code::{TsCode, TsEmitCtx, TsEmitter};
 use super::helpers::ts_escape;

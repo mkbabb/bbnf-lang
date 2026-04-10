@@ -4,8 +4,7 @@ use bbnf_ir::{AltDispatch, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use crate::backend::patterns::key_dispatch::{KeyClass, KeyDispatchConfig};
-use crate::backend::{ValuePlacement, AltBranchInfo, KeyDispatchBranch};
+use crate::backend::{AltBranchInfo, KeyClass, KeyDispatchBranch, KeyDispatchConfig, ValuePlacement};
 
 use super::RustEmitter;
 use super::RustEmitCtx;

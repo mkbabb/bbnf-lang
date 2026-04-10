@@ -9,7 +9,7 @@ use bbnf_ir::{GrammarIR, IrNode, TypeDesc};
 use super::DriverState;
 use super::derive_vec_elem_type;
 use super::node::compile_node;
-use crate::backend::patterns::decisions;
+use crate::backend::types::decisions;
 use crate::backend::{Emitter, SepByConfig, ValuePlacement};
 
 /// Compile a Repeat node.

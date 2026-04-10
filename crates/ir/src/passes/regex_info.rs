@@ -10,6 +10,8 @@
 
 use std::collections::HashMap;
 
+use bbnf_regex::egraph::SaturationCache;
+
 use crate::{GrammarIR, IrNode, StringId};
 
 /// Compute and cache `RegexInfo` for all regex patterns in the grammar.
@@ -40,10 +42,24 @@ pub fn compute_regex_info(ir: &mut GrammarIR) {
         merged_bonus: ir.cost_config.hir_merged_bonus,
     };
 
-    // Analyze each unique pattern with the explicit cost.
+    // Tranche X phase 3: per-compile saturation cache. JSON / CSS L4
+    // grammars contain the same regex patterns in multiple positions
+    // (e.g., the JSON string pattern as object key + object value +
+    // array element). Without the cache each occurrence pays the full
+    // build → saturate → extract → drop cycle. The cache stores the
+    // canonicalized HIR keyed on the input HIR's structural hash so
+    // that each unique pattern's saturation cost is paid at most once
+    // per compile. Lifetime is exactly this pass — the cache drops at
+    // function exit, no global state.
+    let mut sat_cache = SaturationCache::with_capacity(seen.len());
+
+    // Analyze each unique pattern with the explicit cost, threading
+    // the per-compile cache through the HIR canonicalization step.
     for &sid in seen.keys() {
         let pattern = ir.get_string(sid);
-        if let Some(info) = bbnf_regex::RegexInfo::analyze_with_cost(pattern, &cost) {
+        if let Some(info) =
+            bbnf_regex::RegexInfo::analyze_with_cost_cached(pattern, &cost, &mut sat_cache)
+        {
             info_map.insert(sid, info);
         }
     }

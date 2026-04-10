@@ -30,8 +30,8 @@
 mod build_egraph;
 mod cost;
 mod interner;
-mod node;
-mod rules;
+pub mod node;
+pub mod rules;
 mod write_back;
 
 pub use cost::GrammarCostModel;

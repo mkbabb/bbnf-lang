@@ -9,6 +9,7 @@
 use bbnf_ir::{GrammarIR, IrNode, TypeDesc};
 
 use super::DriverState;
+use super::derive_vec_elem_type;
 use super::node::compile_node;
 use crate::backend::patterns::decisions;
 use crate::backend::{Emitter, SepByConfig, ValuePlacement};
@@ -46,18 +47,7 @@ pub(super) fn compile_wrap<E: Emitter>(
                     None
                 };
 
-                let elem_type = ir
-                    .vec_elem_type(element)
-                    .cloned()
-                    .or_else(|| {
-                        let ty = ir.node_type(element).cloned()?;
-                        Some(if ty == TypeDesc::BoxedEnum {
-                            TypeDesc::Enum
-                        } else {
-                            ty
-                        })
-                    })
-                    .unwrap_or(TypeDesc::Span);
+                let elem_type = derive_vec_elem_type(ir, element);
 
                 let elem_alloc = if elem_type == TypeDesc::BoxedEnum {
                     ValuePlacement::Alloc

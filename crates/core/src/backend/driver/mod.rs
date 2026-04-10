@@ -185,6 +185,33 @@ impl DriverState {
     }
 }
 
+// Tranche X phase 5: shared elem-type derivation for sep_by /
+// repeat-many / wrap-sep_by call sites. Replaces the prior
+// `vec_elem_type(n).cloned().or_else(|| node_type(n).cloned() ...)`
+// chains with a single match that clones at most once and avoids the
+// closure-capture overhead.
+//
+// Semantics preserved from the prior implementation:
+// 1. Prefer `vec_elem_type` when set (the explicit Vec-context type).
+// 2. Otherwise fall back to `node_type` with the BoxedEnum→Enum
+//    conversion that the Vec context implies (Vec stores unboxed
+//    values; the heap indirection comes from the Vec itself).
+// 3. Default to `TypeDesc::Span` when both are absent.
+//
+// The post-W samply profile attributed 7.42% of `compile_bbnf` self
+// time to `Option::or_else` for `TypeDesc` lookups across the call
+// sites in repeat.rs / wrap.rs, plus 2.41% to `TypeDesc::clone`.
+pub(super) fn derive_vec_elem_type(ir: &GrammarIR, node: &IrNode) -> TypeDesc {
+    match ir.vec_elem_type(node) {
+        Some(t) => t.clone(),
+        None => match ir.node_type(node) {
+            Some(t) if *t == TypeDesc::BoxedEnum => TypeDesc::Enum,
+            Some(t) => t.clone(),
+            None => TypeDesc::Span,
+        },
+    }
+}
+
 // ─── Grammar-Level Compilation ──────────────────────────────────────────────
 
 /// Compile an entire grammar to backend output.

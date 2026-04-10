@@ -7,6 +7,7 @@
 use bbnf_ir::{GrammarIR, IrNode, TypeDesc};
 
 use super::DriverState;
+use super::derive_vec_elem_type;
 use super::node::compile_node;
 use crate::backend::patterns::decisions;
 use crate::backend::{Emitter, SepByConfig, ValuePlacement};
@@ -25,18 +26,7 @@ pub(super) fn compile_repeat<E: Emitter>(
     // sep_by: Repeat(Skip(element, Repeat(separator, 0, 1)), lo, MAX).
     if hi == u32::MAX {
         if let Some((element, separator)) = decisions::detect_sep_by(inner) {
-            let elem_type = ir
-                .vec_elem_type(element)
-                .cloned()
-                .or_else(|| {
-                    let ty = ir.node_type(element).cloned()?;
-                    Some(if ty == TypeDesc::BoxedEnum {
-                        TypeDesc::Enum
-                    } else {
-                        ty
-                    })
-                })
-                .unwrap_or(TypeDesc::Span);
+            let elem_type = derive_vec_elem_type(ir, element);
 
             let elem_alloc = if elem_type == TypeDesc::BoxedEnum {
                 ValuePlacement::Alloc
@@ -72,23 +62,20 @@ pub(super) fn compile_repeat<E: Emitter>(
 
     // Use vec_elem_type for repeat-many: element type for scratch
     // Vec collection, mapping BoxedEnum → Enum since scratch Vecs
-    // store unboxed values.
-    let elem_type = ir
-        .vec_elem_type(inner)
-        .cloned()
-        .or_else(|| {
-            let ty = ir.node_type(inner).cloned()?;
-            Some(if ty == TypeDesc::BoxedEnum {
-                TypeDesc::Enum
-            } else {
-                ty
-            })
-        })
-        .unwrap_or_else(|| match inner {
+    // store unboxed values. Tranche X phase 5: shared
+    // `derive_vec_elem_type` for the lookup, with the per-IrNode
+    // structural fallback retained inline since it's specific to
+    // repeat-many vs sep_by.
+    let elem_type = match (ir.vec_elem_type(inner), ir.node_type(inner)) {
+        (Some(t), _) => t.clone(),
+        (None, Some(t)) if *t == TypeDesc::BoxedEnum => TypeDesc::Enum,
+        (None, Some(t)) => t.clone(),
+        (None, None) => match inner {
             IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => TypeDesc::Span,
             IrNode::Ref(_) => TypeDesc::Enum,
             _ => TypeDesc::BoxedEnum,
-        });
+        },
+    };
     // Override: when parent forces Alloc (Vec(non-Span) expected), prevent
     // Span compression even if elem_type fell back to Span from TypeMap.
     let elem_type = if alloc == ValuePlacement::Alloc && elem_type == TypeDesc::Span {

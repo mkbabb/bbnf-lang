@@ -15,7 +15,7 @@
 
 use bbnf_ir::dag::NodeId;
 use bbnf_ir::passes::csp_strategy::{AltMode, RegexEngine, WrapMode};
-use bbnf_ir::passes::patterns::{GroupId, RecognizerShape};
+use bbnf_ir::passes::patterns::RecognizerShape;
 use bbnf_ir::{GrammarIR, IrNode};
 
 /// A classified family for a recognizer node. Unlike the raw
@@ -57,15 +57,20 @@ pub enum EmitHint {
 }
 
 /// One backend-facing record per node. Projects `(family,
-/// regex_engine, emit_hint, peer_group)` over the existing IR
-/// substrate in one struct so consumer sites read through a single
-/// view.
+/// regex_engine, emit_hint)` over the existing IR substrate in one
+/// struct so consumer sites read through a single view.
+///
+/// Tranche Y.2 deleted the `peer_group` projection along with the
+/// ghost `AltMode::SharedHelper` / `WrapMode::SharedHelper` variants
+/// it fed. The record is retained as the X.8f unification bridge
+/// for future tranches; its downstream consumer count is currently
+/// zero, but the struct is small enough that the cost of keeping
+/// the bridge alive is negligible.
 #[derive(Clone, Debug)]
 pub struct ScannerPlanRecord {
     pub family: RecognizerFamily,
     pub regex_engine: Option<RegexEngine>,
     pub emit_hint: EmitHint,
-    pub peer_group: Option<GroupId>,
 }
 
 impl ScannerPlanRecord {
@@ -76,7 +81,6 @@ impl ScannerPlanRecord {
             family: RecognizerFamily::Generic,
             regex_engine: None,
             emit_hint: EmitHint::Generic,
-            peer_group: None,
         }
     }
 }
@@ -114,14 +118,11 @@ pub fn plan_for_id(ir: &GrammarIR, node_id: NodeId) -> ScannerPlanRecord {
         (RecognizerFamily::KeywordPrefix, EmitHint::KeyDispatch)
     } else if let Some(mode) = decision.and_then(|d| d.alt_mode.as_ref()) {
         match mode {
-            // Tranche Y.3: TokenLedBranches folds into ByteDispatch in
-            // the CSP domain, so the match is exhaustive over the
-            // remaining four variants.
+            // Tranche Y.3: TokenLedBranches folds into ByteDispatch.
+            // Tranche Y.2: SharedHelper variant was deleted.
             AltMode::ByteDispatch => (RecognizerFamily::TokenLedBranches, EmitHint::ByteDispatch),
             AltMode::KeyDispatch => (RecognizerFamily::KeywordPrefix, EmitHint::KeyDispatch),
-            AltMode::Checkpoint | AltMode::SharedHelper(_) => {
-                (RecognizerFamily::Generic, EmitHint::Generic)
-            }
+            AltMode::Checkpoint => (RecognizerFamily::Generic, EmitHint::Generic),
         }
     } else if let Some(mode) = decision.and_then(|d| d.wrap_mode.as_ref()) {
         match mode {
@@ -129,9 +130,7 @@ pub fn plan_for_id(ir: &GrammarIR, node_id: NodeId) -> ScannerPlanRecord {
                 (RecognizerFamily::DelimiterBalanced, EmitHint::DelimScan)
             }
             WrapMode::SepBy => (RecognizerFamily::SeparatorList, EmitHint::Generic),
-            WrapMode::Generic | WrapMode::SharedHelper(_) => {
-                (RecognizerFamily::Generic, EmitHint::Generic)
-            }
+            WrapMode::Generic => (RecognizerFamily::Generic, EmitHint::Generic),
         }
     } else if recognizer.is_some() {
         let shape_family = match &recognizer.unwrap().shape {
@@ -154,12 +153,9 @@ pub fn plan_for_id(ir: &GrammarIR, node_id: NodeId) -> ScannerPlanRecord {
         (RecognizerFamily::Generic, EmitHint::Generic)
     };
 
-    let peer_group = recognizer.and_then(|r| r.peer_group);
-
     ScannerPlanRecord {
         family,
         regex_engine,
         emit_hint,
-        peer_group,
     }
 }

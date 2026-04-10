@@ -113,10 +113,7 @@ pub(super) fn compile_wrap<E: Emitter>(
             let csp_allows_delim_scan = match csp_wrap_mode {
                 // CSP explicitly chose a delim-scan flavor or left
                 // the decision to the backend (no WrapMode var).
-                Some(WrapMode::DelimScan)
-                | Some(WrapMode::BalancedScan)
-                | Some(WrapMode::SharedHelper(_))
-                | None => true,
+                Some(WrapMode::DelimScan) | Some(WrapMode::BalancedScan) | None => true,
                 // CSP chose Generic or SepBy — honor the decision.
                 Some(WrapMode::Generic) | Some(WrapMode::SepBy) => false,
             };

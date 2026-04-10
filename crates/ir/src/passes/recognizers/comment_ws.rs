@@ -46,7 +46,6 @@ fn walk(
                             role: RecognizerRole::Standalone,
                             shape,
                             signature,
-                            peer_group: None,
                         },
                     ));
                 }

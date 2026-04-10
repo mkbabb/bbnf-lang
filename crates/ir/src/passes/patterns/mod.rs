@@ -227,11 +227,19 @@ pub struct RecognizerSignature {
 }
 
 /// The recognizer record carried by `NodeFacts.recognizer`.
+///
+/// Tranche Y.2: the `peer_group: Option<GroupId>` field was deleted
+/// along with the `AltMode::SharedHelper` / `WrapMode::SharedHelper`
+/// CSP variants and the `prefix_shared_group::mine` pass that
+/// populated it. The substrate was ghost infrastructure — the
+/// hoisting decisions it enabled never had a backend emission path,
+/// and the mining cost paid ~5–8 KB of work per compile for zero
+/// consumers. `RecognizerSignature.shape_hash` is retained because
+/// downstream canonicalization still uses it for signature dedup
+/// within the consumer-invariant tests.
 #[derive(Clone, Debug)]
 pub struct Recognizer {
     pub role: RecognizerRole,
     pub shape: RecognizerShape,
     pub signature: RecognizerSignature,
-    /// Some iff this node is in a ≥N-member sharing group.
-    pub peer_group: Option<GroupId>,
 }

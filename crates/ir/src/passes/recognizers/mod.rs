@@ -5,7 +5,7 @@
 //! flags (`operator_chain`, `sep_by`, `all_span_collapse`) AND the new
 //! `Recognizer` record introduced in V.3.
 //!
-//! Eight miners run as one phase under the `mine_recognizers` entry
+//! Seven miners run as one phase under the `mine_recognizers` entry
 //! point. Mining order is load-bearing: later miners read earlier
 //! miners' outputs.
 //!
@@ -16,11 +16,12 @@
 //! 5. `mine_identifier_family`    — RegexClass::Identifier / PrefixThenClass
 //! 6. `mine_separator_list`       — sep_by + element signature → SeparatorList
 //! 7. `mine_token_led_branches`   — disjoint-FIRST Alt → TokenLedBranches
-//! 8. `mine_prefix_shared_group`  — cross-rule signature dedup → peer_group
 //!
-//! All miners are single DAG walks, NodeId-keyed, O(N) per pass. The
-//! cross-rule miner (`mine_prefix_shared_group`) is O(N) average-case
-//! via hash-map sharing.
+//! All miners are single DAG walks, NodeId-keyed, O(N) per pass.
+//! Tranche Y.2 deleted the former `mine_prefix_shared_group` cross-
+//! rule signature-dedup miner and its `peer_group` output because
+//! the CSP variants it fed (`AltMode::SharedHelper` /
+//! `WrapMode::SharedHelper`) had no backend emission path.
 //!
 //! `RegexInfo.feasible_engines` is populated upstream in
 //! `bbnf_regex::RegexInfo::analyze_from_hir` (Tranche V.2). The
@@ -32,7 +33,6 @@ pub mod delim_scan;
 mod identifier;
 pub mod key_dispatch;
 mod node_facts;
-mod prefix_shared_group;
 mod punct_ws_region;
 mod quoted_string;
 mod separator_list;
@@ -165,7 +165,11 @@ pub fn mine_recognizers(ir: &mut GrammarIR) {
             })
     });
 
-    prefix_shared_group::mine(ir);
+    // Tranche Y.2: the `prefix_shared_group::mine` pass was deleted
+    // along with the `AltMode::SharedHelper` / `WrapMode::SharedHelper`
+    // CSP variants it fed. The pass had no consumers that reached a
+    // backend emission path, and retaining it produced ghost
+    // decisions the strategy CSP silently dropped on the fallthrough.
 }
 
 /// Insert or update a recognizer record on the given node.

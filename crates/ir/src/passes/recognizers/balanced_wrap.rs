@@ -47,7 +47,6 @@ fn walk(
                         role: RecognizerRole::Body { parent: node_id },
                         shape: inner_shape,
                         signature: inner_sig,
-                        peer_group: None,
                     };
 
                     let shape = RecognizerShape::DelimiterBalanced {
@@ -68,7 +67,6 @@ fn walk(
                             role: RecognizerRole::Standalone,
                             shape,
                             signature,
-                            peer_group: None,
                         },
                     ));
                 }

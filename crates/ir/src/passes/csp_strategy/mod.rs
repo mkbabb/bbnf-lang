@@ -119,8 +119,17 @@ pub enum AltMode {
     ByteDispatch,
     /// Keyword dispatch — branches with disjoint leading literals.
     KeyDispatch,
-    /// Hoisted shared helper — N≥`hoist_threshold` peers share one kernel.
-    SharedHelper(u64),
+    //
+    // Tranche Y.2 deleted `AltMode::SharedHelper(u64)`. The variant
+    // was emitted by the CSP whenever `prefix_shared_group::mine`
+    // assigned a peer group to an Alt, but the backend never had an
+    // emission path for it — `alt_strategy::decide_alt_strategy`
+    // simply fell through to `Checkpoint`. Rather than add new
+    // codegen infrastructure for a feature that could not prove its
+    // bench impact without landing first, Y.2 removes the ghost
+    // variant along with the `peer_group` field that fed it. The
+    // `RecognizerSignature.shape_hash` canonicalization is retained
+    // for future use; only the hoisting decoration is gone.
 }
 
 /// Strategy chosen for a Wrap node.
@@ -134,8 +143,9 @@ pub enum WrapMode {
     DelimScan,
     /// Balanced delimiter scan (handles nested open/close).
     BalancedScan,
-    /// Hoisted shared helper.
-    SharedHelper(u64),
+    // Tranche Y.2: `WrapMode::SharedHelper(u64)` deleted alongside
+    // its Alt counterpart — same rationale (zero backend consumers,
+    // no measurable bench pressure).
 }
 
 /// Engine chosen for a regex pattern at a specific call site.
@@ -590,13 +600,6 @@ fn build_alt_domain(
     }
 
     if let Some(rec) = fact {
-        if let Some(group) = rec.peer_group {
-            // SharedHelper carries the lowest cost — hoist savings.
-            values.push((
-                StrategyValue::Alt(AltMode::SharedHelper(group as u64)),
-                cfg.strategy_dispatch_bonus.abs() - cfg.strategy_hoist_savings,
-            ));
-        }
         // Tranche Y.3: TokenLedBranches folds into ByteDispatch. The
         // previous code added a duplicate entry at the same cost
         // weight; the cost model is unchanged but the codepath is
@@ -630,12 +633,6 @@ fn build_wrap_domain(fact: Option<&Recognizer>, cfg: &CostConfig) -> StrategyDom
     values.push((StrategyValue::Wrap(WrapMode::Generic), 10.0 * cfg.literal_cost));
 
     if let Some(rec) = fact {
-        if let Some(group) = rec.peer_group {
-            values.push((
-                StrategyValue::Wrap(WrapMode::SharedHelper(group as u64)),
-                cfg.strategy_dispatch_bonus.abs() - cfg.strategy_hoist_savings,
-            ));
-        }
         match &rec.shape {
             RecognizerShape::DelimiterBalanced { .. } => values.push((
                 StrategyValue::Wrap(WrapMode::BalancedScan),
@@ -746,9 +743,6 @@ fn fallback_alt_mode(fact: Option<&Recognizer>, has_dispatch: bool) -> AltMode {
         return AltMode::ByteDispatch;
     }
     if let Some(rec) = fact {
-        if let Some(group) = rec.peer_group {
-            return AltMode::SharedHelper(group as u64);
-        }
         // Tranche Y.3: TokenLedBranches → ByteDispatch (folded variant).
         if matches!(rec.shape, RecognizerShape::TokenLedBranches { .. }) {
             return AltMode::ByteDispatch;
@@ -762,9 +756,6 @@ fn fallback_alt_mode(fact: Option<&Recognizer>, has_dispatch: bool) -> AltMode {
 
 fn fallback_wrap_mode(fact: Option<&Recognizer>) -> WrapMode {
     if let Some(rec) = fact {
-        if let Some(group) = rec.peer_group {
-            return WrapMode::SharedHelper(group as u64);
-        }
         match &rec.shape {
             RecognizerShape::DelimiterBalanced { .. } => return WrapMode::BalancedScan,
             RecognizerShape::SeparatorList { .. } => return WrapMode::SepBy,

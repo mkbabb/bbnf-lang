@@ -167,13 +167,13 @@ fn decide_alt_strategy(
                 return AltStrategy::Checkpoint;
             }
             AltMode::KeyDispatch => return AltStrategy::KeyDispatch,
-            // Checkpoint / SharedHelper fall through to the universal
-            // Checkpoint emission path. Except: if the upstream
-            // recognizer pass populated a key-dispatch config for
-            // this NodeId, prefer key-dispatch — the structural
-            // detector has higher coverage than the CSP recognizer
-            // shapes.
-            AltMode::Checkpoint | AltMode::SharedHelper(_) => {
+            // Checkpoint falls through to the universal Checkpoint
+            // emission path. Except: if the upstream recognizer
+            // pass populated a key-dispatch config for this NodeId,
+            // prefer key-dispatch — the structural detector has
+            // higher coverage than the CSP recognizer shapes.
+            // Tranche Y.2 deleted the SharedHelper co-branch.
+            AltMode::Checkpoint => {
                 if node_id
                     .map(|id| ir.key_dispatch_configs.contains_key(&id))
                     .unwrap_or(false)

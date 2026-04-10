@@ -42,7 +42,6 @@ fn walk(
                         role: RecognizerRole::Body { parent: node_id },
                         shape: element_shape,
                         signature: element_sig,
-                        peer_group: None,
                     };
 
                     let shape = RecognizerShape::SeparatorList {
@@ -63,8 +62,7 @@ fn walk(
                             role: RecognizerRole::Standalone,
                             shape,
                             signature,
-                            peer_group: None,
-                        },
+                            },
                     ));
                 }
             }

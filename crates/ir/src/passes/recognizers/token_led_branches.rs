@@ -49,7 +49,6 @@ fn walk(
                         role: RecognizerRole::DispatchKey { owner: node_id },
                         shape: key_shape,
                         signature: key_sig,
-                        peer_group: None,
                     };
 
                     let shape = RecognizerShape::TokenLedBranches {
@@ -69,7 +68,6 @@ fn walk(
                             role: RecognizerRole::Standalone,
                             shape,
                             signature,
-                            peer_group: None,
                         },
                     ));
                 }

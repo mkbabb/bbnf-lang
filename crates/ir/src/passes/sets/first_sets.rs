@@ -5,8 +5,11 @@
 //! fixed-point, no CSP needed).
 //!
 //! Equivalent to the AST-level `bbnf::graph::first_sets` module.
+//!
+//! Tranche X.12a: per-pass RuleId-keyed scratch maps are aliased to
+//! `FxHashMap` to avoid SipHasher cost on the fixed-point loop.
 
-use std::collections::HashMap;
+use rustc_hash::FxHashMap as HashMap;
 
 use csp_solver::Csp;
 use csp_solver::constraint::VarId;

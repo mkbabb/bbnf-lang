@@ -7,11 +7,17 @@
 //! propagation. Runs AFTER FIRST sets and nullable flags are frozen.
 //!
 //! Used by dispatch tables (for nullable branches) and error messages.
+//!
+//! Tranche X.12a: per-pass RuleId-keyed scratch maps use `FxHashMap`
+//! internally. The public `FollowSets` type alias stays as a
+//! `std::collections::HashMap` so `GrammarIR::follow_sets` and every
+//! existing consumer remain compatible.
 
-use std::collections::HashMap;
+use std::collections::HashMap as StdHashMap;
 
 use csp_solver::Csp;
 use csp_solver::constraint::VarId;
+use rustc_hash::FxHashMap as HashMap;
 
 use crate::{CharSet128, GrammarIR, IrNode, RuleId};
 
@@ -21,7 +27,7 @@ use super::super::csp_domains::{
 };
 
 /// FOLLOW sets for all rules in the grammar.
-pub type FollowSets = HashMap<RuleId, CharSet128>;
+pub type FollowSets = StdHashMap<RuleId, CharSet128>;
 
 /// Compute FOLLOW sets for all rules in the IR.
 ///
@@ -69,7 +75,7 @@ pub fn compute_follow_sets(ir: &GrammarIR) -> FollowSets {
     let _ = csp.propagate();
 
     // Extract results.
-    let mut follow = HashMap::new();
+    let mut follow: FollowSets = StdHashMap::new();
     for rule in &ir.rules {
         let var = follow_vars[&rule.id];
         follow.insert(rule.id, csp.variables[var as usize].domain.solved.clone());

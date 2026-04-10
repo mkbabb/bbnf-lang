@@ -210,82 +210,82 @@ impl CostDomain for StrategyDomain {
 // ── Solver entry point ──────────────────────────────────────────────────────
 
 /// Build the per-NodeId strategy decision map by running a real CSP
-/// over the **union of every rule body** with
-/// [`OptimizationMode::MinimizeCost`].
+/// per rule body with [`OptimizationMode::MinimizeCost`].
 ///
 /// Renamed from V.6's `solve_recognizer_decisions` to reflect the
 /// reality: this is a strategy synthesis pass that solves an
 /// optimization problem, not a deterministic recognizer walk.
 ///
-/// Tranche X phase 6: **compile-scoped batching.** Pre-X this allocated
-/// one `Csp::new()` per rule body, populated per-rule `sites` Vecs and
-/// `by_node` maps, then ran a separate `solve_optimized` per rule. On
-/// JSON's 4 rules that was 4 × ~2 µs = 8 µs of construction overhead;
-/// on CSS L4's ~265 rules the per-rule allocation cost compounded.
+/// Per-rule scope is intentional: branch-and-bound search complexity
+/// is bounded by the per-rule variable count, even when no cross-rule
+/// constraint exists. A union CSP (Tranche X attempted this and
+/// reverted) blew compile_css_l4 from 9 ms to 94 ms because the
+/// search had to explore the cross-product of every rule's decision
+/// space whenever any single rule had an `ImplicationConstraint` —
+/// the solver does not detect connected components.
 ///
-/// X collapses to one `Csp::new()`, one collect walk over every rule
-/// body, one constraint walk over every rule body, and one
-/// `solve_optimized` call. The single CSP holds the union of every
-/// per-rule decision site. `by_node` is keyed on `NodeId`, which is
-/// globally unique across rules thanks to the durable hash-consed
-/// DAG, so cross-rule constraints (currently only the
-/// `AltMode::TokenDispatch → child engine` implication) compose
-/// naturally.
-///
-/// **This is batching, not globalization.** No new cross-rule cost
-/// objective is introduced — `ImplicationConstraint` is still the only
-/// cross-variable wiring, and it's still parent ↔ child within a rule.
-/// True global CSP with cross-rule `SharedHelper` hoisting variables
-/// and a joint objective belongs to Tranche Y.
+/// True global cross-rule optimization (with `SharedHelper` hoisting
+/// variables and a joint objective) belongs to Tranche Y, and will
+/// require either a connected-components decomposition or a solver
+/// substrate that exploits independent sub-problems.
 pub fn solve_strategy_decisions(ir: &GrammarIR) -> RecognizerDecisionMap {
     let dag = match ir.dag.as_ref() {
         Some(d) => d,
         None => return HashMap::new(),
     };
 
+    let mut decisions: RecognizerDecisionMap = HashMap::new();
     let cfg = &ir.cost_config;
 
-    // ── Phase 1: collect decision sites across every rule body ──────────────
+    for rule in &ir.rules {
+        solve_rule(&rule.body, ir, dag, cfg, &mut decisions);
+    }
+
+    decisions
+}
+
+/// Build and solve the strategy CSP for a single rule body.
+fn solve_rule(
+    body: &IrNode,
+    ir: &GrammarIR,
+    dag: &crate::dag::GrammarDag,
+    cfg: &CostConfig,
+    decisions: &mut RecognizerDecisionMap,
+) {
+    // ── Phase 1: collect decision sites + build CSP variables ──────────────
     let mut csp = Csp::<StrategyDomain>::new();
     let mut sites: Vec<(VarId, Site)> = Vec::new();
     // Map node → its (Alt, Wrap, Engine) variable ids, for cross-var
-    // constraints. Keyed on NodeId which is globally unique across
-    // rules via the durable DAG hash-cons.
+    // constraints. FxHashMap (Tranche X.6) over NodeId for the per-rule
+    // scratch — the SipHasher cost was non-trivial on rule-rich
+    // grammars even though by_node is per-rule.
     let mut by_node: FxHashMap<NodeId, (Option<VarId>, Option<VarId>, Option<VarId>)> =
         FxHashMap::default();
 
-    for rule in &ir.rules {
-        collect_sites(&rule.body, ir, dag, cfg, &mut csp, &mut sites, &mut by_node);
-    }
-
-    let mut decisions: RecognizerDecisionMap = HashMap::new();
+    collect_sites(body, ir, dag, cfg, &mut csp, &mut sites, &mut by_node);
 
     if sites.is_empty() {
-        return decisions;
+        return;
     }
 
-    // ── Phase 2: cross-variable constraints (union over rules) ──────────────
-    let mut constraints_added = 0usize;
-    for rule in &ir.rules {
-        constraints_added +=
-            add_token_dispatch_constraints(&rule.body, dag, &by_node, &mut csp);
-    }
+    // ── Phase 2: cross-variable constraints ────────────────────────────────
+    let constraints_added = add_token_dispatch_constraints(body, dag, &by_node, &mut csp);
 
-    // Fast path: when no cross-variable constraint applies anywhere
-    // in the IR, every variable's optimal value is its lowest-cost
-    // domain entry — branch-and-bound would pick exactly that. Skip
+    // Fast path: when no cross-variable constraint applies to this
+    // rule, every variable's optimal value is its lowest-cost domain
+    // entry — branch-and-bound would pick exactly that. Skip
     // finalize+solve and pick the per-variable minimum directly.
     //
-    // The CSP scaffolding is still **constructed** so the
-    // architectural commitment ("every file with `csp` in its name
-    // uses csp_solver::Csp") holds for every code path; we just elide
-    // the search work that wouldn't change the answer.
+    // The CSP scaffolding is still **constructed** so the architectural
+    // commitment ("every file with `csp` in its name uses csp_solver::Csp")
+    // holds for every code path; we just elide the search work that
+    // wouldn't change the answer.
     if constraints_added == 0 {
-        decode_min_cost_per_variable(&csp, &sites, &mut decisions);
-        return decisions;
+        decode_min_cost_per_variable(&csp, &sites, decisions);
+        return;
     }
 
-    // ── Phase 3: finalize + solve once over the union ──────────────────────
+    // ── Phase 3: finalize + solve with MinimizeCost ────────────────────────
     csp.finalize();
 
     let config = SolveConfig {
@@ -310,16 +310,11 @@ pub fn solve_strategy_decisions(ir: &GrammarIR) -> RecognizerDecisionMap {
         }
     } else {
         // No optimization solution — fall back to the deterministic
-        // priority decisions (the same logic as V.6) on every rule
-        // body. This branch only fires when the CSP is unsatisfiable,
-        // which should only happen if a constraint prunes a domain to
-        // empty.
-        for rule in &ir.rules {
-            decode_fallback(&rule.body, ir, dag, &mut decisions);
-        }
+        // priority decisions. This branch only fires when the CSP is
+        // unsatisfiable, which should only happen if a constraint
+        // prunes a domain to empty.
+        decode_fallback(body, ir, dag, decisions);
     }
-
-    decisions
 }
 
 /// Per-decision-site bookkeeping: which `NodeId` this var belongs to

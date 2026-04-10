@@ -97,9 +97,7 @@ lto = "thin"
     let rule_list = rule_names.join(", ");
 
     let main_rs = format!(
-        r##"#![feature(cold_path)]
-
-use std::io::{{self, Read, Write}};
+        r##"use std::io::{{self, Read, Write}};
 use bbnf_derive::Parser;
 
 #[derive(Parser)]

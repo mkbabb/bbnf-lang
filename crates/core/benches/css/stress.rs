@@ -1,4 +1,3 @@
-#![feature(cold_path)]
 
 //! CSS pathological input stress benchmarks — cold per-parse.
 //!

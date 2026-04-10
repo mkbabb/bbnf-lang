@@ -1,4 +1,3 @@
-#![feature(cold_path)]
 
 //! Google Sheets formula VM benchmark — bytecode interpreter.
 

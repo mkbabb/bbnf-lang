@@ -1,5 +1,3 @@
-#![feature(cold_path)]
-
 //! Integration tests for CSS L4 typed parsing through the `#[derive(Parser)]` slab
 //! codegen path using the l4/stylesheet.bbnf grammar.
 

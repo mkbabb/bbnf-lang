@@ -1,4 +1,3 @@
-#![feature(cold_path)]
 
 //! BBNF CSS L4 WASM backend benchmark — native WASM execution via wasmtime.
 //!

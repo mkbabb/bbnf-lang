@@ -1,4 +1,3 @@
-#![feature(cold_path)]
 
 //! BBNF CSS L4 typed slab benchmark — cold per-parse (l4/stylesheet.bbnf).
 

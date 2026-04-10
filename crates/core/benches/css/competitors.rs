@@ -1,4 +1,3 @@
-#![feature(cold_path)]
 
 //! CSS parsing competitor benchmarks.
 //!

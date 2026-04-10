@@ -1,4 +1,3 @@
-#![feature(cold_path)]
 
 //! Integration tests for CSS parsing through the `#[derive(Parser)]` slab codegen path
 //! using the pretty.bbnf grammar.

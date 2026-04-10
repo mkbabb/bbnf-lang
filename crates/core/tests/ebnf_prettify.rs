@@ -1,4 +1,3 @@
-#![feature(cold_path)]
 
 //! Integration tests for EBNF parsing + prettify through the
 //! `#[derive(Parser)]` slab codegen path.

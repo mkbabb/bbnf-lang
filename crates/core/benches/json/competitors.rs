@@ -1,4 +1,3 @@
-#![feature(cold_path)]
 
 //! JSON parsing competitor benchmarks — comprehensive shootout.
 //!

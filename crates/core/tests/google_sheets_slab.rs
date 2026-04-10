@@ -1,4 +1,3 @@
-#![feature(cold_path)]
 
 //! Integration tests for Google Sheets formula parsing through the
 //! `#[derive(Parser)]` slab codegen path.

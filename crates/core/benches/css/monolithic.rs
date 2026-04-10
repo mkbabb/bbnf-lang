@@ -1,4 +1,3 @@
-#![feature(cold_path)]
 
 //! BBNF CSS monolithic slab benchmark — cold per-parse (pretty.bbnf).
 

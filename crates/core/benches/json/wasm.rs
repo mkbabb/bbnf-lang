@@ -1,4 +1,3 @@
-#![feature(cold_path)]
 
 //! BBNF JSON WASM backend benchmark — native WASM execution throughput.
 //!

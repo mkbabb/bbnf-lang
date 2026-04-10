@@ -1,4 +1,3 @@
-#![feature(cold_path)]
 
 //! Google Sheets formula AOT benchmark — monolithic codegen.
 

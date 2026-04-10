@@ -1,5 +1,3 @@
-#![feature(cold_path)]
-
 mod builtin;
 mod jit;
 

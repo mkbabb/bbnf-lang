@@ -1,4 +1,3 @@
-#![feature(cold_path)]
 use bbnf_derive::Parser;
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;

@@ -1,4 +1,3 @@
-#![feature(cold_path)]
 
 //! BBNF JSON TypeScript backend benchmark — codegen throughput.
 //!

@@ -1,4 +1,3 @@
-#![feature(cold_path)]
 
 //! Integration tests for JSON parsing through the `#[derive(Parser)]` slab codegen path.
 

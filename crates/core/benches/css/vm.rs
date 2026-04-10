@@ -1,4 +1,3 @@
-#![feature(cold_path)]
 
 //! BBNF CSS bytecode VM benchmark — cold per-parse.
 

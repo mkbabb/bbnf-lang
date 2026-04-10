@@ -1,4 +1,3 @@
-#![feature(cold_path)]
 
 //! BBNF JSON bytecode VM benchmark — cold per-parse.
 

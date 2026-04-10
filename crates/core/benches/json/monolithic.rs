@@ -1,4 +1,3 @@
-#![feature(cold_path)]
 
 //! BBNF JSON monolithic slab benchmark — cold per-parse.
 

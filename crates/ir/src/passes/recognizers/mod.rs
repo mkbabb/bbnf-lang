@@ -1,31 +1,46 @@
-//! Tranche V — recognizer mining pass.
+//! Tranche V — recognizer mining pass (consolidated in Tranche Z.0).
 //!
 //! Replaces the old `passes/patterns/recognize.rs` with a richer mining
 //! pipeline that populates `NodeFacts` with both the legacy structural
-//! flags (`operator_chain`, `sep_by`, `all_span_collapse`) AND the new
-//! `Recognizer` record introduced in V.3.
+//! flags (`operator_chain`, `sep_by`, `all_span_collapse`) and the
+//! `Recognizer` records introduced in V.3.
 //!
-//! Seven miners run as one phase under the `mine_recognizers` entry
+//! Nine miners run as one phase under the `mine_recognizers` entry
 //! point. Mining order is load-bearing: later miners read earlier
-//! miners' outputs.
+//! miners' outputs and, on shape overlap, `install_recognizer`
+//! overwrites the earlier record with the later one.
 //!
 //! 1. `mine_node_facts`           — operator_chain, sep_by, all_span_collapse
-//! 2. `mine_quoted_string`        — RegexClass::QuotedString → Recognizer
-//! 3. `mine_balanced_wrap`        — Wrap(open, body, close) → DelimiterBalanced
-//! 4. `mine_comment_aware_ws`     — RegexClass::WsBlockComment → Recognizer
-//! 5. `mine_identifier_family`    — RegexClass::Identifier / PrefixThenClass
-//! 6. `mine_separator_list`       — sep_by + element signature → SeparatorList
-//! 7. `mine_token_led_branches`   — disjoint-FIRST Alt → TokenLedBranches
+//! 2. `QuotedStringMiner`         — RegexClass::QuotedString → Recognizer
+//! 3. `BalancedWrapMiner`         — Wrap(open, body, close) → DelimiterBalanced
+//! 4. `CommentWsMiner`            — RegexClass::WsBlockComment → Recognizer
+//! 5. `IdentifierMiner`           — RegexClass::Identifier / PrefixThenClass
+//! 6. `SeparatorListMiner`        — sep_by + element signature → SeparatorList
+//! 7. `TokenLedBranchesMiner`     — disjoint-FIRST Alt → TokenLedBranches
+//! 8. `PunctWsRegionMiner`        — ws-wrapped structural punctuation
+//! 9. `DelimScanMiner`            — Wrap(open, Repeat(Alt), close) → DelimScanConfig
+//! 10. `KeyDispatchMiner`         — Alt(Literal-led branches) → KeyDispatchMatch
 //!
-//! All miners are single DAG walks, NodeId-keyed, O(N) per pass.
-//! Tranche Y.2 deleted the former `mine_prefix_shared_group` cross-
-//! rule signature-dedup miner and its `peer_group` output because
-//! the CSP variants it fed (`AltMode::SharedHelper` /
-//! `WrapMode::SharedHelper`) had no backend emission path.
+//! # Tranche Z.0 — single-walk consolidation
 //!
-//! `RegexInfo.feasible_engines` is populated upstream in
-//! `bbnf_regex::RegexInfo::analyze_from_hir` (Tranche V.2). The
-//! grammar-tier mining pass treats it as a precomputed input.
+//! Pre-Z, each miner implemented its own `pub(super) fn collect` that
+//! walked every rule body. That meant **nine independent DAG
+//! descents** per compile, each reading the same `GrammarDag` and
+//! calling the same `visit_children_alt` recursor. The work differed
+//! only in per-node match logic.
+//!
+//! Z.0 consolidates those nine walks into a single orchestrator walk
+//! via the `RecognizerMiner` trait: each miner's per-node logic lives
+//! in its `inspect` impl, and `walk_unified` descends the DAG once,
+//! invoking every miner at every node.
+//!
+//! # Mined sidecars
+//!
+//! The first seven miners emit into the shared
+//! `Vec<(NodeId, Recognizer)>` consumed by `install_recognizer`. The
+//! last two emit into `HashMap`-valued sidecars stored on `GrammarIR`
+//! directly (`delim_scan_configs` / `key_dispatch_configs`). Both
+//! stream through the unified walk via the `MineOutputs` struct.
 
 mod balanced_wrap;
 mod comment_ws;
@@ -39,24 +54,106 @@ mod separator_list;
 mod signature;
 mod token_led_branches;
 
-use crate::GrammarIR;
-use crate::passes::context::compute_context_facts;
-use crate::passes::patterns::{NodeFacts, NodeFactsMap, PatternAnnotations};
 use std::collections::HashMap;
+
+use crate::dag::{GrammarDag, NodeId};
+use crate::passes::context::{ContextFactsMap, compute_context_facts};
+use crate::passes::patterns::{NodeFacts, NodeFactsMap, PatternAnnotations, Recognizer};
+use crate::{DelimScanConfig, GrammarIR, IrNode, KeyDispatchMatch};
 
 pub use signature::{compute_shape_hash, hash_recognizer_shape};
 
-/// Tranche V — replaces `recognize_patterns`.
+pub use balanced_wrap::BalancedWrapMiner;
+pub use comment_ws::CommentWsMiner;
+pub use delim_scan::DelimScanMiner;
+pub use identifier::IdentifierMiner;
+pub use key_dispatch::KeyDispatchMiner;
+pub use punct_ws_region::PunctWsRegionMiner;
+pub use quoted_string::QuotedStringMiner;
+pub use separator_list::SeparatorListMiner;
+pub use token_led_branches::TokenLedBranchesMiner;
+
+// ── Recognizer miner substrate (Tranche Z.0) ───────────────────────────
+
+/// Shared per-walk context passed to every `RecognizerMiner::inspect`.
 ///
-/// Walks every rule body once and populates the legacy
-/// `ir.pattern_annotations` (per-rule) plus the per-node `ir.node_facts`
-/// (NodeId-keyed). Subsequent miners read those facts and refine them
-/// with `Recognizer` records.
+/// Holds the borrowed grammar, its durable DAG, and the precomputed
+/// context facts. All miners receive this reference; only
+/// `TokenLedBranchesMiner` currently reads `context_facts`.
+pub struct RecognizerMineCtx<'a> {
+    pub ir: &'a GrammarIR,
+    pub dag: &'a GrammarDag,
+    pub context_facts: &'a ContextFactsMap,
+}
+
+/// Aggregated outputs produced by one recognizer-mining walk.
+///
+/// The first seven miners push into `recognizers`; the two config
+/// miners write into `delim_scan_configs` / `key_dispatch_configs`.
+/// Everything lands in the same `MineOutputs` so the unified walk can
+/// thread one mutable reference through every miner's `inspect`.
+#[derive(Default)]
+pub struct MineOutputs {
+    pub recognizers: Vec<(NodeId, Recognizer)>,
+    pub delim_scan_configs: HashMap<NodeId, DelimScanConfig>,
+    pub key_dispatch_configs: HashMap<NodeId, KeyDispatchMatch>,
+}
+
+/// A recognizer-mining pass. Called once per node during the unified
+/// `mine_recognizers` walk.
+///
+/// ## Miner ordering (load-bearing)
+///
+/// Multiple miners may match the same node; `install_recognizer` at
+/// commit-time overwrites with the later miner's record, so the call
+/// order in [`mine_recognizers`] determines precedence. The sequence
+/// (preserved from the pre-Z sequential version) is listed in the
+/// module doc-comment above.
+pub trait RecognizerMiner {
+    /// Called once per DAG node with a stable `NodeId`. A miner that
+    /// matches the node shape pushes its record into the appropriate
+    /// `outputs` bucket. A miner that does not match is a no-op.
+    fn inspect(
+        &self,
+        node: &IrNode,
+        node_id: NodeId,
+        ctx: &RecognizerMineCtx,
+        outputs: &mut MineOutputs,
+    );
+}
+
+/// Single-walk orchestrator: descends the IR tree once and invokes
+/// every miner's `inspect` at every node with a stable `NodeId`.
+///
+/// Consolidates the nine per-miner walks the pre-Z version did into
+/// one traversal. The `node_for` lookup happens once per node per
+/// walk (previously once per miner per node — a 9x reduction in
+/// hashmap accesses).
+fn walk_unified(
+    node: &IrNode,
+    ctx: &RecognizerMineCtx,
+    miners: &[&dyn RecognizerMiner],
+    outputs: &mut MineOutputs,
+) {
+    if let Some(node_id) = ctx.dag.node_for(node) {
+        for miner in miners {
+            miner.inspect(node, node_id, ctx, outputs);
+        }
+    }
+    visit_children_alt(node, |child| walk_unified(child, ctx, miners, outputs));
+}
+
+/// Tranche V — `mine_recognizers` entry point (Z.0 consolidation).
+///
+/// Walks every rule body once via the unified Z.0 orchestrator and
+/// populates the legacy `ir.pattern_annotations` (per-rule), the
+/// per-node `ir.node_facts` (NodeId-keyed), plus the sidecar config
+/// maps `ir.delim_scan_configs` / `ir.key_dispatch_configs`.
 pub fn mine_recognizers(ir: &mut GrammarIR) {
     let mut legacy_annotations = HashMap::new();
     let mut node_facts: NodeFactsMap = HashMap::new();
 
-    // Phase 1: legacy per-rule annotations + per-node shape facts.
+    // Phase 1: legacy per-rule annotations.
     for rule in &ir.rules {
         let mut ann = PatternAnnotations::default();
         node_facts::recognize_body(&rule.body, &mut ann, ir);
@@ -65,74 +162,55 @@ pub fn mine_recognizers(ir: &mut GrammarIR) {
         }
     }
 
-    // Phase 2: per-node facts (require the durable DAG).
+    // Phase 2: per-node structural facts (operator_chain, sep_by,
+    // all_span_collapse). Kept as a separate walk because it produces
+    // `NodeFacts`, a different output type than the `Recognizer`
+    // records the Phase 3 miners emit, and the miners read it.
     if let Some(dag) = ir.dag.as_ref() {
         for rule in &ir.rules {
             node_facts::recognize_tree(&rule.body, &mut node_facts, ir, dag);
         }
     }
 
-    // Commit phase 1+2 outputs so subsequent miners can read them.
+    // Commit Phase 1+2 outputs so Phase 3 miners can read them.
     ir.pattern_annotations = legacy_annotations;
     ir.node_facts = node_facts;
 
-    // Phase 3: recognizer-shape miners. Each miner walks the DAG once
-    // (by reference) and returns a Vec of decisions. The orchestrator
-    // merges them into `ir.node_facts` once at the end. Avoids per-
-    // miner clones of `ir.regex_info`/`ir.rules`/`ir.dag` that would
-    // dominate compile time on small grammars.
+    // Phase 3 (Tranche Z.0): unified single-walk recognizer mining.
     //
-    // The whole-DAG clone the previous version did was a workaround for
-    // a borrow conflict that NLL handles cleanly: the `dag` borrow is
-    // live only for the miner calls, and ends before the `&mut ir`
-    // mutations below. Profile-confirmed cost on the post-V baseline:
-    // 40-200 KB allocated per compile (the entire NodeId→DagNode map).
-    let (additions, context_facts, delim_scan_configs, key_dispatch_configs) =
-        if let Some(dag) = ir.dag.as_ref() {
-            let context_facts = compute_context_facts(ir, dag);
-            let mut additions: Vec<(crate::dag::NodeId, crate::passes::patterns::Recognizer)> =
-                Vec::new();
-
-            quoted_string::collect(ir, dag, &mut additions);
-            balanced_wrap::collect(ir, dag, &mut additions);
-            comment_ws::collect(ir, dag, &mut additions);
-            identifier::collect(ir, dag, &mut additions);
-            separator_list::collect(ir, dag, &mut additions);
-            token_led_branches::collect(ir, dag, &context_facts, &mut additions);
-
-            // Tranche Y.4: the three ghost-family miners that landed
-            // in Tranche X.10 (function_head, hash_prefix, unit_tail)
-            // produced zero matches on every production grammar —
-            // CSS L4, JSON, BBNF, Sheets, EBNF — and the FunctionHead
-            // kernel's emission semantics are structurally
-            // incompatible with CSS functions that have bodies
-            // anyway (the `try_emit_family_kernel` short-circuit
-            // replaces the entire node's output, dropping the
-            // function body). Y.4 deletes them outright. Only
-            // `punct_ws_region` (56 matches on CSS L4) earned its
-            // keep and stays.
-            punct_ws_region::collect(ir, dag, &mut additions);
-
-            // Tranche X.8a: upstream structural pattern detection.
-            // Populates sidecar maps on `GrammarIR` that the backend
-            // reads directly via `ir.delim_scan_configs` /
-            // `ir.key_dispatch_configs`. This replaces the deleted
-            // `backend/patterns/{delim_scan,key_dispatch,cache}.rs`.
-            let delim_scan_configs = delim_scan::collect(ir);
-            let key_dispatch_configs = key_dispatch::collect(ir);
-
-            // `dag` and `context_facts` borrows end here (NLL).
-            (
-                additions,
-                context_facts,
-                delim_scan_configs,
-                key_dispatch_configs,
-            )
-        } else {
-            return;
+    // Pre-Z this ran nine independent tree descents — one per miner.
+    // Z.0 collapses them into one orchestrator walk dispatching every
+    // miner at every node via the `RecognizerMiner` trait. The
+    // per-miner match logic lives in each `impl`; the walk traversal
+    // logic lives here, once.
+    let (outputs, context_facts) = if let Some(dag) = ir.dag.as_ref() {
+        let context_facts = compute_context_facts(ir, dag);
+        let ctx = RecognizerMineCtx {
+            ir,
+            dag,
+            context_facts: &context_facts,
         };
+        let miners: &[&dyn RecognizerMiner] = &[
+            &QuotedStringMiner,
+            &BalancedWrapMiner,
+            &CommentWsMiner,
+            &IdentifierMiner,
+            &SeparatorListMiner,
+            &TokenLedBranchesMiner,
+            &PunctWsRegionMiner,
+            &DelimScanMiner,
+            &KeyDispatchMiner,
+        ];
+        let mut outputs = MineOutputs::default();
+        for rule in &ir.rules {
+            walk_unified(&rule.body, &ctx, miners, &mut outputs);
+        }
+        (outputs, context_facts)
+    } else {
+        return;
+    };
 
-    for (node_id, rec) in additions {
+    for (node_id, rec) in outputs.recognizers {
         install_recognizer(
             &mut ir.node_facts,
             node_id,
@@ -141,42 +219,32 @@ pub fn mine_recognizers(ir: &mut GrammarIR) {
         );
     }
 
-    // Tranche X.8g: cache context_facts on `GrammarIR` so downstream
-    // passes can read from it without recomputing.
+    // Cache context_facts on `GrammarIR` so downstream passes can read
+    // from it without recomputing (Tranche X.8g).
     ir.context_facts = context_facts;
-    // Tranche X.8a: commit the upstream-mined pattern configs.
-    ir.delim_scan_configs = delim_scan_configs;
-    ir.key_dispatch_configs = key_dispatch_configs;
+    // Commit the upstream-mined pattern configs (Tranche X.8a).
+    ir.delim_scan_configs = outputs.delim_scan_configs;
+    ir.key_dispatch_configs = outputs.key_dispatch_configs;
 
     // Tranche Y.0 / Y.4: the family-recognizer flag gates the driver's
     // per-node `try_emit_family_kernel` probe. Post-Y.4 the only
-    // surviving family shape is `PunctWsRegion`; grammars that match
-    // it (CSS L4: 56 hits) pay the probe, those that don't (JSON,
-    // BBNF, Sheets, EBNF) pay zero per-node lookup overhead.
+    // surviving family shape is `PunctWsRegion`.
     ir.has_family_recognizers = ir.node_facts.values().any(|facts| {
-        facts
-            .recognizer
-            .as_ref()
-            .is_some_and(|rec| {
-                matches!(
-                    rec.shape,
-                    crate::passes::patterns::RecognizerShape::PunctWsRegion { .. }
-                )
-            })
+        facts.recognizer.as_ref().is_some_and(|rec| {
+            matches!(
+                rec.shape,
+                crate::passes::patterns::RecognizerShape::PunctWsRegion { .. }
+            )
+        })
     });
-
-    // Tranche Y.2: the `prefix_shared_group::mine` pass was deleted
-    // along with the `AltMode::SharedHelper` / `WrapMode::SharedHelper`
-    // CSP variants it fed. The pass had no consumers that reached a
-    // backend emission path, and retaining it produced ghost
-    // decisions the strategy CSP silently dropped on the fallthrough.
 }
 
 /// Insert or update a recognizer record on the given node.
 ///
-/// Used by every miner to write its output. If a previous miner already
-/// installed a recognizer on the node, this overwrites it (the later
-/// miner has the more refined shape).
+/// Used by every miner (via the commit loop in `mine_recognizers`) to
+/// write its output. If a previous miner already installed a
+/// recognizer on the node, this overwrites it — the later miner has
+/// the more refined shape.
 pub(crate) fn install_recognizer(
     facts: &mut NodeFactsMap,
     node_id: crate::dag::NodeId,
@@ -196,8 +264,8 @@ pub(crate) fn install_recognizer(
 }
 
 /// Walk the children of an `IrNode`, invoking `f` on each. Shared by
-/// every recognizer-shape miner so they don't each re-implement the
-/// recursion logic.
+/// the unified Z.0 walker and any other tree recursion within this
+/// module.
 pub(crate) fn visit_children_alt(node: &crate::IrNode, mut f: impl FnMut(&crate::IrNode)) {
     use crate::IrNode;
     match node {

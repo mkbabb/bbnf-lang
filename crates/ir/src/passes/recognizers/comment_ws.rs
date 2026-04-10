@@ -4,54 +4,49 @@
 
 use bbnf_regex::RegexClass;
 
-use crate::dag::{GrammarDag, NodeId};
+use crate::IrNode;
+use crate::dag::NodeId;
 use crate::passes::patterns::{
     OnePassGrade, OutputShape, Recognizer, RecognizerRole, RecognizerShape,
 };
-use crate::{GrammarIR, IrNode};
 
 use super::signature::compute_shape_hash;
+use super::{MineOutputs, RecognizerMineCtx, RecognizerMiner};
 
-pub(super) fn collect(
-    ir: &GrammarIR,
-    dag: &GrammarDag,
-    out: &mut Vec<(NodeId, Recognizer)>,
-) {
-    for rule in &ir.rules {
-        walk(&rule.body, ir, dag, out);
-    }
-}
+pub struct CommentWsMiner;
 
-fn walk(
-    node: &IrNode,
-    ir: &GrammarIR,
-    dag: &GrammarDag,
-    out: &mut Vec<(NodeId, Recognizer)>,
-) {
-    if let IrNode::Regex(sid) = node {
-        if let Some(info) = ir.regex_info.get(sid) {
-            if matches!(info.classification, RegexClass::WsBlockComment) {
-                if let Some(node_id) = dag.node_for(node) {
-                    let shape = RecognizerShape::Regex { sid: *sid };
-                    let signature = compute_shape_hash(
-                        &shape,
-                        OutputShape::SpanOnly,
-                        false,
-                        OnePassGrade::OnePass,
-                        ir,
-                    );
-                    out.push((
-                        node_id,
-                        Recognizer {
-                            role: RecognizerRole::Standalone,
-                            shape,
-                            signature,
-                        },
-                    ));
-                }
-            }
+impl RecognizerMiner for CommentWsMiner {
+    fn inspect(
+        &self,
+        node: &IrNode,
+        node_id: NodeId,
+        ctx: &RecognizerMineCtx,
+        outputs: &mut MineOutputs,
+    ) {
+        let IrNode::Regex(sid) = node else {
+            return;
+        };
+        let Some(info) = ctx.ir.regex_info.get(sid) else {
+            return;
+        };
+        if !matches!(info.classification, RegexClass::WsBlockComment) {
+            return;
         }
+        let shape = RecognizerShape::Regex { sid: *sid };
+        let signature = compute_shape_hash(
+            &shape,
+            OutputShape::SpanOnly,
+            false,
+            OnePassGrade::OnePass,
+            ctx.ir,
+        );
+        outputs.recognizers.push((
+            node_id,
+            Recognizer {
+                role: RecognizerRole::Standalone,
+                shape,
+                signature,
+            },
+        ));
     }
-
-    super::visit_children_alt(node, |child| walk(child, ir, dag, out));
 }

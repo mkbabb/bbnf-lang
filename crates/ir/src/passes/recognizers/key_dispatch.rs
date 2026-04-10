@@ -5,53 +5,45 @@
 //! value`). Instead of checkpoint/restore per branch, the backend can
 //! scan the key token once and dispatch on the consumed bytes.
 //!
-//! Detection runs here (during `mine_recognizers`), populating
-//! `ir.key_dispatch_configs` keyed by the Alt's stable `NodeId`. The
-//! backend reads the sidecar map via `GrammarIR::key_dispatch_configs`;
-//! it does not recompute.
+//! Detection runs during `mine_recognizers` (Tranche Z.0 unified
+//! walk), populating `ir.key_dispatch_configs` keyed by the Alt's
+//! stable `NodeId`. The backend reads the sidecar map via
+//! `GrammarIR::key_dispatch_configs`; it does not recompute.
 //!
 //! Previously lived at `backend/patterns/key_dispatch.rs` in the
-//! `bbnf-core` crate. Moved intact in Tranche X.8a.
+//! `bbnf-core` crate. Moved intact in Tranche X.8a. Tranche Z.0
+//! additionally collapses the per-miner tree walk into the shared
+//! orchestrator `walk_unified`.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
-use parse_that::regex::classify::{classify_regex, RegexClass};
+use parse_that::regex::classify::{RegexClass, classify_regex};
 
-use crate::dag::{GrammarDag, NodeId};
+use crate::dag::NodeId;
 use crate::{
     AltBranch, DetectedBranch, GrammarIR, IrNode, KeyClass, KeyDispatchConfig, KeyDispatchMatch,
     RuleId,
 };
 
-/// Build the per-rule key-dispatch configuration map. Walks every rule
-/// body and runs [`try_detect`] on each `Alt` node; stores successful
-/// detections keyed by the Alt's stable `NodeId`.
-pub fn collect(ir: &GrammarIR) -> HashMap<NodeId, KeyDispatchMatch> {
-    let mut out: HashMap<NodeId, KeyDispatchMatch> = HashMap::new();
-    let Some(dag) = ir.dag.as_ref() else {
-        return out;
-    };
-    for rule in &ir.rules {
-        walk(&rule.body, ir, dag, &mut out);
-    }
-    out
-}
+use super::{MineOutputs, RecognizerMineCtx, RecognizerMiner};
 
-fn walk(
-    node: &IrNode,
-    ir: &GrammarIR,
-    dag: &GrammarDag,
-    out: &mut HashMap<NodeId, KeyDispatchMatch>,
-) {
-    if let IrNode::Alt(branches, _) = node {
-        if let Some(result) = try_detect(branches, ir) {
-            if let Some(nid) = dag.node_for(node) {
-                out.insert(nid, result);
-            }
+pub struct KeyDispatchMiner;
+
+impl RecognizerMiner for KeyDispatchMiner {
+    fn inspect(
+        &self,
+        node: &IrNode,
+        node_id: NodeId,
+        ctx: &RecognizerMineCtx,
+        outputs: &mut MineOutputs,
+    ) {
+        let IrNode::Alt(branches, _) = node else {
+            return;
+        };
+        if let Some(result) = try_detect(branches, ctx.ir) {
+            outputs.key_dispatch_configs.insert(node_id, result);
         }
     }
-
-    super::visit_children_alt(node, |child| walk(child, ir, dag, out));
 }
 
 /// Try to detect a key-dispatch pattern in an alternation.

@@ -2,8 +2,9 @@
 //!
 //! Identifies `Wrap(open, Repeat(Alt(...)), close)` patterns where the
 //! Alt branches can be distinguished by a forward scan for a pivot
-//! byte. Detection runs here (during `mine_recognizers`), populating
-//! `ir.delim_scan_configs` keyed by the wrap root's stable `NodeId`.
+//! byte. Detection runs during `mine_recognizers` (Tranche Z.0
+//! unified walk), populating `ir.delim_scan_configs` keyed by the
+//! wrap root's stable `NodeId`.
 //!
 //! This is the upstream half of the Tranche X.8 activation that moves
 //! structural pattern detection out of `backend/patterns/` and into
@@ -12,44 +13,34 @@
 //!
 //! Previously lived at `backend/patterns/delim_scan.rs` in the
 //! `bbnf-core` crate. Moved intact in Tranche X.8a; the detection
-//! logic is identical, only the home crate changed.
+//! logic is identical, only the home crate changed. Tranche Z.0
+//! additionally collapses the per-miner tree walk into the shared
+//! orchestrator `walk_unified`.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
-use crate::dag::{GrammarDag, NodeId};
+use crate::dag::NodeId;
 use crate::{AltBranch, DelimScanConfig, GrammarIR, IrNode, RuleId};
 
-/// Build the per-rule delim-scan configuration map. Walks every rule
-/// body looking for `Wrap(Skip(Next(open, middle), close))` or the
-/// dual `Next(open, Skip(middle, close))` shape and runs
-/// [`try_detect`] on each candidate. Results are keyed by the wrap
-/// root's stable `NodeId`.
-pub fn collect(ir: &GrammarIR) -> HashMap<NodeId, DelimScanConfig> {
-    let mut out: HashMap<NodeId, DelimScanConfig> = HashMap::new();
-    let Some(dag) = ir.dag.as_ref() else {
-        return out;
-    };
-    for rule in &ir.rules {
-        walk(&rule.body, ir, dag, &mut out);
-    }
-    out
-}
+use super::{MineOutputs, RecognizerMineCtx, RecognizerMiner};
 
-fn walk(
-    node: &IrNode,
-    ir: &GrammarIR,
-    dag: &GrammarDag,
-    out: &mut HashMap<NodeId, DelimScanConfig>,
-) {
-    if let Some((open, middle, close)) = unwrap_wrap(node) {
-        if let Some(config) = try_detect(open, middle, close, ir) {
-            if let Some(nid) = dag.node_for(node) {
-                out.insert(nid, config);
-            }
+pub struct DelimScanMiner;
+
+impl RecognizerMiner for DelimScanMiner {
+    fn inspect(
+        &self,
+        node: &IrNode,
+        node_id: NodeId,
+        ctx: &RecognizerMineCtx,
+        outputs: &mut MineOutputs,
+    ) {
+        let Some((open, middle, close)) = unwrap_wrap(node) else {
+            return;
+        };
+        if let Some(config) = try_detect(open, middle, close, ctx.ir) {
+            outputs.delim_scan_configs.insert(node_id, config);
         }
     }
-
-    super::visit_children_alt(node, |child| walk(child, ir, dag, out));
 }
 
 /// Try to detect a delimiter-scannable `Wrap(open, Repeat(Alt), close)`

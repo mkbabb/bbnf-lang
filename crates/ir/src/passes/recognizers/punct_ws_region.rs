@@ -6,8 +6,9 @@
 //!
 //! - `OptionalWhitespace(Literal(p))` where `p` is a single structural
 //!   byte — `p` with ws around it.
-//! - `Next(OptionalWhitespace(x), Skip(OptionalWhitespace(Literal(p)), y))`
-//!   — `ws p ws` embedded inside a larger sequence.
+//! - `Skip(OptionalWhitespace(Literal(p)), _)` / `Next(_,
+//!   OptionalWhitespace(Literal(p)))` — `ws p ws` embedded inside a
+//!   larger sequence.
 //!
 //! The detected shape lands as `RecognizerShape::PunctWsRegion {
 //! puncts }`. The backend `kernels::punct_ws_region` module emits a
@@ -16,56 +17,50 @@
 
 use smallvec::SmallVec;
 
-use crate::dag::{GrammarDag, NodeId};
+use crate::dag::NodeId;
 use crate::passes::patterns::{
     OnePassGrade, OutputShape, Recognizer, RecognizerRole, RecognizerShape,
 };
 use crate::{GrammarIR, IrNode};
 
 use super::signature::compute_shape_hash;
+use super::{MineOutputs, RecognizerMineCtx, RecognizerMiner};
 
 /// Canonical JSON / dictionary structural punctuation bytes.
 const STRUCTURAL_PUNCTS: &[u8] = b",:{}[]";
 
-pub(super) fn collect(
-    ir: &GrammarIR,
-    dag: &GrammarDag,
-    out: &mut Vec<(NodeId, Recognizer)>,
-) {
-    for rule in &ir.rules {
-        walk(&rule.body, ir, dag, out);
-    }
-}
+pub struct PunctWsRegionMiner;
 
-fn walk(
-    node: &IrNode,
-    ir: &GrammarIR,
-    dag: &GrammarDag,
-    out: &mut Vec<(NodeId, Recognizer)>,
-) {
-    if let Some(puncts) = try_match_punct_ws_region(node, ir) {
-        if let Some(node_id) = dag.node_for(node) {
-            let shape = RecognizerShape::PunctWsRegion {
-                puncts: SmallVec::from_slice(&puncts),
-            };
-            let signature = compute_shape_hash(
-                &shape,
-                OutputShape::SpanOnly,
-                false,
-                OnePassGrade::OnePass,
-                ir,
-            );
-            out.push((
-                node_id,
-                Recognizer {
-                    role: RecognizerRole::Standalone,
-                    shape,
-                    signature,
-                },
-            ));
-        }
+impl RecognizerMiner for PunctWsRegionMiner {
+    fn inspect(
+        &self,
+        node: &IrNode,
+        node_id: NodeId,
+        ctx: &RecognizerMineCtx,
+        outputs: &mut MineOutputs,
+    ) {
+        let Some(puncts) = try_match_punct_ws_region(node, ctx.ir) else {
+            return;
+        };
+        let shape = RecognizerShape::PunctWsRegion {
+            puncts: SmallVec::from_slice(&puncts),
+        };
+        let signature = compute_shape_hash(
+            &shape,
+            OutputShape::SpanOnly,
+            false,
+            OnePassGrade::OnePass,
+            ctx.ir,
+        );
+        outputs.recognizers.push((
+            node_id,
+            Recognizer {
+                role: RecognizerRole::Standalone,
+                shape,
+                signature,
+            },
+        ));
     }
-    super::visit_children_alt(node, |child| walk(child, ir, dag, out));
 }
 
 /// Try to extract the cluster of punctuation bytes from a whitespace-
@@ -95,8 +90,8 @@ fn try_match_punct_ws_region(node: &IrNode, ir: &GrammarIR) -> Option<Vec<u8>> {
 }
 
 /// Extract a single-byte literal from a node, handling the bare
-/// `Literal(sid)` shape plus the one-element `Seq` / trivial
-/// wrappers recognizer mining will see.
+/// `Literal(sid)` shape plus the one-element `Seq` / trivial wrappers
+/// the recognizer mining will see.
 fn extract_single_byte_literal(node: &IrNode, ir: &GrammarIR) -> Option<u8> {
     let sid = match node {
         IrNode::Literal(sid) => *sid,

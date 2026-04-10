@@ -42,11 +42,19 @@ pub struct SepByConfig {
 }
 
 /// How a rule reference should be compiled.
+///
+/// Tranche Z.5: the former `InlineFusion` variant was deleted as a
+/// ghost — it was defined here and consumed in two sites
+/// (`driver/mod.rs` and `driver/reference.rs`, both treating it as
+/// a synonym of `InlineBody`) but no producer ever constructed it.
+/// `@token` rules become `InlineBody`; the actual fusion happens
+/// upstream in `fuse_token_dispatch` (the IR pass that inlines the
+/// body at every dispatch site). Y.13's consumer-invariant test was
+/// extended to `CallStrategy` so the variant cannot drift back in.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum CallStrategy {
     DirectCall,
     InlineBody,
-    InlineFusion,
 }
 
 /// Result type classification for a `Seq` node.

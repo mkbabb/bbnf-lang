@@ -23,7 +23,7 @@ pub(super) fn compile_ref<E: Emitter>(
 
     match strategy {
         CallStrategy::DirectCall => emitter.emit_call(rule_id, rule_name, alloc, ctx),
-        CallStrategy::InlineBody | CallStrategy::InlineFusion => {
+        CallStrategy::InlineBody => {
             // Transparent rules always emit a call — they preserve
             // rule identity across the inline boundary.
             if rule.meta.is_transparent {

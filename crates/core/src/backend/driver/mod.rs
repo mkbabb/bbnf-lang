@@ -245,7 +245,7 @@ pub fn compile_grammar<E: Emitter>(
         let is_entry = rule.id == ir.entry;
         if !is_entry
             && !rule.meta.is_transparent
-            && (strategy == CallStrategy::InlineBody || strategy == CallStrategy::InlineFusion)
+            && strategy == CallStrategy::InlineBody
         {
             continue;
         }

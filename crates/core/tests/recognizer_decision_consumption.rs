@@ -26,6 +26,7 @@
 //! surfaces are compact enough to fit the compile-time approach
 //! without ghost escape hatches.
 
+use bbnf::backend::CallStrategy;
 use bbnf_ir::passes::csp_strategy::{AltMode, RegexEngine, WrapMode};
 
 /// Exhaustive consumer mapping for `AltMode`.
@@ -51,6 +52,23 @@ fn wrap_mode_consumer(mode: WrapMode) -> &'static str {
     }
 }
 
+/// Exhaustive consumer mapping for `CallStrategy` (Tranche Z.5).
+///
+/// Z.5 deleted the former `InlineFusion` ghost variant — it had no
+/// producer despite being defined and pattern-matched in two
+/// `driver` consumer sites that treated it as a synonym of
+/// `InlineBody`. The actual `@token` fusion happens upstream in
+/// `fuse_token_dispatch` (the IR pass that inlines the body at
+/// every dispatch site). The exhaustive match here ensures any
+/// future re-introduction of `InlineFusion` (or any other variant)
+/// must come with a real producer + consumer wire.
+fn call_strategy_consumer(strategy: CallStrategy) -> &'static str {
+    match strategy {
+        CallStrategy::DirectCall => "backend::driver::reference (emit_call path)",
+        CallStrategy::InlineBody => "backend::driver::reference (emit_inline_wrap path)",
+    }
+}
+
 /// Exhaustive consumer mapping for `RegexEngine`.
 ///
 /// Every engine variant is consumed by `scanner_plan::plan_regex_scanner`
@@ -68,6 +86,18 @@ fn regex_engine_consumer(engine: RegexEngine) -> &'static str {
         RegexEngine::FamilyHelper => {
             "generate::regex::emit::scanner_plan (classify fall-through)"
         }
+    }
+}
+
+#[test]
+fn every_call_strategy_has_a_consumer() {
+    let all = [CallStrategy::DirectCall, CallStrategy::InlineBody];
+    for strategy in all {
+        let consumer = call_strategy_consumer(strategy);
+        assert!(
+            !consumer.is_empty(),
+            "CallStrategy::{strategy:?} has no consumer — ghost substrate introduced"
+        );
     }
 }
 

@@ -35,7 +35,7 @@ pub use suffix::CommonSuffixFactor;
 
 use rustc_hash::FxHashMap;
 
-use egraph::{Id, NoAnalysis, RewriteFn};
+use egraph::{Analysis, Id, RewriteFn};
 
 use super::interner::SharedStrings;
 use super::node::GrammarENode;
@@ -56,11 +56,11 @@ use crate::{GrammarIR, RuleId};
 ///   pass. Lifts shared trailing sub-expressions out of Alt branches:
 ///   `Alt([Seq([A, x]), Seq([B, x])]) ≡ Seq([Alt([A, B]), x])`.
 ///   (Tranche Y.11)
-pub fn default_rules(
+pub fn default_rules<A: Analysis<GrammarENode> + 'static>(
     _ir: &GrammarIR,
     pool: &SharedStrings,
     _rule_body_ids: FxHashMap<RuleId, Id>,
-) -> Vec<Box<dyn RewriteFn<GrammarENode, NoAnalysis>>> {
+) -> Vec<Box<dyn RewriteFn<GrammarENode, A>>> {
     vec![
         Box::new(DeduplicateAltBranches),
         Box::new(SupersetAbsorbAlt::new(pool.clone())),

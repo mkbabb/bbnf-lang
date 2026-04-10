@@ -1,14 +1,14 @@
 //! Insert an `IrNode` tree into an e-graph, returning the root e-class `Id`.
 
-use egraph::{EGraph, Id, NoAnalysis};
+use egraph::{Analysis, EGraph, Id};
 
 use super::node::{ENodeTdArm, GrammarENode};
 use crate::{GrammarIR, IrNode};
 
 /// Insert every rule's body into the e-graph. Returns the vector of root
 /// e-class Ids, one per rule in rule order.
-pub fn insert_ir(
-    egraph: &mut EGraph<GrammarENode, NoAnalysis>,
+pub fn insert_ir<A: Analysis<GrammarENode>>(
+    egraph: &mut EGraph<GrammarENode, A>,
     ir: &GrammarIR,
 ) -> Vec<Id> {
     ir.rules
@@ -18,8 +18,8 @@ pub fn insert_ir(
 }
 
 /// Recursively insert an `IrNode` and return its e-class Id.
-pub fn insert_node(
-    egraph: &mut EGraph<GrammarENode, NoAnalysis>,
+pub fn insert_node<A: Analysis<GrammarENode>>(
+    egraph: &mut EGraph<GrammarENode, A>,
     node: &IrNode,
 ) -> Id {
     let enode = match node {

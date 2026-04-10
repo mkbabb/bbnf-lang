@@ -20,8 +20,9 @@
 
 use rustc_hash::FxHashMap;
 
-use egraph::{EGraph, Extractor, Id, NoAnalysis};
+use egraph::{EGraph, Extractor, Id};
 
+use super::analysis::GrammarAnalysis;
 use super::cost::GrammarCostModel;
 use super::node::GrammarENode;
 use crate::{AltBranch, FnId, GrammarIR, IrNode, RuleId, StringId};
@@ -31,7 +32,7 @@ use crate::{AltBranch, FnId, GrammarIR, IrNode, RuleId, StringId};
 /// `build_and_saturate` step; the cost model guides best-node
 /// selection.
 pub fn write_back_optimized(
-    egraph: &EGraph<GrammarENode, NoAnalysis>,
+    egraph: &EGraph<GrammarENode, GrammarAnalysis>,
     ir: &mut GrammarIR,
     rule_body_ids: &FxHashMap<RuleId, Id>,
     cost: &GrammarCostModel,
@@ -87,11 +88,11 @@ pub fn write_back_optimized(
 /// alias-style rewrites), producing a self-cycle in the extracted
 /// IR.
 fn materialize_best_at_root(
-    egraph: &EGraph<GrammarENode, NoAnalysis>,
+    egraph: &EGraph<GrammarENode, GrammarAnalysis>,
     extractor: &Extractor<
         '_,
         GrammarENode,
-        NoAnalysis,
+        GrammarAnalysis,
         GrammarCostModel,
     >,
     canonical: Id,
@@ -122,7 +123,7 @@ fn materialize_best_at_root(
 /// mapping, cross-rule references are not preserved — use
 /// [`write_back_optimized`] for full IR reconstruction.
 pub fn extract_ir_node(
-    egraph: &EGraph<GrammarENode, NoAnalysis>,
+    egraph: &EGraph<GrammarENode, GrammarAnalysis>,
     cost: &GrammarCostModel,
     root: Id,
 ) -> Option<IrNode> {
@@ -140,11 +141,11 @@ pub fn extract_ir_node(
 /// (including self-recursion). Only non-root classes descend into
 /// their best node via [`materialize_best`].
 fn rebuild(
-    egraph: &EGraph<GrammarENode, NoAnalysis>,
+    egraph: &EGraph<GrammarENode, GrammarAnalysis>,
     extractor: &Extractor<
         '_,
         GrammarENode,
-        NoAnalysis,
+        GrammarAnalysis,
         GrammarCostModel,
     >,
     id: Id,
@@ -180,11 +181,11 @@ fn rebuild(
 /// e-node for it via the extractor and convert it into an `IrNode`,
 /// descending into children via [`rebuild`].
 fn materialize_best(
-    egraph: &EGraph<GrammarENode, NoAnalysis>,
+    egraph: &EGraph<GrammarENode, GrammarAnalysis>,
     extractor: &Extractor<
         '_,
         GrammarENode,
-        NoAnalysis,
+        GrammarAnalysis,
         GrammarCostModel,
     >,
     canonical: Id,
@@ -200,11 +201,11 @@ fn materialize_best(
 /// [`rebuild`]. This is the pure node-to-IrNode translation — no
 /// class-lookup or visiting bookkeeping (the caller owns those).
 fn materialize_node(
-    egraph: &EGraph<GrammarENode, NoAnalysis>,
+    egraph: &EGraph<GrammarENode, GrammarAnalysis>,
     extractor: &Extractor<
         '_,
         GrammarENode,
-        NoAnalysis,
+        GrammarAnalysis,
         GrammarCostModel,
     >,
     best: GrammarENode,

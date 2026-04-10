@@ -31,7 +31,7 @@
 
 use rustc_hash::FxHashMap;
 
-use egraph::{EGraph, Id, NoAnalysis, Rewrite};
+use egraph::{Analysis, EGraph, Id, Rewrite};
 
 use crate::egraph::node::GrammarENode;
 
@@ -47,14 +47,14 @@ pub struct SuffixMatch {
     pub suffix_id: Id,
 }
 
-impl Rewrite<GrammarENode, NoAnalysis> for CommonSuffixFactor {
+impl<A: Analysis<GrammarENode>> Rewrite<GrammarENode, A> for CommonSuffixFactor {
     type Match = SuffixMatch;
 
     fn name(&self) -> &str {
         "common-suffix-factor"
     }
 
-    fn search(&self, egraph: &EGraph<GrammarENode, NoAnalysis>) -> Vec<(Id, Self::Match)> {
+    fn search(&self, egraph: &EGraph<GrammarENode, A>) -> Vec<(Id, Self::Match)> {
         let mut matches = Vec::new();
         for class in egraph.classes() {
             for node in class.iter() {
@@ -117,7 +117,7 @@ impl Rewrite<GrammarENode, NoAnalysis> for CommonSuffixFactor {
 
     fn apply(
         &self,
-        egraph: &mut EGraph<GrammarENode, NoAnalysis>,
+        egraph: &mut EGraph<GrammarENode, A>,
         class_id: Id,
         m: Self::Match,
     ) {

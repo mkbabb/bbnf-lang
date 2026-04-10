@@ -23,10 +23,16 @@
 //!
 //! Wraps the general-purpose `egraph` crate with a grammar-specific
 //! e-node type (`GrammarENode`), rewrite rules (`rules/`), and the
-//! cost model (`cost::GrammarCostModel`). The substrate analysis is
-//! `egraph::NoAnalysis` — no per-class lattice data is consumed by
-//! any rule, cost model, or extractor.
+//! cost model (`cost::GrammarCostModel`).
+//!
+//! Tranche AA.2 installs a concrete `GrammarAnalysis` substrate
+//! carrying per-class `EClassFacts` (first_set, nullable, width,
+//! literal_sid, regex_sid). Downstream phases of Tranche AA (AA.5
+//! extraction→CSP bridge, AA.11 structural bitmap miner) read from
+//! `egraph.class(id).data` instead of walking subtrees at search
+//! time.
 
+pub mod analysis;
 mod build_egraph;
 mod cost;
 mod interner;
@@ -34,13 +40,14 @@ pub mod node;
 pub mod rules;
 mod write_back;
 
+pub use analysis::{EClassFacts, GrammarAnalysis, WidthBound};
 pub use cost::GrammarCostModel;
 pub use interner::SharedStrings;
 pub use node::GrammarENode;
 pub use rules::default_rules;
 pub use write_back::{extract_ir_node, write_back_optimized};
 
-use egraph::{EGraph, NoAnalysis};
+use egraph::EGraph;
 
 use crate::GrammarIR;
 
@@ -53,7 +60,7 @@ use crate::GrammarIR;
 pub fn build_and_saturate(
     ir: &GrammarIR,
 ) -> (
-    EGraph<GrammarENode, NoAnalysis>,
+    EGraph<GrammarENode, GrammarAnalysis>,
     SharedStrings,
     rustc_hash::FxHashMap<crate::RuleId, egraph::Id>,
 ) {
@@ -72,7 +79,7 @@ pub fn build_and_saturate(
         .iter()
         .map(|r| crate::types::count_nodes(&r.body))
         .sum();
-    let mut egraph: EGraph<GrammarENode, NoAnalysis> =
+    let mut egraph: EGraph<GrammarENode, GrammarAnalysis> =
         EGraph::with_capacity(expected_nodes);
 
     let rule_root_ids = build_egraph::insert_ir(&mut egraph, ir);
@@ -88,7 +95,7 @@ pub fn build_and_saturate(
         .collect();
 
     let rules = default_rules(ir, &pool, rule_body_ids.clone());
-    let rule_refs: Vec<&dyn egraph::RewriteFn<GrammarENode, NoAnalysis>> =
+    let rule_refs: Vec<&dyn egraph::RewriteFn<GrammarENode, GrammarAnalysis>> =
         rules.iter().map(|r| r.as_ref()).collect();
 
     // Read scheduler caps from the per-compile cost config — single

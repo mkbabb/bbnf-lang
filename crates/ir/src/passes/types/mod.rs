@@ -205,10 +205,16 @@ pub fn project_types(ir: &mut GrammarIR) {
     }
 
     // Phase 5: Sub-variant collection using the solved TypeMap.
-    let rule_names: HashMap<RuleId, String> = ir
+    //
+    // Tranche X phase 4: collect borrowed `&str` rule names instead
+    // of one `String` per rule. Pre-X this allocated N strings per
+    // compile via `to_string()`. The names live in `ir.strings`
+    // which is not mutated during sub-variant collection, so the
+    // borrows are valid for the rest of the function body.
+    let rule_names: FxHashMap<RuleId, &str> = ir
         .rules
         .iter()
-        .map(|r| (r.id, ir.get_string(r.name).to_string()))
+        .map(|r| (r.id, ir.get_string(r.name)))
         .collect();
 
     let mut raw_sub_variants: HashMap<RuleId, Vec<subvariants::RawSubVariant>> = HashMap::new();

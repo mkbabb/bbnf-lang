@@ -14,20 +14,25 @@ use super::ir_types::{IrCodegenCtx, ParserAttributes, type_desc_to_syn};
 pub fn generate_enum(ctx: &IrCodegenCtx<'_>) -> TokenStream {
     let enum_ident = &ctx.enum_ident;
 
-    // Rule variants: one per non-transparent rule.
-    let debug_info: Vec<String> = ctx
-        .ir
-        .rules
-        .iter()
-        .map(|r| {
-            format!(
-                "{}: trans={}",
-                ctx.ir.get_string(r.name),
-                r.meta.is_transparent
-            )
-        })
-        .collect();
+    // Tranche X phase 4: build the per-rule debug string lazily,
+    // only when the panic actually fires. Pre-X this allocated one
+    // String per rule on every codegen call (CSS L4 has hundreds of
+    // rules) — `alloc::fmt::format_inner` showed at 4.32% self on
+    // `compile_json` per the post-W samply profile, and the
+    // "all-transparent" panic only fires on a malformed grammar.
     if ctx.ir.rules.iter().all(|r| r.meta.is_transparent) && !ctx.ir.rules.is_empty() {
+        let debug_info: Vec<String> = ctx
+            .ir
+            .rules
+            .iter()
+            .map(|r| {
+                format!(
+                    "{}: trans={}",
+                    ctx.ir.get_string(r.name),
+                    r.meta.is_transparent
+                )
+            })
+            .collect();
         panic!(
             "All {} rules are transparent: {}",
             ctx.ir.rules.len(),

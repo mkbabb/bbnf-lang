@@ -138,14 +138,14 @@ fn collect_sub_variants_walk(
 /// many nested heterogeneous alts contain Span branches. Since the coercion is
 /// always `Box::new(Enum::Variant(x))` regardless of which Span sub-variant
 /// name is chosen, cross-rule duplication is harmless.
-pub(super) fn validate_sub_variant_uniqueness_raw(
-    all_sub_variants: &HashMap<RuleId, Vec<RawSubVariant>>,
-    rule_names: &HashMap<RuleId, String>,
+pub(super) fn validate_sub_variant_uniqueness_raw<'a>(
+    all_sub_variants: &'a HashMap<RuleId, Vec<RawSubVariant>>,
+    rule_names: &'a rustc_hash::FxHashMap<RuleId, &'a str>,
 ) {
     let mut type_to_origin: Vec<(&TypeDesc, &str, &str)> = Vec::new();
 
     for (rule_id, variants) in all_sub_variants {
-        let rule_name = rule_names.get(rule_id).map(|s| s.as_str()).unwrap_or("?");
+        let rule_name = rule_names.get(rule_id).copied().unwrap_or("?");
         let mut seen_in_rule: Vec<&TypeDesc> = Vec::new();
         for sv in variants {
             // Skip Span-typed sub-variants: cross-rule Span duplicates are harmless.

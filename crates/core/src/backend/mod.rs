@@ -5,6 +5,7 @@ mod emitter;
 pub mod kernels;
 pub mod patterns;
 pub mod prettify;
+pub mod recognizer_plan;
 pub mod rust;
 pub mod strategy;
 pub mod ts;
@@ -17,5 +18,8 @@ pub use driver::analysis::{
     prepare_grammar,
 };
 pub use emitter::Emitter;
+pub use recognizer_plan::{
+    EmitHint, RecognizerFamily, ScannerPlanRecord, plan_for_id, scanner_plan_for,
+};
 pub use types::*;
 pub use util::unescape_literal;

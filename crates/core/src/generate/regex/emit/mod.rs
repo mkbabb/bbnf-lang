@@ -27,24 +27,28 @@ use quote::quote;
 
 /// Unified regex emission entry point.
 ///
-/// Solves the regex strategy (via [`solve_regex_strategy`]), then
-/// dispatches to the tier-specific emitter. The strategy enum is both
-/// the planner's output and the diagnostic type — no separate audit
-/// path exists.
+/// Walks the tier ladder in order and returns the first emitter that
+/// succeeds. There is no decide-then-re-emit dance: each emitter is the
+/// sole authority on whether it can handle the pattern, so the planner
+/// and emitter cannot disagree. The [`RegexStrategy`] enum remains as a
+/// pure diagnostic type for `solve_regex_strategy`'s callers (regex
+/// audit, debug output) and is not consulted here.
 pub fn emit_regex(pattern: &str, opts: &EmitOpts) -> TokenStream {
-    match solve_regex_strategy(pattern, opts) {
-        RegexStrategy::FastPath(_) | RegexStrategy::FastPathFused(_) => {
-            emit_regex_fast_path(pattern, opts)
-                .expect("solve_regex_strategy returned FastPath — emission must succeed")
-        }
-        RegexStrategy::HirInline => hir::try_emit_regex_inline(pattern)
-            .expect("solve_regex_strategy returned HirInline — emission must succeed"),
-        RegexStrategy::DfaTierA { .. } | RegexStrategy::DfaTierB { .. } => {
-            dfa::try_emit_dfa_inline(pattern, opts)
-                .expect("solve_regex_strategy returned DfaTier — emission must succeed")
-        }
-        RegexStrategy::Unsupported => emit_regex_unsupported(pattern),
+    // Tier 1: fast-path scanner — shared helpers, SIMD positive classes,
+    // generalized char ranges, negated char-class memchr/nibble-LUT.
+    if let Some(tokens) = emit_regex_fast_path(pattern, opts) {
+        return tokens;
     }
+    // Tier 2: HIR-based inline byte operations.
+    if let Some(tokens) = hir::try_emit_regex_inline(pattern) {
+        return tokens;
+    }
+    // Tier 3: DFA-compiled decision tree or static transition table.
+    if let Some(tokens) = dfa::try_emit_dfa_inline(pattern, opts) {
+        return tokens;
+    }
+    // Tier 4: unsupported — compile-time error.
+    emit_regex_unsupported(pattern)
 }
 
 /// Emit a compile-time error for regex patterns unsupported by all tiers.
@@ -208,15 +212,19 @@ pub enum RegexStrategy {
 
 /// Solve the emission strategy for a regex pattern.
 ///
-/// Probes each tier in order; the first that applies determines the
-/// strategy. The DFA tier is split into A (decision-tree) and B
-/// (table-lookup) by `opts.cost.decision_tree_max_states`.
+/// Probes each tier in order with the caller's `opts`; the first that
+/// applies determines the strategy. The DFA tier is split into A
+/// (decision-tree) and B (table-lookup) by
+/// `opts.cost.decision_tree_max_states`.
 ///
-/// This is the canonical planner used by both [`emit_regex`] and the
-/// grammar-wide regex audit test. It replaces the former
-/// `audit_regex_pattern` + `RegexTier` pair.
+/// This is a pure classifier for the regex audit test and debug output
+/// paths. [`emit_regex`] does NOT consult it — the emitter walks the
+/// same tier ladder independently and is the sole authority on whether
+/// it can handle a pattern. The planner and emitter share tier
+/// predicates (`emit_regex_fast_path` / `hir::try_emit_regex_inline` /
+/// DFA compilation) so they cannot disagree on any pattern.
 pub fn solve_regex_strategy(pattern: &str, opts: &EmitOpts) -> RegexStrategy {
-    if emit_regex_direct_call(pattern).is_some() {
+    if emit_regex_fast_path(pattern, opts).is_some() {
         let kind = classify_fast_path(pattern, opts);
         return if opts.fuse_numbers && matches!(opts.classify_regex(pattern), RegexClass::JsonNumber)
         {

@@ -12,6 +12,17 @@
 //! plumbed but not yet active — every call site emits inline. The
 //! follow-up tranche enables hoisting once the V.6 CSP cost model is
 //! tuned.
+//!
+//! Each kernel is a **pure** emitter: its inputs are pre-computed by
+//! the driver (bytes, `CharSet128`s, TokenStreams, configs from the
+//! IR sidecars `ir.delim_scan_configs`, `ir.key_dispatch_configs`,
+//! `ir.node_facts`, etc.), and the kernel body only constructs the
+//! `TokenStream` to splice in. No kernel reaches into `&GrammarIR`
+//! or walks the IR tree — per the Tranche AF.1 invariant, all facts
+//! flow from the cache through the caller, and the kernels never
+//! recompute anything per-emission.
+
+mod charset_shapes;
 
 pub mod balanced_wrap;
 pub mod charclass;
@@ -21,4 +32,3 @@ pub mod number;
 pub mod prefix_class;
 pub mod punct_ws_region;
 pub mod quoted_string;
-pub mod sep_list;

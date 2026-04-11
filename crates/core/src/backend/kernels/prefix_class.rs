@@ -12,10 +12,21 @@
 //!
 //! Any other tail shape returns `None` so the generalized emitter keeps
 //! handling it inline.
+//!
+//! Tranche AF.1 Wave 3E: the tail-shape classification helpers
+//! (`matches_set` + canonical byte set constants) moved to the shared
+//! `kernels::charset_shapes` module — the same classifier is used by
+//! `kernels::charclass`, and keeping one copy prevents the two
+//! kernels from drifting on the canonical shape definitions. The
+//! legacy `emit_call` wrapper that fell back to `scan_ident` on
+//! shape miss was deleted — zero production callers, unreachable
+//! fallback.
 
 use bbnf_ir::CharSet128;
 use proc_macro2::TokenStream;
 use quote::quote;
+
+use super::charset_shapes::{matches_set, ALNUM, DIGITS, HEX};
 
 /// Tail class shape for prefix-class routing.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -103,40 +114,3 @@ pub fn emit_call_opt(prefix: &[u8], tail_class: &CharSet128) -> Option<TokenStre
     })
 }
 
-/// Legacy stable-surface wrapper retained for the V.10 consumer-invariant
-/// grep test. Falls back to the unconditional-`scan_ident` form when the
-/// tail shape isn't recognized — callers that need actual routing should
-/// use `emit_call_opt`.
-pub fn emit_call(prefix: &[u8], tail_class: &CharSet128) -> TokenStream {
-    emit_call_opt(prefix, tail_class)
-        .unwrap_or_else(|| quote! { ::parse_that::scan_ident(state) })
-}
-
-// ── Canonical tail charsets ────────────────────────────────────────────
-
-const DIGITS: [u8; 10] = [b'0', b'1', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9'];
-
-const ALNUM: [u8; 62] = [
-    b'0', b'1', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9', b'A', b'B', b'C', b'D', b'E',
-    b'F', b'G', b'H', b'I', b'J', b'K', b'L', b'M', b'N', b'O', b'P', b'Q', b'R', b'S', b'T',
-    b'U', b'V', b'W', b'X', b'Y', b'Z', b'a', b'b', b'c', b'd', b'e', b'f', b'g', b'h', b'i',
-    b'j', b'k', b'l', b'm', b'n', b'o', b'p', b'q', b'r', b's', b't', b'u', b'v', b'w', b'x',
-    b'y', b'z',
-];
-
-const HEX: [u8; 22] = [
-    b'0', b'1', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9', b'a', b'b', b'c', b'd', b'e',
-    b'f', b'A', b'B', b'C', b'D', b'E', b'F',
-];
-
-fn matches_set(chars: &CharSet128, expected: &[u8]) -> bool {
-    if chars.len() != expected.len() {
-        return false;
-    }
-    for &b in expected {
-        if !chars.has(b) {
-            return false;
-        }
-    }
-    true
-}

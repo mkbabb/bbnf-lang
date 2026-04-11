@@ -107,8 +107,14 @@ fn top_and_bottom() {
 /// Build a minimal `GrammarIR` from a handwritten rule list. The
 /// string table is pre-populated with rule names so the caller can
 /// refer to them by `StringId`.
+///
+/// `ir.entry` is set to `u32::MAX` — a sentinel that does not match
+/// any rule's id — so the AF.0 "entry rule always MustTape" pin does
+/// not fire for any of the rules under test. Tests that exercise
+/// entry-rule semantics explicitly should override `ir.entry` after
+/// calling `make_ir`.
 fn make_ir(rules: Vec<IrRule>, strings: Vec<String>) -> GrammarIR {
-    let entry = rules.last().map(|r| r.id).unwrap_or(0);
+    let entry = u32::MAX;
     let mut ir = GrammarIR {
         rules,
         entry,

@@ -26,7 +26,10 @@ use bbnf_ir::{
 };
 
 fn make_ir(rules: Vec<IrRule>, strings: Vec<String>) -> GrammarIR {
-    let entry = rules.last().map(|r| r.id).unwrap_or(0);
+    // Sentinel entry: `u32::MAX` does not match any rule id, so the
+    // AF.0 "entry rule always MustTape" pin does not fire. Tests that
+    // need entry-rule semantics should override `ir.entry` directly.
+    let entry = u32::MAX;
     let mut ir = GrammarIR {
         rules,
         entry,

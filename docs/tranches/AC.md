@@ -38,11 +38,16 @@ Every rule in every generated parser is emitted as:
 ```rust
 fn __rule<'a>(
     state: &mut ::parse_that::ParserState<'a>,
-    tape: &mut ::bbnf_tape::TapeBuilder,
-) -> ::std::option::Option<::bbnf_tape::TapeOffset>
+    tape: &mut ::bbnf::runtime::tape::TapeBuilder,
+) -> ::std::option::Option<::bbnf::runtime::tape::TapeOffset>
 ```
 
-And the public API is a `Root` trait with a GAT view type, one
+The `::bbnf::runtime::tape` path is a stable re-export of the
+`bbnf-tape` leaf crate, so downstream consumers of
+`#[derive(Parser)]` only need `bbnf` in their dependency list
+(not a direct `bbnf-tape` dep).
+
+The public API is a `Root` trait with a GAT view type, one
 `Parsed<Grammar>` marker-type per grammar, and a `.view()` method that
 lends a cursor-backed root view bound by `&self`:
 
@@ -50,8 +55,10 @@ lends a cursor-backed root view bound by `&self`:
 // In bbnf::runtime:
 pub trait Root {
     type View<'tape>;
-    fn make_view(tape: &::bbnf_tape::Tape, root: ::bbnf_tape::TapeOffset)
-        -> Self::View<'_>;
+    fn make_view(
+        tape: &::bbnf::runtime::tape::Tape,
+        root: ::bbnf::runtime::tape::TapeOffset,
+    ) -> Self::View<'_>;
 }
 
 // In generated code:
@@ -65,8 +72,12 @@ impl Grammar {
 
 impl ::bbnf::runtime::Root for Grammar {
     type View<'tape> = GrammarRootView<'tape>;
-    fn make_view(tape: &::bbnf_tape::Tape, root: ::bbnf_tape::TapeOffset)
-        -> Self::View<'_> { GrammarRootView::new(tape, root) }
+    fn make_view(
+        tape: &::bbnf::runtime::tape::Tape,
+        root: ::bbnf::runtime::tape::TapeOffset,
+    ) -> Self::View<'_> {
+        GrammarRootView::new(tape, root)
+    }
 }
 ```
 

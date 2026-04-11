@@ -58,10 +58,13 @@ pub struct CostWeights {
     // ── Call / inline decision weights (Tranche AF.2) ──────────────
     //
     // These knobs drive the backend driver's inline-vs-call decision
-    // and the CSP strategy solver's per-rule strategy choice. Before
-    // AF.2 they lived as hardcoded constants in the driver and in a
-    // separate `StrategyCostKnobs` struct on the CSP side; AF.2
-    // consolidates them here so every consumer reads the same values.
+    // and the AF.3–AF.5 follow-ups (cross-rule CSP, per-rule
+    // `EmissionTier` decoder, Tier B emitter). Tranche Z.6 already
+    // consolidated the CSP strategy solver's `dispatch_bonus` read
+    // into the shared `CostWeights`; AF.2 extends the struct with
+    // the remaining call / inline / dispatch / tape-push / prettify
+    // / cross-module dimensions so every cost computation in the
+    // compiler reads from a single source of truth.
 
     /// Fixed cost of a rule-function call. Applied to every
     /// `CallStrategy::DirectCall` site; does not scale with body

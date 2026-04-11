@@ -167,34 +167,44 @@ codegen hot loops.
 ## AF.2 — Universal cost model
 
 One `CostWeights` struct, one source of truth, every cost computation
-reads from it. The grammar tier, HIR tier, CSP solver, and backend
-driver all share the same weights.
+reads from it. The grammar tier, HIR tier, CSP strategy solver, and
+backend driver all share the same weights.
 
 `crates/egraph/src/cost_weights.rs` already defines `CostWeights` as
 the shared substrate; both `GrammarCostModel` and
-`RegexExtractionCost` embed the struct. The gap is the consumers: the
-CSP solver reads from a separate `StrategyCostKnobs` struct that AC.2
-introduced as a stopgap, and the backend driver reads hardcoded
-constants for inline-vs-call decisions. Both consume the same
-dimensions — call overhead, allocation cost, dispatch cost, tape-push
-cost — and should consult the same weights.
+`RegexExtractionCost` embed the struct. Tranche Z.6 consolidated the
+CSP strategy solver's `dispatch_bonus` read into the shared weights
+(`cfg.egraph.weights.dispatch_bonus`, no separate knob struct). AF.2
+finishes the job: it extends `CostWeights` with the call / inline /
+dispatch / tape-push / prettify / cross-module dimensions, migrates
+the backend driver's inline-vs-call analysis (`backend/rust/analysis/
+inline.rs::CostBudgetConstraint`) from hardcoded constants to
+`CostWeights`-derived budgets, and ships the
+`cost_weights_unified.rs` contract gate — a test that patches the
+weights to extreme values and asserts every consumer changes its
+decision proportionally.
 
-AF.2 extends `CostWeights` with the missing dimensions:
-`call_overhead`, `inline_body_size_penalty`, `tape_push`, `slab_alloc`,
-`dispatch_branch`, `dispatch_table`, `prettify_emission`,
-`cross_module_coercion`. Defaults match current hardcoded values;
-behavior is unchanged at the dimension level. `StrategyCostKnobs` is
-deleted; every call site reads `ir.cost_weights` directly. The driver
-reads `ir.cost_weights` for inline-vs-call cost decisions; hardcoded
-constants are deleted. The `cross_module_coercion` weight (one
-`push_compound` + one typed projection cost) is pre-seed for AG's
-module substrate, so AG can consume it without needing a fresh
+The new dimensions: `call_overhead`, `inline_body_size_penalty`,
+`tape_push`, `slab_alloc`, `dispatch_branch`, `dispatch_table`,
+`prettify_emission`, `cross_module_coercion`. Defaults are calibrated
+so pre-AF.2 behavior is preserved at the dimension level — every
+consumer that used a hardcoded constant before AF.2 sees the same
+decision after the migration. The `cross_module_coercion` weight
+(one `push_compound` + one typed projection cost) is pre-seed for
+AG's module substrate, so AG can consume it without needing a fresh
 dimension addition.
 
-A `cargo test -p bbnf-ir --test cost_weights_unified` gate patches the
-weights to extreme values and asserts every consumer changes its
-decision proportionally. The test is the contract that says the cost
-model is the single source of truth.
+Nine of the gate's tests are live at AF.2 landing — they exercise
+`dispatch_bonus` propagation through `GrammarCostModel`,
+`RegexExtractionCost`, and the grammar-tier e-graph extraction. Eight
+more tests are `#[ignore]`-gated pending AF.3 / AF.5 consumers:
+`call_overhead` and `inline_body_size_penalty` flip tests become live
+once AF.3's cross-rule CSP wires them; `tape_push` / `prettify_emission`
+flip tests become live once AF.5's `decode_emission_tier` reads
+`CostWeights` instead of the parallel `cost_config.mat_*` weights;
+`cross_module_coercion` becomes live when AG ships. Each ignored
+test carries a specific TODO identifying the exact consumer that
+must wire the weight.
 
 ## AF.3 — Cross-rule CSP via Y.5 UnionFind
 

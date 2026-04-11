@@ -140,6 +140,7 @@ fn make_ir(rules: Vec<IrRule>, strings: Vec<String>) -> GrammarIR {
         cost_config: CostConfig::default(),
         type_desc_interner: TypeDescInterner::new(),
         materialization: HashMap::new(),
+        emission_tier: HashMap::new(),
     };
     bbnf_ir::dag::ensure_dag(&mut ir);
     ir

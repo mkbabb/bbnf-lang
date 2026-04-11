@@ -24,8 +24,8 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-const COMPILE_RS: &str = include_str!("../../core/src/pipeline/compile.rs");
-const DAG_MOD_RS: &str = include_str!("../src/dag/mod.rs");
+const COMPILE_RS: &str = include_str!("../../../core/src/pipeline/compile.rs");
+const DAG_MOD_RS: &str = include_str!("../../src/dag/mod.rs");
 
 /// Count only fully-qualified call sites — `GrammarDag::from_ir(...)`
 /// with a paren — not comment / doc mentions and not the function

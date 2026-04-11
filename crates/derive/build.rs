@@ -1,13 +1,17 @@
 use std::collections::VecDeque;
-use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 
 /// Build script for bbnf-derive.
 ///
-/// Emits a `BBNF_DERIVE_BUILD_ID` derived from the source trees that affect
-/// generated parser output. This makes the proc-macro cache key change when
-/// the derive crate, shared pipeline, or IR/codegen support changes, even if
-/// the on-disk `.bbnf-cache` survives between builds.
+/// Emits `cargo:rerun-if-changed=...` directives over the source trees that
+/// affect generated parser output, so cargo re-runs the proc-macro whenever
+/// the derive crate, shared pipeline, or IR/codegen support changes.
+///
+/// This script is a cargo-reload signal ONLY. It does NOT export any env var
+/// that feeds the proc-macro cache key — cache invalidation across schema
+/// changes is handled by the manually-bumped `BBNF_SCHEMA_VERSION` const in
+/// `src/lib.rs`. Splitting these two concerns means unrelated edits to the
+/// derive/core/ir source trees no longer bust the on-disk `.bbnf-cache`.
 fn main() {
     let manifest_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
     let tracked_roots = [
@@ -26,19 +30,9 @@ fn main() {
     }
     files.sort();
 
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
     for file in files {
         println!("cargo:rerun-if-changed={}", file.display());
-        file.hash(&mut hasher);
-        if let Ok(bytes) = std::fs::read(&file) {
-            bytes.hash(&mut hasher);
-        }
     }
-
-    println!(
-        "cargo:rustc-env=BBNF_DERIVE_BUILD_ID={:016x}",
-        hasher.finish()
-    );
 }
 
 fn collect_files(root: &Path, out: &mut Vec<PathBuf>) {

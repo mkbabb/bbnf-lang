@@ -24,15 +24,25 @@ use parse_that::utils::get_cargo_root_path;
 //   - All grammar file contents (entry + transitive imports)
 //   - Parser attributes (slab, span, prettify, skip_recover, etc.)
 //   - The struct ident name (determines generated type names)
-//   - The bbnf crate version (invalidates on compiler changes)
-
-/// Version tag baked into the cache key to invalidate on compiler changes.
-///
-/// Combines the crate version with a source fingerprint emitted by `build.rs`
-/// over the derive/runtime codegen crates. This invalidates stale proc-macro
-/// cache entries when the shared pipeline or codegen implementation changes,
-/// even if the on-disk `.bbnf-cache` survives between builds.
-const CACHE_VERSION: &str = concat!(env!("CARGO_PKG_VERSION"), "-", env!("BBNF_DERIVE_BUILD_ID"),);
+//   - The bbnf crate version (invalidates on `Cargo.toml` version bumps)
+//   - The schema version below (invalidates on breaking IR/codegen changes)
+//
+// Cache invalidation is split into two tiers so unrelated edits to the
+// derive/core/ir source trees do NOT bust the on-disk `.bbnf-cache`:
+//
+//   1. Schema version (`BBNF_SCHEMA_VERSION`, this file) — manually bumped
+//      atomically with breaking changes to `GrammarIR`, `TypeDesc`, or the
+//      Rust codegen output shape. The bumping commit must document the break.
+//   2. Cargo rerun-if-changed (`build.rs`) — emits change signals for the
+//      tracked source trees so cargo re-runs the proc-macro on edits, but
+//      does NOT export any env var that feeds the cache key.
+//
+// Bump `BBNF_SCHEMA_VERSION` in the same commit as any breaking change to:
+//   - `bbnf_ir::GrammarIR` field shape, semantics, or invariants
+//   - `bbnf_ir::TypeDesc` projection rules
+//   - The Rust codegen output shape (enum naming, method signatures,
+//     monolithic emitter contracts)
+const BBNF_SCHEMA_VERSION: u64 = 1;
 
 /// Recursively collect all grammar file contents for hashing.
 ///
@@ -96,8 +106,10 @@ fn compute_cache_key(paths: &[PathBuf], attrs: &ParserAttributes, ident_name: &s
 
     let mut hasher = std::hash::DefaultHasher::new();
 
-    // Hash version tag.
-    CACHE_VERSION.hash(&mut hasher);
+    // Hash version tags. The schema version invalidates on breaking IR /
+    // codegen changes; the crate version invalidates on `Cargo.toml` bumps.
+    BBNF_SCHEMA_VERSION.hash(&mut hasher);
+    env!("CARGO_PKG_VERSION").hash(&mut hasher);
 
     // Hash all grammar file contents.
     for (path, content) in &all_contents {

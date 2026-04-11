@@ -9,3 +9,16 @@ codegen-units = 1
 debug = true
 strip = false
 split-debuginfo = "packed"
+
+[profile.dev]
+incremental = true
+codegen-units = 256
+
+[profile.dev.package.bbnf-ir]
+opt-level = 1
+
+[profile.dev.package.csp-solver]
+opt-level = 1
+
+[profile.dev.package.parse_that]
+opt-level = 1

@@ -4,7 +4,7 @@ use bbnf_derive::Parser;
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 #[derive(Parser)]
-#[parser(path = "../../grammar/json/json.bbnf", slab)]
+#[parser(path = "../../grammar/json/json.bbnf")]
 struct JsonParser;
 
 fn bench_file(name: &str) {
@@ -29,32 +29,29 @@ fn bench_file(name: &str) {
     };
     let len = input.len();
 
-    // Cold span — single parse, fresh parser construction
-    let start = std::time::Instant::now();
-    let span_p = JsonParser::value();
-    let _ = std::hint::black_box(span_p.parse(std::hint::black_box(&input)));
-    let span_cold = start.elapsed();
+    // Warm-up — single parse to prime caches and validate the input.
+    let _ = std::hint::black_box(
+        JsonParser::parse(std::hint::black_box(&input)).expect("parse failed"),
+    );
 
-    // Slab — fresh BumpSlab + parser per iteration
+    // Cold — fresh tape + parser state per iteration. Tranche AC.2
+    // collapsed the former span/slab split into a single tape-first
+    // path; the parser returns an owning `Parsed<JsonParser>` whose
+    // tape is allocated inside the generated `parse` entry point.
     let n = if len > 1_000_000 { 5 } else { 20 };
     let start = std::time::Instant::now();
     for _ in 0..n {
-        let ctx = __JsonParserEnumCtx::with_capacity(input.len() / 32);
-        let slab_parser = JsonParser::value();
-        let ast = slab_parser
-            .parse_with_context(std::hint::black_box(&input), &ctx)
-            .unwrap();
-        let _ = std::hint::black_box(ast as *const _);
+        let parsed = JsonParser::parse(std::hint::black_box(&input)).expect("parse failed");
+        let _ = std::hint::black_box(&parsed);
     }
-    let slab = start.elapsed() / n as u32;
+    let cold = start.elapsed() / n as u32;
 
     let mb = |d: std::time::Duration| len as f64 / d.as_secs_f64() / 1e6;
     println!(
-        "{:25} {:>8}B  span_cold:{:>6.0}  slab:{:>6.0} MB/s",
+        "{:25} {:>8}B  cold:{:>6.0} MB/s",
         name,
         len,
-        mb(span_cold),
-        mb(slab)
+        mb(cold)
     );
 }
 

@@ -1,9 +1,12 @@
 use bbnf_derive::Parser;
+
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 #[derive(Parser)]
-#[parser(path = "../../grammar/json/json.bbnf", slab)]
+#[parser(path = "../../grammar/json/json.bbnf")]
 struct P;
+
 fn main() {
     for name in [
         "data.json",
@@ -20,30 +23,22 @@ fn main() {
         let len = input.len();
         let n = if len > 1_000_000 { 5 } else { 20 };
 
-        // Span cold — single parse, fresh parser construction
-        let start = std::time::Instant::now();
-        let span_p = P::value();
-        let _ = std::hint::black_box(span_p.parse(std::hint::black_box(&input)));
-        let span_cold = start.elapsed();
-
-        // Slab — fresh BumpSlab + parser per iteration
+        // Cold — fresh tape + parser state per iteration. The
+        // tape-first `P::parse` entry point owns its allocation
+        // internally; there is no longer a user-visible slab to
+        // pre-size.
         let start = std::time::Instant::now();
         for _ in 0..n {
-            let a = __PEnumCtx::with_capacity(input.len() / 32);
-            let p = P::value();
-            let r = p
-                .parse_with_context(std::hint::black_box(&input), &a)
-                .unwrap();
-            std::hint::black_box(r as *const _);
+            let parsed = P::parse(std::hint::black_box(&input)).expect("parse failed");
+            std::hint::black_box(&parsed);
         }
-        let slab = start.elapsed() / n as u32;
+        let cold = start.elapsed() / n as u32;
 
         eprintln!(
-            "{:25} {:>8}B  span_cold:{:>6.0}  slab:{:>6.0} MB/s",
+            "{:25} {:>8}B  cold:{:>6.0} MB/s",
             name,
             len,
-            len as f64 / span_cold.as_secs_f64() / 1e6,
-            len as f64 / slab.as_secs_f64() / 1e6
+            len as f64 / cold.as_secs_f64() / 1e6
         );
     }
 }

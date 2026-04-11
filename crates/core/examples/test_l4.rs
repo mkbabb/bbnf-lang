@@ -1,5 +1,5 @@
+use bbnf::runtime::ParseErr;
 use bbnf_derive::Parser;
-use parse_that::BumpSlab;
 
 #[allow(dead_code)]
 mod css_types {
@@ -9,28 +9,50 @@ mod css_types {
 }
 
 #[derive(Parser)]
-#[parser(path = "../../grammar/css/l4/stylesheet.bbnf", skip_recover, slab)]
+#[parser(path = "../../grammar/css/l4/stylesheet.bbnf", skip_recover)]
 struct CssL4Parser;
 
+/// Probe the CSS L4 grammar against representative inputs. Under
+/// tape-first (Tranche AC.2) the parser exposes a single
+/// `CssL4Parser::parse` entry point; the old probe that reached in
+/// through `CssL4Parser::stylesheet()` to inspect the combinator
+/// state's `offset` / `furthest_offset` is replaced by
+/// `ParseErr::Syntax { offset, rule }`, which carries the same
+/// halt-offset information through the public surface.
 fn test_input(label: &str, input: &str) {
-    let slab = BumpSlab::with_capacity(64 * std::mem::size_of::<CssL4ParserEnum>());
-    let (result, state) = CssL4Parser::stylesheet().parse_return_state_with_context(input, &slab);
-    let pct = if input.is_empty() {
-        100
-    } else {
-        state.offset * 100 / input.len()
-    };
-    eprintln!(
-        "{:40} offset={}/{} ({}%) success={}",
-        label,
-        state.offset,
-        input.len(),
-        pct,
-        result.is_some()
-    );
-    if state.offset < input.len() {
-        let end = std::cmp::min(state.offset + 40, input.len());
-        eprintln!("  stuck at: '{}'", &input[state.offset..end]);
+    match CssL4Parser::parse(input) {
+        Ok(parsed) => {
+            let view = parsed.view();
+            eprintln!(
+                "{:40} ok len={} root_kind={:?}",
+                label,
+                input.len(),
+                view.cursor().kind()
+            );
+        }
+        Err(ParseErr::Syntax { offset, rule }) => {
+            let pct = if input.is_empty() {
+                100
+            } else {
+                offset as usize * 100 / input.len()
+            };
+            eprintln!(
+                "{:40} err offset={}/{} ({}%) rule={:?}",
+                label,
+                offset,
+                input.len(),
+                pct,
+                rule
+            );
+            let offset = offset as usize;
+            if offset < input.len() {
+                let end = std::cmp::min(offset + 40, input.len());
+                eprintln!("  stuck at: '{}'", &input[offset..end]);
+            }
+        }
+        Err(ParseErr::Tape(e)) => {
+            eprintln!("{:40} tape error: {:?}", label, e);
+        }
     }
 }
 

@@ -101,6 +101,15 @@ impl<'tape> TapeCursor<'tape> {
         let mut out: Vec<TapeCursor<'tape>> = Vec::new();
         if rec.has_children() && !rec.child_off.is_none() {
             let start = rec.child_off.0 as usize;
+            // Defensive: a malformed compound whose `child_off >=
+            // parent_offset` would create a backward-walk that
+            // never terminates because each iteration would jump
+            // forward (or stay put). Bail early — there are no
+            // children to recover under post-order layout when
+            // the start sentinel sits at or past the parent.
+            if start >= parent_offset {
+                return out.into_iter();
+            }
             let mut pos = parent_offset;
             while pos > start {
                 let child_offset = pos - 1;
@@ -109,14 +118,25 @@ impl<'tape> TapeCursor<'tape> {
                     break;
                 };
                 out.push(TapeCursor::new(tape, TapeOffset(child_offset as u32)));
-                if child_rec.has_children() && !child_rec.child_off.is_none() {
+                let next_pos = if child_rec.has_children()
+                    && !child_rec.child_off.is_none()
+                {
                     // Jump to the child's sub-tree start (exclusive
                     // of the child itself — we already accounted for
                     // the compound record with `pos - 1`).
-                    pos = child_rec.child_off.0 as usize;
+                    child_rec.child_off.0 as usize
                 } else {
-                    pos = child_offset;
+                    child_offset
+                };
+                // Defensive: each iteration must strictly decrease
+                // `pos`. A malformed child_off that points at or
+                // past the child itself would create an infinite
+                // loop and grow `out` until OOM. Bail on the first
+                // non-monotonic step.
+                if next_pos >= pos {
+                    break;
                 }
+                pos = next_pos;
             }
             out.reverse();
         }

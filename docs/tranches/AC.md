@@ -325,12 +325,12 @@ Resolution — staged workflow within the single commit:
 12. Create `crates/core/tests/tape_parity.rs` with golden snapshots
     for JSON, CSS L4, BBNF, Sheets, EBNF under
     `tests/fixtures/tape_golden/`.
-12. Verification: `cargo build --workspace` clean;
+13. Verification: `cargo build --workspace` clean;
     `cargo test -p bbnf-ir` green (AB.0/AB.1 tests);
     `cargo expand -p bbnf --bench json_monolithic | grep
     push_compound` finds ≥1 call; `cargo test --test tape_parity`
     green.
-13. Atomic commit.
+14. Atomic commit.
 
 ### AC.3 — Consumer migration
 
@@ -339,7 +339,7 @@ One or more commits — batched by domain. The audited scope is:
 | Area | Files | Migration needed? |
 |---|---|---|
 | Gorgeous prettify modules | `bbnf.rs`, `css.rs`, `json.rs`, `bnf.rs`, `ebnf.rs`, `google_sheets.rs` | **No** — prettify emission tree under `emitter/prettify/` is unchanged. `RuleName_prettify()` calls still bind against the same surface. |
-| Gorgeous jit | `jit.rs` | Yes — calls `bbnf::grammar::parse()`. |
+| Gorgeous jit | `jit.rs` | **No** — calls `bbnf::grammar::parse` (library fn), not a derive-generated method. AC.2's host.rs rewrite updates the library implementation transparently; `jit.rs` still gets back a `ParsedGrammar` with a `.rules` field. |
 | Core slab tests | `json_slab`, `google_sheets_slab`, `ebnf_prettify`, `css_pretty`, `css_l4`, `serialize_roundtrip`, `bench_grammar_parse` | Yes. |
 | Core examples | `mono_test.rs`, `json_check.rs`, `test_pretty.rs`, `test_l4.rs` | Yes. |
 | Core benches | `json/{monolithic,stress,vm,wasm,ts,parse_that,competitors}.rs`, `css/{monolithic,l4,stress,vm,wasm,ts,competitors}.rs`, `google_sheets/{monolithic,vm}.rs` | Yes. |
@@ -347,7 +347,29 @@ One or more commits — batched by domain. The audited scope is:
 
 Each commit updates a related group of consumers from the old
 `Grammar::rule()` + `__XxxEnumCtx` construction pattern to
-`Grammar::parse(input)?.view()` + cursor accessors.
+`Grammar::parse(input)?.view()` + cursor accessors. The migration
+is mechanical once the view type surface is settled.
+
+**Before (slab-mode bench/test/example):**
+```rust
+let ctx = __JsonParserEnumCtx::with_capacity(input.len() / 32);
+let parser = JsonParser::value();
+let (result, state) = parser.parse_return_state_with_context(&input, &ctx);
+assert!(result.is_some());
+assert!(state.offset >= input.trim_end().len());
+```
+
+**After (tape-first):**
+```rust
+let parsed = JsonParser::parse(&input).expect("parse failed");
+let _root = parsed.view();            // or: let tape = parsed.tape();
+// The tape-first API already enforces full input consumption
+// (the parser rejects trailing garbage) so the separate
+// "completeness" assertion collapses into the parse success.
+```
+
+The `__XxxEnumCtx` slab context vanishes entirely — the tape is
+owned by `Parsed<Grammar>` and allocated inside the library.
 
 After AC.3 closes: `cargo test --workspace` green. Every production
 grammar parses correctly end-to-end on the tape.

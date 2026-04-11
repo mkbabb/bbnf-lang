@@ -146,14 +146,22 @@ no new CSP constraints; no new cost weights.
 |---|---|
 | `crates/bbnf-tape/src/kind.rs` | **Add** `TapeKind::Recovered` variant. Pushed by `@recover` arms when recovery fires; views expose `.is_recovered()`. Replaces the old `Recovered` enum variant emitted by `ir_enums.rs:82-94`. |
 
-### Enum & type layer (DELETE)
+### Enum & type layer (Rust backend only)
+
+`ValuePlacement::Alloc` and `TypeDesc::BoxedEnum` are **NOT**
+deleted in AC.2 — they are shared-driver and TS/WASM backend
+concerns. The Rust backend stops consuming them (collapses
+`Alloc`/`Inline` to one tape push; panics on `BoxedEnum` in
+`type_desc_to_syn_raw` as a driver-bug canary), but the types
+and variants remain. Full deletion happens if/when TS + WASM
+migrate to the tape API in a post-AC tranche.
 
 | File | Change |
 |---|---|
-| `crates/core/src/backend/rust/ir_enums.rs` | **Delete** `<Grammar>Enum<'a>` generation. **Replace** with `<Rule>View<'tape>` + `<Grammar>View<'tape>` enum-of-views generation (AC.2 new view codegen). |
-| `crates/core/src/backend/rust/ir_types.rs` | **Delete** `emit_alloc` family (14 call sites become dead). **Delete** `type_desc_to_syn_raw` `BoxedEnum` handling. |
-| `crates/core/src/backend/types/decisions.rs` | **Delete** `ValuePlacement::Alloc` variant + `BoxedEnum` arm in `child_alloc`. |
-| `crates/ir/src/types/type_desc.rs` | **Delete** `TypeDesc::BoxedEnum` variant (if grep clean after emitter rewrite). |
+| `crates/core/src/backend/rust/ir_enums.rs` | **Delete** `<Grammar>Enum<'a>` generation (`generate_enum`). **Keep** `generate_grammar_arr` — it emits the grammar string constant, still needed. The per-rule `<Rule>View<'tape>` types come from `backend/rust/view/generate_views` instead. |
+| `crates/core/src/backend/rust/ir_types.rs` | **Delete** `emit_alloc` + `emit_alloc_let` family. **Replace** `type_desc_to_syn_raw`'s `BoxedEnum` arm with a panic (Rust backend under tape-first should never see it — the panic is a driver-bug canary). `IrCodegenCtx` itself remains load-bearing. |
+| `crates/core/src/backend/types/decisions.rs` | **Keep** `ValuePlacement` — the shared driver + TS/WASM backends still call `child_alloc`. The Rust emitter reads the value but treats `Alloc` and `Inline` identically (both map to one tape push). |
+| `crates/ir/src/types/type_desc.rs` | **Keep** `TypeDesc::BoxedEnum` — TS backend's `type_desc_to_ts` (`crates/core/src/backend/ts/helpers.rs`) still emits `BoxedEnum` arms. Deletion here is blocked on cross-backend migration. |
 
 ### View type codegen (NEW)
 
@@ -275,24 +283,38 @@ compiles. Consumer migration (AC.3) follows.
 #### Load-bearing coupling surprise — lowering reads the bootstrap CST
 
 The initial audit focused on the Rust emitter and bootstrap
-`host.rs`. A second audit found a broader coupling: the entire IR
-lowering pipeline reads `BbnfBootstrapEnum` directly. Every module
-below imports `crate::grammar::generated::BbnfBootstrapEnum`:
+`host.rs`. A deeper audit (worktree-agent-a985875e, 2026-04-10)
+found the real scope: **216 `BbnfBootstrapEnum` references across
+12 files**, not the 8 the early audit suggested. Measured by
+`grep -c BbnfBootstrapEnum`:
 
-- `crates/core/src/types.rs`
-- `crates/core/src/lower/{mod,expression,value_expr}.rs`
-- `crates/core/src/graph/{metadata,deps}.rs`
-- `crates/core/src/pipeline/{compile,directives}.rs`
+| File | LOC | Refs |
+|---|---|---|
+| `crates/core/src/lower/value_expr.rs` | 457 | 67 |
+| `crates/core/src/lower/expression.rs` | 483 | 60 |
+| `crates/core/src/grammar/host.rs` | 187 | 23 |
+| `crates/core/src/pipeline/compile.rs` | 601 | 20 |
+| `crates/core/src/lower/mod.rs` | 263 | 17 |
+| `crates/core/src/graph/metadata.rs` | 64 | 12 |
+| `crates/core/src/graph/deps.rs` | 75 | 7 |
+| `crates/core/src/types.rs` | 108 | 3 |
+| `crates/core/src/grammar/mod.rs` | ~50 | 3 |
+| `crates/core/src/pipeline/directives.rs` | 183 | 2 |
+| `crates/core/src/grammar/schema/build.rs` | ? | 1 |
+| `crates/core/src/grammar/schema/model.rs` | ? | 1 |
 
-Each of these pattern-matches on `BbnfBootstrapEnum` variants and
-calls `.span_text()` / `.identifier_text()` / other schema helpers
-to walk the CST. Under the atomic AC.2 rewrite, `BbnfBootstrapEnum`
+Each pattern-matches on `BbnfBootstrapEnum` variants and calls
+`.span_text()` / `.identifier_text()` / other schema helpers to
+walk the CST. Under the atomic AC.2 rewrite, `BbnfBootstrapEnum`
 is deleted and replaced with `BbnfBootstrapView<'tape>` — every one
-of these call sites must migrate to cursor-walking the view in the
-same commit. The bootstrap consumer is not just `host.rs`; it is
-the entire lowering pipeline. The staged workflow below covers
-this migration; it is called out here so the scope is visible
-from the phase-plan section without needing to read the audit.
+of these call sites migrates to cursor-walking the view in the
+same commit, plus the schema helper emit paths
+(`grammar/schema/emit/rust/`) must switch from `impl <Enum> { fn
+span_text() }` to `impl <View> { fn span_text() }`.
+
+The bootstrap consumer is not just `host.rs`; it is the entire
+lowering pipeline. ~2500 LOC of pattern-matching code migrates
+alongside the emitter rewrite.
 
 #### Staged workflow within AC.2
 
@@ -324,13 +346,16 @@ Resolution — staged workflow within the single commit:
 9. Write the new `crates/core/src/grammar/host.rs` walking
    `BbnfBootstrapView<'tape>` accessors instead of pattern-matching
    `BbnfBootstrapEnum<'a>`.
-10. Migrate every other `BbnfBootstrapEnum` consumer to the view
-    accessor surface: `crates/core/src/types.rs`,
+10. Migrate every `BbnfBootstrapEnum` consumer to the view
+    accessor surface (216 refs across 12 files per the audit):
+    `crates/core/src/types.rs`,
     `lower/{mod,expression,value_expr}.rs`,
     `graph/{metadata,deps}.rs`,
-    `pipeline/{compile,directives}.rs`. Each module pattern-matches
-    on the view (`.kind()`, `.variant_idx()`, `.children()`) plus
-    the schema helpers.
+    `pipeline/{compile,directives}.rs`,
+    `grammar/{mod,schema/build,schema/model}.rs`. Plus update the
+    schema helper emit paths (`grammar/schema/emit/rust/`) so
+    `.span_text()` / `.identifier_text()` / `.as_*_directive()`
+    are emitted as view impls rather than enum impls.
 11. Re-enable `pub mod generated;` and `pub mod host;` in
     `grammar/mod.rs`.
 12. Create `crates/core/tests/tape_parity.rs` with golden snapshots
@@ -529,10 +554,26 @@ The two alternatives both have fatal flaws:
 
 The only idiomatic option is the atomic rewrite: delete everything
 that's about to be replaced, emit the replacement in the same
-commit, regenerate the bootstrap, update the one file that walks
-the bootstrap (`host.rs`). Scope is large (~3000 LOC changed +
-13000 auto-generated) but the change is mechanical once the
-emitter helpers (`tape_prelude.rs`) are settled.
+commit, regenerate the bootstrap, migrate every `BbnfBootstrapEnum`
+consumer (`host.rs` plus the lowering pipeline). Scope per the
+audit:
+
+- **~2900 LOC** Rust emitter rewrite across 13 files (leaves,
+  seq, alt, dispatch, repeat, binary, map_value, operator_chain,
+  grammar, trace, ir_enums, ir_types, alloc_emit).
+- **~2500 LOC** CST consumer migration across 12 files
+  (216 `BbnfBootstrapEnum` references to rewrite as view walks).
+- **13 000 LOC** regenerated `generated.rs` via the bootstrap
+  `cargo expand` pipeline.
+- New `crates/core/tests/tape_parity.rs` + golden snapshots
+  (~500 LOC + fixtures) under `tests/fixtures/tape_golden/`.
+
+The change is mechanical once the emitter helpers
+(`tape_prelude.rs`) are settled and the `generate_views`
+generator is wired in, but the atomic sequencing requirement
+means every file flips together — no incremental per-file
+testing is possible because the driver/emitter contract binds
+all consumers to one return-type shape.
 
 ## What this tranche does NOT include
 

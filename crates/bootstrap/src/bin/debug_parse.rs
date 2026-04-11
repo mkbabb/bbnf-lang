@@ -41,10 +41,12 @@ fn main() {
                 for (j, gc) in item.children().enumerate() {
                     let peeled = peel(gc);
                     println!(
-                        "  top[{i}][{j}]: kind={:?} variant_idx={} rule_kind={:?}",
+                        "  top[{i}][{j}]: kind={:?} variant_idx={} rule_kind={:?} span={:?} text={:?}",
                         peeled.kind(),
                         peeled.variant_idx(),
                         peeled.rule_kind(),
+                        peeled.span(),
+                        peeled.span_text(),
                     );
                 }
             } else {
@@ -63,13 +65,28 @@ fn main() {
     match bbnf::grammar::parse(&source) {
         Some(parsed_grammar) => {
             println!(
-                "bbnf::grammar::parse OK — {} rules, {} recovers, {} imports",
+                "bbnf::grammar::parse OK — {} rules, {} recovers, {} imports, \
+                 {} pretties, {} tokens, {} debugs, {} hosts, ws={}",
                 parsed_grammar.rules.len(),
                 parsed_grammar.recovers.len(),
                 parsed_grammar.imports.len(),
+                parsed_grammar.pretties.len(),
+                parsed_grammar.token_rules.len(),
+                parsed_grammar.debug_rules.len(),
+                parsed_grammar.host_fns.len(),
+                parsed_grammar.ws_pattern.is_some(),
             );
             for (name, _) in parsed_grammar.rules.iter().take(15) {
                 println!("  rule: {}", name);
+            }
+            for d in &parsed_grammar.debug_rules {
+                println!("  debug: {}", d);
+            }
+            for h in &parsed_grammar.host_fns {
+                println!("  host: {} -> {:?}", h.name, h.return_type);
+            }
+            if let Some(ws) = &parsed_grammar.ws_pattern {
+                println!("  ws: {}", ws);
             }
         }
         None => {

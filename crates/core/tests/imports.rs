@@ -262,14 +262,17 @@ fn test_css_l4_media_module_keeps_recursive_local_rules() {
 fn test_css_l4_media_file_parses_to_end() {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../grammar/css/l4/media.bbnf");
     let source = fs::read_to_string(&path).unwrap();
-    let (parsed, state) = bbnf::grammar::parse_with_state(&source);
-    let parsed = parsed.expect("media.bbnf should parse");
+    let parsed = bbnf::grammar::parse_with_state(&source)
+        .expect("media.bbnf should parse");
 
+    // The tape-first parser enforces full input consumption inside
+    // `parse_with_state`, so a successful parse already implies the
+    // full source was consumed. The pre-AC.2 separate
+    // `state.offset >= source.trim_end().len()` check collapsed into
+    // the parse-success guarantee.
     assert!(
-        state.offset >= source.trim_end().len(),
-        "partial parse at {} of {} bytes; parsed rules: {:?}",
-        state.offset,
-        source.len(),
+        !parsed.rules.is_empty(),
+        "parsed rules: {:?}",
         parsed
             .rules
             .keys()

@@ -147,7 +147,6 @@ dependencies = [
  "dhat",
  "egraph",
  "fast-float2",
- "gorgeous",
  "indexmap",
  "jiter",
  "lightningcss",

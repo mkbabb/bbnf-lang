@@ -1,77 +1,36 @@
 //! Operator-chain emission for the Rust backend.
 //!
-//! Generates the inline `head + (op rhs)*` loop with scratch-allocated
-//! `Vec<(Op, Rhs)>` for the link list. Returns `None` for all-Span heads
-//! (those degenerate to plain Seq emission).
+//! Tranche AC.2 tape-first. An operator chain `head + (op rhs)*`
+//! is compiled as a head sub-parse followed by a Repeat-shaped
+//! tail. Under tape-first the tail pushes a compound Repeat record
+//! with one Seq child per link; the head is a sibling of the
+//! Repeat at the owning rule's children run.
+//!
+//! The shared driver's legacy all-Span fast-path returned `None`
+//! here to fall back to plain Seq emission; the tape-first path
+//! keeps that fallback since the scratch-Vec allocator this method
+//! previously drove has been deleted.
 
 use bbnf_ir::TypeDesc;
 use proc_macro2::TokenStream;
-use quote::quote;
 
 use super::{RustEmitCtx, RustEmitter};
 
 impl RustEmitter {
     pub(super) fn emit_operator_chain_impl(
         &mut self,
-        head: TokenStream,
-        op: TokenStream,
-        rhs: TokenStream,
-        head_type: &TypeDesc,
-        link_elem_type: &TypeDesc,
-        ctx: &mut RustEmitCtx,
+        _head: TokenStream,
+        _op: TokenStream,
+        _rhs: TokenStream,
+        _head_type: &TypeDesc,
+        _link_elem_type: &TypeDesc,
+        _ctx: &mut RustEmitCtx,
     ) -> Option<TokenStream> {
-        let ir_ctx = ctx.ir_ctx();
-
-        // Only handle typed chains (not all-Span).
-        if *head_type == TypeDesc::Span {
-            return None;
-        }
-
-        let depth_var = ctx.fresh("chain_depth");
-        let head_var = ctx.fresh("chain_head");
-        let prev_var = ctx.fresh("chain_prev");
-        let op_var = ctx.fresh("chain_op");
-        let rhs_var = ctx.fresh("chain_rhs");
-
-        let init_code = ir_ctx.emit_scratch_init(link_elem_type, &depth_var);
-        let push_code = ir_ctx.emit_scratch_push(link_elem_type, &quote! { (#op_var, #rhs_var) });
-        let collect_code = ir_ctx.emit_scratch_collect(link_elem_type, &depth_var);
-
-        Some(quote! {
-            {
-                let #head_var = #head?;
-                #init_code
-                loop {
-                    let #prev_var = state.offset;
-                    // Tranche AA.8 — labeled block inside `match` replaces IIFE.
-                    // Use match arms instead of let-else for brace-shaped RHS.
-                    let __chain_link = 'chain_link_blk: {
-                        let #op_var = match #op {
-                            Some(__v) => __v,
-                            None => break 'chain_link_blk None,
-                        };
-                        let #rhs_var = match #rhs {
-                            Some(__v) => __v,
-                            None => break 'chain_link_blk None,
-                        };
-                        Some((#op_var, #rhs_var))
-                    };
-                    match __chain_link {
-                        Some(__value) => {
-                            let (#op_var, #rhs_var) = __value;
-                            #push_code;
-                            if state.offset == #prev_var {
-                                break;
-                            }
-                        }
-                        None => {
-                            state.offset = #prev_var;
-                            break;
-                        }
-                    }
-                }
-                Some((#head_var, #collect_code))
-            }
-        })
+        // Operator-chain specialization is deferred under tape-
+        // first. The driver falls back to emitting the shape as a
+        // generic `Seq(head, Repeat(Seq(op, rhs)))`, which yields
+        // identical tape records via the standard repeat/seq
+        // paths. Returning `None` triggers the fallback.
+        None
     }
 }

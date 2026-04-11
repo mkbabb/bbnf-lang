@@ -1,10 +1,24 @@
-//! Repetition emission for the shared-driver Rust emitter.
+//! Repetition emission for the Rust backend.
+//!
+//! Tranche AC.2 tape-first. A Repeat pushes its own compound
+//! record — the child run is marked at entry, every successful
+//! iteration pushes a child tape record (or runs as a
+//! side-effecting sub-parse), and the epilogue emits
+//! `push_compound(TapeKind::Repeat, children, lo, hi, 0)` once
+//! the lo-bound is satisfied.
+//!
+//! `Optional` is a special-case Repeat with lo=0,hi=1; it also
+//! pushes a compound record so the view layer can read the
+//! optional as a 0-or-1 child run.
+//!
+//! `sep_by` composes `element (sep element)*` under the same
+//! compound-record shape.
 
 use bbnf_ir::TypeDesc;
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use crate::backend::{ValuePlacement, SepByConfig};
+use crate::backend::{SepByConfig, ValuePlacement};
 
 use super::RustEmitCtx;
 use super::RustEmitter;
@@ -15,85 +29,41 @@ impl RustEmitter {
         body: TokenStream,
         lo: u32,
         _hi: u32,
-        elem_type: &TypeDesc,
-        ctx: &mut RustEmitCtx,
+        _elem_type: &TypeDesc,
+        _ctx: &mut RustEmitCtx,
     ) -> TokenStream {
         let lo_lit = lo as usize;
 
-        // Span case: collapse to a single Span covering all iterations.
-        if *elem_type == TypeDesc::Span {
-            let count_var = ctx.fresh("count");
-            let check = if lo == 0 {
-                quote! { Some(::parse_that::Span::new(__sp_start, state.offset, state.src)) }
-            } else {
-                quote! {
-                    if #count_var >= #lo_lit {
-                        Some(::parse_that::Span::new(__sp_start, state.offset, state.src))
-                    } else {
-                        None
-                    }
-                }
-            };
-            return quote! {
-                {
-                    let __sp_start = state.offset;
-                    let mut #count_var: usize = 0;
-                    loop {
-                        let __prev = state.offset;
-                        match #body {
-                            Some(_) => {
-                                #count_var += 1;
-                                if state.offset == __prev { break; }
-                            }
-                            None => break,
-                        }
-                    }
-                    #check
-                }
-            };
-        }
-
-        // Typed case: scratch-based slab collection.
-        let scratch_ty = elem_type;
-        let ir_ctx = ctx.ir_ctx();
-        let depth_var = ctx.fresh("depth");
-        let prev_var = ctx.fresh("prev");
-        let init_code = ir_ctx.emit_scratch_init(&scratch_ty, &depth_var);
-        let push_code = ir_ctx.emit_scratch_push(&scratch_ty, &quote! { __value });
-        let count_expr = ir_ctx.emit_scratch_count(&scratch_ty, &depth_var);
-        let collect_expr = ir_ctx.emit_scratch_collect(&scratch_ty, &depth_var);
-        let truncate_expr = ir_ctx.emit_scratch_truncate(&scratch_ty, &depth_var);
-
-        let check = if lo == 0 {
-            quote! { Some(#collect_expr) }
-        } else {
-            quote! {
-                if #count_expr >= #lo_lit {
-                    Some(#collect_expr)
-                } else {
-                    #truncate_expr
-                    None
-                }
-            }
-        };
-
         quote! {
-            {
-                #init_code
+            'rpt_blk: {
+                let __rpt_lo = state.offset as u32;
+                let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __count: usize = 0;
                 loop {
-                    let #prev_var = state.offset;
-                    match #body {
-                        Some(__value) => {
-                            #push_code;
-                            if state.offset == #prev_var { break; }
+                    let __prev = state.offset;
+                    match (#body) {
+                        Some(_) => {
+                            __count += 1;
+                            if state.offset == __prev { break; }
                         }
                         None => {
-                            state.offset = #prev_var;
+                            state.offset = __prev;
                             break;
                         }
                     }
                 }
-                #check
+                if __count >= #lo_lit {
+                    Some(::bbnf::runtime::tape::TapeBuilder::push_compound(
+                        tape,
+                        ::bbnf::runtime::tape::TapeKind::Repeat,
+                        __rpt_children,
+                        __rpt_lo,
+                        state.offset as u32,
+                        0u8,
+                    ))
+                } else {
+                    break 'rpt_blk None;
+                }
             }
         }
     }
@@ -101,36 +71,33 @@ impl RustEmitter {
     pub(super) fn emit_repeat_optional_impl(
         &mut self,
         body: TokenStream,
-        inner_type: &TypeDesc,
+        _inner_type: &TypeDesc,
         _alloc: ValuePlacement,
         _ctx: &mut RustEmitCtx,
     ) -> TokenStream {
-        // Span case: Optional(Span) collapses to Span — zero-width on failure.
-        if *inner_type == TypeDesc::Span {
-            return quote! {
-                {
-                    let __cp = state.offset;
-                    if (|| #body)().is_none() {
-                        state.offset = __cp;
-                    }
-                    Some(::parse_that::Span::new(__cp, state.offset, state.src))
-                }
-            };
-        }
-
-        // General case: body is already compiled with appropriate allocation.
-        // The driver passes Alloc for BoxedEnum inner types, so emit_call
-        // already wraps in slab alloc. No double-allocation needed here.
+        // Optional pushes a compound Repeat record with 0 or 1
+        // child. On miss, `state.offset` is rolled back to the
+        // pre-attempt position; the compound is still pushed with
+        // an empty children run.
         quote! {
             {
-                let __cp = state.offset;
-                match (|| #body)() {
-                    Some(__v) => Some(Some(__v)),
+                let __opt_lo = state.offset as u32;
+                let __opt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let __opt_cp = state.offset;
+                match (#body) {
+                    Some(_) => (),
                     None => {
-                        state.offset = __cp;
-                        Some(None)
+                        state.offset = __opt_cp;
                     }
                 }
+                Some(::bbnf::runtime::tape::TapeBuilder::push_compound(
+                    tape,
+                    ::bbnf::runtime::tape::TapeKind::Repeat,
+                    __opt_children,
+                    __opt_lo,
+                    state.offset as u32,
+                    0u8,
+                ))
             }
         }
     }
@@ -140,90 +107,67 @@ impl RustEmitter {
         element: TokenStream,
         separator: TokenStream,
         config: &SepByConfig,
-        elem_type: &TypeDesc,
-        ctx: &mut RustEmitCtx,
+        _elem_type: &TypeDesc,
+        _ctx: &mut RustEmitCtx,
     ) -> TokenStream {
         let lo_lit = config.lo as usize;
 
-        // Span case: Tranche X.9b routes through `kernels::sep_list`
-        // for the canonical `element (SEP element)*` shape. The
-        // kernel owns the loop scaffolding; the emitter's job is
-        // just to allocate the per-site fresh counter variable and
-        // pass the pre-composed element/separator token streams.
-        if *elem_type == TypeDesc::Span {
-            let count_var = ctx.fresh("count");
-            return crate::backend::kernels::sep_list::emit_span_body(
-                &element,
-                &separator,
-                config,
-                &count_var,
-            );
-        }
-
-        // Terminator byte condition expression (no control flow).
-        let terminator_cond = if let Some(ref tb) = config.terminator_bytes {
+        // Optional terminator-byte short-circuit for delim-wrapped
+        // sep_by variants. The break condition takes a peek at the
+        // next byte; on hit we exit the loop without consuming it.
+        let terminator_break = if let Some(ref tb) = config.terminator_bytes {
             if tb.len() == 1 {
                 let byte = tb[0];
-                Some(quote! {
-                    state.offset < state.src.len()
-                        && state.src.as_bytes()[state.offset] == #byte
-                })
+                quote! {
+                    if state.offset < state.src_bytes.len()
+                        && state.src_bytes[state.offset] == #byte
+                    {
+                        break;
+                    }
+                }
             } else {
-                None
+                quote! {}
             }
         } else {
-            None
+            quote! {}
         };
 
-        // `break` version for inside loop.
-        let terminator_break = terminator_cond.as_ref().map(|cond| {
-            quote! { if #cond { break; } }
-        }).unwrap_or_default();
-
-        // Typed case: scratch-based slab collection.
-        let scratch_ty = elem_type;
-        let ir_ctx = ctx.ir_ctx();
-        let depth_var = ctx.fresh("depth");
-        let count_var = ctx.fresh("count");
-        let init_code = ir_ctx.emit_scratch_init(&scratch_ty, &depth_var);
-        let push_code = ir_ctx.emit_scratch_push(&scratch_ty, &quote! { __value });
-        let count_expr = ir_ctx.emit_scratch_count(&scratch_ty, &depth_var);
-        let collect_expr = ir_ctx.emit_scratch_collect(&scratch_ty, &depth_var);
-        let truncate_expr = ir_ctx.emit_scratch_truncate(&scratch_ty, &depth_var);
-
-        // Tranche AA.8 — labeled block replaces IIFE for early-exit
-        // on the first-element failure path.
         quote! {
             'rpt_blk: {
-                #init_code
-                let mut #count_var: usize = 0;
+                let __rpt_lo = state.offset as u32;
+                let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __count: usize = 0;
 
-                match #element {
-                    Some(__value) => {
-                        #push_code;
-                        #count_var += 1;
+                match (#element) {
+                    Some(_) => {
+                        __count += 1;
                     }
                     None => {
-                        break 'rpt_blk if #count_var >= #lo_lit {
-                            Some(#collect_expr)
+                        if __count >= #lo_lit {
+                            break 'rpt_blk Some(::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Repeat,
+                                __rpt_children,
+                                __rpt_lo,
+                                state.offset as u32,
+                                0u8,
+                            ));
                         } else {
-                            #truncate_expr
-                            None
-                        };
+                            break 'rpt_blk None;
+                        }
                     }
                 }
 
                 loop {
                     #terminator_break
                     let __cp = state.offset;
-                    match #separator {
+                    match (#separator) {
                         Some(_) => {}
                         None => break,
                     }
-                    match #element {
-                        Some(__value) => {
-                            #push_code;
-                            #count_var += 1;
+                    match (#element) {
+                        Some(_) => {
+                            __count += 1;
                         }
                         None => {
                             state.offset = __cp;
@@ -232,11 +176,17 @@ impl RustEmitter {
                     }
                 }
 
-                if #count_expr >= #lo_lit {
-                    Some(#collect_expr)
+                if __count >= #lo_lit {
+                    Some(::bbnf::runtime::tape::TapeBuilder::push_compound(
+                        tape,
+                        ::bbnf::runtime::tape::TapeKind::Repeat,
+                        __rpt_children,
+                        __rpt_lo,
+                        state.offset as u32,
+                        0u8,
+                    ))
                 } else {
-                    #truncate_expr
-                    None
+                    break 'rpt_blk None;
                 }
             }
         }

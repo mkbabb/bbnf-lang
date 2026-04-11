@@ -1,6 +1,14 @@
-//! Binary-op + reference emission for the Rust backend:
-//! `emit_call`, `emit_inline_wrap`, `emit_skip`, `emit_next`, `emit_minus`,
-//! `emit_negate`.
+//! Binary-op + reference emission for the Rust backend under
+//! Tranche AC.2 tape-first: `emit_call`, `emit_inline_wrap`,
+//! `emit_skip`, `emit_next`, `emit_minus`, `emit_negate`.
+//!
+//! Rule calls (`emit_call` / `emit_inline_wrap`) evaluate to
+//! `Option<TapeOffset>` — they dispatch to the target rule's
+//! `__rule(state, tape)` function which pushes its own tape
+//! record. Side-effecting ops (`emit_skip`, `emit_next`,
+//! `emit_minus`, `emit_negate`) return `Option<()>`. The
+//! uniform composition pattern `match (#sub) { Some(_) => (), ... }`
+//! accepts either.
 
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
@@ -13,53 +21,28 @@ impl RustEmitter {
     pub(super) fn emit_call_impl(
         &mut self,
         rule_name: &str,
-        alloc: ValuePlacement,
-        ctx: &mut RustEmitCtx,
+        _alloc: ValuePlacement,
+        _ctx: &mut RustEmitCtx,
     ) -> TokenStream {
+        // `alloc` is ignored — tape-first has no slab allocation
+        // step. The rule function is always
+        // `__rule(state, tape) -> Option<TapeOffset>`.
         let fn_ident = format_ident!("__{}", rule_name);
-        if alloc == ValuePlacement::Alloc {
-            let ir_ctx = ctx.ir_ctx();
-            let val = quote! { __v };
-            let alloc_expr = ir_ctx.emit_alloc(&val);
-            quote! { Self::#fn_ident(state).map(|__v| #alloc_expr) }
-        } else {
-            quote! { Self::#fn_ident(state) }
-        }
+        quote! { Self::#fn_ident(state, tape) }
     }
 
     pub(super) fn emit_inline_wrap_impl(
         &mut self,
         body: TokenStream,
-        variant_name: Option<&str>,
-        alloc: ValuePlacement,
-        ctx: &mut RustEmitCtx,
+        _variant_name: Option<&str>,
+        _alloc: ValuePlacement,
+        _ctx: &mut RustEmitCtx,
     ) -> TokenStream {
-        if let Some(name) = variant_name {
-            let enum_ident = &self.enum_ident;
-            let variant = format_ident!("{}", name);
-            if alloc == ValuePlacement::Alloc {
-                let ir_ctx = ctx.ir_ctx();
-                let val = quote! { __v };
-                let alloc_expr = ir_ctx.emit_alloc(&val);
-                quote! {
-                    #body.map(|__inner| {
-                        let __v = #enum_ident::#variant(__inner);
-                        #alloc_expr
-                    })
-                }
-            } else {
-                quote! {
-                    #body.map(|__v| #enum_ident::#variant(__v))
-                }
-            }
-        } else if alloc == ValuePlacement::Alloc {
-            let ir_ctx = ctx.ir_ctx();
-            let val = quote! { __v };
-            let alloc_expr = ir_ctx.emit_alloc(&val);
-            quote! { #body.map(|__v| #alloc_expr) }
-        } else {
-            body
-        }
+        // Variant wrapping used to produce `Enum::Variant(inner)`.
+        // Under tape-first the variant discriminator travels in the
+        // tape record's `variant_idx` byte, written by the owning
+        // rule's epilogue. The inline wrap is a pass-through.
+        body
     }
 
     pub(super) fn emit_skip_impl(
@@ -68,21 +51,22 @@ impl RustEmitter {
         discarded: TokenStream,
         _ctx: &mut RustEmitCtx,
     ) -> TokenStream {
-        // Tranche AA.8 — `match` instead of let-else because child
-        // outputs can be block-shaped (Rust's let-else forbids a
-        // brace-terminated RHS).
+        // Skip: `kept << discarded` — evaluate kept (must succeed),
+        // then evaluate discarded (must succeed), return ().
         quote! {
             'skip_blk: {
-                let __kept = match #kept {
-                    Some(__v) => __v,
+                match (#kept) {
+                    Some(_) => (),
                     None => break 'skip_blk None,
-                };
-                if #discarded.is_none() { break 'skip_blk None; }
-                Some(__kept)
+                }
+                match (#discarded) {
+                    Some(_) => (),
+                    None => break 'skip_blk None,
+                }
+                Some(())
             }
         }
     }
-
 
     pub(super) fn emit_next_impl(
         &mut self,
@@ -90,10 +74,16 @@ impl RustEmitter {
         kept: TokenStream,
         _ctx: &mut RustEmitCtx,
     ) -> TokenStream {
-        // Tranche AA.8 — labeled block for `?` short-circuit.
+        // Next: `discarded >> kept` — evaluate discarded (must
+        // succeed), then evaluate kept. Return whatever kept
+        // returned (which under tape-first may be either () or a
+        // TapeOffset).
         quote! {
             'next_blk: {
-                if #discarded.is_none() { break 'next_blk None; }
+                match (#discarded) {
+                    Some(_) => (),
+                    None => break 'next_blk None,
+                }
                 #kept
             }
         }
@@ -105,6 +95,9 @@ impl RustEmitter {
         rhs: TokenStream,
         _ctx: &mut RustEmitCtx,
     ) -> TokenStream {
+        // Minus: `lhs - rhs`. Try rhs at the current position
+        // (with rollback); if it succeeds, fail. Otherwise commit
+        // to lhs.
         quote! {
             {
                 let __save_minus = state.offset;
@@ -124,6 +117,9 @@ impl RustEmitter {
         inner: TokenStream,
         _ctx: &mut RustEmitCtx,
     ) -> TokenStream {
+        // Negative lookahead: try inner at the current position
+        // (with rollback); succeed iff inner fails. No tape side
+        // effect on the success path.
         quote! {
             {
                 let __save_neg = state.offset;

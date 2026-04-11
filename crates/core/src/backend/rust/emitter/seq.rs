@@ -1,10 +1,18 @@
 //! Sequence emission for the Rust backend.
 //!
-//! `emit_seq_grouped_impl` consumes per-child groups (single value or
-//! span-compressed run) and produces a Rust IIFE expression that returns
-//! the assembled tuple. Vec-flattening (for `(T, Vec<T>)` patterns) is
-//! handled here as well via the scratch-allocator helpers on
-//! `RustEmitCtx::ir_ctx()`.
+//! Tranche AC.2 tape-first. A Seq composes its children
+//! sequentially; each child is a side-effecting sub-parse
+//! (`Option<()>` or `Option<TapeOffset>`). The Seq itself returns
+//! `Option<()>` — it does not push its own tape record. The
+//! enclosing rule (or the enclosing compound Alt / Repeat) owns
+//! the `push_compound` at its epilogue.
+//!
+//! `FlattenStrategy` and the typed Vec paths used to drive the
+//! scratch-Vec allocator for `(T, Vec<T>)` patterns. Under
+//! tape-first every sub-parse's child run is already linearized
+//! into the tape by the children's own `push_*` calls, so Seq
+//! flattening is a no-op here — the shape is carried through the
+//! `mark_children` / `push_compound` bracket at the owning rule.
 
 use bbnf_ir::TypeDesc;
 use proc_macro2::TokenStream;
@@ -18,112 +26,43 @@ impl RustEmitter {
     pub(super) fn emit_seq_grouped_impl(
         &mut self,
         groups: Vec<SeqChildGroup<TokenStream>>,
-        result_type: &TypeDesc,
-        flatten: Option<FlattenStrategy>,
-        ctx: &mut RustEmitCtx,
+        _result_type: &TypeDesc,
+        _flatten: Option<FlattenStrategy>,
+        _ctx: &mut RustEmitCtx,
     ) -> TokenStream {
-        let mut stmts = Vec::new();
-        let mut result_vars = Vec::new();
-        let mut result_types = Vec::new();
+        // Each group is either a `Single` sub-parse or a
+        // `SpanCompressed` run of side-effecting leaves. Under
+        // tape-first both collapse to sequential `match` chaining —
+        // the compound's span/children are owned by the parent.
+        let mut stmts: Vec<TokenStream> = Vec::new();
 
-        // Tranche AA.8 — use `match` instead of let-else because child
-        // outputs can be block-shaped (`{ ... }`) and Rust's let-else
-        // syntax forbids a brace-terminated RHS. The match arm comma
-        // makes the ambiguity disappear.
         for group in groups {
             match group {
-                SeqChildGroup::Single { output, ty } => {
-                    let var = ctx.fresh("v");
+                SeqChildGroup::Single { output, ty: _ } => {
                     stmts.push(quote! {
-                        let #var = match #output {
-                            Some(__v) => __v,
+                        match (#output) {
+                            Some(_) => (),
                             None => break 'seq_blk None,
-                        };
+                        }
                     });
-                    result_vars.push(var);
-                    result_types.push(ty);
                 }
                 SeqChildGroup::SpanCompressed { outputs } => {
-                    let var = ctx.fresh("sp");
-                    let output_checks: Vec<TokenStream> = outputs
-                        .into_iter()
-                        .map(|o| quote! { if #o.is_none() { break 'seq_blk None; } })
-                        .collect();
-                    stmts.push(quote! {
-                        let __sp_start = state.offset;
-                        #( #output_checks )*
-                        let #var = ::parse_that::Span::new(__sp_start, state.offset, state.src);
-                    });
-                    result_vars.push(var);
-                    result_types.push(TypeDesc::Span);
-                }
-            }
-        }
-
-        // Handle Vec flattening: (T, Vec<T>) → Vec<T> via scratch.
-        if let Some(flatten_strat) = flatten {
-            if let TypeDesc::Vec(elem_td) = result_type {
-                let ir_ctx = ctx.ir_ctx();
-                let depth_var = ctx.fresh("depth");
-                let init = ir_ctx.emit_scratch_init(elem_td, &depth_var);
-                let collect = ir_ctx.emit_scratch_collect(elem_td, &depth_var);
-
-                match flatten_strat {
-                    FlattenStrategy::HeadThenVec => {
-                        // (head, &[T]) → push head, extend from slice
-                        if result_vars.len() == 2 {
-                            let head = &result_vars[0];
-                            let tail = &result_vars[1];
-                            let push = ir_ctx.emit_scratch_push(elem_td, &quote! { #head });
-                            let extend = ir_ctx.emit_scratch_extend_slice(elem_td, &quote! { #tail });
-                            // Tranche AA.8 — labeled block instead of IIFE.
-                            return quote! {
-                                'seq_blk: {
-                                    #init
-                                    #( #stmts )*
-                                    #push;
-                                    #extend;
-                                    Some(#collect)
-                                }
-                            };
-                        }
-                    }
-                    FlattenStrategy::VecThenTail => {
-                        // (&[T], tail) → extend from slice, push tail
-                        if result_vars.len() == 2 {
-                            let vec_part = &result_vars[0];
-                            let tail = &result_vars[1];
-                            let extend = ir_ctx.emit_scratch_extend_slice(elem_td, &quote! { #vec_part });
-                            let push = ir_ctx.emit_scratch_push(elem_td, &quote! { #tail });
-                            // Tranche AA.8 — labeled block instead of IIFE.
-                            return quote! {
-                                'seq_blk: {
-                                    #init
-                                    #( #stmts )*
-                                    #extend;
-                                    #push;
-                                    Some(#collect)
-                                }
-                            };
-                        }
+                    for o in outputs {
+                        stmts.push(quote! {
+                            match (#o) {
+                                Some(_) => (),
+                                None => break 'seq_blk None,
+                            }
+                        });
                     }
                 }
             }
         }
 
-        // Assemble result.
-        let result_expr = if result_vars.len() == 1 {
-            let v = &result_vars[0];
-            quote! { #v }
-        } else {
-            quote! { ( #( #result_vars ),* ) }
-        };
-
-        // Tranche AA.8 — labeled block instead of IIFE.
         quote! {
             'seq_blk: {
                 #( #stmts )*
-                Some(#result_expr)
+                Some(())
             }
         }
     }

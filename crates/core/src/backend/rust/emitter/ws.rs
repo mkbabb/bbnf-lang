@@ -1,4 +1,8 @@
-//! Whitespace trimming emission for the shared-driver Rust emitter.
+//! Whitespace trimming emission for the Rust backend.
+//!
+//! Tranche AC.2 tape-first. Whitespace is always side-effecting:
+//! the scan/trim advances `state.offset` without producing a
+//! tape record. Every shape returns `Option<()>`.
 
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -16,7 +20,7 @@ impl RustEmitter {
             let opts =
                 crate::generate::regex::EmitOpts::new(&crate::generate::regex::CostModel::DEFAULT);
             let code = crate::generate::regex::emit_regex(pattern, &opts);
-            quote! { { #code; Some(()) } }
+            quote! { { let _ = #code; Some(()) } }
         } else {
             quote! { { ::parse_that::trim_leading_whitespace_mut(state); Some(()) } }
         }
@@ -32,7 +36,7 @@ impl RustEmitter {
             let opts =
                 crate::generate::regex::EmitOpts::new(&crate::generate::regex::CostModel::DEFAULT);
             let code = crate::generate::regex::emit_regex(pattern, &opts);
-            quote! { #code; }
+            quote! { let _ = #code; }
         } else {
             quote! { ::parse_that::trim_leading_whitespace_mut(state); }
         };

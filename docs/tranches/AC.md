@@ -26,6 +26,11 @@ implementation — it tells us what each rule must accept and produce
 — and rewrites it from scratch against the tape ABI. The reference
 is deleted in the same commit that lands the replacement.
 
+AB.0, AB.1, and AB.2a are complete and live: `GrammarIR::materialization`
+is populated, `DriverState::materialization_class` is threaded, and the
+`tape_prelude.rs` helpers are in place. AC introduces no new ir-level
+work; it consumes the AB substrate read-only.
+
 ## The single commitment
 
 Every rule in every generated parser is emitted as:
@@ -37,17 +42,39 @@ fn __rule<'a>(
 ) -> ::std::option::Option<::bbnf_tape::TapeOffset>
 ```
 
-And the public API is:
+And the public API is a `Root` trait with a GAT view type, one
+`Parsed<Grammar>` marker-type per grammar, and a `.view()` method that
+lends a cursor-backed root view bound by `&self`:
 
 ```rust
+// In bbnf::runtime:
+pub trait Root {
+    type View<'tape>;
+    fn make_view(tape: &::bbnf_tape::Tape, root: ::bbnf_tape::TapeOffset)
+        -> Self::View<'_>;
+}
+
+// In generated code:
 impl Grammar {
-    pub fn parse<'a>(
-        input: &'a str,
-    ) -> ::std::result::Result<::bbnf::runtime::Parsed<RootView<'a>>, ParseErr> {
+    pub fn parse(
+        input: &str,
+    ) -> ::std::result::Result<::bbnf::runtime::Parsed<Self>, ParseErr> {
         /* ... */
     }
 }
+
+impl ::bbnf::runtime::Root for Grammar {
+    type View<'tape> = GrammarRootView<'tape>;
+    fn make_view(tape: &::bbnf_tape::Tape, root: ::bbnf_tape::TapeOffset)
+        -> Self::View<'_> { GrammarRootView::new(tape, root) }
+}
 ```
+
+`Parsed<Grammar>` is marker-typed over the grammar struct itself —
+never over the view type. The root view lifetime is bound by `&self`
+on `Parsed`, via `Parsed<R: Root>::view(&self) -> R::View<'_>`. Callers
+never name a `'tape` lifetime; they hold `Parsed<Grammar>` and call
+`.view()` to obtain a cursor-backed root.
 
 There is no `<Grammar>Enum<'a>` type. There is no `Parser<'a, T>`
 return. There is no `emit_alloc`. There is no `BoxedEnum` variant.
@@ -68,6 +95,11 @@ in `host.rs`.
   `ir.materialization` in `install_pattern_caches` and
   `generate/mod.rs`. Accessor:
   `DriverState::materialization_class(ir, node)`.
+- **`GrammarIR::materialization`** — `HashMap<NodeId,
+  MaterializationClass>` sidecar populated by
+  `classify_materialization` (AB.0) and refined by
+  `solve_strategy_and_materialization` (AB.1). AC consumes this
+  sidecar read-only; no new ir-level passes are introduced.
 - **`runtime::Parsed<View>`** — owning parse result type
   (`crates/core/src/runtime/parsed.rs`).
 - **`tape_prelude.rs`** — emitter helpers
@@ -93,7 +125,15 @@ no new CSP constraints; no new cost weights.
 | `crates/core/src/backend/rust/emitter/map_value.rs` | **Rewrite** Map / FnDescriptor paths. `EnumWrap` / `BoxWrap` become tape pushes with the rule's variant index. `NumberConvert` / `HexConvert` / `SpanCapture` / `Expr` wrap the inner tape offset under a compound with the mapper's metadata. |
 | `crates/core/src/backend/rust/emitter/dispatch.rs` | **Rewrite** dispatch-table / token-dispatch paths to produce `Option<TapeOffset>`. |
 | `crates/core/src/backend/rust/emitter/operator_chain.rs` | **Rewrite** chained binary flattening. |
+| `crates/core/src/backend/rust/emitter/reference.rs` | **Rewrite** `compile_ref` so every child call is `__rule(state, tape)` returning `Option<TapeOffset>`. When `materialization[ref_node] == TransparentElide`, inline the referenced rule's body at the call site. |
+| `crates/core/src/backend/rust/trace.rs` | **Rewrite** `emit_trace_entry` / `emit_trace_exit` to operate on `Option<TapeOffset>` results instead of `Option<Enum>`. Update the `grammar.rs` trace wrap site accordingly — otherwise `@debug` grammars silently break under `--features parser-trace`. |
 | `crates/core/src/backend/rust/emitter/mod.rs` | Update `impl Emitter for RustEmitter` to match new signatures. |
+
+### Tape substrate (NEW variant)
+
+| File | Change |
+|---|---|
+| `crates/bbnf-tape/src/kind.rs` | **Add** `TapeKind::Recovered` variant. Pushed by `@recover` arms when recovery fires; views expose `.is_recovered()`. Replaces the old `Recovered` enum variant emitted by `ir_enums.rs:82-94`. |
 
 ### Enum & type layer (DELETE)
 
@@ -119,9 +159,9 @@ no new CSP constraints; no new cost weights.
 
 | File | Change |
 |---|---|
-| `crates/derive/src/lib.rs` | **Rewrite** `#[derive(Parser)]` entry point. Instead of delegating to `bbnf::pipeline::compile_paths_request` and emitting `Parser<'a, T>` wrappers, emit the new tape-first API: `impl #ident { pub fn parse<'a>(input: &'a str) -> Result<Parsed<RootView<'a>>, ParseErr> { ... } }`. |
-| `crates/core/src/runtime/parsed.rs` | Already in place from AB.2a. |
-| `crates/core/src/runtime/error.rs` (NEW) | `ParseErr` enum: `Syntax { offset, rule }`, `Tape(TapeBuildError)`. |
+| `crates/derive/src/lib.rs` | **Rewrite** `#[derive(Parser)]` entry point. Instead of delegating to `bbnf::pipeline::compile_paths_request` and emitting `Parser<'a, T>` wrappers, emit the new tape-first API: `impl #ident { pub fn parse(input: &str) -> Result<::bbnf::runtime::Parsed<Self>, ParseErr> { ... } }` plus the `impl ::bbnf::runtime::Root for #ident` GAT binding. |
+| `crates/core/src/runtime/parsed.rs` | **Extend** the AB.2a-shipped `Parsed<View>` type. Add the `Root` trait with GAT `type View<'tape>` and the `make_view` constructor; change the phantom marker to `PhantomData<R>`; add `impl<R: Root> Parsed<R> { pub fn view(&self) -> R::View<'_> }`. AB.2a shipped storage-only; AC.2 lands the view constructor. |
+| `crates/core/src/runtime/error.rs` | `ParseErr` enum: `Syntax { offset, rule }`, `Tape(TapeBuildError)`. **Already shipped in AC.1.** |
 
 ### Bootstrap regeneration
 
@@ -133,18 +173,11 @@ no new CSP constraints; no new cost weights.
 
 ### Consumer migration
 
-Every `#[derive(Parser)]` consumer updates from `Grammar::rule()` →
-`Grammar::parse(input)` with view accessors replacing enum
-pattern-matching:
-
-| Area | Files |
-|---|---|
-| Gorgeous modules | `crates/gorgeous/src/{bbnf,json,css,bnf,ebnf,google_sheets,jit}.rs` |
-| Core tests | `crates/core/tests/{json_slab,google_sheets_slab,ebnf_prettify,css_pretty,css_l4,serialize_roundtrip,bench_grammar_parse}.rs` |
-| Core examples | `crates/core/examples/{mono_test,json_check,test_pretty,test_l4}.rs` |
-| Core benches | `crates/core/benches/{json,css,google_sheets}/*.rs` |
-
-The migration is mechanical once the view type surface is settled.
+Every non-prettify `#[derive(Parser)]` consumer updates from
+`Grammar::rule()` → `Grammar::parse(input).view()` with cursor
+accessors replacing enum pattern-matching. Prettify consumers bind
+against the untouched `emitter/prettify/` tree and need no change.
+The full audited scope lives under **AC.3** below.
 
 ### Auxiliary pieces (DELETE)
 
@@ -152,6 +185,8 @@ The migration is mechanical once the view type surface is settled.
 |---|---|
 | `crates/core/src/backend/rust/alloc_emit.rs` | **Delete** — slab scratch emission is dead code post-rewrite. |
 | `crates/core/src/backend/rust/ir_enums.rs` | Rewritten, not deleted (now emits views). |
+| `crates/ir/src/types/grammar.rs` (`collapse_simple_spans` field) | **Delete in AC.5** — subsumed by `MaterializationClass::TapeSpanOnly`. |
+| `crates/ir/src/passes/span/` (`compute_sp_method_rules`) | **Audit for deletion in AC.5** — the `has_sp_method` pass overlaps `TapeSpanOnly` classification. If `TapeSpanOnly` subsumes it, delete. |
 
 ## Phase plan
 
@@ -164,15 +199,22 @@ multiple subsystems in one commit.
 
 This file. One commit.
 
-### AC.1 — Prep: add `bbnf-tape` to bootstrap + runtime/error module
+### AC.1 — Prep: `bbnf-tape` dep + `runtime::error` module
 
-One small commit:
-- Add `bbnf-tape` + `bbnf = { path = "../core" }` to
-  `crates/bootstrap/Cargo.toml`.
-- Add `crates/core/src/runtime/error.rs` with `ParseErr`.
-- Re-export `ParseErr` + `Parsed` from `bbnf::runtime`.
+AC.1 is a commit-only step. The three changes are already staged in
+the working tree:
 
-Master stays green; no behavioral change.
+- `crates/bootstrap/Cargo.toml` — `bbnf-tape` + `bbnf = { path =
+  "../core" }` already added.
+- `crates/core/src/runtime/error.rs` — already created with the full
+  `ParseErr` enum (`Syntax { offset, rule }` + `Tape(TapeBuildError)`),
+  `Display`, `Error`, and `From<TapeBuildError>` impls.
+- `crates/core/src/runtime/mod.rs` — already declares `pub mod error`
+  and re-exports `ParseErr` alongside `Parsed`.
+
+AC.1 verifies `cargo build --workspace` is clean with those changes,
+then commits them as a single prep commit. Master stays green; no
+behavioral change.
 
 ### AC.2 — Atomic emitter transposition (the big commit)
 
@@ -203,12 +245,64 @@ regenerates the bootstrap in the same atomic change:
 After this commit: `cargo build --workspace` passes. Every grammar
 compiles. Consumer migration (AC.3) follows.
 
+#### Staged workflow within AC.2
+
+The atomic commit has a chicken-and-egg:
+`crates/core/src/grammar/generated.rs` is a source file of `bbnf`,
+and `bbnf-bootstrap` (whose `cargo expand` output produces
+`generated.rs`) depends on `bbnf`. Regenerating `generated.rs`
+requires `bbnf` to compile, which requires a valid `generated.rs`.
+Resolution — staged workflow within the single commit:
+
+1. Temporarily comment out `pub mod generated;` and `pub mod host;`
+   in `crates/core/src/grammar/mod.rs`, and delete both files. `bbnf`
+   now has no grammar module.
+2. Add `TapeKind::Recovered` to `crates/bbnf-tape/src/kind.rs`.
+3. Rewrite every emitter file (`leaves`, `seq`, `alt`, `repeat`,
+   `binary`, `map_value`, `dispatch`, `operator_chain`, `reference`,
+   `grammar`, `trace`, `ir_enums`, `ir_types`) to produce
+   `Option<TapeOffset>` via the `tape_prelude` helpers.
+4. Generate the `backend/rust/view/` module and extend
+   `runtime/parsed.rs` with the `Root` trait + `.view()` method.
+5. Rewrite `#[derive(Parser)]` in `crates/derive/src/lib.rs`.
+6. Delete legacy: `alloc_emit.rs`, `ValuePlacement::Alloc`,
+   `TypeDesc::BoxedEnum` (if grep-clean), old `Recovered` enum
+   emission from `ir_enums.rs`.
+7. Verify `cargo build -p bbnf` is clean without the grammar module.
+8. Run `scripts/bootstrap-bbnf.sh` — regenerates
+   `crates/core/src/grammar/generated.rs` via
+   `cargo expand -p bbnf-bootstrap`.
+9. Write the new `crates/core/src/grammar/host.rs` walking
+   `BbnfBootstrapView<'tape>` accessors instead of pattern-matching
+   `BbnfBootstrapEnum<'a>`.
+10. Re-enable `pub mod generated;` and `pub mod host;` in
+    `grammar/mod.rs`.
+11. Create `crates/core/tests/tape_parity.rs` with golden snapshots
+    for JSON, CSS L4, BBNF, Sheets, EBNF under
+    `tests/fixtures/tape_golden/`.
+12. Verification: `cargo build --workspace` clean;
+    `cargo test -p bbnf-ir` green (AB.0/AB.1 tests);
+    `cargo expand -p bbnf --bench json_monolithic | grep
+    push_compound` finds ≥1 call; `cargo test --test tape_parity`
+    green.
+13. Atomic commit.
+
 ### AC.3 — Consumer migration
 
-One or more commits — batched by domain (gorgeous modules, tests,
-examples, benches). Each commit updates a related group of
-`#[derive(Parser)]` consumers to the new `Grammar::parse` API and
-view-accessor surface.
+One or more commits — batched by domain. The audited scope is:
+
+| Area | Files | Migration needed? |
+|---|---|---|
+| Gorgeous prettify modules | `bbnf.rs`, `css.rs`, `json.rs`, `bnf.rs`, `ebnf.rs`, `google_sheets.rs` | **No** — prettify emission tree under `emitter/prettify/` is unchanged. `RuleName_prettify()` calls still bind against the same surface. |
+| Gorgeous jit | `jit.rs` | Yes — calls `bbnf::grammar::parse()`. |
+| Core slab tests | `json_slab`, `google_sheets_slab`, `ebnf_prettify`, `css_pretty`, `css_l4`, `serialize_roundtrip`, `bench_grammar_parse` | Yes. |
+| Core examples | `mono_test.rs`, `json_check.rs`, `test_pretty.rs`, `test_l4.rs` | Yes. |
+| Core benches | `json/{monolithic,stress,vm,wasm,ts,parse_that,competitors}.rs`, `css/{monolithic,l4,stress,vm,wasm,ts,competitors}.rs`, `google_sheets/{monolithic,vm}.rs` | Yes. |
+| Crates with zero parser consumers | `crates/ser/`, `crates/analysis/`, `crates/lsp/` | N/A. |
+
+Each commit updates a related group of consumers from the old
+`Grammar::rule()` + `__XxxEnumCtx` construction pattern to
+`Grammar::parse(input)?.view()` + cursor accessors.
 
 After AC.3 closes: `cargo test --workspace` green. Every production
 grammar parses correctly end-to-end on the tape.
@@ -223,8 +317,14 @@ class dispatch; AC.4 turns on the optimizations and verifies parity.
 
 - Delete any `cfg!(debug_assertions)` debug asserts left from AC.2.
 - `cargo clippy --all-targets -- -D warnings` clean.
-- `grep -rn "BoxedEnum\|emit_alloc\|BbnfBootstrapEnum"` returns zero
-  results in `src/`.
+- `grep -rn "BoxedEnum\|emit_alloc\|BbnfBootstrapEnum\|Recovered"
+  crates/core/src crates/ir/src` returns zero.
+- Delete `GrammarIR::collapse_simple_spans` flag + its consumers —
+  subsumed by `MaterializationClass::TapeSpanOnly`.
+- Audit `compute_sp_method_rules` for deletion — overlaps
+  `TapeSpanOnly` classification.
+- Delete `crates/core/src/backend/rust/alloc_emit.rs` (if any
+  residue survived AC.2).
 - Fresh samply profiles for every production bench:
   `json_canada`, `json_twitter`, `json_citm`, `json_data_xl`,
   `css_tailwind`, `css_bootstrap`, `css_normalize`, `compile_bbnf`,
@@ -269,6 +369,15 @@ follow-up tranche):
 8. **Bootstrap regeneration is part of AC.2.** The atomic
    transposition includes rerunning the bootstrap script, so
    `generated.rs` and the emitter are always consistent.
+9. **One parse emission path.** `#[parser(slab)]` and
+   `#[parser(structural)]` mode attributes become vestigial as
+   parse-path selectors under the one-tape-path commitment. `slab`
+   is dropped; `structural` becomes the only parse path (aliased to
+   default). `#[parser(prettify)]` remains orthogonal — it
+   additively emits the prettify emission tree
+   (`emitter/prettify/`, unchanged) alongside the tape-first parse
+   path. Gorgeous prettify consumers are therefore unaffected by
+   AC.2.
 
 ## Verification
 
@@ -283,6 +392,18 @@ json_monolithic 2>&1 | grep 'TapeBuilder::push_compound'` — at
 least one `push_compound` call. `grep -rn BoxedEnum crates/core/src
 crates/ir/src` returns zero. `grep -rn emit_alloc
 crates/core/src` returns zero.
+`crates/core/tests/tape_parity.rs` created and green on JSON, CSS
+L4, BBNF, Sheets, EBNF. Parity gate shape: for each grammar, parse
+≥20 sample inputs from the benchmark corpus, walk view accessors
+(`.kind()`, `.span()`, `.variant_idx()`, `.children()`), and
+compare against a golden structural snapshot under
+`tests/fixtures/tape_golden/`.
+`grep -rn Recovered crates/core/src/backend/rust/ir_enums.rs`
+returns zero (old enum variant is gone). `cargo expand -p bbnf
+--bench bbnf_grammar_parse | grep 'TapeKind::Recovered'` appears
+on grammars with `@recover` directives. `@debug` grammars compile
+and trace under `cargo build --features parser-trace` — trace.rs
+adaptation verified.
 
 **AC.3** — `cargo test --workspace` green. Every gorgeous module
 tests pass. Every core integration test passes.
@@ -321,6 +442,13 @@ The two alternatives both have fatal flaws:
    flag, is the definition of legacy code carried alongside the new
    path. Explicitly rejected by the directive.
 
+3. **Regenerate `generated.rs` in a follow-up commit** — keeping
+   `generated.rs` stale for one commit means `cargo build -p bbnf`
+   is broken on master during that window. The workspace build is
+   a hard-blocked prerequisite for every downstream task (tests,
+   benches, LSP, playground). Breaking master, even briefly, is
+   explicitly rejected by the directive.
+
 The only idiomatic option is the atomic rewrite: delete everything
 that's about to be replaced, emit the replacement in the same
 commit, regenerate the bootstrap, update the one file that walks
@@ -335,6 +463,12 @@ emitter helpers (`tape_prelude.rs`) are settled.
   `.children()`). Rule-specific typed accessors (e.g.,
   `PairView::key() -> StringView`) are a post-AC tranche over the
   stable view substrate.
+- **Projection into scalar view accessors.** `FnDescriptor` paths
+  (`NumberConvert`, `HexConvert`, `SpanCapture`, `Expr`,
+  `Constant`) emit span leaves (or compound wrappers over sub-tape
+  offsets) in AC.2; scalar accessor specialization happens in a
+  post-AC tranche over the stable view substrate. The view layer
+  is responsible for lazy `f64`/`u8`/struct extraction.
 - **Direct projection.** Parser rules never return scalar or
   aggregate types. That's a follow-up tranche over the stable
   tape.

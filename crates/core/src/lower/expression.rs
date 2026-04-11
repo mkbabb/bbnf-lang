@@ -160,14 +160,16 @@ fn dispatch_expression<'a>(
         BbnfBootstrapRuleKind::binary_factor => lower_binary_factor(node, ctx),
         BbnfBootstrapRuleKind::mapped_factor => lower_mapped_factor(node, ctx),
         BbnfBootstrapRuleKind::factor => lower_factor(node, ctx),
+
+        // Term layer — `term` is the canonical rule_kind after the
+        // AF substrate-break closure; `literal` / `regex` /
+        // `identifier` surface directly when the optimizer inlines
+        // the term wrapper. All four route through the same
+        // content-dispatched `lower_term` entry.
         BbnfBootstrapRuleKind::term
-        | BbnfBootstrapRuleKind::term_0
-        | BbnfBootstrapRuleKind::term_1
-        | BbnfBootstrapRuleKind::term_2
-        | BbnfBootstrapRuleKind::value_atom_0
         | BbnfBootstrapRuleKind::literal
         | BbnfBootstrapRuleKind::regex
-        | BbnfBootstrapRuleKind::identifier => lower_term_dispatch(node, ctx),
+        | BbnfBootstrapRuleKind::identifier => lower_term(node, ctx),
 
         // Comments are skipped at the rule body level — they
         // produce no IR contribution.
@@ -175,14 +177,13 @@ fn dispatch_expression<'a>(
             IrNode::Epsilon
         }
 
-        other => panic!(
-            "lower/expression.rs: dispatch_expression called on \
-             unhandled rule_kind {:?} (span = {:?}, text = {:?}). \
-             Add an explicit handler for this rule_kind.",
-            other,
-            node.span(),
-            node.span_text(),
-        ),
+        // Fallback: the bbnf grammar is closed at the expression
+        // hierarchy layers above, so anything else is a term-shaped
+        // node whose `rule_kind` was dropped by a sub-variant dedupe
+        // pass in the generated schema. `lower_term` content-dispatches
+        // by the span's leading byte and panics if it cannot classify
+        // the shape — no silent `Epsilon` fallthrough.
+        _ => lower_term(node, ctx),
     }
 }
 
@@ -429,7 +430,10 @@ fn lower_mapped_factor<'a>(
 fn find_value_expr_child<'a>(
     node: BbnfBootstrapNodeView<'a>,
 ) -> Option<BbnfBootstrapNodeView<'a>> {
-    // Search for a value-expression-rooted child.
+    // Search for a value-expression-rooted child. The whitelist is
+    // the closed vocabulary of value-layer rule_kinds — every one
+    // of them belongs to the value sub-grammar and is a valid root
+    // for `lower_value_expr` downstream.
     for c in node.children() {
         match c.rule_kind() {
             BbnfBootstrapRuleKind::value_expr
@@ -439,9 +443,7 @@ fn find_value_expr_child<'a>(
             | BbnfBootstrapRuleKind::value_add
             | BbnfBootstrapRuleKind::value_mul
             | BbnfBootstrapRuleKind::value_unary
-            | BbnfBootstrapRuleKind::value_unary_0
             | BbnfBootstrapRuleKind::value_atom
-            | BbnfBootstrapRuleKind::value_atom_0
             | BbnfBootstrapRuleKind::value_fn_call
             | BbnfBootstrapRuleKind::value_path
             | BbnfBootstrapRuleKind::value_ident
@@ -484,44 +486,67 @@ fn find_type_annotation_child<'a>(
 /// Lower a `factor = big_comment? term ?w modifier? big_comment?` view.
 ///
 /// Children are positionally `[big_comment?, term, modifier?,
-/// big_comment?]`. Under structural mode, the optional comment
-/// wrappers may push empty compounds that shift the positional
-/// indices, so we dispatch by rule_kind: find the `term`-family
-/// child (anything in the term sub-tree) and look for a `modifier`
-/// child for trailing quantifiers.
+/// big_comment?]`, but positional reads are unreliable under
+/// structural mode (optional comment / modifier slots push zero-
+/// width placeholders that shift later indices). Dispatch by role:
+///
+/// 1. Find the term child via `find_child_by_kind(term)` — the
+///    canonical clean-regen shape.
+/// 2. Fall back to the first non-metadata, non-placeholder child
+///    under HEAD's hand-patched schema where the term may surface
+///    under a dedupe-dropped rule_kind or inline directly as a
+///    `literal` / `regex` / `identifier` child.
+/// 3. Collect the optional `modifier` via `find_child_by_kind` and
+///    apply its quantifier to the base term.
 fn lower_factor<'a>(node: BbnfBootstrapNodeView<'a>, ctx: &mut LowerCtx<'a>) -> IrNode {
-    // Locate the term child by rule_kind (it's the only child
-    // belonging to the term sub-tree). Skip comments and modifier
-    // markers; they're metadata, not the value.
-    let term = node
-        .children()
-        .find(|c| {
-            matches!(
-                c.rule_kind(),
-                BbnfBootstrapRuleKind::term
-                    | BbnfBootstrapRuleKind::term_0
-                    | BbnfBootstrapRuleKind::term_1
-                    | BbnfBootstrapRuleKind::term_2
-                    | BbnfBootstrapRuleKind::value_atom_0
-                    | BbnfBootstrapRuleKind::literal
-                    | BbnfBootstrapRuleKind::regex
-                    | BbnfBootstrapRuleKind::identifier
+    let term = find_child_by_kind(node, BbnfBootstrapRuleKind::term)
+        .or_else(|| find_term_child_by_elimination(node))
+        .unwrap_or_else(|| {
+            panic!(
+                "factor: missing term child in span {:?}",
+                node.span_text(),
             )
-        })
-        .expect("factor: missing term child");
-    let base = lower_term_dispatch(term, ctx);
+        });
+    let base = lower_term(term, ctx);
 
-    // Modifier is optional. Match by rule_kind first (preserved
-    // compound), then fall back to span_text inspection on any
-    // sibling with a non-empty span that looks like a modifier
-    // glyph.
-    let modifier = find_child_by_kind(node, BbnfBootstrapRuleKind::modifier);
-    if let Some(mod_node) = modifier {
-        if mod_node.span().1 > mod_node.span().0 {
-            return apply_modifier(base, mod_node.span_text());
-        }
+    // Modifier is optional. `find_child_by_kind` locates the
+    // preserved compound; an absent modifier either yields `None` or
+    // an empty-placeholder Rule record (zero-width span) that we
+    // defensively ignore.
+    if let Some(mod_node) = find_child_by_kind(node, BbnfBootstrapRuleKind::modifier)
+        && mod_node.span().1 > mod_node.span().0
+    {
+        return apply_modifier(base, mod_node.span_text());
     }
     base
+}
+
+/// Locate the term child of a `factor` compound by eliminating the
+/// known metadata / placeholder children.
+///
+/// The factor body is `big_comment? term ?w modifier? big_comment?`,
+/// so any child whose rule_kind is not `big_comment` / `comment` /
+/// `modifier` and whose span is non-empty carries the term. This
+/// path is the substrate-break fallback under HEAD's hand-patched
+/// schema where `term` may surface under a dedupe-dropped rule_kind
+/// or inline directly as a `literal` / `regex` / `identifier` leaf.
+fn find_term_child_by_elimination<'a>(
+    node: BbnfBootstrapNodeView<'a>,
+) -> Option<BbnfBootstrapNodeView<'a>> {
+    for child in node.children() {
+        match child.rule_kind() {
+            BbnfBootstrapRuleKind::big_comment
+            | BbnfBootstrapRuleKind::comment
+            | BbnfBootstrapRuleKind::modifier => continue,
+            _ => {
+                if is_empty_placeholder(child) {
+                    continue;
+                }
+                return Some(child);
+            }
+        }
+    }
+    None
 }
 
 fn apply_modifier(base: IrNode, text: &str) -> IrNode {
@@ -653,86 +678,196 @@ fn lower_leaf_by_span_text<'a>(
     None
 }
 
-fn lower_term_dispatch<'a>(
+/// Lower a `term` compound.
+///
+/// The bbnf.bbnf `term` rule is a heterogeneous alternation:
+///
+/// ```bbnf
+/// term = "ε" | "epsilon"
+///      | identifier , ( "(" , call_arg ?w , ( "," ?w , call_arg ?w ) * , ")" ) ?
+///      | literal | regex
+///      | "@{" , rhs ?w , "}"
+///      | "(" , rhs ?w , ")"
+///      | "[" , rhs ?w , "]"
+///      | "{" , rhs ?w , "}" ;
+/// ```
+///
+/// Every branch dedupes into the same `(Span, children, Span)` tape shape,
+/// so the generated enum cannot express which branch hit — dispatch by
+/// **content**, not by an enum sub-variant. The single source of truth is
+/// the leading byte of the compound's source span (or the leading byte of
+/// its first substantive child): `(` / `[` / `{` / `@` discriminate the
+/// grouped forms, `"` / `'` / `` ` `` a literal, `/` a regex, `ε` / `e`
+/// epsilon, anything else an identifier (possibly followed by grammar-call
+/// argument parentheses).
+///
+/// This is the closed-schema entry point for the term layer. Every caller —
+/// `dispatch_expression`, `lower_factor`, the implicit cascade under
+/// `peel_transparent` — routes through here; there is no other
+/// term-lowering path.
+fn lower_term<'a>(node: BbnfBootstrapNodeView<'a>, ctx: &mut LowerCtx<'a>) -> IrNode {
+    // Plain leaf — literal, regex, identifier, epsilon — classified
+    // directly from the span text. Covers every term branch whose
+    // source span IS the leaf token (no inner expression to descend into).
+    if let Some(leaf) = lower_leaf_by_span_text(node, ctx) {
+        return leaf;
+    }
+
+    let raw = node.span_text();
+    let trimmed = raw.trim_start();
+    let bytes = trimmed.as_bytes();
+    if bytes.is_empty() {
+        panic!(
+            "lower_term: empty span for rule_kind {:?} (full span = {:?})",
+            node.rule_kind(),
+            raw,
+        );
+    }
+
+    // Grouped forms: `"(" rhs ")"`, `"[" rhs "]"`, `"{" rhs "}"`, `"@{" rhs "}"`.
+    // The opening byte (plus a look-ahead for the two-byte `@{`) is the
+    // only discriminator — the four forms all have the same child layout
+    // `[open_delim, inner, close_delim]` at the tape level.
+    match bytes[0] {
+        b'(' => lower_grouped_term(node, GroupKind::Paren, ctx),
+        b'[' => lower_grouped_term(node, GroupKind::Optional, ctx),
+        b'{' => lower_grouped_term(node, GroupKind::Many, ctx),
+        b'@' if bytes.len() >= 2 && bytes[1] == b'{' => {
+            lower_grouped_term(node, GroupKind::SpanCapture, ctx)
+        }
+        // An identifier head with optional grammar-call argument
+        // parentheses. The leaf classifier already handled the bare-identifier
+        // case; reaching here means the span carries trailing `(...)` call args.
+        b if b.is_ascii_alphabetic() || b == b'_' => {
+            lower_identifier_with_optional_call(node, ctx)
+        }
+        other => panic!(
+            "lower_term: unknown leading byte {:?} for rule_kind {:?} (span = {:?})",
+            other as char,
+            node.rule_kind(),
+            raw,
+        ),
+    }
+}
+
+/// The four grouped-term flavors, discriminated by the opening delimiter
+/// byte of the term compound's span.
+#[derive(Clone, Copy)]
+enum GroupKind {
+    /// `"(" rhs ")"` — plain grouping.
+    Paren,
+    /// `"[" rhs "]"` — optional group, lowered to `Repeat { lo: 0, hi: 1 }`.
+    Optional,
+    /// `"{" rhs "}"` — many-group, lowered to `Repeat { lo: 0, hi: u32::MAX }`.
+    Many,
+    /// `"@{" rhs "}"` — span-capture, lowered to `Map + FnDescriptor::SpanCapture`.
+    SpanCapture,
+}
+
+/// Descend into the inner expression of a grouped term compound and apply
+/// the grouping operator.
+fn lower_grouped_term<'a>(
+    node: BbnfBootstrapNodeView<'a>,
+    kind: GroupKind,
+    ctx: &mut LowerCtx<'a>,
+) -> IrNode {
+    let inner_view = find_inner_expression(node).unwrap_or_else(|| {
+        panic!(
+            "lower_term (grouped): missing inner expression in span {:?}",
+            node.span_text(),
+        )
+    });
+    // `lower_rhs` peels `rhs`/`grammar_item`/`directive`/`lhs` wrappers
+    // before dispatching, matching the top-level rule body entry point.
+    let expr = lower_rhs(inner_view, ctx);
+    match kind {
+        GroupKind::Paren => expr,
+        GroupKind::Optional => IrNode::Repeat {
+            inner: Box::new(expr),
+            lo: 0,
+            hi: 1,
+        },
+        GroupKind::Many => IrNode::Repeat {
+            inner: Box::new(expr),
+            lo: 0,
+            hi: u32::MAX,
+        },
+        GroupKind::SpanCapture => {
+            let fn_id = ctx.fns.push(bbnf_ir::FnDescriptor::SpanCapture);
+            IrNode::Map {
+                inner: Box::new(expr),
+                fn_id,
+            }
+        }
+    }
+}
+
+/// Locate the substantive inner child of a grouped term compound —
+/// i.e. everything that is **not** one of the delimiter leaves pushed
+/// for `(` / `)` / `[` / `]` / `{` / `}` / `@{`.
+///
+/// Delimiters surface as `TapeKind::Literal` / `TapeKind::Span`
+/// records whose span is the single delimiter byte. The inner
+/// expression is always a `TapeKind::Rule` or `TapeKind::Repeat` /
+/// `TapeKind::Seq` compound with a non-empty span.
+fn find_inner_expression<'a>(
+    node: BbnfBootstrapNodeView<'a>,
+) -> Option<BbnfBootstrapNodeView<'a>> {
+    use ::bbnf::runtime::tape::TapeKind;
+    for child in node.children() {
+        match child.kind() {
+            TapeKind::Rule | TapeKind::Repeat | TapeKind::Seq => {
+                let (lo, hi) = child.span();
+                if hi > lo {
+                    return Some(child);
+                }
+            }
+            // Literal / Span / Regex / Epsilon — delimiters or empty
+            // placeholders, skip.
+            _ => continue,
+        }
+    }
+    None
+}
+
+/// Lower an `identifier ( "(" call_arg ("," call_arg)* ")" )?` term.
+///
+/// The identifier is the first substantive child (either a `TapeKind::Rule`
+/// compound for the `identifier` rule, or directly surfacing as a `Span`/
+/// `Literal` leaf when the optimizer inlined the wrapper). Call arguments,
+/// when present, are zero or more child compounds with `rule_kind = call_arg`.
+fn lower_identifier_with_optional_call<'a>(
     node: BbnfBootstrapNodeView<'a>,
     ctx: &mut LowerCtx<'a>,
 ) -> IrNode {
-    match node.rule_kind() {
-        // Transparent wrapper
-        BbnfBootstrapRuleKind::term => {
-            let inner = node.child(0).expect("term: missing inner child");
-            lower_term_dispatch(inner, ctx)
-        }
-
-        // Epsilon: "ε" or "epsilon"
-        BbnfBootstrapRuleKind::term_0 => IrNode::Epsilon,
-
-        // Identifier with optional call: identifier ( "(" rhs ("," rhs)* ")" )?
-        BbnfBootstrapRuleKind::term_1 => {
-            let ident = node.child(0).expect("term_1: missing identifier");
-            let call_args = node.child(1);
-            let name = ident.span_text();
-            if let Some(call) = call_args {
-                if call.span().1 > call.span().0 {
-                    // call_args = "(", first, (",", arg)*, ")"
-                    let first_arg = call
-                        .child(1)
-                        .expect("term_1 call: missing first arg");
-                    let rest_args = call.child(2);
-                    return lower_grammar_call(name, first_arg, rest_args, ctx);
-                }
-            }
-            resolve_name(name, ctx)
-        }
-
-        // Grouped: "(" rhs ")", "[" rhs "]", "{" rhs "}", "@{" rhs "}"
-        // Note: the bootstrap parser may produce term_2 OR value_atom_0 for
-        // parenthesized expressions (both have the same (Span, &Enum, Span) shape).
-        BbnfBootstrapRuleKind::term_2 | BbnfBootstrapRuleKind::value_atom_0 => {
-            let open = node.child(0).expect("term_2: missing open delimiter");
-            let inner = node.child(1).expect("term_2: missing inner");
-            let expr = lower_rhs(inner, ctx);
-            match open.span_text() {
-                "(" => expr,
-                "[" => IrNode::Repeat {
-                    inner: Box::new(expr),
-                    lo: 0,
-                    hi: 1,
-                },
-                "@{" => {
-                    let fn_id = ctx.fns.push(bbnf_ir::FnDescriptor::SpanCapture);
-                    IrNode::Map {
-                        inner: Box::new(expr),
-                        fn_id,
-                    }
-                }
-                "{" => IrNode::Repeat {
-                    inner: Box::new(expr),
-                    lo: 0,
-                    hi: u32::MAX,
-                },
-                _ => expr,
-            }
-        }
-
-        // Terminals
-        BbnfBootstrapRuleKind::literal => {
-            let raw = node.span_text();
-            let inner = &raw[1..raw.len() - 1]; // Strip quote delimiters.
-            let unescaped = crate::backend::unescape_literal(inner);
-            let id = ctx.strings.intern(&unescaped);
-            IrNode::Literal(id)
-        }
-        BbnfBootstrapRuleKind::regex => {
-            let raw = node.span_text();
-            let inner = &raw[1..raw.len() - 1]; // Strip / delimiters.
-            let id = ctx.strings.intern(inner);
-            IrNode::Regex(id)
-        }
-        BbnfBootstrapRuleKind::identifier => resolve_name(node.span_text(), ctx),
-
-        // Anything else routes back through dispatch_expression.
-        _ => dispatch_expression(node, ctx),
+    // Prefer an explicit `identifier` child (clean-regen shape); fall
+    // back to the first substantive child otherwise.
+    let ident = find_child_by_kind(node, BbnfBootstrapRuleKind::identifier)
+        .or_else(|| {
+            node.children().find(|c| {
+                let (lo, hi) = c.span();
+                hi > lo
+            })
+        })
+        .unwrap_or_else(|| {
+            panic!(
+                "lower_term (identifier): no identifier child in span {:?}",
+                node.span_text(),
+            )
+        });
+    let name = ident.span_text();
+    // The call argument list, if present, surfaces as zero or more
+    // direct `call_arg`-kinded children. Each `call_arg` is itself a
+    // rule (= alternation of binary_factors), so collecting them yields
+    // the flat argument list without further peeling.
+    let call_args: Vec<BbnfBootstrapNodeView<'a>> = node
+        .children()
+        .filter(|c| c.rule_kind() == BbnfBootstrapRuleKind::call_arg)
+        .collect();
+    if call_args.is_empty() {
+        resolve_name(name, ctx)
+    } else {
+        lower_grammar_call(name, &call_args, ctx)
     }
 }
 
@@ -767,8 +902,7 @@ fn resolve_name<'a>(name: &'a str, ctx: &mut LowerCtx<'a>) -> IrNode {
 /// nonterminal reference.
 fn lower_grammar_call<'a>(
     name: &'a str,
-    first_arg: BbnfBootstrapNodeView<'a>,
-    rest_args: Option<BbnfBootstrapNodeView<'a>>,
+    args: &[BbnfBootstrapNodeView<'a>],
     ctx: &mut LowerCtx<'a>,
 ) -> IrNode {
     let Some(closure) = ctx.closures.get(name) else {
@@ -777,19 +911,6 @@ fn lower_grammar_call<'a>(
     // Snapshot params + body so we can take `&mut ctx` for env push/pop.
     let params: Vec<&'a str> = closure.params.clone();
     let body: BbnfBootstrapNodeView<'a> = closure.body;
-
-    let mut args: Vec<BbnfBootstrapNodeView<'a>> = Vec::with_capacity(
-        1 + rest_args.map(|r| r.children().count()).unwrap_or(0),
-    );
-    args.push(first_arg);
-    if let Some(rest) = rest_args {
-        for pair in rest.children() {
-            // pair = (",", arg)
-            if let Some(arg) = pair.child(1) {
-                args.push(arg);
-            }
-        }
-    }
 
     assert_eq!(
         args.len(),

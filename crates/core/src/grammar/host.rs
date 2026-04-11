@@ -32,21 +32,25 @@ use crate::types::*;
 /// `Root` impl on `BbnfBootstrap`).
 pub fn extract_grammar<'a>(parsed: &'a Parsed<BbnfBootstrap>) -> ParsedGrammar<'a> {
     let root = parsed.view();
-    assert_eq!(
-        root.rule_kind(),
-        BbnfBootstrapRuleKind::grammar,
-        "extract_grammar: expected `grammar` root rule, got {:?}",
-        root.rule_kind(),
-    );
 
     let mut grammar = ParsedGrammar::empty();
 
-    // `grammar = grammar_item*` — iterate direct children as views.
+    // `grammar = grammar_item*` — the rule body is a single Repeat
+    // compound whose direct children are the individual
+    // `grammar_item` compounds. Flatten the Repeat wrapper, peel
+    // transparent grammar_item / directive wrappers, and dispatch
+    // each item to `absorb_item`.
+    use ::bbnf::runtime::tape::TapeKind;
     for item in root.children() {
-        // `grammar_item` / `directive` are transparent wrappers — peel
-        // them before dispatching.
-        let inner = peel_wrappers(item);
-        absorb_item(inner, &mut grammar);
+        if item.kind() == TapeKind::Repeat {
+            for grandchild in item.children() {
+                let inner = peel_wrappers(grandchild);
+                absorb_item(inner, &mut grammar);
+            }
+        } else {
+            let inner = peel_wrappers(item);
+            absorb_item(inner, &mut grammar);
+        }
     }
 
     grammar
@@ -71,12 +75,47 @@ fn absorb_item<'a>(
     item: BbnfBootstrapNodeView<'a>,
     grammar: &mut ParsedGrammar<'a>,
 ) {
-    // Rules: tuple shape `(lhs, "=", rhs, terminator)`.
+    // Rules: `rule = identifier "=" rhs ";"`. Under tape-first,
+    // literal matches don't push records — and `identifier` may
+    // also be elided at the tape level if it's a transparent /
+    // fused rule whose body is inlined. So the rule compound can
+    // have one or two direct children:
+    //   - child(0) = identifier (when present)
+    //   - child(0) = rhs (when identifier was elided)
+    //   - child(0) = identifier, child(1) = rhs (both present)
+    //
+    // We identify the identifier by its `rule_kind`. The name
+    // text comes from the leading token of the rule span.
     if item.rule_kind() == BbnfBootstrapRuleKind::rule {
-        let lhs = item.child(0).expect("rule: missing lhs child");
-        let rhs = item.child(2).expect("rule: missing rhs child");
-        let name = lhs.span_text();
-        let name_span = lhs.identifier_span();
+        let rule_text = item.span_text();
+        let (lo, _hi) = item.span();
+        // Identifier text: leading `[_a-zA-Z][\w]*` run from the rule
+        // span start. The bbnf grammar guarantees a rule starts with
+        // its identifier.
+        let name_len = rule_text
+            .bytes()
+            .take_while(|b| b.is_ascii_alphanumeric() || *b == b'_')
+            .count();
+        let name: &str = &rule_text[..name_len];
+        let input = item.input();
+        let name_span = ::parse_that::Span::new(
+            lo as usize,
+            lo as usize + name_len,
+            input,
+        );
+        // Pick the rhs child: the last direct child that isn't the
+        // identifier view (we look up by rule_kind match). For the
+        // common case where identifier is elided, the single direct
+        // child IS the rhs.
+        let rhs = {
+            let mut rhs: Option<BbnfBootstrapNodeView<'a>> = None;
+            for c in item.children() {
+                if c.rule_kind() != BbnfBootstrapRuleKind::identifier {
+                    rhs = Some(c);
+                }
+            }
+            rhs.expect("rule: missing rhs child")
+        };
         grammar.rules.insert(
             name,
             RuleEntry {

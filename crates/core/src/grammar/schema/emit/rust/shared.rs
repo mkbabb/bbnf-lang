@@ -16,35 +16,29 @@ use super::super::super::model::{CstSchema, VariantCategory, VariantDescriptor};
 ///
 /// Rule records carry `variant_idx` on their tape record; schema
 /// accessors match on this byte to decide which rule a cursor
-/// points at. The discriminator is the variant's position within
-/// `schema.variants` — non-transparent rules first (in declaration
-/// order), then sub-variants, then `Recovered`, then `__Phantom`.
-/// Agent 1's `generate_views` wires the same numbering into the
-/// tape emission epilogues so the two halves line up.
+/// points at. The discriminator is the variant's `rule_id` (the
+/// same value `emit_rule_function_impl` stamps into the compound
+/// record's `variant_idx` byte via `rule.id as u8`). Sub-variants
+/// (heterogeneous-alt coercion) return `None` — they are never
+/// the top-level variant_idx of a rule record.
 #[inline]
 pub(super) fn variant_idx_for(schema: &CstSchema, variant_name: &str) -> Option<u8> {
-    let idx = schema
-        .variants
-        .iter()
-        .position(|v| v.name == variant_name)?;
-    u8::try_from(idx).ok()
+    let variant = schema.variants.iter().find(|v| v.name == variant_name)?;
+    let rule_id = variant.rule_id?;
+    u8::try_from(rule_id & 0xFF).ok()
 }
 
 /// Find a variant by category + rule name. Returns the variant and
-/// its index in the schema variant table (the tape-level
-/// `variant_idx`).
+/// its `rule_id`-based `variant_idx`.
 #[inline]
 pub(super) fn find_variant<'a>(
     schema: &'a CstSchema,
     rule_name: &str,
 ) -> Option<(u8, &'a VariantDescriptor)> {
-    let (i, v) = schema
-        .variants
-        .iter()
-        .enumerate()
-        .find(|(_, v)| v.name == rule_name)?;
-    let idx = u8::try_from(i).ok()?;
-    Some((idx, v))
+    let variant = schema.variants.iter().find(|v| v.name == rule_name)?;
+    let rule_id = variant.rule_id?;
+    let idx = u8::try_from(rule_id & 0xFF).ok()?;
+    Some((idx, variant))
 }
 
 /// Generate the `<RuleName>View` ident for a rule variant.

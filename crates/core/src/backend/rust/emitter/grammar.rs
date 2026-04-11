@@ -217,8 +217,18 @@ impl RustEmitter {
             .or_else(|| ir.rules.iter().find(|r| !r.meta.is_transparent))
             .map(|r| ir.get_string(r.name))
             .unwrap_or_else(|| {
+                let names: Vec<String> = ir
+                    .rules
+                    .iter()
+                    .map(|r| format!("{}{}", ir.get_string(r.name),
+                        if r.meta.is_transparent { "(T)" } else { "" }))
+                    .collect();
                 panic!(
-                    "tape-first emitter requires at least one non-transparent rule"
+                    "tape-first emitter requires at least one non-transparent rule. \
+                     ir.entry={}, rule count={}, rules=[{}]",
+                    ir.entry,
+                    ir.rules.len(),
+                    names.join(", "),
                 )
             });
         let root_fn_ident = format_ident!("__{}", root_rule_name);

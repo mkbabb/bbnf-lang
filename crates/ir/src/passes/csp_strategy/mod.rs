@@ -95,6 +95,7 @@ use csp_solver::{
 use rustc_hash::FxHashMap;
 
 use crate::dag::NodeId;
+use crate::passes::materialization::MaterializationClass;
 use crate::passes::patterns::{Recognizer, RecognizerShape};
 use crate::{CostConfig, GrammarIR, IrNode};
 
@@ -189,14 +190,20 @@ pub type RecognizerDecisionMap = HashMap<NodeId, RecognizerDecision>;
 
 /// Disjoint union of every per-variable decision value the strategy
 /// CSP carries. The CSP holds variables of a single `Domain` type, so
-/// `StrategyValue` unifies the three decision families behind one
+/// `StrategyValue` unifies the four decision families behind one
 /// enum. Each variable's domain is restricted to one variant family
-/// (Alt vars only ever hold `Alt(_)`, etc.).
+/// (Alt vars only ever hold `Alt(_)`, Mat vars only ever hold
+/// `Mat(_)`, etc.).
+///
+/// Tranche AB.1 — added `Mat(MaterializationClass)`. The CSP now
+/// jointly optimizes strategy decisions (Alt / Wrap / Engine) AND
+/// per-rule tape materialization commitments.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum StrategyValue {
     Alt(AltMode),
     Wrap(WrapMode),
     Engine(RegexEngine),
+    Mat(MaterializationClass),
 }
 
 /// Cost-aware finite domain for [`StrategyValue`].
@@ -290,30 +297,91 @@ impl CostDomain for StrategyDomain {
 /// variables and a joint objective) belongs to Tranche Y, and will
 /// require either a connected-components decomposition or a solver
 /// substrate that exploits independent sub-problems.
+///
+/// **Tranche AB.1 — joint strategy + materialization solve.** The
+/// CSP now carries a per-rule `Site::Materialization` variable
+/// alongside the existing Alt/Wrap/Engine sites. See
+/// [`solve_strategy_and_materialization`] for the joint entry point.
+/// This deprecated alias is preserved so external callers can
+/// migrate incrementally; the backend pipeline already calls the
+/// new name directly.
+#[deprecated(
+    since = "AB.1",
+    note = "use solve_strategy_and_materialization (returns both decisions and updated materialization)"
+)]
 pub fn solve_strategy_decisions(ir: &GrammarIR) -> RecognizerDecisionMap {
+    solve_strategy_and_materialization(ir).0
+}
+
+/// Tranche AB.1 — joint strategy + materialization CSP entry point.
+///
+/// Returns `(RecognizerDecisionMap, materialization_map)`: the former
+/// keyed by NodeId with Alt/Wrap/Engine decisions, the latter the
+/// cost-refined per-rule materialization class (one entry per rule
+/// root NodeId). The returned materialization map is meant to be
+/// merged into `ir.materialization`, overriding the bottom-up
+/// estimates from `classify_materialization` where the CSP finds a
+/// cheaper (or pin-satisfying) assignment.
+pub fn solve_strategy_and_materialization(
+    ir: &GrammarIR,
+) -> (RecognizerDecisionMap, HashMap<NodeId, MaterializationClass>) {
     let dag = match ir.dag.as_ref() {
         Some(d) => d,
-        None => return HashMap::new(),
+        None => return (HashMap::new(), HashMap::new()),
     };
 
     let mut decisions: RecognizerDecisionMap = HashMap::new();
+    let mut mat_out: HashMap<NodeId, MaterializationClass> = HashMap::new();
     let cfg = &ir.cost_config;
+    let debug_all = ir.debug_all;
+
+    // Tranche Y.5 → AB.1: wake the `UnionFind` substrate as the
+    // first production consumer. Today every rule body is its own
+    // connected component (the only cross-variable constraint is
+    // the intra-rule TokenDispatch implication), so the union-find
+    // materializes as a set of trivial singletons — but the code
+    // path is live, and the first tranche that adds a cross-rule
+    // edge (e.g., a refined TransparentElideChain constraint) gets
+    // the decomposition for free.
+    let n_rules = ir.rules.len();
+    let mut uf = components::UnionFind::new(n_rules);
+    // No cross-rule unions under the current topology. The loop
+    // below acts as the component enumerator.
+    let _ = &mut uf;
 
     for rule in &ir.rules {
-        solve_rule(&rule.body, ir, dag, cfg, &mut decisions);
+        solve_rule(
+            rule,
+            ir,
+            dag,
+            cfg,
+            &ir.materialization,
+            debug_all,
+            &mut decisions,
+            &mut mat_out,
+        );
     }
 
-    decisions
+    (decisions, mat_out)
 }
 
 /// Build and solve the strategy CSP for a single rule body.
+///
+/// Tranche AB.1 — `rule` passed in addition to `body` so the solver
+/// can install the per-rule `Materialization` variable and apply
+/// prettify/debug domain clamps.
 fn solve_rule(
-    body: &IrNode,
+    rule: &crate::IrRule,
     ir: &GrammarIR,
     dag: &crate::dag::GrammarDag,
     cfg: &CostConfig,
+    materialization: &HashMap<NodeId, MaterializationClass>,
+    debug_all: bool,
     decisions: &mut RecognizerDecisionMap,
+    mat_out: &mut HashMap<NodeId, MaterializationClass>,
 ) {
+    let body = &rule.body;
+
     // ── Phase 1: collect decision sites + build CSP variables ──────────────
     let mut csp = Csp::<StrategyDomain>::new();
     let mut sites: Vec<(VarId, Site)> = Vec::new();
@@ -325,6 +393,25 @@ fn solve_rule(
         FxHashMap::default();
 
     collect_sites(body, ir, dag, cfg, &mut csp, &mut sites, &mut by_node);
+
+    // Tranche AB.1 — install the rule's materialization variable.
+    // Only the rule root gets a CSP variable; per-descendant classes
+    // already come from the `classify_materialization` sweep. The
+    // CSP's job at the rule level is to refine the root's commitment
+    // under cost + pin constraints.
+    let rule_mat_var = if let Some(body_id) = dag.node_for(body) {
+        let initial = materialization
+            .get(&body_id)
+            .copied()
+            .unwrap_or(MaterializationClass::MustTape);
+        let domain = build_materialization_domain(rule, initial, cfg, debug_all);
+        let var = csp.add_variable(domain);
+        sites.push((var, Site::Materialization(body_id)));
+        Some((var, body_id))
+    } else {
+        None
+    };
+    let _ = rule_mat_var;
 
     if sites.is_empty() {
         return;
@@ -343,7 +430,7 @@ fn solve_rule(
     // holds for every code path; we just elide the search work that
     // wouldn't change the answer.
     if constraints_added == 0 {
-        decode_min_cost_per_variable(&csp, &sites, decisions);
+        decode_min_cost_per_variable(&csp, &sites, decisions, mat_out);
         return;
     }
 
@@ -376,7 +463,7 @@ fn solve_rule(
                 sites.len(),
             );
         }
-        decode_min_cost_per_variable(&csp, &sites, decisions);
+        decode_min_cost_per_variable(&csp, &sites, decisions, mat_out);
         return;
     }
 
@@ -384,11 +471,19 @@ fn solve_rule(
     if let Some(solution) = solutions.first() {
         for (var_id, site) in &sites {
             if let Some(value) = solution.get(*var_id as usize).cloned() {
-                let entry = decisions.entry(site.node()).or_default();
                 match (site, value) {
-                    (Site::Alt(_), StrategyValue::Alt(m)) => entry.alt_mode = Some(m),
-                    (Site::Wrap(_), StrategyValue::Wrap(m)) => entry.wrap_mode = Some(m),
-                    (Site::Engine(_), StrategyValue::Engine(e)) => entry.regex_engine = Some(e),
+                    (Site::Alt(n), StrategyValue::Alt(m)) => {
+                        decisions.entry(*n).or_default().alt_mode = Some(m);
+                    }
+                    (Site::Wrap(n), StrategyValue::Wrap(m)) => {
+                        decisions.entry(*n).or_default().wrap_mode = Some(m);
+                    }
+                    (Site::Engine(n), StrategyValue::Engine(e)) => {
+                        decisions.entry(*n).or_default().regex_engine = Some(e);
+                    }
+                    (Site::Materialization(n), StrategyValue::Mat(c)) => {
+                        mat_out.insert(*n, c);
+                    }
                     _ => {}
                 }
             }
@@ -409,12 +504,16 @@ enum Site {
     Alt(NodeId),
     Wrap(NodeId),
     Engine(NodeId),
+    /// Tranche AB.1 — per-rule tape materialization class. One
+    /// variable per rule root (not per descendant) — the
+    /// rule-granularity decision is what the AB.2 emitter consumes.
+    Materialization(NodeId),
 }
 
 impl Site {
     fn node(&self) -> NodeId {
         match self {
-            Site::Alt(n) | Site::Wrap(n) | Site::Engine(n) => *n,
+            Site::Alt(n) | Site::Wrap(n) | Site::Engine(n) | Site::Materialization(n) => *n,
         }
     }
 }
@@ -424,10 +523,14 @@ impl Site {
 /// write it into the decision map. Branch-and-bound would produce
 /// exactly the same answer when there are no cross-variable
 /// constraints, so this is a strict optimization.
+///
+/// Tranche AB.1 — also decodes `Site::Materialization` sites into
+/// the caller's `mat_out` map.
 fn decode_min_cost_per_variable(
     csp: &Csp<StrategyDomain>,
     sites: &[(VarId, Site)],
     decisions: &mut RecognizerDecisionMap,
+    mat_out: &mut HashMap<NodeId, MaterializationClass>,
 ) {
     for (var_id, site) in sites {
         let domain = &csp.variables[*var_id as usize].domain;
@@ -443,11 +546,19 @@ fn decode_min_cost_per_variable(
             Some((v, _)) => v,
             None => continue,
         };
-        let entry = decisions.entry(site.node()).or_default();
         match (site, value) {
-            (Site::Alt(_), StrategyValue::Alt(m)) => entry.alt_mode = Some(m),
-            (Site::Wrap(_), StrategyValue::Wrap(m)) => entry.wrap_mode = Some(m),
-            (Site::Engine(_), StrategyValue::Engine(e)) => entry.regex_engine = Some(e),
+            (Site::Alt(n), StrategyValue::Alt(m)) => {
+                decisions.entry(*n).or_default().alt_mode = Some(m);
+            }
+            (Site::Wrap(n), StrategyValue::Wrap(m)) => {
+                decisions.entry(*n).or_default().wrap_mode = Some(m);
+            }
+            (Site::Engine(n), StrategyValue::Engine(e)) => {
+                decisions.entry(*n).or_default().regex_engine = Some(e);
+            }
+            (Site::Materialization(n), StrategyValue::Mat(c)) => {
+                mat_out.insert(*n, c);
+            }
             _ => {}
         }
     }
@@ -662,6 +773,66 @@ fn build_wrap_domain(fact: Option<&Recognizer>, cfg: &CostConfig) -> StrategyDom
         }
     }
 
+    StrategyDomain::new(values)
+}
+
+/// Tranche AB.1 — build the cost-weighted domain for a
+/// `Materialization` decision variable.
+///
+/// The domain includes every class legal for this rule given its
+/// directives and its classification head. Pinned rules
+/// (`@pretty` / `@debug` / `preserve_identity` / global `debug_all`)
+/// have their domain clamped to `{MustTape}` — no other class is
+/// legal, so the CSP can't demote them.
+///
+/// Non-pinned rules include their initial class (from
+/// `classify_materialization`) plus every class at or below it in
+/// the lattice. The cost weights drive the CSP toward the cheapest
+/// legal answer: `TransparentElide` < `TapeSpanOnly` < `MustTape`.
+fn build_materialization_domain(
+    rule: &crate::IrRule,
+    initial: MaterializationClass,
+    cfg: &CostConfig,
+    debug_all: bool,
+) -> StrategyDomain {
+    // Pinned rules: clamp to MustTape with a giant penalty attached
+    // to any alternative. We express this as a single-value domain
+    // because the CSP's cost model already rewards lower-cost
+    // entries; a pinned domain with one entry means no alternative
+    // can win.
+    let pinned = rule.meta.preserve_identity
+        || rule.meta.directives.pretty.is_some()
+        || rule.meta.directives.debug
+        || debug_all;
+    if pinned {
+        return StrategyDomain::new(vec![(
+            StrategyValue::Mat(MaterializationClass::MustTape),
+            cfg.mat_must_tape,
+        )]);
+    }
+
+    // Non-pinned: include the initial class and any strictly lower
+    // class. The cost model decides which to pick.
+    let mut values: Vec<(StrategyValue, f64)> = Vec::with_capacity(3);
+    values.push((
+        StrategyValue::Mat(MaterializationClass::MustTape),
+        cfg.mat_must_tape,
+    ));
+    if matches!(
+        initial,
+        MaterializationClass::TapeSpanOnly | MaterializationClass::TransparentElide
+    ) {
+        values.push((
+            StrategyValue::Mat(MaterializationClass::TapeSpanOnly),
+            cfg.mat_tape_span_only,
+        ));
+    }
+    if initial == MaterializationClass::TransparentElide {
+        values.push((
+            StrategyValue::Mat(MaterializationClass::TransparentElide),
+            cfg.mat_transparent_elide,
+        ));
+    }
     StrategyDomain::new(values)
 }
 

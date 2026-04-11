@@ -64,6 +64,25 @@ pub struct CostConfig {
     pub hir_repeat_cost: f64,
     /// HIR class-merge bonus (negative = reward).
     pub hir_merged_bonus: f64,
+
+    // ── Tranche AB.1 — materialization weights ──────────────────────
+    /// Cost of emitting a full tape compound record (`MustTape`).
+    /// Baseline; every rule pays at least this for its tape record.
+    pub mat_must_tape: f64,
+    /// Cost of emitting a single-leaf span record (`TapeSpanOnly`).
+    /// Cheaper than `MustTape` — no compound header, no child walk.
+    pub mat_tape_span_only: f64,
+    /// Cost of `TransparentElide` — no record, no function emission.
+    /// Represented as a negative cost (reward) since elision saves
+    /// the entire record-write path at the call site.
+    pub mat_transparent_elide: f64,
+    /// Soft-hard pin penalty for `@pretty` subtrees. Large enough
+    /// that any CSP solution demoting a `@pretty`-pinned node below
+    /// `MustTape` is strictly dominated by the compliant answer.
+    pub mat_prettify_pin_penalty: f64,
+    /// Soft-hard pin penalty for `@debug` subtrees. Same shape as
+    /// `mat_prettify_pin_penalty`.
+    pub mat_debug_pin_penalty: f64,
 }
 
 impl Default for CostConfig {
@@ -83,6 +102,13 @@ impl Default for CostConfig {
             hir_class_cost: 1.5,
             hir_repeat_cost: 1.0,
             hir_merged_bonus: -1.0,
+            // Tranche AB.1 — materialization defaults. See
+            // docs/tranches/AB.md §"Cost weights".
+            mat_must_tape: 6.0,
+            mat_tape_span_only: 3.0,
+            mat_transparent_elide: -5.0,
+            mat_prettify_pin_penalty: 1e9,
+            mat_debug_pin_penalty: 1e9,
         }
     }
 }
@@ -173,6 +199,33 @@ impl CostConfig {
         if let Ok(s) = std::env::var("BBNF_COST_HIR_MERGED_BONUS") {
             if let Ok(v) = s.parse() {
                 c.hir_merged_bonus = v;
+            }
+        }
+
+        // Tranche AB.1 — materialization weight overrides.
+        if let Ok(s) = std::env::var("BBNF_COST_MAT_MUST_TAPE") {
+            if let Ok(v) = s.parse() {
+                c.mat_must_tape = v;
+            }
+        }
+        if let Ok(s) = std::env::var("BBNF_COST_MAT_TAPE_SPAN_ONLY") {
+            if let Ok(v) = s.parse() {
+                c.mat_tape_span_only = v;
+            }
+        }
+        if let Ok(s) = std::env::var("BBNF_COST_MAT_TRANSPARENT_ELIDE") {
+            if let Ok(v) = s.parse() {
+                c.mat_transparent_elide = v;
+            }
+        }
+        if let Ok(s) = std::env::var("BBNF_COST_MAT_PRETTIFY_PIN_PENALTY") {
+            if let Ok(v) = s.parse() {
+                c.mat_prettify_pin_penalty = v;
+            }
+        }
+        if let Ok(s) = std::env::var("BBNF_COST_MAT_DEBUG_PIN_PENALTY") {
+            if let Ok(v) = s.parse() {
+                c.mat_debug_pin_penalty = v;
             }
         }
 

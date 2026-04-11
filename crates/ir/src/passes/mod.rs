@@ -38,9 +38,12 @@ pub use transform::{
     canonicalize_aliases, eliminate_epsilon, fuse_single_use, fuse_token_dispatch, inline_acyclic,
     merge_literals, prune_unreachable,
 };
+#[allow(deprecated)]
+pub use csp_strategy::solve_strategy_decisions;
 pub use csp_strategy::{
-    extract_regex_engine_decisions, solve_strategy_decisions, AltMode, RecognizerDecision,
-    RecognizerDecisionMap, RegexEngine, StrategyDomain, StrategyValue, WrapMode,
+    extract_regex_engine_decisions, solve_strategy_and_materialization, AltMode,
+    RecognizerDecision, RecognizerDecisionMap, RegexEngine, StrategyDomain, StrategyValue,
+    WrapMode,
 };
 pub use recognizers::mine_recognizers;
 pub use regex_info::compute_regex_info;

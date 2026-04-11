@@ -167,13 +167,11 @@ fn finalize_compile(
         ))),
         CompileTarget::Vm => {
             bbnf_ir::passes::project_types(&mut ir);
-            bbnf_ir::passes::classify_materialization(&mut ir);
             Ok(CompileOutput::Vm(ir))
         }
         CompileTarget::Ts => {
             bbnf_ir::passes::compute_sp_method_rules(&mut ir);
             bbnf_ir::passes::project_types(&mut ir);
-            bbnf_ir::passes::classify_materialization(&mut ir);
 
             let entry_name = ir.get_string(ir.rules[ir.entry as usize].name).to_string();
             let enum_name = format!("{entry_name}Value");
@@ -193,7 +191,6 @@ fn finalize_compile(
         CompileTarget::Wasm => {
             bbnf_ir::passes::compute_sp_method_rules(&mut ir);
             bbnf_ir::passes::project_types(&mut ir);
-            bbnf_ir::passes::classify_materialization(&mut ir);
 
             let entry_name = ir.get_string(ir.rules[ir.entry as usize].name).to_string();
             let module_name = format!("{entry_name}_parser");
@@ -516,13 +513,29 @@ fn compile_ast_common<'a>(
         timer.span("mine_recognizers", || {
             bbnf_ir::passes::mine_recognizers(&mut ir);
         });
-        // Tranche W phase 3b — derive per-NodeId strategy decisions
-        // from the upstream facts via a real csp_solver::Csp running
-        // OptimizationMode::MinimizeCost. Stored on
-        // `ir.recognizer_decisions` for the kernel registry and the
-        // per-kind drivers.
-        timer.span("solve_strategy_decisions", || {
-            ir.recognizer_decisions = bbnf_ir::passes::solve_strategy_decisions(&ir);
+        // Tranche AB.0 — bottom-up materialization classification.
+        // Runs before the strategy CSP so the joint solve can consult
+        // the initial per-NodeId class as a domain prefilter. The
+        // classification only consumes `ir.dag`, `ir.fns`, and
+        // per-rule `RuleMeta` directives — no dependency on
+        // `project_types`, so it's safe at this pipeline position.
+        timer.span("classify_materialization", || {
+            bbnf_ir::passes::classify_materialization(&mut ir);
+        });
+        // Tranche W phase 3b / AB.1 — derive per-NodeId strategy
+        // decisions from the upstream facts via a real
+        // `csp_solver::Csp` running `OptimizationMode::MinimizeCost`.
+        // Tranche AB.1 joins the materialization refinement into
+        // the same solver, overriding the bottom-up classification
+        // with the cost-optimal per-rule-root class where the CSP
+        // can prove it legal under pin constraints.
+        timer.span("solve_strategy_and_materialization", || {
+            let (decisions, mat_refined) =
+                bbnf_ir::passes::solve_strategy_and_materialization(&ir);
+            ir.recognizer_decisions = decisions;
+            for (node_id, class) in mat_refined {
+                ir.materialization.insert(node_id, class);
+            }
         });
         // Tranche X.8d — project the per-NodeId RegexEngine decisions
         // into a per-StringId map so `scanner_plan::plan_regex_scanner`

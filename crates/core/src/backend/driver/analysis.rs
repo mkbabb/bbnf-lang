@@ -135,11 +135,6 @@ pub fn analyze_grammar(ir: &mut GrammarIR, config: &EffectiveBackendConfig) -> B
     bbnf_ir::passes::compute_sp_method_rules(ir);
     bbnf_ir::passes::project_types(ir);
 
-    // Tranche AB.0 — classify every NodeId's tape-level
-    // materialization commitment. Consumed by the CSP joint solve
-    // (AB.1) and the tape-first emitter (AB.2).
-    bbnf_ir::passes::classify_materialization(ir);
-
     let sp_method_rules = ir
         .rules
         .iter()

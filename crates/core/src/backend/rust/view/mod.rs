@@ -94,28 +94,43 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
     let node_view_ident = format_ident!("{}NodeView", grammar_name);
     let rule_kind_ident = format_ident!("{}RuleKind", grammar_name);
 
-    let mut non_transparent_rules: Vec<(usize, &bbnf_ir::IrRule)> = ir
+    // Non-transparent rules in declaration order (used for emit
+    // AND for the RuleKind variant list).
+    let non_transparent_rules: Vec<&bbnf_ir::IrRule> = ir
         .rules
         .iter()
-        .enumerate()
-        .filter(|(_, r)| !r.meta.is_transparent)
+        .filter(|r| !r.meta.is_transparent)
         .collect();
-    non_transparent_rules.sort_by_key(|(idx, _)| *idx);
 
     let mut rule_kind_variants: Vec<TokenStream> = Vec::new();
     let mut rule_kind_dispatch: Vec<TokenStream> = Vec::new();
-    let mut next_variant_idx: u8 = 0;
 
-    // Rule-level variants first.
-    for (_, rule) in &non_transparent_rules {
+    // Rule-level variants: use `rule.id` as the discriminator —
+    // this is the value the emitter's `emit_rule_function_impl`
+    // stamps into the compound record's variant_idx via
+    // `rule.id as u8`, so the view-side dispatch must match
+    // exactly. Rule ids are stable across IR passes because the
+    // pipeline preserves them through inlining / reordering.
+    for rule in &non_transparent_rules {
         let name = ir.get_string(rule.name);
         let ident = format_ident!("{}", name);
-        let idx_lit = next_variant_idx;
+        let idx_lit = (rule.id & 0xFF) as u8;
         rule_kind_variants.push(quote! { #ident });
         rule_kind_dispatch.push(quote! { #idx_lit => #rule_kind_ident::#ident, });
-        next_variant_idx = next_variant_idx.saturating_add(1);
     }
-    // Sub-variants from heterogeneous alts. Dedup by name.
+    // Sub-variants from heterogeneous alts. These are written
+    // into the tape by the driver's coerce-branch path and take
+    // the NEXT available variant_idx values after the rule
+    // range (the emitter uses `rule.id` for rules and separate
+    // discriminators for sub-variants; the dispatch table here
+    // lists them with sequentially-assigned positions above the
+    // max rule id).
+    let max_rule_id = non_transparent_rules
+        .iter()
+        .map(|r| r.id as u16)
+        .max()
+        .unwrap_or(0);
+    let mut next_sub_idx: u16 = max_rule_id + 1;
     let mut seen_sub: std::collections::HashSet<String> = Default::default();
     for rule in &ir.rules {
         for sv in &rule.meta.sub_variants {
@@ -124,10 +139,10 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
                 continue;
             }
             let ident = format_ident!("{}", sv_name);
-            let idx_lit = next_variant_idx;
+            let idx_lit = (next_sub_idx & 0xFF) as u8;
             rule_kind_variants.push(quote! { #ident });
             rule_kind_dispatch.push(quote! { #idx_lit => #rule_kind_ident::#ident, });
-            next_variant_idx = next_variant_idx.saturating_add(1);
+            next_sub_idx = next_sub_idx.saturating_add(1);
         }
     }
 
@@ -233,7 +248,7 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
 
     let mut rule_views: Vec<TokenStream> = Vec::new();
 
-    for (_, rule) in &non_transparent_rules {
+    for rule in &non_transparent_rules {
         let name = ir.get_string(rule.name);
         let view_ident = format_ident!("{}View", name);
         let accessors = emit_common_accessors(&view_ident);

@@ -121,9 +121,19 @@ impl TapeBuilder {
             "push_compound on leaf/annotation kind {:?}",
             kind
         );
+        // `has_children` is true iff the caller actually pushed
+        // records between `mark_children` and this call. When the
+        // child run is empty, `child_off` equals the parent's own
+        // index, which would form a cycle for `TapeCursor::children`
+        // / `subtree_size`. The safe thing is to clear the flag and
+        // leave the child_off field untouched — cursor accessors
+        // check `has_children` first.
+        let parent_idx = self.tape.records.len();
+        let has_children = (child_off.0 as usize) < parent_idx;
+        let flags = (variant_idx & 0x3F) | if has_children { 0x40 } else { 0 };
         let idx = self.tape.records.push(TapeRec {
             kind,
-            flags: (variant_idx & 0x3F) | 0x40, // bit 6 = has_children
+            flags,
             _reserved: [0, 0],
             span_lo,
             span_hi,

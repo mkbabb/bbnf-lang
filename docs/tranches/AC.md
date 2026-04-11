@@ -342,7 +342,18 @@ Resolution — staged workflow within the single commit:
 7. Verify `cargo build -p bbnf` is clean without the grammar module.
 8. Run `scripts/bootstrap-bbnf.sh` — regenerates
    `crates/core/src/grammar/generated.rs` via
-   `cargo expand -p bbnf-bootstrap`.
+   `cargo expand -p bbnf-bootstrap`. **The script itself needs
+   updating**: its Python post-processor (lines 23-180) strips
+   `pub enum BbnfBootstrapEnum` and related eager-AST shapes that
+   the tape-first emitter no longer produces, re-adds
+   `#[derive(Debug)]` on the enum, and strips auto-generated
+   `impl Debug for BbnfBootstrapEnum<'a>` blocks. Under AC.2,
+   the post-processor must be rewritten to strip the new
+   view-type shapes (`pub struct BbnfBootstrapRuleView<'tape>`,
+   `impl<'tape> BbnfBootstrapRuleView<'tape>`, etc.) and
+   preserve the `impl Root for BbnfBootstrap` binding and the
+   `impl Grammar { fn parse }` entry point. Budget ~100 LOC of
+   Python rewrite.
 9. Write the new `crates/core/src/grammar/host.rs` walking
    `BbnfBootstrapView<'tape>` accessors instead of pattern-matching
    `BbnfBootstrapEnum<'a>`.

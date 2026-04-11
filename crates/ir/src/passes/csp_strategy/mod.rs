@@ -136,6 +136,9 @@ pub mod components;
 // &GrammarIR)`, called once per component solve after variable
 // building but before finalize.
 pub mod constraints;
+pub mod decode_tier;
+
+pub use decode_tier::decode_emission_tier;
 
 use std::collections::HashMap;
 

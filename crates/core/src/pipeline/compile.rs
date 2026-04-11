@@ -607,6 +607,17 @@ fn compile_ast_common<'a>(
             ir.regex_engine_decisions =
                 bbnf_ir::passes::extract_regex_engine_decisions(&ir, &ir.recognizer_decisions);
         });
+
+        // Tranche AF.5 — decode the per-rule EmissionTier from the
+        // materialization classifier output. The decoder is the
+        // bridge between AF.1's per-NodeId class and AF.6's Tier B
+        // backend emitter; until AF.6 lands the decoded tier sits
+        // dormant on `ir.emission_tier`, defaulting to `Tape` for
+        // every rule the decoder cannot prove eligible for direct
+        // emission.
+        timer.span("decode_emission_tier", || {
+            bbnf_ir::passes::decode_emission_tier(&mut ir);
+        });
     }
 
     // Emit the per-pass CSV report when BBNF_PIPELINE_REPORT=1.

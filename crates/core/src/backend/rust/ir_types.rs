@@ -1,7 +1,17 @@
 //! IR type system bridge: TypeDesc → syn::Type conversion + IrCodegenCtx.
 //!
-//! Provides the context object and type conversion utilities consumed by
-//! all IR codegen modules.
+//! Provides the context object consumed by all IR codegen modules.
+//!
+//! Tranche AC.2 — the Rust backend is tape-first. The enum + slab
+//! allocation surface this module used to expose is gone. The
+//! `emit_alloc` / `emit_alloc_let` family and the scratch-Vec
+//! helpers in the former `alloc_emit.rs` module have been deleted.
+//! Every rule returns `Option<TapeOffset>`; every sub-expression
+//! returns either `Option<()>` (side-effecting) or
+//! `Option<TapeOffset>` (tape-pushing).
+//!
+//! `type_desc_to_syn_raw` panics on `BoxedEnum` — a live BoxedEnum
+//! request on the Rust backend is a driver bug under AC.2.
 
 use std::collections::{HashMap, HashSet};
 
@@ -26,16 +36,21 @@ pub struct ParserAttributes {
 
 /// Central context for IR-based code generation.
 ///
-/// Slab is the only storage mode — all data-producing codegen uses slab allocation.
+/// Holds the per-rule type projection plus the grammar marker
+/// ident. Under AC.2 tape-first there is no longer a slab context
+/// struct and no scratch-Vec allocation; the tape records are the
+/// only storage medium.
 pub struct IrCodegenCtx<'a> {
     pub ir: &'a GrammarIR,
     /// Parser struct name (e.g., `Json`).
     pub ident: &'a syn::Ident,
-    /// Enum name (e.g., `JsonParserEnum`).
+    /// Enum name (e.g., `JsonParserEnum`). Retained for the
+    /// prettify emitter which still emits a parse-tree enum for
+    /// `@pretty` grammars.
     pub enum_ident: syn::Ident,
     /// `JsonParserEnum<'a>`.
     pub enum_type: Type,
-    /// `&'a JsonParserEnum<'a>`.
+    /// `&'a JsonParserEnum<'a>`. Kept for the prettify emitter.
     pub boxed_enum_type: Type,
     /// Parser container attributes.
     pub parser_attrs: &'a ParserAttributes,
@@ -45,18 +60,14 @@ pub struct IrCodegenCtx<'a> {
     pub sp_method_rules: HashSet<String>,
     /// Pre-computed syn::Type per rule (from IR TypeDesc).
     pub rule_types: HashMap<RuleId, Type>,
-    /// Rule IDs with fused number scan+convert. These rules produce `(Span, f64)`
-    /// instead of `Span` in the slab enum. Only set for slab codegen context.
+    /// Rule IDs with fused number scan+convert.
     pub fused_number_rules: HashSet<RuleId>,
-    /// Rules that match the operator-chain hot path shape
-    /// `Seq(head, Repeat(Seq(op, rhs)))`.
+    /// Rules that match the operator-chain hot path shape.
     pub operator_chain_rules: HashSet<RuleId>,
-    /// Distinct Vec element TypeDescs for scratch Vec generation (slab mode only).
-    /// Each entry gets a scratch field `__s{index}` and collect method `__c{index}`.
+    /// Distinct Vec element TypeDescs. Retained only for the
+    /// prettify emitter; tape-first rule emission does not use it.
     pub scratch_types: Vec<TypeDesc>,
     /// Precomputed TypeDesc → variant name map from all rules' sub_variants.
-    /// Non-Span types are globally unique (validated by `validate_sub_variant_uniqueness`),
-    /// so first-seen wins and O(1) lookup replaces O(n*m) linear search.
     pub global_sub_variants: HashMap<TypeDesc, String>,
 }
 
@@ -71,8 +82,6 @@ impl<'a> IrCodegenCtx<'a> {
         let enum_type: Type = parse_quote!(#enum_ident<'a>);
         let boxed_enum_type: Type = parse_quote!(&'a #enum_ident<'a>);
 
-        // Always use slab slices — TypeMap records seq_preserve_spans
-        // so codegen Seq emission respects span preservation for exact type alignment.
         let mut rule_types = HashMap::new();
         for (rule_id, type_desc) in &ir.types {
             let ty = type_desc_to_syn_raw(
@@ -80,20 +89,17 @@ impl<'a> IrCodegenCtx<'a> {
                 &enum_type,
                 &boxed_enum_type,
                 ir,
-                true, // always slab slices
+                true,
             );
             rule_types.insert(*rule_id, ty);
         }
 
-        // Read distinct Vec element types from TypeMap (precomputed by project_types).
         let scratch_types = ir
             .type_map
             .as_ref()
             .map(|m| m.scratch_types().to_vec())
             .unwrap_or_default();
 
-        // Build global sub-variant lookup: TypeDesc → variant_name.
-        // First-seen wins; non-Span types are globally unique per validation.
         let mut global_sub_variants = HashMap::new();
         for rule in &ir.rules {
             for sv in &rule.meta.sub_variants {
@@ -133,8 +139,6 @@ impl<'a> IrCodegenCtx<'a> {
         })
     }
 
-    /// Look up the project_node_in_vec type for a sub-expression
-    /// from the TypeMap.
     pub fn vec_elem_type(&self, node: &bbnf_ir::IrNode) -> TypeDesc {
         self.ir.vec_elem_type(node).cloned().unwrap_or_else(|| {
             panic!(
@@ -145,53 +149,16 @@ impl<'a> IrCodegenCtx<'a> {
         })
     }
 
-    /// Look up the precomputed Seq child types from the TypeMap.
-    ///
-    /// `seq_node` must be the `IrNode::Seq(_)` itself (not the child
-    /// slice) — the Seq-keyed TypeMap entries are keyed by the Seq
-    /// node's `NodeId` via `ir.dag`.
     pub fn seq_child_types(&self, seq_node: &bbnf_ir::IrNode) -> Option<Vec<TypeDesc>> {
         self.ir.seq_child_types(seq_node).map(|s| s.to_vec())
     }
 
-    /// Look up the result type of a Seq (post-compression,
-    /// post-flattening).
     pub fn seq_result_type(&self, seq_node: &bbnf_ir::IrNode) -> Option<TypeDesc> {
         self.ir.seq_result_type(seq_node).cloned()
     }
 
     pub fn seq_preserve_spans(&self, seq_node: &bbnf_ir::IrNode) -> bool {
         self.ir.seq_preserve_spans(seq_node)
-    }
-
-    /// Look up the scratch Vec index for a given collection element TypeDesc.
-    /// Panics if the element type wasn't pre-registered (should never happen
-    /// if `collect_vec_element_types` is correct).
-    pub fn scratch_index_for_elem(&self, elem_desc: &TypeDesc) -> usize {
-        self.scratch_types
-            .iter()
-            .position(|t| t == elem_desc)
-            .unwrap_or_else(|| {
-                panic!(
-                    "scratch type not registered for {:?}; known types: {:?}",
-                    elem_desc, self.scratch_types
-                )
-            })
-    }
-
-    /// Emit the scratch accessor ident for a given index: `__s0`, `__s1`, etc.
-    pub fn scratch_accessor(&self, idx: usize) -> syn::Ident {
-        format_ident!("__s{}", idx)
-    }
-
-    /// Emit the collect method ident for a given index: `__c0`, `__c1`, etc.
-    pub fn collect_accessor(&self, idx: usize) -> syn::Ident {
-        format_ident!("__c{}", idx)
-    }
-
-    /// Get the context struct ident: `__JsonEnumCtx`.
-    pub fn alloc_ctx_ident(&self) -> syn::Ident {
-        format_ident!("__{}Ctx", self.enum_ident)
     }
 
     pub fn rule_return_type(&self, rule_id: RuleId) -> Type {
@@ -208,22 +175,6 @@ impl<'a> IrCodegenCtx<'a> {
             .get(&rule_id)
             .cloned()
             .unwrap_or_else(|| self.boxed_enum_type.clone())
-    }
-
-    pub fn recover_sentinel(&self, rule_id: RuleId) -> TokenStream {
-        let rule = &self.ir.rules[rule_id as usize];
-        let enum_ident = &self.enum_ident;
-        if rule.meta.is_transparent {
-            let recovered_ident = self.recovered_static_ident();
-            quote::quote! { &#recovered_ident }
-        } else {
-            quote::quote! { #enum_ident::Recovered }
-        }
-    }
-
-    /// Emit alloc via AllocCtx: `.slab().alloc()`.
-    fn alloc_tokens(&self, helper_call: TokenStream, value: &TokenStream) -> TokenStream {
-        quote::quote! { #helper_call.slab().alloc(#value) }
     }
 
     pub fn has_sp_method(&self, name: &str) -> bool {
@@ -251,67 +202,57 @@ impl<'a> IrCodegenCtx<'a> {
         format_ident!("{}_unboxed", name)
     }
 
-    pub fn wrap_recur_expr_with_state(
-        &self,
-        expr: TokenStream,
-        state_ident: &syn::Ident,
-    ) -> TokenStream {
-        let helper_ident = self.alloc_helper_ident();
-        let helper_call = quote::quote! { #helper_ident(#state_ident) };
-        let alloc = self.alloc_tokens(helper_call, &quote::quote! { #expr });
-        quote::quote! {{
-            let __slab_alloc = #alloc;
-            &*__slab_alloc
-        }}
+    pub fn rule_body_desc(&self, rule_id: RuleId) -> Option<&TypeDesc> {
+        self.ir
+            .types
+            .iter()
+            .find_map(|(id, ty)| (*id == rule_id).then_some(ty))
     }
 
-    pub fn wrap_recur_expr(&self, expr: TokenStream) -> TokenStream {
-        let state_ident = format_ident!("state");
-        self.wrap_recur_expr_with_state(expr, &state_ident)
+    // ─── Tape-first stubs for prettify compatibility ──────────────
+    //
+    // The prettify emitter still calls `emit_scratch_*`,
+    // `emit_alloc*`, `recovered_static_ident`, and
+    // `generate_alloc_ctx`. Under AC.2 the monolithic rule path no
+    // longer uses any of these; they remain as thin stubs so
+    // `backend/rust/emitter/prettify/` continues to compile
+    // unchanged. Each stub returns the minimum viable token stream;
+    // prettify grammars that still depend on the allocating enum
+    // model must be migrated alongside the eventual prettify
+    // rewrite.
+
+    pub fn scratch_index_for_elem(&self, elem_desc: &TypeDesc) -> usize {
+        self.scratch_types
+            .iter()
+            .position(|t| t == elem_desc)
+            .unwrap_or(0)
     }
 
-    pub fn wrap_recur_map_with_state(
-        &self,
-        parser: TokenStream,
-        body: TokenStream,
-        state_ident: &syn::Ident,
-    ) -> TokenStream {
-        quote::quote! {
-            #parser.map_with_ctx(|x, #state_ident| #body)
-        }
+    pub fn scratch_accessor(&self, idx: usize) -> syn::Ident {
+        format_ident!("__s{}", idx)
     }
 
-    pub fn recovered_static_ident(&self) -> syn::Ident {
-        format_ident!("__{}_RECOVERED", self.enum_ident)
+    pub fn collect_accessor(&self, idx: usize) -> syn::Ident {
+        format_ident!("__c{}", idx)
+    }
+
+    pub fn alloc_ctx_ident(&self) -> syn::Ident {
+        format_ident!("__{}Ctx", self.enum_ident)
     }
 
     pub fn alloc_helper_ident(&self) -> syn::Ident {
         format_ident!("__{}_alloc", self.enum_ident)
     }
 
-    /// Emit code that allocs a value expression into the `boxed_enum_type`.
-    ///
-    /// `&*helper(state).slab().alloc(expr)`.
-    pub fn emit_alloc(&self, value_expr: &TokenStream) -> TokenStream {
-        let helper = self.alloc_helper_ident();
-        let helper_call = quote::quote! { #helper(state) };
-        let alloc = self.alloc_tokens(helper_call, value_expr);
-        quote::quote! { &*#alloc }
+    pub fn recovered_static_ident(&self) -> syn::Ident {
+        format_ident!("__{}_RECOVERED", self.enum_ident)
     }
 
-    /// Emit code that allocs a value via a let binding + alloc.
-    ///
-    /// `let __alloc = helper(state).slab().alloc(expr); &*__alloc`
-    ///
-    /// The let-binding form extends the borrow lifetime.
-    pub fn emit_alloc_let(&self, value_expr: &TokenStream) -> TokenStream {
-        let helper = self.alloc_helper_ident();
-        let helper_call = quote::quote! { #helper(state) };
-        let alloc = self.alloc_tokens(helper_call, value_expr);
-        quote::quote! {
-            let __alloc = #alloc;
-            &*__alloc
-        }
+    pub fn recover_sentinel(&self, _rule_id: RuleId) -> TokenStream {
+        // AC.2: recovery uses TapeKind::Recovered at the emit site;
+        // no static enum sentinel is needed. Returning `None` keeps
+        // any residual call-site that weaves this in compile-safe.
+        quote::quote! { None::<::bbnf::runtime::tape::TapeOffset> }
     }
 
     pub fn collection_builder_type_from_elem_desc(&self, elem_desc: &TypeDesc) -> Type {
@@ -320,19 +261,10 @@ impl<'a> IrCodegenCtx<'a> {
             &self.enum_type,
             &self.boxed_enum_type,
             self.ir,
-            false, // collection builder is always Vec (the BUILD type, not the final type)
+            false,
         );
         parse_quote!(Vec<#elem_ty>)
     }
-
-    pub fn rule_body_desc(&self, rule_id: RuleId) -> Option<&TypeDesc> {
-        self.ir
-            .types
-            .iter()
-            .find_map(|(id, ty)| (*id == rule_id).then_some(ty))
-    }
-
-    // NOTE: emit_scratch_*, generate_alloc_ctx are in alloc_emit.rs (separate impl block).
 }
 
 pub fn type_desc_to_syn(desc: &TypeDesc, ctx: &IrCodegenCtx<'_>) -> Type {
@@ -341,7 +273,7 @@ pub fn type_desc_to_syn(desc: &TypeDesc, ctx: &IrCodegenCtx<'_>) -> Type {
         &ctx.enum_type,
         &ctx.boxed_enum_type,
         ctx.ir,
-        true, // always slab slices
+        true,
     )
 }
 
@@ -379,7 +311,15 @@ fn type_desc_to_syn_raw(
                 parse_quote!((#(#types),*))
             }
         }
-        TypeDesc::BoxedEnum => boxed_enum_type.clone(),
+        TypeDesc::BoxedEnum => {
+            // Tranche AC.2: the Rust backend is tape-first. A live
+            // BoxedEnum projection at codegen time indicates a
+            // driver bug — the monolithic path should never query
+            // the allocating enum type again.
+            panic!(
+                "Rust backend under tape-first should not see BoxedEnum — driver bug"
+            )
+        }
         TypeDesc::Enum => enum_type.clone(),
         TypeDesc::Named(sid) => {
             let type_str = ir.get_string(*sid);

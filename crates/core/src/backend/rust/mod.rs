@@ -7,7 +7,6 @@
 pub mod analysis;
 pub mod emitter;
 pub mod emitter_types;
-mod alloc_emit;
 pub mod ir_enums;
 pub mod ir_types;
 pub mod trace;

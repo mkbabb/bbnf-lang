@@ -56,17 +56,19 @@ pub(super) fn generate_module(schema: &CstSchema) -> TokenStream {
         let Some(variant_idx) = variant_idx_for(schema, &variant.name) else {
             continue;
         };
-        let Some(td) = &variant.type_desc else { continue };
-        let TypeDesc::Tuple(elems) = td else { continue };
-        if elems.len() < 2 {
-            continue;
-        }
-        if elems.len() - 2 != layout.slots.len() {
-            // Layout table out of sync with the grammar — skip
-            // defensively so codegen still produces a buildable
-            // TokenStream.
-            continue;
-        }
+        // Type metadata is consulted only as a heuristic that the
+        // rule was lowered with the expected payload shape. Pre-AE
+        // structural mode preserves more wrappers (Optional
+        // placeholders, comment slots) so the projected Tuple can
+        // come out longer than the layout's slot count. The
+        // generated `try_as_*_directive` helper walks the runtime
+        // tape via `cursor.children()` and binds slots positionally
+        // from the front, so an over-long Tuple is harmless: extra
+        // children are simply not bound. Accept any non-empty
+        // payload — including the case where `type_desc` is missing
+        // entirely (some directives lower to Unit because their
+        // body inlines all literals).
+        let _ = &variant.type_desc;
 
         let struct_ident = format_ident!("{}", layout.struct_name);
         let mut fields = Vec::new();

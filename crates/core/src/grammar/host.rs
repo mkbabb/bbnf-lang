@@ -378,23 +378,94 @@ fn absorb_import_structural<'a>(
     let (lo, hi) = item.span();
     let directive_span = Span::new(lo as usize, hi as usize, item.input());
 
-    let Some(path_view) =
+    // Primary path: structural descent through `import_path` /
+    // `import_items` rule_kinds. Works whenever the runtime-stamped
+    // variant_idx and the compiled enum agree (clean-regen state).
+    if let Some(path_view) =
         find_descendant_by_kind(item, BbnfBootstrapRuleKind::import_path)
-    else {
+    {
+        let (path_lo, path_hi) = path_view.span();
+        let path_raw = &path_view.input()[path_lo as usize..path_hi as usize];
+        let path_str = strip_quotes(path_raw);
+
+        let items_view =
+            find_descendant_by_kind(item, BbnfBootstrapRuleKind::import_items);
+
+        let names: Option<Vec<ImportedName<'a>>> = items_view.map(|items| {
+            let mut out = Vec::new();
+            collect_identifier_descendants(items, &mut out);
+            out
+        });
+
+        imports.push(ImportDirective {
+            path: Cow::Borrowed(path_str),
+            span: directive_span,
+            items: names,
+        });
+        return;
+    }
+
+    // Fallback path: span-text extraction. Used when the hand-
+    // patched bootstrap's enum drifts from the runtime variant_idx
+    // so `rule_kind()` reports wrong kinds for descendants. The
+    // span text of an import compound is always
+    // `@import [ { item, item } from ] "path" [ ; | . ]` so the
+    // path and item list can be lifted from substring ranges
+    // without any schema dependency. Under the clean regen this
+    // branch is unreachable (the primary path always succeeds),
+    // but it keeps `@import` resolution working across the
+    // structural-mode enum-drift window.
+    let input = item.input();
+    let item_start = lo as usize;
+    let item_end = hi as usize;
+    let raw = &input[item_start..item_end];
+
+    let Some(open_quote_rel) = raw.find('"') else {
         return;
     };
-    let (path_lo, path_hi) = path_view.span();
-    let path_raw = &path_view.input()[path_lo as usize..path_hi as usize];
-    let path_str = strip_quotes(path_raw);
+    let Some(close_quote_rel) = raw[open_quote_rel + 1..].find('"') else {
+        return;
+    };
+    let path_lo = item_start + open_quote_rel + 1;
+    let path_hi = item_start + open_quote_rel + 1 + close_quote_rel;
+    let path_str: &'a str = &input[path_lo..path_hi];
 
-    let items_view =
-        find_descendant_by_kind(item, BbnfBootstrapRuleKind::import_items);
-
-    let names: Option<Vec<ImportedName<'a>>> = items_view.map(|items| {
-        let mut out = Vec::new();
-        collect_identifier_descendants(items, &mut out);
-        out
-    });
+    // Items slice (optional): the substring between the first `{`
+    // and the matching `}`, if both precede the path quote. Each
+    // comma-separated identifier is extracted with an absolute byte
+    // span via offset tracking inside the slice.
+    let names: Option<Vec<ImportedName<'a>>> = raw
+        .find('{')
+        .and_then(|brace_lo_rel| {
+            raw[brace_lo_rel + 1..]
+                .find('}')
+                .map(|rel| (brace_lo_rel, brace_lo_rel + 1 + rel))
+        })
+        .filter(|(_, brace_hi_rel)| *brace_hi_rel < open_quote_rel)
+        .map(|(brace_lo_rel, brace_hi_rel)| {
+            let items_start = brace_lo_rel + 1;
+            let items_end = brace_hi_rel;
+            let mut out = Vec::new();
+            let mut cursor = items_start;
+            while cursor < items_end {
+                let comma_rel = raw[cursor..items_end].find(',').unwrap_or(items_end - cursor);
+                let tok = &raw[cursor..cursor + comma_rel];
+                // Trim leading whitespace, track offset.
+                let ws_lead = tok.bytes().take_while(|b| b.is_ascii_whitespace()).count();
+                let trimmed = tok[ws_lead..].trim_end();
+                if !trimmed.is_empty() {
+                    let abs_lo = item_start + cursor + ws_lead;
+                    let abs_hi = abs_lo + trimmed.len();
+                    let name: &'a str = &input[abs_lo..abs_hi];
+                    out.push(ImportedName {
+                        name: Cow::Borrowed(name),
+                        span: Span::new(abs_lo, abs_hi, input),
+                    });
+                }
+                cursor += comma_rel + 1;
+            }
+            out
+        });
 
     imports.push(ImportDirective {
         path: Cow::Borrowed(path_str),

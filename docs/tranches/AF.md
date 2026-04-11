@@ -95,6 +95,39 @@ parses every production grammar (`bbnf.bbnf`, `json.bbnf`,
 counts match a frozen snapshot. Permanent regression gate against
 silent shape-mismatch failure of the kind AE was built to fix.
 
+### AF.0b — Deferred: pipeline codegen substrate-break
+
+Wave 1's substrate-break closure lands as planned: every `term_0 /
+term_1 / term_2 / value_atom_0 / value_unary_0 / import_directive_0`
+reference is gone from `crates/core/src/lower/` and `crates/core/src/grammar/host.rs`.
+The grep gate (`crates/core/tests/no_subvariant_refs.rs`) is the
+contract that keeps it closed.
+
+The clean regen itself — `scripts/bootstrap-bbnf.sh` producing a
+`generated.rs` that replaces the hand-patched file — is deferred to a
+follow-up sub-tranche **AF.0b**. A latent bug in the backend driver
+codegen emits a degenerate `__grammar` body (three empty `'alt_blk:`
+branches instead of the expected `'rpt_blk:` loop) when lowering the
+`grammar = ( grammar_item ?w ) *` rule under structural mode. The
+bug reproduces with every Wave 1 change reverted, so it pre-dates the
+tranche; the hand-patched `generated.rs` has been silently masking it.
+Investigating the codegen regression is unbounded work that would
+block the rest of AF, so it is isolated into AF.0b.
+
+Until AF.0b lands, `crates/core/src/grammar/generated.rs` remains
+hand-patched and the grammar round-trip gate stays `#[ignore]`-gated.
+The substrate-break closure (Wave 1) and all downstream AF phases
+(AF.1–AF.7) run cleanly against the hand-patched parser: Wave 1's
+span-text discipline in `lower/` is enum-drift-tolerant by design,
+and an additional span-text fallback in `host.rs::absorb_import_structural`
+(primary path: structural `find_descendant_by_kind(import_path)`;
+fallback path: byte-offset extraction from the directive's source
+slice) makes `load_module_graph` follow `@import` directives correctly
+regardless of whether the runtime-stamped variant_idx matches the
+compiled enum positions. With that fallback in place, the hand-
+patched parser loads all 53 rules across `bbnf.bbnf`, `expressions.bbnf`,
+and `types.bbnf`.
+
 ## AF.1 — Dormant infrastructure activation
 
 Every piece of pre-built infrastructure that AC–AE landed without a

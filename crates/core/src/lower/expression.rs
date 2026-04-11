@@ -68,6 +68,73 @@ fn dispatch_expression<'a>(
     node: BbnfBootstrapNodeView<'a>,
     ctx: &mut LowerCtx<'a>,
 ) -> IrNode {
+    // Peel named transparent wrappers (`grammar_item`, `directive`,
+    // `lhs`) at the dispatch entry so layer functions can assume
+    // their input is the semantic head.
+    let node = peel_transparent(node);
+
+    // Try to classify as a closed leaf vocabulary first: regex
+    // literal, string literal, identifier, epsilon. The
+    // span-text classifier is the shape-agnostic recognizer of
+    // simple leaves, used both as the named-rule_kind
+    // path's fast-path (literal/regex/identifier hits here when
+    // they would otherwise need to walk the term sub-variants)
+    // and as the fallback when the rule_kind dispatch can't find
+    // a handler.
+    if let Some(leaf) = lower_leaf_by_span_text(node, ctx) {
+        return leaf;
+    }
+
+    // Anonymous wrapper compounds — `Rule` / `Repeat` compounds
+    // whose own `variant_idx` either isn't mapped in the current
+    // `BbnfBootstrapRuleKind` enum (Unknown) or maps to the
+    // sentinel `int_lit` because variant_idx=0 (the catch-all
+    // Repeat / Optional sentinel) collides with `int_lit`'s
+    // rule_id slot. Walk substantive Rule children (skipping
+    // every Repeat / Optional wrapper child — separators,
+    // optional placeholders, and the like) and re-dispatch:
+    //
+    // - Zero substantive Rule children → `Epsilon` (empty
+    //   placeholder).
+    // - Exactly one substantive Rule child → peel and recurse.
+    // - Multiple substantive Rule children → treat as a `Seq`
+    //   (the wrapper carries iteration content separated by
+    //   non-pushing literals like `,` or `|`; under HEAD's
+    //   hand-patched generated.rs the separator commas push
+    //   single-byte Repeat compounds we ignore).
+    //
+    // After AE.4's clean regen these wrappers will have proper
+    // enum entries and the peel becomes mostly unreachable.
+    use ::bbnf::runtime::tape::TapeKind;
+    let kind = node.rule_kind();
+    let is_unknown_or_sentinel = matches!(
+        kind,
+        BbnfBootstrapRuleKind::Unknown | BbnfBootstrapRuleKind::int_lit,
+    );
+    let is_wrapper_kind = matches!(
+        node.kind(),
+        TapeKind::Rule | TapeKind::Repeat,
+    );
+    if is_unknown_or_sentinel && is_wrapper_kind {
+        let substantive: Vec<BbnfBootstrapNodeView<'a>> = node
+            .children()
+            .filter(|c| c.kind() == TapeKind::Rule)
+            .collect();
+        match substantive.len() {
+            0 => return IrNode::Epsilon,
+            1 => return dispatch_expression(substantive[0], ctx),
+            _ => {
+                // Multiple substantive children — treat as a
+                // concatenation (Seq) and lower each.
+                let parts: Vec<IrNode> = substantive
+                    .into_iter()
+                    .map(|c| dispatch_expression(c, ctx))
+                    .collect();
+                return IrNode::Seq(parts);
+            }
+        }
+    }
+
     match node.rule_kind() {
         BbnfBootstrapRuleKind::closure => {
             // Grammar closure at rule level — lower the body directly.
@@ -326,6 +393,16 @@ fn lower_mapped_factor<'a>(
     if mapping_node.span().1 <= mapping_node.span().0 {
         return base;
     }
+    // Disambiguate: under HEAD's hand-patched generated.rs the
+    // mapped_factor compound's children may collapse positions
+    // (factor's modifier slot can land at child(1) instead of
+    // the mapping group). The mapping group always carries the
+    // `->` arrow keyword in its source slice; if `child(1)` is a
+    // bare modifier (`?w` / `?` / `*` / `+`), it's not the
+    // mapping group and we have no `->` mapping.
+    if !mapping_node.span_text().contains("->") {
+        return base;
+    }
     // Extract the value_expr + optional type_annotation. The
     // mapping group's children are normally [arrow_kw, value_expr,
     // type_annotation?]; under flattened shapes, walk the children
@@ -347,7 +424,8 @@ fn find_value_expr_child<'a>(
     // Search for a value-expression-rooted child.
     for c in node.children() {
         match c.rule_kind() {
-            BbnfBootstrapRuleKind::value_or
+            BbnfBootstrapRuleKind::value_expr
+            | BbnfBootstrapRuleKind::value_or
             | BbnfBootstrapRuleKind::value_and
             | BbnfBootstrapRuleKind::value_cmp
             | BbnfBootstrapRuleKind::value_add
@@ -458,6 +536,113 @@ fn apply_modifier(base: IrNode, text: &str) -> IrNode {
         "?w" => IrNode::OptionalWhitespace(Box::new(base)),
         _ => base,
     }
+}
+
+/// True if `view` is an empty placeholder compound — a Repeat
+/// (or Rule) compound whose span has zero width (`lo == hi`) AND
+/// whose child run is empty. These arise from the post-AC.2
+/// emission of missing optional groups in `factor` / `mapped_factor`
+/// (e.g. an absent leading `big_comment?` or trailing modifier
+/// `?w`): the emitter pushes a Repeat compound with `(state.offset,
+/// state.offset)` and zero children to keep positional layout
+/// stable, and downstream consumers detect the placeholder by its
+/// empty span. Used by `dispatch_expression`'s wrapper-peel to
+/// skip over these placeholders when finding the single
+/// substantive child of an anonymous wrapper compound.
+fn is_empty_placeholder(view: BbnfBootstrapNodeView<'_>) -> bool {
+    let (lo, hi) = view.span();
+    lo == hi && view.children().next().is_none()
+}
+
+/// Span-text leaf classifier — the shape-agnostic fallback when
+/// `dispatch_expression` can't route a view by its `rule_kind`.
+///
+/// Inspects the node's source slice (after trimming surrounding
+/// whitespace) and matches against the closed bbnf leaf vocabulary:
+///
+/// - `/regex/` — regex literal (delimited by forward slashes,
+///   matching the bbnf grammar's `regex` rule)
+/// - `"text"` / `'text'` / `` `text` `` — string literal in any of
+///   bbnf's three quote styles (matching the `literal` rule)
+/// - `epsilon` / `ε` — epsilon
+/// - bare identifier — nonterminal reference resolved against the
+///   rule table or the closure environment
+///
+/// Returns `None` when the span text doesn't look like a leaf —
+/// the caller falls through to its rule_kind-based dispatch (or
+/// panics if there's no handler).
+///
+/// This fallback exists because the bootstrap regen runs against a
+/// hand-patched `generated.rs` whose `BbnfBootstrapRuleKind` enum
+/// doesn't map every rule's `variant_idx` (some pre-AC.2 inlining
+/// dropped enum entries while leaving the rule functions in place).
+/// Source-slice classification is the only stable signal under
+/// that mismatch. After AE.4's clean regen the rule_kind dispatch
+/// becomes complete and this path becomes mostly unreachable for
+/// the bbnf bootstrap path.
+fn lower_leaf_by_span_text<'a>(
+    node: BbnfBootstrapNodeView<'a>,
+    ctx: &mut LowerCtx<'a>,
+) -> Option<IrNode> {
+    use ::bbnf::runtime::tape::TapeKind;
+    // Only Rule / Span leaves carry semantic spans we can
+    // classify; Repeat / Optional wrappers should be handled
+    // by `iter_rep_children` further up.
+    match node.kind() {
+        TapeKind::Rule
+        | TapeKind::Span
+        | TapeKind::Literal
+        | TapeKind::Regex => {}
+        _ => return None,
+    }
+    let raw = node.span_text();
+    let trimmed = raw.trim();
+    if trimmed.is_empty() {
+        return None;
+    }
+
+    // Regex literal: starts and ends with `/`, length ≥ 2.
+    if trimmed.len() >= 2
+        && trimmed.starts_with('/')
+        && trimmed.ends_with('/')
+    {
+        let inner = &trimmed[1..trimmed.len() - 1];
+        let id = ctx.strings.intern(inner);
+        return Some(IrNode::Regex(id));
+    }
+
+    // String literal in any of the three bbnf quote styles.
+    if trimmed.len() >= 2 {
+        let bytes = trimmed.as_bytes();
+        let first = bytes[0];
+        let last = bytes[bytes.len() - 1];
+        if first == last && (first == b'"' || first == b'\'' || first == b'`') {
+            let inner = &trimmed[1..trimmed.len() - 1];
+            let unescaped = crate::backend::unescape_literal(inner);
+            let id = ctx.strings.intern(&unescaped);
+            return Some(IrNode::Literal(id));
+        }
+    }
+
+    // Epsilon keyword.
+    if trimmed == "epsilon" || trimmed == "ε" {
+        return Some(IrNode::Epsilon);
+    }
+
+    // Bare identifier — must match `[_a-zA-Z][_a-zA-Z0-9-]*` per
+    // the bbnf `identifier` rule. Trailing alphanumerics / `-` /
+    // `_` only; bail on anything else.
+    let id_bytes = trimmed.as_bytes();
+    if !id_bytes.is_empty()
+        && (id_bytes[0].is_ascii_alphabetic() || id_bytes[0] == b'_')
+        && id_bytes
+            .iter()
+            .all(|b| b.is_ascii_alphanumeric() || *b == b'_' || *b == b'-')
+    {
+        return Some(resolve_name(trimmed, ctx));
+    }
+
+    None
 }
 
 fn lower_term_dispatch<'a>(

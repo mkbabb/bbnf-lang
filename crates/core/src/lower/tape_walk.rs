@@ -89,15 +89,18 @@ pub(crate) fn find_child_by_kind<'tape>(
 /// Peel a closed whitelist of single-child transparent wrapper
 /// rules. Returns the innermost non-wrapper view.
 ///
-/// The whitelist enumerates the known transparent wrapper rules
-/// declared in `bbnf.bbnf` that survive the optimizer in
-/// preserve_identity mode and need to be unwrapped during
-/// lowering descent: `grammar_item`, `directive`, `lhs`. The `rhs`
-/// rule (wraps `closure | alternation`) is also a transparent
-/// wrapper but is not present in HEAD's `BbnfBootstrapRuleKind`
-/// enum (the pre-AC.2 optimizer inlined it); it will be added to
-/// the whitelist after AE.4's clean regen if the new generated.rs
-/// preserves it.
+/// The whitelist enumerates the bbnf.bbnf transparent wrapper
+/// rules that survive preserve_identity mode and need to be
+/// unwrapped during lowering descent: `grammar_item`,
+/// `directive`, `lhs`.
+///
+/// `rhs` and other wrapper rules whose enum entries were dropped
+/// by an earlier optimizer pass are NOT peeled here — they are
+/// detected by `lower_leaf_by_span_text` in `expression.rs` once
+/// the lowering reaches a span whose source slice matches a
+/// closed bbnf leaf vocabulary. After AE.4's clean regen the
+/// enum entries return and the named whitelist becomes
+/// authoritative again.
 ///
 /// If the view's rule_kind is not in the whitelist, returns the
 /// view unchanged. If the view has no `child(0)`, returns it
@@ -109,7 +112,8 @@ pub(crate) fn peel_transparent<'tape>(
         match view.rule_kind() {
             BbnfBootstrapRuleKind::grammar_item
             | BbnfBootstrapRuleKind::directive
-            | BbnfBootstrapRuleKind::lhs => {
+            | BbnfBootstrapRuleKind::lhs
+            | BbnfBootstrapRuleKind::rhs => {
                 let Some(child) = view.child(0) else {
                     return view;
                 };

@@ -65,7 +65,7 @@ import_directive = "@import" ?w , (
 recover_directive = "@recover" ?w , identifier ?w , rhs ?w , ( ";" | "." ) ? ;
 
 pretty_hint = identifier , ( "(" , /[^)]*/ , ")" ) ? ;
-pretty_directive = "@pretty" ?w , ( "*" | identifier ) ?w , (pretty_hint+) ?w , ( ";" | "." ) ? ;
+pretty_directive = "@pretty" ?w , ( "*" | identifier ) ?w , ( pretty_hint ?w ) + , ( ";" | "." ) ? ;
 
 ws_directive = "@ws" ?w , regex ?w , ( ";" | "." ) ? ;
 token_directive = "@token" ?w , identifier ?w , ( ";" | "." ) ? ;

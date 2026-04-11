@@ -13,6 +13,7 @@ mod expression;
 mod fn_table;
 mod metadata;
 mod string_interner;
+pub(crate) mod tape_walk;
 pub(crate) mod value_expr;
 
 use std::collections::{HashMap, HashSet};

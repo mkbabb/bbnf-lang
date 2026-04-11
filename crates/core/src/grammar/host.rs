@@ -20,7 +20,9 @@ use std::borrow::Cow;
 
 use parse_that::Span;
 
-use super::generated::{BbnfBootstrap, BbnfBootstrapNodeView, BbnfBootstrapRuleKind};
+use super::generated::{
+    BbnfBootstrap, BbnfBootstrapNodeView, BbnfBootstrapRuleKind, cst_directives,
+};
 use crate::runtime::Parsed;
 use crate::types::*;
 
@@ -126,64 +128,75 @@ fn absorb_item<'a>(
         return;
     }
 
-    // Directives: schema-emitted typed accessors.
-    if let Some(d) = item.as_recover_directive() {
-        grammar.recovers.push(RecoverDirective {
-            rule_name: d.rule_name,
-            sync_expr: d.sync_expr,
-            span: d.span,
-        });
-        return;
-    }
-
-    if let Some(d) = item.as_pretty_directive() {
-        let hints: Vec<Cow<'a, str>> = d
-            .hints
-            .children()
-            .map(|h| pretty_hint_text(h))
-            .collect();
-        grammar.pretties.push(PrettyDirective {
-            rule_name: Cow::Owned(d.target.to_string()),
-            hints,
-            span: d.span,
-        });
-        return;
-    }
-
-    if let Some(d) = item.as_token_directive() {
-        grammar.token_rules.push(Cow::Owned(d.name.to_string()));
-        return;
-    }
-
-    if let Some(d) = item.as_debug_directive() {
-        grammar.debug_rules.push(Cow::Owned(d.target.to_string()));
-        return;
-    }
-
-    if let Some(d) = item.as_ws_directive() {
-        // `d.value` is a `regex` leaf view; strip the surrounding `/.../`.
-        let raw = d.value.span_text();
-        let stripped = raw
-            .strip_prefix('/')
-            .and_then(|s| s.strip_suffix('/'))
-            .unwrap_or(raw);
-        grammar.ws_pattern = Some(Cow::Borrowed(stripped));
-        return;
-    }
-
-    if let Some(d) = item.as_host_directive() {
-        let return_type = d
-            .type_annotation
-            .map(|t| Cow::Owned(t.span_text().to_string()));
-        grammar.host_fns.push(HostFnDecl {
-            name: Cow::Owned(d.name.to_string()),
-            return_type,
-        });
-        return;
-    }
-
-    if let Some(d) = item.as_import_directive() {
-        absorb_import(d.inner, d.span, &mut grammar.imports);
+    // Directives: dispatch on `rule_kind()` and call the direct
+    // `try_as_<rule>(cursor, input)` schema helpers. The walking
+    // `as_*_directive` methods on `BbnfBootstrapNodeView` look for
+    // matching variants **among a parent view's children**; here
+    // `item` has already been peeled through `grammar_item` /
+    // `directive` wrappers, so it points AT the specific directive
+    // compound. The try helpers check `cursor.variant_idx()`
+    // directly and extract the typed struct in O(child count).
+    let cursor = item.cursor();
+    let input = item.input();
+    match item.rule_kind() {
+        BbnfBootstrapRuleKind::recover_directive => {
+            if let Some(d) = cst_directives::try_as_recover_directive(cursor, input) {
+                grammar.recovers.push(RecoverDirective {
+                    rule_name: d.rule_name,
+                    sync_expr: d.sync_expr,
+                    span: d.span,
+                });
+            }
+        }
+        BbnfBootstrapRuleKind::pretty_directive => {
+            if let Some(d) = cst_directives::try_as_pretty_directive(cursor, input) {
+                let hints: Vec<Cow<'a, str>> =
+                    d.hints.children().map(|h| pretty_hint_text(h)).collect();
+                grammar.pretties.push(PrettyDirective {
+                    rule_name: Cow::Owned(d.target.to_string()),
+                    hints,
+                    span: d.span,
+                });
+            }
+        }
+        BbnfBootstrapRuleKind::token_directive => {
+            if let Some(d) = cst_directives::try_as_token_directive(cursor, input) {
+                grammar.token_rules.push(Cow::Owned(d.name.to_string()));
+            }
+        }
+        BbnfBootstrapRuleKind::debug_directive => {
+            if let Some(d) = cst_directives::try_as_debug_directive(cursor, input) {
+                grammar.debug_rules.push(Cow::Owned(d.target.to_string()));
+            }
+        }
+        BbnfBootstrapRuleKind::ws_directive => {
+            if let Some(d) = cst_directives::try_as_ws_directive(cursor, input) {
+                // `d.value` is a `regex` leaf view; strip `/.../`.
+                let raw = d.value.span_text();
+                let stripped = raw
+                    .strip_prefix('/')
+                    .and_then(|s| s.strip_suffix('/'))
+                    .unwrap_or(raw);
+                grammar.ws_pattern = Some(Cow::Borrowed(stripped));
+            }
+        }
+        BbnfBootstrapRuleKind::host_directive => {
+            if let Some(d) = cst_directives::try_as_host_directive(cursor, input) {
+                let return_type = d
+                    .type_annotation
+                    .map(|t| Cow::Owned(t.span_text().to_string()));
+                grammar.host_fns.push(HostFnDecl {
+                    name: Cow::Owned(d.name.to_string()),
+                    return_type,
+                });
+            }
+        }
+        BbnfBootstrapRuleKind::import_directive => {
+            if let Some(d) = cst_directives::try_as_import_directive(cursor, input) {
+                absorb_import(d.inner, d.span, &mut grammar.imports);
+            }
+        }
+        _ => {}
     }
 }
 

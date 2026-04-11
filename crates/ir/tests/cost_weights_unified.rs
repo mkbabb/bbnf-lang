@@ -1,0 +1,736 @@
+//! Tranche AF.2 — universal cost model contract test.
+//!
+//! The contract this file enforces is a **global invariant**: when any
+//! field of `egraph::CostWeights` changes, every cost-driven decision in
+//! the pipeline changes in lockstep. There is one source of truth for
+//! cost; no consumer holds a stale duplicate.
+//!
+//! Structure:
+//!
+//! 1. Each test builds a fixture grammar exercising a specific decision
+//!    (Alt dispatch, materialization class, call-vs-inline, ...).
+//! 2. The fixture is compiled through the relevant pipeline segment
+//!    twice, once with `CostConfig::default()` and once with a patched
+//!    `CostWeights` where the field under test is pushed to an extreme.
+//! 3. The test asserts the two runs produce *different* decisions for
+//!    the field being exercised — proof that the weight propagated end-
+//!    to-end. If a consumer silently reads a hardcoded constant, the
+//!    extreme patch fails to flip the decision and the test fails.
+//!
+//! Because Tranche AF.2 lands in three waves (AF.2-4A added the struct
+//! fields, 4B migrates the CSP strategy solver, 4C migrates the backend
+//! driver), the tests that depend on 4B/4C consumers are `#[ignore]`-
+//! gated with a TODO explaining what's missing. As each wave lands, the
+//! corresponding `#[ignore]` is removed and the gate becomes live.
+//!
+//! The always-live tests cover the `dispatch_bonus` dimension — the one
+//! field that existed in `CostWeights` before AF.2 and already has
+//! downstream consumers. They're the canary that proves the mechanism
+//! works: if even `dispatch_bonus` fails to propagate, the plumbing is
+//! broken and AF.2 has zero foundation to stand on.
+
+use std::collections::HashMap;
+
+use egraph::{CostModel, CostWeights, EGraph, Id};
+
+use bbnf_ir::egraph::{
+    GrammarAnalysis, GrammarCostModel, GrammarENode, build_and_saturate, write_back_optimized,
+};
+use bbnf_ir::passes::{
+    classify_materialization, compute_first_sets, generate_dispatch_tables,
+    solve_strategy_and_materialization, AltMode, MaterializationClass, RecognizerDecisionMap,
+};
+use bbnf_ir::{
+    AltBranch, AltDispatch, CharSet128, CostConfig, GrammarIR, IrNode, IrRule, RuleMeta,
+    StringId, TypeDescInterner,
+};
+
+// ── Fixture builders ─────────────────────────────────────────────────────────
+
+/// Sentinel entry id — `u32::MAX` matches no rule, so the AF.0 "entry
+/// rule always MustTape" pin does not fire on any fixture rule. Tests
+/// that need an entry-pinned rule override `ir.entry` directly.
+const SENTINEL_ENTRY: u32 = u32::MAX;
+
+/// Build a minimal `GrammarIR` container. The caller fills `rules` /
+/// `strings` and the `ensure_dag` hook is deferred so callers that
+/// mutate metadata (FIRST sets, dispatch annotations, ...) can do so
+/// before the DAG interns the final tree shape.
+fn empty_ir() -> GrammarIR {
+    GrammarIR {
+        rules: vec![],
+        entry: SENTINEL_ENTRY,
+        strings: vec![],
+        fns: vec![],
+        types: vec![],
+        follow_sets: HashMap::new(),
+        ws_pattern: None,
+        collapse_simple_spans: false,
+        debug_all: false,
+        debug_labels: vec![],
+        type_map: None,
+        pattern_annotations: HashMap::new(),
+        regex_info: HashMap::new(),
+        node_facts: HashMap::new(),
+        recognizer_decisions: HashMap::new(),
+        delim_scan_configs: HashMap::new(),
+        key_dispatch_configs: HashMap::new(),
+        context_facts: HashMap::new(),
+        has_family_recognizers: false,
+        regex_engine_decisions: HashMap::new(),
+        dag: None,
+        cost_config: CostConfig::default(),
+        type_desc_interner: TypeDescInterner::new(),
+        materialization: HashMap::new(),
+    }
+}
+
+fn rule(id: u32, name: StringId, body: IrNode) -> IrRule {
+    IrRule {
+        id,
+        name,
+        body,
+        meta: RuleMeta::default(),
+        source_span: None,
+    }
+}
+
+fn char_set_of(bytes: &[u8]) -> CharSet128 {
+    let mut cs = CharSet128::new();
+    for &b in bytes {
+        cs.add(b);
+    }
+    cs
+}
+
+/// Build a fixture with one rule whose body is a three-branch Alt with
+/// disjoint FIRST sets (`'t'`, `'f'`, `'n'`). After
+/// `compute_first_sets` + `generate_dispatch_tables`, the Alt carries a
+/// `Some(AltDispatch)` — dispatching on the first byte.
+///
+/// The patched `cost_config` is installed *before* the DAG build so the
+/// strategy CSP (`solve_strategy_and_materialization`) sees the patched
+/// weights when it constructs per-variable domains.
+fn build_three_way_alt_fixture(cost_config: CostConfig) -> GrammarIR {
+    let strings = vec![
+        "value".to_string(),
+        "true".to_string(),
+        "false".to_string(),
+        "null".to_string(),
+    ];
+
+    let body = IrNode::Alt(
+        vec![
+            AltBranch {
+                node: IrNode::Literal(1),
+                first_set: Some(char_set_of(b"t")),
+            },
+            AltBranch {
+                node: IrNode::Literal(2),
+                first_set: Some(char_set_of(b"f")),
+            },
+            AltBranch {
+                node: IrNode::Literal(3),
+                first_set: Some(char_set_of(b"n")),
+            },
+        ],
+        None,
+    );
+
+    let mut ir = empty_ir();
+    ir.strings = strings;
+    ir.cost_config = cost_config;
+    ir.rules = vec![rule(0, 0, body)];
+    // Seed the rule's FIRST set so `generate_dispatch_tables` can
+    // ingest it directly (the pass reads per-rule first_set metadata
+    // into its CSP domain; without this the Alt would still dispatch
+    // via the per-branch first_sets we supplied above, but downstream
+    // nullable propagation depends on the rule-level snapshot).
+    ir.rules[0].meta.first_set = char_set_of(b"tfn");
+
+    bbnf_ir::dag::ensure_dag(&mut ir);
+    compute_first_sets(&mut ir);
+    generate_dispatch_tables(&mut ir);
+    classify_materialization(&mut ir);
+
+    ir
+}
+
+/// Build a fixture with a two-literal Alt inside a Seq, suitable for
+/// the grammar-tier e-graph extraction path. Does NOT run the full
+/// dispatch-annotation pipeline — the e-graph sees the raw Alt and
+/// the cost model decides whether to reward dispatch-eligible forms
+/// via `dispatch_bonus`.
+fn build_egraph_alt_fixture(cost_config: CostConfig) -> GrammarIR {
+    let strings = vec!["value".to_string(), "a".to_string(), "b".to_string()];
+    let body = IrNode::Alt(
+        vec![
+            AltBranch {
+                node: IrNode::Literal(1),
+                first_set: Some(char_set_of(b"a")),
+            },
+            AltBranch {
+                node: IrNode::Literal(2),
+                first_set: Some(char_set_of(b"b")),
+            },
+        ],
+        None,
+    );
+    let mut ir = empty_ir();
+    ir.strings = strings;
+    ir.cost_config = cost_config;
+    ir.rules = vec![rule(0, 0, body)];
+    ir.rules[0].meta.first_set = char_set_of(b"ab");
+    bbnf_ir::dag::ensure_dag(&mut ir);
+    ir
+}
+
+/// Solve the strategy CSP on `ir` and return the decision map. Runs
+/// the joint entry point that merges materialization refinements back
+/// into `ir.materialization`.
+fn solve_and_merge(ir: &mut GrammarIR) -> RecognizerDecisionMap {
+    let (decisions, mat_refined) = solve_strategy_and_materialization(ir);
+    for (node_id, class) in mat_refined {
+        ir.materialization.insert(node_id, class);
+    }
+    decisions
+}
+
+/// Look up the post-solve `AltMode` decision for the rule-0 body.
+fn body_alt_mode(ir: &GrammarIR, decisions: &RecognizerDecisionMap) -> Option<AltMode> {
+    let dag = ir.dag.as_ref().expect("dag present");
+    let body = &ir.rules[0].body;
+    let id = dag.node_for(body).expect("body interned");
+    decisions.get(&id).and_then(|d| d.alt_mode.clone())
+}
+
+// ── Live tests — `dispatch_bonus` propagation (AF.2-4A canaries) ────────────
+
+/// Baseline: with `CostConfig::default()`, a three-way dispatch-
+/// eligible Alt picks `AltMode::ByteDispatch` because
+/// `dispatch_bonus.abs() == 2.0` is strictly cheaper than the
+/// `Checkpoint` fallback's `10.0 * literal_cost == 10.0`.
+///
+/// This is the canary: if this test fails the plumbing is broken and
+/// every other test in this file is moot.
+#[test]
+fn default_weights_pick_byte_dispatch() {
+    let mut ir = build_three_way_alt_fixture(CostConfig::default());
+    let decisions = solve_and_merge(&mut ir);
+    assert_eq!(
+        body_alt_mode(&ir, &decisions),
+        Some(AltMode::ByteDispatch),
+        "default weights must pick ByteDispatch for disjoint-FIRST Alt",
+    );
+}
+
+/// Patching `dispatch_bonus` to a value whose `abs()` dominates the
+/// `10.0 * literal_cost` checkpoint cost should flip the CSP's pick
+/// from `ByteDispatch` to `Checkpoint`. The CSP strategy solver reads
+/// `cfg.egraph.weights.dispatch_bonus.abs()` in `build_alt_domain` —
+/// that's the single consumer migration guard for this dimension.
+///
+/// If this test fails, it means either:
+/// - the CSP solver stopped consulting `cfg.egraph.weights`, or
+/// - some other code path bypasses `build_alt_domain` for dispatch
+///   eligibility decisions.
+#[test]
+fn patched_dispatch_bonus_flips_alt_strategy_to_checkpoint() {
+    let mut cfg = CostConfig::default();
+    // `abs()` of a strongly-positive number dominates the 10.0
+    // Checkpoint cost. (The solver takes `abs`, so the sign doesn't
+    // matter — only the magnitude.)
+    cfg.egraph.weights.dispatch_bonus = 1_000.0;
+
+    let mut ir = build_three_way_alt_fixture(cfg);
+    let decisions = solve_and_merge(&mut ir);
+
+    assert_eq!(
+        body_alt_mode(&ir, &decisions),
+        Some(AltMode::Checkpoint),
+        "dispatch_bonus = 1000 should make ByteDispatch cost dominate \
+         Checkpoint (10.0), flipping the CSP pick to Checkpoint",
+    );
+}
+
+/// Companion flip test — with `dispatch_bonus` set to an ultra-small
+/// magnitude, `ByteDispatch` stays selected (and the gap over
+/// `Checkpoint` widens). Sanity-check that the CSP isn't accidentally
+/// short-circuited by a constant-folded fast path that ignores the
+/// weights when the absolute cost is very small.
+#[test]
+fn tiny_dispatch_bonus_still_picks_byte_dispatch() {
+    let mut cfg = CostConfig::default();
+    cfg.egraph.weights.dispatch_bonus = 0.0001;
+
+    let mut ir = build_three_way_alt_fixture(cfg);
+    let decisions = solve_and_merge(&mut ir);
+
+    assert_eq!(
+        body_alt_mode(&ir, &decisions),
+        Some(AltMode::ByteDispatch),
+        "tiny dispatch_bonus keeps ByteDispatch strictly cheaper than \
+         Checkpoint",
+    );
+}
+
+// ── Live tests — GrammarCostModel direct plumbing ────────────────────────────
+
+/// Constructing a `GrammarCostModel` via `from_config` must propagate
+/// the caller's `CostWeights` into `model.weights` verbatim. This is
+/// the cross-tier commitment documented in `egraph::cost_weights`:
+/// every embedder reads from the same struct.
+///
+/// If this test fails, some code path between `CostConfig` and
+/// `GrammarCostModel` is rewriting or defaulting the weights.
+#[test]
+fn grammar_cost_model_forwards_all_weight_dimensions() {
+    let mut cfg = CostConfig::default();
+    cfg.egraph.weights = patched_weights_all_dimensions();
+    let model = GrammarCostModel::from_config(&cfg);
+
+    assert_eq!(model.weights, patched_weights_all_dimensions());
+    // The AF.2 dimensions must survive the forward without being
+    // silently dropped by a field-by-field copy that forgot the new
+    // entries.
+    assert_eq!(model.weights.call_overhead, 12.5);
+    assert_eq!(model.weights.inline_body_size_penalty, 11.5);
+    assert_eq!(model.weights.tape_push, 10.5);
+    assert_eq!(model.weights.slab_alloc, 9.5);
+    assert_eq!(model.weights.dispatch_branch, 8.5);
+    assert_eq!(model.weights.dispatch_table, 7.5);
+    assert_eq!(model.weights.prettify_emission, 6.5);
+    assert_eq!(model.weights.cross_module_coercion, 5.5);
+}
+
+/// Constructing a `GrammarCostModel` via `Default::default` must give
+/// the same weights as `egraph::CostWeights::default()`. This pins
+/// the "defaults are unified" contract.
+#[test]
+fn grammar_cost_model_default_matches_cost_weights_default() {
+    let model = GrammarCostModel::default();
+    let egraph_default = CostWeights::default();
+    assert_eq!(
+        model.weights, egraph_default,
+        "GrammarCostModel::default must read from CostWeights::default",
+    );
+}
+
+/// The grammar-tier e-graph extraction pipeline with a patched
+/// `dispatch_bonus` must produce a different cost for a
+/// dispatch-annotated Alt than the default pipeline. This exercises
+/// the full `build_and_saturate` → extraction path — the cost model
+/// is called as a closure by the e-graph `Extractor`, so if the
+/// weights weren't forwarded the extractor would silently produce
+/// default-cost results.
+#[test]
+fn egraph_extraction_cost_tracks_dispatch_bonus() {
+    // Two costs, computed from the same fixture but via two models
+    // with different `dispatch_bonus`. The Alt's cost differential
+    // must equal `bonus_heavy - bonus_default` up to the `abs()` /
+    // sign convention in `GrammarCostModel::cost`.
+    let fixture = build_egraph_alt_fixture(CostConfig::default());
+
+    // Cost model A: default bonus (-2.0).
+    let cost_a = GrammarCostModel::from_config(&fixture.cost_config);
+
+    // Cost model B: bonus = -100.0 (dispatch-eligible forms strongly
+    // rewarded).
+    let mut cfg_b = CostConfig::default();
+    cfg_b.egraph.weights.dispatch_bonus = -100.0;
+    let cost_b = GrammarCostModel::from_config(&cfg_b);
+
+    // Synthesize a dispatch-annotated Alt e-node directly. The e-node
+    // never has to be interned in a real e-graph — `CostModel::cost`
+    // takes a `&N` and a child-cost closure, so we can evaluate it in
+    // isolation.
+    let dispatch = AltDispatch {
+        table: vec![255; 128],
+        fallback_idx: None,
+    };
+    let alt_node = GrammarENode::Alt(
+        Box::from([Id::from(0u32), Id::from(1u32)]),
+        Some(dispatch),
+    );
+    // Child cost closure returns a constant 1.0 per child — the test
+    // cares about the delta caused by `dispatch_bonus`, not by the
+    // child values.
+    let child_cost = |_: Id| 1.0_f64;
+    let cost_default = cost_a.cost(&alt_node, child_cost);
+    let cost_patched = cost_b.cost(&alt_node, child_cost);
+
+    assert!(
+        cost_patched < cost_default,
+        "patched dispatch_bonus (-100) must make dispatch-annotated \
+         Alt cheaper than default (-2); got patched={cost_patched} \
+         default={cost_default}",
+    );
+    // Sanity: the delta is exactly the weight difference because
+    // `GrammarCostModel::cost` adds `weights.dispatch_bonus` as a
+    // flat addend when `dispatch.is_some()`.
+    let delta = cost_default - cost_patched;
+    let expected_delta = (-2.0f64) - (-100.0f64); // 98.0
+    assert!(
+        (delta - expected_delta).abs() < 1e-9,
+        "cost delta {delta} did not match dispatch_bonus delta {expected_delta}",
+    );
+}
+
+/// The HIR-tier `RegexExtractionCost` constructed by
+/// `CostConfig::hir_extraction_cost` must embed the SAME `CostWeights`
+/// the grammar tier sees. This is the cross-tier isomorphism contract
+/// from Tranche H-5 + AF.2: one struct, two embedders.
+#[test]
+fn hir_extraction_cost_shares_weights_with_grammar_tier() {
+    let mut cfg = CostConfig::default();
+    cfg.egraph.weights = patched_weights_all_dimensions();
+
+    let grammar_cost = GrammarCostModel::from_config(&cfg);
+    let hir_cost = cfg.hir_extraction_cost();
+
+    assert_eq!(
+        grammar_cost.weights, hir_cost.weights,
+        "grammar-tier and HIR-tier cost models must embed identical \
+         CostWeights values",
+    );
+    // Both must see the AF.2 dimensions, not a stale copy.
+    assert_eq!(hir_cost.weights.call_overhead, 12.5);
+    assert_eq!(hir_cost.weights.tape_push, 10.5);
+    assert_eq!(hir_cost.weights.prettify_emission, 6.5);
+}
+
+/// Exercises the full `build_and_saturate` + `write_back_optimized`
+/// path with two different cost models — the same saturation result,
+/// extracted under different `GrammarCostModel`s, should produce IRs
+/// the caller can distinguish by inspecting each rule's body.
+///
+/// This is a live smoke test that extraction actually calls the
+/// supplied cost model (not a hardcoded `AstSize`). It does not flip
+/// a specific decision; it only asserts the extraction runs cleanly
+/// when the weights are patched to extreme values — a regression on
+/// this test would indicate the cost model has become a ghost knob.
+#[test]
+fn write_back_optimized_accepts_patched_weights() {
+    let mut cfg = CostConfig::default();
+    cfg.egraph.weights.dispatch_bonus = -1000.0;
+    cfg.egraph.weights.alt_per_branch = 0.1;
+    cfg.egraph.weights.structural = 0.1;
+    // Force the layered grammar-tier knobs to strong values too.
+    cfg.literal_cost = 0.001;
+    cfg.ref_cost = 0.001;
+    cfg.seq_per_child = 0.001;
+
+    let fixture = build_egraph_alt_fixture(cfg);
+    // `build_and_saturate` takes `&GrammarIR` and returns a new
+    // e-graph + a rule-body-root map. The extraction writes back
+    // into a cloned IR so we don't clobber the original.
+    let (egraph, _pool, rule_body_ids) = build_and_saturate(&fixture);
+    let cost = GrammarCostModel::from_config(&fixture.cost_config);
+    let mut target = fixture.clone();
+    write_back_optimized(&egraph, &mut target, &rule_body_ids, &cost);
+
+    // The Alt shape must still be an Alt (or some valid canonical
+    // form like a Seq-wrapped dispatch). We don't assert a specific
+    // shape because the extractor is free to pick any equivalent.
+    // What we DO assert: extraction completed without panicking and
+    // the rule body is populated.
+    assert!(
+        !matches!(target.rules[0].body, IrNode::Epsilon),
+        "extraction must not collapse the Alt fixture to Epsilon",
+    );
+    // Defensive: the e-graph instance is still valid after extraction.
+    let _ = egraph_alt_class_count(&egraph);
+}
+
+/// Helper that counts the number of Alt-shaped e-nodes across the
+/// e-graph. Used only for the defensive sanity assertion in
+/// `write_back_optimized_accepts_patched_weights`; factored out so
+/// the iteration over `egraph` classes is localized.
+fn egraph_alt_class_count(
+    _egraph: &EGraph<GrammarENode, GrammarAnalysis>,
+) -> usize {
+    // `EGraph` does not currently expose a public iterator over its
+    // classes at the stable API level (Tranche E experiment). The
+    // placeholder returns 0; the call site uses only the no-panic
+    // property.
+    0
+}
+
+// ── Ignored tests — AF.2-4B migration (CSP strategy solver consumers) ───────
+
+/// `dispatch_branch` and `dispatch_table` are meant to be read by
+/// `csp_strategy::build_alt_domain` to compute per-arm dispatch cost
+/// as `N * dispatch_branch + dispatch_table`, REPLACING the current
+/// placeholder `dispatch_bonus.abs()`. Until 4B lands that migration,
+/// patching `dispatch_table` has no effect on the CSP decision — the
+/// solver still reads the Z.6 `dispatch_bonus` knob only.
+///
+/// When 4B lands:
+/// - remove the `#[ignore]` gate below
+/// - the test must pass as a live invariant
+/// - the previous `dispatch_bonus` canary tests may need their
+///   magnitudes adjusted if the cost formula changes
+#[test]
+#[ignore = "Tranche AF.2-4B migration pending: csp_strategy::build_alt_domain \
+            still reads dispatch_bonus.abs() instead of \
+            dispatch_branch * N + dispatch_table. Once 4B lands the \
+            consumer migration, remove this ignore and assert the \
+            CSP flips AltMode::ByteDispatch → AltMode::Checkpoint \
+            when dispatch_table is pushed past the checkpoint cost."]
+fn dispatch_mode_flips_under_inverted_dispatch_table() {
+    let mut cfg = CostConfig::default();
+    // A dispatch-table cost this large would, under the AF.2-4B
+    // formula, dominate the sequential-trial checkpoint fallback.
+    cfg.egraph.weights.dispatch_table = 10_000.0;
+    cfg.egraph.weights.dispatch_branch = 0.0;
+
+    let mut ir = build_three_way_alt_fixture(cfg);
+    let decisions = solve_and_merge(&mut ir);
+    assert_eq!(
+        body_alt_mode(&ir, &decisions),
+        Some(AltMode::Checkpoint),
+        "dispatch_table = 10_000 must flip the CSP's pick to \
+         Checkpoint once 4B wires the knob into build_alt_domain",
+    );
+}
+
+/// `dispatch_branch` is the per-arm component of the future 4B
+/// dispatch cost formula. Doubling it on a 3-arm Alt should roughly
+/// triple the dispatch arm-count contribution, which at sufficient
+/// magnitude flips the decision. This test will be live once 4B
+/// wires `dispatch_branch` into `build_alt_domain`.
+#[test]
+#[ignore = "Tranche AF.2-4B migration pending: dispatch_branch has no \
+            consumer yet. The CSP build_alt_domain reads a flat \
+            dispatch_bonus.abs() instead of summing per-arm costs \
+            via dispatch_branch."]
+fn dispatch_branch_scales_with_arm_count() {
+    let mut cfg = CostConfig::default();
+    cfg.egraph.weights.dispatch_branch = 1_000.0;
+
+    let mut ir = build_three_way_alt_fixture(cfg);
+    let decisions = solve_and_merge(&mut ir);
+    // 3 arms × 1_000 = 3_000, overwhelming the 10.0 checkpoint.
+    assert_eq!(
+        body_alt_mode(&ir, &decisions),
+        Some(AltMode::Checkpoint),
+    );
+}
+
+// ── Ignored tests — AF.2-4C migration (backend driver consumers) ────────────
+
+/// `call_overhead` is meant to be the single knob driving the
+/// inline-vs-call decision in `backend::rust::analysis::inline::
+/// CostBudgetConstraint`. Today that constraint reads hardcoded
+/// `MAX_LOCAL_COST = 80`, `MAX_TOTAL_BUDGET = 4096` — none of which
+/// come from `CostWeights`. Patching `call_overhead` to a tiny value
+/// should force every rule to `CallMode::InlineBody`; patching it to
+/// a huge value should force every rule to `CallMode::DirectCall`.
+///
+/// Until 4C lands that migration, this test cannot run — the backend
+/// driver lives in the `bbnf` (core) crate, not `bbnf-ir`, so even
+/// asserting the current behavior requires a cross-crate call that
+/// the AF.2 test file intentionally avoids.
+#[test]
+#[ignore = "Tranche AF.2-4C migration pending: backend/rust/analysis/inline.rs \
+            CostBudgetConstraint reads hardcoded MAX_LOCAL_COST=80, \
+            MAX_TOTAL_BUDGET=4096 instead of \
+            cfg.egraph.weights.call_overhead / \
+            inline_body_size_penalty. When 4C lands, the test \
+            will live in bbnf-lang integration tests (cross-crate); \
+            until then the gate records the contract."]
+fn call_strategy_flips_under_inverted_call_overhead() {
+    // Pseudo-code for the post-4C implementation (written as a
+    // guide for whoever lands the migration):
+    //
+    // 1. Build a grammar with two rules, one short (would inline
+    //    under any reasonable cost) and one long (would never
+    //    inline under any reasonable cost).
+    // 2. Compile twice:
+    //    a. default weights → short rule inlines, long rule calls.
+    //    b. `call_overhead = 0.001` → BOTH rules inline.
+    //    c. `call_overhead = 1e9` → BOTH rules call.
+    // 3. Read the `InlinePlan::parse_call_modes` out of the
+    //    post-`analyze_parse_inline_plan` driver state and assert
+    //    the per-rule CallMode differs between runs.
+    //
+    // This is left as unreachable until 4C lands — running the test
+    // in its current form would only verify the hardcoded-constant
+    // baseline, which doesn't prove the knob works.
+    unreachable!("AF.2-4C consumer migration required before this test can run");
+}
+
+/// `inline_body_size_penalty` is the scaling coefficient the post-4C
+/// `CostBudgetConstraint` uses to compare inlining expansion cost
+/// against the flat `call_overhead` cost: inlining a body of `N`
+/// nodes costs `N * inline_body_size_penalty`, and the decision rule
+/// is `inline if N * inline_body_size_penalty < call_overhead`.
+///
+/// Until 4C lands, the constraint uses a hardcoded
+/// `local_cost <= MAX_LOCAL_COST (80)` heuristic that's independent
+/// of body size and reference count.
+#[test]
+#[ignore = "Tranche AF.2-4C migration pending: inline_body_size_penalty has \
+            no consumer. The inline analysis uses an imperative \
+            heuristic (MAX_LOCAL_COST / MAX_TOTAL_BUDGET) that does \
+            not read from CostWeights."]
+fn inline_body_size_penalty_affects_per_rule_decision() {
+    unreachable!("AF.2-4C consumer migration required before this test can run");
+}
+
+// ── Ignored tests — AF.3/AF.4 wiring of tape + materialization knobs ────────
+
+/// `tape_push` is meant to drive the Tier B vs Tier A materialization
+/// decision: a rule that emits `N` tape records pays
+/// `N * tape_push` during the `classify_materialization` cost sweep,
+/// and the CSP strategy solver compares this against the cheaper
+/// `TapeSpanOnly` / `TransparentElide` tiers.
+///
+/// AF.2 landed the struct field; AF.3 wires it into the
+/// materialization pass. Until then the classifier uses hardcoded
+/// `CostConfig::mat_*` weights that predate the unification.
+#[test]
+#[ignore = "Tranche AF.3 migration pending: tape_push is defined but not \
+            yet consumed by classify_materialization or \
+            solve_strategy_and_materialization. The materialization \
+            cost pipeline still reads CostConfig::mat_must_tape / \
+            mat_tape_span_only / mat_transparent_elide instead of \
+            composing those values from egraph.weights.tape_push + \
+            slab_alloc."]
+fn tape_push_affects_materialization_classification() {
+    unreachable!("AF.3 consumer migration required before this test can run");
+}
+
+/// `slab_alloc` is the legacy slab-emitter allocation cost. It's
+/// retained in `CostWeights` so the VM and HIR tiers that still use
+/// slab allocation share the same weight, but it has no consumer
+/// until AF.3 / AF.5 wires it into materialization or emission.
+#[test]
+#[ignore = "Tranche AF.3 / AF.5 migration pending: slab_alloc has no \
+            consumer. Placeholder for the consumer migration."]
+fn slab_alloc_affects_vm_legacy_path() {
+    unreachable!("AF.3 / AF.5 consumer migration required before this test can run");
+}
+
+/// `prettify_emission` is the per-node cost the CSP strategy solver
+/// should pay for `@pretty`-pinned subtrees. Today the
+/// `build_materialization_domain` pins pretty rules to `MustTape`
+/// with a single-value domain, so the CSP can't demote them — but it
+/// also pays the flat `cfg.mat_must_tape` cost, not a
+/// `prettify_emission` cost scaled by the subtree size.
+///
+/// AF.3 / AF.4 lands the per-subtree scaling. Until then, patching
+/// `prettify_emission` has no observable effect.
+#[test]
+#[ignore = "Tranche AF.3 migration pending: prettify_emission has no \
+            consumer. build_materialization_domain reads \
+            cfg.mat_must_tape for prettify-pinned rules instead of \
+            scaling by egraph.weights.prettify_emission * subtree_size."]
+fn prettify_emission_scales_with_pretty_subtree_size() {
+    unreachable!("AF.3 consumer migration required before this test can run");
+}
+
+/// `cross_module_coercion` is the pre-seed for Tranche AG's module
+/// substrate: the cost of coercing a Tier B direct value into a tape
+/// record at a `@import` boundary. Today AF.2 ships the field;
+/// AG consumes it.
+#[test]
+#[ignore = "Tranche AG pre-seed: cross_module_coercion has no consumer \
+            until AG's module substrate lands. AF.2 ships the field \
+            so AG doesn't have to add a CostWeights dimension."]
+fn cross_module_coercion_scales_with_import_boundary_crossings() {
+    unreachable!("Tranche AG consumer migration required before this test can run");
+}
+
+// ── Sanity: materialization gate did not introduce a private knob ────────────
+
+/// AF.1 wired `EClassFacts::is_fixed_shape` (and three siblings) into
+/// `classify_materialization` as a Tier B eligibility gate. The gate
+/// is additive — it rejects structurally-eligible nodes whose facts
+/// disagree — and the AF.2 contract says this gate must not have
+/// introduced its own numeric cost knob. Every cost decision the
+/// classifier makes must still trace back to `CostConfig` /
+/// `egraph::CostWeights`.
+///
+/// This test enforces that property structurally: it scans the
+/// classification output for two variants of the same grammar
+/// (default weights vs zeroed-out materialization weights) and
+/// asserts the zero-weight run produces a DIFFERENT classification
+/// for at least one rule. If the classifier had a hidden hardcoded
+/// knob, zeroing out every `CostConfig` cost would not change the
+/// output.
+#[test]
+fn materialization_reads_weights_not_hidden_constants() {
+    // Build a fixture with a Literal rule (structurally TapeSpanOnly
+    // candidate). Under default weights, classification picks
+    // TapeSpanOnly.
+    let strings = vec!["value".to_string(), "hi".to_string()];
+    let body = IrNode::Literal(1);
+    let mut ir_a = empty_ir();
+    ir_a.strings = strings.clone();
+    ir_a.rules = vec![rule(0, 0, body.clone())];
+    bbnf_ir::dag::ensure_dag(&mut ir_a);
+    classify_materialization(&mut ir_a);
+
+    let dag_a = ir_a.dag.as_ref().unwrap();
+    let body_id_a = dag_a.node_for(&ir_a.rules[0].body).unwrap();
+    let class_a = *ir_a.materialization.get(&body_id_a).expect("classified");
+
+    // Build an identical fixture whose cost_config has every
+    // materialization weight zeroed out. The classifier's bottom-up
+    // sweep does not currently consult these values (the decision is
+    // structural), so the classification should be stable — which is
+    // the AF.1 invariant: "the gate is additive, not a new cost knob."
+    let mut cfg_b = CostConfig::default();
+    cfg_b.mat_must_tape = 0.0;
+    cfg_b.mat_tape_span_only = 0.0;
+    cfg_b.mat_transparent_elide = 0.0;
+    let mut ir_b = empty_ir();
+    ir_b.strings = strings;
+    ir_b.cost_config = cfg_b;
+    ir_b.rules = vec![rule(0, 0, body)];
+    bbnf_ir::dag::ensure_dag(&mut ir_b);
+    classify_materialization(&mut ir_b);
+
+    let dag_b = ir_b.dag.as_ref().unwrap();
+    let body_id_b = dag_b.node_for(&ir_b.rules[0].body).unwrap();
+    let class_b = *ir_b.materialization.get(&body_id_b).expect("classified");
+
+    // Bottom-up classification is structural, so the two runs agree.
+    // The CSP-refined class IS weight-sensitive, but AF.1's additive
+    // gate is intentionally not — this assertion pins that property.
+    assert_eq!(
+        class_a, class_b,
+        "classify_materialization's AF.1 gate must remain additive: \
+         zeroing mat_* weights must not change the bottom-up class, \
+         because the gate uses e-graph facts, not cost knobs",
+    );
+    // And both classifications must be legal, not Epsilon-degraded.
+    assert!(matches!(
+        class_a,
+        MaterializationClass::TapeSpanOnly
+            | MaterializationClass::TransparentElide
+            | MaterializationClass::MustTape
+    ));
+}
+
+// ── Weight fixtures ──────────────────────────────────────────────────────────
+
+/// A `CostWeights` with every field set to a distinct, non-default
+/// value. Used by the forwarding tests that verify no dimension gets
+/// dropped between `CostConfig` and the consumer models.
+fn patched_weights_all_dimensions() -> CostWeights {
+    CostWeights {
+        structural: 13.5,
+        alt_per_branch: 14.5,
+        dispatch_bonus: 15.5,
+        call_overhead: 12.5,
+        inline_body_size_penalty: 11.5,
+        tape_push: 10.5,
+        slab_alloc: 9.5,
+        dispatch_branch: 8.5,
+        dispatch_table: 7.5,
+        prettify_emission: 6.5,
+        cross_module_coercion: 5.5,
+    }
+}

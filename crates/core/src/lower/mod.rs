@@ -62,10 +62,10 @@ pub(crate) struct LowerCtx<'a> {
     /// Value-expression beta-reduction environment stack. Mirrors `env` but
     /// for the value-expression sub-language: each frame maps a value-closure
     /// parameter name to the already-lowered `MapExpr` it's bound to. Pushed
-    /// by `lower_value_expr_with_bindings`, popped after the body is lowered.
-    /// `lower_value_expr` consults this stack at `value_ident` before
-    /// constructing a `FnCall` — eliminates the `lower_value_expr_substituted`
-    /// parallel walker.
+    /// by `lower_value_closure` before lowering the body, popped afterwards.
+    /// `lower_value_expr` consults this stack at every bare-identifier site
+    /// before constructing a `FnCall` — eliminates the parallel substitution
+    /// walker.
     pub(crate) value_env: Vec<HashMap<&'a str, bbnf_ir::MapExpr>>,
 
     /// Analysis results.

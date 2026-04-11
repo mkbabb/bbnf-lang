@@ -21,17 +21,19 @@ use bbnf_tape::{Tape, TapeBuilder, TapeCursor, TapeKind, TapeOffset};
 /// used to carry the `Root` trait impl.
 struct TestGrammar;
 
-/// Minimal view wrapping a cursor — matches the shape
-/// `generate_views` emits.
+/// Minimal view wrapping a cursor + borrowed input — matches the
+/// shape `generate_views` emits.
 #[derive(Clone, Copy, Debug)]
-struct TestRootView<'tape> {
-    cursor: TapeCursor<'tape>,
+struct TestRootView<'p> {
+    cursor: TapeCursor<'p>,
+    input: &'p str,
 }
 
-impl<'tape> TestRootView<'tape> {
-    fn new(tape: &'tape Tape, offset: TapeOffset) -> Self {
+impl<'p> TestRootView<'p> {
+    fn new(tape: &'p Tape, input: &'p str, offset: TapeOffset) -> Self {
         Self {
             cursor: TapeCursor::new(tape, offset),
+            input,
         }
     }
 
@@ -46,22 +48,29 @@ impl<'tape> TestRootView<'tape> {
     fn variant_idx(&self) -> u8 {
         self.cursor.variant_idx()
     }
-}
 
-impl Root for TestGrammar {
-    type View<'tape> = TestRootView<'tape>;
-
-    fn make_view(tape: &Tape, root: TapeOffset) -> Self::View<'_> {
-        TestRootView::new(tape, root)
+    fn span_text(&self) -> &'p str {
+        let (lo, hi) = self.cursor.span();
+        &self.input[lo as usize..hi as usize]
     }
 }
 
-/// Build a parsed result holding a single leaf span record.
+impl Root for TestGrammar {
+    type View<'p> = TestRootView<'p>;
+
+    fn make_view<'p>(tape: &'p Tape, input: &'p str, root: TapeOffset) -> Self::View<'p> {
+        TestRootView::new(tape, input, root)
+    }
+}
+
+/// Build a parsed result holding a single leaf span record. The
+/// input string is long enough to slice `[0..5]` for the leaf's
+/// own span.
 fn parsed_with_one_leaf() -> Parsed<TestGrammar> {
     let mut builder = TapeBuilder::new();
     let leaf_off = builder.push_leaf(TapeKind::Span, 0, 5, 7);
     let tape = builder.finish().expect("tape finish");
-    Parsed::new(tape, leaf_off)
+    Parsed::new(tape, "hello world".to_string(), leaf_off)
 }
 
 #[test]
@@ -107,4 +116,14 @@ fn view_is_copy_and_cheap_to_clone() {
     let view_copy = view;
     // Both still usable after the move — confirms `Copy`.
     assert_eq!(view.kind(), view_copy.kind());
+}
+
+#[test]
+fn parsed_owns_input_and_lends_slice_to_views() {
+    let parsed = parsed_with_one_leaf();
+    assert_eq!(parsed.input(), "hello world");
+    let view = parsed.view();
+    // `span_text` slices the owned input by the leaf's (lo, hi).
+    // The leaf was pushed with span (0, 5) → "hello".
+    assert_eq!(view.span_text(), "hello");
 }

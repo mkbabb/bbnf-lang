@@ -21,4 +21,4 @@ pub mod error;
 pub mod parsed;
 
 pub use error::ParseErr;
-pub use parsed::Parsed;
+pub use parsed::{Parsed, Root};

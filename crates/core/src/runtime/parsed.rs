@@ -1,25 +1,38 @@
-//! `Parsed<View>` — the owning parse result type.
+//! `Parsed<R>` — the owning parse result type.
 //!
-//! Tranche AB.2. `Parsed` is returned by generated parsers as the
-//! public API. It owns the [`bbnf_tape::Tape`] inline and lends out
-//! typed lazy views over it via [`Parsed::view`], so callers never
-//! deal with the `(View, Tape)` tuple the earlier tape-first plan
-//! proposed.
+//! Tranche AB.2a introduced the storage form; AC.2 lands the `Root`
+//! trait and the `.view()` constructor that together define the
+//! public API every generated `Grammar::parse` function returns.
+//!
+//! `Parsed<R>` is marker-typed over the grammar struct itself —
+//! never over the view type. The root view's lifetime is lent by
+//! `&self` on `Parsed` via the [`Root`] trait's GAT `type View<'tape>`.
+//! Callers never name a `'tape` lifetime directly; they hold
+//! `Parsed<Grammar>` and call [`Parsed::view`] to obtain a cursor-
+//! backed root view bound to the borrow.
 //!
 //! # Example (generated code shape)
 //!
 //! ```ignore
-//! pub fn parse<'a>(input: &'a str) -> Result<Parsed<ValueView<'a>>, ParseErr> {
+//! pub fn parse(input: &str) -> Result<Parsed<Json>, ParseErr> {
 //!     let mut state = ParserState::new(input);
 //!     let mut builder = TapeBuilder::with_capacity(1024);
-//!     let root_off = __value(&mut state, &mut builder).ok_or(ParseErr::Syntax)?;
+//!     let root_off = Self::__value(&mut state, &mut builder)
+//!         .ok_or(ParseErr::Syntax { offset: state.offset as u32, rule: None })?;
 //!     let tape = builder.finish().map_err(ParseErr::Tape)?;
 //!     Ok(Parsed::new(tape, root_off))
 //! }
+//!
+//! impl ::bbnf::runtime::Root for Json {
+//!     type View<'tape> = JsonRootView<'tape>;
+//!     fn make_view(tape: &Tape, root: TapeOffset) -> Self::View<'_> {
+//!         JsonRootView::new(tape, root)
+//!     }
+//! }
 //! ```
 //!
-//! The caller holds the `Parsed<_>` and calls `.view()` to obtain a
-//! cursor-backed typed view:
+//! The caller holds the `Parsed<Json>` and calls `.view()` to obtain
+//! a cursor-backed typed view:
 //!
 //! ```ignore
 //! let parsed = Json::parse(input)?;
@@ -38,26 +51,46 @@ use std::marker::PhantomData;
 
 use bbnf_tape::{Tape, TapeOffset};
 
+/// Binding between a grammar marker type and the root view it
+/// produces over a parsed tape.
+///
+/// Every grammar struct with `#[derive(Parser)]` implements this
+/// trait via generated code. The GAT `type View<'tape>` gives
+/// [`Parsed`] a way to lend a cursor-backed root view whose
+/// lifetime is tied to `&self`, without forcing the grammar
+/// struct itself to carry a lifetime parameter.
+pub trait Root {
+    /// The grammar's root view type, parameterized by the lifetime
+    /// of the borrow on the owning [`Parsed`].
+    type View<'tape>
+    where
+        Self: 'tape;
+
+    /// Construct the root view from a borrowed tape and the root
+    /// record's offset. Generated parsers call this from
+    /// [`Parsed::view`] to lend the view on demand.
+    fn make_view(tape: &Tape, root: TapeOffset) -> Self::View<'_>;
+}
+
 /// Owning parse result — wraps a finished tape + root offset, lends
 /// out typed views over it.
 ///
-/// `View` is the root view type (e.g. `ValueView<'tape>` for a JSON
-/// grammar). The type parameter exists so the `impl Parsed<View>`
-/// block can constrain view construction via a trait (not yet
-/// defined in this tranche — the tape-to-view conversion is
-/// currently done by the generated `parse` fn directly).
+/// `R` is the grammar marker struct (e.g. `Json` for a JSON grammar).
+/// The actual root view type is resolved through `R`'s [`Root`] impl
+/// when [`Parsed::view`] is called; callers never instantiate the
+/// view directly.
 #[derive(Debug)]
-pub struct Parsed<View> {
+pub struct Parsed<R> {
     /// The finished tape. Owned by the `Parsed` so view lifetimes
     /// naturally bind to `&self`.
     tape: Tape,
     /// Offset of the root record within `tape`.
     root_offset: TapeOffset,
-    /// Phantom lifetime anchor for the view type.
-    _view_marker: PhantomData<View>,
+    /// Phantom marker for the grammar's `Root` binding.
+    _root_marker: PhantomData<R>,
 }
 
-impl<View> Parsed<View> {
+impl<R> Parsed<R> {
     /// Construct a new `Parsed` from a finished tape and the root
     /// record's offset within it. Called by generated `parse`
     /// functions at the end of a successful parse.
@@ -66,7 +99,7 @@ impl<View> Parsed<View> {
         Self {
             tape,
             root_offset,
-            _view_marker: PhantomData,
+            _root_marker: PhantomData,
         }
     }
 
@@ -90,5 +123,16 @@ impl<View> Parsed<View> {
     #[inline]
     pub fn into_tape(self) -> Tape {
         self.tape
+    }
+}
+
+impl<R: Root> Parsed<R> {
+    /// Lend out the grammar's root view, bound by the borrow on
+    /// `self`. The view is constructed on each call from the stored
+    /// `(tape, root_offset)` pair via the grammar's [`Root::make_view`]
+    /// impl — constant-cost, no allocation.
+    #[inline]
+    pub fn view(&self) -> R::View<'_> {
+        R::make_view(&self.tape, self.root_offset)
     }
 }

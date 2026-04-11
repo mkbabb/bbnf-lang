@@ -1,4 +1,4 @@
-//! Tape-backed directive value structs + view-anchored accessor methods.
+//! Tape-backed directive value structs + extraction helpers.
 //!
 //! Emits:
 //!
@@ -17,14 +17,15 @@
 //!   order, slice `input` for identifier / text-span fields, and
 //!   build the directive's `span` from the keyword + terminator
 //!   sub-records.
-//! - `impl<'p> <Root>View<'p> { pub fn as_*_directive(&self) }`
-//!   convenience accessors on the root grammar view. Each walks
-//!   `self.cursor.children()` looking for the first child whose
-//!   `variant_idx` matches the directive rule, and delegates to the
-//!   free helper to extract the struct. Callers walking the grammar
-//!   top-level iterate children manually and call the free helpers
-//!   directly; the root-view accessors are for single-directive
-//!   lookups (e.g. "does this grammar carry a @ws directive?").
+//!
+//! Callers walking the grammar top-level iterate children manually
+//! (after peeling `grammar_item` / `directive` wrappers) and dispatch
+//! on `cursor.rule_kind()` before calling
+//! `cst_directives::try_as_<rule>(cursor, input)` directly. There is
+//! no view-anchored walking accessor: such an accessor would scan a
+//! parent's children looking for the directive variant, which is
+//! the wrong shape once the parent has been peeled to the directive
+//! itself.
 //!
 //! The layout table (`DirectiveKind` → slot list) is preserved from
 //! the pre-AC.2 emitter; only the extraction codegen is rewritten
@@ -35,7 +36,7 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use super::super::super::model::{CstSchema, DirectiveKind, VariantCategory};
-use super::shared::{root_rule_name, variant_idx_for, view_ident_for};
+use super::shared::variant_idx_for;
 
 /// Emit the `cst_directives` module containing directive structs +
 /// their extraction helpers. Returns an empty `TokenStream` when the
@@ -119,85 +120,6 @@ pub(super) fn generate_module(schema: &CstSchema) -> TokenStream {
             #(#structs)*
 
             #(#helpers)*
-        }
-    }
-}
-
-/// Emit the `as_*_directive` convenience accessors on the root
-/// grammar view AND on the generic `<Grammar>NodeView<'p>` wrapper.
-/// Returns an empty `TokenStream` when the schema has no directives
-/// or no addressable root rule.
-///
-/// The same method set is emitted on both view types so that CST
-/// consumers walking the grammar bootstrap tree can call
-/// `node.as_recover_directive()` regardless of whether `node` is
-/// the grammar's root view or a type-erased `NodeView` obtained
-/// during recursive descent.
-pub(super) fn generate_root_accessors(schema: &CstSchema) -> TokenStream {
-    let Some(root_name) = root_rule_name(schema) else {
-        return TokenStream::new();
-    };
-    let root_view_ident = view_ident_for(root_name);
-    // The NodeView wrapper is emitted by `backend/rust/view/mod.rs`
-    // as `<GrammarMarker>NodeView<'p>`. Under the AC.2 schema the
-    // `enum_name` field carries the grammar marker (e.g.
-    // `BbnfBootstrap`), so the NodeView ident is the concatenation
-    // of that name with `NodeView`.
-    let node_view_ident = format_ident!("{}NodeView", schema.enum_name);
-
-    let mut methods = Vec::new();
-
-    for variant in &schema.variants {
-        let VariantCategory::Directive(ref kind) = variant.category else {
-            continue;
-        };
-        let Some(layout) = directive_field_layout(kind) else {
-            continue;
-        };
-        let Some(variant_idx) = variant_idx_for(schema, &variant.name) else {
-            continue;
-        };
-        let Some(td) = &variant.type_desc else { continue };
-        let TypeDesc::Tuple(elems) = td else { continue };
-        if elems.len() < 2 || elems.len() - 2 != layout.slots.len() {
-            continue;
-        }
-
-        let struct_ident = format_ident!("{}", layout.struct_name);
-        let method_ident = format_ident!("as_{}", variant.name);
-        let try_ident = format_ident!("try_as_{}", variant.name);
-        let idx_lit = variant_idx;
-
-        methods.push(quote! {
-            /// Schema-generated directive accessor — returns the
-            /// first matching directive among the direct children
-            /// of this view. Multiple-directive grammars should
-            /// iterate `self.cursor.children()` directly and call
-            /// `cst_directives::#try_ident` on each child.
-            pub fn #method_ident(&self) -> ::core::option::Option<cst_directives::#struct_ident<'p>> {
-                for child in self.cursor.children() {
-                    if child.variant_idx() == #idx_lit {
-                        return cst_directives::#try_ident(child, self.input);
-                    }
-                }
-                ::core::option::Option::None
-            }
-        });
-    }
-
-    if methods.is_empty() {
-        return TokenStream::new();
-    }
-
-    quote! {
-        #[allow(dead_code)]
-        impl<'p> #root_view_ident<'p> {
-            #(#methods)*
-        }
-
-        #[allow(dead_code)]
-        impl<'p> #node_view_ident<'p> {
-            #(#methods)*
         }
     }
 }

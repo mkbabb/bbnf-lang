@@ -23,6 +23,7 @@ use parse_that::Span;
 use super::generated::{
     BbnfBootstrap, BbnfBootstrapNodeView, BbnfBootstrapRuleKind, cst_directives,
 };
+use crate::lower::tape_walk::find_child_by_kind;
 use crate::runtime::Parsed;
 use crate::types::*;
 
@@ -198,10 +199,8 @@ fn absorb_item<'a>(
             }
         }
         BbnfBootstrapRuleKind::import_directive => {
-            if let Some(d) = cst_directives::try_as_import_directive(cursor, input) {
-                absorb_import(d.inner, d.span, &mut grammar.imports);
-                return;
-            }
+            absorb_import_structural(item, &mut grammar.imports);
+            return;
         }
         _ => {}
     }
@@ -221,7 +220,7 @@ fn absorb_item<'a>(
     if let Some(kw_end) = trimmed.find(|c: char| c.is_whitespace() || c == ';' || c == '.') {
         let kw = &trimmed[..kw_end];
         match kw {
-            "@import" => absorb_import_by_text(item, &mut grammar.imports),
+            "@import" => absorb_import_structural(item, &mut grammar.imports),
             "@recover" => absorb_recover_by_text(item, &mut grammar.recovers),
             "@pretty" => absorb_pretty_by_text(item, &mut grammar.pretties),
             "@token" => absorb_token_by_text(item, &mut grammar.token_rules),
@@ -237,66 +236,6 @@ fn absorb_item<'a>(
 /// source slice directly when the schema's typed `try_as_*`
 /// helper has stale `variant_idx` constants and returns `None`.
 /// All become unreachable after AE.4's clean regen.
-
-fn absorb_import_by_text<'a>(
-    item: BbnfBootstrapNodeView<'a>,
-    imports: &mut Vec<ImportDirective<'a>>,
-) {
-    let raw = item.span_text();
-    let (lo, hi) = item.span();
-    let span = Span::new(lo as usize, hi as usize, item.input());
-    // Two forms: glob `@import "path" ;` or selective
-    // `@import { a, b } from "path" ;`.
-    let body = raw.trim_start_matches("@import").trim();
-    if let Some(brace_open) = body.find('{') {
-        // Selective.
-        let after_brace = &body[brace_open + 1..];
-        let brace_close = match after_brace.find('}') {
-            Some(i) => i,
-            None => return,
-        };
-        let items_str = &after_brace[..brace_close];
-        let mut items: Vec<ImportedName<'a>> = Vec::new();
-        for raw_name in items_str.split(',') {
-            let name = raw_name.trim();
-            if name.is_empty() {
-                continue;
-            }
-            // Recover an &'a str by re-slicing the input buffer.
-            let input = item.input();
-            if let Some(start) = input[lo as usize..hi as usize].find(name) {
-                let abs_lo = lo as usize + start;
-                let abs_hi = abs_lo + name.len();
-                items.push(ImportedName {
-                    name: Cow::Borrowed(&input[abs_lo..abs_hi]),
-                    span: Span::new(abs_lo, abs_hi, input),
-                });
-            }
-        }
-        // Path: between `from` and the trailing `;` / `.`.
-        let after_close = &after_brace[brace_close + 1..];
-        let from_idx = match after_close.find("from") {
-            Some(i) => i,
-            None => return,
-        };
-        let after_from = after_close[from_idx + 4..].trim_start();
-        let path = parse_quoted_string(after_from);
-        if let Some(path_str) = path {
-            imports.push(ImportDirective {
-                path: Cow::Owned(path_str.to_string()),
-                span,
-                items: Some(items),
-            });
-        }
-    } else if let Some(path_str) = parse_quoted_string(body) {
-        // Glob form.
-        imports.push(ImportDirective {
-            path: Cow::Owned(path_str.to_string()),
-            span,
-            items: None,
-        });
-    }
-}
 
 fn absorb_recover_by_text<'a>(
     item: BbnfBootstrapNodeView<'a>,
@@ -414,74 +353,93 @@ fn absorb_host_by_text<'a>(
     });
 }
 
-/// Parse a leading `"..."` quoted string from the front of `s`,
-/// returning the inside (sans quotes). Used by the span-text
-/// directive fallbacks to recover import paths.
-fn parse_quoted_string(s: &str) -> Option<&str> {
-    let s = s.trim_start();
-    if !s.starts_with('"') {
-        return None;
-    }
-    let after = &s[1..];
-    let close = after.find('"')?;
-    Some(&after[..close])
-}
-
-/// Decode the inner of an `import_directive` — either a glob `import_path`
-/// or a selective `import_directive_0` (`{ items } from "path"`).
-fn absorb_import<'a>(
-    inner: BbnfBootstrapNodeView<'a>,
-    directive_span: Span<'a>,
+/// Decode an `import_directive` compound into its typed form.
+///
+/// `import_directive = "@import" ?w , (
+///       import_items ?w , "from" ?w , import_path
+///     | import_path
+/// ) ?w , ( ";" | "." ) ? ;`
+///
+/// The structural walk scans `item` and its descendants for two
+/// semantic child kinds: `import_items` (the `{ a, b, c }` list —
+/// present in the selective form only) and `import_path` (the
+/// `"..."` string literal — present in both forms). Their presence
+/// disambiguates the two Alt branches without depending on any
+/// `import_directive_0` sub-variant identity that structural-mode
+/// dedup may or may not collapse, and without reading positional
+/// slots past the `@import` keyword.
+///
+/// The `@import` / `from` / `;` keyword literals are skipped
+/// implicitly — they don't carry a rule_kind match.
+fn absorb_import_structural<'a>(
+    item: BbnfBootstrapNodeView<'a>,
     imports: &mut Vec<ImportDirective<'a>>,
 ) {
-    match inner.rule_kind() {
-        // Selective: @import { items } from "path"
-        BbnfBootstrapRuleKind::import_directive_0 => {
-            let items_view = inner.child(0).expect("import_directive_0: missing items");
-            let path_view = inner.child(2).expect("import_directive_0: missing path");
-            let mut names = Vec::new();
-            if items_view.rule_kind() == BbnfBootstrapRuleKind::import_items {
-                // `import_items = "{" (first (, rest)*) "}"` — the
-                // first identifier is child(1), the `(comma, ident)`
-                // pairs live under child(2) as a repeat, and the
-                // closing brace is child(3). The schema accessor on
-                // the view walks this shape directly.
-                let first = items_view
-                    .child(1)
-                    .expect("import_items: missing first identifier");
-                push_import_name(&mut names, first);
-                if let Some(rest) = items_view.child(2) {
-                    for pair in rest.children() {
-                        // pair = (",", ident)
-                        if let Some(name) = pair.child(1) {
-                            push_import_name(&mut names, name);
-                        }
-                    }
-                }
-            }
-            let path_span = if path_view.rule_kind() == BbnfBootstrapRuleKind::import_path {
-                let (lo, hi) = path_view.span();
-                Span::new(lo as usize, hi as usize, path_view.input())
-            } else {
-                directive_span
-            };
-            imports.push(ImportDirective {
-                path: Cow::Borrowed(strip_quotes(path_span.as_str())),
-                span: directive_span,
-                items: Some(names),
-            });
+    let (lo, hi) = item.span();
+    let directive_span = Span::new(lo as usize, hi as usize, item.input());
+
+    let Some(path_view) =
+        find_descendant_by_kind(item, BbnfBootstrapRuleKind::import_path)
+    else {
+        return;
+    };
+    let (path_lo, path_hi) = path_view.span();
+    let path_raw = &path_view.input()[path_lo as usize..path_hi as usize];
+    let path_str = strip_quotes(path_raw);
+
+    let items_view =
+        find_descendant_by_kind(item, BbnfBootstrapRuleKind::import_items);
+
+    let names: Option<Vec<ImportedName<'a>>> = items_view.map(|items| {
+        let mut out = Vec::new();
+        collect_identifier_descendants(items, &mut out);
+        out
+    });
+
+    imports.push(ImportDirective {
+        path: Cow::Borrowed(path_str),
+        span: directive_span,
+        items: names,
+    });
+}
+
+/// Depth-first search for the first descendant whose `rule_kind()`
+/// matches `target`. Checks the root first, then recurses through
+/// children. Used to reach `import_items` / `import_path` compounds
+/// that live underneath transparent / wrapper compounds that dedup
+/// may or may not have collapsed.
+fn find_descendant_by_kind<'a>(
+    view: BbnfBootstrapNodeView<'a>,
+    target: BbnfBootstrapRuleKind,
+) -> Option<BbnfBootstrapNodeView<'a>> {
+    if view.rule_kind() == target {
+        return Some(view);
+    }
+    if let Some(direct) = find_child_by_kind(view, target) {
+        return Some(direct);
+    }
+    for child in view.children() {
+        if let Some(found) = find_descendant_by_kind(child, target) {
+            return Some(found);
         }
-        // Glob: @import "path"
-        BbnfBootstrapRuleKind::import_path => {
-            let (lo, hi) = inner.span();
-            let raw = &inner.input()[lo as usize..hi as usize];
-            imports.push(ImportDirective {
-                path: Cow::Borrowed(strip_quotes(raw)),
-                span: directive_span,
-                items: None,
-            });
-        }
-        _ => {}
+    }
+    None
+}
+
+/// Collect every `identifier`-kind descendant of `view` into `out`.
+/// Used to extract the names from an `import_items` compound whose
+/// `{ first , rest , }` internal shape varies under structural
+/// dedup.
+fn collect_identifier_descendants<'a>(
+    view: BbnfBootstrapNodeView<'a>,
+    out: &mut Vec<ImportedName<'a>>,
+) {
+    if view.rule_kind() == BbnfBootstrapRuleKind::identifier {
+        push_import_name(out, view);
+        return;
+    }
+    for child in view.children() {
+        collect_identifier_descendants(child, out);
     }
 }
 

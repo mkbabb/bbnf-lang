@@ -3,6 +3,13 @@
 //! Tranche AC.2: rewritten against the tape-first view surface.
 //! Identifier references are collected by walking `children()` on a
 //! [`BbnfBootstrapNodeView`] and matching on [`BbnfBootstrapRuleKind`].
+//!
+//! Tranche AF.0: shape-agnostic structural walk — every semantic
+//! handler dispatches on canonical `rule_kind` names only. Sub-
+//! variant wrapper kinds (`term_N`) that structural-mode dedup may
+//! or may not produce are never referenced; the generic descent
+//! into `children()` collects identifier nodes regardless of which
+//! wrapper compounds the optimizer has elided around them.
 
 use indexmap::{IndexMap, IndexSet};
 
@@ -33,37 +40,33 @@ pub fn calculate_ast_deps<'a>(ast: &AST<'a>) -> Dependencies<'a> {
 /// Recursively collect nonterminal (identifier) references from a
 /// bootstrap view node.
 ///
+/// The walk dispatches on canonical `rule_kind` only:
+///
+/// - `identifier` → record the name as a reference.
+/// - anything else → recurse into `children()`.
+///
+/// This covers every grammar-level term shape without naming any
+/// dedup-collapsible sub-variant wrapper. A `term` compound that
+/// under structural mode has children `(identifier, call_args?)`
+/// still has its head `identifier` collected by the generic recursion
+/// in a single pass (the identifier is a direct child and its
+/// rule_kind matches the first arm); any nested references inside
+/// the call args are collected by the recursive descent.
+///
 /// Value expression sub-variants share types with grammar
-/// sub-variants (e.g., `value_atom_0` is also used for `(rhs)` parens
-/// in `term`), so we cannot skip them by variant name — the walk
-/// safely descends and identifier nodes inside value expressions
-/// will be collected, but in valid grammars value expressions don't
-/// contain grammar references.
+/// sub-variants (e.g., paren-grouped shapes), so we cannot skip
+/// them by variant name — the walk safely descends and identifier
+/// nodes inside value expressions will be collected, but in valid
+/// grammars value expressions don't contain grammar references.
 pub fn collect_nonterminal_refs<'a>(
     node: BbnfBootstrapNodeView<'a>,
     refs: &mut IndexSet<&'a str>,
 ) {
-    match node.rule_kind() {
-        // Identifier reference: collect the name.
-        BbnfBootstrapRuleKind::identifier => {
-            refs.insert(node.span_text());
-        }
-        // term_1: identifier with optional call args. Collect the
-        // head identifier, then walk the optional arg list for
-        // nested references.
-        BbnfBootstrapRuleKind::term_1 => {
-            if let Some(ident) = node.child(0) {
-                refs.insert(ident.span_text());
-            }
-            for child in node.children() {
-                collect_nonterminal_refs(child, refs);
-            }
-        }
-        // All other variants: delegate structural recursion.
-        _ => {
-            for child in node.children() {
-                collect_nonterminal_refs(child, refs);
-            }
-        }
+    if node.rule_kind() == BbnfBootstrapRuleKind::identifier {
+        refs.insert(node.span_text());
+        return;
+    }
+    for child in node.children() {
+        collect_nonterminal_refs(child, refs);
     }
 }

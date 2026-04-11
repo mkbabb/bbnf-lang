@@ -1,10 +1,18 @@
 //! Alias detection for AST-level diagnostics.
 //!
 //! Tranche AC.2: rewritten against the tape-first view surface.
+//!
+//! Tranche AF.0: shape-agnostic `term` handling — grouped
+//! expressions and plain-reference shapes are distinguished by
+//! leading-byte dispatch and by the presence of substantive
+//! non-identifier children, not by sub-variant wrapper kinds
+//! that structural-mode dedup may or may not produce. Every
+//! rule_kind reference here is a canonical grammar rule name.
 
 use std::collections::{HashMap, HashSet};
 
 use crate::grammar::generated::{BbnfBootstrapNodeView, BbnfBootstrapRuleKind};
+use crate::lower::tape_walk::{find_child_by_kind, peel_transparent};
 use crate::types::AST;
 
 /// Find rules whose RHS is simply a reference to another nonterminal.
@@ -36,44 +44,64 @@ fn extract_alias_target<'a>(node: BbnfBootstrapNodeView<'a>) -> Option<&'a str> 
         // Direct identifier reference
         BbnfBootstrapRuleKind::identifier => Some(node.span_text()),
 
-        // term_1 without call args = plain nonterminal reference
-        BbnfBootstrapRuleKind::term_1 => {
-            let ident = node.child(0)?;
-            let call_args = node.child(1);
-            let no_call = call_args
-                .map(|c| c.span().1 == c.span().0)
-                .unwrap_or(true);
-            if no_call {
-                Some(ident.span_text())
-            } else {
-                None
-            }
-        }
-
-        // Transparent structural wrapper.
+        // `term = ε | identifier (call_args)? | literal | regex
+        //       | "(" rhs ")" | "[" rhs "]" | "{" rhs "}" | "@{" rhs "}"`
+        //
+        // Structural-mode dedup may collapse the per-branch `term_N`
+        // wrappers, so dispatch on content:
+        //
+        // - Leading byte `(` / `[` / `{` / `@{` → grouped form. Only
+        //   `(rhs)` preserves alias semantics (the other wrappers
+        //   imply optional / repetition / host-call); descend into
+        //   the inner `rhs` compound found by `rule_kind` lookup.
+        // - Otherwise → bare term. If there's exactly one substantive
+        //   non-wrapper child and it's an `identifier` with no
+        //   accompanying call-args compound, the term is a plain
+        //   reference.
         BbnfBootstrapRuleKind::term => {
-            let inner = node.child(0)?;
-            extract_alias_target(inner)
+            let leading = node.span_text().as_bytes().first().copied();
+            if leading == Some(b'(') {
+                // Grouped `( rhs )` form — descend into the inner
+                // expression. Prefer the explicit `rhs` child under
+                // structural mode; fall back to the first
+                // substantive non-literal descendant otherwise.
+                let inner = find_child_by_kind(node, BbnfBootstrapRuleKind::rhs)
+                    .or_else(|| find_semantic_child(node))?;
+                return extract_alias_target(peel_transparent(inner));
+            }
+            if matches!(leading, Some(b'[') | Some(b'{') | Some(b'@')) {
+                // Optional / repetition / host-call — not an alias.
+                return None;
+            }
+            // Bare term: `identifier (call_args)?` / `literal` / `regex` / `ε`.
+            // Alias only when the sole substantive child is an identifier.
+            let ident = find_child_by_kind(node, BbnfBootstrapRuleKind::identifier)?;
+            let has_call_args = node.children().any(|c| {
+                let k = c.rule_kind();
+                k != BbnfBootstrapRuleKind::identifier
+                    && k != BbnfBootstrapRuleKind::comment
+                    && k != BbnfBootstrapRuleKind::big_comment
+                    && c.span().1 > c.span().0
+            });
+            if has_call_args {
+                None
+            } else {
+                Some(ident.span_text())
+            }
         }
 
         // factor = (comment_before?, term, modifier?, comment_after?)
         // — unwrap when all three optional slots are absent.
         BbnfBootstrapRuleKind::factor => {
-            let term = node.child(1)?;
-            let modifier = node.child(2);
-            let comment_before = node.child(0);
-            let comment_after = node.child(3);
-            let all_bare = comment_before
-                .map(|c| c.span().1 == c.span().0)
-                .unwrap_or(true)
-                && modifier.map(|m| m.span().1 == m.span().0).unwrap_or(true)
-                && comment_after
-                    .map(|c| c.span().1 == c.span().0)
-                    .unwrap_or(true);
-            if all_bare {
-                extract_alias_target(term)
-            } else {
+            let term = find_child_by_kind(node, BbnfBootstrapRuleKind::term)?;
+            let modifier = find_child_by_kind(node, BbnfBootstrapRuleKind::modifier);
+            let has_modifier = modifier
+                .map(|m| m.span().1 > m.span().0)
+                .unwrap_or(false);
+            if has_modifier {
                 None
+            } else {
+                extract_alias_target(term)
             }
         }
 
@@ -86,17 +114,6 @@ fn extract_alias_target<'a>(node: BbnfBootstrapNodeView<'a>) -> Option<&'a str> 
                 .map(|m| m.span().1 == m.span().0)
                 .unwrap_or(true);
             if no_mapping {
-                extract_alias_target(inner)
-            } else {
-                None
-            }
-        }
-
-        // Grouped expression: (rhs) — `term_2` with an opening `(`.
-        BbnfBootstrapRuleKind::term_2 => {
-            let open = node.child(0)?;
-            if open.span_text() == "(" {
-                let inner = node.child(1)?;
                 extract_alias_target(inner)
             } else {
                 None
@@ -136,4 +153,27 @@ fn extract_alias_target<'a>(node: BbnfBootstrapNodeView<'a>) -> Option<&'a str> 
 
         _ => None,
     }
+}
+
+/// Find the first substantive (non-literal-punctuation, non-empty)
+/// child of a view — used as a fallback when a named `rhs` child
+/// isn't available because structural-mode dedup elided the wrapper.
+///
+/// "Substantive" here means: compound children with non-zero span
+/// whose rule_kind isn't one of the grammar's literal punctuation
+/// slots (no `identifier`, `literal`, etc. filter — we want
+/// whichever expression layer sits under the opening `(`).
+fn find_semantic_child<'a>(
+    view: BbnfBootstrapNodeView<'a>,
+) -> Option<BbnfBootstrapNodeView<'a>> {
+    view.children().find(|c| {
+        let (lo, hi) = c.span();
+        if hi <= lo {
+            return false;
+        }
+        // Skip the opening / closing delimiter literals — they carry
+        // a single byte of span and no rule_kind of interest.
+        let text = c.span_text();
+        !matches!(text, "(" | ")" | "[" | "]" | "{" | "}" | "@{")
+    })
 }

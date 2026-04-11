@@ -356,28 +356,56 @@ initial estimate and the CSP refines it.
 
 ### AB.2 — Tape-first emitter baseline (the architectural close)
 
-This is the tranche's real architectural close. Every production
-grammar must compile and parse on the tape with every rule returning
-`Option<TapeOffset>`. The parity gate is byte-identical structural
-output against a pre-AB snapshot.
+This is the tranche's real architectural close. Split into two
+sub-phases during execution to keep each commit self-consistent
+and the build green throughout.
 
-- **Add `materialization` to `DriverState`** at
-  `crates/core/src/backend/driver/mod.rs`. Populated by the CSP
-  solver (AB.1) or defaulted to `MustTape` for every NodeId.
+#### AB.2a — Substrate (SHIPPED)
+
+Lands the non-behavioral pieces that unblock the emitter rewrite,
+committed as a self-contained change with no generated-code drift:
+
+- **`DriverState.materialization`** — per-`NodeId` class map cloned
+  from `ir.materialization` by `install_pattern_caches` and
+  `generate/mod.rs`. New `DriverState::materialization_class(ir,
+  node)` accessor with a safe `MustTape` fallback.
+- **`crates/core/src/runtime/parsed.rs`** — `Parsed<View>` owning
+  parse result type. Owns the tape inline, lends views via `.view()`.
+  No `(View, Tape)` tuple surface.
+- **`crates/core/src/backend/rust/emitter/tape_prelude.rs`** — one
+  source of truth for `emit_must_tape_prelude/epilogue`,
+  `emit_tape_span_only_prelude/epilogue`, and
+  `emit_rule_signature`. Keeps the three rule-function shapes from
+  drifting across per-kind emitters during AB.2b's migration.
+- **`bbnf-tape` dep** added to the `bbnf` crate. `pub mod runtime`
+  exposed from `crates/core/src/lib.rs`.
+
+Every existing test passes; generated parsers still emit the
+eager-AST shape because the per-kind emitters haven't been rewired
+yet.
+
+#### AB.2b — Per-kind emitter rewrite (PENDING)
+
+Migrates the Rust backend's rule-function emission to produce
+tape-first output, one emitter path at a time, under the tape
+parity gate:
+
 - **`emit_rule_function_impl`** in
   `crates/core/src/backend/rust/emitter/grammar.rs`: emit the
   `(state, tape) -> Option<TapeOffset>` signature unconditionally. The
   body shape depends on `materialization[rule]`:
-  - `MustTape` → prelude (`__span_lo`, `mark_children`) + body +
-    epilogue (`push_compound`).
-  - `TapeSpanOnly` → `__span_lo` + body + `push_leaf(Span, ...)`.
+  - `MustTape` → `tape_prelude::emit_must_tape_prelude/epilogue`.
+  - `TapeSpanOnly` → `tape_prelude::emit_tape_span_only_prelude/epilogue`.
   - `TransparentElide` → no function emitted; handled in `compile_ref`.
-- **`emit_rule_prelude` / `emit_rule_epilogue`** — new helpers on
-  `RustEmitter` for the two record-emitting shapes.
 - **Child call shape** in `compile_ref` /
   `crates/core/src/backend/rust/emitter/reference.rs`: every child
   call is `__rule(state, tape)` returning `Option<TapeOffset>`.
   `TransparentElide` refs inline the body at the call site.
+- **Per-kind emitters** (`leaves.rs`, `seq.rs`, `alt.rs`,
+  `repeat.rs`, `binary.rs`, `map_value.rs`) rewired to compose
+  sub-parse results as `Option<TapeOffset>` via the match-arm
+  short-circuit pattern. No mixed return types — every sub-parse
+  is uniform.
 - **Delete `emit_alloc` for all rules** at
   `crates/core/src/backend/rust/ir_types.rs:295`. The 14 indirect
   call sites in the emitter siblings become dead. Delete `BoxedEnum`
@@ -387,8 +415,6 @@ output against a pre-AB snapshot.
   a new `crates/core/src/backend/rust/view/` directory module
   (per-kind siblings: `leaves.rs`, `seq.rs`, `alt.rs`, `repeat.rs`,
   `grammar.rs`) producing accessor methods over `TapeCursor`.
-- **`Parsed<View>` type** in `crates/core/src/runtime/parsed.rs` (or
-  equivalent) — the owning parse artifact.
 - **`#[derive(Parser)]` surface** at `crates/derive/src/lib.rs`:
   generate `pub fn parse<'a>(input: &'a str) -> Result<Parsed<RootView<'a>>, ParseErr>`.
 - **Prettify integration**: no changes to prettify emitter.
@@ -398,6 +424,11 @@ output against a pre-AB snapshot.
   structural equivalence + spans + prettify parity + invalid-input
   behavior against a golden snapshot captured pre-AB. Every grammar
   must match.
+
+The migration order under the parity gate: **leaves → seq → alt →
+repeat → binary → map_value → grammar**. Each step is a separate
+commit that keeps every grammar green; a commit that breaks
+parity on any grammar is reverted and reworked.
 
 ### AB.3 — View generation + consumer migration
 

@@ -116,9 +116,17 @@ fn dispatch_expression<'a>(
         TapeKind::Rule | TapeKind::Repeat,
     );
     if is_unknown_or_sentinel && is_wrapper_kind {
+        let parent_offset = node.cursor().offset();
         let substantive: Vec<BbnfBootstrapNodeView<'a>> = node
             .children()
             .filter(|c| c.kind() == TapeKind::Rule)
+            // Cycle guard: drop any child whose tape offset
+            // equals the parent's. A malformed compound whose
+            // children include itself would otherwise re-enter
+            // dispatch_expression at the same view and produce
+            // an infinitely-nested IrNode tree, which the
+            // codegen later SIGBUS-es while flattening.
+            .filter(|c| c.cursor().offset() != parent_offset)
             .collect();
         match substantive.len() {
             0 => return IrNode::Epsilon,

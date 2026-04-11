@@ -107,6 +107,17 @@ pub struct DriverState {
     /// (`MustTape`), a single leaf span (`TapeSpanOnly`), or
     /// nothing at all (`TransparentElide`, inlined at call sites).
     pub materialization: std::collections::HashMap<NodeId, MaterializationClass>,
+
+    /// Set of rule IDs currently being inlined via `compile_ref`'s
+    /// `InlineBody` strategy. Used as a cycle guard: if `compile_ref`
+    /// is asked to inline a rule that's already being inlined further
+    /// up the call chain, we degrade to `DirectCall` instead of
+    /// recursing infinitely. The pre-solved inline planner is
+    /// supposed to prevent this — but a malformed IR (e.g. from a
+    /// hand-patched bootstrap parser) can produce `Ref(X)` chains
+    /// the planner doesn't catch, and the codegen would otherwise
+    /// SIGBUS deep in the stack.
+    pub inline_in_progress: std::collections::HashSet<RuleId>,
 }
 
 impl DriverState {
@@ -122,6 +133,7 @@ impl DriverState {
             regex_patterns: Vec::new(),
             ws_regex_id: None,
             materialization: std::collections::HashMap::new(),
+            inline_in_progress: std::collections::HashSet::new(),
         }
     }
 

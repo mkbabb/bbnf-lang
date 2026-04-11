@@ -146,6 +146,7 @@ fn absorb_item<'a>(
                     sync_expr: d.sync_expr,
                     span: d.span,
                 });
+                return;
             }
         }
         BbnfBootstrapRuleKind::pretty_directive => {
@@ -157,16 +158,19 @@ fn absorb_item<'a>(
                     hints,
                     span: d.span,
                 });
+                return;
             }
         }
         BbnfBootstrapRuleKind::token_directive => {
             if let Some(d) = cst_directives::try_as_token_directive(cursor, input) {
                 grammar.token_rules.push(Cow::Owned(d.name.to_string()));
+                return;
             }
         }
         BbnfBootstrapRuleKind::debug_directive => {
             if let Some(d) = cst_directives::try_as_debug_directive(cursor, input) {
                 grammar.debug_rules.push(Cow::Owned(d.target.to_string()));
+                return;
             }
         }
         BbnfBootstrapRuleKind::ws_directive => {
@@ -178,6 +182,7 @@ fn absorb_item<'a>(
                     .and_then(|s| s.strip_suffix('/'))
                     .unwrap_or(raw);
                 grammar.ws_pattern = Some(Cow::Borrowed(stripped));
+                return;
             }
         }
         BbnfBootstrapRuleKind::host_directive => {
@@ -189,15 +194,237 @@ fn absorb_item<'a>(
                     name: Cow::Owned(d.name.to_string()),
                     return_type,
                 });
+                return;
             }
         }
         BbnfBootstrapRuleKind::import_directive => {
             if let Some(d) = cst_directives::try_as_import_directive(cursor, input) {
                 absorb_import(d.inner, d.span, &mut grammar.imports);
+                return;
             }
         }
         _ => {}
     }
+
+    // Span-text fallback — under HEAD's hand-patched generated.rs
+    // the schema's `try_as_*_directive` helpers check a stale
+    // `variant_idx` that's off-by-one from what the rule emitter
+    // actually stamps, so the typed extraction returns `None`.
+    // When we know the kind from `rule_kind()` but the typed
+    // extraction failed, OR when the inlined `directive` rule
+    // collapses to an empty compound, fall through to a span-text
+    // dispatch on the leading `@keyword`. This becomes redundant
+    // after AE.4's clean regen rebuilds the schema with correct
+    // variant_idx values.
+    let raw = item.span_text();
+    let trimmed = raw.trim_start();
+    if let Some(kw_end) = trimmed.find(|c: char| c.is_whitespace() || c == ';' || c == '.') {
+        let kw = &trimmed[..kw_end];
+        match kw {
+            "@import" => absorb_import_by_text(item, &mut grammar.imports),
+            "@recover" => absorb_recover_by_text(item, &mut grammar.recovers),
+            "@pretty" => absorb_pretty_by_text(item, &mut grammar.pretties),
+            "@token" => absorb_token_by_text(item, &mut grammar.token_rules),
+            "@debug" => absorb_debug_by_text(item, &mut grammar.debug_rules),
+            "@ws" => absorb_ws_by_text(item, &mut grammar.ws_pattern),
+            "@host" => absorb_host_by_text(item, &mut grammar.host_fns),
+            _ => {}
+        }
+    }
+}
+
+/// Span-text directive extractors. Each parses a directive's
+/// source slice directly when the schema's typed `try_as_*`
+/// helper has stale `variant_idx` constants and returns `None`.
+/// All become unreachable after AE.4's clean regen.
+
+fn absorb_import_by_text<'a>(
+    item: BbnfBootstrapNodeView<'a>,
+    imports: &mut Vec<ImportDirective<'a>>,
+) {
+    let raw = item.span_text();
+    let (lo, hi) = item.span();
+    let span = Span::new(lo as usize, hi as usize, item.input());
+    // Two forms: glob `@import "path" ;` or selective
+    // `@import { a, b } from "path" ;`.
+    let body = raw.trim_start_matches("@import").trim();
+    if let Some(brace_open) = body.find('{') {
+        // Selective.
+        let after_brace = &body[brace_open + 1..];
+        let brace_close = match after_brace.find('}') {
+            Some(i) => i,
+            None => return,
+        };
+        let items_str = &after_brace[..brace_close];
+        let mut items: Vec<ImportedName<'a>> = Vec::new();
+        for raw_name in items_str.split(',') {
+            let name = raw_name.trim();
+            if name.is_empty() {
+                continue;
+            }
+            // Recover an &'a str by re-slicing the input buffer.
+            let input = item.input();
+            if let Some(start) = input[lo as usize..hi as usize].find(name) {
+                let abs_lo = lo as usize + start;
+                let abs_hi = abs_lo + name.len();
+                items.push(ImportedName {
+                    name: Cow::Borrowed(&input[abs_lo..abs_hi]),
+                    span: Span::new(abs_lo, abs_hi, input),
+                });
+            }
+        }
+        // Path: between `from` and the trailing `;` / `.`.
+        let after_close = &after_brace[brace_close + 1..];
+        let from_idx = match after_close.find("from") {
+            Some(i) => i,
+            None => return,
+        };
+        let after_from = after_close[from_idx + 4..].trim_start();
+        let path = parse_quoted_string(after_from);
+        if let Some(path_str) = path {
+            imports.push(ImportDirective {
+                path: Cow::Owned(path_str.to_string()),
+                span,
+                items: Some(items),
+            });
+        }
+    } else if let Some(path_str) = parse_quoted_string(body) {
+        // Glob form.
+        imports.push(ImportDirective {
+            path: Cow::Owned(path_str.to_string()),
+            span,
+            items: None,
+        });
+    }
+}
+
+fn absorb_recover_by_text<'a>(
+    item: BbnfBootstrapNodeView<'a>,
+    recovers: &mut Vec<RecoverDirective<'a>>,
+) {
+    // Source-text fallback: we don't have the typed sync_expr
+    // view here, so synthesize from the directive item itself.
+    let input = item.input();
+    let raw = item.span_text();
+    let (lo, hi) = item.span();
+    let body = raw.trim_start_matches("@recover").trim();
+    let name_end = body
+        .find(|c: char| c.is_whitespace())
+        .unwrap_or(body.len());
+    let rule_name_str = &body[..name_end];
+    if rule_name_str.is_empty() {
+        return;
+    }
+    // Recover an `&'a str` slice into the original input buffer.
+    let Some(name_offset) = input[lo as usize..hi as usize].find(rule_name_str) else {
+        return;
+    };
+    let abs_lo = lo as usize + name_offset;
+    let abs_hi = abs_lo + rule_name_str.len();
+    let rule_name: &'a str = &input[abs_lo..abs_hi];
+    // Use the whole directive item as the sync_expr placeholder —
+    // the actual sync expression body will be re-parsed downstream
+    // when this fallback path is removed by AE.4's clean regen.
+    recovers.push(RecoverDirective {
+        rule_name,
+        sync_expr: item,
+        span: Span::new(lo as usize, hi as usize, input),
+    });
+}
+
+fn absorb_pretty_by_text<'a>(
+    item: BbnfBootstrapNodeView<'a>,
+    pretties: &mut Vec<PrettyDirective<'a>>,
+) {
+    let raw = item.span_text();
+    let (lo, hi) = item.span();
+    let body = raw.trim_start_matches("@pretty").trim();
+    // Strip trailing terminator.
+    let body = body.trim_end_matches(|c: char| c == ';' || c == '.').trim();
+    let mut tokens = body.split_whitespace();
+    let target = match tokens.next() {
+        Some(t) => t.to_string(),
+        None => return,
+    };
+    let hints: Vec<Cow<'a, str>> =
+        tokens.map(|h| Cow::Owned(h.to_string())).collect();
+    pretties.push(PrettyDirective {
+        rule_name: Cow::Owned(target),
+        hints,
+        span: Span::new(lo as usize, hi as usize, item.input()),
+    });
+}
+
+fn absorb_token_by_text<'a>(
+    item: BbnfBootstrapNodeView<'a>,
+    token_rules: &mut Vec<Cow<'a, str>>,
+) {
+    let raw = item.span_text();
+    let body = raw.trim_start_matches("@token").trim();
+    let body = body.trim_end_matches(|c: char| c == ';' || c == '.').trim();
+    let name = body.split_whitespace().next().unwrap_or("");
+    if !name.is_empty() {
+        token_rules.push(Cow::Owned(name.to_string()));
+    }
+}
+
+fn absorb_debug_by_text<'a>(
+    item: BbnfBootstrapNodeView<'a>,
+    debug_rules: &mut Vec<Cow<'a, str>>,
+) {
+    let raw = item.span_text();
+    let body = raw.trim_start_matches("@debug").trim();
+    let body = body.trim_end_matches(|c: char| c == ';' || c == '.').trim();
+    let name = body.split_whitespace().next().unwrap_or("");
+    if !name.is_empty() {
+        debug_rules.push(Cow::Owned(name.to_string()));
+    }
+}
+
+fn absorb_ws_by_text<'a>(
+    item: BbnfBootstrapNodeView<'a>,
+    ws_pattern: &mut Option<Cow<'a, str>>,
+) {
+    let raw = item.span_text();
+    let body = raw.trim_start_matches("@ws").trim();
+    let body = body.trim_end_matches(|c: char| c == ';' || c == '.').trim();
+    if let Some(stripped) = body.strip_prefix('/').and_then(|s| s.strip_suffix('/')) {
+        *ws_pattern = Some(Cow::Owned(stripped.to_string()));
+    }
+}
+
+fn absorb_host_by_text<'a>(
+    item: BbnfBootstrapNodeView<'a>,
+    host_fns: &mut Vec<HostFnDecl<'a>>,
+) {
+    let raw = item.span_text();
+    let body = raw.trim_start_matches("@host").trim();
+    let body = body.trim_end_matches(|c: char| c == ';' || c == '.').trim();
+    // Format: name [: type]
+    let (name, type_part) = match body.find(':') {
+        Some(i) => (body[..i].trim(), Some(body[i + 1..].trim())),
+        None => (body.trim(), None),
+    };
+    if name.is_empty() {
+        return;
+    }
+    host_fns.push(HostFnDecl {
+        name: Cow::Owned(name.to_string()),
+        return_type: type_part.map(|t| Cow::Owned(t.to_string())),
+    });
+}
+
+/// Parse a leading `"..."` quoted string from the front of `s`,
+/// returning the inside (sans quotes). Used by the span-text
+/// directive fallbacks to recover import paths.
+fn parse_quoted_string(s: &str) -> Option<&str> {
+    let s = s.trim_start();
+    if !s.starts_with('"') {
+        return None;
+    }
+    let after = &s[1..];
+    let close = after.find('"')?;
+    Some(&after[..close])
 }
 
 /// Decode the inner of an `import_directive` — either a glob `import_path`

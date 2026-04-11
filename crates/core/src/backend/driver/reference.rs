@@ -29,9 +29,22 @@ pub(super) fn compile_ref<E: Emitter>(
             if rule.meta.is_transparent {
                 return emitter.emit_call(rule_id, rule_name, alloc, ctx);
             }
+            // Cycle guard — if this rule is already being inlined
+            // higher in the call chain, degrade to a direct call to
+            // break the cycle. The pre-solved inline planner is
+            // supposed to prevent self-referential inlining, but a
+            // malformed IR (e.g. one produced by a hand-patched
+            // bootstrap parser) can route us into a cycle the
+            // planner doesn't catch. Without this guard the
+            // recursion bottoms out as a stack-overflow SIGBUS deep
+            // in the codegen.
+            if !dstate.inline_in_progress.insert(rule_id) {
+                return emitter.emit_call(rule_id, rule_name, alloc, ctx);
+            }
             // Non-transparent inline: body compiles with Alloc so
             // downstream Refs produce boxed values.
             let body = compile_node(&rule.body, ValuePlacement::Alloc, ir, dstate, emitter, ctx);
+            dstate.inline_in_progress.remove(&rule_id);
             let variant_name = if rule.meta.is_transparent {
                 None
             } else {

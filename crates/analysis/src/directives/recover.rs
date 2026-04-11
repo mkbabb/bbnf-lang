@@ -12,7 +12,7 @@ pub fn extract_recovers(recovers: &[bbnf::types::RecoverDirective<'_>]) -> Vec<R
     recovers
         .iter()
         .map(|rec| {
-            let name_str = rec.rule_name.as_ref();
+            let name_str: &str = rec.rule_name;
             let dir_src = rec.span.as_str();
             let name_start = dir_src
                 .find(name_str)

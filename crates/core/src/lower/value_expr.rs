@@ -114,17 +114,13 @@ fn dispatch_value_expr<'a>(
         // the prefix consumes bytes without pushing, so we
         // disambiguate via leading-byte inspection of the unary
         // span text.
-        BbnfBootstrapRuleKind::value_unary | BbnfBootstrapRuleKind::value_unary_0 => {
-            lower_value_unary(node, ctx)
-        }
+        BbnfBootstrapRuleKind::value_unary => lower_value_unary(node, ctx),
 
         // Atom layer. Inlined alt over int/float/bool/string lits,
         // input chains, paths, function calls, and parenthesised
         // sub-expressions. Discriminated by leading-byte inspection
         // of the atom span text.
-        BbnfBootstrapRuleKind::value_atom | BbnfBootstrapRuleKind::value_atom_0 => {
-            lower_value_atom(node, ctx)
-        }
+        BbnfBootstrapRuleKind::value_atom => lower_value_atom(node, ctx),
 
         // Leaf rule_kinds — these only surface when the optimizer
         // happens to preserve the wrapper compound rather than
@@ -386,8 +382,10 @@ fn lower_value_atom<'a>(
         Some(b'\'') => MapExpr::StringLit(intern_string_lit_inner(trimmed, ctx)),
         Some(b'(') => lower_paren_atom(node, ctx),
         Some(b'!') | Some(b'-') => {
-            // Unary leaked into atom dispatch (e.g. `value_atom_0`
-            // wrapper) — recurse through the unary path.
+            // Unary prefix leaked into atom dispatch — the optimizer
+            // collapsed the `value_unary` wrapper and what reached us
+            // is a unary-shaped compound tagged `value_atom`. Route
+            // through the unary path so the `!` / `-` prefix is honoured.
             lower_value_unary(node, ctx)
         }
         Some(b) if b == b'_' || (b as char).is_ascii_alphabetic() => {
@@ -858,7 +856,7 @@ pub(crate) fn unwrap_value_ident_str<'a>(
                 }
                 cur = operands.into_iter().next().unwrap();
             }
-            BbnfBootstrapRuleKind::value_unary | BbnfBootstrapRuleKind::value_unary_0 => {
+            BbnfBootstrapRuleKind::value_unary => {
                 // Bare unary (no `!`/`-`) — descend into the atom.
                 let text = cur.span_text();
                 let first = text.as_bytes().first().copied();
@@ -867,7 +865,7 @@ pub(crate) fn unwrap_value_ident_str<'a>(
                 }
                 cur = cur.children().next()?;
             }
-            BbnfBootstrapRuleKind::value_atom | BbnfBootstrapRuleKind::value_atom_0 => {
+            BbnfBootstrapRuleKind::value_atom => {
                 // Atom is identifier-shaped iff its leading non-ws
                 // byte is `_`/alpha and the contiguous identifier
                 // run equals the trimmed text length.
@@ -918,7 +916,7 @@ pub(crate) fn deep_unwrap_value<'a>(
                 }
                 cur = operands.into_iter().next().unwrap();
             }
-            BbnfBootstrapRuleKind::value_unary | BbnfBootstrapRuleKind::value_unary_0 => {
+            BbnfBootstrapRuleKind::value_unary => {
                 let text = cur.span_text();
                 let first = text.as_bytes().first().copied();
                 if first == Some(b'!') || first == Some(b'-') {
@@ -930,7 +928,7 @@ pub(crate) fn deep_unwrap_value<'a>(
                     return cur;
                 }
             }
-            BbnfBootstrapRuleKind::value_atom | BbnfBootstrapRuleKind::value_atom_0 => {
+            BbnfBootstrapRuleKind::value_atom => {
                 // Atoms are leaf-shaped — return as-is. Callers
                 // (`lower_map_arrow`'s suffix / bool detection)
                 // inspect the span text directly.
@@ -966,7 +964,7 @@ pub(crate) fn extract_value_func_name<'a>(
         BbnfBootstrapRuleKind::value_fn_call => {
             Some(recover_call_path(node.span_text().trim_start()))
         }
-        BbnfBootstrapRuleKind::value_atom | BbnfBootstrapRuleKind::value_atom_0 => {
+        BbnfBootstrapRuleKind::value_atom => {
             let trimmed = node.span_text().trim_start();
             let first = *trimmed.as_bytes().first()?;
             if !(first.is_ascii_alphabetic() || first == b'_') {

@@ -259,26 +259,37 @@ type and the sidecar but does not write to it.
 
 ## AF.5 — Per-rule tier decoder
 
-A single pass reads the AF.3 component CSP output and writes
-`ir.emission_tier` for every rule. After AF.5, the backend driver has
-a complete per-rule tier decision and never makes its own.
+A single pass reads the AF.1 materialization classifier output and
+writes `ir.emission_tier` for every rule. After AF.5, the backend
+driver has a complete per-rule tier decision and never makes its own.
 
 `decode_emission_tier` at
-`crates/ir/src/passes/csp_strategy/decode_tier.rs` walks the solved
-CSP, picks the optimal tier per rule from the strategy assignment, and
-writes `ir.emission_tier`. The pass runs in
-`crates/core/src/pipeline/compile.rs` between
-`solve_grammar_components` and `project_types`. Order is invariant:
-`project_types` reads tier to decide whether to emit a `__rule_direct`
-shim alongside the tape function.
+`crates/ir/src/passes/csp_strategy/decode_tier.rs` walks each rule,
+reads its body's materialization class via `ir.materialization`, and
+assigns:
 
-Test gate asserts every rule in `bbnf.bbnf` gets a tier assignment;
-`@pretty`-pinned rules are always Tape; typed leaves with
-`FnDescriptor::NumberConvert / HexConvert / Constant` are always
-Direct under cost model defaults; ambiguous rules decode
-deterministically.
+- `MustTape` / `TapeSpanOnly` → `EmissionTier::Tape`
+- `TransparentElide` + structurally Tier B-eligible body → `EmissionTier::Direct`
+- `TransparentElide` + non-eligible body → `EmissionTier::Tape`
 
-## AF.6 — Tier B emitter + view-layer codegen
+Tier B eligibility is the closed vocabulary the AF.6 emitter can
+handle: a `Map` with a non-closure `FnDescriptor` (`NumberConvert` /
+`HexConvert` / `Constant` / `EnumWrap` / `BoxWrap` / `SpanCapture`)
+over a non-`Ref` inner, or a bare leaf (`Literal` / `Regex` /
+`Epsilon`). Anything wider — closure-typed maps, refs, compounds —
+stays Tape until AF.6 can prove the conversion safely.
+
+The decoder is pin-aware: entry rules, `preserve_identity` rules, and
+`@pretty` / `@debug`-pinned rules all stay Tape regardless of
+materialization class, matching the AF.0 pin sweep discipline.
+
+The pass runs in `crates/core/src/pipeline/compile.rs` after
+`extract_regex_engine_decisions`, gated under `!options.structural`.
+It writes `ir.emission_tier` and exits; no consumer reads the sidecar
+yet — AF.6's `emit_rule_function_impl` dispatches on it when the Tier
+B emitter lands.
+
+## AF.6 — Tier B emitter + view-layer codegen (deferred)
 
 Every Tier B rule emits a second function alongside the tape shim.
 The view layer dispatches between tape walk and direct slot on demand.
@@ -308,6 +319,24 @@ TS and WASM backends are untouched. They are Tier A everywhere by
 design — the view layer projection is Rust-specific. The `Emitter`
 trait gains a `tier()` accessor that defaults to `EmissionTier::Tape`
 for non-Rust backends.
+
+**Status: deferred to AF.6 sub-tranche.** The Tier B emitter is a
+substantial multi-file change to the Rust backend that touches
+`backend/rust/emitter/grammar.rs`, `backend/rust/view/mod.rs`,
+`backend/driver/reference.rs` (for `emit_call` coercion), and the
+`Emitter` trait surface. The substrate is in place — `EmissionTier`
+enum, `ir.emission_tier` sidecar populated by `decode_emission_tier`,
+the cross-rule constraints (`tier::install`, `engine::install`,
+`parent::install`) live in `crates/ir/src/passes/csp_strategy/constraints/`
+and stand ready to activate against per-rule tier variables — but the
+backend emit changes warrant a focused sub-tranche to maintain
+correctness across the three backends and the prettify codepath.
+
+Until AF.6 lands, `ir.emission_tier` is populated but unread by any
+emitter. Every rule still emits the AE tape-only path. The decoder's
+classifications can be inspected programmatically (the
+`materialization_eclass_gate.rs` and `cost_weights_unified.rs` test
+suites read the sidecar) but they do not influence generated code.
 
 ## AF.7 — Default-on + post-AF baseline
 

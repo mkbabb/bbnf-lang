@@ -135,12 +135,7 @@ pub mod components;
 // Csp<StrategyDomain>, components: &GrammarComponents, ir:
 // &GrammarIR)`, called once per component solve after variable
 // building but before finalize.
-#[allow(dead_code)]
-pub mod constraints {
-    // TODO(AF.3 Agent 5B): implement engine / parent / tier
-    // sub-modules. Until they land, the parent solver's call sites
-    // are cfg-gated out via the `#[cfg(any())]` marker below.
-}
+pub mod constraints;
 
 use std::collections::HashMap;
 
@@ -257,12 +252,19 @@ pub type RecognizerDecisionMap = HashMap<NodeId, RecognizerDecision>;
 /// Tranche AB.1 — added `Mat(MaterializationClass)`. The CSP now
 /// jointly optimizes strategy decisions (Alt / Wrap / Engine) AND
 /// per-rule tape materialization commitments.
+///
+/// Tranche AF.4 — added `Tier(EmissionTier)`. The cross-rule CSP
+/// solve picks a per-rule emission tier (Tape / Lazy / Direct)
+/// constrained by `TierFollowsMaterialization` against the rule's
+/// materialization class and `ParentCompatibility` against caller
+/// tiers along `Ref` edges.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum StrategyValue {
     Alt(AltMode),
     Wrap(WrapMode),
     Engine(RegexEngine),
     Mat(MaterializationClass),
+    Tier(crate::passes::materialization::EmissionTier),
 }
 
 /// Cost-aware finite domain for [`StrategyValue`].
@@ -492,14 +494,43 @@ fn solve_component(
     // variables in this component" short-circuit.
     let mut contributing_rules: Vec<RuleId> = Vec::with_capacity(member_rules.len());
 
+    // AF.4 stub — per-rule tier variables stay empty until AF.5's
+    // `decode_emission_tier` pass owns the construction + decode.
+    // The map is kept here so the cross-rule constraint installer
+    // signature stays AF.5-ready; the installers gate on the
+    // empty lookup and become no-ops, preserving the AF.2
+    // cost_weights_unified decision invariants.
+    let tier_vars: HashMap<RuleId, VarId> = HashMap::new();
+
+    // AF.3 — per-(rule, regex-node) engine variables, the lookup
+    // table the `EnginePropagation` constraint consumes. Built by
+    // walking the per-node `by_node` triples after `collect_sites`
+    // returns and re-keying the engine slot by `(rule_id, node_id)`.
+    let mut engine_vars: HashMap<(RuleId, NodeId), VarId> = HashMap::new();
+
     for &rid in member_rules {
         let Some(rule) = rule_by_id.get(&rid).copied() else {
             continue;
         };
         let body = &rule.body;
         let sites_before = sites.len();
+        let by_node_before = by_node.len();
 
         collect_sites(body, ir, dag, cfg, &mut csp, &mut sites, &mut by_node);
+
+        // AF.3 — re-key the engine variables this rule contributed
+        // by `(rule_id, node_id)` so the cross-rule constraint
+        // installer can walk component-wide engine pairs without
+        // re-walking the IR. The full `by_node` map is per-component
+        // (NodeIds are unique across rules through the DAG), so we
+        // only need to look at entries added since the prior rule.
+        if by_node.len() > by_node_before {
+            for (&node_id, &(_, _, engine_var)) in by_node.iter() {
+                if let Some(var) = engine_var {
+                    engine_vars.insert((rid, node_id), var);
+                }
+            }
+        }
 
         // AB.1 — per-rule materialization variable. Only the rule
         // root gets a variable; per-descendant classes already come
@@ -540,16 +571,23 @@ fn solve_component(
             add_token_dispatch_constraints(&rule.body, dag, &by_node, &mut csp);
     }
 
-    // Cross-rule: hook point for the AF.3 constraint sub-modules.
-    // `constraints::engine::install(...)`, `constraints::parent::install(...)`,
-    // and `constraints::tier::install(...)` will bind variables
-    // across rule boundaries inside this component. The stubs are
-    // cfg-gated until Wave 5 Agent 5B's sub-modules land; the
-    // `component_constraints_added` local captures the count so the
-    // fast-path short-circuit below can decide whether to run a
-    // real solve or the per-variable trivial pick.
-    let component_constraints_added =
-        install_cross_rule_constraints(&mut csp, components, ir, &by_node);
+    // Cross-rule: install the AF.3 constraint sub-modules.
+    // `tier::install` clamps each rule's emission-tier domain
+    // against its materialization class; `engine::install`
+    // unifies regex engine choice within the component;
+    // `parent::install` enforces tier ordering along `Ref` edges
+    // and prices the boundary coercion. The returned count feeds
+    // the fast-path short-circuit below — when the component is
+    // entirely degenerate (single rule, no Refs, no regex
+    // variables) the solve is skipped.
+    let _ = components; // partition consumed below for component slicing
+    let component_constraints_added = install_cross_rule_constraints(
+        &mut csp,
+        member_rules,
+        &tier_vars,
+        &engine_vars,
+        ir,
+    );
     constraints_added += component_constraints_added;
 
     // Fast path: when no cross-variable constraint applies to this
@@ -633,45 +671,61 @@ fn solve_component(
     }
 }
 
-/// AF.3 — integration seam for Wave 5 Agent 5B's cross-rule
-/// constraint sub-modules (`constraints::engine`,
-/// `constraints::parent`, `constraints::tier`). Called once per
-/// component solve, after variable building but before finalize.
+/// AF.3 — install cross-rule constraints from the
+/// `constraints` sub-modules. Called once per component solve,
+/// after variable building but before finalize.
 ///
-/// Returns the count of constraints installed. Today that is zero
-/// because the sub-modules are stubbed — `#[cfg(any())]` hides the
-/// call sites until 5B's commit lands. When 5B's commit is folded
-/// in, flip the `cfg` gate to enable the three calls.
-#[allow(unused_variables)]
+/// Returns the total count of constraints installed (used by the
+/// fast-path short-circuit to decide whether to skip the
+/// optimization solve entirely). The three sub-modules each take
+/// the shared `ConstraintCtx` and the in-progress `Csp`:
+///
+/// - `tier::install` — unary `TierFollowsMaterialization` clamp
+/// - `engine::install` — pairwise `EnginePropagation` equality
+/// - `parent::install` — `ParentCompatibility` ordering + cost
 fn install_cross_rule_constraints(
     csp: &mut Csp<StrategyDomain>,
-    components: &GrammarComponents,
+    component: &[RuleId],
+    tier_vars: &std::collections::HashMap<RuleId, VarId>,
+    engine_vars: &std::collections::HashMap<(RuleId, NodeId), VarId>,
     ir: &GrammarIR,
-    by_node: &ByNodeVars,
 ) -> usize {
-    let count = 0usize;
+    let ctx = self::constraints::ConstraintCtx {
+        component,
+        tier_vars,
+        mat_classes: &ir.materialization,
+        engine_vars,
+    };
 
-    // Seam for Wave 5 Agent 5B. Each sub-module's `install` entry
-    // point takes the shared CSP, the component partition, the IR,
-    // and the `by_node` var-lookup scratch, and returns the count
-    // of constraints it installed. The `#[cfg(any())]` predicate is
-    // never true, so the calls are type-checked but not emitted;
-    // replacing the gate (or deleting it) post-5B wires the
-    // sub-modules in.
-    #[cfg(any())]
-    {
-        let _ = crate::passes::csp_strategy::constraints::engine::install(
-            csp, components, ir, by_node,
-        );
-        let _ = crate::passes::csp_strategy::constraints::parent::install(
-            csp, components, ir, by_node,
-        );
-        let _ = crate::passes::csp_strategy::constraints::tier::install(
-            csp, components, ir, by_node,
-        );
-    }
-
+    let mut count = 0usize;
+    count += self::constraints::tier::install(&ctx, csp, ir);
+    count += self::constraints::engine::install(&ctx, csp, ir);
+    count += self::constraints::parent::install(&ctx, csp, ir);
     count
+}
+
+/// Build a per-rule tier variable domain.
+///
+/// Initial domain is the full lattice `{Tape, Lazy, Direct}`; the
+/// `TierFollowsMaterialization` constraint clamps it later
+/// against the rule's materialization class. Costs are derived
+/// from `CostWeights`: `Tape` pays per-emission tape push,
+/// `Lazy` pays the view-layer dispatch overhead, and `Direct`
+/// gets the cheapest cost (no tape record at all). The actual
+/// numbers come from the shared `egraph::CostWeights`, so
+/// extreme weight patches in the AF.2 contract test propagate
+/// through to the tier choice.
+fn build_tier_domain(cfg: &CostConfig) -> StrategyDomain {
+    use crate::passes::materialization::EmissionTier;
+    let w = &cfg.egraph.weights;
+    StrategyDomain::new(vec![
+        (StrategyValue::Tier(EmissionTier::Tape), w.tape_push),
+        (
+            StrategyValue::Tier(EmissionTier::Lazy),
+            w.tape_push * 0.5 + w.cross_module_coercion * 0.5,
+        ),
+        (StrategyValue::Tier(EmissionTier::Direct), 0.0),
+    ])
 }
 
 /// Per-decision-site bookkeeping: which `NodeId` this var belongs to
@@ -685,6 +739,14 @@ enum Site {
     /// variable per rule root (not per descendant) — the
     /// rule-granularity decision is what the AB.2 emitter consumes.
     Materialization(NodeId),
+    /// Tranche AF.4 — per-rule emission tier (Tape / Lazy /
+    /// Direct). One variable per rule root, decoded into
+    /// `ir.emission_tier` by the AF.5 `decode_emission_tier`
+    /// pass. Cross-rule constraints
+    /// (`TierFollowsMaterialization`, `EnginePropagation`,
+    /// `ParentCompatibility`) bind these variables to each other
+    /// and to materialization / engine sites.
+    Tier(RuleId),
 }
 
 /// Per-node variable triple: `(alt_var, wrap_var, engine_var)`. Each

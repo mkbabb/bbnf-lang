@@ -7,6 +7,7 @@ pub mod context;
 pub mod csp_domains;
 pub mod csp_strategy;
 pub mod lr;
+pub mod materialization;
 pub mod metadata;
 pub mod patterns;
 pub mod prefix;
@@ -25,6 +26,7 @@ pub mod types;
 // e-graph saturation in bbnf-regex. See commit message for details.
 
 pub use lr::{eliminate_direct_lr, eliminate_indirect_lr};
+pub use materialization::{MaterializationClass, classify_materialization, mat_join};
 pub use metadata::{compute_aliases, compute_transparent};
 pub use prefix::factor_common_prefixes;
 pub use sets::{

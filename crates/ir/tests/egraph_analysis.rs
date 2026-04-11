@@ -80,6 +80,7 @@ fn fixture_ir() -> GrammarIR {
         dag: None,
         cost_config: bbnf_ir::CostConfig::default(),
         type_desc_interner: bbnf_ir::TypeDescInterner::new(),
+        materialization: std::collections::HashMap::new(),
     };
     bbnf_ir::dag::ensure_dag(&mut ir);
     ir

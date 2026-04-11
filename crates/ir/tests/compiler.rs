@@ -32,7 +32,8 @@ fn make_simple_ir(body: IrNode) -> GrammarIR {
         context_facts: std::collections::HashMap::new(),
         has_family_recognizers: false,
         regex_engine_decisions: std::collections::HashMap::new(),
-        dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),    }
+        dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
+        materialization: std::collections::HashMap::new(),    }
 }
 
 #[test]
@@ -156,7 +157,8 @@ fn compile_memo_rule() {
         context_facts: std::collections::HashMap::new(),
         has_family_recognizers: false,
         regex_engine_decisions: std::collections::HashMap::new(),
-        dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
+        materialization: std::collections::HashMap::new(),    };
     let program = compile(&ir);
 
     assert!(!program.memo_enabled);
@@ -213,7 +215,8 @@ fn compile_direct_left_recursive_rule_keeps_memo() {
         context_facts: std::collections::HashMap::new(),
         has_family_recognizers: false,
         regex_engine_decisions: std::collections::HashMap::new(),
-        dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
+        materialization: std::collections::HashMap::new(),    };
     let program = compile(&ir);
 
     assert!(program.memo_enabled);
@@ -364,7 +367,8 @@ fn compile_token_dispatch_emits_dispatch_token() {
         context_facts: std::collections::HashMap::new(),
         has_family_recognizers: false,
         regex_engine_decisions: std::collections::HashMap::new(),
-        dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
+        materialization: std::collections::HashMap::new(),    };
     let program = compile(&ir);
 
     assert!(
@@ -440,7 +444,8 @@ fn compile_call() {
         context_facts: std::collections::HashMap::new(),
         has_family_recognizers: false,
         regex_engine_decisions: std::collections::HashMap::new(),
-        dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
+        materialization: std::collections::HashMap::new(),    };
     let program = compile(&ir);
 
     assert!(program.code.iter().any(|op| matches!(op, Op::Call(1))));

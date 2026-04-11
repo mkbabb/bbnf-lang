@@ -36,7 +36,8 @@ fn literal_is_span_eligible() {
         context_facts: std::collections::HashMap::new(),
         has_family_recognizers: false,
         regex_engine_decisions: std::collections::HashMap::new(),
-        dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
+        materialization: std::collections::HashMap::new(),    };
 
     refine_span_eligibility(&mut ir);
     assert!(ir.rules[0].meta.span_eligible);
@@ -71,7 +72,8 @@ fn map_not_span_eligible() {
         context_facts: std::collections::HashMap::new(),
         has_family_recognizers: false,
         regex_engine_decisions: std::collections::HashMap::new(),
-        dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
+        materialization: std::collections::HashMap::new(),    };
 
     refine_span_eligibility(&mut ir);
     assert!(!ir.rules[0].meta.span_eligible);
@@ -105,7 +107,8 @@ fn transitive_span_eligibility() {
         context_facts: std::collections::HashMap::new(),
         has_family_recognizers: false,
         regex_engine_decisions: std::collections::HashMap::new(),
-        dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
+        materialization: std::collections::HashMap::new(),    };
 
     refine_span_eligibility(&mut ir);
     assert!(ir.rules[0].meta.span_eligible);
@@ -144,7 +147,8 @@ fn cyclic_not_span_eligible() {
         context_facts: std::collections::HashMap::new(),
         has_family_recognizers: false,
         regex_engine_decisions: std::collections::HashMap::new(),
-        dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
+        materialization: std::collections::HashMap::new(),    };
 
     refine_span_eligibility(&mut ir);
     assert!(!ir.rules[0].meta.span_eligible);
@@ -176,7 +180,8 @@ fn seq_of_literals_span_eligible() {
         context_facts: std::collections::HashMap::new(),
         has_family_recognizers: false,
         regex_engine_decisions: std::collections::HashMap::new(),
-        dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),    };
+        dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
+        materialization: std::collections::HashMap::new(),    };
 
     refine_span_eligibility(&mut ir);
     assert!(ir.rules[0].meta.span_eligible);

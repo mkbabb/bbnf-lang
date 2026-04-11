@@ -177,11 +177,24 @@ pub struct GrammarIR {
     /// `TypeDesc::Tuple(Vec<_>)` trees. The interner also provides
     /// reference-equality structural typing for downstream consumers
     /// (dispatch-share signatures in AA.5, TaggedUnion narrowing in
-    /// AA.7, tape view codegen in AA.15). Not serialized across the
+    /// AA.7, tape view codegen in AB.2). Not serialized across the
     /// WASM boundary: every compile rebuilds it from scratch so the
     /// wire format stays compact.
     #[serde(skip, default)]
     pub type_desc_interner: TypeDescInterner,
+
+    /// Tranche AB.0 — per-`NodeId` materialization class.
+    ///
+    /// Populated by `classify_materialization` after `project_types`
+    /// in `finalize_compile`. Refined in Tranche AB.1 by the CSP
+    /// joint strategy + materialization solve. Consumed by the
+    /// tape-first emitter (AB.2) to decide per-rule prelude/epilogue
+    /// shape and per-ref inlining at call sites.
+    ///
+    /// Keyed by `dag::NodeId` — requires `self.dag` to be populated.
+    /// Not serialized: every compile rebuilds it from scratch.
+    #[serde(skip, default)]
+    pub materialization: HashMap<dag::NodeId, passes::MaterializationClass>,
 }
 
 impl GrammarIR {

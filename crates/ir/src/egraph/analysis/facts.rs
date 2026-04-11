@@ -1,5 +1,5 @@
 //! `EClassFacts` — monotone per-class lattice data consumed by
-//! downstream phases of Tranche AA.
+//! downstream phases of Tranches AA / AB.
 //!
 //! Every field is a monotone lattice:
 //!
@@ -13,6 +13,20 @@
 //!   drop to None". This is monotonically lossy (information can only
 //!   disappear, never appear), which is the correct direction for
 //!   these fast-path facts.
+//!
+//! **Tranche AB.0** — materialization facts added:
+//!
+//! - `elision_safe` — true iff this class is a pure structural wrapper
+//!   that can be elided without losing information the view layer
+//!   needs. Monotonically lossy (`&&` join): disagreement demotes to
+//!   false.
+//! - `closure_free` — true iff the class contains no `Map` node whose
+//!   fn descriptor is a closure. Monotonically lossy (`&&` join).
+//! - `is_fixed_shape` — true iff the class has exactly one structural
+//!   shape (no Alt, no Repeat with lo != hi). Monotonically lossy
+//!   (`&&` join).
+//! - `all_descendants_elidable` — transitive closure of `elision_safe`
+//!   over children. Monotonically lossy (`&&` join).
 
 use bbnf_regex::sets::charset::CharSet128;
 
@@ -80,6 +94,27 @@ pub struct EClassFacts {
     pub literal_sid: Option<StringId>,
     /// Fast-path: the StringId of a `Regex` leaf under the same rule.
     pub regex_sid: Option<StringId>,
+    /// Tranche AB.0 — true iff this class is a pure structural wrapper
+    /// the view layer can elide without losing observable information.
+    /// Leaves (`Literal`, `Regex`, `Epsilon`) and transparent aliases
+    /// start true; `Alt`/`Repeat`/`Map` start false (they carry state
+    /// a view accessor has to walk). `&&` join on merge.
+    pub elision_safe: bool,
+    /// Tranche AB.0 — true iff the class contains no `Map` node whose
+    /// descriptor is a host closure. Closure-typed Maps force the
+    /// caller to hold the closure environment alive, which rules out
+    /// tape-layer elision. `&&` join on merge.
+    pub closure_free: bool,
+    /// Tranche AB.0 — true iff this class has exactly one structural
+    /// shape: no `Alt`, no `Repeat` whose bounds differ. Lets the
+    /// classifier decide `TapeSpanOnly` for rules whose output is a
+    /// single contiguous span. `&&` join on merge.
+    pub is_fixed_shape: bool,
+    /// Tranche AB.0 — transitive closure of `elision_safe` over every
+    /// descendant. Only a class whose children are all
+    /// `elision_safe` AND whose own `elision_safe` holds can become
+    /// `TransparentElide`. `&&` join on merge.
+    pub all_descendants_elidable: bool,
 }
 
 impl Default for EClassFacts {
@@ -90,12 +125,17 @@ impl Default for EClassFacts {
             width: WidthBound::default(),
             literal_sid: None,
             regex_sid: None,
+            elision_safe: false,
+            closure_free: true,
+            is_fixed_shape: false,
+            all_descendants_elidable: false,
         }
     }
 }
 
 impl EClassFacts {
-    /// Facts for an epsilon node: matches empty, width=0.
+    /// Facts for an epsilon node: matches empty, width=0. Elision-safe
+    /// — an epsilon node carries no information.
     pub fn epsilon() -> Self {
         Self {
             first_set: CharSet128::new(),
@@ -103,6 +143,10 @@ impl EClassFacts {
             width: WidthBound { min: 0, max: Some(0) },
             literal_sid: None,
             regex_sid: None,
+            elision_safe: true,
+            closure_free: true,
+            is_fixed_shape: true,
+            all_descendants_elidable: true,
         }
     }
 
@@ -111,6 +155,7 @@ impl EClassFacts {
     /// The actual first-byte set is filled in by `GrammarAnalysis::make`
     /// from the shared string pool when it's available; the bare fact
     /// here holds the literal sid as a fast-path handle.
+    /// Literals have a fixed shape (exactly one span) and no children.
     pub fn literal(sid: StringId) -> Self {
         Self {
             first_set: CharSet128::new(),
@@ -118,12 +163,18 @@ impl EClassFacts {
             width: WidthBound::unbounded_from(1),
             literal_sid: Some(sid),
             regex_sid: None,
+            elision_safe: true,
+            closure_free: true,
+            is_fixed_shape: true,
+            all_descendants_elidable: true,
         }
     }
 
     /// Facts for a regex leaf. First set / nullable / width are
     /// computed by downstream `RegexInfo` analysis; the bare fact
-    /// here holds the regex sid.
+    /// here holds the regex sid. Regex leaves are elision-safe at
+    /// the class level (their span is the only output) but their
+    /// shape is not fixed — a regex may match varying lengths.
     pub fn regex(sid: StringId) -> Self {
         Self {
             first_set: CharSet128::new(),
@@ -131,6 +182,10 @@ impl EClassFacts {
             width: WidthBound::unbounded_from(0),
             literal_sid: None,
             regex_sid: Some(sid),
+            elision_safe: true,
+            closure_free: true,
+            is_fixed_shape: false,
+            all_descendants_elidable: true,
         }
     }
 
@@ -184,6 +239,25 @@ impl EClassFacts {
                 changed = true;
             }
             _ => {}
+        }
+
+        // Tranche AB.0 — materialization flags join by `&&` (any
+        // sibling that is not elision-safe demotes the class).
+        if self.elision_safe && !other.elision_safe {
+            self.elision_safe = false;
+            changed = true;
+        }
+        if self.closure_free && !other.closure_free {
+            self.closure_free = false;
+            changed = true;
+        }
+        if self.is_fixed_shape && !other.is_fixed_shape {
+            self.is_fixed_shape = false;
+            changed = true;
+        }
+        if self.all_descendants_elidable && !other.all_descendants_elidable {
+            self.all_descendants_elidable = false;
+            changed = true;
         }
 
         changed

@@ -219,6 +219,7 @@ pub fn lower_to_ir<'a>(
         dag: None,
         cost_config: bbnf_ir::CostConfig::from_env(),
         type_desc_interner: bbnf_ir::TypeDescInterner::new(),
+        materialization: HashMap::new(),
     }
 }
 

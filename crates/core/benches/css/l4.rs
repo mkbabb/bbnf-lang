@@ -135,7 +135,7 @@ mod css_types {
 }
 
 #[derive(Parser)]
-#[parser(path = "../../grammar/css/l4/stylesheet.bbnf", skip_recover, slab)]
+#[parser(path = "../../grammar/css/l4/stylesheet.bbnf", skip_recover)]
 struct CssL4Parser;
 
 #[path = "../common/timeout.rs"]
@@ -153,22 +153,13 @@ macro_rules! bench {
             let input = load($file);
             b.bytes = input.len() as u64;
             {
-                let slab = __CssL4ParserEnumCtx::with_capacity(input.len() / 32);
-                let parser = CssL4Parser::stylesheet();
-                let (result, state) = parser.parse_return_state_with_context(&input, &slab);
-                assert!(result.is_some(), concat!($file, ": parse failed"));
-                assert!(
-                    state.offset >= input.trim_end().len(),
-                    concat!($file, ": incomplete parse ({}/{})"),
-                    state.offset,
-                    input.len(),
-                );
+                let parsed = CssL4Parser::parse(&input)
+                    .unwrap_or_else(|e| panic!(concat!($file, ": parse failed: {:?}"), e));
+                black_box(&parsed);
             }
             bench_with_timeout(b, limits::CSS_TAILWIND_PARSE, || {
-                let slab = __CssL4ParserEnumCtx::with_capacity(input.len() / 32);
-                let parser = CssL4Parser::stylesheet();
-                let ast = parser.parse_with_context(black_box(&input), &slab).unwrap();
-                black_box(&ast as *const _);
+                let parsed = CssL4Parser::parse(black_box(&input)).unwrap();
+                black_box(parsed);
             });
         }
     };

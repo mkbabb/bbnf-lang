@@ -1,5 +1,5 @@
 
-//! Google Sheets formula AOT benchmark — monolithic codegen.
+//! Google Sheets formula AOT benchmark — monolithic codegen (tape-first).
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -31,25 +31,13 @@ fn generate_large_formula(n_bindings: usize) -> String {
 fn parse_pathological(b: &mut Bencher) {
     b.bytes = PATHOLOGICAL.len() as u64;
     {
-        let slab = __GoogleSheetsParserEnumCtx::with_capacity(PATHOLOGICAL.len() / 16);
-        let parser = GoogleSheetsParser::formula();
-        let (result, state) = parser.parse_return_state_with_context(PATHOLOGICAL, &slab);
-        assert!(result.is_some(), "pathological: parse failed");
-        assert_eq!(
-            state.offset,
-            PATHOLOGICAL.len(),
-            "pathological: incomplete parse ({}/{})",
-            state.offset,
-            PATHOLOGICAL.len(),
-        );
+        let parsed = GoogleSheetsParser::parse(PATHOLOGICAL)
+            .unwrap_or_else(|e| panic!("pathological: parse failed: {:?}", e));
+        black_box(&parsed);
     }
     b.iter(|| {
-        let slab = __GoogleSheetsParserEnumCtx::with_capacity(PATHOLOGICAL.len() / 16);
-        let parser = GoogleSheetsParser::formula();
-        let ast = parser
-            .parse_with_context(black_box(PATHOLOGICAL), &slab)
-            .unwrap();
-        black_box(&ast as *const _ as usize)
+        let parsed = GoogleSheetsParser::parse(black_box(PATHOLOGICAL)).unwrap();
+        black_box(parsed);
     });
 }
 
@@ -57,23 +45,13 @@ fn parse_1kb(b: &mut Bencher) {
     let input = generate_large_formula(10);
     b.bytes = input.len() as u64;
     {
-        let slab = __GoogleSheetsParserEnumCtx::with_capacity(input.len() / 16);
-        let parser = GoogleSheetsParser::formula();
-        let (result, state) = parser.parse_return_state_with_context(&input, &slab);
-        assert!(result.is_some(), "parse_1kb: parse failed");
-        assert_eq!(
-            state.offset,
-            input.len(),
-            "parse_1kb: incomplete parse ({}/{})",
-            state.offset,
-            input.len(),
-        );
+        let parsed = GoogleSheetsParser::parse(&input)
+            .unwrap_or_else(|e| panic!("parse_1kb: parse failed: {:?}", e));
+        black_box(&parsed);
     }
     b.iter(|| {
-        let slab = __GoogleSheetsParserEnumCtx::with_capacity(input.len() / 16);
-        let parser = GoogleSheetsParser::formula();
-        let ast = parser.parse_with_context(black_box(&input), &slab).unwrap();
-        black_box(&ast as *const _ as usize)
+        let parsed = GoogleSheetsParser::parse(black_box(&input)).unwrap();
+        black_box(parsed);
     });
 }
 
@@ -81,23 +59,13 @@ fn parse_10kb(b: &mut Bencher) {
     let input = generate_large_formula(100);
     b.bytes = input.len() as u64;
     {
-        let slab = __GoogleSheetsParserEnumCtx::with_capacity(input.len() / 16);
-        let parser = GoogleSheetsParser::formula();
-        let (result, state) = parser.parse_return_state_with_context(&input, &slab);
-        assert!(result.is_some(), "parse_10kb: parse failed");
-        assert_eq!(
-            state.offset,
-            input.len(),
-            "parse_10kb: incomplete parse ({}/{})",
-            state.offset,
-            input.len(),
-        );
+        let parsed = GoogleSheetsParser::parse(&input)
+            .unwrap_or_else(|e| panic!("parse_10kb: parse failed: {:?}", e));
+        black_box(&parsed);
     }
     b.iter(|| {
-        let slab = __GoogleSheetsParserEnumCtx::with_capacity(input.len() / 16);
-        let parser = GoogleSheetsParser::formula();
-        let ast = parser.parse_with_context(black_box(&input), &slab).unwrap();
-        black_box(&ast as *const _ as usize)
+        let parsed = GoogleSheetsParser::parse(black_box(&input)).unwrap();
+        black_box(parsed);
     });
 }
 

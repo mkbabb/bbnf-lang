@@ -1,5 +1,5 @@
 
-//! BBNF CSS monolithic slab benchmark — cold per-parse (pretty.bbnf).
+//! BBNF CSS monolithic benchmark — cold per-parse (pretty.bbnf, tape-first).
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -8,7 +8,7 @@ use bbnf_derive::Parser;
 use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
 
 #[derive(Parser)]
-#[parser(path = "../../grammar/css/pretty.bbnf", skip_recover, slab)]
+#[parser(path = "../../grammar/css/pretty.bbnf", skip_recover)]
 struct CssPrettyParser;
 
 fn load(name: &str) -> String {
@@ -22,22 +22,13 @@ macro_rules! bench {
             let input = load($file);
             b.bytes = input.len() as u64;
             {
-                let slab = __CssPrettyParserEnumCtx::with_capacity(input.len() / 32);
-                let parser = CssPrettyParser::stylesheet();
-                let (result, state) = parser.parse_return_state_with_context(&input, &slab);
-                assert!(result.is_some(), concat!($file, ": parse failed"));
-                assert!(
-                    state.offset >= input.trim_end().len(),
-                    concat!($file, ": incomplete parse ({}/{})"),
-                    state.offset,
-                    input.len(),
-                );
+                let parsed = CssPrettyParser::parse(&input)
+                    .unwrap_or_else(|e| panic!(concat!($file, ": parse failed: {:?}"), e));
+                black_box(&parsed);
             }
             b.iter(|| {
-                let slab = __CssPrettyParserEnumCtx::with_capacity(input.len() / 32);
-                let parser = CssPrettyParser::stylesheet();
-                let ast = parser.parse_with_context(black_box(&input), &slab).unwrap();
-                black_box(&ast as *const _);
+                let parsed = CssPrettyParser::parse(black_box(&input)).unwrap();
+                black_box(parsed);
             });
         }
     };

@@ -11,10 +11,7 @@ pub struct GoogleSheetsParser;
 
 /// Parse a Google Sheets formula. Returns true if the input is valid.
 pub fn parse_formula(input: &str) -> Option<()> {
-    let ctx = __GoogleSheetsParserEnumCtx::with_capacity(input.len() / 8);
-    GoogleSheetsParser::formula()
-        .parse_with_context(input, &ctx)
-        .map(|_| ())
+    GoogleSheetsParser::parse(input).ok().map(|_| ())
 }
 
 /// Parse and pretty-print a Google Sheets formula.
@@ -52,11 +49,8 @@ mod tests {
     #[test]
     fn test_let_parses_as_let_call() {
         let input = "=LET(a, 1, b)";
-        let ctx = __GoogleSheetsParserEnumCtx::with_capacity(input.len());
-        let ast = GoogleSheetsParser::formula()
-            .parse_with_context(input, &ctx)
-            .unwrap();
-        let ast_debug = format!("{:?}", ast);
+        let parsed = GoogleSheetsParser::parse(input).expect("parse failed");
+        let ast_debug = format!("{:?}", parsed);
         assert!(
             ast_debug.contains("let_call"),
             "=LET(a,1,b) should parse as let_call, not func_call"

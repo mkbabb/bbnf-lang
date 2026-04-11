@@ -1,10 +1,10 @@
 
-//! Pathological input stress benchmarks — cold per-parse.
+//! Pathological input stress benchmarks — cold per-parse (tape-first).
 //!
 //! Exercises generated worst-case inputs: deep nesting, wide collections,
 //! long strings, escape-heavy content, and mixed-type arrays.
 //!
-//! Fresh BumpSlab + Parser per iteration. No warm-cache benchmarks.
+//! Fresh parser per iteration. No warm-cache benchmarks.
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -17,7 +17,7 @@ use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
 use bbnf_derive::Parser;
 
 #[derive(Parser)]
-#[parser(path = "../../grammar/json/json.bbnf", slab)]
+#[parser(path = "../../grammar/json/json.bbnf")]
 struct JsonParser;
 
 // ── JSON depth: deeply nested objects ───────────────────────────────────
@@ -28,24 +28,13 @@ macro_rules! bench_depth_obj {
             let input = generators::json_gen::deeply_nested_objects($depth);
             b.bytes = input.len() as u64;
             {
-                let slab = __JsonParserEnumCtx::with_capacity(input.len() / 32);
-                let parser = JsonParser::value();
-                let (result, state) = parser.parse_return_state_with_context(&input, &slab);
-                assert!(result.is_some(), "depth_obj_{}: parse failed", $depth);
-                assert_eq!(
-                    state.offset,
-                    input.len(),
-                    "depth_obj_{}: incomplete parse ({}/{})",
-                    $depth,
-                    state.offset,
-                    input.len(),
-                );
+                let parsed = JsonParser::parse(&input)
+                    .unwrap_or_else(|e| panic!("depth_obj_{}: parse failed: {:?}", $depth, e));
+                black_box(&parsed);
             }
             b.iter(|| {
-                let slab = __JsonParserEnumCtx::with_capacity(input.len() / 32);
-                let parser = JsonParser::value();
-                let ast = parser.parse_with_context(black_box(&input), &slab).unwrap();
-                black_box(ast as *const _);
+                let parsed = JsonParser::parse(black_box(&input)).unwrap();
+                black_box(parsed);
             });
         }
     };
@@ -63,24 +52,13 @@ macro_rules! bench_depth_arr {
             let input = generators::json_gen::deeply_nested_arrays($depth);
             b.bytes = input.len() as u64;
             {
-                let slab = __JsonParserEnumCtx::with_capacity(input.len() / 32);
-                let parser = JsonParser::value();
-                let (result, state) = parser.parse_return_state_with_context(&input, &slab);
-                assert!(result.is_some(), "depth_arr_{}: parse failed", $depth);
-                assert_eq!(
-                    state.offset,
-                    input.len(),
-                    "depth_arr_{}: incomplete parse ({}/{})",
-                    $depth,
-                    state.offset,
-                    input.len(),
-                );
+                let parsed = JsonParser::parse(&input)
+                    .unwrap_or_else(|e| panic!("depth_arr_{}: parse failed: {:?}", $depth, e));
+                black_box(&parsed);
             }
             b.iter(|| {
-                let slab = __JsonParserEnumCtx::with_capacity(input.len() / 32);
-                let parser = JsonParser::value();
-                let ast = parser.parse_with_context(black_box(&input), &slab).unwrap();
-                black_box(ast as *const _);
+                let parsed = JsonParser::parse(black_box(&input)).unwrap();
+                black_box(parsed);
             });
         }
     };
@@ -98,24 +76,13 @@ macro_rules! bench_wide_arr {
             let input = generators::json_gen::wide_array($count);
             b.bytes = input.len() as u64;
             {
-                let slab = __JsonParserEnumCtx::with_capacity(input.len() / 32);
-                let parser = JsonParser::value();
-                let (result, state) = parser.parse_return_state_with_context(&input, &slab);
-                assert!(result.is_some(), "wide_arr_{}: parse failed", $count);
-                assert_eq!(
-                    state.offset,
-                    input.len(),
-                    "wide_arr_{}: incomplete parse ({}/{})",
-                    $count,
-                    state.offset,
-                    input.len(),
-                );
+                let parsed = JsonParser::parse(&input)
+                    .unwrap_or_else(|e| panic!("wide_arr_{}: parse failed: {:?}", $count, e));
+                black_box(&parsed);
             }
             b.iter(|| {
-                let slab = __JsonParserEnumCtx::with_capacity(input.len() / 32);
-                let parser = JsonParser::value();
-                let ast = parser.parse_with_context(black_box(&input), &slab).unwrap();
-                black_box(ast as *const _);
+                let parsed = JsonParser::parse(black_box(&input)).unwrap();
+                black_box(parsed);
             });
         }
     };
@@ -133,24 +100,13 @@ macro_rules! bench_wide_obj {
             let input = generators::json_gen::wide_object($count);
             b.bytes = input.len() as u64;
             {
-                let slab = __JsonParserEnumCtx::with_capacity(input.len() / 32);
-                let parser = JsonParser::value();
-                let (result, state) = parser.parse_return_state_with_context(&input, &slab);
-                assert!(result.is_some(), "wide_obj_{}: parse failed", $count);
-                assert_eq!(
-                    state.offset,
-                    input.len(),
-                    "wide_obj_{}: incomplete parse ({}/{})",
-                    $count,
-                    state.offset,
-                    input.len(),
-                );
+                let parsed = JsonParser::parse(&input)
+                    .unwrap_or_else(|e| panic!("wide_obj_{}: parse failed: {:?}", $count, e));
+                black_box(&parsed);
             }
             b.iter(|| {
-                let slab = __JsonParserEnumCtx::with_capacity(input.len() / 32);
-                let parser = JsonParser::value();
-                let ast = parser.parse_with_context(black_box(&input), &slab).unwrap();
-                black_box(ast as *const _);
+                let parsed = JsonParser::parse(black_box(&input)).unwrap();
+                black_box(parsed);
             });
         }
     };
@@ -168,30 +124,13 @@ macro_rules! bench_strings {
             let input = generators::json_gen::long_strings($count, $len);
             b.bytes = input.len() as u64;
             {
-                let slab = __JsonParserEnumCtx::with_capacity(input.len() / 32);
-                let parser = JsonParser::value();
-                let (result, state) = parser.parse_return_state_with_context(&input, &slab);
-                assert!(
-                    result.is_some(),
-                    "strings_{}x{}: parse failed",
-                    $count,
-                    $len,
-                );
-                assert_eq!(
-                    state.offset,
-                    input.len(),
-                    "strings_{}x{}: incomplete parse ({}/{})",
-                    $count,
-                    $len,
-                    state.offset,
-                    input.len(),
-                );
+                let parsed = JsonParser::parse(&input)
+                    .unwrap_or_else(|e| panic!("strings_{}x{}: parse failed: {:?}", $count, $len, e));
+                black_box(&parsed);
             }
             b.iter(|| {
-                let slab = __JsonParserEnumCtx::with_capacity(input.len() / 32);
-                let parser = JsonParser::value();
-                let ast = parser.parse_with_context(black_box(&input), &slab).unwrap();
-                black_box(ast as *const _);
+                let parsed = JsonParser::parse(black_box(&input)).unwrap();
+                black_box(parsed);
             });
         }
     };
@@ -209,24 +148,13 @@ macro_rules! bench_escapes {
             let input = generators::json_gen::escape_heavy($count);
             b.bytes = input.len() as u64;
             {
-                let slab = __JsonParserEnumCtx::with_capacity(input.len() / 32);
-                let parser = JsonParser::value();
-                let (result, state) = parser.parse_return_state_with_context(&input, &slab);
-                assert!(result.is_some(), "escapes_{}: parse failed", $count);
-                assert_eq!(
-                    state.offset,
-                    input.len(),
-                    "escapes_{}: incomplete parse ({}/{})",
-                    $count,
-                    state.offset,
-                    input.len(),
-                );
+                let parsed = JsonParser::parse(&input)
+                    .unwrap_or_else(|e| panic!("escapes_{}: parse failed: {:?}", $count, e));
+                black_box(&parsed);
             }
             b.iter(|| {
-                let slab = __JsonParserEnumCtx::with_capacity(input.len() / 32);
-                let parser = JsonParser::value();
-                let ast = parser.parse_with_context(black_box(&input), &slab).unwrap();
-                black_box(ast as *const _);
+                let parsed = JsonParser::parse(black_box(&input)).unwrap();
+                black_box(parsed);
             });
         }
     };
@@ -243,24 +171,13 @@ macro_rules! bench_mixed {
             let input = generators::json_gen::mixed_types($count);
             b.bytes = input.len() as u64;
             {
-                let slab = __JsonParserEnumCtx::with_capacity(input.len() / 32);
-                let parser = JsonParser::value();
-                let (result, state) = parser.parse_return_state_with_context(&input, &slab);
-                assert!(result.is_some(), "mixed_{}: parse failed", $count);
-                assert_eq!(
-                    state.offset,
-                    input.len(),
-                    "mixed_{}: incomplete parse ({}/{})",
-                    $count,
-                    state.offset,
-                    input.len(),
-                );
+                let parsed = JsonParser::parse(&input)
+                    .unwrap_or_else(|e| panic!("mixed_{}: parse failed: {:?}", $count, e));
+                black_box(&parsed);
             }
             b.iter(|| {
-                let slab = __JsonParserEnumCtx::with_capacity(input.len() / 32);
-                let parser = JsonParser::value();
-                let ast = parser.parse_with_context(black_box(&input), &slab).unwrap();
-                black_box(ast as *const _);
+                let parsed = JsonParser::parse(black_box(&input)).unwrap();
+                black_box(parsed);
             });
         }
     };

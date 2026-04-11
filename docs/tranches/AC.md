@@ -218,6 +218,22 @@ behavioral change.
 
 ### AC.2 — Atomic emitter transposition (the big commit)
 
+#### Additive preps (shipped before the atomic commit)
+
+Several pieces of AC.2 landed as small additive commits that leave
+master green — each one is either new code no consumer calls yet,
+or a purely additive change (new trait, new enum variant). The
+atomic commit's remaining scope is narrower as a result:
+
+| Commit | What it ships | Why additive |
+|---|---|---|
+| `TapeKind::Recovered` | New variant in `bbnf-tape::kind` + `is_recovered()` predicate. | Additive enum variant; no existing matches elsewhere. |
+| `Root` trait + `Parsed::view` | GAT trait in `bbnf::runtime` + `impl<R: Root> Parsed<R> { view(&self) -> R::View<'_> }`. | New trait; no existing consumers. |
+| `backend/rust/view/` module | Per-rule `<Rule>View<'tape>` generator (`generate_views`). Returns valid TokenStream emitting view structs + the `Root` binding. | Not yet called from `emit_type_definitions_impl`; pure dead code until the atomic commit wires it in. |
+| `runtime_root` integration test | 5 tests exercising `Parsed<R> + Root` with a hand-written `Root` impl. | Independent of generated code; validates the API surface. |
+
+#### Remaining atomic work
+
 One large commit that rewrites the entire emission pipeline and
 regenerates the bootstrap in the same atomic change:
 
@@ -244,6 +260,28 @@ regenerates the bootstrap in the same atomic change:
 
 After this commit: `cargo build --workspace` passes. Every grammar
 compiles. Consumer migration (AC.3) follows.
+
+#### Load-bearing coupling surprise — lowering reads the bootstrap CST
+
+The initial audit focused on the Rust emitter and bootstrap
+`host.rs`. A second audit found a broader coupling: the entire IR
+lowering pipeline reads `BbnfBootstrapEnum` directly. Every module
+below imports `crate::grammar::generated::BbnfBootstrapEnum`:
+
+- `crates/core/src/types.rs`
+- `crates/core/src/lower/{mod,expression,value_expr}.rs`
+- `crates/core/src/graph/{metadata,deps}.rs`
+- `crates/core/src/pipeline/{compile,directives}.rs`
+
+Each of these pattern-matches on `BbnfBootstrapEnum` variants and
+calls `.span_text()` / `.identifier_text()` / other schema helpers
+to walk the CST. Under the atomic AC.2 rewrite, `BbnfBootstrapEnum`
+is deleted and replaced with `BbnfBootstrapView<'tape>` — every one
+of these call sites must migrate to cursor-walking the view in the
+same commit. The bootstrap consumer is not just `host.rs`; it is
+the entire lowering pipeline. The staged workflow below covers
+this migration; it is called out here so the scope is visible
+from the phase-plan section without needing to read the audit.
 
 #### Staged workflow within AC.2
 
@@ -275,9 +313,16 @@ Resolution — staged workflow within the single commit:
 9. Write the new `crates/core/src/grammar/host.rs` walking
    `BbnfBootstrapView<'tape>` accessors instead of pattern-matching
    `BbnfBootstrapEnum<'a>`.
-10. Re-enable `pub mod generated;` and `pub mod host;` in
+10. Migrate every other `BbnfBootstrapEnum` consumer to the view
+    accessor surface: `crates/core/src/types.rs`,
+    `lower/{mod,expression,value_expr}.rs`,
+    `graph/{metadata,deps}.rs`,
+    `pipeline/{compile,directives}.rs`. Each module pattern-matches
+    on the view (`.kind()`, `.variant_idx()`, `.children()`) plus
+    the schema helpers.
+11. Re-enable `pub mod generated;` and `pub mod host;` in
     `grammar/mod.rs`.
-11. Create `crates/core/tests/tape_parity.rs` with golden snapshots
+12. Create `crates/core/tests/tape_parity.rs` with golden snapshots
     for JSON, CSS L4, BBNF, Sheets, EBNF under
     `tests/fixtures/tape_golden/`.
 12. Verification: `cargo build --workspace` clean;

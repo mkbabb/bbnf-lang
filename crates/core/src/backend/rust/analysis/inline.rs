@@ -7,14 +7,26 @@
 //! - **Constraints**:
 //!   - Forced DirectCall: cyclic, recover, prettify, operator-chain rules
 //!   - Forced InlineBody: single-site inline, @token rules
-//!   - Cost budget: `cost(rule) * ref_count <= MAX_TOTAL_BUDGET`
-//!   - Alt branch limit: `max_alt_branches <= MAX_ALT_BRANCHES`
+//!   - Cost budget: `cost(rule) * ref_count <= weight-derived total budget`
+//!   - Alt branch limit: structural ceiling on alternation fan-out
 //!   - Shape guard: heavy-wrapper / high-ref / high-control-flow → DirectCall
 //!
 //! Uses AC-3 propagation via `csp_solver::Csp<InlineDomain>` to resolve all
 //! decisions in a single pass — the constraints are all unary (each rule's
 //! decision is independent given the pre-computed metrics), so propagation
 //! converges immediately.
+//!
+//! # Tranche AF.2 — universal cost model
+//!
+//! Every numeric cost weight in this file now reads from
+//! [`egraph::CostWeights`] (via `ir.cost_config.egraph.weights`). The
+//! per-node structural-cost estimates in [`estimate_expansion_cost`]
+//! and the CSP budget thresholds in [`CostBudgetConstraint`] are
+//! derived via [`CostBudgets::from_weights`] — a single source of
+//! truth for the backend-driver inline-vs-call decision. The default
+//! [`CostWeights`] values reproduce the pre-AF.2 hardcoded constants
+//! exactly, so this migration is behavior-preserving at the default
+//! weight configuration.
 
 use std::collections::HashSet;
 
@@ -23,8 +35,112 @@ use csp_solver::Csp;
 use csp_solver::constraint::{Constraint, Revision, VarId};
 use csp_solver::domain::{Domain, LatticeDomain};
 use csp_solver::variable::Variable;
+use egraph::CostWeights;
 
 use super::specialize::gather_inline_shape_stats;
+
+// ── Cost budgets (Tranche AF.2) ──────────────────────────────────────────────
+
+/// Structural budget derived from the shared [`CostWeights`]. Every
+/// threshold the inline CSP consults lives here — the numeric
+/// constants that used to be hardcoded in [`CostBudgetConstraint`] and
+/// [`should_force_direct_call`] are all projections of the same
+/// `call_overhead` / `inline_body_size_penalty` dimensions that the
+/// CSP strategy solver (`crates/ir/src/passes/csp_strategy/`) reads
+/// for its own decisions.
+///
+/// At `CostWeights::default()` values these projections reproduce the
+/// pre-AF.2 hardcoded constants (`MAX_LOCAL_COST=80`,
+/// `MAX_TOTAL_BUDGET=4096`, shape-guard thresholds 48/1024/1536,
+/// leaf/ref/alt/repeat per-node costs 2/8/5/10).
+#[derive(Clone, Copy, Debug)]
+pub(crate) struct CostBudgets {
+    // Per-node expansion-cost estimates. The `estimate_expansion_cost`
+    // walker turns these into a single `usize` body-size number that
+    // the budget thresholds below compare against.
+    pub leaf_cost: usize,
+    pub ref_cost: usize,
+    pub alt_branch_cost: usize,
+    pub repeat_cost: usize,
+    pub negate_cost: usize,
+
+    // CSP inline-vs-call thresholds.
+    pub max_local_cost: usize,
+    pub max_total_budget: usize,
+
+    // Shape-guard thresholds for `should_force_direct_call`.
+    pub high_ref_local_cost: usize,
+    pub wrapper_heavy_total_budget: usize,
+    pub control_heavy_total_budget: usize,
+}
+
+impl CostBudgets {
+    /// Derive every inline-CSP budget from the shared [`CostWeights`].
+    ///
+    /// The per-node estimates use `call_overhead` / `inline_body_size_penalty`
+    /// as dimensional anchors:
+    /// - Leaf / Map / OptionalWhitespace: `4 * inline_body_size_penalty`
+    ///   (= 2 at default weights — the baseline "tiny structural node" cost).
+    /// - `Ref`: `2 * call_overhead` (= 8 at defaults — a direct call
+    ///   pays `call_overhead`; inlining a call site is two call-equivalents
+    ///   worth of work under the pre-AF.2 cost model).
+    /// - `Alt` per-branch: `call_overhead + 2 * inline_body_size_penalty`
+    ///   (= 5 at defaults — one call-worth plus a small per-branch structural
+    ///   surcharge).
+    /// - `Repeat`: `2 * call_overhead + 4 * inline_body_size_penalty`
+    ///   (= 10 at defaults — two calls plus loop overhead).
+    /// - `Negate`: `0.5 * call_overhead + 2 * inline_body_size_penalty`
+    ///   (= 3 at defaults — half a call plus a small structural surcharge).
+    ///
+    /// The CSP thresholds scale `call_overhead`:
+    /// - `max_local_cost = call_overhead * 20` (= 80 — at most ~20
+    ///   call-equivalents of inlined body per rule).
+    /// - `max_total_budget = call_overhead * 1024` (= 4096 — at most
+    ///   ~1024 call-equivalents summed across all inline sites).
+    /// - Shape guards: `call_overhead * 12 / 256 / 384` (= 48 / 1024 /
+    ///   1536 at defaults).
+    pub fn from_weights(w: &CostWeights) -> Self {
+        let call = w.call_overhead;
+        let body = w.inline_body_size_penalty;
+
+        // Per-node costs (f64 → usize conversion with round-to-nearest
+        // via `as usize`, which truncates but is stable for the
+        // non-negative weights the CostWeights contract guarantees).
+        let leaf_cost = (body * 4.0) as usize;
+        let ref_cost = (call * 2.0) as usize;
+        let alt_branch_cost = (call + body * 2.0) as usize;
+        let repeat_cost = (call * 2.0 + body * 4.0) as usize;
+        let negate_cost = (call * 0.5 + body * 2.0) as usize;
+
+        // CSP thresholds.
+        let max_local_cost = (call * 20.0) as usize;
+        let max_total_budget = (call * 1024.0) as usize;
+
+        // Shape-guard thresholds.
+        let high_ref_local_cost = (call * 12.0) as usize;
+        let wrapper_heavy_total_budget = (call * 256.0) as usize;
+        let control_heavy_total_budget = (call * 384.0) as usize;
+
+        Self {
+            leaf_cost,
+            ref_cost,
+            alt_branch_cost,
+            repeat_cost,
+            negate_cost,
+            max_local_cost,
+            max_total_budget,
+            high_ref_local_cost,
+            wrapper_heavy_total_budget,
+            control_heavy_total_budget,
+        }
+    }
+}
+
+/// Structural ceiling on alternation fan-out. Not a cost weight — a
+/// pragmatic gate on dispatch-table complexity that every backend
+/// respects regardless of the cost model. Tracked here next to the
+/// inline CSP so the two structural gates live together.
+const MAX_ALT_BRANCHES: usize = 32;
 
 // ── Domain ────────────────────────────────────────────────────────────────────
 
@@ -152,7 +268,9 @@ impl Constraint<InlineDomain> for ForceCallMode {
 /// pre-computed expansion cost, ref count, alt branch count, and shape stats.
 ///
 /// This consolidates all the heuristic checks from the original imperative code
-/// into a single constraint that fires once during propagation.
+/// into a single constraint that fires once during propagation. Every numeric
+/// threshold is derived from [`CostBudgets`] (Tranche AF.2), which in turn
+/// reads [`egraph::CostWeights`] from `ir.cost_config.egraph.weights`.
 #[derive(Debug)]
 struct CostBudgetConstraint {
     var: VarId,
@@ -162,12 +280,7 @@ struct CostBudgetConstraint {
     shape_control_nodes: usize,
     shape_refs: usize,
     shape_wrapper_heavy: bool,
-}
-
-impl CostBudgetConstraint {
-    const MAX_ALT_BRANCHES: usize = 32;
-    const MAX_LOCAL_COST: usize = 80;
-    const MAX_TOTAL_BUDGET: usize = 4096;
+    budgets: CostBudgets,
 }
 
 impl Constraint<InlineDomain> for CostBudgetConstraint {
@@ -186,21 +299,25 @@ impl Constraint<InlineDomain> for CostBudgetConstraint {
         }
 
         // Shape-based force-to-DirectCall (same logic as `should_force_direct_call`).
+        let b = &self.budgets;
         let force_direct = if self.shape_control_nodes == 0 {
             false
-        } else if self.shape_refs > 2 && self.local_cost > 48 {
+        } else if self.shape_refs > 2 && self.local_cost > b.high_ref_local_cost {
             true
-        } else if self.shape_wrapper_heavy && self.shape_refs > 1 && self.total_budget > 1024 {
+        } else if self.shape_wrapper_heavy
+            && self.shape_refs > 1
+            && self.total_budget > b.wrapper_heavy_total_budget
+        {
             true
         } else {
-            self.shape_control_nodes > 2 && self.total_budget > 1536
+            self.shape_control_nodes > 2 && self.total_budget > b.control_heavy_total_budget
         };
 
         let mode = if force_direct {
             CallMode::DirectCall
-        } else if self.max_alt_branches <= Self::MAX_ALT_BRANCHES
-            && self.local_cost <= Self::MAX_LOCAL_COST
-            && self.total_budget <= Self::MAX_TOTAL_BUDGET
+        } else if self.max_alt_branches <= MAX_ALT_BRANCHES
+            && self.local_cost <= b.max_local_cost
+            && self.total_budget <= b.max_total_budget
         {
             CallMode::InlineBody
         } else {
@@ -224,6 +341,13 @@ pub fn analyze_parse_inline_plan(
     ir: &GrammarIR,
     operator_chain_rules: &HashSet<RuleId>,
 ) -> InlinePlan {
+    // Tranche AF.2: derive every structural cost budget from the
+    // shared CostWeights. Reads from `ir.cost_config.egraph.weights` —
+    // the same single source of truth the CSP strategy solver
+    // (`crates/ir/src/passes/csp_strategy/`) and both e-graph
+    // extractors consume.
+    let budgets = CostBudgets::from_weights(&ir.cost_config.egraph.weights);
+
     // Phase 1: Compute ref counts.
     let mut ref_counts = vec![0u32; ir.rules.len()];
     for rule in &ir.rules {
@@ -274,7 +398,7 @@ pub fn analyze_parse_inline_plan(
 
         // Priority 5: Cost-budget constraint (consolidates all heuristics).
         let alt_branches = max_alt_branches(&rule.body);
-        let local_cost = estimate_expansion_cost(&rule.body);
+        let local_cost = estimate_expansion_cost_with_budgets(&rule.body, &budgets);
         let total_budget = local_cost.saturating_mul(ref_counts[idx] as usize);
         let shape = gather_inline_shape_stats(&rule.body);
 
@@ -286,6 +410,7 @@ pub fn analyze_parse_inline_plan(
             shape_control_nodes: shape.control_nodes(),
             shape_refs: shape.refs,
             shape_wrapper_heavy: shape.is_wrapper_heavy(),
+            budgets,
         });
     }
 
@@ -309,26 +434,41 @@ pub fn analyze_parse_inline_plan(
     }
 }
 
-// ── Re-exported helpers (unchanged from original) ─────────────────────────────
+// ── Re-exported helpers ───────────────────────────────────────────────────────
 
+/// Shape-based direct-call force predicate. Reads its numeric
+/// thresholds from [`CostWeights`] via [`CostBudgets::from_weights`],
+/// keeping this function's decision boundary in lockstep with the
+/// internal CSP constraint that consults the same budgets.
+///
+/// Tranche AF.2: the former hardcoded constants (48 / 1024 / 1536)
+/// are replaced by `weights.call_overhead`-scaled budgets so every
+/// call site reads the single source of truth on
+/// `ir.cost_config.egraph.weights`.
 pub fn should_force_direct_call(
     shape: super::specialize::InlineShapeStats,
     local_cost: usize,
     total_budget: usize,
+    weights: &CostWeights,
 ) -> bool {
+    let budgets = CostBudgets::from_weights(weights);
+
     if shape.control_nodes() == 0 {
         return false;
     }
 
-    if shape.refs > 2 && local_cost > 48 {
+    if shape.refs > 2 && local_cost > budgets.high_ref_local_cost {
         return true;
     }
 
-    if shape.is_wrapper_heavy() && shape.refs > 1 && total_budget > 1024 {
+    if shape.is_wrapper_heavy()
+        && shape.refs > 1
+        && total_budget > budgets.wrapper_heavy_total_budget
+    {
         return true;
     }
 
-    shape.control_nodes() > 2 && total_budget > 1536
+    shape.control_nodes() > 2 && total_budget > budgets.control_heavy_total_budget
 }
 
 fn compute_single_site_inline_with_ref_counts(ir: &GrammarIR, ref_counts: &[u32]) -> Vec<bool> {
@@ -371,33 +511,75 @@ pub fn max_alt_branches(node: &IrNode) -> usize {
 }
 
 /// Estimate the code expansion cost of inlining a rule body.
+///
+/// Convenience wrapper that derives [`CostBudgets`] from
+/// [`CostWeights::default`] — useful for standalone callers and
+/// tests that don't have a `CostWeights` handy. Production code
+/// should call `estimate_expansion_cost_with_budgets` with the
+/// per-compile budgets from
+/// `CostBudgets::from_weights(&ir.cost_config.egraph.weights)`.
 pub fn estimate_expansion_cost(node: &IrNode) -> usize {
+    let budgets = CostBudgets::from_weights(&CostWeights::default());
+    estimate_expansion_cost_with_budgets(node, &budgets)
+}
+
+/// Estimate the code expansion cost of inlining a rule body, reading
+/// per-node cost estimates from the supplied `CostBudgets`.
+///
+/// Tranche AF.2: the per-node costs (leaf / ref / alt branch /
+/// repeat / negate) that used to be hardcoded here are now scalar
+/// projections of [`CostWeights::call_overhead`] and
+/// [`CostWeights::inline_body_size_penalty`]. See
+/// [`CostBudgets::from_weights`] for the derivation.
+pub(crate) fn estimate_expansion_cost_with_budgets(
+    node: &IrNode,
+    budgets: &CostBudgets,
+) -> usize {
     match node {
-        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => 2,
-        IrNode::Ref(_) => 8,
-        IrNode::Seq(children) => 1 + children.iter().map(estimate_expansion_cost).sum::<usize>(),
+        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => budgets.leaf_cost,
+        IrNode::Ref(_) => budgets.ref_cost,
+        IrNode::Seq(children) => {
+            1 + children
+                .iter()
+                .map(|c| estimate_expansion_cost_with_budgets(c, budgets))
+                .sum::<usize>()
+        }
         IrNode::Alt(branches, _) => branches
             .iter()
-            .map(|b| 5 + estimate_expansion_cost(&b.node))
+            .map(|b| {
+                budgets.alt_branch_cost + estimate_expansion_cost_with_budgets(&b.node, budgets)
+            })
             .sum::<usize>(),
-        IrNode::Repeat { inner, .. } => 10 + estimate_expansion_cost(inner),
-        IrNode::Map { inner, .. } => 2 + estimate_expansion_cost(inner),
-        IrNode::OptionalWhitespace(inner) => 2 + estimate_expansion_cost(inner),
-        IrNode::Negate(inner) => 3 + estimate_expansion_cost(inner),
+        IrNode::Repeat { inner, .. } => {
+            budgets.repeat_cost + estimate_expansion_cost_with_budgets(inner, budgets)
+        }
+        IrNode::Map { inner, .. } => {
+            budgets.leaf_cost + estimate_expansion_cost_with_budgets(inner, budgets)
+        }
+        IrNode::OptionalWhitespace(inner) => {
+            budgets.leaf_cost + estimate_expansion_cost_with_budgets(inner, budgets)
+        }
+        IrNode::Negate(inner) => {
+            budgets.negate_cost + estimate_expansion_cost_with_budgets(inner, budgets)
+        }
         IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
-            estimate_expansion_cost(a) + estimate_expansion_cost(b)
+            estimate_expansion_cost_with_budgets(a, budgets)
+                + estimate_expansion_cost_with_budgets(b, budgets)
         }
         IrNode::TokenDispatch {
             token,
             arms,
             fallback,
         } => {
-            estimate_expansion_cost(token)
+            estimate_expansion_cost_with_budgets(token, budgets)
                 + arms
                     .iter()
-                    .map(|a| 3 + estimate_expansion_cost(&a.continuation))
+                    .map(|a| {
+                        budgets.negate_cost
+                            + estimate_expansion_cost_with_budgets(&a.continuation, budgets)
+                    })
                     .sum::<usize>()
-                + estimate_expansion_cost(fallback)
+                + estimate_expansion_cost_with_budgets(fallback, budgets)
         }
     }
 }

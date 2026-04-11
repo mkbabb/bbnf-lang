@@ -268,14 +268,17 @@ pub fn compile_grammar<E: Emitter>(
     let type_defs = emitter.emit_type_definitions(ir, analysis, ctx);
 
     // 2. Per-rule bodies. Skip rules that are always inlined
-    //    (exception: transparent rules are never inlined, so they
-    //    always need standalone functions).
+    //    (exceptions: transparent rules are never inlined, and
+    //    `preserve_identity` rules — set under structural mode —
+    //    always need a standalone function regardless of the
+    //    inline-planning verdict).
     let mut rule_functions = Vec::with_capacity(ir.rules.len());
     for rule in &ir.rules {
         let strategy = dstate.call_strategy(rule.id);
         let is_entry = rule.id == ir.entry;
         if !is_entry
             && !rule.meta.is_transparent
+            && !rule.meta.preserve_identity
             && strategy == CallStrategy::InlineBody
         {
             continue;

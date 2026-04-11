@@ -11,6 +11,7 @@ mod alloc_emit;
 pub mod ir_enums;
 pub mod ir_types;
 pub mod trace;
+pub mod view;
 
 // Re-export shared utility so all `super::unescape_literal` references resolve.
 pub use super::unescape_literal;

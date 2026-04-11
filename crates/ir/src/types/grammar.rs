@@ -116,8 +116,9 @@ pub struct GrammarIR {
     pub key_dispatch_configs: HashMap<dag::NodeId, KeyDispatchMatch>,
 
     /// Per-NodeId propagated context facts. Populated by
-    /// `passes::context::compute_context_facts` via `mine_recognizers`
-    /// and consumed by downstream passes (Tranche X.8g).
+    /// `passes::recognizers::ContextFactsMiner` as part of the unified
+    /// `mine_recognizers` walk (Tranche X.8g, fused in AF.1) and
+    /// consumed by downstream passes.
     #[serde(skip)]
     pub context_facts: passes::context::ContextFactsMap,
 

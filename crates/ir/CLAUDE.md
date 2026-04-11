@@ -78,10 +78,11 @@ bbnf-ir/
 │       ├── prefix.rs     `factor_common_prefixes` — trie-style byte-level splitting.
 │       ├── span.rs       `refine_span_eligibility`, `compute_sp_method_rules`.
 │       ├── regex_info.rs `compute_regex_info` — caches `bbnf_regex::RegexInfo` per pattern.
-│       ├── context/      Context-facts propagation (role-in-rule).
+│       ├── context/      Context-facts type definitions (role-in-rule).
 │       │   ├── mod.rs    Re-exports.
-│       │   ├── facts.rs  `ContextFacts`, `DiscriminationStrength`, `ScanSafety`.
-│       │   └── propagate.rs  `compute_context_facts`.
+│       │   └── facts.rs  `ContextFacts`, `DiscriminationStrength`, `ScanSafety`.
+│       │                  The producer (`ContextFactsMiner`) lives in
+│       │                  `passes/recognizers/` — folded in AF.1.
 │       ├── patterns/     Structural shape-fact type definitions
 │       │   └── mod.rs    `NodeFacts`, `Recognizer`, `RecognizerShape`,
 │       │                  `RecognizerSignature`, `OnePassGrade`, etc. The

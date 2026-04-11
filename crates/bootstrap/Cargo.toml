@@ -7,5 +7,7 @@ description = "Bootstrap: generates self-hosted BBNF grammar parser via cargo ex
 
 [dependencies]
 bbnf_derive = { version = "0.2", path = "../derive" }
+bbnf-tape = { version = "0.1", path = "../bbnf-tape" }
+bbnf = { path = "../core" }
 parse_that = "0.4"
 pprint = "0.3"

@@ -53,7 +53,7 @@ pub mod kind;
 pub mod tape;
 
 pub use arena::ChunkedArena;
-pub use builder::TapeBuilder;
+pub use builder::{TapeBuildError, TapeBuilder};
 pub use cursor::TapeCursor;
 pub use kind::TapeKind;
 pub use tape::{Tape, TapeOffset, TapeRec};

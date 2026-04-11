@@ -1,7 +1,8 @@
 //! Mine `RecognizerShape::TokenLedBranches` records on Alt nodes whose
 //! branches each carry a leading recognizer with pairwise-disjoint
-//! FIRST sets. Reads `ContextFacts::discrimination` from the upstream
-//! `compute_context_facts` pass — only Alts marked `Strong` qualify.
+//! FIRST sets. Reads `ContextFacts::discrimination` from
+//! `MineOutputs::context_facts`, populated earlier in the same unified
+//! walk by `ContextFactsMiner` — only Alts marked `Strong` qualify.
 
 use crate::IrNode;
 use crate::dag::NodeId;
@@ -26,7 +27,7 @@ impl RecognizerMiner for TokenLedBranchesMiner {
         let IrNode::Alt(branches, _) = node else {
             return;
         };
-        let Some(cf) = ctx.context_facts.get(&node_id) else {
+        let Some(cf) = outputs.context_facts.get(&node_id) else {
             return;
         };
         if cf.discrimination != DiscriminationStrength::Strong {

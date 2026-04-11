@@ -1,25 +1,28 @@
-//! Tranche V — recognizer mining pass (consolidated in Tranche Z.0).
+//! Tranche V — recognizer mining pass (consolidated in Tranche Z.0,
+//! extended with context-facts fusion in Tranche AF.1).
 //!
 //! Replaces the old `passes/patterns/recognize.rs` with a richer mining
 //! pipeline that populates `NodeFacts` with both the legacy structural
 //! flags (`operator_chain`, `sep_by`, `all_span_collapse`) and the
-//! `Recognizer` records introduced in V.3.
+//! `Recognizer` records introduced in V.3. Since AF.1 the same walk
+//! also produces `ContextFacts` (role-in-parent facts previously
+//! produced by the standalone `compute_context_facts` pass).
 //!
-//! Nine miners run as one phase under the `mine_recognizers` entry
+//! Ten miners run as one phase under the `mine_recognizers` entry
 //! point. Mining order is load-bearing: later miners read earlier
 //! miners' outputs and, on shape overlap, `install_recognizer`
 //! overwrites the earlier record with the later one.
 //!
-//! 1. `mine_node_facts`           — operator_chain, sep_by, all_span_collapse
-//! 2. `QuotedStringMiner`         — RegexClass::QuotedString → Recognizer
-//! 3. `BalancedWrapMiner`         — Wrap(open, body, close) → DelimiterBalanced
-//! 4. `CommentWsMiner`            — RegexClass::WsBlockComment → Recognizer
-//! 5. `IdentifierMiner`           — RegexClass::Identifier / PrefixThenClass
-//! 6. `SeparatorListMiner`        — sep_by + element signature → SeparatorList
-//! 7. `TokenLedBranchesMiner`     — disjoint-FIRST Alt → TokenLedBranches
-//! 8. `PunctWsRegionMiner`        — ws-wrapped structural punctuation
-//! 9. `DelimScanMiner`            — Wrap(open, Repeat(Alt), close) → DelimScanConfig
-//! 10. `KeyDispatchMiner`         — Alt(Literal-led branches) → KeyDispatchMatch
+//! 1. `ContextFactsMiner` — `ContextFacts` (discrimination, scan_safety, in_token_dispatch)
+//! 2. `QuotedStringMiner` — RegexClass::QuotedString → Recognizer
+//! 3. `BalancedWrapMiner` — Wrap(open, body, close) → DelimiterBalanced
+//! 4. `CommentWsMiner` — RegexClass::WsBlockComment → Recognizer
+//! 5. `IdentifierMiner` — RegexClass::Identifier / PrefixThenClass
+//! 6. `SeparatorListMiner` — sep_by + element signature → SeparatorList
+//! 7. `TokenLedBranchesMiner` — disjoint-FIRST Alt → TokenLedBranches (reads discrimination strength from `ContextFactsMiner`, same walk)
+//! 8. `PunctWsRegionMiner` — ws-wrapped structural punctuation
+//! 9. `DelimScanMiner` — Wrap(open, Repeat(Alt), close) → DelimScanConfig
+//! 10. `KeyDispatchMiner` — Alt(Literal-led branches) → KeyDispatchMatch
 //!
 //! # Tranche Z.0 — single-walk consolidation
 //!
@@ -34,16 +37,28 @@
 //! in its `inspect` impl, and `walk_unified` descends the DAG once,
 //! invoking every miner at every node.
 //!
+//! # Tranche AF.1 — context-facts fold
+//!
+//! Pre-AF the Z.0 walk was bracketed by a separate `compute_context_facts`
+//! call that re-walked the entire DAG to produce a `ContextFactsMap`
+//! consumed by `TokenLedBranchesMiner` (and cached on `ir.context_facts`
+//! for downstream passes). AF.1 folds that producer into the miner
+//! trait substrate as `ContextFactsMiner`, eliminating the second walk.
+//! The miner writes into `MineOutputs::context_facts`, which is handed
+//! to every downstream miner in the same `inspect` tick.
+//!
 //! # Mined sidecars
 //!
-//! The first seven miners emit into the shared
-//! `Vec<(NodeId, Recognizer)>` consumed by `install_recognizer`. The
-//! last two emit into `HashMap`-valued sidecars stored on `GrammarIR`
-//! directly (`delim_scan_configs` / `key_dispatch_configs`). Both
-//! stream through the unified walk via the `MineOutputs` struct.
+//! Most miners emit into the shared `Vec<(NodeId, Recognizer)>`
+//! consumed by `install_recognizer`. The two pattern-config miners
+//! emit into `HashMap`-valued sidecars
+//! (`delim_scan_configs` / `key_dispatch_configs`). The context-facts
+//! miner emits into `context_facts`. All three streams ride the
+//! unified walk via the `MineOutputs` struct.
 
 mod balanced_wrap;
 mod comment_ws;
+mod context_facts_miner;
 pub mod delim_scan;
 mod identifier;
 pub mod key_dispatch;
@@ -57,7 +72,7 @@ mod token_led_branches;
 use std::collections::HashMap;
 
 use crate::dag::{GrammarDag, NodeId};
-use crate::passes::context::{ContextFactsMap, compute_context_facts};
+use crate::passes::context::ContextFactsMap;
 use crate::passes::patterns::{NodeFacts, NodeFactsMap, PatternAnnotations, Recognizer};
 use crate::{DelimScanConfig, GrammarIR, IrNode, KeyDispatchMatch};
 
@@ -65,6 +80,7 @@ pub use signature::{compute_shape_hash, hash_recognizer_shape};
 
 pub use balanced_wrap::BalancedWrapMiner;
 pub use comment_ws::CommentWsMiner;
+pub use context_facts_miner::ContextFactsMiner;
 pub use delim_scan::DelimScanMiner;
 pub use identifier::IdentifierMiner;
 pub use key_dispatch::KeyDispatchMiner;
@@ -73,30 +89,36 @@ pub use quoted_string::QuotedStringMiner;
 pub use separator_list::SeparatorListMiner;
 pub use token_led_branches::TokenLedBranchesMiner;
 
-// ── Recognizer miner substrate (Tranche Z.0) ───────────────────────────
+// ── Recognizer miner substrate (Tranche Z.0 + AF.1) ────────────────────
 
 /// Shared per-walk context passed to every `RecognizerMiner::inspect`.
 ///
-/// Holds the borrowed grammar, its durable DAG, and the precomputed
-/// context facts. All miners receive this reference; only
-/// `TokenLedBranchesMiner` currently reads `context_facts`.
+/// Holds the borrowed grammar and its durable DAG. Miners that need
+/// per-node role-in-parent information read from the `context_facts`
+/// field of [`MineOutputs`] — populated in the same walk by
+/// [`ContextFactsMiner`], which is invoked first at every node.
 pub struct RecognizerMineCtx<'a> {
     pub ir: &'a GrammarIR,
     pub dag: &'a GrammarDag,
-    pub context_facts: &'a ContextFactsMap,
 }
 
 /// Aggregated outputs produced by one recognizer-mining walk.
 ///
-/// The first seven miners push into `recognizers`; the two config
-/// miners write into `delim_scan_configs` / `key_dispatch_configs`.
-/// Everything lands in the same `MineOutputs` so the unified walk can
-/// thread one mutable reference through every miner's `inspect`.
+/// * `recognizers` — `Vec<(NodeId, Recognizer)>` pushed by every miner
+///   that produces recognizer records, installed via
+///   [`install_recognizer`] after the walk completes.
+/// * `delim_scan_configs` / `key_dispatch_configs` — per-node pattern
+///   configs written by the two config miners.
+/// * `context_facts` — per-node `ContextFacts` written by
+///   [`ContextFactsMiner`] and read in-walk by downstream miners such
+///   as [`TokenLedBranchesMiner`], then cached on `ir.context_facts`
+///   after the walk completes.
 #[derive(Default)]
 pub struct MineOutputs {
     pub recognizers: Vec<(NodeId, Recognizer)>,
     pub delim_scan_configs: HashMap<NodeId, DelimScanConfig>,
     pub key_dispatch_configs: HashMap<NodeId, KeyDispatchMatch>,
+    pub context_facts: ContextFactsMap,
 }
 
 /// A recognizer-mining pass. Called once per node during the unified
@@ -176,21 +198,21 @@ pub fn mine_recognizers(ir: &mut GrammarIR) {
     ir.pattern_annotations = legacy_annotations;
     ir.node_facts = node_facts;
 
-    // Phase 3 (Tranche Z.0): unified single-walk recognizer mining.
+    // Phase 3 (Tranche Z.0 + AF.1): unified single-walk recognizer mining.
     //
     // Pre-Z this ran nine independent tree descents — one per miner.
-    // Z.0 collapses them into one orchestrator walk dispatching every
-    // miner at every node via the `RecognizerMiner` trait. The
-    // per-miner match logic lives in each `impl`; the walk traversal
-    // logic lives here, once.
-    let (outputs, context_facts) = if let Some(dag) = ir.dag.as_ref() {
-        let context_facts = compute_context_facts(ir, dag);
-        let ctx = RecognizerMineCtx {
-            ir,
-            dag,
-            context_facts: &context_facts,
-        };
+    // Z.0 collapsed them into one orchestrator walk dispatching every
+    // miner at every node via the `RecognizerMiner` trait. AF.1 folds
+    // the previously-separate `compute_context_facts` producer in as
+    // `ContextFactsMiner`, which must run first so downstream miners
+    // (`TokenLedBranchesMiner`) can read the discrimination strength
+    // from `MineOutputs::context_facts` during the same `inspect`
+    // tick. The per-miner match logic lives in each `impl`; the walk
+    // traversal logic lives here, once.
+    let outputs = if let Some(dag) = ir.dag.as_ref() {
+        let ctx = RecognizerMineCtx { ir, dag };
         let miners: &[&dyn RecognizerMiner] = &[
+            &ContextFactsMiner,
             &QuotedStringMiner,
             &BalancedWrapMiner,
             &CommentWsMiner,
@@ -205,7 +227,7 @@ pub fn mine_recognizers(ir: &mut GrammarIR) {
         for rule in &ir.rules {
             walk_unified(&rule.body, &ctx, miners, &mut outputs);
         }
-        (outputs, context_facts)
+        outputs
     } else {
         return;
     };
@@ -220,8 +242,8 @@ pub fn mine_recognizers(ir: &mut GrammarIR) {
     }
 
     // Cache context_facts on `GrammarIR` so downstream passes can read
-    // from it without recomputing (Tranche X.8g).
-    ir.context_facts = context_facts;
+    // from it without recomputing (Tranche X.8g / AF.1 fused producer).
+    ir.context_facts = outputs.context_facts;
     // Commit the upstream-mined pattern configs (Tranche X.8a).
     ir.delim_scan_configs = outputs.delim_scan_configs;
     ir.key_dispatch_configs = outputs.key_dispatch_configs;

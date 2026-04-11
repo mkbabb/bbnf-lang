@@ -5,6 +5,22 @@
 //! - dispatch table (O(1) byte lookup)
 //! - key dispatch (keyword-keyed alternations)
 //! - checkpoint chain fallback
+//!
+//! # `AltBranchInfo.ty` (Tranche AF.1)
+//!
+//! Under tape-first emission (Tranche AC.2) every Alt branch body
+//! projects to the same shape — `Option<()>` — because the owning
+//! rule's epilogue carries the variant discriminator. Consequently
+//! `AltBranchInfo.ty` is destructured as `_info` / `_` in every
+//! backend emitter and contributes zero to the generated code.
+//!
+//! Before AF.1 the driver cloned the per-branch `TypeDesc` out of
+//! `TypeMap` into `AltBranchInfo` at every Alt site, paying for the
+//! clone (including recursive `TypeDesc::Tuple(Vec<_>)` allocation
+//! for operator-chain Alts) only to feed a dead field. AF.1 replaces
+//! the clones with [`PLACEHOLDER_TY`] — a `static` unit-variant
+//! `TypeDesc::Span` — eliminating the allocation without touching
+//! the shared struct definition.
 
 use bbnf_ir::{AltBranch, AltDispatch, FnDescriptor, GrammarIR, IrNode, TypeDesc};
 
@@ -12,6 +28,26 @@ use super::DriverState;
 use super::node::compile_node;
 use crate::backend::strategy::alt_strategy::AltStrategy;
 use crate::backend::{AltBranchInfo, Emitter, KeyDispatchBranch, ValuePlacement};
+
+/// Placeholder `TypeDesc` used for the structurally-required-but-dead
+/// `AltBranchInfo.ty` field. See the module-level note on
+/// `AltBranchInfo.ty` for the rationale. Using a single `static`
+/// unit variant means every branch info constructor is a `.clone()`
+/// of a `TypeDesc::Span` — amortized to a stack copy under tape-first
+/// (the variant carries no heap payload).
+static PLACEHOLDER_TY: TypeDesc = TypeDesc::Span;
+
+/// Build the dead-field-only `AltBranchInfo`. Every backend discards
+/// it; this helper makes that contract explicit at the construction
+/// site so future readers don't mistake the placeholder for a
+/// load-bearing value.
+#[inline]
+fn placeholder_branch_info() -> AltBranchInfo {
+    AltBranchInfo {
+        ty: PLACEHOLDER_TY.clone(),
+        coercion_variant: None,
+    }
+}
 
 /// Compile an Alt node, dispatching on the pre-solved `AltStrategy`
 /// (if any) and falling back to inline detection for the not-yet-
@@ -29,22 +65,6 @@ pub(super) fn compile_alt<E: Emitter>(
     // Look up the pre-solved strategy. Cloned to avoid borrowing
     // conflicts with the subsequent &mut DriverState passes.
     let solved_strategy = dstate.alt_strategy(alt_node, ir).cloned();
-
-    // Classify branch types. In Inline context (Vec elements), map
-    // BoxedEnum → Enum to match the TypeMap's Vec projection.
-    let branch_infos: Vec<AltBranchInfo> = branches
-        .iter()
-        .map(|b| {
-            let mut ty = ir.node_type(&b.node).cloned().unwrap_or(TypeDesc::Span);
-            if alloc == ValuePlacement::Inline && ty == TypeDesc::BoxedEnum {
-                ty = TypeDesc::Enum;
-            }
-            AltBranchInfo {
-                ty,
-                coercion_variant: None,
-            }
-        })
-        .collect();
 
     // All-literal fast path: pre-solved strategy short-circuits the
     // inline classifier when it already marked the Alt.
@@ -90,7 +110,7 @@ pub(super) fn compile_alt<E: Emitter>(
         let mut branch_outputs = Vec::with_capacity(branches.len());
         let mut fallback = None;
 
-        for (i, (branch, info)) in branches.iter().zip(branch_infos.into_iter()).enumerate() {
+        for (i, branch) in branches.iter().enumerate() {
             let byte_patterns: Vec<u8> = table
                 .table
                 .iter()
@@ -104,9 +124,9 @@ pub(super) fn compile_alt<E: Emitter>(
             let output = compile_node(&branch.node, alloc, ir, dstate, emitter, ctx);
             dstate.dispatch_guaranteed_byte = None;
             if table.fallback_idx == Some(i as u8) {
-                fallback = Some((info, output));
+                fallback = Some((placeholder_branch_info(), output));
             } else {
-                branch_outputs.push((info, output));
+                branch_outputs.push((placeholder_branch_info(), output));
             }
         }
 
@@ -135,10 +155,6 @@ pub(super) fn compile_alt<E: Emitter>(
         let mut kd_branches = Vec::with_capacity(detected.len());
         for det in &detected {
             let branch = &branches[det.branch_idx];
-            let info = AltBranchInfo {
-                ty: ir.node_type(&branch.node).cloned().unwrap_or(TypeDesc::Span),
-                coercion_variant: None,
-            };
             let body = compile_node(&branch.node, alloc, ir, dstate, emitter, ctx);
             let key_bytes = det
                 .key_literals
@@ -148,17 +164,13 @@ pub(super) fn compile_alt<E: Emitter>(
             kd_branches.push(KeyDispatchBranch {
                 key_bytes,
                 body,
-                info,
+                info: placeholder_branch_info(),
             });
         }
         let fallback = fallback_idx.map(|fi| {
             let branch = &branches[fi];
-            let info = AltBranchInfo {
-                ty: ir.node_type(&branch.node).cloned().unwrap_or(TypeDesc::Span),
-                coercion_variant: None,
-            };
             let body = compile_node(&branch.node, alloc, ir, dstate, emitter, ctx);
-            (info, body)
+            (placeholder_branch_info(), body)
         });
         return emitter.emit_key_dispatch(&config, kd_branches, fallback, alloc, ctx);
     }
@@ -166,10 +178,9 @@ pub(super) fn compile_alt<E: Emitter>(
     // Fallback: checkpoint chain.
     let branch_outputs: Vec<_> = branches
         .iter()
-        .zip(branch_infos)
-        .map(|(branch, info)| {
+        .map(|branch| {
             let output = compile_node(&branch.node, alloc, ir, dstate, emitter, ctx);
-            (info, output)
+            (placeholder_branch_info(), output)
         })
         .collect();
 

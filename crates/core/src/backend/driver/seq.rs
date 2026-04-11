@@ -5,6 +5,19 @@
 //! - all-Span compression from `TypeMap`
 //! - Span grouping: consecutive Span children merge into compressed groups
 //! - Vec flattening: `(T, Vec<T>)` or `(Vec<T>, T)` pairs flatten to `Vec<T>`
+//!
+//! # `TypeDesc` plumbing (Tranche AF.1)
+//!
+//! Under tape-first emission the per-child type fed to
+//! `SeqChildGroup::Single { ty, .. }` and the `head_type` /
+//! `link_elem_type` passed to `emit_operator_chain` are destructured
+//! as `_` / `ty: _` in every backend emitter — the same reason
+//! `AltBranchInfo.ty` is dead. AF.1 avoids cloning the `TypeDesc`
+//! on these dead-field paths; the classification work still reads
+//! borrows from `TypeMap` for real decisions (`child_alloc` routing,
+//! operator-chain eligibility, span compression), but the value
+//! handed to the emitter is a [`PLACEHOLDER_TY`] clone of a shared
+//! unit-variant static.
 
 use bbnf_ir::{GrammarIR, IrNode, TypeDesc};
 
@@ -12,6 +25,11 @@ use super::DriverState;
 use super::node::compile_node;
 use crate::backend::types::decisions;
 use crate::backend::{Emitter, SeqChildGroup, ValuePlacement};
+
+/// Shared unit-variant stand-in for the dead `ty` / `result_type` /
+/// `elem_type` parameters on the emitter surface. See the module
+/// doc comment for background.
+static PLACEHOLDER_TY: TypeDesc = TypeDesc::Span;
 
 /// Compile a Seq node (first tries operator-chain optimization via
 /// `NodeFacts`; falls back to type-guided grouping).
@@ -59,28 +77,31 @@ fn try_operator_chain<E: Emitter>(
 
     let (head, link, op, rhs) = extract_operator_chain(children)?;
 
-    // Compute types from TypeMap via the DAG-keyed convenience
-    // accessors. Fall back to `node_type` if `seq_result` is
-    // unavailable.
-    let seq_result = ir.seq_result_type(node).cloned();
-    let head_type = seq_result
-        .as_ref()
+    // Compute head / link-elem types as borrows from the TypeMap —
+    // both are used only for the `alloc_for` variant inspection and
+    // for the `head_type == Span` eligibility gate, which are cheap
+    // stack reads on owned or borrowed values alike. Prefer the
+    // Tuple projection via the Seq's result type (operator chains
+    // project to `Tuple([head_ty, Vec<Tuple<_>>])`), fall back to
+    // `node_type(head)`, then to `&PLACEHOLDER_TY`.
+    let head_type: &TypeDesc = ir
+        .seq_result_type(node)
         .and_then(|t| match t {
-            TypeDesc::Tuple(elems) if elems.len() == 2 => Some(elems[0].clone()),
+            TypeDesc::Tuple(elems) if elems.len() == 2 => Some(&elems[0]),
             _ => None,
         })
-        .or_else(|| ir.node_type(head).cloned())
-        .unwrap_or(TypeDesc::Span);
+        .or_else(|| ir.node_type(head))
+        .unwrap_or(&PLACEHOLDER_TY);
 
     // Skip if head is Span — operator chain not beneficial for
     // all-Span chains.
-    if head_type == TypeDesc::Span {
+    if matches!(head_type, TypeDesc::Span) {
         return None;
     }
 
-    let link_elem_type = ir.vec_elem_type(link).cloned().unwrap_or(TypeDesc::Span);
+    let link_elem_type: &TypeDesc = ir.vec_elem_type(link).unwrap_or(&PLACEHOLDER_TY);
 
-    let link_elem_types = match &link_elem_type {
+    let link_elem_types: Option<(&TypeDesc, &TypeDesc)> = match link_elem_type {
         TypeDesc::Tuple(elems) if elems.len() == 2 => Some((&elems[0], &elems[1])),
         _ => None,
     };
@@ -94,14 +115,14 @@ fn try_operator_chain<E: Emitter>(
         }
     }
 
-    let head_alloc = alloc_for(&head_type);
+    let head_alloc = alloc_for(head_type);
     let (op_alloc, rhs_alloc) = link_elem_types
         .map(|(o, r)| (alloc_for(o), alloc_for(r)))
         .unwrap_or((ValuePlacement::Inline, ValuePlacement::Inline));
 
     // Compile each child. Span-projected children get span capture wrapping:
     // parse the child for side effects, return Span.
-    let head_out = compile_chain_child(head, &head_type, head_alloc, ir, dstate, emitter, ctx);
+    let head_out = compile_chain_child(head, head_type, head_alloc, ir, dstate, emitter, ctx);
     let op_out = link_elem_types
         .map(|(ot, _)| compile_chain_child(op, ot, op_alloc, ir, dstate, emitter, ctx))
         .unwrap_or_else(|| compile_node(op, ValuePlacement::Inline, ir, dstate, emitter, ctx));
@@ -109,12 +130,16 @@ fn try_operator_chain<E: Emitter>(
         .map(|(_, rt)| compile_chain_child(rhs, rt, rhs_alloc, ir, dstate, emitter, ctx))
         .unwrap_or_else(|| compile_node(rhs, ValuePlacement::Inline, ir, dstate, emitter, ctx));
 
+    // `head_type` / `link_elem_type` are discarded by every backend's
+    // `emit_operator_chain_impl` (`_head_type` / `_link_elem_type`).
+    // Pass the shared placeholder to avoid threading borrows across
+    // a trait-surface boundary for a dead parameter.
     emitter.emit_operator_chain(
         head_out,
         op_out,
         rhs_out,
-        &head_type,
-        &link_elem_type,
+        &PLACEHOLDER_TY,
+        &PLACEHOLDER_TY,
         ir,
         ctx,
     )
@@ -154,9 +179,15 @@ fn compile_seq_grouped<E: Emitter>(
             }
             let ca = decisions::child_alloc(ty, alloc);
             let out = compile_node(child, ca, ir, dstate, emitter, ctx);
+            // `SeqChildGroup::Single.ty` is destructured as `ty: _` /
+            // `..` in every backend's `emit_seq_grouped_impl`. The
+            // span-compression / child-alloc decisions were already
+            // made against the live `&TypeDesc` borrow above; the
+            // placeholder here keeps the group well-typed without
+            // a structural clone of `decision.child_types[i]`.
             groups.push(SeqChildGroup::Single {
                 output: out,
-                ty: ty.clone(),
+                ty: PLACEHOLDER_TY.clone(),
             });
         }
     }
@@ -164,7 +195,12 @@ fn compile_seq_grouped<E: Emitter>(
         groups.push(SeqChildGroup::SpanCompressed { outputs: span_run });
     }
 
-    emitter.emit_seq_grouped(groups, &decision.result_type, decision.flatten, ctx)
+    // `decision.result_type` is similarly destructured as
+    // `_result_type` in every backend. `decide_seq` still owns a
+    // full `TypeDesc` in the decision struct (outside this crate's
+    // bounds to restructure), so the driver reads its `flatten`
+    // field and hands the placeholder to the emitter.
+    emitter.emit_seq_grouped(groups, &PLACEHOLDER_TY, decision.flatten, ctx)
 }
 
 /// Compile an operator-chain child with type-aware alloc and Span

@@ -34,6 +34,12 @@ impl RustEmitter {
     ) -> TokenStream {
         let lo_lit = lo as usize;
 
+        // Repeat pushes its own compound record as a side effect —
+        // the child run is the per-iteration set the body parsed.
+        // The return value is normalized to `Option<()>` so the
+        // surrounding Seq / Alt / rule-body composition stays
+        // uniform; the compound record is already in the tape when
+        // we hand back success.
         quote! {
             'rpt_blk: {
                 let __rpt_lo = state.offset as u32;
@@ -53,14 +59,15 @@ impl RustEmitter {
                     }
                 }
                 if __count >= #lo_lit {
-                    Some(::bbnf::runtime::tape::TapeBuilder::push_compound(
+                    ::bbnf::runtime::tape::TapeBuilder::push_compound(
                         tape,
                         ::bbnf::runtime::tape::TapeKind::Repeat,
                         __rpt_children,
                         __rpt_lo,
                         state.offset as u32,
                         0u8,
-                    ))
+                    );
+                    Some(())
                 } else {
                     break 'rpt_blk None;
                 }
@@ -78,7 +85,8 @@ impl RustEmitter {
         // Optional pushes a compound Repeat record with 0 or 1
         // child. On miss, `state.offset` is rolled back to the
         // pre-attempt position; the compound is still pushed with
-        // an empty children run.
+        // an empty children run. Returns `Option<()>` — the record
+        // is already in the tape.
         quote! {
             {
                 let __opt_lo = state.offset as u32;
@@ -90,14 +98,15 @@ impl RustEmitter {
                         state.offset = __opt_cp;
                     }
                 }
-                Some(::bbnf::runtime::tape::TapeBuilder::push_compound(
+                ::bbnf::runtime::tape::TapeBuilder::push_compound(
                     tape,
                     ::bbnf::runtime::tape::TapeKind::Repeat,
                     __opt_children,
                     __opt_lo,
                     state.offset as u32,
                     0u8,
-                ))
+                );
+                Some(())
             }
         }
     }
@@ -144,14 +153,15 @@ impl RustEmitter {
                     }
                     None => {
                         if __count >= #lo_lit {
-                            break 'rpt_blk Some(::bbnf::runtime::tape::TapeBuilder::push_compound(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
                                 tape,
                                 ::bbnf::runtime::tape::TapeKind::Repeat,
                                 __rpt_children,
                                 __rpt_lo,
                                 state.offset as u32,
                                 0u8,
-                            ));
+                            );
+                            break 'rpt_blk Some(());
                         } else {
                             break 'rpt_blk None;
                         }
@@ -177,14 +187,15 @@ impl RustEmitter {
                 }
 
                 if __count >= #lo_lit {
-                    Some(::bbnf::runtime::tape::TapeBuilder::push_compound(
+                    ::bbnf::runtime::tape::TapeBuilder::push_compound(
                         tape,
                         ::bbnf::runtime::tape::TapeKind::Repeat,
                         __rpt_children,
                         __rpt_lo,
                         state.offset as u32,
                         0u8,
-                    ))
+                    );
+                    Some(())
                 } else {
                     break 'rpt_blk None;
                 }

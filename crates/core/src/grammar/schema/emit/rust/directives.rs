@@ -43,6 +43,7 @@ use super::shared::{root_rule_name, variant_idx_for, view_ident_for};
 pub(super) fn generate_module(schema: &CstSchema) -> TokenStream {
     let mut structs = Vec::new();
     let mut helpers = Vec::new();
+    let node_view_ident = format_ident!("{}NodeView", schema.enum_name);
 
     for variant in &schema.variants {
         let VariantCategory::Directive(ref kind) = variant.category else {
@@ -76,18 +77,20 @@ pub(super) fn generate_module(schema: &CstSchema) -> TokenStream {
                 }
                 DirectiveFieldKind::SpanRaw => quote! { (u32, u32) },
                 DirectiveFieldKind::Inner | DirectiveFieldKind::Slice => {
-                    quote! { ::bbnf::runtime::tape::TapeCursor<'p> }
+                    quote! { super::#node_view_ident<'p> }
                 }
                 DirectiveFieldKind::OptionInner => quote! {
-                    ::core::option::Option<::bbnf::runtime::tape::TapeCursor<'p>>
+                    ::core::option::Option<super::#node_view_ident<'p>>
                 },
             };
             fields.push(quote! { pub #name: #ty });
         }
-        // Full directive source span as a raw (lo, hi) byte tuple.
-        // Callers that want a `&str` slice can do it themselves from
-        // the owning Parsed's input.
-        fields.push(quote! { pub span: (u32, u32) });
+        // Full directive source span as a `parse_that::Span<'p>`
+        // anchored to the owning `Parsed`'s input buffer. Consumers
+        // that held the enum-era `parse_that::Span<'a>` field can
+        // drop this in place; callers that want `(lo, hi)` byte
+        // offsets call `.start` / `.end` on the Span.
+        fields.push(quote! { pub span: ::parse_that::Span<'p> });
 
         structs.push(quote! {
             #[derive(Clone, Copy)]
@@ -96,7 +99,7 @@ pub(super) fn generate_module(schema: &CstSchema) -> TokenStream {
             }
         });
 
-        let helper = generate_helper(&struct_ident, &variant.name, variant_idx, layout);
+        let helper = generate_helper(&struct_ident, &variant.name, variant_idx, layout, &node_view_ident);
         helpers.push(helper);
     }
 
@@ -121,13 +124,26 @@ pub(super) fn generate_module(schema: &CstSchema) -> TokenStream {
 }
 
 /// Emit the `as_*_directive` convenience accessors on the root
-/// grammar view. Returns an empty `TokenStream` when the schema has
-/// no directives or no addressable root rule.
+/// grammar view AND on the generic `<Grammar>NodeView<'p>` wrapper.
+/// Returns an empty `TokenStream` when the schema has no directives
+/// or no addressable root rule.
+///
+/// The same method set is emitted on both view types so that CST
+/// consumers walking the grammar bootstrap tree can call
+/// `node.as_recover_directive()` regardless of whether `node` is
+/// the grammar's root view or a type-erased `NodeView` obtained
+/// during recursive descent.
 pub(super) fn generate_root_accessors(schema: &CstSchema) -> TokenStream {
     let Some(root_name) = root_rule_name(schema) else {
         return TokenStream::new();
     };
     let root_view_ident = view_ident_for(root_name);
+    // The NodeView wrapper is emitted by `backend/rust/view/mod.rs`
+    // as `<GrammarMarker>NodeView<'p>`. Under the AC.2 schema the
+    // `enum_name` field carries the grammar marker (e.g.
+    // `BbnfBootstrap`), so the NodeView ident is the concatenation
+    // of that name with `NodeView`.
+    let node_view_ident = format_ident!("{}NodeView", schema.enum_name);
 
     let mut methods = Vec::new();
 
@@ -154,8 +170,8 @@ pub(super) fn generate_root_accessors(schema: &CstSchema) -> TokenStream {
 
         methods.push(quote! {
             /// Schema-generated directive accessor — returns the
-            /// first matching directive among the root view's
-            /// direct children. Multiple-directive grammars should
+            /// first matching directive among the direct children
+            /// of this view. Multiple-directive grammars should
             /// iterate `self.cursor.children()` directly and call
             /// `cst_directives::#try_ident` on each child.
             pub fn #method_ident(&self) -> ::core::option::Option<cst_directives::#struct_ident<'p>> {
@@ -178,6 +194,11 @@ pub(super) fn generate_root_accessors(schema: &CstSchema) -> TokenStream {
         impl<'p> #root_view_ident<'p> {
             #(#methods)*
         }
+
+        #[allow(dead_code)]
+        impl<'p> #node_view_ident<'p> {
+            #(#methods)*
+        }
     }
 }
 
@@ -198,6 +219,7 @@ fn generate_helper(
     variant_name: &str,
     variant_idx: u8,
     layout: &DirectiveLayout,
+    node_view_ident: &syn::Ident,
 ) -> TokenStream {
     let try_ident = format_ident!("try_as_{}", variant_name);
     let idx_lit = variant_idx;
@@ -233,7 +255,7 @@ fn generate_helper(
                 #child_ident.span()
             },
             DirectiveFieldKind::Inner | DirectiveFieldKind::Slice => quote! {
-                #child_ident
+                super::#node_view_ident::from_cursor(#child_ident, input)
             },
             DirectiveFieldKind::OptionInner => quote! {
                 // OptionInner slots wrap their child in a single-
@@ -241,9 +263,12 @@ fn generate_helper(
                 // the optional is present, the compound carries
                 // one grandchild cursor; when absent, zero
                 // children. `next()` over the children iterator
-                // yields `Some(child)` or `None` — exactly the
-                // `Option<TapeCursor<'p>>` the caller expects.
-                #child_ident.children().next()
+                // yields `Some(child)` or `None`, wrapped into a
+                // `NodeView` so consumers carry the input borrow.
+                #child_ident
+                    .children()
+                    .next()
+                    .map(|c| super::#node_view_ident::from_cursor(c, input))
             },
         };
         slot_assignments.push(quote! { #field_ident: #value });
@@ -274,7 +299,7 @@ fn generate_helper(
             let (_, __term_hi) = __term.span();
             ::core::option::Option::Some(#struct_ident {
                 #(#slot_assignments,)*
-                span: (__kw_lo, __term_hi),
+                span: ::parse_that::Span::new(__kw_lo as usize, __term_hi as usize, input),
             })
         }
     }

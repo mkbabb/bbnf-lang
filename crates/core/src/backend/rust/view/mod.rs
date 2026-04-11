@@ -75,33 +75,76 @@ mod seq;
 /// convention (the bootstrap enforces this), so this matches the
 /// user's intent without needing a separate annotation.
 pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
-    let mut rule_views: Vec<TokenStream> = Vec::new();
+    // Pre-compute the RuleKind enum shape + the per-rule
+    // variant_idx dispatch table. RuleKind includes both the
+    // rule-level variants AND the heterogeneous-alt sub-variants
+    // so CST consumers that dispatch on sub-variant coercion (e.g.
+    // `term_0`, `term_1`, `value_atom_0`) can match against the
+    // same enum the view layer exposes.
+    //
+    // Numbering convention: rule variants take positions 0..R,
+    // sub-variants take positions R..R+S, in the order they appear
+    // in `ir.rules` walked for rule-variants then again for
+    // sub-variants. The emitted `variant_idx` the rule function's
+    // epilogue writes matches the rule position; sub-variant
+    // positions are reserved in the enum but emitted at parse time
+    // only when the driver explicitly stamps a coercion idx.
 
-    for rule in &ir.rules {
-        if rule.meta.is_transparent {
-            continue;
-        }
+    let grammar_name = ctx.ident.to_string();
+    let node_view_ident = format_ident!("{}NodeView", grammar_name);
+    let rule_kind_ident = format_ident!("{}RuleKind", grammar_name);
+
+    let mut non_transparent_rules: Vec<(usize, &bbnf_ir::IrRule)> = ir
+        .rules
+        .iter()
+        .enumerate()
+        .filter(|(_, r)| !r.meta.is_transparent)
+        .collect();
+    non_transparent_rules.sort_by_key(|(idx, _)| *idx);
+
+    let mut rule_kind_variants: Vec<TokenStream> = Vec::new();
+    let mut rule_kind_dispatch: Vec<TokenStream> = Vec::new();
+    let mut next_variant_idx: u8 = 0;
+
+    // Rule-level variants first.
+    for (_, rule) in &non_transparent_rules {
         let name = ir.get_string(rule.name);
-        let view_ident = format_ident!("{}View", name);
-
-        rule_views.push(quote! {
-            /// Generated view over a tape record produced by this rule.
-            ///
-            /// Wraps a [`::bbnf::runtime::tape::TapeCursor`] plus a
-            /// borrow of the original input. The cursor is `Copy`,
-            /// so the view is cheap to clone and passes cheaply by
-            /// value.
-            #[derive(Clone, Copy, Debug)]
-            #[allow(non_camel_case_types)]
-            pub struct #view_ident<'p> {
-                cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
-                input: &'p str,
+        let ident = format_ident!("{}", name);
+        let idx_lit = next_variant_idx;
+        rule_kind_variants.push(quote! { #ident });
+        rule_kind_dispatch.push(quote! { #idx_lit => #rule_kind_ident::#ident, });
+        next_variant_idx = next_variant_idx.saturating_add(1);
+    }
+    // Sub-variants from heterogeneous alts. Dedup by name.
+    let mut seen_sub: std::collections::HashSet<String> = Default::default();
+    for rule in &ir.rules {
+        for sv in &rule.meta.sub_variants {
+            let sv_name = ir.get_string(sv.variant_name).to_string();
+            if !seen_sub.insert(sv_name.clone()) {
+                continue;
             }
+            let ident = format_ident!("{}", sv_name);
+            let idx_lit = next_variant_idx;
+            rule_kind_variants.push(quote! { #ident });
+            rule_kind_dispatch.push(quote! { #idx_lit => #rule_kind_ident::#ident, });
+            next_variant_idx = next_variant_idx.saturating_add(1);
+        }
+    }
 
+    // Shared per-view accessor block. Used by every per-rule view
+    // AND by the generic NodeView. The `children()` / `child(i)`
+    // iterators yield `NodeView`s so CST consumers can walk the
+    // tape tree polymorphically without knowing per-rule view
+    // type names.
+    let rule_kind_ident_for_closure = rule_kind_ident.clone();
+    let node_view_ident_for_closure = node_view_ident.clone();
+    let emit_common_accessors = |view_ident: &syn::Ident| -> TokenStream {
+        let rk = &rule_kind_ident_for_closure;
+        let nv = &node_view_ident_for_closure;
+        let dispatch = &rule_kind_dispatch;
+        quote! {
             #[allow(dead_code)]
             impl<'p> #view_ident<'p> {
-                /// Construct a view pointing at `offset` in `tape`,
-                /// bound to `input` for scalar-projection accessors.
                 #[inline]
                 pub fn new(
                     tape: &'p ::bbnf::runtime::tape::Tape,
@@ -114,76 +157,151 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
                     }
                 }
 
-                /// Borrow the underlying cursor for direct access.
+                #[inline]
+                pub fn from_cursor(
+                    cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+                    input: &'p str,
+                ) -> Self {
+                    Self { cursor, input }
+                }
+
                 #[inline]
                 pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
                     self.cursor
                 }
 
-                /// Borrow the original input string this view was built from.
                 #[inline]
-                pub fn input(&self) -> &'p str {
-                    self.input
-                }
+                pub fn input(&self) -> &'p str { self.input }
 
-                /// Classification tag of the wrapped record.
                 #[inline]
                 pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
                     self.cursor.kind()
                 }
 
-                /// Source-byte span `(lo, hi)` of the wrapped record.
                 #[inline]
-                pub fn span(&self) -> (u32, u32) {
-                    self.cursor.span()
-                }
+                pub fn span(&self) -> (u32, u32) { self.cursor.span() }
 
-                /// Source substring covered by this record's span.
                 #[inline]
                 pub fn span_text(&self) -> &'p str {
                     let (lo, hi) = self.cursor.span();
                     &self.input[lo as usize..hi as usize]
                 }
 
-                /// Variant discriminator for Alt / sub-variant rules.
                 #[inline]
-                pub fn variant_idx(&self) -> u8 {
-                    self.cursor.variant_idx()
+                pub fn variant_idx(&self) -> u8 { self.cursor.variant_idx() }
+
+                /// Dispatch on `variant_idx` to identify which rule
+                /// (or sub-variant) produced this record.
+                #[inline]
+                pub fn rule_kind(&self) -> #rk {
+                    match self.variant_idx() {
+                        #(#dispatch)*
+                        _ => #rk::Unknown,
+                    }
                 }
 
-                /// Iterator over the direct children of this record.
+                /// Iterator over direct children as `NodeView`s.
                 #[inline]
-                pub fn children(
-                    &self,
-                ) -> impl ::core::iter::Iterator<Item = ::bbnf::runtime::tape::TapeCursor<'p>> + 'p {
-                    self.cursor.children()
+                pub fn children(&self) -> impl ::core::iter::Iterator<Item = #nv<'p>> + 'p {
+                    let input = self.input;
+                    self.cursor.children().map(move |c| #nv::from_cursor(c, input))
                 }
 
-                /// The i-th direct child, if present.
+                /// The i-th direct child as a `NodeView`, if present.
                 #[inline]
-                pub fn child(
-                    &self,
-                    i: usize,
-                ) -> ::core::option::Option<::bbnf::runtime::tape::TapeCursor<'p>> {
-                    self.cursor.child(i)
+                pub fn child(&self, i: usize) -> ::core::option::Option<#nv<'p>> {
+                    self.cursor.child(i).map(|c| #nv::from_cursor(c, self.input))
                 }
 
-                /// True iff this record was pushed by an `@recover` arm.
                 #[inline]
                 pub fn is_recovered(&self) -> bool {
                     self.cursor.kind().is_recovered()
                 }
+
+                /// Source-byte span as a `parse_that::Span<'p>` slice.
+                /// Used by CST consumers that historically held
+                /// `parse_that::Span` references (`RuleEntry::name_span`,
+                /// `ImportedName::span`) alongside the view.
+                #[inline]
+                pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
+                    let (lo, hi) = self.cursor.span();
+                    ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+                }
             }
+        }
+    };
+
+    let mut rule_views: Vec<TokenStream> = Vec::new();
+
+    for (_, rule) in &non_transparent_rules {
+        let name = ir.get_string(rule.name);
+        let view_ident = format_ident!("{}View", name);
+        let accessors = emit_common_accessors(&view_ident);
+
+        rule_views.push(quote! {
+            /// Generated view over a tape record produced by this rule.
+            #[derive(Clone, Copy, Debug)]
+            #[allow(non_camel_case_types)]
+            pub struct #view_ident<'p> {
+                cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+                input: &'p str,
+            }
+
+            #accessors
         });
     }
 
-    // Pick the entry-point rule: the first non-transparent rule in
-    // declaration order.
-    let root_rule_name = ir
-        .rules
-        .iter()
-        .find(|r| !r.meta.is_transparent)
-        .map(|r| ir.get_string(r.name));
+    // Generic NodeView — a single wrapper type that carries any
+    // cursor + input borrow. CST consumers (lowering, graph
+    // traversal, pipeline directives) use `NodeView` with
+    // `rule_kind()` dispatch rather than per-rule view types.
+    let node_view_accessors = emit_common_accessors(&node_view_ident);
+    let node_view_decl = quote! {
+        /// Generic node view over any tape record for this grammar.
+        #[derive(Clone, Copy, Debug)]
+        #[allow(non_camel_case_types)]
+        pub struct #node_view_ident<'p> {
+            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        }
+
+        /// Rule-identity discriminator for `NodeView::rule_kind`
+        /// and per-rule view `rule_kind` accessors. One variant
+        /// per non-transparent rule (in declaration order),
+        /// followed by one variant per distinct sub-variant name
+        /// from heterogeneous alt coercion, plus a fallback
+        /// `Unknown` for records the discriminator table does
+        /// not cover (leaf spans, alt branch indices, etc.).
+        #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+        #[allow(non_camel_case_types)]
+        pub enum #rule_kind_ident {
+            #(#rule_kind_variants,)*
+            /// Fallback for records whose variant_idx is not a
+            /// known rule- or sub-variant discriminator.
+            Unknown,
+        }
+
+        #node_view_accessors
+    };
+
+    // Pick the entry-point rule from `ir.entry` (preserved through
+    // every IR pass). Fall back to the first non-transparent rule
+    // only if entry somehow resolves to a transparent rule (defensive;
+    // `ir.entry` is set at lowering time and preserved thereafter).
+    let root_rule_name = {
+        let entry_rule = ir
+            .rules
+            .iter()
+            .find(|r| r.id == ir.entry && !r.meta.is_transparent);
+        if let Some(rule) = entry_rule {
+            Some(ir.get_string(rule.name))
+        } else {
+            ir.rules
+                .iter()
+                .find(|r| !r.meta.is_transparent)
+                .map(|r| ir.get_string(r.name))
+        }
+    };
 
     let grammar_ident = ctx.ident;
     let root_binding = if let Some(root_name) = root_rule_name {
@@ -193,11 +311,11 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
                 type View<'p> = #root_view_ident<'p>;
 
                 #[inline]
-                fn make_view(
-                    tape: &::bbnf::runtime::tape::Tape,
+                fn make_view<'p>(
+                    tape: &'p ::bbnf::runtime::tape::Tape,
                     input: &'p str,
                     root: ::bbnf::runtime::tape::TapeOffset,
-                ) -> Self::View<'_> {
+                ) -> Self::View<'p> {
                     #root_view_ident::new(tape, input, root)
                 }
             }
@@ -209,6 +327,7 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
 
     quote! {
         #(#rule_views)*
+        #node_view_decl
         #root_binding
     }
 }

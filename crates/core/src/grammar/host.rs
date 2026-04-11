@@ -100,8 +100,8 @@ fn absorb_item<'a>(
     if let Some(d) = item.as_pretty_directive() {
         let hints: Vec<Cow<'a, str>> = d
             .hints
-            .iter()
-            .map(|h| pretty_hint_text(*h))
+            .children()
+            .map(|h| pretty_hint_text(h))
             .collect();
         grammar.pretties.push(PrettyDirective {
             rule_name: Cow::Owned(d.target.to_string()),

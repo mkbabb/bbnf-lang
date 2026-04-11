@@ -148,18 +148,22 @@ text = strip_auto_derived_impls(text)
 # out into auto-derived impls, so we don't re-add that one.
 def readd_view_derives(text):
     """Insert `#[derive(Clone, Copy, Debug)]` above every `pub struct
-    <Name>View<'tape> { ... }` definition, preserving the original
-    indentation and leaving any pre-existing attribute lines alone."""
+    <Name>(View|NodeView)<'lifetime> { ... }` definition, preserving
+    the original indentation and leaving any pre-existing attribute
+    lines alone. Covers both the `'tape` and `'p` lifetime conventions
+    and both the per-rule `*View` structs and the single
+    `*NodeView` wrapper struct emitted by the view generator."""
     out = []
     pos = 0
     pat = re.compile(
-        r'(?P<indent>^[ \t]*)pub struct (?P<name>[A-Za-z_][A-Za-z_0-9]*)View<\'tape> \{',
+        r"(?P<indent>^[ \t]*)pub struct (?P<name>[A-Za-z_][A-Za-z_0-9]*)(?P<kind>NodeView|View)<'(?:tape|p)> \{",
         re.MULTILINE,
     )
     for m in pat.finditer(text):
         out.append(text[pos:m.start()])
         indent = m.group('indent')
         name = m.group('name')
+        kind = m.group('kind')
         # Idempotent: if the line immediately before the struct is
         # already our derive, don't re-add it.
         line_start = text.rfind('\n', 0, m.start()) + 1
@@ -169,12 +173,48 @@ def readd_view_derives(text):
         if prev_line == '#[derive(Clone, Copy, Debug)]':
             out.append(text[m.start():m.end()])
         else:
-            out.append(f'{indent}#[derive(Clone, Copy, Debug)]\n{indent}pub struct {name}View<\'tape> {{')
+            # Keep the original lifetime token from the match.
+            struct_header = text[m.start():m.end()]
+            out.append(f"{indent}#[derive(Clone, Copy, Debug)]\n{struct_header}")
         pos = m.end()
     out.append(text[pos:])
     return ''.join(out)
 
 text = readd_view_derives(text)
+
+# ── 5b. Re-add stable `#[derive(Clone, Copy, Debug, PartialEq, Eq)]` ─
+# above every `pub enum <Name>RuleKind { ... }` emitted by the view
+# generator. cargo expand strips the derive into unstable auto-derived
+# impl blocks which we removed in step 4; re-add the stable derive
+# here so downstream consumers can use `{:?}` + `==` on RuleKind.
+def readd_rule_kind_derives(text):
+    """Insert `#[derive(Clone, Copy, Debug, PartialEq, Eq)]` above
+    every `pub enum <Name>RuleKind {` definition, preserving the
+    original indentation and leaving any pre-existing attribute lines
+    alone."""
+    out = []
+    pos = 0
+    pat = re.compile(
+        r'(?P<indent>^[ \t]*)pub enum (?P<name>[A-Za-z_][A-Za-z_0-9]*RuleKind) \{',
+        re.MULTILINE,
+    )
+    for m in pat.finditer(text):
+        out.append(text[pos:m.start()])
+        indent = m.group('indent')
+        name = m.group('name')
+        line_start = text.rfind('\n', 0, m.start()) + 1
+        prev_line_end = line_start - 1
+        prev_line_start = text.rfind('\n', 0, prev_line_end) + 1 if prev_line_end > 0 else 0
+        prev_line = text[prev_line_start:prev_line_end].strip()
+        if prev_line == '#[derive(Clone, Copy, Debug, PartialEq, Eq)]':
+            out.append(text[m.start():m.end()])
+        else:
+            out.append(f'{indent}#[derive(Clone, Copy, Debug, PartialEq, Eq)]\n{indent}pub enum {name} {{')
+        pos = m.end()
+    out.append(text[pos:])
+    return ''.join(out)
+
+text = readd_rule_kind_derives(text)
 
 # ── 6. Re-add stable derives inside the `cst_directives` module ──────
 # The AC.2 schema emitter may still emit `cst_directives` as a sub-
@@ -284,7 +324,7 @@ header = '''//! AUTO-GENERATED from grammar/bbnf/bbnf.bbnf — do not edit manua
 
 use ::bbnf::runtime::tape::*;
 use ::bbnf::runtime::{Parsed, ParseErr, Root};
-use ::parse_that::Span;
+use ::parse_that::*;
 
 pub struct BbnfBootstrap;
 

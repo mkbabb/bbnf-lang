@@ -51,11 +51,9 @@ pub(super) fn generate(schema: &CstSchema) -> TokenStream {
                     &self.input[lo as usize..hi as usize]
                 }
 
-                /// Identifier span as `(lo, hi)` byte offsets.
-                #[inline]
-                pub fn identifier_span(&self) -> (u32, u32) {
-                    self.cursor.span()
-                }
+                // `identifier_span` is emitted on every view by the
+                // backend `view::generate_views` shared accessor block,
+                // so no identifier-specific override is needed here.
             }
         }
     } else {

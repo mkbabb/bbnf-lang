@@ -78,9 +78,23 @@ impl<'a> IrCodegenCtx<'a> {
         parser_attrs: &'a ParserAttributes,
         effective_prettify: bool,
     ) -> Self {
-        let enum_ident = quote::format_ident!("{}Enum", ident);
-        let enum_type: Type = parse_quote!(#enum_ident<'a>);
-        let boxed_enum_type: Type = parse_quote!(&'a #enum_ident<'a>);
+        // Tranche AC.2: under tape-first, the legacy `<Grammar>Enum`
+        // is gone. Type projection for BoxedEnum / Enum slots now
+        // maps to `<Grammar>NodeView<'a>` — the generic node view
+        // the backend emits via `view::generate_views`. NodeView
+        // is `Copy`, so Boxed/Inline both use the same type.
+        //
+        // `enum_ident` stays the bare grammar marker (e.g.
+        // `BbnfBootstrap`) so schema-helper emitters that read
+        // `enum_name` see the user-facing struct name. The
+        // type-projection `enum_type`/`boxed_enum_type` target
+        // `<Grammar>NodeView<'a>` because that is the actual
+        // Rust type any residual BoxedEnum/Enum type slot should
+        // resolve to.
+        let enum_ident = ident.clone();
+        let node_view_ident = quote::format_ident!("{}NodeView", ident);
+        let enum_type: Type = parse_quote!(#node_view_ident<'a>);
+        let boxed_enum_type: Type = parse_quote!(#node_view_ident<'a>);
 
         let mut rule_types = HashMap::new();
         for (rule_id, type_desc) in &ir.types {
@@ -312,13 +326,12 @@ fn type_desc_to_syn_raw(
             }
         }
         TypeDesc::BoxedEnum => {
-            // Tranche AC.2: the Rust backend is tape-first. A live
-            // BoxedEnum projection at codegen time indicates a
-            // driver bug — the monolithic path should never query
-            // the allocating enum type again.
-            panic!(
-                "Rust backend under tape-first should not see BoxedEnum — driver bug"
-            )
+            // Tranche AC.2: under tape-first, BoxedEnum maps to
+            // `<Grammar>NodeView<'a>` (the generic Copy wrapper).
+            // The legacy `&'a <Grammar>Enum<'a>` indirection is
+            // gone because every rule returns `Option<TapeOffset>`
+            // and the typed surface lives in the view layer.
+            boxed_enum_type.clone()
         }
         TypeDesc::Enum => enum_type.clone(),
         TypeDesc::Named(sid) => {

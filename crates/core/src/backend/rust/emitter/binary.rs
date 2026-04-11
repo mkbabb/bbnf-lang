@@ -25,10 +25,15 @@ impl RustEmitter {
         _ctx: &mut RustEmitCtx,
     ) -> TokenStream {
         // `alloc` is ignored — tape-first has no slab allocation
-        // step. The rule function is always
-        // `__rule(state, tape) -> Option<TapeOffset>`.
+        // step. The rule function is `__rule(state, tape) ->
+        // Option<TapeOffset>`; we discard the returned offset
+        // because the rule already pushed its own record into the
+        // parent's children run via `mark_children`. Normalizing
+        // to `Option<()>` keeps every sub-expression's type
+        // uniform so the match-arm short-circuit pattern in Seq /
+        // Alt / Repeat composes cleanly.
         let fn_ident = format_ident!("__{}", rule_name);
-        quote! { Self::#fn_ident(state, tape) }
+        quote! { Self::#fn_ident(state, tape).map(|_| ()) }
     }
 
     pub(super) fn emit_inline_wrap_impl(

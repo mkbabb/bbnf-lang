@@ -206,13 +206,15 @@ impl RustEmitter {
         let grammar_arr =
             crate::backend::rust::ir_enums::generate_grammar_arr(parser_attrs, ident);
 
-        // Root rule — the entry point for `parse(input)`. By
-        // convention, the first non-transparent rule in
-        // declaration order.
+        // Root rule — the entry point for `parse(input)`. Pulled
+        // from `ir.entry`, which is set at lowering time and
+        // preserved through every IR pass. Fall back to the first
+        // non-transparent rule only as a defensive guard.
         let root_rule_name = ir
             .rules
             .iter()
-            .find(|r| !r.meta.is_transparent)
+            .find(|r| r.id == ir.entry && !r.meta.is_transparent)
+            .or_else(|| ir.rules.iter().find(|r| !r.meta.is_transparent))
             .map(|r| ir.get_string(r.name))
             .unwrap_or_else(|| {
                 panic!(
@@ -253,17 +255,18 @@ impl RustEmitter {
                     ::bbnf::runtime::Parsed<Self>,
                     ::bbnf::runtime::ParseErr,
                 > {
-                    let mut state = ::parse_that::ParserState::new(input);
+                    let owned: ::std::string::String = input.to_owned();
+                    let mut state = ::parse_that::ParserState::new(&owned);
                     let mut builder =
                         ::bbnf::runtime::tape::TapeBuilder::with_capacity(
-                            input.len() / 8,
+                            owned.len() / 8,
                         );
                     let root_off = Self::#root_fn_ident(&mut state, &mut builder)
                         .ok_or(::bbnf::runtime::ParseErr::Syntax {
                             offset: state.offset as u32,
                             rule: None,
                         })?;
-                    if state.offset < input.len() {
+                    if state.offset < owned.len() {
                         return ::core::result::Result::Err(
                             ::bbnf::runtime::ParseErr::Syntax {
                                 offset: state.offset as u32,
@@ -275,7 +278,7 @@ impl RustEmitter {
                         .finish()
                         .map_err(::bbnf::runtime::ParseErr::Tape)?;
                     ::core::result::Result::Ok(
-                        ::bbnf::runtime::Parsed::new(tape, root_off),
+                        ::bbnf::runtime::Parsed::new(tape, owned, root_off),
                     )
                 }
             }

@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use bbnf::grammar::generated::BbnfBootstrapEnum;
+use bbnf::grammar::generated::BbnfBootstrapNodeView;
 use bbnf::lower::DirectiveSet;
 use bbnf::pipeline::{PipelineOptions, compile_ast};
 
@@ -24,7 +24,13 @@ pub(super) fn try_compile_ir(cached: &CachedParseResult<'_>) -> IrAnalysis {
     let ast = cached.ast.clone();
 
     // Reconstruct directive maps from the analysis-layer types.
-    let recover_map: HashMap<String, &BbnfBootstrapEnum<'_>> = HashMap::new();
+    // `DirectiveSet::recovers` is typed over `BbnfBootstrapNodeView`
+    // (the tape-first RHS reference); we hand the IR compile an
+    // empty map because the analysis layer has already surfaced
+    // directive diagnostics at this point and the IR pipeline only
+    // uses the map to re-thread recover sync expressions through
+    // codegen.
+    let recover_map: HashMap<String, BbnfBootstrapNodeView<'_>> = HashMap::new();
 
     let pretty_map: HashMap<String, Vec<String>> = cached
         .pretties

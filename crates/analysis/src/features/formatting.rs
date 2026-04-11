@@ -1,10 +1,10 @@
 use ls_types::*;
 
-use crate::state::ast_utils::format_value_expr_short;
-use bbnf::grammar::generated::BbnfBootstrapEnum;
+use bbnf::grammar::generated::{BbnfBootstrapNodeView, BbnfBootstrapRuleKind};
 use bbnf::types::AST;
 
 use crate::state::DocumentState;
+use crate::state::ast_utils::format_value_expr_short;
 
 const MAX_WIDTH: usize = 66;
 
@@ -127,39 +127,70 @@ fn format_ast(ast: &AST<'_>) -> String {
     lines.join("\n") + "\n"
 }
 
-fn format_expression(node: &BbnfBootstrapEnum<'_>, indent_level: usize) -> String {
-    match node {
-        BbnfBootstrapEnum::literal(s) => {
-            let text = s.as_str();
-            // The literal span includes quotes already from the bootstrap parser.
-            text.to_string()
+/// Recursively render a tape-first view into formatted BBNF source.
+///
+/// Walks structural compounds (alternation, concatenation,
+/// binary_factor, mapped_factor, factor, term_*, closure) via the
+/// same shape-agnostic helpers as the rest of the analysis layer,
+/// and falls back to `span_text()` for everything else — which is
+/// exactly the input slice the user typed.
+fn format_expression(node: BbnfBootstrapNodeView<'_>, indent_level: usize) -> String {
+    use crate::state::ast_utils::{collect_binary_operand_views, is_term_kind, iter_iteration_views};
+
+    match node.rule_kind() {
+        BbnfBootstrapRuleKind::literal | BbnfBootstrapRuleKind::regex => {
+            // Spans already cover the delimiters.
+            node.span_text().to_string()
         }
 
-        BbnfBootstrapEnum::identifier(s) => s.as_str().to_string(),
+        BbnfBootstrapRuleKind::identifier => node.span_text().to_string(),
 
-        BbnfBootstrapEnum::regex(s) => s.as_str().to_string(),
+        BbnfBootstrapRuleKind::term_0 => "epsilon".into(),
 
-        BbnfBootstrapEnum::term_0(_) => "epsilon".into(),
+        BbnfBootstrapRuleKind::term => node
+            .child(0)
+            .map(|c| format_expression(c, indent_level))
+            .unwrap_or_else(|| node.span_text().to_string()),
 
-        BbnfBootstrapEnum::term(inner) => format_expression(inner, indent_level),
-
-        BbnfBootstrapEnum::term_1((ident, call_args)) => {
-            let name = bbnf::grammar::generated::BbnfBootstrapEnum::span_text(ident);
-            if let Some((_open, first_arg, rest_args, _close)) = call_args {
-                let mut args = vec![format_expression(first_arg, indent_level)];
-                for (_comma, arg) in *rest_args {
-                    args.push(format_expression(arg, indent_level));
+        BbnfBootstrapRuleKind::term_1 => {
+            let ident = match node.child(0) {
+                Some(i) => i,
+                None => return node.span_text().to_string(),
+            };
+            let name = ident.span_text();
+            if let Some(call) = node.child(1) {
+                let (lo, hi) = call.span();
+                if hi > lo {
+                    let args: Vec<String> = call
+                        .children()
+                        .filter_map(|c| {
+                            let (clo, chi) = c.span();
+                            if chi <= clo {
+                                return None;
+                            }
+                            let text = c.span_text();
+                            if text == "(" || text == ")" || text == "," {
+                                return None;
+                            }
+                            Some(format_expression(c, indent_level))
+                        })
+                        .collect();
+                    return format!("{}({})", name, args.join(", "));
                 }
-                format!("{}({})", name, args.join(", "))
-            } else {
-                name.to_string()
             }
+            name.to_string()
         }
 
-        BbnfBootstrapEnum::term_2((open, inner, _close)) => {
-            let inner_str = format_expression(inner, indent_level + 1);
-            let bracket = open.as_str();
-            match bracket {
+        BbnfBootstrapRuleKind::term_2 | BbnfBootstrapRuleKind::value_atom_0 => {
+            let open = node
+                .child(0)
+                .map(|c| c.span_text().to_string())
+                .unwrap_or_else(|| "(".into());
+            let inner_str = node
+                .child(1)
+                .map(|c| format_expression(c, indent_level + 1))
+                .unwrap_or_default();
+            match open.as_str() {
                 "(" => format!("({})", inner_str),
                 "[" => format!("[{}]", inner_str),
                 "{" => format!("{{{}}}", inner_str),
@@ -168,58 +199,87 @@ fn format_expression(node: &BbnfBootstrapEnum<'_>, indent_level: usize) -> Strin
             }
         }
 
-        BbnfBootstrapEnum::factor((_comment, term, modifier, _trailing)) => {
-            let term_str = format_expression(term, indent_level);
+        BbnfBootstrapRuleKind::factor => {
+            let term = node.children().find(|c| is_term_kind(c.rule_kind()));
+            let modifier = node
+                .children()
+                .find(|c| c.rule_kind() == BbnfBootstrapRuleKind::modifier);
+            let term_str = term
+                .map(|t| format_expression(t, indent_level))
+                .unwrap_or_else(|| node.span_text().to_string());
             if let Some(m) = modifier {
-                format!("{}{}", term_str, format_expression(m, indent_level))
-            } else {
-                term_str
+                let (lo, hi) = m.span();
+                if hi > lo {
+                    return format!("{}{}", term_str, m.span_text());
+                }
             }
+            term_str
         }
 
-        BbnfBootstrapEnum::modifier(s) => s.as_str().to_string(),
+        BbnfBootstrapRuleKind::modifier => node.span_text().to_string(),
 
-        BbnfBootstrapEnum::mapped_factor((inner, mapping)) => {
+        BbnfBootstrapRuleKind::mapped_factor => {
+            let inner = match node.child(0) {
+                Some(c) => c,
+                None => return node.span_text().to_string(),
+            };
             let inner_str = format_expression(inner, indent_level);
-            if let Some((_arrow, (value_expr, type_ann))) = mapping {
-                let val_str = format_value_expr_short(value_expr);
-                if let Some(ta) = type_ann {
-                    format!(
-                        "{} -> {} : {}",
-                        inner_str,
-                        val_str,
-                        format_value_expr_short(ta)
-                    )
-                } else {
-                    format!("{} -> {}", inner_str, val_str)
+            let mapping = node.child(1);
+            let has_arrow = mapping.is_some_and(|m| {
+                let (lo, hi) = m.span();
+                hi > lo && m.span_text().contains("->")
+            });
+            if !has_arrow {
+                return inner_str;
+            }
+            // Extract the value_expr / type annotation from the
+            // mapping group's children via rule_kind dispatch —
+            // mirrors `lower/expression.rs::find_value_expr_child`.
+            let mapping_node = mapping.unwrap();
+            let value_expr = find_value_expr_child(mapping_node);
+            let type_ann = find_type_annotation_child(mapping_node);
+            match (value_expr, type_ann) {
+                (Some(v), Some(t)) => format!(
+                    "{} -> {} : {}",
+                    inner_str,
+                    format_value_expr_short(v),
+                    format_value_expr_short(t)
+                ),
+                (Some(v), None) => {
+                    format!("{} -> {}", inner_str, format_value_expr_short(v))
                 }
-            } else {
-                inner_str
+                _ => mapping_node.span_text().trim().to_string(),
             }
         }
 
-        BbnfBootstrapEnum::binary_factor((first, rest)) => {
-            if rest.is_empty() {
-                format_expression(first, indent_level)
+        BbnfBootstrapRuleKind::binary_factor => {
+            let operands: Vec<_> = collect_binary_operand_views(node).collect();
+            if operands.is_empty() {
+                node.span_text().to_string()
+            } else if operands.len() == 1 {
+                format_expression(operands[0], indent_level)
             } else {
-                let mut s = format_expression(first, indent_level);
-                for (op, operand) in *rest {
-                    s.push_str(&format!(
-                        " {} {}",
-                        format_expression(op, indent_level),
-                        format_expression(operand, indent_level)
-                    ));
+                let input = node.input();
+                let mut out = format_expression(operands[0], indent_level);
+                let mut prev_end = operands[0].span().1;
+                for op in operands.iter().skip(1) {
+                    let gap = &input[prev_end as usize..op.span().0 as usize];
+                    let trimmed = gap.trim();
+                    out.push(' ');
+                    out.push_str(trimmed);
+                    out.push(' ');
+                    out.push_str(&format_expression(*op, indent_level));
+                    prev_end = op.span().1;
                 }
-                s
+                out
             }
         }
 
-        BbnfBootstrapEnum::binary_operators(s) => s.as_str().to_string(),
+        BbnfBootstrapRuleKind::binary_operators => node.span_text().to_string(),
 
-        BbnfBootstrapEnum::concatenation(parts) => {
-            let formatted: Vec<String> = parts
-                .iter()
-                .map(|(part, _comma)| format_expression(part, indent_level))
+        BbnfBootstrapRuleKind::concatenation => {
+            let formatted: Vec<String> = iter_iteration_views(node)
+                .map(|c| format_expression(c, indent_level))
                 .collect();
             let flat = formatted.join(", ");
             if flat.len() + indent_level * 4 <= MAX_WIDTH {
@@ -231,10 +291,9 @@ fn format_expression(node: &BbnfBootstrapEnum<'_>, indent_level: usize) -> Strin
             }
         }
 
-        BbnfBootstrapEnum::alternation(branches) => {
-            let formatted: Vec<String> = branches
-                .iter()
-                .map(|(branch, _pipe)| format_expression(branch, indent_level))
+        BbnfBootstrapRuleKind::alternation => {
+            let formatted: Vec<String> = iter_iteration_views(node)
+                .map(|c| format_expression(c, indent_level))
                 .collect();
             let flat = formatted.join(" | ");
             if flat.len() + indent_level * 4 <= MAX_WIDTH {
@@ -246,24 +305,79 @@ fn format_expression(node: &BbnfBootstrapEnum<'_>, indent_level: usize) -> Strin
             }
         }
 
-        BbnfBootstrapEnum::closure((_pipe, first_param, rest_params, _pipe2, body)) => {
-            let first_name = bbnf::grammar::generated::BbnfBootstrapEnum::span_text(first_param);
-            let mut param_names: Vec<&str> = vec![first_name];
-            for (_comma, p) in *rest_params {
-                if let BbnfBootstrapEnum::identifier(s) = p {
-                    param_names.push(s.as_str());
-                }
-            }
-            format!(
-                "|{}| {}",
-                param_names.join(", "),
-                format_expression(body, indent_level),
-            )
+        BbnfBootstrapRuleKind::closure => {
+            // Closure source slice is already `|params| body`.
+            node.span_text().trim().to_string()
         }
 
-        BbnfBootstrapEnum::comment(_) | BbnfBootstrapEnum::big_comment(_) => String::new(),
+        BbnfBootstrapRuleKind::comment | BbnfBootstrapRuleKind::big_comment => String::new(),
 
-        // Anything else: use the span text directly if available, otherwise "..."
-        _ => "...".into(),
+        // Transparent wrappers.
+        BbnfBootstrapRuleKind::rhs
+        | BbnfBootstrapRuleKind::grammar_item
+        | BbnfBootstrapRuleKind::directive
+        | BbnfBootstrapRuleKind::lhs => node
+            .child(0)
+            .map(|c| format_expression(c, indent_level))
+            .unwrap_or_else(|| node.span_text().to_string()),
+
+        // Anything else: use the raw source slice.
+        _ => {
+            let text = node.span_text().trim();
+            if text.is_empty() {
+                "...".into()
+            } else {
+                text.to_string()
+            }
+        }
     }
+}
+
+/// Walk the children of a mapping group to find the value expression root.
+fn find_value_expr_child<'p>(
+    node: BbnfBootstrapNodeView<'p>,
+) -> Option<BbnfBootstrapNodeView<'p>> {
+    for c in node.children() {
+        match c.rule_kind() {
+            BbnfBootstrapRuleKind::value_expr
+            | BbnfBootstrapRuleKind::value_or
+            | BbnfBootstrapRuleKind::value_and
+            | BbnfBootstrapRuleKind::value_cmp
+            | BbnfBootstrapRuleKind::value_add
+            | BbnfBootstrapRuleKind::value_mul
+            | BbnfBootstrapRuleKind::value_unary
+            | BbnfBootstrapRuleKind::value_unary_0
+            | BbnfBootstrapRuleKind::value_atom
+            | BbnfBootstrapRuleKind::value_atom_0
+            | BbnfBootstrapRuleKind::value_fn_call
+            | BbnfBootstrapRuleKind::value_path
+            | BbnfBootstrapRuleKind::value_ident
+            | BbnfBootstrapRuleKind::value_input
+            | BbnfBootstrapRuleKind::value_closure
+            | BbnfBootstrapRuleKind::int_lit
+            | BbnfBootstrapRuleKind::float_lit
+            | BbnfBootstrapRuleKind::bool_lit
+            | BbnfBootstrapRuleKind::string_lit => return Some(c),
+            _ => {
+                if let Some(found) = find_value_expr_child(c) {
+                    return Some(found);
+                }
+            }
+        }
+    }
+    None
+}
+
+fn find_type_annotation_child<'p>(
+    node: BbnfBootstrapNodeView<'p>,
+) -> Option<BbnfBootstrapNodeView<'p>> {
+    for c in node.children() {
+        if c.rule_kind() == BbnfBootstrapRuleKind::type_annotation {
+            return Some(c);
+        }
+        if let Some(found) = find_type_annotation_child(c) {
+            return Some(found);
+        }
+    }
+    None
 }

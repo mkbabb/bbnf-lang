@@ -22,3 +22,14 @@ pub mod parsed;
 
 pub use error::ParseErr;
 pub use parsed::{Parsed, Root};
+
+/// Re-export the full `bbnf-tape` public surface from `bbnf::runtime`.
+///
+/// Generated parsers reference `::bbnf::runtime::tape::*` for tape
+/// types (`Tape`, `TapeBuilder`, `TapeOffset`, `TapeCursor`,
+/// `TapeKind`, `TapeBuildError`) so downstream consumers do not need
+/// a direct `bbnf-tape` dependency — `bbnf` already carries it as
+/// the substrate for the generated code. This keeps
+/// `#[derive(Parser)]` usage single-dep from the consumer's point
+/// of view.
+pub use bbnf_tape as tape;

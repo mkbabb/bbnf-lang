@@ -81,14 +81,14 @@ mod seq;
 ///
 /// # Downstream dependencies
 ///
-/// The emitted code references:
-/// - `::bbnf_tape::{Tape, TapeOffset, TapeCursor, TapeKind}` —
-///   already on the hot path for every parser.
-/// - `::bbnf::runtime::Root` — re-exported from `bbnf::runtime`.
+/// The emitted code references only `::bbnf::runtime::*`:
+/// - `::bbnf::runtime::tape::{Tape, TapeOffset, TapeCursor, TapeKind}` —
+///   re-exported from the `bbnf_tape` leaf crate.
+/// - `::bbnf::runtime::Root` — the GAT trait consumers bind against.
 ///
-/// Consumer crates that invoke `#[derive(Parser)]` must have both
-/// `bbnf-tape` and `bbnf` in their dependency list. AC.3 handles
-/// the workspace-wide migration.
+/// Consumer crates that invoke `#[derive(Parser)]` only need `bbnf`
+/// in their dependency list; they do not need a direct `bbnf-tape`
+/// dep. This keeps the workspace-wide migration in AC.3 minimal.
 pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
     let mut rule_views: Vec<TokenStream> = Vec::new();
 
@@ -102,13 +102,13 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
         rule_views.push(quote! {
             /// Generated view over a tape record produced by this rule.
             ///
-            /// Wraps a [`::bbnf_tape::TapeCursor`] and exposes the
+            /// Wraps a [`::bbnf::runtime::tape::TapeCursor`] and exposes the
             /// universal accessor set. The cursor is `Copy`, so the
             /// view is cheap to clone and passes cheaply by value.
             #[derive(Clone, Copy, Debug)]
             #[allow(non_camel_case_types)]
             pub struct #view_ident<'tape> {
-                cursor: ::bbnf_tape::TapeCursor<'tape>,
+                cursor: ::bbnf::runtime::tape::TapeCursor<'tape>,
             }
 
             #[allow(dead_code)]
@@ -116,21 +116,21 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
                 /// Construct a view pointing at `offset` in `tape`.
                 #[inline]
                 pub fn new(
-                    tape: &'tape ::bbnf_tape::Tape,
-                    offset: ::bbnf_tape::TapeOffset,
+                    tape: &'tape ::bbnf::runtime::tape::Tape,
+                    offset: ::bbnf::runtime::tape::TapeOffset,
                 ) -> Self {
-                    Self { cursor: ::bbnf_tape::TapeCursor::new(tape, offset) }
+                    Self { cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset) }
                 }
 
                 /// Borrow the underlying cursor for direct access.
                 #[inline]
-                pub fn cursor(&self) -> ::bbnf_tape::TapeCursor<'tape> {
+                pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'tape> {
                     self.cursor
                 }
 
                 /// Classification tag of the wrapped record.
                 #[inline]
-                pub fn kind(&self) -> ::bbnf_tape::TapeKind {
+                pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
                     self.cursor.kind()
                 }
 
@@ -150,7 +150,7 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
                 #[inline]
                 pub fn children(
                     &self,
-                ) -> impl ::core::iter::Iterator<Item = ::bbnf_tape::TapeCursor<'tape>> + 'tape {
+                ) -> impl ::core::iter::Iterator<Item = ::bbnf::runtime::tape::TapeCursor<'tape>> + 'tape {
                     self.cursor.children()
                 }
 
@@ -159,7 +159,7 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
                 pub fn child(
                     &self,
                     i: usize,
-                ) -> ::core::option::Option<::bbnf_tape::TapeCursor<'tape>> {
+                ) -> ::core::option::Option<::bbnf::runtime::tape::TapeCursor<'tape>> {
                     self.cursor.child(i)
                 }
 
@@ -189,8 +189,8 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
 
                 #[inline]
                 fn make_view(
-                    tape: &::bbnf_tape::Tape,
-                    root: ::bbnf_tape::TapeOffset,
+                    tape: &::bbnf::runtime::tape::Tape,
+                    root: ::bbnf::runtime::tape::TapeOffset,
                 ) -> Self::View<'_> {
                     #root_view_ident::new(tape, root)
                 }

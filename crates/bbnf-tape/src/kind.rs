@@ -8,7 +8,7 @@
 
 /// Classification tag for a tape record.
 ///
-/// The variants partition into four groups:
+/// The variants partition into five groups:
 ///
 /// 1. **Leaf shapes** — `Span`, `Epsilon`, `Literal`, `Regex` — carry
 ///    their result directly in `span_lo`/`span_hi`, no children.
@@ -16,7 +16,10 @@
 ///    a contiguous child run via `child_off`.
 /// 3. **Annotation shapes** — `VariantTag`, `SubVariant`, `MapValue` —
 ///    decorate the sibling record with codegen-assigned metadata.
-/// 4. **Sentinel** — `None` — represents parse failure / absence.
+/// 4. **Recovery marker** — `Recovered` — sentinel leaf pushed by
+///    `@recover` arms when a recovery path fires. Views expose this
+///    as `.is_recovered()`.
+/// 5. **Sentinel** — `None` — represents parse failure / absence.
 ///
 /// Codegen may assign additional domain-specific tags by extending
 /// this enum (e.g., `TapeKind::JsonObject`, `TapeKind::CssDeclaration`).
@@ -82,11 +85,18 @@ pub enum TapeKind {
     /// matched arm's continuation. Used for `@token` fused rules.
     TokenDispatch = 11,
 
+    /// Recovery marker — pushed by generated parsers when an
+    /// `@recover` arm fires. Replaces the eager-AST `Recovered`
+    /// enum variant. The record's span covers the recovered input
+    /// region; `flags` carries the recovering rule's variant index.
+    /// Views expose this as `.is_recovered()`.
+    Recovered = 12,
+
     /// Reserved for future grammar-specific shapes (structural bitmap
     /// dispatch, keyword PHF lookup, etc.). Codegen may assign tags
     /// in the range 64..=255 without colliding with the shared
     /// vocabulary above.
-    Reserved = 12,
+    Reserved = 13,
 }
 
 impl TapeKind {
@@ -127,7 +137,15 @@ impl TapeKind {
             TapeKind::VariantTag => "variant_tag",
             TapeKind::MapValue => "map_value",
             TapeKind::TokenDispatch => "token_dispatch",
+            TapeKind::Recovered => "recovered",
             TapeKind::Reserved => "reserved",
         }
+    }
+
+    /// True iff this kind marks a recovery region pushed by an
+    /// `@recover` arm. Views expose this as `.is_recovered()`.
+    #[inline]
+    pub fn is_recovered(self) -> bool {
+        matches!(self, TapeKind::Recovered)
     }
 }

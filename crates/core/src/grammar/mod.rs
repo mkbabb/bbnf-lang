@@ -1,49 +1,53 @@
 //! BBNF grammar parser.
 //!
-//! Single-call parse: generated bootstrap parser + host extraction.
+//! Single-call parse: generated tape-first bootstrap parser + host extraction.
 //!
 //! Sub-modules:
 //! - `generated` — auto-generated parser from bbnf.bbnf (bootstrap, checked-in)
-//! - `host` — extraction: BbnfBootstrapEnum → ParsedGrammar
+//! - `host` — extraction: BbnfBootstrapNodeView → ParsedGrammar
+//!
+//! Tranche AC.2: `parse` / `parse_with_state` now drive the tape-first
+//! generated parser. `generated::BbnfBootstrap::parse(source)` returns a
+//! [`crate::runtime::Parsed`] that owns both the finished tape and the
+//! source string; `host::extract_grammar` walks the root view to lift the
+//! bootstrap tree into the typed `ParsedGrammar`. The returned
+//! `ParsedGrammar<'_>` borrows from a leaked `Parsed` so downstream
+//! pipeline code can keep its existing `'static`-flavoured lifetime
+//! assumptions.
 
 #[allow(unused, non_snake_case, non_camel_case_types, non_upper_case_globals, clippy::all)]
 pub mod generated;
 pub mod host;
 pub mod schema;
 
+use crate::runtime::Parsed;
 use crate::types::ParsedGrammar;
 
 /// Parse a BBNF grammar source into a `ParsedGrammar`.
 ///
-/// Single-call parse: the bootstrap parser's `grammar` rule handles comments,
-/// directives, and rules natively via `grammar_item`.
+/// The tape-first bootstrap parser owns its own source buffer and tape
+/// via [`crate::runtime::Parsed`]. We leak that structure so the
+/// resulting `ParsedGrammar<'_>` — which borrows cursors and text
+/// slices from both — lives for the rest of the compile, matching the
+/// pre-tranche arena-style ownership model expected by callers.
 pub fn parse(source: &str) -> Option<ParsedGrammar<'_>> {
-    let ctx = Box::leak(Box::new(
-        generated::__BbnfBootstrapEnumCtx::with_capacity(source.len() / 4),
-    ));
-    let leaked: &str = Box::leak(source.to_string().into_boxed_str());
-    let (result, _state) = generated::BbnfBootstrap::grammar()
-        .parse_return_state_with_context(leaked, ctx);
-
-    result.map(|ast| {
-        let ast = Box::leak(Box::new(ast));
-        host::extract_grammar(ast)
-    })
+    let parsed = generated::BbnfBootstrap::parse(source).ok()?;
+    // Leak the Parsed so its internal Tape + owned input outlive the
+    // returned ParsedGrammar<'_>. Library-internal scratch: the
+    // bootstrap flow runs once per compile and the rest of the
+    // pipeline assumes `'static`-flavoured lifetimes.
+    let parsed: &'static Parsed<generated::BbnfBootstrap> = Box::leak(Box::new(parsed));
+    Some(host::extract_grammar(parsed))
 }
 
-/// Parse a BBNF grammar file, returning both the result and the parser state.
-pub fn parse_with_state(source: &str) -> (Option<ParsedGrammar<'_>>, parse_that::ParserState<'_>) {
-    let ctx = Box::leak(Box::new(
-        generated::__BbnfBootstrapEnumCtx::with_capacity(source.len() / 4),
-    ));
-    let leaked: &str = Box::leak(source.to_string().into_boxed_str());
-    let (result, state) = generated::BbnfBootstrap::grammar()
-        .parse_return_state_with_context(leaked, ctx);
-
-    let parsed = result.map(|ast| {
-        let ast = Box::leak(Box::new(ast));
-        host::extract_grammar(ast)
-    });
-
-    (parsed, state)
+/// Parse a BBNF grammar file.
+///
+/// Tranche AC.2: the tape-first `BbnfBootstrap::parse` entry point
+/// internally manages its own parser state, so we no longer surface a
+/// `ParserState<'_>` to callers. The function is retained for API
+/// compatibility with pre-AC call sites as a thin alias over [`parse`];
+/// it will be audited and likely removed during AC.3 once the
+/// analysis crate migrates off `parser_state.furthest_offset`.
+pub fn parse_with_state(source: &str) -> Option<ParsedGrammar<'_>> {
+    parse(source)
 }

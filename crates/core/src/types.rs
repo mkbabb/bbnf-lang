@@ -4,17 +4,25 @@ use parse_that::Span;
 
 use indexmap::IndexMap;
 
-use crate::grammar::generated::BbnfBootstrapEnum;
+use crate::grammar::generated::BbnfBootstrapNodeView;
 
 // ─── Grammar AST ─────────────────────────────────────────────────────────────
 
 /// A single rule entry: name span + reference to the RHS in the bootstrap AST.
-#[derive(Debug, Clone)]
+///
+/// Tranche AC.2 — under the tape-first generated parser, the RHS is no
+/// longer a borrowed `&'a BbnfBootstrapEnum<'a>`; it's a
+/// [`BbnfBootstrapNodeView`], a cursor-backed view over the finished
+/// tape that carries both a `TapeCursor<'a>` and a `&'a str` slice of
+/// the owning source buffer. Walking the RHS is identical in shape to
+/// the old enum (iterate children, dispatch on rule kind), but every
+/// access goes through view methods instead of pattern matching.
+#[derive(Debug, Clone, Copy)]
 pub struct RuleEntry<'a> {
     /// Span of the rule's LHS identifier.
     pub name_span: Span<'a>,
-    /// The RHS expression — a reference into the bootstrap parse tree.
-    pub rhs: &'a BbnfBootstrapEnum<'a>,
+    /// The RHS expression — a view over the bootstrap parse tape.
+    pub rhs: BbnfBootstrapNodeView<'a>,
 }
 
 /// Grammar rules: rule name → RHS entry. Insertion-ordered to preserve source order.
@@ -42,12 +50,12 @@ pub struct ImportDirective<'a> {
 }
 
 /// An `@recover` directive that annotates a rule with error recovery.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct RecoverDirective<'a> {
     /// The name of the rule to wrap with recovery.
-    pub rule_name: Cow<'a, str>,
-    /// The sync expression — a reference into the bootstrap parse tree.
-    pub sync_expr: &'a BbnfBootstrapEnum<'a>,
+    pub rule_name: &'a str,
+    /// The sync expression — a view into the bootstrap parse tape.
+    pub sync_expr: BbnfBootstrapNodeView<'a>,
     /// The byte-offset span of the entire recover directive.
     pub span: Span<'a>,
 }

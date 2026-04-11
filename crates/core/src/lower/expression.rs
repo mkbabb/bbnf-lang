@@ -162,95 +162,127 @@ fn lower_concatenation<'a>(
     IrNode::Seq(children)
 }
 
-/// Iterate the "content" view of each iteration pair under a
-/// `(content, optional_separator) +` shape. The view passed in is
-/// the alternation/concatenation rule compound (possibly wrapped
-/// in a `Repeat` compound from the `+` quantifier).
+/// Iterate the operand views of an iteration-pair compound. The
+/// view passed in is an `alternation` / `concatenation` / `call_arg`
+/// rule compound; the body is `(operand ?w , sep ?) +` where the
+/// quantifier wraps each iteration in a `Repeat` compound and the
+/// trailing optional separator (`|` / `,`) consumes bytes without
+/// pushing.
 ///
-/// Each iteration's content is `pair.child(0)` (the binary_factor
-/// or concatenation), and the trailing optional `,` / `|` is
-/// dropped. When the optimizer has elided wrapper compounds, the
-/// iteration may have skipped levels — defensively try `child(0)`
-/// first, fall back to the pair view itself when the pair is the
-/// content.
+/// Tape shape under structural mode (the post-AC.2 default):
+///
+///   `node.children() == [Repeat([operand_1, operand_2, ...])]`
+///
+/// Each operand is a `Rule` compound for the lower-precedence
+/// expression layer (e.g. `binary_factor`); separators don't push.
+/// `iter_rep_children` peels the wrapping Repeat transparently and
+/// yields the operand compounds directly.
+///
+/// Under non-structural mode (legacy optimizer flattening), an
+/// iteration's body Seq may push its own compound carrying
+/// `[operand, optional_sep]`. We detect that case by inspecting
+/// the per-iteration view's tape kind: a `TapeKind::Seq` wrapper is
+/// the legacy shape and we descend to its `child(0)`; everything
+/// else (every `TapeKind::Rule`) is the operand directly.
 fn iter_iteration_pairs<'a>(
     node: BbnfBootstrapNodeView<'a>,
 ) -> impl Iterator<Item = BbnfBootstrapNodeView<'a>> + 'a {
-    iter_rep_children(node).filter_map(|pair| {
-        // The pair is normally a Seq compound holding [content,
-        // optional_sep]. Under post-AC.2 structural emission, Seq
-        // doesn't push its own compound — children land directly
-        // in the enclosing Repeat. So `pair` here may already be
-        // the content view, with the optional separator following
-        // as the next iteration entry.
-        //
-        // Disambiguation: if `pair` has children of its own AND
-        // its first child is a known expression-level rule_kind,
-        // treat the pair as a wrapping Seq and return `child(0)`.
-        // Otherwise treat the pair itself as the content.
-        let first_child = pair.child(0);
-        match first_child.map(|c| c.rule_kind()) {
-            Some(BbnfBootstrapRuleKind::binary_factor)
-            | Some(BbnfBootstrapRuleKind::concatenation)
-            | Some(BbnfBootstrapRuleKind::mapped_factor)
-            | Some(BbnfBootstrapRuleKind::factor)
-            | Some(BbnfBootstrapRuleKind::term)
-            | Some(BbnfBootstrapRuleKind::term_0)
-            | Some(BbnfBootstrapRuleKind::term_1)
-            | Some(BbnfBootstrapRuleKind::term_2)
-            | Some(BbnfBootstrapRuleKind::call_arg)
-            | Some(BbnfBootstrapRuleKind::alternation) => first_child,
-            _ => Some(pair),
-        }
+    use ::bbnf::runtime::tape::TapeKind;
+    iter_rep_children(node).filter_map(|pair| match pair.kind() {
+        TapeKind::Seq => pair.child(0),
+        _ => Some(pair),
     })
 }
 
-/// Lower a `binary_factor = mapped_factor ( binary_op mapped_factor )*` view.
+/// Lower a `binary_factor = mapped_factor , ( binary_operators ?w , mapped_factor ) *` view.
 ///
-/// The first child is always the leftmost operand. Subsequent
-/// `(op, operand)` pairs may be flattened directly into the
-/// compound's children (post-AC.2 structural) or wrapped in a
-/// rest-list compound (pre-AC.2 optimizer). Disambiguate by
-/// inspecting the second child's rule_kind: if it's a
-/// `binary_operators` leaf, treat the rest as flat alternating
-/// pairs; otherwise treat the second child as a rest-list
-/// compound containing the pairs.
+/// Tape shape under structural mode:
+///
+///   `node.children() == [mapped_factor_1, Repeat([mapped_factor_2, mapped_factor_3, ...])]`
+///
+/// The `binary_operators` rule is inlined (its body is just an
+/// alternation of literal punctuation tokens), so the operator
+/// bytes are consumed but never push a tape compound. To recover
+/// each operator, inspect the source slice between
+/// `operands[i].span().1` and `operands[i+1].span().0` and match
+/// against the fixed `<<` / `>>` / `-` set (longest-first).
+///
+/// Single-operand chains (no operators) collapse to the bare
+/// operand without wrapping.
 fn lower_binary_factor<'a>(
     node: BbnfBootstrapNodeView<'a>,
     ctx: &mut LowerCtx<'a>,
 ) -> IrNode {
-    let first = node
-        .child(0)
-        .expect("binary_factor: missing first operand");
-    let mut result = dispatch_expression(first, ctx);
+    let operands: Vec<BbnfBootstrapNodeView<'a>> = collect_binary_operands(node);
+    debug_assert!(
+        !operands.is_empty(),
+        "binary_factor: chain compound produced zero operands (text = {:?})",
+        node.span_text(),
+    );
 
-    // Walk the remaining children as alternating (op, operand)
-    // pairs. Skip the first child since we already consumed it.
-    let mut iter = node.children().skip(1).peekable();
-    if let Some(&first_rest) = iter.peek() {
-        if first_rest.rule_kind() == BbnfBootstrapRuleKind::binary_operators {
-            // Flat shape: alternating (op, operand) at the top
-            // level. Walk pairs from the iterator directly.
-            while let Some(op_node) = iter.next() {
-                let operand = match iter.next() {
-                    Some(o) => o,
-                    None => break,
-                };
-                result = apply_binary_op(result, op_node.span_text(), operand, ctx);
-            }
-        } else {
-            // Wrapped shape: child(1) is a rest-list compound
-            // containing (op, operand) pairs as its own children.
-            for pair in first_rest.children() {
-                let Some(op_node) = pair.child(0) else { continue };
-                let Some(operand) = pair.child(1) else { continue };
-                result = apply_binary_op(result, op_node.span_text(), operand, ctx);
-            }
-            // No further iterator advancement — child(1) was the
-            // whole rest-list.
-        }
+    let mut iter = operands.into_iter();
+    let first = iter
+        .next()
+        .expect("binary_factor: missing first operand");
+    let input = node.input();
+    let mut prev_end = first.span().1;
+    let mut result = dispatch_expression(first, ctx);
+    for operand in iter {
+        let op_text = recover_binary_op(input, prev_end, operand.span().0)
+            .unwrap_or_else(|| {
+                panic!(
+                    "lower/expression.rs: binary_factor failed to recover \
+                     operator from source gap {:?} (chain text = {:?})",
+                    &input[prev_end as usize..operand.span().0 as usize],
+                    node.span_text(),
+                )
+            });
+        prev_end = operand.span().1;
+        result = apply_binary_op(result, op_text, operand, ctx);
     }
     result
+}
+
+/// Collect operand views from a `binary_factor` compound. The
+/// shape under structural mode is `[first, Repeat([rest...])]`;
+/// under non-structural (legacy) mode the optimizer may have
+/// flattened the Repeat wrapper, in which case the operands appear
+/// as direct children. The same `iter_rep_children`-style handling
+/// applies as for `iter_iteration_pairs`, but we need the first
+/// (non-wrapped) operand alongside the rest, so it's spelled out
+/// here.
+fn collect_binary_operands<'a>(
+    node: BbnfBootstrapNodeView<'a>,
+) -> Vec<BbnfBootstrapNodeView<'a>> {
+    use ::bbnf::runtime::tape::TapeKind;
+    let mut children = node.children();
+    let Some(first) = children.next() else {
+        return Vec::new();
+    };
+    let mut operands = vec![first];
+    let rest: Vec<BbnfBootstrapNodeView<'a>> = children.collect();
+    if rest.len() == 1 && rest[0].kind() == TapeKind::Repeat {
+        operands.extend(rest[0].children());
+    } else {
+        operands.extend(rest);
+    }
+    operands
+}
+
+/// Recover a binary-factor operator (`<<` / `>>` / `-`) from the
+/// source slice between two adjacent operand spans. Skips leading
+/// whitespace and matches the longest valid operator prefix; the
+/// two-character operators are listed first so `<` doesn't shadow
+/// `<<`.
+fn recover_binary_op<'a>(input: &'a str, lhs_end: u32, rhs_start: u32) -> Option<&'a str> {
+    let gap = &input[lhs_end as usize..rhs_start as usize];
+    let trimmed = gap.trim_start();
+    for &op in &["<<", ">>", "-"] {
+        if trimmed.starts_with(op) {
+            return Some(op);
+        }
+    }
+    None
 }
 
 fn apply_binary_op<'a>(
@@ -264,7 +296,11 @@ fn apply_binary_op<'a>(
         "<<" => IrNode::Skip(Box::new(lhs), Box::new(rhs)),
         ">>" => IrNode::Next(Box::new(lhs), Box::new(rhs)),
         "-" => IrNode::Minus(Box::new(lhs), Box::new(rhs)),
-        _ => lhs,
+        other => panic!(
+            "lower/expression.rs: apply_binary_op saw an unknown \
+             binary_operator token {:?} (recovered from operand gap)",
+            other,
+        ),
     }
 }
 

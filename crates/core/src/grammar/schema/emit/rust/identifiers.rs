@@ -1,173 +1,162 @@
-//! `identifier_text()` and `identifier_span()`: recursively extract the
-//! identifier carried by a variant. Falls back to descending into the first
-//! enum child when no `IdentifierCarrier` field is present.
+//! `identifier_text` / `identifier_span` helpers on the tape-backed
+//! view types.
+//!
+//! Two layers of emission:
+//!
+//! 1. A dedicated impl on the `identifierView<'p>` struct — trivial
+//!    slice of `self.input[lo..hi]` derived from the cursor's span.
+//!    Every call site that already holds an identifier view goes
+//!    through this zero-cost accessor. Only emitted when the grammar
+//!    declares a rule named `identifier`.
+//!
+//! 2. Free functions `cst_identifier_text(cursor, input) -> &'p str`
+//!    and `cst_identifier_span(cursor, _input) -> (u32, u32)` in the
+//!    enclosing module that walk an arbitrary cursor's sub-tree
+//!    looking for a record whose `variant_idx` matches the identifier
+//!    rule's codegen-assigned discriminator. The walk is depth-first,
+//!    left-to-right; the first match wins.
+//!
+//! The free helpers are always emitted regardless of whether the
+//! grammar has an `identifier` rule, because the directive extractor
+//! helpers in `cst_directives` reference `super::cst_identifier_text`
+//! for `Identifier`-kind slots. Grammars without an identifier rule
+//! get a stub that returns `""` / `(0, 0)`; in practice the stub is
+//! never reached because such grammars also don't declare directives
+//! whose layout references an `Identifier` slot.
 
-use bbnf_ir::TypeDesc;
 use proc_macro2::TokenStream;
-use quote::{format_ident, quote};
+use quote::quote;
 
-use super::super::super::model::{CstSchema, FieldRole, VariantCategory, VariantDescriptor};
+use super::super::super::model::CstSchema;
+use super::shared::{variant_idx_for, view_ident_for};
 
-pub(super) fn generate_text(schema: &CstSchema, enum_ident: &syn::Ident) -> TokenStream {
-    // Find all variants with an `IdentifierCarrier` field — those return
-    // the carried identifier directly. Other variants recurse via children().
-    let mut arms = Vec::new();
+/// Emit the identifier-view impl block + the free helper functions.
+pub(super) fn generate(schema: &CstSchema) -> TokenStream {
+    let identifier_variant_idx = variant_idx_for(schema, "identifier");
+    let has_identifier_rule = schema
+        .variants
+        .iter()
+        .any(|v| v.name == "identifier" && v.rule_id.is_some());
 
-    for variant in &schema.variants {
-        if matches!(
-            variant.category,
-            VariantCategory::Phantom | VariantCategory::Recovered
-        ) {
-            continue;
-        }
-        let ident = format_ident!("{}", variant.name);
-        let Some(td) = &variant.type_desc else {
-            continue;
-        };
+    let view_impl = if has_identifier_rule {
+        let view_ident = view_ident_for("identifier");
+        quote! {
+            #[allow(dead_code, non_camel_case_types)]
+            impl<'p> #view_ident<'p> {
+                /// Identifier text — slice of the owning `Parsed`'s
+                /// input covered by this view's record span.
+                #[inline]
+                pub fn identifier_text(&self) -> &'p str {
+                    let (lo, hi) = self.cursor.span();
+                    &self.input[lo as usize..hi as usize]
+                }
 
-        // Identifier-carrier rule (`identifier`) — return the Span text directly.
-        if matches!(td, TypeDesc::Span) && variant.name == "identifier" {
-            arms.push(quote! {
-                #enum_ident::#ident(s) => s.as_str()
-            });
-            continue;
-        }
-
-        // Variants whose first field is an IdentifierCarrier (e.g. `term_1((ident, _))`).
-        if let Some(idx) = variant
-            .fields
-            .iter()
-            .position(|f| f.role == FieldRole::IdentifierCarrier)
-        {
-            let extraction = text_extraction_from_field(td, idx, variant);
-            if let Some(extr) = extraction {
-                arms.push(quote! {
-                    #enum_ident::#ident(value) => { #extr }
-                });
-                continue;
+                /// Identifier span as `(lo, hi)` byte offsets.
+                #[inline]
+                pub fn identifier_span(&self) -> (u32, u32) {
+                    self.cursor.span()
+                }
             }
         }
+    } else {
+        TokenStream::new()
+    };
 
-        // Otherwise, fall through to the recursive default (`children().first()`).
-    }
+    let helpers = match identifier_variant_idx {
+        Some(idx) => emit_find_helpers(idx),
+        None => emit_stub_helpers(),
+    };
 
     quote! {
-        match node {
-            #(#arms,)*
-            _ => {
-                // Fall back to descending into the first enum child.
-                let ch = Self::children(node);
-                if let Some(first) = ch.first() {
-                    Self::identifier_text(first)
-                } else {
-                    ""
-                }
-            }
-        }
+        #view_impl
+
+        #helpers
     }
 }
 
-pub(super) fn generate_span(schema: &CstSchema, enum_ident: &syn::Ident) -> TokenStream {
-    let mut arms = Vec::new();
-
-    for variant in &schema.variants {
-        if matches!(
-            variant.category,
-            VariantCategory::Phantom | VariantCategory::Recovered
-        ) {
-            continue;
-        }
-        let ident = format_ident!("{}", variant.name);
-        let Some(td) = &variant.type_desc else { continue };
-
-        // The `identifier` rule itself is a Span carrier — return it directly.
-        if matches!(td, TypeDesc::Span) && variant.name == "identifier" {
-            arms.push(quote! {
-                #enum_ident::#ident(s) => *s
-            });
-            continue;
-        }
-
-        // Variants whose first field is an IdentifierCarrier — recurse into it.
-        if let Some(idx) = variant
-            .fields
-            .iter()
-            .position(|f| f.role == FieldRole::IdentifierCarrier)
-        {
-            if let Some(extr) = span_extraction_from_field(td, idx) {
-                arms.push(quote! {
-                    #enum_ident::#ident(value) => { #extr }
-                });
-                continue;
-            }
-        }
-    }
-
+/// Emit the DFS identifier-finding helpers keyed on the grammar's
+/// `identifier` rule's variant_idx.
+fn emit_find_helpers(identifier_variant_idx: u8) -> TokenStream {
+    let idx_lit = identifier_variant_idx;
     quote! {
-        match node {
-            #(#arms,)*
-            _ => {
-                let ch = Self::children(node);
-                if let Some(first) = ch.first() {
-                    Self::identifier_span(first)
-                } else {
-                    ::parse_that::Span::default()
+        /// Walk `cursor`'s sub-tree depth-first and return the text
+        /// of the first reachable identifier record. Returns `""`
+        /// when no identifier is reachable.
+        #[inline]
+        #[allow(dead_code)]
+        pub(crate) fn cst_identifier_text<'p>(
+            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        ) -> &'p str {
+            match cst_find_identifier_cursor(cursor, #idx_lit) {
+                ::core::option::Option::Some(found) => {
+                    let (lo, hi) = found.span();
+                    &input[lo as usize..hi as usize]
+                }
+                ::core::option::Option::None => "",
+            }
+        }
+
+        /// Walk `cursor`'s sub-tree depth-first and return the
+        /// `(lo, hi)` span of the first reachable identifier record.
+        /// Returns `(0, 0)` when no identifier is reachable.
+        #[inline]
+        #[allow(dead_code)]
+        pub(crate) fn cst_identifier_span<'p>(
+            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            _input: &'p str,
+        ) -> (u32, u32) {
+            cst_find_identifier_cursor(cursor, #idx_lit)
+                .map(|c| c.span())
+                .unwrap_or((0, 0))
+        }
+
+        /// DFS helper shared by `cst_identifier_text` and
+        /// `cst_identifier_span`. Returns the first cursor under
+        /// `start` whose `variant_idx` matches `target_idx`.
+        #[inline]
+        #[allow(dead_code)]
+        fn cst_find_identifier_cursor<'p>(
+            start: ::bbnf::runtime::tape::TapeCursor<'p>,
+            target_idx: u8,
+        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeCursor<'p>> {
+            if start.variant_idx() == target_idx {
+                return ::core::option::Option::Some(start);
+            }
+            for child in start.children() {
+                if let ::core::option::Option::Some(found) =
+                    cst_find_identifier_cursor(child, target_idx)
+                {
+                    return ::core::option::Option::Some(found);
                 }
             }
+            ::core::option::Option::None
         }
     }
 }
 
-/// Generate the body of an identifier-text-extraction match arm for a variant.
-///
-/// Returns `None` if the field's type is not directly addressable (we fall
-/// back to `Self::identifier_text(...)` recursion via children).
-fn text_extraction_from_field(
-    td: &TypeDesc,
-    field_idx: usize,
-    _variant: &VariantDescriptor,
-) -> Option<TokenStream> {
-    match td {
-        TypeDesc::Tuple(elems) => {
-            let elem = elems.get(field_idx)?;
-            let idx = syn::Index::from(field_idx);
-            match elem {
-                TypeDesc::BoxedEnum | TypeDesc::Enum => Some(quote! {
-                    Self::identifier_text((value).#idx)
-                }),
-                TypeDesc::Span => Some(quote! {
-                    (value).#idx.as_str()
-                }),
-                _ => None,
-            }
+/// Emit trivial stub helpers for grammars with no `identifier` rule.
+/// Keeps `cst_directives::try_as_*` references to
+/// `super::cst_identifier_text` buildable even when no directive
+/// ever actually exercises them.
+fn emit_stub_helpers() -> TokenStream {
+    quote! {
+        #[inline]
+        #[allow(dead_code)]
+        pub(crate) fn cst_identifier_text<'p>(
+            _cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            _input: &'p str,
+        ) -> &'p str {
+            ""
         }
-        TypeDesc::Span => Some(quote! { value.as_str() }),
-        TypeDesc::BoxedEnum | TypeDesc::Enum => {
-            Some(quote! { Self::identifier_text(value) })
-        }
-        _ => None,
-    }
-}
 
-fn span_extraction_from_field(td: &TypeDesc, field_idx: usize) -> Option<TokenStream> {
-    match td {
-        TypeDesc::Tuple(elems) => {
-            let elem = elems.get(field_idx)?;
-            let idx = syn::Index::from(field_idx);
-            match elem {
-                TypeDesc::BoxedEnum | TypeDesc::Enum => {
-                    Some(quote! { Self::identifier_span((value).#idx) })
-                }
-                // Span is Copy; tuple field access returns it by value.
-                TypeDesc::Span => Some(quote! { (value).#idx }),
-                _ => None,
-            }
+        #[inline]
+        #[allow(dead_code)]
+        pub(crate) fn cst_identifier_span<'p>(
+            _cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            _input: &'p str,
+        ) -> (u32, u32) {
+            (0, 0)
         }
-        // Top-level Span variant: `value` is `&Span<'a>`, so deref.
-        TypeDesc::Span => Some(quote! { *value }),
-        TypeDesc::BoxedEnum | TypeDesc::Enum => {
-            Some(quote! { Self::identifier_span(value) })
-        }
-        _ => None,
     }
 }

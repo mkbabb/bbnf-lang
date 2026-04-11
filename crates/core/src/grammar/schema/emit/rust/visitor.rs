@@ -1,37 +1,20 @@
-//! Visitor trait: `{Enum}Visitor<'a>` — a minimal fold interface over the
-//! schema-emitted `walk_children` dispatch.
+//! Visitor trait — obsolete under Tranche AC.2.
+//!
+//! The pre-AC.2 emitter produced a `<Enum>Visitor<'a>` trait + a
+//! default `walk_children`-backed fold. Under the tape-backed view
+//! model, callers walk cursors directly; grammars that need a
+//! visitor-style API compose it on top of `TapeCursor::children()`
+//! without any schema-emitted glue.
+//!
+//! This module survives as an empty emitter so the orchestrator in
+//! `mod.rs` can continue to call `visitor::generate(...)` without
+//! conditional compilation; the returned `TokenStream` is empty and
+//! contributes nothing to the final codegen output.
 
 use proc_macro2::TokenStream;
-use quote::quote;
 
-pub(super) fn generate(enum_ident: &syn::Ident, visitor_ident: &syn::Ident) -> TokenStream {
-    quote! {
-        /// Auto-generated visitor trait for the parser enum.
-        ///
-        /// Default `visit()` calls `walk()` which dispatches via
-        /// `walk_children` (per-variant direct dispatch). Override
-        /// `visit()` for short-circuiting; override `combine()` for
-        /// non-default fold semantics.
-        pub trait #visitor_ident<'a> {
-            type Output: Default;
-
-            fn combine(&mut self, outputs: ::std::vec::Vec<Self::Output>) -> Self::Output {
-                let _ = outputs;
-                Self::Output::default()
-            }
-
-            fn visit(&mut self, node: &'a #enum_ident<'a>) -> Self::Output {
-                self.walk(node)
-            }
-
-            fn walk(&mut self, node: &'a #enum_ident<'a>) -> Self::Output {
-                let outputs = #enum_ident::walk_children(node, self);
-                if outputs.is_empty() {
-                    Self::Output::default()
-                } else {
-                    self.combine(outputs)
-                }
-            }
-        }
-    }
+/// Emit the visitor trait. Returns an empty `TokenStream` — direct
+/// cursor iteration supersedes the pre-AC.2 visitor pattern.
+pub(super) fn generate() -> TokenStream {
+    TokenStream::new()
 }

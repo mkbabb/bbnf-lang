@@ -1,21 +1,34 @@
-//! Rust schema emitter — full parity with the v1 ir_visitor codegen.
+//! Rust schema emitter — tape-backed view helper codegen.
 //!
-//! Takes a `CstSchema` (frontend-owned, target-agnostic) and emits the
-//! Rust CST helper code that replaces hand-written walkers across the
-//! repo. Generates:
+//! Post-Tranche AC.2, the Rust backend emits one
+//! `<Rule>View<'p> { cursor: TapeCursor<'p>, input: &'p str }`
+//! struct per non-transparent rule via
+//! `backend::rust::view::generate_views`, along with a set of
+//! universal accessors (`kind`, `span`, `span_text`, `variant_idx`,
+//! `children`, `child`, `is_recovered`) on every view. Those
+//! accessors subsume the pre-AC.2 `children`, `span_text`,
+//! `walk_children`, and visitor-trait helpers, so this emitter
+//! focuses on the **schema-specific** additions the view module
+//! doesn't know about:
 //!
-//! - `impl<'a> {Enum}<'a>::children(node) -> Vec<&'a {Enum}<'a>>` — debug helper
-//! - `impl<'a> {Enum}<'a>::span_text(node) -> &'a str` — terminal text accessor
-//! - `impl<'a> {Enum}<'a>::identifier_text(node) -> &'a str` — identifier extractor
-//! - `impl<'a> {Enum}<'a>::identifier_span(node) -> Span<'a>` — identifier span
-//! - `impl<'a> {Enum}<'a>::walk_children<V>(self, v) -> Vec<V::Output>` —
-//!   direct per-variant dispatch
-//! - `pub trait {Enum}Visitor<'a>` — namespaced visitor trait
-//! - `pub mod cst_directives { ... }` — typed directive value structs
-//! - `impl<'a> {Enum}<'a>::as_*_directive(&self) -> Option<...>` — accessors
+//! - `identifier_text` / `identifier_span` on the `identifierView`
+//!   struct (grammar has a rule named `identifier`).
+//! - Free helper functions for extracting identifiers from arbitrary
+//!   cursors, used by the directive accessors below.
+//! - The `cst_directives` module — one `#[derive(Clone, Copy)]`
+//!   struct per directive variant, plus `try_as_<rule>` extraction
+//!   helpers.
+//! - `as_*_directive` convenience methods on the root grammar view.
 //!
-//! Each concern lives in its own sub-module. This `mod.rs` orchestrates the
-//! full bundle.
+//! The `children.rs`, `walkers.rs`, `visitor.rs`, and `span_text.rs`
+//! siblings remain as empty emitters: their pre-AC.2 responsibilities
+//! are now carried by the universal cursor accessor set.
+//!
+//! `fused_number_rules` is accepted as a parameter for backwards
+//! compatibility with the `generate::generate_all` caller but is
+//! otherwise unused — the tape model doesn't need special-casing for
+//! fused numeric payloads because each rule's view carries a single
+//! cursor regardless of its projected payload shape.
 
 mod children;
 mod directives;
@@ -29,70 +42,44 @@ use std::collections::HashSet;
 
 use bbnf_ir::RuleId;
 use proc_macro2::TokenStream;
-use quote::{format_ident, quote};
+use quote::quote;
 
 use super::super::model::CstSchema;
 
-/// Generate the full Rust CST helper bundle from a `CstSchema`.
+/// Generate the full Rust schema helper bundle from a `CstSchema`.
 ///
-/// `fused_number_rules` is the Rust-backend-specific set of rules whose
-/// payload is `(Span, f64)` instead of plain `Span`. Those variants emit
-/// no children regardless of their schema-level type.
-pub fn generate(schema: &CstSchema, fused_number_rules: &HashSet<RuleId>) -> TokenStream {
-    let enum_ident = format_ident!("{}", schema.enum_name);
-    let visitor_ident = format_ident!("{}Visitor", schema.enum_name);
+/// The emitted `TokenStream` is spliced into the final codegen
+/// output by `generate::generate_all` alongside the backend's
+/// per-rule view types and parser functions. It defines:
+///
+/// - `impl<'p> identifierView<'p> { fn identifier_text, fn identifier_span }`
+///   (only if the grammar declares an `identifier` rule).
+/// - Free helpers `cst_identifier_text` / `cst_identifier_span`
+///   that DFS-walk a cursor looking for the first identifier record.
+/// - `pub mod cst_directives { ... }` with directive value structs
+///   and `try_as_<rule>` extraction helpers.
+/// - `impl<'p> <Root>View<'p> { fn as_*_directive }` convenience
+///   accessors on the root grammar view.
+///
+/// Returns an empty `TokenStream` when the schema declares no
+/// identifier rule and no directives — defensive for trivial
+/// grammars.
+pub fn generate(schema: &CstSchema, _fused_number_rules: &HashSet<RuleId>) -> TokenStream {
+    // Empty-emitter slots, kept for future expansion.
+    let _children = children::generate(schema);
+    let _walk_children = walkers::generate(schema);
+    let _span_text = span_text::generate(schema);
+    let _visitor = visitor::generate();
 
-    let children_fn = children::generate(schema, &enum_ident, fused_number_rules);
-    let walk_children_fn = walkers::generate(schema, &enum_ident, fused_number_rules);
-    let span_text_fn = span_text::generate(schema, &enum_ident);
-    let identifier_text_fn = identifiers::generate_text(schema, &enum_ident);
-    let identifier_span_fn = identifiers::generate_span(schema, &enum_ident);
-    let visitor_trait = visitor::generate(&enum_ident, &visitor_ident);
-    let directive_module = directives::generate_module(schema, &enum_ident);
-    let directive_accessors = directives::generate_accessors(schema, &enum_ident);
+    let identifier_block = identifiers::generate(schema);
+    let directive_module = directives::generate_module(schema);
+    let directive_accessors = directives::generate_root_accessors(schema);
 
     quote! {
-        impl<'a> #enum_ident<'a> {
-            /// Debug helper: collect references to all enum-typed children.
-            ///
-            /// Allocates a `Vec`. Walkers should prefer `walk_children`, which
-            /// dispatches per variant directly with the visitor in scope.
-            pub fn children(node: &'a #enum_ident<'a>) -> ::std::vec::Vec<&'a #enum_ident<'a>> {
-                #children_fn
-            }
-
-            /// Extract terminal text by recursively unwrapping wrapper variants.
-            pub fn span_text(node: &'a #enum_ident<'a>) -> &'a str {
-                #span_text_fn
-            }
-
-            /// Recursively extract an identifier carrier's text. Returns the
-            /// empty string if no identifier is reachable.
-            pub fn identifier_text(node: &'a #enum_ident<'a>) -> &'a str {
-                #identifier_text_fn
-            }
-
-            /// Recursively extract an identifier carrier's `Span`. Returns
-            /// `Span::default()` if no identifier is reachable.
-            pub fn identifier_span(node: &'a #enum_ident<'a>) -> ::parse_that::Span<'a> {
-                #identifier_span_fn
-            }
-
-            /// Direct per-variant dispatch: visit each enum-typed child via
-            /// the supplied visitor and collect their `Output`s. No intermediate
-            /// allocation of a `Vec<&Enum>`.
-            pub fn walk_children<__V: #visitor_ident<'a> + ?Sized>(
-                node: &'a #enum_ident<'a>,
-                v: &mut __V,
-            ) -> ::std::vec::Vec<__V::Output> {
-                #walk_children_fn
-            }
-
-            #directive_accessors
-        }
-
-        #visitor_trait
+        #identifier_block
 
         #directive_module
+
+        #directive_accessors
     }
 }

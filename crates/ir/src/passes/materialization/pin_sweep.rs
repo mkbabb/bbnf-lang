@@ -3,10 +3,18 @@
 //! Tranche AB.0. After the bottom-up Pass 1 assigns each node its
 //! most aggressive legal class, Pass 2 walks every rule with a
 //! consumer pin (`@pretty`, `@debug`, `preserve_identity`, closure-
-//! typed `Map` in the body) and transitively widens its subtree to
-//! `MustTape`. A pin is a load-bearing guarantee: the prettify
-//! emitter walks parser state and the debug emitter dumps rule
-//! boundaries — neither can work if the parser elides the records.
+//! typed `Map` in the body, or the grammar's entry rule) and
+//! transitively widens its subtree to `MustTape`. A pin is a load-
+//! bearing guarantee: the prettify emitter walks parser state, the
+//! debug emitter dumps rule boundaries, and `parse()` dispatches
+//! through the entry rule function — none can work if the parser
+//! elides the records.
+//!
+//! The entry rule is pinned unconditionally because the generated
+//! `parse()` helper calls `Self::__<entry>(state, &mut builder)` by
+//! name; if the entry rule's body materialized as `TransparentElide`
+//! the emitter would skip its function and the `parse()` helper
+//! would reference a symbol that does not exist.
 
 use std::collections::HashMap;
 
@@ -19,6 +27,8 @@ use super::lattice::MaterializationClass;
 ///
 /// A rule is pinned when ANY of:
 ///
+/// - `rule.id == ir.entry` — the grammar's entry rule (load-bearing
+///   for the `parse()` helper's entry dispatch)
 /// - `rule.meta.directives.pretty.is_some()` — `@pretty` rule
 /// - `rule.meta.directives.debug` — `@debug` rule
 /// - `ir.debug_all` — global `@debug * ;` directive
@@ -32,12 +42,14 @@ pub fn apply_consumer_pins(
     ir: &GrammarIR,
     map: &mut HashMap<NodeId, MaterializationClass>,
 ) {
-    // Identify the initial pinned rule set.
+    // Identify the initial pinned rule set. The entry rule is
+    // always pinned so that the emitter produces a `__<entry>`
+    // function the generated `parse()` helper can dispatch into.
     let debug_all = ir.debug_all;
     let mut pinned_rules: Vec<RuleId> = ir
         .rules
         .iter()
-        .filter(|r| is_rule_pinned(r, debug_all))
+        .filter(|r| r.id == ir.entry || is_rule_pinned(r, debug_all))
         .map(|r| r.id)
         .collect();
 

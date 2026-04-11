@@ -51,10 +51,23 @@ impl RustEmitter {
     }
 
     /// Look up the materialization class for a rule's body node.
+    ///
+    /// Identity-bearing rules — the grammar entry and any rule with
+    /// `preserve_identity` set — always resolve to `MustTape`
+    /// regardless of what the bottom-up classifier assigned: the
+    /// generated `parse()` helper dispatches through the entry's
+    /// `__<name>` function by name, and `preserve_identity` rules
+    /// are structural-mode guarantees that each named rule has a
+    /// standalone callable. Without this override the emitter would
+    /// skip their function bodies and downstream references would
+    /// dangle.
     fn materialization_for_rule(
         ir: &GrammarIR,
         rule: &IrRule,
     ) -> MaterializationClass {
+        if rule.id == ir.entry || rule.meta.preserve_identity {
+            return MaterializationClass::MustTape;
+        }
         // `ir.materialization` is keyed by `NodeId` via `ir.dag`.
         // A rule without a dag-mapped body defaults to `MustTape`
         // — the safest choice because it preserves every child.

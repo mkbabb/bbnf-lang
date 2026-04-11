@@ -193,25 +193,69 @@ the right thing one layer down. Strategy and identity are now
 orthogonal concerns: strategy decides how a rule is called,
 identity decides whether the function exists.
 
-## The clean regen
+## The clean regen — substrate-break deferred
 
-`generated.rs` is now reproducible from `scripts/bootstrap-bbnf.sh`.
-The HEAD-era hand-patches that crept in during AC.2 debugging are
-gone; the file is the deterministic output of running the current
-pipeline against `grammar/bbnf/bbnf.bbnf` end-to-end. The
-bootstrap script regenerates the same file the manual edits had
-been patching, and the round-trip stabilizes on its own.
+The bootstrap regen path is now mechanically open: the cycle
+guard in `compile_ref` (a `HashSet<RuleId>` that catches
+self-referential inline chains the planner's pre-solver doesn't)
+unblocks `cargo expand -p bbnf-bootstrap`, and `scripts/bootstrap-
+bbnf.sh` runs to completion against the current pipeline. The
+proc-macro no longer SIGBUS-es deep in `compile_node →
+compile_seq → compile_alt → compile_ref`.
+
+What the regen output is missing — and what keeps the regen
+deferred to a follow-up substrate-break tranche — is two
+structural deficits in HEAD's hand-patched `generated.rs` chain:
+
+- The schema emitter's `cst_directives` module is gated on each
+  directive variant having a `TypeDesc::Tuple` shape with the
+  exact element count the emitter's per-directive layout table
+  expects. Under structural mode the optimizer doesn't run the
+  passes that produce the canonical Tuple layout, and several
+  directive variants come out with shifted element counts that
+  fail the layout check and silently get skipped. The emitted
+  `cst_directives` module ends up empty.
+
+- Heterogeneous Alt sub-variant coercion (`term_0` / `term_1` /
+  `value_atom_0` / etc.) is produced by an optimizer pass that's
+  also gated under structural mode. Without those sub-variants
+  the regenerated `BbnfBootstrapRuleKind` enum doesn't have
+  entries that the lowering and schema emitter both reference.
+
+The proper fixes are:
+
+1. Restructure the schema's directive emitter to walk variants
+   semantically rather than by tuple-element count, so the
+   directive helpers emit regardless of structural-mode
+   wrapper preservation.
+
+2. Move the heterogeneous Alt sub-variant coercion out of the
+   optimizer-gated phase into a phase that runs under structural
+   mode too — the coercion is a naming pass, not an optimization,
+   and is safe under `preserve_identity`.
+
+3. Resolve the off-by-one between the rule emitter's stamped
+   `variant_idx` and the schema's hard-coded literals so the
+   `try_as_*_directive` helpers find the matching cursors at
+   runtime.
+
+Until those land, `crates/core/src/grammar/generated.rs` remains
+the HEAD-era hand-patched file. Two minimal patches are stacked
+on top of it inside the file (`value_expr` and `rhs` enum
+variants — the substrate fixes that AE.1's lowering needs to
+reach the directive layer at all). Those patches are documented
+in the file's diff against the original Tranche X regen
+(`534f16b`).
 
 A round-trip test (`crates/core/tests/grammar_roundtrip.rs`)
-parses every production grammar — `bbnf.bbnf`, `json.bbnf`,
+will parse every production grammar — `bbnf.bbnf`, `json.bbnf`,
 `css_l4.bbnf`, `google_sheets.bbnf`, `ebnf.bbnf` — through
-`bbnf::grammar::parse` and asserts the resulting `GrammarIR` rule
-counts match a frozen snapshot. The snapshot is committed
-alongside the test. Any future drift in the lowering pipeline,
-the schema emitter, the directive API, or the bootstrap regen
-trips the test on the first commit that introduces it. This is
-a permanent regression gate against the kind of silent
-shape-mismatch failure AE was built to fix in the first place.
+`bbnf::grammar::parse` and assert the resulting `GrammarIR` rule
+counts match a frozen snapshot. It is the permanent regression
+gate against silent shape-mismatch failure of the kind AE was
+built to fix. The test ships once the regen produces a
+generated.rs that supports it (i.e., once the schema-emitter and
+sub-variant-coercion deficits above are resolved).
 
 ## Architectural commitments
 
@@ -234,10 +278,18 @@ shape-mismatch failure AE was built to fix in the first place.
    second. Structural mode no longer needs to clamp the strategy
    solver to all-`DirectCall`.
 
-4. **Clean regen.** `crates/core/src/grammar/generated.rs` is
-   always the output of `scripts/bootstrap-bbnf.sh` against
-   `grammar/bbnf/bbnf.bbnf`. Hand-patches are forbidden. The
-   round-trip test gate makes drift impossible to land silently.
+4. **Clean regen — pending substrate-break.** The mechanism
+   is in place (`scripts/bootstrap-bbnf.sh` runs to completion;
+   the proc-macro no longer panics) but the regen output is
+   structurally incomplete because the schema emitter's
+   `cst_directives` layout check and the heterogeneous Alt
+   sub-variant coercion are gated under structural mode. A
+   follow-up substrate-break tranche will free both. Until then,
+   `crates/core/src/grammar/generated.rs` carries two minimal
+   enum-mapping patches (`value_expr` and `rhs` variants —
+   already documented in the file's history) and the
+   round-trip test gate ships only after the regen is
+   self-consistent.
 
 5. **Panic, never Epsilon.** Unknown `rule_kind` during lowering is
    a programmer error and surfaces as a panic at the failing site,
@@ -246,8 +298,11 @@ shape-mismatch failure AE was built to fix in the first place.
 
 6. **No legacy code.** Every workaround introduced during AE
    debugging — the structural-mode strategy clamp, the directive
-   walker stubs, the manual `generated.rs` patches, the dead
-   schema-emit modules — is removed by the end of AE. The final
+   walker stubs, the dead schema-emit modules, the inline
+   planner's missing self-cycle guard — is removed or formalized
+   into the substrate. The two minimal `value_expr` / `rhs` enum
+   patches in `generated.rs` are explicitly transitional and
+   removed when the substrate-break tranche lands. The final
    tree contains only the new substrate, never the scaffolding it
    replaced.
 

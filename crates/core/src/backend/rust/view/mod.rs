@@ -1,12 +1,20 @@
 //! Per-rule tape-view codegen for the Rust backend.
 //!
 //! Tranche AC.2 landing surface. For every rule in the IR, this
-//! module emits a `<Rule>View<'tape>` wrapper struct that holds a
-//! [`bbnf_tape::TapeCursor`] and exposes cursor-based accessors:
+//! module emits a `<Rule>View<'p>` wrapper struct that holds a
+//! [`::bbnf::runtime::tape::TapeCursor`] plus a borrow of the
+//! original input string. The `input` borrow lets view accessors
+//! lazily materialize scalar projections (numeric conversion, hex
+//! conversion, constant lookups, etc.) from the source bytes —
+//! under AC.2 scalar projection runs at view-read time rather
+//! than at parse time.
+//!
+//! Universal accessors exposed on every generated view:
 //!
 //! - `.kind()` — the `TapeKind` discriminator of the record.
-//! - `.span()` — the source span (`span_lo`, `span_hi`) as a byte
-//!   range.
+//! - `.span()` — the source span `(lo, hi)` as a byte range.
+//! - `.span_text()` — the source substring for the span.
+//! - `.input()` — the full input string borrow.
 //! - `.variant_idx()` — codegen-assigned discriminator for Alt
 //!   rules (which branch was chosen) and for heterogeneous
 //!   sub-variant coercion.
@@ -14,37 +22,24 @@
 //!   compound records (Seq/Alt/Repeat/Rule).
 //! - `.child(i)` — the i-th direct child, for indexed access.
 //! - `.is_recovered()` — true iff the record was pushed from an
-//!   `@recover` arm (delegates to `TapeKind::is_recovered`).
+//!   `@recover` arm.
 //!
 //! The top-level grammar-view binding ties the grammar marker
-//! struct's [`bbnf::runtime::Root`](crate::runtime::Root) GAT
-//! `type View<'tape>` to the root rule's view type. Generated
-//! `Parsed<Grammar>::view(&self)` calls the `Root::make_view`
-//! constructor to lend the root view with a `&self` lifetime.
+//! struct's [`::bbnf::runtime::Root`] GAT `type View<'p>` to the
+//! root rule's view type. Generated `Parsed<Grammar>::view(&self)`
+//! calls the `Root::make_view` constructor to lend the root view
+//! with a `&self` lifetime.
 //!
 //! # Ownership of generation
 //!
 //! - `generate_views` is the public entry point the backend calls
 //!   to emit all per-rule view types and the top-level `Root`
 //!   binding as one `TokenStream`.
-//! - The per-kind sibling files (`leaves.rs`, `seq.rs`, `alt.rs`,
-//!   `repeat.rs`, `grammar.rs`) host kind-specific accessor
-//!   specializations. The AC.2 baseline shape is uniform —
-//!   every view exposes the universal cursor accessors — so the
-//!   siblings are reserved for the post-AC typed-accessor pass.
+//! - The per-kind sibling files are reserved for the post-AC
+//!   typed-accessor pass.
 //! - `TransparentElide` rules never get a view type: they are
 //!   inlined at every call site during parser emission, so the
 //!   view layer never sees them.
-//!
-//! # Why this is additive
-//!
-//! `generate_views` is not yet called from
-//! `emit_type_definitions_impl` — the call site lands during the
-//! atomic AC.2 commit alongside the emitter rewrite. The
-//! generator is written here so the AC.2 commit only needs to
-//! delete the eager-AST emitter and splice this function into
-//! the emission pipeline, rather than carrying view-layer design
-//! decisions inside the already-large atomic commit.
 
 use bbnf_ir::GrammarIR;
 use proc_macro2::TokenStream;
@@ -63,11 +58,12 @@ mod seq;
 /// Returns a `TokenStream` that, when spliced into the generated
 /// parser module, defines:
 ///
-/// - One `<Rule>View<'tape>` struct per non-transparent rule,
-///   wrapping a `TapeCursor<'tape>` with universal accessors.
+/// - One `<Rule>View<'p>` struct per non-transparent rule,
+///   wrapping a `TapeCursor<'p>` + `input: &'p str` with
+///   universal accessors.
 /// - One `impl ::bbnf::runtime::Root for <Grammar>` binding that
-///   ties the grammar marker struct's `type View<'tape>` GAT to
-///   the root rule's view type.
+///   ties the grammar marker struct's `type View<'p>` GAT to the
+///   root rule's view type.
 ///
 /// Transparent rules are skipped — they are inlined at every
 /// call site and never materialize a tape record.
@@ -78,17 +74,6 @@ mod seq;
 /// declaration order. BBNF grammars put the entry point first by
 /// convention (the bootstrap enforces this), so this matches the
 /// user's intent without needing a separate annotation.
-///
-/// # Downstream dependencies
-///
-/// The emitted code references only `::bbnf::runtime::*`:
-/// - `::bbnf::runtime::tape::{Tape, TapeOffset, TapeCursor, TapeKind}` —
-///   re-exported from the `bbnf_tape` leaf crate.
-/// - `::bbnf::runtime::Root` — the GAT trait consumers bind against.
-///
-/// Consumer crates that invoke `#[derive(Parser)]` only need `bbnf`
-/// in their dependency list; they do not need a direct `bbnf-tape`
-/// dep. This keeps the workspace-wide migration in AC.3 minimal.
 pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
     let mut rule_views: Vec<TokenStream> = Vec::new();
 
@@ -102,30 +87,43 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
         rule_views.push(quote! {
             /// Generated view over a tape record produced by this rule.
             ///
-            /// Wraps a [`::bbnf::runtime::tape::TapeCursor`] and exposes the
-            /// universal accessor set. The cursor is `Copy`, so the
-            /// view is cheap to clone and passes cheaply by value.
+            /// Wraps a [`::bbnf::runtime::tape::TapeCursor`] plus a
+            /// borrow of the original input. The cursor is `Copy`,
+            /// so the view is cheap to clone and passes cheaply by
+            /// value.
             #[derive(Clone, Copy, Debug)]
             #[allow(non_camel_case_types)]
-            pub struct #view_ident<'tape> {
-                cursor: ::bbnf::runtime::tape::TapeCursor<'tape>,
+            pub struct #view_ident<'p> {
+                cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+                input: &'p str,
             }
 
             #[allow(dead_code)]
-            impl<'tape> #view_ident<'tape> {
-                /// Construct a view pointing at `offset` in `tape`.
+            impl<'p> #view_ident<'p> {
+                /// Construct a view pointing at `offset` in `tape`,
+                /// bound to `input` for scalar-projection accessors.
                 #[inline]
                 pub fn new(
-                    tape: &'tape ::bbnf::runtime::tape::Tape,
+                    tape: &'p ::bbnf::runtime::tape::Tape,
+                    input: &'p str,
                     offset: ::bbnf::runtime::tape::TapeOffset,
                 ) -> Self {
-                    Self { cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset) }
+                    Self {
+                        cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                        input,
+                    }
                 }
 
                 /// Borrow the underlying cursor for direct access.
                 #[inline]
-                pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'tape> {
+                pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
                     self.cursor
+                }
+
+                /// Borrow the original input string this view was built from.
+                #[inline]
+                pub fn input(&self) -> &'p str {
+                    self.input
                 }
 
                 /// Classification tag of the wrapped record.
@@ -140,6 +138,13 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
                     self.cursor.span()
                 }
 
+                /// Source substring covered by this record's span.
+                #[inline]
+                pub fn span_text(&self) -> &'p str {
+                    let (lo, hi) = self.cursor.span();
+                    &self.input[lo as usize..hi as usize]
+                }
+
                 /// Variant discriminator for Alt / sub-variant rules.
                 #[inline]
                 pub fn variant_idx(&self) -> u8 {
@@ -150,7 +155,7 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
                 #[inline]
                 pub fn children(
                     &self,
-                ) -> impl ::core::iter::Iterator<Item = ::bbnf::runtime::tape::TapeCursor<'tape>> + 'tape {
+                ) -> impl ::core::iter::Iterator<Item = ::bbnf::runtime::tape::TapeCursor<'p>> + 'p {
                     self.cursor.children()
                 }
 
@@ -159,7 +164,7 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
                 pub fn child(
                     &self,
                     i: usize,
-                ) -> ::core::option::Option<::bbnf::runtime::tape::TapeCursor<'tape>> {
+                ) -> ::core::option::Option<::bbnf::runtime::tape::TapeCursor<'p>> {
                     self.cursor.child(i)
                 }
 
@@ -185,21 +190,20 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
         let root_view_ident = format_ident!("{}View", root_name);
         quote! {
             impl ::bbnf::runtime::Root for #grammar_ident {
-                type View<'tape> = #root_view_ident<'tape>;
+                type View<'p> = #root_view_ident<'p>;
 
                 #[inline]
                 fn make_view(
                     tape: &::bbnf::runtime::tape::Tape,
+                    input: &'p str,
                     root: ::bbnf::runtime::tape::TapeOffset,
                 ) -> Self::View<'_> {
-                    #root_view_ident::new(tape, root)
+                    #root_view_ident::new(tape, input, root)
                 }
             }
         }
     } else {
         // Empty grammar (all-transparent) — no binding emitted.
-        // `ir_enums::generate_enum` already panics in this case, so
-        // this branch is defensive only.
         quote! {}
     };
 

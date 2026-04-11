@@ -1,133 +1,116 @@
-use bbnf::grammar::generated::BbnfBootstrapEnum;
+//! Recursively collect nonterminal references from a tape-first
+//! `BbnfBootstrapNodeView` rule RHS.
+//!
+//! Walks the tape view shape-agnostically: `term_1` identifier-call
+//! compounds, nested `term`/`factor`/`mapped_factor` wrappers,
+//! grouped `term_2` expressions, alternation / concatenation, and
+//! binary-factor chains all cascade into a recursive descent that
+//! bottoms out at the `identifier` leaf.
+
+use bbnf::grammar::generated::{BbnfBootstrapNodeView, BbnfBootstrapRuleKind};
 
 use super::super::types::ReferenceInfo;
 
-/// Recursively collect nonterminal references from a bootstrap AST node.
-pub fn collect_references(node: &BbnfBootstrapEnum<'_>, refs: &mut Vec<ReferenceInfo>) {
-    match node {
-        // Leaf: identifier reference
-        BbnfBootstrapEnum::identifier(s) => {
+/// Recursively collect nonterminal references from a bootstrap tape view.
+pub fn collect_references(node: BbnfBootstrapNodeView<'_>, refs: &mut Vec<ReferenceInfo>) {
+    match node.rule_kind() {
+        // Leaf: identifier reference. The bare `identifier` leaf
+        // variant pushes a rule compound whose span covers the
+        // identifier text; the name is its span_text.
+        BbnfBootstrapRuleKind::identifier => {
+            let (lo, hi) = node.span();
             refs.push(ReferenceInfo {
-                name: s.as_str().to_string(),
-                span: (s.start, s.end),
+                name: node.span_text().to_string(),
+                span: (lo as usize, hi as usize),
             });
         }
 
-        // term_1: identifier + optional call args
-        BbnfBootstrapEnum::term_1((ident, call_args)) => {
-            let name = bbnf::grammar::generated::BbnfBootstrapEnum::span_text(ident);
-            let ident_span = match ident {
-                BbnfBootstrapEnum::identifier(s) => (s.start, s.end),
-                _ => (0, 0),
-            };
-            refs.push(ReferenceInfo {
-                name: name.to_string(),
-                span: ident_span,
-            });
-            if let Some((_open, first_arg, rest_args, _close)) = call_args {
-                collect_references(first_arg, refs);
-                for (_comma, arg) in *rest_args {
-                    collect_references(arg, refs);
-                }
+        // term_1: identifier + optional call args.
+        //   term_1 = identifier ( "(" first_arg ( "," arg )* ")" )?
+        // Child layout under the tape view:
+        //   child(0) = identifier
+        //   child(1) = optional call-args group
+        BbnfBootstrapRuleKind::term_1 => {
+            if let Some(ident) = node.child(0) {
+                let (lo, hi) = ident.span();
+                refs.push(ReferenceInfo {
+                    name: ident.span_text().to_string(),
+                    span: (lo as usize, hi as usize),
+                });
+            }
+            // Any remaining children (the optional call-args group)
+            // are descended into — the args themselves may carry
+            // nonterminal references.
+            for c in node.children().skip(1) {
+                collect_references(c, refs);
             }
         }
 
-        // Structural: alternation, concatenation
-        BbnfBootstrapEnum::alternation(branches) => {
-            for (branch, _pipe) in *branches {
-                collect_references(branch, refs);
-            }
-        }
-        BbnfBootstrapEnum::concatenation(parts) => {
-            for (part, _comma) in *parts {
-                collect_references(part, refs);
+        // Structural: alternation, concatenation. Walk every
+        // iteration child and recurse.
+        BbnfBootstrapRuleKind::alternation | BbnfBootstrapRuleKind::concatenation => {
+            for child in super::iter_iteration_views(node) {
+                collect_references(child, refs);
             }
         }
 
-        // Binary factor: first + [(op, operand)]
-        BbnfBootstrapEnum::binary_factor((first, rest)) => {
-            collect_references(first, refs);
-            for (_, operand) in *rest {
+        // Binary factor: first operand + rest operands.
+        BbnfBootstrapRuleKind::binary_factor => {
+            for operand in super::collect_binary_operand_views(node) {
                 collect_references(operand, refs);
             }
         }
 
-        // Mapped factor: inner + optional mapping
-        BbnfBootstrapEnum::mapped_factor((inner, _mapping)) => {
-            collect_references(inner, refs);
+        // Mapped factor: recurse into the inner factor child.
+        // The optional `-> value_expr` mapping carries no grammar
+        // nonterminal refs.
+        BbnfBootstrapRuleKind::mapped_factor => {
+            if let Some(inner) = node.child(0) {
+                collect_references(inner, refs);
+            }
         }
 
-        // Factor: (comment?, term, modifier?, comment?)
-        BbnfBootstrapEnum::factor((_, term, _, _)) => {
-            collect_references(term, refs);
+        // Factor: find the term child by rule_kind and recurse.
+        BbnfBootstrapRuleKind::factor => {
+            for c in node.children() {
+                if super::is_term_kind(c.rule_kind()) {
+                    collect_references(c, refs);
+                    break;
+                }
+            }
         }
 
-        // Term variants
-        BbnfBootstrapEnum::term(inner) => {
-            collect_references(inner, refs);
-        }
-        BbnfBootstrapEnum::term_2((_open, inner, _close)) => {
-            collect_references(inner, refs);
-        }
-
-        // Closure: |params| body
-        BbnfBootstrapEnum::closure((_pipe, _first_param, _params, _pipe2, body)) => {
-            collect_references(body, refs);
+        // Transparent wrappers — descend into the single inner child.
+        BbnfBootstrapRuleKind::term
+        | BbnfBootstrapRuleKind::rhs
+        | BbnfBootstrapRuleKind::grammar_item
+        | BbnfBootstrapRuleKind::directive
+        | BbnfBootstrapRuleKind::lhs => {
+            if let Some(inner) = node.child(0) {
+                collect_references(inner, refs);
+            }
         }
 
-        // Terminals: literal, regex, modifier, epsilon, comments — no refs
-        BbnfBootstrapEnum::literal(_)
-        | BbnfBootstrapEnum::regex(_)
-        | BbnfBootstrapEnum::modifier(_)
-        | BbnfBootstrapEnum::term_0(_)
-        | BbnfBootstrapEnum::comment(_)
-        | BbnfBootstrapEnum::big_comment(_)
-        | BbnfBootstrapEnum::binary_operators(_) => {}
+        // Grouped: "(" rhs ")" / "[" rhs "]" / "{" rhs "}" / "@{" rhs "}"
+        //   term_2 / value_atom_0 layout: child(0) = open, child(1) = inner, child(2) = close
+        BbnfBootstrapRuleKind::term_2 | BbnfBootstrapRuleKind::value_atom_0 => {
+            if let Some(inner) = node.child(1) {
+                collect_references(inner, refs);
+            }
+        }
 
-        // Value expression variants — no grammar nonterminal refs
-        BbnfBootstrapEnum::value_or(_)
-        | BbnfBootstrapEnum::value_and(_)
-        | BbnfBootstrapEnum::value_cmp(_)
-        | BbnfBootstrapEnum::value_add(_)
-        | BbnfBootstrapEnum::value_mul(_)
-        | BbnfBootstrapEnum::value_unary(_)
-        | BbnfBootstrapEnum::value_unary_0(_)
-        | BbnfBootstrapEnum::value_atom(_)
-        | BbnfBootstrapEnum::value_atom_0(_)
-        | BbnfBootstrapEnum::value_input(_)
-        | BbnfBootstrapEnum::value_fn_call(_)
-        | BbnfBootstrapEnum::value_closure(_)
-        | BbnfBootstrapEnum::int_lit(_)
-        | BbnfBootstrapEnum::float_lit(_)
-        | BbnfBootstrapEnum::bool_lit(_)
-        | BbnfBootstrapEnum::string_lit(_)
-        | BbnfBootstrapEnum::value_ident(_)
-        | BbnfBootstrapEnum::type_annotation(_)
-        | BbnfBootstrapEnum::type_name(_)
-        | BbnfBootstrapEnum::cmp_op(_)
-        | BbnfBootstrapEnum::mul_op(_)
-        | BbnfBootstrapEnum::add_op(_) => {}
+        // Closure: |params| body — recurse into the body child
+        // (trailing child of the closure compound).
+        BbnfBootstrapRuleKind::closure => {
+            if let Some(body) = node.child(4) {
+                collect_references(body, refs);
+            }
+        }
 
-        // Directive variants — no grammar nonterminal refs
-        BbnfBootstrapEnum::import_directive(_)
-        | BbnfBootstrapEnum::import_directive_0(_)
-        | BbnfBootstrapEnum::import_path(_)
-        | BbnfBootstrapEnum::import_items(_)
-        | BbnfBootstrapEnum::recover_directive(_)
-        | BbnfBootstrapEnum::pretty_directive(_)
-        | BbnfBootstrapEnum::pretty_directive_0(_)
-        | BbnfBootstrapEnum::ws_directive(_)
-        | BbnfBootstrapEnum::token_directive(_)
-        | BbnfBootstrapEnum::debug_directive(_)
-        | BbnfBootstrapEnum::debug_directive_0(_)
-        | BbnfBootstrapEnum::host_directive(_) => {}
-
-        // Grammar/rule level — should not appear inside rule RHS
-        BbnfBootstrapEnum::grammar(_)
-        | BbnfBootstrapEnum::rule(_)
-        | BbnfBootstrapEnum::directive(_) => {}
-
-        // Phantom + catch-all
+        // Terminals and value-expression compounds don't carry
+        // grammar nonterminal references. Everything else is a
+        // leaf, directive, or grammar-level construct and
+        // contributes nothing.
         _ => {}
     }
 }

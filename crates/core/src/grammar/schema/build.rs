@@ -21,9 +21,13 @@ use super::model::*;
 impl CstSchema {
     /// Build a `CstSchema` from a fully-lowered `GrammarIR`.
     ///
-    /// `enum_name` is the target enum identifier (e.g. `BbnfBootstrapEnum`).
-    /// `has_recovered` indicates whether the backend will emit a `Recovered`
-    /// variant (any `@recover` directive present and `skip_recover` is off).
+    /// `enum_name` is the target enum identifier — historically
+    /// `BbnfBootstrapEnum` under the eager-AST emitter, now the
+    /// per-rule `<Rule>View` family under the tape-first AC.2
+    /// emitter. The schema is agnostic: it only names the target.
+    /// `has_recovered` indicates whether the backend will emit a
+    /// `Recovered` variant (any `@recover` directive present and
+    /// `skip_recover` is off).
     pub fn from_ir(ir: &GrammarIR, enum_name: String, has_recovered: bool) -> Self {
         let directive_rules = discover_directive_rules(ir);
         let transparent_wrappers = discover_transparent_wrappers(ir);

@@ -15,7 +15,11 @@ use bbnf_ir::{RuleId, TypeDesc};
 /// never re-walk raw `IrNode` / `TypeDesc` to rediscover CST structure.
 #[derive(Debug, Clone)]
 pub struct CstSchema {
-    /// Enum name (e.g., `BbnfBootstrapEnum`).
+    /// Target name — under the eager-AST emitter this held the
+    /// concrete enum identifier (e.g. `BbnfBootstrapEnum`); under
+    /// the tape-first AC.2 emitter it's the root grammar marker
+    /// struct (e.g. `BbnfBootstrap`), with per-rule views resolved
+    /// via codegen from the schema variant list.
     pub enum_name: String,
     /// All variants in stable emission order:
     /// rule variants → sub-variants → Recovered (if any) → __Phantom.

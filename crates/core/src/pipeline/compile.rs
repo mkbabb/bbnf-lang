@@ -4,7 +4,7 @@ use std::time::{Duration, Instant};
 use bbnf_ir::GrammarIR;
 
 use crate::grammar;
-use crate::grammar::generated::BbnfBootstrapEnum;
+use crate::grammar::generated::{BbnfBootstrapNodeView, BbnfBootstrapRuleKind};
 use crate::graph::{tarjan_scc, topological_sort_scc};
 use crate::backend::prepare_grammar;
 use crate::lower::{DirectiveSet, lower_to_ir};
@@ -278,37 +278,94 @@ pub fn compute_call_strategies(ir: &GrammarIR) -> Vec<crate::backend::CallStrate
 /// Separate closure rules from the AST. Returns (closures, non-closure rules).
 fn partition_closures<'a>(
     ast: AST<'a>,
-) -> (Vec<(&'a str, &'a BbnfBootstrapEnum<'a>)>, AST<'a>) {
-    let mut closures: Vec<(&'a str, &'a BbnfBootstrapEnum<'a>)> = Vec::new();
+) -> (Vec<(&'a str, BbnfBootstrapNodeView<'a>)>, AST<'a>) {
+    let mut closures: Vec<(&'a str, BbnfBootstrapNodeView<'a>)> = Vec::new();
     let mut rules: AST<'a> = indexmap::IndexMap::new();
 
     for (&name, entry) in &ast {
         if is_closure_rhs(entry.rhs) {
             closures.push((name, entry.rhs));
         } else {
-            rules.insert(name, entry.clone());
+            rules.insert(name, *entry);
         }
     }
 
     (closures, rules)
 }
 
-/// Check if a bootstrap RHS node is a closure, unwrapping structural wrappers.
-fn is_closure_rhs(node: &BbnfBootstrapEnum<'_>) -> bool {
-    match node {
-        BbnfBootstrapEnum::closure(_) => true,
-        // Unwrap single-element alternation/concatenation wrappers.
-        BbnfBootstrapEnum::alternation(branches) if branches.len() == 1 => {
-            is_closure_rhs(branches[0].0)
+/// Check if a bootstrap RHS view is a closure, unwrapping structural wrappers.
+fn is_closure_rhs(node: BbnfBootstrapNodeView<'_>) -> bool {
+    match node.rule_kind() {
+        BbnfBootstrapRuleKind::closure => true,
+        // Unwrap single-branch alternation/concatenation wrappers.
+        BbnfBootstrapRuleKind::alternation | BbnfBootstrapRuleKind::call_arg => {
+            let mut iter = node.children();
+            let Some(first) = iter.next() else {
+                return false;
+            };
+            if iter.next().is_some() {
+                return false;
+            }
+            let branch = first.child(0).unwrap_or(first);
+            is_closure_rhs(branch)
         }
-        BbnfBootstrapEnum::concatenation(parts) if parts.len() == 1 => {
-            is_closure_rhs(parts[0].0)
+        BbnfBootstrapRuleKind::concatenation => {
+            let mut iter = node.children();
+            let Some(first) = iter.next() else {
+                return false;
+            };
+            if iter.next().is_some() {
+                return false;
+            }
+            let part = first.child(0).unwrap_or(first);
+            is_closure_rhs(part)
         }
-        BbnfBootstrapEnum::binary_factor((first, rest)) if rest.is_empty() => {
-            is_closure_rhs(first)
+        BbnfBootstrapRuleKind::binary_factor => {
+            let Some(first) = node.child(0) else {
+                return false;
+            };
+            let rest = node.child(1);
+            let rest_empty = rest.map(|r| r.children().next().is_none()).unwrap_or(true);
+            if rest_empty {
+                is_closure_rhs(first)
+            } else {
+                false
+            }
         }
-        BbnfBootstrapEnum::mapped_factor((inner, None)) => is_closure_rhs(inner),
-        BbnfBootstrapEnum::factor((None, inner, None, None)) => is_closure_rhs(inner),
+        BbnfBootstrapRuleKind::mapped_factor => {
+            let Some(inner) = node.child(0) else {
+                return false;
+            };
+            let mapping = node.child(1);
+            let no_mapping = mapping
+                .map(|m| m.span().1 == m.span().0)
+                .unwrap_or(true);
+            if no_mapping {
+                is_closure_rhs(inner)
+            } else {
+                false
+            }
+        }
+        BbnfBootstrapRuleKind::factor => {
+            let Some(inner) = node.child(1) else {
+                return false;
+            };
+            let comment_before = node.child(0);
+            let modifier = node.child(2);
+            let comment_after = node.child(3);
+            let all_bare = comment_before
+                .map(|c| c.span().1 == c.span().0)
+                .unwrap_or(true)
+                && modifier.map(|m| m.span().1 == m.span().0).unwrap_or(true)
+                && comment_after
+                    .map(|c| c.span().1 == c.span().0)
+                    .unwrap_or(true);
+            if all_bare {
+                is_closure_rhs(inner)
+            } else {
+                false
+            }
+        }
         _ => false,
     }
 }
@@ -559,42 +616,89 @@ fn compile_ast_common<'a>(
     Ok(ir)
 }
 
-/// Collect closure parameter names from a bootstrap AST node.
+/// Collect closure parameter names from a bootstrap view node.
 fn collect_closure_param_names<'a>(
-    node: &'a BbnfBootstrapEnum<'a>,
+    node: BbnfBootstrapNodeView<'a>,
     params: &mut std::collections::HashSet<&'a str>,
 ) {
-    match node {
-        BbnfBootstrapEnum::closure((_pipe, first_param, rest_params, _pipe2, _body)) => {
-            let first = crate::grammar::generated::BbnfBootstrapEnum::span_text(first_param);
-            if !first.is_empty() {
-                params.insert(first);
+    match node.rule_kind() {
+        BbnfBootstrapRuleKind::closure => {
+            // closure = "|", first_param, rest_params, "|", body
+            if let Some(first_param) = node.child(1) {
+                let first = first_param.span_text();
+                if !first.is_empty() {
+                    params.insert(first);
+                }
             }
-            for (_comma, p) in *rest_params {
-                let name = match p {
-                    BbnfBootstrapEnum::identifier(s) => s.as_str(),
-                    other => crate::grammar::generated::BbnfBootstrapEnum::span_text(other),
-                };
-                if !name.is_empty() {
-                    params.insert(name);
+            if let Some(rest) = node.child(2) {
+                for pair in rest.children() {
+                    if let Some(p) = pair.child(1) {
+                        let name = p.span_text();
+                        if !name.is_empty() {
+                            params.insert(name);
+                        }
+                    }
                 }
             }
         }
         // Unwrap structural wrappers.
-        BbnfBootstrapEnum::alternation(b) if b.len() == 1 => {
-            collect_closure_param_names(b[0].0, params)
+        BbnfBootstrapRuleKind::alternation | BbnfBootstrapRuleKind::call_arg => {
+            let mut iter = node.children();
+            if let Some(first) = iter.next() {
+                if iter.next().is_none() {
+                    let branch = first.child(0).unwrap_or(first);
+                    collect_closure_param_names(branch, params);
+                }
+            }
         }
-        BbnfBootstrapEnum::concatenation(p) if p.len() == 1 => {
-            collect_closure_param_names(p[0].0, params)
+        BbnfBootstrapRuleKind::concatenation => {
+            let mut iter = node.children();
+            if let Some(first) = iter.next() {
+                if iter.next().is_none() {
+                    let part = first.child(0).unwrap_or(first);
+                    collect_closure_param_names(part, params);
+                }
+            }
         }
-        BbnfBootstrapEnum::binary_factor((f, r)) if r.is_empty() => {
-            collect_closure_param_names(f, params)
+        BbnfBootstrapRuleKind::binary_factor => {
+            let Some(first) = node.child(0) else {
+                return;
+            };
+            let rest = node.child(1);
+            let rest_empty = rest.map(|r| r.children().next().is_none()).unwrap_or(true);
+            if rest_empty {
+                collect_closure_param_names(first, params);
+            }
         }
-        BbnfBootstrapEnum::mapped_factor((inner, None)) => {
-            collect_closure_param_names(inner, params)
+        BbnfBootstrapRuleKind::mapped_factor => {
+            let Some(inner) = node.child(0) else {
+                return;
+            };
+            let mapping = node.child(1);
+            let no_mapping = mapping
+                .map(|m| m.span().1 == m.span().0)
+                .unwrap_or(true);
+            if no_mapping {
+                collect_closure_param_names(inner, params);
+            }
         }
-        BbnfBootstrapEnum::factor((None, inner, None, None)) => {
-            collect_closure_param_names(inner, params)
+        BbnfBootstrapRuleKind::factor => {
+            let Some(inner) = node.child(1) else {
+                return;
+            };
+            let comment_before = node.child(0);
+            let modifier = node.child(2);
+            let comment_after = node.child(3);
+            let all_bare = comment_before
+                .map(|c| c.span().1 == c.span().0)
+                .unwrap_or(true)
+                && modifier.map(|m| m.span().1 == m.span().0).unwrap_or(true)
+                && comment_after
+                    .map(|c| c.span().1 == c.span().0)
+                    .unwrap_or(true);
+            if all_bare {
+                collect_closure_param_names(inner, params);
+            }
         }
         _ => {}
     }

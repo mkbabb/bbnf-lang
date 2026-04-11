@@ -1,19 +1,22 @@
 //! Value expression lowering: `->` map syntax.
 //!
 //! Lowers the value expression sub-language (arithmetic, boolean, function
-//! calls, closures, literals) from `BbnfBootstrapEnum` nodes into `MapExpr`.
+//! calls, closures, literals) from `BbnfBootstrapNodeView` nodes into
+//! `MapExpr`.
 //!
 //! Operator chains (`value_or`/`and`/`cmp`/`add`/`mul`) all share the same
 //! left-associative fold shape; the precedence + symbol → `MapBinOp` mapping
 //! lives in the `PRECEDENCE` table and is consumed by the single
 //! `fold_precedence_layer` helper. There is no per-layer hand-written fold.
+//!
+//! Tranche AC.2: every `BbnfBootstrapEnum` pattern-match is now a
+//! `rule_kind()` dispatch + typed child accessors on the view.
 
 use std::collections::HashMap;
 
 use bbnf_ir::{MapBinOp, MapExpr, MapUnaryOp};
-use parse_that::Span;
 
-use crate::grammar::generated::BbnfBootstrapEnum;
+use crate::grammar::generated::{BbnfBootstrapNodeView, BbnfBootstrapRuleKind};
 
 use super::LowerCtx;
 
@@ -66,89 +69,77 @@ const LAYER_CMP: &PrecedenceLayer = &PRECEDENCE[2];
 const LAYER_ADD: &PrecedenceLayer = &PRECEDENCE[3];
 const LAYER_MUL: &PrecedenceLayer = &PRECEDENCE[4];
 
-/// Single generic left-associative fold over a binary operator chain.
+/// Generic left-associative fold over a precedence layer of a
+/// `value_or`/`and`/`cmp`/`add`/`mul` view.
 ///
-/// `op_text` extracts the operator's textual form from each `(op_repr, operand)`
-/// pair (it varies between `Span` and `&Enum` shapes across rules). The text
-/// is looked up in `layer.ops` to recover the canonical `MapBinOp`.
-fn fold_precedence_layer<'a, OpT, I, F>(
-    first: &'a BbnfBootstrapEnum<'a>,
-    rest: I,
-    op_text: F,
+/// Each layer rule has the shape `(first, (op, operand)*)` where
+/// `op` is either a bare punctuation leaf (|| / &&) or a typed
+/// `cmp_op`/`add_op`/`mul_op` wrapper whose `.span_text()` gives the
+/// textual operator. The wrapper distinction is irrelevant to the
+/// fold: both cases resolve via `operator_node.span_text()`.
+fn fold_precedence_layer<'a>(
+    node: BbnfBootstrapNodeView<'a>,
     layer: &PrecedenceLayer,
     ctx: &mut LowerCtx<'a>,
-) -> MapExpr
-where
-    I: IntoIterator<Item = (OpT, &'a BbnfBootstrapEnum<'a>)>,
-    F: Fn(&OpT) -> &str,
-{
+) -> MapExpr {
+    let first = node
+        .child(0)
+        .expect("value precedence layer: missing first operand");
+    let rest_list = node.child(1);
     let mut result = lower_value_expr(first, ctx);
-    for (op_repr, operand) in rest {
-        let text = op_text(&op_repr);
-        let op = layer
-            .ops
-            .iter()
-            .find(|(t, _)| *t == text)
-            .map(|(_, o)| *o)
-            .unwrap_or_else(|| layer.ops[0].1);
-        result = MapExpr::BinOp {
-            op,
-            lhs: Box::new(result),
-            rhs: Box::new(lower_value_expr(operand, ctx)),
-        };
+    if let Some(rest) = rest_list {
+        for pair in rest.children() {
+            // pair = (op_leaf, operand)
+            let op_node = match pair.child(0) {
+                Some(o) => o,
+                None => continue,
+            };
+            let operand = match pair.child(1) {
+                Some(o) => o,
+                None => continue,
+            };
+            let text = op_node.span_text();
+            let op = layer
+                .ops
+                .iter()
+                .find(|(t, _)| *t == text)
+                .map(|(_, o)| *o)
+                .unwrap_or_else(|| layer.ops[0].1);
+            result = MapExpr::BinOp {
+                op,
+                lhs: Box::new(result),
+                rhs: Box::new(lower_value_expr(operand, ctx)),
+            };
+        }
     }
     result
 }
 
 // ─── ValueExpr lowering ────────────────────────────────────────────────────────
 
-/// Lower a value expression bootstrap node to a `MapExpr`.
+/// Lower a value expression view to a `MapExpr`.
 pub(crate) fn lower_value_expr<'a>(
-    node: &'a BbnfBootstrapEnum<'a>,
+    node: BbnfBootstrapNodeView<'a>,
     ctx: &mut LowerCtx<'a>,
 ) -> MapExpr {
-    match node {
+    match node.rule_kind() {
         // Precedence chain: or → and → cmp → add → mul → unary → atom
-        BbnfBootstrapEnum::value_or((first, rest)) => fold_precedence_layer(
-            first,
-            rest.iter().map(|(s, e)| (*s, *e)),
-            |s: &Span<'a>| s.as_str(),
-            LAYER_OR,
-            ctx,
-        ),
-        BbnfBootstrapEnum::value_and((first, rest)) => fold_precedence_layer(
-            first,
-            rest.iter().map(|(s, e)| (*s, *e)),
-            |s: &Span<'a>| s.as_str(),
-            LAYER_AND,
-            ctx,
-        ),
-        BbnfBootstrapEnum::value_cmp((first, rest)) => fold_precedence_layer(
-            first,
-            rest.iter().map(|(op, e)| (*op, *e)),
-            |op: &&BbnfBootstrapEnum<'a>| op_node_text(op),
-            LAYER_CMP,
-            ctx,
-        ),
-        BbnfBootstrapEnum::value_add((first, rest)) => fold_precedence_layer(
-            first,
-            rest.iter().map(|(op, e)| (*op, *e)),
-            |op: &&BbnfBootstrapEnum<'a>| op_node_text(op),
-            LAYER_ADD,
-            ctx,
-        ),
-        BbnfBootstrapEnum::value_mul((first, rest)) => fold_precedence_layer(
-            first,
-            rest.iter().map(|(op, e)| (*op, *e)),
-            |op: &&BbnfBootstrapEnum<'a>| op_node_text(op),
-            LAYER_MUL,
-            ctx,
-        ),
+        BbnfBootstrapRuleKind::value_or => fold_precedence_layer(node, LAYER_OR, ctx),
+        BbnfBootstrapRuleKind::value_and => fold_precedence_layer(node, LAYER_AND, ctx),
+        BbnfBootstrapRuleKind::value_cmp => fold_precedence_layer(node, LAYER_CMP, ctx),
+        BbnfBootstrapRuleKind::value_add => fold_precedence_layer(node, LAYER_ADD, ctx),
+        BbnfBootstrapRuleKind::value_mul => fold_precedence_layer(node, LAYER_MUL, ctx),
 
         // Unary
-        BbnfBootstrapEnum::value_unary(inner) => lower_value_expr(inner, ctx),
-        BbnfBootstrapEnum::value_unary_0((op_span, inner)) => {
-            let op = match op_span.as_str() {
+        BbnfBootstrapRuleKind::value_unary => {
+            let inner = node.child(0).expect("value_unary: missing inner");
+            lower_value_expr(inner, ctx)
+        }
+        BbnfBootstrapRuleKind::value_unary_0 => {
+            // value_unary_0 = (op_span, inner)
+            let op_span = node.child(0).expect("value_unary_0: missing op");
+            let inner = node.child(1).expect("value_unary_0: missing inner");
+            let op = match op_span.span_text() {
                 "-" => MapUnaryOp::Neg,
                 "!" => MapUnaryOp::Not,
                 _ => MapUnaryOp::Neg,
@@ -160,50 +151,74 @@ pub(crate) fn lower_value_expr<'a>(
         }
 
         // Atom
-        BbnfBootstrapEnum::value_atom(inner) => lower_value_expr(inner, ctx),
-        BbnfBootstrapEnum::value_atom_0((_open, inner, _close)) => lower_value_expr(inner, ctx),
+        BbnfBootstrapRuleKind::value_atom => {
+            let inner = node.child(0).expect("value_atom: missing inner");
+            lower_value_expr(inner, ctx)
+        }
+        BbnfBootstrapRuleKind::value_atom_0 => {
+            // value_atom_0 = ("(", inner, ")")
+            let inner = node.child(1).expect("value_atom_0: missing inner");
+            lower_value_expr(inner, ctx)
+        }
 
         // Literals
-        BbnfBootstrapEnum::int_lit(s) => parse_int_literal(s.as_str()),
-        BbnfBootstrapEnum::float_lit(s) => parse_float_literal(s.as_str()),
-        BbnfBootstrapEnum::bool_lit(s) => MapExpr::BoolLit(s.as_str() == "true"),
-        BbnfBootstrapEnum::string_lit(s) => {
-            let raw = s.as_str();
+        BbnfBootstrapRuleKind::int_lit => parse_int_literal(node.span_text()),
+        BbnfBootstrapRuleKind::float_lit => parse_float_literal(node.span_text()),
+        BbnfBootstrapRuleKind::bool_lit => MapExpr::BoolLit(node.span_text() == "true"),
+        BbnfBootstrapRuleKind::string_lit => {
+            let raw = node.span_text();
             let inner = &raw[1..raw.len() - 1]; // Strip quotes.
             let sid = ctx.strings.intern(inner);
             MapExpr::StringLit(sid)
         }
 
         // Input
-        BbnfBootstrapEnum::value_input((_, props)) => {
-            if props.is_empty() {
-                MapExpr::Input
-            } else {
-                // Take the last property access.
-                let (_dot, prop_node) = &props[props.len() - 1];
-                let prop_name = match prop_node {
-                    BbnfBootstrapEnum::value_ident(s) => s.as_str(),
-                    BbnfBootstrapEnum::identifier(s) => s.as_str(),
-                    _ => "unknown",
-                };
-                let sid = ctx.strings.intern(prop_name);
-                MapExpr::InputProp { prop: sid }
+        BbnfBootstrapRuleKind::value_input => {
+            // value_input = (input_kw, (dot, prop)*) — the first
+            // child is the `input` keyword leaf, the second is the
+            // property chain (possibly absent / empty).
+            let props = node.child(1);
+            let last_prop = props.and_then(|p| p.children().last());
+            match last_prop {
+                Some(pair) => {
+                    let prop_node = pair.child(1).unwrap_or(pair);
+                    let prop_name = match prop_node.rule_kind() {
+                        BbnfBootstrapRuleKind::value_ident
+                        | BbnfBootstrapRuleKind::identifier => prop_node.span_text(),
+                        _ => "unknown",
+                    };
+                    let sid = ctx.strings.intern(prop_name);
+                    MapExpr::InputProp { prop: sid }
+                }
+                None => MapExpr::Input,
             }
         }
 
         // Function call
-        BbnfBootstrapEnum::value_fn_call((name_enum, _open, args_opt, _close)) => {
-            let name_str = join_value_path(name_enum);
+        BbnfBootstrapRuleKind::value_fn_call => {
+            // value_fn_call = (name, "(", args_opt, ")")
+            let name_node = node.child(0).expect("value_fn_call: missing name");
+            let args_opt = node.child(2);
+            let name_str = join_value_path(name_node);
             let sid = ctx.strings.intern(&name_str);
             let ir_args: Vec<MapExpr> = match args_opt {
-                Some((first_arg, rest_args)) => {
+                Some(args_group) if args_group.span().1 > args_group.span().0 => {
+                    // args_group = (first_arg, (",", arg)*)
+                    let first_arg = args_group
+                        .child(0)
+                        .expect("value_fn_call args: missing first arg");
+                    let rest = args_group.child(1);
                     let mut args = vec![lower_value_expr(first_arg, ctx)];
-                    for (_comma, arg) in *rest_args {
-                        args.push(lower_value_expr(arg, ctx));
+                    if let Some(rest_list) = rest {
+                        for pair in rest_list.children() {
+                            if let Some(arg) = pair.child(1) {
+                                args.push(lower_value_expr(arg, ctx));
+                            }
+                        }
                     }
                     args
                 }
-                None => vec![],
+                _ => vec![],
             };
             MapExpr::FnCall {
                 name: sid,
@@ -212,13 +227,19 @@ pub(crate) fn lower_value_expr<'a>(
         }
 
         // Path (e.g., crate::module::func — treat as bare function reference)
-        BbnfBootstrapEnum::value_path((first, rest)) => {
-            if rest.is_empty() {
+        BbnfBootstrapRuleKind::value_path => {
+            // value_path = (first, ("::", segment)*) — unwrap
+            // single-segment paths transparently.
+            let first = node.child(0).expect("value_path: missing first segment");
+            let rest = node.child(1);
+            let rest_empty = rest.map(|r| r.children().next().is_none()).unwrap_or(true);
+            if rest_empty {
                 lower_value_expr(first, ctx)
             } else {
                 let path = join_value_path(node);
-                // Single-segment paths that match a value-closure binding
-                // resolve to the bound MapExpr instead of a function call.
+                // Single-segment paths that match a value-closure
+                // binding resolve to the bound MapExpr instead of a
+                // function call.
                 if let Some(bound) = lookup_value_env(&path, &ctx.value_env) {
                     return bound;
                 }
@@ -232,8 +253,8 @@ pub(crate) fn lower_value_expr<'a>(
 
         // Identifier (bare name — treat as function call on input, unless
         // shadowed by a value-closure parameter binding).
-        BbnfBootstrapEnum::value_ident(s) => {
-            let name = s.as_str();
+        BbnfBootstrapRuleKind::value_ident => {
+            let name = node.span_text();
             if let Some(bound) = lookup_value_env(name, &ctx.value_env) {
                 return bound;
             }
@@ -245,7 +266,13 @@ pub(crate) fn lower_value_expr<'a>(
         }
 
         // Value closure: |params| body
-        BbnfBootstrapEnum::value_closure((_pipe, first_param, rest_params, _pipe2, body)) => {
+        BbnfBootstrapRuleKind::value_closure => {
+            // value_closure = "|", first_param, rest_params, "|", body
+            let first_param = node
+                .child(1)
+                .expect("value_closure: missing first param");
+            let rest_params = node.child(2);
+            let body = node.child(4).expect("value_closure: missing body");
             lower_value_expr_with_bindings(body, first_param, rest_params, ctx)
         }
 
@@ -254,39 +281,38 @@ pub(crate) fn lower_value_expr<'a>(
     }
 }
 
-// ─── Op-node text extraction ─────────────────────────────────────────────────
+// ─── Path extraction ─────────────────────────────────────────────────────────
 
-/// Extract the textual operator from a `cmp_op`/`add_op`/`mul_op` enum node.
-/// Used by `fold_precedence_layer` to look up the canonical `MapBinOp`.
-fn op_node_text<'a>(node: &BbnfBootstrapEnum<'a>) -> &'a str {
-    match node {
-        BbnfBootstrapEnum::cmp_op(s)
-        | BbnfBootstrapEnum::add_op(s)
-        | BbnfBootstrapEnum::mul_op(s) => s.as_str(),
-        _ => "",
-    }
-}
-
-/// Join a `value_path` node's segments with `::`. Returns the leaf text
-/// for non-path nodes. Used by value-expression lowering to recover
-/// fully-qualified function paths (e.g. `crate::module::func`).
-fn join_value_path(node: &BbnfBootstrapEnum<'_>) -> String {
-    match node {
-        BbnfBootstrapEnum::value_path((first, rest)) => {
-            let first_str = BbnfBootstrapEnum::span_text(first);
-            if rest.is_empty() {
-                first_str.to_string()
-            } else {
-                let mut path = String::with_capacity(first_str.len() + rest.len() * 10);
-                path.push_str(first_str);
-                for (_sep, segment) in *rest {
+/// Join a `value_path` view's segments with `::`. Returns the leaf
+/// text for non-path views. Used by value-expression lowering to
+/// recover fully-qualified function paths (e.g. `crate::module::func`).
+fn join_value_path<'a>(node: BbnfBootstrapNodeView<'a>) -> String {
+    if node.rule_kind() == BbnfBootstrapRuleKind::value_path {
+        let first = match node.child(0) {
+            Some(f) => f,
+            None => return String::new(),
+        };
+        let first_str = first.span_text();
+        let rest = node.child(1);
+        let rest_empty = rest.map(|r| r.children().next().is_none()).unwrap_or(true);
+        if rest_empty {
+            first_str.to_string()
+        } else {
+            let rest = rest.unwrap();
+            let rest_len = rest.children().count();
+            let mut path = String::with_capacity(first_str.len() + rest_len * 10);
+            path.push_str(first_str);
+            for pair in rest.children() {
+                // pair = ("::", segment)
+                if let Some(segment) = pair.child(1) {
                     path.push_str("::");
-                    path.push_str(BbnfBootstrapEnum::span_text(segment));
+                    path.push_str(segment.span_text());
                 }
-                path
             }
+            path
         }
-        other => BbnfBootstrapEnum::span_text(other).to_string(),
+    } else {
+        node.span_text().to_string()
     }
 }
 
@@ -295,32 +321,43 @@ fn join_value_path(node: &BbnfBootstrapEnum<'_>) -> String {
 /// Lower a value closure body with param→Input bindings via env push/pop.
 ///
 /// `first_param` is the first closure parameter (mapped to `MapExpr::Input`).
-/// `rest_params` are the remaining `(comma, param)` pairs (mapped to `InputProp`).
+/// `rest_params` is the optional rest list: `(",", param)*`.
 ///
 /// Pushes a frame onto `ctx.value_env` before lowering the body, pops
 /// afterwards. `lower_value_expr` consults the stack at `value_ident` /
 /// single-segment `value_path` sites — no parallel substitution walker.
 pub(crate) fn lower_value_expr_with_bindings<'a>(
-    body: &'a BbnfBootstrapEnum<'a>,
-    first_param: &'a BbnfBootstrapEnum<'a>,
-    rest_params: &'a [(Span<'a>, &'a BbnfBootstrapEnum<'a>)],
+    body: BbnfBootstrapNodeView<'a>,
+    first_param: BbnfBootstrapNodeView<'a>,
+    rest_params: Option<BbnfBootstrapNodeView<'a>>,
     ctx: &mut LowerCtx<'a>,
 ) -> MapExpr {
     let mut frame: HashMap<&'a str, MapExpr> = HashMap::new();
 
-    let first_name = match first_param {
-        BbnfBootstrapEnum::value_ident(s) | BbnfBootstrapEnum::identifier(s) => s.as_str(),
+    let first_name = match first_param.rule_kind() {
+        BbnfBootstrapRuleKind::value_ident | BbnfBootstrapRuleKind::identifier => {
+            first_param.span_text()
+        }
         _ => "",
     };
     frame.insert(first_name, MapExpr::Input);
 
-    for (_comma, param_node) in rest_params {
-        let name = match param_node {
-            BbnfBootstrapEnum::value_ident(s) | BbnfBootstrapEnum::identifier(s) => s.as_str(),
-            _ => "",
-        };
-        let sid = ctx.strings.intern(name);
-        frame.insert(name, MapExpr::InputProp { prop: sid });
+    if let Some(rest) = rest_params {
+        for pair in rest.children() {
+            // pair = (",", param)
+            let param_node = match pair.child(1) {
+                Some(p) => p,
+                None => continue,
+            };
+            let name = match param_node.rule_kind() {
+                BbnfBootstrapRuleKind::value_ident | BbnfBootstrapRuleKind::identifier => {
+                    param_node.span_text()
+                }
+                _ => "",
+            };
+            let sid = ctx.strings.intern(name);
+            frame.insert(name, MapExpr::InputProp { prop: sid });
+        }
     }
 
     ctx.value_env.push(frame);
@@ -344,65 +381,91 @@ fn lookup_value_env(name: &str, env: &[HashMap<&str, MapExpr>]) -> Option<MapExp
 
 /// Extract a `&str` from a `value_ident` or a single-segment `value_path`,
 /// recursively unwrapping value expression precedence wrappers.
-pub(crate) fn unwrap_value_ident_str<'a>(node: &'a BbnfBootstrapEnum<'a>) -> Option<&'a str> {
-    match node {
-        BbnfBootstrapEnum::value_ident(s) => Some(s.as_str()),
-        BbnfBootstrapEnum::value_path((first, rest)) if rest.is_empty() => {
-            unwrap_value_ident_str(first)
+pub(crate) fn unwrap_value_ident_str<'a>(
+    node: BbnfBootstrapNodeView<'a>,
+) -> Option<&'a str> {
+    match node.rule_kind() {
+        BbnfBootstrapRuleKind::value_ident => Some(node.span_text()),
+        BbnfBootstrapRuleKind::value_path => {
+            let first = node.child(0)?;
+            let rest = node.child(1);
+            let rest_empty = rest.map(|r| r.children().next().is_none()).unwrap_or(true);
+            if rest_empty {
+                unwrap_value_ident_str(first)
+            } else {
+                None
+            }
         }
-        // Unwrap value expression precedence chain.
-        BbnfBootstrapEnum::value_or((first, rest)) if rest.is_empty() => {
-            unwrap_value_ident_str(first)
+        // Unwrap precedence chain layers.
+        BbnfBootstrapRuleKind::value_or
+        | BbnfBootstrapRuleKind::value_and
+        | BbnfBootstrapRuleKind::value_cmp
+        | BbnfBootstrapRuleKind::value_add
+        | BbnfBootstrapRuleKind::value_mul => {
+            let first = node.child(0)?;
+            let rest = node.child(1);
+            let rest_empty = rest.map(|r| r.children().next().is_none()).unwrap_or(true);
+            if rest_empty {
+                unwrap_value_ident_str(first)
+            } else {
+                None
+            }
         }
-        BbnfBootstrapEnum::value_and((first, rest)) if rest.is_empty() => {
-            unwrap_value_ident_str(first)
+        BbnfBootstrapRuleKind::value_unary | BbnfBootstrapRuleKind::value_atom => {
+            let inner = node.child(0)?;
+            unwrap_value_ident_str(inner)
         }
-        BbnfBootstrapEnum::value_cmp((first, rest)) if rest.is_empty() => {
-            unwrap_value_ident_str(first)
-        }
-        BbnfBootstrapEnum::value_add((first, rest)) if rest.is_empty() => {
-            unwrap_value_ident_str(first)
-        }
-        BbnfBootstrapEnum::value_mul((first, rest)) if rest.is_empty() => {
-            unwrap_value_ident_str(first)
-        }
-        BbnfBootstrapEnum::value_unary(inner)
-        | BbnfBootstrapEnum::value_atom(inner) => unwrap_value_ident_str(inner),
         _ => None,
     }
 }
 
 /// Unwrap transparent value wrappers to reach the inner value node.
 /// Peels one layer of value expression wrapper.
-fn unwrap_value_atom<'a>(node: &'a BbnfBootstrapEnum<'a>) -> Option<&'a BbnfBootstrapEnum<'a>> {
-    match node {
-        BbnfBootstrapEnum::value_atom(inner)
-        | BbnfBootstrapEnum::value_unary(inner) => Some(inner),
-        BbnfBootstrapEnum::value_or((first, rest)) if rest.is_empty() => Some(first),
-        BbnfBootstrapEnum::value_and((first, rest)) if rest.is_empty() => Some(first),
-        BbnfBootstrapEnum::value_cmp((first, rest)) if rest.is_empty() => Some(first),
-        BbnfBootstrapEnum::value_add((first, rest)) if rest.is_empty() => Some(first),
-        BbnfBootstrapEnum::value_mul((first, rest)) if rest.is_empty() => Some(first),
-        BbnfBootstrapEnum::value_atom_0((_open, inner, _close)) => Some(inner),
-        BbnfBootstrapEnum::value_path((first, rest)) if rest.is_empty() => Some(first),
+fn unwrap_value_atom<'a>(
+    node: BbnfBootstrapNodeView<'a>,
+) -> Option<BbnfBootstrapNodeView<'a>> {
+    match node.rule_kind() {
+        BbnfBootstrapRuleKind::value_atom | BbnfBootstrapRuleKind::value_unary => node.child(0),
+        BbnfBootstrapRuleKind::value_or
+        | BbnfBootstrapRuleKind::value_and
+        | BbnfBootstrapRuleKind::value_cmp
+        | BbnfBootstrapRuleKind::value_add
+        | BbnfBootstrapRuleKind::value_mul => {
+            let first = node.child(0)?;
+            let rest = node.child(1);
+            let rest_empty = rest.map(|r| r.children().next().is_none()).unwrap_or(true);
+            if rest_empty { Some(first) } else { None }
+        }
+        BbnfBootstrapRuleKind::value_atom_0 => node.child(1),
+        BbnfBootstrapRuleKind::value_path => {
+            let first = node.child(0)?;
+            let rest = node.child(1);
+            let rest_empty = rest.map(|r| r.children().next().is_none()).unwrap_or(true);
+            if rest_empty { Some(first) } else { None }
+        }
         _ => None,
     }
 }
 
 /// Recursively unwrap the full value expression chain to reach a leaf node.
-pub(crate) fn deep_unwrap_value<'a>(node: &'a BbnfBootstrapEnum<'a>) -> &'a BbnfBootstrapEnum<'a> {
+pub(crate) fn deep_unwrap_value<'a>(
+    node: BbnfBootstrapNodeView<'a>,
+) -> BbnfBootstrapNodeView<'a> {
     match unwrap_value_atom(node) {
         Some(inner) => deep_unwrap_value(inner),
         None => node,
     }
 }
 
-pub(crate) fn extract_value_func_name(node: &BbnfBootstrapEnum<'_>) -> Option<String> {
-    match node {
-        BbnfBootstrapEnum::value_ident(s) => Some(s.as_str().to_string()),
-        BbnfBootstrapEnum::value_path(_) => Some(join_value_path(node)),
-        BbnfBootstrapEnum::value_fn_call((name, _, _, _)) => {
-            Some(join_value_path(name))
+pub(crate) fn extract_value_func_name<'a>(
+    node: BbnfBootstrapNodeView<'a>,
+) -> Option<String> {
+    match node.rule_kind() {
+        BbnfBootstrapRuleKind::value_ident => Some(node.span_text().to_string()),
+        BbnfBootstrapRuleKind::value_path => Some(join_value_path(node)),
+        BbnfBootstrapRuleKind::value_fn_call => {
+            let name_node = node.child(0)?;
+            Some(join_value_path(name_node))
         }
         _ => None,
     }

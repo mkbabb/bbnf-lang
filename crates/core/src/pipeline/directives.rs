@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 use indexmap::IndexMap;
 
-use crate::grammar::generated::BbnfBootstrapEnum;
+use crate::grammar::generated::BbnfBootstrapNodeView;
 use crate::imports::load_module_graph;
 use crate::lower::DirectiveSet;
 use crate::pipeline::CompileError;
@@ -11,7 +11,7 @@ use crate::types::{AST, ParsedGrammar, RuleEntry};
 
 #[derive(Default)]
 pub(crate) struct DirectiveMaps<'a> {
-    recover_map: HashMap<String, &'a BbnfBootstrapEnum<'a>>,
+    recover_map: HashMap<String, BbnfBootstrapNodeView<'a>>,
     pretty_map: HashMap<String, Vec<String>>,
     ws_pattern: Option<String>,
     token_set: HashSet<String>,
@@ -40,7 +40,7 @@ impl<'a> DirectiveMaps<'a> {
 
         for rec in recovers {
             maps.recover_map
-                .insert(rec.rule_name.into_owned(), rec.sync_expr);
+                .insert(rec.rule_name.to_string(), rec.sync_expr);
         }
         for pretty in pretties {
             maps.pretty_map.insert(

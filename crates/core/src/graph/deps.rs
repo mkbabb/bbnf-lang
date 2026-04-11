@@ -1,8 +1,12 @@
 //! Dependency graph construction from grammar AST.
+//!
+//! Tranche AC.2: rewritten against the tape-first view surface.
+//! Identifier references are collected by walking `children()` on a
+//! [`BbnfBootstrapNodeView`] and matching on [`BbnfBootstrapRuleKind`].
 
 use indexmap::{IndexMap, IndexSet};
 
-use crate::grammar::generated::{BbnfBootstrapEnum, BbnfBootstrapEnumVisitor};
+use crate::grammar::generated::{BbnfBootstrapNodeView, BbnfBootstrapRuleKind};
 use crate::types::AST;
 
 /// Rule name → set of referenced rule names.
@@ -19,57 +23,47 @@ pub type Dependencies<'a> = IndexMap<&'a str, IndexSet<&'a str>>;
 pub fn calculate_ast_deps<'a>(ast: &AST<'a>) -> Dependencies<'a> {
     let mut deps = Dependencies::new();
     for (&name, entry) in ast.iter() {
-        let mut collector = RefCollector {
-            refs: IndexSet::new(),
-        };
-        collector.visit(entry.rhs);
-        deps.insert(name, collector.refs);
+        let mut refs = IndexSet::new();
+        collect_nonterminal_refs(entry.rhs, &mut refs);
+        deps.insert(name, refs);
     }
     deps
 }
 
-/// Visitor that collects nonterminal identifier references from a grammar RHS.
-struct RefCollector<'a> {
-    refs: IndexSet<&'a str>,
-}
-
-impl<'a> BbnfBootstrapEnumVisitor<'a> for RefCollector<'a> {
-    type Output = ();
-
-    fn visit(&mut self, node: &'a BbnfBootstrapEnum<'a>) {
-        match node {
-            // Identifier reference: collect the name.
-            BbnfBootstrapEnum::identifier(s) => {
-                self.refs.insert(s.as_str());
+/// Recursively collect nonterminal (identifier) references from a
+/// bootstrap view node.
+///
+/// Value expression sub-variants share types with grammar
+/// sub-variants (e.g., `value_atom_0` is also used for `(rhs)` parens
+/// in `term`), so we cannot skip them by variant name — the walk
+/// safely descends and identifier nodes inside value expressions
+/// will be collected, but in valid grammars value expressions don't
+/// contain grammar references.
+pub fn collect_nonterminal_refs<'a>(
+    node: BbnfBootstrapNodeView<'a>,
+    refs: &mut IndexSet<&'a str>,
+) {
+    match node.rule_kind() {
+        // Identifier reference: collect the name.
+        BbnfBootstrapRuleKind::identifier => {
+            refs.insert(node.span_text());
+        }
+        // term_1: identifier with optional call args. Collect the
+        // head identifier, then walk the optional arg list for
+        // nested references.
+        BbnfBootstrapRuleKind::term_1 => {
+            if let Some(ident) = node.child(0) {
+                refs.insert(ident.span_text());
             }
-            // term_1: identifier with optional call args.
-            BbnfBootstrapEnum::term_1((ident, _call_args)) => {
-                self.refs.insert(crate::grammar::generated::BbnfBootstrapEnum::span_text(ident));
-                self.walk(node);
+            for child in node.children() {
+                collect_nonterminal_refs(child, refs);
             }
-            // All other variants: delegate to generated walk for structural recursion.
-            //
-            // Note: value expression sub-variants share types with grammar
-            // sub-variants (e.g., `value_atom_0` is also used for `(rhs)` parens
-            // in `term`), so we cannot skip them by variant name.
-            // The walk safely descends; identifier nodes inside value expressions
-            // will be collected, but value expressions don't contain grammar refs
-            // in valid grammars.
-            _ => {
-                self.walk(node);
+        }
+        // All other variants: delegate structural recursion.
+        _ => {
+            for child in node.children() {
+                collect_nonterminal_refs(child, refs);
             }
         }
     }
-}
-
-/// Recursively collect nonterminal (identifier) references from a bootstrap AST node.
-pub fn collect_nonterminal_refs<'a>(
-    node: &'a BbnfBootstrapEnum<'a>,
-    refs: &mut IndexSet<&'a str>,
-) {
-    let mut collector = RefCollector {
-        refs: std::mem::take(refs),
-    };
-    collector.visit(node);
-    *refs = collector.refs;
 }

@@ -591,9 +591,9 @@ fn compile_ast_common<'a>(
         // the same solver, overriding the bottom-up classification
         // with the cost-optimal per-rule-root class where the CSP
         // can prove it legal under pin constraints.
-        timer.span("solve_strategy_and_materialization", || {
+        timer.span("solve_grammar_components", || {
             let (decisions, mat_refined) =
-                bbnf_ir::passes::solve_strategy_and_materialization(&ir);
+                bbnf_ir::passes::solve_grammar_components(&ir);
             ir.recognizer_decisions = decisions;
             for (node_id, class) in mat_refined {
                 ir.materialization.insert(node_id, class);

@@ -52,37 +52,95 @@
 //! where the SeqMode/RepeatMode/CallStrategy/MemoMode variables also
 //! join the substrate.
 //!
-//! # Tranche Y.5 — connected-components decomposition
+//! # Tranche AF.3 — per-component CSP solves
 //!
-//! Each rule body is solved as its own [`csp_solver::Csp`] instance.
-//! Under the current constraint topology (the only cross-variable
-//! constraint is `ImplicationConstraint`, wiring an Alt parent to
-//! its child Regex engines within the same rule body), **each rule
-//! body is exactly one connected component** — the per-rule solve
-//! is already the connected-components decomposition the X.6 global-
-//! CSP experiment was trying to approximate with a single giant
-//! `Csp::new()`. The X.6 blow-up (9 ms → 94 ms on `compile_css_l4`)
-//! happened because feeding all rules' variables into one solver let
-//! branch-and-bound explore the cross-product whenever any single
-//! constraint fired; the per-rule decomposition bounds the search
-//! per rule, which is exactly what the connected-components
-//! decomposition would produce under the same topology.
+//! Pre-AF.3, this module iterated `ir.rules` and solved each rule
+//! body as its own isolated `csp_solver::Csp`. The per-rule loop was
+//! sufficient under the pre-AF.3 constraint topology — every
+//! constraint was intra-rule — but a per-rule solve is intrinsically
+//! incapable of carrying cross-rule constraints: a constraint that
+//! binds variables in two distinct rule bodies must be inside a
+//! single `Csp` instance, or the two rules' decisions drift.
 //!
-//! Y.5 ships the architectural substrate for the first tranche that
-//! adds genuine cross-rule constraints (likely Y.2 `SharedHelper`
-//! cross-rule hoisting or a future type-projection lift): see
-//! [`components::UnionFind`] for the ready-to-use union-find helper
-//! and `components` module docs for the migration path. Under the
-//! current topology there is no behavioral change — the code
-//! structure makes the invariant explicit and provides the bridge
-//! for the next tranche that needs it.
+//! AF.3 upgrades the solver to a **per-component** loop. The
+//! [`components::partition_by_call_graph`] helper builds the
+//! connected-components partition of the rule call graph (two rules
+//! share a component iff one transitively references the other via
+//! `IrNode::Ref`), and the solver walks components — not rules —
+//! building one `Csp` per component and installing every rule in
+//! that component's variables into the shared substrate. The three
+//! new cross-rule constraints (`EnginePropagation`,
+//! `ParentCompatibility`, `TierFollowsMaterialization`) then bind
+//! variables inside the component boundary, which is exactly what
+//! the partition semantics guarantee.
 //!
-//! The Y.-1 node budget on the shared `SolveConfig` means a runaway
-//! component search falls back to per-variable trivial picks rather
-//! than hanging the compile. This is the safety net the X.6
-//! experiment lacked.
+//! A component with one rule is still a component; a component with
+//! fifty rules is still a component. The solver does not special-
+//! case isolated rules — they degenerate naturally to the existing
+//! fast paths (empty-sites skip, no-constraints
+//! `decode_min_cost_per_variable` short-circuit) without any new
+//! branching.
+//!
+//! The public entry point is [`solve_grammar_components`], replacing
+//! the pre-AF.3 `solve_strategy_and_materialization` name. The old
+//! name is kept as a `#[deprecated]` alias for one migration
+//! window; internal callers already consume the new name.
+//!
+//! # Cross-rule constraint installation
+//!
+//! The three AF.3 cross-rule constraint families live as
+//! sub-modules under [`constraints`]. Each sub-module exposes an
+//! `install(csp, components, ir)` entry point called once per
+//! component solve, after variable building but before finalize.
+//! The seam is intentionally narrow: the parent solver owns the
+//! CSP lifecycle and the component iteration; the constraint
+//! modules own the decision about which variables to bind. A new
+//! cross-rule constraint family lands as a new file in
+//! `constraints/` and one new `install(...)` call in the component
+//! solve loop — no parent-module changes required.
+//!
+//! # Node budget safety net
+//!
+//! The Y.-1 `SolveConfig::node_budget` guards every component solve.
+//! A pathological component (e.g., one where cross-rule propagation
+//! explodes the search space) falls back to per-variable trivial
+//! picks for that component without hanging the compile. The per-
+//! component logging is preserved from the existing
+//! `BBNF_CSP_REPORT=1` path.
+//!
+//! # Historical context
+//!
+//! The Tranche X.6 "global CSP batching" experiment tried a single
+//! grammar-wide `Csp::new()` and blew up `compile_css_l4` from 9 ms
+//! to 94 ms because branch-and-bound explored the full rule cross-
+//! product whenever any single constraint fired. Y.5 landed the
+//! `UnionFind` substrate as a deferred fix, but left the
+//! per-rule loop intact because the constraint topology did not yet
+//! need it. AF.3 wires the substrate to the solver: the unit of
+//! work is now the component, and the constraint surface is
+//! explicitly cross-rule.
 
 pub mod components;
+
+// Tranche AF.3 — cross-rule constraint families. The sub-modules
+// (`engine`, `parent`, `tier`) register `EnginePropagation`,
+// `ParentCompatibility`, and `TierFollowsMaterialization` constraints
+// against the `GrammarComponents` partition. The stub below compiles
+// as an empty module so the parent file's `constraints::*::install`
+// call sites are syntactically valid; the real implementations land
+// in Wave 5 Agent 5B's commit and get folded in by the orchestrator's
+// cherry-pick step.
+//
+// The seam is: each sub-module exposes `pub fn install(csp: &mut
+// Csp<StrategyDomain>, components: &GrammarComponents, ir:
+// &GrammarIR)`, called once per component solve after variable
+// building but before finalize.
+#[allow(dead_code)]
+pub mod constraints {
+    // TODO(AF.3 Agent 5B): implement engine / parent / tier
+    // sub-modules. Until they land, the parent solver's call sites
+    // are cfg-gated out via the `#[cfg(any())]` marker below.
+}
 
 use std::collections::HashMap;
 
@@ -94,10 +152,11 @@ use csp_solver::{
 };
 use rustc_hash::FxHashMap;
 
+use self::components::{partition_by_call_graph, GrammarComponents};
 use crate::dag::NodeId;
 use crate::passes::materialization::MaterializationClass;
 use crate::passes::patterns::{Recognizer, RecognizerShape};
-use crate::{CostConfig, GrammarIR, IrNode};
+use crate::{CostConfig, GrammarIR, IrNode, RuleId};
 
 // ── Decision domain ─────────────────────────────────────────────────────────
 
@@ -176,7 +235,7 @@ pub enum RegexEngine {
 }
 
 /// One decision record per `NodeId`. Populated by
-/// [`solve_strategy_decisions`].
+/// [`solve_grammar_components`].
 #[derive(Clone, Debug, Default)]
 pub struct RecognizerDecision {
     pub alt_mode: Option<AltMode>,
@@ -279,50 +338,43 @@ impl CostDomain for StrategyDomain {
 // ── Solver entry point ──────────────────────────────────────────────────────
 
 /// Build the per-NodeId strategy decision map by running a real CSP
-/// per rule body with [`OptimizationMode::MinimizeCost`].
+/// per call-graph component with [`OptimizationMode::MinimizeCost`].
 ///
 /// Renamed from V.6's `solve_recognizer_decisions` to reflect the
 /// reality: this is a strategy synthesis pass that solves an
 /// optimization problem, not a deterministic recognizer walk.
+/// Renamed again in AB.1 to
+/// `solve_strategy_and_materialization` when the per-rule joint
+/// strategy + materialization solve landed. Renamed in AF.3 to
+/// `solve_grammar_components` to reflect the **component** unit of
+/// work: the solver now iterates the connected-components partition
+/// of the rule call graph, solving each component as a single CSP.
 ///
-/// Per-rule scope is intentional: branch-and-bound search complexity
-/// is bounded by the per-rule variable count, even when no cross-rule
-/// constraint exists. A union CSP (Tranche X attempted this and
-/// reverted) blew compile_css_l4 from 9 ms to 94 ms because the
-/// search had to explore the cross-product of every rule's decision
-/// space whenever any single rule had an `ImplicationConstraint` —
-/// the solver does not detect connected components.
+/// # Component scope
 ///
-/// True global cross-rule optimization (with `SharedHelper` hoisting
-/// variables and a joint objective) belongs to Tranche Y, and will
-/// require either a connected-components decomposition or a solver
-/// substrate that exploits independent sub-problems.
+/// Per-component scope is the coarsest decomposition under which
+/// every cross-rule constraint (`EnginePropagation`,
+/// `ParentCompatibility`, `TierFollowsMaterialization`) fits inside
+/// a single `Csp` instance. Rules with no Ref chain between them
+/// are in disjoint components and solved independently, bounding
+/// branch-and-bound's search surface per component.
 ///
-/// **Tranche AB.1 — joint strategy + materialization solve.** The
-/// CSP now carries a per-rule `Site::Materialization` variable
-/// alongside the existing Alt/Wrap/Engine sites. See
-/// [`solve_strategy_and_materialization`] for the joint entry point.
-/// This deprecated alias is preserved so external callers can
-/// migrate incrementally; the backend pipeline already calls the
-/// new name directly.
-#[deprecated(
-    since = "AB.1",
-    note = "use solve_strategy_and_materialization (returns both decisions and updated materialization)"
-)]
-pub fn solve_strategy_decisions(ir: &GrammarIR) -> RecognizerDecisionMap {
-    solve_strategy_and_materialization(ir).0
-}
-
-/// Tranche AB.1 — joint strategy + materialization CSP entry point.
+/// The Tranche X.6 union CSP experiment (single grammar-wide
+/// `Csp::new()`) blew `compile_css_l4` from 9 ms to 94 ms because
+/// the solver explored the full rule cross-product whenever any
+/// constraint fired. The per-component decomposition recovers the
+/// bounded search while permitting genuine cross-rule constraints.
 ///
-/// Returns `(RecognizerDecisionMap, materialization_map)`: the former
-/// keyed by NodeId with Alt/Wrap/Engine decisions, the latter the
+/// # Returns
+///
+/// `(RecognizerDecisionMap, materialization_map)` — the former keyed
+/// by NodeId with Alt/Wrap/Engine decisions, the latter the
 /// cost-refined per-rule materialization class (one entry per rule
 /// root NodeId). The returned materialization map is meant to be
 /// merged into `ir.materialization`, overriding the bottom-up
 /// estimates from `classify_materialization` where the CSP finds a
 /// cheaper (or pin-satisfying) assignment.
-pub fn solve_strategy_and_materialization(
+pub fn solve_grammar_components(
     ir: &GrammarIR,
 ) -> (RecognizerDecisionMap, HashMap<NodeId, MaterializationClass>) {
     let dag = match ir.dag.as_ref() {
@@ -335,26 +387,36 @@ pub fn solve_strategy_and_materialization(
     let cfg = &ir.cost_config;
     let debug_all = ir.debug_all;
 
-    // Tranche Y.5 → AB.1: wake the `UnionFind` substrate as the
-    // first production consumer. Today every rule body is its own
-    // connected component (the only cross-variable constraint is
-    // the intra-rule TokenDispatch implication), so the union-find
-    // materializes as a set of trivial singletons — but the code
-    // path is live, and the first tranche that adds a cross-rule
-    // edge (e.g., a refined TransparentElideChain constraint) gets
-    // the decomposition for free.
-    let n_rules = ir.rules.len();
-    let mut uf = components::UnionFind::new(n_rules);
-    // No cross-rule unions under the current topology. The loop
-    // below acts as the component enumerator.
-    let _ = &mut uf;
+    // AF.3 — build the connected-components partition of the rule
+    // call graph exactly once, before the solve loop. The partition
+    // is held by borrow for the entire loop so each component solve
+    // can consult `components.component_of(rule_id)` without
+    // rebuilding or allocating.
+    let components = partition_by_call_graph(ir);
 
+    // Reverse lookup — rule id → rule — needed because components
+    // store `RuleId`s and we iterate components (not rules). O(1)
+    // per lookup, built once.
+    let mut rule_by_id: FxHashMap<RuleId, &crate::IrRule> =
+        FxHashMap::with_capacity_and_hasher(ir.rules.len(), Default::default());
     for rule in &ir.rules {
-        solve_rule(
-            rule,
+        rule_by_id.insert(rule.id, rule);
+    }
+
+    // AF.3 — iterate components in deterministic order. Each
+    // component gets one `solve_component` call that builds a
+    // single `Csp`, installs variables for every rule in the
+    // component, installs intra-rule constraints plus (via the
+    // `constraints` sub-module seam) any cross-rule constraints,
+    // and runs one optimization solve.
+    for (_component_root, member_rules) in components.iter_components() {
+        solve_component(
+            member_rules,
+            &rule_by_id,
             ir,
             dag,
             cfg,
+            &components,
             &ir.materialization,
             debug_all,
             &mut decisions,
@@ -365,70 +427,140 @@ pub fn solve_strategy_and_materialization(
     (decisions, mat_out)
 }
 
-/// Build and solve the strategy CSP for a single rule body.
+/// Deprecated alias for [`solve_grammar_components`]. Preserved so
+/// external callers can migrate incrementally; the internal pipeline
+/// and tests call the new name directly. Renamed in Tranche AF.3
+/// when the per-rule solve became a per-component solve.
+#[deprecated(
+    since = "0.1.6",
+    note = "use solve_grammar_components (renamed in Tranche AF.3; iterates connected components of the rule call graph)"
+)]
+pub fn solve_strategy_and_materialization(
+    ir: &GrammarIR,
+) -> (RecognizerDecisionMap, HashMap<NodeId, MaterializationClass>) {
+    solve_grammar_components(ir)
+}
+
+/// Deprecated alias preserved for external callers from the Tranche
+/// AB.1 transition when the joint strategy + materialization solve
+/// landed. Uses the new entry point under the hood.
+#[deprecated(
+    since = "0.1.6",
+    note = "use solve_grammar_components (renamed in Tranche AF.3; returns both decisions and updated materialization)"
+)]
+pub fn solve_strategy_decisions(ir: &GrammarIR) -> RecognizerDecisionMap {
+    solve_grammar_components(ir).0
+}
+
+/// Build and solve the strategy CSP for a single call-graph component.
 ///
-/// Tranche AB.1 — `rule` passed in addition to `body` so the solver
-/// can install the per-rule `Materialization` variable and apply
-/// prettify/debug domain clamps.
-fn solve_rule(
-    rule: &crate::IrRule,
+/// AF.3 — every rule in `member_rules` contributes its decision
+/// sites to the same `csp_solver::Csp` instance. Cross-rule
+/// constraints installed via the `constraints` sub-module seam bind
+/// variables across rule boundaries inside the component; intra-rule
+/// constraints (the legacy TokenDispatch implication) are installed
+/// exactly as before, just inside the shared CSP.
+///
+/// A component containing a single rule degenerates to the pre-AF.3
+/// per-rule solve without any special-casing.
+#[allow(clippy::too_many_arguments)]
+fn solve_component(
+    member_rules: &[RuleId],
+    rule_by_id: &FxHashMap<RuleId, &crate::IrRule>,
     ir: &GrammarIR,
     dag: &crate::dag::GrammarDag,
     cfg: &CostConfig,
+    components: &GrammarComponents,
     materialization: &HashMap<NodeId, MaterializationClass>,
     debug_all: bool,
     decisions: &mut RecognizerDecisionMap,
     mat_out: &mut HashMap<NodeId, MaterializationClass>,
 ) {
-    let body = &rule.body;
-
     // ── Phase 1: collect decision sites + build CSP variables ──────────────
+    //
+    // One CSP carries every variable from every rule in the
+    // component. The `by_node` scratch map stays per-component so
+    // cross-rule constraints (installed at Phase 2) can look up
+    // variables that live in other rules within the same component.
     let mut csp = Csp::<StrategyDomain>::new();
     let mut sites: Vec<(VarId, Site)> = Vec::new();
-    // Map node → its (Alt, Wrap, Engine) variable ids, for cross-var
-    // constraints. FxHashMap (Tranche X.6) over NodeId for the per-rule
-    // scratch — the SipHasher cost was non-trivial on rule-rich
-    // grammars even though by_node is per-rule.
-    let mut by_node: FxHashMap<NodeId, (Option<VarId>, Option<VarId>, Option<VarId>)> =
+    let mut by_node: ByNodeVars =
         FxHashMap::default();
 
-    collect_sites(body, ir, dag, cfg, &mut csp, &mut sites, &mut by_node);
+    // Track which rules contributed at least one variable; used
+    // below for the post-solve fallback walk and for the "no
+    // variables in this component" short-circuit.
+    let mut contributing_rules: Vec<RuleId> = Vec::with_capacity(member_rules.len());
 
-    // Tranche AB.1 — install the rule's materialization variable.
-    // Only the rule root gets a CSP variable; per-descendant classes
-    // already come from the `classify_materialization` sweep. The
-    // CSP's job at the rule level is to refine the root's commitment
-    // under cost + pin constraints.
-    let rule_mat_var = if let Some(body_id) = dag.node_for(body) {
-        let initial = materialization
-            .get(&body_id)
-            .copied()
-            .unwrap_or(MaterializationClass::MustTape);
-        let domain = build_materialization_domain(rule, initial, cfg, debug_all);
-        let var = csp.add_variable(domain);
-        sites.push((var, Site::Materialization(body_id)));
-        Some((var, body_id))
-    } else {
-        None
-    };
-    let _ = rule_mat_var;
+    for &rid in member_rules {
+        let Some(rule) = rule_by_id.get(&rid).copied() else {
+            continue;
+        };
+        let body = &rule.body;
+        let sites_before = sites.len();
+
+        collect_sites(body, ir, dag, cfg, &mut csp, &mut sites, &mut by_node);
+
+        // AB.1 — per-rule materialization variable. Only the rule
+        // root gets a variable; per-descendant classes already come
+        // from the bottom-up `classify_materialization` sweep. The
+        // CSP's job is to refine the root's commitment under cost
+        // + pin constraints. This runs once per rule inside the
+        // component solve, not once per component.
+        if let Some(body_id) = dag.node_for(body) {
+            let initial = materialization
+                .get(&body_id)
+                .copied()
+                .unwrap_or(MaterializationClass::MustTape);
+            let domain = build_materialization_domain(rule, initial, cfg, debug_all);
+            let var = csp.add_variable(domain);
+            sites.push((var, Site::Materialization(body_id)));
+        }
+
+        if sites.len() > sites_before {
+            contributing_rules.push(rid);
+        }
+    }
 
     if sites.is_empty() {
         return;
     }
 
     // ── Phase 2: cross-variable constraints ────────────────────────────────
-    let constraints_added = add_token_dispatch_constraints(body, dag, &by_node, &mut csp);
+    //
+    // Intra-rule: the existing TokenDispatch → one-pass engine
+    // implication, walked per-contributing-rule against the shared
+    // CSP + shared `by_node`.
+    let mut constraints_added = 0usize;
+    for &rid in &contributing_rules {
+        let Some(rule) = rule_by_id.get(&rid).copied() else {
+            continue;
+        };
+        constraints_added +=
+            add_token_dispatch_constraints(&rule.body, dag, &by_node, &mut csp);
+    }
+
+    // Cross-rule: hook point for the AF.3 constraint sub-modules.
+    // `constraints::engine::install(...)`, `constraints::parent::install(...)`,
+    // and `constraints::tier::install(...)` will bind variables
+    // across rule boundaries inside this component. The stubs are
+    // cfg-gated until Wave 5 Agent 5B's sub-modules land; the
+    // `component_constraints_added` local captures the count so the
+    // fast-path short-circuit below can decide whether to run a
+    // real solve or the per-variable trivial pick.
+    let component_constraints_added =
+        install_cross_rule_constraints(&mut csp, components, ir, &by_node);
+    constraints_added += component_constraints_added;
 
     // Fast path: when no cross-variable constraint applies to this
-    // rule, every variable's optimal value is its lowest-cost domain
-    // entry — branch-and-bound would pick exactly that. Skip
+    // component, every variable's optimal value is its lowest-cost
+    // domain entry — branch-and-bound would pick exactly that. Skip
     // finalize+solve and pick the per-variable minimum directly.
     //
-    // The CSP scaffolding is still **constructed** so the architectural
-    // commitment ("every file with `csp` in its name uses csp_solver::Csp")
-    // holds for every code path; we just elide the search work that
-    // wouldn't change the answer.
+    // The CSP scaffolding is still **constructed** so the
+    // architectural commitment ("every file with `csp` in its name
+    // uses csp_solver::Csp") holds for every code path; we just elide
+    // the search work that would not change the answer.
     if constraints_added == 0 {
         decode_min_cost_per_variable(&csp, &sites, decisions, mat_out);
         return;
@@ -445,22 +577,22 @@ fn solve_rule(
     let solutions = csp.solve_optimized(&config);
 
     // Tranche Y.-1: the csp-solver carries a default node budget
-    // (`SolveConfig::node_budget`) so that a pathological search cannot
-    // hang the compile. If the budget fires, fall back to the trivial
-    // per-variable pick — safe because it's the same answer branch-and-
-    // bound would give if all `ImplicationConstraint`s were dropped.
-    // This is the structured failure mode the X.6 global-CSP attempt
-    // lacked, and the precondition for Y.3 / Y.5 broadening the same
-    // failure surface.
+    // (`SolveConfig::node_budget`) so a pathological search cannot
+    // hang the compile. If the budget fires, fall back to the
+    // trivial per-variable pick — safe because it is the same
+    // answer branch-and-bound would give if every
+    // `ImplicationConstraint` were dropped. This is the structured
+    // failure mode the X.6 global-CSP attempt lacked.
     if csp.stats().budget_exceeded {
         if std::env::var("BBNF_CSP_REPORT").is_ok() || cfg!(debug_assertions) {
             eprintln!(
-                "csp_strategy::solve_rule budget_exceeded nodes_explored={} \
-                 constraints_added={} sites={}; \
-                 falling back to per-variable trivial pick",
+                "csp_strategy::solve_component budget_exceeded \
+                 nodes_explored={} constraints_added={} sites={} \
+                 component_size={}; falling back to per-variable trivial pick",
                 csp.stats().nodes_explored,
                 constraints_added,
                 sites.len(),
+                contributing_rules.len(),
             );
         }
         decode_min_cost_per_variable(&csp, &sites, decisions, mat_out);
@@ -490,11 +622,56 @@ fn solve_rule(
         }
     } else {
         // No optimization solution — fall back to the deterministic
-        // priority decisions. This branch only fires when the CSP is
-        // unsatisfiable, which should only happen if a constraint
-        // prunes a domain to empty.
-        decode_fallback(body, ir, dag, decisions);
+        // priority decisions per contributing rule. This branch only
+        // fires when the CSP is unsatisfiable, which should only
+        // happen if a constraint prunes a domain to empty.
+        for &rid in &contributing_rules {
+            if let Some(rule) = rule_by_id.get(&rid).copied() {
+                decode_fallback(&rule.body, ir, dag, decisions);
+            }
+        }
     }
+}
+
+/// AF.3 — integration seam for Wave 5 Agent 5B's cross-rule
+/// constraint sub-modules (`constraints::engine`,
+/// `constraints::parent`, `constraints::tier`). Called once per
+/// component solve, after variable building but before finalize.
+///
+/// Returns the count of constraints installed. Today that is zero
+/// because the sub-modules are stubbed — `#[cfg(any())]` hides the
+/// call sites until 5B's commit lands. When 5B's commit is folded
+/// in, flip the `cfg` gate to enable the three calls.
+#[allow(unused_variables)]
+fn install_cross_rule_constraints(
+    csp: &mut Csp<StrategyDomain>,
+    components: &GrammarComponents,
+    ir: &GrammarIR,
+    by_node: &ByNodeVars,
+) -> usize {
+    let count = 0usize;
+
+    // Seam for Wave 5 Agent 5B. Each sub-module's `install` entry
+    // point takes the shared CSP, the component partition, the IR,
+    // and the `by_node` var-lookup scratch, and returns the count
+    // of constraints it installed. The `#[cfg(any())]` predicate is
+    // never true, so the calls are type-checked but not emitted;
+    // replacing the gate (or deleting it) post-5B wires the
+    // sub-modules in.
+    #[cfg(any())]
+    {
+        let _ = crate::passes::csp_strategy::constraints::engine::install(
+            csp, components, ir, by_node,
+        );
+        let _ = crate::passes::csp_strategy::constraints::parent::install(
+            csp, components, ir, by_node,
+        );
+        let _ = crate::passes::csp_strategy::constraints::tier::install(
+            csp, components, ir, by_node,
+        );
+    }
+
+    count
 }
 
 /// Per-decision-site bookkeeping: which `NodeId` this var belongs to
@@ -510,13 +687,17 @@ enum Site {
     Materialization(NodeId),
 }
 
-impl Site {
-    fn node(&self) -> NodeId {
-        match self {
-            Site::Alt(n) | Site::Wrap(n) | Site::Engine(n) | Site::Materialization(n) => *n,
-        }
-    }
-}
+/// Per-node variable triple: `(alt_var, wrap_var, engine_var)`. Each
+/// slot is `Some` iff the node contributed a variable of that
+/// decision family to the current CSP. Used as the value type of the
+/// `ByNodeVars` scratch map so cross-variable constraint walks can
+/// look up sibling variables by `NodeId`.
+type NodeVarTriple = (Option<VarId>, Option<VarId>, Option<VarId>);
+
+/// Scratch mapping `NodeId → NodeVarTriple`, per-component, consulted
+/// by intra-rule and cross-rule constraint installers to resolve a
+/// node back to the variable ids the site-collection walk produced.
+type ByNodeVars = FxHashMap<NodeId, NodeVarTriple>;
 
 /// Direct decoder for the no-constraint fast path: pick the
 /// lowest-cost value from each variable's domain independently and
@@ -573,7 +754,7 @@ fn collect_sites(
     cfg: &CostConfig,
     csp: &mut Csp<StrategyDomain>,
     sites: &mut Vec<(VarId, Site)>,
-    by_node: &mut FxHashMap<NodeId, (Option<VarId>, Option<VarId>, Option<VarId>)>,
+    by_node: &mut ByNodeVars,
 ) {
     if let Some(node_id) = dag.node_for(node) {
         let fact = ir
@@ -631,7 +812,7 @@ fn collect_sites(
 fn add_token_dispatch_constraints(
     body: &IrNode,
     dag: &crate::dag::GrammarDag,
-    by_node: &FxHashMap<NodeId, (Option<VarId>, Option<VarId>, Option<VarId>)>,
+    by_node: &ByNodeVars,
     csp: &mut Csp<StrategyDomain>,
 ) -> usize {
     let one_pass_engines: Vec<StrategyValue> = vec![
@@ -650,7 +831,7 @@ fn add_token_dispatch_constraints(
 fn walk_token_dispatch(
     node: &IrNode,
     dag: &crate::dag::GrammarDag,
-    by_node: &FxHashMap<NodeId, (Option<VarId>, Option<VarId>, Option<VarId>)>,
+    by_node: &ByNodeVars,
     csp: &mut Csp<StrategyDomain>,
     one_pass_engines: &[StrategyValue],
     count: &mut usize,
@@ -688,7 +869,7 @@ fn walk_token_dispatch(
 fn collect_engine_vars_in(
     node: &IrNode,
     dag: &crate::dag::GrammarDag,
-    by_node: &FxHashMap<NodeId, (Option<VarId>, Option<VarId>, Option<VarId>)>,
+    by_node: &ByNodeVars,
     out: &mut Vec<VarId>,
 ) {
     if let Some(nid) = dag.node_for(node) {

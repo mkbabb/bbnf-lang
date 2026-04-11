@@ -41,11 +41,11 @@ pub use transform::{
     merge_literals, prune_unreachable,
 };
 #[allow(deprecated)]
-pub use csp_strategy::solve_strategy_decisions;
+pub use csp_strategy::{solve_strategy_and_materialization, solve_strategy_decisions};
 pub use csp_strategy::{
-    extract_regex_engine_decisions, solve_strategy_and_materialization, AltMode,
-    RecognizerDecision, RecognizerDecisionMap, RegexEngine, StrategyDomain, StrategyValue,
-    WrapMode,
+    components::{GrammarComponents, UnionFind, partition_by_call_graph},
+    extract_regex_engine_decisions, solve_grammar_components, AltMode, RecognizerDecision,
+    RecognizerDecisionMap, RegexEngine, StrategyDomain, StrategyValue, WrapMode,
 };
 pub use recognizers::mine_recognizers;
 pub use regex_info::compute_regex_info;

@@ -127,16 +127,41 @@ fn try_get_none_sentinel() {
 fn flags_encode_variant_and_has_children() {
     let mut b = TapeBuilder::new();
     let leaf_off = b.push_leaf(TapeKind::Literal, 0, 4, 7);
-    let compound_children = b.mark_children();
-    // Empty children run is fine — compound just points past the leaf.
-    let compound_off = b.push_compound(TapeKind::Rule, compound_children, 0, 4, 2);
+
+    // Compound with at least one child — mark the child pointer
+    // BEFORE pushing the leaf so the compound's child run is
+    // non-empty. `push_compound` clears `has_children` for empty
+    // runs (fixes the parent-as-own-child cycle in `TapeCursor`).
+    let mut b2 = TapeBuilder::new();
+    let compound_children = b2.mark_children();
+    let _inner_leaf_off = b2.push_leaf(TapeKind::Literal, 0, 4, 7);
+    let compound_off = b2.push_compound(TapeKind::Rule, compound_children, 0, 4, 2);
 
     let tape = b.finish().unwrap();
     let leaf = tape.get(leaf_off);
     assert_eq!(leaf.variant_idx(), 7);
     assert!(!leaf.has_children());
 
-    let compound = tape.get(compound_off);
+    let tape2 = b2.finish().unwrap();
+    let compound = tape2.get(compound_off);
     assert_eq!(compound.variant_idx(), 2);
     assert!(compound.has_children());
+}
+
+#[test]
+fn empty_compound_clears_has_children() {
+    // Regression guard for the `push_compound` empty-run fix:
+    // a compound whose child mark/finalize points at the same
+    // record slot must not advertise `has_children` — otherwise
+    // `TapeCursor::children` follows `child_off` back to the
+    // parent and recurses forever.
+    let mut b = TapeBuilder::new();
+    let leaf_off = b.push_leaf(TapeKind::Literal, 0, 4, 7);
+    let compound_children = b.mark_children();
+    let compound_off = b.push_compound(TapeKind::Rule, compound_children, 0, 4, 2);
+    let tape = b.finish().unwrap();
+    let _ = tape.get(leaf_off);
+    let compound = tape.get(compound_off);
+    assert_eq!(compound.variant_idx(), 2);
+    assert!(!compound.has_children(), "empty compound must clear has_children");
 }

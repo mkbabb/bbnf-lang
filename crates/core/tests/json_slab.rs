@@ -1,11 +1,11 @@
-
-//! Integration tests for JSON parsing through the `#[derive(Parser)]` slab codegen path.
+//! Integration tests for JSON parsing through the tape-first
+//! `#[derive(Parser)]` codegen path.
 
 use bbnf_derive::Parser;
 
 #[derive(Parser)]
-#[parser(path = "../../grammar/json/json.bbnf", slab)]
-struct JsonSlab;
+#[parser(path = "../../grammar/json/json.bbnf")]
+struct JsonParser;
 
 fn load(name: &str) -> String {
     let candidates = [
@@ -25,17 +25,11 @@ fn load(name: &str) -> String {
 
 fn parse_and_assert(name: &str) {
     let input = load(name);
-    let ctx = __JsonSlabEnumCtx::with_capacity(input.len() / 32);
-    let parser = JsonSlab::value();
-    let (result, state) = parser.parse_return_state_with_context(&input, &ctx);
-    assert!(result.is_some(), "{}: parse returned None", name);
-    assert!(
-        state.offset >= input.trim_end().len(),
-        "{}: incomplete parse ({}/{})",
-        name,
-        state.offset,
-        input.len(),
-    );
+    // The tape-first parser rejects incomplete input automatically,
+    // so parse success collapses the old "completeness" assertion.
+    let parsed = JsonParser::parse(&input)
+        .unwrap_or_else(|e| panic!("{}: parse failed with {:?}", name, e));
+    let _root = parsed.view();
 }
 
 #[test]

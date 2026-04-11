@@ -1,36 +1,31 @@
-
 //! Integration tests for EBNF parsing + prettify through the
-//! `#[derive(Parser)]` slab codegen path.
+//! tape-first `#[derive(Parser)]` codegen path.
 
 use bbnf_derive::Parser;
 
 #[derive(Parser)]
-#[parser(path = "../../grammar/ebnf/ebnf.bbnf", prettify, slab)]
-struct EbnfSlab;
+#[parser(path = "../../grammar/ebnf/ebnf.bbnf", prettify)]
+struct EbnfParser;
 
-/// Parse an EBNF grammar with the slab allocator and assert full consumption.
+/// Parse an EBNF grammar and assert the parse succeeds. The
+/// tape-first parser rejects trailing garbage automatically.
 fn parse_grammar(input: &str) {
-    let ctx = __EbnfSlabEnumCtx::with_capacity(input.len() / 16);
-    let parser = EbnfSlab::grammar();
-    let (result, state) = parser.parse_return_state_with_context(input, &ctx);
-    assert!(result.is_some(), "parse returned None for input: {input}");
-    assert!(
-        state.offset >= input.trim_end().len(),
-        "incomplete parse ({}/{}) for input: {input}",
-        state.offset,
-        input.len(),
-    );
+    let parsed = EbnfParser::parse(input)
+        .unwrap_or_else(|e| panic!("parse failed for input {input:?}: {e:?}"));
+    let _root = parsed.view();
 }
 
-/// Prettify an EBNF grammar string.
+/// Prettify an EBNF grammar string via the separate prettify side
+/// channel (still combinator-shaped, unchanged by the tape-first
+/// migration).
 fn prettify(input: &str) -> Option<String> {
     let config = pprint::Printer::new(80, 2, false);
-    let parser = EbnfSlab::grammar_prettify();
+    let parser = EbnfParser::grammar_prettify();
     let ops = parser.parse(input)?;
     Some(pprint::render(&ops, config))
 }
 
-// ── Slab parsing ─────────────────────────────────────────────────────
+// ── Parsing ──────────────────────────────────────────────────────────
 
 #[test]
 fn parse_single_rule() {

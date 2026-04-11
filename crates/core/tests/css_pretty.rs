@@ -1,12 +1,11 @@
-
-//! Integration tests for CSS parsing through the `#[derive(Parser)]` slab codegen path
-//! using the pretty.bbnf grammar.
+//! Integration tests for CSS parsing through the tape-first
+//! `#[derive(Parser)]` codegen path using the pretty.bbnf grammar.
 
 use bbnf_derive::Parser;
 
 #[derive(Parser)]
-#[parser(path = "../../grammar/css/pretty.bbnf", skip_recover, slab)]
-struct CssPrettySlab;
+#[parser(path = "../../grammar/css/pretty.bbnf", skip_recover)]
+struct CssPrettyParser;
 
 fn load_css(name: &str) -> String {
     let candidates = [
@@ -25,10 +24,10 @@ fn load_css(name: &str) -> String {
 }
 
 fn parse_full(input: &str) -> bool {
-    let slab = __CssPrettySlabEnumCtx::with_capacity(input.len() / 32);
-    let parser = CssPrettySlab::stylesheet();
-    let (result, state) = parser.parse_return_state_with_context(input, &slab);
-    result.is_some() && state.offset >= input.trim_end().len()
+    // The tape-first parser enforces full input consumption inside
+    // `parse()`, so a successful `Ok` implies the old "offset reached
+    // end" invariant.
+    CssPrettyParser::parse(input).is_ok()
 }
 
 #[test]

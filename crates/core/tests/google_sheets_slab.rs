@@ -1,29 +1,19 @@
-
 //! Integration tests for Google Sheets formula parsing through the
-//! `#[derive(Parser)]` slab codegen path.
+//! tape-first `#[derive(Parser)]` codegen path.
 
 use bbnf_derive::Parser;
 
 #[derive(Parser)]
-#[parser(path = "../../grammar/google-sheets/google-sheets.bbnf", prettify, slab)]
-struct SheetsSlab;
+#[parser(path = "../../grammar/google-sheets/google-sheets.bbnf", prettify)]
+struct SheetsParser;
 
-/// Parse a formula with the slab allocator and assert full consumption.
+/// Parse a formula and assert success. The tape-first parser
+/// rejects trailing garbage automatically, so parse success
+/// collapses the old completeness assertion.
 fn parse_formula(input: &str) {
-    let ctx = __SheetsSlabEnumCtx::with_capacity(input.len() / 16);
-    let parser = SheetsSlab::formula();
-    let (result, state) = parser.parse_return_state_with_context(input, &ctx);
-    assert!(
-        result.is_some(),
-        "parse returned None for input: {input}"
-    );
-    assert_eq!(
-        state.offset,
-        input.len(),
-        "incomplete parse ({}/{}) for input: {input}",
-        state.offset,
-        input.len(),
-    );
+    let parsed = SheetsParser::parse(input)
+        .unwrap_or_else(|e| panic!("parse failed for input {input:?}: {e:?}"));
+    let _root = parsed.view();
 }
 
 // ── Simple formulas ──────────────────────────────────────────────────
@@ -56,10 +46,14 @@ fn parse_index_match() {
 }
 
 // ── Prettify ─────────────────────────────────────────────────────────
+//
+// The prettify side channel still uses the parse_that combinator
+// shape (`Grammar::rule_prettify()` → `Parser<'a, Vec<FmtOp<'a>>>`),
+// unchanged by the tape-first migration.
 
 #[test]
 fn prettify_simple_formula() {
-    let parser = SheetsSlab::formula_prettify();
+    let parser = SheetsParser::formula_prettify();
     let result = parser.parse("=SUM(A1:A10)");
     assert!(result.is_some(), "prettify should succeed for =SUM(A1:A10)");
 }
@@ -67,7 +61,7 @@ fn prettify_simple_formula() {
 #[test]
 fn prettify_nested_formula() {
     let config = pprint::Printer::new(80, 2, false);
-    let parser = SheetsSlab::formula_prettify();
+    let parser = SheetsParser::formula_prettify();
     let ops = parser.parse("=LET(x,1,y,2,x+y)");
     assert!(ops.is_some(), "prettify should succeed for LET formula");
     let rendered = pprint::render(&ops.unwrap(), config);
@@ -80,7 +74,7 @@ fn prettify_nested_formula() {
 #[test]
 fn prettify_if_formula() {
     let config = pprint::Printer::new(80, 2, false);
-    let parser = SheetsSlab::formula_prettify();
+    let parser = SheetsParser::formula_prettify();
     let ops = parser.parse("=IF(A1>0,A1,0)");
     assert!(ops.is_some(), "prettify should succeed for IF formula");
     let rendered = pprint::render(&ops.unwrap(), config);
@@ -93,7 +87,7 @@ fn prettify_if_formula() {
 #[test]
 fn prettify_index_match_formula() {
     let config = pprint::Printer::new(80, 2, false);
-    let parser = SheetsSlab::formula_prettify();
+    let parser = SheetsParser::formula_prettify();
     let ops = parser.parse("=INDEX(A1:C10,MATCH(\"x\",A1:A10,0),1)");
     assert!(
         ops.is_some(),

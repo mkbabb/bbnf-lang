@@ -1,7 +1,26 @@
 //! Tests for `@recover` directive parsing and codegen integration.
+//!
+//! Walks `RecoverDirective::sync_expr` — a tape-first
+//! `BbnfBootstrapNodeView` — through the view's `rule_kind()` and
+//! `children()` accessors. The pre-AC.2 enum pattern-match walker
+//! no longer applies: the generated bootstrap parser emits tape
+//! records, not a parse-tree enum.
 
 use bbnf::grammar;
-use bbnf::grammar::generated::BbnfBootstrapEnum;
+use bbnf::grammar::generated::{BbnfBootstrapNodeView, BbnfBootstrapRuleKind};
+
+/// True if any descendant of `node` is a `regex` terminal rule.
+fn contains_regex(node: BbnfBootstrapNodeView<'_>) -> bool {
+    if node.rule_kind() == BbnfBootstrapRuleKind::regex {
+        return true;
+    }
+    for child in node.children() {
+        if contains_regex(child) {
+            return true;
+        }
+    }
+    false
+}
 
 #[test]
 fn parse_recover_directive() {
@@ -14,22 +33,13 @@ program = stmt * ;
     let pg = grammar::parse(input).expect("should parse grammar with @recover");
 
     assert_eq!(pg.recovers.len(), 1);
-    assert_eq!(pg.recovers[0].rule_name.as_ref(), "stmt");
-    // The sync expression may be wrapped in structural layers (alternation, concatenation, etc.)
-    // Check that a regex exists somewhere in the tree.
-    fn contains_regex(node: &BbnfBootstrapEnum) -> bool {
-        match node {
-            BbnfBootstrapEnum::regex(_) => true,
-            BbnfBootstrapEnum::alternation(b) => b.iter().any(|(x,_)| contains_regex(x)),
-            BbnfBootstrapEnum::concatenation(p) => p.iter().any(|(x,_)| contains_regex(x)),
-            BbnfBootstrapEnum::binary_factor((f,_)) => contains_regex(f),
-            BbnfBootstrapEnum::mapped_factor((i,_)) => contains_regex(i),
-            BbnfBootstrapEnum::factor((_,t,_,_)) => contains_regex(t),
-            BbnfBootstrapEnum::term(i) => contains_regex(i),
-            _ => false,
-        }
-    }
-    assert!(contains_regex(pg.recovers[0].sync_expr), "sync expr should contain a regex");
+    assert_eq!(pg.recovers[0].rule_name, "stmt");
+    // The sync expression may be wrapped in structural layers (alternation,
+    // concatenation, etc.). Assert that a regex exists somewhere in the tree.
+    assert!(
+        contains_regex(pg.recovers[0].sync_expr),
+        "sync expr should contain a regex"
+    );
     assert_eq!(pg.rules.len(), 2);
 }
 
@@ -45,8 +55,8 @@ rule = /[a-z]+/ , "{" , decl * , "}" ;
     let pg = grammar::parse(input).expect("should parse grammar with multiple @recover");
 
     assert_eq!(pg.recovers.len(), 2);
-    assert_eq!(pg.recovers[0].rule_name.as_ref(), "decl");
-    assert_eq!(pg.recovers[1].rule_name.as_ref(), "rule");
+    assert_eq!(pg.recovers[0].rule_name, "decl");
+    assert_eq!(pg.recovers[1].rule_name, "rule");
 }
 
 #[test]
@@ -76,7 +86,7 @@ stmt = /[a-z]+/ , ";" ;
     let pg = grammar::parse(input).expect("should parse even with nonexistent target");
 
     assert_eq!(pg.recovers.len(), 1);
-    assert_eq!(pg.recovers[0].rule_name.as_ref(), "nonexistent");
+    assert_eq!(pg.recovers[0].rule_name, "nonexistent");
 }
 
 #[test]
@@ -89,10 +99,25 @@ atRule = /@[a-z]+/ , /[^;]+/ , ";" ;
     let pg = grammar::parse(input).expect("should parse recover with alternation sync");
 
     assert_eq!(pg.recovers.len(), 1);
-    assert!(matches!(
-        pg.recovers[0].sync_expr,
-        BbnfBootstrapEnum::alternation(_)
-    ));
+    // Alternation shows up at the top of the sync expression tree.
+    // The view may have wrappers (e.g. a single `rhs`/`alternation`
+    // compound), but walking children must eventually hit an
+    // `alternation` rule_kind.
+    fn contains_alternation(node: BbnfBootstrapNodeView<'_>) -> bool {
+        if node.rule_kind() == BbnfBootstrapRuleKind::alternation {
+            return true;
+        }
+        for child in node.children() {
+            if contains_alternation(child) {
+                return true;
+            }
+        }
+        false
+    }
+    assert!(
+        contains_alternation(pg.recovers[0].sync_expr),
+        "sync expr should contain an alternation"
+    );
 }
 
 #[test]

@@ -1,7 +1,7 @@
 //! Grammar parser benchmarks — generated (self-hosted) parser only.
 //!
 //! The hand-written combinator parser has been removed; only the generated
-//! bootstrap parser remains.
+//! tape-first bootstrap parser remains.
 //!
 //! Run: cargo test -p bbnf --test bench_grammar_parse -- --nocapture
 
@@ -42,13 +42,12 @@ fn bench_generated_parser() {
 
         // ── Generated parser ─────────────────────────────────────
         {
-            let ctx = __BbnfGeneratedEnumCtx::with_capacity(source.len() / 8);
-            let _ = BbnfGenerated::grammar().parse_return_state_with_context(source, &ctx); // warm
+            // Warm-up.
+            let _ = BbnfGenerated::parse(source);
 
             let start = Instant::now();
             for _ in 0..iterations {
-                let ctx = __BbnfGeneratedEnumCtx::with_capacity(source.len() / 8);
-                let _ = BbnfGenerated::grammar().parse_return_state_with_context(source, &ctx);
+                let _ = BbnfGenerated::parse(source);
             }
             let elapsed = start.elapsed();
             let per_parse = elapsed / iterations as u32;

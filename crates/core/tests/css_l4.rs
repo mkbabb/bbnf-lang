@@ -1,5 +1,5 @@
-//! Integration tests for CSS L4 typed parsing through the `#[derive(Parser)]` slab
-//! codegen path using the l4/stylesheet.bbnf grammar.
+//! Integration tests for CSS L4 typed parsing through the tape-first
+//! `#[derive(Parser)]` codegen path using the l4/stylesheet.bbnf grammar.
 
 use bbnf_derive::Parser;
 
@@ -131,8 +131,8 @@ mod css_types {
 }
 
 #[derive(Parser)]
-#[parser(path = "../../grammar/css/l4/stylesheet.bbnf", skip_recover, slab)]
-struct CssL4Slab;
+#[parser(path = "../../grammar/css/l4/stylesheet.bbnf", skip_recover)]
+struct CssL4Parser;
 
 fn load_css(name: &str) -> String {
     let candidates = [
@@ -151,10 +151,10 @@ fn load_css(name: &str) -> String {
 }
 
 fn parse_full(input: &str) -> bool {
-    let slab = __CssL4SlabEnumCtx::with_capacity(std::cmp::max(256, input.len() / 32));
-    let parser = CssL4Slab::stylesheet();
-    let (result, state) = parser.parse_return_state_with_context(input, &slab);
-    result.is_some() && state.offset >= input.trim_end().len()
+    // The tape-first parser enforces full input consumption inside
+    // `parse()`, so a successful `Ok` implies the old "offset reached
+    // end" invariant.
+    CssL4Parser::parse(input).is_ok()
 }
 
 // ---------------------------------------------------------------------------

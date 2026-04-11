@@ -1,6 +1,10 @@
 //! Serialize round-trip tests — ALL grammars must compile and round-trip.
 //!
-//! Each test verifies idempotence: parse → serialize → reparse → serialize → assert eq.
+//! Each test verifies idempotence: parse → serialize → reparse →
+//! serialize → assert eq. Post-AC.2 the parse call returns a
+//! `Parsed<Grammar>`; the serializer still takes the generated
+//! `<Grammar>NodeView<'a>` Copy wrapper, constructed via
+//! `NodeView::from_cursor` from the root view's cursor + input.
 
 use bbnf_derive::Parser;
 
@@ -117,10 +121,10 @@ struct CssL4Emit;
 // ── JSON ─────────────────────────────────────────────────────────────────────
 
 fn json_emit(input: &str) -> String {
-    let ctx = __JsonEmitEnumCtx::with_capacity(input.len() / 32);
-    let (result, _) = JsonEmit::value().parse_return_state_with_context(input, &ctx);
-    let value = result.expect("JSON parse failed");
-    JsonEmit::serialize_compact(&value)
+    let parsed = JsonEmit::parse(input).expect("JSON parse failed");
+    let view = parsed.view();
+    let node = JsonEmitNodeView::from_cursor(view.cursor(), parsed.input());
+    JsonEmit::serialize_compact(node)
 }
 
 fn json_rt(input: &str) {
@@ -143,9 +147,10 @@ fn json_rt(input: &str) {
 // ── CSV ──────────────────────────────────────────────────────────────────────
 
 fn csv_emit(input: &str) -> String {
-    let ctx = __CsvEmitEnumCtx::with_capacity(input.len() / 8);
-    let (result, _) = CsvEmit::csv().parse_return_state_with_context(input, &ctx);
-    CsvEmit::serialize_compact(&result.expect("CSV parse failed"))
+    let parsed = CsvEmit::parse(input).expect("CSV parse failed");
+    let view = parsed.view();
+    let node = CsvEmitNodeView::from_cursor(view.cursor(), parsed.input());
+    CsvEmit::serialize_compact(node)
 }
 
 fn csv_rt(input: &str) {
@@ -162,9 +167,10 @@ fn csv_rt(input: &str) {
 // ── BNF ──────────────────────────────────────────────────────────────────────
 
 fn bnf_emit(input: &str) -> String {
-    let ctx = __BnfEmitEnumCtx::with_capacity(input.len() / 8);
-    let (result, _) = BnfEmit::grammar().parse_return_state_with_context(input, &ctx);
-    BnfEmit::serialize_compact(&result.expect("BNF parse failed"))
+    let parsed = BnfEmit::parse(input).expect("BNF parse failed");
+    let view = parsed.view();
+    let node = BnfEmitNodeView::from_cursor(view.cursor(), parsed.input());
+    BnfEmit::serialize_compact(node)
 }
 
 #[test]
@@ -176,9 +182,10 @@ fn bnf_rule() {
 // ── EBNF ─────────────────────────────────────────────────────────────────────
 
 fn ebnf_emit(input: &str) -> String {
-    let ctx = __EbnfEmitEnumCtx::with_capacity(input.len() / 8);
-    let (result, _) = EbnfEmit::grammar().parse_return_state_with_context(input, &ctx);
-    EbnfEmit::serialize_compact(&result.expect("EBNF parse failed"))
+    let parsed = EbnfEmit::parse(input).expect("EBNF parse failed");
+    let view = parsed.view();
+    let node = EbnfEmitNodeView::from_cursor(view.cursor(), parsed.input());
+    EbnfEmit::serialize_compact(node)
 }
 
 #[test]
@@ -190,9 +197,10 @@ fn ebnf_rule() {
 // ── Math ─────────────────────────────────────────────────────────────────────
 
 fn math_emit(input: &str) -> String {
-    let ctx = __MathEmitEnumCtx::with_capacity(input.len() / 8);
-    let (result, _) = MathEmit::number().parse_return_state_with_context(input, &ctx);
-    MathEmit::serialize_compact(&result.expect("Math parse failed"))
+    let parsed = MathEmit::parse(input).expect("Math parse failed");
+    let view = parsed.view();
+    let node = MathEmitNodeView::from_cursor(view.cursor(), parsed.input());
+    MathEmit::serialize_compact(node)
 }
 
 #[test]
@@ -204,9 +212,10 @@ fn math_num() {
 // ── Google Sheets ────────────────────────────────────────────────────────────
 
 fn sheets_emit(input: &str) -> String {
-    let ctx = __SheetsEmitEnumCtx::with_capacity(input.len() / 8);
-    let (result, _) = SheetsEmit::formula().parse_return_state_with_context(input, &ctx);
-    SheetsEmit::serialize_compact(&result.expect("Sheets parse failed"))
+    let parsed = SheetsEmit::parse(input).expect("Sheets parse failed");
+    let view = parsed.view();
+    let node = SheetsEmitNodeView::from_cursor(view.cursor(), parsed.input());
+    SheetsEmit::serialize_compact(node)
 }
 
 #[test]
@@ -219,35 +228,28 @@ fn sheets_simple() {
 
 #[test]
 fn bbnf_rule() {
-    let ctx = __BbnfEmitEnumCtx::with_capacity(1024);
-
     // Double-quoted literals now work — unescape moved to lowering.
     let input = "x = /[a-z]+/ ;\ny = \"hello\" ;\n";
-    let (result, state) = BbnfEmit::grammar().parse_return_state_with_context(input, &ctx);
-    assert!(result.is_some(), "BBNF grammar parse failed at offset {}", state.offset);
-    assert!(
-        state.offset >= input.trim_end().len(),
-        "BBNF grammar parse incomplete: {}/{}",
-        state.offset,
-        input.len()
-    );
-    let val = result.unwrap();
-    let e = BbnfEmit::serialize_compact(&val);
+    let parsed = BbnfEmit::parse(input).expect("BBNF grammar parse failed");
+    let view = parsed.view();
+    let node = BbnfEmitNodeView::from_cursor(view.cursor(), parsed.input());
+    let e = BbnfEmit::serialize_compact(node);
     assert!(!e.is_empty(), "BBNF serialize empty");
     // Idempotence: serialize → reparse → serialize → assert equal.
-    let (r2, s2) = BbnfEmit::grammar().parse_return_state_with_context(&e, &ctx);
-    assert!(r2.is_some(), "BBNF reparse failed: {:?}", e);
-    let e2 = BbnfEmit::serialize_compact(&r2.unwrap());
+    let parsed2 = BbnfEmit::parse(&e).expect("BBNF reparse failed");
+    let view2 = parsed2.view();
+    let node2 = BbnfEmitNodeView::from_cursor(view2.cursor(), parsed2.input());
+    let e2 = BbnfEmit::serialize_compact(node2);
     assert_eq!(e, e2, "BBNF serialize not idempotent:\n  s1={e:?}\n  s2={e2:?}");
 }
 
 // ── CSS Pretty ───────────────────────────────────────────────────────────────
 
 fn css_pretty_emit(input: &str) -> String {
-    let ctx = __CssPrettyEmitEnumCtx::with_capacity(input.len() / 8);
-    let (result, _) = CssPrettyEmit::stylesheet().parse_return_state_with_context(input, &ctx);
-    let val = result.expect("CSS Pretty parse failed");
-    CssPrettyEmit::serialize_compact(&val)
+    let parsed = CssPrettyEmit::parse(input).expect("CSS Pretty parse failed");
+    let view = parsed.view();
+    let node = CssPrettyEmitNodeView::from_cursor(view.cursor(), parsed.input());
+    CssPrettyEmit::serialize_compact(node)
 }
 
 fn css_pretty_rt(input: &str) {
@@ -264,10 +266,10 @@ fn css_simple() {
 // ── CSS L4 (@import-based grammar with host types) ──────────────────────────
 
 fn css_l4_emit(input: &str) -> String {
-    let ctx = __CssL4EmitEnumCtx::with_capacity(input.len() / 8);
-    let (result, _) = CssL4Emit::stylesheet().parse_return_state_with_context(input, &ctx);
-    let val = result.expect("CSS L4 parse failed");
-    CssL4Emit::serialize_compact(&val)
+    let parsed = CssL4Emit::parse(input).expect("CSS L4 parse failed");
+    let view = parsed.view();
+    let node = CssL4EmitNodeView::from_cursor(view.cursor(), parsed.input());
+    CssL4Emit::serialize_compact(node)
 }
 
 fn css_l4_rt(input: &str) {

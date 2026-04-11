@@ -251,6 +251,46 @@ atomic commit's remaining scope is narrower as a result:
 | `backend/rust/view/` module | Per-rule `<Rule>View<'tape>` generator (`generate_views`). Returns valid TokenStream emitting view structs + the `Root` binding. | Not yet called from `emit_type_definitions_impl`; pure dead code until the atomic commit wires it in. |
 | `runtime_root` integration test | 5 tests exercising `Parsed<R> + Root` with a hand-written `Root` impl. | Independent of generated code; validates the API surface. |
 
+#### Parallel orchestration strategy
+
+The atomic work is tractable via four parallel agents in isolated
+git worktrees, each owning a disjoint file scope. The agents
+follow a shared AC.2 Protocol embedded in their prompts so their
+outputs integrate cleanly at merge time. The protocol defines:
+
+1. Rule function ABI: `fn __rule(state, tape) -> Option<TapeOffset>`
+2. Body expression types: `Option<()>` for inline leaves, `Option<TapeOffset>` for rule refs / inline compounds
+3. Composition pattern: `match (#expr) { Some(_) => (), None => break 'blk None }` (uniform across both Option types)
+4. Rule prelude/epilogue dispatch on `materialization` class
+5. View shape: `<Rule>View<'p> { cursor: TapeCursor<'p>, input: &'p str }`
+6. `Parsed<R>` owns `tape: Tape` + `input: String` + `root_offset: TapeOffset`
+7. `Root` trait GAT: `fn make_view(tape, input, root) -> Self::View<'_>`
+8. Legacy deletion rules (Rust backend only; `ValuePlacement::Alloc` + `TypeDesc::BoxedEnum` stay for TS/WASM)
+
+**Agent scopes**:
+
+| Agent | Files | Responsibility |
+|---|---|---|
+| 1 — Rust emitter | `backend/rust/emitter/*.rs`, `ir_enums.rs`, `ir_types.rs`, `alloc_emit.rs` (delete), `trace.rs`, `view/mod.rs` | Rewrite every per-kind emitter for tape-first output; wire `generate_views` into `emit_type_definitions_impl`; extend view generator with `input` field; rewrite `emit_grammar_impl` for `Grammar::parse` entry point |
+| 2 — Runtime + schema + derive | `runtime/parsed.rs`, `runtime/mod.rs`, `grammar/schema/emit/rust/*.rs`, `derive/src/lib.rs` | Update `Parsed<R>` + `Root` trait; rewrite schema helper emitters to produce view impls instead of enum impls |
+| 3 — CST consumer migration | `types.rs`, `lower/*.rs`, `graph/*.rs`, `pipeline/{compile,directives}.rs`, `grammar/{host,mod}.rs`, `grammar/schema/{build,model}.rs` | Rewrite 216 `BbnfBootstrapEnum` refs across 12 files to use view accessors |
+| 4 — Tests + bootstrap script | `scripts/bootstrap-bbnf.sh`, `tests/tape_parity.rs` (new), `tests/fixtures/tape_golden/` (new) | Rewrite the Python post-processor for tape-first expanded output; create the parity test + fixture skeleton |
+
+File scopes are disjoint. Cross-agent integration errors (e.g.,
+agent 3's consumer code references view methods agent 2 emits)
+surface at merge time and are resolved in the integration pass
+before the atomic commit lands on master.
+
+#### Integration workflow after agents complete
+
+1. Fetch each agent's worktree branch into the main checkout.
+2. Cherry-pick / squash-merge each branch in order: Agent 2 (runtime) → Agent 1 (emitter + wire-in) → Agent 3 (consumers) → Agent 4 (tests + script).
+3. Run the updated `scripts/bootstrap-bbnf.sh` to regenerate `crates/core/src/grammar/generated.rs` with the tape-first output.
+4. Run `cargo build --workspace`; fix any remaining integration issues.
+5. Run `cargo test --workspace`; fix anything flagged.
+6. Run `cargo test --test tape_parity`; confirm the parity gate is green.
+7. Atomic commit with the full change set.
+
 #### Remaining atomic work
 
 One large commit that rewrites the entire emission pipeline and

@@ -76,6 +76,11 @@ pub fn generate_all(
     dstate.alt_strategies = prepared.prep.alt_strategies.clone();
     dstate.delim_scan_configs = prepared.prep.delim_scan_configs.clone();
     dstate.key_dispatch_configs = prepared.prep.key_dispatch_configs.clone();
+    // Tranche AB.2 — clone the per-NodeId materialization map from
+    // `ir.materialization` into driver state so per-kind emitters
+    // can dispatch on rule/node class without re-running
+    // classification.
+    dstate.materialization = ir.materialization.clone();
 
     // Track 2 — backend parser code (rule functions, dispatch, type defs).
     let backend_output = crate::backend::driver::compile_grammar(

@@ -228,6 +228,11 @@ fn install_pattern_caches(dstate: &mut crate::backend::driver::DriverState, ir: 
         crate::backend::strategy::alt_strategy::solve_alt_strategies(ir);
     dstate.delim_scan_configs = ir.delim_scan_configs.clone();
     dstate.key_dispatch_configs = ir.key_dispatch_configs.clone();
+    // Tranche AB.2 — clone the AB.0/AB.1 per-NodeId materialization
+    // map into driver state. Read by the per-kind emitters to decide
+    // rule prelude/epilogue shape and `TransparentElide` inlining at
+    // call sites.
+    dstate.materialization = ir.materialization.clone();
 }
 
 /// Compute call strategies using the shared inline analysis.

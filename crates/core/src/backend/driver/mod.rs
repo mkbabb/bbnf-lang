@@ -36,6 +36,7 @@ mod seq;
 mod wrap;
 
 use bbnf_ir::dag::NodeId;
+use bbnf_ir::passes::MaterializationClass;
 use bbnf_ir::{GrammarIR, IrNode, RuleId, TypeDesc};
 
 use self::analysis::BackendAnalysis;
@@ -96,6 +97,16 @@ pub struct DriverState {
     /// set). Emitters use this to reference the ws regex by ID
     /// rather than by sentinel.
     pub ws_regex_id: Option<usize>,
+
+    /// Tranche AB.2 — per-`NodeId` tape materialization class.
+    ///
+    /// Populated by `install_pattern_caches` from `ir.materialization`
+    /// (which in turn is populated by `classify_materialization` +
+    /// the joint strategy CSP). Read by the per-kind emitters to
+    /// decide whether a rule emits a compound tape record
+    /// (`MustTape`), a single leaf span (`TapeSpanOnly`), or
+    /// nothing at all (`TransparentElide`, inlined at call sites).
+    pub materialization: std::collections::HashMap<NodeId, MaterializationClass>,
 }
 
 impl DriverState {
@@ -110,7 +121,27 @@ impl DriverState {
             current_rule_id: None,
             regex_patterns: Vec::new(),
             ws_regex_id: None,
+            materialization: std::collections::HashMap::new(),
         }
+    }
+
+    /// Tranche AB.2 — look up a node's tape materialization class.
+    ///
+    /// Resolves via the durable DAG in `ir.dag`. Returns
+    /// `MaterializationClass::MustTape` (the safe default) when the
+    /// DAG is absent, the node wasn't present at DAG-build time, or
+    /// no classification is recorded — all three are equivalent to
+    /// "fall back to the full-record path, it's always legal".
+    pub fn materialization_class(
+        &self,
+        ir: &GrammarIR,
+        node: &IrNode,
+    ) -> MaterializationClass {
+        ir.dag
+            .as_ref()
+            .and_then(|dag| dag.node_for(node))
+            .and_then(|id| self.materialization.get(&id).copied())
+            .unwrap_or(MaterializationClass::MustTape)
     }
 
     /// Look up the solved Alt strategy for a node, resolved via the

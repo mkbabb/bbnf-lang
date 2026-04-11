@@ -139,6 +139,7 @@ version = "0.2.11"
 dependencies = [
  "bbnf-ir",
  "bbnf-ser",
+ "bbnf-tape",
  "bbnf_derive",
  "bencher",
  "csp-solver",

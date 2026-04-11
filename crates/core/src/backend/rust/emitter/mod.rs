@@ -16,6 +16,7 @@ mod operator_chain;
 mod prettify;
 mod repeat;
 mod seq;
+pub(crate) mod tape_prelude;
 mod ws;
 
 use bbnf_ir::{FnDescriptor, GrammarIR, IrRule, MapExpr, RuleId, TypeDesc};

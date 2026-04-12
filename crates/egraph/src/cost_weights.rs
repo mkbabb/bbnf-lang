@@ -113,6 +113,14 @@ pub struct CostWeights {
     /// same operation); AG consumes this dimension without adding
     /// a new one.
     pub cross_module_coercion: f64,
+
+    /// Bonus applied to e-nodes whose body shape enables Direct
+    /// emission (Tier B) — leaves (Literal, Regex, Epsilon), non-
+    /// closure Maps, short Seqs, and Skip with a leaf kept side.
+    /// Negative values reward Direct-eligible forms so the
+    /// extractor prefers them over equivalent but harder-to-emit
+    /// alternatives.
+    pub emission_tier_bonus: f64,
 }
 
 impl Default for CostWeights {
@@ -134,6 +142,7 @@ impl Default for CostWeights {
             dispatch_table: 3.0,
             prettify_emission: 2.0,
             cross_module_coercion: 1.5,
+            emission_tier_bonus: -1.5,
         }
     }
 }

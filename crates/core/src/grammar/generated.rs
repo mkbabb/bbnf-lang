@@ -12330,6 +12330,17 @@ impl BbnfBootstrap {
                                                 Some(_) => {}
                                                 None => break 'seq_blk None,
                                             }
+                                            // Tranche AG.4 transitional patch:
+                                            // consume inter-hint whitespace so
+                                            // `( pretty_hint ?w ) +` accepts
+                                            // multiple hints separated by spaces
+                                            // (e.g. `@pretty blockContent block indent ;`).
+                                            // The embedded bbnf.bbnf string at the top
+                                            // of this file still carries the stale
+                                            // `(pretty_hint+) ?w` shape; the clean regen
+                                            // that rewrites it is deferred to AG.4b
+                                            // alongside the `host.rs` tape-shape migration.
+                                            ::parse_that::trim_leading_whitespace_mut(state);
                                             Some(())
                                         }) {
                                             Some(_) => {

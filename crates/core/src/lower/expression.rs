@@ -73,16 +73,18 @@ fn dispatch_expression<'a>(
     // their input is the semantic head.
     let node = peel_transparent(node);
 
-    // Try to classify as a closed leaf vocabulary first: regex
-    // literal, string literal, identifier, epsilon. The
-    // span-text classifier is the shape-agnostic recognizer of
-    // simple leaves, used both as the named-rule_kind
-    // path's fast-path (literal/regex/identifier hits here when
-    // they would otherwise need to walk the term sub-variants)
-    // and as the fallback when the rule_kind dispatch can't find
-    // a handler.
-    if let Some(leaf) = lower_leaf_by_span_text(node, ctx) {
-        return leaf;
+    // Leaf fast-path: only when the node's span is a SINGLE closed
+    // token — a bare identifier, an unquoted epsilon keyword, a
+    // regex literal bounded by `/ ... /`, or a string literal
+    // bounded by matching quotes with no interior punctuation that
+    // would indicate a compound expression. The guard prevents a
+    // multi-branch alternation whose full-source span happens to
+    // start and end with the same quote byte (e.g. `literal`'s body)
+    // from being swallowed as a single `Literal` IR node.
+    if is_single_token_span(node) {
+        if let Some(leaf) = lower_leaf_by_span_text(node, ctx) {
+            return leaf;
+        }
     }
 
     // Anonymous wrapper compounds — `Rule` / `Repeat` compounds
@@ -264,9 +266,31 @@ fn iter_iteration_pairs<'a>(
     node: BbnfBootstrapNodeView<'a>,
 ) -> impl Iterator<Item = BbnfBootstrapNodeView<'a>> + 'a {
     use ::bbnf::runtime::tape::TapeKind;
-    iter_rep_children(node).filter_map(|pair| match pair.kind() {
-        TapeKind::Seq => pair.child(0),
-        _ => Some(pair),
+    iter_rep_children(node).filter_map(|pair| {
+        // Peel an explicit Seq wrapper around `(content, optional_sep)` —
+        // the legacy shape before structural-mode emission flattened it.
+        let candidate = match pair.kind() {
+            TapeKind::Seq => pair.child(0)?,
+            _ => pair,
+        };
+        // Reject separator / whitespace placeholder compounds that sit
+        // alongside the content inside each iteration body. bbnf's
+        // iteration shape `(X ?w , "|" ?) +` / `(X ?w , "," ?) +` pushes
+        // an empty-span placeholder for the optional `?w`, and the
+        // optional `"|"` / `","` separator pushes either an empty
+        // placeholder (when absent) or a single punctuation byte (when
+        // present). Neither is an alternation / concatenation operand;
+        // yielding them would produce phantom `Alt` branches whose span
+        // text is empty or a lone `|` / `,`. Only the content compound
+        // is kept.
+        let span = candidate.span_text().trim();
+        if span.is_empty() {
+            return None;
+        }
+        if span == "|" || span == "," {
+            return None;
+        }
+        Some(candidate)
     })
 }
 
@@ -391,27 +415,68 @@ fn lower_mapped_factor<'a>(
     node: BbnfBootstrapNodeView<'a>,
     ctx: &mut LowerCtx<'a>,
 ) -> IrNode {
-    let inner = node
-        .child(0)
-        .expect("mapped_factor: missing inner factor child");
-    let base = dispatch_expression(inner, ctx);
-    let Some(mapping_node) = node.child(1) else {
+    // Under the clean regen, `factor` is inlined into
+    // `mapped_factor`, so this compound's children are
+    //   `[big_comment?, term, modifier?, big_comment?, mapping?]`
+    // with each optional slot represented by an empty-span
+    // placeholder. Classify children by span content rather than
+    // by positional index: the modifier is the child whose trimmed
+    // span is one of `?` / `?w` / `*` / `+`; the mapping group is
+    // the child whose trimmed span starts with `->` / `=>`; the
+    // term is the first remaining substantive child.
+    let mut term_node: Option<BbnfBootstrapNodeView<'a>> = None;
+    let mut modifier_text: Option<String> = None;
+    let mut mapping_node: Option<BbnfBootstrapNodeView<'a>> = None;
+    for c in node.children() {
+        let span_text = c.span_text();
+        let trimmed = span_text.trim();
+        if trimmed.is_empty() {
+            continue;
+        }
+        if matches!(trimmed, "?" | "?w" | "*" | "+") {
+            modifier_text = Some(trimmed.to_string());
+            continue;
+        }
+        if trimmed.starts_with("->") || trimmed.starts_with("=>") {
+            mapping_node = Some(c);
+            continue;
+        }
+        if term_node.is_none() {
+            term_node = Some(c);
+        }
+    }
+    let mut base = if let Some(term) = term_node {
+        dispatch_expression(term, ctx)
+    } else {
+        // No tape-level term child — the compound's body is a bare
+        // leaf (identifier, literal, regex) that consumed bytes
+        // without pushing a record. Recover the leaf from the
+        // compound's own span_text after stripping a trailing
+        // modifier and surrounding whitespace.
+        let raw = node.span_text();
+        let stripped = if let Some(modifier) = &modifier_text {
+            let trimmed = raw.trim_end();
+            trimmed
+                .strip_suffix(modifier.as_str())
+                .unwrap_or(trimmed)
+                .trim_end()
+        } else {
+            raw.trim_end()
+        };
+        lower_leaf_by_span_text_str(stripped, ctx).unwrap_or_else(|| {
+            panic!(
+                "mapped_factor: no tape term child and span_text {:?} (after stripping \
+                 modifier {:?}) is not a recognisable leaf token",
+                raw, modifier_text
+            )
+        })
+    };
+    if let Some(modifier) = &modifier_text {
+        base = apply_modifier(base, modifier);
+    }
+    let Some(mapping_node) = mapping_node else {
         return base;
     };
-    // Optional mapping group is empty when absent — span(lo, lo).
-    if mapping_node.span().1 <= mapping_node.span().0 {
-        return base;
-    }
-    // Disambiguate: under HEAD's hand-patched generated.rs the
-    // mapped_factor compound's children may collapse positions
-    // (factor's modifier slot can land at child(1) instead of
-    // the mapping group). The mapping group always carries the
-    // `->` arrow keyword in its source slice; if `child(1)` is a
-    // bare modifier (`?w` / `?` / `*` / `+`), it's not the
-    // mapping group and we have no `->` mapping.
-    if !mapping_node.span_text().contains("->") {
-        return base;
-    }
     // Extract the value_expr + optional type_annotation. The
     // mapping group's children are normally [arrow_kw, value_expr,
     // type_annotation?]; under flattened shapes, walk the children
@@ -613,6 +678,129 @@ fn is_empty_placeholder(view: BbnfBootstrapNodeView<'_>) -> bool {
 /// that mismatch. After AE.4's clean regen the rule_kind dispatch
 /// becomes complete and this path becomes mostly unreachable for
 /// the bbnf bootstrap path.
+/// Whether `node`'s trimmed span is a single closed bbnf leaf
+/// token — a bare identifier, `epsilon` / `ε`, a regex literal,
+/// or a quoted string with no interior break into a compound
+/// expression.
+///
+/// The gate stops the leaf fast-path in `dispatch_expression`
+/// from swallowing a multi-branch alternation whose full-source
+/// span happens to start and end with the same quote / bracket
+/// byte (e.g. `literal`'s body, which begins with `"` and ends
+/// with another `"` on the last branch after a run of `,` / `|`
+/// compounds in between).
+fn is_single_token_span(node: BbnfBootstrapNodeView<'_>) -> bool {
+    let trimmed = node.span_text().trim();
+    if trimmed.is_empty() {
+        return false;
+    }
+    let bytes = trimmed.as_bytes();
+    // Regex literal `/ ... /` — forbid a `/` inside the body that
+    // would imply multiple regex literals concatenated.
+    if bytes[0] == b'/' && bytes.len() >= 2 && bytes[bytes.len() - 1] == b'/' {
+        let interior = &trimmed[1..trimmed.len() - 1];
+        let mut escaped = false;
+        for ch in interior.chars() {
+            if escaped {
+                escaped = false;
+                continue;
+            }
+            if ch == '\\' {
+                escaped = true;
+                continue;
+            }
+            if ch == '/' {
+                return false;
+            }
+        }
+        return true;
+    }
+    // String literal `"..."` / `'...'` / `` `...` `` — forbid
+    // unescaped interior quotes.
+    if let first @ (b'"' | b'\'' | b'`') = bytes[0] {
+        if bytes.len() < 2 || bytes[bytes.len() - 1] != first {
+            return false;
+        }
+        let quote = first as char;
+        let interior = &trimmed[1..trimmed.len() - 1];
+        let mut escaped = false;
+        for ch in interior.chars() {
+            if escaped {
+                escaped = false;
+                continue;
+            }
+            if ch == '\\' {
+                escaped = true;
+                continue;
+            }
+            if ch == quote {
+                return false;
+            }
+        }
+        return true;
+    }
+    // Epsilon keyword.
+    if trimmed == "epsilon" || trimmed == "ε" {
+        return true;
+    }
+    // Bare identifier — matches the bbnf `identifier` regex.
+    if (bytes[0].is_ascii_alphabetic() || bytes[0] == b'_')
+        && bytes
+            .iter()
+            .all(|b| b.is_ascii_alphanumeric() || *b == b'_' || *b == b'-')
+    {
+        return true;
+    }
+    false
+}
+
+/// Span-text variant of [`lower_leaf_by_span_text`] that operates
+/// on a bare `&str` (rather than a view). Used by
+/// [`lower_mapped_factor`] to recover an identifier / literal /
+/// regex that was consumed by the parser without pushing its own
+/// tape record.
+fn lower_leaf_by_span_text_str<'a>(
+    raw: &'a str,
+    ctx: &mut LowerCtx<'a>,
+) -> Option<IrNode> {
+    let trimmed = raw.trim();
+    if trimmed.is_empty() {
+        return None;
+    }
+    if trimmed.len() >= 2
+        && trimmed.starts_with('/')
+        && trimmed.ends_with('/')
+    {
+        let inner = &trimmed[1..trimmed.len() - 1];
+        let id = ctx.strings.intern(inner);
+        return Some(IrNode::Regex(id));
+    }
+    if trimmed.len() >= 2 {
+        let bytes = trimmed.as_bytes();
+        let first = bytes[0];
+        let last = bytes[bytes.len() - 1];
+        if first == last && (first == b'"' || first == b'\'' || first == b'`') {
+            let inner = &trimmed[1..trimmed.len() - 1];
+            let unescaped = crate::backend::unescape_literal(inner);
+            let id = ctx.strings.intern(&unescaped);
+            return Some(IrNode::Literal(id));
+        }
+    }
+    if trimmed == "epsilon" || trimmed == "ε" {
+        return Some(IrNode::Epsilon);
+    }
+    let id_bytes = trimmed.as_bytes();
+    if !id_bytes.is_empty()
+        && (id_bytes[0].is_ascii_alphabetic() || id_bytes[0] == b'_')
+        && id_bytes
+            .iter()
+            .all(|b| b.is_ascii_alphanumeric() || *b == b'_' || *b == b'-')
+    {
+        return Some(resolve_name(trimmed, ctx));
+    }
+    None
+}
+
 fn lower_leaf_by_span_text<'a>(
     node: BbnfBootstrapNodeView<'a>,
     ctx: &mut LowerCtx<'a>,

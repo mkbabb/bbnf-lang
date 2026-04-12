@@ -191,6 +191,7 @@ name = "bbnf-bootstrap"
 version = "0.1.0"
 dependencies = [
  "bbnf",
+ "bbnf-ir",
  "bbnf_derive",
  "parse_that",
  "pprint",

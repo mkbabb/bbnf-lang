@@ -138,12 +138,44 @@ implemented but shows ~neutral impact: memchr2 was already
 SIMD-accelerated and the iterative run-enumeration approach does
 not achieve true O(1) carry-less multiply per chunk.
 
-## Post-AM targets (MB/s, cold)
+## Compile pipeline (post-AM)
 
-| File      | Pre-AM | Target | sonic-rs |
-|-----------|--------|--------|----------|
-| canada    | 1,453  | 1,550+ | 1,503    |
-| citm      | 2,001  | 3,100+ | 3,045    |
-| twitter   | 1,672  | 2,750+ | 2,693    |
-| data      | 1,502  | 2,450+ | 2,401    |
-| data_xl   | 1,121  | 1,500+ | 1,477    |
+| Grammar  | Pre-AM  | Post-AM  | Delta  |
+|----------|---------|----------|--------|
+| json     | 131 us  | 122 us   | -7%    |
+| bbnf     | 566 ms  | 1.58 ms  | -99.7% |
+| css l4   | 11.3 s  | 9.46 ms  | -99.9% |
+| sheets   | panic   | 2.07 ms  | fixed  |
+
+## What landed
+
+| Phase | Summary | LOC delta |
+|-------|---------|-----------|
+| AM.0 | Fix 4 regressions + sep hint parser + CSS char_class guard | +240 |
+| AM.0+ | CSP solver soft-index + incremental bound (269x speedup) | +27 / -52 |
+| AM.1 | Delete EmissionTier axis + BumpSlab residue | -2,306 |
+| AM.2 | Tape payload buffer (TapeRec._reserved → payload_idx) | +240 |
+| AM.3 | Per-branch push_leaf/push_compound for Alt rules | +150 |
+| AM.4 | SIMD escape-parity string scanner (parse-that) | +425 |
+| AM.5 | Structural bitmap scanner (parse-that, infrastructure) | +300 |
+
+## What was investigated but not merged
+
+- **FamilyHelper CSP routing**: Exempting FamilyHelper from engine
+  propagation caused a -10% regression on citm — the inline HIR per-byte
+  loops benefit from LLVM cross-function optimization that outweighs
+  the SIMD function-call path.
+- **Whitespace trim guard**: Near-zero impact — LLVM already inlines
+  trim_leading_whitespace_mut with an identical fast-path check.
+
+## Remaining gap analysis
+
+The string-heavy gap to sonic-rs (22-38%) is fundamentally
+architectural: sonic-rs pre-scans the entire buffer with SIMD to
+build a structural bitmap, then dispatches on pre-located positions.
+BBNF uses recursive descent with per-byte dispatch. The inline HIR
+loops are already well-optimized by LLVM — switching to function-call
+SIMD scanners actually REGRESSED performance. Closing the remaining
+gap requires integrating the AM.5 structural bitmap into the codegen
+(AM.5.3), which changes the parse dispatch model from per-byte to
+per-structural-position.

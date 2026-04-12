@@ -34,12 +34,21 @@ impl RustEmitter {
         inner
     }
 
-    pub(super) fn emit_number_convert_impl(&mut self, _ctx: &mut RustEmitCtx) -> TokenStream {
-        // Eisel-Lemire number scan is side-effecting (it advances
-        // `state.offset`). The parsed `f64` is not captured here —
-        // the view layer reconstructs it from the span bytes.
-        quote! {
-            (::parse_that::scan_number_f64(state)).map(|_| ())
+    pub(super) fn emit_number_convert_impl(&mut self, ctx: &mut RustEmitCtx) -> TokenStream {
+        // AN Phase 0: when payload_kind is F64, capture the scanned
+        // value into `__payload_f64` so the epilogue can store it
+        // via `push_leaf_with_f64`.
+        if ctx.payload_kind == Some(crate::backend::rust::emitter_types::PayloadKind::F64) {
+            quote! {
+                match ::parse_that::scan_number_f64(state) {
+                    Some(__v) => { __payload_f64 = __v; __has_payload = true; Some(()) }
+                    None => None,
+                }
+            }
+        } else {
+            quote! {
+                (::parse_that::scan_number_f64(state)).map(|_| ())
+            }
         }
     }
 

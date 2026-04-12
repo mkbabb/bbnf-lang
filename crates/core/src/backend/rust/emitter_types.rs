@@ -48,6 +48,23 @@ pub struct TapeSurgeryCtx {
     pub tape_kind: TokenStream,
 }
 
+/// AN Phase 0: Typed payload kind for direct-to-struct projection.
+///
+/// When a rule body resolves to a single typed value (f64 from
+/// NumberConvert, bool from boolean constants, u8 from Constant),
+/// the emitter stores the value in the tape's payload buffer via
+/// `push_leaf_with_*` instead of discarding it. The view layer
+/// reads the payload directly — zero re-parse.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PayloadKind {
+    /// `f64` from `FnDescriptor::NumberConvert`.
+    F64,
+    /// `bool` from `Map(Literal, Constant(true/false))` alternations.
+    Bool,
+    /// `u8` from `FnDescriptor::Constant`.
+    U8,
+}
+
 /// Mutable context for Rust emission.
 ///
 /// Holds a pointer to `IrCodegenCtx` for type lookups and slab codegen.
@@ -73,6 +90,12 @@ pub struct RustEmitCtx {
     /// bodies cannot clobber outer Alt contexts. Pushed by
     /// `save_alt_context`, popped by `restore_alt_context`.
     alt_context_stack: Vec<(Option<syn::Ident>, Option<TapeSurgeryCtx>)>,
+    /// AN Phase 0: when set, the rule body stores a typed value in a
+    /// well-known variable (`__payload_f64`, `__payload_bool`, or
+    /// `__payload_u8`) and the epilogue uses `push_leaf_with_*`
+    /// instead of plain `push_leaf`. Set in `pre_compile_rule_body`,
+    /// read by `emit_tape_tier_rule`, cleared after body compilation.
+    pub payload_kind: Option<PayloadKind>,
 }
 
 impl RustEmitCtx {
@@ -92,6 +115,7 @@ impl RustEmitCtx {
             branch_idx_ident: None,
             tape_surgery: None,
             alt_context_stack: Vec::new(),
+            payload_kind: None,
         }
     }
 

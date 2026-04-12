@@ -78,12 +78,31 @@ impl RustEmitter {
         pattern: &str,
         _regex_id: usize,
         ir: &GrammarIR,
-        _ctx: &mut RustEmitCtx,
+        ctx: &mut RustEmitCtx,
     ) -> TokenStream {
-        // The shared regex emitter still returns `Option<Span>`; we
-        // discard the Span and re-express as `Option<()>` so the
-        // tape-first composition pattern holds uniformly. The side
-        // effect (`state.offset` advance) is preserved.
+        // AN Phase 0: for number patterns with F64 payload active,
+        // emit scan_number_f64 to capture the parsed value in the
+        // payload variable. The IR passes strip Map { NumberConvert }
+        // down to bare Regex, so we must detect the number pattern
+        // here at the regex emission level.
+        if ctx.payload_kind == Some(crate::backend::rust::emitter_types::PayloadKind::F64) {
+            use parse_that::regex::classify::{RegexClass, classify_regex};
+            if matches!(
+                classify_regex(pattern),
+                RegexClass::Numeric { .. } | RegexClass::JsonNumber
+            ) {
+                return quote! {
+                    match ::parse_that::scan_number_f64(state) {
+                        Some(__v) => { __payload_f64 = __v; __has_payload = true; Some(()) }
+                        None => None,
+                    }
+                };
+            }
+        }
+
+        // Default: span-only scan. The shared regex emitter returns
+        // `Option<Span>`; we discard the Span and re-express as
+        // `Option<()>` so the tape-first composition pattern holds.
         let opts =
             crate::generate::regex::EmitOpts::new(&crate::generate::regex::CostModel::DEFAULT)
                 .with_fuse(!self.effective_prettify)

@@ -390,6 +390,34 @@ impl Emitter for RustEmitter {
         } else {
             ctx.tape_surgery = None;
         }
+
+        // AN Phase 0: detect payload-eligible rules via regex
+        // classification. IR passes strip Map nodes, so detection
+        // uses the regex pattern classifier (Numeric/JsonNumber)
+        // rather than the body structure.
+        ctx.payload_kind = None;
+        if is_visible {
+            if !is_alt {
+                if Self::is_f64_payload_eligible(rule, ir) {
+                    ctx.payload_kind = Some(crate::backend::rust::emitter_types::PayloadKind::F64);
+                }
+            } else {
+                // Alt: check if ANY branch Ref targets a number-pattern rule.
+                if let bbnf_ir::IrNode::Alt(branches, _) = &rule.body {
+                    let any_f64 = branches.iter().any(|b| {
+                        if let bbnf_ir::IrNode::Ref(rid) = &b.node {
+                            let ref_rule = &ir.rules[*rid as usize];
+                            Self::is_f64_payload_eligible(ref_rule, ir)
+                        } else {
+                            false
+                        }
+                    });
+                    if any_f64 {
+                        ctx.payload_kind = Some(crate::backend::rust::emitter_types::PayloadKind::F64);
+                    }
+                }
+            }
+        }
     }
 
     fn emit_rule_function(

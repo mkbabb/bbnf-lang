@@ -116,6 +116,40 @@ pub fn emit_tape_span_only_epilogue(variant_idx: u8) -> TokenStream {
     }
 }
 
+// ── AN Phase 0: Payload-bearing prelude / epilogue ───────────────
+
+/// Emit the prelude for a `TapeSpanOnly` rule with an `f64` payload.
+///
+/// Declares `__span_lo` and `__payload_f64` — the latter is written
+/// by the body (via `emit_number_convert_impl`) and consumed by the
+/// matching [`emit_tape_span_only_f64_epilogue`].
+pub fn emit_tape_span_only_f64_prelude() -> TokenStream {
+    quote! {
+        let __span_lo = state.offset as u32;
+        let mut __payload_f64: f64 = 0.0;
+        let mut __has_payload = false;
+    }
+}
+
+/// Emit the epilogue for a `TapeSpanOnly` rule with an `f64` payload.
+///
+/// Stores the captured `__payload_f64` value into the tape's payload
+/// buffer via `push_leaf_with_f64`. View-layer accessors read it
+/// back in O(1) — zero span re-parsing.
+pub fn emit_tape_span_only_f64_epilogue(variant_idx: u8) -> TokenStream {
+    let variant_lit = variant_idx;
+    quote! {
+        Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with_f64(
+            tape,
+            ::bbnf::runtime::tape::TapeKind::Span,
+            __span_lo,
+            state.offset as u32,
+            #variant_lit,
+            __payload_f64,
+        ))
+    }
+}
+
 /// Emit the rule function signature for a tape-first rule.
 ///
 /// Always `(state, tape) -> Option<TapeOffset>` — the single ABI

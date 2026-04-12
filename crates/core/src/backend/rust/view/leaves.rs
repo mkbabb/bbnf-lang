@@ -36,14 +36,33 @@ pub fn emit_leaf_accessors(rule: &IrRule, rule_name: &str, type_desc: &TypeDesc)
     // Type-specific scalar projections.
     match type_desc {
         TypeDesc::F64 => {
+            // AN Phase 0: three-tier accessor — payload first (O(1)),
+            // span parse fallback (lazy). When the emitter stores the
+            // f64 in the payload buffer via push_leaf_with_f64, this
+            // accessor reads it directly. For tapes produced by older
+            // codegen (payload_idx == 0), falls back to span parsing.
             methods.push(quote! {
+                /// Get the parsed `f64` value.
+                ///
+                /// Payload-first: reads the pre-computed f64 from the
+                /// tape payload buffer in O(1). Falls back to span
+                /// parsing if no payload is present.
+                #[inline]
+                pub fn value(&self) -> f64 {
+                    let tape = self.cursor.tape();
+                    let rec = self.cursor.record();
+                    if let Some(v) = tape.payload_f64(rec) {
+                        return v;
+                    }
+                    self.span_text().parse::<f64>().unwrap_or(0.0)
+                }
+
                 /// Parse the matched span as an `f64`.
                 ///
-                /// Lazy projection: the numeric conversion runs at
-                /// view-read time, not at parse time.
+                /// Alias for backward compatibility. Prefer `.value()`.
                 #[inline]
                 pub fn as_f64(&self) -> f64 {
-                    self.span_text().parse::<f64>().unwrap_or(0.0)
+                    self.value()
                 }
             });
         }

@@ -28,7 +28,8 @@ use crate::backend::driver::analysis::BackendAnalysis;
 use super::tape_prelude::{
     emit_must_tape_epilogue,
     emit_must_tape_prelude, emit_rule_signature, emit_tape_span_only_epilogue,
-    emit_tape_span_only_prelude,
+    emit_tape_span_only_prelude, emit_tape_span_only_f64_prelude,
+    emit_tape_span_only_f64_epilogue,
 };
 use super::{RustEmitCtx, RustEmitter};
 
@@ -37,17 +38,48 @@ impl RustEmitter {
         &mut self,
         rule: &IrRule,
         _ir: &GrammarIR,
-        _ctx: &mut RustEmitCtx,
+        ctx: &mut RustEmitCtx,
     ) -> Option<TokenStream> {
-        // Fused number rules evaluate to `Option<()>` — the
-        // scanner advances `state.offset`; the f64 projection is
-        // a view-layer concern.
-        if !rule.meta.is_transparent {
+        if rule.meta.is_transparent {
+            return None;
+        }
+        // AN Phase 0: when payload_kind is F64, capture the scanned
+        // value into `__payload_f64` so the epilogue can store it
+        // via `push_leaf_with_f64`. Otherwise discard as before.
+        if ctx.payload_kind == Some(crate::backend::rust::emitter_types::PayloadKind::F64) {
+            Some(quote! {
+                match ::parse_that::scan_number_f64(state) {
+                    Some(__v) => { __payload_f64 = __v; __has_payload = true; Some(()) }
+                    None => None,
+                }
+            })
+        } else {
             Some(quote! {
                 (::parse_that::scan_number_f64(state)).map(|_| ())
             })
-        } else {
-            None
+        }
+    }
+
+    /// AN Phase 0: detect if a rule body is a number-pattern regex
+    /// eligible for f64 payload storage. IR passes strip Map nodes,
+    /// so we detect by classifying the regex pattern directly.
+    pub(in crate::backend::rust) fn is_f64_payload_eligible(
+        rule: &IrRule,
+        ir: &GrammarIR,
+    ) -> bool {
+        use parse_that::regex::classify::{RegexClass, classify_regex};
+        match &rule.body {
+            IrNode::Regex(sid) => {
+                let pattern = ir.get_string(*sid);
+                matches!(
+                    classify_regex(pattern),
+                    RegexClass::Numeric { .. } | RegexClass::JsonNumber
+                )
+            }
+            IrNode::Map { fn_id, .. } => {
+                matches!(ir.fns[*fn_id as usize], bbnf_ir::FnDescriptor::NumberConvert)
+            }
+            _ => false,
         }
     }
 
@@ -147,6 +179,24 @@ impl RustEmitter {
     ) -> TokenStream {
         let is_alt_body = matches!(&rule.body, IrNode::Alt(_, _));
 
+        // AN Phase 0: check if any Alt branch has a payload-eligible
+        // body (NumberConvert, Constant). If so, the prelude declares
+        // `__payload_f64` and the epilogue uses `push_leaf_with_f64`
+        // for the non-compound, payload-bearing case.
+        let alt_has_f64_payload = if let IrNode::Alt(branches, _) = &rule.body {
+            let result = branches.iter().any(|b| {
+                if let IrNode::Ref(rid) = &b.node {
+                    let ref_rule = &ir.rules[*rid as usize];
+                    Self::is_f64_payload_eligible(ref_rule, ir)
+                } else {
+                    false
+                }
+            });
+            result
+        } else {
+            false
+        };
+
         let (prelude, epilogue) = if is_alt_body {
             // Alt-bodied rules use __branch_idx for the variant
             // discriminator. The Alt emitter sets __branch_idx per arm.
@@ -156,12 +206,20 @@ impl RustEmitter {
                     // declares __has_children + __children; compound
                     // branches set them via the Alt emitter. The
                     // epilogue checks __has_children at runtime.
+                    //
+                    // AN Phase 0: payload variables are always
+                    // declared in MustTape Alt preludes. The epilogue
+                    // checks __has_payload at runtime to decide between
+                    // push_leaf_with_f64 and plain push_leaf. Unused
+                    // variables compile to no-ops.
                     (
                         quote! {
                             let __span_lo = state.offset as u32;
                             let mut __branch_idx: u8 = 0;
                             let mut __has_children = false;
                             let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
+                            let mut __payload_f64: f64 = 0.0;
+                            let mut __has_payload = false;
                         },
                         quote! {
                             if __has_children {
@@ -172,6 +230,15 @@ impl RustEmitter {
                                     __span_lo,
                                     state.offset as u32,
                                     __branch_idx,
+                                ))
+                            } else if __has_payload {
+                                Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with_f64(
+                                    tape,
+                                    ::bbnf::runtime::tape::TapeKind::Span,
+                                    __span_lo,
+                                    state.offset as u32,
+                                    __branch_idx,
+                                    __payload_f64,
                                 ))
                             } else {
                                 Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(
@@ -209,10 +276,21 @@ impl RustEmitter {
                     emit_must_tape_prelude(),
                     emit_must_tape_epilogue(rule_idx_u8),
                 ),
-                MaterializationClass::TapeSpanOnly => (
-                    emit_tape_span_only_prelude(),
-                    emit_tape_span_only_epilogue(rule_idx_u8),
-                ),
+                MaterializationClass::TapeSpanOnly => {
+                    // AN Phase 0: payload-bearing leaf rules use
+                    // push_leaf_with_f64/bool/u8 instead of push_leaf.
+                    use crate::backend::rust::emitter_types::PayloadKind;
+                    match ctx.payload_kind {
+                        Some(PayloadKind::F64) => (
+                            emit_tape_span_only_f64_prelude(),
+                            emit_tape_span_only_f64_epilogue(rule_idx_u8),
+                        ),
+                        _ => (
+                            emit_tape_span_only_prelude(),
+                            emit_tape_span_only_epilogue(rule_idx_u8),
+                        ),
+                    }
+                }
                 MaterializationClass::TransparentElide => unreachable!(),
             }
         };

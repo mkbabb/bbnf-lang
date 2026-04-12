@@ -168,7 +168,7 @@ impl RustEmitter {
         rule: &IrRule,
         body: TokenStream,
         sync_body: Option<TokenStream>,
-        ir: &GrammarIR,
+        _ir: &GrammarIR,
         ctx: &mut RustEmitCtx,
         class: MaterializationClass,
     ) -> TokenStream {

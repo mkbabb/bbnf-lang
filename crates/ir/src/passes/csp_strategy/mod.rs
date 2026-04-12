@@ -153,6 +153,7 @@ use rustc_hash::FxHashMap;
 use self::components::{partition_by_call_graph, GrammarComponents};
 use crate::dag::NodeId;
 use crate::passes::materialization::MaterializationClass;
+use crate::passes::materialization::EmissionTier;
 use crate::passes::patterns::{Recognizer, RecognizerShape};
 use crate::{CostConfig, GrammarIR, IrNode, RuleId};
 
@@ -1400,5 +1401,89 @@ fn engine_tier(e: &RegexEngine) -> u8 {
         RegexEngine::OnePass => 5,
         RegexEngine::SmallDfa => 6,
         RegexEngine::Dfa => 7,
+    }
+}
+
+// ── Tranche AI.4 — cross-component tier reconciliation ─────────────────────
+
+/// Monotone widening pass: ensure no Direct-tier rule calls a
+/// higher-tier (Tape/Lazy) rule across component boundaries.
+///
+/// Walks every `Ref` edge in every rule body. For each (caller_rule,
+/// callee_rule) pair, if `tier[caller] < tier[callee]` (i.e., caller
+/// is Direct but callee is Tape), promote caller to
+/// `tier_join(caller, callee)`.
+///
+/// The 3-iteration cap is because the 3-element lattice
+/// `{Direct, Lazy, Tape}` guarantees fixpoint in at most 3 rounds.
+///
+/// Returns the reconciled tier map; the caller writes it back to
+/// `ir.emission_tier`.
+pub fn reconcile_cross_component_tiers(ir: &GrammarIR) -> HashMap<RuleId, EmissionTier> {
+    use crate::passes::materialization::emission_tier::tier_join;
+
+    let mut tiers: HashMap<RuleId, EmissionTier> = ir.emission_tier.clone();
+    let mut changed = true;
+    let mut iterations = 0;
+
+    while changed && iterations < 3 {
+        changed = false;
+        iterations += 1;
+
+        for rule in &ir.rules {
+            let caller_tier = tiers.get(&rule.id).copied().unwrap_or(EmissionTier::Tape);
+            let mut refs = Vec::new();
+            collect_refs(&rule.body, &mut refs);
+
+            for callee_id in refs {
+                let callee_tier = tiers.get(&callee_id).copied().unwrap_or(EmissionTier::Tape);
+                let joined = tier_join(caller_tier, callee_tier);
+                if joined != caller_tier {
+                    tiers.insert(rule.id, joined);
+                    changed = true;
+                }
+            }
+        }
+    }
+
+    tiers
+}
+
+/// Collect all `RuleId` references from an `IrNode` tree.
+fn collect_refs(node: &IrNode, refs: &mut Vec<RuleId>) {
+    match node {
+        IrNode::Ref(rid) => refs.push(*rid),
+        IrNode::Seq(children) => {
+            for c in children {
+                collect_refs(c, refs);
+            }
+        }
+        IrNode::Alt(branches, _) => {
+            for b in branches {
+                collect_refs(&b.node, refs);
+            }
+        }
+        IrNode::Repeat { inner, .. }
+        | IrNode::OptionalWhitespace(inner)
+        | IrNode::Negate(inner) => {
+            collect_refs(inner, refs);
+        }
+        IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
+            collect_refs(a, refs);
+            collect_refs(b, refs);
+        }
+        IrNode::Map { inner, .. } => collect_refs(inner, refs),
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => {
+            collect_refs(token, refs);
+            for arm in arms {
+                collect_refs(&arm.continuation, refs);
+            }
+            collect_refs(fallback, refs);
+        }
+        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => {}
     }
 }

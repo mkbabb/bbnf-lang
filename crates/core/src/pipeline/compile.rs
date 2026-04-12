@@ -627,6 +627,16 @@ fn compile_ast_common<'a>(
         timer.span("decode_emission_tier", || {
             bbnf_ir::passes::decode_emission_tier(&mut ir);
         });
+
+        // Tranche AI.4 — monotone widening: reconcile emission tiers
+        // across connected components. A Direct-tier rule that calls a
+        // Tape-tier callee in another component is incoherent; the
+        // widening pass promotes callers to `tier_join(caller, callee)`.
+        timer.span("reconcile_cross_component_tiers", || {
+            let reconciled =
+                bbnf_ir::passes::reconcile_cross_component_tiers(&ir);
+            ir.emission_tier = reconciled;
+        });
     }
 
     // Emit the per-pass CSV report when BBNF_PIPELINE_REPORT=1.

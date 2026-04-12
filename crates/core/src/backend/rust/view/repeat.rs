@@ -43,7 +43,7 @@ pub fn emit_repeat_accessors(
             /// The number of elements in this repetition.
             #[inline]
             pub fn len(&self) -> usize {
-                self.cursor.children().count()
+                self.cursor.child_count()
             }
 
             /// Whether this repetition matched zero elements.

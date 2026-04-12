@@ -284,18 +284,63 @@ fn absorb_pretty_by_text<'a>(
     let body = raw.trim_start_matches("@pretty").trim();
     // Strip trailing terminator.
     let body = body.trim_end_matches(|c: char| c == ';' || c == '.').trim();
-    let mut tokens = body.split_whitespace();
-    let target = match tokens.next() {
-        Some(t) => t.to_string(),
+    let mut hint_tokens = split_pretty_hint_tokens(body);
+    let target = match hint_tokens.first() {
+        Some(t) => t.clone(),
         None => return,
     };
+    hint_tokens.remove(0);
     let hints: Vec<Cow<'a, str>> =
-        tokens.map(|h| Cow::Owned(h.to_string())).collect();
+        hint_tokens.into_iter().map(Cow::Owned).collect();
     pretties.push(PrettyDirective {
         rule_name: Cow::Owned(target),
         hints,
         span: Span::new(lo as usize, hi as usize, item.input()),
     });
+}
+
+/// Split pretty hint tokens, keeping parenthesized groups like
+/// `sep(", ")` and `split(";")` intact instead of splitting on
+/// the whitespace inside the quoted content.
+fn split_pretty_hint_tokens(s: &str) -> Vec<String> {
+    let mut tokens = Vec::new();
+    let mut current = String::new();
+    let mut depth = 0u32;
+    let mut in_quote = false;
+    let bytes = s.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        let b = bytes[i];
+        if in_quote {
+            current.push(b as char);
+            if b == b'"' {
+                in_quote = false;
+            } else if b == b'\\' && i + 1 < bytes.len() {
+                i += 1;
+                current.push(bytes[i] as char);
+            }
+        } else if b == b'"' {
+            in_quote = true;
+            current.push(b as char);
+        } else if b == b'(' {
+            depth += 1;
+            current.push(b as char);
+        } else if b == b')' {
+            depth = depth.saturating_sub(1);
+            current.push(b as char);
+        } else if b.is_ascii_whitespace() && depth == 0 {
+            if !current.is_empty() {
+                tokens.push(std::mem::take(&mut current));
+            }
+        } else {
+            current.push(b as char);
+        }
+        i += 1;
+    }
+    if !current.is_empty() {
+        tokens.push(current);
+    }
+    tokens
 }
 
 fn absorb_token_by_text<'a>(

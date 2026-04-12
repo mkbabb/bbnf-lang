@@ -451,23 +451,29 @@ fn lower_mapped_factor<'a>(
         // No tape-level term child — the compound's body is a bare
         // leaf (identifier, literal, regex) that consumed bytes
         // without pushing a record. Recover the leaf from the
-        // compound's own span_text after stripping a trailing
-        // modifier and surrounding whitespace.
+        // compound's own span_text after stripping any trailing
+        // modifier (`?w`/`?`/`*`/`+`) and any trailing mapping
+        // group (`-> ...` / `=> ...`).
         let raw = node.span_text();
-        let stripped = if let Some(modifier) = &modifier_text {
-            let trimmed = raw.trim_end();
-            trimmed
+        let mut stripped: &str = raw.trim();
+        // Strip trailing modifier first (it's closest to the term).
+        if let Some(modifier) = &modifier_text {
+            stripped = stripped
                 .strip_suffix(modifier.as_str())
-                .unwrap_or(trimmed)
-                .trim_end()
-        } else {
-            raw.trim_end()
-        };
+                .unwrap_or(stripped)
+                .trim();
+        }
+        // Strip mapping group — everything from `->` / `=>` onward.
+        if let Some(idx) = stripped.find("->") {
+            stripped = stripped[..idx].trim();
+        } else if let Some(idx) = stripped.find("=>") {
+            stripped = stripped[..idx].trim();
+        }
         lower_leaf_by_span_text_str(stripped, ctx).unwrap_or_else(|| {
             panic!(
                 "mapped_factor: no tape term child and span_text {:?} (after stripping \
-                 modifier {:?}) is not a recognisable leaf token",
-                raw, modifier_text
+                 modifier {:?} + mapping) resolved to {:?} which is not a recognisable leaf",
+                raw, modifier_text, stripped
             )
         })
     };

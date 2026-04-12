@@ -94,7 +94,16 @@ fn dump_node(ir: &GrammarIR, node: &IrNode, depth: usize) {
 fn dump_rule(ir: &GrammarIR, rid: RuleId) {
     let rule = ir.get_rule(rid);
     let name = ir.get_string(rule.name);
-    println!("=== rule #{rid} {name} (entry={}) ===", ir.entry == rid);
+    let tier = ir
+        .emission_tier
+        .get(&rid)
+        .map(|t| format!("{:?}", t))
+        .unwrap_or_else(|| "Tape[default]".into());
+    println!(
+        "=== rule #{rid} {name} (entry={}) tier={} ===",
+        ir.entry == rid,
+        tier
+    );
     dump_node(ir, &rule.body, 0);
     println!();
 }

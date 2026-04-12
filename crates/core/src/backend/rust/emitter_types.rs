@@ -68,6 +68,11 @@ pub struct RustEmitCtx {
     /// epilogue. Set by `emit_tape_tier_rule` for Alt-bodied
     /// `MustTape` rules; cleared after the body is compiled.
     pub tape_surgery: Option<TapeSurgeryCtx>,
+    /// AN.0: stack of saved outer `branch_idx_ident` +
+    /// `tape_surgery` so arbitrarily nested Alts inside branch
+    /// bodies cannot clobber outer Alt contexts. Pushed by
+    /// `save_alt_context`, popped by `restore_alt_context`.
+    alt_context_stack: Vec<(Option<syn::Ident>, Option<TapeSurgeryCtx>)>,
 }
 
 impl RustEmitCtx {
@@ -86,6 +91,7 @@ impl RustEmitCtx {
             current_rule_id: None,
             branch_idx_ident: None,
             tape_surgery: None,
+            alt_context_stack: Vec::new(),
         }
     }
 
@@ -105,6 +111,27 @@ impl RustEmitCtx {
         let id = self.counter;
         self.counter += 1;
         format_ident!("__{}{}", prefix, id)
+    }
+
+    /// AN.0: Push `branch_idx_ident` and `tape_surgery` onto the
+    /// context stack before the driver compiles Alt branch bodies.
+    /// Inner (nested) Alts will see `None` for both fields so they
+    /// cannot clobber the outer Alt's context.
+    pub fn save_alt_context(&mut self) {
+        self.alt_context_stack.push((
+            self.branch_idx_ident.take(),
+            self.tape_surgery.take(),
+        ));
+    }
+
+    /// AN.0: Pop `branch_idx_ident` and `tape_surgery` from the
+    /// context stack after all branch bodies are compiled, so the
+    /// emitter's `emit_alt_*` call sees the correct outer context.
+    pub fn restore_alt_context(&mut self) {
+        if let Some((saved_idx, saved_surgery)) = self.alt_context_stack.pop() {
+            self.branch_idx_ident = saved_idx;
+            self.tape_surgery = saved_surgery;
+        }
     }
 }
 

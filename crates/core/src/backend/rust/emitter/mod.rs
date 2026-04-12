@@ -342,6 +342,20 @@ impl Emitter for RustEmitter {
         None
     }
 
+    fn pre_compile_alt_branches(
+        &mut self,
+        ctx: &mut Self::Ctx,
+    ) {
+        ctx.save_alt_context();
+    }
+
+    fn post_compile_alt_branches(
+        &mut self,
+        ctx: &mut Self::Ctx,
+    ) {
+        ctx.restore_alt_context();
+    }
+
     fn pre_compile_rule_body(
         &mut self,
         rule: &bbnf_ir::IrRule,

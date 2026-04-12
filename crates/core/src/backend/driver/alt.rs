@@ -150,6 +150,9 @@ pub(super) fn compile_alt<E: Emitter>(
         let mut branch_outputs = Vec::with_capacity(branches.len());
         let mut fallback = None;
 
+        // AN.0: save outer Alt context so inner Alts in branch
+        // bodies cannot clobber branch_idx / tape_surgery.
+        emitter.pre_compile_alt_branches(ctx);
         for (i, branch) in branches.iter().enumerate() {
             let pushes = branch_pushes_children(ir, &branch.node);
             let byte_patterns: Vec<u8> = table
@@ -170,6 +173,7 @@ pub(super) fn compile_alt<E: Emitter>(
                 branch_outputs.push((branch_info(pushes), output));
             }
         }
+        emitter.post_compile_alt_branches(ctx);
 
         return emitter.emit_alt_dispatch(table, branch_outputs, fallback, alloc, ctx);
     }
@@ -193,6 +197,8 @@ pub(super) fn compile_alt<E: Emitter>(
         let pattern = bbnf_ir::key_class_regex_pattern(&config.key_class);
         config.key_scanner_regex_id = Some(dstate.register_regex(pattern));
 
+        // AN.0: save outer Alt context.
+        emitter.pre_compile_alt_branches(ctx);
         let mut kd_branches = Vec::with_capacity(detected.len());
         for det in &detected {
             let branch = &branches[det.branch_idx];
@@ -215,10 +221,13 @@ pub(super) fn compile_alt<E: Emitter>(
             let body = compile_node(&branch.node, alloc, ir, dstate, emitter, ctx);
             (branch_info(pushes), body)
         });
+        emitter.post_compile_alt_branches(ctx);
         return emitter.emit_key_dispatch(&config, kd_branches, fallback, alloc, ctx);
     }
 
     // Fallback: checkpoint chain.
+    // AN.0: save outer Alt context.
+    emitter.pre_compile_alt_branches(ctx);
     let branch_outputs: Vec<_> = branches
         .iter()
         .map(|branch| {
@@ -227,6 +236,7 @@ pub(super) fn compile_alt<E: Emitter>(
             (branch_info(pushes), output)
         })
         .collect();
+    emitter.post_compile_alt_branches(ctx);
 
     emitter.emit_alt_checkpoint(branch_outputs, alloc, ctx)
 }

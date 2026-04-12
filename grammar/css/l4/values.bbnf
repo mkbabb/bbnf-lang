@@ -91,4 +91,5 @@ value = calcFunction
       | number
       | string
       | globalKeyword
-      | ident ;
+      | ident
+      | /[^\s;!}]+/ ;

@@ -2,6 +2,7 @@
 @import "selectors.bbnf" ;
 @import "media.bbnf" ;
 
+// Comment-aware whitespace: skip block comments as whitespace.
 @ws /(?s)(?:\s|\/\*.*?\*\/)*/ ;
 @token ident ;
 

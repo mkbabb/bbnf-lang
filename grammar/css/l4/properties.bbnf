@@ -115,11 +115,18 @@ textAlignDecl  = "text-align" , ":" ?w , ((textAlignKeyword | value) ?w) * , imp
 boxSizingDecl  = "box-sizing" , ":" ?w , ((boxSizingKeyword | value) ?w) * , importantSuffix , ";" ? ;
 cursorDecl     = "cursor"     , ":" ?w , ((cursorKeyword | value) ?w) * , importantSuffix , ";" ? ;
 
+// --- Custom property declaration (CSS Variables, --prefix) ---
+customPropertyDecl = /--[\w-]+/ , ":" ?w , /[^;!}]*/ , importantSuffix , ";" ? ;
+
 // --- Generic fallback declaration (catches ALL unlisted properties) ---
-genericDecl = (propertyName , ":" ?w , (value ?w) * , importantSuffix , ";" ?) ?w ;
+// Uses raw value pattern to handle any CSS value syntax (negative values,
+// calc expressions, complex shorthand values, etc.) that the typed value
+// grammar doesn't cover.
+genericDecl = (propertyName , ":" ?w , /[^;!}]*/ , importantSuffix , ";" ?) ?w ;
 
 // --- Master declaration dispatch ---
-declaration = colorDecl | sizeDecl | spacingDecl
+declaration = customPropertyDecl
+            | colorDecl | sizeDecl | spacingDecl
             | fontDecl | bgDecl | transformDecl | transitionDecl | listTableDecl
             | displayDecl | positionDecl | overflowDecl | visibilityDecl
             | flexDirDecl | flexWrapDecl | alignDecl | flexNumDecl

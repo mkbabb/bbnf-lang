@@ -52,11 +52,9 @@ pseudoElement = partPseudo | slottedPseudo | highlightPseudo | simplePseudoEleme
 // --- Colon-prefixed selector (factored for dispatch: :: before :) ---
 colonSelector = pseudoElement | pseudoClass ;
 
-// --- Simple selector (dispatch-friendly: disjoint first bytes) ---
-simpleSelector = classSelector | idSelector | attrSelector
-               | colonSelector | typeSelector ;
-
-compoundSelector = simpleSelector + ;
+// --- Compound selector (inline simple selectors for direct dispatch) ---
+compoundSelector = (classSelector | idSelector | attrSelector
+                   | colonSelector | typeSelector) + ;
 
 // --- Combinators ---
 combinator = /\s*>\s*/ | /\s*\+\s*/ | /\s*~\s*/ | /\s+/ ;

@@ -396,12 +396,11 @@ fn emit_typed_accessors(
     let body = peel_body(&rule.body);
 
     match body {
-        // Compound shape accessors (Seq, Alt, Repeat) are
-        // structurally correct but need per-grammar dedup and
-        // TapeCursor API alignment before activation. The universal
-        // accessors (children(), child(n), variant_idx(), span_text())
-        // carry full functionality until then.
-        IrNode::Seq(_) | IrNode::Alt(_, _) | IrNode::Repeat { .. } => quote! {},
+        IrNode::Seq(_) => seq::emit_seq_accessors(rule, rule_name, ir, grammar_name),
+        IrNode::Alt(_, _) => alt::emit_alt_accessors(rule, rule_name, ir, grammar_name),
+        IrNode::Repeat { .. } => {
+            repeat::emit_repeat_accessors(rule, rule_name, ir, grammar_name)
+        }
         // Leaves: Literal, Regex, Epsilon, Ref, and any body that
         // doesn't match the compound shapes above.
         _ => {

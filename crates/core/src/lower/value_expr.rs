@@ -97,6 +97,19 @@ fn dispatch_value_expr<'a>(
     ctx: &mut LowerCtx<'a>,
 ) -> MapExpr {
     match node.rule_kind() {
+        // Transparent wrapper — `value_expr = value_or | value_closure`.
+        // Under structural mode the bootstrap parser may yield the
+        // wrapper compound directly rather than inlining. Peel to
+        // the single child.
+        BbnfBootstrapRuleKind::value_expr => {
+            if let Some(child) = node.children().next() {
+                dispatch_value_expr(child, ctx)
+            } else {
+                // Leaf value_expr — the span text is the atom.
+                lower_value_atom(node, ctx)
+            }
+        }
+
         // Top of the value sub-grammar — alt of closure / value_or chain.
         BbnfBootstrapRuleKind::value_or => lower_value_expr_or_closure(node, ctx),
 

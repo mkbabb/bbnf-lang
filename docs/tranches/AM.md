@@ -102,9 +102,36 @@ bench regresses >1%.
 | data      | 1,491  | 1,644     | +10%   | 2,401    |
 | twitter   | 1,661  | 1,733     | +4%    | 2,693    |
 
-canada now BEATS sonic-rs by +13%. AM.3 contributed +4-17% across
+canada now BEATS sonic-rs by +12%. AM.3 contributed +4-16% across
 all datasets by emitting `push_leaf` for leaf Alt branches instead
 of unconditional `push_compound`.
+
+## Post-AM.3 consolidated results
+
+| File      | Pre-AM | Post-AM | Delta  | sonic-rs | vs sonic |
+|-----------|--------|---------|--------|----------|----------|
+| canada    | 1,453  | 1,689   | +16%   | 1,503    | +12% BEAT|
+| citm      | 2,001  | 2,138   | +7%    | 3,045    | -30%     |
+| data      | 1,491  | 1,613   | +8%    | 2,401    | -33%     |
+| data_xl   | 1,121  | 1,153   | +3%    | 1,477    | -22%     |
+| twitter   | 1,661  | 1,671   | +1%    | 2,693    | -38%     |
+
+### CSS Monolithic (cold, MB/s)
+| File       | MB/s  |
+|------------|-------|
+| bootstrap  | 1,754 |
+| normalize  | 2,247 |
+| tailwind   | 1,533 |
+
+### Compile Pipeline (all pass)
+| Grammar  | Time    |
+|----------|---------|
+| json     | 131 us  |
+| ebnf     | 393 us  |
+| css mono | 871 us  |
+| sheets   | 2.6 ms  |
+| bbnf     | 26.9 ms |
+| css l4   | 46.2 ms |
 
 AM.4 (SIMD escape-parity string scanner via `portable_simd`) was
 implemented but shows ~neutral impact: memchr2 was already

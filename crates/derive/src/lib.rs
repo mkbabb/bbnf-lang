@@ -43,7 +43,8 @@ use parse_that::utils::get_cargo_root_path;
 //   - The Rust codegen output shape (enum naming, method signatures,
 //     monolithic emitter contracts)
 // AM.3: bumped from 6 — per-branch mark_children for leaf branches.
-const BBNF_SCHEMA_VERSION: u64 = 7;
+// AN.0.3: bumped from 7 — per-parser submodule wrapping.
+const BBNF_SCHEMA_VERSION: u64 = 8;
 
 /// Recursively collect all grammar file contents for hashing.
 ///
@@ -286,7 +287,19 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
     };
 
     // ── IR-based codegen (active) ──────────────────────────────────────
-    let output = bbnf::generate::generate_all(&prepared, &parser_container_attrs, ident);
+    let inner = bbnf::generate::generate_all(&prepared, &parser_container_attrs, ident);
+
+    // Wrap the generated code in a uniquely-named private submodule so
+    // that multiple `#[derive(Parser)]` invocations in the same file
+    // don't collide on free functions and view types.
+    let mod_name = quote::format_ident!("__{}_emit_impl", ident.to_string().to_lowercase());
+    let output = quote::quote! {
+        mod #mod_name {
+            use super::*;
+            #inner
+        }
+        pub use #mod_name::*;
+    };
 
     // ── Cache write ──────────────────────────────────────────────────────────
     if let Some(key) = cache_key {

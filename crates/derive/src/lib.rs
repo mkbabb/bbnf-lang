@@ -44,7 +44,8 @@ use parse_that::utils::get_cargo_root_path;
 //     monolithic emitter contracts)
 // AM.3: bumped from 6 — per-branch mark_children for leaf branches.
 // AN.0.3: bumped from 7 — per-parser submodule wrapping.
-const BBNF_SCHEMA_VERSION: u64 = 8;
+// AL.1: bumped from 8 — tape-first serialize codegen (NodeView, span_text).
+const BBNF_SCHEMA_VERSION: u64 = 9;
 
 /// Recursively collect all grammar file contents for hashing.
 ///

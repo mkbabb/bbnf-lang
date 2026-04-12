@@ -139,12 +139,12 @@ impl Emitter for RustEmitter {
 
     fn emit_call(
         &mut self,
-        _rule_id: RuleId,
+        rule_id: RuleId,
         rule_name: &str,
         alloc: ValuePlacement,
         ctx: &mut Self::Ctx,
     ) -> TokenStream {
-        self.emit_call_impl(rule_name, alloc, ctx)
+        self.emit_call_impl(rule_id, rule_name, alloc, ctx)
     }
 
     fn emit_inline_wrap(

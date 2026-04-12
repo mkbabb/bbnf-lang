@@ -132,3 +132,37 @@ pub fn emit_rule_signature(fn_name: &str) -> TokenStream {
         ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset>
     }
 }
+
+// ── Tranche AI.1 — Direct-tier signatures ──────────────────────────────────
+
+/// Emit the signature for a Direct-tier rule's inner parse function.
+///
+/// `__<name>_inner(state) -> Option<()>` — the shared parse body
+/// for both the tape wrapper and the direct shim. Takes only
+/// `state`; no tape parameter. The inner function is the single
+/// source of parse logic for Direct-tier rules.
+pub fn emit_direct_inner_signature(fn_name: &str) -> TokenStream {
+    let fn_ident = format_ident!("__{}_inner", fn_name);
+    quote! {
+        #[allow(non_snake_case)]
+        fn #fn_ident<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+        ) -> ::core::option::Option<()>
+    }
+}
+
+/// Emit the signature for a Direct-tier rule's direct shim.
+///
+/// `__<name>_direct(state) -> Option<()>` — skips the tape
+/// entirely. Called when a Direct-tier caller invokes a Direct-tier
+/// callee, avoiding the tape push/pop overhead. The shim delegates
+/// to `__<name>_inner`.
+pub fn emit_direct_shim_signature(fn_name: &str) -> TokenStream {
+    let fn_ident = format_ident!("__{}_direct", fn_name);
+    quote! {
+        #[allow(non_snake_case)]
+        fn #fn_ident<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+        ) -> ::core::option::Option<()>
+    }
+}

@@ -19,15 +19,16 @@
 //! constructs a [`::bbnf::runtime::Parsed`] from a finished tape.
 
 use bbnf_ir::{GrammarIR, IrRule};
-use bbnf_ir::passes::MaterializationClass;
+use bbnf_ir::passes::{EmissionTier, MaterializationClass};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use crate::backend::driver::analysis::BackendAnalysis;
 
 use super::tape_prelude::{
-    emit_must_tape_epilogue, emit_must_tape_prelude, emit_rule_signature,
-    emit_tape_span_only_epilogue, emit_tape_span_only_prelude,
+    emit_direct_inner_signature, emit_direct_shim_signature, emit_must_tape_epilogue,
+    emit_must_tape_prelude, emit_rule_signature, emit_tape_span_only_epilogue,
+    emit_tape_span_only_prelude,
 };
 use super::{RustEmitCtx, RustEmitter};
 
@@ -92,20 +93,41 @@ impl RustEmitter {
         let name = ir.get_string(rule.name).to_string();
         let class = Self::materialization_for_rule(ir, rule);
 
-        // TransparentElide rules do not emit a function at all —
+        // TransparentElide rules do not emit a function at all ��
         // the driver inlines their body at every call site.
         if class == MaterializationClass::TransparentElide {
             return quote! {};
         }
 
-        // Variant discriminator: the rule's index in ir.rules,
-        // capped at u8::MAX. The view layer uses this to branch on
-        // which rule produced a compound / leaf record.
-        let rule_idx_u8: u8 = {
-            let idx = rule.id as usize;
-            debug_assert!(idx <= u8::MAX as usize, "rule id overflows u8 variant_idx");
-            (idx & 0xFF) as u8
-        };
+        let tier = ir
+            .emission_tier
+            .get(&rule.id)
+            .copied()
+            .unwrap_or(EmissionTier::Tape);
+
+        // Direct-tier rules emit a three-function triad:
+        // inner (shared parse body) + tape wrapper + direct shim.
+        if tier == EmissionTier::Direct {
+            return self.emit_direct_tier_rule(&name, rule, body, sync_body, ir, ctx, class);
+        }
+
+        // Tape / Lazy — existing behaviour.
+        self.emit_tape_tier_rule(&name, rule, body, sync_body, ir, ctx, class)
+    }
+
+    /// Emit a Tape-tier (or Lazy-tier) rule: the standard prelude +
+    /// body + epilogue pattern from Tranche AC.2.
+    fn emit_tape_tier_rule(
+        &mut self,
+        name: &str,
+        rule: &IrRule,
+        body: TokenStream,
+        sync_body: Option<TokenStream>,
+        ir: &GrammarIR,
+        ctx: &mut RustEmitCtx,
+        class: MaterializationClass,
+    ) -> TokenStream {
+        let rule_idx_u8 = Self::variant_idx(rule);
 
         let (prelude, epilogue) = match class {
             MaterializationClass::MustTape => (
@@ -119,17 +141,113 @@ impl RustEmitter {
             MaterializationClass::TransparentElide => unreachable!(),
         };
 
-        let signature = emit_rule_signature(&name);
-
-        // The body is a pre-compiled sub-parse expression
-        // evaluating to either `Option<()>` or
-        // `Option<TapeOffset>`. We `match` on it to make both
-        // shapes compose under one uniform failure path.
+        let signature = emit_rule_signature(name);
         let rule_debug = ir.debug_all || rule.meta.directives.debug;
-        let body_block = if rule_debug {
-            let trace_entry = crate::backend::rust::trace::emit_trace_entry(&name);
+        let body_block = Self::wrap_body_in_rule_block(body, &prelude, &epilogue, rule_debug, name);
+
+        let mut methods = Vec::new();
+        methods.push(quote! {
+            #signature {
+                #body_block
+            }
+        });
+
+        Self::maybe_emit_recover_fn(&mut methods, name, sync_body, ctx);
+        quote! { #(#methods)* }
+    }
+
+    /// Emit a Direct-tier rule: `_inner` + tape wrapper + `_direct`.
+    ///
+    /// The inner function owns the parse body (state-only, no tape).
+    /// The tape wrapper calls inner + pushes the tape record. The
+    /// direct shim calls inner with no tape side-effects — used when
+    /// a Direct-tier caller invokes a Direct-tier callee.
+    fn emit_direct_tier_rule(
+        &mut self,
+        name: &str,
+        rule: &IrRule,
+        body: TokenStream,
+        sync_body: Option<TokenStream>,
+        ir: &GrammarIR,
+        ctx: &mut RustEmitCtx,
+        class: MaterializationClass,
+    ) -> TokenStream {
+        let rule_idx_u8 = Self::variant_idx(rule);
+
+        let inner_sig = emit_direct_inner_signature(name);
+        let tape_sig = emit_rule_signature(name);
+        let direct_sig = emit_direct_shim_signature(name);
+        let inner_ident = format_ident!("__{}_inner", name);
+
+        // 1. Inner: the raw parse body, state-only.
+        let inner_fn = quote! {
+            #inner_sig {
+                match ({ #body }) {
+                    Some(_) => Some(()),
+                    None => None,
+                }
+            }
+        };
+
+        // 2. Tape wrapper: calls inner, then tape prelude/epilogue.
+        let (prelude, epilogue) = match class {
+            MaterializationClass::MustTape => (
+                emit_must_tape_prelude(),
+                emit_must_tape_epilogue(rule_idx_u8),
+            ),
+            MaterializationClass::TapeSpanOnly => (
+                emit_tape_span_only_prelude(),
+                emit_tape_span_only_epilogue(rule_idx_u8),
+            ),
+            MaterializationClass::TransparentElide => unreachable!(),
+        };
+
+        let tape_fn = quote! {
+            #tape_sig {
+                'rule_blk: {
+                    #prelude
+                    match Self::#inner_ident(state) {
+                        Some(()) => (),
+                        None => break 'rule_blk None,
+                    }
+                    #epilogue
+                }
+            }
+        };
+
+        // 3. Direct shim: calls inner, no tape.
+        let direct_fn = quote! {
+            #direct_sig {
+                Self::#inner_ident(state)
+            }
+        };
+
+        let mut methods = vec![inner_fn, tape_fn, direct_fn];
+        Self::maybe_emit_recover_fn(&mut methods, name, sync_body, ctx);
+        quote! { #(#methods)* }
+    }
+
+    /// Variant discriminator: the rule's index in ir.rules,
+    /// capped at u8::MAX.
+    fn variant_idx(rule: &IrRule) -> u8 {
+        let idx = rule.id as usize;
+        debug_assert!(idx <= u8::MAX as usize, "rule id overflows u8 variant_idx");
+        (idx & 0xFF) as u8
+    }
+
+    /// Wrap a body expression in the standard `'rule_blk` block with
+    /// optional debug tracing.
+    fn wrap_body_in_rule_block(
+        body: TokenStream,
+        prelude: &TokenStream,
+        epilogue: &TokenStream,
+        rule_debug: bool,
+        name: &str,
+    ) -> TokenStream {
+        if rule_debug {
+            let trace_entry = crate::backend::rust::trace::emit_trace_entry(name);
             let trace_ident = syn::Ident::new("__trace_result", proc_macro2::Span::call_site());
-            let trace_exit = crate::backend::rust::trace::emit_trace_exit(&name, &trace_ident);
+            let trace_exit = crate::backend::rust::trace::emit_trace_exit(name, &trace_ident);
             quote! {
                 'rule_blk: {
                     #prelude
@@ -157,38 +275,34 @@ impl RustEmitter {
                     #epilogue
                 }
             }
-        };
-
-        let mut methods = Vec::new();
-
-        methods.push(quote! {
-            #signature {
-                #body_block
-            }
-        });
-
-        // @recover sync function. Emits Option<()>; the sync
-        // expression is side-effecting only.
-        let has_recover = rule.meta.directives.recover.is_some()
-            && !ctx.ir_ctx().parser_attrs.skip_recover;
-        if has_recover {
-            if let Some(sync_expr) = sync_body {
-                let sync_ident = format_ident!("__sync_{}", name);
-                methods.push(quote! {
-                    #[allow(non_snake_case)]
-                    fn #sync_ident<'a>(
-                        state: &mut ::parse_that::ParserState<'a>,
-                    ) -> ::core::option::Option<()> {
-                        match (#sync_expr) {
-                            Some(_) => Some(()),
-                            None => None,
-                        }
-                    }
-                });
-            }
         }
+    }
 
-        quote! { #(#methods)* }
+    /// Emit the `@recover` sync function if applicable.
+    fn maybe_emit_recover_fn(
+        methods: &mut Vec<TokenStream>,
+        name: &str,
+        sync_body: Option<TokenStream>,
+        ctx: &mut RustEmitCtx,
+    ) {
+        let has_recover = ctx.ir_ctx().parser_attrs.skip_recover;
+        if has_recover {
+            return;
+        }
+        if let Some(sync_expr) = sync_body {
+            let sync_ident = format_ident!("__sync_{}", name);
+            methods.push(quote! {
+                #[allow(non_snake_case)]
+                fn #sync_ident<'a>(
+                    state: &mut ::parse_that::ParserState<'a>,
+                ) -> ::core::option::Option<()> {
+                    match (#sync_expr) {
+                        Some(_) => Some(()),
+                        None => None,
+                    }
+                }
+            });
+        }
     }
 
     pub(super) fn emit_type_definitions_impl(

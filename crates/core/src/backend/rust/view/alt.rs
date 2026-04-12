@@ -29,14 +29,21 @@ pub fn emit_alt_accessors(
     };
 
     let mut methods = Vec::new();
+    let mut seen_names = std::collections::HashSet::new();
 
     // Per-branch accessors based on the branch's inner shape.
     for (branch_idx, branch) in branches.iter().enumerate() {
         let idx_u8 = branch_idx as u8;
 
         // Try to derive a meaningful name from the branch node.
-        let (variant_name, view_ty) =
+        // Disambiguate on collision by appending the branch index.
+        let (mut variant_name, view_ty) =
             resolve_branch_identity(&branch.node, branch_idx, ir, grammar_name);
+
+        if !seen_names.insert(variant_name.clone()) {
+            variant_name = format!("{}_{}", variant_name, branch_idx);
+            seen_names.insert(variant_name.clone());
+        }
 
         let as_ident = format_ident!("as_{}", variant_name);
         let is_ident = format_ident!("is_{}", variant_name);
@@ -70,7 +77,15 @@ pub fn emit_alt_accessors(
 
     // Sub-variant accessors from heterogeneous coercion.
     for sv in &rule.meta.sub_variants {
-        let sv_name = ir.get_string(sv.variant_name);
+        let sv_base = ir.get_string(sv.variant_name).to_string();
+        let sv_name = if seen_names.contains(&sv_base) {
+            let deduped = format!("{}_sv{}", sv_base, sv.branch_index);
+            seen_names.insert(deduped.clone());
+            deduped
+        } else {
+            seen_names.insert(sv_base.clone());
+            sv_base
+        };
         let as_ident = format_ident!("as_{}", sv_name);
         let is_ident = format_ident!("is_{}", sv_name);
 

@@ -10,12 +10,6 @@ debug = true
 strip = false
 split-debuginfo = "packed"
 
-[profile.bench]
-inherits = "release"
-lto = false
-codegen-units = 4
-debug = true
-
 [profile.dev]
 incremental = true
 codegen-units = 16

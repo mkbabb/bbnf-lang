@@ -76,16 +76,14 @@ pub fn emit_alt_accessors(
     }
 
     // Sub-variant accessors from heterogeneous coercion.
+    let mut sv_counter = 0u32;
     for sv in &rule.meta.sub_variants {
         let sv_base = ir.get_string(sv.variant_name).to_string();
-        let sv_name = if seen_names.contains(&sv_base) {
-            let deduped = format!("{}_sv{}", sv_base, sv.branch_index);
-            seen_names.insert(deduped.clone());
-            deduped
-        } else {
-            seen_names.insert(sv_base.clone());
-            sv_base
-        };
+        let mut sv_name = sv_base.clone();
+        while !seen_names.insert(sv_name.clone()) {
+            sv_counter += 1;
+            sv_name = format!("{}_sv{}", sv_base, sv_counter);
+        }
         let as_ident = format_ident!("as_{}", sv_name);
         let is_ident = format_ident!("is_{}", sv_name);
 

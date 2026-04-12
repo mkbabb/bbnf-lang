@@ -230,7 +230,8 @@ fn alt_rule_stays_must_tape_after_csp() {
     )];
     let mut ir = make_ir(rules, strings);
     solve_and_merge(&mut ir);
-    assert_eq!(body_class(&ir, 0), MaterializationClass::MustTape);
+    // AJ.1: Alt with all-leaf branches is TapeSpanOnly.
+    assert_eq!(body_class(&ir, 0), MaterializationClass::TapeSpanOnly);
 }
 
 #[test]

@@ -228,7 +228,9 @@ fn alt_is_must_tape() {
     )];
     let mut ir = make_ir(rules, strings);
     classify_materialization(&mut ir);
-    assert_eq!(rule_class(&ir, 0), MaterializationClass::MustTape);
+    // AJ.1: Alt with all-leaf branches is TapeSpanOnly (variant_idx
+    // stored in flags, no children needed).
+    assert_eq!(rule_class(&ir, 0), MaterializationClass::TapeSpanOnly);
 }
 
 #[test]

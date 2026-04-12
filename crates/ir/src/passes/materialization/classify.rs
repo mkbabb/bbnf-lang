@@ -235,14 +235,27 @@ fn classify_node(
 
         // ── Compound: Alt ───────────────────────────────────────────
         IrNode::Alt(branches, _dispatch) => {
-            // Alt discriminates between branches — the view layer
-            // needs the variant index, so Alt always emits a
-            // compound record. Children still get classified for
-            // AB.1 CSP joint-solve refinement.
+            // Alt discriminates between branches — it needs a
+            // variant index in the record's flags byte. Both
+            // push_leaf and push_compound store variant_idx, so
+            // when ALL branches are leaf-like (TapeSpanOnly or
+            // TransparentElide), the Alt itself can be
+            // TapeSpanOnly: one record, no children run. When any
+            // branch is MustTape (compound children), the Alt
+            // must be MustTape so the parent can walk its
+            // subtree.
+            let mut all_leaf_like = true;
             for b in branches {
-                classify_node(ir, &b.node, facts, map);
+                let c = classify_node(ir, &b.node, facts, map);
+                if c == MaterializationClass::MustTape {
+                    all_leaf_like = false;
+                }
             }
-            MaterializationClass::MustTape
+            if all_leaf_like {
+                MaterializationClass::TapeSpanOnly
+            } else {
+                MaterializationClass::MustTape
+            }
         }
 
         // ── Compound: Repeat ────────────────────────────────────────

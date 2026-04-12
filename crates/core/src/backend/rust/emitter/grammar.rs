@@ -66,7 +66,13 @@ impl RustEmitter {
         ir: &GrammarIR,
         rule: &IrRule,
     ) -> MaterializationClass {
-        if rule.id == ir.entry || rule.meta.preserve_identity {
+        // `preserve_identity` rules must always push a compound.
+        // The entry rule is NOT forced — its body classification
+        // determines whether it uses push_leaf (TapeSpanOnly) or
+        // push_compound (MustTape). Both produce a TapeOffset
+        // valid for `Parsed::root_offset`. The view layer reads
+        // variant_idx from flags, which both paths store.
+        if rule.meta.preserve_identity {
             return MaterializationClass::MustTape;
         }
         // `ir.materialization` is keyed by `NodeId` via `ir.dag`.

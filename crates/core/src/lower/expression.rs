@@ -464,9 +464,11 @@ fn lower_mapped_factor<'a>(
                 .trim();
         }
         // Strip mapping group — everything from `->` / `=>` onward.
-        if let Some(idx) = stripped.find("->") {
+        // Use find_unquoted to avoid matching `->` inside quoted
+        // literals like `"->"`.
+        if let Some(idx) = find_unquoted(stripped, "->") {
             stripped = stripped[..idx].trim();
-        } else if let Some(idx) = stripped.find("=>") {
+        } else if let Some(idx) = find_unquoted(stripped, "=>") {
             stripped = stripped[..idx].trim();
         }
         lower_leaf_by_span_text_str(stripped, ctx).unwrap_or_else(|| {
@@ -803,6 +805,45 @@ fn lower_leaf_by_span_text_str<'a>(
             .all(|b| b.is_ascii_alphanumeric() || *b == b'_' || *b == b'-')
     {
         return Some(resolve_name(trimmed, ctx));
+    }
+    None
+}
+
+/// Search for `needle` in `haystack`, skipping over quoted strings
+/// (`"..."`, `'...'`, `` `...` ``) and regex literals (`/.../`).
+/// Returns the byte offset of the first unquoted occurrence, or `None`.
+///
+/// This prevents matching `->` inside a quoted literal like `"->"`.
+fn find_unquoted(haystack: &str, needle: &str) -> Option<usize> {
+    let bytes = haystack.as_bytes();
+    let needle_bytes = needle.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        let b = bytes[i];
+        // Skip quoted strings and regex literals.
+        if b == b'"' || b == b'\'' || b == b'`' || b == b'/' {
+            let quote = b;
+            i += 1;
+            while i < bytes.len() {
+                if bytes[i] == b'\\' {
+                    i += 2; // skip escape sequence
+                    continue;
+                }
+                if bytes[i] == quote {
+                    i += 1;
+                    break;
+                }
+                i += 1;
+            }
+            continue;
+        }
+        // Check for needle match at this position.
+        if i + needle_bytes.len() <= bytes.len()
+            && &bytes[i..i + needle_bytes.len()] == needle_bytes
+        {
+            return Some(i);
+        }
+        i += 1;
     }
     None
 }

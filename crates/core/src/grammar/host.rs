@@ -59,10 +59,14 @@ pub fn extract_grammar<'a>(parsed: &'a Parsed<'a, BbnfBootstrap>) -> ParsedGramm
     grammar
 }
 
-/// Peel transparent `grammar_item` / `directive` wrappers.
+/// Peel the transparent `grammar_item` wrapper.
+///
+/// Only `grammar_item` is peeled — `directive` retains its full span
+/// text so `absorb_item`'s span-text fallback can find the `@keyword`
+/// and dispatch correctly (e.g., `@recover`).
 fn peel_wrappers<'a>(node: BbnfBootstrapNodeView<'a>) -> BbnfBootstrapNodeView<'a> {
     match node.rule_kind() {
-        BbnfBootstrapRuleKind::grammar_item | BbnfBootstrapRuleKind::directive => {
+        BbnfBootstrapRuleKind::grammar_item => {
             if let Some(child) = node.child(0) {
                 peel_wrappers(child)
             } else {

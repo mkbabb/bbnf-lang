@@ -4,10 +4,8 @@ use bbnf_analysis::state::diagnostics::analyze;
 #[test]
 fn test_analyze_parse_error() {
     let text = "value = number";
-    let (result, parser_state) = bbnf::grammar::parse_with_state(text);
+    let result = bbnf::grammar::parse_with_state(text);
     eprintln!("Result is_some: {}", result.is_some());
-    eprintln!("Offset: {} / {}", parser_state.offset, text.len());
-    eprintln!("Furthest: {}", parser_state.furthest_offset);
     if let Some(ref pg) = result {
         eprintln!("AST len: {}", pg.rules.len());
     }

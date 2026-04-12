@@ -54,8 +54,8 @@ pub fn parse_once(src: &str) -> (Option<CachedParseResult<'_>>, ParseDiagnostics
     match parse_result {
         Ok(result) => {
             let diag = ParseDiagnostics {
-                offset: 0,
-                furthest_offset: 0,
+                offset: if result.is_some() { src.len() } else { 0 },
+                furthest_offset: if result.is_some() { src.len() } else { 0 },
                 panic_message: None,
             };
             let cached = result.map(|pg| {

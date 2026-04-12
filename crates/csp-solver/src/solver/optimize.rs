@@ -104,6 +104,34 @@ where
     let mut scored: Vec<ScoredSolution<D>> = Vec::new();
     let mut best_cost = f64::INFINITY;
 
+    // Pre-collect indices of soft constraints so the hot-path cost
+    // functions (`optimistic_bound`, `assignment_cost`) only iterate
+    // the soft subset instead of scanning all N constraints. On real
+    // grammars the soft fraction is <10% of the total constraint
+    // count, turning an O(N_constraints) per-node scan into O(N_soft).
+    let soft_indices: Vec<usize> = constraints
+        .iter()
+        .enumerate()
+        .filter_map(|(i, c)| if c.is_soft() { Some(i) } else { None })
+        .collect();
+
+    // Incremental bound: start with the optimistic bound of the empty
+    // assignment (every variable contributes its min/max cost). The
+    // recursive search maintains this incrementally as variables are
+    // assigned/unassigned, avoiding the O(N_vars) full recomputation
+    // at every node.
+    let initial_bound = if config.maximize {
+        variables
+            .iter()
+            .map(|v| cost_eval.max_cost(&v.domain))
+            .sum::<f64>()
+    } else {
+        variables
+            .iter()
+            .map(|v| cost_eval.min_cost(&v.domain))
+            .sum::<f64>()
+    };
+
     bb_recurse(
         variables,
         constraints,
@@ -115,6 +143,8 @@ where
         &mut stack,
         &mut scored,
         &mut best_cost,
+        &soft_indices,
+        initial_bound,
         0,
     );
 
@@ -136,6 +166,7 @@ fn assignment_cost<D: Domain>(
     assignment: &[Option<D::Value>],
     variables: &[Variable<D>],
     constraints: &[ConstraintEnum<D>],
+    soft_indices: &[usize],
     cost_eval: &dyn DomainCostEval<D>,
 ) -> f64
 where
@@ -150,56 +181,14 @@ where
         }
     }
 
-    // Soft constraint penalties.
-    for c in constraints {
-        cost += c.soft_penalty(assignment);
+    // Soft constraint penalties — only iterate the pre-indexed soft
+    // subset. Hard constraints always return 0.0 for soft_penalty,
+    // so skipping them is correct and avoids an O(N_constraints) scan.
+    for &idx in soft_indices {
+        cost += constraints[idx].soft_penalty(assignment);
     }
 
     cost
-}
-
-/// Compute the optimistic bound on the cost of any completion.
-///
-/// For minimize: returns a lower bound (assigned vars use actual cost,
-/// unassigned use min_cost).
-/// For maximize: returns an upper bound (assigned vars use actual cost,
-/// unassigned use max_cost). This is then negated by the caller to
-/// compare against the negated incumbent.
-fn optimistic_bound<D: Domain>(
-    assignment: &[Option<D::Value>],
-    variables: &[Variable<D>],
-    constraints: &[ConstraintEnum<D>],
-    cost_eval: &dyn DomainCostEval<D>,
-    maximize: bool,
-) -> f64
-where
-    D::Value: PartialEq,
-{
-    let mut bound = 0.0;
-
-    for (i, val) in assignment.iter().enumerate() {
-        match val {
-            Some(v) => bound += cost_eval.cost(&variables[i].domain, v),
-            None => {
-                if maximize {
-                    bound += cost_eval.max_cost(&variables[i].domain);
-                } else {
-                    bound += cost_eval.min_cost(&variables[i].domain);
-                }
-            }
-        }
-    }
-
-    // Soft constraint penalties for fully-assigned scopes.
-    // (Partially-assigned scopes contribute 0 optimistically.)
-    for c in constraints {
-        let scope = c.scope();
-        if scope.iter().all(|&v| assignment[v as usize].is_some()) {
-            bound += c.soft_penalty(assignment);
-        }
-    }
-
-    bound
 }
 
 fn bb_recurse<D: Domain>(
@@ -213,6 +202,8 @@ fn bb_recurse<D: Domain>(
     stack: &mut Vec<VarId>,
     scored: &mut Vec<ScoredSolution<D>>,
     best_cost: &mut f64,
+    soft_indices: &[usize],
+    domain_bound: f64,
     depth: usize,
 ) -> bool
 where
@@ -220,7 +211,7 @@ where
 {
     // Complete assignment — record solution.
     if stack.is_empty() {
-        let cost = assignment_cost(assignment, variables, constraints, cost_eval);
+        let cost = assignment_cost(assignment, variables, constraints, soft_indices, cost_eval);
         let effective_cost = if config.maximize { -cost } else { cost };
 
         if effective_cost < *best_cost {
@@ -253,10 +244,23 @@ where
 
     stats.nodes_explored += 1;
 
-    // Bound check: prune if the optimistic bound can't beat the incumbent.
-    let ob = optimistic_bound(
-        assignment, variables, constraints, cost_eval, config.maximize,
-    );
+    // Bound check: use the incrementally-maintained domain bound
+    // plus soft constraint penalties. The domain_bound tracks the
+    // sum of (actual cost for assigned vars, min/max cost for
+    // unassigned vars) without recomputing from scratch.
+    let soft_penalty: f64 = soft_indices
+        .iter()
+        .filter_map(|&idx| {
+            let c = &constraints[idx];
+            let scope = c.scope();
+            if scope.iter().all(|&v| assignment[v as usize].is_some()) {
+                Some(c.soft_penalty(assignment))
+            } else {
+                None
+            }
+        })
+        .sum();
+    let ob = domain_bound + soft_penalty;
     let effective_ob = if config.maximize { -ob } else { ob };
     if effective_ob >= *best_cost {
         return false;
@@ -272,6 +276,13 @@ where
     .unwrap();
 
     let var = stack.swap_remove(idx);
+
+    // The optimistic contribution of this variable before assignment.
+    let var_optimistic = if config.maximize {
+        cost_eval.max_cost(&variables[var as usize].domain)
+    } else {
+        cost_eval.min_cost(&variables[var as usize].domain)
+    };
 
     // Value ordering: sort by cost (lowest first for minimize, highest for maximize).
     let mut values: Vec<_> = variables[var as usize].domain.iter().collect();
@@ -293,6 +304,11 @@ where
     }
 
     for val in values {
+        // Update the incremental bound: replace the optimistic
+        // contribution of this variable with the actual cost.
+        let actual_cost = cost_eval.cost(&variables[var as usize].domain, &val);
+        let new_bound = domain_bound - var_optimistic + actual_cost;
+
         assignment[var as usize] = Some(val.clone());
         variables[var as usize].restrict_to(&val, depth);
 
@@ -346,6 +362,8 @@ where
                     stack,
                     scored,
                     best_cost,
+                    soft_indices,
+                    new_bound,
                     depth + 1,
                 ) {
                     return true;

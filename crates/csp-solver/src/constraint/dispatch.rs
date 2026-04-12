@@ -82,4 +82,13 @@ where
             _ => 0.0,
         }
     }
+
+    /// Returns `true` if this constraint is a soft constraint (carries a penalty
+    /// on violation rather than pruning the search space). Used by the optimizer
+    /// to pre-index soft constraints so `optimistic_bound` and `assignment_cost`
+    /// skip the O(N_constraints) scan over hard constraints at every search node.
+    #[inline]
+    pub fn is_soft(&self) -> bool {
+        matches!(self, Self::Soft(_))
+    }
 }

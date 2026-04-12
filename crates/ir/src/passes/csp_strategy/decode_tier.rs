@@ -161,20 +161,19 @@ fn lookup_materialization_class(ir: &GrammarIR, body: &IrNode) -> Materializatio
 /// Tier B is admissible only when the body compiles to a
 /// self-contained `Option<T>` shim — no tape pushes, no
 /// captured closure state, no cross-rule call boundaries. The
-/// closed Tier B vocabulary is:
+/// Tier B vocabulary covers:
 ///
-/// - A `Map` whose `FnDescriptor` is `NumberConvert`,
-///   `HexConvert`, `Constant`, `EnumWrap`, `BoxWrap`, or
-///   `SpanCapture` (every variant except the user-facing `Expr`
-///   that may carry a closure).
+/// - A `Map` whose `FnDescriptor` is non-closure (every variant
+///   except the user-facing `Expr` that may carry a closure),
+///   where the inner is a leaf or a transparent `Ref`.
 /// - A leaf node (`Literal` / `Regex` / `Epsilon`) that
-///   projects to `Span` — the AF.6 view layer can return the
-///   span directly without walking the tape.
-///
-/// Anything else stays Tape until AF.6 can handle it. The check
-/// is intentionally narrow: a wider Tier B eligibility set
-/// would require the AF.6 emitter to handle compound shapes
-/// that need additional design work.
+///   projects to `Span` — the view layer can return the span
+///   directly without walking the tape.
+/// - A `Seq` where every child is a leaf, transparent `Ref`, or
+///   `OptionalWhitespace` over a leaf — typed Seq projections.
+/// - A single-branch `Alt` — collapses to the child's tier.
+/// - A bounded `Repeat` over a leaf or transparent `Ref` —
+///   fixed-size shape that doesn't need tape records.
 fn decide_tier_b_eligibility(ir: &GrammarIR, body: &IrNode) -> EmissionTier {
     match body {
         IrNode::Map { inner, fn_id } => {
@@ -187,18 +186,69 @@ fn decide_tier_b_eligibility(ir: &GrammarIR, body: &IrNode) -> EmissionTier {
             if matches!(desc, FnDescriptor::Expr { .. }) {
                 return EmissionTier::Tape;
             }
-            // The inner must itself be elision-safe — a Map over
-            // a sub-rule reference would need the sub-rule's
-            // tape record to remain available, which the Tier B
-            // shim doesn't push.
-            if matches!(inner.as_ref(), IrNode::Ref(_)) {
-                return EmissionTier::Tape;
+            // A Map over a Ref is Direct only when the target
+            // rule is TransparentElide — otherwise the sub-rule's
+            // tape record must remain available.
+            if let IrNode::Ref(target) = inner.as_ref() {
+                return if is_transparent_ref(ir, *target) {
+                    EmissionTier::Direct
+                } else {
+                    EmissionTier::Tape
+                };
             }
             EmissionTier::Direct
         }
-        // Bare leaves that project to Span — the AF.6 view layer
+        // Bare leaves that project to Span — the view layer
         // returns the span directly. Treat as Tier B candidates.
         IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => EmissionTier::Direct,
+
+        // Typed Seq projections — all children must be leaves,
+        // transparent refs, or OptionalWhitespace over a leaf.
+        IrNode::Seq(children) => {
+            let all_direct = children.iter().all(|c| match c {
+                IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => true,
+                IrNode::OptionalWhitespace(inner) => matches!(
+                    inner.as_ref(),
+                    IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon
+                ),
+                IrNode::Ref(rid) => is_transparent_ref(ir, *rid),
+                _ => false,
+            });
+            if all_direct {
+                EmissionTier::Direct
+            } else {
+                EmissionTier::Tape
+            }
+        }
+
+        // Single-branch Alt collapses to the child's tier.
+        IrNode::Alt(branches, _) if branches.len() == 1 => {
+            decide_tier_b_eligibility(ir, &branches[0].node)
+        }
+
+        // Bounded Repeat over a leaf or transparent Ref.
+        // Unbounded repeats (hi == u32::MAX) are variable-size
+        // and stay Tape.
+        IrNode::Repeat { inner, hi, .. } if *hi != u32::MAX => {
+            match inner.as_ref() {
+                IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => EmissionTier::Direct,
+                IrNode::Ref(rid) if is_transparent_ref(ir, *rid) => EmissionTier::Direct,
+                _ => EmissionTier::Tape,
+            }
+        }
+
         _ => EmissionTier::Tape,
     }
+}
+
+/// Check whether a `Ref(target)` points to a rule whose body is
+/// `TransparentElide` in the materialization lattice.
+fn is_transparent_ref(ir: &GrammarIR, target: u32) -> bool {
+    let Some(rule) = ir.rules.get(target as usize) else {
+        return false;
+    };
+    matches!(
+        lookup_materialization_class(ir, &rule.body),
+        MaterializationClass::TransparentElide
+    )
 }

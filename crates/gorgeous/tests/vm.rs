@@ -58,7 +58,7 @@ fn tagged_spans(input: &str, n: usize) -> Value {
     Value::Tagged {
         tag: 0,
         span: (0, input.len() as u32),
-        children: bbnf_ir::interpreter::ValueSlice::from_slice(Box::leak(children.into_boxed_slice())),
+        children: bbnf_ir::interpreter::ValueSlice::from_vec(children),
     }
 }
 
@@ -184,7 +184,7 @@ fn hint_split() {
     let value = Value::Tagged {
         tag: 0,
         span: (0, 6),
-        children: bbnf_ir::interpreter::ValueSlice::from_slice(Box::leak(children.into_boxed_slice())),
+        children: bbnf_ir::interpreter::ValueSlice::from_vec(children),
     };
     let config = PrinterConfig::new(80, 2);
     let output = format_value(&ir, &value, input, &config).unwrap();

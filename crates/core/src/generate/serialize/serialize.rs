@@ -95,6 +95,10 @@ pub fn serialize_for_node(
         if ref_rule.meta.is_transparent {
             return serialize_for_node(&ref_rule.body, td, val, ir, ctx);
         }
+        // Non-transparent Ref: call the rule's per-rule serialize function.
+        let rule_name = ir.get_string(ref_rule.name);
+        let fn_ident = format_ident!("serialize_{}", rule_name);
+        return quote! { Self::#fn_ident(#val, __ser); };
     }
 
     // Fallback: type-only emit.

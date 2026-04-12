@@ -2,7 +2,7 @@ use bbnf_derive::Parser;
 
 use crate::PrinterConfig;
 
-#[derive(Parser)]
+#[derive(Debug, Parser)]
 #[parser(
     path = "grammar/google-sheets/google-sheets.bbnf",
     prettify

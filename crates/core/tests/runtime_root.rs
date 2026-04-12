@@ -66,11 +66,11 @@ impl Root for TestGrammar {
 /// Build a parsed result holding a single leaf span record. The
 /// input string is long enough to slice `[0..5]` for the leaf's
 /// own span.
-fn parsed_with_one_leaf() -> Parsed<TestGrammar> {
+fn parsed_with_one_leaf() -> Parsed<'static, TestGrammar> {
     let mut builder = TapeBuilder::new();
     let leaf_off = builder.push_leaf(TapeKind::Span, 0, 5, 7);
     let tape = builder.finish().expect("tape finish");
-    Parsed::new(tape, "hello world".to_string(), leaf_off)
+    Parsed::new(tape, "hello world", leaf_off)
 }
 
 #[test]

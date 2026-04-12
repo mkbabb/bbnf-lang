@@ -20153,33 +20153,36 @@ impl BbnfBootstrap {
             Some(__builder.finish())
         })
     }
-    /// Parse an input string and return an owning
-    /// `Parsed<Self>` bound to the grammar's root view
-    /// type via the [`::bbnf::runtime::Root`] trait.
+    /// Parse an input string and return a zero-copy
+    /// `Parsed<'_, Self>` that borrows the input directly.
     pub fn parse(
         input: &str,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::Parsed<Self>,
+        ::bbnf::runtime::Parsed<'_, Self>,
         ::bbnf::runtime::ParseErr,
     > {
-        let owned: ::std::string::String = input.to_owned();
-        let mut state = ::parse_that::ParserState::new(&owned);
+        let mut state = ::parse_that::ParserState::new(input);
         let mut builder = ::bbnf::runtime::tape::TapeBuilder::with_capacity(
-            owned.len() / 8,
+            input.len() / 4,
         );
         let root_off = Self::__grammar(&mut state, &mut builder)
             .ok_or(::bbnf::runtime::ParseErr::Syntax {
                 offset: state.offset as u32,
                 rule: None,
             })?;
-        if state.offset < owned.len() {
+        while state.offset < input.len()
+            && input.as_bytes()[state.offset].is_ascii_whitespace()
+        {
+            state.offset += 1;
+        }
+        if state.offset < input.len() {
             return ::core::result::Result::Err(::bbnf::runtime::ParseErr::Syntax {
                 offset: state.offset as u32,
                 rule: None,
             });
         }
         let tape = builder.finish().map_err(::bbnf::runtime::ParseErr::Tape)?;
-        ::core::result::Result::Ok(::bbnf::runtime::Parsed::new(tape, owned, root_off))
+        ::core::result::Result::Ok(::bbnf::runtime::Parsed::new(tape, input, root_off))
     }
 }
 #[allow(dead_code, non_camel_case_types)]

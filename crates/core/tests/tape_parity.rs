@@ -128,7 +128,7 @@ trait HasCursor<'tape> {
 /// forwards to it so the harness can be generic over grammars
 /// without forcing `parse` onto `Root`.
 trait ParseGrammar: Root + Sized {
-    fn parse_input(input: &str) -> Result<bbnf::runtime::Parsed<Self>, bbnf::runtime::ParseErr>;
+    fn parse_input(input: &str) -> Result<bbnf::runtime::Parsed<'_, Self>, bbnf::runtime::ParseErr>;
 }
 
 // ─── Per-grammar bridge impls ────────────────────────────────────────
@@ -151,7 +151,7 @@ macro_rules! impl_grammar_bridges {
         impl ParseGrammar for $grammar {
             fn parse_input(
                 input: &str,
-            ) -> Result<bbnf::runtime::Parsed<Self>, bbnf::runtime::ParseErr> {
+            ) -> Result<bbnf::runtime::Parsed<'_, Self>, bbnf::runtime::ParseErr> {
                 <$grammar>::parse(input)
             }
         }

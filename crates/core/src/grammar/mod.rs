@@ -31,12 +31,14 @@ use crate::types::ParsedGrammar;
 /// slices from both — lives for the rest of the compile, matching the
 /// pre-tranche arena-style ownership model expected by callers.
 pub fn parse(source: &str) -> Option<ParsedGrammar<'_>> {
-    let parsed = generated::BbnfBootstrap::parse(source).ok()?;
-    // Leak the Parsed so its internal Tape + owned input outlive the
-    // returned ParsedGrammar<'_>. Library-internal scratch: the
-    // bootstrap flow runs once per compile and the rest of the
-    // pipeline assumes `'static`-flavoured lifetimes.
-    let parsed: &'static Parsed<generated::BbnfBootstrap> = Box::leak(Box::new(parsed));
+    // Leak the input string so the borrowed Parsed<'static, _> and
+    // the resulting ParsedGrammar<'_> live for the rest of the
+    // compile. Library-internal scratch: the bootstrap flow runs
+    // once per compile; the pipeline assumes 'static lifetimes.
+    let input: &'static str = Box::leak(source.to_owned().into_boxed_str());
+    let parsed = generated::BbnfBootstrap::parse(input).ok()?;
+    let parsed: &'static Parsed<'static, generated::BbnfBootstrap> =
+        Box::leak(Box::new(parsed));
     Some(host::extract_grammar(parsed))
 }
 

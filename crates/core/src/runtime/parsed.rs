@@ -1,64 +1,38 @@
-//! `Parsed<R>` — the owning parse result type.
+//! `Parsed<'p, R>` — the zero-copy parse result type.
 //!
-//! Tranche AB.2a introduced the storage form; AC.2 lands the `Root`
-//! trait and the `.view()` constructor that together define the
-//! public API every generated `Grammar::parse` function returns.
+//! Tranche AJ.2 rewrites the parse result to borrow the input string
+//! instead of owning a copy. `Parsed<'p, R>` carries a `&'p str`
+//! reference to the caller's input buffer, eliminating the `memcpy`
+//! that the pre-AJ `parse()` performed on every call.
 //!
-//! `Parsed<R>` is marker-typed over the grammar struct itself —
-//! never over the view type. The root view's lifetime is lent by
-//! `&self` on `Parsed` via the [`Root`] trait's GAT `type View<'p>`.
-//! Callers never name a `'p` lifetime directly; they hold
-//! `Parsed<Grammar>` and call [`Parsed::view`] to obtain a cursor-
-//! backed root view bound to the borrow.
+//! The lifetime chain is:
+//!   caller's `input: &str` → `Parsed<'p, R>` borrows input as `'p`
+//!   → `Parsed::view()` lends `R::View<'v>` where `'v ≤ 'p`
 //!
-//! # Input ownership
-//!
-//! `Parsed<R>` owns the source string alongside the tape. Views
-//! carry both a [`bbnf_tape::TapeCursor`] and a `&'p str` slice of
-//! the input, so every schema helper that needs to extract text
-//! (`span_text`, `identifier_text`, directive field slices) can do
-//! it as a cheap `self.input[lo..hi]` against the owned buffer.
-//! Callers no longer need to juggle a separate `&str` borrow next
-//! to the `Parsed`.
+//! Callers hold `Parsed<'_, Grammar>` and call `.view()` to obtain
+//! a cursor-backed typed view bound to the borrow.
 //!
 //! # Example (generated code shape)
 //!
 //! ```ignore
-//! pub fn parse(input: &str) -> Result<Parsed<Json>, ParseErr> {
-//!     let owned: String = input.to_owned();
-//!     let mut state = ParserState::new(&owned);
-//!     let mut builder = TapeBuilder::with_capacity(1024);
+//! pub fn parse(input: &str) -> Result<Parsed<'_, Json>, ParseErr> {
+//!     let mut state = ParserState::new(input);
+//!     let mut builder = TapeBuilder::with_capacity(input.len() / 4);
 //!     let root_off = Self::__value(&mut state, &mut builder)
 //!         .ok_or(ParseErr::Syntax { offset: state.offset as u32, rule: None })?;
-//!     let tape = builder.finish().map_err(ParseErr::Tape)?;
-//!     Ok(Parsed::new(tape, owned, root_off))
-//! }
-//!
-//! impl ::bbnf::runtime::Root for Json {
-//!     type View<'p> = JsonRootView<'p>;
-//!     fn make_view(tape: &'p Tape, input: &'p str, root: TapeOffset)
-//!         -> Self::View<'p>
+//!     // Skip trailing whitespace before EOF check.
+//!     while state.offset < input.len()
+//!         && input.as_bytes()[state.offset].is_ascii_whitespace()
 //!     {
-//!         JsonRootView::new(tape, input, root)
+//!         state.offset += 1;
 //!     }
+//!     if state.offset < input.len() {
+//!         return Err(ParseErr::Syntax { offset: state.offset as u32, rule: None });
+//!     }
+//!     let tape = builder.finish().map_err(ParseErr::Tape)?;
+//!     Ok(Parsed::new(tape, input, root_off))
 //! }
 //! ```
-//!
-//! The caller holds the `Parsed<Json>` and calls `.view()` to obtain
-//! a cursor-backed typed view:
-//!
-//! ```ignore
-//! let parsed = Json::parse(input)?;
-//! let root = parsed.view();
-//! for pair in root.as_object()?.pairs() {
-//!     // ... walk the tape via TapeCursor accessors
-//! }
-//! ```
-//!
-//! The lifetime relationship is natural: views borrow from the
-//! `Parsed`, so `Parsed` must outlive them. Callers that need to
-//! give up the typed surface and keep only the raw tape can call
-//! [`Parsed::into_tape`].
 
 use std::marker::PhantomData;
 
@@ -90,37 +64,35 @@ pub trait Root {
     fn make_view<'p>(tape: &'p Tape, input: &'p str, root: TapeOffset) -> Self::View<'p>;
 }
 
-/// Owning parse result — wraps a finished tape + owned input + root
-/// offset, lends out typed views over it.
+/// Zero-copy parse result — wraps a finished tape + borrowed input
+/// + root offset, lends out typed views over it.
 ///
-/// `R` is the grammar marker struct (e.g. `Json` for a JSON grammar).
-/// The actual root view type is resolved through `R`'s [`Root`] impl
+/// `'p` is the lifetime of the source input string. `R` is the
+/// grammar marker struct (e.g. `Json` for a JSON grammar). The
+/// actual root view type is resolved through `R`'s [`Root`] impl
 /// when [`Parsed::view`] is called; callers never instantiate the
 /// view directly.
 #[derive(Debug)]
-pub struct Parsed<R> {
+pub struct Parsed<'p, R> {
     /// The finished tape. Owned by the `Parsed` so view lifetimes
     /// naturally bind to `&self`.
     tape: Tape,
-    /// Owned source input. Views carry a `&'p str` slice of this
-    /// field and use it for every text-extraction accessor. Owning
-    /// the string keeps the typed view API self-contained: callers
-    /// hold only a `Parsed<Grammar>` and never have to track the
-    /// original input buffer separately.
-    input: String,
+    /// Borrowed source input. Views carry a `&'p str` slice of this
+    /// field and use it for every text-extraction accessor.
+    input: &'p str,
     /// Offset of the root record within `tape`.
     root_offset: TapeOffset,
     /// Phantom marker for the grammar's `Root` binding.
     _root_marker: PhantomData<R>,
 }
 
-impl<R> Parsed<R> {
-    /// Construct a new `Parsed` from a finished tape, the owned
-    /// input buffer, and the root record's offset within it.
+impl<'p, R> Parsed<'p, R> {
+    /// Construct a new `Parsed` from a finished tape, a borrowed
+    /// input string, and the root record's offset within it.
     /// Called by generated `parse` functions at the end of a
     /// successful parse.
     #[inline]
-    pub fn new(tape: Tape, input: String, root_offset: TapeOffset) -> Self {
+    pub fn new(tape: Tape, input: &'p str, root_offset: TapeOffset) -> Self {
         Self {
             tape,
             input,
@@ -129,20 +101,16 @@ impl<R> Parsed<R> {
         }
     }
 
-    /// Borrow the underlying tape. Useful for callers that want to
-    /// walk the raw records directly (diagnostics, serialization,
-    /// schema emitters).
+    /// Borrow the underlying tape.
     #[inline]
     pub fn tape(&self) -> &Tape {
         &self.tape
     }
 
-    /// Borrow the owned input string. Views use this slice for
-    /// every text-extraction accessor; callers that want the raw
-    /// source can read it here too.
+    /// Borrow the source input string.
     #[inline]
-    pub fn input(&self) -> &str {
-        &self.input
+    pub fn input(&self) -> &'p str {
+        self.input
     }
 
     /// The root record's offset within the tape.
@@ -152,21 +120,19 @@ impl<R> Parsed<R> {
     }
 
     /// Consume the `Parsed` and return ownership of the tape.
-    /// Callers that no longer need the typed view can go through
-    /// this to keep the tape alive for further processing.
     #[inline]
     pub fn into_tape(self) -> Tape {
         self.tape
     }
 }
 
-impl<R: Root> Parsed<R> {
+impl<'p, R: Root> Parsed<'p, R> {
     /// Lend out the grammar's root view, bound by the borrow on
     /// `self`. The view is constructed on each call from the stored
     /// `(tape, input, root_offset)` triple via the grammar's
     /// [`Root::make_view`] impl — constant-cost, no allocation.
     #[inline]
     pub fn view(&self) -> R::View<'_> {
-        R::make_view(&self.tape, &self.input, self.root_offset)
+        R::make_view(&self.tape, self.input, self.root_offset)
     }
 }

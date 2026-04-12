@@ -33,7 +33,7 @@ use crate::types::*;
 /// tape + owned input outlive the returned `ParsedGrammar<'a>`.
 /// The root view is lent by `parsed.view()` (GAT-bound by the
 /// `Root` impl on `BbnfBootstrap`).
-pub fn extract_grammar<'a>(parsed: &'a Parsed<BbnfBootstrap>) -> ParsedGrammar<'a> {
+pub fn extract_grammar<'a>(parsed: &'a Parsed<'a, BbnfBootstrap>) -> ParsedGrammar<'a> {
     let root = parsed.view();
 
     let mut grammar = ParsedGrammar::empty();

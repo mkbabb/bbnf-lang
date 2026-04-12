@@ -3,12 +3,16 @@
 //! Constraints layer on top of the existing per-rule CSP solve to
 //! make it component-scoped:
 //!
-//! - [`engine`] — `EnginePropagation` pins regex engine choice
-//!   per-component. When one rule in a component commits to a
-//!   given [`RegexEngine`], every other rule in that component
-//!   that carries a regex variable is pinned to the same engine
-//!   so the startup cost (DFA table construction, aho-corasick
-//!   builder, nibble LUT) amortizes over every site.
+//! - [`engine`] — `EnginePropagation` pins **compiled** regex
+//!   engine choice per-component. When one rule in a component
+//!   commits to a compiled engine (`Memchr*`, `NibbleLut`,
+//!   `OnePass`, `SmallDfa`, `Dfa`), every other rule that
+//!   carries a regex variable is pinned to the same compiled
+//!   engine so the startup cost (DFA table construction,
+//!   aho-corasick builder, nibble LUT) amortizes over every
+//!   site. `FamilyHelper` is exempt: it is a named SIMD
+//!   function call with zero startup cost and no shared
+//!   infrastructure with compiled engines.
 //!
 //! # Integration
 //!

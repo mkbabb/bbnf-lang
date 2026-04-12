@@ -149,9 +149,57 @@ visibility into:
 - Whether optimization mode finds non-trivial answers
 - Per-rule Alt strategy decisions (ByteDispatch vs Checkpoint)
 
+## What Landed
+
+### AN.0 — Correctness Fixes
+- `__has_children` never set (AM.3 regression): fixed via stack-based
+  context save/restore in Alt emitter
+- `__branch_idx` clobbered by inner dispatch: fixed by scoping inner
+  Alt's branch_idx_ident
+- Serialize namespace pollution: per-parser `mod __<name>_emit_impl {}`
+  wrapping via derive macro (AN.0.3)
+- LSP regression: `is_value_keyword()` guard in nonterminal ref fallback,
+  `peel_anonymous_wrapper()` for tape-first compounds (AN.0.4)
+- Gorgeous compile: `split_pretty_hint_tokens` for `sep(", ")` hints
+
+### AN Phase 0 — Three-Tier Payload Projection
+- `PayloadKind` enum (F64/Bool/U8) on `RustEmitCtx` for per-rule
+  payload eligibility detection
+- Regex classification detects number patterns at `emit_regex_match_impl`
+  (IR passes strip Map nodes, so detection uses `classify_regex`, not body
+  structure)
+- `scan_number_f64` emitted for payload-eligible number branches,
+  captures f64 in `__payload_f64` + `__has_payload`
+- MustTape Alt epilogue: three-way branch — `push_compound` for compound,
+  `push_leaf_with_f64` when `__has_payload`, `push_leaf` otherwise
+- TapeSpanOnly non-Alt: `push_leaf_with_f64` epilogue for standalone
+  number rules
+- View layer `.value()` accessor: reads `payload_f64` from tape O(1),
+  falls back to span-text `parse::<f64>()` when no payload present
+
+### Phase 1.1 — Serialize Codegen Tape-First Rewrite
+- Complete rewrite: old `syn::Type`-based dispatch (enum pattern matching)
+  replaced with tape cursor navigation (span_text/children/variant_idx)
+- 675 compilation errors eliminated; 22 round-trip tests pass
+- TransparentElide branches serialize via span_text fallback
+
+### Phase 1.4 — Gorgeous Debug Derive
+- `#[derive(Debug)]` added to `GoogleSheetsParser` for `Parsed<R>` Debug
+  bound
+
+### Post-AN Phase 0 Baseline (JSON cold, MB/s)
+
+| Dataset  | Pre-AN | Post-AN | sonic-rs | vs sonic |
+|----------|--------|---------|----------|----------|
+| canada   | 1,689  | 1,726   | 1,540    | +12% BEAT|
+| citm     | 2,138  | 1,957   | 3,097    | -37%     |
+| data     | 1,613  | 1,482   | 2,450    | -39%     |
+| data_xl  | 1,153  | 1,066   | 1,520    | -30%     |
+| twitter  | 1,671  | 1,605   | 2,736    | -41%     |
+
 ## Execution Order
 
-Phase 1: AN.0 correctness bugs (must fix before any optimization)
+Phase 1: AN.0 correctness bugs (must fix before any optimization) — DONE
 Phase 2: AN.1 CSS @ws SIMD (high impact, isolated change)
 Phase 3: AN.2 scanner generalization (architectural cleanup)
 Phase 4: AN.3 + AN.4 + AN.5 (SIMD hyper-optimization)

@@ -82,10 +82,20 @@ pub fn collect_nonterminal_refs<'a>(
     // `collect_refs_from_compound` fallback.
     if !found_child {
         let text = node.span_text().trim();
-        if !text.is_empty() && is_ident(text.as_bytes()) {
+        if !text.is_empty()
+            && is_ident(text.as_bytes())
+            && !is_value_keyword(text)
+        {
             refs.insert(text);
         }
     }
+}
+
+/// Returns true if the text is a value keyword that should never
+/// be treated as a nonterminal reference (e.g., `true`, `false` in
+/// `-> true` mapper expressions).
+fn is_value_keyword(s: &str) -> bool {
+    matches!(s, "true" | "false" | "null" | "epsilon" | "ε")
 }
 
 /// Quick identifier check on a byte slice.

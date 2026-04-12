@@ -1,7 +1,6 @@
 //! `Tape`, `TapeRec`, `TapeOffset` — the core fixed-size record
 //! substrate that replaces the eager typed AST.
 
-use crate::arena::ChunkedArena;
 use crate::kind::TapeKind;
 
 /// Stable index into a [`Tape`]'s record stream.
@@ -108,29 +107,37 @@ impl TapeRec {
 
 /// The parser's output tape.
 ///
-/// Owns the chunked arena of [`TapeRec`]s plus any per-tape scratch.
-/// Built by [`crate::TapeBuilder`] during parsing; read by the generated
-/// view layer via [`Tape::get`] / children offsets. Lives for the
-/// lifetime of the input buffer — the `'tape` lifetime on every view
-/// type ties back to this.
+/// Owns a flat `Vec<TapeRec>` — one contiguous allocation with zero
+/// indirection per access. Built by [`crate::TapeBuilder`] during
+/// parsing; read by the generated view layer via [`Tape::get`] /
+/// children offsets. Lives for the lifetime of the input buffer — the
+/// `'tape` lifetime on every view type ties back to this.
+///
+/// # Tranche AK.0 — flat Vec substrate
+///
+/// Replaces the `ChunkedArena<TapeRec>` (Vec<Vec<TapeRec>>) with a
+/// single flat Vec. Eliminates 2 pointer dereferences per push and
+/// ensures `with_capacity(N)` pre-allocates the full buffer in one
+/// allocation.
 #[derive(Debug)]
 pub struct Tape {
-    /// Chunked record storage. Append-only during parsing; immutable
+    /// Flat record storage. Append-only during parsing; immutable
     /// during view-layer reads.
-    pub(crate) records: ChunkedArena<TapeRec>,
+    pub(crate) records: Vec<TapeRec>,
 }
 
 impl Tape {
-    /// Construct an empty tape with a single 64 KB chunk preallocated.
+    /// Construct an empty tape with default initial capacity.
     pub fn new() -> Self {
-        Self { records: ChunkedArena::new() }
+        Self {
+            records: Vec::new(),
+        }
     }
 
-    /// Construct an empty tape sized for `expected` records. Rounds up
-    /// to the next chunk boundary.
+    /// Construct an empty tape sized for `expected` records.
     pub fn with_capacity(expected: usize) -> Self {
         Self {
-            records: ChunkedArena::with_capacity(expected),
+            records: Vec::with_capacity(expected),
         }
     }
 
@@ -155,7 +162,7 @@ impl Tape {
             !offset.is_none(),
             "Tape::get called with TapeOffset::NONE sentinel"
         );
-        self.records.get(offset.0 as usize)
+        &self.records[offset.0 as usize]
     }
 
     /// Look up a record by offset, returning `None` for the sentinel
@@ -165,7 +172,7 @@ impl Tape {
         if offset.is_none() {
             return None;
         }
-        self.records.try_get(offset.0 as usize)
+        self.records.get(offset.0 as usize)
     }
 
     /// Iterate every record in insertion order.

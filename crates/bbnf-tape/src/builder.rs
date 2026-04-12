@@ -89,7 +89,8 @@ impl TapeBuilder {
         variant_idx: u8,
     ) -> TapeOffset {
         debug_assert!(kind.is_leaf(), "push_leaf on compound kind {:?}", kind);
-        let idx = self.tape.records.push(TapeRec {
+        let idx = self.tape.records.len();
+        self.tape.records.push(TapeRec {
             kind,
             flags: variant_idx & 0x3F,
             _reserved: [0, 0],
@@ -131,7 +132,8 @@ impl TapeBuilder {
         let parent_idx = self.tape.records.len();
         let has_children = (child_off.0 as usize) < parent_idx;
         let flags = (variant_idx & 0x3F) | if has_children { 0x40 } else { 0 };
-        let idx = self.tape.records.push(TapeRec {
+        let idx = parent_idx;
+        self.tape.records.push(TapeRec {
             kind,
             flags,
             _reserved: [0, 0],

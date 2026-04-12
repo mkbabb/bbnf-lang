@@ -66,7 +66,33 @@ pub fn collect_nonterminal_refs<'a>(
         refs.insert(node.span_text());
         return;
     }
+    // Recurse into children.
+    let mut found_child = false;
     for child in node.children() {
-        collect_nonterminal_refs(child, refs);
+        use ::bbnf::runtime::tape::TapeKind;
+        if child.kind() == TapeKind::Rule || child.kind() == TapeKind::Repeat {
+            collect_nonterminal_refs(child, refs);
+            found_child = true;
+        }
     }
+    // When no child records carry the content (the tape-first
+    // generator may inline identifier / literal / regex scans as
+    // span-only operations), check the span-text gaps for bare
+    // identifiers. This mirrors the analysis layer's
+    // `collect_refs_from_compound` fallback.
+    if !found_child {
+        let text = node.span_text().trim();
+        if !text.is_empty() && is_ident(text.as_bytes()) {
+            refs.insert(text);
+        }
+    }
+}
+
+/// Quick identifier check on a byte slice.
+pub(crate) fn is_ident(s: &[u8]) -> bool {
+    match s.first() {
+        Some(&b) if b == b'_' || b.is_ascii_alphabetic() => {}
+        _ => return false,
+    }
+    s[1..].iter().all(|&b| b == b'_' || b == b'-' || b.is_ascii_alphanumeric())
 }

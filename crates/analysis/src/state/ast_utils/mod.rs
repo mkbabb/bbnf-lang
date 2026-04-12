@@ -141,16 +141,60 @@ pub(crate) fn collect_binary_operand_views<'a>(
 
 /// Iterate the operand views of an iteration-pair compound. Mirrors
 /// `lower/expression.rs::iter_iteration_pairs`: peels a single
-/// `TapeKind::Repeat` wrapper, then descends into any per-iteration
-/// `TapeKind::Seq` wrapper to reach the operand.
+/// `TapeKind::Repeat` wrapper, filters out separators and empty
+/// placeholder spans, and descends through anonymous Repeat wrappers
+/// to reach the substantive `Rule` content child within each
+/// iteration body.
 pub(crate) fn iter_iteration_views<'a>(
     node: BbnfBootstrapNodeView<'a>,
 ) -> impl Iterator<Item = BbnfBootstrapNodeView<'a>> + 'a {
     use ::bbnf::runtime::tape::TapeKind;
-    iter_rep_children(node).filter_map(|pair| match pair.kind() {
-        TapeKind::Seq => pair.child(0),
-        _ => Some(pair),
+    iter_rep_children(node).filter_map(|pair| {
+        // Peel an explicit Seq wrapper around `(content, optional_sep)`.
+        let candidate = match pair.kind() {
+            TapeKind::Seq => pair.child(0)?,
+            _ => pair,
+        };
+        // Filter out separator / whitespace placeholder compounds.
+        let span = candidate.span_text().trim();
+        if span.is_empty() || span == "|" || span == "," {
+            return None;
+        }
+        // Anonymous Repeat/Optional wrapper: peel to the single
+        // substantive Rule child (mirrors the lowering's
+        // dispatch_expression fallback for variant_idx=0 compounds).
+        Some(peel_anonymous_wrapper(candidate))
     })
+}
+
+/// Peel anonymous wrapper compounds — `Repeat` or `Rule` compounds
+/// whose `variant_idx` is 0 (collides with `int_lit` in the
+/// `BbnfBootstrapRuleKind` enum). These are iteration-body wrappers
+/// emitted by the tape-first generator for quantified expressions.
+/// Walk through them to reach the single substantive `Rule` child.
+///
+/// Mirrors `dispatch_expression` in `lower/expression.rs`, lines 90-146.
+pub(crate) fn peel_anonymous_wrapper<'a>(
+    node: BbnfBootstrapNodeView<'a>,
+) -> BbnfBootstrapNodeView<'a> {
+    use ::bbnf::runtime::tape::TapeKind;
+    let kind = node.rule_kind();
+    let is_unknown_or_sentinel = matches!(
+        kind,
+        BbnfBootstrapRuleKind::Unknown | BbnfBootstrapRuleKind::int_lit,
+    );
+    if !is_unknown_or_sentinel {
+        return node;
+    }
+    // Collect substantive Rule children (skip Repeat/Optional wrappers).
+    let substantive: Vec<BbnfBootstrapNodeView<'a>> = node
+        .children()
+        .filter(|c| c.kind() == TapeKind::Rule)
+        .collect();
+    match substantive.len() {
+        1 => peel_anonymous_wrapper(substantive[0]),
+        _ => node,
+    }
 }
 
 /// Iterate iteration children, unwrapping a single top-level

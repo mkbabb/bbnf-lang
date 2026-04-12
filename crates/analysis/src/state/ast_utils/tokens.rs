@@ -117,6 +117,49 @@ pub fn collect_semantic_tokens(
             }
         }
 
+        // Anonymous wrapper compounds (variant_idx=0 collides with
+        // `int_lit`): peel to substantive Rule children and recurse.
+        // When no Rule children exist, check if the span text is a
+        // bare identifier, literal, or regex for token emission.
+        BbnfBootstrapRuleKind::int_lit | BbnfBootstrapRuleKind::Unknown => {
+            use ::bbnf::runtime::tape::TapeKind;
+            let mut found_rule = false;
+            for c in node.children() {
+                if c.kind() == TapeKind::Rule {
+                    collect_semantic_tokens(c, tokens);
+                    found_rule = true;
+                }
+            }
+            if !found_rule {
+                let text = node.span_text().trim();
+                let (lo, hi) = node.span();
+                if !text.is_empty() && lo < hi {
+                    let lead_ws = node.span_text().len() - node.span_text().trim_start().len();
+                    let trail_ws = node.span_text().len() - node.span_text().trim_end().len();
+                    let tok_lo = lo as usize + lead_ws;
+                    let tok_hi = hi as usize - trail_ws;
+                    // Classify the leaf token by its first byte.
+                    let first = text.as_bytes()[0];
+                    if first == b'"' || first == b'\'' || first == b'`' {
+                        tokens.push(SemanticTokenInfo {
+                            span: (tok_lo, tok_hi),
+                            token_type: token_types::STRING,
+                        });
+                    } else if first == b'/' {
+                        tokens.push(SemanticTokenInfo {
+                            span: (tok_lo, tok_hi),
+                            token_type: token_types::REGEXP,
+                        });
+                    } else if first == b'_' || first.is_ascii_alphabetic() {
+                        tokens.push(SemanticTokenInfo {
+                            span: (tok_lo, tok_hi),
+                            token_type: token_types::RULE_REFERENCE,
+                        });
+                    }
+                }
+            }
+        }
+
         // Everything else — no tokens to emit.
         _ => {}
     }

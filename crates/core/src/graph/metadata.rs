@@ -151,6 +151,31 @@ fn extract_alias_target<'a>(node: BbnfBootstrapNodeView<'a>) -> Option<&'a str> 
             }
         }
 
+        // Anonymous wrapper compounds (variant_idx=0 collides with
+        // `int_lit`): peel to the single substantive Rule child and
+        // re-dispatch. When no Rule child exists but the span text
+        // is a bare identifier, treat it as a direct reference.
+        BbnfBootstrapRuleKind::int_lit | BbnfBootstrapRuleKind::Unknown => {
+            use ::bbnf::runtime::tape::TapeKind;
+            let substantive: Vec<BbnfBootstrapNodeView<'a>> = node
+                .children()
+                .filter(|c| c.kind() == TapeKind::Rule)
+                .collect();
+            match substantive.len() {
+                1 => extract_alias_target(substantive[0]),
+                0 => {
+                    // No Rule children — check if span is a bare identifier.
+                    let text = node.span_text().trim();
+                    if !text.is_empty() && super::deps::is_ident(text.as_bytes()) {
+                        Some(text)
+                    } else {
+                        None
+                    }
+                }
+                _ => None,
+            }
+        }
+
         _ => None,
     }
 }

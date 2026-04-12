@@ -119,3 +119,23 @@ value = string | number | bool | null;"#;
     );
     assert_eq!(info.rules.len(), 5, "Should have 5 rules");
 }
+
+#[test]
+fn test_analyze_undefined_rule() {
+    let grammar = "value = number | missing_rule;\nnumber = /[0-9]+/;";
+    let line_index = LineIndex::new(grammar);
+    let info = analyze(grammar, &line_index);
+    let undefined = info.diagnostics.iter().any(|d| d.message.contains("Undefined rule"));
+    assert!(undefined, "Expected undefined rule diagnostic for missing_rule");
+}
+
+#[test]
+fn test_rules_populated() {
+    let grammar = "number = /[0-9]+/;\nstring = /\"[^\"]*\"/;\nvalue = number ;";
+    let line_index = LineIndex::new(grammar);
+    let info = analyze(grammar, &line_index);
+    assert_eq!(info.rules.len(), 3, "Expected 3 rules");
+    assert!(info.rules.iter().any(|r| r.name == "number"), "Expected 'number' rule");
+    assert!(info.rules.iter().any(|r| r.name == "string"), "Expected 'string' rule");
+    assert!(info.rules.iter().any(|r| r.name == "value"), "Expected 'value' rule");
+}

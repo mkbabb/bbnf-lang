@@ -12,6 +12,18 @@
 //! Alt expression returns `Option<()>` via a labeled block.
 //! Heterogeneous type coercion is moot because all branch bodies
 //! share the same return shape under tape-first.
+//!
+//! ## AM.3 per-branch `mark_children`
+//!
+//! When `ctx.tape_surgery` is active (Alt-bodied `MustTape` rules),
+//! compound branches prepend `__children = mark_children(tape);
+//! __has_children = true;` before their body. Leaf branches skip
+//! `mark_children`. The shared rule epilogue in `grammar.rs` checks
+//! `__has_children` to choose `push_compound` vs `push_leaf`.
+//!
+//! The surgery context is `take()`-ed by the emitter so nested Alts
+//! within branch bodies don't re-apply the mark — they compile as
+//! normal `Option<()>` sub-expressions.
 
 use bbnf_ir::AltDispatch;
 use proc_macro2::TokenStream;
@@ -23,6 +35,19 @@ use super::RustEmitter;
 use super::RustEmitCtx;
 
 impl RustEmitter {
+    /// AM.3: emit `mark_children` + `__has_children = true` for
+    /// compound branches. Returns empty tokens for leaf branches.
+    fn emit_compound_mark(pushes_children: bool) -> TokenStream {
+        if pushes_children {
+            quote! {
+                __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                __has_children = true;
+            }
+        } else {
+            quote! {}
+        }
+    }
+
     pub(super) fn emit_alt_dispatch_impl(
         &mut self,
         table: &AltDispatch,
@@ -31,9 +56,12 @@ impl RustEmitter {
         _alloc: ValuePlacement,
         ctx: &mut RustEmitCtx,
     ) -> TokenStream {
+        // AM.3: take the surgery context so nested Alts within branch
+        // bodies don't re-apply the per-branch mark_children.
+        let surgery = ctx.tape_surgery.take();
         let mut arms = Vec::new();
 
-        for (branch_idx, (_info, body)) in branches.iter().enumerate() {
+        for (branch_idx, (info, body)) in branches.iter().enumerate() {
             let byte_patterns: Vec<u8> = table
                 .table
                 .iter()
@@ -56,16 +84,28 @@ impl RustEmitter {
                 quote! {}
             };
 
+            // AM.3: compound branches prepend mark_children.
+            let compound_mark = if surgery.is_some() {
+                Self::emit_compound_mark(info.pushes_children)
+            } else {
+                quote! {}
+            };
+
             let patterns: Vec<_> = byte_patterns.iter().map(|b| quote! { #b }).collect();
             arms.push(quote! {
-                #( #patterns )|* => { #branch_assign #body }
+                #( #patterns )|* => { #branch_assign #compound_mark #body }
             });
         }
 
-        let (fallback_arm, eof_expr) = if let Some((_info, fb_body)) = fallback {
+        let (fallback_arm, eof_expr) = if let Some((info, fb_body)) = fallback {
+            let compound_mark = if surgery.is_some() {
+                Self::emit_compound_mark(info.pushes_children)
+            } else {
+                quote! {}
+            };
             (
-                quote! { _ => { #fb_body } },
-                quote! { { #fb_body } },
+                quote! { _ => { #compound_mark #fb_body } },
+                quote! { { #compound_mark #fb_body } },
             )
         } else {
             (quote! { _ => None }, quote! { None })
@@ -91,20 +131,37 @@ impl RustEmitter {
         _alloc: ValuePlacement,
         ctx: &mut RustEmitCtx,
     ) -> TokenStream {
+        // AM.3: take the surgery context so nested Alts don't re-apply.
+        let surgery = ctx.tape_surgery.take();
+
         if branches.len() == 1 {
-            let (_, body) = &branches[0];
-            // AK.1: single branch still needs the idx assignment.
-            if let Some(ref ident) = ctx.branch_idx_ident {
-                return quote! { { #ident = 0u8; #body } };
+            let (ref info, ref body) = branches[0];
+            let branch_assign = if let Some(ref ident) = ctx.branch_idx_ident {
+                quote! { #ident = 0u8; }
+            } else {
+                quote! {}
+            };
+            let compound_mark = if surgery.is_some() {
+                Self::emit_compound_mark(info.pushes_children)
+            } else {
+                quote! {}
+            };
+            if !branch_assign.is_empty() || !compound_mark.is_empty() {
+                return quote! { { #branch_assign #compound_mark #body } };
             }
             return body.clone();
         }
 
         let mut chain = Vec::new();
-        for (i, (_info, body)) in branches.iter().enumerate() {
+        for (i, (info, body)) in branches.iter().enumerate() {
             let branch_assign = if let Some(ref ident) = ctx.branch_idx_ident {
                 let idx = i as u8;
                 quote! { #ident = #idx; }
+            } else {
+                quote! {}
+            };
+            let compound_mark = if surgery.is_some() {
+                Self::emit_compound_mark(info.pushes_children)
             } else {
                 quote! {}
             };
@@ -112,6 +169,7 @@ impl RustEmitter {
                 {
                     let __cp = state.offset;
                     #branch_assign
+                    #compound_mark
                     let __result = #body;
                     if __result.is_some() {
                         break 'alt_blk __result;

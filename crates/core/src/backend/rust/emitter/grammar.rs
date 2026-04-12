@@ -62,6 +62,9 @@ impl RustEmitter {
     /// standalone callable. Without this override the emitter would
     /// skip their function bodies and downstream references would
     /// dangle.
+    ///
+    /// Public via [`Self::materialization_for_rule_pub`] for the
+    /// `pre_compile_rule_body` hook in `mod.rs`.
     fn materialization_for_rule(
         ir: &GrammarIR,
         rule: &IrRule,
@@ -86,6 +89,16 @@ impl RustEmitter {
             }
         }
         MaterializationClass::MustTape
+    }
+
+    /// Public accessor for `materialization_for_rule`, used by
+    /// `pre_compile_rule_body` in `mod.rs` for AM.3 tape surgery
+    /// context setup.
+    pub(in crate::backend::rust) fn materialization_for_rule_pub(
+        ir: &GrammarIR,
+        rule: &IrRule,
+    ) -> MaterializationClass {
+        Self::materialization_for_rule(ir, rule)
     }
 
     pub(super) fn emit_rule_function_impl(
@@ -115,6 +128,13 @@ impl RustEmitter {
     /// `__branch_idx` variable (set per-arm by the Alt emitter)
     /// instead of the rule's global ID. This gives the view layer
     /// correct branch discrimination.
+    ///
+    /// Tranche AM.3: for Alt-bodied `MustTape` rules, per-branch
+    /// tape surgery emits `push_leaf` or `mark_children` +
+    /// `push_compound` inside each branch arm. The shared epilogue
+    /// becomes a pass-through of the `Option<TapeOffset>` returned
+    /// by the branch body. Leaf branches (literals, regex, pure maps)
+    /// skip `mark_children` entirely.
     fn emit_tape_tier_rule(
         &mut self,
         name: &str,
@@ -131,23 +151,40 @@ impl RustEmitter {
             // Alt-bodied rules use __branch_idx for the variant
             // discriminator. The Alt emitter sets __branch_idx per arm.
             match class {
-                MaterializationClass::MustTape => (
-                    quote! {
-                        let __span_lo = state.offset as u32;
-                        let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                        let mut __branch_idx: u8 = 0;
-                    },
-                    quote! {
-                        Some(::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __branch_idx,
-                        ))
-                    },
-                ),
+                MaterializationClass::MustTape => {
+                    // AM.3: per-branch mark_children. The prelude
+                    // declares __has_children + __children; compound
+                    // branches set them via the Alt emitter. The
+                    // epilogue checks __has_children at runtime.
+                    (
+                        quote! {
+                            let __span_lo = state.offset as u32;
+                            let mut __branch_idx: u8 = 0;
+                            let mut __has_children = false;
+                            let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
+                        },
+                        quote! {
+                            if __has_children {
+                                Some(::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                    tape,
+                                    ::bbnf::runtime::tape::TapeKind::Rule,
+                                    __children,
+                                    __span_lo,
+                                    state.offset as u32,
+                                    __branch_idx,
+                                ))
+                            } else {
+                                Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(
+                                    tape,
+                                    ::bbnf::runtime::tape::TapeKind::Span,
+                                    __span_lo,
+                                    state.offset as u32,
+                                    __branch_idx,
+                                ))
+                            }
+                        },
+                    )
+                }
                 MaterializationClass::TapeSpanOnly => (
                     quote! {
                         let __span_lo = state.offset as u32;
@@ -182,7 +219,9 @@ impl RustEmitter {
 
         let signature = emit_rule_signature(name);
         let rule_debug = ir.debug_all || rule.meta.directives.debug;
-        let body_block = Self::wrap_body_in_rule_block(body, &prelude, &epilogue, rule_debug, name);
+        let body_block = Self::wrap_body_in_rule_block(
+            body, &prelude, &epilogue, rule_debug, name,
+        );
 
         let mut methods = Vec::new();
         methods.push(quote! {

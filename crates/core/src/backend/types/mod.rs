@@ -85,6 +85,11 @@ pub enum AltStrategy<'a> {
 pub struct AltBranchInfo {
     pub ty: TypeDesc,
     pub coercion_variant: Option<String>,
+    /// AM.3 per-branch tape surgery: `true` when the branch's codegen
+    /// pushes child tape records (compound), `false` for leaf branches.
+    /// The Rust alt emitter uses this to emit `push_leaf` vs
+    /// `mark_children` + `push_compound` per arm.
+    pub pushes_children: bool,
 }
 
 /// How allocation should be handled for a value.

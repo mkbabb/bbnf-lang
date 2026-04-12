@@ -35,6 +35,19 @@ impl RustEmitter {
     }
 }
 
+/// AM.3 per-branch tape surgery context.
+///
+/// When active, the Alt emitter wraps each branch arm with its own
+/// `push_leaf` or `mark_children` + `push_compound` instead of
+/// relying on a shared epilogue. This eliminates the compound record
+/// overhead for leaf branches (literals, regex, pure-conversion maps).
+#[derive(Clone)]
+pub struct TapeSurgeryCtx {
+    /// The `TapeKind` to use in push calls (always `TapeKind::Rule`
+    /// for rule-level Alt bodies).
+    pub tape_kind: TokenStream,
+}
+
 /// Mutable context for Rust emission.
 ///
 /// Holds a pointer to `IrCodegenCtx` for type lookups and slab codegen.
@@ -50,6 +63,11 @@ pub struct RustEmitCtx {
     /// discriminator instead of the rule's global ID. Cleared after
     /// the Alt body is compiled.
     pub branch_idx_ident: Option<syn::Ident>,
+    /// AM.3: when set, the Alt emitter emits per-branch `push_leaf`
+    /// or `push_compound` calls instead of relying on a shared
+    /// epilogue. Set by `emit_tape_tier_rule` for Alt-bodied
+    /// `MustTape` rules; cleared after the body is compiled.
+    pub tape_surgery: Option<TapeSurgeryCtx>,
 }
 
 impl RustEmitCtx {
@@ -67,6 +85,7 @@ impl RustEmitCtx {
             current_rule_name: None,
             current_rule_id: None,
             branch_idx_ident: None,
+            tape_surgery: None,
         }
     }
 

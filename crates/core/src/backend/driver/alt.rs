@@ -29,6 +29,47 @@ use super::node::compile_node;
 use crate::backend::strategy::alt_strategy::AltStrategy;
 use crate::backend::{AltBranchInfo, Emitter, KeyDispatchBranch, ValuePlacement};
 
+/// Returns `true` when this IR node's codegen will push child tape
+/// records. Leaf branches (literals, regex, epsilon, pure-conversion
+/// maps over leaves) return `false`.
+///
+/// Used by AM.3 per-branch tape surgery to decide whether a branch
+/// arm needs `mark_children` + `push_compound` (compound) or a
+/// bare `push_leaf` (leaf).
+pub fn branch_pushes_children(ir: &GrammarIR, node: &IrNode) -> bool {
+    match node {
+        // True leaves — never push children.
+        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => false,
+
+        // Pure conversion maps inherit the inner node's classification.
+        // NumberConvert, HexConvert, Constant, and EnumWrap-of-a-leaf
+        // all resolve to a single value without pushing children.
+        IrNode::Map { inner, .. } => branch_pushes_children(ir, inner),
+
+        // Whitespace trimming is transparent — propagate.
+        IrNode::OptionalWhitespace(inner) => branch_pushes_children(ir, inner),
+
+        // Negation is zero-width; it never pushes children.
+        IrNode::Negate(_) => false,
+
+        // A Ref to a transparent-elide rule is inlined at the call
+        // site, so we check its body. A Ref to any other rule pushes
+        // its own tape record (it calls Self::__rule(state, tape)).
+        IrNode::Ref(target) => {
+            if let Some(rule) = ir.rules.iter().find(|r| r.id == *target) {
+                if rule.meta.is_transparent {
+                    return branch_pushes_children(ir, &rule.body);
+                }
+            }
+            true
+        }
+
+        // Seq, Alt, Repeat, Skip, Next, Minus, TokenDispatch — all
+        // structurally push children.
+        _ => true,
+    }
+}
+
 /// Placeholder `TypeDesc` used for the structurally-required-but-dead
 /// `AltBranchInfo.ty` field. See the module-level note on
 /// `AltBranchInfo.ty` for the rationale. Using a single `static`
@@ -37,15 +78,14 @@ use crate::backend::{AltBranchInfo, Emitter, KeyDispatchBranch, ValuePlacement};
 /// (the variant carries no heap payload).
 static PLACEHOLDER_TY: TypeDesc = TypeDesc::Span;
 
-/// Build the dead-field-only `AltBranchInfo`. Every backend discards
-/// it; this helper makes that contract explicit at the construction
-/// site so future readers don't mistake the placeholder for a
-/// load-bearing value.
+/// Build a `AltBranchInfo` with the dead type field and the live
+/// `pushes_children` classification.
 #[inline]
-fn placeholder_branch_info() -> AltBranchInfo {
+fn branch_info(pushes_children: bool) -> AltBranchInfo {
     AltBranchInfo {
         ty: PLACEHOLDER_TY.clone(),
         coercion_variant: None,
+        pushes_children,
     }
 }
 
@@ -111,6 +151,7 @@ pub(super) fn compile_alt<E: Emitter>(
         let mut fallback = None;
 
         for (i, branch) in branches.iter().enumerate() {
+            let pushes = branch_pushes_children(ir, &branch.node);
             let byte_patterns: Vec<u8> = table
                 .table
                 .iter()
@@ -124,9 +165,9 @@ pub(super) fn compile_alt<E: Emitter>(
             let output = compile_node(&branch.node, alloc, ir, dstate, emitter, ctx);
             dstate.dispatch_guaranteed_byte = None;
             if table.fallback_idx == Some(i as u8) {
-                fallback = Some((placeholder_branch_info(), output));
+                fallback = Some((branch_info(pushes), output));
             } else {
-                branch_outputs.push((placeholder_branch_info(), output));
+                branch_outputs.push((branch_info(pushes), output));
             }
         }
 
@@ -155,6 +196,7 @@ pub(super) fn compile_alt<E: Emitter>(
         let mut kd_branches = Vec::with_capacity(detected.len());
         for det in &detected {
             let branch = &branches[det.branch_idx];
+            let pushes = branch_pushes_children(ir, &branch.node);
             let body = compile_node(&branch.node, alloc, ir, dstate, emitter, ctx);
             let key_bytes = det
                 .key_literals
@@ -164,13 +206,14 @@ pub(super) fn compile_alt<E: Emitter>(
             kd_branches.push(KeyDispatchBranch {
                 key_bytes,
                 body,
-                info: placeholder_branch_info(),
+                info: branch_info(pushes),
             });
         }
         let fallback = fallback_idx.map(|fi| {
             let branch = &branches[fi];
+            let pushes = branch_pushes_children(ir, &branch.node);
             let body = compile_node(&branch.node, alloc, ir, dstate, emitter, ctx);
-            (placeholder_branch_info(), body)
+            (branch_info(pushes), body)
         });
         return emitter.emit_key_dispatch(&config, kd_branches, fallback, alloc, ctx);
     }
@@ -179,8 +222,9 @@ pub(super) fn compile_alt<E: Emitter>(
     let branch_outputs: Vec<_> = branches
         .iter()
         .map(|branch| {
+            let pushes = branch_pushes_children(ir, &branch.node);
             let output = compile_node(&branch.node, alloc, ir, dstate, emitter, ctx);
-            (placeholder_branch_info(), output)
+            (branch_info(pushes), output)
         })
         .collect();
 

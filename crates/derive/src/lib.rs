@@ -42,7 +42,8 @@ use parse_that::utils::get_cargo_root_path;
 //   - `bbnf_ir::TypeDesc` projection rules
 //   - The Rust codegen output shape (enum naming, method signatures,
 //     monolithic emitter contracts)
-const BBNF_SCHEMA_VERSION: u64 = 6;
+// AM.3: bumped from 6 — per-branch mark_children for leaf branches.
+const BBNF_SCHEMA_VERSION: u64 = 7;
 
 /// Recursively collect all grammar file contents for hashing.
 ///

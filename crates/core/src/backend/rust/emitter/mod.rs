@@ -345,16 +345,36 @@ impl Emitter for RustEmitter {
     fn pre_compile_rule_body(
         &mut self,
         rule: &bbnf_ir::IrRule,
-        _ir: &bbnf_ir::GrammarIR,
+        ir: &bbnf_ir::GrammarIR,
         ctx: &mut Self::Ctx,
     ) {
+        let is_alt = matches!(&rule.body, bbnf_ir::IrNode::Alt(_, _));
+        let is_visible = !rule.meta.is_transparent;
+
         // AK.1: For Alt-bodied rules, signal the Alt emitter to set
         // __branch_idx per arm. The rule epilogue will use it as the
         // variant discriminator instead of the rule's global ID.
-        if matches!(&rule.body, bbnf_ir::IrNode::Alt(_, _)) && !rule.meta.is_transparent {
+        if is_alt && is_visible {
             ctx.branch_idx_ident = Some(quote::format_ident!("__branch_idx"));
         } else {
             ctx.branch_idx_ident = None;
+        }
+
+        // AM.3: For Alt-bodied MustTape rules, enable per-branch tape
+        // surgery so each branch arm emits its own push_leaf or
+        // mark_children + push_compound.
+        if is_alt && is_visible {
+            use bbnf_ir::passes::MaterializationClass;
+            let class = RustEmitter::materialization_for_rule_pub(ir, rule);
+            if class == MaterializationClass::MustTape {
+                ctx.tape_surgery = Some(crate::backend::rust::emitter_types::TapeSurgeryCtx {
+                    tape_kind: quote::quote! { ::bbnf::runtime::tape::TapeKind::Rule },
+                });
+            } else {
+                ctx.tape_surgery = None;
+            }
+        } else {
+            ctx.tape_surgery = None;
         }
     }
 
@@ -367,8 +387,9 @@ impl Emitter for RustEmitter {
         ctx: &mut Self::Ctx,
     ) -> TokenStream {
         let result = self.emit_rule_function_impl(rule, body, sync_body, ir, ctx);
-        // Clear the branch_idx_ident after the rule is emitted.
+        // Clear per-rule context after the rule is emitted.
         ctx.branch_idx_ident = None;
+        ctx.tape_surgery = None;
         result
     }
 

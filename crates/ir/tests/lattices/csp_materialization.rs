@@ -1,10 +1,10 @@
-//! Tranche AB.1 — CSP joint strategy + materialization solve.
+//! CSP joint strategy + materialization solve.
 //!
 //! Covers:
 //!
 //! 1. Materialization cost weights are read from `CostConfig`.
-//! 2. `solve_strategy_and_materialization` returns a per-rule
-//!    materialization map alongside the recognizer decisions.
+//! 2. `solve_grammar_components` returns a per-rule materialization
+//!    map alongside the recognizer decisions.
 //! 3. Prettify-pinned rules stay `MustTape` after the CSP refinement
 //!    (single-value domain clamp).
 //! 4. Debug-pinned rules stay `MustTape`.
@@ -19,7 +19,7 @@
 use std::collections::HashMap;
 
 use bbnf_ir::passes::materialization::{classify_materialization, MaterializationClass};
-use bbnf_ir::passes::solve_strategy_and_materialization;
+use bbnf_ir::passes::solve_grammar_components;
 use bbnf_ir::{
     AltBranch, CostConfig, GrammarIR, IrNode, IrRule, PrettyHints, RuleDirectives, RuleMeta,
     StringId, TypeDescInterner,
@@ -87,7 +87,7 @@ fn rule_with_meta(id: u32, name: StringId, body: IrNode, meta: RuleMeta) -> IrRu
 /// Run the joint CSP on `ir` and merge the result into
 /// `ir.materialization`. Returns the rule body's post-CSP class.
 fn solve_and_merge(ir: &mut GrammarIR) {
-    let (_decisions, mat_refined) = solve_strategy_and_materialization(ir);
+    let (_decisions, mat_refined, _tiers) = solve_grammar_components(ir);
     for (node_id, class) in mat_refined {
         ir.materialization.insert(node_id, class);
     }
@@ -238,7 +238,7 @@ fn solve_returns_decision_map() {
     let strings = vec!["entry".to_string(), "x".to_string()];
     let rules = vec![rule(0, 0, IrNode::Literal(1))];
     let ir = make_ir(rules, strings);
-    let (decisions, mat) = solve_strategy_and_materialization(&ir);
+    let (decisions, mat, _tiers) = solve_grammar_components(&ir);
     // Materialization map has an entry for the rule body NodeId.
     assert!(!mat.is_empty(), "materialization map populated");
     // Decisions map may be empty for a trivial literal rule (no

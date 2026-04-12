@@ -1,37 +1,17 @@
-//! Tranche AF.0 Wave 1 — grammar round-trip snapshot gate.
+//! Grammar round-trip snapshot gate.
 //!
 //! For each production grammar under `grammar/`, parse the source
-//! through `bbnf::grammar::parse` (the tape-first bootstrap entry
-//! point) and lower it via `bbnf::pipeline::compile_paths_request`,
-//! then assert the resulting `GrammarIR`'s `rules.len()` matches a
-//! frozen snapshot constant.
+//! through `bbnf::grammar::parse` and lower it via
+//! `bbnf::pipeline::compile_paths_request`, then assert the resulting
+//! `GrammarIR`'s `rules.len()` matches a frozen snapshot constant.
+//! Any deviation is a silent lowering regression.
 //!
-//! The snapshot is the substrate-break contract: once Wave 1A/1B/1C
-//! rewrite the hand-patched sub-variant references in
-//! `lower/expression.rs`, `lower/value_expr.rs`, and
-//! `grammar/host.rs`+`graph/*`, and Wave 2 regenerates
-//! `grammar/generated.rs` cleanly from `bbnf.bbnf`, the rule count
-//! for every production grammar must match the pre-Tranche-AF
-//! baseline exactly. Any deviation is a silent lowering regression.
+//! # Status
 //!
-//! # Why this is `#[ignore]`-gated during Wave 1
-//!
-//! Wave 2 is the integration step where the clean regen lands. Until
-//! Wave 2:
-//!
-//! - `generated.rs` in this worktree still embeds the old bootstrap
-//!   numbering that the hand-patched sub-variant references depend on
-//! - The rule-count snapshots below are placeholders
-//!   (`usize::MAX`) — the actual canonical values will be frozen
-//!   by the Wave 2 orchestrator once the clean regen lands and every
-//!   grammar compiles successfully end-to-end
-//!
-//! Marking each test with `#[ignore]` rather than a `cfg` feature
-//! gate keeps the test binary *compiled* — which is the minimum bar
-//! the Wave 1D deliverable must meet — without running against
-//! placeholder constants. The orchestrator will remove the
-//! `#[ignore]` attributes and populate the `TODO_WAVE2_…_COUNT`
-//! constants with real rule-count values in Wave 2.
+//! The rule-count snapshot constants below are placeholders
+//! (`usize::MAX`) that must be populated with the actual canonical
+//! values from a clean regen run. Each test is `#[ignore]`-gated
+//! until the constants are frozen.
 //!
 //! # Canonical grammar entry points
 //!
@@ -40,8 +20,6 @@
 //! `crates/core/benches/`:
 //!
 //! - `bbnf/bbnf.bbnf`          — the self-hosted BBNF grammar
-//!   (bootstrap source of truth for `generated.rs`; pulls in
-//!   `expressions.bbnf` and `types.bbnf` via `@import`)
 //! - `json/json.bbnf`          — JSON
 //! - `ebnf/ebnf.bbnf`          — EBNF
 //! - `css/pretty.bbnf`         — CSS prettifier grammar
@@ -49,9 +27,7 @@
 //! - `google-sheets/google-sheets.bbnf` — Google Sheets formula
 //!
 //! All six dispatch through the unified `compile_paths_request`
-//! helper: its loader short-circuits on grammars without `@import`
-//! directives, so the function is the universal pipeline entry and
-//! the test helper has no reason to fork across two call sites.
+//! helper.
 
 use std::path::PathBuf;
 
@@ -64,12 +40,9 @@ use bbnf_ir::GrammarIR;
 // Frozen snapshot constants — Wave 2 will replace these placeholders.
 // ---------------------------------------------------------------------
 //
-// FIXME(AF.0 Wave 2): replace each `usize::MAX` sentinel with the
-// actual `ir.rules.len()` produced by the post-regen pipeline. The
-// Wave 2 orchestrator captures these values once the clean regen
-// lands; until then, the assertions below are unreachable guards
-// (any real count compared against `usize::MAX` fails deterministically
-// — which is why the tests are `#[ignore]`d during Wave 1).
+// Frozen snapshot constants — replace each `usize::MAX` sentinel with
+// the actual `ir.rules.len()` produced by the pipeline to activate
+// the corresponding test.
 
 const TODO_WAVE2_BBNF_RULE_COUNT: usize = usize::MAX;
 const TODO_WAVE2_JSON_RULE_COUNT: usize = usize::MAX;
@@ -122,7 +95,7 @@ fn compile_entry(rel_entry: &str) -> GrammarIR {
 // ---------------------------------------------------------------------
 
 #[test]
-#[ignore = "Tranche AF.0 Wave 2: blocked on clean regen"]
+#[ignore = "snapshot constants not yet frozen"]
 fn bbnf_grammar_roundtrip() {
     let ir = compile_entry("bbnf/bbnf.bbnf");
     assert_eq!(
@@ -135,7 +108,7 @@ fn bbnf_grammar_roundtrip() {
 }
 
 #[test]
-#[ignore = "Tranche AF.0 Wave 2: blocked on clean regen"]
+#[ignore = "snapshot constants not yet frozen"]
 fn json_grammar_roundtrip() {
     let ir = compile_entry("json/json.bbnf");
     assert_eq!(
@@ -148,7 +121,7 @@ fn json_grammar_roundtrip() {
 }
 
 #[test]
-#[ignore = "Tranche AF.0 Wave 2: blocked on clean regen"]
+#[ignore = "snapshot constants not yet frozen"]
 fn ebnf_grammar_roundtrip() {
     let ir = compile_entry("ebnf/ebnf.bbnf");
     assert_eq!(
@@ -161,7 +134,7 @@ fn ebnf_grammar_roundtrip() {
 }
 
 #[test]
-#[ignore = "Tranche AF.0 Wave 2: blocked on clean regen"]
+#[ignore = "snapshot constants not yet frozen"]
 fn css_pretty_grammar_roundtrip() {
     let ir = compile_entry("css/pretty.bbnf");
     assert_eq!(
@@ -174,7 +147,7 @@ fn css_pretty_grammar_roundtrip() {
 }
 
 #[test]
-#[ignore = "Tranche AF.0 Wave 2: blocked on clean regen"]
+#[ignore = "snapshot constants not yet frozen"]
 fn css_l4_grammar_roundtrip() {
     // CSS L4 is split across many modules under `grammar/css/l4/`
     // and `compile_paths_request` walks the `@import` graph from the
@@ -190,7 +163,7 @@ fn css_l4_grammar_roundtrip() {
 }
 
 #[test]
-#[ignore = "Tranche AF.0 Wave 2: blocked on clean regen"]
+#[ignore = "snapshot constants not yet frozen"]
 fn google_sheets_grammar_roundtrip() {
     let ir = compile_entry("google-sheets/google-sheets.bbnf");
     assert_eq!(

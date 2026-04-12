@@ -59,6 +59,13 @@ reverse-pointer map is correct by design (valid for the lifetime
 of the borrowed `&GrammarIR`) and is NOT part of any residual
 pointer-identity cleanup.
 
+The backend uses **three-tier emission** (Tape / Direct / Lazy)
+with automatic tier assignment via the CSP strategy solver
+(`solve_grammar_components`). The e-graph cost model is
+emission-aware (`emission_tier_bonus` rewards Direct-eligible
+body shapes), and cross-component tier reconciliation ensures
+parent-child tier compatibility across rule call boundaries.
+
 ## Structure
 
 ```

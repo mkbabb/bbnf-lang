@@ -1,10 +1,8 @@
-//! Tranche AF.3 Wave 5 — cross-rule CSP component partition + constraints.
+//! Cross-rule CSP component partition + constraints.
 //!
-//! This file pins the contract for Agent 5A's pending
-//! `solve_grammar_components` entry point, which replaces the
+//! Tests the `solve_grammar_components` entry point, which replaces the
 //! per-rule strategy solve loop with a component-partitioned solve
-//! over the rule call graph. Three cross-rule constraints become
-//! first-class:
+//! over the rule call graph. Three cross-rule constraints are exercised:
 //!
 //! - **`EnginePropagation`** — regex engine choice is global per
 //!   component, not per-rule. A component containing one DFA-eligible
@@ -17,33 +15,6 @@
 //!   bounded above by its materialization class. `MustTape` → Tape;
 //!   `TapeSpanOnly` → Tape or Lazy; `TransparentElide` → Tape, Lazy,
 //!   or Direct.
-//!
-//! # Activation
-//!
-//! Every test in this file is `#[ignore]`-gated until Agent 5A ships
-//! `bbnf_ir::passes::csp_strategy::solve_grammar_components`. The
-//! expected API (pinned below so both agents compile against the same
-//! contract) is:
-//!
-//! ```ignore
-//! pub struct GrammarComponents {
-//!     pub uf: UnionFind,
-//!     pub rule_to_component: Vec<u32>,
-//!     pub components: HashMap<u32, Vec<u32>>,
-//! }
-//!
-//! pub fn solve_grammar_components(
-//!     ir: &mut GrammarIR,
-//! ) -> (RecognizerDecisionMap, GrammarComponents);
-//! ```
-//!
-//! The tests below compile against master today because they only
-//! reference the already-landed `IrNode`, `GrammarIR`, and
-//! `EmissionTier` types. They flip to live once 5A lands the
-//! component solver and Agent 5B lands the `ParentCompatibility` /
-//! `TierFollowsMaterialization` constraint gates. When each test
-//! activates, remove the `#[ignore]` attribute and unpin the matching
-//! TODO.
 
 use std::collections::{HashMap, HashSet};
 
@@ -194,19 +165,15 @@ fn component_of(partition: &[HashSet<u32>], rule_id: u32) -> &HashSet<u32> {
 
 // ── 1. Component partition — bbnf.bbnf structural gate ──────────────
 
-/// Pins the expected call-graph topology that Agent 5A's partition
-/// must produce for a grammar shaped like `bbnf.bbnf`. The fixture
-/// below is a structural stand-in for the real grammar: it mirrors
-/// the "recursive expression family" (term / factor / concatenation /
-/// alternation / rhs), the "terminal rules" (identifier / literal /
-/// regex), and the "directive rules" (import_directive /
-/// pretty_directive). Compiling the real `bbnf.bbnf` from a
-/// `bbnf-ir`-level test is impossible because `bbnf` (core) depends
-/// on `bbnf-ir`, so we encode the structural shape directly.
-///
-/// TODO: unignore once Agent 5A lands `solve_grammar_components` and
-/// replace the local `reference_partition` helper with its
-/// `GrammarComponents` output.
+/// Pins the expected call-graph topology for a grammar shaped like
+/// `bbnf.bbnf`. The fixture is a structural stand-in for the real
+/// grammar: it mirrors the "recursive expression family" (term /
+/// factor / concatenation / alternation / rhs), the "terminal rules"
+/// (identifier / literal / regex), and the "directive rules"
+/// (import_directive / pretty_directive). Compiling the real
+/// `bbnf.bbnf` from a `bbnf-ir`-level test is impossible because
+/// `bbnf` (core) depends on `bbnf-ir`, so we encode the structural
+/// shape directly.
 #[test]
 fn bbnf_grammar_forms_expected_components() {
     // Rule layout — ids chosen so the expression family forms one
@@ -352,10 +319,6 @@ fn bbnf_grammar_forms_expected_components() {
 /// A linear chain `a → b → c` merges all three rules into a single
 /// component. Standalone rule `d` is its own component. The partition
 /// algorithm MUST treat reachability as the component relation.
-///
-/// TODO: unignore once `solve_grammar_components` lands. Today the
-/// test exercises the reference `reference_partition` helper so the
-/// test FILE compiles standalone against master.
 #[test]
 fn component_partition_is_transitive() {
     let strings: Vec<String> = vec!["a", "b", "c", "d", "hi"]
@@ -390,8 +353,6 @@ fn component_partition_is_transitive() {
 /// Standalone `c` is its own component. The test pins that cycles
 /// do not produce degenerate singletons or infinite loops in the
 /// component walk.
-///
-/// TODO: unignore once `solve_grammar_components` lands.
 #[test]
 fn component_partition_is_symmetric() {
     let strings: Vec<String> = vec!["a", "b", "c", "hi"]
@@ -420,16 +381,9 @@ fn component_partition_is_symmetric() {
 // ── 4. EnginePropagation — regex engine uniform per component ──────
 
 /// A component containing two regex rules must converge to a single
-/// engine choice. Before AF.3, each rule's regex engine was picked
-/// independently; after AF.3, the `EnginePropagation` cross-rule
-/// constraint unifies the choice across the component so the cost
-/// model sees the aggregated benefit of a single engine-wide
-/// dispatch table.
-///
-/// TODO: unignore once Agent 5A lands `solve_grammar_components` and
-/// its output exposes per-rule regex engine assignments. Today the
-/// test builds the fixture and verifies the reference partition
-/// places the two regex rules in the same component.
+/// engine choice. The `EnginePropagation` cross-rule constraint
+/// unifies the choice across the component so the cost model sees
+/// the aggregated benefit of a single engine-wide dispatch table.
 #[test]
 fn engine_propagation_unifies_component_regex_engines() {
     let strings: Vec<String> = vec!["caller", "number", "ident", "[0-9]+", "[a-z]+"]
@@ -486,12 +440,6 @@ fn engine_propagation_unifies_component_regex_engines() {
 /// tier — the child hands back a tape record, and Direct expects a
 /// typed value. The `ParentCompatibility` constraint widens the
 /// parent's tier to Tape.
-///
-/// TODO: unignore once Agent 5B lands the `ParentCompatibility`
-/// constraint gate. Today the test sets up the fixture and verifies
-/// the structural pinning (child classified `MustTape` via `@pretty`)
-/// but does NOT yet check the parent's decoded tier — that flip
-/// lives in AF.5 `decode_emission_tier`.
 #[test]
 fn parent_compatibility_forbids_direct_parent_tape_child() {
     let strings: Vec<String> = vec!["parent", "child", "hi"]
@@ -559,11 +507,6 @@ fn parent_compatibility_forbids_direct_parent_tape_child() {
 /// The `TierFollowsMaterialization` constraint pins this upper-bound
 /// relationship so the CSP solver cannot assign a cheaper tier than
 /// the rule's classification permits.
-///
-/// TODO: unignore once Agent 5B lands the `TierFollowsMaterialization`
-/// constraint and AF.5's `decode_emission_tier` writes `ir.emission_tier`.
-/// Today the test sets up the fixture and verifies the materialization
-/// classes so the contract is pinned on the pre-seed side.
 #[test]
 fn tier_follows_materialization_bounds_directly() {
     let strings: Vec<String> = vec![

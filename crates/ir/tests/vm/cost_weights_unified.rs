@@ -1,4 +1,4 @@
-//! Tranche AF.2 — universal cost model contract test.
+//! Universal cost model contract test.
 //!
 //! The contract this file enforces is a **global invariant**: when any
 //! field of `egraph::CostWeights` changes, every cost-driven decision in
@@ -17,17 +17,11 @@
 //!    to-end. If a consumer silently reads a hardcoded constant, the
 //!    extreme patch fails to flip the decision and the test fails.
 //!
-//! Because Tranche AF.2 lands in three waves (AF.2-4A added the struct
-//! fields, 4B migrates the CSP strategy solver, 4C migrates the backend
-//! driver), the tests that depend on 4B/4C consumers are `#[ignore]`-
-//! gated with a TODO explaining what's missing. As each wave lands, the
-//! corresponding `#[ignore]` is removed and the gate becomes live.
-//!
-//! The always-live tests cover the `dispatch_bonus` dimension — the one
-//! field that existed in `CostWeights` before AF.2 and already has
-//! downstream consumers. They're the canary that proves the mechanism
-//! works: if even `dispatch_bonus` fails to propagate, the plumbing is
-//! broken and AF.2 has zero foundation to stand on.
+//! Most dimensions are fully wired (dispatch_bonus, dispatch_table,
+//! dispatch_branch, tape_push, cross_module_coercion). Four tests
+//! remain `#[ignore]`-gated for cost knobs whose consumers still use
+//! hardcoded constants: `call_overhead`, `inline_body_size_penalty`,
+//! `slab_alloc`, and `prettify_emission`.
 
 use std::collections::HashMap;
 
@@ -38,7 +32,7 @@ use bbnf_ir::egraph::{
 };
 use bbnf_ir::passes::{
     classify_materialization, compute_first_sets, generate_dispatch_tables,
-    solve_strategy_and_materialization, AltMode, MaterializationClass, RecognizerDecisionMap,
+    solve_grammar_components, AltMode, MaterializationClass, RecognizerDecisionMap,
 };
 use bbnf_ir::{
     AltBranch, AltDispatch, CharSet128, CostConfig, GrammarIR, IrNode, IrRule, RuleMeta,
@@ -110,8 +104,8 @@ fn char_set_of(bytes: &[u8]) -> CharSet128 {
 /// `Some(AltDispatch)` — dispatching on the first byte.
 ///
 /// The patched `cost_config` is installed *before* the DAG build so the
-/// strategy CSP (`solve_strategy_and_materialization`) sees the patched
-/// weights when it constructs per-variable domains.
+/// strategy CSP (`solve_grammar_components`) sees the patched weights
+/// when it constructs per-variable domains.
 fn build_three_way_alt_fixture(cost_config: CostConfig) -> GrammarIR {
     let strings = vec![
         "value".to_string(),
@@ -190,7 +184,7 @@ fn build_egraph_alt_fixture(cost_config: CostConfig) -> GrammarIR {
 /// the joint entry point that merges materialization refinements back
 /// into `ir.materialization`.
 fn solve_and_merge(ir: &mut GrammarIR) -> RecognizerDecisionMap {
-    let (decisions, mat_refined) = solve_strategy_and_materialization(ir);
+    let (decisions, mat_refined, _tiers) = solve_grammar_components(ir);
     for (node_id, class) in mat_refined {
         ir.materialization.insert(node_id, class);
     }
@@ -465,20 +459,12 @@ fn egraph_alt_class_count(
     0
 }
 
-// ── Ignored tests — AF.2-4B migration (CSP strategy solver consumers) ───────
+// ── Dispatch table/branch cost dimensions (AG.5 wired) ─────────────────────
 
-/// `dispatch_branch` and `dispatch_table` are meant to be read by
-/// `csp_strategy::build_alt_domain` to compute per-arm dispatch cost
-/// as `N * dispatch_branch + dispatch_table`, REPLACING the current
-/// placeholder `dispatch_bonus.abs()`. Until 4B lands that migration,
-/// patching `dispatch_table` has no effect on the CSP decision — the
-/// solver still reads the Z.6 `dispatch_bonus` knob only.
-///
-/// When 4B lands:
-/// - remove the `#[ignore]` gate below
-/// - the test must pass as a live invariant
-/// - the previous `dispatch_bonus` canary tests may need their
-///   magnitudes adjusted if the cost formula changes
+/// `dispatch_branch` and `dispatch_table` drive per-arm dispatch cost
+/// via `csp_strategy::build_alt_domain`: `N * dispatch_branch +
+/// dispatch_table`. A dispatch-table cost exceeding the checkpoint
+/// fallback flips the CSP decision to Checkpoint.
 #[test]
 fn dispatch_mode_flips_under_inverted_dispatch_table() {
     let mut cfg = CostConfig::default();
@@ -498,11 +484,9 @@ fn dispatch_mode_flips_under_inverted_dispatch_table() {
     );
 }
 
-/// `dispatch_branch` is the per-arm component of the future 4B
-/// dispatch cost formula. Doubling it on a 3-arm Alt should roughly
-/// triple the dispatch arm-count contribution, which at sufficient
-/// magnitude flips the decision. This test will be live once 4B
-/// wires `dispatch_branch` into `build_alt_domain`.
+/// `dispatch_branch` is the per-arm component of the dispatch cost
+/// formula. Scaling it on a 3-arm Alt triples the arm-count
+/// contribution, which at sufficient magnitude flips the CSP decision.
 #[test]
 fn dispatch_branch_scales_with_arm_count() {
     let mut cfg = CostConfig::default();
@@ -518,29 +502,18 @@ fn dispatch_branch_scales_with_arm_count() {
     );
 }
 
-// ── Ignored tests — AF.2-4C migration (backend driver consumers) ────────────
+// ── Ignored tests — backend driver consumer migration pending ───────────────
 
-/// `call_overhead` is meant to be the single knob driving the
-/// inline-vs-call decision in `backend::rust::analysis::inline::
-/// CostBudgetConstraint`. Today that constraint reads hardcoded
-/// `MAX_LOCAL_COST = 80`, `MAX_TOTAL_BUDGET = 4096` — none of which
-/// come from `CostWeights`. Patching `call_overhead` to a tiny value
-/// should force every rule to `CallMode::InlineBody`; patching it to
-/// a huge value should force every rule to `CallMode::DirectCall`.
-///
-/// Until 4C lands that migration, this test cannot run — the backend
-/// driver lives in the `bbnf` (core) crate, not `bbnf-ir`, so even
-/// asserting the current behavior requires a cross-crate call that
-/// the AF.2 test file intentionally avoids.
-// TODO(AG.5b): `call_overhead` has no bbnf-ir consumer — the inline
-// analysis in `backend/rust/analysis/inline.rs` reads hardcoded
-// MAX_LOCAL_COST/MAX_TOTAL_BUDGET. This test must live in bbnf (core)
-// integration tests once 4C migrates the backend driver to read from
-// CostWeights.
+/// `call_overhead` is meant to drive the inline-vs-call decision in
+/// `backend::rust::analysis::inline::CostBudgetConstraint`. That
+/// constraint currently reads hardcoded `MAX_LOCAL_COST = 80`,
+/// `MAX_TOTAL_BUDGET = 4096` — none of which come from `CostWeights`.
+/// This test must live in bbnf (core) integration tests once the
+/// backend driver migrates to read from CostWeights.
 #[test]
-#[ignore = "TODO(AG.5b): call_overhead consumer (backend/rust/analysis/inline.rs) \
+#[ignore = "call_overhead consumer (backend/rust/analysis/inline.rs) \
             uses hardcoded constants, not CostWeights. Cross-crate test \
-            required after 4C migration."]
+            required after backend driver migration."]
 fn call_strategy_flips_under_inverted_call_overhead() {
     // Pseudo-code for the post-4C implementation (written as a
     // guide for whoever lands the migration):
@@ -562,40 +535,29 @@ fn call_strategy_flips_under_inverted_call_overhead() {
     unreachable!("AF.2-4C consumer migration required before this test can run");
 }
 
-/// `inline_body_size_penalty` is the scaling coefficient the post-4C
-/// `CostBudgetConstraint` uses to compare inlining expansion cost
-/// against the flat `call_overhead` cost: inlining a body of `N`
-/// nodes costs `N * inline_body_size_penalty`, and the decision rule
-/// is `inline if N * inline_body_size_penalty < call_overhead`.
+/// `inline_body_size_penalty` is the scaling coefficient the
+/// `CostBudgetConstraint` should use to compare inlining expansion
+/// cost against the flat `call_overhead` cost: inlining a body of
+/// `N` nodes costs `N * inline_body_size_penalty`, and the decision
+/// rule is `inline if N * inline_body_size_penalty < call_overhead`.
 ///
-/// Until 4C lands, the constraint uses a hardcoded
+/// The constraint currently uses a hardcoded
 /// `local_cost <= MAX_LOCAL_COST (80)` heuristic that's independent
 /// of body size and reference count.
-// TODO(AG.5b): `inline_body_size_penalty` has no bbnf-ir consumer.
-// The inline analysis in backend/rust/analysis/inline.rs uses
-// MAX_LOCAL_COST/MAX_TOTAL_BUDGET. Cross-crate test after 4C.
 #[test]
-#[ignore = "TODO(AG.5b): inline_body_size_penalty consumer \
+#[ignore = "inline_body_size_penalty consumer \
             (backend/rust/analysis/inline.rs) uses hardcoded heuristic, \
-            not CostWeights. Cross-crate test required after 4C."]
+            not CostWeights. Cross-crate test required after backend \
+            driver migration."]
 fn inline_body_size_penalty_affects_per_rule_decision() {
     unreachable!("AF.2-4C consumer migration required before this test can run");
 }
 
-// ── Ignored tests — AF.3/AF.4 wiring of tape + materialization knobs ────────
+// ── Tape + materialization cost dimensions (AG.5 wired) ─────────────────────
 
-/// `tape_push` is meant to drive the Tier B vs Tier A materialization
-/// decision: a rule that emits `N` tape records pays
-/// `N * tape_push` during the `classify_materialization` cost sweep,
-/// and the CSP strategy solver compares this against the cheaper
-/// `TapeSpanOnly` / `TransparentElide` tiers.
-///
-/// AF.2 landed the struct field; AF.3 wires it into the
-/// materialization pass. Until then the classifier uses hardcoded
-/// `CostConfig::mat_*` weights that predate the unification.
-/// AG.5 activated: `tape_push` now drives the Tape-tier cost in
-/// `build_tier_domain`. A `TransparentElide` rule's tier domain
-/// is `{Tape(tape_push), Lazy(...), Direct(0.0)}`.
+/// `tape_push` drives the Tape-tier cost in `build_tier_domain`. A
+/// `TransparentElide` rule's tier domain is
+/// `{Tape(tape_push), Lazy(...), Direct(0.0)}`.
 ///
 /// Under default weights (`tape_push = 1.0`), Direct(0.0) is
 /// cheapest and wins. When `tape_push = 0.0`, Tape(0.0) ties
@@ -648,46 +610,30 @@ fn tape_push_affects_materialization_classification() {
 /// `slab_alloc` is the legacy slab-emitter allocation cost. It's
 /// retained in `CostWeights` so the VM and HIR tiers that still use
 /// slab allocation share the same weight, but it has no consumer
-/// until AF.3 / AF.5 wires it into materialization or emission.
-// TODO(AG.5b): `slab_alloc` has no consumer in the CSP strategy
-// or materialization pipeline. It drives VM/slab-emitter allocation
-// cost but that path reads hardcoded constants.
+/// in the CSP strategy or materialization pipeline yet.
 #[test]
-#[ignore = "TODO(AG.5b): slab_alloc has no bbnf-ir consumer. VM and slab \
-            emitter paths use hardcoded allocation costs, not \
+#[ignore = "slab_alloc has no bbnf-ir consumer. VM and slab emitter \
+            paths use hardcoded allocation costs, not \
             CostWeights::slab_alloc."]
 fn slab_alloc_affects_vm_legacy_path() {
     unreachable!("slab_alloc consumer migration required before this test can run");
 }
 
 /// `prettify_emission` is the per-node cost the CSP strategy solver
-/// should pay for `@pretty`-pinned subtrees. Today the
-/// `build_materialization_domain` pins pretty rules to `MustTape`
-/// with a single-value domain, so the CSP can't demote them — but it
-/// also pays the flat `cfg.mat_must_tape` cost, not a
-/// `prettify_emission` cost scaled by the subtree size.
-///
-/// AF.3 / AF.4 lands the per-subtree scaling. Until then, patching
-/// `prettify_emission` has no observable effect.
-// TODO(AG.5b): `prettify_emission` is not consumed by the CSP
-// tier domain or materialization cost pipeline. The prettify pin
-// is structural (single-value MustTape domain clamp), not a
-// continuous cost. A per-subtree cost model would need new
-// pipeline infrastructure.
+/// should pay for `@pretty`-pinned subtrees. The prettify pin is
+/// currently structural (single-value MustTape domain clamp), not a
+/// continuous cost. Per-subtree scaling would need new pipeline
+/// infrastructure.
 #[test]
-#[ignore = "TODO(AG.5b): prettify_emission has no bbnf-ir consumer. \
-            Prettify pin is structural (MustTape clamp), not a \
-            continuous cost. Per-subtree scaling needs new pipeline."]
+#[ignore = "prettify_emission has no bbnf-ir consumer. Prettify pin \
+            is structural (MustTape clamp), not a continuous cost. \
+            Per-subtree scaling needs new pipeline infrastructure."]
 fn prettify_emission_scales_with_pretty_subtree_size() {
     unreachable!("prettify_emission consumer migration required before this test can run");
 }
 
-/// `cross_module_coercion` is the pre-seed for Tranche AG's module
-/// substrate: the cost of coercing a Tier B direct value into a tape
-/// record at a `@import` boundary. Today AF.2 ships the field;
-/// AG consumes it.
-/// AG.5 activated: `cross_module_coercion` now feeds into the
-/// Lazy-tier cost in `build_tier_domain` (via the formula
+/// `cross_module_coercion` feeds into the Lazy-tier cost in
+/// `build_tier_domain` (via the formula
 /// `tape_push * 0.5 + cross_module_coercion * 0.5`). A
 /// `TransparentElide` rule's Lazy cost is sensitive to the
 /// coercion weight. Under default weights Direct already wins;
@@ -825,5 +771,6 @@ fn patched_weights_all_dimensions() -> CostWeights {
         dispatch_table: 7.5,
         prettify_emission: 6.5,
         cross_module_coercion: 5.5,
+        emission_tier_bonus: 4.5,
     }
 }

@@ -55,7 +55,6 @@ fn make_ir(rules: Vec<IrRule>, strings: Vec<String>) -> GrammarIR {
         cost_config: CostConfig::default(),
         type_desc_interner: TypeDescInterner::new(),
         materialization: HashMap::new(),
-        emission_tier: HashMap::new(),
     };
     bbnf_ir::dag::ensure_dag(&mut ir);
     // Run the AB.0 classification first — the CSP consumes its
@@ -87,7 +86,7 @@ fn rule_with_meta(id: u32, name: StringId, body: IrNode, meta: RuleMeta) -> IrRu
 /// Run the joint CSP on `ir` and merge the result into
 /// `ir.materialization`. Returns the rule body's post-CSP class.
 fn solve_and_merge(ir: &mut GrammarIR) {
-    let (_decisions, mat_refined, _tiers) = solve_grammar_components(ir);
+    let (_decisions, mat_refined) = solve_grammar_components(ir);
     for (node_id, class) in mat_refined {
         ir.materialization.insert(node_id, class);
     }
@@ -239,7 +238,7 @@ fn solve_returns_decision_map() {
     let strings = vec!["entry".to_string(), "x".to_string()];
     let rules = vec![rule(0, 0, IrNode::Literal(1))];
     let ir = make_ir(rules, strings);
-    let (decisions, mat, _tiers) = solve_grammar_components(&ir);
+    let (decisions, mat) = solve_grammar_components(&ir);
     // Materialization map has an entry for the rule body NodeId.
     assert!(!mat.is_empty(), "materialization map populated");
     // Decisions map may be empty for a trivial literal rule (no

@@ -9,12 +9,6 @@
 //! the same `CostWeights` so dispatch bonuses and alt penalties
 //! stay consistent across tiers. Per-domain knobs do not leak.
 //!
-//! Tranche AI.3 adds an **emission-tier bonus** that rewards body
-//! shapes enabling Direct (Tier B) emission — leaves, non-closure
-//! Maps, short Seqs, and Skip with a leaf kept side. The bonus is
-//! additive (`weights.emission_tier_bonus`, negative = reward) and
-//! steers the extractor toward forms the backend can emit without
-//! tape/slab overhead.
 
 use egraph::{CostModel, CostWeights, Id};
 
@@ -26,13 +20,11 @@ use crate::FnDescriptor;
 /// factoring) and a reward for nodes already carrying an
 /// `AltDispatch` (extraction keeps dispatch-eligible structures
 /// intact). Shared weights live in `weights`; grammar-specific
-/// knobs layer on top. The emission-tier bonus (Tranche AI.3)
-/// additionally rewards Direct-eligible body shapes.
+/// knobs layer on top.
 #[derive(Clone, Copy, Debug)]
 pub struct GrammarCostModel {
     /// Shared cost weights (`structural`, `alt_per_branch`,
-    /// `dispatch_bonus`, `emission_tier_bonus`) used by every
-    /// e-graph consumer.
+    /// `dispatch_bonus`) used by every e-graph consumer.
     pub weights: CostWeights,
     pub literal_cost: f64,
     pub regex_cost: f64,
@@ -40,11 +32,9 @@ pub struct GrammarCostModel {
     pub seq_per_child: f64,
 
     /// Pointer to the host function table (`GrammarIR::fns`).
-    /// Used by the emission-tier bonus to distinguish non-closure
-    /// Maps (Direct-eligible) from `FnDescriptor::Expr` closures.
+    /// Used for precise cost accounting on Map nodes.
     /// Null when the cost model is constructed without an IR
-    /// reference (e.g., `from_config`); in that case the Map bonus
-    /// is conservatively skipped.
+    /// reference (e.g., `from_config`).
     fns_ptr: *const FnDescriptor,
     fns_len: usize,
 }
@@ -87,10 +77,8 @@ impl GrammarCostModel {
         }
     }
 
-    /// Attach the host function table for precise emission-tier
-    /// bonus computation on `Map` nodes. The returned cost model
-    /// distinguishes non-closure Maps (Direct-eligible, bonus
-    /// applied) from `FnDescriptor::Expr` closures (no bonus).
+    /// Attach the host function table for precise cost computation
+    /// on `Map` nodes.
     ///
     /// The caller must ensure the slice outlives the cost model.
     pub fn with_fns(mut self, fns: &[FnDescriptor]) -> Self {
@@ -117,25 +105,17 @@ impl CostModel<GrammarENode> for GrammarCostModel {
 
     fn cost(&self, node: &GrammarENode, child_cost: impl Fn(Id) -> Self::Cost) -> Self::Cost {
         let structural = self.weights.structural;
-        let tier_bonus = self.weights.emission_tier_bonus;
 
         match node {
-            // ── Direct-eligible leaves: full emission-tier bonus ────
-            GrammarENode::Literal(_) => self.literal_cost + tier_bonus,
-            GrammarENode::Regex(_) => self.regex_cost + tier_bonus,
-            GrammarENode::Epsilon => 0.5 + tier_bonus,
+            GrammarENode::Literal(_) => self.literal_cost,
+            GrammarENode::Regex(_) => self.regex_cost,
+            GrammarENode::Epsilon => 0.5,
 
             GrammarENode::Ref(_) => self.ref_cost,
 
-            // ── Short Seqs (<=3 children): discounted bonus ────────
             GrammarENode::Seq(children) => {
                 let child_sum: f64 = children.iter().map(|&id| child_cost(id)).sum();
-                let base = structural + self.seq_per_child * children.len() as f64 + child_sum;
-                if children.len() <= 3 {
-                    base + tier_bonus * 0.5
-                } else {
-                    base
-                }
+                structural + self.seq_per_child * children.len() as f64 + child_sum
             }
 
             GrammarENode::Alt(children, dispatch) => {
@@ -151,35 +131,16 @@ impl CostModel<GrammarENode> for GrammarCostModel {
 
             GrammarENode::Repeat { inner, .. } => structural + child_cost(*inner),
 
-            // ── Skip: Direct-eligible (leaf kept side) ─────────────
-            GrammarENode::Skip([a, b]) => {
-                structural + child_cost(*a) + child_cost(*b) + tier_bonus
-            }
-            GrammarENode::Next([a, b])
+            GrammarENode::Skip([a, b])
+            | GrammarENode::Next([a, b])
             | GrammarENode::Minus([a, b]) => structural + child_cost(*a) + child_cost(*b),
 
             GrammarENode::Negate(inner) | GrammarENode::OptionalWhitespace(inner) => {
                 structural + child_cost(*inner)
             }
 
-            // ── Map: bonus for non-closure (non-Expr) descriptors ──
-            GrammarENode::Map { inner, fn_id } => {
-                let base = structural + child_cost(*inner);
-                let fns = self.fns();
-                if !fns.is_empty() {
-                    // Precise path: look up the FnDescriptor to
-                    // distinguish compiler-internal variants
-                    // (EnumWrap, BoxWrap, NumberConvert, etc.) from
-                    // user-facing Expr closures.
-                    match fns.get(*fn_id as usize) {
-                        Some(FnDescriptor::Expr { .. }) => base,
-                        _ => base + tier_bonus,
-                    }
-                } else {
-                    // No fns table available — conservatively skip
-                    // the bonus rather than misclassify.
-                    base
-                }
+            GrammarENode::Map { inner, fn_id: _ } => {
+                structural + child_cost(*inner)
             }
 
             GrammarENode::TokenDispatch {

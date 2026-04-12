@@ -8,7 +8,6 @@
 mod csp_components;
 mod csp_materialization;
 mod csp_types;
-mod emission_tier_lattice;
 mod materialization;
 mod materialization_eclass_gate;
 mod types;

@@ -1,30 +1,27 @@
 //! Public types produced and consumed by the interpreter:
 //!
 //! - [`Value`] — a parse tree node (Span, Tagged, Array, Nil).
-//! - [`ValueSlice`] — a non-null slice handle into the bump slab.
+//! - [`ValueSlice`] — an owned boxed slice of values.
 //! - [`ParseDiagnostic`] — a single failure-context message.
-//! - [`ParseResult`] — the run result wrapper that owns the bump slab.
+//! - [`ParseResult`] — the run result wrapper.
 
-use std::{fmt, ops::Deref, ptr::NonNull};
-
-use parse_that::BumpSlab;
+use std::{fmt, ops::Deref};
 
 use crate::RuleId;
 
-/// A non-null slice handle into the interpreter's bump slab.
-#[derive(Clone, Copy)]
-pub struct ValueSlice(NonNull<[Value]>);
+/// An owned slice of values.
+#[derive(Clone)]
+pub struct ValueSlice(Box<[Value]>);
 
 impl ValueSlice {
     #[inline(always)]
-    pub fn from_slice(values: &[Value]) -> Self {
-        Self(NonNull::from(values))
+    pub fn from_vec(values: Vec<Value>) -> Self {
+        Self(values.into_boxed_slice())
     }
 
     #[inline(always)]
     pub fn empty() -> Self {
-        let values: &[Value] = &[];
-        Self::from_slice(values)
+        Self(Box::new([]))
     }
 }
 
@@ -32,7 +29,7 @@ impl Deref for ValueSlice {
     type Target = [Value];
 
     fn deref(&self) -> &Self::Target {
-        unsafe { self.0.as_ref() }
+        &self.0
     }
 }
 
@@ -78,14 +75,11 @@ pub struct ParseDiagnostic {
     pub expected: Vec<u8>,
 }
 
-/// The run result wrapper. Owns the bump slab so the borrowed `ValueSlice`
-/// handles in `value` and its descendants stay valid for the lifetime of
-/// the result.
+/// The run result wrapper.
 pub struct ParseResult {
     pub value: Option<Value>,
     pub offset: u32,
     pub success: bool,
     /// Diagnostics collected during parsing (populated when FOLLOW sets are available).
     pub diagnostics: Vec<ParseDiagnostic>,
-    pub(super) _slab: BumpSlab,
 }

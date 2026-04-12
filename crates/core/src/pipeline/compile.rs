@@ -592,20 +592,11 @@ fn compile_ast_common<'a>(
         // with the cost-optimal per-rule-root class where the CSP
         // can prove it legal under pin constraints.
         timer.span("solve_grammar_components", || {
-            let (decisions, mat_refined, tier_refined) =
+            let (decisions, mat_refined) =
                 bbnf_ir::passes::solve_grammar_components(&ir);
             ir.recognizer_decisions = decisions;
             for (node_id, class) in mat_refined {
                 ir.materialization.insert(node_id, class);
-            }
-            // AG.5 — CSP-solved emission tiers land in
-            // `ir.emission_tier` directly. `decode_emission_tier`
-            // below only fills entries the CSP did not assign
-            // (should be none after AG.5, but kept as a safety
-            // net for rules the solver elided for trivial
-            // components).
-            for (rule_id, tier) in tier_refined {
-                ir.emission_tier.insert(rule_id, tier);
             }
         });
         // Tranche X.8d — project the per-NodeId RegexEngine decisions
@@ -617,26 +608,6 @@ fn compile_ast_common<'a>(
                 bbnf_ir::passes::extract_regex_engine_decisions(&ir, &ir.recognizer_decisions);
         });
 
-        // Tranche AF.5 — decode the per-rule EmissionTier from the
-        // materialization classifier output. The decoder is the
-        // bridge between AF.1's per-NodeId class and AF.6's Tier B
-        // backend emitter; until AF.6 lands the decoded tier sits
-        // dormant on `ir.emission_tier`, defaulting to `Tape` for
-        // every rule the decoder cannot prove eligible for direct
-        // emission.
-        timer.span("decode_emission_tier", || {
-            bbnf_ir::passes::decode_emission_tier(&mut ir);
-        });
-
-        // Tranche AI.4 — monotone widening: reconcile emission tiers
-        // across connected components. A Direct-tier rule that calls a
-        // Tape-tier callee in another component is incoherent; the
-        // widening pass promotes callers to `tier_join(caller, callee)`.
-        timer.span("reconcile_cross_component_tiers", || {
-            let reconciled =
-                bbnf_ir::passes::reconcile_cross_component_tiers(&ir);
-            ir.emission_tier = reconciled;
-        });
     }
 
     // Emit the per-pass CSV report when BBNF_PIPELINE_REPORT=1.

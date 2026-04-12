@@ -27,7 +27,7 @@ pub mod types;
 
 pub use lr::{eliminate_direct_lr, eliminate_indirect_lr};
 pub use materialization::{
-    EmissionTier, MaterializationClass, classify_materialization, mat_join, tier_join, tier_meet,
+    MaterializationClass, classify_materialization, mat_join,
 };
 pub use metadata::{compute_aliases, compute_transparent};
 pub use prefix::factor_common_prefixes;
@@ -44,7 +44,7 @@ pub use transform::{
 pub use csp_strategy::{solve_strategy_and_materialization, solve_strategy_decisions};
 pub use csp_strategy::{
     components::{GrammarComponents, UnionFind, partition_by_call_graph},
-    decode_emission_tier, extract_regex_engine_decisions, reconcile_cross_component_tiers,
+    extract_regex_engine_decisions,
     solve_grammar_components, AltMode, RecognizerDecision, RecognizerDecisionMap, RegexEngine,
     StrategyDomain, StrategyValue, WrapMode,
 };

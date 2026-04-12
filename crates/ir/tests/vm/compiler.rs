@@ -34,7 +34,7 @@ fn make_simple_ir(body: IrNode) -> GrammarIR {
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
-        emission_tier: ::std::collections::HashMap::new(),    }
+    }
 }
 
 #[test]
@@ -160,7 +160,7 @@ fn compile_memo_rule() {
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
-        emission_tier: ::std::collections::HashMap::new(),    };
+    };
     let program = compile(&ir);
 
     assert!(!program.memo_enabled);
@@ -219,7 +219,7 @@ fn compile_direct_left_recursive_rule_keeps_memo() {
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
-        emission_tier: ::std::collections::HashMap::new(),    };
+    };
     let program = compile(&ir);
 
     assert!(program.memo_enabled);
@@ -372,7 +372,7 @@ fn compile_token_dispatch_emits_dispatch_token() {
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
-        emission_tier: ::std::collections::HashMap::new(),    };
+    };
     let program = compile(&ir);
 
     assert!(
@@ -450,7 +450,7 @@ fn compile_call() {
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
-        emission_tier: ::std::collections::HashMap::new(),    };
+    };
     let program = compile(&ir);
 
     assert!(program.code.iter().any(|op| matches!(op, Op::Call(1))));

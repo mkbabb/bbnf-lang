@@ -197,23 +197,6 @@ pub struct GrammarIR {
     #[serde(skip, default)]
     pub materialization: HashMap<dag::NodeId, passes::MaterializationClass>,
 
-    /// Tranche AF.4 — per-`RuleId` emission tier.
-    ///
-    /// Orthogonal axis to `materialization`. Where the materialization
-    /// class decides what record shape a rule pushes (compound / span
-    /// only / elided), the emission tier decides what return type the
-    /// rule's parse function projects to (tape-only / direct-to-struct
-    /// / lazy view-layer hybrid).
-    ///
-    /// Populated by AF.5's `decode_emission_tier` pass from the
-    /// solved CSP output. Read by AF.6's Tier B emitter to decide
-    /// whether to emit a `__<rule>_direct` shim alongside the tape
-    /// function. Defaults to `EmissionTier::Tape` for every rule
-    /// (universal, always legal) before the decoder runs.
-    ///
-    /// Not serialized: every compile rebuilds it from scratch.
-    #[serde(skip, default)]
-    pub emission_tier: HashMap<RuleId, passes::EmissionTier>,
 }
 
 impl GrammarIR {

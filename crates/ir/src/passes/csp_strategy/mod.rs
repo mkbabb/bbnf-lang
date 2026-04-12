@@ -136,9 +136,6 @@ pub mod components;
 // &GrammarIR)`, called once per component solve after variable
 // building but before finalize.
 pub mod constraints;
-pub mod decode_tier;
-
-pub use decode_tier::decode_emission_tier;
 
 use std::collections::HashMap;
 
@@ -153,7 +150,6 @@ use rustc_hash::FxHashMap;
 use self::components::{partition_by_call_graph, GrammarComponents};
 use crate::dag::NodeId;
 use crate::passes::materialization::MaterializationClass;
-use crate::passes::materialization::EmissionTier;
 use crate::passes::patterns::{Recognizer, RecognizerShape};
 use crate::{CostConfig, GrammarIR, IrNode, RuleId};
 
@@ -257,18 +253,12 @@ pub type RecognizerDecisionMap = HashMap<NodeId, RecognizerDecision>;
 /// jointly optimizes strategy decisions (Alt / Wrap / Engine) AND
 /// per-rule tape materialization commitments.
 ///
-/// Tranche AF.4 — added `Tier(EmissionTier)`. The cross-rule CSP
-/// solve picks a per-rule emission tier (Tape / Lazy / Direct)
-/// constrained by `TierFollowsMaterialization` against the rule's
-/// materialization class and `ParentCompatibility` against caller
-/// tiers along `Ref` edges.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum StrategyValue {
     Alt(AltMode),
     Wrap(WrapMode),
     Engine(RegexEngine),
     Mat(MaterializationClass),
-    Tier(crate::passes::materialization::EmissionTier),
 }
 
 /// Cost-aware finite domain for [`StrategyValue`].
@@ -385,17 +375,14 @@ pub fn solve_grammar_components(
 ) -> (
     RecognizerDecisionMap,
     HashMap<NodeId, MaterializationClass>,
-    HashMap<RuleId, crate::passes::materialization::EmissionTier>,
 ) {
     let dag = match ir.dag.as_ref() {
         Some(d) => d,
-        None => return (HashMap::new(), HashMap::new(), HashMap::new()),
+        None => return (HashMap::new(), HashMap::new()),
     };
 
     let mut decisions: RecognizerDecisionMap = HashMap::new();
     let mut mat_out: HashMap<NodeId, MaterializationClass> = HashMap::new();
-    let mut tier_out: HashMap<RuleId, crate::passes::materialization::EmissionTier> =
-        HashMap::new();
     let cfg = &ir.cost_config;
     let debug_all = ir.debug_all;
 
@@ -433,11 +420,10 @@ pub fn solve_grammar_components(
             debug_all,
             &mut decisions,
             &mut mat_out,
-            &mut tier_out,
         );
     }
 
-    (decisions, mat_out, tier_out)
+    (decisions, mat_out)
 }
 
 /// Deprecated alias for [`solve_grammar_components`]. Preserved so
@@ -451,8 +437,7 @@ pub fn solve_grammar_components(
 pub fn solve_strategy_and_materialization(
     ir: &GrammarIR,
 ) -> (RecognizerDecisionMap, HashMap<NodeId, MaterializationClass>) {
-    let (decisions, mat, _tiers) = solve_grammar_components(ir);
-    (decisions, mat)
+    solve_grammar_components(ir)
 }
 
 /// Deprecated alias preserved for external callers from the Tranche
@@ -489,7 +474,6 @@ fn solve_component(
     debug_all: bool,
     decisions: &mut RecognizerDecisionMap,
     mat_out: &mut HashMap<NodeId, MaterializationClass>,
-    tier_out: &mut HashMap<RuleId, crate::passes::materialization::EmissionTier>,
 ) {
     // ── Phase 1: collect decision sites + build CSP variables ──────────────
     //
@@ -506,23 +490,6 @@ fn solve_component(
     // below for the post-solve fallback walk and for the "no
     // variables in this component" short-circuit.
     let mut contributing_rules: Vec<RuleId> = Vec::with_capacity(member_rules.len());
-
-    // AG.5 — per-rule tier variables. One variable per rule in
-    // the component with a domain clamped to the rule's
-    // materialization class via `build_tier_domain`:
-    //
-    //   MustTape       → {Tape}                 (singleton)
-    //   TapeSpanOnly   → {Tape, Lazy}
-    //   TransparentElide → {Tape, Lazy, Direct} (full lattice)
-    //
-    // Singleton domains are degenerate cost contributions — the
-    // solver cannot choose anything else, so the tier-var cost
-    // falls out of the branch-and-bound objective for pinned
-    // rules. Only `TransparentElide` rules offer the solver a
-    // real choice, and for those the Direct-vs-Tape cost gap
-    // correctly biases the solver toward the cheapest legal
-    // emission tier.
-    let mut tier_vars: HashMap<RuleId, VarId> = HashMap::new();
 
     // AF.3 — per-(rule, regex-node) engine variables, the lookup
     // table the `EnginePropagation` constraint consumes. Built by
@@ -568,20 +535,6 @@ fn solve_component(
             let domain = build_materialization_domain(rule, initial, cfg, debug_all);
             let var = csp.add_variable(domain);
             sites.push((var, Site::Materialization(body_id)));
-
-            // AG.5 — per-rule emission tier variable. Domain
-            // clamped to the materialization class via
-            // `build_tier_domain`; pinned rules degenerate to a
-            // `{Tape}` singleton so the tier cost drops out of
-            // the objective. The returned VarId is recorded in
-            // both `tier_vars` (for the cross-rule constraint
-            // installers in `constraints::*`) and `sites` (for
-            // the post-solve decode loop that writes
-            // `tier_out[rule_id]`).
-            let tier_domain = build_tier_domain(rule, initial, cfg, debug_all);
-            let tier_var = csp.add_variable(tier_domain);
-            sites.push((tier_var, Site::Tier(rid)));
-            tier_vars.insert(rid, tier_var);
         }
 
         if sites.len() > sites_before {
@@ -620,7 +573,6 @@ fn solve_component(
     let component_constraints_added = install_cross_rule_constraints(
         &mut csp,
         member_rules,
-        &tier_vars,
         &engine_vars,
         ir,
     );
@@ -636,7 +588,7 @@ fn solve_component(
     // uses csp_solver::Csp") holds for every code path; we just elide
     // the search work that would not change the answer.
     if constraints_added == 0 {
-        decode_min_cost_per_variable(&csp, &sites, decisions, mat_out, tier_out);
+        decode_min_cost_per_variable(&csp, &sites, decisions, mat_out);
         return;
     }
 
@@ -669,7 +621,7 @@ fn solve_component(
                 contributing_rules.len(),
             );
         }
-        decode_min_cost_per_variable(&csp, &sites, decisions, mat_out, tier_out);
+        decode_min_cost_per_variable(&csp, &sites, decisions, mat_out);
         return;
     }
 
@@ -689,9 +641,6 @@ fn solve_component(
                     }
                     (Site::Materialization(n), StrategyValue::Mat(c)) => {
                         mat_out.insert(*n, c);
-                    }
-                    (Site::Tier(rid), StrategyValue::Tier(t)) => {
-                        tier_out.insert(*rid, t);
                     }
                     _ => {}
                 }
@@ -725,87 +674,18 @@ fn solve_component(
 fn install_cross_rule_constraints(
     csp: &mut Csp<StrategyDomain>,
     component: &[RuleId],
-    tier_vars: &std::collections::HashMap<RuleId, VarId>,
     engine_vars: &std::collections::HashMap<(RuleId, NodeId), VarId>,
     ir: &GrammarIR,
 ) -> usize {
     let ctx = self::constraints::ConstraintCtx {
         component,
-        tier_vars,
         mat_classes: &ir.materialization,
         engine_vars,
     };
 
     let mut count = 0usize;
-    count += self::constraints::tier::install(&ctx, csp, ir);
     count += self::constraints::engine::install(&ctx, csp, ir);
-    count += self::constraints::parent::install(&ctx, csp, ir);
     count
-}
-
-/// Build a per-rule tier variable domain, clamped against the
-/// rule's materialization class at construction time.
-///
-/// The clamp mirrors `TierFollowsMaterialization` from
-/// `constraints::tier`: pinned rules (entry, prettify, debug,
-/// `preserve_identity`, `debug_all`) and `MustTape` bodies
-/// collapse to the singleton `{Tape}`; `TapeSpanOnly` permits
-/// `{Tape, Lazy}`; `TransparentElide` is the only class that
-/// offers the full `{Tape, Lazy, Direct}` lattice. Pre-clamping
-/// at construction time hands the solver the smallest possible
-/// domain without waiting for AC-3 to discover the restriction
-/// — and more importantly, a pinned rule's singleton domain is
-/// a **degenerate cost contribution**, so the tier var cost
-/// falls out of the branch-and-bound objective for every rule
-/// the solver can't actually retier.
-///
-/// Costs come from `CostWeights`: `Tape` pays
-/// `tape_push`, `Lazy` pays half the tape push plus half the
-/// cross-module coercion, and `Direct` gets 0.0 (cheapest —
-/// no tape record at all). Because pinned rules have only
-/// `{Tape}` in the domain, the `Tape` cost cannot compare
-/// against a cheaper alternative, so `tape_push` perturbations
-/// do not move pinned rules; they only affect `TransparentElide`
-/// rules where the `Direct` option is in the domain and can
-/// undercut `Tape`.
-fn build_tier_domain(
-    rule: &crate::IrRule,
-    initial: MaterializationClass,
-    cfg: &CostConfig,
-    debug_all: bool,
-) -> StrategyDomain {
-    use crate::passes::materialization::EmissionTier;
-    let w = &cfg.egraph.weights;
-
-    // Pin discipline mirrors `build_materialization_domain`:
-    // `@pretty`, `@debug`, `preserve_identity`, and the global
-    // `debug_all` flag force the rule to Tape regardless of its
-    // classified shape. The singleton domain turns the tier var
-    // into a degenerate cost contribution — the solver cannot
-    // pick anything else.
-    let pinned = rule.meta.preserve_identity
-        || rule.meta.directives.pretty.is_some()
-        || rule.meta.directives.debug
-        || debug_all;
-
-    let tape_val = (StrategyValue::Tier(EmissionTier::Tape), w.tape_push);
-    let lazy_val = (
-        StrategyValue::Tier(EmissionTier::Lazy),
-        w.tape_push * 0.5 + w.cross_module_coercion * 0.5,
-    );
-    let direct_val = (StrategyValue::Tier(EmissionTier::Direct), 0.0);
-
-    if pinned {
-        return StrategyDomain::new(vec![tape_val]);
-    }
-
-    match initial {
-        MaterializationClass::MustTape => StrategyDomain::new(vec![tape_val]),
-        MaterializationClass::TapeSpanOnly => StrategyDomain::new(vec![tape_val, lazy_val]),
-        MaterializationClass::TransparentElide => {
-            StrategyDomain::new(vec![tape_val, lazy_val, direct_val])
-        }
-    }
 }
 
 /// Per-decision-site bookkeeping: which `NodeId` this var belongs to
@@ -819,14 +699,6 @@ enum Site {
     /// variable per rule root (not per descendant) — the
     /// rule-granularity decision is what the AB.2 emitter consumes.
     Materialization(NodeId),
-    /// Tranche AF.4 — per-rule emission tier (Tape / Lazy /
-    /// Direct). One variable per rule root, decoded into
-    /// `ir.emission_tier` by the AF.5 `decode_emission_tier`
-    /// pass. Cross-rule constraints
-    /// (`TierFollowsMaterialization`, `EnginePropagation`,
-    /// `ParentCompatibility`) bind these variables to each other
-    /// and to materialization / engine sites.
-    Tier(RuleId),
 }
 
 /// Per-node variable triple: `(alt_var, wrap_var, engine_var)`. Each
@@ -849,14 +721,11 @@ type ByNodeVars = FxHashMap<NodeId, NodeVarTriple>;
 ///
 /// Tranche AB.1 — also decodes `Site::Materialization` sites into
 /// the caller's `mat_out` map.
-/// Tranche AG.5 — also decodes `Site::Tier` sites into the
-/// caller's `tier_out` map.
 fn decode_min_cost_per_variable(
     csp: &Csp<StrategyDomain>,
     sites: &[(VarId, Site)],
     decisions: &mut RecognizerDecisionMap,
     mat_out: &mut HashMap<NodeId, MaterializationClass>,
-    tier_out: &mut HashMap<RuleId, crate::passes::materialization::EmissionTier>,
 ) {
     for (var_id, site) in sites {
         let domain = &csp.variables[*var_id as usize].domain;
@@ -884,9 +753,6 @@ fn decode_min_cost_per_variable(
             }
             (Site::Materialization(n), StrategyValue::Mat(c)) => {
                 mat_out.insert(*n, c);
-            }
-            (Site::Tier(rid), StrategyValue::Tier(t)) => {
-                tier_out.insert(*rid, t);
             }
             _ => {}
         }
@@ -1404,86 +1270,3 @@ fn engine_tier(e: &RegexEngine) -> u8 {
     }
 }
 
-// ── Tranche AI.4 — cross-component tier reconciliation ─────────────────────
-
-/// Monotone widening pass: ensure no Direct-tier rule calls a
-/// higher-tier (Tape/Lazy) rule across component boundaries.
-///
-/// Walks every `Ref` edge in every rule body. For each (caller_rule,
-/// callee_rule) pair, if `tier[caller] < tier[callee]` (i.e., caller
-/// is Direct but callee is Tape), promote caller to
-/// `tier_join(caller, callee)`.
-///
-/// The 3-iteration cap is because the 3-element lattice
-/// `{Direct, Lazy, Tape}` guarantees fixpoint in at most 3 rounds.
-///
-/// Returns the reconciled tier map; the caller writes it back to
-/// `ir.emission_tier`.
-pub fn reconcile_cross_component_tiers(ir: &GrammarIR) -> HashMap<RuleId, EmissionTier> {
-    use crate::passes::materialization::emission_tier::tier_join;
-
-    let mut tiers: HashMap<RuleId, EmissionTier> = ir.emission_tier.clone();
-    let mut changed = true;
-    let mut iterations = 0;
-
-    while changed && iterations < 3 {
-        changed = false;
-        iterations += 1;
-
-        for rule in &ir.rules {
-            let caller_tier = tiers.get(&rule.id).copied().unwrap_or(EmissionTier::Tape);
-            let mut refs = Vec::new();
-            collect_refs(&rule.body, &mut refs);
-
-            for callee_id in refs {
-                let callee_tier = tiers.get(&callee_id).copied().unwrap_or(EmissionTier::Tape);
-                let joined = tier_join(caller_tier, callee_tier);
-                if joined != caller_tier {
-                    tiers.insert(rule.id, joined);
-                    changed = true;
-                }
-            }
-        }
-    }
-
-    tiers
-}
-
-/// Collect all `RuleId` references from an `IrNode` tree.
-fn collect_refs(node: &IrNode, refs: &mut Vec<RuleId>) {
-    match node {
-        IrNode::Ref(rid) => refs.push(*rid),
-        IrNode::Seq(children) => {
-            for c in children {
-                collect_refs(c, refs);
-            }
-        }
-        IrNode::Alt(branches, _) => {
-            for b in branches {
-                collect_refs(&b.node, refs);
-            }
-        }
-        IrNode::Repeat { inner, .. }
-        | IrNode::OptionalWhitespace(inner)
-        | IrNode::Negate(inner) => {
-            collect_refs(inner, refs);
-        }
-        IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
-            collect_refs(a, refs);
-            collect_refs(b, refs);
-        }
-        IrNode::Map { inner, .. } => collect_refs(inner, refs),
-        IrNode::TokenDispatch {
-            token,
-            arms,
-            fallback,
-        } => {
-            collect_refs(token, refs);
-            for arm in arms {
-                collect_refs(&arm.continuation, refs);
-            }
-            collect_refs(fallback, refs);
-        }
-        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => {}
-    }
-}

@@ -21,7 +21,7 @@
 //! dispatch_branch, tape_push, cross_module_coercion). Four tests
 //! remain `#[ignore]`-gated for cost knobs whose consumers still use
 //! hardcoded constants: `call_overhead`, `inline_body_size_penalty`,
-//! `slab_alloc`, and `prettify_emission`.
+//! and `prettify_emission`.
 
 use std::collections::HashMap;
 
@@ -76,7 +76,6 @@ fn empty_ir() -> GrammarIR {
         cost_config: CostConfig::default(),
         type_desc_interner: TypeDescInterner::new(),
         materialization: HashMap::new(),
-        emission_tier: HashMap::new(),
     }
 }
 
@@ -184,7 +183,7 @@ fn build_egraph_alt_fixture(cost_config: CostConfig) -> GrammarIR {
 /// the joint entry point that merges materialization refinements back
 /// into `ir.materialization`.
 fn solve_and_merge(ir: &mut GrammarIR) -> RecognizerDecisionMap {
-    let (decisions, mat_refined, _tiers) = solve_grammar_components(ir);
+    let (decisions, mat_refined) = solve_grammar_components(ir);
     for (node_id, class) in mat_refined {
         ir.materialization.insert(node_id, class);
     }
@@ -299,7 +298,6 @@ fn grammar_cost_model_forwards_all_weight_dimensions() {
     assert_eq!(model.weights.call_overhead, 12.5);
     assert_eq!(model.weights.inline_body_size_penalty, 11.5);
     assert_eq!(model.weights.tape_push, 10.5);
-    assert_eq!(model.weights.slab_alloc, 9.5);
     assert_eq!(model.weights.dispatch_branch, 8.5);
     assert_eq!(model.weights.dispatch_table, 7.5);
     assert_eq!(model.weights.prettify_emission, 6.5);
@@ -555,70 +553,6 @@ fn inline_body_size_penalty_affects_per_rule_decision() {
 
 // ── Tape + materialization cost dimensions (AG.5 wired) ─────────────────────
 
-/// `tape_push` drives the Tape-tier cost in `build_tier_domain`. A
-/// `TransparentElide` rule's tier domain is
-/// `{Tape(tape_push), Lazy(...), Direct(0.0)}`.
-///
-/// Under default weights (`tape_push = 1.0`), Direct(0.0) is
-/// cheapest and wins. When `tape_push = 0.0`, Tape(0.0) ties
-/// with Direct(0.0) and the first-in-domain tie-break picks
-/// Tape. This proves the dimension is live: the CSP's tier
-/// decision changes when `tape_push` changes.
-#[test]
-fn tape_push_affects_materialization_classification() {
-    use bbnf_ir::passes::materialization::EmissionTier;
-    use bbnf_ir::passes::solve_grammar_components;
-
-    // Epsilon body → TransparentElide → full tier domain.
-    let strings = vec!["rule".to_string()];
-    let body = IrNode::Epsilon;
-
-    // Default weights: tape_push = 1.0, cross_module_coercion = 1.5.
-    // Tape(1.0), Lazy(1.25), Direct(0.0) → Direct wins.
-    let mut ir_default = empty_ir();
-    ir_default.strings = strings.clone();
-    ir_default.rules = vec![rule(0, 0, body.clone())];
-    bbnf_ir::dag::ensure_dag(&mut ir_default);
-    bbnf_ir::passes::classify_materialization(&mut ir_default);
-    let (_d, _m, tiers_default) = solve_grammar_components(&ir_default);
-    let default_tier = tiers_default.get(&0).copied().unwrap_or(EmissionTier::Tape);
-
-    // Patched: tape_push = 0.0, cross_module_coercion = 0.0.
-    // Tape(0.0), Lazy(0.0), Direct(0.0) — all tie, first wins → Tape.
-    let mut cfg = CostConfig::default();
-    cfg.egraph.weights.tape_push = 0.0;
-    cfg.egraph.weights.cross_module_coercion = 0.0;
-    let mut ir_patched = empty_ir();
-    ir_patched.strings = strings;
-    ir_patched.cost_config = cfg;
-    ir_patched.rules = vec![rule(0, 0, body)];
-    bbnf_ir::dag::ensure_dag(&mut ir_patched);
-    bbnf_ir::passes::classify_materialization(&mut ir_patched);
-    let (_d2, _m2, tiers_patched) = solve_grammar_components(&ir_patched);
-    let patched_tier = tiers_patched.get(&0).copied().unwrap_or(EmissionTier::Tape);
-
-    // Default picks Direct (cheapest at cost 0.0); patched with
-    // zeroed weights ties all at 0.0, first-in-domain Tape wins.
-    assert_eq!(default_tier, EmissionTier::Direct,
-        "default tape_push = 1.0 → Direct cheapest");
-    assert_eq!(patched_tier, EmissionTier::Tape,
-        "tape_push = 0 → all tie, Tape wins by tie-break");
-    assert_ne!(default_tier, patched_tier,
-        "tape_push perturbation must change the tier decision");
-}
-
-/// `slab_alloc` is the legacy slab-emitter allocation cost. It's
-/// retained in `CostWeights` so the VM and HIR tiers that still use
-/// slab allocation share the same weight, but it has no consumer
-/// in the CSP strategy or materialization pipeline yet.
-#[test]
-#[ignore = "slab_alloc has no bbnf-ir consumer. VM and slab emitter \
-            paths use hardcoded allocation costs, not \
-            CostWeights::slab_alloc."]
-fn slab_alloc_affects_vm_legacy_path() {
-    unreachable!("slab_alloc consumer migration required before this test can run");
-}
-
 /// `prettify_emission` is the per-node cost the CSP strategy solver
 /// should pay for `@pretty`-pinned subtrees. The prettify pin is
 /// currently structural (single-value MustTape domain clamp), not a
@@ -630,55 +564,6 @@ fn slab_alloc_affects_vm_legacy_path() {
             Per-subtree scaling needs new pipeline infrastructure."]
 fn prettify_emission_scales_with_pretty_subtree_size() {
     unreachable!("prettify_emission consumer migration required before this test can run");
-}
-
-/// `cross_module_coercion` feeds into the Lazy-tier cost in
-/// `build_tier_domain` (via the formula
-/// `tape_push * 0.5 + cross_module_coercion * 0.5`). A
-/// `TransparentElide` rule's Lazy cost is sensitive to the
-/// coercion weight. Under default weights Direct already wins;
-/// zeroing the weights creates a tie where Tape (first in domain)
-/// wins instead, proving the dimension is live.
-#[test]
-fn cross_module_coercion_scales_with_import_boundary_crossings() {
-    use bbnf_ir::passes::materialization::EmissionTier;
-    use bbnf_ir::passes::solve_grammar_components;
-
-    // Epsilon body → TransparentElide → full tier domain.
-    let strings = vec!["rule".to_string()];
-    let body = IrNode::Epsilon;
-
-    // Default: tape_push = 1.0, cross_module_coercion = 1.5.
-    // Tape(1.0), Lazy(1.25), Direct(0.0) → Direct wins.
-    let mut ir_a = empty_ir();
-    ir_a.strings = strings.clone();
-    ir_a.rules = vec![rule(0, 0, body.clone())];
-    bbnf_ir::dag::ensure_dag(&mut ir_a);
-    bbnf_ir::passes::classify_materialization(&mut ir_a);
-    let (_d, _m, tiers_a) = solve_grammar_components(&ir_a);
-    let tier_a = tiers_a.get(&0).copied().unwrap_or(EmissionTier::Tape);
-
-    // Patched: cross_module_coercion = 0.0, tape_push = 0.0.
-    // Tape(0), Lazy(0), Direct(0) — all tie, Tape (first) wins.
-    let mut cfg = CostConfig::default();
-    cfg.egraph.weights.tape_push = 0.0;
-    cfg.egraph.weights.cross_module_coercion = 0.0;
-    let mut ir_b = empty_ir();
-    ir_b.strings = strings;
-    ir_b.cost_config = cfg;
-    ir_b.rules = vec![rule(0, 0, body)];
-    bbnf_ir::dag::ensure_dag(&mut ir_b);
-    bbnf_ir::passes::classify_materialization(&mut ir_b);
-    let (_d2, _m2, tiers_b) = solve_grammar_components(&ir_b);
-    let tier_b = tiers_b.get(&0).copied().unwrap_or(EmissionTier::Tape);
-
-    // The perturbation must change the tier decision.
-    assert_eq!(tier_a, EmissionTier::Direct,
-        "default weights → Direct (cheapest at 0.0)");
-    assert_eq!(tier_b, EmissionTier::Tape,
-        "zeroed weights → all tie, Tape by domain ordering");
-    assert_ne!(tier_a, tier_b,
-        "cross_module_coercion perturbation must change the tier decision");
 }
 
 // ── Sanity: materialization gate did not introduce a private knob ────────────
@@ -766,11 +651,9 @@ fn patched_weights_all_dimensions() -> CostWeights {
         call_overhead: 12.5,
         inline_body_size_penalty: 11.5,
         tape_push: 10.5,
-        slab_alloc: 9.5,
         dispatch_branch: 8.5,
         dispatch_table: 7.5,
         prettify_emission: 6.5,
         cross_module_coercion: 5.5,
-        emission_tier_bonus: 4.5,
     }
 }

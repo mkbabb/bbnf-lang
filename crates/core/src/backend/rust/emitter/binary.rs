@@ -11,7 +11,6 @@
 //! accepts either.
 
 use bbnf_ir::RuleId;
-use bbnf_ir::passes::EmissionTier;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
@@ -22,33 +21,12 @@ use super::{RustEmitCtx, RustEmitter};
 impl RustEmitter {
     pub(super) fn emit_call_impl(
         &mut self,
-        rule_id: RuleId,
+        _rule_id: RuleId,
         rule_name: &str,
         _alloc: ValuePlacement,
-        ctx: &mut RustEmitCtx,
+        _ctx: &mut RustEmitCtx,
     ) -> TokenStream {
-        let ir = ctx.ir_ctx().ir;
-        let target_tier = ir
-            .emission_tier
-            .get(&rule_id)
-            .copied()
-            .unwrap_or(EmissionTier::Tape);
-
-        // Direct-to-Direct call: skip the tape entirely.
-        // The caller and callee both operate tape-free.
-        if target_tier == EmissionTier::Direct {
-            let caller_tier = ctx
-                .current_rule_id
-                .and_then(|id| ir.emission_tier.get(&id).copied())
-                .unwrap_or(EmissionTier::Tape);
-
-            if caller_tier == EmissionTier::Direct {
-                let direct_ident = format_ident!("__{}_direct", rule_name);
-                return quote! { Self::#direct_ident(state) };
-            }
-        }
-
-        // Default: tape call. The rule function is
+        // Tape call. The rule function is
         // `__rule(state, tape) -> Option<TapeOffset>`; we discard
         // the returned offset because the rule already pushed its
         // own record into the parent's children run via

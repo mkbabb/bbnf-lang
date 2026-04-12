@@ -58,13 +58,12 @@ pub struct CostWeights {
     // ── Call / inline decision weights (Tranche AF.2) ──────────────
     //
     // These knobs drive the backend driver's inline-vs-call decision
-    // and the AF.3–AF.5 follow-ups (cross-rule CSP, per-rule
-    // `EmissionTier` decoder, Tier B emitter). Tranche Z.6 already
-    // consolidated the CSP strategy solver's `dispatch_bonus` read
-    // into the shared `CostWeights`; AF.2 extends the struct with
-    // the remaining call / inline / dispatch / tape-push / prettify
-    // / cross-module dimensions so every cost computation in the
-    // compiler reads from a single source of truth.
+    // and the cross-rule CSP. Tranche Z.6 consolidated the CSP
+    // strategy solver's `dispatch_bonus` read into the shared
+    // `CostWeights`; AF.2 extends the struct with the remaining
+    // call / inline / dispatch / tape-push / prettify / cross-module
+    // dimensions so every cost computation in the compiler reads
+    // from a single source of truth.
 
     /// Fixed cost of a rule-function call. Applied to every
     /// `CallStrategy::DirectCall` site; does not scale with body
@@ -83,12 +82,6 @@ pub struct CostWeights {
     /// (`MustTape` / `TapeSpanOnly`); elided for `TransparentElide`
     /// nodes. Drives the Tier B vs Tier A decision in AF.3–AF.5.
     pub tape_push: f64,
-
-    /// Cost of a `BumpSlab` allocation — a typed scratch allocation
-    /// used by the legacy slab emitter path. Mostly zero under
-    /// tape-first emission; retained as a dimension so the HIR and
-    /// VM tiers that still use slab allocation can share the weight.
-    pub slab_alloc: f64,
 
     /// Per-arm cost of a dispatch-branch (byte-match → jump). The
     /// CSP strategy solver compares `N * dispatch_branch` against
@@ -114,13 +107,6 @@ pub struct CostWeights {
     /// a new one.
     pub cross_module_coercion: f64,
 
-    /// Bonus applied to e-nodes whose body shape enables Direct
-    /// emission (Tier B) — leaves (Literal, Regex, Epsilon), non-
-    /// closure Maps, short Seqs, and Skip with a leaf kept side.
-    /// Negative values reward Direct-eligible forms so the
-    /// extractor prefers them over equivalent but harder-to-emit
-    /// alternatives.
-    pub emission_tier_bonus: f64,
 }
 
 impl Default for CostWeights {
@@ -137,12 +123,10 @@ impl Default for CostWeights {
             call_overhead: 4.0,
             inline_body_size_penalty: 0.5,
             tape_push: 1.0,
-            slab_alloc: 1.0,
             dispatch_branch: 0.5,
             dispatch_table: 3.0,
             prettify_emission: 2.0,
             cross_module_coercion: 1.5,
-            emission_tier_bonus: -1.5,
         }
     }
 }

@@ -29,7 +29,6 @@ mod value;
 
 use std::fmt;
 
-use parse_that::BumpSlab;
 use rustc_hash::FxHashMap;
 
 use super::bytecode::{BytecodeProgram, Op};
@@ -73,7 +72,6 @@ pub struct Interpreter<'prog> {
     pub(super) program: &'prog BytecodeProgram,
     pub(super) input: &'prog str,
     pub(super) input_bytes: &'prog [u8],
-    pub(super) slab: BumpSlab,
 
     pub(super) pc: u32,
     pub(super) offset: u32,
@@ -118,7 +116,6 @@ impl<'prog> Interpreter<'prog> {
             program,
             input,
             input_bytes: input.as_bytes(),
-            slab: BumpSlab::with_capacity(input.len() / 16 * std::mem::size_of::<Value>()),
             pc: 0,
             offset: 0,
             is_error: false,
@@ -312,7 +309,6 @@ impl<'prog> Interpreter<'prog> {
             value,
             offset: self.offset,
             diagnostics: std::mem::take(&mut self.diagnostics),
-            _slab: std::mem::take(&mut self.slab),
         }
     }
 
@@ -322,7 +318,7 @@ impl<'prog> Interpreter<'prog> {
     #[inline(always)]
     pub(super) fn collect_values_from(&mut self, start: usize) -> ValueSlice {
         let collected =
-            ValueSlice::from_slice(self.slab.alloc_slice_clone(&self.values[start..]));
+            ValueSlice::from_vec(self.values[start..].to_vec());
         self.values.truncate(start);
         collected
     }

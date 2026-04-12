@@ -2,26 +2,18 @@
 //!
 //! Tests the `solve_grammar_components` entry point, which replaces the
 //! per-rule strategy solve loop with a component-partitioned solve
-//! over the rule call graph. Three cross-rule constraints are exercised:
+//! over the rule call graph. Cross-rule constraints exercised:
 //!
 //! - **`EnginePropagation`** — regex engine choice is global per
 //!   component, not per-rule. A component containing one DFA-eligible
 //!   rule promotes the whole component if cost weights justify it.
-//! - **`ParentCompatibility`** — a parent rule's tier is constrained
-//!   by its children's tiers. A Tape parent calling a Direct child
-//!   pays a coercion cost; a Direct parent calling a Tape child is
-//!   impossible without a tier upgrade (forces the parent to Tape).
-//! - **`TierFollowsMaterialization`** — a rule's emission tier is
-//!   bounded above by its materialization class. `MustTape` → Tape;
-//!   `TapeSpanOnly` → Tape or Lazy; `TransparentElide` → Tape, Lazy,
-//!   or Direct.
 
 use std::collections::{HashMap, HashSet};
 
 use bbnf_ir::passes::materialization::{
-    EmissionTier, MaterializationClass, classify_materialization,
+    MaterializationClass, classify_materialization,
 };
-use bbnf_ir::passes::{decode_emission_tier, solve_grammar_components};
+use bbnf_ir::passes::solve_grammar_components;
 use bbnf_ir::{
     AltBranch, CostConfig, GrammarIR, IrNode, IrRule, PrettyHints, RuleDirectives, RuleMeta,
     StringId, TypeDescInterner,
@@ -59,7 +51,6 @@ fn make_ir(rules: Vec<IrRule>, strings: Vec<String>) -> GrammarIR {
         cost_config: CostConfig::default(),
         type_desc_interner: TypeDescInterner::new(),
         materialization: HashMap::new(),
-        emission_tier: HashMap::new(),
     };
     bbnf_ir::dag::ensure_dag(&mut ir);
     classify_materialization(&mut ir);
@@ -416,7 +407,7 @@ fn engine_propagation_unifies_component_regex_engines() {
     // AG.5 — exercise the live solver. The `EnginePropagation`
     // constraint unifies the regex engine across the component;
     // the per-StringId engine decisions must match.
-    let (decisions, _mat, _tiers) = solve_grammar_components(&ir);
+    let (decisions, _mat) = solve_grammar_components(&ir);
     let dag = ir.dag.as_ref().unwrap();
     let engine_decisions =
         bbnf_ir::passes::extract_regex_engine_decisions(&ir, &decisions);
@@ -433,158 +424,7 @@ fn engine_propagation_unifies_component_regex_engines() {
     let _ = dag;
 }
 
-// ── 5. ParentCompatibility — Tape child forces Tape parent ──────────
-
-/// A parent rule calling a `@pretty`-pinned child (which is always
-/// Tape via `TierFollowsMaterialization`) cannot emit at a Direct
-/// tier — the child hands back a tape record, and Direct expects a
-/// typed value. The `ParentCompatibility` constraint widens the
-/// parent's tier to Tape.
-#[test]
-fn parent_compatibility_forbids_direct_parent_tape_child() {
-    let strings: Vec<String> = vec!["parent", "child", "hi"]
-        .into_iter()
-        .map(String::from)
-        .collect();
-
-    // child is @pretty-pinned — materialization stays MustTape.
-    let mut child_meta = RuleMeta::default();
-    child_meta.directives = RuleDirectives {
-        pretty: Some(PrettyHints::default()),
-        recover: None,
-        token: false,
-        debug: false,
-    };
-    let rules = vec![
-        // parent = child
-        rule(0, 0, IrNode::Ref(1)),
-        // child = "hi"  (pretty-pinned)
-        rule_with_meta(1, 1, IrNode::Literal(2), child_meta),
-    ];
-    let mut ir = make_ir(rules, strings);
-    // Re-classify so @pretty is seen.
-    ir.materialization.clear();
-    classify_materialization(&mut ir);
-
-    // Pre-condition: child is pinned to MustTape.
-    let dag = ir.dag.as_ref().unwrap();
-    let child_body = dag.node_for(&ir.rules[1].body).unwrap();
-    assert_eq!(
-        ir.materialization[&child_body],
-        MaterializationClass::MustTape,
-        "@pretty-pinned child must classify as MustTape"
-    );
-
-    // AG.5 — exercise the live CSP + tier decode.
-    let (_d, _m, tier_refined) = solve_grammar_components(&ir);
-    for (rule_id, tier) in &tier_refined {
-        ir.emission_tier.insert(*rule_id, *tier);
-    }
-    decode_emission_tier(&mut ir);
-
-    // The parent tier must be Tape because its only child is
-    // Tape-pinned. `ParentCompatibility` enforces
-    // `parent.rank() >= child.rank()`, and since the child is
-    // Tape (rank 2) the parent must be at least Tape. The only
-    // tier with `rank >= 2` is Tape itself.
-    let parent_tier = ir.emission_tier.get(&0).copied().unwrap_or(EmissionTier::Tape);
-    assert_eq!(
-        parent_tier,
-        EmissionTier::Tape,
-        "parent of Tape child cannot be Direct"
-    );
-}
-
-// ── 6. TierFollowsMaterialization — upper-bound gate ──────────────
-
-/// Three rules covering the three materialization classes:
-///
-/// - Alt body → `MustTape` → tier must be `Tape`
-/// - Literal body → `TapeSpanOnly` → tier may be `Tape` or `Lazy`
-/// - Epsilon body → `TransparentElide` → tier may be `Tape`, `Lazy`,
-///   or `Direct`
-///
-/// The `TierFollowsMaterialization` constraint pins this upper-bound
-/// relationship so the CSP solver cannot assign a cheaper tier than
-/// the rule's classification permits.
-#[test]
-fn tier_follows_materialization_bounds_directly() {
-    let strings: Vec<String> = vec![
-        "entry",
-        "must_tape",
-        "tape_span_only",
-        "transparent_elide",
-        "a",
-        "b",
-        "hi",
-    ]
-    .into_iter()
-    .map(String::from)
-    .collect();
-    let rules = vec![
-        // 0: entry — isolates the test from the AF.0 entry pin.
-        rule(0, 0, IrNode::Ref(1)),
-        // 1: must_tape = "a" | "b"  (Alt → MustTape)
-        rule(1, 1, alt(vec![IrNode::Literal(4), IrNode::Literal(5)])),
-        // 2: tape_span_only = "hi"  (Literal → TapeSpanOnly)
-        rule(2, 2, IrNode::Literal(6)),
-        // 3: transparent_elide = ε  (Epsilon → TransparentElide)
-        rule(3, 3, IrNode::Epsilon),
-    ];
-    let mut ir = make_ir(rules, strings);
-    ir.entry = 0;
-    // Re-classify so the entry rule's MustTape pin is respected.
-    ir.materialization.clear();
-    classify_materialization(&mut ir);
-
-    let dag = ir.dag.as_ref().unwrap();
-    let mt_body = dag.node_for(&ir.rules[1].body).unwrap();
-    let tso_body = dag.node_for(&ir.rules[2].body).unwrap();
-    let te_body = dag.node_for(&ir.rules[3].body).unwrap();
-
-    // Materialization contract: each rule's body class matches the
-    // tier upper-bound shape.
-    assert_eq!(
-        ir.materialization[&mt_body],
-        MaterializationClass::MustTape
-    );
-    assert_eq!(
-        ir.materialization[&tso_body],
-        MaterializationClass::TapeSpanOnly
-    );
-    assert_eq!(
-        ir.materialization[&te_body],
-        MaterializationClass::TransparentElide
-    );
-
-    // AG.5 — exercise the live CSP + tier decode.
-    let (_d, _m, tier_refined) = solve_grammar_components(&ir);
-    for (rule_id, tier) in &tier_refined {
-        ir.emission_tier.insert(*rule_id, *tier);
-    }
-    decode_emission_tier(&mut ir);
-
-    let tier_mt = ir.emission_tier.get(&1).copied().unwrap_or(EmissionTier::Tape);
-    let tier_tso = ir.emission_tier.get(&2).copied().unwrap_or(EmissionTier::Tape);
-    let tier_te = ir.emission_tier.get(&3).copied().unwrap_or(EmissionTier::Tape);
-
-    assert_eq!(tier_mt, EmissionTier::Tape, "MustTape -> Tape only");
-    assert!(
-        matches!(tier_tso, EmissionTier::Tape | EmissionTier::Lazy),
-        "TapeSpanOnly -> Tape or Lazy, got {:?}",
-        tier_tso,
-    );
-    assert!(
-        matches!(
-            tier_te,
-            EmissionTier::Tape | EmissionTier::Lazy | EmissionTier::Direct,
-        ),
-        "TransparentElide -> any tier, got {:?}",
-        tier_te,
-    );
-}
-
-// ── 7. Component solve determinism — reference_partition smoke ────
+// ── 5. Component solve determinism — reference_partition smoke ────
 
 /// Baseline sanity: the `reference_partition` helper is deterministic
 /// over the same IR. Two calls return the same component shape

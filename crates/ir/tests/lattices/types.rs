@@ -27,7 +27,7 @@ fn make_ir(rules: Vec<IrRule>) -> GrammarIR {
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
-        emission_tier: ::std::collections::HashMap::new(),    }
+    }
 }
 
 fn rule(id: RuleId, body: IrNode) -> IrRule {
@@ -277,7 +277,7 @@ fn map_enum_wrap() {
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
-        emission_tier: ::std::collections::HashMap::new(),    };
+    };
     bbnf_ir::dag::ensure_dag(&mut ir);
     project_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::Enum);
@@ -314,7 +314,7 @@ fn map_box_wrap() {
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
-        emission_tier: ::std::collections::HashMap::new(),    };
+    };
     bbnf_ir::dag::ensure_dag(&mut ir);
     project_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::BoxedEnum);

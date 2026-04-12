@@ -19,14 +19,14 @@
 //! constructs a [`::bbnf::runtime::Parsed`] from a finished tape.
 
 use bbnf_ir::{GrammarIR, IrNode, IrRule};
-use bbnf_ir::passes::{EmissionTier, MaterializationClass};
+use bbnf_ir::passes::MaterializationClass;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use crate::backend::driver::analysis::BackendAnalysis;
 
 use super::tape_prelude::{
-    emit_direct_inner_signature, emit_direct_shim_signature, emit_must_tape_epilogue,
+    emit_must_tape_epilogue,
     emit_must_tape_prelude, emit_rule_signature, emit_tape_span_only_epilogue,
     emit_tape_span_only_prelude,
 };
@@ -105,19 +105,6 @@ impl RustEmitter {
             return quote! {};
         }
 
-        let tier = ir
-            .emission_tier
-            .get(&rule.id)
-            .copied()
-            .unwrap_or(EmissionTier::Tape);
-
-        // Direct-tier rules emit a three-function triad:
-        // inner (shared parse body) + tape wrapper + direct shim.
-        if tier == EmissionTier::Direct {
-            return self.emit_direct_tier_rule(&name, rule, body, sync_body, ir, ctx, class);
-        }
-
-        // Tape / Lazy — existing behaviour.
         self.emit_tape_tier_rule(&name, rule, body, sync_body, ir, ctx, class)
     }
 
@@ -204,77 +191,6 @@ impl RustEmitter {
             }
         });
 
-        Self::maybe_emit_recover_fn(&mut methods, name, sync_body, ctx);
-        quote! { #(#methods)* }
-    }
-
-    /// Emit a Direct-tier rule: `_inner` + tape wrapper + `_direct`.
-    ///
-    /// The inner function owns the parse body (state-only, no tape).
-    /// The tape wrapper calls inner + pushes the tape record. The
-    /// direct shim calls inner with no tape side-effects — used when
-    /// a Direct-tier caller invokes a Direct-tier callee.
-    fn emit_direct_tier_rule(
-        &mut self,
-        name: &str,
-        rule: &IrRule,
-        body: TokenStream,
-        sync_body: Option<TokenStream>,
-        _ir: &GrammarIR,
-        ctx: &mut RustEmitCtx,
-        class: MaterializationClass,
-    ) -> TokenStream {
-        let rule_idx_u8 = Self::variant_idx(rule);
-
-        let inner_sig = emit_direct_inner_signature(name);
-        let tape_sig = emit_rule_signature(name);
-        let direct_sig = emit_direct_shim_signature(name);
-        let inner_ident = format_ident!("__{}_inner", name);
-
-        // 1. Inner: the raw parse body, state-only.
-        let inner_fn = quote! {
-            #inner_sig {
-                match ({ #body }) {
-                    Some(_) => Some(()),
-                    None => None,
-                }
-            }
-        };
-
-        // 2. Tape wrapper: calls inner, then tape prelude/epilogue.
-        let (prelude, epilogue) = match class {
-            MaterializationClass::MustTape => (
-                emit_must_tape_prelude(),
-                emit_must_tape_epilogue(rule_idx_u8),
-            ),
-            MaterializationClass::TapeSpanOnly => (
-                emit_tape_span_only_prelude(),
-                emit_tape_span_only_epilogue(rule_idx_u8),
-            ),
-            MaterializationClass::TransparentElide => unreachable!(),
-        };
-
-        let tape_fn = quote! {
-            #tape_sig {
-                'rule_blk: {
-                    #prelude
-                    match Self::#inner_ident(state) {
-                        Some(()) => (),
-                        None => break 'rule_blk None,
-                    }
-                    #epilogue
-                }
-            }
-        };
-
-        // 3. Direct shim: calls inner, no tape.
-        let direct_fn = quote! {
-            #direct_sig {
-                Self::#inner_ident(state)
-            }
-        };
-
-        let mut methods = vec![inner_fn, tape_fn, direct_fn];
         Self::maybe_emit_recover_fn(&mut methods, name, sync_body, ctx);
         quote! { #(#methods)* }
     }

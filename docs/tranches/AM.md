@@ -93,6 +93,24 @@ inline_body_size_penalty, tape_push. Optimize geometric mean
 across json_citm + json_twitter + css_tailwind. No individual
 bench regresses >1%.
 
+## Post-AM.3 results (per-branch tape surgery)
+
+| File      | Pre-AM | Post-AM.3 | Delta  | sonic-rs |
+|-----------|--------|-----------|--------|----------|
+| canada    | 1,453  | 1,704     | +17%   | 1,503    |
+| citm      | 2,001  | 2,182     | +9%    | 3,045    |
+| data      | 1,491  | 1,644     | +10%   | 2,401    |
+| twitter   | 1,661  | 1,733     | +4%    | 2,693    |
+
+canada now BEATS sonic-rs by +13%. AM.3 contributed +4-17% across
+all datasets by emitting `push_leaf` for leaf Alt branches instead
+of unconditional `push_compound`.
+
+AM.4 (SIMD escape-parity string scanner via `portable_simd`) was
+implemented but shows ~neutral impact: memchr2 was already
+SIMD-accelerated and the iterative run-enumeration approach does
+not achieve true O(1) carry-less multiply per chunk.
+
 ## Post-AM targets (MB/s, cold)
 
 | File      | Pre-AM | Target | sonic-rs |

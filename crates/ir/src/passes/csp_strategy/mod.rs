@@ -381,14 +381,20 @@ impl CostDomain for StrategyDomain {
 /// cheaper (or pin-satisfying) assignment.
 pub fn solve_grammar_components(
     ir: &GrammarIR,
-) -> (RecognizerDecisionMap, HashMap<NodeId, MaterializationClass>) {
+) -> (
+    RecognizerDecisionMap,
+    HashMap<NodeId, MaterializationClass>,
+    HashMap<RuleId, crate::passes::materialization::EmissionTier>,
+) {
     let dag = match ir.dag.as_ref() {
         Some(d) => d,
-        None => return (HashMap::new(), HashMap::new()),
+        None => return (HashMap::new(), HashMap::new(), HashMap::new()),
     };
 
     let mut decisions: RecognizerDecisionMap = HashMap::new();
     let mut mat_out: HashMap<NodeId, MaterializationClass> = HashMap::new();
+    let mut tier_out: HashMap<RuleId, crate::passes::materialization::EmissionTier> =
+        HashMap::new();
     let cfg = &ir.cost_config;
     let debug_all = ir.debug_all;
 
@@ -426,10 +432,11 @@ pub fn solve_grammar_components(
             debug_all,
             &mut decisions,
             &mut mat_out,
+            &mut tier_out,
         );
     }
 
-    (decisions, mat_out)
+    (decisions, mat_out, tier_out)
 }
 
 /// Deprecated alias for [`solve_grammar_components`]. Preserved so
@@ -443,7 +450,8 @@ pub fn solve_grammar_components(
 pub fn solve_strategy_and_materialization(
     ir: &GrammarIR,
 ) -> (RecognizerDecisionMap, HashMap<NodeId, MaterializationClass>) {
-    solve_grammar_components(ir)
+    let (decisions, mat, _tiers) = solve_grammar_components(ir);
+    (decisions, mat)
 }
 
 /// Deprecated alias preserved for external callers from the Tranche
@@ -480,6 +488,7 @@ fn solve_component(
     debug_all: bool,
     decisions: &mut RecognizerDecisionMap,
     mat_out: &mut HashMap<NodeId, MaterializationClass>,
+    tier_out: &mut HashMap<RuleId, crate::passes::materialization::EmissionTier>,
 ) {
     // ── Phase 1: collect decision sites + build CSP variables ──────────────
     //
@@ -497,13 +506,22 @@ fn solve_component(
     // variables in this component" short-circuit.
     let mut contributing_rules: Vec<RuleId> = Vec::with_capacity(member_rules.len());
 
-    // AF.4 stub — per-rule tier variables stay empty until AF.5's
-    // `decode_emission_tier` pass owns the construction + decode.
-    // The map is kept here so the cross-rule constraint installer
-    // signature stays AF.5-ready; the installers gate on the
-    // empty lookup and become no-ops, preserving the AF.2
-    // cost_weights_unified decision invariants.
-    let tier_vars: HashMap<RuleId, VarId> = HashMap::new();
+    // AG.5 — per-rule tier variables. One variable per rule in
+    // the component with a domain clamped to the rule's
+    // materialization class via `build_tier_domain`:
+    //
+    //   MustTape       → {Tape}                 (singleton)
+    //   TapeSpanOnly   → {Tape, Lazy}
+    //   TransparentElide → {Tape, Lazy, Direct} (full lattice)
+    //
+    // Singleton domains are degenerate cost contributions — the
+    // solver cannot choose anything else, so the tier-var cost
+    // falls out of the branch-and-bound objective for pinned
+    // rules. Only `TransparentElide` rules offer the solver a
+    // real choice, and for those the Direct-vs-Tape cost gap
+    // correctly biases the solver toward the cheapest legal
+    // emission tier.
+    let mut tier_vars: HashMap<RuleId, VarId> = HashMap::new();
 
     // AF.3 — per-(rule, regex-node) engine variables, the lookup
     // table the `EnginePropagation` constraint consumes. Built by
@@ -549,6 +567,20 @@ fn solve_component(
             let domain = build_materialization_domain(rule, initial, cfg, debug_all);
             let var = csp.add_variable(domain);
             sites.push((var, Site::Materialization(body_id)));
+
+            // AG.5 — per-rule emission tier variable. Domain
+            // clamped to the materialization class via
+            // `build_tier_domain`; pinned rules degenerate to a
+            // `{Tape}` singleton so the tier cost drops out of
+            // the objective. The returned VarId is recorded in
+            // both `tier_vars` (for the cross-rule constraint
+            // installers in `constraints::*`) and `sites` (for
+            // the post-solve decode loop that writes
+            // `tier_out[rule_id]`).
+            let tier_domain = build_tier_domain(rule, initial, cfg, debug_all);
+            let tier_var = csp.add_variable(tier_domain);
+            sites.push((tier_var, Site::Tier(rid)));
+            tier_vars.insert(rid, tier_var);
         }
 
         if sites.len() > sites_before {
@@ -603,7 +635,7 @@ fn solve_component(
     // uses csp_solver::Csp") holds for every code path; we just elide
     // the search work that would not change the answer.
     if constraints_added == 0 {
-        decode_min_cost_per_variable(&csp, &sites, decisions, mat_out);
+        decode_min_cost_per_variable(&csp, &sites, decisions, mat_out, tier_out);
         return;
     }
 
@@ -636,7 +668,7 @@ fn solve_component(
                 contributing_rules.len(),
             );
         }
-        decode_min_cost_per_variable(&csp, &sites, decisions, mat_out);
+        decode_min_cost_per_variable(&csp, &sites, decisions, mat_out, tier_out);
         return;
     }
 
@@ -656,6 +688,9 @@ fn solve_component(
                     }
                     (Site::Materialization(n), StrategyValue::Mat(c)) => {
                         mat_out.insert(*n, c);
+                    }
+                    (Site::Tier(rid), StrategyValue::Tier(t)) => {
+                        tier_out.insert(*rid, t);
                     }
                     _ => {}
                 }
@@ -707,28 +742,69 @@ fn install_cross_rule_constraints(
     count
 }
 
-/// Build a per-rule tier variable domain.
+/// Build a per-rule tier variable domain, clamped against the
+/// rule's materialization class at construction time.
 ///
-/// Initial domain is the full lattice `{Tape, Lazy, Direct}`; the
-/// `TierFollowsMaterialization` constraint clamps it later
-/// against the rule's materialization class. Costs are derived
-/// from `CostWeights`: `Tape` pays per-emission tape push,
-/// `Lazy` pays the view-layer dispatch overhead, and `Direct`
-/// gets the cheapest cost (no tape record at all). The actual
-/// numbers come from the shared `egraph::CostWeights`, so
-/// extreme weight patches in the AF.2 contract test propagate
-/// through to the tier choice.
-fn build_tier_domain(cfg: &CostConfig) -> StrategyDomain {
+/// The clamp mirrors `TierFollowsMaterialization` from
+/// `constraints::tier`: pinned rules (entry, prettify, debug,
+/// `preserve_identity`, `debug_all`) and `MustTape` bodies
+/// collapse to the singleton `{Tape}`; `TapeSpanOnly` permits
+/// `{Tape, Lazy}`; `TransparentElide` is the only class that
+/// offers the full `{Tape, Lazy, Direct}` lattice. Pre-clamping
+/// at construction time hands the solver the smallest possible
+/// domain without waiting for AC-3 to discover the restriction
+/// — and more importantly, a pinned rule's singleton domain is
+/// a **degenerate cost contribution**, so the tier var cost
+/// falls out of the branch-and-bound objective for every rule
+/// the solver can't actually retier.
+///
+/// Costs come from `CostWeights`: `Tape` pays
+/// `tape_push`, `Lazy` pays half the tape push plus half the
+/// cross-module coercion, and `Direct` gets 0.0 (cheapest —
+/// no tape record at all). Because pinned rules have only
+/// `{Tape}` in the domain, the `Tape` cost cannot compare
+/// against a cheaper alternative, so `tape_push` perturbations
+/// do not move pinned rules; they only affect `TransparentElide`
+/// rules where the `Direct` option is in the domain and can
+/// undercut `Tape`.
+fn build_tier_domain(
+    rule: &crate::IrRule,
+    initial: MaterializationClass,
+    cfg: &CostConfig,
+    debug_all: bool,
+) -> StrategyDomain {
     use crate::passes::materialization::EmissionTier;
     let w = &cfg.egraph.weights;
-    StrategyDomain::new(vec![
-        (StrategyValue::Tier(EmissionTier::Tape), w.tape_push),
-        (
-            StrategyValue::Tier(EmissionTier::Lazy),
-            w.tape_push * 0.5 + w.cross_module_coercion * 0.5,
-        ),
-        (StrategyValue::Tier(EmissionTier::Direct), 0.0),
-    ])
+
+    // Pin discipline mirrors `build_materialization_domain`:
+    // `@pretty`, `@debug`, `preserve_identity`, and the global
+    // `debug_all` flag force the rule to Tape regardless of its
+    // classified shape. The singleton domain turns the tier var
+    // into a degenerate cost contribution — the solver cannot
+    // pick anything else.
+    let pinned = rule.meta.preserve_identity
+        || rule.meta.directives.pretty.is_some()
+        || rule.meta.directives.debug
+        || debug_all;
+
+    let tape_val = (StrategyValue::Tier(EmissionTier::Tape), w.tape_push);
+    let lazy_val = (
+        StrategyValue::Tier(EmissionTier::Lazy),
+        w.tape_push * 0.5 + w.cross_module_coercion * 0.5,
+    );
+    let direct_val = (StrategyValue::Tier(EmissionTier::Direct), 0.0);
+
+    if pinned {
+        return StrategyDomain::new(vec![tape_val]);
+    }
+
+    match initial {
+        MaterializationClass::MustTape => StrategyDomain::new(vec![tape_val]),
+        MaterializationClass::TapeSpanOnly => StrategyDomain::new(vec![tape_val, lazy_val]),
+        MaterializationClass::TransparentElide => {
+            StrategyDomain::new(vec![tape_val, lazy_val, direct_val])
+        }
+    }
 }
 
 /// Per-decision-site bookkeeping: which `NodeId` this var belongs to
@@ -772,11 +848,14 @@ type ByNodeVars = FxHashMap<NodeId, NodeVarTriple>;
 ///
 /// Tranche AB.1 — also decodes `Site::Materialization` sites into
 /// the caller's `mat_out` map.
+/// Tranche AG.5 — also decodes `Site::Tier` sites into the
+/// caller's `tier_out` map.
 fn decode_min_cost_per_variable(
     csp: &Csp<StrategyDomain>,
     sites: &[(VarId, Site)],
     decisions: &mut RecognizerDecisionMap,
     mat_out: &mut HashMap<NodeId, MaterializationClass>,
+    tier_out: &mut HashMap<RuleId, crate::passes::materialization::EmissionTier>,
 ) {
     for (var_id, site) in sites {
         let domain = &csp.variables[*var_id as usize].domain;
@@ -805,6 +884,9 @@ fn decode_min_cost_per_variable(
             (Site::Materialization(n), StrategyValue::Mat(c)) => {
                 mat_out.insert(*n, c);
             }
+            (Site::Tier(rid), StrategyValue::Tier(t)) => {
+                tier_out.insert(*rid, t);
+            }
             _ => {}
         }
     }
@@ -828,8 +910,8 @@ fn collect_sites(
             .and_then(|f| f.recognizer.as_ref());
 
         match node {
-            IrNode::Alt(_, dispatch) => {
-                let domain = build_alt_domain(fact, dispatch.is_some(), cfg);
+            IrNode::Alt(branches, dispatch) => {
+                let domain = build_alt_domain(fact, dispatch.is_some(), branches.len(), cfg);
                 let var = csp.add_variable(domain);
                 sites.push((var, Site::Alt(node_id)));
                 by_node.entry(node_id).or_default().0 = Some(var);
@@ -952,23 +1034,42 @@ fn collect_engine_vars_in(
 /// Build the cost-weighted domain for an `Alt` decision variable.
 ///
 /// All architectural fallbacks (Checkpoint) stay in the domain at high
-/// cost. Feasible faster strategies (ByteDispatch, KeyDispatch,
-/// TokenDispatch, SharedHelper) are added at low cost based on the
-/// upstream recognizer fact.
+/// cost. Feasible faster strategies (ByteDispatch, KeyDispatch) are
+/// added at a cost computed from the AF.2 per-arm formula:
+///
+///     dispatch_cost = arm_count * dispatch_branch + dispatch_table
+///
+/// This replaces the pre-AG.5 flat `dispatch_bonus.abs()` placeholder
+/// with the two-component formula the cost_weights_unified contract
+/// tests depend on. Each dimension (`dispatch_branch`,
+/// `dispatch_table`) is independently perturbable, and the per-arm
+/// scaling makes the cost model correctly sensitive to alternation
+/// width — a 100-arm Alt pays proportionally more than a 3-arm Alt.
 fn build_alt_domain(
     fact: Option<&Recognizer>,
     has_byte_dispatch: bool,
+    arm_count: usize,
     cfg: &CostConfig,
 ) -> StrategyDomain {
     let mut values: Vec<(StrategyValue, f64)> = Vec::with_capacity(4);
+    let w = &cfg.egraph.weights;
 
     // Universal fallback — always legal, highest cost.
     values.push((StrategyValue::Alt(AltMode::Checkpoint), 10.0 * cfg.literal_cost));
 
+    // AG.5 — dispatch cost via the per-arm formula. Defaults:
+    // `dispatch_branch = 0.0`, `dispatch_table = 0.0`, so under
+    // default weights the dispatch cost is 0.0 — strictly cheaper
+    // than the Checkpoint fallback (10.0), preserving the existing
+    // decision. When either knob is pushed to an extreme in the
+    // AF.2 contract tests, the formula dominates the checkpoint
+    // cost and flips the decision.
+    let dispatch_cost = (arm_count as f64) * w.dispatch_branch + w.dispatch_table;
+
     if has_byte_dispatch {
         values.push((
             StrategyValue::Alt(AltMode::ByteDispatch),
-            cfg.egraph.weights.dispatch_bonus.abs(),
+            dispatch_cost,
         ));
     }
 
@@ -984,13 +1085,13 @@ fn build_alt_domain(
         {
             values.push((
                 StrategyValue::Alt(AltMode::ByteDispatch),
-                cfg.egraph.weights.dispatch_bonus.abs(),
+                dispatch_cost,
             ));
         }
         if matches!(rec.shape, RecognizerShape::KeywordPrefix { .. }) {
             values.push((
                 StrategyValue::Alt(AltMode::KeyDispatch),
-                cfg.egraph.weights.dispatch_bonus.abs(),
+                dispatch_cost,
             ));
         }
     }

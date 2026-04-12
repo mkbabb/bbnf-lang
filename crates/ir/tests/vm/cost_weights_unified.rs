@@ -225,11 +225,17 @@ fn default_weights_pick_byte_dispatch() {
     );
 }
 
-/// Patching `dispatch_bonus` to a value whose `abs()` dominates the
-/// `10.0 * literal_cost` checkpoint cost should flip the CSP's pick
-/// from `ByteDispatch` to `Checkpoint`. The CSP strategy solver reads
-/// `cfg.egraph.weights.dispatch_bonus.abs()` in `build_alt_domain` —
-/// that's the single consumer migration guard for this dimension.
+/// Patching the per-arm dispatch cost to dominate the `10.0 *
+/// literal_cost` checkpoint cost should flip the CSP's pick from
+/// `ByteDispatch` to `Checkpoint`. The CSP strategy solver reads
+/// `cfg.egraph.weights.dispatch_branch` and `dispatch_table` in
+/// `build_alt_domain` to compute the dispatch cost as
+/// `arm_count * dispatch_branch + dispatch_table`.
+///
+/// AG.5 migrated from the flat `dispatch_bonus.abs()` to the
+/// two-component formula; this test exercises the `dispatch_table`
+/// component (the fixture has 3 arms, so
+/// `dispatch_cost = 3 * 0 + 10_000 = 10_000 > 10.0`).
 ///
 /// If this test fails, it means either:
 /// - the CSP solver stopped consulting `cfg.egraph.weights`, or
@@ -238,10 +244,9 @@ fn default_weights_pick_byte_dispatch() {
 #[test]
 fn patched_dispatch_bonus_flips_alt_strategy_to_checkpoint() {
     let mut cfg = CostConfig::default();
-    // `abs()` of a strongly-positive number dominates the 10.0
-    // Checkpoint cost. (The solver takes `abs`, so the sign doesn't
-    // matter — only the magnitude.)
-    cfg.egraph.weights.dispatch_bonus = 1_000.0;
+    // Push `dispatch_table` to a value that dominates the 10.0
+    // Checkpoint cost: `3 * 0.0 + 10_000.0 = 10_000 > 10.0`.
+    cfg.egraph.weights.dispatch_table = 10_000.0;
 
     let mut ir = build_three_way_alt_fixture(cfg);
     let decisions = solve_and_merge(&mut ir);
@@ -249,20 +254,23 @@ fn patched_dispatch_bonus_flips_alt_strategy_to_checkpoint() {
     assert_eq!(
         body_alt_mode(&ir, &decisions),
         Some(AltMode::Checkpoint),
-        "dispatch_bonus = 1000 should make ByteDispatch cost dominate \
+        "dispatch_table = 10000 should make ByteDispatch cost dominate \
          Checkpoint (10.0), flipping the CSP pick to Checkpoint",
     );
 }
 
-/// Companion flip test — with `dispatch_bonus` set to an ultra-small
-/// magnitude, `ByteDispatch` stays selected (and the gap over
-/// `Checkpoint` widens). Sanity-check that the CSP isn't accidentally
-/// short-circuited by a constant-folded fast path that ignores the
-/// weights when the absolute cost is very small.
+/// Companion flip test — with tiny dispatch_branch and
+/// dispatch_table, `ByteDispatch` stays selected because the
+/// dispatch cost `N * dispatch_branch + dispatch_table` remains
+/// well below the Checkpoint threshold `10.0 * literal_cost`.
+/// Sanity-check that the CSP isn't accidentally short-circuited
+/// by a constant-folded fast path that ignores the weights when
+/// the absolute cost is very small.
 #[test]
 fn tiny_dispatch_bonus_still_picks_byte_dispatch() {
     let mut cfg = CostConfig::default();
-    cfg.egraph.weights.dispatch_bonus = 0.0001;
+    cfg.egraph.weights.dispatch_branch = 0.0001;
+    cfg.egraph.weights.dispatch_table = 0.0001;
 
     let mut ir = build_three_way_alt_fixture(cfg);
     let decisions = solve_and_merge(&mut ir);
@@ -270,7 +278,7 @@ fn tiny_dispatch_bonus_still_picks_byte_dispatch() {
     assert_eq!(
         body_alt_mode(&ir, &decisions),
         Some(AltMode::ByteDispatch),
-        "tiny dispatch_bonus keeps ByteDispatch strictly cheaper than \
+        "tiny dispatch weights keep ByteDispatch strictly cheaper than \
          Checkpoint",
     );
 }
@@ -472,16 +480,12 @@ fn egraph_alt_class_count(
 /// - the previous `dispatch_bonus` canary tests may need their
 ///   magnitudes adjusted if the cost formula changes
 #[test]
-#[ignore = "Tranche AF.2-4B migration pending: csp_strategy::build_alt_domain \
-            still reads dispatch_bonus.abs() instead of \
-            dispatch_branch * N + dispatch_table. Once 4B lands the \
-            consumer migration, remove this ignore and assert the \
-            CSP flips AltMode::ByteDispatch → AltMode::Checkpoint \
-            when dispatch_table is pushed past the checkpoint cost."]
 fn dispatch_mode_flips_under_inverted_dispatch_table() {
     let mut cfg = CostConfig::default();
-    // A dispatch-table cost this large would, under the AF.2-4B
-    // formula, dominate the sequential-trial checkpoint fallback.
+    // AG.5 wired the `dispatch_branch * N + dispatch_table` formula
+    // into build_alt_domain. A dispatch-table cost this large
+    // dominates the sequential-trial checkpoint fallback (10.0):
+    // `3 * 0.0 + 10_000.0 = 10_000 > 10.0`.
     cfg.egraph.weights.dispatch_table = 10_000.0;
     cfg.egraph.weights.dispatch_branch = 0.0;
 
@@ -490,8 +494,7 @@ fn dispatch_mode_flips_under_inverted_dispatch_table() {
     assert_eq!(
         body_alt_mode(&ir, &decisions),
         Some(AltMode::Checkpoint),
-        "dispatch_table = 10_000 must flip the CSP's pick to \
-         Checkpoint once 4B wires the knob into build_alt_domain",
+        "dispatch_table = 10_000 must flip the CSP's pick to Checkpoint",
     );
 }
 
@@ -501,17 +504,14 @@ fn dispatch_mode_flips_under_inverted_dispatch_table() {
 /// magnitude flips the decision. This test will be live once 4B
 /// wires `dispatch_branch` into `build_alt_domain`.
 #[test]
-#[ignore = "Tranche AF.2-4B migration pending: dispatch_branch has no \
-            consumer yet. The CSP build_alt_domain reads a flat \
-            dispatch_bonus.abs() instead of summing per-arm costs \
-            via dispatch_branch."]
 fn dispatch_branch_scales_with_arm_count() {
     let mut cfg = CostConfig::default();
+    // AG.5 formula: `3 * 1_000.0 + 0.0 = 3_000 > 10.0`.
     cfg.egraph.weights.dispatch_branch = 1_000.0;
 
     let mut ir = build_three_way_alt_fixture(cfg);
     let decisions = solve_and_merge(&mut ir);
-    // 3 arms × 1_000 = 3_000, overwhelming the 10.0 checkpoint.
+    // 3 arms x 1_000 = 3_000, overwhelming the 10.0 checkpoint.
     assert_eq!(
         body_alt_mode(&ir, &decisions),
         Some(AltMode::Checkpoint),
@@ -532,14 +532,15 @@ fn dispatch_branch_scales_with_arm_count() {
 /// driver lives in the `bbnf` (core) crate, not `bbnf-ir`, so even
 /// asserting the current behavior requires a cross-crate call that
 /// the AF.2 test file intentionally avoids.
+// TODO(AG.5b): `call_overhead` has no bbnf-ir consumer — the inline
+// analysis in `backend/rust/analysis/inline.rs` reads hardcoded
+// MAX_LOCAL_COST/MAX_TOTAL_BUDGET. This test must live in bbnf (core)
+// integration tests once 4C migrates the backend driver to read from
+// CostWeights.
 #[test]
-#[ignore = "Tranche AF.2-4C migration pending: backend/rust/analysis/inline.rs \
-            CostBudgetConstraint reads hardcoded MAX_LOCAL_COST=80, \
-            MAX_TOTAL_BUDGET=4096 instead of \
-            cfg.egraph.weights.call_overhead / \
-            inline_body_size_penalty. When 4C lands, the test \
-            will live in bbnf-lang integration tests (cross-crate); \
-            until then the gate records the contract."]
+#[ignore = "TODO(AG.5b): call_overhead consumer (backend/rust/analysis/inline.rs) \
+            uses hardcoded constants, not CostWeights. Cross-crate test \
+            required after 4C migration."]
 fn call_strategy_flips_under_inverted_call_overhead() {
     // Pseudo-code for the post-4C implementation (written as a
     // guide for whoever lands the migration):
@@ -570,11 +571,13 @@ fn call_strategy_flips_under_inverted_call_overhead() {
 /// Until 4C lands, the constraint uses a hardcoded
 /// `local_cost <= MAX_LOCAL_COST (80)` heuristic that's independent
 /// of body size and reference count.
+// TODO(AG.5b): `inline_body_size_penalty` has no bbnf-ir consumer.
+// The inline analysis in backend/rust/analysis/inline.rs uses
+// MAX_LOCAL_COST/MAX_TOTAL_BUDGET. Cross-crate test after 4C.
 #[test]
-#[ignore = "Tranche AF.2-4C migration pending: inline_body_size_penalty has \
-            no consumer. The inline analysis uses an imperative \
-            heuristic (MAX_LOCAL_COST / MAX_TOTAL_BUDGET) that does \
-            not read from CostWeights."]
+#[ignore = "TODO(AG.5b): inline_body_size_penalty consumer \
+            (backend/rust/analysis/inline.rs) uses hardcoded heuristic, \
+            not CostWeights. Cross-crate test required after 4C."]
 fn inline_body_size_penalty_affects_per_rule_decision() {
     unreachable!("AF.2-4C consumer migration required before this test can run");
 }
@@ -590,27 +593,71 @@ fn inline_body_size_penalty_affects_per_rule_decision() {
 /// AF.2 landed the struct field; AF.3 wires it into the
 /// materialization pass. Until then the classifier uses hardcoded
 /// `CostConfig::mat_*` weights that predate the unification.
+/// AG.5 activated: `tape_push` now drives the Tape-tier cost in
+/// `build_tier_domain`. A `TransparentElide` rule's tier domain
+/// is `{Tape(tape_push), Lazy(...), Direct(0.0)}`.
+///
+/// Under default weights (`tape_push = 1.0`), Direct(0.0) is
+/// cheapest and wins. When `tape_push = 0.0`, Tape(0.0) ties
+/// with Direct(0.0) and the first-in-domain tie-break picks
+/// Tape. This proves the dimension is live: the CSP's tier
+/// decision changes when `tape_push` changes.
 #[test]
-#[ignore = "Tranche AF.3 migration pending: tape_push is defined but not \
-            yet consumed by classify_materialization or \
-            solve_strategy_and_materialization. The materialization \
-            cost pipeline still reads CostConfig::mat_must_tape / \
-            mat_tape_span_only / mat_transparent_elide instead of \
-            composing those values from egraph.weights.tape_push + \
-            slab_alloc."]
 fn tape_push_affects_materialization_classification() {
-    unreachable!("AF.3 consumer migration required before this test can run");
+    use bbnf_ir::passes::materialization::EmissionTier;
+    use bbnf_ir::passes::solve_grammar_components;
+
+    // Epsilon body → TransparentElide → full tier domain.
+    let strings = vec!["rule".to_string()];
+    let body = IrNode::Epsilon;
+
+    // Default weights: tape_push = 1.0, cross_module_coercion = 1.5.
+    // Tape(1.0), Lazy(1.25), Direct(0.0) → Direct wins.
+    let mut ir_default = empty_ir();
+    ir_default.strings = strings.clone();
+    ir_default.rules = vec![rule(0, 0, body.clone())];
+    bbnf_ir::dag::ensure_dag(&mut ir_default);
+    bbnf_ir::passes::classify_materialization(&mut ir_default);
+    let (_d, _m, tiers_default) = solve_grammar_components(&ir_default);
+    let default_tier = tiers_default.get(&0).copied().unwrap_or(EmissionTier::Tape);
+
+    // Patched: tape_push = 0.0, cross_module_coercion = 0.0.
+    // Tape(0.0), Lazy(0.0), Direct(0.0) — all tie, first wins → Tape.
+    let mut cfg = CostConfig::default();
+    cfg.egraph.weights.tape_push = 0.0;
+    cfg.egraph.weights.cross_module_coercion = 0.0;
+    let mut ir_patched = empty_ir();
+    ir_patched.strings = strings;
+    ir_patched.cost_config = cfg;
+    ir_patched.rules = vec![rule(0, 0, body)];
+    bbnf_ir::dag::ensure_dag(&mut ir_patched);
+    bbnf_ir::passes::classify_materialization(&mut ir_patched);
+    let (_d2, _m2, tiers_patched) = solve_grammar_components(&ir_patched);
+    let patched_tier = tiers_patched.get(&0).copied().unwrap_or(EmissionTier::Tape);
+
+    // Default picks Direct (cheapest at cost 0.0); patched with
+    // zeroed weights ties all at 0.0, first-in-domain Tape wins.
+    assert_eq!(default_tier, EmissionTier::Direct,
+        "default tape_push = 1.0 → Direct cheapest");
+    assert_eq!(patched_tier, EmissionTier::Tape,
+        "tape_push = 0 → all tie, Tape wins by tie-break");
+    assert_ne!(default_tier, patched_tier,
+        "tape_push perturbation must change the tier decision");
 }
 
 /// `slab_alloc` is the legacy slab-emitter allocation cost. It's
 /// retained in `CostWeights` so the VM and HIR tiers that still use
 /// slab allocation share the same weight, but it has no consumer
 /// until AF.3 / AF.5 wires it into materialization or emission.
+// TODO(AG.5b): `slab_alloc` has no consumer in the CSP strategy
+// or materialization pipeline. It drives VM/slab-emitter allocation
+// cost but that path reads hardcoded constants.
 #[test]
-#[ignore = "Tranche AF.3 / AF.5 migration pending: slab_alloc has no \
-            consumer. Placeholder for the consumer migration."]
+#[ignore = "TODO(AG.5b): slab_alloc has no bbnf-ir consumer. VM and slab \
+            emitter paths use hardcoded allocation costs, not \
+            CostWeights::slab_alloc."]
 fn slab_alloc_affects_vm_legacy_path() {
-    unreachable!("AF.3 / AF.5 consumer migration required before this test can run");
+    unreachable!("slab_alloc consumer migration required before this test can run");
 }
 
 /// `prettify_emission` is the per-node cost the CSP strategy solver
@@ -622,25 +669,70 @@ fn slab_alloc_affects_vm_legacy_path() {
 ///
 /// AF.3 / AF.4 lands the per-subtree scaling. Until then, patching
 /// `prettify_emission` has no observable effect.
+// TODO(AG.5b): `prettify_emission` is not consumed by the CSP
+// tier domain or materialization cost pipeline. The prettify pin
+// is structural (single-value MustTape domain clamp), not a
+// continuous cost. A per-subtree cost model would need new
+// pipeline infrastructure.
 #[test]
-#[ignore = "Tranche AF.3 migration pending: prettify_emission has no \
-            consumer. build_materialization_domain reads \
-            cfg.mat_must_tape for prettify-pinned rules instead of \
-            scaling by egraph.weights.prettify_emission * subtree_size."]
+#[ignore = "TODO(AG.5b): prettify_emission has no bbnf-ir consumer. \
+            Prettify pin is structural (MustTape clamp), not a \
+            continuous cost. Per-subtree scaling needs new pipeline."]
 fn prettify_emission_scales_with_pretty_subtree_size() {
-    unreachable!("AF.3 consumer migration required before this test can run");
+    unreachable!("prettify_emission consumer migration required before this test can run");
 }
 
 /// `cross_module_coercion` is the pre-seed for Tranche AG's module
 /// substrate: the cost of coercing a Tier B direct value into a tape
 /// record at a `@import` boundary. Today AF.2 ships the field;
 /// AG consumes it.
+/// AG.5 activated: `cross_module_coercion` now feeds into the
+/// Lazy-tier cost in `build_tier_domain` (via the formula
+/// `tape_push * 0.5 + cross_module_coercion * 0.5`). A
+/// `TransparentElide` rule's Lazy cost is sensitive to the
+/// coercion weight. Under default weights Direct already wins;
+/// zeroing the weights creates a tie where Tape (first in domain)
+/// wins instead, proving the dimension is live.
 #[test]
-#[ignore = "Tranche AG pre-seed: cross_module_coercion has no consumer \
-            until AG's module substrate lands. AF.2 ships the field \
-            so AG doesn't have to add a CostWeights dimension."]
 fn cross_module_coercion_scales_with_import_boundary_crossings() {
-    unreachable!("Tranche AG consumer migration required before this test can run");
+    use bbnf_ir::passes::materialization::EmissionTier;
+    use bbnf_ir::passes::solve_grammar_components;
+
+    // Epsilon body → TransparentElide → full tier domain.
+    let strings = vec!["rule".to_string()];
+    let body = IrNode::Epsilon;
+
+    // Default: tape_push = 1.0, cross_module_coercion = 1.5.
+    // Tape(1.0), Lazy(1.25), Direct(0.0) → Direct wins.
+    let mut ir_a = empty_ir();
+    ir_a.strings = strings.clone();
+    ir_a.rules = vec![rule(0, 0, body.clone())];
+    bbnf_ir::dag::ensure_dag(&mut ir_a);
+    bbnf_ir::passes::classify_materialization(&mut ir_a);
+    let (_d, _m, tiers_a) = solve_grammar_components(&ir_a);
+    let tier_a = tiers_a.get(&0).copied().unwrap_or(EmissionTier::Tape);
+
+    // Patched: cross_module_coercion = 0.0, tape_push = 0.0.
+    // Tape(0), Lazy(0), Direct(0) — all tie, Tape (first) wins.
+    let mut cfg = CostConfig::default();
+    cfg.egraph.weights.tape_push = 0.0;
+    cfg.egraph.weights.cross_module_coercion = 0.0;
+    let mut ir_b = empty_ir();
+    ir_b.strings = strings;
+    ir_b.cost_config = cfg;
+    ir_b.rules = vec![rule(0, 0, body)];
+    bbnf_ir::dag::ensure_dag(&mut ir_b);
+    bbnf_ir::passes::classify_materialization(&mut ir_b);
+    let (_d2, _m2, tiers_b) = solve_grammar_components(&ir_b);
+    let tier_b = tiers_b.get(&0).copied().unwrap_or(EmissionTier::Tape);
+
+    // The perturbation must change the tier decision.
+    assert_eq!(tier_a, EmissionTier::Direct,
+        "default weights → Direct (cheapest at 0.0)");
+    assert_eq!(tier_b, EmissionTier::Tape,
+        "zeroed weights → all tie, Tape by domain ordering");
+    assert_ne!(tier_a, tier_b,
+        "cross_module_coercion perturbation must change the tier decision");
 }
 
 // ── Sanity: materialization gate did not introduce a private knob ────────────

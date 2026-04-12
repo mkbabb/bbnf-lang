@@ -1,11 +1,19 @@
 //! Tranche AF.5 — `decode_emission_tier` pass.
 //!
-//! Walks every rule and writes a per-rule [`EmissionTier`]
-//! decision into `ir.emission_tier`. The decision is the bridge
-//! between AF.1's materialization classifier (which produced the
-//! per-NodeId class) and AF.6's Tier B backend emitter (which
-//! reads the per-rule tier to decide whether to emit a
-//! `__<rule>_direct` shim alongside the tape function).
+//! Post-AG.5 this pass is a **fallback populator** for any
+//! rule the cross-rule CSP solver elided from its tier solve.
+//! After `solve_grammar_components` writes the CSP-solved tier
+//! decisions into `ir.emission_tier` during the pipeline's
+//! `solve_grammar_components` span, this pass walks every rule
+//! and writes a tier **only when one is missing**.
+//!
+//! In practice the CSP owns the per-rule decision for every
+//! contributing rule — any rule that enters the strategy solve
+//! receives a tier variable and a decoded `Site::Tier` write.
+//! The fallback still runs because degenerate components
+//! (single rules that emit no decision sites at all) bypass the
+//! CSP short-circuit and reach this pass untouched; same for
+//! rules whose body pointer is missing from the DAG lookup.
 //!
 //! # Decision rule
 //!
@@ -31,13 +39,17 @@
 //!
 //! # Idempotence
 //!
-//! `decode_emission_tier` is a sidecar populator. Calling it
-//! twice produces the same map; calling it before the AF.1
-//! classifier has run leaves the map empty (defaults to
+//! `decode_emission_tier` is idempotent. Calling it twice
+//! produces the same map; calling it before the AF.1 classifier
+//! has run leaves the map empty (defaults to
 //! `EmissionTier::Tape` at every consumer). The pass is
 //! invariant under any pipeline ordering that places it AFTER
 //! `classify_materialization` and BEFORE `prepare_grammar`'s
 //! emitter consumption.
+//!
+//! Post-AG.5, the pass uses `entry().or_insert_with()` semantics
+//! so existing CSP decisions are preserved and only missing
+//! entries receive the fallback value.
 //!
 //! # AF.6 hand-off
 //!
@@ -75,6 +87,14 @@ pub fn decode_emission_tier(ir: &mut GrammarIR) {
     let rule_ids: Vec<_> = ir.rules.iter().map(|r| r.id).collect();
 
     for rule_id in rule_ids {
+        // AG.5 — fallback semantics: only fill entries the CSP
+        // solver left empty. Most rules receive their tier from
+        // `solve_grammar_components`; this branch only fires for
+        // rules elided from the strategy solve (e.g., because
+        // their body had no DAG NodeId lookup).
+        if ir.emission_tier.contains_key(&rule_id) {
+            continue;
+        }
         let tier = decide_rule_tier(ir, rule_id);
         ir.emission_tier.insert(rule_id, tier);
     }

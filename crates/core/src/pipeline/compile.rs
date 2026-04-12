@@ -592,11 +592,20 @@ fn compile_ast_common<'a>(
         // with the cost-optimal per-rule-root class where the CSP
         // can prove it legal under pin constraints.
         timer.span("solve_grammar_components", || {
-            let (decisions, mat_refined) =
+            let (decisions, mat_refined, tier_refined) =
                 bbnf_ir::passes::solve_grammar_components(&ir);
             ir.recognizer_decisions = decisions;
             for (node_id, class) in mat_refined {
                 ir.materialization.insert(node_id, class);
+            }
+            // AG.5 — CSP-solved emission tiers land in
+            // `ir.emission_tier` directly. `decode_emission_tier`
+            // below only fills entries the CSP did not assign
+            // (should be none after AG.5, but kept as a safety
+            // net for rules the solver elided for trivial
+            // components).
+            for (rule_id, tier) in tier_refined {
+                ir.emission_tier.insert(rule_id, tier);
             }
         });
         // Tranche X.8d — project the per-NodeId RegexEngine decisions

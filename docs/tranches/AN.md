@@ -196,23 +196,30 @@ visibility into:
   in expanded CSS code, -29% total expanded output)
 - CSS pretty tests: 16/16 pass
 
-### Post-AN Baseline (JSON cold, MB/s)
+### AN.4.2 — Whitespace Bitmap Caching (parse-that)
+- 3-tier `trim_leading_whitespace_mut`:
+  1. Scalar 2-byte check (80%+ fast path)
+  2. Bitmap cache hit (64-byte window, zero memory scan)
+  3. Cold scan-and-cache (falls through to SIMD for >64 bytes)
+- `ws_bitmap: u64, ws_bitmap_start: usize` on ParserState
+
+### Post-AN Final Baseline (JSON cold, MB/s)
 
 | Dataset  | Pre-AM | Post-AM | Post-AN | sonic-rs | vs sonic |
 |----------|--------|---------|---------|----------|----------|
-| canada   | 1,453  | 1,689   | 1,745   | 1,540    | +13% BEAT|
-| citm     | 2,001  | 2,138   | 1,985   | 3,097    | -36%     |
-| data     | 1,502  | 1,613   | 1,509   | 2,450    | -38%     |
-| data_xl  | 1,121  | 1,153   | 1,089   | 1,520    | -28%     |
-| twitter  | 1,672  | 1,671   | 1,636   | 2,736    | -40%     |
+| canada   | 1,453  | 1,689   | 1,768   | 1,540    | +15% BEAT|
+| citm     | 2,001  | 2,138   | 2,052   | 3,097    | -34%     |
+| data     | 1,502  | 1,613   | 1,718   | 2,450    | -30%     |
+| data_xl  | 1,121  | 1,153   | 1,108   | 1,520    | -27%     |
+| twitter  | 1,672  | 1,671   | 1,650   | 2,736    | -40%     |
 
 ### Post-AN CSS Monolithic (cold, MB/s)
 
 | Dataset    | Post-AN | cssparser | vs cssparser |
 |------------|---------|-----------|--------------|
-| normalize  | 2,438   | 732       | +233% BEAT   |
-| bootstrap  | 1,618   | 476       | +240% BEAT   |
-| tailwind   | 1,417   | 446       | +218% BEAT   |
+| normalize  | 2,412   | 732       | +230% BEAT   |
+| bootstrap  | 1,588   | 476       | +234% BEAT   |
+| tailwind   | 1,405   | 446       | +215% BEAT   |
 
 ## Execution Order
 

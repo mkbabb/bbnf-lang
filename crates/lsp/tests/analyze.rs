@@ -145,16 +145,8 @@ fn test_first_set_conflict_detection() {
     let grammar = "value = integer | decimal;\ninteger = /[0-9]+/;\ndecimal = /[0-9]+/, \".\", /[0-9]+/;";
     let line_index = LineIndex::new(grammar);
     let info = analyze(grammar, &line_index);
-    eprintln!("Diagnostics count: {}", info.diagnostics.len());
-    for d in &info.diagnostics {
-        eprintln!("  severity={:?}, message={}", d.severity, d.message);
-    }
-    eprintln!("First set labels: {:?}", info.first_set_labels);
-    eprintln!("IR meta keys: {:?}", info.ir_meta.keys().collect::<Vec<_>>());
-    eprintln!("Rules: {:?}", info.rules.iter().map(|r| &r.name).collect::<Vec<_>>());
-    // Verify FIRST set conflict detection
-    let has_conflict = info.diagnostics.iter().any(|d| d.message.contains("ambiguous FIRST sets") || d.message.contains("overlap"));
-    eprintln!("Has FIRST conflict: {}", has_conflict);
+    let has_conflict = info.diagnostics.iter().any(|d| d.message.contains("overlap"));
+    assert!(has_conflict, "Expected FIRST set conflict diagnostic");
 }
 
 #[test]
@@ -162,11 +154,7 @@ fn test_cycle_detection() {
     let grammar = "expr = expr, \"+\", term | term;\nterm = /[0-9]+/;";
     let line_index = LineIndex::new(grammar);
     let info = analyze(grammar, &line_index);
-    eprintln!("Diagnostics count: {}", info.diagnostics.len());
-    for d in &info.diagnostics {
-        eprintln!("  severity={:?}, message={}", d.severity, d.message);
-    }
-    eprintln!("Cyclic paths: {:?}", info.cyclic_rule_paths);
+    assert!(info.cyclic_rule_paths.contains_key("expr"), "Expected cycle for expr");
 }
 
 #[test]
@@ -174,10 +162,8 @@ fn test_alias_detection() {
     let grammar = "value = number;\nnumber = /[0-9]+/;\nint = number;";
     let line_index = LineIndex::new(grammar);
     let info = analyze(grammar, &line_index);
-    eprintln!("Diagnostics count: {}", info.diagnostics.len());
-    for d in &info.diagnostics {
-        eprintln!("  severity={:?}, message={}", d.severity, d.message);
-    }
+    let has_alias = info.diagnostics.iter().any(|d| d.message.contains("alias"));
+    assert!(has_alias, "Expected alias hint diagnostic for `int`");
 }
 
 #[test]
@@ -185,24 +171,5 @@ fn test_nullable_detection() {
     let grammar = "value = [\"hello\"];";
     let line_index = LineIndex::new(grammar);
     let info = analyze(grammar, &line_index);
-    eprintln!("Nullable rules: {:?}", info.nullable_rules);
-    eprintln!("First set labels: {:?}", info.first_set_labels);
-    eprintln!("IR meta keys: {:?}", info.ir_meta.keys().collect::<Vec<_>>());
-    if let Some(meta) = info.ir_meta.get("value") {
-        eprintln!("value meta: {:?}", meta);
-    }
-
-    // Also check the IR directly
-    let pg = bbnf::grammar::parse(grammar).expect("parse");
-    let directives = bbnf::lower::DirectiveSet::empty();
-    let options = bbnf::pipeline::PipelineOptions { structural: true, ..Default::default() };
-    match bbnf::pipeline::compile_ast(pg.rules, &directives, &options) {
-        Ok(ir) => {
-            for rule in &ir.rules {
-                let name = ir.get_string(rule.name);
-                eprintln!("IR rule '{}': nullable={}, body={:?}", name, rule.meta.nullable, rule.body);
-            }
-        },
-        Err(e) => eprintln!("compile_ast FAILED: {}", e),
-    }
+    assert!(info.nullable_rules.contains("value"), "Expected value to be nullable");
 }

@@ -24,6 +24,19 @@
 //! - `.is_recovered()` — true iff the record was pushed from an
 //!   `@recover` arm.
 //!
+//! Typed per-kind accessors (Tranche AI.5) supplement the universals:
+//!
+//! - **Leaves** (`leaves.rs`): `.text()`, `.as_f64()`, `.as_u32()`,
+//!   `.byte_range()` based on the rule's `TypeDesc`.
+//! - **Seq** (`seq.rs`): `.child_N()` positional + named accessors
+//!   derived from `Ref` targets.
+//! - **Alt** (`alt.rs`): `.as_<variant>()`, `.is_<variant>()`,
+//!   `.chosen()` discriminated branch accessors.
+//! - **Repeat** (`repeat.rs`): `.iter()`, `.len()`, `.is_empty()`,
+//!   `.get(i)` typed iteration.
+//! - **Grammar** (`grammar.rs`): root-rule name binding on the
+//!   grammar marker struct.
+//!
 //! The top-level grammar-view binding ties the grammar marker
 //! struct's [`::bbnf::runtime::Root`] GAT `type View<'p>` to the
 //! root rule's view type. Generated `Parsed<Grammar>::view(&self)`
@@ -35,13 +48,13 @@
 //! - `generate_views` is the public entry point the backend calls
 //!   to emit all per-rule view types and the top-level `Root`
 //!   binding as one `TokenStream`.
-//! - The per-kind sibling files are reserved for the post-AC
-//!   typed-accessor pass.
+//! - The per-kind sibling files emit typed accessors driven by
+//!   the rule's body shape (`IrNode` variant) and `TypeDesc`.
 //! - `TransparentElide` rules never get a view type: they are
 //!   inlined at every call site during parser emission, so the
 //!   view layer never sees them.
 
-use bbnf_ir::GrammarIR;
+use bbnf_ir::{GrammarIR, IrNode, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
@@ -246,12 +259,17 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
         }
     };
 
+    let grammar_name_str = grammar_name.as_str();
     let mut rule_views: Vec<TokenStream> = Vec::new();
 
     for rule in &non_transparent_rules {
         let name = ir.get_string(rule.name);
         let view_ident = format_ident!("{}View", name);
         let accessors = emit_common_accessors(&view_ident);
+
+        // Per-kind typed accessors driven by the rule's body shape
+        // and TypeDesc. These supplement the universal accessor set.
+        let typed_accessors = emit_typed_accessors(rule, name, ir, grammar_name_str);
 
         rule_views.push(quote! {
             /// Generated view over a tape record produced by this rule.
@@ -263,6 +281,7 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
             }
 
             #accessors
+            #typed_accessors
         });
     }
 
@@ -340,9 +359,66 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
         quote! {}
     };
 
+    // Grammar-level root helpers (rule name constant, etc.).
+    let grammar_root_helpers = grammar::emit_grammar_root_helpers(ir, ctx);
+
     quote! {
         #(#rule_views)*
         #node_view_decl
         #root_binding
+        #grammar_root_helpers
+    }
+}
+
+/// Dispatch to the appropriate per-kind typed accessor generator
+/// based on the rule's body shape.
+///
+/// Peels through outer wrappers (Map, OptionalWhitespace) to find
+/// the structurally significant node, then delegates to:
+/// - `leaves::emit_leaf_accessors` for Literal, Regex, Epsilon, Ref
+/// - `seq::emit_seq_accessors` for Seq
+/// - `alt::emit_alt_accessors` for Alt
+/// - `repeat::emit_repeat_accessors` for Repeat
+fn emit_typed_accessors(
+    rule: &bbnf_ir::IrRule,
+    rule_name: &str,
+    ir: &GrammarIR,
+    grammar_name: &str,
+) -> TokenStream {
+    // Look up the rule's TypeDesc from `ir.types`.
+    let type_desc = ir
+        .types
+        .iter()
+        .find_map(|(id, ty)| (*id == rule.id).then_some(ty));
+
+    // Peel the body through Map/OptionalWhitespace to find the
+    // structurally meaningful shape.
+    let body = peel_body(&rule.body);
+
+    match body {
+        IrNode::Seq(_) => seq::emit_seq_accessors(rule, rule_name, ir, grammar_name),
+        IrNode::Alt(_, _) => alt::emit_alt_accessors(rule, rule_name, ir, grammar_name),
+        IrNode::Repeat { .. } => {
+            repeat::emit_repeat_accessors(rule, rule_name, ir, grammar_name)
+        }
+        // Leaves: Literal, Regex, Epsilon, Ref, and any body that
+        // doesn't match the compound shapes above.
+        _ => {
+            if let Some(td) = type_desc {
+                leaves::emit_leaf_accessors(rule, rule_name, td)
+            } else {
+                // Default to Span for rules without a TypeDesc entry.
+                leaves::emit_leaf_accessors(rule, rule_name, &TypeDesc::Span)
+            }
+        }
+    }
+}
+
+/// Peel through Map, OptionalWhitespace, and other transparent
+/// wrappers to expose the structurally significant body node.
+fn peel_body(node: &IrNode) -> &IrNode {
+    match node {
+        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => peel_body(inner),
+        other => other,
     }
 }

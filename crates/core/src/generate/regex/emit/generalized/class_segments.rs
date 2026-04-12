@@ -101,10 +101,16 @@ pub(super) fn emit_char_class_loop(pattern: &str) -> Option<TokenStream> {
 
     let _is_plus = min_count >= 1 && max_count == usize::MAX;
 
-    // Must be a single char class [...]
+    // Must be a single char class [...]. Reject multi-segment patterns
+    // (e.g., `[a-z][\w-]*|--[\w-]+`) where naive strip_prefix/suffix
+    // would match the first `[` and last `]` across the entire alternation,
+    // producing a garbage inner string.
     let inner = class_str.strip_prefix('[')?.strip_suffix(']')?;
     if inner.starts_with('^') {
         return None; // Negated classes handled by is_negated_char_class_regex.
+    }
+    if has_unescaped_bracket(inner) {
+        return None; // Multi-segment pattern, not a single class.
     }
 
     // Tranche X phase 1: route through `kernels::charclass::emit_call_opt`
@@ -463,4 +469,23 @@ pub(super) fn emit_literal_prefix_class(pattern: &str) -> Option<TokenStream> {
     // Simple case: single segment with + or * quantifier.
     // This covers --[\w-]+, @[a-zA-Z][\w-]* (two segments but we handle that too).
     emit_prefix_segments(&prefix_lit, prefix_len, &segments)
+}
+
+/// Returns true if the string contains unescaped `[` or `]` characters,
+/// indicating it is a multi-segment pattern rather than a single char
+/// class body. Backslash-escaped brackets are ignored.
+fn has_unescaped_bracket(s: &str) -> bool {
+    let bytes = s.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] == b'\\' {
+            i += 2; // skip escaped character
+            continue;
+        }
+        if bytes[i] == b'[' || bytes[i] == b']' {
+            return true;
+        }
+        i += 1;
+    }
+    false
 }

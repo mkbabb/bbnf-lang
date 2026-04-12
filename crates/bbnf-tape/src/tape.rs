@@ -59,8 +59,15 @@ pub struct TapeRec {
     pub kind: TapeKind,
     /// Bitfield: variant index (low 6 bits), has_children, span_only.
     pub flags: u8,
-    /// Reserved bits; zero-initialized by the builder.
-    pub _reserved: [u8; 2],
+    /// Index into the tape's payload buffer (`Tape::payloads`).
+    ///
+    /// - `0` = no payload (the default for all existing codegen).
+    /// - Non-zero = 1-based slot index. The byte offset into the
+    ///   payload buffer is `(payload_idx - 1) * 8`. All payload
+    ///   slots are 8-byte aligned regardless of the stored type
+    ///   (f64 uses all 8 bytes; bool/u8 use byte 0, the rest is
+    ///   padding).
+    pub payload_idx: u16,
     /// Byte offset into the source input where this record's span begins.
     pub span_lo: u32,
     /// Byte offset into the source input where this record's span ends.
@@ -124,6 +131,13 @@ pub struct Tape {
     /// Flat record storage. Append-only during parsing; immutable
     /// during view-layer reads.
     pub(crate) records: Vec<TapeRec>,
+    /// Side-channel payload buffer for typed leaf values.
+    ///
+    /// Each payload slot is 8 bytes, regardless of the stored type.
+    /// A `TapeRec` with `payload_idx > 0` stores its value at byte
+    /// offset `(payload_idx - 1) * 8`. Empty for all current codegen
+    /// (existing records set `payload_idx = 0`).
+    pub(crate) payloads: Vec<u8>,
 }
 
 impl Tape {
@@ -131,6 +145,7 @@ impl Tape {
     pub fn new() -> Self {
         Self {
             records: Vec::new(),
+            payloads: Vec::new(),
         }
     }
 
@@ -138,6 +153,7 @@ impl Tape {
     pub fn with_capacity(expected: usize) -> Self {
         Self {
             records: Vec::with_capacity(expected),
+            payloads: Vec::new(),
         }
     }
 
@@ -178,6 +194,52 @@ impl Tape {
     /// Iterate every record in insertion order.
     pub fn iter(&self) -> impl Iterator<Item = &TapeRec> + '_ {
         self.records.iter()
+    }
+
+    // ── Payload accessors ─────────────────────────────────────────
+
+    /// Read an `f64` payload from the record's payload slot.
+    ///
+    /// Returns `None` if `rec.payload_idx == 0` (no payload) or if
+    /// the payload buffer is too short (defensive — should never
+    /// happen with well-formed builder output).
+    #[inline]
+    pub fn payload_f64(&self, rec: &TapeRec) -> Option<f64> {
+        let idx = rec.payload_idx;
+        if idx == 0 {
+            return None;
+        }
+        let start = (idx as usize - 1) * 8;
+        let bytes: &[u8; 8] = self.payloads.get(start..start + 8)?.try_into().ok()?;
+        Some(f64::from_le_bytes(*bytes))
+    }
+
+    /// Read a `bool` payload from the record's payload slot.
+    ///
+    /// Returns `None` if `rec.payload_idx == 0`. The bool is stored
+    /// in byte 0 of the 8-byte slot (nonzero = true).
+    #[inline]
+    pub fn payload_bool(&self, rec: &TapeRec) -> Option<bool> {
+        let idx = rec.payload_idx;
+        if idx == 0 {
+            return None;
+        }
+        let start = (idx as usize - 1) * 8;
+        Some(*self.payloads.get(start)? != 0)
+    }
+
+    /// Read a `u8` payload from the record's payload slot.
+    ///
+    /// Returns `None` if `rec.payload_idx == 0`. The byte is stored
+    /// at offset 0 of the 8-byte slot.
+    #[inline]
+    pub fn payload_u8(&self, rec: &TapeRec) -> Option<u8> {
+        let idx = rec.payload_idx;
+        if idx == 0 {
+            return None;
+        }
+        let start = (idx as usize - 1) * 8;
+        self.payloads.get(start).copied()
     }
 }
 

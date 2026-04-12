@@ -165,3 +165,70 @@ fn empty_compound_clears_has_children() {
     assert_eq!(compound.variant_idx(), 2);
     assert!(!compound.has_children(), "empty compound must clear has_children");
 }
+
+// ── Payload round-trip tests (AM.2) ──────────────────────────────
+
+#[test]
+fn payload_f64_round_trip() {
+    let mut b = TapeBuilder::new();
+    let off = b.push_leaf_with_f64(TapeKind::Regex, 0, 5, 0, std::f64::consts::PI);
+    let tape = b.finish().unwrap();
+
+    let rec = tape.get(off);
+    assert_eq!(rec.kind, TapeKind::Regex);
+    assert_ne!(rec.payload_idx, 0, "payload_idx must be non-zero");
+    let val = tape.payload_f64(rec).expect("should read f64 payload");
+    assert!((val - std::f64::consts::PI).abs() < f64::EPSILON);
+}
+
+#[test]
+fn payload_bool_round_trip() {
+    let mut b = TapeBuilder::new();
+    let off_t = b.push_leaf_with_bool(TapeKind::Literal, 0, 4, 0, true);
+    let off_f = b.push_leaf_with_bool(TapeKind::Literal, 4, 9, 1, false);
+    let tape = b.finish().unwrap();
+
+    assert_eq!(tape.payload_bool(tape.get(off_t)), Some(true));
+    assert_eq!(tape.payload_bool(tape.get(off_f)), Some(false));
+}
+
+#[test]
+fn payload_u8_round_trip() {
+    let mut b = TapeBuilder::new();
+    let off = b.push_leaf_with_u8(TapeKind::Literal, 0, 2, 3, 42);
+    let tape = b.finish().unwrap();
+
+    assert_eq!(tape.payload_u8(tape.get(off)), Some(42));
+}
+
+#[test]
+fn payload_idx_zero_returns_none() {
+    let mut b = TapeBuilder::new();
+    let off = b.push_leaf(TapeKind::Span, 0, 5, 0);
+    let tape = b.finish().unwrap();
+    let rec = tape.get(off);
+
+    assert_eq!(rec.payload_idx, 0);
+    assert!(tape.payload_f64(rec).is_none());
+    assert!(tape.payload_bool(rec).is_none());
+    assert!(tape.payload_u8(rec).is_none());
+}
+
+#[test]
+fn multiple_payloads_independent() {
+    let mut b = TapeBuilder::new();
+    let off1 = b.push_leaf_with_f64(TapeKind::Regex, 0, 3, 0, 1.5);
+    let off2 = b.push_leaf_with_f64(TapeKind::Regex, 3, 6, 1, -99.0);
+    let off3 = b.push_leaf_with_u8(TapeKind::Literal, 6, 8, 2, 255);
+    let off_plain = b.push_leaf(TapeKind::Span, 8, 10, 0);
+    let tape = b.finish().unwrap();
+
+    let v1 = tape.payload_f64(tape.get(off1)).unwrap();
+    let v2 = tape.payload_f64(tape.get(off2)).unwrap();
+    let v3 = tape.payload_u8(tape.get(off3)).unwrap();
+
+    assert!((v1 - 1.5).abs() < f64::EPSILON);
+    assert!((v2 - (-99.0)).abs() < f64::EPSILON);
+    assert_eq!(v3, 255);
+    assert!(tape.payload_f64(tape.get(off_plain)).is_none());
+}

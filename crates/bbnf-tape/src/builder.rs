@@ -37,6 +37,9 @@ pub struct TapeBuilder {
     /// still accepted (so mid-recovery parses can continue producing
     /// records for partial success), but `finish` returns the error.
     pub(crate) error: Option<TapeBuildError>,
+    /// Staging buffer for typed leaf payloads. Each slot is 8 bytes,
+    /// transferred to the finished `Tape` at [`Self::finish`].
+    pub(crate) payloads: Vec<u8>,
 }
 
 /// Error state surfaced through [`TapeBuilder::finish`].
@@ -63,6 +66,7 @@ impl TapeBuilder {
         Self {
             tape: Tape::with_capacity(expected),
             error: None,
+            payloads: Vec::new(),
         }
     }
 
@@ -93,7 +97,7 @@ impl TapeBuilder {
         self.tape.records.push(TapeRec {
             kind,
             flags: variant_idx & 0x3F,
-            _reserved: [0, 0],
+            payload_idx: 0,
             span_lo,
             span_hi,
             child_off: TapeOffset::NONE,
@@ -136,10 +140,108 @@ impl TapeBuilder {
         self.tape.records.push(TapeRec {
             kind,
             flags,
-            _reserved: [0, 0],
+            payload_idx: 0,
             span_lo,
             span_hi,
             child_off,
+        });
+        TapeOffset(idx as u32)
+    }
+
+    // ── Payload-bearing leaf pushes ─────────────────────────────────
+
+    /// Append a payload slot (8 bytes) and return its 1-based index.
+    #[inline]
+    fn alloc_payload_slot(&mut self) -> u16 {
+        let slot = self.payloads.len() / 8;
+        self.payloads.extend_from_slice(&[0u8; 8]);
+        // 1-based: slot 0 in the buffer is payload_idx=1.
+        (slot + 1) as u16
+    }
+
+    /// Append a leaf record with an `f64` payload.
+    ///
+    /// Writes 8 bytes (`value.to_le_bytes()`) into the payload buffer
+    /// and sets the record's `payload_idx` to the corresponding
+    /// 1-based slot.
+    #[inline]
+    pub fn push_leaf_with_f64(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        span_hi: u32,
+        variant_idx: u8,
+        value: f64,
+    ) -> TapeOffset {
+        debug_assert!(kind.is_leaf(), "push_leaf_with_f64 on compound kind {:?}", kind);
+        let pidx = self.alloc_payload_slot();
+        let start = (pidx as usize - 1) * 8;
+        self.payloads[start..start + 8].copy_from_slice(&value.to_le_bytes());
+        let idx = self.tape.records.len();
+        self.tape.records.push(TapeRec {
+            kind,
+            flags: variant_idx & 0x3F,
+            payload_idx: pidx,
+            span_lo,
+            span_hi,
+            child_off: TapeOffset::NONE,
+        });
+        TapeOffset(idx as u32)
+    }
+
+    /// Append a leaf record with a `bool` payload.
+    ///
+    /// Stored as a single byte (0 or 1) at offset 0 of the 8-byte
+    /// payload slot.
+    #[inline]
+    pub fn push_leaf_with_bool(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        span_hi: u32,
+        variant_idx: u8,
+        value: bool,
+    ) -> TapeOffset {
+        debug_assert!(kind.is_leaf(), "push_leaf_with_bool on compound kind {:?}", kind);
+        let pidx = self.alloc_payload_slot();
+        let start = (pidx as usize - 1) * 8;
+        self.payloads[start] = value as u8;
+        let idx = self.tape.records.len();
+        self.tape.records.push(TapeRec {
+            kind,
+            flags: variant_idx & 0x3F,
+            payload_idx: pidx,
+            span_lo,
+            span_hi,
+            child_off: TapeOffset::NONE,
+        });
+        TapeOffset(idx as u32)
+    }
+
+    /// Append a leaf record with a `u8` payload.
+    ///
+    /// Stored at offset 0 of the 8-byte payload slot.
+    #[inline]
+    pub fn push_leaf_with_u8(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        span_hi: u32,
+        variant_idx: u8,
+        value: u8,
+    ) -> TapeOffset {
+        debug_assert!(kind.is_leaf(), "push_leaf_with_u8 on compound kind {:?}", kind);
+        let pidx = self.alloc_payload_slot();
+        let start = (pidx as usize - 1) * 8;
+        self.payloads[start] = value;
+        let idx = self.tape.records.len();
+        self.tape.records.push(TapeRec {
+            kind,
+            flags: variant_idx & 0x3F,
+            payload_idx: pidx,
+            span_lo,
+            span_hi,
+            child_off: TapeOffset::NONE,
         });
         TapeOffset(idx as u32)
     }
@@ -158,10 +260,13 @@ impl TapeBuilder {
 
     /// Consume the builder and return the finished tape. Returns the
     /// sticky error if one was set during parsing.
-    pub fn finish(self) -> Result<Tape, TapeBuildError> {
+    pub fn finish(mut self) -> Result<Tape, TapeBuildError> {
         match self.error {
             Some(err) => Err(err),
-            None => Ok(self.tape),
+            None => {
+                self.tape.payloads = self.payloads;
+                Ok(self.tape)
+            }
         }
     }
 

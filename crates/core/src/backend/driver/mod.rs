@@ -318,6 +318,10 @@ pub fn compile_grammar<E: Emitter>(
             ValuePlacement::Inline
         };
 
+        // Pre-compile hook: backends can set up per-rule context
+        // (e.g., Rust sets branch_idx_ident for Alt-bodied rules).
+        emitter.pre_compile_rule_body(rule, ir, ctx);
+
         // Rule-level specialization: fused number rules and
         // operator-chain rules get an emitter-owned fast path. When
         // the emitter declines, fall back to the generic walk.

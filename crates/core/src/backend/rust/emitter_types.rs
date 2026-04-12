@@ -44,6 +44,12 @@ pub struct RustEmitCtx {
     counter: usize,
     pub current_rule_name: Option<String>,
     pub current_rule_id: Option<RuleId>,
+    /// When set, the Alt emitter prepends `<ident> = <branch_idx>u8;`
+    /// to each branch body. Set by `emit_rule_function_impl` for
+    /// Alt-bodied rules so the rule epilogue can use the branch
+    /// discriminator instead of the rule's global ID. Cleared after
+    /// the Alt body is compiled.
+    pub branch_idx_ident: Option<syn::Ident>,
 }
 
 impl RustEmitCtx {
@@ -60,6 +66,7 @@ impl RustEmitCtx {
             counter: 0,
             current_rule_name: None,
             current_rule_id: None,
+            branch_idx_ident: None,
         }
     }
 

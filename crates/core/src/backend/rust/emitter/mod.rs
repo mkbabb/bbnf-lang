@@ -342,6 +342,22 @@ impl Emitter for RustEmitter {
         None
     }
 
+    fn pre_compile_rule_body(
+        &mut self,
+        rule: &bbnf_ir::IrRule,
+        _ir: &bbnf_ir::GrammarIR,
+        ctx: &mut Self::Ctx,
+    ) {
+        // AK.1: For Alt-bodied rules, signal the Alt emitter to set
+        // __branch_idx per arm. The rule epilogue will use it as the
+        // variant discriminator instead of the rule's global ID.
+        if matches!(&rule.body, bbnf_ir::IrNode::Alt(_, _)) && !rule.meta.is_transparent {
+            ctx.branch_idx_ident = Some(quote::format_ident!("__branch_idx"));
+        } else {
+            ctx.branch_idx_ident = None;
+        }
+    }
+
     fn emit_rule_function(
         &mut self,
         rule: &IrRule,
@@ -350,7 +366,10 @@ impl Emitter for RustEmitter {
         ir: &GrammarIR,
         ctx: &mut Self::Ctx,
     ) -> TokenStream {
-        self.emit_rule_function_impl(rule, body, sync_body, ir, ctx)
+        let result = self.emit_rule_function_impl(rule, body, sync_body, ir, ctx);
+        // Clear the branch_idx_ident after the rule is emitted.
+        ctx.branch_idx_ident = None;
+        result
     }
 
     fn emit_type_definitions(

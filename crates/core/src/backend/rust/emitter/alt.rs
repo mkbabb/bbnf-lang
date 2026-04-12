@@ -29,7 +29,7 @@ impl RustEmitter {
         branches: Vec<(AltBranchInfo, TokenStream)>,
         fallback: Option<(AltBranchInfo, TokenStream)>,
         _alloc: ValuePlacement,
-        _ctx: &mut RustEmitCtx,
+        ctx: &mut RustEmitCtx,
     ) -> TokenStream {
         let mut arms = Vec::new();
 
@@ -46,9 +46,19 @@ impl RustEmitter {
                 continue;
             }
 
+            // AK.1: when branch_idx_ident is set, prepend the branch
+            // index assignment so the rule epilogue can use it as the
+            // variant discriminator.
+            let branch_assign = if let Some(ref ident) = ctx.branch_idx_ident {
+                let idx = branch_idx as u8;
+                quote! { #ident = #idx; }
+            } else {
+                quote! {}
+            };
+
             let patterns: Vec<_> = byte_patterns.iter().map(|b| quote! { #b }).collect();
             arms.push(quote! {
-                #( #patterns )|* => { #body }
+                #( #patterns )|* => { #branch_assign #body }
             });
         }
 
@@ -79,18 +89,29 @@ impl RustEmitter {
         &mut self,
         branches: Vec<(AltBranchInfo, TokenStream)>,
         _alloc: ValuePlacement,
-        _ctx: &mut RustEmitCtx,
+        ctx: &mut RustEmitCtx,
     ) -> TokenStream {
         if branches.len() == 1 {
             let (_, body) = &branches[0];
+            // AK.1: single branch still needs the idx assignment.
+            if let Some(ref ident) = ctx.branch_idx_ident {
+                return quote! { { #ident = 0u8; #body } };
+            }
             return body.clone();
         }
 
         let mut chain = Vec::new();
-        for (_info, body) in &branches {
+        for (i, (_info, body)) in branches.iter().enumerate() {
+            let branch_assign = if let Some(ref ident) = ctx.branch_idx_ident {
+                let idx = i as u8;
+                quote! { #ident = #idx; }
+            } else {
+                quote! {}
+            };
             chain.push(quote! {
                 {
                     let __cp = state.offset;
+                    #branch_assign
                     let __result = #body;
                     if __result.is_some() {
                         break 'alt_blk __result;

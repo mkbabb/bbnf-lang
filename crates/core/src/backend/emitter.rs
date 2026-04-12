@@ -322,6 +322,17 @@ pub trait Emitter {
         None
     }
 
+    /// Called before the driver compiles a rule's body. Backends can
+    /// use this to set up per-rule context (e.g., the Rust backend
+    /// sets `branch_idx_ident` for Alt-bodied rules so the Alt
+    /// emitter threads a branch discriminator through each arm).
+    fn pre_compile_rule_body(
+        &mut self,
+        _rule: &IrRule,
+        _ir: &GrammarIR,
+        _ctx: &mut Self::Ctx,
+    ) {}
+
     fn emit_rule_function(
         &mut self,
         rule: &IrRule,

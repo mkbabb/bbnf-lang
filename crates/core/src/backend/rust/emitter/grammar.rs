@@ -18,7 +18,7 @@
 //! functions, and a single public `parse(input)` entry point that
 //! constructs a [`::bbnf::runtime::Parsed`] from a finished tape.
 
-use bbnf_ir::{GrammarIR, IrRule};
+use bbnf_ir::{GrammarIR, IrNode, IrRule};
 use bbnf_ir::passes::{EmissionTier, MaterializationClass};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
@@ -123,6 +123,11 @@ impl RustEmitter {
 
     /// Emit a Tape-tier (or Lazy-tier) rule: the standard prelude +
     /// body + epilogue pattern from Tranche AC.2.
+    ///
+    /// Tranche AK.1: for Alt-bodied rules, the epilogue uses a
+    /// `__branch_idx` variable (set per-arm by the Alt emitter)
+    /// instead of the rule's global ID. This gives the view layer
+    /// correct branch discrimination.
     fn emit_tape_tier_rule(
         &mut self,
         name: &str,
@@ -133,18 +138,59 @@ impl RustEmitter {
         ctx: &mut RustEmitCtx,
         class: MaterializationClass,
     ) -> TokenStream {
-        let rule_idx_u8 = Self::variant_idx(rule);
+        let is_alt_body = matches!(&rule.body, IrNode::Alt(_, _));
 
-        let (prelude, epilogue) = match class {
-            MaterializationClass::MustTape => (
-                emit_must_tape_prelude(),
-                emit_must_tape_epilogue(rule_idx_u8),
-            ),
-            MaterializationClass::TapeSpanOnly => (
-                emit_tape_span_only_prelude(),
-                emit_tape_span_only_epilogue(rule_idx_u8),
-            ),
-            MaterializationClass::TransparentElide => unreachable!(),
+        let (prelude, epilogue) = if is_alt_body {
+            // Alt-bodied rules use __branch_idx for the variant
+            // discriminator. The Alt emitter sets __branch_idx per arm.
+            match class {
+                MaterializationClass::MustTape => (
+                    quote! {
+                        let __span_lo = state.offset as u32;
+                        let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                        let mut __branch_idx: u8 = 0;
+                    },
+                    quote! {
+                        Some(::bbnf::runtime::tape::TapeBuilder::push_compound(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Rule,
+                            __children,
+                            __span_lo,
+                            state.offset as u32,
+                            __branch_idx,
+                        ))
+                    },
+                ),
+                MaterializationClass::TapeSpanOnly => (
+                    quote! {
+                        let __span_lo = state.offset as u32;
+                        let mut __branch_idx: u8 = 0;
+                    },
+                    quote! {
+                        Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            __span_lo,
+                            state.offset as u32,
+                            __branch_idx,
+                        ))
+                    },
+                ),
+                MaterializationClass::TransparentElide => unreachable!(),
+            }
+        } else {
+            let rule_idx_u8 = Self::variant_idx(rule);
+            match class {
+                MaterializationClass::MustTape => (
+                    emit_must_tape_prelude(),
+                    emit_must_tape_epilogue(rule_idx_u8),
+                ),
+                MaterializationClass::TapeSpanOnly => (
+                    emit_tape_span_only_prelude(),
+                    emit_tape_span_only_epilogue(rule_idx_u8),
+                ),
+                MaterializationClass::TransparentElide => unreachable!(),
+            }
         };
 
         let signature = emit_rule_signature(name);

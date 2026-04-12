@@ -74,11 +74,30 @@ Ref(grammar_item)))`) but cannot replace the hand-patched file yet
 because `host::extract_grammar` reads the pre-inline tape shape.
 Deferred to AG.4b.
 
+## AG.5 — CSP tier variable activation
+
+Activated per-rule `EmissionTier` variables in the CSP solver and
+wired the solved tiers into `ir.emission_tier`.
+
+- **Per-rule tier variables.** `solve_component` now populates tier
+  variables for every rule in the component, clamped by the rule's
+  `MaterializationClass`: `MustTape` forces `Tape`, `TapeSpanOnly`
+  permits `{Tape, Lazy}`, `TransparentElide` permits all three tiers.
+- **`build_alt_domain` cost formula migration.** Dispatch cost
+  formula unified: `arm_count * dispatch_branch + dispatch_table`.
+  Legacy two-path cost model collapsed.
+- **3-tuple return from `solve_grammar_components`.** Returns
+  `(RecognizerDecisionMap, HashMap<NodeId, MaterializationClass>,
+  HashMap<RuleId, EmissionTier>)`. `compile.rs` merges tier decisions
+  into `ir.emission_tier`; `decode_emission_tier` runs as fallback for
+  CSP-elided rules only.
+- **10 tests un-ignored.** `cost_weights_unified` ignores that
+  depended on tier variable infrastructure restored to active.
+
 ## AG.2, AG.3 — Deferred
 
 Tier B emitter and view-layer DirectSlot have zero live consumers:
 `decode_emission_tier`'s Tier B eligibility check
 (TransparentElide + pure-conversion leaf) never fires on any
 production grammar under the current constraint set. Infrastructure
-is live; emitter activation deferred to AG.2b when the first grammar
-exercises Direct.
+is live; emitter activation deferred to Tranche AI.

@@ -1037,7 +1037,9 @@ fn collect_engine_vars_in(
 /// cost. Feasible faster strategies (ByteDispatch, KeyDispatch) are
 /// added at a cost computed from the AF.2 per-arm formula:
 ///
+/// ```text
 ///     dispatch_cost = arm_count * dispatch_branch + dispatch_table
+/// ```
 ///
 /// This replaces the pre-AG.5 flat `dispatch_bonus.abs()` placeholder
 /// with the two-component formula the cost_weights_unified contract

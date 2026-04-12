@@ -62,11 +62,6 @@ pub fn format_expression_short(node: BbnfBootstrapNodeView<'_>) -> String {
         }
 
         BbnfBootstrapRuleKind::mapped_factor => {
-            let inner = match node.child(0) {
-                Some(c) => c,
-                None => return node.span_text().to_string(),
-            };
-            let inner_str = format_expression_short(inner);
             let mapping = node.child(1);
             let has_arrow = mapping.is_some_and(|m| {
                 let (lo, hi) = m.span();
@@ -75,10 +70,22 @@ pub fn format_expression_short(node: BbnfBootstrapNodeView<'_>) -> String {
             if has_arrow {
                 // Fall back to the exact mapping source slice; it
                 // already reads as `expr -> value_expr : ty`.
-                node.span_text().trim().to_string()
-            } else {
-                inner_str
+                return node.span_text().trim().to_string();
             }
+            // The inner child (child(0)) may be an empty wrapper under
+            // the tape-first parser when the term body was consumed as
+            // a span-only operation. Detect this and fall back to the
+            // parent's span text.
+            let inner = match node.child(0) {
+                Some(c) => c,
+                None => return node.span_text().trim().to_string(),
+            };
+            let (ilo, ihi) = inner.span();
+            if ihi <= ilo {
+                // Empty wrapper — the actual content is in the parent span.
+                return node.span_text().trim().to_string();
+            }
+            format_expression_short(inner)
         }
 
         BbnfBootstrapRuleKind::factor => {

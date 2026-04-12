@@ -187,15 +187,32 @@ visibility into:
 - `#[derive(Debug)]` added to `GoogleSheetsParser` for `Parsed<R>` Debug
   bound
 
-### Post-AN Phase 0 Baseline (JSON cold, MB/s)
+### AN.1 — CSS @ws SIMD Routing
+- Root cause: DFA-compatible `@ws` regex variant not in classifier's
+  `WS_BLOCK_COMMENT_PATTERNS`; only lazy-quantifier form was recognized
+- Fix: added DFA patterns to parse-that classifier + direct
+  `scan_ws_block_comments` kernel routing in `ws.rs`
+- Result: 15 inline HIR copies replaced by 15 kernel calls (-2190 LOC
+  in expanded CSS code, -29% total expanded output)
+- CSS pretty tests: 16/16 pass
 
-| Dataset  | Pre-AN | Post-AN | sonic-rs | vs sonic |
-|----------|--------|---------|----------|----------|
-| canada   | 1,689  | 1,726   | 1,540    | +12% BEAT|
-| citm     | 2,138  | 1,957   | 3,097    | -37%     |
-| data     | 1,613  | 1,482   | 2,450    | -39%     |
-| data_xl  | 1,153  | 1,066   | 1,520    | -30%     |
-| twitter  | 1,671  | 1,605   | 2,736    | -41%     |
+### Post-AN Baseline (JSON cold, MB/s)
+
+| Dataset  | Pre-AM | Post-AM | Post-AN | sonic-rs | vs sonic |
+|----------|--------|---------|---------|----------|----------|
+| canada   | 1,453  | 1,689   | 1,745   | 1,540    | +13% BEAT|
+| citm     | 2,001  | 2,138   | 1,985   | 3,097    | -36%     |
+| data     | 1,502  | 1,613   | 1,509   | 2,450    | -38%     |
+| data_xl  | 1,121  | 1,153   | 1,089   | 1,520    | -28%     |
+| twitter  | 1,672  | 1,671   | 1,636   | 2,736    | -40%     |
+
+### Post-AN CSS Monolithic (cold, MB/s)
+
+| Dataset    | Post-AN | cssparser | vs cssparser |
+|------------|---------|-----------|--------------|
+| normalize  | 2,438   | 732       | +233% BEAT   |
+| bootstrap  | 1,618   | 476       | +240% BEAT   |
+| tailwind   | 1,417   | 446       | +218% BEAT   |
 
 ## Execution Order
 

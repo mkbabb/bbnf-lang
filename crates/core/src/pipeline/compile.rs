@@ -262,7 +262,7 @@ pub fn compute_call_strategies(ir: &GrammarIR) -> Vec<crate::backend::CallStrate
     let plan =
         crate::backend::rust::analysis::inline::analyze_parse_inline_plan(ir, &operator_chain_rules);
 
-    plan.parse_call_modes
+    let mut strategies: Vec<CallStrategy> = plan.parse_call_modes
         .iter()
         .map(|mode| match mode {
             crate::backend::rust::analysis::inline::CallMode::DirectCall => {
@@ -272,7 +272,45 @@ pub fn compute_call_strategies(ir: &GrammarIR) -> Vec<crate::backend::CallStrate
                 CallStrategy::InlineBody
             }
         })
-        .collect()
+        .collect();
+
+    // AN: Two fixups on the raw CSP-derived strategies:
+    //
+    // 1. Force InlineBody for TransparentElide rules. These rules
+    //    don't emit a function; DirectCall would reference nothing.
+    // 2. Force DirectCall for the entry rule AND for the first
+    //    non-transparent rule (the root function fallback). The
+    //    parse() entry always calls the root function by name.
+    // The entry rule always gets DirectCall — parse() calls it by name.
+    let root_rule_id = Some(ir.entry);
+
+    for rule in &ir.rules {
+        use bbnf_ir::passes::MaterializationClass;
+
+        // Force DirectCall for the root rule.
+        if Some(rule.id) == root_rule_id {
+            if let Some(strat) = strategies.get_mut(rule.id as usize) {
+                *strat = CallStrategy::DirectCall;
+            }
+            continue;
+        }
+
+        // Force InlineBody for TransparentElide.
+        let class = if let Some(dag) = ir.dag.as_ref() {
+            dag.node_for(&rule.body)
+                .and_then(|nid| ir.materialization.get(&nid).copied())
+                .unwrap_or(MaterializationClass::MustTape)
+        } else {
+            MaterializationClass::MustTape
+        };
+        if class == MaterializationClass::TransparentElide {
+            if let Some(strat) = strategies.get_mut(rule.id as usize) {
+                *strat = CallStrategy::InlineBody;
+            }
+        }
+    }
+
+    strategies
 }
 
 /// Separate closure rules from the AST. Returns (closures, non-closure rules).

@@ -231,7 +231,7 @@ fn extract_ident_from_range<'a>(
 /// Iterate iteration-pair children, unwrapping a single top-level
 /// `TapeKind::Repeat` wrapper. Local mirror of the analysis layer's
 /// `iter_iteration_views` / `iter_rep_children`.
-fn iter_tape_iteration_views<'a>(
+pub(crate) fn iter_tape_iteration_views<'a>(
     node: BbnfBootstrapNodeView<'a>,
 ) -> Vec<BbnfBootstrapNodeView<'a>> {
     use ::bbnf::runtime::tape::TapeKind;
@@ -269,7 +269,7 @@ fn iter_tape_iteration_views<'a>(
 }
 
 /// Collect binary-factor operand views.
-fn collect_tape_binary_operand_views<'a>(
+pub(crate) fn collect_tape_binary_operand_views<'a>(
     node: BbnfBootstrapNodeView<'a>,
 ) -> Vec<BbnfBootstrapNodeView<'a>> {
     use ::bbnf::runtime::tape::TapeKind;

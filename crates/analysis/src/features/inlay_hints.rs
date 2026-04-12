@@ -40,7 +40,7 @@ pub fn inlay_hints(state: &DocumentState, range: Range) -> Vec<InlayHint> {
             }
 
             // Truncate long FIRST set labels to keep inlay hints readable.
-            const MAX_HINT_LEN: usize = 32;
+            const MAX_HINT_LEN: usize = 80;
             let truncated = if first_label.len() > MAX_HINT_LEN {
                 let mut s = first_label[..MAX_HINT_LEN].to_string();
                 // Don't cut in the middle of a char representation — find last comma.

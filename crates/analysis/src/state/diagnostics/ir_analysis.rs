@@ -87,7 +87,15 @@ pub(super) fn try_compile_ir(cached: &CachedParseResult<'_>) -> IrAnalysis {
         host_fns: None,
     };
 
-    let options = PipelineOptions::default();
+    // Structural mode: disable destructive optimization passes (inline,
+    // fuse, prune) so all user-authored rules survive in the IR. This
+    // is required for correct FIRST set conflict, alias, and
+    // unreachable-rule diagnostics — the analysis layer needs every
+    // rule the user wrote, not the optimizer's minimal form.
+    let options = PipelineOptions {
+        structural: true,
+        ..PipelineOptions::default()
+    };
 
     let ir = match compile_ast(ast, &directives, &options) {
         Ok(ir) => ir,

@@ -445,8 +445,47 @@ fn lower_mapped_factor<'a>(
             term_node = Some(c);
         }
     }
+    // Detect bracket-delimited group from the span text. Under the
+    // tape-first parser, the opening `[`, `{`, `(`, `@{` delimiters
+    // are consumed span-only and don't appear as child records. The
+    // group kind is recoverable from the leading byte of the
+    // compound's span.
+    let leading_byte = node.span_text().trim_start().as_bytes().first().copied();
+    let group_kind = match leading_byte {
+        Some(b'[') => Some(GroupKind::Optional),
+        Some(b'{') => Some(GroupKind::Many),
+        Some(b'@') if node.span_text().trim_start().starts_with("@{") => {
+            Some(GroupKind::SpanCapture)
+        }
+        Some(b'(') => Some(GroupKind::Paren),
+        _ => None,
+    };
+
     let mut base = if let Some(term) = term_node {
-        dispatch_expression(term, ctx)
+        let inner = dispatch_expression(term, ctx);
+        // Apply group wrapping when the mapped_factor's span has a
+        // bracket delimiter that wasn't handled by the term dispatch
+        // (because the brackets are span-only, not child records).
+        match group_kind {
+            Some(GroupKind::Optional) => IrNode::Repeat {
+                inner: Box::new(inner),
+                lo: 0,
+                hi: 1,
+            },
+            Some(GroupKind::Many) => IrNode::Repeat {
+                inner: Box::new(inner),
+                lo: 0,
+                hi: u32::MAX,
+            },
+            Some(GroupKind::SpanCapture) => {
+                let fn_id = ctx.fns.push(bbnf_ir::FnDescriptor::SpanCapture);
+                IrNode::Map {
+                    inner: Box::new(inner),
+                    fn_id,
+                }
+            }
+            Some(GroupKind::Paren) | None => inner,
+        }
     } else {
         // No tape-level term child — the compound's body is a bare
         // leaf (identifier, literal, regex) that consumed bytes

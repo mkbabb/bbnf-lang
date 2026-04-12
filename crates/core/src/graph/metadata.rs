@@ -44,6 +44,14 @@ fn extract_alias_target<'a>(node: BbnfBootstrapNodeView<'a>) -> Option<&'a str> 
         // Direct identifier reference
         BbnfBootstrapRuleKind::identifier => Some(node.span_text()),
 
+        // Transparent wrappers — descend into the single inner child.
+        BbnfBootstrapRuleKind::rhs
+        | BbnfBootstrapRuleKind::grammar_item
+        | BbnfBootstrapRuleKind::directive
+        | BbnfBootstrapRuleKind::lhs => {
+            node.child(0).and_then(extract_alias_target)
+        }
+
         // `term = ε | identifier (call_args)? | literal | regex
         //       | "(" rhs ")" | "[" rhs "]" | "{" rhs "}" | "@{" rhs "}"`
         //
@@ -93,62 +101,78 @@ fn extract_alias_target<'a>(node: BbnfBootstrapNodeView<'a>) -> Option<&'a str> 
         // factor = (comment_before?, term, modifier?, comment_after?)
         // — unwrap when all three optional slots are absent.
         BbnfBootstrapRuleKind::factor => {
-            let term = find_child_by_kind(node, BbnfBootstrapRuleKind::term)?;
             let modifier = find_child_by_kind(node, BbnfBootstrapRuleKind::modifier);
             let has_modifier = modifier
                 .map(|m| m.span().1 > m.span().0)
                 .unwrap_or(false);
             if has_modifier {
-                None
-            } else {
+                return None;
+            }
+            // Under tape-first, the `term` child may not exist as a
+            // separate Rule record. Check for it explicitly, then fall
+            // back to the factor's span text for a bare identifier.
+            if let Some(term) = find_child_by_kind(node, BbnfBootstrapRuleKind::term) {
                 extract_alias_target(term)
+            } else {
+                let text = node.span_text().trim();
+                if !text.is_empty() && super::deps::is_ident(text.as_bytes()) {
+                    Some(text)
+                } else {
+                    None
+                }
             }
         }
 
         // mapped_factor = (inner, mapping?) — unwrap when the
         // mapping slot is absent.
         BbnfBootstrapRuleKind::mapped_factor => {
-            let inner = node.child(0)?;
             let mapping = node.child(1);
             let no_mapping = mapping
                 .map(|m| m.span().1 == m.span().0)
                 .unwrap_or(true);
-            if no_mapping {
+            if !no_mapping {
+                return None;
+            }
+            // Under the tape-first parser, child(0) may be an empty
+            // wrapper when the term body was consumed span-only.
+            // Fall back to the mapped_factor's own span text.
+            let inner = node.child(0)?;
+            let (ilo, ihi) = inner.span();
+            if ihi > ilo {
                 extract_alias_target(inner)
             } else {
-                None
+                // Empty wrapper — check the parent's span for a bare ident.
+                let text = node.span_text().trim();
+                if !text.is_empty() && super::deps::is_ident(text.as_bytes()) {
+                    Some(text)
+                } else {
+                    None
+                }
             }
         }
 
         // Single-branch alternation / single-element concatenation
         // / single-operand binary factor — descend transparently.
         BbnfBootstrapRuleKind::alternation | BbnfBootstrapRuleKind::call_arg => {
-            let mut iter = node.children();
-            let first = iter.next()?;
-            if iter.next().is_some() {
+            let branches: Vec<_> = super::deps::iter_tape_iteration_views(node);
+            if branches.len() != 1 {
                 return None;
             }
-            let branch = first.child(0).unwrap_or(first);
-            extract_alias_target(branch)
+            extract_alias_target(branches[0])
         }
         BbnfBootstrapRuleKind::concatenation => {
-            let mut iter = node.children();
-            let first = iter.next()?;
-            if iter.next().is_some() {
+            let parts: Vec<_> = super::deps::iter_tape_iteration_views(node);
+            if parts.len() != 1 {
                 return None;
             }
-            let part = first.child(0).unwrap_or(first);
-            extract_alias_target(part)
+            extract_alias_target(parts[0])
         }
         BbnfBootstrapRuleKind::binary_factor => {
-            let first = node.child(0)?;
-            let rest = node.child(1);
-            let rest_empty = rest.map(|r| r.children().next().is_none()).unwrap_or(true);
-            if rest_empty {
-                extract_alias_target(first)
-            } else {
-                None
+            let operands: Vec<_> = super::deps::collect_tape_binary_operand_views(node);
+            if operands.len() != 1 {
+                return None;
             }
+            extract_alias_target(operands[0])
         }
 
         // Anonymous wrapper compounds (variant_idx=0 collides with

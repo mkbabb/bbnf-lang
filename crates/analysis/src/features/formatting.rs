@@ -219,19 +219,36 @@ fn format_expression(node: BbnfBootstrapNodeView<'_>, indent_level: usize) -> St
         BbnfBootstrapRuleKind::modifier => node.span_text().to_string(),
 
         BbnfBootstrapRuleKind::mapped_factor => {
-            let inner = match node.child(0) {
-                Some(c) => c,
-                None => return node.span_text().to_string(),
-            };
-            let inner_str = format_expression(inner, indent_level);
             let mapping = node.child(1);
             let has_arrow = mapping.is_some_and(|m| {
                 let (lo, hi) = m.span();
                 hi > lo && m.span_text().contains("->")
             });
             if !has_arrow {
-                return inner_str;
+                // The inner child (child(0)) may be an empty wrapper under
+                // the tape-first parser. Fall back to the parent span text.
+                let inner = match node.child(0) {
+                    Some(c) => c,
+                    None => return node.span_text().trim().to_string(),
+                };
+                let (ilo, ihi) = inner.span();
+                if ihi <= ilo {
+                    return node.span_text().trim().to_string();
+                }
+                return format_expression(inner, indent_level);
             }
+            let inner = match node.child(0) {
+                Some(c) => c,
+                None => return node.span_text().to_string(),
+            };
+            let inner_str = {
+                let (ilo, ihi) = inner.span();
+                if ihi <= ilo {
+                    node.span_text().trim().to_string()
+                } else {
+                    format_expression(inner, indent_level)
+                }
+            };
             // Extract the value_expr / type annotation from the
             // mapping group's children via rule_kind dispatch —
             // mirrors `lower/expression.rs::find_value_expr_child`.

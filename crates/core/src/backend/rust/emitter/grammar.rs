@@ -422,11 +422,14 @@ impl RustEmitter {
         // from `ir.entry`, which is set at lowering time and
         // preserved through every IR pass. Fall back to the first
         // non-transparent rule only as a defensive guard.
+        // The root rule is always ir.entry — the grammar's declared
+        // entry point. Even if it's transparent (e.g. JSON's `value`
+        // is an Alt of Refs), it must have a function because parse()
+        // calls it by name. compute_call_strategies forces DirectCall.
         let root_rule_name = ir
             .rules
             .iter()
-            .find(|r| r.id == ir.entry && !r.meta.is_transparent)
-            .or_else(|| ir.rules.iter().find(|r| !r.meta.is_transparent))
+            .find(|r| r.id == ir.entry)
             .map(|r| ir.get_string(r.name))
             .unwrap_or_else(|| {
                 let names: Vec<String> = ir

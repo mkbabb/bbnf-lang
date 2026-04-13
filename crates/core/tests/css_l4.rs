@@ -237,6 +237,26 @@ fn media_query() {
 }
 
 // ---------------------------------------------------------------------------
+// Vendor-prefix and multi-rule isolation
+// ---------------------------------------------------------------------------
+
+#[test]
+fn vendor_prefix_property() {
+    assert!(
+        parse_full("html { -webkit-text-size-adjust: 100%; }"),
+        "-webkit vendor prefix property should parse"
+    );
+}
+
+#[test]
+fn two_rules_sequential() {
+    assert!(
+        parse_full("html { margin: 0; }\nbody { margin: 0; }"),
+        "two sequential rules should parse"
+    );
+}
+
+// ---------------------------------------------------------------------------
 // Full file tests
 // ---------------------------------------------------------------------------
 

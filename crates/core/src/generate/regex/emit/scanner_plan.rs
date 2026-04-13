@@ -143,7 +143,27 @@ pub(crate) fn plan_regex_scanner(pattern: &str, opts: &EmitOpts) -> Option<Scann
         RegexClass::WhitespaceWithBlockComment => {
             Some(shared_ws_block_comment_scanner())
         }
-        RegexClass::Identifier { .. } => Some(shared_ident_scanner()),
+        // Plain identifier: no leading dash, no escapes.
+        RegexClass::Identifier {
+            allows_leading_dash: false,
+            allows_double_dash_prefix: false,
+            allows_escapes: false,
+        } => Some(shared_ident_scanner()),
+        // CSS-flavored identifier: vendor prefixes (-foo) and/or
+        // custom properties (--foo). Route through the CSS kernel.
+        RegexClass::Identifier {
+            allows_escapes: false,
+            ..
+        } => Some(ScannerPlan::Kernel(
+            crate::backend::kernels::identifier::emit_call_css(),
+        )),
+        // Escape-augmented identifiers (CSS selectorIdent) need a
+        // dedicated scanner that hasn't been built yet (AS.3.2).
+        // Fall through to the generalized emitter for now.
+        RegexClass::Identifier {
+            allows_escapes: true,
+            ..
+        } => None,
         RegexClass::QuotedString { .. } => Some(shared_quoted_string_scanner()),
         RegexClass::Numeric {
             allows_sign: false, ..

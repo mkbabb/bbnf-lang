@@ -5,7 +5,7 @@
 //!
 //! - **Variables**: One per rule → domain `{InlineBody, DirectCall}`
 //! - **Constraints**:
-//!   - Forced DirectCall: cyclic, recover, prettify, operator-chain rules
+//!   - Forced DirectCall: preserve_identity, cyclic, recover, prettify, operator-chain rules
 //!   - Forced InlineBody: single-site inline, @token rules
 //!   - Cost budget: `cost(rule) * ref_count <= weight-derived total budget`
 //!   - Alt branch limit: structural ceiling on alternation fan-out
@@ -369,6 +369,15 @@ pub fn analyze_parse_inline_plan(
     for (idx, rule) in ir.rules.iter().enumerate() {
         let var = var_ids[idx];
 
+        // Priority 0: preserve_identity → forced DirectCall.
+        // These rules must always produce their own tape record so
+        // consumers (e.g. the bootstrap host.rs extraction layer) can
+        // locate them by variant_idx. Never inline them.
+        if rule.meta.preserve_identity {
+            csp.add_constraint(ForceCallMode::new(var, CallMode::DirectCall));
+            continue;
+        }
+
         // Priority 1: Single-site inline → forced InlineBody.
         if single_site_inline[idx] {
             csp.add_constraint(ForceCallMode::new(var, CallMode::InlineBody));
@@ -479,6 +488,7 @@ fn compute_single_site_inline_with_ref_counts(ir: &GrammarIR, ref_counts: &[u32]
             rule.meta.is_cyclic
                 && rule.id != 0
                 && ref_counts[i] == 1
+                && !rule.meta.preserve_identity
                 && !body_has_self_ref(&rule.body, rule.id)
                 && rule.meta.directives.recover.is_none()
                 && rule.meta.directives.pretty.is_none()

@@ -228,6 +228,7 @@ pub fn lower_to_ir<'a>(
         type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: HashMap::new(),
         payload_layouts: HashMap::new(),
+        string_index: HashMap::new(),
     }
 }
 

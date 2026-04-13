@@ -48,6 +48,30 @@ pub enum TypeDesc {
 }
 
 impl TypeDesc {
+    /// Resolve a well-known scalar type name to its concrete `TypeDesc`
+    /// variant. Returns `None` for unknown names — callers fall back to
+    /// `TypeDesc::Named` in that case.
+    ///
+    /// This is the single source of truth for the
+    /// `"f64" → TypeDesc::F64` mapping; both lowering (`lower_map_arrow`)
+    /// and the type projection CSP consume it.
+    pub fn from_scalar_name(name: &str) -> Option<TypeDesc> {
+        match name {
+            "f64" => Some(TypeDesc::F64),
+            "f32" => Some(TypeDesc::F64), // f32 promoted to f64 (no F32 variant)
+            "bool" => Some(TypeDesc::Bool),
+            "i8" => Some(TypeDesc::I8),
+            "u8" => Some(TypeDesc::U8),
+            "i16" => Some(TypeDesc::I16),
+            "u16" => Some(TypeDesc::U16),
+            "i32" => Some(TypeDesc::I32),
+            "u32" => Some(TypeDesc::U32),
+            "i64" => Some(TypeDesc::I64),
+            "u64" => Some(TypeDesc::U64),
+            _ => None,
+        }
+    }
+
     /// True if this type is storable inline as a fixed-size scalar payload.
     ///
     /// Scalar payloads are written into the tape's payload buffer via

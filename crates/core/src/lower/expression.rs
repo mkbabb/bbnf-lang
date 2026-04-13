@@ -1268,6 +1268,17 @@ fn lookup_env<'a>(
 
 // ─── MapArrow / ValueExpr lowering ─────────────────────────────────────────────
 
+/// Resolve a type name string to a `TypeDesc`, preferring concrete scalar
+/// variants (`TypeDesc::F64`, `TypeDesc::U8`, etc.) over the generic
+/// `TypeDesc::Named`. Falls back to `Named` for unknown type names so
+/// backend-specific resolution can still occur.
+fn resolve_type_name(name: &str, ctx: &mut LowerCtx<'_>) -> TypeDesc {
+    TypeDesc::from_scalar_name(name).unwrap_or_else(|| {
+        let sid = ctx.strings.intern(name);
+        TypeDesc::Named(sid)
+    })
+}
+
 /// Lower a `->` mapping to a `FnId`.
 ///
 /// `value_expr` is the value expression node, `type_ann` is the
@@ -1287,8 +1298,7 @@ fn lower_map_arrow<'a>(
                 }
                 _ => return None,
             };
-            let sid = ctx.strings.intern(name);
-            Some(TypeDesc::Named(sid))
+            Some(resolve_type_name(name, ctx))
         } else {
             None
         }
@@ -1298,20 +1308,33 @@ fn lower_map_arrow<'a>(
     // unwrap_value_ident_str recursively peels value expression wrappers.
     if let Some(name) = unwrap_value_ident_str(value_expr) {
         if is_type_name(name) && return_type.is_none() {
-            let type_sid = ctx.strings.intern(name);
+            let td = resolve_type_name(name, ctx);
             return ctx.fns.push(FnDescriptor::Expr {
                 expr: MapExpr::Input,
-                return_type: Some(TypeDesc::Named(type_sid)),
+                return_type: Some(td),
             });
         }
     }
 
     // Extract type suffix from integer/float literals when no explicit type annotation.
+    // The tape-rewrite may fold `int_lit`/`float_lit` into `value_atom`,
+    // so when the leaf rule_kind is `value_atom` we recover the type
+    // suffix from the span text — the span IS the authoritative source
+    // of the literal's textual form.
     let return_type = return_type.or_else(|| {
         let leaf = deep_unwrap_value(value_expr);
         let text = match leaf.rule_kind() {
             BbnfBootstrapRuleKind::int_lit | BbnfBootstrapRuleKind::float_lit => {
                 Some(leaf.span_text())
+            }
+            BbnfBootstrapRuleKind::value_atom => {
+                // value_atom inlined the leaf — inspect leading byte to
+                // decide if this is a numeric literal.
+                let t = leaf.span_text().trim_start();
+                match t.as_bytes().first() {
+                    Some(b'0'..=b'9') | Some(b'.') => Some(t),
+                    _ => None,
+                }
             }
             _ => None,
         };
@@ -1320,18 +1343,35 @@ fn lower_map_arrow<'a>(
             if suffix.is_empty() {
                 None
             } else {
-                let sid = ctx.strings.intern(suffix);
-                Some(TypeDesc::Named(sid))
+                Some(TypeDesc::from_scalar_name(suffix).unwrap_or_else(|| {
+                    let sid = ctx.strings.intern(suffix);
+                    TypeDesc::Named(sid)
+                }))
             }
         })
     });
 
     // Bool literal → bool type.
+    // Same recovery: when `bool_lit` has been folded into `value_atom`,
+    // detect `true`/`false` from the span text.
     let return_type = return_type.or_else(|| {
         let leaf = deep_unwrap_value(value_expr);
-        if leaf.rule_kind() == BbnfBootstrapRuleKind::bool_lit {
-            let sid = ctx.strings.intern("bool");
-            Some(TypeDesc::Named(sid))
+        let is_bool = match leaf.rule_kind() {
+            BbnfBootstrapRuleKind::bool_lit => true,
+            BbnfBootstrapRuleKind::value_atom => {
+                let t = leaf.span_text().trim_start();
+                let is_word_boundary = |s: &str, len: usize| {
+                    !s.as_bytes()
+                        .get(len)
+                        .is_some_and(|b| b.is_ascii_alphanumeric() || *b == b'_')
+                };
+                (t.starts_with("true") && is_word_boundary(t, 4))
+                    || (t.starts_with("false") && is_word_boundary(t, 5))
+            }
+            _ => false,
+        };
+        if is_bool {
+            Some(TypeDesc::Bool)
         } else {
             None
         }
@@ -1344,10 +1384,7 @@ fn lower_map_arrow<'a>(
             ctx.host_fns
                 .and_then(|hosts| hosts.get(name.as_str()))
                 .and_then(|opt_type| opt_type.as_ref())
-                .map(|type_name| {
-                    let sid = ctx.strings.intern(type_name);
-                    TypeDesc::Named(sid)
-                })
+                .map(|type_name| resolve_type_name(type_name, ctx))
         })
     });
 
@@ -1364,11 +1401,26 @@ fn lower_map_arrow<'a>(
 fn try_specialize_map_fn(inner: &IrNode, fn_id: FnId, ctx: &mut LowerCtx<'_>) -> FnId {
     let desc = &ctx.fns.fns[fn_id as usize];
 
-    let (expr, type_sid) = match desc {
+    // Extract the expression and type name for specialization.
+    // Handles both concrete scalar TypeDescs (TypeDesc::F64, etc.) and
+    // legacy Named("f64") — the latter may still appear from explicit
+    // type annotations using unknown names.
+    let (expr, type_name_owned) = match desc {
         FnDescriptor::Expr {
             expr,
-            return_type: Some(TypeDesc::Named(sid)),
-        } => (expr.clone(), *sid),
+            return_type: Some(td),
+        } => {
+            let name = match td {
+                TypeDesc::Named(sid) => Some(ctx.strings.resolve(*sid).to_owned()),
+                TypeDesc::F64 => Some("f64".to_owned()),
+                TypeDesc::U32 => Some("u32".to_owned()),
+                _ => None,
+            };
+            match name {
+                Some(n) => (expr.clone(), n),
+                None => return fn_id,
+            }
+        }
         _ => return fn_id,
     };
 
@@ -1377,10 +1429,9 @@ fn try_specialize_map_fn(inner: &IrNode, fn_id: FnId, ctx: &mut LowerCtx<'_>) ->
         _ => return fn_id,
     };
 
-    let type_name = ctx.strings.resolve(type_sid).to_owned();
     let pattern = ctx.strings.resolve(regex_sid).to_owned();
 
-    match type_name.as_str() {
+    match type_name_owned.as_str() {
         "f64" => {
             if matches!(expr, MapExpr::Input)
                 && matches!(classify_regex(&pattern), RegexClass::Numeric { .. })

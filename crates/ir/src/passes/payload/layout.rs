@@ -72,6 +72,17 @@ pub fn compute_payload_layouts(ir: &GrammarIR) -> HashMap<RuleId, PayloadLayout>
     out
 }
 
+/// Recognize the KV-pair shape: exactly two fields where the first
+/// is `TypeDesc::Span` and the second is a scalar payload.
+///
+/// This is the flattening criterion for `TapeKind::KvPair` — a
+/// Seq with this shape can be stored as a single aggregate leaf
+/// (key span + value payload) instead of a compound with two
+/// children.
+pub fn is_kv_pair_shape(fields: &[TypeDesc]) -> bool {
+    matches!(fields, [TypeDesc::Span, value] if value.is_scalar_payload())
+}
+
 /// Produce a layout plan for a tuple of scalar TypeDescs.
 ///
 /// Walks the fields in declaration order, aligning each field to its

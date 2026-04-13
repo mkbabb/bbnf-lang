@@ -235,13 +235,24 @@ pub fn emit_tape_span_only_aggregate_prelude(_layout: &PayloadLayout) -> TokenSt
 /// is false (the body finished without writing any scalar
 /// captures), falls back to bare `push_leaf` so the tape carries
 /// the span without any payload reference.
+///
+/// AR.9: when `kv_pair` is true, the aggregate leaf uses
+/// `TapeKind::KvPair` instead of `TapeKind::Span`, signalling
+/// the view layer that the record is a flattened key-value pair.
 pub fn emit_tape_span_only_aggregate_epilogue(
     layout: &PayloadLayout,
     variant_idx: u8,
+    kv_pair: bool,
 ) -> TokenStream {
     let variant_lit = variant_idx;
     let meta_lit = META_IDX_ZERO;
     let total_bytes = layout.total_bytes as usize;
+    let tape_kind = if kv_pair {
+        quote! { ::bbnf::runtime::tape::TapeKind::KvPair }
+    } else {
+        quote! { ::bbnf::runtime::tape::TapeKind::Span }
+    };
+    let tape_kind_fallback = quote! { ::bbnf::runtime::tape::TapeKind::Span };
     quote! {
         {
             let __vi: u8 = #variant_lit;
@@ -249,7 +260,7 @@ pub fn emit_tape_span_only_aggregate_epilogue(
             if __has_payload {
                 Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with_aggregate(
                     tape,
-                    ::bbnf::runtime::tape::TapeKind::Span,
+                    #tape_kind,
                     __span_lo,
                     state.offset as u32,
                     __vi,
@@ -259,7 +270,7 @@ pub fn emit_tape_span_only_aggregate_epilogue(
             } else {
                 Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(
                     tape,
-                    ::bbnf::runtime::tape::TapeKind::Span,
+                    #tape_kind_fallback,
                     __span_lo,
                     state.offset as u32,
                     __vi,
@@ -291,13 +302,22 @@ pub fn emit_must_tape_aggregate_prelude(_layout: &PayloadLayout) -> TokenStream 
 ///
 /// Prefers `push_leaf_with_aggregate` when any field wrote a scalar
 /// capture; otherwise falls through to the compound-children push.
+///
+/// AR.9: when `kv_pair` is true, the aggregate leaf uses
+/// `TapeKind::KvPair` instead of `TapeKind::Span`.
 pub fn emit_must_tape_aggregate_epilogue(
     layout: &PayloadLayout,
     variant_idx: u8,
+    kv_pair: bool,
 ) -> TokenStream {
     let variant_lit = variant_idx;
     let meta_lit = META_IDX_ZERO;
     let total_bytes = layout.total_bytes as usize;
+    let tape_kind = if kv_pair {
+        quote! { ::bbnf::runtime::tape::TapeKind::KvPair }
+    } else {
+        quote! { ::bbnf::runtime::tape::TapeKind::Span }
+    };
     quote! {
         {
             let __vi: u8 = #variant_lit;
@@ -305,7 +325,7 @@ pub fn emit_must_tape_aggregate_epilogue(
             if __has_payload {
                 Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with_aggregate(
                     tape,
-                    ::bbnf::runtime::tape::TapeKind::Span,
+                    #tape_kind,
                     __span_lo,
                     state.offset as u32,
                     __vi,

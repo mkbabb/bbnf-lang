@@ -16,5 +16,6 @@
 mod layout;
 
 pub use layout::{
-    compute_payload_layouts, plan_layout, PayloadField, PayloadLayout, MAX_PAYLOAD_BYTES,
+    compute_payload_layouts, is_kv_pair_shape, plan_layout, PayloadField, PayloadLayout,
+    MAX_PAYLOAD_BYTES,
 };

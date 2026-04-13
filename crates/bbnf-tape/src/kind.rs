@@ -92,11 +92,21 @@ pub enum TapeKind {
     /// Views expose this as `.is_recovered()`.
     Recovered = 12,
 
+    /// Leaf KV-pair — a flattened key-value pair where the key is a
+    /// `Span` and the value is a scalar payload packed into the
+    /// aggregate buffer. Emitted for Seq rules with the shape
+    /// `[Span, scalar]` (e.g., JSON `pair = string, colon >> value`
+    /// when `value` resolves to a scalar leaf). The view reads the
+    /// key span from `(span_lo, span_hi)` of the first field and
+    /// the value from the aggregate payload bytes — no child
+    /// traversal needed.
+    KvPair = 14,
+
     /// Reserved for future grammar-specific shapes (structural bitmap
     /// dispatch, keyword PHF lookup, etc.). Codegen may assign tags
     /// in the range 64..=255 without colliding with the shared
     /// vocabulary above.
-    Reserved = 13,
+    Reserved = 15,
 }
 
 impl TapeKind {
@@ -105,7 +115,11 @@ impl TapeKind {
     pub fn is_leaf(self) -> bool {
         matches!(
             self,
-            TapeKind::Span | TapeKind::Epsilon | TapeKind::Literal | TapeKind::Regex,
+            TapeKind::Span
+                | TapeKind::Epsilon
+                | TapeKind::Literal
+                | TapeKind::Regex
+                | TapeKind::KvPair,
         )
     }
 
@@ -138,6 +152,7 @@ impl TapeKind {
             TapeKind::MapValue => "map_value",
             TapeKind::TokenDispatch => "token_dispatch",
             TapeKind::Recovered => "recovered",
+            TapeKind::KvPair => "kv_pair",
             TapeKind::Reserved => "reserved",
         }
     }

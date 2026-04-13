@@ -16,6 +16,7 @@ mod repetition;
 use proc_macro2::TokenStream;
 use quote::quote;
 use parse_that::regex::hir::{CharClass, Hir};
+use parse_that::regex::info::is_nullable;
 
 use alternation::emit_alternation;
 use leaf::{emit_class_single, emit_literal, emit_look};
@@ -35,19 +36,6 @@ pub(crate) fn contains_lazy_quantifier(hir: &Hir) -> bool {
         }
         Hir::Group(sub) => contains_lazy_quantifier(sub),
         _ => false,
-    }
-}
-
-/// Compute whether an HIR is nullable (can match zero characters).
-fn is_nullable(hir: &Hir) -> bool {
-    match hir {
-        Hir::Empty => true,
-        Hir::Literal(bytes) => bytes.is_empty(),
-        Hir::Class(_) | Hir::Look(_) => false,
-        Hir::Repetition(rep) => rep.min == 0 || is_nullable(&rep.sub),
-        Hir::Group(sub) => is_nullable(sub),
-        Hir::Concat(subs) => subs.iter().all(is_nullable),
-        Hir::Alternation(alts) => alts.iter().any(is_nullable),
     }
 }
 

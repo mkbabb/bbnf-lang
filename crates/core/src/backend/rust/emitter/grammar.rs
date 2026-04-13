@@ -19,7 +19,7 @@
 //! constructs a [`::bbnf::runtime::Parsed`] from a finished tape.
 
 use bbnf_ir::{GrammarIR, IrNode, IrRule, TypeDesc};
-use bbnf_ir::passes::MaterializationClass;
+use bbnf_ir::passes::{MaterializationClass, is_kv_pair_shape};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
@@ -217,14 +217,27 @@ impl RustEmitter {
             // the scalar bytes into the aggregate buffer at the
             // layout-recorded offset.
             if let Some(layout) = ctx.payload_layout.as_ref() {
+                // AR.9: detect KV-pair shape [Span, scalar] so the
+                // epilogue stamps TapeKind::KvPair instead of
+                // TapeKind::Span. The view layer reads the key span
+                // from (span_lo, span_hi) and the value from the
+                // aggregate payload — no child traversal.
+                let kv_pair = ir
+                    .types
+                    .iter()
+                    .find_map(|(rid, td)| (*rid == rule.id).then_some(td))
+                    .is_some_and(|td| match td {
+                        TypeDesc::Tuple(fields) => is_kv_pair_shape(fields),
+                        _ => false,
+                    });
                 match class {
                     MaterializationClass::MustTape => (
                         emit_must_tape_aggregate_prelude(layout),
-                        emit_must_tape_aggregate_epilogue(layout, rule_idx_u8),
+                        emit_must_tape_aggregate_epilogue(layout, rule_idx_u8, kv_pair),
                     ),
                     MaterializationClass::TapeSpanOnly => (
                         emit_tape_span_only_aggregate_prelude(layout),
-                        emit_tape_span_only_aggregate_epilogue(layout, rule_idx_u8),
+                        emit_tape_span_only_aggregate_epilogue(layout, rule_idx_u8, kv_pair),
                     ),
                     MaterializationClass::TransparentElide => unreachable!(),
                 }

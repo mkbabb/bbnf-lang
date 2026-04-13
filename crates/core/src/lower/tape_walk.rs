@@ -112,8 +112,7 @@ pub(crate) fn peel_transparent<'tape>(
         match view.rule_kind() {
             BbnfBootstrapRuleKind::grammar_item
             | BbnfBootstrapRuleKind::directive
-            | BbnfBootstrapRuleKind::lhs
-            | BbnfBootstrapRuleKind::rhs => {
+            | BbnfBootstrapRuleKind::lhs => {
                 let Some(child) = view.child(0) else {
                     return view;
                 };

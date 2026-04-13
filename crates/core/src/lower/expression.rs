@@ -548,8 +548,7 @@ fn find_value_expr_child<'a>(
     // for `lower_value_expr` downstream.
     for c in node.children() {
         match c.rule_kind() {
-            BbnfBootstrapRuleKind::value_expr
-            | BbnfBootstrapRuleKind::value_or
+            BbnfBootstrapRuleKind::value_or
             | BbnfBootstrapRuleKind::value_and
             | BbnfBootstrapRuleKind::value_cmp
             | BbnfBootstrapRuleKind::value_add

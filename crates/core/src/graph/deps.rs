@@ -102,7 +102,6 @@ pub fn collect_nonterminal_refs<'a>(
 
         // Transparent wrappers — descend into the single inner child.
         BbnfBootstrapRuleKind::term
-        | BbnfBootstrapRuleKind::rhs
         | BbnfBootstrapRuleKind::grammar_item
         | BbnfBootstrapRuleKind::directive
         | BbnfBootstrapRuleKind::lhs => {

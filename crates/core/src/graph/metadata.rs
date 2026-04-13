@@ -45,8 +45,7 @@ fn extract_alias_target<'a>(node: BbnfBootstrapNodeView<'a>) -> Option<&'a str> 
         BbnfBootstrapRuleKind::identifier => Some(node.span_text()),
 
         // Transparent wrappers — descend into the single inner child.
-        BbnfBootstrapRuleKind::rhs
-        | BbnfBootstrapRuleKind::grammar_item
+        BbnfBootstrapRuleKind::grammar_item
         | BbnfBootstrapRuleKind::directive
         | BbnfBootstrapRuleKind::lhs => {
             node.child(0).and_then(extract_alias_target)
@@ -69,12 +68,10 @@ fn extract_alias_target<'a>(node: BbnfBootstrapNodeView<'a>) -> Option<&'a str> 
         BbnfBootstrapRuleKind::term => {
             let leading = node.span_text().as_bytes().first().copied();
             if leading == Some(b'(') {
-                // Grouped `( rhs )` form — descend into the inner
-                // expression. Prefer the explicit `rhs` child under
-                // structural mode; fall back to the first
-                // substantive non-literal descendant otherwise.
-                let inner = find_child_by_kind(node, BbnfBootstrapRuleKind::rhs)
-                    .or_else(|| find_semantic_child(node))?;
+                // Grouped `( expr )` form — descend into the inner
+                // expression. Find the first substantive non-literal
+                // descendant.
+                let inner = find_semantic_child(node)?;
                 return extract_alias_target(peel_transparent(inner));
             }
             if matches!(leading, Some(b'[') | Some(b'{') | Some(b'@')) {

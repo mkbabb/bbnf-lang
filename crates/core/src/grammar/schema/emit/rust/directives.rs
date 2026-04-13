@@ -56,18 +56,17 @@ pub(super) fn generate_module(schema: &CstSchema) -> TokenStream {
         let Some(variant_idx) = variant_idx_for(schema, &variant.name) else {
             continue;
         };
-        // Type metadata is consulted only as a heuristic that the
-        // rule was lowered with the expected payload shape. Pre-AE
-        // structural mode preserves more wrappers (Optional
+        // `variant.type_desc` is consulted only as a heuristic: the
+        // structural-mode pipeline preserves more wrappers (Optional
         // placeholders, comment slots) so the projected Tuple can
-        // come out longer than the layout's slot count. The
-        // generated `try_as_*_directive` helper walks the runtime
-        // tape via `cursor.children()` and binds slots positionally
-        // from the front, so an over-long Tuple is harmless: extra
-        // children are simply not bound. Accept any non-empty
-        // payload — including the case where `type_desc` is missing
-        // entirely (some directives lower to Unit because their
-        // body inlines all literals).
+        // come out longer than the layout's slot count. The generated
+        // `try_as_*_directive` helper walks the runtime tape via
+        // `cursor.children()` and binds slots positionally from the
+        // front, so an over-long Tuple is harmless — extra children
+        // are simply not bound. Any non-empty payload is acceptable,
+        // including the case where `type_desc` is missing entirely
+        // (some directives lower to Unit because their body inlines
+        // all literals).
         let _ = &variant.type_desc;
 
         let struct_ident = format_ident!("{}", layout.struct_name);

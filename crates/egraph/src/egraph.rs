@@ -162,36 +162,38 @@ impl<N: Language, A: Analysis<N>> EGraph<N, A> {
         let id = self.unionfind.make_set();
         debug_assert_eq!(id.as_usize(), self.classes.len());
 
-        // Compute analysis data for the initial node.
-        let data = {
-            // Create the class eagerly with default data so analysis can
-            // inspect child classes via `self.class(child)`.
-            self.classes.push(EClass {
-                id,
-                nodes: Vec::new(),
-                data: A::make(self, &node),
-                parents: Vec::new(),
-            });
-            // `A::make` was already called; reuse the freshly-pushed data.
-            // (We can't easily take ownership out of the vec; we rely on
-            // `A::make` being pure.)
-            self.classes[id.as_usize()].data.clone()
-        };
+        // Snapshot child IDs before borrowing `self` for analysis or mutation.
+        let child_ids: Vec<Id> = node.children().to_vec();
+
+        // Compute analysis data while `self` is immutably borrowable.
+        // `A::make` may inspect child classes via `self.class(child)` — all
+        // child classes already exist because children were added first.
+        let data = A::make(self, &node);
+
+        // Pre-clone the node for each child's parent edge + the memo key.
+        // The original is moved into the class's node list (zero-clone path).
+        let mut clones: Vec<N> = (0..child_ids.len() + 1)
+            .map(|_| node.clone())
+            .collect();
+        let memo_key = clones.pop().unwrap();
+
+        // Create the class with the original node moved in.
+        self.classes.push(EClass {
+            id,
+            nodes: vec![node],
+            data,
+            parents: Vec::new(),
+        });
 
         // Register parent edges on each child's class.
-        for &child in node.children() {
-            let child_canonical = self.unionfind.find(child);
+        for (child_id, parent_clone) in child_ids.into_iter().zip(clones) {
+            let child_canonical = self.unionfind.find(child_id);
             self.classes[child_canonical.as_usize()]
                 .parents
-                .push((node.clone(), id));
+                .push((parent_clone, id));
         }
 
-        // Install the node in its class and memo.
-        let class = &mut self.classes[id.as_usize()];
-        class.nodes.push(node.clone());
-        class.data = data;
-        self.memo.insert(node, id);
-
+        self.memo.insert(memo_key, id);
         id
     }
 
@@ -217,7 +219,9 @@ impl<N: Language, A: Analysis<N>> EGraph<N, A> {
         // Union-find bookkeeping: point src at dst.
         self.unionfind.union(dst, src);
         // Replace src with an empty placeholder, carrying over dst's current
-        // data as the placeholder's analysis (avoids a borrow conflict).
+        // data as the placeholder's analysis. Clone required: `A::merge`
+        // consumes src's data by value, so the src slot needs a valid
+        // `A::Data` for drop safety, and `A::Data` has no `Default` bound.
         let dst_data = self.classes[dst.as_usize()].data.clone();
         let src_class = std::mem::replace(
             &mut self.classes[src.as_usize()],
@@ -265,6 +269,8 @@ impl<N: Language, A: Analysis<N>> EGraph<N, A> {
                         let merged = self.union(existing, parent_canonical);
                         let _ = merged;
                     } else {
+                        // Clone required: memo takes ownership of the key,
+                        // and the node is also stored in the parents list.
                         self.memo.insert(parent_node.clone(), parent_canonical);
                         self.classes[canonical.as_usize()]
                             .parents
@@ -272,13 +278,14 @@ impl<N: Language, A: Analysis<N>> EGraph<N, A> {
                     }
                 }
                 // Canonicalize the nodes stored in this class too, and
-                // de-duplicate via a small HashMap.
+                // de-duplicate via linear scan. E-classes are typically
+                // small, so Vec::contains is cheaper than HashMap
+                // construction and avoids cloning each node for the set.
                 let nodes = std::mem::take(&mut self.classes[canonical.as_usize()].nodes);
-                let mut seen: FxHashMap<N, ()> = FxHashMap::default();
                 let mut kept = Vec::with_capacity(nodes.len());
                 for mut n in nodes {
                     self.canonicalize(&mut n);
-                    if seen.insert(n.clone(), ()).is_none() {
+                    if !kept.contains(&n) {
                         kept.push(n);
                     }
                 }

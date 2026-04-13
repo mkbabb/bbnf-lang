@@ -50,7 +50,7 @@ pub struct Scalar<T: Clone + PartialOrd>(pub T);
 
 impl<T: Clone + PartialOrd> Lattice for Scalar<T> {
     fn join(&self, other: &Self) -> Self {
-        if self.0 > other.0 { self.clone() } else { other.clone() }
+        if self.0 > other.0 { Clone::clone(self) } else { Clone::clone(other) }
     }
     fn dominated_by(&self, other: &Self) -> bool {
         other.0 <= self.0
@@ -136,7 +136,8 @@ impl<'a, N: Language, A: Analysis<N>, C: CostModel<N>> Extractor<'a, N, A, C> {
                         continue;
                     }
                     let cost = self.cost_model.cost(node, |c| {
-                        self.best[&self.egraph.find_ref(c)].0.clone()
+                        // Clone required: CostModel::cost returns owned Cost.
+                        Clone::clone(&self.best[&self.egraph.find_ref(c)].0)
                     });
                     let canonical = self.egraph.find_ref(class.id);
                     let improved = match self.best.get(&canonical) {
@@ -144,6 +145,8 @@ impl<'a, N: Language, A: Analysis<N>, C: CostModel<N>> Extractor<'a, N, A, C> {
                         None => true,
                     };
                     if improved {
+                        // Clone required: node is borrowed from class iteration;
+                        // best map stores owned values.
                         self.best.insert(canonical, (cost, node.clone()));
                         changed = true;
                     }
@@ -160,7 +163,8 @@ impl<'a, N: Language, A: Analysis<N>, C: CostModel<N>> Extractor<'a, N, A, C> {
     pub fn best_cost(&self, id: Id) -> Option<C::Cost> {
         self.best
             .get(&self.egraph.find_ref(id))
-            .map(|(c, _)| c.clone())
+            .map(|(c, _)| c)
+            .cloned()
     }
 
     /// Find the best e-node in class `id`, cloning it with canonical child IDs.
@@ -194,6 +198,7 @@ impl<'a, N: Language, A: Analysis<N>, C: CostModel<N>> Extractor<'a, N, A, C> {
         for &child in node.children() {
             self.extract_recurse(child, result, visited)?;
         }
+        // Clone required: node is borrowed from self.best; result owns its entries.
         result.push((canonical, node.clone()));
         Some(())
     }

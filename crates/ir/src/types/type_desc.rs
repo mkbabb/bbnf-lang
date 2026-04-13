@@ -15,6 +15,10 @@ pub enum TypeDesc {
     Span,
     /// A 64-bit float (produced by fused number scan+convert).
     F64,
+    /// A boolean value (produced by `"true" -> true | "false" -> false` constant maps).
+    Bool,
+    /// An unsigned 8-bit integer (produced by `"px" -> 0u8 | "em" -> 1u8` constant maps).
+    U8,
     /// An unsigned 32-bit integer (produced by fused hex scan+convert).
     U32,
     /// An optional value.

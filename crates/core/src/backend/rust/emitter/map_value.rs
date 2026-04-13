@@ -70,12 +70,18 @@ impl RustEmitter {
         &mut self,
         discard_inner: TokenStream,
         _value: &str,
-        _ctx: &mut RustEmitCtx,
+        ctx: &mut RustEmitCtx,
     ) -> TokenStream {
         // Constant mapping discards the parsed Span and produces
         // the constant value. Under tape-first the view layer
         // derives the constant from the span + variant_idx, so we
-        // only need to preserve the side effect.
+        // only need to preserve the side effect — unless a payload
+        // is active, in which case we set the payload variable.
+        //
+        // Note: `emit_constant` is currently dead code (the driver
+        // routes through `emit_map_expr`), but kept consistent for
+        // future wiring.
+        let _ = ctx;
         quote! {
             { #discard_inner }
         }
@@ -84,11 +90,37 @@ impl RustEmitter {
     pub(super) fn emit_map_expr_impl(
         &mut self,
         inner: TokenStream,
-        _expr: &MapExpr,
+        expr: &MapExpr,
         _return_type: Option<&TypeDesc>,
         _ir: &GrammarIR,
-        _ctx: &mut RustEmitCtx,
+        ctx: &mut RustEmitCtx,
     ) -> TokenStream {
+        // AN Phase 0: when a Bool or U8 payload is active and the
+        // map expression is a matching constant literal, capture the
+        // value into the payload variable so the epilogue stores it
+        // via push_leaf_with_bool/u8.
+        use crate::backend::rust::emitter_types::PayloadKind;
+        match (ctx.payload_kind, expr) {
+            (Some(PayloadKind::Bool), MapExpr::BoolLit(val)) => {
+                let val_lit = *val;
+                return quote! {
+                    match ({ #inner }) {
+                        Some(_) => { __payload_bool = #val_lit; __has_payload = true; Some(()) }
+                        None => None,
+                    }
+                };
+            }
+            (Some(PayloadKind::U8), MapExpr::IntLit(val)) => {
+                let val_u8 = (*val & 0xFF) as u8;
+                return quote! {
+                    match ({ #inner }) {
+                        Some(_) => { __payload_u8 = #val_u8; __has_payload = true; Some(()) }
+                        None => None,
+                    }
+                };
+            }
+            _ => {}
+        }
         // Map-expression evaluation is deferred to the view
         // layer. Preserve the parse side effect.
         quote! {

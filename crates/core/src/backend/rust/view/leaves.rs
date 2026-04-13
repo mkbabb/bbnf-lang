@@ -66,6 +66,64 @@ pub fn emit_leaf_accessors(rule: &IrRule, rule_name: &str, type_desc: &TypeDesc)
                 }
             });
         }
+        TypeDesc::Bool => {
+            // Payload-first: reads the pre-computed bool from the
+            // tape payload buffer in O(1). Falls back to span
+            // parsing if no payload is present.
+            methods.push(quote! {
+                /// Get the parsed `bool` value.
+                ///
+                /// Payload-first: reads the pre-computed bool from the
+                /// tape payload buffer in O(1). Falls back to span
+                /// text comparison if no payload is present.
+                #[inline]
+                pub fn value(&self) -> bool {
+                    let tape = self.cursor.tape();
+                    let rec = self.cursor.record();
+                    if let Some(v) = tape.payload_bool(rec) {
+                        return v;
+                    }
+                    self.span_text() == "true"
+                }
+
+                /// Parse the matched span as a `bool`.
+                ///
+                /// Alias for backward compatibility. Prefer `.value()`.
+                #[inline]
+                pub fn as_bool(&self) -> bool {
+                    self.value()
+                }
+            });
+        }
+        TypeDesc::U8 => {
+            // Payload-first: reads the pre-computed u8 from the
+            // tape payload buffer in O(1). Falls back to span
+            // parsing if no payload is present.
+            methods.push(quote! {
+                /// Get the parsed `u8` value.
+                ///
+                /// Payload-first: reads the pre-computed u8 from the
+                /// tape payload buffer in O(1). Falls back to span
+                /// text parsing if no payload is present.
+                #[inline]
+                pub fn value(&self) -> u8 {
+                    let tape = self.cursor.tape();
+                    let rec = self.cursor.record();
+                    if let Some(v) = tape.payload_u8(rec) {
+                        return v;
+                    }
+                    self.span_text().parse::<u8>().unwrap_or(0)
+                }
+
+                /// Parse the matched span as a `u8`.
+                ///
+                /// Alias for backward compatibility. Prefer `.value()`.
+                #[inline]
+                pub fn as_u8(&self) -> u8 {
+                    self.value()
+                }
+            });
+        }
         TypeDesc::U32 => {
             methods.push(quote! {
                 /// Parse the matched span as a `u32` (hex digits).

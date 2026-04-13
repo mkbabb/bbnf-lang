@@ -150,6 +150,68 @@ pub fn emit_tape_span_only_f64_epilogue(variant_idx: u8) -> TokenStream {
     }
 }
 
+// ── Bool payload prelude / epilogue ────────────────────────────────
+
+/// Emit the prelude for a `TapeSpanOnly` rule with a `bool` payload.
+///
+/// Declares `__span_lo`, `__payload_bool`, and `__has_payload`.
+pub fn emit_tape_span_only_bool_prelude() -> TokenStream {
+    quote! {
+        let __span_lo = state.offset as u32;
+        let mut __payload_bool: bool = false;
+        let mut __has_payload = false;
+    }
+}
+
+/// Emit the epilogue for a `TapeSpanOnly` rule with a `bool` payload.
+///
+/// Stores the captured `__payload_bool` value into the tape's payload
+/// buffer via `push_leaf_with_bool`.
+pub fn emit_tape_span_only_bool_epilogue(variant_idx: u8) -> TokenStream {
+    let variant_lit = variant_idx;
+    quote! {
+        Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with_bool(
+            tape,
+            ::bbnf::runtime::tape::TapeKind::Span,
+            __span_lo,
+            state.offset as u32,
+            #variant_lit,
+            __payload_bool,
+        ))
+    }
+}
+
+// ── U8 payload prelude / epilogue ─────────────────────────────────
+
+/// Emit the prelude for a `TapeSpanOnly` rule with a `u8` payload.
+///
+/// Declares `__span_lo`, `__payload_u8`, and `__has_payload`.
+pub fn emit_tape_span_only_u8_prelude() -> TokenStream {
+    quote! {
+        let __span_lo = state.offset as u32;
+        let mut __payload_u8: u8 = 0;
+        let mut __has_payload = false;
+    }
+}
+
+/// Emit the epilogue for a `TapeSpanOnly` rule with a `u8` payload.
+///
+/// Stores the captured `__payload_u8` value into the tape's payload
+/// buffer via `push_leaf_with_u8`.
+pub fn emit_tape_span_only_u8_epilogue(variant_idx: u8) -> TokenStream {
+    let variant_lit = variant_idx;
+    quote! {
+        Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with_u8(
+            tape,
+            ::bbnf::runtime::tape::TapeKind::Span,
+            __span_lo,
+            state.offset as u32,
+            #variant_lit,
+            __payload_u8,
+        ))
+    }
+}
+
 /// Emit the rule function signature for a tape-first rule.
 ///
 /// Always `(state, tape) -> Option<TapeOffset>` — the single ABI

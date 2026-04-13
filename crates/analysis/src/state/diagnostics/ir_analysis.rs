@@ -208,6 +208,8 @@ fn format_type_desc(td: &bbnf_ir::TypeDesc, ir: &bbnf_ir::GrammarIR) -> String {
     match td {
         bbnf_ir::TypeDesc::Span => "Span".into(),
         bbnf_ir::TypeDesc::F64 => "f64".into(),
+        bbnf_ir::TypeDesc::Bool => "bool".into(),
+        bbnf_ir::TypeDesc::U8 => "u8".into(),
         bbnf_ir::TypeDesc::U32 => "u32".into(),
         bbnf_ir::TypeDesc::Option(inner) => format!("Option<{}>", format_type_desc(inner, ir)),
         bbnf_ir::TypeDesc::Vec(inner) => format!("Vec<{}>", format_type_desc(inner, ir)),

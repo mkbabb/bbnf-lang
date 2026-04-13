@@ -8,6 +8,8 @@ pub fn type_desc_to_ts(td: &TypeDesc, enum_name: &str, ir: &GrammarIR) -> String
     match td {
         TypeDesc::Span => "Span".to_string(),
         TypeDesc::F64 => "number".to_string(),
+        TypeDesc::Bool => "boolean".to_string(),
+        TypeDesc::U8 => "number".to_string(),
         TypeDesc::U32 => "number".to_string(),
         TypeDesc::Option(inner) => format!("{} | null", type_desc_to_ts(inner, enum_name, ir)),
         TypeDesc::Vec(inner) => format!("{}[]", type_desc_to_ts(inner, enum_name, ir)),

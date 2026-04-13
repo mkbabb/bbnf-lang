@@ -441,6 +441,8 @@ fn intern_recursive(ty: &TypeDesc, interner: &mut TypeDescInterner) {
         }
         TypeDesc::Span
         | TypeDesc::F64
+        | TypeDesc::Bool
+        | TypeDesc::U8
         | TypeDesc::U32
         | TypeDesc::BoxedEnum
         | TypeDesc::Enum

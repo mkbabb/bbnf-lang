@@ -328,7 +328,7 @@ fn derive_field_role(
         TypeDesc::Option(_) => FieldRole::OptionalChild,
         TypeDesc::Vec(_) => FieldRole::RepeatedChildren,
         TypeDesc::Tuple(_) => FieldRole::PrimaryChild,
-        TypeDesc::F64 | TypeDesc::U32 | TypeDesc::Named(_) => FieldRole::Annotation,
+        TypeDesc::F64 | TypeDesc::Bool | TypeDesc::U8 | TypeDesc::U32 | TypeDesc::Named(_) => FieldRole::Annotation,
     }
 }
 

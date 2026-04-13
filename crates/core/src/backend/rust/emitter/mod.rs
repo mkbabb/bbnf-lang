@@ -408,24 +408,34 @@ impl Emitter for RustEmitter {
         // for `RegexClass::JsonNumber`, `false` for generic `Numeric`.
         // The `json` flag threads into `PayloadKind::F64 { json }`
         // so emission sites select the correct scanner function.
+        //
+        // Bool/U8 detection: for Alt-bodied TapeSpanOnly rules where
+        // ALL branches are `Map(Literal, Expr { BoolLit/IntLit })`,
+        // set PayloadKind::Bool or PayloadKind::U8 so the epilogue
+        // uses `push_leaf_with_bool`/`push_leaf_with_u8`.
         ctx.payload_kind = None;
         if is_visible {
             if !is_alt {
                 if let Some(json) = Self::is_f64_payload_eligible(rule, ir) {
                     ctx.payload_kind = Some(crate::backend::rust::emitter_types::PayloadKind::F64 { json });
                 }
-            } else {
-                // Alt: check if ANY branch Ref targets a number-pattern rule.
-                // Use the first matched branch's JSON classification.
-                if let bbnf_ir::IrNode::Alt(branches, _) = &rule.body {
-                    for b in branches {
-                        if let bbnf_ir::IrNode::Ref(rid) = &b.node {
-                            let ref_rule = &ir.rules[*rid as usize];
-                            if let Some(json) = Self::is_f64_payload_eligible(ref_rule, ir) {
-                                ctx.payload_kind = Some(crate::backend::rust::emitter_types::PayloadKind::F64 { json });
-                                break;
-                            }
+            } else if let bbnf_ir::IrNode::Alt(branches, _) = &rule.body {
+                // First try F64: check if ANY branch Ref targets a number-pattern rule.
+                let mut found_f64 = false;
+                for b in branches {
+                    if let bbnf_ir::IrNode::Ref(rid) = &b.node {
+                        let ref_rule = &ir.rules[*rid as usize];
+                        if let Some(json) = Self::is_f64_payload_eligible(ref_rule, ir) {
+                            ctx.payload_kind = Some(crate::backend::rust::emitter_types::PayloadKind::F64 { json });
+                            found_f64 = true;
+                            break;
                         }
+                    }
+                }
+                // If no F64, try Bool: ALL branches must be Map(Literal, Expr { BoolLit }).
+                if !found_f64 {
+                    if let Some(kind) = Self::detect_constant_payload_alt(branches, ir) {
+                        ctx.payload_kind = Some(kind);
                     }
                 }
             }

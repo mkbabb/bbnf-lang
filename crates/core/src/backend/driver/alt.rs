@@ -193,7 +193,7 @@ pub(super) fn compile_alt<E: Emitter>(
     } else {
         None
     };
-    if let Some((mut config, detected, fallback_idx)) = cached_key_dispatch {
+    if let Some((mut config, detected, fallback_indices)) = cached_key_dispatch {
         let pattern = bbnf_ir::key_class_regex_pattern(&config.key_class);
         config.key_scanner_regex_id = Some(dstate.register_regex(pattern));
 
@@ -215,12 +215,32 @@ pub(super) fn compile_alt<E: Emitter>(
                 info: branch_info(pushes),
             });
         }
-        let fallback = fallback_idx.map(|fi| {
+        // Compile fallback branches. When multiple fallback indices
+        // exist (e.g. a regex-led branch + generic catch-all), they
+        // are emitted as a checkpoint chain.
+        let fallback = if fallback_indices.is_empty() {
+            None
+        } else if fallback_indices.len() == 1 {
+            let fi = fallback_indices[0];
             let branch = &branches[fi];
             let pushes = branch_pushes_children(ir, &branch.node);
             let body = compile_node(&branch.node, alloc, ir, dstate, emitter, ctx);
-            (branch_info(pushes), body)
-        });
+            Some((branch_info(pushes), body))
+        } else {
+            // Multiple fallback branches: compile each and emit a
+            // checkpoint chain as the key-dispatch fallback.
+            let fb_branches: Vec<_> = fallback_indices
+                .iter()
+                .map(|&fi| {
+                    let branch = &branches[fi];
+                    let pushes = branch_pushes_children(ir, &branch.node);
+                    let body = compile_node(&branch.node, alloc, ir, dstate, emitter, ctx);
+                    (branch_info(pushes), body)
+                })
+                .collect();
+            let body = emitter.emit_alt_checkpoint(fb_branches, alloc, ctx);
+            Some((branch_info(true), body))
+        };
         emitter.post_compile_alt_branches(ctx);
         return emitter.emit_key_dispatch(&config, kd_branches, fallback, alloc, ctx);
     }

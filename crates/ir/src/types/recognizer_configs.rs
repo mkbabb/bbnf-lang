@@ -75,7 +75,13 @@ pub struct DetectedBranch {
     pub branch_idx: usize,
 }
 
-/// Pre-solved key-dispatch detection for an Alt node. Tuple form kept
-/// for backward compatibility with the previous `backend/patterns/`
-/// lookup map signature: `(config, detected_branches, fallback_idx)`.
-pub type KeyDispatchMatch = (KeyDispatchConfig, Vec<DetectedBranch>, Option<usize>);
+/// Pre-solved key-dispatch detection for an Alt node. Tuple form:
+/// `(config, detected_branches, fallback_branch_indices)`.
+///
+/// `fallback_branch_indices` lists Alt branch indices that are NOT
+/// key-dispatched. These are tried sequentially (checkpoint chain)
+/// when no key matches. Typically includes a generic catch-all as
+/// the last entry, but may also include non-literal-led branches
+/// (e.g. regex-prefixed custom-property declarations) that cannot
+/// participate in key lookup.
+pub type KeyDispatchMatch = (KeyDispatchConfig, Vec<DetectedBranch>, Vec<usize>);

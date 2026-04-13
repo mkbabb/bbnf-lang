@@ -48,47 +48,56 @@ impl RecognizerMiner for KeyDispatchMiner {
 
 /// Try to detect a key-dispatch pattern in an alternation.
 ///
-/// Returns `(config, detected_branches, fallback_branch_idx)`.
+/// Returns `(config, detected_branches, fallback_branch_indices)`.
+///
+/// Branches that start with literal keys become key-dispatched branches.
+/// Branches that start with regex patterns (not extractable as literals)
+/// become fallback branches, tried sequentially when no key matches.
+/// At least one regex-led fallback must exist (typically the last branch
+/// is a generic catch-all).
 pub fn try_detect(branches: &[AltBranch], ir: &GrammarIR) -> Option<KeyDispatchMatch> {
     if branches.len() < 3 {
         return None;
     }
 
-    // Check if last branch is a regex fallback.
-    let mut visited = HashSet::new();
-    let fallback_idx = if is_leading_regex(&branches[branches.len() - 1].node, ir, &mut visited) {
-        Some(branches.len() - 1)
-    } else {
-        None
-    };
-
-    // Extract leading literals from all non-fallback branches.
+    // Partition branches into literal-led (key-dispatchable) and
+    // non-literal-led (fallback). Fallback branches are tried
+    // sequentially when no key matches.
     let mut all_literals: Vec<(usize, Vec<String>)> = Vec::new();
+    let mut fallback_indices: Vec<usize> = Vec::new();
+
     for (i, branch) in branches.iter().enumerate() {
-        if Some(i) == fallback_idx {
-            continue;
-        }
         let mut visited = HashSet::new();
-        let lits = extract_leading_literals(&branch.node, ir, &mut visited)?;
-        if lits.is_empty() {
-            return None;
+        match extract_leading_literals(&branch.node, ir, &mut visited) {
+            Some(lits) if !lits.is_empty() => {
+                all_literals.push((i, lits));
+            }
+            _ => {
+                // Non-literal-led branch (regex, epsilon, etc.) — treat
+                // as fallback.
+                fallback_indices.push(i);
+            }
         }
-        all_literals.push((i, lits));
     }
 
-    if all_literals.len() < 2 {
+    // Need at least 2 keyed branches and at least 1 fallback.
+    if all_literals.len() < 2 || fallback_indices.is_empty() {
         return None;
     }
 
-    // Detect common separator.
+    // Detect common separator among keyed branches.
     let separator = detect_separator(&all_literals, branches, ir);
 
-    // Classify key type from fallback regex (if present).
-    let key_class = if let Some(fb_idx) = fallback_idx {
-        classify_fallback_key(&branches[fb_idx].node, ir)?
-    } else {
-        // Default to Identifier if no fallback regex.
-        KeyClass::Identifier
+    // Classify key type from the first regex-led fallback branch.
+    let key_class = {
+        let mut found_class = None;
+        for &fb_idx in &fallback_indices {
+            if let Some(cls) = classify_fallback_key(&branches[fb_idx].node, ir) {
+                found_class = Some(cls);
+                break;
+            }
+        }
+        found_class.unwrap_or(KeyClass::Identifier)
     };
 
     // Validate all keys against key class.
@@ -134,7 +143,7 @@ pub fn try_detect(branches: &[AltBranch], ir: &GrammarIR) -> Option<KeyDispatchM
             key_scanner_regex_id: None, // Set by driver after detection.
         },
         detected,
-        fallback_idx,
+        fallback_indices,
     ))
 }
 
@@ -181,34 +190,6 @@ fn extract_leading_literals(
     }
 }
 
-/// Check if a node has a regex in leading position.
-///
-/// `visited` tracks rules currently in the call stack; a cyclic Ref
-/// chain terminates the walk with `false` because cyclic rules have
-/// recursive FIRST sets that are ill-defined for dispatch-table
-/// eligibility.
-fn is_leading_regex(node: &IrNode, ir: &GrammarIR, visited: &mut HashSet<RuleId>) -> bool {
-    match node {
-        IrNode::Regex(_) => true,
-        IrNode::Seq(children) if !children.is_empty() => {
-            is_leading_regex(&children[0], ir, visited)
-        }
-        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
-            is_leading_regex(inner, ir, visited)
-        }
-        IrNode::Ref(rule_id) => {
-            if !visited.insert(*rule_id) {
-                return false;
-            }
-            let rule = &ir.rules[*rule_id as usize];
-            let result = is_leading_regex(&rule.body, ir, visited);
-            visited.remove(rule_id);
-            result
-        }
-        _ => false,
-    }
-}
-
 /// Extract the leading regex pattern string from a node.
 ///
 /// `visited` tracks rules currently in the call stack; a cyclic Ref
@@ -234,6 +215,28 @@ fn extract_leading_regex_pattern<'a>(
             let result = extract_leading_regex_pattern(&rule.body, ir, visited);
             visited.remove(rule_id);
             result
+        }
+        // Inner Alt: try each branch's regex and return the first one
+        // that classifies as a known key class (Identifier/CssIdent/
+        // QuotedString). The branch ordering in the grammar may put a
+        // narrow pattern (e.g. `--[\w-]+`) before the general one
+        // (e.g. `-?[a-zA-Z_][\w-]*`), so we scan all branches.
+        IrNode::Alt(branches, _) => {
+            for b in branches {
+                if let Some(pat) = extract_leading_regex_pattern(&b.node, ir, visited) {
+                    let cls = classify_regex(pat);
+                    if matches!(
+                        cls,
+                        RegexClass::Identifier
+                            | RegexClass::CssIdent
+                            | RegexClass::QuotedString { .. }
+                            | RegexClass::CssQuotedString
+                    ) {
+                        return Some(pat);
+                    }
+                }
+            }
+            None
         }
         _ => None,
     }
@@ -293,7 +296,37 @@ fn detect_separator(
     extract_seq_separator(branches, all_literals, ir)
 }
 
+/// Resolve a node through Ref and OptionalWhitespace wrappers to find
+/// the underlying structural node. Used by separator detection to look
+/// through indirections that don't change the leading structure.
+fn resolve_to_seq<'a>(
+    node: &'a IrNode,
+    ir: &'a GrammarIR,
+    visited: &mut HashSet<RuleId>,
+) -> Option<&'a [IrNode]> {
+    match node {
+        IrNode::Seq(children) => Some(children),
+        IrNode::Ref(rule_id) => {
+            if !visited.insert(*rule_id) {
+                return None;
+            }
+            let rule = &ir.rules[*rule_id as usize];
+            let result = resolve_to_seq(&rule.body, ir, visited);
+            visited.remove(rule_id);
+            result
+        }
+        IrNode::OptionalWhitespace(inner) | IrNode::Map { inner, .. } => {
+            resolve_to_seq(inner, ir, visited)
+        }
+        _ => None,
+    }
+}
+
 /// Extract separator from 2nd Seq child if all branches share it.
+///
+/// Follows `Ref` nodes to find the underlying `Seq` body, so branches
+/// like `Ref(colorDecl)` whose body is `Seq([Ref(colorProps), Literal(":"), ...])`
+/// correctly detect `":"` as the common separator.
 fn extract_seq_separator(
     branches: &[AltBranch],
     all_literals: &[(usize, Vec<String>)],
@@ -302,7 +335,8 @@ fn extract_seq_separator(
     let mut common_sep: Option<String> = None;
     for (idx, _) in all_literals {
         let branch = &branches[*idx];
-        if let IrNode::Seq(children) = &branch.node {
+        let mut visited = HashSet::new();
+        if let Some(children) = resolve_to_seq(&branch.node, ir, &mut visited) {
             if children.len() >= 2 {
                 if let IrNode::Literal(sid) = &children[1] {
                     let sep = ir.get_string(*sid).to_string();

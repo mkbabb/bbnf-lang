@@ -53,7 +53,11 @@ pub fn generate_all(
     // AO Phase 0: enable structural dispatch when the grammar has a
     // structural byte set AND no custom @ws pattern (CSS uses @ws for
     // comment-aware whitespace, which can't be elided).
-    emitter.structural_mode = ir.structural_bytes.is_some() && ir.ws_pattern.is_none();
+    // Structural pre-scan dispatch is disabled: advance_to_structural
+    // jumps past non-structural bytes (e.g., digits for numbers) which
+    // causes branch misrouting in Alts with mixed structural/non-structural
+    // first-bytes.  Revisit with a peek-only approach (AP.1).
+    emitter.structural_mode = false;
 
     // Compute prettify methods via the driver/emitter path.
     if prepared.prep.effective_prettify {

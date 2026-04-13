@@ -38,6 +38,11 @@ impl RustEmitter {
         ws_pattern: Option<&str>,
         _ctx: &mut RustEmitCtx,
     ) -> TokenStream {
+        // AO Phase 0.6: in structural mode with no custom @ws, the
+        // structural cursor inherently skips whitespace — ?w is a no-op.
+        if self.structural_mode && ws_pattern.is_none() {
+            return quote! { Some(()) };
+        }
         if let Some(pattern) = ws_pattern {
             let trim = emit_ws_pattern(pattern);
             quote! { { #trim Some(()) } }
@@ -52,6 +57,10 @@ impl RustEmitter {
         ws_pattern: Option<&str>,
         _ctx: &mut RustEmitCtx,
     ) -> TokenStream {
+        // AO Phase 0.6: structural mode elides whitespace trimming.
+        if self.structural_mode && ws_pattern.is_none() {
+            return inner;
+        }
         let trim = if let Some(pattern) = ws_pattern {
             emit_ws_pattern(pattern)
         } else {

@@ -21,6 +21,10 @@ pub struct RustEmitter {
     pub operator_chain_rules: HashSet<RuleId>,
     /// Extra methods to inject into the `impl` block (e.g., prettify methods).
     pub extra_impl_methods: TokenStream,
+    /// AO Phase 0: when true, the grammar has a structural byte set
+    /// and the codegen emits structural pre-scan + dispatch. Gated
+    /// on `ir.structural_bytes.is_some() && ir.ws_pattern.is_none()`.
+    pub structural_mode: bool,
 }
 
 impl RustEmitter {
@@ -31,6 +35,7 @@ impl RustEmitter {
             fused_number_rules: HashSet::new(),
             operator_chain_rules: HashSet::new(),
             extra_impl_methods: TokenStream::new(),
+            structural_mode: false,
         }
     }
 }

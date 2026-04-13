@@ -112,14 +112,40 @@ impl RustEmitter {
         };
         arms.push(fallback_arm);
 
-        quote! {
-            {
-                if state.offset < state.src_bytes.len() {
-                    match state.src_bytes[state.offset] {
-                        #( #arms ),*
+        // AO Phase 0.5: structural-aware dispatch. When the structural
+        // index is active, advance to the next structural position
+        // instead of checking byte-at-a-time. Falls back to the
+        // standard path when the index is exhausted.
+        if self.structural_mode {
+            quote! {
+                {
+                    if state.has_structural_index() {
+                        if let Some(__byte) = state.advance_to_structural() {
+                            match __byte {
+                                #( #arms ),*
+                            }
+                        } else {
+                            #eof_expr
+                        }
+                    } else if state.offset < state.src_bytes.len() {
+                        match state.src_bytes[state.offset] {
+                            #( #arms ),*
+                        }
+                    } else {
+                        #eof_expr
                     }
-                } else {
-                    #eof_expr
+                }
+            }
+        } else {
+            quote! {
+                {
+                    if state.offset < state.src_bytes.len() {
+                        match state.src_bytes[state.offset] {
+                            #( #arms ),*
+                        }
+                    } else {
+                        #eof_expr
+                    }
                 }
             }
         }

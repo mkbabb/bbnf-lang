@@ -50,6 +50,10 @@ pub fn generate_all(
     let mut emitter = RustEmitter::new(enum_ident.clone(), prepared.prep.effective_prettify);
     emitter.fused_number_rules = prepared.prep.analysis.fused_number_rules.clone();
     emitter.operator_chain_rules = prepared.prep.analysis.operator_chain_rules.clone();
+    // AO Phase 0: enable structural dispatch when the grammar has a
+    // structural byte set AND no custom @ws pattern (CSS uses @ws for
+    // comment-aware whitespace, which can't be elided).
+    emitter.structural_mode = ir.structural_bytes.is_some() && ir.ws_pattern.is_none();
 
     // Compute prettify methods via the driver/emitter path.
     if prepared.prep.effective_prettify {

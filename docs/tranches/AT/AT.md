@@ -335,12 +335,34 @@ through the IR path.
 - Generic number kernel for CSS
 - Bootstrap idempotent: gen1 == gen2, 25,008 lines
 
+## CSS L4 audit findings (post-AS)
+
+47/49 CSS edge cases pass. Two spec-compliance gaps:
+
+1. **`|=` attribute matcher**: conflicts with namespace `|` prefix
+   in `selectors.bbnf`. `wqName` consumes `lang|` as namespace
+   before `attrMatcher` can match `|=`. Fix: factor `|=` ahead
+   of bare `|` in `attrSelector`.
+
+2. **ASCII-only identifiers**: `selectorIdent` and `ident` regexes
+   only match ASCII letters. CSS Syntax L3 §4.3.10 allows non-ASCII.
+   Fix: extend regex or use `\p{L}`.
+
+### Benchmark fairness correction
+
+The cssparser comparison is **misleading**: its bench has
+`parse_declarations() -> false` — it tokenizes and counts top-level
+rules, not building a typed AST. BBNF builds full typed declarations,
+selectors, and values. The real comparison is BBNF vs lightningcss
+(both build typed ASTs): bootstrap 525 vs 124 MB/s (**4.2x**).
+
 ## What is NOT in scope
 
 - **Global CSP solve**: per-component sufficient.
 - **WASM/TS backend updates**: Rust backend only for this tranche.
 - **CSS pretty format quality**: gorgeous formatting is separate.
 - **Language server features**: LSP is not on the critical path.
+- **CSS spec gap fixes** (|= and Unicode idents): separate tranche.
 
 ## Operational directives
 

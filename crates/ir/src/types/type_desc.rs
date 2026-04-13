@@ -53,10 +53,17 @@ impl TypeDesc {
     /// Scalar payloads are written into the tape's payload buffer via
     /// `push_leaf_with_<T>` and read back via `payload_<T>` — zero
     /// re-parse from the source span.
+    ///
+    /// `Span` is admitted as an 8-byte `(u32 lo, u32 hi)` scalar so
+    /// tuple types that carry a Span alongside other scalar payloads
+    /// (e.g. CSS L4 `important = (Span, BoxedEnum, Span)`, JSON's
+    /// `string` branch) become payload-eligible without lifting the
+    /// rule to an aggregate layout.
     pub fn is_scalar_payload(&self) -> bool {
         matches!(
             self,
-            TypeDesc::F64
+            TypeDesc::Span
+                | TypeDesc::F64
                 | TypeDesc::Bool
                 | TypeDesc::I8
                 | TypeDesc::U8
@@ -75,6 +82,7 @@ impl TypeDesc {
     /// instead of always allocating the legacy 8-byte slot.
     pub fn payload_size_bytes(&self) -> Option<u8> {
         match self {
+            TypeDesc::Span => Some(8), // (u32 lo, u32 hi)
             TypeDesc::F64 | TypeDesc::I64 | TypeDesc::U64 => Some(8),
             TypeDesc::I32 | TypeDesc::U32 => Some(4),
             TypeDesc::I16 | TypeDesc::U16 => Some(2),
@@ -84,15 +92,19 @@ impl TypeDesc {
     }
 
     /// Alignment requirement; for primitive scalars this equals the
-    /// size in bytes.
+    /// size in bytes. `Span` is a `(u32, u32)` pair — 4-byte aligned.
     pub fn payload_align_bytes(&self) -> Option<u8> {
-        self.payload_size_bytes()
+        match self {
+            TypeDesc::Span => Some(4),      // u32 alignment
+            _ => self.payload_size_bytes(), // for primitives, align == size
+        }
     }
 
     /// As a Rust source identifier (e.g., for `format_ident!("payload_{}", ...)`).
     /// `None` for non-scalar types.
     pub fn rust_ident(&self) -> Option<&'static str> {
         match self {
+            TypeDesc::Span => Some("Span"),
             TypeDesc::F64 => Some("f64"),
             TypeDesc::Bool => Some("bool"),
             TypeDesc::I8 => Some("i8"),

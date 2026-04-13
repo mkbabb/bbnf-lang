@@ -117,7 +117,7 @@ investigate the VM compiler's dispatch table encoding separately.
 **Hard gate**: all 12 bench targets compile and run without parse
 failures. Post-AS.json has measured throughput for every dataset.
 
-### Phase 2 — Close bootstrap loop (~2 days)
+### Phase 2 — Close bootstrap loop (DONE — landed in AR audit phase)
 
 #### AS.2.1 Diagnose regen IR diff
 

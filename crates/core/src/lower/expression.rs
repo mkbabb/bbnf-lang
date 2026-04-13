@@ -313,30 +313,63 @@ fn lower_binary_factor<'a>(
     node: BbnfBootstrapNodeView<'a>,
     ctx: &mut LowerCtx<'a>,
 ) -> IrNode {
-    let operands: Vec<BbnfBootstrapNodeView<'a>> = collect_binary_operands(node);
+    let all_children: Vec<BbnfBootstrapNodeView<'a>> = collect_binary_operands(node);
     debug_assert!(
-        !operands.is_empty(),
-        "binary_factor: chain compound produced zero operands (text = {:?})",
+        !all_children.is_empty(),
+        "binary_factor: chain compound produced zero children (text = {:?})",
         node.span_text(),
     );
 
-    let mut iter = operands.into_iter();
-    let first = iter
-        .next()
-        .expect("binary_factor: missing first operand");
+    // Partition children into operands and inline operators. When
+    // `binary_operators` is NOT inlined (prettify grammars), operator
+    // tokens appear as leaf children whose trimmed span text is `<<`,
+    // `>>`, or `-`. When it IS inlined, operators are consumed during
+    // parsing and only appear in the source gap between operand spans.
+    let mut operands: Vec<BbnfBootstrapNodeView<'a>> = Vec::new();
+    let mut inline_ops: Vec<&str> = Vec::new();
+    for child in &all_children {
+        let text = child.span_text().trim();
+        if text == "<<" || text == ">>" || text == "-" {
+            inline_ops.push(match text {
+                "<<" => "<<",
+                ">>" => ">>",
+                "-" => "-",
+                _ => unreachable!(),
+            });
+        } else {
+            operands.push(*child);
+        }
+    }
+
+    if operands.len() <= 1 {
+        // Single operand — no binary operators to apply.
+        let only = operands
+            .into_iter()
+            .next()
+            .expect("binary_factor: no operands after partition");
+        return dispatch_expression(only, ctx);
+    }
+
     let input = node.input();
+    let mut iter = operands.into_iter();
+    let first = iter.next().unwrap();
     let mut prev_end = first.span().1;
     let mut result = dispatch_expression(first, ctx);
+    let mut op_iter = inline_ops.into_iter();
+
     for operand in iter {
-        let op_text = recover_binary_op(input, prev_end, operand.span().0)
-            .unwrap_or_else(|| {
-                panic!(
-                    "lower/expression.rs: binary_factor failed to recover \
-                     operator from source gap {:?} (chain text = {:?})",
-                    &input[prev_end as usize..operand.span().0 as usize],
-                    node.span_text(),
-                )
-            });
+        // Prefer inline operator children (when binary_operators rule
+        // was not inlined). Fall back to gap recovery (when it was).
+        let op_text = op_iter.next().or_else(|| {
+            recover_binary_op(input, prev_end, operand.span().0)
+        }).unwrap_or_else(|| {
+            panic!(
+                "lower/expression.rs: binary_factor failed to recover \
+                 operator from source gap {:?} (chain text = {:?})",
+                &input[prev_end as usize..operand.span().0 as usize],
+                node.span_text(),
+            )
+        });
         prev_end = operand.span().1;
         result = apply_binary_op(result, op_text, operand, ctx);
     }

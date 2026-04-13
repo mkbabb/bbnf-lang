@@ -38,7 +38,6 @@ fn literal_is_span_eligible() {
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
-        structural_bytes: None,
     };
 
     refine_span_eligibility(&mut ir);
@@ -76,7 +75,6 @@ fn map_not_span_eligible() {
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
-        structural_bytes: None,
     };
 
     refine_span_eligibility(&mut ir);
@@ -113,7 +111,6 @@ fn transitive_span_eligibility() {
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
-        structural_bytes: None,
     };
 
     refine_span_eligibility(&mut ir);
@@ -155,7 +152,6 @@ fn cyclic_not_span_eligible() {
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
-        structural_bytes: None,
     };
 
     refine_span_eligibility(&mut ir);
@@ -190,7 +186,6 @@ fn seq_of_literals_span_eligible() {
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
-        structural_bytes: None,
     };
 
     refine_span_eligibility(&mut ir);

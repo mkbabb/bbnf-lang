@@ -57,7 +57,6 @@ fn dispatch_for_disjoint_branches() {
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
-        structural_bytes: None,
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -122,7 +121,6 @@ fn no_dispatch_for_overlapping_branches() {
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
-        structural_bytes: None,
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -185,7 +183,6 @@ fn dispatch_for_nested_alt() {
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
-        structural_bytes: None,
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -256,7 +253,6 @@ fn dispatch_with_nullable_branch_via_follow() {
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
-        structural_bytes: None,
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -329,7 +325,6 @@ fn no_dispatch_when_nullable_overlaps_follow() {
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
-        structural_bytes: None,
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -412,7 +407,6 @@ fn fallback_dispatch_typed_plus_catchall() {
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
-        structural_bytes: None,
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -487,7 +481,6 @@ fn fallback_dispatch_not_superset() {
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
-        structural_bytes: None,
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -550,7 +543,6 @@ fn fallback_dispatch_too_few_branches() {
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
-        structural_bytes: None,
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);

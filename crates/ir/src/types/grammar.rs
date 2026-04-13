@@ -197,12 +197,6 @@ pub struct GrammarIR {
     #[serde(skip, default)]
     pub materialization: HashMap<dag::NodeId, passes::MaterializationClass>,
 
-    /// Structural byte set derived from dispatch tables. When populated,
-    /// the codegen emits a structural pre-scan phase that indexes these
-    /// bytes across the entire input before recursive descent.
-    #[serde(default)]
-    pub structural_bytes: Option<Vec<u8>>,
-
 }
 
 impl GrammarIR {

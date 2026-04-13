@@ -664,32 +664,6 @@ impl RustEmitter {
 
         let extra = &self.extra_impl_methods;
 
-        // AO Phase 0.4: structural pre-scan code for parse().
-        let structural_prescan = if self.structural_mode {
-            if let Some(ref bytes) = ir.structural_bytes {
-                let byte_lits: Vec<proc_macro2::Literal> = bytes
-                    .iter()
-                    .map(|b| proc_macro2::Literal::u8_suffixed(*b))
-                    .collect();
-                quote! {
-                    let __structural_bytes: &[u8] = &[#(#byte_lits),*];
-                    let mut __structural_positions = ::parse_that::scan_structural(
-                        input.as_bytes(), __structural_bytes,
-                    );
-                    ::parse_that::filter_quote_parity(
-                        input.as_bytes(), &mut __structural_positions,
-                    );
-                    state.structural_index = __structural_positions.as_ptr();
-                    state.structural_len = __structural_positions.len() as u32;
-                    state.structural_cursor = 0;
-                }
-            } else {
-                quote! {}
-            }
-        } else {
-            quote! {}
-        };
-
         // AP.ws: trailing whitespace before EOF — use comment-aware
         // kernel when the grammar declares a WsBlockComment @ws
         // pattern, otherwise fall back to bare is_ascii_whitespace.
@@ -735,7 +709,6 @@ impl RustEmitter {
                     ::bbnf::runtime::ParseErr,
                 > {
                     let mut state = ::parse_that::ParserState::new(input);
-                    #structural_prescan
                     let mut builder =
                         ::bbnf::runtime::tape::TapeBuilder::with_capacity(
                             input.len() / 4,

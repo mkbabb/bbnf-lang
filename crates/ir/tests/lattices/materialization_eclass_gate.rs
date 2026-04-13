@@ -64,7 +64,6 @@ fn make_ir_with_entry(rules: Vec<IrRule>, strings: Vec<String>, entry: u32) -> G
         cost_config: CostConfig::default(),
         type_desc_interner: TypeDescInterner::new(),
         materialization: HashMap::new(),
-        structural_bytes: None,
     };
     bbnf_ir::dag::ensure_dag(&mut ir);
     ir

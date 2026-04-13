@@ -12,5 +12,5 @@
 use bbnf_derive::Parser;
 
 #[derive(Parser)]
-#[parser(path = "../../grammar/bbnf/bbnf.bbnf", structural)]
+#[parser(path = "../../grammar/bbnf/bbnf.bbnf")]
 pub struct BbnfBootstrap;

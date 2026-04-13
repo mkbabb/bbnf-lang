@@ -20,4 +20,3 @@ mod passes_prune;
 mod passes_span;
 mod recognizer;
 mod regex_first;
-mod structural_bytes;

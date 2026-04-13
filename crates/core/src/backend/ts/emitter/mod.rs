@@ -29,7 +29,7 @@ use bbnf_ir::{AltDispatch, FnDescriptor, GrammarIR, IrRule, MapExpr, RuleId, Typ
 use crate::backend::driver::analysis::BackendAnalysis;
 use crate::backend::{
     AltBranchInfo, DelimScanConfig, Emitter, FlattenStrategy, KeyDispatchBranch, KeyDispatchConfig,
-    SepByConfig, SeqChildGroup, TokenDispatchArmCompiled, ValuePlacement,
+    KeyIndex, SepByConfig, SeqChildGroup, TokenDispatchArmCompiled, ValuePlacement,
 };
 
 pub use super::code::{TsCode, TsEmitCtx, TsEmitter};
@@ -123,12 +123,13 @@ impl Emitter for TsEmitter {
     fn emit_key_dispatch(
         &mut self,
         config: &KeyDispatchConfig,
+        index: &KeyIndex,
         branches: Vec<KeyDispatchBranch<TsCode>>,
         fallback: Option<(AltBranchInfo, TsCode)>,
         alloc: ValuePlacement,
         ctx: &mut TsEmitCtx,
     ) -> TsCode {
-        self.key_dispatch(config, branches, fallback, alloc, ctx)
+        self.key_dispatch(config, index, branches, fallback, alloc, ctx)
     }
 
     // ── Repetition (delegated to super::repeat) ─────────────────────────

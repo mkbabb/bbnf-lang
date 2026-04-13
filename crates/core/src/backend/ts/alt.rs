@@ -2,7 +2,7 @@
 
 use bbnf_ir::AltDispatch;
 
-use crate::backend::{AltBranchInfo, KeyClass, KeyDispatchBranch, KeyDispatchConfig, ValuePlacement};
+use crate::backend::{AltBranchInfo, KeyClass, KeyDispatchBranch, KeyDispatchConfig, KeyIndex, ValuePlacement};
 
 use super::code::{TsCode, TsEmitCtx, TsEmitter};
 use super::helpers::ts_escape;
@@ -93,9 +93,15 @@ impl TsEmitter {
         TsCode::new(stmts, result)
     }
 
+    /// AQ.7.3 added a length-bucketed key index to the IR side; the
+    /// TS backend stays on the existing JS string-comparison form
+    /// (V8 already optimizes short-string compares aggressively).
+    /// The `_index` parameter is reserved for a future port that
+    /// emits a length-first switch + Map dispatch.
     pub(in crate::backend::ts) fn key_dispatch(
         &mut self,
         config: &KeyDispatchConfig,
+        _index: &KeyIndex,
         branches: Vec<KeyDispatchBranch<TsCode>>,
         fallback: Option<(AltBranchInfo, TsCode)>,
         _alloc: ValuePlacement,

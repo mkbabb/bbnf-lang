@@ -11,7 +11,7 @@ use bbnf_ir::{AltDispatch, FnDescriptor, GrammarIR, IrRule, MapExpr, RuleId, Typ
 use crate::backend::driver::analysis::BackendAnalysis;
 use crate::backend::{
     AltBranchInfo, DelimScanConfig, Emitter, FlattenStrategy, KeyDispatchBranch, KeyDispatchConfig,
-    SepByConfig, SeqChildGroup, TokenDispatchArmCompiled, ValuePlacement,
+    KeyIndex, SepByConfig, SeqChildGroup, TokenDispatchArmCompiled, ValuePlacement,
 };
 pub use super::code::{WasmEmitCtx, WasmEmitter};
 pub use super::helpers::unescape_literal;
@@ -89,12 +89,13 @@ impl Emitter for WasmEmitter {
     fn emit_key_dispatch(
         &mut self,
         config: &KeyDispatchConfig,
+        index: &KeyIndex,
         branches: Vec<KeyDispatchBranch<String>>,
         fallback: Option<(AltBranchInfo, String)>,
         alloc: ValuePlacement,
         ctx: &mut WasmEmitCtx,
     ) -> String {
-        self.key_dispatch(config, branches, fallback, alloc, ctx)
+        self.key_dispatch(config, index, branches, fallback, alloc, ctx)
     }
 
     fn emit_repeat_many(

@@ -463,9 +463,18 @@ impl RustEmitter {
                     ::bbnf::runtime::ParseErr,
                 > {
                     let mut state = ::parse_that::ParserState::new(input);
+                    // AQ.8.2: the legacy `input.len() / 4` heuristic
+                    // chronically under-allocated for densely
+                    // structured grammars (CSS L4 emits ≈ 2-3 records
+                    // per byte; BBNF approaches 4 in pathological
+                    // shapes). Conservative upper-bound multiplier of
+                    // 4 records/byte avoids the per-grammar profile
+                    // regression that under-allocation triggered, at
+                    // the cost of a one-time mmap that the OS
+                    // resolves against demand-paged pages.
                     let mut builder =
                         ::bbnf::runtime::tape::TapeBuilder::with_capacity(
-                            input.len() / 4,
+                            input.len().saturating_mul(4),
                         );
                     let root_off = Self::#root_fn_ident(&mut state, &mut builder)
                         .ok_or(::bbnf::runtime::ParseErr::Syntax {

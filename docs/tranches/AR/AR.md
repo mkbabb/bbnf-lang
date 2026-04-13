@@ -1,5 +1,22 @@
 # Tranche AR — Discriminator Split, Payload Activation, Clone Reduction, CSS Hardening
 
+## Execution status
+
+25+ commits landed. Workspace compiles clean. 295+ tests pass.
+6/6 grammar_roundtrip green. 13 payload_layout tests green.
+
+| Phase | Status |
+|-------|--------|
+| 1. Discriminator split | **Complete** — meta_idx side-channel, inline gate, bootstrap regen (24,685 lines) |
+| 2. Payload activation | **Complete** — JSON 3 layouts, CSS L4 11 layouts, mixed Alt enum |
+| 3. Clone reduction | **Complete** — egraph 11→5 clones, string intern, type projection |
+| 4. CSS classifier | **Complete** — allows_escapes structural detection |
+| 5. Tape capacity | **Complete** — /2+2 heuristic (64x over-allocation eliminated) |
+| 6. Scanner generalization | **Partial** — FAMILY_HELPER policy + HIR re-exports (2/8 items) |
+| 7. Host.rs deletion | **Deferred** — agent attempt broke 6/6 roundtrip; needs incremental migration |
+| 8. SIMD fractional scan | **Complete** — NEON + SSE4.2, 12 tests pass, integrated into scan_number_mantissa |
+| 9. Pair compound flattening | **Complete** — TapeKind::KvPair + view accessors + layout recognition |
+
 ## Audit synthesis
 
 Six concurrent audits performed by parallel agents in isolated worktrees,

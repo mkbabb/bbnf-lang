@@ -87,6 +87,33 @@ Status: NOT STARTED
 
 Status: NOT STARTED
 
+### Pre-Phase 4 analysis: JSON regression root cause
+
+The AS.md claim that "post-AQ JSON numbers were from a broken
+parser" is **incorrect for JSON**. The modifier fix (commit
+`0c6e011`) only changed CSS L4 (171→184 rules) and Sheets (37→38).
+JSON stayed at 10 rules — identical IR, identical generated parser.
+
+The regression (AQ→AR) comes from AR codegen changes:
+
+| Dataset | post-AQ | post-AR | Delta |
+|---------|---------|---------|-------|
+| canada | 1796 | 1097 | **-39%** |
+| citm | 2698 | 2353 | **-13%** |
+| twitter | 2086 | 2069 | **-1%** |
+| data | 1939 | 1832 | **-6%** |
+| data_xl | 1348 | 1084 | **-20%** |
+
+Primary suspect: `meta: Vec<u8>` parallel side-channel (commit
+`d9a760a`). Extra byte write per record + separate cache line
+pressure. Canada is record-heavy (~500K records) so per-record
+overhead is highly visible.
+
+Fix path: fold `meta_idx` into `TapeRec.kind` byte — TapeKind
+only uses values 0-15 (4 bits), leaving 4 upper bits for meta_idx.
+Eliminates the parallel Vec entirely. For Alt branches > 15, use
+an overflow mechanism.
+
 ## Phase 5 — Scanner consolidation
 
 Status: NOT STARTED

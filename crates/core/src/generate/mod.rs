@@ -50,14 +50,15 @@ pub fn generate_all(
     let mut emitter = RustEmitter::new(enum_ident.clone(), prepared.prep.effective_prettify);
     emitter.fused_number_rules = prepared.prep.analysis.fused_number_rules.clone();
     emitter.operator_chain_rules = prepared.prep.analysis.operator_chain_rules.clone();
-    // AO Phase 0 / AP.1: enable structural dispatch when the grammar
-    // has a structural byte set AND no custom @ws pattern (CSS uses
-    // @ws for comment-aware whitespace, which can't be elided).
-    // The synchronized peek-only approach (sync_structural_cursor_to_offset
-    // + current_structural_byte) is safe for all Alt shapes — it never
-    // mutates state.offset, so mixed structural/non-structural first-bytes
-    // dispatch correctly.
-    emitter.structural_mode = ir.structural_bytes.is_some() && ir.ws_pattern.is_none();
+    // AP.1b: Structural dispatch uses synchronized peek-only dispatch
+    // (sync_structural_cursor_to_offset + current_structural_byte) which
+    // is safe for all Alt shapes. However, the pre-scan overhead
+    // (scan_structural + filter_quote_parity + Vec<u32> alloc) costs
+    // ~15-25% without WS elision to compensate. Gate behind input size
+    // threshold once WS elision between structural positions is designed.
+    // The infrastructure (IR pass, ParserState helpers, alt.rs hybrid
+    // dispatch) is ready — just needs the WS elision step.
+    emitter.structural_mode = false;
 
     // Compute prettify methods via the driver/emitter path.
     if prepared.prep.effective_prettify {

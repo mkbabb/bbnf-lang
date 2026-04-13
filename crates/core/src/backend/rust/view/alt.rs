@@ -139,7 +139,7 @@ pub fn emit_alt_accessors(
     // payload-eligible. The accessor lives in the same `impl` block
     // as the discriminated variant accessors so consumers see one
     // coherent surface.
-    let typed_enum = emit_typed_enum_value_accessor(rule, rule_name, branches, ir);
+    let typed_enum = emit_typed_enum_value_accessor(rule, rule_name, branches, ir, grammar_name);
 
     if methods.is_empty() && typed_enum.is_empty() {
         return quote! {};
@@ -166,6 +166,7 @@ fn emit_typed_enum_value_accessor(
     rule_name: &str,
     branches: &[bbnf_ir::AltBranch],
     ir: &GrammarIR,
+    grammar_name: &str,
 ) -> TokenStream {
     let view_ident = format_ident!("{}View", rule_name);
     let enum_ident = format_ident!("{}Value", rule_name);
@@ -236,8 +237,6 @@ fn emit_typed_enum_value_accessor(
     }
 
     // Enum type definition — AR.2.3: mixed payload + cursor variants.
-    let grammar_name = ir.get_string(ir.rules[0].name);
-    let grammar_name = grammar_name.split("::").last().unwrap_or(grammar_name);
     let node_view_ident = format_ident!("{}NodeView", grammar_name);
 
     let enum_variants: Vec<TokenStream> = variants
@@ -318,7 +317,7 @@ fn emit_typed_enum_value_accessor(
     quote! {
         /// Typed value enum — payload-eligible branches carry typed
         /// values directly; non-eligible branches wrap a cursor view.
-        #[derive(Clone, Debug, PartialEq)]
+        #[derive(Clone, Debug)]
         #[allow(non_camel_case_types)]
         pub enum #enum_ident<'p> {
             #(#enum_variants,)*

@@ -142,27 +142,15 @@ pub(crate) fn plan_regex_scanner(pattern: &str, opts: &EmitOpts) -> Option<Scann
         RegexClass::WhitespaceWithBlockComment => {
             Some(shared_ws_block_comment_scanner())
         }
-        // Plain identifier: no leading dash, no escapes.
+        // Plain identifier: no leading dash.
         RegexClass::Identifier {
             allows_leading_dash: false,
             allows_double_dash_prefix: false,
-            allows_escapes: false,
         } => Some(shared_ident_scanner()),
         // CSS-flavored identifier: vendor prefixes (-foo) and/or
         // custom properties (--foo). Route through the CSS kernel.
-        RegexClass::Identifier {
-            allows_escapes: false,
-            ..
-        } => Some(ScannerPlan::Kernel(
+        RegexClass::Identifier { .. } => Some(ScannerPlan::Kernel(
             crate::backend::kernels::identifier::emit_call_css(),
-        )),
-        // Escape-augmented identifiers (CSS selectorIdent).
-        // Routes through the CSS identifier kernel with escape support.
-        RegexClass::Identifier {
-            allows_escapes: true,
-            ..
-        } => Some(ScannerPlan::Kernel(
-            crate::backend::kernels::identifier::emit_call_with_escapes(),
         )),
         RegexClass::QuotedString { .. } => Some(shared_quoted_string_scanner()),
         // Generic (non-strict) number: no leading-zero rejection, optional

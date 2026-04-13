@@ -16,6 +16,14 @@ Operational protocol: see `/INSTRUCTIONS.md` at repo root.
   NOT modifier fix (JSON IR unchanged).
 - **JSON bench not apples-to-apples with sonic-rs** — no string
   materialization.
+- **11/22 tape_parity golden fixtures stale** — root_variant_idx
+  changed in AS enum reordering. Not functional regression.
+- **Dead code from AS**: has_scalar_payload_type (never called),
+  META_IDX_ZERO in repeat.rs, unreachable Span arms in grammar.rs.
+- **cssparser bench misleading**: `parse_declarations() -> false`
+  means it tokenizes only. lightningcss comparison (4.2x) is real.
+- **CSS L4 edge cases**: 47/49 pass. `|=` attr selector ambiguity
+  and ASCII-only identifiers are spec gaps.
 
 ## Phase 1 — Projection truth
 

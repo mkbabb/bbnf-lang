@@ -302,7 +302,30 @@ Extend the view layer to generate typed struct accessors for
 Named types: field-by-name access, type-safe getters, the full
 direct-to-struct chain.
 
-#### AT.5.3 ParsedGrammar elimination
+#### AT.5.3 Dead code cleanup (AS audit)
+
+Delete dead code identified in the AS code quality audit:
+- `has_scalar_payload_type` in grammar.rs:80 (never called)
+- `META_IDX_ZERO` in repeat.rs:26 (unused copy)
+- Span arms in `emit_alt_mustape_prelude_epilogue` and
+  `emit_alt_span_only_prelude_epilogue` — unreachable because
+  `needs_payload_slot()` excludes Span upstream
+- Stale doc comment in emitter_types.rs:79
+
+#### AT.5.4 Regenerate tape_parity golden fixtures
+
+11 of 22 tape_parity tests fail: `root_variant_idx` changed due to
+AS enum reordering. The fixtures in `tests/fixtures/tape_golden/`
+need regeneration. Not a functional regression — record counts
+are correct.
+
+#### AT.5.5 Commit parse-that changes
+
+The AS tranche added `allow_escapes: bool` to `IdentConfig` and
+`CSS_IDENT_ESCAPE_CONFIG` in parse-that's working tree. These
+changes must be committed in the parse-that repo.
+
+#### AT.5.6 ParsedGrammar elimination
 
 The bootstrap loop is closed. `host.rs` extracts the grammar from
 the tape-first bootstrap parser. `ParsedGrammar` (the old AST-based
@@ -320,7 +343,10 @@ through the IR path.
 7. `json_monolithic_value` bench directly comparable to sonic-rs (Phase 3)
 8. Fresh samply profiles with delta vs AR-baseline (Phase 4)
 9. StructRegistry populated by at least one grammar (Phase 5)
-10. `cargo test --workspace` no new failures (all phases)
+10. tape_parity: 22/22 pass (fixtures regenerated) (Phase 5)
+11. Zero dead code in AS-changed files (Phase 5)
+12. parse-that changes committed (Phase 5)
+13. `cargo test --workspace` no new failures (all phases)
 
 ## Items already landed (from AS)
 

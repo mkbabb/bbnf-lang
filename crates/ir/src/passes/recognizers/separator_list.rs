@@ -1,11 +1,12 @@
 //! Mine `RecognizerShape::SeparatorList` records on `Skip(element, opt_sep)`
 //! patterns where the separator is a single-byte literal.
 
+use crate::IrNode;
 use crate::dag::NodeId;
+use crate::passes::inspect::single_byte_literal;
 use crate::passes::patterns::{
     OnePassGrade, OutputShape, Recognizer, RecognizerRole, RecognizerShape,
 };
-use crate::{GrammarIR, IrNode};
 
 use super::signature::compute_shape_hash;
 use super::{MineOutputs, RecognizerMineCtx, RecognizerMiner};
@@ -80,15 +81,4 @@ fn element_shape_from(node: &IrNode) -> RecognizerShape {
         bytes: smallvec::smallvec![],
         disjoint_tail: false,
     }
-}
-
-fn single_byte_literal(node: &IrNode, ir: &GrammarIR) -> Option<u8> {
-    if let IrNode::Literal(sid) = node {
-        let s = ir.get_string(*sid);
-        let bytes = s.as_bytes();
-        if bytes.len() == 1 {
-            return Some(bytes[0]);
-        }
-    }
-    None
 }

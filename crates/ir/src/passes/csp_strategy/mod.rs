@@ -149,6 +149,7 @@ use rustc_hash::FxHashMap;
 
 use self::components::{partition_by_call_graph, GrammarComponents};
 use crate::dag::NodeId;
+use crate::passes::inspect::visit_children_alt;
 use crate::passes::materialization::MaterializationClass;
 use crate::passes::patterns::{Recognizer, RecognizerShape};
 use crate::{CostConfig, GrammarIR, IrNode, RuleId};
@@ -805,7 +806,7 @@ fn collect_sites(
         }
     }
 
-    super::recognizers::visit_children_alt(node, |child| {
+    visit_children_alt(node, |child| {
         collect_sites(child, ir, dag, cfg, csp, sites, by_node)
     });
 }
@@ -875,7 +876,7 @@ fn walk_token_dispatch(
             }
         }
     }
-    super::recognizers::visit_children_alt(node, |child| {
+    visit_children_alt(node, |child| {
         walk_token_dispatch(child, dag, by_node, csp, one_pass_engines, count)
     });
 }
@@ -891,7 +892,7 @@ fn collect_engine_vars_in(
             out.push(*engine_var);
         }
     }
-    super::recognizers::visit_children_alt(node, |child| {
+    visit_children_alt(node, |child| {
         collect_engine_vars_in(child, dag, by_node, out)
     });
 }
@@ -1138,7 +1139,7 @@ fn decode_fallback(
             decisions.insert(node_id, dec);
         }
     }
-    super::recognizers::visit_children_alt(node, |child| decode_fallback(child, ir, dag, decisions));
+    visit_children_alt(node, |child| decode_fallback(child, ir, dag, decisions));
 }
 
 fn fallback_alt_mode(fact: Option<&Recognizer>, has_dispatch: bool) -> AltMode {
@@ -1251,7 +1252,7 @@ fn project_regex_decisions(
         }
     }
 
-    super::recognizers::visit_children_alt(node, |child| {
+    visit_children_alt(node, |child| {
         project_regex_decisions(child, ir, dag, decisions, out)
     });
 }

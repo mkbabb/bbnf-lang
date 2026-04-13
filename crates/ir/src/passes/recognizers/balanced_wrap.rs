@@ -2,11 +2,12 @@
 //! nodes (`Skip(Next(open, body), close)` or `Next(open, Skip(body, close))`)
 //! where both delimiters are 1-byte literals.
 
+use crate::IrNode;
 use crate::dag::NodeId;
+use crate::passes::inspect::{single_byte_literal, unwrap_wrap};
 use crate::passes::patterns::{
     OnePassGrade, OutputShape, Recognizer, RecognizerRole, RecognizerShape,
 };
-use crate::{GrammarIR, IrNode};
 
 use super::signature::compute_shape_hash;
 use super::{MineOutputs, RecognizerMineCtx, RecognizerMiner};
@@ -71,33 +72,4 @@ impl RecognizerMiner for BalancedWrapMiner {
             },
         ));
     }
-}
-
-fn unwrap_wrap(node: &IrNode) -> Option<(&IrNode, &IrNode, &IrNode)> {
-    match node {
-        IrNode::Skip(left, right) => {
-            if let IrNode::Next(open, middle) = left.as_ref() {
-                return Some((open, middle, right));
-            }
-            None
-        }
-        IrNode::Next(left, right) => {
-            if let IrNode::Skip(middle, close) = right.as_ref() {
-                return Some((left, middle, close));
-            }
-            None
-        }
-        _ => None,
-    }
-}
-
-fn single_byte_literal(node: &IrNode, ir: &GrammarIR) -> Option<u8> {
-    if let IrNode::Literal(sid) = node {
-        let s = ir.get_string(*sid);
-        let bytes = s.as_bytes();
-        if bytes.len() == 1 {
-            return Some(bytes[0]);
-        }
-    }
-    None
 }

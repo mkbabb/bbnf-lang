@@ -73,6 +73,7 @@ use std::collections::HashMap;
 
 use crate::dag::{GrammarDag, NodeId};
 use crate::passes::context::ContextFactsMap;
+use crate::passes::inspect::visit_children_alt;
 use crate::passes::patterns::{NodeFacts, NodeFactsMap, PatternAnnotations, Recognizer};
 use crate::{DelimScanConfig, GrammarIR, IrNode, KeyDispatchMatch};
 
@@ -285,43 +286,3 @@ pub(crate) fn install_recognizer(
         .recognizer = Some(recognizer);
 }
 
-/// Walk the children of an `IrNode`, invoking `f` on each. Shared by
-/// the unified Z.0 walker and any other tree recursion within this
-/// module.
-pub(crate) fn visit_children_alt(node: &crate::IrNode, mut f: impl FnMut(&crate::IrNode)) {
-    use crate::IrNode;
-    match node {
-        IrNode::Seq(children) => {
-            for c in children {
-                f(c);
-            }
-        }
-        IrNode::Alt(branches, _) => {
-            for b in branches {
-                f(&b.node);
-            }
-        }
-        IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
-            f(a);
-            f(b);
-        }
-        IrNode::Repeat { inner, .. }
-        | IrNode::Negate(inner)
-        | IrNode::OptionalWhitespace(inner)
-        | IrNode::Map { inner, .. } => {
-            f(inner);
-        }
-        IrNode::TokenDispatch {
-            token,
-            arms,
-            fallback,
-        } => {
-            f(token);
-            for arm in arms {
-                f(&arm.continuation);
-            }
-            f(fallback);
-        }
-        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon | IrNode::Ref(_) => {}
-    }
-}

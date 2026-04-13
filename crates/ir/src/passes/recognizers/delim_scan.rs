@@ -20,7 +20,10 @@
 use std::collections::HashSet;
 
 use crate::dag::NodeId;
-use crate::{AltBranch, DelimScanConfig, GrammarIR, IrNode, RuleId};
+use crate::passes::inspect::{
+    single_byte_literal, unwrap_map_ow, unwrap_to_alt, unwrap_to_repeat, unwrap_wrap,
+};
+use crate::{DelimScanConfig, GrammarIR, IrNode, RuleId};
 
 use super::{MineOutputs, RecognizerMineCtx, RecognizerMiner};
 
@@ -116,21 +119,9 @@ pub fn try_detect(
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
-fn single_byte_literal(node: &IrNode, ir: &GrammarIR) -> Option<u8> {
-    if let IrNode::Literal(sid) = node {
-        let unescaped = ir.get_string(*sid).to_string();
-        let bytes = unescaped.as_bytes();
-        if bytes.len() == 1 {
-            return Some(bytes[0]);
-        }
-    }
-    None
-}
-
 fn trailing_delimiter_byte(node: &IrNode, ir: &GrammarIR) -> Option<u8> {
     if let IrNode::Literal(sid) = node {
-        let unescaped = ir.get_string(*sid).to_string();
-        let bytes = unescaped.as_bytes();
+        let bytes = ir.get_string(*sid).as_bytes();
         if bytes.len() >= 2 {
             let last = *bytes.last()?;
             if last == b':' || last == b';' {
@@ -139,61 +130,6 @@ fn trailing_delimiter_byte(node: &IrNode, ir: &GrammarIR) -> Option<u8> {
         }
     }
     None
-}
-
-fn unwrap_to_repeat<'a>(
-    node: &'a IrNode,
-    ir: &'a GrammarIR,
-    visited: &mut HashSet<RuleId>,
-) -> Option<&'a IrNode> {
-    match node {
-        IrNode::Repeat { inner, lo: 0, .. } => Some(inner),
-        IrNode::OptionalWhitespace(inner) | IrNode::Map { inner, .. } => {
-            unwrap_to_repeat(inner, ir, visited)
-        }
-        IrNode::Ref(rule_id) => {
-            if !visited.insert(*rule_id) {
-                return None;
-            }
-            let result = unwrap_to_repeat(&ir.rules[*rule_id as usize].body, ir, visited);
-            visited.remove(rule_id);
-            result
-        }
-        IrNode::Next(_, b) => unwrap_to_repeat(b, ir, visited),
-        IrNode::Skip(a, _) => unwrap_to_repeat(a, ir, visited),
-        _ => None,
-    }
-}
-
-fn unwrap_to_alt<'a>(
-    node: &'a IrNode,
-    ir: &'a GrammarIR,
-    visited: &mut HashSet<RuleId>,
-) -> Option<&'a [AltBranch]> {
-    match node {
-        IrNode::Alt(branches, dispatch) if dispatch.is_none() => Some(branches),
-        IrNode::OptionalWhitespace(inner) | IrNode::Map { inner, .. } => {
-            unwrap_to_alt(inner, ir, visited)
-        }
-        IrNode::Ref(rule_id) => {
-            if !visited.insert(*rule_id) {
-                return None;
-            }
-            let result = unwrap_to_alt(&ir.rules[*rule_id as usize].body, ir, visited);
-            visited.remove(rule_id);
-            result
-        }
-        IrNode::Next(_, b) => unwrap_to_alt(b, ir, visited),
-        IrNode::Skip(a, _) => unwrap_to_alt(a, ir, visited),
-        _ => None,
-    }
-}
-
-fn unwrap_map_ow(node: &IrNode) -> &IrNode {
-    match node {
-        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => unwrap_map_ow(inner),
-        other => other,
-    }
 }
 
 fn find_pivot_in_seq(
@@ -280,24 +216,6 @@ fn find_block_ref(node: &IrNode) -> Option<RuleId> {
         IrNode::Ref(rule_id) => Some(*rule_id),
         IrNode::Seq(children) => children.iter().find_map(|c| find_block_ref(unwrap_map_ow(c))),
         IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => find_block_ref(inner),
-        _ => None,
-    }
-}
-
-fn unwrap_wrap(node: &IrNode) -> Option<(&IrNode, &IrNode, &IrNode)> {
-    match node {
-        IrNode::Skip(left, right) => {
-            if let IrNode::Next(open, middle) = left.as_ref() {
-                return Some((open, middle, right));
-            }
-            None
-        }
-        IrNode::Next(left, right) => {
-            if let IrNode::Skip(middle, close) = right.as_ref() {
-                return Some((left, middle, close));
-            }
-            None
-        }
         _ => None,
     }
 }

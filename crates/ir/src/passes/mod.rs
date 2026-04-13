@@ -6,6 +6,7 @@
 pub mod context;
 pub mod csp_domains;
 pub mod csp_strategy;
+pub mod inspect;
 pub mod lr;
 pub mod materialization;
 pub mod metadata;

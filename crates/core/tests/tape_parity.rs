@@ -184,6 +184,7 @@ fn kind_name(k: TapeKind) -> &'static str {
         TapeKind::MapValue => "MapValue",
         TapeKind::TokenDispatch => "TokenDispatch",
         TapeKind::Recovered => "Recovered",
+        TapeKind::KvPair => "KvPair",
         TapeKind::Reserved => "Reserved",
     }
 }
@@ -260,6 +261,7 @@ impl TapeSummary {
             "MapValue" => "MapValue",
             "TokenDispatch" => "TokenDispatch",
             "Recovered" => "Recovered",
+            "KvPair" => "KvPair",
             "Reserved" => "Reserved",
             _ => return None,
         };

@@ -68,7 +68,7 @@ impl Root for TestGrammar {
 /// own span.
 fn parsed_with_one_leaf() -> Parsed<'static, TestGrammar> {
     let mut builder = TapeBuilder::new();
-    let leaf_off = builder.push_leaf(TapeKind::Span, 0, 5, 7);
+    let leaf_off = builder.push_leaf(TapeKind::Span, 0, 5, 7, 0);
     let tape = builder.finish().expect("tape finish");
     Parsed::new(tape, "hello world", leaf_off)
 }

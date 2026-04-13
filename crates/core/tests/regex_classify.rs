@@ -95,6 +95,7 @@ fn identifier_known() {
         RegexClass::Identifier {
             allows_leading_dash: false,
             allows_double_dash_prefix: false,
+            allows_escapes: false,
         }
     ));
     assert!(matches!(
@@ -102,6 +103,7 @@ fn identifier_known() {
         RegexClass::Identifier {
             allows_leading_dash: false,
             allows_double_dash_prefix: false,
+            allows_escapes: false,
         }
     ));
 }

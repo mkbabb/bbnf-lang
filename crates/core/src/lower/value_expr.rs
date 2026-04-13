@@ -97,6 +97,13 @@ fn dispatch_value_expr<'a>(
     ctx: &mut LowerCtx<'a>,
 ) -> MapExpr {
     match node.rule_kind() {
+        // Top-level value_expr wrapper (= value_closure | value_or).
+        // Peel by re-dispatching on the single child.
+        BbnfBootstrapRuleKind::value_expr => {
+            let child = node.child(0).unwrap_or(node);
+            dispatch_value_expr(child, ctx)
+        }
+
         // Top of the value sub-grammar — alt of closure / value_or chain.
         BbnfBootstrapRuleKind::value_or => lower_value_expr_or_closure(node, ctx),
 

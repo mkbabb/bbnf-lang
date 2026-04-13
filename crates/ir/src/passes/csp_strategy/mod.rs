@@ -626,6 +626,23 @@ fn solve_component(
         return;
     }
 
+    // ── Phase 3.5: per-component instrumentation for BBNF_CSP_REPORT ──
+    // Emit one line per solved component with site/constraint/node
+    // counts, the search statistics, and the contributing rule count.
+    // Skipped when the env var isn't set so production builds incur
+    // no formatting overhead.
+    if std::env::var("BBNF_CSP_REPORT").is_ok() {
+        eprintln!(
+            "csp_strategy::solve_component sites={} constraints={} \
+             nodes_explored={} solutions={} contributing_rules={}",
+            sites.len(),
+            constraints_added,
+            csp.stats().nodes_explored,
+            solutions.len(),
+            contributing_rules.len(),
+        );
+    }
+
     // ── Phase 4: decode solution → RecognizerDecisionMap ───────────────────
     if let Some(solution) = solutions.first() {
         for (var_id, site) in &sites {

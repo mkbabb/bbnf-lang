@@ -47,6 +47,7 @@ fn make_ir(hints: PrettyHints) -> GrammarIR {
         type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
+        struct_registry: Default::default(),
     }
 }
 

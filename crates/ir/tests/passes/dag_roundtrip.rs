@@ -50,6 +50,7 @@ fn make_ir(rules: Vec<(&str, IrNode)>) -> GrammarIR {
         materialization: std::collections::HashMap::new(),
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
+        struct_registry: Default::default(),
     }
 }
 

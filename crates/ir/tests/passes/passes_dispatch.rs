@@ -59,6 +59,7 @@ fn dispatch_for_disjoint_branches() {
         materialization: std::collections::HashMap::new(),
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
+        struct_registry: Default::default(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -125,6 +126,7 @@ fn no_dispatch_for_overlapping_branches() {
         materialization: std::collections::HashMap::new(),
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
+        struct_registry: Default::default(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -189,6 +191,7 @@ fn dispatch_for_nested_alt() {
         materialization: std::collections::HashMap::new(),
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
+        struct_registry: Default::default(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -261,6 +264,7 @@ fn dispatch_with_nullable_branch_via_follow() {
         materialization: std::collections::HashMap::new(),
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
+        struct_registry: Default::default(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -335,6 +339,7 @@ fn no_dispatch_when_nullable_overlaps_follow() {
         materialization: std::collections::HashMap::new(),
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
+        struct_registry: Default::default(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -419,6 +424,7 @@ fn fallback_dispatch_typed_plus_catchall() {
         materialization: std::collections::HashMap::new(),
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
+        struct_registry: Default::default(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -495,6 +501,7 @@ fn fallback_dispatch_not_superset() {
         materialization: std::collections::HashMap::new(),
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
+        struct_registry: Default::default(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -559,6 +566,7 @@ fn fallback_dispatch_too_few_branches() {
         materialization: std::collections::HashMap::new(),
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
+        struct_registry: Default::default(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);

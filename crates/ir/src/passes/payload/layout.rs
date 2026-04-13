@@ -67,6 +67,15 @@ pub fn compute_payload_layouts(ir: &GrammarIR) -> HashMap<RuleId, PayloadLayout>
                     plan_layout(fields)
                 }
             }
+            // AS.2.3: Named struct types — look up the concrete field
+            // layout in the struct registry and plan from those fields.
+            TypeDesc::Named(sid) => {
+                if let Some(fields) = ir.struct_registry.get(sid) {
+                    plan_layout(fields)
+                } else {
+                    continue;
+                }
+            }
             // Bare scalar rules (e.g. `number -> f64`) are single-field
             // payloads. Treat them as a degenerate 1-element tuple so the
             // tape codegen can use aggregate payload storage uniformly.

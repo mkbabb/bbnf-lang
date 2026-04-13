@@ -142,6 +142,7 @@ fn make_ir(rules: Vec<IrRule>, strings: Vec<String>) -> GrammarIR {
         materialization: HashMap::new(),
         string_index: std::collections::HashMap::new(),
         payload_layouts: HashMap::new(),
+        struct_registry: Default::default(),
     };
     bbnf_ir::dag::ensure_dag(&mut ir);
     ir

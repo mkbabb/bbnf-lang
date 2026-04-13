@@ -47,6 +47,7 @@ fn resolve_direct_alias() {
         materialization: std::collections::HashMap::new(),
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
+        struct_registry: Default::default(),
     };
 
     canonicalize_aliases(&mut ir);
@@ -96,6 +97,7 @@ fn resolve_chain_alias() {
         materialization: std::collections::HashMap::new(),
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
+        struct_registry: Default::default(),
     };
 
     canonicalize_aliases(&mut ir);

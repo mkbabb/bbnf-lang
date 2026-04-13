@@ -225,6 +225,17 @@ pub struct GrammarIR {
     /// Not serialized: every compile rebuilds it from scratch.
     #[serde(skip, default)]
     pub string_index: HashMap<String, StringId>,
+
+    /// Registry of named struct types. Maps a `StringId` (the struct
+    /// name) to its ordered field types. Populated by `project_types`
+    /// when a rule's projected type is `Named` and the concrete field
+    /// layout is known from the rule body's Seq children.
+    ///
+    /// Consumed by `compute_payload_layouts` to plan aggregate storage
+    /// for Named types, and by backends to emit struct field accessors.
+    /// Not serialized: every compile rebuilds it from scratch.
+    #[serde(skip, default)]
+    pub struct_registry: HashMap<super::StringId, Vec<TypeDesc>>,
 }
 
 impl GrammarIR {

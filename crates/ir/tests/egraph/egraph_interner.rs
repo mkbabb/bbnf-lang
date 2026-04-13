@@ -39,6 +39,7 @@ fn empty_ir(strings: Vec<&str>) -> GrammarIR {
         materialization: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
         string_index: Default::default(),
+        struct_registry: Default::default(),
     }
 }
 

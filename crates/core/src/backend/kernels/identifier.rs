@@ -17,3 +17,9 @@ pub fn emit_call() -> TokenStream {
 pub fn emit_call_css() -> TokenStream {
     quote! { ::parse_that::scan_ident(state, &::parse_that::CSS_IDENT_CONFIG) }
 }
+
+/// Emit a call to the CSS-flavored identifier scanner with escape support.
+/// Accepts vendor prefixes, custom properties, and `\X` escape sequences.
+pub fn emit_call_with_escapes() -> TokenStream {
+    quote! { ::parse_that::scan_ident(state, &::parse_that::CSS_IDENT_ESCAPE_CONFIG) }
+}

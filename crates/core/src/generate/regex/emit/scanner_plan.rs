@@ -156,13 +156,14 @@ pub(crate) fn plan_regex_scanner(pattern: &str, opts: &EmitOpts) -> Option<Scann
         } => Some(ScannerPlan::Kernel(
             crate::backend::kernels::identifier::emit_call_css(),
         )),
-        // Escape-augmented identifiers (CSS selectorIdent) need a
-        // dedicated scanner that hasn't been built yet (AS.3.2).
-        // Fall through to the generalized emitter for now.
+        // Escape-augmented identifiers (CSS selectorIdent).
+        // Routes through the CSS identifier kernel with escape support.
         RegexClass::Identifier {
             allows_escapes: true,
             ..
-        } => None,
+        } => Some(ScannerPlan::Kernel(
+            crate::backend::kernels::identifier::emit_call_with_escapes(),
+        )),
         RegexClass::QuotedString { .. } => Some(shared_quoted_string_scanner()),
         RegexClass::Numeric {
             allows_sign: false, ..

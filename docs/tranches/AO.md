@@ -1,5 +1,24 @@
 # Tranche AO — Structural Dispatch + Scanner Generalization + Global Optimization
 
+**STATUS: OPEN (code complete for Phase 0, never exercised end-to-end)**
+
+Phase 0 (structural dispatch) infrastructure was implemented in the
+emitter codegen but never activated in any production grammar. The
+proc-macro derive path does not call the structural pre-scan entry
+point. `cargo expand` of JSON and CSS L4 shows zero `scan_structural`
+calls. Phases 1-5 remain plan-only with no code written.
+
+Post-AO audit (AP-prototype-1, AP-prototype-2, AP 12-agent audit)
+found: WS scanning is 50% of JSON citm runtime (samply), structural
+mode would eliminate it, but the flag never flips to `true`. Payload
+projection (f64) is also broken — AO Phase 2.2 kernel rename broke
+the wiring. Core crate has 6 compilation errors blocking fresh builds.
+CSS L4 tailwind still fails at offset 387594.
+
+All remaining AO items are absorbed into Tranche AP.
+
+---
+
 ## Context
 
 Post-AN audit (3 parallel agents: profiling, optimization wiring, sonic-rs

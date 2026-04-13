@@ -34,6 +34,7 @@ fn make_simple_ir(body: IrNode) -> GrammarIR {
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
+        structural_bytes: None,
     }
 }
 
@@ -160,6 +161,7 @@ fn compile_memo_rule() {
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
+        structural_bytes: None,
     };
     let program = compile(&ir);
 
@@ -219,6 +221,7 @@ fn compile_direct_left_recursive_rule_keeps_memo() {
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
+        structural_bytes: None,
     };
     let program = compile(&ir);
 
@@ -372,6 +375,7 @@ fn compile_token_dispatch_emits_dispatch_token() {
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
+        structural_bytes: None,
     };
     let program = compile(&ir);
 
@@ -450,6 +454,7 @@ fn compile_call() {
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
+        structural_bytes: None,
     };
     let program = compile(&ir);
 

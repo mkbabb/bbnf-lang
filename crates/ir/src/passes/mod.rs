@@ -15,6 +15,7 @@ pub mod recognizers;
 pub mod regex_info;
 pub mod sets;
 pub mod span;
+pub mod structural_bytes;
 pub mod transform;
 pub mod types;
 
@@ -50,5 +51,6 @@ pub use csp_strategy::{
 };
 pub use recognizers::mine_recognizers;
 pub use regex_info::compute_regex_info;
+pub use structural_bytes::compute_structural_bytes;
 pub use types::project_types;
 pub use types::{TypeMap, try_flatten_pair};

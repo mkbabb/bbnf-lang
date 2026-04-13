@@ -607,6 +607,9 @@ fn compile_ast_common<'a>(
         timer.span("generate_dispatch_tables", || {
             bbnf_ir::passes::generate_dispatch_tables(&mut ir);
         });
+        timer.span("compute_structural_bytes", || {
+            bbnf_ir::passes::compute_structural_bytes(&mut ir);
+        });
         timer.span("compute_regex_info", || {
             bbnf_ir::passes::compute_regex_info(&mut ir);
         });

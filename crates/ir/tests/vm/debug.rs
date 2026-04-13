@@ -62,6 +62,7 @@ fn make_debug_ir() -> GrammarIR {
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
+        structural_bytes: None,
     }
 }
 
@@ -117,6 +118,7 @@ fn compiler_no_debug_break_without_flag() {
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
+        structural_bytes: None,
     };
     let program = compile(&ir);
 

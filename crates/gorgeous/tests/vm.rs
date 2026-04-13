@@ -46,6 +46,7 @@ fn make_ir(hints: PrettyHints) -> GrammarIR {
         cost_config: bbnf_ir::CostConfig::default(),
         type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
+        structural_bytes: None,
     }
 }
 

@@ -4,6 +4,40 @@ These directives govern ALL work in this repository: implementation,
 auditing, benchmarking, profiling, and testing. They are non-negotiable.
 Agents must internalize them before beginning work.
 
+## Tranche structure
+
+Every tranche lives in `docs/tranches/{LETTER}/` as a directory:
+
+```
+docs/tranches/AS/
+├── AS.md            Plan document (phases, hard gates, critical files)
+├── PROGRESS.md      Running log of what landed, what didn't, blockers
+└── *.md             Audit docs, critique, supplementary analysis
+```
+
+- `{LETTER}.md` is the plan. Written before execution begins.
+- `PROGRESS.md` is updated during execution. Each entry is dated
+  and records: what was done, what was committed, what blocked,
+  what shifted. This is the ground-truth record of the tranche.
+- All tranches reference this `INSTRUCTIONS.md` for operational
+  protocol instead of re-stating directives inline.
+
+## Crate ownership
+
+All crates in the dependency graph are owned and modifiable,
+including external path dependencies:
+
+- **parse-that** (`/Users/mkbabb/Programming/parse-that/`) —
+  parser combinator library, bbnf-regex, HIR, NFA/DFA, scanners.
+  Patched via `.cargo/config.toml`. Full write access.
+- **pprint** — pretty printing. Patched similarly.
+- **csp-solver** — CSP/COP substrate. Workspace member at
+  `crates/csp-solver/`.
+
+These are NOT external read-only dependencies. Fixes, features,
+and architectural changes to leaf crates are first-class work
+items, not deferred to "upstream."
+
 ## Code discipline
 
 - **NO workarounds, NO hacks, NO `#[allow(...)]` to mask issues.**

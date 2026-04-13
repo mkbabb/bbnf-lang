@@ -260,11 +260,10 @@ dispatch table. `wc -l` shows >= 350 LOC net reduction.
 
 ## Operational directives
 
-See `INSTRUCTIONS.md` at the repo root for the full operational
-protocol: cache clearing, bench/test/expand/samply recipes, agent
-orchestration rules, code discipline, and architecture invariants.
+See `/INSTRUCTIONS.md` at the repo root. Progress tracked in
+`PROGRESS.md` alongside this document.
 
-Additional AS-specific directive:
+AS-specific:
 - **Verify SIMD paths fire**: `cargo asm` or runtime feature
   detection logs for both NEON and SSE4.2 paths in
   `parse-that/rust/parse_that/src/parsers/scan/number_simd.rs`.

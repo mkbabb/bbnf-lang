@@ -607,6 +607,10 @@ fn compile_ast_common<'a>(
         "DAG must be built before facts/strategy phases",
     );
 
+    // Build the reverse string index for O(1) `&str → StringId` lookups
+    // used by downstream codegen (regex engine decisions, regex info cache).
+    ir.build_string_index();
+
     if !options.structural {
         // Non-mutating facts on the stable DAG. Gated on !structural
         // because they depend on optimizer output.

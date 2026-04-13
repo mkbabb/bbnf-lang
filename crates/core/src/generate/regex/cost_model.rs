@@ -174,18 +174,18 @@ impl<'a> EmitOpts<'a> {
         pattern: &str,
     ) -> Option<::bbnf_ir::passes::csp_strategy::RegexEngine> {
         let ir = self.ir?;
-        let sid = ir.strings.iter().position(|s| s == pattern)? as u32;
+        let sid = ir.find_string_id(pattern)?;
         ir.regex_engine_decisions.get(&sid).cloned()
     }
 }
 
-/// Resolve `pattern` → `&RegexInfo` via reverse-lookup through the
-/// string pool. Interning is O(n) over `ir.strings`, but that's still
-/// a handful of byte comparisons vs. a full HIR parse on cache miss.
+/// Resolve `pattern` → `&RegexInfo` via the reverse string index.
+/// O(1) when `ir.build_string_index()` has been called (always true in
+/// the production pipeline), falling back to O(n) linear scan otherwise.
 fn find_regex_info<'a>(
     ir: &'a bbnf_ir::GrammarIR,
     pattern: &str,
 ) -> Option<&'a ::parse_that::regex::RegexInfo> {
-    let sid = ir.strings.iter().position(|s| s == pattern)? as u32;
+    let sid = ir.find_string_id(pattern)?;
     ir.regex_info.get(&sid)
 }

@@ -215,12 +215,53 @@ pub struct GrammarIR {
     /// rebuilds it from scratch.
     #[serde(skip, default)]
     pub payload_layouts: HashMap<RuleId, passes::PayloadLayout>,
+
+    /// Reverse string index: pattern string → `StringId`.
+    ///
+    /// Built once by [`GrammarIR::build_string_index`] after all
+    /// string-mutating passes complete (typically at DAG-build time in
+    /// `pipeline/compile.rs`). Provides O(1) lookup from `&str` to
+    /// `StringId`, eliminating O(n) linear scans over `self.strings`.
+    /// Not serialized: every compile rebuilds it from scratch.
+    #[serde(skip, default)]
+    pub string_index: HashMap<String, StringId>,
 }
 
 impl GrammarIR {
     /// Look up an interned string by its `StringId`.
     pub fn get_string(&self, id: StringId) -> &str {
         &self.strings[id as usize]
+    }
+
+    /// Reverse-lookup: find the `StringId` for an interned string.
+    ///
+    /// Returns `None` if the string is not in the pool. O(1) when
+    /// [`build_string_index`](Self::build_string_index) has been called;
+    /// falls back to O(n) linear scan otherwise (should not happen in
+    /// production — the pipeline always builds the index).
+    pub fn find_string_id(&self, s: &str) -> Option<StringId> {
+        if !self.string_index.is_empty() {
+            return self.string_index.get(s).copied();
+        }
+        // Fallback: linear scan (only hit if the index hasn't been built).
+        self.strings
+            .iter()
+            .position(|existing| existing == s)
+            .map(|i| i as StringId)
+    }
+
+    /// Build the reverse string index from `self.strings`.
+    ///
+    /// Call once after all string-mutating passes complete (typically at
+    /// DAG-build time). Subsequent calls are idempotent — they rebuild
+    /// the index from the current strings table.
+    pub fn build_string_index(&mut self) {
+        self.string_index = self
+            .strings
+            .iter()
+            .enumerate()
+            .map(|(i, s)| (s.clone(), i as StringId))
+            .collect();
     }
 
     /// Look up a rule by its `RuleId`.

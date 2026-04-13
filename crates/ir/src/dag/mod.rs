@@ -51,6 +51,9 @@ pub fn ensure_dag(ir: &mut GrammarIR) {
     if ir.dag.is_none() {
         ir.dag = Some(GrammarDag::from_ir(ir));
     }
+    if ir.string_index.is_empty() && !ir.strings.is_empty() {
+        ir.build_string_index();
+    }
 }
 
 /// The canonical grammar DAG — an arena of hash-consed nodes with per-rule

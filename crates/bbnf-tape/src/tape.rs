@@ -224,48 +224,110 @@ impl Tape {
 
     // ── Payload accessors ─────────────────────────────────────────
 
-    /// Read an `f64` payload from the record's payload slot.
+    /// Read an arbitrary scalar payload from the record's payload
+    /// slot.
     ///
     /// Returns `None` if `rec.payload_idx == 0` (no payload) or if
-    /// the payload buffer is too short (defensive — should never
-    /// happen with well-formed builder output).
+    /// the payload buffer is too short to hold `T` at that slot
+    /// (defensive — should never happen with well-formed builder
+    /// output).
+    ///
+    /// `T` must be `Copy` and ≤ 8 bytes, mirroring the contract on
+    /// `TapeBuilder::push_leaf_with_scalar`.
     #[inline]
-    pub fn payload_f64(&self, rec: &TapeRec) -> Option<f64> {
-        let idx = rec.payload_idx;
-        if idx == 0 {
+    pub fn payload_scalar<T: Copy>(&self, rec: &TapeRec) -> Option<T> {
+        if rec.payload_idx == 0 {
             return None;
         }
-        let start = (idx as usize - 1) * 8;
-        let bytes: &[u8; 8] = self.payloads.get(start..start + 8)?.try_into().ok()?;
-        Some(f64::from_le_bytes(*bytes))
+        debug_assert!(
+            std::mem::size_of::<T>() <= 8,
+            "payload_scalar: size_of::<T>() must be ≤ 8, got {}",
+            std::mem::size_of::<T>()
+        );
+        let start = (rec.payload_idx as usize - 1) * 8;
+        if start + std::mem::size_of::<T>() > self.payloads.len() {
+            return None;
+        }
+        let mut v: std::mem::MaybeUninit<T> = std::mem::MaybeUninit::uninit();
+        // SAFETY: bounds are checked above, `T: Copy` permits the raw
+        // byte copy, and the source pointer is valid for the lifetime
+        // of `&self`.
+        unsafe {
+            std::ptr::copy_nonoverlapping(
+                self.payloads.as_ptr().add(start),
+                v.as_mut_ptr() as *mut u8,
+                std::mem::size_of::<T>(),
+            );
+            Some(v.assume_init())
+        }
+    }
+
+    /// Read an `f64` payload from the record's payload slot.
+    #[inline]
+    pub fn payload_f64(&self, rec: &TapeRec) -> Option<f64> {
+        self.payload_scalar::<f64>(rec)
     }
 
     /// Read a `bool` payload from the record's payload slot.
-    ///
-    /// Returns `None` if `rec.payload_idx == 0`. The bool is stored
-    /// in byte 0 of the 8-byte slot (nonzero = true).
     #[inline]
     pub fn payload_bool(&self, rec: &TapeRec) -> Option<bool> {
-        let idx = rec.payload_idx;
-        if idx == 0 {
+        // `bool` has size 1; the byte may be 0 or any non-zero value
+        // produced by the writer's `value as u8` coercion. Go through
+        // raw bytes to make the comparison explicit and avoid any
+        // niche-validity assumptions on `bool`.
+        if rec.payload_idx == 0 {
             return None;
         }
-        let start = (idx as usize - 1) * 8;
+        let start = (rec.payload_idx as usize - 1) * 8;
         Some(*self.payloads.get(start)? != 0)
     }
 
+    /// Read an `i8` payload from the record's payload slot.
+    #[inline]
+    pub fn payload_i8(&self, rec: &TapeRec) -> Option<i8> {
+        self.payload_scalar::<i8>(rec)
+    }
+
     /// Read a `u8` payload from the record's payload slot.
-    ///
-    /// Returns `None` if `rec.payload_idx == 0`. The byte is stored
-    /// at offset 0 of the 8-byte slot.
     #[inline]
     pub fn payload_u8(&self, rec: &TapeRec) -> Option<u8> {
-        let idx = rec.payload_idx;
-        if idx == 0 {
-            return None;
-        }
-        let start = (idx as usize - 1) * 8;
-        self.payloads.get(start).copied()
+        self.payload_scalar::<u8>(rec)
+    }
+
+    /// Read an `i16` payload from the record's payload slot.
+    #[inline]
+    pub fn payload_i16(&self, rec: &TapeRec) -> Option<i16> {
+        self.payload_scalar::<i16>(rec)
+    }
+
+    /// Read a `u16` payload from the record's payload slot.
+    #[inline]
+    pub fn payload_u16(&self, rec: &TapeRec) -> Option<u16> {
+        self.payload_scalar::<u16>(rec)
+    }
+
+    /// Read an `i32` payload from the record's payload slot.
+    #[inline]
+    pub fn payload_i32(&self, rec: &TapeRec) -> Option<i32> {
+        self.payload_scalar::<i32>(rec)
+    }
+
+    /// Read a `u32` payload from the record's payload slot.
+    #[inline]
+    pub fn payload_u32(&self, rec: &TapeRec) -> Option<u32> {
+        self.payload_scalar::<u32>(rec)
+    }
+
+    /// Read an `i64` payload from the record's payload slot.
+    #[inline]
+    pub fn payload_i64(&self, rec: &TapeRec) -> Option<i64> {
+        self.payload_scalar::<i64>(rec)
+    }
+
+    /// Read a `u64` payload from the record's payload slot.
+    #[inline]
+    pub fn payload_u64(&self, rec: &TapeRec) -> Option<u64> {
+        self.payload_scalar::<u64>(rec)
     }
 }
 

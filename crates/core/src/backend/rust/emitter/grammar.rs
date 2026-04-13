@@ -18,7 +18,7 @@
 //! functions, and a single public `parse(input)` entry point that
 //! constructs a [`::bbnf::runtime::Parsed`] from a finished tape.
 
-use bbnf_ir::{GrammarIR, IrNode, IrRule};
+use bbnf_ir::{GrammarIR, IrNode, IrRule, TypeDesc};
 use bbnf_ir::passes::MaterializationClass;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
@@ -28,10 +28,8 @@ use crate::backend::driver::analysis::BackendAnalysis;
 use super::tape_prelude::{
     emit_must_tape_epilogue,
     emit_must_tape_prelude, emit_rule_signature, emit_tape_span_only_epilogue,
-    emit_tape_span_only_prelude, emit_tape_span_only_f64_prelude,
-    emit_tape_span_only_f64_epilogue, emit_tape_span_only_bool_prelude,
-    emit_tape_span_only_bool_epilogue, emit_tape_span_only_u8_prelude,
-    emit_tape_span_only_u8_epilogue,
+    emit_tape_span_only_prelude, emit_tape_span_only_scalar_prelude,
+    emit_tape_span_only_scalar_epilogue,
 };
 use super::{RustEmitCtx, RustEmitter};
 
@@ -45,14 +43,14 @@ impl RustEmitter {
         if rule.meta.is_transparent {
             return None;
         }
-        // AN Phase 0: when payload_kind is F64, capture the scanned
+        // AQ.6.A: when payload_type is F64, capture the scanned
         // value into `__payload_f64` so the epilogue can store it
         // via `push_leaf_with_f64`. Otherwise discard as before.
         //
         // `fused_number_rules` is exclusively the strict numeric
         // shape (`reject_leading_zero: true`), so unconditionally use
         // `scan_number_strict_f64`.
-        if matches!(ctx.payload_kind, Some(crate::backend::rust::emitter_types::PayloadKind::F64 { .. })) {
+        if matches!(ctx.payload_type, Some(TypeDesc::F64)) {
             Some(quote! {
                 match ::parse_that::scan_number_strict_f64(state) {
                     Some(__v) => { __payload_f64 = __v; __has_payload = true; Some(()) }
@@ -66,98 +64,25 @@ impl RustEmitter {
         }
     }
 
-    /// AN Phase 0: detect if a rule body is a number-pattern regex
-    /// eligible for f64 payload storage. IR passes strip Map nodes,
-    /// so we detect by classifying the regex pattern directly.
+    /// AQ.6.A: detect whether a rule has a scalar payload TypeDesc,
+    /// returning the matching `TypeDesc` for the body emitter to
+    /// thread through. Sources from `ir.types[rule_id]` only —
+    /// `project_types` already infers the right shape; the emitter
+    /// simply consumes it.
     ///
-    /// Returns `Some(json)` when eligible — `json = true` for the
-    /// JSON-style `Numeric` shape (`reject_leading_zero: true`),
-    /// `false` for the generic `RegexClass::Numeric` shape. The
-    /// caller threads this into `PayloadKind::F64 { json }` so
-    /// emission sites choose the correct scanner function.
-    pub(in crate::backend::rust) fn is_f64_payload_eligible(
+    /// Currently returns `Some(TypeDesc::F64)` whenever the rule
+    /// (or a directly-referenced rule, when called on the body of an
+    /// Alt branch) projects as F64. Bool / U8 payloads on Alt-bodied
+    /// rules are detected separately through the same lookup —
+    /// `pre_compile_rule_body` checks the rule type once per rule.
+    pub(in crate::backend::rust) fn has_scalar_payload_type<'a>(
         rule: &IrRule,
-        ir: &GrammarIR,
-    ) -> Option<bool> {
-        use parse_that::regex::classify::{RegexClass, classify_regex};
-        match &rule.body {
-            IrNode::Regex(sid) => {
-                let pattern = ir.get_string(*sid);
-                match classify_regex(pattern) {
-                    // Strict numeric: `0|[1-9]\d*` integer alternation
-                    // forbids leading zeros and gates the
-                    // `scan_number_strict_f64` fast path.
-                    RegexClass::Numeric {
-                        reject_leading_zero: true,
-                        ..
-                    } => Some(true),
-                    RegexClass::Numeric { .. } => Some(false),
-                    _ => None,
-                }
-            }
-            IrNode::Map { fn_id, .. } => {
-                // NumberConvert is always JSON-class in practice
-                // (lowered from `-> f64` on a JSON number regex).
-                if matches!(ir.fns[*fn_id as usize], bbnf_ir::FnDescriptor::NumberConvert) {
-                    Some(true)
-                } else {
-                    None
-                }
-            }
-            _ => None,
-        }
-    }
-
-    /// Detect Bool or U8 payload eligibility on a TapeSpanOnly Alt
-    /// where ALL branches are `Map(Literal, Expr { BoolLit/IntLit })`.
-    ///
-    /// Returns `Some(PayloadKind::Bool)` when every branch maps a
-    /// literal to a boolean constant (`true`/`false`).
-    /// Returns `Some(PayloadKind::U8)` when every branch maps a
-    /// literal to a u8-range integer constant (0..=255).
-    /// Returns `None` otherwise (mixed types, non-constant, etc.).
-    pub(in crate::backend::rust) fn detect_constant_payload_alt(
-        branches: &[bbnf_ir::AltBranch],
-        ir: &GrammarIR,
-    ) -> Option<crate::backend::rust::emitter_types::PayloadKind> {
-        use bbnf_ir::{FnDescriptor, MapExpr};
-        if branches.is_empty() {
-            return None;
-        }
-        let mut all_bool = true;
-        let mut all_u8 = true;
-        for b in branches {
-            match &b.node {
-                IrNode::Map { inner, fn_id } => {
-                    if !matches!(inner.as_ref(), IrNode::Literal(_)) {
-                        return None;
-                    }
-                    match &ir.fns[*fn_id as usize] {
-                        FnDescriptor::Expr { expr, .. } => match expr {
-                            MapExpr::BoolLit(_) => {
-                                all_u8 = false;
-                            }
-                            MapExpr::IntLit(v) => {
-                                all_bool = false;
-                                if *v < 0 || *v > 255 {
-                                    all_u8 = false;
-                                }
-                            }
-                            _ => return None,
-                        },
-                        _ => return None,
-                    }
-                }
-                _ => return None,
-            }
-        }
-        if all_bool {
-            Some(crate::backend::rust::emitter_types::PayloadKind::Bool)
-        } else if all_u8 {
-            Some(crate::backend::rust::emitter_types::PayloadKind::U8)
-        } else {
-            None
-        }
+        ir: &'a GrammarIR,
+    ) -> Option<&'a TypeDesc> {
+        ir.types
+            .iter()
+            .find_map(|(rid, td)| if *rid == rule.id { Some(td) } else { None })
+            .filter(|td| td.is_scalar_payload())
     }
 
     /// Look up the materialization class for a rule's body node.
@@ -259,218 +184,24 @@ impl RustEmitter {
         let (prelude, epilogue) = if is_alt_body {
             // Alt-bodied rules use __branch_idx for the variant
             // discriminator. The Alt emitter sets __branch_idx per arm.
-            use crate::backend::rust::emitter_types::PayloadKind;
+            //
+            // AQ.6.A: payload variables are declared based on
+            // ctx.payload_type (TypeDesc directly). The epilogue checks
+            // __has_payload at runtime to decide between
+            // push_leaf_with_<T> and plain push_leaf. Unused locals
+            // compile to no-ops.
             match class {
                 MaterializationClass::MustTape => {
                     // AM.3: per-branch mark_children. The prelude
                     // declares __has_children + __children; compound
                     // branches set them via the Alt emitter. The
                     // epilogue checks __has_children at runtime.
-                    //
-                    // AN Phase 0: payload variables are declared based
-                    // on ctx.payload_kind. The epilogue checks
-                    // __has_payload at runtime to decide between
-                    // push_leaf_with_* and plain push_leaf. Unused
-                    // variables compile to no-ops.
-                    match ctx.payload_kind {
-                        Some(PayloadKind::Bool) => (
-                            quote! {
-                                let __span_lo = state.offset as u32;
-                                let mut __branch_idx: u8 = 0;
-                                let mut __has_children = false;
-                                let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
-                                let mut __payload_bool: bool = false;
-                                let mut __has_payload = false;
-                            },
-                            quote! {
-                                if __has_children {
-                                    Some(::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                        tape,
-                                        ::bbnf::runtime::tape::TapeKind::Rule,
-                                        __children,
-                                        __span_lo,
-                                        state.offset as u32,
-                                        __branch_idx,
-                                    ))
-                                } else if __has_payload {
-                                    Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with_bool(
-                                        tape,
-                                        ::bbnf::runtime::tape::TapeKind::Span,
-                                        __span_lo,
-                                        state.offset as u32,
-                                        __branch_idx,
-                                        __payload_bool,
-                                    ))
-                                } else {
-                                    Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                                        tape,
-                                        ::bbnf::runtime::tape::TapeKind::Span,
-                                        __span_lo,
-                                        state.offset as u32,
-                                        __branch_idx,
-                                    ))
-                                }
-                            },
-                        ),
-                        Some(PayloadKind::U8) => (
-                            quote! {
-                                let __span_lo = state.offset as u32;
-                                let mut __branch_idx: u8 = 0;
-                                let mut __has_children = false;
-                                let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
-                                let mut __payload_u8: u8 = 0;
-                                let mut __has_payload = false;
-                            },
-                            quote! {
-                                if __has_children {
-                                    Some(::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                        tape,
-                                        ::bbnf::runtime::tape::TapeKind::Rule,
-                                        __children,
-                                        __span_lo,
-                                        state.offset as u32,
-                                        __branch_idx,
-                                    ))
-                                } else if __has_payload {
-                                    Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with_u8(
-                                        tape,
-                                        ::bbnf::runtime::tape::TapeKind::Span,
-                                        __span_lo,
-                                        state.offset as u32,
-                                        __branch_idx,
-                                        __payload_u8,
-                                    ))
-                                } else {
-                                    Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                                        tape,
-                                        ::bbnf::runtime::tape::TapeKind::Span,
-                                        __span_lo,
-                                        state.offset as u32,
-                                        __branch_idx,
-                                    ))
-                                }
-                            },
-                        ),
-                        _ => (
-                            // F64 or no payload — use the original f64
-                            // path (f64 variables compile to no-ops
-                            // when unused).
-                            quote! {
-                                let __span_lo = state.offset as u32;
-                                let mut __branch_idx: u8 = 0;
-                                let mut __has_children = false;
-                                let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
-                                let mut __payload_f64: f64 = 0.0;
-                                let mut __has_payload = false;
-                            },
-                            quote! {
-                                if __has_children {
-                                    Some(::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                        tape,
-                                        ::bbnf::runtime::tape::TapeKind::Rule,
-                                        __children,
-                                        __span_lo,
-                                        state.offset as u32,
-                                        __branch_idx,
-                                    ))
-                                } else if __has_payload {
-                                    Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with_f64(
-                                        tape,
-                                        ::bbnf::runtime::tape::TapeKind::Span,
-                                        __span_lo,
-                                        state.offset as u32,
-                                        __branch_idx,
-                                        __payload_f64,
-                                    ))
-                                } else {
-                                    Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                                        tape,
-                                        ::bbnf::runtime::tape::TapeKind::Span,
-                                        __span_lo,
-                                        state.offset as u32,
-                                        __branch_idx,
-                                    ))
-                                }
-                            },
-                        ),
-                    }
+                    emit_alt_mustape_prelude_epilogue(ctx.payload_type.as_ref())
                 }
                 MaterializationClass::TapeSpanOnly => {
-                    // AN Phase 0: payload-bearing Alt leaves use
-                    // push_leaf_with_* based on ctx.payload_kind.
-                    match ctx.payload_kind {
-                        Some(PayloadKind::Bool) => (
-                            quote! {
-                                let __span_lo = state.offset as u32;
-                                let mut __branch_idx: u8 = 0;
-                                let mut __payload_bool: bool = false;
-                                let mut __has_payload = false;
-                            },
-                            quote! {
-                                if __has_payload {
-                                    Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with_bool(
-                                        tape,
-                                        ::bbnf::runtime::tape::TapeKind::Span,
-                                        __span_lo,
-                                        state.offset as u32,
-                                        __branch_idx,
-                                        __payload_bool,
-                                    ))
-                                } else {
-                                    Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                                        tape,
-                                        ::bbnf::runtime::tape::TapeKind::Span,
-                                        __span_lo,
-                                        state.offset as u32,
-                                        __branch_idx,
-                                    ))
-                                }
-                            },
-                        ),
-                        Some(PayloadKind::U8) => (
-                            quote! {
-                                let __span_lo = state.offset as u32;
-                                let mut __branch_idx: u8 = 0;
-                                let mut __payload_u8: u8 = 0;
-                                let mut __has_payload = false;
-                            },
-                            quote! {
-                                if __has_payload {
-                                    Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with_u8(
-                                        tape,
-                                        ::bbnf::runtime::tape::TapeKind::Span,
-                                        __span_lo,
-                                        state.offset as u32,
-                                        __branch_idx,
-                                        __payload_u8,
-                                    ))
-                                } else {
-                                    Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                                        tape,
-                                        ::bbnf::runtime::tape::TapeKind::Span,
-                                        __span_lo,
-                                        state.offset as u32,
-                                        __branch_idx,
-                                    ))
-                                }
-                            },
-                        ),
-                        _ => (
-                            quote! {
-                                let __span_lo = state.offset as u32;
-                                let mut __branch_idx: u8 = 0;
-                            },
-                            quote! {
-                                Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                                    tape,
-                                    ::bbnf::runtime::tape::TapeKind::Span,
-                                    __span_lo,
-                                    state.offset as u32,
-                                    __branch_idx,
-                                ))
-                            },
-                        ),
-                    }
+                    // AQ.6.A: payload-bearing Alt leaves use
+                    // push_leaf_with_<T> based on ctx.payload_type.
+                    emit_alt_span_only_prelude_epilogue(ctx.payload_type.as_ref())
                 }
                 MaterializationClass::TransparentElide => unreachable!(),
             }
@@ -482,23 +213,15 @@ impl RustEmitter {
                     emit_must_tape_epilogue(rule_idx_u8),
                 ),
                 MaterializationClass::TapeSpanOnly => {
-                    // AN Phase 0: payload-bearing leaf rules use
-                    // push_leaf_with_f64/bool/u8 instead of push_leaf.
-                    use crate::backend::rust::emitter_types::PayloadKind;
-                    match ctx.payload_kind {
-                        Some(PayloadKind::F64 { .. }) => (
-                            emit_tape_span_only_f64_prelude(),
-                            emit_tape_span_only_f64_epilogue(rule_idx_u8),
+                    // AQ.6.A: payload-bearing leaf rules use the
+                    // generalized scalar prelude / epilogue, which
+                    // selects `push_leaf_with_<rust_ident(T)>`.
+                    match ctx.payload_type.as_ref() {
+                        Some(td) if td.is_scalar_payload() => (
+                            emit_tape_span_only_scalar_prelude(td),
+                            emit_tape_span_only_scalar_epilogue(td, rule_idx_u8),
                         ),
-                        Some(PayloadKind::Bool) => (
-                            emit_tape_span_only_bool_prelude(),
-                            emit_tape_span_only_bool_epilogue(rule_idx_u8),
-                        ),
-                        Some(PayloadKind::U8) => (
-                            emit_tape_span_only_u8_prelude(),
-                            emit_tape_span_only_u8_epilogue(rule_idx_u8),
-                        ),
-                        None => (
+                        _ => (
                             emit_tape_span_only_prelude(),
                             emit_tape_span_only_epilogue(rule_idx_u8),
                         ),
@@ -755,5 +478,169 @@ impl RustEmitter {
                 }
             }
         }
+    }
+}
+
+/// AQ.6.A: emit the prelude + epilogue pair for an Alt-bodied
+/// `MustTape` rule, parameterized by the projected scalar payload
+/// type.
+///
+/// Per-branch tape surgery (AM.3) is layered on top of this: the Alt
+/// emitter sets `__has_children` / `__children` per arm; this pair
+/// just picks the right `push_leaf_with_<T>` for the leaf-branch
+/// case based on `payload_type`. When `payload_type` is `None`, the
+/// epilogue uses bare `push_leaf` for leaf branches.
+fn emit_alt_mustape_prelude_epilogue(
+    payload_type: Option<&TypeDesc>,
+) -> (TokenStream, TokenStream) {
+    let scalar = payload_type.filter(|td| td.is_scalar_payload());
+    match scalar {
+        Some(td) => {
+            let rust_ident = td.rust_ident().expect("scalar TypeDesc has rust_ident");
+            let payload_local = format_ident!("__payload_{}", rust_ident);
+            let payload_ty = format_ident!("{}", rust_ident);
+            let push_with_ident = format_ident!("push_leaf_with_{}", rust_ident);
+            let init = scalar_zero_init_token(td);
+            (
+                quote! {
+                    let __span_lo = state.offset as u32;
+                    let mut __branch_idx: u8 = 0;
+                    let mut __has_children = false;
+                    let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
+                    let mut #payload_local: #payload_ty = #init;
+                    let mut __has_payload = false;
+                },
+                quote! {
+                    if __has_children {
+                        Some(::bbnf::runtime::tape::TapeBuilder::push_compound(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Rule,
+                            __children,
+                            __span_lo,
+                            state.offset as u32,
+                            __branch_idx,
+                        ))
+                    } else if __has_payload {
+                        Some(::bbnf::runtime::tape::TapeBuilder::#push_with_ident(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            __span_lo,
+                            state.offset as u32,
+                            __branch_idx,
+                            #payload_local,
+                        ))
+                    } else {
+                        Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            __span_lo,
+                            state.offset as u32,
+                            __branch_idx,
+                        ))
+                    }
+                },
+            )
+        }
+        None => (
+            quote! {
+                let __span_lo = state.offset as u32;
+                let mut __branch_idx: u8 = 0;
+                let mut __has_children = false;
+                let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
+            },
+            quote! {
+                if __has_children {
+                    Some(::bbnf::runtime::tape::TapeBuilder::push_compound(
+                        tape,
+                        ::bbnf::runtime::tape::TapeKind::Rule,
+                        __children,
+                        __span_lo,
+                        state.offset as u32,
+                        __branch_idx,
+                    ))
+                } else {
+                    Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(
+                        tape,
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        __span_lo,
+                        state.offset as u32,
+                        __branch_idx,
+                    ))
+                }
+            },
+        ),
+    }
+}
+
+/// AQ.6.A: emit the prelude + epilogue pair for an Alt-bodied
+/// `TapeSpanOnly` rule, parameterized by the projected scalar payload
+/// type. When `payload_type` is `None`, emits bare `push_leaf`.
+fn emit_alt_span_only_prelude_epilogue(
+    payload_type: Option<&TypeDesc>,
+) -> (TokenStream, TokenStream) {
+    let scalar = payload_type.filter(|td| td.is_scalar_payload());
+    match scalar {
+        Some(td) => {
+            let rust_ident = td.rust_ident().expect("scalar TypeDesc has rust_ident");
+            let payload_local = format_ident!("__payload_{}", rust_ident);
+            let payload_ty = format_ident!("{}", rust_ident);
+            let push_with_ident = format_ident!("push_leaf_with_{}", rust_ident);
+            let init = scalar_zero_init_token(td);
+            (
+                quote! {
+                    let __span_lo = state.offset as u32;
+                    let mut __branch_idx: u8 = 0;
+                    let mut #payload_local: #payload_ty = #init;
+                    let mut __has_payload = false;
+                },
+                quote! {
+                    if __has_payload {
+                        Some(::bbnf::runtime::tape::TapeBuilder::#push_with_ident(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            __span_lo,
+                            state.offset as u32,
+                            __branch_idx,
+                            #payload_local,
+                        ))
+                    } else {
+                        Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            __span_lo,
+                            state.offset as u32,
+                            __branch_idx,
+                        ))
+                    }
+                },
+            )
+        }
+        None => (
+            quote! {
+                let __span_lo = state.offset as u32;
+                let mut __branch_idx: u8 = 0;
+            },
+            quote! {
+                Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(
+                    tape,
+                    ::bbnf::runtime::tape::TapeKind::Span,
+                    __span_lo,
+                    state.offset as u32,
+                    __branch_idx,
+                ))
+            },
+        ),
+    }
+}
+
+/// AQ.6.A: zero-initializer expression for a scalar `TypeDesc`.
+/// Mirrors `tape_prelude::scalar_zero_init`. Inlined here so the Alt
+/// prelude builders can share the policy without taking a dependency
+/// on a private helper.
+fn scalar_zero_init_token(td: &TypeDesc) -> TokenStream {
+    match td {
+        TypeDesc::F64 => quote! { 0.0 },
+        TypeDesc::Bool => quote! { false },
+        _ => quote! { 0 },
     }
 }

@@ -399,45 +399,42 @@ impl Emitter for RustEmitter {
             ctx.tape_surgery = None;
         }
 
-        // AN Phase 0: detect payload-eligible rules via regex
-        // classification. IR passes strip Map nodes, so detection
-        // uses the regex pattern classifier (`RegexClass::Numeric`,
-        // distinguishing JSON-style integers via the
-        // `reject_leading_zero` flag) rather than the body structure.
-        //
-        // `is_f64_payload_eligible` returns `Some(json)` — `true`
-        // for the JSON-style numeric (`reject_leading_zero: true`),
-        // `false` for the generic `Numeric` shape. The `json` flag
-        // threads into `PayloadKind::F64 { json }` so emission sites
-        // select the correct scanner function.
-        //
-        // Bool/U8 detection: for Alt-bodied TapeSpanOnly rules where
-        // ALL branches are `Map(Literal, Expr { BoolLit/IntLit })`,
-        // set PayloadKind::Bool or PayloadKind::U8 so the epilogue
-        // uses `push_leaf_with_bool`/`push_leaf_with_u8`.
-        ctx.payload_kind = None;
+        // AQ.6.A: source the payload type directly from the projected
+        // `ir.types[rule_id]`. The CSP `project_types` pass already
+        // computed the rule's `TypeDesc`; the emitter just consumes
+        // the scalar shape here. F64, Bool, U8 — and anything else
+        // that satisfies `is_scalar_payload()` — uniformly route into
+        // the typed prelude / epilogue helpers and the typed
+        // `push_leaf_with_<T>` API.
+        ctx.payload_type = None;
         if is_visible {
-            if !is_alt {
-                if let Some(json) = Self::is_f64_payload_eligible(rule, ir) {
-                    ctx.payload_kind = Some(crate::backend::rust::emitter_types::PayloadKind::F64 { json });
-                }
-            } else if let bbnf_ir::IrNode::Alt(branches, _) = &rule.body {
-                // First try F64: check if ANY branch Ref targets a number-pattern rule.
-                let mut found_f64 = false;
-                for b in branches {
-                    if let bbnf_ir::IrNode::Ref(rid) = &b.node {
-                        let ref_rule = &ir.rules[*rid as usize];
-                        if let Some(json) = Self::is_f64_payload_eligible(ref_rule, ir) {
-                            ctx.payload_kind = Some(crate::backend::rust::emitter_types::PayloadKind::F64 { json });
-                            found_f64 = true;
-                            break;
+            // Direct rule type lookup.
+            let direct = ir
+                .types
+                .iter()
+                .find_map(|(rid, td)| if *rid == rule.id { Some(td.clone()) } else { None })
+                .filter(|td| td.is_scalar_payload());
+            if direct.is_some() {
+                ctx.payload_type = direct;
+            } else if is_alt {
+                // For Alt-bodied rules where the rule's projected type
+                // is non-scalar but a branch references a scalar-typed
+                // rule (e.g. the `value` rule in JSON whose Alt
+                // includes a `number` branch), surface the per-branch
+                // scalar type so the epilogue picks the matching
+                // `push_leaf_with_<T>`.
+                if let bbnf_ir::IrNode::Alt(branches, _) = &rule.body {
+                    for b in branches {
+                        if let bbnf_ir::IrNode::Ref(rid) = &b.node {
+                            if let Some(td) = ir.types.iter().find_map(|(r, t)| {
+                                if *r == *rid { Some(t.clone()) } else { None }
+                            }) {
+                                if td.is_scalar_payload() {
+                                    ctx.payload_type = Some(td);
+                                    break;
+                                }
+                            }
                         }
-                    }
-                }
-                // If no F64, try Bool: ALL branches must be Map(Literal, Expr { BoolLit }).
-                if !found_f64 {
-                    if let Some(kind) = Self::detect_constant_payload_alt(branches, ir) {
-                        ctx.payload_kind = Some(kind);
                     }
                 }
             }

@@ -35,31 +35,19 @@ impl RustEmitter {
     }
 
     pub(super) fn emit_number_convert_impl(&mut self, ctx: &mut RustEmitCtx) -> TokenStream {
-        // AN Phase 0: when payload_kind is F64, capture the scanned
-        // value into `__payload_f64` so the epilogue can store it
-        // via `push_leaf_with_f64`.
-        //
-        // `json` flag selects `scan_number_strict_f64` (RFC 8259) vs
-        // `scan_number_f64` (generic/CSS-compatible).
-        if let Some(crate::backend::rust::emitter_types::PayloadKind::F64 { json }) = ctx.payload_kind {
-            if json {
-                quote! {
-                    match ::parse_that::scan_number_strict_f64(state) {
-                        Some(__v) => { __payload_f64 = __v; __has_payload = true; Some(()) }
-                        None => None,
-                    }
-                }
-            } else {
-                quote! {
-                    match ::parse_that::scan_number_f64(state) {
-                        Some(__v) => { __payload_f64 = __v; __has_payload = true; Some(()) }
-                        None => None,
-                    }
+        // AQ.6.A: when payload_type is F64, capture the scanned value
+        // into `__payload_f64` so the epilogue can store it via
+        // `push_leaf_with_f64`. NumberConvert is always JSON-class
+        // (lowered from `-> f64` on a JSON number regex), so we
+        // unconditionally use `scan_number_strict_f64`.
+        if matches!(ctx.payload_type, Some(TypeDesc::F64)) {
+            quote! {
+                match ::parse_that::scan_number_strict_f64(state) {
+                    Some(__v) => { __payload_f64 = __v; __has_payload = true; Some(()) }
+                    None => None,
                 }
             }
         } else {
-            // No payload — use JSON scanner (NumberConvert is always
-            // JSON-class, matching `fused_number_rules` gating).
             quote! {
                 (::parse_that::scan_number_strict_f64(state)).map(|_| ())
             }
@@ -95,34 +83,22 @@ impl RustEmitter {
         _ir: &GrammarIR,
         ctx: &mut RustEmitCtx,
     ) -> TokenStream {
-        // AN Phase 0: when a Bool or U8 payload is active and the
-        // map expression is a matching constant literal, capture the
-        // value into the payload variable so the epilogue stores it
-        // via push_leaf_with_bool/u8.
-        use crate::backend::rust::emitter_types::PayloadKind;
-        match (ctx.payload_kind, expr) {
-            (Some(PayloadKind::Bool), MapExpr::BoolLit(val)) => {
-                let val_lit = *val;
+        // AQ.6.A: when a scalar payload is active and the map
+        // expression is a matching constant literal, capture the
+        // value into the typed payload variable so the epilogue
+        // stores it via the matching `push_leaf_with_<T>`.
+        if let Some(td) = ctx.payload_type.as_ref() {
+            if let Some(payload_setter) = scalar_payload_setter(td, expr) {
                 return quote! {
                     match ({ #inner }) {
-                        Some(_) => { __payload_bool = #val_lit; __has_payload = true; Some(()) }
+                        Some(_) => { #payload_setter; __has_payload = true; Some(()) }
                         None => None,
                     }
                 };
             }
-            (Some(PayloadKind::U8), MapExpr::IntLit(val)) => {
-                let val_u8 = (*val & 0xFF) as u8;
-                return quote! {
-                    match ({ #inner }) {
-                        Some(_) => { __payload_u8 = #val_u8; __has_payload = true; Some(()) }
-                        None => None,
-                    }
-                };
-            }
-            _ => {}
         }
-        // Map-expression evaluation is deferred to the view
-        // layer. Preserve the parse side effect.
+        // Map-expression evaluation is deferred to the view layer.
+        // Preserve the parse side effect.
         quote! {
             { #inner }
         }
@@ -173,5 +149,65 @@ impl RustEmitter {
             }),
             _ => Some(quote! { { #inner } }),
         }
+    }
+}
+
+/// AQ.6.A: emit the assignment that captures a constant `MapExpr`
+/// into the rule's typed payload local. Returns `None` when the
+/// `MapExpr` cannot be coerced to the active payload `TypeDesc` —
+/// the caller then falls back to the inner side-effect-only
+/// emission.
+///
+/// Bool / U8 are the historically supported pairings; this helper
+/// expands the integer suite uniformly so any narrow integer
+/// constant lands in the matching `__payload_<T>` local.
+fn scalar_payload_setter(td: &TypeDesc, expr: &MapExpr) -> Option<TokenStream> {
+    use quote::format_ident;
+
+    let rust_ident = td.rust_ident()?;
+    let payload_local = format_ident!("__payload_{}", rust_ident);
+
+    match (td, expr) {
+        (TypeDesc::Bool, MapExpr::BoolLit(v)) => {
+            let val = *v;
+            Some(quote! { #payload_local = #val })
+        }
+        (TypeDesc::I8, MapExpr::IntLit(v)) => {
+            let val = *v as i8;
+            Some(quote! { #payload_local = #val })
+        }
+        (TypeDesc::U8, MapExpr::IntLit(v)) => {
+            let val = (*v & 0xFF) as u8;
+            Some(quote! { #payload_local = #val })
+        }
+        (TypeDesc::I16, MapExpr::IntLit(v)) => {
+            let val = *v as i16;
+            Some(quote! { #payload_local = #val })
+        }
+        (TypeDesc::U16, MapExpr::IntLit(v)) => {
+            let val = *v as u16;
+            Some(quote! { #payload_local = #val })
+        }
+        (TypeDesc::I32, MapExpr::IntLit(v)) => {
+            let val = *v as i32;
+            Some(quote! { #payload_local = #val })
+        }
+        (TypeDesc::U32, MapExpr::IntLit(v)) => {
+            let val = *v as u32;
+            Some(quote! { #payload_local = #val })
+        }
+        (TypeDesc::I64, MapExpr::IntLit(v)) => {
+            let val = *v;
+            Some(quote! { #payload_local = #val })
+        }
+        (TypeDesc::U64, MapExpr::IntLit(v)) => {
+            let val = *v as u64;
+            Some(quote! { #payload_local = #val })
+        }
+        (TypeDesc::F64, MapExpr::FloatLit(v)) => {
+            let val = *v;
+            Some(quote! { #payload_local = #val })
+        }
+        _ => None,
     }
 }

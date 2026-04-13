@@ -9,8 +9,18 @@ pub fn type_desc_to_ts(td: &TypeDesc, enum_name: &str, ir: &GrammarIR) -> String
         TypeDesc::Span => "Span".to_string(),
         TypeDesc::F64 => "number".to_string(),
         TypeDesc::Bool => "boolean".to_string(),
-        TypeDesc::U8 => "number".to_string(),
-        TypeDesc::U32 => "number".to_string(),
+        // TS has no native fixed-width integer types — all numeric
+        // scalars project to the unified `number`. Range / signedness
+        // distinctions matter only on the Rust side where the typed
+        // payload is consumed.
+        TypeDesc::I8
+        | TypeDesc::U8
+        | TypeDesc::I16
+        | TypeDesc::U16
+        | TypeDesc::I32
+        | TypeDesc::U32
+        | TypeDesc::I64
+        | TypeDesc::U64 => "number".to_string(),
         TypeDesc::Option(inner) => format!("{} | null", type_desc_to_ts(inner, enum_name, ir)),
         TypeDesc::Vec(inner) => format!("{}[]", type_desc_to_ts(inner, enum_name, ir)),
         TypeDesc::Tuple(elems) => {

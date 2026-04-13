@@ -8,7 +8,7 @@
 //! Each method is `pub(super)` so the trait impl in `mod.rs` can
 //! delegate to it via `self.emit_xxx_impl(...)`.
 
-use bbnf_ir::GrammarIR;
+use bbnf_ir::{GrammarIR, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::quote;
 
@@ -80,30 +80,23 @@ impl RustEmitter {
         ir: &GrammarIR,
         ctx: &mut RustEmitCtx,
     ) -> TokenStream {
-        // AN Phase 0: for number patterns with F64 payload active,
-        // emit the appropriate number scanner to capture the parsed
-        // value in the payload variable. The IR passes strip
-        // Map { NumberConvert } down to bare Regex, so we must
-        // detect the number pattern here at the regex emission level.
-        //
-        // `json` flag selects `scan_number_strict_f64` (RFC 8259) vs
-        // `scan_number_f64` (generic/CSS-compatible).
-        if let Some(crate::backend::rust::emitter_types::PayloadKind::F64 { json }) = ctx.payload_kind {
+        // AQ.6.A: for number patterns with F64 payload active, emit
+        // the strict number scanner to capture the parsed value into
+        // the typed payload variable. IR passes strip
+        // `Map { NumberConvert }` down to bare `Regex`, so we detect
+        // the number shape here via `RegexClass::Numeric` and route
+        // through the strict scanner. The historical
+        // CSS-compatible-vs-strict split is now resolved upstream by
+        // the regex's `RegexInfo`; the emitter uses the strict path
+        // unconditionally for tape payloads (matching the
+        // `fused_number_rules` gating).
+        if matches!(ctx.payload_type, Some(TypeDesc::F64)) {
             use parse_that::regex::classify::{RegexClass, classify_regex};
             if matches!(classify_regex(pattern), RegexClass::Numeric { .. }) {
-                return if json {
-                    quote! {
-                        match ::parse_that::scan_number_strict_f64(state) {
-                            Some(__v) => { __payload_f64 = __v; __has_payload = true; Some(()) }
-                            None => None,
-                        }
-                    }
-                } else {
-                    quote! {
-                        match ::parse_that::scan_number_f64(state) {
-                            Some(__v) => { __payload_f64 = __v; __has_payload = true; Some(()) }
-                            None => None,
-                        }
+                return quote! {
+                    match ::parse_that::scan_number_strict_f64(state) {
+                        Some(__v) => { __payload_f64 = __v; __has_payload = true; Some(()) }
+                        None => None,
                     }
                 };
             }

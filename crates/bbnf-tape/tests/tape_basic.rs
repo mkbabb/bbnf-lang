@@ -232,3 +232,57 @@ fn multiple_payloads_independent() {
     assert_eq!(v3, 255);
     assert!(tape.payload_f64(tape.get(off_plain)).is_none());
 }
+
+// ── AQ.6.A: extended scalar suite round-trips ────────────────────
+
+#[test]
+fn payload_i8_round_trip() {
+    let mut b = TapeBuilder::new();
+    let off_min = b.push_leaf_with_i8(TapeKind::Literal, 0, 4, 0, i8::MIN);
+    let off_max = b.push_leaf_with_i8(TapeKind::Literal, 4, 8, 1, i8::MAX);
+    let off_neg = b.push_leaf_with_i8(TapeKind::Literal, 8, 12, 2, -7);
+    let tape = b.finish().unwrap();
+    assert_eq!(tape.payload_i8(tape.get(off_min)), Some(i8::MIN));
+    assert_eq!(tape.payload_i8(tape.get(off_max)), Some(i8::MAX));
+    assert_eq!(tape.payload_i8(tape.get(off_neg)), Some(-7));
+}
+
+#[test]
+fn payload_i16_u16_round_trip() {
+    let mut b = TapeBuilder::new();
+    let off_i = b.push_leaf_with_i16(TapeKind::Literal, 0, 4, 0, -32_000);
+    let off_u = b.push_leaf_with_u16(TapeKind::Literal, 4, 8, 1, 60_000);
+    let tape = b.finish().unwrap();
+    assert_eq!(tape.payload_i16(tape.get(off_i)), Some(-32_000));
+    assert_eq!(tape.payload_u16(tape.get(off_u)), Some(60_000));
+}
+
+#[test]
+fn payload_i32_u32_round_trip() {
+    let mut b = TapeBuilder::new();
+    let off_i = b.push_leaf_with_i32(TapeKind::Literal, 0, 4, 0, i32::MIN + 1);
+    let off_u = b.push_leaf_with_u32(TapeKind::Literal, 4, 8, 1, u32::MAX);
+    let tape = b.finish().unwrap();
+    assert_eq!(tape.payload_i32(tape.get(off_i)), Some(i32::MIN + 1));
+    assert_eq!(tape.payload_u32(tape.get(off_u)), Some(u32::MAX));
+}
+
+#[test]
+fn payload_i64_u64_round_trip() {
+    let mut b = TapeBuilder::new();
+    let off_i = b.push_leaf_with_i64(TapeKind::Literal, 0, 4, 0, i64::MIN);
+    let off_u = b.push_leaf_with_u64(TapeKind::Literal, 4, 8, 1, u64::MAX);
+    let tape = b.finish().unwrap();
+    assert_eq!(tape.payload_i64(tape.get(off_i)), Some(i64::MIN));
+    assert_eq!(tape.payload_u64(tape.get(off_u)), Some(u64::MAX));
+}
+
+#[test]
+fn payload_scalar_generic_round_trip() {
+    // Direct exercise of the generic write/read pair that the
+    // specialized wrappers delegate to.
+    let mut b = TapeBuilder::new();
+    let off = b.push_leaf_with_scalar::<u32>(TapeKind::Literal, 0, 4, 0, 0xDEAD_BEEF);
+    let tape = b.finish().unwrap();
+    assert_eq!(tape.payload_scalar::<u32>(tape.get(off)), Some(0xDEAD_BEEF));
+}

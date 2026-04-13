@@ -7,7 +7,7 @@
 
 use std::collections::HashSet;
 
-use bbnf_ir::RuleId;
+use bbnf_ir::{RuleId, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::format_ident;
 
@@ -48,28 +48,6 @@ pub struct TapeSurgeryCtx {
     pub tape_kind: TokenStream,
 }
 
-/// AN Phase 0: Typed payload kind for direct-to-struct projection.
-///
-/// When a rule body resolves to a single typed value (f64 from
-/// NumberConvert, bool from boolean constants, u8 from Constant),
-/// the emitter stores the value in the tape's payload buffer via
-/// `push_leaf_with_*` instead of discarding it. The view layer
-/// reads the payload directly — zero re-parse.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum PayloadKind {
-    /// `f64` from `FnDescriptor::NumberConvert`.
-    ///
-    /// `json` distinguishes JSON RFC 8259 numbers (`scan_number_strict_f64`)
-    /// from generic/CSS-compatible numbers (`scan_number_f64`). The two
-    /// scanners accept different grammars (JSON forbids leading `+`,
-    /// bare `.5`, etc.).
-    F64 { json: bool },
-    /// `bool` from `Map(Literal, Constant(true/false))` alternations.
-    Bool,
-    /// `u8` from `FnDescriptor::Constant`.
-    U8,
-}
-
 /// Mutable context for Rust emission.
 ///
 /// Holds a pointer to `IrCodegenCtx` for type lookups and slab codegen.
@@ -95,12 +73,14 @@ pub struct RustEmitCtx {
     /// bodies cannot clobber outer Alt contexts. Pushed by
     /// `save_alt_context`, popped by `restore_alt_context`.
     alt_context_stack: Vec<(Option<syn::Ident>, Option<TapeSurgeryCtx>)>,
-    /// AN Phase 0: when set, the rule body stores a typed value in a
-    /// well-known variable (`__payload_f64`, `__payload_bool`, or
-    /// `__payload_u8`) and the epilogue uses `push_leaf_with_*`
-    /// instead of plain `push_leaf`. Set in `pre_compile_rule_body`,
-    /// read by `emit_tape_tier_rule`, cleared after body compilation.
-    pub payload_kind: Option<PayloadKind>,
+    /// AQ.6.A: the rule body's projected scalar payload type, sourced
+    /// directly from `ir.types[rule_id]` in `pre_compile_rule_body`.
+    /// `Some(td)` iff `td.is_scalar_payload()` — Bool / U8 / I8 / U16 /
+    /// I16 / U32 / I32 / U64 / I64 / F64. The rule prelude declares the
+    /// matching `__payload_<T>` local; the body sets it via the leaf
+    /// emitter; the rule epilogue selects the matching `push_leaf_with_<T>`
+    /// (or `push_leaf` when `__has_payload` is false).
+    pub payload_type: Option<TypeDesc>,
 }
 
 impl RustEmitCtx {
@@ -120,7 +100,7 @@ impl RustEmitCtx {
             branch_idx_ident: None,
             tape_surgery: None,
             alt_context_stack: Vec::new(),
-            payload_kind: None,
+            payload_type: None,
         }
     }
 

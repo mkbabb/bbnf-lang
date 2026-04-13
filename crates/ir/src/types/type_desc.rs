@@ -17,10 +17,22 @@ pub enum TypeDesc {
     F64,
     /// A boolean value (produced by `"true" -> true | "false" -> false` constant maps).
     Bool,
-    /// An unsigned 8-bit integer (produced by `"px" -> 0u8 | "em" -> 1u8` constant maps).
+    /// Signed 8-bit integer.
+    I8,
+    /// Unsigned 8-bit integer (e.g., produced by `"px" -> 0u8 | "em" -> 1u8` constant maps).
     U8,
-    /// An unsigned 32-bit integer (produced by fused hex scan+convert).
+    /// Signed 16-bit integer.
+    I16,
+    /// Unsigned 16-bit integer.
+    U16,
+    /// Signed 32-bit integer.
+    I32,
+    /// Unsigned 32-bit integer (produced by fused hex scan+convert).
     U32,
+    /// Signed 64-bit integer.
+    I64,
+    /// Unsigned 64-bit integer.
+    U64,
     /// An optional value.
     Option(Box<TypeDesc>),
     /// A vector of values.
@@ -33,4 +45,65 @@ pub enum TypeDesc {
     Enum,
     /// A named type (for custom mapping results).
     Named(StringId),
+}
+
+impl TypeDesc {
+    /// True if this type is storable inline as a fixed-size scalar payload.
+    ///
+    /// Scalar payloads are written into the tape's payload buffer via
+    /// `push_leaf_with_<T>` and read back via `payload_<T>` — zero
+    /// re-parse from the source span.
+    pub fn is_scalar_payload(&self) -> bool {
+        matches!(
+            self,
+            TypeDesc::F64
+                | TypeDesc::Bool
+                | TypeDesc::I8
+                | TypeDesc::U8
+                | TypeDesc::I16
+                | TypeDesc::U16
+                | TypeDesc::I32
+                | TypeDesc::U32
+                | TypeDesc::I64
+                | TypeDesc::U64
+        )
+    }
+
+    /// Width in bytes of a scalar payload; `None` for non-scalar types.
+    ///
+    /// Used by the tape builder to size the payload slot precisely
+    /// instead of always allocating the legacy 8-byte slot.
+    pub fn payload_size_bytes(&self) -> Option<u8> {
+        match self {
+            TypeDesc::F64 | TypeDesc::I64 | TypeDesc::U64 => Some(8),
+            TypeDesc::I32 | TypeDesc::U32 => Some(4),
+            TypeDesc::I16 | TypeDesc::U16 => Some(2),
+            TypeDesc::Bool | TypeDesc::I8 | TypeDesc::U8 => Some(1),
+            _ => None,
+        }
+    }
+
+    /// Alignment requirement; for primitive scalars this equals the
+    /// size in bytes.
+    pub fn payload_align_bytes(&self) -> Option<u8> {
+        self.payload_size_bytes()
+    }
+
+    /// As a Rust source identifier (e.g., for `format_ident!("payload_{}", ...)`).
+    /// `None` for non-scalar types.
+    pub fn rust_ident(&self) -> Option<&'static str> {
+        match self {
+            TypeDesc::F64 => Some("f64"),
+            TypeDesc::Bool => Some("bool"),
+            TypeDesc::I8 => Some("i8"),
+            TypeDesc::U8 => Some("u8"),
+            TypeDesc::I16 => Some("i16"),
+            TypeDesc::U16 => Some("u16"),
+            TypeDesc::I32 => Some("i32"),
+            TypeDesc::U32 => Some("u32"),
+            TypeDesc::I64 => Some("i64"),
+            TypeDesc::U64 => Some("u64"),
+            _ => None,
+        }
+    }
 }

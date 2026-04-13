@@ -151,6 +151,11 @@ impl TapeBuilder {
     // ── Payload-bearing leaf pushes ─────────────────────────────────
 
     /// Append a payload slot (8 bytes) and return its 1-based index.
+    ///
+    /// Every slot is allocated 8-byte-wide regardless of the stored
+    /// type so the `payload_idx` continues to denote a fixed-stride
+    /// 1-based slot index. Sub-8-byte scalars consume their leading
+    /// bytes; the trailing padding is left zeroed.
     #[inline]
     fn alloc_payload_slot(&mut self) -> u16 {
         let slot = self.payloads.len() / 8;
@@ -159,11 +164,59 @@ impl TapeBuilder {
         (slot + 1) as u16
     }
 
-    /// Append a leaf record with an `f64` payload.
+    /// Append a leaf record with an arbitrary scalar payload.
     ///
-    /// Writes 8 bytes (`value.to_le_bytes()`) into the payload buffer
-    /// and sets the record's `payload_idx` to the corresponding
-    /// 1-based slot.
+    /// Writes `size_of::<T>()` bytes into the payload buffer (LE-host
+    /// order — the writer + reader are always the same process, so
+    /// host endianness is fine) and sets the record's `payload_idx`
+    /// to the corresponding 1-based 8-byte slot.
+    ///
+    /// `T` must be `Copy` and ≤ 8 bytes. Sub-8 types occupy the
+    /// leading bytes of the slot; trailing bytes stay zeroed.
+    #[inline]
+    pub fn push_leaf_with_scalar<T: Copy>(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        span_hi: u32,
+        variant_idx: u8,
+        value: T,
+    ) -> TapeOffset {
+        debug_assert!(
+            kind.is_leaf(),
+            "push_leaf_with_scalar on compound kind {:?}",
+            kind
+        );
+        debug_assert!(
+            std::mem::size_of::<T>() <= 8,
+            "push_leaf_with_scalar: size_of::<T>() must be ≤ 8, got {}",
+            std::mem::size_of::<T>()
+        );
+        let pidx = self.alloc_payload_slot();
+        let start = (pidx as usize - 1) * 8;
+        // SAFETY: `value` is `Copy` and `size_of::<T>() ≤ 8 ==
+        // payload slot width`. The destination has been just-
+        // allocated (zeroed) and is non-overlapping with the source.
+        unsafe {
+            std::ptr::copy_nonoverlapping(
+                &value as *const T as *const u8,
+                self.payloads.as_mut_ptr().add(start),
+                std::mem::size_of::<T>(),
+            );
+        }
+        let idx = self.tape.records.len();
+        self.tape.records.push(TapeRec {
+            kind,
+            flags: variant_idx & 0x3F,
+            payload_idx: pidx,
+            span_lo,
+            span_hi,
+            child_off: TapeOffset::NONE,
+        });
+        TapeOffset(idx as u32)
+    }
+
+    /// Append a leaf record with an `f64` payload.
     #[inline]
     pub fn push_leaf_with_f64(
         &mut self,
@@ -173,26 +226,10 @@ impl TapeBuilder {
         variant_idx: u8,
         value: f64,
     ) -> TapeOffset {
-        debug_assert!(kind.is_leaf(), "push_leaf_with_f64 on compound kind {:?}", kind);
-        let pidx = self.alloc_payload_slot();
-        let start = (pidx as usize - 1) * 8;
-        self.payloads[start..start + 8].copy_from_slice(&value.to_le_bytes());
-        let idx = self.tape.records.len();
-        self.tape.records.push(TapeRec {
-            kind,
-            flags: variant_idx & 0x3F,
-            payload_idx: pidx,
-            span_lo,
-            span_hi,
-            child_off: TapeOffset::NONE,
-        });
-        TapeOffset(idx as u32)
+        self.push_leaf_with_scalar::<f64>(kind, span_lo, span_hi, variant_idx, value)
     }
 
     /// Append a leaf record with a `bool` payload.
-    ///
-    /// Stored as a single byte (0 or 1) at offset 0 of the 8-byte
-    /// payload slot.
     #[inline]
     pub fn push_leaf_with_bool(
         &mut self,
@@ -202,25 +239,23 @@ impl TapeBuilder {
         variant_idx: u8,
         value: bool,
     ) -> TapeOffset {
-        debug_assert!(kind.is_leaf(), "push_leaf_with_bool on compound kind {:?}", kind);
-        let pidx = self.alloc_payload_slot();
-        let start = (pidx as usize - 1) * 8;
-        self.payloads[start] = value as u8;
-        let idx = self.tape.records.len();
-        self.tape.records.push(TapeRec {
-            kind,
-            flags: variant_idx & 0x3F,
-            payload_idx: pidx,
-            span_lo,
-            span_hi,
-            child_off: TapeOffset::NONE,
-        });
-        TapeOffset(idx as u32)
+        self.push_leaf_with_scalar::<bool>(kind, span_lo, span_hi, variant_idx, value)
+    }
+
+    /// Append a leaf record with an `i8` payload.
+    #[inline]
+    pub fn push_leaf_with_i8(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        span_hi: u32,
+        variant_idx: u8,
+        value: i8,
+    ) -> TapeOffset {
+        self.push_leaf_with_scalar::<i8>(kind, span_lo, span_hi, variant_idx, value)
     }
 
     /// Append a leaf record with a `u8` payload.
-    ///
-    /// Stored at offset 0 of the 8-byte payload slot.
     #[inline]
     pub fn push_leaf_with_u8(
         &mut self,
@@ -230,20 +265,85 @@ impl TapeBuilder {
         variant_idx: u8,
         value: u8,
     ) -> TapeOffset {
-        debug_assert!(kind.is_leaf(), "push_leaf_with_u8 on compound kind {:?}", kind);
-        let pidx = self.alloc_payload_slot();
-        let start = (pidx as usize - 1) * 8;
-        self.payloads[start] = value;
-        let idx = self.tape.records.len();
-        self.tape.records.push(TapeRec {
-            kind,
-            flags: variant_idx & 0x3F,
-            payload_idx: pidx,
-            span_lo,
-            span_hi,
-            child_off: TapeOffset::NONE,
-        });
-        TapeOffset(idx as u32)
+        self.push_leaf_with_scalar::<u8>(kind, span_lo, span_hi, variant_idx, value)
+    }
+
+    /// Append a leaf record with an `i16` payload.
+    #[inline]
+    pub fn push_leaf_with_i16(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        span_hi: u32,
+        variant_idx: u8,
+        value: i16,
+    ) -> TapeOffset {
+        self.push_leaf_with_scalar::<i16>(kind, span_lo, span_hi, variant_idx, value)
+    }
+
+    /// Append a leaf record with a `u16` payload.
+    #[inline]
+    pub fn push_leaf_with_u16(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        span_hi: u32,
+        variant_idx: u8,
+        value: u16,
+    ) -> TapeOffset {
+        self.push_leaf_with_scalar::<u16>(kind, span_lo, span_hi, variant_idx, value)
+    }
+
+    /// Append a leaf record with an `i32` payload.
+    #[inline]
+    pub fn push_leaf_with_i32(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        span_hi: u32,
+        variant_idx: u8,
+        value: i32,
+    ) -> TapeOffset {
+        self.push_leaf_with_scalar::<i32>(kind, span_lo, span_hi, variant_idx, value)
+    }
+
+    /// Append a leaf record with a `u32` payload.
+    #[inline]
+    pub fn push_leaf_with_u32(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        span_hi: u32,
+        variant_idx: u8,
+        value: u32,
+    ) -> TapeOffset {
+        self.push_leaf_with_scalar::<u32>(kind, span_lo, span_hi, variant_idx, value)
+    }
+
+    /// Append a leaf record with an `i64` payload.
+    #[inline]
+    pub fn push_leaf_with_i64(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        span_hi: u32,
+        variant_idx: u8,
+        value: i64,
+    ) -> TapeOffset {
+        self.push_leaf_with_scalar::<i64>(kind, span_lo, span_hi, variant_idx, value)
+    }
+
+    /// Append a leaf record with a `u64` payload.
+    #[inline]
+    pub fn push_leaf_with_u64(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        span_hi: u32,
+        variant_idx: u8,
+        value: u64,
+    ) -> TapeOffset {
+        self.push_leaf_with_scalar::<u64>(kind, span_lo, span_hi, variant_idx, value)
     }
 
     /// Mark the parse as failed with an offset and optional rule label.

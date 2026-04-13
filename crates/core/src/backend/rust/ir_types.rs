@@ -305,8 +305,14 @@ fn type_desc_to_syn_raw(
         TypeDesc::Span => parse_quote!(::parse_that::Span<'a>),
         TypeDesc::F64 => parse_quote!(f64),
         TypeDesc::Bool => parse_quote!(bool),
+        TypeDesc::I8 => parse_quote!(i8),
         TypeDesc::U8 => parse_quote!(u8),
+        TypeDesc::I16 => parse_quote!(i16),
+        TypeDesc::U16 => parse_quote!(u16),
+        TypeDesc::I32 => parse_quote!(i32),
         TypeDesc::U32 => parse_quote!(u32),
+        TypeDesc::I64 => parse_quote!(i64),
+        TypeDesc::U64 => parse_quote!(u64),
         TypeDesc::Option(inner) => {
             let inner = type_desc_to_syn_raw(inner, enum_type, boxed_enum_type, ir, use_slices);
             parse_quote!(Option<#inner>)

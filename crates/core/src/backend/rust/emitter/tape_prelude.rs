@@ -55,6 +55,7 @@
 //! these helpers. A single shim guarantees no drift between leaf
 //! and compound emission paths.
 
+use bbnf_ir::TypeDesc;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
@@ -116,99 +117,66 @@ pub fn emit_tape_span_only_epilogue(variant_idx: u8) -> TokenStream {
     }
 }
 
-// ── AN Phase 0: Payload-bearing prelude / epilogue ───────────────
+// ── AQ.6.A: Generalized scalar-payload prelude / epilogue ────────
+//
+// Replaces the F64-/Bool-/U8-specific helpers with a single pair
+// keyed on `TypeDesc`. The Rust scalar identifier
+// (`td.rust_ident()`) drives both the local variable name
+// (`__payload_<rust_ident>`) and the tape API selection
+// (`push_leaf_with_<rust_ident>`).
 
-/// Emit the prelude for a `TapeSpanOnly` rule with an `f64` payload.
+/// Emit the prelude for a `TapeSpanOnly` rule with a scalar payload
+/// of type `td`.
 ///
-/// Declares `__span_lo` and `__payload_f64` — the latter is written
-/// by the body (via `emit_number_convert_impl`) and consumed by the
-/// matching [`emit_tape_span_only_f64_epilogue`].
-pub fn emit_tape_span_only_f64_prelude() -> TokenStream {
+/// Declares `__span_lo`, `__payload_<rust_ident(td)>`, and
+/// `__has_payload`. Panics if `td` is not a scalar payload type —
+/// callers must gate on [`TypeDesc::is_scalar_payload`] first.
+pub fn emit_tape_span_only_scalar_prelude(td: &TypeDesc) -> TokenStream {
+    let rust_ident = td
+        .rust_ident()
+        .expect("emit_tape_span_only_scalar_prelude: non-scalar TypeDesc");
+    let payload_ident = format_ident!("__payload_{}", rust_ident);
+    let ty_ident = format_ident!("{}", rust_ident);
+    let init = scalar_zero_init(td);
     quote! {
         let __span_lo = state.offset as u32;
-        let mut __payload_f64: f64 = 0.0;
+        let mut #payload_ident: #ty_ident = #init;
         let mut __has_payload = false;
     }
 }
 
-/// Emit the epilogue for a `TapeSpanOnly` rule with an `f64` payload.
+/// Emit the epilogue for a `TapeSpanOnly` rule with a scalar payload
+/// of type `td`.
 ///
-/// Stores the captured `__payload_f64` value into the tape's payload
-/// buffer via `push_leaf_with_f64`. View-layer accessors read it
-/// back in O(1) — zero span re-parsing.
-pub fn emit_tape_span_only_f64_epilogue(variant_idx: u8) -> TokenStream {
+/// Stores the captured `__payload_<rust_ident(td)>` value into the
+/// tape's payload buffer via `push_leaf_with_<rust_ident(td)>`.
+/// View-layer accessors read it back in O(1) — zero span re-parsing.
+pub fn emit_tape_span_only_scalar_epilogue(td: &TypeDesc, variant_idx: u8) -> TokenStream {
+    let rust_ident = td
+        .rust_ident()
+        .expect("emit_tape_span_only_scalar_epilogue: non-scalar TypeDesc");
+    let payload_ident = format_ident!("__payload_{}", rust_ident);
+    let push_ident = format_ident!("push_leaf_with_{}", rust_ident);
     let variant_lit = variant_idx;
     quote! {
-        Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with_f64(
+        Some(::bbnf::runtime::tape::TapeBuilder::#push_ident(
             tape,
             ::bbnf::runtime::tape::TapeKind::Span,
             __span_lo,
             state.offset as u32,
             #variant_lit,
-            __payload_f64,
+            #payload_ident,
         ))
     }
 }
 
-// ── Bool payload prelude / epilogue ────────────────────────────────
-
-/// Emit the prelude for a `TapeSpanOnly` rule with a `bool` payload.
-///
-/// Declares `__span_lo`, `__payload_bool`, and `__has_payload`.
-pub fn emit_tape_span_only_bool_prelude() -> TokenStream {
-    quote! {
-        let __span_lo = state.offset as u32;
-        let mut __payload_bool: bool = false;
-        let mut __has_payload = false;
-    }
-}
-
-/// Emit the epilogue for a `TapeSpanOnly` rule with a `bool` payload.
-///
-/// Stores the captured `__payload_bool` value into the tape's payload
-/// buffer via `push_leaf_with_bool`.
-pub fn emit_tape_span_only_bool_epilogue(variant_idx: u8) -> TokenStream {
-    let variant_lit = variant_idx;
-    quote! {
-        Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with_bool(
-            tape,
-            ::bbnf::runtime::tape::TapeKind::Span,
-            __span_lo,
-            state.offset as u32,
-            #variant_lit,
-            __payload_bool,
-        ))
-    }
-}
-
-// ── U8 payload prelude / epilogue ─────────────────────────────────
-
-/// Emit the prelude for a `TapeSpanOnly` rule with a `u8` payload.
-///
-/// Declares `__span_lo`, `__payload_u8`, and `__has_payload`.
-pub fn emit_tape_span_only_u8_prelude() -> TokenStream {
-    quote! {
-        let __span_lo = state.offset as u32;
-        let mut __payload_u8: u8 = 0;
-        let mut __has_payload = false;
-    }
-}
-
-/// Emit the epilogue for a `TapeSpanOnly` rule with a `u8` payload.
-///
-/// Stores the captured `__payload_u8` value into the tape's payload
-/// buffer via `push_leaf_with_u8`.
-pub fn emit_tape_span_only_u8_epilogue(variant_idx: u8) -> TokenStream {
-    let variant_lit = variant_idx;
-    quote! {
-        Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with_u8(
-            tape,
-            ::bbnf::runtime::tape::TapeKind::Span,
-            __span_lo,
-            state.offset as u32,
-            #variant_lit,
-            __payload_u8,
-        ))
+/// Emit the zero-initializer expression for a scalar `TypeDesc`.
+/// `f64` gets `0.0`, `bool` gets `false`, integer types get `0`.
+fn scalar_zero_init(td: &TypeDesc) -> TokenStream {
+    match td {
+        TypeDesc::F64 => quote! { 0.0 },
+        TypeDesc::Bool => quote! { false },
+        _ => quote! { 0 },
     }
 }
 

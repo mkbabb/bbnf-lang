@@ -65,7 +65,7 @@ pub fn key_class_regex_pattern(class: &KeyClass) -> &'static str {
         .expect("RegexClass::Identifier without flags has a canonical pattern"),
         KeyClass::QuotedString { quote_char } => RegexClass::QuotedString {
             quote_char: *quote_char,
-            allows_escapes: true,
+            allows_escapes: false,
             allows_u_escapes: false,
         }
         .canonical_pattern()

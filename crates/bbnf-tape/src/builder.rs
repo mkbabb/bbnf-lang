@@ -84,6 +84,9 @@ impl TapeBuilder {
     ///
     /// Leaves have no children, so `child_off` is forced to
     /// [`TapeOffset::NONE`].
+    ///
+    /// `meta_idx` is the branch index for Alt-bodied rules (`0` for
+    /// everything else). Stored in the parallel `Tape::meta` buffer.
     #[inline]
     pub fn push_leaf(
         &mut self,
@@ -91,6 +94,7 @@ impl TapeBuilder {
         span_lo: u32,
         span_hi: u32,
         variant_idx: u8,
+        meta_idx: u8,
     ) -> TapeOffset {
         debug_assert!(kind.is_leaf(), "push_leaf on compound kind {:?}", kind);
         let idx = self.tape.records.len();
@@ -102,6 +106,8 @@ impl TapeBuilder {
             span_hi,
             child_off: TapeOffset::NONE,
         });
+        self.tape.meta.push(meta_idx);
+        debug_assert_eq!(self.tape.records.len(), self.tape.meta.len());
         TapeOffset(idx as u32)
     }
 
@@ -112,6 +118,9 @@ impl TapeBuilder {
     /// pushing the first child, and must pass the returned offset as
     /// `child_off`. `span_hi` is the parser state's current offset
     /// (end of the compound's source range).
+    ///
+    /// `meta_idx` is the branch index for Alt-bodied rules (`0` for
+    /// everything else). Stored in the parallel `Tape::meta` buffer.
     #[inline]
     pub fn push_compound(
         &mut self,
@@ -120,6 +129,7 @@ impl TapeBuilder {
         span_lo: u32,
         span_hi: u32,
         variant_idx: u8,
+        meta_idx: u8,
     ) -> TapeOffset {
         debug_assert!(
             kind.is_compound(),
@@ -145,6 +155,8 @@ impl TapeBuilder {
             span_hi,
             child_off,
         });
+        self.tape.meta.push(meta_idx);
+        debug_assert_eq!(self.tape.records.len(), self.tape.meta.len());
         TapeOffset(idx as u32)
     }
 
@@ -189,6 +201,9 @@ impl TapeBuilder {
     ///
     /// `T` must be `Copy` and ≤ 8 bytes. Sub-8 types occupy the
     /// leading bytes of the slot; trailing bytes stay zeroed.
+    ///
+    /// `meta_idx` is the branch index for Alt-bodied rules (`0` for
+    /// everything else). Stored in the parallel `Tape::meta` buffer.
     #[inline]
     pub fn push_leaf_with_scalar<T: Copy>(
         &mut self,
@@ -196,6 +211,7 @@ impl TapeBuilder {
         span_lo: u32,
         span_hi: u32,
         variant_idx: u8,
+        meta_idx: u8,
         value: T,
     ) -> TapeOffset {
         debug_assert!(
@@ -229,6 +245,8 @@ impl TapeBuilder {
             span_hi,
             child_off: TapeOffset::NONE,
         });
+        self.tape.meta.push(meta_idx);
+        debug_assert_eq!(self.tape.records.len(), self.tape.meta.len());
         TapeOffset(idx as u32)
     }
 
@@ -240,9 +258,10 @@ impl TapeBuilder {
         span_lo: u32,
         span_hi: u32,
         variant_idx: u8,
+        meta_idx: u8,
         value: f64,
     ) -> TapeOffset {
-        self.push_leaf_with_scalar::<f64>(kind, span_lo, span_hi, variant_idx, value)
+        self.push_leaf_with_scalar::<f64>(kind, span_lo, span_hi, variant_idx, meta_idx, value)
     }
 
     /// Append a leaf record with a `bool` payload.
@@ -253,9 +272,10 @@ impl TapeBuilder {
         span_lo: u32,
         span_hi: u32,
         variant_idx: u8,
+        meta_idx: u8,
         value: bool,
     ) -> TapeOffset {
-        self.push_leaf_with_scalar::<bool>(kind, span_lo, span_hi, variant_idx, value)
+        self.push_leaf_with_scalar::<bool>(kind, span_lo, span_hi, variant_idx, meta_idx, value)
     }
 
     /// Append a leaf record with an `i8` payload.
@@ -266,9 +286,10 @@ impl TapeBuilder {
         span_lo: u32,
         span_hi: u32,
         variant_idx: u8,
+        meta_idx: u8,
         value: i8,
     ) -> TapeOffset {
-        self.push_leaf_with_scalar::<i8>(kind, span_lo, span_hi, variant_idx, value)
+        self.push_leaf_with_scalar::<i8>(kind, span_lo, span_hi, variant_idx, meta_idx, value)
     }
 
     /// Append a leaf record with a `u8` payload.
@@ -279,9 +300,10 @@ impl TapeBuilder {
         span_lo: u32,
         span_hi: u32,
         variant_idx: u8,
+        meta_idx: u8,
         value: u8,
     ) -> TapeOffset {
-        self.push_leaf_with_scalar::<u8>(kind, span_lo, span_hi, variant_idx, value)
+        self.push_leaf_with_scalar::<u8>(kind, span_lo, span_hi, variant_idx, meta_idx, value)
     }
 
     /// Append a leaf record with an `i16` payload.
@@ -292,9 +314,10 @@ impl TapeBuilder {
         span_lo: u32,
         span_hi: u32,
         variant_idx: u8,
+        meta_idx: u8,
         value: i16,
     ) -> TapeOffset {
-        self.push_leaf_with_scalar::<i16>(kind, span_lo, span_hi, variant_idx, value)
+        self.push_leaf_with_scalar::<i16>(kind, span_lo, span_hi, variant_idx, meta_idx, value)
     }
 
     /// Append a leaf record with a `u16` payload.
@@ -305,9 +328,10 @@ impl TapeBuilder {
         span_lo: u32,
         span_hi: u32,
         variant_idx: u8,
+        meta_idx: u8,
         value: u16,
     ) -> TapeOffset {
-        self.push_leaf_with_scalar::<u16>(kind, span_lo, span_hi, variant_idx, value)
+        self.push_leaf_with_scalar::<u16>(kind, span_lo, span_hi, variant_idx, meta_idx, value)
     }
 
     /// Append a leaf record with an `i32` payload.
@@ -318,9 +342,10 @@ impl TapeBuilder {
         span_lo: u32,
         span_hi: u32,
         variant_idx: u8,
+        meta_idx: u8,
         value: i32,
     ) -> TapeOffset {
-        self.push_leaf_with_scalar::<i32>(kind, span_lo, span_hi, variant_idx, value)
+        self.push_leaf_with_scalar::<i32>(kind, span_lo, span_hi, variant_idx, meta_idx, value)
     }
 
     /// Append a leaf record with a `u32` payload.
@@ -331,9 +356,10 @@ impl TapeBuilder {
         span_lo: u32,
         span_hi: u32,
         variant_idx: u8,
+        meta_idx: u8,
         value: u32,
     ) -> TapeOffset {
-        self.push_leaf_with_scalar::<u32>(kind, span_lo, span_hi, variant_idx, value)
+        self.push_leaf_with_scalar::<u32>(kind, span_lo, span_hi, variant_idx, meta_idx, value)
     }
 
     /// Append a leaf record with an `i64` payload.
@@ -344,9 +370,10 @@ impl TapeBuilder {
         span_lo: u32,
         span_hi: u32,
         variant_idx: u8,
+        meta_idx: u8,
         value: i64,
     ) -> TapeOffset {
-        self.push_leaf_with_scalar::<i64>(kind, span_lo, span_hi, variant_idx, value)
+        self.push_leaf_with_scalar::<i64>(kind, span_lo, span_hi, variant_idx, meta_idx, value)
     }
 
     /// Append a leaf record with a `u64` payload.
@@ -357,9 +384,10 @@ impl TapeBuilder {
         span_lo: u32,
         span_hi: u32,
         variant_idx: u8,
+        meta_idx: u8,
         value: u64,
     ) -> TapeOffset {
-        self.push_leaf_with_scalar::<u64>(kind, span_lo, span_hi, variant_idx, value)
+        self.push_leaf_with_scalar::<u64>(kind, span_lo, span_hi, variant_idx, meta_idx, value)
     }
 
     /// Append a leaf record carrying an aggregate (multi-field)
@@ -379,6 +407,9 @@ impl TapeBuilder {
     ///
     /// Empty aggregates (`bytes.is_empty()`) push a leaf with no
     /// payload, equivalent to [`Self::push_leaf`].
+    ///
+    /// `meta_idx` is the branch index for Alt-bodied rules (`0` for
+    /// everything else). Stored in the parallel `Tape::meta` buffer.
     #[inline]
     pub fn push_leaf_with_aggregate(
         &mut self,
@@ -386,6 +417,7 @@ impl TapeBuilder {
         span_lo: u32,
         span_hi: u32,
         variant_idx: u8,
+        meta_idx: u8,
         bytes: &[u8],
     ) -> TapeOffset {
         debug_assert!(
@@ -427,6 +459,8 @@ impl TapeBuilder {
             span_hi,
             child_off: TapeOffset::NONE,
         });
+        self.tape.meta.push(meta_idx);
+        debug_assert_eq!(self.tape.records.len(), self.tape.meta.len());
         TapeOffset(idx as u32)
     }
 
@@ -445,6 +479,13 @@ impl TapeBuilder {
     /// Consume the builder and return the finished tape. Returns the
     /// sticky error if one was set during parsing.
     pub fn finish(mut self) -> Result<Tape, TapeBuildError> {
+        debug_assert_eq!(
+            self.tape.records.len(),
+            self.tape.meta.len(),
+            "meta Vec length ({}) must match records Vec length ({})",
+            self.tape.meta.len(),
+            self.tape.records.len()
+        );
         match self.error {
             Some(err) => Err(err),
             None => {

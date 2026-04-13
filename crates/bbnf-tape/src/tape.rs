@@ -138,6 +138,17 @@ pub struct Tape {
     /// offset `(payload_idx - 1) * 8`. Empty for all current codegen
     /// (existing records set `payload_idx = 0`).
     pub(crate) payloads: Vec<u8>,
+    /// Side-channel meta buffer — one `u8` per record, parallel to
+    /// `records`.
+    ///
+    /// Carries the `meta_idx` for each record:
+    /// - For Alt-bodied rules: the **branch index** within the rule's
+    ///   alternation (`__branch_idx`).
+    /// - For everything else: `0`.
+    ///
+    /// This separates branch identity from rule identity (`variant_idx`
+    /// in `TapeRec::flags`), which always stores the rule id.
+    pub(crate) meta: Vec<u8>,
 }
 
 impl Tape {
@@ -146,6 +157,7 @@ impl Tape {
         Self {
             records: Vec::new(),
             payloads: Vec::new(),
+            meta: Vec::new(),
         }
     }
 
@@ -154,6 +166,7 @@ impl Tape {
         Self {
             records: Vec::with_capacity(expected),
             payloads: Vec::new(),
+            meta: Vec::with_capacity(expected),
         }
     }
 

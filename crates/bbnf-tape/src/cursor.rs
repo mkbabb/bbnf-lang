@@ -89,6 +89,15 @@ impl<'tape> TapeCursor<'tape> {
         self.record().variant_idx()
     }
 
+    /// Meta index from the parallel `Tape::meta` buffer.
+    ///
+    /// For Alt-bodied rules this is the branch index; for everything
+    /// else it is `0`.
+    #[inline]
+    pub fn meta_idx(&self) -> u8 {
+        self.tape.meta[self.offset.0 as usize]
+    }
+
     // ── Child access (Tranche AJ.0) ────────────────────────────────
 
     /// Construct a cursor over the i-th direct child of the current

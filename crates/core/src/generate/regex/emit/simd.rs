@@ -130,6 +130,70 @@ pub fn emit_nibble_lut_scan(targets: &[u8]) -> Option<TokenStream> {
     })
 }
 
+/// Emit a ws-interleaved negated-class scan (Star quantifier).
+///
+/// When the grammar has `@ws` with block-comment-aware whitespace, raw
+/// memchr cannot see `/* ... */` comments embedded inside a negated char
+/// class span like `[^;!}]*`. This emitter produces a byte-at-a-time
+/// loop that calls `scan_ws_block_comments` before each byte check,
+/// transparently consuming block comments at every position.
+///
+/// Always succeeds (Star allows zero-length match).
+pub fn emit_ws_interleaved_negated_scan_star(needles: &[u8]) -> TokenStream {
+    let checks: Vec<TokenStream> = needles
+        .iter()
+        .map(|&b| {
+            let lit = Literal::byte_character(b);
+            quote! { __b == #lit }
+        })
+        .collect();
+
+    quote! {
+        {
+            let __start = state.offset;
+            loop {
+                ::parse_that::scan_ws_block_comments(state);
+                if state.offset >= state.src_bytes.len() { break; }
+                let __b = state.src_bytes[state.offset];
+                if #(#checks)||* { break; }
+                state.offset += 1;
+            }
+            Some(::parse_that::Span::new(__start, state.offset, state.src))
+        }
+    }
+}
+
+/// Emit a ws-interleaved negated-class scan (Plus quantifier).
+///
+/// Same as the Star variant but returns `None` when zero bytes match.
+pub fn emit_ws_interleaved_negated_scan_plus(needles: &[u8]) -> TokenStream {
+    let checks: Vec<TokenStream> = needles
+        .iter()
+        .map(|&b| {
+            let lit = Literal::byte_character(b);
+            quote! { __b == #lit }
+        })
+        .collect();
+
+    quote! {
+        {
+            let __start = state.offset;
+            loop {
+                ::parse_that::scan_ws_block_comments(state);
+                if state.offset >= state.src_bytes.len() { break; }
+                let __b = state.src_bytes[state.offset];
+                if #(#checks)||* { break; }
+                state.offset += 1;
+            }
+            if state.offset > __start {
+                Some(::parse_that::Span::new(__start, state.offset, state.src))
+            } else {
+                None
+            }
+        }
+    }
+}
+
 /// Compute the set of ASCII bytes NOT in the given inclusive ranges.
 ///
 /// Used to convert a positive character class into its excluded-byte set

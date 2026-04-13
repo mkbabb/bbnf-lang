@@ -133,9 +133,26 @@ fn emit_regex_fast_path(pattern: &str, opts: &EmitOpts) -> Option<TokenStream> {
         return Some(ts);
     }
 
-    // Negated character class → memchr (1-3) or nibble-LUT (4-8).
+    // Negated character class → ws-interleaved loop, memchr (1-3), or nibble-LUT (4-8).
     if let Some((excluded, quantifier)) = is_negated_char_class_regex(pattern) {
         let bytes = excluded.as_bytes();
+
+        // When the grammar has @ws with block-comment-aware whitespace,
+        // emit a ws-interleaved byte loop instead of raw memchr/LUT.
+        // This ensures block comments like `/*!*/` embedded inside the
+        // negated char class span are consumed transparently before the
+        // terminator byte check. Only activates for WsBlockComment @ws
+        // patterns; non-@ws and non-comment grammars keep the SIMD path.
+        if opts.has_ws_block_comment() {
+            return Some(match quantifier {
+                NegCharClassQuantifier::Plus => {
+                    simd::emit_ws_interleaved_negated_scan_plus(bytes)
+                }
+                NegCharClassQuantifier::Star => {
+                    simd::emit_ws_interleaved_negated_scan_star(bytes)
+                }
+            });
+        }
 
         // Try memchr first (1-3 needles).
         let result = match quantifier {

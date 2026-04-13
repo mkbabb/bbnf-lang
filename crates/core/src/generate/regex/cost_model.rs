@@ -97,6 +97,11 @@ pub struct EmitOpts<'a> {
     /// instead of re-parsing the HIR. Callers without an IR (e.g.
     /// standalone fast-path tests) leave this `None` and pay the parse.
     pub ir: Option<&'a bbnf_ir::GrammarIR>,
+    /// Custom `@ws` pattern (resolved from `ir.ws_pattern`). When set
+    /// and classifying as `WsBlockComment`, negated char class scanners
+    /// emit a ws-interleaved byte loop instead of raw memchr — ensuring
+    /// block comments embedded inside regex spans are consumed.
+    pub ws_pattern: Option<&'a str>,
 }
 
 impl<'a> EmitOpts<'a> {
@@ -106,6 +111,7 @@ impl<'a> EmitOpts<'a> {
             length_hint: LengthHint::Unknown,
             cost,
             ir: None,
+            ws_pattern: None,
         }
     }
 
@@ -122,6 +128,24 @@ impl<'a> EmitOpts<'a> {
     pub fn with_ir(mut self, ir: &'a bbnf_ir::GrammarIR) -> Self {
         self.ir = Some(ir);
         self
+    }
+
+    pub fn with_ws_pattern(mut self, ws_pattern: Option<&'a str>) -> Self {
+        self.ws_pattern = ws_pattern;
+        self
+    }
+
+    /// Whether the `@ws` pattern is a block-comment-aware whitespace
+    /// family (e.g. `(?s)(?:\s|/\*.*?\*/)*`). When true, negated
+    /// char class scanners must interleave ws consumption at every
+    /// byte position so block comments embedded in the scanned span
+    /// are transparently consumed.
+    pub fn has_ws_block_comment(&self) -> bool {
+        use ::parse_that::regex::classify::{RegexClass, classify_regex};
+        matches!(
+            self.ws_pattern.map(classify_regex),
+            Some(RegexClass::WsBlockComment),
+        )
     }
 
     /// Classify a regex pattern via the `ir.regex_info` cache when

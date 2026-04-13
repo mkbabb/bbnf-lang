@@ -115,10 +115,12 @@ impl RustEmitter {
         // Default: span-only scan. The shared regex emitter returns
         // `Option<Span>`; we discard the Span and re-express as
         // `Option<()>` so the tape-first composition pattern holds.
+        let ws_pat = ir.ws_pattern.map(|sid| ir.get_string(sid));
         let opts =
             crate::generate::regex::EmitOpts::new(&crate::generate::regex::CostModel::DEFAULT)
                 .with_fuse(!self.effective_prettify)
-                .with_ir(ir);
+                .with_ir(ir)
+                .with_ws_pattern(ws_pat);
         let regex_expr = crate::generate::regex::emit_regex(pattern, &opts);
         quote! {
             { (#regex_expr).map(|_| ()) }

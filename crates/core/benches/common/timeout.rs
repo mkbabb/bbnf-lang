@@ -59,8 +59,6 @@ pub mod limits {
     pub const COMPILE_JSON: Duration = Duration::from_millis(50);
     /// `compile_ebnf` — ~330µs baseline, 50ms limit.
     pub const COMPILE_EBNF: Duration = Duration::from_millis(50);
-    /// `compile_css_mono` — ~600µs baseline, 50ms limit.
-    pub const COMPILE_CSS_MONO: Duration = Duration::from_millis(50);
     /// `compile_bbnf` — ~1ms baseline, 50ms limit.
     pub const COMPILE_BBNF: Duration = Duration::from_millis(50);
     /// `compile_sheets` — ~500µs baseline, 50ms limit.

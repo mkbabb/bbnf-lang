@@ -56,14 +56,6 @@ fn compile_ebnf(b: &mut Bencher) {
     });
 }
 
-// CSS monolithic: 69 lines, single file (no imports), @pretty directives
-fn compile_css_mono(b: &mut Bencher) {
-    let source = load_grammar("css/pretty.bbnf");
-    bench_with_timeout(b, limits::COMPILE_CSS_MONO, || {
-        compile_grammar_request(&source, &vm_request()).unwrap()
-    });
-}
-
 // ── @import grammars ────────────────────────────────────────────────────────
 
 // BBNF: 80 lines, self-describing, uses @import
@@ -95,7 +87,6 @@ benchmark_group!(
     compile,
     compile_json,
     compile_ebnf,
-    compile_css_mono,
     compile_bbnf,
     compile_sheets,
     compile_css_l4,

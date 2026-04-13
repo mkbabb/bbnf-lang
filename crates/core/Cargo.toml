@@ -93,11 +93,6 @@ path = "benches/json/stress.rs"
 harness = false
 
 [[bench]]
-name = "css_monolithic"
-path = "benches/css/monolithic.rs"
-harness = false
-
-[[bench]]
 name = "css_l4"
 path = "benches/css/l4.rs"
 harness = false

@@ -59,6 +59,7 @@ pub fn key_class_regex_pattern(class: &KeyClass) -> &'static str {
         KeyClass::Identifier => RegexClass::Identifier {
             allows_leading_dash: false,
             allows_double_dash_prefix: false,
+            allows_escapes: false,
         }
         .canonical_pattern()
         .expect("RegexClass::Identifier without flags has a canonical pattern"),

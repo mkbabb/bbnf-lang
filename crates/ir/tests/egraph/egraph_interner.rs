@@ -38,6 +38,7 @@ fn empty_ir(strings: Vec<&str>) -> GrammarIR {
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
+        string_index: Default::default(),
     }
 }
 

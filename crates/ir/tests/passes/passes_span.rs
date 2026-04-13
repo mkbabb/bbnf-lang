@@ -38,6 +38,7 @@ fn literal_is_span_eligible() {
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
+        string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
     };
 
@@ -76,6 +77,7 @@ fn map_not_span_eligible() {
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
+        string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
     };
 
@@ -113,6 +115,7 @@ fn transitive_span_eligibility() {
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
+        string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
     };
 
@@ -155,6 +158,7 @@ fn cyclic_not_span_eligible() {
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
+        string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
     };
 
@@ -190,6 +194,7 @@ fn seq_of_literals_span_eligible() {
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
+        string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
     };
 

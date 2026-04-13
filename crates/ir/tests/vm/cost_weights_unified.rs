@@ -76,6 +76,7 @@ fn empty_ir() -> GrammarIR {
         cost_config: CostConfig::default(),
         type_desc_interner: TypeDescInterner::new(),
         materialization: HashMap::new(),
+        string_index: std::collections::HashMap::new(),
         payload_layouts: HashMap::new(),
     }
 }

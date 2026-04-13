@@ -1,14 +1,17 @@
 //! Grammar extraction: `BbnfBootstrapNodeView` → `ParsedGrammar`.
 //!
 //! Walks the top-level `grammar` root view and assembles the typed
-//! `ParsedGrammar` from the schema-emitted `as_*_directive()` accessors
-//! and rule destructuring.
+//! `ParsedGrammar` via structural child traversal. The `directive`
+//! wrapper is peeled to expose the specific directive `rule_kind()`
+//! (`import_directive`, `pretty_directive`, etc.), and each directive
+//! is extracted by walking its data-bearing children — the tape-first
+//! emitter elides keyword literals, so only semantic nodes appear.
 //!
 //! All structural CST traversal lives in the view-layer cursor
-//! accessors (`span_text`, `identifier_text`, `identifier_span`,
-//! `as_*_directive`, `rule_kind`, `children`, `child`). This module
-//! only handles the *typed*-grammar mapping (CST view → public
-//! `crate::types::*` structs).
+//! accessors (`span_text`, `identifier_span`, `rule_kind`,
+//! `children`, `child`). This module only handles the
+//! *typed*-grammar mapping (CST view → public `crate::types::*`
+//! structs).
 //!
 //! Tranche AC.2: replaced the `BbnfBootstrapEnum` enum pattern-match
 //! walker with a cursor-backed view walker. The view API comes from
@@ -20,9 +23,7 @@ use std::borrow::Cow;
 
 use parse_that::Span;
 
-use super::generated::{
-    BbnfBootstrap, BbnfBootstrapNodeView, BbnfBootstrapRuleKind, cst_directives,
-};
+use super::generated::{BbnfBootstrap, BbnfBootstrapNodeView, BbnfBootstrapRuleKind};
 use crate::lower::tape_walk::find_child_by_kind;
 use crate::runtime::Parsed;
 use crate::types::*;
@@ -59,14 +60,15 @@ pub fn extract_grammar<'a>(parsed: &'a Parsed<'a, BbnfBootstrap>) -> ParsedGramm
     grammar
 }
 
-/// Peel the transparent `grammar_item` wrapper.
+/// Peel the transparent `grammar_item` and `directive` wrappers.
 ///
-/// Only `grammar_item` is peeled — `directive` retains its full span
-/// text so `absorb_item`'s span-text fallback can find the `@keyword`
-/// and dispatch correctly (e.g., `@recover`).
+/// Both `grammar_item` and `directive` are alternation-wrappers whose
+/// sole child carries the specific variant tag (`rule`, `import_directive`,
+/// `pretty_directive`, etc.). Peeling both layers lets `absorb_item`
+/// match on the concrete `rule_kind()` directly.
 fn peel_wrappers<'a>(node: BbnfBootstrapNodeView<'a>) -> BbnfBootstrapNodeView<'a> {
     match node.rule_kind() {
-        BbnfBootstrapRuleKind::grammar_item => {
+        BbnfBootstrapRuleKind::grammar_item | BbnfBootstrapRuleKind::directive => {
             if let Some(child) = node.child(0) {
                 peel_wrappers(child)
             } else {
@@ -133,141 +135,56 @@ fn absorb_item<'a>(
         return;
     }
 
-    // Directives: dispatch on `rule_kind()` and call the direct
-    // `try_as_<rule>(cursor, input)` schema helpers. The walking
-    // `as_*_directive` methods on `BbnfBootstrapNodeView` look for
-    // matching variants **among a parent view's children**; here
-    // `item` has already been peeled through `grammar_item` /
-    // `directive` wrappers, so it points AT the specific directive
-    // compound. The try helpers check `cursor.variant_idx()`
-    // directly and extract the typed struct in O(child count).
-    let cursor = item.cursor();
-    let input = item.input();
+    // Directives: dispatch on `rule_kind()`. The `item` has been
+    // peeled through `grammar_item` / `directive` wrappers, so it
+    // points AT the specific directive compound. Each directive is
+    // extracted structurally from its children — the tape-first
+    // emitter elides literal slots (`@pretty`, `@token`, `;`, etc.),
+    // so the child list contains only the semantically meaningful
+    // data nodes (identifier, regex, hints compound, etc.).
     match item.rule_kind() {
         BbnfBootstrapRuleKind::recover_directive => {
-            if let Some(d) = cst_directives::try_as_recover_directive(cursor, input) {
-                grammar.recovers.push(RecoverDirective {
-                    rule_name: d.rule_name,
-                    sync_expr: d.sync_expr,
-                    span: d.span,
-                });
-                return;
-            }
+            absorb_recover_structural(item, &mut grammar.recovers);
         }
         BbnfBootstrapRuleKind::pretty_directive => {
-            if let Some(d) = cst_directives::try_as_pretty_directive(cursor, input) {
-                let hints: Vec<Cow<'a, str>> =
-                    d.hints.children().map(|h| pretty_hint_text(h)).collect();
-                grammar.pretties.push(PrettyDirective {
-                    rule_name: Cow::Owned(d.target.to_string()),
-                    hints,
-                    span: d.span,
-                });
-                return;
-            }
+            absorb_pretty_structural(item, &mut grammar.pretties);
         }
         BbnfBootstrapRuleKind::token_directive => {
-            if let Some(d) = cst_directives::try_as_token_directive(cursor, input) {
-                grammar.token_rules.push(Cow::Owned(d.name.to_string()));
-                return;
-            }
+            absorb_single_name_directive(item, &mut grammar.token_rules);
         }
         BbnfBootstrapRuleKind::debug_directive => {
-            if let Some(d) = cst_directives::try_as_debug_directive(cursor, input) {
-                grammar.debug_rules.push(Cow::Owned(d.target.to_string()));
-                return;
-            }
+            absorb_single_name_directive(item, &mut grammar.debug_rules);
         }
         BbnfBootstrapRuleKind::ws_directive => {
-            if let Some(d) = cst_directives::try_as_ws_directive(cursor, input) {
-                // `d.value` is a `regex` leaf view; strip `/.../`.
-                let raw = d.value.span_text();
-                let stripped = raw
-                    .strip_prefix('/')
-                    .and_then(|s| s.strip_suffix('/'))
-                    .unwrap_or(raw);
-                grammar.ws_pattern = Some(Cow::Borrowed(stripped));
-                return;
-            }
+            absorb_ws_structural(item, &mut grammar.ws_pattern);
         }
         BbnfBootstrapRuleKind::host_directive => {
-            if let Some(d) = cst_directives::try_as_host_directive(cursor, input) {
-                let return_type = d
-                    .type_annotation
-                    .map(|t| Cow::Owned(t.span_text().to_string()));
-                grammar.host_fns.push(HostFnDecl {
-                    name: Cow::Owned(d.name.to_string()),
-                    return_type,
-                });
-                return;
-            }
+            absorb_host_structural(item, &mut grammar.host_fns);
         }
         BbnfBootstrapRuleKind::import_directive => {
             absorb_import_structural(item, &mut grammar.imports);
-            return;
         }
         _ => {}
     }
-
-    // Span-text fallback — under HEAD's hand-patched generated.rs
-    // the schema's `try_as_*_directive` helpers check a stale
-    // `variant_idx` that's off-by-one from what the rule emitter
-    // actually stamps, so the typed extraction returns `None`.
-    // When we know the kind from `rule_kind()` but the typed
-    // extraction failed, OR when the inlined `directive` rule
-    // collapses to an empty compound, fall through to a span-text
-    // dispatch on the leading `@keyword`. This becomes redundant
-    // after AE.4's clean regen rebuilds the schema with correct
-    // variant_idx values.
-    let raw = item.span_text();
-    let trimmed = raw.trim_start();
-    if let Some(kw_end) = trimmed.find(|c: char| c.is_whitespace() || c == ';' || c == '.') {
-        let kw = &trimmed[..kw_end];
-        match kw {
-            "@import" => absorb_import_structural(item, &mut grammar.imports),
-            "@recover" => absorb_recover_by_text(item, &mut grammar.recovers),
-            "@pretty" => absorb_pretty_by_text(item, &mut grammar.pretties),
-            "@token" => absorb_token_by_text(item, &mut grammar.token_rules),
-            "@debug" => absorb_debug_by_text(item, &mut grammar.debug_rules),
-            "@ws" => absorb_ws_by_text(item, &mut grammar.ws_pattern),
-            "@host" => absorb_host_by_text(item, &mut grammar.host_fns),
-            _ => {}
-        }
-    }
 }
 
-/// Span-text directive extractors. Each parses a directive's
-/// source slice directly when the schema's typed `try_as_*`
-/// helper has stale `variant_idx` constants and returns `None`.
-/// All become unreachable after AE.4's clean regen.
+// ------------------------------------------------------------------
+// Structural directive extractors — walk children by `rule_kind()`.
+// ------------------------------------------------------------------
 
-fn absorb_recover_by_text<'a>(
+/// `@recover ruleName syncExpr ;` — extract rule_name (first
+/// identifier child) and sync_expr (remaining children).
+fn absorb_recover_structural<'a>(
     item: BbnfBootstrapNodeView<'a>,
     recovers: &mut Vec<RecoverDirective<'a>>,
 ) {
-    // Source-text fallback: we don't have the typed sync_expr
-    // view here, so synthesize from the directive item itself.
-    let input = item.input();
-    let raw = item.span_text();
     let (lo, hi) = item.span();
-    let body = raw.trim_start_matches("@recover").trim();
-    let name_end = body
-        .find(|c: char| c.is_whitespace())
-        .unwrap_or(body.len());
-    let rule_name_str = &body[..name_end];
-    if rule_name_str.is_empty() {
-        return;
-    }
-    // Recover an `&'a str` slice into the original input buffer.
-    let Some(name_offset) = input[lo as usize..hi as usize].find(rule_name_str) else {
-        return;
-    };
-    let abs_lo = lo as usize + name_offset;
-    let abs_hi = abs_lo + rule_name_str.len();
-    let rule_name: &'a str = &input[abs_lo..abs_hi];
-    // Use the whole directive item as the sync_expr placeholder —
-    // the actual sync expression body will be re-parsed downstream
-    // when this fallback path is removed by AE.4's clean regen.
+    let input = item.input();
+    let mut children = item.children();
+    let name_node = children
+        .find(|c| c.rule_kind() == BbnfBootstrapRuleKind::identifier)
+        .expect("recover_directive: missing identifier child");
+    let rule_name = name_node.span_text();
     recovers.push(RecoverDirective {
         rule_name,
         sync_expr: item,
@@ -275,130 +192,102 @@ fn absorb_recover_by_text<'a>(
     });
 }
 
-fn absorb_pretty_by_text<'a>(
+/// `@pretty target hint* ;` — first identifier is target, remaining
+/// children provide hints.
+fn absorb_pretty_structural<'a>(
     item: BbnfBootstrapNodeView<'a>,
     pretties: &mut Vec<PrettyDirective<'a>>,
 ) {
-    let raw = item.span_text();
     let (lo, hi) = item.span();
-    let body = raw.trim_start_matches("@pretty").trim();
-    // Strip trailing terminator.
-    let body = body.trim_end_matches(|c: char| c == ';' || c == '.').trim();
-    let mut hint_tokens = split_pretty_hint_tokens(body);
-    let target = match hint_tokens.first() {
-        Some(t) => t.clone(),
-        None => return,
-    };
-    hint_tokens.remove(0);
-    let hints: Vec<Cow<'a, str>> =
-        hint_tokens.into_iter().map(Cow::Owned).collect();
+    let input = item.input();
+    let mut children = item.children().peekable();
+
+    // First identifier-kind child is the target rule name.
+    let target = children
+        .find(|c| c.rule_kind() == BbnfBootstrapRuleKind::identifier)
+        .expect("pretty_directive: missing target identifier");
+    let target_text = target.span_text();
+
+    // Remaining children carry hint tokens. Under the tape-first
+    // layout, the hints may be wrapped in a Repeat compound.
+    // Flatten any Repeat wrappers and extract each pretty_hint.
+    let mut hints: Vec<Cow<'a, str>> = Vec::new();
+    for child in children {
+        use ::bbnf::runtime::tape::TapeKind;
+        if child.kind() == TapeKind::Repeat {
+            for hint in child.children() {
+                hints.push(pretty_hint_text(hint));
+            }
+        } else {
+            hints.push(pretty_hint_text(child));
+        }
+    }
+
     pretties.push(PrettyDirective {
-        rule_name: Cow::Owned(target),
+        rule_name: Cow::Owned(target_text.to_string()),
         hints,
-        span: Span::new(lo as usize, hi as usize, item.input()),
+        span: Span::new(lo as usize, hi as usize, input),
     });
 }
 
-/// Split pretty hint tokens, keeping parenthesized groups like
-/// `sep(", ")` and `split(";")` intact instead of splitting on
-/// the whitespace inside the quoted content.
-fn split_pretty_hint_tokens(s: &str) -> Vec<String> {
-    let mut tokens = Vec::new();
-    let mut current = String::new();
-    let mut depth = 0u32;
-    let mut in_quote = false;
-    let bytes = s.as_bytes();
-    let mut i = 0;
-    while i < bytes.len() {
-        let b = bytes[i];
-        if in_quote {
-            current.push(b as char);
-            if b == b'"' {
-                in_quote = false;
-            } else if b == b'\\' && i + 1 < bytes.len() {
-                i += 1;
-                current.push(bytes[i] as char);
-            }
-        } else if b == b'"' {
-            in_quote = true;
-            current.push(b as char);
-        } else if b == b'(' {
-            depth += 1;
-            current.push(b as char);
-        } else if b == b')' {
-            depth = depth.saturating_sub(1);
-            current.push(b as char);
-        } else if b.is_ascii_whitespace() && depth == 0 {
-            if !current.is_empty() {
-                tokens.push(std::mem::take(&mut current));
-            }
-        } else {
-            current.push(b as char);
-        }
-        i += 1;
-    }
-    if !current.is_empty() {
-        tokens.push(current);
-    }
-    tokens
-}
-
-fn absorb_token_by_text<'a>(
+/// Directives with the shape `@keyword name ;` — `@token` and
+/// `@debug`. The first identifier child provides the name.
+fn absorb_single_name_directive<'a>(
     item: BbnfBootstrapNodeView<'a>,
-    token_rules: &mut Vec<Cow<'a, str>>,
+    names: &mut Vec<Cow<'a, str>>,
 ) {
-    let raw = item.span_text();
-    let body = raw.trim_start_matches("@token").trim();
-    let body = body.trim_end_matches(|c: char| c == ';' || c == '.').trim();
-    let name = body.split_whitespace().next().unwrap_or("");
+    let name_node = item
+        .children()
+        .find(|c| c.rule_kind() == BbnfBootstrapRuleKind::identifier)
+        .expect("single_name_directive: missing identifier child");
+    let name = name_node.span_text();
     if !name.is_empty() {
-        token_rules.push(Cow::Owned(name.to_string()));
+        names.push(Cow::Owned(name.to_string()));
     }
 }
 
-fn absorb_debug_by_text<'a>(
-    item: BbnfBootstrapNodeView<'a>,
-    debug_rules: &mut Vec<Cow<'a, str>>,
-) {
-    let raw = item.span_text();
-    let body = raw.trim_start_matches("@debug").trim();
-    let body = body.trim_end_matches(|c: char| c == ';' || c == '.').trim();
-    let name = body.split_whitespace().next().unwrap_or("");
-    if !name.is_empty() {
-        debug_rules.push(Cow::Owned(name.to_string()));
-    }
-}
-
-fn absorb_ws_by_text<'a>(
+/// `@ws /regex/ ;` — the regex child is the first child whose span
+/// text starts with `/`.
+fn absorb_ws_structural<'a>(
     item: BbnfBootstrapNodeView<'a>,
     ws_pattern: &mut Option<Cow<'a, str>>,
 ) {
-    let raw = item.span_text();
-    let body = raw.trim_start_matches("@ws").trim();
-    let body = body.trim_end_matches(|c: char| c == ';' || c == '.').trim();
-    if let Some(stripped) = body.strip_prefix('/').and_then(|s| s.strip_suffix('/')) {
-        *ws_pattern = Some(Cow::Owned(stripped.to_string()));
+    for child in item.children() {
+        let text = child.span_text();
+        if let Some(stripped) = text.strip_prefix('/').and_then(|s| s.strip_suffix('/')) {
+            *ws_pattern = Some(Cow::Borrowed(stripped));
+            return;
+        }
     }
 }
 
-fn absorb_host_by_text<'a>(
+/// `@host name [: type] ;` — first identifier is name, optional
+/// type annotation follows.
+fn absorb_host_structural<'a>(
     item: BbnfBootstrapNodeView<'a>,
     host_fns: &mut Vec<HostFnDecl<'a>>,
 ) {
-    let raw = item.span_text();
-    let body = raw.trim_start_matches("@host").trim();
-    let body = body.trim_end_matches(|c: char| c == ';' || c == '.').trim();
-    // Format: name [: type]
-    let (name, type_part) = match body.find(':') {
-        Some(i) => (body[..i].trim(), Some(body[i + 1..].trim())),
-        None => (body.trim(), None),
-    };
+    let mut children = item.children();
+    let name_node = children
+        .find(|c| c.rule_kind() == BbnfBootstrapRuleKind::identifier)
+        .expect("host_directive: missing identifier child");
+    let name = name_node.span_text();
     if name.is_empty() {
         return;
     }
+    // Optional type annotation: the next non-identifier child whose
+    // span text is non-empty.
+    let return_type = children
+        .find(|c| {
+            c.rule_kind() != BbnfBootstrapRuleKind::identifier && {
+                let t = c.span_text().trim();
+                !t.is_empty() && t != ":" && t != ";" && t != "."
+            }
+        })
+        .map(|c| Cow::Owned(c.span_text().trim().to_string()));
     host_fns.push(HostFnDecl {
         name: Cow::Owned(name.to_string()),
-        return_type: type_part.map(|t| Cow::Owned(t.to_string())),
+        return_type,
     });
 }
 
@@ -427,94 +316,22 @@ fn absorb_import_structural<'a>(
     let (lo, hi) = item.span();
     let directive_span = Span::new(lo as usize, hi as usize, item.input());
 
-    // Primary path: structural descent through `import_path` /
-    // `import_items` rule_kinds. Works whenever the runtime-stamped
-    // variant_idx and the compiled enum agree (clean-regen state).
-    if let Some(path_view) =
+    let path_view =
         find_descendant_by_kind(item, BbnfBootstrapRuleKind::import_path)
-    {
-        let (path_lo, path_hi) = path_view.span();
-        let path_raw = &path_view.input()[path_lo as usize..path_hi as usize];
-        let path_str = strip_quotes(path_raw);
+            .expect("import_directive: missing import_path descendant");
 
-        let items_view =
-            find_descendant_by_kind(item, BbnfBootstrapRuleKind::import_items);
+    let (path_lo, path_hi) = path_view.span();
+    let path_raw = &path_view.input()[path_lo as usize..path_hi as usize];
+    let path_str = strip_quotes(path_raw);
 
-        let names: Option<Vec<ImportedName<'a>>> = items_view.map(|items| {
-            let mut out = Vec::new();
-            collect_identifier_descendants(items, &mut out);
-            out
-        });
+    let items_view =
+        find_descendant_by_kind(item, BbnfBootstrapRuleKind::import_items);
 
-        imports.push(ImportDirective {
-            path: Cow::Borrowed(path_str),
-            span: directive_span,
-            items: names,
-        });
-        return;
-    }
-
-    // Fallback path: span-text extraction. Used when the hand-
-    // patched bootstrap's enum drifts from the runtime variant_idx
-    // so `rule_kind()` reports wrong kinds for descendants. The
-    // span text of an import compound is always
-    // `@import [ { item, item } from ] "path" [ ; | . ]` so the
-    // path and item list can be lifted from substring ranges
-    // without any schema dependency. Under the clean regen this
-    // branch is unreachable (the primary path always succeeds),
-    // but it keeps `@import` resolution working across the
-    // structural-mode enum-drift window.
-    let input = item.input();
-    let item_start = lo as usize;
-    let item_end = hi as usize;
-    let raw = &input[item_start..item_end];
-
-    let Some(open_quote_rel) = raw.find('"') else {
-        return;
-    };
-    let Some(close_quote_rel) = raw[open_quote_rel + 1..].find('"') else {
-        return;
-    };
-    let path_lo = item_start + open_quote_rel + 1;
-    let path_hi = item_start + open_quote_rel + 1 + close_quote_rel;
-    let path_str: &'a str = &input[path_lo..path_hi];
-
-    // Items slice (optional): the substring between the first `{`
-    // and the matching `}`, if both precede the path quote. Each
-    // comma-separated identifier is extracted with an absolute byte
-    // span via offset tracking inside the slice.
-    let names: Option<Vec<ImportedName<'a>>> = raw
-        .find('{')
-        .and_then(|brace_lo_rel| {
-            raw[brace_lo_rel + 1..]
-                .find('}')
-                .map(|rel| (brace_lo_rel, brace_lo_rel + 1 + rel))
-        })
-        .filter(|(_, brace_hi_rel)| *brace_hi_rel < open_quote_rel)
-        .map(|(brace_lo_rel, brace_hi_rel)| {
-            let items_start = brace_lo_rel + 1;
-            let items_end = brace_hi_rel;
-            let mut out = Vec::new();
-            let mut cursor = items_start;
-            while cursor < items_end {
-                let comma_rel = raw[cursor..items_end].find(',').unwrap_or(items_end - cursor);
-                let tok = &raw[cursor..cursor + comma_rel];
-                // Trim leading whitespace, track offset.
-                let ws_lead = tok.bytes().take_while(|b| b.is_ascii_whitespace()).count();
-                let trimmed = tok[ws_lead..].trim_end();
-                if !trimmed.is_empty() {
-                    let abs_lo = item_start + cursor + ws_lead;
-                    let abs_hi = abs_lo + trimmed.len();
-                    let name: &'a str = &input[abs_lo..abs_hi];
-                    out.push(ImportedName {
-                        name: Cow::Borrowed(name),
-                        span: Span::new(abs_lo, abs_hi, input),
-                    });
-                }
-                cursor += comma_rel + 1;
-            }
-            out
-        });
+    let names: Option<Vec<ImportedName<'a>>> = items_view.map(|items| {
+        let mut out = Vec::new();
+        collect_identifier_descendants(items, &mut out);
+        out
+    });
 
     imports.push(ImportDirective {
         path: Cow::Borrowed(path_str),
@@ -590,17 +407,17 @@ fn strip_quotes(raw: &str) -> &str {
 fn pretty_hint_text<'a>(node: BbnfBootstrapNodeView<'a>) -> Cow<'a, str> {
     if node.rule_kind() == BbnfBootstrapRuleKind::pretty_hint {
         let ident = node.child(0).expect("pretty_hint: missing identifier");
-        let name = ident.span_text();
+        let name = ident.span_text().trim();
         // The optional `(string_lit)` group is child(1); its span
         // covers the parens + literal when present.
         if let Some(arg_group) = node.child(1) {
             let (lo, hi) = arg_group.span();
             if hi > lo {
                 let arg = &arg_group.input()[lo as usize..hi as usize];
-                return Cow::Owned(format!("{}{}", name, arg));
+                return Cow::Owned(format!("{}{}", name, arg.trim()));
             }
         }
         return Cow::Owned(name.to_string());
     }
-    Cow::Owned(node.span_text().to_string())
+    Cow::Owned(node.span_text().trim().to_string())
 }

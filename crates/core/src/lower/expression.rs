@@ -320,29 +320,28 @@ fn lower_binary_factor<'a>(
         node.span_text(),
     );
 
-    // Partition children into operands and inline operators. When
-    // `binary_operators` is NOT inlined (prettify grammars), operator
-    // tokens appear as leaf children whose trimmed span text is `<<`,
-    // `>>`, or `-`. When it IS inlined, operators are consumed during
-    // parsing and only appear in the source gap between operand spans.
+    // Partition children by rule_kind: `binary_operators` children
+    // carry the operator token; everything else is an operand.
+    //
+    // When the optimizer inlines `binary_operators` (structural mode),
+    // no operator children appear — the operator bytes are consumed
+    // during parsing and live only in the source gap between operand
+    // spans, recovered via `recover_binary_op`.
+    //
+    // When NOT inlined (prettify mode), operator children have
+    // `rule_kind() == BbnfBootstrapRuleKind::binary_operators` and
+    // their span text carries the actual operator token.
     let mut operands: Vec<BbnfBootstrapNodeView<'a>> = Vec::new();
-    let mut inline_ops: Vec<&str> = Vec::new();
+    let mut inline_ops: Vec<&'a str> = Vec::new();
     for child in &all_children {
-        let text = child.span_text().trim();
-        if text == "<<" || text == ">>" || text == "-" {
-            inline_ops.push(match text {
-                "<<" => "<<",
-                ">>" => ">>",
-                "-" => "-",
-                _ => unreachable!(),
-            });
+        if child.rule_kind() == BbnfBootstrapRuleKind::binary_operators {
+            inline_ops.push(child.span_text().trim());
         } else {
             operands.push(*child);
         }
     }
 
     if operands.len() <= 1 {
-        // Single operand — no binary operators to apply.
         let only = operands
             .into_iter()
             .next()
@@ -358,14 +357,15 @@ fn lower_binary_factor<'a>(
     let mut op_iter = inline_ops.into_iter();
 
     for operand in iter {
-        // Prefer inline operator children (when binary_operators rule
-        // was not inlined). Fall back to gap recovery (when it was).
+        // Prefer structurally-identified operator children; fall back
+        // to source-gap recovery when the rule was inlined away.
         let op_text = op_iter.next().or_else(|| {
             recover_binary_op(input, prev_end, operand.span().0)
         }).unwrap_or_else(|| {
             panic!(
-                "lower/expression.rs: binary_factor failed to recover \
-                 operator from source gap {:?} (chain text = {:?})",
+                "lower/expression.rs: binary_factor could not resolve \
+                 operator — no binary_operators child and source gap \
+                 {:?} contains no recognized token (chain = {:?})",
                 &input[prev_end as usize..operand.span().0 as usize],
                 node.span_text(),
             )

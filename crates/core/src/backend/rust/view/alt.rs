@@ -244,6 +244,9 @@ fn emit_typed_enum_value_accessor(
         .map(|(name, variant)| {
             let v_ident = format_ident!("{}", name);
             match variant {
+                BranchVariant::Payload(BranchValueShape::Scalar(td)) if matches!(td, TypeDesc::Span) => {
+                    quote! { #v_ident(&'p str) }
+                }
                 BranchVariant::Payload(BranchValueShape::Scalar(td)) => {
                     let ty_ident = format_ident!(
                         "{}",
@@ -372,6 +375,18 @@ fn branch_value_shape(rule_id: bbnf_ir::RuleId, ir: &GrammarIR) -> Option<Branch
 
 /// AQ.6.C — emit the typed read for a scalar payload branch.
 fn emit_scalar_value_decode(td: &TypeDesc) -> TokenStream {
+    // AS.2: Span payloads decode as `&'p str` by indexing into the input.
+    if matches!(td, TypeDesc::Span) {
+        return quote! {
+            match __tape.payload_Span(__rec) {
+                Some((lo, hi)) => &self.input[lo as usize..hi as usize],
+                None => {
+                    let (lo, hi) = __cursor.span();
+                    &self.input[lo as usize..hi as usize]
+                }
+            }
+        };
+    }
     let ident = td.rust_ident().expect("scalar TypeDesc has rust_ident");
     let payload_fn = format_ident!("payload_{}", ident);
     let ty_ident = format_ident!("{}", ident);
@@ -387,6 +402,7 @@ fn emit_aggregate_value_decode(layout: &PayloadLayout) -> TokenStream {
         .fields
         .iter()
         .map(|f| match f.ty {
+            TypeDesc::Span => quote! { (0_u32, 0_u32) },
             TypeDesc::F64 => quote! { 0.0_f64 },
             TypeDesc::Bool => quote! { false },
             TypeDesc::I8 => quote! { 0_i8 },
@@ -434,6 +450,14 @@ fn emit_aggregate_value_decode(layout: &PayloadLayout) -> TokenStream {
                 },
                 TypeDesc::U64 => quote! {
                     u64::from_le_bytes(<[u8; 8]>::try_from(&__bytes[#offset..#end]).unwrap())
+                },
+                TypeDesc::Span => quote! {
+                    {
+                        let __raw = u64::from_le_bytes(
+                            <[u8; 8]>::try_from(&__bytes[#offset..#end]).unwrap()
+                        );
+                        (__raw as u32, (__raw >> 32) as u32)
+                    }
                 },
                 _ => unreachable!("aggregate layout planner only admits scalar TypeDescs"),
             }

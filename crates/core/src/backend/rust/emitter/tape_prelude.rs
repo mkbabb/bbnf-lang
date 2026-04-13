@@ -147,7 +147,20 @@ pub fn emit_tape_span_only_epilogue(variant_idx: u8) -> TokenStream {
 /// Declares `__span_lo`, `__payload_<rust_ident(td)>`, and
 /// `__has_payload`. Panics if `td` is not a scalar payload type —
 /// callers must gate on [`TypeDesc::is_scalar_payload`] first.
+///
+/// AS.2: `TypeDesc::Span` declares two `u32` locals (`__payload_lo`,
+/// `__payload_hi`) instead of a single typed variable — the two
+/// offsets are packed into one 8-byte payload slot by
+/// `push_leaf_with_Span`.
 pub fn emit_tape_span_only_scalar_prelude(td: &TypeDesc) -> TokenStream {
+    if matches!(td, TypeDesc::Span) {
+        return quote! {
+            let __span_lo = state.offset as u32;
+            let mut __payload_lo: u32 = 0;
+            let mut __payload_hi: u32 = 0;
+            let mut __has_payload = false;
+        };
+    }
     let rust_ident = td
         .rust_ident()
         .expect("emit_tape_span_only_scalar_prelude: non-scalar TypeDesc");
@@ -167,7 +180,30 @@ pub fn emit_tape_span_only_scalar_prelude(td: &TypeDesc) -> TokenStream {
 /// Stores the captured `__payload_<rust_ident(td)>` value into the
 /// tape's payload buffer via `push_leaf_with_<rust_ident(td)>`.
 /// View-layer accessors read it back in O(1) — zero span re-parsing.
+///
+/// AS.2: `TypeDesc::Span` commits the two `u32` locals (`__payload_lo`,
+/// `__payload_hi`) via `push_leaf_with_Span`.
 pub fn emit_tape_span_only_scalar_epilogue(td: &TypeDesc, variant_idx: u8) -> TokenStream {
+    if matches!(td, TypeDesc::Span) {
+        let variant_lit = variant_idx;
+        let meta_lit = META_IDX_ZERO;
+        return quote! {
+            {
+                let __vi: u8 = #variant_lit;
+                let __mi: u8 = #meta_lit;
+                Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with_Span(
+                    tape,
+                    ::bbnf::runtime::tape::TapeKind::Span,
+                    __span_lo,
+                    state.offset as u32,
+                    __vi,
+                    __mi,
+                    __payload_lo,
+                    __payload_hi,
+                ))
+            }
+        };
+    }
     let rust_ident = td
         .rust_ident()
         .expect("emit_tape_span_only_scalar_epilogue: non-scalar TypeDesc");

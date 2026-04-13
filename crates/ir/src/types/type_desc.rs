@@ -78,14 +78,14 @@ impl TypeDesc {
     /// `push_leaf_with_<T>` and read back via `payload_<T>` — zero
     /// re-parse from the source span.
     ///
-    /// NOTE: `Span` is NOT yet admitted. The `push_leaf_with_Span` /
-    /// `payload_Span` builder/tape methods do not exist. Span scalar
-    /// admission is a Phase 2 item (AR.2) that requires builder +
-    /// view wire-up alongside the type_desc change.
+    /// `Span` is stored as two packed `u32` values (lo, hi) = 8 bytes
+    /// in one payload slot, enabling O(1) sub-span retrieval without
+    /// re-scanning the source text.
     pub fn is_scalar_payload(&self) -> bool {
         matches!(
             self,
-            TypeDesc::F64
+            TypeDesc::Span
+                | TypeDesc::F64
                 | TypeDesc::Bool
                 | TypeDesc::I8
                 | TypeDesc::U8
@@ -104,7 +104,7 @@ impl TypeDesc {
     /// instead of always allocating the legacy 8-byte slot.
     pub fn payload_size_bytes(&self) -> Option<u8> {
         match self {
-            TypeDesc::F64 | TypeDesc::I64 | TypeDesc::U64 => Some(8),
+            TypeDesc::Span | TypeDesc::F64 | TypeDesc::I64 | TypeDesc::U64 => Some(8),
             TypeDesc::I32 | TypeDesc::U32 => Some(4),
             TypeDesc::I16 | TypeDesc::U16 => Some(2),
             TypeDesc::Bool | TypeDesc::I8 | TypeDesc::U8 => Some(1),
@@ -122,6 +122,7 @@ impl TypeDesc {
     /// `None` for non-scalar types.
     pub fn rust_ident(&self) -> Option<&'static str> {
         match self {
+            TypeDesc::Span => Some("Span"),
             TypeDesc::F64 => Some("f64"),
             TypeDesc::Bool => Some("bool"),
             TypeDesc::I8 => Some("i8"),

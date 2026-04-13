@@ -390,6 +390,27 @@ impl TapeBuilder {
         self.push_leaf_with_scalar::<u64>(kind, span_lo, span_hi, variant_idx, meta_idx, value)
     }
 
+    /// Append a leaf record with a `Span` payload (lo: u32, hi: u32).
+    ///
+    /// The two u32 offsets are packed into a single 8-byte payload slot
+    /// as `lo | (hi << 32)` — the same slot width as `u64`/`f64`.
+    /// The view layer unpacks via [`Tape::payload_Span`].
+    #[inline]
+    #[allow(non_snake_case)]
+    pub fn push_leaf_with_Span(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        span_hi: u32,
+        variant_idx: u8,
+        meta_idx: u8,
+        value_lo: u32,
+        value_hi: u32,
+    ) -> TapeOffset {
+        let combined: u64 = (value_lo as u64) | ((value_hi as u64) << 32);
+        self.push_leaf_with_scalar::<u64>(kind, span_lo, span_hi, variant_idx, meta_idx, combined)
+    }
+
     /// Append a leaf record carrying an aggregate (multi-field)
     /// payload of up to 16 bytes.
     ///

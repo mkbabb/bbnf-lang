@@ -35,8 +35,19 @@ fn u8_then_u32_inserts_alignment_padding() {
 
 #[test]
 fn non_scalar_field_rejects_layout() {
-    let layout = plan_layout(&[TypeDesc::F64, TypeDesc::Span]);
+    // Enum is not a scalar — layout should be rejected.
+    let layout = plan_layout(&[TypeDesc::F64, TypeDesc::Enum]);
     assert!(layout.is_none());
+}
+
+#[test]
+fn span_field_packs_as_8_bytes() {
+    // AS.2: Span is now a scalar payload (two packed u32s = 8 bytes).
+    let layout = plan_layout(&[TypeDesc::F64, TypeDesc::Span]).expect("layout");
+    // f64 at 0..8, Span at 8..16.
+    assert_eq!(layout.fields[0].offset, 0);
+    assert_eq!(layout.fields[1].offset, 8);
+    assert_eq!(layout.total_bytes, 16);
 }
 
 #[test]

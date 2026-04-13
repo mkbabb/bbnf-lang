@@ -307,6 +307,15 @@ fn kv_pair_field_read(field: &PayloadField) -> TokenStream {
                     .expect("kv_pair slice is 8 bytes"),
             )
         },
+        TypeDesc::Span => quote! {
+            {
+                let __raw = u64::from_le_bytes(
+                    <[u8; 8]>::try_from(&__bytes[#offset..#end])
+                        .expect("kv_pair slice is 8 bytes"),
+                );
+                (__raw as u32, (__raw >> 32) as u32)
+            }
+        },
         _ => unreachable!("KV-pair value must be a scalar TypeDesc"),
     }
 }
@@ -314,6 +323,7 @@ fn kv_pair_field_read(field: &PayloadField) -> TokenStream {
 /// Emit the zero value for a KV-pair value field.
 fn kv_pair_field_zero(td: &TypeDesc) -> TokenStream {
     match td {
+        TypeDesc::Span => quote! { (0_u32, 0_u32) },
         TypeDesc::F64 => quote! { 0.0_f64 },
         TypeDesc::Bool => quote! { false },
         TypeDesc::I8 => quote! { 0_i8 },

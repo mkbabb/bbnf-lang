@@ -76,11 +76,12 @@ pub struct RustEmitCtx {
     alt_context_stack: Vec<(Option<syn::Ident>, Option<TapeSurgeryCtx>)>,
     /// AQ.6.A: the rule body's projected scalar payload type, sourced
     /// directly from `ir.types[rule_id]` in `pre_compile_rule_body`.
-    /// `Some(td)` iff `td.is_scalar_payload()` — Bool / U8 / I8 / U16 /
-    /// I16 / U32 / I32 / U64 / I64 / F64. The rule prelude declares the
-    /// matching `__payload_<T>` local; the body sets it via the leaf
-    /// emitter; the rule epilogue selects the matching `push_leaf_with_<T>`
-    /// (or `push_leaf` when `__has_payload` is false).
+    /// `Some(td)` iff `td.is_scalar_payload()` — Span / Bool / U8 / I8 /
+    /// U16 / I16 / U32 / I32 / U64 / I64 / F64. The rule prelude declares
+    /// the matching `__payload_<T>` local (or `__payload_lo`/`__payload_hi`
+    /// for Span); the body sets it via the leaf emitter; the rule epilogue
+    /// selects the matching `push_leaf_with_<T>` (or `push_leaf` when
+    /// `__has_payload` is false).
     pub payload_type: Option<TypeDesc>,
     /// AQ.6.B: the rule body's projected aggregate payload layout,
     /// sourced from `ir.payload_layouts` in `pre_compile_rule_body`.

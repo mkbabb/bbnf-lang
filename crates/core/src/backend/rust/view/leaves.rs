@@ -41,14 +41,40 @@ pub fn emit_leaf_accessors(rule: &IrRule, rule_name: &str, type_desc: &TypeDesc)
         }
     });
 
-    // AQ.6.A: scalar-typed views uniformly read through the
-    // generalized `tape.payload_<rust_ident>(rec)` accessor with an
-    // O(1) fast path and a span-parse fallback. Bool keeps its
-    // historical `"true"` literal comparison fallback (it cannot be
-    // `.parse()`-d); U32 keeps its hex-digit fallback because the
-    // typical U32-typed rule is a fused hex scan whose underlying
-    // span is a hex string, not a base-10 number.
-    if type_desc.is_scalar_payload() {
+    // AS.2: Span-typed views decode (lo, hi) from the tape payload
+    // and return `&'p str` by indexing into the input. Falls back to
+    // the record's own span when no payload is present.
+    if matches!(type_desc, TypeDesc::Span) {
+        methods.push(quote! {
+            /// Get the sub-span value as a string slice.
+            ///
+            /// Payload-first: reads the packed (lo, hi) u32 pair from
+            /// the tape payload buffer in O(1). Falls back to the
+            /// record's own span text if no payload is present.
+            #[inline]
+            pub fn value(&self) -> &'p str {
+                let tape = self.cursor.tape();
+                let rec = self.cursor.record();
+                if let Some((lo, hi)) = tape.payload_Span(rec) {
+                    return &self.input[lo as usize..hi as usize];
+                }
+                self.span_text()
+            }
+
+            /// Alias for backward compatibility. Prefer `.value()`.
+            #[inline]
+            pub fn as_span(&self) -> &'p str {
+                self.value()
+            }
+        });
+    } else if type_desc.is_scalar_payload() {
+        // AQ.6.A: scalar-typed views uniformly read through the
+        // generalized `tape.payload_<rust_ident>(rec)` accessor with an
+        // O(1) fast path and a span-parse fallback. Bool keeps its
+        // historical `"true"` literal comparison fallback (it cannot be
+        // `.parse()`-d); U32 keeps its hex-digit fallback because the
+        // typical U32-typed rule is a fused hex scan whose underlying
+        // span is a hex string, not a base-10 number.
         let rust_ident = type_desc
             .rust_ident()
             .expect("scalar TypeDesc has rust_ident");
@@ -258,6 +284,15 @@ fn aggregate_field_read(field: &bbnf_ir::passes::PayloadField) -> TokenStream {
                     .expect("aggregate slice is 8 bytes"),
             )
         },
+        TypeDesc::Span => quote! {
+            {
+                let __raw = u64::from_le_bytes(
+                    <[u8; 8]>::try_from(&__bytes[#offset..#end])
+                        .expect("aggregate slice is 8 bytes"),
+                );
+                (__raw as u32, (__raw >> 32) as u32)
+            }
+        },
         _ => unreachable!("aggregate layout planner only admits scalar TypeDescs"),
     }
 }
@@ -266,6 +301,7 @@ fn aggregate_field_read(field: &bbnf_ir::passes::PayloadField) -> TokenStream {
 /// the aggregate view's no-payload fallback.
 fn scalar_zero_init(td: &TypeDesc) -> TokenStream {
     match td {
+        TypeDesc::Span => quote! { (0_u32, 0_u32) },
         TypeDesc::F64 => quote! { 0.0_f64 },
         TypeDesc::Bool => quote! { false },
         TypeDesc::I8 => quote! { 0_i8 },

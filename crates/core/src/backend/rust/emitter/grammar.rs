@@ -533,6 +533,54 @@ fn emit_alt_mustape_prelude_epilogue(
     let variant_lit = rule_idx_u8;
     let scalar = payload_type.filter(|td| td.is_scalar_payload());
     match scalar {
+        // AS.2: Span payload declares two u32 locals and commits via
+        // `push_leaf_with_Span(tape, kind, span_lo, span_hi, vi, mi,
+        // payload_lo, payload_hi)`.
+        Some(td) if matches!(td, TypeDesc::Span) => (
+            quote! {
+                let __span_lo = state.offset as u32;
+                let __variant_idx: u8 = #variant_lit;
+                let mut __branch_idx: u8 = 0;
+                let mut __has_children = false;
+                let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
+                let mut __payload_lo: u32 = 0;
+                let mut __payload_hi: u32 = 0;
+                let mut __has_payload = false;
+            },
+            quote! {
+                if __has_children {
+                    Some(::bbnf::runtime::tape::TapeBuilder::push_compound(
+                        tape,
+                        ::bbnf::runtime::tape::TapeKind::Rule,
+                        __children,
+                        __span_lo,
+                        state.offset as u32,
+                        __variant_idx,
+                        __branch_idx,
+                    ))
+                } else if __has_payload {
+                    Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with_Span(
+                        tape,
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        __span_lo,
+                        state.offset as u32,
+                        __variant_idx,
+                        __branch_idx,
+                        __payload_lo,
+                        __payload_hi,
+                    ))
+                } else {
+                    Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(
+                        tape,
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        __span_lo,
+                        state.offset as u32,
+                        __variant_idx,
+                        __branch_idx,
+                    ))
+                }
+            },
+        ),
         Some(td) => {
             let rust_ident = td.rust_ident().expect("scalar TypeDesc has rust_ident");
             let payload_local = format_ident!("__payload_{}", rust_ident);
@@ -629,6 +677,41 @@ fn emit_alt_span_only_prelude_epilogue(
     let variant_lit = rule_idx_u8;
     let scalar = payload_type.filter(|td| td.is_scalar_payload());
     match scalar {
+        // AS.2: Span payload declares two u32 locals and commits via
+        // `push_leaf_with_Span`.
+        Some(td) if matches!(td, TypeDesc::Span) => (
+            quote! {
+                let __span_lo = state.offset as u32;
+                let __variant_idx: u8 = #variant_lit;
+                let mut __branch_idx: u8 = 0;
+                let mut __payload_lo: u32 = 0;
+                let mut __payload_hi: u32 = 0;
+                let mut __has_payload = false;
+            },
+            quote! {
+                if __has_payload {
+                    Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with_Span(
+                        tape,
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        __span_lo,
+                        state.offset as u32,
+                        __variant_idx,
+                        __branch_idx,
+                        __payload_lo,
+                        __payload_hi,
+                    ))
+                } else {
+                    Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(
+                        tape,
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        __span_lo,
+                        state.offset as u32,
+                        __variant_idx,
+                        __branch_idx,
+                    ))
+                }
+            },
+        ),
         Some(td) => {
             let rust_ident = td.rust_ident().expect("scalar TypeDesc has rust_ident");
             let payload_local = format_ident!("__payload_{}", rust_ident);

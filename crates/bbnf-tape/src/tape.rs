@@ -343,6 +343,21 @@ impl Tape {
         self.payload_scalar::<u64>(rec)
     }
 
+    /// Read a `Span` payload (lo: u32, hi: u32) from a leaf record.
+    ///
+    /// The two u32 offsets were packed into a single 8-byte slot by
+    /// [`crate::TapeBuilder::push_leaf_with_Span`] as
+    /// `lo | (hi << 32)`. Returns `None` when the record carries no
+    /// payload (`payload_idx == 0`).
+    #[inline]
+    #[allow(non_snake_case)]
+    pub fn payload_Span(&self, rec: &TapeRec) -> Option<(u32, u32)> {
+        let raw = self.payload_u64(rec)?;
+        let lo = raw as u32;
+        let hi = (raw >> 32) as u32;
+        Some((lo, hi))
+    }
+
     /// Read a slice of raw aggregate payload bytes for a record
     /// that was pushed via
     /// [`crate::TapeBuilder::push_leaf_with_aggregate`].

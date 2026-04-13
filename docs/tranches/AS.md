@@ -260,14 +260,14 @@ dispatch table. `wc -l` shows >= 350 LOC net reduction.
 
 ## Operational directives
 
-- **6 parallel agents per wave**, isolated worktrees.
-- **NO workarounds, NO hacks, NO `#[allow(...)]` to mask issues**.
-- **Commit frequently with `/commit`**.
-- **Every claimed perf win has a samply diff**.
-- **Clear ALL `.bbnf-cache` dirs before any bench or regen**.
-- **`cargo expand` evidence for every codegen claim**.
+See `INSTRUCTIONS.md` at the repo root for the full operational
+protocol: cache clearing, bench/test/expand/samply recipes, agent
+orchestration rules, code discipline, and architecture invariants.
+
+Additional AS-specific directive:
 - **Verify SIMD paths fire**: `cargo asm` or runtime feature
-  detection logs for both NEON and SSE4.2 paths.
+  detection logs for both NEON and SSE4.2 paths in
+  `parse-that/rust/parse_that/src/parsers/scan/number_simd.rs`.
 
 ## Critical files
 

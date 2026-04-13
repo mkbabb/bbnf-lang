@@ -220,20 +220,24 @@ Always redirect `cargo expand` to a file — output is typically
 
 ## Architecture invariants
 
-- **One codegen path.** No combinator fallback. One regex system
-  (HIR). KISS.
-- **One propagate() method**, not suffixed variants. The solver
-  determines optimal strategy internally.
+- **One codegen path.** No fallbacks. One regex system (HIR). KISS.
+- **Clean tier boundaries.** Each crate owns a responsibility;
+  analysis lives in the library crate, codegen decisions in the
+  IR/backend crates. Data crosses boundaries through well-defined
+  structs, not re-derivation. If two crates compute the same thing,
+  one is wrong.
 - **General-purpose constructs in own crate(s)**, not stuffed into
   domain crates. The egraph substrate, cost model, and CSP solver
   are general-purpose.
-- **Regex analysis in bbnf-regex**, not bbnf-lang. Only IR-specific
-  items (kernel coverage, recognizer mining, codegen routing) in
-  bbnf-lang.
-- **`RegexInfo` is the sole bridge** between the regex library tier
-  and the codegen tier. All classification, HIR, FIRST sets, and
-  engine feasibility flow through it.
+- **No overfitting.** Don't name a specific struct, function, or
+  pattern as "the one true way" in design documents. Architecture
+  evolves; principles endure. The principle is separation of
+  concerns; the implementation is whatever serves it best today.
 - **Fixed-point loops use LLVM-style Changed bool**, not structural
   hash. Content hash as debug_assert only.
 - **Decision points are pluggable** (cost model, pattern registry,
   rewrite rules), not hardcoded branches.
+- **Fold new work into existing systems.** No orthogonal subsystems.
+  A new optimization integrates with the existing pass pipeline,
+  cost model, and rewrite framework — it doesn't create a parallel
+  one.

@@ -654,8 +654,18 @@ fn find_type_annotation_child<'a>(
 ///    under HEAD's hand-patched schema where the term may surface
 ///    under a dedupe-dropped rule_kind or inline directly as a
 ///    `literal` / `regex` / `identifier` child.
-/// 3. Collect the optional `modifier` via `find_child_by_kind` and
-///    apply its quantifier to the base term.
+/// 3. Collect the optional `modifier` and apply its quantifier to the
+///    base term. Two shapes are handled:
+///
+///    a) Direct modifier child with `rule_kind() == modifier` (when
+///       the modifier's tape record carries its own variant_idx).
+///    b) Modifier wrapped in an optional `Repeat(vi=0)` placeholder
+///       (the common case under clean-regen: the `?` optional wrapper
+///       pushes a `TapeKind::Repeat` compound with `variant_idx = 0`
+///       which maps to `int_lit` in the RuleKind enum, masking the
+///       inner modifier's identity). Detected by span-text
+///       classification: a non-empty child whose trimmed text is one
+///       of `?w`, `?`, `*`, `+`.
 fn lower_factor<'a>(node: BbnfBootstrapNodeView<'a>, ctx: &mut LowerCtx<'a>) -> IrNode {
     let term = find_child_by_kind(node, BbnfBootstrapRuleKind::term)
         .or_else(|| find_term_child_by_elimination(node))
@@ -667,14 +677,22 @@ fn lower_factor<'a>(node: BbnfBootstrapNodeView<'a>, ctx: &mut LowerCtx<'a>) -> 
         });
     let base = lower_term(term, ctx);
 
-    // Modifier is optional. `find_child_by_kind` locates the
-    // preserved compound; an absent modifier either yields `None` or
-    // an empty-placeholder Rule record (zero-width span) that we
-    // defensively ignore.
+    // Modifier detection: first try rule_kind-based lookup (works when
+    // the modifier compound carries its own variant_idx). Fall back to
+    // span-text classification for the clean-regen shape where the
+    // modifier sits inside a Repeat(vi=0) optional wrapper whose
+    // rule_kind maps to `int_lit` instead of `modifier`.
     if let Some(mod_node) = find_child_by_kind(node, BbnfBootstrapRuleKind::modifier)
         && mod_node.span().1 > mod_node.span().0
     {
         return apply_modifier(base, mod_node.span_text());
+    }
+    // Span-text fallback: scan children for a modifier token.
+    for child in node.children() {
+        let trimmed = child.span_text().trim();
+        if matches!(trimmed, "?w" | "?" | "*" | "+") {
+            return apply_modifier(base, trimmed);
+        }
     }
     base
 }

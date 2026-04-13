@@ -165,9 +165,18 @@ pub(crate) fn plan_regex_scanner(pattern: &str, opts: &EmitOpts) -> Option<Scann
             crate::backend::kernels::identifier::emit_call_with_escapes(),
         )),
         RegexClass::QuotedString { .. } => Some(shared_quoted_string_scanner()),
+        // Generic (non-strict) number: no leading-zero rejection, optional
+        // sign. CSS-style numbers route through the generic kernel.
         RegexClass::Numeric {
-            allows_sign: false, ..
-        } => Some(shared_json_number_scanner(false)),
+            reject_leading_zero: false,
+            ..
+        } => Some(ScannerPlan::Kernel(
+            if opts.fuse_numbers {
+                crate::backend::kernels::number::emit_call_generic_f64()
+            } else {
+                crate::backend::kernels::number::emit_call_generic_span()
+            },
+        )),
         // Tranche W phase 5d: route CharClassQuantified through the
         // hoisted scanner kernels for the digit / alnum / hex shapes.
         // Patterns the kernel can't handle (negated, bounded, mixed)

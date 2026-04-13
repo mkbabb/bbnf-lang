@@ -17,3 +17,17 @@ pub fn emit_call_span() -> TokenStream {
 pub fn emit_call_fused() -> TokenStream {
     quote! { ::parse_that::scan_number_strict_fused(state) }
 }
+
+/// Emit a call to the generic (non-strict) number span scanner.
+/// Accepts CSS-style numbers: optional sign, leading zero, no
+/// leading-zero rejection. Used for `Numeric { reject_leading_zero:
+/// false }` patterns.
+pub fn emit_call_generic_span() -> TokenStream {
+    quote! { ::parse_that::scan_number_span(state) }
+}
+
+/// Emit a call to the generic (non-strict) fused number scanner.
+/// Returns `Option<f64>` via Eisel-Lemire. Accepts CSS-style numbers.
+pub fn emit_call_generic_f64() -> TokenStream {
+    quote! { ::parse_that::scan_number_f64(state) }
+}

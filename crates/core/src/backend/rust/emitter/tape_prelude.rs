@@ -34,6 +34,7 @@
 //!             __span_lo,
 //!             state.offset as u32,
 //!             PAIR_VIDX,
+//!             0u8,  // meta_idx — 0 for non-Alt rules
 //!         ))
 //!     }
 //! }
@@ -86,6 +87,7 @@ pub fn emit_must_tape_epilogue(variant_idx: u8) -> TokenStream {
             __span_lo,
             state.offset as u32,
             #variant_lit,
+            0u8,
         ))
     }
 }
@@ -114,6 +116,7 @@ pub fn emit_tape_span_only_epilogue(variant_idx: u8) -> TokenStream {
             __span_lo,
             state.offset as u32,
             #variant_lit,
+            0u8,
         ))
     }
 }
@@ -166,6 +169,7 @@ pub fn emit_tape_span_only_scalar_epilogue(td: &TypeDesc, variant_idx: u8) -> To
             __span_lo,
             state.offset as u32,
             #variant_lit,
+            0u8,
             #payload_ident,
         ))
     }
@@ -228,6 +232,7 @@ pub fn emit_tape_span_only_aggregate_epilogue(
                 __span_lo,
                 state.offset as u32,
                 #variant_lit,
+                0u8,
                 &__aggregate_buf[..#total_bytes],
             ))
         } else {
@@ -237,6 +242,7 @@ pub fn emit_tape_span_only_aggregate_epilogue(
                 __span_lo,
                 state.offset as u32,
                 #variant_lit,
+                0u8,
             ))
         }
     }
@@ -277,6 +283,7 @@ pub fn emit_must_tape_aggregate_epilogue(
                 __span_lo,
                 state.offset as u32,
                 #variant_lit,
+                0u8,
                 &__aggregate_buf[..#total_bytes],
             ))
         } else {
@@ -287,6 +294,7 @@ pub fn emit_must_tape_aggregate_epilogue(
                 __span_lo,
                 state.offset as u32,
                 #variant_lit,
+                0u8,
             ))
         }
     }

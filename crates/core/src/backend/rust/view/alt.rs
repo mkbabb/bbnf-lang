@@ -1,16 +1,16 @@
 //! View emission for `MustTape` Alt rules.
 //!
 //! An Alt rule's view exposes `.as_<variant>()` discriminated
-//! accessors that test `variant_idx` and return the chosen branch's
-//! child view wrapped in `Option`. Heterogeneous Alts with
-//! sub-variant coercion also generate sub-variant accessors.
+//! accessors that test `meta_idx` (the branch index) and return the
+//! chosen branch's child view wrapped in `Option`. Heterogeneous
+//! Alts with sub-variant coercion also generate sub-variant accessors.
 //!
 //! AQ.6.C — typed-enum dispatch: when every branch of an Alt has a
 //! payload-eligible projected type (scalar via
 //! [`TypeDesc::is_scalar_payload`] OR aggregate via
 //! `ir.payload_layouts`), the generator emits an additional
 //! `<RuleName>Value` enum and a `.value()` accessor that returns
-//! the chosen branch's typed value via `match variant_idx`. The
+//! the chosen branch's typed value via `match meta_idx`. The
 //! enum supplements the existing accessors — it does not replace
 //! them, so consumers can still walk the cursor tree directly.
 
@@ -22,7 +22,7 @@ use quote::{format_ident, quote};
 /// Emit typed Alt variant accessors for a rule whose body is an `Alt`.
 ///
 /// Returns an `impl` block with `.as_<variant>()` methods that
-/// dispatch on `variant_idx` and `.is_<variant>()` discriminator
+/// dispatch on `meta_idx` (branch index) and `.is_<variant>()` discriminator
 /// predicates.
 pub fn emit_alt_accessors(
     rule: &IrRule,
@@ -70,7 +70,7 @@ pub fn emit_alt_accessors(
             #[doc = #doc_as]
             #[inline]
             pub fn #as_ident(&self) -> ::core::option::Option<#view_ty<'p>> {
-                if self.variant_idx() == #idx_u8 {
+                if self.cursor.meta_idx() == #idx_u8 {
                     self.cursor.child(0).map(|c| #view_ty::from_cursor(c, self.input))
                 } else {
                     None
@@ -80,7 +80,7 @@ pub fn emit_alt_accessors(
             #[doc = #doc_is]
             #[inline]
             pub fn #is_ident(&self) -> bool {
-                self.variant_idx() == #idx_u8
+                self.cursor.meta_idx() == #idx_u8
             }
         });
     }
@@ -109,7 +109,7 @@ pub fn emit_alt_accessors(
             #[doc = #doc_sv]
             #[inline]
             pub fn #as_ident(&self) -> ::core::option::Option<#node_view_ident<'p>> {
-                if self.variant_idx() == #branch_idx {
+                if self.cursor.meta_idx() == #branch_idx {
                     self.cursor.child(0).map(|c| #node_view_ident::from_cursor(c, self.input))
                 } else {
                     None
@@ -118,7 +118,7 @@ pub fn emit_alt_accessors(
 
             #[inline]
             pub fn #is_ident(&self) -> bool {
-                self.variant_idx() == #branch_idx
+                self.cursor.meta_idx() == #branch_idx
             }
         });
     }
@@ -276,12 +276,12 @@ fn emit_typed_enum_value_accessor(
         #[allow(dead_code)]
         impl<'p> #view_ident<'p> {
             /// Decode the chosen branch's typed payload into a
-            /// matching enum variant. Returns `None` for variant
+            /// matching enum variant. Returns `None` for branch
             /// indices outside the rule's branch set (e.g.
             /// recovery records).
             #[inline]
             pub fn value(&self) -> ::core::option::Option<#enum_ident> {
-                match self.variant_idx() {
+                match self.cursor.meta_idx() {
                     #(#dispatch_arms,)*
                     _ => None,
                 }

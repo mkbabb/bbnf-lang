@@ -160,10 +160,10 @@ impl RustEmitter {
     /// Emit a Tape-tier (or Lazy-tier) rule: the standard prelude +
     /// body + epilogue pattern from Tranche AC.2.
     ///
-    /// Tranche AK.1: for Alt-bodied rules, the epilogue uses a
-    /// `__branch_idx` variable (set per-arm by the Alt emitter)
-    /// instead of the rule's global ID. This gives the view layer
-    /// correct branch discrimination.
+    /// AR.1.1: ALL rules stamp `rule.id as u8` into `variant_idx`
+    /// (rule identity). Alt-bodied rules additionally stamp
+    /// `__branch_idx` into `meta_idx` (branch identity); non-Alt
+    /// rules pass `0u8` as `meta_idx`.
     ///
     /// Tranche AM.3: for Alt-bodied `MustTape` rules, per-branch
     /// tape surgery emits `push_leaf` or `mark_children` +
@@ -182,10 +182,13 @@ impl RustEmitter {
         class: MaterializationClass,
     ) -> TokenStream {
         let is_alt_body = matches!(&rule.body, IrNode::Alt(_, _));
+        let rule_idx_u8 = Self::variant_idx(rule);
 
         let (prelude, epilogue) = if is_alt_body {
-            // Alt-bodied rules use __branch_idx for the variant
-            // discriminator. The Alt emitter sets __branch_idx per arm.
+            // AR.1.1: Alt-bodied rules stamp `rule.id` into
+            // `variant_idx` (rule identity, always) and `__branch_idx`
+            // into `meta_idx` (branch identity). The Alt emitter sets
+            // `__branch_idx` per arm.
             //
             // AQ.6.A: payload variables are declared based on
             // ctx.payload_type (TypeDesc directly). The epilogue checks
@@ -198,17 +201,16 @@ impl RustEmitter {
                     // declares __has_children + __children; compound
                     // branches set them via the Alt emitter. The
                     // epilogue checks __has_children at runtime.
-                    emit_alt_mustape_prelude_epilogue(ctx.payload_type.as_ref())
+                    emit_alt_mustape_prelude_epilogue(rule_idx_u8, ctx.payload_type.as_ref())
                 }
                 MaterializationClass::TapeSpanOnly => {
                     // AQ.6.A: payload-bearing Alt leaves use
                     // push_leaf_with_<T> based on ctx.payload_type.
-                    emit_alt_span_only_prelude_epilogue(ctx.payload_type.as_ref())
+                    emit_alt_span_only_prelude_epilogue(rule_idx_u8, ctx.payload_type.as_ref())
                 }
                 MaterializationClass::TransparentElide => unreachable!(),
             }
         } else {
-            let rule_idx_u8 = Self::variant_idx(rule);
             // AQ.6.B: aggregate payload layout takes precedence over
             // the legacy scalar payload — when both are set the
             // aggregate path subsumes the scalar capture by writing
@@ -512,8 +514,10 @@ impl RustEmitter {
 /// case based on `payload_type`. When `payload_type` is `None`, the
 /// epilogue uses bare `push_leaf` for leaf branches.
 fn emit_alt_mustape_prelude_epilogue(
+    rule_idx_u8: u8,
     payload_type: Option<&TypeDesc>,
 ) -> (TokenStream, TokenStream) {
+    let variant_lit = rule_idx_u8;
     let scalar = payload_type.filter(|td| td.is_scalar_payload());
     match scalar {
         Some(td) => {
@@ -539,6 +543,7 @@ fn emit_alt_mustape_prelude_epilogue(
                             __children,
                             __span_lo,
                             state.offset as u32,
+                            #variant_lit,
                             __branch_idx,
                         ))
                     } else if __has_payload {
@@ -547,6 +552,7 @@ fn emit_alt_mustape_prelude_epilogue(
                             ::bbnf::runtime::tape::TapeKind::Span,
                             __span_lo,
                             state.offset as u32,
+                            #variant_lit,
                             __branch_idx,
                             #payload_local,
                         ))
@@ -556,6 +562,7 @@ fn emit_alt_mustape_prelude_epilogue(
                             ::bbnf::runtime::tape::TapeKind::Span,
                             __span_lo,
                             state.offset as u32,
+                            #variant_lit,
                             __branch_idx,
                         ))
                     }
@@ -577,6 +584,7 @@ fn emit_alt_mustape_prelude_epilogue(
                         __children,
                         __span_lo,
                         state.offset as u32,
+                        #variant_lit,
                         __branch_idx,
                     ))
                 } else {
@@ -585,6 +593,7 @@ fn emit_alt_mustape_prelude_epilogue(
                         ::bbnf::runtime::tape::TapeKind::Span,
                         __span_lo,
                         state.offset as u32,
+                        #variant_lit,
                         __branch_idx,
                     ))
                 }
@@ -597,8 +606,10 @@ fn emit_alt_mustape_prelude_epilogue(
 /// `TapeSpanOnly` rule, parameterized by the projected scalar payload
 /// type. When `payload_type` is `None`, emits bare `push_leaf`.
 fn emit_alt_span_only_prelude_epilogue(
+    rule_idx_u8: u8,
     payload_type: Option<&TypeDesc>,
 ) -> (TokenStream, TokenStream) {
+    let variant_lit = rule_idx_u8;
     let scalar = payload_type.filter(|td| td.is_scalar_payload());
     match scalar {
         Some(td) => {
@@ -621,6 +632,7 @@ fn emit_alt_span_only_prelude_epilogue(
                             ::bbnf::runtime::tape::TapeKind::Span,
                             __span_lo,
                             state.offset as u32,
+                            #variant_lit,
                             __branch_idx,
                             #payload_local,
                         ))
@@ -630,6 +642,7 @@ fn emit_alt_span_only_prelude_epilogue(
                             ::bbnf::runtime::tape::TapeKind::Span,
                             __span_lo,
                             state.offset as u32,
+                            #variant_lit,
                             __branch_idx,
                         ))
                     }
@@ -647,6 +660,7 @@ fn emit_alt_span_only_prelude_epilogue(
                     ::bbnf::runtime::tape::TapeKind::Span,
                     __span_lo,
                     state.offset as u32,
+                    #variant_lit,
                     __branch_idx,
                 ))
             },

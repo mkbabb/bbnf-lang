@@ -15,9 +15,10 @@
 //! - `.span()` — the source span `(lo, hi)` as a byte range.
 //! - `.span_text()` — the source substring for the span.
 //! - `.input()` — the full input string borrow.
-//! - `.variant_idx()` — codegen-assigned discriminator for Alt
-//!   rules (which branch was chosen) and for heterogeneous
-//!   sub-variant coercion.
+//! - `.variant_idx()` — rule identity discriminator (`rule.id`).
+//!   Always identifies which rule produced the record.
+//! - `.meta_idx()` — branch identity for Alt-bodied rules (which
+//!   branch was chosen); `0` for non-Alt rules.
 //! - `.children()` — iterator of child cursors, for `MustTape`
 //!   compound records (Seq/Alt/Repeat/Rule).
 //! - `.child(i)` — the i-th direct child, for indexed access.

@@ -4,7 +4,7 @@
 //! record — the child run is marked at entry, every successful
 //! iteration pushes a child tape record (or runs as a
 //! side-effecting sub-parse), and the epilogue emits
-//! `push_compound(TapeKind::Repeat, children, lo, hi, 0)` once
+//! `push_compound(TapeKind::Repeat, children, lo, hi, 0, 0)` once
 //! the lo-bound is satisfied.
 //!
 //! `Optional` is a special-case Repeat with lo=0,hi=1; it also
@@ -66,6 +66,7 @@ impl RustEmitter {
                         __rpt_lo,
                         state.offset as u32,
                         0u8,
+                        0u8,
                     );
                     Some(())
                 } else {
@@ -104,6 +105,7 @@ impl RustEmitter {
                     __opt_children,
                     __opt_lo,
                     state.offset as u32,
+                    0u8,
                     0u8,
                 );
                 Some(())
@@ -160,6 +162,7 @@ impl RustEmitter {
                                 __rpt_lo,
                                 state.offset as u32,
                                 0u8,
+                                0u8,
                             );
                             break 'rpt_blk Some(());
                         } else {
@@ -193,6 +196,7 @@ impl RustEmitter {
                         __rpt_children,
                         __rpt_lo,
                         state.offset as u32,
+                        0u8,
                         0u8,
                     );
                     Some(())

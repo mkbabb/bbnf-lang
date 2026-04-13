@@ -65,27 +65,32 @@ pub fn emit_call(
                         }
                     }
                 }
-                // Scan for pivot byte.
+                // SIMD-accelerated scan for pivot / close / open.
                 loop {
-                    if state.offset >= state.src.len() {
-                        break;
-                    }
-                    let __pb = state.src.as_bytes()[state.offset];
-                    if __pb == #pivot {
-                        state.offset += 1;
-                        #trail_consume
-                        match #pivot_call {
-                            Some(_) => break, // Back to outer loop.
-                            None => {
-                                state.offset = __ds_start;
-                                return None;
+                    let __rem = &state.src.as_bytes()[state.offset..];
+                    match ::parse_that::find_first_of_3(__rem, #pivot, #close, #open) {
+                        Some((__off, __pb)) => {
+                            state.offset += __off;
+                            if __pb == #pivot {
+                                state.offset += 1;
+                                #trail_consume
+                                match #pivot_call {
+                                    Some(_) => break, // Back to outer loop.
+                                    None => {
+                                        state.offset = __ds_start;
+                                        return None;
+                                    }
+                                }
+                            } else {
+                                // close or open — let outer loop handle.
+                                break;
                             }
                         }
+                        None => {
+                            // No structural byte in remaining input.
+                            break;
+                        }
                     }
-                    if __pb == #close || __pb == #open {
-                        break; // Let outer loop handle delimiter.
-                    }
-                    state.offset += 1;
                 }
             }
         })()

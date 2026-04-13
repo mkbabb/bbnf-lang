@@ -170,34 +170,29 @@ pub(super) fn hash_dfa_structure(dfa: &Dfa) -> u64 {
     hash
 }
 
-/// Try to emit SIMD-accelerated scanning code for a self-loop state.
-pub(super) fn try_emit_accel_scan(accel: &StateAccel) -> Option<TokenStream> {
+/// Emit an expression that scans `haystack` for the first exit byte,
+/// returning `Option<usize>` (offset within the haystack slice).
+///
+/// Returns `None` if the strategy is not accelerable.
+pub(super) fn try_emit_accel_expr(accel: &StateAccel) -> Option<TokenStream> {
     match &accel.strategy {
         AccelStrategy::Memchr1(b) => {
             let b_lit = proc_macro2::Literal::byte_character(*b);
             Some(quote! {
-                if let Some(__skip) = ::parse_that::memchr::memchr(
+                ::parse_that::memchr::memchr(
                     #b_lit,
-                    &state.src_bytes[state.offset..]
-                ) {
-                    state.offset += __skip;
-                } else {
-                    state.offset = state.src_bytes.len();
-                }
+                    __accel_haystack,
+                )
             })
         }
         AccelStrategy::Memchr2(b1, b2) => {
             let b1_lit = proc_macro2::Literal::byte_character(*b1);
             let b2_lit = proc_macro2::Literal::byte_character(*b2);
             Some(quote! {
-                if let Some(__skip) = ::parse_that::memchr::memchr2(
+                ::parse_that::memchr::memchr2(
                     #b1_lit, #b2_lit,
-                    &state.src_bytes[state.offset..]
-                ) {
-                    state.offset += __skip;
-                } else {
-                    state.offset = state.src_bytes.len();
-                }
+                    __accel_haystack,
+                )
             })
         }
         AccelStrategy::Memchr3(b1, b2, b3) => {
@@ -205,16 +200,50 @@ pub(super) fn try_emit_accel_scan(accel: &StateAccel) -> Option<TokenStream> {
             let b2_lit = proc_macro2::Literal::byte_character(*b2);
             let b3_lit = proc_macro2::Literal::byte_character(*b3);
             Some(quote! {
-                if let Some(__skip) = ::parse_that::memchr::memchr3(
+                ::parse_that::memchr::memchr3(
                     #b1_lit, #b2_lit, #b3_lit,
-                    &state.src_bytes[state.offset..]
-                ) {
-                    state.offset += __skip;
-                } else {
-                    state.offset = state.src_bytes.len();
+                    __accel_haystack,
+                )
+            })
+        }
+        AccelStrategy::NibbleLut {
+            lo_lut, hi_lut, ..
+        } => {
+            let lo_elems: Vec<proc_macro2::Literal> =
+                lo_lut.iter().map(|&b| proc_macro2::Literal::u8_unsuffixed(b)).collect();
+            let hi_elems: Vec<proc_macro2::Literal> =
+                hi_lut.iter().map(|&b| proc_macro2::Literal::u8_unsuffixed(b)).collect();
+            Some(quote! {
+                {
+                    static __LO_LUT: [u8; 16] = [#(#lo_elems),*];
+                    static __HI_LUT: [u8; 16] = [#(#hi_elems),*];
+                    ::parse_that::find_first_of_nibble_lut(
+                        __accel_haystack,
+                        &__LO_LUT,
+                        &__HI_LUT,
+                    ).map(|(pos, _)| pos)
                 }
             })
         }
         _ => None,
     }
+}
+
+/// Emit a statement block that scans from `state.offset` using SIMD
+/// acceleration, advancing `state.offset` to the first exit byte (or
+/// to `state.src_bytes.len()` if no exit byte is found).
+///
+/// Used by the simple-loop (two-state) DFA path.
+pub(super) fn try_emit_accel_scan(accel: &StateAccel) -> Option<TokenStream> {
+    let expr = try_emit_accel_expr(accel)?;
+    Some(quote! {
+        {
+            let __accel_haystack = &state.src_bytes[state.offset..];
+            if let Some(__skip) = #expr {
+                state.offset += __skip;
+            } else {
+                state.offset = state.src_bytes.len();
+            }
+        }
+    })
 }

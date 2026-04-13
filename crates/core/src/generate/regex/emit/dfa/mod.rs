@@ -19,7 +19,7 @@
 mod helpers;
 mod table;
 
-use helpers::{build_class_predicate, try_emit_accel_scan};
+use helpers::{build_class_predicate, try_emit_accel_expr, try_emit_accel_scan};
 use table::emit_tier_b;
 
 use crate::generate::regex::cost_model::EmitOpts;
@@ -343,18 +343,19 @@ fn emit_general_state_machine(
                 .collect();
 
             // Phase 2.4: Check for SIMD acceleration on this self-loop state.
-            let accel_scan = if sid < accels.len() {
-                try_emit_accel_scan(&accels[sid])
+            let accel_expr = if sid < accels.len() {
+                try_emit_accel_expr(&accels[sid])
             } else {
                 None
             };
 
-            if let Some(accel_code) = accel_scan {
+            if let Some(accel_code) = accel_expr {
                 // SIMD-accelerated self-loop: skip ahead to exit byte.
                 arms.push(quote! {
                     #sid_lit => {
                         // SIMD-accelerated self-loop scan.
                         if __pos < __end {
+                            let __accel_haystack = &state.src_bytes[__pos..];
                             if let Some(__found) = #accel_code {
                                 let __skip_end = __pos + __found;
                                 __pos = __skip_end;

@@ -4,7 +4,6 @@
 //! dispatch codegen choose the same shared `parse_that` helpers.
 
 use proc_macro2::TokenStream;
-use quote::quote;
 
 use crate::generate::regex::cost_model::EmitOpts;
 use parse_that::regex::classify::{ClassRangeInfo, RegexClass};

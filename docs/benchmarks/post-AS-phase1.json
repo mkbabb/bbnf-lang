@@ -1,0 +1,104 @@
+{
+  "tag": "post-AS-phase1",
+  "description": "Post-AS Phase 1. CSS L4 parse activated: plan_regex_scanner now dispatches on Identifier sub-flags (allows_leading_dash, allows_double_dash_prefix, allows_escapes), routing CSS-flavored identifiers through CSS_IDENT_CONFIG. Vendor-prefixed properties (-webkit-*, -moz-*, etc.) now parse correctly. All bench targets operational.",
+  "arch": "aarch64-apple-darwin",
+  "tests": {
+    "grammar_roundtrip": {
+      "passed": 6,
+      "failed": 0,
+      "ignored": 0,
+      "grammars": ["json", "css_l4", "css_pretty", "bbnf", "ebnf", "google_sheets"]
+    },
+    "payload_layouts": {
+      "json": 3,
+      "css_l4": 11,
+      "total": 14
+    },
+    "bbnf_tape": { "passed": 24, "failed": 0 },
+    "bbnf_ir": { "passed": 242, "failed": 0 },
+    "egraph": { "passed": 26, "failed": 0 },
+    "css_l4": { "passed": 15, "failed": 0, "note": "normalize.css + bootstrap.css now parse. All unit tests pass." },
+    "bootstrap_idempotent": true
+  },
+  "benches": {
+    "compile_pipeline": {
+      "json":       { "ns_per_iter": 134142 },
+      "ebnf":       { "ns_per_iter": 415805 },
+      "bbnf":       { "ns_per_iter": 1741146 },
+      "sheets":     { "ns_per_iter": 2279792 },
+      "css_l4":     { "ns_per_iter": 9957291 }
+    },
+    "json_monolithic": {
+      "canada":  { "ns_per_iter": 2072470, "mb_per_s": 1086 },
+      "citm":    { "ns_per_iter": 752098,  "mb_per_s": 2296 },
+      "twitter": { "ns_per_iter": 313271,  "mb_per_s": 2015 },
+      "data":    { "ns_per_iter": 19712,   "mb_per_s": 1800 },
+      "data_xl": { "ns_per_iter": 20278512,"mb_per_s": 1049 }
+    },
+    "css_l4": {
+      "normalize": { "ns_per_iter": 6331,    "mb_per_s": 969 },
+      "bootstrap": { "ns_per_iter": 545873,  "mb_per_s": 513 },
+      "tailwind":  { "ns_per_iter": 6542335, "mb_per_s": 556 },
+      "note": "FIRST MEASUREMENT — CSS L4 was BROKEN in post-AR."
+    },
+    "css_competitors": {
+      "cssparser_normalize":    { "ns_per_iter": 8742,     "mb_per_s": 702 },
+      "cssparser_bootstrap":    { "ns_per_iter": 620794,   "mb_per_s": 451 },
+      "cssparser_tailwind":     { "ns_per_iter": 8564895,  "mb_per_s": 425 },
+      "lightningcss_normalize": { "ns_per_iter": 22687,    "mb_per_s": 270 },
+      "lightningcss_bootstrap": { "ns_per_iter": 2254498,  "mb_per_s": 124 },
+      "lightningcss_tailwind":  { "ns_per_iter": 38315620, "mb_per_s": 95 }
+    },
+    "css_stress": {
+      "selectors_500":  { "ns_per_iter": 173,    "mb_per_s": 28352 },
+      "selectors_100":  { "ns_per_iter": 81,     "mb_per_s": 11172 },
+      "nesting_20":     { "ns_per_iter": 490,    "mb_per_s": 1293 },
+      "decls_500":      { "ns_per_iter": 7880,   "mb_per_s": 1092 },
+      "rules_5000":     { "ns_per_iter": 157498, "mb_per_s": 881 }
+    },
+    "css_vm": {
+      "normalize": { "ns_per_iter": 106406,    "mb_per_s": 57 },
+      "bootstrap": { "ns_per_iter": 11001691,  "mb_per_s": 25 },
+      "tailwind":  { "ns_per_iter": 161739487, "mb_per_s": 22 }
+    },
+    "json_vm": {
+      "canada":  { "ns_per_iter": 99280329, "mb_per_s": 22 },
+      "citm":    { "ns_per_iter": 33456916, "mb_per_s": 51 },
+      "data":    { "ns_per_iter": 466801,   "mb_per_s": 76 }
+    },
+    "json_stress": {
+      "strings_100x1024": { "ns_per_iter": 7149,   "mb_per_s": 14365 },
+      "escapes_1000":     { "ns_per_iter": 36246,  "mb_per_s": 1076 },
+      "wide_obj_10000":   { "ns_per_iter": 147682, "mb_per_s": 865 },
+      "mixed_10000":      { "ns_per_iter": 65026,  "mb_per_s": 730 }
+    },
+    "json_parse_that": {
+      "canada":  { "ns_per_iter": 3732447,  "mb_per_s": 603 },
+      "citm":    { "ns_per_iter": 1594950,  "mb_per_s": 1082 },
+      "twitter": { "ns_per_iter": 641082,   "mb_per_s": 985 },
+      "data":    { "ns_per_iter": 40258,    "mb_per_s": 881 },
+      "data_xl": { "ns_per_iter": 35978487, "mb_per_s": 591 }
+    },
+    "google_sheets": {
+      "parse_1kb":  { "ns_per_iter": 5498,  "mb_per_s": 119 },
+      "parse_10kb": { "ns_per_iter": 53728, "mb_per_s": 126 }
+    }
+  },
+  "hard_gates": {
+    "all_bench_targets_run": "PASS — all 12 bench targets compile and run without parse failures",
+    "css_l4_parse": "PASS — normalize.css (6KB) + bootstrap.css (280KB) + tailwind.css (3.6MB) parse correctly",
+    "css_beats_lightningcss": "PASS — bootstrap: 513 vs 124 MB/s (4.1x), tailwind: 556 vs 95 MB/s (5.9x)",
+    "css_beats_cssparser": "PASS — bootstrap: 513 vs 451 MB/s (1.1x), tailwind: 556 vs 425 MB/s (1.3x)",
+    "json_monolithic": "PASS — canada 1086, citm 2296, twitter 2015, data 1800 MB/s",
+    "bootstrap_idempotent": "PASS — gen1 == gen2 (24,685 lines)",
+    "grammar_roundtrip": "PASS — 6/6 green",
+    "all_tests_pass": "PASS — 341+ tests across all crates"
+  },
+  "sonic_rs_targets": {
+    "canada": 1540,
+    "citm": 3000,
+    "twitter": 2643,
+    "data": 2346,
+    "note": "sonic-rs reference numbers. Current: canada 70%, citm 77%, twitter 76%, data 77% of sonic-rs."
+  }
+}

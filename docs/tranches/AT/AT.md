@@ -108,57 +108,82 @@ offset in the payload slot. One pass, zero re-traversal.
 
 ## AT plan — 5 phases
 
-### Phase 1 — Projection truth: wire all scalar paths (~2 days)
+### Phase 1 — Generalized direct projection (~3 days)
 
-The payload infrastructure exists. The wiring doesn't fire. Fix
-the codegen routing so every type annotation produces the
-corresponding payload-bearing push call.
+The payload infrastructure (`push_leaf_with_scalar<T>`) is generic.
+The ROUTING that decides when to use it is not — it only fires for
+standalone rules with explicit type annotations, missing inlined
+rules entirely. Every `.map(|_| ())` in the generated code is a
+computed value being discarded. There are 10 in the JSON parser
+alone.
 
-#### AT.1.1 Fix f64 payload for inlined Map(Regex, NumberConvert)
+The fix is NOT type-specific patches for f64, bool, etc. The fix
+is a **general inlined-node type resolver** in the emitter that
+walks Map/Constant/FnDescriptor nodes and surfaces their TypeDesc
+regardless of whether the original rule was inlined or standalone.
 
-The `value` rule's Alt body contains inlined `Map(Regex(number_pat),
-NumberConvert)` nodes. The emitter sees this as a branch of `value`,
-not as a standalone `number` rule. The per-branch scalar detection
-in `emitter/mod.rs:436-448` iterates Alt branches looking for
-`Ref(rid)` with scalar types — but the `number` rule is inlined,
-so there's no `Ref` to find.
+#### AT.1.1 General per-branch type resolver for inlined nodes
 
-Fix: extend the per-branch detection to recognize `Map(_, NumberConvert)`
-directly, not just `Ref(scalar_rule)`. When the Map's FnDescriptor is
-NumberConvert, the branch type is F64 regardless of whether the inner
-node is a Ref or an inlined Regex.
+Replace the `Ref(rid)` → type lookup in `emitter/mod.rs:436-448`
+with a general node-type resolver:
 
-Hard gate: `push_leaf_with_f64` appears in the expanded JSON parser.
-`__has_payload = true` fires for number branches. `__payload_f64`
-carries the scanned value.
+```
+fn resolve_branch_type(node: &IrNode, ir: &GrammarIR) -> Option<TypeDesc> {
+    match node {
+        IrNode::Ref(rid) => ir.types.iter()
+            .find_map(|(r, t)| if *r == *rid { Some(t.clone()) } else { None }),
+        IrNode::Map(_, fn_id) => match &ir.fns[*fn_id] {
+            FnDescriptor::NumberConvert => Some(TypeDesc::F64),
+            FnDescriptor::HexConvert { .. } => Some(TypeDesc::U32),
+            FnDescriptor::Constant { return_type, .. } => return_type.clone(),
+            FnDescriptor::Expr { return_type, .. } => return_type.clone(),
+            _ => None,
+        },
+        _ => None,
+    }
+}
+```
 
-#### AT.1.2 Fix bool payload for inlined Constant maps
+This resolves the type for ANY inlined node — not just Ref. When
+the resolver produces a TypeDesc that satisfies `needs_payload_slot()`,
+the emitter captures the value into `__payload_<T>` and emits
+`push_leaf_with_<T>`.
 
-Same pattern. `"true" -> true | "false" -> false` produces
-`Map(Literal, Constant { value: "true", type: Bool })`. Extend
-detection to recognize `Constant` → `TypeDesc::Bool`.
+Hard gate: zero `.map(|_| ())` on scanner functions that produce
+typed values (scan_number_strict_f64, scan_number_strict_fused).
+The value IS captured into the payload.
 
-Hard gate: `push_leaf_with_bool` appears in expanded JSON parser.
+#### AT.1.2 Eliminate all value-discarding `.map(|_| ())`
+
+Audit every `.map(|_| ())` in the emitter output. Each one is a
+codegen decision that discarded a return value. For each:
+
+- Scanner returns `Option<Span>` → fine, Span lives in TapeRec
+- Scanner returns `Option<f64>` → MUST capture into payload
+- Scanner returns `Option<(Span, f64)>` → MUST capture f64
+- Rule returns `Option<TapeOffset>` → fine, offset is control flow
+- Literal match returns `Option<()>` → fine, no value to capture
+
+The emitter should never discard a typed scanner result. When the
+scanner produces a value, the codegen MUST route it into the
+payload slot. This is not an optimization — it is the fundamental
+contract of direct projection.
 
 #### AT.1.3 Wire KvPair for JSON pair rule
 
-`pair = string, colon >> value` projects as `Tuple([Span, <value_type>])`.
-When value resolves to a scalar, `is_kv_pair_shape` should match.
-Verify the layout planner produces a KvPair layout for `pair`.
-If not, trace the type projection to find where the pair type
-is computed and why it doesn't match.
+The KvPair infrastructure exists (TapeKind::KvPair, is_kv_pair_shape,
+view accessors). Verify the type projection produces `Tuple([Span, scalar])`
+for `pair` and that the layout planner matches it. If not, trace
+the type projection to find the gap.
 
-Hard gate: `TapeKind::KvPair` appears in expanded JSON parser for
-`pair` branches where value is scalar.
+#### AT.1.4 Verify projection fires for all grammars
 
-#### AT.1.4 Verify all payload paths fire
-
-Expand all 6 grammar parsers (JSON, CSS L4, BBNF, EBNF, CSS pretty,
-Google Sheets). For each, count `push_leaf_with_*` calls and verify
-they match the expected typed rules:
-- JSON: f64 (number), bool (bool), u8 (null), KvPair (pair)
-- CSS L4: u8 (unit enums), f64 (dimension numbers)
-- Google Sheets: typed leaf payloads
+Expand all 6 grammars. For each, verify:
+- Every `-> f64` mapping produces `push_leaf_with_f64`
+- Every `-> true/false` mapping produces `push_leaf_with_bool`
+- Every `-> 0u8` constant produces `push_leaf_with_u8`
+- Every `[Span, scalar]` tuple produces `TapeKind::KvPair`
+- Zero `.map(|_| ())` on typed scanner returns
 
 ### Phase 2 — Regression redress: meta_idx + capacity (~1 day)
 
@@ -334,19 +359,22 @@ through the IR path.
 
 ## Hard gates summary
 
-1. `push_leaf_with_f64` appears in expanded JSON parser (Phase 1)
-2. `push_leaf_with_bool` appears in expanded JSON parser (Phase 1)
-3. `TapeKind::KvPair` appears in expanded JSON pair (Phase 1)
-4. `meta: Vec<u8>` eliminated from Tape/TapeBuilder (Phase 2)
-5. JSON canada >= 1500 MB/s (Phase 2)
-6. `decode_json_string_to_arena` with test coverage (Phase 3)
-7. `json_monolithic_value` bench directly comparable to sonic-rs (Phase 3)
-8. Fresh samply profiles with delta vs AR-baseline (Phase 4)
-9. StructRegistry populated by at least one grammar (Phase 5)
-10. tape_parity: 22/22 pass (fixtures regenerated) (Phase 5)
-11. Zero dead code in AS-changed files (Phase 5)
-12. parse-that changes committed (Phase 5)
-13. `cargo test --workspace` no new failures (all phases)
+1. Zero `.map(|_| ())` on typed scanner returns in expanded JSON (Phase 1)
+2. `push_leaf_with_f64` appears in expanded JSON parser (Phase 1)
+3. `push_leaf_with_bool` appears in expanded JSON parser (Phase 1)
+4. `TapeKind::KvPair` appears in expanded JSON pair (Phase 1)
+5. General `resolve_branch_type` handles Map/Constant/FnDescriptor (Phase 1)
+6. `meta: Vec<u8>` eliminated from Tape/TapeBuilder (Phase 2)
+7. JSON canada >= 1500 MB/s (Phase 2)
+8. `decode_json_string_to_arena` with test coverage (Phase 3)
+9. `json_monolithic_value` bench directly comparable to sonic-rs (Phase 3)
+10. Fresh samply profiles with delta vs AR-baseline (Phase 4)
+11. StructRegistry populated by at least one grammar (Phase 5)
+12. tape_parity: 22/22 pass (fixtures regenerated) (Phase 5)
+13. parse-that changes committed (Phase 5)
+14. `[lang|="en"]` attribute selector parses correctly (Phase 6)
+15. Unicode identifiers accepted in CSS selectors (Phase 6)
+16. `cargo test --workspace` no new failures (all phases)
 
 ## Items already landed (from AS)
 
@@ -382,13 +410,43 @@ rules, not building a typed AST. BBNF builds full typed declarations,
 selectors, and values. The real comparison is BBNF vs lightningcss
 (both build typed ASTs): bootstrap 525 vs 124 MB/s (**4.2x**).
 
+### Phase 6 — CSS spec parity + semantic audit (~1 day)
+
+#### AT.6.1 Fix |= attribute selector ambiguity
+
+In `grammar/css/l4/selectors.bbnf`, `attrSelector` uses `wqName`
+which consumes `lang|` as namespace prefix before `attrMatcher` can
+see `|=`. Fix: factor the `|=` matcher ahead of the namespace `|`
+in the `attrSelector` rule. This is a grammar fix, not a codegen
+fix.
+
+#### AT.6.2 Unicode identifiers
+
+`selectorIdent` and `ident` regexes only match ASCII letters.
+CSS Syntax L3 §4.3.10 allows non-ASCII codepoints. Extend the
+regex to accept bytes >= 0x80 in identifier positions:
+`/(?:-?[a-zA-Z_\x80-\xff]|\\[^\n])(?:[\w\x80-\xff-]|\\[^\n])*/`
+
+#### AT.6.3 Semantic parity audit
+
+Audit against lightningcss's output for bootstrap.css:
+- Does our typed declaration dispatch cover all properties
+  lightningcss recognizes?
+- Do our selector combinators produce structurally equivalent
+  results?
+- Are CSS function calls (calc, var, url, color functions)
+  parsed to equivalent depth?
+
+The cssparser comparison is still valuable — we do substantively
+more work (full typed AST vs tokenize-only) while running faster.
+Document this explicitly in the bench output.
+
 ## What is NOT in scope
 
 - **Global CSP solve**: per-component sufficient.
 - **WASM/TS backend updates**: Rust backend only for this tranche.
 - **CSS pretty format quality**: gorgeous formatting is separate.
 - **Language server features**: LSP is not on the critical path.
-- **CSS spec gap fixes** (|= and Unicode idents): separate tranche.
 
 ## Operational directives
 

@@ -108,7 +108,7 @@ AR targets: bootstrap 800+, normalize 1400+, tailwind 800+.
 Every target requires a post-implementation samply diff before being
 claimed as achieved.
 
-## AR plan — 5 phases (resequenced per critique)
+## AR plan — 9 phases (resequenced per critique, deferred items reintegrated)
 
 Each phase has a hard gate. No phase is "deferred" — items either
 ship, are deleted with rationale, or move to the explicit
@@ -306,13 +306,141 @@ in `scan_quoted_string_simd`.
 
 **Hard gate**: samply diff shows reduced branch-miss in scan paths.
 
+### Phase 6 — Scanner generalization (~3 days)
+
+Reintegrated from the original 8-item AR.3 plan. Phase 1's
+discriminator split is stable; clone reduction (Phase 3) has
+reduced compile-time noise; these refactors are now the correct
+next step for architectural hygiene.
+
+#### AR.6.1 Collapse RegexClass passthrough miners
+
+Files: `crates/ir/src/passes/recognizers/{quoted_string,identifier,comment_ws}.rs`
+replaced by parameterized `regex_class.rs` with acceptance predicate.
+
+#### AR.6.2 Single source of truth via `ScanLut` registry
+
+Collapse `parse_that/parsers/scan/digits.rs`,
+`kernels/charclass.rs`, `kernels/charset_shapes.rs`,
+`generate/regex/patterns/shorthand.rs` into
+`class_lut.rs` + `scan_class.rs`.
+
+#### AR.6.3 Lift `EngineSet::FAMILY_HELPER` to bbnf-lang
+
+Replace hardcoded family-variant arm with
+`EmitOpts.kernel_coverage: EngineSet` mask.
+
+#### AR.6.4 Fold regex-pattern-parser-lites into `RegexClassEmitter::route`
+
+Unify `emit/{mod,negated_class,generalized/mod,generalized/class_segments}.rs`
+into `emit/route.rs` consuming `RegexInfo`.
+
+#### AR.6.5 Parameterize `WhitespaceWithBlockComment`
+
+Add `WsCommentConfig { line_comment, block_comment_open,
+block_comment_close }` to runtime.
+
+#### AR.6.6 Move `FnDescriptor` specialization to post-`compute_regex_info`
+
+`try_specialize_map_fn` becomes `crates/ir/src/passes/specialize_fns.rs`,
+reads cached `RegexInfo` instead of re-classifying.
+
+#### AR.6.7 Symmetric `kernels::number::emit_call_generic`
+
+Expose relaxed-config kernel call for non-JSON numeric grammars.
+
+#### AR.6.8 Re-export bbnf-regex HIR predicates
+
+Replace local `is_nullable`, `is_broad_byte_class`,
+`contains_lazy_quantifier` with re-exports from `bbnf_regex`.
+
+**Hard gate (Phase 6)**:
+- Five regex-pattern-parser-lites collapsed to one dispatch table
+- `EngineSet::FAMILY_HELPER` is a policy mask, not hardcoded
+- `cargo test --workspace` no new failures
+- `wc -l` shows >= 350 LOC net reduction
+
+### Phase 7 — Host.rs deletion / ParsedGrammar elimination
+
+Phase 1 discriminator split is stable, bootstrap regen is green.
+The tape identity is now trustworthy. Consumers can migrate off
+the span-text fallback in `host.rs`.
+
+#### AR.7.1 Delete span-text fallback in host.rs
+
+File: `crates/core/src/grammar/host.rs` lines 244-423 (span-text
+extraction) AND catch-all dispatcher (lines 212-236). Update
+`absorb_item` to dispatch purely on typed view accessors.
+
+**Hard gate**: `grep "absorb_.*_by_text\|process_grammar_item_structural"
+crates/` returns zero matches. `wc -l crates/core/src/grammar/host.rs`
+< 250 lines (currently 606).
+
+#### AR.7.2 Eliminate `ParsedGrammar` — direct IR consumption
+
+After host.rs is lean, the bbnf-bootstrap proc-macro can lower
+directly to IR. `ParsedGrammar`'s 8 fields all have IR equivalents
+except `imports` (needs `IrModule` wrapper). Removes ~600 LOC plus
+the entire CST-walking layer.
+
+**Hard gate**: `crates/core/src/grammar/host.rs` deleted;
+`crates/core/src/types.rs` no longer carries `ParsedGrammar`;
+the bbnf-derive macro path consumes IR directly.
+
+### Phase 8 — SIMD fractional scan (x86 + aarch64)
+
+Fused SIMD fraction parsing for the Eisel-Lemire fast path.
+sonic-rs has this on x86 only — implementing for both x86 (SSE4.2 /
+AVX2) and aarch64 (NEON) gives parity or edge on all platforms.
+
+#### AR.8.1 NEON 17-digit fractional scan
+
+File: `parse_that/rust/parse_that/src/parsers/scan/number.rs`.
+NEON implementation of 17-digit fraction accumulation for
+aarch64 targets.
+
+#### AR.8.2 SSE4.2 / AVX2 fractional scan
+
+File: `parse_that/rust/parse_that/src/parsers/scan/number.rs`.
+x86_64 SIMD implementation with runtime feature detection.
+`cfg(target_arch)` dispatch at the call site.
+
+**Hard gate (Phase 8)**:
+- `cargo test --workspace` on both x86_64 and aarch64
+- canada dataset throughput improvement measured via samply diff
+- Both architectures exercise the SIMD path (verified via
+  `cargo asm` or `RUSTFLAGS=--emit=asm`)
+
+### Phase 9 — Pair compound flattening
+
+Phase 2 payload activation is stable. JSON `pair = string, colon >>
+value` can now be recognized as a 2-field aggregate when `value`
+is a leaf span/scalar.
+
+#### AR.9.1 Recognize KV-pair shape
+
+File: `crates/core/src/backend/rust/emitter/grammar.rs`. Recognize
+`Tuple(Span, scalar)` for KV-pair shape in `compute_payload_layouts`.
+Emit aggregate + kv-pair view accessor.
+
+#### AR.9.2 Emit `TapeKind::KvPair` for pair compounds
+
+File: `crates/bbnf-tape/src/kind.rs`. Add `KvPair` variant to
+`TapeKind`. File: `crates/core/src/backend/rust/view/seq.rs`.
+Emit accessor that reads key Span + value payload in one shot.
+
+**Hard gate (Phase 9)**:
+- JSON twitter throughput improvement measured via samply diff
+- `cargo expand` shows `KvPair` in JSON parser output
+- `cargo test --workspace` no new failures
+
 ### Validation — bench + documentation
 
 Same protocol as AQ.9: full bench sweep, samply profiles per dataset,
 post-AR.json with delta vs post-AQ. Hard gates:
 
 - `cargo test --workspace` no new failures
-- Bootstrap regen produces compileable `generated.rs`
+- Bootstrap regen produces compilable `generated.rs`
 - Six `grammar_roundtrip` tests pass without `#[ignore]`
 - `payload_layouts.len() >= 8` summed across production grammars
 - Every performance claim backed by samply diff
@@ -338,33 +466,17 @@ The tranche is "done" only when:
 
 ## What is NOT in scope
 
-Items deliberately deferred:
+Items that remain outside AR:
 
-- **Named struct projection ABI**: scalar payload plumbing is partly
-  live; the full `Named`-to-concrete-struct lowering/codegen bridge
-  is a separate tranche. Per critique §1: do not call the current
-  state "direct-to-struct."
-- **Structural pre-scan**: deleted in AQ.5, proven net-negative. If
-  it returns, it must be a peek-only hybrid dispatcher, not the old
-  "advance offset to structural byte" model. Per critique §3.
+- **Named struct projection ABI**: the full `Named`-to-concrete-struct
+  lowering/codegen bridge is a separate tranche.
+- **Structural pre-scan**: deleted in AQ.5, proven net-negative.
 - **Global CSP solve**: per-component CSP is sufficient at current
   grammar scale.
 - **Cost-model grid sweep**: manual calibration adequate.
 - **LazyValue / RawStr** (sonic-rs technique): architectural mismatch
   with tape model.
 - **In-place string unescape**: breaks borrow model.
-- **Scanner generalization**: the 8-item AR.3 scanner refactor from
-  the original plan is deferred. Per critique §4: profile story
-  points toward control-flow and clone reduction, not another round
-  of regex micro-specialization. The scanner items are valid
-  architectural cleanup but are not the highest-leverage next step.
-- **Host.rs deletion / ParsedGrammar elimination**: sequencing
-  depends on discriminator split being stable. After Phase 1 proves
-  stable, this becomes a follow-up tranche item.
-- **NEON 17-digit fractional scan**: speculative perf gain, not
-  profiler-justified.
-- **Pair compound flattening**: valid optimization, but requires
-  payload activation (Phase 2) to be stable first.
 
 ## Operational directives
 

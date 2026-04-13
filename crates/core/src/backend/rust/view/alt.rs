@@ -171,48 +171,88 @@ fn emit_typed_enum_value_accessor(
     let enum_ident = format_ident!("{}Value", rule_name);
 
     // Gather per-branch (variant_name, projected TypeDesc) pairs.
-    // Bail out the moment any branch lacks a payload-eligible type.
-    let mut variants: Vec<(String, BranchValueShape)> = Vec::with_capacity(branches.len());
+    //
+    // AR.2.2: peel through Map/Regex wrappers to find the payload
+    // shape even after fuse_single_use has inlined branches. A bare
+    // `Ref(rid)` looks up the target rule; an inlined `Map { inner,
+    // return_type }` or `IrNode::Regex` infers the shape directly.
+    //
+    // AR.2.3: mixed payload + cursor branches. Instead of bailing on
+    // the first non-payload-eligible branch, collect all branches:
+    // payload-eligible ones get typed reads, non-eligible ones get
+    // cursor-wrapped sub-views. The enum only emits when at least
+    // one branch IS payload-eligible (otherwise the standard
+    // discriminated-accessor surface suffices).
+    let mut variants: Vec<(String, BranchVariant)> = Vec::with_capacity(branches.len());
     let mut seen = std::collections::HashSet::new();
+    let mut has_any_payload = false;
     for (idx, branch) in branches.iter().enumerate() {
         let inner = peel_map_wrappers(&branch.node);
-        let (variant_name, shape) = match inner {
+        let (variant_name, variant) = match inner {
             IrNode::Ref(rule_id) => {
                 let target = &ir.rules[*rule_id as usize];
                 let name = ir.get_string(target.name).to_string();
-                let Some(shape) = branch_value_shape(*rule_id, ir) else {
-                    return TokenStream::new();
-                };
-                (name, shape)
+                match branch_value_shape(*rule_id, ir) {
+                    Some(shape) => (name, BranchVariant::Payload(shape)),
+                    None => (name, BranchVariant::Cursor),
+                }
             }
-            _ => return TokenStream::new(),
+            // AR.2.2: inlined Map — resolve return_type from FnDescriptor
+            IrNode::Map { fn_id, .. } => {
+                let td = ir.fns.get(*fn_id as usize).and_then(|fd| match fd {
+                    bbnf_ir::FnDescriptor::Expr { return_type: Some(td), .. } => Some(td),
+                    bbnf_ir::FnDescriptor::NumberConvert => Some(&TypeDesc::F64),
+                    _ => None,
+                });
+                match td {
+                    Some(td) if td.is_scalar_payload() => {
+                        let name = format!("branch_{}", idx);
+                        (name, BranchVariant::Payload(BranchValueShape::Scalar(td.clone())))
+                    }
+                    _ => {
+                        let name = format!("branch_{}", idx);
+                        (name, BranchVariant::Cursor)
+                    }
+                }
+            }
+            _ => {
+                let name = format!("branch_{}", idx);
+                (name, BranchVariant::Cursor)
+            }
         };
+        if matches!(variant, BranchVariant::Payload(_)) {
+            has_any_payload = true;
+        }
         let mut name = variant_name;
         if !seen.insert(name.clone()) {
             name = format!("{}_{}", name, idx);
             seen.insert(name.clone());
         }
-        variants.push((name, shape));
+        variants.push((name, variant));
     }
 
-    if variants.is_empty() {
+    if !has_any_payload {
         return TokenStream::new();
     }
 
-    // Enum type definition.
+    // Enum type definition — AR.2.3: mixed payload + cursor variants.
+    let grammar_name = ir.get_string(ir.rules[0].name);
+    let grammar_name = grammar_name.split("::").last().unwrap_or(grammar_name);
+    let node_view_ident = format_ident!("{}NodeView", grammar_name);
+
     let enum_variants: Vec<TokenStream> = variants
         .iter()
-        .map(|(name, shape)| {
+        .map(|(name, variant)| {
             let v_ident = format_ident!("{}", name);
-            match shape {
-                BranchValueShape::Scalar(td) => {
+            match variant {
+                BranchVariant::Payload(BranchValueShape::Scalar(td)) => {
                     let ty_ident = format_ident!(
                         "{}",
                         td.rust_ident().expect("scalar TypeDesc has rust_ident"),
                     );
                     quote! { #v_ident(#ty_ident) }
                 }
-                BranchValueShape::Aggregate(layout) => {
+                BranchVariant::Payload(BranchValueShape::Aggregate(layout)) => {
                     let field_tys: Vec<TokenStream> = layout
                         .fields
                         .iter()
@@ -226,38 +266,49 @@ fn emit_typed_enum_value_accessor(
                         .collect();
                     quote! { #v_ident(( #(#field_tys),* )) }
                 }
+                BranchVariant::Cursor => {
+                    // Non-payload-eligible branch — wrap in the
+                    // grammar's generic NodeView for cursor access.
+                    quote! { #v_ident(#node_view_ident<'p>) }
+                }
             }
         })
         .collect();
 
-    // Per-branch reads — each branch decodes the chosen variant's
-    // typed value from the tape. Scalar branches use the typed
-    // payload reader for their TypeDesc; aggregate branches use
-    // `payload_bytes` plus the per-field decoders.
-    //
-    // Per AM.3 tape surgery, the alt epilogue may write the
-    // payload directly onto the parent record (no child) when the
-    // branch is a scalar leaf. Each arm therefore prefers
-    // `child(0)` and falls back to the parent cursor when no
-    // child is present.
+    // Per-branch dispatch — payload branches decode typed values;
+    // cursor branches wrap the child in a NodeView.
     let dispatch_arms: Vec<TokenStream> = branches
         .iter()
         .enumerate()
         .zip(variants.iter())
-        .map(|((branch_idx, _), (name, shape))| {
+        .map(|((branch_idx, _), (name, variant))| {
             let idx_u8 = branch_idx as u8;
             let v_ident = format_ident!("{}", name);
-            let reader = match shape {
-                BranchValueShape::Scalar(td) => emit_scalar_value_decode(td),
-                BranchValueShape::Aggregate(layout) => emit_aggregate_value_decode(layout),
-            };
-            quote! {
-                #idx_u8 => {
-                    let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
-                    let __rec = __cursor.record();
-                    let __tape = __cursor.tape();
-                    let __value = #reader;
-                    Some(#enum_ident::#v_ident(__value))
+            match variant {
+                BranchVariant::Payload(shape) => {
+                    let reader = match shape {
+                        BranchValueShape::Scalar(td) => emit_scalar_value_decode(td),
+                        BranchValueShape::Aggregate(layout) => emit_aggregate_value_decode(layout),
+                    };
+                    quote! {
+                        #idx_u8 => {
+                            let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
+                            let __rec = __cursor.record();
+                            let __tape = __cursor.tape();
+                            let __value = #reader;
+                            Some(#enum_ident::#v_ident(__value))
+                        }
+                    }
+                }
+                BranchVariant::Cursor => {
+                    quote! {
+                        #idx_u8 => {
+                            let __child = self.cursor.child(0)?;
+                            Some(#enum_ident::#v_ident(
+                                #node_view_ident::from_cursor(__child, self.input)
+                            ))
+                        }
+                    }
                 }
             }
         })
@@ -265,22 +316,21 @@ fn emit_typed_enum_value_accessor(
 
     let _ = rule;
     quote! {
-        /// Typed value enum produced by AQ.6.C — one variant per
-        /// payload-eligible Alt branch.
+        /// Typed value enum — payload-eligible branches carry typed
+        /// values directly; non-eligible branches wrap a cursor view.
         #[derive(Clone, Debug, PartialEq)]
         #[allow(non_camel_case_types)]
-        pub enum #enum_ident {
+        pub enum #enum_ident<'p> {
             #(#enum_variants,)*
         }
 
         #[allow(dead_code)]
         impl<'p> #view_ident<'p> {
-            /// Decode the chosen branch's typed payload into a
-            /// matching enum variant. Returns `None` for branch
-            /// indices outside the rule's branch set (e.g.
-            /// recovery records).
+            /// Decode the chosen branch's value. Payload-eligible
+            /// branches return typed scalars/aggregates; other
+            /// branches return cursor-wrapped sub-views.
             #[inline]
-            pub fn value(&self) -> ::core::option::Option<#enum_ident> {
+            pub fn value(&self) -> ::core::option::Option<#enum_ident<'p>> {
                 match self.cursor.meta_idx() {
                     #(#dispatch_arms,)*
                     _ => None,
@@ -295,6 +345,13 @@ fn emit_typed_enum_value_accessor(
 enum BranchValueShape {
     Scalar(TypeDesc),
     Aggregate(PayloadLayout),
+}
+
+/// AR.2.3 — per-branch variant: either a typed payload read or a
+/// cursor-wrapped sub-view for non-payload-eligible branches.
+enum BranchVariant {
+    Payload(BranchValueShape),
+    Cursor,
 }
 
 /// AQ.6.C — classify a branch's typed value shape. Returns `None`

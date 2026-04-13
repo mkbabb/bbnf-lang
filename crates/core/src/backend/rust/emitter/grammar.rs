@@ -485,6 +485,30 @@ impl RustEmitter {
             quote! {}
         };
 
+        // AP.ws: trailing whitespace before EOF — use comment-aware
+        // kernel when the grammar declares a WsBlockComment @ws
+        // pattern, otherwise fall back to bare is_ascii_whitespace.
+        let trailing_ws = {
+            use parse_that::regex::classify::{RegexClass, classify_regex};
+            let ws_is_comment_aware = ir
+                .ws_pattern
+                .map(|sid| ir.get_string(sid))
+                .is_some_and(|pat| matches!(classify_regex(pat), RegexClass::WsBlockComment));
+            if ws_is_comment_aware {
+                quote! {
+                    let _ = ::parse_that::scan_ws_block_comments(&mut state);
+                }
+            } else {
+                quote! {
+                    while state.offset < input.len()
+                        && input.as_bytes()[state.offset].is_ascii_whitespace()
+                    {
+                        state.offset += 1;
+                    }
+                }
+            }
+        };
+
         quote! {
             use ::parse_that::*;
 
@@ -516,14 +540,15 @@ impl RustEmitter {
                             offset: state.offset as u32,
                             rule: None,
                         })?;
-                    // Skip trailing ASCII whitespace before the EOF
-                    // check so inputs with a final newline (common in
-                    // files read via read_to_string) are accepted.
-                    while state.offset < input.len()
-                        && input.as_bytes()[state.offset].is_ascii_whitespace()
-                    {
-                        state.offset += 1;
-                    }
+                    // Skip trailing whitespace before the EOF check
+                    // so inputs with a final newline (common in files
+                    // read via read_to_string) are accepted.
+                    //
+                    // AP.ws: when a custom @ws pattern is active and
+                    // classifies as WsBlockComment, use the comment-
+                    // aware kernel so trailing `/* ... */` comments
+                    // are consumed before the EOF gate.
+                    #trailing_ws
                     if state.offset < input.len() {
                         return ::core::result::Result::Err(
                             ::bbnf::runtime::ParseErr::Syntax {

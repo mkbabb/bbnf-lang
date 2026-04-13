@@ -306,7 +306,7 @@ impl Emitter for RustEmitter {
     fn emit_recognizer_family_kernel(
         &mut self,
         shape: &bbnf_ir::passes::patterns::RecognizerShape,
-        _ctx: &mut Self::Ctx,
+        ctx: &mut Self::Ctx,
     ) -> Option<TokenStream> {
         use bbnf_ir::passes::patterns::RecognizerShape;
         match shape {
@@ -314,9 +314,17 @@ impl Emitter for RustEmitter {
             // deleted (zero production matches + FunctionHead's
             // short-circuit kernel couldn't emit function bodies).
             // Only PunctWsRegion survives from the X.10 / X.11b slate.
-            RecognizerShape::PunctWsRegion { puncts } => Some(
-                crate::backend::kernels::punct_ws_region::emit_call(puncts.as_slice()),
-            ),
+            //
+            // AP.ws: thread the grammar's @ws pattern so the kernel
+            // emits comment-aware whitespace when applicable.
+            RecognizerShape::PunctWsRegion { puncts } => {
+                let ir = ctx.ir_ctx().ir;
+                let ws_pat = ir.ws_pattern.map(|sid| ir.get_string(sid));
+                Some(crate::backend::kernels::punct_ws_region::emit_call(
+                    puncts.as_slice(),
+                    ws_pat,
+                ))
+            }
             _ => None,
         }
     }

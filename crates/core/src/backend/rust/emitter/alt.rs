@@ -25,16 +25,11 @@
 //! within branch bodies don't re-apply the mark — they compile as
 //! normal `Option<()>` sub-expressions.
 
-use std::collections::HashMap;
-
 use bbnf_ir::AltDispatch;
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use crate::backend::{
-    AltBranchInfo, BucketProbe, KeyClass, KeyDispatchBranch, KeyDispatchConfig, KeyIndex,
-    LengthBucket, ValuePlacement,
-};
+use crate::backend::{AltBranchInfo, KeyClass, KeyDispatchBranch, KeyDispatchConfig, ValuePlacement};
 
 use super::RustEmitter;
 use super::RustEmitCtx;
@@ -218,7 +213,6 @@ impl RustEmitter {
     pub(super) fn emit_key_dispatch_impl(
         &mut self,
         config: &KeyDispatchConfig,
-        index: &KeyIndex,
         branches: Vec<KeyDispatchBranch<TokenStream>>,
         fallback: Option<(AltBranchInfo, TokenStream)>,
         _alloc: ValuePlacement,
@@ -231,38 +225,30 @@ impl RustEmitter {
             },
             KeyClass::QuotedString { .. } => quote! { ::parse_that::scan_string_quoted(state) },
         };
-
-        // AQ.7.3: build a NodeId-stable map from `branch_idx` (Alt
-        // branch index inside the parent) to the compiled body
-        // TokenStream. The KeyIndex's per-bucket entries reference
-        // branches by the same index, so we can drop in the right
-        // body when we emit each match arm.
-        let mut body_by_branch: HashMap<u8, TokenStream> = HashMap::new();
-        for kd in branches {
-            // The IR's `DetectedBranch.branch_idx` is widened to
-            // u8 inside `build_key_index` already. Find the branch
-            // by its first key in the bucket — we keyed compilation
-            // by `det.branch_idx` (the Alt index), which equals the
-            // `branch_idx` field on every KeyEntry the index built
-            // for that detected branch. Look it up by hashing
-            // `key_bytes` against the bucket entries below.
-            //
-            // We piggy-back on the `key_bytes` Vec the driver passed
-            // in: those are the same byte sequences the KeyIndex
-            // entries hold, so we can join the body to the bucket
-            // entry by its first key match.
-            let first = kd
-                .key_bytes
-                .first()
-                .map(|b| b.as_slice())
-                .unwrap_or(&[]);
-            if let Some(branch_idx) = lookup_branch_idx(index, first) {
-                body_by_branch.insert(branch_idx, kd.body);
-            }
-        }
-
-        let bucket_arms = emit_bucket_arms(index, &body_by_branch, &cp);
-
+        let arm_checks: Vec<TokenStream> = branches
+            .into_iter()
+            .map(|kd| {
+                let comparisons: Vec<TokenStream> = kd
+                    .key_bytes
+                    .iter()
+                    .map(|key| {
+                        let byte_lits: Vec<proc_macro2::Literal> = key
+                            .iter()
+                            .map(|b| proc_macro2::Literal::byte_character(*b))
+                            .collect();
+                        let len = key.len();
+                        quote! { (__kd_len == #len && __kd_bytes == &[#(#byte_lits),*]) }
+                    })
+                    .collect();
+                let body = kd.body;
+                quote! {
+                    if #(#comparisons)||* {
+                        state.offset = #cp;
+                        break 'kd_blk #body;
+                    }
+                }
+            })
+            .collect();
         let fallback_expr = if let Some((_info, fb)) = fallback {
             fb
         } else {
@@ -274,150 +260,11 @@ impl RustEmitter {
                 if let Some(ref __kd_s) = #scanner {
                     let __kd_bytes = &state.src_bytes[__kd_s.start..__kd_s.end];
                     let __kd_len = __kd_bytes.len();
-                    match __kd_len {
-                        #(#bucket_arms)*
-                        _ => {}
-                    }
+                    #(#arm_checks)*
                 }
                 state.offset = #cp;
                 #fallback_expr
             }
-        }
-    }
-}
-
-/// AQ.7.3: locate the branch index for a given key by walking the
-/// length bucket. Returns `None` when the key isn't present (which
-/// only happens when the driver passes an empty key list — every
-/// branch has at least one key in production).
-fn lookup_branch_idx(index: &KeyIndex, key: &[u8]) -> Option<u8> {
-    if key.is_empty() {
-        return None;
-    }
-    let key_len = key.len() as u8;
-    let bucket = index.buckets.iter().find(|b| b.key_len == key_len)?;
-    bucket
-        .entries
-        .iter()
-        .find(|e| e.key_bytes.as_slice() == key)
-        .map(|e| e.branch_idx)
-}
-
-/// AQ.7.3: emit one match arm per length bucket, using the probe
-/// shape stored on the bucket.
-///
-/// The `cp` ident is the saved checkpoint position the dispatch
-/// rewinds to before invoking the branch body — every match arm
-/// rewinds before breaking with the body.
-fn emit_bucket_arms(
-    index: &KeyIndex,
-    body_by_branch: &HashMap<u8, TokenStream>,
-    cp: &proc_macro2::Ident,
-) -> Vec<TokenStream> {
-    index
-        .buckets
-        .iter()
-        .map(|bucket| emit_one_bucket(bucket, body_by_branch, cp))
-        .collect()
-}
-
-fn emit_one_bucket(
-    bucket: &LengthBucket,
-    body_by_branch: &HashMap<u8, TokenStream>,
-    cp: &proc_macro2::Ident,
-) -> TokenStream {
-    let key_len_lit = bucket.key_len as usize;
-    let body = match &bucket.probe {
-        BucketProbe::Linear => emit_linear_probe(bucket, body_by_branch, cp),
-        BucketProbe::FirstByteTable { cells } => {
-            emit_first_byte_table_probe(bucket, cells, body_by_branch, cp)
-        }
-    };
-    quote! { #key_len_lit => { #body } }
-}
-
-fn emit_linear_probe(
-    bucket: &LengthBucket,
-    body_by_branch: &HashMap<u8, TokenStream>,
-    cp: &proc_macro2::Ident,
-) -> TokenStream {
-    let arms: Vec<TokenStream> = bucket
-        .entries
-        .iter()
-        .map(|entry| {
-            let byte_lits: Vec<proc_macro2::Literal> = entry
-                .key_bytes
-                .iter()
-                .map(|b| proc_macro2::Literal::byte_character(*b))
-                .collect();
-            let body = body_by_branch
-                .get(&entry.branch_idx)
-                .cloned()
-                .unwrap_or_else(|| quote! { None });
-            quote! {
-                if __kd_bytes == &[#(#byte_lits),*] {
-                    state.offset = #cp;
-                    break 'kd_blk #body;
-                }
-            }
-        })
-        .collect();
-    quote! { #(#arms)* }
-}
-
-fn emit_first_byte_table_probe(
-    bucket: &LengthBucket,
-    cells: &[u8],
-    body_by_branch: &HashMap<u8, TokenStream>,
-    cp: &proc_macro2::Ident,
-) -> TokenStream {
-    debug_assert_eq!(cells.len(), 256);
-    // Emit the table as a `static` 256-byte array so the lookup
-    // turns into one indexed load. Sentinel `255` means "no
-    // candidate" — bucket entry counts cap below `u8::MAX` because
-    // each entry maps to a single Alt branch.
-    let cell_lits: Vec<proc_macro2::Literal> = cells
-        .iter()
-        .map(|c| proc_macro2::Literal::u8_unsuffixed(*c))
-        .collect();
-    let table_ident = proc_macro2::Ident::new(
-        &format!("__KD_LEN{}_TBL", bucket.key_len),
-        proc_macro2::Span::call_site(),
-    );
-    // The candidate entry's index inside `bucket.entries` selects
-    // the body and the equality check.
-    let case_arms: Vec<TokenStream> = bucket
-        .entries
-        .iter()
-        .enumerate()
-        .map(|(idx, entry)| {
-            let idx_lit = idx as u8;
-            let byte_lits: Vec<proc_macro2::Literal> = entry
-                .key_bytes
-                .iter()
-                .map(|b| proc_macro2::Literal::byte_character(*b))
-                .collect();
-            let body = body_by_branch
-                .get(&entry.branch_idx)
-                .cloned()
-                .unwrap_or_else(|| quote! { None });
-            quote! {
-                #idx_lit => {
-                    if __kd_bytes == &[#(#byte_lits),*] {
-                        state.offset = #cp;
-                        break 'kd_blk #body;
-                    }
-                }
-            }
-        })
-        .collect();
-    quote! {
-        static #table_ident: [u8; 256] = [#(#cell_lits),*];
-        let __kd_first = unsafe { *__kd_bytes.get_unchecked(0) };
-        let __kd_slot = #table_ident[__kd_first as usize];
-        match __kd_slot {
-            #(#case_arms)*
-            _ => {}
         }
     }
 }

@@ -84,7 +84,6 @@ pub trait Emitter {
     fn emit_key_dispatch(
         &mut self,
         config: &KeyDispatchConfig,
-        index: &KeyIndex,
         branches: Vec<KeyDispatchBranch<Self::Output>>,
         fallback: Option<(AltBranchInfo, Self::Output)>,
         alloc: ValuePlacement,

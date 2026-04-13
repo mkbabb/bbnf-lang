@@ -39,8 +39,8 @@ pub use node::{
     AltBranch, AltDispatch, GrammarSpan, IrNode, TokenDispatchArm, count_nodes,
 };
 pub use recognizer_configs::{
-    BucketProbe, DelimScanConfig, DetectedBranch, KeyClass, KeyDispatchConfig,
-    KeyDispatchMatch, KeyEntry, KeyIndex, LengthBucket, key_class_regex_pattern,
+    DelimScanConfig, DetectedBranch, KeyClass, KeyDispatchConfig, KeyDispatchMatch,
+    key_class_regex_pattern,
 };
 pub use rule::{
     DispatchHint, IrRule, MemoStrategy, PrettyHints, RuleDirectives, RuleMeta, SubVariant,

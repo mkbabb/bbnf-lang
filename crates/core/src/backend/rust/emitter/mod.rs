@@ -26,7 +26,7 @@ use crate::backend::driver::analysis::BackendAnalysis;
 use crate::backend::prettify::{PrettyPolicy, PrettyRulePlan};
 use crate::backend::{
     AltBranchInfo, DelimScanConfig, Emitter, FlattenStrategy, KeyDispatchBranch, KeyDispatchConfig,
-    KeyIndex, SepByConfig, SeqChildGroup, TokenDispatchArmCompiled, ValuePlacement,
+    SepByConfig, SeqChildGroup, TokenDispatchArmCompiled, ValuePlacement,
 };
 
 pub use super::emitter_types::{RustEmitCtx, RustEmitter};
@@ -277,13 +277,12 @@ impl Emitter for RustEmitter {
     fn emit_key_dispatch(
         &mut self,
         config: &KeyDispatchConfig,
-        index: &KeyIndex,
         branches: Vec<KeyDispatchBranch<TokenStream>>,
         fallback: Option<(AltBranchInfo, TokenStream)>,
         alloc: ValuePlacement,
         ctx: &mut Self::Ctx,
     ) -> TokenStream {
-        self.emit_key_dispatch_impl(config, index, branches, fallback, alloc, ctx)
+        self.emit_key_dispatch_impl(config, branches, fallback, alloc, ctx)
     }
 
     fn emit_token_dispatch(

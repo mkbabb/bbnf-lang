@@ -29,20 +29,12 @@ impl ScannerPlan {
 }
 
 /// Shared scanner helpers preferred by codegen.
-///
-/// The `Ident` variant carries the dialect flags lifted from
-/// `RegexClass::Identifier` so the kernel call selects the right
-/// `IdentConfig` per pattern (bare / vendor-prefixed /
-/// custom-property / full CSS fold).
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum SharedScanner {
     JsonString,
     JsonNumber { fuse_numbers: bool },
     WsBlockComment,
-    Ident {
-        allow_leading_dash: bool,
-        allow_double_dash_prefix: bool,
-    },
+    Ident,
     QuotedString,
 }
 
@@ -67,13 +59,7 @@ impl SharedScanner {
                 fuse_numbers: false,
             } => kernels::number::emit_call_span(),
             SharedScanner::WsBlockComment => kernels::comment_ws::emit_call(),
-            SharedScanner::Ident {
-                allow_leading_dash,
-                allow_double_dash_prefix,
-            } => kernels::identifier::emit_call_with_flags(
-                allow_leading_dash,
-                allow_double_dash_prefix,
-            ),
+            SharedScanner::Ident => kernels::identifier::emit_call(),
             SharedScanner::QuotedString => kernels::quoted_string::emit_call(),
         }
     }
@@ -91,19 +77,8 @@ pub(crate) fn shared_ws_block_comment_scanner() -> ScannerPlan {
     ScannerPlan::Shared(SharedScanner::WsBlockComment)
 }
 
-/// Build an `Ident` scanner plan parameterized by the CSS dialect
-/// flags lifted from `RegexClass::Identifier`. The kernel emission
-/// picks the appropriate pre-declared `IdentConfig` constant when
-/// the flag combination is one of the canonical dialects, and emits
-/// an inline `IdentConfig` literal otherwise.
-pub(crate) fn shared_ident_scanner(
-    allow_leading_dash: bool,
-    allow_double_dash_prefix: bool,
-) -> ScannerPlan {
-    ScannerPlan::Shared(SharedScanner::Ident {
-        allow_leading_dash,
-        allow_double_dash_prefix,
-    })
+pub(crate) fn shared_ident_scanner() -> ScannerPlan {
+    ScannerPlan::Shared(SharedScanner::Ident)
 }
 
 pub(crate) fn shared_quoted_string_scanner() -> ScannerPlan {
@@ -168,13 +143,7 @@ pub(crate) fn plan_regex_scanner(pattern: &str, opts: &EmitOpts) -> Option<Scann
         RegexClass::WhitespaceWithBlockComment => {
             Some(shared_ws_block_comment_scanner())
         }
-        RegexClass::Identifier {
-            allows_leading_dash,
-            allows_double_dash_prefix,
-        } => Some(shared_ident_scanner(
-            allows_leading_dash,
-            allows_double_dash_prefix,
-        )),
+        RegexClass::Identifier { .. } => Some(shared_ident_scanner()),
         RegexClass::QuotedString { .. } => Some(shared_quoted_string_scanner()),
         RegexClass::Numeric {
             allows_sign: false, ..

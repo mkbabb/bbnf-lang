@@ -2,7 +2,7 @@
 
 use bbnf_ir::AltDispatch;
 
-use crate::backend::{AltBranchInfo, KeyDispatchBranch, KeyDispatchConfig, KeyIndex, ValuePlacement};
+use crate::backend::{AltBranchInfo, KeyDispatchBranch, KeyDispatchConfig, ValuePlacement};
 
 use super::code::{WasmEmitCtx, WasmEmitter};
 
@@ -118,17 +118,9 @@ impl WasmEmitter {
     }
 
     /// Key-based dispatch — scan a key via regex, then match against known key byte patterns.
-    ///
-    /// AQ.7.3 added a length-bucketed key index to the IR side; the
-    /// WASM backend stays on the existing linear comparison form for
-    /// now (the body of every WAT comparison already collapses to a
-    /// short instruction sequence after WASM JIT). The `_index`
-    /// parameter is reserved for a future port that emits a
-    /// length-first dispatch with WAT `br_table`.
     pub(super) fn key_dispatch(
         &mut self,
         config: &KeyDispatchConfig,
-        _index: &KeyIndex,
         branches: Vec<KeyDispatchBranch<String>>,
         fallback: Option<(AltBranchInfo, String)>,
         _alloc: ValuePlacement,

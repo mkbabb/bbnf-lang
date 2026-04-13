@@ -193,7 +193,7 @@ pub(super) fn compile_alt<E: Emitter>(
     } else {
         None
     };
-    if let Some((mut config, detected, fallback_indices, key_index)) = cached_key_dispatch {
+    if let Some((mut config, detected, fallback_indices)) = cached_key_dispatch {
         let pattern = bbnf_ir::key_class_regex_pattern(&config.key_class);
         config.key_scanner_regex_id = Some(dstate.register_regex(pattern));
 
@@ -242,7 +242,7 @@ pub(super) fn compile_alt<E: Emitter>(
             Some((branch_info(true), body))
         };
         emitter.post_compile_alt_branches(ctx);
-        return emitter.emit_key_dispatch(&config, &key_index, kd_branches, fallback, alloc, ctx);
+        return emitter.emit_key_dispatch(&config, kd_branches, fallback, alloc, ctx);
     }
 
     // Fallback: checkpoint chain.

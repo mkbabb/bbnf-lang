@@ -90,7 +90,7 @@ pub struct DetectedBranch {
 }
 
 /// Pre-solved key-dispatch detection for an Alt node. Tuple form:
-/// `(config, detected_branches, fallback_branch_indices, key_index)`.
+/// `(config, detected_branches, fallback_branch_indices)`.
 ///
 /// `fallback_branch_indices` lists Alt branch indices that are NOT
 /// key-dispatched. These are tried sequentially (checkpoint chain)
@@ -98,89 +98,4 @@ pub struct DetectedBranch {
 /// the last entry, but may also include non-literal-led branches
 /// (e.g. regex-prefixed custom-property declarations) that cannot
 /// participate in key lookup.
-///
-/// `key_index` is the AQ.7.3 length-bucketed lookup table covering
-/// every detected key. Codegen emits a length-first match arm
-/// followed by per-length probing (linear, first-byte hash, or
-/// dense table) so the cost per dispatch falls from O(branches) to
-/// O(1) under the perfect-hash buckets.
-pub type KeyDispatchMatch = (
-    KeyDispatchConfig,
-    Vec<DetectedBranch>,
-    Vec<usize>,
-    KeyIndex,
-);
-
-/// Length-bucketed key index for AQ.7.3 perfect-hash dispatch.
-///
-/// Every detected key is bucketed by byte length. Within a bucket,
-/// the lookup probe selects between three forms based on bucket
-/// size and first-byte distribution:
-///
-/// - `Linear` — bucket has ≤ 4 entries, codegen emits a sequential
-///   array-equality check with no extra probe overhead.
-/// - `FirstByteTable` — bucket has > 4 entries with no first-byte
-///   collisions, codegen emits a 256-entry table indexed by
-///   `key[0]` returning the matching entry index (or sentinel for
-///   no match), followed by a single equality check on the bucket
-///   slot.
-/// - `Linear` (collision fallback) — bucket has > 4 entries but
-///   first-byte collisions force a linear scan over the bucket.
-///   Reserved for the rare case where two keys of the same length
-///   start with the same byte (e.g. `align`/`accent`).
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
-pub struct KeyIndex {
-    /// Buckets keyed by byte length, sorted ascending so the
-    /// codegen match arm enumerates lengths predictably.
-    pub buckets: Vec<LengthBucket>,
-}
-
-/// One length bucket inside [`KeyIndex`].
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct LengthBucket {
-    /// Byte length shared by every entry in this bucket.
-    pub key_len: u8,
-    /// Detected keys (and the dispatch branch each maps to). Each
-    /// branch may have multiple keys (e.g. the CSS `border-color`
-    /// branch covers `color`, `background-color`, …); each key gets
-    /// one entry, so the same `branch_idx` can appear multiple
-    /// times.
-    pub entries: Vec<KeyEntry>,
-    /// Probe form selected at codegen time.
-    pub probe: BucketProbe,
-}
-
-/// Single key entry inside a length bucket.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct KeyEntry {
-    /// Key bytes (length matches the parent `LengthBucket::key_len`).
-    pub key_bytes: Vec<u8>,
-    /// Dispatch branch index inside the parent Alt.
-    pub branch_idx: u8,
-}
-
-/// Codegen probe shape selected per bucket.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub enum BucketProbe {
-    /// Linear sweep — emit one comparison per entry. Best for ≤ 4
-    /// entries, or for > 4 entries when first-byte collisions force
-    /// a sequential scan.
-    Linear,
-    /// First-byte perfect hash — codegen emits a 256-entry table
-    /// keyed by `key_bytes[0]`. Each cell stores the index of the
-    /// matching entry inside `entries`, or 255 (sentinel) for "no
-    /// candidate". Codegen looks up the cell, then performs a
-    /// single equality check against the candidate. Sentinel `255`
-    /// is safe because the length bucket caps at 64 entries.
-    FirstByteTable {
-        /// 256-byte lookup table; `cells[b] == 255` means no match.
-        cells: Vec<u8>,
-    },
-}
-
-impl KeyIndex {
-    /// Total entry count across every bucket.
-    pub fn total_entries(&self) -> usize {
-        self.buckets.iter().map(|b| b.entries.len()).sum()
-    }
-}
+pub type KeyDispatchMatch = (KeyDispatchConfig, Vec<DetectedBranch>, Vec<usize>);

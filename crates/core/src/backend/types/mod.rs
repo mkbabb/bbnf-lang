@@ -17,8 +17,8 @@ use bbnf_ir::{AltDispatch, TypeDesc};
 // module-local naming for those types — every backend sub-module
 // imports them via `backend::types::*` or directly from `bbnf_ir::`.
 pub use bbnf_ir::{
-    BucketProbe, DelimScanConfig, DetectedBranch, KeyClass, KeyDispatchConfig, KeyDispatchMatch,
-    KeyEntry, KeyIndex, LengthBucket, key_class_regex_pattern,
+    DelimScanConfig, DetectedBranch, KeyClass, KeyDispatchConfig, KeyDispatchMatch,
+    key_class_regex_pattern,
 };
 
 // ─── Compilation Driver Types ───────────────────────────────────────────────

@@ -10,15 +10,6 @@
 //! stable `NodeId`. The backend reads the sidecar map via
 //! `GrammarIR::key_dispatch_configs`; it does not recompute.
 //!
-//! Tranche AQ.7.3 augments the detection result with a length-bucketed
-//! `KeyIndex` — every detected key is bucketed by byte length and,
-//! within each bucket, indexed by either a linear sweep (≤ 4
-//! entries) or a 256-entry first-byte perfect-hash table (> 4
-//! entries with disjoint first bytes). Codegen consumes the index
-//! to emit O(1) bucket selection followed by O(1) entry probing,
-//! replacing the pre-AQ linear ladder of `__kd_len == N && __kd_bytes
-//! == &[…]` checks.
-//!
 //! Previously lived at `backend/patterns/key_dispatch.rs` in the
 //! `bbnf-core` crate. Moved intact in Tranche X.8a. Tranche Z.0
 //! additionally collapses the per-miner tree walk into the shared
@@ -33,8 +24,7 @@ use crate::passes::inspect::{
     extract_leading_literals, extract_leading_regex_pattern, resolve_to_seq,
 };
 use crate::{
-    AltBranch, BucketProbe, DetectedBranch, GrammarIR, IrNode, KeyClass, KeyDispatchConfig,
-    KeyDispatchMatch, KeyEntry, KeyIndex, LengthBucket,
+    AltBranch, DetectedBranch, GrammarIR, IrNode, KeyClass, KeyDispatchConfig, KeyDispatchMatch,
 };
 
 use super::{MineOutputs, RecognizerMineCtx, RecognizerMiner};
@@ -148,8 +138,6 @@ pub fn try_detect(branches: &[AltBranch], ir: &GrammarIR) -> Option<KeyDispatchM
         })
         .collect();
 
-    let key_index = build_key_index(&detected);
-
     Some((
         KeyDispatchConfig {
             key_class,
@@ -158,85 +146,7 @@ pub fn try_detect(branches: &[AltBranch], ir: &GrammarIR) -> Option<KeyDispatchM
         },
         detected,
         fallback_indices,
-        key_index,
     ))
-}
-
-// ─── Length-bucketed perfect hash (AQ.7.3) ────────────────────────────────
-
-/// Threshold above which a bucket prefers a first-byte perfect-hash
-/// table over a linear sweep. Buckets at or below the threshold pay
-/// at most 4 byte-array equality checks under the linear form, which
-/// the compiler typically vectorizes; first-byte indirection only
-/// pays off above that.
-const LINEAR_THRESHOLD: usize = 4;
-
-/// Build a length-bucketed key index across every detected branch's
-/// keys. Within each bucket, choose the cheapest probe shape: linear
-/// sweep when there are ≤ [`LINEAR_THRESHOLD`] entries OR when
-/// first-byte collisions would force a fallback, otherwise a dense
-/// 256-entry first-byte lookup table.
-///
-/// Branch indices are clamped to `u8` because the dispatch table on
-/// the wider Alt already encodes per-arm via `u8` (see
-/// `AltDispatch::table`). When more than 255 branches feed a single
-/// key dispatch, the surplus simply degrades to the linear fallback
-/// without changing semantics.
-fn build_key_index(detected: &[DetectedBranch]) -> KeyIndex {
-    use std::collections::BTreeMap;
-
-    let mut by_len: BTreeMap<u8, Vec<KeyEntry>> = BTreeMap::new();
-    for det in detected {
-        let branch_idx = det.branch_idx.min(u8::MAX as usize) as u8;
-        for lit in &det.key_literals {
-            let key_bytes = lit.as_bytes().to_vec();
-            let key_len = key_bytes.len().min(u8::MAX as usize) as u8;
-            by_len.entry(key_len).or_default().push(KeyEntry {
-                key_bytes,
-                branch_idx,
-            });
-        }
-    }
-
-    let mut buckets = Vec::with_capacity(by_len.len());
-    for (key_len, entries) in by_len {
-        let probe = solve_bucket_probe(&entries);
-        buckets.push(LengthBucket {
-            key_len,
-            entries,
-            probe,
-        });
-    }
-    KeyIndex { buckets }
-}
-
-/// Pick the codegen probe shape for a single length bucket.
-///
-/// Uses the first-byte perfect-hash form when the bucket is large
-/// enough to amortize the table emission AND every entry has a
-/// distinct first byte. Falls back to linear sweep otherwise.
-fn solve_bucket_probe(entries: &[KeyEntry]) -> BucketProbe {
-    if entries.len() <= LINEAR_THRESHOLD {
-        return BucketProbe::Linear;
-    }
-    let mut cells = vec![u8::MAX; 256];
-    for (idx, entry) in entries.iter().enumerate() {
-        let first = match entry.key_bytes.first() {
-            Some(b) => *b,
-            None => return BucketProbe::Linear,
-        };
-        let cell = &mut cells[first as usize];
-        if *cell != u8::MAX {
-            // First-byte collision — fall back to linear so the
-            // codegen doesn't need to emit a secondary probe.
-            return BucketProbe::Linear;
-        }
-        // Branch index inside the bucket fits comfortably in a u8
-        // because each bucket's entry count is bounded by the total
-        // detected literal count, which the AltDispatch already caps.
-        *cell = idx as u8;
-    }
-    BucketProbe::FirstByteTable { cells }
 }
 
 // ─── Detection Helpers ─────────────────────────────────────────────────────

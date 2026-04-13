@@ -36,10 +36,9 @@ pub use vm::interpreter;
 
 // IR type re-exports (from `types/`).
 pub use types::{
-    AltBranch, AltDispatch, BucketProbe, DelimScanConfig, DetectedBranch, DispatchHint,
-    FnDescriptor, FnId, GrammarIR, GrammarSpan, IrNode, IrRule, KeyClass, KeyDispatchConfig,
-    KeyDispatchMatch, KeyEntry, KeyIndex, LengthBucket, MapBinOp, MapExpr, MapUnaryOp,
-    MemoStrategy, PrettyHints, RuleDirectives, RuleId, RuleMeta, StringId, SubVariant,
-    TokenDispatchArm, TypeDesc, TypeDescId, TypeDescInterner, key_class_regex_pattern,
-    parse_sep_hint, parse_split_hint,
+    AltBranch, AltDispatch, DelimScanConfig, DetectedBranch, DispatchHint, FnDescriptor, FnId,
+    GrammarIR, GrammarSpan, IrNode, IrRule, KeyClass, KeyDispatchConfig, KeyDispatchMatch,
+    MapBinOp, MapExpr, MapUnaryOp, MemoStrategy, PrettyHints, RuleDirectives, RuleId, RuleMeta,
+    StringId, SubVariant, TokenDispatchArm, TypeDesc, TypeDescId, TypeDescInterner,
+    key_class_regex_pattern, parse_sep_hint, parse_split_hint,
 };

@@ -181,6 +181,32 @@ impl Tape {
         &self.records[offset.0 as usize]
     }
 
+    /// Look up a record by offset **without bounds checking**.
+    ///
+    /// # Safety
+    ///
+    /// The caller must guarantee that `offset` is not the
+    /// [`TapeOffset::NONE`] sentinel and that `offset.0 as usize`
+    /// is less than `self.len()`. Both invariants hold for every
+    /// offset produced by [`TapeBuilder::push_leaf`] /
+    /// [`TapeBuilder::push_compound`] when reading from the same
+    /// tape that produced them.
+    #[inline]
+    pub unsafe fn get_unchecked(&self, offset: TapeOffset) -> &TapeRec {
+        debug_assert!(
+            !offset.is_none(),
+            "Tape::get_unchecked called with TapeOffset::NONE sentinel"
+        );
+        debug_assert!(
+            (offset.0 as usize) < self.records.len(),
+            "Tape::get_unchecked: offset {} out of range (len {})",
+            offset.0,
+            self.records.len()
+        );
+        // SAFETY: caller guarantees offset is in bounds.
+        unsafe { self.records.get_unchecked(offset.0 as usize) }
+    }
+
     /// Look up a record by offset, returning `None` for the sentinel
     /// or out-of-range offsets.
     #[inline]

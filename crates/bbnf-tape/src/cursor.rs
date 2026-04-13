@@ -56,10 +56,18 @@ impl<'tape> TapeCursor<'tape> {
         self.offset
     }
 
-    /// The current record (panics if `offset` is the sentinel).
+    /// The current record.
+    ///
+    /// Uses unchecked indexing — safe because every `TapeCursor` is
+    /// constructed from offsets that originate from `TapeBuilder`
+    /// pushes into the same tape, and the tape is immutable during
+    /// reads.
     #[inline]
     pub fn record(&self) -> &'tape TapeRec {
-        self.tape.get(self.offset)
+        // SAFETY: `self.offset` was produced by a `TapeBuilder::push_*`
+        // call on the same tape and is never the NONE sentinel (cursors
+        // are only constructed with valid offsets).
+        unsafe { self.tape.get_unchecked(self.offset) }
     }
 
     /// Classification tag of the current record.
@@ -157,10 +165,9 @@ impl<'tape> TapeCursor<'tape> {
             let mut pos = parent_offset;
             while pos > start {
                 let co = pos - 1;
-                let Some(child_rec) = tape.try_get(TapeOffset(co as u32))
-                else {
-                    break;
-                };
+                // SAFETY: `co` is in range [start, parent_offset), both
+                // valid tape offsets from `child_off` / parent offset.
+                let child_rec = unsafe { tape.get_unchecked(TapeOffset(co as u32)) };
                 out.push(TapeCursor::new(tape, TapeOffset(co as u32)));
                 pos = backward_step(child_rec, co);
             }
@@ -194,13 +201,11 @@ fn count_backward(tape: &Tape, start: usize, end: usize) -> usize {
     let mut pos = end;
     while pos > start {
         let co = pos - 1;
-        match tape.try_get(TapeOffset(co as u32)) {
-            Some(rec) => {
-                count += 1;
-                pos = backward_step(rec, co);
-            }
-            None => break,
-        }
+        // SAFETY: `co` is in range [start, end), both of which are
+        // valid tape offsets from `child_off` / parent offset.
+        let rec = unsafe { tape.get_unchecked(TapeOffset(co as u32)) };
+        count += 1;
+        pos = backward_step(rec, co);
     }
     count
 }
@@ -218,7 +223,8 @@ fn nth_backward<'tape>(
     let mut step = 0usize;
     while pos > start {
         let co = pos - 1;
-        let rec = tape.try_get(TapeOffset(co as u32))?;
+        // SAFETY: `co` is in range [start, end), both valid tape offsets.
+        let rec = unsafe { tape.get_unchecked(TapeOffset(co as u32)) };
         if step == n {
             return Some(TapeCursor::new(tape, TapeOffset(co as u32)));
         }

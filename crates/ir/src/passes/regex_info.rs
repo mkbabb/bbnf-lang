@@ -51,14 +51,41 @@ pub fn compute_regex_info(ir: &mut GrammarIR) {
     // the per-compile cache through the HIR canonicalization step.
     for &sid in seen.keys() {
         let pattern = ir.get_string(sid);
-        if let Some(info) =
+        if let Some(mut info) =
             bbnf_regex::RegexInfo::analyze_with_cost_cached(pattern, &cost, &mut sat_cache)
         {
+            // AR.6.3: FAMILY_HELPER is a bbnf-lang policy decision —
+            // set the bit when the classification matches a variant
+            // that has a kernel module in backend/kernels/.
+            if has_kernel_coverage(&info.classification) {
+                info.feasible_engines
+                    .insert(bbnf_regex::info::EngineSet::FAMILY_HELPER);
+            }
             info_map.insert(sid, info);
         }
     }
 
     ir.regex_info = info_map;
+}
+
+/// bbnf-lang kernel coverage policy: returns `true` for RegexClass
+/// variants that have a dedicated kernel module in
+/// `crates/core/src/backend/kernels/`. This is the single source of
+/// truth for the FAMILY_HELPER bit — previously hardcoded inside
+/// bbnf-regex's `derive_feasible_engines`.
+fn has_kernel_coverage(classification: &bbnf_regex::classify::RegexClass) -> bool {
+    use bbnf_regex::classify::RegexClass;
+    matches!(
+        classification,
+        RegexClass::Numeric { .. }
+            | RegexClass::QuotedString { .. }
+            | RegexClass::HexDigits
+            | RegexClass::Identifier { .. }
+            | RegexClass::WhitespaceWithBlockComment
+            | RegexClass::CharClassQuantified(_)
+            | RegexClass::PrefixThenClass { .. }
+            | RegexClass::AccelDriven(_)
+    )
 }
 
 fn collect_regex_ids(node: &IrNode, seen: &mut HashMap<StringId, ()>) {

@@ -94,6 +94,23 @@ This applies to: `cargo test`, `cargo bench`, `cargo expand`,
 `cargo build`, `cargo check --workspace`, `samply record`, and
 any command taking > 30 seconds.
 
+**Never read large output files line-by-line with `Read`.** Expanded
+proc-macro output (`cargo expand`) routinely exceeds 100K lines.
+Use targeted `grep -n`, `awk`, or `sed` to extract the specific
+function, block, or pattern you need:
+
+```bash
+# CORRECT: find structure, then read only the relevant slice
+grep -n "fn __declaration\|fn __ruleItem" /tmp/expand-css.txt
+awk 'NR>=5000 && NR<=5100' /tmp/expand-css.txt
+
+# CORRECT: extract a specific function body
+awk '/fn __declaration/,/^        fn __/' /tmp/expand-css.txt > /tmp/decl.txt
+wc -l /tmp/decl.txt   # know the size before reading
+
+# WRONG: reading 200 lines at a time through a 130K-line file
+```
+
 ## Cache clearing
 
 **Clear ALL `.bbnf-cache` directories before any bench, regen,

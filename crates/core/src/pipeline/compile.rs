@@ -167,11 +167,16 @@ fn finalize_compile(
         ))),
         CompileTarget::Vm => {
             bbnf_ir::passes::project_types(&mut ir);
+            // Tranche AQ.6.B — plan aggregate payload layouts so any
+            // VM consumer that reads `ir.payload_layouts` sees the
+            // same map the Rust backend does.
+            ir.payload_layouts = bbnf_ir::passes::compute_payload_layouts(&ir);
             Ok(CompileOutput::Vm(ir))
         }
         CompileTarget::Ts => {
             bbnf_ir::passes::compute_sp_method_rules(&mut ir);
             bbnf_ir::passes::project_types(&mut ir);
+            ir.payload_layouts = bbnf_ir::passes::compute_payload_layouts(&ir);
 
             let entry_name = ir.get_string(ir.rules[ir.entry as usize].name).to_string();
             let enum_name = format!("{entry_name}Value");
@@ -191,6 +196,7 @@ fn finalize_compile(
         CompileTarget::Wasm => {
             bbnf_ir::passes::compute_sp_method_rules(&mut ir);
             bbnf_ir::passes::project_types(&mut ir);
+            ir.payload_layouts = bbnf_ir::passes::compute_payload_layouts(&ir);
 
             let entry_name = ir.get_string(ir.rules[ir.entry as usize].name).to_string();
             let module_name = format!("{entry_name}_parser");

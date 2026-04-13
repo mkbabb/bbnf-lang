@@ -7,6 +7,7 @@
 
 use std::collections::HashSet;
 
+use bbnf_ir::passes::PayloadLayout;
 use bbnf_ir::{RuleId, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::format_ident;
@@ -81,6 +82,21 @@ pub struct RustEmitCtx {
     /// emitter; the rule epilogue selects the matching `push_leaf_with_<T>`
     /// (or `push_leaf` when `__has_payload` is false).
     pub payload_type: Option<TypeDesc>,
+    /// AQ.6.B: the rule body's projected aggregate payload layout,
+    /// sourced from `ir.payload_layouts` in `pre_compile_rule_body`.
+    /// `Some(layout)` iff the rule's `TypeDesc` is a `Tuple` of scalars
+    /// whose packed total fits in `MAX_PAYLOAD_BYTES`. When set, the
+    /// rule prelude reserves a 16-byte stack buffer; per-field scalar
+    /// writes go to the buffer at the layout-recorded offset; the
+    /// epilogue commits via `push_leaf_with_aggregate`. Leaf emitters
+    /// consult [`Self::next_aggregate_field`] to advance the
+    /// per-field cursor.
+    pub payload_layout: Option<PayloadLayout>,
+    /// AQ.6.B: cursor into the active `payload_layout`'s field list.
+    /// Each scalar capture in the body advances the cursor by one
+    /// via `next_aggregate_field`. Reset to 0 when the layout is
+    /// installed in `pre_compile_rule_body`.
+    pub aggregate_field_cursor: usize,
 }
 
 impl RustEmitCtx {
@@ -101,7 +117,25 @@ impl RustEmitCtx {
             tape_surgery: None,
             alt_context_stack: Vec::new(),
             payload_type: None,
+            payload_layout: None,
+            aggregate_field_cursor: 0,
         }
+    }
+
+    /// AQ.6.B: advance the aggregate-field cursor and return a
+    /// reference to the field at the previous position. Returns
+    /// `None` when no aggregate layout is active or when the cursor
+    /// has already consumed every field. Leaf-payload emitters call
+    /// this in payload-write order so each scalar capture lands at
+    /// the correct buffer offset.
+    pub fn next_aggregate_field(
+        &mut self,
+    ) -> Option<bbnf_ir::passes::PayloadField> {
+        let layout = self.payload_layout.as_ref()?;
+        let idx = self.aggregate_field_cursor;
+        let field = layout.fields.get(idx).cloned()?;
+        self.aggregate_field_cursor = idx + 1;
+        Some(field)
     }
 
     /// Access the `IrCodegenCtx`.

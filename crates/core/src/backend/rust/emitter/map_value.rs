@@ -12,6 +12,7 @@
 //! epilogue via `push_compound(..., variant_idx)`; there is no
 //! `Enum::Variant(inner)` construction anywhere in the emitter.
 
+use bbnf_ir::passes::PayloadField;
 use bbnf_ir::{FnDescriptor, GrammarIR, MapExpr, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -35,6 +36,35 @@ impl RustEmitter {
     }
 
     pub(super) fn emit_number_convert_impl(&mut self, ctx: &mut RustEmitCtx) -> TokenStream {
+        // AQ.6.B: when an aggregate layout is active, advance the
+        // field cursor and write the scanned f64 into the buffer at
+        // the layout-recorded offset. The aggregate path supersedes
+        // the legacy `__payload_f64` capture.
+        if ctx.payload_layout.is_some() {
+            if let Some(field) = ctx.next_aggregate_field() {
+                if matches!(field.ty, TypeDesc::F64) {
+                    let offset = field.offset as usize;
+                    let end = offset + 8;
+                    return quote! {
+                        match ::parse_that::scan_number_strict_f64(state) {
+                            Some(__v) => {
+                                __aggregate_buf[#offset..#end]
+                                    .copy_from_slice(&__v.to_le_bytes());
+                                __has_payload = true;
+                                Some(())
+                            }
+                            None => None,
+                        }
+                    };
+                }
+            }
+            // Layout active but the current field is not F64 (or no
+            // more fields) — fall through to side-effect only.
+            return quote! {
+                (::parse_that::scan_number_strict_f64(state)).map(|_| ())
+            };
+        }
+
         // AQ.6.A: when payload_type is F64, capture the scanned value
         // into `__payload_f64` so the epilogue can store it via
         // `push_leaf_with_f64`. NumberConvert is always JSON-class
@@ -83,6 +113,30 @@ impl RustEmitter {
         _ir: &GrammarIR,
         ctx: &mut RustEmitCtx,
     ) -> TokenStream {
+        // AQ.6.B: when an aggregate payload layout is active, the
+        // current Seq position determines which field of the buffer
+        // receives the constant-mapped scalar. Advance the per-field
+        // cursor and write the scalar bytes via `to_le_bytes()` at
+        // the layout-recorded offset.
+        if ctx.payload_layout.is_some() {
+            if let Some(field) = ctx.next_aggregate_field() {
+                if let Some(buf_setter) = aggregate_constant_setter(&field, expr) {
+                    return quote! {
+                        match ({ #inner }) {
+                            Some(_) => { #buf_setter; __has_payload = true; Some(()) }
+                            None => None,
+                        }
+                    };
+                }
+            }
+            // Layout active but no matching scalar literal at this
+            // position — fall through to the side-effect-only path
+            // (the field defaults to its zero-init from the prelude).
+            return quote! {
+                { #inner }
+            };
+        }
+
         // AQ.6.A: when a scalar payload is active and the map
         // expression is a matching constant literal, capture the
         // value into the typed payload variable so the epilogue
@@ -150,6 +204,67 @@ impl RustEmitter {
             _ => Some(quote! { { #inner } }),
         }
     }
+}
+
+/// AQ.6.B: emit the assignment that copies a constant `MapExpr`'s
+/// scalar bytes into the active aggregate buffer at the field's
+/// layout offset. Returns `None` when the `MapExpr` cannot be
+/// coerced to the field's `TypeDesc` (caller falls through to
+/// side-effect-only emission).
+///
+/// Each scalar lowers to a `to_le_bytes()` call followed by a
+/// `copy_from_slice` into the buffer slice — LLVM lowers this to a
+/// single store of the appropriate width.
+fn aggregate_constant_setter(field: &PayloadField, expr: &MapExpr) -> Option<TokenStream> {
+    let offset = field.offset as usize;
+    let size = field.ty.payload_size_bytes()? as usize;
+    let value_expr: TokenStream = match (&field.ty, expr) {
+        (TypeDesc::Bool, MapExpr::BoolLit(v)) => {
+            let val = *v as u8;
+            quote! { [#val] }
+        }
+        (TypeDesc::I8, MapExpr::IntLit(v)) => {
+            let val = *v as i8;
+            quote! { (#val as i8).to_le_bytes() }
+        }
+        (TypeDesc::U8, MapExpr::IntLit(v)) => {
+            let val = (*v & 0xFF) as u8;
+            quote! { [#val] }
+        }
+        (TypeDesc::I16, MapExpr::IntLit(v)) => {
+            let val = *v as i16;
+            quote! { (#val as i16).to_le_bytes() }
+        }
+        (TypeDesc::U16, MapExpr::IntLit(v)) => {
+            let val = *v as u16;
+            quote! { (#val as u16).to_le_bytes() }
+        }
+        (TypeDesc::I32, MapExpr::IntLit(v)) => {
+            let val = *v as i32;
+            quote! { (#val as i32).to_le_bytes() }
+        }
+        (TypeDesc::U32, MapExpr::IntLit(v)) => {
+            let val = *v as u32;
+            quote! { (#val as u32).to_le_bytes() }
+        }
+        (TypeDesc::I64, MapExpr::IntLit(v)) => {
+            let val = *v;
+            quote! { (#val as i64).to_le_bytes() }
+        }
+        (TypeDesc::U64, MapExpr::IntLit(v)) => {
+            let val = *v as u64;
+            quote! { (#val as u64).to_le_bytes() }
+        }
+        (TypeDesc::F64, MapExpr::FloatLit(v)) => {
+            let val = *v;
+            quote! { (#val as f64).to_le_bytes() }
+        }
+        _ => return None,
+    };
+    let end = offset + size;
+    Some(quote! {
+        __aggregate_buf[#offset..#end].copy_from_slice(&#value_expr)
+    })
 }
 
 /// AQ.6.A: emit the assignment that captures a constant `MapExpr`

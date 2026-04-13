@@ -55,6 +55,7 @@ fn make_ir(rules: Vec<IrRule>, strings: Vec<String>) -> GrammarIR {
         cost_config: CostConfig::default(),
         type_desc_interner: TypeDescInterner::new(),
         materialization: HashMap::new(),
+        payload_layouts: HashMap::new(),
     };
     bbnf_ir::dag::ensure_dag(&mut ir);
     // Run the AB.0 classification first — the CSP consumes its

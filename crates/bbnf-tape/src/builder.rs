@@ -164,6 +164,22 @@ impl TapeBuilder {
         (slot + 1) as u16
     }
 
+    /// Append `slot_count` consecutive 8-byte payload slots and
+    /// return the byte offset of the first slot.
+    ///
+    /// The returned offset is the raw byte index into
+    /// `self.payloads` (not a 1-based payload_idx). The caller is
+    /// responsible for translating it into a `payload_idx` via
+    /// `(byte_offset / 8) + 1` when the slots are committed to a
+    /// `TapeRec`. Used by [`Self::push_leaf_with_aggregate`] for
+    /// multi-slot aggregate payloads.
+    #[inline]
+    fn alloc_aggregate_slots(&mut self, slot_count: usize) -> usize {
+        let start = self.payloads.len();
+        self.payloads.resize(start + slot_count * 8, 0);
+        start
+    }
+
     /// Append a leaf record with an arbitrary scalar payload.
     ///
     /// Writes `size_of::<T>()` bytes into the payload buffer (LE-host
@@ -344,6 +360,74 @@ impl TapeBuilder {
         value: u64,
     ) -> TapeOffset {
         self.push_leaf_with_scalar::<u64>(kind, span_lo, span_hi, variant_idx, value)
+    }
+
+    /// Append a leaf record carrying an aggregate (multi-field)
+    /// payload of up to 16 bytes.
+    ///
+    /// The caller supplies a slice of bytes representing a packed
+    /// scalar tuple — for example, `[f64 value, u8 unit]` packed
+    /// into 9 bytes by the codegen following the offsets recorded
+    /// in [`bbnf_ir::passes::PayloadLayout`]. The builder rounds
+    /// the byte count up to the next 8-byte slot, allocates that
+    /// many consecutive payload slots, and copies the bytes in
+    /// verbatim.
+    ///
+    /// The corresponding reader is [`crate::Tape::payload_bytes`],
+    /// which returns the leading `byte_count` bytes of the
+    /// allocated region.
+    ///
+    /// Empty aggregates (`bytes.is_empty()`) push a leaf with no
+    /// payload, equivalent to [`Self::push_leaf`].
+    #[inline]
+    pub fn push_leaf_with_aggregate(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        span_hi: u32,
+        variant_idx: u8,
+        bytes: &[u8],
+    ) -> TapeOffset {
+        debug_assert!(
+            kind.is_leaf(),
+            "push_leaf_with_aggregate on compound kind {:?}",
+            kind
+        );
+        debug_assert!(
+            bytes.len() <= 16,
+            "aggregate payload exceeds 16 bytes: {}",
+            bytes.len()
+        );
+
+        let payload_idx: u16 = if bytes.is_empty() {
+            0
+        } else {
+            // Round up to next 8-byte slot.
+            let slot_count = bytes.len().div_ceil(8);
+            let start = self.alloc_aggregate_slots(slot_count);
+            // SAFETY: `start..start + bytes.len()` was just
+            // allocated by `alloc_aggregate_slots` and is non-
+            // overlapping with the source.
+            unsafe {
+                std::ptr::copy_nonoverlapping(
+                    bytes.as_ptr(),
+                    self.payloads.as_mut_ptr().add(start),
+                    bytes.len(),
+                );
+            }
+            ((start / 8) + 1) as u16
+        };
+
+        let idx = self.tape.records.len();
+        self.tape.records.push(TapeRec {
+            kind,
+            flags: variant_idx & 0x3F,
+            payload_idx,
+            span_lo,
+            span_hi,
+            child_off: TapeOffset::NONE,
+        });
+        TapeOffset(idx as u32)
     }
 
     /// Mark the parse as failed with an offset and optional rule label.

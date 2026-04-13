@@ -33,6 +33,7 @@ fn make_ir(body: IrNode) -> GrammarIR {
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
+        payload_layouts: std::collections::HashMap::new(),
     }
 }
 
@@ -66,6 +67,7 @@ fn make_ir_with_strings(body: IrNode, strings: Vec<String>) -> GrammarIR {
         regex_engine_decisions: std::collections::HashMap::new(),
         dag: None, cost_config: bbnf_ir::CostConfig::default(), type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: std::collections::HashMap::new(),
+        payload_layouts: std::collections::HashMap::new(),
     }
 }
 

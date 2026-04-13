@@ -11,6 +11,7 @@ pub mod lr;
 pub mod materialization;
 pub mod metadata;
 pub mod patterns;
+pub mod payload;
 pub mod prefix;
 pub mod recognizers;
 pub mod regex_info;
@@ -31,6 +32,7 @@ pub use materialization::{
     MaterializationClass, classify_materialization, mat_join,
 };
 pub use metadata::{compute_aliases, compute_transparent};
+pub use payload::{compute_payload_layouts, plan_layout, MAX_PAYLOAD_BYTES, PayloadField, PayloadLayout};
 pub use prefix::factor_common_prefixes;
 pub use sets::{
     compute_first_sets, compute_follow_sets, compute_rule_deps, compute_scc,

@@ -407,31 +407,42 @@ impl Emitter for RustEmitter {
         // the typed prelude / epilogue helpers and the typed
         // `push_leaf_with_<T>` API.
         ctx.payload_type = None;
+        ctx.payload_layout = None;
+        ctx.aggregate_field_cursor = 0;
         if is_visible {
-            // Direct rule type lookup.
-            let direct = ir
-                .types
-                .iter()
-                .find_map(|(rid, td)| if *rid == rule.id { Some(td.clone()) } else { None })
-                .filter(|td| td.is_scalar_payload());
-            if direct.is_some() {
-                ctx.payload_type = direct;
-            } else if is_alt {
-                // For Alt-bodied rules where the rule's projected type
-                // is non-scalar but a branch references a scalar-typed
-                // rule (e.g. the `value` rule in JSON whose Alt
-                // includes a `number` branch), surface the per-branch
-                // scalar type so the epilogue picks the matching
-                // `push_leaf_with_<T>`.
-                if let bbnf_ir::IrNode::Alt(branches, _) = &rule.body {
-                    for b in branches {
-                        if let bbnf_ir::IrNode::Ref(rid) = &b.node {
-                            if let Some(td) = ir.types.iter().find_map(|(r, t)| {
-                                if *r == *rid { Some(t.clone()) } else { None }
-                            }) {
-                                if td.is_scalar_payload() {
-                                    ctx.payload_type = Some(td);
-                                    break;
+            // AQ.6.B: prefer the aggregate layout when one is planned
+            // for this rule. The layout planner only emits an entry
+            // when every field is a scalar payload and the packed
+            // total fits in MAX_PAYLOAD_BYTES, so any `Some(layout)`
+            // here is unconditionally codegen-ready.
+            if let Some(layout) = ir.payload_layouts.get(&rule.id) {
+                ctx.payload_layout = Some(layout.clone());
+            } else {
+                // Direct rule type lookup.
+                let direct = ir
+                    .types
+                    .iter()
+                    .find_map(|(rid, td)| if *rid == rule.id { Some(td.clone()) } else { None })
+                    .filter(|td| td.is_scalar_payload());
+                if direct.is_some() {
+                    ctx.payload_type = direct;
+                } else if is_alt {
+                    // For Alt-bodied rules where the rule's projected type
+                    // is non-scalar but a branch references a scalar-typed
+                    // rule (e.g. the `value` rule in JSON whose Alt
+                    // includes a `number` branch), surface the per-branch
+                    // scalar type so the epilogue picks the matching
+                    // `push_leaf_with_<T>`.
+                    if let bbnf_ir::IrNode::Alt(branches, _) = &rule.body {
+                        for b in branches {
+                            if let bbnf_ir::IrNode::Ref(rid) = &b.node {
+                                if let Some(td) = ir.types.iter().find_map(|(r, t)| {
+                                    if *r == *rid { Some(t.clone()) } else { None }
+                                }) {
+                                    if td.is_scalar_payload() {
+                                        ctx.payload_type = Some(td);
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -453,6 +464,8 @@ impl Emitter for RustEmitter {
         // Clear per-rule context after the rule is emitted.
         ctx.branch_idx_ident = None;
         ctx.tape_surgery = None;
+        ctx.payload_layout = None;
+        ctx.aggregate_field_cursor = 0;
         result
     }
 

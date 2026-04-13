@@ -64,6 +64,7 @@ fn make_ir_with_entry(rules: Vec<IrRule>, strings: Vec<String>, entry: u32) -> G
         cost_config: CostConfig::default(),
         type_desc_interner: TypeDescInterner::new(),
         materialization: HashMap::new(),
+        payload_layouts: HashMap::new(),
     };
     bbnf_ir::dag::ensure_dag(&mut ir);
     ir
@@ -130,7 +131,7 @@ fn fixed_shape_false_only() -> EClassFacts {
     }
 }
 
-// ── Tier B agree path ────────────────────────────────────────────────
+// ── Scalar payload tier — facts agree path ──────────────────────────
 
 /// A rule whose body is structurally `TransparentElide`-eligible
 /// (Epsilon) AND whose pre-computed facts agree on all four bits
@@ -159,7 +160,7 @@ fn structural_and_facts_agree_yields_transparent_elide() {
     assert_eq!(rule_class(&ir, 0), MaterializationClass::TransparentElide);
 }
 
-// ── Tier B disagree path ─────────────────────────────────────────────
+// ── Scalar payload tier — facts disagree path ───────────────────────
 
 /// A rule whose body is structurally `TransparentElide`-eligible
 /// but whose facts map says `is_fixed_shape == false` demotes to

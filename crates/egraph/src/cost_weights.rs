@@ -80,7 +80,8 @@ pub struct CostWeights {
     /// Cost of a single `TapeBuilder::push_*` invocation. Applied
     /// to every node that materializes to a tape record
     /// (`MustTape` / `TapeSpanOnly`); elided for `TransparentElide`
-    /// nodes. Drives the Tier B vs Tier A decision in AF.3–AF.5.
+    /// nodes. Drives the scalar payload tier vs full-tape decision
+    /// in AF.3–AF.5.
     pub tape_push: f64,
 
     /// Per-arm cost of a dispatch-branch (byte-match → jump). The
@@ -100,11 +101,12 @@ pub struct CostWeights {
     /// `TierFollowsMaterialization` constraint in AF.3.
     pub prettify_emission: f64,
 
-    /// Cost of coercing a Tier B direct value into a tape record at
-    /// a Tape parent → Direct child call boundary. Pre-seed for
-    /// AG's module substrate (`@import` boundary coercion is the
-    /// same operation); AG consumes this dimension without adding
-    /// a new one.
+    /// Cost of coercing a scalar payload tier value (TypeDesc-driven
+    /// payload projection) into a tape record at a Tape parent →
+    /// Direct child call boundary. Pre-seed for AG's module
+    /// substrate (`@import` boundary coercion is the same
+    /// operation); AG consumes this dimension without adding a new
+    /// one.
     pub cross_module_coercion: f64,
 
 }

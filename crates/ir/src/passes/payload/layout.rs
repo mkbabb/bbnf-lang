@@ -1,0 +1,99 @@
+//! Aggregate payload layout planner.
+//!
+//! Given a rule's projected `TypeDesc::Tuple(scalar_fields...)`, produce
+//! a [`PayloadLayout`] with explicit field offsets respecting natural
+//! scalar alignment. Rules whose total layout would exceed
+//! [`MAX_PAYLOAD_BYTES`] (16) are skipped — they continue using the
+//! existing compound-children pathway.
+
+use std::collections::HashMap;
+
+use crate::types::{GrammarIR, RuleId, TypeDesc};
+
+/// Maximum aggregate payload size in bytes.
+///
+/// 16 bytes matches the size of a single [`bbnf_tape::TapeRec`] and
+/// gives every aggregate at most two payload slots (`(payload_idx -
+/// 1) * 8` to `payload_idx * 8` and the next slot). Rules whose
+/// scalar tuple exceeds this fall back to the regular compound
+/// representation rather than promoting to a heap allocation.
+pub const MAX_PAYLOAD_BYTES: u8 = 16;
+
+/// Planned aggregate payload layout for a rule.
+///
+/// `fields` lists the projected scalar fields with their byte
+/// offsets into a 16-byte aggregate buffer. `total_bytes` is the
+/// number of bytes the buffer actually occupies — the codegen reads
+/// only this many bytes back through
+/// [`bbnf_tape::Tape::payload_bytes`].
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PayloadLayout {
+    pub fields: Vec<PayloadField>,
+    pub total_bytes: u8,
+}
+
+/// One aligned scalar field within an aggregate payload.
+///
+/// The `ty` member is the scalar `TypeDesc` (any variant satisfying
+/// [`TypeDesc::is_scalar_payload`]). The `offset` is the byte index
+/// into the aggregate buffer where this field's bytes begin —
+/// guaranteed to be a multiple of `ty.payload_align_bytes()`.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PayloadField {
+    pub ty: TypeDesc,
+    pub offset: u8,
+}
+
+/// Compute aggregate payload layouts for every rule whose `TypeDesc`
+/// is a `Tuple` of scalars.
+///
+/// Returns a map from `RuleId` to the planned layout. Rules whose
+/// layout would exceed [`MAX_PAYLOAD_BYTES`] are omitted (they
+/// continue to use compound-children storage). Non-Tuple rule types
+/// are also omitted — scalar-leaf rules already live on the
+/// `push_leaf_with_<T>` payload path; this planner is exclusively
+/// for the multi-field aggregate case.
+pub fn compute_payload_layouts(ir: &GrammarIR) -> HashMap<RuleId, PayloadLayout> {
+    let mut out = HashMap::new();
+    for (rule_id, ty) in &ir.types {
+        let TypeDesc::Tuple(fields) = ty else {
+            continue;
+        };
+        let Some(layout) = plan_layout(fields) else {
+            continue;
+        };
+        out.insert(*rule_id, layout);
+    }
+    out
+}
+
+/// Produce a layout plan for a tuple of scalar TypeDescs.
+///
+/// Walks the fields in declaration order, aligning each field to its
+/// natural alignment and bumping the running offset. Returns `None`
+/// if any field is non-scalar or the total would exceed
+/// [`MAX_PAYLOAD_BYTES`].
+pub fn plan_layout(fields: &[TypeDesc]) -> Option<PayloadLayout> {
+    let mut offset: u8 = 0;
+    let mut planned = Vec::with_capacity(fields.len());
+    for f in fields {
+        if !f.is_scalar_payload() {
+            return None;
+        }
+        let size = f.payload_size_bytes()?;
+        let align = f.payload_align_bytes()?;
+        let aligned = (offset + align - 1) & !(align - 1);
+        if aligned + size > MAX_PAYLOAD_BYTES {
+            return None;
+        }
+        planned.push(PayloadField {
+            ty: f.clone(),
+            offset: aligned,
+        });
+        offset = aligned + size;
+    }
+    Some(PayloadLayout {
+        fields: planned,
+        total_bytes: offset,
+    })
+}

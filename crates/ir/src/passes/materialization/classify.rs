@@ -425,7 +425,8 @@ fn gate_transparent_elide(
 }
 
 /// True iff all four dormant e-graph bits agree that this class is
-/// eligible for Tier B direct-to-struct elision.
+/// eligible for the scalar payload tier (TypeDesc-driven value
+/// materialization).
 ///
 /// The four bits — `is_fixed_shape`, `elision_safe`, `closure_free`,
 /// and `all_descendants_elidable` — are the monotone lattice joins

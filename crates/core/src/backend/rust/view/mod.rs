@@ -379,6 +379,12 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
 /// - `seq::emit_seq_accessors` for Seq
 /// - `alt::emit_alt_accessors` for Alt
 /// - `repeat::emit_repeat_accessors` for Repeat
+///
+/// AQ.6.B exception: a rule with an aggregate `PayloadLayout`
+/// always lands in `leaves::emit_leaf_accessors`. The rule's tape
+/// record is a `push_leaf_with_aggregate` leaf (no children) even
+/// though its IR body is structurally a Seq, so the per-field
+/// reader belongs on the leaf accessor surface.
 fn emit_typed_accessors(
     rule: &bbnf_ir::IrRule,
     rule_name: &str,
@@ -390,6 +396,13 @@ fn emit_typed_accessors(
         .types
         .iter()
         .find_map(|(id, ty)| (*id == rule.id).then_some(ty));
+
+    // AQ.6.B: aggregate-payload rules go straight to the leaf
+    // emitter, which generates the typed `.value()` reader from the
+    // packed bytes.
+    if let Some(layout) = ir.payload_layouts.get(&rule.id) {
+        return leaves::emit_aggregate_accessors(rule, rule_name, layout, type_desc);
+    }
 
     // Peel the body through Map/OptionalWhitespace to find the
     // structurally meaningful shape.

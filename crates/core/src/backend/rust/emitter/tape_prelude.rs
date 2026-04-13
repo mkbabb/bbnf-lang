@@ -55,6 +55,7 @@
 //! these helpers. A single shim guarantees no drift between leaf
 //! and compound emission paths.
 
+use bbnf_ir::passes::PayloadLayout;
 use bbnf_ir::TypeDesc;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
@@ -177,6 +178,117 @@ fn scalar_zero_init(td: &TypeDesc) -> TokenStream {
         TypeDesc::F64 => quote! { 0.0 },
         TypeDesc::Bool => quote! { false },
         _ => quote! { 0 },
+    }
+}
+
+// ── AQ.6.B: Aggregate-payload prelude / epilogue ─────────────────
+//
+// Activated when `ir.payload_layouts` carries a layout for the
+// rule. The prelude reserves a 16-byte stack buffer plus the
+// per-field payload cursor; per-field scalars write into the
+// buffer at their layout-recorded offsets; the epilogue commits
+// the leading `total_bytes` via `push_leaf_with_aggregate`.
+
+/// Emit the prelude for a `TapeSpanOnly` rule with an aggregate
+/// payload layout.
+///
+/// Reserves a 16-byte stack buffer (zero-initialized so unwritten
+/// bytes are deterministic) plus a `__has_payload` flag the
+/// epilogue checks at runtime — when no field of the body wrote a
+/// scalar (e.g. an Alt branch that was not taken), the rule falls
+/// back to plain `push_leaf` so the tape never carries garbage
+/// payload bytes.
+pub fn emit_tape_span_only_aggregate_prelude(_layout: &PayloadLayout) -> TokenStream {
+    quote! {
+        let __span_lo = state.offset as u32;
+        let mut __aggregate_buf: [u8; 16] = [0u8; 16];
+        let mut __has_payload = false;
+    }
+}
+
+/// Emit the epilogue for a `TapeSpanOnly` rule with an aggregate
+/// payload layout.
+///
+/// On the success path, calls `push_leaf_with_aggregate` over the
+/// leading `total_bytes` of `__aggregate_buf`. When `__has_payload`
+/// is false (the body finished without writing any scalar
+/// captures), falls back to bare `push_leaf` so the tape carries
+/// the span without any payload reference.
+pub fn emit_tape_span_only_aggregate_epilogue(
+    layout: &PayloadLayout,
+    variant_idx: u8,
+) -> TokenStream {
+    let variant_lit = variant_idx;
+    let total_bytes = layout.total_bytes as usize;
+    quote! {
+        if __has_payload {
+            Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with_aggregate(
+                tape,
+                ::bbnf::runtime::tape::TapeKind::Span,
+                __span_lo,
+                state.offset as u32,
+                #variant_lit,
+                &__aggregate_buf[..#total_bytes],
+            ))
+        } else {
+            Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(
+                tape,
+                ::bbnf::runtime::tape::TapeKind::Span,
+                __span_lo,
+                state.offset as u32,
+                #variant_lit,
+            ))
+        }
+    }
+}
+
+/// Emit the prelude for a `MustTape` rule with an aggregate payload
+/// layout.
+///
+/// Like the `TapeSpanOnly` aggregate prelude, but additionally
+/// reserves the children run so the epilogue can decide between
+/// `push_leaf_with_aggregate` (any field wrote a scalar capture) or
+/// the standard compound-children pathway.
+pub fn emit_must_tape_aggregate_prelude(_layout: &PayloadLayout) -> TokenStream {
+    quote! {
+        let __span_lo = state.offset as u32;
+        let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+        let mut __aggregate_buf: [u8; 16] = [0u8; 16];
+        let mut __has_payload = false;
+    }
+}
+
+/// Emit the epilogue for a `MustTape` rule with an aggregate
+/// payload layout.
+///
+/// Prefers `push_leaf_with_aggregate` when any field wrote a scalar
+/// capture; otherwise falls through to the compound-children push.
+pub fn emit_must_tape_aggregate_epilogue(
+    layout: &PayloadLayout,
+    variant_idx: u8,
+) -> TokenStream {
+    let variant_lit = variant_idx;
+    let total_bytes = layout.total_bytes as usize;
+    quote! {
+        if __has_payload {
+            Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with_aggregate(
+                tape,
+                ::bbnf::runtime::tape::TapeKind::Span,
+                __span_lo,
+                state.offset as u32,
+                #variant_lit,
+                &__aggregate_buf[..#total_bytes],
+            ))
+        } else {
+            Some(::bbnf::runtime::tape::TapeBuilder::push_compound(
+                tape,
+                ::bbnf::runtime::tape::TapeKind::Rule,
+                __children,
+                __span_lo,
+                state.offset as u32,
+                #variant_lit,
+            ))
+        }
     }
 }
 

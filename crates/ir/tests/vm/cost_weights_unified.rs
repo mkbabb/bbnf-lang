@@ -76,6 +76,7 @@ fn empty_ir() -> GrammarIR {
         cost_config: CostConfig::default(),
         type_desc_interner: TypeDescInterner::new(),
         materialization: HashMap::new(),
+        payload_layouts: HashMap::new(),
     }
 }
 
@@ -569,7 +570,8 @@ fn prettify_emission_scales_with_pretty_subtree_size() {
 // ── Sanity: materialization gate did not introduce a private knob ────────────
 
 /// AF.1 wired `EClassFacts::is_fixed_shape` (and three siblings) into
-/// `classify_materialization` as a Tier B eligibility gate. The gate
+/// `classify_materialization` as a scalar payload tier eligibility
+/// gate. The gate
 /// is additive — it rejects structurally-eligible nodes whose facts
 /// disagree — and the AF.2 contract says this gate must not have
 /// introduced its own numeric cost knob. Every cost decision the

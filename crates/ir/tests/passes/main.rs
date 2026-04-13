@@ -15,6 +15,7 @@ mod passes_follow;
 mod passes_inline;
 mod passes_lr;
 mod passes_optimize;
+mod passes_payload;
 mod passes_prefix;
 mod passes_prune;
 mod passes_span;

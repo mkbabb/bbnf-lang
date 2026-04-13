@@ -134,6 +134,11 @@ pub fn analyze_grammar(ir: &mut GrammarIR, config: &EffectiveBackendConfig) -> B
     // so that project_types uses the correct has_sp_method flags for span-method override.
     bbnf_ir::passes::compute_sp_method_rules(ir);
     bbnf_ir::passes::project_types(ir);
+    // Tranche AQ.6.B — plan aggregate payload layouts for any
+    // tuple-of-scalars rule whose total packed size fits in
+    // `MAX_PAYLOAD_BYTES`. Consumed by the Rust emitter and view
+    // layer to materialize typed structs from a flat payload buffer.
+    ir.payload_layouts = bbnf_ir::passes::compute_payload_layouts(ir);
 
     let sp_method_rules = ir
         .rules

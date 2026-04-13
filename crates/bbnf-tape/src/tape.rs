@@ -329,6 +329,31 @@ impl Tape {
     pub fn payload_u64(&self, rec: &TapeRec) -> Option<u64> {
         self.payload_scalar::<u64>(rec)
     }
+
+    /// Read a slice of raw aggregate payload bytes for a record
+    /// that was pushed via
+    /// [`crate::TapeBuilder::push_leaf_with_aggregate`].
+    ///
+    /// The caller knows the total byte width from the rule's
+    /// [`bbnf_ir::passes::PayloadLayout::total_bytes`]; pass it as
+    /// `byte_count`. Returns `None` when the record carries no
+    /// payload (`payload_idx == 0`) or when the buffer is too
+    /// short to satisfy the request.
+    ///
+    /// Field-level reads (`f64::from_le_bytes`,
+    /// `u32::from_le_bytes`, etc.) slice into the returned buffer
+    /// at the per-field `offset` recorded in the layout.
+    #[inline]
+    pub fn payload_bytes(&self, rec: &TapeRec, byte_count: usize) -> Option<&[u8]> {
+        if rec.payload_idx == 0 {
+            return None;
+        }
+        let start = (rec.payload_idx as usize - 1) * 8;
+        if start + byte_count > self.payloads.len() {
+            return None;
+        }
+        Some(&self.payloads[start..start + byte_count])
+    }
 }
 
 impl Default for Tape {

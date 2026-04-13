@@ -7,7 +7,7 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 use bbnf_derive::Parser;
 use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
 
-/// Semantic CSS value types for direct-to-struct parsing.
+/// Semantic CSS value types for TypeDesc-driven value materialization.
 #[allow(dead_code)]
 mod css_types {
     pub fn parse_hex_color(s: &str) -> u32 {

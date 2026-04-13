@@ -80,6 +80,32 @@ impl RustEmitter {
         ir: &GrammarIR,
         ctx: &mut RustEmitCtx,
     ) -> TokenStream {
+        // AQ.6.B: when an aggregate layout is active and the regex
+        // is numeric, advance the field cursor and write into the
+        // buffer at the layout offset.
+        if ctx.payload_layout.is_some() {
+            use parse_that::regex::classify::{RegexClass, classify_regex};
+            if matches!(classify_regex(pattern), RegexClass::Numeric { .. }) {
+                if let Some(field) = ctx.next_aggregate_field() {
+                    if matches!(field.ty, TypeDesc::F64) {
+                        let offset = field.offset as usize;
+                        let end = offset + 8;
+                        return quote! {
+                            match ::parse_that::scan_number_strict_f64(state) {
+                                Some(__v) => {
+                                    __aggregate_buf[#offset..#end]
+                                        .copy_from_slice(&__v.to_le_bytes());
+                                    __has_payload = true;
+                                    Some(())
+                                }
+                                None => None,
+                            }
+                        };
+                    }
+                }
+            }
+        }
+
         // AQ.6.A: for number patterns with F64 payload active, emit
         // the strict number scanner to capture the parsed value into
         // the typed payload variable. IR passes strip

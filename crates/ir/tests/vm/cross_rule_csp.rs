@@ -51,6 +51,7 @@ fn make_ir(rules: Vec<IrRule>, strings: Vec<String>) -> GrammarIR {
         cost_config: CostConfig::default(),
         type_desc_interner: TypeDescInterner::new(),
         materialization: HashMap::new(),
+        payload_layouts: HashMap::new(),
     };
     bbnf_ir::dag::ensure_dag(&mut ir);
     classify_materialization(&mut ir);

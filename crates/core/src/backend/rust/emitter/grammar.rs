@@ -26,8 +26,10 @@ use quote::{format_ident, quote};
 use crate::backend::driver::analysis::BackendAnalysis;
 
 use super::tape_prelude::{
+    emit_must_tape_aggregate_epilogue, emit_must_tape_aggregate_prelude,
     emit_must_tape_epilogue,
-    emit_must_tape_prelude, emit_rule_signature, emit_tape_span_only_epilogue,
+    emit_must_tape_prelude, emit_rule_signature, emit_tape_span_only_aggregate_epilogue,
+    emit_tape_span_only_aggregate_prelude, emit_tape_span_only_epilogue,
     emit_tape_span_only_prelude, emit_tape_span_only_scalar_prelude,
     emit_tape_span_only_scalar_epilogue,
 };
@@ -207,27 +209,46 @@ impl RustEmitter {
             }
         } else {
             let rule_idx_u8 = Self::variant_idx(rule);
-            match class {
-                MaterializationClass::MustTape => (
-                    emit_must_tape_prelude(),
-                    emit_must_tape_epilogue(rule_idx_u8),
-                ),
-                MaterializationClass::TapeSpanOnly => {
-                    // AQ.6.A: payload-bearing leaf rules use the
-                    // generalized scalar prelude / epilogue, which
-                    // selects `push_leaf_with_<rust_ident(T)>`.
-                    match ctx.payload_type.as_ref() {
-                        Some(td) if td.is_scalar_payload() => (
-                            emit_tape_span_only_scalar_prelude(td),
-                            emit_tape_span_only_scalar_epilogue(td, rule_idx_u8),
-                        ),
-                        _ => (
-                            emit_tape_span_only_prelude(),
-                            emit_tape_span_only_epilogue(rule_idx_u8),
-                        ),
-                    }
+            // AQ.6.B: aggregate payload layout takes precedence over
+            // the legacy scalar payload — when both are set the
+            // aggregate path subsumes the scalar capture by writing
+            // the scalar bytes into the aggregate buffer at the
+            // layout-recorded offset.
+            if let Some(layout) = ctx.payload_layout.as_ref() {
+                match class {
+                    MaterializationClass::MustTape => (
+                        emit_must_tape_aggregate_prelude(layout),
+                        emit_must_tape_aggregate_epilogue(layout, rule_idx_u8),
+                    ),
+                    MaterializationClass::TapeSpanOnly => (
+                        emit_tape_span_only_aggregate_prelude(layout),
+                        emit_tape_span_only_aggregate_epilogue(layout, rule_idx_u8),
+                    ),
+                    MaterializationClass::TransparentElide => unreachable!(),
                 }
-                MaterializationClass::TransparentElide => unreachable!(),
+            } else {
+                match class {
+                    MaterializationClass::MustTape => (
+                        emit_must_tape_prelude(),
+                        emit_must_tape_epilogue(rule_idx_u8),
+                    ),
+                    MaterializationClass::TapeSpanOnly => {
+                        // AQ.6.A: payload-bearing leaf rules use the
+                        // generalized scalar prelude / epilogue, which
+                        // selects `push_leaf_with_<rust_ident(T)>`.
+                        match ctx.payload_type.as_ref() {
+                            Some(td) if td.is_scalar_payload() => (
+                                emit_tape_span_only_scalar_prelude(td),
+                                emit_tape_span_only_scalar_epilogue(td, rule_idx_u8),
+                            ),
+                            _ => (
+                                emit_tape_span_only_prelude(),
+                                emit_tape_span_only_epilogue(rule_idx_u8),
+                            ),
+                        }
+                    }
+                    MaterializationClass::TransparentElide => unreachable!(),
+                }
             }
         };
 

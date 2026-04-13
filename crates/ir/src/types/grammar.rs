@@ -197,6 +197,24 @@ pub struct GrammarIR {
     #[serde(skip, default)]
     pub materialization: HashMap<dag::NodeId, passes::MaterializationClass>,
 
+    /// Tranche AQ.6.B — per-rule aggregate payload layouts.
+    ///
+    /// Populated by [`passes::compute_payload_layouts`] after
+    /// `project_types` in `finalize_compile`. For each rule whose
+    /// projected `TypeDesc` is a `Tuple` of scalars and whose
+    /// total packed size fits in
+    /// [`passes::MAX_PAYLOAD_BYTES`], the planner records field
+    /// offsets respecting natural alignment.
+    ///
+    /// Consumed by the Rust backend's rule prelude / epilogue
+    /// (writes scalars into a stack-allocated 16-byte buffer, then
+    /// commits via `push_leaf_with_aggregate`) and by the view layer
+    /// (reads the bytes back via `Tape::payload_bytes`). Rules
+    /// missing from this map fall back to the existing compound or
+    /// scalar-payload pathways. Not serialized: every compile
+    /// rebuilds it from scratch.
+    #[serde(skip, default)]
+    pub payload_layouts: HashMap<RuleId, passes::PayloadLayout>,
 }
 
 impl GrammarIR {

@@ -529,6 +529,7 @@ fn emit_alt_mustape_prelude_epilogue(
             (
                 quote! {
                     let __span_lo = state.offset as u32;
+                    let __variant_idx: u8 = #variant_lit;
                     let mut __branch_idx: u8 = 0;
                     let mut __has_children = false;
                     let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
@@ -543,7 +544,7 @@ fn emit_alt_mustape_prelude_epilogue(
                             __children,
                             __span_lo,
                             state.offset as u32,
-                            #variant_lit,
+                            __variant_idx,
                             __branch_idx,
                         ))
                     } else if __has_payload {
@@ -552,7 +553,7 @@ fn emit_alt_mustape_prelude_epilogue(
                             ::bbnf::runtime::tape::TapeKind::Span,
                             __span_lo,
                             state.offset as u32,
-                            #variant_lit,
+                            __variant_idx,
                             __branch_idx,
                             #payload_local,
                         ))
@@ -562,7 +563,7 @@ fn emit_alt_mustape_prelude_epilogue(
                             ::bbnf::runtime::tape::TapeKind::Span,
                             __span_lo,
                             state.offset as u32,
-                            #variant_lit,
+                            __variant_idx,
                             __branch_idx,
                         ))
                     }
@@ -577,25 +578,28 @@ fn emit_alt_mustape_prelude_epilogue(
                 let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
             },
             quote! {
-                if __has_children {
-                    Some(::bbnf::runtime::tape::TapeBuilder::push_compound(
-                        tape,
-                        ::bbnf::runtime::tape::TapeKind::Rule,
-                        __children,
-                        __span_lo,
-                        state.offset as u32,
-                        #variant_lit,
-                        __branch_idx,
-                    ))
-                } else {
-                    Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                        tape,
-                        ::bbnf::runtime::tape::TapeKind::Span,
-                        __span_lo,
-                        state.offset as u32,
-                        #variant_lit,
-                        __branch_idx,
-                    ))
+                {
+                    let __variant_idx: u8 = #variant_lit;
+                    if __has_children {
+                        Some(::bbnf::runtime::tape::TapeBuilder::push_compound(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Rule,
+                            __children,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                        ))
+                    } else {
+                        Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                        ))
+                    }
                 }
             },
         ),
@@ -621,6 +625,7 @@ fn emit_alt_span_only_prelude_epilogue(
             (
                 quote! {
                     let __span_lo = state.offset as u32;
+                    let __variant_idx: u8 = #variant_lit;
                     let mut __branch_idx: u8 = 0;
                     let mut #payload_local: #payload_ty = #init;
                     let mut __has_payload = false;
@@ -632,7 +637,7 @@ fn emit_alt_span_only_prelude_epilogue(
                             ::bbnf::runtime::tape::TapeKind::Span,
                             __span_lo,
                             state.offset as u32,
-                            #variant_lit,
+                            __variant_idx,
                             __branch_idx,
                             #payload_local,
                         ))
@@ -642,7 +647,7 @@ fn emit_alt_span_only_prelude_epilogue(
                             ::bbnf::runtime::tape::TapeKind::Span,
                             __span_lo,
                             state.offset as u32,
-                            #variant_lit,
+                            __variant_idx,
                             __branch_idx,
                         ))
                     }
@@ -652,6 +657,7 @@ fn emit_alt_span_only_prelude_epilogue(
         None => (
             quote! {
                 let __span_lo = state.offset as u32;
+                let __variant_idx: u8 = #variant_lit;
                 let mut __branch_idx: u8 = 0;
             },
             quote! {
@@ -660,7 +666,7 @@ fn emit_alt_span_only_prelude_epilogue(
                     ::bbnf::runtime::tape::TapeKind::Span,
                     __span_lo,
                     state.offset as u32,
-                    #variant_lit,
+                    __variant_idx,
                     __branch_idx,
                 ))
             },

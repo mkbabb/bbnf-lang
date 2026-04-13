@@ -23,6 +23,8 @@ use crate::backend::{SepByConfig, ValuePlacement};
 use super::RustEmitCtx;
 use super::RustEmitter;
 
+const META_IDX_ZERO: u8 = 0;
+
 impl RustEmitter {
     pub(super) fn emit_repeat_many_impl(
         &mut self,
@@ -59,15 +61,18 @@ impl RustEmitter {
                     }
                 }
                 if __count >= #lo_lit {
-                    ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                        tape,
-                        ::bbnf::runtime::tape::TapeKind::Repeat,
-                        __rpt_children,
-                        __rpt_lo,
-                        state.offset as u32,
-                        0u8,
-                        0u8,
-                    );
+                    {
+                        let __vi: u8 = 0u8;
+                        let __mi: u8 = 0u8;
+                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Repeat,
+                            __rpt_children,
+                            __rpt_lo,
+                            state.offset as u32,
+                            __vi, __mi,
+                        );
+                    }
                     Some(())
                 } else {
                     break 'rpt_blk None;
@@ -99,15 +104,19 @@ impl RustEmitter {
                         state.offset = __opt_cp;
                     }
                 }
-                ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                    tape,
-                    ::bbnf::runtime::tape::TapeKind::Repeat,
-                    __opt_children,
-                    __opt_lo,
-                    state.offset as u32,
-                    0u8,
-                    0u8,
-                );
+                {
+                    let __vi: u8 = 0u8;
+                    let __mi: u8 = 0u8;
+                    ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                        tape,
+                        ::bbnf::runtime::tape::TapeKind::Repeat,
+                        __opt_children,
+                        __opt_lo,
+                        state.offset as u32,
+                        __vi,
+                        __mi,
+                    );
+                }
                 Some(())
             }
         }
@@ -155,15 +164,19 @@ impl RustEmitter {
                     }
                     None => {
                         if __count >= #lo_lit {
-                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Repeat,
-                                __rpt_children,
-                                __rpt_lo,
-                                state.offset as u32,
-                                0u8,
-                                0u8,
-                            );
+                            {
+                                let __vi: u8 = 0u8;
+                                let __mi: u8 = 0u8;
+                                ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                    tape,
+                                    ::bbnf::runtime::tape::TapeKind::Repeat,
+                                    __rpt_children,
+                                    __rpt_lo,
+                                    state.offset as u32,
+                                    __vi,
+                                    __mi,
+                                );
+                            }
                             break 'rpt_blk Some(());
                         } else {
                             break 'rpt_blk None;
@@ -190,15 +203,18 @@ impl RustEmitter {
                 }
 
                 if __count >= #lo_lit {
-                    ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                        tape,
-                        ::bbnf::runtime::tape::TapeKind::Repeat,
-                        __rpt_children,
-                        __rpt_lo,
-                        state.offset as u32,
-                        0u8,
-                        0u8,
-                    );
+                    {
+                        let __vi: u8 = 0u8;
+                        let __mi: u8 = 0u8;
+                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Repeat,
+                            __rpt_children,
+                            __rpt_lo,
+                            state.offset as u32,
+                            __vi, __mi,
+                        );
+                    }
                     Some(())
                 } else {
                     break 'rpt_blk None;

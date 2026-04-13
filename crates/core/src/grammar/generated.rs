@@ -7917,6 +7917,7 @@ impl BbnfBootstrap {
                                 __rpt_lo,
                                 state.offset as u32,
                                 0u8,
+                                0u8,
                             );
                             Some(())
                         } else {
@@ -7940,6 +7941,7 @@ impl BbnfBootstrap {
                     __span_lo,
                     state.offset as u32,
                     27u8,
+                    0u8,
                 ),
             )
         }
@@ -8038,6 +8040,7 @@ impl BbnfBootstrap {
                                 __rpt_lo,
                                 state.offset as u32,
                                 0u8,
+                                0u8,
                             );
                             Some(())
                         } else {
@@ -8061,6 +8064,7 @@ impl BbnfBootstrap {
                     __span_lo,
                     state.offset as u32,
                     29u8,
+                    0u8,
                 ),
             )
         }
@@ -8239,6 +8243,7 @@ impl BbnfBootstrap {
                                 __rpt_lo,
                                 state.offset as u32,
                                 0u8,
+                                0u8,
                             );
                             Some(())
                         } else {
@@ -8262,6 +8267,7 @@ impl BbnfBootstrap {
                     __span_lo,
                     state.offset as u32,
                     30u8,
+                    0u8,
                 ),
             )
         }
@@ -8336,6 +8342,7 @@ impl BbnfBootstrap {
                                 __rpt_lo,
                                 state.offset as u32,
                                 0u8,
+                                0u8,
                             );
                             Some(())
                         } else {
@@ -8359,6 +8366,7 @@ impl BbnfBootstrap {
                     __span_lo,
                     state.offset as u32,
                     31u8,
+                    0u8,
                 ),
             )
         }
@@ -8445,6 +8453,7 @@ impl BbnfBootstrap {
                                         __rpt_children,
                                         __rpt_lo,
                                         state.offset as u32,
+                                        0u8,
                                         0u8,
                                     );
                                     Some(())
@@ -8542,6 +8551,7 @@ impl BbnfBootstrap {
                                         __rpt_lo,
                                         state.offset as u32,
                                         0u8,
+                                        0u8,
                                     );
                                     Some(())
                                 } else {
@@ -8572,6 +8582,7 @@ impl BbnfBootstrap {
                     __span_lo,
                     state.offset as u32,
                     34u8,
+                    0u8,
                 ),
             )
         }
@@ -8983,6 +8994,7 @@ impl BbnfBootstrap {
                                             __rpt_lo,
                                             state.offset as u32,
                                             0u8,
+                                            0u8,
                                         );
                                         Some(())
                                     } else {
@@ -9074,6 +9086,7 @@ impl BbnfBootstrap {
                                                 __rpt_lo,
                                                 state.offset as u32,
                                                 0u8,
+                                                0u8,
                                             );
                                             Some(())
                                         } else {
@@ -9096,6 +9109,7 @@ impl BbnfBootstrap {
                                     __opt_children,
                                     __opt_lo,
                                     state.offset as u32,
+                                    0u8,
                                     0u8,
                                 );
                                 Some(())
@@ -9190,6 +9204,7 @@ impl BbnfBootstrap {
                                         __rpt_lo,
                                         state.offset as u32,
                                         0u8,
+                                        0u8,
                                     );
                                     Some(())
                                 } else {
@@ -9263,6 +9278,7 @@ impl BbnfBootstrap {
                                         __rpt_children,
                                         __rpt_lo,
                                         state.offset as u32,
+                                        0u8,
                                         0u8,
                                     );
                                     Some(())
@@ -9340,6 +9356,7 @@ impl BbnfBootstrap {
                     __span_lo,
                     state.offset as u32,
                     35u8,
+                    0u8,
                 ),
             )
         }
@@ -9426,6 +9443,7 @@ impl BbnfBootstrap {
                     __span_lo,
                     state.offset as u32,
                     36u8,
+                    0u8,
                 ),
             )
         }
@@ -9547,6 +9565,7 @@ impl BbnfBootstrap {
                                                                 __rpt_children,
                                                                 __rpt_lo,
                                                                 state.offset as u32,
+                                                                0u8,
                                                                 0u8,
                                                             );
                                                             Some(())
@@ -9893,6 +9912,7 @@ impl BbnfBootstrap {
                             __opt_lo,
                             state.offset as u32,
                             0u8,
+                            0u8,
                         );
                         Some(())
                     }) {
@@ -9913,6 +9933,7 @@ impl BbnfBootstrap {
                     __span_lo,
                     state.offset as u32,
                     37u8,
+                    0u8,
                 ),
             )
         }
@@ -9984,6 +10005,7 @@ impl BbnfBootstrap {
                                                     __opt_lo,
                                                     state.offset as u32,
                                                     0u8,
+                                                    0u8,
                                                 );
                                                 Some(())
                                             }) {
@@ -10011,6 +10033,7 @@ impl BbnfBootstrap {
                                             __rpt_children,
                                             __rpt_lo,
                                             state.offset as u32,
+                                            0u8,
                                             0u8,
                                         );
                                         Some(())
@@ -10052,6 +10075,7 @@ impl BbnfBootstrap {
                                     __opt_lo,
                                     state.offset as u32,
                                     0u8,
+                                    0u8,
                                 );
                                 Some(())
                             }) {
@@ -10080,6 +10104,7 @@ impl BbnfBootstrap {
                             __rpt_lo,
                             state.offset as u32,
                             0u8,
+                            0u8,
                         );
                         Some(())
                     } else {
@@ -10098,6 +10123,7 @@ impl BbnfBootstrap {
                     __span_lo,
                     state.offset as u32,
                     39u8,
+                    0u8,
                 ),
             )
         }
@@ -10158,6 +10184,7 @@ impl BbnfBootstrap {
                                     __opt_lo,
                                     state.offset as u32,
                                     0u8,
+                                    0u8,
                                 );
                                 Some(())
                             }) {
@@ -10186,6 +10213,7 @@ impl BbnfBootstrap {
                             __rpt_lo,
                             state.offset as u32,
                             0u8,
+                            0u8,
                         );
                         Some(())
                     } else {
@@ -10204,6 +10232,7 @@ impl BbnfBootstrap {
                     __span_lo,
                     state.offset as u32,
                     40u8,
+                    0u8,
                 ),
             )
         }
@@ -10325,6 +10354,7 @@ impl BbnfBootstrap {
                                 __rpt_lo,
                                 state.offset as u32,
                                 0u8,
+                                0u8,
                             );
                             Some(())
                         } else {
@@ -10348,6 +10378,7 @@ impl BbnfBootstrap {
                     __span_lo,
                     state.offset as u32,
                     44u8,
+                    0u8,
                 ),
             )
         }
@@ -10435,6 +10466,7 @@ impl BbnfBootstrap {
                                         __rpt_lo,
                                         state.offset as u32,
                                         0u8,
+                                        0u8,
                                     );
                                     Some(())
                                 } else {
@@ -10495,6 +10527,7 @@ impl BbnfBootstrap {
                     __span_lo,
                     state.offset as u32,
                     45u8,
+                    0u8,
                 ),
             )
         }
@@ -10589,6 +10622,7 @@ impl BbnfBootstrap {
                                 __opt_children,
                                 __opt_lo,
                                 state.offset as u32,
+                                0u8,
                                 0u8,
                             );
                             Some(())
@@ -10733,6 +10767,7 @@ impl BbnfBootstrap {
                                                             __rpt_lo,
                                                             state.offset as u32,
                                                             0u8,
+                                                            0u8,
                                                         );
                                                         Some(())
                                                     } else {
@@ -10768,6 +10803,7 @@ impl BbnfBootstrap {
                                                 __opt_children,
                                                 __opt_lo,
                                                 state.offset as u32,
+                                                0u8,
                                                 0u8,
                                             );
                                             Some(())
@@ -11523,6 +11559,7 @@ impl BbnfBootstrap {
                                 __opt_lo,
                                 state.offset as u32,
                                 0u8,
+                                0u8,
                             );
                             Some(())
                         }) {
@@ -11608,6 +11645,7 @@ impl BbnfBootstrap {
                                 __opt_children,
                                 __opt_lo,
                                 state.offset as u32,
+                                0u8,
                                 0u8,
                             );
                             Some(())
@@ -11908,6 +11946,7 @@ impl BbnfBootstrap {
                                         __opt_lo,
                                         state.offset as u32,
                                         0u8,
+                                        0u8,
                                     );
                                     Some(())
                                 }) {
@@ -11933,6 +11972,7 @@ impl BbnfBootstrap {
                             __opt_lo,
                             state.offset as u32,
                             0u8,
+                            0u8,
                         );
                         Some(())
                     }) {
@@ -11953,6 +11993,7 @@ impl BbnfBootstrap {
                     __span_lo,
                     state.offset as u32,
                     47u8,
+                    0u8,
                 ),
             )
         }
@@ -12048,6 +12089,7 @@ impl BbnfBootstrap {
                     __span_lo,
                     state.offset as u32,
                     48u8,
+                    0u8,
                 ),
             )
         }
@@ -12164,6 +12206,7 @@ impl BbnfBootstrap {
                                     __opt_children,
                                     __opt_lo,
                                     state.offset as u32,
+                                    0u8,
                                     0u8,
                                 );
                                 Some(())
@@ -12324,6 +12367,7 @@ impl BbnfBootstrap {
                                                     __opt_lo,
                                                     state.offset as u32,
                                                     0u8,
+                                                    0u8,
                                                 );
                                                 Some(())
                                             }) {
@@ -12362,6 +12406,7 @@ impl BbnfBootstrap {
                                             __rpt_children,
                                             __rpt_lo,
                                             state.offset as u32,
+                                            0u8,
                                             0u8,
                                         );
                                         Some(())
@@ -12425,6 +12470,7 @@ impl BbnfBootstrap {
                                     __opt_children,
                                     __opt_lo,
                                     state.offset as u32,
+                                    0u8,
                                     0u8,
                                 );
                                 Some(())
@@ -12627,6 +12673,7 @@ impl BbnfBootstrap {
                                     __opt_lo,
                                     state.offset as u32,
                                     0u8,
+                                    0u8,
                                 );
                                 Some(())
                             }) {
@@ -12725,6 +12772,7 @@ impl BbnfBootstrap {
                                     __opt_children,
                                     __opt_lo,
                                     state.offset as u32,
+                                    0u8,
                                     0u8,
                                 );
                                 Some(())
@@ -12851,6 +12899,7 @@ impl BbnfBootstrap {
                                     __opt_children,
                                     __opt_lo,
                                     state.offset as u32,
+                                    0u8,
                                     0u8,
                                 );
                                 Some(())
@@ -13160,6 +13209,7 @@ impl BbnfBootstrap {
                                     __opt_lo,
                                     state.offset as u32,
                                     0u8,
+                                    0u8,
                                 );
                                 Some(())
                             }) {
@@ -13217,6 +13267,7 @@ impl BbnfBootstrap {
                                     __opt_lo,
                                     state.offset as u32,
                                     0u8,
+                                    0u8,
                                 );
                                 Some(())
                             }) {
@@ -13244,6 +13295,7 @@ impl BbnfBootstrap {
                     __span_lo,
                     state.offset as u32,
                     50u8,
+                    0u8,
                 ),
             )
         }
@@ -13421,6 +13473,7 @@ impl BbnfBootstrap {
                     __span_lo,
                     state.offset as u32,
                     51u8,
+                    0u8,
                 ),
             )
         }
@@ -13469,6 +13522,7 @@ impl BbnfBootstrap {
                             __rpt_lo,
                             state.offset as u32,
                             0u8,
+                            0u8,
                         );
                         Some(())
                     } else {
@@ -13487,6 +13541,7 @@ impl BbnfBootstrap {
                     __span_lo,
                     state.offset as u32,
                     52u8,
+                    0u8,
                 ),
             )
         }

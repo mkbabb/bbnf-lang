@@ -61,6 +61,8 @@ use bbnf_ir::TypeDesc;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
+const META_IDX_ZERO: u8 = 0;
+
 /// Emit the prelude for a `MustTape` rule body.
 ///
 /// Captures the starting byte offset and reserves the children run.
@@ -79,16 +81,21 @@ pub fn emit_must_tape_prelude() -> TokenStream {
 /// discriminator (u8) — the rule's index in `ir.rules`.
 pub fn emit_must_tape_epilogue(variant_idx: u8) -> TokenStream {
     let variant_lit = variant_idx;
+    let meta_lit = META_IDX_ZERO;
     quote! {
-        Some(::bbnf::runtime::tape::TapeBuilder::push_compound(
-            tape,
-            ::bbnf::runtime::tape::TapeKind::Rule,
-            __children,
-            __span_lo,
-            state.offset as u32,
-            #variant_lit,
-            0u8,
-        ))
+        {
+            let __vi: u8 = #variant_lit;
+            let __mi: u8 = #meta_lit;
+            Some(::bbnf::runtime::tape::TapeBuilder::push_compound(
+                tape,
+                ::bbnf::runtime::tape::TapeKind::Rule,
+                __children,
+                __span_lo,
+                state.offset as u32,
+                __vi,
+                __mi,
+            ))
+        }
     }
 }
 
@@ -109,15 +116,20 @@ pub fn emit_tape_span_only_prelude() -> TokenStream {
 /// variant discriminator; no child run.
 pub fn emit_tape_span_only_epilogue(variant_idx: u8) -> TokenStream {
     let variant_lit = variant_idx;
+    let meta_lit = META_IDX_ZERO;
     quote! {
-        Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(
-            tape,
-            ::bbnf::runtime::tape::TapeKind::Span,
-            __span_lo,
-            state.offset as u32,
-            #variant_lit,
-            0u8,
-        ))
+        {
+            let __vi: u8 = #variant_lit;
+            let __mi: u8 = #meta_lit;
+            Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(
+                tape,
+                ::bbnf::runtime::tape::TapeKind::Span,
+                __span_lo,
+                state.offset as u32,
+                __vi,
+                __mi,
+            ))
+        }
     }
 }
 
@@ -162,16 +174,21 @@ pub fn emit_tape_span_only_scalar_epilogue(td: &TypeDesc, variant_idx: u8) -> To
     let payload_ident = format_ident!("__payload_{}", rust_ident);
     let push_ident = format_ident!("push_leaf_with_{}", rust_ident);
     let variant_lit = variant_idx;
+    let meta_lit = META_IDX_ZERO;
     quote! {
-        Some(::bbnf::runtime::tape::TapeBuilder::#push_ident(
-            tape,
-            ::bbnf::runtime::tape::TapeKind::Span,
-            __span_lo,
-            state.offset as u32,
-            #variant_lit,
-            0u8,
-            #payload_ident,
-        ))
+        {
+            let __vi: u8 = #variant_lit;
+            let __mi: u8 = #meta_lit;
+            Some(::bbnf::runtime::tape::TapeBuilder::#push_ident(
+                tape,
+                ::bbnf::runtime::tape::TapeKind::Span,
+                __span_lo,
+                state.offset as u32,
+                __vi,
+                __mi,
+                #payload_ident,
+            ))
+        }
     }
 }
 
@@ -223,27 +240,32 @@ pub fn emit_tape_span_only_aggregate_epilogue(
     variant_idx: u8,
 ) -> TokenStream {
     let variant_lit = variant_idx;
+    let meta_lit = META_IDX_ZERO;
     let total_bytes = layout.total_bytes as usize;
     quote! {
-        if __has_payload {
-            Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with_aggregate(
-                tape,
-                ::bbnf::runtime::tape::TapeKind::Span,
-                __span_lo,
-                state.offset as u32,
-                #variant_lit,
-                0u8,
-                &__aggregate_buf[..#total_bytes],
-            ))
-        } else {
-            Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                tape,
-                ::bbnf::runtime::tape::TapeKind::Span,
-                __span_lo,
-                state.offset as u32,
-                #variant_lit,
-                0u8,
-            ))
+        {
+            let __vi: u8 = #variant_lit;
+            let __mi: u8 = #meta_lit;
+            if __has_payload {
+                Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with_aggregate(
+                    tape,
+                    ::bbnf::runtime::tape::TapeKind::Span,
+                    __span_lo,
+                    state.offset as u32,
+                    __vi,
+                    __mi,
+                    &__aggregate_buf[..#total_bytes],
+                ))
+            } else {
+                Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(
+                    tape,
+                    ::bbnf::runtime::tape::TapeKind::Span,
+                    __span_lo,
+                    state.offset as u32,
+                    __vi,
+                    __mi,
+                ))
+            }
         }
     }
 }
@@ -274,28 +296,33 @@ pub fn emit_must_tape_aggregate_epilogue(
     variant_idx: u8,
 ) -> TokenStream {
     let variant_lit = variant_idx;
+    let meta_lit = META_IDX_ZERO;
     let total_bytes = layout.total_bytes as usize;
     quote! {
-        if __has_payload {
-            Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with_aggregate(
-                tape,
-                ::bbnf::runtime::tape::TapeKind::Span,
-                __span_lo,
-                state.offset as u32,
-                #variant_lit,
-                0u8,
-                &__aggregate_buf[..#total_bytes],
-            ))
-        } else {
-            Some(::bbnf::runtime::tape::TapeBuilder::push_compound(
-                tape,
-                ::bbnf::runtime::tape::TapeKind::Rule,
-                __children,
-                __span_lo,
-                state.offset as u32,
-                #variant_lit,
-                0u8,
-            ))
+        {
+            let __vi: u8 = #variant_lit;
+            let __mi: u8 = #meta_lit;
+            if __has_payload {
+                Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with_aggregate(
+                    tape,
+                    ::bbnf::runtime::tape::TapeKind::Span,
+                    __span_lo,
+                    state.offset as u32,
+                    __vi,
+                    __mi,
+                    &__aggregate_buf[..#total_bytes],
+                ))
+            } else {
+                Some(::bbnf::runtime::tape::TapeBuilder::push_compound(
+                    tape,
+                    ::bbnf::runtime::tape::TapeKind::Rule,
+                    __children,
+                    __span_lo,
+                    state.offset as u32,
+                    __vi,
+                    __mi,
+                ))
+            }
         }
     }
 }

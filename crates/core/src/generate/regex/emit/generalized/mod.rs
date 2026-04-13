@@ -1,61 +1,23 @@
 //! Generalized regex direct emission — strength-reduces regex patterns into
 //! inline byte-scanning loops (char ranges, char sets, shorthand classes,
 //! literal-prefix + class tail, whitespace-padded literals).
+//!
+//! Pattern detection uses `RegexClass::CharClassQuantified` and
+//! `RegexClass::PrefixThenClass` from the structural classifier rather
+//! than hand-rolled regex string parsers.
 
 mod class_segments;
 
-use class_segments::{emit_char_class_loop, emit_literal_prefix_class};
+use class_segments::{emit_class_quantified, emit_prefix_then_class};
 
 use proc_macro2::TokenStream;
 use quote::quote;
 
+use parse_that::regex::classify::RegexClass;
+
 use super::negated_class::try_strip_ws_padded_literal;
 use crate::backend::kernels;
-
-/// Whether a pattern is a simple character range like `[a-z]` or `[0-9]`.
-/// Returns `(lo, hi)` byte range if detected.
-fn is_single_char_range_regex(pattern: &str) -> Option<(u8, u8)> {
-    let inner = pattern.strip_prefix('[')?.strip_suffix(']')?;
-    // Must be exactly "X-Y" where X and Y are single ASCII characters.
-    if inner.len() == 3 && inner.as_bytes()[1] == b'-' {
-        let lo = inner.as_bytes()[0];
-        let hi = inner.as_bytes()[2];
-        if lo.is_ascii() && hi.is_ascii() && lo < hi {
-            return Some((lo, hi));
-        }
-    }
-    None
-}
-
-/// Whether a pattern is a simple character set like `[abc]` (no ranges, no escapes).
-/// Returns the set of bytes if detected (max 8 bytes for practical emission).
-fn is_small_char_set_regex(pattern: &str) -> Option<Vec<u8>> {
-    let inner = pattern.strip_prefix('[')?.strip_suffix(']')?;
-    // Must not contain ranges, escapes, or negation.
-    if inner.starts_with('^') || inner.contains('-') || inner.contains('\\') {
-        return None;
-    }
-    let bytes: Vec<u8> = inner.bytes().collect();
-    if bytes.len() >= 2 && bytes.len() <= 8 && bytes.iter().all(|b| b.is_ascii()) {
-        Some(bytes)
-    } else {
-        None
-    }
-}
-
-/// Whether a pattern is a single-char range with `+` quantifier like `[a-z]+`.
-/// Returns `(lo, hi)` byte range.
-fn is_char_range_plus_regex(pattern: &str) -> Option<(u8, u8)> {
-    let inner = pattern.strip_suffix('+')?;
-    is_single_char_range_regex(inner)
-}
-
-/// Whether a pattern is a single-char range with `*` quantifier like `[a-z]*`.
-/// Returns `(lo, hi)` byte range.
-fn is_char_range_star_regex(pattern: &str) -> Option<(u8, u8)> {
-    let inner = pattern.strip_suffix('*')?;
-    is_single_char_range_regex(inner)
-}
+use crate::generate::regex::cost_model::EmitOpts;
 
 /// Emit a direct call for generalized regex patterns beyond JSON/CSS.
 ///
@@ -66,12 +28,14 @@ fn is_char_range_star_regex(pattern: &str) -> Option<(u8, u8)> {
 /// - `[a-z]*` → byte range scan loop (zero-or-more)
 /// - `\s+`, `\d+`, `\w+` → shorthand class scan loops
 /// - `prefix[class]+` → literal prefix + char class tail (e.g., `--[\w-]+`, `@[a-z][\w-]*`)
-pub fn emit_generalized_regex_direct(pattern: &str) -> Option<TokenStream> {
+///
+/// Pattern detection uses `opts.classify_regex(pattern)` to resolve via
+/// cached `RegexInfo` when available, eliminating hand-rolled string parsing.
+pub fn emit_generalized_regex_direct(pattern: &str, opts: &EmitOpts) -> Option<TokenStream> {
     // Whitespace-padded literal: \s*LITERAL\s* — matches a fixed literal
     // with optional surrounding whitespace. Common in CSS for comma separators,
-    // combinator operators, etc. Generalizes the \s*,\s* pattern.
-    if let Some(inner) = try_strip_ws_padded_literal(pattern) {
-        let inner_bytes = inner.as_bytes();
+    // combinator operators, etc. Detected via HIR concat inspection.
+    if let Some(inner_bytes) = try_strip_ws_padded_literal(pattern) {
         let inner_len = inner_bytes.len();
         let byte_lits: Vec<proc_macro2::Literal> = inner_bytes
             .iter()
@@ -108,116 +72,36 @@ pub fn emit_generalized_regex_direct(pattern: &str) -> Option<TokenStream> {
         });
     }
 
-    // Single character range: [a-z]
-    if let Some((lo, hi)) = is_single_char_range_regex(pattern) {
-        let lo_lit = proc_macro2::Literal::byte_character(lo);
-        let hi_lit = proc_macro2::Literal::byte_character(hi);
-        return Some(quote! {
-            {
-                let __start = state.offset;
-                if let Some(&__b) = state.src_bytes.get(__start) {
-                    if __b >= #lo_lit && __b <= #hi_lit {
-                        state.offset = __start + 1;
-                        Some(::parse_that::Span::new(__start, __start + 1, state.src))
-                    } else {
-                        None
-                    }
-                } else {
-                    None
-                }
+    // Classify the pattern structurally via the cached RegexInfo.
+    let class = opts.classify_regex(pattern);
+
+    match class {
+        // Quantified char class: [a-z], [abc], [a-z]+, [0-9a-fA-F]*, etc.
+        RegexClass::CharClassQuantified(ref info) => {
+            // Negated classes are handled by the negated_class path upstream.
+            if info.negated {
+                return None;
             }
-        });
-    }
+            emit_class_quantified(info)
+        }
 
-    // Small character set: [abc]
-    if let Some(bytes) = is_small_char_set_regex(pattern) {
-        let byte_lits: Vec<_> = bytes
-            .iter()
-            .map(|b| proc_macro2::Literal::byte_character(*b))
-            .collect();
-        return Some(quote! {
-            {
-                let __start = state.offset;
-                if let Some(&__b) = state.src_bytes.get(__start) {
-                    if matches!(__b, #(#byte_lits)|*) {
-                        state.offset = __start + 1;
-                        Some(::parse_that::Span::new(__start, __start + 1, state.src))
-                    } else {
-                        None
-                    }
-                } else {
-                    None
-                }
+        // Literal prefix + class tail: --[\w-]+, @[a-zA-Z][\w-]*, etc.
+        RegexClass::PrefixThenClass {
+            ref prefix,
+            ref tail,
+        } => emit_prefix_then_class(prefix, tail),
+
+        // Shorthand class with quantifier: \s+, \d+, \w+, \s*, \d*, \w*
+        // These don't classify as CharClassQuantified because the classifier
+        // resolves shorthands into the broader class variants. Route through
+        // the shorthand emitter which handles kernel routing.
+        _ => {
+            if let Some(ts) = emit_shorthand_class_loop(pattern) {
+                return Some(ts);
             }
-        });
+            None
+        }
     }
-
-    // Character range with + quantifier: [a-z]+
-    if let Some((lo, hi)) = is_char_range_plus_regex(pattern) {
-        let lo_lit = proc_macro2::Literal::byte_character(lo);
-        let hi_lit = proc_macro2::Literal::byte_character(hi);
-        return Some(quote! {
-            {
-                let __start = state.offset;
-                let __end = state.src_bytes.len();
-                let mut __pos = __start;
-                while __pos < __end {
-                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                    if __b >= #lo_lit && __b <= #hi_lit {
-                        __pos += 1;
-                    } else {
-                        break;
-                    }
-                }
-                if __pos > __start {
-                    state.offset = __pos;
-                    Some(::parse_that::Span::new(__start, __pos, state.src))
-                } else {
-                    None
-                }
-            }
-        });
-    }
-
-    // Character range with * quantifier: [a-z]*
-    if let Some((lo, hi)) = is_char_range_star_regex(pattern) {
-        let lo_lit = proc_macro2::Literal::byte_character(lo);
-        let hi_lit = proc_macro2::Literal::byte_character(hi);
-        return Some(quote! {
-            {
-                let __start = state.offset;
-                let __end = state.src_bytes.len();
-                let mut __pos = __start;
-                while __pos < __end {
-                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                    if __b >= #lo_lit && __b <= #hi_lit {
-                        __pos += 1;
-                    } else {
-                        break;
-                    }
-                }
-                state.offset = __pos;
-                Some(::parse_that::Span::new(__start, __pos, state.src))
-            }
-        });
-    }
-
-    // General char class loop: [0-9a-fA-F]+, [\w-]+, etc.
-    if let Some(ts) = emit_char_class_loop(pattern) {
-        return Some(ts);
-    }
-
-    // Shorthand class with quantifier: \s+, \d+, \w+, \s*, \d*, \w*
-    if let Some(ts) = emit_shorthand_class_loop(pattern) {
-        return Some(ts);
-    }
-
-    // Literal prefix followed by char class: --[\w-]+, @[a-zA-Z][\w-]*, etc.
-    if let Some(ts) = emit_literal_prefix_class(pattern) {
-        return Some(ts);
-    }
-
-    None
 }
 
 /// Emit inline byte scan for shorthand class + quantifier: `\s+`, `\d+`, `\w+`, `\s*`, etc.

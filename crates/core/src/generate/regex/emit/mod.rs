@@ -17,7 +17,7 @@ pub use negated_class::{is_negated_char_class_regex, NegCharClassQuantifier};
 // Phase 6: DFA canonical hashing for cross-rule deduplication.
 pub use dfa::canonical_dfa_hash;
 
-use parse_that::regex::classify::{classify_regex, RegexClass};
+use parse_that::regex::classify::{ClassRangeInfo, RegexClass};
 use crate::generate::regex::cost_model::{CostModel, EmitOpts};
 
 use proc_macro2::TokenStream;
@@ -71,6 +71,7 @@ pub fn emit_regex_unsupported(pattern: &str) -> TokenStream {
 /// resolved from the cache. This shim exists for call sites where the
 /// caller only has the pattern string; it pays a full HIR parse.
 pub fn is_fused_number_regex(pattern: &str) -> bool {
+    use parse_that::regex::classify::classify_regex;
     matches!(
         classify_regex(pattern),
         RegexClass::Numeric {
@@ -114,6 +115,8 @@ fn emit_regex_fast_path(pattern: &str, opts: &EmitOpts) -> Option<TokenStream> {
     }
 
     // Comma-or-whitespace separator: ,|\s+
+    // This is a two-branch alternation not captured by a single RegexClass
+    // variant. Kept as exact string comparison (not regex re-parsing).
     if pattern == r",|\s+" || pattern == r"\s+|," {
         return Some(quote! {
             {
@@ -146,19 +149,17 @@ fn emit_regex_fast_path(pattern: &str, opts: &EmitOpts) -> Option<TokenStream> {
     // SIMD-accelerated positive char class scanning (Phase 2.1/2.2).
     // Before falling through to scalar generalized emission, check if
     // the pattern is a quantified char class that could use memchr/nibble-LUT.
-    if let Some(ts) = try_emit_simd_positive_class(pattern) {
+    if let Some(ts) = try_emit_simd_positive_class(pattern, opts) {
         return Some(ts);
     }
 
     // Generalized regex patterns (char ranges, small char sets).
-    if let Some(ts) = generalized::emit_generalized_regex_direct(pattern) {
+    if let Some(ts) = generalized::emit_generalized_regex_direct(pattern, opts) {
         return Some(ts);
     }
 
     // Negated character class → ws-interleaved loop, memchr (1-3), or nibble-LUT (4-8).
-    if let Some((excluded, quantifier)) = is_negated_char_class_regex(pattern) {
-        let bytes = excluded.as_bytes();
-
+    if let Some((excluded, quantifier)) = is_negated_char_class_regex(pattern, opts) {
         // When the grammar has @ws with block-comment-aware whitespace,
         // emit a ws-interleaved byte loop instead of raw memchr/LUT.
         // This ensures block comments like `/*!*/` embedded inside the
@@ -169,26 +170,26 @@ fn emit_regex_fast_path(pattern: &str, opts: &EmitOpts) -> Option<TokenStream> {
         if opts.has_ws_block_comment() {
             return Some(match quantifier {
                 NegCharClassQuantifier::Plus => {
-                    simd::emit_ws_interleaved_negated_scan_plus(bytes)
+                    simd::emit_ws_interleaved_negated_scan_plus(&excluded)
                 }
                 NegCharClassQuantifier::Star => {
-                    simd::emit_ws_interleaved_negated_scan_star(bytes)
+                    simd::emit_ws_interleaved_negated_scan_star(&excluded)
                 }
             });
         }
 
         // Try memchr first (1-3 needles).
         let result = match quantifier {
-            NegCharClassQuantifier::Plus => simd::emit_negated_scan_plus(bytes),
-            NegCharClassQuantifier::Star => simd::emit_negated_scan_star(bytes),
+            NegCharClassQuantifier::Plus => simd::emit_negated_scan_plus(&excluded),
+            NegCharClassQuantifier::Star => simd::emit_negated_scan_star(&excluded),
         };
         if result.is_some() {
             return result;
         }
 
         // Try nibble-LUT for 4-8 excluded bytes (Phase 2.3).
-        if bytes.len() >= 4 && bytes.len() <= 8 {
-            if let Some(lut_scan) = simd::emit_nibble_lut_scan(bytes) {
+        if excluded.len() >= 4 && excluded.len() <= 8 {
+            if let Some(lut_scan) = simd::emit_nibble_lut_scan(&excluded) {
                 let ts = match quantifier {
                     NegCharClassQuantifier::Plus => {
                         quote! {
@@ -319,45 +320,35 @@ fn classify_fast_path(pattern: &str, opts: &EmitOpts) -> &'static str {
 
 /// Try to emit a SIMD-accelerated scan for positive character classes.
 ///
-/// Detects patterns like `[a-z]+`, `\d+`, `\s+`, `\w+` and emits
-/// inverted memchr/nibble-LUT scans when the excluded byte count is small.
+/// Uses the structural classifier to detect quantified char classes and
+/// reads the `ClassRangeInfo.chars` bitset to compute excluded bytes
+/// for memchr/nibble-LUT emission.
 ///
 /// Falls through to `None` for classes with too many excluded bytes
 /// (handled by scalar loops in `generalized.rs`).
-fn try_emit_simd_positive_class(pattern: &str) -> Option<TokenStream> {
-    // Parse the quantified class pattern.
-    let (class_pattern, is_plus) = if let Some(s) = pattern.strip_suffix('+') {
-        (s, true)
-    } else if let Some(s) = pattern.strip_suffix('*') {
-        (s, false)
-    } else {
-        return None;
+fn try_emit_simd_positive_class(pattern: &str, opts: &EmitOpts) -> Option<TokenStream> {
+    let class = opts.classify_regex(pattern);
+
+    let (chars, negated, min, max) = match &class {
+        RegexClass::CharClassQuantified(ClassRangeInfo {
+            chars,
+            negated,
+            min,
+            max,
+        }) => (chars, *negated, *min, *max),
+        _ => return None,
     };
 
-    // Detect shorthand classes: \d, \s, \w
-    let excluded: Vec<u8> = match class_pattern {
-        r"\d" => {
-            // Digits: 0-9 included, everything else excluded
-            simd::compute_excluded_bytes(&[(b'0', b'9')])
-        }
-        r"\s" => {
-            // Whitespace: \t \n \x0B \x0C \r space
-            simd::compute_excluded_bytes(&[(0x09, 0x0D), (0x20, 0x20)])
-        }
-        r"\w" => {
-            // Word chars: [0-9A-Za-z_] — 63 included, 65 excluded in ASCII 0-127
-            // Too many excluded for memchr; nibble-LUT won't help either.
-            return None;
-        }
-        _ => {
-            // Try single char range: [a-z]
-            if let Some(ranges) = parse_positive_class_ranges(class_pattern) {
-                simd::compute_excluded_bytes(&ranges)
-            } else {
-                return None;
-            }
-        }
-    };
+    // Only handle positive, unbounded classes (+ or *).
+    if negated || max.is_some() {
+        return None;
+    }
+
+    let is_plus = min >= 1;
+
+    // Compute excluded bytes from the complement of the accepted set.
+    // The `chars` bitset holds the positive-form accepted bytes (ASCII).
+    let excluded: Vec<u8> = (0u8..128).filter(|b| !chars.has(*b)).collect();
 
     // Only emit SIMD for patterns with few excluded bytes (memchr/nibble-LUT territory).
     // CostModel.memchr_max_needles=3, nibble_lut_max_excluded=8.
@@ -401,61 +392,5 @@ fn try_emit_simd_positive_class(pattern: &str) -> Option<TokenStream> {
                 }
             })
         }
-    }
-}
-
-/// Parse a positive character class (e.g., `[a-z]`, `[0-9a-fA-F]`) into byte ranges.
-fn parse_positive_class_ranges(class_str: &str) -> Option<Vec<(u8, u8)>> {
-    let inner = class_str.strip_prefix('[')?.strip_suffix(']')?;
-    if inner.starts_with('^') || inner.is_empty() {
-        return None;
-    }
-
-    let mut ranges = Vec::new();
-    let mut chars = inner.chars().peekable();
-
-    while let Some(c) = chars.next() {
-        if c == '\\' {
-            // Shorthand in class context.
-            match chars.next()? {
-                'd' => ranges.push((b'0', b'9')),
-                'w' => {
-                    ranges.push((b'0', b'9'));
-                    ranges.push((b'A', b'Z'));
-                    ranges.push((b'_', b'_'));
-                    ranges.push((b'a', b'z'));
-                }
-                's' => {
-                    ranges.push((0x09, 0x0D));
-                    ranges.push((0x20, 0x20));
-                }
-                esc if esc.is_ascii() => {
-                    let b = esc as u8;
-                    ranges.push((b, b));
-                }
-                _ => return None,
-            }
-        } else if c.is_ascii() {
-            // Check for range: a-z
-            if chars.peek() == Some(&'-') {
-                chars.next(); // consume '-'
-                let hi = chars.next()?;
-                if !hi.is_ascii() {
-                    return None;
-                }
-                ranges.push((c as u8, hi as u8));
-            } else {
-                let b = c as u8;
-                ranges.push((b, b));
-            }
-        } else {
-            return None;
-        }
-    }
-
-    if ranges.is_empty() {
-        None
-    } else {
-        Some(ranges)
     }
 }

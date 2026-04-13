@@ -80,12 +80,21 @@ impl RustEmitter {
         ir: &GrammarIR,
         ctx: &mut RustEmitCtx,
     ) -> TokenStream {
+        // Build EmitOpts once up front so every classify_regex call
+        // hits the ir.regex_info cache instead of re-parsing the HIR.
+        let ws_pat = ir.ws_pattern.map(|sid| ir.get_string(sid));
+        let opts =
+            crate::generate::regex::EmitOpts::new(&crate::generate::regex::CostModel::DEFAULT)
+                .with_fuse(!self.effective_prettify)
+                .with_ir(ir)
+                .with_ws_pattern(ws_pat);
+
         // AQ.6.B: when an aggregate layout is active and the regex
         // is numeric, advance the field cursor and write into the
         // buffer at the layout offset.
         if ctx.payload_layout.is_some() {
-            use parse_that::regex::classify::{RegexClass, classify_regex};
-            if matches!(classify_regex(pattern), RegexClass::Numeric { .. }) {
+            use parse_that::regex::classify::RegexClass;
+            if matches!(opts.classify_regex(pattern), RegexClass::Numeric { .. }) {
                 if let Some(field) = ctx.next_aggregate_field() {
                     if matches!(field.ty, TypeDesc::F64) {
                         let offset = field.offset as usize;
@@ -117,8 +126,8 @@ impl RustEmitter {
         // unconditionally for tape payloads (matching the
         // `fused_number_rules` gating).
         if matches!(ctx.payload_type, Some(TypeDesc::F64)) {
-            use parse_that::regex::classify::{RegexClass, classify_regex};
-            if matches!(classify_regex(pattern), RegexClass::Numeric { .. }) {
+            use parse_that::regex::classify::RegexClass;
+            if matches!(opts.classify_regex(pattern), RegexClass::Numeric { .. }) {
                 return quote! {
                     match ::parse_that::scan_number_strict_f64(state) {
                         Some(__v) => { __payload_f64 = __v; __has_payload = true; Some(()) }
@@ -131,12 +140,6 @@ impl RustEmitter {
         // Default: span-only scan. The shared regex emitter returns
         // `Option<Span>`; we discard the Span and re-express as
         // `Option<()>` so the tape-first composition pattern holds.
-        let ws_pat = ir.ws_pattern.map(|sid| ir.get_string(sid));
-        let opts =
-            crate::generate::regex::EmitOpts::new(&crate::generate::regex::CostModel::DEFAULT)
-                .with_fuse(!self.effective_prettify)
-                .with_ir(ir)
-                .with_ws_pattern(ws_pat);
         let regex_expr = crate::generate::regex::emit_regex(pattern, &opts);
         quote! {
             { (#regex_expr).map(|_| ()) }

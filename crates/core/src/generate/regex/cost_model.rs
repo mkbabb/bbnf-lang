@@ -142,9 +142,9 @@ impl<'a> EmitOpts<'a> {
     /// byte position so block comments embedded in the scanned span
     /// are transparently consumed.
     pub fn has_ws_block_comment(&self) -> bool {
-        use ::parse_that::regex::classify::{RegexClass, classify_regex};
+        use ::parse_that::regex::classify::RegexClass;
         matches!(
-            self.ws_pattern.map(classify_regex),
+            self.ws_pattern.map(|p| self.classify_regex(p)),
             Some(RegexClass::WhitespaceWithBlockComment),
         )
     }

@@ -77,9 +77,9 @@ pub fn compute_payload_layouts(ir: &GrammarIR) -> HashMap<RuleId, PayloadLayout>
                 }
             }
             // Bare scalar rules (e.g. `number -> f64`) are single-field
-            // payloads. Treat them as a degenerate 1-element tuple so the
-            // tape codegen can use aggregate payload storage uniformly.
-            td if td.is_scalar_payload() => plan_layout(std::slice::from_ref(td)),
+            // payloads. Span-typed rules use TapeRec.span_lo/span_hi
+            // natively and don't need a payload slot.
+            td if td.needs_payload_slot() => plan_layout(std::slice::from_ref(td)),
             _ => continue,
         };
         let Some(layout) = layout else {

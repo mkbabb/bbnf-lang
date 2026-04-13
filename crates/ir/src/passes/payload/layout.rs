@@ -56,10 +56,15 @@ pub struct PayloadField {
 pub fn compute_payload_layouts(ir: &GrammarIR) -> HashMap<RuleId, PayloadLayout> {
     let mut out = HashMap::new();
     for (rule_id, ty) in &ir.types {
-        let TypeDesc::Tuple(fields) = ty else {
-            continue;
+        let layout = match ty {
+            TypeDesc::Tuple(fields) => plan_layout(fields),
+            // Bare scalar rules (e.g. `number -> f64`) are single-field
+            // payloads. Treat them as a degenerate 1-element tuple so the
+            // tape codegen can use aggregate payload storage uniformly.
+            td if td.is_scalar_payload() => plan_layout(std::slice::from_ref(td)),
+            _ => continue,
         };
-        let Some(layout) = plan_layout(fields) else {
+        let Some(layout) = layout else {
             continue;
         };
         out.insert(*rule_id, layout);

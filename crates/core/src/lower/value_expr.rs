@@ -848,6 +848,10 @@ pub(crate) fn unwrap_value_ident_str<'a>(
                 let text = cur.span_text().trim();
                 return if text.contains("::") { None } else { Some(text) };
             }
+            // Top-level value_expr wrapper — peel into the single child.
+            BbnfBootstrapRuleKind::value_expr => {
+                cur = cur.children().next()?;
+            }
             // Precedence-chain wrappers: descend through the
             // first-and-only operand if there are no operators.
             BbnfBootstrapRuleKind::value_or
@@ -912,6 +916,14 @@ pub(crate) fn deep_unwrap_value<'a>(
     let mut cur = node;
     loop {
         match cur.rule_kind() {
+            // Top-level value_expr wrapper — peel into the single child.
+            BbnfBootstrapRuleKind::value_expr => {
+                if let Some(child) = cur.children().next() {
+                    cur = child;
+                } else {
+                    return cur;
+                }
+            }
             BbnfBootstrapRuleKind::value_or
             | BbnfBootstrapRuleKind::value_and
             | BbnfBootstrapRuleKind::value_cmp

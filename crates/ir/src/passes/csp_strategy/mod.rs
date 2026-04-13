@@ -589,6 +589,14 @@ fn solve_component(
     // uses csp_solver::Csp") holds for every code path; we just elide
     // the search work that would not change the answer.
     if constraints_added == 0 {
+        if std::env::var("BBNF_CSP_REPORT").is_ok() {
+            eprintln!(
+                "csp_strategy::solve_component sites={} constraints=0 \
+                 (trivial) contributing_rules={}",
+                sites.len(),
+                contributing_rules.len(),
+            );
+        }
         decode_min_cost_per_variable(&csp, &sites, decisions, mat_out);
         return;
     }

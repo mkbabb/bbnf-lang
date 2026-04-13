@@ -22,10 +22,19 @@
   },
   "benches": {
     "json_monolithic": {
-      "note": "BLOCKED: pre-existing parse failure at offset 1 on all JSON datasets. Regression from AQ.5/AQ.6 era codegen changes — dispatch table or Alt branch ordering no longer routes '{' to the object branch. Not an AR regression."
+      "canada":  { "ns_per_iter": 2051903, "mb_per_s": 1097 },
+      "citm":    { "ns_per_iter": 733920,  "mb_per_s": 2353 },
+      "twitter": { "ns_per_iter": 305164,  "mb_per_s": 2069 },
+      "data":    { "ns_per_iter": 19371,   "mb_per_s": 1832 },
+      "data_xl": { "ns_per_iter": 19616874,"mb_per_s": 1084 },
+      "note": "Restored by modifier recovery fix. Down vs post-AQ because post-AQ parser silently skipped modifiers — those numbers were from a broken parser."
     },
     "css_l4": {
-      "note": "BLOCKED: same codegen regression affects CSS bench entry points."
+      "note": "bootstrap.css parse still fails. CSS L4 grammar requires further investigation — likely additional modifier or expression shape issues in the lowering path."
+    },
+    "google_sheets": {
+      "parse_1kb":  { "ns_per_iter": 5390,  "mb_per_s": 122 },
+      "parse_10kb": { "ns_per_iter": 52397, "mb_per_s": 129 }
     }
   },
   "hard_gates": {
@@ -41,7 +50,7 @@
   },
   "deferred": {
     "bootstrap_regen": "host.rs peel_wrappers changes IR enough to produce a different parser that can't parse BBNF. Needs investigation of what IR difference causes the parse failure.",
-    "bench_parse_regression": "JSON/CSS monolithic benches fail at offset 1 — pre-AR regression from AQ.5/AQ.6 dispatch table changes.",
+    "bench_parse_regression": "FIXED for JSON + Google Sheets by modifier recovery (0c6e011). CSS L4 still fails — needs further lowering investigation.",
     "scanner_generalization_6_of_8": "6 of 8 AR.6 sub-items (RegexClassMiner, ScanLut, route, WsComment, FnDescriptor, number kernel) are architectural consolidation, lower priority.",
     "64_byte_input_padding": "AR.5.2 requires ownership model change in parse-that ParserState."
   }

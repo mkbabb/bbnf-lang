@@ -173,9 +173,22 @@ fn dispatch_expression<'a>(
         | BbnfBootstrapRuleKind::regex
         | BbnfBootstrapRuleKind::identifier => lower_term(node, ctx),
 
-        // Comments are skipped at the rule body level — they
-        // produce no IR contribution.
-        BbnfBootstrapRuleKind::comment | BbnfBootstrapRuleKind::big_comment => {
+        // Comments and directives are grammar-level metadata — they
+        // produce no IR contribution. Directives (@recover, @import,
+        // @pretty, @ws, @token, @debug, @no_collapse) are consumed
+        // by host.rs during grammar extraction; expression lowering
+        // treats them as Epsilon.
+        BbnfBootstrapRuleKind::comment
+        | BbnfBootstrapRuleKind::big_comment
+        | BbnfBootstrapRuleKind::recover_directive
+        | BbnfBootstrapRuleKind::import_directive
+        | BbnfBootstrapRuleKind::import_directive_0
+        | BbnfBootstrapRuleKind::pretty_directive
+        | BbnfBootstrapRuleKind::pretty_directive_0
+        | BbnfBootstrapRuleKind::ws_directive
+        | BbnfBootstrapRuleKind::token_directive
+        | BbnfBootstrapRuleKind::debug_directive
+        | BbnfBootstrapRuleKind::debug_directive_0 => {
             IrNode::Epsilon
         }
 

@@ -62,11 +62,24 @@ items, not deferred to "upstream."
 
 - **Up to 6 parallel agents per wave**, isolated worktrees
   (`isolation: "worktree"`), cherry-pick onto master.
+- **ALL agents use `isolation: "worktree"` — no exceptions.** Even
+  read-only audit agents, bench agents, and expand agents MUST use
+  worktrees. An agent without a worktree can `git checkout`, `git
+  stash`, or `cargo expand` on the main worktree, corrupting HEAD
+  or racing with other agents. This has caused data loss.
+- **Agents must NEVER run `git checkout`, `git stash`, or `git
+  reset` on the main worktree.** If an agent needs to compare
+  against an older commit, it does so in its own worktree.
 - **No file collisions across agents in the same wave.** Exclusive
   write per file per wave. Cross-wave conflicts resolved by
   sequencing.
 - **Commit before parallelizing.** Never let sub-agents race on
   shared files. Master must be clean before spawning worktree agents.
+- **Harden all agent claims.** Agent results are not trusted at face
+  value. The orchestrator must independently verify key findings
+  before acting on them — especially benchmark numbers, feature
+  wiring claims, and regression attributions. Agents may parrot
+  doc claims without verifying them against the actual code/data.
 - **Each agent gets explicit file bounds** in its prompt: which files
   it may modify, which it must not touch.
 - **Agent prompts are self-contained.** The agent starts with no

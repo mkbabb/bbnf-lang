@@ -112,20 +112,19 @@ impl RustEmitter {
         };
         arms.push(fallback_arm);
 
-        // AO Phase 0.5: structural-aware dispatch. When the structural
-        // index is active, advance to the next structural position
-        // instead of checking byte-at-a-time. Falls back to the
-        // standard path when the index is exhausted.
+        // AO Phase 0.5 / AP.1: synchronized peek-only structural dispatch.
+        // When the structural index is active, sync the cursor to the
+        // current offset and peek. If the cursor points exactly at
+        // offset we use the peeked byte (zero-cost: already known).
+        // Otherwise fall back to the normal byte load. Neither path
+        // mutates state.offset — no jump-past-digits bug.
         if self.structural_mode {
             quote! {
                 {
-                    if state.has_structural_index() {
-                        if let Some(__byte) = state.advance_to_structural() {
-                            match __byte {
-                                #( #arms ),*
-                            }
-                        } else {
-                            #eof_expr
+                    state.sync_structural_cursor_to_offset();
+                    if let Some(__byte) = state.current_structural_byte() {
+                        match __byte {
+                            #( #arms ),*
                         }
                     } else if state.offset < state.src_bytes.len() {
                         match state.src_bytes[state.offset] {

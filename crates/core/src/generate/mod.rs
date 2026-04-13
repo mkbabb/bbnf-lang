@@ -50,14 +50,14 @@ pub fn generate_all(
     let mut emitter = RustEmitter::new(enum_ident.clone(), prepared.prep.effective_prettify);
     emitter.fused_number_rules = prepared.prep.analysis.fused_number_rules.clone();
     emitter.operator_chain_rules = prepared.prep.analysis.operator_chain_rules.clone();
-    // AO Phase 0: enable structural dispatch when the grammar has a
-    // structural byte set AND no custom @ws pattern (CSS uses @ws for
-    // comment-aware whitespace, which can't be elided).
-    // Structural pre-scan dispatch is disabled: advance_to_structural
-    // jumps past non-structural bytes (e.g., digits for numbers) which
-    // causes branch misrouting in Alts with mixed structural/non-structural
-    // first-bytes.  Revisit with a peek-only approach (AP.1).
-    emitter.structural_mode = false;
+    // AO Phase 0 / AP.1: enable structural dispatch when the grammar
+    // has a structural byte set AND no custom @ws pattern (CSS uses
+    // @ws for comment-aware whitespace, which can't be elided).
+    // The synchronized peek-only approach (sync_structural_cursor_to_offset
+    // + current_structural_byte) is safe for all Alt shapes — it never
+    // mutates state.offset, so mixed structural/non-structural first-bytes
+    // dispatch correctly.
+    emitter.structural_mode = ir.structural_bytes.is_some() && ir.ws_pattern.is_none();
 
     // Compute prettify methods via the driver/emitter path.
     if prepared.prep.effective_prettify {

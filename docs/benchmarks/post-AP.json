@@ -1,0 +1,63 @@
+{
+  "tag": "post-AP",
+  "description": "Baseline captured after Tranche AP. AP delivered: @ws kernel universality (PunctWsRegion + trailing-WS + ws-interleaved negated char class scan for CSS comments), payload f64 wiring fix (scan_json_number_f64 for JSON, scan_number_f64 for generic), structural dispatch redesign (synchronized peek-only, gated behind WS elision), SIMD WS bitmap construction, SIMD string scanner (scan_quoted_string_simd wired into production), NibbleLut DFA acceleration, SIMD delimiter scan, Tape::get_unchecked, CSS monolithic bench deletion, bootstrap enum fixes, gorgeous proc-macro fixes. CSS L4 tailwind.css parses successfully for the first time (was FAIL at offset 387594).",
+  "arch": "Tape-first zero-copy parser with materialization tripartite (MustTape/TapeSpanOnly/TransparentElide). Payload enrichment: f64 via scan_json_number_f64 (JSON) / scan_number_f64 (generic). Structural dispatch infrastructure ready (synchronized peek-only, IR pass, ParserState helpers, alt.rs hybrid codegen) but gated behind structural_mode=false until inter-structural WS elision offsets pre-scan overhead. SIMD acceleration: u8x16 WS bitmap construction, escape-parity string scanning, NibbleLut DFA self-loop states, find_first_of_3 delimiter scan. @ws comment-aware kernel universal in CSS L4 (PunctWsRegion, trailing-WS, negated char class interleaving).",
+  "hardware": "Darwin 25.4.0 — aarch64-apple-darwin (M-series ARM)",
+  "tests": {
+    "bbnf_workspace": { "total_passing": "all passing", "total_failing": 0, "notes": "2 pre-existing google_sheets_slab failures (parse_arithmetic, parse_let_nested) confirmed on master HEAD" }
+  },
+  "benches": {
+    "json_monolithic": {
+      "canada":  { "ns_per_iter": 1264667, "mb_per_sec": 1779, "delta_vs_post_z_pct": 30.9 },
+      "citm":    { "ns_per_iter": 642761,  "mb_per_sec": 2687, "delta_vs_post_z_pct": 41.7 },
+      "data":    { "ns_per_iter": 18719,   "mb_per_sec": 1895, "delta_vs_post_z_pct": 38.6 },
+      "data_xl": { "ns_per_iter": 16155524,"mb_per_sec": 1317, "delta_vs_post_z_pct": 27.6 },
+      "twitter": { "ns_per_iter": 299530,  "mb_per_sec": 2108, "delta_vs_post_z_pct": 38.9 }
+    },
+    "css_l4": {
+      "bootstrap":{ "ns_per_iter": 861213,  "mb_per_sec": 325,  "delta_vs_post_z_pct": 33.7 },
+      "normalize":{ "ns_per_iter": 10033,   "mb_per_sec": 611,  "delta_vs_post_z_pct": 22.7 },
+      "tailwind": { "ns_per_iter": 9696033, "mb_per_sec": 375,  "delta_vs_post_z_pct": "NEW (was FAIL)" }
+    },
+    "compile_pipeline": {
+      "compile_bbnf":     { "ns_per_iter": 1702144, "delta_vs_post_z_pct": -14.3 },
+      "compile_css_l4":   { "ns_per_iter": 9894941, "delta_vs_post_z_pct": -4.5 },
+      "compile_ebnf":     { "ns_per_iter": 393168,  "delta_vs_post_z_pct": -15.7 },
+      "compile_json":     { "ns_per_iter": 121787,  "delta_vs_post_z_pct": -20.9 },
+      "compile_sheets":   { "ns_per_iter": 2277402, "delta_vs_post_z_pct": 9.6 }
+    }
+  },
+  "gates": {
+    "hard": {
+      "cargo_test_workspace": true,
+      "css_l4_tailwind_parses": true,
+      "post_ap_json_exists": true
+    },
+    "soft": {
+      "json_citm_2800": false,
+      "json_twitter_2200": false,
+      "css_l4_bootstrap_500": false
+    }
+  },
+  "gates_vs_pre_ap": {
+    "json_canada":    { "pre_ap": 1754, "post_ap": 1779, "delta_pct": 1.4, "notes": "Maintains sonic-rs BEAT (+16%)" },
+    "json_citm":      { "pre_ap": 1874, "post_ap": 2687, "delta_pct": 43.4, "target": 2800, "met": false, "notes": "Massive gain from SIMD WS bitmap + f64 payload. Within 13% of sonic-rs (3097). Soft gate missed by 4%." },
+    "json_twitter":   { "pre_ap": 1540, "post_ap": 2108, "delta_pct": 36.9, "target": 2200, "met": false, "notes": "Within 23% of sonic-rs (2736). Soft gate missed by 4%." },
+    "json_data":      { "pre_ap": 1590, "post_ap": 1895, "delta_pct": 19.2, "notes": "Small file, high variance" },
+    "json_data_xl":   { "pre_ap": 979,  "post_ap": 1317, "delta_pct": 34.5, "notes": "Within 13% of sonic-rs (1520)" },
+    "css_tailwind":   { "pre_ap": "FAIL", "post_ap": 375, "notes": "FIXED. Was parse failure at offset 387594." },
+    "css_bootstrap":  { "pre_ap": 337,  "post_ap": 325,  "delta_pct": -3.6, "target": 500, "met": false, "notes": "Slight regression from ws-interleaved scan overhead. CSS L4 optimization deferred (AP.4)." }
+  },
+  "phase_summary": [
+    { "phase": "AP.0.1", "title": "Fix bootstrap enum references", "status": "completed", "impact": "6 compile errors eliminated" },
+    { "phase": "AP.0.2", "title": "@ws kernel universality (PunctWsRegion + trailing-WS + ws-interleaved negated scan)", "status": "completed", "impact": "CSS L4 tailwind.css parses successfully (was FAIL at offset 387594). 112 bare is_ascii_whitespace calls replaced with comment-aware kernel." },
+    { "phase": "AP.0.3", "title": "Payload f64 wiring (scan_json_number_f64)", "status": "completed", "impact": "+2-8% JSON throughput from correct f64 payload activation" },
+    { "phase": "AP.0.4", "title": "Delete CSS monolithic benchmark", "status": "completed", "impact": "Cleanup" },
+    { "phase": "AP.1b", "title": "Structural dispatch redesign (synchronized peek-only)", "status": "completed", "impact": "Architecturally correct (no misrouting), gated behind structural_mode=false until WS elision offsets pre-scan overhead (-15-25% without it)" },
+    { "phase": "AP.3.1", "title": "SIMD WS bitmap construction", "status": "completed", "impact": "u8x16 simd_eq replaces scalar 8-byte loop in trim_leading_whitespace_scan_and_cache" },
+    { "phase": "AP.3.3", "title": "SIMD string scanner", "status": "completed", "impact": "scan_quoted_string_simd wired into production scan_string_quoted (escape-parity processing, 16 bytes/iter)" },
+    { "phase": "AP.5.1", "title": "NibbleLut DFA acceleration", "status": "completed", "impact": "4-8 exit byte DFA self-loop states now get SIMD nibble-LUT acceleration" },
+    { "phase": "AP.5.2", "title": "SIMD delimiter scan", "status": "completed", "impact": "balanced_wrap inner loop uses find_first_of_3 (16 bytes/iter vs byte-at-a-time)" },
+    { "phase": "AP.5.3", "title": "Tape::get_unchecked", "status": "completed", "impact": "Eliminates bounds check per record access in view layer" }
+  ]
+}

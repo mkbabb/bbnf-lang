@@ -8,23 +8,23 @@
   },
   "benches": {
     "json_monolithic": {
-      "canada":  { "ns_per_iter": 1264667, "mb_per_sec": 1779, "delta_vs_post_z_pct": 30.9 },
-      "citm":    { "ns_per_iter": 642761,  "mb_per_sec": 2687, "delta_vs_post_z_pct": 41.7 },
-      "data":    { "ns_per_iter": 18719,   "mb_per_sec": 1895, "delta_vs_post_z_pct": 38.6 },
-      "data_xl": { "ns_per_iter": 16155524,"mb_per_sec": 1317, "delta_vs_post_z_pct": 27.6 },
-      "twitter": { "ns_per_iter": 299530,  "mb_per_sec": 2108, "delta_vs_post_z_pct": 38.9 }
+      "canada":  { "ns_per_iter": 1252363, "mb_per_sec": 1797, "delta_vs_post_z_pct": 31.5 },
+      "citm":    { "ns_per_iter": 636745,  "mb_per_sec": 2712, "delta_vs_post_z_pct": 43.0 },
+      "data":    { "ns_per_iter": 18676,   "mb_per_sec": 1900, "delta_vs_post_z_pct": 39.0 },
+      "data_xl": { "ns_per_iter": 15861824,"mb_per_sec": 1341, "delta_vs_post_z_pct": 29.9 },
+      "twitter": { "ns_per_iter": 290553,  "mb_per_sec": 2173, "delta_vs_post_z_pct": 43.2 }
     },
     "css_l4": {
-      "bootstrap":{ "ns_per_iter": 861213,  "mb_per_sec": 325,  "delta_vs_post_z_pct": 33.7 },
-      "normalize":{ "ns_per_iter": 10033,   "mb_per_sec": 611,  "delta_vs_post_z_pct": 22.7 },
-      "tailwind": { "ns_per_iter": 9696033, "mb_per_sec": 375,  "delta_vs_post_z_pct": "NEW (was FAIL)" }
+      "bootstrap":{ "ns_per_iter": 554053,  "mb_per_sec": 505,  "delta_vs_post_z_pct": 107.8 },
+      "normalize":{ "ns_per_iter": 6274,    "mb_per_sec": 978,  "delta_vs_post_z_pct": 96.4 },
+      "tailwind": { "ns_per_iter": 6816775, "mb_per_sec": 534,  "delta_vs_post_z_pct": "NEW (was FAIL)" }
     },
     "compile_pipeline": {
-      "compile_bbnf":     { "ns_per_iter": 1702144, "delta_vs_post_z_pct": -14.3 },
-      "compile_css_l4":   { "ns_per_iter": 9894941, "delta_vs_post_z_pct": -4.5 },
-      "compile_ebnf":     { "ns_per_iter": 393168,  "delta_vs_post_z_pct": -15.7 },
-      "compile_json":     { "ns_per_iter": 121787,  "delta_vs_post_z_pct": -20.9 },
-      "compile_sheets":   { "ns_per_iter": 2277402, "delta_vs_post_z_pct": 9.6 }
+      "compile_bbnf":     { "ns_per_iter": 1610534, "delta_vs_post_z_pct": -17.1 },
+      "compile_css_l4":   { "ns_per_iter": 9558664, "delta_vs_post_z_pct": -7.8 },
+      "compile_ebnf":     { "ns_per_iter": 378709,  "delta_vs_post_z_pct": -18.9 },
+      "compile_json":     { "ns_per_iter": 115824,  "delta_vs_post_z_pct": -24.7 },
+      "compile_sheets":   { "ns_per_iter": 2133446, "delta_vs_post_z_pct": 6.4 }
     }
   },
   "gates": {
@@ -36,17 +36,18 @@
     "soft": {
       "json_citm_2800": false,
       "json_twitter_2200": false,
-      "css_l4_bootstrap_500": false
+      "css_l4_bootstrap_500": true
     }
   },
   "gates_vs_pre_ap": {
     "json_canada":    { "pre_ap": 1754, "post_ap": 1779, "delta_pct": 1.4, "notes": "Maintains sonic-rs BEAT (+16%)" },
-    "json_citm":      { "pre_ap": 1874, "post_ap": 2687, "delta_pct": 43.4, "target": 2800, "met": false, "notes": "Massive gain from SIMD WS bitmap + f64 payload. Within 13% of sonic-rs (3097). Soft gate missed by 4%." },
-    "json_twitter":   { "pre_ap": 1540, "post_ap": 2108, "delta_pct": 36.9, "target": 2200, "met": false, "notes": "Within 23% of sonic-rs (2736). Soft gate missed by 4%." },
-    "json_data":      { "pre_ap": 1590, "post_ap": 1895, "delta_pct": 19.2, "notes": "Small file, high variance" },
-    "json_data_xl":   { "pre_ap": 979,  "post_ap": 1317, "delta_pct": 34.5, "notes": "Within 13% of sonic-rs (1520)" },
-    "css_tailwind":   { "pre_ap": "FAIL", "post_ap": 375, "notes": "FIXED. Was parse failure at offset 387594." },
-    "css_bootstrap":  { "pre_ap": 337,  "post_ap": 325,  "delta_pct": -3.6, "target": 500, "met": false, "notes": "Slight regression from ws-interleaved scan overhead. CSS L4 optimization deferred (AP.4)." }
+    "json_citm":      { "pre_ap": 1874, "post_ap": 2712, "delta_pct": 44.7, "target": 2800, "met": false, "notes": "+44.7% from SIMD WS bitmap + f64 payload + SIMD string scanner. Within 12% of sonic-rs (3097)." },
+    "json_twitter":   { "pre_ap": 1540, "post_ap": 2173, "delta_pct": 41.1, "target": 2200, "met": false, "notes": "+41.1%. Within 21% of sonic-rs (2736)." },
+    "json_data":      { "pre_ap": 1590, "post_ap": 1900, "delta_pct": 19.5, "notes": "Small file" },
+    "json_data_xl":   { "pre_ap": 979,  "post_ap": 1341, "delta_pct": 37.0, "notes": "Within 12% of sonic-rs (1520)" },
+    "css_tailwind":   { "pre_ap": "FAIL", "post_ap": 534, "notes": "FIXED. Was parse failure at offset 387594. Now 534 MB/s with key dispatch." },
+    "css_bootstrap":  { "pre_ap": 337,  "post_ap": 505,  "delta_pct": 49.9, "target": 500, "met": true, "notes": "+50% from key dispatch for __declaration (AP.4)." },
+    "css_normalize":  { "pre_ap": 623,  "post_ap": 978,  "delta_pct": 57.0, "notes": "+57% from key dispatch + @ws kernel fixes." }
   },
   "phase_summary": [
     { "phase": "AP.0.1", "title": "Fix bootstrap enum references", "status": "completed", "impact": "6 compile errors eliminated" },
@@ -58,6 +59,8 @@
     { "phase": "AP.3.3", "title": "SIMD string scanner", "status": "completed", "impact": "scan_quoted_string_simd wired into production scan_string_quoted (escape-parity processing, 16 bytes/iter)" },
     { "phase": "AP.5.1", "title": "NibbleLut DFA acceleration", "status": "completed", "impact": "4-8 exit byte DFA self-loop states now get SIMD nibble-LUT acceleration" },
     { "phase": "AP.5.2", "title": "SIMD delimiter scan", "status": "completed", "impact": "balanced_wrap inner loop uses find_first_of_3 (16 bytes/iter vs byte-at-a-time)" },
-    { "phase": "AP.5.3", "title": "Tape::get_unchecked", "status": "completed", "impact": "Eliminates bounds check per record access in view layer" }
+    { "phase": "AP.5.3", "title": "Tape::get_unchecked", "status": "completed", "impact": "Eliminates bounds check per record access in view layer" },
+    { "phase": "AP.2", "title": "PayloadKind::Bool and ::U8 wiring", "status": "completed", "impact": "TypeDesc::Bool/U8 added, detection + emission + view accessors wired for constant-mapped Alt branches" },
+    { "phase": "AP.4", "title": "CSS L4 key dispatch for __declaration", "status": "completed", "impact": "28-branch sequential checkpoint → key dispatch. bootstrap +50% (505 MB/s), normalize +57% (978 MB/s), tailwind +27% (534 MB/s)" }
   ]
 }

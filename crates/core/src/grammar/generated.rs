@@ -8389,7 +8389,7 @@ impl BbnfBootstrap {
                                 Some(_) => {}
                                 None => break 'seq_blk None,
                             }
-                            match ({ (::parse_that::scan_ident(state)).map(|_| ()) }) {
+                            match ({ (::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG)).map(|_| ()) }) {
                                 Some(_) => {}
                                 None => break 'seq_blk None,
                             }
@@ -8420,7 +8420,7 @@ impl BbnfBootstrap {
                                             Some(_) => {}
                                             None => break 'seq_blk None,
                                         }
-                                        match ({ (::parse_that::scan_ident(state)).map(|_| ()) }) {
+                                        match ({ (::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG)).map(|_| ()) }) {
                                             Some(_) => {}
                                             None => break 'seq_blk None,
                                         }
@@ -8928,7 +8928,7 @@ impl BbnfBootstrap {
                         let __cp = state.offset;
                         let __result = 'seq_blk: {
                             match ('seq_blk: {
-                                match ({ (::parse_that::scan_ident(state)).map(|_| ()) }) {
+                                match ({ (::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG)).map(|_| ()) }) {
                                     Some(_) => {}
                                     None => break 'seq_blk None,
                                 }
@@ -8957,7 +8957,7 @@ impl BbnfBootstrap {
                                                 Some(_) => {}
                                                 None => break 'seq_blk None,
                                             }
-                                            match ({ (::parse_that::scan_ident(state)).map(|_| ()) }) {
+                                            match ({ (::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG)).map(|_| ()) }) {
                                                 Some(_) => {}
                                                 None => break 'seq_blk None,
                                             }
@@ -9164,7 +9164,7 @@ impl BbnfBootstrap {
                                             Some(_) => {}
                                             None => break 'seq_blk None,
                                         }
-                                        match ({ (::parse_that::scan_ident(state)).map(|_| ()) }) {
+                                        match ({ (::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG)).map(|_| ()) }) {
                                             Some(_) => {}
                                             None => break 'seq_blk None,
                                         }
@@ -9209,7 +9209,7 @@ impl BbnfBootstrap {
                     {
                         let __cp = state.offset;
                         let __result = 'seq_blk: {
-                            match ({ (::parse_that::scan_ident(state)).map(|_| ()) }) {
+                            match ({ (::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG)).map(|_| ()) }) {
                                 Some(_) => {}
                                 None => break 'seq_blk None,
                             }
@@ -9238,7 +9238,7 @@ impl BbnfBootstrap {
                                             Some(_) => {}
                                             None => break 'seq_blk None,
                                         }
-                                        match ({ (::parse_that::scan_ident(state)).map(|_| ()) }) {
+                                        match ({ (::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG)).map(|_| ()) }) {
                                             Some(_) => {}
                                             None => break 'seq_blk None,
                                         }
@@ -9491,7 +9491,7 @@ impl BbnfBootstrap {
                                             match ({
                                                 ::parse_that::trim_leading_whitespace_mut(state);
                                                 let __ws_inner = 'seq_blk: {
-                                                    match ({ (::parse_that::scan_ident(state)).map(|_| ()) }) {
+                                                    match ({ (::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG)).map(|_| ()) }) {
                                                         Some(_) => {}
                                                         None => break 'seq_blk None,
                                                     }
@@ -9522,7 +9522,7 @@ impl BbnfBootstrap {
                                                                     Some(_) => {}
                                                                     None => break 'seq_blk None,
                                                                 }
-                                                                match ({ (::parse_that::scan_ident(state)).map(|_| ()) }) {
+                                                                match ({ (::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG)).map(|_| ()) }) {
                                                                     Some(_) => {}
                                                                     None => break 'seq_blk None,
                                                                 }
@@ -10378,7 +10378,7 @@ impl BbnfBootstrap {
                                 Some(_) => {}
                                 None => break 'seq_blk None,
                             }
-                            match ({ (::parse_that::scan_ident(state)).map(|_| ()) }) {
+                            match ({ (::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG)).map(|_| ()) }) {
                                 Some(_) => {}
                                 None => break 'seq_blk None,
                             }
@@ -10409,7 +10409,7 @@ impl BbnfBootstrap {
                                             Some(_) => {}
                                             None => break 'seq_blk None,
                                         }
-                                        match ({ (::parse_that::scan_ident(state)).map(|_| ()) }) {
+                                        match ({ (::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG)).map(|_| ()) }) {
                                             Some(_) => {}
                                             None => break 'seq_blk None,
                                         }
@@ -10642,7 +10642,7 @@ impl BbnfBootstrap {
                                 {
                                     let __cp = state.offset;
                                     let __result = 'seq_blk: {
-                                        match ({ (::parse_that::scan_ident(state)).map(|_| ()) }) {
+                                        match ({ (::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG)).map(|_| ()) }) {
                                             Some(_) => {}
                                             None => break 'seq_blk None,
                                         }
@@ -11882,7 +11882,7 @@ impl BbnfBootstrap {
                                             {
                                                 let __cp = state.offset;
                                                 let __result = {
-                                                    (::parse_that::scan_ident(state)).map(|_| ())
+                                                    (::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG)).map(|_| ())
                                                 };
                                                 if __result.is_some() {
                                                     break 'alt_blk __result;
@@ -11967,7 +11967,7 @@ impl BbnfBootstrap {
             let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
             match ({
                 'seq_blk: {
-                    match ({ (::parse_that::scan_ident(state)).map(|_| ()) }) {
+                    match ({ (::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG)).map(|_| ()) }) {
                         Some(_) => {}
                         None => break 'seq_blk None,
                     }
@@ -12097,7 +12097,7 @@ impl BbnfBootstrap {
                             match ({
                                 ::parse_that::trim_leading_whitespace_mut(state);
                                 let __ws_inner = {
-                                    (::parse_that::scan_ident(state)).map(|_| ())
+                                    (::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG)).map(|_| ())
                                 };
                                 ::parse_that::trim_leading_whitespace_mut(state);
                                 __ws_inner
@@ -12225,7 +12225,7 @@ impl BbnfBootstrap {
                                     {
                                         let __cp = state.offset;
                                         let __result = {
-                                            (::parse_that::scan_ident(state)).map(|_| ())
+                                            (::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG)).map(|_| ())
                                         };
                                         if __result.is_some() {
                                             break 'alt_blk __result;
@@ -12251,7 +12251,7 @@ impl BbnfBootstrap {
                                     loop {
                                         let __prev = state.offset;
                                         match ('seq_blk: {
-                                            match ({ (::parse_that::scan_ident(state)).map(|_| ()) }) {
+                                            match ({ (::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG)).map(|_| ()) }) {
                                                 Some(_) => {}
                                                 None => break 'seq_blk None,
                                             }
@@ -12667,7 +12667,7 @@ impl BbnfBootstrap {
                             match ({
                                 ::parse_that::trim_leading_whitespace_mut(state);
                                 let __ws_inner = {
-                                    (::parse_that::scan_ident(state)).map(|_| ())
+                                    (::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG)).map(|_| ())
                                 };
                                 ::parse_that::trim_leading_whitespace_mut(state);
                                 __ws_inner
@@ -12786,7 +12786,7 @@ impl BbnfBootstrap {
                                     {
                                         let __cp = state.offset;
                                         let __result = {
-                                            (::parse_that::scan_ident(state)).map(|_| ())
+                                            (::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG)).map(|_| ())
                                         };
                                         if __result.is_some() {
                                             break 'alt_blk __result;
@@ -12892,7 +12892,7 @@ impl BbnfBootstrap {
                             match ({
                                 ::parse_that::trim_leading_whitespace_mut(state);
                                 let __ws_inner = {
-                                    (::parse_that::scan_ident(state)).map(|_| ())
+                                    (::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG)).map(|_| ())
                                 };
                                 ::parse_that::trim_leading_whitespace_mut(state);
                                 __ws_inner
@@ -13131,7 +13131,7 @@ impl BbnfBootstrap {
                                             {
                                                 let __cp = state.offset;
                                                 let __result = {
-                                                    (::parse_that::scan_ident(state)).map(|_| ())
+                                                    (::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG)).map(|_| ())
                                                 };
                                                 if __result.is_some() {
                                                     break 'alt_blk __result;
@@ -13889,7 +13889,7 @@ impl BbnfBootstrap {
         {
             {
                 let __start = state.offset;
-                if ::parse_that::scan_ident(state).is_none() {
+                if ::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG).is_none() {
                     return false;
                 }
                 let __matched = &state.src[__start..state.offset];
@@ -14474,7 +14474,7 @@ impl BbnfBootstrap {
                                                                                                     let __ok = (|| -> bool {
                                                                                                         {
                                                                                                             let __start = state.offset;
-                                                                                                            if ::parse_that::scan_ident(state).is_none() {
+                                                                                                            if ::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG).is_none() {
                                                                                                                 return false;
                                                                                                             }
                                                                                                             let __matched = &state.src[__start..state.offset];
@@ -14534,7 +14534,7 @@ impl BbnfBootstrap {
         {
             {
                 let __start = state.offset;
-                if ::parse_that::scan_ident(state).is_none() {
+                if ::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG).is_none() {
                     return false;
                 }
                 let __matched = &state.src[__start..state.offset];
@@ -15568,7 +15568,7 @@ impl BbnfBootstrap {
             {
                 {
                     let __start = state.offset;
-                    if ::parse_that::scan_ident(state).is_none() {
+                    if ::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG).is_none() {
                         return false;
                     }
                     let __matched = &state.src[__start..state.offset];
@@ -15601,7 +15601,7 @@ impl BbnfBootstrap {
                                     };
                                     {
                                         let __start = state.offset;
-                                        if ::parse_that::scan_ident(state).is_none() {
+                                        if ::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG).is_none() {
                                             return false;
                                         }
                                         let __matched = &state.src[__start..state.offset];
@@ -15681,7 +15681,7 @@ impl BbnfBootstrap {
                                     };
                                     {
                                         let __start = state.offset;
-                                        if ::parse_that::scan_ident(state).is_none() {
+                                        if ::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG).is_none() {
                                             return false;
                                         }
                                         let __matched = &state.src[__start..state.offset];
@@ -15771,7 +15771,7 @@ impl BbnfBootstrap {
         {
             {
                 let __start = state.offset;
-                if ::parse_that::scan_ident(state).is_none() {
+                if ::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG).is_none() {
                     return false;
                 }
                 let __matched = &state.src[__start..state.offset];
@@ -15828,7 +15828,7 @@ impl BbnfBootstrap {
                                 {
                                     {
                                         let __start = state.offset;
-                                        if ::parse_that::scan_ident(state).is_none() {
+                                        if ::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG).is_none() {
                                             return false;
                                         }
                                         let __matched = &state.src[__start..state.offset];
@@ -15864,7 +15864,7 @@ impl BbnfBootstrap {
                                                         };
                                                         {
                                                             let __start = state.offset;
-                                                            if ::parse_that::scan_ident(state).is_none() {
+                                                            if ::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG).is_none() {
                                                                 return false;
                                                             }
                                                             let __matched = &state.src[__start..state.offset];
@@ -15937,7 +15937,7 @@ impl BbnfBootstrap {
             {
                 {
                     let __start = state.offset;
-                    if ::parse_that::scan_ident(state).is_none() {
+                    if ::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG).is_none() {
                         return false;
                     }
                     let __matched = &state.src[__start..state.offset];
@@ -16055,7 +16055,7 @@ impl BbnfBootstrap {
                     let __ows74 = state.offset;
                     {
                         let __start = state.offset;
-                        if ::parse_that::scan_ident(state).is_none() {
+                        if ::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG).is_none() {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];
@@ -16186,7 +16186,7 @@ impl BbnfBootstrap {
                                     } {
                                         {
                                             let __start = state.offset;
-                                            if ::parse_that::scan_ident(state).is_none() {
+                                            if ::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG).is_none() {
                                                 return false;
                                             }
                                             let __matched = &state.src[__start..state.offset];
@@ -16305,7 +16305,7 @@ impl BbnfBootstrap {
                     let __ows94 = state.offset;
                     {
                         let __start = state.offset;
-                        if ::parse_that::scan_ident(state).is_none() {
+                        if ::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG).is_none() {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];
@@ -17008,7 +17008,7 @@ impl BbnfBootstrap {
                 };
                 {
                     let __start = state.offset;
-                    if ::parse_that::scan_ident(state).is_none() {
+                    if ::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG).is_none() {
                         return false;
                     }
                     let __matched = &state.src[__start..state.offset];
@@ -17045,7 +17045,7 @@ impl BbnfBootstrap {
                                     };
                                     {
                                         let __start = state.offset;
-                                        if ::parse_that::scan_ident(state).is_none() {
+                                        if ::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG).is_none() {
                                             return false;
                                         }
                                         let __matched = &state.src[__start..state.offset];
@@ -18077,7 +18077,7 @@ impl BbnfBootstrap {
                                     } {
                                         {
                                             let __start = state.offset;
-                                            if ::parse_that::scan_ident(state).is_none() {
+                                            if ::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG).is_none() {
                                                 return false;
                                             }
                                             let __matched = &state.src[__start..state.offset];
@@ -18562,7 +18562,7 @@ impl BbnfBootstrap {
                 };
                 {
                     let __start = state.offset;
-                    if ::parse_that::scan_ident(state).is_none() {
+                    if ::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG).is_none() {
                         return false;
                     }
                     let __matched = &state.src[__start..state.offset];
@@ -18599,7 +18599,7 @@ impl BbnfBootstrap {
                                     };
                                     {
                                         let __start = state.offset;
-                                        if ::parse_that::scan_ident(state).is_none() {
+                                        if ::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG).is_none() {
                                             return false;
                                         }
                                         let __matched = &state.src[__start..state.offset];
@@ -18723,7 +18723,7 @@ impl BbnfBootstrap {
                                         {
                                             {
                                                 let __start = state.offset;
-                                                if ::parse_that::scan_ident(state).is_none() {
+                                                if ::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG).is_none() {
                                                     return false;
                                                 }
                                                 let __matched = &state.src[__start..state.offset];
@@ -19517,7 +19517,7 @@ impl BbnfBootstrap {
                 {
                     {
                         let __start = state.offset;
-                        if ::parse_that::scan_ident(state).is_none() {
+                        if ::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG).is_none() {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];
@@ -19652,7 +19652,7 @@ impl BbnfBootstrap {
                     let __ows371 = state.offset;
                     {
                         let __start = state.offset;
-                        if ::parse_that::scan_ident(state).is_none() {
+                        if ::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG).is_none() {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];

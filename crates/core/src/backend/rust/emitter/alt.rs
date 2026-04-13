@@ -220,7 +220,9 @@ impl RustEmitter {
     ) -> TokenStream {
         let cp = ctx.fresh("kd_cp");
         let scanner = match config.key_class {
-            KeyClass::Identifier => quote! { ::parse_that::scan_ident(state) },
+            KeyClass::Identifier => quote! {
+                ::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG)
+            },
             KeyClass::QuotedString { .. } => quote! { ::parse_that::scan_string_quoted(state) },
         };
         let arm_checks: Vec<TokenStream> = branches

@@ -59,7 +59,7 @@ pub struct TapeSurgeryCtx {
 pub enum PayloadKind {
     /// `f64` from `FnDescriptor::NumberConvert`.
     ///
-    /// `json` distinguishes JSON RFC 8259 numbers (`scan_json_number_f64`)
+    /// `json` distinguishes JSON RFC 8259 numbers (`scan_number_strict_f64`)
     /// from generic/CSS-compatible numbers (`scan_number_f64`). The two
     /// scanners accept different grammars (JSON forbids leading `+`,
     /// bare `.5`, etc.).

@@ -23,7 +23,7 @@
 //! # `FamilyHelper` exemption
 //!
 //! `FamilyHelper` is a named function call (e.g.,
-//! `quoted_string_scan_full`, `scan_json_number_fused`) —
+//! `scan_quoted_string_strict`, `scan_number_strict_fused`) —
 //! not a compiled automaton. It carries zero startup cost and
 //! shares no state-table infrastructure with the DFA/SmallDfa/
 //! OnePass/NibbleLut/memchr family. Forcing a `FamilyHelper`-

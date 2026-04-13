@@ -1,6 +1,6 @@
 //! Quoted-string kernel emission.
 //!
-//! Targets `parse_that::scan_string_quoted` (`parsers/scan.rs:552`).
+//! Targets `parse_that::scan_string_quoted` (`parsers/scan/quoted.rs`).
 //! Used by `RegexClass::QuotedString`, `JsonString`, `CssQuotedString`.
 
 use proc_macro2::TokenStream;
@@ -13,8 +13,8 @@ pub fn emit_call() -> TokenStream {
     quote! { ::parse_that::scan_string_quoted(state) }
 }
 
-/// Emit a call to the JSON-specific quoted-string scanner with full
-/// escape semantics (RFC 8259).
-pub fn emit_json_call() -> TokenStream {
-    quote! { ::parse_that::quoted_string_scan_full(state) }
+/// Emit a call to the strict quoted-string scanner with full
+/// escape semantics (RFC 8259 grammar).
+pub fn emit_call_strict() -> TokenStream {
+    quote! { ::parse_that::scan_quoted_string_strict(state) }
 }

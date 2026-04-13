@@ -127,6 +127,7 @@ fn compute_cache_key(paths: &[PathBuf], attrs: &ParserAttributes, ident_name: &s
     attrs.prettify.hash(&mut hasher);
     attrs.skip_recover.hash(&mut hasher);
     attrs.serialize.hash(&mut hasher);
+    attrs.structural.hash(&mut hasher);
     for p in &attrs.paths {
         // Hash canonical paths so that the same file via different relative
         // paths produces the same key.
@@ -233,6 +234,9 @@ fn parse_parser_attrs(attrs: &[Attribute]) -> ParserAttributes {
                 Meta::Path(p) if p.is_ident("serialize") => {
                     parser_attr.serialize = true;
                 }
+                Meta::Path(p) if p.is_ident("structural") => {
+                    parser_attr.structural = true;
+                }
                 _ => {}
             }
         }
@@ -270,7 +274,7 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
         options: PipelineOptions {
             remove_left_recursion: parser_container_attrs.remove_left_recursion,
             entry_rule: None,
-            ..PipelineOptions::default()
+            structural: parser_container_attrs.structural,
         },
         target: CompileTarget::Rust {
             requested_prettify: parser_container_attrs.prettify,

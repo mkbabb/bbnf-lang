@@ -30,6 +30,11 @@ pub struct ParserAttributes {
     pub prettify: bool,
     pub skip_recover: bool,
     pub serialize: bool,
+    /// Structural mode — preserves rule identity (no inlining, aliasing,
+    /// or transparent collapse) so consumers that walk the parse tree
+    /// by `RuleKind` keep a stable surface. Drives the pipeline's
+    /// `preserve_identity` gate.
+    pub structural: bool,
 }
 
 /// Central context for IR-based code generation.

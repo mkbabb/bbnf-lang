@@ -6,13 +6,6 @@
 //! `GrammarIR`'s `rules.len()` matches a frozen snapshot constant.
 //! Any deviation is a silent lowering regression.
 //!
-//! # Status
-//!
-//! The rule-count snapshot constants below are placeholders
-//! (`usize::MAX`) that must be populated with the actual canonical
-//! values from a clean regen run. Each test is `#[ignore]`-gated
-//! until the constants are frozen.
-//!
 //! # Canonical grammar entry points
 //!
 //! The six production grammars covered by this gate mirror the
@@ -37,19 +30,16 @@ use bbnf::pipeline::{
 use bbnf_ir::GrammarIR;
 
 // ---------------------------------------------------------------------
-// Frozen snapshot constants — Wave 2 will replace these placeholders.
+// Frozen rule-count snapshots. Update any constant only when the
+// corresponding grammar is intentionally edited.
 // ---------------------------------------------------------------------
-//
-// Frozen snapshot constants — replace each `usize::MAX` sentinel with
-// the actual `ir.rules.len()` produced by the pipeline to activate
-// the corresponding test.
 
-const TODO_WAVE2_BBNF_RULE_COUNT: usize = usize::MAX;
-const TODO_WAVE2_JSON_RULE_COUNT: usize = usize::MAX;
-const TODO_WAVE2_EBNF_RULE_COUNT: usize = usize::MAX;
-const TODO_WAVE2_CSS_PRETTY_RULE_COUNT: usize = usize::MAX;
-const TODO_WAVE2_CSS_L4_RULE_COUNT: usize = usize::MAX;
-const TODO_WAVE2_GOOGLE_SHEETS_RULE_COUNT: usize = usize::MAX;
+const BBNF_RULE_COUNT: usize = 52;
+const JSON_RULE_COUNT: usize = 10;
+const EBNF_RULE_COUNT: usize = 14;
+const CSS_PRETTY_RULE_COUNT: usize = 20;
+const CSS_L4_RULE_COUNT: usize = 184;
+const GOOGLE_SHEETS_RULE_COUNT: usize = 38;
 
 // ---------------------------------------------------------------------
 // Shared helpers.
@@ -95,59 +85,54 @@ fn compile_entry(rel_entry: &str) -> GrammarIR {
 // ---------------------------------------------------------------------
 
 #[test]
-#[ignore = "snapshot constants not yet frozen"]
 fn bbnf_grammar_roundtrip() {
     let ir = compile_entry("bbnf/bbnf.bbnf");
     assert_eq!(
         ir.rules.len(),
-        TODO_WAVE2_BBNF_RULE_COUNT,
+        BBNF_RULE_COUNT,
         "bbnf.bbnf rule count drifted from frozen snapshot — \
-         update TODO_WAVE2_BBNF_RULE_COUNT in crates/core/tests/grammar_roundtrip.rs \
+         update BBNF_RULE_COUNT in crates/core/tests/grammar_roundtrip.rs \
          only if the grammar itself was intentionally edited"
     );
 }
 
 #[test]
-#[ignore = "snapshot constants not yet frozen"]
 fn json_grammar_roundtrip() {
     let ir = compile_entry("json/json.bbnf");
     assert_eq!(
         ir.rules.len(),
-        TODO_WAVE2_JSON_RULE_COUNT,
+        JSON_RULE_COUNT,
         "json.bbnf rule count drifted from frozen snapshot — \
-         update TODO_WAVE2_JSON_RULE_COUNT in crates/core/tests/grammar_roundtrip.rs \
+         update JSON_RULE_COUNT in crates/core/tests/grammar_roundtrip.rs \
          only if the grammar itself was intentionally edited"
     );
 }
 
 #[test]
-#[ignore = "snapshot constants not yet frozen"]
 fn ebnf_grammar_roundtrip() {
     let ir = compile_entry("ebnf/ebnf.bbnf");
     assert_eq!(
         ir.rules.len(),
-        TODO_WAVE2_EBNF_RULE_COUNT,
+        EBNF_RULE_COUNT,
         "ebnf.bbnf rule count drifted from frozen snapshot — \
-         update TODO_WAVE2_EBNF_RULE_COUNT in crates/core/tests/grammar_roundtrip.rs \
+         update EBNF_RULE_COUNT in crates/core/tests/grammar_roundtrip.rs \
          only if the grammar itself was intentionally edited"
     );
 }
 
 #[test]
-#[ignore = "snapshot constants not yet frozen"]
 fn css_pretty_grammar_roundtrip() {
     let ir = compile_entry("css/pretty.bbnf");
     assert_eq!(
         ir.rules.len(),
-        TODO_WAVE2_CSS_PRETTY_RULE_COUNT,
+        CSS_PRETTY_RULE_COUNT,
         "css/pretty.bbnf rule count drifted from frozen snapshot — \
-         update TODO_WAVE2_CSS_PRETTY_RULE_COUNT in crates/core/tests/grammar_roundtrip.rs \
+         update CSS_PRETTY_RULE_COUNT in crates/core/tests/grammar_roundtrip.rs \
          only if the grammar itself was intentionally edited"
     );
 }
 
 #[test]
-#[ignore = "snapshot constants not yet frozen"]
 fn css_l4_grammar_roundtrip() {
     // CSS L4 is split across many modules under `grammar/css/l4/`
     // and `compile_paths_request` walks the `@import` graph from the
@@ -155,22 +140,21 @@ fn css_l4_grammar_roundtrip() {
     let ir = compile_entry("css/l4/stylesheet.bbnf");
     assert_eq!(
         ir.rules.len(),
-        TODO_WAVE2_CSS_L4_RULE_COUNT,
+        CSS_L4_RULE_COUNT,
         "css/l4/stylesheet.bbnf rule count drifted from frozen snapshot — \
-         update TODO_WAVE2_CSS_L4_RULE_COUNT in crates/core/tests/grammar_roundtrip.rs \
+         update CSS_L4_RULE_COUNT in crates/core/tests/grammar_roundtrip.rs \
          only if the grammar itself was intentionally edited"
     );
 }
 
 #[test]
-#[ignore = "snapshot constants not yet frozen"]
 fn google_sheets_grammar_roundtrip() {
     let ir = compile_entry("google-sheets/google-sheets.bbnf");
     assert_eq!(
         ir.rules.len(),
-        TODO_WAVE2_GOOGLE_SHEETS_RULE_COUNT,
+        GOOGLE_SHEETS_RULE_COUNT,
         "google-sheets.bbnf rule count drifted from frozen snapshot — \
-         update TODO_WAVE2_GOOGLE_SHEETS_RULE_COUNT in crates/core/tests/grammar_roundtrip.rs \
+         update GOOGLE_SHEETS_RULE_COUNT in crates/core/tests/grammar_roundtrip.rs \
          only if the grammar itself was intentionally edited"
     );
 }

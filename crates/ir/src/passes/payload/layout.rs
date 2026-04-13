@@ -57,7 +57,16 @@ pub fn compute_payload_layouts(ir: &GrammarIR) -> HashMap<RuleId, PayloadLayout>
     let mut out = HashMap::new();
     for (rule_id, ty) in &ir.types {
         let layout = match ty {
-            TypeDesc::Tuple(fields) => plan_layout(fields),
+            TypeDesc::Tuple(fields) => {
+                // AR.9: KV-pair shape [Span, scalar] — the Span key
+                // lives in the record's own (span_lo, span_hi), so
+                // only the scalar value needs aggregate storage.
+                if is_kv_pair_shape(fields) {
+                    plan_layout(&fields[1..])
+                } else {
+                    plan_layout(fields)
+                }
+            }
             // Bare scalar rules (e.g. `number -> f64`) are single-field
             // payloads. Treat them as a degenerate 1-element tuple so the
             // tape codegen can use aggregate payload storage uniformly.

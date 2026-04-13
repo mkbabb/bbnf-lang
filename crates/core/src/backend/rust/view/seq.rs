@@ -7,7 +7,8 @@
 //! each position, plus named accessors (`.identifier()`,
 //! `.expression()`, ...) when the child is a `Ref` to a named rule.
 
-use bbnf_ir::{GrammarIR, IrNode, IrRule};
+use bbnf_ir::passes::{PayloadField, PayloadLayout};
+use bbnf_ir::{GrammarIR, IrNode, IrRule, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
@@ -144,5 +145,185 @@ fn peel_wrappers(node: &IrNode) -> &IrNode {
         | IrNode::Negate(inner) => peel_wrappers(inner),
         IrNode::Skip(kept, _) => peel_wrappers(kept),
         other => other,
+    }
+}
+
+// ── AR.9: KV-pair view accessors ────────────────────────────────
+
+/// Emit typed accessors for a rule whose tape record is a flattened
+/// KV-pair (`TapeKind::KvPair`).
+///
+/// The key Span is stored in the record's own `(span_lo, span_hi)`.
+/// The scalar value is packed into the aggregate payload buffer.
+/// This accessor surface exposes:
+///
+/// - `.key()` — the source text of the key Span.
+/// - `.key_span()` — the `(lo, hi)` byte offsets of the key.
+/// - `.value()` — the decoded scalar value from the payload.
+/// - `.text()` — alias for `.key()` (backward compat with leaf views).
+pub fn emit_kv_pair_accessors(
+    rule: &IrRule,
+    rule_name: &str,
+    layout: &PayloadLayout,
+    _type_desc: Option<&TypeDesc>,
+) -> TokenStream {
+    let view_ident = format_ident!("{}View", rule_name);
+    let total_bytes = layout.total_bytes as usize;
+
+    // The layout contains only the scalar value field (the Span key
+    // is implicit in the record's own span). There should be exactly
+    // one field.
+    assert!(
+        layout.fields.len() == 1,
+        "KV-pair layout must have exactly one scalar field, got {}",
+        layout.fields.len()
+    );
+    let field = &layout.fields[0];
+    let field_ty_ident = format_ident!(
+        "{}",
+        field.ty.rust_ident().expect("KV-pair value has rust_ident")
+    );
+    let field_read = kv_pair_field_read(field);
+    let field_zero = kv_pair_field_zero(&field.ty);
+
+    let mut methods = Vec::new();
+
+    // `.key()` — the source text of the key Span.
+    methods.push(quote! {
+        /// The key as source text (the Span matched by the first
+        /// child of the original Seq).
+        #[inline]
+        pub fn key(&self) -> &'p str {
+            self.span_text()
+        }
+    });
+
+    // `.text()` — alias for backward compatibility.
+    methods.push(quote! {
+        /// Alias for `.key()` — the source text of the key Span.
+        #[inline]
+        pub fn text(&self) -> &'p str {
+            self.span_text()
+        }
+    });
+
+    // `.key_span()` — byte offset pair of the key.
+    methods.push(quote! {
+        /// The key Span as `(lo, hi)` byte offsets.
+        #[inline]
+        pub fn key_span(&self) -> (u32, u32) {
+            self.span()
+        }
+    });
+
+    // `.value()` — the decoded scalar from the aggregate payload.
+    methods.push(quote! {
+        /// The value scalar decoded from the aggregate payload.
+        ///
+        /// Returns the zero-initialized value if no payload was
+        /// written for this record.
+        #[inline]
+        pub fn value(&self) -> #field_ty_ident {
+            let tape = self.cursor.tape();
+            let rec = self.cursor.record();
+            match tape.payload_bytes(rec, #total_bytes) {
+                Some(__bytes) => #field_read,
+                None => #field_zero,
+            }
+        }
+    });
+
+    // `.byte_range()` convenience.
+    if rule.meta.span_eligible {
+        methods.push(quote! {
+            /// The matched byte range as a `Range<usize>`.
+            #[inline]
+            pub fn byte_range(&self) -> ::core::ops::Range<usize> {
+                let (lo, hi) = self.span();
+                lo as usize..hi as usize
+            }
+        });
+    }
+
+    quote! {
+        #[allow(dead_code)]
+        impl<'p> #view_ident<'p> {
+            #(#methods)*
+        }
+    }
+}
+
+/// Emit the decoder expression for a KV-pair value field.
+fn kv_pair_field_read(field: &PayloadField) -> TokenStream {
+    let offset = field.offset as usize;
+    let size = field
+        .ty
+        .payload_size_bytes()
+        .expect("KV-pair value has payload_size") as usize;
+    let end = offset + size;
+    match field.ty {
+        TypeDesc::Bool => quote! { __bytes[#offset] != 0 },
+        TypeDesc::I8 => quote! { __bytes[#offset] as i8 },
+        TypeDesc::U8 => quote! { __bytes[#offset] },
+        TypeDesc::F64 => quote! {
+            f64::from_le_bytes(
+                <[u8; 8]>::try_from(&__bytes[#offset..#end])
+                    .expect("kv_pair slice is 8 bytes"),
+            )
+        },
+        TypeDesc::I16 => quote! {
+            i16::from_le_bytes(
+                <[u8; 2]>::try_from(&__bytes[#offset..#end])
+                    .expect("kv_pair slice is 2 bytes"),
+            )
+        },
+        TypeDesc::U16 => quote! {
+            u16::from_le_bytes(
+                <[u8; 2]>::try_from(&__bytes[#offset..#end])
+                    .expect("kv_pair slice is 2 bytes"),
+            )
+        },
+        TypeDesc::I32 => quote! {
+            i32::from_le_bytes(
+                <[u8; 4]>::try_from(&__bytes[#offset..#end])
+                    .expect("kv_pair slice is 4 bytes"),
+            )
+        },
+        TypeDesc::U32 => quote! {
+            u32::from_le_bytes(
+                <[u8; 4]>::try_from(&__bytes[#offset..#end])
+                    .expect("kv_pair slice is 4 bytes"),
+            )
+        },
+        TypeDesc::I64 => quote! {
+            i64::from_le_bytes(
+                <[u8; 8]>::try_from(&__bytes[#offset..#end])
+                    .expect("kv_pair slice is 8 bytes"),
+            )
+        },
+        TypeDesc::U64 => quote! {
+            u64::from_le_bytes(
+                <[u8; 8]>::try_from(&__bytes[#offset..#end])
+                    .expect("kv_pair slice is 8 bytes"),
+            )
+        },
+        _ => unreachable!("KV-pair value must be a scalar TypeDesc"),
+    }
+}
+
+/// Emit the zero value for a KV-pair value field.
+fn kv_pair_field_zero(td: &TypeDesc) -> TokenStream {
+    match td {
+        TypeDesc::F64 => quote! { 0.0_f64 },
+        TypeDesc::Bool => quote! { false },
+        TypeDesc::I8 => quote! { 0_i8 },
+        TypeDesc::U8 => quote! { 0_u8 },
+        TypeDesc::I16 => quote! { 0_i16 },
+        TypeDesc::U16 => quote! { 0_u16 },
+        TypeDesc::I32 => quote! { 0_i32 },
+        TypeDesc::U32 => quote! { 0_u32 },
+        TypeDesc::I64 => quote! { 0_i64 },
+        TypeDesc::U64 => quote! { 0_u64 },
+        _ => quote! { ::core::default::Default::default() },
     }
 }

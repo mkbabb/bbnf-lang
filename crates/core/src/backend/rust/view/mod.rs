@@ -56,6 +56,7 @@
 //!   view layer never sees them.
 
 use bbnf_ir::{GrammarIR, IrNode, TypeDesc};
+use bbnf_ir::passes::is_kv_pair_shape;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
@@ -398,10 +399,21 @@ fn emit_typed_accessors(
         .iter()
         .find_map(|(id, ty)| (*id == rule.id).then_some(ty));
 
-    // AQ.6.B: aggregate-payload rules go straight to the leaf
-    // emitter, which generates the typed `.value()` reader from the
-    // packed bytes.
+    // AR.9: KV-pair shape [Span, scalar] — emit specialized
+    // accessors for the flattened key-value pair (`.key()` for the
+    // Span, `.value()` for the scalar) before the generic aggregate
+    // path.
     if let Some(layout) = ir.payload_layouts.get(&rule.id) {
+        let is_kv = type_desc.is_some_and(|td| match td {
+            TypeDesc::Tuple(fields) => is_kv_pair_shape(fields),
+            _ => false,
+        });
+        if is_kv {
+            return seq::emit_kv_pair_accessors(rule, rule_name, layout, type_desc);
+        }
+        // AQ.6.B: aggregate-payload rules go straight to the leaf
+        // emitter, which generates the typed `.value()` reader from the
+        // packed bytes.
         return leaves::emit_aggregate_accessors(rule, rule_name, layout, type_desc);
     }
 

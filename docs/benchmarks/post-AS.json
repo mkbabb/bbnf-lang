@@ -1,0 +1,65 @@
+{
+  "tag": "post-AS",
+  "description": "Post-AS tranche. CSS L4 parse activated (scanner_plan Identifier sub-flag dispatch). TypeDesc::Span admitted as scalar payload. scan_ident_with_escapes for CSS selectors. 6 hand-rolled regex parsers replaced (-263 LOC). classify_regex calls cached. StructRegistry scaffolded. Generic number kernel for CSS. All bench targets operational.",
+  "arch": "aarch64-apple-darwin",
+  "tests": {
+    "grammar_roundtrip": { "passed": 6, "failed": 0 },
+    "payload_layouts": { "passed": 13, "failed": 0 },
+    "css_l4": { "passed": 15, "failed": 0 },
+    "bbnf_tape": { "passed": 25, "failed": 0 },
+    "bbnf_ir": { "passed": 243, "failed": 0 },
+    "egraph": { "passed": 26, "failed": 0 },
+    "bootstrap_idempotent": true
+  },
+  "benches": {
+    "json_monolithic": {
+      "canada":  { "ns_per_iter": 2066146, "mb_per_s": 1089 },
+      "citm":    { "ns_per_iter": 740799,  "mb_per_s": 2331 },
+      "twitter": { "ns_per_iter": 315206,  "mb_per_s": 2003 },
+      "data":    { "ns_per_iter": 19655,   "mb_per_s": 1805 },
+      "data_xl": { "ns_per_iter": 20332749,"mb_per_s": 1046 },
+      "note": "Tape-only parse (no string materialization). NOT apples-to-apples with sonic-rs::Value."
+    },
+    "css_l4": {
+      "normalize": { "ns_per_iter": 6301,    "mb_per_s": 974 },
+      "bootstrap": { "ns_per_iter": 533868,  "mb_per_s": 525 },
+      "tailwind":  { "ns_per_iter": 6395583, "mb_per_s": 569 }
+    },
+    "css_competitors": {
+      "cssparser_normalize":    { "ns_per_iter": 9000,     "mb_per_s": 682 },
+      "cssparser_bootstrap":    { "ns_per_iter": 615920,   "mb_per_s": 455 },
+      "cssparser_tailwind":     { "ns_per_iter": 8722487,  "mb_per_s": 417 },
+      "lightningcss_normalize": { "ns_per_iter": 23072,    "mb_per_s": 266 },
+      "lightningcss_bootstrap": { "ns_per_iter": 2248851,  "mb_per_s": 124 },
+      "lightningcss_tailwind":  { "ns_per_iter": 38581304, "mb_per_s": 94 }
+    },
+    "google_sheets": {
+      "parse_1kb":  { "ns_per_iter": 5488,  "mb_per_s": 120 },
+      "parse_10kb": { "ns_per_iter": 53342, "mb_per_s": 127 }
+    },
+    "compile_pipeline": {
+      "json":   { "ns_per_iter": 133660 },
+      "ebnf":   { "ns_per_iter": 415716 },
+      "bbnf":   { "ns_per_iter": 1784886 },
+      "sheets": { "ns_per_iter": 2311940 },
+      "css_l4": { "ns_per_iter": 10213404 }
+    }
+  },
+  "hard_gates": {
+    "all_bench_targets_run": "PASS",
+    "span_admitted_with_builder_tape_view": "PASS — push_leaf_with_Span + payload_Span + needs_payload_slot",
+    "named_struct_projects_to_layout": "PASS — StructRegistry scaffolded, layout.rs handles Named",
+    "identifier_sub_flags_dispatched": "PASS — allows_leading_dash, allows_double_dash_prefix, allows_escapes",
+    "zero_hand_rolled_regex_parsers": "PASS — -263 LOC in generate/regex/emit/",
+    "post_as_json_measured": "PASS",
+    "css_beats_lightningcss": "PASS — bootstrap: 525 vs 124 (4.2x), tailwind: 569 vs 94 (6.1x)",
+    "css_beats_cssparser": "PASS — bootstrap: 525 vs 455 (1.2x), tailwind: 569 vs 417 (1.4x)",
+    "gorgeous_compiles": "PASS — 0 errors",
+    "bootstrap_idempotent": "PASS — gen1 == gen2"
+  },
+  "json_honesty_note": "JSON bench measures tape-only parse throughput (spans + f64/bool/u8 payloads). Strings are not decoded. For apples-to-apples with sonic-rs::Value, a string decode kernel writing to an arena during scan is needed. This is direct projection (one pass), not tape + walk.",
+  "delta_vs_post_ar": {
+    "css_l4": "NEW — was BROKEN in post-AR",
+    "json_monolithic": "Stable (within noise of post-AR numbers)"
+  }
+}

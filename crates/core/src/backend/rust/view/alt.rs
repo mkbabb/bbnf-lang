@@ -206,7 +206,7 @@ fn emit_typed_enum_value_accessor(
                     _ => None,
                 });
                 match td {
-                    Some(td) if td.is_scalar_payload() => {
+                    Some(td) if td.needs_payload_slot() => {
                         let name = format!("branch_{}", idx);
                         (name, BranchVariant::Payload(BranchValueShape::Scalar(td.clone())))
                     }
@@ -258,13 +258,7 @@ fn emit_typed_enum_value_accessor(
                     let field_tys: Vec<TokenStream> = layout
                         .fields
                         .iter()
-                        .map(|f| {
-                            let i = format_ident!(
-                                "{}",
-                                f.ty.rust_ident().expect("aggregate field has rust_ident"),
-                            );
-                            quote! { #i }
-                        })
+                        .map(|f| aggregate_field_type_for_enum(&f.ty))
                         .collect();
                     quote! { #v_ident(( #(#field_tys),* )) }
                 }
@@ -316,26 +310,62 @@ fn emit_typed_enum_value_accessor(
         })
         .collect();
 
-    let _ = rule;
-    quote! {
-        /// Typed value enum — payload-eligible branches carry typed
-        /// values directly; non-eligible branches wrap a cursor view.
-        #[derive(Clone, Debug)]
-        #[allow(non_camel_case_types)]
-        pub enum #enum_ident<'p> {
-            #(#enum_variants,)*
-        }
+    // Determine whether the enum needs a lifetime parameter. It does
+    // when any variant borrows from `'p` — i.e. Cursor branches
+    // (which wrap `NodeView<'p>`) or Scalar Span branches (which
+    // carry `&'p str`). Pure-primitive / pure-aggregate enums need
+    // no lifetime; emitting an unused `'p` triggers E0392.
+    let needs_lifetime = variants.iter().any(|(_, v)| matches!(
+        v,
+        BranchVariant::Cursor
+        | BranchVariant::Payload(BranchValueShape::Scalar(TypeDesc::Span))
+    ));
 
-        #[allow(dead_code)]
-        impl<'p> #view_ident<'p> {
-            /// Decode the chosen branch's value. Payload-eligible
-            /// branches return typed scalars/aggregates; other
-            /// branches return cursor-wrapped sub-views.
-            #[inline]
-            pub fn value(&self) -> ::core::option::Option<#enum_ident<'p>> {
-                match self.cursor.meta_idx() {
-                    #(#dispatch_arms,)*
-                    _ => None,
+    let _ = rule;
+
+    if needs_lifetime {
+        quote! {
+            /// Typed value enum — payload-eligible branches carry typed
+            /// values directly; non-eligible branches wrap a cursor view.
+            #[derive(Clone, Debug)]
+            #[allow(non_camel_case_types)]
+            pub enum #enum_ident<'p> {
+                #(#enum_variants,)*
+            }
+
+            #[allow(dead_code)]
+            impl<'p> #view_ident<'p> {
+                /// Decode the chosen branch's value. Payload-eligible
+                /// branches return typed scalars/aggregates; other
+                /// branches return cursor-wrapped sub-views.
+                #[inline]
+                pub fn value(&self) -> ::core::option::Option<#enum_ident<'p>> {
+                    match self.cursor.meta_idx() {
+                        #(#dispatch_arms,)*
+                        _ => None,
+                    }
+                }
+            }
+        }
+    } else {
+        quote! {
+            /// Typed value enum — all branches carry owned scalars or
+            /// aggregates (no borrows).
+            #[derive(Clone, Debug)]
+            #[allow(non_camel_case_types)]
+            pub enum #enum_ident {
+                #(#enum_variants,)*
+            }
+
+            #[allow(dead_code)]
+            impl<'p> #view_ident<'p> {
+                /// Decode the chosen branch's value.
+                #[inline]
+                pub fn value(&self) -> ::core::option::Option<#enum_ident> {
+                    match self.cursor.meta_idx() {
+                        #(#dispatch_arms,)*
+                        _ => None,
+                    }
                 }
             }
         }
@@ -469,6 +499,20 @@ fn emit_aggregate_value_decode(layout: &PayloadLayout) -> TokenStream {
             None => ( #(#field_zeros),* ),
         }
     }
+}
+
+/// Emit the Rust type token for an aggregate field in a typed-enum
+/// variant. `TypeDesc::Span` fields are stored as packed `(u32, u32)`
+/// pairs — NOT as `parse_that::Span<'_>`.
+fn aggregate_field_type_for_enum(td: &TypeDesc) -> TokenStream {
+    if matches!(td, TypeDesc::Span) {
+        return quote! { (u32, u32) };
+    }
+    let ident = td
+        .rust_ident()
+        .expect("aggregate field has rust_ident");
+    let ty = format_ident!("{}", ident);
+    quote! { #ty }
 }
 
 /// Derive a branch name and view type from the branch node shape.

@@ -157,14 +157,7 @@ pub fn emit_aggregate_accessors(
     let field_tys: Vec<TokenStream> = layout
         .fields
         .iter()
-        .map(|f| {
-            let ident = f
-                .ty
-                .rust_ident()
-                .expect("aggregate field has rust_ident");
-            let ty = format_ident!("{}", ident);
-            quote! { #ty }
-        })
+        .map(|f| aggregate_field_type(&f.ty))
         .collect();
 
     let field_reads: Vec<TokenStream> = layout
@@ -226,6 +219,22 @@ pub fn emit_aggregate_accessors(
             #(#methods)*
         }
     }
+}
+
+/// Emit the Rust type token for an aggregate field.
+///
+/// `TypeDesc::Span` fields are stored as packed `(u32, u32)` pairs
+/// in the aggregate payload buffer — NOT as `parse_that::Span<'_>`.
+/// Every other scalar uses its natural Rust primitive name.
+fn aggregate_field_type(td: &TypeDesc) -> TokenStream {
+    if matches!(td, TypeDesc::Span) {
+        return quote! { (u32, u32) };
+    }
+    let ident = td
+        .rust_ident()
+        .expect("aggregate field has rust_ident");
+    let ty = format_ident!("{}", ident);
+    quote! { #ty }
 }
 
 /// AQ.6.B: emit the per-field decoder for an aggregate read. Each

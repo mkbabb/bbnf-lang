@@ -423,7 +423,7 @@ impl Emitter for RustEmitter {
                     .types
                     .iter()
                     .find_map(|(rid, td)| if *rid == rule.id { Some(td.clone()) } else { None })
-                    .filter(|td| td.is_scalar_payload());
+                    .filter(|td| td.needs_payload_slot());
                 if direct.is_some() {
                     ctx.payload_type = direct;
                 } else if is_alt {
@@ -439,7 +439,7 @@ impl Emitter for RustEmitter {
                                 if let Some(td) = ir.types.iter().find_map(|(r, t)| {
                                     if *r == *rid { Some(t.clone()) } else { None }
                                 }) {
-                                    if td.is_scalar_payload() {
+                                    if td.needs_payload_slot() {
                                         ctx.payload_type = Some(td);
                                         break;
                                     }

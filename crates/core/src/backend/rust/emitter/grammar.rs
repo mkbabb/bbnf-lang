@@ -84,7 +84,7 @@ impl RustEmitter {
         ir.types
             .iter()
             .find_map(|(rid, td)| if *rid == rule.id { Some(td) } else { None })
-            .filter(|td| td.is_scalar_payload())
+            .filter(|td| td.needs_payload_slot())
     }
 
     /// Look up the materialization class for a rule's body node.

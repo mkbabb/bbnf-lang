@@ -74,13 +74,14 @@ impl TypeDesc {
 
     /// True if this type is storable inline as a fixed-size scalar payload.
     ///
-    /// Scalar payloads are written into the tape's payload buffer via
-    /// `push_leaf_with_<T>` and read back via `payload_<T>` — zero
-    /// re-parse from the source span.
+    /// Includes `Span` (packed as two `u32` values = 8 bytes) and all
+    /// numeric/bool primitives. Used by aggregate layout planning,
+    /// KvPair detection, and field-level payload packing.
     ///
-    /// `Span` is stored as two packed `u32` values (lo, hi) = 8 bytes
-    /// in one payload slot, enabling O(1) sub-span retrieval without
-    /// re-scanning the source text.
+    /// For rule-level routing (deciding whether a standalone rule uses
+    /// the payload-bearing codegen path), use [`Self::needs_payload_slot`]
+    /// instead — Span-typed rules already carry their span in `TapeRec`
+    /// and don't need a payload slot.
     pub fn is_scalar_payload(&self) -> bool {
         matches!(
             self,
@@ -96,6 +97,19 @@ impl TypeDesc {
                 | TypeDesc::I64
                 | TypeDesc::U64
         )
+    }
+
+    /// True if a standalone rule of this type requires a payload slot.
+    ///
+    /// `Span`-typed rules store their span natively in `TapeRec.span_lo/
+    /// span_hi` — no payload buffer entry needed. All other scalar types
+    /// (f64, bool, u8, etc.) must go through `push_leaf_with_<T>`.
+    ///
+    /// Used by the emitter's rule-function routing to decide between the
+    /// `TapeSpanOnly` path (normal span construction) and the
+    /// `TapeSpanOnlyScalar` path (payload-bearing leaf).
+    pub fn needs_payload_slot(&self) -> bool {
+        self.is_scalar_payload() && !matches!(self, TypeDesc::Span)
     }
 
     /// Width in bytes of a scalar payload; `None` for non-scalar types.

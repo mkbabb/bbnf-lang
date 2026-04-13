@@ -13,7 +13,7 @@
 | 4. CSS classifier | **Complete** — allows_escapes structural detection |
 | 5. Tape capacity | **Complete** — /2+2 heuristic (64x over-allocation eliminated) |
 | 6. Scanner generalization | **Partial** — FAMILY_HELPER policy + HIR re-exports (2/8 items) |
-| 7. Host.rs deletion | **Deferred** — agent attempt broke 6/6 roundtrip; needs incremental migration |
+| 7. Host.rs deletion | **Complete** — 607→423 lines, span-text fallback deleted, structural directive extraction |
 | 8. SIMD fractional scan | **Complete** — NEON + SSE4.2, 12 tests pass, integrated into scan_number_mantissa |
 | 9. Pair compound flattening | **Complete** — TapeKind::KvPair + view accessors + layout recognition |
 

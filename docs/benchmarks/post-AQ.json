@@ -1,0 +1,79 @@
+{
+  "tag": "post-AQ",
+  "description": "Post-AQ baseline. Wave 1-3 fully landed (self-hosting closure deferred per Phase 1.2 fallback). Wave 4 partial: Vec sizing landed; CSS L4 routing + key dispatch hash reverted (regression).",
+  "arch": "aarch64-apple-darwin",
+  "hardware": "M4 Max",
+  "tests": {
+    "bbnf_workspace": {
+      "passed": 563,
+      "failed": 30,
+      "ignored": 5,
+      "diff_vs_post_ap": "30 new failures vs post-AP's 'all passing' baseline. Breakdown: 8 css tape-parity/bench panics (CSS L4 grammar now chokes at comment+declaration boundaries), 4 closure_* pipeline tests (grammar closure feature deferred per Phase 1.2), 4 css_* tape_parity parses, 2 lower_* (cyclic meta), 2 ir_meta_* (follow + memo/span labels), 2 recover (parse_recover_directive/without_terminator), 2 gorgeous dumps (dump_biome_vs_gorgeous, dump_tailwind_comparison), 2 hint_* (indent/softbreak), 2 lsp analyze (cycle/alias detection), 2 diagnostics (alias hint, cycle path), 1 google_sheets let_parses_as_let_call, 1 pipeline_google_sheets_multiline_let, 1 compile_request_rejects_unknown_nonterminal, 1 no_hand_written_subvariant_references, 1 test_selective_transitive_unfurling, 1 output_size_comparison. Root causes: CSS grammar regression from AQ.1-6 refactors (structural dispatch delete + RegexClass/scanner deoverfit), IR meta label emission changes, closure feature partial rollback."
+    }
+  },
+  "benches": {
+    "json_monolithic": {
+      "canada":  { "ns_per_iter": 1226301, "mb_per_s": 1835 },
+      "citm":    { "ns_per_iter": 635102,  "mb_per_s": 2719 },
+      "twitter": { "ns_per_iter": 301404,  "mb_per_s": 2095 },
+      "data":    { "ns_per_iter": 18041,   "mb_per_s": 1967 },
+      "data_xl": { "ns_per_iter": 15521166,"mb_per_s": 1371 }
+    },
+    "css_l4": {
+      "bootstrap": { "status": "FAIL", "error": "Syntax { offset: 6532, rule: None }", "context": "fails at `body { margin: 0; font-family: var(--bs-body-font-family); ... }` block following `@media (prefers-reduced-motion: no-preference)`; offset lands on an empty-line/comment boundary before the body rule" },
+      "normalize": { "status": "FAIL", "error": "Syntax { offset: 301, rule: None }", "context": "fails right after the opening comment block `/* ... Prevent adjustments of font size after orientation changes in iOS. */` before `html { line-height: 1.15; ... }`" },
+      "tailwind":  { "status": "FAIL", "error": "Syntax { offset: 340, rule: None }", "context": "fails at an early stylesheet boundary (offset 340)" }
+    },
+    "compile_pipeline": {
+      "compile_json":   { "ns_per_iter": 115785 },
+      "compile_bbnf":   { "ns_per_iter": 1612793 },
+      "compile_ebnf":   { "ns_per_iter": 377912 },
+      "compile_sheets": { "ns_per_iter": 2122020 },
+      "compile_css_l4": { "ns_per_iter": 9084808 }
+    }
+  },
+  "grammar_rule_counts": {
+    "bbnf": 52,
+    "json": 10,
+    "ebnf": 14,
+    "css/pretty": 20,
+    "css/l4": 184,
+    "google-sheets": 38
+  },
+  "tranche_summary": {
+    "wave_1": {
+      "phases": ["AQ.1 (self-hosting closure — partial: regen failed, span-text fallback restored)", "AQ.2 (IR inspect module)", "AQ.5 (DELETE structural dispatch)"],
+      "commits": ["2f7c1bd", "7c2c0d6", "9f3f883", "ea1e562", "5b06096"]
+    },
+    "wave_2": {
+      "phases": ["AQ.3 (RegexClass deoverfit)", "AQ.4 (scanner deoverfit)"],
+      "commits": ["0b0082a", "4b696f9"]
+    },
+    "wave_3": {
+      "phases": ["AQ.6.A (PayloadKind delete + TypeDesc expansion)", "AQ.6.B+C+D (aggregate layout + Alt typed enum + cleanup)"],
+      "commits": ["349f98c", "94894c6"]
+    },
+    "wave_4": {
+      "phases": ["AQ.8.2 Vec sizing (LANDED)", "AQ.7 + AQ.8.1 (REVERTED — CSS regression)", "AQ.8.3 + AQ.8.4 (DEFERRED — optional)"],
+      "commits": ["64a2cf9 (revert)", "759b0da (Vec sizing)"]
+    }
+  },
+  "deferred_work": [
+    "Bootstrap regen without span-text fallback (Phase 1.2): requires deeper architectural change to handle sub-variant compounds vs. typed view accessors.",
+    "CSS L4 identifier kernel routing (AQ.7.2): scan_ident does not handle CSS escape sequences (\\\\.) — classifier needs to reject patterns mixing identifier shape with escape branches.",
+    "Length-bucketed perfect hash for key dispatch (AQ.7.3): worktree implementation regressed CSS L4 — needs distinct test coverage for hash collision behavior.",
+    "skip_space bitmap caching (AQ.8.1): ws_bitmap already exists in ParserState; nospace_bits/nospace_start additions need careful integration with existing cache.",
+    "TLS-recycled scratch (AQ.8.3): optional codegen flag — deferred.",
+    "NEON simd_str2int (AQ.8.4): current SWAR 8-digit chunks already fast — ROI low.",
+    "AQ.9.2 samply diff (this run): too time-consuming for the sweep; follow-up profiling pass.",
+    "AQ.9.3 BBNF_EGRAPH_REPORT / BBNF_CSP_REPORT release emission: env-var hooks exist but reporting is dormant.",
+    "AQ.9.4 cost model grid sweep.",
+    "AQ.9.5 global CSP solve.",
+    "CSS L4 benchmark parse regression: bootstrap/normalize/tailwind all fail before emitting timing — root cause not yet isolated but correlates with the AQ.1-5 structural dispatch delete + scanner deoverfit work; the revert in 64a2cf9 did not fully restore bench-side parsing."
+  ],
+  "post_aq_status": {
+    "code_quality": "Codebase has shed 5 nominal RegexClass variants (JsonString/JsonNumber/CssIdent/CssQuotedString/WsBlockComment), 7 sp_*/sp_* SpanParser constructors, deleted the entire structural dispatch infrastructure, deleted PayloadKind, generalized TypeDesc to full integer suite, and consolidated 5 IR-walking primitives into a shared inspect module.",
+    "test_health": "30 failing tests against a clean workspace run (563 passing, 5 ignored). CSS L4 parsing regressed across all three bench datasets (bootstrap/normalize/tailwind) with Syntax errors at early boundaries — needs isolation and fix in a follow-up tranche. JSON monolithic and compile_pipeline benches are healthy.",
+    "self_hosting": "generated.rs still hand-maintained. Bootstrap regen path produces a divergent generated.rs because the codegen inlines single-use sub-rules even under preserve_identity. Resolution requires the deeper architectural change."
+  }
+}

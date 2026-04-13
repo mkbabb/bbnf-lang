@@ -1,6 +1,10 @@
 //! Mine `RecognizerShape::Regex` records for identifier-family regex
-//! patterns (`RegexClass::Identifier`, `CssIdent`, `PrefixThenClass`,
-//! `CharClassQuantified`, `HexDigits`).
+//! patterns. The parameterized `RegexClass::Identifier` variant
+//! folds the formerly-nominal CssIdent shape (the flags
+//! `allows_leading_dash` / `allows_double_dash_prefix` distinguish
+//! the dialects). Adjacent shapes — `PrefixThenClass`,
+//! `CharClassQuantified`, `HexDigits` — share the same recognizer
+//! channel because the kernel layer treats them as a single family.
 
 use bbnf_regex::RegexClass;
 
@@ -31,8 +35,7 @@ impl RecognizerMiner for IdentifierMiner {
         };
         if !matches!(
             info.classification,
-            RegexClass::Identifier
-                | RegexClass::CssIdent
+            RegexClass::Identifier { .. }
                 | RegexClass::PrefixThenClass { .. }
                 | RegexClass::CharClassQuantified(_)
                 | RegexClass::HexDigits

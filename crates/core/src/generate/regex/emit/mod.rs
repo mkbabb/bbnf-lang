@@ -63,18 +63,40 @@ pub fn emit_regex_unsupported(pattern: &str) -> TokenStream {
 /// Check if a regex pattern returns a fused `(Span, f64)` instead of plain `Span`.
 /// Used by type inference to determine the correct enum variant type.
 ///
+/// The fused number path is keyed on the JSON-style integer alternation
+/// (`reject_leading_zero`) plus an exponent — i.e. patterns whose
+/// canonical shape is the JSON `Number` production.
+///
 /// Prefer passing an `EmitOpts` with `ir` set so the classification is
 /// resolved from the cache. This shim exists for call sites where the
 /// caller only has the pattern string; it pays a full HIR parse.
 pub fn is_fused_number_regex(pattern: &str) -> bool {
-    matches!(classify_regex(pattern), RegexClass::JsonNumber)
+    matches!(
+        classify_regex(pattern),
+        RegexClass::Numeric {
+            allows_sign: true,
+            allows_fraction: true,
+            allows_exponent: true,
+            reject_leading_zero: true,
+            ..
+        }
+    )
 }
 
 /// Cached variant of [`is_fused_number_regex`] — resolves via
 /// `ir.regex_info[sid].classification` when the pattern is interned.
 pub fn is_fused_number_regex_cached(ir: &bbnf_ir::GrammarIR, pattern: &str) -> bool {
     let opts = EmitOpts::new(&CostModel::DEFAULT).with_ir(ir);
-    matches!(opts.classify_regex(pattern), RegexClass::JsonNumber)
+    matches!(
+        opts.classify_regex(pattern),
+        RegexClass::Numeric {
+            allows_sign: true,
+            allows_fraction: true,
+            allows_exponent: true,
+            reject_leading_zero: true,
+            ..
+        }
+    )
 }
 
 // ── Fast-path emission (Tier 1) ──────────────────────────────────────────
@@ -141,8 +163,9 @@ fn emit_regex_fast_path(pattern: &str, opts: &EmitOpts) -> Option<TokenStream> {
         // emit a ws-interleaved byte loop instead of raw memchr/LUT.
         // This ensures block comments like `/*!*/` embedded inside the
         // negated char class span are consumed transparently before the
-        // terminator byte check. Only activates for WsBlockComment @ws
-        // patterns; non-@ws and non-comment grammars keep the SIMD path.
+        // terminator byte check. Only activates for
+        // WhitespaceWithBlockComment @ws patterns; non-@ws and
+        // non-comment grammars keep the SIMD path.
         if opts.has_ws_block_comment() {
             return Some(match quantifier {
                 NegCharClassQuantifier::Plus => {
@@ -243,8 +266,17 @@ pub enum RegexStrategy {
 pub fn solve_regex_strategy(pattern: &str, opts: &EmitOpts) -> RegexStrategy {
     if emit_regex_fast_path(pattern, opts).is_some() {
         let kind = classify_fast_path(pattern, opts);
-        return if opts.fuse_numbers && matches!(opts.classify_regex(pattern), RegexClass::JsonNumber)
-        {
+        let is_json_number = matches!(
+            opts.classify_regex(pattern),
+            RegexClass::Numeric {
+                allows_sign: true,
+                allows_fraction: true,
+                allows_exponent: true,
+                reject_leading_zero: true,
+                ..
+            }
+        );
+        return if opts.fuse_numbers && is_json_number {
             RegexStrategy::FastPathFused(kind)
         } else {
             RegexStrategy::FastPath(kind)
@@ -267,13 +299,18 @@ pub fn solve_regex_strategy(pattern: &str, opts: &EmitOpts) -> RegexStrategy {
 
 fn classify_fast_path(pattern: &str, opts: &EmitOpts) -> &'static str {
     match opts.classify_regex(pattern) {
-        RegexClass::JsonNumber => "json_number",
-        RegexClass::JsonString => "json_string",
-        RegexClass::WsBlockComment => "ws_block_comment",
-        RegexClass::CssIdent => "ident",
-        RegexClass::CssQuotedString => "quoted_string",
-        RegexClass::Identifier => "ident",
+        RegexClass::Numeric {
+            reject_leading_zero: true,
+            ..
+        } => "json_number",
         RegexClass::Numeric { .. } => "numeric",
+        RegexClass::QuotedString {
+            allows_u_escapes: true,
+            ..
+        } => "json_string",
+        RegexClass::QuotedString { .. } => "quoted_string",
+        RegexClass::WhitespaceWithBlockComment => "ws_block_comment",
+        RegexClass::Identifier { .. } => "ident",
         _ => "other",
     }
 }

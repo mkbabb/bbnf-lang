@@ -1,6 +1,7 @@
 //! Mine `RecognizerShape::Regex` records for
-//! `RegexClass::WsBlockComment` patterns. Tags every Regex node whose
-//! classification is the canonical comment-aware whitespace pattern.
+//! `RegexClass::WhitespaceWithBlockComment` patterns. Tags every
+//! Regex node whose classification is the canonical comment-aware
+//! whitespace pattern.
 
 use bbnf_regex::RegexClass;
 
@@ -29,7 +30,7 @@ impl RecognizerMiner for CommentWsMiner {
         let Some(info) = ctx.ir.regex_info.get(sid) else {
             return;
         };
-        if !matches!(info.classification, RegexClass::WsBlockComment) {
+        if !matches!(info.classification, RegexClass::WhitespaceWithBlockComment) {
             return;
         }
         let shape = RecognizerShape::Regex { sid: *sid };

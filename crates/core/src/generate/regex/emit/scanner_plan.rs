@@ -51,7 +51,7 @@ impl SharedScanner {
         // family module").
         use crate::backend::kernels;
         match self {
-            SharedScanner::JsonString => kernels::quoted_string::emit_json_call(),
+            SharedScanner::JsonString => kernels::quoted_string::emit_call_strict(),
             SharedScanner::JsonNumber { fuse_numbers: true } => {
                 kernels::number::emit_call_fused()
             }
@@ -128,13 +128,23 @@ pub(crate) fn plan_regex_scanner(pattern: &str, opts: &EmitOpts) -> Option<Scann
     }
 
     match opts.classify_regex(pattern) {
-        RegexClass::JsonString => Some(shared_json_string_scanner()),
-        RegexClass::JsonNumber => Some(shared_json_number_scanner(opts.fuse_numbers)),
-        RegexClass::WsBlockComment => Some(shared_ws_block_comment_scanner()),
-        RegexClass::CssIdent | RegexClass::Identifier => Some(shared_ident_scanner()),
-        RegexClass::CssQuotedString | RegexClass::QuotedString { .. } => {
-            Some(shared_quoted_string_scanner())
+        // JSON-style strings carry the `\uXXXX` escape vocabulary;
+        // the JSON scanner kernel is fastest on those.
+        RegexClass::QuotedString {
+            allows_u_escapes: true,
+            ..
+        } => Some(shared_json_string_scanner()),
+        // JSON-style numbers fold sign + exponent + leading-zero
+        // rejection; route through the fused/span number scanner.
+        RegexClass::Numeric {
+            reject_leading_zero: true,
+            ..
+        } => Some(shared_json_number_scanner(opts.fuse_numbers)),
+        RegexClass::WhitespaceWithBlockComment => {
+            Some(shared_ws_block_comment_scanner())
         }
+        RegexClass::Identifier { .. } => Some(shared_ident_scanner()),
+        RegexClass::QuotedString { .. } => Some(shared_quoted_string_scanner()),
         RegexClass::Numeric {
             allows_sign: false, ..
         } => Some(shared_json_number_scanner(false)),

@@ -13,7 +13,7 @@ fn test_negated_class_misclassification() {
     // The bespoke HIR preserves the negated flag, so this should work correctly.
 
     match result {
-        RegexClass::Identifier => println!("BUG: Classified as Identifier!"),
+        RegexClass::Identifier { .. } => println!("BUG: Classified as Identifier!"),
         RegexClass::Unknown => println!("Correct: Classified as Unknown"),
         other => println!("Unexpected: {:?}", other),
     }

@@ -67,11 +67,12 @@ pub fn extract_leading_literals(
 /// chain terminates with `None`.
 ///
 /// For an inner [`IrNode::Alt`], scans every branch and returns the
-/// first pattern that classifies as a known key class
-/// (`Identifier` / `CssIdent` / `QuotedString` / `CssQuotedString`).
-/// The branch ordering in the grammar may put a narrow pattern (e.g.
-/// `--[\w-]+`) before a general one (e.g. `-?[a-zA-Z_][\w-]*`), so
-/// every branch must be considered.
+/// first pattern that classifies as a known key class — the
+/// parameterized `Identifier` / `QuotedString` variants cover both
+/// the generic and CSS dialects via their flag fields. The branch
+/// ordering in the grammar may put a narrow pattern (e.g. `--[\w-]+`)
+/// before a general one (e.g. `-?[a-zA-Z_][\w-]*`), so every branch
+/// must be considered.
 pub fn extract_leading_regex_pattern<'a>(
     node: &'a IrNode,
     ir: &'a GrammarIR,
@@ -100,10 +101,7 @@ pub fn extract_leading_regex_pattern<'a>(
                     let cls = classify_regex(pat);
                     if matches!(
                         cls,
-                        RegexClass::Identifier
-                            | RegexClass::CssIdent
-                            | RegexClass::QuotedString { .. }
-                            | RegexClass::CssQuotedString
+                        RegexClass::Identifier { .. } | RegexClass::QuotedString { .. }
                     ) {
                         return Some(pat);
                     }

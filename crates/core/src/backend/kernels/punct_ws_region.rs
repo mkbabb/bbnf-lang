@@ -1,4 +1,4 @@
-//! JSON / dictionary structural punctuation+whitespace kernel emission
+//! Structural punctuation+whitespace kernel emission
 //! (Tranche X.11b, AP.ws universality fix).
 //!
 //! Emits a fused scanner that consumes leading whitespace + a cluster
@@ -8,12 +8,12 @@
 //! `parse_ws_then_lit_then_ws`.
 //!
 //! The kernel handles single-byte punctuation clusters (the common
-//! JSON `,`, `:`, `{`, `}`, `[`, `]` shape). Multi-byte clusters are
-//! also supported via a sequential `all` check against the provided
-//! byte slice.
+//! `,`, `:`, `{`, `}`, `[`, `]` shapes seen in dictionary-shaped
+//! grammars). Multi-byte clusters are also supported via a sequential
+//! `all` check against the provided byte slice.
 //!
 //! When a custom `@ws` pattern is active and classifies as
-//! `WsBlockComment`, whitespace segments call
+//! `WhitespaceWithBlockComment`, whitespace segments call
 //! `::parse_that::scan_ws_block_comments(state)` instead of bare
 //! `is_ascii_whitespace` loops, ensuring CSS block comments are
 //! consumed at every whitespace position.
@@ -27,7 +27,7 @@ fn is_comment_aware_ws(ws_pattern: Option<&str>) -> bool {
     use parse_that::regex::classify::{RegexClass, classify_regex};
     matches!(
         ws_pattern.map(classify_regex),
-        Some(RegexClass::WsBlockComment),
+        Some(RegexClass::WhitespaceWithBlockComment),
     )
 }
 
@@ -58,8 +58,8 @@ fn emit_ws_skip(comment_aware: bool) -> TokenStream {
 /// Emit a ws-padded punctuation scanner.
 ///
 /// `ws_pattern` is the grammar's `@ws` regex (if any). When it
-/// classifies as `WsBlockComment`, every whitespace segment uses the
-/// comment-aware kernel; otherwise, falls back to
+/// classifies as `WhitespaceWithBlockComment`, every whitespace
+/// segment uses the comment-aware kernel; otherwise, falls back to
 /// `is_ascii_whitespace` byte loops.
 ///
 /// For a single-byte cluster (the common case), emits a fused scanner

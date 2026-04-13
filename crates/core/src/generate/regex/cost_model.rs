@@ -98,9 +98,10 @@ pub struct EmitOpts<'a> {
     /// standalone fast-path tests) leave this `None` and pay the parse.
     pub ir: Option<&'a bbnf_ir::GrammarIR>,
     /// Custom `@ws` pattern (resolved from `ir.ws_pattern`). When set
-    /// and classifying as `WsBlockComment`, negated char class scanners
-    /// emit a ws-interleaved byte loop instead of raw memchr — ensuring
-    /// block comments embedded inside regex spans are consumed.
+    /// and classifying as `WhitespaceWithBlockComment`, negated char
+    /// class scanners emit a ws-interleaved byte loop instead of raw
+    /// memchr — ensuring block comments embedded inside regex spans
+    /// are consumed.
     pub ws_pattern: Option<&'a str>,
 }
 
@@ -144,7 +145,7 @@ impl<'a> EmitOpts<'a> {
         use ::parse_that::regex::classify::{RegexClass, classify_regex};
         matches!(
             self.ws_pattern.map(classify_regex),
-            Some(RegexClass::WsBlockComment),
+            Some(RegexClass::WhitespaceWithBlockComment),
         )
     }
 

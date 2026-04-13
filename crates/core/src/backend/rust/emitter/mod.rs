@@ -401,13 +401,15 @@ impl Emitter for RustEmitter {
 
         // AN Phase 0: detect payload-eligible rules via regex
         // classification. IR passes strip Map nodes, so detection
-        // uses the regex pattern classifier (Numeric/JsonNumber)
-        // rather than the body structure.
+        // uses the regex pattern classifier (`RegexClass::Numeric`,
+        // distinguishing JSON-style integers via the
+        // `reject_leading_zero` flag) rather than the body structure.
         //
         // `is_f64_payload_eligible` returns `Some(json)` — `true`
-        // for `RegexClass::JsonNumber`, `false` for generic `Numeric`.
-        // The `json` flag threads into `PayloadKind::F64 { json }`
-        // so emission sites select the correct scanner function.
+        // for the JSON-style numeric (`reject_leading_zero: true`),
+        // `false` for the generic `Numeric` shape. The `json` flag
+        // threads into `PayloadKind::F64 { json }` so emission sites
+        // select the correct scanner function.
         //
         // Bool/U8 detection: for Alt-bodied TapeSpanOnly rules where
         // ALL branches are `Map(Literal, Expr { BoolLit/IntLit })`,

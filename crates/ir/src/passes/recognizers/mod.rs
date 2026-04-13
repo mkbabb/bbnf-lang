@@ -16,7 +16,7 @@
 //! 1. `ContextFactsMiner` — `ContextFacts` (discrimination, scan_safety, in_token_dispatch)
 //! 2. `QuotedStringMiner` — RegexClass::QuotedString → Recognizer
 //! 3. `BalancedWrapMiner` — Wrap(open, body, close) → DelimiterBalanced
-//! 4. `CommentWsMiner` — RegexClass::WsBlockComment → Recognizer
+//! 4. `CommentWsMiner` — RegexClass::WhitespaceWithBlockComment → Recognizer
 //! 5. `IdentifierMiner` — RegexClass::Identifier / PrefixThenClass
 //! 6. `SeparatorListMiner` — sep_by + element signature → SeparatorList
 //! 7. `TokenLedBranchesMiner` — disjoint-FIRST Alt → TokenLedBranches (reads discrimination strength from `ContextFactsMiner`, same walk)
@@ -212,6 +212,7 @@ pub fn mine_recognizers(ir: &mut GrammarIR) {
     // traversal logic lives here, once.
     let outputs = if let Some(dag) = ir.dag.as_ref() {
         let ctx = RecognizerMineCtx { ir, dag };
+        let punct_ws_region_miner = PunctWsRegionMiner::new();
         let miners: &[&dyn RecognizerMiner] = &[
             &ContextFactsMiner,
             &QuotedStringMiner,
@@ -220,7 +221,7 @@ pub fn mine_recognizers(ir: &mut GrammarIR) {
             &IdentifierMiner,
             &SeparatorListMiner,
             &TokenLedBranchesMiner,
-            &PunctWsRegionMiner,
+            &punct_ws_region_miner,
             &DelimScanMiner,
             &KeyDispatchMiner,
         ];

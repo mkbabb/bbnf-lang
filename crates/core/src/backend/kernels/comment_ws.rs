@@ -1,7 +1,7 @@
 //! Comment-aware whitespace kernel emission.
 //!
 //! Targets `parse_that::scan_ws_block_comments` (`parsers/scan.rs:497`).
-//! Used by `RegexClass::WsBlockComment`.
+//! Used by `RegexClass::WhitespaceWithBlockComment`.
 
 use proc_macro2::TokenStream;
 use quote::quote;

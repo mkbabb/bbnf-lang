@@ -86,17 +86,14 @@ impl RustEmitter {
         // Map { NumberConvert } down to bare Regex, so we must
         // detect the number pattern here at the regex emission level.
         //
-        // `json` flag selects `scan_json_number_f64` (RFC 8259) vs
+        // `json` flag selects `scan_number_strict_f64` (RFC 8259) vs
         // `scan_number_f64` (generic/CSS-compatible).
         if let Some(crate::backend::rust::emitter_types::PayloadKind::F64 { json }) = ctx.payload_kind {
             use parse_that::regex::classify::{RegexClass, classify_regex};
-            if matches!(
-                classify_regex(pattern),
-                RegexClass::Numeric { .. } | RegexClass::JsonNumber
-            ) {
+            if matches!(classify_regex(pattern), RegexClass::Numeric { .. }) {
                 return if json {
                     quote! {
-                        match ::parse_that::scan_json_number_f64(state) {
+                        match ::parse_that::scan_number_strict_f64(state) {
                             Some(__v) => { __payload_f64 = __v; __has_payload = true; Some(()) }
                             None => None,
                         }

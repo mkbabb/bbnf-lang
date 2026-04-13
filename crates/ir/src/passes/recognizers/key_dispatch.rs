@@ -156,12 +156,10 @@ fn classify_fallback_key(fallback: &IrNode, ir: &GrammarIR) -> Option<KeyClass> 
     let mut visited = HashSet::new();
     let pattern = extract_leading_regex_pattern(fallback, ir, &mut visited)?;
     match classify_regex(pattern) {
-        RegexClass::Identifier | RegexClass::CssIdent => Some(KeyClass::Identifier),
-        RegexClass::QuotedString {
-            quote_char,
-            allows_escapes: _,
-        } => Some(KeyClass::QuotedString { quote_char }),
-        RegexClass::CssQuotedString => Some(KeyClass::QuotedString { quote_char: b'"' }),
+        RegexClass::Identifier { .. } => Some(KeyClass::Identifier),
+        RegexClass::QuotedString { quote_char, .. } => {
+            Some(KeyClass::QuotedString { quote_char })
+        }
         _ => None,
     }
 }

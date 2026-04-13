@@ -49,18 +49,19 @@ impl RustEmitter {
         // value into `__payload_f64` so the epilogue can store it
         // via `push_leaf_with_f64`. Otherwise discard as before.
         //
-        // `fused_number_rules` is exclusively `RegexClass::JsonNumber`,
-        // so unconditionally use `scan_json_number_f64`.
+        // `fused_number_rules` is exclusively the strict numeric
+        // shape (`reject_leading_zero: true`), so unconditionally use
+        // `scan_number_strict_f64`.
         if matches!(ctx.payload_kind, Some(crate::backend::rust::emitter_types::PayloadKind::F64 { .. })) {
             Some(quote! {
-                match ::parse_that::scan_json_number_f64(state) {
+                match ::parse_that::scan_number_strict_f64(state) {
                     Some(__v) => { __payload_f64 = __v; __has_payload = true; Some(()) }
                     None => None,
                 }
             })
         } else {
             Some(quote! {
-                (::parse_that::scan_json_number_f64(state)).map(|_| ())
+                (::parse_that::scan_number_strict_f64(state)).map(|_| ())
             })
         }
     }
@@ -69,9 +70,10 @@ impl RustEmitter {
     /// eligible for f64 payload storage. IR passes strip Map nodes,
     /// so we detect by classifying the regex pattern directly.
     ///
-    /// Returns `Some(json)` when eligible — `json = true` for
-    /// `RegexClass::JsonNumber`, `false` for `RegexClass::Numeric`.
-    /// The caller threads this into `PayloadKind::F64 { json }` so
+    /// Returns `Some(json)` when eligible — `json = true` for the
+    /// JSON-style `Numeric` shape (`reject_leading_zero: true`),
+    /// `false` for the generic `RegexClass::Numeric` shape. The
+    /// caller threads this into `PayloadKind::F64 { json }` so
     /// emission sites choose the correct scanner function.
     pub(in crate::backend::rust) fn is_f64_payload_eligible(
         rule: &IrRule,
@@ -82,7 +84,13 @@ impl RustEmitter {
             IrNode::Regex(sid) => {
                 let pattern = ir.get_string(*sid);
                 match classify_regex(pattern) {
-                    RegexClass::JsonNumber => Some(true),
+                    // Strict numeric: `0|[1-9]\d*` integer alternation
+                    // forbids leading zeros and gates the
+                    // `scan_number_strict_f64` fast path.
+                    RegexClass::Numeric {
+                        reject_leading_zero: true,
+                        ..
+                    } => Some(true),
                     RegexClass::Numeric { .. } => Some(false),
                     _ => None,
                 }
@@ -665,14 +673,16 @@ impl RustEmitter {
         let extra = &self.extra_impl_methods;
 
         // AP.ws: trailing whitespace before EOF — use comment-aware
-        // kernel when the grammar declares a WsBlockComment @ws
-        // pattern, otherwise fall back to bare is_ascii_whitespace.
+        // kernel when the grammar declares a WhitespaceWithBlockComment
+        // @ws pattern, otherwise fall back to bare is_ascii_whitespace.
         let trailing_ws = {
             use parse_that::regex::classify::{RegexClass, classify_regex};
             let ws_is_comment_aware = ir
                 .ws_pattern
                 .map(|sid| ir.get_string(sid))
-                .is_some_and(|pat| matches!(classify_regex(pat), RegexClass::WsBlockComment));
+                .is_some_and(|pat| {
+                    matches!(classify_regex(pat), RegexClass::WhitespaceWithBlockComment)
+                });
             if ws_is_comment_aware {
                 quote! {
                     let _ = ::parse_that::scan_ws_block_comments(&mut state);
@@ -723,9 +733,10 @@ impl RustEmitter {
                     // read via read_to_string) are accepted.
                     //
                     // AP.ws: when a custom @ws pattern is active and
-                    // classifies as WsBlockComment, use the comment-
-                    // aware kernel so trailing `/* ... */` comments
-                    // are consumed before the EOF gate.
+                    // classifies as WhitespaceWithBlockComment, use
+                    // the comment-aware kernel so trailing
+                    // `/* ... */` comments are consumed before the
+                    // EOF gate.
                     #trailing_ws
                     if state.offset < input.len() {
                         return ::core::result::Result::Err(

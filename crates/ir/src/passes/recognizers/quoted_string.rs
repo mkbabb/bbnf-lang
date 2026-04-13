@@ -1,5 +1,8 @@
-//! Mine `RecognizerShape::Regex` records for `RegexClass::QuotedString`,
-//! `JsonString`, and `CssQuotedString` patterns at every Regex node site.
+//! Mine `RecognizerShape::Regex` records for the parameterized
+//! `RegexClass::QuotedString` family. The same variant covers the
+//! formerly-nominal JsonString and CssQuotedString shapes — the
+//! distinguishing flags (`quote_char`, `allows_escapes`,
+//! `allows_u_escapes`) are carried inside the variant.
 
 use bbnf_regex::RegexClass;
 
@@ -28,12 +31,7 @@ impl RecognizerMiner for QuotedStringMiner {
         let Some(info) = ctx.ir.regex_info.get(sid) else {
             return;
         };
-        if !matches!(
-            info.classification,
-            RegexClass::QuotedString { .. }
-                | RegexClass::JsonString
-                | RegexClass::CssQuotedString
-        ) {
+        if !matches!(info.classification, RegexClass::QuotedString { .. }) {
             return;
         }
         let shape = RecognizerShape::Regex { sid: *sid };

@@ -4,10 +4,16 @@ use parse_that::regex::classify::{RegexClass, classify_regex};
 
 #[test]
 fn json_number_known() {
-    assert_eq!(
+    assert!(matches!(
         classify_regex(r"-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?"),
-        RegexClass::JsonNumber,
-    );
+        RegexClass::Numeric {
+            allows_sign: true,
+            allows_fraction: true,
+            allows_exponent: true,
+            reject_leading_zero: true,
+            allow_leading_dot: false,
+        }
+    ));
 }
 
 #[test]
@@ -17,7 +23,8 @@ fn css_number_required_digits() {
         RegexClass::Numeric {
             allows_sign: true,
             allows_fraction: true,
-            allows_exponent: true
+            allows_exponent: true,
+            ..
         }
     ));
 }
@@ -29,7 +36,9 @@ fn css_number_non_nullable() {
         RegexClass::Numeric {
             allows_sign: true,
             allows_fraction: true,
-            allows_exponent: true
+            allows_exponent: true,
+            allow_leading_dot: true,
+            ..
         }
     ));
 }
@@ -41,7 +50,8 @@ fn simple_integer() {
         RegexClass::Numeric {
             allows_sign: true,
             allows_fraction: false,
-            allows_exponent: false
+            allows_exponent: false,
+            ..
         }
     ));
 }
@@ -53,7 +63,8 @@ fn unsigned_integer() {
         RegexClass::Numeric {
             allows_sign: false,
             allows_fraction: false,
-            allows_exponent: false
+            allows_exponent: false,
+            ..
         }
     ));
 }
@@ -65,7 +76,8 @@ fn simple_decimal() {
         RegexClass::Numeric {
             allows_sign: false,
             allows_fraction: true,
-            allows_exponent: false
+            allows_exponent: false,
+            ..
         }
     ));
 }
@@ -78,16 +90,28 @@ fn hex_digits() {
 
 #[test]
 fn identifier_known() {
-    assert_eq!(classify_regex(r"[a-zA-Z_][\w-]*"), RegexClass::CssIdent);
-    assert_eq!(classify_regex(r"[a-zA-Z][\w-]*"), RegexClass::CssIdent);
+    assert!(matches!(
+        classify_regex(r"[a-zA-Z_][\w-]*"),
+        RegexClass::Identifier {
+            allows_leading_dash: false,
+            allows_double_dash_prefix: false,
+        }
+    ));
+    assert!(matches!(
+        classify_regex(r"[a-zA-Z][\w-]*"),
+        RegexClass::Identifier {
+            allows_leading_dash: false,
+            allows_double_dash_prefix: false,
+        }
+    ));
 }
 
 #[test]
 fn identifier_structural() {
-    assert_eq!(
+    assert!(matches!(
         classify_regex(r"[a-zA-Z_][a-zA-Z0-9]*"),
-        RegexClass::Identifier
-    );
+        RegexClass::Identifier { .. }
+    ));
 }
 
 #[test]
@@ -103,18 +127,26 @@ fn quoted_string() {
 
 #[test]
 fn known_patterns() {
-    assert_eq!(
+    assert!(matches!(
         classify_regex(r#""(?:[^"\\]|\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4}))*""#),
-        RegexClass::JsonString,
-    );
+        RegexClass::QuotedString {
+            quote_char: b'"',
+            allows_escapes: true,
+            allows_u_escapes: true,
+        }
+    ));
     assert_eq!(
         classify_regex(r"(?s)(?:\s|/\*.*?\*/)*"),
-        RegexClass::WsBlockComment,
+        RegexClass::WhitespaceWithBlockComment,
     );
-    assert_eq!(
+    assert!(matches!(
         classify_regex(r#""(?:[^"\\]|\\[\s\S])*"|'(?:[^'\\]|\\[\s\S])*'"#),
-        RegexClass::CssQuotedString,
-    );
+        RegexClass::QuotedString {
+            quote_char: b'"',
+            allows_escapes: true,
+            allows_u_escapes: false,
+        }
+    ));
 }
 
 #[test]

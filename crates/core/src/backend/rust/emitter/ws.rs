@@ -5,8 +5,8 @@
 //! `state.offset` without producing a tape record.  Every shape
 //! returns `Option<()>`.
 //!
-//! When the `@ws` pattern classifies as `WsBlockComment` (CSS
-//! comment-aware whitespace), we emit the kernel call
+//! When the `@ws` pattern classifies as `WhitespaceWithBlockComment`
+//! (CSS comment-aware whitespace), we emit the kernel call
 //! (`scan_ws_block_comments`) directly — bypassing the full
 //! `emit_regex` pipeline that previously fell through to a
 //! 147-line inline HIR expansion duplicated at every call site.
@@ -22,7 +22,7 @@ use super::RustEmitter;
 /// family, otherwise falls through to `emit_regex`.
 fn emit_ws_pattern(pattern: &str) -> TokenStream {
     use parse_that::regex::classify::{RegexClass, classify_regex};
-    if matches!(classify_regex(pattern), RegexClass::WsBlockComment) {
+    if matches!(classify_regex(pattern), RegexClass::WhitespaceWithBlockComment) {
         let call = crate::backend::kernels::comment_ws::emit_call();
         return quote! { let _ = #call; };
     }

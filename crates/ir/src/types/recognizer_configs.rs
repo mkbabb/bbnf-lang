@@ -13,6 +13,7 @@
 //!   [`KeyDispatchMatch`] — keyword-dispatch alternation configuration.
 //!   Populated by `passes::recognizers::key_dispatch::collect`.
 
+use bbnf_regex::RegexClass;
 use serde::{Deserialize, Serialize};
 
 use super::RuleId;
@@ -48,13 +49,26 @@ pub enum KeyClass {
 }
 
 /// The regex pattern string for a given key class.
+///
+/// Delegates to [`RegexClass::canonical_pattern`] so the canonical
+/// regex literals live in exactly one place — the parameterized
+/// classifier is the source of truth, this accessor just selects
+/// the right variant for the requested key class.
 pub fn key_class_regex_pattern(class: &KeyClass) -> &'static str {
     match class {
-        KeyClass::Identifier => r"[a-zA-Z_][\w-]*",
-        KeyClass::QuotedString { quote_char } => match quote_char {
-            b'\'' => r"'[^']*'",
-            _ => r#""[^"]*""#,
-        },
+        KeyClass::Identifier => RegexClass::Identifier {
+            allows_leading_dash: false,
+            allows_double_dash_prefix: false,
+        }
+        .canonical_pattern()
+        .expect("RegexClass::Identifier without flags has a canonical pattern"),
+        KeyClass::QuotedString { quote_char } => RegexClass::QuotedString {
+            quote_char: *quote_char,
+            allows_escapes: true,
+            allows_u_escapes: false,
+        }
+        .canonical_pattern()
+        .expect("RegexClass::QuotedString has a canonical pattern"),
     }
 }
 

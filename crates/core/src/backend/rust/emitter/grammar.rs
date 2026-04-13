@@ -46,16 +46,19 @@ impl RustEmitter {
         // AN Phase 0: when payload_kind is F64, capture the scanned
         // value into `__payload_f64` so the epilogue can store it
         // via `push_leaf_with_f64`. Otherwise discard as before.
-        if ctx.payload_kind == Some(crate::backend::rust::emitter_types::PayloadKind::F64) {
+        //
+        // `fused_number_rules` is exclusively `RegexClass::JsonNumber`,
+        // so unconditionally use `scan_json_number_f64`.
+        if matches!(ctx.payload_kind, Some(crate::backend::rust::emitter_types::PayloadKind::F64 { .. })) {
             Some(quote! {
-                match ::parse_that::scan_number_f64(state) {
+                match ::parse_that::scan_json_number_f64(state) {
                     Some(__v) => { __payload_f64 = __v; __has_payload = true; Some(()) }
                     None => None,
                 }
             })
         } else {
             Some(quote! {
-                (::parse_that::scan_number_f64(state)).map(|_| ())
+                (::parse_that::scan_json_number_f64(state)).map(|_| ())
             })
         }
     }
@@ -63,23 +66,35 @@ impl RustEmitter {
     /// AN Phase 0: detect if a rule body is a number-pattern regex
     /// eligible for f64 payload storage. IR passes strip Map nodes,
     /// so we detect by classifying the regex pattern directly.
+    ///
+    /// Returns `Some(json)` when eligible — `json = true` for
+    /// `RegexClass::JsonNumber`, `false` for `RegexClass::Numeric`.
+    /// The caller threads this into `PayloadKind::F64 { json }` so
+    /// emission sites choose the correct scanner function.
     pub(in crate::backend::rust) fn is_f64_payload_eligible(
         rule: &IrRule,
         ir: &GrammarIR,
-    ) -> bool {
+    ) -> Option<bool> {
         use parse_that::regex::classify::{RegexClass, classify_regex};
         match &rule.body {
             IrNode::Regex(sid) => {
                 let pattern = ir.get_string(*sid);
-                matches!(
-                    classify_regex(pattern),
-                    RegexClass::Numeric { .. } | RegexClass::JsonNumber
-                )
+                match classify_regex(pattern) {
+                    RegexClass::JsonNumber => Some(true),
+                    RegexClass::Numeric { .. } => Some(false),
+                    _ => None,
+                }
             }
             IrNode::Map { fn_id, .. } => {
-                matches!(ir.fns[*fn_id as usize], bbnf_ir::FnDescriptor::NumberConvert)
+                // NumberConvert is always JSON-class in practice
+                // (lowered from `-> f64` on a JSON number regex).
+                if matches!(ir.fns[*fn_id as usize], bbnf_ir::FnDescriptor::NumberConvert) {
+                    Some(true)
+                } else {
+                    None
+                }
             }
-            _ => false,
+            _ => None,
         }
     }
 
@@ -184,15 +199,14 @@ impl RustEmitter {
         // `__payload_f64` and the epilogue uses `push_leaf_with_f64`
         // for the non-compound, payload-bearing case.
         let alt_has_f64_payload = if let IrNode::Alt(branches, _) = &rule.body {
-            let result = branches.iter().any(|b| {
+            branches.iter().any(|b| {
                 if let IrNode::Ref(rid) = &b.node {
                     let ref_rule = &ir.rules[*rid as usize];
-                    Self::is_f64_payload_eligible(ref_rule, ir)
+                    Self::is_f64_payload_eligible(ref_rule, ir).is_some()
                 } else {
                     false
                 }
-            });
-            result
+            })
         } else {
             false
         };
@@ -281,7 +295,7 @@ impl RustEmitter {
                     // push_leaf_with_f64/bool/u8 instead of push_leaf.
                     use crate::backend::rust::emitter_types::PayloadKind;
                     match ctx.payload_kind {
-                        Some(PayloadKind::F64) => (
+                        Some(PayloadKind::F64 { .. }) => (
                             emit_tape_span_only_f64_prelude(),
                             emit_tape_span_only_f64_epilogue(rule_idx_u8),
                         ),

@@ -403,25 +403,29 @@ impl Emitter for RustEmitter {
         // classification. IR passes strip Map nodes, so detection
         // uses the regex pattern classifier (Numeric/JsonNumber)
         // rather than the body structure.
+        //
+        // `is_f64_payload_eligible` returns `Some(json)` — `true`
+        // for `RegexClass::JsonNumber`, `false` for generic `Numeric`.
+        // The `json` flag threads into `PayloadKind::F64 { json }`
+        // so emission sites select the correct scanner function.
         ctx.payload_kind = None;
         if is_visible {
             if !is_alt {
-                if Self::is_f64_payload_eligible(rule, ir) {
-                    ctx.payload_kind = Some(crate::backend::rust::emitter_types::PayloadKind::F64);
+                if let Some(json) = Self::is_f64_payload_eligible(rule, ir) {
+                    ctx.payload_kind = Some(crate::backend::rust::emitter_types::PayloadKind::F64 { json });
                 }
             } else {
                 // Alt: check if ANY branch Ref targets a number-pattern rule.
+                // Use the first matched branch's JSON classification.
                 if let bbnf_ir::IrNode::Alt(branches, _) = &rule.body {
-                    let any_f64 = branches.iter().any(|b| {
+                    for b in branches {
                         if let bbnf_ir::IrNode::Ref(rid) = &b.node {
                             let ref_rule = &ir.rules[*rid as usize];
-                            Self::is_f64_payload_eligible(ref_rule, ir)
-                        } else {
-                            false
+                            if let Some(json) = Self::is_f64_payload_eligible(ref_rule, ir) {
+                                ctx.payload_kind = Some(crate::backend::rust::emitter_types::PayloadKind::F64 { json });
+                                break;
+                            }
                         }
-                    });
-                    if any_f64 {
-                        ctx.payload_kind = Some(crate::backend::rust::emitter_types::PayloadKind::F64);
                     }
                 }
             }

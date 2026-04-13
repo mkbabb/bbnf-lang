@@ -81,20 +81,32 @@ impl RustEmitter {
         ctx: &mut RustEmitCtx,
     ) -> TokenStream {
         // AN Phase 0: for number patterns with F64 payload active,
-        // emit scan_number_f64 to capture the parsed value in the
-        // payload variable. The IR passes strip Map { NumberConvert }
-        // down to bare Regex, so we must detect the number pattern
-        // here at the regex emission level.
-        if ctx.payload_kind == Some(crate::backend::rust::emitter_types::PayloadKind::F64) {
+        // emit the appropriate number scanner to capture the parsed
+        // value in the payload variable. The IR passes strip
+        // Map { NumberConvert } down to bare Regex, so we must
+        // detect the number pattern here at the regex emission level.
+        //
+        // `json` flag selects `scan_json_number_f64` (RFC 8259) vs
+        // `scan_number_f64` (generic/CSS-compatible).
+        if let Some(crate::backend::rust::emitter_types::PayloadKind::F64 { json }) = ctx.payload_kind {
             use parse_that::regex::classify::{RegexClass, classify_regex};
             if matches!(
                 classify_regex(pattern),
                 RegexClass::Numeric { .. } | RegexClass::JsonNumber
             ) {
-                return quote! {
-                    match ::parse_that::scan_number_f64(state) {
-                        Some(__v) => { __payload_f64 = __v; __has_payload = true; Some(()) }
-                        None => None,
+                return if json {
+                    quote! {
+                        match ::parse_that::scan_json_number_f64(state) {
+                            Some(__v) => { __payload_f64 = __v; __has_payload = true; Some(()) }
+                            None => None,
+                        }
+                    }
+                } else {
+                    quote! {
+                        match ::parse_that::scan_number_f64(state) {
+                            Some(__v) => { __payload_f64 = __v; __has_payload = true; Some(()) }
+                            None => None,
+                        }
                     }
                 };
             }

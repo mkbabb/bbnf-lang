@@ -38,16 +38,30 @@ impl RustEmitter {
         // AN Phase 0: when payload_kind is F64, capture the scanned
         // value into `__payload_f64` so the epilogue can store it
         // via `push_leaf_with_f64`.
-        if ctx.payload_kind == Some(crate::backend::rust::emitter_types::PayloadKind::F64) {
-            quote! {
-                match ::parse_that::scan_number_f64(state) {
-                    Some(__v) => { __payload_f64 = __v; __has_payload = true; Some(()) }
-                    None => None,
+        //
+        // `json` flag selects `scan_json_number_f64` (RFC 8259) vs
+        // `scan_number_f64` (generic/CSS-compatible).
+        if let Some(crate::backend::rust::emitter_types::PayloadKind::F64 { json }) = ctx.payload_kind {
+            if json {
+                quote! {
+                    match ::parse_that::scan_json_number_f64(state) {
+                        Some(__v) => { __payload_f64 = __v; __has_payload = true; Some(()) }
+                        None => None,
+                    }
+                }
+            } else {
+                quote! {
+                    match ::parse_that::scan_number_f64(state) {
+                        Some(__v) => { __payload_f64 = __v; __has_payload = true; Some(()) }
+                        None => None,
+                    }
                 }
             }
         } else {
+            // No payload — use JSON scanner (NumberConvert is always
+            // JSON-class, matching `fused_number_rules` gating).
             quote! {
-                (::parse_that::scan_number_f64(state)).map(|_| ())
+                (::parse_that::scan_json_number_f64(state)).map(|_| ())
             }
         }
     }
@@ -118,9 +132,12 @@ impl RustEmitter {
         // All fused (inner_fd, outer_fd) pairs collapse to the
         // inner expression's side effect under tape-first. The
         // view layer owns the downstream projection.
+        //
+        // NumberConvert is always JSON-class (lowered from
+        // `-> f64` on a JSON number regex).
         match inner_fd {
             FnDescriptor::NumberConvert => Some(quote! {
-                (::parse_that::scan_number_f64(state)).map(|_| ())
+                (::parse_that::scan_json_number_f64(state)).map(|_| ())
             }),
             _ => Some(quote! { { #inner } }),
         }

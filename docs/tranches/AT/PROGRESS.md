@@ -100,23 +100,35 @@ Status: IN PROGRESS
 - AT.2.1 SIMD guard: DONE (parse-that commit 44ae43b) — removed
   `scan_digits_simd()` from integer digit path, kept for fractional.
   85%+ of real-world numbers have short integer runs (1-4 digits).
-- AT.2.2 meta_idx fold: agent deployed (bbnf-tape worktree)
+- AT.2.2 meta_idx fold: DONE (commit c57ef27) — packed meta_idx into
+  TapeRec kind_meta byte (5 bits), eliminated meta: Vec<u8>. TapeRec
+  stays 16 bytes. 28 tape tests pass.
 
-### Post-Phase-1+SIMD JSON bench results
+### Post-AT JSON bench results (all phases)
 
-| Dataset | post-AS | post-AT | Delta | Hard gate |
-|---------|---------|---------|-------|-----------|
-| canada | 1089 | **1387** | **+27%** | ≥1350 ✓ |
-| citm | 2331 | **2577** | **+11%** | — |
-| twitter | 2003 | **2089** | **+4%** | — |
-| data | 1805 | **1843** | **+2%** | — |
-| data_xl | 1046 | **1167** | **+12%** | — |
+| Dataset | post-AS | Phase 1+SIMD | +meta fold | Delta vs AS |
+|---------|---------|-------------|------------|-------------|
+| canada | 1089 | 1387 | **1464** | **+34%** |
+| citm | 2331 | 2577 | **2631** | **+13%** |
+| twitter | 2003 | 2089 | **2155** | **+8%** |
+| data | 1805 | 1843 | **1907** | **+6%** |
+| data_xl | 1046 | 1167 | **1227** | **+17%** |
 
-canada hard gate (≥1350 MB/s) satisfied.
+canada hard gate (≥1350 MB/s) exceeded at 1464 MB/s.
+
+### CSS L4 bench results
+
+| Dataset | post-AT | vs lightningcss |
+|---------|---------|-----------------|
+| normalize | 934 MB/s | ~7.5x |
+| bootstrap | 516 MB/s | ~4.2x |
+| tailwind | 553 MB/s | ~4.5x |
 
 ## Phase 3 — String decode kernel + bench parity
 
-Status: NOT STARTED
+Status: IN PROGRESS — `decode_json_string_to_arena` implemented in
+parse-that (commit accb3c0). 18 tests pass. Wiring into codegen
+and honest bench TBD.
 
 ## Phase 4 — Profile-driven optimization
 
@@ -128,7 +140,18 @@ Status: IN PROGRESS — agent deployed
 
 ## Phase 6 — Named struct ABI + cleanup
 
-Status: IN PROGRESS — dead code + fixture regen agents deployed
+Status: PARTIAL
+
+- AT.6.3 Dead code: DONE (commit 61cc0d9) — removed META_IDX_ZERO
+  from repeat.rs, 7 dead fns from serialize.rs, SpanRaw variant from
+  directives.rs. -166 LOC, 10 warnings eliminated.
+- AT.6.4 Tape parity fixtures: DONE (commit 0ae68b1) — 22/22 pass.
+  JSON root_variant_idx 0/1→9, CSS L4 record counts decreased
+  (codegen optimization), EBNF record counts increased.
+- AT.6.5 parse-that commits: DONE — SIMD guard (44ae43b), hex escape
+  (6ae8e6a), string decode (accb3c0), decode fix (f96753a)
+- AT.6.1-6.2 StructRegistry + named struct view: NOT STARTED
+- AT.6.6 ParsedGrammar elimination: NOT STARTED
 
 ## Phase 7 — CSS spec parity
 

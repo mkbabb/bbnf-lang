@@ -26,7 +26,7 @@ fn push_leaf_round_trip() {
     assert_eq!(tape.len(), 1);
 
     let rec = tape.get(off);
-    assert_eq!(rec.kind, TapeKind::Span);
+    assert_eq!(rec.kind(), TapeKind::Span);
     assert_eq!(rec.span_lo, 0);
     assert_eq!(rec.span_hi, 5);
     assert_eq!(rec.span_len(), 5);
@@ -51,7 +51,7 @@ fn push_compound_with_children() {
     assert_eq!(tape.len(), 3);
 
     let rec = tape.get(compound);
-    assert_eq!(rec.kind, TapeKind::Seq);
+    assert_eq!(rec.kind(), TapeKind::Seq);
     assert!(rec.has_children());
     assert_eq!(rec.child_off, TapeOffset(0));
     assert_eq!(rec.span_lo, 0);
@@ -175,7 +175,7 @@ fn payload_f64_round_trip() {
     let tape = b.finish().unwrap();
 
     let rec = tape.get(off);
-    assert_eq!(rec.kind, TapeKind::Regex);
+    assert_eq!(rec.kind(), TapeKind::Regex);
     assert_ne!(rec.payload_idx, 0, "payload_idx must be non-zero");
     let val = tape.payload_f64(rec).expect("should read f64 payload");
     assert!((val - std::f64::consts::PI).abs() < f64::EPSILON);
@@ -294,7 +294,7 @@ fn meta_idx_round_trip_leaf() {
     let mut b = TapeBuilder::new();
     let off0 = b.push_leaf(TapeKind::Span, 0, 3, 1, 0);
     let off1 = b.push_leaf(TapeKind::Literal, 3, 6, 2, 5);
-    let off2 = b.push_leaf(TapeKind::Span, 6, 9, 3, 255);
+    let off2 = b.push_leaf(TapeKind::Span, 6, 9, 3, 31); // 31 = max 5-bit meta_idx
     let tape = b.finish().unwrap();
 
     let c0 = TapeCursor::new(&tape, off0);
@@ -303,7 +303,7 @@ fn meta_idx_round_trip_leaf() {
 
     assert_eq!(c0.meta_idx(), 0);
     assert_eq!(c1.meta_idx(), 5);
-    assert_eq!(c2.meta_idx(), 255);
+    assert_eq!(c2.meta_idx(), 31);
     // variant_idx is independent of meta_idx.
     assert_eq!(c0.variant_idx(), 1);
     assert_eq!(c1.variant_idx(), 2);
@@ -315,11 +315,11 @@ fn meta_idx_round_trip_compound() {
     let mut b = TapeBuilder::new();
     let children_start = b.mark_children();
     b.push_leaf(TapeKind::Span, 0, 3, 0, 7);
-    let compound = b.push_compound(TapeKind::Rule, children_start, 0, 3, 4, 42);
+    let compound = b.push_compound(TapeKind::Rule, children_start, 0, 3, 4, 27); // CSS L4 max
     let tape = b.finish().unwrap();
 
     let cursor = TapeCursor::new(&tape, compound);
-    assert_eq!(cursor.meta_idx(), 42);
+    assert_eq!(cursor.meta_idx(), 27);
     assert_eq!(cursor.variant_idx(), 4);
 
     // Child's meta_idx is also correct.
@@ -346,4 +346,80 @@ fn meta_idx_default_zero_for_plain_pushes() {
     let off = b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
     let tape = b.finish().unwrap();
     assert_eq!(TapeCursor::new(&tape, off).meta_idx(), 0);
+}
+
+// ── AT.2.2: packed meta_idx boundary tests ──────────────────────
+
+#[test]
+fn meta_idx_all_5bit_values_round_trip() {
+    // Exhaustively verify every encodable meta_idx (0-31).
+    let mut b = TapeBuilder::new();
+    let mut offsets = Vec::new();
+    for m in 0..=TapeRec::MAX_META_IDX {
+        offsets.push(b.push_leaf(TapeKind::Span, 0, 1, 0, m));
+    }
+    let tape = b.finish().unwrap();
+    for (m, &off) in offsets.iter().enumerate() {
+        let rec = tape.get(off);
+        assert_eq!(rec.meta_idx(), m as u8, "meta_idx mismatch at {}", m);
+        assert_eq!(rec.kind(), TapeKind::Span, "kind mismatch at meta_idx={}", m);
+    }
+}
+
+#[test]
+fn meta_idx_15_16_boundary() {
+    // The 4th bit of meta_idx spills into flags[7]. Verify the
+    // boundary between 15 (fits in kind_meta alone) and 16 (needs
+    // the flags overflow bit).
+    let mut b = TapeBuilder::new();
+    let off_15 = b.push_leaf(TapeKind::Literal, 0, 1, 10, 15);
+    let off_16 = b.push_leaf(TapeKind::Literal, 1, 2, 10, 16);
+    let tape = b.finish().unwrap();
+
+    let r15 = tape.get(off_15);
+    assert_eq!(r15.meta_idx(), 15);
+    assert_eq!(r15.variant_idx(), 10);
+    assert_eq!(r15.kind(), TapeKind::Literal);
+    assert!(!r15.has_children());
+
+    let r16 = tape.get(off_16);
+    assert_eq!(r16.meta_idx(), 16);
+    assert_eq!(r16.variant_idx(), 10);
+    assert_eq!(r16.kind(), TapeKind::Literal);
+    assert!(!r16.has_children());
+}
+
+#[test]
+fn meta_idx_and_has_children_coexist() {
+    // Verify that has_children (flags bit 6) and meta_idx bit 4
+    // (flags bit 7) do not interfere with each other.
+    let mut b = TapeBuilder::new();
+    let children_start = b.mark_children();
+    b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
+    let compound = b.push_compound(TapeKind::Rule, children_start, 0, 1, 5, 20);
+    let tape = b.finish().unwrap();
+
+    let rec = tape.get(compound);
+    assert_eq!(rec.meta_idx(), 20);
+    assert_eq!(rec.variant_idx(), 5);
+    assert!(rec.has_children());
+    assert_eq!(rec.kind(), TapeKind::Rule);
+}
+
+#[test]
+fn meta_idx_max_value_with_all_kinds() {
+    // Max meta_idx (31) with every TapeKind to ensure packing
+    // does not corrupt the kind discriminant.
+    let kinds = [
+        TapeKind::Span, TapeKind::Epsilon, TapeKind::Literal,
+        TapeKind::Regex, TapeKind::KvPair,
+    ];
+    for &kind in &kinds {
+        let mut b = TapeBuilder::new();
+        let off = b.push_leaf(kind, 0, 1, 0, TapeRec::MAX_META_IDX);
+        let tape = b.finish().unwrap();
+        let rec = tape.get(off);
+        assert_eq!(rec.kind(), kind, "kind mismatch for {:?} with max meta_idx", kind);
+        assert_eq!(rec.meta_idx(), TapeRec::MAX_META_IDX);
+    }
 }

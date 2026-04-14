@@ -41,10 +41,11 @@ impl TapeOffset {
 /// so four consecutive records fit in one line and sequential scans
 /// enjoy the hardware prefetcher without strided pointer chasing.
 ///
-/// - `kind` — classifies the record (rule entry, leaf span, compound,
-///   keyword tag, etc.). The view layer dispatches on this byte.
-/// - `flags` — bitfield: variant index within the rule's enum (low 6
-///   bits), `has_children`, `span_only`. Codegen assigns.
+/// - `kind_meta` — packed byte: low 4 bits = [`TapeKind`] discriminant
+///   (values 0-15), high 4 bits = `meta_idx` bits \[0:3\].
+/// - `flags` — bitfield: variant index (low 6 bits), `has_children`
+///   (bit 6), `meta_idx` bit \[4\] (bit 7). Five-bit `meta_idx`
+///   (0-31) is split across `kind_meta[7:4]` and `flags[7]`.
 /// - `span_lo` / `span_hi` — byte offsets into the source input.
 ///   `span_hi == span_lo` means a zero-width record (epsilon match).
 /// - `child_off` — `TapeOffset` of the first child record for
@@ -55,9 +56,12 @@ impl TapeOffset {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct TapeRec {
-    /// Classification tag — dispatches the view layer.
-    pub kind: TapeKind,
-    /// Bitfield: variant index (low 6 bits), has_children, span_only.
+    /// Packed byte: low 4 bits = [`TapeKind`] discriminant, high 4
+    /// bits = `meta_idx` bits \[0:3\]. Use [`TapeRec::kind()`] and
+    /// [`TapeRec::meta_idx()`] to decode.
+    pub kind_meta: u8,
+    /// Bitfield: variant index (low 6 bits), has_children (bit 6),
+    /// meta_idx bit \[4\] (bit 7).
     pub flags: u8,
     /// Index into the tape's payload buffer (`Tape::payloads`).
     ///
@@ -85,6 +89,45 @@ const _: () = {
 };
 
 impl TapeRec {
+    /// Maximum `meta_idx` value encodable in the 5-bit packed field
+    /// (4 bits in `kind_meta[7:4]` + 1 bit in `flags[7]`).
+    pub const MAX_META_IDX: u8 = 31;
+
+    /// Pack a [`TapeKind`] and `meta_idx` into the `kind_meta` and
+    /// `flags` bytes. Returns `(kind_meta, flags_meta_bit)` where
+    /// `flags_meta_bit` is `0x00` or `0x80` — the caller ORs it into
+    /// the flags byte.
+    #[inline]
+    pub(crate) fn pack_kind_meta(kind: TapeKind, meta_idx: u8) -> (u8, u8) {
+        debug_assert!(
+            meta_idx <= Self::MAX_META_IDX,
+            "meta_idx {} exceeds 5-bit maximum ({})",
+            meta_idx,
+            Self::MAX_META_IDX,
+        );
+        let kind_meta = (kind as u8 & 0x0F) | ((meta_idx & 0x0F) << 4);
+        let flags_meta_bit = (meta_idx >> 4) << 7; // bit [4] → bit 7 of flags
+        (kind_meta, flags_meta_bit)
+    }
+
+    /// Extract the [`TapeKind`] from the packed `kind_meta` byte.
+    #[inline]
+    pub fn kind(&self) -> TapeKind {
+        TapeKind::from_u8(self.kind_meta & 0x0F)
+    }
+
+    /// Extract the 5-bit `meta_idx` from the packed `kind_meta` and
+    /// `flags` bytes.
+    ///
+    /// For Alt-bodied rules this is the branch index; for everything
+    /// else it is `0`.
+    #[inline]
+    pub fn meta_idx(&self) -> u8 {
+        let lo4 = (self.kind_meta >> 4) & 0x0F;
+        let hi1 = (self.flags >> 7) & 0x01;
+        lo4 | (hi1 << 4)
+    }
+
     /// Extract the variant index from `flags` (low 6 bits).
     #[inline]
     pub fn variant_idx(&self) -> u8 {
@@ -95,14 +138,6 @@ impl TapeRec {
     #[inline]
     pub fn has_children(&self) -> bool {
         (self.flags & 0x40) != 0
-    }
-
-    /// Is this record span-only? (Bit 7 of `flags` — set by the tape
-    /// emitter for rules projected as `Span` rather than as a typed
-    /// compound.)
-    #[inline]
-    pub fn is_span_only(&self) -> bool {
-        (self.flags & 0x80) != 0
     }
 
     /// Byte length of the record's source span.
@@ -126,6 +161,13 @@ impl TapeRec {
 /// single flat Vec. Eliminates 2 pointer dereferences per push and
 /// ensures `with_capacity(N)` pre-allocates the full buffer in one
 /// allocation.
+///
+/// # Tranche AT.2.2 — meta_idx folded into TapeRec
+///
+/// The parallel `meta: Vec<u8>` buffer has been eliminated. The
+/// per-record `meta_idx` (branch index for Alt-bodied rules) is now
+/// packed into the `TapeRec` itself: 4 bits in the high nibble of
+/// `kind_meta` + 1 bit in `flags[7]`, giving a 5-bit range (0-31).
 #[derive(Debug)]
 pub struct Tape {
     /// Flat record storage. Append-only during parsing; immutable
@@ -138,17 +180,6 @@ pub struct Tape {
     /// offset `(payload_idx - 1) * 8`. Empty for all current codegen
     /// (existing records set `payload_idx = 0`).
     pub(crate) payloads: Vec<u8>,
-    /// Side-channel meta buffer — one `u8` per record, parallel to
-    /// `records`.
-    ///
-    /// Carries the `meta_idx` for each record:
-    /// - For Alt-bodied rules: the **branch index** within the rule's
-    ///   alternation (`__branch_idx`).
-    /// - For everything else: `0`.
-    ///
-    /// This separates branch identity from rule identity (`variant_idx`
-    /// in `TapeRec::flags`), which always stores the rule id.
-    pub(crate) meta: Vec<u8>,
 }
 
 impl Tape {
@@ -157,7 +188,6 @@ impl Tape {
         Self {
             records: Vec::new(),
             payloads: Vec::new(),
-            meta: Vec::new(),
         }
     }
 
@@ -166,7 +196,6 @@ impl Tape {
         Self {
             records: Vec::with_capacity(expected),
             payloads: Vec::new(),
-            meta: Vec::with_capacity(expected),
         }
     }
 

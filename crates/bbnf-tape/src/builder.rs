@@ -86,7 +86,8 @@ impl TapeBuilder {
     /// [`TapeOffset::NONE`].
     ///
     /// `meta_idx` is the branch index for Alt-bodied rules (`0` for
-    /// everything else). Stored in the parallel `Tape::meta` buffer.
+    /// everything else). Packed into `TapeRec::kind_meta` (high 4
+    /// bits) and `TapeRec::flags` (bit 7). 5-bit range: 0-31.
     #[inline]
     pub fn push_leaf(
         &mut self,
@@ -97,17 +98,16 @@ impl TapeBuilder {
         meta_idx: u8,
     ) -> TapeOffset {
         debug_assert!(kind.is_leaf(), "push_leaf on compound kind {:?}", kind);
+        let (kind_meta, flags_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
         let idx = self.tape.records.len();
         self.tape.records.push(TapeRec {
-            kind,
-            flags: variant_idx & 0x3F,
+            kind_meta,
+            flags: (variant_idx & 0x3F) | flags_meta_bit,
             payload_idx: 0,
             span_lo,
             span_hi,
             child_off: TapeOffset::NONE,
         });
-        self.tape.meta.push(meta_idx);
-        debug_assert_eq!(self.tape.records.len(), self.tape.meta.len());
         TapeOffset(idx as u32)
     }
 
@@ -120,7 +120,8 @@ impl TapeBuilder {
     /// (end of the compound's source range).
     ///
     /// `meta_idx` is the branch index for Alt-bodied rules (`0` for
-    /// everything else). Stored in the parallel `Tape::meta` buffer.
+    /// everything else). Packed into `TapeRec::kind_meta` (high 4
+    /// bits) and `TapeRec::flags` (bit 7). 5-bit range: 0-31.
     #[inline]
     pub fn push_compound(
         &mut self,
@@ -145,18 +146,17 @@ impl TapeBuilder {
         // check `has_children` first.
         let parent_idx = self.tape.records.len();
         let has_children = (child_off.0 as usize) < parent_idx;
-        let flags = (variant_idx & 0x3F) | if has_children { 0x40 } else { 0 };
+        let (kind_meta, flags_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
+        let flags = (variant_idx & 0x3F) | if has_children { 0x40 } else { 0 } | flags_meta_bit;
         let idx = parent_idx;
         self.tape.records.push(TapeRec {
-            kind,
+            kind_meta,
             flags,
             payload_idx: 0,
             span_lo,
             span_hi,
             child_off,
         });
-        self.tape.meta.push(meta_idx);
-        debug_assert_eq!(self.tape.records.len(), self.tape.meta.len());
         TapeOffset(idx as u32)
     }
 
@@ -203,7 +203,8 @@ impl TapeBuilder {
     /// leading bytes of the slot; trailing bytes stay zeroed.
     ///
     /// `meta_idx` is the branch index for Alt-bodied rules (`0` for
-    /// everything else). Stored in the parallel `Tape::meta` buffer.
+    /// everything else). Packed into `TapeRec::kind_meta` (high 4
+    /// bits) and `TapeRec::flags` (bit 7). 5-bit range: 0-31.
     #[inline]
     pub fn push_leaf_with_scalar<T: Copy>(
         &mut self,
@@ -236,17 +237,16 @@ impl TapeBuilder {
                 std::mem::size_of::<T>(),
             );
         }
+        let (kind_meta, flags_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
         let idx = self.tape.records.len();
         self.tape.records.push(TapeRec {
-            kind,
-            flags: variant_idx & 0x3F,
+            kind_meta,
+            flags: (variant_idx & 0x3F) | flags_meta_bit,
             payload_idx: pidx,
             span_lo,
             span_hi,
             child_off: TapeOffset::NONE,
         });
-        self.tape.meta.push(meta_idx);
-        debug_assert_eq!(self.tape.records.len(), self.tape.meta.len());
         TapeOffset(idx as u32)
     }
 
@@ -430,7 +430,8 @@ impl TapeBuilder {
     /// payload, equivalent to [`Self::push_leaf`].
     ///
     /// `meta_idx` is the branch index for Alt-bodied rules (`0` for
-    /// everything else). Stored in the parallel `Tape::meta` buffer.
+    /// everything else). Packed into `TapeRec::kind_meta` (high 4
+    /// bits) and `TapeRec::flags` (bit 7). 5-bit range: 0-31.
     #[inline]
     pub fn push_leaf_with_aggregate(
         &mut self,
@@ -471,17 +472,16 @@ impl TapeBuilder {
             ((start / 8) + 1) as u16
         };
 
+        let (kind_meta, flags_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
         let idx = self.tape.records.len();
         self.tape.records.push(TapeRec {
-            kind,
-            flags: variant_idx & 0x3F,
+            kind_meta,
+            flags: (variant_idx & 0x3F) | flags_meta_bit,
             payload_idx,
             span_lo,
             span_hi,
             child_off: TapeOffset::NONE,
         });
-        self.tape.meta.push(meta_idx);
-        debug_assert_eq!(self.tape.records.len(), self.tape.meta.len());
         TapeOffset(idx as u32)
     }
 
@@ -500,13 +500,6 @@ impl TapeBuilder {
     /// Consume the builder and return the finished tape. Returns the
     /// sticky error if one was set during parsing.
     pub fn finish(mut self) -> Result<Tape, TapeBuildError> {
-        debug_assert_eq!(
-            self.tape.records.len(),
-            self.tape.meta.len(),
-            "meta Vec length ({}) must match records Vec length ({})",
-            self.tape.meta.len(),
-            self.tape.records.len()
-        );
         match self.error {
             Some(err) => Err(err),
             None => {

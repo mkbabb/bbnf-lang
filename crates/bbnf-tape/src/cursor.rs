@@ -73,7 +73,7 @@ impl<'tape> TapeCursor<'tape> {
     /// Classification tag of the current record.
     #[inline]
     pub fn kind(&self) -> TapeKind {
-        self.record().kind
+        self.record().kind()
     }
 
     /// Source span `(lo, hi)` of the current record.
@@ -89,13 +89,14 @@ impl<'tape> TapeCursor<'tape> {
         self.record().variant_idx()
     }
 
-    /// Meta index from the parallel `Tape::meta` buffer.
+    /// Meta index decoded from the packed `TapeRec::kind_meta` and
+    /// `TapeRec::flags` fields.
     ///
     /// For Alt-bodied rules this is the branch index; for everything
     /// else it is `0`.
     #[inline]
     pub fn meta_idx(&self) -> u8 {
-        self.tape.meta[self.offset.0 as usize]
+        self.record().meta_idx()
     }
 
     // ── Child access (Tranche AJ.0) ────────────────────────────────

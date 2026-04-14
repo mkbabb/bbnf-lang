@@ -110,6 +110,33 @@ pub enum TapeKind {
 }
 
 impl TapeKind {
+    /// Reconstruct a `TapeKind` from a raw `u8` discriminant.
+    ///
+    /// Returns `TapeKind::None` for unrecognised values (defensive;
+    /// should never happen with well-formed tape data produced by
+    /// `TapeBuilder`).
+    #[inline]
+    pub fn from_u8(v: u8) -> Self {
+        match v {
+            0 => TapeKind::None,
+            1 => TapeKind::Span,
+            2 => TapeKind::Epsilon,
+            3 => TapeKind::Literal,
+            4 => TapeKind::Regex,
+            5 => TapeKind::Seq,
+            6 => TapeKind::Alt,
+            7 => TapeKind::Repeat,
+            8 => TapeKind::Rule,
+            9 => TapeKind::VariantTag,
+            10 => TapeKind::MapValue,
+            11 => TapeKind::TokenDispatch,
+            12 => TapeKind::Recovered,
+            14 => TapeKind::KvPair,
+            15 => TapeKind::Reserved,
+            _ => TapeKind::None,
+        }
+    }
+
     /// True iff this kind represents a leaf (no children to walk).
     #[inline]
     pub fn is_leaf(self) -> bool {

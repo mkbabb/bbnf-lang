@@ -76,11 +76,31 @@ The `.map(|_| ())` pattern is universal (10-202 per grammar).
 
 ## Phase 1 — Projection truth
 
-Status: NOT STARTED
+Status: **COMPLETE** (commit 0ff06bc)
+
+- Implemented `resolve_branch_type()` — walks inlined Map/Constant/
+  FnDescriptor nodes to surface TypeDesc after rule fusing
+- Replaced single `payload_type: Option<TypeDesc>` with multi-type
+  `payload_types: Vec<TypeDesc>` supporting heterogeneous Alt branches
+- Emit `__payload_tag` discriminator for multi-type Alts; epilogue
+  generates match arms per type selecting `push_leaf_with_<T>`
+- JSON `value` rule now captures f64 (number), bool (true/false), and
+  u8 (null) via direct projection
+- Zero `.map(|_| ())` on typed scanner returns in expanded JSON
+- Deleted dead `has_scalar_payload_type` (never called)
+- Verified: `push_leaf_with_f64`, `push_leaf_with_bool`,
+  `push_leaf_with_u8` all appear in expanded JSON parser
+
+Hard gates 1-5 satisfied. 34 tests pass.
 
 ## Phase 2 — Regression redress
 
-Status: NOT STARTED
+Status: IN PROGRESS
+
+- AT.2.1 SIMD guard: DONE (parse-that commit 44ae43b) — removed
+  `scan_digits_simd()` from integer digit path, kept for fractional.
+  85%+ of real-world numbers have short integer runs (1-4 digits).
+- AT.2.2 meta_idx fold: agent deployed (bbnf-tape worktree)
 
 ## Phase 3 — String decode kernel + bench parity
 
@@ -90,6 +110,14 @@ Status: NOT STARTED
 
 Status: NOT STARTED
 
-## Phase 5 — Named struct ABI + cleanup
+## Phase 5 — Test + bench structural validation
 
-Status: NOT STARTED
+Status: IN PROGRESS — agent deployed
+
+## Phase 6 — Named struct ABI + cleanup
+
+Status: IN PROGRESS — dead code + fixture regen agents deployed
+
+## Phase 7 — CSS spec parity
+
+Status: IN PROGRESS — CSS |= attr selector + Unicode ident agent deployed

@@ -313,21 +313,49 @@ for the fractional part gives us an edge on Apple Silicon.
 Delta vs post-AS. Include both tape-only and value-materialization
 numbers for JSON.
 
-### Phase 5 — Named struct ABI + ParsedGrammar cleanup (~2 days)
+### Phase 5 — Test + bench structural validation (~1 day)
 
-#### AT.5.1 Populate StructRegistry from project_types
+#### AT.5.1 benches/common/validate.rs
+
+Shared validation helpers run ONCE before the bench loop:
+- `assert_record_count_range(tape, min, max, label)` — catches
+  silent record drops
+- `assert_root_kind(tape, expected_kind, label)` — catches
+  miscategorization
+- Per-grammar structural spot-checks (record count ranges for
+  known datasets)
+
+#### AT.5.2 Deep structural tests per grammar
+
+New test file `tests/structural.rs` with the deep-walk pattern:
+parse known inputs, walk tape/view, assert specific values.
+Per-grammar coverage:
+- JSON: object pairs, array elements, nesting depth, variant tags
+- CSS L4: property names, selector structure, at-rule kinds
+- Sheets: function names, argument counts
+- BBNF: rule names, body shapes, directive extraction
+
+#### AT.5.3 View accessor exercise tests
+
+Tests that call the generated view methods (`.pairs()`, `.key()`,
+`.value()`, `.children()`) on REAL parse output, not hand-built
+tapes. These catch codegen regressions in the view layer.
+
+### Phase 6 — Named struct ABI + cleanup (~2 days)
+
+#### AT.6.1 Populate StructRegistry from project_types
 
 When project_types resolves a rule's type to a concrete set of
 named fields, register it in `ir.struct_registry`. This bridges
 the scaffold from AS.2.3 to actual use.
 
-#### AT.5.2 Named struct view codegen
+#### AT.6.2 Named struct view codegen
 
 Extend the view layer to generate typed struct accessors for
 Named types: field-by-name access, type-safe getters, the full
 direct-to-struct chain.
 
-#### AT.5.3 Dead code cleanup (AS audit)
+#### AT.6.3 Dead code cleanup (AS audit)
 
 Delete dead code identified in the AS code quality audit:
 - `has_scalar_payload_type` in grammar.rs:80 (never called)
@@ -337,20 +365,20 @@ Delete dead code identified in the AS code quality audit:
   `needs_payload_slot()` excludes Span upstream
 - Stale doc comment in emitter_types.rs:79
 
-#### AT.5.4 Regenerate tape_parity golden fixtures
+#### AT.6.4 Regenerate tape_parity golden fixtures
 
 11 of 22 tape_parity tests fail: `root_variant_idx` changed due to
 AS enum reordering. The fixtures in `tests/fixtures/tape_golden/`
 need regeneration. Not a functional regression — record counts
 are correct.
 
-#### AT.5.5 Commit parse-that changes
+#### AT.6.5 Commit parse-that changes
 
 The AS tranche added `allow_escapes: bool` to `IdentConfig` and
 `CSS_IDENT_ESCAPE_CONFIG` in parse-that's working tree. These
 changes must be committed in the parse-that repo.
 
-#### AT.5.6 ParsedGrammar elimination
+#### AT.6.6 ParsedGrammar elimination
 
 The bootstrap loop is closed. `host.rs` extracts the grammar from
 the tape-first bootstrap parser. `ParsedGrammar` (the old AST-based
@@ -369,12 +397,14 @@ through the IR path.
 8. `decode_json_string_to_arena` with test coverage (Phase 3)
 9. `json_monolithic_value` bench directly comparable to sonic-rs (Phase 3)
 10. Fresh samply profiles with delta vs AR-baseline (Phase 4)
-11. StructRegistry populated by at least one grammar (Phase 5)
-12. tape_parity: 22/22 pass (fixtures regenerated) (Phase 5)
-13. parse-that changes committed (Phase 5)
-14. `[lang|="en"]` attribute selector parses correctly (Phase 6)
-15. Unicode identifiers accepted in CSS selectors (Phase 6)
-16. `cargo test --workspace` no new failures (all phases)
+11. Deep structural test passes for each grammar (Phase 5)
+12. Bench validate.rs helpers catch record count regressions (Phase 5)
+13. StructRegistry populated by at least one grammar (Phase 6)
+14. tape_parity: 22/22 pass (fixtures regenerated) (Phase 6)
+15. parse-that changes committed (Phase 6)
+16. `[lang|="en"]` attribute selector parses correctly (Phase 7)
+17. Unicode identifiers accepted in CSS selectors (Phase 7)
+18. `cargo test --workspace` no new failures (all phases)
 
 ## Items already landed (from AS)
 
@@ -410,9 +440,9 @@ rules, not building a typed AST. BBNF builds full typed declarations,
 selectors, and values. The real comparison is BBNF vs lightningcss
 (both build typed ASTs): bootstrap 525 vs 124 MB/s (**4.2x**).
 
-### Phase 6 — CSS spec parity + semantic audit (~1 day)
+### Phase 7 — CSS spec parity + semantic audit (~1 day)
 
-#### AT.6.1 Fix |= attribute selector ambiguity
+#### AT.7.1 Fix |= attribute selector ambiguity
 
 In `grammar/css/l4/selectors.bbnf`, `attrSelector` uses `wqName`
 which consumes `lang|` as namespace prefix before `attrMatcher` can
@@ -420,14 +450,14 @@ see `|=`. Fix: factor the `|=` matcher ahead of the namespace `|`
 in the `attrSelector` rule. This is a grammar fix, not a codegen
 fix.
 
-#### AT.6.2 Unicode identifiers
+#### AT.7.2 Unicode identifiers
 
 `selectorIdent` and `ident` regexes only match ASCII letters.
 CSS Syntax L3 §4.3.10 allows non-ASCII codepoints. Extend the
 regex to accept bytes >= 0x80 in identifier positions:
 `/(?:-?[a-zA-Z_\x80-\xff]|\\[^\n])(?:[\w\x80-\xff-]|\\[^\n])*/`
 
-#### AT.6.3 Semantic parity audit
+#### AT.7.3 Semantic parity audit
 
 Audit against lightningcss's output for bootstrap.css:
 - Does our typed declaration dispatch cover all properties
@@ -440,6 +470,44 @@ Audit against lightningcss's output for bootstrap.css:
 The cssparser comparison is still valuable — we do substantively
 more work (full typed AST vs tokenize-only) while running faster.
 Document this explicitly in the bench output.
+
+## Bench + test validation audit findings
+
+**Every bench verifies parse success. None verify structural
+correctness.** The `parse()` function DOES enforce full consumption
+(returns `Err` if `state.offset < input.len()`), so partial parses
+are caught. But no bench checks record count, tree shape, or
+decoded values.
+
+Specific gaps:
+- No bench counts tape records (would catch silent rule drops)
+- No bench verifies view accessor results (would catch payload
+  wiring failures like the f64 discard)
+- No bench checks root node kind (would catch miscategorization)
+- `compile_pipeline.rs` never inspects the compiled IR (could
+  verify rule counts match grammar_roundtrip expectations)
+
+### Test structural validation audit
+
+**No test in the suite parses a known input and walks the tape/view
+to verify deep structural values.** grammar_roundtrip checks rule
+counts only. tape_parity checks root record + total count only.
+css_l4 checks `is_ok()` only. No test exercises the generated
+view accessors on real parse output.
+
+Missing test patterns:
+- Parse `{"key": [1, true, null]}` → walk tape → assert pair
+  count, key span, value array element count and span texts
+- Parse `a { color: red; }` → verify property name and value spans
+- Parse `=SUM(A1:A10)` → verify function name and argument range
+- Deep tape walk: collect `(depth, kind, span_text)` triples and
+  compare against golden arrays
+- View accessor exercise: call generated `.pairs()`, `.key()`,
+  `.value()` methods on real parse output
+
+AT must land `benches/common/validate.rs` with structural helpers
+AND deep structural tests per grammar that catch silent regressions
+(dropped children, wrong variant tags, missing payloads).
 
 ## What is NOT in scope
 

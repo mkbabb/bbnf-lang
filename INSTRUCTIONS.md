@@ -175,33 +175,46 @@ in `src/` files.
 Benchmarks must run sequentially to avoid interference. Single
 invocation only — never run bench suites in separate commands.
 
+The canonical bench suite covers all 4 grammars in both compile
+and parse, plus competitors:
+
 ```bash
 # Clear caches first
 find . -name ".bbnf-cache" -exec rm -rf {} + 2>/dev/null
 
-# Compile pipeline (always works)
+# ── Compile pipeline (all 5 grammars) ──
 cargo bench -p bbnf --bench compile_pipeline 2>&1 > /tmp/bench-compile.txt
 grep "bench:" /tmp/bench-compile.txt
 
-# JSON monolithic parse
+# ── Parse: JSON (5 real-world datasets, 35KB→21MB) ──
 cargo bench -p bbnf --bench json_monolithic 2>&1 > /tmp/bench-json.txt
 grep "bench:" /tmp/bench-json.txt
 
-# CSS L4 parse
+# ── Parse: CSS L4 (3 real-world stylesheets, 6KB→3.6MB) ──
 cargo bench -p bbnf --bench css_l4 2>&1 > /tmp/bench-css.txt
 grep "bench:" /tmp/bench-css.txt
 
-# Google Sheets
+# ── Parse: Google Sheets (3 formula tiers: simple/nested/stress) ──
 cargo bench -p bbnf --bench google_sheets_monolithic 2>&1 > /tmp/bench-sheets.txt
 grep "bench:" /tmp/bench-sheets.txt
 
-# CSS competitors baseline
+# ── Parse: BBNF self-hosting (6 grammars, incl. full CSS L4 grammar) ──
+cargo bench -p bbnf --bench bbnf_monolithic 2>&1 > /tmp/bench-bbnf.txt
+grep "bench:" /tmp/bench-bbnf.txt
+
+# ── Competitors: CSS (cssparser + lightningcss baseline) ──
 cargo bench -p bbnf --bench css_competitors 2>&1 > /tmp/bench-competitors.txt
 grep "bench:" /tmp/bench-competitors.txt
 ```
 
 Cold per-parse only — warm/cached benchmarks are disingenuous.
 The bench binaries use `#[global_allocator] mimalloc`.
+
+**Bench data files**:
+- `data/json/` — canada, citm_catalog, twitter, data, data_xl
+- `data/css/` — normalize, bootstrap, tailwind
+- `data/sheets/` — simple, nested, stress
+- `grammar/` — all `.bbnf` files (BBNF bench parses grammar files)
 
 ## Profiling with samply
 

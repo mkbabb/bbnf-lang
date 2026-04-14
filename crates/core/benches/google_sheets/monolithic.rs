@@ -1,5 +1,9 @@
 
-//! Google Sheets formula AOT benchmark — monolithic codegen (tape-first).
+//! Google Sheets formula benchmark — monolithic codegen (tape-first).
+//!
+//! Stratified from simple cell references (simple.txt, 505B) through
+//! deeply nested LET/LAMBDA/FILTER chains (stress.txt, 2.7KB).
+//! Each formula is parsed individually; throughput is aggregate bytes/s.
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -11,139 +15,113 @@ use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
 #[parser(path = "../../grammar/google-sheets/google-sheets.bbnf", prettify)]
 struct GoogleSheetsParser;
 
-const PATHOLOGICAL: &str = r#"=LET(raw, A2:E1000, filtered, FILTER(raw, (INDEX(raw,,3)>100)*(INDEX(raw,,5)="Active")), sorted, SORT(filtered, 3, FALSE), IF(ROWS(sorted)>0, MAP(SEQUENCE(MIN(10, ROWS(sorted))), LAMBDA(i, INDEX(sorted, i, 1)&" - "&TEXT(INDEX(sorted, i, 3), "$#,##0"))), "No results"))"#;
+#[path = "../common/timeout.rs"]
+mod timeout;
+use timeout::{bench_with_timeout, limits};
 
-fn generate_large_formula(n_bindings: usize) -> String {
-    let mut parts = Vec::with_capacity(n_bindings * 2 + 1);
-    for i in 0..n_bindings {
-        parts.push(format!("v{}", i));
-        parts.push(format!(
-            "IF(v{}>0, FILTER(A1:Z100, INDEX(A1:Z100,,{})>0), SUM(A1:A{}))",
-            i,
-            i + 1,
-            i + 10
-        ));
-    }
-    parts.push(format!("v{}", n_bindings - 1));
-    format!("=LET({})", parts.join(", "))
+fn load(name: &str) -> String {
+    let path = format!("../../data/sheets/{}", name);
+    std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{}: {}", path, e))
 }
 
-fn parse_pathological(b: &mut Bencher) {
-    b.bytes = PATHOLOGICAL.len() as u64;
-    {
-        let parsed = GoogleSheetsParser::parse(PATHOLOGICAL)
-            .unwrap_or_else(|e| panic!("pathological: parse failed: {:?}", e));
-        black_box(&parsed);
+/// Parse every non-empty line as an individual formula.
+fn parse_all_formulas(input: &str) {
+    for line in input.lines() {
+        let line = line.trim();
+        if line.is_empty() {
+            continue;
+        }
+        GoogleSheetsParser::parse(line)
+            .unwrap_or_else(|e| panic!("parse failed on {:?}: {:?}", &line[..line.len().min(40)], e));
     }
-    b.iter(|| {
-        let parsed = GoogleSheetsParser::parse(black_box(PATHOLOGICAL)).unwrap();
-        black_box(parsed);
-    });
 }
 
-fn parse_1kb(b: &mut Bencher) {
-    let input = generate_large_formula(10);
+fn parse_simple(b: &mut Bencher) {
+    let input = load("simple.txt");
     b.bytes = input.len() as u64;
-    {
-        let parsed = GoogleSheetsParser::parse(&input)
-            .unwrap_or_else(|e| panic!("parse_1kb: parse failed: {:?}", e));
-        black_box(&parsed);
-    }
-    b.iter(|| {
-        let parsed = GoogleSheetsParser::parse(black_box(&input)).unwrap();
-        black_box(parsed);
+    parse_all_formulas(&input); // verify
+    bench_with_timeout(b, limits::PARSE_DEFAULT, || {
+        for line in input.lines() {
+            let line = line.trim();
+            if line.is_empty() { continue; }
+            let parsed = GoogleSheetsParser::parse(black_box(line)).unwrap();
+            black_box(parsed);
+        }
     });
 }
 
-fn parse_10kb(b: &mut Bencher) {
-    let input = generate_large_formula(100);
+fn parse_nested(b: &mut Bencher) {
+    let input = load("nested.txt");
     b.bytes = input.len() as u64;
-    {
-        let parsed = GoogleSheetsParser::parse(&input)
-            .unwrap_or_else(|e| panic!("parse_10kb: parse failed: {:?}", e));
-        black_box(&parsed);
-    }
-    b.iter(|| {
-        let parsed = GoogleSheetsParser::parse(black_box(&input)).unwrap();
-        black_box(parsed);
+    parse_all_formulas(&input); // verify
+    bench_with_timeout(b, limits::PARSE_DEFAULT, || {
+        for line in input.lines() {
+            let line = line.trim();
+            if line.is_empty() { continue; }
+            let parsed = GoogleSheetsParser::parse(black_box(line)).unwrap();
+            black_box(parsed);
+        }
     });
 }
 
-fn format_pathological(b: &mut Bencher) {
+fn parse_stress(b: &mut Bencher) {
+    let input = load("stress.txt");
+    b.bytes = input.len() as u64;
+    parse_all_formulas(&input); // verify
+    bench_with_timeout(b, limits::PARSE_DEFAULT, || {
+        for line in input.lines() {
+            let line = line.trim();
+            if line.is_empty() { continue; }
+            let parsed = GoogleSheetsParser::parse(black_box(line)).unwrap();
+            black_box(parsed);
+        }
+    });
+}
+
+// ── Format benchmarks ──────────────────────────────────────────────
+
+fn format_simple(b: &mut Bencher) {
+    let input = load("simple.txt");
+    let first_formula = input.lines().find(|l| !l.trim().is_empty()).unwrap().trim();
     let config = pprint::Printer::new(80, 2, false);
-    b.bytes = PATHOLOGICAL.len() as u64;
+    b.bytes = first_formula.len() as u64;
     {
         let parser = GoogleSheetsParser::formula_prettify();
-        let (result, state) = parser.parse_return_state(PATHOLOGICAL);
-        assert!(result.is_some(), "format_pathological: parse failed");
-        assert_eq!(
-            state.offset,
-            PATHOLOGICAL.len(),
-            "format_pathological: incomplete parse ({}/{})",
-            state.offset,
-            PATHOLOGICAL.len(),
-        );
+        let (result, state) = parser.parse_return_state(first_formula);
+        assert!(result.is_some(), "format_simple: parse failed");
+        assert_eq!(state.offset, first_formula.len());
     }
     b.iter(|| {
         let parser = GoogleSheetsParser::formula_prettify();
-        let ops = parser.parse(black_box(PATHOLOGICAL)).unwrap();
+        let ops = parser.parse(black_box(first_formula)).unwrap();
         pprint::render(&ops, config)
     });
 }
 
-fn format_1kb(b: &mut Bencher) {
-    let input = generate_large_formula(10);
+fn format_stress(b: &mut Bencher) {
+    let input = load("stress.txt");
+    let first_formula = input.lines().find(|l| !l.trim().is_empty()).unwrap().trim();
     let config = pprint::Printer::new(80, 2, false);
-    b.bytes = input.len() as u64;
+    b.bytes = first_formula.len() as u64;
     {
         let parser = GoogleSheetsParser::formula_prettify();
-        let (result, state) = parser.parse_return_state(&input);
-        assert!(result.is_some(), "format_1kb: parse failed");
-        assert_eq!(
-            state.offset,
-            input.len(),
-            "format_1kb: incomplete parse ({}/{})",
-            state.offset,
-            input.len(),
-        );
+        let (result, state) = parser.parse_return_state(first_formula);
+        assert!(result.is_some(), "format_stress: parse failed");
+        assert_eq!(state.offset, first_formula.len());
     }
     b.iter(|| {
         let parser = GoogleSheetsParser::formula_prettify();
-        let ops = parser.parse(black_box(&input)).unwrap();
-        pprint::render(&ops, config)
-    });
-}
-
-fn format_10kb(b: &mut Bencher) {
-    let input = generate_large_formula(100);
-    let config = pprint::Printer::new(80, 2, false);
-    b.bytes = input.len() as u64;
-    {
-        let parser = GoogleSheetsParser::formula_prettify();
-        let (result, state) = parser.parse_return_state(&input);
-        assert!(result.is_some(), "format_10kb: parse failed");
-        assert_eq!(
-            state.offset,
-            input.len(),
-            "format_10kb: incomplete parse ({}/{})",
-            state.offset,
-            input.len(),
-        );
-    }
-    b.iter(|| {
-        let parser = GoogleSheetsParser::formula_prettify();
-        let ops = parser.parse(black_box(&input)).unwrap();
+        let ops = parser.parse(black_box(first_formula)).unwrap();
         pprint::render(&ops, config)
     });
 }
 
 benchmark_group!(
     benches,
-    parse_pathological,
-    parse_1kb,
-    parse_10kb,
-    format_pathological,
-    format_1kb,
-    format_10kb,
+    parse_simple,
+    parse_nested,
+    parse_stress,
+    format_simple,
+    format_stress,
 );
 benchmark_main!(benches);

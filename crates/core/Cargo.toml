@@ -146,3 +146,8 @@ harness = false
 name = "compile_pipeline"
 path = "benches/compile_pipeline.rs"
 harness = false
+
+[[bench]]
+name = "bbnf_monolithic"
+path = "benches/bbnf/monolithic.rs"
+harness = false

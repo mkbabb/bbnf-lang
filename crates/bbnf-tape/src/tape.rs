@@ -277,23 +277,18 @@ impl Tape {
     /// `T` must be `Copy` and ≤ 8 bytes, mirroring the contract on
     /// `TapeBuilder::push_leaf_with_scalar`.
     #[inline]
+    /// AU.1: payload byte offset is in `child_off` for scalar leaves.
+    /// `payload_idx == 1` is the sentinel for "payload present."
     pub fn payload_scalar<T: Copy>(&self, rec: &TapeRec) -> Option<T> {
         if rec.payload_idx == 0 {
             return None;
         }
-        debug_assert!(
-            std::mem::size_of::<T>() <= 8,
-            "payload_scalar: size_of::<T>() must be ≤ 8, got {}",
-            std::mem::size_of::<T>()
-        );
-        let start = (rec.payload_idx as usize - 1) * 8;
+        debug_assert!(std::mem::size_of::<T>() <= 8);
+        let start = rec.child_off.0 as usize;
         if start + std::mem::size_of::<T>() > self.payloads.len() {
             return None;
         }
         let mut v: std::mem::MaybeUninit<T> = std::mem::MaybeUninit::uninit();
-        // SAFETY: bounds are checked above, `T: Copy` permits the raw
-        // byte copy, and the source pointer is valid for the lifetime
-        // of `&self`.
         unsafe {
             std::ptr::copy_nonoverlapping(
                 self.payloads.as_ptr().add(start),
@@ -313,14 +308,10 @@ impl Tape {
     /// Read a `bool` payload from the record's payload slot.
     #[inline]
     pub fn payload_bool(&self, rec: &TapeRec) -> Option<bool> {
-        // `bool` has size 1; the byte may be 0 or any non-zero value
-        // produced by the writer's `value as u8` coercion. Go through
-        // raw bytes to make the comparison explicit and avoid any
-        // niche-validity assumptions on `bool`.
         if rec.payload_idx == 0 {
             return None;
         }
-        let start = (rec.payload_idx as usize - 1) * 8;
+        let start = rec.child_off.0 as usize;
         Some(*self.payloads.get(start)? != 0)
     }
 
@@ -405,7 +396,7 @@ impl Tape {
         if rec.payload_idx == 0 {
             return None;
         }
-        let start = (rec.payload_idx as usize - 1) * 8;
+        let start = rec.child_off.0 as usize;
         if start + byte_count > self.payloads.len() {
             return None;
         }

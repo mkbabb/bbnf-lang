@@ -166,18 +166,21 @@ impl TapeBuilder {
 
     // ── Payload-bearing leaf pushes ─────────────────────────────────
 
-    /// Append a payload slot (8 bytes) and return its 1-based index.
-    ///
-    /// Every slot is 8-byte-wide regardless of the stored type.
-    /// Sub-8-byte scalars overwrite their leading bytes; trailing
-    /// bytes are zeroed by the resize.
+    /// Append a payload slot (8 bytes), write `value` into it, and
+    /// return the byte offset. Full u32 range — no u16 overflow.
     #[inline]
-    fn alloc_payload_slot(&mut self) -> u16 {
-        let slot = self.payloads.len() / 8;
-        // resize instead of extend_from_slice — avoids stack-copy of
-        // an 8-byte zeroed array on every call.
-        self.payloads.resize(self.payloads.len() + 8, 0);
-        (slot + 1) as u16
+    fn alloc_and_write_payload<T: Copy>(&mut self, value: T) -> u32 {
+        debug_assert!(std::mem::size_of::<T>() <= 8);
+        let start = self.payloads.len();
+        self.payloads.resize(start + 8, 0);
+        unsafe {
+            std::ptr::copy_nonoverlapping(
+                &value as *const T as *const u8,
+                self.payloads.as_mut_ptr().add(start),
+                std::mem::size_of::<T>(),
+            );
+        }
+        start as u32
     }
 
     /// Append `slot_count` consecutive 8-byte payload slots and
@@ -198,17 +201,10 @@ impl TapeBuilder {
 
     /// Append a leaf record with an arbitrary scalar payload.
     ///
-    /// Writes `size_of::<T>()` bytes into the payload buffer (LE-host
-    /// order — the writer + reader are always the same process, so
-    /// host endianness is fine) and sets the record's `payload_idx`
-    /// to the corresponding 1-based 8-byte slot.
-    ///
-    /// `T` must be `Copy` and ≤ 8 bytes. Sub-8 types occupy the
-    /// leading bytes of the slot; trailing bytes stay zeroed.
-    ///
-    /// `meta_idx` is the branch index for Alt-bodied rules (`0` for
-    /// everything else). Packed into `TapeRec::kind_meta` (high 4
-    /// bits) and `TapeRec::flags` (bit 7). 5-bit range: 0-31.
+    /// AU.1: Payload byte offset stored in `child_off` (repurposed
+    /// from the leaf's unused children pointer). Full u32 range —
+    /// no u16 overflow on number-heavy inputs. `payload_idx` is set
+    /// to 1 as a sentinel indicating "payload at child_off offset."
     #[inline]
     pub fn push_leaf_with_scalar<T: Copy>(
         &mut self,
@@ -219,37 +215,17 @@ impl TapeBuilder {
         meta_idx: u8,
         value: T,
     ) -> TapeOffset {
-        debug_assert!(
-            kind.is_leaf(),
-            "push_leaf_with_scalar on compound kind {:?}",
-            kind
-        );
-        debug_assert!(
-            std::mem::size_of::<T>() <= 8,
-            "push_leaf_with_scalar: size_of::<T>() must be ≤ 8, got {}",
-            std::mem::size_of::<T>()
-        );
-        let pidx = self.alloc_payload_slot();
-        let start = (pidx as usize - 1) * 8;
-        // SAFETY: `value` is `Copy` and `size_of::<T>() ≤ 8 ==
-        // payload slot width`. The destination has been just-
-        // allocated (zeroed) and is non-overlapping with the source.
-        unsafe {
-            std::ptr::copy_nonoverlapping(
-                &value as *const T as *const u8,
-                self.payloads.as_mut_ptr().add(start),
-                std::mem::size_of::<T>(),
-            );
-        }
+        debug_assert!(kind.is_leaf());
+        let byte_offset = self.alloc_and_write_payload(value);
         let (kind_meta, flags_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
         let idx = self.tape.records.len();
         self.tape.records.push(TapeRec {
             kind_meta,
             flags: (variant_idx & 0x3F) | flags_meta_bit,
-            payload_idx: pidx,
+            payload_idx: 1,
             span_lo,
             span_hi,
-            child_off: TapeOffset::NONE,
+            child_off: TapeOffset(byte_offset),
         });
         TapeOffset(idx as u32)
     }
@@ -457,15 +433,11 @@ impl TapeBuilder {
             bytes.len()
         );
 
-        let payload_idx: u16 = if bytes.is_empty() {
-            0
+        let (payload_idx, payload_off) = if bytes.is_empty() {
+            (0u16, TapeOffset::NONE)
         } else {
-            // Round up to next 8-byte slot.
             let slot_count = bytes.len().div_ceil(8);
             let start = self.alloc_aggregate_slots(slot_count);
-            // SAFETY: `start..start + bytes.len()` was just
-            // allocated by `alloc_aggregate_slots` and is non-
-            // overlapping with the source.
             unsafe {
                 std::ptr::copy_nonoverlapping(
                     bytes.as_ptr(),
@@ -473,7 +445,7 @@ impl TapeBuilder {
                     bytes.len(),
                 );
             }
-            ((start / 8) + 1) as u16
+            (1u16, TapeOffset(start as u32))
         };
 
         let (kind_meta, flags_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
@@ -484,7 +456,7 @@ impl TapeBuilder {
             payload_idx,
             span_lo,
             span_hi,
-            child_off: TapeOffset::NONE,
+            child_off: payload_off,
         });
         TapeOffset(idx as u32)
     }

@@ -27,7 +27,7 @@ use bbnf_ir::{AltBranch, AltDispatch, FnDescriptor, GrammarIR, IrNode, TypeDesc}
 use super::DriverState;
 use super::node::compile_node;
 use crate::backend::strategy::alt_strategy::AltStrategy;
-use crate::backend::{AltBranchInfo, Emitter, KeyDispatchBranch, ValuePlacement};
+use crate::backend::{AltBranchInfo, CallStrategy, Emitter, KeyDispatchBranch, ValuePlacement};
 
 /// Returns `true` when this IR node's codegen will push child tape
 /// records. Leaf branches (literals, regex, epsilon, pure-conversion
@@ -36,53 +36,37 @@ use crate::backend::{AltBranchInfo, Emitter, KeyDispatchBranch, ValuePlacement};
 /// Used by AM.3 per-branch tape surgery to decide whether a branch
 /// arm needs `mark_children` + `push_compound` (compound) or a
 /// bare `push_leaf` (leaf).
-pub fn branch_pushes_children(ir: &GrammarIR, node: &IrNode) -> bool {
+/// AU.1.1: Determines whether a branch's codegen will push child
+/// records. When the driver inlines a Ref (CallStrategy::InlineBody),
+/// the branch's children are the inlined body — check that body
+/// recursively, not the Ref target's function.
+pub fn branch_pushes_children(ir: &GrammarIR, node: &IrNode, dstate: &DriverState) -> bool {
     match node {
-        // True leaves — never push children.
         IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => false,
-
-        // Pure conversion maps inherit the inner node's classification.
-        IrNode::Map { inner, .. } => branch_pushes_children(ir, inner),
-
-        // Whitespace trimming is transparent — propagate.
-        IrNode::OptionalWhitespace(inner) => branch_pushes_children(ir, inner),
-
-        // Negation is zero-width; it never pushes children.
+        IrNode::Map { inner, .. } => branch_pushes_children(ir, inner, dstate),
+        IrNode::OptionalWhitespace(inner) => branch_pushes_children(ir, inner, dstate),
         IrNode::Negate(_) => false,
 
-        // AU.1.1: A Ref to a rule whose materialization is
-        // TransparentElide is inlined at the call site — check its
-        // body. Also check is_transparent (IR metadata).
         IrNode::Ref(target) => {
             if let Some(rule) = ir.rules.iter().find(|r| r.id == *target) {
-                let is_elided = rule.meta.is_transparent || {
-                    ir.dag.as_ref()
-                        .and_then(|dag| dag.node_for(&rule.body))
-                        .and_then(|nid| ir.materialization.get(&nid))
-                        .is_some_and(|c| {
-                            *c == bbnf_ir::passes::MaterializationClass::TransparentElide
-                        })
-                };
-                if is_elided {
-                    return branch_pushes_children(ir, &rule.body);
+                let inlined = matches!(
+                    dstate.call_strategy(*target),
+                    CallStrategy::InlineBody
+                ) || rule.meta.is_transparent;
+                if inlined {
+                    return branch_pushes_children(ir, &rule.body, dstate);
                 }
             }
             true
         }
 
-        // AU.1.1: Nested Alts are leaf-like when all branches are.
         IrNode::Alt(branches, _) => branches
             .iter()
-            .any(|b| branch_pushes_children(ir, &b.node)),
+            .any(|b| branch_pushes_children(ir, &b.node, dstate)),
+        IrNode::Skip(kept, _) => branch_pushes_children(ir, kept, dstate),
+        IrNode::Next(_, kept) => branch_pushes_children(ir, kept, dstate),
+        IrNode::Minus(lhs, _) => branch_pushes_children(ir, lhs, dstate),
 
-        // Skip keeps left, Next keeps right.
-        IrNode::Skip(kept, _) => branch_pushes_children(ir, kept),
-        IrNode::Next(_, kept) => branch_pushes_children(ir, kept),
-
-        // Minus: match result is left side.
-        IrNode::Minus(lhs, _) => branch_pushes_children(ir, lhs),
-
-        // Seq, Repeat, TokenDispatch — structurally push children.
         _ => true,
     }
 }
@@ -171,7 +155,7 @@ pub(super) fn compile_alt<E: Emitter>(
         // bodies cannot clobber branch_idx / tape_surgery.
         emitter.pre_compile_alt_branches(ctx);
         for (i, branch) in branches.iter().enumerate() {
-            let pushes = branch_pushes_children(ir, &branch.node);
+            let pushes = branch_pushes_children(ir, &branch.node, dstate);
             let byte_patterns: Vec<u8> = table
                 .table
                 .iter()
@@ -219,7 +203,7 @@ pub(super) fn compile_alt<E: Emitter>(
         let mut kd_branches = Vec::with_capacity(detected.len());
         for det in &detected {
             let branch = &branches[det.branch_idx];
-            let pushes = branch_pushes_children(ir, &branch.node);
+            let pushes = branch_pushes_children(ir, &branch.node, dstate);
             let body = compile_node(&branch.node, alloc, ir, dstate, emitter, ctx);
             let key_bytes = det
                 .key_literals
@@ -240,7 +224,7 @@ pub(super) fn compile_alt<E: Emitter>(
         } else if fallback_indices.len() == 1 {
             let fi = fallback_indices[0];
             let branch = &branches[fi];
-            let pushes = branch_pushes_children(ir, &branch.node);
+            let pushes = branch_pushes_children(ir, &branch.node, dstate);
             let body = compile_node(&branch.node, alloc, ir, dstate, emitter, ctx);
             Some((branch_info(pushes), body))
         } else {
@@ -250,7 +234,7 @@ pub(super) fn compile_alt<E: Emitter>(
                 .iter()
                 .map(|&fi| {
                     let branch = &branches[fi];
-                    let pushes = branch_pushes_children(ir, &branch.node);
+                    let pushes = branch_pushes_children(ir, &branch.node, dstate);
                     let body = compile_node(&branch.node, alloc, ir, dstate, emitter, ctx);
                     (branch_info(pushes), body)
                 })
@@ -268,7 +252,7 @@ pub(super) fn compile_alt<E: Emitter>(
     let branch_outputs: Vec<_> = branches
         .iter()
         .map(|branch| {
-            let pushes = branch_pushes_children(ir, &branch.node);
+            let pushes = branch_pushes_children(ir, &branch.node, dstate);
             let output = compile_node(&branch.node, alloc, ir, dstate, emitter, ctx);
             (branch_info(pushes), output)
         })

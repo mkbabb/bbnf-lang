@@ -15,6 +15,9 @@ struct JsonParser;
 mod timeout;
 use timeout::{bench_with_timeout, limits};
 
+#[path = "../common/validate.rs"]
+mod validate;
+
 fn load(name: &str) -> String {
     let path = format!("../../data/json/{}", name);
     std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{}: {}", path, e))
@@ -28,6 +31,10 @@ macro_rules! bench {
             {
                 let parsed = JsonParser::parse(&input)
                     .unwrap_or_else(|e| panic!(concat!($file, ": parse failed: {:?}"), e));
+                // Structural sanity: root is compound, tape is non-trivial.
+                let view = parsed.view();
+                validate::assert_root_kind_compound(&view.cursor(), $file);
+                validate::assert_record_count_range(parsed.tape(), 1, 10_000_000, $file);
                 black_box(&parsed);
             }
             bench_with_timeout(b, limits::JSON_PARSE, || {

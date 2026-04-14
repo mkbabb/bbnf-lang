@@ -480,7 +480,7 @@ impl RustEmitter {
                     let mut state = ::parse_that::ParserState::new(input);
                     let mut builder =
                         ::bbnf::runtime::tape::TapeBuilder::with_capacity(
-                            input.len().saturating_mul(4),
+                            input.len() / 2 + 2,
                         );
                     let root_off = Self::#root_fn_ident(&mut state, &mut builder)
                         .ok_or(::bbnf::runtime::ParseErr::Syntax {

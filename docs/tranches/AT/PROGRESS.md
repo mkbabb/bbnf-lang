@@ -24,6 +24,12 @@ Operational protocol: see `/INSTRUCTIONS.md` at repo root.
   means it tokenizes only. lightningcss comparison (4.2x) is real.
 - **CSS L4 edge cases**: 47/49 pass. `|=` attr selector ambiguity
   and ASCII-only identifiers are spec gaps.
+- **Capacity heuristic regressed** — Span admission (8258576)
+  reverted AR.5.1's `len/2+2` back to `saturating_mul(4)`.
+- **regex_classify test has stale Identifier field** — references
+  `allows_escapes: false` on Identifier but field was restructured.
+- **Prior tranche gates**: all 12 PRESENT. 336 tests pass, 0 fail.
+  Egraph has 6 clones (claim was 5).
 
 ## Phase 1 — Projection truth
 

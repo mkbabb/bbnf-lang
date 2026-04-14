@@ -99,7 +99,7 @@ fn tape_accessor_borrows_underlying_tape() {
     assert!(!tape.is_empty());
     let root_off = parsed.root_offset();
     let rec = tape.get(root_off);
-    assert_eq!(rec.kind, TapeKind::Span);
+    assert_eq!(rec.kind(), TapeKind::Span);
 }
 
 #[test]

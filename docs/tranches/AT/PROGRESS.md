@@ -102,6 +102,18 @@ Status: IN PROGRESS
   85%+ of real-world numbers have short integer runs (1-4 digits).
 - AT.2.2 meta_idx fold: agent deployed (bbnf-tape worktree)
 
+### Post-Phase-1+SIMD JSON bench results
+
+| Dataset | post-AS | post-AT | Delta | Hard gate |
+|---------|---------|---------|-------|-----------|
+| canada | 1089 | **1387** | **+27%** | ≥1350 ✓ |
+| citm | 2331 | **2577** | **+11%** | — |
+| twitter | 2003 | **2089** | **+4%** | — |
+| data | 1805 | **1843** | **+2%** | — |
+| data_xl | 1046 | **1167** | **+12%** | — |
+
+canada hard gate (≥1350 MB/s) satisfied.
+
 ## Phase 3 — String decode kernel + bench parity
 
 Status: NOT STARTED
@@ -120,4 +132,14 @@ Status: IN PROGRESS — dead code + fixture regen agents deployed
 
 ## Phase 7 — CSS spec parity
 
-Status: IN PROGRESS — CSS |= attr selector + Unicode ident agent deployed
+Status: **COMPLETE** (commit bdfaf1e + parse-that 6ae8e6a)
+
+- AT.7.1: Fixed `|=` attribute selector ambiguity — new `attrName`
+  rule with 4 ordered branches for namespace disambiguation
+- AT.7.2: Extended `ident` and `selectorIdent` to accept non-ASCII
+  bytes (≥0x80) per CSS Syntax L3 §4.3.10
+- Added `\xHH` hex escape support in bbnf-regex character classes
+  (required for `\x80-\xff` byte ranges)
+- CSS_L4_RULE_COUNT updated 184→185 for new `attrName` rule
+- All 21 CSS tests pass; bench: normalize 952, bootstrap 511,
+  tailwind 552 MB/s

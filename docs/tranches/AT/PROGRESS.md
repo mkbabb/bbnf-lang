@@ -95,7 +95,7 @@ Hard gates 1-5 satisfied. 34 tests pass.
 
 ## Phase 2 — Regression redress
 
-Status: IN PROGRESS
+Status: **COMPLETE**
 
 - AT.2.1 SIMD guard: DONE (parse-that commit 44ae43b) — removed
   `scan_digits_simd()` from integer digit path, kept for fractional.
@@ -132,11 +132,30 @@ and honest bench TBD.
 
 ## Phase 4 — Profile-driven optimization
 
-Status: NOT STARTED
+Status: PARTIAL — payload pre-alloc done. Fresh samply profiles +
+NEON fractional scan deferred to profile-guided next wave.
+
+vs sonic-rs comparison (tape-only, no string decode):
+| Dataset | BBNF | sonic-rs | Ratio |
+|---------|------|----------|-------|
+| canada | 1469 | 1470 | 99.9% |
+| citm | 2622 | 3042 | 86.2% |
+| data | 1907 | 2387 | 79.9% |
+| data_xl | 1208 | 1456 | 83.0% |
+| twitter | 2163 | 2622 | 82.5% |
+
+canada is parity with sonic-rs. Other datasets 80-86%.
 
 ## Phase 5 — Test + bench structural validation
 
-Status: IN PROGRESS — agent deployed
+Status: **COMPLETE** (commits bfef009, 71675dd)
+
+- 17 deep structural tests in `tests/structural.rs`: parse known
+  JSON inputs, walk tape records, verify spans/kinds/nesting/bounds
+- `benches/common/validate.rs`: assert_record_count_range,
+  assert_root_kind_compound, assert_root_covers_input
+- JSON bench validation wired into pre-bench setup
+- 73 tests total, 0 failures
 
 ## Phase 6 — Named struct ABI + cleanup
 

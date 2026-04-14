@@ -62,11 +62,15 @@ impl TapeBuilder {
     }
 
     /// Construct a builder sized for `expected` records.
+    ///
+    /// Pre-allocates the payload buffer assuming ~25% of records will
+    /// carry scalar payloads (8 bytes each). This avoids repeated
+    /// grow/copy for number-heavy inputs like JSON.
     pub fn with_capacity(expected: usize) -> Self {
         Self {
             tape: Tape::with_capacity(expected),
             error: None,
-            payloads: Vec::new(),
+            payloads: Vec::with_capacity(expected / 4 * 8),
         }
     }
 
@@ -164,15 +168,15 @@ impl TapeBuilder {
 
     /// Append a payload slot (8 bytes) and return its 1-based index.
     ///
-    /// Every slot is allocated 8-byte-wide regardless of the stored
-    /// type so the `payload_idx` continues to denote a fixed-stride
-    /// 1-based slot index. Sub-8-byte scalars consume their leading
-    /// bytes; the trailing padding is left zeroed.
+    /// Every slot is 8-byte-wide regardless of the stored type.
+    /// Sub-8-byte scalars overwrite their leading bytes; trailing
+    /// bytes are zeroed by the resize.
     #[inline]
     fn alloc_payload_slot(&mut self) -> u16 {
         let slot = self.payloads.len() / 8;
-        self.payloads.extend_from_slice(&[0u8; 8]);
-        // 1-based: slot 0 in the buffer is payload_idx=1.
+        // resize instead of extend_from_slice — avoids stack-copy of
+        // an 8-byte zeroed array on every call.
+        self.payloads.resize(self.payloads.len() + 8, 0);
         (slot + 1) as u16
     }
 

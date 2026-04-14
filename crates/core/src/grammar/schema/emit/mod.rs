@@ -6,9 +6,5 @@
 //! source code or runtime metadata.
 //!
 //! - `rust` — full parity with the v1 visitor codegen (current target)
-//! - `ts` — placeholder, contract fixed
-//! - `runtime` — placeholder, runtime metadata tables for WASM/introspection
 
 pub mod rust;
-pub mod runtime;
-pub mod ts;

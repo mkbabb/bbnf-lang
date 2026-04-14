@@ -283,6 +283,23 @@ attribute. 5-minute fix.
 `schema/emit/runtime.rs` (returns `Vec::new()`) have been stubs for
 10+ tranches. Delete them.
 
+#### AU.4.5 Bootstrap regen + stale test fixes
+
+`generated.rs` is STALE — diverges from fresh regen by +770/-479
+lines. Fresh regen, recommit, verify idempotency.
+
+Fix 2 compile errors from the meta_idx fold:
+- `gorgeous/tests/vm.rs` — missing `string_index` field in GrammarIR
+- `core/tests/runtime_root.rs` — `rec.kind` → `rec.kind()`
+
+Hard gate: `cargo test --workspace` compiles (zero compile errors).
+
+#### AU.4.6 Triage pre-existing test failures
+
+18 tests fail across pipeline (closures), debug (wildcards), imports,
+lower, analysis. These are pre-existing — not AT regressions. Triage
+each: fix, delete, or document as known-incomplete-feature.
+
 ### Phase 5 — Profile-driven optimization + bench parity
 
 #### AU.5.1 Fresh samply profiles (all grammars)
@@ -308,7 +325,9 @@ no regression vs AQ on any grammar.
 8. `json_monolithic_value` bench directly comparable to sonic-rs (Phase 3)
 9. `ParsedGrammar` does not exist in codebase (Phase 4)
 10. Fresh samply profiles with delta vs AQ baseline (Phase 5)
-11. `cargo test --workspace` no new failures (all phases)
+11. `cargo test --workspace` compiles with zero errors (Phase 4)
+12. `generated.rs` matches fresh bootstrap regen (Phase 4)
+13. `cargo test --workspace` — zero NEW failures vs pre-AU (Phase 4)
 
 ## Critical files
 

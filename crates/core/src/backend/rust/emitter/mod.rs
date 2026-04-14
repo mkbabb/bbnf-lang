@@ -19,7 +19,7 @@ mod seq;
 pub(crate) mod tape_prelude;
 mod ws;
 
-use bbnf_ir::{FnDescriptor, GrammarIR, IrRule, MapExpr, RuleId, TypeDesc};
+use bbnf_ir::{AltBranch, FnDescriptor, GrammarIR, IrNode, IrRule, MapExpr, RuleId, TypeDesc};
 use proc_macro2::TokenStream;
 
 use crate::backend::driver::analysis::BackendAnalysis;
@@ -30,6 +30,72 @@ use crate::backend::{
 };
 
 pub use super::emitter_types::{RustEmitCtx, RustEmitter};
+
+/// AT.1.1: Resolve the projected payload type for a node, including
+/// inlined Map/Constant/FnDescriptor nodes that appear after rule
+/// fusing.
+///
+/// This is the general replacement for the AQ.6-era `Ref(rid)` → type
+/// lookup. It walks:
+/// - `Ref(rid)` → look up in `ir.types`
+/// - `Map { fn_id, .. }` → derive from `FnDescriptor` variant
+/// - `Alt(branches)` → recurse; return the type iff all branches agree
+/// - `OptionalWhitespace(inner)` → recurse (ws is transparent)
+///
+/// Returns `None` for compound/non-scalar nodes.
+fn resolve_branch_type(node: &IrNode, ir: &GrammarIR) -> Option<TypeDesc> {
+    match node {
+        IrNode::Ref(rid) => ir
+            .types
+            .iter()
+            .find_map(|(r, t)| if *r == *rid { Some(t.clone()) } else { None }),
+        IrNode::Map { fn_id, .. } => {
+            let fn_desc = &ir.fns[*fn_id as usize];
+            match fn_desc {
+                FnDescriptor::NumberConvert => Some(TypeDesc::F64),
+                FnDescriptor::HexConvert { .. } => Some(TypeDesc::U32),
+                FnDescriptor::Expr { return_type, .. } => return_type.clone(),
+                FnDescriptor::EnumWrap { .. }
+                | FnDescriptor::BoxWrap
+                | FnDescriptor::SpanCapture => None,
+            }
+        }
+        IrNode::Alt(branches, _) => {
+            // For nested Alts (e.g., inlined `bool` rule), return the
+            // type only if ALL branches agree on a single type.
+            let mut result: Option<TypeDesc> = None;
+            for b in branches {
+                match resolve_branch_type(&b.node, ir) {
+                    Some(td) => match &result {
+                        None => result = Some(td),
+                        Some(existing) if *existing == td => {}
+                        Some(_) => return None, // heterogeneous nested Alt
+                    },
+                    None => return None, // non-scalar branch in nested Alt
+                }
+            }
+            result
+        }
+        IrNode::OptionalWhitespace(inner) => resolve_branch_type(inner, ir),
+        _ => None,
+    }
+}
+
+/// AT.1.1: Collect all distinct scalar payload types across Alt
+/// branches. Each branch is resolved via `resolve_branch_type`;
+/// types that satisfy `needs_payload_slot()` are deduplicated and
+/// returned in branch order.
+fn collect_alt_payload_types(branches: &[AltBranch], ir: &GrammarIR) -> Vec<TypeDesc> {
+    let mut types = Vec::new();
+    for b in branches {
+        if let Some(td) = resolve_branch_type(&b.node, ir) {
+            if td.needs_payload_slot() && !types.contains(&td) {
+                types.push(td);
+            }
+        }
+    }
+    types
+}
 
 impl Emitter for RustEmitter {
     type Output = TokenStream;
@@ -399,22 +465,17 @@ impl Emitter for RustEmitter {
             ctx.tape_surgery = None;
         }
 
-        // AQ.6.A: source the payload type directly from the projected
-        // `ir.types[rule_id]`. The CSP `project_types` pass already
-        // computed the rule's `TypeDesc`; the emitter just consumes
-        // the scalar shape here. F64, Bool, U8 — and anything else
-        // that satisfies `is_scalar_payload()` — uniformly route into
-        // the typed prelude / epilogue helpers and the typed
-        // `push_leaf_with_<T>` API.
-        ctx.payload_type = None;
+        // AT.1: source payload types from projected types + inlined
+        // node resolution. The CSP `project_types` pass computes each
+        // rule's `TypeDesc`; for Alt-bodied rules,
+        // `resolve_branch_type` walks inlined Map/Constant/FnDescriptor
+        // nodes to surface per-branch scalar types that the fusing
+        // passes hid from the rule-level type table.
+        ctx.payload_types.clear();
         ctx.payload_layout = None;
         ctx.aggregate_field_cursor = 0;
         if is_visible {
-            // AQ.6.B: prefer the aggregate layout when one is planned
-            // for this rule. The layout planner only emits an entry
-            // when every field is a scalar payload and the packed
-            // total fits in MAX_PAYLOAD_BYTES, so any `Some(layout)`
-            // here is unconditionally codegen-ready.
+            // AQ.6.B: prefer the aggregate layout when one is planned.
             if let Some(layout) = ir.payload_layouts.get(&rule.id) {
                 ctx.payload_layout = Some(layout.clone());
             } else {
@@ -424,28 +485,13 @@ impl Emitter for RustEmitter {
                     .iter()
                     .find_map(|(rid, td)| if *rid == rule.id { Some(td.clone()) } else { None })
                     .filter(|td| td.needs_payload_slot());
-                if direct.is_some() {
-                    ctx.payload_type = direct;
+                if let Some(td) = direct {
+                    ctx.payload_types = vec![td];
                 } else if is_alt {
-                    // For Alt-bodied rules where the rule's projected type
-                    // is non-scalar but a branch references a scalar-typed
-                    // rule (e.g. the `value` rule in JSON whose Alt
-                    // includes a `number` branch), surface the per-branch
-                    // scalar type so the epilogue picks the matching
-                    // `push_leaf_with_<T>`.
-                    if let bbnf_ir::IrNode::Alt(branches, _) = &rule.body {
-                        for b in branches {
-                            if let bbnf_ir::IrNode::Ref(rid) = &b.node {
-                                if let Some(td) = ir.types.iter().find_map(|(r, t)| {
-                                    if *r == *rid { Some(t.clone()) } else { None }
-                                }) {
-                                    if td.needs_payload_slot() {
-                                        ctx.payload_type = Some(td);
-                                        break;
-                                    }
-                                }
-                            }
-                        }
+                    // AT.1.1: collect ALL scalar types across Alt
+                    // branches, including inlined Map/Constant nodes.
+                    if let IrNode::Alt(branches, _) = &rule.body {
+                        ctx.payload_types = collect_alt_payload_types(branches, ir);
                     }
                 }
             }

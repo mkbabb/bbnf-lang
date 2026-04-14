@@ -125,12 +125,15 @@ impl RustEmitter {
         // the regex's `RegexInfo`; the emitter uses the strict path
         // unconditionally for tape payloads (matching the
         // `fused_number_rules` gating).
-        if matches!(ctx.payload_type, Some(TypeDesc::F64)) {
+        if ctx.has_payload_type(&TypeDesc::F64) {
             use parse_that::regex::classify::RegexClass;
             if matches!(opts.classify_regex(pattern), RegexClass::Numeric { .. }) {
+                let tag_set = ctx.payload_tag(&TypeDesc::F64).map(|tag| {
+                    quote! { __payload_tag = #tag; }
+                });
                 return quote! {
                     match ::parse_that::scan_number_strict_f64(state) {
-                        Some(__v) => { __payload_f64 = __v; __has_payload = true; Some(()) }
+                        Some(__v) => { __payload_f64 = __v; #tag_set __has_payload = true; Some(()) }
                         None => None,
                     }
                 };

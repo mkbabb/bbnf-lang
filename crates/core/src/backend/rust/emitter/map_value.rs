@@ -65,15 +65,14 @@ impl RustEmitter {
             };
         }
 
-        // AQ.6.A: when payload_type is F64, capture the scanned value
-        // into `__payload_f64` so the epilogue can store it via
-        // `push_leaf_with_f64`. NumberConvert is always JSON-class
-        // (lowered from `-> f64` on a JSON number regex), so we
-        // unconditionally use `scan_number_strict_f64`.
-        if matches!(ctx.payload_type, Some(TypeDesc::F64)) {
+        // AT.1: capture f64 when the payload type set includes F64.
+        if ctx.has_payload_type(&TypeDesc::F64) {
+            let tag_set = ctx.payload_tag(&TypeDesc::F64).map(|tag| {
+                quote! { __payload_tag = #tag; }
+            });
             quote! {
                 match ::parse_that::scan_number_strict_f64(state) {
-                    Some(__v) => { __payload_f64 = __v; __has_payload = true; Some(()) }
+                    Some(__v) => { __payload_f64 = __v; #tag_set __has_payload = true; Some(()) }
                     None => None,
                 }
             }
@@ -137,15 +136,18 @@ impl RustEmitter {
             };
         }
 
-        // AQ.6.A: when a scalar payload is active and the map
-        // expression is a matching constant literal, capture the
-        // value into the typed payload variable so the epilogue
-        // stores it via the matching `push_leaf_with_<T>`.
-        if let Some(td) = ctx.payload_type.as_ref() {
+        // AT.1: check if the map expression produces a constant
+        // whose type is in the current rule's payload_types set.
+        // If so, capture the value into the typed payload variable
+        // and set the tag (for multi-type Alts).
+        for td in &ctx.payload_types {
             if let Some(payload_setter) = scalar_payload_setter(td, expr) {
+                let tag_set = ctx.payload_tag(td).map(|tag| {
+                    quote! { __payload_tag = #tag; }
+                });
                 return quote! {
                     match ({ #inner }) {
-                        Some(_) => { #payload_setter; __has_payload = true; Some(()) }
+                        Some(_) => { #payload_setter; #tag_set __has_payload = true; Some(()) }
                         None => None,
                     }
                 };

@@ -74,15 +74,17 @@ pub struct RustEmitCtx {
     /// bodies cannot clobber outer Alt contexts. Pushed by
     /// `save_alt_context`, popped by `restore_alt_context`.
     alt_context_stack: Vec<(Option<syn::Ident>, Option<TapeSurgeryCtx>)>,
-    /// AQ.6.A: the rule body's projected scalar payload type, sourced
-    /// directly from `ir.types[rule_id]` in `pre_compile_rule_body`.
-    /// `Some(td)` iff `td.is_scalar_payload()` — Span / Bool / U8 / I8 /
-    /// U16 / I16 / U32 / I32 / U64 / I64 / F64. The rule prelude declares
-    /// the matching `__payload_<T>` local (or `__payload_lo`/`__payload_hi`
-    /// for Span); the body sets it via the leaf emitter; the rule epilogue
-    /// selects the matching `push_leaf_with_<T>` (or `push_leaf` when
-    /// `__has_payload` is false).
-    pub payload_type: Option<TypeDesc>,
+    /// AT.1: ordered set of scalar payload types active for the
+    /// current rule. For non-Alt rules with a single scalar type,
+    /// this contains exactly one element. For Alt-bodied rules,
+    /// this contains all distinct scalar types across branches
+    /// (e.g., `[F64, Bool, U8]` for JSON's `value` rule).
+    ///
+    /// The prelude declares a `__payload_<T>` local for each type.
+    /// For multi-type Alts, a `__payload_tag: u8` local selects the
+    /// matching `push_leaf_with_<T>` in the epilogue (tag = 1-based
+    /// index into this vec; 0 = no payload).
+    pub payload_types: Vec<TypeDesc>,
     /// AQ.6.B: the rule body's projected aggregate payload layout,
     /// sourced from `ir.payload_layouts` in `pre_compile_rule_body`.
     /// `Some(layout)` iff the rule's `TypeDesc` is a `Tuple` of scalars
@@ -117,10 +119,32 @@ impl RustEmitCtx {
             branch_idx_ident: None,
             tape_surgery: None,
             alt_context_stack: Vec::new(),
-            payload_type: None,
+            payload_types: Vec::new(),
             payload_layout: None,
             aggregate_field_cursor: 0,
         }
+    }
+
+    /// AT.1: check whether a given scalar type should be captured
+    /// into a payload variable. True when the type appears in the
+    /// current rule's payload_types set.
+    pub fn has_payload_type(&self, td: &TypeDesc) -> bool {
+        self.payload_types.iter().any(|t| t == td)
+    }
+
+    /// AT.1: return the 1-based tag for a payload type in a multi-type
+    /// Alt. Returns `None` when payload_types has at most one element
+    /// (single-type path doesn't use tags). Returns `Some(tag)` when
+    /// multi-type — the tag selects the right `push_leaf_with_<T>` in
+    /// the epilogue.
+    pub fn payload_tag(&self, td: &TypeDesc) -> Option<u8> {
+        if self.payload_types.len() <= 1 {
+            return None;
+        }
+        self.payload_types
+            .iter()
+            .position(|t| t == td)
+            .map(|i| (i + 1) as u8)
     }
 
     /// AQ.6.B: advance the aggregate-field cursor and return a

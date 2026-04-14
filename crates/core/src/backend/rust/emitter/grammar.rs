@@ -52,10 +52,13 @@ impl RustEmitter {
         // `fused_number_rules` is exclusively the strict numeric
         // shape (`reject_leading_zero: true`), so unconditionally use
         // `scan_number_strict_f64`.
-        if matches!(ctx.payload_type, Some(TypeDesc::F64)) {
+        if ctx.has_payload_type(&TypeDesc::F64) {
+            let tag_set = ctx.payload_tag(&TypeDesc::F64).map(|tag| {
+                quote! { __payload_tag = #tag; }
+            });
             Some(quote! {
                 match ::parse_that::scan_number_strict_f64(state) {
-                    Some(__v) => { __payload_f64 = __v; __has_payload = true; Some(()) }
+                    Some(__v) => { __payload_f64 = __v; #tag_set __has_payload = true; Some(()) }
                     None => None,
                 }
             })
@@ -64,27 +67,6 @@ impl RustEmitter {
                 (::parse_that::scan_number_strict_f64(state)).map(|_| ())
             })
         }
-    }
-
-    /// AQ.6.A: detect whether a rule has a scalar payload TypeDesc,
-    /// returning the matching `TypeDesc` for the body emitter to
-    /// thread through. Sources from `ir.types[rule_id]` only —
-    /// `project_types` already infers the right shape; the emitter
-    /// simply consumes it.
-    ///
-    /// Currently returns `Some(TypeDesc::F64)` whenever the rule
-    /// (or a directly-referenced rule, when called on the body of an
-    /// Alt branch) projects as F64. Bool / U8 payloads on Alt-bodied
-    /// rules are detected separately through the same lookup —
-    /// `pre_compile_rule_body` checks the rule type once per rule.
-    pub(in crate::backend::rust) fn has_scalar_payload_type<'a>(
-        rule: &IrRule,
-        ir: &'a GrammarIR,
-    ) -> Option<&'a TypeDesc> {
-        ir.types
-            .iter()
-            .find_map(|(rid, td)| if *rid == rule.id { Some(td) } else { None })
-            .filter(|td| td.needs_payload_slot())
     }
 
     /// Look up the materialization class for a rule's body node.
@@ -185,43 +167,21 @@ impl RustEmitter {
         let rule_idx_u8 = Self::variant_idx(rule);
 
         let (prelude, epilogue) = if is_alt_body {
-            // AR.1.1: Alt-bodied rules stamp `rule.id` into
-            // `variant_idx` (rule identity, always) and `__branch_idx`
-            // into `meta_idx` (branch identity). The Alt emitter sets
-            // `__branch_idx` per arm.
-            //
-            // AQ.6.A: payload variables are declared based on
-            // ctx.payload_type (TypeDesc directly). The epilogue checks
-            // __has_payload at runtime to decide between
-            // push_leaf_with_<T> and plain push_leaf. Unused locals
-            // compile to no-ops.
+            // AT.1: Alt-bodied rules use multi-type payload support.
+            // The prelude declares a `__payload_<T>` local for each
+            // distinct scalar type across branches, plus a
+            // `__payload_tag` discriminator for multi-type Alts.
             match class {
                 MaterializationClass::MustTape => {
-                    // AM.3: per-branch mark_children. The prelude
-                    // declares __has_children + __children; compound
-                    // branches set them via the Alt emitter. The
-                    // epilogue checks __has_children at runtime.
-                    emit_alt_mustape_prelude_epilogue(rule_idx_u8, ctx.payload_type.as_ref())
+                    emit_alt_mustape_prelude_epilogue(rule_idx_u8, &ctx.payload_types)
                 }
                 MaterializationClass::TapeSpanOnly => {
-                    // AQ.6.A: payload-bearing Alt leaves use
-                    // push_leaf_with_<T> based on ctx.payload_type.
-                    emit_alt_span_only_prelude_epilogue(rule_idx_u8, ctx.payload_type.as_ref())
+                    emit_alt_span_only_prelude_epilogue(rule_idx_u8, &ctx.payload_types)
                 }
                 MaterializationClass::TransparentElide => unreachable!(),
             }
         } else {
-            // AQ.6.B: aggregate payload layout takes precedence over
-            // the legacy scalar payload — when both are set the
-            // aggregate path subsumes the scalar capture by writing
-            // the scalar bytes into the aggregate buffer at the
-            // layout-recorded offset.
             if let Some(layout) = ctx.payload_layout.as_ref() {
-                // AR.9: detect KV-pair shape [Span, scalar] so the
-                // epilogue stamps TapeKind::KvPair instead of
-                // TapeKind::Span. The view layer reads the key span
-                // from (span_lo, span_hi) and the value from the
-                // aggregate payload — no child traversal.
                 let kv_pair = ir
                     .types
                     .iter()
@@ -248,10 +208,8 @@ impl RustEmitter {
                         emit_must_tape_epilogue(rule_idx_u8),
                     ),
                     MaterializationClass::TapeSpanOnly => {
-                        // AQ.6.A: payload-bearing leaf rules use the
-                        // generalized scalar prelude / epilogue, which
-                        // selects `push_leaf_with_<rust_ident(T)>`.
-                        match ctx.payload_type.as_ref() {
+                        // Non-Alt rules have at most one payload type.
+                        match ctx.payload_types.first() {
                             Some(td) if td.is_scalar_payload() => (
                                 emit_tape_span_only_scalar_prelude(td),
                                 emit_tape_span_only_scalar_epilogue(td, rule_idx_u8),
@@ -524,256 +482,174 @@ impl RustEmitter {
 /// Per-branch tape surgery (AM.3) is layered on top of this: the Alt
 /// emitter sets `__has_children` / `__children` per arm; this pair
 /// just picks the right `push_leaf_with_<T>` for the leaf-branch
-/// case based on `payload_type`. When `payload_type` is `None`, the
-/// epilogue uses bare `push_leaf` for leaf branches.
-fn emit_alt_mustape_prelude_epilogue(
-    rule_idx_u8: u8,
-    payload_type: Option<&TypeDesc>,
-) -> (TokenStream, TokenStream) {
-    let variant_lit = rule_idx_u8;
-    let scalar = payload_type.filter(|td| td.is_scalar_payload());
-    match scalar {
-        // AS.2: Span payload declares two u32 locals and commits via
-        // `push_leaf_with_Span(tape, kind, span_lo, span_hi, vi, mi,
-        // payload_lo, payload_hi)`.
-        Some(td) if matches!(td, TypeDesc::Span) => (
-            quote! {
-                let __span_lo = state.offset as u32;
-                let __variant_idx: u8 = #variant_lit;
-                let mut __branch_idx: u8 = 0;
-                let mut __has_children = false;
-                let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
+// ── AT.1: Multi-type payload prelude/epilogue helpers ──────────────
+//
+// Supports zero, one, or many scalar payload types per Alt rule.
+// Single-type: direct `push_leaf_with_<T>` with `__has_payload` guard.
+// Multi-type: `__payload_tag` discriminator selects the right push in
+// the epilogue via a generated match arm per type.
+
+/// Emit `let mut __payload_<T>: T = init;` declarations for each type.
+fn emit_payload_declarations(types: &[TypeDesc]) -> TokenStream {
+    let mut decls = TokenStream::new();
+    for td in types {
+        if matches!(td, TypeDesc::Span) {
+            decls.extend(quote! {
                 let mut __payload_lo: u32 = 0;
                 let mut __payload_hi: u32 = 0;
-                let mut __has_payload = false;
-            },
-            quote! {
-                if __has_children {
-                    Some(::bbnf::runtime::tape::TapeBuilder::push_compound(
-                        tape,
-                        ::bbnf::runtime::tape::TapeKind::Rule,
-                        __children,
-                        __span_lo,
-                        state.offset as u32,
-                        __variant_idx,
-                        __branch_idx,
-                    ))
-                } else if __has_payload {
-                    Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with_Span(
-                        tape,
-                        ::bbnf::runtime::tape::TapeKind::Span,
-                        __span_lo,
-                        state.offset as u32,
-                        __variant_idx,
-                        __branch_idx,
-                        __payload_lo,
-                        __payload_hi,
-                    ))
-                } else {
-                    Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                        tape,
-                        ::bbnf::runtime::tape::TapeKind::Span,
-                        __span_lo,
-                        state.offset as u32,
-                        __variant_idx,
-                        __branch_idx,
-                    ))
-                }
-            },
-        ),
-        Some(td) => {
-            let rust_ident = td.rust_ident().expect("scalar TypeDesc has rust_ident");
+            });
+        } else {
+            let rust_ident = td.rust_ident().expect("scalar TypeDesc");
             let payload_local = format_ident!("__payload_{}", rust_ident);
             let payload_ty = format_ident!("{}", rust_ident);
-            let push_with_ident = format_ident!("push_leaf_with_{}", rust_ident);
             let init = scalar_zero_init_token(td);
-            (
-                quote! {
-                    let __span_lo = state.offset as u32;
-                    let __variant_idx: u8 = #variant_lit;
-                    let mut __branch_idx: u8 = 0;
-                    let mut __has_children = false;
-                    let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
-                    let mut #payload_local: #payload_ty = #init;
-                    let mut __has_payload = false;
-                },
-                quote! {
-                    if __has_children {
-                        Some(::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                        ))
-                    } else if __has_payload {
-                        Some(::bbnf::runtime::tape::TapeBuilder::#push_with_ident(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Span,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                            #payload_local,
-                        ))
-                    } else {
-                        Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Span,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                        ))
-                    }
-                },
+            decls.extend(quote! {
+                let mut #payload_local: #payload_ty = #init;
+            });
+        }
+    }
+    if !types.is_empty() {
+        decls.extend(quote! { let mut __has_payload = false; });
+    }
+    if types.len() > 1 {
+        decls.extend(quote! { let mut __payload_tag: u8 = 0; });
+    }
+    decls
+}
+
+/// Emit the payload push expression for a single type.
+fn emit_push_leaf_with(td: &TypeDesc) -> TokenStream {
+    if matches!(td, TypeDesc::Span) {
+        quote! {
+            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with_Span(
+                tape,
+                ::bbnf::runtime::tape::TapeKind::Span,
+                __span_lo,
+                state.offset as u32,
+                __variant_idx,
+                __branch_idx,
+                __payload_lo,
+                __payload_hi,
             )
         }
-        None => (
-            quote! {
-                let __span_lo = state.offset as u32;
-                let mut __branch_idx: u8 = 0;
-                let mut __has_children = false;
-                let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
-            },
-            quote! {
-                {
-                    let __variant_idx: u8 = #variant_lit;
-                    if __has_children {
-                        Some(::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                        ))
-                    } else {
-                        Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Span,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                        ))
-                    }
-                }
-            },
-        ),
+    } else {
+        let rust_ident = td.rust_ident().expect("scalar TypeDesc");
+        let payload_local = format_ident!("__payload_{}", rust_ident);
+        let push_with_ident = format_ident!("push_leaf_with_{}", rust_ident);
+        quote! {
+            ::bbnf::runtime::tape::TapeBuilder::#push_with_ident(
+                tape,
+                ::bbnf::runtime::tape::TapeKind::Span,
+                __span_lo,
+                state.offset as u32,
+                __variant_idx,
+                __branch_idx,
+                #payload_local,
+            )
+        }
     }
 }
 
-/// AQ.6.A: emit the prelude + epilogue pair for an Alt-bodied
-/// `TapeSpanOnly` rule, parameterized by the projected scalar payload
-/// type. When `payload_type` is `None`, emits bare `push_leaf`.
-fn emit_alt_span_only_prelude_epilogue(
-    rule_idx_u8: u8,
-    payload_type: Option<&TypeDesc>,
-) -> (TokenStream, TokenStream) {
-    let variant_lit = rule_idx_u8;
-    let scalar = payload_type.filter(|td| td.is_scalar_payload());
-    match scalar {
-        // AS.2: Span payload declares two u32 locals and commits via
-        // `push_leaf_with_Span`.
-        Some(td) if matches!(td, TypeDesc::Span) => (
-            quote! {
-                let __span_lo = state.offset as u32;
-                let __variant_idx: u8 = #variant_lit;
-                let mut __branch_idx: u8 = 0;
-                let mut __payload_lo: u32 = 0;
-                let mut __payload_hi: u32 = 0;
-                let mut __has_payload = false;
-            },
+/// Emit the payload epilogue: either direct push (single type) or
+/// match on `__payload_tag` (multi-type).
+fn emit_payload_epilogue(types: &[TypeDesc]) -> TokenStream {
+    let push_leaf = quote! {
+        ::bbnf::runtime::tape::TapeBuilder::push_leaf(
+            tape,
+            ::bbnf::runtime::tape::TapeKind::Span,
+            __span_lo,
+            state.offset as u32,
+            __variant_idx,
+            __branch_idx,
+        )
+    };
+    match types.len() {
+        0 => quote! { Some(#push_leaf) },
+        1 => {
+            let push_with = emit_push_leaf_with(&types[0]);
             quote! {
                 if __has_payload {
-                    Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with_Span(
-                        tape,
-                        ::bbnf::runtime::tape::TapeKind::Span,
-                        __span_lo,
-                        state.offset as u32,
-                        __variant_idx,
-                        __branch_idx,
-                        __payload_lo,
-                        __payload_hi,
-                    ))
+                    Some(#push_with)
                 } else {
-                    Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                        tape,
-                        ::bbnf::runtime::tape::TapeKind::Span,
-                        __span_lo,
-                        state.offset as u32,
-                        __variant_idx,
-                        __branch_idx,
-                    ))
+                    Some(#push_leaf)
                 }
-            },
-        ),
-        Some(td) => {
-            let rust_ident = td.rust_ident().expect("scalar TypeDesc has rust_ident");
-            let payload_local = format_ident!("__payload_{}", rust_ident);
-            let payload_ty = format_ident!("{}", rust_ident);
-            let push_with_ident = format_ident!("push_leaf_with_{}", rust_ident);
-            let init = scalar_zero_init_token(td);
-            (
-                quote! {
-                    let __span_lo = state.offset as u32;
-                    let __variant_idx: u8 = #variant_lit;
-                    let mut __branch_idx: u8 = 0;
-                    let mut #payload_local: #payload_ty = #init;
-                    let mut __has_payload = false;
-                },
-                quote! {
-                    if __has_payload {
-                        Some(::bbnf::runtime::tape::TapeBuilder::#push_with_ident(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Span,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                            #payload_local,
-                        ))
-                    } else {
-                        Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Span,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                        ))
-                    }
-                },
-            )
+            }
         }
-        None => (
+        _ => {
+            // Multi-type: match on __payload_tag.
+            let arms: Vec<TokenStream> = types
+                .iter()
+                .enumerate()
+                .map(|(i, td)| {
+                    let tag = (i + 1) as u8;
+                    let push_with = emit_push_leaf_with(td);
+                    quote! { #tag => Some(#push_with), }
+                })
+                .collect();
             quote! {
-                let __span_lo = state.offset as u32;
-                let __variant_idx: u8 = #variant_lit;
-                let mut __branch_idx: u8 = 0;
-            },
-            quote! {
-                Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(
+                match __payload_tag {
+                    #(#arms)*
+                    _ => Some(#push_leaf),
+                }
+            }
+        }
+    }
+}
+
+/// AT.1: emit prelude + epilogue for an Alt-bodied `MustTape` rule.
+fn emit_alt_mustape_prelude_epilogue(
+    rule_idx_u8: u8,
+    payload_types: &[TypeDesc],
+) -> (TokenStream, TokenStream) {
+    let variant_lit = rule_idx_u8;
+    let payload_decls = emit_payload_declarations(payload_types);
+    let payload_push = emit_payload_epilogue(payload_types);
+    (
+        quote! {
+            let __span_lo = state.offset as u32;
+            let __variant_idx: u8 = #variant_lit;
+            let mut __branch_idx: u8 = 0;
+            let mut __has_children = false;
+            let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
+            #payload_decls
+        },
+        quote! {
+            if __has_children {
+                Some(::bbnf::runtime::tape::TapeBuilder::push_compound(
                     tape,
-                    ::bbnf::runtime::tape::TapeKind::Span,
+                    ::bbnf::runtime::tape::TapeKind::Rule,
+                    __children,
                     __span_lo,
                     state.offset as u32,
                     __variant_idx,
                     __branch_idx,
                 ))
-            },
-        ),
-    }
+            } else {
+                #payload_push
+            }
+        },
+    )
 }
 
-/// AQ.6.A: zero-initializer expression for a scalar `TypeDesc`.
-/// Mirrors `tape_prelude::scalar_zero_init`. Inlined here so the Alt
-/// prelude builders can share the policy without taking a dependency
-/// on a private helper.
+/// AT.1: emit prelude + epilogue for an Alt-bodied `TapeSpanOnly` rule.
+fn emit_alt_span_only_prelude_epilogue(
+    rule_idx_u8: u8,
+    payload_types: &[TypeDesc],
+) -> (TokenStream, TokenStream) {
+    let variant_lit = rule_idx_u8;
+    let payload_decls = emit_payload_declarations(payload_types);
+    let payload_push = emit_payload_epilogue(payload_types);
+    (
+        quote! {
+            let __span_lo = state.offset as u32;
+            let __variant_idx: u8 = #variant_lit;
+            let mut __branch_idx: u8 = 0;
+            #payload_decls
+        },
+        payload_push,
+    )
+}
+
 fn scalar_zero_init_token(td: &TypeDesc) -> TokenStream {
     match td {
         TypeDesc::F64 => quote! { 0.0 },

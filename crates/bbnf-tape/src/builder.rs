@@ -63,14 +63,15 @@ impl TapeBuilder {
 
     /// Construct a builder sized for `expected` records.
     ///
-    /// Payloads grow lazily — only allocated when a rule actually
-    /// writes a scalar via `push_leaf_with_*`. Compound-heavy
-    /// grammars (CSS, Sheets) never touch the payloads Vec.
+    /// Pre-allocates records and a modest payload buffer.
+    /// The payload heuristic (expected/8 * 8 bytes) covers typical
+    /// scalar-heavy grammars (JSON numbers ~50% of records) without
+    /// over-allocating for compound-heavy grammars (CSS, Sheets).
     pub fn with_capacity(expected: usize) -> Self {
         Self {
             tape: Tape::with_capacity(expected),
             error: None,
-            payloads: Vec::new(),
+            payloads: Vec::with_capacity(expected / 8 * 8),
         }
     }
 

@@ -31,6 +31,35 @@ Operational protocol: see `/INSTRUCTIONS.md` at repo root.
 - **Prior tranche gates**: all 12 PRESENT. 336 tests pass, 0 fail.
   Egraph has 6 clones (claim was 5).
 
+### Profiling results (pre-AT baseline)
+
+**JSON** (from prior analysis):
+- 10 `.map(|_| ())`, f64 payload never fires, bool never fires
+- KvPair never emits, 8 push_compound, 1 push_leaf, 1 push_leaf_with_u8
+
+**CSS L4** (133K expanded lines, 76 functions):
+- 234 push_compound, 21 push_leaf, 1 push_leaf_with (91% compound)
+- 202 `.map(|_| ())` — mostly WS discard
+- 319 scan_ws_block_comments (89% of scanner calls)
+- Zero CSS fused scanners (css_ident_fast, css_number_scan_f64 absent)
+- Beats lightningcss 4-6x, cssparser 1.1-1.4x
+
+**Google Sheets** (17K expanded lines, 56 functions):
+- 37 push calls, ALL push_compound — zero push_leaf, zero typed payloads
+- 50 `.map(|_| ())`
+- Only digit scanners — no scan_ident, no scan_quoted
+- 97-130 MB/s parse, 42-49 MB/s format
+
+**BBNF self-hosting** (25K lines, 106 functions):
+- 90 push_compound, 15 push_leaf — 86/14 split
+- 106 `.map(|_| ())` — one per function
+- Parse is 1-2% of compile time — not a bottleneck
+- ebnf slowest (172 MB/s), css_pretty fastest (490 MB/s)
+
+**Key insight**: the projection system does not fire for ANY grammar.
+Every grammar uses >85% push_compound with near-zero typed payloads.
+The `.map(|_| ())` pattern is universal (10-202 per grammar).
+
 ## Phase 1 — Projection truth
 
 Status: NOT STARTED

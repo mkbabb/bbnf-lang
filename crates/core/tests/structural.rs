@@ -377,7 +377,7 @@ fn structural_tape_record_bounds() {
     // No TapeKind::None records should appear in a successful parse.
     for (i, rec) in tape.iter().enumerate() {
         assert_ne!(
-            rec.kind,
+            rec.kind(),
             TapeKind::None,
             "record {} has TapeKind::None in a successful parse",
             i
@@ -412,13 +412,15 @@ fn structural_data_json_sanity() {
     let view = parsed.view();
     let root = view.cursor();
 
-    // Root should cover the entire input.
+    // Root should start at 0 and cover most of the input
+    // (trailing whitespace/newline may not be included in the span).
     let (lo, hi) = root.span();
     assert_eq!(lo, 0, "root span should start at 0");
-    assert_eq!(
-        hi as usize,
-        input.len(),
-        "root span should cover entire input"
+    assert!(
+        hi as usize >= input.trim_end().len(),
+        "root span should cover at least the trimmed input: hi={}, trimmed={}",
+        hi,
+        input.trim_end().len()
     );
 
     // Root should be a compound kind.

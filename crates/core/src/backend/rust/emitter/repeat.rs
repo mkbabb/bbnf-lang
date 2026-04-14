@@ -23,8 +23,6 @@ use crate::backend::{SepByConfig, ValuePlacement};
 use super::RustEmitCtx;
 use super::RustEmitter;
 
-const META_IDX_ZERO: u8 = 0;
-
 impl RustEmitter {
     pub(super) fn emit_repeat_many_impl(
         &mut self,

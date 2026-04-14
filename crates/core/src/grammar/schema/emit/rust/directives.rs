@@ -4,8 +4,8 @@
 //!
 //! - `pub mod cst_directives { ... }` — one `#[derive(Clone, Copy)]`
 //!   struct per directive variant. Struct fields are tape-native:
-//!   pre-sliced `&'p str` for `Identifier` / `TextSpan`, raw span
-//!   tuples for `SpanRaw`, and `TapeCursor<'p>` for compound
+//!   pre-sliced `&'p str` for `Identifier` / `TextSpan`,
+//!   and `TapeCursor<'p>` for compound
 //!   (`Inner` / `OptionInner` / `Slice`) slots so callers can
 //!   construct whatever typed view they need over the referenced
 //!   record without the schema layer having to name the child
@@ -31,7 +31,6 @@
 //! the pre-AC.2 emitter; only the extraction codegen is rewritten
 //! to walk the tape instead of pattern-matching enum variants.
 
-use bbnf_ir::TypeDesc;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
@@ -77,7 +76,6 @@ pub(super) fn generate_module(schema: &CstSchema) -> TokenStream {
                 DirectiveFieldKind::Identifier | DirectiveFieldKind::TextSpan => {
                     quote! { &'p str }
                 }
-                DirectiveFieldKind::SpanRaw => quote! { (u32, u32) },
                 DirectiveFieldKind::Inner | DirectiveFieldKind::Slice => {
                     quote! { super::#node_view_ident<'p> }
                 }
@@ -174,9 +172,6 @@ fn generate_helper(
                     &input[__lo as usize..__hi as usize]
                 }
             },
-            DirectiveFieldKind::SpanRaw => quote! {
-                #child_ident.span()
-            },
             DirectiveFieldKind::Inner | DirectiveFieldKind::Slice => quote! {
                 super::#node_view_ident::from_cursor(#child_ident, input)
             },
@@ -249,8 +244,6 @@ enum DirectiveFieldKind {
     /// Rule child whose full span text is the slot's value — extract
     /// via `input[lo..hi]` into `&'p str`.
     TextSpan,
-    /// Raw `(lo, hi)` span tuple of the rule child.
-    SpanRaw,
     /// Rule child as a raw `TapeCursor<'p>`; callers wrap it in the
     /// appropriate view type.
     Inner,

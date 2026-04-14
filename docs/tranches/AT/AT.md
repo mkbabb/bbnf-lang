@@ -185,9 +185,24 @@ Expand all 6 grammars. For each, verify:
 - Every `[Span, scalar]` tuple produces `TapeKind::KvPair`
 - Zero `.map(|_| ())` on typed scanner returns
 
-### Phase 2 — Regression redress: meta_idx + capacity (~1 day)
+### Phase 2 — Regression redress (~2 days)
 
-#### AT.2.1 Fold meta_idx into TapeRec
+#### AT.2.1 Guard SIMD number scanner with digit-count threshold
+
+Primary regression cause (verified: +31% on canada when disabled).
+`scan_digits_simd()` in `parse-that/src/parsers/scan/number.rs:132`
+loads a 16-byte NEON vector even for 2-digit runs (85.6% of canada
+numbers). The NEON path costs ~16 cycles for 2 digits vs ~10 for
+scalar SWAR.
+
+Fix: skip `scan_digits_simd` for the integer part entirely (short
+runs are the norm), or gate on `remaining >= 9` before invoking.
+Keep SIMD only for the fractional part where long digit runs
+(12-15 bytes) actually benefit.
+
+Hard gate: JSON canada >= 1350 MB/s (vs 1046 currently).
+
+#### AT.2.2 Fold meta_idx into TapeRec
 
 Eliminate the parallel `meta: Vec<u8>` by packing meta_idx into
 the TapeRec. Two options:
@@ -208,8 +223,7 @@ reads from the packed TapeRec field. All `tape.meta.push(meta_idx)`
 calls are replaced with writes to the packed field.
 
 Hard gate: `meta: Vec<u8>` does not exist. `meta_idx()` reads from
-TapeRec. `cargo test -p bbnf-tape` passes. JSON canada throughput
-recovers to >= 1500 MB/s.
+TapeRec. `cargo test -p bbnf-tape` passes.
 
 #### AT.2.2 Verify capacity heuristic is optimal
 
@@ -392,8 +406,8 @@ through the IR path.
 3. `push_leaf_with_bool` appears in expanded JSON parser (Phase 1)
 4. `TapeKind::KvPair` appears in expanded JSON pair (Phase 1)
 5. General `resolve_branch_type` handles Map/Constant/FnDescriptor (Phase 1)
-6. `meta: Vec<u8>` eliminated from Tape/TapeBuilder (Phase 2)
-7. JSON canada >= 1500 MB/s (Phase 2)
+6. JSON canada >= 1350 MB/s with SIMD guard (Phase 2)
+7. `meta: Vec<u8>` eliminated from Tape/TapeBuilder (Phase 2)
 8. `decode_json_string_to_arena` with test coverage (Phase 3)
 9. `json_monolithic_value` bench directly comparable to sonic-rs (Phase 3)
 10. Fresh samply profiles with delta vs AR-baseline (Phase 4)

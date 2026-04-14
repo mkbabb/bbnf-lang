@@ -56,6 +56,20 @@ Operational protocol: see `/INSTRUCTIONS.md` at repo root.
 - Parse is 1-2% of compile time — not a bottleneck
 - ebnf slowest (172 MB/s), css_pretty fastest (490 MB/s)
 
+**JSON regression root cause** (verified from isolated worktree):
+- **Primary: SIMD number scanner** (+31% on canada when disabled).
+  85.6% of canada numbers have 2 integer digits — NEON path costs
+  ~16 cycles for 2 digits vs ~10 for scalar SWAR. Fix: guard SIMD
+  with digit-count threshold (skip for integer part, or require 9+
+  remaining bytes).
+- **Secondary: meta Vec** (~6-10% estimated). With SIMD disabled,
+  canada is still 23% below AQ (1374 vs 1796 MB/s).
+- **NOT a factor: capacity heuristic** (<2% impact).
+- **Chronic waste: f64 discard** (~18% of parse time). Eisel-Lemire
+  runs and result thrown away via `.map(|_| ())`. Exists in both
+  AQ and AR — not a regression but a permanent tax that Phase 1
+  projection fixes will eliminate.
+
 **Key insight**: the projection system does not fire for ANY grammar.
 Every grammar uses >85% push_compound with near-zero typed payloads.
 The `.map(|_| ())` pattern is universal (10-202 per grammar).

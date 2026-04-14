@@ -13,7 +13,8 @@ wasm/.cargo/
 dist/
 extension/server/
 
-.cargo/
+/.cargo/*
+!/.cargo/config.toml
 .claude/
 
 # Playwright MCP

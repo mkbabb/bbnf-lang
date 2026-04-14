@@ -1,0 +1,32 @@
+# Local development overrides — resolve crates from sibling repos instead of crates.io.
+# This file is tracked so isolated worktrees inherit the same path-patched environment.
+
+# Tranche AG.0: optional fast linker for debug builds.
+#
+# Apple's default ld64 is acceptable. To opt into a faster linker, install
+# mold (`brew install mold`) or LLVM lld (`brew install llvm` — adds `ld.lld`
+# to `/opt/homebrew/opt/llvm/bin/`), then uncomment the matching block below
+# and ensure the linker binary is on PATH. Removing this whole section also
+# works.
+#
+# [target.aarch64-apple-darwin]
+# rustflags = ["-C", "link-arg=-fuse-ld=/opt/homebrew/bin/mold"]
+#
+# [target.aarch64-apple-darwin]
+# rustflags = ["-C", "link-arg=-fuse-ld=/opt/homebrew/opt/llvm/bin/ld.lld"]
+
+[patch.crates-io]
+pprint = { path = "../pprint/rust" }
+pprint_derive = { path = "../pprint/rust/derive" }
+parse_that = { path = "../parse-that/rust/parse_that" }
+bbnf-regex = { path = "../parse-that/rust/regex" }
+gorgeous = { path = "crates/gorgeous" }
+bbnf = { path = "crates/core" }
+bbnf-ir = { path = "crates/ir" }
+bbnf_derive = { path = "crates/derive" }
+# Tranche AA.2: csp-solver is now a workspace member at crates/csp-solver/.
+csp-solver = { path = "crates/csp-solver" }
+# Tranche H: expose the local egraph substrate so bbnf-regex's HIR
+# e-graph resolves against the same path-patched crate bbnf-ir uses.
+egraph = { path = "crates/egraph" }
+egraph-derive = { path = "crates/egraph-derive" }

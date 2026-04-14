@@ -39,11 +39,39 @@ payloads are computed but never stored — a correctness bug.
 
 ## Phase 1 — Fix projection activation
 
-Status: NOT STARTED
+Status: IN PROGRESS
+
+### AU.1.1 branch_pushes_children investigation
+
+Commit 908067f added TransparentElide materialization check + nested
+Alt/Skip/Next/Minus recursion + reverted payload pre-alloc to lazy.
+
+**Critical finding**: JSON leaf rules (null, bool, number, string)
+have `MaterializationClass::MustTape` (not TransparentElide), yet NO
+parse function is emitted. Only `_prettify` variants exist. The rules
+ARE inlined at call sites in `__value`, but NOT by the `is_transparent`
+metadata — by some other mechanism (possibly the driver's inline
+analysis or the `@pretty` codegen path).
+
+Agent investigating the exact elision mechanism.
 
 ## Phase 2 — CSS scanner activation
 
-Status: NOT STARTED
+Status: IN PROGRESS
+
+### AU.2.1 WS scanner
+`scan_ws_block_comments` IS the fused scanner — 319 call sites are
+correct. The "zero fused CSS scanners" claim was incorrect. The
+scanner handles both `\s` and `/* */` in one pass. No separate
+`css_ws_comment_fast` exists or is needed.
+
+### AU.2.2 Ident config
+7 of 8 ident scans use `DEFAULT_IDENT_CONFIG`. 1 uses `CSS_IDENT_CONFIG`.
+The CSS ident regex `[a-zA-Z_\x80-\xff][\w\x80-\xff-]*` does NOT have
+leading dash in the first char class — it starts with `[a-zA-Z_\x80-\xff]`.
+So `DEFAULT_IDENT_CONFIG` is actually correct for most CSS idents.
+Only `selectorIdent` (which allows leading dash via `(?:-?...)`) needs
+CSS config. Current routing is correct.
 
 ## Phase 3 — String decode + honest JSON bench
 

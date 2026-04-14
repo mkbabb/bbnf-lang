@@ -38,7 +38,7 @@ const BBNF_RULE_COUNT: usize = 52;
 const JSON_RULE_COUNT: usize = 10;
 const EBNF_RULE_COUNT: usize = 14;
 const CSS_PRETTY_RULE_COUNT: usize = 20;
-const CSS_L4_RULE_COUNT: usize = 184;
+const CSS_L4_RULE_COUNT: usize = 185;
 const GOOGLE_SHEETS_RULE_COUNT: usize = 38;
 
 // ---------------------------------------------------------------------

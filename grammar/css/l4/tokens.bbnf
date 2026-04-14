@@ -4,6 +4,6 @@
 //   - vendor prefixes (leading `-` for -moz-, -webkit-)
 //   - CSS escape sequences (\: \. etc.) for Tailwind-style class names
 
-ident  = /[a-zA-Z_][\w-]*/ ;
-selectorIdent = /(?:-?[a-zA-Z_]|\\[^\n])(?:[\w-]|\\[^\n])*/ ;
+ident  = /[a-zA-Z_\x80-\xff][\w\x80-\xff-]*/ ;
+selectorIdent = /(?:-?[a-zA-Z_\x80-\xff]|\\[^\n])(?:[\w\x80-\xff-]|\\[^\n])*/ ;
 string = /"(?:[^"\\]|\\[\s\S])*"/ | /'(?:[^'\\]|\\[\s\S])*'/ ;

@@ -7,7 +7,7 @@
 @import "tokens.bbnf" ;
 
 // --- Tokens ---
-hash = /#(?:[\w-]|\\[^\n])+/ ;
+hash = /#(?:[\w\x80-\xff-]|\\[^\n])+/ ;
 
 // --- Namespace (CSS Namespaces) ---
 nsPrefix = (selectorIdent | "*") , "|" ;
@@ -19,9 +19,19 @@ classSelector = "." , selectorIdent ;
 idSelector    = hash ;
 
 // --- Attribute selectors ---
+// Attribute name with namespace disambiguation: "|" is tried as
+// namespace separator (ns|attr) BEFORE falling back to bare ident,
+// so "|=" in attrMatcher is never shadowed by a greedy namespace pipe.
+// PEG backtracking: "ident | ident" fails on [lang|="en"] because
+// the second selectorIdent rejects "=", causing fallback to bare ident,
+// letting attrMatcher see "|=".
+attrName     = "*|" , selectorIdent
+             | selectorIdent , "|" , selectorIdent
+             | "|" , selectorIdent
+             | selectorIdent ;
 attrMatcher  = "~=" | "|=" | "^=" | "$=" | "*=" | "=" ;
 attrModifier = /[iIsS]/ ;
-attrSelector = "[" ?w , wqName ?w , (attrMatcher ?w , (string | selectorIdent) ?w , attrModifier ?) ? , "]" ;
+attrSelector = "[" ?w , attrName ?w , (attrMatcher ?w , (string | selectorIdent) ?w , attrModifier ?) ? , "]" ;
 
 // --- An+B microsyntax ---
 anPlusB = "odd" | "even" | /[-+]?\d*n\s*[+-]\s*\d+/ | /[-+]?\d*n/ | /[-+]?\d+/ ;

@@ -130,7 +130,7 @@ impl RustEmitter {
         let name = ir.get_string(rule.name).to_string();
         let class = Self::materialization_for_rule(ir, rule);
 
-        // TransparentElide rules do not emit a function at all ��
+        // TransparentElide rules do not emit a function at all
         // the driver inlines their body at every call site.
         if class == MaterializationClass::TransparentElide {
             return quote! {};

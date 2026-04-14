@@ -63,14 +63,14 @@ impl TapeBuilder {
 
     /// Construct a builder sized for `expected` records.
     ///
-    /// Pre-allocates the payload buffer assuming ~25% of records will
-    /// carry scalar payloads (8 bytes each). This avoids repeated
-    /// grow/copy for number-heavy inputs like JSON.
+    /// Payloads grow lazily — only allocated when a rule actually
+    /// writes a scalar via `push_leaf_with_*`. Compound-heavy
+    /// grammars (CSS, Sheets) never touch the payloads Vec.
     pub fn with_capacity(expected: usize) -> Self {
         Self {
             tape: Tape::with_capacity(expected),
             error: None,
-            payloads: Vec::with_capacity(expected / 4 * 8),
+            payloads: Vec::new(),
         }
     }
 

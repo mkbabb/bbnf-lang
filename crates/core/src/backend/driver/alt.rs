@@ -42,8 +42,6 @@ pub fn branch_pushes_children(ir: &GrammarIR, node: &IrNode) -> bool {
         IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => false,
 
         // Pure conversion maps inherit the inner node's classification.
-        // NumberConvert, HexConvert, Constant, and EnumWrap-of-a-leaf
-        // all resolve to a single value without pushing children.
         IrNode::Map { inner, .. } => branch_pushes_children(ir, inner),
 
         // Whitespace trimming is transparent — propagate.
@@ -52,20 +50,39 @@ pub fn branch_pushes_children(ir: &GrammarIR, node: &IrNode) -> bool {
         // Negation is zero-width; it never pushes children.
         IrNode::Negate(_) => false,
 
-        // A Ref to a transparent-elide rule is inlined at the call
-        // site, so we check its body. A Ref to any other rule pushes
-        // its own tape record (it calls Self::__rule(state, tape)).
+        // AU.1.1: A Ref to a rule whose materialization is
+        // TransparentElide is inlined at the call site — check its
+        // body. Also check is_transparent (IR metadata).
         IrNode::Ref(target) => {
             if let Some(rule) = ir.rules.iter().find(|r| r.id == *target) {
-                if rule.meta.is_transparent {
+                let is_elided = rule.meta.is_transparent || {
+                    ir.dag.as_ref()
+                        .and_then(|dag| dag.node_for(&rule.body))
+                        .and_then(|nid| ir.materialization.get(&nid))
+                        .is_some_and(|c| {
+                            *c == bbnf_ir::passes::MaterializationClass::TransparentElide
+                        })
+                };
+                if is_elided {
                     return branch_pushes_children(ir, &rule.body);
                 }
             }
             true
         }
 
-        // Seq, Alt, Repeat, Skip, Next, Minus, TokenDispatch — all
-        // structurally push children.
+        // AU.1.1: Nested Alts are leaf-like when all branches are.
+        IrNode::Alt(branches, _) => branches
+            .iter()
+            .any(|b| branch_pushes_children(ir, &b.node)),
+
+        // Skip keeps left, Next keeps right.
+        IrNode::Skip(kept, _) => branch_pushes_children(ir, kept),
+        IrNode::Next(_, kept) => branch_pushes_children(ir, kept),
+
+        // Minus: match result is left side.
+        IrNode::Minus(lhs, _) => branch_pushes_children(ir, lhs),
+
+        // Seq, Repeat, TokenDispatch — structurally push children.
         _ => true,
     }
 }

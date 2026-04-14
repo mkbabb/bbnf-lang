@@ -46,14 +46,36 @@ Status: IN PROGRESS
 Commit 908067f added TransparentElide materialization check + nested
 Alt/Skip/Next/Minus recursion + reverted payload pre-alloc to lazy.
 
-**Critical finding**: JSON leaf rules (null, bool, number, string)
-have `MaterializationClass::MustTape` (not TransparentElide), yet NO
-parse function is emitted. Only `_prettify` variants exist. The rules
-ARE inlined at call sites in `__value`, but NOT by the `is_transparent`
-metadata — by some other mechanism (possibly the driver's inline
-analysis or the `@pretty` codegen path).
+**Root cause found**: `branch_pushes_children` didn't check
+`CallStrategy::InlineBody`. The driver inlines leaf rules at Ref
+sites via the CSP-driven inline analysis, but the branch classifier
+only checked `is_transparent` and `MaterializationClass::TransparentElide`.
 
-Agent investigating the exact elision mechanism.
+Fix (commit 83357e4): add `DriverState` parameter, check
+`call_strategy(rid) == InlineBody`, recurse into inlined body.
+
+Also fixed: payload_idx u16 overflow — canada.json has 111K f64
+payloads, exceeding u16 max (65535). Stored byte offset in
+`child_off` for payload-bearing leaves (full u32 range).
+
+**Post-fix bench results** (f64 values now ACTUALLY STORED):
+
+| Dataset | AQ (no values) | AU (with f64) | Delta |
+|---------|---------------|---------------|-------|
+| canada | 1796 | **1294** | -28% (111K f64 writes) |
+| citm | 2698 | **2627** | -3% |
+| twitter | 2086 | **2142** | +3% |
+| data | 1939 | **1890** | -3% |
+
+The canada delta is the inherent cost of materializing 111K f64
+values (888KB of payload writes). AQ discarded these values.
+This is now an apples-to-apples comparison — we store what sonic-rs
+stores.
+
+**Bonus finding**: `inline_acyclic` and `fuse_single_use` are
+effectively no-ops at the IR level because `scc_id` is always
+`Some(...)` during the normalizer loop (set in lowering before
+`compute_scc` runs). All inlining happens at the driver level.
 
 ## Phase 2 — CSS scanner activation
 

@@ -251,6 +251,57 @@ fn global_keyword_parses_branches() {
     }
 }
 
+/// AV.0.1 Bug 1 hard-gate landing test for the dispatch-alt path.
+/// `dirKeyword = "ltr" -> 0u8 | "rtl" -> 1u8` is inlined into
+/// `dirPseudo`'s aggregate-layout body. Pre-AV the dispatched
+/// `rtl` branch lost its `1u8` write; post-AV the dispatch-alt
+/// composer emits the per-branch payload write keyed on each
+/// branch's `MapExpr`.
+#[test]
+fn dir_pseudo_rtl_branch_fires_payload() {
+    let input = "a:dir(rtl) { color: red; }";
+    let parsed = CssL4Parser::parse(input).expect("parse");
+    let tape = parsed.tape();
+    let mut found = false;
+    for rec in tape.iter() {
+        if rec.kind() == TapeKind::KvPair && rec.has_payload() {
+            if let Some(bytes) = tape.payload_bytes(rec, 1) {
+                if bytes[0] == 1u8 {
+                    found = true;
+                    break;
+                }
+            }
+        }
+    }
+    assert!(
+        found,
+        "AV.0.1 Bug 1: dirKeyword 'rtl' -> 1u8 must reach the tape \
+         after the dispatch-path per-branch payload-write hoist"
+    );
+}
+
+#[test]
+fn dir_pseudo_ltr_branch_fires_payload() {
+    let input = "a:dir(ltr) { color: red; }";
+    let parsed = CssL4Parser::parse(input).expect("parse");
+    let tape = parsed.tape();
+    let mut found = false;
+    for rec in tape.iter() {
+        if rec.kind() == TapeKind::KvPair && rec.has_payload() {
+            if let Some(bytes) = tape.payload_bytes(rec, 1) {
+                if bytes[0] == 0u8 {
+                    found = true;
+                    break;
+                }
+            }
+        }
+    }
+    assert!(
+        found,
+        "AV.0.1 Bug 1: dirKeyword 'ltr' -> 0u8 must reach the tape"
+    );
+}
+
 // ─── Hex-colour typed aggregate ──────────────────────────────────────
 
 /// `hex = "#" , /[0-9a-fA-F]{3,8}/ -> crate::css_types::parse_hex_color(input) : u32`

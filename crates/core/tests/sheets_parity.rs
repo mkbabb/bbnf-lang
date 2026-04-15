@@ -252,6 +252,46 @@ fn error_literal_first_branch_fires() {
     );
 }
 
+/// AV.0.1 Bug 1 hard-gate landing test. Pre-AV the alt-lit
+/// composer's monotonic cursor advance left every non-first branch
+/// without a payload-write; post-AV every branch's `MapExpr`
+/// produces the correct aggregate-buffer write. `#NULL!` lives in
+/// the factor-pass nested `__alt_lit_blk` (alongside `#NUM!` and
+/// `#NAME?`) — the inner branch under the shared `#N` prefix that
+/// the audit cited as the canonical first-branch-loss site.
+#[test]
+fn error_literal_factored_branch_fires_payload() {
+    let payloads = typed_u8_payloads("=#NULL!");
+    let four_count = payloads.iter().filter(|(_, b)| *b == 4).count();
+    assert!(
+        four_count >= 1,
+        "AV.0.1 Bug 1: error_literal '#NULL!' -> 4u8 must fire after \
+         the per-branch payload-write hoisting. Payloads = {payloads:?}"
+    );
+}
+
+#[test]
+fn error_literal_num_branch_fires_payload() {
+    let payloads = typed_u8_payloads("=#NUM!");
+    let six_count = payloads.iter().filter(|(_, b)| *b == 6).count();
+    assert!(
+        six_count >= 1,
+        "AV.0.1 Bug 1: error_literal '#NUM!' -> 6u8 must fire. \
+         Payloads = {payloads:?}"
+    );
+}
+
+#[test]
+fn error_literal_name_branch_fires_payload() {
+    let payloads = typed_u8_payloads("=#NAME?");
+    let five_count = payloads.iter().filter(|(_, b)| *b == 5).count();
+    assert!(
+        five_count >= 1,
+        "AV.0.1 Bug 1: error_literal '#NAME?' -> 5u8 must fire. \
+         Payloads = {payloads:?}"
+    );
+}
+
 // ─── Pinned: alt-payload gap on later branches ──────────────────────
 
 /// AU.6.8 alt-payload gap: the SECOND alt branch of `add_op`,

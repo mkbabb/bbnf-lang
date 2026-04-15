@@ -14112,10 +14112,51 @@ mod __bbnfbootstrap_emit_impl {
                                         let __scan = if __start >= state.src_bytes.len() {
                                             0
                                         } else {
-                                            (::parse_that::memchr::memchr(
-                                                b'*',
-                                                &state.src_bytes[__start..],
-                                            ))
+                                            ({
+                                                static __LO_LUT: [u8; 16] = [
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    1,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                ];
+                                                static __HI_LUT: [u8; 16] = [
+                                                    0,
+                                                    0,
+                                                    1,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                ];
+                                                ::parse_that::find_next_structural_from(
+                                                        &state.src_bytes,
+                                                        __start,
+                                                        &__LO_LUT,
+                                                        &__HI_LUT,
+                                                    )
+                                                    .map(|(pos, _)| pos - __start)
+                                            })
                                                 .unwrap_or(state.src_bytes.len() - __start)
                                         };
                                         state.offset = __start + __scan;
@@ -14206,10 +14247,51 @@ mod __bbnfbootstrap_emit_impl {
                                         let __scan = if __start >= state.src_bytes.len() {
                                             0
                                         } else {
-                                            (::parse_that::memchr::memchr(
-                                                b'\n',
-                                                &state.src_bytes[__start..],
-                                            ))
+                                            ({
+                                                static __LO_LUT: [u8; 16] = [
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    1,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                ];
+                                                static __HI_LUT: [u8; 16] = [
+                                                    1,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                ];
+                                                ::parse_that::find_next_structural_from(
+                                                        &state.src_bytes,
+                                                        __start,
+                                                        &__LO_LUT,
+                                                        &__HI_LUT,
+                                                    )
+                                                    .map(|(pos, _)| pos - __start)
+                                            })
                                                 .unwrap_or(state.src_bytes.len() - __start)
                                         };
                                         state.offset = __start + __scan;
@@ -16638,10 +16720,51 @@ mod __bbnfbootstrap_emit_impl {
                                         let __scan = if __start >= state.src_bytes.len() {
                                             0
                                         } else {
-                                            (::parse_that::memchr::memchr(
-                                                b')',
-                                                &state.src_bytes[__start..],
-                                            ))
+                                            ({
+                                                static __LO_LUT: [u8; 16] = [
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    1,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                ];
+                                                static __HI_LUT: [u8; 16] = [
+                                                    0,
+                                                    0,
+                                                    1,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                ];
+                                                ::parse_that::find_next_structural_from(
+                                                        &state.src_bytes,
+                                                        __start,
+                                                        &__LO_LUT,
+                                                        &__HI_LUT,
+                                                    )
+                                                    .map(|(pos, _)| pos - __start)
+                                            })
                                                 .unwrap_or(state.src_bytes.len() - __start)
                                         };
                                         state.offset = __start + __scan;
@@ -20901,10 +21024,51 @@ mod __bbnfbootstrap_emit_impl {
                                             let __scan = if __start >= state.src_bytes.len() {
                                                 0
                                             } else {
-                                                (::parse_that::memchr::memchr(
-                                                    b'*',
-                                                    &state.src_bytes[__start..],
-                                                ))
+                                                ({
+                                                    static __LO_LUT: [u8; 16] = [
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        1,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                    ];
+                                                    static __HI_LUT: [u8; 16] = [
+                                                        0,
+                                                        0,
+                                                        1,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                    ];
+                                                    ::parse_that::find_next_structural_from(
+                                                            &state.src_bytes,
+                                                            __start,
+                                                            &__LO_LUT,
+                                                            &__HI_LUT,
+                                                        )
+                                                        .map(|(pos, _)| pos - __start)
+                                                })
                                                     .unwrap_or(state.src_bytes.len() - __start)
                                             };
                                             state.offset = __start + __scan;
@@ -21004,10 +21168,51 @@ mod __bbnfbootstrap_emit_impl {
                                             let __scan = if __start >= state.src_bytes.len() {
                                                 0
                                             } else {
-                                                (::parse_that::memchr::memchr(
-                                                    b'\n',
-                                                    &state.src_bytes[__start..],
-                                                ))
+                                                ({
+                                                    static __LO_LUT: [u8; 16] = [
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        1,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                    ];
+                                                    static __HI_LUT: [u8; 16] = [
+                                                        1,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                    ];
+                                                    ::parse_that::find_next_structural_from(
+                                                            &state.src_bytes,
+                                                            __start,
+                                                            &__LO_LUT,
+                                                            &__HI_LUT,
+                                                        )
+                                                        .map(|(pos, _)| pos - __start)
+                                                })
                                                     .unwrap_or(state.src_bytes.len() - __start)
                                             };
                                             state.offset = __start + __scan;
@@ -23350,10 +23555,51 @@ mod __bbnfbootstrap_emit_impl {
                                             let __scan = if __start >= state.src_bytes.len() {
                                                 0
                                             } else {
-                                                (::parse_that::memchr::memchr(
-                                                    b')',
-                                                    &state.src_bytes[__start..],
-                                                ))
+                                                ({
+                                                    static __LO_LUT: [u8; 16] = [
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        1,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                    ];
+                                                    static __HI_LUT: [u8; 16] = [
+                                                        0,
+                                                        0,
+                                                        1,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                    ];
+                                                    ::parse_that::find_next_structural_from(
+                                                            &state.src_bytes,
+                                                            __start,
+                                                            &__LO_LUT,
+                                                            &__HI_LUT,
+                                                        )
+                                                        .map(|(pos, _)| pos - __start)
+                                                })
                                                     .unwrap_or(state.src_bytes.len() - __start)
                                             };
                                             state.offset = __start + __scan;
@@ -24365,10 +24611,51 @@ mod __bbnfbootstrap_emit_impl {
                                                         let __scan = if __start >= state.src_bytes.len() {
                                                             0
                                                         } else {
-                                                            (::parse_that::memchr::memchr(
-                                                                b'\n',
-                                                                &state.src_bytes[__start..],
-                                                            ))
+                                                            ({
+                                                                static __LO_LUT: [u8; 16] = [
+                                                                    0,
+                                                                    0,
+                                                                    0,
+                                                                    0,
+                                                                    0,
+                                                                    0,
+                                                                    0,
+                                                                    0,
+                                                                    0,
+                                                                    0,
+                                                                    1,
+                                                                    0,
+                                                                    0,
+                                                                    0,
+                                                                    0,
+                                                                    0,
+                                                                ];
+                                                                static __HI_LUT: [u8; 16] = [
+                                                                    1,
+                                                                    0,
+                                                                    0,
+                                                                    0,
+                                                                    0,
+                                                                    0,
+                                                                    0,
+                                                                    0,
+                                                                    0,
+                                                                    0,
+                                                                    0,
+                                                                    0,
+                                                                    0,
+                                                                    0,
+                                                                    0,
+                                                                    0,
+                                                                ];
+                                                                ::parse_that::find_next_structural_from(
+                                                                        &state.src_bytes,
+                                                                        __start,
+                                                                        &__LO_LUT,
+                                                                        &__HI_LUT,
+                                                                    )
+                                                                    .map(|(pos, _)| pos - __start)
+                                                            })
                                                                 .unwrap_or(state.src_bytes.len() - __start)
                                                         };
                                                         state.offset = __start + __scan;

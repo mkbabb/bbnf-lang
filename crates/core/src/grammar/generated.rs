@@ -180,30 +180,31 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     impl<'p> int_litView<'p> {
-        /// The source text matched by this rule.
+        /// The source text matched by this leaf rule.
         #[inline]
         pub fn text(&self) -> &'p str {
             self.span_text()
         }
-        /// The packed scalar fields decoded from the tape's
-        /// aggregate payload buffer.
+        /// Get the parsed scalar value.
         ///
-        /// Returns the layout-zeroed tuple if no payload was
-        /// written for this record (e.g. an alternative branch
-        /// path that never set any fields).
+        /// Payload-first: reads the pre-computed value from the
+        /// tape payload buffer in O(1). Falls back to span text
+        /// parsing if no payload is present.
         #[inline]
-        pub fn value(&self) -> (i64) {
+        pub fn value(&self) -> i64 {
             let tape = self.cursor.tape();
             let rec = self.cursor.record();
-            match tape.payload_bytes(rec, 8usize) {
-                Some(__bytes) => {
-                    (i64::from_le_bytes(
-                        <[u8; 8]>::try_from(&__bytes[0usize..8usize])
-                            .expect("aggregate slice is 8 bytes"),
-                    ))
-                }
-                None => (0_i64),
+            if let Some(v) = tape.payload_i64(rec) {
+                return v;
             }
+            self.span_text().parse::<i64>().unwrap_or(0)
+        }
+        /// Convert the matched span to the scalar type.
+        ///
+        /// Alias for backward compatibility. Prefer `.value()`.
+        #[inline]
+        pub fn as_i64(&self) -> i64 {
+            self.value()
         }
     }
     /// Generated view over a tape record produced by this rule.
@@ -362,30 +363,31 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     impl<'p> float_litView<'p> {
-        /// The source text matched by this rule.
+        /// The source text matched by this leaf rule.
         #[inline]
         pub fn text(&self) -> &'p str {
             self.span_text()
         }
-        /// The packed scalar fields decoded from the tape's
-        /// aggregate payload buffer.
+        /// Get the parsed scalar value.
         ///
-        /// Returns the layout-zeroed tuple if no payload was
-        /// written for this record (e.g. an alternative branch
-        /// path that never set any fields).
+        /// Payload-first: reads the pre-computed value from the
+        /// tape payload buffer in O(1). Falls back to span text
+        /// parsing if no payload is present.
         #[inline]
-        pub fn value(&self) -> (f64) {
+        pub fn value(&self) -> f64 {
             let tape = self.cursor.tape();
             let rec = self.cursor.record();
-            match tape.payload_bytes(rec, 8usize) {
-                Some(__bytes) => {
-                    (f64::from_le_bytes(
-                        <[u8; 8]>::try_from(&__bytes[0usize..8usize])
-                            .expect("aggregate slice is 8 bytes"),
-                    ))
-                }
-                None => (0.0_f64),
+            if let Some(v) = tape.payload_f64(rec) {
+                return v;
             }
+            self.span_text().parse::<f64>().unwrap_or(0.0)
+        }
+        /// Convert the matched span to the scalar type.
+        ///
+        /// Alias for backward compatibility. Prefer `.value()`.
+        #[inline]
+        pub fn as_f64(&self) -> f64 {
+            self.value()
         }
     }
     /// Generated view over a tape record produced by this rule.
@@ -1876,8 +1878,8 @@ mod __bbnfbootstrap_emit_impl {
     /// Typed value enum — payload-eligible branches carry typed
     /// values directly; non-eligible branches wrap a cursor view.
     pub enum value_atomValue<'p> {
-        int_lit((i64)),
-        float_lit((f64)),
+        int_lit(i64),
+        float_lit(f64),
         bool_lit(&'p str),
         string_lit(&'p str),
         value_fn_call(BbnfBootstrapNodeView<'p>),
@@ -1896,28 +1898,18 @@ mod __bbnfbootstrap_emit_impl {
                     let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
                     let __rec = __cursor.record();
                     let __tape = __cursor.tape();
-                    let __value = match __tape.payload_bytes(__rec, 8usize) {
-                        Some(__bytes) => {
-                            (i64::from_le_bytes(
-                                <[u8; 8]>::try_from(&__bytes[0usize..8usize]).unwrap(),
-                            ))
-                        }
-                        None => (0_i64),
-                    };
+                    let __value = __tape
+                        .payload_i64(__rec)
+                        .unwrap_or(<i64 as ::core::default::Default>::default());
                     Some(value_atomValue::int_lit(__value))
                 }
                 1u8 => {
                     let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
                     let __rec = __cursor.record();
                     let __tape = __cursor.tape();
-                    let __value = match __tape.payload_bytes(__rec, 8usize) {
-                        Some(__bytes) => {
-                            (f64::from_le_bytes(
-                                <[u8; 8]>::try_from(&__bytes[0usize..8usize]).unwrap(),
-                            ))
-                        }
-                        None => (0.0_f64),
-                    };
+                    let __value = __tape
+                        .payload_f64(__rec)
+                        .unwrap_or(<f64 as ::core::default::Default>::default());
                     Some(value_atomValue::float_lit(__value))
                 }
                 2u8 => {
@@ -11303,8 +11295,6 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                let mut __aggregate_buf: [u8; 16] = [0u8; 16];
-                let mut __has_payload = false;
                 match ({
                     {
                         {
@@ -11396,33 +11386,17 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 0u8;
                     let __mi: u8 = 0u8;
-                    if __has_payload {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Span,
-                                __span_lo,
-                                state.offset as u32,
-                                __vi,
-                                __mi,
-                                ::bbnf::runtime::tape::PayloadData::Aggregate(
-                                    &__aggregate_buf[..8usize],
-                                ),
-                            ),
-                        )
-                    } else {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Rule,
-                                __children,
-                                __span_lo,
-                                state.offset as u32,
-                                __vi,
-                                __mi,
-                            ),
-                        )
-                    }
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Rule,
+                            __children,
+                            __span_lo,
+                            state.offset as u32,
+                            __vi,
+                            __mi,
+                        ),
+                    )
                 }
             }
         }
@@ -11433,8 +11407,6 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                let mut __aggregate_buf: [u8; 16] = [0u8; 16];
-                let mut __has_payload = false;
                 match ({
                     {
                         {
@@ -11524,33 +11496,17 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 1u8;
                     let __mi: u8 = 0u8;
-                    if __has_payload {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Span,
-                                __span_lo,
-                                state.offset as u32,
-                                __vi,
-                                __mi,
-                                ::bbnf::runtime::tape::PayloadData::Aggregate(
-                                    &__aggregate_buf[..8usize],
-                                ),
-                            ),
-                        )
-                    } else {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Rule,
-                                __children,
-                                __span_lo,
-                                state.offset as u32,
-                                __vi,
-                                __mi,
-                            ),
-                        )
-                    }
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Rule,
+                            __children,
+                            __span_lo,
+                            state.offset as u32,
+                            __vi,
+                            __mi,
+                        ),
+                    )
                 }
             }
         }

@@ -839,3 +839,129 @@ description for columnar substrate`.
 
 V2 CLOSED. V3 (DTA synthesis, serial, workspace-unworkable
 permitted) dispatches next.
+
+## 2026-04-15 — V3 DTA synthesis (serial, in progress)
+
+Single-agent serial wave `av3-dta`. Four commits in the
+worktree:
+
+- `5cdae5c` feat(ir): DTA lifter — GrammarIR → counter-DFA
+  (AV.3.1 + AV.3.2). IR-side `crates/ir/src/passes/recognizers/
+  dta.rs` — `DtaBuilder` sink parallel to `GrammarSink`
+  (AU.4.1). Lifts every rule's Alt/Seq/Repeat/Ref/Map into
+  `DtaState` values stored on `DtaTable`. Counter-optional
+  detection surfaces the nested-optional-with-empty-body
+  shape (BBNF `mapped_factor`); byte-class dispatch lifts
+  Alt nodes with populated `AltDispatch` into 256-entry
+  `ByteDispatch` tables.
+- `661e9f6` feat(ir): shunting-yard DTA for Sheets
+  precedence chain (AV.3.3). `collect_precedence_chain`
+  walks each rule for the operator-chain shape
+  `body = Seq(operand, Repeat(Seq(op, operand)))`;
+  `extract_operator_set` admits the op-position as Ref,
+  inlined Alt, or single Literal to handle the
+  post-`fuse_single_use` IR shape. Sheets collapses four
+  rungs (`concat_expr → add_op → mul_op → exp_expr`) into
+  a single `DtaState::ShuntingYard` with a 6-entry
+  precedence table. `^` correctly inferred right-
+  associative; all others left-associative.
+- `2deabd5` feat(emitter): DtaBuilder sink → const
+  DTA_TABLE literal (AV.3.1). New
+  `crates/bbnf-tape/src/dta.rs` carrying the runtime wire
+  types and `crates/core/src/backend/rust/emitter/dta.rs`
+  lowering the `DtaTable` to `const`-constructible static
+  data. Every grammar's `generated.rs` now carries a
+  `pub const DTA_TABLE: DtaTable = ...;` alongside
+  `GRAMMAR_PROFILE`. BBNF bootstrap regen: 26154 → 28274
+  lines, +2120 for the DTA data.
+- `d862381` feat(emitter): DTA diagnostic replay mode
+  (AV.3.4). `DtaDiagnostic` struct on the tape side
+  carries `furthest_offset` / `failing_state` /
+  `failing_rule` / `states_visited`. `observe(offset,
+  state, rule)` updates only on strict advance;
+  `tick()` saturates at u32::MAX. One automaton, two
+  driver modes — the V4 PSI driver routes through this
+  when `state.diagnostic_mode()` is active.
+
+### Per-grammar DTA lift summary
+
+    json:    38 states, 0 yards, depth 7
+    bbnf:    345 states, 1 yard covering 2 rules, depth 8
+    sheets:  164 states, 1 yard covering 4 rules, depth 6
+    css_l4:  2473 states, 0 yards, depth 22
+
+AV.md §AV.3.1 predicted ~1200 states for CSS L4; the current
+lift produces 2473 because the lifter allocates one state
+per node without factoring-shared-tails. This is within the
+u16 budget; factoring can land in V9 closure if the table
+size becomes a runtime constraint.
+
+### Counter-optional
+
+`detect_counter_optional` has the recognition primitive, but
+the shipped grammars show 0 counter-optional rules. Post-
+AU pipeline passes (inline_acyclic, fuse_single_use) collapse
+the nested-optional-in-optional pattern before the lift runs.
+BBNF's `mapped_factor` specifically has been inlined into
+its caller's Seq. The infrastructure is in place for when
+a grammar surfaces a non-inlinable nested-optional.
+
+### AV.3.5 (Eisel-Lemire)
+
+Out of scope for this agent (parse-that parallel agent).
+
+### AV.3.6 (legacy fn-per-rule deletion) — DEFERRED TO V4
+CLOSE
+
+The V3 hard gate — `grep -cE 'fn __[a-zA-Z_]+<' generated.rs`
+returns 0 — is **NOT MET** this wave. Current count: 106
+(unchanged from V2 close). The fn-per-rule path is the
+runtime consumer; deleting it without the V4 PSI driver
+would break `parse()` outright. AV.md §Wave-failure policy
+permits V3–V9 workspace failures but requires
+`grammar_roundtrip` green at wave close — which forbids
+deletion without the consumer.
+
+The legacy deletion sequences naturally with V4 PSI stage-B
+(`AV.4.1–4.2`): once the stage-A DTA walker + stage-B
+payload filler + stage-C prefix-scan form the complete
+parse pipeline, the emitter rewires `parse()` to drive
+through the DTA and deletes the fn-per-rule codegen. This
+is the single-path invariant kept clean.
+
+### Regression gates at V3 close (this session)
+
+- `grammar_roundtrip`: 6/6 ✓ (the primary correctness gate)
+- `tape_parity`: 22/22 ✓
+- `bbnf_parity`: 18/18 ✓
+- `sheets_parity`: 25/25 ✓
+- `json_parity`: 2/2 + 7 ignored (unchanged V9 carry)
+- `css_l4_parity`: 13/13 + 3 ignored (unchanged V1 carry)
+- `dta_counter_states`: 10/10 ✓ (new in AV.3.1+3.2)
+- `dta_shunting_yard`: 8/8 ✓ (new in AV.3.3)
+- `dta_diagnostic_replay`: 5/5 ✓ (new in AV.3.4)
+- `bbnf-tape` unit tests: 54/54 ✓ (added 11 DTA types)
+- Workspace: 1044 passed, 0 failed, 56 ignored (was
+  1021/0/53 at V2 close → +23 for new DTA tests).
+- Deterministic bootstrap: two consecutive regens produce
+  byte-identical generated.rs ✓
+- `cargo check --workspace`: clean.
+
+### Between-wave failures — V9 closure reference
+
+**None introduced by this wave.** The post-V2 workspace
+baseline (1021/0/53) held through V3 as the DTA emission is
+pure additive data — no existing runtime code path reads
+`DTA_TABLE`. When V4 PSI introduces the driver, the
+baseline will flex per the tranche's wave-failure policy.
+
+### Next wave dispatches on
+
+- **AV.3.6 (legacy deletion)** — contingent on V4 PSI
+  driver landing.
+- **Sheets `parse_simple` ≥ 250 MB/s** — contingent on V4.
+- **CSS L4 state-count narrowing** — optional V9 refinement.
+
+V3 data infrastructure landed. V4 (PSI stage-B + stage-C +
+simdjson decode, 3-parallel) is the natural next dispatch;
+the DTA table is the stage-A output V4's stage-B consumes.

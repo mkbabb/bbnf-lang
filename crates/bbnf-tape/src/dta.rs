@@ -77,7 +77,10 @@ pub enum DtaCounterOptional {
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum DtaAssociativity {
+    /// Left-associative: `a op b op c` binds as `(a op b) op c`.
     Left = 0,
+    /// Right-associative: `a op b op c` binds as `a op (b op c)`. In
+    /// the Sheets precedence chain this is only `^`.
     Right = 1,
 }
 

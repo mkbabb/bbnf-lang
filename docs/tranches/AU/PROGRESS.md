@@ -660,3 +660,97 @@ defers to AV.
 Scratch crate not cherry-picked; worktree deleted cleanly per the
 no-legacy invariant. Gate numbers and findings above are the W4
 deliverable that feeds W5 and AV planning.
+
+### W5 — LANDED (AU.6.7 unified arena on AoS)
+
+Single serial agent. Substrate overhaul: every `payload_*: Vec<_>`
+side-car on `Tape` collapsed into one `arena: Vec<u8>`; ten-plus
+`push_leaf_with_*` methods collapsed into one `push_leaf_with(kind,
+…, PayloadData)` entry point; `TapeRec::payload_idx` removed from
+the record layout.
+
+Three feature commits cherry-picked (`903ac95`, `468a061`, `7fc0adf`);
+agent's docs commit skipped in favour of this master-side integration
+record.
+
+**PayloadData enum** (`crates/bbnf-tape/src/builder.rs`):
+
+```rust
+pub enum PayloadData<'a> {
+    None,
+    InlineScalar(u32),     // ≤ 4 B, packed into child_off directly
+    WideScalar(u64),       // 8 B arena slot
+    Aggregate(&'a [u8]),   // ≤ 16 B arena slot
+    Bytes(&'a [u8]),       // (len: u32 LE, bytes) arena frame
+}
+```
+
+**Single entry point**:
+
+```rust
+pub fn push_leaf_with(
+    &mut self, kind: TapeKind, span_lo: u32, span_hi: u32,
+    variant_idx: u8, meta_idx: u8, payload: PayloadData<'_>,
+) -> TapeOffset;
+```
+
+One thin helper `push_leaf_with_arena_frame(...)` remains for the
+decode kernel, which streams directly into `arena_mut()` and commits
+without constructing an intermediate `PayloadData`. Deliberately not
+a full second entry point — the single signature still dominates.
+
+**Record layout**: `TapeRec` stays 16 B; the vacated 2 B `payload_idx`
+slot is `_reserved: u16` for future meta packing. Readers recover
+payload kind from `TapeKind` alone.
+
+**Hard gates verified**:
+
+1. `grep -rn 'payload_idx' crates/bbnf-tape/src/` returns only doc
+   references explaining the removal (no code-level usage).
+2. Every `push_leaf_with_Span` / `push_leaf_with_aggregate` /
+   `push_leaf_with_f64` / `push_leaf_with_u32` / `push_leaf_with_string`
+   / `push_leaf_with_scalar` gone from source (zero code-level
+   matches).
+3. `Tape` carries only `arena: Vec<u8>`; every `payload_*: Vec<_>`
+   side-car deleted.
+4. Target tests: bbnf-tape 31/31, grammar_roundtrip 6/6,
+   payload_layouts 13/13, json_decode 5/5, css_l4 18/18,
+   css_l4_dimensions 23/23, tape_walker_allocs 8/8, tape_parity 22/22.
+5. Bootstrap idempotent (diff = 0 across two consecutive clean-cache
+   regens).
+6. Workspace: only the 2 pre-existing debug-wildcard failures carry
+   over.
+
+**Post-W5 absolute bench references** (cold single invocation,
+mimalloc):
+
+| Grammar / entry | MB/s |
+|-----------------|-----:|
+| json canada | 932 |
+| json twitter | 1545 |
+| json citm | 1997 |
+| json data_s | 1509 |
+| json data_xl | 933 |
+| css_l4 bootstrap | 396 |
+| css_l4 normalize | 656 |
+| css_l4 tailwind | 436 |
+
+These are the new reference points for W6 and W7's regression gates.
+The Session-2 and post-AT numbers cited earlier are no longer
+directly comparable — the tape record count shifted on most fixtures
+because the heterogeneous-Alt dispatch now flows through a single
+`push_leaf_with(PayloadData::WideScalar)` branch with a different
+record-count discipline.
+
+**Tape-parity goldens regenerated** for every `crates/core/tests/
+fixtures/tape_golden/*/*.json`. Pattern: total_records shifted
+(CSS bootstrap 78043→82284, sheets nested_if 140→144, …); root
+kind and root children counts unchanged on every fixture. `.gitkeep`
+placeholders removed since every grammar directory now carries
+real goldens.
+
+**AU.3.2 walker ratio not re-probed.** Substrate-neutral on the
+walker path (readers stay typed + inline-shim over arena). Inline
+scalar path (u8/bool/u16/u32) now skips the arena read entirely,
+which should help bool/null-heavy twitter bench marginally; no
+profile was run to attribute it. W6 can re-probe if meaningful.

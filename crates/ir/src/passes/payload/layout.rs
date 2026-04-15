@@ -149,8 +149,23 @@ fn span_layout_eligible(ir: &GrammarIR, rule_id: RuleId) -> bool {
     if !body_is_leaf_only(&rule.body) {
         return false;
     }
-    rule_head_materialization(ir, rule_id)
-        .is_some_and(|class| class != MaterializationClass::TransparentElide)
+    // AV.0.2 (close-out): permissive gate on materialisation. The
+    // CSP-refined materialisation map (`ir.materialization`) is only
+    // populated for non-`structural` pipeline runs — BBNF's own
+    // bootstrap compiles with `structural = true` so `preserve_identity`
+    // is stamped on every rule and the CSP pipeline is skipped. A
+    // strict `Some(class) != TransparentElide` gate silently excludes
+    // every structural-build Span rule (BBNF `identifier`, `literal`,
+    // `regex`, `big_comment`, `comment`) from the layout pipeline. The
+    // permissive reading is sound: `TransparentElide` only exists as a
+    // refined materialisation decision; when the map is unpopulated no
+    // rule has been downgraded to transparent inlining. Admit the
+    // layout whenever the gate does not have explicit `TransparentElide`
+    // evidence against the rule.
+    !matches!(
+        rule_head_materialization(ir, rule_id),
+        Some(MaterializationClass::TransparentElide),
+    )
 }
 
 /// True iff `node` and every descendant carry no `IrNode::Ref(_)`.

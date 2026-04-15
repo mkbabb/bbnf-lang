@@ -306,14 +306,25 @@ pub fn emit_tape_span_only_aggregate_prelude(_layout: &PayloadLayout) -> TokenSt
 /// payload layout.
 ///
 /// On the success path, calls `push_leaf_with` with a
-/// `PayloadData::Aggregate(&__aggregate_buf[..total_bytes])`. When
-/// `__has_payload` is false (the body finished without writing any
-/// scalar captures), falls back to bare `push_leaf` so the tape
-/// carries the span without any payload reference.
+/// `PayloadData::Aggregate(&__aggregate_buf[..total_bytes])` or
+/// `PayloadData::LargeAggregate(&__aggregate_buf[..total_bytes])`
+/// depending on total_bytes (AV.0.5). When `__has_payload` is false
+/// (the body finished without writing any scalar captures), falls
+/// back to bare `push_leaf` so the tape carries the span without any
+/// payload reference.
 ///
 /// AR.9: when `kv_pair` is true, the aggregate leaf uses
 /// `TapeKind::KvPair` instead of `TapeKind::Span`, signalling
 /// the view layer that the record is a flattened key-value pair.
+///
+/// AV.0.2: bare-`Span` layouts — those with exactly one field of
+/// `TypeDesc::Span` at offset 0 — get an unconditional epilogue
+/// pack of `(__span_lo, state.offset)` into the first 8 bytes of
+/// `__aggregate_buf` and set `__has_payload = true`. Multi-leaf
+/// rule bodies (e.g. BBNF `literal` whose Alt branches emit three
+/// leaves each) would otherwise write the first leaf's partial
+/// `hi` into the buffer; the epilogue rewrite ensures the on-tape
+/// Span always carries the rule-final `state.offset`.
 pub fn emit_tape_span_only_aggregate_epilogue(
     layout: &PayloadLayout,
     variant_idx: u8,
@@ -328,10 +339,13 @@ pub fn emit_tape_span_only_aggregate_epilogue(
         quote! { ::bbnf::runtime::tape::TapeKind::Span }
     };
     let tape_kind_fallback = quote! { ::bbnf::runtime::tape::TapeKind::Span };
+    let span_fixup = bare_span_epilogue_fixup(layout);
+    let payload_ctor = aggregate_payload_ctor(total_bytes);
     quote! {
         {
             let __vi: u8 = #variant_lit;
             let __mi: u8 = #meta_lit;
+            #span_fixup
             if __has_payload {
                 Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
                     tape,
@@ -340,9 +354,7 @@ pub fn emit_tape_span_only_aggregate_epilogue(
                     state.offset as u32,
                     __vi,
                     __mi,
-                    ::bbnf::runtime::tape::PayloadData::Aggregate(
-                        &__aggregate_buf[..#total_bytes],
-                    ),
+                    #payload_ctor,
                 ))
             } else {
                 Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(
@@ -377,12 +389,20 @@ pub fn emit_must_tape_aggregate_prelude(_layout: &PayloadLayout) -> TokenStream 
 /// Emit the epilogue for a `MustTape` rule with an aggregate
 /// payload layout.
 ///
-/// Prefers `push_leaf_with` + `PayloadData::Aggregate` when any
-/// field wrote a scalar capture; otherwise falls through to the
+/// Prefers `push_leaf_with` + `PayloadData::Aggregate` (total_bytes
+/// ≤ 16) or `PayloadData::LargeAggregate` (total_bytes > 16) when
+/// any field wrote a scalar capture; otherwise falls through to the
 /// compound-children push.
 ///
 /// AR.9: when `kv_pair` is true, the aggregate leaf uses
 /// `TapeKind::KvPair` instead of `TapeKind::Span`.
+///
+/// AV.0.2: bare-`Span` layouts — those with exactly one field of
+/// `TypeDesc::Span` at offset 0 — get an unconditional epilogue
+/// pack of `(__span_lo, state.offset)` into `__aggregate_buf` and
+/// set `__has_payload = true`, guaranteeing the on-tape Span
+/// carries the rule-final cursor regardless of how many leaves the
+/// body stepped through.
 pub fn emit_must_tape_aggregate_epilogue(
     layout: &PayloadLayout,
     variant_idx: u8,
@@ -396,10 +416,13 @@ pub fn emit_must_tape_aggregate_epilogue(
     } else {
         quote! { ::bbnf::runtime::tape::TapeKind::Span }
     };
+    let span_fixup = bare_span_epilogue_fixup(layout);
+    let payload_ctor = aggregate_payload_ctor(total_bytes);
     quote! {
         {
             let __vi: u8 = #variant_lit;
             let __mi: u8 = #meta_lit;
+            #span_fixup
             if __has_payload {
                 Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
                     tape,
@@ -408,9 +431,7 @@ pub fn emit_must_tape_aggregate_epilogue(
                     state.offset as u32,
                     __vi,
                     __mi,
-                    ::bbnf::runtime::tape::PayloadData::Aggregate(
-                        &__aggregate_buf[..#total_bytes],
-                    ),
+                    #payload_ctor,
                 ))
             } else {
                 Some(::bbnf::runtime::tape::TapeBuilder::push_compound(
@@ -426,6 +447,71 @@ pub fn emit_must_tape_aggregate_epilogue(
         }
     }
 }
+
+/// AV.0.2 + AV.0.5: select the `PayloadData` constructor for an
+/// aggregate leaf push based on `total_bytes`. Layouts up to
+/// [`crate::backend::rust::emitter::tape_prelude::MAX_INLINE_AGGREGATE_BYTES`]
+/// (`16` — matching `bbnf_tape::MAX_INLINE_AGGREGATE_BYTES`) keep
+/// the `PayloadData::Aggregate` inline-aggregate path; larger
+/// layouts (CSS colour-function `colorFunction` / `colorFn` /
+/// `colorMix` land at 33-40 B) route through
+/// `PayloadData::LargeAggregate`, arena-backed without a length
+/// prefix. Readers recover the width from the grammar's payload-
+/// layout table keyed by `(kind, variant_idx)`.
+fn aggregate_payload_ctor(total_bytes: usize) -> TokenStream {
+    if total_bytes > MAX_INLINE_AGGREGATE_BYTES {
+        quote! {
+            ::bbnf::runtime::tape::PayloadData::LargeAggregate(
+                &__aggregate_buf[..#total_bytes],
+            )
+        }
+    } else {
+        quote! {
+            ::bbnf::runtime::tape::PayloadData::Aggregate(
+                &__aggregate_buf[..#total_bytes],
+            )
+        }
+    }
+}
+
+/// AV.0.2: produce the prologue stamp for the aggregate epilogue
+/// when the rule's layout is exactly one `TypeDesc::Span` field at
+/// offset 0 (total_bytes == 8). Writes `__span_lo` + `state.offset`
+/// into the buffer and sets `__has_payload = true` before the
+/// epilogue's `push_leaf_with` dispatch. For non-bare-Span layouts
+/// returns an empty stream, leaving the epilogue untouched.
+///
+/// The stamp is idempotent with the leaf-level Span pack in
+/// `leaves.rs::probe_span_aggregate_pack`: single-leaf bodies
+/// (`identifier = /regex/ -> Span`) write the pack once at leaf
+/// match success and the epilogue rewrites with the same values.
+/// Multi-leaf bodies (`literal = ( "\"" , /…/ , "\"" ) -> Span`)
+/// rely exclusively on the epilogue rewrite because the leaf-level
+/// pack runs with a premature `hi = state.offset` (the cursor is
+/// mid-body at that point).
+fn bare_span_epilogue_fixup(layout: &PayloadLayout) -> TokenStream {
+    if layout.total_bytes == 8
+        && layout.fields.len() == 1
+        && matches!(layout.fields[0].ty, bbnf_ir::TypeDesc::Span)
+        && layout.fields[0].offset == 0
+    {
+        quote! {
+            __aggregate_buf[0..4]
+                .copy_from_slice(&(__span_lo as u32).to_le_bytes());
+            __aggregate_buf[4..8]
+                .copy_from_slice(&(state.offset as u32).to_le_bytes());
+            __has_payload = true;
+        }
+    } else {
+        quote! {}
+    }
+}
+
+/// AV.0.5: aggregates > `MAX_INLINE_AGGREGATE_BYTES` route through
+/// `PayloadData::LargeAggregate`. Kept in sync with
+/// `bbnf_tape::MAX_INLINE_AGGREGATE_BYTES` (same constant, same
+/// value).
+const MAX_INLINE_AGGREGATE_BYTES: usize = 16;
 
 /// Emit the rule function signature for a tape-first rule.
 ///

@@ -19,12 +19,38 @@ impl RustEmitter {
         &mut self,
         value: &str,
         guaranteed_byte: Option<u8>,
-        _ctx: &mut RustEmitCtx,
+        ctx: &mut RustEmitCtx,
     ) -> TokenStream {
         let bytes = value.as_bytes();
 
+        // AV.0.2: bare-`Span` aggregate layout — pack (__span_lo,
+        // state.offset) into the 8-byte layout field on literal match
+        // success. Mirrors the F64 aggregate arm in
+        // `emit_regex_match_impl`: probe the next aggregate field, and
+        // if it is a `Span`, wrap the literal match with the pack.
+        // `__span_lo` (prelude local) carries the rule's start offset;
+        // `state.offset` at the pack site is the post-match end. For
+        // single-leaf bodies (e.g. BBNF `identifier = /regex/ -> Span`)
+        // this captures the full rule span; for multi-leaf bodies (e.g.
+        // BBNF `literal = ( "\"" , /…/ , "\"" ) -> Span`) the per-leaf
+        // hi is partial — the aggregate epilogue's Span fixup in
+        // `emit_tape_span_only_aggregate_epilogue` /
+        // `emit_must_tape_aggregate_epilogue` rewrites the buffer with
+        // the rule-final `state.offset` before the `push_leaf_with`
+        // call, so the on-tape Span is always correct.
+        let span_pack = probe_span_aggregate_pack(ctx);
+
         if guaranteed_byte.is_some() {
             // Dispatch already proved this byte — just advance.
+            if let Some(pack) = span_pack {
+                return quote! {
+                    {
+                        state.offset += 1;
+                        #pack
+                        Some(())
+                    }
+                };
+            }
             return quote! {
                 {
                     state.offset += 1;
@@ -35,6 +61,21 @@ impl RustEmitter {
 
         if bytes.len() == 1 {
             let byte = bytes[0];
+            if let Some(pack) = span_pack {
+                return quote! {
+                    {
+                        if state.offset < state.src_bytes.len()
+                            && state.src_bytes[state.offset] == #byte
+                        {
+                            state.offset += 1;
+                            #pack
+                            Some(())
+                        } else {
+                            None
+                        }
+                    }
+                };
+            }
             quote! {
                 {
                     if state.offset < state.src_bytes.len()
@@ -55,6 +96,24 @@ impl RustEmitter {
             // never invoking memcmp.
             let len = bytes.len();
             let lit = proc_macro2::Literal::byte_string(bytes);
+            if let Some(pack) = span_pack {
+                return quote! {
+                    {
+                        if state.offset + #len <= state.src_bytes.len()
+                            && unsafe {
+                                *(state.src_bytes.as_ptr().add(state.offset)
+                                    as *const [u8; #len])
+                            } == *#lit
+                        {
+                            state.offset += #len;
+                            #pack
+                            Some(())
+                        } else {
+                            None
+                        }
+                    }
+                };
+            }
             quote! {
                 {
                     if state.offset + #len <= state.src_bytes.len()
@@ -89,16 +148,17 @@ impl RustEmitter {
                 .with_ir(ir)
                 .with_ws_pattern(ws_pat);
 
-        // AQ.6.B: when an aggregate layout is active and the regex
-        // is numeric, advance the field cursor and write into the
-        // buffer at the layout offset. The scanner choice follows the
-        // regex class's `allow_leading_dot` flag: JSON-strict numbers
-        // route through `scan_number_strict_f64` (which rejects `.5`),
-        // CSS-permissive numbers route through `scan_number_f64`
-        // (which accepts `.5` via `GENERIC_NUMBER_CONFIG`).
+        // AQ.6.B / AV.0.2: when an aggregate layout is active,
+        // probe the next aggregate field and emit the field-specific
+        // capture. The F64 arm drives the number scanner (JSON-strict
+        // vs CSS-permissive per `allow_leading_dot`); the Span arm
+        // packs `(__span_lo, state.offset)` into the 8-byte layout
+        // slot on regex-match success without requiring a typed
+        // scanner return value.
         if ctx.payload_layout.is_some() {
             use parse_that::regex::classify::RegexClass;
-            if let RegexClass::Numeric { allow_leading_dot, .. } = opts.classify_regex(pattern) {
+            let classified = opts.classify_regex(pattern);
+            if let RegexClass::Numeric { allow_leading_dot, .. } = classified {
                 if let Some(field) = ctx.next_aggregate_field() {
                     if matches!(field.ty, TypeDesc::F64) {
                         let offset = field.offset as usize;
@@ -116,7 +176,31 @@ impl RustEmitter {
                             }
                         };
                     }
+                    // Non-F64 field at this cursor position — keep the
+                    // field consumed but fall through to the non-
+                    // aggregate emission path. Probing and advancing
+                    // the cursor is idempotent across non-matching
+                    // field types; emitters downstream see the
+                    // advanced cursor and match the next field.
                 }
+            } else if let Some(pack) = probe_span_aggregate_pack(ctx) {
+                // AV.0.2: bare-`Span` layout, non-numeric regex body —
+                // wrap the regex match with the Span pack. The shared
+                // `emit_regex` call below returns `Option<Span>`; we
+                // discard the Span value (we already have the equivalent
+                // `(lo, hi) = (__span_lo, state.offset)` in scope) and
+                // fold the pack + `Some(())` into the match's success
+                // arm.
+                let regex_expr = crate::generate::regex::emit_regex(pattern, &opts);
+                return quote! {
+                    match ({ #regex_expr }) {
+                        Some(_) => {
+                            #pack
+                            Some(())
+                        }
+                        None => None,
+                    }
+                };
             }
         }
 
@@ -229,4 +313,46 @@ pub(super) fn number_scan_fn(allow_leading_dot: bool) -> TokenStream {
     } else {
         quote! { ::parse_that::scan_number_strict_f64 }
     }
+}
+
+/// AV.0.2: probe `ctx` for a bare-`Span` aggregate field. When the
+/// active payload layout's next field is a `TypeDesc::Span`, advance
+/// the cursor and return the pack token stream that writes
+/// `(__span_lo, state.offset)` into the layout's 8-byte slot.
+///
+/// The returned stream is inline — callers splice it into the
+/// success arm of their literal / regex match (`#pack` between the
+/// `state.offset` advance and the trailing `Some(())`). `__span_lo`
+/// is the rule prelude's captured start offset; `state.offset` at
+/// pack time is the post-match cursor, so for single-leaf bodies
+/// (e.g. BBNF `identifier = /regex/ -> Span`) the full rule span
+/// lands in the buffer. For multi-leaf bodies (e.g. BBNF `literal`
+/// whose body is an Alt of Seq-of-leaves) the first leaf's pack
+/// writes a premature `hi`; the rule's aggregate epilogue rewrites
+/// the `hi` half of the buffer with the final `state.offset` before
+/// the `push_leaf_with` call, so the on-tape Span is always correct.
+///
+/// Returns `None` when the cursor is past the layout's fields or
+/// the current field is not `TypeDesc::Span` — callers then fall
+/// through to their non-aggregate emission.
+pub(super) fn probe_span_aggregate_pack(ctx: &mut RustEmitCtx) -> Option<TokenStream> {
+    if ctx.payload_layout.is_none() {
+        return None;
+    }
+    let field = ctx.next_aggregate_field()?;
+    if !matches!(field.ty, TypeDesc::Span) {
+        // Cursor has advanced past this non-Span field; caller
+        // emission will not pack but the layout's remaining fields
+        // can still be captured by downstream emitters.
+        return None;
+    }
+    let lo_off = field.offset as usize;
+    let hi_off = lo_off + 4;
+    Some(quote! {
+        __aggregate_buf[#lo_off..#lo_off + 4]
+            .copy_from_slice(&(__span_lo as u32).to_le_bytes());
+        __aggregate_buf[#hi_off..#hi_off + 4]
+            .copy_from_slice(&(state.offset as u32).to_le_bytes());
+        __has_payload = true;
+    })
 }

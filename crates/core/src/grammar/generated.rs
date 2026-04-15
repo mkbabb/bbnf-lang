@@ -11518,7 +11518,7 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                let mut __aggregate_buf: [u8; 16] = [0u8; 16];
+                let mut __aggregate_buf: [u8; 16usize] = [0u8; 16usize];
                 let mut __has_payload = false;
                 match ({
                     {
@@ -11678,7 +11678,7 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                let mut __aggregate_buf: [u8; 16] = [0u8; 16];
+                let mut __aggregate_buf: [u8; 16usize] = [0u8; 16usize];
                 let mut __has_payload = false;
                 match ({
                     match ({
@@ -14124,7 +14124,7 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                let mut __aggregate_buf: [u8; 16] = [0u8; 16];
+                let mut __aggregate_buf: [u8; 16usize] = [0u8; 16usize];
                 let mut __has_payload = false;
                 match ({
                     {
@@ -14194,7 +14194,7 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                let mut __aggregate_buf: [u8; 16] = [0u8; 16];
+                let mut __aggregate_buf: [u8; 16usize] = [0u8; 16usize];
                 let mut __has_payload = false;
                 match ({
                     {
@@ -14583,7 +14583,7 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                let mut __aggregate_buf: [u8; 16] = [0u8; 16];
+                let mut __aggregate_buf: [u8; 16usize] = [0u8; 16usize];
                 let mut __has_payload = false;
                 match ({
                     {
@@ -14746,7 +14746,7 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                let mut __aggregate_buf: [u8; 16] = [0u8; 16];
+                let mut __aggregate_buf: [u8; 16usize] = [0u8; 16usize];
                 let mut __has_payload = false;
                 match ({
                     {
@@ -14877,7 +14877,7 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                let mut __aggregate_buf: [u8; 16] = [0u8; 16];
+                let mut __aggregate_buf: [u8; 16usize] = [0u8; 16usize];
                 let mut __has_payload = false;
                 match ({
                     {
@@ -16992,7 +16992,7 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                let mut __aggregate_buf: [u8; 16] = [0u8; 16];
+                let mut __aggregate_buf: [u8; 16usize] = [0u8; 16usize];
                 let mut __has_payload = false;
                 match ({
                     '__span_blk78: {

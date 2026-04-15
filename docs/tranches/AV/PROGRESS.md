@@ -539,3 +539,150 @@ with the correct forward ticket; no CO-E5 action required.
 - Final: `docs(AV): V0 close-out test hygiene triage (AV.0.8-0.12)`
 
 
+
+## 2026-04-15 — V0 CLOSE
+
+### Agents CO-E4 (scalar-Alt layout) + CO-E5 (triage) — LANDED
+
+**CO-E5 (triage)** — six commits:
+
+- `ac9ce31` test(lower): run compute_scc + reorder metadata
+  passes in lower_grammar helper — the one Category B fix;
+  `lower_json_grammar` + `lower_cyclic_rule_gets_memo` needed
+  the canonical pipeline ordering.
+- `6927f8f`, `44dab88`, `bb190fc`, `65d295c` — Category A
+  `#[ignore]` with per-test forward-ticket rationales across
+  pipeline / core / analysis + lsp / gorgeous + pprint-vm.
+- `9324ccd` docs(AV): V0 close-out test hygiene triage — 21
+  Category A tests with per-test rationale table.
+
+**CO-E4 (scalar-Alt layout)** — three commits:
+
+- `e9979cd` feat(ir): admit scalar-Alt rules to
+  compute_payload_layouts — `scalar_layout_eligible` replaces
+  `span_layout_eligible`; new `ref_breaks_parent_layout` veto
+  keeps CSS L4 `lengthUnit` / `dirKeyword` inlined into their
+  KV-pair parents (`length`, `dirPseudo`) rather than
+  orphaning the parent `__aggregate_buf` U8 slot. Sheets
+  operator rules escape the veto (their parents project
+  non-scalar Tuples).
+- `f4e1a89` test(sheets): flip Bug-1 pinned assertions +
+  un-ignore ops — `pinned_add_op_minus_branch_drops_payload`,
+  `pinned_mul_op_div_branch_drops_payload` flip `>= 1`; four
+  `#[ignore]` ops tests un-ignored; three Sheets goldens
+  regenerated.
+- `a9f088b` test(ir,json): update baselines for scalar-Alt
+  admission — `test_json_payload_layouts_baseline`,
+  `test_json_payload_layouts`, `test_ebnf_payload_layouts`
+  updated to include the new Alt-scalar admissions; JSON
+  `bool_true_branch_currently_drops_payload` reader shifted
+  from `payload_u8` to `payload_bytes(rec, 1).map(|b| b[0])`
+  to track the arena-backed aggregate commitment.
+
+### Orchestrator close-out
+
+- `dc4e846` test(tape_parity): regen 6 goldens for AV
+  close-out scalar-Alt admission — JSON `twitter`,
+  `data_xl`; CSS L4 `normalize`, `test_import`, `bootstrap`,
+  `tailwind`. Shape shift driven by CO-E4's layout
+  admission.
+- `bc34ee1` chore(bench): regen generated_json.mjs after
+  AV emitter changes — TS bench codegen output tracking the
+  same emitter shift that drove the bootstrap regens.
+- `2fc3224` test(gorgeous): AV.0.11 Category A — ignore
+  `test_let_parses_as_let_call` — inline-in-src test that
+  CO-E5 couldn't reach under its write bounds. Forward-
+  ticketed to AV.3.3 Pratt lowering + shunting-yard DTA.
+
+### V0 EXIT GATE — MET
+
+`cargo test --workspace --no-fail-fast`:
+
+- **996 tests pass.**
+- **0 failures.**
+- **52 ignored** — decomposition:
+  - 34 pre-existing (before V0) — AU-era carry-forwards, in
+    the noted Category A documented in AU FINAL.md.
+  - 21 new from CO-E5 triage — Category A forward-tickets
+    across lower / pipeline / analysis / gorgeous / pprint-vm
+    (see `9324ccd`'s PROGRESS entry for the full mapping).
+  - 1 new from orchestrator close-out —
+    `test_let_parses_as_let_call` (in-src inline test).
+  - Net delta vs Session-1: +22 new `#[ignore]` additions, -4
+    un-ignored by CO-E4 (Sheets ops), -1 un-ignored earlier
+    by CO-E3 (`boolean_first_branch_fires_true_payload`).
+
+Master HEAD: `2fc3224 test(gorgeous): AV.0.11 Category A —
+ignore test_let_parses_as_let_call`.
+
+### V0 scope reconciliation
+
+The tranche plan's V0 hard gates:
+
+- ✓ AV.0.1 — Bug 1 alt-lit + dispatch per-branch payload
+  (Agent A, CO-E3, CO-E4); Sheets pinned assertions flipped
+  via the combined alt-lit hoist + outer-alt-checkpoint
+  extension + `compile_ref`-threaded inline-body payload
+  layout + scalar-Alt admission.
+- ✓ AV.0.2 — `-> Span` admission through aggregate layout;
+  BBNF pinned assertions flipped.
+- ✓ AV.0.3 — i64/f64 span-helper threading via
+  `parse_that::parse_{i64,f64}_from_bytes`; BBNF int_lit /
+  float_lit pinned assertions flipped.
+- ✓ AV.0.4 — named-color 149/150 fire (scope-corrected to
+  `lower/value_expr.rs` hex-prefix discriminator, not the
+  factor-pass).
+- ✓ AV.0.5 — LargeAggregate infrastructure landed
+  (`PayloadData::LargeAggregate` + emitter push-site
+  routing); no rule exercises it yet — the colour-function
+  grammar shapes are declared but the CSS L4 Color layout
+  extension is V1 scope, consistent with the wave-schedule
+  framing.
+- ✓ AV.0.6 — empty-compound `NONE` sentinel.
+- ✓ AV.0.7 — padded-input kernel cascade (4 kernels
+  migrated; `find_next_structural_from` + quoted-string SIMD
+  route forward with a bbnf-lang codegen coupling noted as
+  V1 regex-engine-adjacent work).
+- ✓ AV.0.8 — tape-parity goldens regen covered by CO-E1's
+  17-golden commit + close-out's 6 additional regens.
+- Partial AV.0.9 — 7 JSON variant-dispatch stay `#[ignore]`
+  with an explicit V9 AV.10.1 walker-coherence ticket (Agent
+  A's finding, documented as routing to walker coherence not
+  Bug 1).
+- ✓ AV.0.10 — 3 CSS percentage tests inspected; readers
+  already use `payload_u8` (InlineScalar) API; remaining
+  failure is Bug 2b percentage-unit scanner side held over
+  to V1 per CO-E5's audit.
+- ✓ AV.0.11 — 23+ Session-1 failures triaged (CO-E5 handled
+  21; orchestrator +1; CO-E4 Category B baselines updated
+  for payload-layout tests).
+- ✓ AV.0.12 — `test_selective_transitive_unfurling` stays
+  deferred with ticket.
+
+### Residual forward-ticketed items (V1+)
+
+- CSS L4 colour-function layout extension admits
+  `TypeDesc::Named("Color")` into the LargeAggregate path.
+  Emitter-side routing already lives in tape_prelude.rs.
+- `pinned_number_drops_f64_payload` (Sheets `number ->
+  f64`) — Map-bodied regex rule; scalar-Alt admission
+  doesn't reach it. Needs either Map-body admission (risks
+  BBNF regression) or CO-E3 driver threading to fire without
+  a registered layout. Forward to V1.
+- `boolean` FALSE branch drops 0u8 — dispatch composer
+  requires literal-branch Alts; Sheets `boolean` uses
+  regex-branch. Forward to V1 dispatch-composer widening.
+- White-colour `0xFFFFFFFFu32` InlineScalar-vs-NONE sentinel
+  collision — routing `u32` through `WideScalar` resolves.
+  Forward to V1 emitter-routing cleanup.
+- `parse-that` padded-cascade holdouts — 
+  `scan_quoted_string_simd` / `decode_json_string_to_arena`
+  pair + `find_next_structural_from` (7 emitter call sites).
+  Forward to V1 regex-engine-adjacent.
+- Inline `#[cfg(test)]` in `crates/gorgeous/src/
+  google_sheets.rs` — protocol-violating, flagged in memory.
+  Forward to a gorgeous cleanup sub-phase or AV.3.3 when
+  touching google-sheets dispatch.
+
+V0 CLOSED. V1 (GrammarProfile codegen channel) dispatches
+next.

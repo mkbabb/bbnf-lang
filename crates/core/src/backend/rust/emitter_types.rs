@@ -8,7 +8,7 @@
 use std::collections::HashSet;
 
 use bbnf_ir::passes::PayloadLayout;
-use bbnf_ir::{RuleId, TypeDesc};
+use bbnf_ir::{FnDescriptor, IrNode, MapExpr, RuleId, StringId, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::format_ident;
 
@@ -100,6 +100,23 @@ pub struct RustEmitCtx {
     /// via `next_aggregate_field`. Reset to 0 when the layout is
     /// installed in `pre_compile_rule_body`.
     pub aggregate_field_cursor: usize,
+    /// AU.3.1: precomputed set of regex pattern string ids whose
+    /// rules carry `-> decode_json_string_to_arena(input) : String`
+    /// (or equivalent string-decode annotations). Populated once per
+    /// ctx construction from `ir.rules` + `ir.fns` — the pattern set
+    /// is grammar-level structural, not per-rule. Used by
+    /// `emit_regex_match_impl` to route into the decode kernel
+    /// regardless of whether the rule is being compiled standalone
+    /// or inlined into an enclosing rule, which closes the
+    /// inlined-rule detection gap (`pre_compile_rule_body` doesn't
+    /// run for inlined rules in the driver, so `payload_types`
+    /// cannot be relied on as a signal).
+    pub string_decode_patterns: HashSet<StringId>,
+    /// AU.3.1: map from `StringId` (regex pattern) to the rule's
+    /// codegen `variant_idx` — the low 8 bits of `rule.id`. Resolves
+    /// `push_leaf_with_string`'s `variant_idx` arg without relying
+    /// on `pre_compile_rule_body` threading `current_rule_id`.
+    pub string_decode_variant_idx: std::collections::HashMap<StringId, u8>,
 }
 
 impl RustEmitCtx {
@@ -110,6 +127,8 @@ impl RustEmitCtx {
     /// emission calls that use it. This is guaranteed by `generate_all()` which
     /// creates `IrCodegenCtx` on the stack before emission and drops it after.
     pub fn new(ir_ctx: &IrCodegenCtx<'_>) -> Self {
+        let (string_decode_patterns, string_decode_variant_idx) =
+            collect_string_decode_patterns(ir_ctx.ir);
         Self {
             ir_ctx_ptr: ir_ctx as *const IrCodegenCtx<'_> as *const (),
             hoisted: Vec::new(),
@@ -122,7 +141,27 @@ impl RustEmitCtx {
             payload_types: Vec::new(),
             payload_layout: None,
             aggregate_field_cursor: 0,
+            string_decode_patterns,
+            string_decode_variant_idx,
         }
+    }
+
+    /// AU.3.1: check whether a regex pattern (by string id) routes
+    /// through the JSON string decode kernel. Called by
+    /// `emit_regex_match_impl` — wins over the span-only fallback
+    /// when set.
+    pub fn is_string_decode_pattern(&self, sid: StringId) -> bool {
+        self.string_decode_patterns.contains(&sid)
+    }
+
+    /// AU.3.1: look up the variant_idx for a string-decode pattern.
+    /// Returns `0` when the pattern is not in the decode set (the
+    /// caller should have gated on `is_string_decode_pattern` first).
+    pub fn string_decode_variant_idx(&self, sid: StringId) -> u8 {
+        self.string_decode_variant_idx
+            .get(&sid)
+            .copied()
+            .unwrap_or(0)
     }
 
     /// AT.1: check whether a given scalar type should be captured
@@ -131,6 +170,7 @@ impl RustEmitCtx {
     pub fn has_payload_type(&self, td: &TypeDesc) -> bool {
         self.payload_types.iter().any(|t| t == td)
     }
+
 
     /// AT.1: return the 1-based tag for a payload type in a multi-type
     /// Alt. Returns `None` when payload_types has at most one element
@@ -210,8 +250,87 @@ impl RustEmitCtx {
             self.tape_surgery = saved_surgery;
         }
     }
+
+    /// AU.3.1: Check whether any outer Alt frame has tape surgery
+    /// active. During a branch body compile, `tape_surgery` is moved
+    /// from `self` onto the `alt_context_stack` by
+    /// `save_alt_context`; the branch body sees `self.tape_surgery
+    /// = None` but `alt_context_stack` has the saved state. This
+    /// peek lets leaf emitters detect the outer-rule tape-surgery
+    /// context without waiting for `restore_alt_context` (which only
+    /// runs after every branch has compiled).
+    pub fn outer_tape_surgery_active(&self) -> bool {
+        if self.tape_surgery.is_some() {
+            return true;
+        }
+        self.alt_context_stack
+            .iter()
+            .any(|(_, surgery)| surgery.is_some())
+    }
 }
 
 // SAFETY: RustEmitCtx is only used single-threaded within a single compile_grammar call.
 unsafe impl Send for RustEmitCtx {}
 unsafe impl Sync for RustEmitCtx {}
+
+/// AU.3.1: walk the grammar IR once, collecting the regex pattern
+/// `StringId`s that route through the JSON string-decode kernel.
+///
+/// A pattern qualifies when it's the inner of a `Map { Regex(sid),
+/// FnDescriptor::Expr { expr: FnCall { name: "decode_json_string_to_arena",
+/// .. }, .. } }` rule body. Returns `(pattern_set, variant_idx_map)`
+/// where `variant_idx_map` records the owning rule's codegen
+/// variant_idx (`rule.id & 0xFF`) so the scan site can stamp it
+/// into `push_leaf_with_string` without needing a runtime
+/// "current rule id" lookup.
+///
+/// One precompute at ctx construction beats either a thread-local
+/// stack or per-trait-method rule threading. The set is small
+/// (≤ 1 per grammar in practice) and lookup is O(1) via `HashSet`.
+fn collect_string_decode_patterns(
+    ir: &bbnf_ir::GrammarIR,
+) -> (HashSet<StringId>, std::collections::HashMap<StringId, u8>) {
+    let mut patterns = HashSet::new();
+    let mut variant_idx_map = std::collections::HashMap::new();
+    for rule in &ir.rules {
+        let (regex_sid, fn_id) = match &rule.body {
+            IrNode::Map { inner, fn_id } => match inner.as_ref() {
+                IrNode::Regex(sid) => (*sid, *fn_id),
+                _ => continue,
+            },
+            _ => continue,
+        };
+        let fn_desc = &ir.fns[fn_id as usize];
+        let FnDescriptor::Expr { expr, .. } = fn_desc else {
+            continue;
+        };
+        if !is_decode_json_string_expr(expr, ir) {
+            continue;
+        }
+        let idx = (rule.id & 0xFF) as u8;
+        patterns.insert(regex_sid);
+        variant_idx_map.insert(regex_sid, idx);
+    }
+    (patterns, variant_idx_map)
+}
+
+/// AU.3.1: predicate on `MapExpr` — true iff the expression is a
+/// top-level call to the `decode_json_string_to_arena` kernel.
+///
+/// The lowerer stores the function arg list as collected via
+/// `collect_fn_call_args`, which structurally descends the tape's
+/// value_expr subtrees. For `decode_json_string_to_arena(input)`
+/// the arg list may lower to `[]` or `[Input]` depending on how
+/// the tape rewrite folded the `input` atom — both are equivalent
+/// to "the function operates on the parsed input." We accept
+/// either shape.
+fn is_decode_json_string_expr(expr: &MapExpr, ir: &bbnf_ir::GrammarIR) -> bool {
+    let MapExpr::FnCall { name, args } = expr else {
+        return false;
+    };
+    let name_str = ir.get_string(*name);
+    if name_str != "decode_json_string_to_arena" {
+        return false;
+    }
+    matches!(args.as_slice(), [] | [MapExpr::Input])
+}

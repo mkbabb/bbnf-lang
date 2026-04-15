@@ -140,6 +140,36 @@ impl RustEmitter {
             }
         }
 
+        // AU.3.1: detection via the precomputed string-decode
+        // pattern set on the ctx. This set is populated once at
+        // ctx creation by walking the grammar IR for rules whose
+        // body matches `Map { Regex(sid), FnDescriptor::Expr {
+        // FnCall("decode_json_string_to_arena", [Input]), .. } }`.
+        // Using a structural pattern-set beats chasing the
+        // `ctx.current_rule_id` / `ctx.payload_types` signals:
+        // those reflect the enclosing compile context, not the
+        // rule that originally owned the regex, and break when
+        // the string rule is inlined into `pair` / `value`.
+        if let Some(sid) = ir.find_string_id(pattern) {
+            if ctx.is_string_decode_pattern(sid) {
+                let variant_idx = ctx.string_decode_variant_idx(sid);
+                // `outer_tape_surgery_active` peeks at both
+                // `ctx.tape_surgery` (set for the enclosing rule
+                // itself when we're directly in a MustTape Alt
+                // body) and the saved alt-context stack (set when
+                // we're deeper, e.g. inside an Alt branch body whose
+                // outer rule is MustTape). Either case requires the
+                // decode scan to `mark_children` + set
+                // `__has_children = true` so the rule's epilogue
+                // pushes a compound wrapping the string leaf.
+                let needs_mark_children = ctx.outer_tape_surgery_active();
+                return crate::backend::rust::emitter::string_decode::emit_decode_call(
+                    variant_idx,
+                    needs_mark_children,
+                );
+            }
+        }
+
         // Default: span-only scan. The shared regex emitter returns
         // `Option<Span>`; we discard the Span and re-express as
         // `Option<()>` so the tape-first composition pattern holds.
@@ -179,3 +209,4 @@ impl RustEmitter {
         }
     }
 }
+

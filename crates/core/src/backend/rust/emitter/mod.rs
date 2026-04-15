@@ -16,6 +16,7 @@ mod operator_chain;
 mod prettify;
 mod repeat;
 mod seq;
+pub(crate) mod string_decode;
 pub(crate) mod tape_prelude;
 mod ws;
 

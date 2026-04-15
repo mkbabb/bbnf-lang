@@ -1423,7 +1423,16 @@ fn try_specialize_map_fn(inner: &IrNode, fn_id: FnId, ctx: &mut LowerCtx<'_>) ->
     // Handles both concrete scalar TypeDescs (TypeDesc::F64, etc.) and
     // legacy Named("f64") — the latter may still appear from explicit
     // type annotations using unknown names.
-    let (expr, type_name_owned) = match desc {
+    //
+    // AU.2.4: The type annotation is optional — when it's absent, we
+    // attempt structural inference from the (regex, expr) pair: a
+    // HexDigits regex paired with `FnCall(_, [Input])` is a hex
+    // converter, even without an explicit `: u32` annotation. This
+    // side-steps a bootstrap-grammar surface-syntax quirk where
+    // `-> fn_call(input) : type_name` loses the type annotation
+    // between the function-call arg list and the type name.
+    let desc_clone = desc.clone();
+    let (expr, type_name_owned) = match &desc_clone {
         FnDescriptor::Expr {
             expr,
             return_type: Some(td),
@@ -1438,6 +1447,32 @@ fn try_specialize_map_fn(inner: &IrNode, fn_id: FnId, ctx: &mut LowerCtx<'_>) ->
                 Some(n) => (expr.clone(), n),
                 None => return fn_id,
             }
+        }
+        FnDescriptor::Expr {
+            expr,
+            return_type: None,
+        } => {
+            // Type-free specialization: infer from (regex, expr) shape.
+            // Currently only the hex-converter pattern is inferred;
+            // number-conversion already requires the `-> f64` shorthand
+            // to carry type information explicitly.
+            let IrNode::Regex(sid) = inner else {
+                return fn_id;
+            };
+            let pattern = ctx.strings.resolve(*sid).to_owned();
+            if let MapExpr::FnCall { name, args } = expr {
+                if args.len() == 1
+                    && matches!(args[0], MapExpr::Input | MapExpr::InputProp { .. })
+                    && matches!(classify_regex(&pattern), RegexClass::HexDigits)
+                {
+                    let fn_path_str = ctx.strings.resolve(*name).to_owned();
+                    let path_sid = ctx.strings.intern(&fn_path_str);
+                    return ctx
+                        .fns
+                        .push(FnDescriptor::HexConvert { fn_path: path_sid });
+                }
+            }
+            return fn_id;
         }
         _ => return fn_id,
     };

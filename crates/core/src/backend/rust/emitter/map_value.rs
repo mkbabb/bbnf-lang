@@ -176,9 +176,82 @@ impl RustEmitter {
     pub(super) fn emit_hex_convert_impl(
         &mut self,
         inner: TokenStream,
-        _fn_path: &str,
-        _ctx: &mut RustEmitCtx,
+        fn_path: &str,
+        ctx: &mut RustEmitCtx,
     ) -> TokenStream {
+        // AU.2.4: route HexConvert through the tape-first emitter so
+        // `hex = "#" , /[0-9a-fA-F]{3,8}/ -> parse_hex_color(input) : u32`
+        // activates `push_leaf_with_u32` instead of dropping the u32
+        // result. The `inner` token stream parses the hex digits and
+        // advances the cursor; capturing `state.offset` before the
+        // inner parse lets us read the exact matched bytes (just the
+        // hex digits, not any leading delimiter the enclosing rule
+        // already consumed), pass them through the user-provided
+        // converter, and stash the u32 into either the aggregate
+        // buffer (layout-active path) or the typed payload local
+        // (single-type path).
+        let fn_path_tokens: TokenStream = fn_path.parse().unwrap_or_else(|err| {
+            panic!("hex_convert: invalid fn_path `{fn_path}`: {err}")
+        });
+
+        // Aggregate layout active → write u32 bytes into the buffer.
+        if ctx.payload_layout.is_some() {
+            if let Some(field) = ctx.next_aggregate_field() {
+                if matches!(field.ty, TypeDesc::U32) {
+                    let offset = field.offset as usize;
+                    let end = offset + 4;
+                    return quote! {
+                        {
+                            let __hex_start = state.offset;
+                            match ({ #inner }) {
+                                Some(_) => {
+                                    let __hex_bytes = &state.src_bytes[__hex_start..state.offset];
+                                    let __hex_str = ::core::str::from_utf8(__hex_bytes)
+                                        .unwrap_or("");
+                                    let __hex_val: u32 = #fn_path_tokens(__hex_str);
+                                    __aggregate_buf[#offset..#end]
+                                        .copy_from_slice(&__hex_val.to_le_bytes());
+                                    __has_payload = true;
+                                    Some(())
+                                }
+                                None => None,
+                            }
+                        }
+                    };
+                }
+            }
+            // Layout active but the current field is not U32 — fall
+            // through to side-effect only.
+            return quote! { { #inner } };
+        }
+
+        // Single-type payload path → capture into `__payload_u32`.
+        if ctx.has_payload_type(&TypeDesc::U32) {
+            let tag_assign = ctx.payload_tag(&TypeDesc::U32).map(|tag| {
+                quote! { __payload_tag = #tag; }
+            });
+            return quote! {
+                {
+                    let __hex_start = state.offset;
+                    match ({ #inner }) {
+                        Some(_) => {
+                            let __hex_bytes = &state.src_bytes[__hex_start..state.offset];
+                            let __hex_str = ::core::str::from_utf8(__hex_bytes)
+                                .unwrap_or("");
+                            __payload_u32 = #fn_path_tokens(__hex_str);
+                            #tag_assign
+                            __has_payload = true;
+                            Some(())
+                        }
+                        None => None,
+                    }
+                }
+            };
+        }
+
+        // No payload active (rule not marked as needing u32 capture) —
+        // preserve the parse side effect. View layer can still recover
+        // the value from the span via `parse_hex_color(view.text())`.
         quote! {
             { #inner }
         }

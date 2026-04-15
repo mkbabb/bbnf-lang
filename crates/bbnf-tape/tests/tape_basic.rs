@@ -6,9 +6,14 @@
 //! 2. `TapeBuilder::push_leaf` / `push_compound` append records in
 //!    insertion order with stable offsets.
 //! 3. `TapeCursor::record` / `kind` / `span` / `child` round-trip.
-//! 4. `ChunkedArena` spans chunk boundaries without data corruption.
+//! 4. Flat Vec storage holds arbitrary record counts without data
+//!    corruption.
+//! 5. AU.6.7 — unified `PayloadData` dispatches the four payload
+//!    shapes through `push_leaf_with`: inline scalars pack into
+//!    `child_off`; wide scalars, aggregates, and byte strings use
+//!    the shared arena.
 
-use bbnf_tape::{Tape, TapeBuilder, TapeCursor, TapeKind, TapeOffset, TapeRec};
+use bbnf_tape::{PayloadData, Tape, TapeBuilder, TapeCursor, TapeKind, TapeOffset, TapeRec};
 
 #[test]
 fn tape_rec_size() {
@@ -32,6 +37,7 @@ fn push_leaf_round_trip() {
     assert_eq!(rec.span_len(), 5);
     assert_eq!(rec.child_off, TapeOffset::NONE);
     assert!(!rec.has_children());
+    assert!(!rec.has_payload());
 }
 
 #[test]
@@ -100,9 +106,8 @@ fn cursor_walks_children() {
 }
 
 #[test]
-fn chunked_arena_crosses_chunk_boundary() {
-    // CHUNK_CAPACITY is 4096; push 5000 leaves to force a spill into
-    // the second chunk and verify every record is readable by offset.
+fn large_tape_round_trip() {
+    // Push 5000 leaves and verify every record is readable by offset.
     let mut b = TapeBuilder::with_capacity(5000);
     let mut offsets = Vec::with_capacity(5000);
     for i in 0..5000u32 {
@@ -111,7 +116,6 @@ fn chunked_arena_crosses_chunk_boundary() {
     let tape = b.finish().unwrap();
     assert_eq!(tape.len(), 5000);
 
-    // Readback across the chunk boundary.
     for (i, &off) in offsets.iter().enumerate() {
         let rec = tape.get(off);
         assert_eq!(rec.span_lo, i as u32);
@@ -176,17 +180,24 @@ fn empty_compound_clears_has_children() {
     assert!(!compound.has_children(), "empty compound must clear has_children");
 }
 
-// ── Payload round-trip tests (AM.2) ──────────────────────────────
+// ── AU.6.7: unified PayloadData round-trips ─────────────────────
 
 #[test]
 fn payload_f64_round_trip() {
     let mut b = TapeBuilder::new();
-    let off = b.push_leaf_with_f64(TapeKind::Regex, 0, 5, 0, 0, std::f64::consts::PI);
+    let off = b.push_leaf_with(
+        TapeKind::Regex,
+        0,
+        5,
+        0,
+        0,
+        PayloadData::WideScalar(std::f64::consts::PI.to_bits()),
+    );
     let tape = b.finish().unwrap();
 
     let rec = tape.get(off);
     assert_eq!(rec.kind(), TapeKind::Regex);
-    assert_ne!(rec.payload_idx, 0, "payload_idx must be non-zero");
+    assert!(rec.has_payload(), "record must advertise a payload");
     let val = tape.payload_f64(rec).expect("should read f64 payload");
     assert!((val - std::f64::consts::PI).abs() < f64::EPSILON);
 }
@@ -194,8 +205,22 @@ fn payload_f64_round_trip() {
 #[test]
 fn payload_bool_round_trip() {
     let mut b = TapeBuilder::new();
-    let off_t = b.push_leaf_with_bool(TapeKind::Literal, 0, 4, 0, 0, true);
-    let off_f = b.push_leaf_with_bool(TapeKind::Literal, 4, 9, 1, 0, false);
+    let off_t = b.push_leaf_with(
+        TapeKind::Literal,
+        0,
+        4,
+        0,
+        0,
+        PayloadData::InlineScalar(1),
+    );
+    let off_f = b.push_leaf_with(
+        TapeKind::Literal,
+        4,
+        9,
+        1,
+        0,
+        PayloadData::InlineScalar(0),
+    );
     let tape = b.finish().unwrap();
 
     assert_eq!(tape.payload_bool(tape.get(off_t)), Some(true));
@@ -205,31 +230,61 @@ fn payload_bool_round_trip() {
 #[test]
 fn payload_u8_round_trip() {
     let mut b = TapeBuilder::new();
-    let off = b.push_leaf_with_u8(TapeKind::Literal, 0, 2, 3, 0, 42);
+    let off = b.push_leaf_with(
+        TapeKind::Literal,
+        0,
+        2,
+        3,
+        0,
+        PayloadData::InlineScalar(42),
+    );
     let tape = b.finish().unwrap();
 
     assert_eq!(tape.payload_u8(tape.get(off)), Some(42));
 }
 
 #[test]
-fn payload_idx_zero_returns_none() {
+fn payload_absent_returns_none() {
     let mut b = TapeBuilder::new();
     let off = b.push_leaf(TapeKind::Span, 0, 5, 0, 0);
     let tape = b.finish().unwrap();
     let rec = tape.get(off);
 
-    assert_eq!(rec.payload_idx, 0);
+    assert!(rec.child_off.is_none());
+    assert!(!rec.has_payload());
     assert!(tape.payload_f64(rec).is_none());
     assert!(tape.payload_bool(rec).is_none());
     assert!(tape.payload_u8(rec).is_none());
+    assert!(tape.payload_string(rec).is_none());
 }
 
 #[test]
 fn multiple_payloads_independent() {
     let mut b = TapeBuilder::new();
-    let off1 = b.push_leaf_with_f64(TapeKind::Regex, 0, 3, 0, 0, 1.5);
-    let off2 = b.push_leaf_with_f64(TapeKind::Regex, 3, 6, 1, 0, -99.0);
-    let off3 = b.push_leaf_with_u8(TapeKind::Literal, 6, 8, 2, 0, 255);
+    let off1 = b.push_leaf_with(
+        TapeKind::Regex,
+        0,
+        3,
+        0,
+        0,
+        PayloadData::WideScalar(1.5_f64.to_bits()),
+    );
+    let off2 = b.push_leaf_with(
+        TapeKind::Regex,
+        3,
+        6,
+        1,
+        0,
+        PayloadData::WideScalar((-99.0_f64).to_bits()),
+    );
+    let off3 = b.push_leaf_with(
+        TapeKind::Literal,
+        6,
+        8,
+        2,
+        0,
+        PayloadData::InlineScalar(255),
+    );
     let off_plain = b.push_leaf(TapeKind::Span, 8, 10, 0, 0);
     let tape = b.finish().unwrap();
 
@@ -243,14 +298,33 @@ fn multiple_payloads_independent() {
     assert!(tape.payload_f64(tape.get(off_plain)).is_none());
 }
 
-// ── AQ.6.A: extended scalar suite round-trips ────────────────────
-
 #[test]
 fn payload_i8_round_trip() {
     let mut b = TapeBuilder::new();
-    let off_min = b.push_leaf_with_i8(TapeKind::Literal, 0, 4, 0, 0, i8::MIN);
-    let off_max = b.push_leaf_with_i8(TapeKind::Literal, 4, 8, 1, 0, i8::MAX);
-    let off_neg = b.push_leaf_with_i8(TapeKind::Literal, 8, 12, 2, 0, -7);
+    let off_min = b.push_leaf_with(
+        TapeKind::Literal,
+        0,
+        4,
+        0,
+        0,
+        PayloadData::InlineScalar(u32::from_le_bytes([i8::MIN as u8, 0, 0, 0])),
+    );
+    let off_max = b.push_leaf_with(
+        TapeKind::Literal,
+        4,
+        8,
+        1,
+        0,
+        PayloadData::InlineScalar(u32::from_le_bytes([i8::MAX as u8, 0, 0, 0])),
+    );
+    let off_neg = b.push_leaf_with(
+        TapeKind::Literal,
+        8,
+        12,
+        2,
+        0,
+        PayloadData::InlineScalar(u32::from_le_bytes([(-7i8) as u8, 0, 0, 0])),
+    );
     let tape = b.finish().unwrap();
     assert_eq!(tape.payload_i8(tape.get(off_min)), Some(i8::MIN));
     assert_eq!(tape.payload_i8(tape.get(off_max)), Some(i8::MAX));
@@ -260,8 +334,28 @@ fn payload_i8_round_trip() {
 #[test]
 fn payload_i16_u16_round_trip() {
     let mut b = TapeBuilder::new();
-    let off_i = b.push_leaf_with_i16(TapeKind::Literal, 0, 4, 0, 0, -32_000);
-    let off_u = b.push_leaf_with_u16(TapeKind::Literal, 4, 8, 1, 0, 60_000);
+    let off_i = b.push_leaf_with(
+        TapeKind::Literal,
+        0,
+        4,
+        0,
+        0,
+        PayloadData::InlineScalar(u32::from_le_bytes({
+            let bytes = (-32_000_i16).to_le_bytes();
+            [bytes[0], bytes[1], 0, 0]
+        })),
+    );
+    let off_u = b.push_leaf_with(
+        TapeKind::Literal,
+        4,
+        8,
+        1,
+        0,
+        PayloadData::InlineScalar(u32::from_le_bytes({
+            let bytes = 60_000_u16.to_le_bytes();
+            [bytes[0], bytes[1], 0, 0]
+        })),
+    );
     let tape = b.finish().unwrap();
     assert_eq!(tape.payload_i16(tape.get(off_i)), Some(-32_000));
     assert_eq!(tape.payload_u16(tape.get(off_u)), Some(60_000));
@@ -270,18 +364,50 @@ fn payload_i16_u16_round_trip() {
 #[test]
 fn payload_i32_u32_round_trip() {
     let mut b = TapeBuilder::new();
-    let off_i = b.push_leaf_with_i32(TapeKind::Literal, 0, 4, 0, 0, i32::MIN + 1);
-    let off_u = b.push_leaf_with_u32(TapeKind::Literal, 4, 8, 1, 0, u32::MAX);
+    let off_i = b.push_leaf_with(
+        TapeKind::Literal,
+        0,
+        4,
+        0,
+        0,
+        PayloadData::InlineScalar((i32::MIN + 1) as u32),
+    );
+    // u32::MAX collides with the TapeOffset::NONE sentinel; route
+    // u32 values that could be u32::MAX through WideScalar. Here
+    // we use a smaller u32 value to exercise the inline path; the
+    // sentinel-collision debug_assert is tested via payload_wide.
+    let off_u = b.push_leaf_with(
+        TapeKind::Literal,
+        4,
+        8,
+        1,
+        0,
+        PayloadData::InlineScalar(u32::MAX - 1),
+    );
     let tape = b.finish().unwrap();
     assert_eq!(tape.payload_i32(tape.get(off_i)), Some(i32::MIN + 1));
-    assert_eq!(tape.payload_u32(tape.get(off_u)), Some(u32::MAX));
+    assert_eq!(tape.payload_u32(tape.get(off_u)), Some(u32::MAX - 1));
 }
 
 #[test]
 fn payload_i64_u64_round_trip() {
     let mut b = TapeBuilder::new();
-    let off_i = b.push_leaf_with_i64(TapeKind::Literal, 0, 4, 0, 0, i64::MIN);
-    let off_u = b.push_leaf_with_u64(TapeKind::Literal, 4, 8, 1, 0, u64::MAX);
+    let off_i = b.push_leaf_with(
+        TapeKind::Literal,
+        0,
+        4,
+        0,
+        0,
+        PayloadData::WideScalar(i64::MIN as u64),
+    );
+    let off_u = b.push_leaf_with(
+        TapeKind::Literal,
+        4,
+        8,
+        1,
+        0,
+        PayloadData::WideScalar(u64::MAX),
+    );
     let tape = b.finish().unwrap();
     assert_eq!(tape.payload_i64(tape.get(off_i)), Some(i64::MIN));
     assert_eq!(tape.payload_u64(tape.get(off_u)), Some(u64::MAX));
@@ -289,12 +415,76 @@ fn payload_i64_u64_round_trip() {
 
 #[test]
 fn payload_scalar_generic_round_trip() {
-    // Direct exercise of the generic write/read pair that the
-    // specialized wrappers delegate to.
     let mut b = TapeBuilder::new();
-    let off = b.push_leaf_with_scalar::<u32>(TapeKind::Literal, 0, 4, 0, 0, 0xDEAD_BEEF);
+    let off = b.push_leaf_with(
+        TapeKind::Literal,
+        0,
+        4,
+        0,
+        0,
+        PayloadData::InlineScalar(0xDEAD_BEEF_u32),
+    );
     let tape = b.finish().unwrap();
     assert_eq!(tape.payload_scalar::<u32>(tape.get(off)), Some(0xDEAD_BEEF));
+}
+
+#[test]
+fn payload_aggregate_round_trip() {
+    // Pack a 9-byte (f64, u8) aggregate like CSS dimensions.
+    let mut bytes = [0u8; 9];
+    bytes[..8].copy_from_slice(&1.5_f64.to_le_bytes());
+    bytes[8] = 7;
+
+    let mut b = TapeBuilder::new();
+    let off = b.push_leaf_with(
+        TapeKind::Span,
+        0,
+        4,
+        0,
+        0,
+        PayloadData::Aggregate(&bytes),
+    );
+    let tape = b.finish().unwrap();
+    let rec = tape.get(off);
+    let slice = tape.payload_bytes(rec, 9).expect("aggregate payload");
+    let f = f64::from_le_bytes(<[u8; 8]>::try_from(&slice[0..8]).unwrap());
+    let u = slice[8];
+    assert!((f - 1.5).abs() < f64::EPSILON);
+    assert_eq!(u, 7);
+}
+
+#[test]
+fn payload_bytes_round_trip() {
+    let mut b = TapeBuilder::new();
+    let off = b.push_leaf_with(
+        TapeKind::Span,
+        0,
+        5,
+        0,
+        0,
+        PayloadData::Bytes(b"hello"),
+    );
+    let tape = b.finish().unwrap();
+    let rec = tape.get(off);
+    assert_eq!(tape.payload_string(rec), Some("hello"));
+    assert_eq!(tape.payload_string_bytes(rec), Some(&b"hello"[..]));
+}
+
+#[test]
+fn payload_span_round_trip() {
+    let mut b = TapeBuilder::new();
+    let packed = (10u64) | ((42u64) << 32);
+    let off = b.push_leaf_with(
+        TapeKind::Span,
+        0,
+        50,
+        0,
+        0,
+        PayloadData::WideScalar(packed),
+    );
+    let tape = b.finish().unwrap();
+    let rec = tape.get(off);
+    assert_eq!(tape.payload_Span(rec), Some((10, 42)));
 }
 
 // ── AR.1.1: meta_idx side-channel round-trip ─────────────────────
@@ -340,7 +530,14 @@ fn meta_idx_round_trip_compound() {
 #[test]
 fn meta_idx_round_trip_payload_leaf() {
     let mut b = TapeBuilder::new();
-    let off = b.push_leaf_with_f64(TapeKind::Regex, 0, 5, 0, 3, 2.718);
+    let off = b.push_leaf_with(
+        TapeKind::Regex,
+        0,
+        5,
+        0,
+        3,
+        PayloadData::WideScalar(2.718_f64.to_bits()),
+    );
     let tape = b.finish().unwrap();
 
     let cursor = TapeCursor::new(&tape, off);
@@ -351,7 +548,6 @@ fn meta_idx_round_trip_payload_leaf() {
 
 #[test]
 fn meta_idx_default_zero_for_plain_pushes() {
-    // When callers pass meta_idx=0, the read-back is 0.
     let mut b = TapeBuilder::new();
     let off = b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
     let tape = b.finish().unwrap();
@@ -362,7 +558,6 @@ fn meta_idx_default_zero_for_plain_pushes() {
 
 #[test]
 fn meta_idx_all_5bit_values_round_trip() {
-    // Exhaustively verify every encodable meta_idx (0-31).
     let mut b = TapeBuilder::new();
     let mut offsets = Vec::new();
     for m in 0..=TapeRec::MAX_META_IDX {
@@ -378,9 +573,6 @@ fn meta_idx_all_5bit_values_round_trip() {
 
 #[test]
 fn meta_idx_15_16_boundary() {
-    // The 4th bit of meta_idx spills into flags[7]. Verify the
-    // boundary between 15 (fits in kind_meta alone) and 16 (needs
-    // the flags overflow bit).
     let mut b = TapeBuilder::new();
     let off_15 = b.push_leaf(TapeKind::Literal, 0, 1, 10, 15);
     let off_16 = b.push_leaf(TapeKind::Literal, 1, 2, 10, 16);
@@ -401,8 +593,6 @@ fn meta_idx_15_16_boundary() {
 
 #[test]
 fn meta_idx_and_has_children_coexist() {
-    // Verify that has_children (flags bit 6) and meta_idx bit 4
-    // (flags bit 7) do not interfere with each other.
     let mut b = TapeBuilder::new();
     let children_start = b.mark_children();
     b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
@@ -418,8 +608,6 @@ fn meta_idx_and_has_children_coexist() {
 
 #[test]
 fn meta_idx_max_value_with_all_kinds() {
-    // Max meta_idx (31) with every TapeKind to ensure packing
-    // does not corrupt the kind discriminant.
     let kinds = [
         TapeKind::Span, TapeKind::Epsilon, TapeKind::Literal,
         TapeKind::Regex, TapeKind::KvPair,

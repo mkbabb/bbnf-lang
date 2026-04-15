@@ -19,7 +19,11 @@ use crate::kind::TapeKind;
 pub struct TapeOffset(pub u32);
 
 impl TapeOffset {
-    /// Sentinel used for "no children" / "end of a compound run".
+    /// Sentinel used for "no children" / "end of a compound run" and —
+    /// on leaf records — "no payload". Every payload-bearing leaf
+    /// stores either an arena byte offset or an inline-packed scalar
+    /// value in `child_off`; a leaf whose `child_off == NONE` carries
+    /// a pure span and no payload.
     pub const NONE: TapeOffset = TapeOffset(u32::MAX);
 
     /// Treat this offset as a raw integer index.
@@ -46,13 +50,38 @@ impl TapeOffset {
 /// - `flags` — bitfield: variant index (low 6 bits), `has_children`
 ///   (bit 6), `meta_idx` bit \[4\] (bit 7). Five-bit `meta_idx`
 ///   (0-31) is split across `kind_meta[7:4]` and `flags[7]`.
+/// - `_reserved` — 2 bytes reserved for future packed metadata (kept
+///   for record-size stability against AU.6.7's predecessor layout,
+///   which carried a `payload_idx: u16` sentinel in this slot).
 /// - `span_lo` / `span_hi` — byte offsets into the source input.
 ///   `span_hi == span_lo` means a zero-width record (epsilon match).
-/// - `child_off` — `TapeOffset` of the first child record for
-///   compound nodes. `TapeOffset::NONE` for leaves. The children run
-///   from `child_off` (inclusive) to the next compound's `child_off`
-///   (exclusive) — the tape is written in pre-order, so siblings are
-///   contiguous.
+/// - `child_off` — polymorphic. For compound nodes, `TapeOffset` of
+///   the first child record; children run from `child_off` (inclusive)
+///   to the next compound's `child_off` (exclusive). For payload-
+///   bearing leaves, the arena byte offset of the payload
+///   (wide scalars / aggregates / byte strings) OR the inline-packed
+///   scalar value itself (≤ 4-byte scalars). For leaves with no
+///   payload or empty compounds, `TapeOffset::NONE`.
+///
+/// # Tranche AU.6.7 — unified arena payload encoding
+///
+/// The `payload_idx: u16` field was deleted. A record's payload
+/// presence is now encoded by:
+/// - `has_children() == false` AND `child_off.is_none()` → pure leaf
+///   (no payload).
+/// - `has_children() == false` AND `child_off != NONE` → payload-
+///   bearing leaf. The reader's caller decides how to decode
+///   `child_off` based on the grammar-declared type:
+///     * Inline scalars (`u8/i8/u16/i16/u32/i32/f32/bool`) — value
+///       packed directly into `child_off.0`.
+///     * Wide scalars (`u64/i64/f64/Span`) — `child_off.0` is an
+///       8-aligned arena byte offset.
+///     * Aggregates — `child_off.0` is an 8-aligned arena byte
+///       offset; layout bytes follow verbatim.
+///     * Byte strings — `child_off.0` is the arena byte offset of a
+///       `(len: u32 LE, bytes: [u8; len])` frame.
+/// - `has_children() == true` → compound (Seq/Alt/Repeat/Rule/...).
+///   `child_off` is the first-child record offset.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct TapeRec {
@@ -63,32 +92,18 @@ pub struct TapeRec {
     /// Bitfield: variant index (low 6 bits), has_children (bit 6),
     /// meta_idx bit \[4\] (bit 7).
     pub flags: u8,
-    /// Sentinel marker for the record's payload slot.
-    ///
-    /// Historically a 1-based index into `Tape::payloads`; now a
-    /// sentinel tag because AU.1 repurposed `child_off` as the
-    /// payload byte offset for leaves. The post-AU.3.1 encoding is:
-    ///
-    /// - `0` — no payload (compound records and leaves without an
-    ///   inline value).
-    /// - `1` — inline scalar in the `Tape::payloads` slab, byte
-    ///   offset in `child_off`. Applies to every `push_leaf_with_*`
-    ///   scalar / Span / aggregate push (the aggregate slab is the
-    ///   same buffer; the layout handles the multi-field unpack).
-    /// - `2` — arena-backed variable-length payload in `Tape::arena`
-    ///   at the byte offset in `child_off`. Framing is
-    ///   `(len: u32 le, bytes: [u8; len])`. Written by
-    ///   [`crate::TapeBuilder::push_leaf_with_string`] /
-    ///   [`crate::TapeBuilder::push_leaf_with_string_bytes`]; read
-    ///   by [`Tape::payload_string`]. AU.6.7 collapses the two
-    ///   sentinel values into a single arena-offset scheme.
-    pub payload_idx: u16,
+    /// Reserved padding for future packed metadata. Kept so the
+    /// record stays at exactly 16 bytes — a quarter of a 64-byte
+    /// cache line — without padding bytes elsewhere.
+    pub _reserved: u16,
     /// Byte offset into the source input where this record's span begins.
     pub span_lo: u32,
     /// Byte offset into the source input where this record's span ends.
     /// `span_hi == span_lo` represents epsilon / zero-width matches.
     pub span_hi: u32,
-    /// First child's offset, or [`TapeOffset::NONE`] for leaves.
+    /// First child's offset (compounds), arena offset / inline-packed
+    /// scalar (payload-bearing leaves), or [`TapeOffset::NONE`]
+    /// (no payload / empty compound).
     pub child_off: TapeOffset,
 }
 
@@ -156,6 +171,16 @@ impl TapeRec {
     pub fn span_len(&self) -> u32 {
         self.span_hi.saturating_sub(self.span_lo)
     }
+
+    /// True iff this record is a leaf that carries a payload (an
+    /// arena byte offset or an inline-packed scalar in `child_off`).
+    ///
+    /// False for compounds (`has_children() == true`) and for pure-
+    /// span leaves (`child_off == NONE`).
+    #[inline]
+    pub fn has_payload(&self) -> bool {
+        !self.has_children() && !self.child_off.is_none()
+    }
 }
 
 /// The parser's output tape.
@@ -179,22 +204,38 @@ impl TapeRec {
 /// per-record `meta_idx` (branch index for Alt-bodied rules) is now
 /// packed into the `TapeRec` itself: 4 bits in the high nibble of
 /// `kind_meta` + 1 bit in `flags[7]`, giving a 5-bit range (0-31).
+///
+/// # Tranche AU.6.7 — unified payload arena
+///
+/// The AU.1 scalar `payloads: Vec<u8>` slab and the AU.3.1 string
+/// `arena: Vec<u8>` slab have been unified into a single
+/// [`Tape::arena`]. Wide scalars (f64/u64/i64/Span), aggregate tuples,
+/// and byte strings all live there; inline scalars (≤ 4 bytes) pack
+/// directly into the record's `child_off` and bypass the arena.
+/// The former `payload_idx: u16` sentinel on each record is gone;
+/// `child_off != NONE` on a leaf is sufficient to identify a
+/// payload-bearing record, and the caller's statically-known type
+/// selects the decode path.
 #[derive(Debug)]
 pub struct Tape {
     /// Flat record storage. Append-only during parsing; immutable
     /// during view-layer reads.
     pub(crate) records: Vec<TapeRec>,
-    /// Side-channel payload buffer for inline scalar and aggregate
-    /// leaf values (`payload_idx == 1`). The stored value lives at
-    /// byte offset `rec.child_off.0` and has a fixed width known
-    /// statically from the record's type (via `payload_size_bytes`
-    /// or the rule's aggregate `PayloadLayout`).
-    pub(crate) payloads: Vec<u8>,
-    /// AU.3.1: arena-backed variable-length payload buffer
-    /// (`payload_idx == 2`). Each frame is `(len: u32 le, bytes)`
-    /// at the byte offset stored in `rec.child_off.0`. Currently
-    /// holds decoded JSON strings; AU.6.7 generalises the arena to
-    /// subsume the scalar `payloads` slab too.
+    /// Unified payload arena. Stores:
+    ///
+    /// - **Wide scalars** (`f64/u64/i64/Span`) — one 8-byte slot per
+    ///   value, 8-aligned. `child_off` holds the byte offset.
+    /// - **Aggregates** — packed tuple bytes sized by the rule's
+    ///   [`PayloadLayout`]. 8-byte aligned slot allocations, with
+    ///   the leading `total_bytes` of each slot carrying the
+    ///   typed fields.
+    /// - **Byte strings** (decoded JSON strings, CSS quoted strings,
+    ///   BBNF identifier/literal bodies) — framed as
+    ///   `(len: u32 LE, bytes: [u8; len])`. `child_off` points at
+    ///   the length prefix.
+    ///
+    /// Inline scalars (`u8/i8/u16/i16/u32/i32/f32/bool`) are NOT
+    /// stored here — they pack into each record's `child_off` directly.
     pub(crate) arena: Vec<u8>,
 }
 
@@ -203,7 +244,6 @@ impl Tape {
     pub fn new() -> Self {
         Self {
             records: Vec::new(),
-            payloads: Vec::new(),
             arena: Vec::new(),
         }
     }
@@ -212,7 +252,6 @@ impl Tape {
     pub fn with_capacity(expected: usize) -> Self {
         Self {
             records: Vec::with_capacity(expected),
-            payloads: Vec::new(),
             arena: Vec::new(),
         }
     }
@@ -283,36 +322,36 @@ impl Tape {
     }
 
     // ── Payload accessors ─────────────────────────────────────────
+    //
+    // AU.6.7: every accessor below dispatches on the record's
+    // `child_off`. A `NONE` child_off indicates the absence of a
+    // payload and each accessor returns `None`. Inline scalars
+    // recover their value from `child_off.0` directly; wide scalars,
+    // aggregates, and byte strings read from the unified arena.
 
-    /// Read an arbitrary scalar payload from the record's payload
-    /// slot.
+    /// Read an inline-packed scalar payload (≤ 4 bytes) directly
+    /// out of `rec.child_off`.
     ///
-    /// Returns `None` if `rec.payload_idx == 0` (no payload) or if
-    /// the payload buffer is too short to hold `T` at that slot
-    /// (defensive — should never happen with well-formed builder
-    /// output).
+    /// `T` must be `Copy` and its size must be ≤ 4 bytes. Wider
+    /// scalars live in the arena and must be read via
+    /// [`Self::payload_wide`].
     ///
-    /// `T` must be `Copy` and ≤ 8 bytes, mirroring the contract on
-    /// `TapeBuilder::push_leaf_with_scalar`.
-    ///
-    /// AU.1: payload byte offset is in `child_off` for scalar leaves.
-    /// `payload_idx == 1` is the sentinel for "inline scalar in
-    /// `payloads`." `payload_idx == 2` (arena-string) is rejected —
-    /// the caller should route to [`Self::payload_string`] instead.
+    /// Returns `None` for non-payload records (`child_off == NONE`).
     #[inline]
-    pub fn payload_scalar<T: Copy>(&self, rec: &TapeRec) -> Option<T> {
-        if rec.payload_idx != 1 {
+    fn payload_inline<T: Copy>(&self, rec: &TapeRec) -> Option<T> {
+        debug_assert!(std::mem::size_of::<T>() <= 4);
+        if rec.child_off.is_none() {
             return None;
         }
-        debug_assert!(std::mem::size_of::<T>() <= 8);
-        let start = rec.child_off.0 as usize;
-        if start + std::mem::size_of::<T>() > self.payloads.len() {
-            return None;
-        }
+        let bytes = rec.child_off.0.to_le_bytes();
         let mut v: std::mem::MaybeUninit<T> = std::mem::MaybeUninit::uninit();
+        // SAFETY: `T` is `Copy` and size_of::<T>() <= 4, matching the
+        // width of `bytes`. The copy writes size_of::<T>() bytes from
+        // the record's own `child_off` bytes, which are always
+        // initialised (the record itself is initialised).
         unsafe {
             std::ptr::copy_nonoverlapping(
-                self.payloads.as_ptr().add(start),
+                bytes.as_ptr(),
                 v.as_mut_ptr() as *mut u8,
                 std::mem::size_of::<T>(),
             );
@@ -320,76 +359,112 @@ impl Tape {
         }
     }
 
-    /// Read an `f64` payload from the record's payload slot.
+    /// Read a wide (8-byte) scalar payload from the arena slot at
+    /// `rec.child_off`.
+    ///
+    /// Returns `None` for non-payload records or when the arena is
+    /// too short to carry an 8-byte slot at the recorded offset.
     #[inline]
-    pub fn payload_f64(&self, rec: &TapeRec) -> Option<f64> {
-        self.payload_scalar::<f64>(rec)
-    }
-
-    /// Read a `bool` payload from the record's payload slot.
-    #[inline]
-    pub fn payload_bool(&self, rec: &TapeRec) -> Option<bool> {
-        if rec.payload_idx != 1 {
+    fn payload_wide<T: Copy>(&self, rec: &TapeRec) -> Option<T> {
+        debug_assert!(std::mem::size_of::<T>() == 8);
+        if rec.child_off.is_none() {
             return None;
         }
         let start = rec.child_off.0 as usize;
-        Some(*self.payloads.get(start)? != 0)
+        if start + 8 > self.arena.len() {
+            return None;
+        }
+        let mut v: std::mem::MaybeUninit<T> = std::mem::MaybeUninit::uninit();
+        // SAFETY: bounds check above; `T` is `Copy` of size 8.
+        unsafe {
+            std::ptr::copy_nonoverlapping(
+                self.arena.as_ptr().add(start),
+                v.as_mut_ptr() as *mut u8,
+                8,
+            );
+            Some(v.assume_init())
+        }
     }
 
-    /// Read an `i8` payload from the record's payload slot.
+    /// Read an arbitrary scalar payload from the record.
+    ///
+    /// `T` must be `Copy` and ≤ 8 bytes. Sizes ≤ 4 bytes pack inline
+    /// into `child_off`; wider sizes read from the arena. Returns
+    /// `None` for records with no payload.
+    #[inline]
+    pub fn payload_scalar<T: Copy>(&self, rec: &TapeRec) -> Option<T> {
+        debug_assert!(std::mem::size_of::<T>() <= 8);
+        if std::mem::size_of::<T>() <= 4 {
+            self.payload_inline::<T>(rec)
+        } else {
+            self.payload_wide::<T>(rec)
+        }
+    }
+
+    /// Read an `f64` payload.
+    #[inline]
+    pub fn payload_f64(&self, rec: &TapeRec) -> Option<f64> {
+        self.payload_wide::<f64>(rec)
+    }
+
+    /// Read a `bool` payload (inline-packed).
+    #[inline]
+    pub fn payload_bool(&self, rec: &TapeRec) -> Option<bool> {
+        self.payload_inline::<u8>(rec).map(|b| b != 0)
+    }
+
+    /// Read an `i8` payload (inline-packed).
     #[inline]
     pub fn payload_i8(&self, rec: &TapeRec) -> Option<i8> {
-        self.payload_scalar::<i8>(rec)
+        self.payload_inline::<i8>(rec)
     }
 
-    /// Read a `u8` payload from the record's payload slot.
+    /// Read a `u8` payload (inline-packed).
     #[inline]
     pub fn payload_u8(&self, rec: &TapeRec) -> Option<u8> {
-        self.payload_scalar::<u8>(rec)
+        self.payload_inline::<u8>(rec)
     }
 
-    /// Read an `i16` payload from the record's payload slot.
+    /// Read an `i16` payload (inline-packed).
     #[inline]
     pub fn payload_i16(&self, rec: &TapeRec) -> Option<i16> {
-        self.payload_scalar::<i16>(rec)
+        self.payload_inline::<i16>(rec)
     }
 
-    /// Read a `u16` payload from the record's payload slot.
+    /// Read a `u16` payload (inline-packed).
     #[inline]
     pub fn payload_u16(&self, rec: &TapeRec) -> Option<u16> {
-        self.payload_scalar::<u16>(rec)
+        self.payload_inline::<u16>(rec)
     }
 
-    /// Read an `i32` payload from the record's payload slot.
+    /// Read an `i32` payload (inline-packed).
     #[inline]
     pub fn payload_i32(&self, rec: &TapeRec) -> Option<i32> {
-        self.payload_scalar::<i32>(rec)
+        self.payload_inline::<i32>(rec)
     }
 
-    /// Read a `u32` payload from the record's payload slot.
+    /// Read a `u32` payload (inline-packed).
     #[inline]
     pub fn payload_u32(&self, rec: &TapeRec) -> Option<u32> {
-        self.payload_scalar::<u32>(rec)
+        self.payload_inline::<u32>(rec)
     }
 
-    /// Read an `i64` payload from the record's payload slot.
+    /// Read an `i64` payload (wide; arena-backed).
     #[inline]
     pub fn payload_i64(&self, rec: &TapeRec) -> Option<i64> {
-        self.payload_scalar::<i64>(rec)
+        self.payload_wide::<i64>(rec)
     }
 
-    /// Read a `u64` payload from the record's payload slot.
+    /// Read a `u64` payload (wide; arena-backed).
     #[inline]
     pub fn payload_u64(&self, rec: &TapeRec) -> Option<u64> {
-        self.payload_scalar::<u64>(rec)
+        self.payload_wide::<u64>(rec)
     }
 
     /// Read a `Span` payload (lo: u32, hi: u32) from a leaf record.
     ///
-    /// The two u32 offsets were packed into a single 8-byte slot by
-    /// [`crate::TapeBuilder::push_leaf_with_Span`] as
-    /// `lo | (hi << 32)`. Returns `None` when the record carries no
-    /// payload (`payload_idx == 0`).
+    /// The two u32 offsets are packed into a single 8-byte arena slot
+    /// as `lo | (hi << 32)`. Returns `None` for non-payload records.
     #[inline]
     #[allow(non_snake_case)]
     pub fn payload_Span(&self, rec: &TapeRec) -> Option<(u32, u32)> {
@@ -399,32 +474,25 @@ impl Tape {
         Some((lo, hi))
     }
 
-    /// AU.3.1: read a variable-length decoded payload as `&str`.
+    /// Read a variable-length decoded payload as `&str`.
     ///
-    /// Returns the decoded UTF-8 slice for a record pushed via
-    /// [`crate::TapeBuilder::push_leaf_with_string`] /
-    /// [`crate::TapeBuilder::push_leaf_with_string_bytes`]. The frame
-    /// layout is `(len: u32 le, bytes: [u8; len])` at the arena byte
-    /// offset stored in `rec.child_off`.
+    /// Returns the decoded UTF-8 slice for a record whose payload was
+    /// pushed via [`crate::TapeBuilder::push_leaf_with`] with a
+    /// `PayloadData::Bytes(...)` shape. The arena frame layout is
+    /// `(len: u32 LE, bytes: [u8; len])` at the byte offset stored in
+    /// `rec.child_off`.
     ///
-    /// Returns `None` when the record is not string-tagged
-    /// (`payload_idx != 2`) or when the arena slot is truncated.
+    /// Returns `None` when the record has no payload or when the
+    /// arena slot is truncated.
     ///
     /// # Safety / contract
     ///
-    /// The decoder kernel
-    /// (`parse_that::parsers::scan::decode::decode_json_string_to_arena`)
-    /// emits well-formed UTF-8 by construction: it copies ASCII
-    /// substrings verbatim and re-encodes `\uXXXX` escapes via
-    /// `char::from_u32(...).encode_utf8()`. The arena bytes are
-    /// therefore valid UTF-8 by the time this method observes them,
-    /// and we use `from_utf8_unchecked` on the hot path to skip the
-    /// validation walk (AU.3.2). A `debug_assert!` round-trips
-    /// `std::str::from_utf8` to catch decoder regressions in debug
-    /// builds.
-    ///
-    /// Callers that accept arbitrary unvalidated bytes should use
-    /// [`Self::payload_string_bytes`] and validate explicitly.
+    /// Callers that route bytes through `PayloadData::Bytes` must
+    /// supply well-formed UTF-8 (the JSON decode kernel guarantees
+    /// this by construction). The accessor uses
+    /// `std::str::from_utf8_unchecked` on the hot path; a
+    /// `debug_assert!` round-trips `std::str::from_utf8` to catch
+    /// regressions in debug builds.
     #[inline]
     pub fn payload_string(&self, rec: &TapeRec) -> Option<&str> {
         let bytes = self.payload_string_bytes(rec)?;
@@ -433,21 +501,20 @@ impl Tape {
             "Tape::payload_string: malformed UTF-8 in arena slot at offset {}",
             rec.child_off.0,
         );
-        // SAFETY: the decoder kernel emits well-formed UTF-8 (ASCII
-        // verbatim copies + `char::from_u32(...).encode_utf8()` for
-        // `\uXXXX` escapes). debug builds round-trip
-        // `std::str::from_utf8` to catch regressions.
+        // SAFETY: byte-string callers route UTF-8 through the decoder
+        // kernels that enforce well-formed output; the debug_assert
+        // round-trips `std::str::from_utf8` in debug builds.
         Some(unsafe { std::str::from_utf8_unchecked(bytes) })
     }
 
-    /// AU.3.1: read a variable-length decoded payload as raw bytes.
+    /// Read a variable-length decoded payload as raw bytes.
     ///
     /// Same slot semantics as [`Self::payload_string`] but without
-    /// the UTF-8 check. Returns `None` for non-string records or
+    /// the UTF-8 check. Returns `None` for non-payload records or
     /// truncated slots; never panics.
     #[inline]
     pub fn payload_string_bytes(&self, rec: &TapeRec) -> Option<&[u8]> {
-        if rec.payload_idx != 2 {
+        if rec.child_off.is_none() {
             return None;
         }
         let start = rec.child_off.0 as usize;
@@ -464,10 +531,10 @@ impl Tape {
         Some(&self.arena[body_start..body_end])
     }
 
-    /// AU.3.1: borrow the tape's arena buffer (read-only).
+    /// Borrow the tape's unified payload arena (read-only).
     ///
-    /// Primarily used by view-layer accessors that want to slice
-    /// the arena directly (e.g. a borrowed fast path that skipped
+    /// Primarily used by view-layer accessors that want to slice the
+    /// arena directly (e.g. a borrowed fast path that skipped
     /// copying the decoded bytes). Exposed for test / debug
     /// introspection; prefer [`Self::payload_string`] for the
     /// decoded accessor contract.
@@ -477,28 +544,26 @@ impl Tape {
     }
 
     /// Read a slice of raw aggregate payload bytes for a record
-    /// that was pushed via
-    /// [`crate::TapeBuilder::push_leaf_with_aggregate`].
+    /// whose payload was written via [`crate::PayloadData::Aggregate`].
     ///
     /// The caller knows the total byte width from the rule's
     /// [`bbnf_ir::passes::PayloadLayout::total_bytes`]; pass it as
     /// `byte_count`. Returns `None` when the record carries no
-    /// payload (`payload_idx == 0`) or when the buffer is too
-    /// short to satisfy the request.
+    /// payload or when the arena is too short to satisfy the request.
     ///
     /// Field-level reads (`f64::from_le_bytes`,
-    /// `u32::from_le_bytes`, etc.) slice into the returned buffer
-    /// at the per-field `offset` recorded in the layout.
+    /// `u32::from_le_bytes`, etc.) slice into the returned buffer at
+    /// the per-field `offset` recorded in the layout.
     #[inline]
     pub fn payload_bytes(&self, rec: &TapeRec, byte_count: usize) -> Option<&[u8]> {
-        if rec.payload_idx != 1 {
+        if rec.child_off.is_none() {
             return None;
         }
         let start = rec.child_off.0 as usize;
-        if start + byte_count > self.payloads.len() {
+        if start + byte_count > self.arena.len() {
             return None;
         }
-        Some(&self.payloads[start..start + byte_count])
+        Some(&self.arena[start..start + byte_count])
     }
 }
 

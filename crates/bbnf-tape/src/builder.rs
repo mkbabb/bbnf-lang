@@ -8,6 +8,51 @@
 use crate::kind::TapeKind;
 use crate::tape::{Tape, TapeOffset, TapeRec};
 
+/// Payload data handed to [`TapeBuilder::push_leaf_with`] — the single
+/// entry point for payload-bearing leaves.
+///
+/// Each variant corresponds to one of the four payload shapes the
+/// unified arena recognises:
+///
+/// - [`PayloadData::None`] — pure span leaf, no payload. Equivalent
+///   to [`TapeBuilder::push_leaf`]; exposed on `PayloadData` so
+///   callers that build a payload conditionally don't need to switch
+///   to a different entry point when the payload is absent.
+/// - [`PayloadData::InlineScalar`] — scalar ≤ 4 bytes packed directly
+///   into the record's `child_off`. The `u32` carries the value's
+///   little-endian bytes; callers typically construct this via
+///   `u32::from_le_bytes(...)` from a typed scalar's byte
+///   representation, or for `u8/u16/u32` the value itself.
+/// - [`PayloadData::WideScalar`] — 8-byte scalar (`f64/u64/i64/Span`)
+///   written into an 8-aligned arena slot.
+/// - [`PayloadData::Aggregate`] — packed tuple bytes (colour tuples,
+///   dimension `(f64, u8)` pairs, kv-pair values). Length up to 16
+///   bytes; written verbatim into an arena slot rounded up to the
+///   next 8-byte boundary.
+/// - [`PayloadData::Bytes`] — variable-length byte string (decoded
+///   JSON strings, comment bodies, regex patterns). Framed into the
+///   arena as `(len: u32 LE, bytes: [u8; len])`.
+#[derive(Debug, Clone, Copy)]
+pub enum PayloadData<'a> {
+    /// No payload.
+    None,
+    /// Scalar value ≤ 4 bytes, packed inline into `child_off`.
+    /// The `u32` carries the raw bytes in little-endian order.
+    InlineScalar(u32),
+    /// 8-byte scalar (`f64`, `u64`, `i64`, packed `Span`) written
+    /// into an arena slot. The `u64` carries the raw bytes in
+    /// little-endian order (via `f64::to_bits()` or `to_le_bytes()`
+    /// conversions at the call site).
+    WideScalar(u64),
+    /// Packed aggregate tuple bytes written verbatim into the arena.
+    /// Length up to 16 bytes.
+    Aggregate(&'a [u8]),
+    /// Byte string framed as `(len: u32 LE, bytes)` into the arena.
+    /// The caller supplies the decoded bytes; the builder writes the
+    /// length prefix.
+    Bytes(&'a [u8]),
+}
+
 /// The parser's write interface to the tape.
 ///
 /// Held by `&mut` for the duration of a parse. The generated parser
@@ -37,16 +82,15 @@ pub struct TapeBuilder {
     /// still accepted (so mid-recovery parses can continue producing
     /// records for partial success), but `finish` returns the error.
     pub(crate) error: Option<TapeBuildError>,
-    /// Staging buffer for typed leaf payloads. Each slot is 8 bytes,
-    /// transferred to the finished `Tape` at [`Self::finish`].
-    pub(crate) payloads: Vec<u8>,
-    /// AU.3.1: staging buffer for variable-length decoded payloads
-    /// (e.g. JSON strings with `\uXXXX` escapes). Each write uses a
-    /// `(len: u32, bytes: [u8; len])` framing so reads can recover
-    /// the slice without a side-car length table. Transferred to
-    /// the finished `Tape` at [`Self::finish`]. Kept separate from
-    /// the scalar `payloads` slab so the two buffers can evolve
-    /// independently toward the AU.6.7 unified arena.
+    /// Unified payload arena. Staged here during builds and
+    /// transferred to [`Tape::arena`] at [`Self::finish`]. Holds:
+    /// - Wide scalars (f64/u64/i64/Span) — one 8-byte slot per value.
+    /// - Aggregates — packed tuple bytes rounded up to 8-byte slots.
+    /// - Byte strings — `(len: u32 LE, bytes)` frames.
+    ///
+    /// Inline scalars (`u8/i8/u16/i16/u32/i32/f32/bool`) bypass the
+    /// arena entirely: the value packs into each record's `child_off`
+    /// at push time, so the arena touches zero bytes per inline push.
     pub(crate) arena: Vec<u8>,
 }
 
@@ -71,16 +115,16 @@ impl TapeBuilder {
 
     /// Construct a builder sized for `expected` records.
     ///
-    /// Pre-allocates records and a modest payload buffer.
-    /// The payload heuristic (expected/8 * 8 bytes) covers typical
-    /// scalar-heavy grammars (JSON numbers ~50% of records) without
-    /// over-allocating for compound-heavy grammars (CSS, Sheets).
+    /// Pre-allocates records and reserves an arena heuristic sized
+    /// for typical scalar-heavy grammars (JSON numbers ~50% of
+    /// records). Compound-heavy grammars (CSS, Sheets) may leave the
+    /// reserve unused, but the over-reservation cost is cheap
+    /// compared to a runtime `RawVec::grow_one` on the hot path.
     pub fn with_capacity(expected: usize) -> Self {
         Self {
             tape: Tape::with_capacity(expected),
             error: None,
-            payloads: Vec::with_capacity(expected / 8 * 8),
-            arena: Vec::new(),
+            arena: Vec::with_capacity(expected / 8 * 8),
         }
     }
 
@@ -117,7 +161,7 @@ impl TapeBuilder {
         self.tape.records.push(TapeRec {
             kind_meta,
             flags: (variant_idx & 0x3F) | flags_meta_bit,
-            payload_idx: 0,
+            _reserved: 0,
             span_lo,
             span_hi,
             child_off: TapeOffset::NONE,
@@ -166,7 +210,7 @@ impl TapeBuilder {
         self.tape.records.push(TapeRec {
             kind_meta,
             flags,
-            payload_idx: 0,
+            _reserved: 0,
             span_lo,
             span_hi,
             child_off,
@@ -174,345 +218,175 @@ impl TapeBuilder {
         TapeOffset(idx as u32)
     }
 
-    // ── Payload-bearing leaf pushes ─────────────────────────────────
+    // ── Payload-bearing leaf push ──────────────────────────────────
 
-    /// Append a payload slot (8 bytes), write `value` into it, and
-    /// return the byte offset. Full u32 range — no u16 overflow.
+    /// Append a leaf record carrying the supplied [`PayloadData`].
+    ///
+    /// Unified entry point for every payload-bearing leaf. The four
+    /// `PayloadData` variants cover the complete set of runtime
+    /// payload shapes:
+    ///
+    /// - [`PayloadData::None`] — equivalent to [`Self::push_leaf`].
+    /// - [`PayloadData::InlineScalar`] — scalar ≤ 4 bytes packed
+    ///   directly into `child_off`; no arena touch.
+    /// - [`PayloadData::WideScalar`] — 8-byte scalar at an 8-aligned
+    ///   arena slot; `child_off` is the arena byte offset.
+    /// - [`PayloadData::Aggregate`] — packed tuple bytes (≤ 16)
+    ///   written verbatim into an 8-aligned arena slot; `child_off`
+    ///   is the arena byte offset.
+    /// - [`PayloadData::Bytes`] — framed `(len: u32 LE, bytes)`
+    ///   written into the arena; `child_off` is the frame byte
+    ///   offset.
+    ///
+    /// `meta_idx` range is 0-31 (5-bit packed field).
     #[inline]
-    fn alloc_and_write_payload<T: Copy>(&mut self, value: T) -> u32 {
-        debug_assert!(std::mem::size_of::<T>() <= 8);
-        let start = self.payloads.len();
-        self.payloads.resize(start + 8, 0);
+    pub fn push_leaf_with(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        span_hi: u32,
+        variant_idx: u8,
+        meta_idx: u8,
+        payload: PayloadData<'_>,
+    ) -> TapeOffset {
+        debug_assert!(
+            kind.is_leaf(),
+            "push_leaf_with on compound kind {:?}",
+            kind
+        );
+        let child_off = match payload {
+            PayloadData::None => TapeOffset::NONE,
+            PayloadData::InlineScalar(v) => {
+                // The inline-scalar caller guarantees the payload
+                // fits in 4 bytes. NONE's sentinel value (u32::MAX)
+                // would collide with an inline u32 of exactly
+                // u32::MAX; callers that project to u32 must route
+                // through WideScalar instead (the grammar rarely
+                // emits u32::MAX literally, and any collision will
+                // appear as a payload-absence false positive in
+                // debug builds — guarded below).
+                debug_assert!(
+                    v != u32::MAX,
+                    "inline scalar collides with TapeOffset::NONE sentinel"
+                );
+                TapeOffset(v)
+            }
+            PayloadData::WideScalar(v) => {
+                let offset = self.alloc_wide_slot(v);
+                TapeOffset(offset)
+            }
+            PayloadData::Aggregate(bytes) => {
+                if bytes.is_empty() {
+                    TapeOffset::NONE
+                } else {
+                    let offset = self.alloc_aggregate_slot(bytes);
+                    TapeOffset(offset)
+                }
+            }
+            PayloadData::Bytes(bytes) => {
+                let offset = self.alloc_bytes_frame(bytes);
+                TapeOffset(offset)
+            }
+        };
+        let (kind_meta, flags_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
+        let idx = self.tape.records.len();
+        self.tape.records.push(TapeRec {
+            kind_meta,
+            flags: (variant_idx & 0x3F) | flags_meta_bit,
+            _reserved: 0,
+            span_lo,
+            span_hi,
+            child_off,
+        });
+        TapeOffset(idx as u32)
+    }
+
+    /// Append a wide (8-byte) scalar into an 8-aligned arena slot
+    /// and return the byte offset.
+    #[inline]
+    fn alloc_wide_slot(&mut self, value: u64) -> u32 {
+        let start = self.arena.len();
+        self.arena.extend_from_slice(&value.to_le_bytes());
+        start as u32
+    }
+
+    /// Append aggregate bytes into an arena slot rounded up to the
+    /// next 8-byte boundary and return the byte offset.
+    ///
+    /// The slot is zero-initialised so any unused trailing bytes
+    /// (between `bytes.len()` and the rounded-up total) are
+    /// deterministic.
+    #[inline]
+    fn alloc_aggregate_slot(&mut self, bytes: &[u8]) -> u32 {
+        debug_assert!(bytes.len() <= 16, "aggregate payload exceeds 16 bytes");
+        let slot_count = bytes.len().div_ceil(8);
+        let slot_total = slot_count * 8;
+        let start = self.arena.len();
+        self.arena.resize(start + slot_total, 0);
+        // SAFETY: the resize above guarantees `slot_total` bytes are
+        // available starting at `start`.
         unsafe {
             std::ptr::copy_nonoverlapping(
-                &value as *const T as *const u8,
-                self.payloads.as_mut_ptr().add(start),
-                std::mem::size_of::<T>(),
+                bytes.as_ptr(),
+                self.arena.as_mut_ptr().add(start),
+                bytes.len(),
             );
         }
         start as u32
     }
 
-    /// Append `slot_count` consecutive 8-byte payload slots and
-    /// return the byte offset of the first slot.
+    /// Append a `(len: u32 LE, bytes)` frame into the arena and
+    /// return the byte offset of the length prefix.
+    #[inline]
+    fn alloc_bytes_frame(&mut self, bytes: &[u8]) -> u32 {
+        let start = self.arena.len();
+        let len = bytes.len() as u32;
+        self.arena.extend_from_slice(&len.to_le_bytes());
+        self.arena.extend_from_slice(bytes);
+        start as u32
+    }
+
+    /// Borrow the arena buffer for direct variable-length payload
+    /// writes.
     ///
-    /// The returned offset is the raw byte index into
-    /// `self.payloads` (not a 1-based payload_idx). The caller is
-    /// responsible for translating it into a `payload_idx` via
-    /// `(byte_offset / 8) + 1` when the slots are committed to a
-    /// `TapeRec`. Used by [`Self::push_leaf_with_aggregate`] for
-    /// multi-slot aggregate payloads.
-    #[inline]
-    fn alloc_aggregate_slots(&mut self, slot_count: usize) -> usize {
-        let start = self.payloads.len();
-        self.payloads.resize(start + slot_count * 8, 0);
-        start
-    }
-
-    /// Append a leaf record with an arbitrary scalar payload.
+    /// The JSON-string decode kernel uses this to stream decoded
+    /// bytes into the arena without an intermediate allocation.
+    /// After decoding, the caller commits the record via
+    /// [`Self::push_leaf_with`] with a zero-copy `PayloadData::Bytes`
+    /// pointing at a buffer that was built via this accessor.
     ///
-    /// AU.1: Payload byte offset stored in `child_off` (repurposed
-    /// from the leaf's unused children pointer). Full u32 range —
-    /// no u16 overflow on number-heavy inputs. `payload_idx` is set
-    /// to 1 as a sentinel indicating "payload at child_off offset."
-    #[inline]
-    pub fn push_leaf_with_scalar<T: Copy>(
-        &mut self,
-        kind: TapeKind,
-        span_lo: u32,
-        span_hi: u32,
-        variant_idx: u8,
-        meta_idx: u8,
-        value: T,
-    ) -> TapeOffset {
-        debug_assert!(kind.is_leaf());
-        let byte_offset = self.alloc_and_write_payload(value);
-        let (kind_meta, flags_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
-        let idx = self.tape.records.len();
-        self.tape.records.push(TapeRec {
-            kind_meta,
-            flags: (variant_idx & 0x3F) | flags_meta_bit,
-            payload_idx: 1,
-            span_lo,
-            span_hi,
-            child_off: TapeOffset(byte_offset),
-        });
-        TapeOffset(idx as u32)
-    }
-
-    /// Append a leaf record with an `f64` payload.
-    #[inline]
-    pub fn push_leaf_with_f64(
-        &mut self,
-        kind: TapeKind,
-        span_lo: u32,
-        span_hi: u32,
-        variant_idx: u8,
-        meta_idx: u8,
-        value: f64,
-    ) -> TapeOffset {
-        self.push_leaf_with_scalar::<f64>(kind, span_lo, span_hi, variant_idx, meta_idx, value)
-    }
-
-    /// Append a leaf record with a `bool` payload.
-    #[inline]
-    pub fn push_leaf_with_bool(
-        &mut self,
-        kind: TapeKind,
-        span_lo: u32,
-        span_hi: u32,
-        variant_idx: u8,
-        meta_idx: u8,
-        value: bool,
-    ) -> TapeOffset {
-        self.push_leaf_with_scalar::<bool>(kind, span_lo, span_hi, variant_idx, meta_idx, value)
-    }
-
-    /// Append a leaf record with an `i8` payload.
-    #[inline]
-    pub fn push_leaf_with_i8(
-        &mut self,
-        kind: TapeKind,
-        span_lo: u32,
-        span_hi: u32,
-        variant_idx: u8,
-        meta_idx: u8,
-        value: i8,
-    ) -> TapeOffset {
-        self.push_leaf_with_scalar::<i8>(kind, span_lo, span_hi, variant_idx, meta_idx, value)
-    }
-
-    /// Append a leaf record with a `u8` payload.
-    #[inline]
-    pub fn push_leaf_with_u8(
-        &mut self,
-        kind: TapeKind,
-        span_lo: u32,
-        span_hi: u32,
-        variant_idx: u8,
-        meta_idx: u8,
-        value: u8,
-    ) -> TapeOffset {
-        self.push_leaf_with_scalar::<u8>(kind, span_lo, span_hi, variant_idx, meta_idx, value)
-    }
-
-    /// Append a leaf record with an `i16` payload.
-    #[inline]
-    pub fn push_leaf_with_i16(
-        &mut self,
-        kind: TapeKind,
-        span_lo: u32,
-        span_hi: u32,
-        variant_idx: u8,
-        meta_idx: u8,
-        value: i16,
-    ) -> TapeOffset {
-        self.push_leaf_with_scalar::<i16>(kind, span_lo, span_hi, variant_idx, meta_idx, value)
-    }
-
-    /// Append a leaf record with a `u16` payload.
-    #[inline]
-    pub fn push_leaf_with_u16(
-        &mut self,
-        kind: TapeKind,
-        span_lo: u32,
-        span_hi: u32,
-        variant_idx: u8,
-        meta_idx: u8,
-        value: u16,
-    ) -> TapeOffset {
-        self.push_leaf_with_scalar::<u16>(kind, span_lo, span_hi, variant_idx, meta_idx, value)
-    }
-
-    /// Append a leaf record with an `i32` payload.
-    #[inline]
-    pub fn push_leaf_with_i32(
-        &mut self,
-        kind: TapeKind,
-        span_lo: u32,
-        span_hi: u32,
-        variant_idx: u8,
-        meta_idx: u8,
-        value: i32,
-    ) -> TapeOffset {
-        self.push_leaf_with_scalar::<i32>(kind, span_lo, span_hi, variant_idx, meta_idx, value)
-    }
-
-    /// Append a leaf record with a `u32` payload.
-    #[inline]
-    pub fn push_leaf_with_u32(
-        &mut self,
-        kind: TapeKind,
-        span_lo: u32,
-        span_hi: u32,
-        variant_idx: u8,
-        meta_idx: u8,
-        value: u32,
-    ) -> TapeOffset {
-        self.push_leaf_with_scalar::<u32>(kind, span_lo, span_hi, variant_idx, meta_idx, value)
-    }
-
-    /// Append a leaf record with an `i64` payload.
-    #[inline]
-    pub fn push_leaf_with_i64(
-        &mut self,
-        kind: TapeKind,
-        span_lo: u32,
-        span_hi: u32,
-        variant_idx: u8,
-        meta_idx: u8,
-        value: i64,
-    ) -> TapeOffset {
-        self.push_leaf_with_scalar::<i64>(kind, span_lo, span_hi, variant_idx, meta_idx, value)
-    }
-
-    /// Append a leaf record with a `u64` payload.
-    #[inline]
-    pub fn push_leaf_with_u64(
-        &mut self,
-        kind: TapeKind,
-        span_lo: u32,
-        span_hi: u32,
-        variant_idx: u8,
-        meta_idx: u8,
-        value: u64,
-    ) -> TapeOffset {
-        self.push_leaf_with_scalar::<u64>(kind, span_lo, span_hi, variant_idx, meta_idx, value)
-    }
-
-    /// Append a leaf record with a `Span` payload (lo: u32, hi: u32).
+    /// The typical pattern:
     ///
-    /// The two u32 offsets are packed into a single 8-byte payload slot
-    /// as `lo | (hi << 32)` — the same slot width as `u64`/`f64`.
-    /// The view layer unpacks via [`Tape::payload_Span`].
-    #[inline]
-    #[allow(non_snake_case)]
-    pub fn push_leaf_with_Span(
-        &mut self,
-        kind: TapeKind,
-        span_lo: u32,
-        span_hi: u32,
-        variant_idx: u8,
-        meta_idx: u8,
-        value_lo: u32,
-        value_hi: u32,
-    ) -> TapeOffset {
-        let combined: u64 = (value_lo as u64) | ((value_hi as u64) << 32);
-        self.push_leaf_with_scalar::<u64>(kind, span_lo, span_hi, variant_idx, meta_idx, combined)
-    }
-
-    /// Append a leaf record carrying an aggregate (multi-field)
-    /// payload of up to 16 bytes.
-    ///
-    /// The caller supplies a slice of bytes representing a packed
-    /// scalar tuple — for example, `[f64 value, u8 unit]` packed
-    /// into 9 bytes by the codegen following the offsets recorded
-    /// in [`bbnf_ir::passes::PayloadLayout`]. The builder rounds
-    /// the byte count up to the next 8-byte slot, allocates that
-    /// many consecutive payload slots, and copies the bytes in
-    /// verbatim.
-    ///
-    /// The corresponding reader is [`crate::Tape::payload_bytes`],
-    /// which returns the leading `byte_count` bytes of the
-    /// allocated region.
-    ///
-    /// Empty aggregates (`bytes.is_empty()`) push a leaf with no
-    /// payload, equivalent to [`Self::push_leaf`].
-    ///
-    /// `meta_idx` is the branch index for Alt-bodied rules (`0` for
-    /// everything else). Packed into `TapeRec::kind_meta` (high 4
-    /// bits) and `TapeRec::flags` (bit 7). 5-bit range: 0-31.
-    #[inline]
-    pub fn push_leaf_with_aggregate(
-        &mut self,
-        kind: TapeKind,
-        span_lo: u32,
-        span_hi: u32,
-        variant_idx: u8,
-        meta_idx: u8,
-        bytes: &[u8],
-    ) -> TapeOffset {
-        debug_assert!(
-            kind.is_leaf(),
-            "push_leaf_with_aggregate on compound kind {:?}",
-            kind
-        );
-        debug_assert!(
-            bytes.len() <= 16,
-            "aggregate payload exceeds 16 bytes: {}",
-            bytes.len()
-        );
-
-        let (payload_idx, payload_off) = if bytes.is_empty() {
-            (0u16, TapeOffset::NONE)
-        } else {
-            let slot_count = bytes.len().div_ceil(8);
-            let start = self.alloc_aggregate_slots(slot_count);
-            unsafe {
-                std::ptr::copy_nonoverlapping(
-                    bytes.as_ptr(),
-                    self.payloads.as_mut_ptr().add(start),
-                    bytes.len(),
-                );
-            }
-            (1u16, TapeOffset(start as u32))
-        };
-
-        let (kind_meta, flags_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
-        let idx = self.tape.records.len();
-        self.tape.records.push(TapeRec {
-            kind_meta,
-            flags: (variant_idx & 0x3F) | flags_meta_bit,
-            payload_idx,
-            span_lo,
-            span_hi,
-            child_off: payload_off,
-        });
-        TapeOffset(idx as u32)
-    }
-
-    /// AU.3.1: borrow the arena buffer for variable-length payload
-    /// writes. The decode kernel uses this to append decoded bytes
-    /// directly into the arena without an intermediate allocation.
-    /// Prefer [`Self::push_leaf_with_string`] for the full record
-    /// push + bookkeeping; this accessor is reserved for kernels
-    /// that need to stage bytes across multiple calls.
+    /// 1. Reserve the 4-byte length prefix (`extend_from_slice(&0u32.to_le_bytes())`).
+    /// 2. Stream decoded bytes after the prefix.
+    /// 3. Back-stamp the length via [`Self::stamp_arena_len_prefix`].
+    /// 4. Push the leaf via [`Self::push_leaf_with_arena_frame`] with
+    ///    the offset of the prefix.
     #[inline]
     pub fn arena_mut(&mut self) -> &mut Vec<u8> {
         &mut self.arena
     }
 
-    /// AU.3.1: the current length of the arena — equivalently, the
-    /// byte offset where the next write will land.
+    /// The current length of the arena — equivalently, the byte
+    /// offset where the next write will land.
     #[inline]
     pub fn arena_len(&self) -> u32 {
         self.arena.len() as u32
     }
 
-    /// AU.3.1: append a leaf record carrying a variable-length
-    /// decoded byte payload.
+    /// Append a leaf record whose payload bytes (with length prefix)
+    /// have already been written to the arena at `arena_offset`.
     ///
-    /// The payload framing is `(len: u32 le, bytes: [u8; len])`
-    /// written contiguously into the builder's arena. The record's
-    /// `child_off` stores the byte offset of the length prefix;
-    /// `payload_idx` is set to `2` as the "arena-string" sentinel
-    /// (where `0` = no payload, `1` = inline scalar in the 8-byte
-    /// `payloads` slab, `2` = arena-backed variable-length).
-    ///
-    /// The corresponding reader is [`crate::Tape::payload_string`],
-    /// which returns `&str` after UTF-8 validation.
-    ///
-    /// Contract: `bytes` must be valid UTF-8 — the reader panics on
-    /// malformed UTF-8. Callers that decode from arbitrary input
-    /// (e.g. the JSON string decoder) MUST validate upstream or use
-    /// the provided `decode_json_string_to_arena` kernel which
-    /// produces well-formed UTF-8 by construction (every escape
-    /// decode emits correct UTF-8 bytes and the borrowed fast path
-    /// returns a span of the input that was already UTF-8).
+    /// Used by the JSON-string decode kernel which streams decoded
+    /// bytes directly into the arena via [`Self::arena_mut`] and then
+    /// commits the record by calling this method with the frame's
+    /// offset. The `arena_offset` must point at the 4-byte length
+    /// prefix; the length itself has been back-stamped via
+    /// [`Self::stamp_arena_len_prefix`] after decoding.
     ///
     /// `meta_idx` range is 0-31 (5-bit packed field).
     #[inline]
-    pub fn push_leaf_with_string(
+    pub fn push_leaf_with_arena_frame(
         &mut self,
         kind: TapeKind,
         span_lo: u32,
@@ -520,84 +394,37 @@ impl TapeBuilder {
         variant_idx: u8,
         meta_idx: u8,
         arena_offset: u32,
-        arena_len: u32,
     ) -> TapeOffset {
         debug_assert!(
             kind.is_leaf(),
-            "push_leaf_with_string on compound kind {:?}",
+            "push_leaf_with_arena_frame on compound kind {:?}",
             kind
+        );
+        debug_assert!(
+            (arena_offset as usize) + 4 <= self.arena.len(),
+            "push_leaf_with_arena_frame: offset {} + 4 exceeds arena len {}",
+            arena_offset,
+            self.arena.len()
         );
         let (kind_meta, flags_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
         let idx = self.tape.records.len();
-        // Frame: [len: u32 le][bytes...]. We expect callers to have
-        // already written the bytes via `arena_mut()` at
-        // `arena_offset + 4`; this method writes the length prefix
-        // in-place. When the caller has not yet reserved the prefix
-        // slot, use [`Self::push_leaf_with_string_bytes`] which
-        // handles the full write path in one call.
         self.tape.records.push(TapeRec {
             kind_meta,
             flags: (variant_idx & 0x3F) | flags_meta_bit,
-            payload_idx: 2,
+            _reserved: 0,
             span_lo,
             span_hi,
             child_off: TapeOffset(arena_offset),
         });
-        // Bookkeep the length prefix if the arena currently has the
-        // bytes only (no prefix yet). Per contract the caller writes
-        // the bytes into the arena in-place before calling this
-        // method; the length is whatever the caller supplied.
-        //
-        // We intentionally keep the length argument explicit rather
-        // than recomputing `arena.len() - arena_offset` so the
-        // caller can push compact frames where the payload sits at
-        // an arbitrary offset (e.g. a borrowed zero-copy slice of
-        // the original source via the `Borrowed` fast path of the
-        // decode kernel, which doesn't touch the arena at all).
-        let _ = arena_len;
         TapeOffset(idx as u32)
     }
 
-    /// AU.3.1: convenience wrapper that appends `bytes` to the
-    /// arena with a length prefix and pushes the corresponding
-    /// leaf record. Used for the simple case where the caller
-    /// already has the decoded bytes in hand.
+    /// Write the 4-byte length prefix at the arena slot reserved by
+    /// the decode kernel.
     ///
-    /// Frame layout: `[len: u32 le][bytes...]`. The record's
-    /// `child_off` points at the length prefix so
-    /// [`crate::Tape::payload_string`] can read the length and
-    /// slice the bytes.
-    #[inline]
-    pub fn push_leaf_with_string_bytes(
-        &mut self,
-        kind: TapeKind,
-        span_lo: u32,
-        span_hi: u32,
-        variant_idx: u8,
-        meta_idx: u8,
-        bytes: &[u8],
-    ) -> TapeOffset {
-        let arena_offset = self.arena.len() as u32;
-        let len = bytes.len() as u32;
-        self.arena.extend_from_slice(&len.to_le_bytes());
-        self.arena.extend_from_slice(bytes);
-        self.push_leaf_with_string(
-            kind,
-            span_lo,
-            span_hi,
-            variant_idx,
-            meta_idx,
-            arena_offset,
-            len,
-        )
-    }
-
-    /// AU.3.1: write the 4-byte length prefix at the arena slot
-    /// reserved by the decode kernel.
-    ///
-    /// The kernel writes decoded bytes into the arena after
-    /// reserving a 4-byte slot at `arena_offset` (via `arena_mut()`
-    /// + `extend_from_slice(&[0u8; 4])`). Once the bytes have been
+    /// The kernel writes decoded bytes into the arena after reserving
+    /// a 4-byte slot at `arena_offset` (via `arena_mut()` +
+    /// `extend_from_slice(&[0u8; 4])`). Once the bytes have been
     /// decoded, the kernel calls this helper to stamp the actual
     /// length into the reserved slot. The slot must exist.
     #[inline]
@@ -630,7 +457,6 @@ impl TapeBuilder {
         match self.error {
             Some(err) => Err(err),
             None => {
-                self.tape.payloads = self.payloads;
                 self.tape.arena = self.arena;
                 Ok(self.tape)
             }

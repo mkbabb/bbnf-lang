@@ -136,13 +136,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -319,13 +321,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -502,13 +506,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -700,13 +706,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -855,13 +863,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -1037,13 +1047,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -1221,13 +1233,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -1398,13 +1412,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -1592,13 +1608,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -1754,9 +1772,111 @@ mod __bbnfbootstrap_emit_impl {
         pub fn is_branch_7(&self) -> bool {
             self.cursor.meta_idx() == 7u8
         }
-        ///If sub-variant `value_atom_0` was chosen (branch 7), return its child view.
+        ///If sub-variant `value_atom_0` was chosen (branch 0), return its child view.
         #[inline]
         pub fn as_value_atom_0(
+            &self,
+        ) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
+            if self.cursor.meta_idx() == 0u8 {
+                self.cursor
+                    .child(0)
+                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
+            } else {
+                None
+            }
+        }
+        #[inline]
+        pub fn is_value_atom_0(&self) -> bool {
+            self.cursor.meta_idx() == 0u8
+        }
+        ///If sub-variant `value_atom_1` was chosen (branch 1), return its child view.
+        #[inline]
+        pub fn as_value_atom_1(
+            &self,
+        ) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
+            if self.cursor.meta_idx() == 1u8 {
+                self.cursor
+                    .child(0)
+                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
+            } else {
+                None
+            }
+        }
+        #[inline]
+        pub fn is_value_atom_1(&self) -> bool {
+            self.cursor.meta_idx() == 1u8
+        }
+        ///If sub-variant `value_atom_2` was chosen (branch 2), return its child view.
+        #[inline]
+        pub fn as_value_atom_2(
+            &self,
+        ) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
+            if self.cursor.meta_idx() == 2u8 {
+                self.cursor
+                    .child(0)
+                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
+            } else {
+                None
+            }
+        }
+        #[inline]
+        pub fn is_value_atom_2(&self) -> bool {
+            self.cursor.meta_idx() == 2u8
+        }
+        ///If sub-variant `value_atom_2_sv1` was chosen (branch 3), return its child view.
+        #[inline]
+        pub fn as_value_atom_2_sv1(
+            &self,
+        ) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
+            if self.cursor.meta_idx() == 3u8 {
+                self.cursor
+                    .child(0)
+                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
+            } else {
+                None
+            }
+        }
+        #[inline]
+        pub fn is_value_atom_2_sv1(&self) -> bool {
+            self.cursor.meta_idx() == 3u8
+        }
+        ///If sub-variant `value_atom_2_sv2` was chosen (branch 5), return its child view.
+        #[inline]
+        pub fn as_value_atom_2_sv2(
+            &self,
+        ) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
+            if self.cursor.meta_idx() == 5u8 {
+                self.cursor
+                    .child(0)
+                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
+            } else {
+                None
+            }
+        }
+        #[inline]
+        pub fn is_value_atom_2_sv2(&self) -> bool {
+            self.cursor.meta_idx() == 5u8
+        }
+        ///If sub-variant `value_atom_2_sv3` was chosen (branch 6), return its child view.
+        #[inline]
+        pub fn as_value_atom_2_sv3(
+            &self,
+        ) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
+            if self.cursor.meta_idx() == 6u8 {
+                self.cursor
+                    .child(0)
+                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
+            } else {
+                None
+            }
+        }
+        #[inline]
+        pub fn is_value_atom_2_sv3(&self) -> bool {
+            self.cursor.meta_idx() == 6u8
+        }
+        ///If sub-variant `value_atom_3` was chosen (branch 7), return its child view.
+        #[inline]
+        pub fn as_value_atom_3(
             &self,
         ) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
             if self.cursor.meta_idx() == 7u8 {
@@ -1768,7 +1888,7 @@ mod __bbnfbootstrap_emit_impl {
             }
         }
         #[inline]
-        pub fn is_value_atom_0(&self) -> bool {
+        pub fn is_value_atom_3(&self) -> bool {
             self.cursor.meta_idx() == 7u8
         }
         /// The chosen branch's child as a generic node view,
@@ -1789,8 +1909,8 @@ mod __bbnfbootstrap_emit_impl {
         bool_lit(&'p str),
         string_lit(&'p str),
         value_fn_call(BbnfBootstrapNodeView<'p>),
-        value_input(BbnfBootstrapNodeView<'p>),
-        value_path(BbnfBootstrapNodeView<'p>),
+        value_input(&'p str),
+        value_path(&'p str),
         branch_7(BbnfBootstrapNodeView<'p>),
     }
     #[allow(dead_code)]
@@ -1864,20 +1984,30 @@ mod __bbnfbootstrap_emit_impl {
                     )
                 }
                 5u8 => {
-                    let __child = self.cursor.child(0)?;
-                    Some(
-                        value_atomValue::value_input(
-                            BbnfBootstrapNodeView::from_cursor(__child, self.input),
-                        ),
-                    )
+                    let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
+                    let __rec = __cursor.record();
+                    let __tape = __cursor.tape();
+                    let __value = match __tape.payload_Span(__rec) {
+                        Some((lo, hi)) => &self.input[lo as usize..hi as usize],
+                        None => {
+                            let (lo, hi) = __cursor.span();
+                            &self.input[lo as usize..hi as usize]
+                        }
+                    };
+                    Some(value_atomValue::value_input(__value))
                 }
                 6u8 => {
-                    let __child = self.cursor.child(0)?;
-                    Some(
-                        value_atomValue::value_path(
-                            BbnfBootstrapNodeView::from_cursor(__child, self.input),
-                        ),
-                    )
+                    let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
+                    let __rec = __cursor.record();
+                    let __tape = __cursor.tape();
+                    let __value = match __tape.payload_Span(__rec) {
+                        Some((lo, hi)) => &self.input[lo as usize..hi as usize],
+                        None => {
+                            let (lo, hi) = __cursor.span();
+                            &self.input[lo as usize..hi as usize]
+                        }
+                    };
+                    Some(value_atomValue::value_path(__value))
                 }
                 7u8 => {
                     let __child = self.cursor.child(0)?;
@@ -2002,13 +2132,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -2216,13 +2348,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -2414,13 +2548,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -2676,13 +2812,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -2889,13 +3027,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -3073,13 +3213,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -3253,13 +3395,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -3433,13 +3577,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -3613,13 +3759,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -3793,13 +3941,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -4001,13 +4151,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -4197,13 +4349,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -4370,13 +4524,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -4712,13 +4868,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -4894,13 +5052,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -5049,13 +5209,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -5204,13 +5366,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -5359,13 +5523,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -5514,13 +5680,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -5564,6 +5732,25 @@ mod __bbnfbootstrap_emit_impl {
         #[inline]
         pub fn text(&self) -> &'p str {
             self.span_text()
+        }
+        /// Get the sub-span value as a string slice.
+        ///
+        /// Payload-first: reads the packed (lo, hi) u32 pair from
+        /// the tape payload buffer in O(1). Falls back to the
+        /// record's own span text if no payload is present.
+        #[inline]
+        pub fn value(&self) -> &'p str {
+            let tape = self.cursor.tape();
+            let rec = self.cursor.record();
+            if let Some((lo, hi)) = tape.payload_Span(rec) {
+                return &self.input[lo as usize..hi as usize];
+            }
+            self.span_text()
+        }
+        /// Alias for backward compatibility. Prefer `.value()`.
+        #[inline]
+        pub fn as_span(&self) -> &'p str {
+            self.value()
         }
     }
     /// Generated view over a tape record produced by this rule.
@@ -5677,13 +5864,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -5865,13 +6054,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -6098,6 +6289,40 @@ mod __bbnfbootstrap_emit_impl {
         pub fn is_term_1(&self) -> bool {
             self.cursor.meta_idx() == 2u8
         }
+        ///If sub-variant `term_0_sv2` was chosen (branch 3), return its child view.
+        #[inline]
+        pub fn as_term_0_sv2(
+            &self,
+        ) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
+            if self.cursor.meta_idx() == 3u8 {
+                self.cursor
+                    .child(0)
+                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
+            } else {
+                None
+            }
+        }
+        #[inline]
+        pub fn is_term_0_sv2(&self) -> bool {
+            self.cursor.meta_idx() == 3u8
+        }
+        ///If sub-variant `term_0_sv3` was chosen (branch 4), return its child view.
+        #[inline]
+        pub fn as_term_0_sv3(
+            &self,
+        ) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
+            if self.cursor.meta_idx() == 4u8 {
+                self.cursor
+                    .child(0)
+                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
+            } else {
+                None
+            }
+        }
+        #[inline]
+        pub fn is_term_0_sv3(&self) -> bool {
+            self.cursor.meta_idx() == 4u8
+        }
         ///If sub-variant `term_2` was chosen (branch 5), return its child view.
         #[inline]
         pub fn as_term_2(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
@@ -6113,9 +6338,9 @@ mod __bbnfbootstrap_emit_impl {
         pub fn is_term_2(&self) -> bool {
             self.cursor.meta_idx() == 5u8
         }
-        ///If sub-variant `term_2_sv2` was chosen (branch 6), return its child view.
+        ///If sub-variant `term_2_sv4` was chosen (branch 6), return its child view.
         #[inline]
-        pub fn as_term_2_sv2(
+        pub fn as_term_2_sv4(
             &self,
         ) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
             if self.cursor.meta_idx() == 6u8 {
@@ -6127,12 +6352,12 @@ mod __bbnfbootstrap_emit_impl {
             }
         }
         #[inline]
-        pub fn is_term_2_sv2(&self) -> bool {
+        pub fn is_term_2_sv4(&self) -> bool {
             self.cursor.meta_idx() == 6u8
         }
-        ///If sub-variant `term_2_sv3` was chosen (branch 7), return its child view.
+        ///If sub-variant `term_2_sv5` was chosen (branch 7), return its child view.
         #[inline]
-        pub fn as_term_2_sv3(
+        pub fn as_term_2_sv5(
             &self,
         ) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
             if self.cursor.meta_idx() == 7u8 {
@@ -6144,12 +6369,12 @@ mod __bbnfbootstrap_emit_impl {
             }
         }
         #[inline]
-        pub fn is_term_2_sv3(&self) -> bool {
+        pub fn is_term_2_sv5(&self) -> bool {
             self.cursor.meta_idx() == 7u8
         }
-        ///If sub-variant `term_2_sv4` was chosen (branch 8), return its child view.
+        ///If sub-variant `term_2_sv6` was chosen (branch 8), return its child view.
         #[inline]
-        pub fn as_term_2_sv4(
+        pub fn as_term_2_sv6(
             &self,
         ) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
             if self.cursor.meta_idx() == 8u8 {
@@ -6161,7 +6386,7 @@ mod __bbnfbootstrap_emit_impl {
             }
         }
         #[inline]
-        pub fn is_term_2_sv4(&self) -> bool {
+        pub fn is_term_2_sv6(&self) -> bool {
             self.cursor.meta_idx() == 8u8
         }
         /// The chosen branch's child as a generic node view,
@@ -6392,13 +6617,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -6622,13 +6849,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -6806,13 +7035,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -6986,13 +7217,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -7200,13 +7433,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -7384,13 +7619,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -7572,13 +7809,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -7760,13 +7999,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -7957,13 +8198,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -8151,13 +8394,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -8331,13 +8576,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -8515,13 +8762,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -8685,13 +8934,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -8855,13 +9106,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -9025,13 +9278,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -9205,13 +9460,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -9382,13 +9639,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -9552,13 +9811,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -9722,13 +9983,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -9892,13 +10155,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -10069,13 +10334,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -10239,6 +10506,91 @@ mod __bbnfbootstrap_emit_impl {
         pub fn is_host_directive(&self) -> bool {
             self.cursor.meta_idx() == 6u8
         }
+        ///If sub-variant `directive_0` was chosen (branch 0), return its child view.
+        #[inline]
+        pub fn as_directive_0(
+            &self,
+        ) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
+            if self.cursor.meta_idx() == 0u8 {
+                self.cursor
+                    .child(0)
+                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
+            } else {
+                None
+            }
+        }
+        #[inline]
+        pub fn is_directive_0(&self) -> bool {
+            self.cursor.meta_idx() == 0u8
+        }
+        ///If sub-variant `directive_0_sv1` was chosen (branch 3), return its child view.
+        #[inline]
+        pub fn as_directive_0_sv1(
+            &self,
+        ) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
+            if self.cursor.meta_idx() == 3u8 {
+                self.cursor
+                    .child(0)
+                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
+            } else {
+                None
+            }
+        }
+        #[inline]
+        pub fn is_directive_0_sv1(&self) -> bool {
+            self.cursor.meta_idx() == 3u8
+        }
+        ///If sub-variant `directive_0_sv2` was chosen (branch 4), return its child view.
+        #[inline]
+        pub fn as_directive_0_sv2(
+            &self,
+        ) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
+            if self.cursor.meta_idx() == 4u8 {
+                self.cursor
+                    .child(0)
+                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
+            } else {
+                None
+            }
+        }
+        #[inline]
+        pub fn is_directive_0_sv2(&self) -> bool {
+            self.cursor.meta_idx() == 4u8
+        }
+        ///If sub-variant `directive_0_sv3` was chosen (branch 5), return its child view.
+        #[inline]
+        pub fn as_directive_0_sv3(
+            &self,
+        ) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
+            if self.cursor.meta_idx() == 5u8 {
+                self.cursor
+                    .child(0)
+                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
+            } else {
+                None
+            }
+        }
+        #[inline]
+        pub fn is_directive_0_sv3(&self) -> bool {
+            self.cursor.meta_idx() == 5u8
+        }
+        ///If sub-variant `directive_0_sv4` was chosen (branch 6), return its child view.
+        #[inline]
+        pub fn as_directive_0_sv4(
+            &self,
+        ) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
+            if self.cursor.meta_idx() == 6u8 {
+                self.cursor
+                    .child(0)
+                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
+            } else {
+                None
+            }
+        }
+        #[inline]
+        pub fn is_directive_0_sv4(&self) -> bool {
+            self.cursor.meta_idx() == 6u8
+        }
         /// The chosen branch's child as a generic node view,
         /// regardless of which variant was selected.
         #[inline]
@@ -10246,6 +10598,111 @@ mod __bbnfbootstrap_emit_impl {
             self.cursor
                 .child(0)
                 .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
+        }
+    }
+    /// Typed value enum — payload-eligible branches carry typed
+    /// values directly; non-eligible branches wrap a cursor view.
+    #[allow(non_camel_case_types)]
+    pub enum directiveValue<'p> {
+        import_directive(&'p str),
+        recover_directive(BbnfBootstrapNodeView<'p>),
+        pretty_directive(BbnfBootstrapNodeView<'p>),
+        ws_directive(&'p str),
+        token_directive(&'p str),
+        debug_directive(&'p str),
+        host_directive(&'p str),
+    }
+    #[allow(dead_code)]
+    impl<'p> directiveView<'p> {
+        /// Decode the chosen branch's value. Payload-eligible
+        /// branches return typed scalars/aggregates; other
+        /// branches return cursor-wrapped sub-views.
+        #[inline]
+        pub fn value(&self) -> ::core::option::Option<directiveValue<'p>> {
+            match self.cursor.meta_idx() {
+                0u8 => {
+                    let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
+                    let __rec = __cursor.record();
+                    let __tape = __cursor.tape();
+                    let __value = match __tape.payload_Span(__rec) {
+                        Some((lo, hi)) => &self.input[lo as usize..hi as usize],
+                        None => {
+                            let (lo, hi) = __cursor.span();
+                            &self.input[lo as usize..hi as usize]
+                        }
+                    };
+                    Some(directiveValue::import_directive(__value))
+                }
+                1u8 => {
+                    let __child = self.cursor.child(0)?;
+                    Some(
+                        directiveValue::recover_directive(
+                            BbnfBootstrapNodeView::from_cursor(__child, self.input),
+                        ),
+                    )
+                }
+                2u8 => {
+                    let __child = self.cursor.child(0)?;
+                    Some(
+                        directiveValue::pretty_directive(
+                            BbnfBootstrapNodeView::from_cursor(__child, self.input),
+                        ),
+                    )
+                }
+                3u8 => {
+                    let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
+                    let __rec = __cursor.record();
+                    let __tape = __cursor.tape();
+                    let __value = match __tape.payload_Span(__rec) {
+                        Some((lo, hi)) => &self.input[lo as usize..hi as usize],
+                        None => {
+                            let (lo, hi) = __cursor.span();
+                            &self.input[lo as usize..hi as usize]
+                        }
+                    };
+                    Some(directiveValue::ws_directive(__value))
+                }
+                4u8 => {
+                    let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
+                    let __rec = __cursor.record();
+                    let __tape = __cursor.tape();
+                    let __value = match __tape.payload_Span(__rec) {
+                        Some((lo, hi)) => &self.input[lo as usize..hi as usize],
+                        None => {
+                            let (lo, hi) = __cursor.span();
+                            &self.input[lo as usize..hi as usize]
+                        }
+                    };
+                    Some(directiveValue::token_directive(__value))
+                }
+                5u8 => {
+                    let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
+                    let __rec = __cursor.record();
+                    let __tape = __cursor.tape();
+                    let __value = match __tape.payload_Span(__rec) {
+                        Some((lo, hi)) => &self.input[lo as usize..hi as usize],
+                        None => {
+                            let (lo, hi) = __cursor.span();
+                            &self.input[lo as usize..hi as usize]
+                        }
+                    };
+                    Some(directiveValue::debug_directive(__value))
+                }
+                6u8 => {
+                    let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
+                    let __rec = __cursor.record();
+                    let __tape = __cursor.tape();
+                    let __value = match __tape.payload_Span(__rec) {
+                        Some((lo, hi)) => &self.input[lo as usize..hi as usize],
+                        None => {
+                            let (lo, hi) = __cursor.span();
+                            &self.input[lo as usize..hi as usize]
+                        }
+                    };
+                    Some(directiveValue::host_directive(__value))
+                }
+                _ => None,
+            }
         }
     }
     /// Generated view over a tape record produced by this rule.
@@ -10359,13 +10816,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -10460,6 +10919,40 @@ mod __bbnfbootstrap_emit_impl {
         #[inline]
         pub fn is_rule(&self) -> bool {
             self.cursor.meta_idx() == 3u8
+        }
+        ///If sub-variant `grammar_item_0` was chosen (branch 0), return its child view.
+        #[inline]
+        pub fn as_grammar_item_0(
+            &self,
+        ) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
+            if self.cursor.meta_idx() == 0u8 {
+                self.cursor
+                    .child(0)
+                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
+            } else {
+                None
+            }
+        }
+        #[inline]
+        pub fn is_grammar_item_0(&self) -> bool {
+            self.cursor.meta_idx() == 0u8
+        }
+        ///If sub-variant `grammar_item_0_sv1` was chosen (branch 1), return its child view.
+        #[inline]
+        pub fn as_grammar_item_0_sv1(
+            &self,
+        ) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
+            if self.cursor.meta_idx() == 1u8 {
+                self.cursor
+                    .child(0)
+                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
+            } else {
+                None
+            }
+        }
+        #[inline]
+        pub fn is_grammar_item_0_sv1(&self) -> bool {
+            self.cursor.meta_idx() == 1u8
         }
         /// The chosen branch's child as a generic node view,
         /// regardless of which variant was selected.
@@ -10644,13 +11137,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -10785,13 +11280,15 @@ mod __bbnfbootstrap_emit_impl {
         grammar_item,
         grammar,
         value_atom_0,
+        value_atom_1,
+        value_atom_2,
+        value_atom_3,
         value_unary_0,
         term_0,
         term_1,
         term_2,
-        import_directive_0,
-        pretty_directive_0,
-        debug_directive_0,
+        directive_0,
+        grammar_item_0,
         /// Fallback for records whose variant_idx is not a
         /// known rule- or sub-variant discriminator.
         Unknown,
@@ -10900,13 +11397,15 @@ mod __bbnfbootstrap_emit_impl {
                 51u8 => BbnfBootstrapRuleKind::grammar_item,
                 52u8 => BbnfBootstrapRuleKind::grammar,
                 53u8 => BbnfBootstrapRuleKind::value_atom_0,
-                54u8 => BbnfBootstrapRuleKind::value_unary_0,
-                55u8 => BbnfBootstrapRuleKind::term_0,
-                56u8 => BbnfBootstrapRuleKind::term_1,
-                57u8 => BbnfBootstrapRuleKind::term_2,
-                58u8 => BbnfBootstrapRuleKind::import_directive_0,
-                59u8 => BbnfBootstrapRuleKind::pretty_directive_0,
-                60u8 => BbnfBootstrapRuleKind::debug_directive_0,
+                54u8 => BbnfBootstrapRuleKind::value_atom_1,
+                55u8 => BbnfBootstrapRuleKind::value_atom_2,
+                56u8 => BbnfBootstrapRuleKind::value_atom_3,
+                57u8 => BbnfBootstrapRuleKind::value_unary_0,
+                58u8 => BbnfBootstrapRuleKind::term_0,
+                59u8 => BbnfBootstrapRuleKind::term_1,
+                60u8 => BbnfBootstrapRuleKind::term_2,
+                61u8 => BbnfBootstrapRuleKind::directive_0,
+                62u8 => BbnfBootstrapRuleKind::grammar_item_0,
                 _ => BbnfBootstrapRuleKind::Unknown,
             }
         }
@@ -11481,10 +11980,10 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    '__seq_blk4: {
+                    '__span_blk4: {
                         match (Self::__value_ident(state, tape)) {
                             Some(_) => {}
-                            None => break '__seq_blk4 None,
+                            None => break '__span_blk4 None,
                         }
                         match ('__rpt_blk3: {
                             let __rpt_lo = state.offset as u32;
@@ -11494,7 +11993,7 @@ mod __bbnfbootstrap_emit_impl {
                             let mut __count: usize = 0;
                             loop {
                                 let __prev = state.offset;
-                                match ('__seq_blk2: {
+                                match ('__span_blk2: {
                                     match ({
                                         if state.offset + 2usize <= state.src_bytes.len()
                                             && unsafe {
@@ -11509,11 +12008,11 @@ mod __bbnfbootstrap_emit_impl {
                                         }
                                     }) {
                                         Some(_) => {}
-                                        None => break '__seq_blk2 None,
+                                        None => break '__span_blk2 None,
                                     }
                                     match (Self::__value_ident(state, tape)) {
                                         Some(_) => {}
-                                        None => break '__seq_blk2 None,
+                                        None => break '__span_blk2 None,
                                     }
                                     Some(())
                                 }) {
@@ -11550,7 +12049,7 @@ mod __bbnfbootstrap_emit_impl {
                             }
                         }) {
                             Some(_) => {}
-                            None => break '__seq_blk4 None,
+                            None => break '__span_blk4 None,
                         }
                         Some(())
                     }
@@ -11584,7 +12083,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    '__seq_blk7: {
+                    '__span_blk7: {
                         match ({
                             if state.offset + 5usize <= state.src_bytes.len()
                                 && unsafe {
@@ -11599,7 +12098,7 @@ mod __bbnfbootstrap_emit_impl {
                             }
                         }) {
                             Some(_) => {}
-                            None => break '__seq_blk7 None,
+                            None => break '__span_blk7 None,
                         }
                         match ('__rpt_blk6: {
                             let __rpt_lo = state.offset as u32;
@@ -11609,7 +12108,7 @@ mod __bbnfbootstrap_emit_impl {
                             let mut __count: usize = 0;
                             loop {
                                 let __prev = state.offset;
-                                match ('__seq_blk5: {
+                                match ('__span_blk5: {
                                     match ({
                                         if state.offset < state.src_bytes.len()
                                             && state.src_bytes[state.offset] == 46u8
@@ -11621,11 +12120,11 @@ mod __bbnfbootstrap_emit_impl {
                                         }
                                     }) {
                                         Some(_) => {}
-                                        None => break '__seq_blk5 None,
+                                        None => break '__span_blk5 None,
                                     }
                                     match (Self::__value_ident(state, tape)) {
                                         Some(_) => {}
-                                        None => break '__seq_blk5 None,
+                                        None => break '__span_blk5 None,
                                     }
                                     Some(())
                                 }) {
@@ -11662,7 +12161,7 @@ mod __bbnfbootstrap_emit_impl {
                             }
                         }) {
                             Some(_) => {}
-                            None => break '__seq_blk7 None,
+                            None => break '__span_blk7 None,
                         }
                         Some(())
                     }
@@ -13045,7 +13544,7 @@ mod __bbnfbootstrap_emit_impl {
                             let mut __count: usize = 0;
                             loop {
                                 let __prev = state.offset;
-                                match ('__seq_blk35: {
+                                match ('__span_blk35: {
                                     match ({
                                         ::parse_that::trim_leading_whitespace_mut(state);
                                         let __ws_inner = {
@@ -13062,11 +13561,11 @@ mod __bbnfbootstrap_emit_impl {
                                         __ws_inner
                                     }) {
                                         Some(_) => {}
-                                        None => break '__seq_blk35 None,
+                                        None => break '__span_blk35 None,
                                     }
                                     match (Self::__value_ident(state, tape)) {
                                         Some(_) => {}
-                                        None => break '__seq_blk35 None,
+                                        None => break '__span_blk35 None,
                                     }
                                     Some(())
                                 }) {
@@ -13223,7 +13722,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    '__seq_blk39: {
+                    '__span_blk39: {
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
                             let __ws_inner = {
@@ -13240,11 +13739,11 @@ mod __bbnfbootstrap_emit_impl {
                             __ws_inner
                         }) {
                             Some(_) => {}
-                            None => break '__seq_blk39 None,
+                            None => break '__span_blk39 None,
                         }
                         match (Self::__type_name(state, tape)) {
                             Some(_) => {}
-                            None => break '__seq_blk39 None,
+                            None => break '__span_blk39 None,
                         }
                         Some(())
                     }
@@ -15765,7 +16264,7 @@ mod __bbnfbootstrap_emit_impl {
                             let mut __count: usize = 0;
                             loop {
                                 let __prev = state.offset;
-                                match ('__seq_blk72: {
+                                match ('__span_blk72: {
                                     match ({
                                         ::parse_that::trim_leading_whitespace_mut(state);
                                         let __ws_inner = {
@@ -15782,11 +16281,11 @@ mod __bbnfbootstrap_emit_impl {
                                         __ws_inner
                                     }) {
                                         Some(_) => {}
-                                        None => break '__seq_blk72 None,
+                                        None => break '__span_blk72 None,
                                     }
                                     match (Self::__identifier(state, tape)) {
                                         Some(_) => {}
-                                        None => break '__seq_blk72 None,
+                                        None => break '__span_blk72 None,
                                     }
                                     Some(())
                                 }) {
@@ -16181,7 +16680,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    '__seq_blk82: {
+                    '__span_blk82: {
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
                             let __ws_inner = {
@@ -16198,14 +16697,14 @@ mod __bbnfbootstrap_emit_impl {
                             __ws_inner
                         }) {
                             Some(_) => {}
-                            None => break '__seq_blk82 None,
+                            None => break '__span_blk82 None,
                         }
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = '__seq_blk81: {
+                            let __ws_inner = '__span_blk81: {
                                 match (Self::__identifier(state, tape)) {
                                     Some(_) => {}
-                                    None => break '__seq_blk81 None,
+                                    None => break '__span_blk81 None,
                                 }
                                 match ('__rpt_blk80: {
                                     let __rpt_lo = state.offset as u32;
@@ -16215,7 +16714,7 @@ mod __bbnfbootstrap_emit_impl {
                                     let mut __count: usize = 0;
                                     loop {
                                         let __prev = state.offset;
-                                        match ('__seq_blk79: {
+                                        match ('__span_blk79: {
                                             match ({
                                                 ::parse_that::trim_leading_whitespace_mut(state);
                                                 let __ws_inner = {
@@ -16232,11 +16731,11 @@ mod __bbnfbootstrap_emit_impl {
                                                 __ws_inner
                                             }) {
                                                 Some(_) => {}
-                                                None => break '__seq_blk79 None,
+                                                None => break '__span_blk79 None,
                                             }
                                             match (Self::__identifier(state, tape)) {
                                                 Some(_) => {}
-                                                None => break '__seq_blk79 None,
+                                                None => break '__span_blk79 None,
                                             }
                                             Some(())
                                         }) {
@@ -16273,7 +16772,7 @@ mod __bbnfbootstrap_emit_impl {
                                     }
                                 }) {
                                     Some(_) => {}
-                                    None => break '__seq_blk81 None,
+                                    None => break '__span_blk81 None,
                                 }
                                 Some(())
                             };
@@ -16281,7 +16780,7 @@ mod __bbnfbootstrap_emit_impl {
                             __ws_inner
                         }) {
                             Some(_) => {}
-                            None => break '__seq_blk82 None,
+                            None => break '__span_blk82 None,
                         }
                         match ({
                             if state.offset < state.src_bytes.len()
@@ -16294,7 +16793,7 @@ mod __bbnfbootstrap_emit_impl {
                             }
                         }) {
                             Some(_) => {}
-                            None => break '__seq_blk82 None,
+                            None => break '__span_blk82 None,
                         }
                         Some(())
                     }
@@ -16328,7 +16827,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    '__seq_blk86: {
+                    '__span_blk86: {
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
                             let __ws_inner = {
@@ -16348,14 +16847,14 @@ mod __bbnfbootstrap_emit_impl {
                             __ws_inner
                         }) {
                             Some(_) => {}
-                            None => break '__seq_blk86 None,
+                            None => break '__span_blk86 None,
                         }
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
                             let __ws_inner = '__alt_blk84: {
                                 {
                                     let __cp = state.offset;
-                                    if '__seq_blk83: {
+                                    if '__span_blk83: {
                                         match ({
                                             ::parse_that::trim_leading_whitespace_mut(state);
                                             let __ws_inner = Self::__import_items(state, tape);
@@ -16363,7 +16862,7 @@ mod __bbnfbootstrap_emit_impl {
                                             __ws_inner
                                         }) {
                                             Some(_) => {}
-                                            None => break '__seq_blk83 None,
+                                            None => break '__span_blk83 None,
                                         }
                                         match ({
                                             ::parse_that::trim_leading_whitespace_mut(state);
@@ -16384,11 +16883,11 @@ mod __bbnfbootstrap_emit_impl {
                                             __ws_inner
                                         }) {
                                             Some(_) => {}
-                                            None => break '__seq_blk83 None,
+                                            None => break '__span_blk83 None,
                                         }
                                         match (Self::__import_path(state, tape)) {
                                             Some(_) => {}
-                                            None => break '__seq_blk83 None,
+                                            None => break '__span_blk83 None,
                                         }
                                         Some(())
                                     }
@@ -16411,7 +16910,7 @@ mod __bbnfbootstrap_emit_impl {
                             __ws_inner
                         }) {
                             Some(_) => {}
-                            None => break '__seq_blk86 None,
+                            None => break '__span_blk86 None,
                         }
                         match ({
                             let __opt_lo = state.offset as u32;
@@ -16475,7 +16974,7 @@ mod __bbnfbootstrap_emit_impl {
                             Some(())
                         }) {
                             Some(_) => {}
-                            None => break '__seq_blk86 None,
+                            None => break '__span_blk86 None,
                         }
                         Some(())
                     }
@@ -16645,10 +17144,10 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    '__seq_blk90: {
+                    '__span_blk90: {
                         match (Self::__identifier(state, tape)) {
                             Some(_) => {}
-                            None => break '__seq_blk90 None,
+                            None => break '__span_blk90 None,
                         }
                         match ({
                             let __opt_lo = state.offset as u32;
@@ -16738,7 +17237,7 @@ mod __bbnfbootstrap_emit_impl {
                             Some(())
                         }) {
                             Some(_) => {}
-                            None => break '__seq_blk90 None,
+                            None => break '__span_blk90 None,
                         }
                         Some(())
                     }
@@ -16979,7 +17478,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    '__seq_blk96: {
+                    '__span_blk96: {
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
                             let __ws_inner = {
@@ -16999,7 +17498,7 @@ mod __bbnfbootstrap_emit_impl {
                             __ws_inner
                         }) {
                             Some(_) => {}
-                            None => break '__seq_blk96 None,
+                            None => break '__span_blk96 None,
                         }
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
@@ -17008,7 +17507,7 @@ mod __bbnfbootstrap_emit_impl {
                             __ws_inner
                         }) {
                             Some(_) => {}
-                            None => break '__seq_blk96 None,
+                            None => break '__span_blk96 None,
                         }
                         match ({
                             let __opt_lo = state.offset as u32;
@@ -17072,7 +17571,7 @@ mod __bbnfbootstrap_emit_impl {
                             Some(())
                         }) {
                             Some(_) => {}
-                            None => break '__seq_blk96 None,
+                            None => break '__span_blk96 None,
                         }
                         Some(())
                     }
@@ -17106,7 +17605,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    '__seq_blk98: {
+                    '__span_blk98: {
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
                             let __ws_inner = {
@@ -17126,7 +17625,7 @@ mod __bbnfbootstrap_emit_impl {
                             __ws_inner
                         }) {
                             Some(_) => {}
-                            None => break '__seq_blk98 None,
+                            None => break '__span_blk98 None,
                         }
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
@@ -17135,7 +17634,7 @@ mod __bbnfbootstrap_emit_impl {
                             __ws_inner
                         }) {
                             Some(_) => {}
-                            None => break '__seq_blk98 None,
+                            None => break '__span_blk98 None,
                         }
                         match ({
                             let __opt_lo = state.offset as u32;
@@ -17199,7 +17698,7 @@ mod __bbnfbootstrap_emit_impl {
                             Some(())
                         }) {
                             Some(_) => {}
-                            None => break '__seq_blk98 None,
+                            None => break '__span_blk98 None,
                         }
                         Some(())
                     }
@@ -17233,7 +17732,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    '__seq_blk101: {
+                    '__span_blk101: {
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
                             let __ws_inner = {
@@ -17253,7 +17752,7 @@ mod __bbnfbootstrap_emit_impl {
                             __ws_inner
                         }) {
                             Some(_) => {}
-                            None => break '__seq_blk101 None,
+                            None => break '__span_blk101 None,
                         }
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
@@ -17289,7 +17788,7 @@ mod __bbnfbootstrap_emit_impl {
                             __ws_inner
                         }) {
                             Some(_) => {}
-                            None => break '__seq_blk101 None,
+                            None => break '__span_blk101 None,
                         }
                         match ({
                             let __opt_lo = state.offset as u32;
@@ -17353,7 +17852,7 @@ mod __bbnfbootstrap_emit_impl {
                             Some(())
                         }) {
                             Some(_) => {}
-                            None => break '__seq_blk101 None,
+                            None => break '__span_blk101 None,
                         }
                         Some(())
                     }
@@ -17387,7 +17886,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    '__seq_blk104: {
+                    '__span_blk104: {
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
                             let __ws_inner = {
@@ -17407,7 +17906,7 @@ mod __bbnfbootstrap_emit_impl {
                             __ws_inner
                         }) {
                             Some(_) => {}
-                            None => break '__seq_blk104 None,
+                            None => break '__span_blk104 None,
                         }
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
@@ -17416,7 +17915,7 @@ mod __bbnfbootstrap_emit_impl {
                             __ws_inner
                         }) {
                             Some(_) => {}
-                            None => break '__seq_blk104 None,
+                            None => break '__span_blk104 None,
                         }
                         match ({
                             let __opt_lo = state.offset as u32;
@@ -17424,7 +17923,7 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             let __opt_cp = state.offset;
-                            match ('__seq_blk102: {
+                            match ('__span_blk102: {
                                 match ({
                                     ::parse_that::trim_leading_whitespace_mut(state);
                                     let __ws_inner = {
@@ -17441,7 +17940,7 @@ mod __bbnfbootstrap_emit_impl {
                                     __ws_inner
                                 }) {
                                     Some(_) => {}
-                                    None => break '__seq_blk102 None,
+                                    None => break '__span_blk102 None,
                                 }
                                 match ({
                                     ::parse_that::trim_leading_whitespace_mut(state);
@@ -17450,7 +17949,7 @@ mod __bbnfbootstrap_emit_impl {
                                     __ws_inner
                                 }) {
                                     Some(_) => {}
-                                    None => break '__seq_blk102 None,
+                                    None => break '__span_blk102 None,
                                 }
                                 Some(())
                             }) {
@@ -17475,7 +17974,7 @@ mod __bbnfbootstrap_emit_impl {
                             Some(())
                         }) {
                             Some(_) => {}
-                            None => break '__seq_blk104 None,
+                            None => break '__span_blk104 None,
                         }
                         match ({
                             let __opt_lo = state.offset as u32;
@@ -17539,7 +18038,7 @@ mod __bbnfbootstrap_emit_impl {
                             Some(())
                         }) {
                             Some(_) => {}
-                            None => break '__seq_blk104 None,
+                            None => break '__span_blk104 None,
                         }
                         Some(())
                     }

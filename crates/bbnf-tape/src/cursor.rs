@@ -104,6 +104,26 @@ impl<'tape> TapeCursor<'tape> {
         self.record().meta_idx()
     }
 
+    /// Read the bytes of an aggregate payload whose width is known
+    /// to the caller from the grammar's payload-layout table.
+    ///
+    /// Reads from the unified arena at the record's `child_off`.
+    /// Works for both [`PayloadData::Aggregate`](crate::PayloadData::Aggregate)
+    /// (≤ 16 B inline) and
+    /// [`PayloadData::LargeAggregate`](crate::PayloadData::LargeAggregate)
+    /// (> 16 B arena-backed) — the on-arena representation is
+    /// identical (bytes verbatim into an 8-aligned slot); only the
+    /// caller-supplied `byte_count` differs.
+    ///
+    /// Returns `None` for non-payload records or when the arena is
+    /// too short to satisfy the request. Field-level reads slice
+    /// into the returned buffer at the per-field offsets recorded
+    /// in the layout.
+    #[inline]
+    pub fn payload_aggregate_bytes(&self, byte_count: usize) -> Option<&'tape [u8]> {
+        self.tape.payload_bytes(self.record(), byte_count)
+    }
+
     // ── Child access (Tranche AJ.0, AU.3.2) ────────────────────────
 
     /// Construct a cursor over the i-th direct child of the current

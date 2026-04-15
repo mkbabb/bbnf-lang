@@ -11,8 +11,8 @@ use crate::tape::{Tape, TapeOffset, TapeRec};
 /// Payload data handed to [`TapeBuilder::push_leaf_with`] — the single
 /// entry point for payload-bearing leaves.
 ///
-/// Each variant corresponds to one of the four payload shapes the
-/// unified arena recognises:
+/// Each variant corresponds to one of the payload shapes the unified
+/// arena recognises:
 ///
 /// - [`PayloadData::None`] — pure span leaf, no payload. Equivalent
 ///   to [`TapeBuilder::push_leaf`]; exposed on `PayloadData` so
@@ -29,6 +29,14 @@ use crate::tape::{Tape, TapeOffset, TapeRec};
 ///   dimension `(f64, u8)` pairs, kv-pair values). Length up to 16
 ///   bytes; written verbatim into an arena slot rounded up to the
 ///   next 8-byte boundary.
+/// - [`PayloadData::LargeAggregate`] — aggregate payload exceeding the
+///   16-byte inline budget (CSS `colorFunction` / `colorFn` / `colorMix`
+///   — `u8 space + f64×3 + f64 alpha` = 33 B, and larger recursive
+///   shapes). Identical on-arena layout to [`Self::Aggregate`] — bytes
+///   written verbatim into an 8-aligned slot, no length prefix — but
+///   the reader recovers the width from the payload-layout table keyed
+///   by the record's `kind` + `variant_idx` rather than reading it from
+///   a frame header.
 /// - [`PayloadData::Bytes`] — variable-length byte string (decoded
 ///   JSON strings, comment bodies, regex patterns). Framed into the
 ///   arena as `(len: u32 LE, bytes: [u8; len])`.
@@ -47,6 +55,20 @@ pub enum PayloadData<'a> {
     /// Packed aggregate tuple bytes written verbatim into the arena.
     /// Length up to 16 bytes.
     Aggregate(&'a [u8]),
+    /// Aggregate bytes exceeding the 16-byte inline budget — arena-
+    /// backed, unframed. Written verbatim into an 8-aligned slot
+    /// (padding at the tail is zero-initialised, matching
+    /// [`Self::Aggregate`]). The width is NOT stored alongside the
+    /// bytes; readers recover it from the grammar's payload-layout
+    /// table via `(kind, variant_idx)` and pass it to
+    /// [`Tape::payload_bytes`](crate::Tape::payload_bytes) /
+    /// [`TapeCursor::payload_large_aggregate`](crate::TapeCursor::payload_large_aggregate).
+    ///
+    /// Used for CSS colour-function aggregates (`colorFunction`,
+    /// `colorFn`, `colorMix`) that pack `u8 space + f64×3 channels +
+    /// f64 alpha` (33 B → 40 B slot) and larger recursive shapes
+    /// indirected through `ColorRef` arena offsets.
+    LargeAggregate(&'a [u8]),
     /// Byte string framed as `(len: u32 LE, bytes)` into the arena.
     /// The caller supplies the decoded bytes; the builder writes the
     /// length prefix.
@@ -283,6 +305,14 @@ impl TapeBuilder {
                     TapeOffset(offset)
                 }
             }
+            PayloadData::LargeAggregate(bytes) => {
+                if bytes.is_empty() {
+                    TapeOffset::NONE
+                } else {
+                    let offset = self.alloc_large_aggregate_slot(bytes);
+                    TapeOffset(offset)
+                }
+            }
             PayloadData::Bytes(bytes) => {
                 let offset = self.alloc_bytes_frame(bytes);
                 TapeOffset(offset)
@@ -319,6 +349,43 @@ impl TapeBuilder {
     #[inline]
     fn alloc_aggregate_slot(&mut self, bytes: &[u8]) -> u32 {
         debug_assert!(bytes.len() <= 16, "aggregate payload exceeds 16 bytes");
+        let slot_count = bytes.len().div_ceil(8);
+        let slot_total = slot_count * 8;
+        let start = self.arena.len();
+        self.arena.resize(start + slot_total, 0);
+        // SAFETY: the resize above guarantees `slot_total` bytes are
+        // available starting at `start`.
+        unsafe {
+            std::ptr::copy_nonoverlapping(
+                bytes.as_ptr(),
+                self.arena.as_mut_ptr().add(start),
+                bytes.len(),
+            );
+        }
+        start as u32
+    }
+
+    /// Append a large aggregate payload (> 16 bytes) into an arena
+    /// slot rounded up to the next 8-byte boundary and return the
+    /// byte offset.
+    ///
+    /// Identical in on-arena layout to
+    /// [`Self::alloc_aggregate_slot`]: bytes are written verbatim,
+    /// the slot is padded to 8-byte boundary with zero-initialised
+    /// trailing bytes, no length prefix. The only distinction is the
+    /// size bound — `LargeAggregate` carries payloads that exceed
+    /// the inline 16-byte budget (CSS colour-function aggregates are
+    /// 33+ B; the widened window accommodates recursive colour-mix
+    /// shapes). Readers recover the byte count from the grammar's
+    /// payload-layout table keyed by `(kind, variant_idx)`.
+    #[inline]
+    fn alloc_large_aggregate_slot(&mut self, bytes: &[u8]) -> u32 {
+        debug_assert!(
+            bytes.len() > crate::MAX_INLINE_AGGREGATE_BYTES,
+            "LargeAggregate payload {} bytes fits inline (≤ {})",
+            bytes.len(),
+            crate::MAX_INLINE_AGGREGATE_BYTES,
+        );
         let slot_count = bytes.len().div_ceil(8);
         let slot_total = slot_count * 8;
         let start = self.arena.len();

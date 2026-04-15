@@ -453,6 +453,142 @@ fn payload_aggregate_round_trip() {
     assert_eq!(u, 7);
 }
 
+// ── AV.0.5: LargeAggregate (> 16 B arena-backed) round-trips ────
+
+#[test]
+fn payload_large_aggregate_round_trip() {
+    // Shape: CSS `colorFunction` — u8 space + f64×3 channels + f64
+    // alpha. Packed with natural scalar alignment (u8 at 0, 7 bytes
+    // pad, three f64 at 8/16/24, alpha f64 at 32 → 40-byte slot).
+    const CHANNELS: [f64; 3] = [255.0, 128.0, 0.0];
+    const ALPHA: f64 = 0.5;
+    let space: u8 = 1; // rgba discriminant
+
+    let mut bytes = [0u8; 40];
+    bytes[0] = space;
+    bytes[8..16].copy_from_slice(&CHANNELS[0].to_le_bytes());
+    bytes[16..24].copy_from_slice(&CHANNELS[1].to_le_bytes());
+    bytes[24..32].copy_from_slice(&CHANNELS[2].to_le_bytes());
+    bytes[32..40].copy_from_slice(&ALPHA.to_le_bytes());
+
+    let mut b = TapeBuilder::new();
+    let off = b.push_leaf_with(
+        TapeKind::KvPair,
+        0,
+        24,
+        1,
+        0,
+        PayloadData::LargeAggregate(&bytes),
+    );
+    let tape = b.finish().unwrap();
+    let rec = tape.get(off);
+    assert!(
+        rec.has_payload(),
+        "LargeAggregate record must advertise a payload"
+    );
+
+    // Read through the tape-level accessor (width known to caller).
+    let slice = tape
+        .payload_bytes(rec, 40)
+        .expect("LargeAggregate payload bytes");
+    assert_eq!(slice.len(), 40);
+    assert_eq!(slice[0], space);
+    let c0 = f64::from_le_bytes(<[u8; 8]>::try_from(&slice[8..16]).unwrap());
+    let c1 = f64::from_le_bytes(<[u8; 8]>::try_from(&slice[16..24]).unwrap());
+    let c2 = f64::from_le_bytes(<[u8; 8]>::try_from(&slice[24..32]).unwrap());
+    let a = f64::from_le_bytes(<[u8; 8]>::try_from(&slice[32..40]).unwrap());
+    assert_eq!(c0, CHANNELS[0]);
+    assert_eq!(c1, CHANNELS[1]);
+    assert_eq!(c2, CHANNELS[2]);
+    assert!((a - ALPHA).abs() < f64::EPSILON);
+
+    // Same read via the cursor alias, which forwards to `payload_bytes`.
+    let cursor = TapeCursor::new(&tape, off);
+    let alias = cursor
+        .payload_aggregate_bytes(40)
+        .expect("cursor forwarder");
+    assert_eq!(alias, slice);
+}
+
+#[test]
+fn payload_large_aggregate_empty_is_none() {
+    // Empty `LargeAggregate` must not allocate an arena slot — the
+    // record stores `TapeOffset::NONE` in `child_off` and reports
+    // no payload, symmetric with the empty-`Aggregate` path.
+    let mut b = TapeBuilder::new();
+    let empty: [u8; 0] = [];
+    let off = b.push_leaf_with(
+        TapeKind::KvPair,
+        0,
+        0,
+        0,
+        0,
+        PayloadData::LargeAggregate(&empty),
+    );
+    let tape = b.finish().unwrap();
+    let rec = tape.get(off);
+    assert_eq!(rec.child_off, bbnf_tape::TapeOffset::NONE);
+    assert!(!rec.has_payload());
+}
+
+#[test]
+fn payload_large_aggregate_slot_padding_is_zero() {
+    // 33 bytes round up to 40 bytes (five 8-byte slots); the 7
+    // trailing pad bytes must be zero-initialised so the payload is
+    // deterministic across builds.
+    let bytes: [u8; 33] = core::array::from_fn(|i| i as u8);
+    let mut b = TapeBuilder::new();
+    let off = b.push_leaf_with(
+        TapeKind::KvPair,
+        0,
+        10,
+        0,
+        0,
+        PayloadData::LargeAggregate(&bytes),
+    );
+    let tape = b.finish().unwrap();
+    let rec = tape.get(off);
+    let slot = tape.payload_bytes(rec, 40).expect("padded slot");
+    assert_eq!(&slot[..33], &bytes[..]);
+    assert!(
+        slot[33..].iter().all(|b| *b == 0),
+        "tail pad must be zero: {:?}",
+        &slot[33..]
+    );
+}
+
+#[test]
+fn payload_large_aggregate_multiple_records_independent() {
+    // Two records with different widths; each arena slot must be
+    // independently addressed by its record's `child_off`.
+    let a: [u8; 33] = [0x11; 33];
+    let b_bytes: [u8; 48] = [0x22; 48];
+
+    let mut builder = TapeBuilder::new();
+    let off_a = builder.push_leaf_with(
+        TapeKind::KvPair,
+        0,
+        5,
+        0,
+        0,
+        PayloadData::LargeAggregate(&a),
+    );
+    let off_b = builder.push_leaf_with(
+        TapeKind::KvPair,
+        5,
+        10,
+        1,
+        0,
+        PayloadData::LargeAggregate(&b_bytes),
+    );
+    let tape = builder.finish().unwrap();
+
+    let slice_a = tape.payload_bytes(tape.get(off_a), 33).unwrap();
+    let slice_b = tape.payload_bytes(tape.get(off_b), 48).unwrap();
+    assert_eq!(slice_a, &a[..]);
+    assert_eq!(slice_b, &b_bytes[..]);
+}
+
 #[test]
 fn payload_bytes_round_trip() {
     let mut b = TapeBuilder::new();

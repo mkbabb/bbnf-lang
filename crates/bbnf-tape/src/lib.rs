@@ -46,3 +46,20 @@ pub use builder::{PayloadData, TapeBuildError, TapeBuilder};
 pub use cursor::{ChildIter, TapeCursor};
 pub use kind::TapeKind;
 pub use tape::{Tape, TapeOffset, TapeRec};
+
+/// Inline-aggregate payload budget (in bytes).
+///
+/// Aggregate payloads `≤ MAX_INLINE_AGGREGATE_BYTES` route through
+/// [`PayloadData::Aggregate`] and occupy at most two 8-byte arena
+/// slots. Aggregates that exceed this budget — CSS `colorFunction`
+/// and friends at 33+ B — route through [`PayloadData::LargeAggregate`]
+/// instead; the on-arena layout is identical (bytes verbatim into an
+/// 8-aligned slot, no length prefix) and the read path recovers the
+/// byte count from the grammar's payload-layout table keyed by
+/// `(kind, variant_idx)`.
+///
+/// 16 bytes matches the size of a single [`TapeRec`] — the bound is
+/// chosen so small aggregates occupy exactly one or two arena slots
+/// while larger ones pay a per-slot accounting cost only when they
+/// genuinely exceed the stack-buffer budget used by the emitter.
+pub const MAX_INLINE_AGGREGATE_BYTES: usize = 16;

@@ -191,8 +191,15 @@ hex = "#" , /[0-9a-fA-F]{3,8}/
 
 // --- Color function names ---
 // rgb/rgba, hsl/hsla, hwb, lab, lch, oklab, oklch
+// u8 discriminant tags each functional-color family; lightningcss's
+// Color enum ordering is the canonical source for the numbering below.
+// TODO typed-aggregate (AU.2.6): full (u8 space, f64×3 channels, f64 alpha).
 
-colorType = "oklch" | "oklab" | "rgba" | "rgb" | "hsla" | "hsl" | "hwb" | "lab" | "lch" ;
+colorType = "oklch" -> 8u8 | "oklab" -> 7u8
+          | "rgba" -> 1u8 | "rgb" -> 0u8
+          | "hsla" -> 3u8 | "hsl" -> 2u8
+          | "hwb" -> 4u8
+          | "lab" -> 5u8 | "lch" -> 6u8 ;
 
 // Standard color function: type(c1 sep c2 sep c3 [alphaSep alpha])
 // @{...} span capture: validates argument structure, returns raw Span
@@ -208,19 +215,32 @@ colorFunction = @{
 } ;
 
 // --- color() function (CSS Color Level 4 §10) ---
+// u8 discriminant tags the nine color() predefined spaces.
 
-colorSpace = "srgb-linear" | "srgb" | "display-p3" | "a98-rgb"
-           | "prophoto-rgb" | "rec2020" | "xyz-d65" | "xyz-d50" | "xyz" ;
+colorSpace = "srgb-linear" -> 1u8 | "srgb" -> 0u8
+           | "display-p3" -> 2u8 | "a98-rgb" -> 3u8
+           | "prophoto-rgb" -> 4u8 | "rec2020" -> 5u8
+           | "xyz-d65" -> 7u8 | "xyz-d50" -> 6u8 | "xyz" -> 8u8 ;
 
 colorFn = "color" , "(" >>
     colorSpace , colorValue , colorValue , colorValue , ("/" >> colorValue)?
     << ")" ;
 
 // --- color-mix() (CSS Color Level 5) ---
+// hue-method u8 + mix-space u8 discriminants.
+// TODO typed-aggregate (AU.2.6): colorMix is recursive — left/right Color
+// references become arena offsets once the aggregate emitter lands.
 
-hueMethod = ("shorter" | "longer" | "increasing" | "decreasing") , "hue" ;
-mixSpace  = "srgb-linear" | "srgb" | "display-p3" | "a98-rgb" | "prophoto-rgb" | "rec2020"
-          | "oklab" | "oklch" | "lab" | "lch" | "hsl" | "hwb" | "xyz-d65" | "xyz-d50" | "xyz" ;
+hueMethodKeyword = "shorter" -> 0u8 | "longer" -> 1u8
+                 | "increasing" -> 2u8 | "decreasing" -> 3u8 ;
+hueMethod = hueMethodKeyword , "hue" ;
+mixSpace  = "srgb-linear" -> 1u8 | "srgb" -> 0u8
+          | "display-p3" -> 2u8 | "a98-rgb" -> 3u8
+          | "prophoto-rgb" -> 4u8 | "rec2020" -> 5u8
+          | "oklab" -> 10u8 | "oklch" -> 11u8
+          | "lab" -> 8u8 | "lch" -> 9u8
+          | "hsl" -> 12u8 | "hwb" -> 13u8
+          | "xyz-d65" -> 7u8 | "xyz-d50" -> 6u8 | "xyz" -> 14u8 ;
 
 colorMix = "color-mix" , "(" >>
     "in" , mixSpace , hueMethod? , ",",

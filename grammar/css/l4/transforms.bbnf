@@ -2,6 +2,27 @@
 
 // CSS Transforms Level 2 — transform functions.
 // Spec: https://drafts.csswg.org/css-transforms-2/
+// Each transform is a tagged-union variant. transformName declares the
+// u8 discriminant — ordering matches lightningcss's Transform enum.
+// TODO typed-aggregate (AU.2.6): variant payload shapes
+//   (matrix: f64×6, matrix3d: f64×16, translate: (Length,Length?),
+//    rotate: Angle, scale: (f64,f64?), skew: (Angle,Angle?), …)
+// land once per-variant payload codegen supports them.
+
+transformName = "translate3d" -> 3u8
+              | "translateX" -> 1u8 | "translateY" -> 2u8
+              | "translate" -> 0u8
+              | "rotate3d" -> 8u8
+              | "rotateX" -> 5u8 | "rotateY" -> 6u8 | "rotateZ" -> 7u8
+              | "rotate" -> 4u8
+              | "scale3d" -> 12u8
+              | "scaleX" -> 10u8 | "scaleY" -> 11u8
+              | "scale" -> 9u8
+              | "skewX" -> 14u8 | "skewY" -> 15u8
+              | "skew" -> 13u8
+              | "matrix3d" -> 17u8
+              | "matrix" -> 16u8
+              | "perspective" -> 18u8 ;
 
 transformValue = length | percentage | angle | number ;
 transformArgs = transformValue , ("," ?w , transformValue) * ;

@@ -171,69 +171,27 @@ bbnf_monolithic, json_value).
   both `data` and `data_xl`). Rename prefixing entries or accept
   the resulting profile contamination — document either choice.
 
-## Cargo expand artefacts
-
-`cargo expand` is also file-first — output routinely exceeds 100K
-lines.
-
-```bash
-cargo expand -p bbnf --bench json_monolithic > /tmp/expand-json.txt
-```
-
-Inspect with targeted `grep -n`, `awk`, `sed`. Do not re-read the
-full file to slice it differently.
-
-```bash
-grep -n 'fn __value\|fn __pair' /tmp/expand-json.txt
-awk '/fn __value/,/^        fn __/' /tmp/expand-json.txt > /tmp/value.txt
-wc -l /tmp/value.txt
-```
-
-## Performance claims contract
-
-- **Every perf win has a samply profile.** No speculative
-  throughput numbers.
-- **Every codegen-activation claim has a `cargo expand` citation.**
-  Visual inspection of the expanded code, not "the test passes".
-- **Run the actual profiler.** No static-analysis guesses.
-- **Separate emitted-code facts from runtime hotspot facts.** Both
-  are required; neither alone is sufficient.
-- **Performance narratives reconstruct the actual timeline from
-  commits.** No fabrication. A claim without an artefact citation
-  is a vibe, not evidence.
-- **Cold per-parse only.** Warm or cached benchmarks are
-  disingenuous. Bench binaries use `#[global_allocator] mimalloc`.
-
-## Benchmark-set canon
-
-The benches that matter for tranche completion (`post-{LETTER}.json`):
-
-- `json_monolithic` × {data, twitter, citm, canada, data_xl}
-- `css_l4` × {normalize, bootstrap, tailwind}
-- `google_sheets_monolithic` × {parse_simple, parse_nested, parse_stress}
-- `bbnf_monolithic` × {json, ebnf, css_pretty, google_sheets, bbnf_self, css_l4_grammar}
-
-The VM, WASM, TS, and competitors benches are **not** tranche-
-completion inputs.
-
 ## Orchestrator prompt template
 
-The template below is the canonical invocation for a full-matrix
-profiling wave. Adapt bench/entry lists as the tranche requires.
+The canonical invocation for a full-matrix profiling wave. Adapt
+bench/entry lists as the tranche requires. Performance-claims
+and benchmark-set rules live in `README.md`; this template does
+not restate them.
 
 ```
-Analyze tranche <LETTER> and current performance with hard
-evidence only. Read docs/instructions/README.md and this file
-before beginning. Clear all .bbnf-cache directories. Export one
-absolute shared CARGO_TARGET_DIR. Reserve ports. Run
+Analyze tranche {LETTER} with hard evidence only. Read
+docs/instructions/README.md and docs/instructions/PROFILING.md
+before beginning. Clear all .bbnf-cache directories. Export
+one absolute shared CARGO_TARGET_DIR. Reserve ports. Run
 scripts/prepare-profile-wave.sh. Verify wave.tsv, binaries.tsv,
-per-bench expand artefacts. Dispatch up to five profiling
+and per-bench expand artefacts. Dispatch up to five profiling
 sub-agents, each with the exact wave.tsv row for its bench.
 Every sub-agent runs scripts/profile-bench-headless.sh against
-its prebuilt binary and entry list; no rerun of cargo expand or
-cargo bench. Verify every sub-agent claim against saved
-artefacts. Refine the tranche document with firing / not-firing
-per dataset, hotspot union, proposed optimisations cited to
-artefacts, and next-tranche seeds. .profiles/ in the main repo
-is the only retained artefact root.
+its prebuilt binary and entry list — no rerun of cargo expand
+or cargo bench. Verify every sub-agent claim against saved
+artefacts before folding into the tranche document. Refine
+the tranche doc with firing / not-firing per dataset, hotspot
+union, proposed optimisations cited to artefacts, and
+next-tranche seeds. .profiles/ in the main repo is the only
+retained artefact root.
 ```

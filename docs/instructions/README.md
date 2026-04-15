@@ -10,8 +10,8 @@ Internalise them before beginning any task.
 Every tranche lives in `docs/tranches/{LETTER}/` as a directory:
 
 ```
-docs/tranches/AU/
-├── AU.md              Plan document — phases, hard gates, critical files, invariants
+docs/tranches/{LETTER}/
+├── {LETTER}.md        Plan document — phases, hard gates, critical files, invariants
 ├── PROGRESS.md        Dated execution log — ground truth of what landed, what didn't, what blocked
 ├── FINAL.md           Completion document — required at end of tranche (see below)
 ├── research/          Verbatim agent research artefacts that informed the plan
@@ -21,7 +21,7 @@ docs/tranches/AU/
 - `{LETTER}.md` is written **before execution**.
 - `PROGRESS.md` is updated **during execution**. Every entry is dated.
   Every entry records: what was done, what was committed, what blocked,
-  what shifted. This is the canonical record — the diff between
+  what shifted: particularly note frictional impasses, or work that landed seamlessly. This is the canonical record — the diff between
   `{LETTER}.md` and `PROGRESS.md` tells you what changed under contact.
 - `FINAL.md` is written **at tranche completion**. See tranche
   completion requirements below.
@@ -48,8 +48,8 @@ architectural changes to any of them are first-class work items, not
 ## Code discipline
 
 - **NO workarounds, NO hacks, NO `#[allow(...)]` to mask issues.**
-  If something does not work, find and fix the root cause. Temporary
-  fixes become permanent debt.
+  Idiomatic approaches only. If something does not work, find and
+  fix the root cause. Temporary fixes become permanent debt.
 - **NO legacy code.** Architectural transpositions for elegance,
   simplicity, and performance are mandatory. Delete dead code; do
   not comment it out, gate it behind feature flags, or rename it to
@@ -116,9 +116,9 @@ prior sessions have lost work when it was violated.
 
 **File bounds.**
 
-- Every sub-agent prompt declares explicit **file bounds**: the
-  files it may read, the files it may modify, the files it must
-  not touch.
+- Every sub-agent prompt declares explicit, fastidious **file
+  bounds**: the files it may read, the files it may modify, the
+  files it must not touch.
 - No two agents in the same wave share write access to the same
   file. Exclusive write per file per wave.
 - Cross-wave conflicts are resolved by sequencing (moving work to

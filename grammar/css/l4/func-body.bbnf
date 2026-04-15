@@ -12,6 +12,20 @@ funcBody = (/[^()"']+/ | "(" , funcBody , ")" | string) * ;
 
 // --- Math expressions (calc/min/max/clamp) ---
 // Recursive with correct precedence: * / before + -
+// TODO typed-aggregate (AU.2.6): mathExpr is a recursive tagged union
+// (BinaryOp | Value). calc/min/max/clamp variant payloads compose
+// through arena-backed refs. Outer-function variant dispatch is
+// presently by rule alternation; variant-tag u8 codegen for
+// per-rule (not keyword) disambiguation lands with AU.6.7.
+
+mathFunctionName = "calc"  -> 0u8
+                 | "clamp" -> 3u8
+                 | "min"   -> 1u8
+                 | "max"   -> 2u8 ;
+
+// Binary operator tag used by mathProduct/mathExpr walkers.
+mathProductOp = "*" -> 0u8 | "/" -> 1u8 ;
+mathSumOp     = "+" -> 0u8 | "-" -> 1u8 ;
 
 mathValue = calcFunction
           | minFunction
@@ -23,8 +37,8 @@ mathValue = calcFunction
           | number
           | "(" >> mathExpr << ")" ;
 
-mathProduct = mathValue , (("*" | "/") >> mathValue) * ;
-mathExpr    = mathProduct , (("+" | "-") >> mathProduct) * ;
+mathProduct = mathValue , (mathProductOp >> mathValue) * ;
+mathExpr    = mathProduct , (mathSumOp >> mathProduct) * ;
 
 calcFunction  = "calc" , "(" >> mathExpr << ")" ;
 minFunction   = "min" , "(" >> (mathExpr , ("," >> mathExpr) +) << ")" ;

@@ -747,3 +747,95 @@ Master HEAD: `e977fa5 chore(codegen): regen after AV.1.3`.
 
 V1 CLOSED. V2 (Columnar substrate + reordering codegen,
 3-parallel) dispatches next.
+
+## 2026-04-15 — V2 CLOSED
+
+Two parallel agents + zero-cost walker migration (view/ already
+abstracted through TapeCursor — AV.2.6 folded into substrate).
+
+### av2-substrate — LANDED
+
+- `f8091cd` feat(bbnf-tape): Columns SoA substrate + sibling-
+  skip traversal (AV.2.1-2.3). +1392/-703 lines. 13 new
+  bbnf-tape tests. The old `Vec<TapeRec>` collapses to column
+  vectors: 6 structural (`kinds`, `flags`, `extra`, `span_lo`,
+  `span_hi`, `sib_skip`, `child_off`) + 3 payload
+  (`pay_narrow`, `pay_wide`, `pay_agg`). `TapeBuilder` push
+  signatures preserved — generated.rs regenerates byte-
+  identical (26154 lines, deterministic).
+- `f07a8fe` test(core): walker-allocs forward-order semantic
+  update + json_parity helper signature migration. Downstream
+  of `TapeCursor::record()` now returning `TapeRec` by value
+  (Copy, 16 B).
+- `e18e40c` chore(bbnf-tape): crate description refresh.
+
+Pragmatic deviation from AV.md: the "first child = idx + 1
+pre-order" assumption doesn't hold — the TapeBuilder emits
+post-order (parent after children). Substrate keeps
+post-order and seeds the first-child root via a bounded
+backward walk (same cost as the AU.3.2 walk), then navigates
+forward via `sib_skip` in O(1) per step. Sibling-skip forward
+navigation gain is preserved; only the first-child seed
+retains the backward walk. Pre-order emission requires a full
+emitter rewrite outside V2's scope. Routes forward to V3 DTA
+which emits pre-order natively.
+
+`InlineScalar(u32::MAX)` collision resolved: column rank
+counters rarely approach `u32::MAX` (would need > 4 B inline
+scalars in a single grammar). New regression test
+`inline_scalar_u32_max_does_not_collide_with_none` pins the
+invariant.
+
+### av2-visitor — LANDED
+
+- `3a42f58` feat(ir): visitor-recognition pass (AV.2.5).
+  `mine_visitors` returns empty for every shipped grammar
+  today — `@visitor` directive not wired through the
+  parser. Routes forward to the first downstream wave that
+  needs a visitor.
+- `de4a2c4` feat(emitter): reordered-unrolling codegen
+  (AV.2.5). `emit_visitor_kernels` lands the 4-lane
+  accumulator pattern; 3.3× scalar-left-fold speedup on
+  synthetic `Vec<f64>` (measured release-build). Full 6×
+  requires packed SIMD (portable_simd `f64x4`) which is
+  V3-adjacent forward work.
+- `80ed113` test(visitor): 8-test lowering harness.
+
+### View migration (AV.2.6) — FOLDED INTO SUBSTRATE
+
+`grep -rn "TapeRec\|tape\.records\|&TapeRec"
+crates/core/src/backend/rust/view/` → 0 matches. The view
+layer was already abstracted through TapeCursor before V2;
+the substrate agent's by-value `TapeRec` change worked
+transparently for view consumers. No dedicated walker-
+migration commit needed.
+
+### Hard gates
+
+- (11) `Vec<TapeRec>` does not exist in code ✓ (only doc
+  comments mention the pre-AV name).
+- (12) `sum-all-f64(canada)` ≥ 6×: **partial** — 3.3× on the
+  visitor-emitted pattern, full 6× requires packed SIMD
+  (planned V3-adjacent). Substrate exposes
+  `tape.columns().pay_wide: &[u64]` as the packed-SIMD
+  consumption slice.
+- (13) Every tape-parity fixture passes ✓ (22/22, no golden
+  regen needed — push API preserved).
+- (14) sonic-rs + lightningcss AST equivalence — gated on
+  V5 ShapeDict + AV.0.5 colour-function Color layout; the
+  V2 substrate is the enabling substrate, not the gate
+  closer. Routes forward.
+
+### Workspace status
+
+- **1021 passed / 0 failed / 53 ignored** (was 1000/0/52 at
+  V1 close → 1008/0/53 at visitor landing → 1021/0/53 at
+  substrate landing).
+- No new failures; +21 new substrate/visitor tests.
+- Deterministic bootstrap verified.
+
+Master HEAD: `e18e40c chore(bbnf-tape): refresh crate
+description for columnar substrate`.
+
+V2 CLOSED. V3 (DTA synthesis, serial, workspace-unworkable
+permitted) dispatches next.

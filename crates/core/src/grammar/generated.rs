@@ -11123,8 +11123,12 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __payload_i64: i64 = 0;
+                let mut __payload_f64: f64 = 0.0;
+                let mut __payload_tag: u8 = 0;
+                let mut __has_payload: bool = false;
                 match ({
-                    {
+                    match ({
                         {
                             {
                                 let __start = state.offset;
@@ -11206,6 +11210,18 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             }
                         }
+                    }) {
+                        Some(_) => {
+                            if let Some(__v) = ::parse_that::parse_i64_from_bytes(
+                                &state.src_bytes[__span_lo as usize..state.offset],
+                            ) {
+                                __payload_i64 = __v;
+                                __payload_tag = 1u8;
+                                __has_payload = true;
+                            }
+                            Some(())
+                        }
+                        None => None,
                     }
                 }) {
                     Some(_) => {}
@@ -11214,17 +11230,36 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 0u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    if __has_payload {
+                        let __bits: u64 = match __payload_tag {
+                            1u8 => __payload_i64 as u64,
+                            2u8 => __payload_f64.to_bits(),
+                            _ => 0u64,
+                        };
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::WideScalar(__bits),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -11235,8 +11270,12 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __payload_i64: i64 = 0;
+                let mut __payload_f64: f64 = 0.0;
+                let mut __payload_tag: u8 = 0;
+                let mut __has_payload: bool = false;
                 match ({
-                    {
+                    match ({
                         {
                             {
                                 let __start = state.offset;
@@ -11316,6 +11355,18 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             }
                         }
+                    }) {
+                        Some(_) => {
+                            if let Some(__v) = ::parse_that::parse_f64_from_bytes(
+                                &state.src_bytes[__span_lo as usize..state.offset],
+                            ) {
+                                __payload_f64 = __v;
+                                __payload_tag = 2u8;
+                                __has_payload = true;
+                            }
+                            Some(())
+                        }
+                        None => None,
                     }
                 }) {
                     Some(_) => {}
@@ -11324,17 +11375,36 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 1u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    if __has_payload {
+                        let __bits: u64 = match __payload_tag {
+                            1u8 => __payload_i64 as u64,
+                            2u8 => __payload_f64.to_bits(),
+                            _ => 0u64,
+                        };
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::WideScalar(__bits),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -11676,6 +11746,10 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __payload_i64: i64 = 0;
+                let mut __payload_f64: f64 = 0.0;
+                let mut __payload_tag: u8 = 0;
+                let mut __has_payload: bool = false;
                 match ({
                     '__span_blk4: {
                         match (Self::__value_ident(state, tape)) {
@@ -11757,17 +11831,36 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 5u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    if __has_payload {
+                        let __bits: u64 = match __payload_tag {
+                            1u8 => __payload_i64 as u64,
+                            2u8 => __payload_f64.to_bits(),
+                            _ => 0u64,
+                        };
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::WideScalar(__bits),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -11778,6 +11871,10 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __payload_i64: i64 = 0;
+                let mut __payload_f64: f64 = 0.0;
+                let mut __payload_tag: u8 = 0;
+                let mut __has_payload: bool = false;
                 match ({
                     '__span_blk7: {
                         match ({
@@ -11868,17 +11965,36 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 6u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    if __has_payload {
+                        let __bits: u64 = match __payload_tag {
+                            1u8 => __payload_i64 as u64,
+                            2u8 => __payload_f64.to_bits(),
+                            _ => 0u64,
+                        };
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::WideScalar(__bits),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -11889,6 +12005,10 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __payload_i64: i64 = 0;
+                let mut __payload_f64: f64 = 0.0;
+                let mut __payload_tag: u8 = 0;
+                let mut __has_payload: bool = false;
                 match ({
                     '__seq_blk11: {
                         match (Self::__value_path(state, tape)) {
@@ -12034,17 +12154,36 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 7u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    if __has_payload {
+                        let __bits: u64 = match __payload_tag {
+                            1u8 => __payload_i64 as u64,
+                            2u8 => __payload_f64.to_bits(),
+                            _ => 0u64,
+                        };
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::WideScalar(__bits),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -12769,6 +12908,10 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __payload_i64: i64 = 0;
+                let mut __payload_f64: f64 = 0.0;
+                let mut __payload_tag: u8 = 0;
+                let mut __has_payload: bool = false;
                 match ({
                     '__seq_blk22: {
                         match (Self::__value_unary(state, tape)) {
@@ -12843,17 +12986,36 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 13u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    if __has_payload {
+                        let __bits: u64 = match __payload_tag {
+                            1u8 => __payload_i64 as u64,
+                            2u8 => __payload_f64.to_bits(),
+                            _ => 0u64,
+                        };
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::WideScalar(__bits),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -12864,6 +13026,10 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __payload_i64: i64 = 0;
+                let mut __payload_f64: f64 = 0.0;
+                let mut __payload_tag: u8 = 0;
+                let mut __has_payload: bool = false;
                 match ({
                     '__seq_blk25: {
                         match (Self::__value_mul(state, tape)) {
@@ -12938,17 +13104,36 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 14u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    if __has_payload {
+                        let __bits: u64 = match __payload_tag {
+                            1u8 => __payload_i64 as u64,
+                            2u8 => __payload_f64.to_bits(),
+                            _ => 0u64,
+                        };
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::WideScalar(__bits),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -12959,6 +13144,10 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __payload_i64: i64 = 0;
+                let mut __payload_f64: f64 = 0.0;
+                let mut __payload_tag: u8 = 0;
+                let mut __has_payload: bool = false;
                 match ({
                     '__seq_blk28: {
                         match (Self::__value_add(state, tape)) {
@@ -13033,17 +13222,36 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 15u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    if __has_payload {
+                        let __bits: u64 = match __payload_tag {
+                            1u8 => __payload_i64 as u64,
+                            2u8 => __payload_f64.to_bits(),
+                            _ => 0u64,
+                        };
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::WideScalar(__bits),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -13054,6 +13262,10 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __payload_i64: i64 = 0;
+                let mut __payload_f64: f64 = 0.0;
+                let mut __payload_tag: u8 = 0;
+                let mut __has_payload: bool = false;
                 match ({
                     '__seq_blk31: {
                         match (Self::__value_cmp(state, tape)) {
@@ -13140,17 +13352,36 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 16u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    if __has_payload {
+                        let __bits: u64 = match __payload_tag {
+                            1u8 => __payload_i64 as u64,
+                            2u8 => __payload_f64.to_bits(),
+                            _ => 0u64,
+                        };
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::WideScalar(__bits),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -13161,6 +13392,10 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __payload_i64: i64 = 0;
+                let mut __payload_f64: f64 = 0.0;
+                let mut __payload_tag: u8 = 0;
+                let mut __has_payload: bool = false;
                 match ({
                     '__seq_blk34: {
                         match (Self::__value_and(state, tape)) {
@@ -13247,17 +13482,36 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 17u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    if __has_payload {
+                        let __bits: u64 = match __payload_tag {
+                            1u8 => __payload_i64 as u64,
+                            2u8 => __payload_f64.to_bits(),
+                            _ => 0u64,
+                        };
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::WideScalar(__bits),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -13268,6 +13522,10 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __payload_i64: i64 = 0;
+                let mut __payload_f64: f64 = 0.0;
+                let mut __payload_tag: u8 = 0;
+                let mut __has_payload: bool = false;
                 match ({
                     '__seq_blk37: {
                         match ({
@@ -13381,17 +13639,36 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 18u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    if __has_payload {
+                        let __bits: u64 = match __payload_tag {
+                            1u8 => __payload_i64 as u64,
+                            2u8 => __payload_f64.to_bits(),
+                            _ => 0u64,
+                        };
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::WideScalar(__bits),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -13470,6 +13747,10 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __payload_i64: i64 = 0;
+                let mut __payload_f64: f64 = 0.0;
+                let mut __payload_tag: u8 = 0;
+                let mut __has_payload: bool = false;
                 match ({
                     '__span_blk39: {
                         match ({
@@ -13503,17 +13784,36 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 20u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    if __has_payload {
+                        let __bits: u64 = match __payload_tag {
+                            1u8 => __payload_i64 as u64,
+                            2u8 => __payload_f64.to_bits(),
+                            _ => 0u64,
+                        };
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::WideScalar(__bits),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -14692,6 +14992,10 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __payload_i64: i64 = 0;
+                let mut __payload_f64: f64 = 0.0;
+                let mut __payload_tag: u8 = 0;
+                let mut __has_payload: bool = false;
                 match ({ Self::__identifier(state, tape) }) {
                     Some(_) => {}
                     None => break 'rule_blk None,
@@ -14699,17 +15003,36 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 27u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    if __has_payload {
+                        let __bits: u64 = match __payload_tag {
+                            1u8 => __payload_i64 as u64,
+                            2u8 => __payload_f64.to_bits(),
+                            _ => 0u64,
+                        };
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::WideScalar(__bits),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -14720,6 +15043,10 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __payload_i64: i64 = 0;
+                let mut __payload_f64: f64 = 0.0;
+                let mut __payload_tag: u8 = 0;
+                let mut __has_payload: bool = false;
                 match ({
                     '__rpt_blk49: {
                         let __rpt_lo = state.offset as u32;
@@ -14823,17 +15150,36 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 28u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    if __has_payload {
+                        let __bits: u64 = match __payload_tag {
+                            1u8 => __payload_i64 as u64,
+                            2u8 => __payload_f64.to_bits(),
+                            _ => 0u64,
+                        };
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::WideScalar(__bits),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -15455,6 +15801,10 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __payload_i64: i64 = 0;
+                let mut __payload_f64: f64 = 0.0;
+                let mut __payload_tag: u8 = 0;
+                let mut __has_payload: bool = false;
                 match ({
                     '__seq_blk60: {
                         match ({
@@ -15565,17 +15915,36 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 31u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    if __has_payload {
+                        let __bits: u64 = match __payload_tag {
+                            1u8 => __payload_i64 as u64,
+                            2u8 => __payload_f64.to_bits(),
+                            _ => 0u64,
+                        };
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::WideScalar(__bits),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -15586,6 +15955,10 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __payload_i64: i64 = 0;
+                let mut __payload_f64: f64 = 0.0;
+                let mut __payload_tag: u8 = 0;
+                let mut __has_payload: bool = false;
                 match ({
                     '__seq_blk63: {
                         match (Self::__factor(state, tape)) {
@@ -15694,17 +16067,36 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 32u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    if __has_payload {
+                        let __bits: u64 = match __payload_tag {
+                            1u8 => __payload_i64 as u64,
+                            2u8 => __payload_f64.to_bits(),
+                            _ => 0u64,
+                        };
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::WideScalar(__bits),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -15834,6 +16226,10 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __payload_i64: i64 = 0;
+                let mut __payload_f64: f64 = 0.0;
+                let mut __payload_tag: u8 = 0;
+                let mut __has_payload: bool = false;
                 match ({
                     '__seq_blk67: {
                         match (Self::__mapped_factor(state, tape)) {
@@ -15908,17 +16304,36 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 34u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    if __has_payload {
+                        let __bits: u64 = match __payload_tag {
+                            1u8 => __payload_i64 as u64,
+                            2u8 => __payload_f64.to_bits(),
+                            _ => 0u64,
+                        };
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::WideScalar(__bits),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -15929,6 +16344,10 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __payload_i64: i64 = 0;
+                let mut __payload_f64: f64 = 0.0;
+                let mut __payload_tag: u8 = 0;
+                let mut __has_payload: bool = false;
                 match ({
                     '__rpt_blk69: {
                         let __rpt_lo = state.offset as u32;
@@ -16032,17 +16451,36 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 35u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    if __has_payload {
+                        let __bits: u64 = match __payload_tag {
+                            1u8 => __payload_i64 as u64,
+                            2u8 => __payload_f64.to_bits(),
+                            _ => 0u64,
+                        };
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::WideScalar(__bits),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -16053,6 +16491,10 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __payload_i64: i64 = 0;
+                let mut __payload_f64: f64 = 0.0;
+                let mut __payload_tag: u8 = 0;
+                let mut __has_payload: bool = false;
                 match ({
                     '__rpt_blk71: {
                         let __rpt_lo = state.offset as u32;
@@ -16156,17 +16598,36 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 36u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    if __has_payload {
+                        let __bits: u64 = match __payload_tag {
+                            1u8 => __payload_i64 as u64,
+                            2u8 => __payload_f64.to_bits(),
+                            _ => 0u64,
+                        };
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::WideScalar(__bits),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -16177,6 +16638,10 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __payload_i64: i64 = 0;
+                let mut __payload_f64: f64 = 0.0;
+                let mut __payload_tag: u8 = 0;
+                let mut __has_payload: bool = false;
                 match ({
                     '__seq_blk74: {
                         match ({
@@ -16295,17 +16760,36 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 37u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    if __has_payload {
+                        let __bits: u64 = match __payload_tag {
+                            1u8 => __payload_i64 as u64,
+                            2u8 => __payload_f64.to_bits(),
+                            _ => 0u64,
+                        };
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::WideScalar(__bits),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -16384,6 +16868,10 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __payload_i64: i64 = 0;
+                let mut __payload_f64: f64 = 0.0;
+                let mut __payload_tag: u8 = 0;
+                let mut __has_payload: bool = false;
                 match ({
                     '__seq_blk77: {
                         match (Self::__lhs(state, tape)) {
@@ -16464,17 +16952,36 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 39u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    if __has_payload {
+                        let __bits: u64 = match __payload_tag {
+                            1u8 => __payload_i64 as u64,
+                            2u8 => __payload_f64.to_bits(),
+                            _ => 0u64,
+                        };
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::WideScalar(__bits),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -16643,6 +17150,10 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __payload_i64: i64 = 0;
+                let mut __payload_f64: f64 = 0.0;
+                let mut __payload_tag: u8 = 0;
+                let mut __has_payload: bool = false;
                 match ({
                     '__span_blk82: {
                         match ({
@@ -16768,17 +17279,36 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 41u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    if __has_payload {
+                        let __bits: u64 = match __payload_tag {
+                            1u8 => __payload_i64 as u64,
+                            2u8 => __payload_f64.to_bits(),
+                            _ => 0u64,
+                        };
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::WideScalar(__bits),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -16789,6 +17319,10 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __payload_i64: i64 = 0;
+                let mut __payload_f64: f64 = 0.0;
+                let mut __payload_tag: u8 = 0;
+                let mut __has_payload: bool = false;
                 match ({
                     '__span_blk86: {
                         match ({
@@ -16948,17 +17482,36 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 42u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    if __has_payload {
+                        let __bits: u64 = match __payload_tag {
+                            1u8 => __payload_i64 as u64,
+                            2u8 => __payload_f64.to_bits(),
+                            _ => 0u64,
+                        };
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::WideScalar(__bits),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -16969,6 +17522,10 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __payload_i64: i64 = 0;
+                let mut __payload_f64: f64 = 0.0;
+                let mut __payload_tag: u8 = 0;
+                let mut __has_payload: bool = false;
                 match ({
                     '__seq_blk88: {
                         match ({
@@ -17083,17 +17640,36 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 43u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    if __has_payload {
+                        let __bits: u64 = match __payload_tag {
+                            1u8 => __payload_i64 as u64,
+                            2u8 => __payload_f64.to_bits(),
+                            _ => 0u64,
+                        };
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::WideScalar(__bits),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -17104,6 +17680,10 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __payload_i64: i64 = 0;
+                let mut __payload_f64: f64 = 0.0;
+                let mut __payload_tag: u8 = 0;
+                let mut __has_payload: bool = false;
                 match ({
                     '__span_blk90: {
                         match (Self::__identifier(state, tape)) {
@@ -17209,17 +17789,36 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 44u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    if __has_payload {
+                        let __bits: u64 = match __payload_tag {
+                            1u8 => __payload_i64 as u64,
+                            2u8 => __payload_f64.to_bits(),
+                            _ => 0u64,
+                        };
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::WideScalar(__bits),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -17230,6 +17829,10 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __payload_i64: i64 = 0;
+                let mut __payload_f64: f64 = 0.0;
+                let mut __payload_tag: u8 = 0;
+                let mut __has_payload: bool = false;
                 match ({
                     '__seq_blk94: {
                         match ({
@@ -17415,17 +18018,36 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 45u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    if __has_payload {
+                        let __bits: u64 = match __payload_tag {
+                            1u8 => __payload_i64 as u64,
+                            2u8 => __payload_f64.to_bits(),
+                            _ => 0u64,
+                        };
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::WideScalar(__bits),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -17436,6 +18058,10 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __payload_i64: i64 = 0;
+                let mut __payload_f64: f64 = 0.0;
+                let mut __payload_tag: u8 = 0;
+                let mut __has_payload: bool = false;
                 match ({
                     '__span_blk96: {
                         match ({
@@ -17541,17 +18167,36 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 46u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    if __has_payload {
+                        let __bits: u64 = match __payload_tag {
+                            1u8 => __payload_i64 as u64,
+                            2u8 => __payload_f64.to_bits(),
+                            _ => 0u64,
+                        };
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::WideScalar(__bits),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -17562,6 +18207,10 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __payload_i64: i64 = 0;
+                let mut __payload_f64: f64 = 0.0;
+                let mut __payload_tag: u8 = 0;
+                let mut __has_payload: bool = false;
                 match ({
                     '__span_blk98: {
                         match ({
@@ -17667,17 +18316,36 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 47u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    if __has_payload {
+                        let __bits: u64 = match __payload_tag {
+                            1u8 => __payload_i64 as u64,
+                            2u8 => __payload_f64.to_bits(),
+                            _ => 0u64,
+                        };
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::WideScalar(__bits),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -17688,6 +18356,10 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __payload_i64: i64 = 0;
+                let mut __payload_f64: f64 = 0.0;
+                let mut __payload_tag: u8 = 0;
+                let mut __has_payload: bool = false;
                 match ({
                     '__span_blk101: {
                         match ({
@@ -17820,17 +18492,36 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 48u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    if __has_payload {
+                        let __bits: u64 = match __payload_tag {
+                            1u8 => __payload_i64 as u64,
+                            2u8 => __payload_f64.to_bits(),
+                            _ => 0u64,
+                        };
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::WideScalar(__bits),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -17841,6 +18532,10 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __payload_i64: i64 = 0;
+                let mut __payload_f64: f64 = 0.0;
+                let mut __payload_tag: u8 = 0;
+                let mut __has_payload: bool = false;
                 match ({
                     '__span_blk104: {
                         match ({
@@ -18005,17 +18700,36 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 49u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    if __has_payload {
+                        let __bits: u64 = match __payload_tag {
+                            1u8 => __payload_i64 as u64,
+                            2u8 => __payload_f64.to_bits(),
+                            _ => 0u64,
+                        };
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::WideScalar(__bits),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -18246,6 +18960,10 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __payload_i64: i64 = 0;
+                let mut __payload_f64: f64 = 0.0;
+                let mut __payload_tag: u8 = 0;
+                let mut __has_payload: bool = false;
                 match ({
                     '__rpt_blk107: {
                         let __rpt_lo = state.offset as u32;
@@ -18300,17 +19018,36 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 52u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    if __has_payload {
+                        let __bits: u64 = match __payload_tag {
+                            1u8 => __payload_i64 as u64,
+                            2u8 => __payload_f64.to_bits(),
+                            _ => 0u64,
+                        };
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::WideScalar(__bits),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }

@@ -61,6 +61,7 @@ fn dispatch_for_disjoint_branches() {
         payload_layouts: std::collections::HashMap::new(),
         struct_registry: Default::default(),
         structural_alphabet: None,
+        push_fingerprint: None,
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -129,6 +130,7 @@ fn no_dispatch_for_overlapping_branches() {
         payload_layouts: std::collections::HashMap::new(),
         struct_registry: Default::default(),
         structural_alphabet: None,
+        push_fingerprint: None,
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -195,6 +197,7 @@ fn dispatch_for_nested_alt() {
         payload_layouts: std::collections::HashMap::new(),
         struct_registry: Default::default(),
         structural_alphabet: None,
+        push_fingerprint: None,
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -269,6 +272,7 @@ fn dispatch_with_nullable_branch_via_follow() {
         payload_layouts: std::collections::HashMap::new(),
         struct_registry: Default::default(),
         structural_alphabet: None,
+        push_fingerprint: None,
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -345,6 +349,7 @@ fn no_dispatch_when_nullable_overlaps_follow() {
         payload_layouts: std::collections::HashMap::new(),
         struct_registry: Default::default(),
         structural_alphabet: None,
+        push_fingerprint: None,
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -431,6 +436,7 @@ fn fallback_dispatch_typed_plus_catchall() {
         payload_layouts: std::collections::HashMap::new(),
         struct_registry: Default::default(),
         structural_alphabet: None,
+        push_fingerprint: None,
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -509,6 +515,7 @@ fn fallback_dispatch_not_superset() {
         payload_layouts: std::collections::HashMap::new(),
         struct_registry: Default::default(),
         structural_alphabet: None,
+        push_fingerprint: None,
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -575,6 +582,7 @@ fn fallback_dispatch_too_few_branches() {
         payload_layouts: std::collections::HashMap::new(),
         struct_registry: Default::default(),
         structural_alphabet: None,
+        push_fingerprint: None,
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);

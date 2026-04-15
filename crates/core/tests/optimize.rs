@@ -58,6 +58,7 @@ fn make_ir(rules: Vec<(&str, IrNode, Option<u32>, bool)>) -> GrammarIR {
         string_index: Default::default(),
         struct_registry: Default::default(),
         structural_alphabet: None,
+        push_fingerprint: None,
     }
 }
 

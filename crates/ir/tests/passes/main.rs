@@ -19,5 +19,6 @@ mod passes_payload;
 mod passes_prefix;
 mod passes_prune;
 mod passes_span;
+mod push_fingerprint;
 mod recognizer;
 mod regex_first;

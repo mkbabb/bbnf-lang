@@ -144,6 +144,7 @@ fn make_ir(rules: Vec<IrRule>, strings: Vec<String>) -> GrammarIR {
         payload_layouts: HashMap::new(),
         struct_registry: Default::default(),
         structural_alphabet: None,
+        push_fingerprint: None,
     };
     bbnf_ir::dag::ensure_dag(&mut ir);
     ir

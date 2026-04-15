@@ -251,6 +251,20 @@ pub struct GrammarIR {
     /// Not serialized: every compile rebuilds it from scratch.
     #[serde(skip, default)]
     pub structural_alphabet: Option<passes::sets::StructuralAlphabet>,
+
+    /// Tranche AU.6.2 — per-grammar push-site fingerprint.
+    ///
+    /// Static count of `(push_compound, push_leaf, push_leaf_with_*)`
+    /// call sites across every emitted rule function. Populated by
+    /// [`passes::compute_push_fingerprint`] after
+    /// `classify_materialization` + `compute_payload_layouts`. The
+    /// Rust emitter's `parse()` entry point reads the fingerprint at
+    /// codegen time and picks a grammar-specific
+    /// `TapeBuilder::with_capacity` divisor so `RawVec::grow_one` /
+    /// `_mi_heap_realloc_zero` does not fire on the first parse.
+    /// Not serialized: every compile rebuilds it from scratch.
+    #[serde(skip, default)]
+    pub push_fingerprint: Option<passes::sets::PushFingerprint>,
 }
 
 impl GrammarIR {

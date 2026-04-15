@@ -38,6 +38,7 @@ fn make_simple_ir(body: IrNode) -> GrammarIR {
         payload_layouts: std::collections::HashMap::new(),
         struct_registry: Default::default(),
         structural_alphabet: None,
+        push_fingerprint: None,
     }
 }
 
@@ -168,6 +169,7 @@ fn compile_memo_rule() {
         payload_layouts: std::collections::HashMap::new(),
         struct_registry: Default::default(),
         structural_alphabet: None,
+        push_fingerprint: None,
     };
     let program = compile(&ir);
 
@@ -231,6 +233,7 @@ fn compile_direct_left_recursive_rule_keeps_memo() {
         payload_layouts: std::collections::HashMap::new(),
         struct_registry: Default::default(),
         structural_alphabet: None,
+        push_fingerprint: None,
     };
     let program = compile(&ir);
 
@@ -388,6 +391,7 @@ fn compile_token_dispatch_emits_dispatch_token() {
         payload_layouts: std::collections::HashMap::new(),
         struct_registry: Default::default(),
         structural_alphabet: None,
+        push_fingerprint: None,
     };
     let program = compile(&ir);
 
@@ -470,6 +474,7 @@ fn compile_call() {
         payload_layouts: std::collections::HashMap::new(),
         struct_registry: Default::default(),
         structural_alphabet: None,
+        push_fingerprint: None,
     };
     let program = compile(&ir);
 

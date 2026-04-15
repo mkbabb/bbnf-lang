@@ -49,6 +49,7 @@ fn make_ir_with(body: IrNode) -> GrammarIR {
         string_index: Default::default(),
         struct_registry: Default::default(),
         structural_alphabet: None,
+        push_fingerprint: None,
     }
 }
 

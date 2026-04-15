@@ -35,8 +35,9 @@ pub use metadata::{compute_aliases, compute_transparent};
 pub use payload::{compute_payload_layouts, is_kv_pair_shape, plan_layout, MAX_PAYLOAD_BYTES, PayloadField, PayloadLayout};
 pub use prefix::factor_common_prefixes;
 pub use sets::{
-    compute_first_sets, compute_follow_sets, compute_rule_deps, compute_scc,
-    factor_regex_with_lookahead, generate_dispatch_tables, sort_alt_branches,
+    compute_first_sets, compute_follow_sets, compute_push_fingerprint, compute_rule_deps,
+    compute_scc, factor_regex_with_lookahead, generate_dispatch_tables, sort_alt_branches,
+    PushFingerprint,
 };
 pub use span::{compute_sp_method_rules, refine_span_eligibility};
 pub use transform::{

@@ -41,6 +41,7 @@ fn empty_ir(strings: Vec<&str>) -> GrammarIR {
         string_index: Default::default(),
         struct_registry: Default::default(),
         structural_alphabet: None,
+        push_fingerprint: None,
     }
 }
 

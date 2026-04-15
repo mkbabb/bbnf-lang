@@ -62,6 +62,7 @@ fn follow_set_basic_seq() {
         payload_layouts: std::collections::HashMap::new(),
         struct_registry: Default::default(),
         structural_alphabet: None,
+        push_fingerprint: None,
     };
 
     let follow = compute_follow_sets(&ir);
@@ -150,6 +151,7 @@ fn follow_set_propagates_through_nullable() {
         payload_layouts: std::collections::HashMap::new(),
         struct_registry: Default::default(),
         structural_alphabet: None,
+        push_fingerprint: None,
     };
 
     let follow = compute_follow_sets(&ir);

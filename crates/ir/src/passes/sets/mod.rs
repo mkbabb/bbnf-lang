@@ -7,6 +7,7 @@
 pub mod deps;
 mod dispatch;
 mod factor_lookahead;
+pub mod fingerprint;
 pub mod first_sets;
 mod follow;
 pub mod scc;
@@ -16,6 +17,7 @@ pub mod structural_alphabet;
 pub use deps::compute_rule_deps;
 pub use dispatch::generate_dispatch_tables;
 pub use factor_lookahead::factor_regex_with_lookahead;
+pub use fingerprint::{PushFingerprint, compute_push_fingerprint};
 pub use first_sets::compute_first_sets;
 pub use follow::compute_follow_sets;
 pub use scc::compute_scc;

@@ -66,6 +66,7 @@ fn make_debug_ir() -> GrammarIR {
         payload_layouts: std::collections::HashMap::new(),
         struct_registry: Default::default(),
         structural_alphabet: None,
+        push_fingerprint: None,
     }
 }
 
@@ -125,6 +126,7 @@ fn compiler_no_debug_break_without_flag() {
         payload_layouts: std::collections::HashMap::new(),
         struct_registry: Default::default(),
         structural_alphabet: None,
+        push_fingerprint: None,
     };
     let program = compile(&ir);
 

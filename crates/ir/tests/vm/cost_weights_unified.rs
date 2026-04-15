@@ -80,6 +80,7 @@ fn empty_ir() -> GrammarIR {
         payload_layouts: HashMap::new(),
         struct_registry: Default::default(),
         structural_alphabet: None,
+        push_fingerprint: None,
     }
 }
 

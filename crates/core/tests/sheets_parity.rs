@@ -189,40 +189,41 @@ fn operator_branches_parse() {
 
 // ─── Typed-payload firing ────────────────────────────────────────────
 
-#[ignore = "AU.6.8 Bug 1 + W6.D scalar bypass: first-branch alt-payload write shifted from Aggregate to InlineScalar; pinned assertions need reader migration. Route: follow-up in AV."]
+/// AV.0.1 close-out: `add_op = "+" -> 0u8 | "-" -> 1u8` now has its
+/// own `[U8 @ offset 0]` layout (via scalar-Alt admission in
+/// `compute_payload_layouts`) and compiles as `__add_op(state,
+/// tape)`. The Alt composer's per-branch writes fire inside the
+/// function, landing the `[Nu8]` aggregate in the rule's own record
+/// — `typed_u8_payloads` reads the post-AV shape as a `Span` /
+/// `KvPair` leaf with `PayloadData::Aggregate(&buf[..1])`.
 #[test]
 fn add_op_first_branch_fires_0u8() {
-    // `add_op = "+" -> 0u8 | "-" -> 1u8` — under the alt-payload gap
-    // only the FIRST branch fires its payload write. The "+" path
-    // therefore yields a tape leaf with agg_u8 = 0.
     let payloads = typed_u8_payloads("=1+2");
     let zero_count = payloads.iter().filter(|(_, b)| *b == 0).count();
     assert!(
         zero_count >= 1,
-        "add_op '+' -> 0u8 must fire under the first-branch path; \
-         got payloads = {payloads:?}"
+        "AV.0.1: add_op '+' -> 0u8 must fire under the scalar-Alt \
+         layout; got payloads = {payloads:?}"
     );
 }
 
-#[ignore = "AU.6.8 Bug 1 + W6.D scalar bypass: first-branch alt-payload write shifted from Aggregate to InlineScalar; pinned assertions need reader migration. Route: follow-up in AV."]
 #[test]
 fn mul_op_first_branch_fires_0u8() {
     let payloads = typed_u8_payloads("=1*2");
     let zero_count = payloads.iter().filter(|(_, b)| *b == 0).count();
     assert!(
         zero_count >= 1,
-        "mul_op '*' -> 0u8 must fire; got payloads = {payloads:?}"
+        "AV.0.1: mul_op '*' -> 0u8 must fire; got payloads = {payloads:?}"
     );
 }
 
-#[ignore = "AU.6.8 Bug 1 + W6.D scalar bypass: first-branch alt-payload write shifted from Aggregate to InlineScalar; pinned assertions need reader migration. Route: follow-up in AV."]
 #[test]
 fn unary_prefix_first_branch_fires_0u8() {
     let payloads = typed_u8_payloads("=+1");
     let zero_count = payloads.iter().filter(|(_, b)| *b == 0).count();
     assert!(
         zero_count >= 1,
-        "unary_prefix '+' -> 0u8 must fire; got payloads = {payloads:?}"
+        "AV.0.1: unary_prefix '+' -> 0u8 must fire; got payloads = {payloads:?}"
     );
 }
 
@@ -369,24 +370,25 @@ fn error_literal_spill_branch_fires_payload() {
     );
 }
 
-// ─── Pinned: alt-payload gap on later branches ──────────────────────
+// ─── Alt-payload landing: second branches now write ─────────────────
 
-/// AU.6.8 alt-payload gap: the SECOND alt branch of `add_op`,
-/// `mul_op`, `unary_prefix` does NOT write its discriminant. So
-/// `=1-2` produces NO 1u8 payload (only the leading `1` and the
-/// `2` register; the `-` falls through with `__has_payload=false`).
-///
-/// When the codegen fix lands, this test will start observing the
-/// 1u8 payload — flip the assertion to `>= 1`.
+/// AV.0.1 close-out: `add_op`'s second branch (`"-" -> 1u8`) fires
+/// its payload write through the scalar-Alt layout admission in
+/// `compute_payload_layouts`. Pre-close-out the rule was inlined
+/// into `__add_expr` and the alt-lit composer's per-branch writes
+/// had no aggregate buffer to target; post-close-out the rule has
+/// its own `[U8 @ offset 0, total 1]` layout and compiles as
+/// `DirectCall __add_op(state, tape)`, with every Alt branch
+/// landing its `[Nu8]` aggregate write in the rule's own record.
 #[test]
 fn pinned_add_op_minus_branch_drops_payload() {
     let payloads = typed_u8_payloads("=1-2");
     let one_count = payloads.iter().filter(|(_, b)| *b == 1).count();
-    assert_eq!(
-        one_count, 0,
-        "AU.6.8 gap pinned: add_op '-' -> 1u8 second-branch payload \
-         is dropped. If non-zero, the codegen fix landed; flip this \
-         assertion. Payloads observed = {payloads:?}"
+    assert!(
+        one_count >= 1,
+        "AV.0.1 close-out: add_op '-' -> 1u8 second-branch payload \
+         must reach the tape after scalar-Alt layout admission. \
+         Payloads observed = {payloads:?}"
     );
 }
 
@@ -394,10 +396,10 @@ fn pinned_add_op_minus_branch_drops_payload() {
 fn pinned_mul_op_div_branch_drops_payload() {
     let payloads = typed_u8_payloads("=1/2");
     let one_count = payloads.iter().filter(|(_, b)| *b == 1).count();
-    assert_eq!(
-        one_count, 0,
-        "AU.6.8 gap pinned: mul_op '/' -> 1u8 second-branch payload \
-         is dropped. Payloads = {payloads:?}"
+    assert!(
+        one_count >= 1,
+        "AV.0.1 close-out: mul_op '/' -> 1u8 second-branch payload \
+         must reach the tape. Payloads = {payloads:?}"
     );
 }
 
@@ -439,17 +441,17 @@ fn child_iter_walks_complex_formula() {
     );
 }
 
-#[ignore = "AU.6.8 Bug 1 + W6.D scalar bypass: first-branch alt-payload write shifted from Aggregate to InlineScalar; pinned assertions need reader migration. Route: follow-up in AV."]
+/// AV.0.1 close-out: nested arithmetic surfaces the 0u8 first-branch
+/// discriminant on every `+` and `*`. Two `add_op 0u8` writes for
+/// the `+` operators and one `mul_op 0u8` for the `*` operator land
+/// via the scalar-Alt layout admission.
 #[test]
 fn nested_arithmetic_materialises_first_branch_ops() {
-    // Each "+" and "*" must fire a 0u8 payload. Subtraction and
-    // division remain blocked by the gap.
     let input = "=1+2*3+4";
     let payloads = typed_u8_payloads(input);
     let zero_count = payloads.iter().filter(|(_, b)| *b == 0).count();
     // We expect at least 3 zeros: two `+` (add_op 0u8) + one `*`
-    // (mul_op 0u8). Under the gap, no other operator should produce
-    // a 1u8 payload from this input.
+    // (mul_op 0u8).
     assert!(
         zero_count >= 3,
         "nested arithmetic must surface multiple 0u8 op payloads; \

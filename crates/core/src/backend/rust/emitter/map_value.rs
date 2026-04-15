@@ -128,7 +128,7 @@ impl RustEmitter {
         &mut self,
         inner: TokenStream,
         expr: &MapExpr,
-        _return_type: Option<&TypeDesc>,
+        return_type: Option<&TypeDesc>,
         _ir: &GrammarIR,
         ctx: &mut RustEmitCtx,
     ) -> TokenStream {
@@ -154,6 +154,35 @@ impl RustEmitter {
             return quote! {
                 { #inner }
             };
+        }
+
+        // AV.0.3: bare `input` identity maps with an `I64` / `F64`
+        // return type (BBNF `int_lit -> i64`, `float_lit -> f64`)
+        // capture the parsed scalar via `parse_that::
+        // parse_i64_from_bytes` / `parse_f64_from_bytes`. The rule's
+        // regex body matches a numeric prefix + `\w*` junk tail; the
+        // span helper stops at the first non-digit byte and returns
+        // `Option<i64>` / `Option<f64>`. The payload is then stored
+        // into `__payload_i64` / `__payload_f64` for the rule's
+        // scalar epilogue to commit via `PayloadData::WideScalar`.
+        //
+        // Helper selection is driven by the declared `return_type`
+        // rather than by payload-types set membership — the return
+        // type is the authoritative signal at `Map` time, whereas
+        // `ctx.payload_types` reflects the full rule context (which
+        // may include additional types from sibling Alt branches).
+        // The return type's Rust ident drives the local name +
+        // scanner function; the tag set is consulted when the
+        // rule-level payload pipeline carries a multi-type Alt.
+        if let Some(td) = return_type {
+            if let Some(capture) = span_helper_capture(td, ctx) {
+                return quote! {
+                    match ({ #inner }) {
+                        Some(_) => { #capture Some(()) }
+                        None => None,
+                    }
+                };
+            }
         }
 
         // AT.1: check if the map expression produces a constant
@@ -366,6 +395,73 @@ fn aggregate_constant_setter(field: &PayloadField, expr: &MapExpr) -> Option<Tok
     let end = offset + size;
     Some(quote! {
         __aggregate_buf[#offset..#end].copy_from_slice(&#value_expr)
+    })
+}
+
+/// AV.0.3: emit a post-match scalar capture for rules whose `->`
+/// annotation projects to `I64` or `F64` via the bare-`input`
+/// identity map. `parse_that::parse_i64_from_bytes` /
+/// `parse_f64_from_bytes` walk the matched span's prefix, stopping
+/// at the first non-digit byte — the regex body's `\w*` junk tail
+/// (BBNF `int_lit = /…\w*/`, `float_lit = /…\w*/`) is trimmed
+/// automatically.
+///
+/// Returns the assignment statement that stores the parsed scalar
+/// into `__payload_i64` / `__payload_f64` and sets `__has_payload =
+/// true` (plus the multi-type `__payload_tag` assignment when the
+/// enclosing rule carries an Alt payload). Returns `None` when the
+/// target type is not a span-helper scalar — the caller then falls
+/// through to the side-effect-only emission or the `scalar_payload_
+/// setter` constant path.
+///
+/// The capture reads `&state.src_bytes[__span_lo..state.offset]` —
+/// the rule prelude's `__span_lo` plus the post-match cursor — so
+/// the emitter's existing `__span_lo` local is the single source of
+/// truth; no additional bookkeeping required.
+fn span_helper_capture(td: &TypeDesc, ctx: &mut RustEmitCtx) -> Option<TokenStream> {
+    use quote::format_ident;
+    // AV.0.3: the span-helper is keyed on the rule's declared return
+    // type. Every prelude that reaches this capture path declares
+    // `__payload_tag: u8` — `MustTape` (via the AV.0.3 scalar
+    // fallback in `emit_must_tape_prelude`), `TapeSpanOnly` scalar
+    // (`emit_tape_span_only_scalar_prelude`), and multi-type Alt
+    // preludes alike. The tag discriminates the runtime payload
+    // width for the `MustTape` epilogue's `PayloadData::WideScalar`
+    // dispatch (`1 = i64`, `2 = f64`); `TapeSpanOnly` scalar
+    // epilogues already know the width from `td` and ignore the
+    // tag — the declaration is a harmonising stub, silenced by the
+    // crate-level `#[allow(unused_mut, unused_assignments)]` when
+    // the body never captures.
+    //
+    // Multi-type Alt contexts (`ctx.payload_tag(td).is_some()`) use
+    // the rule-scoped tag that drives the Alt epilogue's
+    // `match __payload_tag` dispatch. Single-type rules
+    // (`ctx.payload_tag(td).is_none()`) default to the type-keyed
+    // tag (`1 = i64`, `2 = f64`) so the MustTape scalar fallback
+    // can still recover the correct bit pattern from `__payload_X`.
+    let (payload_local, scan_path, default_tag) = match td {
+        TypeDesc::I64 => (
+            format_ident!("__payload_i64"),
+            quote! { ::parse_that::parse_i64_from_bytes },
+            1u8,
+        ),
+        TypeDesc::F64 => (
+            format_ident!("__payload_f64"),
+            quote! { ::parse_that::parse_f64_from_bytes },
+            2u8,
+        ),
+        _ => return None,
+    };
+    if !ctx.has_payload_type(td) {
+        return None;
+    }
+    let tag_value = ctx.payload_tag(td).unwrap_or(default_tag);
+    Some(quote! {
+        if let Some(__v) = #scan_path(&state.src_bytes[__span_lo as usize..state.offset]) {
+            #payload_local = __v;
+            __payload_tag = #tag_value;
+            __has_payload = true;
+        }
     })
 }
 

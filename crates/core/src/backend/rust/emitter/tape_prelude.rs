@@ -65,20 +65,47 @@ const META_IDX_ZERO: u8 = 0;
 
 /// Emit the prelude for a `MustTape` rule body.
 ///
-/// Captures the starting byte offset and reserves the children run.
-/// The `__span_lo` and `__children` locals are in scope for the
-/// rule body and for the matching [`emit_must_tape_epilogue`].
+/// Captures the starting byte offset, reserves the children run,
+/// and declares the wide-scalar payload stubs the AV.0.3 span-helper
+/// capture path writes into. `__payload_i64` / `__payload_f64` are
+/// initialised to zero; `__payload_tag` discriminates between them
+/// at epilogue time (`1 = i64`, `2 = f64`); `__has_payload` reports
+/// whether the rule body actually captured a scalar.
+///
+/// The stubs are dead on rules whose body neither maps a regex
+/// match through `parse_that::parse_i64_from_bytes` nor
+/// `parse_f64_from_bytes`. The crate-level `#[allow(unused_mut,
+/// unused_assignments, unused_variables)]` at the top of
+/// `generated.rs` silences the resulting warnings. The alternative —
+/// emitting separate prelude / epilogue pairs keyed on the rule's
+/// payload_types — would require grammar.rs dispatch changes that
+/// live outside the close-out's write bounds; the always-declared
+/// locals are the minimal delta that lets `map_value.rs`'s span
+/// helper compose without reaching into the rule-scope via a second
+/// ctx threading pass.
 pub fn emit_must_tape_prelude() -> TokenStream {
     quote! {
         let __span_lo = state.offset as u32;
         let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+        let mut __payload_i64: i64 = 0;
+        let mut __payload_f64: f64 = 0.0;
+        let mut __payload_tag: u8 = 0;
+        let mut __has_payload: bool = false;
     }
 }
 
 /// Emit the epilogue for a `MustTape` rule body.
 ///
 /// `variant_idx` is the rule's codegen-assigned variant
-/// discriminator (u8) — the rule's index in `ir.rules`.
+/// discriminator (u8) — the rule's index in `ir.rules`. When the
+/// body captured a wide scalar via `__has_payload = true`, commits
+/// the payload through `push_leaf_with(Span, ...,
+/// PayloadData::WideScalar)` rather than the default compound
+/// record — AV.0.3 `int_lit -> i64`, `float_lit -> f64` land on
+/// this path. `__payload_tag` picks the bit pattern (`1 = i64`,
+/// `2 = f64`); other tag values fall back to compound emission to
+/// preserve the tape shape for every rule that does not reach the
+/// span-helper capture.
 pub fn emit_must_tape_epilogue(variant_idx: u8) -> TokenStream {
     let variant_lit = variant_idx;
     let meta_lit = META_IDX_ZERO;
@@ -86,15 +113,32 @@ pub fn emit_must_tape_epilogue(variant_idx: u8) -> TokenStream {
         {
             let __vi: u8 = #variant_lit;
             let __mi: u8 = #meta_lit;
-            Some(::bbnf::runtime::tape::TapeBuilder::push_compound(
-                tape,
-                ::bbnf::runtime::tape::TapeKind::Rule,
-                __children,
-                __span_lo,
-                state.offset as u32,
-                __vi,
-                __mi,
-            ))
+            if __has_payload {
+                let __bits: u64 = match __payload_tag {
+                    1u8 => __payload_i64 as u64,
+                    2u8 => __payload_f64.to_bits(),
+                    _ => 0u64,
+                };
+                Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                    tape,
+                    ::bbnf::runtime::tape::TapeKind::Span,
+                    __span_lo,
+                    state.offset as u32,
+                    __vi,
+                    __mi,
+                    ::bbnf::runtime::tape::PayloadData::WideScalar(__bits),
+                ))
+            } else {
+                Some(::bbnf::runtime::tape::TapeBuilder::push_compound(
+                    tape,
+                    ::bbnf::runtime::tape::TapeKind::Rule,
+                    __children,
+                    __span_lo,
+                    state.offset as u32,
+                    __vi,
+                    __mi,
+                ))
+            }
         }
     }
 }
@@ -158,6 +202,7 @@ pub fn emit_tape_span_only_scalar_prelude(td: &TypeDesc) -> TokenStream {
             let __span_lo = state.offset as u32;
             let mut __payload_lo: u32 = 0;
             let mut __payload_hi: u32 = 0;
+            let mut __payload_tag: u8 = 0;
             let mut __has_payload = false;
         };
     }
@@ -167,9 +212,19 @@ pub fn emit_tape_span_only_scalar_prelude(td: &TypeDesc) -> TokenStream {
     let payload_ident = format_ident!("__payload_{}", rust_ident);
     let ty_ident = format_ident!("{}", rust_ident);
     let init = scalar_zero_init(td);
+    // AV.0.3: the scalar prelude declares the `__payload_tag` local
+    // alongside the type-specific payload slot so the AV.0.3 span-
+    // helper capture (`map_value.rs::span_helper_capture`) can
+    // unconditionally stamp a tag — the `TapeSpanOnly` scalar
+    // epilogue already knows the type from `td`, but the tag slot
+    // harmonises with the `MustTape` scalar epilogue path that
+    // reads the tag at runtime. The stub is silenced by the crate-
+    // level `#[allow(unused_variables)]` when the body does not
+    // reach the span helper.
     quote! {
         let __span_lo = state.offset as u32;
         let mut #payload_ident: #ty_ident = #init;
+        let mut __payload_tag: u8 = 0;
         let mut __has_payload = false;
     }
 }

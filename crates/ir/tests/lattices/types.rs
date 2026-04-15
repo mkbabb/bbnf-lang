@@ -30,6 +30,7 @@ fn make_ir(rules: Vec<IrRule>) -> GrammarIR {
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
         struct_registry: Default::default(),
+        structural_alphabet: None,
     }
 }
 
@@ -283,6 +284,7 @@ fn map_enum_wrap() {
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
         struct_registry: Default::default(),
+        structural_alphabet: None,
     };
     bbnf_ir::dag::ensure_dag(&mut ir);
     project_types(&mut ir);
@@ -323,6 +325,7 @@ fn map_box_wrap() {
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
         struct_registry: Default::default(),
+        structural_alphabet: None,
     };
     bbnf_ir::dag::ensure_dag(&mut ir);
     project_types(&mut ir);

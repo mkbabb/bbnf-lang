@@ -41,6 +41,7 @@ fn literal_is_span_eligible() {
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
         struct_registry: Default::default(),
+        structural_alphabet: None,
     };
 
     refine_span_eligibility(&mut ir);
@@ -81,6 +82,7 @@ fn map_not_span_eligible() {
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
         struct_registry: Default::default(),
+        structural_alphabet: None,
     };
 
     refine_span_eligibility(&mut ir);
@@ -120,6 +122,7 @@ fn transitive_span_eligibility() {
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
         struct_registry: Default::default(),
+        structural_alphabet: None,
     };
 
     refine_span_eligibility(&mut ir);
@@ -164,6 +167,7 @@ fn cyclic_not_span_eligible() {
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
         struct_registry: Default::default(),
+        structural_alphabet: None,
     };
 
     refine_span_eligibility(&mut ir);
@@ -201,6 +205,7 @@ fn seq_of_literals_span_eligible() {
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
         struct_registry: Default::default(),
+        structural_alphabet: None,
     };
 
     refine_span_eligibility(&mut ir);

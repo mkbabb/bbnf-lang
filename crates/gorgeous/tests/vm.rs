@@ -48,6 +48,7 @@ fn make_ir(hints: PrettyHints) -> GrammarIR {
         materialization: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
         struct_registry: Default::default(),
+        structural_alphabet: None,
         string_index: std::collections::HashMap::new(),
     }
 }

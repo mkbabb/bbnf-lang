@@ -51,6 +51,7 @@ fn prune_removes_unreachable() {
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
         struct_registry: Default::default(),
+        structural_alphabet: None,
     };
 
     prune_unreachable(&mut ir);
@@ -94,6 +95,7 @@ fn prune_keeps_all_when_all_reachable() {
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
         struct_registry: Default::default(),
+        structural_alphabet: None,
     };
 
     prune_unreachable(&mut ir);
@@ -157,6 +159,7 @@ fn prune_follows_alt_branches() {
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
         struct_registry: Default::default(),
+        structural_alphabet: None,
     };
 
     prune_unreachable(&mut ir);

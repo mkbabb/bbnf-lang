@@ -58,6 +58,7 @@ fn make_ir(rules: Vec<IrRule>, strings: Vec<String>) -> GrammarIR {
         string_index: std::collections::HashMap::new(),
         payload_layouts: HashMap::new(),
         struct_registry: Default::default(),
+        structural_alphabet: None,
     };
     bbnf_ir::dag::ensure_dag(&mut ir);
     // Run the AB.0 classification first — the CSP consumes its

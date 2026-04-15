@@ -36,6 +36,7 @@ fn make_ir(rules: Vec<IrRule>, fns: Vec<FnDescriptor>) -> GrammarIR {
         debug_all: false,
         debug_labels: vec![],
         struct_registry: Default::default(),
+        structural_alphabet: None,
     }
 }
 

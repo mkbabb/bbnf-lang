@@ -40,6 +40,7 @@ fn empty_ir(strings: Vec<&str>) -> GrammarIR {
         payload_layouts: std::collections::HashMap::new(),
         string_index: Default::default(),
         struct_registry: Default::default(),
+        structural_alphabet: None,
     }
 }
 

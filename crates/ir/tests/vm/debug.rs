@@ -65,6 +65,7 @@ fn make_debug_ir() -> GrammarIR {
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
         struct_registry: Default::default(),
+        structural_alphabet: None,
     }
 }
 
@@ -123,6 +124,7 @@ fn compiler_no_debug_break_without_flag() {
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
         struct_registry: Default::default(),
+        structural_alphabet: None,
     };
     let program = compile(&ir);
 

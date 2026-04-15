@@ -54,6 +54,7 @@ fn make_ir(rules: Vec<IrRule>, strings: Vec<String>) -> GrammarIR {
         string_index: std::collections::HashMap::new(),
         payload_layouts: HashMap::new(),
         struct_registry: Default::default(),
+        structural_alphabet: None,
     };
     bbnf_ir::dag::ensure_dag(&mut ir);
     classify_materialization(&mut ir);

@@ -38,7 +38,8 @@ DECLARATIONS_LIST = (DECLARATION ?w << ";" ?) + << ";" ? ;
 
 // --- Keyframe blocks ---
 
-FROM_TO_KEYWORD    = "from" | "to" ;
+// u8 discriminant for from/to keyframe selectors: from=0 (0%), to=1 (100%).
+FROM_TO_KEYWORD    = "from" -> 0u8 | "to" -> 1u8 ;
 KEYFRAME_SELECTOR  = percentage | FROM_TO_KEYWORD | (percentage , ("," ?w >> percentage) +) ;
 KEYFRAME_BLOCK     = KEYFRAME_SELECTOR ?w , "{" ?w >> DECLARATIONS_LIST ?w << "}" ;
 KEYFRAME_BLOCKS    = (VENDOR_PREFIX ? , KEYFRAME_BLOCK ?w) + ;

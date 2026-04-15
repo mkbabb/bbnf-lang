@@ -40,6 +40,11 @@ pub fn fuse_single_use(ir: &mut GrammarIR) {
     }
 
     // Identify fusable rules: single-use, acyclic, not entry.
+    //
+    // AU.2.5: rules whose body is a `Seq` of two or more children own
+    // a candidate aggregate payload layout (e.g. `length = number,
+    // lengthUnit` → `(f64, u8)`). Even at single-use reference count
+    // they must stay callable so the aggregate epilogue fires.
     let fusable: Vec<(RuleId, IrNode)> = ir
         .rules
         .iter()
@@ -49,6 +54,7 @@ pub fn fuse_single_use(ir: &mut GrammarIR) {
                 && !r.meta.preserve_identity
                 && r.meta.scc_id.is_none()
                 && ref_counts.get(r.id as usize).copied().unwrap_or(0) == 1
+                && !is_composite_seq(&r.body)
         })
         .map(|r| (r.id, r.body.clone()))
         .collect();
@@ -68,6 +74,16 @@ pub fn fuse_single_use(ir: &mut GrammarIR) {
     for rule in &mut ir.rules {
         rule.body = inline_single_use(std::mem::replace(&mut rule.body, IrNode::Epsilon), &bodies);
     }
+}
+
+/// True when the node is a `Seq` with two or more children — the
+/// aggregate-payload composition shape. See
+/// `bbnf_ir::passes::transform::inline::is_composite_seq` for the
+/// sibling rationale; we keep a local mirror rather than exposing a
+/// cross-module helper because both passes are internal to the
+/// structural loop.
+fn is_composite_seq(node: &IrNode) -> bool {
+    matches!(node, IrNode::Seq(children) if children.len() >= 2)
 }
 
 /// Count `Ref(id)` occurrences in an IR tree.

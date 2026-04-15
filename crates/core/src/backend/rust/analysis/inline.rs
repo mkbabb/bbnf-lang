@@ -378,6 +378,19 @@ pub fn analyze_parse_inline_plan(
             continue;
         }
 
+        // AU.2.5: rules carrying an aggregate payload layout must own
+        // their emission site — the `push_leaf_with_aggregate` epilogue
+        // commits the 16-byte buffer populated by the rule's body. An
+        // inlined aggregate body has no epilogue to fire, so any rule
+        // with a registered layout must stay callable. `payload_layouts`
+        // is populated by `compute_payload_layouts` before backend
+        // analysis runs (see `BackendAnalysis::from_ir`), so the map is
+        // ready here.
+        if ir.payload_layouts.contains_key(&rule.id) {
+            csp.add_constraint(ForceCallMode::new(var, CallMode::DirectCall));
+            continue;
+        }
+
         // Priority 1: Single-site inline → forced InlineBody.
         if single_site_inline[idx] {
             csp.add_constraint(ForceCallMode::new(var, CallMode::InlineBody));

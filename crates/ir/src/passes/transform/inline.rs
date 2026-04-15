@@ -22,6 +22,16 @@ const INLINE_THRESHOLD: usize = 4;
 /// Run `prune_unreachable` afterward to clean up dead rules.
 pub fn inline_acyclic(ir: &mut GrammarIR) {
     // Identify inlinable rules.
+    //
+    // AU.2.5: rules whose body is a `Seq` of two or more children are
+    // candidates for aggregate payload layouts (e.g. `length =
+    // number, lengthUnit` projects to `(f64, u8)`). Inlining such a
+    // rule merges its Seq children into the caller's context, so the
+    // rule's function body — and its aggregate epilogue — never
+    // emit. Typed-materialisation cohesion demands these rules stay
+    // callable; we preserve them here by excluding composite Seq
+    // bodies from the inlinable set. Single-element Seqs (unlikely
+    // outside lowering artefacts) remain eligible.
     let inlinable: Vec<(RuleId, IrNode)> = ir
         .rules
         .iter()
@@ -31,6 +41,7 @@ pub fn inline_acyclic(ir: &mut GrammarIR) {
                 && !r.meta.preserve_identity
                 && r.meta.scc_id.is_none()
                 && node_count(&r.body) <= INLINE_THRESHOLD
+                && !is_composite_seq(&r.body)
         })
         .map(|r| (r.id, r.body.clone()))
         .collect();
@@ -50,6 +61,18 @@ pub fn inline_acyclic(ir: &mut GrammarIR) {
     for rule in &mut ir.rules {
         rule.body = inline_refs(std::mem::replace(&mut rule.body, IrNode::Epsilon), &bodies);
     }
+}
+
+/// True when the node is a `Seq` with two or more children — a shape
+/// that can compose typed sub-rules into an aggregate payload layout
+/// (e.g. `Seq(Ref(number), Ref(lengthUnit))` → `Tuple([F64, U8])`).
+///
+/// Used by [`inline_acyclic`] to preserve these rules as callable
+/// functions so their aggregate epilogues fire. Without this check the
+/// IR-level inline pass merges the Seq's children into the caller's
+/// body and the layout computation loses its anchor rule.
+fn is_composite_seq(node: &IrNode) -> bool {
+    matches!(node, IrNode::Seq(children) if children.len() >= 2)
 }
 
 /// Count the number of nodes in an IR tree (for threshold check).

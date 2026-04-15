@@ -343,16 +343,25 @@ fn scalar_zero_init(td: &TypeDesc) -> TokenStream {
 /// Emit the prelude for a `TapeSpanOnly` rule with an aggregate
 /// payload layout.
 ///
-/// Reserves a 16-byte stack buffer (zero-initialized so unwritten
-/// bytes are deterministic) plus a `__has_payload` flag the
-/// epilogue checks at runtime — when no field of the body wrote a
-/// scalar (e.g. an Alt branch that was not taken), the rule falls
-/// back to plain `push_leaf` so the tape never carries garbage
-/// payload bytes.
-pub fn emit_tape_span_only_aggregate_prelude(_layout: &PayloadLayout) -> TokenStream {
+/// Reserves a stack buffer sized to the layout's total_bytes
+/// (rounded up to the inline minimum) — zero-initialized so any
+/// unwritten trailing bytes are deterministic — plus a
+/// `__has_payload` flag the epilogue checks at runtime. When the
+/// body finishes without writing any scalar captures (e.g. an Alt
+/// branch that was not taken), the rule falls back to plain
+/// `push_leaf` so the tape never carries garbage payload bytes.
+///
+/// AV.0.5: layouts > `MAX_INLINE_AGGREGATE_BYTES` widen the
+/// buffer to `total_bytes` so colour-function aggregates (33-40 B)
+/// have room on the stack before the arena commit via
+/// `PayloadData::LargeAggregate`. Layouts ≤ 16 B keep the 16-byte
+/// reservation — smaller stack frames for the common aggregate
+/// path.
+pub fn emit_tape_span_only_aggregate_prelude(layout: &PayloadLayout) -> TokenStream {
+    let buf_bytes = aggregate_buffer_bytes(layout);
     quote! {
         let __span_lo = state.offset as u32;
-        let mut __aggregate_buf: [u8; 16] = [0u8; 16];
+        let mut __aggregate_buf: [u8; #buf_bytes] = [0u8; #buf_bytes];
         let mut __has_payload = false;
     }
 }
@@ -430,13 +439,16 @@ pub fn emit_tape_span_only_aggregate_epilogue(
 ///
 /// Like the `TapeSpanOnly` aggregate prelude, but additionally
 /// reserves the children run so the epilogue can decide between
-/// `push_leaf_with` + `PayloadData::Aggregate` (any field wrote a
-/// scalar capture) or the standard compound-children pathway.
-pub fn emit_must_tape_aggregate_prelude(_layout: &PayloadLayout) -> TokenStream {
+/// `push_leaf_with` + `PayloadData::Aggregate` /
+/// `PayloadData::LargeAggregate` (any field wrote a scalar capture)
+/// or the standard compound-children pathway. AV.0.5 layouts
+/// > 16 B widen the buffer via `aggregate_buffer_bytes`.
+pub fn emit_must_tape_aggregate_prelude(layout: &PayloadLayout) -> TokenStream {
+    let buf_bytes = aggregate_buffer_bytes(layout);
     quote! {
         let __span_lo = state.offset as u32;
         let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-        let mut __aggregate_buf: [u8; 16] = [0u8; 16];
+        let mut __aggregate_buf: [u8; #buf_bytes] = [0u8; #buf_bytes];
         let mut __has_payload = false;
     }
 }
@@ -567,6 +579,18 @@ fn bare_span_epilogue_fixup(layout: &PayloadLayout) -> TokenStream {
 /// `bbnf_tape::MAX_INLINE_AGGREGATE_BYTES` (same constant, same
 /// value).
 const MAX_INLINE_AGGREGATE_BYTES: usize = 16;
+
+/// AV.0.5: stack buffer width for the aggregate prelude, derived
+/// from the layout's `total_bytes`. Layouts ≤ 16 B keep the
+/// 16-byte reservation that matches `bbnf_tape`'s inline-aggregate
+/// path; wider layouts (colour-function `colorFunction` / `colorFn` /
+/// `colorMix` at 33-40 B) widen to exactly `total_bytes` so the
+/// prelude's `__aggregate_buf` accommodates the `LargeAggregate`
+/// commit without overflowing or truncating.
+fn aggregate_buffer_bytes(layout: &PayloadLayout) -> usize {
+    let total = layout.total_bytes as usize;
+    total.max(MAX_INLINE_AGGREGATE_BYTES)
+}
 
 /// Emit the rule function signature for a tape-first rule.
 ///

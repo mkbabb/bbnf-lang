@@ -226,12 +226,18 @@ fn unary_prefix_first_branch_fires_0u8() {
     );
 }
 
-#[ignore = "AU.6.8 Bug 1 + W6.D scalar bypass: first-branch alt-payload write shifted from Aggregate to InlineScalar; pinned assertions need reader migration. Route: follow-up in AV."]
+/// AV.0.1 Bug 1 landing: `boolean`'s first branch (`TRUE -> true`)
+/// fires its `1u8` aggregate payload through the bare-Span route.
+/// The `boolean` rule is DirectCall (its own emitted function) and
+/// its Alt is single-type (Bool, unified from both `true` and `false`
+/// branches), so its `payload_layout` and the alt-lit composer's
+/// per-branch payload hoist land the write on both branches. The
+/// tape reader walks Span + KvPair records; `=TRUE` produces a
+/// `Span variant=<boolean>` leaf carrying the `[1u8]` aggregate.
 #[test]
 fn boolean_first_branch_fires_true_payload() {
-    // `boolean = /TRUE/i -> true | /FALSE/i -> false` — codegen
-    // currently writes `[1u8]` for the true branch (declaration
-    // order), so parsing `=TRUE` produces agg_u8 = 1.
+    // `boolean = /TRUE/i -> true | /FALSE/i -> false` — declaration
+    // order gives TRUE the 1u8 write.
     let payloads = typed_u8_payloads("=TRUE");
     let one_count = payloads.iter().filter(|(_, b)| *b == 1).count();
     assert!(
@@ -288,6 +294,77 @@ fn error_literal_name_branch_fires_payload() {
     assert!(
         five_count >= 1,
         "AV.0.1 Bug 1: error_literal '#NAME?' -> 5u8 must fire. \
+         Payloads = {payloads:?}"
+    );
+}
+
+// ─── AV.0.1 close-out landing: outer-Alt checkpoint extension ───────
+//
+// Sheets `error_literal`'s outer Alt is checkpoint-shaped after the
+// factor pass: five direct `Map { Literal, IntLit }` branches for
+// `#VALUE!`, `#REF!`, `#DIV/0!`, `#ERROR!`, `#SPILL!` mixed with a
+// factored `Seq(Literal("N"), inner-alt-lit(#NULL!|#NUM!|#NAME?))`
+// branch. Before the CO-E3 checkpoint extension, only the first
+// branch and the inner factored alt-lit emitted payload writes; the
+// five outer direct-literal branches fell through with no write.
+//
+// After the checkpoint composer's per-branch payload-write hoist,
+// every outer direct-literal branch emits its declared u8 into
+// `__aggregate_buf[0..1]`, and the rule's `push_leaf_with` epilogue
+// commits via `PayloadData::Aggregate(&buf[..1])` as a `KvPair`.
+
+#[test]
+fn error_literal_value_branch_fires_payload() {
+    let payloads = typed_u8_payloads("=#VALUE!");
+    let one_count = payloads.iter().filter(|(_, b)| *b == 1).count();
+    assert!(
+        one_count >= 1,
+        "AV.0.1 close-out: error_literal '#VALUE!' -> 1u8 must fire \
+         through the checkpoint per-branch payload-write hoist. \
+         Payloads = {payloads:?}"
+    );
+}
+
+#[test]
+fn error_literal_ref_branch_fires_payload() {
+    let payloads = typed_u8_payloads("=#REF!");
+    let two_count = payloads.iter().filter(|(_, b)| *b == 2).count();
+    assert!(
+        two_count >= 1,
+        "AV.0.1 close-out: error_literal '#REF!' -> 2u8 must fire. \
+         Payloads = {payloads:?}"
+    );
+}
+
+#[test]
+fn error_literal_divzero_branch_fires_payload() {
+    let payloads = typed_u8_payloads("=#DIV/0!");
+    let three_count = payloads.iter().filter(|(_, b)| *b == 3).count();
+    assert!(
+        three_count >= 1,
+        "AV.0.1 close-out: error_literal '#DIV/0!' -> 3u8 must fire. \
+         Payloads = {payloads:?}"
+    );
+}
+
+#[test]
+fn error_literal_error_branch_fires_payload() {
+    let payloads = typed_u8_payloads("=#ERROR!");
+    let seven_count = payloads.iter().filter(|(_, b)| *b == 7).count();
+    assert!(
+        seven_count >= 1,
+        "AV.0.1 close-out: error_literal '#ERROR!' -> 7u8 must fire. \
+         Payloads = {payloads:?}"
+    );
+}
+
+#[test]
+fn error_literal_spill_branch_fires_payload() {
+    let payloads = typed_u8_payloads("=#SPILL!");
+    let eight_count = payloads.iter().filter(|(_, b)| *b == 8).count();
+    assert!(
+        eight_count >= 1,
+        "AV.0.1 close-out: error_literal '#SPILL!' -> 8u8 must fire. \
          Payloads = {payloads:?}"
     );
 }

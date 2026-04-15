@@ -91,3 +91,129 @@ parallel agents cherry-pick onto master:
 - V0 exit gate: `cargo test --workspace --no-fail-fast` reports
   0 failures; ignored count matches the Category A list.
 
+## 2026-04-15 — V0 mid-wave status
+
+### Agent D (av0-tape) — LANDED
+
+API-terminated after landing three clean commits in its
+worktree. All three cherry-picked onto master without conflict:
+
+- `e7add15` feat(bbnf-tape): `PayloadData::LargeAggregate` —
+  arena-backed >16 B tuples. 4 files / +242 lines. 37 bbnf-tape
+  unit tests green.
+- `e280975` fix(bbnf-tape): stamp `NONE` on empty-compound
+  `child_off` (AV.0.6). 22 `tape_parity` goldens pass unchanged;
+  the NONE semantic tightens `has_payload` without shifting any
+  currently-firing golden.
+- `ec20e99` grammar(css l4): declare colour-function
+  `LargeAggregate` shapes (AV.0.5 grammar side). 195 rules still
+  roundtrip; 22/22 goldens match.
+
+Worktree removed. AV.0.5 emitter routing remains deferred to
+V0 close-out per the original plan.
+
+### Agent C (av0-namedcolor) — LANDED, scope correction
+
+Agent C completed with a correctly-diagnosed root-cause pivot.
+The AV.md hypothesis pointing at `crates/ir/src/passes/sets/
+dispatch/annotate.rs` (factor-pass) was archaeologically wrong
+— the factor-pass preserves `MapExpr { fn_id }` wrappers
+correctly. The real bug lives in
+`crates/core/src/lower/value_expr.rs` at
+`parse_numeric_literal_text`: the float-vs-int discriminator
+uses `digits.contains('e') || digits.contains('E')` which fires
+on valid hex digits in `0x`-prefixed literals. 37 of 150
+namedColor values (containing `E` or `e` — e.g.
+`0xFAEBD7FFu32` for antiquewhite, `0xEE82EEFFu32` for violet)
+were misclassified as floats and parsed via
+`parse_float_literal("0xFAEBD7FF")`, which returned
+`FloatLit(0.0)`.
+
+Three-line fix: if `digits.starts_with("0x") ||
+digits.starts_with("0X")`, route unconditionally to
+`parse_int_literal`. Agent C documented the scope expansion to
+`lower/value_expr.rs` (outside original write bounds, orthogonal
+to other agents' work).
+
+Cherry-picked onto master:
+
+- `60d4a70` fix(lower): hex literals with E/e no longer route
+  to float path.
+- `9b06310` test(css_l4): namedColor 149/150 branches fire u32
+  payload — grammar-driven (loads the 150 `(name, hex)` pairs
+  from `color.bbnf`), 2/2 pass.
+
+The residual gap (white = `0xFFFFFFFFu32` coincides with
+`TapeOffset::NONE`, so `PayloadData::InlineScalar(u32::MAX)` is
+indistinguishable from payload-absence) is a pre-existing
+architectural concern tied to the sentinel encoding of
+`InlineScalar`. Routing `u32` through `PayloadData::WideScalar`
+resolves it. Deferred to V0 close-out (the emitter-side
+decision belongs there alongside AV.0.5's oversize-aggregate
+routing).
+
+Worktree removed. Also corrects the branch-count: the grammar
+actually contains 150 named colours, not the 148 the audit
+cited. Pre-fix: 113 fired. Post-fix: 149 fire (white pending).
+
+### Agent B (av0-bug2) — PARTIAL; respawn required
+
+API-terminated with two high-quality commits on
+`../parse-that/master` (still there, already on the patched
+path):
+
+- `6d04bf2` feat(scan): `parse_i64_from_bytes` +
+  `parse_f64_from_bytes` span helpers.
+- `8679b8a` feat(scan): add `scan_digits_parse_i64_mut` +
+  `scan_hex_parse_i64_mut`.
+
+Those two cover AV.0.3's parse-that side cleanly.
+
+The bbnf-lang side was uncommitted at termination. Attempted
+orchestrator-side commit of the emitter + `type_desc.rs`
+changes produced `dabe3bc` in B's worktree (`feat(emitter):
+post-match scalar capture for -> Span/i64/f64/bool rules`) and
+a hand-patched `generated.rs` that passed `cargo check -p
+bbnf`. But bootstrap regen failed: `cargo expand -p
+bbnf-bootstrap --lib` panics with `pretty_hint: missing
+identifier` — the emitter's `rule_is_scalar_payload` downgrade
+flattens `pretty_hint` into a leaf even after narrowing the
+check with a `body_is_terminal` helper (body = `Seq(Ref(ident),
+Repeat(...))` should keep the compound shape, but the IR's
+payload-layout pass cascades `needs_payload_slot` changes
+through type inference in a way that still affects
+`pretty_hint`'s materialization). The clean-regen discipline
+rejects hand-patched generated files, so B's emitter commit is
+ineligible for master.
+
+Resolution: reverted B's worktree to master HEAD (generated.rs
+restored, `dabe3bc` dropped). parse-that commits stand. V0
+dispatches a fresh Agent B with narrower scope:
+`is_kv_pair_shape` → extend `plan_layout` to admit standalone
+`TypeDesc::Span` at the payload-layout pass (not the
+materialization pass), routing bare-Span rules through
+`PayloadData::Aggregate(8)` without touching
+`preserve_identity` or `materialization_for_rule`. That is
+what the AV.md §AV.0.2 "extend the KvPair-aggregate whitelist
+to admit bare-Span" clause actually specifies; B's broader
+materialization override was off-plan.
+
+Worktree removed.
+
+### Agent A (av0-bug1) — STILL RUNNING
+
+`../bbnf-wt-av0-bug1` active (HEAD=`36bbc09`, one commit
+ahead). No completion notification yet. Orchestrator does not
+touch A's files while it runs.
+
+### Master status (post-D, post-C cherry-picks)
+
+- `grammar_roundtrip`: 6/6
+- `tape_parity`: 22/22
+- `css_l4_named_color_parity`: 2/2
+- bbnf-tape unit tests: 37/37 + 1 ignored doctest
+
+Master HEAD: `9b06310 test(css_l4): namedColor 149/150
+branches fire u32 payload`.
+
+

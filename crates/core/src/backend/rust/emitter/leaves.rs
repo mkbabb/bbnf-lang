@@ -335,17 +335,23 @@ pub(super) fn number_scan_fn(allow_leading_dot: bool) -> TokenStream {
 /// Returns `None` when the cursor is past the layout's fields or
 /// the current field is not `TypeDesc::Span` — callers then fall
 /// through to their non-aggregate emission.
+///
+/// The cursor is only advanced when the field is actually a Span
+/// (and the pack emits). Non-Span fields stay available to
+/// downstream emitters (HexConvert, NumberConvert, map-constant
+/// setters) that otherwise consume them in their own
+/// `ctx.next_aggregate_field()` call. This preserves the kv-pair
+/// U32 capture in hex colour rules and the F64 capture in numeric
+/// aggregates even when a leading literal leaf emits first.
 pub(super) fn probe_span_aggregate_pack(ctx: &mut RustEmitCtx) -> Option<TokenStream> {
-    if ctx.payload_layout.is_none() {
-        return None;
-    }
-    let field = ctx.next_aggregate_field()?;
+    let layout = ctx.payload_layout.as_ref()?;
+    let field = layout.fields.get(ctx.aggregate_field_cursor)?.clone();
     if !matches!(field.ty, TypeDesc::Span) {
-        // Cursor has advanced past this non-Span field; caller
-        // emission will not pack but the layout's remaining fields
-        // can still be captured by downstream emitters.
+        // Peek-only: leave the cursor for downstream emitters.
         return None;
     }
+    // Commit the cursor advance now that we know the field is ours.
+    ctx.aggregate_field_cursor += 1;
     let lo_off = field.offset as usize;
     let hi_off = lo_off + 4;
     Some(quote! {

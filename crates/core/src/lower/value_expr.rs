@@ -1043,6 +1043,9 @@ pub(crate) fn parse_float_literal(text: &str) -> MapExpr {
 /// the source slice's leading byte is a digit.
 fn parse_numeric_literal_text(text: &str) -> MapExpr {
     let (digits, _) = split_numeric_suffix(text);
+    if digits.starts_with("0x") || digits.starts_with("0X") {
+        return parse_int_literal(text);
+    }
     if digits.contains('.') || digits.contains('e') || digits.contains('E') {
         parse_float_literal(text)
     } else {

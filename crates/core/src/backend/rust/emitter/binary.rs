@@ -53,19 +53,26 @@ impl RustEmitter {
         &mut self,
         kept: TokenStream,
         discarded: TokenStream,
-        _ctx: &mut RustEmitCtx,
+        ctx: &mut RustEmitCtx,
     ) -> TokenStream {
         // Skip: `kept << discarded` — evaluate kept (must succeed),
         // then evaluate discarded (must succeed), return ().
+        //
+        // `fresh_lifetime` threads a per-rule counter through the
+        // emitter so nested Skip / Next / Seq blocks get unique
+        // block labels — avoids the `derive(Parser)` `label name
+        // shadows a label name that is already in scope` warning and
+        // keeps LLVM's block-level optimisations unambiguous.
+        let skip_blk = ctx.fresh_lifetime("skip_blk");
         quote! {
-            'skip_blk: {
+            #skip_blk: {
                 match (#kept) {
                     Some(_) => (),
-                    None => break 'skip_blk None,
+                    None => break #skip_blk None,
                 }
                 match (#discarded) {
                     Some(_) => (),
-                    None => break 'skip_blk None,
+                    None => break #skip_blk None,
                 }
                 Some(())
             }
@@ -76,17 +83,21 @@ impl RustEmitter {
         &mut self,
         discarded: TokenStream,
         kept: TokenStream,
-        _ctx: &mut RustEmitCtx,
+        ctx: &mut RustEmitCtx,
     ) -> TokenStream {
         // Next: `discarded >> kept` — evaluate discarded (must
         // succeed), then evaluate kept. Return whatever kept
         // returned (which under tape-first may be either () or a
         // TapeOffset).
+        //
+        // Uses `fresh_lifetime` for the same reason as `emit_skip_impl`
+        // above.
+        let next_blk = ctx.fresh_lifetime("next_blk");
         quote! {
-            'next_blk: {
+            #next_blk: {
                 match (#discarded) {
                     Some(_) => (),
-                    None => break 'next_blk None,
+                    None => break #next_blk None,
                 }
                 #kept
             }

@@ -220,7 +220,11 @@ impl RustEmitter {
         _alloc: ValuePlacement,
         ctx: &mut RustEmitCtx,
     ) -> TokenStream {
+        // `fresh_lifetime` so nested key-dispatch blocks within a
+        // single rule body each get a unique label — prevents the
+        // `derive(Parser)` label shadow warning.
         let cp = ctx.fresh("kd_cp");
+        let kd_blk = ctx.fresh_lifetime("kd_blk");
         let scanner = match config.key_class {
             KeyClass::Identifier => quote! {
                 ::parse_that::scan_ident(state, &::parse_that::DEFAULT_IDENT_CONFIG)
@@ -246,7 +250,7 @@ impl RustEmitter {
                 quote! {
                     if #(#comparisons)||* {
                         state.offset = #cp;
-                        break 'kd_blk #body;
+                        break #kd_blk #body;
                     }
                 }
             })
@@ -257,7 +261,7 @@ impl RustEmitter {
             quote! { None }
         };
         quote! {
-            'kd_blk: {
+            #kd_blk: {
                 let #cp = state.offset;
                 if let Some(ref __kd_s) = #scanner {
                     let __kd_bytes = &state.src_bytes[__kd_s.start..__kd_s.end];

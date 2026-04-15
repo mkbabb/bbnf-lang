@@ -18,7 +18,11 @@ impl RustEmitter {
         fallback: TokenStream,
         ctx: &mut RustEmitCtx,
     ) -> TokenStream {
+        // `fresh_lifetime` so nested token-dispatch blocks share no
+        // label and `derive(Parser)` emits no `label name shadows`
+        // warning inside a single rule body.
         let token_var = ctx.fresh("tok");
+        let td_blk = ctx.fresh_lifetime("td_blk");
         let mut arm_checks = Vec::new();
         for arm in &arms {
             let patterns: Vec<TokenStream> = arm
@@ -37,19 +41,19 @@ impl RustEmitter {
                     if (#(#patterns)||*) && state.offset < state.src_bytes.len()
                         && state.src_bytes[state.offset] == #guard
                     {
-                        break 'td_blk #cont;
+                        break #td_blk #cont;
                     }
                 });
             } else {
                 arm_checks.push(quote! {
                     if #(#patterns)||* {
-                        break 'td_blk #cont;
+                        break #td_blk #cont;
                     }
                 });
             }
         }
         quote! {
-            'td_blk: {
+            #td_blk: {
                 if let Some(#token_var) = #token {
                     let __td_bytes = &state.src_bytes[#token_var.start..#token_var.end];
                     let __td_len = __td_bytes.len();

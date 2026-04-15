@@ -996,11 +996,27 @@ pub(crate) fn extract_value_func_name<'a>(
 }
 
 /// Whitelist of builtin Rust type names recognised by the type-
-/// shorthand `-> f64` form.
+/// shorthand `-> T` form.
+///
+/// `"Span"` admits the grammar-level `-> Span` shorthand so token rules
+/// (`identifier`, `string_lit`, `regex`, `big_comment`, `comment`) route
+/// through the backend-agnostic span-payload path rather than degrading
+/// to `TypeDesc::Named("Span")`.
 pub(crate) fn is_type_name(name: &str) -> bool {
     matches!(
         name,
-        "f64" | "f32" | "u32" | "u64" | "i32" | "i64" | "usize" | "u8" | "u16" | "i8" | "i16"
+        "Span"
+            | "f64"
+            | "f32"
+            | "u32"
+            | "u64"
+            | "i32"
+            | "i64"
+            | "usize"
+            | "u8"
+            | "u16"
+            | "i8"
+            | "i16"
     )
 }
 

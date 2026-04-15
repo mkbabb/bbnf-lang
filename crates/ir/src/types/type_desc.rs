@@ -57,6 +57,10 @@ impl TypeDesc {
     /// and the type projection CSP consume it.
     pub fn from_scalar_name(name: &str) -> Option<TypeDesc> {
         match name {
+            // `Span` admits the grammar-level `-> Span` shorthand.
+            // Backend-agnostic: Rust resolves to `parse_that::Span<'_>`;
+            // other backends map to their native span representation.
+            "Span" => Some(TypeDesc::Span),
             "f64" => Some(TypeDesc::F64),
             "f32" => Some(TypeDesc::F64), // f32 promoted to f64 (no F32 variant)
             "bool" => Some(TypeDesc::Bool),

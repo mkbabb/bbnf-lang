@@ -9,9 +9,10 @@
 //! Consumers: codegen (rule prelude/epilogue, view layer accessors). The
 //! rule body emits scalar writes into a stack-allocated 16-byte buffer at
 //! the field offsets recorded here, then a single
-//! [`bbnf_tape::TapeBuilder::push_leaf_with_aggregate`] call at the
-//! epilogue commits the bytes to the tape's payload buffer. The view
-//! reads back via [`bbnf_tape::Tape::payload_bytes`] using `total_bytes`.
+//! [`bbnf_tape::TapeBuilder::push_leaf_with`] call with
+//! [`bbnf_tape::PayloadData::Aggregate`] at the epilogue commits the
+//! bytes to the tape's unified arena. The view reads back via
+//! [`bbnf_tape::Tape::payload_bytes`] using `total_bytes`.
 
 mod layout;
 

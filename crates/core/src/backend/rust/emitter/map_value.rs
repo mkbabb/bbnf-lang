@@ -188,7 +188,7 @@ impl RustEmitter {
     ) -> TokenStream {
         // AU.2.4: route HexConvert through the tape-first emitter so
         // `hex = "#" , /[0-9a-fA-F]{3,8}/ -> parse_hex_color(input) : u32`
-        // activates `push_leaf_with_u32` instead of dropping the u32
+        // activates `PayloadData::InlineScalar(u32)` instead of dropping the u32
         // result. The `inner` token stream parses the hex digits and
         // advances the cursor; capturing `state.offset` before the
         // inner parse lets us read the exact matched bytes (just the

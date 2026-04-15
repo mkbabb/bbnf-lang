@@ -208,8 +208,9 @@ pub struct GrammarIR {
     ///
     /// Consumed by the Rust backend's rule prelude / epilogue
     /// (writes scalars into a stack-allocated 16-byte buffer, then
-    /// commits via `push_leaf_with_aggregate`) and by the view layer
-    /// (reads the bytes back via `Tape::payload_bytes`). Rules
+    /// commits via `push_leaf_with` + `PayloadData::Aggregate`) and
+    /// by the view layer (reads the bytes back via
+    /// `Tape::payload_bytes`). Rules
     /// missing from this map fall back to the existing compound or
     /// scalar-payload pathways. Not serialized: every compile
     /// rebuilds it from scratch.

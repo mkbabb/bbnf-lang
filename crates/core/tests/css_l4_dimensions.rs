@@ -4,7 +4,8 @@
 //! `length`, `angle`, `time`, `frequency`, `resolution`, `flex`, and
 //! `percentage` reach the compiled parser. Each typed dimension rule is
 //! `(number, unit)` — when `number -> f64` re-activates, every site
-//! materialises a `(f64, u8)` aggregate via `push_leaf_with_aggregate`.
+//! materialises a `(f64, u8)` aggregate via `push_leaf_with` +
+//! `PayloadData::Aggregate`.
 //!
 //! These tests cover the grammar-level reachability invariant (the seven
 //! dimension types must all parse via the typed Alt) and serve as the

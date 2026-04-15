@@ -47,7 +47,8 @@ impl RustEmitter {
         }
         // AQ.6.A: when payload_type is F64, capture the scanned
         // value into `__payload_f64` so the epilogue can store it
-        // via `push_leaf_with_f64`. Otherwise discard as before.
+        // via `PayloadData::WideScalar` (AU.6.7). Otherwise discard
+        // as before.
         //
         // `fused_number_rules` is exclusively the strict numeric
         // shape (`reject_leading_zero: true`), so unconditionally use
@@ -752,11 +753,11 @@ fn emit_alt_span_only_prelude_epilogue(
 /// `__children`, `__branch_idx`) with the aggregate path the non-Alt
 /// emitter already lays down (`__aggregate_buf`, `__has_payload`).
 /// When a branch writes into `__aggregate_buf` via
-/// `aggregate_constant_setter`, the epilogue emits
-/// `push_leaf_with_aggregate`. When a branch's children mark the
-/// record as compound (e.g. a composite-bodied branch), the epilogue
-/// falls back to `push_compound`. When neither fires, the epilogue
-/// emits a plain `push_leaf` spanning the Alt's byte range.
+/// `aggregate_constant_setter`, the epilogue emits `push_leaf_with`
+/// + `PayloadData::Aggregate`. When a branch's children mark the
+/// record as compound (e.g. a composite-bodied branch), the
+/// epilogue falls back to `push_compound`. When neither fires, the
+/// epilogue emits a plain `push_leaf` spanning the Alt's byte range.
 fn emit_alt_mustape_aggregate_prelude_epilogue(
     rule_idx_u8: u8,
     layout: &PayloadLayout,

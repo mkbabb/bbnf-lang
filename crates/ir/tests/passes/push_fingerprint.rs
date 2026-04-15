@@ -199,7 +199,7 @@ fn tape_span_only_rule_without_payload_counts_as_leaf() {
 fn tape_span_only_rule_with_scalar_type_counts_as_leaf_with() {
     // `TapeSpanOnly` whose TypeDesc is a scalar payload (F64) →
     // fingerprint (0, 0, 1). Mirrors the emitter's gate for
-    // `push_leaf_with_f64`.
+    // `push_leaf_with` + `PayloadData::WideScalar(f64::to_bits())`.
     let mut ir = empty_ir(
         vec![rule_with_body(0, 0, IrNode::Literal(1))],
         vec!["entry".into(), "hi".into()],

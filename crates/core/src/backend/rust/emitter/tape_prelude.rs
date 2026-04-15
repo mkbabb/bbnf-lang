@@ -138,8 +138,8 @@ pub fn emit_tape_span_only_epilogue(variant_idx: u8) -> TokenStream {
 // Replaces the F64-/Bool-/U8-specific helpers with a single pair
 // keyed on `TypeDesc`. The Rust scalar identifier
 // (`td.rust_ident()`) drives both the local variable name
-// (`__payload_<rust_ident>`) and the tape API selection
-// (`push_leaf_with_<rust_ident>`).
+// (`__payload_<rust_ident>`) and the AU.6.7 `PayloadData` constructor
+// (`InlineScalar` / `WideScalar`) used by `push_leaf_with`.
 
 /// Emit the prelude for a `TapeSpanOnly` rule with a scalar payload
 /// of type `td`.
@@ -150,8 +150,8 @@ pub fn emit_tape_span_only_epilogue(variant_idx: u8) -> TokenStream {
 ///
 /// AS.2: `TypeDesc::Span` declares two `u32` locals (`__payload_lo`,
 /// `__payload_hi`) instead of a single typed variable — the two
-/// offsets are packed into one 8-byte payload slot by
-/// `push_leaf_with_Span`.
+/// offsets pack into a single `u64` arena slot via
+/// `PayloadData::WideScalar` at epilogue time.
 pub fn emit_tape_span_only_scalar_prelude(td: &TypeDesc) -> TokenStream {
     if matches!(td, TypeDesc::Span) {
         return quote! {
@@ -282,7 +282,8 @@ fn scalar_zero_init(td: &TypeDesc) -> TokenStream {
 // rule. The prelude reserves a 16-byte stack buffer plus the
 // per-field payload cursor; per-field scalars write into the
 // buffer at their layout-recorded offsets; the epilogue commits
-// the leading `total_bytes` via `push_leaf_with_aggregate`.
+// the leading `total_bytes` via `push_leaf_with` +
+// `PayloadData::Aggregate`.
 
 /// Emit the prelude for a `TapeSpanOnly` rule with an aggregate
 /// payload layout.
@@ -304,11 +305,11 @@ pub fn emit_tape_span_only_aggregate_prelude(_layout: &PayloadLayout) -> TokenSt
 /// Emit the epilogue for a `TapeSpanOnly` rule with an aggregate
 /// payload layout.
 ///
-/// On the success path, calls `push_leaf_with_aggregate` over the
-/// leading `total_bytes` of `__aggregate_buf`. When `__has_payload`
-/// is false (the body finished without writing any scalar
-/// captures), falls back to bare `push_leaf` so the tape carries
-/// the span without any payload reference.
+/// On the success path, calls `push_leaf_with` with a
+/// `PayloadData::Aggregate(&__aggregate_buf[..total_bytes])`. When
+/// `__has_payload` is false (the body finished without writing any
+/// scalar captures), falls back to bare `push_leaf` so the tape
+/// carries the span without any payload reference.
 ///
 /// AR.9: when `kv_pair` is true, the aggregate leaf uses
 /// `TapeKind::KvPair` instead of `TapeKind::Span`, signalling
@@ -362,8 +363,8 @@ pub fn emit_tape_span_only_aggregate_epilogue(
 ///
 /// Like the `TapeSpanOnly` aggregate prelude, but additionally
 /// reserves the children run so the epilogue can decide between
-/// `push_leaf_with_aggregate` (any field wrote a scalar capture) or
-/// the standard compound-children pathway.
+/// `push_leaf_with` + `PayloadData::Aggregate` (any field wrote a
+/// scalar capture) or the standard compound-children pathway.
 pub fn emit_must_tape_aggregate_prelude(_layout: &PayloadLayout) -> TokenStream {
     quote! {
         let __span_lo = state.offset as u32;
@@ -376,8 +377,9 @@ pub fn emit_must_tape_aggregate_prelude(_layout: &PayloadLayout) -> TokenStream 
 /// Emit the epilogue for a `MustTape` rule with an aggregate
 /// payload layout.
 ///
-/// Prefers `push_leaf_with_aggregate` when any field wrote a scalar
-/// capture; otherwise falls through to the compound-children push.
+/// Prefers `push_leaf_with` + `PayloadData::Aggregate` when any
+/// field wrote a scalar capture; otherwise falls through to the
+/// compound-children push.
 ///
 /// AR.9: when `kv_pair` is true, the aggregate leaf uses
 /// `TapeKind::KvPair` instead of `TapeKind::Span`.

@@ -31,7 +31,8 @@
 //!    the outer rule's `__children` local, setting `__has_children
 //!    = true` so the epilogue routes through the compound push path.
 //! 2. Decode the JSON string into the arena.
-//! 3. Push the `push_leaf_with_string` record — now a child of the
+//! 3. Push the arena-frame leaf via
+//!    `push_leaf_with_arena_frame` — now a child of the
 //!    about-to-be-pushed compound.
 //! 4. Return `Some(())` so the enclosing `Seq` / `Alt` continues.
 //!
@@ -63,7 +64,8 @@ use quote::quote;
 /// Emit the decode-kernel call site for a JSON quoted string.
 ///
 /// Emits an expression of type `Option<()>` that, on success, also
-/// appends a `push_leaf_with_string` record to the tape.
+/// appends a decoded-string leaf record via
+/// `push_leaf_with_arena_frame` to the tape.
 ///
 /// `variant_idx` is the owning rule's codegen discriminator
 /// (`rule.id & 0xFF`), resolved at codegen time via the

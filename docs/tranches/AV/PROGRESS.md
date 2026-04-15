@@ -200,20 +200,93 @@ materialization override was off-plan.
 
 Worktree removed.
 
-### Agent A (av0-bug1) — STILL RUNNING
+### Agent A (av0-bug1) — LANDED with scoped findings
 
-`../bbnf-wt-av0-bug1` active (HEAD=`36bbc09`, one commit
-ahead). No completion notification yet. Orchestrator does not
-touch A's files while it runs.
+Three commits cherry-picked onto master:
 
-### Master status (post-D, post-C cherry-picks)
+- `fb1f08a` fix(AV): AV.0.1 Bug 1 — alt-lit per-branch
+  payload-write emission. 253+ lines in `alt.rs`.
+- `a9dfd0a` fix(AV): AV.0.1 Bug 1 — extend per-branch
+  payload-write to dispatch Alt. 108+ lines in `alt.rs`.
+- `611d46c` test(AV): AV.0.1 Bug 1 — landing tests for
+  per-branch payload writes. Five new assertions across
+  `css_l4_parity.rs` and `sheets_parity.rs`, all pass:
+  `error_literal_factored_branch_fires_payload`,
+  `error_literal_num_branch_fires_payload`,
+  `error_literal_name_branch_fires_payload`,
+  `dir_pseudo_rtl_branch_fires_payload`,
+  `dir_pseudo_ltr_branch_fires_payload`.
+
+Fix sketch: Alt-lit and dispatch-Alt composers now hoist the
+aggregate-buffer payload-write onto every branch. Prior
+behaviour: `RustEmitCtx::next_aggregate_field` advanced
+monotonically across sibling Alt branches, so only branch 0
+consumed a `PayloadField` and emitted the
+`__aggregate_buf[..] = [...]; __has_payload = true;` block.
+Branches 1+ received `None` and fell through. The fix locates
+the matching IR Alt by literal-value signature (alt-lit path)
+or by a combination of branch count, dispatch-table byte
+equality, and a `Map+Literal+constant-MapExpr` structural
+signature (dispatch path); extracts each branch's `MapExpr`;
+re-wraps each precomposed branch body with a fresh per-branch
+payload-write derived from the declared return value. Branch 0's
+existing inner write becomes redundant-but-idempotent; branches
+1+ gain the previously-missing write.
+
+**Hard gate partially met.** Five new landing assertions pass.
+The pre-existing `pinned_*_drops_payload` assertions do NOT
+flip because the breakage has three distinct architectural
+causes that sit outside AV.0.1's alt.rs-only write bounds:
+
+1. **Sheets inlining** — `add_op`, `mul_op`, `unary_prefix`,
+   `boolean`, `compare_op`, `sheet_prefix` are inlined into
+   `__add_expr`, `__mul_expr`, `__unary_expr`,
+   `__comparison_expr` via the driver's `compile_ref`
+   `InlineBody` path. That path strips the inlined rule's
+   `payload_layout` and `payload_types` — the caller's ctx is
+   in scope, not the inlined rule's. Cursor-advance fix is
+   necessary but not sufficient; an inline-aware payload
+   pass in `crates/core/src/backend/driver/` must thread the
+   inlined rule's payload context through. Scoped to V0
+   close-out.
+2. **JSON `bool`** routes through the scalar-payload path
+   (`__payload_bool` / `__payload_tag`) where the cursor-advance
+   bug doesn't apply. Both branches already emitted writes
+   pre-fix. The `bool_true_branch_currently_drops_payload`
+   test reads zero due to post-W6 tape-shape walker drift
+   documented in its existing `#[ignore]` banner. Routes to
+   AV.10.1 walker coherence (wave V9 per plan).
+3. **Outer alt checkpoint shape** — Sheets `error_literal`'s
+   outer alt is checkpoint-shaped with mixed branch types
+   (`Map{Literal, IntLit}` plus factored `Seq` branches).
+   `emit_alt_checkpoint_impl` was NOT extended; the
+   dispatch-Alt fix's structural identifier (every branch is
+   `Map{Literal, constant-MapExpr}`) doesn't hold for the
+   outer alt. Inner factored `N`-prefix alt-lit is fixed;
+   outer simple branches (`#VALUE!`, `#REF!`, `#DIV/0!`,
+   `#ERROR!`, `#SPILL!`) still miss writes after the first.
+   Scoped to V0 close-out — Agent A held back to avoid the
+   kind of misidentification the dispatch helper hit on its
+   first iteration.
+
+### Master status (post-A, post-D, post-C cherry-picks)
 
 - `grammar_roundtrip`: 6/6
 - `tape_parity`: 22/22
 - `css_l4_named_color_parity`: 2/2
+- `css_l4_parity`: 13/13 (+ 3 `#[ignore]` pre-existing)
+- `json_parity`: 2/2 (+ 7 `#[ignore]` pre-existing)
+- `sheets_parity`: 15/15 (+ 5 `#[ignore]` pre-existing)
 - bbnf-tape unit tests: 37/37 + 1 ignored doctest
 
-Master HEAD: `9b06310 test(css_l4): namedColor 149/150
-branches fire u32 payload`.
+Master HEAD: `611d46c test(AV): AV.0.1 Bug 1 — landing tests`.
+
+V0 close-out scope has grown from the original plan. The new
+items (Sheets InlineBody payload threading, outer alt
+checkpoint extension) are not deferrals — they are scope
+expansions within AV.0.1 that cross Agent A's file bounds.
+Close-out handles them alongside AV.0.5 emitter routing,
+Sheets Bug-2/2b flips (pending new Agent B), and AV.0.8–12
+test hygiene.
 
 

@@ -373,6 +373,13 @@ impl RustEmitter {
         let grammar_arr =
             crate::backend::rust::ir_enums::generate_grammar_arr(parser_attrs, ident);
 
+        // Tranche AV Phase 1 — consolidated per-grammar fingerprint.
+        // Lowers `GrammarIR::profile()` to a single `const
+        // GRAMMAR_PROFILE: GrammarProfile = GrammarProfile { ... };`
+        // literal emitted alongside the grammar string array.
+        let grammar_profile =
+            super::profile::emit_grammar_profile(&ir.profile());
+
         // Root rule — the entry point for `parse(input)`. Pulled
         // from `ir.entry`, which is set at lowering time and
         // preserved through every IR pass. Fall back to the first
@@ -470,6 +477,8 @@ impl RustEmitter {
             use ::parse_that::*;
 
             #grammar_arr
+
+            #grammar_profile
 
             #type_defs
 

@@ -14,6 +14,7 @@ mod leaves;
 mod map_value;
 mod operator_chain;
 mod prettify;
+pub(crate) mod profile;
 mod repeat;
 mod seq;
 pub(crate) mod string_decode;

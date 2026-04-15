@@ -4,24 +4,29 @@
 //! and walk children via the cursor's accessor methods. Every accessor
 //! is a `#[inline]` offset read + bounds check.
 //!
-//! # Child access (Tranche AJ.0)
+//! # Child access (Tranche AJ.0, AU.3.2)
 //!
 //! The tape is written in **post-order**: each compound record sits
 //! AFTER all its transitive children, and its `child_off` points to
 //! the first child's offset in the tape.
 //!
 //! Direct children are recovered by **backward walking** from the
-//! parent's offset: each step lands on a direct child's compound
-//! record, and `child_off` lets us jump past its subtree to the
-//! previous sibling.
+//! parent's offset: each step lands on a direct child's record, and
+//! `child_off` lets us jump past its subtree to the previous sibling.
 //!
 //! - [`child(i)`](TapeCursor::child) — O(K) backward walk, **zero
 //!   allocation**. Two passes: count K, then walk to index.
 //! - [`child_count()`](TapeCursor::child_count) — O(K) backward
 //!   walk, **zero allocation**.
-//! - [`children()`](TapeCursor::children) — collects via backward
-//!   walk, yields in forward (source) order. One `Vec` allocation
-//!   per call.
+//! - [`children()`](TapeCursor::children) — zero-alloc backward walk
+//!   (AU.3.2). Yields children in **reverse source order** (last
+//!   child first); the hot-path walker uses commutative folds so
+//!   order is irrelevant. `ChildIter` is the returned iterator type.
+//! - [`children_forward()`](TapeCursor::children_forward) — Vec-based
+//!   collection yielding children in forward source order. Used by
+//!   the generated `NodeView::children()` accessor so that positional
+//!   consumers (directives, seq slots, lowering / analysis) see
+//!   child[0] first. Allocates one `Vec` per call.
 
 use crate::kind::TapeKind;
 use crate::tape::{Tape, TapeOffset, TapeRec};
@@ -99,7 +104,7 @@ impl<'tape> TapeCursor<'tape> {
         self.record().meta_idx()
     }
 
-    // ── Child access (Tranche AJ.0) ────────────────────────────────
+    // ── Child access (Tranche AJ.0, AU.3.2) ────────────────────────
 
     /// Construct a cursor over the i-th direct child of the current
     /// compound record. Returns `None` if the current record is a
@@ -157,9 +162,10 @@ impl<'tape> TapeCursor<'tape> {
     ///
     /// Collects via a backward walk then reverses so the iterator
     /// yields children in forward order. One `Vec` allocation per
-    /// call. Callers that only need a count or indexed access should
-    /// prefer [`child_count`](Self::child_count) /
-    /// [`child`](Self::child) which are zero-allocation.
+    /// call. Hot-path walkers that fold commutatively over children
+    /// should use [`children_zero_alloc`](Self::children_zero_alloc)
+    /// (AU.3.2) instead — it walks the tape backward without any
+    /// heap allocation.
     pub fn children(self) -> impl Iterator<Item = TapeCursor<'tape>> + 'tape {
         let tape = self.tape;
         let rec = self.record();
@@ -185,16 +191,122 @@ impl<'tape> TapeCursor<'tape> {
         }
         out.into_iter()
     }
+
+    /// AU.3.2: zero-alloc iterator over direct children, yielding in
+    /// **reverse source order** (last child first).
+    ///
+    /// Backward walk over the post-order tape: each [`Iterator::next`]
+    /// call reads one record and follows its `child_off` link (or
+    /// steps back by one for leaves) to locate the previous sibling's
+    /// root. Total traversal cost is O(K) for K direct children; no
+    /// heap allocation occurs.
+    ///
+    /// The reverse-order yield is intentional: the backward walk is
+    /// the only O(K) direction over the current tape layout (the
+    /// forward direction requires subtree-size information that the
+    /// AoS substrate does not carry). Callers that need source-order
+    /// iteration use [`children`](Self::children), which collects
+    /// the reverse walk into a `Vec` and reverses.
+    ///
+    /// # When to use which
+    ///
+    /// | Use case | Method | Allocation |
+    /// |----------|--------|------------|
+    /// | Commutative fold (sum, count, validate) | `children_zero_alloc()` | zero |
+    /// | Positional binding (slot[0], slot[1]) | `children()` | one `Vec` |
+    /// | Indexed access (`child(i)`) | `child(i)` | zero |
+    #[inline]
+    pub fn children_zero_alloc(self) -> ChildIter<'tape> {
+        let rec = self.record();
+        if !rec.has_children() || rec.child_off.is_none() {
+            return ChildIter {
+                tape: self.tape,
+                next: TapeOffset(0),
+                end: TapeOffset(0),
+            };
+        }
+        let start = rec.child_off.0;
+        let end = self.offset.0;
+        if start >= end {
+            return ChildIter {
+                tape: self.tape,
+                next: TapeOffset(0),
+                end: TapeOffset(0),
+            };
+        }
+        ChildIter {
+            tape: self.tape,
+            next: TapeOffset(end),
+            end: TapeOffset(start),
+        }
+    }
+}
+
+/// Zero-alloc backward iterator over a compound's direct children.
+///
+/// Yields [`TapeCursor`] items in **reverse source order** (last
+/// child first). Each step follows one `child_off` link in the
+/// post-order tape; `size_of::<ChildIter>` is 24 bytes (two
+/// [`TapeOffset`] + one `&Tape`). No heap allocation occurs.
+///
+/// Returned by [`TapeCursor::children`]. See that method's
+/// documentation for when forward order is required instead.
+#[derive(Clone, Copy, Debug)]
+pub struct ChildIter<'tape> {
+    tape: &'tape Tape,
+    /// Exclusive upper bound on the unconsumed portion of the
+    /// children range. Each `next()` call yields the child whose
+    /// root is at `next - 1`, then resets `next` to that child's
+    /// subtree start (`backward_step` — `child_off` for compounds,
+    /// `next - 1` for leaves).
+    next: TapeOffset,
+    /// Inclusive lower bound: the parent's `child_off`. When
+    /// `next <= end`, iteration is complete.
+    end: TapeOffset,
+}
+
+// (size assertion handled at runtime in tests/tape_walker_allocs.rs)
+
+impl<'tape> Iterator for ChildIter<'tape> {
+    type Item = TapeCursor<'tape>;
+
+    #[inline]
+    fn next(&mut self) -> Option<TapeCursor<'tape>> {
+        if self.next.0 <= self.end.0 {
+            return None;
+        }
+        let co = self.next.0 - 1;
+        // SAFETY: `co` is in `[self.end.0, self.next.0)`, which by
+        // construction from `TapeCursor::children` is the parent's
+        // [child_off, parent_offset) range — all valid offsets in
+        // the shared tape. The post-order `backward_step` can only
+        // decrease `next`, so it stays within the range.
+        let rec = unsafe { self.tape.get_unchecked(TapeOffset(co)) };
+        let step = backward_step_u32(rec, co);
+        self.next = TapeOffset(step);
+        Some(TapeCursor::new(self.tape, TapeOffset(co)))
+    }
 }
 
 // ── Backward-walk helpers ──────────────────────────────────────────
 
-/// One backward step in the post-order child walk.
+/// One backward step in the post-order child walk, `u32` variant.
 ///
 /// For a compound child at `offset` with `child_off = C`, jumps to
 /// `C` (the start of its subtree — the previous sibling's record
 /// sits at `C - 1`). For a leaf, jumps to `offset` (the previous
 /// record is at `offset - 1`).
+#[inline]
+fn backward_step_u32(rec: &TapeRec, offset: u32) -> u32 {
+    if rec.has_children() && !rec.child_off.is_none() {
+        rec.child_off.0
+    } else {
+        offset
+    }
+}
+
+/// One backward step in the post-order child walk, `usize` variant
+/// (used by [`count_backward`] and [`nth_backward`]).
 #[inline]
 fn backward_step(rec: &TapeRec, offset: usize) -> usize {
     if rec.has_children() && !rec.child_off.is_none() {

@@ -82,11 +82,21 @@ fn cursor_walks_children() {
     let tape = b.finish().unwrap();
     let cursor = TapeCursor::new(&tape, compound);
 
+    // Forward iteration via `children` (Vec-backed, source order).
     let children: Vec<TapeCursor<'_>> = cursor.children().collect();
     assert_eq!(children.len(), 3);
     assert_eq!(children[0].span(), (0, 1));
     assert_eq!(children[1].span(), (1, 2));
     assert_eq!(children[2].span(), (2, 3));
+
+    // AU.3.2: zero-alloc `children_zero_alloc()` yields in reverse
+    // source order. `size_of::<ChildIter>` ≤ 24 bytes; no heap
+    // allocation per call.
+    let rev: Vec<TapeCursor<'_>> = cursor.children_zero_alloc().collect();
+    assert_eq!(rev.len(), 3);
+    assert_eq!(rev[0].span(), (2, 3));
+    assert_eq!(rev[1].span(), (1, 2));
+    assert_eq!(rev[2].span(), (0, 1));
 }
 
 #[test]

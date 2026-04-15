@@ -43,6 +43,6 @@ pub mod kind;
 pub mod tape;
 
 pub use builder::{TapeBuildError, TapeBuilder};
-pub use cursor::TapeCursor;
+pub use cursor::{ChildIter, TapeCursor};
 pub use kind::TapeKind;
 pub use tape::{Tape, TapeOffset, TapeRec};

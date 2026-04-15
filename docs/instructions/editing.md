@@ -14,6 +14,7 @@ For tracked-file implementation work:
 - harden all agent claims
 - each agent gets explicit file bounds
 - agent prompts are self-contained
+- **take great care to avoid sub-agent trammeling or your own trammeling of agent work**
 
 Example:
 

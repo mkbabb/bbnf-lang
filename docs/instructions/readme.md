@@ -2,17 +2,19 @@
 
 ## Core rules
 
-- No workarounds, no hacks, and no `#[allow(...)]`.
-- No legacy code and no backward-compatibility shims.
-- Generated files come from fresh regen. Do not hand-patch them.
+- No workarounds, no hacks, and no `#[allow(...)]` to mask issues.
+- No legacy code.
+- No backward compatibility shims.
+- Generated files are output of fresh regen; never hand-patch.
 - One codegen path. No hidden fallback path.
-- No overfitting. Fold work into existing systems.
-- Use `rule_kind()` dispatch, not string matching, unless the tape
-  shape leaves no alternative and that recovery path is documented.
+- No overfitting. Fold work into existing systems instead of creating
+  parallel subsystems.
+- All solutions implemented must befit full generality with no special cases of grammar or structure.
 
 ## Owned crates
 
-Real fixes may land in:
+All crates in the dependency graph are owned and modifiable,
+including external path dependencies:
 
 - `../parse-that`
 - `../pprint`
@@ -23,12 +25,12 @@ Real fixes may land in:
 Every tranche lives in `docs/tranches/{LETTER}/`:
 
 - `{LETTER}.md` is the plan.
-- `PROGRESS.md` is the dated execution log.
+- `PROGRESS.md` is the dated execution log and ground truth.
 
 ## Expensive commands
 
-- Write expensive command output to a file first.
-- Inspect with `rg`, `sed`, or `awk`.
+- Always write expensive command output to a file first.
+- Then inspect with `rg`, `sed`, or `awk`.
 - Do not rerun an expensive command just to slice output differently.
 
 ## Cache clearing
@@ -38,12 +40,6 @@ expansion, or profiling work:
 
 ```bash
 find . -name ".bbnf-cache" -exec rm -rf {} + 2>/dev/null
-```
-
-When `bbnf-analysis` is the problem:
-
-```bash
-cargo clean -p bbnf-analysis
 ```
 
 ## Read next

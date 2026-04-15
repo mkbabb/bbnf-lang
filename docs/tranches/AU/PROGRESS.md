@@ -619,3 +619,44 @@ existing debug-wildcard failures carry over unchanged.
    `NibbleBitmapIter::new`, `compute_in_string_bitmap`, and the
    internal SIMD kernels' `pos + CHUNK <= len` guards can drop their
    guards once all callers pass padded views.
+
+### W4 — Columnar prototype gate (AU.7.1)
+
+Single serial agent. Scratch `columnar-tape` sibling crate exercised
+the sum-all-f64 walker on canada.json against the AoS tape. The gate
+bench was executed offline (Option B — parse canada.json through the
+existing AoS parser, translate into the columnar layout, measure
+walker-only sum). Gate threshold per AU.7.1: ≥ 5× speedup.
+
+**Result**: AoS median 115,618 ns; SoA median 59,567 ns; **ratio
+1.94×**, seven cold runs, very low variance. **Gate NOT met**; W5
+proceeds with AU.6.7 (unified arena on AoS); SoA substrate pivot
+defers to AV.
+
+**Secondary findings that feed AV planning**:
+
+- `cols.pay_f64.iter().sum()` does NOT auto-vectorise because
+  strict-IEEE f64 left-fold blocks LLVM reordering. The hot loop
+  is scalar `fadd d0, d0, d1` with serial dependency chain.
+- A 4-lane reordered unrolling (`soa_sum_all_f64_unrolled`) compiles
+  to full NEON `ld2.2d` + `fadd.2d` and clears the gate at 6.64×.
+  The SoA layout is a necessary-but-not-sufficient precondition for
+  that speedup; the emitter-side reordering pattern is the additional
+  lever. This is the core AV.columnar design note.
+- AoS `payload_f64` cost is dominated by `payload_idx != 0` sentinel
+  check, bounds check, `MaybeUninit`/`copy_nonoverlapping` dispatch,
+  and 16 B TapeRec load vs 8 B f64 load. A collapsed AoS with inline
+  8-byte payload would close most of the 1.94× gap — orthogonal to
+  SoA.
+- Rank-tracking cost is unvalidated in this spike because the gate
+  bench bypassed it. The research-doc "running counter during
+  traversal" pattern still needs validation before AV relies on it.
+- `sib_skip` vs `child_off` is mechanically trivial in the walker
+  (one flags load + bounds-free add) and genuinely cheaper than
+  AoS's `child_off` read + NONE check, but its contribution to the
+  1.94× is incidental; the full walker-descent lever was not
+  isolated.
+
+Scratch crate not cherry-picked; worktree deleted cleanly per the
+no-legacy invariant. Gate numbers and findings above are the W4
+deliverable that feeds W5 and AV planning.

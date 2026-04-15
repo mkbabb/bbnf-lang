@@ -87,17 +87,6 @@ impl GrammarCostModel {
         self
     }
 
-    /// Recover the fns slice from the stored raw pointer + length.
-    /// Returns an empty slice when constructed without [`with_fns`].
-    fn fns(&self) -> &[FnDescriptor] {
-        if self.fns_ptr.is_null() {
-            &[]
-        } else {
-            // Safety: `with_fns` stores a valid pointer+length from
-            // a borrowed slice that outlives this cost model.
-            unsafe { std::slice::from_raw_parts(self.fns_ptr, self.fns_len) }
-        }
-    }
 }
 
 impl CostModel<GrammarENode> for GrammarCostModel {

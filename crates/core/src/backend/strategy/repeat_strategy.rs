@@ -22,7 +22,7 @@ pub enum RepeatStrategy {
 /// Sep-by and DelimitedSepBy are detected at the enclosing Skip/Wrap
 /// level, not here — this classification only covers the intrinsic
 /// Repeat shape.
-pub fn classify_repeat(lo: u32, hi: u32) -> RepeatStrategy {
+pub fn classify_repeat(_lo: u32, hi: u32) -> RepeatStrategy {
     if hi <= 1 {
         RepeatStrategy::Optional
     } else {

@@ -133,6 +133,7 @@ impl RustEmitter {
     ) -> TokenStream {
         // AM.3: take the surgery context so nested Alts don't re-apply.
         let surgery = ctx.tape_surgery.take();
+        let alt_blk = ctx.fresh_lifetime("alt_blk");
 
         if branches.len() == 1 {
             let (ref info, ref body) = branches[0];
@@ -172,7 +173,7 @@ impl RustEmitter {
                     #compound_mark
                     let __result = #body;
                     if __result.is_some() {
-                        break 'alt_blk __result;
+                        break #alt_blk __result;
                     }
                     state.offset = __cp;
                 }
@@ -180,7 +181,7 @@ impl RustEmitter {
         }
 
         quote! {
-            'alt_blk: {
+            #alt_blk: {
                 #( #chain )*
                 None
             }
@@ -191,19 +192,20 @@ impl RustEmitter {
         &mut self,
         literals: Vec<(String, TokenStream)>,
         _alloc: ValuePlacement,
-        _ctx: &mut RustEmitCtx,
+        ctx: &mut RustEmitCtx,
     ) -> TokenStream {
+        let alt_lit_blk = ctx.fresh_lifetime("alt_lit_blk");
         let mut chain = Vec::new();
         for (_value, body) in &literals {
             chain.push(quote! {
                 {
                     let __r = #body;
-                    if __r.is_some() { break 'alt_lit_blk __r; }
+                    if __r.is_some() { break #alt_lit_blk __r; }
                 }
             });
         }
         quote! {
-            'alt_lit_blk: {
+            #alt_lit_blk: {
                 #( #chain )*
                 None
             }

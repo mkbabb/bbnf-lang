@@ -28,8 +28,9 @@ impl RustEmitter {
         groups: Vec<SeqChildGroup<TokenStream>>,
         _result_type: &TypeDesc,
         _flatten: Option<FlattenStrategy>,
-        _ctx: &mut RustEmitCtx,
+        ctx: &mut RustEmitCtx,
     ) -> TokenStream {
+        let seq_blk = ctx.fresh_lifetime("seq_blk");
         // Each group is either a `Single` sub-parse or a
         // `SpanCompressed` run of side-effecting leaves. Under
         // tape-first both collapse to sequential `match` chaining —
@@ -42,7 +43,7 @@ impl RustEmitter {
                     stmts.push(quote! {
                         match (#output) {
                             Some(_) => (),
-                            None => break 'seq_blk None,
+                            None => break #seq_blk None,
                         }
                     });
                 }
@@ -51,7 +52,7 @@ impl RustEmitter {
                         stmts.push(quote! {
                             match (#o) {
                                 Some(_) => (),
-                                None => break 'seq_blk None,
+                                None => break #seq_blk None,
                             }
                         });
                     }
@@ -60,7 +61,7 @@ impl RustEmitter {
         }
 
         quote! {
-            'seq_blk: {
+            #seq_blk: {
                 #( #stmts )*
                 Some(())
             }

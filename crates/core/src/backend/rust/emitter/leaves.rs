@@ -157,8 +157,9 @@ impl RustEmitter {
     pub(super) fn emit_seq_all_span_impl(
         &mut self,
         child_outputs: Vec<TokenStream>,
-        _ctx: &mut RustEmitCtx,
+        ctx: &mut RustEmitCtx,
     ) -> TokenStream {
+        let span_blk = ctx.fresh_lifetime("span_blk");
         // All children are side-effecting `Option<()>`. Chain them
         // together under a labeled block for short-circuit failure.
         let child_checks: Vec<TokenStream> = child_outputs
@@ -166,12 +167,12 @@ impl RustEmitter {
             .map(|c| quote! {
                 match (#c) {
                     Some(_) => (),
-                    None => break 'span_blk None,
+                    None => break #span_blk None,
                 }
             })
             .collect();
         quote! {
-            'span_blk: {
+            #span_blk: {
                 #( #child_checks )*
                 Some(())
             }

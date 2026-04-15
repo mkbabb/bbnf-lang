@@ -172,7 +172,16 @@ fn emit_general_loop(
     match max {
         None => {
             // Unbounded: `+` or `*`
-            let min_lit = proc_macro2::Literal::u32_unsuffixed(min);
+            let min_check = if min == 0 {
+                quote! {}
+            } else {
+                let min_lit = proc_macro2::Literal::u32_unsuffixed(min);
+                quote! {
+                    if __rep_count < #min_lit {
+                        return None;
+                    }
+                }
+            };
             Some(quote! {
                 {
                     let mut __rep_count: u32 = 0;
@@ -192,16 +201,23 @@ fn emit_general_loop(
                         }
                         __rep_count += 1;
                     }
-                    if __rep_count < #min_lit {
-                        return None;
-                    }
+                    #min_check
                 }
             })
         }
         Some(max_val) => {
             // Bounded: `{n,m}`
-            let min_lit = proc_macro2::Literal::u32_unsuffixed(min);
             let max_lit = proc_macro2::Literal::u32_unsuffixed(max_val);
+            let min_check = if min == 0 {
+                quote! {}
+            } else {
+                let min_lit = proc_macro2::Literal::u32_unsuffixed(min);
+                quote! {
+                    if __rep_count < #min_lit {
+                        return None;
+                    }
+                }
+            };
             Some(quote! {
                 {
                     let mut __rep_count: u32 = 0;
@@ -220,9 +236,7 @@ fn emit_general_loop(
                         }
                         __rep_count += 1;
                     }
-                    if __rep_count < #min_lit {
-                        return None;
-                    }
+                    #min_check
                 }
             })
         }

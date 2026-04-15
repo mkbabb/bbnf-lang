@@ -30,9 +30,21 @@ impl RustEmitter {
         lo: u32,
         _hi: u32,
         _elem_type: &TypeDesc,
-        _ctx: &mut RustEmitCtx,
+        ctx: &mut RustEmitCtx,
     ) -> TokenStream {
         let lo_lit = lo as usize;
+        let rpt_blk = ctx.fresh_lifetime("rpt_blk");
+        let min_check = if lo == 0 {
+            quote! { Some(()) }
+        } else {
+            quote! {
+                if __count >= #lo_lit {
+                    Some(())
+                } else {
+                    break #rpt_blk None;
+                }
+            }
+        };
 
         // Repeat pushes its own compound record as a side effect —
         // the child run is the per-iteration set the body parsed.
@@ -41,7 +53,7 @@ impl RustEmitter {
         // uniform; the compound record is already in the tape when
         // we hand back success.
         quote! {
-            'rpt_blk: {
+            #rpt_blk: {
                 let __rpt_lo = state.offset as u32;
                 let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 let mut __count: usize = 0;
@@ -58,22 +70,23 @@ impl RustEmitter {
                         }
                     }
                 }
-                if __count >= #lo_lit {
-                    {
-                        let __vi: u8 = 0u8;
-                        let __mi: u8 = 0u8;
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Repeat,
-                            __rpt_children,
-                            __rpt_lo,
-                            state.offset as u32,
-                            __vi, __mi,
-                        );
+                match #min_check {
+                    Some(()) => {
+                        {
+                            let __vi: u8 = 0u8;
+                            let __mi: u8 = 0u8;
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Repeat,
+                                __rpt_children,
+                                __rpt_lo,
+                                state.offset as u32,
+                                __vi, __mi,
+                            );
+                        }
+                        Some(())
                     }
-                    Some(())
-                } else {
-                    break 'rpt_blk None;
+                    None => None,
                 }
             }
         }
@@ -126,9 +139,10 @@ impl RustEmitter {
         separator: TokenStream,
         config: &SepByConfig,
         _elem_type: &TypeDesc,
-        _ctx: &mut RustEmitCtx,
+        ctx: &mut RustEmitCtx,
     ) -> TokenStream {
         let lo_lit = config.lo as usize;
+        let rpt_blk = ctx.fresh_lifetime("rpt_blk");
 
         // Optional terminator-byte short-circuit for delim-wrapped
         // sep_by variants. The break condition takes a peek at the
@@ -151,7 +165,7 @@ impl RustEmitter {
         };
 
         quote! {
-            'rpt_blk: {
+            #rpt_blk: {
                 let __rpt_lo = state.offset as u32;
                 let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 let mut __count: usize = 0;
@@ -175,9 +189,9 @@ impl RustEmitter {
                                     __mi,
                                 );
                             }
-                            break 'rpt_blk Some(());
+                            break #rpt_blk Some(());
                         } else {
-                            break 'rpt_blk None;
+                            break #rpt_blk None;
                         }
                     }
                 }
@@ -215,7 +229,7 @@ impl RustEmitter {
                     }
                     Some(())
                 } else {
-                    break 'rpt_blk None;
+                    break #rpt_blk None;
                 }
             }
         }

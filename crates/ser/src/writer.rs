@@ -88,7 +88,6 @@ impl<'a, W: Write> Serializer<'a> for WriterSerializer<W> {
 
     #[inline]
     fn i128(&mut self, v: i128) {
-        use std::io::Write as _;
         if self.error.is_none() {
             if let Err(e) = write!(self.writer, "{v}") {
                 self.error = Some(e);
@@ -98,7 +97,6 @@ impl<'a, W: Write> Serializer<'a> for WriterSerializer<W> {
 
     #[inline]
     fn u128(&mut self, v: u128) {
-        use std::io::Write as _;
         if self.error.is_none() {
             if let Err(e) = write!(self.writer, "{v}") {
                 self.error = Some(e);

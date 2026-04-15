@@ -181,6 +181,15 @@ impl RustEmitCtx {
         format_ident!("__{}{}", prefix, id)
     }
 
+    pub fn fresh_lifetime(&mut self, prefix: &str) -> syn::Lifetime {
+        let id = self.counter;
+        self.counter += 1;
+        syn::Lifetime::new(
+            &format!("'__{}{}", prefix, id),
+            proc_macro2::Span::call_site(),
+        )
+    }
+
     /// AN.0: Push `branch_idx_ident` and `tape_surgery` onto the
     /// context stack before the driver compiles Alt branch bodies.
     /// Inner (nested) Alts will see `None` for both fields so they

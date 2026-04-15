@@ -187,6 +187,25 @@ mod __bbnfbootstrap_emit_impl {
         pub fn text(&self) -> &'p str {
             self.span_text()
         }
+        /// Get the sub-span value as a string slice.
+        ///
+        /// Payload-first: reads the packed (lo, hi) u32 pair from
+        /// the tape payload buffer in O(1). Falls back to the
+        /// record's own span text if no payload is present.
+        #[inline]
+        pub fn value(&self) -> &'p str {
+            let tape = self.cursor.tape();
+            let rec = self.cursor.record();
+            if let Some((lo, hi)) = tape.payload_Span(rec) {
+                return &self.input[lo as usize..hi as usize];
+            }
+            self.span_text()
+        }
+        /// Alias for backward compatibility. Prefer `.value()`.
+        #[inline]
+        pub fn as_span(&self) -> &'p str {
+            self.value()
+        }
     }
     /// Generated view over a tape record produced by this rule.
     #[allow(non_camel_case_types)]
@@ -349,6 +368,25 @@ mod __bbnfbootstrap_emit_impl {
         #[inline]
         pub fn text(&self) -> &'p str {
             self.span_text()
+        }
+        /// Get the sub-span value as a string slice.
+        ///
+        /// Payload-first: reads the packed (lo, hi) u32 pair from
+        /// the tape payload buffer in O(1). Falls back to the
+        /// record's own span text if no payload is present.
+        #[inline]
+        pub fn value(&self) -> &'p str {
+            let tape = self.cursor.tape();
+            let rec = self.cursor.record();
+            if let Some((lo, hi)) = tape.payload_Span(rec) {
+                return &self.input[lo as usize..hi as usize];
+            }
+            self.span_text()
+        }
+        /// Alias for backward compatibility. Prefer `.value()`.
+        #[inline]
+        pub fn as_span(&self) -> &'p str {
+            self.value()
         }
     }
     /// Generated view over a tape record produced by this rule.
@@ -894,6 +932,25 @@ mod __bbnfbootstrap_emit_impl {
         #[inline]
         pub fn text(&self) -> &'p str {
             self.span_text()
+        }
+        /// Get the sub-span value as a string slice.
+        ///
+        /// Payload-first: reads the packed (lo, hi) u32 pair from
+        /// the tape payload buffer in O(1). Falls back to the
+        /// record's own span text if no payload is present.
+        #[inline]
+        pub fn value(&self) -> &'p str {
+            let tape = self.cursor.tape();
+            let rec = self.cursor.record();
+            if let Some((lo, hi)) = tape.payload_Span(rec) {
+                return &self.input[lo as usize..hi as usize];
+            }
+            self.span_text()
+        }
+        /// Alias for backward compatibility. Prefer `.value()`.
+        #[inline]
+        pub fn as_span(&self) -> &'p str {
+            self.value()
         }
     }
     /// Generated view over a tape record produced by this rule.
@@ -1748,6 +1805,115 @@ mod __bbnfbootstrap_emit_impl {
             self.cursor
                 .child(0)
                 .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
+        }
+    }
+    /// Typed value enum — payload-eligible branches carry typed
+    /// values directly; non-eligible branches wrap a cursor view.
+    #[allow(non_camel_case_types)]
+    pub enum value_atomValue<'p> {
+        int_lit(&'p str),
+        float_lit(&'p str),
+        bool_lit(&'p str),
+        string_lit(&'p str),
+        value_fn_call(BbnfBootstrapNodeView<'p>),
+        value_input(BbnfBootstrapNodeView<'p>),
+        value_path(BbnfBootstrapNodeView<'p>),
+        branch_7(BbnfBootstrapNodeView<'p>),
+    }
+    #[allow(dead_code)]
+    impl<'p> value_atomView<'p> {
+        /// Decode the chosen branch's value. Payload-eligible
+        /// branches return typed scalars/aggregates; other
+        /// branches return cursor-wrapped sub-views.
+        #[inline]
+        pub fn value(&self) -> ::core::option::Option<value_atomValue<'p>> {
+            match self.cursor.meta_idx() {
+                0u8 => {
+                    let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
+                    let __rec = __cursor.record();
+                    let __tape = __cursor.tape();
+                    let __value = match __tape.payload_Span(__rec) {
+                        Some((lo, hi)) => &self.input[lo as usize..hi as usize],
+                        None => {
+                            let (lo, hi) = __cursor.span();
+                            &self.input[lo as usize..hi as usize]
+                        }
+                    };
+                    Some(value_atomValue::int_lit(__value))
+                }
+                1u8 => {
+                    let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
+                    let __rec = __cursor.record();
+                    let __tape = __cursor.tape();
+                    let __value = match __tape.payload_Span(__rec) {
+                        Some((lo, hi)) => &self.input[lo as usize..hi as usize],
+                        None => {
+                            let (lo, hi) = __cursor.span();
+                            &self.input[lo as usize..hi as usize]
+                        }
+                    };
+                    Some(value_atomValue::float_lit(__value))
+                }
+                2u8 => {
+                    let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
+                    let __rec = __cursor.record();
+                    let __tape = __cursor.tape();
+                    let __value = match __tape.payload_Span(__rec) {
+                        Some((lo, hi)) => &self.input[lo as usize..hi as usize],
+                        None => {
+                            let (lo, hi) = __cursor.span();
+                            &self.input[lo as usize..hi as usize]
+                        }
+                    };
+                    Some(value_atomValue::bool_lit(__value))
+                }
+                3u8 => {
+                    let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
+                    let __rec = __cursor.record();
+                    let __tape = __cursor.tape();
+                    let __value = match __tape.payload_Span(__rec) {
+                        Some((lo, hi)) => &self.input[lo as usize..hi as usize],
+                        None => {
+                            let (lo, hi) = __cursor.span();
+                            &self.input[lo as usize..hi as usize]
+                        }
+                    };
+                    Some(value_atomValue::string_lit(__value))
+                }
+                4u8 => {
+                    let __child = self.cursor.child(0)?;
+                    Some(
+                        value_atomValue::value_fn_call(
+                            BbnfBootstrapNodeView::from_cursor(__child, self.input),
+                        ),
+                    )
+                }
+                5u8 => {
+                    let __child = self.cursor.child(0)?;
+                    Some(
+                        value_atomValue::value_input(
+                            BbnfBootstrapNodeView::from_cursor(__child, self.input),
+                        ),
+                    )
+                }
+                6u8 => {
+                    let __child = self.cursor.child(0)?;
+                    Some(
+                        value_atomValue::value_path(
+                            BbnfBootstrapNodeView::from_cursor(__child, self.input),
+                        ),
+                    )
+                }
+                7u8 => {
+                    let __child = self.cursor.child(0)?;
+                    Some(
+                        value_atomValue::branch_7(
+                            BbnfBootstrapNodeView::from_cursor(__child, self.input),
+                        ),
+                    )
+                }
+                _ => None,
+            }
         }
     }
     /// Generated view over a tape record produced by this rule.
@@ -4622,6 +4788,25 @@ mod __bbnfbootstrap_emit_impl {
         pub fn text(&self) -> &'p str {
             self.span_text()
         }
+        /// Get the sub-span value as a string slice.
+        ///
+        /// Payload-first: reads the packed (lo, hi) u32 pair from
+        /// the tape payload buffer in O(1). Falls back to the
+        /// record's own span text if no payload is present.
+        #[inline]
+        pub fn value(&self) -> &'p str {
+            let tape = self.cursor.tape();
+            let rec = self.cursor.record();
+            if let Some((lo, hi)) = tape.payload_Span(rec) {
+                return &self.input[lo as usize..hi as usize];
+            }
+            self.span_text()
+        }
+        /// Alias for backward compatibility. Prefer `.value()`.
+        #[inline]
+        pub fn as_span(&self) -> &'p str {
+            self.value()
+        }
     }
     /// Generated view over a tape record produced by this rule.
     #[allow(non_camel_case_types)]
@@ -6099,6 +6284,114 @@ mod __bbnfbootstrap_emit_impl {
             self.cursor
                 .child(0)
                 .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
+        }
+    }
+    /// Typed value enum — payload-eligible branches carry typed
+    /// values directly; non-eligible branches wrap a cursor view.
+    #[allow(non_camel_case_types)]
+    pub enum termValue<'p> {
+        branch_0(BbnfBootstrapNodeView<'p>),
+        branch_1(BbnfBootstrapNodeView<'p>),
+        branch_2(BbnfBootstrapNodeView<'p>),
+        literal(&'p str),
+        regex(&'p str),
+        branch_5(BbnfBootstrapNodeView<'p>),
+        branch_6(BbnfBootstrapNodeView<'p>),
+        branch_7(BbnfBootstrapNodeView<'p>),
+        branch_8(BbnfBootstrapNodeView<'p>),
+    }
+    #[allow(dead_code)]
+    impl<'p> termView<'p> {
+        /// Decode the chosen branch's value. Payload-eligible
+        /// branches return typed scalars/aggregates; other
+        /// branches return cursor-wrapped sub-views.
+        #[inline]
+        pub fn value(&self) -> ::core::option::Option<termValue<'p>> {
+            match self.cursor.meta_idx() {
+                0u8 => {
+                    let __child = self.cursor.child(0)?;
+                    Some(
+                        termValue::branch_0(
+                            BbnfBootstrapNodeView::from_cursor(__child, self.input),
+                        ),
+                    )
+                }
+                1u8 => {
+                    let __child = self.cursor.child(0)?;
+                    Some(
+                        termValue::branch_1(
+                            BbnfBootstrapNodeView::from_cursor(__child, self.input),
+                        ),
+                    )
+                }
+                2u8 => {
+                    let __child = self.cursor.child(0)?;
+                    Some(
+                        termValue::branch_2(
+                            BbnfBootstrapNodeView::from_cursor(__child, self.input),
+                        ),
+                    )
+                }
+                3u8 => {
+                    let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
+                    let __rec = __cursor.record();
+                    let __tape = __cursor.tape();
+                    let __value = match __tape.payload_Span(__rec) {
+                        Some((lo, hi)) => &self.input[lo as usize..hi as usize],
+                        None => {
+                            let (lo, hi) = __cursor.span();
+                            &self.input[lo as usize..hi as usize]
+                        }
+                    };
+                    Some(termValue::literal(__value))
+                }
+                4u8 => {
+                    let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
+                    let __rec = __cursor.record();
+                    let __tape = __cursor.tape();
+                    let __value = match __tape.payload_Span(__rec) {
+                        Some((lo, hi)) => &self.input[lo as usize..hi as usize],
+                        None => {
+                            let (lo, hi) = __cursor.span();
+                            &self.input[lo as usize..hi as usize]
+                        }
+                    };
+                    Some(termValue::regex(__value))
+                }
+                5u8 => {
+                    let __child = self.cursor.child(0)?;
+                    Some(
+                        termValue::branch_5(
+                            BbnfBootstrapNodeView::from_cursor(__child, self.input),
+                        ),
+                    )
+                }
+                6u8 => {
+                    let __child = self.cursor.child(0)?;
+                    Some(
+                        termValue::branch_6(
+                            BbnfBootstrapNodeView::from_cursor(__child, self.input),
+                        ),
+                    )
+                }
+                7u8 => {
+                    let __child = self.cursor.child(0)?;
+                    Some(
+                        termValue::branch_7(
+                            BbnfBootstrapNodeView::from_cursor(__child, self.input),
+                        ),
+                    )
+                }
+                8u8 => {
+                    let __child = self.cursor.child(0)?;
+                    Some(
+                        termValue::branch_8(
+                            BbnfBootstrapNodeView::from_cursor(__child, self.input),
+                        ),
+                    )
+                }
+                _ => None,
+            }
         }
     }
     /// Generated view over a tape record produced by this rule.
@@ -10290,6 +10583,69 @@ mod __bbnfbootstrap_emit_impl {
                 .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
         }
     }
+    /// Typed value enum — payload-eligible branches carry typed
+    /// values directly; non-eligible branches wrap a cursor view.
+    #[allow(non_camel_case_types)]
+    pub enum grammar_itemValue<'p> {
+        comment(&'p str),
+        big_comment(&'p str),
+        directive(BbnfBootstrapNodeView<'p>),
+        rule(BbnfBootstrapNodeView<'p>),
+    }
+    #[allow(dead_code)]
+    impl<'p> grammar_itemView<'p> {
+        /// Decode the chosen branch's value. Payload-eligible
+        /// branches return typed scalars/aggregates; other
+        /// branches return cursor-wrapped sub-views.
+        #[inline]
+        pub fn value(&self) -> ::core::option::Option<grammar_itemValue<'p>> {
+            match self.cursor.meta_idx() {
+                0u8 => {
+                    let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
+                    let __rec = __cursor.record();
+                    let __tape = __cursor.tape();
+                    let __value = match __tape.payload_Span(__rec) {
+                        Some((lo, hi)) => &self.input[lo as usize..hi as usize],
+                        None => {
+                            let (lo, hi) = __cursor.span();
+                            &self.input[lo as usize..hi as usize]
+                        }
+                    };
+                    Some(grammar_itemValue::comment(__value))
+                }
+                1u8 => {
+                    let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
+                    let __rec = __cursor.record();
+                    let __tape = __cursor.tape();
+                    let __value = match __tape.payload_Span(__rec) {
+                        Some((lo, hi)) => &self.input[lo as usize..hi as usize],
+                        None => {
+                            let (lo, hi) = __cursor.span();
+                            &self.input[lo as usize..hi as usize]
+                        }
+                    };
+                    Some(grammar_itemValue::big_comment(__value))
+                }
+                2u8 => {
+                    let __child = self.cursor.child(0)?;
+                    Some(
+                        grammar_itemValue::directive(
+                            BbnfBootstrapNodeView::from_cursor(__child, self.input),
+                        ),
+                    )
+                }
+                3u8 => {
+                    let __child = self.cursor.child(0)?;
+                    Some(
+                        grammar_itemValue::rule(
+                            BbnfBootstrapNodeView::from_cursor(__child, self.input),
+                        ),
+                    )
+                }
+                _ => None,
+            }
+        }
+    }
     /// Generated view over a tape record produced by this rule.
     #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
@@ -10950,11 +11306,12 @@ mod __bbnfbootstrap_emit_impl {
         ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
+                let __variant_idx: u8 = 2u8;
                 let mut __branch_idx: u8 = 0;
                 let mut __has_children = false;
                 let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
                 match ({
-                    'alt_lit_blk: {
+                    '__alt_lit_blk0: {
                         {
                             let __r = {
                                 if state.offset + 4usize <= state.src_bytes.len()
@@ -10970,7 +11327,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             };
                             if __r.is_some() {
-                                break 'alt_lit_blk __r;
+                                break '__alt_lit_blk0 __r;
                             }
                         }
                         {
@@ -10988,7 +11345,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             };
                             if __r.is_some() {
-                                break 'alt_lit_blk __r;
+                                break '__alt_lit_blk0 __r;
                             }
                         }
                         None
@@ -10997,32 +11354,29 @@ mod __bbnfbootstrap_emit_impl {
                     Some(_) => {}
                     None => break 'rule_blk None,
                 }
-                {
-                    let __variant_idx: u8 = 2u8;
-                    if __has_children {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Rule,
-                                __children,
-                                __span_lo,
-                                state.offset as u32,
-                                __variant_idx,
-                                __branch_idx,
-                            ),
-                        )
-                    } else {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Span,
-                                __span_lo,
-                                state.offset as u32,
-                                __variant_idx,
-                                __branch_idx,
-                            ),
-                        )
-                    }
+                if __has_children {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Rule,
+                            __children,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                        ),
+                    )
+                } else {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_leaf(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                        ),
+                    )
                 }
             }
         }
@@ -11035,7 +11389,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    'span_blk: {
+                    '__span_blk1: {
                         match ({
                             if state.offset < state.src_bytes.len()
                                 && state.src_bytes[state.offset] == 34u8
@@ -11047,7 +11401,7 @@ mod __bbnfbootstrap_emit_impl {
                             }
                         }) {
                             Some(_) => {}
-                            None => break 'span_blk None,
+                            None => break '__span_blk1 None,
                         }
                         match ({
                             ({
@@ -11105,9 +11459,6 @@ mod __bbnfbootstrap_emit_impl {
                                             }
                                             __rep_count += 1;
                                         }
-                                        if __rep_count < 0 {
-                                            return None;
-                                        }
                                     }
                                     Some(())
                                 })();
@@ -11123,7 +11474,7 @@ mod __bbnfbootstrap_emit_impl {
                                 .map(|_| ())
                         }) {
                             Some(_) => {}
-                            None => break 'span_blk None,
+                            None => break '__span_blk1 None,
                         }
                         match ({
                             if state.offset < state.src_bytes.len()
@@ -11136,7 +11487,7 @@ mod __bbnfbootstrap_emit_impl {
                             }
                         }) {
                             Some(_) => {}
-                            None => break 'span_blk None,
+                            None => break '__span_blk1 None,
                         }
                         Some(())
                     }
@@ -11207,12 +11558,12 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    'seq_blk: {
+                    '__seq_blk4: {
                         match (Self::__value_ident(state, tape).map(|_| ())) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk4 None,
                         }
-                        match ('rpt_blk: {
+                        match ('__rpt_blk3: {
                             let __rpt_lo = state.offset as u32;
                             let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
                                 tape,
@@ -11220,7 +11571,7 @@ mod __bbnfbootstrap_emit_impl {
                             let mut __count: usize = 0;
                             loop {
                                 let __prev = state.offset;
-                                match ('seq_blk: {
+                                match ('__seq_blk2: {
                                     match ({
                                         if state.offset + 2usize <= state.src_bytes.len()
                                             && unsafe {
@@ -11235,11 +11586,11 @@ mod __bbnfbootstrap_emit_impl {
                                         }
                                     }) {
                                         Some(_) => {}
-                                        None => break 'seq_blk None,
+                                        None => break '__seq_blk2 None,
                                     }
                                     match (Self::__value_ident(state, tape).map(|_| ())) {
                                         Some(_) => {}
-                                        None => break 'seq_blk None,
+                                        None => break '__seq_blk2 None,
                                     }
                                     Some(())
                                 }) {
@@ -11255,27 +11606,28 @@ mod __bbnfbootstrap_emit_impl {
                                     }
                                 }
                             }
-                            if __count >= 0usize {
-                                {
-                                    let __vi: u8 = 0u8;
-                                    let __mi: u8 = 0u8;
-                                    ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                        tape,
-                                        ::bbnf::runtime::tape::TapeKind::Repeat,
-                                        __rpt_children,
-                                        __rpt_lo,
-                                        state.offset as u32,
-                                        __vi,
-                                        __mi,
-                                    );
+                            match Some(()) {
+                                Some(()) => {
+                                    {
+                                        let __vi: u8 = 0u8;
+                                        let __mi: u8 = 0u8;
+                                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                            tape,
+                                            ::bbnf::runtime::tape::TapeKind::Repeat,
+                                            __rpt_children,
+                                            __rpt_lo,
+                                            state.offset as u32,
+                                            __vi,
+                                            __mi,
+                                        );
+                                    }
+                                    Some(())
                                 }
-                                Some(())
-                            } else {
-                                break 'rpt_blk None;
+                                None => None,
                             }
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk4 None,
                         }
                         Some(())
                     }
@@ -11309,7 +11661,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    'seq_blk: {
+                    '__seq_blk7: {
                         match ({
                             if state.offset + 5usize <= state.src_bytes.len()
                                 && unsafe {
@@ -11324,9 +11676,9 @@ mod __bbnfbootstrap_emit_impl {
                             }
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk7 None,
                         }
-                        match ('rpt_blk: {
+                        match ('__rpt_blk6: {
                             let __rpt_lo = state.offset as u32;
                             let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
                                 tape,
@@ -11334,7 +11686,7 @@ mod __bbnfbootstrap_emit_impl {
                             let mut __count: usize = 0;
                             loop {
                                 let __prev = state.offset;
-                                match ('seq_blk: {
+                                match ('__seq_blk5: {
                                     match ({
                                         if state.offset < state.src_bytes.len()
                                             && state.src_bytes[state.offset] == 46u8
@@ -11346,11 +11698,11 @@ mod __bbnfbootstrap_emit_impl {
                                         }
                                     }) {
                                         Some(_) => {}
-                                        None => break 'seq_blk None,
+                                        None => break '__seq_blk5 None,
                                     }
                                     match (Self::__value_ident(state, tape).map(|_| ())) {
                                         Some(_) => {}
-                                        None => break 'seq_blk None,
+                                        None => break '__seq_blk5 None,
                                     }
                                     Some(())
                                 }) {
@@ -11366,27 +11718,28 @@ mod __bbnfbootstrap_emit_impl {
                                     }
                                 }
                             }
-                            if __count >= 0usize {
-                                {
-                                    let __vi: u8 = 0u8;
-                                    let __mi: u8 = 0u8;
-                                    ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                        tape,
-                                        ::bbnf::runtime::tape::TapeKind::Repeat,
-                                        __rpt_children,
-                                        __rpt_lo,
-                                        state.offset as u32,
-                                        __vi,
-                                        __mi,
-                                    );
+                            match Some(()) {
+                                Some(()) => {
+                                    {
+                                        let __vi: u8 = 0u8;
+                                        let __mi: u8 = 0u8;
+                                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                            tape,
+                                            ::bbnf::runtime::tape::TapeKind::Repeat,
+                                            __rpt_children,
+                                            __rpt_lo,
+                                            state.offset as u32,
+                                            __vi,
+                                            __mi,
+                                        );
+                                    }
+                                    Some(())
                                 }
-                                Some(())
-                            } else {
-                                break 'rpt_blk None;
+                                None => None,
                             }
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk7 None,
                         }
                         Some(())
                     }
@@ -11420,10 +11773,10 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    'seq_blk: {
+                    '__seq_blk11: {
                         match (Self::__value_path(state, tape).map(|_| ())) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk11 None,
                         }
                         match ({
                             if state.offset < state.src_bytes.len()
@@ -11436,7 +11789,7 @@ mod __bbnfbootstrap_emit_impl {
                             }
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk11 None,
                         }
                         match ({
                             let __opt_lo = state.offset as u32;
@@ -11444,12 +11797,12 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             let __opt_cp = state.offset;
-                            match ('seq_blk: {
+                            match ('__seq_blk10: {
                                 match (Self::__value_expr(state, tape).map(|_| ())) {
                                     Some(_) => {}
-                                    None => break 'seq_blk None,
+                                    None => break '__seq_blk10 None,
                                 }
-                                match ('rpt_blk: {
+                                match ('__rpt_blk9: {
                                     let __rpt_lo = state.offset as u32;
                                     let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
                                         tape,
@@ -11457,7 +11810,7 @@ mod __bbnfbootstrap_emit_impl {
                                     let mut __count: usize = 0;
                                     loop {
                                         let __prev = state.offset;
-                                        match ('seq_blk: {
+                                        match ('__seq_blk8: {
                                             match ({
                                                 ::parse_that::trim_leading_whitespace_mut(state);
                                                 let __ws_inner = {
@@ -11474,11 +11827,11 @@ mod __bbnfbootstrap_emit_impl {
                                                 __ws_inner
                                             }) {
                                                 Some(_) => {}
-                                                None => break 'seq_blk None,
+                                                None => break '__seq_blk8 None,
                                             }
                                             match (Self::__value_expr(state, tape).map(|_| ())) {
                                                 Some(_) => {}
-                                                None => break 'seq_blk None,
+                                                None => break '__seq_blk8 None,
                                             }
                                             Some(())
                                         }) {
@@ -11494,27 +11847,28 @@ mod __bbnfbootstrap_emit_impl {
                                             }
                                         }
                                     }
-                                    if __count >= 0usize {
-                                        {
-                                            let __vi: u8 = 0u8;
-                                            let __mi: u8 = 0u8;
-                                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                                tape,
-                                                ::bbnf::runtime::tape::TapeKind::Repeat,
-                                                __rpt_children,
-                                                __rpt_lo,
-                                                state.offset as u32,
-                                                __vi,
-                                                __mi,
-                                            );
+                                    match Some(()) {
+                                        Some(()) => {
+                                            {
+                                                let __vi: u8 = 0u8;
+                                                let __mi: u8 = 0u8;
+                                                ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                                    tape,
+                                                    ::bbnf::runtime::tape::TapeKind::Repeat,
+                                                    __rpt_children,
+                                                    __rpt_lo,
+                                                    state.offset as u32,
+                                                    __vi,
+                                                    __mi,
+                                                );
+                                            }
+                                            Some(())
                                         }
-                                        Some(())
-                                    } else {
-                                        break 'rpt_blk None;
+                                        None => None,
                                     }
                                 }) {
                                     Some(_) => {}
-                                    None => break 'seq_blk None,
+                                    None => break '__seq_blk10 None,
                                 }
                                 Some(())
                             }) {
@@ -11539,7 +11893,7 @@ mod __bbnfbootstrap_emit_impl {
                             Some(())
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk11 None,
                         }
                         match ({
                             if state.offset < state.src_bytes.len()
@@ -11552,7 +11906,7 @@ mod __bbnfbootstrap_emit_impl {
                             }
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk11 None,
                         }
                         Some(())
                     }
@@ -11584,11 +11938,12 @@ mod __bbnfbootstrap_emit_impl {
         ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
+                let __variant_idx: u8 = 8u8;
                 let mut __branch_idx: u8 = 0;
                 let mut __has_children = false;
                 let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
                 match ({
-                    'alt_blk: {
+                    '__alt_blk13: {
                         {
                             let __cp = state.offset;
                             __branch_idx = 0u8;
@@ -11598,7 +11953,7 @@ mod __bbnfbootstrap_emit_impl {
                             __has_children = true;
                             let __result = Self::__int_lit(state, tape).map(|_| ());
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk13 __result;
                             }
                             state.offset = __cp;
                         }
@@ -11611,7 +11966,7 @@ mod __bbnfbootstrap_emit_impl {
                             __has_children = true;
                             let __result = Self::__float_lit(state, tape).map(|_| ());
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk13 __result;
                             }
                             state.offset = __cp;
                         }
@@ -11624,7 +11979,7 @@ mod __bbnfbootstrap_emit_impl {
                             __has_children = true;
                             let __result = Self::__bool_lit(state, tape).map(|_| ());
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk13 __result;
                             }
                             state.offset = __cp;
                         }
@@ -11637,7 +11992,7 @@ mod __bbnfbootstrap_emit_impl {
                             __has_children = true;
                             let __result = Self::__string_lit(state, tape).map(|_| ());
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk13 __result;
                             }
                             state.offset = __cp;
                         }
@@ -11651,7 +12006,7 @@ mod __bbnfbootstrap_emit_impl {
                             let __result = Self::__value_fn_call(state, tape)
                                 .map(|_| ());
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk13 __result;
                             }
                             state.offset = __cp;
                         }
@@ -11664,7 +12019,7 @@ mod __bbnfbootstrap_emit_impl {
                             __has_children = true;
                             let __result = Self::__value_input(state, tape).map(|_| ());
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk13 __result;
                             }
                             state.offset = __cp;
                         }
@@ -11677,7 +12032,7 @@ mod __bbnfbootstrap_emit_impl {
                             __has_children = true;
                             let __result = Self::__value_path(state, tape).map(|_| ());
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk13 __result;
                             }
                             state.offset = __cp;
                         }
@@ -11688,7 +12043,7 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = 'seq_blk: {
+                            let __result = '__seq_blk12: {
                                 match ({
                                     if state.offset < state.src_bytes.len()
                                         && state.src_bytes[state.offset] == 40u8
@@ -11700,7 +12055,7 @@ mod __bbnfbootstrap_emit_impl {
                                     }
                                 }) {
                                     Some(_) => {}
-                                    None => break 'seq_blk None,
+                                    None => break '__seq_blk12 None,
                                 }
                                 match ({
                                     ::parse_that::trim_leading_whitespace_mut(state);
@@ -11710,7 +12065,7 @@ mod __bbnfbootstrap_emit_impl {
                                     __ws_inner
                                 }) {
                                     Some(_) => {}
-                                    None => break 'seq_blk None,
+                                    None => break '__seq_blk12 None,
                                 }
                                 match ({
                                     if state.offset < state.src_bytes.len()
@@ -11723,12 +12078,12 @@ mod __bbnfbootstrap_emit_impl {
                                     }
                                 }) {
                                     Some(_) => {}
-                                    None => break 'seq_blk None,
+                                    None => break '__seq_blk12 None,
                                 }
                                 Some(())
                             };
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk13 __result;
                             }
                             state.offset = __cp;
                         }
@@ -11738,32 +12093,29 @@ mod __bbnfbootstrap_emit_impl {
                     Some(_) => {}
                     None => break 'rule_blk None,
                 }
-                {
-                    let __variant_idx: u8 = 8u8;
-                    if __has_children {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Rule,
-                                __children,
-                                __span_lo,
-                                state.offset as u32,
-                                __variant_idx,
-                                __branch_idx,
-                            ),
-                        )
-                    } else {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Span,
-                                __span_lo,
-                                state.offset as u32,
-                                __variant_idx,
-                                __branch_idx,
-                            ),
-                        )
-                    }
+                if __has_children {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Rule,
+                            __children,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                        ),
+                    )
+                } else {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_leaf(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                        ),
+                    )
                 }
             }
         }
@@ -11774,11 +12126,12 @@ mod __bbnfbootstrap_emit_impl {
         ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
+                let __variant_idx: u8 = 9u8;
                 let mut __branch_idx: u8 = 0;
                 let mut __has_children = false;
                 let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
                 match ({
-                    'alt_lit_blk: {
+                    '__alt_lit_blk14: {
                         {
                             let __r = {
                                 if state.offset < state.src_bytes.len()
@@ -11791,7 +12144,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             };
                             if __r.is_some() {
-                                break 'alt_lit_blk __r;
+                                break '__alt_lit_blk14 __r;
                             }
                         }
                         {
@@ -11806,7 +12159,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             };
                             if __r.is_some() {
-                                break 'alt_lit_blk __r;
+                                break '__alt_lit_blk14 __r;
                             }
                         }
                         {
@@ -11821,7 +12174,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             };
                             if __r.is_some() {
-                                break 'alt_lit_blk __r;
+                                break '__alt_lit_blk14 __r;
                             }
                         }
                         None
@@ -11830,32 +12183,29 @@ mod __bbnfbootstrap_emit_impl {
                     Some(_) => {}
                     None => break 'rule_blk None,
                 }
-                {
-                    let __variant_idx: u8 = 9u8;
-                    if __has_children {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Rule,
-                                __children,
-                                __span_lo,
-                                state.offset as u32,
-                                __variant_idx,
-                                __branch_idx,
-                            ),
-                        )
-                    } else {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Span,
-                                __span_lo,
-                                state.offset as u32,
-                                __variant_idx,
-                                __branch_idx,
-                            ),
-                        )
-                    }
+                if __has_children {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Rule,
+                            __children,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                        ),
+                    )
+                } else {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_leaf(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                        ),
+                    )
                 }
             }
         }
@@ -11866,11 +12216,12 @@ mod __bbnfbootstrap_emit_impl {
         ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
+                let __variant_idx: u8 = 10u8;
                 let mut __branch_idx: u8 = 0;
                 let mut __has_children = false;
                 let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
                 match ({
-                    'alt_lit_blk: {
+                    '__alt_lit_blk15: {
                         {
                             let __r = {
                                 if state.offset < state.src_bytes.len()
@@ -11883,7 +12234,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             };
                             if __r.is_some() {
-                                break 'alt_lit_blk __r;
+                                break '__alt_lit_blk15 __r;
                             }
                         }
                         {
@@ -11898,7 +12249,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             };
                             if __r.is_some() {
-                                break 'alt_lit_blk __r;
+                                break '__alt_lit_blk15 __r;
                             }
                         }
                         None
@@ -11907,32 +12258,29 @@ mod __bbnfbootstrap_emit_impl {
                     Some(_) => {}
                     None => break 'rule_blk None,
                 }
-                {
-                    let __variant_idx: u8 = 10u8;
-                    if __has_children {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Rule,
-                                __children,
-                                __span_lo,
-                                state.offset as u32,
-                                __variant_idx,
-                                __branch_idx,
-                            ),
-                        )
-                    } else {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Span,
-                                __span_lo,
-                                state.offset as u32,
-                                __variant_idx,
-                                __branch_idx,
-                            ),
-                        )
-                    }
+                if __has_children {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Rule,
+                            __children,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                        ),
+                    )
+                } else {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_leaf(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                        ),
+                    )
                 }
             }
         }
@@ -11943,11 +12291,12 @@ mod __bbnfbootstrap_emit_impl {
         ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
+                let __variant_idx: u8 = 11u8;
                 let mut __branch_idx: u8 = 0;
                 let mut __has_children = false;
                 let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
                 match ({
-                    'alt_lit_blk: {
+                    '__alt_lit_blk16: {
                         {
                             let __r = {
                                 if state.offset + 2usize <= state.src_bytes.len()
@@ -11963,7 +12312,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             };
                             if __r.is_some() {
-                                break 'alt_lit_blk __r;
+                                break '__alt_lit_blk16 __r;
                             }
                         }
                         {
@@ -11981,7 +12330,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             };
                             if __r.is_some() {
-                                break 'alt_lit_blk __r;
+                                break '__alt_lit_blk16 __r;
                             }
                         }
                         {
@@ -11999,7 +12348,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             };
                             if __r.is_some() {
-                                break 'alt_lit_blk __r;
+                                break '__alt_lit_blk16 __r;
                             }
                         }
                         {
@@ -12017,7 +12366,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             };
                             if __r.is_some() {
-                                break 'alt_lit_blk __r;
+                                break '__alt_lit_blk16 __r;
                             }
                         }
                         {
@@ -12032,7 +12381,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             };
                             if __r.is_some() {
-                                break 'alt_lit_blk __r;
+                                break '__alt_lit_blk16 __r;
                             }
                         }
                         {
@@ -12047,7 +12396,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             };
                             if __r.is_some() {
-                                break 'alt_lit_blk __r;
+                                break '__alt_lit_blk16 __r;
                             }
                         }
                         None
@@ -12056,32 +12405,29 @@ mod __bbnfbootstrap_emit_impl {
                     Some(_) => {}
                     None => break 'rule_blk None,
                 }
-                {
-                    let __variant_idx: u8 = 11u8;
-                    if __has_children {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Rule,
-                                __children,
-                                __span_lo,
-                                state.offset as u32,
-                                __variant_idx,
-                                __branch_idx,
-                            ),
-                        )
-                    } else {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Span,
-                                __span_lo,
-                                state.offset as u32,
-                                __variant_idx,
-                                __branch_idx,
-                            ),
-                        )
-                    }
+                if __has_children {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Rule,
+                            __children,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                        ),
+                    )
+                } else {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_leaf(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                        ),
+                    )
                 }
             }
         }
@@ -12092,11 +12438,12 @@ mod __bbnfbootstrap_emit_impl {
         ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
+                let __variant_idx: u8 = 12u8;
                 let mut __branch_idx: u8 = 0;
                 let mut __has_children = false;
                 let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
                 match ({
-                    'alt_blk: {
+                    '__alt_blk19: {
                         {
                             let __cp = state.offset;
                             __branch_idx = 0u8;
@@ -12104,8 +12451,8 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = 'seq_blk: {
-                                match ('alt_lit_blk: {
+                            let __result = '__seq_blk18: {
+                                match ('__alt_lit_blk17: {
                                     {
                                         let __r = {
                                             if state.offset < state.src_bytes.len()
@@ -12118,7 +12465,7 @@ mod __bbnfbootstrap_emit_impl {
                                             }
                                         };
                                         if __r.is_some() {
-                                            break 'alt_lit_blk __r;
+                                            break '__alt_lit_blk17 __r;
                                         }
                                     }
                                     {
@@ -12133,22 +12480,22 @@ mod __bbnfbootstrap_emit_impl {
                                             }
                                         };
                                         if __r.is_some() {
-                                            break 'alt_lit_blk __r;
+                                            break '__alt_lit_blk17 __r;
                                         }
                                     }
                                     None
                                 }) {
                                     Some(_) => {}
-                                    None => break 'seq_blk None,
+                                    None => break '__seq_blk18 None,
                                 }
                                 match (Self::__value_atom(state, tape).map(|_| ())) {
                                     Some(_) => {}
-                                    None => break 'seq_blk None,
+                                    None => break '__seq_blk18 None,
                                 }
                                 Some(())
                             };
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk19 __result;
                             }
                             state.offset = __cp;
                         }
@@ -12161,7 +12508,7 @@ mod __bbnfbootstrap_emit_impl {
                             __has_children = true;
                             let __result = Self::__value_atom(state, tape).map(|_| ());
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk19 __result;
                             }
                             state.offset = __cp;
                         }
@@ -12171,32 +12518,29 @@ mod __bbnfbootstrap_emit_impl {
                     Some(_) => {}
                     None => break 'rule_blk None,
                 }
-                {
-                    let __variant_idx: u8 = 12u8;
-                    if __has_children {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Rule,
-                                __children,
-                                __span_lo,
-                                state.offset as u32,
-                                __variant_idx,
-                                __branch_idx,
-                            ),
-                        )
-                    } else {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Span,
-                                __span_lo,
-                                state.offset as u32,
-                                __variant_idx,
-                                __branch_idx,
-                            ),
-                        )
-                    }
+                if __has_children {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Rule,
+                            __children,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                        ),
+                    )
+                } else {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_leaf(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                        ),
+                    )
                 }
             }
         }
@@ -12209,12 +12553,12 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    'seq_blk: {
+                    '__seq_blk22: {
                         match (Self::__value_unary(state, tape).map(|_| ())) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk22 None,
                         }
-                        match ('rpt_blk: {
+                        match ('__rpt_blk21: {
                             let __rpt_lo = state.offset as u32;
                             let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
                                 tape,
@@ -12222,7 +12566,7 @@ mod __bbnfbootstrap_emit_impl {
                             let mut __count: usize = 0;
                             loop {
                                 let __prev = state.offset;
-                                match ('seq_blk: {
+                                match ('__seq_blk20: {
                                     match ({
                                         ::parse_that::trim_leading_whitespace_mut(state);
                                         let __ws_inner = Self::__mul_op(state, tape).map(|_| ());
@@ -12230,11 +12574,11 @@ mod __bbnfbootstrap_emit_impl {
                                         __ws_inner
                                     }) {
                                         Some(_) => {}
-                                        None => break 'seq_blk None,
+                                        None => break '__seq_blk20 None,
                                     }
                                     match (Self::__value_unary(state, tape).map(|_| ())) {
                                         Some(_) => {}
-                                        None => break 'seq_blk None,
+                                        None => break '__seq_blk20 None,
                                     }
                                     Some(())
                                 }) {
@@ -12250,27 +12594,28 @@ mod __bbnfbootstrap_emit_impl {
                                     }
                                 }
                             }
-                            if __count >= 0usize {
-                                {
-                                    let __vi: u8 = 0u8;
-                                    let __mi: u8 = 0u8;
-                                    ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                        tape,
-                                        ::bbnf::runtime::tape::TapeKind::Repeat,
-                                        __rpt_children,
-                                        __rpt_lo,
-                                        state.offset as u32,
-                                        __vi,
-                                        __mi,
-                                    );
+                            match Some(()) {
+                                Some(()) => {
+                                    {
+                                        let __vi: u8 = 0u8;
+                                        let __mi: u8 = 0u8;
+                                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                            tape,
+                                            ::bbnf::runtime::tape::TapeKind::Repeat,
+                                            __rpt_children,
+                                            __rpt_lo,
+                                            state.offset as u32,
+                                            __vi,
+                                            __mi,
+                                        );
+                                    }
+                                    Some(())
                                 }
-                                Some(())
-                            } else {
-                                break 'rpt_blk None;
+                                None => None,
                             }
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk22 None,
                         }
                         Some(())
                     }
@@ -12304,12 +12649,12 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    'seq_blk: {
+                    '__seq_blk25: {
                         match (Self::__value_mul(state, tape).map(|_| ())) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk25 None,
                         }
-                        match ('rpt_blk: {
+                        match ('__rpt_blk24: {
                             let __rpt_lo = state.offset as u32;
                             let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
                                 tape,
@@ -12317,7 +12662,7 @@ mod __bbnfbootstrap_emit_impl {
                             let mut __count: usize = 0;
                             loop {
                                 let __prev = state.offset;
-                                match ('seq_blk: {
+                                match ('__seq_blk23: {
                                     match ({
                                         ::parse_that::trim_leading_whitespace_mut(state);
                                         let __ws_inner = Self::__add_op(state, tape).map(|_| ());
@@ -12325,11 +12670,11 @@ mod __bbnfbootstrap_emit_impl {
                                         __ws_inner
                                     }) {
                                         Some(_) => {}
-                                        None => break 'seq_blk None,
+                                        None => break '__seq_blk23 None,
                                     }
                                     match (Self::__value_mul(state, tape).map(|_| ())) {
                                         Some(_) => {}
-                                        None => break 'seq_blk None,
+                                        None => break '__seq_blk23 None,
                                     }
                                     Some(())
                                 }) {
@@ -12345,27 +12690,28 @@ mod __bbnfbootstrap_emit_impl {
                                     }
                                 }
                             }
-                            if __count >= 0usize {
-                                {
-                                    let __vi: u8 = 0u8;
-                                    let __mi: u8 = 0u8;
-                                    ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                        tape,
-                                        ::bbnf::runtime::tape::TapeKind::Repeat,
-                                        __rpt_children,
-                                        __rpt_lo,
-                                        state.offset as u32,
-                                        __vi,
-                                        __mi,
-                                    );
+                            match Some(()) {
+                                Some(()) => {
+                                    {
+                                        let __vi: u8 = 0u8;
+                                        let __mi: u8 = 0u8;
+                                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                            tape,
+                                            ::bbnf::runtime::tape::TapeKind::Repeat,
+                                            __rpt_children,
+                                            __rpt_lo,
+                                            state.offset as u32,
+                                            __vi,
+                                            __mi,
+                                        );
+                                    }
+                                    Some(())
                                 }
-                                Some(())
-                            } else {
-                                break 'rpt_blk None;
+                                None => None,
                             }
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk25 None,
                         }
                         Some(())
                     }
@@ -12399,12 +12745,12 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    'seq_blk: {
+                    '__seq_blk28: {
                         match (Self::__value_add(state, tape).map(|_| ())) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk28 None,
                         }
-                        match ('rpt_blk: {
+                        match ('__rpt_blk27: {
                             let __rpt_lo = state.offset as u32;
                             let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
                                 tape,
@@ -12412,7 +12758,7 @@ mod __bbnfbootstrap_emit_impl {
                             let mut __count: usize = 0;
                             loop {
                                 let __prev = state.offset;
-                                match ('seq_blk: {
+                                match ('__seq_blk26: {
                                     match ({
                                         ::parse_that::trim_leading_whitespace_mut(state);
                                         let __ws_inner = Self::__cmp_op(state, tape).map(|_| ());
@@ -12420,11 +12766,11 @@ mod __bbnfbootstrap_emit_impl {
                                         __ws_inner
                                     }) {
                                         Some(_) => {}
-                                        None => break 'seq_blk None,
+                                        None => break '__seq_blk26 None,
                                     }
                                     match (Self::__value_add(state, tape).map(|_| ())) {
                                         Some(_) => {}
-                                        None => break 'seq_blk None,
+                                        None => break '__seq_blk26 None,
                                     }
                                     Some(())
                                 }) {
@@ -12440,27 +12786,28 @@ mod __bbnfbootstrap_emit_impl {
                                     }
                                 }
                             }
-                            if __count >= 0usize {
-                                {
-                                    let __vi: u8 = 0u8;
-                                    let __mi: u8 = 0u8;
-                                    ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                        tape,
-                                        ::bbnf::runtime::tape::TapeKind::Repeat,
-                                        __rpt_children,
-                                        __rpt_lo,
-                                        state.offset as u32,
-                                        __vi,
-                                        __mi,
-                                    );
+                            match Some(()) {
+                                Some(()) => {
+                                    {
+                                        let __vi: u8 = 0u8;
+                                        let __mi: u8 = 0u8;
+                                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                            tape,
+                                            ::bbnf::runtime::tape::TapeKind::Repeat,
+                                            __rpt_children,
+                                            __rpt_lo,
+                                            state.offset as u32,
+                                            __vi,
+                                            __mi,
+                                        );
+                                    }
+                                    Some(())
                                 }
-                                Some(())
-                            } else {
-                                break 'rpt_blk None;
+                                None => None,
                             }
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk28 None,
                         }
                         Some(())
                     }
@@ -12494,12 +12841,12 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    'seq_blk: {
+                    '__seq_blk31: {
                         match (Self::__value_cmp(state, tape).map(|_| ())) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk31 None,
                         }
-                        match ('rpt_blk: {
+                        match ('__rpt_blk30: {
                             let __rpt_lo = state.offset as u32;
                             let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
                                 tape,
@@ -12507,7 +12854,7 @@ mod __bbnfbootstrap_emit_impl {
                             let mut __count: usize = 0;
                             loop {
                                 let __prev = state.offset;
-                                match ('seq_blk: {
+                                match ('__seq_blk29: {
                                     match ({
                                         ::parse_that::trim_leading_whitespace_mut(state);
                                         let __ws_inner = {
@@ -12527,11 +12874,11 @@ mod __bbnfbootstrap_emit_impl {
                                         __ws_inner
                                     }) {
                                         Some(_) => {}
-                                        None => break 'seq_blk None,
+                                        None => break '__seq_blk29 None,
                                     }
                                     match (Self::__value_cmp(state, tape).map(|_| ())) {
                                         Some(_) => {}
-                                        None => break 'seq_blk None,
+                                        None => break '__seq_blk29 None,
                                     }
                                     Some(())
                                 }) {
@@ -12547,27 +12894,28 @@ mod __bbnfbootstrap_emit_impl {
                                     }
                                 }
                             }
-                            if __count >= 0usize {
-                                {
-                                    let __vi: u8 = 0u8;
-                                    let __mi: u8 = 0u8;
-                                    ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                        tape,
-                                        ::bbnf::runtime::tape::TapeKind::Repeat,
-                                        __rpt_children,
-                                        __rpt_lo,
-                                        state.offset as u32,
-                                        __vi,
-                                        __mi,
-                                    );
+                            match Some(()) {
+                                Some(()) => {
+                                    {
+                                        let __vi: u8 = 0u8;
+                                        let __mi: u8 = 0u8;
+                                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                            tape,
+                                            ::bbnf::runtime::tape::TapeKind::Repeat,
+                                            __rpt_children,
+                                            __rpt_lo,
+                                            state.offset as u32,
+                                            __vi,
+                                            __mi,
+                                        );
+                                    }
+                                    Some(())
                                 }
-                                Some(())
-                            } else {
-                                break 'rpt_blk None;
+                                None => None,
                             }
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk31 None,
                         }
                         Some(())
                     }
@@ -12601,12 +12949,12 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    'seq_blk: {
+                    '__seq_blk34: {
                         match (Self::__value_and(state, tape).map(|_| ())) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk34 None,
                         }
-                        match ('rpt_blk: {
+                        match ('__rpt_blk33: {
                             let __rpt_lo = state.offset as u32;
                             let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
                                 tape,
@@ -12614,7 +12962,7 @@ mod __bbnfbootstrap_emit_impl {
                             let mut __count: usize = 0;
                             loop {
                                 let __prev = state.offset;
-                                match ('seq_blk: {
+                                match ('__seq_blk32: {
                                     match ({
                                         ::parse_that::trim_leading_whitespace_mut(state);
                                         let __ws_inner = {
@@ -12634,11 +12982,11 @@ mod __bbnfbootstrap_emit_impl {
                                         __ws_inner
                                     }) {
                                         Some(_) => {}
-                                        None => break 'seq_blk None,
+                                        None => break '__seq_blk32 None,
                                     }
                                     match (Self::__value_and(state, tape).map(|_| ())) {
                                         Some(_) => {}
-                                        None => break 'seq_blk None,
+                                        None => break '__seq_blk32 None,
                                     }
                                     Some(())
                                 }) {
@@ -12654,27 +13002,28 @@ mod __bbnfbootstrap_emit_impl {
                                     }
                                 }
                             }
-                            if __count >= 0usize {
-                                {
-                                    let __vi: u8 = 0u8;
-                                    let __mi: u8 = 0u8;
-                                    ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                        tape,
-                                        ::bbnf::runtime::tape::TapeKind::Repeat,
-                                        __rpt_children,
-                                        __rpt_lo,
-                                        state.offset as u32,
-                                        __vi,
-                                        __mi,
-                                    );
+                            match Some(()) {
+                                Some(()) => {
+                                    {
+                                        let __vi: u8 = 0u8;
+                                        let __mi: u8 = 0u8;
+                                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                            tape,
+                                            ::bbnf::runtime::tape::TapeKind::Repeat,
+                                            __rpt_children,
+                                            __rpt_lo,
+                                            state.offset as u32,
+                                            __vi,
+                                            __mi,
+                                        );
+                                    }
+                                    Some(())
                                 }
-                                Some(())
-                            } else {
-                                break 'rpt_blk None;
+                                None => None,
                             }
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk34 None,
                         }
                         Some(())
                     }
@@ -12708,7 +13057,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    'seq_blk: {
+                    '__seq_blk37: {
                         match ({
                             if state.offset < state.src_bytes.len()
                                 && state.src_bytes[state.offset] == 124u8
@@ -12720,13 +13069,13 @@ mod __bbnfbootstrap_emit_impl {
                             }
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk37 None,
                         }
                         match (Self::__value_ident(state, tape).map(|_| ())) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk37 None,
                         }
-                        match ('rpt_blk: {
+                        match ('__rpt_blk36: {
                             let __rpt_lo = state.offset as u32;
                             let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
                                 tape,
@@ -12734,7 +13083,7 @@ mod __bbnfbootstrap_emit_impl {
                             let mut __count: usize = 0;
                             loop {
                                 let __prev = state.offset;
-                                match ('seq_blk: {
+                                match ('__seq_blk35: {
                                     match ({
                                         ::parse_that::trim_leading_whitespace_mut(state);
                                         let __ws_inner = {
@@ -12751,11 +13100,11 @@ mod __bbnfbootstrap_emit_impl {
                                         __ws_inner
                                     }) {
                                         Some(_) => {}
-                                        None => break 'seq_blk None,
+                                        None => break '__seq_blk35 None,
                                     }
                                     match (Self::__value_ident(state, tape).map(|_| ())) {
                                         Some(_) => {}
-                                        None => break 'seq_blk None,
+                                        None => break '__seq_blk35 None,
                                     }
                                     Some(())
                                 }) {
@@ -12771,27 +13120,28 @@ mod __bbnfbootstrap_emit_impl {
                                     }
                                 }
                             }
-                            if __count >= 0usize {
-                                {
-                                    let __vi: u8 = 0u8;
-                                    let __mi: u8 = 0u8;
-                                    ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                        tape,
-                                        ::bbnf::runtime::tape::TapeKind::Repeat,
-                                        __rpt_children,
-                                        __rpt_lo,
-                                        state.offset as u32,
-                                        __vi,
-                                        __mi,
-                                    );
+                            match Some(()) {
+                                Some(()) => {
+                                    {
+                                        let __vi: u8 = 0u8;
+                                        let __mi: u8 = 0u8;
+                                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                            tape,
+                                            ::bbnf::runtime::tape::TapeKind::Repeat,
+                                            __rpt_children,
+                                            __rpt_lo,
+                                            state.offset as u32,
+                                            __vi,
+                                            __mi,
+                                        );
+                                    }
+                                    Some(())
                                 }
-                                Some(())
-                            } else {
-                                break 'rpt_blk None;
+                                None => None,
                             }
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk37 None,
                         }
                         match ({
                             if state.offset < state.src_bytes.len()
@@ -12804,11 +13154,11 @@ mod __bbnfbootstrap_emit_impl {
                             }
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk37 None,
                         }
                         match (Self::__value_expr(state, tape).map(|_| ())) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk37 None,
                         }
                         Some(())
                     }
@@ -12840,11 +13190,12 @@ mod __bbnfbootstrap_emit_impl {
         ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
+                let __variant_idx: u8 = 19u8;
                 let mut __branch_idx: u8 = 0;
                 let mut __has_children = false;
                 let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
                 match ({
-                    'alt_blk: {
+                    '__alt_blk38: {
                         {
                             let __cp = state.offset;
                             __branch_idx = 0u8;
@@ -12855,7 +13206,7 @@ mod __bbnfbootstrap_emit_impl {
                             let __result = Self::__value_closure(state, tape)
                                 .map(|_| ());
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk38 __result;
                             }
                             state.offset = __cp;
                         }
@@ -12868,7 +13219,7 @@ mod __bbnfbootstrap_emit_impl {
                             __has_children = true;
                             let __result = Self::__value_or(state, tape).map(|_| ());
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk38 __result;
                             }
                             state.offset = __cp;
                         }
@@ -12878,32 +13229,29 @@ mod __bbnfbootstrap_emit_impl {
                     Some(_) => {}
                     None => break 'rule_blk None,
                 }
-                {
-                    let __variant_idx: u8 = 19u8;
-                    if __has_children {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Rule,
-                                __children,
-                                __span_lo,
-                                state.offset as u32,
-                                __variant_idx,
-                                __branch_idx,
-                            ),
-                        )
-                    } else {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Span,
-                                __span_lo,
-                                state.offset as u32,
-                                __variant_idx,
-                                __branch_idx,
-                            ),
-                        )
-                    }
+                if __has_children {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Rule,
+                            __children,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                        ),
+                    )
+                } else {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_leaf(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                        ),
+                    )
                 }
             }
         }
@@ -12916,7 +13264,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    'seq_blk: {
+                    '__seq_blk39: {
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
                             let __ws_inner = {
@@ -12933,11 +13281,11 @@ mod __bbnfbootstrap_emit_impl {
                             __ws_inner
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk39 None,
                         }
                         match (Self::__type_name(state, tape).map(|_| ())) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk39 None,
                         }
                         Some(())
                     }
@@ -12969,11 +13317,12 @@ mod __bbnfbootstrap_emit_impl {
         ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
+                let __variant_idx: u8 = 21u8;
                 let mut __branch_idx: u8 = 0;
                 let mut __has_children = false;
                 let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
                 match ({
-                    'alt_blk: {
+                    '__alt_blk40: {
                         {
                             let __cp = state.offset;
                             __branch_idx = 0u8;
@@ -12991,7 +13340,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             };
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk40 __result;
                             }
                             state.offset = __cp;
                         }
@@ -13012,7 +13361,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             };
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk40 __result;
                             }
                             state.offset = __cp;
                         }
@@ -13033,7 +13382,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             };
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk40 __result;
                             }
                             state.offset = __cp;
                         }
@@ -13054,7 +13403,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             };
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk40 __result;
                             }
                             state.offset = __cp;
                         }
@@ -13075,7 +13424,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             };
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk40 __result;
                             }
                             state.offset = __cp;
                         }
@@ -13096,7 +13445,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             };
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk40 __result;
                             }
                             state.offset = __cp;
                         }
@@ -13117,7 +13466,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             };
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk40 __result;
                             }
                             state.offset = __cp;
                         }
@@ -13138,7 +13487,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             };
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk40 __result;
                             }
                             state.offset = __cp;
                         }
@@ -13159,7 +13508,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             };
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk40 __result;
                             }
                             state.offset = __cp;
                         }
@@ -13180,7 +13529,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             };
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk40 __result;
                             }
                             state.offset = __cp;
                         }
@@ -13195,7 +13544,7 @@ mod __bbnfbootstrap_emit_impl {
                                     .map(|_| ())
                             };
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk40 __result;
                             }
                             state.offset = __cp;
                         }
@@ -13205,32 +13554,29 @@ mod __bbnfbootstrap_emit_impl {
                     Some(_) => {}
                     None => break 'rule_blk None,
                 }
-                {
-                    let __variant_idx: u8 = 21u8;
-                    if __has_children {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Rule,
-                                __children,
-                                __span_lo,
-                                state.offset as u32,
-                                __variant_idx,
-                                __branch_idx,
-                            ),
-                        )
-                    } else {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Span,
-                                __span_lo,
-                                state.offset as u32,
-                                __variant_idx,
-                                __branch_idx,
-                            ),
-                        )
-                    }
+                if __has_children {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Rule,
+                            __children,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                        ),
+                    )
+                } else {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_leaf(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                        ),
+                    )
                 }
             }
         }
@@ -13278,11 +13624,12 @@ mod __bbnfbootstrap_emit_impl {
         ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
+                let __variant_idx: u8 = 23u8;
                 let mut __branch_idx: u8 = 0;
                 let mut __has_children = false;
                 let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
                 match ({
-                    'alt_blk: {
+                    '__alt_blk44: {
                         {
                             let __cp = state.offset;
                             __branch_idx = 0u8;
@@ -13290,7 +13637,7 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = 'span_blk: {
+                            let __result = '__span_blk41: {
                                 match ({
                                     if state.offset < state.src_bytes.len()
                                         && state.src_bytes[state.offset] == 34u8
@@ -13302,7 +13649,7 @@ mod __bbnfbootstrap_emit_impl {
                                     }
                                 }) {
                                     Some(_) => {}
-                                    None => break 'span_blk None,
+                                    None => break '__span_blk41 None,
                                 }
                                 match ({
                                     ({
@@ -13360,9 +13707,6 @@ mod __bbnfbootstrap_emit_impl {
                                                     }
                                                     __rep_count += 1;
                                                 }
-                                                if __rep_count < 0 {
-                                                    return None;
-                                                }
                                             }
                                             Some(())
                                         })();
@@ -13378,7 +13722,7 @@ mod __bbnfbootstrap_emit_impl {
                                         .map(|_| ())
                                 }) {
                                     Some(_) => {}
-                                    None => break 'span_blk None,
+                                    None => break '__span_blk41 None,
                                 }
                                 match ({
                                     if state.offset < state.src_bytes.len()
@@ -13391,12 +13735,12 @@ mod __bbnfbootstrap_emit_impl {
                                     }
                                 }) {
                                     Some(_) => {}
-                                    None => break 'span_blk None,
+                                    None => break '__span_blk41 None,
                                 }
                                 Some(())
                             };
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk44 __result;
                             }
                             state.offset = __cp;
                         }
@@ -13407,7 +13751,7 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = 'span_blk: {
+                            let __result = '__span_blk42: {
                                 match ({
                                     if state.offset < state.src_bytes.len()
                                         && state.src_bytes[state.offset] == 39u8
@@ -13419,7 +13763,7 @@ mod __bbnfbootstrap_emit_impl {
                                     }
                                 }) {
                                     Some(_) => {}
-                                    None => break 'span_blk None,
+                                    None => break '__span_blk42 None,
                                 }
                                 match ({
                                     ({
@@ -13477,9 +13821,6 @@ mod __bbnfbootstrap_emit_impl {
                                                     }
                                                     __rep_count += 1;
                                                 }
-                                                if __rep_count < 0 {
-                                                    return None;
-                                                }
                                             }
                                             Some(())
                                         })();
@@ -13495,7 +13836,7 @@ mod __bbnfbootstrap_emit_impl {
                                         .map(|_| ())
                                 }) {
                                     Some(_) => {}
-                                    None => break 'span_blk None,
+                                    None => break '__span_blk42 None,
                                 }
                                 match ({
                                     if state.offset < state.src_bytes.len()
@@ -13508,12 +13849,12 @@ mod __bbnfbootstrap_emit_impl {
                                     }
                                 }) {
                                     Some(_) => {}
-                                    None => break 'span_blk None,
+                                    None => break '__span_blk42 None,
                                 }
                                 Some(())
                             };
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk44 __result;
                             }
                             state.offset = __cp;
                         }
@@ -13524,7 +13865,7 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = 'span_blk: {
+                            let __result = '__span_blk43: {
                                 match ({
                                     if state.offset < state.src_bytes.len()
                                         && state.src_bytes[state.offset] == 96u8
@@ -13536,7 +13877,7 @@ mod __bbnfbootstrap_emit_impl {
                                     }
                                 }) {
                                     Some(_) => {}
-                                    None => break 'span_blk None,
+                                    None => break '__span_blk43 None,
                                 }
                                 match ({
                                     ({
@@ -13594,9 +13935,6 @@ mod __bbnfbootstrap_emit_impl {
                                                     }
                                                     __rep_count += 1;
                                                 }
-                                                if __rep_count < 0 {
-                                                    return None;
-                                                }
                                             }
                                             Some(())
                                         })();
@@ -13612,7 +13950,7 @@ mod __bbnfbootstrap_emit_impl {
                                         .map(|_| ())
                                 }) {
                                     Some(_) => {}
-                                    None => break 'span_blk None,
+                                    None => break '__span_blk43 None,
                                 }
                                 match ({
                                     if state.offset < state.src_bytes.len()
@@ -13625,12 +13963,12 @@ mod __bbnfbootstrap_emit_impl {
                                     }
                                 }) {
                                     Some(_) => {}
-                                    None => break 'span_blk None,
+                                    None => break '__span_blk43 None,
                                 }
                                 Some(())
                             };
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk44 __result;
                             }
                             state.offset = __cp;
                         }
@@ -13640,32 +13978,29 @@ mod __bbnfbootstrap_emit_impl {
                     Some(_) => {}
                     None => break 'rule_blk None,
                 }
-                {
-                    let __variant_idx: u8 = 23u8;
-                    if __has_children {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Rule,
-                                __children,
-                                __span_lo,
-                                state.offset as u32,
-                                __variant_idx,
-                                __branch_idx,
-                            ),
-                        )
-                    } else {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Span,
-                                __span_lo,
-                                state.offset as u32,
-                                __variant_idx,
-                                __branch_idx,
-                            ),
-                        )
-                    }
+                if __has_children {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Rule,
+                            __children,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                        ),
+                    )
+                } else {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_leaf(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                        ),
+                    )
                 }
             }
         }
@@ -13678,7 +14013,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    'span_blk: {
+                    '__span_blk45: {
                         match ({
                             if state.offset < state.src_bytes.len()
                                 && state.src_bytes[state.offset] == 47u8
@@ -13690,7 +14025,7 @@ mod __bbnfbootstrap_emit_impl {
                             }
                         }) {
                             Some(_) => {}
-                            None => break 'span_blk None,
+                            None => break '__span_blk45 None,
                         }
                         match ({
                             ({
@@ -13766,7 +14101,7 @@ mod __bbnfbootstrap_emit_impl {
                                 .map(|_| ())
                         }) {
                             Some(_) => {}
-                            None => break 'span_blk None,
+                            None => break '__span_blk45 None,
                         }
                         match ({
                             if state.offset < state.src_bytes.len()
@@ -13779,7 +14114,7 @@ mod __bbnfbootstrap_emit_impl {
                             }
                         }) {
                             Some(_) => {}
-                            None => break 'span_blk None,
+                            None => break '__span_blk45 None,
                         }
                         Some(())
                     }
@@ -13815,7 +14150,7 @@ mod __bbnfbootstrap_emit_impl {
                 match ({
                     {
                         ::parse_that::trim_leading_whitespace_mut(state);
-                        let __ws_inner = 'span_blk: {
+                        let __ws_inner = '__span_blk46: {
                             match ({
                                 if state.offset + 2usize <= state.src_bytes.len()
                                     && unsafe {
@@ -13830,7 +14165,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             }) {
                                 Some(_) => {}
-                                None => break 'span_blk None,
+                                None => break '__span_blk46 None,
                             }
                             match ({
                                 ({
@@ -13852,7 +14187,7 @@ mod __bbnfbootstrap_emit_impl {
                                     .map(|_| ())
                             }) {
                                 Some(_) => {}
-                                None => break 'span_blk None,
+                                None => break '__span_blk46 None,
                             }
                             match ({
                                 if state.offset + 2usize <= state.src_bytes.len()
@@ -13868,7 +14203,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             }) {
                                 Some(_) => {}
-                                None => break 'span_blk None,
+                                None => break '__span_blk46 None,
                             }
                             Some(())
                         };
@@ -13907,7 +14242,7 @@ mod __bbnfbootstrap_emit_impl {
                 match ({
                     {
                         ::parse_that::trim_leading_whitespace_mut(state);
-                        let __ws_inner = 'span_blk: {
+                        let __ws_inner = '__span_blk47: {
                             match ({
                                 if state.offset + 2usize <= state.src_bytes.len()
                                     && unsafe {
@@ -13922,40 +14257,29 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             }) {
                                 Some(_) => {}
-                                None => break 'span_blk None,
+                                None => break '__span_blk47 None,
                             }
                             match ({
                                 ({
                                     let __start = state.offset;
-                                    let __result: Option<()> = (|| {
-                                        {
-                                            let __end = state.src_bytes.len();
-                                            let mut __pos = state.offset;
-                                            while __pos < __end {
-                                                let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                                if !(__b == b'\n') {
-                                                    __pos += 1;
-                                                } else {
-                                                    break;
-                                                }
-                                            }
-                                            state.offset = __pos;
-                                        }
-                                        Some(())
-                                    })();
-                                    if __result.is_some() {
-                                        Some(
-                                            ::parse_that::Span::new(__start, state.offset, state.src),
-                                        )
+                                    let __scan = if __start >= state.src_bytes.len() {
+                                        0
                                     } else {
-                                        state.offset = __start;
-                                        None
-                                    }
+                                        (::parse_that::memchr::memchr(
+                                            b'\n',
+                                            &state.src_bytes[__start..],
+                                        ))
+                                            .unwrap_or(state.src_bytes.len() - __start)
+                                    };
+                                    state.offset = __start + __scan;
+                                    Some(
+                                        ::parse_that::Span::new(__start, state.offset, state.src),
+                                    )
                                 })
                                     .map(|_| ())
                             }) {
                                 Some(_) => {}
-                                None => break 'span_blk None,
+                                None => break '__span_blk47 None,
                             }
                             Some(())
                         };
@@ -14021,7 +14345,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    'rpt_blk: {
+                    '__rpt_blk49: {
                         let __rpt_lo = state.offset as u32;
                         let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
                             tape,
@@ -14029,7 +14353,7 @@ mod __bbnfbootstrap_emit_impl {
                         let mut __count: usize = 0;
                         loop {
                             let __prev = state.offset;
-                            match ('seq_blk: {
+                            match ('__seq_blk48: {
                                 match ({
                                     ::parse_that::trim_leading_whitespace_mut(state);
                                     let __ws_inner = Self::__binary_factor(state, tape)
@@ -14038,7 +14362,7 @@ mod __bbnfbootstrap_emit_impl {
                                     __ws_inner
                                 }) {
                                     Some(_) => {}
-                                    None => break 'seq_blk None,
+                                    None => break '__seq_blk48 None,
                                 }
                                 match ({
                                     let __opt_lo = state.offset as u32;
@@ -14077,7 +14401,7 @@ mod __bbnfbootstrap_emit_impl {
                                     Some(())
                                 }) {
                                     Some(_) => {}
-                                    None => break 'seq_blk None,
+                                    None => break '__seq_blk48 None,
                                 }
                                 Some(())
                             }) {
@@ -14093,23 +14417,28 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             }
                         }
-                        if __count >= 1usize {
-                            {
-                                let __vi: u8 = 0u8;
-                                let __mi: u8 = 0u8;
-                                ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                    tape,
-                                    ::bbnf::runtime::tape::TapeKind::Repeat,
-                                    __rpt_children,
-                                    __rpt_lo,
-                                    state.offset as u32,
-                                    __vi,
-                                    __mi,
-                                );
-                            }
+                        match if __count >= 1usize {
                             Some(())
                         } else {
-                            break 'rpt_blk None;
+                            break '__rpt_blk49 None;
+                        } {
+                            Some(()) => {
+                                {
+                                    let __vi: u8 = 0u8;
+                                    let __mi: u8 = 0u8;
+                                    ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                        tape,
+                                        ::bbnf::runtime::tape::TapeKind::Repeat,
+                                        __rpt_children,
+                                        __rpt_lo,
+                                        state.offset as u32,
+                                        __vi,
+                                        __mi,
+                                    );
+                                }
+                                Some(())
+                            }
+                            None => None,
                         }
                     }
                 }) {
@@ -14140,11 +14469,12 @@ mod __bbnfbootstrap_emit_impl {
         ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
+                let __variant_idx: u8 = 29u8;
                 let mut __branch_idx: u8 = 0;
                 let mut __has_children = false;
                 let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
                 match ({
-                    'alt_blk: {
+                    '__alt_blk58: {
                         {
                             let __cp = state.offset;
                             __branch_idx = 0u8;
@@ -14162,7 +14492,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             };
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk58 __result;
                             }
                             state.offset = __cp;
                         }
@@ -14183,7 +14513,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             };
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk58 __result;
                             }
                             state.offset = __cp;
                         }
@@ -14194,10 +14524,10 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = 'seq_blk: {
+                            let __result = '__seq_blk53: {
                                 match (Self::__identifier(state, tape).map(|_| ())) {
                                     Some(_) => {}
-                                    None => break 'seq_blk None,
+                                    None => break '__seq_blk53 None,
                                 }
                                 match ({
                                     let __opt_lo = state.offset as u32;
@@ -14205,7 +14535,7 @@ mod __bbnfbootstrap_emit_impl {
                                         tape,
                                     );
                                     let __opt_cp = state.offset;
-                                    match ('seq_blk: {
+                                    match ('__seq_blk52: {
                                         match ({
                                             if state.offset < state.src_bytes.len()
                                                 && state.src_bytes[state.offset] == 40u8
@@ -14217,7 +14547,7 @@ mod __bbnfbootstrap_emit_impl {
                                             }
                                         }) {
                                             Some(_) => {}
-                                            None => break 'seq_blk None,
+                                            None => break '__seq_blk52 None,
                                         }
                                         match ({
                                             ::parse_that::trim_leading_whitespace_mut(state);
@@ -14226,9 +14556,9 @@ mod __bbnfbootstrap_emit_impl {
                                             __ws_inner
                                         }) {
                                             Some(_) => {}
-                                            None => break 'seq_blk None,
+                                            None => break '__seq_blk52 None,
                                         }
-                                        match ('rpt_blk: {
+                                        match ('__rpt_blk51: {
                                             let __rpt_lo = state.offset as u32;
                                             let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
                                                 tape,
@@ -14236,7 +14566,7 @@ mod __bbnfbootstrap_emit_impl {
                                             let mut __count: usize = 0;
                                             loop {
                                                 let __prev = state.offset;
-                                                match ('seq_blk: {
+                                                match ('__seq_blk50: {
                                                     match ({
                                                         ::parse_that::trim_leading_whitespace_mut(state);
                                                         let __ws_inner = {
@@ -14253,7 +14583,7 @@ mod __bbnfbootstrap_emit_impl {
                                                         __ws_inner
                                                     }) {
                                                         Some(_) => {}
-                                                        None => break 'seq_blk None,
+                                                        None => break '__seq_blk50 None,
                                                     }
                                                     match ({
                                                         ::parse_that::trim_leading_whitespace_mut(state);
@@ -14262,7 +14592,7 @@ mod __bbnfbootstrap_emit_impl {
                                                         __ws_inner
                                                     }) {
                                                         Some(_) => {}
-                                                        None => break 'seq_blk None,
+                                                        None => break '__seq_blk50 None,
                                                     }
                                                     Some(())
                                                 }) {
@@ -14278,27 +14608,28 @@ mod __bbnfbootstrap_emit_impl {
                                                     }
                                                 }
                                             }
-                                            if __count >= 0usize {
-                                                {
-                                                    let __vi: u8 = 0u8;
-                                                    let __mi: u8 = 0u8;
-                                                    ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                                        tape,
-                                                        ::bbnf::runtime::tape::TapeKind::Repeat,
-                                                        __rpt_children,
-                                                        __rpt_lo,
-                                                        state.offset as u32,
-                                                        __vi,
-                                                        __mi,
-                                                    );
+                                            match Some(()) {
+                                                Some(()) => {
+                                                    {
+                                                        let __vi: u8 = 0u8;
+                                                        let __mi: u8 = 0u8;
+                                                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                                            tape,
+                                                            ::bbnf::runtime::tape::TapeKind::Repeat,
+                                                            __rpt_children,
+                                                            __rpt_lo,
+                                                            state.offset as u32,
+                                                            __vi,
+                                                            __mi,
+                                                        );
+                                                    }
+                                                    Some(())
                                                 }
-                                                Some(())
-                                            } else {
-                                                break 'rpt_blk None;
+                                                None => None,
                                             }
                                         }) {
                                             Some(_) => {}
-                                            None => break 'seq_blk None,
+                                            None => break '__seq_blk52 None,
                                         }
                                         match ({
                                             if state.offset < state.src_bytes.len()
@@ -14311,7 +14642,7 @@ mod __bbnfbootstrap_emit_impl {
                                             }
                                         }) {
                                             Some(_) => {}
-                                            None => break 'seq_blk None,
+                                            None => break '__seq_blk52 None,
                                         }
                                         Some(())
                                     }) {
@@ -14336,12 +14667,12 @@ mod __bbnfbootstrap_emit_impl {
                                     Some(())
                                 }) {
                                     Some(_) => {}
-                                    None => break 'seq_blk None,
+                                    None => break '__seq_blk53 None,
                                 }
                                 Some(())
                             };
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk58 __result;
                             }
                             state.offset = __cp;
                         }
@@ -14354,7 +14685,7 @@ mod __bbnfbootstrap_emit_impl {
                             __has_children = true;
                             let __result = Self::__literal(state, tape).map(|_| ());
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk58 __result;
                             }
                             state.offset = __cp;
                         }
@@ -14367,7 +14698,7 @@ mod __bbnfbootstrap_emit_impl {
                             __has_children = true;
                             let __result = Self::__regex(state, tape).map(|_| ());
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk58 __result;
                             }
                             state.offset = __cp;
                         }
@@ -14378,7 +14709,7 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = 'seq_blk: {
+                            let __result = '__seq_blk54: {
                                 match ({
                                     if state.offset + 2usize <= state.src_bytes.len()
                                         && unsafe {
@@ -14393,7 +14724,7 @@ mod __bbnfbootstrap_emit_impl {
                                     }
                                 }) {
                                     Some(_) => {}
-                                    None => break 'seq_blk None,
+                                    None => break '__seq_blk54 None,
                                 }
                                 match ({
                                     ::parse_that::trim_leading_whitespace_mut(state);
@@ -14402,7 +14733,7 @@ mod __bbnfbootstrap_emit_impl {
                                     __ws_inner
                                 }) {
                                     Some(_) => {}
-                                    None => break 'seq_blk None,
+                                    None => break '__seq_blk54 None,
                                 }
                                 match ({
                                     if state.offset < state.src_bytes.len()
@@ -14415,12 +14746,12 @@ mod __bbnfbootstrap_emit_impl {
                                     }
                                 }) {
                                     Some(_) => {}
-                                    None => break 'seq_blk None,
+                                    None => break '__seq_blk54 None,
                                 }
                                 Some(())
                             };
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk58 __result;
                             }
                             state.offset = __cp;
                         }
@@ -14431,7 +14762,7 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = 'seq_blk: {
+                            let __result = '__seq_blk55: {
                                 match ({
                                     if state.offset < state.src_bytes.len()
                                         && state.src_bytes[state.offset] == 40u8
@@ -14443,7 +14774,7 @@ mod __bbnfbootstrap_emit_impl {
                                     }
                                 }) {
                                     Some(_) => {}
-                                    None => break 'seq_blk None,
+                                    None => break '__seq_blk55 None,
                                 }
                                 match ({
                                     ::parse_that::trim_leading_whitespace_mut(state);
@@ -14452,7 +14783,7 @@ mod __bbnfbootstrap_emit_impl {
                                     __ws_inner
                                 }) {
                                     Some(_) => {}
-                                    None => break 'seq_blk None,
+                                    None => break '__seq_blk55 None,
                                 }
                                 match ({
                                     if state.offset < state.src_bytes.len()
@@ -14465,12 +14796,12 @@ mod __bbnfbootstrap_emit_impl {
                                     }
                                 }) {
                                     Some(_) => {}
-                                    None => break 'seq_blk None,
+                                    None => break '__seq_blk55 None,
                                 }
                                 Some(())
                             };
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk58 __result;
                             }
                             state.offset = __cp;
                         }
@@ -14481,7 +14812,7 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = 'seq_blk: {
+                            let __result = '__seq_blk56: {
                                 match ({
                                     if state.offset < state.src_bytes.len()
                                         && state.src_bytes[state.offset] == 91u8
@@ -14493,7 +14824,7 @@ mod __bbnfbootstrap_emit_impl {
                                     }
                                 }) {
                                     Some(_) => {}
-                                    None => break 'seq_blk None,
+                                    None => break '__seq_blk56 None,
                                 }
                                 match ({
                                     ::parse_that::trim_leading_whitespace_mut(state);
@@ -14502,7 +14833,7 @@ mod __bbnfbootstrap_emit_impl {
                                     __ws_inner
                                 }) {
                                     Some(_) => {}
-                                    None => break 'seq_blk None,
+                                    None => break '__seq_blk56 None,
                                 }
                                 match ({
                                     if state.offset < state.src_bytes.len()
@@ -14515,12 +14846,12 @@ mod __bbnfbootstrap_emit_impl {
                                     }
                                 }) {
                                     Some(_) => {}
-                                    None => break 'seq_blk None,
+                                    None => break '__seq_blk56 None,
                                 }
                                 Some(())
                             };
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk58 __result;
                             }
                             state.offset = __cp;
                         }
@@ -14531,7 +14862,7 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = 'seq_blk: {
+                            let __result = '__seq_blk57: {
                                 match ({
                                     if state.offset < state.src_bytes.len()
                                         && state.src_bytes[state.offset] == 123u8
@@ -14543,7 +14874,7 @@ mod __bbnfbootstrap_emit_impl {
                                     }
                                 }) {
                                     Some(_) => {}
-                                    None => break 'seq_blk None,
+                                    None => break '__seq_blk57 None,
                                 }
                                 match ({
                                     ::parse_that::trim_leading_whitespace_mut(state);
@@ -14552,7 +14883,7 @@ mod __bbnfbootstrap_emit_impl {
                                     __ws_inner
                                 }) {
                                     Some(_) => {}
-                                    None => break 'seq_blk None,
+                                    None => break '__seq_blk57 None,
                                 }
                                 match ({
                                     if state.offset < state.src_bytes.len()
@@ -14565,12 +14896,12 @@ mod __bbnfbootstrap_emit_impl {
                                     }
                                 }) {
                                     Some(_) => {}
-                                    None => break 'seq_blk None,
+                                    None => break '__seq_blk57 None,
                                 }
                                 Some(())
                             };
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk58 __result;
                             }
                             state.offset = __cp;
                         }
@@ -14580,32 +14911,29 @@ mod __bbnfbootstrap_emit_impl {
                     Some(_) => {}
                     None => break 'rule_blk None,
                 }
-                {
-                    let __variant_idx: u8 = 29u8;
-                    if __has_children {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Rule,
-                                __children,
-                                __span_lo,
-                                state.offset as u32,
-                                __variant_idx,
-                                __branch_idx,
-                            ),
-                        )
-                    } else {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Span,
-                                __span_lo,
-                                state.offset as u32,
-                                __variant_idx,
-                                __branch_idx,
-                            ),
-                        )
-                    }
+                if __has_children {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Rule,
+                            __children,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                        ),
+                    )
+                } else {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_leaf(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                        ),
+                    )
                 }
             }
         }
@@ -14616,11 +14944,12 @@ mod __bbnfbootstrap_emit_impl {
         ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
+                let __variant_idx: u8 = 30u8;
                 let mut __branch_idx: u8 = 0;
                 let mut __has_children = false;
                 let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
                 match ({
-                    'alt_lit_blk: {
+                    '__alt_lit_blk59: {
                         {
                             let __r = {
                                 if state.offset + 2usize <= state.src_bytes.len()
@@ -14636,7 +14965,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             };
                             if __r.is_some() {
-                                break 'alt_lit_blk __r;
+                                break '__alt_lit_blk59 __r;
                             }
                         }
                         {
@@ -14651,7 +14980,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             };
                             if __r.is_some() {
-                                break 'alt_lit_blk __r;
+                                break '__alt_lit_blk59 __r;
                             }
                         }
                         {
@@ -14666,7 +14995,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             };
                             if __r.is_some() {
-                                break 'alt_lit_blk __r;
+                                break '__alt_lit_blk59 __r;
                             }
                         }
                         {
@@ -14681,7 +15010,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             };
                             if __r.is_some() {
-                                break 'alt_lit_blk __r;
+                                break '__alt_lit_blk59 __r;
                             }
                         }
                         None
@@ -14690,32 +15019,29 @@ mod __bbnfbootstrap_emit_impl {
                     Some(_) => {}
                     None => break 'rule_blk None,
                 }
-                {
-                    let __variant_idx: u8 = 30u8;
-                    if __has_children {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Rule,
-                                __children,
-                                __span_lo,
-                                state.offset as u32,
-                                __variant_idx,
-                                __branch_idx,
-                            ),
-                        )
-                    } else {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Span,
-                                __span_lo,
-                                state.offset as u32,
-                                __variant_idx,
-                                __branch_idx,
-                            ),
-                        )
-                    }
+                if __has_children {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Rule,
+                            __children,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                        ),
+                    )
+                } else {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_leaf(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                        ),
+                    )
                 }
             }
         }
@@ -14728,7 +15054,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    'seq_blk: {
+                    '__seq_blk60: {
                         match ({
                             let __opt_lo = state.offset as u32;
                             let __opt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
@@ -14757,7 +15083,7 @@ mod __bbnfbootstrap_emit_impl {
                             Some(())
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk60 None,
                         }
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
@@ -14766,7 +15092,7 @@ mod __bbnfbootstrap_emit_impl {
                             __ws_inner
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk60 None,
                         }
                         match ({
                             let __opt_lo = state.offset as u32;
@@ -14796,7 +15122,7 @@ mod __bbnfbootstrap_emit_impl {
                             Some(())
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk60 None,
                         }
                         match ({
                             let __opt_lo = state.offset as u32;
@@ -14826,7 +15152,7 @@ mod __bbnfbootstrap_emit_impl {
                             Some(())
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk60 None,
                         }
                         Some(())
                     }
@@ -14860,10 +15186,10 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    'seq_blk: {
+                    '__seq_blk63: {
                         match (Self::__factor(state, tape).map(|_| ())) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk63 None,
                         }
                         match ({
                             let __opt_lo = state.offset as u32;
@@ -14871,7 +15197,7 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             let __opt_cp = state.offset;
-                            match ('seq_blk: {
+                            match ('__seq_blk62: {
                                 match ({
                                     ::parse_that::trim_leading_whitespace_mut(state);
                                     let __ws_inner = {
@@ -14891,12 +15217,12 @@ mod __bbnfbootstrap_emit_impl {
                                     __ws_inner
                                 }) {
                                     Some(_) => {}
-                                    None => break 'seq_blk None,
+                                    None => break '__seq_blk62 None,
                                 }
-                                match ('seq_blk: {
+                                match ('__seq_blk61: {
                                     match (Self::__value_expr(state, tape).map(|_| ())) {
                                         Some(_) => {}
-                                        None => break 'seq_blk None,
+                                        None => break '__seq_blk61 None,
                                     }
                                     match ({
                                         let __opt_lo = state.offset as u32;
@@ -14926,12 +15252,12 @@ mod __bbnfbootstrap_emit_impl {
                                         Some(())
                                     }) {
                                         Some(_) => {}
-                                        None => break 'seq_blk None,
+                                        None => break '__seq_blk61 None,
                                     }
                                     Some(())
                                 }) {
                                     Some(_) => {}
-                                    None => break 'seq_blk None,
+                                    None => break '__seq_blk62 None,
                                 }
                                 Some(())
                             }) {
@@ -14956,7 +15282,7 @@ mod __bbnfbootstrap_emit_impl {
                             Some(())
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk63 None,
                         }
                         Some(())
                     }
@@ -14988,11 +15314,12 @@ mod __bbnfbootstrap_emit_impl {
         ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
+                let __variant_idx: u8 = 33u8;
                 let mut __branch_idx: u8 = 0;
                 let mut __has_children = false;
                 let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
                 match ({
-                    'alt_lit_blk: {
+                    '__alt_lit_blk64: {
                         {
                             let __r = {
                                 if state.offset + 2usize <= state.src_bytes.len()
@@ -15008,7 +15335,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             };
                             if __r.is_some() {
-                                break 'alt_lit_blk __r;
+                                break '__alt_lit_blk64 __r;
                             }
                         }
                         {
@@ -15026,7 +15353,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             };
                             if __r.is_some() {
-                                break 'alt_lit_blk __r;
+                                break '__alt_lit_blk64 __r;
                             }
                         }
                         {
@@ -15041,7 +15368,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             };
                             if __r.is_some() {
-                                break 'alt_lit_blk __r;
+                                break '__alt_lit_blk64 __r;
                             }
                         }
                         None
@@ -15050,32 +15377,29 @@ mod __bbnfbootstrap_emit_impl {
                     Some(_) => {}
                     None => break 'rule_blk None,
                 }
-                {
-                    let __variant_idx: u8 = 33u8;
-                    if __has_children {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Rule,
-                                __children,
-                                __span_lo,
-                                state.offset as u32,
-                                __variant_idx,
-                                __branch_idx,
-                            ),
-                        )
-                    } else {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Span,
-                                __span_lo,
-                                state.offset as u32,
-                                __variant_idx,
-                                __branch_idx,
-                            ),
-                        )
-                    }
+                if __has_children {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Rule,
+                            __children,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                        ),
+                    )
+                } else {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_leaf(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                        ),
+                    )
                 }
             }
         }
@@ -15088,12 +15412,12 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    'seq_blk: {
+                    '__seq_blk67: {
                         match (Self::__mapped_factor(state, tape).map(|_| ())) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk67 None,
                         }
-                        match ('rpt_blk: {
+                        match ('__rpt_blk66: {
                             let __rpt_lo = state.offset as u32;
                             let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
                                 tape,
@@ -15101,7 +15425,7 @@ mod __bbnfbootstrap_emit_impl {
                             let mut __count: usize = 0;
                             loop {
                                 let __prev = state.offset;
-                                match ('seq_blk: {
+                                match ('__seq_blk65: {
                                     match ({
                                         ::parse_that::trim_leading_whitespace_mut(state);
                                         let __ws_inner = Self::__binary_operators(state, tape)
@@ -15110,11 +15434,11 @@ mod __bbnfbootstrap_emit_impl {
                                         __ws_inner
                                     }) {
                                         Some(_) => {}
-                                        None => break 'seq_blk None,
+                                        None => break '__seq_blk65 None,
                                     }
                                     match (Self::__mapped_factor(state, tape).map(|_| ())) {
                                         Some(_) => {}
-                                        None => break 'seq_blk None,
+                                        None => break '__seq_blk65 None,
                                     }
                                     Some(())
                                 }) {
@@ -15130,27 +15454,28 @@ mod __bbnfbootstrap_emit_impl {
                                     }
                                 }
                             }
-                            if __count >= 0usize {
-                                {
-                                    let __vi: u8 = 0u8;
-                                    let __mi: u8 = 0u8;
-                                    ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                        tape,
-                                        ::bbnf::runtime::tape::TapeKind::Repeat,
-                                        __rpt_children,
-                                        __rpt_lo,
-                                        state.offset as u32,
-                                        __vi,
-                                        __mi,
-                                    );
+                            match Some(()) {
+                                Some(()) => {
+                                    {
+                                        let __vi: u8 = 0u8;
+                                        let __mi: u8 = 0u8;
+                                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                            tape,
+                                            ::bbnf::runtime::tape::TapeKind::Repeat,
+                                            __rpt_children,
+                                            __rpt_lo,
+                                            state.offset as u32,
+                                            __vi,
+                                            __mi,
+                                        );
+                                    }
+                                    Some(())
                                 }
-                                Some(())
-                            } else {
-                                break 'rpt_blk None;
+                                None => None,
                             }
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk67 None,
                         }
                         Some(())
                     }
@@ -15184,7 +15509,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    'rpt_blk: {
+                    '__rpt_blk69: {
                         let __rpt_lo = state.offset as u32;
                         let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
                             tape,
@@ -15192,7 +15517,7 @@ mod __bbnfbootstrap_emit_impl {
                         let mut __count: usize = 0;
                         loop {
                             let __prev = state.offset;
-                            match ('seq_blk: {
+                            match ('__seq_blk68: {
                                 match ({
                                     ::parse_that::trim_leading_whitespace_mut(state);
                                     let __ws_inner = Self::__binary_factor(state, tape)
@@ -15201,7 +15526,7 @@ mod __bbnfbootstrap_emit_impl {
                                     __ws_inner
                                 }) {
                                     Some(_) => {}
-                                    None => break 'seq_blk None,
+                                    None => break '__seq_blk68 None,
                                 }
                                 match ({
                                     let __opt_lo = state.offset as u32;
@@ -15240,7 +15565,7 @@ mod __bbnfbootstrap_emit_impl {
                                     Some(())
                                 }) {
                                     Some(_) => {}
-                                    None => break 'seq_blk None,
+                                    None => break '__seq_blk68 None,
                                 }
                                 Some(())
                             }) {
@@ -15256,23 +15581,28 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             }
                         }
-                        if __count >= 1usize {
-                            {
-                                let __vi: u8 = 0u8;
-                                let __mi: u8 = 0u8;
-                                ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                    tape,
-                                    ::bbnf::runtime::tape::TapeKind::Repeat,
-                                    __rpt_children,
-                                    __rpt_lo,
-                                    state.offset as u32,
-                                    __vi,
-                                    __mi,
-                                );
-                            }
+                        match if __count >= 1usize {
                             Some(())
                         } else {
-                            break 'rpt_blk None;
+                            break '__rpt_blk69 None;
+                        } {
+                            Some(()) => {
+                                {
+                                    let __vi: u8 = 0u8;
+                                    let __mi: u8 = 0u8;
+                                    ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                        tape,
+                                        ::bbnf::runtime::tape::TapeKind::Repeat,
+                                        __rpt_children,
+                                        __rpt_lo,
+                                        state.offset as u32,
+                                        __vi,
+                                        __mi,
+                                    );
+                                }
+                                Some(())
+                            }
+                            None => None,
                         }
                     }
                 }) {
@@ -15305,7 +15635,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    'rpt_blk: {
+                    '__rpt_blk71: {
                         let __rpt_lo = state.offset as u32;
                         let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
                             tape,
@@ -15313,7 +15643,7 @@ mod __bbnfbootstrap_emit_impl {
                         let mut __count: usize = 0;
                         loop {
                             let __prev = state.offset;
-                            match ('seq_blk: {
+                            match ('__seq_blk70: {
                                 match ({
                                     ::parse_that::trim_leading_whitespace_mut(state);
                                     let __ws_inner = Self::__concatenation(state, tape)
@@ -15322,7 +15652,7 @@ mod __bbnfbootstrap_emit_impl {
                                     __ws_inner
                                 }) {
                                     Some(_) => {}
-                                    None => break 'seq_blk None,
+                                    None => break '__seq_blk70 None,
                                 }
                                 match ({
                                     let __opt_lo = state.offset as u32;
@@ -15361,7 +15691,7 @@ mod __bbnfbootstrap_emit_impl {
                                     Some(())
                                 }) {
                                     Some(_) => {}
-                                    None => break 'seq_blk None,
+                                    None => break '__seq_blk70 None,
                                 }
                                 Some(())
                             }) {
@@ -15377,23 +15707,28 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             }
                         }
-                        if __count >= 1usize {
-                            {
-                                let __vi: u8 = 0u8;
-                                let __mi: u8 = 0u8;
-                                ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                    tape,
-                                    ::bbnf::runtime::tape::TapeKind::Repeat,
-                                    __rpt_children,
-                                    __rpt_lo,
-                                    state.offset as u32,
-                                    __vi,
-                                    __mi,
-                                );
-                            }
+                        match if __count >= 1usize {
                             Some(())
                         } else {
-                            break 'rpt_blk None;
+                            break '__rpt_blk71 None;
+                        } {
+                            Some(()) => {
+                                {
+                                    let __vi: u8 = 0u8;
+                                    let __mi: u8 = 0u8;
+                                    ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                        tape,
+                                        ::bbnf::runtime::tape::TapeKind::Repeat,
+                                        __rpt_children,
+                                        __rpt_lo,
+                                        state.offset as u32,
+                                        __vi,
+                                        __mi,
+                                    );
+                                }
+                                Some(())
+                            }
+                            None => None,
                         }
                     }
                 }) {
@@ -15426,7 +15761,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    'seq_blk: {
+                    '__seq_blk74: {
                         match ({
                             if state.offset < state.src_bytes.len()
                                 && state.src_bytes[state.offset] == 124u8
@@ -15438,13 +15773,13 @@ mod __bbnfbootstrap_emit_impl {
                             }
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk74 None,
                         }
                         match (Self::__identifier(state, tape).map(|_| ())) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk74 None,
                         }
-                        match ('rpt_blk: {
+                        match ('__rpt_blk73: {
                             let __rpt_lo = state.offset as u32;
                             let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
                                 tape,
@@ -15452,7 +15787,7 @@ mod __bbnfbootstrap_emit_impl {
                             let mut __count: usize = 0;
                             loop {
                                 let __prev = state.offset;
-                                match ('seq_blk: {
+                                match ('__seq_blk72: {
                                     match ({
                                         ::parse_that::trim_leading_whitespace_mut(state);
                                         let __ws_inner = {
@@ -15469,11 +15804,11 @@ mod __bbnfbootstrap_emit_impl {
                                         __ws_inner
                                     }) {
                                         Some(_) => {}
-                                        None => break 'seq_blk None,
+                                        None => break '__seq_blk72 None,
                                     }
                                     match (Self::__identifier(state, tape).map(|_| ())) {
                                         Some(_) => {}
-                                        None => break 'seq_blk None,
+                                        None => break '__seq_blk72 None,
                                     }
                                     Some(())
                                 }) {
@@ -15489,27 +15824,28 @@ mod __bbnfbootstrap_emit_impl {
                                     }
                                 }
                             }
-                            if __count >= 0usize {
-                                {
-                                    let __vi: u8 = 0u8;
-                                    let __mi: u8 = 0u8;
-                                    ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                        tape,
-                                        ::bbnf::runtime::tape::TapeKind::Repeat,
-                                        __rpt_children,
-                                        __rpt_lo,
-                                        state.offset as u32,
-                                        __vi,
-                                        __mi,
-                                    );
+                            match Some(()) {
+                                Some(()) => {
+                                    {
+                                        let __vi: u8 = 0u8;
+                                        let __mi: u8 = 0u8;
+                                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                            tape,
+                                            ::bbnf::runtime::tape::TapeKind::Repeat,
+                                            __rpt_children,
+                                            __rpt_lo,
+                                            state.offset as u32,
+                                            __vi,
+                                            __mi,
+                                        );
+                                    }
+                                    Some(())
                                 }
-                                Some(())
-                            } else {
-                                break 'rpt_blk None;
+                                None => None,
                             }
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk74 None,
                         }
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
@@ -15527,11 +15863,11 @@ mod __bbnfbootstrap_emit_impl {
                             __ws_inner
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk74 None,
                         }
                         match (Self::__rhs(state, tape).map(|_| ())) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk74 None,
                         }
                         Some(())
                     }
@@ -15563,11 +15899,12 @@ mod __bbnfbootstrap_emit_impl {
         ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
+                let __variant_idx: u8 = 38u8;
                 let mut __branch_idx: u8 = 0;
                 let mut __has_children = false;
                 let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
                 match ({
-                    'alt_blk: {
+                    '__alt_blk75: {
                         {
                             let __cp = state.offset;
                             __branch_idx = 0u8;
@@ -15577,7 +15914,7 @@ mod __bbnfbootstrap_emit_impl {
                             __has_children = true;
                             let __result = Self::__closure(state, tape).map(|_| ());
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk75 __result;
                             }
                             state.offset = __cp;
                         }
@@ -15590,7 +15927,7 @@ mod __bbnfbootstrap_emit_impl {
                             __has_children = true;
                             let __result = Self::__alternation(state, tape).map(|_| ());
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk75 __result;
                             }
                             state.offset = __cp;
                         }
@@ -15600,32 +15937,29 @@ mod __bbnfbootstrap_emit_impl {
                     Some(_) => {}
                     None => break 'rule_blk None,
                 }
-                {
-                    let __variant_idx: u8 = 38u8;
-                    if __has_children {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Rule,
-                                __children,
-                                __span_lo,
-                                state.offset as u32,
-                                __variant_idx,
-                                __branch_idx,
-                            ),
-                        )
-                    } else {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Span,
-                                __span_lo,
-                                state.offset as u32,
-                                __variant_idx,
-                                __branch_idx,
-                            ),
-                        )
-                    }
+                if __has_children {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Rule,
+                            __children,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                        ),
+                    )
+                } else {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_leaf(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                        ),
+                    )
                 }
             }
         }
@@ -15638,10 +15972,10 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    'seq_blk: {
+                    '__seq_blk77: {
                         match (Self::__lhs(state, tape).map(|_| ())) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk77 None,
                         }
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
@@ -15659,7 +15993,7 @@ mod __bbnfbootstrap_emit_impl {
                             __ws_inner
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk77 None,
                         }
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
@@ -15668,9 +16002,9 @@ mod __bbnfbootstrap_emit_impl {
                             __ws_inner
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk77 None,
                         }
-                        match ('alt_lit_blk: {
+                        match ('__alt_lit_blk76: {
                             {
                                 let __r = {
                                     if state.offset < state.src_bytes.len()
@@ -15683,7 +16017,7 @@ mod __bbnfbootstrap_emit_impl {
                                     }
                                 };
                                 if __r.is_some() {
-                                    break 'alt_lit_blk __r;
+                                    break '__alt_lit_blk76 __r;
                                 }
                             }
                             {
@@ -15698,13 +16032,13 @@ mod __bbnfbootstrap_emit_impl {
                                     }
                                 };
                                 if __r.is_some() {
-                                    break 'alt_lit_blk __r;
+                                    break '__alt_lit_blk76 __r;
                                 }
                             }
                             None
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk77 None,
                         }
                         Some(())
                     }
@@ -15738,7 +16072,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    'span_blk: {
+                    '__span_blk78: {
                         match ({
                             if state.offset < state.src_bytes.len()
                                 && state.src_bytes[state.offset] == 34u8
@@ -15750,7 +16084,7 @@ mod __bbnfbootstrap_emit_impl {
                             }
                         }) {
                             Some(_) => {}
-                            None => break 'span_blk None,
+                            None => break '__span_blk78 None,
                         }
                         match ({
                             ({
@@ -15808,9 +16142,6 @@ mod __bbnfbootstrap_emit_impl {
                                             }
                                             __rep_count += 1;
                                         }
-                                        if __rep_count < 0 {
-                                            return None;
-                                        }
                                     }
                                     Some(())
                                 })();
@@ -15826,7 +16157,7 @@ mod __bbnfbootstrap_emit_impl {
                                 .map(|_| ())
                         }) {
                             Some(_) => {}
-                            None => break 'span_blk None,
+                            None => break '__span_blk78 None,
                         }
                         match ({
                             if state.offset < state.src_bytes.len()
@@ -15839,7 +16170,7 @@ mod __bbnfbootstrap_emit_impl {
                             }
                         }) {
                             Some(_) => {}
-                            None => break 'span_blk None,
+                            None => break '__span_blk78 None,
                         }
                         Some(())
                     }
@@ -15873,7 +16204,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    'seq_blk: {
+                    '__seq_blk82: {
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
                             let __ws_inner = {
@@ -15890,16 +16221,16 @@ mod __bbnfbootstrap_emit_impl {
                             __ws_inner
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk82 None,
                         }
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = 'seq_blk: {
+                            let __ws_inner = '__seq_blk81: {
                                 match (Self::__identifier(state, tape).map(|_| ())) {
                                     Some(_) => {}
-                                    None => break 'seq_blk None,
+                                    None => break '__seq_blk81 None,
                                 }
-                                match ('rpt_blk: {
+                                match ('__rpt_blk80: {
                                     let __rpt_lo = state.offset as u32;
                                     let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
                                         tape,
@@ -15907,7 +16238,7 @@ mod __bbnfbootstrap_emit_impl {
                                     let mut __count: usize = 0;
                                     loop {
                                         let __prev = state.offset;
-                                        match ('seq_blk: {
+                                        match ('__seq_blk79: {
                                             match ({
                                                 ::parse_that::trim_leading_whitespace_mut(state);
                                                 let __ws_inner = {
@@ -15924,11 +16255,11 @@ mod __bbnfbootstrap_emit_impl {
                                                 __ws_inner
                                             }) {
                                                 Some(_) => {}
-                                                None => break 'seq_blk None,
+                                                None => break '__seq_blk79 None,
                                             }
                                             match (Self::__identifier(state, tape).map(|_| ())) {
                                                 Some(_) => {}
-                                                None => break 'seq_blk None,
+                                                None => break '__seq_blk79 None,
                                             }
                                             Some(())
                                         }) {
@@ -15944,27 +16275,28 @@ mod __bbnfbootstrap_emit_impl {
                                             }
                                         }
                                     }
-                                    if __count >= 0usize {
-                                        {
-                                            let __vi: u8 = 0u8;
-                                            let __mi: u8 = 0u8;
-                                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                                tape,
-                                                ::bbnf::runtime::tape::TapeKind::Repeat,
-                                                __rpt_children,
-                                                __rpt_lo,
-                                                state.offset as u32,
-                                                __vi,
-                                                __mi,
-                                            );
+                                    match Some(()) {
+                                        Some(()) => {
+                                            {
+                                                let __vi: u8 = 0u8;
+                                                let __mi: u8 = 0u8;
+                                                ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                                    tape,
+                                                    ::bbnf::runtime::tape::TapeKind::Repeat,
+                                                    __rpt_children,
+                                                    __rpt_lo,
+                                                    state.offset as u32,
+                                                    __vi,
+                                                    __mi,
+                                                );
+                                            }
+                                            Some(())
                                         }
-                                        Some(())
-                                    } else {
-                                        break 'rpt_blk None;
+                                        None => None,
                                     }
                                 }) {
                                     Some(_) => {}
-                                    None => break 'seq_blk None,
+                                    None => break '__seq_blk81 None,
                                 }
                                 Some(())
                             };
@@ -15972,7 +16304,7 @@ mod __bbnfbootstrap_emit_impl {
                             __ws_inner
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk82 None,
                         }
                         match ({
                             if state.offset < state.src_bytes.len()
@@ -15985,7 +16317,7 @@ mod __bbnfbootstrap_emit_impl {
                             }
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk82 None,
                         }
                         Some(())
                     }
@@ -16019,7 +16351,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    'seq_blk: {
+                    '__seq_blk86: {
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
                             let __ws_inner = {
@@ -16039,14 +16371,14 @@ mod __bbnfbootstrap_emit_impl {
                             __ws_inner
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk86 None,
                         }
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = 'alt_blk: {
+                            let __ws_inner = '__alt_blk84: {
                                 {
                                     let __cp = state.offset;
-                                    let __result = 'seq_blk: {
+                                    let __result = '__seq_blk83: {
                                         match ({
                                             ::parse_that::trim_leading_whitespace_mut(state);
                                             let __ws_inner = Self::__import_items(state, tape)
@@ -16055,7 +16387,7 @@ mod __bbnfbootstrap_emit_impl {
                                             __ws_inner
                                         }) {
                                             Some(_) => {}
-                                            None => break 'seq_blk None,
+                                            None => break '__seq_blk83 None,
                                         }
                                         match ({
                                             ::parse_that::trim_leading_whitespace_mut(state);
@@ -16076,16 +16408,16 @@ mod __bbnfbootstrap_emit_impl {
                                             __ws_inner
                                         }) {
                                             Some(_) => {}
-                                            None => break 'seq_blk None,
+                                            None => break '__seq_blk83 None,
                                         }
                                         match (Self::__import_path(state, tape).map(|_| ())) {
                                             Some(_) => {}
-                                            None => break 'seq_blk None,
+                                            None => break '__seq_blk83 None,
                                         }
                                         Some(())
                                     };
                                     if __result.is_some() {
-                                        break 'alt_blk __result;
+                                        break '__alt_blk84 __result;
                                     }
                                     state.offset = __cp;
                                 }
@@ -16093,7 +16425,7 @@ mod __bbnfbootstrap_emit_impl {
                                     let __cp = state.offset;
                                     let __result = Self::__import_path(state, tape).map(|_| ());
                                     if __result.is_some() {
-                                        break 'alt_blk __result;
+                                        break '__alt_blk84 __result;
                                     }
                                     state.offset = __cp;
                                 }
@@ -16103,7 +16435,7 @@ mod __bbnfbootstrap_emit_impl {
                             __ws_inner
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk86 None,
                         }
                         match ({
                             let __opt_lo = state.offset as u32;
@@ -16111,7 +16443,7 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             let __opt_cp = state.offset;
-                            match ('alt_lit_blk: {
+                            match ('__alt_lit_blk85: {
                                 {
                                     let __r = {
                                         if state.offset < state.src_bytes.len()
@@ -16124,7 +16456,7 @@ mod __bbnfbootstrap_emit_impl {
                                         }
                                     };
                                     if __r.is_some() {
-                                        break 'alt_lit_blk __r;
+                                        break '__alt_lit_blk85 __r;
                                     }
                                 }
                                 {
@@ -16139,7 +16471,7 @@ mod __bbnfbootstrap_emit_impl {
                                         }
                                     };
                                     if __r.is_some() {
-                                        break 'alt_lit_blk __r;
+                                        break '__alt_lit_blk85 __r;
                                     }
                                 }
                                 None
@@ -16165,7 +16497,7 @@ mod __bbnfbootstrap_emit_impl {
                             Some(())
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk86 None,
                         }
                         Some(())
                     }
@@ -16199,7 +16531,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    'seq_blk: {
+                    '__seq_blk88: {
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
                             let __ws_inner = {
@@ -16219,7 +16551,7 @@ mod __bbnfbootstrap_emit_impl {
                             __ws_inner
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk88 None,
                         }
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
@@ -16228,7 +16560,7 @@ mod __bbnfbootstrap_emit_impl {
                             __ws_inner
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk88 None,
                         }
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
@@ -16237,7 +16569,7 @@ mod __bbnfbootstrap_emit_impl {
                             __ws_inner
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk88 None,
                         }
                         match ({
                             let __opt_lo = state.offset as u32;
@@ -16245,7 +16577,7 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             let __opt_cp = state.offset;
-                            match ('alt_lit_blk: {
+                            match ('__alt_lit_blk87: {
                                 {
                                     let __r = {
                                         if state.offset < state.src_bytes.len()
@@ -16258,7 +16590,7 @@ mod __bbnfbootstrap_emit_impl {
                                         }
                                     };
                                     if __r.is_some() {
-                                        break 'alt_lit_blk __r;
+                                        break '__alt_lit_blk87 __r;
                                     }
                                 }
                                 {
@@ -16273,7 +16605,7 @@ mod __bbnfbootstrap_emit_impl {
                                         }
                                     };
                                     if __r.is_some() {
-                                        break 'alt_lit_blk __r;
+                                        break '__alt_lit_blk87 __r;
                                     }
                                 }
                                 None
@@ -16299,7 +16631,7 @@ mod __bbnfbootstrap_emit_impl {
                             Some(())
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk88 None,
                         }
                         Some(())
                     }
@@ -16333,10 +16665,10 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    'seq_blk: {
+                    '__seq_blk90: {
                         match (Self::__identifier(state, tape).map(|_| ())) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk90 None,
                         }
                         match ({
                             let __opt_lo = state.offset as u32;
@@ -16344,7 +16676,7 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             let __opt_cp = state.offset;
-                            match ('span_blk: {
+                            match ('__span_blk89: {
                                 match ({
                                     if state.offset < state.src_bytes.len()
                                         && state.src_bytes[state.offset] == 40u8
@@ -16356,7 +16688,7 @@ mod __bbnfbootstrap_emit_impl {
                                     }
                                 }) {
                                     Some(_) => {}
-                                    None => break 'span_blk None,
+                                    None => break '__span_blk89 None,
                                 }
                                 match ({
                                     ({
@@ -16378,7 +16710,7 @@ mod __bbnfbootstrap_emit_impl {
                                         .map(|_| ())
                                 }) {
                                     Some(_) => {}
-                                    None => break 'span_blk None,
+                                    None => break '__span_blk89 None,
                                 }
                                 match ({
                                     if state.offset < state.src_bytes.len()
@@ -16391,7 +16723,7 @@ mod __bbnfbootstrap_emit_impl {
                                     }
                                 }) {
                                     Some(_) => {}
-                                    None => break 'span_blk None,
+                                    None => break '__span_blk89 None,
                                 }
                                 Some(())
                             }) {
@@ -16416,7 +16748,7 @@ mod __bbnfbootstrap_emit_impl {
                             Some(())
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk90 None,
                         }
                         Some(())
                     }
@@ -16450,7 +16782,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    'seq_blk: {
+                    '__seq_blk94: {
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
                             let __ws_inner = {
@@ -16470,11 +16802,11 @@ mod __bbnfbootstrap_emit_impl {
                             __ws_inner
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk94 None,
                         }
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = 'alt_blk: {
+                            let __ws_inner = '__alt_blk91: {
                                 {
                                     let __cp = state.offset;
                                     let __result = {
@@ -16488,7 +16820,7 @@ mod __bbnfbootstrap_emit_impl {
                                         }
                                     };
                                     if __result.is_some() {
-                                        break 'alt_blk __result;
+                                        break '__alt_blk91 __result;
                                     }
                                     state.offset = __cp;
                                 }
@@ -16496,7 +16828,7 @@ mod __bbnfbootstrap_emit_impl {
                                     let __cp = state.offset;
                                     let __result = Self::__identifier(state, tape).map(|_| ());
                                     if __result.is_some() {
-                                        break 'alt_blk __result;
+                                        break '__alt_blk91 __result;
                                     }
                                     state.offset = __cp;
                                 }
@@ -16506,9 +16838,9 @@ mod __bbnfbootstrap_emit_impl {
                             __ws_inner
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk94 None,
                         }
-                        match ('rpt_blk: {
+                        match ('__rpt_blk92: {
                             let __rpt_lo = state.offset as u32;
                             let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
                                 tape,
@@ -16535,27 +16867,32 @@ mod __bbnfbootstrap_emit_impl {
                                     }
                                 }
                             }
-                            if __count >= 1usize {
-                                {
-                                    let __vi: u8 = 0u8;
-                                    let __mi: u8 = 0u8;
-                                    ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                        tape,
-                                        ::bbnf::runtime::tape::TapeKind::Repeat,
-                                        __rpt_children,
-                                        __rpt_lo,
-                                        state.offset as u32,
-                                        __vi,
-                                        __mi,
-                                    );
-                                }
+                            match if __count >= 1usize {
                                 Some(())
                             } else {
-                                break 'rpt_blk None;
+                                break '__rpt_blk92 None;
+                            } {
+                                Some(()) => {
+                                    {
+                                        let __vi: u8 = 0u8;
+                                        let __mi: u8 = 0u8;
+                                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                            tape,
+                                            ::bbnf::runtime::tape::TapeKind::Repeat,
+                                            __rpt_children,
+                                            __rpt_lo,
+                                            state.offset as u32,
+                                            __vi,
+                                            __mi,
+                                        );
+                                    }
+                                    Some(())
+                                }
+                                None => None,
                             }
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk94 None,
                         }
                         match ({
                             let __opt_lo = state.offset as u32;
@@ -16563,7 +16900,7 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             let __opt_cp = state.offset;
-                            match ('alt_lit_blk: {
+                            match ('__alt_lit_blk93: {
                                 {
                                     let __r = {
                                         if state.offset < state.src_bytes.len()
@@ -16576,7 +16913,7 @@ mod __bbnfbootstrap_emit_impl {
                                         }
                                     };
                                     if __r.is_some() {
-                                        break 'alt_lit_blk __r;
+                                        break '__alt_lit_blk93 __r;
                                     }
                                 }
                                 {
@@ -16591,7 +16928,7 @@ mod __bbnfbootstrap_emit_impl {
                                         }
                                     };
                                     if __r.is_some() {
-                                        break 'alt_lit_blk __r;
+                                        break '__alt_lit_blk93 __r;
                                     }
                                 }
                                 None
@@ -16617,7 +16954,7 @@ mod __bbnfbootstrap_emit_impl {
                             Some(())
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk94 None,
                         }
                         Some(())
                     }
@@ -16651,7 +16988,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    'seq_blk: {
+                    '__seq_blk96: {
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
                             let __ws_inner = {
@@ -16671,7 +17008,7 @@ mod __bbnfbootstrap_emit_impl {
                             __ws_inner
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk96 None,
                         }
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
@@ -16680,7 +17017,7 @@ mod __bbnfbootstrap_emit_impl {
                             __ws_inner
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk96 None,
                         }
                         match ({
                             let __opt_lo = state.offset as u32;
@@ -16688,7 +17025,7 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             let __opt_cp = state.offset;
-                            match ('alt_lit_blk: {
+                            match ('__alt_lit_blk95: {
                                 {
                                     let __r = {
                                         if state.offset < state.src_bytes.len()
@@ -16701,7 +17038,7 @@ mod __bbnfbootstrap_emit_impl {
                                         }
                                     };
                                     if __r.is_some() {
-                                        break 'alt_lit_blk __r;
+                                        break '__alt_lit_blk95 __r;
                                     }
                                 }
                                 {
@@ -16716,7 +17053,7 @@ mod __bbnfbootstrap_emit_impl {
                                         }
                                     };
                                     if __r.is_some() {
-                                        break 'alt_lit_blk __r;
+                                        break '__alt_lit_blk95 __r;
                                     }
                                 }
                                 None
@@ -16742,7 +17079,7 @@ mod __bbnfbootstrap_emit_impl {
                             Some(())
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk96 None,
                         }
                         Some(())
                     }
@@ -16776,7 +17113,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    'seq_blk: {
+                    '__seq_blk98: {
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
                             let __ws_inner = {
@@ -16796,7 +17133,7 @@ mod __bbnfbootstrap_emit_impl {
                             __ws_inner
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk98 None,
                         }
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
@@ -16805,7 +17142,7 @@ mod __bbnfbootstrap_emit_impl {
                             __ws_inner
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk98 None,
                         }
                         match ({
                             let __opt_lo = state.offset as u32;
@@ -16813,7 +17150,7 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             let __opt_cp = state.offset;
-                            match ('alt_lit_blk: {
+                            match ('__alt_lit_blk97: {
                                 {
                                     let __r = {
                                         if state.offset < state.src_bytes.len()
@@ -16826,7 +17163,7 @@ mod __bbnfbootstrap_emit_impl {
                                         }
                                     };
                                     if __r.is_some() {
-                                        break 'alt_lit_blk __r;
+                                        break '__alt_lit_blk97 __r;
                                     }
                                 }
                                 {
@@ -16841,7 +17178,7 @@ mod __bbnfbootstrap_emit_impl {
                                         }
                                     };
                                     if __r.is_some() {
-                                        break 'alt_lit_blk __r;
+                                        break '__alt_lit_blk97 __r;
                                     }
                                 }
                                 None
@@ -16867,7 +17204,7 @@ mod __bbnfbootstrap_emit_impl {
                             Some(())
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk98 None,
                         }
                         Some(())
                     }
@@ -16901,7 +17238,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    'seq_blk: {
+                    '__seq_blk101: {
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
                             let __ws_inner = {
@@ -16921,11 +17258,11 @@ mod __bbnfbootstrap_emit_impl {
                             __ws_inner
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk101 None,
                         }
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = 'alt_blk: {
+                            let __ws_inner = '__alt_blk99: {
                                 {
                                     let __cp = state.offset;
                                     let __result = {
@@ -16939,7 +17276,7 @@ mod __bbnfbootstrap_emit_impl {
                                         }
                                     };
                                     if __result.is_some() {
-                                        break 'alt_blk __result;
+                                        break '__alt_blk99 __result;
                                     }
                                     state.offset = __cp;
                                 }
@@ -16947,7 +17284,7 @@ mod __bbnfbootstrap_emit_impl {
                                     let __cp = state.offset;
                                     let __result = Self::__identifier(state, tape).map(|_| ());
                                     if __result.is_some() {
-                                        break 'alt_blk __result;
+                                        break '__alt_blk99 __result;
                                     }
                                     state.offset = __cp;
                                 }
@@ -16957,7 +17294,7 @@ mod __bbnfbootstrap_emit_impl {
                             __ws_inner
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk101 None,
                         }
                         match ({
                             let __opt_lo = state.offset as u32;
@@ -16965,7 +17302,7 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             let __opt_cp = state.offset;
-                            match ('alt_lit_blk: {
+                            match ('__alt_lit_blk100: {
                                 {
                                     let __r = {
                                         if state.offset < state.src_bytes.len()
@@ -16978,7 +17315,7 @@ mod __bbnfbootstrap_emit_impl {
                                         }
                                     };
                                     if __r.is_some() {
-                                        break 'alt_lit_blk __r;
+                                        break '__alt_lit_blk100 __r;
                                     }
                                 }
                                 {
@@ -16993,7 +17330,7 @@ mod __bbnfbootstrap_emit_impl {
                                         }
                                     };
                                     if __r.is_some() {
-                                        break 'alt_lit_blk __r;
+                                        break '__alt_lit_blk100 __r;
                                     }
                                 }
                                 None
@@ -17019,7 +17356,7 @@ mod __bbnfbootstrap_emit_impl {
                             Some(())
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk101 None,
                         }
                         Some(())
                     }
@@ -17053,7 +17390,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    'seq_blk: {
+                    '__seq_blk104: {
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
                             let __ws_inner = {
@@ -17073,7 +17410,7 @@ mod __bbnfbootstrap_emit_impl {
                             __ws_inner
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk104 None,
                         }
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
@@ -17082,7 +17419,7 @@ mod __bbnfbootstrap_emit_impl {
                             __ws_inner
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk104 None,
                         }
                         match ({
                             let __opt_lo = state.offset as u32;
@@ -17090,7 +17427,7 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             let __opt_cp = state.offset;
-                            match ('seq_blk: {
+                            match ('__seq_blk102: {
                                 match ({
                                     ::parse_that::trim_leading_whitespace_mut(state);
                                     let __ws_inner = {
@@ -17107,7 +17444,7 @@ mod __bbnfbootstrap_emit_impl {
                                     __ws_inner
                                 }) {
                                     Some(_) => {}
-                                    None => break 'seq_blk None,
+                                    None => break '__seq_blk102 None,
                                 }
                                 match ({
                                     ::parse_that::trim_leading_whitespace_mut(state);
@@ -17116,7 +17453,7 @@ mod __bbnfbootstrap_emit_impl {
                                     __ws_inner
                                 }) {
                                     Some(_) => {}
-                                    None => break 'seq_blk None,
+                                    None => break '__seq_blk102 None,
                                 }
                                 Some(())
                             }) {
@@ -17141,7 +17478,7 @@ mod __bbnfbootstrap_emit_impl {
                             Some(())
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk104 None,
                         }
                         match ({
                             let __opt_lo = state.offset as u32;
@@ -17149,7 +17486,7 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             let __opt_cp = state.offset;
-                            match ('alt_lit_blk: {
+                            match ('__alt_lit_blk103: {
                                 {
                                     let __r = {
                                         if state.offset < state.src_bytes.len()
@@ -17162,7 +17499,7 @@ mod __bbnfbootstrap_emit_impl {
                                         }
                                     };
                                     if __r.is_some() {
-                                        break 'alt_lit_blk __r;
+                                        break '__alt_lit_blk103 __r;
                                     }
                                 }
                                 {
@@ -17177,7 +17514,7 @@ mod __bbnfbootstrap_emit_impl {
                                         }
                                     };
                                     if __r.is_some() {
-                                        break 'alt_lit_blk __r;
+                                        break '__alt_lit_blk103 __r;
                                     }
                                 }
                                 None
@@ -17203,7 +17540,7 @@ mod __bbnfbootstrap_emit_impl {
                             Some(())
                         }) {
                             Some(_) => {}
-                            None => break 'seq_blk None,
+                            None => break '__seq_blk104 None,
                         }
                         Some(())
                     }
@@ -17235,11 +17572,12 @@ mod __bbnfbootstrap_emit_impl {
         ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
+                let __variant_idx: u8 = 50u8;
                 let mut __branch_idx: u8 = 0;
                 let mut __has_children = false;
                 let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
                 match ({
-                    'alt_blk: {
+                    '__alt_blk105: {
                         {
                             let __cp = state.offset;
                             __branch_idx = 0u8;
@@ -17250,7 +17588,7 @@ mod __bbnfbootstrap_emit_impl {
                             let __result = Self::__import_directive(state, tape)
                                 .map(|_| ());
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk105 __result;
                             }
                             state.offset = __cp;
                         }
@@ -17264,7 +17602,7 @@ mod __bbnfbootstrap_emit_impl {
                             let __result = Self::__recover_directive(state, tape)
                                 .map(|_| ());
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk105 __result;
                             }
                             state.offset = __cp;
                         }
@@ -17278,7 +17616,7 @@ mod __bbnfbootstrap_emit_impl {
                             let __result = Self::__pretty_directive(state, tape)
                                 .map(|_| ());
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk105 __result;
                             }
                             state.offset = __cp;
                         }
@@ -17291,7 +17629,7 @@ mod __bbnfbootstrap_emit_impl {
                             __has_children = true;
                             let __result = Self::__ws_directive(state, tape).map(|_| ());
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk105 __result;
                             }
                             state.offset = __cp;
                         }
@@ -17305,7 +17643,7 @@ mod __bbnfbootstrap_emit_impl {
                             let __result = Self::__token_directive(state, tape)
                                 .map(|_| ());
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk105 __result;
                             }
                             state.offset = __cp;
                         }
@@ -17319,7 +17657,7 @@ mod __bbnfbootstrap_emit_impl {
                             let __result = Self::__debug_directive(state, tape)
                                 .map(|_| ());
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk105 __result;
                             }
                             state.offset = __cp;
                         }
@@ -17333,7 +17671,7 @@ mod __bbnfbootstrap_emit_impl {
                             let __result = Self::__host_directive(state, tape)
                                 .map(|_| ());
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk105 __result;
                             }
                             state.offset = __cp;
                         }
@@ -17343,32 +17681,29 @@ mod __bbnfbootstrap_emit_impl {
                     Some(_) => {}
                     None => break 'rule_blk None,
                 }
-                {
-                    let __variant_idx: u8 = 50u8;
-                    if __has_children {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Rule,
-                                __children,
-                                __span_lo,
-                                state.offset as u32,
-                                __variant_idx,
-                                __branch_idx,
-                            ),
-                        )
-                    } else {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Span,
-                                __span_lo,
-                                state.offset as u32,
-                                __variant_idx,
-                                __branch_idx,
-                            ),
-                        )
-                    }
+                if __has_children {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Rule,
+                            __children,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                        ),
+                    )
+                } else {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_leaf(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                        ),
+                    )
                 }
             }
         }
@@ -17379,11 +17714,12 @@ mod __bbnfbootstrap_emit_impl {
         ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
+                let __variant_idx: u8 = 51u8;
                 let mut __branch_idx: u8 = 0;
                 let mut __has_children = false;
                 let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
                 match ({
-                    'alt_blk: {
+                    '__alt_blk106: {
                         {
                             let __cp = state.offset;
                             __branch_idx = 0u8;
@@ -17393,7 +17729,7 @@ mod __bbnfbootstrap_emit_impl {
                             __has_children = true;
                             let __result = Self::__comment(state, tape).map(|_| ());
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk106 __result;
                             }
                             state.offset = __cp;
                         }
@@ -17406,7 +17742,7 @@ mod __bbnfbootstrap_emit_impl {
                             __has_children = true;
                             let __result = Self::__big_comment(state, tape).map(|_| ());
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk106 __result;
                             }
                             state.offset = __cp;
                         }
@@ -17419,7 +17755,7 @@ mod __bbnfbootstrap_emit_impl {
                             __has_children = true;
                             let __result = Self::__directive(state, tape).map(|_| ());
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk106 __result;
                             }
                             state.offset = __cp;
                         }
@@ -17432,7 +17768,7 @@ mod __bbnfbootstrap_emit_impl {
                             __has_children = true;
                             let __result = Self::__rule(state, tape).map(|_| ());
                             if __result.is_some() {
-                                break 'alt_blk __result;
+                                break '__alt_blk106 __result;
                             }
                             state.offset = __cp;
                         }
@@ -17442,32 +17778,29 @@ mod __bbnfbootstrap_emit_impl {
                     Some(_) => {}
                     None => break 'rule_blk None,
                 }
-                {
-                    let __variant_idx: u8 = 51u8;
-                    if __has_children {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Rule,
-                                __children,
-                                __span_lo,
-                                state.offset as u32,
-                                __variant_idx,
-                                __branch_idx,
-                            ),
-                        )
-                    } else {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Span,
-                                __span_lo,
-                                state.offset as u32,
-                                __variant_idx,
-                                __branch_idx,
-                            ),
-                        )
-                    }
+                if __has_children {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Rule,
+                            __children,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                        ),
+                    )
+                } else {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_leaf(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                        ),
+                    )
                 }
             }
         }
@@ -17480,7 +17813,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
-                    'rpt_blk: {
+                    '__rpt_blk107: {
                         let __rpt_lo = state.offset as u32;
                         let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
                             tape,
@@ -17507,23 +17840,24 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                             }
                         }
-                        if __count >= 0usize {
-                            {
-                                let __vi: u8 = 0u8;
-                                let __mi: u8 = 0u8;
-                                ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                    tape,
-                                    ::bbnf::runtime::tape::TapeKind::Repeat,
-                                    __rpt_children,
-                                    __rpt_lo,
-                                    state.offset as u32,
-                                    __vi,
-                                    __mi,
-                                );
+                        match Some(()) {
+                            Some(()) => {
+                                {
+                                    let __vi: u8 = 0u8;
+                                    let __mi: u8 = 0u8;
+                                    ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                        tape,
+                                        ::bbnf::runtime::tape::TapeKind::Repeat,
+                                        __rpt_children,
+                                        __rpt_lo,
+                                        state.offset as u32,
+                                        __vi,
+                                        __mi,
+                                    );
+                                }
+                                Some(())
                             }
-                            Some(())
-                        } else {
-                            break 'rpt_blk None;
+                            None => None,
                         }
                     }
                 }) {
@@ -17895,9 +18229,6 @@ mod __bbnfbootstrap_emit_impl {
                                             break;
                                         }
                                         __rep_count += 1;
-                                    }
-                                    if __rep_count < 0 {
-                                        return None;
                                     }
                                 }
                                 Some(())
@@ -18591,9 +18922,6 @@ mod __bbnfbootstrap_emit_impl {
                                                                                 break;
                                                                             }
                                                                             __rep_count += 1;
-                                                                        }
-                                                                        if __rep_count < 0 {
-                                                                            return None;
                                                                         }
                                                                     }
                                                                     Some(())
@@ -20199,9 +20527,6 @@ mod __bbnfbootstrap_emit_impl {
                                                     }
                                                     __rep_count += 1;
                                                 }
-                                                if __rep_count < 0 {
-                                                    return None;
-                                                }
                                             }
                                             Some(())
                                         })();
@@ -20311,9 +20636,6 @@ mod __bbnfbootstrap_emit_impl {
                                                             }
                                                             __rep_count += 1;
                                                         }
-                                                        if __rep_count < 0 {
-                                                            return None;
-                                                        }
                                                     }
                                                     Some(())
                                                 })();
@@ -20422,9 +20744,6 @@ mod __bbnfbootstrap_emit_impl {
                                                                         break;
                                                                     }
                                                                     __rep_count += 1;
-                                                                }
-                                                                if __rep_count < 0 {
-                                                                    return None;
                                                                 }
                                                             }
                                                             Some(())
@@ -20740,30 +21059,19 @@ mod __bbnfbootstrap_emit_impl {
                                         let __start = state.offset;
                                         if {
                                             let __start = state.offset;
-                                            let __result: Option<()> = (|| {
-                                                {
-                                                    let __end = state.src_bytes.len();
-                                                    let mut __pos = state.offset;
-                                                    while __pos < __end {
-                                                        let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                                        if !(__b == b'\n') {
-                                                            __pos += 1;
-                                                        } else {
-                                                            break;
-                                                        }
-                                                    }
-                                                    state.offset = __pos;
-                                                }
-                                                Some(())
-                                            })();
-                                            if __result.is_some() {
-                                                Some(
-                                                    ::parse_that::Span::new(__start, state.offset, state.src),
-                                                )
+                                            let __scan = if __start >= state.src_bytes.len() {
+                                                0
                                             } else {
-                                                state.offset = __start;
-                                                None
-                                            }
+                                                (::parse_that::memchr::memchr(
+                                                    b'\n',
+                                                    &state.src_bytes[__start..],
+                                                ))
+                                                    .unwrap_or(state.src_bytes.len() - __start)
+                                            };
+                                            state.offset = __start + __scan;
+                                            Some(
+                                                ::parse_that::Span::new(__start, state.offset, state.src),
+                                            )
                                         }
                                             .is_none()
                                         {
@@ -22533,9 +22841,6 @@ mod __bbnfbootstrap_emit_impl {
                                         }
                                         __rep_count += 1;
                                     }
-                                    if __rep_count < 0 {
-                                        return None;
-                                    }
                                 }
                                 Some(())
                             })();
@@ -24115,30 +24420,19 @@ mod __bbnfbootstrap_emit_impl {
                                                     let __start = state.offset;
                                                     if {
                                                         let __start = state.offset;
-                                                        let __result: Option<()> = (|| {
-                                                            {
-                                                                let __end = state.src_bytes.len();
-                                                                let mut __pos = state.offset;
-                                                                while __pos < __end {
-                                                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                                                    if !(__b == b'\n') {
-                                                                        __pos += 1;
-                                                                    } else {
-                                                                        break;
-                                                                    }
-                                                                }
-                                                                state.offset = __pos;
-                                                            }
-                                                            Some(())
-                                                        })();
-                                                        if __result.is_some() {
-                                                            Some(
-                                                                ::parse_that::Span::new(__start, state.offset, state.src),
-                                                            )
+                                                        let __scan = if __start >= state.src_bytes.len() {
+                                                            0
                                                         } else {
-                                                            state.offset = __start;
-                                                            None
-                                                        }
+                                                            (::parse_that::memchr::memchr(
+                                                                b'\n',
+                                                                &state.src_bytes[__start..],
+                                                            ))
+                                                                .unwrap_or(state.src_bytes.len() - __start)
+                                                        };
+                                                        state.offset = __start + __scan;
+                                                        Some(
+                                                            ::parse_that::Span::new(__start, state.offset, state.src),
+                                                        )
                                                     }
                                                         .is_none()
                                                     {

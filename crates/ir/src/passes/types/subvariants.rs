@@ -157,6 +157,7 @@ pub(super) fn validate_sub_variant_uniqueness_raw<'a>(
             }
             seen_in_rule.push(&sv.ty);
 
+            #[cfg(debug_assertions)]
             if let Some((_, other_rule, other_variant)) = type_to_origin
                 .iter()
                 .find(|(seen_ty, seen_rule, _)| *seen_ty == &sv.ty && *seen_rule != rule_name)
@@ -164,12 +165,15 @@ pub(super) fn validate_sub_variant_uniqueness_raw<'a>(
                 // Cross-rule type collision: two rules produce structurally identical
                 // sub-variant types. This is handled at codegen time by scoping the
                 // sub-variant search to the current rule. Log but don't panic.
-                #[cfg(debug_assertions)]
                 eprintln!(
                     "Note: sub-variant type collision between `{}::{}` and `{}::{}` ({:?}). \
                      Codegen will resolve by rule-scoped lookup.",
                     rule_name, sv.variant_name, other_rule, other_variant, sv.ty,
                 );
+            }
+            #[cfg(not(debug_assertions))]
+            {
+                let _ = &type_to_origin;
             }
             type_to_origin.push((&sv.ty, rule_name, &sv.variant_name));
         }

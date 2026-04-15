@@ -43,6 +43,17 @@ use bbnf_derive::Parser;
 // integration tests — the benchmark corpus is well-formed, so
 // recovery arms would never fire.
 
+/// AU.2.4: the CSS L4 grammar's `hex` rule references
+/// `crate::css_types::parse_hex_color` through the HexConvert route;
+/// every #[derive(Parser)] site that includes CSS L4 must expose this
+/// module with a compatible signature so the generated parser compiles.
+#[allow(dead_code)]
+mod css_types {
+    pub fn parse_hex_color(_s: &str) -> u32 {
+        0
+    }
+}
+
 #[derive(Parser)]
 #[parser(path = "../../grammar/json/json.bbnf")]
 struct JsonGrammar;

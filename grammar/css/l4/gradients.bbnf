@@ -4,20 +4,35 @@
 // CSS Images Level 4 — gradient functions.
 // Spec: https://drafts.csswg.org/css-images-4/
 
+// Gradient family u8 discriminants and per-axis keyword tags.
+// TODO typed-aggregate (AU.2.6): colorStopList is a Vec<(Color, Position?)>;
+// linear/radial/conic configs compose direction + stop-list aggregates.
+// Grammar declares per-variant tags; recursive Color payloads land with
+// AU.6.7 arena-backed aggregates.
+
+gradientKind = "repeating-linear-gradient" -> 1u8
+             | "repeating-radial-gradient" -> 3u8
+             | "repeating-conic-gradient"  -> 5u8
+             | "linear-gradient" -> 0u8
+             | "radial-gradient" -> 2u8
+             | "conic-gradient"  -> 4u8 ;
+
 // Color stop: color with optional position(s)
 colorStopPosition = percentage | length ;
 colorStop = color , colorStopPosition ? , colorStopPosition ? ;
 colorStopList = colorStop , ("," ?w , colorStop) * ;
 
-// Linear gradient
-linearSide = "top" | "bottom" | "left" | "right" ;
+// Linear gradient — side keywords carry a u8 tag.
+linearSide = "top" -> 0u8 | "bottom" -> 1u8
+           | "left" -> 2u8 | "right" -> 3u8 ;
 linearDirection = ("to" , linearSide , linearSide ?) | angle ;
 linearGradient = "linear-gradient" , "(" ?w , (linearDirection , "," ?w) ? , colorStopList ?w , ")" ;
 repeatingLinearGradient = "repeating-linear-gradient" , "(" ?w , (linearDirection , "," ?w) ? , colorStopList ?w , ")" ;
 
-// Radial gradient
-radialShape = "circle" | "ellipse" ;
-radialExtent = "closest-side" | "closest-corner" | "farthest-side" | "farthest-corner" ;
+// Radial gradient — shape + extent keywords carry u8 tags.
+radialShape = "circle" -> 0u8 | "ellipse" -> 1u8 ;
+radialExtent = "closest-side" -> 0u8 | "closest-corner" -> 1u8
+             | "farthest-side" -> 2u8 | "farthest-corner" -> 3u8 ;
 radialSize = (length , length ?) | radialExtent ;
 radialPosition = "at" , /[^,)]+/ ;
 radialConfig = (radialShape ? , radialSize ?) , radialPosition ? ;

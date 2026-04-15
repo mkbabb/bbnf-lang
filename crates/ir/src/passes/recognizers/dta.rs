@@ -665,7 +665,12 @@ fn collect_precedence_chain(ir: &GrammarIR, rule: &IrRule) -> Option<PrecedenceC
 /// next rung starts from.
 ///
 /// Operand is identified by `Ref(inner_rule_id)`; operator is an
-/// Alt of Literal branches (or a Ref to an Alt-of-Literal rule).
+/// Alt of Literal branches — either via `Ref(op_rule_id)` with
+/// `op_rule_id` being an Alt-of-Literal rule, or the Alt-of-Literal
+/// directly inlined into the Seq (post-`fuse_single_use` shape).
+/// The owning rule's id is used as the `op_rule` reference so the
+/// emitter can thread variant_idx through without a secondary rule
+/// allocation.
 fn match_operator_chain_rule(
     ir: &GrammarIR,
     rule: &IrRule,
@@ -705,16 +710,93 @@ fn match_operator_chain_rule(
         return None;
     }
 
-    // First non-whitespace child is the op.
+    // First non-whitespace child is the op — either a Ref to an
+    // Alt-of-literal rule, or the inlined Alt-of-literal itself.
     let op_node = inner_children
         .iter()
         .find(|c| !matches!(strip_transparent_owned(c), IrNode::OptionalWhitespace(_)))?;
 
-    let op_rule = op_node_to_rule(ir, op_node)?;
-    let op_rule_obj = ir.rules.iter().find(|r| r.id == op_rule)?;
-    let entries = collect_operator_alternatives(ir, op_rule_obj, op_rule)?;
+    let entries = extract_operator_set(ir, op_node, rule.id)?;
 
     Some((operand_rule, entries, operand.clone()))
+}
+
+/// Extract the operator set from a chain rung's op-position node.
+///
+/// Three shapes are accepted:
+///
+/// 1. `Ref(op_rule_id)` where `op_rule_id` is an Alt-of-Literal
+///    rule. Canonical case before inlining (Sheets `add_op`,
+///    `mul_op`, etc.).
+/// 2. `Alt(branches)` inlined directly into the rung's Seq. Common
+///    post-`fuse_single_use` shape.
+/// 3. `Literal(sid)` when the chain has a single operator (BBNF
+///    `concat_expr = … "&" …` would fit if the op-rule were
+///    reduced to one literal).
+///
+/// `owning_rule_id` is the rung's own rule id — used when the
+/// operator is inlined so the emitter can thread variant_idx
+/// through the chain rung without a phantom op-rule reference.
+fn extract_operator_set(
+    ir: &GrammarIR,
+    node: &IrNode,
+    owning_rule_id: RuleId,
+) -> Option<Vec<PrecedenceEntry>> {
+    let stripped = strip_transparent_owned(node);
+    match stripped {
+        IrNode::Ref(rid) => {
+            let op_rule = ir.rules.iter().find(|r| r.id == rid)?;
+            collect_operator_alternatives(ir, op_rule, rid)
+        }
+        IrNode::Alt(_, _) => collect_inlined_alt_operators(ir, &stripped, owning_rule_id),
+        IrNode::Literal(sid) => {
+            let literal = ir.get_string(sid).to_string();
+            let bytes = literal.as_bytes();
+            if bytes.is_empty() {
+                return None;
+            }
+            Some(vec![PrecedenceEntry {
+                byte: bytes[0],
+                second_byte: bytes.get(1).copied(),
+                precedence: 0,
+                associativity: infer_associativity(&literal),
+                op_rule: owning_rule_id,
+                op_discriminant: 0,
+            }])
+        }
+        _ => None,
+    }
+}
+
+/// Collect operator entries from an inlined Alt node. The node must
+/// be an Alt whose branches are each a Literal (possibly wrapped in
+/// Map/OptionalWhitespace).
+fn collect_inlined_alt_operators(
+    ir: &GrammarIR,
+    node: &IrNode,
+    owning_rule_id: RuleId,
+) -> Option<Vec<PrecedenceEntry>> {
+    let branches = match node {
+        IrNode::Alt(branches, _) => branches,
+        _ => return None,
+    };
+    let mut out = Vec::new();
+    for (discriminant, branch) in branches.iter().enumerate() {
+        let literal = extract_literal(&branch.node, ir)?;
+        let bytes = literal.as_bytes();
+        if bytes.is_empty() {
+            return None;
+        }
+        out.push(PrecedenceEntry {
+            byte: bytes[0],
+            second_byte: bytes.get(1).copied(),
+            precedence: 0,
+            associativity: infer_associativity(&literal),
+            op_rule: owning_rule_id,
+            op_discriminant: discriminant.min(u8::MAX as usize) as u8,
+        });
+    }
+    Some(out)
 }
 
 /// Strip transparent wrappers (OptionalWhitespace, Map) from a node,
@@ -727,13 +809,6 @@ fn strip_transparent_owned(node: &IrNode) -> IrNode {
         IrNode::OptionalWhitespace(inner) => strip_transparent_owned(inner),
         IrNode::Map { inner, .. } => strip_transparent_owned(inner),
         _ => node.clone(),
-    }
-}
-
-fn op_node_to_rule(_ir: &GrammarIR, node: &IrNode) -> Option<RuleId> {
-    match strip_transparent_owned(node) {
-        IrNode::Ref(rid) => Some(rid),
-        _ => None,
     }
 }
 

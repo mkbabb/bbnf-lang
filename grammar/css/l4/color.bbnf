@@ -190,10 +190,9 @@ hex = "#" , /[0-9a-fA-F]{3,8}/
     -> crate::css_types::parse_hex_color(input) : u32 ;
 
 // --- Color function names ---
-// rgb/rgba, hsl/hsla, hwb, lab, lch, oklab, oklch
+// rgb/rgba, hsl/hsla, hwb, lab, lch, oklab, oklch.
 // u8 discriminant tags each functional-color family; lightningcss's
 // Color enum ordering is the canonical source for the numbering below.
-// TODO typed-aggregate (AU.2.6): full (u8 space, f64×3 channels, f64 alpha).
 
 colorType = "oklch" -> 8u8 | "oklab" -> 7u8
           | "rgba" -> 1u8 | "rgb" -> 0u8
@@ -201,9 +200,23 @@ colorType = "oklch" -> 8u8 | "oklab" -> 7u8
           | "hwb" -> 4u8
           | "lab" -> 5u8 | "lch" -> 6u8 ;
 
-// Standard color function: type(c1 sep c2 sep c3 [alphaSep alpha])
-// @{...} span capture: validates argument structure, returns raw Span
-// for deferred color-space conversion.
+// Standard color function: type(c1 sep c2 sep c3 [alphaSep alpha]).
+//
+// AV.0.5 aggregate layout (LargeAggregate, 40-byte arena slot):
+//
+//     offset  field   width  source
+//     ──────  ─────   ─────  ──────────────────────────────
+//     0       space   1 B    colorType (u8 discriminant)
+//     1..8    —       7 B    alignment pad (zero-initialised)
+//     8       c1      8 B    colorValue #1 (f64)
+//     16      c2      8 B    colorValue #2 (f64)
+//     24      c3      8 B    colorValue #3 (f64)
+//     32      alpha   8 B    optional alpha (f64; NaN = absent)
+//     ──────                 33 payload B → 40 B slot
+//
+// The rule-level `-> input : Color` annotation declares the rule's
+// output type; the layout above is consumed by the emitter's
+// LargeAggregate routing (V0 close-out).
 colorFunction = @{
     (colorType)
     , "(" >>
@@ -212,7 +225,7 @@ colorFunction = @{
         colorValue,
         (alphaSep >> colorValue)?
     << ")"
-} ;
+} -> input : Color ;
 
 // --- color() function (CSS Color Level 4 §10) ---
 // u8 discriminant tags the nine color() predefined spaces.
@@ -222,14 +235,55 @@ colorSpace = "srgb-linear" -> 1u8 | "srgb" -> 0u8
            | "prophoto-rgb" -> 4u8 | "rec2020" -> 5u8
            | "xyz-d65" -> 7u8 | "xyz-d50" -> 6u8 | "xyz" -> 8u8 ;
 
+// color() predefined-space function.
+//
+// AV.0.5 aggregate layout (LargeAggregate, 40-byte arena slot;
+// identical shape to colorFunction — the colorSpace u8 occupies
+// the `space` slot and the remaining layout follows unchanged):
+//
+//     offset  field   width  source
+//     ──────  ─────   ─────  ──────────────────────────────
+//     0       space   1 B    colorSpace (u8 discriminant)
+//     1..8    —       7 B    alignment pad (zero-initialised)
+//     8       c1      8 B    colorValue #1 (f64)
+//     16      c2      8 B    colorValue #2 (f64)
+//     24      c3      8 B    colorValue #3 (f64)
+//     32      alpha   8 B    optional alpha (f64; NaN = absent)
+//     ──────                 33 payload B → 40 B slot
 colorFn = "color" , "(" >>
     colorSpace , colorValue , colorValue , colorValue , ("/" >> colorValue)?
-    << ")" ;
+    << ")" -> input : Color ;
 
 // --- color-mix() (CSS Color Level 5) ---
 // hue-method u8 + mix-space u8 discriminants.
-// TODO typed-aggregate (AU.2.6): colorMix is recursive — left/right Color
-// references become arena offsets once the aggregate emitter lands.
+//
+// AV.0.5 aggregate layout (LargeAggregate, recursive via ColorRef).
+// Each nested `<color>` argument is NOT inlined into the parent
+// aggregate — doing so would make the worst-case width unbounded
+// (colour-mix nests arbitrarily deep). Instead each nested colour
+// becomes an 8-byte ColorRef carrying the arena offset of its own
+// aggregate plus a kind tag:
+//
+//     ColorRef { arena_offset: u32, kind_tag: u8, _pad: [u8; 3] }
+//
+// Parent layout (LargeAggregate, 40-byte arena slot):
+//
+//     offset  field          width  source
+//     ──────  ─────          ─────  ────────────────────────────
+//     0       mix_space      1 B    mixSpace (u8 discriminant)
+//     1       hue_method     1 B    hueMethodKeyword (u8; 255 = absent)
+//     2..8    —              6 B    alignment pad (zero-initialised)
+//     8       left_color     8 B    ColorRef → left nested colour
+//     16      left_pct       8 B    optional percentage (f64; NaN = absent)
+//     24      right_color    8 B    ColorRef → right nested colour
+//     32      right_pct      8 B    optional percentage (f64; NaN = absent)
+//     ──────                        40 B slot
+//
+// Readers follow each ColorRef's `arena_offset` to the nested
+// colour aggregate and dispatch on `kind_tag` to pick the nested
+// decoding path (colorFunction / colorFn / colorMix / namedColor /
+// hex). The parent + children together form a DAG rooted at the
+// top-level colour record.
 
 hueMethodKeyword = "shorter" -> 0u8 | "longer" -> 1u8
                  | "increasing" -> 2u8 | "decreasing" -> 3u8 ;
@@ -246,8 +300,22 @@ colorMix = "color-mix" , "(" >>
     "in" , mixSpace , hueMethod? , ",",
     color , percentage? , ",",
     color , percentage?
-    << ")" ;
+    << ")" -> input : Color ;
 
 // --- Top-level color ---
+//
+// The five branches — colorMix, colorFn, hex, colorFunction,
+// namedColor — materialise through different payload shapes:
+//
+//   - namedColor, hex   → InlineScalar (u32 0xRRGGBBAA)
+//   - colorFunction,
+//     colorFn,
+//     colorMix          → LargeAggregate (40-byte arena slot)
+//
+// The Alt itself is a tagged union (TypeDesc::BoxedEnum at the
+// type-inference level); each branch's record carries the payload
+// that matches its shape. Readers dispatch on `TapeRec::variant_idx`
+// to pick the decoding path, symmetric with lightningcss's `Color`
+// tagged union.
 
 color = colorMix | colorFn | hex | colorFunction | namedColor ;

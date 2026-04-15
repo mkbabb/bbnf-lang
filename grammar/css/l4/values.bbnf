@@ -33,7 +33,8 @@ dimension = length | angle | time | frequency | resolution | flex | percentage ;
 // mathExpr uses left-recursive-like structure for correct precedence:
 // mathProduct handles * and /, mathExpr handles + and -.
 
-mathOperator = "+" | "-" | "*" | "/" ;
+// u8 discriminant for math operator: +=0, -=1, *=2, /=3.
+mathOperator = "+" -> 0u8 | "-" -> 1u8 | "*" -> 2u8 | "/" -> 3u8 ;
 
 mathValue = calcFunction
           | minFunction
@@ -68,8 +69,13 @@ envFunction = "env" , "(" >> ident , ("," >> varFallback) ? << ")" ;
 urlFunction = @{ "url" , "(" >> (string | /[^)"'\s]+/) << ")" } ;
 
 // --- Global keywords (CSS Cascading and Inheritance Level 5) ---
+// u8 discriminant matches keywords.bbnf's globalKeyword ordering.
 
-globalKeyword = "revert-layer" | "inherit" | "initial" | "unset" | "revert" ;
+globalKeyword = "revert-layer" -> 0u8
+              | "inherit" -> 1u8
+              | "initial" -> 2u8
+              | "unset" -> 3u8
+              | "revert" -> 4u8 ;
 
 // --- Generic value ---
 // Ordered for dispatch: longest-prefix / most-specific first.

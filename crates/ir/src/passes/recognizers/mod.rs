@@ -68,6 +68,7 @@ mod quoted_string;
 mod separator_list;
 mod signature;
 mod token_led_branches;
+pub mod visitor;
 
 use std::collections::HashMap;
 

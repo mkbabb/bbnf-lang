@@ -23,6 +23,7 @@
 //! [`EClassFacts`]: crate::egraph::analysis::EClassFacts
 
 use crate::GrammarIR;
+use crate::passes::recognizers::visitor::{mine_visitors, VisitorDescriptor};
 
 /// Consolidated per-grammar fingerprint — the owned IR-side
 /// counterpart of [`bbnf_tape::GrammarProfile`].
@@ -88,6 +89,23 @@ pub struct GrammarProfile {
 
     /// Two-byte digraphs observed at scanner boundaries.
     pub structural_digraphs: Vec<[u8; 2]>,
+
+    // ── Reorder-unroll visitors (V2, AV.2.5) ─────────────────────────
+
+    /// Visitor-like reductions admitted by this grammar over its typed
+    /// payload columns. Each descriptor lowers to a 4-lane reordered-
+    /// unrolling kernel function in `generated.rs`; the kernel pattern
+    /// defeats strict-IEEE `f64` non-associativity and lets LLVM
+    /// vectorise the accumulator on NEON / AVX2.
+    ///
+    /// Populated by [`mine_visitors`] via
+    /// [`GrammarIR::profile`]. The current grammar-side
+    /// `@visitor` directive is not wired; the field is empty on master
+    /// grammars today, and tests populate the tape-side slice directly
+    /// via [`VisitorDescriptor::canonical`] + manual profile
+    /// construction. When the directive lands, `mine_visitors` walks
+    /// the parsed descriptors; this accessor signature does not change.
+    pub reorder_unroll_visitors: Vec<VisitorDescriptor>,
 }
 
 impl GrammarIR {
@@ -147,6 +165,13 @@ impl GrammarIR {
             None => (Vec::new(), Vec::new()),
         };
 
+        // V2 AV.2.5 — visitor-recognition pass. Empty for every
+        // grammar shipped today because the grammar-side `@visitor`
+        // directive is not yet wired; tests exercise the emitter via
+        // synthetic profile construction. See `mine_visitors` for the
+        // forward plan.
+        let reorder_unroll_visitors = mine_visitors(self);
+
         GrammarProfile {
             push_compound_count,
             push_leaf_count,
@@ -158,6 +183,7 @@ impl GrammarIR {
             parallel_break_even_bytes: 0,
             structural_alphabet,
             structural_digraphs,
+            reorder_unroll_visitors,
         }
     }
 }

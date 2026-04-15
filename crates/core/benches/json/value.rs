@@ -51,10 +51,10 @@ fn load(name: &str) -> String {
 /// matter, only that every payload read is observed.
 fn walk_tape(tape: &Tape, root: TapeOffset, input: &str) -> u64 {
     let cursor = TapeCursor::new(tape, root);
-    walk_cursor(cursor, input)
+    walk_cursor(tape, cursor, input)
 }
 
-fn walk_cursor(cursor: TapeCursor<'_>, input: &str) -> u64 {
+fn walk_cursor(tape: &Tape, cursor: TapeCursor<'_>, input: &str) -> u64 {
     let rec = cursor.record();
     let mut acc: u64 = rec.span_lo as u64;
     match rec.kind() {
@@ -63,8 +63,11 @@ fn walk_cursor(cursor: TapeCursor<'_>, input: &str) -> u64 {
             // via `payload_string`. The accessor returns a `&str`
             // pointing into the arena without copying; we fold its
             // length into the accumulator so the compiler cannot
-            // elide the arena read.
-            if let Some(s) = cursor.tape().payload_string(rec) {
+            // elide the arena read. AU.3.2: `payload_string` skips
+            // UTF-8 validation on the hot path (decoder kernel
+            // contract) so the accessor is a single bounds check +
+            // slice + transmute.
+            if let Some(s) = tape.payload_string(rec) {
                 acc = acc.wrapping_add(s.len() as u64);
             } else {
                 acc = acc.wrapping_add(rec.span_hi as u64);
@@ -72,34 +75,37 @@ fn walk_cursor(cursor: TapeCursor<'_>, input: &str) -> u64 {
         }
         TapeKind::Regex => {
             // Numeric leaf — `number` rule with `-> f64`.
-            if let Some(f) = cursor.tape().payload_f64(rec) {
+            if let Some(f) = tape.payload_f64(rec) {
                 acc = acc.wrapping_add(f.to_bits());
             }
         }
         TapeKind::Literal => {
             // Bool / null constants — `payload_bool` for bool and
             // `payload_u8` for null (the `"null" -> 0u8` sentinel).
-            if let Some(b) = cursor.tape().payload_bool(rec) {
+            if let Some(b) = tape.payload_bool(rec) {
                 acc = acc.wrapping_add(b as u64);
-            } else if let Some(u) = cursor.tape().payload_u8(rec) {
+            } else if let Some(u) = tape.payload_u8(rec) {
                 acc = acc.wrapping_add(u as u64);
             }
         }
         TapeKind::Epsilon => {}
         TapeKind::KvPair => {
-            if let Some(bytes) = cursor.tape().payload_bytes(rec, 16) {
+            if let Some(bytes) = tape.payload_bytes(rec, 16) {
                 acc = acc.wrapping_add(bytes.len() as u64);
             }
         }
         _ => {
-            // `children()` allocates a Vec per compound but is O(K)
-            // total — the indexed `child(i)` accessors are O(K²) due
-            // to the per-call backward walk, which on canada's ~3M
-            // records balloons into the bench timeout. The Vec-per-
-            // compound cost is bounded by fanout and amortises across
-            // the children.
-            for child in cursor.children() {
-                acc = acc.wrapping_add(walk_cursor(child, input));
+            // AU.3.2: `cursor.children_zero_alloc()` returns a
+            // 24-byte `ChildIter` that walks the tape backward via
+            // `child_off` links, yielding children in reverse source
+            // order without any heap allocation. The walker
+            // accumulates into a `u64` via `wrapping_add`, so child
+            // order is irrelevant; the bench/sonic ratio gains come
+            // from eliminating the per-compound `Vec` allocation
+            // that `cursor.children()` (the source-order accessor)
+            // incurs.
+            for child in cursor.children_zero_alloc() {
+                acc = acc.wrapping_add(walk_cursor(tape, child, input));
             }
         }
     }

@@ -294,11 +294,12 @@ impl Tape {
     ///
     /// `T` must be `Copy` and ≤ 8 bytes, mirroring the contract on
     /// `TapeBuilder::push_leaf_with_scalar`.
-    #[inline]
+    ///
     /// AU.1: payload byte offset is in `child_off` for scalar leaves.
     /// `payload_idx == 1` is the sentinel for "inline scalar in
     /// `payloads`." `payload_idx == 2` (arena-string) is rejected —
     /// the caller should route to [`Self::payload_string`] instead.
+    #[inline]
     pub fn payload_scalar<T: Copy>(&self, rec: &TapeRec) -> Option<T> {
         if rec.payload_idx != 1 {
             return None;
@@ -409,23 +410,34 @@ impl Tape {
     /// Returns `None` when the record is not string-tagged
     /// (`payload_idx != 2`) or when the arena slot is truncated.
     ///
-    /// # Panics
+    /// # Safety / contract
     ///
-    /// Panics on malformed UTF-8 in the arena slot. Callers that
-    /// accept arbitrary input should use [`Self::payload_string_bytes`]
-    /// and validate explicitly. The decoder kernel emits well-formed
-    /// UTF-8 by construction (see
-    /// `parse_that::parsers::scan::decode::decode_json_string_to_arena`),
-    /// so the default accessor matches the production contract.
+    /// The decoder kernel
+    /// (`parse_that::parsers::scan::decode::decode_json_string_to_arena`)
+    /// emits well-formed UTF-8 by construction: it copies ASCII
+    /// substrings verbatim and re-encodes `\uXXXX` escapes via
+    /// `char::from_u32(...).encode_utf8()`. The arena bytes are
+    /// therefore valid UTF-8 by the time this method observes them,
+    /// and we use `from_utf8_unchecked` on the hot path to skip the
+    /// validation walk (AU.3.2). A `debug_assert!` round-trips
+    /// `std::str::from_utf8` to catch decoder regressions in debug
+    /// builds.
+    ///
+    /// Callers that accept arbitrary unvalidated bytes should use
+    /// [`Self::payload_string_bytes`] and validate explicitly.
     #[inline]
     pub fn payload_string(&self, rec: &TapeRec) -> Option<&str> {
         let bytes = self.payload_string_bytes(rec)?;
-        Some(std::str::from_utf8(bytes).unwrap_or_else(|e| {
-            panic!(
-                "Tape::payload_string: malformed UTF-8 in arena slot at offset {}: {}",
-                rec.child_off.0, e
-            )
-        }))
+        debug_assert!(
+            std::str::from_utf8(bytes).is_ok(),
+            "Tape::payload_string: malformed UTF-8 in arena slot at offset {}",
+            rec.child_off.0,
+        );
+        // SAFETY: the decoder kernel emits well-formed UTF-8 (ASCII
+        // verbatim copies + `char::from_u32(...).encode_utf8()` for
+        // `\uXXXX` escapes). debug builds round-trip
+        // `std::str::from_utf8` to catch regressions.
+        Some(unsafe { std::str::from_utf8_unchecked(bytes) })
     }
 
     /// AU.3.1: read a variable-length decoded payload as raw bytes.

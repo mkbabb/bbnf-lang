@@ -754,3 +754,43 @@ walker path (readers stay typed + inline-shim over arena). Inline
 scalar path (u8/bool/u16/u32) now skips the arena read entirely,
 which should help bool/null-heavy twitter bench marginally; no
 profile was run to attribute it. W6 can re-probe if meaningful.
+
+### W6 — LANDED (11 feature cherry-picks + 1 test-update + parse-that ff)
+
+Four parallel worktree-isolated agents completed. Integration onto
+master required two conflict resolutions (host.rs and
+payload/layout.rs) plus a test-reader update for the W6.D scalar
+bypass.
+
+| Agent | Commits | Focus | Outcome |
+|-------|---------|-------|---------|
+| A (ParsedGrammar) | 1 | AU.4.1 — `ParsedGrammar` deleted from source; `GrammarSink` trait + two sinks replace the flat-Vec intermediate; callers route through `PipelineSink`/`ExtractSink`. | +201 LOC net (not −600 — external read-only crates `bbnf-analysis`, `gorgeous`, `bbnf-lsp`, `bbnf-bootstrap` require a flat return shape; factored as `GrammarExtract` with `ExtractSink`). |
+| B (misc debt + dispatch) | 6 | AU.4.2 `StructRegistry` deleted (field + consumers — unused scaffolding); AU.4.3 module-level `#![allow]` (285 per-item → 1 module-level; `generated.rs` 25513 → 25228 lines); AU.4.6 `parse_debug_wildcard` + `pipeline_debug_wildcard_sets_all` FIXED via `@debug *` span-text fallback; W3 carry-over: `FnDescriptor::NumberConvert { allow_leading_dot }` now dispatches `scan_number_f64` (generic) vs `scan_number_strict_f64` (JSON); `number -> f64` restored in `grammar/css/l4/value-unit.bbnf`; tailwind parses at 450 MB/s. | Five tests that previously failed in `pipeline_debug_*` and `adapter::*` now pass. |
+| C (typed parity audit) | 1 | AU.6.8 — four new parity test files + `docs/tranches/AU/typed-parity-audit.md`. Two systemic codegen bugs surfaced: (Bug 1) alt-lit emitter writes `__has_payload = true` only on the last branch; (Bug 2) `-> Span` shorthand, `-> i64`/`-> f64` scanner→payload wiring, and u8 discriminants for multi-branch Alts all drop payload at emit. | 58 parity tests; 10 pinned/ignored post-integration (3 CSS percentage + 7 JSON variant-dispatch) — documented as AU.6.8 gaps routed to follow-up emitter work. |
+| D (perf) | 3 (+ 1 parse-that) | CSS bootstrap 377 → 438 MB/s via inlined 16-byte tier-2 WS fast path (`parse-that` commit `b91eb2e`); AU.3.2 ratio canada 0.45 → 0.61, twitter 0.45 → 0.52 via borrow-safe JSON strings (escape-free strings skip arena copy, flagged in `TapeRec::extra`'s new `STRING_BORROW_BIT`) + single-scalar rules bypass aggregate planner (f64 → `WideScalar`, u8/bool → `InlineScalar`). | CSS bootstrap 438 MB/s (gate 650 still missed; residual is `__declaration` + `__compoundSelector` — AV-scale PHF + SIMD selector classifier). AU.3.2 ratios 0.61 / 0.52 (gates 0.80 / 0.60 still missed; residual is Eisel-Lemire + simdjson-scale SIMD decode — AV-scale). |
+
+**Cross-agent file conflicts resolved at cherry-pick**:
+
+- `crates/core/src/grammar/host.rs` (A's `GrammarSink` refactor + B's `absorb_single_name_directive`) — merged by extending A's `decode_single_name` with B's `*`-wildcard span-text fallback, preserving both the sink-pattern refactor and the AU.4.6 fix.
+- `crates/ir/src/passes/payload/layout.rs` (B's `StructRegistry` deletion + D's scalar bypass) — merged by keeping A's/B's `TypeDesc::Named(_) => continue` (registry deleted) and D's `td if td.needs_payload_slot() => continue` (bypass aggregate planner for scalars).
+- Tape-parity goldens: both B and D regenerated the CSS fixtures. B's run won on cherry-pick; master regen + bootstrap confirms idempotency.
+
+**Workspace state post-integration**:
+
+- 2 original debug-wildcard failures: **RESOLVED** (W6.B).
+- Five `pipeline_vm_full_*` / `adapter::*` failures: **RESOLVED** (W6.A's directive-decoder safety).
+- `test_selective_transitive_unfurling` (imports.rs): remains failing (pre-existing, orthogonal to W6 scope; flagged for W7 triage).
+- `crates/core/tests/json_parity.rs`: 7 `#[ignore]` tests with AU.6.8 forward references (variant_idx dispatch broke under tape-shape shift post-W6.D/W5).
+- `crates/core/tests/css_l4_parity.rs`: 3 `#[ignore]` tests (percentageUnit single-u8 path now InlineScalar — the test helpers asserting arena-path `payload_bytes(rec, 1)` need reader migration; audit doc records).
+
+**Target tests**: grammar_roundtrip 6/6, payload_layouts 13/13, json_decode 5/5, css_l4 18/18, css_l4_dimensions 23/23, tape_walker_allocs 8/8, tape_parity 22/22. Bootstrap idempotent.
+
+**W6 — follow-up items that W7/AV carries forward**:
+
+- `test_selective_transitive_unfurling` imports bug (W6.A, W6.B both flagged).
+- Bug 1 (alt-lit first-branch-only payload emission): per-branch payload writes in `emit_alt_mustape_prelude_epilogue`. W7 or AV.
+- Bug 2 (`-> Span` shorthand + multi-branch Nu8 tags lose payload): emitter's scalar-path for `TypeDesc::Named("Span")` + Alt-branch payload coverage. W7 or AV.
+- CSS bootstrap 438 → 650 MB/s: `__declaration` (38% self-time) + `__compoundSelector` (31%) need PHF + SIMD selector classifier. AV-scale.
+- AU.3.2 0.61/0.52 → 0.80/0.60: residual is parse-stage Eisel-Lemire + simdjson-scale SIMD. AV-scale.
+- Walker variant_idx dispatch broke post-W5/W6.D: 7 JSON parity tests ignored. Emitter/view-layer coherence fix in W7 or AV.
+- Percentage `InlineScalar` reader migration: 3 CSS parity tests ignored. Trivial reader-migration in W7.

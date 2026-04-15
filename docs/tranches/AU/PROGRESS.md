@@ -413,3 +413,95 @@ carries its `(f64, u8)`, every color format resolves to its typed
 value, every comparison against lightningcss uses the full typed
 output. Scanner-only fast modes, if ever built, live behind a
 grammar-level `@scan` directive — not as a silent codegen drop-off.
+
+## Session 3 (2026-04-15) — wave orchestration begins
+
+Seven-wave schedule declared in AU.md is authoritative; task tracking
+mirrors it.
+
+### W1 — Grammar annotation audit — IN PROGRESS
+
+Four worktree-isolated agents dispatched in parallel, one per grammar
+family. Each agent owns its grammar files exclusively (no shared
+writes). Bootstrap idempotency is each agent's own hard gate before
+commit.
+
+| Agent | Worktree | Files owned | Scope |
+|-------|----------|-------------|-------|
+| (a) CSS L4 | `../bbnf-wt-au-w1-css` | `grammar/css/l4/*.bbnf` (15) | AU.2.0 full audit |
+| (b) JSON string | `../bbnf-wt-au-w1-json` | `grammar/json/json.bbnf` | AU.3.1 grammar side |
+| (c) BBNF tokens | `../bbnf-wt-au-w1-bbnf` | `grammar/bbnf/*.bbnf` (3) | AU.6.4 / AU.6.8 tokens |
+| (d) Sheets | `../bbnf-wt-au-w1-sheets` | `grammar/google-sheets/*.bbnf` | AU.6.8 literals+refs |
+
+Invariants honoured: master clean before dispatch, no shared writes,
+each worktree on detached HEAD, no `/tmp` paths. Commits land inside
+each worktree; orchestrator cherry-picks accepted commits onto master
+at wave boundary.
+
+### W1 — LANDED (19 cherry-picks + bootstrap regen)
+
+Wave boundary integration on master:
+
+| Family | Commits cherry-picked | Net diff | Bootstrap ok? | Idempotent? |
+|--------|-----------------------|----------|---------------|-------------|
+| CSS L4 | 13 | +252 / -102 across 12 files | yes | yes |
+| JSON | 1 | +2 / -1 in `json.bbnf` | yes | yes |
+| Sheets | 3 | +84 / -17 in `google-sheets.bbnf` | yes | yes |
+| BBNF | 1 (`4bd5a05` only; agent's `e93f317` regen skipped in favour of a clean master regen) | +9 / -9 across `bbnf.bbnf` + `expressions.bbnf` | yes | yes |
+
+Master-level regen commit `6e33a40` lands the fresh `generated.rs`
+(24921 lines, down from 24979 under the CSS-heavy agent regen — the
+master regen is the authoritative compiled form). `CSS_L4_RULE_COUNT`
+frozen snapshot advanced 185→190 in the same commit to match the
+intentional grammar edits. Every other rule-count snapshot unchanged.
+
+**Post-W1 test gate.** `cargo test -p bbnf --test grammar_roundtrip` —
+6 / 6 pass (all five grammar families including the new annotations).
+`cargo test -p bbnf --test payload_layouts` — 13 / 13 pass.
+`cargo check --workspace` — zero errors, zero warnings.
+`cargo test --workspace` — two failures remain (`parse_debug_wildcard`,
+`pipeline_debug_wildcard_sets_all`), both pre-W1 and both in the
+Session 1 "pre-existing 18" list. No new failures.
+
+**W2 input from W1 (codegen gaps to close).** BBNF agent surfaced two
+latent bugs and one whitelist gap that W2 must reconcile before the
+remaining BBNF Alt-of-constant-literal rules (`bool_lit`, `modifier`,
+`binary_operators`, `mul_op`, `add_op`, `cmp_op`) can annotate:
+
+1. `TypeDesc::from_scalar_name` and `is_type_name` do not admit
+   `"Span"` — `-> Span` shorthand reaches IR as `TypeDesc::Named("Span")`,
+   not `TypeDesc::Span`. Either admit `"Span"` to both whitelists OR
+   teach the Rust emitter to treat `Named("Span")` as `TypeDesc::Span`
+   for leaf-payload routing.
+2. `aggregate_constant_setter` in `emitter/map_value.rs` emits
+   `__aggregate_buf[…].copy_from_slice(…); __has_payload = true;`
+   inside rules whose prelude is `emit_alt_span_only_prelude_epilogue`
+   (which declares `__payload_<T>` but NOT `__aggregate_buf` or
+   `__has_payload`). Non-inlined Alt-bodied rules fail cargo expand
+   with `E0425: cannot find value __aggregate_buf`. Inlined rules
+   (CSS `timeUnit`, `angleUnit`, …) escape because they emit into
+   their caller's prelude. Fix: gate `ctx.payload_layout` off for
+   Alt-bodied non-inlined rules, or extend the Alt prelude to reserve
+   aggregate locals.
+3. `->` binds to a single factor; Seq / Alt rule bodies must be
+   wrapped in `(...)` to carry a rule-level annotation. Documented for
+   future grammar authors; not a bug, but a surface-syntax rough edge.
+
+CSS agent surfaced three codegen gaps that W2's typed emitter routing
+must absorb:
+- Named aggregate structs (`colorFunction`/`colorFn`) cannot be
+  expressed in `type_annotation` — `(u8, f64, f64, f64, f64)` needs
+  either inference composition from leaf-annotated sub-rules or a
+  host-function convert path (`-> parse_color(input) : Color`).
+- Recursive arena-backed types (`ColorRef` in `colorMix`, recursive
+  `mathExpr` in calc) require `TypeDesc::ArenaOffset` or equivalent.
+- Variable-length lists (`colorStopList`, `linearEasing`) have no
+  surface syntax.
+
+Sheets agent surfaced the same aggregate-type gap for `cell_ref` —
+`(row: u32, col: u32, abs_row: bool, abs_col: bool)` requires either a
+named-tuple annotation syntax extension OR a host-function convert
+(`-> decode_cell_ref(input) : CellRef`).
+
+All three agents' TODO pointers anchor to AU.2.5 / AU.2.6 / AU.6.7,
+which are W2 and W5 scope respectively. Nothing is deferred past AU.

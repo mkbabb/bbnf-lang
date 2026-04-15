@@ -49,11 +49,16 @@ enum Leaf {
     },
 }
 
-/// Read a 1-byte payload. Post-W6.D single-scalar u8 rules route
-/// through `PayloadData::InlineScalar(u8 as u32)` — packed directly
-/// into `child_off`. `payload_u8(rec)` is the typed inline reader.
+/// Read a 1-byte payload. Post-AV.0.1 close-out scalar-Alt rules
+/// (`bool`) route through `PayloadData::Aggregate(&buf[..1])` —
+/// arena-backed 1-byte slot. Map-bodied scalar rules (`null`) retain
+/// the `InlineScalar` packed-into-`child_off` path. `payload_bytes(1)`
+/// handles both by reading one byte from wherever the record points;
+/// `tape.payload_u8(rec)` stays the inline path and returns the raw
+/// `child_off` byte, so the Aggregate payload needs the bytes-slice
+/// reader.
 fn agg_u8(tape: &Tape, rec: &bbnf::runtime::tape::TapeRec) -> Option<u8> {
-    tape.payload_u8(rec)
+    tape.payload_bytes(rec, 1).map(|b| b[0])
 }
 
 /// Read an 8-byte f64 payload. Post-W6.D single-scalar f64 rules
@@ -177,11 +182,15 @@ fn bool_materialises_false_payload() {
 /// codegen; only the LAST alt branch carries the payload write. This
 /// is a systemic alt-payload-emission gap documented in
 /// `docs/tranches/AU/typed-parity-audit.md` and routed to W7 (or AV
-/// if substrate work is required).
-///
-/// The test pins the current behaviour so any fix that broadens the
-/// payload write across alt branches produces a visible delta here.
-/// Flip the expectation once the codegen writes every alt branch.
+/// AV.0.1 close-out: `bool = "true" -> true | "false" -> false`
+/// receives a single-field `[Bool @ offset 0]` layout via the
+/// scalar-Alt admission in `compute_payload_layouts`, forcing the
+/// rule to DirectCall (AU.2.5) and turning the alt-lit composer's
+/// per-branch payload-write hoist on. The `true` branch's Bool
+/// payload reaches the tape via
+/// `PayloadData::Aggregate(&buf[..1])`; the Leaf walker recovers it
+/// from the 1-byte aggregate. The pre-close-out `== 0` sentinel is
+/// retired — the codegen now writes every alt branch.
 #[test]
 fn bool_true_branch_currently_drops_payload() {
     let leaves = parse_and_walk("true");
@@ -192,16 +201,11 @@ fn bool_true_branch_currently_drops_payload() {
             _ => None,
         })
         .collect();
-    // Gap: the `true` branch never writes PayloadData::InlineScalar(1u8),
-    // so the tape leaf has child_off=NONE (no payload). This is a
-    // codegen bug in the alt-body literal emitter; tracked as AU.6.8 /
-    // W7 in the audit document. When the fix lands, trues == [true].
     assert_eq!(
-        trues.len(),
-        0,
-        "Pinned regression — if this now returns Some, the \
-         alt-branch payload fix landed; update the assertion to \
-         `vec![true]` and remove this sentinel test."
+        trues,
+        vec![true],
+        "AV.0.1: bool `true` branch must reach the tape as a \
+         Bool(true) leaf. Observed = {trues:?}"
     );
 }
 

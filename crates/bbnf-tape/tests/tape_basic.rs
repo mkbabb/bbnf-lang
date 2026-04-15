@@ -13,7 +13,10 @@
 //!    `child_off`; wide scalars, aggregates, and byte strings use
 //!    the shared arena.
 
-use bbnf_tape::{PayloadData, Tape, TapeBuilder, TapeCursor, TapeKind, TapeOffset, TapeRec};
+use bbnf_tape::{
+    GrammarProfile, PayloadData, RuleId, Tape, TapeBuilder, TapeCursor, TapeKind, TapeOffset,
+    TapeRec,
+};
 
 #[test]
 fn tape_rec_size() {
@@ -807,4 +810,79 @@ fn meta_idx_max_value_with_all_kinds() {
         assert_eq!(rec.kind(), kind, "kind mismatch for {:?} with max meta_idx", kind);
         assert_eq!(rec.meta_idx(), TapeRec::MAX_META_IDX);
     }
+}
+
+// ── Tranche AV Phase 1 — GrammarProfile const-evaluability ─────────
+
+// Compile-time witness: `GrammarProfile::EMPTY` is const-evaluable.
+// If any field's initialiser becomes non-const, this fails to compile
+// at `const` site rather than at test run.
+const _EMPTY_WITNESS: GrammarProfile = GrammarProfile::EMPTY;
+
+// Compile-time witness: an emitter-shaped literal is const-evaluable.
+// Mirrors the shape the emitter writes into `generated.rs` — every
+// slice is a `&'static` reference to a `static` array, every scalar
+// is a numeric literal.
+static _SAMPLE_ALPHABET: [u8; 3] = [b'{', b'}', b','];
+static _SAMPLE_DIGRAPHS: [[u8; 2]; 1] = [[b'/', b'*']];
+static _SAMPLE_LIST_RULES: [RuleId; 2] = [RuleId(0), RuleId(7)];
+const _SAMPLE_PROFILE: GrammarProfile = GrammarProfile {
+    push_compound_count: 7,
+    push_leaf_count: 2,
+    push_leaf_with_count: 3,
+    compounds_per_input_byte: 0.5,
+    leaves_per_input_byte: 0.25,
+    payload_bytes_per_input_byte: 0.125,
+    expected_ns_per_byte: 5.0,
+    parallel_break_even_bytes: 65_536,
+    structural_alphabet: &_SAMPLE_ALPHABET,
+    structural_digraphs: &_SAMPLE_DIGRAPHS,
+    active_columns: &[],
+    list_rules: &_SAMPLE_LIST_RULES,
+    keyword_tables: &[],
+    shape_dict: &[],
+    branch_priors: &[],
+    dedup_eligible_rules: &[],
+    reorder_unroll_visitors: &[],
+};
+
+#[test]
+fn grammar_profile_empty_is_zero_everywhere() {
+    assert_eq!(GrammarProfile::EMPTY.total_push_sites(), 0);
+    assert!(GrammarProfile::EMPTY.structural_alphabet.is_empty());
+    assert!(GrammarProfile::EMPTY.structural_digraphs.is_empty());
+    assert!(GrammarProfile::EMPTY.active_columns.is_empty());
+    assert!(GrammarProfile::EMPTY.list_rules.is_empty());
+    assert!(GrammarProfile::EMPTY.keyword_tables.is_empty());
+    assert!(GrammarProfile::EMPTY.shape_dict.is_empty());
+    assert!(GrammarProfile::EMPTY.branch_priors.is_empty());
+    assert!(GrammarProfile::EMPTY.dedup_eligible_rules.is_empty());
+    assert!(GrammarProfile::EMPTY.reorder_unroll_visitors.is_empty());
+}
+
+#[test]
+fn grammar_profile_total_push_sites_sums_three_counts() {
+    assert_eq!(_SAMPLE_PROFILE.total_push_sites(), 12);
+}
+
+#[test]
+fn grammar_profile_capacity_for_scales_with_input_len() {
+    // 0.5 + 0.25 = 0.75 records/byte; 1024 bytes ⇒ 768 records + 2
+    assert_eq!(_SAMPLE_PROFILE.capacity_for(1024), 770);
+    assert_eq!(_SAMPLE_PROFILE.capacity_for(0), 2);
+}
+
+#[test]
+fn grammar_profile_slices_reference_rodata() {
+    // Round-trip through the const profile to confirm the compiler
+    // keeps the slice references and they read back equal to the
+    // underlying static arrays.
+    assert_eq!(_SAMPLE_PROFILE.structural_alphabet, &[b'{', b'}', b',']);
+    assert_eq!(
+        _SAMPLE_PROFILE.structural_digraphs,
+        &[[b'/', b'*']] as &[[u8; 2]],
+    );
+    assert_eq!(_SAMPLE_PROFILE.list_rules.len(), 2);
+    assert_eq!(_SAMPLE_PROFILE.list_rules[0].0, 0);
+    assert_eq!(_SAMPLE_PROFILE.list_rules[1].0, 7);
 }

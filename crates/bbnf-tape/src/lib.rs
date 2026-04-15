@@ -40,11 +40,15 @@
 pub mod builder;
 pub mod cursor;
 pub mod kind;
+pub mod profile;
 pub mod tape;
 
 pub use builder::{PayloadData, TapeBuildError, TapeBuilder};
 pub use cursor::{ChildIter, TapeCursor};
 pub use kind::TapeKind;
+pub use profile::{
+    BranchPrior, ColumnId, GrammarProfile, KeywordTable, RuleId, ShapeEntry, VisitorId,
+};
 pub use tape::{Tape, TapeOffset, TapeRec};
 
 /// Inline-aggregate payload budget (in bytes).

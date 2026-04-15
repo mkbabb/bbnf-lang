@@ -66,9 +66,19 @@ impl RustEmitter {
         // block yields uniform `Option<()>` via `break #ad_blk
         // Some(())` on success — heterogeneous inner types no longer
         // force a per-call `.map(|_| ())` wrap.
+        //
+        // AV.0.1 Bug 1: dispatch-path counterpart of the alt-lit
+        // composer fix. When an aggregate payload layout is active,
+        // every dispatched branch whose IR node is
+        // `Map { Literal, constant-MapExpr }` must emit its payload
+        // write. The IR Alt is identified by dispatch-table equality
+        // plus a full branch-signature match (every branch being a
+        // literal-with-constant-map) to guarantee a unique
+        // structural fingerprint across the rule set.
         let surgery = ctx.tape_surgery.take();
         let ad_blk = ctx.fresh_lifetime("ad_blk");
         let mut arms = Vec::new();
+        let per_branch_writes = dispatch_per_branch_writes(table, branches.len(), ctx);
 
         for (branch_idx, (info, body)) in branches.iter().enumerate() {
             let byte_patterns: Vec<u8> = table
@@ -101,11 +111,28 @@ impl RustEmitter {
             };
 
             let patterns: Vec<_> = byte_patterns.iter().map(|b| quote! { #b }).collect();
+            let wrapper = per_branch_writes
+                .as_ref()
+                .and_then(|w| w.get(branch_idx))
+                .and_then(|w| w.as_ref());
+            let probe = match wrapper {
+                Some(buf_setter) => quote! {
+                    match ({ #body }) {
+                        Some(_) => {
+                            #buf_setter;
+                            __has_payload = true;
+                            Some(())
+                        }
+                        None => None,
+                    }
+                },
+                None => quote! { #body },
+            };
             arms.push(quote! {
                 #( #patterns )|* => {
                     #branch_assign
                     #compound_mark
-                    if #body.is_some() {
+                    if #probe.is_some() {
                         break #ad_blk Some(());
                     }
                 }
@@ -387,6 +414,86 @@ fn alt_lit_per_branch_writes(
         writes.push(branch_payload_write(&branch.node, ir, &field));
     }
     Some(writes)
+}
+
+/// AV.0.1: dispatch-alt counterpart of [`alt_lit_per_branch_writes`].
+/// The dispatch composer receives `(AltBranchInfo, TokenStream)`
+/// pairs — no literal signature threads through — so the IR Alt is
+/// identified by combining dispatch-table equality, branch count,
+/// and a structural signature requiring every branch to be a
+/// `Map { Literal, constant-MapExpr }` node. Inlined rules whose
+/// bodies are rewritten out of the IR cannot be located this way;
+/// the helper returns `None` and the caller falls back to the
+/// pre-fix emission for those sites (addressed by a separate
+/// inline-aware payload pass outside AV.0.1's scope).
+fn dispatch_per_branch_writes(
+    table: &AltDispatch,
+    branch_count: usize,
+    ctx: &RustEmitCtx,
+) -> Option<Vec<Option<TokenStream>>> {
+    let layout = ctx.payload_layout.as_ref()?;
+    if layout.fields.len() != 1 {
+        return None;
+    }
+    let field = layout.fields[0].clone();
+    let ir = ctx.ir_ctx().ir;
+    let alt_branches = ir
+        .rules
+        .iter()
+        .find_map(|rule| locate_dispatch_alt(&rule.body, table, branch_count, ir))?;
+    let mut writes = Vec::with_capacity(alt_branches.len());
+    for branch in alt_branches {
+        writes.push(branch_payload_write(&branch.node, ir, &field));
+    }
+    Some(writes)
+}
+
+/// Walk `root` looking for an `IrNode::Alt` matching:
+///   * branch count equal to `branch_count`,
+///   * dispatch table byte-for-byte equal to `table`,
+///   * every branch structured as `Map { Literal, constant MapExpr }`
+///     (the all-literal-with-constant shape Bug 1 targets).
+///
+/// The structural constraint rules out coincidental matches against
+/// unrelated Alts whose dispatch tables may happen to overlap.
+fn locate_dispatch_alt<'ir>(
+    root: &'ir IrNode,
+    table: &AltDispatch,
+    branch_count: usize,
+    ir: &'ir GrammarIR,
+) -> Option<&'ir [AltBranch]> {
+    if let IrNode::Alt(branches, dispatch) = root {
+        if branches.len() == branch_count {
+            if let Some(t) = dispatch {
+                if t == table
+                    && branches.iter().all(|b| is_literal_with_constant_map(&b.node, ir))
+                {
+                    return Some(branches.as_slice());
+                }
+            }
+        }
+    }
+    for child in node_children(root) {
+        if let Some(m) = locate_dispatch_alt(child, table, branch_count, ir) {
+            return Some(m);
+        }
+    }
+    None
+}
+
+/// Predicate: `node` is `Map { Literal, FnDescriptor::Expr { expr } }`
+/// where `expr` is a constant `MapExpr` (`IntLit`, `FloatLit`,
+/// `BoolLit`, `StringLit`). These are the exact shapes the driver's
+/// all-literal detector recognises and the Bug 1 fix targets.
+fn is_literal_with_constant_map(node: &IrNode, ir: &GrammarIR) -> bool {
+    let fn_id = match node {
+        IrNode::Map { inner, fn_id } if matches!(inner.as_ref(), IrNode::Literal(_)) => *fn_id,
+        _ => return false,
+    };
+    match &ir.fns[fn_id as usize] {
+        FnDescriptor::Expr { expr, .. } => expr.is_constant(),
+        _ => false,
+    }
 }
 
 /// Walk `root` looking for an `IrNode::Alt` whose branch literals

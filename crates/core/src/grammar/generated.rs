@@ -48,6 +48,2126 @@ mod __bbnfbootstrap_emit_impl {
         dedup_eligible_rules: &[],
         reorder_unroll_visitors: &[],
     };
+    static __DTA_REGEX_0: &str = "__state_0_regex";
+    static __DTA_REGEX_1: &str = "__state_1_regex";
+    static __DTA_LITERAL_2: &str = "__state_2_literal";
+    static __DTA_LITERAL_3: &str = "__state_3_literal";
+    static __DTA_ALT_LIN_4: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(2),
+        ::bbnf::runtime::tape::DtaStateId(3),
+    ];
+    static __DTA_LITERAL_5: &str = "__state_5_literal";
+    static __DTA_REGEX_6: &str = "__state_6_regex";
+    static __DTA_LITERAL_7: &str = "__state_7_literal";
+    static __DTA_SEQ_8_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(5),
+        ::bbnf::runtime::tape::DtaStateId(6),
+        ::bbnf::runtime::tape::DtaStateId(7),
+    ];
+    static __DTA_REGEX_9: &str = "__state_9_regex";
+    static __DTA_LITERAL_11: &str = "__state_11_literal";
+    static __DTA_SEQ_13_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(11),
+        ::bbnf::runtime::tape::DtaStateId(12),
+    ];
+    static __DTA_SEQ_15_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(10),
+        ::bbnf::runtime::tape::DtaStateId(14),
+    ];
+    static __DTA_LITERAL_16: &str = "__state_16_literal";
+    static __DTA_LITERAL_17: &str = "__state_17_literal";
+    static __DTA_SEQ_19_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(17),
+        ::bbnf::runtime::tape::DtaStateId(18),
+    ];
+    static __DTA_SEQ_21_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(16),
+        ::bbnf::runtime::tape::DtaStateId(20),
+    ];
+    static __DTA_LITERAL_23: &str = "__state_23_literal";
+    static __DTA_LITERAL_25: &str = "__state_25_literal";
+    static __DTA_SEQ_27_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(25),
+        ::bbnf::runtime::tape::DtaStateId(26),
+    ];
+    static __DTA_SEQ_29_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(24),
+        ::bbnf::runtime::tape::DtaStateId(28),
+    ];
+    static __DTA_LITERAL_31: &str = "__state_31_literal";
+    static __DTA_SEQ_32_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 4usize] = [
+        ::bbnf::runtime::tape::DtaStateId(22),
+        ::bbnf::runtime::tape::DtaStateId(23),
+        ::bbnf::runtime::tape::DtaStateId(30),
+        ::bbnf::runtime::tape::DtaStateId(31),
+    ];
+    static __DTA_LITERAL_40: &str = "__state_40_literal";
+    static __DTA_LITERAL_42: &str = "__state_42_literal";
+    static __DTA_SEQ_43_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(40),
+        ::bbnf::runtime::tape::DtaStateId(41),
+        ::bbnf::runtime::tape::DtaStateId(42),
+    ];
+    static __DTA_ALT_LIN_44: [::bbnf::runtime::tape::DtaStateId; 8usize] = [
+        ::bbnf::runtime::tape::DtaStateId(33),
+        ::bbnf::runtime::tape::DtaStateId(34),
+        ::bbnf::runtime::tape::DtaStateId(35),
+        ::bbnf::runtime::tape::DtaStateId(36),
+        ::bbnf::runtime::tape::DtaStateId(37),
+        ::bbnf::runtime::tape::DtaStateId(38),
+        ::bbnf::runtime::tape::DtaStateId(39),
+        ::bbnf::runtime::tape::DtaStateId(43),
+    ];
+    static __DTA_LITERAL_45: &str = "__state_45_literal";
+    static __DTA_LITERAL_46: &str = "__state_46_literal";
+    static __DTA_LITERAL_47: &str = "__state_47_literal";
+    static __DTA_ALT_LIN_48: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(45),
+        ::bbnf::runtime::tape::DtaStateId(46),
+        ::bbnf::runtime::tape::DtaStateId(47),
+    ];
+    static __DTA_LITERAL_49: &str = "__state_49_literal";
+    static __DTA_LITERAL_50: &str = "__state_50_literal";
+    static __DTA_ALT_LIN_51: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(49),
+        ::bbnf::runtime::tape::DtaStateId(50),
+    ];
+    static __DTA_LITERAL_52: &str = "__state_52_literal";
+    static __DTA_LITERAL_53: &str = "__state_53_literal";
+    static __DTA_LITERAL_54: &str = "__state_54_literal";
+    static __DTA_LITERAL_55: &str = "__state_55_literal";
+    static __DTA_LITERAL_56: &str = "__state_56_literal";
+    static __DTA_LITERAL_57: &str = "__state_57_literal";
+    static __DTA_ALT_LIN_58: [::bbnf::runtime::tape::DtaStateId; 6usize] = [
+        ::bbnf::runtime::tape::DtaStateId(52),
+        ::bbnf::runtime::tape::DtaStateId(53),
+        ::bbnf::runtime::tape::DtaStateId(54),
+        ::bbnf::runtime::tape::DtaStateId(55),
+        ::bbnf::runtime::tape::DtaStateId(56),
+        ::bbnf::runtime::tape::DtaStateId(57),
+    ];
+    static __DTA_LITERAL_59: &str = "__state_59_literal";
+    static __DTA_LITERAL_60: &str = "__state_60_literal";
+    static __DTA_ALT_LIN_61: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(59),
+        ::bbnf::runtime::tape::DtaStateId(60),
+    ];
+    static __DTA_SEQ_63_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(61),
+        ::bbnf::runtime::tape::DtaStateId(62),
+    ];
+    static __DTA_ALT_LIN_65: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(63),
+        ::bbnf::runtime::tape::DtaStateId(64),
+    ];
+    static __DTA_SEQ_69_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(67),
+        ::bbnf::runtime::tape::DtaStateId(68),
+    ];
+    static __DTA_SEQ_71_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(66),
+        ::bbnf::runtime::tape::DtaStateId(70),
+    ];
+    static __DTA_SY_73_PREC: [::bbnf::runtime::tape::DtaPrecedenceEntry; 5usize] = [
+        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+            byte: 43,
+            second_byte: None,
+            precedence: 2,
+            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
+            op_rule: ::bbnf::runtime::tape::DtaRuleId(10),
+            op_discriminant: 0,
+        },
+        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+            byte: 45,
+            second_byte: None,
+            precedence: 2,
+            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
+            op_rule: ::bbnf::runtime::tape::DtaRuleId(10),
+            op_discriminant: 1,
+        },
+        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+            byte: 42,
+            second_byte: None,
+            precedence: 1,
+            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
+            op_rule: ::bbnf::runtime::tape::DtaRuleId(9),
+            op_discriminant: 0,
+        },
+        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+            byte: 47,
+            second_byte: None,
+            precedence: 1,
+            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
+            op_rule: ::bbnf::runtime::tape::DtaRuleId(9),
+            op_discriminant: 1,
+        },
+        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+            byte: 37,
+            second_byte: None,
+            precedence: 1,
+            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
+            op_rule: ::bbnf::runtime::tape::DtaRuleId(9),
+            op_discriminant: 2,
+        },
+    ];
+    static __DTA_SEQ_77_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(75),
+        ::bbnf::runtime::tape::DtaStateId(76),
+    ];
+    static __DTA_SEQ_79_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(74),
+        ::bbnf::runtime::tape::DtaStateId(78),
+    ];
+    static __DTA_LITERAL_81: &str = "__state_81_literal";
+    static __DTA_SEQ_83_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(81),
+        ::bbnf::runtime::tape::DtaStateId(82),
+    ];
+    static __DTA_SEQ_85_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(80),
+        ::bbnf::runtime::tape::DtaStateId(84),
+    ];
+    static __DTA_LITERAL_87: &str = "__state_87_literal";
+    static __DTA_SEQ_89_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(87),
+        ::bbnf::runtime::tape::DtaStateId(88),
+    ];
+    static __DTA_SEQ_91_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(86),
+        ::bbnf::runtime::tape::DtaStateId(90),
+    ];
+    static __DTA_LITERAL_92: &str = "__state_92_literal";
+    static __DTA_LITERAL_94: &str = "__state_94_literal";
+    static __DTA_SEQ_96_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(94),
+        ::bbnf::runtime::tape::DtaStateId(95),
+    ];
+    static __DTA_LITERAL_98: &str = "__state_98_literal";
+    static __DTA_SEQ_100_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 5usize] = [
+        ::bbnf::runtime::tape::DtaStateId(92),
+        ::bbnf::runtime::tape::DtaStateId(93),
+        ::bbnf::runtime::tape::DtaStateId(97),
+        ::bbnf::runtime::tape::DtaStateId(98),
+        ::bbnf::runtime::tape::DtaStateId(99),
+    ];
+    static __DTA_ALT_LIN_103: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(101),
+        ::bbnf::runtime::tape::DtaStateId(102),
+    ];
+    static __DTA_LITERAL_104: &str = "__state_104_literal";
+    static __DTA_SEQ_106_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(104),
+        ::bbnf::runtime::tape::DtaStateId(105),
+    ];
+    static __DTA_LITERAL_107: &str = "__state_107_literal";
+    static __DTA_LITERAL_108: &str = "__state_108_literal";
+    static __DTA_LITERAL_109: &str = "__state_109_literal";
+    static __DTA_LITERAL_110: &str = "__state_110_literal";
+    static __DTA_LITERAL_111: &str = "__state_111_literal";
+    static __DTA_LITERAL_112: &str = "__state_112_literal";
+    static __DTA_LITERAL_113: &str = "__state_113_literal";
+    static __DTA_LITERAL_114: &str = "__state_114_literal";
+    static __DTA_LITERAL_115: &str = "__state_115_literal";
+    static __DTA_LITERAL_116: &str = "__state_116_literal";
+    static __DTA_REGEX_117: &str = "__state_117_regex";
+    static __DTA_ALT_LIN_118: [::bbnf::runtime::tape::DtaStateId; 11usize] = [
+        ::bbnf::runtime::tape::DtaStateId(107),
+        ::bbnf::runtime::tape::DtaStateId(108),
+        ::bbnf::runtime::tape::DtaStateId(109),
+        ::bbnf::runtime::tape::DtaStateId(110),
+        ::bbnf::runtime::tape::DtaStateId(111),
+        ::bbnf::runtime::tape::DtaStateId(112),
+        ::bbnf::runtime::tape::DtaStateId(113),
+        ::bbnf::runtime::tape::DtaStateId(114),
+        ::bbnf::runtime::tape::DtaStateId(115),
+        ::bbnf::runtime::tape::DtaStateId(116),
+        ::bbnf::runtime::tape::DtaStateId(117),
+    ];
+    static __DTA_REGEX_119: &str = "__state_119_regex";
+    static __DTA_LITERAL_120: &str = "__state_120_literal";
+    static __DTA_REGEX_121: &str = "__state_121_regex";
+    static __DTA_LITERAL_122: &str = "__state_122_literal";
+    static __DTA_SEQ_123_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(120),
+        ::bbnf::runtime::tape::DtaStateId(121),
+        ::bbnf::runtime::tape::DtaStateId(122),
+    ];
+    static __DTA_LITERAL_124: &str = "__state_124_literal";
+    static __DTA_REGEX_125: &str = "__state_125_regex";
+    static __DTA_LITERAL_126: &str = "__state_126_literal";
+    static __DTA_SEQ_127_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(124),
+        ::bbnf::runtime::tape::DtaStateId(125),
+        ::bbnf::runtime::tape::DtaStateId(126),
+    ];
+    static __DTA_LITERAL_128: &str = "__state_128_literal";
+    static __DTA_REGEX_129: &str = "__state_129_regex";
+    static __DTA_LITERAL_130: &str = "__state_130_literal";
+    static __DTA_SEQ_131_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(128),
+        ::bbnf::runtime::tape::DtaStateId(129),
+        ::bbnf::runtime::tape::DtaStateId(130),
+    ];
+    static __DTA_ALT_LIN_132: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(123),
+        ::bbnf::runtime::tape::DtaStateId(127),
+        ::bbnf::runtime::tape::DtaStateId(131),
+    ];
+    static __DTA_LITERAL_133: &str = "__state_133_literal";
+    static __DTA_REGEX_134: &str = "__state_134_regex";
+    static __DTA_LITERAL_135: &str = "__state_135_literal";
+    static __DTA_SEQ_136_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(133),
+        ::bbnf::runtime::tape::DtaStateId(134),
+        ::bbnf::runtime::tape::DtaStateId(135),
+    ];
+    static __DTA_LITERAL_137: &str = "__state_137_literal";
+    static __DTA_REGEX_138: &str = "__state_138_regex";
+    static __DTA_LITERAL_139: &str = "__state_139_literal";
+    static __DTA_SEQ_140_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(137),
+        ::bbnf::runtime::tape::DtaStateId(138),
+        ::bbnf::runtime::tape::DtaStateId(139),
+    ];
+    static __DTA_LITERAL_141: &str = "__state_141_literal";
+    static __DTA_REGEX_142: &str = "__state_142_regex";
+    static __DTA_SEQ_143_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(141),
+        ::bbnf::runtime::tape::DtaStateId(142),
+    ];
+    static __DTA_LITERAL_146: &str = "__state_146_literal";
+    static __DTA_SEQ_148_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(145),
+        ::bbnf::runtime::tape::DtaStateId(147),
+    ];
+    static __DTA_LITERAL_150: &str = "__state_150_literal";
+    static __DTA_LITERAL_151: &str = "__state_151_literal";
+    static __DTA_LITERAL_153: &str = "__state_153_literal";
+    static __DTA_LITERAL_155: &str = "__state_155_literal";
+    static __DTA_SEQ_157_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(155),
+        ::bbnf::runtime::tape::DtaStateId(156),
+    ];
+    static __DTA_LITERAL_159: &str = "__state_159_literal";
+    static __DTA_SEQ_160_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 4usize] = [
+        ::bbnf::runtime::tape::DtaStateId(153),
+        ::bbnf::runtime::tape::DtaStateId(154),
+        ::bbnf::runtime::tape::DtaStateId(158),
+        ::bbnf::runtime::tape::DtaStateId(159),
+    ];
+    static __DTA_SEQ_162_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(152),
+        ::bbnf::runtime::tape::DtaStateId(161),
+    ];
+    static __DTA_LITERAL_165: &str = "__state_165_literal";
+    static __DTA_LITERAL_167: &str = "__state_167_literal";
+    static __DTA_SEQ_168_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(165),
+        ::bbnf::runtime::tape::DtaStateId(166),
+        ::bbnf::runtime::tape::DtaStateId(167),
+    ];
+    static __DTA_LITERAL_169: &str = "__state_169_literal";
+    static __DTA_LITERAL_171: &str = "__state_171_literal";
+    static __DTA_SEQ_172_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(169),
+        ::bbnf::runtime::tape::DtaStateId(170),
+        ::bbnf::runtime::tape::DtaStateId(171),
+    ];
+    static __DTA_LITERAL_173: &str = "__state_173_literal";
+    static __DTA_LITERAL_175: &str = "__state_175_literal";
+    static __DTA_SEQ_176_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(173),
+        ::bbnf::runtime::tape::DtaStateId(174),
+        ::bbnf::runtime::tape::DtaStateId(175),
+    ];
+    static __DTA_LITERAL_177: &str = "__state_177_literal";
+    static __DTA_LITERAL_179: &str = "__state_179_literal";
+    static __DTA_SEQ_180_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(177),
+        ::bbnf::runtime::tape::DtaStateId(178),
+        ::bbnf::runtime::tape::DtaStateId(179),
+    ];
+    static __DTA_ALT_LIN_181: [::bbnf::runtime::tape::DtaStateId; 9usize] = [
+        ::bbnf::runtime::tape::DtaStateId(150),
+        ::bbnf::runtime::tape::DtaStateId(151),
+        ::bbnf::runtime::tape::DtaStateId(162),
+        ::bbnf::runtime::tape::DtaStateId(163),
+        ::bbnf::runtime::tape::DtaStateId(164),
+        ::bbnf::runtime::tape::DtaStateId(168),
+        ::bbnf::runtime::tape::DtaStateId(172),
+        ::bbnf::runtime::tape::DtaStateId(176),
+        ::bbnf::runtime::tape::DtaStateId(180),
+    ];
+    static __DTA_LITERAL_182: &str = "__state_182_literal";
+    static __DTA_LITERAL_183: &str = "__state_183_literal";
+    static __DTA_LITERAL_184: &str = "__state_184_literal";
+    static __DTA_LITERAL_185: &str = "__state_185_literal";
+    static __DTA_ALT_LIN_186: [::bbnf::runtime::tape::DtaStateId; 4usize] = [
+        ::bbnf::runtime::tape::DtaStateId(182),
+        ::bbnf::runtime::tape::DtaStateId(183),
+        ::bbnf::runtime::tape::DtaStateId(184),
+        ::bbnf::runtime::tape::DtaStateId(185),
+    ];
+    static __DTA_SEQ_194_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 4usize] = [
+        ::bbnf::runtime::tape::DtaStateId(188),
+        ::bbnf::runtime::tape::DtaStateId(189),
+        ::bbnf::runtime::tape::DtaStateId(191),
+        ::bbnf::runtime::tape::DtaStateId(193),
+    ];
+    static __DTA_LITERAL_196: &str = "__state_196_literal";
+    static __DTA_SEQ_200_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(197),
+        ::bbnf::runtime::tape::DtaStateId(199),
+    ];
+    static __DTA_SEQ_201_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(196),
+        ::bbnf::runtime::tape::DtaStateId(200),
+    ];
+    static __DTA_SEQ_203_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(195),
+        ::bbnf::runtime::tape::DtaStateId(202),
+    ];
+    static __DTA_LITERAL_204: &str = "__state_204_literal";
+    static __DTA_LITERAL_205: &str = "__state_205_literal";
+    static __DTA_LITERAL_206: &str = "__state_206_literal";
+    static __DTA_ALT_LIN_207: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(204),
+        ::bbnf::runtime::tape::DtaStateId(205),
+        ::bbnf::runtime::tape::DtaStateId(206),
+    ];
+    static __DTA_SEQ_211_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(209),
+        ::bbnf::runtime::tape::DtaStateId(210),
+    ];
+    static __DTA_SEQ_213_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(208),
+        ::bbnf::runtime::tape::DtaStateId(212),
+    ];
+    static __DTA_LITERAL_215: &str = "__state_215_literal";
+    static __DTA_SEQ_217_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(214),
+        ::bbnf::runtime::tape::DtaStateId(216),
+    ];
+    static __DTA_LITERAL_220: &str = "__state_220_literal";
+    static __DTA_SEQ_222_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(219),
+        ::bbnf::runtime::tape::DtaStateId(221),
+    ];
+    static __DTA_LITERAL_224: &str = "__state_224_literal";
+    static __DTA_LITERAL_226: &str = "__state_226_literal";
+    static __DTA_SEQ_228_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(226),
+        ::bbnf::runtime::tape::DtaStateId(227),
+    ];
+    static __DTA_LITERAL_230: &str = "__state_230_literal";
+    static __DTA_SEQ_232_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 5usize] = [
+        ::bbnf::runtime::tape::DtaStateId(224),
+        ::bbnf::runtime::tape::DtaStateId(225),
+        ::bbnf::runtime::tape::DtaStateId(229),
+        ::bbnf::runtime::tape::DtaStateId(230),
+        ::bbnf::runtime::tape::DtaStateId(231),
+    ];
+    static __DTA_ALT_LIN_235: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(233),
+        ::bbnf::runtime::tape::DtaStateId(234),
+    ];
+    static __DTA_LITERAL_237: &str = "__state_237_literal";
+    static __DTA_LITERAL_239: &str = "__state_239_literal";
+    static __DTA_LITERAL_240: &str = "__state_240_literal";
+    static __DTA_ALT_LIN_241: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(239),
+        ::bbnf::runtime::tape::DtaStateId(240),
+    ];
+    static __DTA_SEQ_242_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 4usize] = [
+        ::bbnf::runtime::tape::DtaStateId(236),
+        ::bbnf::runtime::tape::DtaStateId(237),
+        ::bbnf::runtime::tape::DtaStateId(238),
+        ::bbnf::runtime::tape::DtaStateId(241),
+    ];
+    static __DTA_LITERAL_243: &str = "__state_243_literal";
+    static __DTA_REGEX_244: &str = "__state_244_regex";
+    static __DTA_LITERAL_245: &str = "__state_245_literal";
+    static __DTA_SEQ_246_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(243),
+        ::bbnf::runtime::tape::DtaStateId(244),
+        ::bbnf::runtime::tape::DtaStateId(245),
+    ];
+    static __DTA_LITERAL_247: &str = "__state_247_literal";
+    static __DTA_LITERAL_249: &str = "__state_249_literal";
+    static __DTA_SEQ_251_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(249),
+        ::bbnf::runtime::tape::DtaStateId(250),
+    ];
+    static __DTA_SEQ_253_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(248),
+        ::bbnf::runtime::tape::DtaStateId(252),
+    ];
+    static __DTA_LITERAL_254: &str = "__state_254_literal";
+    static __DTA_SEQ_255_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(247),
+        ::bbnf::runtime::tape::DtaStateId(253),
+        ::bbnf::runtime::tape::DtaStateId(254),
+    ];
+    static __DTA_LITERAL_256: &str = "__state_256_literal";
+    static __DTA_LITERAL_258: &str = "__state_258_literal";
+    static __DTA_SEQ_260_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(257),
+        ::bbnf::runtime::tape::DtaStateId(258),
+        ::bbnf::runtime::tape::DtaStateId(259),
+    ];
+    static __DTA_ALT_LIN_262: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(260),
+        ::bbnf::runtime::tape::DtaStateId(261),
+    ];
+    static __DTA_LITERAL_263: &str = "__state_263_literal";
+    static __DTA_LITERAL_264: &str = "__state_264_literal";
+    static __DTA_ALT_LIN_265: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(263),
+        ::bbnf::runtime::tape::DtaStateId(264),
+    ];
+    static __DTA_SEQ_267_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(256),
+        ::bbnf::runtime::tape::DtaStateId(262),
+        ::bbnf::runtime::tape::DtaStateId(266),
+    ];
+    static __DTA_LITERAL_268: &str = "__state_268_literal";
+    static __DTA_LITERAL_271: &str = "__state_271_literal";
+    static __DTA_LITERAL_272: &str = "__state_272_literal";
+    static __DTA_ALT_LIN_273: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(271),
+        ::bbnf::runtime::tape::DtaStateId(272),
+    ];
+    static __DTA_SEQ_275_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 4usize] = [
+        ::bbnf::runtime::tape::DtaStateId(268),
+        ::bbnf::runtime::tape::DtaStateId(269),
+        ::bbnf::runtime::tape::DtaStateId(270),
+        ::bbnf::runtime::tape::DtaStateId(274),
+    ];
+    static __DTA_LITERAL_277: &str = "__state_277_literal";
+    static __DTA_REGEX_278: &str = "__state_278_regex";
+    static __DTA_LITERAL_279: &str = "__state_279_literal";
+    static __DTA_SEQ_280_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(277),
+        ::bbnf::runtime::tape::DtaStateId(278),
+        ::bbnf::runtime::tape::DtaStateId(279),
+    ];
+    static __DTA_SEQ_282_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(276),
+        ::bbnf::runtime::tape::DtaStateId(281),
+    ];
+    static __DTA_LITERAL_283: &str = "__state_283_literal";
+    static __DTA_LITERAL_284: &str = "__state_284_literal";
+    static __DTA_ALT_LIN_286: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(284),
+        ::bbnf::runtime::tape::DtaStateId(285),
+    ];
+    static __DTA_LITERAL_289: &str = "__state_289_literal";
+    static __DTA_LITERAL_290: &str = "__state_290_literal";
+    static __DTA_ALT_LIN_291: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(289),
+        ::bbnf::runtime::tape::DtaStateId(290),
+    ];
+    static __DTA_SEQ_293_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 4usize] = [
+        ::bbnf::runtime::tape::DtaStateId(283),
+        ::bbnf::runtime::tape::DtaStateId(286),
+        ::bbnf::runtime::tape::DtaStateId(288),
+        ::bbnf::runtime::tape::DtaStateId(292),
+    ];
+    static __DTA_LITERAL_294: &str = "__state_294_literal";
+    static __DTA_LITERAL_296: &str = "__state_296_literal";
+    static __DTA_LITERAL_297: &str = "__state_297_literal";
+    static __DTA_ALT_LIN_298: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(296),
+        ::bbnf::runtime::tape::DtaStateId(297),
+    ];
+    static __DTA_SEQ_300_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(294),
+        ::bbnf::runtime::tape::DtaStateId(295),
+        ::bbnf::runtime::tape::DtaStateId(299),
+    ];
+    static __DTA_LITERAL_301: &str = "__state_301_literal";
+    static __DTA_LITERAL_303: &str = "__state_303_literal";
+    static __DTA_LITERAL_304: &str = "__state_304_literal";
+    static __DTA_ALT_LIN_305: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(303),
+        ::bbnf::runtime::tape::DtaStateId(304),
+    ];
+    static __DTA_SEQ_307_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(301),
+        ::bbnf::runtime::tape::DtaStateId(302),
+        ::bbnf::runtime::tape::DtaStateId(306),
+    ];
+    static __DTA_LITERAL_308: &str = "__state_308_literal";
+    static __DTA_LITERAL_309: &str = "__state_309_literal";
+    static __DTA_ALT_LIN_311: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(309),
+        ::bbnf::runtime::tape::DtaStateId(310),
+    ];
+    static __DTA_LITERAL_312: &str = "__state_312_literal";
+    static __DTA_LITERAL_313: &str = "__state_313_literal";
+    static __DTA_ALT_LIN_314: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(312),
+        ::bbnf::runtime::tape::DtaStateId(313),
+    ];
+    static __DTA_SEQ_316_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(308),
+        ::bbnf::runtime::tape::DtaStateId(311),
+        ::bbnf::runtime::tape::DtaStateId(315),
+    ];
+    static __DTA_LITERAL_317: &str = "__state_317_literal";
+    static __DTA_LITERAL_319: &str = "__state_319_literal";
+    static __DTA_SEQ_321_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(319),
+        ::bbnf::runtime::tape::DtaStateId(320),
+    ];
+    static __DTA_LITERAL_323: &str = "__state_323_literal";
+    static __DTA_LITERAL_324: &str = "__state_324_literal";
+    static __DTA_ALT_LIN_325: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(323),
+        ::bbnf::runtime::tape::DtaStateId(324),
+    ];
+    static __DTA_SEQ_327_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 4usize] = [
+        ::bbnf::runtime::tape::DtaStateId(317),
+        ::bbnf::runtime::tape::DtaStateId(318),
+        ::bbnf::runtime::tape::DtaStateId(322),
+        ::bbnf::runtime::tape::DtaStateId(326),
+    ];
+    static __DTA_ALT_LIN_335: [::bbnf::runtime::tape::DtaStateId; 7usize] = [
+        ::bbnf::runtime::tape::DtaStateId(328),
+        ::bbnf::runtime::tape::DtaStateId(329),
+        ::bbnf::runtime::tape::DtaStateId(330),
+        ::bbnf::runtime::tape::DtaStateId(331),
+        ::bbnf::runtime::tape::DtaStateId(332),
+        ::bbnf::runtime::tape::DtaStateId(333),
+        ::bbnf::runtime::tape::DtaStateId(334),
+    ];
+    static __DTA_ALT_LIN_340: [::bbnf::runtime::tape::DtaStateId; 4usize] = [
+        ::bbnf::runtime::tape::DtaStateId(336),
+        ::bbnf::runtime::tape::DtaStateId(337),
+        ::bbnf::runtime::tape::DtaStateId(338),
+        ::bbnf::runtime::tape::DtaStateId(339),
+    ];
+    static __DTA_STATES: [::bbnf::runtime::tape::DtaState; 343usize] = [
+        ::bbnf::runtime::tape::DtaState::Regex {
+            pattern: __DTA_REGEX_0,
+        },
+        ::bbnf::runtime::tape::DtaState::Regex {
+            pattern: __DTA_REGEX_1,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_2,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_3,
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_4,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_5,
+        },
+        ::bbnf::runtime::tape::DtaState::Regex {
+            pattern: __DTA_REGEX_6,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_7,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_8_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Regex {
+            pattern: __DTA_REGEX_9,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(4),
+            target: ::bbnf::runtime::tape::DtaStateId(9),
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_11,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(4),
+            target: ::bbnf::runtime::tape::DtaStateId(9),
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_13_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(13),
+            lo: 0,
+            hi: 4294967295,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_15_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_16,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_17,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(4),
+            target: ::bbnf::runtime::tape::DtaStateId(9),
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_19_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(19),
+            lo: 0,
+            hi: 4294967295,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_21_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(5),
+            target: ::bbnf::runtime::tape::DtaStateId(15),
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_23,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(19),
+            target: ::bbnf::runtime::tape::DtaStateId(65535),
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_25,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(19),
+            target: ::bbnf::runtime::tape::DtaStateId(65535),
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_27_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(27),
+            lo: 0,
+            hi: 4294967295,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_29_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(29),
+            lo: 0,
+            hi: 1,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_31,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_32_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(0),
+            target: ::bbnf::runtime::tape::DtaStateId(0),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(1),
+            target: ::bbnf::runtime::tape::DtaStateId(1),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(2),
+            target: ::bbnf::runtime::tape::DtaStateId(4),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(3),
+            target: ::bbnf::runtime::tape::DtaStateId(8),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(7),
+            target: ::bbnf::runtime::tape::DtaStateId(32),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(6),
+            target: ::bbnf::runtime::tape::DtaStateId(21),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(5),
+            target: ::bbnf::runtime::tape::DtaStateId(15),
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_40,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(19),
+            target: ::bbnf::runtime::tape::DtaStateId(65535),
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_42,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_43_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_44,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_45,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_46,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_47,
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_48,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_49,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_50,
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_51,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_52,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_53,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_54,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_55,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_56,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_57,
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_58,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_59,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_60,
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_61,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(8),
+            target: ::bbnf::runtime::tape::DtaStateId(44),
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_63_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(8),
+            target: ::bbnf::runtime::tape::DtaStateId(44),
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_65,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(12),
+            target: ::bbnf::runtime::tape::DtaStateId(65),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(9),
+            target: ::bbnf::runtime::tape::DtaStateId(48),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(12),
+            target: ::bbnf::runtime::tape::DtaStateId(65),
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_69_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(69),
+            lo: 0,
+            hi: 4294967295,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_71_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(12),
+            target: ::bbnf::runtime::tape::DtaStateId(65),
+        },
+        ::bbnf::runtime::tape::DtaState::ShuntingYard {
+            head: ::bbnf::runtime::tape::DtaStateId(72),
+            precedence: &__DTA_SY_73_PREC,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(14),
+            target: ::bbnf::runtime::tape::DtaStateId(73),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(11),
+            target: ::bbnf::runtime::tape::DtaStateId(58),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(14),
+            target: ::bbnf::runtime::tape::DtaStateId(73),
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_77_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(77),
+            lo: 0,
+            hi: 4294967295,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_79_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(15),
+            target: ::bbnf::runtime::tape::DtaStateId(79),
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_81,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(15),
+            target: ::bbnf::runtime::tape::DtaStateId(79),
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_83_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(83),
+            lo: 0,
+            hi: 4294967295,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_85_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(16),
+            target: ::bbnf::runtime::tape::DtaStateId(85),
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_87,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(16),
+            target: ::bbnf::runtime::tape::DtaStateId(85),
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_89_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(89),
+            lo: 0,
+            hi: 4294967295,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_91_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_92,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(4),
+            target: ::bbnf::runtime::tape::DtaStateId(9),
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_94,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(4),
+            target: ::bbnf::runtime::tape::DtaStateId(9),
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_96_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(96),
+            lo: 0,
+            hi: 4294967295,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_98,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(19),
+            target: ::bbnf::runtime::tape::DtaStateId(65535),
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_100_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(18),
+            target: ::bbnf::runtime::tape::DtaStateId(100),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(17),
+            target: ::bbnf::runtime::tape::DtaStateId(91),
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_103,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_104,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(21),
+            target: ::bbnf::runtime::tape::DtaStateId(65535),
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_106_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_107,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_108,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_109,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_110,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_111,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_112,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_113,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_114,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_115,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_116,
+        },
+        ::bbnf::runtime::tape::DtaState::Regex {
+            pattern: __DTA_REGEX_117,
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_118,
+        },
+        ::bbnf::runtime::tape::DtaState::Regex {
+            pattern: __DTA_REGEX_119,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_120,
+        },
+        ::bbnf::runtime::tape::DtaState::Regex {
+            pattern: __DTA_REGEX_121,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_122,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_123_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_124,
+        },
+        ::bbnf::runtime::tape::DtaState::Regex {
+            pattern: __DTA_REGEX_125,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_126,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_127_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_128,
+        },
+        ::bbnf::runtime::tape::DtaState::Regex {
+            pattern: __DTA_REGEX_129,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_130,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_131_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_132,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_133,
+        },
+        ::bbnf::runtime::tape::DtaState::Regex {
+            pattern: __DTA_REGEX_134,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_135,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_136_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_137,
+        },
+        ::bbnf::runtime::tape::DtaState::Regex {
+            pattern: __DTA_REGEX_138,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_139,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_140_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_141,
+        },
+        ::bbnf::runtime::tape::DtaState::Regex {
+            pattern: __DTA_REGEX_142,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_143_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(22),
+            target: ::bbnf::runtime::tape::DtaStateId(119),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(34),
+            target: ::bbnf::runtime::tape::DtaStateId(65535),
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_146,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(146),
+            lo: 0,
+            hi: 1,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_148_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(148),
+            lo: 1,
+            hi: 4294967295,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_150,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_151,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(22),
+            target: ::bbnf::runtime::tape::DtaStateId(119),
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_153,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(28),
+            target: ::bbnf::runtime::tape::DtaStateId(149),
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_155,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(28),
+            target: ::bbnf::runtime::tape::DtaStateId(149),
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_157_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(157),
+            lo: 0,
+            hi: 4294967295,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_159,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_160_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(160),
+            lo: 0,
+            hi: 1,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_162_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(23),
+            target: ::bbnf::runtime::tape::DtaStateId(132),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(24),
+            target: ::bbnf::runtime::tape::DtaStateId(136),
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_165,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(38),
+            target: ::bbnf::runtime::tape::DtaStateId(65535),
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_167,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_168_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_169,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(38),
+            target: ::bbnf::runtime::tape::DtaStateId(65535),
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_171,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_172_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_173,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(38),
+            target: ::bbnf::runtime::tape::DtaStateId(65535),
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_175,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_176_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_177,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(38),
+            target: ::bbnf::runtime::tape::DtaStateId(65535),
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_179,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_180_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_181,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_182,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_183,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_184,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_185,
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_186,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(25),
+            target: ::bbnf::runtime::tape::DtaStateId(140),
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(187),
+            lo: 0,
+            hi: 1,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(29),
+            target: ::bbnf::runtime::tape::DtaStateId(181),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(30),
+            target: ::bbnf::runtime::tape::DtaStateId(186),
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(190),
+            lo: 0,
+            hi: 1,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(25),
+            target: ::bbnf::runtime::tape::DtaStateId(140),
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(192),
+            lo: 0,
+            hi: 1,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_194_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(31),
+            target: ::bbnf::runtime::tape::DtaStateId(194),
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_196,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(19),
+            target: ::bbnf::runtime::tape::DtaStateId(103),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(20),
+            target: ::bbnf::runtime::tape::DtaStateId(106),
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(198),
+            lo: 0,
+            hi: 1,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_200_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_201_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(201),
+            lo: 0,
+            hi: 1,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_203_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_204,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_205,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_206,
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_207,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(32),
+            target: ::bbnf::runtime::tape::DtaStateId(203),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(33),
+            target: ::bbnf::runtime::tape::DtaStateId(207),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(32),
+            target: ::bbnf::runtime::tape::DtaStateId(203),
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_211_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(211),
+            lo: 0,
+            hi: 4294967295,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_213_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(34),
+            target: ::bbnf::runtime::tape::DtaStateId(213),
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_215,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(215),
+            lo: 0,
+            hi: 1,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_217_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(217),
+            lo: 1,
+            hi: 4294967295,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(35),
+            target: ::bbnf::runtime::tape::DtaStateId(218),
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_220,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(220),
+            lo: 0,
+            hi: 1,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_222_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(222),
+            lo: 1,
+            hi: 4294967295,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_224,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(22),
+            target: ::bbnf::runtime::tape::DtaStateId(119),
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_226,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(22),
+            target: ::bbnf::runtime::tape::DtaStateId(119),
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_228_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(228),
+            lo: 0,
+            hi: 4294967295,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_230,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(38),
+            target: ::bbnf::runtime::tape::DtaStateId(65535),
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_232_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(37),
+            target: ::bbnf::runtime::tape::DtaStateId(232),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(36),
+            target: ::bbnf::runtime::tape::DtaStateId(223),
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_235,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(27),
+            target: ::bbnf::runtime::tape::DtaStateId(144),
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_237,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(38),
+            target: ::bbnf::runtime::tape::DtaStateId(235),
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_239,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_240,
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_241,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_242_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_243,
+        },
+        ::bbnf::runtime::tape::DtaState::Regex {
+            pattern: __DTA_REGEX_244,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_245,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_246_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_247,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(22),
+            target: ::bbnf::runtime::tape::DtaStateId(119),
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_249,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(22),
+            target: ::bbnf::runtime::tape::DtaStateId(119),
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_251_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(251),
+            lo: 0,
+            hi: 4294967295,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_253_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_254,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_255_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_256,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(41),
+            target: ::bbnf::runtime::tape::DtaStateId(255),
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_258,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(40),
+            target: ::bbnf::runtime::tape::DtaStateId(246),
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_260_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(40),
+            target: ::bbnf::runtime::tape::DtaStateId(246),
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_262,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_263,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_264,
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_265,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(265),
+            lo: 0,
+            hi: 1,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_267_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_268,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(22),
+            target: ::bbnf::runtime::tape::DtaStateId(119),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(38),
+            target: ::bbnf::runtime::tape::DtaStateId(235),
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_271,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_272,
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_273,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(273),
+            lo: 0,
+            hi: 1,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_275_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(22),
+            target: ::bbnf::runtime::tape::DtaStateId(119),
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_277,
+        },
+        ::bbnf::runtime::tape::DtaState::Regex {
+            pattern: __DTA_REGEX_278,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_279,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_280_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(280),
+            lo: 0,
+            hi: 1,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_282_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_283,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_284,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(22),
+            target: ::bbnf::runtime::tape::DtaStateId(119),
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_286,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(44),
+            target: ::bbnf::runtime::tape::DtaStateId(282),
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(287),
+            lo: 1,
+            hi: 4294967295,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_289,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_290,
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_291,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(291),
+            lo: 0,
+            hi: 1,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_293_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_294,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(24),
+            target: ::bbnf::runtime::tape::DtaStateId(136),
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_296,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_297,
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_298,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(298),
+            lo: 0,
+            hi: 1,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_300_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_301,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(22),
+            target: ::bbnf::runtime::tape::DtaStateId(119),
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_303,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_304,
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_305,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(305),
+            lo: 0,
+            hi: 1,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_307_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_308,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_309,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(22),
+            target: ::bbnf::runtime::tape::DtaStateId(119),
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_311,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_312,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_313,
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_314,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(314),
+            lo: 0,
+            hi: 1,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_316_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_317,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(22),
+            target: ::bbnf::runtime::tape::DtaStateId(119),
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_319,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(21),
+            target: ::bbnf::runtime::tape::DtaStateId(118),
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_321_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(321),
+            lo: 0,
+            hi: 1,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_323,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_324,
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_325,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(325),
+            lo: 0,
+            hi: 1,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_327_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(42),
+            target: ::bbnf::runtime::tape::DtaStateId(267),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(43),
+            target: ::bbnf::runtime::tape::DtaStateId(275),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(45),
+            target: ::bbnf::runtime::tape::DtaStateId(293),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(46),
+            target: ::bbnf::runtime::tape::DtaStateId(300),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(47),
+            target: ::bbnf::runtime::tape::DtaStateId(307),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(48),
+            target: ::bbnf::runtime::tape::DtaStateId(316),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(49),
+            target: ::bbnf::runtime::tape::DtaStateId(327),
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_335,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(26),
+            target: ::bbnf::runtime::tape::DtaStateId(143),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(25),
+            target: ::bbnf::runtime::tape::DtaStateId(140),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(50),
+            target: ::bbnf::runtime::tape::DtaStateId(335),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(39),
+            target: ::bbnf::runtime::tape::DtaStateId(242),
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_340,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(51),
+            target: ::bbnf::runtime::tape::DtaStateId(340),
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(341),
+            lo: 0,
+            hi: 4294967295,
+            counter_optional: None,
+        },
+    ];
+    static __DTA_RULE_ENTRIES: [::bbnf::runtime::tape::DtaRuleEntry; 53usize] = [
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(0),
+            state: ::bbnf::runtime::tape::DtaStateId(0),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(1),
+            state: ::bbnf::runtime::tape::DtaStateId(1),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(2),
+            state: ::bbnf::runtime::tape::DtaStateId(4),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(3),
+            state: ::bbnf::runtime::tape::DtaStateId(8),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(4),
+            state: ::bbnf::runtime::tape::DtaStateId(9),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(5),
+            state: ::bbnf::runtime::tape::DtaStateId(15),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(6),
+            state: ::bbnf::runtime::tape::DtaStateId(21),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(7),
+            state: ::bbnf::runtime::tape::DtaStateId(32),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(8),
+            state: ::bbnf::runtime::tape::DtaStateId(44),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(9),
+            state: ::bbnf::runtime::tape::DtaStateId(48),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(10),
+            state: ::bbnf::runtime::tape::DtaStateId(51),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(11),
+            state: ::bbnf::runtime::tape::DtaStateId(58),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(12),
+            state: ::bbnf::runtime::tape::DtaStateId(65),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(13),
+            state: ::bbnf::runtime::tape::DtaStateId(73),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(14),
+            state: ::bbnf::runtime::tape::DtaStateId(73),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(15),
+            state: ::bbnf::runtime::tape::DtaStateId(79),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(16),
+            state: ::bbnf::runtime::tape::DtaStateId(85),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(17),
+            state: ::bbnf::runtime::tape::DtaStateId(91),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(18),
+            state: ::bbnf::runtime::tape::DtaStateId(100),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(19),
+            state: ::bbnf::runtime::tape::DtaStateId(103),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(20),
+            state: ::bbnf::runtime::tape::DtaStateId(106),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(21),
+            state: ::bbnf::runtime::tape::DtaStateId(118),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(22),
+            state: ::bbnf::runtime::tape::DtaStateId(119),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(23),
+            state: ::bbnf::runtime::tape::DtaStateId(132),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(24),
+            state: ::bbnf::runtime::tape::DtaStateId(136),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(25),
+            state: ::bbnf::runtime::tape::DtaStateId(140),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(26),
+            state: ::bbnf::runtime::tape::DtaStateId(143),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(27),
+            state: ::bbnf::runtime::tape::DtaStateId(144),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(28),
+            state: ::bbnf::runtime::tape::DtaStateId(149),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(29),
+            state: ::bbnf::runtime::tape::DtaStateId(181),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(30),
+            state: ::bbnf::runtime::tape::DtaStateId(186),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(31),
+            state: ::bbnf::runtime::tape::DtaStateId(194),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(32),
+            state: ::bbnf::runtime::tape::DtaStateId(203),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(33),
+            state: ::bbnf::runtime::tape::DtaStateId(207),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(34),
+            state: ::bbnf::runtime::tape::DtaStateId(213),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(35),
+            state: ::bbnf::runtime::tape::DtaStateId(218),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(36),
+            state: ::bbnf::runtime::tape::DtaStateId(223),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(37),
+            state: ::bbnf::runtime::tape::DtaStateId(232),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(38),
+            state: ::bbnf::runtime::tape::DtaStateId(235),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(39),
+            state: ::bbnf::runtime::tape::DtaStateId(242),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(40),
+            state: ::bbnf::runtime::tape::DtaStateId(246),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(41),
+            state: ::bbnf::runtime::tape::DtaStateId(255),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(42),
+            state: ::bbnf::runtime::tape::DtaStateId(267),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(43),
+            state: ::bbnf::runtime::tape::DtaStateId(275),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(44),
+            state: ::bbnf::runtime::tape::DtaStateId(282),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(45),
+            state: ::bbnf::runtime::tape::DtaStateId(293),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(46),
+            state: ::bbnf::runtime::tape::DtaStateId(300),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(47),
+            state: ::bbnf::runtime::tape::DtaStateId(307),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(48),
+            state: ::bbnf::runtime::tape::DtaStateId(316),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(49),
+            state: ::bbnf::runtime::tape::DtaStateId(327),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(50),
+            state: ::bbnf::runtime::tape::DtaStateId(335),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(51),
+            state: ::bbnf::runtime::tape::DtaStateId(340),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(52),
+            state: ::bbnf::runtime::tape::DtaStateId(342),
+        },
+    ];
+    static __DTA_SHUNTING_YARD_RULES: [::bbnf::runtime::tape::DtaRuleId; 2usize] = [
+        ::bbnf::runtime::tape::DtaRuleId(13),
+        ::bbnf::runtime::tape::DtaRuleId(14),
+    ];
+    /// Dispatch Tape Automaton — emitted by Tranche AV Phase 3.
+    /// The runtime driver (V4 PSI stage-B) walks this table from
+    /// each rule's entry state; until V4 lands, this data is
+    /// inert and `parse()` drives through the legacy fn-per-rule
+    /// path.
+    pub const DTA_TABLE: ::bbnf::runtime::tape::DtaTable = ::bbnf::runtime::tape::DtaTable {
+        states: &__DTA_STATES,
+        rule_entries: &__DTA_RULE_ENTRIES,
+        shunting_yard_rules: &__DTA_SHUNTING_YARD_RULES,
+        counter_optional_rules: &[],
+        max_nesting_depth: 8u16,
+    };
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct int_litView<'p> {

@@ -380,6 +380,14 @@ impl RustEmitter {
         let profile = ir.profile();
         let grammar_profile = super::profile::emit_grammar_profile(&profile);
 
+        // Tranche AV Phase 3 — DTA table. Lowers the lifter's
+        // owned `DtaTable` into a `const DTA_TABLE: ::bbnf::runtime::tape::DtaTable
+        // = DtaTable { ... };` literal next to `GRAMMAR_PROFILE`. The
+        // runtime driver consuming the table ships in V4 PSI; until
+        // then the table is inert data and `parse()` drives the
+        // legacy fn-per-rule path.
+        let dta_table = super::dta::emit_dta_table(ir);
+
         // Tranche AV Phase 2 — AV.2.5 reordered-unrolling kernels for
         // typed-payload visitors. One free-function per descriptor
         // with a 4-lane reordered accumulator (Sum) or lane-wise
@@ -479,6 +487,8 @@ impl RustEmitter {
             #grammar_arr
 
             #grammar_profile
+
+            #dta_table
 
             #type_defs
 

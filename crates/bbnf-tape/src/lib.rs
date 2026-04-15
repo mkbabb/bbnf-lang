@@ -48,6 +48,7 @@
 pub mod builder;
 pub mod columns;
 pub mod cursor;
+pub mod dta;
 pub mod kind;
 pub mod profile;
 pub mod tape;
@@ -55,6 +56,10 @@ pub mod tape;
 pub use builder::{PayloadData, TapeBuildError, TapeBuilder};
 pub use columns::Columns;
 pub use cursor::{ChildIter, ColumnRank, TapeCursor};
+pub use dta::{
+    DtaAssociativity, DtaCounterOptional, DtaFrameKind, DtaPrecedenceEntry, DtaRuleEntry,
+    DtaRuleId, DtaState, DtaStateId, DtaTable,
+};
 pub use kind::TapeKind;
 pub use profile::{
     BranchPrior, ColumnId, GrammarProfile, KeywordTable, RuleId, ShapeEntry, VisitorId,

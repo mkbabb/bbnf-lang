@@ -9,6 +9,7 @@
 mod alt;
 mod binary;
 mod dispatch;
+pub(crate) mod dta;
 mod grammar;
 mod leaves;
 mod map_value;

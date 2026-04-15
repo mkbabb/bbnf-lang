@@ -6,9 +6,10 @@
 // Unit literals map to u8 discriminants (matching lightningcss LengthValue layout).
 
 // --- Numeric primitives (§3.1) ---
-
-number = /[-+]?(\d+(\.\d+)?|\.\d+)([eE][-+]?\d+)?/ ;
-integer = /[-+]?\d+/ ;
+// AU.2.3: `number -> f64` activates payload capture at 20 CSS discard sites
+// and composes dimensions as (f64, u8) aggregates via Seq inference (AU.2.5).
+number = /[-+]?(\d+(\.\d+)?|\.\d+)([eE][-+]?\d+)?/ -> f64 ;
+integer = /[-+]?\d+/ -> i64 ;
 
 // --- Length units (§6) → u8 discriminant ---
 

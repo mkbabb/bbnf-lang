@@ -92,7 +92,6 @@ pub fn emit_seq_accessors(
     }
 
     quote! {
-        #[allow(dead_code)]
         impl<'p> #view_ident<'p> {
             #(#methods)*
         }
@@ -257,7 +256,6 @@ pub fn emit_kv_pair_accessors(
     }
 
     quote! {
-        #[allow(dead_code)]
         impl<'p> #view_ident<'p> {
             #(#methods)*
         }

@@ -146,7 +146,6 @@ pub fn emit_alt_accessors(
     }
 
     quote! {
-        #[allow(dead_code)]
         impl<'p> #view_ident<'p> {
             #(#methods)*
         }
@@ -328,12 +327,10 @@ fn emit_typed_enum_value_accessor(
             /// Typed value enum — payload-eligible branches carry typed
             /// values directly; non-eligible branches wrap a cursor view.
             #[derive(Clone, Debug)]
-            #[allow(non_camel_case_types)]
             pub enum #enum_ident<'p> {
                 #(#enum_variants,)*
             }
 
-            #[allow(dead_code)]
             impl<'p> #view_ident<'p> {
                 /// Decode the chosen branch's value. Payload-eligible
                 /// branches return typed scalars/aggregates; other
@@ -352,12 +349,10 @@ fn emit_typed_enum_value_accessor(
             /// Typed value enum — all branches carry owned scalars or
             /// aggregates (no borrows).
             #[derive(Clone, Debug)]
-            #[allow(non_camel_case_types)]
             pub enum #enum_ident {
                 #(#enum_variants,)*
             }
 
-            #[allow(dead_code)]
             impl<'p> #view_ident<'p> {
                 /// Decode the chosen branch's value.
                 #[inline]

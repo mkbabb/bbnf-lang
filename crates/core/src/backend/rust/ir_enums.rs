@@ -26,7 +26,6 @@ pub fn generate_grammar_arr(parser_attrs: &ParserAttributes, ident: &syn::Ident)
     });
 
     quote! {
-        #[allow(non_upper_case_globals)]
         pub const #grammar_arr_name: [&'static str; #len] = [
             #(#include_strs),*
         ];

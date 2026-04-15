@@ -333,7 +333,6 @@ impl RustEmitter {
         if let Some(sync_expr) = sync_body {
             let sync_ident = format_ident!("__sync_{}", name);
             methods.push(quote! {
-                #[allow(non_snake_case)]
                 fn #sync_ident<'a>(
                     state: &mut ::parse_that::ParserState<'a>,
                 ) -> ::core::option::Option<()> {

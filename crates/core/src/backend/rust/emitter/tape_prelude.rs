@@ -436,7 +436,6 @@ pub fn emit_must_tape_aggregate_epilogue(
 pub fn emit_rule_signature(fn_name: &str) -> TokenStream {
     let fn_ident = format_ident!("__{}", fn_name);
     quote! {
-        #[allow(non_snake_case)]
         fn #fn_ident<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,

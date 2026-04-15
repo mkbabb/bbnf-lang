@@ -55,7 +55,6 @@ impl RustEmitter {
         let mut methods = TokenStream::new();
 
         methods.extend(quote! {
-            #[allow(non_snake_case)]
             fn #fn_ident<'a>(
                 state: &mut ::parse_that::ParserState<'a>,
                 __builder: &mut ::pprint::FmtBuilder<'a>,

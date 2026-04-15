@@ -20,19 +20,16 @@ use ::parse_that::*;
 pub struct BbnfBootstrap;
 
 mod __bbnfbootstrap_emit_impl {
-    use super::*;
-    #[allow(non_upper_case_globals)]
+        use super::*;
     pub const GRAMMAR_BbnfBootstrap: [&'static str; 1usize] = [
         "// BBNF \u{2014} Better Backus-Naur Form\n// Self-hosted grammar definition.\n\n@import { value_expr, type_annotation } from \"expressions\" ;\n@import { type_name } from \"types\" ;\n\n// \u{2500}\u{2500}\u{2500} Terminals \u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\n\nidentifier = /[_a-zA-Z][_a-zA-Z0-9-]*/ -> Span ;\n\nliteral = ( \"\\\"\" , /(\\\\.|[^\"\\\\])*/  , \"\\\"\"\n        | \"\'\"  , /(\\\\.|[^\'\\\\])*/  , \"\'\"\n        | \"`\"  , /(\\\\.|[^`\\\\])*/  , \"`\" ) -> Span ;\n\nregex = ( \"/\" , /(\\\\.|[^\\/])+/ , \"/\" ) -> Span ;\n\nbig_comment = ( \"/*\" , /[^\\*]*/ , \"*/\" ) ?w -> Span ;\ncomment = ( \"//\" , /.*/ ) ?w -> Span ;\n\n// \u{2500}\u{2500}\u{2500} Expressions \u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\n\nlhs = identifier ;\n\n// Grammar function call args: each arg is a single binary_factor\n// (alternation of binary_factors, no comma-concatenation).\n// This avoids ambiguity between call arg commas and concatenation commas.\ncall_arg = ( binary_factor ?w , \"|\" ? ) + ;\n\nterm = \"\u{3b5}\" | \"epsilon\"\n     | identifier , ( \"(\" , call_arg ?w , ( \",\" ?w , call_arg ?w ) * , \")\" ) ?\n     | literal\n     | regex\n     | \"@{\" , rhs ?w , \"}\"\n     | \"(\" , rhs ?w , \")\"\n     | \"[\" , rhs ?w , \"]\"\n     | \"{\" , rhs ?w , \"}\" ;\n\nmodifier = \"?w\" | \"?\" | \"*\" | \"+\" ;\nfactor = big_comment ? , term ?w , modifier ? , big_comment ? ;\n\n// Map syntax: factor -> value_expr : type\nmapped_factor = factor , ( \"->\" ?w , ( value_expr , type_annotation ? ) ) ? ;\n\nbinary_operators = \"<<\" | \">>\" | \"-\" ;\nbinary_factor = mapped_factor , ( binary_operators ?w , mapped_factor ) * ;\n\nconcatenation = ( binary_factor ?w , \",\" ? ) + ;\nalternation = ( concatenation ?w , \"|\" ? ) + ;\n\n// Closures at rule level: |params| rhs (grammar functions)\nclosure = \"|\" , identifier , ( \",\" ?w , identifier ) * , \"|\" ?w , rhs ;\nrhs = closure | alternation ;\n\n// \u{2500}\u{2500}\u{2500} Rules and Directives \u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\n\nrule = lhs , \"=\" ?w , rhs ?w , ( \";\" | \".\" ) ;\n\nimport_path = \"\\\"\" , /(\\\\.|[^\"\\\\])*/ , \"\\\"\" ;\nimport_items = \"{\" ?w , ( identifier , ( \",\" ?w , identifier ) * ) ?w , \"}\" ;\nimport_directive = \"@import\" ?w , (\n      import_items ?w , \"from\" ?w , import_path\n    | import_path\n) ?w , ( \";\" | \".\" ) ? ;\n\nrecover_directive = \"@recover\" ?w , identifier ?w , rhs ?w , ( \";\" | \".\" ) ? ;\n\npretty_hint = identifier , ( \"(\" , /[^)]*/ , \")\" ) ? ;\npretty_directive = \"@pretty\" ?w , ( \"*\" | identifier ) ?w , ( pretty_hint ?w ) + , ( \";\" | \".\" ) ? ;\n\nws_directive = \"@ws\" ?w , regex ?w , ( \";\" | \".\" ) ? ;\ntoken_directive = \"@token\" ?w , identifier ?w , ( \";\" | \".\" ) ? ;\ndebug_directive = \"@debug\" ?w , ( \"*\" | identifier ) ?w , ( \";\" | \".\" ) ? ;\nhost_directive = \"@host\" ?w , identifier ?w , ( \":\" ?w , type_name ?w ) ? , ( \";\" | \".\" ) ? ;\n\ndirective = import_directive\n          | recover_directive\n          | pretty_directive\n          | ws_directive\n          | token_directive\n          | debug_directive\n          | host_directive ;\n\n// Grammar: top-level items in any order.\ngrammar_item = comment | big_comment | directive | rule ;\ngrammar = ( grammar_item ?w ) * ;\n\n@pretty grammar block ;\n@pretty rule group ;\n@pretty alternation group ;\n",
     ];
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct int_litView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> int_litView<'p> {
         #[inline]
         pub fn new(
@@ -182,7 +179,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> int_litView<'p> {
         /// The source text matched by this rule.
         #[inline]
@@ -211,13 +207,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct float_litView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> float_litView<'p> {
         #[inline]
         pub fn new(
@@ -367,7 +361,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> float_litView<'p> {
         /// The source text matched by this rule.
         #[inline]
@@ -396,13 +389,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct bool_litView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> bool_litView<'p> {
         #[inline]
         pub fn new(
@@ -552,7 +543,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> bool_litView<'p> {
         ///If variant `branch_0` (branch 0) was chosen, return its child view.
         #[inline]
@@ -596,13 +586,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct string_litView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> string_litView<'p> {
         #[inline]
         pub fn new(
@@ -753,13 +741,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct value_identView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> value_identView<'p> {
         #[inline]
         pub fn new(
@@ -909,7 +895,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> value_identView<'p> {
         /// The source text matched by this leaf rule.
         #[inline]
@@ -937,13 +922,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct value_pathView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> value_pathView<'p> {
         #[inline]
         pub fn new(
@@ -1093,7 +1076,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> value_pathView<'p> {
         ///Child at position 0 as a typed view.
         #[inline]
@@ -1123,13 +1105,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct value_inputView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> value_inputView<'p> {
         #[inline]
         pub fn new(
@@ -1279,7 +1259,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> value_inputView<'p> {
         ///Child at position 0 as a typed view.
         #[inline]
@@ -1302,13 +1281,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct value_fn_callView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> value_fn_callView<'p> {
         #[inline]
         pub fn new(
@@ -1458,7 +1435,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> value_fn_callView<'p> {
         ///Child at position 0 as a typed view.
         #[inline]
@@ -1498,13 +1474,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct value_atomView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> value_atomView<'p> {
         #[inline]
         pub fn new(
@@ -1654,7 +1628,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> value_atomView<'p> {
         ///If variant `int_lit` (branch 0) was chosen, return its child view.
         #[inline]
@@ -1902,7 +1875,6 @@ mod __bbnfbootstrap_emit_impl {
     }
     /// Typed value enum — payload-eligible branches carry typed
     /// values directly; non-eligible branches wrap a cursor view.
-    #[allow(non_camel_case_types)]
     pub enum value_atomValue<'p> {
         int_lit((i64)),
         float_lit((f64)),
@@ -1913,7 +1885,6 @@ mod __bbnfbootstrap_emit_impl {
         value_path(&'p str),
         branch_7(BbnfBootstrapNodeView<'p>),
     }
-    #[allow(dead_code)]
     impl<'p> value_atomView<'p> {
         /// Decode the chosen branch's value. Payload-eligible
         /// branches return typed scalars/aggregates; other
@@ -2022,13 +1993,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct mul_opView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> mul_opView<'p> {
         #[inline]
         pub fn new(
@@ -2178,7 +2147,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> mul_opView<'p> {
         ///If variant `branch_0` (branch 0) was chosen, return its child view.
         #[inline]
@@ -2238,13 +2206,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct add_opView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> add_opView<'p> {
         #[inline]
         pub fn new(
@@ -2394,7 +2360,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> add_opView<'p> {
         ///If variant `branch_0` (branch 0) was chosen, return its child view.
         #[inline]
@@ -2438,13 +2403,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct cmp_opView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> cmp_opView<'p> {
         #[inline]
         pub fn new(
@@ -2594,7 +2557,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> cmp_opView<'p> {
         ///If variant `branch_0` (branch 0) was chosen, return its child view.
         #[inline]
@@ -2702,13 +2664,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct value_unaryView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> value_unaryView<'p> {
         #[inline]
         pub fn new(
@@ -2858,7 +2818,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> value_unaryView<'p> {
         ///If variant `branch_0` (branch 0) was chosen, return its child view.
         #[inline]
@@ -2917,13 +2876,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct value_mulView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> value_mulView<'p> {
         #[inline]
         pub fn new(
@@ -3073,7 +3030,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> value_mulView<'p> {
         ///Child at position 0 as a typed view.
         #[inline]
@@ -3103,13 +3059,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct value_addView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> value_addView<'p> {
         #[inline]
         pub fn new(
@@ -3259,7 +3213,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> value_addView<'p> {
         ///Child at position 0 as a typed view.
         #[inline]
@@ -3285,13 +3238,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct value_cmpView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> value_cmpView<'p> {
         #[inline]
         pub fn new(
@@ -3441,7 +3392,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> value_cmpView<'p> {
         ///Child at position 0 as a typed view.
         #[inline]
@@ -3467,13 +3417,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct value_andView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> value_andView<'p> {
         #[inline]
         pub fn new(
@@ -3623,7 +3571,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> value_andView<'p> {
         ///Child at position 0 as a typed view.
         #[inline]
@@ -3649,13 +3596,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct value_orView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> value_orView<'p> {
         #[inline]
         pub fn new(
@@ -3805,7 +3750,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> value_orView<'p> {
         ///Child at position 0 as a typed view.
         #[inline]
@@ -3831,13 +3775,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct value_closureView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> value_closureView<'p> {
         #[inline]
         pub fn new(
@@ -3987,7 +3929,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> value_closureView<'p> {
         ///Child at position 0 as a typed view.
         #[inline]
@@ -4041,13 +3982,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct value_exprView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> value_exprView<'p> {
         #[inline]
         pub fn new(
@@ -4197,7 +4136,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> value_exprView<'p> {
         ///If variant `value_closure` (branch 0) was chosen, return its child view.
         #[inline]
@@ -4239,13 +4177,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct type_annotationView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> type_annotationView<'p> {
         #[inline]
         pub fn new(
@@ -4395,7 +4331,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> type_annotationView<'p> {
         ///Child at position 0 as a typed view.
         #[inline]
@@ -4414,13 +4349,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct type_nameView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> type_nameView<'p> {
         #[inline]
         pub fn new(
@@ -4570,7 +4503,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> type_nameView<'p> {
         ///If variant `branch_0` (branch 0) was chosen, return its child view.
         #[inline]
@@ -4758,13 +4690,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct identifierView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> identifierView<'p> {
         #[inline]
         pub fn new(
@@ -4914,7 +4844,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> identifierView<'p> {
         /// The source text matched by this leaf rule.
         #[inline]
@@ -4942,13 +4871,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct literalView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> literalView<'p> {
         #[inline]
         pub fn new(
@@ -5099,13 +5026,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct regexView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> regexView<'p> {
         #[inline]
         pub fn new(
@@ -5256,13 +5181,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct big_commentView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> big_commentView<'p> {
         #[inline]
         pub fn new(
@@ -5413,13 +5336,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct commentView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> commentView<'p> {
         #[inline]
         pub fn new(
@@ -5570,13 +5491,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct lhsView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> lhsView<'p> {
         #[inline]
         pub fn new(
@@ -5726,7 +5645,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> lhsView<'p> {
         /// The source text matched by this leaf rule.
         #[inline]
@@ -5754,13 +5672,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct call_argView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> call_argView<'p> {
         #[inline]
         pub fn new(
@@ -5910,7 +5826,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> call_argView<'p> {
         /// Iterator over each repetition element as a typed view.
         #[inline]
@@ -5944,13 +5859,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct termView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> termView<'p> {
         #[inline]
         pub fn new(
@@ -6100,7 +6013,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> termView<'p> {
         ///If variant `branch_0` (branch 0) was chosen, return its child view.
         #[inline]
@@ -6400,7 +6312,6 @@ mod __bbnfbootstrap_emit_impl {
     }
     /// Typed value enum — payload-eligible branches carry typed
     /// values directly; non-eligible branches wrap a cursor view.
-    #[allow(non_camel_case_types)]
     pub enum termValue<'p> {
         branch_0(BbnfBootstrapNodeView<'p>),
         branch_1(BbnfBootstrapNodeView<'p>),
@@ -6412,7 +6323,6 @@ mod __bbnfbootstrap_emit_impl {
         branch_7(BbnfBootstrapNodeView<'p>),
         branch_8(BbnfBootstrapNodeView<'p>),
     }
-    #[allow(dead_code)]
     impl<'p> termView<'p> {
         /// Decode the chosen branch's value. Payload-eligible
         /// branches return typed scalars/aggregates; other
@@ -6507,13 +6417,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct modifierView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> modifierView<'p> {
         #[inline]
         pub fn new(
@@ -6663,7 +6571,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> modifierView<'p> {
         ///If variant `branch_0` (branch 0) was chosen, return its child view.
         #[inline]
@@ -6739,13 +6646,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct factorView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> factorView<'p> {
         #[inline]
         pub fn new(
@@ -6895,7 +6800,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> factorView<'p> {
         ///Child at position 0 as a typed view.
         #[inline]
@@ -6925,13 +6829,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct mapped_factorView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> mapped_factorView<'p> {
         #[inline]
         pub fn new(
@@ -7081,7 +6983,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> mapped_factorView<'p> {
         ///Child at position 0 as a typed view.
         #[inline]
@@ -7107,13 +7008,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct binary_operatorsView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> binary_operatorsView<'p> {
         #[inline]
         pub fn new(
@@ -7263,7 +7162,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> binary_operatorsView<'p> {
         ///If variant `branch_0` (branch 0) was chosen, return its child view.
         #[inline]
@@ -7323,13 +7221,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct binary_factorView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> binary_factorView<'p> {
         #[inline]
         pub fn new(
@@ -7479,7 +7375,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> binary_factorView<'p> {
         ///Child at position 0 as a typed view.
         #[inline]
@@ -7509,13 +7404,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct concatenationView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> concatenationView<'p> {
         #[inline]
         pub fn new(
@@ -7665,7 +7558,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> concatenationView<'p> {
         /// Iterator over each repetition element as a typed view.
         #[inline]
@@ -7699,13 +7591,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct alternationView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> alternationView<'p> {
         #[inline]
         pub fn new(
@@ -7855,7 +7745,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> alternationView<'p> {
         /// Iterator over each repetition element as a typed view.
         #[inline]
@@ -7889,13 +7778,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct closureView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> closureView<'p> {
         #[inline]
         pub fn new(
@@ -8045,7 +7932,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> closureView<'p> {
         ///Child at position 0 as a typed view.
         #[inline]
@@ -8088,13 +7974,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct rhsView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> rhsView<'p> {
         #[inline]
         pub fn new(
@@ -8244,7 +8128,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> rhsView<'p> {
         ///If variant `closure` (branch 0) was chosen, return its child view.
         #[inline]
@@ -8284,13 +8167,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct ruleView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> ruleView<'p> {
         #[inline]
         pub fn new(
@@ -8440,7 +8321,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> ruleView<'p> {
         ///Child at position 0 as a typed view.
         #[inline]
@@ -8466,13 +8346,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct import_pathView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> import_pathView<'p> {
         #[inline]
         pub fn new(
@@ -8622,7 +8500,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> import_pathView<'p> {
         ///Child at position 0 as a typed view.
         #[inline]
@@ -8652,13 +8529,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct import_itemsView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> import_itemsView<'p> {
         #[inline]
         pub fn new(
@@ -8808,7 +8683,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> import_itemsView<'p> {
         ///Child at position 0 as a typed view.
         #[inline]
@@ -8824,13 +8698,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct import_directiveView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> import_directiveView<'p> {
         #[inline]
         pub fn new(
@@ -8980,7 +8852,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> import_directiveView<'p> {
         ///Child at position 0 as a typed view.
         #[inline]
@@ -8996,13 +8867,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct recover_directiveView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> recover_directiveView<'p> {
         #[inline]
         pub fn new(
@@ -9152,7 +9021,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> recover_directiveView<'p> {
         ///Child at position 0 as a typed view.
         #[inline]
@@ -9168,13 +9036,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct pretty_hintView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> pretty_hintView<'p> {
         #[inline]
         pub fn new(
@@ -9324,7 +9190,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> pretty_hintView<'p> {
         ///Child at position 0 as a typed view.
         #[inline]
@@ -9350,13 +9215,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct pretty_directiveView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> pretty_directiveView<'p> {
         #[inline]
         pub fn new(
@@ -9506,7 +9369,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> pretty_directiveView<'p> {
         ///Child at position 0 as a typed view.
         #[inline]
@@ -9529,13 +9391,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct ws_directiveView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> ws_directiveView<'p> {
         #[inline]
         pub fn new(
@@ -9685,7 +9545,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> ws_directiveView<'p> {
         ///Child at position 0 as a typed view.
         #[inline]
@@ -9701,13 +9560,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct token_directiveView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> token_directiveView<'p> {
         #[inline]
         pub fn new(
@@ -9857,7 +9714,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> token_directiveView<'p> {
         ///Child at position 0 as a typed view.
         #[inline]
@@ -9873,13 +9729,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct debug_directiveView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> debug_directiveView<'p> {
         #[inline]
         pub fn new(
@@ -10029,7 +9883,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> debug_directiveView<'p> {
         ///Child at position 0 as a typed view.
         #[inline]
@@ -10045,13 +9898,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct host_directiveView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> host_directiveView<'p> {
         #[inline]
         pub fn new(
@@ -10201,7 +10052,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> host_directiveView<'p> {
         ///Child at position 0 as a typed view.
         #[inline]
@@ -10224,13 +10074,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct directiveView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> directiveView<'p> {
         #[inline]
         pub fn new(
@@ -10380,7 +10228,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> directiveView<'p> {
         ///If variant `import_directive` (branch 0) was chosen, return its child view.
         #[inline]
@@ -10602,7 +10449,6 @@ mod __bbnfbootstrap_emit_impl {
     }
     /// Typed value enum — payload-eligible branches carry typed
     /// values directly; non-eligible branches wrap a cursor view.
-    #[allow(non_camel_case_types)]
     pub enum directiveValue<'p> {
         import_directive(&'p str),
         recover_directive(BbnfBootstrapNodeView<'p>),
@@ -10612,7 +10458,6 @@ mod __bbnfbootstrap_emit_impl {
         debug_directive(&'p str),
         host_directive(&'p str),
     }
-    #[allow(dead_code)]
     impl<'p> directiveView<'p> {
         /// Decode the chosen branch's value. Payload-eligible
         /// branches return typed scalars/aggregates; other
@@ -10706,13 +10551,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct grammar_itemView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> grammar_itemView<'p> {
         #[inline]
         pub fn new(
@@ -10862,7 +10705,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> grammar_itemView<'p> {
         ///If variant `comment` (branch 0) was chosen, return its child view.
         #[inline]
@@ -10965,14 +10807,12 @@ mod __bbnfbootstrap_emit_impl {
     }
     /// Typed value enum — payload-eligible branches carry typed
     /// values directly; non-eligible branches wrap a cursor view.
-    #[allow(non_camel_case_types)]
     pub enum grammar_itemValue<'p> {
         comment(&'p str),
         big_comment(&'p str),
         directive(BbnfBootstrapNodeView<'p>),
         rule(BbnfBootstrapNodeView<'p>),
     }
-    #[allow(dead_code)]
     impl<'p> grammar_itemView<'p> {
         /// Decode the chosen branch's value. Payload-eligible
         /// branches return typed scalars/aggregates; other
@@ -11027,13 +10867,11 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generated view over a tape record produced by this rule.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct grammarView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
-    #[allow(dead_code)]
     impl<'p> grammarView<'p> {
         #[inline]
         pub fn new(
@@ -11183,7 +11021,6 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    #[allow(dead_code)]
     impl<'p> grammarView<'p> {
         /// Iterator over each repetition element as a typed view.
         #[inline]
@@ -11210,7 +11047,6 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// Generic node view over any tape record for this grammar.
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug)]
     pub struct BbnfBootstrapNodeView<'p> {
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
@@ -11223,7 +11059,6 @@ mod __bbnfbootstrap_emit_impl {
     /// from heterogeneous alt coercion, plus a fallback
     /// `Unknown` for records the discriminator table does
     /// not cover (leaf spans, alt branch indices, etc.).
-    #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub enum BbnfBootstrapRuleKind {
         int_lit,
@@ -11293,7 +11128,6 @@ mod __bbnfbootstrap_emit_impl {
         /// known rule- or sub-variant discriminator.
         Unknown,
     }
-    #[allow(dead_code)]
     impl<'p> BbnfBootstrapNodeView<'p> {
         #[inline]
         pub fn new(
@@ -11454,7 +11288,6 @@ mod __bbnfbootstrap_emit_impl {
             grammarView::new(tape, input, root)
         }
     }
-    #[allow(dead_code)]
     impl BbnfBootstrap {
         /// The name of the root rule for this grammar.
         #[inline]
@@ -11463,7 +11296,6 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     impl BbnfBootstrap {
-        #[allow(non_snake_case)]
         fn __int_lit<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -11594,7 +11426,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __float_lit<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -11723,7 +11554,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __bool_lit<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -11806,7 +11636,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __string_lit<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -11939,7 +11768,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __value_ident<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -11975,7 +11803,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __value_path<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -12078,7 +11905,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __value_input<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -12190,7 +12016,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __value_fn_call<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -12357,7 +12182,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __value_atom<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -12575,7 +12399,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __mul_op<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -12668,7 +12491,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __add_op<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -12745,7 +12567,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __cmp_op<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -12898,7 +12719,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __value_unary<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -13013,7 +12833,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __value_mul<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -13109,7 +12928,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __value_add<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -13205,7 +13023,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __value_cmp<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -13301,7 +13118,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __value_and<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -13409,7 +13225,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __value_or<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -13517,7 +13332,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __value_closure<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -13652,7 +13466,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __value_expr<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -13721,7 +13534,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __type_annotation<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -13776,7 +13588,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __type_name<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -14056,7 +13867,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __identifier<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -14094,7 +13904,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __literal<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -14456,7 +14265,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __regex<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -14592,7 +14400,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __big_comment<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -14696,7 +14503,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __comment<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -14784,7 +14590,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __lhs<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -14813,7 +14618,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __call_arg<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -14938,7 +14742,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __term<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -15418,7 +15221,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __modifier<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -15530,7 +15332,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __factor<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -15662,7 +15463,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __mapped_factor<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -15792,7 +15592,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __binary_operators<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -15891,7 +15690,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __binary_factor<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -15987,7 +15785,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __concatenation<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -16112,7 +15909,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __alternation<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -16237,7 +16033,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __closure<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -16377,7 +16172,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __rhs<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -16446,7 +16240,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __rule<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -16548,7 +16341,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __import_path<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -16679,7 +16471,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __import_items<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -16826,7 +16617,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __import_directive<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -17007,7 +16797,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __recover_directive<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -17143,7 +16932,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __pretty_hint<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -17270,7 +17058,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __pretty_directive<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -17477,7 +17264,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __ws_directive<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -17604,7 +17390,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __token_directive<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -17731,7 +17516,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __debug_directive<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -17885,7 +17669,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __host_directive<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -18071,7 +17854,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __directive<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -18200,7 +17982,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __grammar_item<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -18293,7 +18074,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __grammar<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             tape: &mut ::bbnf::runtime::tape::TapeBuilder,
@@ -18369,7 +18149,6 @@ mod __bbnfbootstrap_emit_impl {
                 }
             }
         }
-        #[allow(non_snake_case)]
         fn __int_lit_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -18479,7 +18258,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __float_lit_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -18586,7 +18364,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __bool_lit_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -18647,7 +18424,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __string_lit_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -18761,7 +18537,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __value_ident_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -18796,7 +18571,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __value_path_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -18889,7 +18663,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __value_input_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -18974,7 +18747,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __value_fn_call_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -19080,7 +18852,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __value_atom_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -19586,7 +19357,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __mul_op_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -19670,7 +19440,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __add_op_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -19718,7 +19487,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __cmp_op_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -19889,7 +19657,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __value_unary_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -19961,7 +19728,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __value_mul_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -20043,7 +19809,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __value_add_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -20151,7 +19916,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __value_cmp_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -20233,7 +19997,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __value_and_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -20311,7 +20074,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __value_or_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -20389,7 +20151,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __value_closure_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -20502,7 +20263,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __value_expr_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -20543,7 +20303,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __type_annotation_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -20584,7 +20343,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __type_name_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -20903,7 +20661,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __identifier_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -20938,7 +20695,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __literal_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -21292,7 +21048,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __regex_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -21409,7 +21164,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __big_comment_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -21523,7 +21277,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __comment_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -21623,7 +21376,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __lhs_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -21658,7 +21410,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __call_arg_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -21764,7 +21515,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __term_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -22297,7 +22047,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __modifier_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -22408,7 +22157,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __factor_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -22513,7 +22261,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __mapped_factor_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -22602,7 +22349,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __binary_operators_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -22698,7 +22444,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __binary_factor_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -22782,7 +22527,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __concatenation_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -22888,7 +22632,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __alternation_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -22999,7 +22742,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __closure_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -23122,7 +22864,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __rhs_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -23163,7 +22904,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __rule_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -23280,7 +23020,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __import_path_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -23394,7 +23133,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __import_items_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -23542,7 +23280,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __import_directive_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -23733,7 +23470,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __recover_directive_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -23875,7 +23611,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __pretty_hint_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -23983,7 +23718,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __pretty_directive_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -24195,7 +23929,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __ws_directive_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -24313,7 +24046,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __token_directive_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -24426,7 +24158,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __debug_directive_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -24577,7 +24308,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __host_directive_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -24754,7 +24484,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __directive_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -24901,7 +24630,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __grammar_item_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -25071,7 +24799,6 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
-        #[allow(non_snake_case)]
         fn __grammar_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -25188,7 +24915,6 @@ mod __bbnfbootstrap_emit_impl {
             )
         }
     }
-    #[allow(dead_code, non_camel_case_types)]
     impl<'p> identifierView<'p> {
         /// Identifier text — slice of the owning `Parsed`'s
         /// input covered by this view's record span.
@@ -25202,7 +24928,6 @@ mod __bbnfbootstrap_emit_impl {
     /// of the first reachable identifier record. Returns `""`
     /// when no identifier is reachable.
     #[inline]
-    #[allow(dead_code)]
     pub(crate) fn cst_identifier_text<'p>(
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         input: &'p str,
@@ -25219,7 +24944,6 @@ mod __bbnfbootstrap_emit_impl {
     /// `(lo, hi)` span of the first reachable identifier record.
     /// Returns `(0, 0)` when no identifier is reachable.
     #[inline]
-    #[allow(dead_code)]
     pub(crate) fn cst_identifier_span<'p>(
         cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
         _input: &'p str,
@@ -25230,7 +24954,6 @@ mod __bbnfbootstrap_emit_impl {
     /// `cst_identifier_span`. Returns the first cursor under
     /// `start` whose `variant_idx` matches `target_idx`.
     #[inline]
-    #[allow(dead_code)]
     fn cst_find_identifier_cursor<'p>(
         start: ::bbnf::runtime::tape::TapeCursor<'p>,
         target_idx: u8,
@@ -25254,7 +24977,6 @@ mod __bbnfbootstrap_emit_impl {
     /// `TapeCursor<'p>` handles so callers can construct
     /// whatever typed view they need without this module having
     /// to enumerate the target rule's view type.
-    #[allow(dead_code, non_snake_case)]
     pub mod cst_directives {
         #[derive(Clone, Copy)]
         pub struct ImportDirective<'p> {
@@ -25301,7 +25023,6 @@ mod __bbnfbootstrap_emit_impl {
         /// `variant_idx` matches this directive rule's codegen-
         /// assigned discriminator; `None` otherwise.
         #[inline]
-        #[allow(dead_code)]
         pub fn try_as_import_directive<'p>(
             cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
             input: &'p str,
@@ -25329,7 +25050,6 @@ mod __bbnfbootstrap_emit_impl {
         /// `variant_idx` matches this directive rule's codegen-
         /// assigned discriminator; `None` otherwise.
         #[inline]
-        #[allow(dead_code)]
         pub fn try_as_recover_directive<'p>(
             cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
             input: &'p str,
@@ -25359,7 +25079,6 @@ mod __bbnfbootstrap_emit_impl {
         /// `variant_idx` matches this directive rule's codegen-
         /// assigned discriminator; `None` otherwise.
         #[inline]
-        #[allow(dead_code)]
         pub fn try_as_pretty_directive<'p>(
             cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
             input: &'p str,
@@ -25392,7 +25111,6 @@ mod __bbnfbootstrap_emit_impl {
         /// `variant_idx` matches this directive rule's codegen-
         /// assigned discriminator; `None` otherwise.
         #[inline]
-        #[allow(dead_code)]
         pub fn try_as_ws_directive<'p>(
             cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
             input: &'p str,
@@ -25420,7 +25138,6 @@ mod __bbnfbootstrap_emit_impl {
         /// `variant_idx` matches this directive rule's codegen-
         /// assigned discriminator; `None` otherwise.
         #[inline]
-        #[allow(dead_code)]
         pub fn try_as_token_directive<'p>(
             cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
             input: &'p str,
@@ -25448,7 +25165,6 @@ mod __bbnfbootstrap_emit_impl {
         /// `variant_idx` matches this directive rule's codegen-
         /// assigned discriminator; `None` otherwise.
         #[inline]
-        #[allow(dead_code)]
         pub fn try_as_debug_directive<'p>(
             cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
             input: &'p str,
@@ -25479,7 +25195,6 @@ mod __bbnfbootstrap_emit_impl {
         /// `variant_idx` matches this directive rule's codegen-
         /// assigned discriminator; `None` otherwise.
         #[inline]
-        #[allow(dead_code)]
         pub fn try_as_host_directive<'p>(
             cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
             input: &'p str,

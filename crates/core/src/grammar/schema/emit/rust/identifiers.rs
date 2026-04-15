@@ -41,7 +41,6 @@ pub(super) fn generate(schema: &CstSchema) -> TokenStream {
     let view_impl = if has_identifier_rule {
         let view_ident = view_ident_for("identifier");
         quote! {
-            #[allow(dead_code, non_camel_case_types)]
             impl<'p> #view_ident<'p> {
                 /// Identifier text — slice of the owning `Parsed`'s
                 /// input covered by this view's record span.
@@ -81,7 +80,6 @@ fn emit_find_helpers(identifier_variant_idx: u8) -> TokenStream {
         /// of the first reachable identifier record. Returns `""`
         /// when no identifier is reachable.
         #[inline]
-        #[allow(dead_code)]
         pub(crate) fn cst_identifier_text<'p>(
             cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
             input: &'p str,
@@ -99,7 +97,6 @@ fn emit_find_helpers(identifier_variant_idx: u8) -> TokenStream {
         /// `(lo, hi)` span of the first reachable identifier record.
         /// Returns `(0, 0)` when no identifier is reachable.
         #[inline]
-        #[allow(dead_code)]
         pub(crate) fn cst_identifier_span<'p>(
             cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
             _input: &'p str,
@@ -113,7 +110,6 @@ fn emit_find_helpers(identifier_variant_idx: u8) -> TokenStream {
         /// `cst_identifier_span`. Returns the first cursor under
         /// `start` whose `variant_idx` matches `target_idx`.
         #[inline]
-        #[allow(dead_code)]
         fn cst_find_identifier_cursor<'p>(
             start: ::bbnf::runtime::tape::TapeCursor<'p>,
             target_idx: u8,
@@ -140,7 +136,6 @@ fn emit_find_helpers(identifier_variant_idx: u8) -> TokenStream {
 fn emit_stub_helpers() -> TokenStream {
     quote! {
         #[inline]
-        #[allow(dead_code)]
         pub(crate) fn cst_identifier_text<'p>(
             _cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
             _input: &'p str,
@@ -149,7 +144,6 @@ fn emit_stub_helpers() -> TokenStream {
         }
 
         #[inline]
-        #[allow(dead_code)]
         pub(crate) fn cst_identifier_span<'p>(
             _cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
             _input: &'p str,

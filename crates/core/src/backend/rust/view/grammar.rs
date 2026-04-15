@@ -34,7 +34,6 @@ pub fn emit_grammar_root_helpers(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> Toke
     let grammar_ident = ctx.ident;
 
     quote! {
-        #[allow(dead_code)]
         impl #grammar_ident {
             /// The name of the root rule for this grammar.
             #[inline]

@@ -114,7 +114,6 @@ pub(super) fn generate_module(schema: &CstSchema) -> TokenStream {
         /// `TapeCursor<'p>` handles so callers can construct
         /// whatever typed view they need without this module having
         /// to enumerate the target rule's view type.
-        #[allow(dead_code, non_snake_case)]
         pub mod cst_directives {
             #(#structs)*
 
@@ -198,7 +197,6 @@ fn generate_helper(
         /// `variant_idx` matches this directive rule's codegen-
         /// assigned discriminator; `None` otherwise.
         #[inline]
-        #[allow(dead_code)]
         pub fn #try_ident<'p>(
             cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
             input: &'p str,

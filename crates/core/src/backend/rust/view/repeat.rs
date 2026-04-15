@@ -31,7 +31,6 @@ pub fn emit_repeat_accessors(
     let elem_view_ident = resolve_elem_view(inner, ir, grammar_name);
 
     quote! {
-        #[allow(dead_code)]
         impl<'p> #view_ident<'p> {
             /// Iterator over each repetition element as a typed view.
             #[inline]

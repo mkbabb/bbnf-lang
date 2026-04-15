@@ -292,10 +292,27 @@ pub fn bbnf_derive(input: TokenStream) -> TokenStream {
 
     // Wrap the generated code in a uniquely-named private submodule so
     // that multiple `#[derive(Parser)]` invocations in the same file
-    // don't collide on free functions and view types.
+    // don't collide on free functions and view types. The module-level
+    // `#![allow(...)]` swallows the naming-convention and dead-code
+    // diagnostics uniformly so individual items don't need per-item
+    // attributes; when the bootstrap script post-processes the expanded
+    // output (for `crates/core/src/grammar/generated.rs`) it emits the
+    // same allow set at the crate level, so either path silences the
+    // same lints.
     let mod_name = quote::format_ident!("__{}_emit_impl", ident.to_string().to_lowercase());
     let output = quote::quote! {
         mod #mod_name {
+            #![allow(
+                dead_code,
+                unused_variables,
+                unused_mut,
+                unused_parens,
+                unused_assignments,
+                non_camel_case_types,
+                non_snake_case,
+                non_upper_case_globals,
+                clippy::all,
+            )]
             use super::*;
             #inner
         }

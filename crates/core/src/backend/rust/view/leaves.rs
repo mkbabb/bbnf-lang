@@ -127,7 +127,6 @@ pub fn emit_leaf_accessors(rule: &IrRule, rule_name: &str, type_desc: &TypeDesc)
     }
 
     quote! {
-        #[allow(dead_code)]
         impl<'p> #view_ident<'p> {
             #(#methods)*
         }
@@ -214,7 +213,6 @@ pub fn emit_aggregate_accessors(
     }
 
     quote! {
-        #[allow(dead_code)]
         impl<'p> #view_ident<'p> {
             #(#methods)*
         }

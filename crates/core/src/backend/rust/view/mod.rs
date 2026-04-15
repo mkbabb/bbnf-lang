@@ -173,7 +173,6 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
         let nv = &node_view_ident_for_closure;
         let dispatch = &rule_kind_dispatch;
         quote! {
-            #[allow(dead_code)]
             impl<'p> #view_ident<'p> {
                 #[inline]
                 pub fn new(
@@ -276,7 +275,6 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
         rule_views.push(quote! {
             /// Generated view over a tape record produced by this rule.
             #[derive(Clone, Copy, Debug)]
-            #[allow(non_camel_case_types)]
             pub struct #view_ident<'p> {
                 cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
                 input: &'p str,
@@ -295,7 +293,6 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
     let node_view_decl = quote! {
         /// Generic node view over any tape record for this grammar.
         #[derive(Clone, Copy, Debug)]
-        #[allow(non_camel_case_types)]
         pub struct #node_view_ident<'p> {
             cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
             input: &'p str,
@@ -309,7 +306,6 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
         /// `Unknown` for records the discriminator table does
         /// not cover (leaf spans, alt branch indices, etc.).
         #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-        #[allow(non_camel_case_types)]
         pub enum #rule_kind_ident {
             #(#rule_kind_variants,)*
             /// Fallback for records whose variant_idx is not a

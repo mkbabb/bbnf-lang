@@ -1,37 +1,59 @@
-//! `TapeCursor` — the view layer's read interface into a finished [`Tape`].
+//! `TapeCursor` — the view layer's read interface into a finished
+//! [`Tape`].
 //!
 //! Generated view types hold a `TapeCursor` keyed at the root record
-//! and walk children via the cursor's accessor methods. Every accessor
-//! is a `#[inline]` offset read + bounds check.
+//! and walk children via the cursor's accessor methods. Every
+//! accessor is a `#[inline]` column-indexed read.
 //!
-//! # Child access (Tranche AJ.0, AU.3.2)
+//! # Tranche AV.2.2 — sibling-skip traversal
 //!
-//! The tape is written in **post-order**: each compound record sits
-//! AFTER all its transitive children, and its `child_off` points to
-//! the first child's offset in the tape.
+//! Pre-AV, child traversal backward-walked from the parent offset
+//! toward `child_off`, using each compound's `child_off` to leap past
+//! its subtree to the previous sibling's root. The walk was O(K)
+//! per compound and emitted children in reverse source order.
 //!
-//! Direct children are recovered by **backward walking** from the
-//! parent's offset: each step lands on a direct child's record, and
-//! `child_off` lets us jump past its subtree to the previous sibling.
+//! Post-AV the [`Columns::sib_skip`](crate::columns::Columns::sib_skip)
+//! column holds `next_sibling_root - this_root` for every record
+//! (or `0` for the last sibling in its run). A forward sibling walk
+//! is therefore a single indexed column read per step. The first
+//! child's root is still seeded by a backward walk from the parent
+//! offset (the post-order layout keeps the first direct child's
+//! ROOT as the LAST record emitted inside the compound's subtree),
+//! but every subsequent step through the siblings is O(1).
 //!
-//! - [`child(i)`](TapeCursor::child) — O(K) backward walk, **zero
-//!   allocation**. Two passes: count K, then walk to index.
-//! - [`child_count()`](TapeCursor::child_count) — O(K) backward
-//!   walk, **zero allocation**.
-//! - [`children()`](TapeCursor::children) — zero-alloc backward walk
-//!   (AU.3.2). Yields children in **reverse source order** (last
-//!   child first); the hot-path walker uses commutative folds so
-//!   order is irrelevant. `ChildIter` is the returned iterator type.
-//! - [`children_forward()`](TapeCursor::children_forward) — Vec-based
-//!   collection yielding children in forward source order. Used by
-//!   the generated `NodeView::children()` accessor so that positional
-//!   consumers (directives, seq slots, lowering / analysis) see
-//!   child[0] first. Allocates one `Vec` per call.
+//! # Tranche AV.2.3 — monotonic payload rank
+//!
+//! The old `payload_idx` sentinel on `TapeRec` is gone. Payload
+//! lookups route through the record's `child_off` which carries
+//! either the `pay_narrow` / `pay_wide` column rank (scalar
+//! payloads) or the `pay_agg` arena byte offset (aggregates). The
+//! cursor additionally carries an optional [`ColumnRank`] so walker
+//! paths that walk in push order can increment rank counters
+//! monotonically without re-reading `child_off` — this is the path
+//! V2.5's reordered-unrolling codegen compiles into.
 
+use crate::columns::Columns;
 use crate::kind::TapeKind;
 use crate::tape::{Tape, TapeOffset, TapeRec};
 
-/// A pointer into a specific [`TapeRec`] in a specific [`Tape`].
+/// Monotonic per-column rank maintained by a walker stepping through
+/// the tape in push order.
+///
+/// Written by the walker itself — every time the walker advances to
+/// a record carrying a payload of a given column, it increments the
+/// matching counter. V2.5's typed-visitor codegen reads the columns
+/// at these rank offsets without dereferencing `child_off`.
+#[derive(Clone, Copy, Debug, Default)]
+pub struct ColumnRank {
+    /// Next read index into [`Columns::pay_narrow`](crate::columns::Columns::pay_narrow).
+    pub pay_narrow: u32,
+    /// Next read index into [`Columns::pay_wide`](crate::columns::Columns::pay_wide).
+    pub pay_wide: u32,
+    /// Next aggregate-payload index — counts records, not bytes.
+    pub pay_agg: u32,
+}
+
+/// A pointer into a specific record in a specific [`Tape`].
 ///
 /// Tied to `'tape` — the lifetime of the underlying tape — so the
 /// borrow checker guarantees the cursor never outlives the arena it
@@ -40,13 +62,38 @@ use crate::tape::{Tape, TapeOffset, TapeRec};
 pub struct TapeCursor<'tape> {
     tape: &'tape Tape,
     offset: TapeOffset,
+    /// Per-column rank as of this cursor's position.
+    ///
+    /// Zero on cursors constructed via random access ([`Self::new`],
+    /// [`Self::child`]). Monotonic walkers (the generated view-fill
+    /// path landing in V2.5/V2.6) thread rank through explicitly via
+    /// [`Self::with_rank`].
+    rank: ColumnRank,
 }
 
 impl<'tape> TapeCursor<'tape> {
     /// Construct a cursor pointing at `offset` within `tape`.
+    ///
+    /// The column-rank counters start at zero; callers that want to
+    /// honour the monotonic-rank invariant use [`Self::with_rank`].
     #[inline]
     pub fn new(tape: &'tape Tape, offset: TapeOffset) -> Self {
-        Self { tape, offset }
+        Self {
+            tape,
+            offset,
+            rank: ColumnRank::default(),
+        }
+    }
+
+    /// Construct a cursor pointing at `offset` within `tape`, with
+    /// an explicit starting [`ColumnRank`].
+    #[inline]
+    pub fn with_rank(tape: &'tape Tape, offset: TapeOffset, rank: ColumnRank) -> Self {
+        Self {
+            tape,
+            offset,
+            rank,
+        }
     }
 
     /// Access the underlying tape.
@@ -55,20 +102,32 @@ impl<'tape> TapeCursor<'tape> {
         self.tape
     }
 
+    /// Access the underlying [`Columns`].
+    #[inline]
+    pub fn columns(&self) -> &'tape Columns {
+        self.tape.columns()
+    }
+
     /// The current record's offset.
     #[inline]
     pub fn offset(&self) -> TapeOffset {
         self.offset
     }
 
-    /// The current record.
+    /// The cursor's current [`ColumnRank`].
+    #[inline]
+    pub fn rank(&self) -> ColumnRank {
+        self.rank
+    }
+
+    /// The current record, materialised from the structural columns.
     ///
     /// Uses unchecked indexing — safe because every `TapeCursor` is
     /// constructed from offsets that originate from `TapeBuilder`
     /// pushes into the same tape, and the tape is immutable during
     /// reads.
     #[inline]
-    pub fn record(&self) -> &'tape TapeRec {
+    pub fn record(&self) -> TapeRec {
         // SAFETY: `self.offset` was produced by a `TapeBuilder::push_*`
         // call on the same tape and is never the NONE sentinel (cursors
         // are only constructed with valid offsets).
@@ -78,14 +137,13 @@ impl<'tape> TapeCursor<'tape> {
     /// Classification tag of the current record.
     #[inline]
     pub fn kind(&self) -> TapeKind {
-        self.record().kind()
+        self.tape.columns().kind_at(self.offset.0)
     }
 
     /// Source span `(lo, hi)` of the current record.
     #[inline]
     pub fn span(&self) -> (u32, u32) {
-        let rec = self.record();
-        (rec.span_lo, rec.span_hi)
+        self.tape.columns().span_at(self.offset.0)
     }
 
     /// Variant index stored in flags (low 6 bits).
@@ -112,266 +170,190 @@ impl<'tape> TapeCursor<'tape> {
     /// (≤ 16 B inline) and
     /// [`PayloadData::LargeAggregate`](crate::PayloadData::LargeAggregate)
     /// (> 16 B arena-backed) — the on-arena representation is
-    /// identical (bytes verbatim into an 8-aligned slot); only the
-    /// caller-supplied `byte_count` differs.
-    ///
-    /// Returns `None` for non-payload records or when the arena is
-    /// too short to satisfy the request. Field-level reads slice
-    /// into the returned buffer at the per-field offsets recorded
-    /// in the layout.
+    /// identical; only the caller-supplied `byte_count` differs.
     #[inline]
     pub fn payload_aggregate_bytes(&self, byte_count: usize) -> Option<&'tape [u8]> {
-        self.tape.payload_bytes(self.record(), byte_count)
+        let rec = self.record();
+        self.tape.payload_bytes(rec, byte_count)
     }
 
-    // ── Child access (Tranche AJ.0, AU.3.2) ────────────────────────
+    // ── Child access (AV.2.2 sibling-skip traversal) ──────────────
 
     /// Construct a cursor over the i-th direct child of the current
     /// compound record. Returns `None` if the current record is a
     /// leaf or `i` is out of range.
     ///
-    /// **Zero allocation.** Uses a two-pass backward walk:
-    /// 1. Count K direct children (O(K))
-    /// 2. Walk to the (K−1−i)-th backward step (O(K−i))
-    ///
-    /// Total cost: O(K). For the hot-path `child(0)` on Alt (K=1)
-    /// and Seq (K=2–5) nodes, this is effectively O(1).
+    /// Uses forward sibling-skip traversal from the first-child
+    /// root: locate the first child's root via a single backward
+    /// seed, then step `i` times via `sib_skip` column reads.
     #[inline]
     pub fn child(self, i: usize) -> Option<TapeCursor<'tape>> {
-        let rec = self.record();
-        if !rec.has_children() || rec.child_off.is_none() {
+        let columns = self.tape.columns();
+        if !columns.has_children_at(self.offset.0) {
             return None;
         }
-        let start = rec.child_off.0 as usize;
-        let end = self.offset.0 as usize;
-        if start >= end {
-            return None;
+        let first_child_root = first_child_root(columns, self.offset.0)?;
+        // Walk forward across sib_skip.
+        let mut current = first_child_root;
+        for _ in 0..i {
+            let step = columns.sib_skip_at(current);
+            if step == 0 {
+                return None;
+            }
+            current = current.checked_add(step)?;
         }
-
-        // Pass 1: count direct children.
-        let count = count_backward(self.tape, start, end);
-        if i >= count {
-            return None;
-        }
-
-        // Pass 2: walk backward to the target.
-        // Backward walk yields child[K-1] first, so to reach
-        // child[i] we walk (K-1-i) steps.
-        nth_backward(self.tape, start, end, count - 1 - i)
+        Some(TapeCursor {
+            tape: self.tape,
+            offset: TapeOffset(current),
+            // Reset rank — random-access via `child(i)` is not a
+            // monotonic-push walk, and the child's `child_off` is
+            // the authoritative pointer for payload lookup.
+            rank: ColumnRank::default(),
+        })
     }
 
     /// Number of direct children of the current compound record.
     ///
-    /// **Zero allocation.** O(K) backward walk.
+    /// Forward walk via `sib_skip`. Zero-allocation.
     #[inline]
     pub fn child_count(self) -> usize {
-        let rec = self.record();
-        if !rec.has_children() || rec.child_off.is_none() {
+        let columns = self.tape.columns();
+        if !columns.has_children_at(self.offset.0) {
             return 0;
         }
-        let start = rec.child_off.0 as usize;
-        let end = self.offset.0 as usize;
-        if start >= end {
+        let Some(first_child_root) = first_child_root(columns, self.offset.0) else {
             return 0;
+        };
+        let mut count = 1usize;
+        let mut current = first_child_root;
+        loop {
+            let step = columns.sib_skip_at(current);
+            if step == 0 {
+                return count;
+            }
+            let Some(next) = current.checked_add(step) else {
+                return count;
+            };
+            current = next;
+            count += 1;
         }
-        count_backward(self.tape, start, end)
     }
 
     /// Iterate every direct child of the current compound record,
     /// in emission (source) order.
     ///
-    /// Collects via a backward walk then reverses so the iterator
-    /// yields children in forward order. One `Vec` allocation per
-    /// call. Hot-path walkers that fold commutatively over children
-    /// should use [`children_zero_alloc`](Self::children_zero_alloc)
-    /// (AU.3.2) instead — it walks the tape backward without any
-    /// heap allocation.
-    pub fn children(self) -> impl Iterator<Item = TapeCursor<'tape>> + 'tape {
-        let tape = self.tape;
-        let rec = self.record();
-        let parent_offset = self.offset.0 as usize;
-        let mut out: Vec<TapeCursor<'tape>> = Vec::new();
-        if rec.has_children() && !rec.child_off.is_none() {
-            let start = rec.child_off.0 as usize;
-            if start >= parent_offset {
-                return out.into_iter();
-            }
-            let count = count_backward(tape, start, parent_offset);
-            out.reserve_exact(count);
-            let mut pos = parent_offset;
-            while pos > start {
-                let co = pos - 1;
-                // SAFETY: `co` is in range [start, parent_offset), both
-                // valid tape offsets from `child_off` / parent offset.
-                let child_rec = unsafe { tape.get_unchecked(TapeOffset(co as u32)) };
-                out.push(TapeCursor::new(tape, TapeOffset(co as u32)));
-                pos = backward_step(child_rec, co);
-            }
-            out.reverse();
-        }
-        out.into_iter()
-    }
-
-    /// AU.3.2: zero-alloc iterator over direct children, yielding in
-    /// **reverse source order** (last child first).
-    ///
-    /// Backward walk over the post-order tape: each [`Iterator::next`]
-    /// call reads one record and follows its `child_off` link (or
-    /// steps back by one for leaves) to locate the previous sibling's
-    /// root. Total traversal cost is O(K) for K direct children; no
-    /// heap allocation occurs.
-    ///
-    /// The reverse-order yield is intentional: the backward walk is
-    /// the only O(K) direction over the current tape layout (the
-    /// forward direction requires subtree-size information that the
-    /// AoS substrate does not carry). Callers that need source-order
-    /// iteration use [`children`](Self::children), which collects
-    /// the reverse walk into a `Vec` and reverses.
-    ///
-    /// # When to use which
-    ///
-    /// | Use case | Method | Allocation |
-    /// |----------|--------|------------|
-    /// | Commutative fold (sum, count, validate) | `children_zero_alloc()` | zero |
-    /// | Positional binding (slot[0], slot[1]) | `children()` | one `Vec` |
-    /// | Indexed access (`child(i)`) | `child(i)` | zero |
+    /// Forward walk via `sib_skip`; zero heap allocations per call.
     #[inline]
-    pub fn children_zero_alloc(self) -> ChildIter<'tape> {
-        let rec = self.record();
-        if !rec.has_children() || rec.child_off.is_none() {
-            return ChildIter {
-                tape: self.tape,
-                next: TapeOffset(0),
-                end: TapeOffset(0),
-            };
+    pub fn children(self) -> ChildIter<'tape> {
+        let columns = self.tape.columns();
+        if !columns.has_children_at(self.offset.0) {
+            return ChildIter::empty(self.tape);
         }
-        let start = rec.child_off.0;
-        let end = self.offset.0;
-        if start >= end {
-            return ChildIter {
-                tape: self.tape,
-                next: TapeOffset(0),
-                end: TapeOffset(0),
-            };
-        }
+        let Some(first_child_root) = first_child_root(columns, self.offset.0) else {
+            return ChildIter::empty(self.tape);
+        };
         ChildIter {
             tape: self.tape,
-            next: TapeOffset(end),
-            end: TapeOffset(start),
+            next: Some(first_child_root),
         }
+    }
+
+    /// Alias for [`Self::children`] — retained for parity with the
+    /// pre-AV API, which exposed `children` (vec-backed, source
+    /// order) and `children_zero_alloc` (linked-list backward walk,
+    /// reverse order) as separate methods. Post-AV the substrate
+    /// makes forward source-order iteration zero-alloc, so the two
+    /// methods collapse into one.
+    #[inline]
+    pub fn children_zero_alloc(self) -> ChildIter<'tape> {
+        self.children()
     }
 }
 
-/// Zero-alloc backward iterator over a compound's direct children.
+/// Forward-order iterator over a compound's direct children.
 ///
-/// Yields [`TapeCursor`] items in **reverse source order** (last
-/// child first). Each step follows one `child_off` link in the
-/// post-order tape; `size_of::<ChildIter>` is 24 bytes (two
-/// [`TapeOffset`] + one `&Tape`). No heap allocation occurs.
-///
-/// Returned by [`TapeCursor::children`]. See that method's
-/// documentation for when forward order is required instead.
+/// Zero heap allocation. Each step reads the current record's
+/// [`Columns::sib_skip`](crate::columns::Columns::sib_skip) slot in
+/// one indexed column load; iteration ends when that slot reads zero.
 #[derive(Clone, Copy, Debug)]
 pub struct ChildIter<'tape> {
     tape: &'tape Tape,
-    /// Exclusive upper bound on the unconsumed portion of the
-    /// children range. Each `next()` call yields the child whose
-    /// root is at `next - 1`, then resets `next` to that child's
-    /// subtree start (`backward_step` — `child_off` for compounds,
-    /// `next - 1` for leaves).
-    next: TapeOffset,
-    /// Inclusive lower bound: the parent's `child_off`. When
-    /// `next <= end`, iteration is complete.
-    end: TapeOffset,
+    /// Next record offset to yield. `None` when iteration is over.
+    next: Option<u32>,
 }
 
-// (size assertion handled at runtime in tests/tape_walker_allocs.rs)
+impl<'tape> ChildIter<'tape> {
+    /// Iterator that immediately yields `None`.
+    #[inline]
+    fn empty(tape: &'tape Tape) -> Self {
+        Self { tape, next: None }
+    }
+}
 
 impl<'tape> Iterator for ChildIter<'tape> {
     type Item = TapeCursor<'tape>;
 
     #[inline]
     fn next(&mut self) -> Option<TapeCursor<'tape>> {
-        if self.next.0 <= self.end.0 {
-            return None;
-        }
-        let co = self.next.0 - 1;
-        // SAFETY: `co` is in `[self.end.0, self.next.0)`, which by
-        // construction from `TapeCursor::children` is the parent's
-        // [child_off, parent_offset) range — all valid offsets in
-        // the shared tape. The post-order `backward_step` can only
-        // decrease `next`, so it stays within the range.
-        let rec = unsafe { self.tape.get_unchecked(TapeOffset(co)) };
-        let step = backward_step_u32(rec, co);
-        self.next = TapeOffset(step);
-        Some(TapeCursor::new(self.tape, TapeOffset(co)))
+        let current = self.next?;
+        let columns = self.tape.columns();
+        let step = columns.sib_skip_at(current);
+        self.next = if step == 0 {
+            None
+        } else {
+            current.checked_add(step)
+        };
+        Some(TapeCursor {
+            tape: self.tape,
+            offset: TapeOffset(current),
+            rank: ColumnRank::default(),
+        })
     }
 }
 
-// ── Backward-walk helpers ──────────────────────────────────────────
+// ── First-child seed (post-order layout helper) ───────────────────
 
-/// One backward step in the post-order child walk, `u32` variant.
+/// Locate the ROOT offset of the first direct child of the compound
+/// at `parent_idx`.
 ///
-/// For a compound child at `offset` with `child_off = C`, jumps to
-/// `C` (the start of its subtree — the previous sibling's record
-/// sits at `C - 1`). For a leaf, jumps to `offset` (the previous
-/// record is at `offset - 1`).
+/// The current tape layout is post-order: a compound sits AFTER its
+/// transitive subtree, with `child_off` pointing to the first
+/// descendant's offset rather than the first direct child's root.
+/// The first direct child's ROOT is the LAST record emitted inside
+/// that subtree — found by a single backward walk from the parent
+/// down to `child_off`.
+///
+/// Returns `None` when the parent has no children.
 #[inline]
-fn backward_step_u32(rec: &TapeRec, offset: u32) -> u32 {
-    if rec.has_children() && !rec.child_off.is_none() {
-        rec.child_off.0
-    } else {
-        offset
+fn first_child_root(columns: &Columns, parent_idx: u32) -> Option<u32> {
+    if !columns.has_children_at(parent_idx) {
+        return None;
     }
-}
-
-/// One backward step in the post-order child walk, `usize` variant
-/// (used by [`count_backward`] and [`nth_backward`]).
-#[inline]
-fn backward_step(rec: &TapeRec, offset: usize) -> usize {
-    if rec.has_children() && !rec.child_off.is_none() {
-        rec.child_off.0 as usize
-    } else {
-        offset
+    let child_off = columns.child_off_at(parent_idx);
+    if child_off.is_none() {
+        return None;
     }
-}
-
-/// Count direct children via backward walk from `end` to `start`.
-#[inline]
-fn count_backward(tape: &Tape, start: usize, end: usize) -> usize {
-    let mut count = 0usize;
+    let start = child_off.0;
+    let end = parent_idx;
+    if start >= end {
+        return None;
+    }
+    // Backward-walk to locate the root of the first direct child.
+    // Each step visits a direct child's root, jumping past its
+    // subtree via its own `child_off`. When the walk reaches `start`,
+    // the last-visited root is the first direct child's root.
     let mut pos = end;
+    let mut first = end - 1;
     while pos > start {
         let co = pos - 1;
-        // SAFETY: `co` is in range [start, end), both of which are
-        // valid tape offsets from `child_off` / parent offset.
-        let rec = unsafe { tape.get_unchecked(TapeOffset(co as u32)) };
-        count += 1;
-        pos = backward_step(rec, co);
+        first = co;
+        let has_children = columns.has_children_at(co);
+        let co_child_off = columns.child_off_at(co);
+        pos = if has_children && !co_child_off.is_none() {
+            co_child_off.0
+        } else {
+            co
+        };
     }
-    count
-}
-
-/// Walk backward `n` steps from `end` and return the cursor at
-/// that position. Step 0 = the last child (at `end - 1`).
-#[inline]
-fn nth_backward<'tape>(
-    tape: &'tape Tape,
-    start: usize,
-    end: usize,
-    n: usize,
-) -> Option<TapeCursor<'tape>> {
-    let mut pos = end;
-    let mut step = 0usize;
-    while pos > start {
-        let co = pos - 1;
-        // SAFETY: `co` is in range [start, end), both valid tape offsets.
-        let rec = unsafe { tape.get_unchecked(TapeOffset(co as u32)) };
-        if step == n {
-            return Some(TapeCursor::new(tape, TapeOffset(co as u32)));
-        }
-        step += 1;
-        pos = backward_step(rec, co);
-    }
-    None
+    Some(first)
 }

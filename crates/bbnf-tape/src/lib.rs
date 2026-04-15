@@ -2,54 +2,64 @@
 //!
 //! # Architectural role
 //!
-//! The tape is bbnf-lang's replacement for the eager AST. Instead of
-//! materialising a typed enum tree per parse (one `slab().alloc()` per
-//! heterogeneous Alt element, one enum variant per branch, recursive
-//! `&'a Node` indirection through every compound shape), the parser
-//! appends fixed-size records to a flat `Vec<TapeRec>`. The typed view
-//! is generated lazily as an `impl` over the tape: each accessor call
-//! reads a [`TapeRec`] by offset and returns a view over its children.
+//! The tape is bbnf-lang's replacement for the eager AST. Instead
+//! of materialising a typed enum tree per parse (one `slab().alloc()`
+//! per heterogeneous Alt element, one enum variant per branch,
+//! recursive `&'a Node` indirection through every compound shape),
+//! the parser appends records to a columnar [`Columns`] substrate.
+//! The typed view is generated lazily as an `impl` over the tape:
+//! each accessor call materialises a [`TapeRec`] by offset and
+//! returns a view over its children.
 //!
 //! ```text
-//!   input bytes ─► parser ─► Tape (flat Vec<TapeRec>) ─► View<'tape>
-//!                     │                                       │
+//!   input bytes ─► parser ─► Tape (Columns SoA substrate) ─► View<'tape>
+//!                     │                                           │
 //!                     └─ TapeBuilder::push_compound(kind, start..end)
-//!                                                             │
-//!                                                             ▼
-//!                                                  accessor.key() / .value()
+//!                                                                 │
+//!                                                                 ▼
+//!                                                      accessor.key() / .value()
 //! ```
 //!
 //! # Design
 //!
-//! - **Fixed-size records** ([`TapeRec`] is 16 bytes, one-quarter of a
-//!   64-byte cache line): `kind`, `flags`, `span_lo`, `span_hi`,
-//!   `child_off` fields. Compound records (Seq, Alt, Repeat, rule
-//!   entry) point to their children via `child_off`; the children are
-//!   a contiguous run from `child_off` to the next compound's
-//!   `child_off`.
-//! - **Flat Vec storage** (Tranche AK.0): single `Vec<TapeRec>` with
-//!   one pre-allocation via `with_capacity`. Zero indirection per
-//!   push — just bounds check + write + len increment. Replaces the
-//!   ChunkedArena `Vec<Vec<TapeRec>>` that had 2 pointer dereferences
-//!   per push.
+//! - **Columnar substrate** (Tranche AV.2.1): [`Columns`] holds the
+//!   six structural columns (`kinds`, `flags`, `extra`, `span_lo`,
+//!   `span_hi`, `sib_skip`) plus `child_off` and the typed-payload
+//!   columns (`pay_narrow`, `pay_wide`, `pay_agg`). Per-record
+//!   metadata lives in SoA layout so bulk typed visitors — the
+//!   4-lane reordered-unrolling kernels landing in V2.5 — see dense
+//!   `Vec<u64>` / `Vec<u32>` blocks rather than 16-byte records.
+//! - **16-byte [`TapeRec`]** is the read-side materialised view.
+//!   External consumers bind `TapeRec` by value; the struct is
+//!   reconstructed from the six structural columns on demand.
+//! - **Sibling-skip traversal** (Tranche AV.2.2): forward sibling
+//!   walks consume one indexed `sib_skip` column read per step.
+//!   The backward-walk child enumeration is gone.
+//! - **Column-rank payload routing** (Tranche AV.2.3):
+//!   `PayloadData::InlineScalar` lands in `pay_narrow`, `WideScalar`
+//!   lands in `pay_wide`; the record's `child_off` holds the column
+//!   rank. The `u32::MAX` collision with `TapeOffset::NONE` is
+//!   resolved because column ranks are push-ordered counters.
 //! - **Zero inter-crate dependencies**: leaf crate with no external
 //!   deps beyond std.
 
 #![warn(missing_docs)]
 
 pub mod builder;
+pub mod columns;
 pub mod cursor;
 pub mod kind;
 pub mod profile;
 pub mod tape;
 
 pub use builder::{PayloadData, TapeBuildError, TapeBuilder};
-pub use cursor::{ChildIter, TapeCursor};
+pub use columns::Columns;
+pub use cursor::{ChildIter, ColumnRank, TapeCursor};
 pub use kind::TapeKind;
 pub use profile::{
     BranchPrior, ColumnId, GrammarProfile, KeywordTable, RuleId, ShapeEntry, VisitorId,
 };
-pub use tape::{Tape, TapeOffset, TapeRec};
+pub use tape::{Tape, TapeIter, TapeOffset, TapeRec};
 
 /// Inline-aggregate payload budget (in bytes).
 ///

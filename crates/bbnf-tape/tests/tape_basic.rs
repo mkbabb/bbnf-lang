@@ -98,14 +98,17 @@ fn cursor_walks_children() {
     assert_eq!(children[1].span(), (1, 2));
     assert_eq!(children[2].span(), (2, 3));
 
-    // AU.3.2: zero-alloc `children_zero_alloc()` yields in reverse
-    // source order. `size_of::<ChildIter>` ≤ 24 bytes; no heap
-    // allocation per call.
-    let rev: Vec<TapeCursor<'_>> = cursor.children_zero_alloc().collect();
-    assert_eq!(rev.len(), 3);
-    assert_eq!(rev[0].span(), (2, 3));
-    assert_eq!(rev[1].span(), (1, 2));
-    assert_eq!(rev[2].span(), (0, 1));
+    // AV.2.2: `children_zero_alloc()` post-substrate yields in
+    // forward source order — the columnar substrate's sibling-skip
+    // column makes forward iteration zero-allocation, so the pre-AV
+    // split between `children()` (vec-backed, source order) and
+    // `children_zero_alloc()` (linked-list, reverse order) collapses
+    // into one forward-order zero-alloc iterator.
+    let forward: Vec<TapeCursor<'_>> = cursor.children_zero_alloc().collect();
+    assert_eq!(forward.len(), 3);
+    assert_eq!(forward[0].span(), (0, 1));
+    assert_eq!(forward[1].span(), (1, 2));
+    assert_eq!(forward[2].span(), (2, 3));
 }
 
 #[test]
@@ -886,3 +889,400 @@ fn grammar_profile_slices_reference_rodata() {
     assert_eq!(_SAMPLE_PROFILE.list_rules[0].0, 0);
     assert_eq!(_SAMPLE_PROFILE.list_rules[1].0, 7);
 }
+
+// ── Tranche AV Phase 2 — Columns SoA substrate ────────────────────
+
+use bbnf_tape::Columns;
+
+#[test]
+fn columns_struct_holds_soa_layout() {
+    // Build a minimal tape and verify the six structural columns
+    // grow in lockstep.
+    let mut b = TapeBuilder::new();
+    b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
+    b.push_leaf(TapeKind::Literal, 1, 2, 1, 0);
+    let tape = b.finish().unwrap();
+
+    let cols = tape.columns();
+    assert_eq!(cols.len(), 2);
+    assert_eq!(cols.kinds.len(), 2);
+    assert_eq!(cols.flags.len(), 2);
+    assert_eq!(cols.extra.len(), 2);
+    assert_eq!(cols.span_lo.len(), 2);
+    assert_eq!(cols.span_hi.len(), 2);
+    assert_eq!(cols.sib_skip.len(), 2);
+    assert_eq!(cols.child_off.len(), 2);
+
+    // Typed payload columns stay empty for pure-span leaves.
+    assert_eq!(cols.pay_narrow.len(), 0);
+    assert_eq!(cols.pay_wide.len(), 0);
+    assert_eq!(cols.pay_agg.len(), 0);
+}
+
+#[test]
+fn columns_pay_narrow_holds_inline_scalars() {
+    // AV.2.3: inline scalars land in `pay_narrow`; the record's
+    // `child_off` stores the column rank.
+    let mut b = TapeBuilder::new();
+    let off0 = b.push_leaf_with(
+        TapeKind::Literal,
+        0,
+        1,
+        0,
+        0,
+        PayloadData::InlineScalar(7),
+    );
+    let off1 = b.push_leaf_with(
+        TapeKind::Literal,
+        1,
+        2,
+        1,
+        0,
+        PayloadData::InlineScalar(42),
+    );
+    let tape = b.finish().unwrap();
+
+    let cols = tape.columns();
+    assert_eq!(cols.pay_narrow, vec![7u32, 42u32]);
+
+    // `child_off` points to the column rank, not into the arena.
+    let rec0 = tape.get(off0);
+    let rec1 = tape.get(off1);
+    assert_eq!(rec0.child_off, TapeOffset(0));
+    assert_eq!(rec1.child_off, TapeOffset(1));
+
+    // Readers project via the column.
+    assert_eq!(tape.payload_u8(rec0), Some(7));
+    assert_eq!(tape.payload_u8(rec1), Some(42));
+}
+
+#[test]
+fn columns_pay_wide_holds_wide_scalars() {
+    // AV.2.3: 8-byte scalars land in `pay_wide`; `child_off` stores
+    // the column rank.
+    let mut b = TapeBuilder::new();
+    let off0 = b.push_leaf_with(
+        TapeKind::Regex,
+        0,
+        3,
+        0,
+        0,
+        PayloadData::WideScalar(1.5_f64.to_bits()),
+    );
+    let off1 = b.push_leaf_with(
+        TapeKind::Regex,
+        3,
+        6,
+        1,
+        0,
+        PayloadData::WideScalar((-99.0_f64).to_bits()),
+    );
+    let tape = b.finish().unwrap();
+
+    let cols = tape.columns();
+    assert_eq!(cols.pay_wide.len(), 2);
+    assert_eq!(cols.pay_wide[0], 1.5_f64.to_bits());
+    assert_eq!(cols.pay_wide[1], (-99.0_f64).to_bits());
+
+    let rec0 = tape.get(off0);
+    let rec1 = tape.get(off1);
+    assert_eq!(rec0.child_off, TapeOffset(0));
+    assert_eq!(rec1.child_off, TapeOffset(1));
+}
+
+#[test]
+fn columns_pay_agg_holds_aggregate_and_bytes() {
+    // Aggregate + Bytes payloads continue to land in the unified
+    // arena (`pay_agg`). `child_off` holds the arena byte offset.
+    let mut b = TapeBuilder::new();
+    let agg_bytes: [u8; 9] = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+    let off_agg = b.push_leaf_with(
+        TapeKind::KvPair,
+        0,
+        4,
+        0,
+        0,
+        PayloadData::Aggregate(&agg_bytes),
+    );
+    let off_bytes = b.push_leaf_with(
+        TapeKind::Span,
+        4,
+        9,
+        1,
+        0,
+        PayloadData::Bytes(b"hello"),
+    );
+    let tape = b.finish().unwrap();
+
+    let cols = tape.columns();
+    assert!(cols.pay_agg.len() >= 9 + 4 + 5, "arena stores aggregate + bytes frame");
+
+    let rec_agg = tape.get(off_agg);
+    let rec_bytes = tape.get(off_bytes);
+    // The aggregate lands at offset 0; bytes frame at 16 (aggregate
+    // pads to 16 bytes = 2 slots, then the bytes frame starts).
+    assert_eq!(rec_agg.child_off.0, 0);
+    assert_eq!(rec_bytes.child_off.0, 16);
+    assert_eq!(tape.payload_string(rec_bytes), Some("hello"));
+}
+
+#[test]
+fn sibling_skip_walks_direct_children_forward() {
+    // Build `(a (b c) d)` and verify sib_skip drives forward sibling
+    // iteration through the outer compound's three children.
+    let mut b = TapeBuilder::new();
+    // a
+    b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
+    // (b c)
+    let bc_children = b.mark_children();
+    b.push_leaf(TapeKind::Span, 1, 2, 1, 0);
+    b.push_leaf(TapeKind::Span, 2, 3, 2, 0);
+    let _bc = b.push_compound(TapeKind::Seq, bc_children, 1, 3, 0, 0);
+    // d
+    b.push_leaf(TapeKind::Span, 3, 4, 3, 0);
+    // outer compound (children at 0, 3, 4)
+    let outer_children = TapeOffset(0);
+    let outer = b.push_compound(TapeKind::Rule, outer_children, 0, 4, 0, 0);
+    let tape = b.finish().unwrap();
+
+    let cursor = TapeCursor::new(&tape, outer);
+
+    // Forward iteration yields children in source order.
+    let children: Vec<_> = cursor.children().collect();
+    assert_eq!(children.len(), 3);
+    assert_eq!(children[0].span(), (0, 1)); // a
+    assert_eq!(children[1].span(), (1, 3)); // (b c)
+    assert_eq!(children[2].span(), (3, 4)); // d
+
+    // child(i) uses sibling-skip stepping.
+    assert_eq!(cursor.child(0).unwrap().span(), (0, 1));
+    assert_eq!(cursor.child(1).unwrap().span(), (1, 3));
+    assert_eq!(cursor.child(2).unwrap().span(), (3, 4));
+    assert!(cursor.child(3).is_none());
+
+    // sib_skip values at each child root:
+    //   child@0 (a, leaf): next sibling (b c) at offset 3, skip = 3
+    //   child@3 ((b c)):   next sibling d at offset 4, skip = 1
+    //   child@4 (d):       last sibling, skip = 0
+    let cols = tape.columns();
+    assert_eq!(cols.sib_skip_at(0), 3);
+    assert_eq!(cols.sib_skip_at(3), 1);
+    assert_eq!(cols.sib_skip_at(4), 0);
+}
+
+#[test]
+fn sibling_skip_nested_compound() {
+    // Build `(x y)` nested inside `(z (x y) w)`; verify sib_skip
+    // inside the nested compound.
+    let mut b = TapeBuilder::new();
+    // z
+    b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
+    // (x y)
+    let xy_children = b.mark_children();
+    b.push_leaf(TapeKind::Span, 1, 2, 1, 0);
+    b.push_leaf(TapeKind::Span, 2, 3, 2, 0);
+    let xy = b.push_compound(TapeKind::Seq, xy_children, 1, 3, 0, 0);
+    // w
+    b.push_leaf(TapeKind::Span, 3, 4, 3, 0);
+    let outer_children = TapeOffset(0);
+    let _outer = b.push_compound(TapeKind::Rule, outer_children, 0, 4, 0, 0);
+    let tape = b.finish().unwrap();
+
+    // Inner (x y) children: x@1, y@2. sib_skip[1]=1, sib_skip[2]=0.
+    let cols = tape.columns();
+    assert_eq!(cols.sib_skip_at(1), 1);
+    assert_eq!(cols.sib_skip_at(2), 0);
+
+    // Walker yields x then y in forward order.
+    let xy_cursor = TapeCursor::new(&tape, xy);
+    let inner: Vec<_> = xy_cursor.children().collect();
+    assert_eq!(inner.len(), 2);
+    assert_eq!(inner[0].span(), (1, 2));
+    assert_eq!(inner[1].span(), (2, 3));
+}
+
+#[test]
+fn empty_compound_sibling_skip_is_zero() {
+    // An empty compound's `sib_skip` stays at the default `0`
+    // because there are no direct children to enumerate.
+    let mut b = TapeBuilder::new();
+    let marked = b.mark_children();
+    let empty = b.push_compound(TapeKind::Rule, marked, 0, 0, 0, 0);
+    let tape = b.finish().unwrap();
+    assert_eq!(tape.columns().sib_skip_at(empty.0), 0);
+    assert_eq!(TapeCursor::new(&tape, empty).child_count(), 0);
+}
+
+#[test]
+fn tape_iter_materialises_all_records() {
+    // The tape iterator yields each record exactly once in push
+    // order.
+    let mut b = TapeBuilder::new();
+    b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
+    b.push_leaf(TapeKind::Literal, 1, 2, 1, 0);
+    b.push_leaf(TapeKind::Regex, 2, 3, 2, 0);
+    let tape = b.finish().unwrap();
+    let recs: Vec<_> = tape.iter().collect();
+    assert_eq!(recs.len(), 3);
+    assert_eq!(recs[0].kind(), TapeKind::Span);
+    assert_eq!(recs[1].kind(), TapeKind::Literal);
+    assert_eq!(recs[2].kind(), TapeKind::Regex);
+}
+
+#[test]
+fn payload_data_variant_coverage() {
+    // Round-trip every PayloadData variant through the columnar
+    // substrate.
+    let mut b = TapeBuilder::new();
+    let off_none = b.push_leaf_with(TapeKind::Span, 0, 1, 0, 0, PayloadData::None);
+    let off_inline = b.push_leaf_with(
+        TapeKind::Literal,
+        1,
+        2,
+        0,
+        0,
+        PayloadData::InlineScalar(0xDEAD_BEEF),
+    );
+    let off_wide = b.push_leaf_with(
+        TapeKind::Regex,
+        2,
+        3,
+        0,
+        0,
+        PayloadData::WideScalar(0x0123_4567_89AB_CDEF),
+    );
+    let agg = [1u8, 2, 3, 4, 5];
+    let off_agg = b.push_leaf_with(
+        TapeKind::KvPair,
+        3,
+        4,
+        0,
+        0,
+        PayloadData::Aggregate(&agg),
+    );
+    let large: [u8; 33] = core::array::from_fn(|i| (i as u8).wrapping_add(1));
+    let off_large = b.push_leaf_with(
+        TapeKind::KvPair,
+        4,
+        5,
+        0,
+        0,
+        PayloadData::LargeAggregate(&large),
+    );
+    let off_bytes = b.push_leaf_with(
+        TapeKind::Span,
+        5,
+        12,
+        0,
+        0,
+        PayloadData::Bytes(b"bonjour"),
+    );
+    let tape = b.finish().unwrap();
+
+    // None
+    assert!(!tape.get(off_none).has_payload());
+
+    // InlineScalar → pay_narrow
+    let rec_inline = tape.get(off_inline);
+    assert!(rec_inline.has_payload());
+    assert_eq!(tape.payload_u32(rec_inline), Some(0xDEAD_BEEF));
+
+    // WideScalar → pay_wide
+    let rec_wide = tape.get(off_wide);
+    assert!(rec_wide.has_payload());
+    assert_eq!(tape.payload_u64(rec_wide), Some(0x0123_4567_89AB_CDEF));
+
+    // Aggregate → pay_agg
+    let rec_agg = tape.get(off_agg);
+    assert_eq!(tape.payload_bytes(rec_agg, 5), Some(&agg[..]));
+
+    // LargeAggregate → pay_agg
+    let rec_large = tape.get(off_large);
+    assert_eq!(tape.payload_bytes(rec_large, 33), Some(&large[..]));
+
+    // Bytes → pay_agg framed
+    let rec_bytes = tape.get(off_bytes);
+    assert_eq!(tape.payload_string(rec_bytes), Some("bonjour"));
+}
+
+#[test]
+fn inline_scalar_u32_max_does_not_collide_with_none() {
+    // AV.2.3: InlineScalar routes to pay_narrow, so `u32::MAX`
+    // inline values no longer collide with the `TapeOffset::NONE`
+    // sentinel. Pre-AV this debug-asserted; post-AV it must round-
+    // trip cleanly.
+    let mut b = TapeBuilder::new();
+    let off = b.push_leaf_with(
+        TapeKind::Literal,
+        0,
+        4,
+        0,
+        0,
+        PayloadData::InlineScalar(u32::MAX),
+    );
+    let tape = b.finish().unwrap();
+    let rec = tape.get(off);
+    assert!(rec.has_payload(), "u32::MAX inline does not collide with NONE sentinel");
+    assert_eq!(tape.payload_u32(rec), Some(u32::MAX));
+}
+
+#[test]
+fn columns_direct_access_for_bulk_visitors() {
+    // V2.5's reordered-unrolling codegen will consume
+    // `tape.columns().pay_wide` as a dense `&[u64]` (reinterpretable
+    // to `&[f64]` via bit pattern). Verify the typed column is in
+    // push order.
+    let mut b = TapeBuilder::new();
+    for i in 0..8 {
+        b.push_leaf_with(
+            TapeKind::Span,
+            i as u32,
+            (i + 1) as u32,
+            0,
+            0,
+            PayloadData::WideScalar((i as f64 * 0.5).to_bits()),
+        );
+    }
+    let tape = b.finish().unwrap();
+    let cols = tape.columns();
+    assert_eq!(cols.pay_wide.len(), 8);
+    // Dense f64 view recovered via bit cast per element.
+    let sum: f64 = cols
+        .pay_wide
+        .iter()
+        .map(|b| f64::from_bits(*b))
+        .sum();
+    let expected: f64 = (0..8).map(|i| i as f64 * 0.5).sum();
+    assert!((sum - expected).abs() < f64::EPSILON);
+}
+
+#[test]
+fn column_rank_default() {
+    use bbnf_tape::ColumnRank;
+    let r = ColumnRank::default();
+    assert_eq!(r.pay_narrow, 0);
+    assert_eq!(r.pay_wide, 0);
+    assert_eq!(r.pay_agg, 0);
+}
+
+#[test]
+fn cursor_with_rank_preserves_rank() {
+    use bbnf_tape::ColumnRank;
+    let mut b = TapeBuilder::new();
+    let off = b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
+    let tape = b.finish().unwrap();
+
+    let rank = ColumnRank {
+        pay_narrow: 5,
+        pay_wide: 3,
+        pay_agg: 1,
+    };
+    let cursor = TapeCursor::with_rank(&tape, off, rank);
+    assert_eq!(cursor.rank().pay_narrow, 5);
+    assert_eq!(cursor.rank().pay_wide, 3);
+    assert_eq!(cursor.rank().pay_agg, 1);
+}
+
+// Compile-time witness: `Columns` can be constructed at `const` time
+// via `Vec::new()`. Useful for static fixtures and tests.
+const _COLUMNS_DEFAULT_WITNESS: fn() -> Columns = Columns::new;

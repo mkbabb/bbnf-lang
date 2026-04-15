@@ -4,39 +4,49 @@
 //! append records as each rule / Seq / Alt matches. The builder owns
 //! the growing [`Tape`] plus sticky error state so failed sub-tree
 //! matches don't poison the rest of the parse.
+//!
+//! Tranche AV.2.1 flipped the underlying storage from a flat
+//! `Vec<TapeRec>` to the columnar [`Columns`](crate::columns::Columns)
+//! substrate. The push entry points (`push_leaf`, `push_compound`,
+//! `push_leaf_with`, `push_leaf_borrowed_string`,
+//! `push_leaf_with_arena_frame`) keep their pre-AV signatures so the
+//! generated code's push sites are untouched; internally, each push
+//! writes into the structural + payload columns instead of allocating
+//! a 16-byte `TapeRec`.
 
+use crate::columns::Columns;
 use crate::kind::TapeKind;
 use crate::tape::{Tape, TapeOffset, TapeRec};
 
 /// Payload data handed to [`TapeBuilder::push_leaf_with`] — the single
 /// entry point for payload-bearing leaves.
 ///
-/// Each variant corresponds to one of the payload shapes the unified
-/// arena recognises:
+/// Each variant names one of the payload shapes the columnar
+/// substrate recognises:
 ///
 /// - [`PayloadData::None`] — pure span leaf, no payload. Equivalent
 ///   to [`TapeBuilder::push_leaf`]; exposed on `PayloadData` so
 ///   callers that build a payload conditionally don't need to switch
 ///   to a different entry point when the payload is absent.
-/// - [`PayloadData::InlineScalar`] — scalar ≤ 4 bytes packed directly
-///   into the record's `child_off`. The `u32` carries the value's
-///   little-endian bytes; callers typically construct this via
-///   `u32::from_le_bytes(...)` from a typed scalar's byte
-///   representation, or for `u8/u16/u32` the value itself.
-/// - [`PayloadData::WideScalar`] — 8-byte scalar (`f64/u64/i64/Span`)
-///   written into an 8-aligned arena slot.
+/// - [`PayloadData::InlineScalar`] — scalar ≤ 4 bytes written into
+///   the [`Columns::pay_narrow`](crate::columns::Columns::pay_narrow)
+///   column. The record's `child_off` stores the column rank.
+/// - [`PayloadData::WideScalar`] — 8-byte scalar (`f64`/`u64`/`i64`/
+///   packed `Span`) written into the
+///   [`Columns::pay_wide`](crate::columns::Columns::pay_wide) column;
+///   the record's `child_off` stores the column rank.
 /// - [`PayloadData::Aggregate`] — packed tuple bytes (colour tuples,
 ///   dimension `(f64, u8)` pairs, kv-pair values). Length up to 16
-///   bytes; written verbatim into an arena slot rounded up to the
-///   next 8-byte boundary.
-/// - [`PayloadData::LargeAggregate`] — aggregate payload exceeding the
-///   16-byte inline budget (CSS `colorFunction` / `colorFn` / `colorMix`
-///   — `u8 space + f64×3 + f64 alpha` = 33 B, and larger recursive
-///   shapes). Identical on-arena layout to [`Self::Aggregate`] — bytes
-///   written verbatim into an 8-aligned slot, no length prefix — but
-///   the reader recovers the width from the payload-layout table keyed
-///   by the record's `kind` + `variant_idx` rather than reading it from
-///   a frame header.
+///   bytes; written verbatim into the shared
+///   [`Columns::pay_agg`](crate::columns::Columns::pay_agg) arena
+///   rounded up to the next 8-byte boundary. `child_off` holds the
+///   arena byte offset.
+/// - [`PayloadData::LargeAggregate`] — aggregate payload exceeding
+///   the 16-byte inline budget (CSS colour-functions at 33+ B).
+///   Identical arena encoding to `Aggregate` — bytes verbatim into
+///   an 8-aligned slot — but the width is recovered from the
+///   grammar's payload-layout table keyed by
+///   `(kind, variant_idx)` rather than a frame header.
 /// - [`PayloadData::Bytes`] — variable-length byte string (decoded
 ///   JSON strings, comment bodies, regex patterns). Framed into the
 ///   arena as `(len: u32 LE, bytes: [u8; len])`.
@@ -44,34 +54,24 @@ use crate::tape::{Tape, TapeOffset, TapeRec};
 pub enum PayloadData<'a> {
     /// No payload.
     None,
-    /// Scalar value ≤ 4 bytes, packed inline into `child_off`.
-    /// The `u32` carries the raw bytes in little-endian order.
+    /// Scalar value ≤ 4 bytes stored in `Columns::pay_narrow`. The
+    /// `u32` carries the value's raw little-endian bytes.
     InlineScalar(u32),
-    /// 8-byte scalar (`f64`, `u64`, `i64`, packed `Span`) written
-    /// into an arena slot. The `u64` carries the raw bytes in
-    /// little-endian order (via `f64::to_bits()` or `to_le_bytes()`
-    /// conversions at the call site).
+    /// 8-byte scalar (`f64`, `u64`, `i64`, packed `Span`) stored in
+    /// `Columns::pay_wide` as raw bits. Callers convert at the push
+    /// site via `f64::to_bits()` / `to_le_bytes()` as needed.
     WideScalar(u64),
-    /// Packed aggregate tuple bytes written verbatim into the arena.
-    /// Length up to 16 bytes.
+    /// Packed aggregate tuple bytes written verbatim into
+    /// `Columns::pay_agg`. Length up to 16 bytes.
     Aggregate(&'a [u8]),
     /// Aggregate bytes exceeding the 16-byte inline budget — arena-
-    /// backed, unframed. Written verbatim into an 8-aligned slot
-    /// (padding at the tail is zero-initialised, matching
-    /// [`Self::Aggregate`]). The width is NOT stored alongside the
-    /// bytes; readers recover it from the grammar's payload-layout
-    /// table via `(kind, variant_idx)` and pass it to
-    /// [`Tape::payload_bytes`](crate::Tape::payload_bytes) /
-    /// [`TapeCursor::payload_large_aggregate`](crate::TapeCursor::payload_large_aggregate).
-    ///
-    /// Used for CSS colour-function aggregates (`colorFunction`,
-    /// `colorFn`, `colorMix`) that pack `u8 space + f64×3 channels +
-    /// f64 alpha` (33 B → 40 B slot) and larger recursive shapes
-    /// indirected through `ColorRef` arena offsets.
+    /// backed, unframed. Written verbatim into an 8-aligned slot in
+    /// `Columns::pay_agg` (trailing pad zero-initialised, matching
+    /// [`Self::Aggregate`]). Width recovered from the grammar's
+    /// payload-layout table via `(kind, variant_idx)`.
     LargeAggregate(&'a [u8]),
-    /// Byte string framed as `(len: u32 LE, bytes)` into the arena.
-    /// The caller supplies the decoded bytes; the builder writes the
-    /// length prefix.
+    /// Byte string framed as `(len: u32 LE, bytes)` into
+    /// `Columns::pay_agg`.
     Bytes(&'a [u8]),
 }
 
@@ -96,24 +96,14 @@ pub enum PayloadData<'a> {
 /// ```
 #[derive(Debug, Default)]
 pub struct TapeBuilder {
-    /// The tape being assembled. Owned by the builder for the
-    /// duration of the parse; consumed via [`Self::finish`] at the
-    /// end.
-    pub(crate) tape: Tape,
+    /// Column storage under construction. Consumed by [`Self::finish`]
+    /// which computes the sibling-skip column and packages the result
+    /// into a [`Tape`].
+    pub(crate) columns: Columns,
     /// Sticky error state. Once set, subsequent `push_*` calls are
     /// still accepted (so mid-recovery parses can continue producing
     /// records for partial success), but `finish` returns the error.
     pub(crate) error: Option<TapeBuildError>,
-    /// Unified payload arena. Staged here during builds and
-    /// transferred to [`Tape::arena`] at [`Self::finish`]. Holds:
-    /// - Wide scalars (f64/u64/i64/Span) — one 8-byte slot per value.
-    /// - Aggregates — packed tuple bytes rounded up to 8-byte slots.
-    /// - Byte strings — `(len: u32 LE, bytes)` frames.
-    ///
-    /// Inline scalars (`u8/i8/u16/i16/u32/i32/f32/bool`) bypass the
-    /// arena entirely: the value packs into each record's `child_off`
-    /// at push time, so the arena touches zero bytes per inline push.
-    pub(crate) arena: Vec<u8>,
 }
 
 /// Error state surfaced through [`TapeBuilder::finish`].
@@ -136,17 +126,10 @@ impl TapeBuilder {
     }
 
     /// Construct a builder sized for `expected` records.
-    ///
-    /// Pre-allocates records and reserves an arena heuristic sized
-    /// for typical scalar-heavy grammars (JSON numbers ~50% of
-    /// records). Compound-heavy grammars (CSS, Sheets) may leave the
-    /// reserve unused, but the over-reservation cost is cheap
-    /// compared to a runtime `RawVec::grow_one` on the hot path.
     pub fn with_capacity(expected: usize) -> Self {
         Self {
-            tape: Tape::with_capacity(expected),
+            columns: Columns::with_capacity(expected),
             error: None,
-            arena: Vec::with_capacity(expected / 8 * 8),
         }
     }
 
@@ -157,7 +140,7 @@ impl TapeBuilder {
     /// field.
     #[inline]
     pub fn mark_children(&self) -> TapeOffset {
-        TapeOffset(self.tape.len() as u32)
+        TapeOffset(self.columns.len() as u32)
     }
 
     /// Append a leaf record with a concrete kind + span.
@@ -179,16 +162,16 @@ impl TapeBuilder {
     ) -> TapeOffset {
         debug_assert!(kind.is_leaf(), "push_leaf on compound kind {:?}", kind);
         let (kind_meta, flags_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
-        let idx = self.tape.records.len();
-        self.tape.records.push(TapeRec {
+        let flags = (variant_idx & 0x3F) | flags_meta_bit;
+        let idx = self.columns.push_structural(
             kind_meta,
-            flags: (variant_idx & 0x3F) | flags_meta_bit,
-            extra: 0,
+            flags,
+            0,
             span_lo,
             span_hi,
-            child_off: TapeOffset::NONE,
-        });
-        TapeOffset(idx as u32)
+            TapeOffset::NONE,
+        );
+        TapeOffset(idx)
     }
 
     /// Append a compound record pointing at a previously-marked
@@ -229,7 +212,7 @@ impl TapeBuilder {
         // not `NONE`, would spuriously light up `has_payload` on
         // any reader that checks `child_off != NONE` to gate payload
         // decoding.
-        let parent_idx = self.tape.records.len();
+        let parent_idx = self.columns.len();
         let has_children = (child_off.0 as usize) < parent_idx;
         let effective_child_off = if has_children {
             child_off
@@ -238,39 +221,26 @@ impl TapeBuilder {
         };
         let (kind_meta, flags_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
         let flags = (variant_idx & 0x3F) | if has_children { 0x40 } else { 0 } | flags_meta_bit;
-        let idx = parent_idx;
-        self.tape.records.push(TapeRec {
+        let idx = self.columns.push_structural(
             kind_meta,
             flags,
-            extra: 0,
+            0,
             span_lo,
             span_hi,
-            child_off: effective_child_off,
-        });
-        TapeOffset(idx as u32)
+            effective_child_off,
+        );
+        TapeOffset(idx)
     }
 
     // ── Payload-bearing leaf push ──────────────────────────────────
 
     /// Append a leaf record carrying the supplied [`PayloadData`].
     ///
-    /// Unified entry point for every payload-bearing leaf. The four
-    /// `PayloadData` variants cover the complete set of runtime
-    /// payload shapes:
-    ///
-    /// - [`PayloadData::None`] — equivalent to [`Self::push_leaf`].
-    /// - [`PayloadData::InlineScalar`] — scalar ≤ 4 bytes packed
-    ///   directly into `child_off`; no arena touch.
-    /// - [`PayloadData::WideScalar`] — 8-byte scalar at an 8-aligned
-    ///   arena slot; `child_off` is the arena byte offset.
-    /// - [`PayloadData::Aggregate`] — packed tuple bytes (≤ 16)
-    ///   written verbatim into an 8-aligned arena slot; `child_off`
-    ///   is the arena byte offset.
-    /// - [`PayloadData::Bytes`] — framed `(len: u32 LE, bytes)`
-    ///   written into the arena; `child_off` is the frame byte
-    ///   offset.
-    ///
-    /// `meta_idx` range is 0-31 (5-bit packed field).
+    /// Unified entry point for every payload-bearing leaf. The
+    /// `PayloadData` variants cover the complete runtime payload
+    /// taxonomy; the record's `child_off` ends up holding a column
+    /// rank (for scalar payloads) or an arena byte offset (for
+    /// aggregates and byte frames).
     #[inline]
     pub fn push_leaf_with(
         &mut self,
@@ -289,23 +259,20 @@ impl TapeBuilder {
         let child_off = match payload {
             PayloadData::None => TapeOffset::NONE,
             PayloadData::InlineScalar(v) => {
-                // The inline-scalar caller guarantees the payload
-                // fits in 4 bytes. NONE's sentinel value (u32::MAX)
-                // would collide with an inline u32 of exactly
-                // u32::MAX; callers that project to u32 must route
-                // through WideScalar instead (the grammar rarely
-                // emits u32::MAX literally, and any collision will
-                // appear as a payload-absence false positive in
-                // debug builds — guarded below).
-                debug_assert!(
-                    v != u32::MAX,
-                    "inline scalar collides with TapeOffset::NONE sentinel"
-                );
-                TapeOffset(v)
+                // AV.2.3: inline scalars land in `pay_narrow`; the
+                // record's `child_off` carries the column rank. The
+                // earlier collision with `TapeOffset::NONE` when
+                // inlining `u32::MAX` directly into `child_off` is
+                // resolved — column ranks don't approach `u32::MAX`
+                // unless a grammar emits four billion inline scalars.
+                let rank = self.columns.pay_narrow.len() as u32;
+                self.columns.pay_narrow.push(v);
+                TapeOffset(rank)
             }
             PayloadData::WideScalar(v) => {
-                let offset = self.alloc_wide_slot(v);
-                TapeOffset(offset)
+                let rank = self.columns.pay_wide.len() as u32;
+                self.columns.pay_wide.push(v);
+                TapeOffset(rank)
             }
             PayloadData::Aggregate(bytes) => {
                 if bytes.is_empty() {
@@ -329,29 +296,20 @@ impl TapeBuilder {
             }
         };
         let (kind_meta, flags_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
-        let idx = self.tape.records.len();
-        self.tape.records.push(TapeRec {
+        let flags = (variant_idx & 0x3F) | flags_meta_bit;
+        let idx = self.columns.push_structural(
             kind_meta,
-            flags: (variant_idx & 0x3F) | flags_meta_bit,
-            extra: 0,
+            flags,
+            0,
             span_lo,
             span_hi,
             child_off,
-        });
-        TapeOffset(idx as u32)
+        );
+        TapeOffset(idx)
     }
 
-    /// Append a wide (8-byte) scalar into an 8-aligned arena slot
-    /// and return the byte offset.
-    #[inline]
-    fn alloc_wide_slot(&mut self, value: u64) -> u32 {
-        let start = self.arena.len();
-        self.arena.extend_from_slice(&value.to_le_bytes());
-        start as u32
-    }
-
-    /// Append aggregate bytes into an arena slot rounded up to the
-    /// next 8-byte boundary and return the byte offset.
+    /// Append aggregate bytes into a `pay_agg` slot rounded up to
+    /// the next 8-byte boundary and return the byte offset.
     ///
     /// The slot is zero-initialised so any unused trailing bytes
     /// (between `bytes.len()` and the rounded-up total) are
@@ -361,21 +319,22 @@ impl TapeBuilder {
         debug_assert!(bytes.len() <= 16, "aggregate payload exceeds 16 bytes");
         let slot_count = bytes.len().div_ceil(8);
         let slot_total = slot_count * 8;
-        let start = self.arena.len();
-        self.arena.resize(start + slot_total, 0);
+        let arena = &mut self.columns.pay_agg;
+        let start = arena.len();
+        arena.resize(start + slot_total, 0);
         // SAFETY: the resize above guarantees `slot_total` bytes are
         // available starting at `start`.
         unsafe {
             std::ptr::copy_nonoverlapping(
                 bytes.as_ptr(),
-                self.arena.as_mut_ptr().add(start),
+                arena.as_mut_ptr().add(start),
                 bytes.len(),
             );
         }
         start as u32
     }
 
-    /// Append a large aggregate payload (> 16 bytes) into an arena
+    /// Append a large aggregate payload (> 16 bytes) into a `pay_agg`
     /// slot rounded up to the next 8-byte boundary and return the
     /// byte offset.
     ///
@@ -384,10 +343,9 @@ impl TapeBuilder {
     /// the slot is padded to 8-byte boundary with zero-initialised
     /// trailing bytes, no length prefix. The only distinction is the
     /// size bound — `LargeAggregate` carries payloads that exceed
-    /// the inline 16-byte budget (CSS colour-function aggregates are
-    /// 33+ B; the widened window accommodates recursive colour-mix
-    /// shapes). Readers recover the byte count from the grammar's
-    /// payload-layout table keyed by `(kind, variant_idx)`.
+    /// the inline 16-byte budget. Readers recover the byte count
+    /// from the grammar's payload-layout table keyed by
+    /// `(kind, variant_idx)`.
     #[inline]
     fn alloc_large_aggregate_slot(&mut self, bytes: &[u8]) -> u32 {
         debug_assert!(
@@ -398,32 +356,34 @@ impl TapeBuilder {
         );
         let slot_count = bytes.len().div_ceil(8);
         let slot_total = slot_count * 8;
-        let start = self.arena.len();
-        self.arena.resize(start + slot_total, 0);
+        let arena = &mut self.columns.pay_agg;
+        let start = arena.len();
+        arena.resize(start + slot_total, 0);
         // SAFETY: the resize above guarantees `slot_total` bytes are
         // available starting at `start`.
         unsafe {
             std::ptr::copy_nonoverlapping(
                 bytes.as_ptr(),
-                self.arena.as_mut_ptr().add(start),
+                arena.as_mut_ptr().add(start),
                 bytes.len(),
             );
         }
         start as u32
     }
 
-    /// Append a `(len: u32 LE, bytes)` frame into the arena and
+    /// Append a `(len: u32 LE, bytes)` frame into `pay_agg` and
     /// return the byte offset of the length prefix.
     #[inline]
     fn alloc_bytes_frame(&mut self, bytes: &[u8]) -> u32 {
-        let start = self.arena.len();
+        let arena = &mut self.columns.pay_agg;
+        let start = arena.len();
         let len = bytes.len() as u32;
-        self.arena.extend_from_slice(&len.to_le_bytes());
-        self.arena.extend_from_slice(bytes);
+        arena.extend_from_slice(&len.to_le_bytes());
+        arena.extend_from_slice(bytes);
         start as u32
     }
 
-    /// Borrow the arena buffer for direct variable-length payload
+    /// Borrow the `pay_agg` arena for direct variable-length payload
     /// writes.
     ///
     /// The JSON-string decode kernel uses this to stream decoded
@@ -441,18 +401,18 @@ impl TapeBuilder {
     ///    the offset of the prefix.
     #[inline]
     pub fn arena_mut(&mut self) -> &mut Vec<u8> {
-        &mut self.arena
+        &mut self.columns.pay_agg
     }
 
-    /// The current length of the arena — equivalently, the byte
-    /// offset where the next write will land.
+    /// The current length of the `pay_agg` arena — equivalently, the
+    /// byte offset where the next write will land.
     #[inline]
     pub fn arena_len(&self) -> u32 {
-        self.arena.len() as u32
+        self.columns.pay_agg.len() as u32
     }
 
     /// Append a leaf record whose payload bytes (with length prefix)
-    /// have already been written to the arena at `arena_offset`.
+    /// have already been written to `pay_agg` at `arena_offset`.
     ///
     /// Used by the JSON-string decode kernel which streams decoded
     /// bytes directly into the arena via [`Self::arena_mut`] and then
@@ -478,36 +438,35 @@ impl TapeBuilder {
             kind
         );
         debug_assert!(
-            (arena_offset as usize) + 4 <= self.arena.len(),
+            (arena_offset as usize) + 4 <= self.columns.pay_agg.len(),
             "push_leaf_with_arena_frame: offset {} + 4 exceeds arena len {}",
             arena_offset,
-            self.arena.len()
+            self.columns.pay_agg.len()
         );
         let (kind_meta, flags_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
-        let idx = self.tape.records.len();
-        self.tape.records.push(TapeRec {
+        let flags = (variant_idx & 0x3F) | flags_meta_bit;
+        let idx = self.columns.push_structural(
             kind_meta,
-            flags: (variant_idx & 0x3F) | flags_meta_bit,
-            extra: 0,
+            flags,
+            0,
             span_lo,
             span_hi,
-            child_off: TapeOffset(arena_offset),
-        });
-        TapeOffset(idx as u32)
+            TapeOffset(arena_offset),
+        );
+        TapeOffset(idx)
     }
 
     /// Append a borrow-safe string leaf — zero arena writes.
     ///
-    /// Companion to [`Self::push_leaf_with_arena_frame`] for the JSON
-    /// decode kernel's fast path. When
+    /// Companion to [`Self::push_leaf_with_arena_frame`] for the
+    /// JSON decode kernel's fast path. When
     /// [`parse_that::parsers::scan::decode_json_string_to_arena`]
     /// returns `StringPayload::Borrowed`, the source bytes are already
     /// the decoded UTF-8 (no escapes); the emitter calls this method
     /// instead of copying those bytes into an arena frame. The record
     /// stores no arena pointer; the reader recovers content via
     /// [`Tape::payload_string_with_source`], which slices
-    /// `source[span_lo + 1 .. span_hi - 1]` (the JSON string body
-    /// between the quote bytes carried in the record's span).
+    /// `source[span_lo + 1 .. span_hi - 1]`.
     ///
     /// `meta_idx` range is 0-31 (5-bit packed field).
     #[inline]
@@ -531,20 +490,20 @@ impl TapeBuilder {
             span_hi,
         );
         let (kind_meta, flags_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
-        let idx = self.tape.records.len();
-        self.tape.records.push(TapeRec {
+        let flags = (variant_idx & 0x3F) | flags_meta_bit;
+        let idx = self.columns.push_structural(
             kind_meta,
-            flags: (variant_idx & 0x3F) | flags_meta_bit,
-            extra: TapeRec::STRING_BORROW_BIT,
+            flags,
+            TapeRec::STRING_BORROW_BIT,
             span_lo,
             span_hi,
-            child_off: TapeOffset::NONE,
-        });
-        TapeOffset(idx as u32)
+            TapeOffset::NONE,
+        );
+        TapeOffset(idx)
     }
 
-    /// Write the 4-byte length prefix at the arena slot reserved by
-    /// the decode kernel.
+    /// Write the 4-byte length prefix at the `pay_agg` slot reserved
+    /// by the decode kernel.
     ///
     /// The kernel writes decoded bytes into the arena after reserving
     /// a 4-byte slot at `arena_offset` (via `arena_mut()` +
@@ -555,17 +514,18 @@ impl TapeBuilder {
     pub fn stamp_arena_len_prefix(&mut self, arena_offset: u32, len: u32) {
         let start = arena_offset as usize;
         debug_assert!(
-            start + 4 <= self.arena.len(),
+            start + 4 <= self.columns.pay_agg.len(),
             "stamp_arena_len_prefix: offset {} + 4 exceeds arena len {}",
             start,
-            self.arena.len()
+            self.columns.pay_agg.len()
         );
-        self.arena[start..start + 4].copy_from_slice(&len.to_le_bytes());
+        self.columns.pay_agg[start..start + 4].copy_from_slice(&len.to_le_bytes());
     }
 
-    /// Mark the parse as failed with an offset and optional rule label.
-    /// The builder continues to accept pushes (so recovery paths can
-    /// produce partial tapes) but [`Self::finish`] returns the error.
+    /// Mark the parse as failed with an offset and optional rule
+    /// label. The builder continues to accept pushes (so recovery
+    /// paths can produce partial tapes) but [`Self::finish`] returns
+    /// the error.
     pub fn set_error(&mut self, offset: u32, rule_label: u32) {
         if self.error.is_none() {
             self.error = Some(TapeBuildError::ParseFailed {
@@ -577,19 +537,51 @@ impl TapeBuilder {
 
     /// Consume the builder and return the finished tape. Returns the
     /// sticky error if one was set during parsing.
+    ///
+    /// The sibling-skip column is computed at finish time — every
+    /// direct-child run is enumerated once via the `child_off`
+    /// pointers and the per-record `sib_skip` slot is stamped with
+    /// `next_sibling_root - this_root` (or `0` for the last
+    /// sibling). This is the exact information walkers need to step
+    /// forward across siblings in a single indexed load.
     pub fn finish(mut self) -> Result<Tape, TapeBuildError> {
         match self.error {
             Some(err) => Err(err),
             None => {
-                self.tape.arena = self.arena;
-                Ok(self.tape)
+                self.columns.compute_sibling_skip();
+                Ok(Tape {
+                    columns: self.columns,
+                })
             }
         }
     }
 
-    /// Access the in-progress tape for debug / intermediate inspection.
-    /// Primarily a test hook — production parsers use `finish()`.
-    pub fn tape(&self) -> &Tape {
-        &self.tape
+    /// Access the in-progress columns for debug / intermediate
+    /// inspection. Primarily a test hook — production parsers use
+    /// `finish()`.
+    pub fn columns(&self) -> &Columns {
+        &self.columns
+    }
+
+    /// Access the in-progress tape view for debug inspection.
+    ///
+    /// Returns a snapshot `Tape` built from a clone of the current
+    /// columns; useful in tests that want to inspect mid-build
+    /// state. Sibling-skip is NOT computed on this snapshot — the
+    /// authoritative path is [`Self::finish`].
+    pub fn tape_snapshot(&self) -> Tape {
+        let columns = Columns {
+            kinds: self.columns.kinds.clone(),
+            flags: self.columns.flags.clone(),
+            extra: self.columns.extra.clone(),
+            span_lo: self.columns.span_lo.clone(),
+            span_hi: self.columns.span_hi.clone(),
+            sib_skip: self.columns.sib_skip.clone(),
+            child_off: self.columns.child_off.clone(),
+            pay_narrow: self.columns.pay_narrow.clone(),
+            pay_wide: self.columns.pay_wide.clone(),
+            pay_agg: self.columns.pay_agg.clone(),
+        };
+        Tape { columns }
     }
 }

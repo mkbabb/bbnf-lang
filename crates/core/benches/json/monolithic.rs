@@ -45,11 +45,15 @@ macro_rules! bench {
     };
 }
 
-bench!(data, "data.json");
+// AU.6.6: rename `data` to `data_s` so `--bench data` no longer
+// matches `data_xl` as a prefix. Bencher 0.1.5's filter is a
+// substring match — the previous `data` / `data_xl` pair collapsed
+// both entries into one profile run, hiding per-dataset attribution.
+bench!(data_s, "data.json");
 bench!(twitter, "twitter.json");
 bench!(citm, "citm_catalog.json");
 bench!(canada, "canada.json");
 bench!(data_xl, "data_xl.json");
 
-benchmark_group!(benches, data, twitter, citm, canada, data_xl);
+benchmark_group!(benches, data_s, twitter, citm, canada, data_xl);
 benchmark_main!(benches);

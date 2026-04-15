@@ -148,7 +148,7 @@ path = "benches/compile_pipeline.rs"
 harness = false
 
 [[bench]]
-name = "json_value"
+name = "json_monolithic_value"
 path = "benches/json/value.rs"
 harness = false
 

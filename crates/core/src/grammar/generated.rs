@@ -546,45 +546,33 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     impl<'p> bool_litView<'p> {
-        ///If variant `branch_0` (branch 0) was chosen, return its child view.
+        /// The source text matched by this rule.
         #[inline]
-        pub fn as_branch_0(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            if self.cursor.meta_idx() == 0u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
-            } else {
-                None
+        pub fn text(&self) -> &'p str {
+            self.span_text()
+        }
+        /// The packed scalar fields decoded from the tape's
+        /// aggregate payload buffer.
+        ///
+        /// Returns the layout-zeroed tuple if no payload was
+        /// written for this record (e.g. an alternative branch
+        /// path that never set any fields).
+        #[inline]
+        pub fn value(&self) -> ((u32, u32)) {
+            let tape = self.cursor.tape();
+            let rec = self.cursor.record();
+            match tape.payload_bytes(rec, 8usize) {
+                Some(__bytes) => {
+                    ({
+                        let __raw = u64::from_le_bytes(
+                            <[u8; 8]>::try_from(&__bytes[0usize..8usize])
+                                .expect("aggregate slice is 8 bytes"),
+                        );
+                        (__raw as u32, (__raw >> 32) as u32)
+                    })
+                }
+                None => ((0_u32, 0_u32)),
             }
-        }
-        ///Returns `true` if variant `branch_0` (branch 0) was chosen.
-        #[inline]
-        pub fn is_branch_0(&self) -> bool {
-            self.cursor.meta_idx() == 0u8
-        }
-        ///If variant `branch_1` (branch 1) was chosen, return its child view.
-        #[inline]
-        pub fn as_branch_1(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            if self.cursor.meta_idx() == 1u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `branch_1` (branch 1) was chosen.
-        #[inline]
-        pub fn is_branch_1(&self) -> bool {
-            self.cursor.meta_idx() == 1u8
-        }
-        /// The chosen branch's child as a generic node view,
-        /// regardless of which variant was selected.
-        #[inline]
-        pub fn chosen(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            self.cursor
-                .child(0)
-                .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
         }
     }
     /// Generated view over a tape record produced by this rule.
@@ -740,6 +728,36 @@ mod __bbnfbootstrap_emit_impl {
         pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
             let (lo, hi) = self.cursor.span();
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> string_litView<'p> {
+        /// The source text matched by this rule.
+        #[inline]
+        pub fn text(&self) -> &'p str {
+            self.span_text()
+        }
+        /// The packed scalar fields decoded from the tape's
+        /// aggregate payload buffer.
+        ///
+        /// Returns the layout-zeroed tuple if no payload was
+        /// written for this record (e.g. an alternative branch
+        /// path that never set any fields).
+        #[inline]
+        pub fn value(&self) -> ((u32, u32)) {
+            let tape = self.cursor.tape();
+            let rec = self.cursor.record();
+            match tape.payload_bytes(rec, 8usize) {
+                Some(__bytes) => {
+                    ({
+                        let __raw = u64::from_le_bytes(
+                            <[u8; 8]>::try_from(&__bytes[0usize..8usize])
+                                .expect("aggregate slice is 8 bytes"),
+                        );
+                        (__raw as u32, (__raw >> 32) as u32)
+                    })
+                }
+                None => ((0_u32, 0_u32)),
+            }
         }
     }
     /// Generated view over a tape record produced by this rule.
@@ -898,29 +916,33 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     impl<'p> value_identView<'p> {
-        /// The source text matched by this leaf rule.
+        /// The source text matched by this rule.
         #[inline]
         pub fn text(&self) -> &'p str {
             self.span_text()
         }
-        /// Get the sub-span value as a string slice.
+        /// The packed scalar fields decoded from the tape's
+        /// aggregate payload buffer.
         ///
-        /// Payload-first: reads the packed (lo, hi) u32 pair from
-        /// the tape payload buffer in O(1). Falls back to the
-        /// record's own span text if no payload is present.
+        /// Returns the layout-zeroed tuple if no payload was
+        /// written for this record (e.g. an alternative branch
+        /// path that never set any fields).
         #[inline]
-        pub fn value(&self) -> &'p str {
+        pub fn value(&self) -> ((u32, u32)) {
             let tape = self.cursor.tape();
             let rec = self.cursor.record();
-            if let Some((lo, hi)) = tape.payload_Span(rec) {
-                return &self.input[lo as usize..hi as usize];
+            match tape.payload_bytes(rec, 8usize) {
+                Some(__bytes) => {
+                    ({
+                        let __raw = u64::from_le_bytes(
+                            <[u8; 8]>::try_from(&__bytes[0usize..8usize])
+                                .expect("aggregate slice is 8 bytes"),
+                        );
+                        (__raw as u32, (__raw >> 32) as u32)
+                    })
+                }
+                None => ((0_u32, 0_u32)),
             }
-            self.span_text()
-        }
-        /// Alias for backward compatibility. Prefer `.value()`.
-        #[inline]
-        pub fn as_span(&self) -> &'p str {
-            self.value()
         }
     }
     /// Generated view over a tape record produced by this rule.
@@ -1880,8 +1902,8 @@ mod __bbnfbootstrap_emit_impl {
     pub enum value_atomValue<'p> {
         int_lit(i64),
         float_lit(f64),
-        bool_lit(&'p str),
-        string_lit(&'p str),
+        bool_lit(((u32, u32))),
+        string_lit(((u32, u32))),
         value_fn_call(BbnfBootstrapNodeView<'p>),
         value_input(&'p str),
         value_path(&'p str),
@@ -1916,12 +1938,16 @@ mod __bbnfbootstrap_emit_impl {
                     let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
                     let __rec = __cursor.record();
                     let __tape = __cursor.tape();
-                    let __value = match __tape.payload_Span(__rec) {
-                        Some((lo, hi)) => &self.input[lo as usize..hi as usize],
-                        None => {
-                            let (lo, hi) = __cursor.span();
-                            &self.input[lo as usize..hi as usize]
+                    let __value = match __tape.payload_bytes(__rec, 8usize) {
+                        Some(__bytes) => {
+                            ({
+                                let __raw = u64::from_le_bytes(
+                                    <[u8; 8]>::try_from(&__bytes[0usize..8usize]).unwrap(),
+                                );
+                                (__raw as u32, (__raw >> 32) as u32)
+                            })
                         }
+                        None => ((0_u32, 0_u32)),
                     };
                     Some(value_atomValue::bool_lit(__value))
                 }
@@ -1929,12 +1955,16 @@ mod __bbnfbootstrap_emit_impl {
                     let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
                     let __rec = __cursor.record();
                     let __tape = __cursor.tape();
-                    let __value = match __tape.payload_Span(__rec) {
-                        Some((lo, hi)) => &self.input[lo as usize..hi as usize],
-                        None => {
-                            let (lo, hi) = __cursor.span();
-                            &self.input[lo as usize..hi as usize]
+                    let __value = match __tape.payload_bytes(__rec, 8usize) {
+                        Some(__bytes) => {
+                            ({
+                                let __raw = u64::from_le_bytes(
+                                    <[u8; 8]>::try_from(&__bytes[0usize..8usize]).unwrap(),
+                                );
+                                (__raw as u32, (__raw >> 32) as u32)
+                            })
                         }
+                        None => ((0_u32, 0_u32)),
                     };
                     Some(value_atomValue::string_lit(__value))
                 }
@@ -2140,61 +2170,33 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     impl<'p> mul_opView<'p> {
-        ///If variant `branch_0` (branch 0) was chosen, return its child view.
+        /// The source text matched by this rule.
         #[inline]
-        pub fn as_branch_0(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            if self.cursor.meta_idx() == 0u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
-            } else {
-                None
+        pub fn text(&self) -> &'p str {
+            self.span_text()
+        }
+        /// The packed scalar fields decoded from the tape's
+        /// aggregate payload buffer.
+        ///
+        /// Returns the layout-zeroed tuple if no payload was
+        /// written for this record (e.g. an alternative branch
+        /// path that never set any fields).
+        #[inline]
+        pub fn value(&self) -> ((u32, u32)) {
+            let tape = self.cursor.tape();
+            let rec = self.cursor.record();
+            match tape.payload_bytes(rec, 8usize) {
+                Some(__bytes) => {
+                    ({
+                        let __raw = u64::from_le_bytes(
+                            <[u8; 8]>::try_from(&__bytes[0usize..8usize])
+                                .expect("aggregate slice is 8 bytes"),
+                        );
+                        (__raw as u32, (__raw >> 32) as u32)
+                    })
+                }
+                None => ((0_u32, 0_u32)),
             }
-        }
-        ///Returns `true` if variant `branch_0` (branch 0) was chosen.
-        #[inline]
-        pub fn is_branch_0(&self) -> bool {
-            self.cursor.meta_idx() == 0u8
-        }
-        ///If variant `branch_1` (branch 1) was chosen, return its child view.
-        #[inline]
-        pub fn as_branch_1(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            if self.cursor.meta_idx() == 1u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `branch_1` (branch 1) was chosen.
-        #[inline]
-        pub fn is_branch_1(&self) -> bool {
-            self.cursor.meta_idx() == 1u8
-        }
-        ///If variant `branch_2` (branch 2) was chosen, return its child view.
-        #[inline]
-        pub fn as_branch_2(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            if self.cursor.meta_idx() == 2u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `branch_2` (branch 2) was chosen.
-        #[inline]
-        pub fn is_branch_2(&self) -> bool {
-            self.cursor.meta_idx() == 2u8
-        }
-        /// The chosen branch's child as a generic node view,
-        /// regardless of which variant was selected.
-        #[inline]
-        pub fn chosen(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            self.cursor
-                .child(0)
-                .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
         }
     }
     /// Generated view over a tape record produced by this rule.
@@ -2353,45 +2355,33 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     impl<'p> add_opView<'p> {
-        ///If variant `branch_0` (branch 0) was chosen, return its child view.
+        /// The source text matched by this rule.
         #[inline]
-        pub fn as_branch_0(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            if self.cursor.meta_idx() == 0u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
-            } else {
-                None
+        pub fn text(&self) -> &'p str {
+            self.span_text()
+        }
+        /// The packed scalar fields decoded from the tape's
+        /// aggregate payload buffer.
+        ///
+        /// Returns the layout-zeroed tuple if no payload was
+        /// written for this record (e.g. an alternative branch
+        /// path that never set any fields).
+        #[inline]
+        pub fn value(&self) -> ((u32, u32)) {
+            let tape = self.cursor.tape();
+            let rec = self.cursor.record();
+            match tape.payload_bytes(rec, 8usize) {
+                Some(__bytes) => {
+                    ({
+                        let __raw = u64::from_le_bytes(
+                            <[u8; 8]>::try_from(&__bytes[0usize..8usize])
+                                .expect("aggregate slice is 8 bytes"),
+                        );
+                        (__raw as u32, (__raw >> 32) as u32)
+                    })
+                }
+                None => ((0_u32, 0_u32)),
             }
-        }
-        ///Returns `true` if variant `branch_0` (branch 0) was chosen.
-        #[inline]
-        pub fn is_branch_0(&self) -> bool {
-            self.cursor.meta_idx() == 0u8
-        }
-        ///If variant `branch_1` (branch 1) was chosen, return its child view.
-        #[inline]
-        pub fn as_branch_1(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            if self.cursor.meta_idx() == 1u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `branch_1` (branch 1) was chosen.
-        #[inline]
-        pub fn is_branch_1(&self) -> bool {
-            self.cursor.meta_idx() == 1u8
-        }
-        /// The chosen branch's child as a generic node view,
-        /// regardless of which variant was selected.
-        #[inline]
-        pub fn chosen(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            self.cursor
-                .child(0)
-                .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
         }
     }
     /// Generated view over a tape record produced by this rule.
@@ -2550,109 +2540,33 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     impl<'p> cmp_opView<'p> {
-        ///If variant `branch_0` (branch 0) was chosen, return its child view.
+        /// The source text matched by this rule.
         #[inline]
-        pub fn as_branch_0(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            if self.cursor.meta_idx() == 0u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
-            } else {
-                None
+        pub fn text(&self) -> &'p str {
+            self.span_text()
+        }
+        /// The packed scalar fields decoded from the tape's
+        /// aggregate payload buffer.
+        ///
+        /// Returns the layout-zeroed tuple if no payload was
+        /// written for this record (e.g. an alternative branch
+        /// path that never set any fields).
+        #[inline]
+        pub fn value(&self) -> ((u32, u32)) {
+            let tape = self.cursor.tape();
+            let rec = self.cursor.record();
+            match tape.payload_bytes(rec, 8usize) {
+                Some(__bytes) => {
+                    ({
+                        let __raw = u64::from_le_bytes(
+                            <[u8; 8]>::try_from(&__bytes[0usize..8usize])
+                                .expect("aggregate slice is 8 bytes"),
+                        );
+                        (__raw as u32, (__raw >> 32) as u32)
+                    })
+                }
+                None => ((0_u32, 0_u32)),
             }
-        }
-        ///Returns `true` if variant `branch_0` (branch 0) was chosen.
-        #[inline]
-        pub fn is_branch_0(&self) -> bool {
-            self.cursor.meta_idx() == 0u8
-        }
-        ///If variant `branch_1` (branch 1) was chosen, return its child view.
-        #[inline]
-        pub fn as_branch_1(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            if self.cursor.meta_idx() == 1u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `branch_1` (branch 1) was chosen.
-        #[inline]
-        pub fn is_branch_1(&self) -> bool {
-            self.cursor.meta_idx() == 1u8
-        }
-        ///If variant `branch_2` (branch 2) was chosen, return its child view.
-        #[inline]
-        pub fn as_branch_2(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            if self.cursor.meta_idx() == 2u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `branch_2` (branch 2) was chosen.
-        #[inline]
-        pub fn is_branch_2(&self) -> bool {
-            self.cursor.meta_idx() == 2u8
-        }
-        ///If variant `branch_3` (branch 3) was chosen, return its child view.
-        #[inline]
-        pub fn as_branch_3(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            if self.cursor.meta_idx() == 3u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `branch_3` (branch 3) was chosen.
-        #[inline]
-        pub fn is_branch_3(&self) -> bool {
-            self.cursor.meta_idx() == 3u8
-        }
-        ///If variant `branch_4` (branch 4) was chosen, return its child view.
-        #[inline]
-        pub fn as_branch_4(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            if self.cursor.meta_idx() == 4u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `branch_4` (branch 4) was chosen.
-        #[inline]
-        pub fn is_branch_4(&self) -> bool {
-            self.cursor.meta_idx() == 4u8
-        }
-        ///If variant `branch_5` (branch 5) was chosen, return its child view.
-        #[inline]
-        pub fn as_branch_5(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            if self.cursor.meta_idx() == 5u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `branch_5` (branch 5) was chosen.
-        #[inline]
-        pub fn is_branch_5(&self) -> bool {
-            self.cursor.meta_idx() == 5u8
-        }
-        /// The chosen branch's child as a generic node view,
-        /// regardless of which variant was selected.
-        #[inline]
-        pub fn chosen(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            self.cursor
-                .child(0)
-                .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
         }
     }
     /// Generated view over a tape record produced by this rule.
@@ -4496,189 +4410,33 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     impl<'p> type_nameView<'p> {
-        ///If variant `branch_0` (branch 0) was chosen, return its child view.
+        /// The source text matched by this rule.
         #[inline]
-        pub fn as_branch_0(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            if self.cursor.meta_idx() == 0u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
-            } else {
-                None
+        pub fn text(&self) -> &'p str {
+            self.span_text()
+        }
+        /// The packed scalar fields decoded from the tape's
+        /// aggregate payload buffer.
+        ///
+        /// Returns the layout-zeroed tuple if no payload was
+        /// written for this record (e.g. an alternative branch
+        /// path that never set any fields).
+        #[inline]
+        pub fn value(&self) -> ((u32, u32)) {
+            let tape = self.cursor.tape();
+            let rec = self.cursor.record();
+            match tape.payload_bytes(rec, 8usize) {
+                Some(__bytes) => {
+                    ({
+                        let __raw = u64::from_le_bytes(
+                            <[u8; 8]>::try_from(&__bytes[0usize..8usize])
+                                .expect("aggregate slice is 8 bytes"),
+                        );
+                        (__raw as u32, (__raw >> 32) as u32)
+                    })
+                }
+                None => ((0_u32, 0_u32)),
             }
-        }
-        ///Returns `true` if variant `branch_0` (branch 0) was chosen.
-        #[inline]
-        pub fn is_branch_0(&self) -> bool {
-            self.cursor.meta_idx() == 0u8
-        }
-        ///If variant `branch_1` (branch 1) was chosen, return its child view.
-        #[inline]
-        pub fn as_branch_1(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            if self.cursor.meta_idx() == 1u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `branch_1` (branch 1) was chosen.
-        #[inline]
-        pub fn is_branch_1(&self) -> bool {
-            self.cursor.meta_idx() == 1u8
-        }
-        ///If variant `branch_2` (branch 2) was chosen, return its child view.
-        #[inline]
-        pub fn as_branch_2(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            if self.cursor.meta_idx() == 2u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `branch_2` (branch 2) was chosen.
-        #[inline]
-        pub fn is_branch_2(&self) -> bool {
-            self.cursor.meta_idx() == 2u8
-        }
-        ///If variant `branch_3` (branch 3) was chosen, return its child view.
-        #[inline]
-        pub fn as_branch_3(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            if self.cursor.meta_idx() == 3u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `branch_3` (branch 3) was chosen.
-        #[inline]
-        pub fn is_branch_3(&self) -> bool {
-            self.cursor.meta_idx() == 3u8
-        }
-        ///If variant `branch_4` (branch 4) was chosen, return its child view.
-        #[inline]
-        pub fn as_branch_4(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            if self.cursor.meta_idx() == 4u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `branch_4` (branch 4) was chosen.
-        #[inline]
-        pub fn is_branch_4(&self) -> bool {
-            self.cursor.meta_idx() == 4u8
-        }
-        ///If variant `branch_5` (branch 5) was chosen, return its child view.
-        #[inline]
-        pub fn as_branch_5(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            if self.cursor.meta_idx() == 5u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `branch_5` (branch 5) was chosen.
-        #[inline]
-        pub fn is_branch_5(&self) -> bool {
-            self.cursor.meta_idx() == 5u8
-        }
-        ///If variant `branch_6` (branch 6) was chosen, return its child view.
-        #[inline]
-        pub fn as_branch_6(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            if self.cursor.meta_idx() == 6u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `branch_6` (branch 6) was chosen.
-        #[inline]
-        pub fn is_branch_6(&self) -> bool {
-            self.cursor.meta_idx() == 6u8
-        }
-        ///If variant `branch_7` (branch 7) was chosen, return its child view.
-        #[inline]
-        pub fn as_branch_7(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            if self.cursor.meta_idx() == 7u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `branch_7` (branch 7) was chosen.
-        #[inline]
-        pub fn is_branch_7(&self) -> bool {
-            self.cursor.meta_idx() == 7u8
-        }
-        ///If variant `branch_8` (branch 8) was chosen, return its child view.
-        #[inline]
-        pub fn as_branch_8(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            if self.cursor.meta_idx() == 8u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `branch_8` (branch 8) was chosen.
-        #[inline]
-        pub fn is_branch_8(&self) -> bool {
-            self.cursor.meta_idx() == 8u8
-        }
-        ///If variant `branch_9` (branch 9) was chosen, return its child view.
-        #[inline]
-        pub fn as_branch_9(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            if self.cursor.meta_idx() == 9u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `branch_9` (branch 9) was chosen.
-        #[inline]
-        pub fn is_branch_9(&self) -> bool {
-            self.cursor.meta_idx() == 9u8
-        }
-        ///If variant `branch_10` (branch 10) was chosen, return its child view.
-        #[inline]
-        pub fn as_branch_10(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            if self.cursor.meta_idx() == 10u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `branch_10` (branch 10) was chosen.
-        #[inline]
-        pub fn is_branch_10(&self) -> bool {
-            self.cursor.meta_idx() == 10u8
-        }
-        /// The chosen branch's child as a generic node view,
-        /// regardless of which variant was selected.
-        #[inline]
-        pub fn chosen(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            self.cursor
-                .child(0)
-                .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
         }
     }
     /// Generated view over a tape record produced by this rule.
@@ -4837,29 +4595,33 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     impl<'p> identifierView<'p> {
-        /// The source text matched by this leaf rule.
+        /// The source text matched by this rule.
         #[inline]
         pub fn text(&self) -> &'p str {
             self.span_text()
         }
-        /// Get the sub-span value as a string slice.
+        /// The packed scalar fields decoded from the tape's
+        /// aggregate payload buffer.
         ///
-        /// Payload-first: reads the packed (lo, hi) u32 pair from
-        /// the tape payload buffer in O(1). Falls back to the
-        /// record's own span text if no payload is present.
+        /// Returns the layout-zeroed tuple if no payload was
+        /// written for this record (e.g. an alternative branch
+        /// path that never set any fields).
         #[inline]
-        pub fn value(&self) -> &'p str {
+        pub fn value(&self) -> ((u32, u32)) {
             let tape = self.cursor.tape();
             let rec = self.cursor.record();
-            if let Some((lo, hi)) = tape.payload_Span(rec) {
-                return &self.input[lo as usize..hi as usize];
+            match tape.payload_bytes(rec, 8usize) {
+                Some(__bytes) => {
+                    ({
+                        let __raw = u64::from_le_bytes(
+                            <[u8; 8]>::try_from(&__bytes[0usize..8usize])
+                                .expect("aggregate slice is 8 bytes"),
+                        );
+                        (__raw as u32, (__raw >> 32) as u32)
+                    })
+                }
+                None => ((0_u32, 0_u32)),
             }
-            self.span_text()
-        }
-        /// Alias for backward compatibility. Prefer `.value()`.
-        #[inline]
-        pub fn as_span(&self) -> &'p str {
-            self.value()
         }
     }
     /// Generated view over a tape record produced by this rule.
@@ -5017,6 +4779,36 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
+    impl<'p> literalView<'p> {
+        /// The source text matched by this rule.
+        #[inline]
+        pub fn text(&self) -> &'p str {
+            self.span_text()
+        }
+        /// The packed scalar fields decoded from the tape's
+        /// aggregate payload buffer.
+        ///
+        /// Returns the layout-zeroed tuple if no payload was
+        /// written for this record (e.g. an alternative branch
+        /// path that never set any fields).
+        #[inline]
+        pub fn value(&self) -> ((u32, u32)) {
+            let tape = self.cursor.tape();
+            let rec = self.cursor.record();
+            match tape.payload_bytes(rec, 8usize) {
+                Some(__bytes) => {
+                    ({
+                        let __raw = u64::from_le_bytes(
+                            <[u8; 8]>::try_from(&__bytes[0usize..8usize])
+                                .expect("aggregate slice is 8 bytes"),
+                        );
+                        (__raw as u32, (__raw >> 32) as u32)
+                    })
+                }
+                None => ((0_u32, 0_u32)),
+            }
+        }
+    }
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct regexView<'p> {
@@ -5170,6 +4962,36 @@ mod __bbnfbootstrap_emit_impl {
         pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
             let (lo, hi) = self.cursor.span();
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> regexView<'p> {
+        /// The source text matched by this rule.
+        #[inline]
+        pub fn text(&self) -> &'p str {
+            self.span_text()
+        }
+        /// The packed scalar fields decoded from the tape's
+        /// aggregate payload buffer.
+        ///
+        /// Returns the layout-zeroed tuple if no payload was
+        /// written for this record (e.g. an alternative branch
+        /// path that never set any fields).
+        #[inline]
+        pub fn value(&self) -> ((u32, u32)) {
+            let tape = self.cursor.tape();
+            let rec = self.cursor.record();
+            match tape.payload_bytes(rec, 8usize) {
+                Some(__bytes) => {
+                    ({
+                        let __raw = u64::from_le_bytes(
+                            <[u8; 8]>::try_from(&__bytes[0usize..8usize])
+                                .expect("aggregate slice is 8 bytes"),
+                        );
+                        (__raw as u32, (__raw >> 32) as u32)
+                    })
+                }
+                None => ((0_u32, 0_u32)),
+            }
         }
     }
     /// Generated view over a tape record produced by this rule.
@@ -5327,6 +5149,36 @@ mod __bbnfbootstrap_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
+    impl<'p> big_commentView<'p> {
+        /// The source text matched by this rule.
+        #[inline]
+        pub fn text(&self) -> &'p str {
+            self.span_text()
+        }
+        /// The packed scalar fields decoded from the tape's
+        /// aggregate payload buffer.
+        ///
+        /// Returns the layout-zeroed tuple if no payload was
+        /// written for this record (e.g. an alternative branch
+        /// path that never set any fields).
+        #[inline]
+        pub fn value(&self) -> ((u32, u32)) {
+            let tape = self.cursor.tape();
+            let rec = self.cursor.record();
+            match tape.payload_bytes(rec, 8usize) {
+                Some(__bytes) => {
+                    ({
+                        let __raw = u64::from_le_bytes(
+                            <[u8; 8]>::try_from(&__bytes[0usize..8usize])
+                                .expect("aggregate slice is 8 bytes"),
+                        );
+                        (__raw as u32, (__raw >> 32) as u32)
+                    })
+                }
+                None => ((0_u32, 0_u32)),
+            }
+        }
+    }
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct commentView<'p> {
@@ -5480,6 +5332,36 @@ mod __bbnfbootstrap_emit_impl {
         pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
             let (lo, hi) = self.cursor.span();
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> commentView<'p> {
+        /// The source text matched by this rule.
+        #[inline]
+        pub fn text(&self) -> &'p str {
+            self.span_text()
+        }
+        /// The packed scalar fields decoded from the tape's
+        /// aggregate payload buffer.
+        ///
+        /// Returns the layout-zeroed tuple if no payload was
+        /// written for this record (e.g. an alternative branch
+        /// path that never set any fields).
+        #[inline]
+        pub fn value(&self) -> ((u32, u32)) {
+            let tape = self.cursor.tape();
+            let rec = self.cursor.record();
+            match tape.payload_bytes(rec, 8usize) {
+                Some(__bytes) => {
+                    ({
+                        let __raw = u64::from_le_bytes(
+                            <[u8; 8]>::try_from(&__bytes[0usize..8usize])
+                                .expect("aggregate slice is 8 bytes"),
+                        );
+                        (__raw as u32, (__raw >> 32) as u32)
+                    })
+                }
+                None => ((0_u32, 0_u32)),
+            }
         }
     }
     /// Generated view over a tape record produced by this rule.
@@ -6308,8 +6190,8 @@ mod __bbnfbootstrap_emit_impl {
         branch_0(BbnfBootstrapNodeView<'p>),
         branch_1(BbnfBootstrapNodeView<'p>),
         branch_2(BbnfBootstrapNodeView<'p>),
-        literal(&'p str),
-        regex(&'p str),
+        literal(((u32, u32))),
+        regex(((u32, u32))),
         branch_5(BbnfBootstrapNodeView<'p>),
         branch_6(BbnfBootstrapNodeView<'p>),
         branch_7(BbnfBootstrapNodeView<'p>),
@@ -6350,12 +6232,16 @@ mod __bbnfbootstrap_emit_impl {
                     let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
                     let __rec = __cursor.record();
                     let __tape = __cursor.tape();
-                    let __value = match __tape.payload_Span(__rec) {
-                        Some((lo, hi)) => &self.input[lo as usize..hi as usize],
-                        None => {
-                            let (lo, hi) = __cursor.span();
-                            &self.input[lo as usize..hi as usize]
+                    let __value = match __tape.payload_bytes(__rec, 8usize) {
+                        Some(__bytes) => {
+                            ({
+                                let __raw = u64::from_le_bytes(
+                                    <[u8; 8]>::try_from(&__bytes[0usize..8usize]).unwrap(),
+                                );
+                                (__raw as u32, (__raw >> 32) as u32)
+                            })
                         }
+                        None => ((0_u32, 0_u32)),
                     };
                     Some(termValue::literal(__value))
                 }
@@ -6363,12 +6249,16 @@ mod __bbnfbootstrap_emit_impl {
                     let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
                     let __rec = __cursor.record();
                     let __tape = __cursor.tape();
-                    let __value = match __tape.payload_Span(__rec) {
-                        Some((lo, hi)) => &self.input[lo as usize..hi as usize],
-                        None => {
-                            let (lo, hi) = __cursor.span();
-                            &self.input[lo as usize..hi as usize]
+                    let __value = match __tape.payload_bytes(__rec, 8usize) {
+                        Some(__bytes) => {
+                            ({
+                                let __raw = u64::from_le_bytes(
+                                    <[u8; 8]>::try_from(&__bytes[0usize..8usize]).unwrap(),
+                                );
+                                (__raw as u32, (__raw >> 32) as u32)
+                            })
                         }
+                        None => ((0_u32, 0_u32)),
                     };
                     Some(termValue::regex(__value))
                 }
@@ -6564,77 +6454,33 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     impl<'p> modifierView<'p> {
-        ///If variant `branch_0` (branch 0) was chosen, return its child view.
+        /// The source text matched by this rule.
         #[inline]
-        pub fn as_branch_0(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            if self.cursor.meta_idx() == 0u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
-            } else {
-                None
+        pub fn text(&self) -> &'p str {
+            self.span_text()
+        }
+        /// The packed scalar fields decoded from the tape's
+        /// aggregate payload buffer.
+        ///
+        /// Returns the layout-zeroed tuple if no payload was
+        /// written for this record (e.g. an alternative branch
+        /// path that never set any fields).
+        #[inline]
+        pub fn value(&self) -> ((u32, u32)) {
+            let tape = self.cursor.tape();
+            let rec = self.cursor.record();
+            match tape.payload_bytes(rec, 8usize) {
+                Some(__bytes) => {
+                    ({
+                        let __raw = u64::from_le_bytes(
+                            <[u8; 8]>::try_from(&__bytes[0usize..8usize])
+                                .expect("aggregate slice is 8 bytes"),
+                        );
+                        (__raw as u32, (__raw >> 32) as u32)
+                    })
+                }
+                None => ((0_u32, 0_u32)),
             }
-        }
-        ///Returns `true` if variant `branch_0` (branch 0) was chosen.
-        #[inline]
-        pub fn is_branch_0(&self) -> bool {
-            self.cursor.meta_idx() == 0u8
-        }
-        ///If variant `branch_1` (branch 1) was chosen, return its child view.
-        #[inline]
-        pub fn as_branch_1(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            if self.cursor.meta_idx() == 1u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `branch_1` (branch 1) was chosen.
-        #[inline]
-        pub fn is_branch_1(&self) -> bool {
-            self.cursor.meta_idx() == 1u8
-        }
-        ///If variant `branch_2` (branch 2) was chosen, return its child view.
-        #[inline]
-        pub fn as_branch_2(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            if self.cursor.meta_idx() == 2u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `branch_2` (branch 2) was chosen.
-        #[inline]
-        pub fn is_branch_2(&self) -> bool {
-            self.cursor.meta_idx() == 2u8
-        }
-        ///If variant `branch_3` (branch 3) was chosen, return its child view.
-        #[inline]
-        pub fn as_branch_3(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            if self.cursor.meta_idx() == 3u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `branch_3` (branch 3) was chosen.
-        #[inline]
-        pub fn is_branch_3(&self) -> bool {
-            self.cursor.meta_idx() == 3u8
-        }
-        /// The chosen branch's child as a generic node view,
-        /// regardless of which variant was selected.
-        #[inline]
-        pub fn chosen(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            self.cursor
-                .child(0)
-                .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
         }
     }
     /// Generated view over a tape record produced by this rule.
@@ -7155,61 +7001,33 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     impl<'p> binary_operatorsView<'p> {
-        ///If variant `branch_0` (branch 0) was chosen, return its child view.
+        /// The source text matched by this rule.
         #[inline]
-        pub fn as_branch_0(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            if self.cursor.meta_idx() == 0u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
-            } else {
-                None
+        pub fn text(&self) -> &'p str {
+            self.span_text()
+        }
+        /// The packed scalar fields decoded from the tape's
+        /// aggregate payload buffer.
+        ///
+        /// Returns the layout-zeroed tuple if no payload was
+        /// written for this record (e.g. an alternative branch
+        /// path that never set any fields).
+        #[inline]
+        pub fn value(&self) -> ((u32, u32)) {
+            let tape = self.cursor.tape();
+            let rec = self.cursor.record();
+            match tape.payload_bytes(rec, 8usize) {
+                Some(__bytes) => {
+                    ({
+                        let __raw = u64::from_le_bytes(
+                            <[u8; 8]>::try_from(&__bytes[0usize..8usize])
+                                .expect("aggregate slice is 8 bytes"),
+                        );
+                        (__raw as u32, (__raw >> 32) as u32)
+                    })
+                }
+                None => ((0_u32, 0_u32)),
             }
-        }
-        ///Returns `true` if variant `branch_0` (branch 0) was chosen.
-        #[inline]
-        pub fn is_branch_0(&self) -> bool {
-            self.cursor.meta_idx() == 0u8
-        }
-        ///If variant `branch_1` (branch 1) was chosen, return its child view.
-        #[inline]
-        pub fn as_branch_1(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            if self.cursor.meta_idx() == 1u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `branch_1` (branch 1) was chosen.
-        #[inline]
-        pub fn is_branch_1(&self) -> bool {
-            self.cursor.meta_idx() == 1u8
-        }
-        ///If variant `branch_2` (branch 2) was chosen, return its child view.
-        #[inline]
-        pub fn as_branch_2(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            if self.cursor.meta_idx() == 2u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `branch_2` (branch 2) was chosen.
-        #[inline]
-        pub fn is_branch_2(&self) -> bool {
-            self.cursor.meta_idx() == 2u8
-        }
-        /// The chosen branch's child as a generic node view,
-        /// regardless of which variant was selected.
-        #[inline]
-        pub fn chosen(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            self.cursor
-                .child(0)
-                .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
         }
     }
     /// Generated view over a tape record produced by this rule.
@@ -8493,31 +8311,33 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     impl<'p> import_pathView<'p> {
-        ///Child at position 0 as a typed view.
+        /// The source text matched by this rule.
         #[inline]
-        pub fn child_0(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            self.cursor
-                .child(0usize)
-                .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
+        pub fn text(&self) -> &'p str {
+            self.span_text()
         }
-        ///Child at position 1 as a typed view.
+        /// The packed scalar fields decoded from the tape's
+        /// aggregate payload buffer.
+        ///
+        /// Returns the layout-zeroed tuple if no payload was
+        /// written for this record (e.g. an alternative branch
+        /// path that never set any fields).
         #[inline]
-        pub fn child_1(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            self.cursor
-                .child(1usize)
-                .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
-        }
-        ///Child at position 2 as a typed view.
-        #[inline]
-        pub fn child_2(&self) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-            self.cursor
-                .child(2usize)
-                .map(|c| BbnfBootstrapNodeView::from_cursor(c, self.input))
-        }
-        /// The number of typed child positions in this Seq.
-        #[inline]
-        pub fn num_children(&self) -> usize {
-            3usize
+        pub fn value(&self) -> ((u32, u32)) {
+            let tape = self.cursor.tape();
+            let rec = self.cursor.record();
+            match tape.payload_bytes(rec, 8usize) {
+                Some(__bytes) => {
+                    ({
+                        let __raw = u64::from_le_bytes(
+                            <[u8; 8]>::try_from(&__bytes[0usize..8usize])
+                                .expect("aggregate slice is 8 bytes"),
+                        );
+                        (__raw as u32, (__raw >> 32) as u32)
+                    })
+                }
+                None => ((0_u32, 0_u32)),
+            }
         }
     }
     /// Generated view over a tape record produced by this rule.
@@ -10800,8 +10620,8 @@ mod __bbnfbootstrap_emit_impl {
     /// Typed value enum — payload-eligible branches carry typed
     /// values directly; non-eligible branches wrap a cursor view.
     pub enum grammar_itemValue<'p> {
-        comment(&'p str),
-        big_comment(&'p str),
+        comment(((u32, u32))),
+        big_comment(((u32, u32))),
         directive(BbnfBootstrapNodeView<'p>),
         rule(BbnfBootstrapNodeView<'p>),
     }
@@ -10816,12 +10636,16 @@ mod __bbnfbootstrap_emit_impl {
                     let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
                     let __rec = __cursor.record();
                     let __tape = __cursor.tape();
-                    let __value = match __tape.payload_Span(__rec) {
-                        Some((lo, hi)) => &self.input[lo as usize..hi as usize],
-                        None => {
-                            let (lo, hi) = __cursor.span();
-                            &self.input[lo as usize..hi as usize]
+                    let __value = match __tape.payload_bytes(__rec, 8usize) {
+                        Some(__bytes) => {
+                            ({
+                                let __raw = u64::from_le_bytes(
+                                    <[u8; 8]>::try_from(&__bytes[0usize..8usize]).unwrap(),
+                                );
+                                (__raw as u32, (__raw >> 32) as u32)
+                            })
                         }
+                        None => ((0_u32, 0_u32)),
                     };
                     Some(grammar_itemValue::comment(__value))
                 }
@@ -10829,12 +10653,16 @@ mod __bbnfbootstrap_emit_impl {
                     let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
                     let __rec = __cursor.record();
                     let __tape = __cursor.tape();
-                    let __value = match __tape.payload_Span(__rec) {
-                        Some((lo, hi)) => &self.input[lo as usize..hi as usize],
-                        None => {
-                            let (lo, hi) = __cursor.span();
-                            &self.input[lo as usize..hi as usize]
+                    let __value = match __tape.payload_bytes(__rec, 8usize) {
+                        Some(__bytes) => {
+                            ({
+                                let __raw = u64::from_le_bytes(
+                                    <[u8; 8]>::try_from(&__bytes[0usize..8usize]).unwrap(),
+                                );
+                                (__raw as u32, (__raw >> 32) as u32)
+                            })
                         }
+                        None => ((0_u32, 0_u32)),
                     };
                     Some(grammar_itemValue::big_comment(__value))
                 }
@@ -11520,6 +11348,8 @@ mod __bbnfbootstrap_emit_impl {
                 let mut __branch_idx: u8 = 0;
                 let mut __has_children = false;
                 let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
+                let mut __aggregate_buf: [u8; 16] = [0u8; 16];
+                let mut __has_payload = false;
                 match ({
                     '__alt_lit_blk0: {
                         {
@@ -11531,6 +11361,11 @@ mod __bbnfbootstrap_emit_impl {
                                     } == *b"true"
                                 {
                                     state.offset += 4usize;
+                                    __aggregate_buf[0usize..0usize + 4]
+                                        .copy_from_slice(&(__span_lo as u32).to_le_bytes());
+                                    __aggregate_buf[4usize..4usize + 4]
+                                        .copy_from_slice(&(state.offset as u32).to_le_bytes());
+                                    __has_payload = true;
                                     Some(())
                                 } else {
                                     None
@@ -11578,6 +11413,20 @@ mod __bbnfbootstrap_emit_impl {
                             __branch_idx,
                         ),
                     )
+                } else if __has_payload {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                            ::bbnf::runtime::tape::PayloadData::Aggregate(
+                                &__aggregate_buf[..8usize],
+                            ),
+                        ),
+                    )
                 } else {
                     Some(
                         ::bbnf::runtime::tape::TapeBuilder::push_leaf(
@@ -11599,6 +11448,8 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __aggregate_buf: [u8; 16] = [0u8; 16];
+                let mut __has_payload = false;
                 match ({
                     {
                         '__span_blk1: {
@@ -11607,6 +11458,11 @@ mod __bbnfbootstrap_emit_impl {
                                     && state.src_bytes[state.offset] == 34u8
                                 {
                                     state.offset += 1;
+                                    __aggregate_buf[0usize..0usize + 4]
+                                        .copy_from_slice(&(__span_lo as u32).to_le_bytes());
+                                    __aggregate_buf[4usize..4usize + 4]
+                                        .copy_from_slice(&(state.offset as u32).to_le_bytes());
+                                    __has_payload = true;
                                     Some(())
                                 } else {
                                     None
@@ -11710,17 +11566,38 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 3u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    __aggregate_buf[0..4]
+                        .copy_from_slice(&(__span_lo as u32).to_le_bytes());
+                    __aggregate_buf[4..8]
+                        .copy_from_slice(&(state.offset as u32).to_le_bytes());
+                    __has_payload = true;
+                    if __has_payload {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::Aggregate(
+                                    &__aggregate_buf[..8usize],
+                                ),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -11731,12 +11608,24 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __aggregate_buf: [u8; 16] = [0u8; 16];
+                let mut __has_payload = false;
                 match ({
-                    {
+                    match ({
                         ::parse_that::scan_ident(
                             state,
                             &::parse_that::DEFAULT_IDENT_CONFIG,
                         )
+                    }) {
+                        Some(_) => {
+                            __aggregate_buf[0usize..0usize + 4]
+                                .copy_from_slice(&(__span_lo as u32).to_le_bytes());
+                            __aggregate_buf[4usize..4usize + 4]
+                                .copy_from_slice(&(state.offset as u32).to_le_bytes());
+                            __has_payload = true;
+                            Some(())
+                        }
+                        None => None,
                     }
                 }) {
                     Some(_) => {}
@@ -11745,17 +11634,38 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 4u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    __aggregate_buf[0..4]
+                        .copy_from_slice(&(__span_lo as u32).to_le_bytes());
+                    __aggregate_buf[4..8]
+                        .copy_from_slice(&(state.offset as u32).to_le_bytes());
+                    __has_payload = true;
+                    if __has_payload {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::Aggregate(
+                                    &__aggregate_buf[..8usize],
+                                ),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -12365,6 +12275,8 @@ mod __bbnfbootstrap_emit_impl {
                 let mut __branch_idx: u8 = 0;
                 let mut __has_children = false;
                 let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
+                let mut __aggregate_buf: [u8; 16] = [0u8; 16];
+                let mut __has_payload = false;
                 match ({
                     '__alt_lit_blk14: {
                         {
@@ -12373,6 +12285,11 @@ mod __bbnfbootstrap_emit_impl {
                                     && state.src_bytes[state.offset] == 42u8
                                 {
                                     state.offset += 1;
+                                    __aggregate_buf[0usize..0usize + 4]
+                                        .copy_from_slice(&(__span_lo as u32).to_le_bytes());
+                                    __aggregate_buf[4usize..4usize + 4]
+                                        .copy_from_slice(&(state.offset as u32).to_le_bytes());
+                                    __has_payload = true;
                                     Some(())
                                 } else {
                                     None
@@ -12433,6 +12350,20 @@ mod __bbnfbootstrap_emit_impl {
                             __branch_idx,
                         ),
                     )
+                } else if __has_payload {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                            ::bbnf::runtime::tape::PayloadData::Aggregate(
+                                &__aggregate_buf[..8usize],
+                            ),
+                        ),
+                    )
                 } else {
                     Some(
                         ::bbnf::runtime::tape::TapeBuilder::push_leaf(
@@ -12457,6 +12388,8 @@ mod __bbnfbootstrap_emit_impl {
                 let mut __branch_idx: u8 = 0;
                 let mut __has_children = false;
                 let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
+                let mut __aggregate_buf: [u8; 16] = [0u8; 16];
+                let mut __has_payload = false;
                 match ({
                     '__alt_lit_blk15: {
                         {
@@ -12465,6 +12398,11 @@ mod __bbnfbootstrap_emit_impl {
                                     && state.src_bytes[state.offset] == 43u8
                                 {
                                     state.offset += 1;
+                                    __aggregate_buf[0usize..0usize + 4]
+                                        .copy_from_slice(&(__span_lo as u32).to_le_bytes());
+                                    __aggregate_buf[4usize..4usize + 4]
+                                        .copy_from_slice(&(state.offset as u32).to_le_bytes());
+                                    __has_payload = true;
                                     Some(())
                                 } else {
                                     None
@@ -12509,6 +12447,20 @@ mod __bbnfbootstrap_emit_impl {
                             __branch_idx,
                         ),
                     )
+                } else if __has_payload {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                            ::bbnf::runtime::tape::PayloadData::Aggregate(
+                                &__aggregate_buf[..8usize],
+                            ),
+                        ),
+                    )
                 } else {
                     Some(
                         ::bbnf::runtime::tape::TapeBuilder::push_leaf(
@@ -12533,6 +12485,8 @@ mod __bbnfbootstrap_emit_impl {
                 let mut __branch_idx: u8 = 0;
                 let mut __has_children = false;
                 let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
+                let mut __aggregate_buf: [u8; 16] = [0u8; 16];
+                let mut __has_payload = false;
                 match ({
                     '__alt_lit_blk16: {
                         {
@@ -12544,6 +12498,11 @@ mod __bbnfbootstrap_emit_impl {
                                     } == *b"=="
                                 {
                                     state.offset += 2usize;
+                                    __aggregate_buf[0usize..0usize + 4]
+                                        .copy_from_slice(&(__span_lo as u32).to_le_bytes());
+                                    __aggregate_buf[4usize..4usize + 4]
+                                        .copy_from_slice(&(state.offset as u32).to_le_bytes());
+                                    __has_payload = true;
                                     Some(())
                                 } else {
                                     None
@@ -12659,6 +12618,20 @@ mod __bbnfbootstrap_emit_impl {
                             state.offset as u32,
                             __variant_idx,
                             __branch_idx,
+                        ),
+                    )
+                } else if __has_payload {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                            ::bbnf::runtime::tape::PayloadData::Aggregate(
+                                &__aggregate_buf[..8usize],
+                            ),
                         ),
                     )
                 } else {
@@ -13554,6 +13527,8 @@ mod __bbnfbootstrap_emit_impl {
                 let mut __branch_idx: u8 = 0;
                 let mut __has_children = false;
                 let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
+                let mut __aggregate_buf: [u8; 16] = [0u8; 16];
+                let mut __has_payload = false;
                 match ({
                     '__alt_blk40: {
                         {
@@ -13567,6 +13542,11 @@ mod __bbnfbootstrap_emit_impl {
                                     } == *b"u8"
                                 {
                                     state.offset += 2usize;
+                                    __aggregate_buf[0usize..0usize + 4]
+                                        .copy_from_slice(&(__span_lo as u32).to_le_bytes());
+                                    __aggregate_buf[4usize..4usize + 4]
+                                        .copy_from_slice(&(state.offset as u32).to_le_bytes());
+                                    __has_payload = true;
                                     Some(())
                                 } else {
                                     None
@@ -13809,6 +13789,20 @@ mod __bbnfbootstrap_emit_impl {
                             __branch_idx,
                         ),
                     )
+                } else if __has_payload {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                            ::bbnf::runtime::tape::PayloadData::Aggregate(
+                                &__aggregate_buf[..8usize],
+                            ),
+                        ),
+                    )
                 } else {
                     Some(
                         ::bbnf::runtime::tape::TapeBuilder::push_leaf(
@@ -13830,13 +13824,25 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __aggregate_buf: [u8; 16] = [0u8; 16];
+                let mut __has_payload = false;
                 match ({
                     {
-                        {
+                        match ({
                             ::parse_that::scan_ident(
                                 state,
                                 &::parse_that::DEFAULT_IDENT_CONFIG,
                             )
+                        }) {
+                            Some(_) => {
+                                __aggregate_buf[0usize..0usize + 4]
+                                    .copy_from_slice(&(__span_lo as u32).to_le_bytes());
+                                __aggregate_buf[4usize..4usize + 4]
+                                    .copy_from_slice(&(state.offset as u32).to_le_bytes());
+                                __has_payload = true;
+                                Some(())
+                            }
+                            None => None,
                         }
                     }
                 }) {
@@ -13846,17 +13852,38 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 22u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    __aggregate_buf[0..4]
+                        .copy_from_slice(&(__span_lo as u32).to_le_bytes());
+                    __aggregate_buf[4..8]
+                        .copy_from_slice(&(state.offset as u32).to_le_bytes());
+                    __has_payload = true;
+                    if __has_payload {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::Aggregate(
+                                    &__aggregate_buf[..8usize],
+                                ),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -13867,6 +13894,8 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __aggregate_buf: [u8; 16] = [0u8; 16];
+                let mut __has_payload = false;
                 match ({
                     {
                         '__alt_blk44: {
@@ -13878,6 +13907,11 @@ mod __bbnfbootstrap_emit_impl {
                                             && state.src_bytes[state.offset] == 34u8
                                         {
                                             state.offset += 1;
+                                            __aggregate_buf[0usize..0usize + 4]
+                                                .copy_from_slice(&(__span_lo as u32).to_le_bytes());
+                                            __aggregate_buf[4usize..4usize + 4]
+                                                .copy_from_slice(&(state.offset as u32).to_le_bytes());
+                                            __has_payload = true;
                                             Some(())
                                         } else {
                                             None
@@ -14207,17 +14241,38 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 23u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    __aggregate_buf[0..4]
+                        .copy_from_slice(&(__span_lo as u32).to_le_bytes());
+                    __aggregate_buf[4..8]
+                        .copy_from_slice(&(state.offset as u32).to_le_bytes());
+                    __has_payload = true;
+                    if __has_payload {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::Aggregate(
+                                    &__aggregate_buf[..8usize],
+                                ),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -14228,6 +14283,8 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __aggregate_buf: [u8; 16] = [0u8; 16];
+                let mut __has_payload = false;
                 match ({
                     {
                         '__span_blk45: {
@@ -14236,6 +14293,11 @@ mod __bbnfbootstrap_emit_impl {
                                     && state.src_bytes[state.offset] == 47u8
                                 {
                                     state.offset += 1;
+                                    __aggregate_buf[0usize..0usize + 4]
+                                        .copy_from_slice(&(__span_lo as u32).to_le_bytes());
+                                    __aggregate_buf[4usize..4usize + 4]
+                                        .copy_from_slice(&(state.offset as u32).to_le_bytes());
+                                    __has_payload = true;
                                     Some(())
                                 } else {
                                     None
@@ -14342,17 +14404,38 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 24u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    __aggregate_buf[0..4]
+                        .copy_from_slice(&(__span_lo as u32).to_le_bytes());
+                    __aggregate_buf[4..8]
+                        .copy_from_slice(&(state.offset as u32).to_le_bytes());
+                    __has_payload = true;
+                    if __has_payload {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::Aggregate(
+                                    &__aggregate_buf[..8usize],
+                                ),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -14363,6 +14446,8 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __aggregate_buf: [u8; 16] = [0u8; 16];
+                let mut __has_payload = false;
                 match ({
                     {
                         {
@@ -14376,6 +14461,11 @@ mod __bbnfbootstrap_emit_impl {
                                         } == *b"/*"
                                     {
                                         state.offset += 2usize;
+                                        __aggregate_buf[0usize..0usize + 4]
+                                            .copy_from_slice(&(__span_lo as u32).to_le_bytes());
+                                        __aggregate_buf[4usize..4usize + 4]
+                                            .copy_from_slice(&(state.offset as u32).to_le_bytes());
+                                        __has_payload = true;
                                         Some(())
                                     } else {
                                         None
@@ -14445,17 +14535,38 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 25u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    __aggregate_buf[0..4]
+                        .copy_from_slice(&(__span_lo as u32).to_le_bytes());
+                    __aggregate_buf[4..8]
+                        .copy_from_slice(&(state.offset as u32).to_le_bytes());
+                    __has_payload = true;
+                    if __has_payload {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::Aggregate(
+                                    &__aggregate_buf[..8usize],
+                                ),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -14466,6 +14577,8 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __aggregate_buf: [u8; 16] = [0u8; 16];
+                let mut __has_payload = false;
                 match ({
                     {
                         {
@@ -14479,6 +14592,11 @@ mod __bbnfbootstrap_emit_impl {
                                         } == *b"//"
                                     {
                                         state.offset += 2usize;
+                                        __aggregate_buf[0usize..0usize + 4]
+                                            .copy_from_slice(&(__span_lo as u32).to_le_bytes());
+                                        __aggregate_buf[4usize..4usize + 4]
+                                            .copy_from_slice(&(state.offset as u32).to_le_bytes());
+                                        __has_payload = true;
                                         Some(())
                                     } else {
                                         None
@@ -14532,17 +14650,38 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 26u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    __aggregate_buf[0..4]
+                        .copy_from_slice(&(__span_lo as u32).to_le_bytes());
+                    __aggregate_buf[4..8]
+                        .copy_from_slice(&(state.offset as u32).to_le_bytes());
+                    __has_payload = true;
+                    if __has_payload {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::Aggregate(
+                                    &__aggregate_buf[..8usize],
+                                ),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -15187,6 +15326,8 @@ mod __bbnfbootstrap_emit_impl {
                 let mut __branch_idx: u8 = 0;
                 let mut __has_children = false;
                 let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
+                let mut __aggregate_buf: [u8; 16] = [0u8; 16];
+                let mut __has_payload = false;
                 match ({
                     '__alt_lit_blk59: {
                         {
@@ -15198,6 +15339,11 @@ mod __bbnfbootstrap_emit_impl {
                                     } == *b"?w"
                                 {
                                     state.offset += 2usize;
+                                    __aggregate_buf[0usize..0usize + 4]
+                                        .copy_from_slice(&(__span_lo as u32).to_le_bytes());
+                                    __aggregate_buf[4usize..4usize + 4]
+                                        .copy_from_slice(&(state.offset as u32).to_le_bytes());
+                                    __has_payload = true;
                                     Some(())
                                 } else {
                                     None
@@ -15272,6 +15418,20 @@ mod __bbnfbootstrap_emit_impl {
                             state.offset as u32,
                             __variant_idx,
                             __branch_idx,
+                        ),
+                    )
+                } else if __has_payload {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                            ::bbnf::runtime::tape::PayloadData::Aggregate(
+                                &__aggregate_buf[..8usize],
+                            ),
                         ),
                     )
                 } else {
@@ -15558,6 +15718,8 @@ mod __bbnfbootstrap_emit_impl {
                 let mut __branch_idx: u8 = 0;
                 let mut __has_children = false;
                 let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
+                let mut __aggregate_buf: [u8; 16] = [0u8; 16];
+                let mut __has_payload = false;
                 match ({
                     '__alt_lit_blk64: {
                         {
@@ -15569,6 +15731,11 @@ mod __bbnfbootstrap_emit_impl {
                                     } == *b"<<"
                                 {
                                     state.offset += 2usize;
+                                    __aggregate_buf[0usize..0usize + 4]
+                                        .copy_from_slice(&(__span_lo as u32).to_le_bytes());
+                                    __aggregate_buf[4usize..4usize + 4]
+                                        .copy_from_slice(&(state.offset as u32).to_le_bytes());
+                                    __has_payload = true;
                                     Some(())
                                 } else {
                                     None
@@ -15630,6 +15797,20 @@ mod __bbnfbootstrap_emit_impl {
                             state.offset as u32,
                             __variant_idx,
                             __branch_idx,
+                        ),
+                    )
+                } else if __has_payload {
+                    Some(
+                        ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                            tape,
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            __span_lo,
+                            state.offset as u32,
+                            __variant_idx,
+                            __branch_idx,
+                            ::bbnf::runtime::tape::PayloadData::Aggregate(
+                                &__aggregate_buf[..8usize],
+                            ),
                         ),
                     )
                 } else {
@@ -16304,6 +16485,8 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+                let mut __aggregate_buf: [u8; 16] = [0u8; 16];
+                let mut __has_payload = false;
                 match ({
                     '__span_blk78: {
                         match ({
@@ -16311,6 +16494,11 @@ mod __bbnfbootstrap_emit_impl {
                                 && state.src_bytes[state.offset] == 34u8
                             {
                                 state.offset += 1;
+                                __aggregate_buf[0usize..0usize + 4]
+                                    .copy_from_slice(&(__span_lo as u32).to_le_bytes());
+                                __aggregate_buf[4usize..4usize + 4]
+                                    .copy_from_slice(&(state.offset as u32).to_le_bytes());
+                                __has_payload = true;
                                 Some(())
                             } else {
                                 None
@@ -16413,17 +16601,38 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let __vi: u8 = 40u8;
                     let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
+                    __aggregate_buf[0..4]
+                        .copy_from_slice(&(__span_lo as u32).to_le_bytes());
+                    __aggregate_buf[4..8]
+                        .copy_from_slice(&(state.offset as u32).to_le_bytes());
+                    __has_payload = true;
+                    if __has_payload {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                                ::bbnf::runtime::tape::PayloadData::Aggregate(
+                                    &__aggregate_buf[..8usize],
+                                ),
+                            ),
+                        )
+                    } else {
+                        Some(
+                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Rule,
+                                __children,
+                                __span_lo,
+                                state.offset as u32,
+                                __vi,
+                                __mi,
+                            ),
+                        )
+                    }
                 }
             }
         }

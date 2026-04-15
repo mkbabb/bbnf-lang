@@ -25817,7 +25817,7 @@ mod __bbnfbootstrap_emit_impl {
         > {
             let mut state = ::parse_that::ParserState::new(input);
             let mut builder = ::bbnf::runtime::tape::TapeBuilder::with_capacity(
-                input.len() + 2,
+                GRAMMAR_PROFILE.capacity_for(input.len()),
             );
             let root_off = Self::__grammar(&mut state, &mut builder)
                 .ok_or(::bbnf::runtime::ParseErr::Syntax {

@@ -60,14 +60,15 @@ fn walk_cursor(tape: &Tape, cursor: TapeCursor<'_>, input: &str) -> u64 {
     match rec.kind() {
         TapeKind::Span => {
             // AU.3.1: decoded JSON strings live in the arena; read
-            // via `payload_string`. The accessor returns a `&str`
-            // pointing into the arena without copying; we fold its
-            // length into the accumulator so the compiler cannot
-            // elide the arena read. AU.3.2: `payload_string` skips
-            // UTF-8 validation on the hot path (decoder kernel
-            // contract) so the accessor is a single bounds check +
-            // slice + transmute.
-            if let Some(s) = tape.payload_string(rec) {
+            // via `payload_string`. AU.3.2 / W6: borrow-safe strings
+            // (no `\` byte in the source span) skip the arena read
+            // entirely — `payload_string_with_source` slices
+            // `input[span_lo + 1 .. span_hi - 1]` directly. Owned
+            // strings (escape-bearing) still go through the arena
+            // frame. Both branches return `&str` without a copy and
+            // skip UTF-8 validation on the hot path (decoder kernel
+            // contract).
+            if let Some(s) = tape.payload_string_with_source(rec, input.as_bytes()) {
                 acc = acc.wrapping_add(s.len() as u64);
             } else {
                 acc = acc.wrapping_add(rec.span_hi as u64);

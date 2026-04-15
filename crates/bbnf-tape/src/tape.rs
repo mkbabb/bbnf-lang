@@ -50,9 +50,11 @@ impl TapeOffset {
 /// - `flags` — bitfield: variant index (low 6 bits), `has_children`
 ///   (bit 6), `meta_idx` bit \[4\] (bit 7). Five-bit `meta_idx`
 ///   (0-31) is split across `kind_meta[7:4]` and `flags[7]`.
-/// - `_reserved` — 2 bytes reserved for future packed metadata (kept
-///   for record-size stability against AU.6.7's predecessor layout,
-///   which carried a `payload_idx: u16` sentinel in this slot).
+/// - `extra` — 2 bytes of packed per-record flags. Currently only
+///   bit 0 is allocated: [`TapeRec::STRING_BORROW_BIT`] marks a
+///   decode-kernel leaf whose content is a zero-copy slice of the
+///   source (`source[span_lo+1..span_hi-1]`). Remaining 15 bits are
+///   free for future packed metadata.
 /// - `span_lo` / `span_hi` — byte offsets into the source input.
 ///   `span_hi == span_lo` means a zero-width record (epsilon match).
 /// - `child_off` — polymorphic. For compound nodes, `TapeOffset` of
@@ -92,10 +94,13 @@ pub struct TapeRec {
     /// Bitfield: variant index (low 6 bits), has_children (bit 6),
     /// meta_idx bit \[4\] (bit 7).
     pub flags: u8,
-    /// Reserved padding for future packed metadata. Kept so the
+    /// Packed per-record flags. Bit 0 ([`Self::STRING_BORROW_BIT`])
+    /// marks a string leaf whose content is a zero-copy slice of the
+    /// parser input (`source[span_lo+1..span_hi-1]`); the remaining
+    /// 15 bits are reserved for future packed metadata. Kept so the
     /// record stays at exactly 16 bytes — a quarter of a 64-byte
     /// cache line — without padding bytes elsewhere.
-    pub _reserved: u16,
+    pub extra: u16,
     /// Byte offset into the source input where this record's span begins.
     pub span_lo: u32,
     /// Byte offset into the source input where this record's span ends.
@@ -118,6 +123,14 @@ impl TapeRec {
     /// Maximum `meta_idx` value encodable in the 5-bit packed field
     /// (4 bits in `kind_meta[7:4]` + 1 bit in `flags[7]`).
     pub const MAX_META_IDX: u8 = 31;
+
+    /// Bit in [`TapeRec::extra`] that marks a decode-kernel string
+    /// leaf whose content is a zero-copy borrow of the parser input.
+    /// When set, the leaf's `child_off` is [`TapeOffset::NONE`] (no
+    /// arena write) and the decoded content is
+    /// `source[span_lo + 1 .. span_hi - 1]` — JSON strings carry the
+    /// quote bytes in the record's span.
+    pub const STRING_BORROW_BIT: u16 = 0x0001;
 
     /// Pack a [`TapeKind`] and `meta_idx` into the `kind_meta` and
     /// `flags` bytes. Returns `(kind_meta, flags_meta_bit)` where
@@ -180,6 +193,16 @@ impl TapeRec {
     #[inline]
     pub fn has_payload(&self) -> bool {
         !self.has_children() && !self.child_off.is_none()
+    }
+
+    /// True iff this leaf record is a borrow-safe string (decoded JSON
+    /// or similar). The decoded content is
+    /// `source[span_lo + 1 .. span_hi - 1]` — no arena read required.
+    /// Set by [`crate::TapeBuilder::push_leaf_borrowed_string`] when
+    /// the decode kernel reports a `Borrowed` payload.
+    #[inline]
+    pub fn is_string_borrowed(&self) -> bool {
+        (self.extra & Self::STRING_BORROW_BIT) != 0
     }
 }
 
@@ -529,6 +552,48 @@ impl Tape {
             return None;
         }
         Some(&self.arena[body_start..body_end])
+    }
+
+    /// Source-aware string accessor — returns the decoded UTF-8 of a
+    /// string leaf without touching the arena when the record is
+    /// borrow-safe.
+    ///
+    /// Decode-kernel leaves push themselves either as borrowed (no
+    /// arena write — see [`crate::TapeBuilder::push_leaf_borrowed_string`])
+    /// or owned ([`Self::payload_string`] for the arena-frame path).
+    /// This accessor honours both: when [`TapeRec::is_string_borrowed`]
+    /// is set, the content is `source[span_lo + 1 .. span_hi - 1]`;
+    /// otherwise it falls through to [`Self::payload_string`].
+    ///
+    /// `source` MUST be the same byte slice the parser consumed.
+    /// Returns `None` for non-string records, malformed UTF-8, or
+    /// out-of-range spans.
+    #[inline]
+    pub fn payload_string_with_source<'s, 'a: 's, 't: 's>(
+        &'t self,
+        rec: &TapeRec,
+        source: &'a [u8],
+    ) -> Option<&'s str> {
+        if rec.is_string_borrowed() {
+            let lo = rec.span_lo as usize + 1;
+            let hi = (rec.span_hi as usize).checked_sub(1)?;
+            if hi > source.len() || lo > hi {
+                return None;
+            }
+            let bytes = unsafe { source.get_unchecked(lo..hi) };
+            debug_assert!(
+                std::str::from_utf8(bytes).is_ok(),
+                "borrowed string at span [{}, {}) is not UTF-8",
+                lo,
+                hi,
+            );
+            // SAFETY: callers route bytes through the JSON decoder
+            // kernel which only emits Borrowed for ASCII-clean
+            // sources; the debug_assert round-trips std::str::from_utf8
+            // in debug builds.
+            return Some(unsafe { std::str::from_utf8_unchecked(bytes) });
+        }
+        self.payload_string(rec)
     }
 
     /// Borrow the tape's unified payload arena (read-only).

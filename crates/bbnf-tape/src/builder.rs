@@ -161,7 +161,7 @@ impl TapeBuilder {
         self.tape.records.push(TapeRec {
             kind_meta,
             flags: (variant_idx & 0x3F) | flags_meta_bit,
-            _reserved: 0,
+            extra: 0,
             span_lo,
             span_hi,
             child_off: TapeOffset::NONE,
@@ -210,7 +210,7 @@ impl TapeBuilder {
         self.tape.records.push(TapeRec {
             kind_meta,
             flags,
-            _reserved: 0,
+            extra: 0,
             span_lo,
             span_hi,
             child_off,
@@ -293,7 +293,7 @@ impl TapeBuilder {
         self.tape.records.push(TapeRec {
             kind_meta,
             flags: (variant_idx & 0x3F) | flags_meta_bit,
-            _reserved: 0,
+            extra: 0,
             span_lo,
             span_hi,
             child_off,
@@ -411,10 +411,57 @@ impl TapeBuilder {
         self.tape.records.push(TapeRec {
             kind_meta,
             flags: (variant_idx & 0x3F) | flags_meta_bit,
-            _reserved: 0,
+            extra: 0,
             span_lo,
             span_hi,
             child_off: TapeOffset(arena_offset),
+        });
+        TapeOffset(idx as u32)
+    }
+
+    /// Append a borrow-safe string leaf — zero arena writes.
+    ///
+    /// Companion to [`Self::push_leaf_with_arena_frame`] for the JSON
+    /// decode kernel's fast path. When
+    /// [`parse_that::parsers::scan::decode_json_string_to_arena`]
+    /// returns `StringPayload::Borrowed`, the source bytes are already
+    /// the decoded UTF-8 (no escapes); the emitter calls this method
+    /// instead of copying those bytes into an arena frame. The record
+    /// stores no arena pointer; the reader recovers content via
+    /// [`Tape::payload_string_with_source`], which slices
+    /// `source[span_lo + 1 .. span_hi - 1]` (the JSON string body
+    /// between the quote bytes carried in the record's span).
+    ///
+    /// `meta_idx` range is 0-31 (5-bit packed field).
+    #[inline]
+    pub fn push_leaf_borrowed_string(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        span_hi: u32,
+        variant_idx: u8,
+        meta_idx: u8,
+    ) -> TapeOffset {
+        debug_assert!(
+            kind.is_leaf(),
+            "push_leaf_borrowed_string on compound kind {:?}",
+            kind
+        );
+        debug_assert!(
+            span_hi >= span_lo + 2,
+            "borrowed string span too short to carry quotes: [{}, {})",
+            span_lo,
+            span_hi,
+        );
+        let (kind_meta, flags_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
+        let idx = self.tape.records.len();
+        self.tape.records.push(TapeRec {
+            kind_meta,
+            flags: (variant_idx & 0x3F) | flags_meta_bit,
+            extra: TapeRec::STRING_BORROW_BIT,
+            span_lo,
+            span_hi,
+            child_off: TapeOffset::NONE,
         });
         TapeOffset(idx as u32)
     }

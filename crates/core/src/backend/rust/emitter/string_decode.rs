@@ -97,10 +97,16 @@ pub fn emit_decode_call(variant_idx: u8, needs_mark_children: bool) -> TokenStre
         {
             let __start = state.offset;
             #mark_children
+            // Reserve the standard `(len: u32 LE, bytes)` arena frame
+            // up front. The decode kernel's `Borrowed` fast path
+            // (no `\` byte in the source span) wrote no bytes after
+            // the prefix; we discard the prefix slot and push a
+            // borrow-flagged leaf instead, so the reader slices
+            // `source[span_lo + 1 .. span_hi - 1]` with zero arena
+            // cost. `Owned` keeps the prefix and back-stamps the
+            // length once the kernel returns.
             let __prefix_offset: u32 =
                 ::bbnf::runtime::tape::TapeBuilder::arena_len(&*tape);
-            // Reserve the 4-byte length prefix slot at the head of
-            // the arena frame.
             {
                 let __arena = ::bbnf::runtime::tape::TapeBuilder::arena_mut(tape);
                 __arena.extend_from_slice(&0u32.to_le_bytes());
@@ -114,46 +120,49 @@ pub fn emit_decode_call(variant_idx: u8, needs_mark_children: bool) -> TokenStre
             };
             match __decode_result {
                 Some((__payload, __end)) => {
-                    // Normalise borrowed vs owned into a single arena
-                    // frame. For `Borrowed`, memcpy the source slice
-                    // into the arena (the fast-path decoder skipped
-                    // the copy); for `Owned`, the kernel already
-                    // wrote the bytes right after our reserved
-                    // prefix slot.
-                    let __len: u32 = match __payload {
-                        ::parse_that::parsers::scan::StringPayload::Borrowed {
-                            start: __bs,
-                            end: __be,
-                        } => {
-                            let __src = state.src_bytes;
+                    let __leaf_span_lo: u32 = __start as u32;
+                    state.offset = __end;
+                    match __payload {
+                        ::parse_that::parsers::scan::StringPayload::Borrowed { .. } => {
+                            // Decode kernel wrote nothing past the
+                            // prefix slot — drop the prefix and push a
+                            // borrow-flagged leaf. The reader slices
+                            // source[span_lo + 1 .. span_hi - 1].
                             let __arena =
                                 ::bbnf::runtime::tape::TapeBuilder::arena_mut(tape);
-                            __arena.extend_from_slice(
-                                &__src[__bs as usize..__be as usize],
+                            __arena.truncate(__prefix_offset as usize);
+                            let _ = ::bbnf::runtime::tape::TapeBuilder::push_leaf_borrowed_string(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __leaf_span_lo,
+                                state.offset as u32,
+                                #variant_lit,
+                                0u8,   // meta_idx
                             );
-                            (__be - __bs) as u32
                         }
                         ::parse_that::parsers::scan::StringPayload::Owned {
                             len: __ol,
                             ..
-                        } => __ol,
-                    };
-                    ::bbnf::runtime::tape::TapeBuilder::stamp_arena_len_prefix(
-                        tape,
-                        __prefix_offset,
-                        __len,
-                    );
-                    let __leaf_span_lo: u32 = __start as u32;
-                    state.offset = __end;
-                    let _ = ::bbnf::runtime::tape::TapeBuilder::push_leaf_with_arena_frame(
-                        tape,
-                        ::bbnf::runtime::tape::TapeKind::Span,
-                        __leaf_span_lo,
-                        state.offset as u32,
-                        #variant_lit,
-                        0u8,   // meta_idx
-                        __prefix_offset,
-                    );
+                        } => {
+                            // Owned bytes are appended right after our
+                            // reserved prefix. Stamp the length and
+                            // commit a standard arena-frame leaf.
+                            ::bbnf::runtime::tape::TapeBuilder::stamp_arena_len_prefix(
+                                tape,
+                                __prefix_offset,
+                                __ol,
+                            );
+                            let _ = ::bbnf::runtime::tape::TapeBuilder::push_leaf_with_arena_frame(
+                                tape,
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                __leaf_span_lo,
+                                state.offset as u32,
+                                #variant_lit,
+                                0u8,   // meta_idx
+                                __prefix_offset,
+                            );
+                        }
+                    }
                     Some(())
                 }
                 None => {

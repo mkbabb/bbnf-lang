@@ -188,8 +188,20 @@ impl RustEmitter {
         // `Option<()>` via `break ... Some(())` on success (tested
         // with `is_some()`), so heterogeneous inner types do not
         // force a `.map(|_| ())` wrap at each emit site.
+        //
+        // AV.0.1 Bug 1 (close-out): checkpoint counterpart of the
+        // alt-lit and dispatch composer fixes. When the rule has an
+        // active aggregate payload layout and at least one branch is a
+        // direct `Map { Literal, constant-MapExpr }` shape, hoist the
+        // per-branch payload-write onto each arm. Mixed-branch Alts —
+        // `error_literal`'s outer Alt mixes direct literal branches
+        // with a factored `Seq(Literal("N"), inner-alt-lit)` branch —
+        // get per-branch writes only on the direct-literal arms; the
+        // factored arms keep their existing inner alt-lit writes from
+        // the `emit_alt_all_literal_impl` fix landed earlier.
         let surgery = ctx.tape_surgery.take();
         let alt_blk = ctx.fresh_lifetime("alt_blk");
+        let per_branch_writes = checkpoint_per_branch_writes(&branches, ctx);
 
         if branches.len() == 1 {
             let (ref info, ref body) = branches[0];
@@ -222,12 +234,29 @@ impl RustEmitter {
             } else {
                 quote! {}
             };
+            let wrapper = per_branch_writes
+                .as_ref()
+                .and_then(|w| w.get(i))
+                .and_then(|w| w.as_ref());
+            let probe = match wrapper {
+                Some(buf_setter) => quote! {
+                    match ({ #body }) {
+                        Some(_) => {
+                            #buf_setter;
+                            __has_payload = true;
+                            Some(())
+                        }
+                        None => None,
+                    }
+                },
+                None => quote! { #body },
+            };
             chain.push(quote! {
                 {
                     let __cp = state.offset;
                     #branch_assign
                     #compound_mark
-                    if #body.is_some() {
+                    if #probe.is_some() {
                         break #alt_blk Some(());
                     }
                     state.offset = __cp;
@@ -414,6 +443,116 @@ fn alt_lit_per_branch_writes(
         writes.push(branch_payload_write(&branch.node, ir, &field));
     }
     Some(writes)
+}
+
+/// AV.0.1 (close-out): checkpoint-alt counterpart of
+/// [`alt_lit_per_branch_writes`] and [`dispatch_per_branch_writes`].
+///
+/// The checkpoint composer handles mixed-branch Alts where branches
+/// are heterogeneous — Sheets `error_literal`'s outer Alt is the
+/// canonical case: direct `Map { Literal(s), IntLit(v) }` branches
+/// (`#VALUE!` → 1, `#REF!` → 2, `#DIV/0!` → 3, `#ERROR!` → 7,
+/// `#SPILL!` → 8) mixed with a factored `Seq(Literal("N"),
+/// inner-alt-lit)` branch that already carries its own per-branch
+/// writes via the alt-lit composer fix.
+///
+/// The structural identifier is relaxed versus the dispatch helper:
+/// a branch counts as payload-eligible when its IR node is
+/// `Map { Literal, constant-MapExpr }` (direct shape). Factored
+/// `Seq` branches — where the MapExprs live on the inner Alt's
+/// branches — are identified by falling through to a `None` entry;
+/// the checkpoint composer then leaves that arm's body unwrapped
+/// and the inner Alt's existing per-branch writes fire normally.
+///
+/// Uniqueness: the IR scan matches on
+///   * exact branch count,
+///   * at least one branch being `Map { Literal, constant-MapExpr }`,
+///   * every `Map { Literal, constant }` branch's MapExpr target
+///     type coercing to the active single-field layout's scalar.
+///
+/// The type-match constraint pins the search to Alts whose payload
+/// shape agrees with the caller's rule — the canonical
+/// `error_literal` case has a 1-byte U8 layout and every literal
+/// branch's IntLit coerces to U8. Unrelated 7-branch Alts in the
+/// grammar with non-U8 targets are filtered out.
+fn checkpoint_per_branch_writes(
+    branches: &[(AltBranchInfo, TokenStream)],
+    ctx: &RustEmitCtx,
+) -> Option<Vec<Option<TokenStream>>> {
+    let layout = ctx.payload_layout.as_ref()?;
+    if layout.fields.len() != 1 {
+        return None;
+    }
+    let field = layout.fields[0].clone();
+    let ir = ctx.ir_ctx().ir;
+    let branch_count = branches.len();
+    let alt_branches = ir.rules.iter().find_map(|rule| {
+        locate_checkpoint_alt(&rule.body, branch_count, ir, &field)
+    })?;
+    let mut writes = Vec::with_capacity(alt_branches.len());
+    for branch in alt_branches {
+        writes.push(branch_payload_write(&branch.node, ir, &field));
+    }
+    Some(writes)
+}
+
+/// Walk `root` looking for an `IrNode::Alt` matching:
+///   * branch count equal to `branch_count`,
+///   * every direct-literal branch (`Map { Literal, constant MapExpr }`)
+///     coerces to `field.ty` — so non-`U8` Alts with the same branch
+///     count are excluded,
+///   * at least one branch being the direct-literal shape (versus a
+///     factored `Seq`), guaranteeing we have a payload-write to
+///     emit somewhere.
+///
+/// Factored-Seq branches (e.g. `Seq(Literal("N"), inner-alt-lit)`)
+/// are admitted as "non-literal" positions — the inner Alt's
+/// alt-lit composer already emits per-branch writes, and the outer
+/// wrapper intentionally leaves those arms unwrapped.
+fn locate_checkpoint_alt<'ir>(
+    root: &'ir IrNode,
+    branch_count: usize,
+    ir: &'ir GrammarIR,
+    field: &PayloadField,
+) -> Option<&'ir [AltBranch]> {
+    if let IrNode::Alt(branches, _) = root {
+        if branches.len() == branch_count
+            && branches.iter().any(|b| is_literal_with_constant_map(&b.node, ir))
+            && branches
+                .iter()
+                .all(|b| checkpoint_branch_is_compatible(&b.node, ir, field))
+        {
+            return Some(branches.as_slice());
+        }
+    }
+    for child in node_children(root) {
+        if let Some(m) = locate_checkpoint_alt(child, branch_count, ir, field) {
+            return Some(m);
+        }
+    }
+    None
+}
+
+/// Predicate: a checkpoint branch is compatible with `field` when
+/// either
+///   * it is a direct `Map { Literal, constant-MapExpr }` whose
+///     MapExpr coerces to `field.ty` (verified by the same
+///     `aggregate_constant_setter` the per-branch write emitter uses
+///     — a `None` return means the MapExpr type does not match the
+///     field, so this is NOT the target Alt), or
+///   * it is a non-direct-literal shape (factored Seq, nested Alt,
+///     etc.) — we leave those arms alone and trust their own
+///     composer to emit writes if needed.
+fn checkpoint_branch_is_compatible(
+    node: &IrNode,
+    ir: &GrammarIR,
+    field: &PayloadField,
+) -> bool {
+    if is_literal_with_constant_map(node, ir) {
+        branch_payload_write(node, ir, field).is_some()
+    } else {
+        true
+    }
 }
 
 /// AV.0.1: dispatch-alt counterpart of [`alt_lit_per_branch_writes`].

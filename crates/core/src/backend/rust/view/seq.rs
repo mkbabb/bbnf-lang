@@ -179,10 +179,21 @@ pub fn emit_kv_pair_accessors(
         layout.fields.len()
     );
     let field = &layout.fields[0];
-    let field_ty_ident = format_ident!(
-        "{}",
-        field.ty.rust_ident().expect("KV-pair value has rust_ident")
-    );
+    // KV-pair value return type. Numeric primitives map to their
+    // Rust scalar ident; `Span` is the `(u32, u32)` offset pair that
+    // `kv_pair_field_read`/`kv_pair_field_zero` produce — the outer
+    // `Span<'p>` type is reserved for the view's `.identifier_span()`
+    // style accessors that construct a full slice.
+    let field_ty_tokens: TokenStream = match field.ty {
+        TypeDesc::Span => quote! { (u32, u32) },
+        _ => {
+            let ident = format_ident!(
+                "{}",
+                field.ty.rust_ident().expect("KV-pair value has rust_ident")
+            );
+            quote! { #ident }
+        }
+    };
     let field_read = kv_pair_field_read(field);
     let field_zero = kv_pair_field_zero(&field.ty);
 
@@ -223,7 +234,7 @@ pub fn emit_kv_pair_accessors(
         /// Returns the zero-initialized value if no payload was
         /// written for this record.
         #[inline]
-        pub fn value(&self) -> #field_ty_ident {
+        pub fn value(&self) -> #field_ty_tokens {
             let tape = self.cursor.tape();
             let rec = self.cursor.record();
             match tape.payload_bytes(rec, #total_bytes) {

@@ -168,13 +168,15 @@ fn seq_mixed_tuple() {
     ]);
     bbnf_ir::dag::ensure_dag(&mut ir);
     project_types(&mut ir);
-    // Rule 1: Alt(Span, Span) -> Span
-    // Rule 0: Seq(Span, Ref(1)→BoxedEnum, Span) -> Tuple(Span, BoxedEnum, Span)
-    // Ref(1) always returns BoxedEnum (matching emit_ref's Box::new wrapping).
-    assert_eq!(
-        *get_type(&ir, 0),
-        TypeDesc::Tuple(vec![TypeDesc::Span, TypeDesc::BoxedEnum, TypeDesc::Span])
-    );
+    // Rule 1: Alt(Span, Span) -> Span.
+    // Rule 0: Seq(Span, Ref(1)→Span, Span) -> three consecutive Spans,
+    // which the Seq span-compression rule collapses to a single Span.
+    // AU.2.5: `RefConstraint` now inherits the target rule's scalar
+    // type (Span qualifies) so the Seq sees three Spans and compresses
+    // correctly; the previous `BoxedEnum` ground was the source of the
+    // `Tuple(Span, BoxedEnum, Span)` fan-out that blocked aggregate
+    // composition at every Seq-of-Refs site.
+    assert_eq!(*get_type(&ir, 0), TypeDesc::Span);
 }
 
 #[test]
@@ -333,4 +335,184 @@ fn map_box_wrap() {
     bbnf_ir::dag::ensure_dag(&mut ir);
     project_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::BoxedEnum);
+}
+
+// ─── AU.2.5 scalar projection tests ────────────────────────────
+
+/// Build a minimal GrammarIR where each rule carries an `Expr`
+/// FnDescriptor return type (`u8`, `f64`, …). The rules use Map
+/// wrappers so projection flows through the `FnDescriptor::Expr`
+/// branch of `generate_node`.
+fn make_ir_with_fns(rules: Vec<IrRule>, fns: Vec<FnDescriptor>, strings: Vec<String>) -> GrammarIR {
+    GrammarIR {
+        entry: 0,
+        rules,
+        strings,
+        fns,
+        types: vec![],
+        follow_sets: HashMap::new(),
+        ws_pattern: None,
+        collapse_simple_spans: false,
+        debug_all: false,
+        debug_labels: Vec::new(),
+        type_map: None,
+        pattern_annotations: std::collections::HashMap::new(),
+        regex_info: std::collections::HashMap::new(),
+        node_facts: HashMap::new(),
+        recognizer_decisions: HashMap::new(),
+        delim_scan_configs: std::collections::HashMap::new(),
+        key_dispatch_configs: std::collections::HashMap::new(),
+        context_facts: std::collections::HashMap::new(),
+        has_family_recognizers: false,
+        regex_engine_decisions: std::collections::HashMap::new(),
+        dag: None,
+        cost_config: bbnf_ir::CostConfig::default(),
+        type_desc_interner: bbnf_ir::TypeDescInterner::new(),
+        materialization: std::collections::HashMap::new(),
+        string_index: std::collections::HashMap::new(),
+        payload_layouts: std::collections::HashMap::new(),
+        struct_registry: Default::default(),
+        structural_alphabet: None,
+    }
+}
+
+/// A `-> T` return-type Expr descriptor with no custom body; the
+/// projection code only reads the return type.
+fn expr_fn(return_type: TypeDesc) -> FnDescriptor {
+    FnDescriptor::Expr {
+        expr: bbnf_ir::MapExpr::Input,
+        return_type: Some(return_type),
+    }
+}
+
+#[test]
+fn ref_projects_target_scalar_type() {
+    // AU.2.5: a Ref to a rule declared `-> f64` must itself carry
+    // `TypeDesc::F64`, not the historical `BoxedEnum` ground. Without
+    // this, `Seq(number, unit)` projects as `Tuple([BoxedEnum, ...])`
+    // and the aggregate-payload path never activates.
+    //
+    //  rule 0 = Ref(1)       expected F64
+    //  rule 1 = Map(Lit, f0)  fn 0 = Expr { return F64 }
+    let mut ir = make_ir_with_fns(
+        vec![
+            rule(0, IrNode::Ref(1)),
+            rule(
+                1,
+                IrNode::Map {
+                    inner: Box::new(IrNode::Literal(3)),
+                    fn_id: 0,
+                },
+            ),
+        ],
+        vec![expr_fn(TypeDesc::F64)],
+        vec!["r0".into(), "r1".into(), "r2".into(), "lit".into()],
+    );
+    bbnf_ir::dag::ensure_dag(&mut ir);
+    project_types(&mut ir);
+    assert_eq!(*get_type(&ir, 0), TypeDesc::F64);
+    assert_eq!(*get_type(&ir, 1), TypeDesc::F64);
+}
+
+#[test]
+fn seq_of_refs_composes_f64_u8_aggregate() {
+    // AU.2.5: the dimension shape. `dimension = number , anyUnit`
+    // where `number -> f64` and `anyUnit -> u8`. Before the fix this
+    // projected to `Tuple([BoxedEnum, BoxedEnum])`; with Ref-scalar
+    // projection the target rules' scalar types flow through.
+    //
+    //  rule 0 = Seq(Ref(1), Ref(2))
+    //  rule 1 = Map(Lit, f0)  fn 0 = Expr { return F64 }
+    //  rule 2 = Map(Lit, f1)  fn 1 = Expr { return U8  }
+    let mut ir = make_ir_with_fns(
+        vec![
+            rule(
+                0,
+                IrNode::Seq(vec![IrNode::Ref(1), IrNode::Ref(2)]),
+            ),
+            rule(
+                1,
+                IrNode::Map {
+                    inner: Box::new(IrNode::Literal(3)),
+                    fn_id: 0,
+                },
+            ),
+            rule(
+                2,
+                IrNode::Map {
+                    inner: Box::new(IrNode::Literal(3)),
+                    fn_id: 1,
+                },
+            ),
+        ],
+        vec![expr_fn(TypeDesc::F64), expr_fn(TypeDesc::U8)],
+        vec!["r0".into(), "r1".into(), "r2".into(), "lit".into()],
+    );
+    bbnf_ir::dag::ensure_dag(&mut ir);
+    project_types(&mut ir);
+    assert_eq!(
+        *get_type(&ir, 0),
+        TypeDesc::Tuple(vec![TypeDesc::F64, TypeDesc::U8])
+    );
+}
+
+// ─── AU.2.5 factor-pass type-loss tests ────────────────────────
+
+#[test]
+fn factored_prefix_alt_projects_scalar() {
+    // AU.2.5: `factor_common_prefixes` rewrites
+    //     "px" -> u8 | "cm" -> u8 | "mm" -> u8 | "Q" -> u8
+    // into an Alt whose first branch is
+    //     Seq(Literal("p"), Alt(Map(Literal("x"), u8), ...))
+    // whose shape is `Tuple([Span, U8])` — heterogeneous with the
+    // remaining bare-`Map` branches whose shape is `U8`. The fixed
+    // `join_types` strips the factored-prefix Span and reconciles
+    // every branch's effective payload as `U8`.
+    let mut ir = make_ir_with_fns(
+        vec![rule(
+            0,
+            IrNode::Alt(
+                vec![
+                    AltBranch {
+                        node: IrNode::Seq(vec![
+                            IrNode::Literal(1),
+                            IrNode::Alt(
+                                vec![
+                                    AltBranch {
+                                        node: IrNode::Map {
+                                            inner: Box::new(IrNode::Literal(2)),
+                                            fn_id: 0,
+                                        },
+                                        first_set: None,
+                                    },
+                                    AltBranch {
+                                        node: IrNode::Map {
+                                            inner: Box::new(IrNode::Literal(3)),
+                                            fn_id: 0,
+                                        },
+                                        first_set: None,
+                                    },
+                                ],
+                                None,
+                            ),
+                        ]),
+                        first_set: None,
+                    },
+                    AltBranch {
+                        node: IrNode::Map {
+                            inner: Box::new(IrNode::Literal(4)),
+                            fn_id: 0,
+                        },
+                        first_set: None,
+                    },
+                ],
+                None,
+            ),
+        )],
+        vec![expr_fn(TypeDesc::U8)],
+        vec!["r0".into(), "p".into(), "x".into(), "c".into(), "mm".into()],
+    );
+    bbnf_ir::dag::ensure_dag(&mut ir);
+    project_types(&mut ir);
+    assert_eq!(*get_type(&ir, 0), TypeDesc::U8);
 }

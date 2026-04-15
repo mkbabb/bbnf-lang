@@ -143,11 +143,20 @@ impl<'a> ConstraintGenerator<'a> {
             }
 
             // Reference constraint
-            IrNode::Ref(_rule_id) => {
-                // Normal context: Ref always produces BoxedEnum.
+            //
+            // AU.2.5: a Ref inherits the target rule's scalar type
+            // (primitives + Span) so `Seq(number, unit)` composes as
+            // `Tuple([F64, U8])` instead of `Tuple([BoxedEnum,
+            // BoxedEnum])`. Compound targets still collapse to
+            // `BoxedEnum` — the Ref position holds an enum variant
+            // for tagged-union codegen in those cases. The vec
+            // context stays as the historical `Enum` wrapper; vec
+            // elements always need an enum for the heterogeneous
+            // branches of a repeat.
+            IrNode::Ref(rule_id) => {
+                let rule_var = self.rule_vars[rule_id];
                 self.csp
-                    .add_constraint(GroundConstraint::new(var, TypeDesc::BoxedEnum));
-                // Vec context: Ref produces Enum (Vec provides heap indirection).
+                    .add_constraint(RefConstraint::new(var, rule_var));
                 self.csp
                     .add_constraint(GroundConstraint::new(vec_var, TypeDesc::Enum));
             }

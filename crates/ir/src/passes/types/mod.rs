@@ -62,6 +62,29 @@ pub fn project_types(ir: &mut GrammarIR) {
     // Phase 2: Solve via monotonic fixed-point propagation.
     let _ = system.csp.propagate();
 
+    // Phase 2b: Cycle-break any rule variables still unsolved after
+    // propagation. `RefConstraint` suspends propagation while the
+    // target rule is unsolved so scalar rule types can flow to every
+    // reference. Rule-to-rule cycles (e.g. `a = b; b = a`) never reach
+    // a solved state under that policy — propagate would stall
+    // waiting for either endpoint. Ground any surviving unsolved rule
+    // variables to `BoxedEnum` and re-run propagation so every
+    // reference inside the cycle inherits the fallback.
+    {
+        let unsolved_rule_vars: Vec<csp_solver::constraint::VarId> = system
+            .rule_vars
+            .values()
+            .copied()
+            .filter(|&var| system.csp.variables[var as usize].domain.solved.is_none())
+            .collect();
+        if !unsolved_rule_vars.is_empty() {
+            for var in unsolved_rule_vars {
+                system.csp.variables[var as usize].domain.solved = Some(TypeDesc::BoxedEnum);
+            }
+            let _ = system.csp.propagate();
+        }
+    }
+
     // Tranche X Phase 0: build a reverse var→node map ONCE before
     // the Seq-children loop below. The previous implementation was a
     // linear `iter().chain().find_map()` scan over `system.node_vars`

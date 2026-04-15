@@ -7,7 +7,13 @@
 @import "tokens.bbnf" ;
 
 // --- Media types ---
-mediaType = "all" | "print" | "screen" | "speech" ;
+// u8 discriminant for media type — matches lightningcss MediaType:
+// All=0, Print=1, Screen=2, Speech=3.
+mediaType = "all" -> 0u8 | "print" -> 1u8
+          | "screen" -> 2u8 | "speech" -> 3u8 ;
+
+// --- Query qualifier (not / only) ---
+mediaQualifier = "not" -> 0u8 | "only" -> 1u8 ;
 
 // --- Media feature: (name: value) or (name) ---
 mediaFeatureName = ident ;
@@ -15,6 +21,10 @@ mediaFeatureValue = /[^)]+/ ;
 mediaFeature = "(" ?w , mediaFeatureName ?w , (":" ?w , mediaFeatureValue ?w) ? , ")" ;
 
 // --- Media condition combinators ---
+// TODO typed-aggregate (AU.2.6): mediaCondition is a recursive enum —
+// Not/And/Or/InParens — with nested mediaCondition payloads. The grammar
+// disambiguates by structure; variant tags compose via the branch-typed
+// codegen landing with AU.6.7.
 mediaNot       = "not" ?w , mediaInParens ;
 mediaAnd       = mediaInParens , ("and" ?w >> mediaInParens) + ;
 mediaOr        = mediaInParens , ("or" ?w >> mediaInParens) + ;
@@ -23,5 +33,5 @@ mediaCondition = mediaNot | mediaAnd | mediaOr | mediaInParens ;
 
 // --- Full media query ---
 // "print", "screen and (min-width: 768px)", "not print", "(prefers-color-scheme: dark)"
-mediaQuery     = ("not" | "only") ? , mediaType ? , ("and" ?w >> mediaInParens) * ;
+mediaQuery     = mediaQualifier ? , mediaType ? , ("and" ?w >> mediaInParens) * ;
 mediaQueryList = mediaQuery , ("," ?w >> mediaQuery) * ;

@@ -417,4 +417,125 @@ call out in the CO-E1 report).
    `test_selective_transitive_unfurling` (AV.0.12) stays
    deferred with its existing ticket.
 
+## 2026-04-15 — CO-E5 close-out: AV.0.8-0.12 test hygiene triage
+
+Agent CO-E5 (`av0-close-triage`) landed the AV.0.11 triage and
+the AV.0.10 verification. Seven commits cherry-picked onto master.
+
+### Triage decisions
+
+Of the 26 failures called out in the plan (minus the 3 layout-
+pass tests CO-E4 owns), **23 were Category A** (pre-existing,
+orthogonal to AV) and **2 were Category B** (cascaded-substrate,
+fixable with test-assertion coherence):
+
+**Category B — fixed in this pass (`lower_grammar` helper):**
+
+| Test | Rationale |
+|------|-----------|
+| `lower_json_grammar` | `compute_scc` not called → `is_cyclic=false` → `compute_transparent` never fires → `is_transparent` stays false |
+| `lower_cyclic_rule_gets_memo` | Same root cause: SCC pass missing from test helper, so `meta.memo` stays `None` |
+
+Fix: add `bbnf_ir::passes::compute_scc` to `lower_grammar` and
+reorder so SCC runs before `compute_transparent` (matches the
+canonical pipeline order in `crates/core/src/pipeline/compile.rs`).
+
+**Category A — `#[ignore]` with forward ticket:**
+
+| Test | Forward ticket |
+|------|----------------|
+| `test_selective_transitive_unfurling` | AV.0.12 — module loader selective-transitive unfurl rework |
+| `closure_single_param`, `closure_multi_param`, `closure_nested_calls`, `closure_with_rule_ref`, `closure_composition` | `lower::expression` closure-body lowering gap (see `grammar-closures` memo) |
+| `pipeline_google_sheets_multiline_let` | google-sheets rule-name drift (`expression` → arithmetic/compare_expr); forward to AV.3.3 Pratt lowering |
+| `no_hand_written_subvariant_references` | AF Wave 2 substrate-break closure gate — `src/graph/deps.rs` leaks; forward to wrapper-peel graph-walker migration |
+| `compile_request_rejects_unknown_nonterminal` | `validate_ast` no longer precedes `lower::expression`; forward to pipeline error-surface refresh |
+| `parse_recover_without_terminator` | bbnf grammar requires trailing `;` after `@recover`; forward to directive-syntax refresh |
+| `ir_meta_has_follow_sets`, `ir_meta_has_memo_and_span_info` | analysis crate runs `PipelineOptions::structural = true` which gates `compute_follow_sets` + `refine_span_eligibility`; forward to analysis-mode rework |
+| `test_cycle_detection`, `test_alias_detection` | same structural-mode gate: `cyclic_rule_paths` + alias-hint diagnostics absent; forward to analysis-mode rework |
+| `test_diagnostics_cycle_path`, `test_diagnostics_alias_hint` | LSP-level consumers of the same analysis-crate gap; forward alongside |
+| `dump_biome_vs_gorgeous`, `dump_tailwind_comparison`, `output_size_comparison` | dump/visualisation tests reading non-checked-in fixtures (`data/css/tailwind-output.css`, `data/css/app.css`); forward to gorgeous visualisation-fixtures audit |
+| `hint_softbreak`, `hint_indent_group` | pprint vm rendering-semantics drift (softbreak flat inserts space, indent+group+sep collapses break); forward to pprint hint-semantics audit |
+
+**Category C — auto-resolved:** none that were still failing
+when CO-E5 took over. Bug 1 / Bug 2 / Bug 2b landings had
+already cleared the Category C population. (Agent A and CO-E1's
+earlier commits on master already flipped the JSON/Sheets/CSS
+L4 parity tests; CO-E4's pending commits will clear the three
+layout-pass failures that remain out-of-scope for CO-E5.)
+
+### AV.0.10 verification
+
+AV.0.10 scope per `AV.md` §AV.9.2 is "switch reader call sites
+from `payload_aggregate(kind)` to `payload_inline_scalar(kind)`".
+Inspection shows the three ignored percentage tests already use
+`tape.payload_u8(rec)` — the InlineScalar reader — so no reader-
+call-site migration is pending at the test level. The tests
+still fail when un-ignored because the src-side percentageUnit
+scanner→payload wiring does not emit the `255u8` payload for
+the `%` lexeme; that is the AU.6.8 Bug 2b residual held over
+for Wave V1. The three tests therefore remain `#[ignore]` with
+their existing `AU.6.8 Bug 2b` ticket message, not converted.
+
+### AV.0.8 state
+
+AV.0.8 (4 stale CSS `tape_parity` goldens) landed earlier in
+master at commit `15b94c0 test(close-out): regen CSS tape_parity
+goldens, ignore 5 sheets Bug-1 pins` — the goldens regenerated
+with the post-AU tape shape and the 5 Sheets Bug-1 pins got
+their `#[ignore]` attributes. No additional CO-E5 action
+required; all 22/22 `tape_parity` goldens pass and no CSS
+`tape_parity` test is in the CO-E5 failure set.
+
+### AV.0.9 state
+
+AV.0.9 (7 JSON variant-dispatch tests un-ignored) is **not**
+closed yet — the 7 tests stay `#[ignore]` with the V9 AV.10.1
+walker-coherence ticket. Per Agent A's finding (see earlier
+PROGRESS entries) and the plan's resequencing, the JSON tape-
+walker drift lives in V9 scope, not V0. The tests remain ignored
+with the correct forward ticket; no CO-E5 action required.
+
+### Final workspace status
+
+`cargo test --workspace --no-fail-fast`:
+
+- **0 failed** in CO-E5 scope.
+- **55 ignored** total (up from 34 pre-CO-E5).
+  - 34 pre-existing (see prior PROGRESS entries: Sheets Bug-1
+    pins (5), JSON walker-drift (7), CSS percentage Bug 2b (3),
+    sheets-parity W6.D bypass (4), plus scattered serialize /
+    pipeline / ws_pattern / lsp pre-existings).
+  - 21 added by CO-E5: 5 closures + 1 pipeline sheets + 1 imports
+    + 1 no_subvariant + 1 compile_request + 1 recover + 2 ir_meta
+    + 2 lsp-analyze + 2 lsp-integration + 3 gorgeous dumps + 2
+    pprint vm hints.
+
+### Residual risks
+
+- **3 layout-pass failures** (`test_json_payload_layouts`,
+  `test_json_payload_layouts_baseline`, `test_ebnf_payload_layouts`)
+  are CO-E4 scope and intentionally left failing per the CO-E5
+  brief.
+- **`google_sheets::tests::test_let_parses_as_let_call`** is an
+  inline `#[cfg(test)]` module inside `crates/gorgeous/src/google_sheets.rs`.
+  It asserts that `=LET(a,1,b)` parses as a `let_call` rather
+  than a `func_call` — src-side grammar dispatch regression
+  (same class as `pipeline_google_sheets_multiline_let` above).
+  CO-E5's write bounds forbid src/ modifications and the test
+  is not listed in the CO-E5 scope; it stays failing for a
+  follow-up agent whose scope includes `src/` edits, or for the
+  sheets Pratt-lowering work at AV.3.3 which will naturally
+  touch the grammar dispatch surface.
+- **Total failures after CO-E5:** 4 (3 CO-E4 + 1 inline gorgeous
+  src test). All route to future scope with an explicit owner.
+
+### Commits
+
+- `ac9ce31` test(lower): compute_scc + reorder metadata passes
+- `6927f8f` test(pipeline): ignore closure + sheets rule-name tests
+- `44dab88` test(core): ignore imports/no_subvariant/compile_request/recover
+- `bb190fc` test(analysis,lsp): ignore structural-mode analysis gaps
+- `65d295c` test(gorgeous): ignore dump + pprint-vm drift tests
+- Final: `docs(AV): V0 close-out test hygiene triage (AV.0.8-0.12)`
+
 

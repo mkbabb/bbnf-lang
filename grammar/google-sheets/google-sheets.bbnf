@@ -3,11 +3,43 @@
 
 // ── Lexical tokens ──────────────────────────────────────────────────
 
-number = /(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?/ ;
-string = /"([^"]|"")*"/ ;
-boolean = /[tT][rR][uU][eE]|[fF][aA][lL][sS][eE]/ ;
-error_literal = "#N/A" | "#VALUE!" | "#REF!" | "#DIV/0!"
-              | "#NULL!" | "#NAME?" | "#NUM!" | "#ERROR!" | "#SPILL!" ;
+number = /(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?/ -> f64 ;
+
+// Raw span for now; escape-decoding (doubled `""` → `"`) is deferred to
+// AU.6.7's unified arena, which provides `push_leaf_with_string` and a
+// decode kernel analogous to JSON's `decode_json_string_to_arena`.
+// TODO AU.6.7: -> decode_sheets_string_to_arena(input) : String
+string = /"([^"]|"")*"/ -> input : Span ;
+
+// Each alt maps to its own bool literal. Mirrors JSON's
+// `bool = "true" -> true | "false" -> false` pattern, extended to
+// case-insensitive regex forms used by Sheets.
+boolean = /[tT][rR][uU][eE]/ -> true
+        | /[fF][aA][lL][sS][eE]/ -> false ;
+
+// Sheets error literals. The `Nu8` discriminant uses the declaration
+// order below as its stable ordering and matches the conventional
+// lightningcss-style tagged-enum layout. Numbering also aligns with
+// Google Sheets' internal error codes where they overlap.
+//
+//   0 = #N/A        missing value
+//   1 = #VALUE!     wrong value type
+//   2 = #REF!       invalid reference
+//   3 = #DIV/0!     division by zero
+//   4 = #NULL!      intersection of non-intersecting ranges
+//   5 = #NAME?      unknown function / name
+//   6 = #NUM!       numeric computation overflow / domain error
+//   7 = #ERROR!     generic parser / formula error
+//   8 = #SPILL!     array result cannot spill into target range
+error_literal = "#N/A"    -> 0u8
+              | "#VALUE!" -> 1u8
+              | "#REF!"   -> 2u8
+              | "#DIV/0!" -> 3u8
+              | "#NULL!"  -> 4u8
+              | "#NAME?"  -> 5u8
+              | "#NUM!"   -> 6u8
+              | "#ERROR!" -> 7u8
+              | "#SPILL!" -> 8u8 ;
 
 // Sheet prefix: Sheet1! or 'Sheet Name'!
 sheet_prefix = /'(?:[^']|'')*'!/ | /[A-Za-z_]\w*!/ ;

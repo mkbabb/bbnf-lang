@@ -9,6 +9,8 @@ For bench, profiling, and `cargo expand` analysis:
 - prepare once, then profile many
 - worktrees are optional for profiling; they are for git isolation, not
   build isolation
+- clear all `.bbnf-cache` directories before any bench, regen, or
+  proc-macro expansion test
 
 Set the shared target first:
 
@@ -54,6 +56,8 @@ Rules:
 - use `--unstable-presymbolicate`
 - do not use `--save-only`
 - bench binaries are cwd-sensitive; run from `crates/core`
+- always write expensive command output to a file first, then search it
+- do not rerun an expensive command for a different slice of output
 
 `cargo expand` must also be file-first:
 
@@ -65,7 +69,7 @@ Then inspect with targeted search, not full rereads.
 
 ## Bench execution
 
-Benchmarks run sequentially to avoid interference.
+Benchmarks must run sequentially to avoid interference.
 
 Common bench commands:
 

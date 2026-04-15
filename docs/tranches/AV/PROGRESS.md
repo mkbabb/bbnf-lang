@@ -289,4 +289,132 @@ Close-out handles them alongside AV.0.5 emitter routing,
 Sheets Bug-2/2b flips (pending new Agent B), and AV.0.8–12
 test hygiene.
 
+## 2026-04-15 — V0 close-out progress (CO-E1, CO-E2)
+
+### Agent CO-E2 (parse-that padded cascade) — LANDED
+
+Four commits cherry-picked onto parse-that master:
+
+- `b17ca96` feat(state): `PaddedView<'a>` +
+  `ParserState::padded()` helper (AV.0.7) — zero-cost witness
+  type carrying the padded-buffer invariant at the type level.
+- `8ec55cc` perf(scan): `scan_digits_simd` +
+  `scan_number_mantissa` take `PaddedView` — drops the
+  16-byte SSE/NEON guard + two SWAR guards.
+- `0af57c2` perf(scan): `quote_parity` kernel takes
+  `PaddedView` — scalar-tail epilogue replaced by the shared
+  SIMD `classify_stripe_64` with a `valid_mask` gate.
+- `561ef5c` perf(scan): `ws_comment` internals take
+  `PaddedView` witness — architectural cohesion; AU.6.1 had
+  already removed the 64-byte guard here.
+
+`grep -rn "if i + 16 <= bytes.len()"
+rust/parse_that/src/parsers/scan/ | wc -l` → 0.
+
+Holdouts (documented): `scan_quoted_string_simd` /
+`decode_json_string_to_arena` pair (needs paired bbnf-lang
+codegen change in `string_decode.rs`) and
+`find_next_structural_from` (7 emitter call sites pass
+`&state.src_bytes`; needs coordinated bbnf-lang codegen
+update at the regex emit SIMD path). These route forward to
+V1 scope as regex-engine-adjacent work, not V0 deferrals.
+
+### Agent CO-E1 (emitter consumer) — LANDED
+
+Ten commits cherry-picked onto master. Master HEAD:
+`3b4ae38 fix(emitter): reorder string-decode check before
+Span aggregate probe`.
+
+- `81a99fb` feat(emitter): Span aggregate pack for -> Span
+  rules (AV.0.2) — `leaves.rs` gains a
+  `probe_span_aggregate_pack(ctx)` helper that peeks the
+  layout field (without advancing the cursor) and emits
+  `(lo, hi)` into `__aggregate_buf` on match success.
+  `tape_prelude.rs` gains a `bare_span_epilogue_fixup` step
+  that unconditionally rewrites the buffer's first 8 bytes
+  with rule-final `state.offset`.
+- `a19c22f` chore(codegen): regen generated.rs after AV.0.2
+  (+913/-704 lines).
+- `6305283` feat(emitter): i64/f64 span-helper threading
+  (AV.0.3) — `map_value.rs` gains a `span_helper_capture`
+  that fires `parse_that::parse_i64_from_bytes` /
+  `parse_f64_from_bytes` on I64/F64 rule types.
+  `emit_must_tape_prelude` declares scalar stubs;
+  `emit_must_tape_epilogue` dispatches via `__payload_tag` to
+  `push_leaf_with(WideScalar(bits))` when `__has_payload`,
+  else falls through to `push_compound`.
+- `330d2cb` chore(codegen): regen after AV.0.3 (+1086/-349).
+- `ee0868d` feat(emitter): LargeAggregate routing
+  (AV.0.5) — `aggregate_payload_ctor(total_bytes)` helper
+  in `tape_prelude.rs` routes > 16 B layouts through
+  `PayloadData::LargeAggregate`. At landing no rule triggers
+  the > 16 B path (colour functions carry
+  `TypeDesc::Named("Color")` which the layout pass does not
+  admit yet — scaffolding awaits the Color layout extension).
+- `5e96790` chore(codegen): regen after AV.0.5.
+- `df48279` test(parity): flip BBNF Bug-2 + Bug-2b pinned
+  assertions — all seven `pinned_*_drops_payload` asserts
+  flipped from `== 0` to `>= 1`.
+- `c28872b` test(tape_parity): regen 17 goldens for the
+  post-AV.0.2 tape shape shift (BBNF / EBNF / JSON / CSS /
+  Sheets).
+- `a8a0f63` fix(emitter): peek aggregate field cursor in
+  Span probe — prevents double-advance.
+- `3b4ae38` fix(emitter): reorder string-decode check before
+  Span aggregate probe — preserves
+  `decode_json_string_to_arena` precedence over the new
+  Span aggregate path for decoded-String rules.
+
+**Scope expansion that landed** (documented in agent
+report, deliberate and minimal): `crates/ir/src/passes/
+payload/layout.rs` `span_layout_eligible` gate relaxed from
+`is_some_and(class != TransparentElide)` to `!matches!(...,
+Some(TransparentElide))`. The permissive reading admits
+structural-build rules when the materialisation map is
+unpopulated (BBNF bootstrap case). `TransparentElide` is
+refined CSP output; absence of evidence must not demote a
+rule.
+
+### Master status (post-CO-E1, CO-E2)
+
+- `grammar_roundtrip`: 6/6 ✓
+- `bbnf_parity`: **18/18** ✓ (all seven BBNF pinned
+  assertions flipped — AV.0.2 + AV.0.3 hard gate MET)
+- `css_l4_named_color_parity`: 2/2 ✓
+- `css_l4_parity`: 13/13 + 3 `#[ignore]` (pre-existing
+  percentage-reader migration, AV.0.10)
+- `json_parity`: 2/2 + 7 `#[ignore]` (pre-existing variant-
+  dispatch walker-drift, routes to V9 AV.10.1 not V0)
+- `sheets_parity`: 15/15 + 5 `#[ignore]` (Sheets Bug-1
+  blocked by driver/compile_ref InlineBody stripping —
+  Agent A's finding, close-out scope)
+- `tape_parity`: 22/22 ✓
+
+`cargo test --workspace --no-fail-fast`: 26 failing tests
+across 14 suites. Breakdown pending AV.0.11 triage (some
+are pre-existing Session-1 Category A; some cascaded from
+the aggregate-layout admission and need Category B fixes —
+`test_json_payload_layouts_baseline`,
+`test_json_payload_layouts`, `test_ebnf_payload_layouts`
+call out in the CO-E1 report).
+
+### Remaining V0 close-out work
+
+1. **Sheets InlineBody + outer alt checkpoint** (CO-E3) —
+   Agent A's finding. Driver-side payload threading so the
+   inline-body dispatch in
+   `crates/core/src/backend/driver/` no longer strips the
+   inlined rule's `payload_layout` / `payload_types`. Plus
+   `emit_alt_checkpoint_impl` extension for mixed-branch
+   error_literal outer alt. Flips Sheets Bug-1 pinned
+   assertions.
+2. **AV.0.11 triage + AV.0.8-0.12 hygiene** (CO-E4) — 26
+   failing workspace tests triaged into A/B/C; Category B
+   fixed; Category A ignored with tickets. CSS percentage
+   InlineScalar reader migration (AV.0.10). JSON walker-
+   drift tests stay `#[ignore]` with V9 AV.10.1 reference
+   per the Agent A finding.
+   `test_selective_transitive_unfurling` (AV.0.12) stays
+   deferred with its existing ticket.
+
 

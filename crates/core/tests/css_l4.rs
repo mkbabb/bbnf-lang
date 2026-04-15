@@ -285,3 +285,67 @@ fn parse_bootstrap_css() {
         .expect("failed to spawn thread");
     child.join().expect("bootstrap parse thread panicked");
 }
+
+// ---------------------------------------------------------------------------
+// AU.2.4 — Typed hex colour round-trip (W2 agent B)
+//
+// Asserts that the aggregate u32 payload produced by the tape-first
+// emitter round-trips through the parsed tape: the matched span is
+// the hex digits and the payload bytes decode back to the
+// lightningcss-equivalent 0xRRGGBBAA u32.
+// ---------------------------------------------------------------------------
+
+/// Walk the parsed tape for a hex-colour rule, returning the decoded
+/// u32 payload bytes from the first `KvPair` record found. Returns
+/// None when the parse fails or no KvPair record exists.
+fn first_hex_payload_u32(css_input: &str) -> Option<u32> {
+    use ::bbnf::runtime::tape::TapeKind;
+
+    let parsed = CssL4Parser::parse(css_input).ok()?;
+    let tape = parsed.tape();
+    for rec in tape.iter() {
+        if rec.kind() == TapeKind::KvPair {
+            // hex carries a 4-byte u32 payload (total_bytes = 4).
+            let payload = tape.payload_bytes(rec, 4)?;
+            let bytes: [u8; 4] = payload.try_into().ok()?;
+            return Some(u32::from_le_bytes(bytes));
+        }
+    }
+    None
+}
+
+#[test]
+fn hex_color_roundtrip_6digit() {
+    let u32_val = first_hex_payload_u32("a { color: #FF00FF; }")
+        .expect("hex rule should produce a KvPair with u32 payload");
+    // #FF00FF -> (r=0xFF, g=0x00, b=0xFF, a=0xFF) = 0xFF00FFFF
+    assert_eq!(
+        u32_val, 0xFF00_FFFF,
+        "hex #FF00FF should decode to 0xFF00FFFF, got 0x{:08X}",
+        u32_val
+    );
+}
+
+#[test]
+fn hex_color_roundtrip_3digit() {
+    let u32_val = first_hex_payload_u32("a { color: #abc; }")
+        .expect("hex rule should produce a KvPair with u32 payload");
+    // #abc -> r=0xaa, g=0xbb, b=0xcc, a=0xff = 0xaabbccff
+    assert_eq!(
+        u32_val, 0xAABB_CCFF,
+        "hex #abc should decode to 0xAABBCCFF, got 0x{:08X}",
+        u32_val
+    );
+}
+
+#[test]
+fn hex_color_roundtrip_8digit() {
+    let u32_val = first_hex_payload_u32("a { color: #12345678; }")
+        .expect("hex rule should produce a KvPair with u32 payload");
+    // #12345678 -> (r=0x12, g=0x34, b=0x56, a=0x78) = 0x12345678
+    assert_eq!(
+        u32_val, 0x1234_5678,
+        "hex #12345678 should decode to 0x12345678, got 0x{:08X}",
+        u32_val
+    );
+}

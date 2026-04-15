@@ -253,3 +253,163 @@ Given the partial completion and my noted mistakes:
 3. **Complete AU.5 bench parity with post-AU.json** — the tranche
    contract requires full bench results for all 4 grammars in both
    compile and parse.
+
+## Session 2 recap (2026-04-15)
+
+### Orchestrator hardening before profiling
+
+Three friction points between running, benching, and profiling
+blocked the wave-1 pattern from scaling past one entry per bench.
+All three resolved before any subagent was dispatched:
+
+1. `scripts/prepare-profile-wave.sh` rewritten to enumerate every
+   (bench, entry) pair — five benches × their entries = 27 rows in
+   `.profiles/samply/prebuild/wave.tsv`, one port pair per bench
+   (reused sequentially by a single subagent across its entries).
+2. `scripts/profile-bench-headless.sh` swapped its three `rg`
+   calls to `grep -E`. The ripgrep binary was only a zsh alias on
+   this machine, not a `$PATH` binary, so bash-invoked scripts
+   found nothing and the record/load wait loops silently timed
+   out even when every artifact was on disk. Smoke test on
+   `google_sheets_monolithic/parse_simple` proved the fix: all
+   seven required artifacts land cleanly.
+3. Substring-filter contamination flagged but not fixed. Bencher
+   0.1.5's `--bench <name>` filter is `name.contains(filter)`;
+   running `--bench data` executes both `data` and `data_xl`, so
+   the `data`/`bbnf_data`/`sonic_data` profile dumps contain
+   mixed samples (dominated by the `_xl` run because it is ~1000×
+   larger). `bench.txt` lines are still entry-matched and the
+   throughput figures for those entries remain valid; the profile
+   percentages for those three entries specifically should be
+   read as `_xl` attribution. Fix options for a future wave:
+   rename the small variants (`data` → `data_s`) or switch to
+   criterion. Out of scope for this session.
+
+### Wave-2 matrix and findings
+
+Full per-bench detail lives alongside this document in
+`profiling-2.md`. Headline:
+
+| bench / side | entries | MB/s range |
+|--------------|--------:|-----------:|
+| json_monolithic | 5 | 1219 – 2690 |
+| css_l4 | 3 |  578 – 1044 |
+| google_sheets_monolithic | 3 |   93 –  124 |
+| bbnf_monolithic | 6 |  217 –  631 |
+| json_value (bbnf side) | 5 | 1230 – 2646 |
+| json_value (sonic side) | 5 | 1508 – 3097 |
+
+bbnf is at 77–85% of sonic across all five JSON datasets, but the
+comparison is apples-to-oranges until Phase 3 lands: bbnf's side
+never decodes strings, never materialises a value tree, and drops
+the `Parsed` handle without a `.view()` call. Post-decode ratios
+are estimated at 0.60–0.85 depending on string density (see
+`profiling-2.md` for the per-dataset table).
+
+### Verified cross-bench claims
+
+- JSON scalar projection is firing (`push_leaf_with_{f64,bool,u8}`
+  at expand.rs:2638/2651/2664) — confirmed by independent `grep`
+  over `.profiles/samply/prebuild/expand/json_monolithic/expand.rs`.
+- JSON string decode is not firing — `scan_quoted_string_strict`
+  at expand.rs:2508 still falls through `.map(|_| ())` to a plain
+  `push_leaf`. `decode_json_string_to_arena` exists in
+  `parse-that/.../decode.rs:35` but has zero expand call sites.
+  `push_leaf_with_string` does not exist on `TapeBuilder`; the
+  closest existing methods are `push_leaf_with_Span` (packed
+  (u32, u32)) and `push_leaf_with_aggregate` (≤ 16 bytes).
+- CSS `parse_hex_color` is declared at expand.rs:61 but has zero
+  call sites; the `push_leaf_with_u32` at expand.rs:103160 is
+  inside `__namedColor` (function starts at 97235), not the hex
+  rule. Named-color keyword-to-u32 projection is the only u32
+  leaf path currently active.
+- CSS number discards: 20 `scan_number_f64(...).map(|_| ())`
+  sites verified; `-> f64` on the `number` rule in
+  `grammar/css/l4/value-unit.bbnf` is still the trivial
+  activation.
+- Sheets is 100% compound (`push_compound = 37`, `push_leaf = 0`,
+  `push_leaf_with = 0`) — confirmed against
+  `.profiles/samply/prebuild/expand/google_sheets_monolithic/expand.rs`.
+  Precedence-tower self-time is 56–86% of leaf samples across
+  the three formula packs.
+- BBNF generated parser fingerprint (push_compound = 90, push_leaf
+  = 15, push_leaf_with = 0) matches pre-AU audit exactly. Hot
+  rules resolve to `__mapped_factor` (15181), `__rhs` (15896),
+  `__directive` (17569), `__big_comment` (14143), `__binary_factor`
+  (15407) in `crates/core/src/grammar/generated.rs`.
+
+### Corrected claims from subagent reports
+
+- Fractional-digit SIMD *is* firing. The parse-that
+  `scan_number_mantissa` at `number.rs:93` uses SWAR for the
+  integer part by design (the comment at lines 128–131 explains:
+  short integer runs dominate, 16-byte SIMD loads cost more than
+  scalar SWAR on typical inputs) but calls
+  `number_simd::scan_digits_simd(bytes, i)` at line 193 for the
+  fractional part. Canada's 11.5% `compute_f64` leaf share is
+  the Eisel–Lemire bridge, not missing SIMD.
+- Byte-size claims in the BBNF agent report ("__directive 18,744 B",
+  "__mapped_factor 8,036 B") do not match line counts (142 and
+  130 lines respectively). The percentage-of-leaf-samples claims
+  were independently verified and are accurate; the byte-size
+  figures appear to conflate a different metric and were dropped
+  from the integrated findings.
+
+### What Phase 5 now has to work with
+
+Fresh samply profiles for all 27 entries (five per JSON monolithic
+dataset, three per CSS stylesheet, three per Sheets formula pack,
+six per BBNF grammar file, ten per json_value parity entry). Every
+profile has bench.txt, build.txt, record.txt, load.txt,
+profile.json.gz, profile.json.syms.json, and syms-proof.txt. Every
+entry's `profile.json.gz` symbols were verified against
+`syms-proof.txt` for named-frame coverage.
+
+### Architectural correction — the inference pipeline is already
+### complete; codegen is the reason most typed ASTs don't materialise
+
+Reading the CSS L4 grammar against the expand artifacts made it
+plain that the grammar declares more typed structure than the
+generated parser actually emits. `grammar/css/l4/color.bbnf`
+defines the complete CSS Color Level 4 / 5 specification: 148
+named colors each annotated `-> u32`, hex with
+`-> parse_hex_color(input) : u32`, `colorFunction` covering rgb /
+rgba / hsl / hsla / hwb / lab / lch / oklab / oklch, `colorFn` for
+the nine-space `color()` notation, and `colorMix` for
+`color-mix(in <space> …)`. `grammar/css/l4/value-unit.bbnf`
+declares seven typed dimensions (`length`, `angle`, `time`,
+`frequency`, `resolution`, `flex`, `percentage`) as
+`Seq(number, unit)` with `unit -> u8` annotations matching
+lightningcss's discriminants. The grammar is the full spec; the
+materialised tape is a small subset of it.
+
+The fingerprint against `css_l4` expand:
+`push_leaf_with_u32 = 1` (namedColor's 148-branch keyword alt),
+`push_leaf_with_u8 = 6` (a handful of keyword enums in CSS
+keyword tables), `push_leaf_with_f64 = 0`, 20
+`scan_number_f64(...).map(|_| ())` discards, `parse_hex_color`
+declared at expand.rs:61 and called zero times. Every other `->`
+annotation in the grammar is read by inference but never reaches
+the tape emitter.
+
+This is a codegen gap, not a grammar gap. The creed is clear:
+no legacy, no fallbacks, no workarounds. Every `->` annotation
+in the grammar must reach the tape. Inference composes types;
+it never loses them. The AU.md Phase 2 rewrite makes the invariant
+explicit and adds AU.2.5 (typed dimensions as `(f64, u8)`
+aggregates) and AU.2.6 (typed color functions with
+`(space: u8, c1..c3: f64, alpha: f64)` aggregates, arena-backed
+for color-mix recursion). AU.6.7 collapses the existing per-type
+payload side-car Vecs into a single arena-backed `Vec<u8>` so
+aggregate payloads of any size live in one contiguous buffer.
+AU.6.8 extends the same "every `->` reaches the tape" audit to
+JSON, BBNF, and Sheets — no grammar may silently drop typed
+information it declares.
+
+The practical consequence for this tranche: AU.2 is no longer
+"CSS scanner activation and payload retention" — it is "CSS typed-
+AST parity with lightningcss". Parity means every dimension
+carries its `(f64, u8)`, every color format resolves to its typed
+value, every comparison against lightningcss uses the full typed
+output. Scanner-only fast modes, if ever built, live behind a
+grammar-level `@scan` directive — not as a silent codegen drop-off.

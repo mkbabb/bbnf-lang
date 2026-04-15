@@ -25,5 +25,8 @@ scripts/
 # Rust compiler ICE dumps
 rustc-ice-*.txt
 
+# Local profiling artifacts
+.profiles/
+
 # Screenshot artifacts (root only, not assets/)
 /*.png

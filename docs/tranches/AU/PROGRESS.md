@@ -571,3 +571,51 @@ failures carry over; no new regressions.
    factoring produces `Seq(Literal, Alt)` branches with
    `Tuple([Span, U8])` shape, heterogeneous with non-factored U8
    branches. W3/W6 scope.
+
+### W3 — LANDED (12 cherry-picks + parse-that ff + regen)
+
+Six parallel worktree-isolated agents. Every wave-entry landed.
+
+| Agent | Commits | Focus | Gate |
+|-------|---------|-------|------|
+| A (padded input) | 1 (parse-that `64fe9f2`) | 64-byte-aligned `padded_bytes()` on `ParserState`; four scanner kernels consume the padded view. | Neutral within noise; memcpy (~150µs canada) offsets early SIMD savings until all kernels drop their internal bounds guards. Hard gate met: state allocates padded buffer. |
+| B (fingerprint + capacity) | 2 (`61b6cd7`, `8a6b056`) | `compute_push_fingerprint` IR pass + `GrammarIR.push_fingerprint` field + per-grammar (numer, denom) divisor emitted at codegen time. | JSON canada +18% (989→1169), BBNF json.bbnf +49% (188→281, high variance), BBNF css_pretty +9.5%. Sheets parse_simple +5% (78 MB/s; the 200 MB/s gate awaits AU.6.3). |
+| C (.map elim + label shadow + CSS perf probe) | 2 (`ebfc690`, `568a26b`) | Unique nested-scope labels; 309 `.map(\|_\| ())` sites → 0 across all expand artifacts. | Hard gate met: `grep -cF '.map(\|_\| ())'` == 0 on every expand. 0 label-shadow warnings. CSS bootstrap 396→411 MB/s (+4%); residual gap to 600 MB/s routed to W6 (structural bitmap vs nibble_lut byte-distribution). |
+| D (zero-alloc walker) | 2 (`ff0f513`, `5364526`) | `ChildIter` (size 24 B) additive alongside existing `children()`; `payload_string` drops UTF-8 validation on hot path. | bbnf throughput roughly doubled: twitter 0.27→**0.47**, canada 0.41→**0.56**, citm 0.30→**0.52**. **AU.3.2 hard gate STILL NOT MET** (targets 0.60 / 0.80). Residual is parse-stage: arena-write per string, scanner dispatch, `payload_idx` discriminator — routed to W6. |
+| E (tailwind + valueUnit) | 2 (`fc965d1`, `eded24f`) | Tailwind root cause identified (`scan_number_strict_f64` rejects leading-dot literals); reverted `number -> f64` pending emitter dispatch fix. Wired `dimension = valueUnit` and added `percentageUnit -> 255u8`. `CSS_L4_RULE_COUNT` 190→195. `push_leaf_with_aggregate` sites 2→20. | Tailwind parses (437 MB/s). `css_l4_dimensions` 23/23 new tests. `number -> f64` restoration pending W6 emitter dispatch fix routing to `scan_number_f64` (generic) vs `scan_number_strict_f64`. |
+| F (Ref projection + factor-pass) | 2 (`558a457`, `05e38dc`) | `IrNode::Ref(_)` projects target rule's scalar via `RefConstraint`; Phase 2b cycle-break grounds unsolved vars. `join_types` reconciles `Tuple([Span, T])` with bare-`T` via structural-Span extraction. | `absoluteLengthUnit` projects `U8` (was `BoxedEnum`). `push_leaf_with_aggregate` sites 20→27. Collateral fixes in `view/seq.rs` kv-pair and `lower/expression.rs` stale `_0` variants. CSS bootstrap 427→405 MB/s (-5%) from new aggregate writes. |
+
+`generated.rs` regens idempotently (diff = 0 across two consecutive
+clean-cache passes). Target tests: grammar_roundtrip 6/6,
+payload_layouts 13/13, json_decode 5/5, css_l4 18/18,
+css_l4_dimensions 23/23, tape_walker_allocs 8/8. Workspace: 2 pre-
+existing debug-wildcard failures carry over unchanged.
+
+### W3 — follow-up that rolls into W6
+
+1. **CSS bootstrap 411 MB/s → 600 MB/s target**. Structural bitmap
+   kernel likely under-performs the deleted nibble_lut for bootstrap's
+   byte-distribution. Needs samply profile + bitmap-kernel tuning.
+2. **AU.3.2 ratio miss** — ratios plateau at ~0.47–0.56 across
+   datasets; residual cost is uniform parse-stage (not walker-
+   specific). Candidate fixes: skip arena copy for borrow-safe strings
+   (JSON spec ambiguity here), scanner dispatch table, `kind_meta`-
+   indexed leaf readers.
+3. **number → f64 dispatch fix** — `emit_number_convert_impl` +
+   `leaves.rs` regex-match emission must branch on
+   `RegexClass::Numeric { allow_leading_dot, .. }` and call
+   `scan_number_f64` (generic `GENERIC_NUMBER_CONFIG`) when
+   `allow_leading_dot: true`. Restores the 20 dimension-site f64
+   captures gated out by E's safe revert.
+4. **BBNF fingerprint under-detection** — BBNF's effective
+   fingerprint lands in the Sheets-like (1, 1) bucket; the agent
+   left a (5, 8) BBNF-like bucket for future use. Not a bug, but
+   could tune for the actual BBNF workload.
+5. **Other walker surfaces still allocating** — 27+ `node.children()`
+   Vec allocations in `lower/`, `analysis/` (cold LSP paths); fixable
+   via `.rev()` adoption or forward zero-alloc accessor (substrate
+   work in AU.7 / AV).
+6. **Padded-input kernel opt-in cascade** — `find_next_structural_from`,
+   `NibbleBitmapIter::new`, `compute_in_string_bitmap`, and the
+   internal SIMD kernels' `pos + CHUNK <= len` guards can drop their
+   guards once all callers pass padded views.

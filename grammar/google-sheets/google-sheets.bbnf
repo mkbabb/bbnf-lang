@@ -42,12 +42,33 @@ error_literal = "#N/A"    -> 0u8
               | "#SPILL!" -> 8u8 ;
 
 // Sheet prefix: Sheet1! or 'Sheet Name'!
-sheet_prefix = /'(?:[^']|'')*'!/ | /[A-Za-z_]\w*!/ ;
+// Nu8 tag distinguishes quoted (0) vs bare (1) prefix forms; quoted
+// prefixes carry doubled `''` escapes that decode to `'` in the
+// rendered sheet name (deferred to AU.6.7 alongside string decode).
+sheet_prefix = /'(?:[^']|'')*'!/ -> 0u8
+             | /[A-Za-z_]\w*!/   -> 1u8 ;
 
-// Cell reference: column letters + row digits (A1, $B$2)
-cell_ref = /\$?[A-Za-z]{1,3}\$?\d+/ ;
+// Cell reference: column letters + row digits (A1, $B$2).
+// Declared return shape is (row: u32, col: u32, abs_row: bool,
+// abs_col: bool); named-tuple annotations are not expressible in
+// the current type_annotation grammar (which accepts a single
+// type_name token, not a parenthesised named-tuple), so the
+// annotation degrades to a raw Span until AU.6.7's unified arena
+// provides a host-style decode kernel (analogous to CSS's
+// parse_hex_color) that can emit the 4-field aggregate in one go.
+// TODO AU.6.7: -> decode_cell_ref(input) : CellRef  (aggregate: u32,u32,bool,bool)
+cell_ref = /\$?[A-Za-z]{1,3}\$?\d+/ -> input : Span ;
 
-// Range endpoint: cell ref, column-only ($B, AD), or row-only ($3)
+// Range endpoint: cell ref, column-only ($B, AD), or row-only ($3).
+// Left structural: the three branches have heterogeneous natural
+// types — cell_ref's typed aggregate (once it lands via AU.6.7) vs
+// column-only / row-only spans — and the current type_annotation
+// grammar cannot unify a rule reference with regex Nu8 tags under
+// one alt without introducing a named-tuple variant form. The three
+// endpoint shapes are structurally recoverable from each branch's
+// record kind on the tape.
+// TODO AU.6.7: variant-tagged enum (Cell | Column | Row) once the
+// backend-agnostic tagged-union payload codegen lands.
 range_end = cell_ref | /\$?[A-Za-z]{1,3}/ | /\$?\d+/ ;
 
 // Cell with optional sheet prefix
@@ -59,8 +80,11 @@ range_ref = sheet_prefix ? , range_end , ":" , range_end ;
 // Reference: range first (greedy), then single cell
 cell_or_range = range_ref | cell ;
 
-// Identifier: variable names, named ranges, function names
-identifier = /[A-Za-z_][A-Za-z0-9_.]*/ ;
+// Identifier: variable names, named ranges, function names.
+// Explicit Span annotation makes the tape-level projection intent
+// obvious and keeps the grammar aligned with the AU.6.8 parity rule:
+// every leaf rule declares a type.
+identifier = /[A-Za-z_][A-Za-z0-9_.]*/ -> input : Span ;
 
 // ── Expressions ── operator precedence tower ────────────────────────
 

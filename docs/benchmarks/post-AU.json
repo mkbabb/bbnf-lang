@@ -1,0 +1,153 @@
+{
+  "tag": "post-AU",
+  "tranche": "AU",
+  "date": "2026-04-15",
+  "commit": "3b8b757d5699a0ab50f49e73a95bc43c83f0b9d5",
+  "arch": "aarch64-apple-darwin",
+  "description": "Post-AU tranche. Unified arena on AoS substrate (AU.6.7) replaced per-type payload side-car Vecs with a single arena; ten push_leaf_with_* methods collapsed into one push_leaf_with(kind, PayloadData). ParsedGrammar deleted (AU.4.1; 11-tranche deferral resolved). StructRegistry deleted (AU.4.2). generated.rs matches fresh regen; module-level #![allow] (AU.4.3). Branch classification fixed for nested Alt-of-leaves (AU.1). Grammar-wide W1 annotation audit landed (CSS L4, JSON, BBNF, Sheets). HexConvert routed through tape-first emitter (AU.2.4). AU.2.7 structural bitmap subsumed memchr1/2/3 + nibble_lut. @debug * wildcard fix (AU.4.6). number -> f64 dispatch fixed (strict-vs-permissive leading-dot). Borrow-safe JSON strings skip arena copy. 58 typed-parity tests pinned (10 ignored for variant-dispatch / InlineScalar migration gaps routed to AV).",
+  "bench_matrix_note": "Cold per-parse only (mimalloc). Four bench suites per tranche README completion requirements; VM, WASM, TS, and competitor benches excluded. The google_sheets_monolithic bench includes 2 format_* entries (listed under format/) in addition to the 3 parse_* entries specified in the README matrix.",
+  "benches": {
+    "json_monolithic": {
+      "canada":  { "ns_per_iter": 1827428, "mb_per_s": 1231 },
+      "citm":    { "ns_per_iter": 708191,  "mb_per_s": 2438 },
+      "data_s":  { "ns_per_iter": 20326,   "mb_per_s": 1746 },
+      "data_xl": { "ns_per_iter": 18037587,"mb_per_s": 1179 },
+      "twitter": { "ns_per_iter": 320995,  "mb_per_s": 1967 },
+      "note": "Tape-only parse (direct-to-struct; strings land borrow-safe when escape-free, arena-copied otherwise). NOT apples-to-apples with sonic-rs::Value; see json_monolithic_value bench for honest parity (not part of the four-bench close-out matrix)."
+    },
+    "css_l4": {
+      "bootstrap": { "ns_per_iter": 616486,  "mb_per_s": 454 },
+      "normalize": { "ns_per_iter": 8351,    "mb_per_s": 735 },
+      "tailwind":  { "ns_per_iter": 7331274, "mb_per_s": 496 }
+    },
+    "google_sheets_monolithic": {
+      "parse": {
+        "parse_simple": { "ns_per_iter": 5271,  "mb_per_s": 95  },
+        "parse_nested": { "ns_per_iter": 11333, "mb_per_s": 128 },
+        "parse_stress": { "ns_per_iter": 15121, "mb_per_s": 121 }
+      },
+      "format": {
+        "format_simple": { "ns_per_iter": 140,  "mb_per_s": 42 },
+        "format_stress": { "ns_per_iter": 3813, "mb_per_s": 52 }
+      }
+    },
+    "bbnf_monolithic": {
+      "bbnf_self":      { "ns_per_iter": 13003,  "mb_per_s": 394 },
+      "css_l4_grammar": { "ns_per_iter": 102451, "mb_per_s": 496 },
+      "css_pretty":     { "ns_per_iter": 3950,   "mb_per_s": 647 },
+      "ebnf":           { "ns_per_iter": 6490,   "mb_per_s": 223 },
+      "google_sheets":  { "ns_per_iter": 8731,   "mb_per_s": 858 },
+      "json":           { "ns_per_iter": 1892,   "mb_per_s": 283 }
+    }
+  },
+  "hard_gates": {
+    "structural_activation": {
+      "gate_1_json_value_number_leaf_f64": { "status": "MET", "evidence": "commit 83357e4: push_leaf_with_f64 fires on JSON __value number branch (W5 substrate folds this into push_leaf_with(PayloadData::WideScalar))" },
+      "gate_2_json_value_bool_leaf_bool": { "status": "PARTIAL", "evidence": "Only the `false` branch fires (alt-payload first-branch loss — typed-parity-audit Bug 1). Routes to AV.", "routing": "AV" },
+      "gate_3_json_value_null_leaf_u8": { "status": "MET", "evidence": "Single-branch rule; payload writes reliably via InlineScalar." },
+      "gate_4_payload_correctness_test": { "status": "MET", "evidence": "grammar_roundtrip 6/6, payload_layouts 13/13, tape_walker_allocs 8/8 green." },
+      "gate_5_css_number_f64_activation": { "status": "MET", "evidence": "commit 63f86a5: `number -> f64` restored; commit 240535b: dispatch by allow_leading_dot (scan_number_f64 generic vs scan_number_strict_f64)." },
+      "gate_6_css_hex_u32_activation": { "status": "MET", "evidence": "commit 2bd75a3: HexConvert routes through tape-first emitter; parse_hex_color emits twice in expand; push_leaf_with_aggregate fires at 20+ sites (post-W2)." },
+      "gate_7_css_ident_config_routing": { "status": "MET-BY-AUDIT", "evidence": "PROGRESS Session 1 correction: 7 of 8 `scan_ident` call sites correctly use DEFAULT_IDENT_CONFIG — the CSS `ident` regex does not admit leading dash; only `selectorIdent` needs CSS_IDENT_CONFIG, which it receives. Original audit claim was incorrect." },
+      "gate_8_css_dimensions_aggregate": { "status": "PARTIAL", "evidence": "Activated via AU.2.5 Ref-projection + join_types fix (commits 558a457, 05e38dc). `push_leaf_with_aggregate` sites grew 2→20→27 post-W3. Per typed-parity-audit, multi-branch unit rules exhibit Bug 1 (alt-payload first-branch only fires). Single-branch percentageUnit / flexUnit reliably fire.", "routing": "AV" },
+      "gate_9_css_color_families_roundtrip": { "status": "PARTIAL", "evidence": "hex round-trip landed (W2.B + test ff30e16). namedColor 113/148 branches fire (factor-pass payload loss). colorFunction / colorFn / colorMix aggregate payloads did NOT land (AU.2.6 emitter extension not shipped).", "routing": "AV" }
+    },
+    "typed_materialisation_parity": {
+      "gate_10_json_value_bench_walks_tape": { "status": "MET-MODULO-VARIANT-DISPATCH", "evidence": "commits de51346 + 39aa0d0 + aa778c8: json_monolithic_value walker consumes ChildIter; payload_string skips UTF-8 check on hot path. 7 JSON variant-dispatch parity tests ignored post-W5/W6.D due to walker variant_idx dispatch break against the new tape shape.", "routing": "AV" },
+      "gate_11_bbnf_sonic_ratio_post_decode": { "status": "MISSED", "evidence": "Post-W6.D: canada ratio 0.61 (target 0.80), twitter 0.52 (target 0.60). Residual is parse-stage (Eisel-Lemire, simdjson-scale SIMD decode). Walker side is zero-alloc with borrow-safe strings.", "routing": "AV" },
+      "gate_12_every_arrow_reaches_tape": { "status": "MISSED", "evidence": "Systemic Bug 1 (alt-lit first-branch-only payload write) + Bug 2 (-> Span shorthand lowers to push_compound) documented in typed-parity-audit.md. BBNF: 4 sites in source, 0 firing at runtime. Sheets: 9 sites, majority lose the second-branch payload. CSS: 31 Aggregate writes vs ~600+ declared alt branches.", "routing": "AV" },
+      "gate_13_no_comment_push_compound": { "status": "DEFERRED", "evidence": "AU.6.9 `big_comment -> Span` leaf-optimisation was not shipped — `-> Span` lowers to push_compound under Bug 2 anyway.", "routing": "AV (alongside Bug 2 fix)" },
+      "gate_14_no_map_unit_discard": { "status": "MET", "evidence": "commit 4e4a75e: .map(|_| ()) eliminated at every codegen site (309 sites → 0); W3.C verified grep -cF '.map(|_| ())' == 0 on every expand artifact." }
+    },
+    "architectural_cleanup": {
+      "gate_15_parsed_grammar_eliminated": { "status": "MET", "evidence": "commit 688d6ea: ParsedGrammar deleted; GrammarSink trait + PipelineSink / ExtractSink replace the flat-Vec intermediate. 11-tranche deferral resolved." },
+      "gate_16_payload_idx_eliminated_singular_push_leaf_with": { "status": "MET", "evidence": "commit 3b75463 + 9a1186e: TapeRec::payload_idx field removed (slot is _reserved: u16 for future packing). Every payload_*: Vec<_> side-car on Tape deleted. Single push_leaf_with(kind, PayloadData) entry point; thin push_leaf_with_arena_frame helper retained for the decode-kernel stream path." },
+      "gate_17_workspace_compiles_zero_errors_no_new_failures": { "status": "PARTIAL", "evidence": "Compiles zero errors. Default `cargo test --workspace` exits 101 on the single pre-existing imports failure (matches the plan expectation). Under --no-fail-fast: 967 pass / 33 fail / 30 ignored. Breakdown: 4 CSS tape_parity goldens stale post-W6.D (4df6b8c regenerated only json/sheets), 5 sheets_parity Bug-1 pinned-assert tests flipped PASS→FAIL under W6.D scalar-bypass (missed #[ignore] marking during W6.C integration), 23 pre-existing Session-1 '18 tests fail' family hidden by cargo's stop-at-first behaviour, 1 pre-existing imports failure." },
+      "gate_18_generated_rs_matches_fresh_regen": { "status": "MET", "evidence": "commits 6e33a40 (W1), c9a4fc7 (W2), 5b2a48e (W3), 28f5023 (W4.B); bootstrap idempotent (diff = 0 across consecutive clean-cache regens per PROGRESS W5/W6)." }
+    },
+    "performance_cross_bench": {
+      "gate_19_fresh_samply_profiles_27_pairs": { "status": "MET", "evidence": "profiling-2.md — 27 (bench, entry) pairs captured with seven required artefacts each (bench.txt, build.txt, record.txt, load.txt, profile.json.gz, profile.json.syms.json, syms-proof.txt). 19 profile sub-directories under .profiles/samply/prebuild/ in master." },
+      "gate_20_padded_input_every_simd_kernel": { "status": "PARTIAL", "evidence": "parse-that commit 64fe9f2 landed padded_bytes() on ParserState and converted four scanner kernels. Not every kernel has dropped its internal bounds guards yet — routed as a kernel opt-in cascade to AV (PROGRESS W3.A follow-up 6).", "routing": "AV" },
+      "gate_21_json_canada_decoded_1800_mbps": { "status": "MISSED", "evidence": "canada 1231 MB/s on the tape-only path (with payload_f64 storage); the decoded value path via json_monolithic_value stabilises at 0.61 ratio vs sonic. Raw canada dropped 1796 → 1294 → 1231 from AQ to post-AU as the cost of activating f64 payload writes (see PROGRESS Session 1 'unverified claim' section for uninvestigated delta).", "routing": "AV (needs Eisel-Lemire optimisation + simdjson-scale SIMD decode)" },
+      "gate_22_css_bootstrap_600_mbps": { "status": "MISSED", "evidence": "bootstrap 454 MB/s (this run); residual is __declaration (38% self) + __compoundSelector (31%) — AV-scale PHF + SIMD selector classifier. W6.D tier-2 inlined WS fastpath landed 438 MB/s; noise puts this run at 454.", "routing": "AV" },
+      "gate_23_css_bootstrap_550_after_aggregates": { "status": "N/A", "evidence": "AU.2.6 colorFunction / colorFn / colorMix aggregate payloads did not ship; the dimension-aggregate activation from AU.2.5 landed but bootstrap never reached the 600 baseline, so the regression-budget gate is not applicable." },
+      "gate_24_sheets_parse_simple_200_mbps": { "status": "MISSED", "evidence": "parse_simple 95 MB/s. AU.6.3 Pratt precedence-tower flattening was not shipped; the six-level left-recursive tower still emits unconditional mark_children + push_compound at every level. Per-grammar TapeBuilder capacity (W3.B) contributed +5% from 78 → 95; the structural lever is AV.", "routing": "AV" }
+    }
+  },
+  "gate_tally": {
+    "met": 10,
+    "met_modulo_qualifier": 2,
+    "partial": 5,
+    "missed": 5,
+    "deferred": 1,
+    "not_applicable": 1,
+    "total": 24
+  },
+  "landed_tests": {
+    "default_cargo_test_workspace": {
+      "exit_code": 101,
+      "first_failure": "test_selective_transitive_unfurling (imports.rs)",
+      "note": "cargo test --workspace stops at first failing test binary. Exit 101 matches the tranche-plan expectation. The 33 full failure count below is surfaced only via --no-fail-fast."
+    },
+    "no_fail_fast_workspace": {
+      "total_passed": 967,
+      "total_failed": 33,
+      "total_ignored": 30
+    },
+    "passing_targets": {
+      "grammar_roundtrip": { "passed": 6, "failed": 0 },
+      "payload_layouts": { "passed": 13, "failed": 0 },
+      "json_decode": { "passed": 5, "failed": 0 },
+      "css_l4": { "passed": 18, "failed": 0 },
+      "css_l4_dimensions": { "passed": 23, "failed": 0 },
+      "tape_walker_allocs": { "passed": 8, "failed": 0 },
+      "json_parity": { "passed": 9, "failed": 0, "ignored": 7 },
+      "css_l4_parity": { "passed": 14, "failed": 0, "ignored": 3 },
+      "bbnf_parity": { "passed": 18, "failed": 0 }
+    },
+    "failing_test_breakdown": {
+      "pre_existing_imports": ["test_selective_transitive_unfurling"],
+      "tape_parity_css_goldens_stale_post_W6D": [
+        "css_bootstrap_tape_parity",
+        "css_normalize_tape_parity",
+        "css_tailwind_tape_parity",
+        "css_test_import_tape_parity"
+      ],
+      "sheets_parity_bug_1_first_branch_pinned_assertions": [
+        "add_op_first_branch_fires_0u8",
+        "boolean_first_branch_fires_true_payload",
+        "mul_op_first_branch_fires_0u8",
+        "nested_arithmetic_materialises_first_branch_ops",
+        "unary_prefix_first_branch_fires_0u8"
+      ],
+      "pre_existing_feature_tests": [
+        "closure_composition", "closure_multi_param", "closure_nested_calls",
+        "closure_single_param", "closure_with_rule_ref",
+        "compile_request_rejects_unknown_nonterminal",
+        "lower_cyclic_rule_gets_memo", "lower_json_grammar",
+        "ir_meta_has_follow_sets", "ir_meta_has_memo_and_span_info",
+        "test_alias_detection", "test_cycle_detection",
+        "test_diagnostics_alias_hint", "test_diagnostics_cycle_path",
+        "hint_indent_group", "hint_softbreak",
+        "dump_biome_vs_gorgeous", "dump_tailwind_comparison",
+        "output_size_comparison",
+        "google_sheets::tests::test_let_parses_as_let_call",
+        "no_hand_written_subvariant_references",
+        "parse_recover_without_terminator",
+        "pipeline_google_sheets_multiline_let"
+      ]
+    },
+    "bootstrap_idempotent": true,
+    "honesty_note": "The tranche plan expected 'exit 101 with 1 failing test plus 10 #[ignore]s'. Default cargo test produces exactly that. Under --no-fail-fast the genuine picture is 967/33/30 — 33 real failures hidden by cargo's stop-at-first behaviour. The 4 css tape_parity failures surface stale goldens that W6.D's test regen commit (4df6b8c) missed (it only regenerated json/sheets goldens). The 5 sheets_parity first-branch tests are Bug 1 pinned assertions that flipped from PASS to FAIL once W6.D's scalar-bypass landed; their `assert` was intended to flip with the Bug 1 fix but was not explicitly marked #[ignore]. The remaining 23 failures are pre-existing Session-1 '18 tests fail' family (closures, debug, imports, lower, analysis, gorgeous)."
+  },
+  "av_seeds": {
+    "bug_1_alt_payload_first_branch_loss": "Per typed-parity-audit §Bug 1: Alt-bodied rules with literal alternatives carrying typed payloads fire the payload-write block on only ONE branch. Concrete instance: JSON `bool` fires only `false`; every CSS Nu8 unit rule (absoluteLengthUnit, angleUnit, …), every *Keyword rule, and every Sheets Nu8 op (compare_op, add_op, mul_op, unary_prefix) lose second-branch payloads. Surgical fix: hoist the `__has_payload = true` write out of the per-branch closure in `crates/core/src/backend/rust/emitter/grammar.rs`'s alt-lit emission path.",
+    "bug_2_span_shorthand_lowers_to_compound": "Per typed-parity-audit §Bug 2: `-> Span` shorthand and `-> input : Span` reach IR as TypeDesc::Named(\"Span\") which the rule-body emitter does not route through PayloadData::Aggregate(8 bytes). Every BBNF token rule (identifier, literal, regex, big_comment, comment, string_lit) and every Sheets `-> input : Span` rule (string, cell_ref, identifier) emit push_compound with no payload. Fix: admit TypeDesc::Named(\"Span\") to the leaf-payload route (the KvPair whitelist landed in W2.B; extend to bare-Span). Bug 2b (`-> i64`/`-> f64` scanner-to-payload wiring) is larger — parse_that scan_*_mut must return Option<f64>/Option<i64> threaded into the alt prelude. AV-substrate scope.",
+    "css_bootstrap_438_to_600_mbps": "Post-AU CSS bootstrap is 454 MB/s; the residual cost sits on __declaration (38% self) + __compoundSelector (31%). AV-scale remediation: PHF property name dispatch + SIMD selector classifier over the structural bitmap. Structural bitmap kernel (AU.2.7) is in place as the substrate for the classifier.",
+    "json_sonic_ratio_0.61_to_0.80": "AU.3.2 ratio plateaued at canada 0.61 / twitter 0.52 after walker zero-alloc + borrow-safe strings. Residual is parse-stage Eisel-Lemire + simdjson-scale SIMD decode. AV substrate work: widen scan_number_mantissa integer fastpath, NEON fractional, and integrate with the scanner dispatch so string-decode + number-parse share the padded-input SIMD pipeline.",
+    "sheets_parse_simple_95_to_200_mbps": "Sheets precedence-tower flattening (AU.6.3 Pratt lowering) was not shipped. Six-level left-recursive tower contributes 56–86% self-time. Replace with a single Pratt-style loop in __expr dispatching on operator precedence via a lookahead byte match. Pattern generalises to CSS value expressions and BBNF binary expressions. AV scope.",
+    "soa_columnar_substrate": "W4 columnar prototype measured 1.94× on sum-all-f64 (gate was ≥ 5×); AU.6.7 unified arena landed on AoS. Key finding: strict-IEEE f64 left-fold blocks LLVM auto-vectorisation; 4-lane reordered unrolling clears the gate at 6.64×. The SoA layout is necessary-but-not-sufficient; the emitter-side reordering pattern is the additional AV lever.",
+    "variant_dispatch_walker_coherence": "7 JSON parity tests ignored post-W5/W6.D because walker variant_idx dispatch broke under the unified-arena tape shape. View-layer coherence fix alongside the Bug 1 emitter work. Trivial once Bug 1 lands since variant_idx re-anchors to the per-branch payload writes.",
+    "test_selective_transitive_unfurling": "Pre-existing imports.rs failure, orthogonal to AU scope but surfaced during W6 triage. W6.A and W6.B both flagged it. Defer to a dedicated imports-subsystem pass; not an AU regression."
+  }
+}

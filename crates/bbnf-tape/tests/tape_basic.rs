@@ -180,6 +180,57 @@ fn empty_compound_clears_has_children() {
     assert!(!compound.has_children(), "empty compound must clear has_children");
 }
 
+#[test]
+fn empty_compound_stamps_child_off_none() {
+    // AV.0.6: `push_compound` must write `TapeOffset::NONE` to
+    // `child_off` when the children run is empty. A non-NONE
+    // `child_off` on a compound without children would collide with
+    // the payload encoding `has_children=false && child_off != NONE`
+    // that identifies payload-bearing leaves, so the reader's
+    // `has_payload()` would light up spuriously for empty compounds.
+    let mut b = TapeBuilder::new();
+    // Push a real child first so parent_idx > 0; the empty compound
+    // lands after the leaf and its mark_children points at the next
+    // (yet-unwritten) slot — exactly the same slot the compound will
+    // occupy.
+    let _ = b.push_leaf(TapeKind::Literal, 0, 4, 0, 0);
+    let marked = b.mark_children();
+    let compound_off = b.push_compound(TapeKind::Rule, marked, 4, 4, 0, 0);
+    let tape = b.finish().unwrap();
+
+    let rec = tape.get(compound_off);
+    assert!(!rec.has_children(), "empty compound must not report children");
+    assert_eq!(
+        rec.child_off,
+        TapeOffset::NONE,
+        "empty compound must carry `child_off = NONE`"
+    );
+    assert!(
+        !rec.has_payload(),
+        "empty compound must report `has_payload() == false`"
+    );
+}
+
+#[test]
+fn nonempty_compound_preserves_child_off() {
+    // Complement to the NONE-stamping test: a compound with at least
+    // one child keeps the caller-supplied `child_off` verbatim.
+    let mut b = TapeBuilder::new();
+    let marked = b.mark_children();
+    b.push_leaf(TapeKind::Literal, 0, 4, 0, 0);
+    b.push_leaf(TapeKind::Literal, 4, 8, 0, 0);
+    let compound_off = b.push_compound(TapeKind::Seq, marked, 0, 8, 0, 0);
+    let tape = b.finish().unwrap();
+
+    let rec = tape.get(compound_off);
+    assert!(rec.has_children());
+    assert_eq!(rec.child_off, marked);
+    assert_ne!(rec.child_off, TapeOffset::NONE);
+    // `has_payload()` is false for every compound — the payload
+    // bit is gated on `!has_children`.
+    assert!(!rec.has_payload());
+}
+
 // ── AU.6.7: unified PayloadData round-trips ─────────────────────
 
 #[test]

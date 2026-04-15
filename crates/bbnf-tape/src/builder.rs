@@ -219,13 +219,23 @@ impl TapeBuilder {
         );
         // `has_children` is true iff the caller actually pushed
         // records between `mark_children` and this call. When the
-        // child run is empty, `child_off` equals the parent's own
-        // index, which would form a cycle for `TapeCursor::children`
-        // / `subtree_size`. The safe thing is to clear the flag and
-        // leave the child_off field untouched — cursor accessors
-        // check `has_children` first.
+        // child run is empty (`child_off` equals the parent's own
+        // index), the compound has no payload and must report that
+        // symmetrically with leaves — a single
+        // `TapeOffset::NONE` sentinel on `child_off` drives both
+        // [`TapeRec::has_children`] and [`TapeRec::has_payload`] to
+        // false. Leaving the raw marked offset would form a cycle
+        // in [`TapeCursor::children`] and, since the raw offset is
+        // not `NONE`, would spuriously light up `has_payload` on
+        // any reader that checks `child_off != NONE` to gate payload
+        // decoding.
         let parent_idx = self.tape.records.len();
         let has_children = (child_off.0 as usize) < parent_idx;
+        let effective_child_off = if has_children {
+            child_off
+        } else {
+            TapeOffset::NONE
+        };
         let (kind_meta, flags_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
         let flags = (variant_idx & 0x3F) | if has_children { 0x40 } else { 0 } | flags_meta_bit;
         let idx = parent_idx;
@@ -235,7 +245,7 @@ impl TapeBuilder {
             extra: 0,
             span_lo,
             span_hi,
-            child_off,
+            child_off: effective_child_off,
         });
         TapeOffset(idx as u32)
     }

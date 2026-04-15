@@ -29,22 +29,43 @@ attrName     = "*|" , selectorIdent
              | selectorIdent , "|" , selectorIdent
              | "|" , selectorIdent
              | selectorIdent ;
-attrMatcher  = "~=" | "|=" | "^=" | "$=" | "*=" | "=" ;
+// u8 discriminant for attrMatcher — matches lightningcss's AttrOperator:
+// Equal=0, Dash(|=)=1, Includes(~=)=2, Prefix(^=)=3, Suffix($=)=4,
+// Substring(*=)=5.
+attrMatcher  = "~=" -> 2u8 | "|=" -> 1u8
+             | "^=" -> 3u8 | "$=" -> 4u8
+             | "*=" -> 5u8 | "=" -> 0u8 ;
 attrModifier = /[iIsS]/ ;
 attrSelector = "[" ?w , attrName ?w , (attrMatcher ?w , (string | selectorIdent) ?w , attrModifier ?) ? , "]" ;
 
 // --- An+B microsyntax ---
-anPlusB = "odd" | "even" | /[-+]?\d*n\s*[+-]\s*\d+/ | /[-+]?\d*n/ | /[-+]?\d+/ ;
+// "odd" → (2n+1), "even" → (2n+0); numeric forms parse to (a, b) i32 pair.
+// TODO typed-aggregate (AU.2.6): (i32, i32) for anPlusB once aggregate
+// codegen composes pairs from regex captures. Current annotation marks
+// the keyword shorthands.
+anPlusB = "odd" -> 0u8 | "even" -> 1u8
+       | /[-+]?\d*n\s*[+-]\s*\d+/ | /[-+]?\d*n/ | /[-+]?\d+/ ;
 
 // --- Pseudo-classes (all start with :) ---
+// TODO typed-aggregate (AU.2.6): full pseudo-class variant enum with
+// recursive selectorList / relativeSelectorList payloads. The grammar
+// already disambiguates by structure; variant tag compose via Alt of
+// annotated leaves.
 isPseudo    = ":is" , "(" >> selectorList << ")" ;
 wherePseudo = ":where" , "(" >> selectorList << ")" ;
 notPseudo   = ":not" , "(" >> selectorList << ")" ;
 hasPseudo   = ":has" , "(" >> relativeSelectorList << ")" ;
-nthPseudo   = ":" , ("nth-last-of-type" | "nth-last-child" | "nth-of-type" | "nth-child")
+// u8 discriminant for nth-family pseudo-class.
+nthFunctionName = "nth-last-of-type" -> 3u8
+                | "nth-last-child"   -> 2u8
+                | "nth-of-type"      -> 1u8
+                | "nth-child"        -> 0u8 ;
+nthPseudo   = ":" , nthFunctionName
               , "(" , anPlusB , ("of" >> selectorList) ? , ")" ;
 langPseudo  = ":lang" , "(" >> (selectorIdent , ("," >> selectorIdent) *) << ")" ;
-dirPseudo   = ":dir" , "(" >> ("ltr" | "rtl") << ")" ;
+// u8 discriminant for :dir(ltr|rtl).
+dirKeyword  = "ltr" -> 0u8 | "rtl" -> 1u8 ;
+dirPseudo   = ":dir" , "(" >> dirKeyword << ")" ;
 simplePseudoClass = ":" , selectorIdent ;
 
 pseudoClass = isPseudo | wherePseudo | notPseudo | hasPseudo
@@ -67,7 +88,12 @@ compoundSelector = (classSelector | idSelector | attrSelector
                    | colonSelector | typeSelector) + ;
 
 // --- Combinators ---
-combinator = /\s*>\s*/ | /\s*\+\s*/ | /\s*~\s*/ | /\s+/ ;
+// u8 discriminant for combinator — matches lightningcss's Combinator:
+// Descendant( )=0, Child(>)=1, NextSibling(+)=2, LaterSibling(~)=3.
+combinator = /\s*>\s*/ -> 1u8
+           | /\s*\+\s*/ -> 2u8
+           | /\s*~\s*/ -> 3u8
+           | /\s+/ -> 0u8 ;
 
 // --- Complex selector ---
 complexSelector = compoundSelector , (combinator , compoundSelector) * ;

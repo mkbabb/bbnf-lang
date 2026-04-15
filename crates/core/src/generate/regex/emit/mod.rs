@@ -178,48 +178,15 @@ fn emit_regex_fast_path(pattern: &str, opts: &EmitOpts) -> Option<TokenStream> {
             });
         }
 
-        // Try memchr first (1-3 needles).
+        // Tranche AU.2.7 v2 — single structural-bitmap kernel path.
+        // Subsumes memchr1/2/3 (1–3 needles) and nibble-LUT (4–8
+        // needles) in one emitter; no hybrid, no fallback.
         let result = match quantifier {
             NegCharClassQuantifier::Plus => simd::emit_negated_scan_plus(&excluded),
             NegCharClassQuantifier::Star => simd::emit_negated_scan_star(&excluded),
         };
         if result.is_some() {
             return result;
-        }
-
-        // Try nibble-LUT for 4-8 excluded bytes (Phase 2.3).
-        if excluded.len() >= 4 && excluded.len() <= 8 {
-            if let Some(lut_scan) = simd::emit_nibble_lut_scan(&excluded) {
-                let ts = match quantifier {
-                    NegCharClassQuantifier::Plus => {
-                        quote! {
-                            {
-                                let __start = state.offset;
-                                if __start >= state.src_bytes.len() { None } else {
-                                    let __scan = (#lut_scan).unwrap_or(state.src_bytes.len() - __start);
-                                    if __scan == 0 { None } else {
-                                        state.offset = __start + __scan;
-                                        Some(::parse_that::Span::new(__start, state.offset, state.src))
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    NegCharClassQuantifier::Star => {
-                        quote! {
-                            {
-                                let __start = state.offset;
-                                let __scan = if __start >= state.src_bytes.len() { 0 } else {
-                                    (#lut_scan).unwrap_or(state.src_bytes.len() - __start)
-                                };
-                                state.offset = __start + __scan;
-                                Some(::parse_that::Span::new(__start, state.offset, state.src))
-                            }
-                        }
-                    }
-                };
-                return Some(ts);
-            }
         }
     }
 
@@ -350,47 +317,16 @@ fn try_emit_simd_positive_class(pattern: &str, opts: &EmitOpts) -> Option<TokenS
     // The `chars` bitset holds the positive-form accepted bytes (ASCII).
     let excluded: Vec<u8> = (0u8..128).filter(|b| !chars.has(*b)).collect();
 
-    // Only emit SIMD for patterns with few excluded bytes (memchr/nibble-LUT territory).
-    // CostModel.memchr_max_needles=3, nibble_lut_max_excluded=8.
+    // Tranche AU.2.7 v2: single structural-bitmap kernel handles
+    // 1..=8 excluded bytes. The nibble-LUT window is the upper
+    // bound — wider sets fall through to the generalized emitter.
     if excluded.is_empty() || excluded.len() > 8 {
         return None;
     }
 
-    // Emit the SIMD scan.
-    if excluded.len() <= 3 {
-        // Use memchr on excluded bytes (inverted scan).
-        if is_plus {
-            simd::emit_negated_scan_plus(&excluded)
-        } else {
-            simd::emit_negated_scan_star(&excluded)
-        }
+    if is_plus {
+        simd::emit_negated_scan_plus(&excluded)
     } else {
-        // Use nibble-LUT on excluded bytes (4-8).
-        let lut_scan = simd::emit_nibble_lut_scan(&excluded)?;
-        if is_plus {
-            Some(quote! {
-                {
-                    let __start = state.offset;
-                    if __start >= state.src_bytes.len() { None } else {
-                        let __scan = (#lut_scan).unwrap_or(state.src_bytes.len() - __start);
-                        if __scan == 0 { None } else {
-                            state.offset = __start + __scan;
-                            Some(::parse_that::Span::new(__start, state.offset, state.src))
-                        }
-                    }
-                }
-            })
-        } else {
-            Some(quote! {
-                {
-                    let __start = state.offset;
-                    let __scan = if __start >= state.src_bytes.len() { 0 } else {
-                        (#lut_scan).unwrap_or(state.src_bytes.len() - __start)
-                    };
-                    state.offset = __start + __scan;
-                    Some(::parse_that::Span::new(__start, state.offset, state.src))
-                }
-            })
-        }
+        simd::emit_negated_scan_star(&excluded)
     }
 }

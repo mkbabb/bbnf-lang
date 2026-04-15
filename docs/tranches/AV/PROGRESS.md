@@ -686,3 +686,64 @@ The tranche plan's V0 hard gates:
 
 V0 CLOSED. V1 (GrammarProfile codegen channel) dispatches
 next.
+
+## 2026-04-15 — V1 CLOSED
+
+Single-agent serial wave `av1-profile` landed six commits:
+
+- `38775a1…e977fa5` — GrammarProfile struct in bbnf-tape with
+  17 fields. Stub wrappers `ColumnId(u16)`, `RuleId(u32)`,
+  `VisitorId(u16)` + data structs `KeywordTable`, `ShapeEntry`,
+  `BranchPrior`. `GrammarProfile::EMPTY`, `capacity_for()`,
+  `total_push_sites()` helpers.
+- `GrammarIR::profile()` accessor consolidates
+  `PushFingerprint` (push counts), `RecognizerSignature`,
+  `EClassFacts.is_fixed_shape`, structural-alphabet data,
+  payload-bytes density estimates.
+- Emitter profile.rs emits `pub const GRAMMAR_PROFILE:
+  GrammarProfile = GrammarProfile { ... };` into every
+  grammar's `generated.rs` (JSON, CSS L4, BBNF, Sheets,
+  EBNF, google-sheets).
+- Tape capacity consolidation: the 4-case ratio dispatch in
+  `emit_grammar_impl` (numer/denom combinatorics inlined into
+  each grammar's `parse()`) collapses to
+  `GRAMMAR_PROFILE.capacity_for(input.len())`.
+
+Hard gates met:
+
+- (9) `pub const GRAMMAR_PROFILE: GrammarProfile` in every
+  grammar's `generated.rs` ✓
+- (10) `grep -rn 'const [A-Z_]*: &\[u8\]'
+  crates/core/src/backend/rust/emitter/ | wc -l` → 0 ✓
+
+Regression gates:
+
+- `grammar_roundtrip`: 6/6 ✓
+- `bbnf_parity`: 18/18 ✓
+- `tape_parity`: 22/22 ✓
+- `sheets_parity`: 25/25 ✓
+- `json_parity`: 2/2 + 7 ignored (V9 walker)
+- `css_l4_parity`: 13/13 + 3 ignored (V1 Bug 2b)
+- Workspace: 1000 passed, 0 failed, 52 ignored.
+- Deterministic bootstrap: two consecutive regens produce
+  byte-identical `generated.rs`.
+
+Slot ownership for later waves (documented):
+
+- `payload_bytes_per_input_byte` — V4 refines.
+- `expected_ns_per_byte`, `parallel_break_even_bytes` — V6
+  calibrates.
+- `structural_alphabet`, `structural_digraphs` — V3 DTA
+  may widen the 2..=8 byte gate.
+- `active_columns` — V2 (AV.2.4).
+- `list_rules` — V6 (AV.7.x).
+- `keyword_tables` — V7 (AV.8.x).
+- `shape_dict` — V5 (AV.5.x).
+- `branch_priors` — V4 (AV.4.x).
+- `dedup_eligible_rules` — V8 (AV.9.x).
+- `reorder_unroll_visitors` — V2 (AV.2.5).
+
+Master HEAD: `e977fa5 chore(codegen): regen after AV.1.3`.
+
+V1 CLOSED. V2 (Columnar substrate + reordering codegen,
+3-parallel) dispatches next.

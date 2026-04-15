@@ -25,7 +25,8 @@
 //! within branch bodies don't re-apply the mark — they compile as
 //! normal `Option<()>` sub-expressions.
 
-use bbnf_ir::AltDispatch;
+use bbnf_ir::passes::{PayloadField, PayloadLayout};
+use bbnf_ir::{AltBranch, AltDispatch, FnDescriptor, GrammarIR, IrNode, MapExpr, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::quote;
 
@@ -225,14 +226,46 @@ impl RustEmitter {
         // via `is_some()` and yield the label's uniform `Option<()>`
         // — avoiding the prior `break __r` which forced the body's
         // natural type onto the label break.
+        //
+        // AV.0.1 Bug 1: when an aggregate payload layout is active for
+        // the enclosing rule, each branch of the all-literal Alt should
+        // write its declared return value into the same aggregate
+        // buffer slot. The driver compiles each branch sequentially
+        // with a shared `aggregate_field_cursor`; the first branch
+        // consumes the field and the remaining branches fall through
+        // to side-effect-only emission. Repair this in the alt-lit
+        // composer: look up each branch's `MapExpr` in the IR, and
+        // wrap every body with its own payload-write. Branch 0's
+        // existing write becomes idempotent; branches 1+ gain the
+        // previously missing write.
         let alt_lit_blk = ctx.fresh_lifetime("alt_lit_blk");
+        let per_branch_writes = alt_lit_per_branch_writes(&literals, ctx);
         let mut chain = Vec::new();
-        for (_value, body) in &literals {
-            chain.push(quote! {
-                {
-                    if #body.is_some() { break #alt_lit_blk Some(()); }
-                }
-            });
+        for (idx, (_value, body)) in literals.iter().enumerate() {
+            let arm = match per_branch_writes.as_ref().and_then(|w| w.get(idx)) {
+                Some(Some(buf_setter)) => quote! {
+                    {
+                        if match ({ #body }) {
+                            Some(_) => {
+                                #buf_setter;
+                                __has_payload = true;
+                                Some(())
+                            }
+                            None => None,
+                        }
+                        .is_some()
+                        {
+                            break #alt_lit_blk Some(());
+                        }
+                    }
+                },
+                _ => quote! {
+                    {
+                        if #body.is_some() { break #alt_lit_blk Some(()); }
+                    }
+                },
+            };
+            chain.push(arm);
         }
         quote! {
             #alt_lit_blk: {
@@ -312,4 +345,217 @@ impl RustEmitter {
             }
         }
     }
+}
+
+/// AV.0.1: for an all-literal Alt inside a rule with an active
+/// aggregate payload layout, compute the per-branch aggregate-buffer
+/// write that the alt-lit composer must hoist onto every arm.
+///
+/// Returns `None` when no layout is active, the enclosing rule body
+/// cannot be resolved, or the matching IR Alt cannot be located
+/// unambiguously — in those cases the caller falls back to bare
+/// emission (no regression versus the pre-AV shape).
+///
+/// When the Alt is located, returns one entry per `literals` branch.
+/// An inner `None` inside the outer `Some` means the branch's
+/// `MapExpr` could not be coerced to a constant setter for the
+/// target field (non-constant map, type mismatch) — the caller
+/// leaves that branch's body unwrapped.
+fn alt_lit_per_branch_writes(
+    literals: &[(String, TokenStream)],
+    ctx: &RustEmitCtx,
+) -> Option<Vec<Option<TokenStream>>> {
+    let layout = ctx.payload_layout.as_ref()?;
+    let ir = ctx.ir_ctx().ir;
+
+    // Search every rule body for the matching Alt. `current_rule_id`
+    // is unset on the Rust emitter's ctx, so the identification goes
+    // by literal-value signature. `values` is the ordered literal set
+    // the alt-lit composer received; an Alt whose branches' literals
+    // match in the same order is the unambiguous target. Duplicate
+    // signatures across different rules would be ambiguous, but in
+    // the AV.0.1 target set (rule-scoped payload layouts, small
+    // factored alt-lit groups) the signatures are unique.
+    let values: Vec<&str> = literals.iter().map(|(s, _)| s.as_str()).collect();
+    let (alt_branches, field) = ir
+        .rules
+        .iter()
+        .find_map(|rule| locate_alt_and_field(&rule.body, &values, ir, layout))?;
+
+    let mut writes = Vec::with_capacity(alt_branches.len());
+    for branch in alt_branches {
+        writes.push(branch_payload_write(&branch.node, ir, &field));
+    }
+    Some(writes)
+}
+
+/// Walk `root` looking for an `IrNode::Alt` whose branch literals
+/// match `values` in declaration order. Returns the `AltBranch`
+/// slice and the `PayloadField` the branches are expected to fill.
+///
+/// The field is the one consumed by the first-to-compile branch. In
+/// the all-literal contract every branch writes a single scalar at
+/// the same offset, so any branch's consumption identifies the
+/// shared field. The cursor at `emit_alt_all_literal_impl` entry
+/// points one past that field, so the target is
+/// `layout.fields[cursor - 1]`.
+fn locate_alt_and_field<'ir>(
+    root: &'ir IrNode,
+    values: &[&str],
+    ir: &'ir GrammarIR,
+    layout: &'ir PayloadLayout,
+) -> Option<(&'ir [AltBranch], PayloadField)> {
+    fn find<'a>(node: &'a IrNode, values: &[&str], ir: &GrammarIR) -> Option<&'a [AltBranch]> {
+        if let IrNode::Alt(branches, _) = node {
+            if branches.len() == values.len()
+                && branches
+                    .iter()
+                    .zip(values.iter())
+                    .all(|(b, v)| alt_branch_literal(&b.node, ir) == Some(*v))
+            {
+                return Some(branches.as_slice());
+            }
+        }
+        for child in node_children(node) {
+            if let Some(m) = find(child, values, ir) {
+                return Some(m);
+            }
+        }
+        None
+    }
+    let alt_branches = find(root, values, ir)?;
+    // Field index: the monotonic cursor is one past the field the
+    // first branch consumed. The layout stores field count; guard
+    // against underflow by requiring at least one field.
+    let field_idx = layout.fields.len().checked_sub(1)?;
+    let field = layout.fields.get(field_idx).cloned()?;
+    // Accept only layouts with exactly one field — multi-field
+    // layouts mean the Alt sits inside a Seq with other cursor
+    // consumers and the single-cursor-step assumption doesn't
+    // hold. Those rules (none in the AV.0.1 target set) fall
+    // through to the pre-fix emission.
+    if layout.fields.len() != 1 {
+        return None;
+    }
+    Some((alt_branches, field))
+}
+
+/// Iterate direct children of an `IrNode` for structural descent.
+fn node_children(node: &IrNode) -> Vec<&IrNode> {
+    match node {
+        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon | IrNode::Ref(_) => Vec::new(),
+        IrNode::Seq(cs) => cs.iter().collect(),
+        IrNode::Alt(bs, _) => bs.iter().map(|b| &b.node).collect(),
+        IrNode::Repeat { inner, .. } => vec![inner.as_ref()],
+        IrNode::Skip(l, r) | IrNode::Next(l, r) | IrNode::Minus(l, r) => {
+            vec![l.as_ref(), r.as_ref()]
+        }
+        IrNode::Negate(inner) => vec![inner.as_ref()],
+        IrNode::Map { inner, .. } => vec![inner.as_ref()],
+        IrNode::OptionalWhitespace(inner) => vec![inner.as_ref()],
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => {
+            let mut children: Vec<&IrNode> = Vec::with_capacity(2 + arms.len());
+            children.push(token.as_ref());
+            children.push(fallback.as_ref());
+            for arm in arms {
+                children.push(&arm.continuation);
+            }
+            children
+        }
+    }
+}
+
+/// Extract the literal string backing an Alt branch's node, when it
+/// is a bare literal or a `Map { Literal, .. }` wrapper. Returns
+/// `None` for any other shape.
+fn alt_branch_literal<'ir>(node: &'ir IrNode, ir: &'ir GrammarIR) -> Option<&'ir str> {
+    match node {
+        IrNode::Literal(sid) => Some(ir.get_string(*sid)),
+        IrNode::Map { inner, .. } => match inner.as_ref() {
+            IrNode::Literal(sid) => Some(ir.get_string(*sid)),
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
+/// Compose the per-branch aggregate-buffer write for `branch_node`
+/// writing into `field`. Returns `None` when the branch's `MapExpr`
+/// is not a constant compatible with the field's type — the caller
+/// leaves that arm unwrapped.
+fn branch_payload_write(
+    branch_node: &IrNode,
+    ir: &GrammarIR,
+    field: &PayloadField,
+) -> Option<TokenStream> {
+    let fn_id = match branch_node {
+        IrNode::Map { fn_id, .. } => *fn_id,
+        _ => return None,
+    };
+    let expr = match &ir.fns[fn_id as usize] {
+        FnDescriptor::Expr { expr, .. } => expr,
+        _ => return None,
+    };
+    aggregate_constant_setter(&field, expr)
+}
+
+/// Mirror of `aggregate_constant_setter` in `map_value.rs`: emit a
+/// byte-level write into `__aggregate_buf` at the field's layout
+/// offset for a constant `MapExpr`. Kept in-module so the alt-lit
+/// composer is self-contained; the two sites stay in lockstep via
+/// the `PayloadField` / `MapExpr` surface they share.
+fn aggregate_constant_setter(field: &PayloadField, expr: &MapExpr) -> Option<TokenStream> {
+    let offset = field.offset as usize;
+    let size = field.ty.payload_size_bytes()? as usize;
+    let value_expr: TokenStream = match (&field.ty, expr) {
+        (TypeDesc::Bool, MapExpr::BoolLit(v)) => {
+            let val = *v as u8;
+            quote! { [#val] }
+        }
+        (TypeDesc::I8, MapExpr::IntLit(v)) => {
+            let val = *v as i8;
+            quote! { (#val as i8).to_le_bytes() }
+        }
+        (TypeDesc::U8, MapExpr::IntLit(v)) => {
+            let val = (*v & 0xFF) as u8;
+            quote! { [#val] }
+        }
+        (TypeDesc::I16, MapExpr::IntLit(v)) => {
+            let val = *v as i16;
+            quote! { (#val as i16).to_le_bytes() }
+        }
+        (TypeDesc::U16, MapExpr::IntLit(v)) => {
+            let val = *v as u16;
+            quote! { (#val as u16).to_le_bytes() }
+        }
+        (TypeDesc::I32, MapExpr::IntLit(v)) => {
+            let val = *v as i32;
+            quote! { (#val as i32).to_le_bytes() }
+        }
+        (TypeDesc::U32, MapExpr::IntLit(v)) => {
+            let val = *v as u32;
+            quote! { (#val as u32).to_le_bytes() }
+        }
+        (TypeDesc::I64, MapExpr::IntLit(v)) => {
+            let val = *v;
+            quote! { (#val as i64).to_le_bytes() }
+        }
+        (TypeDesc::U64, MapExpr::IntLit(v)) => {
+            let val = *v as u64;
+            quote! { (#val as u64).to_le_bytes() }
+        }
+        (TypeDesc::F64, MapExpr::FloatLit(v)) => {
+            let val = *v;
+            quote! { (#val as f64).to_le_bytes() }
+        }
+        _ => return None,
+    };
+    let end = offset + size;
+    Some(quote! {
+        __aggregate_buf[#offset..#end].copy_from_slice(&#value_expr)
+    })
 }

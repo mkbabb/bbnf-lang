@@ -63,8 +63,11 @@ impl RustEmitter {
                 }
             })
         } else {
+            // AU.6.5 no-value-discard: return the scanner's
+            // `Option<f64>` directly; enclosing callers match via
+            // `Some(_)` which is payload-agnostic.
             Some(quote! {
-                (::parse_that::scan_number_strict_f64(state)).map(|_| ())
+                ::parse_that::scan_number_strict_f64(state)
             })
         }
     }

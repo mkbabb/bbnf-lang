@@ -27,12 +27,15 @@ impl RustEmitter {
         _ctx: &mut RustEmitCtx,
     ) -> TokenStream {
         // Tape call. The rule function is
-        // `__rule(state, tape) -> Option<TapeOffset>`; we discard
-        // the returned offset because the rule already pushed its
-        // own record into the parent's children run via
-        // `mark_children`.
+        // `__rule(state, tape) -> Option<TapeOffset>`; the offset
+        // composes into every enclosing Seq / Alt / rule-body match
+        // site via `Some(_)` — so AU.6.5 no-value-discard drops the
+        // historical `.map(|_| ())` wrap and emits the natural
+        // `Option<TapeOffset>` directly. Alt emitters unify
+        // heterogeneous arm types via an `is_some()` probe at the
+        // label break, not at each call site.
         let fn_ident = format_ident!("__{}", rule_name);
-        quote! { Self::#fn_ident(state, tape).map(|_| ()) }
+        quote! { Self::#fn_ident(state, tape) }
     }
 
     pub(super) fn emit_inline_wrap_impl(
@@ -86,12 +89,14 @@ impl RustEmitter {
         ctx: &mut RustEmitCtx,
     ) -> TokenStream {
         // Next: `discarded >> kept` — evaluate discarded (must
-        // succeed), then evaluate kept. Return whatever kept
-        // returned (which under tape-first may be either () or a
-        // TapeOffset).
+        // succeed), then evaluate kept.
         //
-        // Uses `fresh_lifetime` for the same reason as `emit_skip_impl`
-        // above.
+        // AU.6.5 no-value-discard: `#kept` can legitimately be
+        // `Option<TapeOffset>` / `Option<()>` / `Option<Span>`. The
+        // labeled block yields uniform `Option<()>` via an
+        // `is_some()` probe so callers in heterogeneous Alt / Seq
+        // contexts compose without a `.map(|_| ())` wrap at each
+        // nested site.
         let next_blk = ctx.fresh_lifetime("next_blk");
         quote! {
             #next_blk: {
@@ -99,7 +104,7 @@ impl RustEmitter {
                     Some(_) => (),
                     None => break #next_blk None,
                 }
-                #kept
+                if #kept.is_some() { Some(()) } else { None }
             }
         }
     }

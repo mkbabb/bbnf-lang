@@ -21,6 +21,12 @@ impl RustEmitter {
         // `fresh_lifetime` so nested token-dispatch blocks share no
         // label and `derive(Parser)` emits no `label name shadows`
         // warning inside a single rule body.
+        //
+        // AU.6.5 no-value-discard: each arm's continuation returns a
+        // natural `Option<T>` shape; the block yields uniform
+        // `Option<()>` via `break ... Some(())` on success (tested
+        // with `is_some()`). The fallback coerces via an `is_some()`
+        // probe in the same shape.
         let token_var = ctx.fresh("tok");
         let td_blk = ctx.fresh_lifetime("td_blk");
         let mut arm_checks = Vec::new();
@@ -41,13 +47,19 @@ impl RustEmitter {
                     if (#(#patterns)||*) && state.offset < state.src_bytes.len()
                         && state.src_bytes[state.offset] == #guard
                     {
-                        break #td_blk #cont;
+                        if #cont.is_some() {
+                            break #td_blk Some(());
+                        }
+                        break #td_blk None;
                     }
                 });
             } else {
                 arm_checks.push(quote! {
                     if #(#patterns)||* {
-                        break #td_blk #cont;
+                        if #cont.is_some() {
+                            break #td_blk Some(());
+                        }
+                        break #td_blk None;
                     }
                 });
             }
@@ -59,7 +71,7 @@ impl RustEmitter {
                     let __td_len = __td_bytes.len();
                     #(#arm_checks)*
                 }
-                #fallback
+                if #fallback.is_some() { Some(()) } else { None }
             }
         }
     }

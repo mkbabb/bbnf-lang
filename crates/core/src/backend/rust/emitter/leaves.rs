@@ -171,11 +171,14 @@ impl RustEmitter {
         }
 
         // Default: span-only scan. The shared regex emitter returns
-        // `Option<Span>`; we discard the Span and re-express as
-        // `Option<()>` so the tape-first composition pattern holds.
+        // `Option<Span>`; AU.6.5 no-value-discard drops the prior
+        // `.map(|_| ())` wrap and returns `Option<Span>` directly —
+        // the Span composes identically via `Some(_)` at every call
+        // site, so one less Option epilogue per regex match in the
+        // inner loop.
         let regex_expr = crate::generate::regex::emit_regex(pattern, &opts);
         quote! {
-            { (#regex_expr).map(|_| ()) }
+            { #regex_expr }
         }
     }
 

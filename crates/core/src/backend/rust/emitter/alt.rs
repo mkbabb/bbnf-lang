@@ -58,7 +58,15 @@ impl RustEmitter {
     ) -> TokenStream {
         // AM.3: take the surgery context so nested Alts within branch
         // bodies don't re-apply the per-branch mark_children.
+        //
+        // AU.6.5 no-value-discard: dispatch arms now produce natural
+        // `Option<()>` / `Option<TapeOffset>` / `Option<Span>` types.
+        // Each arm probes its body with `is_some()` and the labeled
+        // block yields uniform `Option<()>` via `break #ad_blk
+        // Some(())` on success — heterogeneous inner types no longer
+        // force a per-call `.map(|_| ())` wrap.
         let surgery = ctx.tape_surgery.take();
+        let ad_blk = ctx.fresh_lifetime("ad_blk");
         let mut arms = Vec::new();
 
         for (branch_idx, (info, body)) in branches.iter().enumerate() {
@@ -93,34 +101,48 @@ impl RustEmitter {
 
             let patterns: Vec<_> = byte_patterns.iter().map(|b| quote! { #b }).collect();
             arms.push(quote! {
-                #( #patterns )|* => { #branch_assign #compound_mark #body }
+                #( #patterns )|* => {
+                    #branch_assign
+                    #compound_mark
+                    if #body.is_some() {
+                        break #ad_blk Some(());
+                    }
+                }
             });
         }
 
-        let (fallback_arm, eof_expr) = if let Some((info, fb_body)) = fallback {
+        let fallback_stmt = if let Some((info, fb_body)) = fallback {
             let compound_mark = if surgery.is_some() {
                 Self::emit_compound_mark(info.pushes_children)
             } else {
                 quote! {}
             };
-            (
-                quote! { _ => { #compound_mark #fb_body } },
-                quote! { { #compound_mark #fb_body } },
-            )
+            quote! {
+                {
+                    #compound_mark
+                    if #fb_body.is_some() {
+                        break #ad_blk Some(());
+                    }
+                }
+            }
         } else {
-            (quote! { _ => None }, quote! { None })
+            quote! { {} }
         };
-        arms.push(fallback_arm);
+
+        // `_ => #fallback_stmt` and the EOF branch share the same
+        // statement — the fallback runs in either case.
+        arms.push(quote! { _ => #fallback_stmt });
 
         quote! {
-            {
+            #ad_blk: {
                 if state.offset < state.src_bytes.len() {
                     match state.src_bytes[state.offset] {
                         #( #arms ),*
                     }
                 } else {
-                    #eof_expr
+                    #fallback_stmt
                 }
+                None
             }
         }
     }
@@ -132,6 +154,12 @@ impl RustEmitter {
         ctx: &mut RustEmitCtx,
     ) -> TokenStream {
         // AM.3: take the surgery context so nested Alts don't re-apply.
+        //
+        // AU.6.5 no-value-discard: each branch body now emits a
+        // natural `Option<T>` shape. The labeled block yields
+        // `Option<()>` via `break ... Some(())` on success (tested
+        // with `is_some()`), so heterogeneous inner types do not
+        // force a `.map(|_| ())` wrap at each emit site.
         let surgery = ctx.tape_surgery.take();
         let alt_blk = ctx.fresh_lifetime("alt_blk");
 
@@ -171,9 +199,8 @@ impl RustEmitter {
                     let __cp = state.offset;
                     #branch_assign
                     #compound_mark
-                    let __result = #body;
-                    if __result.is_some() {
-                        break #alt_blk __result;
+                    if #body.is_some() {
+                        break #alt_blk Some(());
                     }
                     state.offset = __cp;
                 }
@@ -194,13 +221,16 @@ impl RustEmitter {
         _alloc: ValuePlacement,
         ctx: &mut RustEmitCtx,
     ) -> TokenStream {
+        // AU.6.5 no-value-discard: literal-Alt branches probe success
+        // via `is_some()` and yield the label's uniform `Option<()>`
+        // — avoiding the prior `break __r` which forced the body's
+        // natural type onto the label break.
         let alt_lit_blk = ctx.fresh_lifetime("alt_lit_blk");
         let mut chain = Vec::new();
         for (_value, body) in &literals {
             chain.push(quote! {
                 {
-                    let __r = #body;
-                    if __r.is_some() { break #alt_lit_blk __r; }
+                    if #body.is_some() { break #alt_lit_blk Some(()); }
                 }
             });
         }
@@ -221,8 +251,12 @@ impl RustEmitter {
         ctx: &mut RustEmitCtx,
     ) -> TokenStream {
         // `fresh_lifetime` so nested key-dispatch blocks within a
-        // single rule body each get a unique label — prevents the
-        // `derive(Parser)` label shadow warning.
+        // single rule body each get a unique label.
+        //
+        // AU.6.5 no-value-discard: each arm probes its body with
+        // `is_some()` and yields the block's uniform `Option<()>`
+        // via `break ... Some(())`. The fallback coerces through an
+        // `is_some()` probe in the same shape.
         let cp = ctx.fresh("kd_cp");
         let kd_blk = ctx.fresh_lifetime("kd_blk");
         let scanner = match config.key_class {
@@ -250,13 +284,18 @@ impl RustEmitter {
                 quote! {
                     if #(#comparisons)||* {
                         state.offset = #cp;
-                        break #kd_blk #body;
+                        if #body.is_some() {
+                            break #kd_blk Some(());
+                        }
+                        break #kd_blk None;
                     }
                 }
             })
             .collect();
         let fallback_expr = if let Some((_info, fb)) = fallback {
-            fb
+            quote! {
+                if #fb.is_some() { Some(()) } else { None }
+            }
         } else {
             quote! { None }
         };
@@ -269,7 +308,7 @@ impl RustEmitter {
                     #(#arm_checks)*
                 }
                 state.offset = #cp;
-                #fallback_expr
+                break #kd_blk #fallback_expr;
             }
         }
     }

@@ -59,9 +59,13 @@ impl RustEmitter {
                 }
             }
             // Layout active but the current field is not F64 (or no
-            // more fields) — fall through to side-effect only.
+            // more fields) — return the scanner's `Option<f64>`
+            // directly (AU.6.5 no-value-discard). Callers match via
+            // `Some(_)` so the inner f64 composes identically to
+            // `Option<()>`; stripping the `.map(|_| ())` wrap shrinks
+            // the inner-loop icache footprint.
             return quote! {
-                (::parse_that::scan_number_strict_f64(state)).map(|_| ())
+                ::parse_that::scan_number_strict_f64(state)
             };
         }
 
@@ -77,8 +81,11 @@ impl RustEmitter {
                 }
             }
         } else {
+            // AU.6.5 no-value-discard: bare scanner output. The
+            // `Option<f64>` threads upward unchanged — callers see
+            // `Some(_)` as truthy regardless of the inner type.
             quote! {
-                (::parse_that::scan_number_strict_f64(state)).map(|_| ())
+                ::parse_that::scan_number_strict_f64(state)
             }
         }
     }
@@ -272,9 +279,13 @@ impl RustEmitter {
         //
         // NumberConvert is always JSON-class (lowered from
         // `-> f64` on a JSON number regex).
+        //
+        // AU.6.5 no-value-discard: return the scanner's `Option<f64>`
+        // directly — callers compose via `Some(_)` so the
+        // `.map(|_| ())` wrap has been dropped.
         match inner_fd {
             FnDescriptor::NumberConvert => Some(quote! {
-                (::parse_that::scan_number_strict_f64(state)).map(|_| ())
+                ::parse_that::scan_number_strict_f64(state)
             }),
             _ => Some(quote! { { #inner } }),
         }

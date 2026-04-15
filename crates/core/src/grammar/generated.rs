@@ -10977,7 +10977,7 @@ mod __bbnfbootstrap_emit_impl {
                 match ({
                     {
                         {
-                            ({
+                            {
                                 let __start = state.offset;
                                 let __result: Option<()> = (|| {
                                     {
@@ -11055,8 +11055,7 @@ mod __bbnfbootstrap_emit_impl {
                                     state.offset = __start;
                                     None
                                 }
-                            })
-                                .map(|_| ())
+                            }
                         }
                     }
                 }) {
@@ -11107,7 +11106,7 @@ mod __bbnfbootstrap_emit_impl {
                 match ({
                     {
                         {
-                            ({
+                            {
                                 let __start = state.offset;
                                 let __result: Option<()> = (|| {
                                     {
@@ -11183,8 +11182,7 @@ mod __bbnfbootstrap_emit_impl {
                                     state.offset = __start;
                                     None
                                 }
-                            })
-                                .map(|_| ())
+                            }
                         }
                     }
                 }) {
@@ -11236,7 +11234,7 @@ mod __bbnfbootstrap_emit_impl {
                 match ({
                     '__alt_lit_blk0: {
                         {
-                            let __r = {
+                            if {
                                 if state.offset + 4usize <= state.src_bytes.len()
                                     && unsafe {
                                         *(state.src_bytes.as_ptr().add(state.offset)
@@ -11248,13 +11246,14 @@ mod __bbnfbootstrap_emit_impl {
                                 } else {
                                     None
                                 }
-                            };
-                            if __r.is_some() {
-                                break '__alt_lit_blk0 __r;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_lit_blk0 Some(());
                             }
                         }
                         {
-                            let __r = {
+                            if {
                                 if state.offset + 5usize <= state.src_bytes.len()
                                     && unsafe {
                                         *(state.src_bytes.as_ptr().add(state.offset)
@@ -11266,9 +11265,10 @@ mod __bbnfbootstrap_emit_impl {
                                 } else {
                                     None
                                 }
-                            };
-                            if __r.is_some() {
-                                break '__alt_lit_blk0 __r;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_lit_blk0 Some(());
                             }
                         }
                         None
@@ -11328,7 +11328,7 @@ mod __bbnfbootstrap_emit_impl {
                                 None => break '__span_blk1 None,
                             }
                             match ({
-                                ({
+                                {
                                     let __start = state.offset;
                                     let __result: Option<()> = (|| {
                                         {
@@ -11394,8 +11394,7 @@ mod __bbnfbootstrap_emit_impl {
                                         state.offset = __start;
                                         None
                                     }
-                                })
-                                    .map(|_| ())
+                                }
                             }) {
                                 Some(_) => {}
                                 None => break '__span_blk1 None,
@@ -11447,11 +11446,10 @@ mod __bbnfbootstrap_emit_impl {
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
                     {
-                        (::parse_that::scan_ident(
+                        ::parse_that::scan_ident(
                             state,
                             &::parse_that::DEFAULT_IDENT_CONFIG,
-                        ))
-                            .map(|_| ())
+                        )
                     }
                 }) {
                     Some(_) => {}
@@ -11484,7 +11482,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
                     '__seq_blk4: {
-                        match (Self::__value_ident(state, tape).map(|_| ())) {
+                        match (Self::__value_ident(state, tape)) {
                             Some(_) => {}
                             None => break '__seq_blk4 None,
                         }
@@ -11513,7 +11511,7 @@ mod __bbnfbootstrap_emit_impl {
                                         Some(_) => {}
                                         None => break '__seq_blk2 None,
                                     }
-                                    match (Self::__value_ident(state, tape).map(|_| ())) {
+                                    match (Self::__value_ident(state, tape)) {
                                         Some(_) => {}
                                         None => break '__seq_blk2 None,
                                     }
@@ -11625,7 +11623,7 @@ mod __bbnfbootstrap_emit_impl {
                                         Some(_) => {}
                                         None => break '__seq_blk5 None,
                                     }
-                                    match (Self::__value_ident(state, tape).map(|_| ())) {
+                                    match (Self::__value_ident(state, tape)) {
                                         Some(_) => {}
                                         None => break '__seq_blk5 None,
                                     }
@@ -11699,7 +11697,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
                     '__seq_blk11: {
-                        match (Self::__value_path(state, tape).map(|_| ())) {
+                        match (Self::__value_path(state, tape)) {
                             Some(_) => {}
                             None => break '__seq_blk11 None,
                         }
@@ -11723,7 +11721,7 @@ mod __bbnfbootstrap_emit_impl {
                             );
                             let __opt_cp = state.offset;
                             match ('__seq_blk10: {
-                                match (Self::__value_expr(state, tape).map(|_| ())) {
+                                match (Self::__value_expr(state, tape)) {
                                     Some(_) => {}
                                     None => break '__seq_blk10 None,
                                 }
@@ -11754,7 +11752,7 @@ mod __bbnfbootstrap_emit_impl {
                                                 Some(_) => {}
                                                 None => break '__seq_blk8 None,
                                             }
-                                            match (Self::__value_expr(state, tape).map(|_| ())) {
+                                            match (Self::__value_expr(state, tape)) {
                                                 Some(_) => {}
                                                 None => break '__seq_blk8 None,
                                             }
@@ -11880,9 +11878,8 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = Self::__int_lit(state, tape).map(|_| ());
-                            if __result.is_some() {
-                                break '__alt_blk13 __result;
+                            if Self::__int_lit(state, tape).is_some() {
+                                break '__alt_blk13 Some(());
                             }
                             state.offset = __cp;
                         }
@@ -11893,9 +11890,8 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = Self::__float_lit(state, tape).map(|_| ());
-                            if __result.is_some() {
-                                break '__alt_blk13 __result;
+                            if Self::__float_lit(state, tape).is_some() {
+                                break '__alt_blk13 Some(());
                             }
                             state.offset = __cp;
                         }
@@ -11906,9 +11902,8 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = Self::__bool_lit(state, tape).map(|_| ());
-                            if __result.is_some() {
-                                break '__alt_blk13 __result;
+                            if Self::__bool_lit(state, tape).is_some() {
+                                break '__alt_blk13 Some(());
                             }
                             state.offset = __cp;
                         }
@@ -11919,9 +11914,8 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = Self::__string_lit(state, tape).map(|_| ());
-                            if __result.is_some() {
-                                break '__alt_blk13 __result;
+                            if Self::__string_lit(state, tape).is_some() {
+                                break '__alt_blk13 Some(());
                             }
                             state.offset = __cp;
                         }
@@ -11932,10 +11926,8 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = Self::__value_fn_call(state, tape)
-                                .map(|_| ());
-                            if __result.is_some() {
-                                break '__alt_blk13 __result;
+                            if Self::__value_fn_call(state, tape).is_some() {
+                                break '__alt_blk13 Some(());
                             }
                             state.offset = __cp;
                         }
@@ -11946,9 +11938,8 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = Self::__value_input(state, tape).map(|_| ());
-                            if __result.is_some() {
-                                break '__alt_blk13 __result;
+                            if Self::__value_input(state, tape).is_some() {
+                                break '__alt_blk13 Some(());
                             }
                             state.offset = __cp;
                         }
@@ -11959,9 +11950,8 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = Self::__value_path(state, tape).map(|_| ());
-                            if __result.is_some() {
-                                break '__alt_blk13 __result;
+                            if Self::__value_path(state, tape).is_some() {
+                                break '__alt_blk13 Some(());
                             }
                             state.offset = __cp;
                         }
@@ -11972,7 +11962,7 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = '__seq_blk12: {
+                            if '__seq_blk12: {
                                 match ({
                                     if state.offset < state.src_bytes.len()
                                         && state.src_bytes[state.offset] == 40u8
@@ -11988,8 +11978,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                                 match ({
                                     ::parse_that::trim_leading_whitespace_mut(state);
-                                    let __ws_inner = Self::__value_expr(state, tape)
-                                        .map(|_| ());
+                                    let __ws_inner = Self::__value_expr(state, tape);
                                     ::parse_that::trim_leading_whitespace_mut(state);
                                     __ws_inner
                                 }) {
@@ -12010,9 +11999,10 @@ mod __bbnfbootstrap_emit_impl {
                                     None => break '__seq_blk12 None,
                                 }
                                 Some(())
-                            };
-                            if __result.is_some() {
-                                break '__alt_blk13 __result;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_blk13 Some(());
                             }
                             state.offset = __cp;
                         }
@@ -12092,7 +12082,7 @@ mod __bbnfbootstrap_emit_impl {
                 match ({
                     '__alt_lit_blk14: {
                         {
-                            let __r = {
+                            if {
                                 if state.offset < state.src_bytes.len()
                                     && state.src_bytes[state.offset] == 42u8
                                 {
@@ -12101,13 +12091,14 @@ mod __bbnfbootstrap_emit_impl {
                                 } else {
                                     None
                                 }
-                            };
-                            if __r.is_some() {
-                                break '__alt_lit_blk14 __r;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_lit_blk14 Some(());
                             }
                         }
                         {
-                            let __r = {
+                            if {
                                 if state.offset < state.src_bytes.len()
                                     && state.src_bytes[state.offset] == 47u8
                                 {
@@ -12116,13 +12107,14 @@ mod __bbnfbootstrap_emit_impl {
                                 } else {
                                     None
                                 }
-                            };
-                            if __r.is_some() {
-                                break '__alt_lit_blk14 __r;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_lit_blk14 Some(());
                             }
                         }
                         {
-                            let __r = {
+                            if {
                                 if state.offset < state.src_bytes.len()
                                     && state.src_bytes[state.offset] == 37u8
                                 {
@@ -12131,9 +12123,10 @@ mod __bbnfbootstrap_emit_impl {
                                 } else {
                                     None
                                 }
-                            };
-                            if __r.is_some() {
-                                break '__alt_lit_blk14 __r;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_lit_blk14 Some(());
                             }
                         }
                         None
@@ -12182,7 +12175,7 @@ mod __bbnfbootstrap_emit_impl {
                 match ({
                     '__alt_lit_blk15: {
                         {
-                            let __r = {
+                            if {
                                 if state.offset < state.src_bytes.len()
                                     && state.src_bytes[state.offset] == 43u8
                                 {
@@ -12191,13 +12184,14 @@ mod __bbnfbootstrap_emit_impl {
                                 } else {
                                     None
                                 }
-                            };
-                            if __r.is_some() {
-                                break '__alt_lit_blk15 __r;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_lit_blk15 Some(());
                             }
                         }
                         {
-                            let __r = {
+                            if {
                                 if state.offset < state.src_bytes.len()
                                     && state.src_bytes[state.offset] == 45u8
                                 {
@@ -12206,9 +12200,10 @@ mod __bbnfbootstrap_emit_impl {
                                 } else {
                                     None
                                 }
-                            };
-                            if __r.is_some() {
-                                break '__alt_lit_blk15 __r;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_lit_blk15 Some(());
                             }
                         }
                         None
@@ -12257,7 +12252,7 @@ mod __bbnfbootstrap_emit_impl {
                 match ({
                     '__alt_lit_blk16: {
                         {
-                            let __r = {
+                            if {
                                 if state.offset + 2usize <= state.src_bytes.len()
                                     && unsafe {
                                         *(state.src_bytes.as_ptr().add(state.offset)
@@ -12269,13 +12264,14 @@ mod __bbnfbootstrap_emit_impl {
                                 } else {
                                     None
                                 }
-                            };
-                            if __r.is_some() {
-                                break '__alt_lit_blk16 __r;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_lit_blk16 Some(());
                             }
                         }
                         {
-                            let __r = {
+                            if {
                                 if state.offset + 2usize <= state.src_bytes.len()
                                     && unsafe {
                                         *(state.src_bytes.as_ptr().add(state.offset)
@@ -12287,13 +12283,14 @@ mod __bbnfbootstrap_emit_impl {
                                 } else {
                                     None
                                 }
-                            };
-                            if __r.is_some() {
-                                break '__alt_lit_blk16 __r;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_lit_blk16 Some(());
                             }
                         }
                         {
-                            let __r = {
+                            if {
                                 if state.offset + 2usize <= state.src_bytes.len()
                                     && unsafe {
                                         *(state.src_bytes.as_ptr().add(state.offset)
@@ -12305,13 +12302,14 @@ mod __bbnfbootstrap_emit_impl {
                                 } else {
                                     None
                                 }
-                            };
-                            if __r.is_some() {
-                                break '__alt_lit_blk16 __r;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_lit_blk16 Some(());
                             }
                         }
                         {
-                            let __r = {
+                            if {
                                 if state.offset + 2usize <= state.src_bytes.len()
                                     && unsafe {
                                         *(state.src_bytes.as_ptr().add(state.offset)
@@ -12323,13 +12321,14 @@ mod __bbnfbootstrap_emit_impl {
                                 } else {
                                     None
                                 }
-                            };
-                            if __r.is_some() {
-                                break '__alt_lit_blk16 __r;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_lit_blk16 Some(());
                             }
                         }
                         {
-                            let __r = {
+                            if {
                                 if state.offset < state.src_bytes.len()
                                     && state.src_bytes[state.offset] == 60u8
                                 {
@@ -12338,13 +12337,14 @@ mod __bbnfbootstrap_emit_impl {
                                 } else {
                                     None
                                 }
-                            };
-                            if __r.is_some() {
-                                break '__alt_lit_blk16 __r;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_lit_blk16 Some(());
                             }
                         }
                         {
-                            let __r = {
+                            if {
                                 if state.offset < state.src_bytes.len()
                                     && state.src_bytes[state.offset] == 62u8
                                 {
@@ -12353,9 +12353,10 @@ mod __bbnfbootstrap_emit_impl {
                                 } else {
                                     None
                                 }
-                            };
-                            if __r.is_some() {
-                                break '__alt_lit_blk16 __r;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_lit_blk16 Some(());
                             }
                         }
                         None
@@ -12410,10 +12411,10 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = '__seq_blk18: {
+                            if '__seq_blk18: {
                                 match ('__alt_lit_blk17: {
                                     {
-                                        let __r = {
+                                        if {
                                             if state.offset < state.src_bytes.len()
                                                 && state.src_bytes[state.offset] == 33u8
                                             {
@@ -12422,13 +12423,14 @@ mod __bbnfbootstrap_emit_impl {
                                             } else {
                                                 None
                                             }
-                                        };
-                                        if __r.is_some() {
-                                            break '__alt_lit_blk17 __r;
+                                        }
+                                            .is_some()
+                                        {
+                                            break '__alt_lit_blk17 Some(());
                                         }
                                     }
                                     {
-                                        let __r = {
+                                        if {
                                             if state.offset < state.src_bytes.len()
                                                 && state.src_bytes[state.offset] == 45u8
                                             {
@@ -12437,9 +12439,10 @@ mod __bbnfbootstrap_emit_impl {
                                             } else {
                                                 None
                                             }
-                                        };
-                                        if __r.is_some() {
-                                            break '__alt_lit_blk17 __r;
+                                        }
+                                            .is_some()
+                                        {
+                                            break '__alt_lit_blk17 Some(());
                                         }
                                     }
                                     None
@@ -12447,14 +12450,15 @@ mod __bbnfbootstrap_emit_impl {
                                     Some(_) => {}
                                     None => break '__seq_blk18 None,
                                 }
-                                match (Self::__value_atom(state, tape).map(|_| ())) {
+                                match (Self::__value_atom(state, tape)) {
                                     Some(_) => {}
                                     None => break '__seq_blk18 None,
                                 }
                                 Some(())
-                            };
-                            if __result.is_some() {
-                                break '__alt_blk19 __result;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_blk19 Some(());
                             }
                             state.offset = __cp;
                         }
@@ -12465,9 +12469,8 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = Self::__value_atom(state, tape).map(|_| ());
-                            if __result.is_some() {
-                                break '__alt_blk19 __result;
+                            if Self::__value_atom(state, tape).is_some() {
+                                break '__alt_blk19 Some(());
                             }
                             state.offset = __cp;
                         }
@@ -12513,7 +12516,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
                     '__seq_blk22: {
-                        match (Self::__value_unary(state, tape).map(|_| ())) {
+                        match (Self::__value_unary(state, tape)) {
                             Some(_) => {}
                             None => break '__seq_blk22 None,
                         }
@@ -12528,14 +12531,14 @@ mod __bbnfbootstrap_emit_impl {
                                 match ('__seq_blk20: {
                                     match ({
                                         ::parse_that::trim_leading_whitespace_mut(state);
-                                        let __ws_inner = Self::__mul_op(state, tape).map(|_| ());
+                                        let __ws_inner = Self::__mul_op(state, tape);
                                         ::parse_that::trim_leading_whitespace_mut(state);
                                         __ws_inner
                                     }) {
                                         Some(_) => {}
                                         None => break '__seq_blk20 None,
                                     }
-                                    match (Self::__value_unary(state, tape).map(|_| ())) {
+                                    match (Self::__value_unary(state, tape)) {
                                         Some(_) => {}
                                         None => break '__seq_blk20 None,
                                     }
@@ -12609,7 +12612,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
                     '__seq_blk25: {
-                        match (Self::__value_mul(state, tape).map(|_| ())) {
+                        match (Self::__value_mul(state, tape)) {
                             Some(_) => {}
                             None => break '__seq_blk25 None,
                         }
@@ -12624,14 +12627,14 @@ mod __bbnfbootstrap_emit_impl {
                                 match ('__seq_blk23: {
                                     match ({
                                         ::parse_that::trim_leading_whitespace_mut(state);
-                                        let __ws_inner = Self::__add_op(state, tape).map(|_| ());
+                                        let __ws_inner = Self::__add_op(state, tape);
                                         ::parse_that::trim_leading_whitespace_mut(state);
                                         __ws_inner
                                     }) {
                                         Some(_) => {}
                                         None => break '__seq_blk23 None,
                                     }
-                                    match (Self::__value_mul(state, tape).map(|_| ())) {
+                                    match (Self::__value_mul(state, tape)) {
                                         Some(_) => {}
                                         None => break '__seq_blk23 None,
                                     }
@@ -12705,7 +12708,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
                     '__seq_blk28: {
-                        match (Self::__value_add(state, tape).map(|_| ())) {
+                        match (Self::__value_add(state, tape)) {
                             Some(_) => {}
                             None => break '__seq_blk28 None,
                         }
@@ -12720,14 +12723,14 @@ mod __bbnfbootstrap_emit_impl {
                                 match ('__seq_blk26: {
                                     match ({
                                         ::parse_that::trim_leading_whitespace_mut(state);
-                                        let __ws_inner = Self::__cmp_op(state, tape).map(|_| ());
+                                        let __ws_inner = Self::__cmp_op(state, tape);
                                         ::parse_that::trim_leading_whitespace_mut(state);
                                         __ws_inner
                                     }) {
                                         Some(_) => {}
                                         None => break '__seq_blk26 None,
                                     }
-                                    match (Self::__value_add(state, tape).map(|_| ())) {
+                                    match (Self::__value_add(state, tape)) {
                                         Some(_) => {}
                                         None => break '__seq_blk26 None,
                                     }
@@ -12801,7 +12804,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
                     '__seq_blk31: {
-                        match (Self::__value_cmp(state, tape).map(|_| ())) {
+                        match (Self::__value_cmp(state, tape)) {
                             Some(_) => {}
                             None => break '__seq_blk31 None,
                         }
@@ -12835,7 +12838,7 @@ mod __bbnfbootstrap_emit_impl {
                                         Some(_) => {}
                                         None => break '__seq_blk29 None,
                                     }
-                                    match (Self::__value_cmp(state, tape).map(|_| ())) {
+                                    match (Self::__value_cmp(state, tape)) {
                                         Some(_) => {}
                                         None => break '__seq_blk29 None,
                                     }
@@ -12909,7 +12912,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
                     '__seq_blk34: {
-                        match (Self::__value_and(state, tape).map(|_| ())) {
+                        match (Self::__value_and(state, tape)) {
                             Some(_) => {}
                             None => break '__seq_blk34 None,
                         }
@@ -12943,7 +12946,7 @@ mod __bbnfbootstrap_emit_impl {
                                         Some(_) => {}
                                         None => break '__seq_blk32 None,
                                     }
-                                    match (Self::__value_and(state, tape).map(|_| ())) {
+                                    match (Self::__value_and(state, tape)) {
                                         Some(_) => {}
                                         None => break '__seq_blk32 None,
                                     }
@@ -13030,7 +13033,7 @@ mod __bbnfbootstrap_emit_impl {
                             Some(_) => {}
                             None => break '__seq_blk37 None,
                         }
-                        match (Self::__value_ident(state, tape).map(|_| ())) {
+                        match (Self::__value_ident(state, tape)) {
                             Some(_) => {}
                             None => break '__seq_blk37 None,
                         }
@@ -13061,7 +13064,7 @@ mod __bbnfbootstrap_emit_impl {
                                         Some(_) => {}
                                         None => break '__seq_blk35 None,
                                     }
-                                    match (Self::__value_ident(state, tape).map(|_| ())) {
+                                    match (Self::__value_ident(state, tape)) {
                                         Some(_) => {}
                                         None => break '__seq_blk35 None,
                                     }
@@ -13115,7 +13118,7 @@ mod __bbnfbootstrap_emit_impl {
                             Some(_) => {}
                             None => break '__seq_blk37 None,
                         }
-                        match (Self::__value_expr(state, tape).map(|_| ())) {
+                        match (Self::__value_expr(state, tape)) {
                             Some(_) => {}
                             None => break '__seq_blk37 None,
                         }
@@ -13162,10 +13165,8 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = Self::__value_closure(state, tape)
-                                .map(|_| ());
-                            if __result.is_some() {
-                                break '__alt_blk38 __result;
+                            if Self::__value_closure(state, tape).is_some() {
+                                break '__alt_blk38 Some(());
                             }
                             state.offset = __cp;
                         }
@@ -13176,9 +13177,8 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = Self::__value_or(state, tape).map(|_| ());
-                            if __result.is_some() {
-                                break '__alt_blk38 __result;
+                            if Self::__value_or(state, tape).is_some() {
+                                break '__alt_blk38 Some(());
                             }
                             state.offset = __cp;
                         }
@@ -13242,7 +13242,7 @@ mod __bbnfbootstrap_emit_impl {
                             Some(_) => {}
                             None => break '__seq_blk39 None,
                         }
-                        match (Self::__type_name(state, tape).map(|_| ())) {
+                        match (Self::__type_name(state, tape)) {
                             Some(_) => {}
                             None => break '__seq_blk39 None,
                         }
@@ -13285,7 +13285,7 @@ mod __bbnfbootstrap_emit_impl {
                         {
                             let __cp = state.offset;
                             __branch_idx = 0u8;
-                            let __result = {
+                            if {
                                 if state.offset + 2usize <= state.src_bytes.len()
                                     && unsafe {
                                         *(state.src_bytes.as_ptr().add(state.offset)
@@ -13297,16 +13297,17 @@ mod __bbnfbootstrap_emit_impl {
                                 } else {
                                     None
                                 }
-                            };
-                            if __result.is_some() {
-                                break '__alt_blk40 __result;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_blk40 Some(());
                             }
                             state.offset = __cp;
                         }
                         {
                             let __cp = state.offset;
                             __branch_idx = 1u8;
-                            let __result = {
+                            if {
                                 if state.offset + 3usize <= state.src_bytes.len()
                                     && unsafe {
                                         *(state.src_bytes.as_ptr().add(state.offset)
@@ -13318,16 +13319,17 @@ mod __bbnfbootstrap_emit_impl {
                                 } else {
                                     None
                                 }
-                            };
-                            if __result.is_some() {
-                                break '__alt_blk40 __result;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_blk40 Some(());
                             }
                             state.offset = __cp;
                         }
                         {
                             let __cp = state.offset;
                             __branch_idx = 2u8;
-                            let __result = {
+                            if {
                                 if state.offset + 3usize <= state.src_bytes.len()
                                     && unsafe {
                                         *(state.src_bytes.as_ptr().add(state.offset)
@@ -13339,16 +13341,17 @@ mod __bbnfbootstrap_emit_impl {
                                 } else {
                                     None
                                 }
-                            };
-                            if __result.is_some() {
-                                break '__alt_blk40 __result;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_blk40 Some(());
                             }
                             state.offset = __cp;
                         }
                         {
                             let __cp = state.offset;
                             __branch_idx = 3u8;
-                            let __result = {
+                            if {
                                 if state.offset + 3usize <= state.src_bytes.len()
                                     && unsafe {
                                         *(state.src_bytes.as_ptr().add(state.offset)
@@ -13360,16 +13363,17 @@ mod __bbnfbootstrap_emit_impl {
                                 } else {
                                     None
                                 }
-                            };
-                            if __result.is_some() {
-                                break '__alt_blk40 __result;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_blk40 Some(());
                             }
                             state.offset = __cp;
                         }
                         {
                             let __cp = state.offset;
                             __branch_idx = 4u8;
-                            let __result = {
+                            if {
                                 if state.offset + 3usize <= state.src_bytes.len()
                                     && unsafe {
                                         *(state.src_bytes.as_ptr().add(state.offset)
@@ -13381,16 +13385,17 @@ mod __bbnfbootstrap_emit_impl {
                                 } else {
                                     None
                                 }
-                            };
-                            if __result.is_some() {
-                                break '__alt_blk40 __result;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_blk40 Some(());
                             }
                             state.offset = __cp;
                         }
                         {
                             let __cp = state.offset;
                             __branch_idx = 5u8;
-                            let __result = {
+                            if {
                                 if state.offset + 3usize <= state.src_bytes.len()
                                     && unsafe {
                                         *(state.src_bytes.as_ptr().add(state.offset)
@@ -13402,16 +13407,17 @@ mod __bbnfbootstrap_emit_impl {
                                 } else {
                                     None
                                 }
-                            };
-                            if __result.is_some() {
-                                break '__alt_blk40 __result;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_blk40 Some(());
                             }
                             state.offset = __cp;
                         }
                         {
                             let __cp = state.offset;
                             __branch_idx = 6u8;
-                            let __result = {
+                            if {
                                 if state.offset + 3usize <= state.src_bytes.len()
                                     && unsafe {
                                         *(state.src_bytes.as_ptr().add(state.offset)
@@ -13423,16 +13429,17 @@ mod __bbnfbootstrap_emit_impl {
                                 } else {
                                     None
                                 }
-                            };
-                            if __result.is_some() {
-                                break '__alt_blk40 __result;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_blk40 Some(());
                             }
                             state.offset = __cp;
                         }
                         {
                             let __cp = state.offset;
                             __branch_idx = 7u8;
-                            let __result = {
+                            if {
                                 if state.offset + 3usize <= state.src_bytes.len()
                                     && unsafe {
                                         *(state.src_bytes.as_ptr().add(state.offset)
@@ -13444,16 +13451,17 @@ mod __bbnfbootstrap_emit_impl {
                                 } else {
                                     None
                                 }
-                            };
-                            if __result.is_some() {
-                                break '__alt_blk40 __result;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_blk40 Some(());
                             }
                             state.offset = __cp;
                         }
                         {
                             let __cp = state.offset;
                             __branch_idx = 8u8;
-                            let __result = {
+                            if {
                                 if state.offset + 4usize <= state.src_bytes.len()
                                     && unsafe {
                                         *(state.src_bytes.as_ptr().add(state.offset)
@@ -13465,16 +13473,17 @@ mod __bbnfbootstrap_emit_impl {
                                 } else {
                                     None
                                 }
-                            };
-                            if __result.is_some() {
-                                break '__alt_blk40 __result;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_blk40 Some(());
                             }
                             state.offset = __cp;
                         }
                         {
                             let __cp = state.offset;
                             __branch_idx = 9u8;
-                            let __result = {
+                            if {
                                 if state.offset + 5usize <= state.src_bytes.len()
                                     && unsafe {
                                         *(state.src_bytes.as_ptr().add(state.offset)
@@ -13486,24 +13495,25 @@ mod __bbnfbootstrap_emit_impl {
                                 } else {
                                     None
                                 }
-                            };
-                            if __result.is_some() {
-                                break '__alt_blk40 __result;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_blk40 Some(());
                             }
                             state.offset = __cp;
                         }
                         {
                             let __cp = state.offset;
                             __branch_idx = 10u8;
-                            let __result = {
-                                (::parse_that::scan_ident(
+                            if {
+                                ::parse_that::scan_ident(
                                     state,
                                     &::parse_that::DEFAULT_IDENT_CONFIG,
-                                ))
-                                    .map(|_| ())
-                            };
-                            if __result.is_some() {
-                                break '__alt_blk40 __result;
+                                )
+                            }
+                                .is_some()
+                            {
+                                break '__alt_blk40 Some(());
                             }
                             state.offset = __cp;
                         }
@@ -13550,11 +13560,10 @@ mod __bbnfbootstrap_emit_impl {
                 match ({
                     {
                         {
-                            (::parse_that::scan_ident(
+                            ::parse_that::scan_ident(
                                 state,
                                 &::parse_that::DEFAULT_IDENT_CONFIG,
-                            ))
-                                .map(|_| ())
+                            )
                         }
                     }
                 }) {
@@ -13591,7 +13600,7 @@ mod __bbnfbootstrap_emit_impl {
                         '__alt_blk44: {
                             {
                                 let __cp = state.offset;
-                                let __result = '__span_blk41: {
+                                if '__span_blk41: {
                                     match ({
                                         if state.offset < state.src_bytes.len()
                                             && state.src_bytes[state.offset] == 34u8
@@ -13606,7 +13615,7 @@ mod __bbnfbootstrap_emit_impl {
                                         None => break '__span_blk41 None,
                                     }
                                     match ({
-                                        ({
+                                        {
                                             let __start = state.offset;
                                             let __result: Option<()> = (|| {
                                                 {
@@ -13672,8 +13681,7 @@ mod __bbnfbootstrap_emit_impl {
                                                 state.offset = __start;
                                                 None
                                             }
-                                        })
-                                            .map(|_| ())
+                                        }
                                     }) {
                                         Some(_) => {}
                                         None => break '__span_blk41 None,
@@ -13692,15 +13700,16 @@ mod __bbnfbootstrap_emit_impl {
                                         None => break '__span_blk41 None,
                                     }
                                     Some(())
-                                };
-                                if __result.is_some() {
-                                    break '__alt_blk44 __result;
+                                }
+                                    .is_some()
+                                {
+                                    break '__alt_blk44 Some(());
                                 }
                                 state.offset = __cp;
                             }
                             {
                                 let __cp = state.offset;
-                                let __result = '__span_blk42: {
+                                if '__span_blk42: {
                                     match ({
                                         if state.offset < state.src_bytes.len()
                                             && state.src_bytes[state.offset] == 39u8
@@ -13715,7 +13724,7 @@ mod __bbnfbootstrap_emit_impl {
                                         None => break '__span_blk42 None,
                                     }
                                     match ({
-                                        ({
+                                        {
                                             let __start = state.offset;
                                             let __result: Option<()> = (|| {
                                                 {
@@ -13781,8 +13790,7 @@ mod __bbnfbootstrap_emit_impl {
                                                 state.offset = __start;
                                                 None
                                             }
-                                        })
-                                            .map(|_| ())
+                                        }
                                     }) {
                                         Some(_) => {}
                                         None => break '__span_blk42 None,
@@ -13801,15 +13809,16 @@ mod __bbnfbootstrap_emit_impl {
                                         None => break '__span_blk42 None,
                                     }
                                     Some(())
-                                };
-                                if __result.is_some() {
-                                    break '__alt_blk44 __result;
+                                }
+                                    .is_some()
+                                {
+                                    break '__alt_blk44 Some(());
                                 }
                                 state.offset = __cp;
                             }
                             {
                                 let __cp = state.offset;
-                                let __result = '__span_blk43: {
+                                if '__span_blk43: {
                                     match ({
                                         if state.offset < state.src_bytes.len()
                                             && state.src_bytes[state.offset] == 96u8
@@ -13824,7 +13833,7 @@ mod __bbnfbootstrap_emit_impl {
                                         None => break '__span_blk43 None,
                                     }
                                     match ({
-                                        ({
+                                        {
                                             let __start = state.offset;
                                             let __result: Option<()> = (|| {
                                                 {
@@ -13890,8 +13899,7 @@ mod __bbnfbootstrap_emit_impl {
                                                 state.offset = __start;
                                                 None
                                             }
-                                        })
-                                            .map(|_| ())
+                                        }
                                     }) {
                                         Some(_) => {}
                                         None => break '__span_blk43 None,
@@ -13910,9 +13918,10 @@ mod __bbnfbootstrap_emit_impl {
                                         None => break '__span_blk43 None,
                                     }
                                     Some(())
-                                };
-                                if __result.is_some() {
-                                    break '__alt_blk44 __result;
+                                }
+                                    .is_some()
+                                {
+                                    break '__alt_blk44 Some(());
                                 }
                                 state.offset = __cp;
                             }
@@ -13965,7 +13974,7 @@ mod __bbnfbootstrap_emit_impl {
                                 None => break '__span_blk45 None,
                             }
                             match ({
-                                ({
+                                {
                                     let __start = state.offset;
                                     let __result: Option<()> = (|| {
                                         {
@@ -14034,8 +14043,7 @@ mod __bbnfbootstrap_emit_impl {
                                         state.offset = __start;
                                         None
                                     }
-                                })
-                                    .map(|_| ())
+                                }
                             }) {
                                 Some(_) => {}
                                 None => break '__span_blk45 None,
@@ -14107,7 +14115,7 @@ mod __bbnfbootstrap_emit_impl {
                                     None => break '__span_blk46 None,
                                 }
                                 match ({
-                                    ({
+                                    {
                                         let __start = state.offset;
                                         let __scan = if __start >= state.src_bytes.len() {
                                             0
@@ -14133,8 +14141,7 @@ mod __bbnfbootstrap_emit_impl {
                                         Some(
                                             ::parse_that::Span::new(__start, state.offset, state.src),
                                         )
-                                    })
-                                        .map(|_| ())
+                                    }
                                 }) {
                                     Some(_) => {}
                                     None => break '__span_blk46 None,
@@ -14212,7 +14219,7 @@ mod __bbnfbootstrap_emit_impl {
                                     None => break '__span_blk47 None,
                                 }
                                 match ({
-                                    ({
+                                    {
                                         let __start = state.offset;
                                         let __scan = if __start >= state.src_bytes.len() {
                                             0
@@ -14238,8 +14245,7 @@ mod __bbnfbootstrap_emit_impl {
                                         Some(
                                             ::parse_that::Span::new(__start, state.offset, state.src),
                                         )
-                                    })
-                                        .map(|_| ())
+                                    }
                                 }) {
                                     Some(_) => {}
                                     None => break '__span_blk47 None,
@@ -14279,7 +14285,7 @@ mod __bbnfbootstrap_emit_impl {
             'rule_blk: {
                 let __span_lo = state.offset as u32;
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                match ({ Self::__identifier(state, tape).map(|_| ()) }) {
+                match ({ Self::__identifier(state, tape) }) {
                     Some(_) => {}
                     None => break 'rule_blk None,
                 }
@@ -14320,8 +14326,7 @@ mod __bbnfbootstrap_emit_impl {
                             match ('__seq_blk48: {
                                 match ({
                                     ::parse_that::trim_leading_whitespace_mut(state);
-                                    let __ws_inner = Self::__binary_factor(state, tape)
-                                        .map(|_| ());
+                                    let __ws_inner = Self::__binary_factor(state, tape);
                                     ::parse_that::trim_leading_whitespace_mut(state);
                                     __ws_inner
                                 }) {
@@ -14442,7 +14447,7 @@ mod __bbnfbootstrap_emit_impl {
                         {
                             let __cp = state.offset;
                             __branch_idx = 0u8;
-                            let __result = {
+                            if {
                                 if state.offset + 2usize <= state.src_bytes.len()
                                     && unsafe {
                                         *(state.src_bytes.as_ptr().add(state.offset)
@@ -14454,16 +14459,17 @@ mod __bbnfbootstrap_emit_impl {
                                 } else {
                                     None
                                 }
-                            };
-                            if __result.is_some() {
-                                break '__alt_blk58 __result;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_blk58 Some(());
                             }
                             state.offset = __cp;
                         }
                         {
                             let __cp = state.offset;
                             __branch_idx = 1u8;
-                            let __result = {
+                            if {
                                 if state.offset + 7usize <= state.src_bytes.len()
                                     && unsafe {
                                         *(state.src_bytes.as_ptr().add(state.offset)
@@ -14475,9 +14481,10 @@ mod __bbnfbootstrap_emit_impl {
                                 } else {
                                     None
                                 }
-                            };
-                            if __result.is_some() {
-                                break '__alt_blk58 __result;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_blk58 Some(());
                             }
                             state.offset = __cp;
                         }
@@ -14488,8 +14495,8 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = '__seq_blk53: {
-                                match (Self::__identifier(state, tape).map(|_| ())) {
+                            if '__seq_blk53: {
+                                match (Self::__identifier(state, tape)) {
                                     Some(_) => {}
                                     None => break '__seq_blk53 None,
                                 }
@@ -14515,7 +14522,7 @@ mod __bbnfbootstrap_emit_impl {
                                         }
                                         match ({
                                             ::parse_that::trim_leading_whitespace_mut(state);
-                                            let __ws_inner = Self::__call_arg(state, tape).map(|_| ());
+                                            let __ws_inner = Self::__call_arg(state, tape);
                                             ::parse_that::trim_leading_whitespace_mut(state);
                                             __ws_inner
                                         }) {
@@ -14551,7 +14558,7 @@ mod __bbnfbootstrap_emit_impl {
                                                     }
                                                     match ({
                                                         ::parse_that::trim_leading_whitespace_mut(state);
-                                                        let __ws_inner = Self::__call_arg(state, tape).map(|_| ());
+                                                        let __ws_inner = Self::__call_arg(state, tape);
                                                         ::parse_that::trim_leading_whitespace_mut(state);
                                                         __ws_inner
                                                     }) {
@@ -14634,9 +14641,10 @@ mod __bbnfbootstrap_emit_impl {
                                     None => break '__seq_blk53 None,
                                 }
                                 Some(())
-                            };
-                            if __result.is_some() {
-                                break '__alt_blk58 __result;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_blk58 Some(());
                             }
                             state.offset = __cp;
                         }
@@ -14647,9 +14655,8 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = Self::__literal(state, tape).map(|_| ());
-                            if __result.is_some() {
-                                break '__alt_blk58 __result;
+                            if Self::__literal(state, tape).is_some() {
+                                break '__alt_blk58 Some(());
                             }
                             state.offset = __cp;
                         }
@@ -14660,9 +14667,8 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = Self::__regex(state, tape).map(|_| ());
-                            if __result.is_some() {
-                                break '__alt_blk58 __result;
+                            if Self::__regex(state, tape).is_some() {
+                                break '__alt_blk58 Some(());
                             }
                             state.offset = __cp;
                         }
@@ -14673,7 +14679,7 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = '__seq_blk54: {
+                            if '__seq_blk54: {
                                 match ({
                                     if state.offset + 2usize <= state.src_bytes.len()
                                         && unsafe {
@@ -14692,7 +14698,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                                 match ({
                                     ::parse_that::trim_leading_whitespace_mut(state);
-                                    let __ws_inner = Self::__rhs(state, tape).map(|_| ());
+                                    let __ws_inner = Self::__rhs(state, tape);
                                     ::parse_that::trim_leading_whitespace_mut(state);
                                     __ws_inner
                                 }) {
@@ -14713,9 +14719,10 @@ mod __bbnfbootstrap_emit_impl {
                                     None => break '__seq_blk54 None,
                                 }
                                 Some(())
-                            };
-                            if __result.is_some() {
-                                break '__alt_blk58 __result;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_blk58 Some(());
                             }
                             state.offset = __cp;
                         }
@@ -14726,7 +14733,7 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = '__seq_blk55: {
+                            if '__seq_blk55: {
                                 match ({
                                     if state.offset < state.src_bytes.len()
                                         && state.src_bytes[state.offset] == 40u8
@@ -14742,7 +14749,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                                 match ({
                                     ::parse_that::trim_leading_whitespace_mut(state);
-                                    let __ws_inner = Self::__rhs(state, tape).map(|_| ());
+                                    let __ws_inner = Self::__rhs(state, tape);
                                     ::parse_that::trim_leading_whitespace_mut(state);
                                     __ws_inner
                                 }) {
@@ -14763,9 +14770,10 @@ mod __bbnfbootstrap_emit_impl {
                                     None => break '__seq_blk55 None,
                                 }
                                 Some(())
-                            };
-                            if __result.is_some() {
-                                break '__alt_blk58 __result;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_blk58 Some(());
                             }
                             state.offset = __cp;
                         }
@@ -14776,7 +14784,7 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = '__seq_blk56: {
+                            if '__seq_blk56: {
                                 match ({
                                     if state.offset < state.src_bytes.len()
                                         && state.src_bytes[state.offset] == 91u8
@@ -14792,7 +14800,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                                 match ({
                                     ::parse_that::trim_leading_whitespace_mut(state);
-                                    let __ws_inner = Self::__rhs(state, tape).map(|_| ());
+                                    let __ws_inner = Self::__rhs(state, tape);
                                     ::parse_that::trim_leading_whitespace_mut(state);
                                     __ws_inner
                                 }) {
@@ -14813,9 +14821,10 @@ mod __bbnfbootstrap_emit_impl {
                                     None => break '__seq_blk56 None,
                                 }
                                 Some(())
-                            };
-                            if __result.is_some() {
-                                break '__alt_blk58 __result;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_blk58 Some(());
                             }
                             state.offset = __cp;
                         }
@@ -14826,7 +14835,7 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = '__seq_blk57: {
+                            if '__seq_blk57: {
                                 match ({
                                     if state.offset < state.src_bytes.len()
                                         && state.src_bytes[state.offset] == 123u8
@@ -14842,7 +14851,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                                 match ({
                                     ::parse_that::trim_leading_whitespace_mut(state);
-                                    let __ws_inner = Self::__rhs(state, tape).map(|_| ());
+                                    let __ws_inner = Self::__rhs(state, tape);
                                     ::parse_that::trim_leading_whitespace_mut(state);
                                     __ws_inner
                                 }) {
@@ -14863,9 +14872,10 @@ mod __bbnfbootstrap_emit_impl {
                                     None => break '__seq_blk57 None,
                                 }
                                 Some(())
-                            };
-                            if __result.is_some() {
-                                break '__alt_blk58 __result;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_blk58 Some(());
                             }
                             state.offset = __cp;
                         }
@@ -14915,7 +14925,7 @@ mod __bbnfbootstrap_emit_impl {
                 match ({
                     '__alt_lit_blk59: {
                         {
-                            let __r = {
+                            if {
                                 if state.offset + 2usize <= state.src_bytes.len()
                                     && unsafe {
                                         *(state.src_bytes.as_ptr().add(state.offset)
@@ -14927,13 +14937,14 @@ mod __bbnfbootstrap_emit_impl {
                                 } else {
                                     None
                                 }
-                            };
-                            if __r.is_some() {
-                                break '__alt_lit_blk59 __r;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_lit_blk59 Some(());
                             }
                         }
                         {
-                            let __r = {
+                            if {
                                 if state.offset < state.src_bytes.len()
                                     && state.src_bytes[state.offset] == 63u8
                                 {
@@ -14942,13 +14953,14 @@ mod __bbnfbootstrap_emit_impl {
                                 } else {
                                     None
                                 }
-                            };
-                            if __r.is_some() {
-                                break '__alt_lit_blk59 __r;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_lit_blk59 Some(());
                             }
                         }
                         {
-                            let __r = {
+                            if {
                                 if state.offset < state.src_bytes.len()
                                     && state.src_bytes[state.offset] == 42u8
                                 {
@@ -14957,13 +14969,14 @@ mod __bbnfbootstrap_emit_impl {
                                 } else {
                                     None
                                 }
-                            };
-                            if __r.is_some() {
-                                break '__alt_lit_blk59 __r;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_lit_blk59 Some(());
                             }
                         }
                         {
-                            let __r = {
+                            if {
                                 if state.offset < state.src_bytes.len()
                                     && state.src_bytes[state.offset] == 43u8
                                 {
@@ -14972,9 +14985,10 @@ mod __bbnfbootstrap_emit_impl {
                                 } else {
                                     None
                                 }
-                            };
-                            if __r.is_some() {
-                                break '__alt_lit_blk59 __r;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_lit_blk59 Some(());
                             }
                         }
                         None
@@ -15025,7 +15039,7 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             let __opt_cp = state.offset;
-                            match (Self::__big_comment(state, tape).map(|_| ())) {
+                            match (Self::__big_comment(state, tape)) {
                                 Some(_) => {}
                                 None => {
                                     state.offset = __opt_cp;
@@ -15051,7 +15065,7 @@ mod __bbnfbootstrap_emit_impl {
                         }
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = Self::__term(state, tape).map(|_| ());
+                            let __ws_inner = Self::__term(state, tape);
                             ::parse_that::trim_leading_whitespace_mut(state);
                             __ws_inner
                         }) {
@@ -15064,7 +15078,7 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             let __opt_cp = state.offset;
-                            match (Self::__modifier(state, tape).map(|_| ())) {
+                            match (Self::__modifier(state, tape)) {
                                 Some(_) => {}
                                 None => {
                                     state.offset = __opt_cp;
@@ -15094,7 +15108,7 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             let __opt_cp = state.offset;
-                            match (Self::__big_comment(state, tape).map(|_| ())) {
+                            match (Self::__big_comment(state, tape)) {
                                 Some(_) => {}
                                 None => {
                                     state.offset = __opt_cp;
@@ -15151,7 +15165,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
                     '__seq_blk63: {
-                        match (Self::__factor(state, tape).map(|_| ())) {
+                        match (Self::__factor(state, tape)) {
                             Some(_) => {}
                             None => break '__seq_blk63 None,
                         }
@@ -15184,7 +15198,7 @@ mod __bbnfbootstrap_emit_impl {
                                     None => break '__seq_blk62 None,
                                 }
                                 match ('__seq_blk61: {
-                                    match (Self::__value_expr(state, tape).map(|_| ())) {
+                                    match (Self::__value_expr(state, tape)) {
                                         Some(_) => {}
                                         None => break '__seq_blk61 None,
                                     }
@@ -15194,7 +15208,7 @@ mod __bbnfbootstrap_emit_impl {
                                             tape,
                                         );
                                         let __opt_cp = state.offset;
-                                        match (Self::__type_annotation(state, tape).map(|_| ())) {
+                                        match (Self::__type_annotation(state, tape)) {
                                             Some(_) => {}
                                             None => {
                                                 state.offset = __opt_cp;
@@ -15285,7 +15299,7 @@ mod __bbnfbootstrap_emit_impl {
                 match ({
                     '__alt_lit_blk64: {
                         {
-                            let __r = {
+                            if {
                                 if state.offset + 2usize <= state.src_bytes.len()
                                     && unsafe {
                                         *(state.src_bytes.as_ptr().add(state.offset)
@@ -15297,13 +15311,14 @@ mod __bbnfbootstrap_emit_impl {
                                 } else {
                                     None
                                 }
-                            };
-                            if __r.is_some() {
-                                break '__alt_lit_blk64 __r;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_lit_blk64 Some(());
                             }
                         }
                         {
-                            let __r = {
+                            if {
                                 if state.offset + 2usize <= state.src_bytes.len()
                                     && unsafe {
                                         *(state.src_bytes.as_ptr().add(state.offset)
@@ -15315,13 +15330,14 @@ mod __bbnfbootstrap_emit_impl {
                                 } else {
                                     None
                                 }
-                            };
-                            if __r.is_some() {
-                                break '__alt_lit_blk64 __r;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_lit_blk64 Some(());
                             }
                         }
                         {
-                            let __r = {
+                            if {
                                 if state.offset < state.src_bytes.len()
                                     && state.src_bytes[state.offset] == 45u8
                                 {
@@ -15330,9 +15346,10 @@ mod __bbnfbootstrap_emit_impl {
                                 } else {
                                     None
                                 }
-                            };
-                            if __r.is_some() {
-                                break '__alt_lit_blk64 __r;
+                            }
+                                .is_some()
+                            {
+                                break '__alt_lit_blk64 Some(());
                             }
                         }
                         None
@@ -15377,7 +15394,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
                     '__seq_blk67: {
-                        match (Self::__mapped_factor(state, tape).map(|_| ())) {
+                        match (Self::__mapped_factor(state, tape)) {
                             Some(_) => {}
                             None => break '__seq_blk67 None,
                         }
@@ -15392,15 +15409,14 @@ mod __bbnfbootstrap_emit_impl {
                                 match ('__seq_blk65: {
                                     match ({
                                         ::parse_that::trim_leading_whitespace_mut(state);
-                                        let __ws_inner = Self::__binary_operators(state, tape)
-                                            .map(|_| ());
+                                        let __ws_inner = Self::__binary_operators(state, tape);
                                         ::parse_that::trim_leading_whitespace_mut(state);
                                         __ws_inner
                                     }) {
                                         Some(_) => {}
                                         None => break '__seq_blk65 None,
                                     }
-                                    match (Self::__mapped_factor(state, tape).map(|_| ())) {
+                                    match (Self::__mapped_factor(state, tape)) {
                                         Some(_) => {}
                                         None => break '__seq_blk65 None,
                                     }
@@ -15484,8 +15500,7 @@ mod __bbnfbootstrap_emit_impl {
                             match ('__seq_blk68: {
                                 match ({
                                     ::parse_that::trim_leading_whitespace_mut(state);
-                                    let __ws_inner = Self::__binary_factor(state, tape)
-                                        .map(|_| ());
+                                    let __ws_inner = Self::__binary_factor(state, tape);
                                     ::parse_that::trim_leading_whitespace_mut(state);
                                     __ws_inner
                                 }) {
@@ -15610,8 +15625,7 @@ mod __bbnfbootstrap_emit_impl {
                             match ('__seq_blk70: {
                                 match ({
                                     ::parse_that::trim_leading_whitespace_mut(state);
-                                    let __ws_inner = Self::__concatenation(state, tape)
-                                        .map(|_| ());
+                                    let __ws_inner = Self::__concatenation(state, tape);
                                     ::parse_that::trim_leading_whitespace_mut(state);
                                     __ws_inner
                                 }) {
@@ -15739,7 +15753,7 @@ mod __bbnfbootstrap_emit_impl {
                             Some(_) => {}
                             None => break '__seq_blk74 None,
                         }
-                        match (Self::__identifier(state, tape).map(|_| ())) {
+                        match (Self::__identifier(state, tape)) {
                             Some(_) => {}
                             None => break '__seq_blk74 None,
                         }
@@ -15770,7 +15784,7 @@ mod __bbnfbootstrap_emit_impl {
                                         Some(_) => {}
                                         None => break '__seq_blk72 None,
                                     }
-                                    match (Self::__identifier(state, tape).map(|_| ())) {
+                                    match (Self::__identifier(state, tape)) {
                                         Some(_) => {}
                                         None => break '__seq_blk72 None,
                                     }
@@ -15829,7 +15843,7 @@ mod __bbnfbootstrap_emit_impl {
                             Some(_) => {}
                             None => break '__seq_blk74 None,
                         }
-                        match (Self::__rhs(state, tape).map(|_| ())) {
+                        match (Self::__rhs(state, tape)) {
                             Some(_) => {}
                             None => break '__seq_blk74 None,
                         }
@@ -15876,9 +15890,8 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = Self::__closure(state, tape).map(|_| ());
-                            if __result.is_some() {
-                                break '__alt_blk75 __result;
+                            if Self::__closure(state, tape).is_some() {
+                                break '__alt_blk75 Some(());
                             }
                             state.offset = __cp;
                         }
@@ -15889,9 +15902,8 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = Self::__alternation(state, tape).map(|_| ());
-                            if __result.is_some() {
-                                break '__alt_blk75 __result;
+                            if Self::__alternation(state, tape).is_some() {
+                                break '__alt_blk75 Some(());
                             }
                             state.offset = __cp;
                         }
@@ -15937,7 +15949,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
                     '__seq_blk77: {
-                        match (Self::__lhs(state, tape).map(|_| ())) {
+                        match (Self::__lhs(state, tape)) {
                             Some(_) => {}
                             None => break '__seq_blk77 None,
                         }
@@ -15961,7 +15973,7 @@ mod __bbnfbootstrap_emit_impl {
                         }
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = Self::__rhs(state, tape).map(|_| ());
+                            let __ws_inner = Self::__rhs(state, tape);
                             ::parse_that::trim_leading_whitespace_mut(state);
                             __ws_inner
                         }) {
@@ -15970,7 +15982,7 @@ mod __bbnfbootstrap_emit_impl {
                         }
                         match ('__alt_lit_blk76: {
                             {
-                                let __r = {
+                                if {
                                     if state.offset < state.src_bytes.len()
                                         && state.src_bytes[state.offset] == 59u8
                                     {
@@ -15979,13 +15991,14 @@ mod __bbnfbootstrap_emit_impl {
                                     } else {
                                         None
                                     }
-                                };
-                                if __r.is_some() {
-                                    break '__alt_lit_blk76 __r;
+                                }
+                                    .is_some()
+                                {
+                                    break '__alt_lit_blk76 Some(());
                                 }
                             }
                             {
-                                let __r = {
+                                if {
                                     if state.offset < state.src_bytes.len()
                                         && state.src_bytes[state.offset] == 46u8
                                     {
@@ -15994,9 +16007,10 @@ mod __bbnfbootstrap_emit_impl {
                                     } else {
                                         None
                                     }
-                                };
-                                if __r.is_some() {
-                                    break '__alt_lit_blk76 __r;
+                                }
+                                    .is_some()
+                                {
+                                    break '__alt_lit_blk76 Some(());
                                 }
                             }
                             None
@@ -16051,7 +16065,7 @@ mod __bbnfbootstrap_emit_impl {
                             None => break '__span_blk78 None,
                         }
                         match ({
-                            ({
+                            {
                                 let __start = state.offset;
                                 let __result: Option<()> = (|| {
                                     {
@@ -16117,8 +16131,7 @@ mod __bbnfbootstrap_emit_impl {
                                     state.offset = __start;
                                     None
                                 }
-                            })
-                                .map(|_| ())
+                            }
                         }) {
                             Some(_) => {}
                             None => break '__span_blk78 None,
@@ -16190,7 +16203,7 @@ mod __bbnfbootstrap_emit_impl {
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
                             let __ws_inner = '__seq_blk81: {
-                                match (Self::__identifier(state, tape).map(|_| ())) {
+                                match (Self::__identifier(state, tape)) {
                                     Some(_) => {}
                                     None => break '__seq_blk81 None,
                                 }
@@ -16221,7 +16234,7 @@ mod __bbnfbootstrap_emit_impl {
                                                 Some(_) => {}
                                                 None => break '__seq_blk79 None,
                                             }
-                                            match (Self::__identifier(state, tape).map(|_| ())) {
+                                            match (Self::__identifier(state, tape)) {
                                                 Some(_) => {}
                                                 None => break '__seq_blk79 None,
                                             }
@@ -16342,11 +16355,10 @@ mod __bbnfbootstrap_emit_impl {
                             let __ws_inner = '__alt_blk84: {
                                 {
                                     let __cp = state.offset;
-                                    let __result = '__seq_blk83: {
+                                    if '__seq_blk83: {
                                         match ({
                                             ::parse_that::trim_leading_whitespace_mut(state);
-                                            let __ws_inner = Self::__import_items(state, tape)
-                                                .map(|_| ());
+                                            let __ws_inner = Self::__import_items(state, tape);
                                             ::parse_that::trim_leading_whitespace_mut(state);
                                             __ws_inner
                                         }) {
@@ -16374,22 +16386,22 @@ mod __bbnfbootstrap_emit_impl {
                                             Some(_) => {}
                                             None => break '__seq_blk83 None,
                                         }
-                                        match (Self::__import_path(state, tape).map(|_| ())) {
+                                        match (Self::__import_path(state, tape)) {
                                             Some(_) => {}
                                             None => break '__seq_blk83 None,
                                         }
                                         Some(())
-                                    };
-                                    if __result.is_some() {
-                                        break '__alt_blk84 __result;
+                                    }
+                                        .is_some()
+                                    {
+                                        break '__alt_blk84 Some(());
                                     }
                                     state.offset = __cp;
                                 }
                                 {
                                     let __cp = state.offset;
-                                    let __result = Self::__import_path(state, tape).map(|_| ());
-                                    if __result.is_some() {
-                                        break '__alt_blk84 __result;
+                                    if Self::__import_path(state, tape).is_some() {
+                                        break '__alt_blk84 Some(());
                                     }
                                     state.offset = __cp;
                                 }
@@ -16409,7 +16421,7 @@ mod __bbnfbootstrap_emit_impl {
                             let __opt_cp = state.offset;
                             match ('__alt_lit_blk85: {
                                 {
-                                    let __r = {
+                                    if {
                                         if state.offset < state.src_bytes.len()
                                             && state.src_bytes[state.offset] == 59u8
                                         {
@@ -16418,13 +16430,14 @@ mod __bbnfbootstrap_emit_impl {
                                         } else {
                                             None
                                         }
-                                    };
-                                    if __r.is_some() {
-                                        break '__alt_lit_blk85 __r;
+                                    }
+                                        .is_some()
+                                    {
+                                        break '__alt_lit_blk85 Some(());
                                     }
                                 }
                                 {
-                                    let __r = {
+                                    if {
                                         if state.offset < state.src_bytes.len()
                                             && state.src_bytes[state.offset] == 46u8
                                         {
@@ -16433,9 +16446,10 @@ mod __bbnfbootstrap_emit_impl {
                                         } else {
                                             None
                                         }
-                                    };
-                                    if __r.is_some() {
-                                        break '__alt_lit_blk85 __r;
+                                    }
+                                        .is_some()
+                                    {
+                                        break '__alt_lit_blk85 Some(());
                                     }
                                 }
                                 None
@@ -16519,7 +16533,7 @@ mod __bbnfbootstrap_emit_impl {
                         }
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = Self::__identifier(state, tape).map(|_| ());
+                            let __ws_inner = Self::__identifier(state, tape);
                             ::parse_that::trim_leading_whitespace_mut(state);
                             __ws_inner
                         }) {
@@ -16528,7 +16542,7 @@ mod __bbnfbootstrap_emit_impl {
                         }
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = Self::__rhs(state, tape).map(|_| ());
+                            let __ws_inner = Self::__rhs(state, tape);
                             ::parse_that::trim_leading_whitespace_mut(state);
                             __ws_inner
                         }) {
@@ -16543,7 +16557,7 @@ mod __bbnfbootstrap_emit_impl {
                             let __opt_cp = state.offset;
                             match ('__alt_lit_blk87: {
                                 {
-                                    let __r = {
+                                    if {
                                         if state.offset < state.src_bytes.len()
                                             && state.src_bytes[state.offset] == 59u8
                                         {
@@ -16552,13 +16566,14 @@ mod __bbnfbootstrap_emit_impl {
                                         } else {
                                             None
                                         }
-                                    };
-                                    if __r.is_some() {
-                                        break '__alt_lit_blk87 __r;
+                                    }
+                                        .is_some()
+                                    {
+                                        break '__alt_lit_blk87 Some(());
                                     }
                                 }
                                 {
-                                    let __r = {
+                                    if {
                                         if state.offset < state.src_bytes.len()
                                             && state.src_bytes[state.offset] == 46u8
                                         {
@@ -16567,9 +16582,10 @@ mod __bbnfbootstrap_emit_impl {
                                         } else {
                                             None
                                         }
-                                    };
-                                    if __r.is_some() {
-                                        break '__alt_lit_blk87 __r;
+                                    }
+                                        .is_some()
+                                    {
+                                        break '__alt_lit_blk87 Some(());
                                     }
                                 }
                                 None
@@ -16630,7 +16646,7 @@ mod __bbnfbootstrap_emit_impl {
                 let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
                 match ({
                     '__seq_blk90: {
-                        match (Self::__identifier(state, tape).map(|_| ())) {
+                        match (Self::__identifier(state, tape)) {
                             Some(_) => {}
                             None => break '__seq_blk90 None,
                         }
@@ -16655,7 +16671,7 @@ mod __bbnfbootstrap_emit_impl {
                                     None => break '__span_blk89 None,
                                 }
                                 match ({
-                                    ({
+                                    {
                                         let __start = state.offset;
                                         let __scan = if __start >= state.src_bytes.len() {
                                             0
@@ -16681,8 +16697,7 @@ mod __bbnfbootstrap_emit_impl {
                                         Some(
                                             ::parse_that::Span::new(__start, state.offset, state.src),
                                         )
-                                    })
-                                        .map(|_| ())
+                                    }
                                 }) {
                                     Some(_) => {}
                                     None => break '__span_blk89 None,
@@ -16784,7 +16799,7 @@ mod __bbnfbootstrap_emit_impl {
                             let __ws_inner = '__alt_blk91: {
                                 {
                                     let __cp = state.offset;
-                                    let __result = {
+                                    if {
                                         if state.offset < state.src_bytes.len()
                                             && state.src_bytes[state.offset] == 42u8
                                         {
@@ -16793,17 +16808,17 @@ mod __bbnfbootstrap_emit_impl {
                                         } else {
                                             None
                                         }
-                                    };
-                                    if __result.is_some() {
-                                        break '__alt_blk91 __result;
+                                    }
+                                        .is_some()
+                                    {
+                                        break '__alt_blk91 Some(());
                                     }
                                     state.offset = __cp;
                                 }
                                 {
                                     let __cp = state.offset;
-                                    let __result = Self::__identifier(state, tape).map(|_| ());
-                                    if __result.is_some() {
-                                        break '__alt_blk91 __result;
+                                    if Self::__identifier(state, tape).is_some() {
+                                        break '__alt_blk91 Some(());
                                     }
                                     state.offset = __cp;
                                 }
@@ -16825,8 +16840,7 @@ mod __bbnfbootstrap_emit_impl {
                                 let __prev = state.offset;
                                 match ({
                                     ::parse_that::trim_leading_whitespace_mut(state);
-                                    let __ws_inner = Self::__pretty_hint(state, tape)
-                                        .map(|_| ());
+                                    let __ws_inner = Self::__pretty_hint(state, tape);
                                     ::parse_that::trim_leading_whitespace_mut(state);
                                     __ws_inner
                                 }) {
@@ -16877,7 +16891,7 @@ mod __bbnfbootstrap_emit_impl {
                             let __opt_cp = state.offset;
                             match ('__alt_lit_blk93: {
                                 {
-                                    let __r = {
+                                    if {
                                         if state.offset < state.src_bytes.len()
                                             && state.src_bytes[state.offset] == 59u8
                                         {
@@ -16886,13 +16900,14 @@ mod __bbnfbootstrap_emit_impl {
                                         } else {
                                             None
                                         }
-                                    };
-                                    if __r.is_some() {
-                                        break '__alt_lit_blk93 __r;
+                                    }
+                                        .is_some()
+                                    {
+                                        break '__alt_lit_blk93 Some(());
                                     }
                                 }
                                 {
-                                    let __r = {
+                                    if {
                                         if state.offset < state.src_bytes.len()
                                             && state.src_bytes[state.offset] == 46u8
                                         {
@@ -16901,9 +16916,10 @@ mod __bbnfbootstrap_emit_impl {
                                         } else {
                                             None
                                         }
-                                    };
-                                    if __r.is_some() {
-                                        break '__alt_lit_blk93 __r;
+                                    }
+                                        .is_some()
+                                    {
+                                        break '__alt_lit_blk93 Some(());
                                     }
                                 }
                                 None
@@ -16987,7 +17003,7 @@ mod __bbnfbootstrap_emit_impl {
                         }
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = Self::__regex(state, tape).map(|_| ());
+                            let __ws_inner = Self::__regex(state, tape);
                             ::parse_that::trim_leading_whitespace_mut(state);
                             __ws_inner
                         }) {
@@ -17002,7 +17018,7 @@ mod __bbnfbootstrap_emit_impl {
                             let __opt_cp = state.offset;
                             match ('__alt_lit_blk95: {
                                 {
-                                    let __r = {
+                                    if {
                                         if state.offset < state.src_bytes.len()
                                             && state.src_bytes[state.offset] == 59u8
                                         {
@@ -17011,13 +17027,14 @@ mod __bbnfbootstrap_emit_impl {
                                         } else {
                                             None
                                         }
-                                    };
-                                    if __r.is_some() {
-                                        break '__alt_lit_blk95 __r;
+                                    }
+                                        .is_some()
+                                    {
+                                        break '__alt_lit_blk95 Some(());
                                     }
                                 }
                                 {
-                                    let __r = {
+                                    if {
                                         if state.offset < state.src_bytes.len()
                                             && state.src_bytes[state.offset] == 46u8
                                         {
@@ -17026,9 +17043,10 @@ mod __bbnfbootstrap_emit_impl {
                                         } else {
                                             None
                                         }
-                                    };
-                                    if __r.is_some() {
-                                        break '__alt_lit_blk95 __r;
+                                    }
+                                        .is_some()
+                                    {
+                                        break '__alt_lit_blk95 Some(());
                                     }
                                 }
                                 None
@@ -17112,7 +17130,7 @@ mod __bbnfbootstrap_emit_impl {
                         }
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = Self::__identifier(state, tape).map(|_| ());
+                            let __ws_inner = Self::__identifier(state, tape);
                             ::parse_that::trim_leading_whitespace_mut(state);
                             __ws_inner
                         }) {
@@ -17127,7 +17145,7 @@ mod __bbnfbootstrap_emit_impl {
                             let __opt_cp = state.offset;
                             match ('__alt_lit_blk97: {
                                 {
-                                    let __r = {
+                                    if {
                                         if state.offset < state.src_bytes.len()
                                             && state.src_bytes[state.offset] == 59u8
                                         {
@@ -17136,13 +17154,14 @@ mod __bbnfbootstrap_emit_impl {
                                         } else {
                                             None
                                         }
-                                    };
-                                    if __r.is_some() {
-                                        break '__alt_lit_blk97 __r;
+                                    }
+                                        .is_some()
+                                    {
+                                        break '__alt_lit_blk97 Some(());
                                     }
                                 }
                                 {
-                                    let __r = {
+                                    if {
                                         if state.offset < state.src_bytes.len()
                                             && state.src_bytes[state.offset] == 46u8
                                         {
@@ -17151,9 +17170,10 @@ mod __bbnfbootstrap_emit_impl {
                                         } else {
                                             None
                                         }
-                                    };
-                                    if __r.is_some() {
-                                        break '__alt_lit_blk97 __r;
+                                    }
+                                        .is_some()
+                                    {
+                                        break '__alt_lit_blk97 Some(());
                                     }
                                 }
                                 None
@@ -17240,7 +17260,7 @@ mod __bbnfbootstrap_emit_impl {
                             let __ws_inner = '__alt_blk99: {
                                 {
                                     let __cp = state.offset;
-                                    let __result = {
+                                    if {
                                         if state.offset < state.src_bytes.len()
                                             && state.src_bytes[state.offset] == 42u8
                                         {
@@ -17249,17 +17269,17 @@ mod __bbnfbootstrap_emit_impl {
                                         } else {
                                             None
                                         }
-                                    };
-                                    if __result.is_some() {
-                                        break '__alt_blk99 __result;
+                                    }
+                                        .is_some()
+                                    {
+                                        break '__alt_blk99 Some(());
                                     }
                                     state.offset = __cp;
                                 }
                                 {
                                     let __cp = state.offset;
-                                    let __result = Self::__identifier(state, tape).map(|_| ());
-                                    if __result.is_some() {
-                                        break '__alt_blk99 __result;
+                                    if Self::__identifier(state, tape).is_some() {
+                                        break '__alt_blk99 Some(());
                                     }
                                     state.offset = __cp;
                                 }
@@ -17279,7 +17299,7 @@ mod __bbnfbootstrap_emit_impl {
                             let __opt_cp = state.offset;
                             match ('__alt_lit_blk100: {
                                 {
-                                    let __r = {
+                                    if {
                                         if state.offset < state.src_bytes.len()
                                             && state.src_bytes[state.offset] == 59u8
                                         {
@@ -17288,13 +17308,14 @@ mod __bbnfbootstrap_emit_impl {
                                         } else {
                                             None
                                         }
-                                    };
-                                    if __r.is_some() {
-                                        break '__alt_lit_blk100 __r;
+                                    }
+                                        .is_some()
+                                    {
+                                        break '__alt_lit_blk100 Some(());
                                     }
                                 }
                                 {
-                                    let __r = {
+                                    if {
                                         if state.offset < state.src_bytes.len()
                                             && state.src_bytes[state.offset] == 46u8
                                         {
@@ -17303,9 +17324,10 @@ mod __bbnfbootstrap_emit_impl {
                                         } else {
                                             None
                                         }
-                                    };
-                                    if __r.is_some() {
-                                        break '__alt_lit_blk100 __r;
+                                    }
+                                        .is_some()
+                                    {
+                                        break '__alt_lit_blk100 Some(());
                                     }
                                 }
                                 None
@@ -17389,7 +17411,7 @@ mod __bbnfbootstrap_emit_impl {
                         }
                         match ({
                             ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = Self::__identifier(state, tape).map(|_| ());
+                            let __ws_inner = Self::__identifier(state, tape);
                             ::parse_that::trim_leading_whitespace_mut(state);
                             __ws_inner
                         }) {
@@ -17423,7 +17445,7 @@ mod __bbnfbootstrap_emit_impl {
                                 }
                                 match ({
                                     ::parse_that::trim_leading_whitespace_mut(state);
-                                    let __ws_inner = Self::__type_name(state, tape).map(|_| ());
+                                    let __ws_inner = Self::__type_name(state, tape);
                                     ::parse_that::trim_leading_whitespace_mut(state);
                                     __ws_inner
                                 }) {
@@ -17463,7 +17485,7 @@ mod __bbnfbootstrap_emit_impl {
                             let __opt_cp = state.offset;
                             match ('__alt_lit_blk103: {
                                 {
-                                    let __r = {
+                                    if {
                                         if state.offset < state.src_bytes.len()
                                             && state.src_bytes[state.offset] == 59u8
                                         {
@@ -17472,13 +17494,14 @@ mod __bbnfbootstrap_emit_impl {
                                         } else {
                                             None
                                         }
-                                    };
-                                    if __r.is_some() {
-                                        break '__alt_lit_blk103 __r;
+                                    }
+                                        .is_some()
+                                    {
+                                        break '__alt_lit_blk103 Some(());
                                     }
                                 }
                                 {
-                                    let __r = {
+                                    if {
                                         if state.offset < state.src_bytes.len()
                                             && state.src_bytes[state.offset] == 46u8
                                         {
@@ -17487,9 +17510,10 @@ mod __bbnfbootstrap_emit_impl {
                                         } else {
                                             None
                                         }
-                                    };
-                                    if __r.is_some() {
-                                        break '__alt_lit_blk103 __r;
+                                    }
+                                        .is_some()
+                                    {
+                                        break '__alt_lit_blk103 Some(());
                                     }
                                 }
                                 None
@@ -17560,10 +17584,8 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = Self::__import_directive(state, tape)
-                                .map(|_| ());
-                            if __result.is_some() {
-                                break '__alt_blk105 __result;
+                            if Self::__import_directive(state, tape).is_some() {
+                                break '__alt_blk105 Some(());
                             }
                             state.offset = __cp;
                         }
@@ -17574,10 +17596,8 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = Self::__recover_directive(state, tape)
-                                .map(|_| ());
-                            if __result.is_some() {
-                                break '__alt_blk105 __result;
+                            if Self::__recover_directive(state, tape).is_some() {
+                                break '__alt_blk105 Some(());
                             }
                             state.offset = __cp;
                         }
@@ -17588,10 +17608,8 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = Self::__pretty_directive(state, tape)
-                                .map(|_| ());
-                            if __result.is_some() {
-                                break '__alt_blk105 __result;
+                            if Self::__pretty_directive(state, tape).is_some() {
+                                break '__alt_blk105 Some(());
                             }
                             state.offset = __cp;
                         }
@@ -17602,9 +17620,8 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = Self::__ws_directive(state, tape).map(|_| ());
-                            if __result.is_some() {
-                                break '__alt_blk105 __result;
+                            if Self::__ws_directive(state, tape).is_some() {
+                                break '__alt_blk105 Some(());
                             }
                             state.offset = __cp;
                         }
@@ -17615,10 +17632,8 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = Self::__token_directive(state, tape)
-                                .map(|_| ());
-                            if __result.is_some() {
-                                break '__alt_blk105 __result;
+                            if Self::__token_directive(state, tape).is_some() {
+                                break '__alt_blk105 Some(());
                             }
                             state.offset = __cp;
                         }
@@ -17629,10 +17644,8 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = Self::__debug_directive(state, tape)
-                                .map(|_| ());
-                            if __result.is_some() {
-                                break '__alt_blk105 __result;
+                            if Self::__debug_directive(state, tape).is_some() {
+                                break '__alt_blk105 Some(());
                             }
                             state.offset = __cp;
                         }
@@ -17643,10 +17656,8 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = Self::__host_directive(state, tape)
-                                .map(|_| ());
-                            if __result.is_some() {
-                                break '__alt_blk105 __result;
+                            if Self::__host_directive(state, tape).is_some() {
+                                break '__alt_blk105 Some(());
                             }
                             state.offset = __cp;
                         }
@@ -17702,9 +17713,8 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = Self::__comment(state, tape).map(|_| ());
-                            if __result.is_some() {
-                                break '__alt_blk106 __result;
+                            if Self::__comment(state, tape).is_some() {
+                                break '__alt_blk106 Some(());
                             }
                             state.offset = __cp;
                         }
@@ -17715,9 +17725,8 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = Self::__big_comment(state, tape).map(|_| ());
-                            if __result.is_some() {
-                                break '__alt_blk106 __result;
+                            if Self::__big_comment(state, tape).is_some() {
+                                break '__alt_blk106 Some(());
                             }
                             state.offset = __cp;
                         }
@@ -17728,9 +17737,8 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = Self::__directive(state, tape).map(|_| ());
-                            if __result.is_some() {
-                                break '__alt_blk106 __result;
+                            if Self::__directive(state, tape).is_some() {
+                                break '__alt_blk106 Some(());
                             }
                             state.offset = __cp;
                         }
@@ -17741,9 +17749,8 @@ mod __bbnfbootstrap_emit_impl {
                                 tape,
                             );
                             __has_children = true;
-                            let __result = Self::__rule(state, tape).map(|_| ());
-                            if __result.is_some() {
-                                break '__alt_blk106 __result;
+                            if Self::__rule(state, tape).is_some() {
+                                break '__alt_blk106 Some(());
                             }
                             state.offset = __cp;
                         }
@@ -17798,8 +17805,7 @@ mod __bbnfbootstrap_emit_impl {
                             let __prev = state.offset;
                             match ({
                                 ::parse_that::trim_leading_whitespace_mut(state);
-                                let __ws_inner = Self::__grammar_item(state, tape)
-                                    .map(|_| ());
+                                let __ws_inner = Self::__grammar_item(state, tape);
                                 ::parse_that::trim_leading_whitespace_mut(state);
                                 __ws_inner
                             }) {

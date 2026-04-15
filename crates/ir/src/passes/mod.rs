@@ -13,6 +13,7 @@ pub mod metadata;
 pub mod patterns;
 pub mod payload;
 pub mod prefix;
+pub mod profile;
 pub mod recognizers;
 pub mod regex_info;
 pub mod sets;
@@ -34,6 +35,7 @@ pub use materialization::{
 pub use metadata::{compute_aliases, compute_transparent};
 pub use payload::{compute_payload_layouts, is_kv_pair_shape, plan_layout, MAX_PAYLOAD_BYTES, PayloadField, PayloadLayout};
 pub use prefix::factor_common_prefixes;
+pub use profile::GrammarProfile;
 pub use sets::{
     compute_first_sets, compute_follow_sets, compute_push_fingerprint, compute_rule_deps,
     compute_scc, factor_regex_with_lookahead, generate_dispatch_tables, sort_alt_branches,

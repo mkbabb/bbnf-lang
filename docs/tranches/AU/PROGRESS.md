@@ -505,3 +505,69 @@ named-tuple annotation syntax extension OR a host-function convert
 
 All three agents' TODO pointers anchor to AU.2.5 / AU.2.6 / AU.6.7,
 which are W2 and W5 scope respectively. Nothing is deferred past AU.
+
+### W2 — LANDED (13 cherry-picks + parse-that fast-forward + regen)
+
+Wave boundary integration on master. Three parallel worktree-isolated
+agents completed. Each owned a disjoint emitter region per the plan's
+file bounds; cross-agent communication handled via careful commit-
+message hand-offs.
+
+| Agent | Commits | Focus | Hard gates |
+|-------|---------|-------|------------|
+| B (typed CSS emitter) | 7 | Span whitelist, Alt prelude / aggregate-buf reconciliation (Option A), HexConvert → `push_leaf_with_aggregate` + `TapeKind::KvPair`, Seq-leaf classification, hex colour round-trip tests | AU.2.4 hard gate met (`parse_hex_color` emits twice in expand, `push_leaf_with_aggregate` fires at 20 sites); AU.2.5 partial (4 of 20 dimension sites activate; 16 blocked on Ref-projection); AU.2.6 minimum gate met (hex colour round-trip) |
+| C (SIMD bitmap v2) | 3 worktree + 3 parse-that | Grammar-parameterised `structural_alphabet` IR pass, `emit_structural_bitmap_kernel` subsuming `memchr1/2/3` + `nibble_lut`, SIMD `filter_quote_parity` via clmul / pmull, `scan_ws_block_comments_slow` deleted | AU.2.7 architectural hard gate met (0 matches for `scan_ws_block_comments_slow\|memchr1\|memchr2\|memchr3\|nibble_lut`); the 650 MB/s CSS bootstrap perf hard gate is **NOT** met (current 427 MB/s; investigation in W3) |
+| D (JSON string decode) | 3 worktree + 0 parse-that | `push_leaf_with_string` with per-parse arena + `payload_idx=2` sentinel, `SharedScanner::JsonStringDecode`, JSON value bench walks the tape, `data` → `data_s` rename (AU.6.6) | AU.3.1 hard gate met (`decode_json_string_to_arena` fires 3× in expand); **AU.3.2 bbnf/sonic ratio hard gate is NOT met** (current 0.27–0.41 vs goal ≥ 0.60 twitter / ≥ 0.80 canada — walker allocates `Vec` per `cursor.children()`, structural fix scoped into W3) |
+
+Parse-that fast-forwarded master to `f624ba6` (89 commits ahead of
+origin). Three SIMD commits fold in on top of the AR/AS/AT path-
+dependency work.
+
+`generated.rs` regens stably in one pass. Confirmed idempotent (diff
+= 0 across three consecutive clean-cache regens). Test suite: 6/6
+grammar_roundtrip, 13/13 payload_layouts, 5/5 json_decode, 18/18
+css_l4 target tests. Workspace: 2 pre-existing debug-wildcard
+failures carry over; no new regressions.
+
+### W2 — follow-up work that rolls into W3
+
+1. **Tailwind CSS parse failure at offset 111798** — Introduced by
+   W1 grammar annotations (confirmed by W2.C agent via temporary
+   revert). `cargo bench -p bbnf --bench css_l4` panics on tailwind;
+   normalize and bootstrap complete. Root cause investigation is
+   W3-scoped: one of the 13 CSS grammar annotation commits
+   `623161b…6843654` widened or narrowed a rule in a way that rejects
+   the `@keyframes` at-rule following `}\n\n` at that offset.
+2. **CSS bootstrap perf regression** — 644 MB/s (Session 2) →
+   427 MB/s (post-W2). Architectural hard gate for AU.2.7 was
+   650 MB/s. Three candidate causes:
+   - Label shadowing warnings from `derive(Parser)` (`'next_blk`,
+     `'skip_blk` shadow) — indicates the Alt prelude / Seq fix
+     landed with a gensym hole; the emitted code still compiles but
+     LLVM may not be optimising through duplicate-labelled blocks.
+   - `emit_structural_bitmap_kernel` routes CSS bootstrap paths
+     through a kernel that is slower than the deleted `nibble_lut`
+     path for bootstrap's particular byte distribution.
+   - `HexConvert` aggregate push adds arena work that is net-
+     negative on bootstrap (very few hex colours, but the emitter
+     now reserves the aggregate buf per `__hex` call).
+3. **AU.3.2 ratio miss** — walker allocates `Vec` per
+   `cursor.children()`; a zero-alloc child iterator (running offset
+   cursor + `sib_skip`-style traversal) closes most of the gap.
+   This is a W3 scope item; the AoS substrate can carry the fix
+   without waiting on the AV columnar pivot.
+4. **Ref-scalar-projection always projecting BoxedEnum** — named in
+   W2.B agent's deliverable. `IrNode::Ref(_)` loses the target
+   rule's scalar type at every Seq-with-Ref site, which is the
+   direct cause of the 16 inactive dimension sites. Fix lives at
+   `crates/ir/src/passes/types/generate.rs:148-149`. W3 scope.
+5. **`valueUnit` unreachability** — the CSS L4 stylesheet entry
+   does not reference `valueUnit`; `prune_unreachable` cascades,
+   removing `length`, `angle`, etc. from the compiled graph. Either
+   wire `valueUnit` into the reachable graph from `stylesheet.bbnf`
+   or remove its definition. W3 scope (grammar-side).
+6. **Factor-pass type loss in large Alts** — `absoluteLengthUnit`
+   projects to `BoxedEnum` because `fuse_token_dispatch`'s prefix-
+   factoring produces `Seq(Literal, Alt)` branches with
+   `Tuple([Span, U8])` shape, heterogeneous with non-factored U8
+   branches. W3/W6 scope.

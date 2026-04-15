@@ -19,6 +19,7 @@ mod repeat;
 mod seq;
 pub(crate) mod string_decode;
 pub(crate) mod tape_prelude;
+pub(crate) mod visitor;
 mod ws;
 
 use bbnf_ir::{AltBranch, FnDescriptor, GrammarIR, IrNode, IrRule, MapExpr, RuleId, TypeDesc};

@@ -377,8 +377,20 @@ impl RustEmitter {
         // Lowers `GrammarIR::profile()` to a single `const
         // GRAMMAR_PROFILE: GrammarProfile = GrammarProfile { ... };`
         // literal emitted alongside the grammar string array.
-        let grammar_profile =
-            super::profile::emit_grammar_profile(&ir.profile());
+        let profile = ir.profile();
+        let grammar_profile = super::profile::emit_grammar_profile(&profile);
+
+        // Tranche AV Phase 2 — AV.2.5 reordered-unrolling kernels for
+        // typed-payload visitors. One free-function per descriptor
+        // with a 4-lane reordered accumulator (Sum) or lane-wise
+        // extrema (Min/Max). The grammar-side `@visitor` directive is
+        // not wired today, so `reorder_unroll_visitors` is empty for
+        // every grammar shipped; the list is exercised by tests that
+        // populate it directly. When the directive lands, the kernels
+        // start appearing in every affected grammar without any
+        // further emitter work.
+        let visitor_kernels =
+            super::visitor::emit_visitor_kernels(&profile.reorder_unroll_visitors);
 
         // Root rule — the entry point for `parse(input)`. Pulled
         // from `ir.entry`, which is set at lowering time and
@@ -474,6 +486,7 @@ impl RustEmitter {
                 #depth_counter
                 #( #rule_functions )*
                 #extra
+                #visitor_kernels
 
                 /// Parse an input string and return a zero-copy
                 /// `Parsed<'_, Self>` that borrows the input directly.

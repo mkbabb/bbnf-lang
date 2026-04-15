@@ -17,18 +17,22 @@
 //!
 //! | Slot | Populated in |
 //! |------|--------------|
-//! | push counts + per-byte density | V1 (this phase) |
-//! | structural alphabet + digraphs | V1 (this phase) |
+//! | push counts + per-byte density | V1 |
+//! | structural alphabet + digraphs | V1 |
 //! | active_columns | V2 |
 //! | list_rules | V6 |
 //! | keyword_tables | V7 |
 //! | shape_dict | V5 |
 //! | branch_priors | V4 |
 //! | dedup_eligible_rules | V8 |
-//! | reorder_unroll_visitors | V2 |
+//! | reorder_unroll_visitors | V2 (AV.2.5, this phase) |
 //!
-//! Empty slices land as `&[]` in the emitted literal at V1; waves
-//! V2–V9 swap each `&[]` for a concrete `&SOME_STATIC_ARRAY`.
+//! Empty slices land as `&[]` in the emitted literal at V1; later
+//! waves swap each `&[]` for a concrete `&SOME_STATIC_ARRAY`.
+//! AV.2.5 (V2) wires `reorder_unroll_visitors` — one `VisitorId` per
+//! entry in `profile.reorder_unroll_visitors`, positional so the id
+//! matches the index of the emitted kernel in the grammar `impl`
+//! block.
 
 use bbnf_ir::passes::GrammarProfile;
 use proc_macro2::{Literal, TokenStream};
@@ -89,9 +93,34 @@ pub fn emit_grammar_profile(profile: &GrammarProfile) -> TokenStream {
         )
     };
 
+    // AV.2.5 — one `VisitorId(i)` per descriptor in
+    // `reorder_unroll_visitors`, positional so the id matches the
+    // index of the emitted kernel in the grammar `impl` block.
+    let (visitors_decl, visitors_ref) = if profile.reorder_unroll_visitors.is_empty() {
+        (TokenStream::new(), quote! { &[] })
+    } else {
+        let ids = profile
+            .reorder_unroll_visitors
+            .iter()
+            .enumerate()
+            .map(|(idx, _)| {
+                let idx_lit = Literal::u16_unsuffixed(idx as u16);
+                quote! { ::bbnf::runtime::tape::VisitorId(#idx_lit) }
+            });
+        let len = profile.reorder_unroll_visitors.len();
+        (
+            quote! {
+                static __GRAMMAR_PROFILE_VISITORS:
+                    [::bbnf::runtime::tape::VisitorId; #len] = [#(#ids),*];
+            },
+            quote! { &__GRAMMAR_PROFILE_VISITORS },
+        )
+    };
+
     quote! {
         #alphabet_decl
         #digraphs_decl
+        #visitors_decl
 
         /// Per-grammar codegen fingerprint — consolidated static
         /// profile emitted by Tranche AV Phase 1. Every downstream
@@ -116,7 +145,7 @@ pub fn emit_grammar_profile(profile: &GrammarProfile) -> TokenStream {
                 shape_dict: &[],
                 branch_priors: &[],
                 dedup_eligible_rules: &[],
-                reorder_unroll_visitors: &[],
+                reorder_unroll_visitors: #visitors_ref,
             };
     }
 }

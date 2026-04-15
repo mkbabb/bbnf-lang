@@ -29,7 +29,6 @@ fn make_ir(rules: Vec<IrRule>) -> GrammarIR {
         materialization: std::collections::HashMap::new(),
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
-        struct_registry: Default::default(),
         structural_alphabet: None,
         push_fingerprint: None,
     }
@@ -286,7 +285,6 @@ fn map_enum_wrap() {
         materialization: std::collections::HashMap::new(),
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
-        struct_registry: Default::default(),
         structural_alphabet: None,
         push_fingerprint: None,
     };
@@ -328,7 +326,6 @@ fn map_box_wrap() {
         materialization: std::collections::HashMap::new(),
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
-        struct_registry: Default::default(),
         structural_alphabet: None,
         push_fingerprint: None,
     };
@@ -371,7 +368,6 @@ fn make_ir_with_fns(rules: Vec<IrRule>, fns: Vec<FnDescriptor>, strings: Vec<Str
         materialization: std::collections::HashMap::new(),
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
-        struct_registry: Default::default(),
         structural_alphabet: None,
         push_fingerprint: None,
     }

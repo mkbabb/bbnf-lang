@@ -40,7 +40,6 @@ fn literal_is_span_eligible() {
         materialization: std::collections::HashMap::new(),
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
-        struct_registry: Default::default(),
         structural_alphabet: None,
         push_fingerprint: None,
     };
@@ -82,7 +81,6 @@ fn map_not_span_eligible() {
         materialization: std::collections::HashMap::new(),
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
-        struct_registry: Default::default(),
         structural_alphabet: None,
         push_fingerprint: None,
     };
@@ -123,7 +121,6 @@ fn transitive_span_eligibility() {
         materialization: std::collections::HashMap::new(),
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
-        struct_registry: Default::default(),
         structural_alphabet: None,
         push_fingerprint: None,
     };
@@ -169,7 +166,6 @@ fn cyclic_not_span_eligible() {
         materialization: std::collections::HashMap::new(),
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
-        struct_registry: Default::default(),
         structural_alphabet: None,
         push_fingerprint: None,
     };
@@ -208,7 +204,6 @@ fn seq_of_literals_span_eligible() {
         materialization: std::collections::HashMap::new(),
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
-        struct_registry: Default::default(),
         structural_alphabet: None,
         push_fingerprint: None,
     };

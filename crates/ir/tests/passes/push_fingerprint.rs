@@ -50,7 +50,6 @@ fn empty_ir(rules: Vec<IrRule>, strings: Vec<String>) -> GrammarIR {
         materialization: HashMap::new(),
         string_index: HashMap::new(),
         payload_layouts: HashMap::new(),
-        struct_registry: Default::default(),
         structural_alphabet: None,
         push_fingerprint: None,
     }

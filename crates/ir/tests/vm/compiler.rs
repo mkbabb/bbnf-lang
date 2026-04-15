@@ -36,7 +36,6 @@ fn make_simple_ir(body: IrNode) -> GrammarIR {
         materialization: std::collections::HashMap::new(),
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
-        struct_registry: Default::default(),
         structural_alphabet: None,
         push_fingerprint: None,
     }
@@ -167,7 +166,6 @@ fn compile_memo_rule() {
         materialization: std::collections::HashMap::new(),
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
-        struct_registry: Default::default(),
         structural_alphabet: None,
         push_fingerprint: None,
     };
@@ -231,7 +229,6 @@ fn compile_direct_left_recursive_rule_keeps_memo() {
         materialization: std::collections::HashMap::new(),
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
-        struct_registry: Default::default(),
         structural_alphabet: None,
         push_fingerprint: None,
     };
@@ -389,7 +386,6 @@ fn compile_token_dispatch_emits_dispatch_token() {
         materialization: std::collections::HashMap::new(),
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
-        struct_registry: Default::default(),
         structural_alphabet: None,
         push_fingerprint: None,
     };
@@ -472,7 +468,6 @@ fn compile_call() {
         materialization: std::collections::HashMap::new(),
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
-        struct_registry: Default::default(),
         structural_alphabet: None,
         push_fingerprint: None,
     };

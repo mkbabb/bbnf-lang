@@ -67,15 +67,11 @@ pub fn compute_payload_layouts(ir: &GrammarIR) -> HashMap<RuleId, PayloadLayout>
                     plan_layout(fields)
                 }
             }
-            // AS.2.3: Named struct types — look up the concrete field
-            // layout in the struct registry and plan from those fields.
-            TypeDesc::Named(sid) => {
-                if let Some(fields) = ir.struct_registry.get(sid) {
-                    plan_layout(fields)
-                } else {
-                    continue;
-                }
-            }
+            // Named types have no concrete field layout at the IR
+            // layer — typed struct projections are resolved at codegen
+            // time via per-backend type tables rather than a centralised
+            // registry. Skip; the codegen path handles these directly.
+            TypeDesc::Named(_) => continue,
             // Bare scalar rules (e.g. `number -> f64`) are single-field
             // payloads. Span-typed rules use TapeRec.span_lo/span_hi
             // natively and don't need a payload slot.

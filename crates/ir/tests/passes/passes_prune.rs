@@ -50,7 +50,6 @@ fn prune_removes_unreachable() {
         materialization: std::collections::HashMap::new(),
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
-        struct_registry: Default::default(),
         structural_alphabet: None,
         push_fingerprint: None,
     };
@@ -95,7 +94,6 @@ fn prune_keeps_all_when_all_reachable() {
         materialization: std::collections::HashMap::new(),
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
-        struct_registry: Default::default(),
         structural_alphabet: None,
         push_fingerprint: None,
     };
@@ -160,7 +158,6 @@ fn prune_follows_alt_branches() {
         materialization: std::collections::HashMap::new(),
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
-        struct_registry: Default::default(),
         structural_alphabet: None,
         push_fingerprint: None,
     };

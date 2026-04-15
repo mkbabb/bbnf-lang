@@ -227,16 +227,6 @@ pub fn project_types(ir: &mut GrammarIR) {
         }
     }
 
-    // Phase 4.5 (AS.2.3 scaffold): Populate struct_registry for Named types.
-    //
-    // When a rule's projected type is `Named(sid)`, the concrete field
-    // layout comes from the rule body's Seq children (or from the
-    // Map return type annotation). This is where `ir.struct_registry`
-    // should be populated — walk `types_map`, find Named entries, resolve
-    // their field types from the Seq child types in `type_map`, and
-    // insert into `ir.struct_registry`. Currently a no-op until the
-    // type projection CSP starts emitting Named types for struct rules.
-
     // Phase 5: Sub-variant collection using the solved TypeMap.
     //
     // Tranche X phase 4: collect borrowed `&str` rule names instead

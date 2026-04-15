@@ -47,7 +47,6 @@ fn resolve_direct_alias() {
         materialization: std::collections::HashMap::new(),
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
-        struct_registry: Default::default(),
         structural_alphabet: None,
         push_fingerprint: None,
     };
@@ -99,7 +98,6 @@ fn resolve_chain_alias() {
         materialization: std::collections::HashMap::new(),
         string_index: std::collections::HashMap::new(),
         payload_layouts: std::collections::HashMap::new(),
-        struct_registry: Default::default(),
         structural_alphabet: None,
         push_fingerprint: None,
     };

@@ -91,16 +91,21 @@ impl RustEmitter {
 
         // AQ.6.B: when an aggregate layout is active and the regex
         // is numeric, advance the field cursor and write into the
-        // buffer at the layout offset.
+        // buffer at the layout offset. The scanner choice follows the
+        // regex class's `allow_leading_dot` flag: JSON-strict numbers
+        // route through `scan_number_strict_f64` (which rejects `.5`),
+        // CSS-permissive numbers route through `scan_number_f64`
+        // (which accepts `.5` via `GENERIC_NUMBER_CONFIG`).
         if ctx.payload_layout.is_some() {
             use parse_that::regex::classify::RegexClass;
-            if matches!(opts.classify_regex(pattern), RegexClass::Numeric { .. }) {
+            if let RegexClass::Numeric { allow_leading_dot, .. } = opts.classify_regex(pattern) {
                 if let Some(field) = ctx.next_aggregate_field() {
                     if matches!(field.ty, TypeDesc::F64) {
                         let offset = field.offset as usize;
                         let end = offset + 8;
+                        let scan = number_scan_fn(allow_leading_dot);
                         return quote! {
-                            match ::parse_that::scan_number_strict_f64(state) {
+                            match #scan(state) {
                                 Some(__v) => {
                                     __aggregate_buf[#offset..#end]
                                         .copy_from_slice(&__v.to_le_bytes());
@@ -116,23 +121,22 @@ impl RustEmitter {
         }
 
         // AQ.6.A: for number patterns with F64 payload active, emit
-        // the strict number scanner to capture the parsed value into
-        // the typed payload variable. IR passes strip
+        // the number scanner to capture the parsed value into the
+        // typed payload variable. IR passes strip
         // `Map { NumberConvert }` down to bare `Regex`, so we detect
         // the number shape here via `RegexClass::Numeric` and route
-        // through the strict scanner. The historical
-        // CSS-compatible-vs-strict split is now resolved upstream by
-        // the regex's `RegexInfo`; the emitter uses the strict path
-        // unconditionally for tape payloads (matching the
-        // `fused_number_rules` gating).
+        // through the scanner whose leading-dot policy matches the
+        // regex classification: strict JSON rejects `.5`, CSS-
+        // permissive accepts it.
         if ctx.has_payload_type(&TypeDesc::F64) {
             use parse_that::regex::classify::RegexClass;
-            if matches!(opts.classify_regex(pattern), RegexClass::Numeric { .. }) {
+            if let RegexClass::Numeric { allow_leading_dot, .. } = opts.classify_regex(pattern) {
                 let tag_set = ctx.payload_tag(&TypeDesc::F64).map(|tag| {
                     quote! { __payload_tag = #tag; }
                 });
+                let scan = number_scan_fn(allow_leading_dot);
                 return quote! {
-                    match ::parse_that::scan_number_strict_f64(state) {
+                    match #scan(state) {
                         Some(__v) => { __payload_f64 = __v; #tag_set __has_payload = true; Some(()) }
                         None => None,
                     }
@@ -213,3 +217,16 @@ impl RustEmitter {
     }
 }
 
+/// Map a numeric regex's `allow_leading_dot` flag onto the matching
+/// parse-that scanner. JSON-strict (`allow_leading_dot: false`) routes
+/// through `scan_number_strict_f64`; CSS-permissive and any numeric
+/// class that admits bare `.5` routes through `scan_number_f64`
+/// (generic `GENERIC_NUMBER_CONFIG`). The emitter chooses at codegen
+/// time from the regex classification — no runtime branching.
+pub(super) fn number_scan_fn(allow_leading_dot: bool) -> TokenStream {
+    if allow_leading_dot {
+        quote! { ::parse_that::scan_number_f64 }
+    } else {
+        quote! { ::parse_that::scan_number_strict_f64 }
+    }
+}

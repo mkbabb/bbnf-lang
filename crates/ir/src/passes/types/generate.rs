@@ -345,7 +345,7 @@ impl<'a> ConstraintGenerator<'a> {
                 let map_type = match fn_desc {
                     FnDescriptor::EnumWrap { .. } => TypeDesc::Enum,
                     FnDescriptor::BoxWrap => TypeDesc::BoxedEnum,
-                    FnDescriptor::NumberConvert => TypeDesc::F64,
+                    FnDescriptor::NumberConvert { .. } => TypeDesc::F64,
                     FnDescriptor::HexConvert { .. } => TypeDesc::U32,
                     FnDescriptor::SpanCapture => TypeDesc::Span,
                     FnDescriptor::Expr { return_type, .. } => {
@@ -373,7 +373,7 @@ impl<'a> ConstraintGenerator<'a> {
                         let map_type = match fn_desc {
                             FnDescriptor::EnumWrap { .. } => TypeDesc::Enum,
                             FnDescriptor::BoxWrap => TypeDesc::BoxedEnum,
-                            FnDescriptor::NumberConvert => TypeDesc::F64,
+                            FnDescriptor::NumberConvert { .. } => TypeDesc::F64,
                             FnDescriptor::HexConvert { .. } => TypeDesc::U32,
                             FnDescriptor::SpanCapture => TypeDesc::Span,
                             FnDescriptor::Expr { return_type, .. } => {

@@ -201,7 +201,7 @@ fn emit_typed_enum_value_accessor(
             IrNode::Map { fn_id, .. } => {
                 let td = ir.fns.get(*fn_id as usize).and_then(|fd| match fd {
                     bbnf_ir::FnDescriptor::Expr { return_type: Some(td), .. } => Some(td),
-                    bbnf_ir::FnDescriptor::NumberConvert => Some(&TypeDesc::F64),
+                    bbnf_ir::FnDescriptor::NumberConvert { .. } => Some(&TypeDesc::F64),
                     _ => None,
                 });
                 match td {

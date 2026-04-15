@@ -188,7 +188,11 @@ impl Emitter for WasmEmitter {
         self.emit_enum_wrap_impl(inner, variant_name, alloc, ctx)
     }
 
-    fn emit_number_convert(&mut self, ctx: &mut WasmEmitCtx) -> String {
+    fn emit_number_convert(&mut self, _allow_leading_dot: bool, ctx: &mut WasmEmitCtx) -> String {
+        // WASM emitter currently delegates to its number scan helper
+        // which does not yet split on leading-dot policy — the flag
+        // is threaded for parity with the Rust backend; adding
+        // dispatch is AV scope.
         self.emit_number_convert_impl(ctx)
     }
 

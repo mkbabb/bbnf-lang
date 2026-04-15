@@ -35,7 +35,20 @@ impl RustEmitter {
         inner
     }
 
-    pub(super) fn emit_number_convert_impl(&mut self, ctx: &mut RustEmitCtx) -> TokenStream {
+    pub(super) fn emit_number_convert_impl(
+        &mut self,
+        allow_leading_dot: bool,
+        ctx: &mut RustEmitCtx,
+    ) -> TokenStream {
+        // The scanner dispatch follows the regex's leading-dot policy
+        // recorded on `FnDescriptor::NumberConvert`. JSON-strict inputs
+        // (`allow_leading_dot: false`) route through
+        // `scan_number_strict_f64`; CSS-permissive inputs
+        // (`allow_leading_dot: true`) route through `scan_number_f64`
+        // (generic `GENERIC_NUMBER_CONFIG`). Chosen at codegen time —
+        // no runtime branching.
+        let scan = super::leaves::number_scan_fn(allow_leading_dot);
+
         // AQ.6.B: when an aggregate layout is active, advance the
         // field cursor and write the scanned f64 into the buffer at
         // the layout-recorded offset. The aggregate path supersedes
@@ -46,7 +59,7 @@ impl RustEmitter {
                     let offset = field.offset as usize;
                     let end = offset + 8;
                     return quote! {
-                        match ::parse_that::scan_number_strict_f64(state) {
+                        match #scan(state) {
                             Some(__v) => {
                                 __aggregate_buf[#offset..#end]
                                     .copy_from_slice(&__v.to_le_bytes());
@@ -65,7 +78,7 @@ impl RustEmitter {
             // `Option<()>`; stripping the `.map(|_| ())` wrap shrinks
             // the inner-loop icache footprint.
             return quote! {
-                ::parse_that::scan_number_strict_f64(state)
+                #scan(state)
             };
         }
 
@@ -75,7 +88,7 @@ impl RustEmitter {
                 quote! { __payload_tag = #tag; }
             });
             quote! {
-                match ::parse_that::scan_number_strict_f64(state) {
+                match #scan(state) {
                     Some(__v) => { __payload_f64 = __v; #tag_set __has_payload = true; Some(()) }
                     None => None,
                 }
@@ -85,7 +98,7 @@ impl RustEmitter {
             // `Option<f64>` threads upward unchanged — callers see
             // `Some(_)` as truthy regardless of the inner type.
             quote! {
-                ::parse_that::scan_number_strict_f64(state)
+                #scan(state)
             }
         }
     }
@@ -277,16 +290,19 @@ impl RustEmitter {
         // inner expression's side effect under tape-first. The
         // view layer owns the downstream projection.
         //
-        // NumberConvert is always JSON-class (lowered from
-        // `-> f64` on a JSON number regex).
+        // `NumberConvert { allow_leading_dot }` picks the matching
+        // scanner: JSON-strict rejects bare `.5`, CSS-permissive
+        // accepts it. The regex classifier recorded the policy at
+        // lowering time; the emitter just reads it.
         //
         // AU.6.5 no-value-discard: return the scanner's `Option<f64>`
         // directly — callers compose via `Some(_)` so the
         // `.map(|_| ())` wrap has been dropped.
         match inner_fd {
-            FnDescriptor::NumberConvert => Some(quote! {
-                ::parse_that::scan_number_strict_f64(state)
-            }),
+            FnDescriptor::NumberConvert { allow_leading_dot } => {
+                let scan = super::leaves::number_scan_fn(*allow_leading_dot);
+                Some(quote! { #scan(state) })
+            }
             _ => Some(quote! { { #inner } }),
         }
     }

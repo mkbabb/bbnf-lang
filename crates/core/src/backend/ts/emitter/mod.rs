@@ -251,7 +251,10 @@ impl Emitter for TsEmitter {
         self.emit_enum_wrap_impl(inner, variant_name, alloc, ctx)
     }
 
-    fn emit_number_convert(&mut self, ctx: &mut TsEmitCtx) -> TsCode {
+    fn emit_number_convert(&mut self, _allow_leading_dot: bool, ctx: &mut TsEmitCtx) -> TsCode {
+        // TS emitter's number path calls `Number(span)` which already
+        // accepts both `.5` and strict digits; the policy is enforced
+        // upstream by the regex scan, not the conversion call.
         self.emit_number_convert_impl(ctx)
     }
 

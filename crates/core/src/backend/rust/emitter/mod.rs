@@ -57,7 +57,7 @@ fn resolve_branch_type(node: &IrNode, ir: &GrammarIR) -> Option<TypeDesc> {
         IrNode::Map { fn_id, .. } => {
             let fn_desc = &ir.fns[*fn_id as usize];
             match fn_desc {
-                FnDescriptor::NumberConvert => Some(TypeDesc::F64),
+                FnDescriptor::NumberConvert { .. } => Some(TypeDesc::F64),
                 FnDescriptor::HexConvert { .. } => Some(TypeDesc::U32),
                 FnDescriptor::Expr { return_type, .. } => return_type.clone(),
                 FnDescriptor::EnumWrap { .. }
@@ -289,8 +289,8 @@ impl Emitter for RustEmitter {
         self.emit_enum_wrap_impl(inner, variant_name, alloc, ctx)
     }
 
-    fn emit_number_convert(&mut self, ctx: &mut Self::Ctx) -> TokenStream {
-        self.emit_number_convert_impl(ctx)
+    fn emit_number_convert(&mut self, allow_leading_dot: bool, ctx: &mut Self::Ctx) -> TokenStream {
+        self.emit_number_convert_impl(allow_leading_dot, ctx)
     }
 
     fn emit_constant(

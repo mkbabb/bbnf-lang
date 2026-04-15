@@ -43,7 +43,9 @@ pub(super) fn compile_map<E: Emitter>(
     }
 
     match fn_desc {
-        FnDescriptor::NumberConvert => emitter.emit_number_convert(ctx),
+        FnDescriptor::NumberConvert { allow_leading_dot } => {
+            emitter.emit_number_convert(*allow_leading_dot, ctx)
+        }
 
         FnDescriptor::EnumWrap { variant } => {
             let variant_name = ir.get_string(*variant);

@@ -194,7 +194,7 @@ pub trait Emitter {
         ctx: &mut Self::Ctx,
     ) -> Self::Output;
 
-    fn emit_number_convert(&mut self, ctx: &mut Self::Ctx) -> Self::Output;
+    fn emit_number_convert(&mut self, allow_leading_dot: bool, ctx: &mut Self::Ctx) -> Self::Output;
 
     fn emit_constant(
         &mut self,

@@ -207,7 +207,7 @@ fn csp_number_convert() {
                 fn_id: 0,
             },
         )],
-        vec![FnDescriptor::NumberConvert],
+        vec![FnDescriptor::NumberConvert { allow_leading_dot: false }],
     );
     assert_eq!(solve_rule_type(&ir, 0), TypeDesc::F64);
 }

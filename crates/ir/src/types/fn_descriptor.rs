@@ -25,10 +25,19 @@ pub enum FnDescriptor {
     /// Box the parse result: `Box::new(result)`.
     BoxWrap,
 
-    /// Fused numeric regex scan + f64 conversion (CSS-compatible).
-    /// Internal specialization of `Expr { Input, return_type: F64 }` when inner is
-    /// a numeric regex. Codegen emits `css_number_scan_f64(state)` → `Option<f64>`.
-    NumberConvert,
+    /// Fused numeric regex scan + f64 conversion.
+    ///
+    /// Internal specialization of `Expr { Input, return_type: F64 }` when
+    /// the inner IR node is a numeric regex. The `allow_leading_dot`
+    /// flag is derived at lowering time from
+    /// `RegexClass::Numeric { allow_leading_dot, .. }`:
+    ///
+    /// - `false` → JSON-strict digits (no bare `.5`). Codegen emits
+    ///   `scan_number_strict_f64(state)` → `Option<f64>`.
+    /// - `true` → CSS-permissive digits (bare `.5` admitted). Codegen
+    ///   emits `scan_number_f64(state)` → `Option<f64>`, routed through
+    ///   `GENERIC_NUMBER_CONFIG`.
+    NumberConvert { allow_leading_dot: bool },
 
     /// Fused hex regex scan + user conversion function.
     /// Internal specialization of `Expr { FnCall(name, [Input]), return_type: U32 }` when

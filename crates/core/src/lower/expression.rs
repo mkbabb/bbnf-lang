@@ -1490,10 +1490,13 @@ fn try_specialize_map_fn(inner: &IrNode, fn_id: FnId, ctx: &mut LowerCtx<'_>) ->
 
     match type_name_owned.as_str() {
         "f64" => {
-            if matches!(expr, MapExpr::Input)
-                && matches!(classify_regex(&pattern), RegexClass::Numeric { .. })
-            {
-                ctx.fns.push(FnDescriptor::NumberConvert)
+            if matches!(expr, MapExpr::Input) {
+                if let RegexClass::Numeric { allow_leading_dot, .. } = classify_regex(&pattern) {
+                    ctx.fns
+                        .push(FnDescriptor::NumberConvert { allow_leading_dot })
+                } else {
+                    fn_id
+                }
             } else {
                 fn_id
             }

@@ -63,6 +63,16 @@ pub fn branch_pushes_children(ir: &GrammarIR, node: &IrNode, dstate: &DriverStat
         IrNode::Alt(branches, _) => branches
             .iter()
             .any(|b| branch_pushes_children(ir, &b.node, dstate)),
+        // AU.1.1 (second half): Seq branches whose children are all
+        // leaves (literals, regex, pure maps) do not themselves push
+        // child records — the Seq is an aggregate-shape producer, not
+        // a compound. Without this case the `_ => true` catch-all
+        // would classify every Seq as compound and the aggregate
+        // layout epilogue (`push_leaf_with_aggregate`) would never
+        // fire for Seq-bodied rules like `length = number, lengthUnit`.
+        IrNode::Seq(children) => children
+            .iter()
+            .any(|c| branch_pushes_children(ir, c, dstate)),
         IrNode::Skip(kept, _) => branch_pushes_children(ir, kept, dstate),
         IrNode::Next(_, kept) => branch_pushes_children(ir, kept, dstate),
         IrNode::Minus(lhs, _) => branch_pushes_children(ir, lhs, dstate),

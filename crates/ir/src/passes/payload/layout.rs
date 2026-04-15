@@ -72,10 +72,14 @@ pub fn compute_payload_layouts(ir: &GrammarIR) -> HashMap<RuleId, PayloadLayout>
             // time via per-backend type tables rather than a centralised
             // registry. Skip; the codegen path handles these directly.
             TypeDesc::Named(_) => continue,
-            // Bare scalar rules (e.g. `number -> f64`) are single-field
-            // payloads. Span-typed rules use TapeRec.span_lo/span_hi
-            // natively and don't need a payload slot.
-            td if td.needs_payload_slot() => plan_layout(std::slice::from_ref(td)),
+            // Bare scalar rules (e.g. `number -> f64`) live on the
+            // scalar `PayloadData::InlineScalar` / `WideScalar` path
+            // — one arena slot, no aggregate stack buffer. The Rust
+            // emitter dispatches them through
+            // `emit_tape_span_only_scalar_*` when the layout is
+            // absent. Skipping them here keeps the aggregate planner
+            // exclusively for the multi-field tuple case.
+            td if td.needs_payload_slot() => continue,
             _ => continue,
         };
         let Some(layout) = layout else {

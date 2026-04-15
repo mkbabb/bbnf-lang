@@ -123,13 +123,16 @@ fn compile_and_compute_layouts(
 #[test]
 fn test_json_payload_layouts_baseline() {
     let (_ir, layouts) = compile_and_compute_layouts("json", "json/json.bbnf");
-    // Post-AR.2.1: type-suffix detection produces concrete scalar TypeDescs.
-    //   - null  -> 0u8  => U8   (1 layout)
-    //   - bool  -> true/false => Bool (1 layout)
-    //   - number -> f64 => F64  (1 layout)
-    assert!(
-        layouts.len() >= 3,
-        "json: expected at least 3 payload layouts, got {}",
+    // W6.D: single-scalar rules (null -> U8, bool -> Bool, number -> F64)
+    // route through `emit_tape_span_only_scalar_*` and bypass the
+    // aggregate planner entirely. The layouts map is exclusively
+    // for multi-field tuples (e.g. KV-pair shapes); JSON has no
+    // such aggregate rules today, so the map is empty.
+    assert_eq!(
+        layouts.len(),
+        0,
+        "json: expected 0 aggregate layouts (single-scalar rules use \
+         the scalar payload path), got {}",
         layouts.len()
     );
 }
@@ -201,10 +204,14 @@ fn test_css_pretty_payload_layouts_baseline() {
 #[test]
 fn test_json_payload_layouts() {
     let (_ir, layouts) = compile_and_compute_layouts("json", "json/json.bbnf");
-    // null -> U8, bool -> Bool, number -> F64.
-    assert!(
-        layouts.len() >= 3,
-        "json: expected at least 3 payload layouts, got {}",
+    // W6.D: scalar-leaf rules use `PayloadData::WideScalar` /
+    // `InlineScalar` and bypass the aggregate planner. JSON has no
+    // multi-field tuple rules, so the layouts map is empty.
+    assert_eq!(
+        layouts.len(),
+        0,
+        "json: expected 0 aggregate layouts (single-scalar rules use \
+         the scalar payload path), got {}",
         layouts.len()
     );
 }
@@ -283,10 +290,16 @@ fn test_total_payload_layouts() {
         css_pretty.len()
     );
 
-    // JSON contributes >= 3, CSS L4 >= 7.
+    // W6.D: single-scalar rules (json's null/bool/number, css_l4's
+    // u8 keyword rules) bypass the aggregate planner. The layouts
+    // map captures only multi-field tuples — KV pairs and dimension
+    // `(f64, u8)` aggregates. CSS L4 still contributes 7 (dimension
+    // + KV-pair shapes); sheets contributes 2; JSON/EBNF/BBNF/css_pretty
+    // contribute 0.
     assert!(
-        total >= 10,
-        "total payload layouts across all grammars should be >= 10, got {}",
+        total >= 7,
+        "total aggregate layouts across all grammars should be >= 7, \
+         got {}",
         total
     );
 }

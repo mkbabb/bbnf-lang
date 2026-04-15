@@ -2,6 +2,23 @@
 
 // CSS Filter Effects Level 1 — filter functions.
 // Spec: https://drafts.fxtf.org/filter-effects-1/
+// Each filter function is a tagged-union variant; the filterName rule
+// declares the u8 discriminant. lightningcss Filter enum ordering guides
+// the numbering.
+// TODO typed-aggregate (AU.2.6): payload composition (length | percentage |
+// angle | (length×3, Color)) lands once variant-with-payload codegen
+// supports per-variant shape.
+
+filterName = "drop-shadow" -> 3u8
+           | "hue-rotate" -> 5u8
+           | "brightness" -> 1u8
+           | "grayscale" -> 4u8
+           | "saturate" -> 8u8
+           | "contrast" -> 2u8
+           | "opacity" -> 7u8
+           | "invert" -> 6u8
+           | "sepia" -> 9u8
+           | "blur" -> 0u8 ;
 
 blur       = "blur" , "(" ?w , (length ?) ?w , ")" ;
 brightness = "brightness" , "(" ?w , ((number | percentage) ?) ?w , ")" ;

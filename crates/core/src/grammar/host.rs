@@ -368,17 +368,38 @@ fn decode_pretty<'a>(item: BbnfBootstrapNodeView<'a>) -> Option<PrettyDirective<
     })
 }
 
-/// Directives with the shape `@keyword name ;` — `@token` and
-/// `@debug`. The first identifier child provides the name.
+/// Directives with the shape `@keyword (identifier | "*") ;` —
+/// `@token` (identifier only) and `@debug` (identifier or `*`
+/// wildcard that marks every rule for instrumentation).
+///
+/// Under the tape-first emitter the `*` literal branch leaves no
+/// record on the tape (the wildcard is elided alongside the keyword
+/// and terminator), so there is no `BbnfBootstrapRuleKind::identifier`
+/// child to find. The identifier branch does leave an
+/// `identifier` record. We try the identifier child first; when
+/// absent, we scan the directive's span text for a `*` wildcard.
 fn decode_single_name<'a>(item: BbnfBootstrapNodeView<'a>) -> Option<Cow<'a, str>> {
-    let name_node = item
+    if let Some(name_node) = item
         .children()
-        .find(|c| c.rule_kind() == BbnfBootstrapRuleKind::identifier)?;
-    let name = name_node.span_text();
-    if name.is_empty() {
-        None
+        .find(|c| c.rule_kind() == BbnfBootstrapRuleKind::identifier)
+    {
+        let name = name_node.span_text();
+        if !name.is_empty() {
+            return Some(Cow::Owned(name.to_string()));
+        }
+    }
+    // No identifier child — the `*` branch of the alt was taken.
+    // The directive's span covers `@keyword ... <terminator>`; skip
+    // the leading `@keyword` token and look for the wildcard.
+    let text = item.span_text();
+    let body = text
+        .strip_prefix("@debug")
+        .or_else(|| text.strip_prefix("@token"))
+        .unwrap_or(text);
+    if body.trim_start().starts_with('*') {
+        Some(Cow::Borrowed("*"))
     } else {
-        Some(Cow::Owned(name.to_string()))
+        None
     }
 }
 

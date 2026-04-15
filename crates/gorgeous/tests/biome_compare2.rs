@@ -1,6 +1,11 @@
 use biome_css_parser::{CssParserOptions, parse_css};
 use biome_css_formatter::{context::CssFormatOptions, format_node};
 
+// AV.0.11 Category A — output-size dump test, not an assertion. Iterates
+// over fixtures including `tailwind-output.css` and `app.css` which are
+// not checked in. Forward-ticketed alongside `biome_compare` visualisation
+// tests.
+#[ignore = "AV.0.11 Category A: dump/visualisation test; relies on non-checked-in data/css/{tailwind-output,app}.css fixtures. Forward-ticketed to gorgeous visualisation-fixtures audit."]
 #[test]
 fn output_size_comparison() {
     for (name, path) in [

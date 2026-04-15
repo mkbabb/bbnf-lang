@@ -8,6 +8,12 @@ fn biome_format(input: &str) -> String {
     formatted.print().unwrap().into_code()
 }
 
+// AV.0.11 Category A — visualisation/dump test, not an assertion. Reads
+// `data/css/bootstrap.css` (present) and `data/css/tailwind-output.css`
+// (never checked in — gorgeous-side visualisation artefact). The test
+// panics on the missing fixture. Forward-ticketed to the gorgeous
+// visualisation-fixtures audit.
+#[ignore = "AV.0.11 Category A: dump/visualisation test; relies on non-checked-in data/css/tailwind-output.css fixture. Forward-ticketed to gorgeous visualisation-fixtures audit."]
 #[test]
 fn dump_biome_vs_gorgeous() {
     let bootstrap = std::fs::read_to_string("data/css/bootstrap.css").unwrap();
@@ -42,6 +48,7 @@ fn dump_biome_vs_gorgeous() {
     }
 }
 
+#[ignore = "AV.0.11 Category A: dump/visualisation test; relies on non-checked-in data/css/tailwind-output.css fixture. Forward-ticketed to gorgeous visualisation-fixtures audit."]
 #[test]
 fn dump_tailwind_comparison() {
     let tailwind = std::fs::read_to_string("data/css/tailwind-output.css").unwrap();

@@ -45,15 +45,17 @@ pub struct PayloadField {
 }
 
 /// Compute aggregate payload layouts for every rule whose `TypeDesc`
-/// is a `Tuple` of scalars or a bare `TypeDesc::Span`.
+/// is a `Tuple` of scalars, a bare `TypeDesc::Span`, or a bare
+/// scalar projected from an Alt body.
 ///
 /// Returns a map from `RuleId` to the planned layout. Rules whose
 /// layout would exceed [`MAX_PAYLOAD_BYTES`] are omitted (they
-/// continue to use compound-children storage). Non-Tuple, non-Span
-/// rule types are also omitted — scalar-leaf rules already live on
-/// the `PayloadData::InlineScalar` / `PayloadData::WideScalar` paths
+/// continue to use compound-children storage). Non-Tuple, non-Span,
+/// non-scalar-Alt rule types are also omitted — regex-bodied scalar
+/// rules (e.g. `number = /regex/ -> f64`) live on the
+/// `PayloadData::InlineScalar` / `PayloadData::WideScalar` paths
 /// (AU.6.7); this planner covers the multi-field aggregate case
-/// plus the bare `Span` case.
+/// plus the bare `Span` / scalar-Alt cases.
 ///
 /// AV.0.2: bare-`Span` rules — BBNF's `identifier`, `literal`,
 /// `regex`, `big_comment`, `comment`, `string_lit`, and Sheets'
@@ -65,6 +67,24 @@ pub struct PayloadField {
 /// literal match succeeds, and the existing aggregate epilogue
 /// commits via `push_leaf_with(PayloadData::Aggregate(..))`. No
 /// widening of `MAX_PAYLOAD_BYTES`; no new emitter path.
+///
+/// AV.0.1 (close-out): scalar-Alt rules — Sheets `add_op =
+/// "+" -> 0u8 | "-" -> 1u8`, `mul_op`, `unary_prefix`, `compare_op`,
+/// `sheet_prefix`, `boolean`, plus any analogous rule whose body
+/// is an Alt and whose projected type is a bare scalar
+/// (`U8` / `Bool` / `I8` / `U16` / `I16` / `U32` / `I32` / `U64` /
+/// `I64` / `F64`) — register a single-field layout `[T @ offset 0,
+/// total_bytes = size_of::<T>()]`. The alt composers' per-branch
+/// payload-write hoist (see `backend/rust/emitter/alt.rs`) fires
+/// on `ctx.payload_layout.is_some()`, so a registered layout is
+/// what turns the per-branch writes on; without it each branch
+/// emits the literal match without touching the aggregate buffer
+/// and the rule epilogue's `PayloadData::Aggregate` commit carries
+/// garbage. Gating matches the bare-Span case: leaf-only body
+/// (no sub-rule refs), not `TransparentElide`. Single-leaf Map
+/// rules (e.g. Sheets `number = /regex/ -> f64`) stay on the
+/// `TapeSpanOnly` scalar path because their body is `Map(Regex)`,
+/// not `Alt(...)`.
 pub fn compute_payload_layouts(ir: &GrammarIR) -> HashMap<RuleId, PayloadLayout> {
     let mut out = HashMap::new();
     for (rule_id, ty) in &ir.types {
@@ -95,22 +115,32 @@ pub fn compute_payload_layouts(ir: &GrammarIR) -> HashMap<RuleId, PayloadLayout>
             // materialisation class is `TransparentElide` (e.g. JSON
             // `comma = "," ?w`) are inlined at every call site and
             // have no own emission point to commit a layout against.
-            TypeDesc::Span if span_layout_eligible(ir, *rule_id) => {
-                plan_layout(std::slice::from_ref(ty))
+            //
+            // AV.0.1 close-out: scalar-Alt rules share the
+            // eligibility contract — the admission additionally
+            // requires the body to be an `Alt`, so Map-bodied
+            // scalar rules (`number = /regex/ -> f64`) continue to
+            // route through the dedicated `TapeSpanOnly` scalar
+            // path (`PayloadData::InlineScalar` / `WideScalar`)
+            // rather than the aggregate buffer.
+            td if scalar_layout_eligible(ir, *rule_id, td) => {
+                plan_layout(std::slice::from_ref(td))
             }
             // Named types have no concrete field layout at the IR
             // layer — typed struct projections are resolved at codegen
             // time via per-backend type tables rather than a centralised
             // registry. Skip; the codegen path handles these directly.
             TypeDesc::Named(_) => continue,
-            // Bare scalar rules (e.g. `number -> f64`) live on the
-            // scalar `PayloadData::InlineScalar` / `WideScalar` path
-            // — one arena slot, no aggregate stack buffer. The Rust
+            // Non-Alt-bodied scalar rules (e.g. `number = /regex/
+            // -> f64`) live on the scalar
+            // `PayloadData::InlineScalar` / `WideScalar` path —
+            // one arena slot, no aggregate stack buffer. The Rust
             // emitter dispatches them through
             // `emit_tape_span_only_scalar_*` when the layout is
-            // absent. Skipping them here keeps the aggregate planner
-            // exclusively for the multi-field tuple case plus the
-            // bare-Span case carved out above.
+            // absent. Skipping them here keeps the aggregate
+            // planner exclusively for the multi-field tuple case
+            // plus the bare-Span and scalar-Alt cases carved out
+            // above.
             td if td.needs_payload_slot() => continue,
             _ => continue,
         };
@@ -122,10 +152,22 @@ pub fn compute_payload_layouts(ir: &GrammarIR) -> HashMap<RuleId, PayloadLayout>
     out
 }
 
-/// AV.0.2: gate the bare-`Span` aggregate route on body shape +
-/// materialisation class.
+/// AV.0.2 / AV.0.1 close-out: gate the single-field scalar
+/// aggregate route on type shape, body shape, and materialisation
+/// class.
 ///
 /// A rule is eligible when:
+/// - its projected type is a bare scalar payload — `TypeDesc::Span`,
+///   `Bool`, or any narrow integer / float primitive. Non-scalar
+///   types (Tuple, Vec, Option, Enum, Named, …) route through the
+///   tuple or structural paths upstream;
+/// - the rule body is either an `IrNode::Alt` (scalar-Alt
+///   admission — `add_op = "+" -> 0u8 | "-" -> 1u8` and kin) or the
+///   projected type is `Span` (the AV.0.2 single-leaf token case).
+///   Map-bodied scalar rules (e.g. Sheets `number = /regex/ -> f64`)
+///   stay on the dedicated `TapeSpanOnly` scalar path: their single
+///   post-match conversion fires via `span_helper_capture` at Map
+///   time, with no per-branch hoist to activate;
 /// - its body is a *leaf-only* expression — no `IrNode::Ref(_)`
 ///   anywhere in the tree, so the rule's own span fully determines
 ///   the typed payload (no sub-rule contributes its own span);
@@ -144,9 +186,47 @@ pub fn compute_payload_layouts(ir: &GrammarIR) -> HashMap<RuleId, PayloadLayout>
 /// so adding a layout would force the inline analyser to demote it
 /// to a `DirectCall` and inflate the tape with redundant compound
 /// records that no longer round-trip the existing goldens.
-fn span_layout_eligible(ir: &GrammarIR, rule_id: RuleId) -> bool {
+fn scalar_layout_eligible(ir: &GrammarIR, rule_id: RuleId, ty: &TypeDesc) -> bool {
+    if !ty.is_scalar_payload() {
+        return false;
+    }
     let rule = ir.get_rule(rule_id);
+    // Span admits single-leaf regex / literal bodies (AV.0.2); the
+    // non-Span scalars admit Alt bodies only (AV.0.1 close-out).
+    // A Map-bodied scalar rule has a single post-match conversion
+    // — `span_helper_capture` / the scalar setter — rather than a
+    // per-branch hoist, so it stays off the aggregate path.
+    let body_shape_ok = matches!(ty, TypeDesc::Span) || matches!(rule.body, IrNode::Alt(_, _));
+    if !body_shape_ok {
+        return false;
+    }
     if !body_is_leaf_only(&rule.body) {
+        return false;
+    }
+    // AV.0.1 close-out: a scalar-Alt rule whose Ref is consumed by a
+    // parent's aggregate-payload layout must stay inlined — otherwise
+    // the parent's `__aggregate_buf` loses the field write. CSS L4
+    // `length = number, lengthUnit` projects `Tuple([F64, U8])` and
+    // takes a `[F64 @ 0, U8 @ 8]` layout; the U8 comes from
+    // `lengthUnit`'s Alt branches. If `lengthUnit` becomes `DirectCall`
+    // (forced by its own layout via AU.2.5), the Alt branches now
+    // write into `lengthUnit`'s own `__aggregate_buf` — `length`'s
+    // U8 slot stays zero and the dimension decodes as `px` regardless
+    // of the matched unit. Likewise `dirPseudo = ":dir", "(" >>
+    // dirKeyword << ")"` projects `Tuple([Span, U8])`, its KV-pair
+    // layout consumes the U8 from `dirKeyword`'s Alt branches; a
+    // standalone `dirKeyword` layout shifts the u8 into a nested Span
+    // record and the `dirPseudo` KvPair reader reads zero. The gate
+    // keeps scalar-Alt rules inlined at these compound call sites —
+    // `Sheets add_op / mul_op / unary_prefix / compare_op /
+    // sheet_prefix / boolean` callers (`add_expr`, `mul_expr`,
+    // `unary_expr`, `comparison_expr`, `cell`, `primary`) compose
+    // their U8 values into a parent `Tuple` that contains a
+    // non-scalar field (`BoxedEnum`, `Vec`, `Option`) so the parent
+    // never receives an aggregate layout; admitting those rules is
+    // safe. Dimension / KV-pair callers have all-scalar Tuple parents
+    // and trigger the veto.
+    if ref_breaks_parent_layout(ir, rule_id) {
         return false;
     }
     // AV.0.2 (close-out): permissive gate on materialisation. The
@@ -166,6 +246,71 @@ fn span_layout_eligible(ir: &GrammarIR, rule_id: RuleId) -> bool {
         rule_head_materialization(ir, rule_id),
         Some(MaterializationClass::TransparentElide),
     )
+}
+
+/// AV.0.1 close-out: veto scalar-Alt admission when the rule's Ref
+/// feeds a parent rule's aggregate-payload layout. A parent's
+/// aggregate layout is populated by its body's per-leaf writes into
+/// the shared `__aggregate_buf`; the Alt composer's per-branch
+/// payload-write hoist uses the parent's cursor to land the write in
+/// the right field. Promoting the child rule to a callable function
+/// (AU.2.5 forces `DirectCall` for layout-carrying rules) shifts the
+/// write into the child's own record, leaving the parent's aggregate
+/// field unwritten. The veto gate keeps the child inlined at any
+/// call site whose enclosing rule composes a scalar-tuple or
+/// KV-pair layout.
+///
+/// Returns `true` when admission would break an enclosing aggregate
+/// layout — that is, when the candidate rule is referenced by any
+/// rule whose projected type is:
+///   * a `Tuple(scalar_fields...)` whose `plan_layout` succeeds
+///     (bounded by `MAX_PAYLOAD_BYTES` and all fields scalar), or
+///   * a KV-pair shape `Tuple([Span, scalar])`.
+/// Such a parent's body relies on the candidate's leaves to fill the
+/// shared aggregate buffer; forcing the child to carry its own
+/// layout orphans the parent's field.
+fn ref_breaks_parent_layout(ir: &GrammarIR, rule_id: RuleId) -> bool {
+    for parent in &ir.rules {
+        if parent.id == rule_id {
+            continue;
+        }
+        let Some(parent_ty) = ir.types.iter().find_map(|(rid, td)| {
+            (*rid == parent.id).then_some(td)
+        }) else {
+            continue;
+        };
+        let parent_has_layout = match parent_ty {
+            TypeDesc::Tuple(fields) => {
+                if is_kv_pair_shape(fields) {
+                    plan_layout(&fields[1..]).is_some()
+                } else {
+                    plan_layout(fields).is_some()
+                }
+            }
+            _ => false,
+        };
+        if !parent_has_layout {
+            continue;
+        }
+        if body_references_rule(&parent.body, rule_id) {
+            return true;
+        }
+    }
+    false
+}
+
+/// True iff `node` or any descendant is `IrNode::Ref(rule_id)`.
+fn body_references_rule(node: &IrNode, rule_id: RuleId) -> bool {
+    if let IrNode::Ref(rid) = node {
+        return *rid == rule_id;
+    }
+    let mut found = false;
+    node.for_each_child(&mut |child| {
+        if !found && body_references_rule(child, rule_id) {
+            found = true;
+        }
+    });
+    found
 }
 
 /// True iff `node` and every descendant carry no `IrNode::Ref(_)`.

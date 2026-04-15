@@ -57,8 +57,8 @@ pub use builder::{PayloadData, TapeBuildError, TapeBuilder};
 pub use columns::Columns;
 pub use cursor::{ChildIter, ColumnRank, TapeCursor};
 pub use dta::{
-    DtaAssociativity, DtaCounterOptional, DtaFrameKind, DtaPrecedenceEntry, DtaRuleEntry,
-    DtaRuleId, DtaState, DtaStateId, DtaTable,
+    DtaAssociativity, DtaCounterOptional, DtaDiagnostic, DtaFrameKind, DtaPrecedenceEntry,
+    DtaRuleEntry, DtaRuleId, DtaState, DtaStateId, DtaTable,
 };
 pub use kind::TapeKind;
 pub use profile::{

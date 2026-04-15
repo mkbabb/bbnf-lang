@@ -244,3 +244,59 @@ impl DtaTable {
         !self.counter_optional_rules.is_empty()
     }
 }
+
+// ── AV.3.4 — diagnostic replay ──────────────────────────────────────
+//
+// The happy-path driver does not backtrack. Diagnostic mode re-walks
+// the same state machine with an instrumentation hook that tracks the
+// deepest successful advance and the failing state. The trace data is
+// all the error emitter needs to produce a useful "expected X at Y"
+// diagnostic without a second codegen path.
+
+/// Diagnostic trace — populated during a replay run.
+///
+/// The runtime driver writes `furthest_offset` each time it advances
+/// past the previous maximum, and stamps `failing_state` when the
+/// dispatch dead-ends. The caller's error emitter consults both.
+#[derive(Clone, Copy, Debug)]
+pub struct DtaDiagnostic {
+    /// Deepest byte offset reached by the driver during the run.
+    pub furthest_offset: u32,
+    /// The state that dispatched to no successful child at the
+    /// deepest advance. `DtaStateId::NONE` until the driver fails.
+    pub failing_state: DtaStateId,
+    /// Rule id of the rule that was active when the failure
+    /// occurred. `DtaRuleId(u32::MAX)` until populated.
+    pub failing_rule: DtaRuleId,
+    /// Number of states visited — useful for diagnosing diagnostics-
+    /// mode overhead vs. happy-path cost.
+    pub states_visited: u32,
+}
+
+impl DtaDiagnostic {
+    /// Empty diagnostic — the driver initialises from this.
+    pub const EMPTY: Self = Self {
+        furthest_offset: 0,
+        failing_state: DtaStateId::NONE,
+        failing_rule: DtaRuleId(u32::MAX),
+        states_visited: 0,
+    };
+
+    /// Update `furthest_offset` with `state` if `offset` exceeds the
+    /// previous best. The driver calls this at every state transition;
+    /// the `if` is the single cost in happy-path mode.
+    #[inline]
+    pub fn observe(&mut self, offset: u32, state: DtaStateId, rule: DtaRuleId) {
+        if offset > self.furthest_offset {
+            self.furthest_offset = offset;
+            self.failing_state = state;
+            self.failing_rule = rule;
+        }
+    }
+
+    /// Increment the visited counter. Cheap in Release.
+    #[inline]
+    pub fn tick(&mut self) {
+        self.states_visited = self.states_visited.saturating_add(1);
+    }
+}

@@ -19,7 +19,7 @@
 //! constructs a [`::bbnf::runtime::Parsed`] from a finished tape.
 
 use bbnf_ir::{GrammarIR, IrNode, IrRule, TypeDesc};
-use bbnf_ir::passes::{MaterializationClass, is_kv_pair_shape};
+use bbnf_ir::passes::{MaterializationClass, PayloadLayout, is_kv_pair_shape};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
@@ -166,7 +166,51 @@ impl RustEmitter {
         let is_alt_body = matches!(&rule.body, IrNode::Alt(_, _));
         let rule_idx_u8 = Self::variant_idx(rule);
 
-        let (prelude, epilogue) = if is_alt_body {
+        // AU.2.2: aggregate payload layout takes precedence over
+        // per-type payload locals. When `ctx.payload_layout.is_some()`
+        // the prelude reserves `__aggregate_buf` / `__has_payload`
+        // regardless of Alt-body shape; the Alt-aware variants layer
+        // the per-branch `__branch_idx` / `__has_children` locals on
+        // top so per-branch tape surgery still fires.
+        let (prelude, epilogue) = if let Some(layout) = ctx.payload_layout.as_ref() {
+            let kv_pair = ir
+                .types
+                .iter()
+                .find_map(|(rid, td)| (*rid == rule.id).then_some(td))
+                .is_some_and(|td| match td {
+                    TypeDesc::Tuple(fields) => is_kv_pair_shape(fields),
+                    _ => false,
+                });
+            if is_alt_body {
+                match class {
+                    MaterializationClass::MustTape => emit_alt_mustape_aggregate_prelude_epilogue(
+                        rule_idx_u8,
+                        layout,
+                        kv_pair,
+                    ),
+                    MaterializationClass::TapeSpanOnly => {
+                        emit_alt_span_only_aggregate_prelude_epilogue(
+                            rule_idx_u8,
+                            layout,
+                            kv_pair,
+                        )
+                    }
+                    MaterializationClass::TransparentElide => unreachable!(),
+                }
+            } else {
+                match class {
+                    MaterializationClass::MustTape => (
+                        emit_must_tape_aggregate_prelude(layout),
+                        emit_must_tape_aggregate_epilogue(layout, rule_idx_u8, kv_pair),
+                    ),
+                    MaterializationClass::TapeSpanOnly => (
+                        emit_tape_span_only_aggregate_prelude(layout),
+                        emit_tape_span_only_aggregate_epilogue(layout, rule_idx_u8, kv_pair),
+                    ),
+                    MaterializationClass::TransparentElide => unreachable!(),
+                }
+            }
+        } else if is_alt_body {
             // AT.1: Alt-bodied rules use multi-type payload support.
             // The prelude declares a `__payload_<T>` local for each
             // distinct scalar type across branches, plus a
@@ -181,47 +225,25 @@ impl RustEmitter {
                 MaterializationClass::TransparentElide => unreachable!(),
             }
         } else {
-            if let Some(layout) = ctx.payload_layout.as_ref() {
-                let kv_pair = ir
-                    .types
-                    .iter()
-                    .find_map(|(rid, td)| (*rid == rule.id).then_some(td))
-                    .is_some_and(|td| match td {
-                        TypeDesc::Tuple(fields) => is_kv_pair_shape(fields),
-                        _ => false,
-                    });
-                match class {
-                    MaterializationClass::MustTape => (
-                        emit_must_tape_aggregate_prelude(layout),
-                        emit_must_tape_aggregate_epilogue(layout, rule_idx_u8, kv_pair),
-                    ),
-                    MaterializationClass::TapeSpanOnly => (
-                        emit_tape_span_only_aggregate_prelude(layout),
-                        emit_tape_span_only_aggregate_epilogue(layout, rule_idx_u8, kv_pair),
-                    ),
-                    MaterializationClass::TransparentElide => unreachable!(),
-                }
-            } else {
-                match class {
-                    MaterializationClass::MustTape => (
-                        emit_must_tape_prelude(),
-                        emit_must_tape_epilogue(rule_idx_u8),
-                    ),
-                    MaterializationClass::TapeSpanOnly => {
-                        // Non-Alt rules have at most one payload type.
-                        match ctx.payload_types.first() {
-                            Some(td) if td.is_scalar_payload() => (
-                                emit_tape_span_only_scalar_prelude(td),
-                                emit_tape_span_only_scalar_epilogue(td, rule_idx_u8),
-                            ),
-                            _ => (
-                                emit_tape_span_only_prelude(),
-                                emit_tape_span_only_epilogue(rule_idx_u8),
-                            ),
-                        }
+            match class {
+                MaterializationClass::MustTape => (
+                    emit_must_tape_prelude(),
+                    emit_must_tape_epilogue(rule_idx_u8),
+                ),
+                MaterializationClass::TapeSpanOnly => {
+                    // Non-Alt rules have at most one payload type.
+                    match ctx.payload_types.first() {
+                        Some(td) if td.is_scalar_payload() => (
+                            emit_tape_span_only_scalar_prelude(td),
+                            emit_tape_span_only_scalar_epilogue(td, rule_idx_u8),
+                        ),
+                        _ => (
+                            emit_tape_span_only_prelude(),
+                            emit_tape_span_only_epilogue(rule_idx_u8),
+                        ),
                     }
-                    MaterializationClass::TransparentElide => unreachable!(),
                 }
+                MaterializationClass::TransparentElide => unreachable!(),
             }
         };
 
@@ -648,6 +670,125 @@ fn emit_alt_span_only_prelude_epilogue(
         },
         payload_push,
     )
+}
+
+/// AU.2.2: emit prelude + epilogue for an Alt-bodied `MustTape` rule
+/// whose projected type has an aggregate payload layout.
+///
+/// Reconciles the Alt per-branch tape surgery (`__has_children`,
+/// `__children`, `__branch_idx`) with the aggregate path the non-Alt
+/// emitter already lays down (`__aggregate_buf`, `__has_payload`).
+/// When a branch writes into `__aggregate_buf` via
+/// `aggregate_constant_setter`, the epilogue emits
+/// `push_leaf_with_aggregate`. When a branch's children mark the
+/// record as compound (e.g. a composite-bodied branch), the epilogue
+/// falls back to `push_compound`. When neither fires, the epilogue
+/// emits a plain `push_leaf` spanning the Alt's byte range.
+fn emit_alt_mustape_aggregate_prelude_epilogue(
+    rule_idx_u8: u8,
+    layout: &PayloadLayout,
+    kv_pair: bool,
+) -> (TokenStream, TokenStream) {
+    let variant_lit = rule_idx_u8;
+    let total_bytes = layout.total_bytes as usize;
+    let tape_kind_aggregate = if kv_pair {
+        quote! { ::bbnf::runtime::tape::TapeKind::KvPair }
+    } else {
+        quote! { ::bbnf::runtime::tape::TapeKind::Span }
+    };
+    let prelude = quote! {
+        let __span_lo = state.offset as u32;
+        let __variant_idx: u8 = #variant_lit;
+        let mut __branch_idx: u8 = 0;
+        let mut __has_children = false;
+        let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
+        let mut __aggregate_buf: [u8; 16] = [0u8; 16];
+        let mut __has_payload = false;
+    };
+    let epilogue = quote! {
+        if __has_children {
+            Some(::bbnf::runtime::tape::TapeBuilder::push_compound(
+                tape,
+                ::bbnf::runtime::tape::TapeKind::Rule,
+                __children,
+                __span_lo,
+                state.offset as u32,
+                __variant_idx,
+                __branch_idx,
+            ))
+        } else if __has_payload {
+            Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with_aggregate(
+                tape,
+                #tape_kind_aggregate,
+                __span_lo,
+                state.offset as u32,
+                __variant_idx,
+                __branch_idx,
+                &__aggregate_buf[..#total_bytes],
+            ))
+        } else {
+            Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(
+                tape,
+                ::bbnf::runtime::tape::TapeKind::Span,
+                __span_lo,
+                state.offset as u32,
+                __variant_idx,
+                __branch_idx,
+            ))
+        }
+    };
+    (prelude, epilogue)
+}
+
+/// AU.2.2: emit prelude + epilogue for an Alt-bodied `TapeSpanOnly`
+/// rule whose projected type has an aggregate payload layout.
+///
+/// Like the `MustTape` variant but without the children run — Alt
+/// branches that need to push compound records do so independently,
+/// and this prelude reserves only the aggregate-buffer locals plus
+/// the Alt's `__branch_idx` discriminator.
+fn emit_alt_span_only_aggregate_prelude_epilogue(
+    rule_idx_u8: u8,
+    layout: &PayloadLayout,
+    kv_pair: bool,
+) -> (TokenStream, TokenStream) {
+    let variant_lit = rule_idx_u8;
+    let total_bytes = layout.total_bytes as usize;
+    let tape_kind_aggregate = if kv_pair {
+        quote! { ::bbnf::runtime::tape::TapeKind::KvPair }
+    } else {
+        quote! { ::bbnf::runtime::tape::TapeKind::Span }
+    };
+    let prelude = quote! {
+        let __span_lo = state.offset as u32;
+        let __variant_idx: u8 = #variant_lit;
+        let mut __branch_idx: u8 = 0;
+        let mut __aggregate_buf: [u8; 16] = [0u8; 16];
+        let mut __has_payload = false;
+    };
+    let epilogue = quote! {
+        if __has_payload {
+            Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with_aggregate(
+                tape,
+                #tape_kind_aggregate,
+                __span_lo,
+                state.offset as u32,
+                __variant_idx,
+                __branch_idx,
+                &__aggregate_buf[..#total_bytes],
+            ))
+        } else {
+            Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(
+                tape,
+                ::bbnf::runtime::tape::TapeKind::Span,
+                __span_lo,
+                state.offset as u32,
+                __variant_idx,
+                __branch_idx,
+            ))
+        }
+    };
+    (prelude, epilogue)
 }
 
 fn scalar_zero_init_token(td: &TypeDesc) -> TokenStream {

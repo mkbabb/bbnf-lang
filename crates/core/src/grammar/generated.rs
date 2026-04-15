@@ -14114,40 +14114,10 @@ mod __bbnfbootstrap_emit_impl {
                                         } else {
                                             ({
                                                 static __LO_LUT: [u8; 16] = [
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    1,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
+                                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
                                                 ];
                                                 static __HI_LUT: [u8; 16] = [
-                                                    0,
-                                                    0,
-                                                    1,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
+                                                    0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                                 ];
                                                 ::parse_that::find_next_structural_from(
                                                         &state.src_bytes,
@@ -14249,40 +14219,10 @@ mod __bbnfbootstrap_emit_impl {
                                         } else {
                                             ({
                                                 static __LO_LUT: [u8; 16] = [
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    1,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
+                                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
                                                 ];
                                                 static __HI_LUT: [u8; 16] = [
-                                                    1,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
+                                                    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                                 ];
                                                 ::parse_that::find_next_structural_from(
                                                         &state.src_bytes,
@@ -16722,40 +16662,10 @@ mod __bbnfbootstrap_emit_impl {
                                         } else {
                                             ({
                                                 static __LO_LUT: [u8; 16] = [
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    1,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
+                                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0,
                                                 ];
                                                 static __HI_LUT: [u8; 16] = [
-                                                    0,
-                                                    0,
-                                                    1,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
+                                                    0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                                 ];
                                                 ::parse_that::find_next_structural_from(
                                                         &state.src_bytes,
@@ -21026,40 +20936,10 @@ mod __bbnfbootstrap_emit_impl {
                                             } else {
                                                 ({
                                                     static __LO_LUT: [u8; 16] = [
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        1,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
+                                                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
                                                     ];
                                                     static __HI_LUT: [u8; 16] = [
-                                                        0,
-                                                        0,
-                                                        1,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
+                                                        0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                                     ];
                                                     ::parse_that::find_next_structural_from(
                                                             &state.src_bytes,
@@ -21170,40 +21050,10 @@ mod __bbnfbootstrap_emit_impl {
                                             } else {
                                                 ({
                                                     static __LO_LUT: [u8; 16] = [
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        1,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
+                                                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
                                                     ];
                                                     static __HI_LUT: [u8; 16] = [
-                                                        1,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
+                                                        1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                                     ];
                                                     ::parse_that::find_next_structural_from(
                                                             &state.src_bytes,
@@ -23557,40 +23407,10 @@ mod __bbnfbootstrap_emit_impl {
                                             } else {
                                                 ({
                                                     static __LO_LUT: [u8; 16] = [
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        1,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
+                                                        0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0,
                                                     ];
                                                     static __HI_LUT: [u8; 16] = [
-                                                        0,
-                                                        0,
-                                                        1,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0,
+                                                        0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                                     ];
                                                     ::parse_that::find_next_structural_from(
                                                             &state.src_bytes,
@@ -24613,40 +24433,10 @@ mod __bbnfbootstrap_emit_impl {
                                                         } else {
                                                             ({
                                                                 static __LO_LUT: [u8; 16] = [
-                                                                    0,
-                                                                    0,
-                                                                    0,
-                                                                    0,
-                                                                    0,
-                                                                    0,
-                                                                    0,
-                                                                    0,
-                                                                    0,
-                                                                    0,
-                                                                    1,
-                                                                    0,
-                                                                    0,
-                                                                    0,
-                                                                    0,
-                                                                    0,
+                                                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
                                                                 ];
                                                                 static __HI_LUT: [u8; 16] = [
-                                                                    1,
-                                                                    0,
-                                                                    0,
-                                                                    0,
-                                                                    0,
-                                                                    0,
-                                                                    0,
-                                                                    0,
-                                                                    0,
-                                                                    0,
-                                                                    0,
-                                                                    0,
-                                                                    0,
-                                                                    0,
-                                                                    0,
-                                                                    0,
+                                                                    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                                                 ];
                                                                 ::parse_that::find_next_structural_from(
                                                                         &state.src_bytes,
@@ -24861,7 +24651,7 @@ mod __bbnfbootstrap_emit_impl {
         > {
             let mut state = ::parse_that::ParserState::new(input);
             let mut builder = ::bbnf::runtime::tape::TapeBuilder::with_capacity(
-                input.len() / 2 + 2,
+                input.len() + 2,
             );
             let root_off = Self::__grammar(&mut state, &mut builder)
                 .ok_or(::bbnf::runtime::ParseErr::Syntax {
@@ -24936,8 +24726,10 @@ mod __bbnfbootstrap_emit_impl {
             return ::core::option::Option::Some(start);
         }
         for child in start.children() {
-            if let ::core::option::Option::Some(found)
-                = cst_find_identifier_cursor(child, target_idx) {
+            if let ::core::option::Option::Some(found) = cst_find_identifier_cursor(
+                child,
+                target_idx,
+            ) {
                 return ::core::option::Option::Some(found);
             }
         }

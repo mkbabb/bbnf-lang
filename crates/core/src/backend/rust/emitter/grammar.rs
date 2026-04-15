@@ -411,6 +411,32 @@ impl RustEmitter {
 
         let extra = &self.extra_impl_methods;
 
+        // AU.6.2: derive a grammar-specific `TapeBuilder::with_capacity`
+        // divisor from the push-site fingerprint recorded by
+        // [`bbnf_ir::passes::compute_push_fingerprint`]. The ratio
+        // avoids the `_mi_heap_realloc_zero` / `RawVec::grow_one`
+        // path on first parse — under-allocating Sheets or CSS
+        // bootstrap triggers 10–22% of `parse_simple` samples on
+        // the realloc chain. No runtime branching: the numerator
+        // and denominator are picked at codegen time.
+        let with_capacity_expr = {
+            let (numer, denom) = ir
+                .push_fingerprint
+                .as_ref()
+                .map(|fp| fp.capacity_ratio())
+                .unwrap_or((1u32, 2u32));
+            if numer == 1 && denom == 1 {
+                quote! { input.len() + 2 }
+            } else if numer == 1 {
+                let denom_lit = denom as usize;
+                quote! { input.len() / #denom_lit + 2 }
+            } else {
+                let numer_lit = numer as usize;
+                let denom_lit = denom as usize;
+                quote! { input.len() * #numer_lit / #denom_lit + 2 }
+            }
+        };
+
         // AP.ws: trailing whitespace before EOF — use comment-aware
         // kernel when the grammar declares a WhitespaceWithBlockComment
         // @ws pattern, otherwise fall back to bare is_ascii_whitespace.
@@ -460,7 +486,7 @@ impl RustEmitter {
                     let mut state = ::parse_that::ParserState::new(input);
                     let mut builder =
                         ::bbnf::runtime::tape::TapeBuilder::with_capacity(
-                            input.len() / 2 + 2,
+                            #with_capacity_expr,
                         );
                     let root_off = Self::#root_fn_ident(&mut state, &mut builder)
                         .ok_or(::bbnf::runtime::ParseErr::Syntax {

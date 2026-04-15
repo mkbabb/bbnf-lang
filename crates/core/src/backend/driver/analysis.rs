@@ -139,6 +139,14 @@ pub fn analyze_grammar(ir: &mut GrammarIR, config: &EffectiveBackendConfig) -> B
     // `MAX_PAYLOAD_BYTES`. Consumed by the Rust emitter and view
     // layer to materialize typed structs from a flat payload buffer.
     ir.payload_layouts = bbnf_ir::passes::compute_payload_layouts(ir);
+    // Tranche AU.6.2 — count (push_compound, push_leaf,
+    // push_leaf_with_*) sites across every emitted rule function so
+    // the Rust emitter's `parse()` entry point can pick a grammar-
+    // specific `TapeBuilder::with_capacity` divisor. Must run after
+    // `classify_materialization` (fills `ir.materialization`) and
+    // `compute_payload_layouts` (fills `ir.payload_layouts`) — both
+    // are already in place at this point in `analyze_grammar`.
+    bbnf_ir::passes::compute_push_fingerprint(ir);
 
     let sp_method_rules = ir
         .rules

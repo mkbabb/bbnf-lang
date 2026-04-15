@@ -384,9 +384,10 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
 ///
 /// AQ.6.B exception: a rule with an aggregate `PayloadLayout`
 /// always lands in `leaves::emit_leaf_accessors`. The rule's tape
-/// record is a `push_leaf_with_aggregate` leaf (no children) even
-/// though its IR body is structurally a Seq, so the per-field
-/// reader belongs on the leaf accessor surface.
+/// record is a leaf whose `PayloadData::Aggregate` slot holds the
+/// packed tuple bytes (no children) even though its IR body is
+/// structurally a Seq, so the per-field reader belongs on the leaf
+/// accessor surface.
 fn emit_typed_accessors(
     rule: &bbnf_ir::IrRule,
     rule_name: &str,

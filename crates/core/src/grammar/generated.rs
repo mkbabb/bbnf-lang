@@ -11566,14 +11566,16 @@ mod __bbnfbootstrap_emit_impl {
                     let __mi: u8 = 0u8;
                     if __has_payload {
                         Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with_aggregate(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
                                 tape,
                                 ::bbnf::runtime::tape::TapeKind::Span,
                                 __span_lo,
                                 state.offset as u32,
                                 __vi,
                                 __mi,
-                                &__aggregate_buf[..8usize],
+                                ::bbnf::runtime::tape::PayloadData::Aggregate(
+                                    &__aggregate_buf[..8usize],
+                                ),
                             ),
                         )
                     } else {
@@ -11693,14 +11695,16 @@ mod __bbnfbootstrap_emit_impl {
                     let __mi: u8 = 0u8;
                     if __has_payload {
                         Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with_aggregate(
+                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
                                 tape,
                                 ::bbnf::runtime::tape::TapeKind::Span,
                                 __span_lo,
                                 state.offset as u32,
                                 __vi,
                                 __mi,
-                                &__aggregate_buf[..8usize],
+                                ::bbnf::runtime::tape::PayloadData::Aggregate(
+                                    &__aggregate_buf[..8usize],
+                                ),
                             ),
                         )
                     } else {
@@ -12527,27 +12531,31 @@ mod __bbnfbootstrap_emit_impl {
                     match __payload_tag {
                         1u8 => {
                             Some(
-                                ::bbnf::runtime::tape::TapeBuilder::push_leaf_with_i64(
+                                ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
                                     tape,
                                     ::bbnf::runtime::tape::TapeKind::Span,
                                     __span_lo,
                                     state.offset as u32,
                                     __variant_idx,
                                     __branch_idx,
-                                    __payload_i64,
+                                    ::bbnf::runtime::tape::PayloadData::WideScalar(
+                                        __payload_i64 as u64,
+                                    ),
                                 ),
                             )
                         }
                         2u8 => {
                             Some(
-                                ::bbnf::runtime::tape::TapeBuilder::push_leaf_with_f64(
+                                ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
                                     tape,
                                     ::bbnf::runtime::tape::TapeKind::Span,
                                     __span_lo,
                                     state.offset as u32,
                                     __variant_idx,
                                     __branch_idx,
-                                    __payload_f64,
+                                    ::bbnf::runtime::tape::PayloadData::WideScalar(
+                                        __payload_f64.to_bits(),
+                                    ),
                                 ),
                             )
                         }

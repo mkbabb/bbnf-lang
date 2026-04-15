@@ -91,7 +91,8 @@ pub struct RustEmitCtx {
     /// whose packed total fits in `MAX_PAYLOAD_BYTES`. When set, the
     /// rule prelude reserves a 16-byte stack buffer; per-field scalar
     /// writes go to the buffer at the layout-recorded offset; the
-    /// epilogue commits via `push_leaf_with_aggregate`. Leaf emitters
+    /// epilogue commits via `push_leaf_with` + `PayloadData::Aggregate`.
+    /// Leaf emitters
     /// consult [`Self::next_aggregate_field`] to advance the
     /// per-field cursor.
     pub payload_layout: Option<PayloadLayout>,
@@ -114,8 +115,8 @@ pub struct RustEmitCtx {
     pub string_decode_patterns: HashSet<StringId>,
     /// AU.3.1: map from `StringId` (regex pattern) to the rule's
     /// codegen `variant_idx` — the low 8 bits of `rule.id`. Resolves
-    /// `push_leaf_with_string`'s `variant_idx` arg without relying
-    /// on `pre_compile_rule_body` threading `current_rule_id`.
+    /// the decode-kernel push's `variant_idx` arg without relying on
+    /// `pre_compile_rule_body` threading `current_rule_id`.
     pub string_decode_variant_idx: std::collections::HashMap<StringId, u8>,
 }
 
@@ -281,7 +282,7 @@ unsafe impl Sync for RustEmitCtx {}
 /// .. }, .. } }` rule body. Returns `(pattern_set, variant_idx_map)`
 /// where `variant_idx_map` records the owning rule's codegen
 /// variant_idx (`rule.id & 0xFF`) so the scan site can stamp it
-/// into `push_leaf_with_string` without needing a runtime
+/// into the decode-kernel push without needing a runtime
 /// "current rule id" lookup.
 ///
 /// One precompute at ctx construction beats either a thread-local

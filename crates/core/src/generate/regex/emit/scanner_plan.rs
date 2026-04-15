@@ -44,7 +44,7 @@ pub(crate) enum SharedScanner {
     /// Emitted when the enclosing rule's `payload_types` set
     /// includes a String-shaped type (agent B's whitelist entry or
     /// the named-type stub). Rule epilogue calls
-    /// `push_leaf_with_string`.
+    /// the unified-arena decode push (AU.6.7).
     JsonStringDecode,
     JsonNumber { fuse_numbers: bool },
     WsBlockComment,

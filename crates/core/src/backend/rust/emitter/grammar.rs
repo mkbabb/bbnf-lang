@@ -569,35 +569,79 @@ fn emit_payload_declarations(types: &[TypeDesc]) -> TokenStream {
 }
 
 /// Emit the payload push expression for a single type.
+///
+/// AU.6.7: every scalar/Span push routes through `push_leaf_with` with
+/// a `PayloadData` constructed per the declared type. Inline-packed
+/// scalars (<= 4 bytes) use `PayloadData::InlineScalar`; 8-byte
+/// scalars (f64/i64/u64/Span) use `PayloadData::WideScalar` with the
+/// value's little-endian bits.
 fn emit_push_leaf_with(td: &TypeDesc) -> TokenStream {
+    let payload_expr = emit_scalar_payload_data(td);
+    quote! {
+        ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+            tape,
+            ::bbnf::runtime::tape::TapeKind::Span,
+            __span_lo,
+            state.offset as u32,
+            __variant_idx,
+            __branch_idx,
+            #payload_expr,
+        )
+    }
+}
+
+/// Emit the `PayloadData` expression for a scalar `TypeDesc`.
+///
+/// Inline scalars (<= 4 bytes) extend their bytes to a `u32` and use
+/// `PayloadData::InlineScalar`; wide scalars (f64/i64/u64/Span) use
+/// `PayloadData::WideScalar` with a u64 representation.
+pub(super) fn emit_scalar_payload_data(td: &TypeDesc) -> TokenStream {
     if matches!(td, TypeDesc::Span) {
-        quote! {
-            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with_Span(
-                tape,
-                ::bbnf::runtime::tape::TapeKind::Span,
-                __span_lo,
-                state.offset as u32,
-                __variant_idx,
-                __branch_idx,
-                __payload_lo,
-                __payload_hi,
+        return quote! {
+            ::bbnf::runtime::tape::PayloadData::WideScalar(
+                (__payload_lo as u64) | ((__payload_hi as u64) << 32),
             )
-        }
-    } else {
-        let rust_ident = td.rust_ident().expect("scalar TypeDesc");
-        let payload_local = format_ident!("__payload_{}", rust_ident);
-        let push_with_ident = format_ident!("push_leaf_with_{}", rust_ident);
-        quote! {
-            ::bbnf::runtime::tape::TapeBuilder::#push_with_ident(
-                tape,
-                ::bbnf::runtime::tape::TapeKind::Span,
-                __span_lo,
-                state.offset as u32,
-                __variant_idx,
-                __branch_idx,
-                #payload_local,
+        };
+    }
+    let rust_ident = td.rust_ident().expect("scalar TypeDesc");
+    let payload_local = format_ident!("__payload_{}", rust_ident);
+    match td {
+        TypeDesc::F64 => quote! {
+            ::bbnf::runtime::tape::PayloadData::WideScalar(#payload_local.to_bits())
+        },
+        TypeDesc::U64 => quote! {
+            ::bbnf::runtime::tape::PayloadData::WideScalar(#payload_local)
+        },
+        TypeDesc::I64 => quote! {
+            ::bbnf::runtime::tape::PayloadData::WideScalar(#payload_local as u64)
+        },
+        TypeDesc::Bool => quote! {
+            ::bbnf::runtime::tape::PayloadData::InlineScalar(#payload_local as u32)
+        },
+        TypeDesc::I8 => quote! {
+            ::bbnf::runtime::tape::PayloadData::InlineScalar(
+                u32::from_le_bytes([#payload_local as u8, 0, 0, 0]),
             )
-        }
+        },
+        TypeDesc::U8 => quote! {
+            ::bbnf::runtime::tape::PayloadData::InlineScalar(#payload_local as u32)
+        },
+        TypeDesc::I16 => quote! {
+            ::bbnf::runtime::tape::PayloadData::InlineScalar({
+                let __b = (#payload_local as i16).to_le_bytes();
+                u32::from_le_bytes([__b[0], __b[1], 0, 0])
+            })
+        },
+        TypeDesc::U16 => quote! {
+            ::bbnf::runtime::tape::PayloadData::InlineScalar(#payload_local as u32)
+        },
+        TypeDesc::I32 => quote! {
+            ::bbnf::runtime::tape::PayloadData::InlineScalar(#payload_local as u32)
+        },
+        TypeDesc::U32 => quote! {
+            ::bbnf::runtime::tape::PayloadData::InlineScalar(#payload_local)
+        },
+        _ => unreachable!("emit_scalar_payload_data: non-scalar TypeDesc {:?}", td),
     }
 }
 
@@ -746,14 +790,16 @@ fn emit_alt_mustape_aggregate_prelude_epilogue(
                 __branch_idx,
             ))
         } else if __has_payload {
-            Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with_aggregate(
+            Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
                 tape,
                 #tape_kind_aggregate,
                 __span_lo,
                 state.offset as u32,
                 __variant_idx,
                 __branch_idx,
-                &__aggregate_buf[..#total_bytes],
+                ::bbnf::runtime::tape::PayloadData::Aggregate(
+                    &__aggregate_buf[..#total_bytes],
+                ),
             ))
         } else {
             Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(
@@ -797,14 +843,16 @@ fn emit_alt_span_only_aggregate_prelude_epilogue(
     };
     let epilogue = quote! {
         if __has_payload {
-            Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with_aggregate(
+            Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
                 tape,
                 #tape_kind_aggregate,
                 __span_lo,
                 state.offset as u32,
                 __variant_idx,
                 __branch_idx,
-                &__aggregate_buf[..#total_bytes],
+                ::bbnf::runtime::tape::PayloadData::Aggregate(
+                    &__aggregate_buf[..#total_bytes],
+                ),
             ))
         } else {
             Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(

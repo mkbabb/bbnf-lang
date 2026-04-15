@@ -326,7 +326,7 @@ fn scalar_zero_init(td: &TypeDesc) -> TokenStream {
 }
 
 /// AQ.6.A: emit the span-parse fallback expression used when the
-/// tape carries no payload (e.g. `payload_idx == 0`).
+/// tape carries no payload (`rec.child_off.is_none()`).
 ///
 /// - Bool falls back to `span_text() == "true"` because `bool` lacks
 ///   a `FromStr` instance compatible with the tape grammar.

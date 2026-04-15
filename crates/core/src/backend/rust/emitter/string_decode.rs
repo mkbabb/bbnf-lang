@@ -3,8 +3,12 @@
 //! When a grammar rule carries
 //! `-> decode_json_string_to_arena(input) : String`, this helper
 //! emits a scan + tape push that lands the decoded UTF-8 into the
-//! tape's arena via
-//! [`bbnf_tape::TapeBuilder::push_leaf_with_string`].
+//! tape's unified arena via
+//! [`bbnf_tape::TapeBuilder::push_leaf_with_arena_frame`] (AU.6.7).
+//! The prior AU.3.1 `push_leaf_with_string` signature collapsed into
+//! the unified-arena entry point; the decode kernel still streams
+//! bytes into the arena in-place (zero intermediate allocation) and
+//! commits the record once the length prefix has been back-stamped.
 //!
 //! # Placement in the emission pipeline
 //!
@@ -139,7 +143,7 @@ pub fn emit_decode_call(variant_idx: u8, needs_mark_children: bool) -> TokenStre
                     );
                     let __leaf_span_lo: u32 = __start as u32;
                     state.offset = __end;
-                    let _ = ::bbnf::runtime::tape::TapeBuilder::push_leaf_with_string(
+                    let _ = ::bbnf::runtime::tape::TapeBuilder::push_leaf_with_arena_frame(
                         tape,
                         ::bbnf::runtime::tape::TapeKind::Span,
                         __leaf_span_lo,
@@ -147,7 +151,6 @@ pub fn emit_decode_call(variant_idx: u8, needs_mark_children: bool) -> TokenStre
                         #variant_lit,
                         0u8,   // meta_idx
                         __prefix_offset,
-                        __len,
                     );
                     Some(())
                 }

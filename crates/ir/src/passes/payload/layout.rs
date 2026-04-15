@@ -13,8 +13,7 @@ use crate::types::{GrammarIR, RuleId, TypeDesc};
 /// Maximum aggregate payload size in bytes.
 ///
 /// 16 bytes matches the size of a single [`bbnf_tape::TapeRec`] and
-/// gives every aggregate at most two payload slots (`(payload_idx -
-/// 1) * 8` to `payload_idx * 8` and the next slot). Rules whose
+/// gives every aggregate at most two 8-byte arena slots. Rules whose
 /// scalar tuple exceeds this fall back to the regular compound
 /// representation rather than promoting to a heap allocation.
 pub const MAX_PAYLOAD_BYTES: u8 = 16;
@@ -51,8 +50,9 @@ pub struct PayloadField {
 /// layout would exceed [`MAX_PAYLOAD_BYTES`] are omitted (they
 /// continue to use compound-children storage). Non-Tuple rule types
 /// are also omitted — scalar-leaf rules already live on the
-/// `push_leaf_with_<T>` payload path; this planner is exclusively
-/// for the multi-field aggregate case.
+/// `PayloadData::InlineScalar` / `PayloadData::WideScalar` paths
+/// (AU.6.7); this planner is exclusively for the multi-field
+/// aggregate case.
 pub fn compute_payload_layouts(ir: &GrammarIR) -> HashMap<RuleId, PayloadLayout> {
     let mut out = HashMap::new();
     for (rule_id, ty) in &ir.types {

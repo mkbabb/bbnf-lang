@@ -83,14 +83,59 @@ pub(super) fn project_seq_type(child_types: &[&TypeDesc], preserve_spans: bool) 
 /// homogeneous case still clones the one representative branch into
 /// the return; the heterogeneous case returns `BoxedEnum` with zero
 /// clones.
+///
+/// AU.2.5: a branch shaped `Tuple([Span, T])` where `T` is a scalar
+/// payload carries the same runtime value as a bare `T` — the Span
+/// came from `factor_common_prefixes` splitting a shared literal byte
+/// out of the rule's branches (`"px" | "cm" | "mm"` becomes
+/// `Seq(Literal("p"), Alt("x" | "c" | "t"))`), so the prefix Span is
+/// structural noise, not semantic payload. Extend the homogeneity
+/// check to accept these branches: if every branch's "effective" type
+/// agrees (a bare scalar or a `Tuple([Span, scalar])` of the same
+/// scalar), the join is that scalar. This restores correct types for
+/// `absoluteLengthUnit`, `relativeLengthUnit`, and every other Alt
+/// whose branches were broken up by the trie-style byte factoring.
 pub(super) fn join_types(branch_types: &[&TypeDesc]) -> TypeDesc {
     if branch_types.is_empty() {
         return TypeDesc::Tuple(vec![]);
     }
     let first = branch_types[0];
     if branch_types.iter().all(|t| *t == first) {
-        first.clone()
-    } else {
-        TypeDesc::BoxedEnum
+        return first.clone();
     }
+
+    // AU.2.5: cross-shape homogeneity for factored-prefix branches.
+    let first_effective = effective_payload_type(first);
+    if let Some(common) = first_effective {
+        if branch_types
+            .iter()
+            .all(|t| effective_payload_type(t).as_ref() == Some(&common))
+        {
+            return common;
+        }
+    }
+
+    TypeDesc::BoxedEnum
+}
+
+/// Extract the semantically meaningful payload type from a branch's
+/// projected `TypeDesc`, stripping the structural `Span` inserted by
+/// `factor_common_prefixes`.
+///
+/// Accepts:
+/// - a bare scalar payload (`needs_payload_slot()`); returns it
+/// - `Tuple([Span, T])` where `T` is a scalar payload; returns `T`
+///
+/// Returns `None` for anything else — compound types stay compound
+/// under the Alt join.
+fn effective_payload_type(ty: &TypeDesc) -> Option<TypeDesc> {
+    if ty.needs_payload_slot() {
+        return Some(ty.clone());
+    }
+    if let TypeDesc::Tuple(elems) = ty {
+        if elems.len() == 2 && elems[0] == TypeDesc::Span && elems[1].needs_payload_slot() {
+            return Some(elems[1].clone());
+        }
+    }
+    None
 }

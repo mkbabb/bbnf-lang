@@ -42,6 +42,10 @@ pub use super::emitter_types::{RustEmitCtx, RustEmitter};
 /// - `Map { fn_id, .. }` → derive from `FnDescriptor` variant
 /// - `Alt(branches)` → recurse; return the type iff all branches agree
 /// - `OptionalWhitespace(inner)` → recurse (ws is transparent)
+/// - `Seq([Literal, tail])` → AU.2.5 factored-prefix shape:
+///   `factor_common_prefixes` rewrites `"px" | "pc" | "pt"` into
+///   `Seq(Literal("p"), Alt("x" | "c" | "t"))`; the leading Literal
+///   is structural, so the branch's payload type is the tail's type.
 ///
 /// Returns `None` for compound/non-scalar nodes.
 fn resolve_branch_type(node: &IrNode, ir: &GrammarIR) -> Option<TypeDesc> {
@@ -76,6 +80,13 @@ fn resolve_branch_type(node: &IrNode, ir: &GrammarIR) -> Option<TypeDesc> {
                 }
             }
             result
+        }
+        IrNode::Seq(children) if children.len() == 2 => {
+            if matches!(children[0], IrNode::Literal(_)) {
+                resolve_branch_type(&children[1], ir)
+            } else {
+                None
+            }
         }
         IrNode::OptionalWhitespace(inner) => resolve_branch_type(inner, ir),
         _ => None,

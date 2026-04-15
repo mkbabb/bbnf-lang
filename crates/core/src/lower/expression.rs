@@ -178,17 +178,21 @@ fn dispatch_expression<'a>(
         // @pretty, @ws, @token, @debug, @no_collapse) are consumed
         // by host.rs during grammar extraction; expression lowering
         // treats them as Epsilon.
+        //
+        // AU.2.5: the old `_0` sub-variants (`import_directive_0`,
+        // `pretty_directive_0`, `debug_directive_0`) vanished once
+        // Ref-scalar projection collapsed their owning Alt to
+        // homogeneous `Span`. The variants dispatched here anyway,
+        // so dropping the stale names closes the loop without
+        // losing any lowering capability.
         BbnfBootstrapRuleKind::comment
         | BbnfBootstrapRuleKind::big_comment
         | BbnfBootstrapRuleKind::recover_directive
         | BbnfBootstrapRuleKind::import_directive
-        | BbnfBootstrapRuleKind::import_directive_0
         | BbnfBootstrapRuleKind::pretty_directive
-        | BbnfBootstrapRuleKind::pretty_directive_0
         | BbnfBootstrapRuleKind::ws_directive
         | BbnfBootstrapRuleKind::token_directive
-        | BbnfBootstrapRuleKind::debug_directive
-        | BbnfBootstrapRuleKind::debug_directive_0 => {
+        | BbnfBootstrapRuleKind::debug_directive => {
             IrNode::Epsilon
         }
 

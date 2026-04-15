@@ -1,7 +1,10 @@
-//! Grammar extraction: `BbnfBootstrapNodeView` → `ParsedGrammar`.
+//! Grammar extraction: bootstrap tape → observational `GrammarExtract` +
+//! pipeline-direct tape walkers.
 //!
-//! Walks the top-level `grammar` root view and assembles the typed
-//! `ParsedGrammar` via structural child traversal. The `directive`
+//! Walks the top-level `grammar` root view and assembles either the
+//! observational [`crate::types::GrammarExtract`] (for LSP analysis /
+//! gorgeous JIT / debug binaries) or the pipeline-direct
+//! `(AST, DirectiveMaps)` pair (for `compile_grammar`). The `directive`
 //! wrapper is peeled to expose the specific directive `rule_kind()`
 //! (`import_directive`, `pretty_directive`, etc.), and each directive
 //! is extracted by walking its data-bearing children — the tape-first
@@ -11,13 +14,15 @@
 //! accessors (`span_text`, `identifier_span`, `rule_kind`,
 //! `children`, `child`). This module only handles the
 //! *typed*-grammar mapping (CST view → public `crate::types::*`
-//! structs).
+//! structs and pipeline-internal [`DirectiveMaps`]).
 //!
-//! Tranche AC.2: replaced the `BbnfBootstrapEnum` enum pattern-match
-//! walker with a cursor-backed view walker. The view API comes from
-//! `crate::grammar::generated::BbnfBootstrapNodeView` (emitted by the
-//! tape-first generator) and the `Parsed<BbnfBootstrap>` owning type
-//! from `crate::runtime::Parsed`.
+//! Tranche AU.4.1: the historical `extract_grammar` → `ParsedGrammar`
+//! round-trip is gone. The compile pipeline now calls
+//! [`extract_for_pipeline`], which walks the tape exactly once and
+//! lands results straight in pipeline-shaped containers — no
+//! intermediate grab-bag struct on the hot path. The observational
+//! path ([`extract_observational`]) builds `GrammarExtract` for
+//! tooling.
 
 use std::borrow::Cow;
 
@@ -25,19 +30,151 @@ use parse_that::Span;
 
 use super::generated::{BbnfBootstrap, BbnfBootstrapNodeView, BbnfBootstrapRuleKind};
 use crate::lower::tape_walk::find_child_by_kind;
+use crate::pipeline::directives::DirectiveMaps;
 use crate::runtime::Parsed;
 use crate::types::*;
 
-/// Extract a `ParsedGrammar` from a finished tape-first parse.
+/// Sink abstraction for absorbing a parsed grammar's rules and directives.
 ///
-/// The caller holds a `&'a Parsed<BbnfBootstrap>` whose internal
-/// tape + owned input outlive the returned `ParsedGrammar<'a>`.
-/// The root view is lent by `parsed.view()` (GAT-bound by the
-/// `Root` impl on `BbnfBootstrap`).
-pub fn extract_grammar<'a>(parsed: &'a Parsed<'a, BbnfBootstrap>) -> ParsedGrammar<'a> {
-    let root = parsed.view();
+/// The tape walker ([`walk_tape`]) is shape-agnostic: it dispatches
+/// each grammar item into a sink. Observational callers instantiate
+/// [`ExtractSink`] to build a [`GrammarExtract`]; pipeline callers
+/// instantiate [`PipelineSink`] to populate [`DirectiveMaps`] + `AST`
+/// directly, skipping the intermediate vector allocations that
+/// [`GrammarExtract`] demands.
+trait GrammarSink<'a> {
+    fn insert_rule(&mut self, name: &'a str, entry: RuleEntry<'a>);
+    fn push_import(&mut self, imp: ImportDirective<'a>);
+    fn push_recover(&mut self, rec: RecoverDirective<'a>);
+    fn push_pretty(&mut self, pretty: PrettyDirective<'a>);
+    fn push_token_name(&mut self, name: Cow<'a, str>);
+    fn push_debug_name(&mut self, name: Cow<'a, str>);
+    fn set_ws_pattern(&mut self, pattern: Cow<'a, str>);
+    fn push_host_fn(&mut self, decl: HostFnDecl<'a>);
+}
 
-    let mut grammar = ParsedGrammar::empty();
+/// Observational sink: accumulates every directive as a `Vec<_>` inside a
+/// [`GrammarExtract`] for LSP analysis / gorgeous / debug callers.
+struct ExtractSink<'a> {
+    grammar: GrammarExtract<'a>,
+}
+
+impl<'a> GrammarSink<'a> for ExtractSink<'a> {
+    fn insert_rule(&mut self, name: &'a str, entry: RuleEntry<'a>) {
+        self.grammar.rules.insert(name, entry);
+    }
+    fn push_import(&mut self, imp: ImportDirective<'a>) {
+        self.grammar.imports.push(imp);
+    }
+    fn push_recover(&mut self, rec: RecoverDirective<'a>) {
+        self.grammar.recovers.push(rec);
+    }
+    fn push_pretty(&mut self, pretty: PrettyDirective<'a>) {
+        self.grammar.pretties.push(pretty);
+    }
+    fn push_token_name(&mut self, name: Cow<'a, str>) {
+        self.grammar.token_rules.push(name);
+    }
+    fn push_debug_name(&mut self, name: Cow<'a, str>) {
+        self.grammar.debug_rules.push(name);
+    }
+    fn set_ws_pattern(&mut self, pattern: Cow<'a, str>) {
+        self.grammar.ws_pattern = Some(pattern);
+    }
+    fn push_host_fn(&mut self, decl: HostFnDecl<'a>) {
+        self.grammar.host_fns.push(decl);
+    }
+}
+
+/// Pipeline sink: lands directives directly in the compile-shaped
+/// containers. Imports are siphoned off because the loader / single-file
+/// compile path treats them as a pre-merge side channel, not a map.
+struct PipelineSink<'a> {
+    ast: AST<'a>,
+    directives: DirectiveMaps<'a>,
+    imports: Vec<ImportDirective<'a>>,
+}
+
+impl<'a> GrammarSink<'a> for PipelineSink<'a> {
+    fn insert_rule(&mut self, name: &'a str, entry: RuleEntry<'a>) {
+        self.ast.insert(name, entry);
+    }
+    fn push_import(&mut self, imp: ImportDirective<'a>) {
+        self.imports.push(imp);
+    }
+    fn push_recover(&mut self, rec: RecoverDirective<'a>) {
+        self.directives
+            .recover_map_mut()
+            .insert(rec.rule_name.to_string(), rec.sync_expr);
+    }
+    fn push_pretty(&mut self, pretty: PrettyDirective<'a>) {
+        let hints: Vec<String> = pretty.hints.into_iter().map(|h| h.into_owned()).collect();
+        self.directives
+            .pretty_map_mut()
+            .insert(pretty.rule_name.into_owned(), hints);
+    }
+    fn push_token_name(&mut self, name: Cow<'a, str>) {
+        self.directives.token_set_mut().insert(name.into_owned());
+    }
+    fn push_debug_name(&mut self, name: Cow<'a, str>) {
+        if name.as_ref() == "*" {
+            self.directives.set_debug_all(true);
+        } else {
+            self.directives.debug_set_mut().insert(name.into_owned());
+        }
+    }
+    fn set_ws_pattern(&mut self, pattern: Cow<'a, str>) {
+        self.directives.set_ws_pattern(pattern.into_owned());
+    }
+    fn push_host_fn(&mut self, decl: HostFnDecl<'a>) {
+        self.directives.host_map_mut().insert(
+            decl.name.into_owned(),
+            decl.return_type.map(|t| t.into_owned()),
+        );
+    }
+}
+
+/// Observational extraction: build a full [`GrammarExtract`] from a
+/// finished tape-first parse.
+///
+/// Consumed by LSP analysis, the gorgeous JIT driver, and the
+/// `debug_parse` binary. The compile pipeline bypasses this function
+/// in favour of [`extract_for_pipeline`] to avoid the intermediate
+/// vector allocation.
+pub fn extract_observational<'a>(
+    parsed: &'a Parsed<'a, BbnfBootstrap>,
+) -> GrammarExtract<'a> {
+    let mut sink = ExtractSink {
+        grammar: GrammarExtract::empty(),
+    };
+    walk_tape(parsed, &mut sink);
+    sink.grammar
+}
+
+/// Pipeline-direct extraction: build `(AST, DirectiveMaps, imports)`
+/// straight from the bootstrap tape, skipping the [`GrammarExtract`]
+/// intermediate.
+///
+/// `imports` is returned separately because the single-file compile
+/// path rejects any non-empty list (it does not resolve `@import`),
+/// and the multi-file import loader needs the vector before per-module
+/// merging. Keeping them on a side channel makes the flow explicit.
+pub(crate) fn extract_for_pipeline<'a>(
+    parsed: &'a Parsed<'a, BbnfBootstrap>,
+) -> (AST<'a>, DirectiveMaps<'a>, Vec<ImportDirective<'a>>) {
+    let mut sink = PipelineSink {
+        ast: indexmap::IndexMap::new(),
+        directives: DirectiveMaps::default(),
+        imports: Vec::new(),
+    };
+    walk_tape(parsed, &mut sink);
+    (sink.ast, sink.directives, sink.imports)
+}
+
+/// Drive the single structural walk over the grammar root, dispatching
+/// each peeled top-level item into the sink.
+fn walk_tape<'a, S: GrammarSink<'a>>(parsed: &'a Parsed<'a, BbnfBootstrap>, sink: &mut S) {
+    let root = parsed.view();
 
     // `grammar = grammar_item*` — the rule body is a single Repeat
     // compound whose direct children are the individual
@@ -49,15 +186,13 @@ pub fn extract_grammar<'a>(parsed: &'a Parsed<'a, BbnfBootstrap>) -> ParsedGramm
         if item.kind() == TapeKind::Repeat {
             for grandchild in item.children() {
                 let inner = peel_wrappers(grandchild);
-                absorb_item(inner, &mut grammar);
+                absorb_item(inner, sink);
             }
         } else {
             let inner = peel_wrappers(item);
-            absorb_item(inner, &mut grammar);
+            absorb_item(inner, sink);
         }
     }
-
-    grammar
 }
 
 /// Peel the transparent `grammar_item` and `directive` wrappers.
@@ -79,10 +214,10 @@ fn peel_wrappers<'a>(node: BbnfBootstrapNodeView<'a>) -> BbnfBootstrapNodeView<'
     }
 }
 
-/// Map a single grammar item (rule or directive) into the typed `ParsedGrammar`.
-fn absorb_item<'a>(
+/// Route a single peeled grammar item — rule or directive — into the sink.
+fn absorb_item<'a, S: GrammarSink<'a>>(
     item: BbnfBootstrapNodeView<'a>,
-    grammar: &mut ParsedGrammar<'a>,
+    sink: &mut S,
 ) {
     // Rules: `rule = identifier "=" rhs ";"`. Under tape-first,
     // literal matches don't push records — and `identifier` may
@@ -125,7 +260,7 @@ fn absorb_item<'a>(
             }
             rhs.expect("rule: missing rhs child")
         };
-        grammar.rules.insert(
+        sink.insert_rule(
             name,
             RuleEntry {
                 name_span,
@@ -144,68 +279,71 @@ fn absorb_item<'a>(
     // data nodes (identifier, regex, hints compound, etc.).
     match item.rule_kind() {
         BbnfBootstrapRuleKind::recover_directive => {
-            absorb_recover_structural(item, &mut grammar.recovers);
+            if let Some(rec) = decode_recover(item) {
+                sink.push_recover(rec);
+            }
         }
         BbnfBootstrapRuleKind::pretty_directive => {
-            absorb_pretty_structural(item, &mut grammar.pretties);
+            if let Some(pretty) = decode_pretty(item) {
+                sink.push_pretty(pretty);
+            }
         }
         BbnfBootstrapRuleKind::token_directive => {
-            absorb_single_name_directive(item, &mut grammar.token_rules);
+            if let Some(name) = decode_single_name(item) {
+                sink.push_token_name(name);
+            }
         }
         BbnfBootstrapRuleKind::debug_directive => {
-            absorb_single_name_directive(item, &mut grammar.debug_rules);
+            if let Some(name) = decode_single_name(item) {
+                sink.push_debug_name(name);
+            }
         }
         BbnfBootstrapRuleKind::ws_directive => {
-            absorb_ws_structural(item, &mut grammar.ws_pattern);
+            if let Some(pattern) = decode_ws(item) {
+                sink.set_ws_pattern(pattern);
+            }
         }
         BbnfBootstrapRuleKind::host_directive => {
-            absorb_host_structural(item, &mut grammar.host_fns);
+            if let Some(decl) = decode_host(item) {
+                sink.push_host_fn(decl);
+            }
         }
         BbnfBootstrapRuleKind::import_directive => {
-            absorb_import_structural(item, &mut grammar.imports);
+            sink.push_import(decode_import(item));
         }
         _ => {}
     }
 }
 
 // ------------------------------------------------------------------
-// Structural directive extractors — walk children by `rule_kind()`.
+// Structural directive decoders — walk children by `rule_kind()`.
+// Each returns the typed directive; the sink decides where it lands.
 // ------------------------------------------------------------------
 
 /// `@recover ruleName syncExpr ;` — extract rule_name (first
 /// identifier child) and sync_expr (remaining children).
-fn absorb_recover_structural<'a>(
-    item: BbnfBootstrapNodeView<'a>,
-    recovers: &mut Vec<RecoverDirective<'a>>,
-) {
+fn decode_recover<'a>(item: BbnfBootstrapNodeView<'a>) -> Option<RecoverDirective<'a>> {
     let (lo, hi) = item.span();
     let input = item.input();
-    let mut children = item.children();
-    let name_node = children
-        .find(|c| c.rule_kind() == BbnfBootstrapRuleKind::identifier)
-        .expect("recover_directive: missing identifier child");
-    let rule_name = name_node.span_text();
-    recovers.push(RecoverDirective {
-        rule_name,
+    let name_node = item
+        .children()
+        .find(|c| c.rule_kind() == BbnfBootstrapRuleKind::identifier)?;
+    Some(RecoverDirective {
+        rule_name: name_node.span_text(),
         sync_expr: item,
         span: Span::new(lo as usize, hi as usize, input),
-    });
+    })
 }
 
 /// `@pretty target hint* ;` — first identifier is target, remaining
 /// children provide hints.
-fn absorb_pretty_structural<'a>(
-    item: BbnfBootstrapNodeView<'a>,
-    pretties: &mut Vec<PrettyDirective<'a>>,
-) {
+fn decode_pretty<'a>(item: BbnfBootstrapNodeView<'a>) -> Option<PrettyDirective<'a>> {
     let (lo, hi) = item.span();
     let input = item.input();
     let mut children = item.children().peekable();
 
     // First identifier-kind child is the target rule name.
-    let target = children
-        .find(|c| c.rule_kind() == BbnfBootstrapRuleKind::identifier)
-        .expect("pretty_directive: missing target identifier");
+    let target = children.find(|c| c.rule_kind() == BbnfBootstrapRuleKind::identifier)?;
     let target_text = target.span_text();
 
     // Remaining children carry hint tokens. Under the tape-first
@@ -223,57 +361,47 @@ fn absorb_pretty_structural<'a>(
         }
     }
 
-    pretties.push(PrettyDirective {
+    Some(PrettyDirective {
         rule_name: Cow::Owned(target_text.to_string()),
         hints,
         span: Span::new(lo as usize, hi as usize, input),
-    });
+    })
 }
 
 /// Directives with the shape `@keyword name ;` — `@token` and
 /// `@debug`. The first identifier child provides the name.
-fn absorb_single_name_directive<'a>(
-    item: BbnfBootstrapNodeView<'a>,
-    names: &mut Vec<Cow<'a, str>>,
-) {
+fn decode_single_name<'a>(item: BbnfBootstrapNodeView<'a>) -> Option<Cow<'a, str>> {
     let name_node = item
         .children()
-        .find(|c| c.rule_kind() == BbnfBootstrapRuleKind::identifier)
-        .expect("single_name_directive: missing identifier child");
+        .find(|c| c.rule_kind() == BbnfBootstrapRuleKind::identifier)?;
     let name = name_node.span_text();
-    if !name.is_empty() {
-        names.push(Cow::Owned(name.to_string()));
+    if name.is_empty() {
+        None
+    } else {
+        Some(Cow::Owned(name.to_string()))
     }
 }
 
 /// `@ws /regex/ ;` — the regex child is the first child whose span
-/// text starts with `/`.
-fn absorb_ws_structural<'a>(
-    item: BbnfBootstrapNodeView<'a>,
-    ws_pattern: &mut Option<Cow<'a, str>>,
-) {
+/// text is wrapped in `/`. Returns the pattern body without delimiters.
+fn decode_ws<'a>(item: BbnfBootstrapNodeView<'a>) -> Option<Cow<'a, str>> {
     for child in item.children() {
         let text = child.span_text();
         if let Some(stripped) = text.strip_prefix('/').and_then(|s| s.strip_suffix('/')) {
-            *ws_pattern = Some(Cow::Borrowed(stripped));
-            return;
+            return Some(Cow::Borrowed(stripped));
         }
     }
+    None
 }
 
 /// `@host name [: type] ;` — first identifier is name, optional
 /// type annotation follows.
-fn absorb_host_structural<'a>(
-    item: BbnfBootstrapNodeView<'a>,
-    host_fns: &mut Vec<HostFnDecl<'a>>,
-) {
+fn decode_host<'a>(item: BbnfBootstrapNodeView<'a>) -> Option<HostFnDecl<'a>> {
     let mut children = item.children();
-    let name_node = children
-        .find(|c| c.rule_kind() == BbnfBootstrapRuleKind::identifier)
-        .expect("host_directive: missing identifier child");
+    let name_node = children.find(|c| c.rule_kind() == BbnfBootstrapRuleKind::identifier)?;
     let name = name_node.span_text();
     if name.is_empty() {
-        return;
+        return None;
     }
     // Optional type annotation: the next non-identifier child whose
     // span text is non-empty.
@@ -285,10 +413,10 @@ fn absorb_host_structural<'a>(
             }
         })
         .map(|c| Cow::Owned(c.span_text().trim().to_string()));
-    host_fns.push(HostFnDecl {
+    Some(HostFnDecl {
         name: Cow::Owned(name.to_string()),
         return_type,
-    });
+    })
 }
 
 /// Decode an `import_directive` compound into its typed form.
@@ -309,10 +437,7 @@ fn absorb_host_structural<'a>(
 ///
 /// The `@import` / `from` / `;` keyword literals are skipped
 /// implicitly — they don't carry a rule_kind match.
-fn absorb_import_structural<'a>(
-    item: BbnfBootstrapNodeView<'a>,
-    imports: &mut Vec<ImportDirective<'a>>,
-) {
+fn decode_import<'a>(item: BbnfBootstrapNodeView<'a>) -> ImportDirective<'a> {
     let (lo, hi) = item.span();
     let directive_span = Span::new(lo as usize, hi as usize, item.input());
 
@@ -333,11 +458,11 @@ fn absorb_import_structural<'a>(
         out
     });
 
-    imports.push(ImportDirective {
+    ImportDirective {
         path: Cow::Borrowed(path_str),
         span: directive_span,
         items: names,
-    });
+    }
 }
 
 /// Depth-first search for the first descendant whose `rule_kind()`

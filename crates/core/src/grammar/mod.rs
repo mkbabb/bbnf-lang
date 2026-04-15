@@ -1,19 +1,25 @@
 //! BBNF grammar parser.
 //!
-//! Single-call parse: generated tape-first bootstrap parser + host extraction.
+//! Single-call parse: generated tape-first bootstrap parser + extraction.
 //!
 //! Sub-modules:
 //! - `generated` — auto-generated parser from bbnf.bbnf (bootstrap, checked-in)
-//! - `host` — extraction: BbnfBootstrapNodeView → ParsedGrammar
+//! - `host` — tape walkers: bootstrap view → observational `GrammarExtract`
+//!   (LSP / gorgeous / debug) or pipeline-direct `(AST, DirectiveMaps)`
+//!   (compile).
 //!
-//! Tranche AC.2: `parse` / `parse_with_state` now drive the tape-first
-//! generated parser. `generated::BbnfBootstrap::parse(source)` returns a
+//! Tranche AC.2: drives the tape-first generated parser.
+//! `generated::BbnfBootstrap::parse(source)` returns a
 //! [`crate::runtime::Parsed`] that owns both the finished tape and the
-//! source string; `host::extract_grammar` walks the root view to lift the
-//! bootstrap tree into the typed `ParsedGrammar`. The returned
-//! `ParsedGrammar<'_>` borrows from a leaked `Parsed` so downstream
-//! pipeline code can keep its existing `'static`-flavoured lifetime
-//! assumptions.
+//! source string.
+//!
+//! Tranche AU.4.1: deleted the historical `ParsedGrammar` intermediate.
+//! The public `parse` entry point leaks the `Parsed` so callers can
+//! keep their `'static`-flavoured lifetime assumptions, then returns a
+//! [`crate::types::GrammarExtract`] for observational callers. The
+//! compile pipeline bypasses `parse` in favour of
+//! [`crate::pipeline::directives::parse_to_pipeline_inputs`], which
+//! walks the tape straight into `DirectiveMaps` + `AST`.
 
 #[allow(unused, non_snake_case, non_camel_case_types, non_upper_case_globals, clippy::all)]
 pub mod generated;
@@ -21,25 +27,30 @@ pub mod host;
 pub mod schema;
 
 use crate::runtime::Parsed;
-use crate::types::ParsedGrammar;
+use crate::types::GrammarExtract;
 
-/// Parse a BBNF grammar source into a `ParsedGrammar`.
+/// Parse a BBNF grammar source into a [`GrammarExtract`].
 ///
 /// The tape-first bootstrap parser owns its own source buffer and tape
-/// via [`crate::runtime::Parsed`]. We leak that structure so the
-/// resulting `ParsedGrammar<'_>` — which borrows cursors and text
-/// slices from both — lives for the rest of the compile, matching the
-/// pre-tranche arena-style ownership model expected by callers.
-pub fn parse(source: &str) -> Option<ParsedGrammar<'_>> {
+/// via [`crate::runtime::Parsed`]. This entry point leaks the input so
+/// the resulting `GrammarExtract<'_>` — which borrows cursors and text
+/// slices from the tape — lives for the rest of the compile, matching
+/// the pre-AU.4.1 arena-style ownership model observational callers
+/// (LSP analysis, gorgeous JIT, `debug_parse`) already rely on.
+///
+/// Compile-side callers should instead route through
+/// [`crate::pipeline`]; the pipeline avoids this allocation by landing
+/// results straight in its internal containers.
+pub fn parse(source: &str) -> Option<GrammarExtract<'_>> {
     // Leak the input string so the borrowed Parsed<'static, _> and
-    // the resulting ParsedGrammar<'_> live for the rest of the
+    // the resulting GrammarExtract<'_> live for the rest of the
     // compile. Library-internal scratch: the bootstrap flow runs
-    // once per compile; the pipeline assumes 'static lifetimes.
+    // once per compile; observational callers assume 'static lifetimes.
     let input: &'static str = Box::leak(source.to_owned().into_boxed_str());
     let parsed = generated::BbnfBootstrap::parse(input).ok()?;
     let parsed: &'static Parsed<'static, generated::BbnfBootstrap> =
         Box::leak(Box::new(parsed));
-    Some(host::extract_grammar(parsed))
+    Some(host::extract_observational(parsed))
 }
 
 /// Parse a BBNF grammar file.
@@ -50,6 +61,6 @@ pub fn parse(source: &str) -> Option<ParsedGrammar<'_>> {
 /// compatibility with pre-AC call sites as a thin alias over [`parse`];
 /// it will be audited and likely removed during AC.3 once the
 /// analysis crate migrates off `parser_state.furthest_offset`.
-pub fn parse_with_state(source: &str) -> Option<ParsedGrammar<'_>> {
+pub fn parse_with_state(source: &str) -> Option<GrammarExtract<'_>> {
     parse(source)
 }

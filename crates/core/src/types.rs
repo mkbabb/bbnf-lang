@@ -79,11 +79,26 @@ pub struct HostFnDecl<'a> {
     pub return_type: Option<Cow<'a, str>>,
 }
 
-// ─── Parsed Grammar ──────────────────────────────────────────────────────────
+// ─── Grammar Extract ─────────────────────────────────────────────────────────
+//
+// Tranche AU.4.1: the historical `ParsedGrammar` aggregate is gone. The
+// lowering pipeline now walks the bootstrap tape directly into
+// `DirectiveMaps` + `AST` (see `pipeline::directives::extract_from_tape`) —
+// no intermediate grab-bag struct on the hot compile path.
+//
+// `GrammarExtract` survives purely as the query facade for observational
+// consumers (LSP analysis, gorgeous JIT, debug binaries) that want a
+// single handle grouping every directive vector plus the rule map.
+// Pipeline code does NOT construct one.
 
-/// The result of parsing a complete grammar file: imports + rules + directives.
+/// Observational view over a parsed BBNF file.
+///
+/// Aggregates every directive vector + the rule AST so LSP / gorgeous
+/// / debug callers can consume a single value. The compile pipeline
+/// bypasses this type entirely; use
+/// [`crate::pipeline::directives::extract_from_tape`] instead.
 #[derive(Debug, Clone)]
-pub struct ParsedGrammar<'a> {
+pub struct GrammarExtract<'a> {
     pub imports: Vec<ImportDirective<'a>>,
     pub recovers: Vec<RecoverDirective<'a>>,
     pub pretties: Vec<PrettyDirective<'a>>,
@@ -99,8 +114,8 @@ pub struct ParsedGrammar<'a> {
     pub host_fns: Vec<HostFnDecl<'a>>,
 }
 
-impl<'a> ParsedGrammar<'a> {
-    /// Create an empty `ParsedGrammar` (no rules, no directives).
+impl<'a> GrammarExtract<'a> {
+    /// Create an empty `GrammarExtract` (no rules, no directives).
     pub fn empty() -> Self {
         Self {
             imports: Vec::new(),

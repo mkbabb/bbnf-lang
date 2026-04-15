@@ -1,3 +1,13 @@
+//! Pipeline-internal directive aggregation.
+//!
+//! `DirectiveMaps` is the compile-pipeline-facing container populated
+//! directly from the bootstrap tape (see
+//! [`crate::grammar::host::extract_for_pipeline`]). Tranche AU.4.1
+//! deleted the historical `ParsedGrammar` intermediate: the tape walker
+//! now lands directive rows straight in this struct instead of
+//! round-tripping through `Vec<ImportDirective>` / `Vec<RecoverDirective>`
+//! / … aggregates.
+
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 
@@ -7,7 +17,8 @@ use crate::grammar::generated::BbnfBootstrapNodeView;
 use crate::imports::load_module_graph;
 use crate::lower::DirectiveSet;
 use crate::pipeline::CompileError;
-use crate::types::{AST, ParsedGrammar, RuleEntry};
+use crate::runtime::Parsed;
+use crate::types::{AST, ImportDirective, RuleEntry};
 
 #[derive(Default)]
 pub(crate) struct DirectiveMaps<'a> {
@@ -21,51 +32,30 @@ pub(crate) struct DirectiveMaps<'a> {
 }
 
 impl<'a> DirectiveMaps<'a> {
-    pub(crate) fn from_parsed(parsed: ParsedGrammar<'a>) -> (AST<'a>, Self) {
-        let ParsedGrammar {
-            imports: _,
-            recovers,
-            pretties,
-            rules,
-            ws_pattern,
-            debug_rules,
-            token_rules,
-            host_fns,
-        } = parsed;
+    // ---- mutators used by the tape-walker sink in `grammar::host` ----
 
-        let mut maps = Self {
-            ws_pattern: ws_pattern.map(|p| p.into_owned()),
-            ..Self::default()
-        };
-
-        for rec in recovers {
-            maps.recover_map
-                .insert(rec.rule_name.to_string(), rec.sync_expr);
-        }
-        for pretty in pretties {
-            maps.pretty_map.insert(
-                pretty.rule_name.into_owned(),
-                pretty.hints.into_iter().map(|h| h.into_owned()).collect(),
-            );
-        }
-        for name in token_rules {
-            maps.token_set.insert(name.into_owned());
-        }
-        for decl in host_fns {
-            maps.host_map.insert(
-                decl.name.into_owned(),
-                decl.return_type.map(|t| t.into_owned()),
-            );
-        }
-        for name in debug_rules {
-            if name.as_ref() == "*" {
-                maps.debug_all = true;
-            } else {
-                maps.debug_set.insert(name.into_owned());
-            }
-        }
-
-        (rules, maps)
+    pub(crate) fn recover_map_mut(
+        &mut self,
+    ) -> &mut HashMap<String, BbnfBootstrapNodeView<'a>> {
+        &mut self.recover_map
+    }
+    pub(crate) fn pretty_map_mut(&mut self) -> &mut HashMap<String, Vec<String>> {
+        &mut self.pretty_map
+    }
+    pub(crate) fn token_set_mut(&mut self) -> &mut HashSet<String> {
+        &mut self.token_set
+    }
+    pub(crate) fn debug_set_mut(&mut self) -> &mut HashSet<String> {
+        &mut self.debug_set
+    }
+    pub(crate) fn host_map_mut(&mut self) -> &mut HashMap<String, Option<String>> {
+        &mut self.host_map
+    }
+    pub(crate) fn set_debug_all(&mut self, value: bool) {
+        self.debug_all = value;
+    }
+    pub(crate) fn set_ws_pattern(&mut self, value: String) {
+        self.ws_pattern = Some(value);
     }
 
     pub(crate) fn as_directive_set(&self) -> DirectiveSet<'_> {
@@ -79,6 +69,41 @@ impl<'a> DirectiveMaps<'a> {
             host_fns: (!self.host_map.is_empty()).then_some(&self.host_map),
         }
     }
+}
+
+/// Parse a grammar source string and immediately project it into
+/// pipeline-shaped containers — AST, DirectiveMaps, imports — by
+/// walking the bootstrap tape exactly once.
+///
+/// Leaks the source so the returned containers can borrow `'static`
+/// slices, matching the ownership contract the rest of the compile
+/// pipeline already assumes (see `grammar::parse`).
+pub(crate) fn parse_to_pipeline_inputs(
+    source: &str,
+) -> Option<(
+    AST<'static>,
+    DirectiveMaps<'static>,
+    Vec<ImportDirective<'static>>,
+)> {
+    use crate::grammar::{self, host};
+
+    let input: &'static str = Box::leak(source.to_owned().into_boxed_str());
+    let parsed = grammar::generated::BbnfBootstrap::parse(input).ok()?;
+    let parsed: &'static Parsed<'static, grammar::generated::BbnfBootstrap> =
+        Box::leak(Box::new(parsed));
+    Some(host::extract_for_pipeline(parsed))
+}
+
+/// Per-module data retained by the import graph loader. Replaces the
+/// pre-AU.4.1 `ModuleData { grammar: ParsedGrammar }` shape: each
+/// module now holds its pipeline-shaped outputs directly so
+/// `merge_module` can splice them in without reparsing.
+pub(crate) struct ModulePipelineData {
+    pub(crate) source: String,
+    pub(crate) ast: AST<'static>,
+    pub(crate) directives: DirectiveMaps<'static>,
+    pub(crate) imports: Vec<ImportDirective<'static>>,
+    pub(crate) local_rule_names: Vec<String>,
 }
 
 pub(crate) struct MergedStaticGrammar {
@@ -138,43 +163,32 @@ fn merge_module(
     ast: &mut AST<'static>,
     directives: &mut DirectiveMaps<'static>,
 ) {
-    for rec in &module.grammar.recovers {
-        directives
-            .recover_map
-            .insert(rec.rule_name.to_string(), rec.sync_expr);
+    let data = module.pipeline_data();
+    // Splice directive maps — the loader already populated them
+    // pipeline-shaped, so merging is a straight HashMap/HashSet union.
+    for (k, v) in &data.directives.recover_map {
+        directives.recover_map.insert(k.clone(), *v);
+    }
+    for (k, v) in &data.directives.pretty_map {
+        directives.pretty_map.insert(k.clone(), v.clone());
+    }
+    if let Some(pat) = &data.directives.ws_pattern {
+        directives.ws_pattern = Some(pat.clone());
+    }
+    for name in &data.directives.token_set {
+        directives.token_set.insert(name.clone());
+    }
+    for (k, v) in &data.directives.host_map {
+        directives.host_map.insert(k.clone(), v.clone());
+    }
+    if data.directives.debug_all {
+        directives.debug_all = true;
+    }
+    for name in &data.directives.debug_set {
+        directives.debug_set.insert(name.clone());
     }
 
-    for pretty in &module.grammar.pretties {
-        directives.pretty_map.insert(
-            pretty.rule_name.to_string(),
-            pretty.hints.iter().map(|hint| hint.to_string()).collect(),
-        );
-    }
-
-    if let Some(pattern) = &module.grammar.ws_pattern {
-        directives.ws_pattern = Some(pattern.to_string());
-    }
-
-    for name in &module.grammar.token_rules {
-        directives.token_set.insert(name.to_string());
-    }
-
-    for decl in &module.grammar.host_fns {
-        directives.host_map.insert(
-            decl.name.to_string(),
-            decl.return_type.as_ref().map(|t| t.to_string()),
-        );
-    }
-
-    for name in &module.grammar.debug_rules {
-        if name.as_ref() == "*" {
-            directives.debug_all = true;
-        } else {
-            directives.debug_set.insert(name.to_string());
-        }
-    }
-
-    for (&name, entry) in &module.grammar.rules {
+    for (&name, entry) in &data.ast {
         ast.insert(name, RuleEntry {
             name_span: entry.name_span,
             rhs: entry.rhs,

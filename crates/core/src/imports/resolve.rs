@@ -26,7 +26,7 @@ pub(super) fn resolve_imports_for(path: &Path, registry: &mut ModuleRegistry) {
 
     // Clone the imports to avoid borrow issues.
     let imports: Vec<_> = module
-        .grammar
+        .pipeline_data()
         .imports
         .iter()
         .map(|imp| {
@@ -72,7 +72,7 @@ pub(super) fn resolve_imports_for(path: &Path, registry: &mut ModuleRegistry) {
             // transitive local dependencies.
             let mut verified = Vec::new();
             for name in &items {
-                if target.local_rule_names.contains(name) {
+                if target.local_rule_names().contains(name) {
                     verified.push(name.clone());
                 } else {
                     registry.errors.push(ImportError::MissingRule {
@@ -92,7 +92,7 @@ pub(super) fn resolve_imports_for(path: &Path, registry: &mut ModuleRegistry) {
             expanded.into_iter().collect()
         } else {
             // Glob import: all local rules.
-            target.local_rule_names.clone()
+            target.local_rule_names().to_vec()
         };
 
         // Check for name conflicts.
@@ -133,13 +133,13 @@ fn transitive_local_deps(rule_name: &str, module: &ModuleData) -> HashSet<String
         }
         result.insert(name.clone());
 
-        // Look up the rule by string key in the new AST.
-        if let Some(entry) = module.grammar.rules.get(name.as_str()) {
+        // Look up the rule by string key in the AST.
+        if let Some(entry) = module.pipeline_data().ast.get(name.as_str()) {
             let mut refs = indexmap::IndexSet::new();
             deps::collect_nonterminal_refs(entry.rhs, &mut refs);
             for r in refs {
                 let r_owned = r.to_string();
-                if module.local_rule_names.contains(&r_owned) && !result.contains(&r_owned) {
+                if module.local_rule_names().contains(&r_owned) && !result.contains(&r_owned) {
                     queue.push(r_owned);
                 }
             }

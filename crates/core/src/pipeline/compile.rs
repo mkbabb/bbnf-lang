@@ -3,12 +3,11 @@ use std::time::{Duration, Instant};
 
 use bbnf_ir::GrammarIR;
 
-use crate::grammar;
 use crate::grammar::generated::{BbnfBootstrapNodeView, BbnfBootstrapRuleKind};
 use crate::graph::{tarjan_scc, topological_sort_scc};
 use crate::backend::prepare_grammar;
 use crate::lower::{DirectiveSet, lower_to_ir};
-use crate::pipeline::directives::{DirectiveMaps, load_merged_paths};
+use crate::pipeline::directives::{load_merged_paths, parse_to_pipeline_inputs};
 use crate::pipeline::validate::{validate_ast, validate_pretty_directives};
 use crate::pipeline::{
     CompileError, CompileOutput, CompileRequest, CompileTarget, PipelineOptions,
@@ -93,17 +92,19 @@ pub fn compile_grammar_request(
     source: &str,
     request: &CompileRequest,
 ) -> Result<CompileOutput, CompileError> {
-    let parsed = grammar::parse(source)
+    // Tape-direct ingress: walk the bootstrap tape straight into
+    // pipeline-shaped containers — AST, DirectiveMaps, imports — in
+    // one pass. No `GrammarExtract` / `ParsedGrammar` middle step.
+    let (ast, directive_maps, imports) = parse_to_pipeline_inputs(source)
         .ok_or_else(|| CompileError::Parse("failed to parse grammar".to_string()))?;
 
-    if !parsed.imports.is_empty() {
+    if !imports.is_empty() {
         return Err(CompileError::Import(
             "compile_grammar(source) does not resolve @import; use compile_paths_request"
                 .to_string(),
         ));
     }
 
-    let (ast, directive_maps) = DirectiveMaps::from_parsed(parsed);
     let directives = directive_maps.as_directive_set();
     compile_ast_request(ast, &directives, request)
 }

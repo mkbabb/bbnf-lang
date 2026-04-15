@@ -247,14 +247,14 @@ fn test_css_l4_media_module_keeps_recursive_local_rules() {
     let module = registry
         .get_module(&media)
         .expect("media.bbnf should be loaded");
-    assert!(module.local_rule_names.iter().any(|name| name == "mediaNot"));
+    assert!(module.local_rule_names().iter().any(|name| name == "mediaNot"));
     assert!(
         module
-            .local_rule_names
+            .local_rule_names()
             .iter()
             .any(|name| name == "mediaInParens"),
         "media.bbnf lost mediaInParens: {:?}",
-        module.local_rule_names
+        module.local_rule_names()
     );
 }
 

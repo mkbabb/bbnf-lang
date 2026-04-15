@@ -3,7 +3,7 @@
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
-use crate::grammar;
+use crate::pipeline::directives::parse_to_pipeline_inputs;
 
 use super::errors::ImportError;
 use super::registry::{ImportCycle, ModuleData, ModuleRegistry};
@@ -15,6 +15,10 @@ use super::resolve::{resolve_import_path, resolve_imports_for};
 /// once (canonical path dedup). Cyclic imports are allowed (Python-style
 /// partial-init: a module is registered before its imports are processed).
 /// Returns a `ModuleRegistry` with all modules and resolved imports.
+///
+/// Tranche AU.4.1: each file's tape walk now lands directly in
+/// `ModulePipelineData` (AST + directive maps + imports list) — the
+/// `ParsedGrammar` middle step is gone.
 pub fn load_module_graph(entry: &Path) -> Result<ModuleRegistry, ImportError> {
     let entry = entry
         .canonicalize()
@@ -91,16 +95,22 @@ fn load_recursive(
         }
     };
 
-    // Parse using grammar::parse().
-    // SAFETY: We leak the source string to get 'static lifetime for the AST.
-    // This is acceptable because `load_module_graph()` is only called from:
-    //   1. The proc-macro derive path (`bbnf-derive`), where the process exits after compilation.
-    //   2. Integration tests, where the leaked memory is reclaimed at process exit.
-    // The LSP does NOT use this function — it uses `self_cell::self_cell!` in
-    // `lsp/src/state/parsing.rs` for safe self-referential ownership without leaking.
-    let source_static: &'static str = Box::leak(source.clone().into_boxed_str());
-    let parsed = match grammar::parse(source_static) {
-        Some(g) => g,
+    // Parse straight into pipeline-shaped containers. The walker
+    // leaks the source so the borrowed spans inside the AST /
+    // directives become `'static`, which matches the ownership
+    // contract the rest of the compile pipeline already assumes.
+    //
+    // SAFETY: leaking the source is acceptable because
+    // `load_module_graph()` is only called from:
+    //   1. The proc-macro derive path (`bbnf-derive`), where the
+    //      process exits after compilation.
+    //   2. Integration tests, where the leaked memory is reclaimed
+    //      at process exit.
+    // The LSP does NOT use this function — it uses `self_cell` in
+    // `analysis/src/state/parsing.rs` for safe self-referential
+    // ownership without leaking.
+    let (ast, directives, imports) = match parse_to_pipeline_inputs(&source) {
+        Some(t) => t,
         None => {
             registry.errors.push(ImportError::ParseError {
                 path: path.to_path_buf(),
@@ -110,22 +120,25 @@ fn load_recursive(
         }
     };
 
-    // Extract local rule names — keys are already &str in the new AST.
-    let local_rule_names: Vec<String> = parsed.rules.keys().map(|k| k.to_string()).collect();
+    // Extract local rule names — keys are already &str in the AST.
+    let local_rule_names: Vec<String> = ast.keys().map(|k| k.to_string()).collect();
 
     // Register BEFORE recursing (partial-init, like Python module loading).
     // This allows cyclic imports to find the module already registered.
     visited.insert(path.to_path_buf());
     loading.insert(path.to_path_buf());
     active_chain.push(path.to_path_buf());
-    registry.modules.insert(
-        path.to_path_buf(),
-        ModuleData {
-            source,
-            grammar: parsed,
-            local_rule_names,
-        },
-    );
+
+    let data = crate::pipeline::directives::ModulePipelineData {
+        source,
+        ast,
+        directives,
+        imports: imports.clone(),
+        local_rule_names,
+    };
+    registry
+        .modules
+        .insert(path.to_path_buf(), ModuleData::from_pipeline_data(data));
 
     // Recursively load imports. Cycles find the file already in visited and return.
     let dir = path.parent().unwrap_or_else(|| {
@@ -134,13 +147,7 @@ fn load_recursive(
             path.display()
         )
     });
-    // Collect import paths first to avoid borrow issues with registry.
-    let import_paths: Vec<PathBuf> = registry
-        .modules
-        .get(path)
-        .unwrap()
-        .grammar
-        .imports
+    let import_paths: Vec<PathBuf> = imports
         .iter()
         .map(|imp| resolve_import_path(dir, &imp.path))
         .collect();

@@ -3,19 +3,47 @@
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
-use crate::types::ParsedGrammar;
-
 use super::errors::ImportError;
+use crate::pipeline::directives::ModulePipelineData;
 
 /// Per-file module data after parsing.
-#[derive(Debug)]
+///
+/// Tranche AU.4.1: the pre-existing `ParsedGrammar` grab bag was
+/// excised from the compile hot path. Each module now holds its
+/// pipeline-shaped outputs directly in [`ModulePipelineData`] —
+/// `(AST, DirectiveMaps, imports)` — skipping the observational
+/// `GrammarExtract` middle step entirely.
 pub struct ModuleData {
-    /// Source text (owned).
-    pub source: String,
-    /// The parsed grammar.
-    pub grammar: ParsedGrammar<'static>,
+    /// Pipeline-shaped parse: AST + directive maps + imports list.
+    pub(crate) data: ModulePipelineData,
+}
+
+impl ModuleData {
+    /// Wrap pipeline-shaped parse outputs for storage in the registry.
+    pub(crate) fn from_pipeline_data(data: ModulePipelineData) -> Self {
+        Self { data }
+    }
+
+    /// Access the pipeline-shaped parse outputs.
+    pub(crate) fn pipeline_data(&self) -> &ModulePipelineData {
+        &self.data
+    }
+
     /// Names of rules defined locally in this file.
-    pub local_rule_names: Vec<String>,
+    pub fn local_rule_names(&self) -> &[String] {
+        &self.data.local_rule_names
+    }
+}
+
+impl std::fmt::Debug for ModuleData {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ModuleData")
+            .field("local_rule_names", &self.data.local_rule_names)
+            .field("source_len", &self.data.source.len())
+            .field("rules", &self.data.ast.len())
+            .field("imports", &self.data.imports.len())
+            .finish()
+    }
 }
 
 /// A resolved import: which rules are visible and where they come from.

@@ -198,28 +198,27 @@ fn string_lit_fires_on_map_arrow_string_value() {
     );
 }
 
-// ─── Payload firing (currently 0 for every BBNF typed rule) ──────────
+// ─── Payload firing (AV.0.2 + AV.0.3 — every typed rule reaches the tape) ─
 
-/// AU.6.8 gap: pinned regression. Every BBNF `-> Span` / `-> i64` /
-/// `-> f64` annotation drops the payload write. The `__has_payload`
-/// flag in the generated function body is initialised to false and
-/// never set, so `push_compound(Rule, …)` fires unconditionally.
-///
-/// Once the emitter routes the inner scanner / regex match's value
-/// through `PayloadData::WideScalar` (i64/f64) or
-/// `PayloadData::Bytes` (Span), `count_typed_payload_leaves` returns
-/// non-zero — flip these expectations and remove the gap reference
-/// in `typed-parity-audit.md`.
+/// AV.0.2 + AV.0.3 landing: every BBNF `-> Span` / `-> i64` / `-> f64`
+/// annotation routes its payload through `push_leaf_with` — `Span`
+/// rules pack `(lo, hi)` into `PayloadData::Aggregate(&buf[..8])`
+/// via the bare-Span aggregate layout, `i64`/`f64` rules capture via
+/// `parse_that::parse_i64_from_bytes` / `parse_f64_from_bytes` and
+/// commit through `PayloadData::WideScalar`. Both paths produce a
+/// `TapeKind::Span` leaf with `has_payload = true`; the pre-AV.0
+/// behaviour was a `TapeKind::Rule` empty compound that lost the
+/// declared payload. `count_typed_payload_leaves` filters for
+/// `Span`-kind + has_payload to isolate the typed-leaf firings
+/// from any residual empty-compound false positives.
 #[test]
 fn pinned_int_lit_drops_payload() {
     let input = "kw = \"x\" -> 42i64 ;";
     let records = parse_records(input);
-    assert_eq!(
-        count_typed_payload_leaves(&records, VAR_INT_LIT),
-        0,
-        "AU.6.8 W7 / AV-routable gap pinned: BBNF int_lit `-> i64` \
-         payload is not reached. If non-zero, the codegen fix has \
-         landed — flip this assertion."
+    assert!(
+        count_typed_payload_leaves(&records, VAR_INT_LIT) >= 1,
+        "AV.0.3: BBNF int_lit `-> i64` payload must reach the tape. \
+         records = {records:?}"
     );
 }
 
@@ -227,10 +226,10 @@ fn pinned_int_lit_drops_payload() {
 fn pinned_float_lit_drops_payload() {
     let input = "kw = \"x\" -> .14 ;";
     let records = parse_records(input);
-    assert_eq!(
-        count_typed_payload_leaves(&records, VAR_FLOAT_LIT),
-        0,
-        "AU.6.8 gap pinned: BBNF float_lit `-> f64` payload not reached."
+    assert!(
+        count_typed_payload_leaves(&records, VAR_FLOAT_LIT) >= 1,
+        "AV.0.3: BBNF float_lit `-> f64` payload must reach the tape. \
+         records = {records:?}"
     );
 }
 
@@ -238,10 +237,10 @@ fn pinned_float_lit_drops_payload() {
 fn pinned_identifier_drops_payload() {
     let input = "rule_name = \"x\" ;";
     let records = parse_records(input);
-    assert_eq!(
-        count_typed_payload_leaves(&records, VAR_IDENTIFIER),
-        0,
-        "AU.6.8 gap pinned: BBNF identifier `-> Span` payload not reached."
+    assert!(
+        count_typed_payload_leaves(&records, VAR_IDENTIFIER) >= 1,
+        "AV.0.2: BBNF identifier `-> Span` payload must reach the tape. \
+         records = {records:?}"
     );
 }
 
@@ -249,10 +248,10 @@ fn pinned_identifier_drops_payload() {
 fn pinned_literal_drops_payload() {
     let input = "rule = \"hello\" ;";
     let records = parse_records(input);
-    assert_eq!(
-        count_typed_payload_leaves(&records, VAR_LITERAL),
-        0,
-        "AU.6.8 gap pinned: BBNF literal `-> Span` payload not reached."
+    assert!(
+        count_typed_payload_leaves(&records, VAR_LITERAL) >= 1,
+        "AV.0.2: BBNF literal `-> Span` payload must reach the tape. \
+         records = {records:?}"
     );
 }
 
@@ -260,10 +259,10 @@ fn pinned_literal_drops_payload() {
 fn pinned_regex_drops_payload() {
     let input = "rule = /[a-z]+/ ;";
     let records = parse_records(input);
-    assert_eq!(
-        count_typed_payload_leaves(&records, VAR_REGEX),
-        0,
-        "AU.6.8 gap pinned: BBNF regex `-> Span` payload not reached."
+    assert!(
+        count_typed_payload_leaves(&records, VAR_REGEX) >= 1,
+        "AV.0.2: BBNF regex `-> Span` payload must reach the tape. \
+         records = {records:?}"
     );
 }
 
@@ -271,10 +270,10 @@ fn pinned_regex_drops_payload() {
 fn pinned_comment_drops_payload() {
     let input = "// hi\nrule = \"x\" ;";
     let records = parse_records(input);
-    assert_eq!(
-        count_typed_payload_leaves(&records, VAR_COMMENT),
-        0,
-        "AU.6.8 gap pinned: BBNF comment `-> Span` payload not reached."
+    assert!(
+        count_typed_payload_leaves(&records, VAR_COMMENT) >= 1,
+        "AV.0.2: BBNF comment `-> Span` payload must reach the tape. \
+         records = {records:?}"
     );
 }
 
@@ -282,10 +281,10 @@ fn pinned_comment_drops_payload() {
 fn pinned_big_comment_drops_payload() {
     let input = "/* hi */\nrule = \"x\" ;";
     let records = parse_records(input);
-    assert_eq!(
-        count_typed_payload_leaves(&records, VAR_BIG_COMMENT),
-        0,
-        "AU.6.8 gap pinned: BBNF big_comment `-> Span` payload not reached."
+    assert!(
+        count_typed_payload_leaves(&records, VAR_BIG_COMMENT) >= 1,
+        "AV.0.2: BBNF big_comment `-> Span` payload must reach the tape. \
+         records = {records:?}"
     );
 }
 

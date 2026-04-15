@@ -22,10 +22,15 @@ propertyName = /--[\w-]+/ | /-?[a-zA-Z_][\w-]*/ ;
 // --- !important ---
 importantSuffix = ("!" ?w , "important") ? ;
 
-// --- Dimension: factor common `number` prefix, dispatch on unit ---
-anyUnit = lengthUnit | angleUnit | timeUnit | frequencyUnit
-        | resolutionUnit | flexUnit | percentageUnit ;
-dimension = number , anyUnit ;
+// --- Dimension: typed per-unit dispatch via valueUnit ---
+// AU.2.5: each typed dimension rule (length/angle/time/frequency/
+// resolution/flex/percentage/unitless) composes (number, unit) into a
+// distinct `(f64, u8)` aggregate site; the seven non-unitless branches
+// reach `push_leaf_with_aggregate` once `number -> f64` is restored.
+// Wiring through `valueUnit` makes those typed rules reachable from
+// the stylesheet entry; without this reference `prune_unreachable`
+// removed every dimension type from compiled codegen.
+dimension = valueUnit ;
 
 // --- Generic value token — matches any single CSS value token ---
 cssString = /"(?:[^"\\]|\\[\s\S])*"/ | /'(?:[^'\\]|\\[\s\S])*'/ ;

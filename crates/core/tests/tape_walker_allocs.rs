@@ -1,12 +1,19 @@
-//! AU.3.2 — `ChildIter` zero-allocation regression guard.
+//! AU.3.2 / AV.2.2 — `ChildIter` zero-allocation regression guard.
 //!
-//! The tranche AU.3.2 hard gate requires a zero-heap-allocation child
-//! iterator over a finished `Tape`. This file pins the iterator's
-//! structural shape (so a regression that reintroduces a `Vec` /
-//! `Box` field is caught at compile time) and exercises the iterator
-//! over a hand-built tape to confirm the post-order backward walk
-//! lands on every direct child without skipping or recursing into
-//! grandchildren.
+//! AU.3.2 introduced the first zero-heap-allocation child iterator
+//! over the AoS tape via backward post-order walk (reverse source
+//! order). AV.2.2 flipped the substrate to a columnar layout with a
+//! `sib_skip` column: forward sibling traversal is now one indexed
+//! column load per step, so forward *source* order is also zero-
+//! allocation. The pre-AV split between Vec-backed `children()`
+//! (source order) and linked-list `children_zero_alloc()` (reverse
+//! order) collapses into a single forward-order zero-alloc iterator.
+//!
+//! This file pins the iterator's structural shape (regression
+//! catches on accidental heap-backed fields) and exercises the
+//! iterator over hand-built tapes to confirm direct-children
+//! enumeration lands on every child without skipping or recursing
+//! into grandchildren.
 
 use bbnf::runtime::tape::{ChildIter, TapeBuilder, TapeCursor, TapeKind, TapeOffset};
 
@@ -27,14 +34,15 @@ fn child_iter_size_bounded() {
     );
 }
 
-/// Build a tape with a compound that holds three leaf children (post-
-/// order: [leaf0, leaf1, leaf2, compound]) and verify the zero-alloc
-/// iterator yields all three children in reverse source order. The
-/// reverse-order semantic is intentional: backward walk is the only
-/// O(K) direction over the AoS tape layout (forward-walk discovery
-/// of subtree roots is O(subtree-size); see cursor.rs commentary).
+/// Build a tape with a compound that holds three leaf children
+/// (post-order: [leaf0, leaf1, leaf2, compound]) and verify the
+/// zero-alloc iterator yields all three children in forward source
+/// order. AV.2.2's sibling-skip column makes forward iteration a
+/// single indexed column load per step, unifying what was previously
+/// two iterators (`children()` and `children_zero_alloc()`) into one
+/// zero-alloc forward iterator.
 #[test]
-fn child_iter_yields_three_leaves_in_reverse_order() {
+fn child_iter_yields_three_leaves_in_forward_order() {
     let mut b = TapeBuilder::new();
     let start = b.mark_children();
     let _l0 = b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
@@ -49,11 +57,11 @@ fn child_iter_yields_three_leaves_in_reverse_order() {
         .map(|c| c.span())
         .collect();
 
-    // Reverse source order — last child first.
+    // Forward source order — first child first.
     assert_eq!(
         yielded,
-        vec![(2, 3), (1, 2), (0, 1)],
-        "ChildIter must yield direct children in reverse source order"
+        vec![(0, 1), (1, 2), (2, 3)],
+        "ChildIter must yield direct children in forward source order"
     );
 }
 
@@ -85,13 +93,13 @@ fn child_iter_does_not_descend_into_grandchildren() {
         .map(|c| c.span())
         .collect();
 
-    // Two direct children: the trailing leaf (span 2..3) yielded
-    // first under reverse-order semantics, then the inner compound
-    // (span 0..2). The inner compound's two grandchildren must
+    // Two direct children: under forward-order semantics the inner
+    // compound (span 0..2) yields first, then the trailing leaf
+    // (span 2..3). The inner compound's two grandchildren must
     // never appear in this list.
     assert_eq!(yielded.len(), 2, "outer compound has K = 2 direct children");
-    assert_eq!(yielded[0], (2, 3), "trailing leaf yielded first in reverse");
-    assert_eq!(yielded[1], (0, 2), "inner compound yielded second");
+    assert_eq!(yielded[0], (0, 2), "inner compound yielded first in forward order");
+    assert_eq!(yielded[1], (2, 3), "trailing leaf yielded second");
 }
 
 /// A leaf cursor (no children) must produce an empty iterator.

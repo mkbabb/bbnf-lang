@@ -64,20 +64,31 @@ identifier = /[A-Za-z_][A-Za-z0-9_.]*/ ;
 
 // ── Expressions ── operator precedence tower ────────────────────────
 
-compare_op = "<>" | "<=" | ">=" | "=" | "<" | ">" ;
+// Operator kinds carry a stable Nu8 discriminant. Declaration order
+// inside each rule is its discriminant ordering; unrelated operator
+// rules do not share a namespace (each is its own small enum).
+compare_op = "<>" -> 0u8
+           | "<=" -> 1u8
+           | ">=" -> 2u8
+           | "="  -> 3u8
+           | "<"  -> 4u8
+           | ">"  -> 5u8 ;
 comparison_expr = concat_expr ?w , (compare_op ?w , concat_expr ?w) * ;
 
 concat_expr = add_expr ?w , ("&" ?w , add_expr ?w) * ;
 
-add_op = "+" | "-" ;
+add_op = "+" -> 0u8
+       | "-" -> 1u8 ;
 add_expr = mul_expr ?w , (add_op ?w , mul_expr ?w) * ;
 
-mul_op = "*" | "/" ;
+mul_op = "*" -> 0u8
+       | "/" -> 1u8 ;
 mul_expr = exp_expr ?w , (mul_op ?w , exp_expr ?w) * ;
 
 exp_expr = unary_expr ?w , ("^" ?w , unary_expr ?w) * ;
 
-unary_prefix = "+" | "-" ;
+unary_prefix = "+" -> 0u8
+             | "-" -> 1u8 ;
 unary_expr = unary_prefix * , postfix_expr ;
 
 postfix_expr = primary , "%" * ;

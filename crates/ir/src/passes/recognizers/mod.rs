@@ -60,6 +60,7 @@ mod balanced_wrap;
 mod comment_ws;
 mod context_facts_miner;
 pub mod delim_scan;
+pub mod dta;
 mod identifier;
 pub mod key_dispatch;
 mod node_facts;

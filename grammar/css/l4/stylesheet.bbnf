@@ -15,7 +15,10 @@ qualifiedRule = selectorList ?w , ruleBlock ?w ;
 // Typed @-rules
 mediaRule     = "@media" ?w , mediaQueryList ?w , ruleBlock ;
 
-keyframeStop  = /\d+%/ | "from" | "to" ;
+// u8 discriminant for keyframe selector forms: percentage=0, from=1, to=2.
+// (Numeric percent stops use tag 0; the numeric literal carries the
+// percentage value when AU.2.5 aggregate codegen composes it.)
+keyframeStop  = /\d+%/ -> 0u8 | "from" -> 1u8 | "to" -> 2u8 ;
 keyframeSel   = keyframeStop , (/\s*,\s*/ >> keyframeStop) * ;
 keyframeBlock = (keyframeSel ?w , "{" >> ((declaration ?w) *) ?w << "}") ?w ;
 keyframesRule = "@keyframes" ?w , ident ?w , "{" >> (keyframeBlock *) ?w << "}" ;
@@ -24,6 +27,11 @@ keyframesRule = "@keyframes" ?w , ident ?w , "{" >> (keyframeBlock *) ?w << "}" 
 atRuleBody    = ruleBlock | ";" ;
 genericAtRule = /@[a-zA-Z][\w-]*/ , /[^;{}]*/ , atRuleBody ;
 
+// u8 discriminant for at-rule kind — matches lightningcss AtRule ordering:
+// @media=0, @keyframes=1, generic (catch-all)=255.
+// TODO typed-aggregate (AU.2.6): per-variant body types (MediaQueryList vs
+// KeyframeBlockList vs generic prelude). Variant-payload codegen lands
+// with AU.6.7.
 atRule   = mediaRule | keyframesRule | genericAtRule ;
 ruleItem = qualifiedRule | atRule ;
 ruleList = (ruleItem ?w) * ;

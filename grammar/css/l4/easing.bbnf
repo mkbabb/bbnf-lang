@@ -3,13 +3,23 @@
 // CSS Easing Functions Level 2.
 // Spec: https://drafts.csswg.org/css-easing-2/
 
+// TODO typed-aggregate (AU.2.6): cubic-bezier carries (f64×4); steps carries
+// (i64, u8 step_position); linearEasing is a variable-length list of
+// (f64, f64?) stops. Each variant tag below is declared; the parameter
+// composition lands with aggregate codegen.
+
 cubicBezier   = "cubic-bezier" , "(" ?w , number , "," ?w , number , "," ?w , number , "," ?w , number ?w , ")" ;
-stepsKeyword  = "jump-start" | "jump-end" | "jump-none" | "jump-both" | "start" | "end" ;
+stepsKeyword  = "jump-start" -> 0u8 | "jump-end" -> 1u8
+              | "jump-none" -> 2u8 | "jump-both" -> 3u8
+              | "start" -> 4u8 | "end" -> 5u8 ;
 steps         = "steps" , "(" ?w , integer ?w , ("," ?w , stepsKeyword) ? , ")" ;
 linearEasing  = "linear" , "(" ?w , (number , percentage ?) , ("," ?w , number , percentage ?) * , ")" ;
 
-// Keyword forms — ordered longest-first for PEG
-easingKeyword = "ease-in-out" | "ease-in" | "ease-out" | "ease"
-              | "step-start" | "step-end" | "linear" ;
+// Keyword forms — ordered longest-first for PEG.
+// u8 discriminant tags the easing family keyword.
+easingKeyword = "ease-in-out" -> 3u8 | "ease-in" -> 1u8
+              | "ease-out" -> 2u8 | "ease" -> 0u8
+              | "step-start" -> 4u8 | "step-end" -> 5u8
+              | "linear" -> 6u8 ;
 
 easingFunction = cubicBezier | steps | linearEasing | easingKeyword ;

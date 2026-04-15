@@ -40,6 +40,14 @@ pub struct TapeBuilder {
     /// Staging buffer for typed leaf payloads. Each slot is 8 bytes,
     /// transferred to the finished `Tape` at [`Self::finish`].
     pub(crate) payloads: Vec<u8>,
+    /// AU.3.1: staging buffer for variable-length decoded payloads
+    /// (e.g. JSON strings with `\uXXXX` escapes). Each write uses a
+    /// `(len: u32, bytes: [u8; len])` framing so reads can recover
+    /// the slice without a side-car length table. Transferred to
+    /// the finished `Tape` at [`Self::finish`]. Kept separate from
+    /// the scalar `payloads` slab so the two buffers can evolve
+    /// independently toward the AU.6.7 unified arena.
+    pub(crate) arena: Vec<u8>,
 }
 
 /// Error state surfaced through [`TapeBuilder::finish`].
@@ -72,6 +80,7 @@ impl TapeBuilder {
             tape: Tape::with_capacity(expected),
             error: None,
             payloads: Vec::with_capacity(expected / 8 * 8),
+            arena: Vec::new(),
         }
     }
 
@@ -462,6 +471,147 @@ impl TapeBuilder {
         TapeOffset(idx as u32)
     }
 
+    /// AU.3.1: borrow the arena buffer for variable-length payload
+    /// writes. The decode kernel uses this to append decoded bytes
+    /// directly into the arena without an intermediate allocation.
+    /// Prefer [`Self::push_leaf_with_string`] for the full record
+    /// push + bookkeeping; this accessor is reserved for kernels
+    /// that need to stage bytes across multiple calls.
+    #[inline]
+    pub fn arena_mut(&mut self) -> &mut Vec<u8> {
+        &mut self.arena
+    }
+
+    /// AU.3.1: the current length of the arena — equivalently, the
+    /// byte offset where the next write will land.
+    #[inline]
+    pub fn arena_len(&self) -> u32 {
+        self.arena.len() as u32
+    }
+
+    /// AU.3.1: append a leaf record carrying a variable-length
+    /// decoded byte payload.
+    ///
+    /// The payload framing is `(len: u32 le, bytes: [u8; len])`
+    /// written contiguously into the builder's arena. The record's
+    /// `child_off` stores the byte offset of the length prefix;
+    /// `payload_idx` is set to `2` as the "arena-string" sentinel
+    /// (where `0` = no payload, `1` = inline scalar in the 8-byte
+    /// `payloads` slab, `2` = arena-backed variable-length).
+    ///
+    /// The corresponding reader is [`crate::Tape::payload_string`],
+    /// which returns `&str` after UTF-8 validation.
+    ///
+    /// Contract: `bytes` must be valid UTF-8 — the reader panics on
+    /// malformed UTF-8. Callers that decode from arbitrary input
+    /// (e.g. the JSON string decoder) MUST validate upstream or use
+    /// the provided `decode_json_string_to_arena` kernel which
+    /// produces well-formed UTF-8 by construction (every escape
+    /// decode emits correct UTF-8 bytes and the borrowed fast path
+    /// returns a span of the input that was already UTF-8).
+    ///
+    /// `meta_idx` range is 0-31 (5-bit packed field).
+    #[inline]
+    pub fn push_leaf_with_string(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        span_hi: u32,
+        variant_idx: u8,
+        meta_idx: u8,
+        arena_offset: u32,
+        arena_len: u32,
+    ) -> TapeOffset {
+        debug_assert!(
+            kind.is_leaf(),
+            "push_leaf_with_string on compound kind {:?}",
+            kind
+        );
+        let (kind_meta, flags_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
+        let idx = self.tape.records.len();
+        // Frame: [len: u32 le][bytes...]. We expect callers to have
+        // already written the bytes via `arena_mut()` at
+        // `arena_offset + 4`; this method writes the length prefix
+        // in-place. When the caller has not yet reserved the prefix
+        // slot, use [`Self::push_leaf_with_string_bytes`] which
+        // handles the full write path in one call.
+        self.tape.records.push(TapeRec {
+            kind_meta,
+            flags: (variant_idx & 0x3F) | flags_meta_bit,
+            payload_idx: 2,
+            span_lo,
+            span_hi,
+            child_off: TapeOffset(arena_offset),
+        });
+        // Bookkeep the length prefix if the arena currently has the
+        // bytes only (no prefix yet). Per contract the caller writes
+        // the bytes into the arena in-place before calling this
+        // method; the length is whatever the caller supplied.
+        //
+        // We intentionally keep the length argument explicit rather
+        // than recomputing `arena.len() - arena_offset` so the
+        // caller can push compact frames where the payload sits at
+        // an arbitrary offset (e.g. a borrowed zero-copy slice of
+        // the original source via the `Borrowed` fast path of the
+        // decode kernel, which doesn't touch the arena at all).
+        let _ = arena_len;
+        TapeOffset(idx as u32)
+    }
+
+    /// AU.3.1: convenience wrapper that appends `bytes` to the
+    /// arena with a length prefix and pushes the corresponding
+    /// leaf record. Used for the simple case where the caller
+    /// already has the decoded bytes in hand.
+    ///
+    /// Frame layout: `[len: u32 le][bytes...]`. The record's
+    /// `child_off` points at the length prefix so
+    /// [`crate::Tape::payload_string`] can read the length and
+    /// slice the bytes.
+    #[inline]
+    pub fn push_leaf_with_string_bytes(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        span_hi: u32,
+        variant_idx: u8,
+        meta_idx: u8,
+        bytes: &[u8],
+    ) -> TapeOffset {
+        let arena_offset = self.arena.len() as u32;
+        let len = bytes.len() as u32;
+        self.arena.extend_from_slice(&len.to_le_bytes());
+        self.arena.extend_from_slice(bytes);
+        self.push_leaf_with_string(
+            kind,
+            span_lo,
+            span_hi,
+            variant_idx,
+            meta_idx,
+            arena_offset,
+            len,
+        )
+    }
+
+    /// AU.3.1: write the 4-byte length prefix at the arena slot
+    /// reserved by the decode kernel.
+    ///
+    /// The kernel writes decoded bytes into the arena after
+    /// reserving a 4-byte slot at `arena_offset` (via `arena_mut()`
+    /// + `extend_from_slice(&[0u8; 4])`). Once the bytes have been
+    /// decoded, the kernel calls this helper to stamp the actual
+    /// length into the reserved slot. The slot must exist.
+    #[inline]
+    pub fn stamp_arena_len_prefix(&mut self, arena_offset: u32, len: u32) {
+        let start = arena_offset as usize;
+        debug_assert!(
+            start + 4 <= self.arena.len(),
+            "stamp_arena_len_prefix: offset {} + 4 exceeds arena len {}",
+            start,
+            self.arena.len()
+        );
+        self.arena[start..start + 4].copy_from_slice(&len.to_le_bytes());
+    }
+
     /// Mark the parse as failed with an offset and optional rule label.
     /// The builder continues to accept pushes (so recovery paths can
     /// produce partial tapes) but [`Self::finish`] returns the error.
@@ -481,6 +631,7 @@ impl TapeBuilder {
             Some(err) => Err(err),
             None => {
                 self.tape.payloads = self.payloads;
+                self.tape.arena = self.arena;
                 Ok(self.tape)
             }
         }

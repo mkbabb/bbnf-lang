@@ -20,6 +20,12 @@ fn lower_grammar(source: &str) -> GrammarIR {
     // Compute FIRST sets at IR level.
     bbnf_ir::passes::compute_first_sets(&mut ir);
 
+    // SCC pass populates RuleMeta.{is_cyclic, scc_id, memo} at IR level.
+    // Must run before `compute_transparent`, which gates transparency on
+    // `is_cyclic` — the AST-level `tarjan_scc` above seeds `lower_to_ir`'s
+    // node-id memo hints, but the IR pass is authoritative for RuleMeta.
+    bbnf_ir::passes::compute_scc(&mut ir);
+
     // Run metadata IR passes (alias + transparent + span eligibility detection).
     bbnf_ir::passes::compute_aliases(&mut ir);
     bbnf_ir::passes::compute_transparent(&mut ir);

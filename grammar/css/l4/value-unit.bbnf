@@ -6,9 +6,19 @@
 // Unit literals map to u8 discriminants (matching lightningcss LengthValue layout).
 
 // --- Numeric primitives (§3.1) ---
-// AU.2.3: `number -> f64` activates payload capture at 20 CSS discard sites
-// and composes dimensions as (f64, u8) aggregates via Seq inference (AU.2.5).
-number = /[-+]?(\d+(\.\d+)?|\.\d+)([eE][-+]?\d+)?/ -> f64 ;
+// AU.2.3 partial: `integer -> i64` activates i64 capture; `number -> f64`
+// is held back pending agent-F emitter fix. The current f64 codegen routes
+// every Numeric-classified regex through `scan_number_strict_f64`, which
+// rejects CSS leading-dot literals (`.5`, `.25`); tailwind.css fails on
+// the first `.5` declaration value (`opacity: .5;`, ~379 sites). The
+// classifier already records `allow_leading_dot: true` on this regex, so
+// the dispatch in `crates/core/src/backend/rust/emitter/leaves.rs:130-141`
+// and `crates/core/src/backend/rust/emitter/map_value.rs:38-84` must
+// branch on that flag and call `parse_that::scan_number_f64` (generic
+// CSS-permissive variant) instead of `scan_number_strict_f64`. Once
+// agent F lands that fix, restore `-> f64` here and AU.2.3 / AU.2.5
+// activate together.
+number = /[-+]?(\d+(\.\d+)?|\.\d+)([eE][-+]?\d+)?/ ;
 integer = /[-+]?\d+/ -> i64 ;
 
 // --- Length units (§6) → u8 discriminant ---
@@ -50,8 +60,8 @@ resolutionUnit = "dpcm" -> 1u8 | "dppx" -> 2u8 | "dpi" -> 0u8 | "x" -> 3u8 ;
 // --- Flex units (Grid L1) → u8 discriminant ---
 flexUnit = "fr" -> 0u8 ;
 
-// --- Percentage (§5.1.1) ---
-percentageUnit = "%" ;
+// --- Percentage (§5.1.1) → u8 discriminant (255 marks the "%" tag) ---
+percentageUnit = "%" -> 255u8 ;
 
 // --- Dimension types ---
 

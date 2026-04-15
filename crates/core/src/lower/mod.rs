@@ -230,6 +230,7 @@ pub fn lower_to_ir<'a>(
         payload_layouts: HashMap::new(),
         string_index: HashMap::new(),
         struct_registry: HashMap::new(),
+        structural_alphabet: None,
     }
 }
 

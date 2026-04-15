@@ -617,6 +617,15 @@ fn compile_ast_common<'a>(
         timer.span("generate_dispatch_tables", || {
             bbnf_ir::passes::generate_dispatch_tables(&mut ir);
         });
+        // Tranche AU.2.7 — grammar-parameterised structural alphabet.
+        // Runs immediately after `generate_dispatch_tables` because
+        // the dispatch tables are the canonical source of Alt-branch
+        // first-byte data. The alphabet is read at codegen time by
+        // the scanner-kernel emitters in
+        // `crates/core/src/generate/regex/emit/simd.rs`.
+        timer.span("compute_structural_alphabet", || {
+            bbnf_ir::passes::sets::compute_structural_alphabet(&mut ir);
+        });
         timer.span("compute_regex_info", || {
             bbnf_ir::passes::compute_regex_info(&mut ir);
         });

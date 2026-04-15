@@ -236,6 +236,21 @@ pub struct GrammarIR {
     /// Not serialized: every compile rebuilds it from scratch.
     #[serde(skip, default)]
     pub struct_registry: HashMap<super::StringId, Vec<TypeDesc>>,
+
+    /// Tranche AU.2.7 — grammar-parameterised structural alphabet.
+    ///
+    /// The byte set `S` of every byte that could terminate a
+    /// scanner's inner loop (Alt dispatch starters, terminal
+    /// literal starters, digraph first-bytes). Populated by
+    /// [`passes::compute_structural_alphabet`] after
+    /// `generate_dispatch_tables`. Consumed by the scanner-kernel
+    /// emitters in `crates/core/src/generate/regex/emit/simd.rs`
+    /// to emit grammar-specific nibble-LUTs instead of per-site
+    /// ad-hoc sets. Digraph set `D` is the derived list of
+    /// two-byte structural delimiters (`/*`, `*/`, `->`, etc.).
+    /// Not serialized: every compile rebuilds it from scratch.
+    #[serde(skip, default)]
+    pub structural_alphabet: Option<passes::sets::StructuralAlphabet>,
 }
 
 impl GrammarIR {

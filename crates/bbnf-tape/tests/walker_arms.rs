@@ -114,6 +114,266 @@ fn altlinear_exhausts_all_branches_returns_syntax() {
     assert!(matches!(err, Err(DtaError::Syntax { .. })));
 }
 
+#[test]
+fn altlinear_nested_paren_group() {
+    // Grammar:
+    //   expr    = group | literal   (AltLinear)
+    //   group   = "(" expr ")"      (Seq — self-recursive through expr)
+    //   literal = "x"               (Literal)
+    // Input "(x)".
+    //
+    // Reproduces the bbnf bootstrap failure on `a = ( "x" ) ;` — paren-
+    // wrapped expressions fail when the enclosing AltLinear's branch is
+    // the `group` Seq and the Seq's middle child dispatches back to
+    // `expr` recursively. The bug surfaces because the inner AltLinear,
+    // trying `group` first, fails on `x` (input doesn't start with "("),
+    // which propagates a Syntax error up through `try_branch`. The
+    // outer AltLinear's savepoint-restore truncated past the OUTER Alt
+    // frame's parent_rec reservation — but when the INNER Alt surfaces
+    // a branch failure, the inner's own body-failure-restore must not
+    // rewind the OUTER Alt frame's state.
+    //
+    // Pre-fix expectation: this test fails because the inner AltLinear's
+    // first-branch failure propagates through `try_branch`'s
+    // stop_depth-bounded loop, but the bounded loop then re-enters
+    // the main dispatcher which dispatches against the OUTER Alt's
+    // state context, losing the inner recursion's frame correctness.
+    static EXPR_BRANCHES: &[DtaStateId] = &[DtaStateId(1), DtaStateId(5)];
+    // group = Seq[Literal("("), Ref(expr), Literal(")")]
+    static GROUP_CHILDREN: &[DtaStateId] = &[DtaStateId(2), DtaStateId(3), DtaStateId(4)];
+    static STATES: &[DtaState] = &[
+        // 0: expr = AltLinear[group, literal]
+        DtaState::AltLinear { branches: EXPR_BRANCHES },
+        // 1: group = Seq["(", expr, ")"]
+        DtaState::Seq {
+            children: GROUP_CHILDREN,
+            frame: DtaFrameKind::Seq,
+        },
+        // 2: "("
+        DtaState::Literal { text: "(" },
+        // 3: expr self-ref → dispatch back to state 0.
+        DtaState::Ref {
+            rule: DtaRuleId(0),
+            target: DtaStateId(0),
+        },
+        // 4: ")"
+        DtaState::Literal { text: ")" },
+        // 5: literal = "x"
+        DtaState::Literal { text: "x" },
+    ];
+    static RULE_ENTRIES: &[DtaRuleEntry] = &[DtaRuleEntry {
+        rule: DtaRuleId(0),
+        state: DtaStateId(0),
+    }];
+    let table = DtaTable {
+        states: STATES,
+        rule_entries: RULE_ENTRIES,
+        shunting_yard_rules: &[],
+        counter_optional_rules: &[],
+        max_nesting_depth: 8,
+        entry: DtaRuleId(0),
+    };
+
+    let mut cols = Columns::new();
+    let mut psi = PayloadStream::new();
+    let mut fd: Vec<u8> = Vec::new();
+    let result = dta_run(&table, b"(x)", &NullScanner, &mut cols, &mut psi, &mut fd);
+    assert!(
+        result.is_ok(),
+        "nested paren-group parse of `(x)` failed: {:?}",
+        result,
+    );
+
+    // Root: outer Alt selecting branch 0 (group). Contains a Seq child
+    // with 3 descendants: "(", inner Alt, ")".
+    let root = cols.materialize(0);
+    assert_eq!(root.kind(), TapeKind::Alt, "root is Alt");
+    assert!(root.has_children());
+    assert_eq!(root.variant_idx(), 0, "outer Alt selected group branch (0)");
+    assert_eq!(root.span_lo, 0);
+    assert_eq!(root.span_hi, 3, "outer Alt covers the full `(x)`");
+}
+
+#[test]
+fn altlinear_branch_fails_after_nested_ref_alt_partial() {
+    // Reproduces bbnf bootstrap's paren-expression failure mode by
+    // mimicking the exact shape: an outer AltLinear whose branches
+    // dispatch through a Ref into ANOTHER AltLinear, and at least one
+    // early branch partially succeeds (consumes bytes) before failing
+    // deep inside — forcing the outer Alt to restore state and try the
+    // next branch.
+    //
+    // Grammar shape:
+    //   outer = inner_alt_b | paren_group
+    //   inner_alt_b = "b" , "z"        (consumes "b" then fails on "z")
+    //   paren_group = "(" , outer , ")"
+    //   inner_alt_b is tried FIRST. Input "(b)" starts with "(" so
+    //   inner_alt_b fails immediately. But input "(bz)" — inside the
+    //   paren, outer recurses: inner_alt_b matches "b" then "z". OK.
+    //   The TEST case is input "(b)": outer is tried, first branch
+    //   inner_alt_b fails on "(", second paren_group succeeds.
+    //
+    //   Now make the fail DEEPER: make the first branch itself
+    //   dispatch via a Ref into an Alt, so the failure happens two
+    //   frames deep.
+    //
+    //   outer = a_or_b | paren_group
+    //   a_or_b = a_literal | b_literal   (Ref → Alt)
+    //   paren_group = "(" , outer , ")"
+    //   Input "(a)": outer tries a_or_b → dispatches to AltLinear{a,b}
+    //   → tries "a" → fails on "(". Tries "b" → fails. a_or_b errors.
+    //   Outer retries with paren_group: matches "(", recurses to outer,
+    //   tries a_or_b again → a matches. Matches ")". Done.
+    static OUTER_BRANCHES: &[DtaStateId] = &[DtaStateId(1), DtaStateId(4)];
+    static A_OR_B_BRANCHES: &[DtaStateId] = &[DtaStateId(2), DtaStateId(3)];
+    static GROUP_CHILDREN: &[DtaStateId] = &[DtaStateId(5), DtaStateId(6), DtaStateId(7)];
+    static STATES: &[DtaState] = &[
+        // 0: outer = AltLinear[ref→a_or_b, paren_group]
+        DtaState::AltLinear { branches: OUTER_BRANCHES },
+        // 1: Ref to a_or_b — target UNRESOLVED (DtaStateId::NONE).
+        // The walker MUST resolve via `rule_entry_for(rule)`. This
+        // mirrors bbnf's generated.rs where 11 Ref entries have
+        // `target: DtaStateId(65535)` and rely on the runtime lookup.
+        DtaState::Ref {
+            rule: DtaRuleId(1),
+            target: DtaStateId::NONE,
+        },
+        // 2: Literal("a")
+        DtaState::Literal { text: "a" },
+        // 3: Literal("b")
+        DtaState::Literal { text: "b" },
+        // 4: paren_group = Seq["(", outer_ref, ")"]
+        DtaState::Seq {
+            children: GROUP_CHILDREN,
+            frame: DtaFrameKind::Seq,
+        },
+        // 5: "("
+        DtaState::Literal { text: "(" },
+        // 6: Ref to outer (self-recursive)
+        DtaState::Ref {
+            rule: DtaRuleId(0),
+            target: DtaStateId(0),
+        },
+        // 7: ")"
+        DtaState::Literal { text: ")" },
+        // 8: a_or_b = AltLinear[a, b]  (entry of rule 1)
+        DtaState::AltLinear { branches: A_OR_B_BRANCHES },
+    ];
+    static RULE_ENTRIES: &[DtaRuleEntry] = &[
+        DtaRuleEntry {
+            rule: DtaRuleId(0),
+            state: DtaStateId(0),
+        },
+        DtaRuleEntry {
+            rule: DtaRuleId(1),
+            state: DtaStateId(8),
+        },
+    ];
+    let table = DtaTable {
+        states: STATES,
+        rule_entries: RULE_ENTRIES,
+        shunting_yard_rules: &[],
+        counter_optional_rules: &[],
+        max_nesting_depth: 8,
+        entry: DtaRuleId(0),
+    };
+
+    let mut cols = Columns::new();
+    let mut psi = PayloadStream::new();
+    let mut fd: Vec<u8> = Vec::new();
+    let result = dta_run(&table, b"(a)", &NullScanner, &mut cols, &mut psi, &mut fd);
+    assert!(
+        result.is_ok(),
+        "nested-ref Alt paren parse of `(a)` failed: {:?}",
+        result,
+    );
+}
+
+#[test]
+fn altlinear_branch_partial_match_then_fails_restores_pos() {
+    // Branch 0 matches ONE byte then fails on the second. Ensures
+    // pos is correctly restored for branch 1.
+    //
+    // outer = ab_seq | a_then_end
+    // ab_seq = "a" "b"          (tries; "a" matches, "b" fails)
+    // a_then_end = "a"           (tries second; succeeds)
+    static OUTER_BRANCHES: &[DtaStateId] = &[DtaStateId(1), DtaStateId(4)];
+    static AB_CHILDREN: &[DtaStateId] = &[DtaStateId(2), DtaStateId(3)];
+    static STATES: &[DtaState] = &[
+        DtaState::AltLinear { branches: OUTER_BRANCHES },
+        DtaState::Seq {
+            children: AB_CHILDREN,
+            frame: DtaFrameKind::Seq,
+        },
+        DtaState::Literal { text: "a" },
+        DtaState::Literal { text: "b" },
+        DtaState::Literal { text: "a" },
+    ];
+    static RULE_ENTRIES: &[DtaRuleEntry] = &[DtaRuleEntry {
+        rule: DtaRuleId(0),
+        state: DtaStateId(0),
+    }];
+    let table = DtaTable {
+        states: STATES,
+        rule_entries: RULE_ENTRIES,
+        shunting_yard_rules: &[],
+        counter_optional_rules: &[],
+        max_nesting_depth: 4,
+        entry: DtaRuleId(0),
+    };
+
+    let mut cols = Columns::new();
+    let mut psi = PayloadStream::new();
+    let mut fd: Vec<u8> = Vec::new();
+    let result = dta_run(&table, b"a", &NullScanner, &mut cols, &mut psi, &mut fd);
+    assert!(result.is_ok(), "partial-match restore failed: {:?}", result);
+    let root = cols.materialize(0);
+    assert_eq!(root.variant_idx(), 1);
+}
+
+#[test]
+fn altlinear_nested_paren_literal_only_works() {
+    // Sanity counter-case: `a = "x"` works without paren wrapping.
+    // If this ALSO fails the bug is wider than paren-specific.
+    static EXPR_BRANCHES: &[DtaStateId] = &[DtaStateId(1), DtaStateId(5)];
+    static GROUP_CHILDREN: &[DtaStateId] = &[DtaStateId(2), DtaStateId(3), DtaStateId(4)];
+    static STATES: &[DtaState] = &[
+        DtaState::AltLinear { branches: EXPR_BRANCHES },
+        DtaState::Seq {
+            children: GROUP_CHILDREN,
+            frame: DtaFrameKind::Seq,
+        },
+        DtaState::Literal { text: "(" },
+        DtaState::Ref {
+            rule: DtaRuleId(0),
+            target: DtaStateId(0),
+        },
+        DtaState::Literal { text: ")" },
+        DtaState::Literal { text: "x" },
+    ];
+    static RULE_ENTRIES: &[DtaRuleEntry] = &[DtaRuleEntry {
+        rule: DtaRuleId(0),
+        state: DtaStateId(0),
+    }];
+    let table = DtaTable {
+        states: STATES,
+        rule_entries: RULE_ENTRIES,
+        shunting_yard_rules: &[],
+        counter_optional_rules: &[],
+        max_nesting_depth: 8,
+        entry: DtaRuleId(0),
+    };
+
+    let mut cols = Columns::new();
+    let mut psi = PayloadStream::new();
+    let mut fd: Vec<u8> = Vec::new();
+    let result = dta_run(&table, b"x", &NullScanner, &mut cols, &mut psi, &mut fd);
+    assert!(result.is_ok(), "bare literal parse failed: {:?}", result);
+    let root = cols.materialize(0);
+    assert_eq!(root.kind(), TapeKind::Alt);
+    assert_eq!(root.variant_idx(), 1, "selected literal branch (1)");
+}
+
 // ── Repeat ──────────────────────────────────────────────────────────
 
 #[test]

@@ -194,7 +194,21 @@ pub fn finalise(columns: &mut Columns, frame_depth: &[u8]) {
         // The children at depth `d + 1` were tracked in the
         // immediately-preceding visits and have not yet been
         // invalidated — we read them first.
-        if columns.has_children_at(i_u32) {
+        //
+        // AW-I.W4δ: skip the `child_off` / `span_hi` re-derivation
+        // when the parser's inline writes are already authoritative
+        // (every `child_off != NONE` compound has the walker's own
+        // `close_compound` write). Pre-order tape layout (W1 adoption)
+        // places children AFTER the parent — the per-depth scratch
+        // slots read here would reflect an EARLIER sibling's frame,
+        // not this compound's own children, so re-writing would
+        // corrupt `span_hi` / `child_off` with stale data from a
+        // prior iteration of the same outer Repeat. Post-order tapes
+        // (legacy fn-per-rule) carry a `child_off == NONE` placeholder
+        // at close time; those still need the re-derivation.
+        if columns.has_children_at(i_u32)
+            && columns.child_off[i] == TapeOffset::NONE
+        {
             let child_d = d + 1;
             if let (Some(first), Some(last)) =
                 (first_at_depth[child_d], last_at_depth[child_d])

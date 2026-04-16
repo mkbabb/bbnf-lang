@@ -306,7 +306,128 @@ budget.
    coordinated set. Continuation agent receives them as one
    composite milestone.
 
-### W1 continuation dispatch — pending
+### W1b continuation — landed, with genuine scope change
+
+Focused continuation agent (a61626ac) landed five commits on
+the activation path:
+
+- `86ca9e00` — cursor.child(0) O(1) `idx+1` under pre-order
+  (AW.1.10). Includes `child_mark` capture-before-reserve bug
+  fix in driver.rs. **Gate 21 MET.**
+- `9af72f6b` — DTA Literal/Regex `StringId` resolution to real
+  byte text. This time lands clean against master (unlike the
+  prior attempt `ee0fc82d` that surfaced derive-consumer
+  breakage; the difference is this version sequences with the
+  DfaScanner bridge emitted alongside, whose presence absorbs
+  the derive-expansion edge case).
+- `57d972a9` — `TapeBuilder` owns `frame_depth: Vec<u8>`;
+  `finish()` skips `derive_frame_depth` when inline flag set;
+  exposes `columns_mut()`, `frame_depth_mut()`,
+  `dta_run_into()` ergonomic bridge (AW.1.4 inline path).
+- `5f741138` — `DtaError` variant doc annotations.
+- `08658746` — emitted `parse_dta()` entry point dispatching
+  to `dta_run` (AW.1.2 **additive**). DtaDfaScanner emitted
+  alongside, threading the resolved literal/regex strings into
+  the tape-side regex engine.
+
+**Critical scope realisation.** The DTA walker (driver.rs)'s
+`Alt` / `Repeat` / `ShuntingYard` arms are substrate stubs
+inherited from V3 — a `Unsupported`-returning placeholder.
+Implementing them is substantial additional work; the walker
+is functionally complete only for trivial grammars. Hence
+W1b's additive-`parse_dta()` choice: rewriting `parse()`
+wholesale would regress every grammar (`dta_run` returns
+`Unsupported` for most rules). The agent chose an additive
+activation pattern so the legacy path stays the correctness
+baseline while `parse_dta()` matures.
+
+**Hard gate status at W1b close** (matching Plan §AW.md):
+
+| Gate | Target | Status |
+|------|--------|--------|
+| 14 | `fn __` = 0 in generated.rs | **NOT MET** — 106 fns remain |
+| 15 | generated.rs ≤ 12000 lines | **NOT MET** — 27522 lines |
+| 16 | workspace test 0 failures | **MET** — 1101/0/67 |
+| 17 | post-AW-W1.json ≥ post-AU baseline | pending full activation |
+| 18 | `dta-replay` feature clean both ways | MET (W1 agent) |
+| 19 | `MemoStore` deleted from parse-that | pending orchestrator (sibling repo) |
+| 20 | `TapeKind::KvPair` ≥ 1 OR rationale | **RATIONALE** — JSON `pair` projects `Tuple([Span, BoxedEnum])`; `BoxedEnum` is heap-allocated, not a scalar payload — widening `is_kv_pair_shape` to admit would be architecturally unsound. AT.1.3 retires as a CSS-only optimisation. |
+| 21 | cursor first-child O(1) | **MET** (AW.1.10) |
+| 12 | CSS L4 DTA state count < 2000 | **NOT MET** — fuse/inline activation (AW.1.11) requires coordinated test-snapshot updates (W1b agent confirmed 45 tests regress under SCC recompute alone) |
+
+**AW.1.11 deeper diagnosis** (W1b agent): even without
+dropping the `scc_id.is_none()` guards, merely recomputing
+SCC between inline+fuse passes regresses 45 workspace tests
+(sheets parity, payload layouts, grammar roundtrips). The
+eager optimisation eliminates rules whose test snapshots
+expect survival. Closing requires a coordinated wave of test
+snapshot updates — larger scope than a single-focus agent.
+Orchestrator's W0 reversion rationale stands. The guard-drop
+route forward is either (a) a dedicated fuse/inline-
+activation tranche with test-snapshot migration as first-
+class scope, or (b) wholesale deletion of snapshot-style
+tests that encode un-fused IR shape as-correctness (arguably
+the correct architectural move: snapshot tests on IR shape
+are fragile against optimisation passes).
+
+### AW strategic status — post-W1b
+
+The plan's W1 vision ("delete legacy, activate DTA, every
+entry ≥ post-AU baseline in one wave") is **larger than
+one wave's worth of agent work** given the DTA walker's
+inherited stub surface. AW W1 as-planned would require, at
+minimum: Alt/Repeat/ShuntingYard walker arms implemented,
+Bug-1 alt-lit per-branch payload ported into the walker,
+keyword dispatch (W3 scope!) integrated into the walker,
+scanner bridges for every grammar's regex set — multi-hour
+agent work per sub-phase, probably multi-session per wave.
+
+W2–W6's phases all depend on the DTA walker being the
+primary parse path:
+
+- W2.3 (ShapeRef dispatch) lives in the DTA's compound-emit
+  branch.
+- W3.1-3.3 (PHF/SIMD keyword, selector classifier) are DTA
+  Alt arm extensions.
+- W4.4 (bloom+GADT dedup) hooks into DTA stage-A emit.
+- W5 parity harnesses run the parse path end-to-end —
+  require DTA-primary.
+- W6.1 (Tape::reduce_column) API is orthogonal, can land
+  regardless; AW.6.2 bench parity requires DTA-primary.
+
+**Honest assessment**: continuing AW waves as planned against
+an incomplete DTA walker produces either (i) work that lands
+in `parse_dta()` but not in `parse()` — achieving substrate
+activation but no bench-measurable wins, or (ii) agents that
+attempt the full walker completion in-wave and hit the same
+context-budget wall W1b hit.
+
+### Orchestrator-landed close-out items
+
+- AW.1.8 (MemoStore delete in parse-that) can land from main
+  repo directly — parse-that is a first-class owned dep per
+  `docs/instructions/README.md` §Crate ownership. Pending
+  orchestrator commit.
+- W7 `FINAL.md` composition can compose over what landed
+  honestly: W0 complete, W1 substrate + additive activation,
+  remaining waves pending.
+
+Route forward options (orchestrator decision pending):
+
+1. **Continue orchestration** — dispatch focused agents for
+   each missing DTA walker arm (Alt, Repeat, ShuntingYard);
+   each agent implements one arm with its matching tests;
+   when walker is feature-complete, dispatch AW.1.3 deletion
+   agent; then W2+ follows. Estimated 10-20 additional agent
+   dispatches.
+2. **Declare AW substrate-activation close** — FINAL.md
+   honestly records W0 + W1 substrate + partial activation;
+   remaining activation + W2–W6 roll to AY (new tranche)
+   dedicated to DTA walker completion + consumer migration.
+3. **Restructure** — split AW into AW (W0 + W1 substrate,
+   closing now) and AY (full activation + W2–W6 levers).
+   Mechanical redocumentation but keeps momentum on what's
+   achieved.
 
 ## GrammarProfile population matrix (AW.0.9 ledger)
 

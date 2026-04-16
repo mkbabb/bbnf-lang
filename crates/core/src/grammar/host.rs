@@ -370,17 +370,26 @@ fn absorb_item<'a, S: GrammarSink<'a>>(
 // ------------------------------------------------------------------
 
 /// `@recover ruleName syncExpr ;` — extract rule_name (first
-/// identifier descendant) and sync_expr (the directive itself).
+/// identifier descendant) and sync_expr (the `rhs` descendant).
 ///
 /// Under DTA, the identifier is nested inside the Seq wrappers the
 /// lifter emits for the rule body; a descendant search handles that.
+/// The sync expression is a full `rhs` body (the directive grammar
+/// is `"@recover" ?w , identifier ?w , rhs ?w , ( ";" | "." ) ?`);
+/// we pick it by rule_kind so the `metadata.rs::build_rule_meta`
+/// caller can hand it straight to `lower_rhs` without tripping on
+/// the terminator Alt. Falls back to the whole directive if the
+/// lifter inlined the rhs wrapper away — `dispatch_expression`'s
+/// directive arm returns Epsilon in that case rather than panic.
 fn decode_recover<'a>(item: BbnfBootstrapNodeView<'a>) -> Option<RecoverDirective<'a>> {
     let (lo, hi) = item.span();
     let input = item.input();
     let name_node = find_descendant_by_kind(item, BbnfBootstrapRuleKind::identifier)?;
+    let sync_expr = find_descendant_by_kind(item, BbnfBootstrapRuleKind::rhs)
+        .unwrap_or(item);
     Some(RecoverDirective {
         rule_name: name_node.span_text(),
-        sync_expr: item,
+        sync_expr,
         span: Span::new(lo as usize, hi as usize, input),
     })
 }

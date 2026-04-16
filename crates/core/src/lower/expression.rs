@@ -182,9 +182,17 @@ fn dispatch_expression<'a>(
 
         // Comments and directives are grammar-level metadata — they
         // produce no IR contribution. Directives (@recover, @import,
-        // @pretty, @ws, @token, @debug, @no_collapse) are consumed
-        // by host.rs during grammar extraction; expression lowering
-        // treats them as Epsilon.
+        // @pretty, @ws, @token, @debug, @host, @no_collapse) are
+        // consumed by host.rs during grammar extraction; expression
+        // lowering treats them as Epsilon.
+        //
+        // Every directive variant must be listed: under DTA the
+        // fallback `lower_term` descends into the compound's span
+        // text and reports `unknown leading byte '@'` (or the
+        // terminator `';'` when the sub-rule happens to carry its
+        // terminator Alt as a direct descendant). `host_directive`
+        // was dropped pre-AW-II; re-included here to close the
+        // gap.
         //
         // AU.2.5: the old `_0` sub-variants (`import_directive_0`,
         // `pretty_directive_0`, `debug_directive_0`) vanished once
@@ -199,7 +207,11 @@ fn dispatch_expression<'a>(
         | BbnfBootstrapRuleKind::pretty_directive
         | BbnfBootstrapRuleKind::ws_directive
         | BbnfBootstrapRuleKind::token_directive
-        | BbnfBootstrapRuleKind::debug_directive => {
+        | BbnfBootstrapRuleKind::debug_directive
+        | BbnfBootstrapRuleKind::host_directive
+        | BbnfBootstrapRuleKind::directive
+        | BbnfBootstrapRuleKind::directive_0
+        | BbnfBootstrapRuleKind::grammar_item_0 => {
             IrNode::Epsilon
         }
 
@@ -658,18 +670,12 @@ fn find_value_expr_child<'a>(
 fn find_type_annotation_child<'a>(
     node: BbnfBootstrapNodeView<'a>,
 ) -> Option<BbnfBootstrapNodeView<'a>> {
-    find_child_by_kind(node, BbnfBootstrapRuleKind::type_annotation)
-        .or_else(|| {
-            // Walk one level deeper for nested wrappers.
-            for c in node.children() {
-                if let Some(found) =
-                    find_child_by_kind(c, BbnfBootstrapRuleKind::type_annotation)
-                {
-                    return Some(found);
-                }
-            }
-            None
-        })
+    // The `type_annotation` compound lives at unpredictable depths
+    // under DTA's Seq wrappers (the mapping grouping may nest one
+    // or more structurally-anonymous Seq layers between the
+    // `mapping_node` and the inner `type_annotation`). A descendant
+    // search handles both fn-per-rule and DTA shapes uniformly.
+    find_descendant_by_kind(node, BbnfBootstrapRuleKind::type_annotation)
 }
 
 /// Lower a `factor = big_comment? term ?w modifier? big_comment?` view.

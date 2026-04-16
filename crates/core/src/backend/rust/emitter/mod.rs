@@ -10,7 +10,6 @@ mod binary;
 mod dispatch;
 pub(crate) mod dta;
 mod grammar;
-mod leaves;
 mod map_value;
 mod operator_chain;
 mod prettify;
@@ -113,37 +112,6 @@ fn collect_alt_payload_types(branches: &[AltBranch], ir: &GrammarIR) -> Vec<Type
 impl Emitter for RustEmitter {
     type Output = TokenStream;
     type Ctx = RustEmitCtx;
-
-    fn emit_literal_match(
-        &mut self,
-        value: &str,
-        guaranteed_byte: Option<u8>,
-        ctx: &mut Self::Ctx,
-    ) -> TokenStream {
-        self.emit_literal_match_impl(value, guaranteed_byte, ctx)
-    }
-
-    fn emit_regex_match(
-        &mut self,
-        pattern: &str,
-        regex_id: usize,
-        ir: &GrammarIR,
-        ctx: &mut Self::Ctx,
-    ) -> TokenStream {
-        self.emit_regex_match_impl(pattern, regex_id, ir, ctx)
-    }
-
-    fn emit_epsilon(&mut self, ctx: &mut Self::Ctx) -> TokenStream {
-        self.emit_epsilon_impl(ctx)
-    }
-
-    fn emit_seq_all_span(
-        &mut self,
-        child_outputs: Vec<TokenStream>,
-        ctx: &mut Self::Ctx,
-    ) -> TokenStream {
-        self.emit_seq_all_span_impl(child_outputs, ctx)
-    }
 
     fn emit_seq_grouped(
         &mut self,

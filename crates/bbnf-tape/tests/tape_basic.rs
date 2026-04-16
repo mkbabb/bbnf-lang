@@ -1916,3 +1916,164 @@ fn finalise_independently_reproduces_v2_via_helper() {
     let v2 = reference_v2_sibling_skip(n, &child_off, &has_children);
     assert_eq!(cols.sib_skip, v2, "direct finalise / V2 sib_skip mismatch");
 }
+
+// ── ShapeRef round-trip (AV.5.1) ─────────────────────────────────
+
+/// Build a ShapeRef record with no payload and verify round-trip.
+#[test]
+fn shape_ref_no_payload_round_trip() {
+    let mut b = TapeBuilder::new();
+    let off = b.push_shape_ref(10, 20, 7, &[]);
+    assert_eq!(off, TapeOffset(0));
+
+    let tape = b.finish().unwrap();
+    assert_eq!(tape.len(), 1);
+
+    let rec = tape.get(off);
+    assert_eq!(rec.kind(), TapeKind::ShapeRef);
+    assert_eq!(rec.span_lo, 10);
+    assert_eq!(rec.span_hi, 20);
+    assert_eq!(rec.shape_dict_idx(), 7);
+    assert!(!rec.shape_ref_has_payload());
+    assert_eq!(rec.child_off, TapeOffset::NONE);
+    // ShapeRef is classified as a leaf (no structural children).
+    assert!(!rec.has_children());
+    assert!(TapeKind::ShapeRef.is_leaf());
+    assert!(TapeKind::ShapeRef.is_shape_ref());
+}
+
+/// Build a ShapeRef with a packed payload and verify the packed
+/// bytes round-trip through `pay_agg`.
+#[test]
+fn shape_ref_with_payload_round_trip() {
+    let mut b = TapeBuilder::new();
+    // Synthetic 3-leaf-hole payload: each leaf is (lo: u32, hi: u32) =
+    // 8 bytes; total 24 bytes.
+    let mut blob = Vec::new();
+    blob.extend_from_slice(&100u32.to_le_bytes());
+    blob.extend_from_slice(&110u32.to_le_bytes());
+    blob.extend_from_slice(&110u32.to_le_bytes());
+    blob.extend_from_slice(&115u32.to_le_bytes());
+    blob.extend_from_slice(&115u32.to_le_bytes());
+    blob.extend_from_slice(&130u32.to_le_bytes());
+
+    let off = b.push_shape_ref(100, 130, 3, &blob);
+    let tape = b.finish().unwrap();
+
+    let rec = tape.get(off);
+    assert_eq!(rec.kind(), TapeKind::ShapeRef);
+    assert_eq!(rec.shape_dict_idx(), 3);
+    assert!(rec.shape_ref_has_payload());
+    let arena_offset = rec.child_off.0 as usize;
+    let arena = tape.arena();
+    assert!(arena_offset + 24 <= arena.len());
+    assert_eq!(&arena[arena_offset..arena_offset + 24], blob.as_slice());
+}
+
+/// Lazy expansion via `TapeCursor::shape_ref_children` reconstructs
+/// child cursors from the template.
+#[test]
+fn shape_ref_cursor_lazy_expansion() {
+    use bbnf_tape::ShapeEntry;
+
+    let mut b = TapeBuilder::new();
+    // Template: 5 children. Positions 0, 2, 4 are leaf holes (Span);
+    // positions 1 and 3 are structural (Literal).
+    // Each leaf hole = 8 bytes (span lo, hi). Total payload = 24 bytes.
+    let mut blob = Vec::new();
+    // Hole 0 — child 0 — span [10, 18)
+    blob.extend_from_slice(&10u32.to_le_bytes());
+    blob.extend_from_slice(&18u32.to_le_bytes());
+    // Hole 1 — child 2 — span [20, 25)
+    blob.extend_from_slice(&20u32.to_le_bytes());
+    blob.extend_from_slice(&25u32.to_le_bytes());
+    // Hole 2 — child 4 — span [30, 42)
+    blob.extend_from_slice(&30u32.to_le_bytes());
+    blob.extend_from_slice(&42u32.to_le_bytes());
+
+    let off = b.push_shape_ref(10, 42, 0, &blob);
+    let tape = b.finish().unwrap();
+
+    static CHILD_KINDS: [u8; 5] = [
+        TapeKind::Span as u8,
+        TapeKind::Literal as u8,
+        TapeKind::Span as u8,
+        TapeKind::Literal as u8,
+        TapeKind::Span as u8,
+    ];
+    static LEAF_OFFSETS: [u16; 5] = [0, u16::MAX, 8, u16::MAX, 16];
+    static ENTRY: ShapeEntry = ShapeEntry {
+        shape_hash: 0xDEADBEEF,
+        rule: RuleId(42),
+        child_kinds: &CHILD_KINDS,
+        leaf_payload_offsets: &LEAF_OFFSETS,
+        payload_bytes: 24,
+    };
+
+    let cursor = TapeCursor::new(&tape, off);
+    assert_eq!(cursor.shape_ref_child_count(&ENTRY), 5);
+
+    let children: Vec<_> = cursor.shape_ref_children(&ENTRY).collect();
+    assert_eq!(children.len(), 5);
+
+    // Child 0: leaf hole, Span [10, 18).
+    assert_eq!(children[0].kind, TapeKind::Span);
+    assert!(children[0].is_leaf_hole);
+    assert_eq!(children[0].span_lo, 10);
+    assert_eq!(children[0].span_hi, 18);
+
+    // Child 1: structural Literal, span inherited from parent.
+    assert_eq!(children[1].kind, TapeKind::Literal);
+    assert!(!children[1].is_leaf_hole);
+    assert_eq!(children[1].span_lo, 10);
+    assert_eq!(children[1].span_hi, 42);
+
+    // Child 2: leaf hole, Span [20, 25).
+    assert_eq!(children[2].kind, TapeKind::Span);
+    assert!(children[2].is_leaf_hole);
+    assert_eq!(children[2].span_lo, 20);
+    assert_eq!(children[2].span_hi, 25);
+
+    // Child 4: leaf hole, Span [30, 42).
+    assert_eq!(children[4].kind, TapeKind::Span);
+    assert!(children[4].is_leaf_hole);
+    assert_eq!(children[4].span_lo, 30);
+    assert_eq!(children[4].span_hi, 42);
+}
+
+/// On a non-ShapeRef record, `shape_ref_children` yields no items.
+#[test]
+fn shape_ref_children_empty_on_non_shape_ref() {
+    use bbnf_tape::ShapeEntry;
+
+    let mut b = TapeBuilder::new();
+    let off = b.push_leaf(TapeKind::Span, 0, 10, 0, 0);
+    let tape = b.finish().unwrap();
+
+    static CHILD_KINDS: [u8; 1] = [TapeKind::Span as u8];
+    static LEAF_OFFSETS: [u16; 1] = [0];
+    static ENTRY: ShapeEntry = ShapeEntry {
+        shape_hash: 0,
+        rule: RuleId(0),
+        child_kinds: &CHILD_KINDS,
+        leaf_payload_offsets: &LEAF_OFFSETS,
+        payload_bytes: 8,
+    };
+
+    let cursor = TapeCursor::new(&tape, off);
+    assert_eq!(cursor.shape_ref_child_count(&ENTRY), 0);
+    assert_eq!(cursor.shape_ref_children(&ENTRY).count(), 0);
+}
+
+/// Verify the `shape_dict_idx` 5-bit packing handles the boundary
+/// values 0 and 31 correctly.
+#[test]
+fn shape_ref_dict_idx_boundary() {
+    let mut b = TapeBuilder::new();
+    let off_min = b.push_shape_ref(0, 1, 0, &[]);
+    let off_max = b.push_shape_ref(1, 2, 31, &[]);
+    let tape = b.finish().unwrap();
+
+    assert_eq!(tape.get(off_min).shape_dict_idx(), 0);
+    assert_eq!(tape.get(off_max).shape_dict_idx(), 31);
+}

@@ -62,21 +62,31 @@ architectural changes to any of them are first-class work items, not
   tranche is accepted only when the plan document declares the
   deferral explicitly, with rationale, at plan time — not silently
   during execution.
-- **Execute the plan, not around it.** Large architectural changes
-  the plan stipulates — substrate swap, path deletion, cascading
-  pass rewrite, wholesale deletion of a helper module set — land
-  in the declaring tranche. Placeholder arms, single-probe stubs,
-  `Unsupported` branches, additive `parse_*`-style surfaces
-  shadowing the primary path, and "substrate only" landings that
-  leave the consumer unwired are architectural debt, not
-  pragmatism. Under contact, dispatch more agents, split into sub-
-  waves, carry plan-declared intentional unworkability across
-  waves — but execute. Conservative engineering means high-quality
-  execution; architecture-aversion is its opposite. Escalate to
-  the user only for hard environmental blockers (upstream compiler
-  bug, irrecoverable state, authorization boundary) — scope
-  reveal-under-contact is re-plan-with-more-agents territory, not
-  escalation territory.
+- **Execute the plan, not around it.** The plan declares intent;
+  contact reveals scope. The default response to scope-reveal-
+  under-contact is re-plan-with-more-agents: dispatch more
+  sub-agents, split into sub-waves, carry plan-declared
+  intentional unworkability across waves. Placeholder arms,
+  single-probe stubs, `Unsupported` branches, "substrate only"
+  landings that leave the consumer unwired, and additive
+  shadow-surfaces that keep a legacy path alive beside a partial
+  replacement are architectural debt dressed as pragmatism.
+  Conservative engineering is high-quality execution of what the
+  plan stipulates; architecture-aversion is its opposite.
+  Escalate only for hard environmental blockers — compiler bug,
+  authorization boundary, irrecoverable state. Scope-reveal is
+  not an escalation condition.
+- **NO god modules.** At every level — crate, module, file —
+  separate concerns into proper sub-units. A file that grows past
+  a natural responsibility boundary factors into a directory
+  module (`foo/` with `foo/lib.rs`, `foo/kind.rs`, `foo/pass.rs`)
+  over flat siblings (`foo.rs`, `foo_kind.rs`, `foo_pass.rs`).
+  "Utils" / "helpers" / "common" modules that accumulate
+  orthogonal concerns are god modules in gestation — name the
+  responsibility, split accordingly. Crates mirror the same rule:
+  general-purpose infrastructure (e-graph, cost model, CSP
+  substrate, regex engine) lives in its own crate, not stuffed
+  into a domain crate.
 - **Generated files are output of fresh regen; never hand-patch.**
   `generated.rs` is produced by `scripts/bootstrap-bbnf.sh`. The
   only legitimate edits are via that script.

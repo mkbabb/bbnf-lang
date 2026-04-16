@@ -421,12 +421,22 @@ normalize (lightningcss); CI step wired in
 
 ### W5 — Visitor reduce_column + SIMD pack + bench parity [2 parallel]
 
-#### W5.1 `Tape::reduce_column<C, R>` + per-column codegen
+#### W5.1 `Tape::reduce_column<C, R>` + per-column codegen + SoA 4-lane SIMD pack
 
 Owner: `crates/bbnf-tape/src/columns.rs` (API surface);
 `crates/core/src/backend/rust/emitter/visitor.rs`
 (codegen specialisations); `crates/core/tests/visitor_reduce.rs`
 (new).
+
+**Substrate lineage.** AV.2.5 landed the SoA-substrate's
+reordered-unrolling kernel as codegen: `emit_visitor_kernels`
+emits, per active f64 payload column, a 4-lane scalar left-
+fold-free reducer. The 4 lanes break the strict-IEEE left-
+fold dependency chain; LLVM's auto-vectoriser produces four
+independent scalar `fadd d*` chains on AArch64. AV measured
+3.3× on synthetic `Vec<f64>`. AV's hard gate 12 ("6×
+packed SIMD") was partial at AV close — the consumer API
+and SIMD promotion never shipped. W5.1 ships both.
 
 ```rust
 let total: f64 = parsed.tape().reduce_column::<F64Column, _>(
@@ -435,24 +445,28 @@ let total: f64 = parsed.tape().reduce_column::<F64Column, _>(
 );
 ```
 
-Emitter produces one `reduce_column<C, R>` impl per
-active payload column per grammar, driven by
-`GRAMMAR_PROFILE.active_columns`. LLVM monomorphises the
-reducer at the call site, yielding the V2.5 4-lane
-reordered-unrolled loop.
+Emitter extends `visitor.rs::emit_visitor_kernels` to produce
+one `reduce_column<C, R>` impl per active payload column per
+grammar, driven by `GRAMMAR_PROFILE.active_columns`. LLVM
+monomorphises the reducer at the call site, preserving the
+AV.2.5 4-lane scalar reordered-unrolled loop as the inner
+body when the reducer matches `|acc, x| acc + x` associatively.
 
 Test surface: one reducer per grammar in `visitor_reduce.rs`.
-JSON sum-all-f64 on canada.json. CSS count-all-
-declarations on bootstrap.css. BBNF count-all-rules on
-bbnf_self.bbnf. Sheets sum-all-cell-refs on stress.txt.
-Each test matches V2.5's microbench performance ceiling.
+JSON sum-all-f64 on canada.json. CSS count-all-declarations
+on bootstrap.css. BBNF count-all-rules on bbnf_self.bbnf.
+Sheets sum-all-cell-refs on stress.txt. Each test matches
+the AV.2.5 microbench 3.3× scalar baseline first, then
+clears the 6× SIMD-packed gate.
 
-Promote the emitted inner loop to packed
-`std::simd::f64x4` (or arch-intrinsic `vfaddq_f64` pairs
-on NEON, `_mm256_add_pd` on AVX2). The scalar 4-lane
-reordering AV.2.5 delivered breaks the strict-IEEE left-
-fold dependency; SIMD packing completes the 6× SIMD-
-packed gate.
+Promote the emitted inner loop to packed `std::simd::f64x4`
+(or arch-intrinsic `vfaddq_f64` pairs on NEON,
+`_mm256_add_pd` on AVX2). Portable-simd is stable; no
+nightly dependence. The scalar 4-lane reordering AV.2.5
+delivered is the substrate; SIMD packing completes the 6×
+gate on AVX2 and documents the AArch64 per-arch ceiling
+(NEON is 2-lane f64-wide; portable f64x4 lowers to 2×
+pairs).
 
 Verify on canada.json's f64 column (~6M entries):
 ```

@@ -1,8 +1,64 @@
 # Tranche AW — PROGRESS log
 
 Indefatigable orchestration record. Dated entries; what landed,
-what committed, what blocked, what shifted. The diff between
-`AW.md` and this file names every contact-adapted shift.
+what committed, what blocked, what shifted.
+
+## Status dashboard — 2026-04-16
+
+### AW-I — Activation (DTA primary, legacy deleted, fuse firing)
+
+| Wave | Scope | Agents | Status |
+|------|-------|--------|--------|
+| W0 | cleanup + hygiene + Color view + CI gate | 5 parallel | ✓ landed |
+| W1 | DTA substrate skeleton (walker + cursor O(1) + inline finalise + replay feature) | 1 serial | ✓ landed (stubs open) |
+| W2 | walker completion + MemoStore retire + SCC plumbing + snapshot audit | 4 parallel | pending |
+| W3 | `parse()` swap + regen | 1 serial | pending (workspace intentionally breaks) |
+| W4 | legacy `fn __<rule>` deletion + fuse/inline activation + snapshot migration | 5 parallel | pending |
+| W5 | FINAL-I + bench + close | 1 serial | pending |
+
+Workspace at AW-I HEAD `ff0b7fe7`: **1101/0/67**.
+
+Bench schedule: one cold run at AW-I.W5 close →
+`docs/benchmarks/post-AW-I.json`. No per-wave checkpoints —
+W2–W4 touch substrate the legacy path still dominates.
+
+### AW-II — Optimisation + parity
+
+| Wave | Scope | Agents | Status |
+|------|-------|--------|--------|
+| W1 | PSI rayon + ShapeRef + Bug 2b residuals | 3 parallel | pending |
+| W2 | PHF + SIMD keyword + selector classifier + scanner closure | 4 parallel | pending |
+| W3 | document-parallel + bloom + Pratt generalisation + profile calibration | 4 parallel | pending |
+| W4 | walker + reader + sonic-rs + lightningcss parity harnesses | 3 parallel | pending |
+| W5 | `Tape::reduce_column<C,R>` + SoA 4-lane SIMD pack + bench parity | 2 parallel | pending |
+| W6 | FINAL + close | 1 serial | pending |
+
+Bench schedule: per-wave cold run at W1–W5 close →
+`docs/benchmarks/post-AW-II-W{N}.json`. W6 composes
+`docs/benchmarks/post-AW.json` as multi-wave history.
+
+### SoA 4-lane — tranche placement
+
+The SoA-substrate reordered-unrolling kernel (AV.2.5) emits
+today via `visitor.rs::emit_visitor_kernels` as a 4-lane
+scalar left-fold-free reducer. **AW-II.W5.1** ships the
+`Tape::reduce_column<C,R>` consumer API + per-active-payload-
+column codegen specialisation driven by
+`GRAMMAR_PROFILE.active_columns`, and promotes the scalar
+4-lane to packed `f64x4` SIMD to clear AV's 6× gate.
+
+### Research artefacts — `research/01…05-*.md`
+
+Five design docs feed both tranches. `01-dta-driver-design`
++ `03-pratt-lowering-generality` drive AW-I.W2.1
+(walker completion). `02-shaperef-runtime-dispatch` drives
+AW-II.W1.2. `04-named-struct-abi-finalisation` already
+consumed by AW-I.W0.5. `05-bench-checkpoint-protocol` drives
+AW-I.W5 + AW-II per-wave benches.
+
+---
+
+## Historical log
 
 ## 2026-04-16 — AW kickoff
 

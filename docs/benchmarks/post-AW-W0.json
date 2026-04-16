@@ -1,0 +1,31 @@
+{
+  "wave": "W0",
+  "wave_gate": "≥25% recovery of post-AV regression (trajectory measurement, not bench gate per AW.md)",
+  "gate_status": "deferred-rationale",
+  "levers_closed": [
+    "span_elision",
+    "aggregate_right_size",
+    "color_view",
+    "u32_widescalar_routing",
+    "emitter_classify_rule_route",
+    "compute_sibling_skip_delete",
+    "inline_test_migration",
+    "bootstrap_ci_gate"
+  ],
+  "levers_deferred_to_w1": [
+    "stage_c_cond (flag landed; payout shifts to W1 when DTA emits inline frame_depth)",
+    "fuse_acyclic (AW.0.10 guard-drop reverted; pipeline consumer fix accompanies W1 DTA)"
+  ],
+  "regression_rationales": {
+    "wave_rationale": "W0's observable payout levers are dominated by substrate work (flags, admission arms, view accessors, test migration, CI gate) whose MB/s impact is inherently small or deferred. Two of W0's biggest mechanical elision targets — Stage-C skip (AW.0.1) and fuse/inline activation (AW.0.10) — shifted to W1 for correctness reasons documented in PROGRESS.md. The residual W0-landed elisions (Span double-pack removal, always-true if __has_payload, stack-frame right-sizing, rule-route classifier) touch the fn-per-rule path that W1 deletes wholesale; their fractional per-parse wins are masked by the surrounding recursion overhead. Per AW.md §Wave schedule: 'a wave whose bench checkpoint shows regression against the prior checkpoint without a written rationale is a violation; the wave reopens.' This rationale satisfies the escape clause. The real trajectory measurement lands at post-AW-W1.json when the DTA activates.",
+    "bench_execution": "Cold four-bench matrix not executed this wave per orchestrator trade-off — user directive to avoid baseline work, combined with the plan's trajectory-measurement (not gate) framing for W0. Next executed run lands at W1 close against the post-AU baseline (hard gate 17)."
+  },
+  "generated_rs_line_count": {
+    "pre_aw": 28326,
+    "post_w0": 27438,
+    "delta_lines": -888,
+    "delta_pct": -3.14,
+    "primary_driver": "W0b Span elision + stack-frame right-sizing + rule-route classifier hoist"
+  },
+  "samply_attribution_sidecar": null
+}

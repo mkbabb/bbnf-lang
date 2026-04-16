@@ -347,41 +347,71 @@ impl PayloadStream {
     /// [`Self::fill_columns`] selects this path when the parallel
     /// break-even gate is not cleared.
     ///
-    /// Workers own the columns mutably for the duration of the walk;
-    /// the loop touches each column's slot once. The match on
-    /// [`PayloadKind`] compiles to a jump table.
+    /// Same write strategy as the parallel path — disjoint slot
+    /// writes via [`ColumnCells`] — so the two paths share an
+    /// observable behaviour. The match on [`PayloadKind`] compiles
+    /// to a jump table; the body of [`write_decoded`] is the same
+    /// scanner ladder both paths execute.
     fn fill_sequential(&self, input: &[u8], columns: &mut Columns) -> usize {
-        let len_required = self.required_column_capacities();
-        len_required.reserve(columns);
+        let caps = self.required_column_capacities();
+        caps.reserve(columns);
+        let cells = ColumnCells::from(&mut *columns);
+        // SAFETY: same disjointness invariant as the parallel path,
+        // exercised serially. Every job's `column_idx` is unique per
+        // `PayloadKind`; the columns are pre-sized to admit every
+        // slot. The closure has exclusive `&mut Columns` access for
+        // the duration of the walk so the cells outlive every write.
         for job in &self.jobs {
-            apply_job(job, input, columns);
+            unsafe {
+                write_decoded(job, input, &cells);
+            }
         }
         self.jobs.len()
     }
 
     /// Parallel Stage-B walk via rayon `par_chunks` over the PSI
-    /// stream. Each worker decodes its chunk into a local scratch
-    /// buffer, then a sequential merge pass writes the decoded values
-    /// into the column slots in PSI order.
+    /// stream. Each worker decodes its chunk's jobs and writes the
+    /// decoded values directly into the matching column slots.
     ///
-    /// Two-phase to keep the column writes non-contended: workers
-    /// only read `input` (immutable); the merge pass is the sole
-    /// writer of the column substrate. The chunk-local scratch
-    /// allocations dominate the cost only on inputs below the
-    /// break-even gate — by construction, those inputs take the
-    /// sequential path.
+    /// **Safety contract.** Stage A guarantees every job's
+    /// `column_idx` is unique per `PayloadKind` — a slot in
+    /// `pay_narrow`, `pay_wide`, or `pay_agg` is touched by exactly
+    /// one job. The columns are pre-resized to the required
+    /// capacities by [`Self::required_column_capacities`], so every
+    /// slot is in-bounds and disjoint across workers. Writes are
+    /// raw-pointer stores guarded by this disjointness invariant —
+    /// no `&mut T` aliases ever co-exist across threads.
+    ///
+    /// Cache lines: [`Self::CHUNK_RECS`] is 4, so each rayon chunk
+    /// owns one 64 B line of `PayloadJob`s on the read side.
+    /// Destination column writes can land on shared cache lines
+    /// (adjacent `column_idx` values), but the writes themselves are
+    /// disjoint and the underlying architectures (x86, ARM) tolerate
+    /// concurrent stores to different bytes within a line at the
+    /// hardware-coherence level.
     #[cfg(feature = "rayon")]
     fn fill_parallel(&self, input: &[u8], columns: &mut Columns) -> usize {
-        let len_required = self.required_column_capacities();
-        len_required.reserve(columns);
-        let decoded: Vec<DecodedValue> = self
-            .jobs
+        let caps = self.required_column_capacities();
+        caps.reserve(columns);
+        // Capture raw pointers + lengths so the parallel closure can
+        // write into disjoint slots without holding a `&mut Vec<_>`
+        // across threads. The disjointness invariant comes from
+        // Stage A's per-kind monotonic `column_idx` allocation.
+        let cells = ColumnCells::from(&mut *columns);
+        // SAFETY: every job's `column_idx` is unique per `PayloadKind`
+        // (Stage A invariant), the columns are pre-sized to admit
+        // every job's slot (caps.reserve above), and the cell pointers
+        // outlive the par_chunks closure (cells captured by ref into
+        // each thread).
+        self.jobs
             .par_chunks(Self::CHUNK_RECS)
-            .flat_map_iter(|chunk| chunk.iter().map(|job| decode_job(job, input)))
-            .collect();
-        for (job, value) in self.jobs.iter().zip(decoded.iter()) {
-            commit_value(job, value, columns);
-        }
+            .for_each(|chunk| {
+                for job in chunk {
+                    unsafe {
+                        write_decoded(job, input, &cells);
+                    }
+                }
+            });
         self.jobs.len()
     }
 
@@ -446,71 +476,120 @@ impl ColumnCapacities {
     }
 }
 
-/// Decode-only output of a Stage-B worker. Produced in the parallel
-/// chunk closure, consumed by the sequential commit pass; lifetime-
-/// bound to the input slice so the `String` / `AggregateLarge`
-/// variants point at the source bytes (no per-job allocation).
-#[derive(Debug)]
-enum DecodedValue<'src> {
-    Narrow(u32),
-    Wide(u64),
-    /// Slice view into `input` — the bytes the commit pass copies
-    /// into [`Columns::pay_agg`] at the job's `column_idx` offset.
-    Bytes(&'src [u8]),
+/// Raw cell pointers + lengths into a [`Columns`] substrate.
+///
+/// Captured by [`PayloadStream::fill_sequential`] /
+/// [`PayloadStream::fill_parallel`] before the walk so workers can
+/// write into disjoint slots without holding a `&mut Vec<_>` across
+/// thread boundaries. The disjointness invariant — every job's
+/// `(kind, column_idx)` pair is unique — comes from Stage A's
+/// monotonic per-kind allocation, so two writes never target the
+/// same byte.
+///
+/// The struct is `Send + Sync` because raw pointers carry no `Send`
+/// inheritance constraint; the safety contract lives at the
+/// `unsafe` write site.
+#[derive(Clone, Copy)]
+struct ColumnCells {
+    pay_narrow: *mut u32,
+    pay_narrow_len: usize,
+    pay_wide: *mut u64,
+    pay_wide_len: usize,
+    pay_agg: *mut u8,
+    pay_agg_len: usize,
 }
 
-/// Sequential decode + write — the unit of work the sequential path
-/// performs once per job.
-fn apply_job(job: &PayloadJob, input: &[u8], columns: &mut Columns) {
-    let value = decode_job(job, input);
-    commit_value(job, &value, columns);
+// SAFETY: `ColumnCells` carries raw pointers into a `&mut Columns`
+// that outlives the `par_chunks` walk — the `fill_parallel` /
+// `fill_sequential` callers hold exclusive `&mut Columns` access for
+// the entire duration of the closure, and the disjointness invariant
+// above guarantees no two concurrent writes touch the same address.
+unsafe impl Send for ColumnCells {}
+unsafe impl Sync for ColumnCells {}
+
+impl From<&mut Columns> for ColumnCells {
+    fn from(columns: &mut Columns) -> Self {
+        Self {
+            pay_narrow: columns.pay_narrow.as_mut_ptr(),
+            pay_narrow_len: columns.pay_narrow.len(),
+            pay_wide: columns.pay_wide.as_mut_ptr(),
+            pay_wide_len: columns.pay_wide.len(),
+            pay_agg: columns.pay_agg.as_mut_ptr(),
+            pay_agg_len: columns.pay_agg.len(),
+        }
+    }
 }
 
-/// Decode a single job's source slice into a [`DecodedValue`]. Pure
-/// — no column writes — so the parallel path can run this in the
-/// chunk closure without taking a `&mut Columns`.
+/// Decode `job`'s source slice and write the result into the
+/// matching column slot at `job.column_idx`.
+///
+/// # Safety
+///
+/// - `cells` must point at a valid `Columns` substrate that outlives
+///   this call — established by [`PayloadStream::fill_sequential`] /
+///   [`PayloadStream::fill_parallel`] holding a `&mut Columns`
+///   throughout.
+/// - Every job's `(kind, column_idx)` must be unique across all
+///   concurrent invocations — established by Stage A's per-kind
+///   monotonic `column_idx` allocation.
+/// - `column_idx` must address a pre-allocated slot — established by
+///   [`PayloadStream::required_column_capacities`] +
+///   [`ColumnCapacities::reserve`] sizing the columns to admit every
+///   job before the walk begins.
 #[inline]
-fn decode_job<'src>(job: &PayloadJob, input: &'src [u8]) -> DecodedValue<'src> {
+unsafe fn write_decoded(job: &PayloadJob, input: &[u8], cells: &ColumnCells) {
     let lo = job.input_lo as usize;
     let hi = job.input_hi as usize;
     let slice = &input[lo..hi];
     match job.kind {
         PayloadKind::F64 => {
             let s = std::str::from_utf8(slice).unwrap_or("0");
-            DecodedValue::Wide(s.parse::<f64>().unwrap_or(0.0).to_bits())
+            let bits = s.parse::<f64>().unwrap_or(0.0).to_bits();
+            debug_assert!((job.column_idx as usize) < cells.pay_wide_len);
+            unsafe {
+                *cells.pay_wide.add(job.column_idx as usize) = bits;
+            }
         }
         PayloadKind::I64 => {
             let s = std::str::from_utf8(slice).unwrap_or("0");
-            DecodedValue::Wide(s.parse::<i64>().unwrap_or(0) as u64)
+            let bits = s.parse::<i64>().unwrap_or(0) as u64;
+            debug_assert!((job.column_idx as usize) < cells.pay_wide_len);
+            unsafe {
+                *cells.pay_wide.add(job.column_idx as usize) = bits;
+            }
         }
-        PayloadKind::U8 => DecodedValue::Narrow(slice.first().copied().unwrap_or(0) as u32),
-        PayloadKind::Bool => DecodedValue::Narrow(if slice == b"true" { 1 } else { 0 }),
-        PayloadKind::HexU32 => DecodedValue::Narrow(parse_hex_u32(slice)),
-        PayloadKind::String | PayloadKind::AggregateLarge => DecodedValue::Bytes(slice),
-    }
-}
-
-/// Commit a decoded value into the matching column slot. Called
-/// sequentially in both fill paths — the parallel path collects
-/// values first, then commits in order.
-#[inline]
-fn commit_value(job: &PayloadJob, value: &DecodedValue<'_>, columns: &mut Columns) {
-    match (job.kind, value) {
-        (k, DecodedValue::Narrow(v)) if k.is_narrow() => {
-            columns.pay_narrow[job.column_idx as usize] = *v;
+        PayloadKind::U8 => {
+            let value = slice.first().copied().unwrap_or(0) as u32;
+            debug_assert!((job.column_idx as usize) < cells.pay_narrow_len);
+            unsafe {
+                *cells.pay_narrow.add(job.column_idx as usize) = value;
+            }
         }
-        (k, DecodedValue::Wide(v)) if k.is_wide() => {
-            columns.pay_wide[job.column_idx as usize] = *v;
+        PayloadKind::Bool => {
+            let value: u32 = if slice == b"true" { 1 } else { 0 };
+            debug_assert!((job.column_idx as usize) < cells.pay_narrow_len);
+            unsafe {
+                *cells.pay_narrow.add(job.column_idx as usize) = value;
+            }
         }
-        (k, DecodedValue::Bytes(bytes)) if k.is_arena() => {
+        PayloadKind::HexU32 => {
+            let value = parse_hex_u32(slice);
+            debug_assert!((job.column_idx as usize) < cells.pay_narrow_len);
+            unsafe {
+                *cells.pay_narrow.add(job.column_idx as usize) = value;
+            }
+        }
+        PayloadKind::String | PayloadKind::AggregateLarge => {
             let start = job.column_idx as usize;
-            columns.pay_agg[start..start + bytes.len()].copy_from_slice(bytes);
+            debug_assert!(start + slice.len() <= cells.pay_agg_len);
+            unsafe {
+                std::ptr::copy_nonoverlapping(
+                    slice.as_ptr(),
+                    cells.pay_agg.add(start),
+                    slice.len(),
+                );
+            }
         }
-        _ => debug_assert!(
-            false,
-            "PayloadKind {:?} does not match decoded value variant",
-            job.kind
-        ),
     }
 }
 

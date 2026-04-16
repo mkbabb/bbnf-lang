@@ -70,8 +70,8 @@ per grammar.
 | Wave | Agents | Bench gate |
 |------|--------|------------|
 | W1 PSI + ShapeRef + Bug 2b | 3 parallel | bootstrap ≥ 700 MB/s; twitter decode_json_string self-time < 5% |
-| W2 PHF + SIMD + classifier + scanner | 4 parallel | bootstrap ≥ 900 MB/s; tailwind 4c ≥ 1.4 GB/s; `__compoundSelector` self-time < 15% |
-| W3 parallel parse + bloom + Pratt + calibration | 4 parallel | tailwind 4c ≥ 1.2 GB/s; canada 4c ≥ 1800 MB/s; parse_simple ≥ 250 MB/s |
+| W2 PHF/freq/bucket + SIMD/u8x32 + classifier + scanner migration + scanner-cluster | 5 parallel | bootstrap ≥ 900 MB/s; tailwind 4c ≥ 1.4 GB/s; `__compoundSelector` self-time < 15% |
+| W3 list/fork + bloom/pattern-dedup + Pratt + calibration/ws-polish + cost-model grid | 5 parallel | tailwind 4c ≥ 1.2 GB/s; canada 4c ≥ 1800 MB/s; parse_simple ≥ 250 MB/s |
 | W4 walker + reader + parity harnesses | 3 parallel | every parity harness green; ignored ≤ 14 Category A |
 | W5 reduce_column + SIMD pack + bench parity | 2 parallel | every post-AV reality-check entry meets its W6 gate |
 | W6 FINAL + close | 1 serial | post-AW.json composed |
@@ -162,46 +162,75 @@ Hard gate: every pinned_*_drops_payload test flips;
 
 ### W2 — PHF + SIMD keyword + selector classifier + scanner closure [4 parallel]
 
-#### W2.1 PHF for dense keyword Alts
+#### W2.1 PHF + frequency ordering + length-bucket tail
 
 Owner: `crates/core/src/backend/rust/emitter/keyword_dispatch.rs`
-(new); `crates/core/src/backend/rust/emitter/grammar.rs`.
+(new); `crates/core/src/backend/rust/emitter/grammar.rs`;
+`crates/ir/src/passes/recognizers/keyword_stats.rs` (new —
+frequency mining).
 
 Emit `pub const NAMED_COLOR_PHF: phf::OrderedMap<&'static
 [u8], u32> = phf_map! { ... };` for CSS `namedColor` (148
-entries). Same pattern for CSS `*Keyword` rules
-(`positionKeyword`, `overflowKeyword`, etc.) and Sheets
-function names (~150 entries). Walker's `AltLinear` arm
-consults the PHF directly for keyword matches — one PHF
-lookup instead of 148-branch linear scan or byte-dispatch.
+entries). Same for CSS `*Keyword` rules and Sheets function
+names (~150 entries). Walker's `AltLinear` arm consults the
+PHF directly — one PHF lookup instead of 148-branch linear
+scan or byte-dispatch.
 
-White-colour `0xFFFFFFFFu32` collision already routed to
-WideScalar in AW-I.W0.8; PHF stays homogeneous.
+**AO.5.3 frequency-ordered dispatch** (chronic since AO):
+emit `FREQUENCY_ORDER: &[u32]` alongside PHF where profiling
+evidence identifies hot keywords. The walker's
+byte-dispatched miss path consults frequency order before
+PHF lookup for ≤ 8 hot keywords. Frequency comes from
+samply self-time attribution over a representative corpus
+per grammar.
+
+**AQ.7.3 generalised length-bucket PHF tail** (chronic since
+AQ): the PHF for variable-length dense keywords subdivides
+by byte length before hashing. `NAMED_COLOR_PHF` stays one
+table (single byte length ranges fit cleanly); Sheets
+function names add a length-bucket prefix — `[bucket_6,
+bucket_7, bucket_8, …]: &[Phf]` indexed by
+`[input_length.saturating_sub(MIN).min(MAX - MIN)]`. Dense
+tail for short names; sparse tail for long.
+
+White-colour `0xFFFFFFFFu32` collision routed to WideScalar
+in AW-I.W0.8; PHF stays homogeneous.
 
 Hard gate: `grep -rn 'const [A-Z_]*: \[&\[u8\]'
 crates/core/src/backend/rust/emitter/` returns 0 (every
-keyword table PHF-routed).
+keyword table PHF-routed). Samply delta on
+`Sheets::__function_name` self-time ≥ 30% from frequency +
+length-bucket combined vs the AW-I post-W1 baseline.
 
-#### W2.2 SIMD keyword compare for ≤ 16-keyword Alts
+#### W2.2 SIMD keyword compare + AVX2 u8x32 widening
 
 Owner: `crates/core/src/backend/rust/emitter/keyword_dispatch.rs`;
-`crates/bbnf-tape/src/driver.rs` (walker arm integration).
+`crates/bbnf-tape/src/driver.rs` (walker arm integration);
+`crates/core/src/generate/regex/emit/simd.rs` (x86_64
+widening).
 
-CSS `colorType` (9 entries): pack all into one 128-bit
-NEON register (9 × 8-byte lanes, padded). One parallel
-8-byte-lane compare emits a match bitmask;
-`trailing_zeros` picks branch index. Typed u8
-discriminant flows through per-branch Bug-1 payload
-emission (AW-I.W2.1 carry-forward).
+CSS `colorType` (9 entries): pack into one 128-bit NEON
+register (9 × 8-byte lanes, padded). One parallel 8-byte-
+lane compare emits a match bitmask; `trailing_zeros` picks
+branch index. Typed u8 discriminant flows through per-
+branch Bug-1 payload emission (AW-I.W2.1 carry-forward).
 
 Same pattern for BBNF `__directive` (8 entries). Walker
 dispatches to the SIMD compare when Alt is ≤ 16 keywords,
-all length-bounded, FIRST-set mutually-disjoint.
+length-bounded, FIRST-set mutually-disjoint.
 
-Hard gate: BBNF `__directive` + CSS `colorType`
-dispatched via SIMD compare; fallback to PHF for the ≤ 16
-case not triggered in the corpus; `cargo expand` shows
-the emitted NEON intrinsic.
+**AN.5 u8x32 AVX2 widening** (chronic since AN): every
+SIMD call site today uses `u8x16`. On x86_64 AVX2, widen
+to `u8x32` for scanner structural-byte passes. The walker's
+structural-bitmap producer (inherited from AU.2.7) and the
+DFA scanner dispatch both consume. Arch-gate via
+`#[cfg(target_feature = "avx2")]`; NEON path unchanged.
+
+Hard gate: BBNF `__directive` + CSS `colorType` dispatched
+via SIMD compare; `cargo expand` shows the NEON intrinsic
+on AArch64 and the AVX2 intrinsic on x86_64. Samply on
+canada.json (x86_64 AVX2) shows ≥ 15% reduction in
+structural-scan self-time vs u8x16 baseline.
 
 #### W2.3 CSS selector classifier
 
@@ -239,7 +268,38 @@ Hard gate: per-chunk SIMD bounds guards in consolidated
 loops return 0; `grep -rn 'src_bytes' crates/core/src/`
 in scanner paths returns 0.
 
-### W3 — Document-level parallel parse + bloom dedup + Pratt generalisation + profile calibration [4 parallel]
+#### W2.5 Scanner-architecture cluster consolidation + NEON 17-digit
+
+Owner: `parse-that/rust/parse_that/src/{scanners,regex}/`
+(orchestrator-landed from main; sibling-repo);
+`crates/ir/src/regex_info.rs`.
+
+**Scanner cluster** (chronic since AR.6.x / AS.5.x, six-
+tranche deferral): `RegexClassMiner` consolidation into one
+canonical miner shared across scanner emission paths;
+`ScanLut` registry as a per-grammar resource (replaces the
+scattered per-rule LUT emit sites);
+`WsCommentConfig` parameterisation (one config struct per
+grammar carries whitespace + comment alphabet);
+`FnDescriptor` post-pass (unifies function-call descriptor
+emission); HIR predicate re-exports collapsed to one
+module. Net: ~600 LOC delete + ~350 LOC net reduction per
+AR audit.
+
+**AT.4.3 NEON 17-digit fractional scan** (chronic since
+AT): AV.3.5 landed Eisel-Lemire + 16-digit integer SIMD
+fastpath; the 17-digit fractional kernel specifically
+never landed. Hand-written NEON kernel for 17-digit
+fractional part — ±1 ULP vs scalar `f64::from_str` on the
+canonical corpus.
+
+Hard gate: `parse-that/rust/parse_that/src/scanners/` LOC
+drops by ≥ 600 (baseline at W2 open); HIR predicate module
+count drops to 1; every scanner call site resolves through
+the consolidated miners. `parse-that` f64-parse tests
+pass bit-identically on fractional inputs up to 17 digits.
+
+### W3 — Document-level parallel parse + bloom dedup + Pratt generalisation + profile calibration + cost-model grid [5 parallel]
 
 #### W3.1 List-rule identification + chunk fork
 
@@ -269,19 +329,20 @@ Hard gate: tailwind.css on 4 cores shows sub-linear-to-
 linear scaling; `GRAMMAR_PROFILE.list_rules` non-empty
 for CSS L4.
 
-#### W3.2 Bloom + GADT runtime dedup
+#### W3.2 Bloom + GADT runtime dedup + grammar-level pattern hoisting
 
 Owner: `crates/bbnf-tape/src/dedup.rs` (new);
 `crates/bbnf-tape/src/driver.rs`;
 `crates/ir/src/passes/recognizers/dedup_eligibility.rs`
-(new).
+(new); `crates/ir/src/passes/transform/pattern_dedup.rs`
+(new — compile-time sibling).
 
-Layered over the DTA stage-A emit per AW.md §Phase 6.
-Mandatory where `GRAMMAR_PROFILE.dedup_eligible_rules` is
-non-empty (CSS `compoundSelector`, `identifier`,
-`namedColor`-wrap, fixed unit suffixes; JSON `null`,
-`true`-branch, `emptyObject`, `emptyArray`; BBNF
-literal-only Alt branches).
+**Runtime bloom + GADT.** Layered over the DTA stage-A
+emit per AW.md §Phase 6. Mandatory where
+`GRAMMAR_PROFILE.dedup_eligible_rules` is non-empty (CSS
+`compoundSelector`, `identifier`, `namedColor`-wrap, fixed
+unit suffixes; JSON `null`, `true`-branch, `emptyObject`,
+`emptyArray`; BBNF literal-only Alt branches).
 
 64-bit rolling FNV over raw column bytes of child records
 (`hash_children_tail`). Span_lo/span_hi ignored for
@@ -295,10 +356,24 @@ existing IR facts: `TypeDesc`, `EClassFacts.closure_free`,
 `EClassFacts.all_descendants_elidable`. Populates
 `GRAMMAR_PROFILE.dedup_eligible_rules`.
 
+**AP.4.2 grammar-level pattern dedup** (chronic since AP,
+compile-time sibling to runtime bloom): `ws + ':' + ws`
+appears 43 times in CSS L4; `!important` appears 42 times
+across grammars; similar multi-rule repeats across the
+corpus. Compile-time pass identifies recurring sub-patterns
+and hoists into synthetic non-terminals. Pre-egraph pass
+(runs after `canonicalize_aliases`, before
+`factor_common_prefixes`). Bloom handles runtime structural
+sharing; pattern hoisting handles compile-time grammar-
+level sharing — orthogonal axes.
+
 Hard gate: canada.json (zero-sharing input) bloom-AND
 steady-state overhead < 2% of parse time;
 bootstrap.css record count drops ≥ 30% vs W2 baseline;
-`GRAMMAR_PROFILE.dedup_eligible_rules` non-empty.
+`GRAMMAR_PROFILE.dedup_eligible_rules` non-empty;
+grammar-level pattern hoisting synthesizes ≥ 5 non-terminals
+on CSS L4 (`ws_colon_ws`, `important_kw`, etc.) with a
+DTA state-count reduction ≥ 100.
 
 #### W3.3 Pratt generalisation
 
@@ -335,29 +410,78 @@ shape; BBNF `value_or` tower produces correct
 associativity; `test_let_parses_as_let_call` un-ignored
 + passing.
 
-#### W3.4 GrammarProfile calibration + small-input amortisation
+#### W3.4 GrammarProfile calibration + small-input amortisation + ws polish
 
 Owner: `crates/core/src/backend/rust/emitter/profile.rs`;
-`crates/bbnf-tape/src/profile.rs` (if runtime reads).
+`crates/bbnf-tape/src/profile.rs`;
+`crates/bbnf-tape/src/driver.rs::skip_ws`;
+`parse-that/rust/parse_that/src/` (skip_ws bitmap
+caching).
 
-Calibrate per-grammar `expected_ns_per_byte`,
+**Calibration.** Per-grammar `expected_ns_per_byte`,
 `parallel_break_even_bytes`,
-`payload_bytes_per_input_byte`,
-`dta_setup_floor_ns` against the W3 single-threaded
-measurement matrix. Commit values as const literals in
-each emitter's `GRAMMAR_PROFILE`.
+`payload_bytes_per_input_byte`, `dta_setup_floor_ns`
+measured against the W3 single-threaded matrix. Commit
+values as const literals in each emitter's
+`GRAMMAR_PROFILE`.
 
-Small-input amortisation (AW.4.7 sub-item): bench
-reports compute expected MB/s for sub-100 µs parses
-from `(input.len() × 1e9) / (setup_floor + input.len()
+Small-input amortisation (AW.4.7): bench reports compute
+expected MB/s for sub-100 µs parses from
+`(input.len() × 1e9) / (setup_floor + input.len()
 × expected_ns_per_byte)`, report achieved/expected
 ratio instead of fixed gate.
 
+**AP.3.2 redundant trim-call elision** (chronic since AP):
+fused-scan with `last_trim_offset` memoises the most
+recent trim-result so adjacent trim calls short-circuit
+when the input position hasn't advanced. Walker's
+`skip_ws` consults before scanning.
+
+**AQ.8.1 skip_space bitmap caching** (chronic since AQ):
+`nospace_bits: [u8; N]` + `nospace_start: u32` cache
+populated on first `skip_ws` call per parse. Subsequent
+calls hit the cache for their byte range.
+
 Hard gate: every grammar's `GRAMMAR_PROFILE` const
 populated; stub `&[]` slots remain only where
-populated-by-design (e.g., JSON has no keyword
-dispatch — populated `&[]` for `keyword_tables` is
-correct).
+populated-by-design. Samply on bootstrap shows
+`skip_ws`/`__ws` self-time drops ≥ 30% vs the AW-I post-
+W1 baseline.
+
+#### W3.5 Cost-model grid sweep (AM.6 → five-tranche deferral)
+
+Owner: `crates/egraph/src/cost.rs`;
+`crates/bbnf-ir/src/egraph/`;
+`scripts/cost-grid-sweep.sh` (new);
+`docs/benchmarks/cost-weights-sweep.json` (new).
+
+**Six-tranche chronic** (AM.6 → AO.4.1 → AP.6.4 → AQ.9.4
+→ AW ledger): egraph `CostWeights` have been hand-
+calibrated since AL. The grid-sweep harness runs
+orthogonal to the runtime calibration W3.4 handles —
+compile-time IR ranking weights driving cost-aware
+extraction.
+
+Harness: for each weight in
+`{seq_cost, alt_cost, repeat_cost, literal_bonus,
+regex_cost, payload_bonus, ...}` sweep a logarithmic
+grid (0.5×, 1×, 2×, 4×) across the 4-grammar corpus.
+Measure DTA state count post-extraction + extraction
+pass wall-clock. Pick the Pareto frontier per grammar;
+pick the dominant weights that minimise state count
+across the corpus.
+
+Commit calibrated `CostWeights` as a `pub const` in the
+egraph crate. Measure post-calibration delta vs the
+baseline CostWeights.
+
+Hard gate: ≥ 5% reduction in DTA state count OR
+extraction-pass wall-clock vs the post-AW-I master
+baseline on the 4-grammar corpus. If neither moves,
+close the item as a null result — the hand-calibrated
+CostWeights are the permanent decision with measurement
+evidence in `cost-weights-sweep.json`. Either outcome
+closes the chronic.
 
 ### W4 — Walker + reader migration + parity harnesses [3 parallel]
 
@@ -558,13 +682,21 @@ failures.
 | `crates/bbnf-tape/src/shape_dict.rs` (strict-injective check) | W1.2 |
 | `crates/ir/src/passes/payload/layout.rs` (Map-bodied admission) | W1.3 |
 | `crates/core/src/backend/rust/emitter/keyword_dispatch.rs` (new) | W2.1-2 |
+| `crates/ir/src/passes/recognizers/keyword_stats.rs` (new — frequency mining) | W2.1 |
 | `crates/core/src/backend/rust/emitter/selector_classifier.rs` (new) | W2.3 |
-| `crates/core/src/generate/regex/emit/simd.rs` (PaddedView migration) | W2.4 |
+| `crates/core/src/generate/regex/emit/simd.rs` (PaddedView migration + AVX2 u8x32) | W2.2, W2.4 |
+| `parse-that/rust/parse_that/src/{scanners,regex}/` (cluster consolidation, sibling-repo) | W2.5 |
+| `crates/ir/src/regex_info.rs` (HIR predicate re-export collapse) | W2.5 |
 | `crates/ir/src/passes/recognizers/list_rules.rs` (new) | W3.1 |
 | `crates/bbnf-tape/src/dedup.rs` (new) | W3.2 |
 | `crates/ir/src/passes/recognizers/dedup_eligibility.rs` (new) | W3.2 |
+| `crates/ir/src/passes/transform/pattern_dedup.rs` (new — compile-time hoisting) | W3.2 |
 | `crates/ir/src/passes/recognizers/operator_chain.rs` (extension) | W3.3 |
 | `crates/core/src/backend/rust/emitter/profile.rs` (calibration) | W3.4 |
+| `crates/bbnf-tape/src/driver.rs::skip_ws` (trim elision + bitmap cache) | W3.4 |
+| `crates/egraph/src/cost.rs` (CostWeights grid sweep) | W3.5 |
+| `scripts/cost-grid-sweep.sh` (new) | W3.5 |
+| `docs/benchmarks/cost-weights-sweep.json` (new) | W3.5 |
 | `crates/core/src/backend/rust/view/alt.rs` (variant_idx migration) | W4.1 |
 | `crates/core/tests/{json_parity,structural_parity,imports}.rs` (un-ignore) | W4.2 |
 | `crates/core/tests/{sonic_rs_parity,lightningcss_parity}.rs` (new) | W4.3 |

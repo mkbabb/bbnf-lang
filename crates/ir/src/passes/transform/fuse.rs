@@ -60,10 +60,14 @@ pub fn fuse_single_use(ir: &mut GrammarIR) {
         .rules
         .iter()
         .filter(|r| {
+            // AW-I.W4α: the `scc_id.is_none()` guard retired. Fuse now
+            // runs without the SCC gate — `is_composite_seq`,
+            // `body_has_map`, and `is_consumer_pinned` continue to
+            // guard the typed-materialisation + directive invariants
+            // the W2.5 source fix established.
             r.id != ir.entry
                 && !r.meta.is_cyclic
                 && !r.meta.preserve_identity
-                && r.meta.scc_id.is_none()
                 && ref_counts.get(r.id as usize).copied().unwrap_or(0) == 1
                 && !is_composite_seq(&r.body)
                 && !body_has_map(&r.body)

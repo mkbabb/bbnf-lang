@@ -36,10 +36,14 @@ pub fn inline_acyclic(ir: &mut GrammarIR) {
         .rules
         .iter()
         .filter(|r| {
+            // AW-I.W4α: the `scc_id.is_none()` guard retired. Cyclic
+            // rules now participate in acyclic inlining too — the
+            // `is_composite_seq`, `body_has_map`, `is_consumer_pinned`
+            // gates continue to preserve typed-materialisation +
+            // directive invariants (W2.5 source fix).
             r.id != ir.entry
                 && !r.meta.is_cyclic
                 && !r.meta.preserve_identity
-                && r.meta.scc_id.is_none()
                 && node_count(&r.body) <= INLINE_THRESHOLD
                 && !is_composite_seq(&r.body)
                 && !body_has_map(&r.body)

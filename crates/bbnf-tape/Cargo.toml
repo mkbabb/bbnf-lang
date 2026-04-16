@@ -5,10 +5,11 @@ edition = "2024"
 description = "Tape representation for bbnf-lang parser output. The eager AST replacement: a columnar (Struct-of-Arrays) record substrate the parser writes and the generated view types read lazily via accessor methods."
 
 [features]
-default = []
+default = ["rayon"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"], optional = true }
+rayon = { version = "1", optional = true }
 
 [dev-dependencies]
 

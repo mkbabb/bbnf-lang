@@ -252,6 +252,7 @@ dependencies = [
 name = "bbnf-tape"
 version = "0.1.0"
 dependencies = [
+ "rayon",
  "serde",
 ]
 

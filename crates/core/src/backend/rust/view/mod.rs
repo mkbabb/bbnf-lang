@@ -63,10 +63,15 @@ use quote::{format_ident, quote};
 use crate::backend::rust::ir_types::IrCodegenCtx;
 
 mod alt;
+pub mod color;
 mod grammar;
 mod leaves;
+pub mod named_types;
 mod repeat;
 mod seq;
+
+pub use color::{Color, ColorSpace, COLOR_PAYLOAD_BYTES};
+pub use named_types::RustNamedTypes;
 
 /// Generate the full view-type surface for a grammar.
 ///
@@ -411,7 +416,11 @@ fn emit_typed_accessors(
         // AQ.6.B: aggregate-payload rules go straight to the leaf
         // emitter, which generates the typed `.value()` reader from the
         // packed bytes.
-        return leaves::emit_aggregate_accessors(rule, rule_name, layout, type_desc);
+        //
+        // AW.0.5: pass `ir` so the emitter can resolve
+        // `TypeDesc::Named(sid)` to its interned name and emit the
+        // `.as_color()` shim on colour-function views.
+        return leaves::emit_aggregate_accessors(rule, rule_name, layout, type_desc, ir);
     }
 
     // Peel the body through Map/OptionalWhitespace to find the

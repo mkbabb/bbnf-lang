@@ -33,3 +33,13 @@ pub use parsed::{Parsed, Root};
 /// `#[derive(Parser)]` usage single-dep from the consumer's point
 /// of view.
 pub use bbnf_tape as tape;
+
+/// AW.0.5: typed view-layer projections the generated `.as_color()`
+/// shims reference. The Rust-side `Color` struct + `ColorSpace`
+/// enum live in the backend's `view/color.rs`; this re-export
+/// surfaces them at the stable `::bbnf::runtime::view::*` path so
+/// generated `#[derive(Parser)]` output reaches the types without
+/// depending on crate-internal `backend::rust::view::*` paths.
+pub mod view {
+    pub use crate::backend::rust::view::color::{Color, ColorSpace, COLOR_PAYLOAD_BYTES};
+}

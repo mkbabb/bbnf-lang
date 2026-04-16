@@ -138,7 +138,20 @@ pub fn analyze_grammar(ir: &mut GrammarIR, config: &EffectiveBackendConfig) -> B
     // tuple-of-scalars rule whose total packed size fits in
     // `MAX_PAYLOAD_BYTES`. Consumed by the Rust emitter and view
     // layer to materialize typed structs from a flat payload buffer.
-    ir.payload_layouts = bbnf_ir::passes::compute_payload_layouts(ir);
+    //
+    // AW.0.5: the Rust backend supplies `RustNamedTypes` so the
+    // layout pass admits `TypeDesc::Named` rules (e.g. CSS L4
+    // `colorFunction` → `Color`) whose backend-resolved tuple shape
+    // fits the `LARGE_PAYLOAD_MAX` cap. Per AU.4.2's stated path,
+    // the resolver lives in the backend crate; IR owns only the
+    // `NamedTypeResolver` trait.
+    {
+        let resolver =
+            crate::backend::rust::view::named_types::RustNamedTypes::from_ir(ir);
+        ir.payload_layouts = bbnf_ir::passes::compute_payload_layouts_with_resolver(
+            ir, &resolver,
+        );
+    }
     // Tranche AU.6.2 — count (push_compound, push_leaf,
     // push_leaf_with_*) sites across every emitted rule function so
     // the Rust emitter's `parse()` entry point can pick a grammar-

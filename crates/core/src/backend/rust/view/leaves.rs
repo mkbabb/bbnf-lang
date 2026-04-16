@@ -17,7 +17,7 @@
 //! `<T>::from_le_bytes` reads at the layout-recorded offsets.
 
 use bbnf_ir::passes::PayloadLayout;
-use bbnf_ir::{IrRule, TypeDesc};
+use bbnf_ir::{GrammarIR, IrRule, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
@@ -146,7 +146,8 @@ pub fn emit_aggregate_accessors(
     rule: &IrRule,
     rule_name: &str,
     layout: &PayloadLayout,
-    _type_desc: Option<&TypeDesc>,
+    type_desc: Option<&TypeDesc>,
+    ir: &GrammarIR,
 ) -> TokenStream {
     let view_ident = format_ident!("{}View", rule_name);
     let total_bytes = layout.total_bytes as usize;
@@ -200,6 +201,47 @@ pub fn emit_aggregate_accessors(
         }
     });
 
+    // AW.0.5: emit `.as_color()` on views whose TypeDesc is a
+    // backend-resolved `Color` / `ColorMix` named type and whose
+    // planned layout matches the colour-function shape
+    // `(U8, F64, F64, F64, F64)` with `total_bytes == 40`. The shim
+    // wraps the layout-driven `.value()` tuple into the view-layer
+    // `Color` struct, so consumers can write
+    // `stylesheet.view()... .as_color()` without manually plumbing
+    // the tuple through `Color::from_tuple`. No impact on non-colour
+    // aggregate rules — the gate requires both the named-type match
+    // AND the 5-field (U8, F64, F64, F64, F64) shape, so BBNF /
+    // JSON / Sheets aggregates never accidentally acquire the shim.
+    if let Some(name) = named_type_name(type_desc, ir) {
+        if matches!(name, "Color" | "ColorMix") && is_color_layout(layout) {
+            methods.push(quote! {
+                /// Project the typed `Color` struct from the packed
+                /// aggregate payload.
+                ///
+                /// Wraps `.value()` via
+                /// `::bbnf::runtime::view::Color::from_tuple`.
+                /// Panics on an out-of-range `space` discriminant;
+                /// use [`Self::try_as_color`] for the fallible
+                /// variant.
+                #[inline]
+                pub fn as_color(&self) -> ::bbnf::runtime::view::Color {
+                    ::bbnf::runtime::view::Color::from_tuple(self.value())
+                }
+
+                /// Fallible variant of [`Self::as_color`]: returns
+                /// `None` when the `space` discriminant is out of
+                /// range (corrupt tape or foreign payload). Prefer
+                /// this accessor when consuming records that may
+                /// not have come from the BBNF emitter's colour-
+                /// function arm.
+                #[inline]
+                pub fn try_as_color(&self) -> ::core::option::Option<::bbnf::runtime::view::Color> {
+                    ::bbnf::runtime::view::Color::try_from_tuple(self.value())
+                }
+            });
+        }
+    }
+
     if rule.meta.span_eligible {
         methods.push(quote! {
             /// The matched byte range as a `Range<usize>`, suitable
@@ -217,6 +259,37 @@ pub fn emit_aggregate_accessors(
             #(#methods)*
         }
     }
+}
+
+/// AW.0.5: resolve a `TypeDesc::Named(sid)` to its interned name
+/// via the IR's string table, returning `None` for every other
+/// `TypeDesc` variant.
+fn named_type_name<'ir>(td: Option<&TypeDesc>, ir: &'ir GrammarIR) -> Option<&'ir str> {
+    match td? {
+        TypeDesc::Named(sid) => Some(ir.get_string(*sid)),
+        _ => None,
+    }
+}
+
+/// AW.0.5: detect the colour-function layout shape
+/// `[U8 @ 0, F64 @ 8, F64 @ 16, F64 @ 24, F64 @ 32]` with
+/// `total_bytes == 40`. The gate guards the `.as_color()` shim
+/// against Named-tuple layouts that may be introduced later and
+/// happen to share the `Named("Color")` name but carry a different
+/// structural shape.
+fn is_color_layout(layout: &PayloadLayout) -> bool {
+    layout.total_bytes == 40
+        && layout.fields.len() == 5
+        && matches!(layout.fields[0].ty, TypeDesc::U8)
+        && layout.fields[0].offset == 0
+        && matches!(layout.fields[1].ty, TypeDesc::F64)
+        && layout.fields[1].offset == 8
+        && matches!(layout.fields[2].ty, TypeDesc::F64)
+        && layout.fields[2].offset == 16
+        && matches!(layout.fields[3].ty, TypeDesc::F64)
+        && layout.fields[3].offset == 24
+        && matches!(layout.fields[4].ty, TypeDesc::F64)
+        && layout.fields[4].offset == 32
 }
 
 /// Emit the Rust type token for an aggregate field.

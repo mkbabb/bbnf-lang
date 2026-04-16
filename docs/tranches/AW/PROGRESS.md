@@ -56,28 +56,126 @@ friction points AW.md names:
 - `.github/workflows/{ci,release}.yml` — CI substrate exists;
   AW.0.7's `check-bootstrap-clean.sh` wires here.
 
-### Wave 0α — Research wave (dispatched, read-only)
+### Wave 0α — Research wave (landed)
 
-Five parallel sub-agents in sibling worktrees producing the
-design documents AW.md §Research artefacts prescribes:
+Five parallel sub-agents in sibling worktrees produced the
+design documents AW.md §Research artefacts prescribes. All
+five cherry-picked onto master (commits `6917125` → `8846ee2`,
+`docs/tranches/AW/research/01…05-*.md`). Worktrees removed.
+Contents feed each consumer wave:
 
-- `01-dta-driver-design.md` — W1 walker contract, frame-stack
-  overflow handling, `frame_depth` emission.
-- `02-shaperef-runtime-dispatch.md` — W2.3 dict consultation
-  cost model, `shape_hash` collision strategy, view-layer
-  expansion correctness sketch.
-- `03-pratt-lowering-generality.md` — W4.6 Pratt loop
-  generalisation from Sheets to CSS / BBNF.
-- `04-named-struct-abi-finalisation.md` — W0.5 layout
-  contract, `LargeAggregate` arena encoding, view-layer Color
-  accessor codegen, lightningcss equivalence.
-- `05-bench-checkpoint-protocol.md` — per-wave bench agent
-  contract, input matrix, output JSON shape, attribution
-  requirements, regression rationale format.
+- **01 DTA driver design** (W1 input) — `FrameStack` with
+  `[Frame; 64]` inline + `Vec<Frame>` overflow, parallel
+  `counters: SmallVec<[u32; 16]>` column (isomorphic to
+  `DtaSnapshot.counter_regs` for replay reuse). `frame_depth[i]`
+  stamped at row-push instant inside `columns.push_structural_
+  leaf` / `reserve_structural`, collapsing the two-pass
+  `derive_frame_depth` into one 1 B store per push. Feature-
+  gated `dta-replay` signature variance — off-feature emits no
+  `Option<&mut Vec<u8>>` at all, so LLVM has no branch to
+  hoist.
+- **02 ShapeRef runtime dispatch** (W2.3 input) —
+  strict-injective compile-time collision assertion over
+  `SHAPE_DICT.shape_hash`; rejects runtime
+  `columns_range_eq` confirm on the argument the dispatch's
+  hash universe is ≤32 per grammar (collision prob ≈ 2.7·10⁻¹¹).
+  Saves 20–40 cycles per hit; break-even at hit-rate p >
+  0.53, CSS `declaration` reaches p ≈ 1.0. Bootstrap.css tape
+  footprint drops ~481 KiB. Dict L1d budget ~2.4 KiB/grammar.
+- **03 Pratt lowering generality** (W4.6 input) — dense
+  `PRECEDENCE_LUT: [u8; 256]` packed as
+  `prec(4b) | assoc(1b) | arity(2b) | two-byte-marker(1b)`,
+  paired with sparse `&'static [DtaPrecedenceEntry]` for
+  second-byte + op_rule + discriminant. Hot-path lookup: one
+  byte-load + shift-mask. Mining uses existing AV.3.3
+  operator-chain detector (`match_operator_chain_rule`);
+  precedence values fall out of chain depth. CSS `calc/min/
+  max/clamp` + BBNF `value_or…value_unary` tower **fit** the
+  Pratt frame; CSS comma-lists + BBNF `|,?*+` grammar-surface
+  **route elsewhere** (list-rule recogniser / postfix
+  quantifier dispatch).
+- **04 Named-struct ABI finalisation** (W0.5 input) —
+  admission arm: `TypeDesc::Named(sid) => ctx.backend_types.
+  resolve_named(*sid)` returns `Some(TypeDesc::Tuple(fields))`
+  and falls through to existing `plan_layout`. No new
+  `TypeDesc::Struct` variant, no central registry (per AU.4.2
+  per-backend type-table path). `MAX_PAYLOAD_BYTES` raises to
+  `LARGE_PAYLOAD_MAX = 64`. `Color` payload layout: 8-byte
+  aligned, 40 B, `[u8 space @ 0][7 B pad][f64 c1 @ 8][f64 c2
+  @ 16][f64 c3 @ 24][f64 alpha @ 32]`. Four lightningcss
+  parity risks surfaced for W0c handling (discriminant drift,
+  `currentColor`↔`black` `0x000000FFu32` collision, f32↔f64
+  predef precision, alpha-less inputs must emit `f64::NAN`).
+- **05 bench checkpoint protocol** (every W{N} close input) —
+  `post-AW-W{N}.json` schema adapts `post-AV.json`/`post-AU.
+  json` shape; each entry carries `{ns_per_iter, mb_per_s,
+  prior, delta_mb_s, delta_pct, gate{target_mb_s, status},
+  attribution{primary, secondary, residual}, small_input_
+  amortisation?}`. Top-level: `{wave, wave_gate, levers_
+  closed, gate_status, regression_rationales, samply_
+  attribution_sidecar?}`. Matrix 19 entries (JSON 5 + CSS 3 +
+  Sheets 3+2 + BBNF 6). Lever-attribution enum: 18 codes —
+  `stage_c_cond, span_elision, aggregate_right_size,
+  color_view, fuse_acyclic, dta_activate, psi_rayon, shape_
+  ref, phf_keyword, simd_compare, selector_classifier,
+  scanner_padded, parallel_fork, bloom_dedup, pratt_lower,
+  profile_calibration, visitor_reduce, visitor_simd_pack`.
+  Samply sidecar **mandated on self-time gates (W2, W3)**,
+  discretionary elsewhere. `post-AW.json` composes as
+  enriched `multi_wave_history` map, not bare W6 copy.
 
-Docs 04 and 05 gate W0 dispatch (W0.5 depends on 04, the W0
-close bench checkpoint depends on 05). Docs 01–03 gate their
-respective waves.
+### Orchestrator decisions on research-raised questions
+
+1. **Pre-order tape layout (R01/W1.10).** Adopt pre-order
+   emission in W1 if the forward walk yields it naturally
+   (R01 confirms it does). `finalise` rewrite lands **in W1**,
+   not deferred to AX. W1.10 hard gate: `cursor.rs::child(0)`
+   degrades to O(1) `idx + 1`.
+2. **`Frame` ABI location (R01).** Promote `Frame` to
+   `crates/bbnf-tape/src/dta.rs` so `DtaSnapshot.counter_regs`
+   reuses the type; no duplication across driver.rs and the
+   snapshot surface.
+3. **`next_rank` ownership (R01).** Per-kind counter inside
+   `dta_run` at first (KISS). If W1 bench shows rank-counter
+   thrash, refactor to `ColumnRanks` on `Columns` in the same
+   wave — not deferred.
+4. **`active_columns` population (R02).** Co-populated with
+   `shape_dict` at W2.3. Population matrix stands.
+   Mechanism: W2.3 emit-time inspection of which payload
+   columns carry non-zero Kind usage across the mined dict +
+   grammar surface.
+5. **`local_hash` baking (R02).** DTA emitter already carries
+   shape-hash machinery from AV.3.x; W2.3 inherits and does
+   not re-introduce.
+6. **Named-struct parity risks (R04).** W0c agent handles
+   (1) `ColorSpace` discriminant as the bbnf pin, projection
+   maps across; (2) `currentColor`↔`black` collision via
+   span-text disambiguation; (3) f32↔f64 predef precision
+   via `(f32 as f64)` compare in the W5 parity harness; (4)
+   alpha-less inputs emit `f64::NAN.to_le_bytes()` at the
+   skipped-branch emit site.
+7. **post-AV-substrate-only baseline (orchestrator).** Skipped
+   per user directive. `docs/benchmarks/post-AV.json` is the
+   regression baseline; W0 recovery reads against it.
+
+### Wave 0β — W0 cleanup dispatch
+
+Five parallel sub-agents in sibling worktrees, disjoint file
+bounds:
+
+- **W0a — `bbnf-tape` internals** (AW.0.1, AW.0.2).
+- **W0b — emitter cleanup + IR transform + white-colour
+  WideScalar** (AW.0.3, AW.0.4, AW.0.8, AW.0.10 — fold of
+  plan's (b) and (e)'s white-colour item to keep emitter
+  writes single-owner).
+- **W0c — layout admission + Color view** (AW.0.5).
+- **W0d — inline-test migration** (AW.0.6, six gorgeous
+  source files, not one).
+- **W0e — bootstrap CI gate + profile ledger** (AW.0.7,
+  AW.0.9).
+
+Bootstrap regen runs once post-cherry-pick on master, owned
+by the orchestrator. No agent regens.
 
 ## GrammarProfile population matrix (AW.0.9 ledger)
 

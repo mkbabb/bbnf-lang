@@ -965,3 +965,21 @@ baseline will flex per the tranche's wave-failure policy.
 V3 data infrastructure landed. V4 (PSI stage-B + stage-C +
 simdjson decode, 3-parallel) is the natural next dispatch;
 the DTA table is the stage-A output V4's stage-B consumes.
+
+## 2026-04-15 — V3 + V4 CLOSED
+
+V3 DTA synthesis: 5 commits, 23 new tests, DTA_TABLE const
+emitted per grammar with Sheets shunting-yard collapse.
+Legacy fn-per-rule deletion deferred to V4 PSI driver.
+AV.3.5 Eisel-Lemire Clinger short-circuit: 2.1x compute_f64
+speedup on parse-that master.
+
+V4 PSI + finaliser + simdjson: 12 commits across 3 agents.
+PayloadStream + rayon stage-B (gate-closed today, V6
+calibrates). Stage-C O(N) forward finaliser replaces V2
+backward walk (67 bit-equality tests). simdjson-scale JSON
+string decode (2.46-3.65x per call). All merged with conflict
+resolved (PSI + Stage-C both extended tape_basic.rs).
+
+V4 master status: grammar_roundtrip 6/6, tape_parity 22/22,
+bbnf-tape 79/79. 65 total AV commits on master.

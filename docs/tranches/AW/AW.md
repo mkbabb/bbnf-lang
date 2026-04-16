@@ -165,8 +165,10 @@ demands it:
    `keyword_tables` resolve to PHF / SIMD compare. `dedup_
    eligible_rules` drive runtime bloom + GADT. `parallel_
    break_even_bytes` is per-grammar-calibrated, not zero.
-   `reorder_unroll_visitors` ships at least one production
-   visitor per scalar-dense grammar.
+   The visitor reordered-unrolling kernels emit unconditionally
+   for every active payload column per grammar via
+   `Tape::reduce_column<C, R>` — Rust-side API, no grammar
+   surface.
 3. **Bench between every wave.** Each wave concludes with an
    agent-driven bench checkpoint that captures the four
    parse-bench matrix to `docs/benchmarks/post-AW-W{N}.json`.
@@ -277,6 +279,40 @@ dispatches:
   (Suppression silently emits warning today; deletion lands
   alongside Stage-C's conditional activation.)
 
+## Substrate-cost ledger
+
+Each AV correctness fix added a mechanical per-instance or per-
+parse overhead. The ledger maps each cost to the AW wave that
+eliminates it (or the reason it stays). Triage aid for the
+orchestrator: if a wave's bench checkpoint underperforms its
+expected recovery, the ledger names the residual cost to chase.
+
+| Cost | AV origin | Per-unit overhead | Eliminated by |
+|------|-----------|-------------------|---------------|
+| Span aggregate-buf 8B copy | AV.0.2 (Bug 2 leaf-payload route) | 1 store + 1 load per Span push (BBNF identifier/literal/regex/comment, Sheets cell_ref/identifier/string) | W1 — DTA writes columns in batch, no per-call buffer dance |
+| Per-branch payload-write hoisting | AV.0.1 (Bug 1 alt-lit fix) | ~2 stores per Alt branch (was 1 first-only) | W3 — PHF + SIMD compare on dense keyword alts (CSS namedColor 148, *Keyword family); remaining structural alts keep cost as correctness |
+| i64/f64 span-helper threading | AV.0.3 (Bug 2b) | `parse_{i64,f64}_from_bytes` per BBNF int_lit/float_lit | Stays (correctness invariant); AV.3.5's Eisel-Lemire short-circuit + 16-digit SIMD fastpath reduce per-call cost on the parse-that side |
+| Scalar-Alt single-byte payload stamp | AV.0.1 close-out CO-E4 | 1 B store per Sheets `add_op`/`mul_op`/`unary_prefix` match | W4.6 — Pratt lowering removes the per-op wrapper compound; the stamp moves to the operator-precedence stack push |
+| Empty-compound NONE compare | AV.0.6 (`push_compound` correctness) | 1 `child_off` compare per `push_compound` | W1 — DTA stage-A bypasses `push_compound` entirely (writes columns directly); the legacy push helper deletes alongside fn-per-rule |
+| Stage-C double O(N) scan | AV V4 finaliser landing | 2 full-tape walks per parse on every grammar | W0.1 — conditional gate (skip while legacy path runs); W1.4 — unconditional with DTA-inline `frame_depth` |
+| Double Span pack in `__identifier` | AV V0.2 emitter | 2 aggregate-buf writes per identifier match (body + epilogue) | W0.3 — single pack, epilogue authoritative |
+| Always-true `if __has_payload` | AV V0.2 emitter | Dead branch per Span-rule epilogue | W0.3 — branch elision when emitter knows path is provably-only `push_leaf_with` |
+| `mark_children` for leaf-route rules | AV emitter | Dead store + read per Span-rule prelude | W0.3 — prelude gate when epilogue is provably-only `push_leaf_with` |
+| `__aggregate_buf [u8; 16]` over-allocation | AV emitter | 16 B stack + zero-init per rule (only 8 needed for Span; 1 for unit) | W0.4 — right-sized to layout `total_bytes`, padded to alignment |
+
+The W0 elision targets the bottom four rows wholesale. W1 DTA
+activation removes the next three (Span buffer dance, empty-
+compound check, fn-per-rule call overhead). W3 keyword dispatch
+collapses the per-branch hoist on dense alts. W4 Pratt
+collapses Sheets operator wrappers. The two cost rows that stay
+through AW close are the i64/f64 span-helper threading
+(correctness — required for typed-AST parity) and the per-
+branch payload writes on non-keyword alts (correctness — the
+Bug 1 fix is non-negotiable). Both have measured per-unit cost
+in the single-digit-cycle range and are bounded; they shape the
+AW.6.2 bench-confirmation expected ceilings, not the wave
+gates.
+
 ## Friction areas — operational lessons from AV
 
 Not architectural items, but lessons the orchestrator carries
@@ -327,13 +363,13 @@ top of it.
 
 | Wave | Parallel sub-agents | Workspace state | Bench gate |
 |------|---------------------|-----------------|------------|
-| **W0 — Cleanup + ABI finalisation + hygiene** (5 parallel) | (a) Stage-C conditional + dead-code deletion (AW.0.1, AW.0.2). (b) Span-rule emitter elision (AW.0.3, AW.0.4). (c) Named struct ABI finalisation (AW.0.5). (d) Inline-test migration (AW.0.6). (e) Bootstrap regen CI gate + white-colour WideScalar routing (AW.0.7, AW.0.8). | Green at W0 close. | **post-AW-W0.json** — recovers 25–40% of regression by elision alone; trajectory measurement, not gate. |
-| **W1 — DTA runtime driver activation** (serial, single owner) | Single agent: AW.1.x replaces every grammar's `parse()` entry point with the DTA-driven stage-A walk. Legacy `fn __<rule>` deleted from the hot path; `__rule_kind()` dispatch retained for IR consumers. Stage-C activates unconditionally with DTA-emitted `frame_depth`. | Green at W1 close — primary correctness gate. | **post-AW-W1.json** — gate: every entry ≥ post-AU baseline. |
+| **W0 — Cleanup + ABI finalisation + hygiene** (5 parallel) | (a) Stage-C conditional + dead-code deletion (AW.0.1, AW.0.2). (b) Span-rule emitter elision + IR-pass no-op fix (AW.0.3, AW.0.4, AW.0.10). (c) Colour-function `LargeAggregate` consumer + view-layer Color projection (AW.0.5). (d) Inline-test migration (AW.0.6). (e) Bootstrap regen CI gate + white-colour WideScalar routing + GrammarProfile stub-field ledger (AW.0.7, AW.0.8, AW.0.9). Wave opens with `post-AV-substrate-only.json` — a one-shot bench of master-as-AV-closed before any cleanup, captured by the bench agent at W0 dispatch as the reference for the W0 elision recovery measurement. | Green at W0 close. | **post-AW-W0.json** — recovers 25–40% of regression by elision alone; trajectory measurement, not gate. |
+| **W1 — DTA runtime driver activation** (serial, single owner) | Single agent: AW.1.x replaces every grammar's `parse()` entry point with the DTA-driven stage-A walk. Legacy `fn __<rule>` deleted from the hot path; `__rule_kind()` dispatch retained for IR consumers. Stage-C activates unconditionally with DTA-emitted `frame_depth`. Includes AW.1.9 KvPair JSON `pair` activation verification (closes AT.1.3) and AW.1.10 pre-order tape verification (closes AV.2 substrate inheritance). | Green at W1 close — primary correctness gate. | **post-AW-W1.json** — gate: every entry ≥ post-AU baseline. |
 | **W2 — PSI stage-B + ShapeRef + percentage closure** (3 parallel) | (a) PSI rayon stage-B activation per `parallel_break_even_bytes` (AW.2.1, AW.2.2). (b) ShapeRef runtime dispatch — `push_shape_ref` fires on `shape_hash` match (AW.2.3, AW.2.4). (c) Bug 2b residuals + Sheets boolean FALSE + percentage InlineScalar (AW.2.5). | Green. | **post-AW-W2.json** — gate: bootstrap ≥ 700 MB/s, twitter `decode_json_string` self-time < 5%. |
 | **W3 — SIMD keyword dispatch + PHF + selector classifier** (4 parallel) | (a) PHF for CSS `namedColor` + Sheets function names (AW.3.1). (b) SIMD keyword compare for ≤ 16-keyword Alts (AW.3.2). (c) CSS selector classifier over structural bitmap (AW.3.3). (d) `find_next_structural_from` paired migration + remaining SIMD scanner holdouts (AW.3.4). | Green. | **post-AW-W3.json** — gate: `__compoundSelector` self-time < 15%; bootstrap ≥ 900 MB/s. |
 | **W4 — Document-level parallel parse + bloom+GADT dedup + Pratt** (3 parallel) | (a) List-rule mining + chunk boundary detection + offset remap (AW.4.1, AW.4.2, AW.4.3). (b) Runtime bloom + GADT dedup gated on `dedup_eligible_rules` (AW.4.4, AW.4.5). (c) Pratt precedence-tower lowering for Sheets (and any grammar with chained operators) — heals `test_let_parses_as_let_call` (AW.4.6). Plus GrammarProfile slot calibration (AW.4.7). | Green. | **post-AW-W4.json** — gate: tailwind ≥ 1.2 GB/s on 4 cores; canada ≥ 1800 MB/s on 4 cores; sheets `parse_simple` ≥ 250 MB/s. |
 | **W5 — Walker + reader migration + parity harnesses** (3 parallel) | (a) variant_idx walker coherence — un-ignore 7 JSON tests (AW.5.1). (b) 13 serialize/structural roundtrip un-ignore + fix (AW.5.2). (c) sonic-rs JSON-value parity harness + lightningcss CSS AST parity harness (AW.5.3, AW.5.4). Plus `test_selective_transitive_unfurling` triage (AW.5.5). | Green; ignored count = documented Category A only. | **post-AW-W5.json** — gate: every parity harness green; ignored count ≤ 5. |
-| **W6 — Bench parity confirmation + visitor production wiring** (2 parallel) | (a) Wire at least one production `@visitor` directive per scalar-dense grammar (BBNF `$count_rules`, JSON `$sum_of_numbers`, etc.) — proves V2.5 visitor codegen reaches end users (AW.6.1). (b) Bench confirmation matrix vs the post-AU baseline (AW.6.2); compose `post-AW.json`. | Green. | **post-AW.json** — every entry from the post-AV reality-check table meets its W6 gate. |
+| **W6 — Visitor API surface + bench parity confirmation** (2 parallel) | (a) Land `Tape::reduce_column<C, R>` plus the per-payload-column codegen specialisations on the columnar substrate; tests in `crates/core/tests/visitor_reduce.rs` exercise one reducer per grammar against a fixture (AW.6.1). (b) Bench confirmation matrix vs the post-AU baseline (AW.6.2); compose `post-AW.json`. | Green. | **post-AW.json** — every entry from the post-AV reality-check table meets its W6 gate. |
 | **W7 — Tranche completion** (serial, no code changes) | Single agent: FINAL.md composition, post-AW.json publish, workspace test confirmation, deferred-item ledger reconciliation. | Green. | — |
 
 **Bench-checkpoint contract.** Each `post-AW-W{N}.json` is
@@ -557,6 +593,64 @@ namedColor → WideScalar across the board for uniformity).
 Hard gate: `css_l4_named_color_parity::white_materialises`
 (new test) passes.
 
+#### AW.0.9 GrammarProfile stub-field population contract
+
+V1's hard-gate 10 ("every per-grammar emitter constant has
+moved into `GRAMMAR_PROFILE`") passed on the grep criterion
+that `crates/core/src/backend/rust/emitter/` carries no
+per-grammar `const X: &[u8]` constants. The profile struct
+itself, however, has five array fields that V1 emits as
+`&[]` for every grammar today: `active_columns`,
+`list_rules`, `keyword_tables`, `shape_dict`,
+`dedup_eligible_rules`. AW waves populate as they activate
+(W2 → `active_columns` + `shape_dict`, W3 → `keyword_
+tables`, W4.1 → `list_rules`, W4.5 → `dedup_eligible_
+rules`), but no shared precondition ledger names the stub
+state, so an interrupted wave's stub residue is invisible
+to the hard-gate tally.
+
+W0.9 is a ledger-only entry: `docs/tranches/AW/PROGRESS.md`
+gains a "GrammarProfile population matrix" table updated at
+each W2/W3/W4 wave close, listing which slots each grammar's
+emitted profile populates and which remain `&[]`. No code
+change at W0.9 itself; the contract is documentary, the
+verification is per-wave.
+
+Hard gate: PROGRESS.md carries the matrix; W6 close shows
+zero `&[]` slots for any grammar except where the slot is
+genuinely inapplicable (e.g. JSON has no `keyword_tables`
+because it has no keyword Alts; record this as a
+populated-by-design `&[]`, not a stub).
+
+#### AW.0.10 `inline_acyclic` / `fuse_single_use` no-op fix
+
+AU PROGRESS Session 1 flagged: both passes guard on
+`r.meta.scc_id.is_none()` which is always `Some` during the
+normalizer loop — the SCC pass populates `scc_id` before
+the transform pass runs, so the guard rejects every rule.
+Effective behaviour: zero rules inlined / fused; the passes
+no-op silently. Source: `crates/ir/src/passes/transform/
+inline.rs:23`, `crates/ir/src/passes/transform/fuse.rs:31`.
+
+Consumers depend on the fused shape. The DTA lifter at
+`crates/core/src/backend/rust/emitter/dta.rs:670` carries
+the comment "post-fuse_single_use shape" — its expected
+input is the post-fuse IR; it currently consumes the un-
+fused IR because the fuse pass no-ops.
+
+Fix: drop the always-true guard. The passes fire as
+designed. Verify post-fix that DTA state count drops
+measurably (CSS L4 today reports 2473 states; expected
+drop after fuse_single_use actually fuses single-use
+rules).
+
+Hard gate: post-W0.10 `dta_run_unit_tests` show the
+expected state-count reduction for CSS L4 (target: < 2000,
+measured against the AV.3.6 PROGRESS-cited 2473 baseline).
+If state count does not drop, root-cause investigation
+required — the no-op fix should observably reduce DTA
+table size.
+
 ### Phase 1 — DTA runtime driver activation (W1)
 
 **Single-agent serial wave.** This is the largest single lift
@@ -645,11 +739,111 @@ the matching column after `fill_columns` returns.
 
 #### AW.1.6 Visitor codegen survives
 
-V2.5's `emit_visitor_kernels` continues to fire for any
-grammar whose `mine_visitors()` returns non-empty (today
-none; W6 wires production directives). The kernel emission
-is unchanged; the consumer is the rule-walker, which is
-unaffected by the DTA driver swap.
+V2.5's `emit_visitor_kernels` continues to fire and is
+generalised in W6 to emit one reordered-unrolling specialisation
+per active payload column per grammar (no grammar-author
+declaration needed). The kernel emission is unchanged at
+substrate; the consumer changes from "any grammar whose
+`mine_visitors()` returns non-empty" to "every grammar whose
+`GrammarProfile::active_columns` includes a reducible payload
+column." Rule-walker unaffected by the DTA driver swap.
+
+#### AW.1.7 Replay substrate hooks (decision log + snapshot)
+
+The DTA's flat state machine makes two adjacent
+capabilities trivial to expose without committing to the
+incremental-parsing infrastructure that consumes them. AW
+ships the substrate; AX builds the consumer (incremental
+re-parse, generalised error recovery, parse-step debugger,
+test-case minimisation).
+
+**Decision log.** The DTA driver accepts an optional
+`decision_log: Option<&mut Vec<u8>>` sink. When provided,
+the driver writes the low byte of each visited state ID
+into the sink — one append per structural transition, ~1
+byte per ~6–8 input bytes on typical grammars (so ~250 KB
+for canada.json). Cost when `None`: a single
+`Option::is_some` branch the optimiser hoists; effectively
+zero. Replay = re-drive the DTA with the log as transition
+oracle instead of consulting the byte stream + structural
+bitmap; produces a bit-identical tape.
+
+**Snapshot format.** A `pub struct DtaSnapshot { frame_
+stack: SmallVec<[Frame; 64]>, depth: u8, counter_regs:
+SmallVec<[u32; 16]>, byte_offset: u32 }` captures the
+DTA's full state at any byte offset. Resume = pass the
+snapshot back into the driver; parsing continues from
+exactly that point. Snapshot-and-resume is O(stack depth) —
+typical depth ≤ 8 for JSON, ≤ 12 for CSS L4, ≤ 6 for
+Sheets, ≤ 10 for BBNF.
+
+Both hooks are feature-gated behind `dta-replay` (default
+off) so production builds carry zero cost. The on-by-
+default tape and `parse()` API are unchanged.
+
+#### AW.1.8 Packrat memo retirement
+
+`ParserState::memo` (parse-that) was per-parse, dropped
+each invocation, never reused across parses; no production
+consumer relies on it. The DTA driver carries no memo —
+the counter-DFA is deterministic over the input; packrat
+caching is structurally unnecessary. AW.1.8 deletes the
+`MemoStore` field from `ParserState` and the `memo`-related
+plumbing. The `parse-that` test suite that exercises memo
+storage either ports to the DTA's deterministic-replay
+fixture or deletes alongside.
+
+#### AW.1.9 KvPair JSON `pair` activation verification (AT.1.3 closure)
+
+AT.1.3 planned `KvPair` shape activation for JSON's `pair`
+rule. The substrate landed: `is_kv_pair_shape` exists in
+`crates/ir/src/passes/payload/layout.rs`; the emitter
+consumes the layout when `compute_payload_layouts` admits
+the rule. But `grep KvPair crates/core/src/grammar/
+generated.rs` returns zero matches at HEAD — the layout
+admission excludes `pair` because its shape doesn't reach
+`is_kv_pair_shape`'s `(Span, scalar)` recogniser today
+(JSON `pair = string : value` projects as
+`Tuple([Span, BoxedEnum])`, not `Tuple([Span, scalar])`).
+
+W1.9 verifies post-DTA-driver landing: `KvPair` should
+fire for JSON `pair` (and Sheets `key_value` if the
+pattern surfaces). If the layout admission still excludes,
+W1.9 widens `is_kv_pair_shape` to admit `Tuple([Span,
+BoxedEnum])` provided the BoxedEnum's value range
+satisfies the KvPair payload constraint, OR documents why
+the exclusion remains correct (i.e., AV's `LargeAggregate`
++ ShapeRef path is the right substitute for JSON pairs and
+KvPair is a CSS-only optimisation post-AV).
+
+Hard gate: post-W1.9 `grep -c 'TapeKind::KvPair'
+crates/core/src/grammar/generated.rs` returns ≥ 1 (JSON
+`pair` fires KvPair) OR PROGRESS.md carries the written
+rationale that JSON `pair` is the wrong fit for KvPair and
+the AT.1.3 item retires.
+
+#### AW.1.10 Pre-order emission verification (AV.2 substrate inheritance)
+
+AV.2's substrate keeps post-order emission — parents
+emit after children — so `cursor.rs::child(0)` retains a
+bounded backward walk to seed first-child-from-parent.
+AW.1.1's DTA driver emits records in stage-A order
+(structural skeleton in pre-order natively); the SoA
+column writes go in pre-order naturally because the DTA
+walks the input forward.
+
+W1.10 verifies post-DTA-emit that the tape shape IS
+pre-order (parents precede their children's tape offsets)
+and the cursor's first-child accessor degrades to the O(1)
+`idx + 1` lookup AV.md originally specified. If the DTA
+driver inherits AV.2's post-order convention, document
+that as the design decision and route the `idx + 1`
+optimisation to AX (the bounded backward walk is correct,
+just not maximally efficient).
+
+Hard gate: `cursor.rs::first_child_complexity_test` (new)
+asserts O(1) behaviour OR PROGRESS.md documents the
+post-order inheritance with rationale.
 
 Hard gates:
 
@@ -913,7 +1107,27 @@ landing.
 Heals `test_let_parses_as_let_call` (Sheets dispatch
 surface naturally touched by Pratt lowering).
 
-#### AW.4.7 GrammarProfile slot calibration
+#### AW.4.7 GrammarProfile slot calibration + small-input amortisation
+
+Calibrate per-grammar `expected_ns_per_byte`, `parallel_
+break_even_bytes`, `payload_bytes_per_input_byte` against
+the post-W4 single-threaded measurement matrix; commit the
+chosen values into `GrammarProfile` so downstream waves
+have stable comparison points.
+
+Sub-item: **single-threaded setup-cost ceiling.** Sub-100 µs
+parses (Sheets `parse_simple` ~5 µs, BBNF `json` ~6 µs)
+amortise the DTA's frame-stack init + `Columns::new` + PSI
+allocator init over very few bytes. Calibration commits a
+per-grammar `dta_setup_floor_ns` constant derived from a
+zero-input parse measurement; the W4 expected MB/s for
+small inputs is `(input.len() × 1e9) / (dta_setup_floor_ns
++ input.len() × expected_ns_per_byte)`. The W4 bench
+checkpoint compares against the formula, not against a
+fixed gate, for inputs below the small-input threshold.
+This prevents W4 from chasing a bench gate that's
+mathematically unreachable while still catching genuine
+regressions on small workloads.
 
 Calibrate the V1-stub fields from samply data:
 
@@ -1015,36 +1229,69 @@ break parity fail CI, not just the local test run.
 Hard gates:
 
 - 0 failures in `cargo test --workspace --no-fail-fast`.
-- ignored count ≤ 5 (only the documented Category A
-  pre-existing items: `test_selective_transitive_
-  unfurling` if not fixed; closure tests if still gapping;
-  whatever the W5 audit confirms is genuinely out-of-AW
-  scope).
+- ignored count ≤ 14, comprising the enumerated Category A
+  set:
+  - `test_selective_transitive_unfurling` — imports-
+    subsystem bug, AW.5.5 disposition (fix in W5 if scope
+    permits, otherwise route to AX as standalone tranche).
+  - 5 closure tests (`closure_*_param`, `lower::expression`
+    gap) — language-feature scope, route to AX.
+  - 4 analysis structural-mode gates (cycle/alias detection,
+    diagnostics) — analysis-subsystem scope, route to AX.
+  - 3 gorgeous dump tests (non-checked-in fixtures) —
+    fixture-side, the tests reference snapshot files not
+    in-repo. Either commit the fixtures or delete the
+    tests; W5 audit decides per-test.
+  - 2 pprint-vm hint tests (softbreak/indent_group drift) —
+    pprint-vm scope, route to AX.
+
+Every AV-routed forward-ticket lands in an AW phase: the 7
+JSON variant-dispatch tests un-ignore at AW.5.1; the 13
+serialize/structural roundtrip tests un-ignore at AW.5.2;
+the 3 CSS percentage InlineScalar tests un-ignore at
+AW.2.5; the Sheets Bug-1 inline tests un-ignore at AW.2.5
+or via Pratt at AW.4.6; `test_let_parses_as_let_call`
+heals at AW.4.6. Anything still ignored after W5 close is
+a Category A item per the enumerated list above.
 
 ### Phase 6 — Visitor production wiring + bench parity (W6)
 
-#### AW.6.1 Production `@visitor` directives
+#### AW.6.1 Visitor API on the columnar `Tape`
 
-V2.5's `mine_visitors()` returns empty for every shipped
-grammar today because the `@visitor` directive isn't wired
-through the BBNF lexer/parser. W6.1 lands the directive +
-adds at least one production visitor per scalar-dense
-grammar:
+V2.5's reordered-unrolling kernels reach end users via a
+Rust-side API on the columnar `Tape`, not via a grammar-
+author directive. The visitor invocation is a method call
+the consumer writes against the parsed tape:
 
-- BBNF: `@visitor count_rules : column any reduce count ;`
-- JSON: `@visitor sum_of_numbers : column F64 reduce sum ;`
-- CSS L4: `@visitor declaration_count : column any reduce count ;`
-- Sheets: `@visitor formula_count : column any reduce count ;`
+```rust
+let total: f64 = parsed.tape().reduce_column::<F64Column, _>(
+    0.0,
+    |acc, x| acc + x,
+);
+```
 
-The kernels emit via V2.5's `emit_visitor_kernels` —
-unchanged from AV. The wiring is grammar-side: extend the
-BBNF grammar to recognise `@visitor name : column TYPE
-reduce OP ;`, lower to `IrRule { meta.directives.visitor:
-Some(VisitorDirective {...}) }`, populate `GrammarProfile::
-reorder_unroll_visitors` from the directive.
+The codegen emits one `reduce_column<C, R>` impl per active
+payload column per grammar (driven by `GrammarProfile::
+active_columns`); LLVM monomorphises the reducer at the call
+site, producing the V2.5 4-lane reordered-unrolled loop. No
+proc-macro on the consumer side; no grammar surface; no new
+BBNF directive. The kernel was always grammar-agnostic — it
+needs the column type and the reducer, both of which the
+Rust call site supplies.
 
-Verifies V2.5's substrate reaches end users; the 3.3×
-microbench gain becomes available to grammar authors.
+Test surface: `crates/core/tests/visitor_reduce.rs` exercises
+one reducer per grammar against a fixture — JSON sum-all-f64
+on canada.json; CSS count-all-declarations on bootstrap.css;
+BBNF count-all-rules on bbnf_self.bbnf; Sheets sum-all-cell-
+refs on stress.txt — proving the kernel reaches end users
+through the new API and matches the V2.5 microbench
+performance ceiling.
+
+The choice keeps the AV invariant 5 alignment: codegen
+specialised from `GrammarProfile::active_columns` (a
+fingerprint output, not a grammar annotation); consumer
+ergonomics through Rust generics; zero grammar-author surface
+introduced by AW.
 
 #### AW.6.2 Bench parity confirmation
 
@@ -1059,6 +1306,44 @@ based attribution: which W1–W4 lever delivered the win,
 which residual costs remain.
 
 Hard gate: every gate met.
+
+#### AW.6.3 Visitor SIMD-packed 6× gate (AV.2.5 closure)
+
+AV.2.5 measured 3.3× scalar-left-fold-free speedup on
+synthetic `Vec<f64>`. AV FINAL hard-gate 12 was partial:
+the plan's 6× SIMD-packed target was unmet at AV close
+because portable `f64x4` packing was not wired into the
+emitted kernel. AW.6.3 closes it.
+
+The 4-lane reordered accumulator the visitor codegen emits
+already breaks the strict-IEEE left-fold dependency chain;
+LLVM auto-vectoriser produces four independent scalar
+`fadd d*` chains on AArch64. Promotion to packed
+`std::simd::f64x4` (or arch-intrinsic `vfadd.2d` x 2) is a
+mechanical change to `crates/core/src/backend/rust/emitter/
+visitor.rs::emit_visitor_kernels`: the inner loop body
+swaps from 4 independent scalar adds to one `f64x4` SIMD
+add per stripe. portable_simd is stable; no nightly
+dependence required.
+
+Verified against AW.6.1's `reduce_column<F64Column,_>` API
+on a representative dense-numeric input (canada.json's
+`f64` column, ~6M entries):
+
+```bash
+cargo bench -p bbnf --bench visitor_reduce_simd \
+  -- --measurement-time 10
+```
+
+Hard gate: ≥ 6× speedup over the AV.2.5-baseline scalar
+left-fold on the canada.json `f64` column. If portable
+`f64x4` lowering on AArch64 cannot clear 6× (the AV.md
+projection was based on x86_64 AVX2 measurements; AArch64
+NEON has 2-lane f64 width), document the per-arch ceiling
+and route the 6× target to AX with arch-specific
+intrinsic kernels (`vfaddq_f64` pairs on NEON, AVX2
+`_mm256_add_pd` on x86_64). Either ≥ 6× lands or the gate
+formally retires per-arch with measurement evidence.
 
 ### Phase 7 — Tranche completion (W7)
 
@@ -1081,7 +1366,8 @@ requirements.
 | `crates/core/src/backend/rust/emitter/tape_prelude.rs` (always-true branch elision, mark_children prelude gate) | 0 |
 | `crates/core/src/backend/rust/emitter/grammar.rs` (parse() rewrite, fn-per-rule deletion) | 1 |
 | `crates/core/src/backend/rust/emitter/{alt,map_value,seq,repeat,binary,operator_chain,dispatch,ws,string_decode}.rs` (per-rule helpers delete) | 1 |
-| `crates/bbnf-tape/src/driver.rs` (**new** — DTA stage-A walker) | 1 |
+| `crates/bbnf-tape/src/driver.rs` (**new** — DTA stage-A walker; `dta-replay` feature exposes `decision_log` + `DtaSnapshot`) | 1 |
+| `parse-that/rust/parse_that/src/state.rs` (`MemoStore` deletion) | 1 |
 | `crates/ir/src/types/type_desc.rs` (TypeDesc::Struct admission) | 0 |
 | `crates/ir/src/passes/payload/layout.rs` (Map-bodied scalar admission) | 2 |
 | `crates/bbnf-tape/src/dedup.rs` (**new** — bloom + GADT) | 4 |
@@ -1091,13 +1377,14 @@ requirements.
 | `crates/core/src/backend/rust/emitter/selector_classifier.rs` (**new** — CSS selector classifier) | 3 |
 | `crates/core/src/grammar/generated.rs` (DTA-driven, ~10K lines) | 1, 2, 3, 4, 6 |
 | `grammar/css/l4/color.bbnf` (Color / ColorMix struct projection) | 0 |
-| `grammar/bbnf/bbnf.bbnf` (`@visitor` directive grammar) | 6 |
+| `crates/bbnf-tape/src/columns.rs` (`Tape::reduce_column<C, R>` API + per-column codegen specialisations) | 6 |
+| `crates/core/tests/visitor_reduce.rs` (**new** — one-reducer-per-grammar fixture suite) | 6 |
 | `crates/core/tests/sonic_rs_parity.rs` (**new**) | 5 |
 | `crates/core/tests/lightningcss_parity.rs` (**new**) | 5 |
 | `crates/core/tests/{json,structural}_parity.rs` (un-ignore + fix) | 5 |
 | `scripts/check-bootstrap-clean.sh` (**new** — CI gate) | 0 |
 | `crates/gorgeous/tests/google_sheets.rs` (**new** — inline-test migration target) | 0 |
-| `docs/tranches/AW/{PROGRESS,FINAL}.md` + `docs/benchmarks/post-AW{,-W0,-W1,-W2,-W3,-W4,-W5}.json` | 0–7 |
+| `docs/tranches/AW/{PROGRESS,FINAL}.md` + `docs/benchmarks/{post-AV-substrate-only,post-AW,post-AW-W0,post-AW-W1,post-AW-W2,post-AW-W3,post-AW-W4,post-AW-W5}.json` | 0–7 |
 
 ## Hard gates summary
 
@@ -1113,14 +1400,20 @@ requirements.
 8. `grep -rn '^#\[cfg(test)\]' crates/*/src/` returns 0.
 9. `scripts/check-bootstrap-clean.sh` lands in CI; PRs that skip bootstrap regen fail.
 10. White-colour collision routed via WideScalar; `white_materialises` test passes.
-11. **post-AW-W0.json** shows ≥ 25% recovery on the post-AV regression vs. four-bench matrix (trajectory measurement, not bench gate).
+11. PROGRESS.md carries the GrammarProfile population matrix (AW.0.9); each W2/W3/W4 wave's profile-population contract enumerated.
+12. `inline_acyclic` / `fuse_single_use` always-true guard dropped; CSS L4 DTA state count drops measurably from the AV.3.6 baseline of 2473.
+13. **post-AW-W0.json** shows ≥ 25% recovery on the post-AV regression vs. four-bench matrix (trajectory measurement, not bench gate).
 
 ### W1 — DTA driver activation
 
-12. `grep -cE 'fn __[a-zA-Z_]+<' crates/core/src/grammar/generated.rs` returns 0 outside prettify.
-13. `wc -l crates/core/src/grammar/generated.rs` ≤ 12000.
-14. `cargo test --workspace --no-fail-fast` 0 failures, ignored count unchanged from W0.
-15. **post-AW-W1.json**: every entry ≥ post-AU baseline.
+14. `grep -cE 'fn __[a-zA-Z_]+<' crates/core/src/grammar/generated.rs` returns 0 outside prettify.
+15. `wc -l crates/core/src/grammar/generated.rs` ≤ 12000.
+16. `cargo test --workspace --no-fail-fast` 0 failures, ignored count unchanged from W0.
+17. **post-AW-W1.json**: every entry ≥ post-AU baseline (small inputs amortised per AW.4.7 formula once W4 calibration lands).
+18. `dta-replay` feature builds clean; with the feature on, `dta_run` accepts a `decision_log` sink and a `DtaSnapshot` resume entry; with the feature off, the `Option`-typed sink hoists out of the hot loop (asm-verified zero overhead).
+19. `ParserState::memo` and `MemoStore` deleted from `parse-that`; no production consumer remains.
+20. AW.1.9: `grep -c 'TapeKind::KvPair' crates/core/src/grammar/generated.rs` ≥ 1 (JSON `pair` fires KvPair) OR PROGRESS.md carries the AT.1.3-retire rationale.
+21. AW.1.10: cursor first-child accessor degrades to O(1) `idx + 1` lookup post-DTA OR PROGRESS.md carries the post-order inheritance rationale routing the optimisation to AX.
 
 ### W2 — PSI rayon + ShapeRef + Bug 2b
 
@@ -1152,11 +1445,11 @@ requirements.
 32. 13 serialize/structural roundtrip tests un-ignore.
 33. `sonic_rs_parity` harness: zero divergences.
 34. `lightningcss_parity` harness: zero divergences.
-35. `cargo test --workspace --no-fail-fast` 0 failures; ignored count ≤ 5 (Category A only).
+35. `cargo test --workspace --no-fail-fast` 0 failures; ignored count ≤ 14 (the enumerated Category A set per W5 phase narrative — closure tests, analysis structural-mode gates, gorgeous fixture tests, pprint-vm hint tests, plus `test_selective_transitive_unfurling` if W5.5 routes to AX).
 
 ### W6 — Visitor production + bench parity
 
-36. ≥ 1 `@visitor` directive lands per scalar-dense grammar; visitor kernels emit + active.
+36. `Tape::reduce_column<C, R>` lands; one reducer per grammar in `crates/core/tests/visitor_reduce.rs` exercises the kernel and matches V2.5's microbench performance ceiling. Zero new BBNF grammar directives introduced by AW (verifies AV invariant 5 alignment).
 37. **post-AW.json**: every entry from the post-AV reality-check table meets its W6 gate (canada ≥ 2000, twitter ≥ 2400, bootstrap ≥ 800, tailwind ≥ 1200, parse_simple ≥ 250, bbnf_self ≥ 500, etc.).
 
 ### W7 — Completion
@@ -1214,6 +1507,62 @@ deferred-but-actually-deleted:
 | `Tape::iter` / cursor-allocation walker (AT.5.1) | **WIRED** AT, validated AU | nothing for AW |
 | 64-byte input padding | **LANDED** AU (parse-that `64fe9f2`); cascade closed AV.0.7 | nothing for AW |
 | `.map(|_| ())` discards | **ELIMINATED** AT/AU (commit `4e4a75e`) | nothing for AW |
+
+## Long-deferral audit ledger (AM–AV ten-tranche read-only audit)
+
+Four parallel audit agents read every tranche doc from AM
+through AV (and grep-confirmed against current master code)
+to surface items consistently deferred but neither
+implemented nor accounted for above. The audit findings
+fold here so no item drifts through a seventh tranche
+unadjudicated. Items below are separated into AW-fold
+(genuine W0–W7 scope additions), formal-retire (chronic
+deferrals that need explicit closure), and AX-route
+(genuinely out-of-AW-scope hyperopt or post-DTA polish).
+
+### AW-fold — genuine W0–W7 additions surfaced by the audit
+
+| Item | Origin chain | AW phase fold |
+|------|--------------|---------------|
+| GrammarProfile 5 stub fields = `&[]` (`active_columns`, `list_rules`, `keyword_tables`, `shape_dict`, `dedup_eligible_rules`). V1 hard-gate 10 passed on grep criterion (no per-grammar `const X: &[u8]`); profile fields themselves remain stubs. AW waves populate as they activate — but no shared precondition ledger. Source: `crates/core/src/backend/rust/emitter/profile.rs:142-147`. | AV.1.3 (AU-AV agent) | **AW.0.9** (NEW) — ledger-only entry confirming each W2/W3/W4 wave's profile-population contract. The wave that consumes the slot is responsible for populating it; W0.9 enumerates the four contracts so an interrupted wave's stub state is auditable. |
+| AT.1.3 KvPair JSON `pair` rule activation gap. `is_kv_pair_shape` exists in `crates/ir/src/passes/payload/layout.rs`; never fires for JSON because `pair`'s layout admission excludes it. `grep KvPair crates/core/src/grammar/generated.rs` returns 0. AW.1 wholesale DTA-replaces emission — but if the layout pass excludes `pair`, the DTA inherits the gap. Source: AR-AT agent grep. | AT.1.3 (AR-AT agent) | **AW.1.7** (NEW) — sub-verification step in W1: post-DTA-driver landing, confirm `KvPair` fires for JSON `pair` (and Sheets `key_value` if applicable). If layout admission still excludes, widen `compute_payload_layouts` to admit `pair`-shape rules. |
+| AV.2.5 reorder-unrolling 6× SIMD-packed gate (currently 3.3× scalar-left-fold-free per V2.5 microbench). AV FINAL hard-gate 12 partial; AW.6.1 wires the `@visitor` directive but no explicit 6× numeric gate. Source: AV FINAL.md hard-gate 12. | AV.2.5 (AU-AV agent) | **AW.6.3** (NEW) — explicit numeric gate added to W6: at least one production visitor on a scalar-dense grammar measures ≥ 6× scalar-left-fold via portable_simd `f64x4` packing, OR rationale documents the AArch64-specific lowering ceiling that holds at 3.3× scalar. |
+| `inline_acyclic` / `fuse_single_use` latent no-op (AU PROGRESS Session 1 flag): both passes guard on `r.meta.scc_id.is_none()` which is always `Some` during the normalizer loop. Effectively no-ops at IR level. Source: `crates/ir/src/passes/transform/inline.rs:23`, `crates/ir/src/passes/transform/fuse.rs:31`. | AU PROGRESS (AU-AV agent) | **AW.0.10** (NEW) — drop the always-true guard so the passes fire as designed; consumers (DTA lifter at `dta.rs:670` "post-fuse_single_use shape" comment) currently consume a no-op output. Verify post-fix that fused-shape DTA states drop in count. |
+
+### Formal-retire — chronic deferrals that must close in AW with rationale, not drift
+
+| Item | Defer chain (5+ tranches) | AW posture |
+|------|--------------------------|------------|
+| **Cost-model grid sweep** — egraph `CostWeights` calibration via grid search over a representative grammar corpus. Proposed AM.6 → AO.4.1 → AP.6.4 → AQ.9.4. AR.md explicitly: "manual calibration adequate." | AM.6 → AO.4.1 → AP.6.4 → AQ.9.4 | **SUPERSEDED** by AW.4.7 GrammarProfile-slot calibration: AW.4.7 calibrates *runtime* per-grammar scalars (`expected_ns_per_byte`, `parallel_break_even_bytes`, `payload_bytes_per_input_byte`) from samply data, which is the cost surface that actually moves observable bench. The egraph `CostWeights` proposal addressed compile-time IR cost ranking; AR's "manual calibration adequate" stance holds — current weights are fit, no evidence demands re-calibration. AW FINAL formally retires with this rationale; future tranches do not re-list. |
+| **Global CSP solve** — replace per-component CSP with a single global solve. Proposed AL-prototype → AO.4.2 → AP.6.5 → AQ.9.5. AR.md: "per-component CSP is sufficient at current grammar scale." | AL → AO.4.2 → AP.6.5 → AQ.9.5 | **FORMALLY RETIRED** in AW. AR's per-component-sufficient stance holds: today's grammars (CSS L4 ~1200 rules max, BBNF ~400, JSON ~25, Sheets ~80) do not exhibit cross-component coupling that per-component fails on. AW FINAL closes with the rationale "evidence-driven re-open only — no automatic carry-forward". Future tranches that hit cross-component pessimisation reopen with a specific failing case; otherwise the item retires. |
+| **AU.2.7 intermediate perf gate** (CSS bootstrap ≥ 650 MB/s from v2 structural bitmap *alone*). Silently rolled into AW W3 composite (`bootstrap ≥ 900 MB/s` after PHF + selector classifier). Original gate's attribution lost. | AU.2.7 (AU-AV agent) | **SUPERSEDED** by AW W3 composite gate. AW FINAL records the supersession explicitly: the v2-bitmap-alone gate was a phase-internal AU target; the AW composite gate (PHF + classifier + bitmap together at ≥ 900 MB/s) subsumes it. Future tranches do not re-list as "missed AU gate". |
+
+### AX-route — items genuinely out of AW scope (next tranche or later)
+
+| Item | Origin | AX classification |
+|------|--------|------------------|
+| AN.5 32-byte SIMD widening (`u8x32` on AVX2). Every SIMD call site uses `u8x16` today; no `u8x32` matches in scanners. Hyperopt; gated on workload where chunk-count dominates. | AN.5 (AM-AN agent) | AX **scanner hyperopt** wave |
+| AO.5.3 Branch frequency ordering for dispatch (frequency-hint consumer, not specificity sort). | AO.5.3 (AO-AQ agent) | AX **dispatch tuning** wave |
+| AP.3.2 Redundant trim-call elision via `last_trim_offset` fused-scan. Sub-5% marginal post-DTA. | AP.3.2 (AO-AQ agent) | AX **post-DTA WS polish** wave |
+| AP.4.2 Hoist duplicated patterns (`ws + ':' + ws`, `!important`) — grammar-level dedup of 43/42 repeats. | AP.4.2 (AO-AQ agent) | AX **grammar-dedup** scope |
+| AP.5.4 Deferred UTF-8 validation — lazy validation hooks; substrate-level change. | AP.5.4 (AO-AQ agent) | AX **substrate** scope |
+| AQ.7.3 Length-bucketed perfect hash for key dispatch (generalised first/last-byte PHF). AW.3.1 covers `namedColor` and Sheets functions; the *generalised* length-bucket variant is a separate lever. | AQ.7.3 (AO-AQ agent) | **AW.3.1 partial** — generalised tail to AX |
+| AQ.8.1 `skip_space` bitmap caching (`nospace_bits`, `nospace_start`). | AQ.8.1 (AO-AQ agent) | AX **post-DTA WS polish** |
+| AQ.8.3 TLS-recycled scratch (`#[parser(tls_scratch)]`) codegen flag. | AQ.8.3 (AO-AQ agent) | AX **codegen flags** scope |
+| AT.4.3 NEON 17-digit fractional scan (4-tranche chain AR→AT). AV.3.5 landed Eisel-Lemire Clinger short-circuit + 16-digit SIMD integer fastpath; the *17-digit fractional* kernel specifically remains. | AT.4.3 (AR-AT agent) | AX **number-scan finishing** scope |
+| Scanner-architecture cluster: AR.6.1/6.2/6.4/6.5/6.6/6.8 (mirrored as AS.5.1/5.2/5.4/5.5). `RegexClassMiner` consolidation, `ScanLut` registry, `WsCommentConfig` parameterisation, `FnDescriptor` post-pass, HIR predicate re-exports. AS.5 marked most as "Not applicable" / "Premature optimisation" / "Negligible overhead"; AT silent. ~600 LOC delete + 350 LOC net reduction estimated. | AR.6.x / AS.5.x (AR-AT agent) | AX **focused scanner-hygiene tranche** — recommend a dedicated tranche, not folding into a multi-purpose wave |
+| AV.3.6 CSS L4 DTA state count narrowing (2473 vs predicted ~1200). AV PROGRESS: "factoring can land in V9 closure if the table size becomes a runtime constraint." | AV.3.6 (AU-AV agent) | AX **conditional** — only if AW W6 bench shows table-size pressure (DTA dispatch I-cache miss rate); otherwise stays at 2473 |
+| AV.2 pre-order emission (sibling-skip walker still uses bounded backward walk for first-child seeding). AW.1.1 DTA emits pre-order natively, so the AV.2 substrate inherits the gap silently. | AV.2 / AV.2.6 (AU-AV agent) | **AW.1.4 sub-verification** — confirm post-DTA emit yields pre-order tape and the bounded backward walk in `cursor.rs::child(0)` becomes O(1); otherwise route to AX |
+| FDMP mimalloc segment-class rounding (research 02). Never implemented. | AV research 02 (AU-AV agent) | AX **allocator-tuning** scope |
+| Per-grammar column overlays `sel_col` / `pay_cellref` (research 04). Never implemented. | AV research 04 (AU-AV agent) | AX **column-overlay** scope (low priority — current 6 structural + 6 typed-payload columns suffice) |
+
+### Audit confirmations (no action required)
+
+- AT.4.1 fresh samply profiles → SUPERSEDED by AW per-wave bench checkpoint contract.
+- AO.5.4 structural position prefetch → SUPERSEDED (deleted substrate per AQ.5).
+- AN.3 single-pass string scan → SUPERSEDED by AU.3.1 commit `ceab7e8` + the fused `decode.rs` SIMD loop.
+- AM.5.3 structural bitmap codegen consumer → DELETED in AQ.5 commit `2f7c1bd` (net regression on citm).
+- AO.0.1–0.6 / AP.1 / AP.3.4 structural dispatch family → DELETED in AQ.5.
 
 ## Style note
 

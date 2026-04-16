@@ -40,6 +40,7 @@ fn make_simple_ir(body: IrNode) -> GrammarIR {
         push_fingerprint: None,
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
+        shape_dict_selection: Vec::new(),
     }
 }
 
@@ -172,6 +173,7 @@ fn compile_memo_rule() {
         push_fingerprint: None,
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
+        shape_dict_selection: Vec::new(),
     };
     let program = compile(&ir);
 
@@ -237,6 +239,7 @@ fn compile_direct_left_recursive_rule_keeps_memo() {
         push_fingerprint: None,
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
+        shape_dict_selection: Vec::new(),
     };
     let program = compile(&ir);
 
@@ -396,6 +399,7 @@ fn compile_token_dispatch_emits_dispatch_token() {
         push_fingerprint: None,
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
+        shape_dict_selection: Vec::new(),
     };
     let program = compile(&ir);
 
@@ -480,6 +484,7 @@ fn compile_call() {
         push_fingerprint: None,
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
+        shape_dict_selection: Vec::new(),
     };
     let program = compile(&ir);
 

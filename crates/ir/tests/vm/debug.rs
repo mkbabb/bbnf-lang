@@ -68,6 +68,7 @@ fn make_debug_ir() -> GrammarIR {
         push_fingerprint: None,
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
+        shape_dict_selection: Vec::new(),
     }
 }
 
@@ -129,6 +130,7 @@ fn compiler_no_debug_break_without_flag() {
         push_fingerprint: None,
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
+        shape_dict_selection: Vec::new(),
     };
     let program = compile(&ir);
 

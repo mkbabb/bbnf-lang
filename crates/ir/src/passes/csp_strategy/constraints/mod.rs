@@ -13,6 +13,14 @@
 //!   site. `FamilyHelper` is exempt: it is a named SIMD
 //!   function call with zero startup cost and no shared
 //!   infrastructure with compiled engines.
+//! - [`shape_dict`] — Tranche AV.5.3 grammar-wide shape-template
+//!   admission. Selects up to
+//!   [`shape_dict::MAX_SHAPE_DICT_ENTRIES`] candidates from the
+//!   `ShapeDictMiner` pool by greedy maximisation of `freq ×
+//!   savings - static_entry_cost`. Runs as a separate pass via
+//!   [`shape_dict::solve_shape_dict_selection`]; the per-component
+//!   [`shape_dict::install`] hook is reserved for future
+//!   cross-rule shape-dict interactions.
 //!
 //! # Integration
 //!
@@ -34,6 +42,7 @@
 //! unaffected.
 
 pub mod engine;
+pub mod shape_dict;
 
 use std::collections::HashMap;
 

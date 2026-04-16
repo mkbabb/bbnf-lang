@@ -39,6 +39,7 @@ fn make_ir(body: IrNode) -> GrammarIR {
         push_fingerprint: None,
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
+        shape_dict_selection: Vec::new(),
     }
 }
 
@@ -78,6 +79,7 @@ fn make_ir_with_strings(body: IrNode, strings: Vec<String>) -> GrammarIR {
         push_fingerprint: None,
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
+        shape_dict_selection: Vec::new(),
     }
 }
 

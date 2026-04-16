@@ -44,6 +44,7 @@ fn literal_is_span_eligible() {
         push_fingerprint: None,
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
+        shape_dict_selection: Vec::new(),
     };
 
     refine_span_eligibility(&mut ir);
@@ -87,6 +88,7 @@ fn map_not_span_eligible() {
         push_fingerprint: None,
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
+        shape_dict_selection: Vec::new(),
     };
 
     refine_span_eligibility(&mut ir);
@@ -129,6 +131,7 @@ fn transitive_span_eligibility() {
         push_fingerprint: None,
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
+        shape_dict_selection: Vec::new(),
     };
 
     refine_span_eligibility(&mut ir);
@@ -176,6 +179,7 @@ fn cyclic_not_span_eligible() {
         push_fingerprint: None,
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
+        shape_dict_selection: Vec::new(),
     };
 
     refine_span_eligibility(&mut ir);
@@ -216,6 +220,7 @@ fn seq_of_literals_span_eligible() {
         push_fingerprint: None,
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
+        shape_dict_selection: Vec::new(),
     };
 
     refine_span_eligibility(&mut ir);

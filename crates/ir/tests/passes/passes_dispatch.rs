@@ -63,6 +63,7 @@ fn dispatch_for_disjoint_branches() {
         push_fingerprint: None,
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
+        shape_dict_selection: Vec::new(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -133,6 +134,7 @@ fn no_dispatch_for_overlapping_branches() {
         push_fingerprint: None,
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
+        shape_dict_selection: Vec::new(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -201,6 +203,7 @@ fn dispatch_for_nested_alt() {
         push_fingerprint: None,
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
+        shape_dict_selection: Vec::new(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -277,6 +280,7 @@ fn dispatch_with_nullable_branch_via_follow() {
         push_fingerprint: None,
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
+        shape_dict_selection: Vec::new(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -355,6 +359,7 @@ fn no_dispatch_when_nullable_overlaps_follow() {
         push_fingerprint: None,
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
+        shape_dict_selection: Vec::new(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -443,6 +448,7 @@ fn fallback_dispatch_typed_plus_catchall() {
         push_fingerprint: None,
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
+        shape_dict_selection: Vec::new(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -523,6 +529,7 @@ fn fallback_dispatch_not_superset() {
         push_fingerprint: None,
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
+        shape_dict_selection: Vec::new(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -591,6 +598,7 @@ fn fallback_dispatch_too_few_branches() {
         push_fingerprint: None,
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
+        shape_dict_selection: Vec::new(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);

@@ -61,6 +61,7 @@ fn make_ir(rules: Vec<IrRule>, strings: Vec<String>) -> GrammarIR {
         push_fingerprint: None,
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
+        shape_dict_selection: Vec::new(),
     };
     bbnf_ir::dag::ensure_dag(&mut ir);
     // Run the AB.0 classification first — the CSP consumes its

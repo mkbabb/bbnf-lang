@@ -64,6 +64,7 @@ fn follow_set_basic_seq() {
         push_fingerprint: None,
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
+        shape_dict_selection: Vec::new(),
     };
 
     let follow = compute_follow_sets(&ir);
@@ -154,6 +155,7 @@ fn follow_set_propagates_through_nullable() {
         push_fingerprint: None,
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
+        shape_dict_selection: Vec::new(),
     };
 
     let follow = compute_follow_sets(&ir);

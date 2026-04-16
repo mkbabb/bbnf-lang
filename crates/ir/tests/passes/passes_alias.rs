@@ -51,6 +51,7 @@ fn resolve_direct_alias() {
         push_fingerprint: None,
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
+        shape_dict_selection: Vec::new(),
     };
 
     canonicalize_aliases(&mut ir);
@@ -104,6 +105,7 @@ fn resolve_chain_alias() {
         push_fingerprint: None,
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
+        shape_dict_selection: Vec::new(),
     };
 
     canonicalize_aliases(&mut ir);

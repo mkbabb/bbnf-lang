@@ -225,6 +225,17 @@ pub struct GrammarIR {
     #[serde(skip, default)]
     pub shape_dict_templates: passes::recognizers::shape_dict::ShapeDictMap,
 
+    /// Tranche AV.5.3 — admitted shape-dictionary indices.
+    ///
+    /// Result of
+    /// [`passes::csp_strategy::constraints::shape_dict::solve_shape_dict_selection`]
+    /// — the indices into `shape_dict_templates` that survived the
+    /// budget-bounded selection. Sorted ascending so the emitter
+    /// sees a deterministic dictionary order across compile sessions.
+    /// Not serialized.
+    #[serde(skip, default)]
+    pub shape_dict_selection: passes::csp_strategy::constraints::shape_dict::ShapeDictSelection,
+
     /// Tranche AQ.6.B — per-rule aggregate payload layouts.
     ///
     /// Populated by [`passes::compute_payload_layouts`] after

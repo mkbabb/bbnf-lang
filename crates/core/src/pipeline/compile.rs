@@ -666,6 +666,19 @@ fn compile_ast_common<'a>(
                 bbnf_ir::passes::extract_regex_engine_decisions(&ir, &ir.recognizer_decisions);
         });
 
+        // Tranche AV.5.3 — shape-dictionary admission solve. Selects
+        // up to MAX_SHAPE_DICT_ENTRIES candidates from the
+        // `mine_recognizers`-emitted pool by greedy maximisation of
+        // `freq × savings - static_entry_cost`. The result indexes
+        // into `ir.shape_dict_templates`; the codegen emitter walks
+        // the selection to bake `GrammarProfile::shape_dict`.
+        timer.span("solve_shape_dict_selection", || {
+            ir.shape_dict_selection =
+                bbnf_ir::passes::csp_strategy::constraints::shape_dict::solve_shape_dict_selection(
+                    &ir,
+                );
+        });
+
     }
 
     // Emit the per-pass CSV report when BBNF_PIPELINE_REPORT=1.

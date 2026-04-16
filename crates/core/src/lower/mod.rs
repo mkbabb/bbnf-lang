@@ -229,6 +229,7 @@ pub fn lower_to_ir<'a>(
         materialization: HashMap::new(),
         eclass_facts: HashMap::new(),
         shape_dict_templates: Vec::new(),
+        shape_dict_selection: Vec::new(),
         payload_layouts: HashMap::new(),
         string_index: HashMap::new(),
         structural_alphabet: None,

@@ -522,6 +522,76 @@ impl TapeBuilder {
         self.columns.pay_agg[start..start + 4].copy_from_slice(&len.to_le_bytes());
     }
 
+    // ── Shape-dictionary leaf push (AV.5.1) ─────────────────────────
+
+    /// Append a `ShapeRef` leaf record — a single record that replaces
+    /// an entire fixed-shape compound subtree.
+    ///
+    /// `shape_dict_idx` is the index into
+    /// [`GrammarProfile::shape_dict`](crate::GrammarProfile::shape_dict)
+    /// (0..=31, 5-bit packed into `flags`). `packed_payload` is the
+    /// per-instance payload blob (non-constant leaf spans + typed
+    /// payloads following the shape template's layout); the bytes are
+    /// written into `pay_agg` and the arena offset stored in
+    /// `child_off`.
+    ///
+    /// Bit 5 of `flags` is set when `packed_payload` is non-empty
+    /// (`has_payload`). The remaining bits (6 and 7) are zero — ShapeRef
+    /// records do not carry `has_children` or `meta_idx[4]`.
+    #[inline]
+    pub fn push_shape_ref(
+        &mut self,
+        span_lo: u32,
+        span_hi: u32,
+        shape_dict_idx: u8,
+        packed_payload: &[u8],
+    ) -> TapeOffset {
+        debug_assert!(
+            shape_dict_idx <= 31,
+            "shape_dict_idx {} exceeds 5-bit maximum (31)",
+            shape_dict_idx,
+        );
+        let has_payload = !packed_payload.is_empty();
+        let child_off = if has_payload {
+            let offset = self.alloc_aggregate_shape_ref(packed_payload);
+            TapeOffset(offset)
+        } else {
+            TapeOffset::NONE
+        };
+        // kind_meta: low 4 bits = ShapeRef discriminant (13), high 4
+        // bits = 0 (no meta_idx for ShapeRef).
+        let kind_meta = TapeKind::ShapeRef as u8 & 0x0F;
+        let flags = (shape_dict_idx & 0x1F) | if has_payload { 0x20 } else { 0 };
+        let idx = self.columns.push_structural(
+            kind_meta,
+            flags,
+            0,
+            span_lo,
+            span_hi,
+            child_off,
+        );
+        TapeOffset(idx)
+    }
+
+    /// Allocate an arena slot for a ShapeRef packed payload. Identical
+    /// to the aggregate slot path but without the 16-byte inline limit.
+    #[inline]
+    fn alloc_aggregate_shape_ref(&mut self, bytes: &[u8]) -> u32 {
+        let slot_total = bytes.len().div_ceil(8) * 8;
+        let arena = &mut self.columns.pay_agg;
+        let start = arena.len();
+        arena.resize(start + slot_total, 0);
+        // SAFETY: resize guarantees `slot_total` bytes at `start`.
+        unsafe {
+            std::ptr::copy_nonoverlapping(
+                bytes.as_ptr(),
+                arena.as_mut_ptr().add(start),
+                bytes.len(),
+            );
+        }
+        start as u32
+    }
+
     /// Mark the parse as failed with an offset and optional rule
     /// label. The builder continues to accept pushes (so recovery
     /// paths can produce partial tapes) but [`Self::finish`] returns

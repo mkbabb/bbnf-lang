@@ -58,7 +58,7 @@ pub mod tape;
 
 pub use builder::{PayloadData, TapeBuildError, TapeBuilder};
 pub use columns::Columns;
-pub use cursor::{ChildIter, ColumnRank, TapeCursor};
+pub use cursor::{ChildIter, ColumnRank, ShapeRefChildIter, ShapeRefSyntheticChild, TapeCursor};
 pub use dta::{
     DtaAssociativity, DtaCounterOptional, DtaDiagnostic, DtaFrameKind, DtaPrecedenceEntry,
     DtaRuleEntry, DtaRuleId, DtaState, DtaStateId, DtaTable,

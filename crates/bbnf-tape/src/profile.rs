@@ -67,13 +67,34 @@ pub struct KeywordTable {
 }
 
 /// A shape-dictionary entry ([`GrammarProfile::shape_dict`], wave V5).
-/// V5 will populate the fields; V1 carries an empty slice.
+///
+/// Each entry describes one fixed-shape compound subtree that the
+/// parser collapses to a single `TapeKind::ShapeRef` record at parse
+/// time. The cursor reconstitutes children from the template at
+/// read time.
+///
+/// `child_kinds` declares the skeleton: each byte is the
+/// [`TapeKind`](crate::TapeKind) discriminant of the corresponding
+/// child position. `leaf_holes` gives the byte offset within the
+/// packed payload blob where each non-constant leaf's span/payload
+/// begins. The two slices are parallel with `child_kinds`; entries
+/// where the child is structural (not a leaf hole) carry
+/// `u16::MAX` as the sentinel.
 #[derive(Debug, Clone, Copy)]
 pub struct ShapeEntry {
     /// Canonical shape-hash from `RecognizerSignature`.
     pub shape_hash: u64,
     /// Rule id the shape-ref expands to.
     pub rule: RuleId,
+    /// Per-child `TapeKind` discriminants declaring the skeleton.
+    /// Length = number of direct children the collapsed compound
+    /// would have emitted.
+    pub child_kinds: &'static [u8],
+    /// Per-child byte offset into the packed payload blob for each
+    /// leaf hole. `u16::MAX` marks structural (non-hole) children.
+    pub leaf_payload_offsets: &'static [u16],
+    /// Total byte width of the packed payload blob.
+    pub payload_bytes: u16,
 }
 
 /// A branch-prior entry ([`GrammarProfile::branch_priors`], wave V4).

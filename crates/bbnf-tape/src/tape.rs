@@ -191,6 +191,26 @@ impl TapeRec {
     pub fn is_string_borrowed(&self) -> bool {
         (self.extra & Self::STRING_BORROW_BIT) != 0
     }
+
+    // ── ShapeRef accessors (AV.5.1) ──────────────────────────────
+
+    /// Extract the shape-dictionary index from a `ShapeRef` record's
+    /// `flags` (low 5 bits).
+    ///
+    /// Only meaningful when `kind() == TapeKind::ShapeRef`.
+    #[inline]
+    pub fn shape_dict_idx(&self) -> u8 {
+        self.flags & 0x1F
+    }
+
+    /// True iff this `ShapeRef` record carries a packed payload blob.
+    /// Bit 5 of `flags`.
+    ///
+    /// Only meaningful when `kind() == TapeKind::ShapeRef`.
+    #[inline]
+    pub fn shape_ref_has_payload(&self) -> bool {
+        (self.flags & 0x20) != 0
+    }
 }
 
 /// The parser's output tape.

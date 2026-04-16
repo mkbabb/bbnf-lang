@@ -8,7 +8,7 @@
 
 /// Classification tag for a tape record.
 ///
-/// The variants partition into five groups:
+/// The variants partition into six groups:
 ///
 /// 1. **Leaf shapes** — `Span`, `Epsilon`, `Literal`, `Regex` — carry
 ///    their result directly in `span_lo`/`span_hi`, no children.
@@ -19,7 +19,10 @@
 /// 4. **Recovery marker** — `Recovered` — sentinel leaf pushed by
 ///    `@recover` arms when a recovery path fires. Views expose this
 ///    as `.is_recovered()`.
-/// 5. **Sentinel** — `None` — represents parse failure / absence.
+/// 5. **Shape-dictionary reference** — `ShapeRef` — a single leaf that
+///    collapses an entire fixed-shape compound subtree. Children are
+///    lazily expanded via template lookup at cursor time.
+/// 6. **Sentinel** — `None` — represents parse failure / absence.
 ///
 /// Codegen may assign additional domain-specific tags by extending
 /// this enum (e.g., `TapeKind::JsonObject`, `TapeKind::CssDeclaration`).
@@ -92,6 +95,27 @@ pub enum TapeKind {
     /// Views expose this as `.is_recovered()`.
     Recovered = 12,
 
+    /// Shape-dictionary reference — a single leaf that replaces an
+    /// entire fixed-shape compound subtree at parse time (Tranche
+    /// AV.5.1). Record layout:
+    ///
+    /// ```text
+    /// kinds[i]    = ShapeRef
+    /// flags[i]    = shape_dict_idx (low 5 bits) | has_payload (bit 5)
+    /// span_lo[i]  = covered region start
+    /// span_hi[i]  = covered region end
+    /// sib_skip[i] = distance to next sibling
+    /// child_off[i]= pay_agg byte offset of the packed payload blob
+    /// ```
+    ///
+    /// The packed payload blob in `pay_agg` holds the non-constant
+    /// leaf spans and typed payloads following the shape template's
+    /// layout. `TapeCursor::children(ShapeRef)` lazily expands via
+    /// [`ShapeEntry`](crate::ShapeEntry) lookup — the template
+    /// declares which child positions are structural (emit synthetic
+    /// sub-cursors) and which resolve to actual tape records.
+    ShapeRef = 13,
+
     /// Leaf KV-pair — a flattened key-value pair where the key is a
     /// `Span` and the value is a scalar payload packed into the
     /// aggregate buffer. Emitted for Seq rules with the shape
@@ -131,6 +155,7 @@ impl TapeKind {
             10 => TapeKind::MapValue,
             11 => TapeKind::TokenDispatch,
             12 => TapeKind::Recovered,
+            13 => TapeKind::ShapeRef,
             14 => TapeKind::KvPair,
             15 => TapeKind::Reserved,
             _ => TapeKind::None,
@@ -146,7 +171,8 @@ impl TapeKind {
                 | TapeKind::Epsilon
                 | TapeKind::Literal
                 | TapeKind::Regex
-                | TapeKind::KvPair,
+                | TapeKind::KvPair
+                | TapeKind::ShapeRef,
         )
     }
 
@@ -179,6 +205,7 @@ impl TapeKind {
             TapeKind::MapValue => "map_value",
             TapeKind::TokenDispatch => "token_dispatch",
             TapeKind::Recovered => "recovered",
+            TapeKind::ShapeRef => "shape_ref",
             TapeKind::KvPair => "kv_pair",
             TapeKind::Reserved => "reserved",
         }
@@ -189,5 +216,15 @@ impl TapeKind {
     #[inline]
     pub fn is_recovered(self) -> bool {
         matches!(self, TapeKind::Recovered)
+    }
+
+    /// True iff this kind is a shape-dictionary reference (AV.5.1).
+    ///
+    /// `ShapeRef` leaves collapse fixed-shape compound subtrees to a
+    /// single record + packed payload. The cursor lazily expands
+    /// children from the template.
+    #[inline]
+    pub fn is_shape_ref(self) -> bool {
+        matches!(self, TapeKind::ShapeRef)
     }
 }

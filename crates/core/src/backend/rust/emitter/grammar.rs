@@ -509,6 +509,23 @@ impl RustEmitter {
             }
         };
 
+        // AW-I.W3: `parse()` now dispatches through `dta_run` wholesale.
+        // `parse_dta` retires — the DTA walker is feature-complete (AW-I.W2.1
+        // landed AltLinear savepoint / Repeat lo..=hi / ShuntingYard arms) and
+        // serves as the sole entry point. The per-rule `rule_functions`
+        // argument is intentionally unused here (the helpers still land in
+        // `rule_functions` upstream; W4 deletes the helper modules + the
+        // upstream call chain). The `trailing_ws`, `root_fn_ident`, and
+        // `with_capacity_expr` previously woven into the legacy body are no
+        // longer needed: `dta_run_into` owns EOF, root dispatch, and capacity
+        // derivation via `GRAMMAR_PROFILE.capacity_for`.
+        //
+        // `DTA_SCANNER` is promoted to a module-level `const` singleton so
+        // `parse()` borrows a single shared scanner instead of stack-
+        // allocating one per call. The `DtaDfaScanner` struct is zero-size
+        // so `const` is canonical.
+        let _ = (rule_functions, root_fn_ident, trailing_ws, with_capacity_expr);
+
         quote! {
             use ::parse_that::*;
 
@@ -520,97 +537,63 @@ impl RustEmitter {
 
             #type_defs
 
+            /// DTA regex-scanner adapter — consults parse-that's
+            /// cached DFA registry to match a regex pattern at
+            /// `input[offset..]`.
+            ///
+            /// Zero-size: one shared `const` instance per grammar; the
+            /// DTA driver's [`dta_run_into`] takes it by `&dyn`.
+            struct DtaDfaScanner;
+
+            impl ::bbnf::runtime::tape::RegexScanner for DtaDfaScanner {
+                fn scan(
+                    &self,
+                    pattern: &str,
+                    input: &[u8],
+                    offset: usize,
+                ) -> ::core::option::Option<u32> {
+                    let dfa = ::parse_that::cached_dfa(pattern);
+                    dfa.find_at(input, offset).map(|end| (end - offset) as u32)
+                }
+            }
+
+            /// Module-level scanner singleton. `DtaDfaScanner` is a ZST;
+            /// `const` binds the one-and-only value at compile time so
+            /// every `parse()` call borrows the same instance rather
+            /// than materialising a new stack local.
+            const DTA_SCANNER: DtaDfaScanner = DtaDfaScanner;
+
             impl #ident {
                 #depth_counter
-                #( #rule_functions )*
                 #extra
                 #visitor_kernels
 
                 /// Parse an input string and return a zero-copy
                 /// `Parsed<'_, Self>` that borrows the input directly.
                 ///
-                /// AW.1.2: the legacy fn-per-rule path remains the
-                /// primary parser during the W1 transition — the DTA
-                /// walker's Alt / Repeat / ShuntingYard arms are
-                /// partial and would regress most grammars if called
-                /// directly. [`Self::parse_dta`] exposes the DTA
-                /// entry for grammars whose hot path fits the walker's
-                /// current feature set (BBNF bootstrap); once the
-                /// walker is feature-complete, `parse` will call
-                /// `dta_run` wholesale and `parse_dta` retires.
+                /// AW-I.W3: `parse()` dispatches through the DTA driver
+                /// wholesale. The per-rule fn-per-rule path retired at
+                /// W3.1; the DTA walker (AW-I.W2.1) owns Seq / Literal /
+                /// Regex / Ref / AltLinear-with-savepoint / Repeat with
+                /// `lo..=hi` bounds / ShuntingYard. `dta_run_into`
+                /// drives `DTA_TABLE` over the input bytes, writing
+                /// records into the builder's columns and stamping
+                /// `frame_depth` inline so `finish()` skips the
+                /// `derive_frame_depth` reconstruction pass.
                 pub fn parse(
                     input: &str,
                 ) -> ::core::result::Result<
                     ::bbnf::runtime::Parsed<'_, Self>,
                     ::bbnf::runtime::ParseErr,
                 > {
-                    let mut state = ::parse_that::ParserState::new(input);
                     let mut builder =
                         ::bbnf::runtime::tape::TapeBuilder::with_capacity(
-                            #with_capacity_expr,
-                        );
-                    let root_off = Self::#root_fn_ident(&mut state, &mut builder)
-                        .ok_or(::bbnf::runtime::ParseErr::Syntax {
-                            offset: state.offset as u32,
-                            rule: None,
-                        })?;
-                    // Skip trailing whitespace before the EOF check
-                    // so inputs with a final newline (common in files
-                    // read via read_to_string) are accepted.
-                    //
-                    // AP.ws: when a custom @ws pattern is active and
-                    // classifies as WhitespaceWithBlockComment, use
-                    // the comment-aware kernel so trailing
-                    // `/* ... */` comments are consumed before the
-                    // EOF gate.
-                    #trailing_ws
-                    if state.offset < input.len() {
-                        return ::core::result::Result::Err(
-                            ::bbnf::runtime::ParseErr::Syntax {
-                                offset: state.offset as u32,
-                                rule: None,
-                            },
-                        );
-                    }
-                    let tape = builder
-                        .finish()
-                        .map_err(::bbnf::runtime::ParseErr::Tape)?;
-                    ::core::result::Result::Ok(
-                        ::bbnf::runtime::Parsed::new(tape, input, root_off),
-                    )
-                }
-
-                /// AW.1.2 — Parse via the DTA stage-A walker.
-                ///
-                /// Drives `DTA_TABLE` through `bbnf_tape::dta_run`,
-                /// writing records into the builder's columns and
-                /// stamping `frame_depth` inline so `finish()` skips
-                /// the `derive_frame_depth` reconstruction pass.
-                ///
-                /// This entry point is emitted alongside [`Self::parse`]
-                /// during AW.1.2's transitional window. The DTA
-                /// walker's Alt / Repeat / ShuntingYard arms are
-                /// partial at AW.1.2 — they succeed on grammars whose
-                /// hot path is pure Seq/Literal/Regex/Ref and return
-                /// `DtaError` on everything else. `parse()` stays the
-                /// correctness default until the walker is feature-
-                /// complete (AW.1.3 deletion of per-rule fns switches
-                /// `parse` to call `dta_run` wholesale).
-                pub fn parse_dta(
-                    input: &str,
-                ) -> ::core::result::Result<
-                    ::bbnf::runtime::Parsed<'_, Self>,
-                    ::bbnf::runtime::ParseErr,
-                > {
-                    let mut builder =
-                        ::bbnf::runtime::tape::TapeBuilder::with_capacity(
-                            #with_capacity_expr,
+                            GRAMMAR_PROFILE.capacity_for(input.len()),
                         );
                     builder.enable_inline_frame_depth();
                     let mut psi = psi_with_capacity(input.len());
-                    let scanner = DtaDfaScanner;
                     let root_off = builder
-                        .dta_run_into(&DTA_TABLE, input.as_bytes(), &scanner, &mut psi)
+                        .dta_run_into(&DTA_TABLE, input.as_bytes(), &DTA_SCANNER, &mut psi)
                         .map_err(|e| match e {
                             ::bbnf::runtime::tape::DtaError::Syntax { offset, .. } => {
                                 ::bbnf::runtime::ParseErr::Syntax {
@@ -642,25 +625,6 @@ impl RustEmitter {
                     ::core::result::Result::Ok(
                         ::bbnf::runtime::Parsed::new(tape, input, root_off),
                     )
-                }
-            }
-
-            /// DTA regex-scanner adapter — consults parse-that's
-            /// cached DFA registry to match a regex pattern at
-            /// `input[offset..]`.
-            ///
-            /// One shared instance per grammar (it holds no state);
-            /// the DTA driver's [`dta_run`] takes it by `&dyn`.
-            struct DtaDfaScanner;
-            impl ::bbnf::runtime::tape::RegexScanner for DtaDfaScanner {
-                fn scan(
-                    &self,
-                    pattern: &str,
-                    input: &[u8],
-                    offset: usize,
-                ) -> ::core::option::Option<u32> {
-                    let dfa = ::parse_that::cached_dfa(pattern);
-                    dfa.find_at(input, offset).map(|end| (end - offset) as u32)
                 }
             }
         }

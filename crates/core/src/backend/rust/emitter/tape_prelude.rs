@@ -56,12 +56,233 @@
 //! these helpers. A single shim guarantees no drift between leaf
 //! and compound emission paths.
 
-use bbnf_ir::passes::PayloadLayout;
-use bbnf_ir::TypeDesc;
+use bbnf_ir::passes::{MaterializationClass, PayloadLayout};
+use bbnf_ir::{GrammarIR, IrNode, IrRule, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 const META_IDX_ZERO: u8 = 0;
+
+/// AW.0.3 rule-routing classification.
+///
+/// Drives prelude / epilogue elision: the emitter decides at codegen
+/// time whether a rule's tape-commit path is provably single-shape
+/// (LeafOnly / CompoundOnly) or genuinely runtime-branched (Mixed).
+///
+/// - `LeafOnly` — the only push path is `push_leaf` or
+///   `push_leaf_with`. No `mark_children` is needed in the prelude;
+///   the epilogue's `if __has_payload { push_leaf_with } else
+///   { push_leaf }` collapses to the leaf-with arm when the body
+///   unconditionally sets `__has_payload = true` (e.g. bare-`Span`
+///   aggregate layouts where `bare_span_epilogue_fixup` stamps the
+///   flag) and to the bare `push_leaf` arm otherwise.
+/// - `CompoundOnly` — the rule always pushes a compound record. The
+///   prelude keeps its `mark_children`; the epilogue emits the
+///   `push_compound` branch unconditionally without the
+///   `if __has_payload` hedge.
+/// - `Mixed` — both paths live inside the rule body (Alt with some
+///   leaf and some compound branches, or a rule whose payload
+///   capture is genuinely conditional). The emitter keeps the full
+///   hedged `if __has_payload` epilogue.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RuleRouteClass {
+    LeafOnly,
+    CompoundOnly,
+    Mixed,
+}
+
+/// AW.0.3 classify a rule's tape-routing path.
+///
+/// A rule is **LeafOnly** when every leaf of its body pushes either
+/// a bare `push_leaf` or a scalar / aggregate `push_leaf_with`. This
+/// is the case for:
+/// - `TapeSpanOnly`-classified rules whose body contains no
+///   sub-rule calls (no `Ref`) — only literals, regex, Epsilon, and
+///   structural combinators over those. The sub-parse at runtime
+///   never reaches a `push_compound` site.
+///
+/// A rule is **CompoundOnly** when the body's successful path always
+/// ends in `push_compound`. This is the case for:
+/// - `MustTape`-classified rules whose body contains at least one
+///   `Ref` (or other compound-emitting sub-parse) and whose Alt
+///   branches — if any — all push compounds.
+///
+/// When the rule body is an Alt whose branches disagree (some push
+/// leaves, some push compounds) or when payload capture is
+/// conditional in a non-bare-Span layout, the routing is **Mixed**
+/// and the full hedged epilogue is retained.
+pub fn classify_rule_route(
+    rule: &IrRule,
+    ir: &GrammarIR,
+    class: MaterializationClass,
+    layout: Option<&PayloadLayout>,
+) -> RuleRouteClass {
+    match class {
+        MaterializationClass::TransparentElide => RuleRouteClass::LeafOnly,
+        MaterializationClass::TapeSpanOnly => {
+            // TapeSpanOnly rules never push a compound. They end in
+            // `push_leaf` or `push_leaf_with`. The distinction LeafOnly
+            // vs Mixed matters only for the epilogue hedge: when the
+            // layout is a bare-Span aggregate (one Span field at
+            // offset 0), `bare_span_epilogue_fixup` unconditionally
+            // sets `__has_payload = true` before the `if` — so the
+            // `else` arm is dead. We model this as LeafOnly so the
+            // emitter can drop the hedge. Other TapeSpanOnly rules
+            // keep the hedge because `__has_payload` may legitimately
+            // be false.
+            if is_bare_span_layout(layout) {
+                RuleRouteClass::LeafOnly
+            } else if body_is_leaf_only(&rule.body, ir) {
+                RuleRouteClass::LeafOnly
+            } else {
+                RuleRouteClass::Mixed
+            }
+        }
+        MaterializationClass::MustTape => {
+            // MustTape rules may push compound or, for aggregate
+            // payloads, `push_leaf_with` in the `__has_payload`
+            // branch. When the body contains a Ref or otherwise
+            // emits sub-children, the only success path under the
+            // current epilogue is `push_compound` — that's
+            // CompoundOnly and we can drop the `if __has_payload`
+            // guard.
+            if is_bare_span_layout(layout) {
+                RuleRouteClass::LeafOnly
+            } else if body_is_compound_only(&rule.body, ir) {
+                RuleRouteClass::CompoundOnly
+            } else {
+                RuleRouteClass::Mixed
+            }
+        }
+    }
+}
+
+/// Bare-`Span` layout probe: single `Span` field at offset 0, 8 total
+/// bytes. The aggregate epilogue's `bare_span_epilogue_fixup` stamps
+/// `__has_payload = true` unconditionally for these layouts, so the
+/// `if __has_payload` hedge in the epilogue is provably always-true.
+fn is_bare_span_layout(layout: Option<&PayloadLayout>) -> bool {
+    layout.is_some_and(is_bare_span_layout_ref)
+}
+
+/// Same as [`is_bare_span_layout`] but takes the layout by reference
+/// directly — convenient inside epilogue emitters that already have
+/// a borrowed layout in scope.
+fn is_bare_span_layout_ref(l: &PayloadLayout) -> bool {
+    l.total_bytes == 8
+        && l.fields.len() == 1
+        && matches!(l.fields[0].ty, TypeDesc::Span)
+        && l.fields[0].offset == 0
+}
+
+/// Walk the rule body to determine whether its successful path ever
+/// reaches a `Ref(_)` call (which emits `push_compound` in the child
+/// rule, threading children onto our tape). When it doesn't, the
+/// rule's own epilogue is the only record pusher and we can elide
+/// `mark_children`.
+fn body_is_leaf_only(body: &IrNode, ir: &GrammarIR) -> bool {
+    match body {
+        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => true,
+        IrNode::Ref(rid) => {
+            // A Ref to a TransparentElide rule inlines its body —
+            // we must recurse into that body to decide. Refs to
+            // MustTape / TapeSpanOnly rules ARE record pushers.
+            let Some(rule) = ir.rules.iter().find(|r| r.id == *rid) else {
+                return false;
+            };
+            if rule.meta.is_transparent {
+                body_is_leaf_only(&rule.body, ir)
+            } else {
+                false
+            }
+        }
+        IrNode::Seq(children) => children.iter().all(|c| body_is_leaf_only(c, ir)),
+        IrNode::Alt(branches, _) => branches.iter().all(|b| body_is_leaf_only(&b.node, ir)),
+        IrNode::Repeat { inner, .. }
+        | IrNode::Negate(inner)
+        | IrNode::OptionalWhitespace(inner)
+        | IrNode::Map { inner, .. } => body_is_leaf_only(inner, ir),
+        IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
+            body_is_leaf_only(a, ir) && body_is_leaf_only(b, ir)
+        }
+        IrNode::TokenDispatch { token, arms, fallback } => {
+            body_is_leaf_only(token, ir)
+                && arms.iter().all(|a| body_is_leaf_only(&a.continuation, ir))
+                && body_is_leaf_only(fallback, ir)
+        }
+    }
+}
+
+/// For `MustTape` rules, check whether every successful-path branch
+/// pushes compound — i.e. no branch terminates in a pure leaf write
+/// without child emission. A Ref-containing body that is NOT an Alt
+/// is CompoundOnly; Alt bodies are CompoundOnly only if every branch
+/// contains at least one child push.
+fn body_is_compound_only(body: &IrNode, ir: &GrammarIR) -> bool {
+    match body {
+        IrNode::Ref(rid) => {
+            let Some(rule) = ir.rules.iter().find(|r| r.id == *rid) else {
+                return false;
+            };
+            if rule.meta.is_transparent {
+                body_is_compound_only(&rule.body, ir)
+            } else {
+                // A Ref to a non-transparent rule pushes a record;
+                // the outer MustTape epilogue then wraps it as a
+                // compound parent.
+                true
+            }
+        }
+        IrNode::Seq(children) => children.iter().any(|c| emits_child_push(c, ir)),
+        IrNode::Alt(branches, _) => branches.iter().all(|b| emits_child_push(&b.node, ir)),
+        IrNode::Repeat { inner, .. } => emits_child_push(inner, ir),
+        IrNode::Skip(a, b) | IrNode::Next(a, b) => {
+            emits_child_push(a, ir) || emits_child_push(b, ir)
+        }
+        IrNode::Negate(inner) | IrNode::OptionalWhitespace(inner) | IrNode::Map { inner, .. } => {
+            emits_child_push(inner, ir)
+        }
+        IrNode::Minus(a, b) => emits_child_push(a, ir) || emits_child_push(b, ir),
+        IrNode::TokenDispatch { token, arms, fallback } => {
+            emits_child_push(token, ir)
+                || arms.iter().any(|a| emits_child_push(&a.continuation, ir))
+                || emits_child_push(fallback, ir)
+        }
+        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => false,
+    }
+}
+
+/// Helper: does this sub-node emit a child tape record when
+/// executed?
+fn emits_child_push(node: &IrNode, ir: &GrammarIR) -> bool {
+    match node {
+        IrNode::Ref(rid) => {
+            let Some(rule) = ir.rules.iter().find(|r| r.id == *rid) else {
+                return false;
+            };
+            if rule.meta.is_transparent {
+                emits_child_push(&rule.body, ir)
+            } else {
+                true
+            }
+        }
+        IrNode::Seq(children) => children.iter().any(|c| emits_child_push(c, ir)),
+        IrNode::Alt(branches, _) => branches.iter().any(|b| emits_child_push(&b.node, ir)),
+        IrNode::Repeat { inner, .. }
+        | IrNode::Negate(inner)
+        | IrNode::OptionalWhitespace(inner)
+        | IrNode::Map { inner, .. } => emits_child_push(inner, ir),
+        IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
+            emits_child_push(a, ir) || emits_child_push(b, ir)
+        }
+        IrNode::TokenDispatch { token, arms, fallback } => {
+            emits_child_push(token, ir)
+                || arms.iter().any(|a| emits_child_push(&a.continuation, ir))
+                || emits_child_push(fallback, ir)
+        }
+        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => false,
+    }
+}
 
 /// Emit the prelude for a `MustTape` rule body.
 ///
@@ -83,14 +304,25 @@ const META_IDX_ZERO: u8 = 0;
 /// locals are the minimal delta that lets `map_value.rs`'s span
 /// helper compose without reaching into the rule-scope via a second
 /// ctx threading pass.
-pub fn emit_must_tape_prelude() -> TokenStream {
-    quote! {
-        let __span_lo = state.offset as u32;
-        let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-        let mut __payload_i64: i64 = 0;
-        let mut __payload_f64: f64 = 0.0;
-        let mut __payload_tag: u8 = 0;
-        let mut __has_payload: bool = false;
+pub fn emit_must_tape_prelude(route: RuleRouteClass) -> TokenStream {
+    // AW.0.3: CompoundOnly rules never reach the `push_leaf_with`
+    // branch in the epilogue, so the payload-capture locals are
+    // dead. Drop them to shrink the stack frame and eliminate the
+    // `unused_assignments` warnings from generated code.
+    if route == RuleRouteClass::CompoundOnly {
+        quote! {
+            let __span_lo = state.offset as u32;
+            let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+        }
+    } else {
+        quote! {
+            let __span_lo = state.offset as u32;
+            let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+            let mut __payload_i64: i64 = 0;
+            let mut __payload_f64: f64 = 0.0;
+            let mut __payload_tag: u8 = 0;
+            let mut __has_payload: bool = false;
+        }
     }
 }
 
@@ -106,9 +338,29 @@ pub fn emit_must_tape_prelude() -> TokenStream {
 /// `2 = f64`); other tag values fall back to compound emission to
 /// preserve the tape shape for every rule that does not reach the
 /// span-helper capture.
-pub fn emit_must_tape_epilogue(variant_idx: u8) -> TokenStream {
+pub fn emit_must_tape_epilogue(variant_idx: u8, route: RuleRouteClass) -> TokenStream {
     let variant_lit = variant_idx;
     let meta_lit = META_IDX_ZERO;
+    // AW.0.3: CompoundOnly routes never set `__has_payload` —
+    // the body contains no scalar capture, only sub-parses. Drop
+    // the hedge and emit the compound push unconditionally.
+    if route == RuleRouteClass::CompoundOnly {
+        return quote! {
+            {
+                let __vi: u8 = #variant_lit;
+                let __mi: u8 = #meta_lit;
+                Some(::bbnf::runtime::tape::TapeBuilder::push_compound(
+                    tape,
+                    ::bbnf::runtime::tape::TapeKind::Rule,
+                    __children,
+                    __span_lo,
+                    state.offset as u32,
+                    __vi,
+                    __mi,
+                ))
+            }
+        };
+    }
     quote! {
         {
             let __vi: u8 = #variant_lit;
@@ -359,10 +611,20 @@ fn scalar_zero_init(td: &TypeDesc) -> TokenStream {
 /// path.
 pub fn emit_tape_span_only_aggregate_prelude(layout: &PayloadLayout) -> TokenStream {
     let buf_bytes = aggregate_buffer_bytes(layout);
-    quote! {
-        let __span_lo = state.offset as u32;
-        let mut __aggregate_buf: [u8; #buf_bytes] = [0u8; #buf_bytes];
-        let mut __has_payload = false;
+    // AW.0.3: bare-`Span` layouts route unconditionally through
+    // `push_leaf_with` at the epilogue; the `__has_payload` stub is
+    // dead. Drop it for leaner generated frames.
+    if is_bare_span_layout_ref(layout) {
+        quote! {
+            let __span_lo = state.offset as u32;
+            let mut __aggregate_buf: [u8; #buf_bytes] = [0u8; #buf_bytes];
+        }
+    } else {
+        quote! {
+            let __span_lo = state.offset as u32;
+            let mut __aggregate_buf: [u8; #buf_bytes] = [0u8; #buf_bytes];
+            let mut __has_payload = false;
+        }
     }
 }
 
@@ -405,6 +667,31 @@ pub fn emit_tape_span_only_aggregate_epilogue(
     let tape_kind_fallback = quote! { ::bbnf::runtime::tape::TapeKind::Span };
     let span_fixup = bare_span_epilogue_fixup(layout);
     let payload_ctor = aggregate_payload_ctor(total_bytes);
+    // AW.0.3: bare-`Span` layouts have `bare_span_epilogue_fixup`
+    // stamping `__has_payload = true` unconditionally, so the `else`
+    // arm is provably dead. Emit the `push_leaf_with` branch
+    // directly and skip the hedge entirely.
+    if is_bare_span_layout_ref(layout) {
+        return quote! {
+            {
+                let __vi: u8 = #variant_lit;
+                let __mi: u8 = #meta_lit;
+                __aggregate_buf[0..4]
+                    .copy_from_slice(&(__span_lo as u32).to_le_bytes());
+                __aggregate_buf[4..8]
+                    .copy_from_slice(&(state.offset as u32).to_le_bytes());
+                Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                    tape,
+                    #tape_kind,
+                    __span_lo,
+                    state.offset as u32,
+                    __vi,
+                    __mi,
+                    #payload_ctor,
+                ))
+            }
+        };
+    }
     quote! {
         {
             let __vi: u8 = #variant_lit;
@@ -445,11 +732,22 @@ pub fn emit_tape_span_only_aggregate_epilogue(
 /// > 16 B widen the buffer via `aggregate_buffer_bytes`.
 pub fn emit_must_tape_aggregate_prelude(layout: &PayloadLayout) -> TokenStream {
     let buf_bytes = aggregate_buffer_bytes(layout);
-    quote! {
-        let __span_lo = state.offset as u32;
-        let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-        let mut __aggregate_buf: [u8; #buf_bytes] = [0u8; #buf_bytes];
-        let mut __has_payload = false;
+    // AW.0.3: bare-`Span` layouts route unconditionally through
+    // `push_leaf_with` at the epilogue (the fixup stamps
+    // `__has_payload = true`), so the children-run reservation is
+    // dead. Drop `mark_children` and the `__has_payload` stub.
+    if is_bare_span_layout_ref(layout) {
+        quote! {
+            let __span_lo = state.offset as u32;
+            let mut __aggregate_buf: [u8; #buf_bytes] = [0u8; #buf_bytes];
+        }
+    } else {
+        quote! {
+            let __span_lo = state.offset as u32;
+            let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
+            let mut __aggregate_buf: [u8; #buf_bytes] = [0u8; #buf_bytes];
+            let mut __has_payload = false;
+        }
     }
 }
 
@@ -485,6 +783,30 @@ pub fn emit_must_tape_aggregate_epilogue(
     };
     let span_fixup = bare_span_epilogue_fixup(layout);
     let payload_ctor = aggregate_payload_ctor(total_bytes);
+    // AW.0.3: bare-`Span` layouts have the fixup stamping
+    // `__has_payload = true` unconditionally; the `else` arm is
+    // provably dead. Emit the `push_leaf_with` branch directly.
+    if is_bare_span_layout_ref(layout) {
+        return quote! {
+            {
+                let __vi: u8 = #variant_lit;
+                let __mi: u8 = #meta_lit;
+                __aggregate_buf[0..4]
+                    .copy_from_slice(&(__span_lo as u32).to_le_bytes());
+                __aggregate_buf[4..8]
+                    .copy_from_slice(&(state.offset as u32).to_le_bytes());
+                Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
+                    tape,
+                    #tape_kind,
+                    __span_lo,
+                    state.offset as u32,
+                    __vi,
+                    __mi,
+                    #payload_ctor,
+                ))
+            }
+        };
+    }
     quote! {
         {
             let __vi: u8 = #variant_lit;

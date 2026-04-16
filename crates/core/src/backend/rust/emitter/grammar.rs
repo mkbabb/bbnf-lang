@@ -26,7 +26,7 @@ use quote::{format_ident, quote};
 use crate::backend::driver::analysis::BackendAnalysis;
 
 use super::tape_prelude::{
-    emit_must_tape_aggregate_epilogue, emit_must_tape_aggregate_prelude,
+    classify_rule_route, emit_must_tape_aggregate_epilogue, emit_must_tape_aggregate_prelude,
     emit_must_tape_epilogue,
     emit_must_tape_prelude, emit_rule_signature, emit_tape_span_only_aggregate_epilogue,
     emit_tape_span_only_aggregate_prelude, emit_tape_span_only_epilogue,
@@ -170,6 +170,13 @@ impl RustEmitter {
         let is_alt_body = matches!(&rule.body, IrNode::Alt(_, _));
         let rule_idx_u8 = Self::variant_idx(rule);
 
+        // AW.0.3: classify the rule's tape-routing path up front.
+        // Drives `if __has_payload` elision in the non-aggregate
+        // `MustTape` path (CompoundOnly rules drop the hedge) and
+        // informs the aggregate-path `push_leaf_with`-only vs
+        // hedged choice.
+        let route = classify_rule_route(rule, ir, class, ctx.payload_layout.as_ref());
+
         // AU.2.2: aggregate payload layout takes precedence over
         // per-type payload locals. When `ctx.payload_layout.is_some()`
         // the prelude reserves `__aggregate_buf` / `__has_payload`
@@ -231,8 +238,8 @@ impl RustEmitter {
         } else {
             match class {
                 MaterializationClass::MustTape => (
-                    emit_must_tape_prelude(),
-                    emit_must_tape_epilogue(rule_idx_u8),
+                    emit_must_tape_prelude(route),
+                    emit_must_tape_epilogue(rule_idx_u8, route),
                 ),
                 MaterializationClass::TapeSpanOnly => {
                     // Non-Alt rules have at most one payload type.

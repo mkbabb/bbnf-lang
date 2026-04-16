@@ -360,6 +360,21 @@ pub(super) fn probe_span_aggregate_pack(ctx: &mut RustEmitCtx) -> Option<TokenSt
         // Peek-only: leave the cursor for downstream emitters.
         return None;
     }
+    // AW.0.3: bare-`Span` layouts (single Span field at offset 0,
+    // total_bytes 8) route unconditionally through the epilogue's
+    // `bare_span_epilogue_fixup`, which rewrites the buffer with
+    // the rule-final `state.offset` and stamps `__has_payload =
+    // true` itself. The leaf-level pack here would double-write
+    // the first 8 bytes and reference a `__has_payload` local the
+    // elided prelude no longer declares. Skip it.
+    if layout.total_bytes == 8
+        && layout.fields.len() == 1
+        && field.offset == 0
+    {
+        // Cursor was never advanced — leave it so downstream
+        // emitters see a consistent view (no fields consumed).
+        return None;
+    }
     // Commit the cursor advance now that we know the field is ours.
     ctx.aggregate_field_cursor += 1;
     let lo_off = field.offset as usize;

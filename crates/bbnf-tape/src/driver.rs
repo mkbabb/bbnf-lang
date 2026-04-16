@@ -234,16 +234,27 @@ pub enum DtaError {
     /// dispatched to no successful branch (or `DtaStateId::NONE` when
     /// the error is a byte-dispatch miss).
     Syntax {
+        /// Byte offset where the match attempt failed.
         offset: u32,
+        /// The DTA state id that dispatched to no successful child.
         failing_state: DtaStateId,
+        /// The rule that was active when the failure occurred;
+        /// `DtaRuleId(u32::MAX)` when the driver cannot attribute
+        /// the failure to a specific rule.
         failing_rule: DtaRuleId,
     },
     /// The driver exhausted the DTA table without reaching a valid
     /// terminal state — either the table is malformed or the input
     /// contains trailing bytes beyond the entry rule's match.
-    UnexpectedEnd { offset: u32 },
+    UnexpectedEnd {
+        /// Byte offset where the driver terminated.
+        offset: u32,
+    },
     /// The DTA state table references a state id outside its bounds.
-    InvalidState { state: DtaStateId },
+    InvalidState {
+        /// The out-of-range state id the driver encountered.
+        state: DtaStateId,
+    },
 }
 
 // ── Regex scanner trait ─────────────────────────────────────────────

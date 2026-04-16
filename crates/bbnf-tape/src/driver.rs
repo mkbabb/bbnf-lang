@@ -140,6 +140,19 @@ pub struct Frame {
     /// owning rule appears in `table.counter_optional_rules` — in
     /// that case, position-stagnant iterations count toward `lo`.
     pub counter_optional_flag: u8,
+    /// AW-I.W4ζ — rule-entry variant_idx stamp.
+    ///
+    /// When a `DtaState::Ref { rule, .. }` dispatches to this frame's
+    /// state, the driver captures `rule.0 as u8` here so `close_compound`
+    /// can stamp the tape record's `variant_idx` field with the owning
+    /// rule's discriminant. Without this, every compound would stamp
+    /// `variant_idx = 0` (or the Alt branch index), causing
+    /// `rule_kind()` to return the first-indexed rule for every record
+    /// — the W4 self-host round-trip failure.
+    ///
+    /// `u8::MAX` indicates "no rule context" — the compound uses the
+    /// existing Alt-cursor stamping (for non-rule-entry Alt frames).
+    pub variant_idx: u8,
 }
 
 /// One entry on the ShuntingYard reducer's auxiliary operator stack.
@@ -216,6 +229,18 @@ pub struct FrameStack {
     /// handling can restore and close the compound at `counter >=
     /// lo`.
     pub iter_savepoints: Vec<IterSavepoint>,
+    /// AW-I.W4ζ — pending rule-entry variant_idx stamp.
+    ///
+    /// Set by the `DtaState::Ref { rule, .. }` arm to `rule.0 as u8`
+    /// before dispatching to the rule's entry state. The next compound
+    /// frame push (Seq/Alt/Repeat/ShuntingYard) consumes this value
+    /// into `frame.variant_idx`, then clears it back to `u8::MAX`. On
+    /// close_compound, the captured variant_idx is stamped into the
+    /// tape record's `variant_idx` bits — the rule identity the view
+    /// layer's `rule_kind()` dispatch decodes.
+    ///
+    /// `u8::MAX` indicates "no pending rule context".
+    pub pending_variant_idx: u8,
 }
 
 /// Savepoint captured by [`FrameStack::savepoint`] — used by the
@@ -261,6 +286,7 @@ impl FrameStack {
             lo: 0,
             hi: 0,
             counter_optional_flag: 0,
+            variant_idx: u8::MAX,
         };
         Self {
             inline: [template; STACK_INLINE_DEPTH],
@@ -269,6 +295,7 @@ impl FrameStack {
             counters: Vec::with_capacity(COUNTER_INLINE_SLOTS),
             op_stack: Vec::with_capacity(8),
             iter_savepoints: Vec::with_capacity(COUNTER_INLINE_SLOTS),
+            pending_variant_idx: u8::MAX,
         }
     }
 
@@ -667,6 +694,10 @@ fn handle_repeat_failure(
                 frame_depth.truncate(sp.fd_len as usize);
                 psi.truncate(sp.psi_len as usize);
                 stack.restore(sp.stack);
+                // AW-I.W4ζ — clear pending rule-entry stamp from the
+                // failed iteration body's Refs so it doesn't leak to
+                // the next sibling's compound push.
+                stack.pending_variant_idx = u8::MAX;
                 *pos = sp.pos;
                 close_compound(columns, stack, *pos);
                 pop_and_release(stack);
@@ -710,6 +741,10 @@ fn handle_repeat_failure_bounded(
                 frame_depth.truncate(sp.fd_len as usize);
                 psi.truncate(sp.psi_len as usize);
                 stack.restore(sp.stack);
+                // AW-I.W4ζ — clear pending rule-entry stamp from the
+                // failed iteration body's Refs so it doesn't leak to
+                // the next sibling's compound push.
+                stack.pending_variant_idx = u8::MAX;
                 *pos = sp.pos;
                 close_compound(columns, stack, *pos);
                 pop_and_release(stack);
@@ -832,7 +867,9 @@ fn dispatch_one(
     match table.states[state_idx] {
         DtaState::Epsilon => {
             // No column emission, no byte advance — step to the
-            // parent's next child (or terminate).
+            // parent's next child (or terminate). Drop any pending
+            // rule-entry stamp since the rule produced no record.
+            stack.pending_variant_idx = u8::MAX;
             advance_or_pop_with(Some(table), Some(input), columns, frame_depth, psi, stack, pos)
         }
         DtaState::Literal { text } => {
@@ -849,6 +886,8 @@ fn dispatch_one(
             let lo = *pos;
             *pos = end as u32;
             emit_leaf(columns, frame_depth, stack, TapeKind::Literal, lo, *pos);
+            // AW-I.W4ζ — consume the pending rule-entry stamp.
+            stack.pending_variant_idx = u8::MAX;
             advance_or_pop_with(Some(table), Some(input), columns, frame_depth, psi, stack, pos)
         }
         DtaState::Regex { pattern } => {
@@ -863,6 +902,8 @@ fn dispatch_one(
             *pos = lo + match_len;
             let rec_idx = columns.len() as u32;
             emit_leaf(columns, frame_depth, stack, TapeKind::Span, lo, *pos);
+            // AW-I.W4ζ — consume the pending rule-entry stamp.
+            stack.pending_variant_idx = u8::MAX;
             // Enqueue a PSI job — the PayloadKind classification is
             // the emitter's responsibility; without a per-state kind
             // annotation on the table we default to F64 as the most
@@ -884,6 +925,13 @@ fn dispatch_one(
             let tape_kind = frame_to_tape_kind(frame);
             reserve_compound(columns, frame_depth, stack.depth(), tape_kind, *pos);
             let child_mark = columns.len() as u32;
+            // AW-I.W4ζ — consume pending rule-entry stamp. The Ref
+            // arm set this to `rule.0 as u8` before dispatching here;
+            // capturing it onto the frame lets close_compound stamp
+            // the correct variant_idx so `rule_kind()` returns the
+            // owning rule's enum variant.
+            let variant_idx = stack.pending_variant_idx;
+            stack.pending_variant_idx = u8::MAX;
             stack.push(Frame {
                 kind: frame,
                 counter_idx: u8::MAX,
@@ -897,6 +945,7 @@ fn dispatch_one(
                 lo: 0,
                 hi: 0,
                 counter_optional_flag: 0,
+                variant_idx,
             });
             if children.is_empty() {
                 // Degenerate Seq — close immediately.
@@ -937,6 +986,12 @@ fn dispatch_one(
                     failing_rule: rule,
                 });
             }
+            // AW-I.W4ζ — stamp the rule's discriminant so the next
+            // compound push captures it as the tape record's
+            // variant_idx. Without this, rule_kind() would decode
+            // every record as the first-indexed rule. See Frame's
+            // `variant_idx` field + close_compound's stamping logic.
+            stack.pending_variant_idx = (rule.0 & 0x3F) as u8;
             Ok(StepResult::Next(chosen))
         }
         DtaState::ByteDispatch { table: disp, fallback } => {
@@ -988,6 +1043,13 @@ fn dispatch_one(
             let parent_rec = columns.len() as u32;
             reserve_compound(columns, frame_depth, start_depth, TapeKind::Alt, *pos);
             let child_mark = columns.len() as u32;
+            // AW-I.W4ζ — consume pending rule-entry stamp. For an Alt
+            // reached directly through a Ref (rule body IS an Alt),
+            // the rule's variant_idx wins over the branch index; the
+            // sub-variant (branch) is carried separately in meta_idx
+            // downstream, mirroring pre-W3 fn-per-rule semantics.
+            let variant_idx = stack.pending_variant_idx;
+            stack.pending_variant_idx = u8::MAX;
             stack.push(Frame {
                 kind: DtaFrameKind::Alt,
                 counter_idx: u8::MAX,
@@ -1001,6 +1063,7 @@ fn dispatch_one(
                 lo: 0,
                 hi: 0,
                 counter_optional_flag: 0,
+                variant_idx,
             });
 
             // Savepoint AFTER pushing the Alt frame so a failed branch
@@ -1010,6 +1073,13 @@ fn dispatch_one(
             let cols_len_after_push = columns.len();
             let fd_len_after_push = frame_depth.len();
             let psi_len_after_push = psi.len();
+            // AW-I.W4ζ — snapshot pending_variant_idx so a failed
+            // branch's Ref dispatch (which sets pending) does not
+            // leak into the next branch. The Alt frame has already
+            // consumed its own pending stamp above into
+            // `frame.variant_idx`; subsequent Refs inside each branch
+            // must start from a clean slate on every attempt.
+            let pending_after_push = stack.pending_variant_idx;
 
             let mut last_err: Option<DtaError> = None;
             for (branch_idx, &branch) in branches.iter().enumerate() {
@@ -1044,6 +1114,7 @@ fn dispatch_one(
                         frame_depth.truncate(fd_len_after_push);
                         psi.truncate(psi_len_after_push);
                         stack.restore(sp_after_push);
+                        stack.pending_variant_idx = pending_after_push;
                         last_err = Some(e);
                     }
                     Err(e) => return Err(e),
@@ -1110,6 +1181,9 @@ fn dispatch_one(
                 },
             });
 
+            // AW-I.W4ζ — consume pending rule-entry stamp.
+            let variant_idx = stack.pending_variant_idx;
+            stack.pending_variant_idx = u8::MAX;
             stack.push(Frame {
                 kind: DtaFrameKind::Repeat,
                 counter_idx: counter_idx as u8,
@@ -1123,6 +1197,7 @@ fn dispatch_one(
                 lo: saturating_u16(lo),
                 hi: saturating_u16(hi),
                 counter_optional_flag,
+                variant_idx,
             });
 
             // Fill in the stack savepoint AFTER the push so body
@@ -1147,6 +1222,10 @@ fn dispatch_one(
             // matching `bbnf_ir::vm::interpreter::control::exec_trim_ws`.
             // Zero-byte matches are admitted — `?w` is optional,
             // not required.
+            //
+            // WsTrim never emits a record; any pending rule-entry
+            // stamp survives to the next emitting state so a rule
+            // whose body is `?w <body>` still tags correctly.
             if let Some(pat) = pattern {
                 if let Some(len) = scanner.scan(pat, input, *pos as usize) {
                     *pos += len;
@@ -1188,6 +1267,9 @@ fn dispatch_one(
             // state id itself, so `advance_or_pop_with`'s reducer can
             // look up both `head` and `precedence` from the table on
             // each operand-complete tick.
+            // AW-I.W4ζ — consume pending rule-entry stamp.
+            let variant_idx = stack.pending_variant_idx;
+            stack.pending_variant_idx = u8::MAX;
             stack.push(Frame {
                 kind: DtaFrameKind::ShuntingYard,
                 counter_idx: u8::MAX,
@@ -1201,6 +1283,7 @@ fn dispatch_one(
                 lo: 0,
                 hi: 0,
                 counter_optional_flag: 0,
+                variant_idx,
             });
             let _ = head; // head is retrieved from the state at dispatch time
             Ok(StepResult::Next(head))
@@ -1234,7 +1317,16 @@ fn emit_leaf(
     let idx = columns.len() as u32;
     let kind_meta = kind as u8 & 0x0F;
     columns.kinds.push(kind_meta);
-    columns.flags.push(0);
+    // AW-I.W4ζ — consume the pending rule-entry variant_idx stamp
+    // into this leaf's flags. Leaf rules (`identifier = /regex/`)
+    // reach here via `Ref → Regex/Literal`; the rule's discriminant
+    // must survive onto the tape so `rule_kind()` can decode it.
+    let variant = if stack.pending_variant_idx != u8::MAX {
+        stack.pending_variant_idx & 0x3F
+    } else {
+        0
+    };
+    columns.flags.push(variant);
     columns.extra.push(0);
     columns.span_lo.push(span_lo);
     columns.span_hi.push(span_hi);
@@ -1341,10 +1433,19 @@ fn close_compound(columns: &mut Columns, stack: &FrameStack, pos: u32) {
             columns.child_off[parent] = TapeOffset(frame.child_mark);
             columns.flags[parent] |= 0x40;
         }
-        // Stamp variant_idx (low 6 bits) for Alt frames — the
-        // AltLinear / ByteDispatch recorded the branch index on
-        // `cursor` at branch-select time.
-        if matches!(frame.kind, DtaFrameKind::Alt) {
+        // Stamp variant_idx (low 6 bits). Precedence:
+        //   1. `frame.variant_idx` — rule-entry stamp captured from
+        //      `FrameStack::pending_variant_idx` at push time. This
+        //      encodes the OWNING rule's discriminant so the view
+        //      layer's `rule_kind()` decodes correctly.
+        //   2. Alt frame's `cursor` — branch index, when no rule
+        //      context is set (non-rule-entry Alt compounds).
+        // The u8::MAX sentinel indicates "no rule stamp"; fall through
+        // to the Alt-cursor path to preserve sub-variant dispatch.
+        if frame.variant_idx != u8::MAX {
+            let variant = frame.variant_idx & 0x3F;
+            columns.flags[parent] = (columns.flags[parent] & 0xC0) | variant;
+        } else if matches!(frame.kind, DtaFrameKind::Alt) {
             let variant = (frame.cursor as u8) & 0x3F;
             columns.flags[parent] = (columns.flags[parent] & 0xC0) | variant;
         }

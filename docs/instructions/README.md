@@ -120,13 +120,20 @@ prior sessions have lost work when it was violated.
 - **Every sub-agent runs in its own isolated worktree** — no
   exceptions. Research agents, audit agents, benchmark agents,
   profile agents, codegen agents: all worktree-isolated.
-- Worktrees are siblings of the main repo:
+- Worktrees are siblings of the main repo. Seed immediately with
+  `scripts/seed-worktree.sh` so gitignored corpora (`data/`) and
+  any other required-but-ignored resources are visible:
 
   ```bash
   ROOT=$(git rev-parse --show-toplevel)
   PARENT=$(dirname "$ROOT")
   git worktree add --detach "$PARENT/bbnf-wt-<agent-tag>" HEAD
+  "$ROOT/scripts/seed-worktree.sh" "$PARENT/bbnf-wt-<agent-tag>"
   ```
+
+  Skipping the seed step produces environmental test failures that
+  look like regressions — W2.1's agent reported 24 "failures" that
+  were all missing `data/{bbnf,css,json}`. Do not repeat.
 
 - Worktrees are **never** placed under `/tmp`, `/private/tmp`, or
   any ephemeral path. Loss of work there has happened; do not

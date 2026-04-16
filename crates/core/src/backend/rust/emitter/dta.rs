@@ -187,6 +187,7 @@ pub fn emit_dta_table(ir: &GrammarIR) -> TokenStream {
     };
 
     let max_depth = table.max_nesting_depth;
+    let entry_rule = Literal::u32_unsuffixed(table.entry);
     let psi_helper = emit_psi_helper();
 
     quote! {
@@ -202,10 +203,10 @@ pub fn emit_dta_table(ir: &GrammarIR) -> TokenStream {
         #co_decl
 
         /// Dispatch Tape Automaton — emitted by Tranche AV Phase 3.
-        /// The runtime driver (V4 PSI stage-B) walks this table from
-        /// each rule's entry state; until V4 lands, this data is
-        /// inert and `parse()` drives through the legacy fn-per-rule
-        /// path.
+        /// The runtime driver walks this table from the grammar's
+        /// entry rule state. AW-I.W4γ — `entry` carries the
+        /// authoritative `RuleId` so the walker dispatches the
+        /// correct grammar entry irrespective of lift order.
         pub const DTA_TABLE: ::bbnf::runtime::tape::DtaTable =
             ::bbnf::runtime::tape::DtaTable {
                 states: &#states_ident,
@@ -213,6 +214,7 @@ pub fn emit_dta_table(ir: &GrammarIR) -> TokenStream {
                 shunting_yard_rules: #sy_ref,
                 counter_optional_rules: #co_ref,
                 max_nesting_depth: #max_depth,
+                entry: ::bbnf::runtime::tape::DtaRuleId(#entry_rule),
             };
 
         #shape_dict_block
@@ -426,6 +428,31 @@ fn emit_state_literal(
                     head: #head_lit,
                     precedence: &#prec_ident,
                 }
+            }
+        }
+        DtaState::WsTrim { pattern } => {
+            // AW-I.W4γ: emit `DtaState::WsTrim { pattern: Some(_) }`
+            // when the grammar has `@ws`; `None` otherwise (walker
+            // treats a pattern-less WsTrim as Epsilon).
+            match pattern {
+                Some(sid) => {
+                    let pat_ident = format_ident!("__DTA_WS_{}", idx);
+                    let pat_str = ir.get_string(*sid);
+                    let pat_literal = Literal::string(pat_str);
+                    support.extend(quote! {
+                        static #pat_ident: &str = #pat_literal;
+                    });
+                    quote! {
+                        ::bbnf::runtime::tape::DtaState::WsTrim {
+                            pattern: ::core::option::Option::Some(#pat_ident),
+                        }
+                    }
+                }
+                None => quote! {
+                    ::bbnf::runtime::tape::DtaState::WsTrim {
+                        pattern: ::core::option::Option::None,
+                    }
+                },
             }
         }
     }

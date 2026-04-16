@@ -164,6 +164,24 @@ pub enum DtaState {
         /// single-byte dispatch.
         precedence: PrecedenceTable,
     },
+    /// AW-I.W4γ — Whitespace trim step.
+    ///
+    /// Advances `pos` past zero or more bytes matching the grammar's
+    /// `@ws` regex. `pattern` is `None` when the grammar did not
+    /// declare `@ws` — the walker treats that as a no-op. Lowered
+    /// from `IrNode::OptionalWhitespace(inner)` as the outer Seq
+    /// `[WsTrim, inner, WsTrim]`, matching the VM's
+    /// `TrimWs + inner + TrimWs` pair (see
+    /// `bbnf_ir::vm::compiler::node::compile_node`).
+    ///
+    /// The pre-W4γ lifter silently dropped the wrapper and emitted
+    /// just the inner node. Grammars that relied on `?w` between
+    /// atoms parsed incorrectly — `"=" ?w` returned at "=" without
+    /// consuming trailing whitespace, causing the walker to observe
+    /// an unexpected byte at the next rule's entry.
+    WsTrim {
+        pattern: Option<StringId>,
+    },
 }
 
 /// Counter-optional marker for AV.3.2.
@@ -255,6 +273,10 @@ pub struct DtaTable {
     /// sizes its frame stack from this — `max(depth, 16)` with the
     /// 64-byte overflow region taking over above 64.
     pub max_nesting_depth: u16,
+    /// AW-I.W4γ — the grammar's authoritative entry rule, copied
+    /// from `GrammarIR::entry`. The walker dispatches the entry
+    /// rule's state via `rule_entries`, not `rule_entries.first()`.
+    pub entry: RuleId,
 }
 
 impl DtaTable {
@@ -468,7 +490,29 @@ impl<'ir> DtaBuilder<'ir> {
                     frame: FrameKind::Seq,
                 })
             }
-            IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => self.lift_node(inner),
+            IrNode::Map { inner, .. } => self.lift_node(inner),
+            IrNode::OptionalWhitespace(inner) => {
+                // AW-I.W4γ: `?w` lowers to a Seq `[WsTrim, inner, WsTrim]`
+                // matching the VM compiler's `TrimWs + inner + TrimWs`
+                // pair (`bbnf_ir::vm::compiler::node::compile_node`).
+                // Pre-W4γ the lifter silently returned the inner state,
+                // stripping every whitespace-trim site from the DTA and
+                // breaking `BbnfBootstrap::parse` on any grammar with
+                // `?w` between atoms.
+                //
+                // The ws regex is carried on each `WsTrim` state so the
+                // runtime need not thread grammar-level context. `None`
+                // admits grammars that never declared `@ws` — the
+                // walker's WsTrim arm treats that as a no-op Epsilon.
+                let ws_sid = self.ir.ws_pattern;
+                let inner_state = self.lift_node(inner);
+                let ws_before = self.alloc_state(DtaState::WsTrim { pattern: ws_sid });
+                let ws_after = self.alloc_state(DtaState::WsTrim { pattern: ws_sid });
+                self.alloc_state(DtaState::Seq {
+                    children: vec![ws_before, inner_state, ws_after],
+                    frame: FrameKind::Seq,
+                })
+            }
             IrNode::TokenDispatch { token, arms: _, fallback } => {
                 // TokenDispatch is an existing dispatch lowering — the
                 // DTA inherits it by lifting the token + fallback;
@@ -499,12 +543,14 @@ impl<'ir> DtaBuilder<'ir> {
                 counter_optional_rules.entry(rule_id).or_insert(*kind);
             }
         }
+        let entry = self.ir.entry;
         DtaTable {
             states: self.states,
             rule_entries: self.rule_entries,
             shunting_yard_chains: self.shunting_yard_chains,
             counter_optional_rules,
             max_nesting_depth: self.max_depth,
+            entry,
         }
     }
 }

@@ -2134,6 +2134,7 @@ fn cursor_child_zero_is_o1_under_preorder() {
         shunting_yard_rules: &[],
         counter_optional_rules: &[],
         max_nesting_depth: 2,
+        entry: DtaRuleId(0),
     };
 
     // Stub regex scanner — not exercised by the literal-only DTA.

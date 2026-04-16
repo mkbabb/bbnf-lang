@@ -158,6 +158,27 @@ pub enum DtaState {
         /// Precedence table — one entry per operator byte.
         precedence: &'static [DtaPrecedenceEntry],
     },
+    /// AW-I.W4γ — Whitespace trim.
+    ///
+    /// Advances `pos` past the grammar's `@ws` pattern when set.
+    /// Zero-byte trims are admitted (the `?` in `?w`). No column
+    /// emission — whitespace is structural hole, not content.
+    ///
+    /// Lifted from `IrNode::OptionalWhitespace(inner)` as the tail
+    /// element of a Seq `[inner_state, WsTrim]`. The prior lifter
+    /// silently dropped the whitespace step and emitted the inner
+    /// node alone, which caused every `?w`-bearing grammar to parse
+    /// incorrectly at the whitespace boundary.
+    ///
+    /// The ws pattern is embedded on each state (rather than
+    /// referenced from a shared scanner call) so the runtime
+    /// dispatch does not depend on grammar-level state. An `Option`
+    /// here admits grammars that never declared `@ws` — for those
+    /// the walker simply treats the state as a no-op Epsilon.
+    WsTrim {
+        /// Whitespace regex pattern. `None` => act as Epsilon.
+        pattern: Option<&'static str>,
+    },
 }
 
 /// One operator's shunting-yard profile.
@@ -213,6 +234,14 @@ pub struct DtaTable {
     /// sizes its `[Frame; 64]` stack from this; grammars with
     /// depth > 64 overflow onto the heap region.
     pub max_nesting_depth: u16,
+    /// AW-I.W4γ — grammar entry rule.
+    ///
+    /// `dta_run` dispatches the entry state by looking up this
+    /// rule id in `rule_entries`. The pre-W4γ driver read
+    /// `rule_entries.first()` which returned the first-indexed
+    /// rule — incorrect when the grammar entry isn't lowered as
+    /// `RuleId(0)` (bbnf's entry is `grammar`, lifted last).
+    pub entry: DtaRuleId,
 }
 
 impl DtaTable {
@@ -224,6 +253,7 @@ impl DtaTable {
         shunting_yard_rules: &[],
         counter_optional_rules: &[],
         max_nesting_depth: 0,
+        entry: DtaRuleId(0),
     };
 
     /// Look up a rule's entry state via binary search.

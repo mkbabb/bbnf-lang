@@ -486,10 +486,17 @@ fn dta_run_with_log(
     let mut pos: u32 = 0;
     let root_rec = columns.len() as u32;
 
-    // Entry state: the first rule entry is the grammar entry.
-    let mut state = match table.rule_entries.first() {
-        Some(e) => e.state,
-        None => return Err(DtaError::InvalidState { state: DtaStateId::NONE }),
+    // Entry state: AW-I.W4γ — look up the grammar's authoritative
+    // entry rule. Pre-W4γ the walker read `rule_entries.first()`,
+    // which surfaced the first-indexed rule — incorrect for grammars
+    // whose entry rule is lifted after other rules (e.g. bbnf's
+    // `grammar` rule is the last one lifted).
+    let mut state = {
+        let s = table.rule_entry_for(table.entry);
+        if s == DtaStateId::NONE {
+            return Err(DtaError::InvalidState { state: DtaStateId::NONE });
+        }
+        s
     };
 
     loop {
@@ -533,9 +540,14 @@ fn dta_run_core(
     let mut pos: u32 = 0;
     let root_rec = columns.len() as u32;
 
-    let mut state = match table.rule_entries.first() {
-        Some(e) => e.state,
-        None => return Err(DtaError::InvalidState { state: DtaStateId::NONE }),
+    // AW-I.W4γ: dispatch the grammar's authoritative entry rule, not
+    // `rule_entries.first()`.
+    let mut state = {
+        let s = table.rule_entry_for(table.entry);
+        if s == DtaStateId::NONE {
+            return Err(DtaError::InvalidState { state: DtaStateId::NONE });
+        }
+        s
     };
 
     loop {
@@ -1040,6 +1052,29 @@ fn dispatch_one(
             }
 
             Ok(StepResult::Next(inner))
+        }
+        DtaState::WsTrim { pattern } => {
+            // AW-I.W4γ: consume whitespace via the grammar's `@ws`
+            // regex when set; otherwise fall back to the default
+            // ASCII whitespace class (space / tab / newline / CR)
+            // matching `bbnf_ir::vm::interpreter::control::exec_trim_ws`.
+            // Zero-byte matches are admitted — `?w` is optional,
+            // not required.
+            if let Some(pat) = pattern {
+                if let Some(len) = scanner.scan(pat, input, *pos as usize) {
+                    *pos += len;
+                }
+            } else {
+                let mut p = *pos as usize;
+                while let Some(&b) = input.get(p) {
+                    match b {
+                        b' ' | b'\t' | b'\n' | b'\r' => p += 1,
+                        _ => break,
+                    }
+                }
+                *pos = p as u32;
+            }
+            advance_or_pop_with(Some(table), Some(input), columns, frame_depth, stack, pos)
         }
         DtaState::ShuntingYard { head, .. } => {
             // Shunting-yard entry: reserve the outer compound, push a

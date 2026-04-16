@@ -64,6 +64,7 @@ fn altlinear_backtracks_after_first_failure() {
         shunting_yard_rules: &[],
         counter_optional_rules: &[],
         max_nesting_depth: 4,
+        entry: DtaRuleId(0),
     };
 
     let mut cols = Columns::new();
@@ -104,6 +105,7 @@ fn altlinear_exhausts_all_branches_returns_syntax() {
         shunting_yard_rules: &[],
         counter_optional_rules: &[],
         max_nesting_depth: 2,
+        entry: DtaRuleId(0),
     };
     let mut cols = Columns::new();
     let mut psi = PayloadStream::new();
@@ -136,6 +138,7 @@ fn repeat_iterates_to_hi() {
         shunting_yard_rules: &[],
         counter_optional_rules: &[],
         max_nesting_depth: 2,
+        entry: DtaRuleId(0),
     };
     let mut cols = Columns::new();
     let mut psi = PayloadStream::new();
@@ -173,6 +176,7 @@ fn repeat_many1_rejects_empty() {
         shunting_yard_rules: &[],
         counter_optional_rules: &[],
         max_nesting_depth: 2,
+        entry: DtaRuleId(0),
     };
     let mut cols = Columns::new();
     let mut psi = PayloadStream::new();
@@ -207,6 +211,7 @@ fn repeat_optional_admits_empty() {
         shunting_yard_rules: &[],
         counter_optional_rules: &[],
         max_nesting_depth: 2,
+        entry: DtaRuleId(0),
     };
     let mut cols = Columns::new();
     let mut psi = PayloadStream::new();
@@ -288,6 +293,7 @@ fn shunting_yard_left_associative_add() {
         shunting_yard_rules: &[DtaRuleId(0)],
         counter_optional_rules: &[],
         max_nesting_depth: 8,
+        entry: DtaRuleId(0),
     };
     let mut cols = Columns::new();
     let mut psi = PayloadStream::new();
@@ -367,6 +373,7 @@ fn shunting_yard_right_associative_pow() {
         shunting_yard_rules: &[DtaRuleId(0)],
         counter_optional_rules: &[],
         max_nesting_depth: 8,
+        entry: DtaRuleId(0),
     };
     let mut cols = Columns::new();
     let mut psi = PayloadStream::new();

@@ -6,7 +6,6 @@
 //! `leaves`, `seq`, `alt`, `dispatch`, `repeat`, `binary`,
 //! `operator_chain`, `map_value`, `grammar`, `prettify` (sub-dir), `ws`.
 
-mod alt;
 mod binary;
 mod dispatch;
 pub(crate) mod dta;
@@ -155,35 +154,6 @@ impl Emitter for RustEmitter {
         ctx: &mut Self::Ctx,
     ) -> TokenStream {
         self.emit_seq_grouped_impl(groups, result_type, flatten, ctx)
-    }
-
-    fn emit_alt_dispatch(
-        &mut self,
-        table: &bbnf_ir::AltDispatch,
-        branches: Vec<(AltBranchInfo, TokenStream)>,
-        fallback: Option<(AltBranchInfo, TokenStream)>,
-        alloc: ValuePlacement,
-        ctx: &mut Self::Ctx,
-    ) -> TokenStream {
-        self.emit_alt_dispatch_impl(table, branches, fallback, alloc, ctx)
-    }
-
-    fn emit_alt_checkpoint(
-        &mut self,
-        branches: Vec<(AltBranchInfo, TokenStream)>,
-        alloc: ValuePlacement,
-        ctx: &mut Self::Ctx,
-    ) -> TokenStream {
-        self.emit_alt_checkpoint_impl(branches, alloc, ctx)
-    }
-
-    fn emit_alt_all_literal(
-        &mut self,
-        literals: Vec<(String, TokenStream)>,
-        alloc: ValuePlacement,
-        ctx: &mut Self::Ctx,
-    ) -> TokenStream {
-        self.emit_alt_all_literal_impl(literals, alloc, ctx)
     }
 
     fn emit_repeat_many(
@@ -353,17 +323,6 @@ impl Emitter for RustEmitter {
         ctx: &mut Self::Ctx,
     ) -> TokenStream {
         self.emit_with_ws_trim_impl(inner, ws_pattern, ctx)
-    }
-
-    fn emit_key_dispatch(
-        &mut self,
-        config: &KeyDispatchConfig,
-        branches: Vec<KeyDispatchBranch<TokenStream>>,
-        fallback: Option<(AltBranchInfo, TokenStream)>,
-        alloc: ValuePlacement,
-        ctx: &mut Self::Ctx,
-    ) -> TokenStream {
-        self.emit_key_dispatch_impl(config, branches, fallback, alloc, ctx)
     }
 
     fn emit_token_dispatch(

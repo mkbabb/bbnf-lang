@@ -5,7 +5,7 @@ AW-I set out to activate the DTA as the sole parse path, delete every
 activation. Execution landed every architectural precept plus twelve
 substrate extensions the plan did not enumerate. The final barrier —
 workspace-green self-host round-trip — revealed a lowering-pipeline
-scope-pivot beyond AW-I's envelope. The successor tranche **AZ**
+scope-pivot beyond AW-I's envelope. The successor tranche **AY**
 carries the lowering migration; AW-I closes on what landed with
 honest gate attribution.
 
@@ -121,16 +121,16 @@ fixed**: `dispatch_expression` wrapper detection extended for
 Seq/Alt kinds; `collect_binary_operands` flattens DTA's
 Repeat-as-Rule trailing wrappers. Systematic migration of
 `lower/expression.rs`, `lower/tape_walk.rs`, `lower/value_expr.rs`,
-`graph/**`, `types.rs` is scope-revealed to AZ.
+`graph/**`, `types.rs` is scope-revealed to AY.
 
 Audit: `docs/tranches/AW/audit/w4-scope-reveal.md`.
 
-### W5 — FINAL + bench + close [deferred to AZ close per escape clause]
+### W5 — FINAL + bench + close [deferred to AY close per escape clause]
 
 `post-AW-I.json` bench matrix NOT produced. Rationale per plan
 §Escape clause: workspace cannot run `cargo test --workspace`
-until AZ closes the lowering migration. `post-AW.json` composed
-multi-wave at AZ close; FINAL-I.md (this document) records AW-I
+until AY closes the lowering migration. `post-AW.json` composed
+multi-wave at AY close; FINAL-I.md (this document) records AW-I
 on its honest merit.
 
 ## Hard gate status
@@ -149,18 +149,18 @@ on its honest merit.
 | 9 (generated.rs line count) | ≤ 12000 | 21198 | ✗ **plan miscalibration** — floor ≈10638 view accessors + 7092 prettify + ~1500 DTA tables; realistic envelope 15k-21k per `w4-close.md` §"Line-count miscalibration" |
 | 10 (parse_dta retired) | no parse_dta fn | 0 | ✓ met |
 | 11 (emitter dir reduction) | 5 files + prettify/ | verified | ✓ met |
-| 12 (CSS L4 state_count < 2000) | direct `summarise` call | unverified — test lives in `crates/core/tests/` which requires workspace compile | ✗ deferred to AZ-W5 |
-| 13 (workspace 0 failures) | `cargo test --workspace --no-fail-fast` | workspace-check fails (proc-macro panics on dev-dependent gorgeous grammars) | ✗ deferred to AZ close |
+| 12 (CSS L4 state_count < 2000) | direct `summarise` call | unverified — test lives in `crates/core/tests/` which requires workspace compile | ✗ deferred to AY-W5 |
+| 13 (workspace 0 failures) | `cargo test --workspace --no-fail-fast` | workspace-check fails (proc-macro panics on dev-dependent gorgeous grammars) | ✗ deferred to AY close |
 
 ## Invariant verification
 
 1. **One path**. `parse()` dispatches through `dta_run_into` exclusively. `parse_dta()` retired. ✓
 2. **No legacy code**. 11 sibling emitter files + `emit_rule_function_impl` machinery deleted (~4600 lines). `MemoStore` retired. No per-rule fn emission surface survives. `compute_sibling_skip` deleted (W0). ✓
 3. **No stubs at tranche close**. AltLinear / Repeat / ShuntingYard walker arms implement full semantics. ✓ (Note: the lowering pipeline's tape-shape migration is an un-migrated CONSUMER, not a stub — the walker/lifter/emitter trio are complete.)
-4. **Intentional unworkability W3-W4 declared** — realized. Window did not close at W4; extended into AZ (successor tranche). Per TRANCHE_SPEC §Scope-reveal protocol, a new letter opens — not a violation when the scope pivot is documented. ✓ (with caveat)
+4. **Intentional unworkability W3-W4 declared** — realized. Window did not close at W4; extended into AY (successor tranche). Per TRANCHE_SPEC §Scope-reveal protocol, a new letter opens — not a violation when the scope pivot is documented. ✓ (with caveat)
 5. **Typed-AST parity total**. W2.5's `body_has_map` + `is_consumer_pinned` predicates preserve every `->` annotation's path to the tape emitter. Every typed rule that fuse/inline would have dissolved is pinned. ✓
-6. **Bootstrap regen CI-enforced** (W0). Gate active at CI; will pass once AZ restores idempotency.
-7. **Workspace green at W5 close**. ✗ deferred to AZ close per escape-clause extension.
+6. **Bootstrap regen CI-enforced** (W0). Gate active at CI; will pass once AY restores idempotency.
+7. **Workspace green at W5 close**. ✗ deferred to AY close per escape-clause extension.
 
 ## Cross-tranche debt — resolved
 
@@ -179,43 +179,66 @@ on its honest merit.
 | Legacy `fn __<rule>` emission | AU era | W3.1 + W4β | ✓ landed |
 | `parse_dta` additive surface | W1 substrate | W3.1 | ✓ landed |
 
-## Cross-tranche debt — deferred to AZ
+## Cross-tranche debt — deferred to AY
 
 | Item | Origin | Destination | Rationale |
 |------|--------|-------------|-----------|
-| `find_child_by_kind` → `find_descendant_by_kind` systematic migration | W4ζ scope-reveal | AZ-W1, AZ-W3 | DTA wraps semantic children one Seq compound deeper than fn-per-rule; every direct-child scan in `lower/**`, `graph/**`, `types.rs` needs evaluation. |
-| `binary_factor` Alt-compound operator recognition | W4ζ scope-reveal | AZ-W2 | walker stamps sub-variant branch_idx on Alt, decoder expects binary_operators rule id. Either lift wraps Ref, or decoder recurses. |
-| `value_expr` `->` map-expression lowering | W4ζ scope-reveal | AZ-W4 | `lower/value_expr.rs` assumes fn-per-rule child layout. |
-| CSS L4 DTA state_count < 2000 verification | plan gate 12 | AZ-W5 | requires end-to-end pipeline. |
-| Workspace tests ≥ 1078 passed / 0 failed | plan gate 13 | AZ close | requires lowering migration complete. |
-| `serialize_roundtrip::css_simple` | W2.5 INVESTIGATE | AZ-W5 or follow-up | `@pretty`-pinned rules survive fuse but serialize pipeline mis-dispatches; deeper view-layer reconciliation. |
-| `post-AW-I.json` bench matrix | plan W5 | AZ close (as `post-AW.json` multi-wave) | cannot bench workspace that doesn't compile. |
+| `find_child_by_kind` → `find_descendant_by_kind` systematic migration | W4ζ scope-reveal | AY-W1, AY-W3 | DTA wraps semantic children one Seq compound deeper than fn-per-rule; every direct-child scan in `lower/**`, `graph/**`, `types.rs` needs evaluation. |
+| `binary_factor` Alt-compound operator recognition | W4ζ scope-reveal | AY-W2 | walker stamps sub-variant branch_idx on Alt, decoder expects binary_operators rule id. Either lift wraps Ref, or decoder recurses. |
+| `value_expr` `->` map-expression lowering | W4ζ scope-reveal | AY-W4 | `lower/value_expr.rs` assumes fn-per-rule child layout. |
+| CSS L4 DTA state_count < 2000 verification | plan gate 12 | AY-W5 | requires end-to-end pipeline. |
+| Workspace tests ≥ 1078 passed / 0 failed | plan gate 13 | AY close | requires lowering migration complete. |
+| `serialize_roundtrip::css_simple` | W2.5 INVESTIGATE | AY-W5 or follow-up | `@pretty`-pinned rules survive fuse but serialize pipeline mis-dispatches; deeper view-layer reconciliation. |
+| `post-AW-I.json` bench matrix | plan W5 | AY close (as `post-AW.json` multi-wave) | cannot bench workspace that doesn't compile. |
 
 ## Artefacts
 
 - `docs/tranches/AW/audit/fuse-snapshot-migration.md` (W2.4) — 74 at-risk tests (22 DELETE / 44 UPDATE / 8 INVESTIGATE).
 - `docs/tranches/AW/audit/w3-unworkable-surface.md` (W3.2) — line-count floor analysis + failure surface enumeration.
 - `docs/tranches/AW/audit/w4-close.md` (W4γ) — emitter directory reduction + idempotency caveat.
-- `docs/tranches/AW/audit/w4-scope-reveal.md` (W4ζ) — lowering-pipeline scope-pivot + AZ seed.
+- `docs/tranches/AW/audit/w4-scope-reveal.md` (W4ζ) — lowering-pipeline scope-pivot + AY seed.
 - `crates/bbnf-tape/tests/walker_arms.rs` — 11 walker-arm focused tests (7 from W2.1 + 1 from W4δ paren + 3 from W4δ counter-slot/PSI-refresh).
 - `crates/core/src/grammar/generated.rs` — 21198 lines, DTA-based, under post-W4ζ emitter.
 - `scripts/seed-worktree.sh` — orchestration tooling, symlinks `data/` into fresh worktrees.
 
 ## What did not land
 
-1. Workspace-green tests. Lowering-pipeline migration required; see AZ-W1 through AZ-W5.
+1. Workspace-green tests. Lowering-pipeline migration required; see AY-W1 through AY-W5.
 2. CSS L4 state_count verification. Blocked on (1).
 3. `post-AW-I.json` bench matrix. Blocked on (1).
 4. AW-I as a standalone closed tranche per strict `README.md` §Tranche completion requirements 1-3. Closed instead per TRANCHE_SPEC §Scope-reveal protocol item 4 (new letter opens when scope pivot exceeds current tranche envelope).
 
-## AZ — successor tranche
+## Successor chain
 
-`docs/tranches/AZ/AZ.md` authored alongside this document. Five
-waves, one sub-phase per wave, budget ~4-5 waves of ~1k-line
-changes each, predominantly in `crates/core/src/lower/**`. No
-further bbnf-tape DTA driver changes anticipated. Walker + lifter +
-emitter are complete per this tranche.
+Three pre-authored + one new successor tranche sequence off AW-I:
 
-AZ close lifts the intentional-unworkability window that AW-I opened
-at W3 and produces `post-AW.json` as a multi-wave history
-`{post-AW-I (synthetic), post-AZ-W1, ..., post-AZ-W5, post-AZ}`.
+- **AY** (new — `docs/tranches/AY/AY.md`) — DTA Self-Host Round-Trip.
+  Five waves migrating the lowering pipeline's tape-shape assumptions
+  (`find_child_by_kind` → descendant walks). Prerequisite to AW-II
+  and AX: no workspace-green → no bench matrix → no consumer wiring.
+- **AW-II** (pre-authored — `docs/tranches/AW/AW-II.md`) —
+  Optimisation + Parity. Six waves activating every AV-emitted
+  substrate channel: PSI rayon, ShapeRef dispatch, PHF + SIMD
+  keyword tables, CSS selector classifier, document-level parallel
+  parse, bloom + GADT dedup, Pratt generalisation, parity harnesses,
+  `Tape::reduce_column<C,R>`, bench parity. Presumes workspace-green
+  — BLOCKED on AY close.
+- **AX** (pre-authored — `docs/tranches/AX/AX.md`) — Replay,
+  Recovery, and the Subsystem Ledger. Consumer of AW's `dta-replay`
+  substrate: incremental re-parse, grammar-structural error recovery,
+  parse-step debugger, test-case minimisation. Also closes four
+  pre-existing Category A subsystem failures. Presumes workspace-
+  green — BLOCKED on AY close.
+
+AY close lifts the intentional-unworkability window that AW-I opened
+at W3. AW-II + AX then dispatch in parallel (they share no file
+bounds) or serially by priority. `post-AW.json` composes multi-wave
+at AY close; AW-II emits `post-AW-II.json` against its own baseline;
+AX closes on substrate-consumer wiring without a separate bench
+matrix.
+
+Letter sequence rationale: AY is chronologically the immediate
+successor to AW-I (AX was pre-authored for replay/recovery work
+separate from the self-host flow; AW-II retains its numeric
+subscript per pre-existing authoring). The three tranches have
+disjoint scope and can execute in any order after AY lands.

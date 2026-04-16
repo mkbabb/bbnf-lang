@@ -1,6 +1,6 @@
-# Tranche AZ — DTA Self-Host Round-Trip
+# Tranche AY — DTA Self-Host Round-Trip
 
-AZ closes the intentional-unworkability window AW-I opened at W3 and
+AY closes the intentional-unworkability window AW-I opened at W3 and
 did not fully lift at W4. The walker, lifter, and emitter are
 complete per AW-I; the DTA-shaped tape correctly encodes rule
 identity via W4ζ's `variant_idx` stamping. What remains is the
@@ -33,21 +33,21 @@ load-bearing and complete.
 ## Invariants
 
 1. **Consumer migration, not producer rework**. The DTA tape shape
-   is settled; AZ migrates consumers. If a wave surfaces a
+   is settled; AY migrates consumers. If a wave surfaces a
    producer-side bug (walker/lifter/emitter), that's a carry-over
    W4δ-style issue — fold the fix into the same wave; do not defer.
 2. **Descendant walks where semantic; direct walks where leaf**.
    The generic pattern is to prefer `find_descendant_by_kind`; the
    narrow exception is identifier / literal / regex whose compound
    parent can still carry them as direct children.
-3. **Workspace green at every wave boundary after AZ-W1 lands**.
-   AW-I's unworkability window closes at AZ-W1 (the first wave that
+3. **Workspace green at every wave boundary after AY-W1 lands**.
+   AW-I's unworkability window closes at AY-W1 (the first wave that
    migrates the highest-frequency `find_child_by_kind` call sites).
    W2–W5 operate with a green workspace; any wave that regresses
    gates at close-time fixes in-wave.
 4. **Typed-AST parity total** (inherited from AW-I).
 5. **Bootstrap regen idempotent at close** (inherited from AW-I
-   invariant #6). AZ-W5 confirms.
+   invariant #6). AY-W5 confirms.
 6. **No stubs, no workarounds, no shims.** If a migration reveals
    architectural gaps (e.g. a new `find_descendant_by_kind_then_peel`
    helper is needed), land it as substrate; do not ship local shims
@@ -147,7 +147,7 @@ call site. Classify:
   correctness under DTA's Seq wrappers; migrate only if the leaf
   is genuinely not a direct child in the DTA shape.
 
-Produce an audit markdown `docs/tranches/AZ/audit/find-child-audit.md`
+Produce an audit markdown `docs/tranches/AY/audit/find-child-audit.md`
 mid-wave; ship migrations as commits referencing the audit rows.
 
 #### W3.2 — `graph/**`
@@ -201,11 +201,11 @@ Owner: orchestrator serial.
    - `google_sheets_monolithic` × {parse_simple, parse_nested, parse_stress}
    - `bbnf_monolithic` × {json, ebnf, css_pretty, google_sheets, bbnf_self, css_l4_grammar}
 5. Compose `docs/benchmarks/post-AW.json` as a multi-wave history
-   rooted at AW-I's synthesized reference entry + AZ-W1 through
-   AZ-W5 measurements. Reference point: AW-I's W2 close workspace
+   rooted at AW-I's synthesized reference entry + AY-W1 through
+   AY-W5 measurements. Reference point: AW-I's W2 close workspace
    baseline (1078/0/68); compare against post-AU (the last
    bench-measurable tranche close).
-6. Write `docs/tranches/AZ/FINAL.md`.
+6. Write `docs/tranches/AY/FINAL.md`.
 7. Verify hard gate 12: dedicated test asserts CSS L4 DTA
    `state_count < 2000` via `bbnf_ir::passes::recognizers::dta::
    summarise`.
@@ -224,8 +224,8 @@ covers the 19-entry matrix.
 | `crates/core/src/types.rs` (type annotation decoding) | W3.3 |
 | `crates/core/src/lower/value_expr.rs` (`->` maps) | W4 |
 | `crates/core/src/grammar/generated.rs` (regen) | W5 |
-| `docs/tranches/AZ/audit/find-child-audit.md` (new) | W3 |
-| `docs/tranches/AZ/FINAL.md` (new) | W5 |
+| `docs/tranches/AY/audit/find-child-audit.md` (new) | W3 |
+| `docs/tranches/AY/FINAL.md` (new) | W5 |
 | `docs/benchmarks/post-AW.json` (new) | W5 |
 
 ## Hard gates summary
@@ -260,7 +260,7 @@ covers the 19-entry matrix.
 
 ## Cross-tranche debt — inherited from AW-I
 
-| Item | Origin | AZ wave |
+| Item | Origin | AY wave |
 |------|--------|---------|
 | `find_child_by_kind` → `find_descendant_by_kind` migration | AW-I.W4ζ scope-reveal | W1, W3 |
 | `binary_factor` operator recognition | AW-I.W4ζ scope-reveal | W2 |
@@ -273,7 +273,7 @@ covers the 19-entry matrix.
 
 ## Research artefacts
 
-AZ does not open a research wave — the design space is tight
+AY does not open a research wave — the design space is tight
 (consumer-side migration following one structural pattern). The
 AW-I audits `w3-unworkable-surface.md`, `w4-close.md`, and
 `w4-scope-reveal.md` supply the diagnostic context that a research

@@ -13,8 +13,8 @@ what committed, what blocked, what shifted.
 | W1 | DTA substrate skeleton (walker + cursor O(1) + inline finalise + replay feature) | 1 serial | ✓ landed (stubs open) |
 | W2 | walker + memo + SCC + audit + snapshot migration | 5 parallel (W2.1–W2.4 concurrent; W2.5 sequenced) | ✓ landed (workspace **1078/0/68**) |
 | W3 | `parse()` swap + regen | 1 serial | ✓ landed (workspace intentionally unworkable) |
-| W4 | legacy deletion + cyclic activation + walker extensions + scope-reveal | 6 sub-waves (α/β×4/γ/δ/ε/ζ), ~10 agents | ✓ landed (workspace unworkable; AZ scope-pivot opened) |
-| W5 | FINAL-I + AZ.md authorship | 1 serial (orchestrator) | ✓ landed (post-AW-I.json deferred to AZ close per escape clause) |
+| W4 | legacy deletion + cyclic activation + walker extensions + scope-reveal | 6 sub-waves (α/β×4/γ/δ/ε/ζ), ~10 agents | ✓ landed (workspace unworkable; AY scope-pivot opened) |
+| W5 | FINAL-I + AY.md authorship | 1 serial (orchestrator) | ✓ landed (post-AW-I.json deferred to AY close per escape clause) |
 
 Workspace at AW-I HEAD `ff0b7fe7`: **1101/0/67**.
 Workspace at W2 close: **1078/0/68** (−22 DELETE, −1 new Category A
@@ -755,7 +755,7 @@ bootstrap idempotency regression — a second `scripts/bootstrap-
 bbnf.sh` run would collapse to 23 lines because the committed
 DTA-path `BbnfBootstrap::parse` can't parse bbnf.bbnf.
 
-## 2026-04-16 — AW-I.W4 six-sub-wave execution + scope-pivot to AZ
+## 2026-04-16 — AW-I.W4 six-sub-wave execution + scope-pivot to AY
 
 The largest wave of AW-I. Ten agents across six sub-waves; ~4600
 lines deleted; two genuine scope-pivots handled; one tranche
@@ -892,17 +892,17 @@ Single serial agent (`adbd33ec2186d0dfe`). Seven commits:
   direct-child to descendant-based lookups.
 - `ba9e14a8` — `fix(lower/expression): extend wrapper detection
   for DTA tape shapes`. Partial — outer expression shape unblocked;
-  systematic lowering migration scope-revealed to AZ.
+  systematic lowering migration scope-revealed to AY.
 - `e784a648` — `chore(bootstrap/debug_parse): dump imports and
   pretties`. Debug harness augmentation.
-- `da39ad60` — `docs(AW-I/audit): W4 scope-reveal + AZ seed`.
+- `da39ad60` — `docs(AW-I/audit): W4 scope-reveal + AY seed`.
   Audit + successor-tranche seed.
 
 **W4ζ scope-reveal taken**. Per TRANCHE_SPEC §"Scope-reveal
 protocol" item 4: "Mid-tranche plan pivots open a new letter."
 The lowering-pipeline migration (every `find_child_by_kind` call
 site in `lower/**`, `graph/**`, `types.rs`) is a multi-wave
-consumer audit orthogonal to AW-I's DTA activation thesis. AZ
+consumer audit orthogonal to AW-I's DTA activation thesis. AY
 opens to carry it.
 
 ### AW-I tranche close
@@ -910,7 +910,7 @@ opens to carry it.
 **Workspace state**: `bbnf` + `bbnf-tape` + `bbnf-ir` + `bbnf-ser` +
 `egraph` + `csp-solver` + dependencies compile cleanly
 (`cargo check -p bbnf --lib` exits 0); gorgeous subgrammar dev-deps
-derive-panic until AZ's lowering migration lands. Workspace test
+derive-panic until AY's lowering migration lands. Workspace test
 suite cannot run end-to-end; isolated-crate tests pass:
 - `bbnf-tape`: 11 walker_arms passing (7 W2.1 + 1 W4δ paren + 3
   counter-slot/PSI-refresh additions).
@@ -919,7 +919,7 @@ suite cannot run end-to-end; isolated-crate tests pass:
 
 **Per-phase landing count**: every W0-W4 sub-phase has commit
 citations in FINAL-I.md. Hard gates 1-11 met; gates 9 reclassified
-as plan-miscalibration (documented); gates 12-13 deferred to AZ
+as plan-miscalibration (documented); gates 12-13 deferred to AY
 close with named destination per escape-clause extension.
 
 **Architectural gains preserved on master**:
@@ -942,15 +942,15 @@ close with named destination per escape-clause extension.
 **FINAL-I.md** composed at `docs/tranches/AW/FINAL-I.md` with
 full hard-gate attribution + cross-tranche debt ledger.
 
-**AZ.md** composed at `docs/tranches/AZ/AZ.md`: five waves
+**AY.md** composed at `docs/tranches/AY/AY.md`: five waves
 migrating the lowering pipeline's tape-shape assumptions. Budget
 ~4-5 waves of ~1k-line changes each, predominantly
 `crates/core/src/lower/**`. No further bbnf-tape driver changes
 anticipated.
 
 `post-AW-I.json` bench matrix NOT produced per escape-clause
-extension; will compose at AZ close as `post-AW.json` multi-wave
-history rooted at AW-I's W2 baseline and AZ-W1 through AZ-W5
+extension; will compose at AY close as `post-AW.json` multi-wave
+history rooted at AW-I's W2 baseline and AY-W1 through AY-W5
 measurements.
 
 ### AW-I HEAD

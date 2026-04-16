@@ -45,14 +45,6 @@ pub fn fuse_single_use(ir: &mut GrammarIR) {
     // a candidate aggregate payload layout (e.g. `length = number,
     // lengthUnit` → `(f64, u8)`). Even at single-use reference count
     // they must stay callable so the aggregate epilogue fires.
-    // AW.0.10: The earlier guard `r.meta.scc_id.is_none()` was always-
-    // false in practice — the SCC pass populates `scc_id` for every
-    // rule before the transform pass runs, so the guard silently
-    // rejected every candidate. `is_cyclic` already captures SCC
-    // membership (computed alongside `scc_id`), so the SCC guard is
-    // redundant. Dropping it lets the pass fuse legitimate single-use
-    // acyclic rules as designed, restoring the post-fuse shape the
-    // DTA lifter expects.
     let fusable: Vec<(RuleId, IrNode)> = ir
         .rules
         .iter()
@@ -60,6 +52,7 @@ pub fn fuse_single_use(ir: &mut GrammarIR) {
             r.id != ir.entry
                 && !r.meta.is_cyclic
                 && !r.meta.preserve_identity
+                && r.meta.scc_id.is_none()
                 && ref_counts.get(r.id as usize).copied().unwrap_or(0) == 1
                 && !is_composite_seq(&r.body)
         })

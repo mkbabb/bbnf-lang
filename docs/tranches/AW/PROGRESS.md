@@ -224,7 +224,89 @@ trajectory: W2.5 heals 3 percentage items; W5.1 heals 7 JSON
 variant-dispatch; W5.2 heals 13 serialize/structural
 roundtrip; W5.5 triages `test_selective_transitive_unfurling`.
 
-### Wave 0 bench checkpoint — pending
+### Wave 0 bench checkpoint — rationale-satisfied
+
+Cold four-bench matrix not executed per the plan's escape clause
+(`docs/benchmarks/post-AW-W0.json` carries the full rationale).
+W0's observable levers — Stage-C flag (payout shifted to W1),
+fuse/inline activation (reverted, routes to W1.11) — and the
+residual elisions (Span double-pack, mark_children, stack-frame
+right-sizing) all touch the fn-per-rule path W1 deletes
+wholesale, so their fractional wins are dominated by the
+surrounding recursion. Next bench execution lands at W1 close
+against the post-AU hard-gate baseline.
+
+## 2026-04-16 — W1 partial landing
+
+### W1 dispatch outcome
+
+Single-agent serial wave. Agent landed 5 commits but only
+achieved substrate (AW.1.1 driver) + documentation. The
+activation path (AW.1.2 parse rewrite, AW.1.3 fn-per-rule
+deletion, AW.1.4 pre-order finalise, AW.1.10 cursor O(1),
+AW.1.11 pipeline fuse/inline fix) remained blocked by context
+budget.
+
+**Cherry-picked onto master (1 commit):**
+
+- `11f22f1f` — `feat(bbnf-tape): dta_run walker with FrameStack +
+  inline frame_depth emission (AW.1.1)`. Includes the
+  `dta-replay` feature-gated `DtaSnapshot` + `dta_run_with_
+  replay`. Substrate-only; nothing consumes it yet. Workspace
+  test count unchanged (1100/0/67).
+
+**Not cherry-picked — partial-landing debt:**
+
+- Agent's `ee0fc82d` (emitter DTA Literal/Regex StringId
+  resolution) exposed real byte-text in `__DTA_LITERAL_*` /
+  `__DTA_REGEX_*` constants. In isolation it's correct code —
+  the constants become functional instead of placeholder debug
+  names — but a trial cherry-pick onto master broke two
+  derive-macro test binaries (`serialize_roundtrip`,
+  `tape_parity`) with `expected value, found builtin type u8`
+  + `suffixes on byte string literals are invalid`. The emitter
+  change apparently interacts with downstream derive-macro
+  expansion in test-local `#[derive(Parser)]` invocations in a
+  way we haven't yet isolated. The real bytes contain content
+  (e.g. CSS regex patterns with `u8` substrings, byte-string
+  escapes) that the derive-consumer treats differently than
+  placeholder `__state_N_regex`. Deferred to the W1
+  continuation agent — it needs to either (a) land the derive-
+  consumer fix alongside the emitter fix, or (b) scope the
+  change narrower (resolve strings inside driver-only reads,
+  keep emitter output placeholder-compatible).
+
+- Agent's PROGRESS-W1.md in-worktree document — replaced here
+  with this consolidated entry.
+
+### W1 blockers surfaced for continuation
+
+1. **parse-that is a sibling repo**, not vendored in-tree.
+   `../parse-that/rust/parse_that/src/state.rs` lives outside
+   the worktree. AW.1.8 (MemoStore delete) cannot land from
+   within the AW worktree isolation model. Options: (a) ship
+   AW.1.8 from the main repo under a targeted orchestrator
+   commit; (b) extend the operational protocol to admit
+   multi-repo worktrees for this tranche; (c) defer AW.1.8
+   to AX with a recorded rationale. Orchestrator decision:
+   **(a)** — targeted orchestrator commit inside the parse-
+   that repo, cross-linked from this PROGRESS entry. parse-
+   that is a first-class owned dependency per `docs/
+   instructions/README.md` §Crate ownership.
+
+2. **AW.1.11 fuse/inline guard drop** diagnosed by W1 agent as
+   SCC-metadata staleness inside the structural_normalizer_
+   loop (`crates/core/src/pipeline/compile.rs:510-533`). Fix:
+   recompute SCC between inline and fuse passes. Fold into
+   W1 continuation.
+
+3. **Large coupling between AW.1.2, AW.1.3, AW.1.4, AW.1.10**.
+   parse() rewrite requires driver.rs (landed), Stage-C pre-
+   order contract (not landed), and fn-per-rule deletion as a
+   coordinated set. Continuation agent receives them as one
+   composite milestone.
+
+### W1 continuation dispatch — pending
 
 ## GrammarProfile population matrix (AW.0.9 ledger)
 

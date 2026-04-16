@@ -502,6 +502,15 @@ fn dta_run_with_log(
         ) {
             Ok(StepResult::Next(next)) => state = next,
             Ok(StepResult::Done) => break,
+            Err(e @ DtaError::Syntax { .. }) => {
+                match handle_repeat_failure(
+                    table, input, columns, psi, frame_depth, &mut stack, &mut pos,
+                )? {
+                    RepeatAbsorbResult::Continue(next) => state = next,
+                    RepeatAbsorbResult::Done => break,
+                    RepeatAbsorbResult::NotAbsorbed => return Err(e),
+                }
+            }
             Err(e) => return Err(e),
         }
     }
@@ -536,6 +545,15 @@ fn dta_run_core(
         ) {
             Ok(StepResult::Next(next)) => state = next,
             Ok(StepResult::Done) => break,
+            Err(e @ DtaError::Syntax { .. }) => {
+                match handle_repeat_failure(
+                    table, input, columns, psi, frame_depth, &mut stack, &mut pos,
+                )? {
+                    RepeatAbsorbResult::Continue(next) => state = next,
+                    RepeatAbsorbResult::Done => break,
+                    RepeatAbsorbResult::NotAbsorbed => return Err(e),
+                }
+            }
             Err(e) => return Err(e),
         }
     }
@@ -551,12 +569,131 @@ enum StepResult {
     Done,
 }
 
+/// Result of a Repeat-failure absorption attempt.
+enum RepeatAbsorbResult {
+    /// Absorption fired; the walker should continue with this state.
+    Continue(DtaStateId),
+    /// Absorption fired AND the stack fully drained — parse is done.
+    Done,
+    /// No absorbing Repeat in scope — caller propagates the original
+    /// error.
+    NotAbsorbed,
+}
+
+/// Handle a body-failure that occurred inside a live Repeat frame.
+///
+/// Walks down the frame stack looking for the innermost Repeat frame
+/// whose counter (iterations completed) is at least `lo`. If found,
+/// restores the walker state to that frame's iteration savepoint,
+/// closes the Repeat compound at the current counter, and returns
+/// [`RepeatAbsorbResult::Continue`] with the next state the main loop
+/// should dispatch, or [`RepeatAbsorbResult::Done`] if the absorbing
+/// close drained the stack.
+fn handle_repeat_failure(
+    table: &DtaTable,
+    input: &[u8],
+    columns: &mut Columns,
+    psi: &mut PayloadStream,
+    frame_depth: &mut Vec<u8>,
+    stack: &mut FrameStack,
+    pos: &mut u32,
+) -> Result<RepeatAbsorbResult, DtaError> {
+    let mut scan_depth = stack.depth();
+    while scan_depth > 0 {
+        let idx = (scan_depth - 1) as usize;
+        let frame = frame_at(stack, idx);
+        if let DtaFrameKind::Repeat = frame.kind {
+            let counter_idx = frame.counter_idx as usize;
+            let counter_val = stack.counters[counter_idx];
+            if counter_val as u32 >= frame.lo as u32 {
+                let sp = stack.iter_savepoints[counter_idx];
+                columns.truncate(sp.cols_len as usize);
+                frame_depth.truncate(sp.fd_len as usize);
+                psi.truncate(sp.psi_len as usize);
+                stack.restore(sp.stack);
+                *pos = sp.pos;
+                close_compound(columns, stack, *pos);
+                stack.pop();
+                let res = advance_or_pop_with(
+                    Some(table), Some(input), columns, frame_depth, stack, pos,
+                )?;
+                return Ok(match res {
+                    StepResult::Next(n) => RepeatAbsorbResult::Continue(n),
+                    StepResult::Done => RepeatAbsorbResult::Done,
+                });
+            }
+        }
+        scan_depth -= 1;
+    }
+    Ok(RepeatAbsorbResult::NotAbsorbed)
+}
+
+/// Repeat-failure handler constrained to frames above `bound_depth`
+/// — used by `try_branch` so a Repeat inside the branch can absorb
+/// its own failures without leaking into the Alt's outer context.
+fn handle_repeat_failure_bounded(
+    table: &DtaTable,
+    input: &[u8],
+    columns: &mut Columns,
+    psi: &mut PayloadStream,
+    frame_depth: &mut Vec<u8>,
+    stack: &mut FrameStack,
+    pos: &mut u32,
+    bound_depth: u8,
+) -> Result<RepeatAbsorbResult, DtaError> {
+    let mut scan_depth = stack.depth();
+    while scan_depth > bound_depth {
+        let idx = (scan_depth - 1) as usize;
+        let frame = frame_at(stack, idx);
+        if let DtaFrameKind::Repeat = frame.kind {
+            let counter_idx = frame.counter_idx as usize;
+            let counter_val = stack.counters[counter_idx];
+            if counter_val as u32 >= frame.lo as u32 {
+                let sp = stack.iter_savepoints[counter_idx];
+                columns.truncate(sp.cols_len as usize);
+                frame_depth.truncate(sp.fd_len as usize);
+                psi.truncate(sp.psi_len as usize);
+                stack.restore(sp.stack);
+                *pos = sp.pos;
+                close_compound(columns, stack, *pos);
+                stack.pop();
+                let res = advance_or_pop_with(
+                    Some(table), Some(input), columns, frame_depth, stack, pos,
+                )?;
+                return Ok(match res {
+                    StepResult::Next(n) => RepeatAbsorbResult::Continue(n),
+                    StepResult::Done => RepeatAbsorbResult::Done,
+                });
+            }
+        }
+        scan_depth -= 1;
+    }
+    Ok(RepeatAbsorbResult::NotAbsorbed)
+}
+
+/// Peek at the frame at the given stack depth index (0 = bottom).
+#[inline]
+fn frame_at(stack: &FrameStack, idx: usize) -> Frame {
+    let inline_len = stack.inline_len as usize;
+    if idx < inline_len {
+        stack.inline[idx]
+    } else {
+        stack.overflow[idx - inline_len]
+    }
+}
+
 /// Nested walker that drives dispatch from `entry_state` until the
 /// stack depth returns to `stop_depth` (the Alt-frame boundary). On
 /// success, returns the next state the outer walker should dispatch,
 /// or [`StepResult::Done`] when the stack fully drains. On syntax
 /// failure, returns the error so the caller can restore the savepoint
 /// and try the next branch.
+///
+/// Repeat-body failures inside a branch are absorbed by
+/// `handle_repeat_failure_bounded` if an enclosing Repeat has
+/// `counter >= lo` — the branch continues past the Repeat's
+/// successful close. Failures that cannot be absorbed propagate to
+/// the AltLinear caller.
 fn try_branch(
     table: &DtaTable,
     input: &[u8],
@@ -573,14 +710,29 @@ fn try_branch(
     loop {
         match dispatch_one(
             table, input, scanner, columns, psi, frame_depth, stack, state, pos,
-        )? {
-            StepResult::Next(next) => {
+        ) {
+            Ok(StepResult::Next(next)) => {
                 state = next;
                 if stack.depth() <= stop_depth {
                     return Ok(StepResult::Next(next));
                 }
             }
-            StepResult::Done => return Ok(StepResult::Done),
+            Ok(StepResult::Done) => return Ok(StepResult::Done),
+            Err(e @ DtaError::Syntax { .. }) => {
+                match handle_repeat_failure_bounded(
+                    table, input, columns, psi, frame_depth, stack, pos, stop_depth,
+                )? {
+                    RepeatAbsorbResult::Continue(next) => {
+                        state = next;
+                        if stack.depth() <= stop_depth {
+                            return Ok(StepResult::Next(next));
+                        }
+                    }
+                    RepeatAbsorbResult::Done => return Ok(StepResult::Done),
+                    RepeatAbsorbResult::NotAbsorbed => return Err(e),
+                }
+            }
+            Err(e) => return Err(e),
         }
     }
 }
@@ -812,18 +964,56 @@ fn dispatch_one(
                 failing_rule: DtaRuleId(u32::MAX),
             }))
         }
-        DtaState::Repeat { inner, lo: _, hi: _, counter_optional: _ } => {
-            // W2.1 Commit 1 lands AltLinear only. Repeat iteration
-            // semantics (lo..=hi loop + body-failure absorption) land
-            // in the follow-on commit; this commit keeps the single-
-            // iteration behaviour for the Repeat arm so non-Alt
-            // grammars continue to function through W2.1 Commit 1.
+        DtaState::Repeat { inner, lo, hi, counter_optional } => {
+            // Repeat opens a Repeat frame whose counter tracks
+            // iteration count. Allocates a counter slot + an
+            // iteration savepoint slot; the first iteration begins
+            // immediately by dispatching to `inner`.
+            //
+            // The AV.3.2 `counter_optional` marker is a rule-set
+            // membership check — when the body has nested optionals
+            // whose empties should count toward `lo`, stagnant
+            // iterations do not terminate the loop.
+            //
+            // Body failure with `counter >= lo` is caught by
+            // `handle_repeat_failure` at the walker-loop boundary;
+            // the iteration savepoint captured below is the restore
+            // target.
             let parent_rec = columns.len() as u32;
             reserve_compound(columns, frame_depth, stack.depth(), TapeKind::Rule, *pos);
             let child_mark = columns.len() as u32;
+
+            // Allocate a counter slot + matching iter-savepoint slot.
+            let counter_idx = stack.counters.len();
+            if counter_idx >= u8::MAX as usize {
+                return Err(DtaError::InvalidState { state });
+            }
+            stack.counters.push(0);
+
+            let counter_optional_flag = match counter_optional {
+                Some(_) => 1u8,
+                None => 0u8,
+            };
+
+            // Pre-reserve the iter-savepoint slot; the stack field is
+            // filled in place AFTER the Repeat frame is pushed.
+            stack.iter_savepoints.push(IterSavepoint {
+                cols_len: columns.len() as u32,
+                fd_len: frame_depth.len() as u32,
+                psi_len: psi.len() as u32,
+                pos: *pos,
+                stack: FrameStackSavepoint {
+                    inline_len: 0,
+                    overflow_len: 0,
+                    counters_len: 0,
+                    op_stack_len: 0,
+                    iter_savepoints_len: 0,
+                },
+            });
+
             stack.push(Frame {
                 kind: DtaFrameKind::Repeat,
-                counter_idx: u8::MAX,
+                counter_idx: counter_idx as u8,
                 cursor: 0,
                 children: &[],
                 repeat_inner: inner,
@@ -831,19 +1021,41 @@ fn dispatch_one(
                 child_mark,
                 tape_kind: TapeKind::Rule,
                 last_pos: *pos,
-                lo: 0,
-                hi: 0,
-                counter_optional_flag: 0,
+                lo: saturating_u16(lo),
+                hi: saturating_u16(hi),
+                counter_optional_flag,
             });
+
+            // Fill in the stack savepoint AFTER the push so body
+            // failure restores exactly to "Repeat frame present, no
+            // body state yet".
+            stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+
+            // Handle degenerate `hi == 0` — close immediately.
+            if hi == 0 {
+                close_compound(columns, stack, *pos);
+                return advance_or_pop_with(
+                    Some(table), Some(input), columns, frame_depth, stack, pos,
+                );
+            }
+
             Ok(StepResult::Next(inner))
         }
         DtaState::ShuntingYard { head, .. } => {
-            // W2.1 Commit 1 lands AltLinear only. Operator-precedence
-            // reduction for the ShuntingYard arm lands in the follow-
-            // on commit; this commit forwards to `head` so non-SY
-            // grammars continue to function.
+            // W2.1 Commit 2 lands AltLinear + Repeat. Operator-
+            // precedence reduction for the ShuntingYard arm lands in
+            // the follow-on commit; this commit forwards to `head`.
             Ok(StepResult::Next(head))
         }
+    }
+}
+
+#[inline]
+fn saturating_u16(v: u32) -> u16 {
+    if v >= u16::MAX as u32 {
+        u16::MAX
+    } else {
+        v as u16
     }
 }
 
@@ -938,16 +1150,17 @@ fn stack_top(stack: &FrameStack) -> Option<&Frame> {
 /// frame's child list is exhausted.
 ///
 /// Takes optional `table` / `input` references so the Repeat +
-/// ShuntingYard arms (landing in the W2.1 follow-on commits) can
-/// consult compile-time metadata and peek operator bytes. Commit 1's
-/// AltLinear path does not exercise either parameter — the plumbing
-/// is pre-wired to keep the call-site API stable across the W2.1
-/// series.
+/// ShuntingYard arms can consult compile-time metadata and peek
+/// operator bytes.
+///
+/// The Repeat arm reads the frame's counter, consults `lo`/`hi`, and
+/// either re-enters `repeat_inner` (capturing a fresh iteration
+/// savepoint) or closes at `counter >= lo`.
 fn advance_or_pop_with(
     _table: Option<&DtaTable>,
     _input: Option<&[u8]>,
     columns: &mut Columns,
-    _frame_depth: &mut Vec<u8>,
+    frame_depth: &mut Vec<u8>,
     stack: &mut FrameStack,
     pos: &mut u32,
 ) -> Result<StepResult, DtaError> {
@@ -969,12 +1182,49 @@ fn advance_or_pop_with(
                 // the Alt compound's child run. Close and pop.
             }
             DtaFrameKind::Repeat => {
-                // W2.1 Commit 1: single-iteration behaviour. Full
-                // lo..=hi iteration + body-failure absorption land in
-                // the Repeat-arm follow-on commit.
+                // One iteration completed. Consult lo/hi + position-
+                // stagnation to decide whether to re-enter or close.
+                // Copy-out the `top` fields first to release the
+                // mutable borrow on `stack`.
+                let counter_idx = top.counter_idx as usize;
+                let iter_start_pos = top.last_pos;
+                let counter_optional_flag = top.counter_optional_flag;
+                let hi = top.hi;
+                let inner = top.repeat_inner;
+                let _ = top;
+
+                let counter_val = stack.counters[counter_idx] + 1;
+                stack.counters[counter_idx] = counter_val;
+
+                let stagnant = *pos == iter_start_pos;
+                let should_close = counter_val as u32 >= hi as u32
+                    || (stagnant && counter_optional_flag == 0);
+
+                if should_close {
+                    // Fall through to close+pop.
+                } else {
+                    // Re-enter the body. Refresh the iteration
+                    // savepoint + `last_pos` for the next round.
+                    let new_sp_cols = columns.len() as u32;
+                    let new_sp_fd = frame_depth.len() as u32;
+                    let prior_psi_len = stack.iter_savepoints[counter_idx].psi_len;
+                    let pos_val = *pos;
+                    let new_stack_sp = stack.savepoint();
+                    stack.iter_savepoints[counter_idx] = IterSavepoint {
+                        cols_len: new_sp_cols,
+                        fd_len: new_sp_fd,
+                        psi_len: prior_psi_len,
+                        pos: pos_val,
+                        stack: new_stack_sp,
+                    };
+                    if let Some(top2) = stack.top_mut() {
+                        top2.last_pos = pos_val;
+                    }
+                    return Ok(StepResult::Next(inner));
+                }
             }
             DtaFrameKind::ShuntingYard => {
-                // W2.1 Commit 1: forward-ref behaviour. Operator-
+                // W2.1 Commit 2: forward-ref behaviour. Operator-
                 // precedence reducer lands in the SY-arm follow-on
                 // commit.
             }

@@ -111,3 +111,109 @@ fn altlinear_exhausts_all_branches_returns_syntax() {
     let err = dta_run(&table, b"z", &NullScanner, &mut cols, &mut psi, &mut fd);
     assert!(matches!(err, Err(DtaError::Syntax { .. })));
 }
+
+// ── Repeat ──────────────────────────────────────────────────────────
+
+#[test]
+fn repeat_iterates_to_hi() {
+    // Grammar: rule = "a"{0, 3}. Input "aaa" — 3 iterations.
+    static STATES: &[DtaState] = &[
+        DtaState::Repeat {
+            inner: DtaStateId(1),
+            lo: 0,
+            hi: 3,
+            counter_optional: None,
+        },
+        DtaState::Literal { text: "a" },
+    ];
+    static RULE_ENTRIES: &[DtaRuleEntry] = &[DtaRuleEntry {
+        rule: DtaRuleId(0),
+        state: DtaStateId(0),
+    }];
+    let table = DtaTable {
+        states: STATES,
+        rule_entries: RULE_ENTRIES,
+        shunting_yard_rules: &[],
+        counter_optional_rules: &[],
+        max_nesting_depth: 2,
+    };
+    let mut cols = Columns::new();
+    let mut psi = PayloadStream::new();
+    let mut fd: Vec<u8> = Vec::new();
+    let result = dta_run(&table, b"aaa", &NullScanner, &mut cols, &mut psi, &mut fd);
+    assert!(result.is_ok(), "repeat {{0,3}} on aaa: {:?}", result);
+    let root = cols.materialize(0);
+    assert_eq!(root.kind(), TapeKind::Rule);
+    assert!(root.has_children());
+    for i in 1..=3 {
+        let rec = cols.materialize(i);
+        assert_eq!(rec.kind(), TapeKind::Literal, "child {} is literal", i);
+    }
+}
+
+#[test]
+fn repeat_many1_rejects_empty() {
+    // Grammar: rule = "a"+ (lo=1, hi=u32::MAX). Empty input → Syntax.
+    static STATES: &[DtaState] = &[
+        DtaState::Repeat {
+            inner: DtaStateId(1),
+            lo: 1,
+            hi: u32::MAX,
+            counter_optional: None,
+        },
+        DtaState::Literal { text: "a" },
+    ];
+    static RULE_ENTRIES: &[DtaRuleEntry] = &[DtaRuleEntry {
+        rule: DtaRuleId(0),
+        state: DtaStateId(0),
+    }];
+    let table = DtaTable {
+        states: STATES,
+        rule_entries: RULE_ENTRIES,
+        shunting_yard_rules: &[],
+        counter_optional_rules: &[],
+        max_nesting_depth: 2,
+    };
+    let mut cols = Columns::new();
+    let mut psi = PayloadStream::new();
+    let mut fd: Vec<u8> = Vec::new();
+    let result = dta_run(&table, b"", &NullScanner, &mut cols, &mut psi, &mut fd);
+    assert!(
+        matches!(result, Err(DtaError::Syntax { .. })),
+        "many1 on empty input must error: {:?}",
+        result,
+    );
+}
+
+#[test]
+fn repeat_optional_admits_empty() {
+    // Grammar: rule = "a"? (lo=0, hi=1). Empty input closes at count 0.
+    static STATES: &[DtaState] = &[
+        DtaState::Repeat {
+            inner: DtaStateId(1),
+            lo: 0,
+            hi: 1,
+            counter_optional: None,
+        },
+        DtaState::Literal { text: "a" },
+    ];
+    static RULE_ENTRIES: &[DtaRuleEntry] = &[DtaRuleEntry {
+        rule: DtaRuleId(0),
+        state: DtaStateId(0),
+    }];
+    let table = DtaTable {
+        states: STATES,
+        rule_entries: RULE_ENTRIES,
+        shunting_yard_rules: &[],
+        counter_optional_rules: &[],
+        max_nesting_depth: 2,
+    };
+    let mut cols = Columns::new();
+    let mut psi = PayloadStream::new();
+    let mut fd: Vec<u8> = Vec::new();
+    let result = dta_run(&table, b"", &NullScanner, &mut cols, &mut psi, &mut fd);
+    assert!(result.is_ok(), "optional on empty input: {:?}", result);
+    let root = cols.materialize(0);
+    assert_eq!(root.kind(), TapeKind::Rule);
+    assert!(!root.has_children());
+}

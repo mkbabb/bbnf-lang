@@ -70,15 +70,14 @@
 //!    amortising the per-visit invalidation cost to `O(1)` across
 //!    the whole pass.
 //!
-//! # Bit-equality with the V2 backward-walk path
+//! # Alignment with the parser's inline column writes
 //!
 //! On every canonical post-order tape (the layout the existing
-//! [`TapeBuilder`](crate::TapeBuilder) emits), Stage-C's outputs are
-//! byte-identical to [`Columns::compute_sibling_skip`]'s outputs:
+//! [`TapeBuilder`](crate::TapeBuilder) emits), Stage-C re-derives
+//! exactly the column values the parser's
+//! [`push_compound`](crate::TapeBuilder::push_compound) writes are
+//! canonical for:
 //!
-//! - `sib_skip` derives from the same direct-child enumeration; both
-//!   paths yield `next_root - this_root` per non-last sibling and `0`
-//!   for the last sibling.
 //! - `span_hi` for compounds equals the last child's `span_hi` in
 //!   post-order, which matches what the parser writes at
 //!   `push_compound` time (the parser passes `state.offset` =
@@ -86,9 +85,18 @@
 //! - `child_off` for compounds equals the first direct child's index,
 //!   which matches the `child_off` the parser writes from
 //!   [`TapeBuilder::mark_children`](crate::TapeBuilder::mark_children).
+//! - `sib_skip` derives from the same direct-child enumeration the
+//!   parser's `child_off` chain encodes, yielding `next_root -
+//!   this_root` per non-last sibling and `0` for the last sibling.
 //!
-//! The bit-equality contract is enforced by the `tape_basic`
-//! regression suite plus the `tape_parity` golden corpus.
+//! The alignment contract is enforced by the `tape_basic` regression
+//! suite's Stage-C / reference-walk bit-equality assertions. Running
+//! Stage-C on the legacy fn-per-rule path would re-derive values the
+//! parser's inline writes already carry; the
+//! [`TapeBuilder::has_inline_frame_depth`](crate::TapeBuilder)
+//! gate makes Stage-C conditional on the DTA driver supplying the
+//! `frame_depth` stream inline, so the scan only runs when it is the
+//! canonical emitter for those columns.
 //!
 //! # Future parallelisation
 //!

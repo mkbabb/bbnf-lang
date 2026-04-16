@@ -1545,19 +1545,18 @@ fn payload_stream_chunk_recs_matches_cache_line() {
 // ── Tranche AV.4.4 — Stage-C finaliser bit-equality regression ─────
 //
 // `TapeBuilder::finish` routes through the Stage-C segmented prefix
-// scan (`bbnf_tape::finaliser::finalise`); these tests pin the
-// invariant that the scan's output matches a reference V2 backward-
-// walk implementation byte-for-byte on canonical post-order tapes.
+// scan (`bbnf_tape::finaliser::finalise`) when
+// `has_inline_frame_depth` is set; these tests pin the invariant
+// that the scan's output matches a reference backward-walk
+// implementation byte-for-byte on canonical post-order tapes.
 //
-// The reference V2 implementation lives in this test file (rather
-// than reaching into the crate's `pub(crate)` `compute_sibling_skip`)
-// so the regression is a self-contained black-box check against the
-// public API.
+// The reference implementation lives in this test file so the
+// regression is a self-contained black-box check against the public
+// API, with no dependence on crate-internal helpers.
 
 use bbnf_tape::{derive_frame_depth, finalise, TapeOffset as Off};
 
-/// Reference V2 backward-walk sibling-skip computation — transcribed
-/// verbatim from `bbnf_tape::columns::Columns::compute_sibling_skip`.
+/// Reference backward-walk sibling-skip computation.
 ///
 /// Walks every compound's child run by following `child_off` pointers,
 /// collecting direct-child roots in reverse emission order, and

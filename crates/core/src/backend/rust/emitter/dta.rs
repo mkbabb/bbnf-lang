@@ -102,12 +102,19 @@ pub fn emit_dta_table(ir: &GrammarIR) -> TokenStream {
     // value; supporting arrays (ByteDispatch tables, precedence
     // tables, Seq/AltLinear child slices) are emitted as `static`
     // items above the table literal.
+    //
+    // AW.1.2: `Literal` / `Regex` variants resolve their `StringId`
+    // payloads to the real IR-interned text so the DTA driver's
+    // byte-compare and regex-scan arms have something to match
+    // against. Prior waves emitted placeholder strings (`__state_N
+    // _literal`) because the driver was inert; now the driver is
+    // the primary parse path and needs the real bytes.
     let mut support = TokenStream::new();
     let state_literals: Vec<TokenStream> = table
         .states
         .iter()
         .enumerate()
-        .map(|(idx, state)| emit_state_literal(state, idx, &mut support))
+        .map(|(idx, state)| emit_state_literal(state, idx, ir, &mut support))
         .collect();
 
     let states_len = table.states.len();
@@ -271,31 +278,40 @@ fn emit_psi_helper() -> TokenStream {
 
 // ── State literal emission — one per DtaState variant ──────────────
 
-fn emit_state_literal(state: &DtaState, idx: usize, support: &mut TokenStream) -> TokenStream {
+fn emit_state_literal(
+    state: &DtaState,
+    idx: usize,
+    ir: &GrammarIR,
+    support: &mut TokenStream,
+) -> TokenStream {
     match state {
         DtaState::Literal { text } => {
-            // The StringId isn't available here; the IR-side StringId
-            // already resolved to a &str during the lift. Store a
-            // placeholder that reads through to the text from
-            // generated.rs's context. The test's view over
-            // DtaState::Literal.text is sufficient for V3 verification.
+            // AW.1.2: resolve the IR-interned StringId to the actual
+            // byte sequence the driver will compare against input.
+            // Emitted as a `&str` literal via `proc_macro2::Literal::
+            // string` so arbitrary content (UTF-8, escape sequences,
+            // embedded quotes) round-trips verbatim through the token
+            // stream.
             let text_ident = format_ident!("__DTA_LITERAL_{}", idx);
-            let text_str: String = format!("__state_{}_literal", idx);
+            let text_str = ir.get_string(*text);
+            let text_literal = Literal::string(text_str);
             support.extend(quote! {
-                static #text_ident: &str = #text_str;
+                static #text_ident: &str = #text_literal;
             });
-            let _ = text; // intentional — StringId lookup lives at the IR-level
             quote! {
                 ::bbnf::runtime::tape::DtaState::Literal { text: #text_ident }
             }
         }
         DtaState::Regex { pattern } => {
+            // AW.1.2: same resolution as `Literal`. The driver's regex
+            // arm feeds this pattern into the caller-supplied
+            // `RegexScanner` implementation.
             let pat_ident = format_ident!("__DTA_REGEX_{}", idx);
-            let pat_str: String = format!("__state_{}_regex", idx);
+            let pat_str = ir.get_string(*pattern);
+            let pat_literal = Literal::string(pat_str);
             support.extend(quote! {
-                static #pat_ident: &str = #pat_str;
+                static #pat_ident: &str = #pat_literal;
             });
-            let _ = pattern;
             quote! {
                 ::bbnf::runtime::tape::DtaState::Regex { pattern: #pat_ident }
             }

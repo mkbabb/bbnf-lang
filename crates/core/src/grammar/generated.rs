@@ -48,24 +48,24 @@ mod __bbnfbootstrap_emit_impl {
         dedup_eligible_rules: &[],
         reorder_unroll_visitors: &[],
     };
-    static __DTA_REGEX_0: &str = "__state_0_regex";
-    static __DTA_REGEX_1: &str = "__state_1_regex";
-    static __DTA_LITERAL_2: &str = "__state_2_literal";
-    static __DTA_LITERAL_3: &str = "__state_3_literal";
+    static __DTA_REGEX_0: &str = "0[xX][0-9a-fA-F]+\\w*|[0-9]+\\w*";
+    static __DTA_REGEX_1: &str = "[0-9]*\\.[0-9]+([eE][+-]?[0-9]+)?\\w*";
+    static __DTA_LITERAL_2: &str = "true";
+    static __DTA_LITERAL_3: &str = "false";
     static __DTA_ALT_LIN_4: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(2),
         ::bbnf::runtime::tape::DtaStateId(3),
     ];
-    static __DTA_LITERAL_5: &str = "__state_5_literal";
-    static __DTA_REGEX_6: &str = "__state_6_regex";
-    static __DTA_LITERAL_7: &str = "__state_7_literal";
+    static __DTA_LITERAL_5: &str = "\"";
+    static __DTA_REGEX_6: &str = "(\\\\.|[^\"\\\\])*";
+    static __DTA_LITERAL_7: &str = "\"";
     static __DTA_SEQ_8_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(5),
         ::bbnf::runtime::tape::DtaStateId(6),
         ::bbnf::runtime::tape::DtaStateId(7),
     ];
-    static __DTA_REGEX_9: &str = "__state_9_regex";
-    static __DTA_LITERAL_11: &str = "__state_11_literal";
+    static __DTA_REGEX_9: &str = "[_a-zA-Z][_a-zA-Z0-9]*";
+    static __DTA_LITERAL_11: &str = "::";
     static __DTA_SEQ_13_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(11),
         ::bbnf::runtime::tape::DtaStateId(12),
@@ -74,8 +74,8 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaStateId(10),
         ::bbnf::runtime::tape::DtaStateId(14),
     ];
-    static __DTA_LITERAL_16: &str = "__state_16_literal";
-    static __DTA_LITERAL_17: &str = "__state_17_literal";
+    static __DTA_LITERAL_16: &str = "input";
+    static __DTA_LITERAL_17: &str = ".";
     static __DTA_SEQ_19_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(17),
         ::bbnf::runtime::tape::DtaStateId(18),
@@ -84,8 +84,8 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaStateId(16),
         ::bbnf::runtime::tape::DtaStateId(20),
     ];
-    static __DTA_LITERAL_23: &str = "__state_23_literal";
-    static __DTA_LITERAL_25: &str = "__state_25_literal";
+    static __DTA_LITERAL_23: &str = "(";
+    static __DTA_LITERAL_25: &str = ",";
     static __DTA_SEQ_27_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(25),
         ::bbnf::runtime::tape::DtaStateId(26),
@@ -94,15 +94,15 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaStateId(24),
         ::bbnf::runtime::tape::DtaStateId(28),
     ];
-    static __DTA_LITERAL_31: &str = "__state_31_literal";
+    static __DTA_LITERAL_31: &str = ")";
     static __DTA_SEQ_32_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 4usize] = [
         ::bbnf::runtime::tape::DtaStateId(22),
         ::bbnf::runtime::tape::DtaStateId(23),
         ::bbnf::runtime::tape::DtaStateId(30),
         ::bbnf::runtime::tape::DtaStateId(31),
     ];
-    static __DTA_LITERAL_40: &str = "__state_40_literal";
-    static __DTA_LITERAL_42: &str = "__state_42_literal";
+    static __DTA_LITERAL_40: &str = "(";
+    static __DTA_LITERAL_42: &str = ")";
     static __DTA_SEQ_43_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(40),
         ::bbnf::runtime::tape::DtaStateId(41),
@@ -118,26 +118,26 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaStateId(39),
         ::bbnf::runtime::tape::DtaStateId(43),
     ];
-    static __DTA_LITERAL_45: &str = "__state_45_literal";
-    static __DTA_LITERAL_46: &str = "__state_46_literal";
-    static __DTA_LITERAL_47: &str = "__state_47_literal";
+    static __DTA_LITERAL_45: &str = "*";
+    static __DTA_LITERAL_46: &str = "/";
+    static __DTA_LITERAL_47: &str = "%";
     static __DTA_ALT_LIN_48: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(45),
         ::bbnf::runtime::tape::DtaStateId(46),
         ::bbnf::runtime::tape::DtaStateId(47),
     ];
-    static __DTA_LITERAL_49: &str = "__state_49_literal";
-    static __DTA_LITERAL_50: &str = "__state_50_literal";
+    static __DTA_LITERAL_49: &str = "+";
+    static __DTA_LITERAL_50: &str = "-";
     static __DTA_ALT_LIN_51: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(49),
         ::bbnf::runtime::tape::DtaStateId(50),
     ];
-    static __DTA_LITERAL_52: &str = "__state_52_literal";
-    static __DTA_LITERAL_53: &str = "__state_53_literal";
-    static __DTA_LITERAL_54: &str = "__state_54_literal";
-    static __DTA_LITERAL_55: &str = "__state_55_literal";
-    static __DTA_LITERAL_56: &str = "__state_56_literal";
-    static __DTA_LITERAL_57: &str = "__state_57_literal";
+    static __DTA_LITERAL_52: &str = "==";
+    static __DTA_LITERAL_53: &str = "!=";
+    static __DTA_LITERAL_54: &str = "<=";
+    static __DTA_LITERAL_55: &str = ">=";
+    static __DTA_LITERAL_56: &str = "<";
+    static __DTA_LITERAL_57: &str = ">";
     static __DTA_ALT_LIN_58: [::bbnf::runtime::tape::DtaStateId; 6usize] = [
         ::bbnf::runtime::tape::DtaStateId(52),
         ::bbnf::runtime::tape::DtaStateId(53),
@@ -146,8 +146,8 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaStateId(56),
         ::bbnf::runtime::tape::DtaStateId(57),
     ];
-    static __DTA_LITERAL_59: &str = "__state_59_literal";
-    static __DTA_LITERAL_60: &str = "__state_60_literal";
+    static __DTA_LITERAL_59: &str = "!";
+    static __DTA_LITERAL_60: &str = "-";
     static __DTA_ALT_LIN_61: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(59),
         ::bbnf::runtime::tape::DtaStateId(60),
@@ -218,7 +218,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaStateId(74),
         ::bbnf::runtime::tape::DtaStateId(78),
     ];
-    static __DTA_LITERAL_81: &str = "__state_81_literal";
+    static __DTA_LITERAL_81: &str = "&&";
     static __DTA_SEQ_83_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(81),
         ::bbnf::runtime::tape::DtaStateId(82),
@@ -227,7 +227,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaStateId(80),
         ::bbnf::runtime::tape::DtaStateId(84),
     ];
-    static __DTA_LITERAL_87: &str = "__state_87_literal";
+    static __DTA_LITERAL_87: &str = "||";
     static __DTA_SEQ_89_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(87),
         ::bbnf::runtime::tape::DtaStateId(88),
@@ -236,13 +236,13 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaStateId(86),
         ::bbnf::runtime::tape::DtaStateId(90),
     ];
-    static __DTA_LITERAL_92: &str = "__state_92_literal";
-    static __DTA_LITERAL_94: &str = "__state_94_literal";
+    static __DTA_LITERAL_92: &str = "|";
+    static __DTA_LITERAL_94: &str = ",";
     static __DTA_SEQ_96_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(94),
         ::bbnf::runtime::tape::DtaStateId(95),
     ];
-    static __DTA_LITERAL_98: &str = "__state_98_literal";
+    static __DTA_LITERAL_98: &str = "|";
     static __DTA_SEQ_100_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 5usize] = [
         ::bbnf::runtime::tape::DtaStateId(92),
         ::bbnf::runtime::tape::DtaStateId(93),
@@ -254,22 +254,22 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaStateId(101),
         ::bbnf::runtime::tape::DtaStateId(102),
     ];
-    static __DTA_LITERAL_104: &str = "__state_104_literal";
+    static __DTA_LITERAL_104: &str = ":";
     static __DTA_SEQ_106_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(104),
         ::bbnf::runtime::tape::DtaStateId(105),
     ];
-    static __DTA_LITERAL_107: &str = "__state_107_literal";
-    static __DTA_LITERAL_108: &str = "__state_108_literal";
-    static __DTA_LITERAL_109: &str = "__state_109_literal";
-    static __DTA_LITERAL_110: &str = "__state_110_literal";
-    static __DTA_LITERAL_111: &str = "__state_111_literal";
-    static __DTA_LITERAL_112: &str = "__state_112_literal";
-    static __DTA_LITERAL_113: &str = "__state_113_literal";
-    static __DTA_LITERAL_114: &str = "__state_114_literal";
-    static __DTA_LITERAL_115: &str = "__state_115_literal";
-    static __DTA_LITERAL_116: &str = "__state_116_literal";
-    static __DTA_REGEX_117: &str = "__state_117_regex";
+    static __DTA_LITERAL_107: &str = "u8";
+    static __DTA_LITERAL_108: &str = "u16";
+    static __DTA_LITERAL_109: &str = "u32";
+    static __DTA_LITERAL_110: &str = "u64";
+    static __DTA_LITERAL_111: &str = "i32";
+    static __DTA_LITERAL_112: &str = "i64";
+    static __DTA_LITERAL_113: &str = "f32";
+    static __DTA_LITERAL_114: &str = "f64";
+    static __DTA_LITERAL_115: &str = "bool";
+    static __DTA_LITERAL_116: &str = "usize";
+    static __DTA_REGEX_117: &str = "[_a-zA-Z][_a-zA-Z0-9]*";
     static __DTA_ALT_LIN_118: [::bbnf::runtime::tape::DtaStateId; 11usize] = [
         ::bbnf::runtime::tape::DtaStateId(107),
         ::bbnf::runtime::tape::DtaStateId(108),
@@ -283,26 +283,26 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaStateId(116),
         ::bbnf::runtime::tape::DtaStateId(117),
     ];
-    static __DTA_REGEX_119: &str = "__state_119_regex";
-    static __DTA_LITERAL_120: &str = "__state_120_literal";
-    static __DTA_REGEX_121: &str = "__state_121_regex";
-    static __DTA_LITERAL_122: &str = "__state_122_literal";
+    static __DTA_REGEX_119: &str = "[_a-zA-Z][_a-zA-Z0-9-]*";
+    static __DTA_LITERAL_120: &str = "\"";
+    static __DTA_REGEX_121: &str = "(\\\\.|[^\"\\\\])*";
+    static __DTA_LITERAL_122: &str = "\"";
     static __DTA_SEQ_123_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(120),
         ::bbnf::runtime::tape::DtaStateId(121),
         ::bbnf::runtime::tape::DtaStateId(122),
     ];
-    static __DTA_LITERAL_124: &str = "__state_124_literal";
-    static __DTA_REGEX_125: &str = "__state_125_regex";
-    static __DTA_LITERAL_126: &str = "__state_126_literal";
+    static __DTA_LITERAL_124: &str = "'";
+    static __DTA_REGEX_125: &str = "(\\\\.|[^'\\\\])*";
+    static __DTA_LITERAL_126: &str = "'";
     static __DTA_SEQ_127_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(124),
         ::bbnf::runtime::tape::DtaStateId(125),
         ::bbnf::runtime::tape::DtaStateId(126),
     ];
-    static __DTA_LITERAL_128: &str = "__state_128_literal";
-    static __DTA_REGEX_129: &str = "__state_129_regex";
-    static __DTA_LITERAL_130: &str = "__state_130_literal";
+    static __DTA_LITERAL_128: &str = "`";
+    static __DTA_REGEX_129: &str = "(\\\\.|[^`\\\\])*";
+    static __DTA_LITERAL_130: &str = "`";
     static __DTA_SEQ_131_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(128),
         ::bbnf::runtime::tape::DtaStateId(129),
@@ -313,42 +313,42 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaStateId(127),
         ::bbnf::runtime::tape::DtaStateId(131),
     ];
-    static __DTA_LITERAL_133: &str = "__state_133_literal";
-    static __DTA_REGEX_134: &str = "__state_134_regex";
-    static __DTA_LITERAL_135: &str = "__state_135_literal";
+    static __DTA_LITERAL_133: &str = "/";
+    static __DTA_REGEX_134: &str = "(\\\\.|[^\\/])+";
+    static __DTA_LITERAL_135: &str = "/";
     static __DTA_SEQ_136_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(133),
         ::bbnf::runtime::tape::DtaStateId(134),
         ::bbnf::runtime::tape::DtaStateId(135),
     ];
-    static __DTA_LITERAL_137: &str = "__state_137_literal";
-    static __DTA_REGEX_138: &str = "__state_138_regex";
-    static __DTA_LITERAL_139: &str = "__state_139_literal";
+    static __DTA_LITERAL_137: &str = "/*";
+    static __DTA_REGEX_138: &str = "[^\\*]*";
+    static __DTA_LITERAL_139: &str = "*/";
     static __DTA_SEQ_140_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(137),
         ::bbnf::runtime::tape::DtaStateId(138),
         ::bbnf::runtime::tape::DtaStateId(139),
     ];
-    static __DTA_LITERAL_141: &str = "__state_141_literal";
-    static __DTA_REGEX_142: &str = "__state_142_regex";
+    static __DTA_LITERAL_141: &str = "//";
+    static __DTA_REGEX_142: &str = ".*";
     static __DTA_SEQ_143_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(141),
         ::bbnf::runtime::tape::DtaStateId(142),
     ];
-    static __DTA_LITERAL_146: &str = "__state_146_literal";
+    static __DTA_LITERAL_146: &str = "|";
     static __DTA_SEQ_148_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(145),
         ::bbnf::runtime::tape::DtaStateId(147),
     ];
-    static __DTA_LITERAL_150: &str = "__state_150_literal";
-    static __DTA_LITERAL_151: &str = "__state_151_literal";
-    static __DTA_LITERAL_153: &str = "__state_153_literal";
-    static __DTA_LITERAL_155: &str = "__state_155_literal";
+    static __DTA_LITERAL_150: &str = "ε";
+    static __DTA_LITERAL_151: &str = "epsilon";
+    static __DTA_LITERAL_153: &str = "(";
+    static __DTA_LITERAL_155: &str = ",";
     static __DTA_SEQ_157_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(155),
         ::bbnf::runtime::tape::DtaStateId(156),
     ];
-    static __DTA_LITERAL_159: &str = "__state_159_literal";
+    static __DTA_LITERAL_159: &str = ")";
     static __DTA_SEQ_160_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 4usize] = [
         ::bbnf::runtime::tape::DtaStateId(153),
         ::bbnf::runtime::tape::DtaStateId(154),
@@ -359,29 +359,29 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaStateId(152),
         ::bbnf::runtime::tape::DtaStateId(161),
     ];
-    static __DTA_LITERAL_165: &str = "__state_165_literal";
-    static __DTA_LITERAL_167: &str = "__state_167_literal";
+    static __DTA_LITERAL_165: &str = "@{";
+    static __DTA_LITERAL_167: &str = "}";
     static __DTA_SEQ_168_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(165),
         ::bbnf::runtime::tape::DtaStateId(166),
         ::bbnf::runtime::tape::DtaStateId(167),
     ];
-    static __DTA_LITERAL_169: &str = "__state_169_literal";
-    static __DTA_LITERAL_171: &str = "__state_171_literal";
+    static __DTA_LITERAL_169: &str = "(";
+    static __DTA_LITERAL_171: &str = ")";
     static __DTA_SEQ_172_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(169),
         ::bbnf::runtime::tape::DtaStateId(170),
         ::bbnf::runtime::tape::DtaStateId(171),
     ];
-    static __DTA_LITERAL_173: &str = "__state_173_literal";
-    static __DTA_LITERAL_175: &str = "__state_175_literal";
+    static __DTA_LITERAL_173: &str = "[";
+    static __DTA_LITERAL_175: &str = "]";
     static __DTA_SEQ_176_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(173),
         ::bbnf::runtime::tape::DtaStateId(174),
         ::bbnf::runtime::tape::DtaStateId(175),
     ];
-    static __DTA_LITERAL_177: &str = "__state_177_literal";
-    static __DTA_LITERAL_179: &str = "__state_179_literal";
+    static __DTA_LITERAL_177: &str = "{";
+    static __DTA_LITERAL_179: &str = "}";
     static __DTA_SEQ_180_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(177),
         ::bbnf::runtime::tape::DtaStateId(178),
@@ -398,10 +398,10 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaStateId(176),
         ::bbnf::runtime::tape::DtaStateId(180),
     ];
-    static __DTA_LITERAL_182: &str = "__state_182_literal";
-    static __DTA_LITERAL_183: &str = "__state_183_literal";
-    static __DTA_LITERAL_184: &str = "__state_184_literal";
-    static __DTA_LITERAL_185: &str = "__state_185_literal";
+    static __DTA_LITERAL_182: &str = "?w";
+    static __DTA_LITERAL_183: &str = "?";
+    static __DTA_LITERAL_184: &str = "*";
+    static __DTA_LITERAL_185: &str = "+";
     static __DTA_ALT_LIN_186: [::bbnf::runtime::tape::DtaStateId; 4usize] = [
         ::bbnf::runtime::tape::DtaStateId(182),
         ::bbnf::runtime::tape::DtaStateId(183),
@@ -414,7 +414,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaStateId(191),
         ::bbnf::runtime::tape::DtaStateId(193),
     ];
-    static __DTA_LITERAL_196: &str = "__state_196_literal";
+    static __DTA_LITERAL_196: &str = "->";
     static __DTA_SEQ_200_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(197),
         ::bbnf::runtime::tape::DtaStateId(199),
@@ -427,9 +427,9 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaStateId(195),
         ::bbnf::runtime::tape::DtaStateId(202),
     ];
-    static __DTA_LITERAL_204: &str = "__state_204_literal";
-    static __DTA_LITERAL_205: &str = "__state_205_literal";
-    static __DTA_LITERAL_206: &str = "__state_206_literal";
+    static __DTA_LITERAL_204: &str = "<<";
+    static __DTA_LITERAL_205: &str = ">>";
+    static __DTA_LITERAL_206: &str = "-";
     static __DTA_ALT_LIN_207: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(204),
         ::bbnf::runtime::tape::DtaStateId(205),
@@ -443,23 +443,23 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaStateId(208),
         ::bbnf::runtime::tape::DtaStateId(212),
     ];
-    static __DTA_LITERAL_215: &str = "__state_215_literal";
+    static __DTA_LITERAL_215: &str = ",";
     static __DTA_SEQ_217_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(214),
         ::bbnf::runtime::tape::DtaStateId(216),
     ];
-    static __DTA_LITERAL_220: &str = "__state_220_literal";
+    static __DTA_LITERAL_220: &str = "|";
     static __DTA_SEQ_222_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(219),
         ::bbnf::runtime::tape::DtaStateId(221),
     ];
-    static __DTA_LITERAL_224: &str = "__state_224_literal";
-    static __DTA_LITERAL_226: &str = "__state_226_literal";
+    static __DTA_LITERAL_224: &str = "|";
+    static __DTA_LITERAL_226: &str = ",";
     static __DTA_SEQ_228_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(226),
         ::bbnf::runtime::tape::DtaStateId(227),
     ];
-    static __DTA_LITERAL_230: &str = "__state_230_literal";
+    static __DTA_LITERAL_230: &str = "|";
     static __DTA_SEQ_232_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 5usize] = [
         ::bbnf::runtime::tape::DtaStateId(224),
         ::bbnf::runtime::tape::DtaStateId(225),
@@ -471,9 +471,9 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaStateId(233),
         ::bbnf::runtime::tape::DtaStateId(234),
     ];
-    static __DTA_LITERAL_237: &str = "__state_237_literal";
-    static __DTA_LITERAL_239: &str = "__state_239_literal";
-    static __DTA_LITERAL_240: &str = "__state_240_literal";
+    static __DTA_LITERAL_237: &str = "=";
+    static __DTA_LITERAL_239: &str = ";";
+    static __DTA_LITERAL_240: &str = ".";
     static __DTA_ALT_LIN_241: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(239),
         ::bbnf::runtime::tape::DtaStateId(240),
@@ -484,16 +484,16 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaStateId(238),
         ::bbnf::runtime::tape::DtaStateId(241),
     ];
-    static __DTA_LITERAL_243: &str = "__state_243_literal";
-    static __DTA_REGEX_244: &str = "__state_244_regex";
-    static __DTA_LITERAL_245: &str = "__state_245_literal";
+    static __DTA_LITERAL_243: &str = "\"";
+    static __DTA_REGEX_244: &str = "(\\\\.|[^\"\\\\])*";
+    static __DTA_LITERAL_245: &str = "\"";
     static __DTA_SEQ_246_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(243),
         ::bbnf::runtime::tape::DtaStateId(244),
         ::bbnf::runtime::tape::DtaStateId(245),
     ];
-    static __DTA_LITERAL_247: &str = "__state_247_literal";
-    static __DTA_LITERAL_249: &str = "__state_249_literal";
+    static __DTA_LITERAL_247: &str = "{";
+    static __DTA_LITERAL_249: &str = ",";
     static __DTA_SEQ_251_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(249),
         ::bbnf::runtime::tape::DtaStateId(250),
@@ -502,14 +502,14 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaStateId(248),
         ::bbnf::runtime::tape::DtaStateId(252),
     ];
-    static __DTA_LITERAL_254: &str = "__state_254_literal";
+    static __DTA_LITERAL_254: &str = "}";
     static __DTA_SEQ_255_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(247),
         ::bbnf::runtime::tape::DtaStateId(253),
         ::bbnf::runtime::tape::DtaStateId(254),
     ];
-    static __DTA_LITERAL_256: &str = "__state_256_literal";
-    static __DTA_LITERAL_258: &str = "__state_258_literal";
+    static __DTA_LITERAL_256: &str = "@import";
+    static __DTA_LITERAL_258: &str = "from";
     static __DTA_SEQ_260_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(257),
         ::bbnf::runtime::tape::DtaStateId(258),
@@ -519,8 +519,8 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaStateId(260),
         ::bbnf::runtime::tape::DtaStateId(261),
     ];
-    static __DTA_LITERAL_263: &str = "__state_263_literal";
-    static __DTA_LITERAL_264: &str = "__state_264_literal";
+    static __DTA_LITERAL_263: &str = ";";
+    static __DTA_LITERAL_264: &str = ".";
     static __DTA_ALT_LIN_265: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(263),
         ::bbnf::runtime::tape::DtaStateId(264),
@@ -530,9 +530,9 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaStateId(262),
         ::bbnf::runtime::tape::DtaStateId(266),
     ];
-    static __DTA_LITERAL_268: &str = "__state_268_literal";
-    static __DTA_LITERAL_271: &str = "__state_271_literal";
-    static __DTA_LITERAL_272: &str = "__state_272_literal";
+    static __DTA_LITERAL_268: &str = "@recover";
+    static __DTA_LITERAL_271: &str = ";";
+    static __DTA_LITERAL_272: &str = ".";
     static __DTA_ALT_LIN_273: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(271),
         ::bbnf::runtime::tape::DtaStateId(272),
@@ -543,9 +543,9 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaStateId(270),
         ::bbnf::runtime::tape::DtaStateId(274),
     ];
-    static __DTA_LITERAL_277: &str = "__state_277_literal";
-    static __DTA_REGEX_278: &str = "__state_278_regex";
-    static __DTA_LITERAL_279: &str = "__state_279_literal";
+    static __DTA_LITERAL_277: &str = "(";
+    static __DTA_REGEX_278: &str = "[^)]*";
+    static __DTA_LITERAL_279: &str = ")";
     static __DTA_SEQ_280_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(277),
         ::bbnf::runtime::tape::DtaStateId(278),
@@ -555,14 +555,14 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaStateId(276),
         ::bbnf::runtime::tape::DtaStateId(281),
     ];
-    static __DTA_LITERAL_283: &str = "__state_283_literal";
-    static __DTA_LITERAL_284: &str = "__state_284_literal";
+    static __DTA_LITERAL_283: &str = "@pretty";
+    static __DTA_LITERAL_284: &str = "*";
     static __DTA_ALT_LIN_286: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(284),
         ::bbnf::runtime::tape::DtaStateId(285),
     ];
-    static __DTA_LITERAL_289: &str = "__state_289_literal";
-    static __DTA_LITERAL_290: &str = "__state_290_literal";
+    static __DTA_LITERAL_289: &str = ";";
+    static __DTA_LITERAL_290: &str = ".";
     static __DTA_ALT_LIN_291: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(289),
         ::bbnf::runtime::tape::DtaStateId(290),
@@ -573,9 +573,9 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaStateId(288),
         ::bbnf::runtime::tape::DtaStateId(292),
     ];
-    static __DTA_LITERAL_294: &str = "__state_294_literal";
-    static __DTA_LITERAL_296: &str = "__state_296_literal";
-    static __DTA_LITERAL_297: &str = "__state_297_literal";
+    static __DTA_LITERAL_294: &str = "@ws";
+    static __DTA_LITERAL_296: &str = ";";
+    static __DTA_LITERAL_297: &str = ".";
     static __DTA_ALT_LIN_298: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(296),
         ::bbnf::runtime::tape::DtaStateId(297),
@@ -585,9 +585,9 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaStateId(295),
         ::bbnf::runtime::tape::DtaStateId(299),
     ];
-    static __DTA_LITERAL_301: &str = "__state_301_literal";
-    static __DTA_LITERAL_303: &str = "__state_303_literal";
-    static __DTA_LITERAL_304: &str = "__state_304_literal";
+    static __DTA_LITERAL_301: &str = "@token";
+    static __DTA_LITERAL_303: &str = ";";
+    static __DTA_LITERAL_304: &str = ".";
     static __DTA_ALT_LIN_305: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(303),
         ::bbnf::runtime::tape::DtaStateId(304),
@@ -597,14 +597,14 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaStateId(302),
         ::bbnf::runtime::tape::DtaStateId(306),
     ];
-    static __DTA_LITERAL_308: &str = "__state_308_literal";
-    static __DTA_LITERAL_309: &str = "__state_309_literal";
+    static __DTA_LITERAL_308: &str = "@debug";
+    static __DTA_LITERAL_309: &str = "*";
     static __DTA_ALT_LIN_311: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(309),
         ::bbnf::runtime::tape::DtaStateId(310),
     ];
-    static __DTA_LITERAL_312: &str = "__state_312_literal";
-    static __DTA_LITERAL_313: &str = "__state_313_literal";
+    static __DTA_LITERAL_312: &str = ";";
+    static __DTA_LITERAL_313: &str = ".";
     static __DTA_ALT_LIN_314: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(312),
         ::bbnf::runtime::tape::DtaStateId(313),
@@ -614,14 +614,14 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaStateId(311),
         ::bbnf::runtime::tape::DtaStateId(315),
     ];
-    static __DTA_LITERAL_317: &str = "__state_317_literal";
-    static __DTA_LITERAL_319: &str = "__state_319_literal";
+    static __DTA_LITERAL_317: &str = "@host";
+    static __DTA_LITERAL_319: &str = ":";
     static __DTA_SEQ_321_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(319),
         ::bbnf::runtime::tape::DtaStateId(320),
     ];
-    static __DTA_LITERAL_323: &str = "__state_323_literal";
-    static __DTA_LITERAL_324: &str = "__state_324_literal";
+    static __DTA_LITERAL_323: &str = ";";
+    static __DTA_LITERAL_324: &str = ".";
     static __DTA_ALT_LIN_325: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(323),
         ::bbnf::runtime::tape::DtaStateId(324),

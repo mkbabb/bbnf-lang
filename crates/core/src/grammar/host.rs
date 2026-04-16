@@ -303,19 +303,12 @@ fn absorb_item<'a, S: GrammarSink<'a>>(
             lo as usize + name_len,
             input,
         );
-        // Pick the rhs child: the last direct child that isn't the
-        // identifier view (we look up by rule_kind match). For the
-        // common case where identifier is elided, the single direct
-        // child IS the rhs.
-        let rhs = {
-            let mut rhs: Option<BbnfBootstrapNodeView<'a>> = None;
-            for c in item.children() {
-                if c.rule_kind() != BbnfBootstrapRuleKind::identifier {
-                    rhs = Some(c);
-                }
-            }
-            rhs.expect("rule: missing rhs child")
-        };
+        // The RHS is the `rhs` descendant compound. `rule = lhs , "=" ?w ,
+        // rhs ?w , ( ";" | "." ) ;` — picking the last non-identifier
+        // child erroneously lands on the terminator Alt under DTA's
+        // structural wrapping, so we descend explicitly.
+        let rhs = find_descendant_by_kind(item, BbnfBootstrapRuleKind::rhs)
+            .expect("rule: missing rhs descendant");
         sink.insert_rule(
             name,
             RuleEntry {
@@ -377,13 +370,14 @@ fn absorb_item<'a, S: GrammarSink<'a>>(
 // ------------------------------------------------------------------
 
 /// `@recover ruleName syncExpr ;` — extract rule_name (first
-/// identifier child) and sync_expr (remaining children).
+/// identifier descendant) and sync_expr (the directive itself).
+///
+/// Under DTA, the identifier is nested inside the Seq wrappers the
+/// lifter emits for the rule body; a descendant search handles that.
 fn decode_recover<'a>(item: BbnfBootstrapNodeView<'a>) -> Option<RecoverDirective<'a>> {
     let (lo, hi) = item.span();
     let input = item.input();
-    let name_node = item
-        .children()
-        .find(|c| c.rule_kind() == BbnfBootstrapRuleKind::identifier)?;
+    let name_node = find_descendant_by_kind(item, BbnfBootstrapRuleKind::identifier)?;
     Some(RecoverDirective {
         rule_name: name_node.span_text(),
         sync_expr: item,
@@ -391,37 +385,53 @@ fn decode_recover<'a>(item: BbnfBootstrapNodeView<'a>) -> Option<RecoverDirectiv
     })
 }
 
-/// `@pretty target hint* ;` — first identifier is target, remaining
-/// children provide hints.
+/// `@pretty target hint* ;` — first identifier descendant is target,
+/// remaining pretty_hint descendants are hints.
+///
+/// Under the DTA lowering, `pretty_directive` compound's children are
+/// inner Seq/Alt/Repeat wrappers (one per component of the directive
+/// grammar) — the target identifier and the pretty_hint compounds
+/// sit two or three levels deep. `find_descendant_by_kind` + a
+/// hint-collection descent walk handle both shapes.
 fn decode_pretty<'a>(item: BbnfBootstrapNodeView<'a>) -> Option<PrettyDirective<'a>> {
     let (lo, hi) = item.span();
     let input = item.input();
-    let mut children = item.children().peekable();
 
-    // First identifier-kind child is the target rule name.
-    let target = children.find(|c| c.rule_kind() == BbnfBootstrapRuleKind::identifier)?;
-    let target_text = target.span_text();
+    // Target: the first `identifier` descendant — the `(* | identifier)`
+    // alternation's identifier branch when present. `*` produces no
+    // identifier record, so `None` here means the wildcard form.
+    let target_text = find_descendant_by_kind(item, BbnfBootstrapRuleKind::identifier)
+        .map(|n| n.span_text())
+        .unwrap_or("*");
 
-    // Remaining children carry hint tokens. Under the tape-first
-    // layout, the hints may be wrapped in a Repeat compound.
-    // Flatten any Repeat wrappers and extract each pretty_hint.
+    // Hints: every `pretty_hint` descendant. The `(pretty_hint ?w)+`
+    // Repeat is a sibling of the target's Alt wrapper; walking the
+    // whole directive tree collects them regardless of the intervening
+    // structural nesting.
     let mut hints: Vec<Cow<'a, str>> = Vec::new();
-    for child in children {
-        use ::bbnf::runtime::tape::TapeKind;
-        if child.kind() == TapeKind::Repeat {
-            for hint in child.children() {
-                hints.push(pretty_hint_text(hint));
-            }
-        } else {
-            hints.push(pretty_hint_text(child));
-        }
-    }
+    collect_pretty_hint_descendants(item, &mut hints);
 
     Some(PrettyDirective {
         rule_name: Cow::Owned(target_text.to_string()),
         hints,
         span: Span::new(lo as usize, hi as usize, input),
     })
+}
+
+/// Collect every `pretty_hint` descendant's text into `out`. Used by
+/// `decode_pretty` to flatten the DTA-wrapped `(pretty_hint ?w)+`
+/// Repeat structure.
+fn collect_pretty_hint_descendants<'a>(
+    view: BbnfBootstrapNodeView<'a>,
+    out: &mut Vec<Cow<'a, str>>,
+) {
+    if view.rule_kind() == BbnfBootstrapRuleKind::pretty_hint {
+        out.push(pretty_hint_text(view));
+        return;
+    }
+    for c in view.children() {
+        collect_pretty_hint_descendants(c, out);
+    }
 }
 
 /// Directives with the shape `@keyword (identifier | "*") ;` —
@@ -435,10 +445,7 @@ fn decode_pretty<'a>(item: BbnfBootstrapNodeView<'a>) -> Option<PrettyDirective<
 /// `identifier` record. We try the identifier child first; when
 /// absent, we scan the directive's span text for a `*` wildcard.
 fn decode_single_name<'a>(item: BbnfBootstrapNodeView<'a>) -> Option<Cow<'a, str>> {
-    if let Some(name_node) = item
-        .children()
-        .find(|c| c.rule_kind() == BbnfBootstrapRuleKind::identifier)
-    {
+    if let Some(name_node) = find_descendant_by_kind(item, BbnfBootstrapRuleKind::identifier) {
         let name = name_node.span_text();
         if !name.is_empty() {
             return Some(Cow::Owned(name.to_string()));
@@ -459,13 +466,27 @@ fn decode_single_name<'a>(item: BbnfBootstrapNodeView<'a>) -> Option<Cow<'a, str
     }
 }
 
-/// `@ws /regex/ ;` — the regex child is the first child whose span
-/// text is wrapped in `/`. Returns the pattern body without delimiters.
+/// `@ws /regex/ ;` — the regex descendant span text is wrapped in `/`.
+/// Returns the pattern body without delimiters.
+///
+/// Uses a recursive descendant walk to see through DTA structural
+/// wrappers (Seq compounds around the `regex` child).
 fn decode_ws<'a>(item: BbnfBootstrapNodeView<'a>) -> Option<Cow<'a, str>> {
-    for child in item.children() {
-        let text = child.span_text();
+    fn scan<'a>(node: BbnfBootstrapNodeView<'a>) -> Option<Cow<'a, str>> {
+        let text = node.span_text();
         if let Some(stripped) = text.strip_prefix('/').and_then(|s| s.strip_suffix('/')) {
             return Some(Cow::Borrowed(stripped));
+        }
+        for c in node.children() {
+            if let Some(s) = scan(c) {
+                return Some(s);
+            }
+        }
+        None
+    }
+    for child in item.children() {
+        if let Some(s) = scan(child) {
+            return Some(s);
         }
     }
     None
@@ -474,22 +495,18 @@ fn decode_ws<'a>(item: BbnfBootstrapNodeView<'a>) -> Option<Cow<'a, str>> {
 /// `@host name [: type] ;` — first identifier is name, optional
 /// type annotation follows.
 fn decode_host<'a>(item: BbnfBootstrapNodeView<'a>) -> Option<HostFnDecl<'a>> {
-    let mut children = item.children();
-    let name_node = children.find(|c| c.rule_kind() == BbnfBootstrapRuleKind::identifier)?;
+    // Descendant walk so we see through DTA's structural Seq wrappers.
+    let name_node = find_descendant_by_kind(item, BbnfBootstrapRuleKind::identifier)?;
     let name = name_node.span_text();
     if name.is_empty() {
         return None;
     }
-    // Optional type annotation: the next non-identifier child whose
-    // span text is non-empty.
-    let return_type = children
-        .find(|c| {
-            c.rule_kind() != BbnfBootstrapRuleKind::identifier && {
-                let t = c.span_text().trim();
-                !t.is_empty() && t != ":" && t != ";" && t != "."
-            }
-        })
-        .map(|c| Cow::Owned(c.span_text().trim().to_string()));
+    // Optional type annotation: the `type_name` descendant (comes
+    // after the name identifier). `type_name` is imported from the
+    // `types` sub-grammar so its rule kind is directly addressable.
+    let return_type =
+        find_descendant_by_kind(item, BbnfBootstrapRuleKind::type_name)
+            .map(|c| Cow::Owned(c.span_text().trim().to_string()));
     Some(HostFnDecl {
         name: Cow::Owned(name.to_string()),
         return_type,

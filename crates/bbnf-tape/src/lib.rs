@@ -48,6 +48,7 @@
 pub mod builder;
 pub mod columns;
 pub mod cursor;
+pub mod driver;
 pub mod dta;
 pub mod finaliser;
 pub mod kind;
@@ -59,6 +60,9 @@ pub mod tape;
 pub use builder::{PayloadData, TapeBuildError, TapeBuilder};
 pub use columns::Columns;
 pub use cursor::{ChildIter, ColumnRank, ShapeRefChildIter, ShapeRefSyntheticChild, TapeCursor};
+pub use driver::{dta_run, DtaError, Frame, FrameStack, RegexScanner, STACK_INLINE_DEPTH};
+#[cfg(feature = "dta-replay")]
+pub use driver::{dta_run_with_replay, DtaSnapshot};
 pub use dta::{
     DtaAssociativity, DtaCounterOptional, DtaDiagnostic, DtaFrameKind, DtaPrecedenceEntry,
     DtaRuleEntry, DtaRuleId, DtaState, DtaStateId, DtaTable,

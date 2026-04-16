@@ -6,6 +6,11 @@ description = "Tape representation for bbnf-lang parser output. The eager AST re
 
 [features]
 default = ["rayon"]
+# AW.1.7 — decision log + resumable snapshot for the DTA driver. Off by
+# default; enabling adds the `Option<&mut Vec<u8>>` parameter to
+# `dta_run` so LLVM has no branch to hoist on the hot path when the
+# feature is disabled (R01 §5 signature variance).
+dta-replay = []
 
 [dependencies]
 serde = { version = "1", features = ["derive"], optional = true }

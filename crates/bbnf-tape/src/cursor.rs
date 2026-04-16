@@ -491,16 +491,31 @@ impl<'tape> Iterator for ShapeRefChildIter<'tape> {
 
 impl ExactSizeIterator for ShapeRefChildIter<'_> {}
 
-// ── First-child seed (post-order layout helper) ───────────────────
+// ── First-child seed (O(1) pre-order, fallback post-order walk) ─
 
 /// Locate the ROOT offset of the first direct child of the compound
 /// at `parent_idx`.
 ///
-/// The current tape layout is post-order: a compound sits AFTER its
-/// transitive subtree, with `child_off` pointing to the first
-/// descendant's offset rather than the first direct child's root.
-/// The first direct child's ROOT is the LAST record emitted inside
-/// that subtree — found by a single backward walk from the parent
+/// # Pre-order fast path (Tranche AW.1.10)
+///
+/// Post-AW.1.2 the DTA driver writes records in pre-order: a
+/// compound sits BEFORE its transitive subtree, with `child_off`
+/// pointing directly at the first child's ROOT — equivalently
+/// `parent_idx + 1`. The fast path recognises this by checking
+/// `child_off == parent_idx + 1` and returns the child pointer
+/// directly, degrading the lookup to O(1) as AW.md §AW.1.10
+/// specifies.
+///
+/// # Post-order fallback
+///
+/// Legacy tapes built via direct [`TapeBuilder::push_leaf`] /
+/// [`TapeBuilder::push_compound`] calls (pre-DTA test harnesses
+/// and the in-tree `tape_basic` regression suite) still use
+/// post-order emission — a compound sits AFTER its transitive
+/// subtree, with `child_off` pointing at the first descendant's
+/// offset rather than the first direct child's root. The first
+/// direct child's ROOT is the LAST record emitted inside that
+/// subtree, recovered by a bounded backward walk from the parent
 /// down to `child_off`.
 ///
 /// Returns `None` when the parent has no children.
@@ -514,14 +529,20 @@ fn first_child_root(columns: &Columns, parent_idx: u32) -> Option<u32> {
         return None;
     }
     let start = child_off.0;
+    // AW.1.10 pre-order fast path: `child_off == parent + 1`.
+    // The DTA driver's `close_compound` stamps `child_off` to the
+    // frame's `child_mark`, which is `columns.len()` at the instant
+    // the parent row was reserved — one record before the first
+    // child's row. So `child_off == parent + 1` iff the layout is
+    // pre-order. Degrade to O(1) in that case; fall through to the
+    // bounded backward walk only for the post-order legacy layout.
+    if start == parent_idx + 1 {
+        return Some(start);
+    }
     let end = parent_idx;
     if start >= end {
         return None;
     }
-    // Backward-walk to locate the root of the first direct child.
-    // Each step visits a direct child's root, jumping past its
-    // subtree via its own `child_off`. When the walk reaches `start`,
-    // the last-visited root is the first direct child's root.
     let mut pos = end;
     let mut first = end - 1;
     while pos > start {

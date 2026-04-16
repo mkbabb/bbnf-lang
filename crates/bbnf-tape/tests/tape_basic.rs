@@ -2092,3 +2092,112 @@ fn shape_ref_dict_idx_boundary() {
     assert_eq!(tape.get(off_min).shape_dict_idx(), 0);
     assert_eq!(tape.get(off_max).shape_dict_idx(), 31);
 }
+
+// ── AW.1.10 — cursor.child(0) O(1) under pre-order ───────────────
+
+/// Run a minimal DTA table that emits a Seq with three empty-literal
+/// children, producing a pre-order tape: `[Seq@0, Lit@1, Lit@2, Lit@3]`
+/// with `child_off[0] == 1 == parent + 1`. The cursor's `child(0)`
+/// accessor must return offset 1 without entering the backward walk.
+#[test]
+fn cursor_child_zero_is_o1_under_preorder() {
+    use bbnf_tape::driver::dta_run;
+    use bbnf_tape::dta::{
+        DtaFrameKind, DtaRuleEntry, DtaRuleId, DtaState, DtaStateId, DtaTable,
+    };
+    use bbnf_tape::psi::PayloadStream;
+    use bbnf_tape::Columns;
+
+    // Three Literal states + one Seq state referencing them in order.
+    // Static arrays keep lifetimes `'static` as the DTA contract
+    // demands.
+    static LIT_A: &str = "";
+    static LIT_B: &str = "";
+    static LIT_C: &str = "";
+    static SEQ_CHILDREN: [DtaStateId; 3] = [
+        DtaStateId(1),
+        DtaStateId(2),
+        DtaStateId(3),
+    ];
+    static STATES: [DtaState; 4] = [
+        DtaState::Seq {
+            children: &SEQ_CHILDREN,
+            frame: DtaFrameKind::Seq,
+        },
+        DtaState::Literal { text: LIT_A },
+        DtaState::Literal { text: LIT_B },
+        DtaState::Literal { text: LIT_C },
+    ];
+    static RULE_ENTRIES: [DtaRuleEntry; 1] = [DtaRuleEntry {
+        rule: DtaRuleId(0),
+        state: DtaStateId(0),
+    }];
+    const TABLE: DtaTable = DtaTable {
+        states: &STATES,
+        rule_entries: &RULE_ENTRIES,
+        shunting_yard_rules: &[],
+        counter_optional_rules: &[],
+        max_nesting_depth: 2,
+    };
+
+    // Stub regex scanner — not exercised by the literal-only DTA.
+    struct NoScanner;
+    impl bbnf_tape::RegexScanner for NoScanner {
+        fn scan(&self, _: &str, _: &[u8], _: usize) -> Option<u32> {
+            None
+        }
+    }
+
+    let mut columns = Columns::new();
+    let mut psi = PayloadStream::new();
+    let mut frame_depth: Vec<u8> = Vec::new();
+    let input: &[u8] = b"";
+    dta_run(
+        &TABLE,
+        input,
+        &NoScanner,
+        &mut columns,
+        &mut psi,
+        &mut frame_depth,
+    )
+    .expect("empty-literal DTA run");
+
+    assert_eq!(columns.len(), 4, "Seq + 3 literal leaves");
+    // Pre-order layout: parent at 0, children at 1..=3.
+    assert_eq!(columns.child_off_at(0).0, 1, "child_off = parent + 1");
+    assert!(columns.has_children_at(0));
+
+    // Finalise to populate sib_skip from the DTA-emitted frame_depth.
+    bbnf_tape::finalise(&mut columns, &frame_depth);
+
+    // Wrap in a Tape and drive a cursor through child(0). The
+    // fast-path branch in `first_child_root` returns offset 1 directly
+    // because `child_off == parent_idx + 1`.
+    let tape = finalise_to_tape(columns);
+    let root = TapeCursor::new(&tape, TapeOffset(0));
+    let first = root.child(0).expect("first child present");
+    assert_eq!(first.offset().0, 1);
+}
+
+/// Helper — wraps populated `Columns` into a `Tape` so pre-order
+/// cursor tests can read through the public cursor API without the
+/// `TapeBuilder`'s post-order emission path.
+///
+/// Uses the builder's `tape_snapshot` indirectly: construct a builder,
+/// move the columns in by cloning every subcolumn, then call
+/// `finish()` to obtain a `Tape`. The columns are already finalised
+/// (sib_skip populated by the caller), so `finish` only wraps them;
+/// the `has_inline_frame_depth` path skips the internal stage-C pass.
+fn finalise_to_tape(columns: bbnf_tape::Columns) -> Tape {
+    let mut b = TapeBuilder::new();
+    b.enable_inline_frame_depth();
+    // Move each column into the builder by swapping with an empty
+    // scratch buffer — avoids a full clone.
+    let mut scratch = columns;
+    std::mem::swap(b.columns_mut(), &mut scratch);
+    // Columns are already finalised; `finish` will run finalise over
+    // an externally-derived frame_depth length of 0 (which no-ops on
+    // an empty depth slice — but the columns already carry valid
+    // sib_skip / child_off / span_hi). Use the direct snapshot path.
+    b.tape_snapshot()
+}

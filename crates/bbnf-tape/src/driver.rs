@@ -460,10 +460,16 @@ fn dispatch_one(
         DtaState::Seq { children, frame } => {
             // Reserve the parent row — pre-order: parent sits at the
             // lowest index in its subtree, children flow in after.
+            // `child_mark` is the column length AFTER the parent row
+            // has been reserved, i.e. `parent_rec + 1`. Under
+            // pre-order this is where the first child will land; the
+            // cursor's AW.1.10 fast path recognises this layout as
+            // `child_off == parent + 1` and degrades `child(0)` to
+            // an O(1) lookup.
             let parent_rec = columns.len() as u32;
-            let child_mark = columns.len() as u32;
             let tape_kind = frame_to_tape_kind(frame);
             reserve_compound(columns, frame_depth, stack.depth(), tape_kind, *pos);
+            let child_mark = columns.len() as u32;
             stack.push(Frame {
                 kind: frame,
                 counter_idx: u8::MAX,
@@ -539,9 +545,12 @@ fn dispatch_one(
             // baseline — enter the body, advance-or-pop consults the
             // Repeat frame on each body completion to decide whether
             // to re-enter or emit the compound close.
+            //
+            // `child_mark = parent + 1` under pre-order — see the
+            // AW.1.10 note on `DtaState::Seq` above.
             let parent_rec = columns.len() as u32;
-            let child_mark = columns.len() as u32;
             reserve_compound(columns, frame_depth, stack.depth(), TapeKind::Rule, *pos);
+            let child_mark = columns.len() as u32;
             stack.push(Frame {
                 kind: DtaFrameKind::Repeat,
                 counter_idx: u8::MAX,

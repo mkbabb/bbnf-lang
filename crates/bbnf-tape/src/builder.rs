@@ -691,6 +691,21 @@ impl TapeBuilder {
         &self.columns
     }
 
+    /// Mutable handle on the in-progress columns.
+    ///
+    /// The DTA driver ([`crate::driver::dta_run`]) writes directly
+    /// into the builder's column substrate instead of threading
+    /// through [`Self::push_leaf`] / [`Self::push_compound`]. The
+    /// generated `parse()` entry point post-AW.1.2 constructs a
+    /// `TapeBuilder`, calls [`Self::enable_inline_frame_depth`] to
+    /// opt into the Stage-C activation the DTA presupposes, then
+    /// hands the mutable column reference returned here to the
+    /// driver.
+    #[inline]
+    pub fn columns_mut(&mut self) -> &mut Columns {
+        &mut self.columns
+    }
+
     /// Access the in-progress tape view for debug inspection.
     ///
     /// Returns a snapshot `Tape` built from a clone of the current

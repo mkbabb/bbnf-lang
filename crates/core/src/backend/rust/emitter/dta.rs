@@ -55,6 +55,7 @@
 //! gain for bootstrapping the V4 driver outweighs the binary-size
 //! cost.
 
+use bbnf_ir::passes::recognizers::shape_dict::{ShapeTemplate, TemplatePiece};
 use bbnf_ir::passes::recognizers::shape_dict_bbnf::{BbnfShapeKind, BbnfShapeTemplate};
 use bbnf_ir::passes::{
     Associativity, CounterOptional, DtaState, FrameKind, PrecedenceEntry, StateId,
@@ -80,6 +81,7 @@ use quote::{format_ident, quote};
 pub fn emit_dta_table(ir: &GrammarIR) -> TokenStream {
     let table = bbnf_ir::passes::lift_dta(ir);
     let bbnf_shapes = emit_bbnf_shape_dict(ir);
+    let shape_dict_block = emit_shape_dict_arrays(ir);
     if table.states.is_empty() {
         let psi_helper = emit_psi_helper();
         return quote! {
@@ -89,6 +91,7 @@ pub fn emit_dta_table(ir: &GrammarIR) -> TokenStream {
             pub const DTA_TABLE: ::bbnf::runtime::tape::DtaTable =
                 ::bbnf::runtime::tape::DtaTable::EMPTY;
 
+            #shape_dict_block
             #psi_helper
 
             #bbnf_shapes
@@ -205,6 +208,7 @@ pub fn emit_dta_table(ir: &GrammarIR) -> TokenStream {
                 max_nesting_depth: #max_depth,
             };
 
+        #shape_dict_block
         #psi_helper
 
         #bbnf_shapes
@@ -449,6 +453,180 @@ fn associativity_literal(a: Associativity) -> TokenStream {
         Associativity::Left => quote! { ::bbnf::runtime::tape::DtaAssociativity::Left },
         Associativity::Right => quote! { ::bbnf::runtime::tape::DtaAssociativity::Right },
     }
+}
+
+// ── AV.5.4 — Shape-dictionary emission ────────────────────────────
+
+/// Emit `static SHAPE_DICT_TABLE: [ShapeEntry; N]` plus the
+/// supporting per-template `child_kinds` and `leaf_payload_offsets`
+/// arrays.
+///
+/// Walks `ir.shape_dict_selection` (the indices admitted by
+/// [`bbnf_ir::passes::csp_strategy::constraints::shape_dict::solve_shape_dict_selection`])
+/// and bakes the corresponding [`ShapeTemplate`]s into a
+/// `static SHAPE_DICT_TABLE: [::bbnf::runtime::tape::ShapeEntry; N]`
+/// array plus a `pub const SHAPE_DICT: &[ShapeEntry]` view that
+/// downstream tranches will splice into `GRAMMAR_PROFILE.shape_dict`
+/// once the profile-emitter wiring lands.
+///
+/// When the selection is empty the function emits a `pub const
+/// SHAPE_DICT: &[ShapeEntry] = &[];` so downstream consumers always
+/// have a stable symbol to reference.
+///
+/// Each `ShapeEntry` carries:
+///
+/// - `shape_hash` — canonical 64-bit hash from
+///   [`ShapeTemplate::shape_hash`], used by the V4 DTA driver to
+///   route a stage-A rule body to its dictionary entry.
+/// - `rule` — the root rule id whose collapsed compound the entry
+///   represents (resolved from the template's NodeId).
+/// - `child_kinds` — per-position skeleton bytes
+///   ([`bbnf_tape::TapeKind`] discriminants) that `TapeCursor::
+///   shape_ref_children` reads at view time to synthesise children.
+/// - `leaf_payload_offsets` — per-position byte offset within the
+///   packed payload blob where each leaf hole's `(span_lo,
+///   span_hi)` pair begins. `u16::MAX` for structural (non-hole)
+///   positions.
+/// - `payload_bytes` — total byte width of the per-instance packed
+///   blob.
+fn emit_shape_dict_arrays(ir: &GrammarIR) -> TokenStream {
+    if ir.shape_dict_selection.is_empty() {
+        return quote! {
+            /// Shape dictionary — empty for this grammar (selection
+            /// admitted no templates). Reserved symbol so downstream
+            /// driver code can reference it unconditionally.
+            pub const SHAPE_DICT: &[::bbnf::runtime::tape::ShapeEntry] = &[];
+        };
+    }
+
+    let mut support = TokenStream::new();
+    let mut entry_literals = Vec::with_capacity(ir.shape_dict_selection.len());
+
+    for (slot, &template_idx) in ir.shape_dict_selection.iter().enumerate() {
+        let (node_id, template) = &ir.shape_dict_templates[template_idx];
+        let rule_id = resolve_rule_for_node(ir, *node_id);
+        let entry = emit_shape_entry_literal(slot, rule_id, template, &mut support);
+        entry_literals.push(entry);
+    }
+
+    let table_ident = format_ident!("__SHAPE_DICT_TABLE");
+    let table_len = entry_literals.len();
+
+    quote! {
+        #support
+        static #table_ident:
+            [::bbnf::runtime::tape::ShapeEntry; #table_len] = [
+            #(#entry_literals),*
+        ];
+
+        /// Shape dictionary — Tranche AV.5.4 emission. Each entry
+        /// describes one fixed-shape compound subtree the parser
+        /// collapses to a single `TapeKind::ShapeRef` record. The
+        /// V4+ DTA driver consults this table by `shape_hash`
+        /// during counter-DFA stage-A transitions; on match it
+        /// routes through `TapeBuilder::push_shape_ref` instead of
+        /// the per-position child push sites.
+        pub const SHAPE_DICT: &[::bbnf::runtime::tape::ShapeEntry] =
+            &#table_ident;
+    }
+}
+
+/// Emit one `ShapeEntry` literal plus its supporting `child_kinds`
+/// and `leaf_payload_offsets` static arrays.
+fn emit_shape_entry_literal(
+    slot: usize,
+    rule_id: u32,
+    template: &ShapeTemplate,
+    support: &mut TokenStream,
+) -> TokenStream {
+    // Compute per-position kind discriminants and leaf-hole offsets
+    // in source order. The skeleton is a flat list emitted by
+    // ShapeDictMiner; each piece maps to one TapeKind + an optional
+    // packed-blob offset.
+    let mut child_kinds: Vec<u8> = Vec::with_capacity(template.skeleton.len());
+    let mut leaf_offsets: Vec<u16> = Vec::with_capacity(template.skeleton.len());
+    let mut next_hole_offset: u16 = 0;
+
+    for piece in &template.skeleton {
+        let kind_byte = template_piece_to_kind_byte(piece);
+        child_kinds.push(kind_byte);
+        match piece {
+            TemplatePiece::LeafHole => {
+                leaf_offsets.push(next_hole_offset);
+                // 8 bytes for (span_lo, span_hi); the typed-payload
+                // bytes follow but the offset table only needs to
+                // point at the span pair — typed payloads are read
+                // through the same packed-blob arena via
+                // `Tape::payload_bytes` keyed by absolute offset.
+                next_hole_offset = next_hole_offset.saturating_add(8);
+            }
+            _ => {
+                leaf_offsets.push(u16::MAX);
+            }
+        }
+    }
+
+    let kinds_ident = format_ident!("__SHAPE_DICT_{}_KINDS", slot);
+    let offsets_ident = format_ident!("__SHAPE_DICT_{}_OFFSETS", slot);
+    let kinds_len = child_kinds.len();
+    let offsets_len = leaf_offsets.len();
+    let kind_lits = child_kinds.iter().map(|b| Literal::u8_unsuffixed(*b));
+    let offset_lits = leaf_offsets.iter().map(|o| Literal::u16_unsuffixed(*o));
+
+    support.extend(quote! {
+        static #kinds_ident: [u8; #kinds_len] = [#(#kind_lits),*];
+        static #offsets_ident: [u16; #offsets_len] = [#(#offset_lits),*];
+    });
+
+    let shape_hash_lit = Literal::u64_unsuffixed(template.shape_hash);
+    let rule_lit = Literal::u32_unsuffixed(rule_id);
+    let payload_bytes = next_hole_offset; // total packed blob width
+
+    let payload_bytes_lit = Literal::u16_unsuffixed(payload_bytes);
+
+    quote! {
+        ::bbnf::runtime::tape::ShapeEntry {
+            shape_hash: #shape_hash_lit,
+            rule: ::bbnf::runtime::tape::RuleId(#rule_lit),
+            child_kinds: &#kinds_ident,
+            leaf_payload_offsets: &#offsets_ident,
+            payload_bytes: #payload_bytes_lit,
+        }
+    }
+}
+
+/// Map a [`TemplatePiece`] to its corresponding
+/// [`bbnf_tape::TapeKind`] discriminant byte.
+fn template_piece_to_kind_byte(piece: &TemplatePiece) -> u8 {
+    use bbnf_tape::TapeKind;
+    match piece {
+        TemplatePiece::Literal(_) => TapeKind::Literal as u8,
+        TemplatePiece::LeafHole => TapeKind::Span as u8,
+        TemplatePiece::Whitespace => TapeKind::Span as u8,
+        TemplatePiece::Epsilon => TapeKind::Epsilon as u8,
+    }
+}
+
+/// Resolve a `NodeId` back to the rule id whose body contains it.
+///
+/// Walks the IR's rules in order; the first rule whose body's DAG
+/// position matches `node_id` wins. Returns `0` (the entry rule) as
+/// the conservative fallback when the node is not directly
+/// associated with a rule root — the dictionary entry still works
+/// because `rule` is a hint the driver uses for diagnostics, not a
+/// dispatch key.
+fn resolve_rule_for_node(ir: &GrammarIR, node_id: bbnf_ir::dag::NodeId) -> u32 {
+    let Some(dag) = ir.dag.as_ref() else {
+        return 0;
+    };
+    for rule in &ir.rules {
+        if let Some(body_id) = dag.node_for(&rule.body) {
+            if body_id == node_id {
+                return rule.id;
+            }
+        }
+    }
+    0
 }
 
 fn precedence_entry_literal(e: &PrecedenceEntry) -> TokenStream {

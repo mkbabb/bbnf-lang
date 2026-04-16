@@ -67,11 +67,8 @@ mod node_facts;
 mod punct_ws_region;
 mod quoted_string;
 mod separator_list;
-<<<<<<< HEAD
-pub mod shape_dict_bbnf;
-=======
 pub mod shape_dict;
->>>>>>> e4ca180 (feat(ir): ShapeDictMiner pass (AV.5.2))
+pub mod shape_dict_bbnf;
 mod signature;
 mod token_led_branches;
 pub mod visitor;

@@ -1529,12 +1529,21 @@ deferrals that need explicit closure), and AX-route
 | AV.2.5 reorder-unrolling 6× SIMD-packed gate (currently 3.3× scalar-left-fold-free per V2.5 microbench). AV FINAL hard-gate 12 partial; AW.6.1 wires the `@visitor` directive but no explicit 6× numeric gate. Source: AV FINAL.md hard-gate 12. | AV.2.5 (AU-AV agent) | **AW.6.3** (NEW) — explicit numeric gate added to W6: at least one production visitor on a scalar-dense grammar measures ≥ 6× scalar-left-fold via portable_simd `f64x4` packing, OR rationale documents the AArch64-specific lowering ceiling that holds at 3.3× scalar. |
 | `inline_acyclic` / `fuse_single_use` latent no-op (AU PROGRESS Session 1 flag): both passes guard on `r.meta.scc_id.is_none()` which is always `Some` during the normalizer loop. Effectively no-ops at IR level. Source: `crates/ir/src/passes/transform/inline.rs:23`, `crates/ir/src/passes/transform/fuse.rs:31`. | AU PROGRESS (AU-AV agent) | **AW.0.10** (NEW) — drop the always-true guard so the passes fire as designed; consumers (DTA lifter at `dta.rs:670` "post-fuse_single_use shape" comment) currently consume a no-op output. Verify post-fix that fused-shape DTA states drop in count. |
 
-### Formal-retire — chronic deferrals that must close in AW with rationale, not drift
+### Chronic 5+-tranche deferrals — AX scope (must adjudicate, not drift)
 
-| Item | Defer chain (5+ tranches) | AW posture |
+The two longest unresolved deferral chains land as **AX
+opening scope**, not retired. Both have been re-proposed in
+every cost/CSP-touching tranche from AL/AM through AR, then
+silently dropped each cycle. AR.md acknowledged each as
+"intentionally shelved at current grammar scale" but did not
+close the item. AW does not let them slip a seventh time.
+AX adopts both as named phases on day one of its plan
+authorship.
+
+| Item | Defer chain (5+ tranches) | AX posture |
 |------|--------------------------|------------|
-| **Cost-model grid sweep** — egraph `CostWeights` calibration via grid search over a representative grammar corpus. Proposed AM.6 → AO.4.1 → AP.6.4 → AQ.9.4. AR.md explicitly: "manual calibration adequate." | AM.6 → AO.4.1 → AP.6.4 → AQ.9.4 | **SUPERSEDED** by AW.4.7 GrammarProfile-slot calibration: AW.4.7 calibrates *runtime* per-grammar scalars (`expected_ns_per_byte`, `parallel_break_even_bytes`, `payload_bytes_per_input_byte`) from samply data, which is the cost surface that actually moves observable bench. The egraph `CostWeights` proposal addressed compile-time IR cost ranking; AR's "manual calibration adequate" stance holds — current weights are fit, no evidence demands re-calibration. AW FINAL formally retires with this rationale; future tranches do not re-list. |
-| **Global CSP solve** — replace per-component CSP with a single global solve. Proposed AL-prototype → AO.4.2 → AP.6.5 → AQ.9.5. AR.md: "per-component CSP is sufficient at current grammar scale." | AL → AO.4.2 → AP.6.5 → AQ.9.5 | **FORMALLY RETIRED** in AW. AR's per-component-sufficient stance holds: today's grammars (CSS L4 ~1200 rules max, BBNF ~400, JSON ~25, Sheets ~80) do not exhibit cross-component coupling that per-component fails on. AW FINAL closes with the rationale "evidence-driven re-open only — no automatic carry-forward". Future tranches that hit cross-component pessimisation reopen with a specific failing case; otherwise the item retires. |
+| **Cost-model grid sweep** — egraph `CostWeights` calibration via grid search over a representative grammar corpus. Proposed AM.6 → AO.4.1 → AP.6.4 → AQ.9.4. AR.md: "manual calibration adequate." | AM.6 → AO.4.1 → AP.6.4 → AQ.9.4 | **AX scope** — distinct cost surface from AW.4.7's runtime per-grammar scalars (`expected_ns_per_byte`, `parallel_break_even_bytes`, `payload_bytes_per_input_byte`). The egraph `CostWeights` are compile-time IR ranking weights driving cost-aware extraction; the AW.4.7 calibration moves orthogonal levers. AX writes a grid-sweep harness across the four-grammar corpus + the representative inputs, regenerates `CostWeights`, measures DTA state-count + extraction depth deltas, commits the calibrated weights as a `pub const`. Acceptance criterion: ≥ 5% reduction in either DTA state count OR extraction-pass wall-clock against the post-AW master baseline. If neither moves, the item closes with a recorded null-result and AR's manual-calibration stance becomes the documented permanent decision. |
+| **Global CSP solve** — replace per-component CSP with a single global solve. Proposed AL-prototype → AO.4.2 → AP.6.5 → AQ.9.5. AR.md: "per-component CSP is sufficient at current grammar scale." | AL → AO.4.2 → AP.6.5 → AQ.9.5 | **AX scope** — AX explicitly investigates whether the post-AW grammar corpus (CSS L4 ~1200 rules, BBNF ~400, JSON ~25, Sheets ~80) carries cross-component coupling that per-component CSP pessimises. Concrete deliverable: implement a single-solver path behind a feature flag, measure the per-component vs global solve quality on the four-grammar corpus, compare emitted constants byte-for-byte. Acceptance criterion: global solve produces strictly-better-or-equal cost on every grammar, OR documents specific cases where it under-fits; if no measurable improvement, the per-component design is adopted as the permanent choice with measurement evidence. |
 | **AU.2.7 intermediate perf gate** (CSS bootstrap ≥ 650 MB/s from v2 structural bitmap *alone*). Silently rolled into AW W3 composite (`bootstrap ≥ 900 MB/s` after PHF + selector classifier). Original gate's attribution lost. | AU.2.7 (AU-AV agent) | **SUPERSEDED** by AW W3 composite gate. AW FINAL records the supersession explicitly: the v2-bitmap-alone gate was a phase-internal AU target; the AW composite gate (PHF + classifier + bitmap together at ≥ 900 MB/s) subsumes it. Future tranches do not re-list as "missed AU gate". |
 
 ### AX-route — items genuinely out of AW scope (next tranche or later)
@@ -1603,6 +1612,47 @@ audit deliverables that seed wave dispatch:
 These land before the relevant wave dispatches; the W0
 audit kicks off the research wave the same day the
 orchestrator dispatches W0 cleanup.
+
+## AX seeds — opening scope for the next tranche
+
+AW FINAL.md will enumerate AX seeds in detail post-W7. The
+ones already named in this plan, captured here so they
+carry forward without further drift:
+
+- **Cost-model grid sweep** (AM.6 → AO.4.1 → AP.6.4 →
+  AQ.9.4 → AW long-deferral ledger). Egraph `CostWeights`
+  calibration with a grid-sweep harness over the four-
+  grammar corpus. Acceptance: ≥ 5% reduction in DTA state
+  count or extraction wall-clock vs post-AW master, OR
+  null-result close with measurement evidence.
+- **Global CSP solve** (AL → AO.4.2 → AP.6.5 → AQ.9.5 →
+  AW long-deferral ledger). Single-solver path behind a
+  feature flag, byte-for-byte comparison of emitted
+  constants vs per-component on the four-grammar corpus.
+  Acceptance: strictly-better-or-equal cost everywhere, OR
+  documented null-result with per-component as the
+  permanent decision.
+- **Scanner-architecture cluster** (AR.6.1/6.2/6.4/6.5/
+  6.6/6.8 + AS.5.1/5.2/5.4/5.5). Dedicated scanner-hygiene
+  tranche: `RegexClassMiner` consolidation, `ScanLut`
+  registry, `WsCommentConfig` parameterisation,
+  `FnDescriptor` post-pass, HIR predicate re-exports.
+  Estimated ~600 LOC delete + 350 LOC net reduction.
+- AX hyperopt cluster (post-DTA polish): AN.5 `u8x32`
+  AVX2 widening, AO.5.3 frequency-ordered dispatch,
+  AP.3.2 trim elision, AP.4.2 grammar-level pattern
+  dedup, AP.5.4 deferred UTF-8 validation, AQ.7.3
+  generalised length-bucket PHF tail, AQ.8.1 skip_space
+  bitmap caching, AQ.8.3 TLS-recycled scratch, AT.4.3
+  NEON 17-digit fractional scan.
+- AX substrate cluster: FDMP mimalloc segment-class
+  rounding (AV research 02), per-grammar column overlays
+  `sel_col` / `pay_cellref` (AV research 04), AV.3.6 CSS
+  L4 DTA state-count narrowing (only if AW W6 bench shows
+  table-size pressure on I-cache).
+
+AX adopts these on day one of its plan authorship. None
+drifts to a seventh tranche unadjudicated.
 
 ## Indefatigability
 

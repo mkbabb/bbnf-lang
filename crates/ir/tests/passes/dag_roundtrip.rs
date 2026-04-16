@@ -52,6 +52,8 @@ fn make_ir(rules: Vec<(&str, IrNode)>) -> GrammarIR {
         payload_layouts: std::collections::HashMap::new(),
         structural_alphabet: None,
         push_fingerprint: None,
+        eclass_facts: std::collections::HashMap::new(),
+        shape_dict_templates: Vec::new(),
     }
 }
 

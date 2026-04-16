@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize};
 use bbnf_regex::sets::charset::CharSet128;
 
 use crate::dag;
+use crate::egraph;
 use crate::passes;
 
 use super::{
@@ -196,6 +197,33 @@ pub struct GrammarIR {
     /// Not serialized: every compile rebuilds it from scratch.
     #[serde(skip, default)]
     pub materialization: HashMap<dag::NodeId, passes::MaterializationClass>,
+
+    /// Tranche AV.5.2 — per-`NodeId` [`EClassFacts`] sidecar.
+    ///
+    /// Populated by [`passes::materialization::compute_eclass_facts`]
+    /// during `finalize_compile`, before the recognizer-mining walk.
+    /// Cached on the IR so downstream miners (notably
+    /// [`passes::recognizers::ShapeDictMiner`]) can read fixed-shape
+    /// / closure-free / descendant-elidable bits without recomputing
+    /// the bottom-up lattice. Keyed by `dag::NodeId` — requires
+    /// `self.dag` to be populated.
+    /// Not serialized: every compile rebuilds it from scratch.
+    #[serde(skip, default)]
+    pub eclass_facts: HashMap<dag::NodeId, egraph::EClassFacts>,
+
+    /// Tranche AV.5.2 — per-NodeId shape-dictionary template
+    /// candidates emitted by
+    /// [`passes::recognizers::ShapeDictMiner`].
+    ///
+    /// Each entry pairs a node with its discovered
+    /// [`passes::recognizers::shape_dict::ShapeTemplate`]. The CSP
+    /// shape-dict constraint
+    /// ([`passes::csp_strategy::constraints::shape_dict`]) selects a
+    /// budget-bounded subset; the emitter bakes the chosen subset
+    /// into `GrammarProfile::shape_dict`.
+    /// Not serialized.
+    #[serde(skip, default)]
+    pub shape_dict_templates: passes::recognizers::shape_dict::ShapeDictMap,
 
     /// Tranche AQ.6.B — per-rule aggregate payload layouts.
     ///

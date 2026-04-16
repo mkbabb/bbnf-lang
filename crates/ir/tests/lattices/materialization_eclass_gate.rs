@@ -68,6 +68,8 @@ fn make_ir_with_entry(rules: Vec<IrRule>, strings: Vec<String>, entry: u32) -> G
         payload_layouts: HashMap::new(),
         structural_alphabet: None,
         push_fingerprint: None,
+        eclass_facts: std::collections::HashMap::new(),
+        shape_dict_templates: Vec::new(),
     };
     bbnf_ir::dag::ensure_dag(&mut ir);
     ir

@@ -85,6 +85,8 @@ fn fixture_ir() -> GrammarIR {
         payload_layouts: std::collections::HashMap::new(),
         structural_alphabet: None,
         push_fingerprint: None,
+        eclass_facts: std::collections::HashMap::new(),
+        shape_dict_templates: Vec::new(),
     };
     bbnf_ir::dag::ensure_dag(&mut ir);
     ir

@@ -31,6 +31,8 @@ fn make_ir(rules: Vec<IrRule>) -> GrammarIR {
         payload_layouts: std::collections::HashMap::new(),
         structural_alphabet: None,
         push_fingerprint: None,
+        eclass_facts: std::collections::HashMap::new(),
+        shape_dict_templates: Vec::new(),
     }
 }
 
@@ -287,6 +289,8 @@ fn map_enum_wrap() {
         payload_layouts: std::collections::HashMap::new(),
         structural_alphabet: None,
         push_fingerprint: None,
+        eclass_facts: std::collections::HashMap::new(),
+        shape_dict_templates: Vec::new(),
     };
     bbnf_ir::dag::ensure_dag(&mut ir);
     project_types(&mut ir);
@@ -328,6 +332,8 @@ fn map_box_wrap() {
         payload_layouts: std::collections::HashMap::new(),
         structural_alphabet: None,
         push_fingerprint: None,
+        eclass_facts: std::collections::HashMap::new(),
+        shape_dict_templates: Vec::new(),
     };
     bbnf_ir::dag::ensure_dag(&mut ir);
     project_types(&mut ir);
@@ -370,6 +376,8 @@ fn make_ir_with_fns(rules: Vec<IrRule>, fns: Vec<FnDescriptor>, strings: Vec<Str
         payload_layouts: std::collections::HashMap::new(),
         structural_alphabet: None,
         push_fingerprint: None,
+        eclass_facts: std::collections::HashMap::new(),
+        shape_dict_templates: Vec::new(),
     }
 }
 

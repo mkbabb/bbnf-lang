@@ -67,7 +67,11 @@ mod node_facts;
 mod punct_ws_region;
 mod quoted_string;
 mod separator_list;
+<<<<<<< HEAD
 pub mod shape_dict_bbnf;
+=======
+pub mod shape_dict;
+>>>>>>> e4ca180 (feat(ir): ShapeDictMiner pass (AV.5.2))
 mod signature;
 mod token_led_branches;
 pub mod visitor;
@@ -91,6 +95,7 @@ pub use key_dispatch::KeyDispatchMiner;
 pub use punct_ws_region::PunctWsRegionMiner;
 pub use quoted_string::QuotedStringMiner;
 pub use separator_list::SeparatorListMiner;
+pub use shape_dict::{ShapeDictMap, ShapeDictMiner, ShapeTemplate, TemplatePiece};
 pub use token_led_branches::TokenLedBranchesMiner;
 
 // ── Recognizer miner substrate (Tranche Z.0 + AF.1) ────────────────────
@@ -117,12 +122,16 @@ pub struct RecognizerMineCtx<'a> {
 ///   [`ContextFactsMiner`] and read in-walk by downstream miners such
 ///   as [`TokenLedBranchesMiner`], then cached on `ir.context_facts`
 ///   after the walk completes.
+/// * `shape_dict_templates` — `(NodeId, ShapeTemplate)` pairs emitted
+///   by [`ShapeDictMiner`] (Tranche AV.5.2). The CSP shape-dict
+///   constraint later prunes this set under the 256-entry budget.
 #[derive(Default)]
 pub struct MineOutputs {
     pub recognizers: Vec<(NodeId, Recognizer)>,
     pub delim_scan_configs: HashMap<NodeId, DelimScanConfig>,
     pub key_dispatch_configs: HashMap<NodeId, KeyDispatchMatch>,
     pub context_facts: ContextFactsMap,
+    pub shape_dict_templates: ShapeDictMap,
 }
 
 /// A recognizer-mining pass. Called once per node during the unified
@@ -175,7 +184,23 @@ fn walk_unified(
 /// populates the legacy `ir.pattern_annotations` (per-rule), the
 /// per-node `ir.node_facts` (NodeId-keyed), plus the sidecar config
 /// maps `ir.delim_scan_configs` / `ir.key_dispatch_configs`.
+///
+/// Tranche AV.5.2 — `ir.eclass_facts` is also populated here, before
+/// the unified walk, so [`ShapeDictMiner`] (which gates on the
+/// fixed-shape / closure-free / descendant-elidable bits) can read
+/// the lattice during `inspect`. The classification pass that runs
+/// downstream re-uses the same map, paying for the bottom-up walk
+/// once per compile.
 pub fn mine_recognizers(ir: &mut GrammarIR) {
+    // Tranche AV.5.2 — pre-compute the per-NodeId EClassFacts so
+    // ShapeDictMiner can gate on them during the unified walk.
+    // `compute_eclass_facts` is a pure function over the IR; the
+    // result is cached on `ir.eclass_facts` and re-read by the
+    // downstream materialization classifier.
+    if ir.dag.is_some() {
+        ir.eclass_facts = crate::passes::materialization::compute_eclass_facts(ir);
+    }
+
     let mut legacy_annotations = HashMap::new();
     let mut node_facts: NodeFactsMap = HashMap::new();
 
@@ -227,6 +252,7 @@ pub fn mine_recognizers(ir: &mut GrammarIR) {
             &punct_ws_region_miner,
             &DelimScanMiner,
             &KeyDispatchMiner,
+            &ShapeDictMiner,
         ];
         let mut outputs = MineOutputs::default();
         for rule in &ir.rules {
@@ -252,6 +278,11 @@ pub fn mine_recognizers(ir: &mut GrammarIR) {
     // Commit the upstream-mined pattern configs (Tranche X.8a).
     ir.delim_scan_configs = outputs.delim_scan_configs;
     ir.key_dispatch_configs = outputs.key_dispatch_configs;
+    // Tranche AV.5.2 — commit the shape-dictionary candidates. The
+    // CSP shape-dict constraint prunes this set under the 256-entry
+    // budget; the emitter then bakes the survivors into
+    // `GrammarProfile::shape_dict`.
+    ir.shape_dict_templates = outputs.shape_dict_templates;
 
     // Tranche Y.0 / Y.4: the family-recognizer flag gates the driver's
     // per-node `try_emit_family_kernel` probe. Post-Y.4 the only

@@ -52,6 +52,8 @@ fn prune_removes_unreachable() {
         payload_layouts: std::collections::HashMap::new(),
         structural_alphabet: None,
         push_fingerprint: None,
+        eclass_facts: std::collections::HashMap::new(),
+        shape_dict_templates: Vec::new(),
     };
 
     prune_unreachable(&mut ir);
@@ -96,6 +98,8 @@ fn prune_keeps_all_when_all_reachable() {
         payload_layouts: std::collections::HashMap::new(),
         structural_alphabet: None,
         push_fingerprint: None,
+        eclass_facts: std::collections::HashMap::new(),
+        shape_dict_templates: Vec::new(),
     };
 
     prune_unreachable(&mut ir);
@@ -160,6 +164,8 @@ fn prune_follows_alt_branches() {
         payload_layouts: std::collections::HashMap::new(),
         structural_alphabet: None,
         push_fingerprint: None,
+        eclass_facts: std::collections::HashMap::new(),
+        shape_dict_templates: Vec::new(),
     };
 
     prune_unreachable(&mut ir);

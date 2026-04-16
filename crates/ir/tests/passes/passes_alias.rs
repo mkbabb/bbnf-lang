@@ -49,6 +49,8 @@ fn resolve_direct_alias() {
         payload_layouts: std::collections::HashMap::new(),
         structural_alphabet: None,
         push_fingerprint: None,
+        eclass_facts: std::collections::HashMap::new(),
+        shape_dict_templates: Vec::new(),
     };
 
     canonicalize_aliases(&mut ir);
@@ -100,6 +102,8 @@ fn resolve_chain_alias() {
         payload_layouts: std::collections::HashMap::new(),
         structural_alphabet: None,
         push_fingerprint: None,
+        eclass_facts: std::collections::HashMap::new(),
+        shape_dict_templates: Vec::new(),
     };
 
     canonicalize_aliases(&mut ir);

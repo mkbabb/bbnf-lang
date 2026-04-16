@@ -37,6 +37,8 @@ fn make_ir(rules: Vec<IrRule>, fns: Vec<FnDescriptor>) -> GrammarIR {
         debug_labels: vec![],
         structural_alphabet: None,
         push_fingerprint: None,
+        eclass_facts: std::collections::HashMap::new(),
+        shape_dict_templates: Vec::new(),
     }
 }
 

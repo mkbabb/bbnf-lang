@@ -227,6 +227,8 @@ pub fn lower_to_ir<'a>(
         cost_config: bbnf_ir::CostConfig::from_env(),
         type_desc_interner: bbnf_ir::TypeDescInterner::new(),
         materialization: HashMap::new(),
+        eclass_facts: HashMap::new(),
+        shape_dict_templates: Vec::new(),
         payload_layouts: HashMap::new(),
         string_index: HashMap::new(),
         structural_alphabet: None,

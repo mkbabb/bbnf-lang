@@ -49,6 +49,7 @@ pub mod builder;
 pub mod columns;
 pub mod cursor;
 pub mod dta;
+pub mod finaliser;
 pub mod kind;
 pub mod profile;
 pub mod psi;
@@ -61,6 +62,7 @@ pub use dta::{
     DtaAssociativity, DtaCounterOptional, DtaDiagnostic, DtaFrameKind, DtaPrecedenceEntry,
     DtaRuleEntry, DtaRuleId, DtaState, DtaStateId, DtaTable,
 };
+pub use finaliser::{derive_frame_depth, finalise, STACK_DEPTH_HINT};
 pub use kind::TapeKind;
 pub use profile::{
     BranchPrior, ColumnId, GrammarProfile, KeywordTable, RuleId, ShapeEntry, VisitorId,

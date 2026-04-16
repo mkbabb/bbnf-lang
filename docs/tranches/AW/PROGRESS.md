@@ -180,18 +180,56 @@ by the orchestrator. No agent regens.
 ## GrammarProfile population matrix (AW.0.9 ledger)
 
 Each AW wave that consumes a profile slot is responsible for
-populating it. Stub slots at AW open (all `&[]` per V1 closure):
-`active_columns`, `list_rules`, `keyword_tables`, `shape_dict`,
-`dedup_eligible_rules`. Matrix updated at each W2/W3/W4 close.
+populating it. The matrix enumerates every `&'static [_]` slot
+of `bbnf_tape::profile::GrammarProfile` whose emitter projection
+lands as `&[]` at AW open (`crates/core/src/backend/rust/emitter/
+profile.rs:142–147`). Matrix updated at each W2/W3/W4 close.
 
-| Slot | Populated by | Status at AW open |
-|------|--------------|-------------------|
-| `active_columns` | W2.3 (ShapeRef view-layer wiring) | `&[]` |
-| `shape_dict` | W2.3 (ShapeRef dispatch) | `&[]` |
-| `keyword_tables` | W3.1 (PHF) + W3.2 (SIMD compare) | `&[]` |
-| `list_rules` | W4.1 (list-rule recogniser) | `&[]` |
-| `dedup_eligible_rules` | W4.5 (eligibility IR pass) | `&[]` |
+### Slot × wave assignment
 
-A wave that closes without populating its slot violates AW.0.9.
-JSON has no keyword Alts — its populated-by-design `&[]` for
-`keyword_tables` records here post-W3, not stub-carried.
+| Slot | Tape-side type | Populated by | Status at AW open |
+|------|----------------|--------------|-------------------|
+| `active_columns` | `&'static [ColumnId]` | W2.3 (ShapeRef view-layer wiring) | `&[]` |
+| `shape_dict` | `&'static [ShapeEntry]` | W2.3 (ShapeRef dispatch) | `&[]` |
+| `keyword_tables` | `&'static [KeywordTable]` | W3.1 (PHF) + W3.2 (SIMD compare) | `&[]` |
+| `list_rules` | `&'static [RuleId]` | W4.1 (list-rule recogniser) | `&[]` |
+| `dedup_eligible_rules` | `&'static [RuleId]` | W4.5 (eligibility IR pass) | `&[]` |
+| `branch_priors` | `&'static [BranchPrior]` | *unassigned in AW* (tape-side docstring names "V4"; AW.4.x does not touch it) | `&[]` |
+
+**Chronic residual.** `branch_priors` is the sixth stub slot at
+AW open; AW.md §AW.0.9 enumerates only five and no AW wave
+populates it. W6 close inherits the stub unless a later tranche
+picks it up — record this as a carry-forward, not a populated-
+by-design `&[]`. The `reorder_unroll_visitors` slot is already
+wired by AV.2.5 and emits a concrete static slice when the IR
+precursor is non-empty; it does not appear here because its
+population contract is closed pre-AW.
+
+### Per-grammar status at AW open
+
+The `emit_grammar_profile` function in
+`crates/core/src/backend/rust/emitter/profile.rs` is a single
+uniform projection — every grammar routes through it with the
+same six `&[]` literals, so per-grammar variance across
+{BBNF, JSON, CSS L4, Sheets} is **zero** at AW open. The
+checked-in `crates/core/src/grammar/generated.rs` confirms the
+six `&[]` slots verbatim at lines 43–48. CSS L4 / JSON / Sheets
+generated.rs is not checked in; their profile emission reads
+from the same function at compile time and therefore carries
+the same stub shape.
+
+| Grammar | `active_columns` | `shape_dict` | `keyword_tables` | `list_rules` | `dedup_eligible_rules` | `branch_priors` |
+|---------|:---:|:---:|:---:|:---:|:---:|:---:|
+| BBNF | `&[]` | `&[]` | `&[]` | `&[]` | `&[]` | `&[]` |
+| JSON | `&[]` | `&[]` | `&[]` | `&[]` | `&[]` | `&[]` |
+| CSS L4 | `&[]` | `&[]` | `&[]` | `&[]` | `&[]` | `&[]` |
+| Sheets | `&[]` | `&[]` | `&[]` | `&[]` | `&[]` | `&[]` |
+
+### Close conditions
+
+A wave that closes without populating its slot for at least the
+grammars it targets violates AW.0.9. JSON has no keyword Alts —
+its populated-by-design `&[]` for `keyword_tables` records here
+post-W3 (distinct from stub-carried). The `branch_priors` slot
+is chronic residual, not an AW gate — its presence as `&[]`
+post-W6 does not fail AW.0.9 on its own.

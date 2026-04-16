@@ -25,16 +25,25 @@ the ShapeRef dispatch, the PHF + SIMD keyword classifiers, and
 the bloom + GADT runtime dedup, with bench checkpoints between
 every wave so the perf trajectory is observable not asserted.
 
-This tranche also closes the typing debt that has carried
-across the last five tranches — Named struct ABI finalization
-(deferred AT.6.1 → AS.2.3 → AT.6.2 → AV residual), proper
-grammar-side typed-AST equivalence with `lightningcss::values::
-color::Color` and `sonic_rs::Value`, the inline `#[cfg(test)]`
-violations in `crates/gorgeous/src/google_sheets.rs`, and the
-13 serialize/structural roundtrip regressions AV ignored to
-get the workspace green. None of these are new scope. Each is
-an item that has been deferred at least once, in some cases
-five times. AW is where the ledger zeroes.
+This tranche also closes the typing debt AV's substrate work
+*partially* addressed: AV.0.5 landed the `LargeAggregate`
+arena-backed payload variant and the colour-function tuple-
+shaped grammar declarations, but the layout pass refuses
+`TypeDesc::Named("Color")` at admission so no rule's runtime
+push fires the substrate. The view-layer accessor that
+projects the packed blob into a
+`lightningcss::values::color::Color::RGBA`-shaped Rust value
+was never written. The `StructRegistry` approach AS.2.3
+scaffolded was *deleted* in AU.4.2 (commit `ab8588a`) per the
+no-legacy-code invariant — AU explicitly stated the forward
+path: per-backend type tables, not a central IR registry.
+AV's tuple-via-`LargeAggregate` design follows that path; AW
+W0.5 wires the runtime consumer that completes it. The inline
+`#[cfg(test)]` violations in
+`crates/gorgeous/src/google_sheets.rs` and the 13 serialize/
+structural roundtrip regressions AV ignored to get the
+workspace green also close here. Each is an item AV explicitly
+forwarded with a ticket; the ledger zeroes at AW close.
 
 ## Post-AV reality check
 
@@ -171,14 +180,28 @@ demands it:
    annotation — every typed projection round-trips bit-
    identically against its peer parser's output. Parity
    harnesses land in W5 and gate workspace-green at AW close.
-5. **Named struct ABI finalises in this tranche.** The five-
-   tranche deferral (AT.6.1 → AS.2.3 → AT.6.2 → AU →
-   AV residual) closes here. CSS L4 colour-function rules
-   (`colorFunction`, `colorFn`, `colorMix`) project to
-   concrete Rust struct layouts via `pub struct Color` /
-   `pub struct ColorMix` over the existing `LargeAggregate`
-   payload route. No more `TypeDesc::Named("Color")`
-   placeholders.
+5. **Colour-function `LargeAggregate` consumer wires in
+   this tranche.** Not a Named-struct-registry restoration
+   — that scaffold was *deleted* in AU.4.2 (commit
+   `ab8588a`) with explicit rationale: two tranches of
+   zero-population scaffold, removed per the no-legacy-code
+   invariant. The actual hole AV.0.5 left open: the
+   `LargeAggregate` arena-backed payload variant exists
+   (commit `e7add15`); the `colorFunction` / `colorFn` /
+   `colorMix` grammar declarations exist (commit `ec20e99`,
+   tuple-shaped `(u8 space, f64 c1, f64 c2, f64 c3, f64
+   alpha)`); the emitter routing in `tape_prelude.rs` is
+   ready (CO-E1's `aggregate_payload_ctor` switches on
+   `total_bytes > 16`). What never landed: the layout pass
+   refusing `TypeDesc::Named("Color")` at admission, so no
+   rule actually drives the routing at runtime, and the
+   view-layer accessor that projects the packed
+   `LargeAggregate` blob into the typed shape
+   `lightningcss::values::color::Color::RGBA { r, g, b, a }`
+   compares against. AW W0.5 admits the Named CSS Color
+   types to the layout pass and lands the view-layer
+   projection. Per-backend type-table resolution per AU.4.2's
+   stated path; no central IR registry.
 6. **Inline `#[cfg(test)]` blocks under `src/` migrate to
    `tests/` directories.** The flagged violations in
    `crates/gorgeous/src/google_sheets.rs` and any siblings
@@ -206,7 +229,7 @@ Items deferred across AR, AS, AT, AU, AV that AW closes:
 
 | Item | Origin | Deferred through | AW phase |
 |------|--------|------------------|----------|
-| Named struct ABI finalisation | AT.6.1 | AT.6.2 → AU → AV | **W5 Phase 5.2** |
+| Colour-function `LargeAggregate` runtime consumer + view-layer Color projection | AV.0.5 (substrate landed; consumer never wired) | AV V5 close | **W0 Phase 0.5** |
 | `find_next_structural_from` SIMD kernel + `scan_quoted_string_simd`/`decode_json_string_to_arena` paired migration | CO-E2 (V0.7) | AV V6+ | **W3 Phase 3.4** |
 | `pinned_number_drops_f64_payload` (Sheets) | AV.0.3 | V0 close-out | **W2 Phase 2.5** |
 | Sheets `boolean` FALSE branch drops `0u8` | AV CO-E4 | V5 close | **W2 Phase 2.5** |
@@ -413,35 +436,81 @@ costs 80 B per parse; at 8 B / level it costs 40 B. Per-
 parse this is not the dominant cost, but D-cache pressure
 across sibling rules in tight loops is.
 
-#### AW.0.5 Named struct ABI finalisation
+#### AW.0.5 Colour-function `LargeAggregate` runtime consumer + view-layer Color projection
 
-The five-tranche deferral closes here. AT.6.1 introduced the
-plan; AT.6.2 deferred to AS.2.3; AS deferred to AT.6.2; AU
-deferred via §4 to AV; AV V0–V5 closed without addressing.
+Not a Named-struct-registry restoration. The AS.2.3 / AT.6.1
+StructRegistry approach was deleted in **AU.4.2** (commit
+`ab8588a`) with explicit rationale: scaffold with zero
+population, zero effective consumption across two tranches;
+removed per the no-legacy-code invariant. AU.4.2 stated the
+path forward: *"codegen handles struct projections via
+per-backend type tables, not a central registry."* AV.0.5
+took that path with `LargeAggregate` arena-backed payloads
+plus tuple-shaped grammar projections (`colorFunction
+-> (u8 space, f64 c1, f64 c2, f64 c3, f64 alpha)` in
+`grammar/css/l4/color.bbnf`).
 
-Concrete deliverable: CSS L4 colour-function rules
-(`colorFunction`, `colorFn`, `colorMix`) project to concrete
-Rust struct layouts via `pub struct Color { pub space:
-ColorSpace, pub c1: f64, pub c2: f64, pub c3: f64, pub
-alpha: f64 }` and `pub struct ColorMix { pub mix_space:
-MixSpace, pub hue_method: HueMethod, pub a: ColorRef, pub
-b: ColorRef, pub a_pct: Option<u8>, pub b_pct: Option<u8> }`
-over the existing `LargeAggregate` payload route AV.0.5
-landed.
+What landed in AV.0.5:
 
-`crates/ir/src/types/type_desc.rs::TypeDesc::Named("Color")`
-admits to a new `TypeDesc::Struct(StructId)` variant with a
-registered `StructLayout` that the emitter resolves at
-codegen time. View-layer accessors (`.as_color()`) project
-through `pub struct Color` rather than returning a tuple.
+- `PayloadData::LargeAggregate(&[u8])` variant in
+  `bbnf-tape` (commit `e7add15`) — arena-backed > 16 B
+  aggregate, identical wire shape to `Bytes` minus the
+  length prefix.
+- Colour-function grammar declarations (commit `ec20e99`)
+  — tuple types, not Named structs.
+- Emitter routing in `tape_prelude.rs` via CO-E1's
+  `aggregate_payload_ctor(total_bytes)` helper —
+  `> 16 B → LargeAggregate`, `≤ 16 B → Aggregate`.
+
+What never landed:
+
+- `crates/ir/src/passes/payload/layout.rs::compute_payload_
+  layouts` excludes `TypeDesc::Named("Color")` at admission
+  (it is not a `TypeDesc::Tuple` shape, not a bare scalar,
+  not currently admitted). No rule's `payload_layout`
+  populates with the Color shape, so the emitter's
+  `ctx.payload_layout.is_some()` path never fires for
+  colour-function rules at runtime.
+- The view-layer accessor that decodes a `LargeAggregate`
+  byte blob into a typed Rust value matching
+  `lightningcss::values::color::Color::RGBA { r: f32, g:
+  f32, b: f32, a: f32 }`. Today `.view().as_color()` on a
+  colour-function record returns the cursor span text
+  (correct for source preservation, wrong for typed-AST
+  parity).
+
+W0.5 closes both:
+
+1. **Layout pass admission for tuple-shaped Named types.**
+   `compute_payload_layouts` admits `TypeDesc::Named(sid)`
+   when the IR's per-backend type table resolves `sid` to a
+   tuple of scalars. The grammar's `colorFunction -> (u8
+   space, f64 c1, f64 c2, f64 c3, f64 alpha)` projects to
+   `Tuple([U8, F64, F64, F64, F64])` via the per-backend
+   resolver; layout planning reuses the existing scalar-
+   tuple arm. No new `TypeDesc::Struct` variant; the
+   existing `Tuple` path carries the payload and the
+   accessor name is per-backend.
+2. **View-layer Color projection.** `crates/core/src/
+   backend/rust/view/color.rs` (new) carries the
+   `pub struct Color { pub space: ColorSpace, pub c1: f64,
+   pub c2: f64, pub c3: f64, pub alpha: f64 }` Rust-side
+   projection plus `.view().as_color()` that decodes the
+   `LargeAggregate` byte blob into the struct. The Rust
+   struct lives in the BACKEND code, not in IR — per AU.4.2's
+   per-backend type-table principle. Other backends (TS,
+   WASM) get equivalent projections in their own backend
+   modules without crossing IR boundaries.
 
 Hard gate: `CssL4Parser::parse("rgb(255 128 0 / 0.5)").
-view().as_color()` returns a `Color { space: ColorSpace::
-Rgb, c1: 255.0, c2: 128.0, c3: 0.0, alpha: 0.5 }` whose
-field layout matches `lightningcss::values::color::Color::
-RGBA { r: 255.0, g: 128.0, b: 0.0, a: 0.5 }` accessor-by-
-accessor under the parity harness W5 lands. AV.0.5's hard
-gate ("byte-equivalent to lightningcss") finally satisfied.
+view().as_color()` returns a backend-projected `Color {
+space: ColorSpace::Rgb, c1: 255.0, c2: 128.0, c3: 0.0,
+alpha: 0.5 }` whose field-by-field accessors match
+`lightningcss::values::color::Color::RGBA { r: 255.0, g:
+128.0, b: 0.0, a: 0.5 }` under the W5 parity harness.
+AV.0.5's hard gate ("byte-equivalent to lightningcss")
+satisfied via tuple-projection + per-backend view, as
+AU.4.2 prescribed.
 
 #### AW.0.6 Inline `#[cfg(test)]` migration
 
@@ -1135,11 +1204,16 @@ Plus AW-internal fold-ins from V0–V5 substrate overshoots:
 | `mark_children` for leaf-route rules | AW.0.3 |
 | `__aggregate_buf [u8; 16]` over-allocation | AW.0.4 |
 
-Plus AT/AU long-deferred:
+Plus AT/AU items the AW orchestrator INITIALLY misframed as
+deferred-but-actually-deleted:
 
-| AT/AU item | AW phase |
-|------------|----------|
-| Named struct ABI finalisation (5-tranche deferral) | AW.0.5 |
+| Item | Actual history | AW posture |
+|------|----------------|------------|
+| `StructRegistry` (AS.2.3 / AT.6.1 / AT.6.2) | **DELETED** AU.4.2 (commit `ab8588a`) per no-legacy-code invariant; explicit decision to "handle struct projections via per-backend type tables, not a central registry" | AW does NOT reintroduce; W0.5 follows AU.4.2's stated path: backend-side Color projection over AV.0.5's `LargeAggregate` substrate |
+| `ParsedGrammar` elimination (AR.7.2, 11-tranche deferral) | **DELETED** AU (commit `688d6ea`) | nothing for AW |
+| `Tape::iter` / cursor-allocation walker (AT.5.1) | **WIRED** AT, validated AU | nothing for AW |
+| 64-byte input padding | **LANDED** AU (parse-that `64fe9f2`); cascade closed AV.0.7 | nothing for AW |
+| `.map(|_| ())` discards | **ELIMINATED** AT/AU (commit `4e4a75e`) | nothing for AW |
 
 ## Style note
 

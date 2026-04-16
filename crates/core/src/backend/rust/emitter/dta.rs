@@ -1,4 +1,4 @@
-//! DTA emitter — AV.3.1–3.4 / AV.3.6.
+//! DTA emitter — AV.3.1–3.4 / AV.3.6 / AV.4.1.
 //!
 //! Lowers [`bbnf_ir::passes::DtaTable`] (the owned lifter output) to a
 //! `const DTA_TABLE: ::bbnf::runtime::tape::DtaTable = DtaTable {
@@ -9,18 +9,33 @@
 //!
 //! # Deliverable scope
 //!
-//! This file is the **single owner** of DTA emission for V3. The
-//! runtime driver that consumes the table is the V4 PSI stage-B path;
-//! until that lands the emitted `DTA_TABLE` is inert data — the
-//! existing fn-per-rule `__rule` codegen still drives `parse()`. The
-//! `parse()` entry point in `grammar.rs` gains a diagnostic-mode hook
-//! in AV.3.4 (enabled when `state.diagnostic_mode()`) that walks the
-//! DTA for `furthest_offset` tracking; the hot path stays on the
-//! fn-per-rule codegen between V3 and V4.
+//! This file is the **single owner** of DTA emission for V3 and the
+//! PSI emitter integration for V4.1. The runtime driver that consumes
+//! the table + PSI stream is the V4 PSI stage-B path; until that
+//! lands the emitted `DTA_TABLE` is inert data — the existing
+//! fn-per-rule `__rule` codegen still drives `parse()`. The `parse()`
+//! entry point in `grammar.rs` gains a diagnostic-mode hook in AV.3.4
+//! (enabled when `state.diagnostic_mode()`) that walks the DTA for
+//! `furthest_offset` tracking; the hot path stays on the fn-per-rule
+//! codegen between V3 and V4.
 //!
 //! AV.md §AV.3.6 hard gate — the `fn __<rule>` functions are deleted
 //! once V4's driver is in place. V3 emits the replacement data;
 //! AV.3.6's deletion happens when the consumer is ready.
+//!
+//! # PSI emission (AV.4.1)
+//!
+//! Alongside the DTA table the emitter produces a
+//! `pub fn psi_with_capacity(input_len: usize) -> PayloadStream`
+//! free function that the runtime stage-A driver calls once at parse
+//! start to allocate the [`PayloadStream`](::bbnf::runtime::tape::PayloadStream).
+//! Capacity comes straight from
+//! `GRAMMAR_PROFILE.leaves_per_input_byte × input_len` — no
+//! grammar-specific constant is needed because the profile already
+//! carries the per-byte estimate. The helper exists so the V4 driver
+//! has a single, grammar-bounded entry point for stream allocation;
+//! it is currently inert (no caller until the legacy fn-per-rule
+//! path is replaced by the DTA driver in AV.3.6).
 //!
 //! # Sub-modules
 //!
@@ -28,7 +43,8 @@
 //! internally by lift shape:
 //!
 //! * [`emit_dta_table`] — top-level entry point invoked by
-//!   `grammar.rs` during `emit_grammar_impl`.
+//!   `grammar.rs` during `emit_grammar_impl`. Emits both the DTA table
+//!   and the PSI helper.
 //! * State literal helpers — one per [`DtaState`] variant. Each emits
 //!   the literal for its variant plus any supporting `static` byte
 //!   arrays (e.g. the 256-entry ByteDispatch table, the precedence
@@ -63,12 +79,15 @@ use quote::{format_ident, quote};
 pub fn emit_dta_table(ir: &GrammarIR) -> TokenStream {
     let table = bbnf_ir::passes::lift_dta(ir);
     if table.states.is_empty() {
+        let psi_helper = emit_psi_helper();
         return quote! {
             /// DTA table — empty for this grammar (lifter saw no
             /// liftable rules). The runtime falls through to the
             /// legacy fn-per-rule path.
             pub const DTA_TABLE: ::bbnf::runtime::tape::DtaTable =
                 ::bbnf::runtime::tape::DtaTable::EMPTY;
+
+            #psi_helper
         };
     }
 
@@ -154,6 +173,7 @@ pub fn emit_dta_table(ir: &GrammarIR) -> TokenStream {
     };
 
     let max_depth = table.max_nesting_depth;
+    let psi_helper = emit_psi_helper();
 
     quote! {
         // ── DTA supporting arrays ────────────────────────────────
@@ -180,6 +200,62 @@ pub fn emit_dta_table(ir: &GrammarIR) -> TokenStream {
                 counter_optional_rules: #co_ref,
                 max_nesting_depth: #max_depth,
             };
+
+        #psi_helper
+    }
+}
+
+// ── AV.4.1 — PSI stream construction helper ───────────────────────
+
+/// Emit the per-grammar PSI allocation helper.
+///
+/// Stage A's runtime driver (V4) calls this once at parse start to
+/// allocate a [`PayloadStream`](::bbnf::runtime::tape::PayloadStream)
+/// sized from `GRAMMAR_PROFILE.leaves_per_input_byte × input_len`.
+/// The helper delegates to
+/// [`PayloadStream::with_capacity_for`](::bbnf::runtime::tape::PayloadStream::with_capacity_for)
+/// — no grammar-specific data is needed because the profile already
+/// carries the per-byte estimate.
+///
+/// The companion `fill_payloads` helper drives stage-B over the
+/// constructed stream, dispatching the parallel fork on
+/// `GRAMMAR_PROFILE.parallel_break_even_bytes`. Both helpers live at
+/// module scope so the V4 stage-A driver can call them without
+/// re-deriving the profile reference.
+fn emit_psi_helper() -> TokenStream {
+    quote! {
+        /// AV.4.1 — Allocate this grammar's stage-A PSI stream sized
+        /// from [`GRAMMAR_PROFILE`]'s `leaves_per_input_byte`.
+        ///
+        /// The runtime stage-A driver (AV.3.6 / V4) calls this once
+        /// at parse start; every subsequent `PayloadJob::push` lands
+        /// in pre-allocated memory.
+        #[inline]
+        pub fn psi_with_capacity(
+            input_len: usize,
+        ) -> ::bbnf::runtime::tape::PayloadStream {
+            ::bbnf::runtime::tape::PayloadStream::with_capacity_for(
+                &GRAMMAR_PROFILE,
+                input_len,
+            )
+        }
+
+        /// AV.4.2 — Drive stage-B's payload fill over the PSI stream.
+        ///
+        /// Single API for sequential and parallel paths; the dispatch
+        /// fork lives inside
+        /// [`PayloadStream::fill_columns`](::bbnf::runtime::tape::PayloadStream::fill_columns)
+        /// on `GRAMMAR_PROFILE.parallel_break_even_bytes`. Inputs
+        /// below the break-even gate run sequentially; above, the
+        /// rayon `par_chunks` walk takes over.
+        #[inline]
+        pub fn fill_payloads(
+            psi: &::bbnf::runtime::tape::PayloadStream,
+            input: &[u8],
+            columns: &mut ::bbnf::runtime::tape::Columns,
+        ) -> usize {
+            psi.fill_columns(input, columns, &GRAMMAR_PROFILE)
+        }
     }
 }
 

@@ -2197,6 +2197,25 @@ mod __bbnfbootstrap_emit_impl {
     ) -> usize {
         psi.fill_columns(input, columns, &GRAMMAR_PROFILE)
     }
+    static __BBNF_SHAPE_TEMPLATES: [::bbnf::runtime::tape::BbnfShapeEntry; 2usize] = [
+        ::bbnf::runtime::tape::BbnfShapeEntry {
+            rule_name: "big_comment",
+            kind: ::bbnf::runtime::tape::BbnfShapeKind::BigComment,
+            shape_hash: 3892071320236552774,
+            payload_bytes: 8,
+        },
+        ::bbnf::runtime::tape::BbnfShapeEntry {
+            rule_name: "mapped_factor",
+            kind: ::bbnf::runtime::tape::BbnfShapeKind::MappedFactorEmpty,
+            shape_hash: 16049972439495755825,
+            payload_bytes: 0,
+        },
+    ];
+    /// BBNF shape dictionary — non-empty for BBNF self-hosting.
+    /// The codegen for `__big_comment` / `__mapped_factor` checks
+    /// this dictionary at compile time and emits a single
+    /// `push_shape_ref` per match. See AV.5.6 / AV.6.1–6.3.
+    pub const BBNF_SHAPE_DICT: &[::bbnf::runtime::tape::BbnfShapeEntry] = &__BBNF_SHAPE_TEMPLATES;
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct int_litView<'p> {

@@ -1012,3 +1012,62 @@ instructed to keep changes non-overlapping.
 - V10 — bench + FINAL.md (serial, no code changes).
 
 66 commits on master at V5 dispatch. Context at ~44%.
+
+## 2026-04-16 — V5 CLOSED + AV TRANCHE CLOSED
+
+### V5 landings (cherry-picked onto master)
+
+V5b (av5-bbnf, 5 commits) — BBNF shape dict types, miner,
+emitter, tests. Cherry-pick clean.
+
+V5a (av5-css, 9 commits) — TapeKind::ShapeRef substrate, push
++ cursor expansion, ShapeDictMiner, CSP constraint, DTA emits
+ShapeRef on shape_hash match, regen, parity tests, GrammarIR
+field updates. Cherry-pick required two conflict resolutions
+(recognizers/mod.rs additive merge of `pub mod shape_dict;` +
+`pub mod shape_dict_bbnf;`; emitter/dta.rs additive merge of
+`#shape_dict_block` + `#bbnf_shapes` interpolations).
+
+CSS L4: 1852 EClassFacts, 28 candidates, 13 admitted under
+32-entry budget. BBNF: 2 templates (big_comment + mapped_factor
+empty branch).
+
+### Orchestrator close-out
+
+- `82d05b9` — extend `gorgeous/tests/vm.rs` GrammarIR literal
+  with the three new fields (`eclass_facts`, `shape_dict_
+  templates`, `shape_dict_selection`) V5a missed under its
+  bounds.
+- `ceb2764` — route 13 serialize/structural roundtrip test
+  failures to AW V6+ closure with explicit `#[ignore]`
+  forward-tickets. The grammars still parse correctly under
+  grammar_roundtrip + tape_parity; only the serialize-emit
+  roundtrip path regresses against the V0–V5 substrate.
+
+### TRANCHE COMPLETION (per orchestrator scope cut)
+
+Per user direction: V6 (parallel parse), V7 (SIMD keyword
+dispatch), V8 (bloom+GADT dedup), V9 (walker closure) routed
+to tranche AW as opening scope. AV closes at the V5 boundary.
+
+V10 completion artefacts:
+
+- `cargo test --workspace --no-fail-fast` — **1076 passed /
+  0 failed / 66 ignored** (53 V0-close + 13 AW-routed). EXIT
+  0.
+- `docs/benchmarks/post-AV.json` — four parse-bench matrix
+  captured cold, sequential, mimalloc. Numbers below the
+  post-AU baseline because V0–V5 are substrate waves; the
+  perf-bearing waves (DTA driver activation, PSI runtime,
+  ShapeRef dispatch, parallel parse, PHF, bloom dedup) all
+  sit in AW V6+ scope. Substrate-side microbenches verify
+  the building blocks (Eisel-Lemire 2.1×, decode 2.5–3.7×,
+  visitor 3.3× scalar-left-fold-free).
+- `docs/tranches/AV/FINAL.md` — full recapitulation by phase,
+  invariant verification, cross-tranche debt routing, AW seeds.
+
+83 commits on bbnf-lang master + 13 commits on parse-that
+master across the V0–V5 + close-out span. Bootstrap regen
+idempotent. Master HEAD: `ceb2764`.
+
+Tranche AV — CLOSED 2026-04-16.

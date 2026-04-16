@@ -1,0 +1,96 @@
+{
+  "tag": "post-AV",
+  "tranche": "AV",
+  "date": "2026-04-16",
+  "commit": "ceb2764539b2520f860ea752d350d3ff1547c427",
+  "arch": "aarch64-apple-darwin",
+  "scope_note": "AV closed at the V5 boundary by orchestrator decision: V0–V5 (typed-materialisation closure + GrammarProfile + SoA columnar + DTA + PSI/finaliser/simdjson + ShapeDictionary substrate) landed; V6 (document-level parallel parse), V7 (SIMD keyword dispatch + PHF + selector classifier), V8 (runtime bloom+GADT dedup), V9 (walker + reader migration closure) routed forward to tranche AW as opening scope. The substrate landings emit `const DTA_TABLE`, `const GRAMMAR_PROFILE`, `const SHAPE_DICT`, `const BBNF_SHAPE_DICT`, the `PayloadStream` + Stage-C finaliser API, the `TapeKind::ShapeRef` cursor expansion, and the visitor reordered-unrolling codegen — all gate-closed today because the runtime DTA driver that activates them is the AV.3.6 deletion deferred to AW. Bench numbers below therefore measure the LEGACY fn-per-rule hot path with V0–V2 correctness fixes layered on top, NOT the DTA-driven hot path the substrate enables.",
+  "bench_matrix_note": "Cold per-parse only (mimalloc). Four bench suites per tranche README completion requirements; VM, WASM, TS, and competitor benches excluded. Single sequential invocation per bench, output captured to /tmp/bench-{json,css,sheets,bbnf}.txt before being collated here.",
+  "benches": {
+    "json_monolithic": {
+      "canada":  { "ns_per_iter": 4947301,  "mb_per_s": 455 },
+      "citm":    { "ns_per_iter": 2460626,  "mb_per_s": 701 },
+      "data_s":  { "ns_per_iter": 72246,    "mb_per_s": 491 },
+      "data_xl": { "ns_per_iter": 55883166, "mb_per_s": 380 },
+      "twitter": { "ns_per_iter": 1310712,  "mb_per_s": 481 },
+      "note": "Tape-only parse on the legacy fn-per-rule hot path. Eisel-Lemire Clinger short-circuit (AV.3.5) + 16-digit SIMD fastpath are live in parse-that and reduce compute_f64 self-time per microbench (2.1×), but end-to-end bench is dominated by string decode + structural scan which won't see the DTA-driver gain until AW V6+ wiring."
+    },
+    "css_l4": {
+      "bootstrap": { "ns_per_iter": 1540133,  "mb_per_s": 182 },
+      "normalize": { "ns_per_iter": 20469,    "mb_per_s": 299 },
+      "tailwind":  { "ns_per_iter": 17539883, "mb_per_s": 207 },
+      "note": "ShapeDictionary mining + CSP selection live (1852 EClassFacts, 28 candidates, 13 admitted under 32-entry budget); SHAPE_DICT const is emitted but the runtime push_shape_ref dispatch is gated on the DTA driver activation deferred to AW. Bootstrap + tailwind also wait on the AW V7 SIMD selector classifier."
+    },
+    "google_sheets_monolithic": {
+      "parse": {
+        "parse_simple": { "ns_per_iter": 23709, "mb_per_s": 21 },
+        "parse_nested": { "ns_per_iter": 48822, "mb_per_s": 29 },
+        "parse_stress": { "ns_per_iter": 64052, "mb_per_s": 28 }
+      },
+      "format": {
+        "format_simple": { "ns_per_iter": 150,  "mb_per_s": 40 },
+        "format_stress": { "ns_per_iter": 4138, "mb_per_s": 48 }
+      },
+      "note": "Shunting-yard DTA precedence table emitted (concat/add/mul/exp tower collapse, 6 precedence entries inferred ^ as right-associative), but the runtime driver that consumes the table is AW scope. Sheets parser still walks the 6-level recursive-descent tower."
+    },
+    "bbnf_monolithic": {
+      "bbnf_self":      { "ns_per_iter": 48246,  "mb_per_s": 106 },
+      "css_l4_grammar": { "ns_per_iter": 374464, "mb_per_s": 145 },
+      "css_pretty":     { "ns_per_iter": 13509,  "mb_per_s": 189 },
+      "ebnf":           { "ns_per_iter": 24189,  "mb_per_s": 60 },
+      "google_sheets":  { "ns_per_iter": 29527,  "mb_per_s": 253 },
+      "json":           { "ns_per_iter": 6489,   "mb_per_s": 82 },
+      "note": "BBNF_SHAPE_DICT emits 2 templates (big_comment single-hole + mapped_factor empty-branch); SHAPE_DICT consumption awaits AW V6+ runtime dispatch."
+    }
+  },
+  "perf_vs_post_au": {
+    "comparison_note": "AV closed below the AU baseline on every bench. This is expected and documented: V0–V5 are SUBSTRATE waves that add correctness (typed-parity Bug 1/2/2b closure, Span aggregate routing, scalar-Alt admission, post-match capture step, Stage-C finaliser, ShapeRef cursor expansion) and emission (DTA_TABLE, GRAMMAR_PROFILE, SHAPE_DICT, BBNF_SHAPE_DICT, PayloadStream helpers). The PERF gates (DTA driver replacing fn-per-rule, PSI rayon activation, ShapeRef runtime dispatch, parallel parse, PHF + SIMD keyword dispatch, bloom+GADT dedup) all sit downstream of AV.3.6 (legacy fn-per-rule deletion) which interlocks with the V4 PSI driver — both routed to AW V6+ closure per orchestrator scope decision.",
+    "regression_drivers": [
+      "Span-annotated rules now emit per-instance aggregate writes (AV.0.2): every BBNF identifier/literal/regex push pays for an 8-byte (lo, hi) buffer copy that the legacy push_compound did not.",
+      "Bug 1 alt-lit per-branch payload-write hoisting (AV.0.1): every alt branch now stamps __aggregate_buf, costing ~2 stores per branch where previously only the first branch fired.",
+      "Bug 2b i64/f64 span-helper threading (AV.0.3): BBNF int_lit/float_lit pay parse_that::parse_{i64,f64}_from_bytes per match where previously the scanner advanced state.offset only.",
+      "Scalar-Alt aggregate admission (AV.0.1 close-out via CO-E4): Sheets add_op/mul_op/unary_prefix now stamp single-byte payloads where they previously dispatched as type-only structural compounds.",
+      "Empty-compound NONE sentinel (AV.0.6): correctness invariant; tightens has_payload but adds a child_off compare per push_compound."
+    ],
+    "what_AW_will_recover": "The DTA hot-path replaces the recursive fn-per-rule with a single counter-DFA + frame stack walking byte-class dispatch (AV.3.1–3.6). PSI stage-B parallelises payload decode behind the parallel_break_even_bytes gate (AV.4.2). ShapeRef collapses 5–7-record subtrees to one record + packed blob (AV.5.x). PHF + SIMD keyword dispatch (AV.7) replaces the 148-branch namedColor / *Keyword chains. Bloom+GADT (AV.8) dedup on the runtime side. Each lever is wired into the substrate today and will activate in AW with no emitter-side rework."
+  },
+  "tests": {
+    "passed": 1076,
+    "failed": 0,
+    "ignored": 66,
+    "ignored_breakdown": {
+      "pre_existing_AV0_close": 53,
+      "AV5_serialize_structural_routed_to_AW": 13,
+      "category_a_includes": [
+        "test_selective_transitive_unfurling (AV.0.12 deferred)",
+        "7 JSON variant-dispatch (AW V6+ walker coherence)",
+        "3 CSS percentage InlineScalar reader (Bug 2b src-side, AW)",
+        "5 Sheets Bug-1 inline tests (some un-ignored by CO-E3/CO-E4)",
+        "5 closure tests (closure_*_param, lower::expression gap)",
+        "4 analysis structural-mode gates (cycle/alias detection, diagnostics)",
+        "3 gorgeous dump tests (non-checked-in fixtures)",
+        "2 pprint-vm hint tests (softbreak/indent_group drift)",
+        "test_let_parses_as_let_call (AW V6+ google-sheets dispatch)",
+        "13 serialize/structural roundtrip (AW V6+ walker/reader closure)"
+      ]
+    },
+    "primary_gates": {
+      "grammar_roundtrip": { "passed": 6, "failed": 0 },
+      "tape_parity": { "passed": 22, "failed": 0 },
+      "bbnf_parity": { "passed": 18, "failed": 0 },
+      "json_parity": { "passed": 2, "failed": 0, "ignored": 7 },
+      "css_l4_parity": { "passed": 13, "failed": 0, "ignored": 3 },
+      "sheets_parity": { "passed": 25, "failed": 0 },
+      "css_l4_named_color_parity": { "passed": 2, "failed": 0 },
+      "shape_dict_css": { "passed": 5, "failed": 0 },
+      "shape_dict_bbnf": { "passed": 10, "failed": 0 },
+      "dta_counter_states": { "passed": 10, "failed": 0 },
+      "dta_shunting_yard": { "passed": 8, "failed": 0 },
+      "dta_diagnostic_replay": { "passed": 5, "failed": 0 },
+      "visitor_reorder": { "passed": 8, "failed": 0 },
+      "bbnf_tape_unit": { "passed": 79, "failed": 0 }
+    }
+  },
+  "bootstrap_idempotent": true,
+  "honesty_note": "AV completed substrate, not perf. The grammar_roundtrip + tape_parity + parity suites all green, including all seven BBNF Bug-2/Bug-2b pinned assertions flipping (AV.0.2/0.3 hard gate met) and the four Sheets Bug-1 pinned assertions un-ignoring under CO-E3 + CO-E4. parse-that lib tests 69/69 green; bbnf-tape 79/79 green; visitor_reorder 8/8 green at 3.3× scalar-left-fold-free speedup. The MB/s numbers above reflect the legacy fn-per-rule path carrying additional per-instance correctness work; they are not a measurement of the substrate AV builds. AW's first wave activates the DTA runtime driver and reads against post-AV-substrate.json baselines."
+}

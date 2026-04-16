@@ -902,16 +902,20 @@ fn bare_span_epilogue_fixup(layout: &PayloadLayout) -> TokenStream {
 /// value).
 const MAX_INLINE_AGGREGATE_BYTES: usize = 16;
 
-/// AV.0.5: stack buffer width for the aggregate prelude, derived
-/// from the layout's `total_bytes`. Layouts ≤ 16 B keep the
-/// 16-byte reservation that matches `bbnf_tape`'s inline-aggregate
-/// path; wider layouts (colour-function `colorFunction` / `colorFn` /
-/// `colorMix` at 33-40 B) widen to exactly `total_bytes` so the
-/// prelude's `__aggregate_buf` accommodates the `LargeAggregate`
-/// commit without overflowing or truncating.
+/// AW.0.4: stack buffer width for the aggregate prelude, derived
+/// from the layout's actual `total_bytes`. The earlier 16-byte
+/// floor (AV.0.5) over-reserved every single-byte CSS unit rule
+/// and every 8-byte bare-Span rule by 15 B and 8 B respectively;
+/// nested selectors carried the pressure through the D-cache. The
+/// inline-aggregate runtime (`bbnf_tape::PayloadData::Aggregate`)
+/// only reads `..total_bytes` from the buffer, so a smaller stack
+/// reservation is always correct. Colour-function aggregates
+/// (33-40 B) continue to size up naturally; the 1-byte floor is
+/// purely a safety net against zero-byte layouts that should not
+/// exist in practice.
 fn aggregate_buffer_bytes(layout: &PayloadLayout) -> usize {
     let total = layout.total_bytes as usize;
-    total.max(MAX_INLINE_AGGREGATE_BYTES)
+    total.max(1)
 }
 
 /// Emit the rule function signature for a tape-first rule.

@@ -796,13 +796,20 @@ fn emit_alt_mustape_aggregate_prelude_epilogue(
     } else {
         quote! { ::bbnf::runtime::tape::TapeKind::Span }
     };
+    // AW.0.4: size the stack buffer to the layout's actual
+    // `total_bytes`, not a fixed 16 B. CSS unit rules drop to
+    // `[u8; 1]`; bare-Span rules drop to `[u8; 8]`; colour-function
+    // rules widen to `[u8; 40]`. Large (> 16 B) aggregates route
+    // through `PayloadData::LargeAggregate`, so the buffer width
+    // sets both stack footprint and LargeAggregate payload width.
+    let buf_bytes = aggregate_alt_buffer_bytes(layout);
     let prelude = quote! {
         let __span_lo = state.offset as u32;
         let __variant_idx: u8 = #variant_lit;
         let mut __branch_idx: u8 = 0;
         let mut __has_children = false;
         let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
-        let mut __aggregate_buf: [u8; 16] = [0u8; 16];
+        let mut __aggregate_buf: [u8; #buf_bytes] = [0u8; #buf_bytes];
         let mut __has_payload = false;
     };
     let epilogue = quote! {
@@ -861,11 +868,14 @@ fn emit_alt_span_only_aggregate_prelude_epilogue(
     } else {
         quote! { ::bbnf::runtime::tape::TapeKind::Span }
     };
+    // AW.0.4: layout-driven buffer width (see sibling MustTape
+    // helper for rationale).
+    let buf_bytes = aggregate_alt_buffer_bytes(layout);
     let prelude = quote! {
         let __span_lo = state.offset as u32;
         let __variant_idx: u8 = #variant_lit;
         let mut __branch_idx: u8 = 0;
-        let mut __aggregate_buf: [u8; 16] = [0u8; 16];
+        let mut __aggregate_buf: [u8; #buf_bytes] = [0u8; #buf_bytes];
         let mut __has_payload = false;
     };
     let epilogue = quote! {
@@ -901,4 +911,26 @@ fn scalar_zero_init_token(td: &TypeDesc) -> TokenStream {
         TypeDesc::Bool => quote! { false },
         _ => quote! { 0 },
     }
+}
+
+/// AW.0.4: stack buffer width for Alt-aggregate preludes.
+///
+/// Mirrors `tape_prelude::aggregate_buffer_bytes` but lives on the
+/// grammar-side Alt helpers. Layouts ≤ `MAX_INLINE_AGGREGATE_BYTES`
+/// (16) reserve exactly `total_bytes` (aligned up to 1 — the
+/// buffer only needs to cover the layout's actual field run);
+/// wider layouts (colour-function aggregates at 33–40 B) widen to
+/// `total_bytes` so the `LargeAggregate` commit has room. The
+/// earlier fixed `[u8; 16]` over-allocated CSS unit rules (1-byte
+/// payload) by 15 B per frame; stacked across nested rules the
+/// D-cache pressure was meaningful.
+fn aggregate_alt_buffer_bytes(layout: &PayloadLayout) -> usize {
+    // Match the non-Alt aggregate helper's invariant: buffers never
+    // shrink below a 1-byte minimum (zero-byte types never admit a
+    // payload layout). No upper cap — `LargeAggregate` rules widen
+    // naturally. The earlier 16 B floor is gone: the tape codegen
+    // only reads `..total_bytes` anyway, so a 1-byte `[u8; 1]` is
+    // sufficient for a single-u8 layout.
+    let total = layout.total_bytes as usize;
+    total.max(1)
 }

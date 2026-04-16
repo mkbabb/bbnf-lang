@@ -1531,3 +1531,388 @@ fn payload_stream_chunk_recs_matches_cache_line() {
     );
     assert_eq!(PayloadStream::CHUNK_RECS, 4);
 }
+
+// ── Tranche AV.4.4 — Stage-C finaliser bit-equality regression ─────
+//
+// `TapeBuilder::finish` routes through the Stage-C segmented prefix
+// scan (`bbnf_tape::finaliser::finalise`); these tests pin the
+// invariant that the scan's output matches a reference V2 backward-
+// walk implementation byte-for-byte on canonical post-order tapes.
+//
+// The reference V2 implementation lives in this test file (rather
+// than reaching into the crate's `pub(crate)` `compute_sibling_skip`)
+// so the regression is a self-contained black-box check against the
+// public API.
+
+use bbnf_tape::{derive_frame_depth, finalise, TapeOffset as Off};
+
+/// Reference V2 backward-walk sibling-skip computation — transcribed
+/// verbatim from `bbnf_tape::columns::Columns::compute_sibling_skip`.
+///
+/// Walks every compound's child run by following `child_off` pointers,
+/// collecting direct-child roots in reverse emission order, and
+/// stamping `next_root - this_root` into each non-last sibling's
+/// slot. Operates on a `(child_off, has_children, sib_skip)` shape
+/// extracted from a [`Columns`] snapshot.
+fn reference_v2_sibling_skip(
+    parent_count: usize,
+    child_off: &[Off],
+    has_children: &[bool],
+) -> Vec<u32> {
+    let mut sib_skip = vec![0u32; parent_count];
+    for parent_idx in 0..parent_count as u32 {
+        if !has_children[parent_idx as usize] {
+            continue;
+        }
+        let child_start = child_off[parent_idx as usize];
+        if child_start.is_none() {
+            continue;
+        }
+        let start = child_start.0 as usize;
+        let end = parent_idx as usize;
+        if start >= end {
+            continue;
+        }
+        let mut roots: Vec<u32> = Vec::new();
+        let mut pos = end;
+        while pos > start {
+            let co = pos - 1;
+            roots.push(co as u32);
+            let co_has_children = has_children[co];
+            let co_child_off = child_off[co];
+            pos = if co_has_children && !co_child_off.is_none() {
+                co_child_off.0 as usize
+            } else {
+                co
+            };
+        }
+        for window in roots.windows(2) {
+            let later = window[0];
+            let earlier = window[1];
+            sib_skip[earlier as usize] = later - earlier;
+        }
+    }
+    sib_skip
+}
+
+/// Snapshot the structural shape of a finished tape's columns into
+/// the small structural arrays the reference V2 implementation
+/// consumes. Captures only the fields V2 reads — `child_off` and the
+/// `has_children` bit per record — so the reference run is decoupled
+/// from any other column movement.
+fn snapshot_shape(cols: &Columns) -> (usize, Vec<Off>, Vec<bool>) {
+    let n = cols.len();
+    let child_off = cols.child_off.clone();
+    let has_children: Vec<bool> = (0..n as u32).map(|i| cols.has_children_at(i)).collect();
+    (n, child_off, has_children)
+}
+
+/// Construct a finished tape via the public `TapeBuilder` API and
+/// assert that Stage-C's `sib_skip` column is bit-identical to the
+/// reference V2 backward-walk implementation.
+///
+/// The reference V2 walk reads `child_off` to enumerate sibling
+/// roots, so the snapshot is taken from the in-progress builder via
+/// [`TapeBuilder::tape_snapshot`] *before* `finish()` runs Stage-C.
+/// `tape_snapshot` clones columns without mutating `child_off`,
+/// preserving the exact `child_off` values the parser wrote — which
+/// is the input shape both algorithms were designed to consume.
+fn assert_stage_c_matches_v2(b: TapeBuilder, label: &str) {
+    let pre_snapshot = b.tape_snapshot();
+    let (n, child_off, has_children) = snapshot_shape(pre_snapshot.columns());
+    let v2 = reference_v2_sibling_skip(n, &child_off, &has_children);
+
+    let tape = b.finish().unwrap();
+    assert_eq!(
+        tape.columns().sib_skip, v2,
+        "Stage-C / V2 sib_skip mismatch on `{}`",
+        label,
+    );
+}
+
+#[test]
+fn stage_c_matches_v2_flat_sibling_run() {
+    // Three sibling leaves under a single root.
+    let mut b = TapeBuilder::new();
+    let cs = b.mark_children();
+    b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
+    b.push_leaf(TapeKind::Span, 1, 2, 0, 0);
+    b.push_leaf(TapeKind::Span, 2, 3, 0, 0);
+    b.push_compound(TapeKind::Rule, cs, 0, 3, 0, 0);
+    assert_stage_c_matches_v2(b, "flat_sibling_run");
+}
+
+#[test]
+fn stage_c_matches_v2_nested_compound() {
+    // (a (b c) d) outer Rule, mirroring `sibling_skip_walks_direct_children_forward`.
+    let mut b = TapeBuilder::new();
+    b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
+    let bc = b.mark_children();
+    b.push_leaf(TapeKind::Span, 1, 2, 1, 0);
+    b.push_leaf(TapeKind::Span, 2, 3, 2, 0);
+    b.push_compound(TapeKind::Seq, bc, 1, 3, 0, 0);
+    b.push_leaf(TapeKind::Span, 3, 4, 3, 0);
+    let outer_children = TapeOffset(0);
+    b.push_compound(TapeKind::Rule, outer_children, 0, 4, 0, 0);
+    assert_stage_c_matches_v2(b, "nested_compound");
+}
+
+#[test]
+fn stage_c_matches_v2_two_nested_siblings() {
+    // (a (b) (c)) — two compound siblings, each with one inner leaf.
+    // Exercises the per-depth `next_at_depth` invalidation when the
+    // backward walk crosses the parent boundary between (b) and (c).
+    let mut b = TapeBuilder::new();
+    b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
+    let bc = b.mark_children();
+    b.push_leaf(TapeKind::Span, 1, 2, 1, 0);
+    b.push_compound(TapeKind::Seq, bc, 1, 2, 0, 0);
+    let cc = b.mark_children();
+    b.push_leaf(TapeKind::Span, 2, 3, 2, 0);
+    b.push_compound(TapeKind::Seq, cc, 2, 3, 1, 0);
+    let outer_children = TapeOffset(0);
+    b.push_compound(TapeKind::Rule, outer_children, 0, 3, 0, 0);
+    assert_stage_c_matches_v2(b, "two_nested_siblings");
+}
+
+#[test]
+fn stage_c_matches_v2_deep_nesting() {
+    // Deep right-spine ((((leaf))))) — exercises `tracked_depth`
+    // high-water mark and the per-depth scratch growth.
+    let mut b = TapeBuilder::new();
+    let l1_children = b.mark_children();
+    let l2_children = b.mark_children();
+    let l3_children = b.mark_children();
+    let l4_children = b.mark_children();
+    b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
+    b.push_compound(TapeKind::Seq, l4_children, 0, 1, 0, 0);
+    b.push_compound(TapeKind::Seq, l3_children, 0, 1, 0, 0);
+    b.push_compound(TapeKind::Seq, l2_children, 0, 1, 0, 0);
+    b.push_compound(TapeKind::Rule, l1_children, 0, 1, 0, 0);
+    assert_stage_c_matches_v2(b, "deep_nesting");
+}
+
+#[test]
+fn stage_c_matches_v2_empty_compound() {
+    // An empty compound + a sibling leaf — empty compound's
+    // `child_off` lands as NONE, skipping the child enumeration.
+    let mut b = TapeBuilder::new();
+    let leaf_off = b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
+    let _ = leaf_off;
+    let empty_children = b.mark_children();
+    b.push_compound(TapeKind::Seq, empty_children, 1, 1, 0, 0);
+    b.push_leaf(TapeKind::Span, 1, 2, 0, 0);
+    let outer_children = TapeOffset(0);
+    b.push_compound(TapeKind::Rule, outer_children, 0, 2, 0, 0);
+    assert_stage_c_matches_v2(b, "empty_compound");
+}
+
+#[test]
+fn stage_c_matches_v2_wide_sibling_run() {
+    // A wider sibling run (16 leaves) under a single root — checks
+    // the linear scan against a non-trivial number of `sib_skip`
+    // stamps in one frame.
+    let mut b = TapeBuilder::new();
+    let cs = b.mark_children();
+    for i in 0..16u32 {
+        b.push_leaf(TapeKind::Span, i, i + 1, 0, 0);
+    }
+    b.push_compound(TapeKind::Rule, cs, 0, 16, 0, 0);
+    assert_stage_c_matches_v2(b, "wide_sibling_run");
+}
+
+#[test]
+fn stage_c_matches_v2_mixed_compound_leaf_siblings() {
+    // (leaf (compound leaf leaf) leaf (compound leaf) leaf)
+    // — alternates compound and leaf siblings to stress the first-
+    // child / last-child pointers across mixed shapes.
+    let mut b = TapeBuilder::new();
+    b.push_leaf(TapeKind::Span, 0, 1, 0, 0); // leaf 1
+    let inner1 = b.mark_children();
+    b.push_leaf(TapeKind::Span, 1, 2, 0, 0);
+    b.push_leaf(TapeKind::Span, 2, 3, 0, 0);
+    b.push_compound(TapeKind::Seq, inner1, 1, 3, 0, 0); // compound 1
+    b.push_leaf(TapeKind::Span, 3, 4, 0, 0); // leaf 2
+    let inner2 = b.mark_children();
+    b.push_leaf(TapeKind::Span, 4, 5, 0, 0);
+    b.push_compound(TapeKind::Seq, inner2, 4, 5, 0, 0); // compound 2
+    b.push_leaf(TapeKind::Span, 5, 6, 0, 0); // leaf 3
+    let outer_children = TapeOffset(0);
+    b.push_compound(TapeKind::Rule, outer_children, 0, 6, 0, 0);
+    assert_stage_c_matches_v2(b, "mixed_compound_leaf_siblings");
+}
+
+#[test]
+fn stage_c_matches_v2_balanced_binary_tree() {
+    // Balanced binary tree of 4 leaves, 3 internal compounds:
+    //
+    //               root
+    //              /    \
+    //          inner1  inner2
+    //          /  \     /  \
+    //         a   b    c   d
+    //
+    // Post-order: a, b, inner1, c, d, inner2, root.
+    // Stresses two-level recursion + matched sibling pairs at every
+    // depth.
+    fn push_pair(b: &mut TapeBuilder, span_lo: u32, span_hi: u32) -> TapeOffset {
+        let cs = b.mark_children();
+        b.push_leaf(TapeKind::Span, span_lo, span_lo + 1, 0, 0);
+        b.push_leaf(TapeKind::Span, span_lo + 1, span_hi, 0, 0);
+        b.push_compound(TapeKind::Seq, cs, span_lo, span_hi, 0, 0)
+    }
+    let mut b = TapeBuilder::new();
+    let outer_cs = b.mark_children();
+    push_pair(&mut b, 0, 2);
+    push_pair(&mut b, 2, 4);
+    b.push_compound(TapeKind::Rule, outer_cs, 0, 4, 0, 0);
+    assert_stage_c_matches_v2(b, "balanced_binary_tree");
+}
+
+#[test]
+fn stage_c_matches_v2_recursive_three_level() {
+    // Deterministic three-level shape:
+    //
+    //   root [
+    //     leaf,
+    //     mid [ leaf, leaf, mid' [ leaf, leaf ] ],
+    //     leaf,
+    //     mid'' [ leaf, leaf ],
+    //   ]
+    //
+    // Mixes deep / shallow children at each layer; exercises the
+    // tracked_depth high-water mark over multiple invalidate /
+    // re-populate cycles.
+    let mut b = TapeBuilder::new();
+    let root_cs = b.mark_children();
+    b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
+    let mid_cs = b.mark_children();
+    b.push_leaf(TapeKind::Span, 1, 2, 0, 0);
+    b.push_leaf(TapeKind::Span, 2, 3, 0, 0);
+    let mid_inner_cs = b.mark_children();
+    b.push_leaf(TapeKind::Span, 3, 4, 0, 0);
+    b.push_leaf(TapeKind::Span, 4, 5, 0, 0);
+    b.push_compound(TapeKind::Seq, mid_inner_cs, 3, 5, 0, 0);
+    b.push_compound(TapeKind::Seq, mid_cs, 1, 5, 0, 0);
+    b.push_leaf(TapeKind::Span, 5, 6, 0, 0);
+    let mid2_cs = b.mark_children();
+    b.push_leaf(TapeKind::Span, 6, 7, 0, 0);
+    b.push_leaf(TapeKind::Span, 7, 8, 0, 0);
+    b.push_compound(TapeKind::Seq, mid2_cs, 6, 8, 0, 0);
+    b.push_compound(TapeKind::Rule, root_cs, 0, 8, 0, 0);
+    assert_stage_c_matches_v2(b, "recursive_three_level");
+}
+
+// ── span_hi + child_off closure on canonical inputs ────────────────
+//
+// V2's path leaves `span_hi` and `child_off` exactly as the parser
+// wrote them at `push_compound` time. Stage-C re-derives them from
+// `frame_depth`; on canonical tapes the re-derivation reproduces the
+// parser's values byte-for-byte.
+
+#[test]
+fn stage_c_compound_span_hi_and_child_off_match_parser() {
+    // Build the same shape as `nested_compound` but assert directly
+    // on the compound records — Stage-C's compound closure must
+    // reproduce the parser-supplied `span_hi` / `child_off`.
+    let mut b = TapeBuilder::new();
+    b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
+    let bc = b.mark_children();
+    b.push_leaf(TapeKind::Span, 1, 2, 1, 0);
+    b.push_leaf(TapeKind::Span, 2, 3, 2, 0);
+    let inner = b.push_compound(TapeKind::Seq, bc, 1, 3, 0, 0);
+    b.push_leaf(TapeKind::Span, 3, 4, 3, 0);
+    let outer_children = TapeOffset(0);
+    let outer = b.push_compound(TapeKind::Rule, outer_children, 0, 4, 0, 0);
+    let tape = b.finish().unwrap();
+
+    let inner_rec = tape.get(inner);
+    assert_eq!(inner_rec.span_hi, 3, "Stage-C inner span_hi mismatch");
+    assert_eq!(inner_rec.child_off, TapeOffset(1), "Stage-C inner child_off mismatch");
+
+    let outer_rec = tape.get(outer);
+    assert_eq!(outer_rec.span_hi, 4, "Stage-C outer span_hi mismatch");
+    assert_eq!(outer_rec.child_off, TapeOffset(0), "Stage-C outer child_off mismatch");
+}
+
+#[test]
+fn stage_c_empty_compound_keeps_none_child_off() {
+    // Stage-C must not synthesise a `child_off` for compounds whose
+    // `has_children` bit is false — the empty-compound invariant
+    // (`child_off == NONE`) carries forward unchanged.
+    let mut b = TapeBuilder::new();
+    let _ = b.push_leaf(TapeKind::Literal, 0, 4, 0, 0);
+    let marked = b.mark_children();
+    let empty = b.push_compound(TapeKind::Rule, marked, 4, 4, 0, 0);
+    let tape = b.finish().unwrap();
+    let rec = tape.get(empty);
+    assert!(!rec.has_children());
+    assert_eq!(rec.child_off, TapeOffset::NONE);
+}
+
+// ── derive_frame_depth round-trip ──────────────────────────────────
+
+#[test]
+fn derive_frame_depth_matches_post_order_layout() {
+    // The transition-window `derive_frame_depth` helper must produce
+    // depths that, when passed to `finalise`, recover the V2-equivalent
+    // sibling-skip column. This test exercises the helper directly on
+    // a finished tape (snapshot before `finalise` over-writes anything).
+    let mut b = TapeBuilder::new();
+    b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
+    let bc = b.mark_children();
+    b.push_leaf(TapeKind::Span, 1, 2, 1, 0);
+    b.push_leaf(TapeKind::Span, 2, 3, 2, 0);
+    b.push_compound(TapeKind::Seq, bc, 1, 3, 0, 0);
+    b.push_leaf(TapeKind::Span, 3, 4, 3, 0);
+    let outer_children = TapeOffset(0);
+    b.push_compound(TapeKind::Rule, outer_children, 0, 4, 0, 0);
+    let tape = b.finish().unwrap();
+
+    // Re-derive frame_depth from the post-finish columns.
+    let depth = derive_frame_depth(tape.columns());
+    // Layout: 0:a(d=1), 1:b(d=2), 2:c(d=2), 3:(bc)(d=1), 4:d(d=1), 5:outer(d=0)
+    assert_eq!(depth, vec![1, 2, 2, 1, 1, 0]);
+}
+
+#[test]
+fn finalise_independently_reproduces_v2_via_helper() {
+    // Direct invocation of `finalise(columns, frame_depth)` on a
+    // freshly-derived `frame_depth` must produce the same `sib_skip`
+    // column as the V2 reference.
+    //
+    // Build a tape, snapshot its structural shape, zero out
+    // `sib_skip`, run `finalise`, and compare against V2.
+    let mut b = TapeBuilder::new();
+    b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
+    let bc = b.mark_children();
+    b.push_leaf(TapeKind::Span, 1, 2, 1, 0);
+    b.push_leaf(TapeKind::Span, 2, 3, 2, 0);
+    b.push_compound(TapeKind::Seq, bc, 1, 3, 0, 0);
+    b.push_leaf(TapeKind::Span, 3, 4, 3, 0);
+    let outer_children = TapeOffset(0);
+    b.push_compound(TapeKind::Rule, outer_children, 0, 4, 0, 0);
+    // `tape_snapshot()` clones columns WITHOUT running Stage-C, so
+    // `sib_skip` is still default-zero and `child_off` / `span_hi`
+    // hold the parser-written values. Perfect inputs for a direct
+    // `finalise()` call.
+    let snap = b.tape_snapshot();
+    let mut cols = bbnf_tape::Columns {
+        kinds: snap.columns().kinds.clone(),
+        flags: snap.columns().flags.clone(),
+        extra: snap.columns().extra.clone(),
+        span_lo: snap.columns().span_lo.clone(),
+        span_hi: snap.columns().span_hi.clone(),
+        sib_skip: vec![0; snap.len()],
+        child_off: snap.columns().child_off.clone(),
+        pay_narrow: snap.columns().pay_narrow.clone(),
+        pay_wide: snap.columns().pay_wide.clone(),
+        pay_agg: snap.columns().pay_agg.clone(),
+    };
+    let depth = derive_frame_depth(&cols);
+    finalise(&mut cols, &depth);
+
+    let (n, child_off, has_children) = snapshot_shape(&cols);
+    let v2 = reference_v2_sibling_skip(n, &child_off, &has_children);
+    assert_eq!(cols.sib_skip, v2, "direct finalise / V2 sib_skip mismatch");
+}

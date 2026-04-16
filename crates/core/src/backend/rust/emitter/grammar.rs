@@ -1,40 +1,28 @@
-//! Rule-level + grammar-level emission for the Rust backend under
-//! Tranche AC.2 tape-first.
+//! Grammar-level emission for the Rust backend under the AW-I
+//! DTA-wholesale dispatch.
 //!
-//! `emit_rule_function_impl` wraps a pre-compiled body expression
-//! in the rule's prelude + epilogue, dispatched on the rule's
-//! materialization class:
+//! Post-W4α the Rust backend emits no per-rule parse functions.
+//! `emit_rule_function_impl` is retained as an empty shim so the
+//! driver's call pipeline compiles while the sibling per-rule
+//! emitter modules (`alt.rs`, `seq.rs`, `repeat.rs`, etc.) are
+//! dismantled in W4β. The `parse()` entry point emitted by
+//! `emit_grammar_impl` dispatches through `dta_run_into` wholesale —
+//! the DTA walker (AW-I.W2.1) owns Seq / Literal / Regex / Ref /
+//! AltLinear-with-savepoint / Repeat with `lo..=hi` bounds /
+//! ShuntingYard and is the sole parse pathway.
 //!
-//! - `MustTape` — `mark_children` prelude + `push_compound`
-//!   epilogue.
-//! - `TapeSpanOnly` — `__span_lo` prelude + `push_leaf` epilogue.
-//! - `TransparentElide` — no function is emitted. The driver
-//!   inlines transparent bodies at every call site; this method
-//!   returns an empty token stream for them.
-//!
-//! `emit_grammar_impl` assembles the grammar-wide `impl` block:
-//! the grammar string array, the view types (from
-//! [`crate::backend::rust::view::generate_views`]), all rule
-//! functions, and a single public `parse(input)` entry point that
-//! constructs a [`::bbnf::runtime::Parsed`] from a finished tape.
+//! `materialization_for_rule_pub` is preserved because the driver's
+//! `pre_compile_rule_body` hook consults it to set up AM.3 tape
+//! surgery context; W4β will revisit once the surgery context falls
+//! out of use.
 
-use bbnf_ir::{GrammarIR, IrNode, IrRule, TypeDesc};
-use bbnf_ir::passes::{
-    is_kv_pair_shape, scalar_range_includes_sentinel, MaterializationClass, PayloadLayout,
-};
+use bbnf_ir::passes::MaterializationClass;
+use bbnf_ir::{GrammarIR, IrRule, TypeDesc};
 use proc_macro2::TokenStream;
-use quote::{format_ident, quote};
+use quote::quote;
 
 use crate::backend::driver::analysis::BackendAnalysis;
 
-use super::tape_prelude::{
-    classify_rule_route, emit_must_tape_aggregate_epilogue, emit_must_tape_aggregate_prelude,
-    emit_must_tape_epilogue,
-    emit_must_tape_prelude, emit_rule_signature, emit_tape_span_only_aggregate_epilogue,
-    emit_tape_span_only_aggregate_prelude, emit_tape_span_only_epilogue,
-    emit_tape_span_only_prelude, emit_tape_span_only_scalar_prelude,
-    emit_tape_span_only_scalar_epilogue,
-};
 use super::{RustEmitCtx, RustEmitter};
 
 impl RustEmitter {
@@ -125,252 +113,24 @@ impl RustEmitter {
         Self::materialization_for_rule(ir, rule)
     }
 
+    /// AW-I.W4α: per-rule function emission is a no-op.
+    ///
+    /// The Rust backend's `parse()` dispatches through the DTA
+    /// walker wholesale (see [`Self::emit_grammar_impl`]), so the
+    /// per-rule `__<name>` function bodies previously assembled here
+    /// are dead surface. The driver still calls into this method
+    /// once per rule; returning an empty token stream drops the
+    /// body without disturbing the call pipeline. W4β dismantles
+    /// the sibling emitter modules that fed this path.
     pub(super) fn emit_rule_function_impl(
         &mut self,
-        rule: &IrRule,
-        body: TokenStream,
-        sync_body: Option<TokenStream>,
-        ir: &GrammarIR,
-        ctx: &mut RustEmitCtx,
+        _rule: &IrRule,
+        _body: TokenStream,
+        _sync_body: Option<TokenStream>,
+        _ir: &GrammarIR,
+        _ctx: &mut RustEmitCtx,
     ) -> TokenStream {
-        let name = ir.get_string(rule.name).to_string();
-        let class = Self::materialization_for_rule(ir, rule);
-
-        // TransparentElide rules do not emit a function at all
-        // the driver inlines their body at every call site.
-        if class == MaterializationClass::TransparentElide {
-            return quote! {};
-        }
-
-        self.emit_tape_tier_rule(&name, rule, body, sync_body, ir, ctx, class)
-    }
-
-    /// Emit a Tape-tier (or Lazy-tier) rule: the standard prelude +
-    /// body + epilogue pattern from Tranche AC.2.
-    ///
-    /// AR.1.1: ALL rules stamp `rule.id as u8` into `variant_idx`
-    /// (rule identity). Alt-bodied rules additionally stamp
-    /// `__branch_idx` into `meta_idx` (branch identity); non-Alt
-    /// rules pass `0u8` as `meta_idx`.
-    ///
-    /// Tranche AM.3: for Alt-bodied `MustTape` rules, per-branch
-    /// tape surgery emits `push_leaf` or `mark_children` +
-    /// `push_compound` inside each branch arm. The shared epilogue
-    /// becomes a pass-through of the `Option<TapeOffset>` returned
-    /// by the branch body. Leaf branches (literals, regex, pure maps)
-    /// skip `mark_children` entirely.
-    fn emit_tape_tier_rule(
-        &mut self,
-        name: &str,
-        rule: &IrRule,
-        body: TokenStream,
-        sync_body: Option<TokenStream>,
-        ir: &GrammarIR,
-        ctx: &mut RustEmitCtx,
-        class: MaterializationClass,
-    ) -> TokenStream {
-        let is_alt_body = matches!(&rule.body, IrNode::Alt(_, _));
-        let rule_idx_u8 = Self::variant_idx(rule);
-
-        // AW.0.3: classify the rule's tape-routing path up front.
-        // Drives `if __has_payload` elision in the non-aggregate
-        // `MustTape` path (CompoundOnly rules drop the hedge) and
-        // informs the aggregate-path `push_leaf_with`-only vs
-        // hedged choice.
-        let route = classify_rule_route(rule, ir, class, ctx.payload_layout.as_ref());
-
-        // AW.0.8: for `u32`-typed payloads, probe the rule's value
-        // domain. Rules that could emit `u32::MAX` (CSS `namedColor`'s
-        // `white = 0xFFFFFFFFu32` being the known offender) route
-        // through `PayloadData::WideScalar` to avoid the sentinel
-        // collision with `TapeOffset::NONE`.
-        let u32_reaches_sentinel = scalar_range_includes_sentinel(rule, ir);
-
-        // AU.2.2: aggregate payload layout takes precedence over
-        // per-type payload locals. When `ctx.payload_layout.is_some()`
-        // the prelude reserves `__aggregate_buf` / `__has_payload`
-        // regardless of Alt-body shape; the Alt-aware variants layer
-        // the per-branch `__branch_idx` / `__has_children` locals on
-        // top so per-branch tape surgery still fires.
-        let (prelude, epilogue) = if let Some(layout) = ctx.payload_layout.as_ref() {
-            let kv_pair = ir
-                .types
-                .iter()
-                .find_map(|(rid, td)| (*rid == rule.id).then_some(td))
-                .is_some_and(|td| match td {
-                    TypeDesc::Tuple(fields) => is_kv_pair_shape(fields),
-                    _ => false,
-                });
-            if is_alt_body {
-                match class {
-                    MaterializationClass::MustTape => emit_alt_mustape_aggregate_prelude_epilogue(
-                        rule_idx_u8,
-                        layout,
-                        kv_pair,
-                    ),
-                    MaterializationClass::TapeSpanOnly => {
-                        emit_alt_span_only_aggregate_prelude_epilogue(
-                            rule_idx_u8,
-                            layout,
-                            kv_pair,
-                        )
-                    }
-                    MaterializationClass::TransparentElide => unreachable!(),
-                }
-            } else {
-                match class {
-                    MaterializationClass::MustTape => (
-                        emit_must_tape_aggregate_prelude(layout),
-                        emit_must_tape_aggregate_epilogue(layout, rule_idx_u8, kv_pair),
-                    ),
-                    MaterializationClass::TapeSpanOnly => (
-                        emit_tape_span_only_aggregate_prelude(layout),
-                        emit_tape_span_only_aggregate_epilogue(layout, rule_idx_u8, kv_pair),
-                    ),
-                    MaterializationClass::TransparentElide => unreachable!(),
-                }
-            }
-        } else if is_alt_body {
-            // AT.1: Alt-bodied rules use multi-type payload support.
-            // The prelude declares a `__payload_<T>` local for each
-            // distinct scalar type across branches, plus a
-            // `__payload_tag` discriminator for multi-type Alts.
-            match class {
-                MaterializationClass::MustTape => {
-                    emit_alt_mustape_prelude_epilogue(
-                        rule_idx_u8,
-                        &ctx.payload_types,
-                        u32_reaches_sentinel,
-                    )
-                }
-                MaterializationClass::TapeSpanOnly => {
-                    emit_alt_span_only_prelude_epilogue(
-                        rule_idx_u8,
-                        &ctx.payload_types,
-                        u32_reaches_sentinel,
-                    )
-                }
-                MaterializationClass::TransparentElide => unreachable!(),
-            }
-        } else {
-            match class {
-                MaterializationClass::MustTape => (
-                    emit_must_tape_prelude(route),
-                    emit_must_tape_epilogue(rule_idx_u8, route),
-                ),
-                MaterializationClass::TapeSpanOnly => {
-                    // Non-Alt rules have at most one payload type.
-                    match ctx.payload_types.first() {
-                        Some(td) if td.is_scalar_payload() => (
-                            emit_tape_span_only_scalar_prelude(td),
-                            emit_tape_span_only_scalar_epilogue(
-                                td,
-                                rule_idx_u8,
-                                u32_reaches_sentinel,
-                            ),
-                        ),
-                        _ => (
-                            emit_tape_span_only_prelude(),
-                            emit_tape_span_only_epilogue(rule_idx_u8),
-                        ),
-                    }
-                }
-                MaterializationClass::TransparentElide => unreachable!(),
-            }
-        };
-
-        let signature = emit_rule_signature(name);
-        let rule_debug = ir.debug_all || rule.meta.directives.debug;
-        let body_block = Self::wrap_body_in_rule_block(
-            body, &prelude, &epilogue, rule_debug, name,
-        );
-
-        let mut methods = Vec::new();
-        methods.push(quote! {
-            #signature {
-                #body_block
-            }
-        });
-
-        Self::maybe_emit_recover_fn(&mut methods, name, sync_body, ctx);
-        quote! { #(#methods)* }
-    }
-
-    /// Variant discriminator: the rule's index in ir.rules,
-    /// capped at u8::MAX.
-    fn variant_idx(rule: &IrRule) -> u8 {
-        let idx = rule.id as usize;
-        debug_assert!(idx <= u8::MAX as usize, "rule id overflows u8 variant_idx");
-        (idx & 0xFF) as u8
-    }
-
-    /// Wrap a body expression in the standard `'rule_blk` block with
-    /// optional debug tracing.
-    fn wrap_body_in_rule_block(
-        body: TokenStream,
-        prelude: &TokenStream,
-        epilogue: &TokenStream,
-        rule_debug: bool,
-        name: &str,
-    ) -> TokenStream {
-        if rule_debug {
-            let trace_entry = crate::backend::rust::trace::emit_trace_entry(name);
-            let trace_ident = syn::Ident::new("__trace_result", proc_macro2::Span::call_site());
-            let trace_exit = crate::backend::rust::trace::emit_trace_exit(name, &trace_ident);
-            quote! {
-                'rule_blk: {
-                    #prelude
-                    #trace_entry
-                    let #trace_ident: ::core::option::Option<::bbnf::runtime::tape::TapeOffset> =
-                        'trace_blk: {
-                            match ({ #body }) {
-                                Some(_) => (),
-                                None => break 'trace_blk None,
-                            }
-                            #epilogue
-                        };
-                    #trace_exit
-                    break 'rule_blk #trace_ident;
-                }
-            }
-        } else {
-            quote! {
-                'rule_blk: {
-                    #prelude
-                    match ({ #body }) {
-                        Some(_) => (),
-                        None => break 'rule_blk None,
-                    }
-                    #epilogue
-                }
-            }
-        }
-    }
-
-    /// Emit the `@recover` sync function if applicable.
-    fn maybe_emit_recover_fn(
-        methods: &mut Vec<TokenStream>,
-        name: &str,
-        sync_body: Option<TokenStream>,
-        ctx: &mut RustEmitCtx,
-    ) {
-        let has_recover = ctx.ir_ctx().parser_attrs.skip_recover;
-        if has_recover {
-            return;
-        }
-        if let Some(sync_expr) = sync_body {
-            let sync_ident = format_ident!("__sync_{}", name);
-            methods.push(quote! {
-                fn #sync_ident<'a>(
-                    state: &mut ::parse_that::ParserState<'a>,
-                ) -> ::core::option::Option<()> {
-                    match (#sync_expr) {
-                        Some(_) => Some(()),
-                        None => None,
-                    }
-                }
-            });
-        }
+        TokenStream::new()
     }
 
     pub(super) fn emit_type_definitions_impl(
@@ -428,36 +188,6 @@ impl RustEmitter {
         let visitor_kernels =
             super::visitor::emit_visitor_kernels(&profile.reorder_unroll_visitors);
 
-        // Root rule — the entry point for `parse(input)`. Pulled
-        // from `ir.entry`, which is set at lowering time and
-        // preserved through every IR pass. Fall back to the first
-        // non-transparent rule only as a defensive guard.
-        // The root rule is always ir.entry — the grammar's declared
-        // entry point. Even if it's transparent (e.g. JSON's `value`
-        // is an Alt of Refs), it must have a function because parse()
-        // calls it by name. compute_call_strategies forces DirectCall.
-        let root_rule_name = ir
-            .rules
-            .iter()
-            .find(|r| r.id == ir.entry)
-            .map(|r| ir.get_string(r.name))
-            .unwrap_or_else(|| {
-                let names: Vec<String> = ir
-                    .rules
-                    .iter()
-                    .map(|r| format!("{}{}", ir.get_string(r.name),
-                        if r.meta.is_transparent { "(T)" } else { "" }))
-                    .collect();
-                panic!(
-                    "tape-first emitter requires at least one non-transparent rule. \
-                     ir.entry={}, rule count={}, rules=[{}]",
-                    ir.entry,
-                    ir.rules.len(),
-                    names.join(", "),
-                )
-            });
-        let root_fn_ident = format_ident!("__{}", root_rule_name);
-
         // Debug trace depth counter (only emitted if any rule
         // uses @debug).
         let has_debug = ir.debug_all || ir.rules.iter().any(|r| r.meta.directives.debug);
@@ -469,62 +199,21 @@ impl RustEmitter {
 
         let extra = &self.extra_impl_methods;
 
-        // AU.6.2 (AV.1.3): derive the `TapeBuilder::with_capacity`
-        // reservation from the per-grammar `GRAMMAR_PROFILE`. The
-        // profile's `compounds_per_input_byte + leaves_per_input_byte`
-        // reproduces the pre-AV `PushFingerprint::capacity_ratio`
-        // exactly (AU.6.2 split per-class, AV.1.1 recombined in
-        // `GrammarProfile::capacity_for`); the reservation avoids
-        // the `_mi_heap_realloc_zero` / `RawVec::grow_one` path on
-        // first parse — under-allocating Sheets or CSS bootstrap
-        // triggers 10–22% of `parse_simple` samples on the realloc
-        // chain.
-        let with_capacity_expr = quote! {
-            GRAMMAR_PROFILE.capacity_for(input.len())
-        };
-
-        // AP.ws: trailing whitespace before EOF — use comment-aware
-        // kernel when the grammar declares a WhitespaceWithBlockComment
-        // @ws pattern, otherwise fall back to bare is_ascii_whitespace.
-        let trailing_ws = {
-            use parse_that::regex::classify::{RegexClass, classify_regex};
-            let ws_is_comment_aware = ir
-                .ws_pattern
-                .map(|sid| ir.get_string(sid))
-                .is_some_and(|pat| {
-                    matches!(classify_regex(pat), RegexClass::WhitespaceWithBlockComment)
-                });
-            if ws_is_comment_aware {
-                quote! {
-                    let _ = ::parse_that::scan_ws_block_comments(&mut state);
-                }
-            } else {
-                quote! {
-                    while state.offset < input.len()
-                        && input.as_bytes()[state.offset].is_ascii_whitespace()
-                    {
-                        state.offset += 1;
-                    }
-                }
-            }
-        };
-
-        // AW-I.W3: `parse()` now dispatches through `dta_run` wholesale.
-        // `parse_dta` retires — the DTA walker is feature-complete (AW-I.W2.1
-        // landed AltLinear savepoint / Repeat lo..=hi / ShuntingYard arms) and
-        // serves as the sole entry point. The per-rule `rule_functions`
-        // argument is intentionally unused here (the helpers still land in
-        // `rule_functions` upstream; W4 deletes the helper modules + the
-        // upstream call chain). The `trailing_ws`, `root_fn_ident`, and
-        // `with_capacity_expr` previously woven into the legacy body are no
-        // longer needed: `dta_run_into` owns EOF, root dispatch, and capacity
-        // derivation via `GRAMMAR_PROFILE.capacity_for`.
+        // AW-I.W3: `parse()` dispatches through `dta_run` wholesale.
+        // The per-rule `rule_functions` stream and the trailing_ws /
+        // root_fn_ident / with_capacity scaffolding previously woven
+        // into the legacy body are retired — the DTA walker owns EOF,
+        // root dispatch, and capacity derivation. `rule_functions` is
+        // intentionally accepted (the upstream pipeline still compiles
+        // per-rule fragments) and discarded here; W4β removes the
+        // upstream compilation step once the sibling emitter modules
+        // are deleted.
         //
-        // `DTA_SCANNER` is promoted to a module-level `const` singleton so
-        // `parse()` borrows a single shared scanner instead of stack-
-        // allocating one per call. The `DtaDfaScanner` struct is zero-size
-        // so `const` is canonical.
-        let _ = (rule_functions, root_fn_ident, trailing_ws, with_capacity_expr);
+        // `DTA_SCANNER` is promoted to a module-level `const` singleton
+        // so `parse()` borrows a single shared scanner instead of
+        // stack-allocating one per call. The `DtaDfaScanner` struct is
+        // zero-size so `const` is canonical.
+        let _ = rule_functions;
 
         quote! {
             use ::parse_that::*;
@@ -629,401 +318,4 @@ impl RustEmitter {
             }
         }
     }
-}
-
-/// AQ.6.A: emit the prelude + epilogue pair for an Alt-bodied
-/// `MustTape` rule, parameterized by the projected scalar payload
-/// type.
-///
-/// Per-branch tape surgery (AM.3) is layered on top of this: the Alt
-/// emitter sets `__has_children` / `__children` per arm; this pair
-/// just picks the right `push_leaf_with_<T>` for the leaf-branch
-// ── AT.1: Multi-type payload prelude/epilogue helpers ──────────────
-//
-// Supports zero, one, or many scalar payload types per Alt rule.
-// Single-type: direct `push_leaf_with_<T>` with `__has_payload` guard.
-// Multi-type: `__payload_tag` discriminator selects the right push in
-// the epilogue via a generated match arm per type.
-
-/// Emit `let mut __payload_<T>: T = init;` declarations for each type.
-fn emit_payload_declarations(types: &[TypeDesc]) -> TokenStream {
-    let mut decls = TokenStream::new();
-    for td in types {
-        if matches!(td, TypeDesc::Span) {
-            decls.extend(quote! {
-                let mut __payload_lo: u32 = 0;
-                let mut __payload_hi: u32 = 0;
-            });
-        } else {
-            let rust_ident = td.rust_ident().expect("scalar TypeDesc");
-            let payload_local = format_ident!("__payload_{}", rust_ident);
-            let payload_ty = format_ident!("{}", rust_ident);
-            let init = scalar_zero_init_token(td);
-            decls.extend(quote! {
-                let mut #payload_local: #payload_ty = #init;
-            });
-        }
-    }
-    if !types.is_empty() {
-        decls.extend(quote! { let mut __has_payload = false; });
-    }
-    if types.len() > 1 {
-        decls.extend(quote! { let mut __payload_tag: u8 = 0; });
-    }
-    decls
-}
-
-/// Emit the payload push expression for a single type.
-///
-/// AU.6.7: every scalar/Span push routes through `push_leaf_with` with
-/// a `PayloadData` constructed per the declared type. Inline-packed
-/// scalars (<= 4 bytes) use `PayloadData::InlineScalar`; 8-byte
-/// scalars (f64/i64/u64/Span) use `PayloadData::WideScalar` with the
-/// value's little-endian bits.
-fn emit_push_leaf_with(td: &TypeDesc, u32_reaches_sentinel: bool) -> TokenStream {
-    let payload_expr = emit_scalar_payload_data(td, u32_reaches_sentinel);
-    quote! {
-        ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
-            tape,
-            ::bbnf::runtime::tape::TapeKind::Span,
-            __span_lo,
-            state.offset as u32,
-            __variant_idx,
-            __branch_idx,
-            #payload_expr,
-        )
-    }
-}
-
-/// Emit the `PayloadData` expression for a scalar `TypeDesc`.
-///
-/// Inline scalars (<= 4 bytes) extend their bytes to a `u32` and use
-/// `PayloadData::InlineScalar`; wide scalars (f64/i64/u64/Span) use
-/// `PayloadData::WideScalar` with a u64 representation.
-///
-/// AW.0.8: `u32_reaches_sentinel` promotes `U32` rules whose value
-/// domain can touch `u32::MAX` to `WideScalar`. The sentinel
-/// collision is `u32::MAX == TapeOffset::NONE`; an inline slot
-/// storing that literal is indistinguishable from payload-absent.
-pub(super) fn emit_scalar_payload_data(td: &TypeDesc, u32_reaches_sentinel: bool) -> TokenStream {
-    if matches!(td, TypeDesc::Span) {
-        return quote! {
-            ::bbnf::runtime::tape::PayloadData::WideScalar(
-                (__payload_lo as u64) | ((__payload_hi as u64) << 32),
-            )
-        };
-    }
-    let rust_ident = td.rust_ident().expect("scalar TypeDesc");
-    let payload_local = format_ident!("__payload_{}", rust_ident);
-    match td {
-        TypeDesc::F64 => quote! {
-            ::bbnf::runtime::tape::PayloadData::WideScalar(#payload_local.to_bits())
-        },
-        TypeDesc::U64 => quote! {
-            ::bbnf::runtime::tape::PayloadData::WideScalar(#payload_local)
-        },
-        TypeDesc::I64 => quote! {
-            ::bbnf::runtime::tape::PayloadData::WideScalar(#payload_local as u64)
-        },
-        TypeDesc::Bool => quote! {
-            ::bbnf::runtime::tape::PayloadData::InlineScalar(#payload_local as u32)
-        },
-        TypeDesc::I8 => quote! {
-            ::bbnf::runtime::tape::PayloadData::InlineScalar(
-                u32::from_le_bytes([#payload_local as u8, 0, 0, 0]),
-            )
-        },
-        TypeDesc::U8 => quote! {
-            ::bbnf::runtime::tape::PayloadData::InlineScalar(#payload_local as u32)
-        },
-        TypeDesc::I16 => quote! {
-            ::bbnf::runtime::tape::PayloadData::InlineScalar({
-                let __b = (#payload_local as i16).to_le_bytes();
-                u32::from_le_bytes([__b[0], __b[1], 0, 0])
-            })
-        },
-        TypeDesc::U16 => quote! {
-            ::bbnf::runtime::tape::PayloadData::InlineScalar(#payload_local as u32)
-        },
-        TypeDesc::I32 => quote! {
-            ::bbnf::runtime::tape::PayloadData::InlineScalar(#payload_local as u32)
-        },
-        TypeDesc::U32 => {
-            if u32_reaches_sentinel {
-                quote! {
-                    ::bbnf::runtime::tape::PayloadData::WideScalar(#payload_local as u64)
-                }
-            } else {
-                quote! {
-                    ::bbnf::runtime::tape::PayloadData::InlineScalar(#payload_local)
-                }
-            }
-        }
-        _ => unreachable!("emit_scalar_payload_data: non-scalar TypeDesc {:?}", td),
-    }
-}
-
-/// Emit the payload epilogue: either direct push (single type) or
-/// match on `__payload_tag` (multi-type).
-fn emit_payload_epilogue(types: &[TypeDesc], u32_reaches_sentinel: bool) -> TokenStream {
-    let push_leaf = quote! {
-        ::bbnf::runtime::tape::TapeBuilder::push_leaf(
-            tape,
-            ::bbnf::runtime::tape::TapeKind::Span,
-            __span_lo,
-            state.offset as u32,
-            __variant_idx,
-            __branch_idx,
-        )
-    };
-    match types.len() {
-        0 => quote! { Some(#push_leaf) },
-        1 => {
-            let push_with = emit_push_leaf_with(&types[0], u32_reaches_sentinel);
-            quote! {
-                if __has_payload {
-                    Some(#push_with)
-                } else {
-                    Some(#push_leaf)
-                }
-            }
-        }
-        _ => {
-            // Multi-type: match on __payload_tag.
-            let arms: Vec<TokenStream> = types
-                .iter()
-                .enumerate()
-                .map(|(i, td)| {
-                    let tag = (i + 1) as u8;
-                    let push_with = emit_push_leaf_with(td, u32_reaches_sentinel);
-                    quote! { #tag => Some(#push_with), }
-                })
-                .collect();
-            quote! {
-                match __payload_tag {
-                    #(#arms)*
-                    _ => Some(#push_leaf),
-                }
-            }
-        }
-    }
-}
-
-/// AT.1: emit prelude + epilogue for an Alt-bodied `MustTape` rule.
-fn emit_alt_mustape_prelude_epilogue(
-    rule_idx_u8: u8,
-    payload_types: &[TypeDesc],
-    u32_reaches_sentinel: bool,
-) -> (TokenStream, TokenStream) {
-    let variant_lit = rule_idx_u8;
-    let payload_decls = emit_payload_declarations(payload_types);
-    let payload_push = emit_payload_epilogue(payload_types, u32_reaches_sentinel);
-    (
-        quote! {
-            let __span_lo = state.offset as u32;
-            let __variant_idx: u8 = #variant_lit;
-            let mut __branch_idx: u8 = 0;
-            let mut __has_children = false;
-            let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
-            #payload_decls
-        },
-        quote! {
-            if __has_children {
-                Some(::bbnf::runtime::tape::TapeBuilder::push_compound(
-                    tape,
-                    ::bbnf::runtime::tape::TapeKind::Rule,
-                    __children,
-                    __span_lo,
-                    state.offset as u32,
-                    __variant_idx,
-                    __branch_idx,
-                ))
-            } else {
-                #payload_push
-            }
-        },
-    )
-}
-
-/// AT.1: emit prelude + epilogue for an Alt-bodied `TapeSpanOnly` rule.
-fn emit_alt_span_only_prelude_epilogue(
-    rule_idx_u8: u8,
-    payload_types: &[TypeDesc],
-    u32_reaches_sentinel: bool,
-) -> (TokenStream, TokenStream) {
-    let variant_lit = rule_idx_u8;
-    let payload_decls = emit_payload_declarations(payload_types);
-    let payload_push = emit_payload_epilogue(payload_types, u32_reaches_sentinel);
-    (
-        quote! {
-            let __span_lo = state.offset as u32;
-            let __variant_idx: u8 = #variant_lit;
-            let mut __branch_idx: u8 = 0;
-            #payload_decls
-        },
-        payload_push,
-    )
-}
-
-/// AU.2.2: emit prelude + epilogue for an Alt-bodied `MustTape` rule
-/// whose projected type has an aggregate payload layout.
-///
-/// Reconciles the Alt per-branch tape surgery (`__has_children`,
-/// `__children`, `__branch_idx`) with the aggregate path the non-Alt
-/// emitter already lays down (`__aggregate_buf`, `__has_payload`).
-/// When a branch writes into `__aggregate_buf` via
-/// `aggregate_constant_setter`, the epilogue emits `push_leaf_with`
-/// + `PayloadData::Aggregate`. When a branch's children mark the
-/// record as compound (e.g. a composite-bodied branch), the
-/// epilogue falls back to `push_compound`. When neither fires, the
-/// epilogue emits a plain `push_leaf` spanning the Alt's byte range.
-fn emit_alt_mustape_aggregate_prelude_epilogue(
-    rule_idx_u8: u8,
-    layout: &PayloadLayout,
-    kv_pair: bool,
-) -> (TokenStream, TokenStream) {
-    let variant_lit = rule_idx_u8;
-    let total_bytes = layout.total_bytes as usize;
-    let tape_kind_aggregate = if kv_pair {
-        quote! { ::bbnf::runtime::tape::TapeKind::KvPair }
-    } else {
-        quote! { ::bbnf::runtime::tape::TapeKind::Span }
-    };
-    // AW.0.4: size the stack buffer to the layout's actual
-    // `total_bytes`, not a fixed 16 B. CSS unit rules drop to
-    // `[u8; 1]`; bare-Span rules drop to `[u8; 8]`; colour-function
-    // rules widen to `[u8; 40]`. Large (> 16 B) aggregates route
-    // through `PayloadData::LargeAggregate`, so the buffer width
-    // sets both stack footprint and LargeAggregate payload width.
-    let buf_bytes = aggregate_alt_buffer_bytes(layout);
-    let prelude = quote! {
-        let __span_lo = state.offset as u32;
-        let __variant_idx: u8 = #variant_lit;
-        let mut __branch_idx: u8 = 0;
-        let mut __has_children = false;
-        let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
-        let mut __aggregate_buf: [u8; #buf_bytes] = [0u8; #buf_bytes];
-        let mut __has_payload = false;
-    };
-    let epilogue = quote! {
-        if __has_children {
-            Some(::bbnf::runtime::tape::TapeBuilder::push_compound(
-                tape,
-                ::bbnf::runtime::tape::TapeKind::Rule,
-                __children,
-                __span_lo,
-                state.offset as u32,
-                __variant_idx,
-                __branch_idx,
-            ))
-        } else if __has_payload {
-            Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
-                tape,
-                #tape_kind_aggregate,
-                __span_lo,
-                state.offset as u32,
-                __variant_idx,
-                __branch_idx,
-                ::bbnf::runtime::tape::PayloadData::Aggregate(
-                    &__aggregate_buf[..#total_bytes],
-                ),
-            ))
-        } else {
-            Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                tape,
-                ::bbnf::runtime::tape::TapeKind::Span,
-                __span_lo,
-                state.offset as u32,
-                __variant_idx,
-                __branch_idx,
-            ))
-        }
-    };
-    (prelude, epilogue)
-}
-
-/// AU.2.2: emit prelude + epilogue for an Alt-bodied `TapeSpanOnly`
-/// rule whose projected type has an aggregate payload layout.
-///
-/// Like the `MustTape` variant but without the children run — Alt
-/// branches that need to push compound records do so independently,
-/// and this prelude reserves only the aggregate-buffer locals plus
-/// the Alt's `__branch_idx` discriminator.
-fn emit_alt_span_only_aggregate_prelude_epilogue(
-    rule_idx_u8: u8,
-    layout: &PayloadLayout,
-    kv_pair: bool,
-) -> (TokenStream, TokenStream) {
-    let variant_lit = rule_idx_u8;
-    let total_bytes = layout.total_bytes as usize;
-    let tape_kind_aggregate = if kv_pair {
-        quote! { ::bbnf::runtime::tape::TapeKind::KvPair }
-    } else {
-        quote! { ::bbnf::runtime::tape::TapeKind::Span }
-    };
-    // AW.0.4: layout-driven buffer width (see sibling MustTape
-    // helper for rationale).
-    let buf_bytes = aggregate_alt_buffer_bytes(layout);
-    let prelude = quote! {
-        let __span_lo = state.offset as u32;
-        let __variant_idx: u8 = #variant_lit;
-        let mut __branch_idx: u8 = 0;
-        let mut __aggregate_buf: [u8; #buf_bytes] = [0u8; #buf_bytes];
-        let mut __has_payload = false;
-    };
-    let epilogue = quote! {
-        if __has_payload {
-            Some(::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
-                tape,
-                #tape_kind_aggregate,
-                __span_lo,
-                state.offset as u32,
-                __variant_idx,
-                __branch_idx,
-                ::bbnf::runtime::tape::PayloadData::Aggregate(
-                    &__aggregate_buf[..#total_bytes],
-                ),
-            ))
-        } else {
-            Some(::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                tape,
-                ::bbnf::runtime::tape::TapeKind::Span,
-                __span_lo,
-                state.offset as u32,
-                __variant_idx,
-                __branch_idx,
-            ))
-        }
-    };
-    (prelude, epilogue)
-}
-
-fn scalar_zero_init_token(td: &TypeDesc) -> TokenStream {
-    match td {
-        TypeDesc::F64 => quote! { 0.0 },
-        TypeDesc::Bool => quote! { false },
-        _ => quote! { 0 },
-    }
-}
-
-/// AW.0.4: stack buffer width for Alt-aggregate preludes.
-///
-/// Mirrors `tape_prelude::aggregate_buffer_bytes` but lives on the
-/// grammar-side Alt helpers. Layouts ≤ `MAX_INLINE_AGGREGATE_BYTES`
-/// (16) reserve exactly `total_bytes` (aligned up to 1 — the
-/// buffer only needs to cover the layout's actual field run);
-/// wider layouts (colour-function aggregates at 33–40 B) widen to
-/// `total_bytes` so the `LargeAggregate` commit has room. The
-/// earlier fixed `[u8; 16]` over-allocated CSS unit rules (1-byte
-/// payload) by 15 B per frame; stacked across nested rules the
-/// D-cache pressure was meaningful.
-fn aggregate_alt_buffer_bytes(layout: &PayloadLayout) -> usize {
-    // Match the non-Alt aggregate helper's invariant: buffers never
-    // shrink below a 1-byte minimum (zero-byte types never admit a
-    // payload layout). No upper cap — `LargeAggregate` rules widen
-    // naturally. The earlier 16 B floor is gone: the tape codegen
-    // only reads `..total_bytes` anyway, so a 1-byte `[u8; 1]` is
-    // sufficient for a single-u8 layout.
-    let total = layout.total_bytes as usize;
-    total.max(1)
 }

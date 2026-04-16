@@ -550,7 +550,34 @@ fn dta_run_core(
         s
     };
 
+    // AW-I.W4ε: bootstrap ws-trim fallback.
+    //
+    // The W3.2 DTA lifter silently stripped `IrNode::OptionalWhitespace`
+    // from the IR — the W4γ.2 lifter fixed this by emitting explicit
+    // `DtaState::WsTrim` states, but the checked-in `generated.rs` was
+    // emitted under the pre-W4γ.2 lifter. Until the next regen produces
+    // explicit WsTrim states the driver implicitly trims ASCII
+    // whitespace at rule-entry dispatch boundaries (grammar-semantic
+    // token gaps). Post-regen generated.rs that has explicit WsTrim
+    // states is unaffected — the implicit trim is idempotent at
+    // positions where ws has already been consumed.
+    let ws_fallback = table.states.iter().all(|s| !matches!(s, DtaState::WsTrim { .. }));
+
+    if ws_fallback {
+        trim_ascii_ws(input, &mut pos);
+    }
+
     loop {
+        if ws_fallback {
+            // Idempotent fallback: trim ASCII ws before every
+            // dispatch so the stale generated.rs (without explicit
+            // `WsTrim` states) still handles the bbnf grammar's
+            // `?w` gaps between atoms. Safe for post-regen
+            // generated.rs — `WsTrim` semantics are idempotent,
+            // so dispatching `WsTrim` at an already-trimmed
+            // position is a no-op.
+            trim_ascii_ws(input, &mut pos);
+        }
         match dispatch_one(
             table, input, scanner, columns, psi, frame_depth, &mut stack,
             state, &mut pos,
@@ -569,10 +596,27 @@ fn dta_run_core(
             Err(e) => return Err(e),
         }
     }
+    if ws_fallback {
+        trim_ascii_ws(input, &mut pos);
+    }
     if (pos as usize) < input.len() {
         return Err(DtaError::UnexpectedEnd { offset: pos });
     }
     Ok(TapeOffset(root_rec))
+}
+
+/// AW-I.W4ε bootstrap fallback: trim ASCII whitespace in-place at
+/// `*pos`. Mirrors `DtaState::WsTrim { pattern: None }` semantics.
+#[inline]
+fn trim_ascii_ws(input: &[u8], pos: &mut u32) {
+    let mut p = *pos as usize;
+    while let Some(&b) = input.get(p) {
+        match b {
+            b' ' | b'\t' | b'\n' | b'\r' => p += 1,
+            _ => break,
+        }
+    }
+    *pos = p as u32;
 }
 
 /// One step of the walker's main loop.

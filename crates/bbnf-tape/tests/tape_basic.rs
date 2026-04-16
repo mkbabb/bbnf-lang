@@ -2099,7 +2099,6 @@ fn shape_ref_dict_idx_boundary() {
 /// accessor must return offset 1 without entering the backward walk.
 #[test]
 fn cursor_child_zero_is_o1_under_preorder() {
-    use bbnf_tape::driver::dta_run;
     use bbnf_tape::dta::{
         DtaFrameKind, DtaRuleEntry, DtaRuleId, DtaState, DtaStateId, DtaTable,
     };

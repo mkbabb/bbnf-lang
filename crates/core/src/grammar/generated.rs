@@ -27093,6 +27093,16 @@ mod __bbnfbootstrap_emit_impl {
         }
         /// Parse an input string and return a zero-copy
         /// `Parsed<'_, Self>` that borrows the input directly.
+        ///
+        /// AW.1.2: the legacy fn-per-rule path remains the
+        /// primary parser during the W1 transition — the DTA
+        /// walker's Alt / Repeat / ShuntingYard arms are
+        /// partial and would regress most grammars if called
+        /// directly. [`Self::parse_dta`] exposes the DTA
+        /// entry for grammars whose hot path fits the walker's
+        /// current feature set (BBNF bootstrap); once the
+        /// walker is feature-complete, `parse` will call
+        /// `dta_run` wholesale and `parse_dta` retires.
         pub fn parse(
             input: &str,
         ) -> ::core::result::Result<
@@ -27123,6 +27133,80 @@ mod __bbnfbootstrap_emit_impl {
             ::core::result::Result::Ok(
                 ::bbnf::runtime::Parsed::new(tape, input, root_off),
             )
+        }
+        /// AW.1.2 — Parse via the DTA stage-A walker.
+        ///
+        /// Drives `DTA_TABLE` through `bbnf_tape::dta_run`,
+        /// writing records into the builder's columns and
+        /// stamping `frame_depth` inline so `finish()` skips
+        /// the `derive_frame_depth` reconstruction pass.
+        ///
+        /// This entry point is emitted alongside [`Self::parse`]
+        /// during AW.1.2's transitional window. The DTA
+        /// walker's Alt / Repeat / ShuntingYard arms are
+        /// partial at AW.1.2 — they succeed on grammars whose
+        /// hot path is pure Seq/Literal/Regex/Ref and return
+        /// `DtaError` on everything else. `parse()` stays the
+        /// correctness default until the walker is feature-
+        /// complete (AW.1.3 deletion of per-rule fns switches
+        /// `parse` to call `dta_run` wholesale).
+        pub fn parse_dta(
+            input: &str,
+        ) -> ::core::result::Result<
+            ::bbnf::runtime::Parsed<'_, Self>,
+            ::bbnf::runtime::ParseErr,
+        > {
+            let mut builder = ::bbnf::runtime::tape::TapeBuilder::with_capacity(
+                GRAMMAR_PROFILE.capacity_for(input.len()),
+            );
+            builder.enable_inline_frame_depth();
+            let mut psi = psi_with_capacity(input.len());
+            let scanner = DtaDfaScanner;
+            let root_off = builder
+                .dta_run_into(&DTA_TABLE, input.as_bytes(), &scanner, &mut psi)
+                .map_err(|e| match e {
+                    ::bbnf::runtime::tape::DtaError::Syntax { offset, .. } => {
+                        ::bbnf::runtime::ParseErr::Syntax {
+                            offset,
+                            rule: None,
+                        }
+                    }
+                    ::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset } => {
+                        ::bbnf::runtime::ParseErr::Syntax {
+                            offset,
+                            rule: None,
+                        }
+                    }
+                    ::bbnf::runtime::tape::DtaError::InvalidState { .. } => {
+                        ::bbnf::runtime::ParseErr::Syntax {
+                            offset: 0,
+                            rule: None,
+                        }
+                    }
+                })?;
+            psi.fill_columns(input.as_bytes(), builder.columns_mut(), &GRAMMAR_PROFILE);
+            let tape = builder.finish().map_err(::bbnf::runtime::ParseErr::Tape)?;
+            ::core::result::Result::Ok(
+                ::bbnf::runtime::Parsed::new(tape, input, root_off),
+            )
+        }
+    }
+    /// DTA regex-scanner adapter — consults parse-that's
+    /// cached DFA registry to match a regex pattern at
+    /// `input[offset..]`.
+    ///
+    /// One shared instance per grammar (it holds no state);
+    /// the DTA driver's [`dta_run`] takes it by `&dyn`.
+    struct DtaDfaScanner;
+    impl ::bbnf::runtime::tape::RegexScanner for DtaDfaScanner {
+        fn scan(
+            &self,
+            pattern: &str,
+            input: &[u8],
+            offset: usize,
+        ) -> ::core::option::Option<u32> {
+            let dfa = ::parse_that::cached_dfa(pattern);
+            dfa.find_at(input, offset).map(|end| (end - offset) as u32)
         }
     }
     impl<'p> identifierView<'p> {

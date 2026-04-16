@@ -79,6 +79,14 @@ fn main() {
             for (name, _) in parsed_grammar.rules.iter().take(15) {
                 println!("  rule: {}", name);
             }
+            for imp in &parsed_grammar.imports {
+                println!("  import: path={:?}, items={:?}", imp.path.as_ref(),
+                    imp.items.as_ref().map(|v| v.iter().map(|n| n.name.as_ref().to_string()).collect::<Vec<_>>()));
+            }
+            for p in &parsed_grammar.pretties {
+                println!("  pretty: rule={:?}, hints={:?}", p.rule_name.as_ref(),
+                    p.hints.iter().map(|h| h.as_ref().to_string()).collect::<Vec<_>>());
+            }
             for d in &parsed_grammar.debug_rules {
                 println!("  debug: {}", d);
             }

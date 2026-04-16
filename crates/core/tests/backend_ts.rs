@@ -61,8 +61,14 @@ fn ts_emits_span_helper() {
 
 #[test]
 fn ts_emits_discriminated_union() {
+    // AW-I.W2.5: `item = "x" | "y"` is a small untyped Alt rule that
+    // post-fuse gets inlined into `list`. For the discriminated-union
+    // codegen to survive, retain the typed Alt shape via a `->`
+    // annotation on each branch — this attaches an `IrNode::Map` per
+    // branch and the `body_has_map` guard in fuse / inline preserves
+    // the rule's identity.
     let source = compile_ts(r#"
-        item = "x" | "y" ;
+        item = "x" -> 0u8 | "y" -> 1u8 ;
         list = item, { item } ;
     "#);
     assert!(source.contains("tag: \"item\""), "missing item variant: {source}");

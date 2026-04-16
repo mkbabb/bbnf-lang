@@ -254,8 +254,15 @@ fn ts_backend_produces_valid_structure() {
 
 #[test]
 fn ts_backend_emits_discriminated_union() {
+    // AW-I.W2.5: typed discriminants (`-> 0u8`/`-> 1u8`) attach an
+    // `IrNode::Map` per branch; the `body_has_map` guard in
+    // fuse / inline preserves the rule identity across the structural
+    // normaliser loop, so the TS backend emits the discriminated
+    // union variant for `item`. Without the typed annotations a small
+    // untyped Alt rule at single-use reference count would inline
+    // into its caller (`list`) and the union variant would vanish.
     let grammar = r#"
-        item = "x" | "y" ;
+        item = "x" -> 0u8 | "y" -> 1u8 ;
         list = item, { item } ;
     "#;
 

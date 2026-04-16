@@ -248,20 +248,40 @@ fn fold_value_chain<'a>(
 fn collect_chain_operands<'a>(
     node: BbnfBootstrapNodeView<'a>,
 ) -> Vec<BbnfBootstrapNodeView<'a>> {
+    use ::bbnf::runtime::tape::TapeKind;
     let mut children = node.children();
     let Some(first) = children.next() else {
         return Vec::new();
     };
     // The remaining children are either zero (single-operand
-    // chain), one Repeat compound (structural mode), or multiple
-    // flat compounds (non-structural mode where the optimizer
-    // inlined the Repeat).
+    // chain), one `Repeat` compound (fn-per-rule structural mode),
+    // or — under DTA — one `Rule` compound that's actually the
+    // Repeat frame (the walker emits `frame_to_tape_kind(Repeat)
+    // == Rule` per the AW-I substrate). Peel a single trailing
+    // compound child whose children are the iteration operands.
+    //
+    // Filter empty-span operands — an empty Rule compound with a
+    // sentinel rule_kind surfaces for zero-iteration Repeats under
+    // DTA, and those carry no operand data.
     let mut operands = vec![first];
     let rest: Vec<BbnfBootstrapNodeView<'a>> = children.collect();
-    if rest.len() == 1 && rest[0].kind() == ::bbnf::runtime::tape::TapeKind::Repeat {
-        operands.extend(rest[0].children());
+    let is_iteration_wrapper = |c: &BbnfBootstrapNodeView<'a>| {
+        matches!(c.kind(), TapeKind::Repeat | TapeKind::Rule)
+    };
+    if rest.len() == 1 && is_iteration_wrapper(&rest[0]) {
+        for child in rest[0].children() {
+            let (lo, hi) = child.span();
+            if hi > lo {
+                operands.push(child);
+            }
+        }
     } else {
-        operands.extend(rest);
+        for child in rest {
+            let (lo, hi) = child.span();
+            if hi > lo {
+                operands.push(child);
+            }
+        }
     }
     operands
 }

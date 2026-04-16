@@ -30,7 +30,9 @@ use parse_that::regex::classify::{RegexClass, classify_regex};
 use crate::grammar::generated::{BbnfBootstrapNodeView, BbnfBootstrapRuleKind};
 
 use super::LowerCtx;
-use super::tape_walk::{find_child_by_kind, iter_rep_children, peel_transparent};
+use super::tape_walk::{
+    find_child_by_kind, find_descendant_by_kind, iter_rep_children, peel_transparent,
+};
 use super::value_expr::{
     deep_unwrap_value, extract_value_func_name, is_type_name, lower_value_expr,
     split_numeric_suffix, unwrap_value_ident_str,
@@ -603,37 +605,51 @@ fn lower_mapped_factor<'a>(
 fn find_value_expr_child<'a>(
     node: BbnfBootstrapNodeView<'a>,
 ) -> Option<BbnfBootstrapNodeView<'a>> {
-    // Search for a value-expression-rooted child. The whitelist is
-    // the closed vocabulary of value-layer rule_kinds — every one
-    // of them belongs to the value sub-grammar and is a valid root
-    // for `lower_value_expr` downstream.
-    for c in node.children() {
-        match c.rule_kind() {
-            BbnfBootstrapRuleKind::value_expr
-            | BbnfBootstrapRuleKind::value_or
-            | BbnfBootstrapRuleKind::value_and
-            | BbnfBootstrapRuleKind::value_cmp
-            | BbnfBootstrapRuleKind::value_add
-            | BbnfBootstrapRuleKind::value_mul
-            | BbnfBootstrapRuleKind::value_unary
-            | BbnfBootstrapRuleKind::value_atom
-            | BbnfBootstrapRuleKind::value_fn_call
-            | BbnfBootstrapRuleKind::value_path
-            | BbnfBootstrapRuleKind::value_ident
-            | BbnfBootstrapRuleKind::value_input
-            | BbnfBootstrapRuleKind::value_closure
-            | BbnfBootstrapRuleKind::int_lit
-            | BbnfBootstrapRuleKind::float_lit
-            | BbnfBootstrapRuleKind::bool_lit
-            | BbnfBootstrapRuleKind::string_lit => return Some(c),
-            _ => {
-                // Recurse into single-child wrapper compounds (the
-                // mapping's inner Seq may push its own compound
-                // before reaching the value_expr).
-                if let Some(found) = find_value_expr_child(c) {
-                    return Some(found);
-                }
-            }
+    // Outermost-first descendant search. Each call to
+    // `find_descendant_by_kind` returns the first occurrence in
+    // document order, so the lookups run from the outermost class
+    // (`value_expr`) down through each precedence wrapper to the
+    // inlined atoms. First hit wins.
+    //
+    // Under DTA, structurally-anonymous groupings (the mapping's
+    // `( "->" ?w , ( value_expr , ... ) )` parent) emit Seq compounds
+    // whose `variant_idx` was never stamped by a `DtaState::Ref`
+    // dispatch — they surface via the `int_lit`/`Unknown` sentinel on
+    // `rule_kind()`. Iterating direct children and admitting the
+    // whole value-layer set (including `int_lit` for the real literal
+    // leaf case) would return the sentinel Seq before ever reaching
+    // the real `value_expr` inside. Targeting specific kinds in
+    // outermost-first priority order avoids the sentinel trap — no
+    // descendant of a mapping Seq has `rule_kind == value_expr`
+    // unless it's a genuine `value_expr` record.
+    const OUTER_KINDS: &[BbnfBootstrapRuleKind] = &[
+        BbnfBootstrapRuleKind::value_expr,
+        BbnfBootstrapRuleKind::value_closure,
+        BbnfBootstrapRuleKind::value_or,
+        BbnfBootstrapRuleKind::value_and,
+        BbnfBootstrapRuleKind::value_cmp,
+        BbnfBootstrapRuleKind::value_add,
+        BbnfBootstrapRuleKind::value_mul,
+        BbnfBootstrapRuleKind::value_unary,
+        BbnfBootstrapRuleKind::value_atom,
+        BbnfBootstrapRuleKind::value_fn_call,
+        BbnfBootstrapRuleKind::value_path,
+        BbnfBootstrapRuleKind::value_input,
+        BbnfBootstrapRuleKind::value_ident,
+        BbnfBootstrapRuleKind::float_lit,
+        BbnfBootstrapRuleKind::bool_lit,
+        BbnfBootstrapRuleKind::string_lit,
+        // `int_lit` goes last — real int_lit leaves carry their
+        // numeric literal span; if a sentinel-tagged Seq wrapper also
+        // carries `int_lit` its span will overlap (or exceed) a real
+        // value_expr descendant, which the outermost lookups above
+        // resolve first.
+        BbnfBootstrapRuleKind::int_lit,
+    ];
+
+    for &kind in OUTER_KINDS {
+        if let Some(v) = find_descendant_by_kind(node, kind) {
+            return Some(v);
         }
     }
     None
@@ -1160,28 +1176,82 @@ fn lower_grouped_term<'a>(
 }
 
 /// Locate the substantive inner child of a grouped term compound —
-/// i.e. everything that is **not** one of the delimiter leaves pushed
-/// for `(` / `)` / `[` / `]` / `{` / `}` / `@{`.
+/// the `rhs` (or collapsed descendant) expression between the
+/// `(...)` / `[...]` / `{...}` / `@{...}` delimiters.
 ///
-/// Delimiters surface as `TapeKind::Literal` / `TapeKind::Span`
-/// records whose span is the single delimiter byte. The inner
-/// expression is always a `TapeKind::Rule` or `TapeKind::Repeat` /
-/// `TapeKind::Seq` compound with a non-empty span.
+/// Under DTA the walker emits the opening and closing delimiters
+/// as `TapeKind::Literal` / `Span` leaves alongside a Seq compound
+/// that carries the body's semantic children. Fn-per-rule emission
+/// placed the body compound directly as a child of the grouped
+/// term; DTA's structural lifter wraps it one Seq deeper, so a
+/// direct-children scan misses the inner expression.
+///
+/// Strategy (in order):
+///
+/// 1. **Primary**: `find_descendant_by_kind` for each expression-
+///    layer rule kind in outermost-first order (`rhs`, `alternation`,
+///    `concatenation`, `binary_factor`, `mapped_factor`, `factor`,
+///    `term`, `closure`). First match wins — the outermost class
+///    that surfaces in the descendants is the root of the inner
+///    subtree. Returning at the first hit avoids picking a nested
+///    `term` when the body is a multi-branch alternation.
+/// 2. **Fallback**: iterate descendants in document order; stop at
+///    the first compound whose span is non-empty and whose
+///    `rule_kind()` is a body-expression class (the same set as
+///    above). Handles tape shapes where the outermost wrapper was
+///    inlined away by the lifter.
+///
+/// Bracket Literal leaves are skipped implicitly — their `rule_kind`
+/// is not in the expression-layer set.
 fn find_inner_expression<'a>(
     node: BbnfBootstrapNodeView<'a>,
 ) -> Option<BbnfBootstrapNodeView<'a>> {
-    use ::bbnf::runtime::tape::TapeKind;
-    for child in node.children() {
-        match child.kind() {
-            TapeKind::Rule | TapeKind::Repeat | TapeKind::Seq => {
-                let (lo, hi) = child.span();
-                if hi > lo {
-                    return Some(child);
-                }
+    // Outermost-first: a nested `term` inside a multi-branch
+    // alternation must not pre-empt the alternation itself.
+    const EXPRESSION_KINDS: &[BbnfBootstrapRuleKind] = &[
+        BbnfBootstrapRuleKind::rhs,
+        BbnfBootstrapRuleKind::closure,
+        BbnfBootstrapRuleKind::alternation,
+        BbnfBootstrapRuleKind::concatenation,
+        BbnfBootstrapRuleKind::binary_factor,
+        BbnfBootstrapRuleKind::mapped_factor,
+        BbnfBootstrapRuleKind::factor,
+        BbnfBootstrapRuleKind::term,
+    ];
+
+    for &kind in EXPRESSION_KINDS {
+        if let Some(v) = find_descendant_by_kind(node, kind) {
+            let (lo, hi) = v.span();
+            if hi > lo {
+                return Some(v);
             }
-            // Literal / Span / Regex / Epsilon — delimiters or empty
-            // placeholders, skip.
-            _ => continue,
+        }
+    }
+
+    // Fallback: document-order descent looking for any compound
+    // with an expression-layer rule_kind (covers tape shapes the
+    // outermost-first scan missed — e.g. if the lifter inlined
+    // every layer down to an alternation sub-branch without an
+    // `alternation` kind surviving).
+    find_body_expression_descendant(node, EXPRESSION_KINDS)
+}
+
+/// Document-order descent helper — returns the first compound under
+/// `view` (inclusive) whose `rule_kind()` is in `kinds` and whose
+/// span is non-empty. Used as the fallback arm of
+/// [`find_inner_expression`].
+fn find_body_expression_descendant<'a>(
+    view: BbnfBootstrapNodeView<'a>,
+    kinds: &[BbnfBootstrapRuleKind],
+) -> Option<BbnfBootstrapNodeView<'a>> {
+    let kind = view.rule_kind();
+    let (lo, hi) = view.span();
+    if hi > lo && kinds.contains(&kind) {
+        return Some(view);
+    }
+    for child in view.children() {
+        if let Some(found) = find_body_expression_descendant(child, kinds) {
+            return Some(found);
         }
     }
     None

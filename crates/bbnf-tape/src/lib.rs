@@ -53,6 +53,7 @@ pub mod finaliser;
 pub mod kind;
 pub mod profile;
 pub mod psi;
+pub mod shape_dict;
 pub mod tape;
 
 pub use builder::{PayloadData, TapeBuildError, TapeBuilder};
@@ -68,6 +69,7 @@ pub use profile::{
     BranchPrior, ColumnId, GrammarProfile, KeywordTable, RuleId, ShapeEntry, VisitorId,
 };
 pub use psi::{PayloadJob, PayloadKind, PayloadStream};
+pub use shape_dict::{BbnfShapeEntry, BbnfShapeKind};
 pub use tape::{Tape, TapeIter, TapeOffset, TapeRec};
 
 /// Inline-aggregate payload budget (in bytes).

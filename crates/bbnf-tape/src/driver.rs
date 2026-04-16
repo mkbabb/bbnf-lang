@@ -1042,9 +1042,45 @@ fn dispatch_one(
             Ok(StepResult::Next(inner))
         }
         DtaState::ShuntingYard { head, .. } => {
-            // W2.1 Commit 2 lands AltLinear + Repeat. Operator-
-            // precedence reduction for the ShuntingYard arm lands in
-            // the follow-on commit; this commit forwards to `head`.
+            // Shunting-yard entry: reserve the outer compound, push a
+            // ShuntingYard frame, and dispatch into `head` to parse
+            // the first operand. The operator-precedence reducer
+            // lives in `advance_or_pop_with`'s SY arm — after each
+            // operand completes, the reducer peeks the next byte,
+            // consults the precedence table, and either pushes a
+            // new operator onto the op stack (possibly emitting
+            // reduced compounds first) or closes the frame if no
+            // further operator fires.
+            //
+            // Operator compounds emitted by the reducer are laid out
+            // post-order: the compound's record follows the RHS
+            // operand, with `child_off` pointing back at the LHS
+            // operand's tape row. The cursor's bounded backward-walk
+            // fallback handles this layout; the outer SY compound's
+            // `child_off` still satisfies the pre-order fast path
+            // (it points at `parent + 1`).
+            let parent_rec = columns.len() as u32;
+            reserve_compound(columns, frame_depth, stack.depth(), TapeKind::Rule, *pos);
+            let child_mark = columns.len() as u32;
+            // `repeat_inner` on a ShuntingYard frame stores the SY
+            // state id itself, so `advance_or_pop_with`'s reducer can
+            // look up both `head` and `precedence` from the table on
+            // each operand-complete tick.
+            stack.push(Frame {
+                kind: DtaFrameKind::ShuntingYard,
+                counter_idx: u8::MAX,
+                cursor: 0,
+                children: &[],
+                repeat_inner: state,
+                parent_rec,
+                child_mark,
+                tape_kind: TapeKind::Rule,
+                last_pos: *pos,
+                lo: 0,
+                hi: 0,
+                counter_optional_flag: 0,
+            });
+            let _ = head; // head is retrieved from the state at dispatch time
             Ok(StepResult::Next(head))
         }
     }
@@ -1109,6 +1145,66 @@ fn reserve_compound(
     idx
 }
 
+/// Emit a binary-operator compound for the ShuntingYard reducer.
+///
+/// The compound sits AFTER the RHS operand with `child_off` pointing
+/// back at the LHS operand's tape row. Post-order layout for
+/// reducer-produced compounds; the cursor's bounded backward-walk
+/// fallback resolves the first-child lookup at read time.
+#[inline]
+fn emit_reducer_compound(
+    columns: &mut Columns,
+    frame_depth: &mut Vec<u8>,
+    depth: u8,
+    lhs_idx: u32,
+    op_discriminant: u8,
+    span_lo: u32,
+    span_hi: u32,
+) -> u32 {
+    let idx = columns.len() as u32;
+    let kind_meta = TapeKind::Rule as u8 & 0x0F;
+    columns.kinds.push(kind_meta);
+    // Pack the op_discriminant into the variant_idx bits (low 6) +
+    // stamp the has_children bit (0x40) eagerly — the reducer always
+    // has two operand subtrees.
+    columns.flags.push((op_discriminant & 0x3F) | 0x40);
+    columns.extra.push(0);
+    columns.span_lo.push(span_lo);
+    columns.span_hi.push(span_hi);
+    columns.sib_skip.push(0);
+    columns.child_off.push(TapeOffset(lhs_idx));
+    frame_depth.push(depth);
+    idx
+}
+
+/// Lookup the precedence entry for the operator starting at byte `b`
+/// (with optional second byte `b2` for two-byte operators).
+///
+/// Two-byte operators (e.g. `<=`, `>=`) require both bytes to match;
+/// a single-byte op entry matches regardless of the second byte.
+/// Prefers two-byte matches when available; falls back to single-
+/// byte.
+#[inline]
+fn lookup_precedence(
+    precedence: &'static [crate::dta::DtaPrecedenceEntry],
+    b: u8,
+    b2: Option<u8>,
+) -> Option<&'static crate::dta::DtaPrecedenceEntry> {
+    if let Some(b2v) = b2 {
+        for entry in precedence {
+            if entry.byte == b && entry.second_byte == Some(b2v) {
+                return Some(entry);
+            }
+        }
+    }
+    for entry in precedence {
+        if entry.byte == b && entry.second_byte.is_none() {
+            return Some(entry);
+        }
+    }
+    None
+}
+
 /// Close the topmost compound frame — stamp `span_hi`, `child_off`,
 /// and `has_children` on the reserved parent row.
 #[inline]
@@ -1155,7 +1251,12 @@ fn stack_top(stack: &FrameStack) -> Option<&Frame> {
 ///
 /// The Repeat arm reads the frame's counter, consults `lo`/`hi`, and
 /// either re-enters `repeat_inner` (capturing a fresh iteration
-/// savepoint) or closes at `counter >= lo`.
+/// savepoint) or closes at `counter >= lo`. The ShuntingYard arm
+/// consults the SY state's precedence table: on each operand
+/// completion it peeks the next byte, pushes a new operator
+/// (emitting reduced compounds for higher-precedence top-of-stack
+/// ops first), or reduces the remaining op stack to completion and
+/// closes.
 fn advance_or_pop_with(
     _table: Option<&DtaTable>,
     _input: Option<&[u8]>,
@@ -1224,9 +1325,124 @@ fn advance_or_pop_with(
                 }
             }
             DtaFrameKind::ShuntingYard => {
-                // W2.1 Commit 2: forward-ref behaviour. Operator-
-                // precedence reducer lands in the SY-arm follow-on
-                // commit.
+                // Operand complete. Consult the precedence table to
+                // decide: reduce-and-pop (no more ops), or push a new
+                // operator (emitting a reduced compound first if the
+                // stack top's precedence demands it).
+                let sy_state_id = top.repeat_inner;
+                let sy_parent_depth_marker = top.child_mark;
+                let sy_parent_rec = top.parent_rec;
+                // The operand just finished at span [top.last_pos ..
+                // pos]. Track the operand's tape root — the record at
+                // `sy_parent_depth_marker` is the first operand; each
+                // subsequent operand starts at the length-marker
+                // from the prior op-push.
+                let mut this_operand_root = top.cursor as u32;
+                if this_operand_root == 0 {
+                    // First operand: its root sits at the child_mark
+                    // (the first record after the outer SY parent).
+                    this_operand_root = sy_parent_depth_marker;
+                }
+
+                let (head_state, precedence_slice, input_ref) = match (_table, _input) {
+                    (Some(t), Some(i)) => {
+                        let st = t.states[sy_state_id.0 as usize];
+                        match st {
+                            DtaState::ShuntingYard { head, precedence } => {
+                                (head, precedence, i)
+                            }
+                            _ => return Err(DtaError::InvalidState { state: sy_state_id }),
+                        }
+                    }
+                    _ => {
+                        // Context unavailable — the walker always
+                        // supplies table + input for ShuntingYard
+                        // dispatch. This arm is unreachable in
+                        // practice; failing loud beats silent
+                        // misbehaviour.
+                        return Err(DtaError::InvalidState { state: sy_state_id });
+                    }
+                };
+
+                let b = input_ref.get(*pos as usize).copied().unwrap_or(0);
+                let b2 = input_ref.get(*pos as usize + 1).copied();
+                let entry_opt = lookup_precedence(precedence_slice, b, b2);
+
+                // Reduce top-of-op-stack entries whose precedence
+                // exceeds (or ties with, for left-assoc) the new
+                // op's precedence; reducing emits a binary compound.
+                // If no new op, reduce all pending ops.
+                let new_prec = entry_opt.map(|e| e.precedence);
+                while let Some(top_op) = stack.op_stack.last().copied() {
+                    let should_reduce = match new_prec {
+                        None => true, // no new op — reduce all remaining
+                        Some(p) => {
+                            top_op.precedence > p
+                                || (top_op.precedence == p
+                                    && matches!(
+                                        top_op.associativity,
+                                        crate::dta::DtaAssociativity::Left
+                                    ))
+                        }
+                    };
+                    if !should_reduce {
+                        break;
+                    }
+                    stack.op_stack.pop();
+                    let compound_idx = emit_reducer_compound(
+                        columns,
+                        frame_depth,
+                        stack.depth(),
+                        top_op.lhs_idx,
+                        top_op.op_discriminant,
+                        top_op.lhs_span_lo,
+                        *pos,
+                    );
+                    this_operand_root = compound_idx;
+                    let _ = top_op.op_rule;
+                }
+
+                if let Some(entry) = entry_opt {
+                    // Push the new op onto the stack. Advance past
+                    // its bytes (1 or 2). Re-enter `head` to parse
+                    // the RHS operand.
+                    let op_width = if entry.second_byte.is_some() { 2 } else { 1 };
+                    *pos = pos.saturating_add(op_width);
+                    let lhs_span_lo = columns
+                        .span_lo
+                        .get(this_operand_root as usize)
+                        .copied()
+                        .unwrap_or(*pos);
+                    stack.op_stack.push(OpStackEntry {
+                        op_rule: entry.op_rule,
+                        op_discriminant: entry.op_discriminant,
+                        precedence: entry.precedence,
+                        associativity: entry.associativity,
+                        lhs_idx: this_operand_root,
+                        lhs_span_lo,
+                    });
+                    let pos_val = *pos;
+                    if let Some(top) = stack.top_mut() {
+                        top.cursor = 0;
+                        top.last_pos = pos_val;
+                    }
+                    return Ok(StepResult::Next(head_state));
+                } else {
+                    // No operator — the outermost SY frame closes.
+                    // The parent compound's child_off points at the
+                    // final reduced operand (this_operand_root).
+                    // Patch it instead of letting close_compound
+                    // default to the frame's `child_mark`.
+                    let sy_parent = sy_parent_rec as usize;
+                    columns.child_off[sy_parent] = TapeOffset(this_operand_root);
+                    columns.flags[sy_parent] |= 0x40;
+                    columns.span_hi[sy_parent] = *pos;
+                    // Suppress the default close_compound path for
+                    // this frame by popping manually and continuing
+                    // the outer loop.
+                    stack.pop();
+                    continue;
+                }
             }
         }
         // Close the compound and pop.

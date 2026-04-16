@@ -538,17 +538,32 @@ impl TapeBuilder {
     /// Consume the builder and return the finished tape. Returns the
     /// sticky error if one was set during parsing.
     ///
-    /// The sibling-skip column is computed at finish time — every
-    /// direct-child run is enumerated once via the `child_off`
-    /// pointers and the per-record `sib_skip` slot is stamped with
-    /// `next_sibling_root - this_root` (or `0` for the last
-    /// sibling). This is the exact information walkers need to step
-    /// forward across siblings in a single indexed load.
+    /// Routes through the Stage-C segmented prefix scan
+    /// ([`crate::finaliser::finalise`]) over the `frame_depth` column
+    /// the DTA emits inline during stage A. The scan closes
+    /// [`Columns::sib_skip`](crate::Columns::sib_skip),
+    /// [`Columns::span_hi`](crate::Columns::span_hi) (for compounds),
+    /// and [`Columns::child_off`](crate::Columns::child_off) (for
+    /// compounds) in a single linear backward pass — `O(N)` over the
+    /// tape with `O(max_depth)` working-set memory.
+    ///
+    /// Until `av4-psi` lands the inline stage-A emission of
+    /// `frame_depth`, the column is reconstructed at finish time from
+    /// the `child_off` pointers the parser already wrote
+    /// ([`crate::finaliser::derive_frame_depth`]). The reconstruction
+    /// is itself `O(N)` and reuses the canonical post-order layout,
+    /// so the production path is the *same* Stage-C scan whether
+    /// `frame_depth` arrives from stage A or from the helper — there
+    /// is no fallback to V2's backward-walk
+    /// ([`Columns::compute_sibling_skip`](crate::Columns::compute_sibling_skip));
+    /// V2's method survives only as the bit-equality reference for
+    /// the regression suite.
     pub fn finish(mut self) -> Result<Tape, TapeBuildError> {
         match self.error {
             Some(err) => Err(err),
             None => {
-                self.columns.compute_sibling_skip();
+                let frame_depth = crate::finaliser::derive_frame_depth(&self.columns);
+                crate::finaliser::finalise(&mut self.columns, &frame_depth);
                 Ok(Tape {
                     columns: self.columns,
                 })

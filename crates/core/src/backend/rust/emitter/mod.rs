@@ -1,33 +1,27 @@
 //! Emitter trait implementation for the Rust backend.
 //!
 //! `mod.rs` owns the single `impl Emitter for RustEmitter` block — Rust
-//! requires the trait impl to be one block — and delegates every method
-//! to a `xxx_impl` helper in a sibling file grouped by emit-kind:
-//! `leaves`, `seq`, `alt`, `dispatch`, `repeat`, `binary`,
-//! `operator_chain`, `map_value`, `grammar`, `prettify` (sub-dir), `ws`.
+//! requires the trait impl to be one block. Post-AW-I.W4 the Rust
+//! backend routes parses through `dta_run` wholesale; the per-rule
+//! emit sibling modules (`alt`, `seq`, `repeat`, `binary`,
+//! `operator_chain`, `leaves`, `map_value`, `tape_prelude`,
+//! `dispatch`, `ws`, `string_decode`) deleted along with their
+//! trait-method impls. Surviving: `grammar` (impl block + parse
+//! entry), `dta`/`profile`/`visitor` (codegen data), `prettify`
+//! sub-dir (separate emission channel).
 
-mod binary;
-mod dispatch;
 pub(crate) mod dta;
 mod grammar;
-mod operator_chain;
 mod prettify;
 pub(crate) mod profile;
-mod repeat;
-mod seq;
-pub(crate) mod string_decode;
 pub mod visitor;
-mod ws;
 
 use bbnf_ir::{AltBranch, FnDescriptor, GrammarIR, IrNode, IrRule, MapExpr, RuleId, TypeDesc};
 use proc_macro2::TokenStream;
 
 use crate::backend::driver::analysis::BackendAnalysis;
 use crate::backend::prettify::{PrettyPolicy, PrettyRulePlan};
-use crate::backend::{
-    AltBranchInfo, DelimScanConfig, Emitter, FlattenStrategy, KeyDispatchBranch, KeyDispatchConfig,
-    SepByConfig, SeqChildGroup, TokenDispatchArmCompiled, ValuePlacement,
-};
+use crate::backend::Emitter;
 
 pub use super::emitter_types::{RustEmitCtx, RustEmitter};
 
@@ -111,143 +105,6 @@ fn collect_alt_payload_types(branches: &[AltBranch], ir: &GrammarIR) -> Vec<Type
 impl Emitter for RustEmitter {
     type Output = TokenStream;
     type Ctx = RustEmitCtx;
-
-    fn emit_seq_grouped(
-        &mut self,
-        groups: Vec<SeqChildGroup<TokenStream>>,
-        result_type: &TypeDesc,
-        flatten: Option<FlattenStrategy>,
-        ctx: &mut Self::Ctx,
-    ) -> TokenStream {
-        self.emit_seq_grouped_impl(groups, result_type, flatten, ctx)
-    }
-
-    fn emit_repeat_many(
-        &mut self,
-        body: TokenStream,
-        lo: u32,
-        hi: u32,
-        elem_type: &TypeDesc,
-        ctx: &mut Self::Ctx,
-    ) -> TokenStream {
-        self.emit_repeat_many_impl(body, lo, hi, elem_type, ctx)
-    }
-
-    fn emit_repeat_optional(
-        &mut self,
-        body: TokenStream,
-        inner_type: &TypeDesc,
-        alloc: ValuePlacement,
-        ctx: &mut Self::Ctx,
-    ) -> TokenStream {
-        self.emit_repeat_optional_impl(body, inner_type, alloc, ctx)
-    }
-
-    fn emit_sep_by(
-        &mut self,
-        element: TokenStream,
-        separator: TokenStream,
-        config: &SepByConfig,
-        elem_type: &TypeDesc,
-        ctx: &mut Self::Ctx,
-    ) -> TokenStream {
-        self.emit_sep_by_impl(element, separator, config, elem_type, ctx)
-    }
-
-    fn emit_call(
-        &mut self,
-        rule_id: RuleId,
-        rule_name: &str,
-        alloc: ValuePlacement,
-        ctx: &mut Self::Ctx,
-    ) -> TokenStream {
-        self.emit_call_impl(rule_id, rule_name, alloc, ctx)
-    }
-
-    fn emit_inline_wrap(
-        &mut self,
-        body: TokenStream,
-        variant_name: Option<&str>,
-        alloc: ValuePlacement,
-        ctx: &mut Self::Ctx,
-    ) -> TokenStream {
-        self.emit_inline_wrap_impl(body, variant_name, alloc, ctx)
-    }
-
-    fn emit_operator_chain(
-        &mut self,
-        head: TokenStream,
-        op: TokenStream,
-        rhs: TokenStream,
-        head_type: &TypeDesc,
-        link_elem_type: &TypeDesc,
-        _ir: &GrammarIR,
-        ctx: &mut Self::Ctx,
-    ) -> Option<TokenStream> {
-        self.emit_operator_chain_impl(head, op, rhs, head_type, link_elem_type, ctx)
-    }
-
-    fn emit_skip(
-        &mut self,
-        kept: TokenStream,
-        discarded: TokenStream,
-        ctx: &mut Self::Ctx,
-    ) -> TokenStream {
-        self.emit_skip_impl(kept, discarded, ctx)
-    }
-
-    fn emit_next(
-        &mut self,
-        discarded: TokenStream,
-        kept: TokenStream,
-        ctx: &mut Self::Ctx,
-    ) -> TokenStream {
-        self.emit_next_impl(discarded, kept, ctx)
-    }
-
-    fn emit_minus(
-        &mut self,
-        lhs: TokenStream,
-        rhs: TokenStream,
-        ctx: &mut Self::Ctx,
-    ) -> TokenStream {
-        self.emit_minus_impl(lhs, rhs, ctx)
-    }
-
-    fn emit_negate(&mut self, inner: TokenStream, ctx: &mut Self::Ctx) -> TokenStream {
-        self.emit_negate_impl(inner, ctx)
-    }
-
-    fn emit_ws_trim(&mut self, ws_pattern: Option<&str>, ctx: &mut Self::Ctx) -> TokenStream {
-        self.emit_ws_trim_impl(ws_pattern, ctx)
-    }
-
-    fn emit_with_ws_trim(
-        &mut self,
-        inner: TokenStream,
-        ws_pattern: Option<&str>,
-        ctx: &mut Self::Ctx,
-    ) -> TokenStream {
-        self.emit_with_ws_trim_impl(inner, ws_pattern, ctx)
-    }
-
-    fn emit_token_dispatch(
-        &mut self,
-        token: TokenStream,
-        arms: Vec<TokenDispatchArmCompiled<TokenStream>>,
-        fallback: TokenStream,
-        ctx: &mut Self::Ctx,
-    ) -> TokenStream {
-        self.emit_token_dispatch_impl(token, arms, fallback, ctx)
-    }
-
-    fn emit_delim_scan(
-        &mut self,
-        config: &DelimScanConfig,
-        ctx: &mut Self::Ctx,
-    ) -> Option<TokenStream> {
-        self.emit_delim_scan_impl(config, ctx)
-    }
 
     fn emit_recognizer_family_kernel(
         &mut self,

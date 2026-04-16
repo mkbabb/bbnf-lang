@@ -625,9 +625,9 @@ fn handle_repeat_failure(
                 stack.restore(sp.stack);
                 *pos = sp.pos;
                 close_compound(columns, stack, *pos);
-                stack.pop();
+                pop_and_release(stack);
                 let res = advance_or_pop_with(
-                    Some(table), Some(input), columns, frame_depth, stack, pos,
+                    Some(table), Some(input), columns, frame_depth, psi, stack, pos,
                 )?;
                 return Ok(match res {
                     StepResult::Next(n) => RepeatAbsorbResult::Continue(n),
@@ -668,9 +668,9 @@ fn handle_repeat_failure_bounded(
                 stack.restore(sp.stack);
                 *pos = sp.pos;
                 close_compound(columns, stack, *pos);
-                stack.pop();
+                pop_and_release(stack);
                 let res = advance_or_pop_with(
-                    Some(table), Some(input), columns, frame_depth, stack, pos,
+                    Some(table), Some(input), columns, frame_depth, psi, stack, pos,
                 )?;
                 return Ok(match res {
                     StepResult::Next(n) => RepeatAbsorbResult::Continue(n),
@@ -681,6 +681,27 @@ fn handle_repeat_failure_bounded(
         scan_depth -= 1;
     }
     Ok(RepeatAbsorbResult::NotAbsorbed)
+}
+
+/// Pop the topmost frame and release its counter slot if it is a
+/// Repeat. Centralises the AW-I.W4δ counter-release invariant so
+/// every pop site drops the counter/iter_savepoint entry when the
+/// popped frame is a Repeat — absent the release, long parses
+/// (bbnf.bbnf's ~250-Repeat traversal) exhaust the `u8` counter
+/// index space.
+#[inline]
+fn pop_and_release(stack: &mut FrameStack) -> Option<Frame> {
+    let popped = stack.pop();
+    if let Some(f) = popped {
+        if matches!(f.kind, DtaFrameKind::Repeat) {
+            let idx = f.counter_idx as usize;
+            if idx < stack.counters.len() {
+                stack.counters.truncate(idx);
+                stack.iter_savepoints.truncate(idx);
+            }
+        }
+    }
+    popped
 }
 
 /// Peek at the frame at the given stack depth index (0 = bottom).
@@ -768,7 +789,7 @@ fn dispatch_one(
         DtaState::Epsilon => {
             // No column emission, no byte advance — step to the
             // parent's next child (or terminate).
-            advance_or_pop_with(Some(table), Some(input), columns, frame_depth, stack, pos)
+            advance_or_pop_with(Some(table), Some(input), columns, frame_depth, psi, stack, pos)
         }
         DtaState::Literal { text } => {
             let bytes = text.as_bytes();
@@ -784,7 +805,7 @@ fn dispatch_one(
             let lo = *pos;
             *pos = end as u32;
             emit_leaf(columns, frame_depth, stack, TapeKind::Literal, lo, *pos);
-            advance_or_pop_with(Some(table), Some(input), columns, frame_depth, stack, pos)
+            advance_or_pop_with(Some(table), Some(input), columns, frame_depth, psi, stack, pos)
         }
         DtaState::Regex { pattern } => {
             let match_len = scanner
@@ -804,7 +825,7 @@ fn dispatch_one(
             // common numeric payload. The emitter-driven lowering in
             // AW.1.2 threads the right kind through.
             psi.push(PayloadJob::new(rec_idx, lo, *pos, PayloadKind::F64, 0));
-            advance_or_pop_with(Some(table), Some(input), columns, frame_depth, stack, pos)
+            advance_or_pop_with(Some(table), Some(input), columns, frame_depth, psi, stack, pos)
         }
         DtaState::Seq { children, frame } => {
             // Reserve the parent row — pre-order: parent sits at the
@@ -837,20 +858,42 @@ fn dispatch_one(
                 // Degenerate Seq — close immediately.
                 close_compound(columns, stack, *pos);
                 return advance_or_pop_with(
-                    Some(table), Some(input), columns, frame_depth, stack, pos,
+                    Some(table), Some(input), columns, frame_depth, psi, stack, pos,
                 );
             }
             Ok(StepResult::Next(children[0]))
         }
-        DtaState::Ref { target, .. } => {
-            if target == DtaStateId::NONE {
+        DtaState::Ref { rule, target } => {
+            // AW-I.W4δ — resolve unresolved Refs via `rule_entry_for`.
+            // The lifter marks a Ref's `target` with `DtaStateId::NONE`
+            // when the referenced rule is lifted later than the
+            // dispatching Ref's state — forward references in the
+            // rule graph. The driver finishes the resolution at parse
+            // time by looking the rule id up in
+            // [`DtaTable::rule_entries`] (a sorted binary-search
+            // table, log₂(rule_count) ≈ 6 comparisons for the BBNF
+            // grammar's 53 rules). Refs whose target IS pre-resolved
+            // are dispatched directly, skipping the lookup.
+            //
+            // Pre-W4δ the arm errored on `target == NONE`, which
+            // surfaced as a Syntax failure at every forward-reference
+            // site. BBNF self-hosting exercised 11 such sites (Ref to
+            // rule `rhs` from inside `term`, among others) and every
+            // paren-expression rule body traversed at least one —
+            // hence `a = ( "x" ) ;` failed where `a = "x" ;` succeeded.
+            let chosen = if target == DtaStateId::NONE {
+                table.rule_entry_for(rule)
+            } else {
+                target
+            };
+            if chosen == DtaStateId::NONE {
                 return Err(DtaError::Syntax {
                     offset: *pos,
                     failing_state: state,
-                    failing_rule: DtaRuleId(u32::MAX),
+                    failing_rule: rule,
                 });
             }
-            Ok(StepResult::Next(target))
+            Ok(StepResult::Next(chosen))
         }
         DtaState::ByteDispatch { table: disp, fallback } => {
             let b = input.get(*pos as usize).copied().unwrap_or(0);
@@ -969,7 +1012,7 @@ fn dispatch_one(
             columns.truncate(parent_rec as usize);
             frame_depth.truncate(parent_rec as usize);
             // Stack already restored to post-push; pop the Alt frame.
-            stack.pop();
+            pop_and_release(stack);
             Err(last_err.unwrap_or(DtaError::Syntax {
                 offset: start_pos,
                 failing_state: state,
@@ -1047,7 +1090,7 @@ fn dispatch_one(
             if hi == 0 {
                 close_compound(columns, stack, *pos);
                 return advance_or_pop_with(
-                    Some(table), Some(input), columns, frame_depth, stack, pos,
+                    Some(table), Some(input), columns, frame_depth, psi, stack, pos,
                 );
             }
 
@@ -1074,7 +1117,7 @@ fn dispatch_one(
                 }
                 *pos = p as u32;
             }
-            advance_or_pop_with(Some(table), Some(input), columns, frame_depth, stack, pos)
+            advance_or_pop_with(Some(table), Some(input), columns, frame_depth, psi, stack, pos)
         }
         DtaState::ShuntingYard { head, .. } => {
             // Shunting-yard entry: reserve the outer compound, push a
@@ -1297,6 +1340,7 @@ fn advance_or_pop_with(
     _input: Option<&[u8]>,
     columns: &mut Columns,
     frame_depth: &mut Vec<u8>,
+    psi: &mut PayloadStream,
     stack: &mut FrameStack,
     pos: &mut u32,
 ) -> Result<StepResult, DtaError> {
@@ -1341,15 +1385,24 @@ fn advance_or_pop_with(
                 } else {
                     // Re-enter the body. Refresh the iteration
                     // savepoint + `last_pos` for the next round.
+                    //
+                    // AW-I.W4δ: refresh psi_len alongside cols/fd.
+                    // Pre-W4δ the code preserved the iter-1 psi_len
+                    // ("prior_psi_len"), which meant a later-
+                    // iteration body-failure would truncate psi back
+                    // past already-committed iterations' payload
+                    // writes. Use the CURRENT psi.len() so absorbed
+                    // failures restore to "end of successful
+                    // iterations", not "before the loop".
                     let new_sp_cols = columns.len() as u32;
                     let new_sp_fd = frame_depth.len() as u32;
-                    let prior_psi_len = stack.iter_savepoints[counter_idx].psi_len;
+                    let new_sp_psi = psi.len() as u32;
                     let pos_val = *pos;
                     let new_stack_sp = stack.savepoint();
                     stack.iter_savepoints[counter_idx] = IterSavepoint {
                         cols_len: new_sp_cols,
                         fd_len: new_sp_fd,
-                        psi_len: prior_psi_len,
+                        psi_len: new_sp_psi,
                         pos: pos_val,
                         stack: new_stack_sp,
                     };
@@ -1475,14 +1528,14 @@ fn advance_or_pop_with(
                     // Suppress the default close_compound path for
                     // this frame by popping manually and continuing
                     // the outer loop.
-                    stack.pop();
+                    pop_and_release(stack);
                     continue;
                 }
             }
         }
         // Close the compound and pop.
         close_compound(columns, stack, *pos);
-        stack.pop();
+        pop_and_release(stack);
     }
 }
 

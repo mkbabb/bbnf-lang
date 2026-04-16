@@ -88,6 +88,11 @@ fn cursor_walks_children() {
     b.push_leaf(TapeKind::Span, 2, 3, 0, 0);
     let compound = b.push_compound(TapeKind::Seq, children_start, 0, 3, 0, 0);
 
+    // Cursor sibling walks read `sib_skip`, which Stage-C derives
+    // from `child_off` + `frame_depth`. AW.0.1 gates Stage-C on the
+    // DTA's inline-frame-depth flag; opt in so the legacy-API-built
+    // tape is closed before the cursor reads it.
+    b.enable_inline_frame_depth();
     let tape = b.finish().unwrap();
     let cursor = TapeCursor::new(&tape, compound);
 
@@ -1043,6 +1048,9 @@ fn sibling_skip_walks_direct_children_forward() {
     // outer compound (children at 0, 3, 4)
     let outer_children = TapeOffset(0);
     let outer = b.push_compound(TapeKind::Rule, outer_children, 0, 4, 0, 0);
+    // AW.0.1: Stage-C populates `sib_skip`, which the assertions below
+    // and the cursor's forward walk both depend on. Opt in.
+    b.enable_inline_frame_depth();
     let tape = b.finish().unwrap();
 
     let cursor = TapeCursor::new(&tape, outer);
@@ -1086,6 +1094,8 @@ fn sibling_skip_nested_compound() {
     b.push_leaf(TapeKind::Span, 3, 4, 3, 0);
     let outer_children = TapeOffset(0);
     let _outer = b.push_compound(TapeKind::Rule, outer_children, 0, 4, 0, 0);
+    // AW.0.1: `sib_skip` is a Stage-C output; opt in to close it.
+    b.enable_inline_frame_depth();
     let tape = b.finish().unwrap();
 
     // Inner (x y) children: x@1, y@2. sib_skip[1]=1, sib_skip[2]=0.
@@ -1617,11 +1627,17 @@ fn snapshot_shape(cols: &Columns) -> (usize, Vec<Off>, Vec<bool>) {
 /// `tape_snapshot` clones columns without mutating `child_off`,
 /// preserving the exact `child_off` values the parser wrote — which
 /// is the input shape both algorithms were designed to consume.
-fn assert_stage_c_matches_v2(b: TapeBuilder, label: &str) {
+fn assert_stage_c_matches_v2(mut b: TapeBuilder, label: &str) {
     let pre_snapshot = b.tape_snapshot();
     let (n, child_off, has_children) = snapshot_shape(pre_snapshot.columns());
     let v2 = reference_v2_sibling_skip(n, &child_off, &has_children);
 
+    // The Stage-C bit-equality regression *is* the DTA-driven closure
+    // path; AW.0.1 gates Stage-C on `has_inline_frame_depth`, so opt
+    // in explicitly here. The reference V2 walk above still runs
+    // against the pre-finalise column snapshot, keeping the
+    // comparison honest.
+    b.enable_inline_frame_depth();
     let tape = b.finish().unwrap();
     assert_eq!(
         tape.columns().sib_skip, v2,

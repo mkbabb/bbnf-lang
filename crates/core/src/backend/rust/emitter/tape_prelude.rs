@@ -492,8 +492,12 @@ pub fn emit_tape_span_only_scalar_prelude(td: &TypeDesc) -> TokenStream {
 /// `push_leaf_with` entry point with `PayloadData::InlineScalar`
 /// (<= 4 B types) or `PayloadData::WideScalar` (8 B types including
 /// `TypeDesc::Span`, whose two `u32` locals pack into a `u64`).
-pub fn emit_tape_span_only_scalar_epilogue(td: &TypeDesc, variant_idx: u8) -> TokenStream {
-    let payload_expr = scalar_payload_data_token(td);
+pub fn emit_tape_span_only_scalar_epilogue(
+    td: &TypeDesc,
+    variant_idx: u8,
+    u32_reaches_sentinel: bool,
+) -> TokenStream {
+    let payload_expr = scalar_payload_data_token(td, u32_reaches_sentinel);
     let variant_lit = variant_idx;
     let meta_lit = META_IDX_ZERO;
     quote! {
@@ -518,7 +522,13 @@ pub fn emit_tape_span_only_scalar_epilogue(td: &TypeDesc, variant_idx: u8) -> To
 /// `__payload_lo`/`__payload_hi` (for Span). Mirrors
 /// `emit_scalar_payload_data` in `grammar.rs` with different local
 /// names (no `__variant_idx`/`__branch_idx` wrappers).
-fn scalar_payload_data_token(td: &TypeDesc) -> TokenStream {
+///
+/// AW.0.8: `u32_reaches_sentinel` forces `U32` rules whose value
+/// domain can touch `u32::MAX` to use `PayloadData::WideScalar`
+/// instead of `InlineScalar`. The sentinel collision arises because
+/// `u32::MAX == TapeOffset::NONE`; storing that literal in an
+/// inline slot becomes indistinguishable from payload-absent.
+fn scalar_payload_data_token(td: &TypeDesc, u32_reaches_sentinel: bool) -> TokenStream {
     if matches!(td, TypeDesc::Span) {
         return quote! {
             ::bbnf::runtime::tape::PayloadData::WideScalar(
@@ -563,9 +573,19 @@ fn scalar_payload_data_token(td: &TypeDesc) -> TokenStream {
         TypeDesc::I32 => quote! {
             ::bbnf::runtime::tape::PayloadData::InlineScalar(#payload_ident as u32)
         },
-        TypeDesc::U32 => quote! {
-            ::bbnf::runtime::tape::PayloadData::InlineScalar(#payload_ident)
-        },
+        TypeDesc::U32 => {
+            if u32_reaches_sentinel {
+                // AW.0.8 white-colour fix: widen to `WideScalar` so
+                // `u32::MAX` cannot collide with `TapeOffset::NONE`.
+                quote! {
+                    ::bbnf::runtime::tape::PayloadData::WideScalar(#payload_ident as u64)
+                }
+            } else {
+                quote! {
+                    ::bbnf::runtime::tape::PayloadData::InlineScalar(#payload_ident)
+                }
+            }
+        }
         _ => unreachable!(
             "scalar_payload_data_token: unhandled TypeDesc {:?}",
             td

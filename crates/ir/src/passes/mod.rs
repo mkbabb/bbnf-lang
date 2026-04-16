@@ -35,8 +35,8 @@ pub use materialization::{
 pub use metadata::{compute_aliases, compute_transparent};
 pub use payload::{
     compute_payload_layouts, compute_payload_layouts_with_resolver, is_kv_pair_shape, plan_layout,
-    plan_layout_with_cap, NamedTypeResolver, NullResolver, PayloadField, PayloadLayout,
-    LARGE_PAYLOAD_MAX, MAX_PAYLOAD_BYTES,
+    plan_layout_with_cap, scalar_range_includes_sentinel, NamedTypeResolver, NullResolver,
+    PayloadField, PayloadLayout, LARGE_PAYLOAD_MAX, MAX_PAYLOAD_BYTES,
 };
 pub use prefix::factor_common_prefixes;
 pub use profile::GrammarProfile;

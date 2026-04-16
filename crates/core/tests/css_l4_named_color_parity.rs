@@ -156,6 +156,15 @@ fn find_named_color_payload(input: &str, variant_idx: u8) -> Option<u32> {
             && rec.has_payload()
             && !rec.has_children()
         {
+            // AW.0.8: `namedColor` now routes through
+            // `PayloadData::WideScalar` because its value domain hits
+            // `u32::MAX` (the `white = 0xFFFFFFFFu32` constant would
+            // otherwise collide with the `TapeOffset::NONE` sentinel).
+            // Read from the wide-payload column and truncate to u32.
+            if let Some(v) = tape.payload_u64(rec) {
+                return Some(v as u32);
+            }
+            // Fallback for grammars still on the narrow path.
             if let Some(v) = tape.payload_scalar::<u32>(rec) {
                 return Some(v);
             }
@@ -182,12 +191,9 @@ fn every_named_color_materialises_its_u32_payload() {
 
     let mut failed: Vec<(String, u32, Option<u32>)> = Vec::new();
     for (name, expected) in &colors {
-        if *expected == u32::MAX {
-            // `white = 0xFFFFFFFFu32` coincides with
-            // `TapeOffset::NONE`; the inline-scalar slot cannot
-            // represent it unambiguously. Scoped outside AV.0.4.
-            continue;
-        }
+        // AW.0.8: the `white = 0xFFFFFFFFu32` sentinel collision is
+        // now resolved via `PayloadData::WideScalar` routing. Every
+        // named color — including white — must materialise.
         let input = format!("a {{ color: {name}; }}");
         let got = find_named_color_payload(&input, variant_idx);
         if got != Some(*expected) {
@@ -208,4 +214,23 @@ fn every_named_color_materialises_its_u32_payload() {
             preview.join("\n  ")
         );
     }
+}
+
+/// AW.0.8 hard gate: `color: white` materialises the `0xFFFFFFFFu32`
+/// payload instead of colliding with the `TapeOffset::NONE` sentinel.
+///
+/// The classic bug was `PayloadData::InlineScalar(u32::MAX)` being
+/// indistinguishable from payload-absent (`u32::MAX == TapeOffset::
+/// NONE`). The W0b fix promotes `u32` payloads whose rule range could
+/// reach the sentinel to `PayloadData::WideScalar`, where the 8-byte
+/// slot cannot collide with the 4-byte sentinel.
+#[test]
+fn white_materialises() {
+    let variant_idx = named_color_variant_idx();
+    let got = find_named_color_payload("a { color: white; }", variant_idx);
+    assert_eq!(
+        got,
+        Some(0xFFFFFFFFu32),
+        "white must decode as 0xFFFFFFFFu32 (not PayloadData::None sentinel)"
+    );
 }

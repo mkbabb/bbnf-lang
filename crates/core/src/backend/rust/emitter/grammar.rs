@@ -19,7 +19,9 @@
 //! constructs a [`::bbnf::runtime::Parsed`] from a finished tape.
 
 use bbnf_ir::{GrammarIR, IrNode, IrRule, TypeDesc};
-use bbnf_ir::passes::{MaterializationClass, PayloadLayout, is_kv_pair_shape};
+use bbnf_ir::passes::{
+    is_kv_pair_shape, scalar_range_includes_sentinel, MaterializationClass, PayloadLayout,
+};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
@@ -177,6 +179,13 @@ impl RustEmitter {
         // hedged choice.
         let route = classify_rule_route(rule, ir, class, ctx.payload_layout.as_ref());
 
+        // AW.0.8: for `u32`-typed payloads, probe the rule's value
+        // domain. Rules that could emit `u32::MAX` (CSS `namedColor`'s
+        // `white = 0xFFFFFFFFu32` being the known offender) route
+        // through `PayloadData::WideScalar` to avoid the sentinel
+        // collision with `TapeOffset::NONE`.
+        let u32_reaches_sentinel = scalar_range_includes_sentinel(rule, ir);
+
         // AU.2.2: aggregate payload layout takes precedence over
         // per-type payload locals. When `ctx.payload_layout.is_some()`
         // the prelude reserves `__aggregate_buf` / `__has_payload`
@@ -228,10 +237,18 @@ impl RustEmitter {
             // `__payload_tag` discriminator for multi-type Alts.
             match class {
                 MaterializationClass::MustTape => {
-                    emit_alt_mustape_prelude_epilogue(rule_idx_u8, &ctx.payload_types)
+                    emit_alt_mustape_prelude_epilogue(
+                        rule_idx_u8,
+                        &ctx.payload_types,
+                        u32_reaches_sentinel,
+                    )
                 }
                 MaterializationClass::TapeSpanOnly => {
-                    emit_alt_span_only_prelude_epilogue(rule_idx_u8, &ctx.payload_types)
+                    emit_alt_span_only_prelude_epilogue(
+                        rule_idx_u8,
+                        &ctx.payload_types,
+                        u32_reaches_sentinel,
+                    )
                 }
                 MaterializationClass::TransparentElide => unreachable!(),
             }
@@ -246,7 +263,11 @@ impl RustEmitter {
                     match ctx.payload_types.first() {
                         Some(td) if td.is_scalar_payload() => (
                             emit_tape_span_only_scalar_prelude(td),
-                            emit_tape_span_only_scalar_epilogue(td, rule_idx_u8),
+                            emit_tape_span_only_scalar_epilogue(
+                                td,
+                                rule_idx_u8,
+                                u32_reaches_sentinel,
+                            ),
                         ),
                         _ => (
                             emit_tape_span_only_prelude(),
@@ -602,8 +623,8 @@ fn emit_payload_declarations(types: &[TypeDesc]) -> TokenStream {
 /// scalars (<= 4 bytes) use `PayloadData::InlineScalar`; 8-byte
 /// scalars (f64/i64/u64/Span) use `PayloadData::WideScalar` with the
 /// value's little-endian bits.
-fn emit_push_leaf_with(td: &TypeDesc) -> TokenStream {
-    let payload_expr = emit_scalar_payload_data(td);
+fn emit_push_leaf_with(td: &TypeDesc, u32_reaches_sentinel: bool) -> TokenStream {
+    let payload_expr = emit_scalar_payload_data(td, u32_reaches_sentinel);
     quote! {
         ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
             tape,
@@ -622,7 +643,12 @@ fn emit_push_leaf_with(td: &TypeDesc) -> TokenStream {
 /// Inline scalars (<= 4 bytes) extend their bytes to a `u32` and use
 /// `PayloadData::InlineScalar`; wide scalars (f64/i64/u64/Span) use
 /// `PayloadData::WideScalar` with a u64 representation.
-pub(super) fn emit_scalar_payload_data(td: &TypeDesc) -> TokenStream {
+///
+/// AW.0.8: `u32_reaches_sentinel` promotes `U32` rules whose value
+/// domain can touch `u32::MAX` to `WideScalar`. The sentinel
+/// collision is `u32::MAX == TapeOffset::NONE`; an inline slot
+/// storing that literal is indistinguishable from payload-absent.
+pub(super) fn emit_scalar_payload_data(td: &TypeDesc, u32_reaches_sentinel: bool) -> TokenStream {
     if matches!(td, TypeDesc::Span) {
         return quote! {
             ::bbnf::runtime::tape::PayloadData::WideScalar(
@@ -665,16 +691,24 @@ pub(super) fn emit_scalar_payload_data(td: &TypeDesc) -> TokenStream {
         TypeDesc::I32 => quote! {
             ::bbnf::runtime::tape::PayloadData::InlineScalar(#payload_local as u32)
         },
-        TypeDesc::U32 => quote! {
-            ::bbnf::runtime::tape::PayloadData::InlineScalar(#payload_local)
-        },
+        TypeDesc::U32 => {
+            if u32_reaches_sentinel {
+                quote! {
+                    ::bbnf::runtime::tape::PayloadData::WideScalar(#payload_local as u64)
+                }
+            } else {
+                quote! {
+                    ::bbnf::runtime::tape::PayloadData::InlineScalar(#payload_local)
+                }
+            }
+        }
         _ => unreachable!("emit_scalar_payload_data: non-scalar TypeDesc {:?}", td),
     }
 }
 
 /// Emit the payload epilogue: either direct push (single type) or
 /// match on `__payload_tag` (multi-type).
-fn emit_payload_epilogue(types: &[TypeDesc]) -> TokenStream {
+fn emit_payload_epilogue(types: &[TypeDesc], u32_reaches_sentinel: bool) -> TokenStream {
     let push_leaf = quote! {
         ::bbnf::runtime::tape::TapeBuilder::push_leaf(
             tape,
@@ -688,7 +722,7 @@ fn emit_payload_epilogue(types: &[TypeDesc]) -> TokenStream {
     match types.len() {
         0 => quote! { Some(#push_leaf) },
         1 => {
-            let push_with = emit_push_leaf_with(&types[0]);
+            let push_with = emit_push_leaf_with(&types[0], u32_reaches_sentinel);
             quote! {
                 if __has_payload {
                     Some(#push_with)
@@ -704,7 +738,7 @@ fn emit_payload_epilogue(types: &[TypeDesc]) -> TokenStream {
                 .enumerate()
                 .map(|(i, td)| {
                     let tag = (i + 1) as u8;
-                    let push_with = emit_push_leaf_with(td);
+                    let push_with = emit_push_leaf_with(td, u32_reaches_sentinel);
                     quote! { #tag => Some(#push_with), }
                 })
                 .collect();
@@ -722,10 +756,11 @@ fn emit_payload_epilogue(types: &[TypeDesc]) -> TokenStream {
 fn emit_alt_mustape_prelude_epilogue(
     rule_idx_u8: u8,
     payload_types: &[TypeDesc],
+    u32_reaches_sentinel: bool,
 ) -> (TokenStream, TokenStream) {
     let variant_lit = rule_idx_u8;
     let payload_decls = emit_payload_declarations(payload_types);
-    let payload_push = emit_payload_epilogue(payload_types);
+    let payload_push = emit_payload_epilogue(payload_types, u32_reaches_sentinel);
     (
         quote! {
             let __span_lo = state.offset as u32;
@@ -757,10 +792,11 @@ fn emit_alt_mustape_prelude_epilogue(
 fn emit_alt_span_only_prelude_epilogue(
     rule_idx_u8: u8,
     payload_types: &[TypeDesc],
+    u32_reaches_sentinel: bool,
 ) -> (TokenStream, TokenStream) {
     let variant_lit = rule_idx_u8;
     let payload_decls = emit_payload_declarations(payload_types);
-    let payload_push = emit_payload_epilogue(payload_types);
+    let payload_push = emit_payload_epilogue(payload_types, u32_reaches_sentinel);
     (
         quote! {
             let __span_lo = state.offset as u32;
